@@ -12,8 +12,6 @@ const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
 const StatusCode = createFactory(require("./StatusCode"));
 
-const { div } = dom;
-
 class RequestListColumnStatus extends Component {
   static get propTypes() {
     return {
@@ -25,7 +23,7 @@ class RequestListColumnStatus extends Component {
     const { item } = this.props;
 
     return (
-      div({
+      dom.td({
         className: "requests-list-column requests-list-status",
       },
       StatusCode({ item }),

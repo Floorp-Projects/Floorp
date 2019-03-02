@@ -19,6 +19,7 @@
 #include "mozilla/AutoRestore.h"
 #include "mozilla/ComputedStyleInlines.h"
 #include "mozilla/EffectSet.h"
+#include "mozilla/LayerAnimationInfo.h"
 #include "mozilla/RestyleManager.h"
 #include "mozilla/ServoBindings.h"  // Servo_GetProperties_Overriding_Animation
 #include "mozilla/ServoStyleSet.h"
@@ -28,6 +29,7 @@
 #include "nsCSSPseudoElements.h"
 #include "nsCSSPropertyIDSet.h"
 #include "nsCSSProps.h"
+#include "nsDisplayItemTypes.h"
 #include "nsAtom.h"
 #include "nsIPresShell.h"
 #include "nsIPresShellInlines.h"
@@ -103,8 +105,18 @@ bool EffectCompositor::AllowCompositorAnimationsOnFrame(
 //
 // Returns true if there are eligible animations, false otherwise.
 bool FindAnimationsForCompositor(
-    const nsIFrame* aFrame, nsCSSPropertyID aProperty,
+    const nsIFrame* aFrame, const nsCSSPropertyIDSet& aPropertySet,
     nsTArray<RefPtr<dom::Animation>>* aMatches /*out*/) {
+  MOZ_ASSERT(
+      aPropertySet.IsSubsetOf(LayerAnimationInfo::GetCSSPropertiesFor(
+          DisplayItemType::TYPE_TRANSFORM)) ||
+          aPropertySet.IsSubsetOf(LayerAnimationInfo::GetCSSPropertiesFor(
+              DisplayItemType::TYPE_OPACITY)) ||
+          aPropertySet.IsSubsetOf(LayerAnimationInfo::GetCSSPropertiesFor(
+              DisplayItemType::TYPE_BACKGROUND_COLOR)),
+      "Should be the subset of transform-like properties, or opacity, "
+      "or background color");
+
   MOZ_ASSERT(!aMatches || aMatches->IsEmpty(),
              "Matches array, if provided, should be empty");
 
@@ -117,7 +129,8 @@ bool FindAnimationsForCompositor(
   // synchronized with geometric animations. We need to do this before any
   // other early returns (the one above is ok) since we can only check this
   // state when the animation is newly-started.
-  if (aProperty == eCSSProperty_transform) {
+  if (aPropertySet.Intersects(LayerAnimationInfo::GetCSSPropertiesFor(
+          DisplayItemType::TYPE_TRANSFORM))) {
     PendingAnimationTracker* tracker =
         aFrame->PresContext()->Document()->GetPendingAnimationTracker();
     if (tracker) {
@@ -128,8 +141,8 @@ bool FindAnimationsForCompositor(
   // If the property will be added to the animations level of the cascade but
   // there is an !important rule for that property in the cascade then the
   // animation will not be applied since the !important rule overrides it.
-  if (effects->PropertiesWithImportantRules().HasProperty(aProperty) &&
-      effects->PropertiesForAnimationsLevel().HasProperty(aProperty)) {
+  if (effects->PropertiesWithImportantRules().Intersects(aPropertySet) &&
+      effects->PropertiesForAnimationsLevel().Intersects(aPropertySet)) {
     return false;
   }
 
@@ -137,8 +150,15 @@ bool FindAnimationsForCompositor(
       AnimationPerformanceWarning::Type::None;
   if (!EffectCompositor::AllowCompositorAnimationsOnFrame(aFrame, warning)) {
     if (warning != AnimationPerformanceWarning::Type::None) {
-      EffectCompositor::SetPerformanceWarning(
-          aFrame, aProperty, AnimationPerformanceWarning(warning));
+      // FIXME: Bug 1425837: We should set performance warning by a property set
+      // and write some test cases for this.
+      for (nsCSSPropertyID property : COMPOSITOR_ANIMATABLE_PROPERTY_LIST) {
+        if (!aPropertySet.HasProperty(property)) {
+          continue;
+        }
+        EffectCompositor::SetPerformanceWarning(
+            aFrame, property, AnimationPerformanceWarning(warning));
+      }
     }
     return false;
   }
@@ -163,18 +183,25 @@ bool FindAnimationsForCompositor(
     AnimationPerformanceWarning::Type effectWarning =
         AnimationPerformanceWarning::Type::None;
     KeyframeEffect::MatchForCompositor matchResult =
-        effect->IsMatchForCompositor(aProperty, aFrame, *effects,
+        effect->IsMatchForCompositor(aPropertySet, aFrame, *effects,
                                      effectWarning);
     if (effectWarning != AnimationPerformanceWarning::Type::None) {
-      EffectCompositor::SetPerformanceWarning(
-          aFrame, aProperty, AnimationPerformanceWarning(effectWarning));
+      // FIXME: Bug 1425837: We should set performance warning by a property set
+      // and write some test cases for this.
+      for (nsCSSPropertyID property : COMPOSITOR_ANIMATABLE_PROPERTY_LIST) {
+        if (!aPropertySet.HasProperty(property)) {
+          continue;
+        }
+        EffectCompositor::SetPerformanceWarning(
+            aFrame, property, AnimationPerformanceWarning(effectWarning));
+      }
     }
 
     if (matchResult ==
         KeyframeEffect::MatchForCompositor::NoAndBlockThisProperty) {
-      // For a given |aFrame|, we don't want some animations of |aProperty| to
-      // run on the compositor and others to run on the main thread, so if any
-      // need to be synchronized with the main thread, run them all there.
+      // For a given |aFrame|, we don't want some animations of |aPropertySet|
+      // to run on the compositor and others to run on the main thread, so if
+      // any need to be synchronized with the main thread, run them all there.
       if (aMatches) {
         aMatches->Clear();
       }
@@ -449,19 +476,20 @@ bool EffectCompositor::HasPendingStyleUpdates() const {
 
 /* static */
 bool EffectCompositor::HasAnimationsForCompositor(const nsIFrame* aFrame,
-                                                  nsCSSPropertyID aProperty) {
-  return FindAnimationsForCompositor(aFrame, aProperty, nullptr);
+                                                  DisplayItemType aType) {
+  return FindAnimationsForCompositor(
+      aFrame, LayerAnimationInfo::GetCSSPropertiesFor(aType), nullptr);
 }
 
-/* static */ nsTArray<RefPtr<dom::Animation>>
-EffectCompositor::GetAnimationsForCompositor(const nsIFrame* aFrame,
-                                             nsCSSPropertyID aProperty) {
+/* static */
+nsTArray<RefPtr<dom::Animation>> EffectCompositor::GetAnimationsForCompositor(
+    const nsIFrame* aFrame, const nsCSSPropertyIDSet& aPropertySet) {
   nsTArray<RefPtr<dom::Animation>> result;
 
 #ifdef DEBUG
   bool foundSome =
 #endif
-      FindAnimationsForCompositor(aFrame, aProperty, &result);
+      FindAnimationsForCompositor(aFrame, aPropertySet, &result);
   MOZ_ASSERT(!foundSome || !result.IsEmpty(),
              "If return value is true, matches array should be non-empty");
 
@@ -470,14 +498,16 @@ EffectCompositor::GetAnimationsForCompositor(const nsIFrame* aFrame,
 
 /* static */
 void EffectCompositor::ClearIsRunningOnCompositor(const nsIFrame* aFrame,
-                                                  nsCSSPropertyID aProperty) {
+                                                  DisplayItemType aType) {
   EffectSet* effects = EffectSet::GetEffectSet(aFrame);
   if (!effects) {
     return;
   }
 
+  const nsCSSPropertyIDSet& propertySet =
+      LayerAnimationInfo::GetCSSPropertiesFor(aType);
   for (KeyframeEffect* effect : *effects) {
-    effect->SetIsRunningOnCompositor(aProperty, false);
+    effect->SetIsRunningOnCompositor(propertySet, false);
   }
 }
 

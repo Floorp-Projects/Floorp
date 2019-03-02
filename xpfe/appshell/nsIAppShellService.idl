@@ -133,6 +133,11 @@ interface nsIAppShellService : nsISupports
   void unregisterTopLevelWindow(in nsIXULWindow aWindow);
 
   /**
+   * Whether the hidden window has been lazily created.
+   */
+  readonly attribute boolean hasHiddenWindow;
+
+  /**
    * Whether the hidden private window has been lazily created.
    */
   [noscript]

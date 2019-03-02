@@ -16,6 +16,7 @@
 namespace mozilla {
 
 class TimeStamp;
+class VideoFrameContainer;
 
 /**
  * A consumer of audio/video data which plays audio and video tracks and
@@ -124,6 +125,9 @@ class MediaSink {
   // allocated by this sink should be released.
   // Must be called after playback stopped.
   virtual void Shutdown() {}
+
+  virtual void SetSecondaryVideoContainer(VideoFrameContainer* aSecondary) {}
+  virtual void ClearSecondaryVideoContainer() {}
 
   // Return a string containing debugging information.
   // Can be called in any phase.

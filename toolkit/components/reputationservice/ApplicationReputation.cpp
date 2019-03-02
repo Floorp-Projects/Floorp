@@ -43,6 +43,7 @@
 #include "nsDebug.h"
 #include "nsDependentSubstring.h"
 #include "nsError.h"
+#include "nsLocalFileCommon.h"
 #include "nsNetCID.h"
 #include "nsReadableUtils.h"
 #include "nsServiceManagerUtils.h"
@@ -100,6 +101,416 @@ mozilla::LazyLogModule ApplicationReputationService::prlog(
   MOZ_LOG(ApplicationReputationService::prlog, mozilla::LogLevel::Debug, args)
 #define LOG_ENABLED() \
   MOZ_LOG_TEST(ApplicationReputationService::prlog, mozilla::LogLevel::Debug)
+
+/**
+ * Our detection of executable/binary files uses 3 lists:
+ * - kNonBinaryExecutables (below)
+ * - kBinaryFileExtensions (below)
+ * - sExecutableExts (in nsLocalFileCommon)
+ *
+ * On Windows, the `sExecutableExts` list is used to determine whether files
+ * count as executable. For executable files, we will not offer an "open with"
+ * option when downloading, only "save as".
+ *
+ * On all platforms, the combination of these lists is used to determine
+ * whether files should be subject to application reputation checks.
+ * Specifically, all files with extensions that:
+ * - are in kBinaryFileExtensions, or
+ * - are in sExecutableExts **and not in kNonBinaryExecutables**
+ *
+ * will be subject to checks.
+ *
+ * There are tests that verify that these lists are sorted and that extensions
+ * never appear in both the sExecutableExts and kBinaryFileExtensions lists.
+ *
+ * When adding items to any lists:
+ * - please prefer adding to sExecutableExts unless it is imperative users can
+ *   (potentially automatically!) open such files with a helper application
+ *   without first saving them (and that outweighs any associated risk).
+ * - if adding executable items that shouldn't be submitted to apprep servers,
+ *   add them to sExecutableExts and also to kNonBinaryExecutables.
+ * - always add an associated comment in the kBinaryFileExtensions list. Add
+ *   a commented-out entry with an `exec` annotation if you add the actual
+ *   entry in sExecutableExts.
+ *
+ * When removing items please consider whether items should still be in the
+ * sExecutableExts list even if removing them from the kBinaryFileExtensions
+ * list, and vice versa.
+ *
+ * Note that there is a GTest that does its best to check some of these
+ * invariants that you'll likely need to update if you're modifying these
+ * lists.
+ */
+
+// Items that are in sExecutableExts but shouldn't be submitted for application
+// reputation checks.
+/* static */
+const char* const ApplicationReputationService::kNonBinaryExecutables[] = {
+    ".ad",
+    ".air",
+};
+
+// Items that should be submitted for application reputation checks that users
+// are able to open immediately (without first saving and then finding the
+// file). If users shouldn't be able to open them immediately, add to
+// sExecutableExts instead (see also the docstring comment above!).
+/* static */
+const char* const ApplicationReputationService::kBinaryFileExtensions[] = {
+    // Originally extracted from the "File Type Policies" Chrome extension
+    // Items listed with an `exec` comment are in the sExecutableExts list in
+    // nsLocalFileCommon.h .
+    //".001",
+    //".7z",
+    //".ace",
+    //".action", // Mac script
+    //".ad", exec // Windows
+    //".ade", exec  // MS Access
+    //".adp", exec // MS Access
+    //".air", exec // Adobe AIR installer; excluded from apprep checks.
+    ".apk",  // Android package
+    //".app", exec  // Executable application
+    ".applescript",
+    //".application", exec // MS ClickOnce
+    ".appref-ms",    // MS ClickOnce
+    //".arc",
+    //".arj",
+    ".as",   // Mac archive
+    //".asp", exec  // Windows Server script
+    ".asx",  // Windows Media Player
+    //".b64",
+    //".balz",
+    //".bas", exec  // Basic script
+    ".bash",  // Linux shell
+    //".bat", exec  // Windows shell
+    //".bhx",
+    ".bin",
+    ".btapp",      // uTorrent and Transmission
+    ".btinstall",  // uTorrent and Transmission
+    ".btkey",      // uTorrent and Transmission
+    ".btsearch",   // uTorrent and Transmission
+    ".btskin",     // uTorrent and Transmission
+    ".bz",         // Linux archive (bzip)
+    ".bz2",        // Linux archive (bzip2)
+    ".bzip2",      // Linux archive (bzip2)
+    ".cab",        // Windows archive
+    ".cdr",        // Mac disk image
+    ".cfg",        // Windows
+    ".chi",        // Windows Help
+    //".chm", exec // Windows Help
+    ".class",      // Java
+    //".cmd", exec // Windows executable
+    //".com", exec // Windows executable
+    ".command",    // Mac script
+    ".cpgz",       // Mac archive
+    ".cpi",        // Control Panel Item. Executable used for adding icons
+                   // to Control Panel
+    //".cpio",
+    //".cpl", exec  // Windows executable
+    //".crt", exec  // Windows signed certificate
+    ".crx",  // Chrome extensions
+    ".csh",  // Linux shell
+    //".csv",
+    ".dart",        // Mac disk image
+    ".dc42",        // Apple DiskCopy Image
+    ".deb",         // Linux package
+    ".desktop",     // A shortcut that runs other files
+    ".dex",         // Android
+    ".dht",         // HTML
+    ".dhtm",        // HTML
+    ".dhtml",       // HTML
+    ".diskcopy42",  // Apple DiskCopy Image
+    ".dll",         // Windows executable
+    ".dmg",         // Mac disk image
+    ".dmgpart",     // Mac disk image
+    ".doc",         // MS Office
+    ".docb",        // MS Office
+    ".docm",        // MS Word
+    ".docx",        // MS Word
+    ".dot",         // MS Word
+    ".dotm",        // MS Word
+    ".dott",        // MS Office
+    ".dotx",        // MS Word
+    ".drv",         // Windows driver
+    ".dvdr",        // Mac Disk image
+    ".efi",         // Firmware
+    ".eml",         // MS Outlook
+    //".exe", exec // Windows executable
+    //".fat",
+    ".fon",     // Windows font
+    //".fxp", exec // MS FoxPro
+    ".gadget",  // Windows
+    //".gif",
+    ".grp",   // Windows
+    ".gz",    // Linux archive (gzip)
+    ".gzip",  // Linux archive (gzip)
+    ".hfs",   // Mac disk image
+    //".hlp", exec // Windows Help
+    ".hqx",   // Mac archive
+    //".hta", exec // HTML trusted application
+    ".htm", ".html",
+    ".htt",  // MS HTML template
+    //".ica",
+    ".img",      // Mac disk image
+    ".imgpart",  // Mac disk image
+    //".inf", exec // Windows installer
+    ".ini",      // Generic config file
+    //".ins", exec // IIS config
+    //".inx", // InstallShield
+    ".iso",  // CD image
+    //".isp", exec // IIS config
+    //".isu", // InstallShield
+    //".jar", exec // Java
+    //".jnlp", exec // Java
+    //".job", // Windows
+    //".jpg",
+    //".jpeg",
+    //".js", exec  // JavaScript script
+    //".jse", exec // JScript
+    ".ksh",  // Linux shell
+    //".lha",
+    //".lnk", exec // Windows
+    ".local",  // Windows
+    //".lpaq1",
+    //".lpaq5",
+    //".lpaq8",
+    //".lzh",
+    //".lzma",
+    //".mad", exec  // MS Access
+    //".maf", exec  // MS Access
+    //".mag", exec  // MS Access
+    //".mam", exec  // MS Access
+    ".manifest",  // Windows
+    //".maq", exec  // MS Access
+    //".mar", exec  // MS Access
+    //".mas", exec  // MS Access
+    //".mat", exec  // MS Access
+    //".mau", exec  // Media attachment
+    //".mav", exec  // MS Access
+    //".maw", exec  // MS Access
+    //".mda", exec  // MS Access
+    //".mdb", exec  // MS Access
+    //".mde", exec  // MS Access
+    //".mdt", exec  // MS Access
+    //".mdw", exec  // MS Access
+    //".mdz", exec  // MS Access
+    ".mht",       // MS HTML
+    ".mhtml",     // MS HTML
+    ".mim",       // MS Mail
+    //".mkv",
+    ".mmc",  // MS Office
+    ".mof",  // Windows
+    //".mov",
+    //".mp3",
+    //".mp4",
+    ".mpkg",     // Mac installer
+    //".msc", exec  // Windows executable
+    ".msg",      // MS Outlook
+    //".msh", exec  // Windows shell
+    //".msh1", exec // Windows shell
+    //".msh1xml", exec  // Windows shell
+    //".msh2", exec // Windows shell
+    //".msh2xml", exec // Windows shell
+    //".mshxml", exec // Windows
+    //".msi", exec  // Windows installer
+    //".msp", exec  // Windows installer
+    //".mst", exec  // Windows installer
+    ".ndif",     // Mac disk image
+    //".ntfs", // 7z
+    ".ocx",   // ActiveX
+    //".ops", exec  // MS Office
+    ".osas",  // AppleScript
+    ".osax",  // AppleScript
+    //".out", // Linux binary
+    ".oxt",  // OpenOffice extension, can execute arbitrary code
+    //".package",
+    //".paf", // PortableApps package
+    //".paq8f",
+    //".paq8jd",
+    //".paq8l",
+    //".paq8o",
+    ".partial",  // Downloads
+    ".pax",      // Mac archive
+    //".pcd", exec     // Microsoft Visual Test
+    ".pdf",      // Adobe Acrobat
+    //".pea",
+    ".pet",  // Linux package
+    //".pif", exec // Windows
+    ".pkg",  // Mac installer
+    ".pl",   // Perl script
+    //".plg", exec // MS Visual Studio
+    //".png",
+    ".pot",     // MS PowerPoint
+    ".potm",    // MS PowerPoint
+    ".potx",    // MS PowerPoint
+    ".ppam",    // MS PowerPoint
+    ".pps",     // MS PowerPoint
+    ".ppsm",    // MS PowerPoint
+    ".ppsx",    // MS PowerPoint
+    ".ppt",     // MS PowerPoint
+    ".pptm",    // MS PowerPoint
+    ".pptx",    // MS PowerPoint
+    //".prf", exec // MS Outlook
+    //".prg", exec // Windows
+    ".ps1",     // Windows shell
+    ".ps1xml",  // Windows shell
+    ".ps2",     // Windows shell
+    ".ps2xml",  // Windows shell
+    ".psc1",    // Windows shell
+    ".psc2",    // Windows shell
+    //".pst", exec // MS Outlook
+    ".pup",     // Linux package
+    ".py",      // Python script
+    ".pyc",     // Python binary
+    ".pyd",     // Equivalent of a DLL, for python libraries
+    ".pyo",     // Compiled python code
+    ".pyw",     // Python GUI
+    //".quad",
+    //".r00",
+    //".r01",
+    //".r02",
+    //".r03",
+    //".r04",
+    //".r05",
+    //".r06",
+    //".r07",
+    //".r08",
+    //".r09",
+    //".r10",
+    //".r11",
+    //".r12",
+    //".r13",
+    //".r14",
+    //".r15",
+    //".r16",
+    //".r17",
+    //".r18",
+    //".r19",
+    //".r20",
+    //".r21",
+    //".r22",
+    //".r23",
+    //".r24",
+    //".r25",
+    //".r26",
+    //".r27",
+    //".r28",
+    //".r29",
+    //".rar",
+    ".rb",    // Ruby script
+    //".reg", exec  // Windows Registry
+    ".rels",  // MS Office
+    //".rgs", // Windows Registry
+    ".rpm",  // Linux package
+    ".rtf",  // MS Office
+    //".run", // Linux shell
+    //".scf", exec         // Windows shell
+    ".scpt",               // AppleScript
+    ".scptd",              // AppleScript
+    //".scr", exec         // Windows
+    //".sct", exec         // Windows shell
+    ".search-ms",          // Windows
+    ".seplugin",           // AppleScript
+    //".settingcontent-ms", exec // Windows settings
+    ".sh",                 // Linux shell
+    ".shar",               // Linux shell
+    //".shb", exec         // Windows
+    //".shs", exec         // Windows shell
+    ".sht",                // HTML
+    ".shtm",               // HTML
+    ".shtml",              // HTML
+    ".sldm",               // MS PowerPoint
+    ".sldx",               // MS PowerPoint
+    ".slk",                // MS Excel
+    ".slp",                // Linux package
+    ".smi",                // Mac disk image
+    ".sparsebundle",       // Mac disk image
+    ".sparseimage",        // Mac disk image
+    ".spl",                // Adobe Flash
+    //".squashfs",
+    ".svg",
+    ".swf",   // Adobe Flash
+    ".swm",   // Windows Imaging
+    ".sys",   // Windows
+    ".tar",   // Linux archive
+    ".taz",   // Linux archive (bzip2)
+    ".tbz",   // Linux archive (bzip2)
+    ".tbz2",  // Linux archive (bzip2)
+    ".tcsh",  // Linux shell
+    //".tif",
+    ".tgz",  // Linux archive (gzip)
+    //".toast", // Roxio disk image
+    ".torrent",  // Bittorrent
+    ".tpz",      // Linux archive (gzip)
+    //".txt",
+    ".txz",  // Linux archive (xz)
+    ".tz",   // Linux archive (gzip)
+    //".u3p", // U3 Smart Apps
+    ".udf",   // MS Excel
+    ".udif",  // Mac disk image
+    //".url", exec  // Windows
+    //".uu",
+    //".uue",
+    //".vb", exec  // Visual Basic script
+    //".vbe", exec // Visual Basic script
+    //".vbs", exec // Visual Basic script
+    //".vbscript", // Visual Basic script
+    //".vdx", exec // MS Visio
+    ".vhd",       // Windows virtual hard drive
+    ".vhdx",      // Windows virtual hard drive
+    ".vmdk",      // VMware virtual disk
+    //".vsd", exec  // MS Visio
+    //".vsdm", exec // MS Visio
+    //".vsdx", exec // MS Visio
+    //".vsmacros", exec  // MS Visual Studio
+    //".vss",  exec  // MS Visio
+    //".vssm", exec  // MS Visio
+    //".vssx", exec  // MS Visio
+    //".vst",  exec  // MS Visio
+    //".vstm", exec  // MS Visio
+    //".vstx", exec  // MS Visio
+    //".vsw",  exec  // MS Visio
+    //".vsx",  exec  // MS Visio
+    //".vtx",  exec  // MS Visio
+    //".wav",
+    //".webp",
+    ".website",  // Windows
+    ".wim",      // Windows Imaging
+    //".workflow", // Mac Automator
+    //".wrc", // FreeArc archive
+    //".ws",  exec  // Windows script
+    //".wsc", exec  // Windows script
+    //".wsf", exec  // Windows script
+    //".wsh", exec  // Windows script
+    ".xar",   // MS Excel
+    ".xbap",  // XAML Browser Application
+    ".xht", ".xhtm", ".xhtml",
+    ".xip",     // Mac archive
+    ".xla",     // MS Excel
+    ".xlam",    // MS Excel
+    ".xldm",    // MS Excel
+    ".xll",     // MS Excel
+    ".xlm",     // MS Excel
+    ".xls",     // MS Excel
+    ".xlsb",    // MS Excel
+    ".xlsm",    // MS Excel
+    ".xlsx",    // MS Excel
+    ".xlt",     // MS Excel
+    ".xltm",    // MS Excel
+    ".xltx",    // MS Excel
+    ".xlw",     // MS Excel
+    ".xml",     // MS Excel
+    ".xnk",     // MS Exchange
+    ".xrm-ms",  // Windows
+    ".xsl",     // XML Stylesheet
+    //".xxe",
+    ".xz",     // Linux archive (xz)
+    ".z",      // InstallShield
+#ifdef XP_WIN  // disable on Mac/Linux, see 1167493
+    ".zip",    // Generic archive
+#endif
+    ".zipx",  // WinZip
+              //".zpaq",
+};
 
 enum class LookupType { AllowlistOnly, BlocklistOnly, BothLists };
 
@@ -174,7 +585,7 @@ class PendingLookup final : public nsIStreamListener,
   nsCString mFileName;
 
   // True if extension of this file matches any extension in the
-  // kBinaryFileExtensions list.
+  // kBinaryFileExtensions or sExecutableExts list.
   bool mIsBinaryFile;
 
   // Number of blocklist and allowlist hits we have seen.
@@ -440,360 +851,6 @@ PendingLookup::~PendingLookup() {
   LOG(("Destroying pending lookup [this = %p]", this));
 }
 
-static const char* const kBinaryFileExtensions[] = {
-    // Extracted from the "File Type Policies" Chrome extension
-    //".001",
-    //".7z",
-    //".ace",
-    //".action", // Mac script
-    //".ad", // Windows
-    ".ade",  // MS Access
-    ".adp",  // MS Access
-    ".apk",  // Android package
-    ".app",  // Executable application
-    ".applescript",
-    ".application",  // MS ClickOnce
-    ".appref-ms",    // MS ClickOnce
-    //".arc",
-    //".arj",
-    ".as",   // Mac archive
-    ".asp",  // Windows Server script
-    ".asx",  // Windows Media Player
-    //".b64",
-    //".balz",
-    ".bas",   // Basic script
-    ".bash",  // Linux shell
-    ".bat",   // Windows shell
-    //".bhx",
-    ".bin",
-    ".btapp",      // uTorrent and Transmission
-    ".btinstall",  // uTorrent and Transmission
-    ".btkey",      // uTorrent and Transmission
-    ".btsearch",   // uTorrent and Transmission
-    ".btskin",     // uTorrent and Transmission
-    ".bz",         // Linux archive (bzip)
-    ".bz2",        // Linux archive (bzip2)
-    ".bzip2",      // Linux archive (bzip2)
-    ".cab",        // Windows archive
-    ".cdr",        // Mac disk image
-    ".cfg",        // Windows
-    ".chi",        // Windows Help
-    ".chm",        // Windows Help
-    ".class",      // Java
-    ".cmd",        // Windows executable
-    ".com",        // Windows executable
-    ".command",    // Mac script
-    ".cpgz",       // Mac archive
-    ".cpi",        // Control Panel Item. Executable used for adding icons
-                   // to Control Panel
-    //".cpio",
-    ".cpl",  // Windows executable
-    ".crt",  // Windows signed certificate
-    ".crx",  // Chrome extensions
-    ".csh",  // Linux shell
-    //".csv",
-    ".dart",        // Mac disk image
-    ".dc42",        // Apple DiskCopy Image
-    ".deb",         // Linux package
-    ".desktop",     // A shortcut that runs other files
-    ".dex",         // Android
-    ".dhtml",       // HTML
-    ".dhtm",        // HTML
-    ".dht",         // HTML
-    ".diskcopy42",  // Apple DiskCopy Image
-    ".dll",         // Windows executable
-    ".dmg",         // Mac disk image
-    ".dmgpart",     // Mac disk image
-    ".doc",         // MS Office
-    ".docb",        // MS Office
-    ".docm",        // MS Word
-    ".docx",        // MS Word
-    ".dot",         // MS Word
-    ".dotm",        // MS Word
-    ".dott",        // MS Office
-    ".dotx",        // MS Word
-    ".drv",         // Windows driver
-    ".dvdr",        // Mac Disk image
-    ".efi",         // Firmware
-    ".eml",         // MS Outlook
-    ".exe",         // Windows executable
-    //".fat",
-    ".fon",     // Windows font
-    ".fxp",     // MS FoxPro
-    ".gadget",  // Windows
-    //".gif",
-    ".grp",   // Windows
-    ".gz",    // Linux archive (gzip)
-    ".gzip",  // Linux archive (gzip)
-    ".hfs",   // Mac disk image
-    ".hlp",   // Windows Help
-    ".hqx",   // Mac archive
-    ".hta",   // HTML trusted application
-    ".htm", ".html",
-    ".htt",  // MS HTML template
-    //".ica",
-    ".img",      // Mac disk image
-    ".imgpart",  // Mac disk image
-    ".inf",      // Windows installer
-    ".ini",      // Generic config file
-    ".ins",      // IIS config
-    //".inx", // InstallShield
-    ".iso",  // CD image
-    ".isp",  // IIS config
-    //".isu", // InstallShield
-    ".jar",   // Java
-    ".jnlp",  // Java
-    //".job", // Windows
-    //".jpg",
-    //".jpeg",
-    ".js",   // JavaScript script
-    ".jse",  // JScript
-    ".ksh",  // Linux shell
-    //".lha",
-    ".lnk",    // Windows
-    ".local",  // Windows
-    //".lpaq1",
-    //".lpaq5",
-    //".lpaq8",
-    //".lzh",
-    //".lzma",
-    ".mad",       // MS Access
-    ".maf",       // MS Access
-    ".mag",       // MS Access
-    ".mam",       // MS Access
-    ".manifest",  // Windows
-    ".maq",       // MS Access
-    ".mar",       // MS Access
-    ".mas",       // MS Access
-    ".mat",       // MS Access
-    ".mau",       // Media attachment
-    ".mav",       // MS Access
-    ".maw",       // MS Access
-    ".mda",       // MS Access
-    ".mdb",       // MS Access
-    ".mde",       // MS Access
-    ".mdt",       // MS Access
-    ".mdw",       // MS Access
-    ".mdz",       // MS Access
-    ".mht",       // MS HTML
-    ".mhtml",     // MS HTML
-    ".mim",       // MS Mail
-    //".mkv",
-    ".mmc",  // MS Office
-    ".mof",  // Windows
-    //".mov",
-    //".mp3",
-    //".mp4",
-    ".mpkg",     // Mac installer
-    ".msc",      // Windows executable
-    ".msg",      // MS Outlook
-    ".msh",      // Windows shell
-    ".msh1",     // Windows shell
-    ".msh1xml",  // Windows shell
-    ".msh2",     // Windows shell
-    ".msh2xml",  // Windows shell
-    ".mshxml",   // Windows
-    ".msi",      // Windows installer
-    ".msp",      // Windows installer
-    ".mst",      // Windows installer
-    ".ndif",     // Mac disk image
-    //".ntfs", // 7z
-    ".ocx",   // ActiveX
-    ".ops",   // MS Office
-    ".osas",  // AppleScript
-    ".osax",  // AppleScript
-    //".out", // Linux binary
-    ".oxt",  // OpenOffice extension, can execute arbitrary code
-    //".package",
-    //".paf", // PortableApps package
-    //".paq8f",
-    //".paq8jd",
-    //".paq8l",
-    //".paq8o",
-    ".partial",  // Downloads
-    ".pax",      // Mac archive
-    ".pcd",      // Microsoft Visual Test
-    ".pdf",      // Adobe Acrobat
-    //".pea",
-    ".pet",  // Linux package
-    ".pif",  // Windows
-    ".pkg",  // Mac installer
-    ".pl",   // Perl script
-    ".plg",  // MS Visual Studio
-    //".png",
-    ".pot",     // MS PowerPoint
-    ".potm",    // MS PowerPoint
-    ".potx",    // MS PowerPoint
-    ".ppam",    // MS PowerPoint
-    ".pps",     // MS PowerPoint
-    ".ppsm",    // MS PowerPoint
-    ".ppsx",    // MS PowerPoint
-    ".ppt",     // MS PowerPoint
-    ".pptm",    // MS PowerPoint
-    ".pptx",    // MS PowerPoint
-    ".prf",     // MS Outlook
-    ".prg",     // Windows
-    ".ps1",     // Windows shell
-    ".ps1xml",  // Windows shell
-    ".ps2",     // Windows shell
-    ".ps2xml",  // Windows shell
-    ".psc1",    // Windows shell
-    ".psc2",    // Windows shell
-    ".pst",     // MS Outlook
-    ".pup",     // Linux package
-    ".py",      // Python script
-    ".pyc",     // Python binary
-    ".pyd",     // Equivalent of a DLL, for python libraries
-    ".pyo",     // Compiled python code
-    ".pyw",     // Python GUI
-    //".quad",
-    //".r00",
-    //".r01",
-    //".r02",
-    //".r03",
-    //".r04",
-    //".r05",
-    //".r06",
-    //".r07",
-    //".r08",
-    //".r09",
-    //".r10",
-    //".r11",
-    //".r12",
-    //".r13",
-    //".r14",
-    //".r15",
-    //".r16",
-    //".r17",
-    //".r18",
-    //".r19",
-    //".r20",
-    //".r21",
-    //".r22",
-    //".r23",
-    //".r24",
-    //".r25",
-    //".r26",
-    //".r27",
-    //".r28",
-    //".r29",
-    //".rar",
-    ".rb",    // Ruby script
-    ".reg",   // Windows Registry
-    ".rels",  // MS Office
-    //".rgs", // Windows Registry
-    ".rpm",  // Linux package
-    ".rtf",  // MS Office
-    //".run", // Linux shell
-    ".scf",                // Windows shell
-    ".scpt",               // AppleScript
-    ".scptd",              // AppleScript
-    ".scr",                // Windows
-    ".sct",                // Windows shell
-    ".search-ms",          // Windows
-    ".seplugin",           // AppleScript
-    ".settingcontent-ms",  // Windows settings
-    ".sh",                 // Linux shell
-    ".shar",               // Linux shell
-    ".shb",                // Windows
-    ".shs",                // Windows shell
-    ".shtml",              // HTML
-    ".shtm",               // HTML
-    ".sht",                // HTML
-    ".sldm",               // MS PowerPoint
-    ".sldx",               // MS PowerPoint
-    ".slk",                // MS Excel
-    ".slp",                // Linux package
-    ".smi",                // Mac disk image
-    ".sparsebundle",       // Mac disk image
-    ".sparseimage",        // Mac disk image
-    ".spl",                // Adobe Flash
-    //".squashfs",
-    ".svg",
-    ".swf",   // Adobe Flash
-    ".swm",   // Windows Imaging
-    ".sys",   // Windows
-    ".tar",   // Linux archive
-    ".taz",   // Linux archive (bzip2)
-    ".tbz",   // Linux archive (bzip2)
-    ".tbz2",  // Linux archive (bzip2)
-    ".tcsh",  // Linux shell
-    //".tif",
-    ".tgz",  // Linux archive (gzip)
-    //".toast", // Roxio disk image
-    ".torrent",  // Bittorrent
-    ".tpz",      // Linux archive (gzip)
-    //".txt",
-    ".txz",  // Linux archive (xz)
-    ".tz",   // Linux archive (gzip)
-    //".u3p", // U3 Smart Apps
-    ".udf",   // MS Excel
-    ".udif",  // Mac disk image
-    ".url",   // Windows
-    //".uu",
-    //".uue",
-    ".vb",   // Visual Basic script
-    ".vbe",  // Visual Basic script
-    ".vbs",  // Visual Basic script
-    //".vbscript", // Visual Basic script
-    ".vdx",       // MS Visio
-    ".vhd",       // Windows virtual hard drive
-    ".vhdx",      // Windows virtual hard drive
-    ".vmdk",      // VMware virtual disk
-    ".vsd",       // MS Visio
-    ".vsdm",      // MS Visio
-    ".vsdx",      // MS Visio
-    ".vsmacros",  // MS Visual Studio
-    ".vss",       // MS Visio
-    ".vssm",      // MS Visio
-    ".vssx",      // MS Visio
-    ".vst",       // MS Visio
-    ".vstm",      // MS Visio
-    ".vstx",      // MS Visio
-    ".vsw",       // MS Visio
-    ".vsx",       // MS Visio
-    ".vtx",       // MS Visio
-    //".wav",
-    //".webp",
-    ".website",  // Windows
-    ".wim",      // Windows Imaging
-    //".workflow", // Mac Automator
-    //".wrc", // FreeArc archive
-    ".ws",    // Windows script
-    ".wsc",   // Windows script
-    ".wsf",   // Windows script
-    ".wsh",   // Windows script
-    ".xar",   // MS Excel
-    ".xbap",  // XAML Browser Application
-    ".xhtml", ".xhtm", ".xht",
-    ".xip",     // Mac archive
-    ".xla",     // MS Excel
-    ".xlam",    // MS Excel
-    ".xldm",    // MS Excel
-    ".xll",     // MS Excel
-    ".xlm",     // MS Excel
-    ".xls",     // MS Excel
-    ".xlsb",    // MS Excel
-    ".xlsm",    // MS Excel
-    ".xlsx",    // MS Excel
-    ".xlt",     // MS Excel
-    ".xltm",    // MS Excel
-    ".xltx",    // MS Excel
-    ".xlw",     // MS Excel
-    ".xml",     // MS Excel
-    ".xnk",     // MS Exchange
-    ".xrm-ms",  // Windows
-    ".xsl",     // XML Stylesheet
-    //".xxe",
-    ".xz",     // Linux archive (xz)
-    ".z",      // InstallShield
-#ifdef XP_WIN  // disable on Mac/Linux, see 1167493
-    ".zip",    // Generic archive
-#endif
-    ".zipx",  // WinZip
-              //".zpaq",
-};
-
 static const char* const kDmgFileExtensions[] = {
     ".cdr",          ".dart",        ".dc42",  ".diskcopy42",
     ".dmg",          ".dmgpart",     ".dvdr",  ".img",
@@ -824,6 +881,18 @@ static const char* GetFileExt(const nsACString& aFilename,
   return nullptr;
 }
 
+static const char* GetFileExt(const nsACString& aFilename) {
+#define _GetFileExt(_f, _l) GetFileExt(_f, _l, ArrayLength(_l))
+  const char* ext = _GetFileExt(
+      aFilename, ApplicationReputationService::kBinaryFileExtensions);
+  if (ext == nullptr &&
+      !_GetFileExt(aFilename,
+                   ApplicationReputationService::kNonBinaryExecutables)) {
+    ext = _GetFileExt(aFilename, sExecutableExts);
+  }
+  return ext;
+}
+
 // Returns true if the file extension matches one in the given array.
 static bool IsFileType(const nsACString& aFilename,
                        const char* const aFileExtensions[],
@@ -831,10 +900,21 @@ static bool IsFileType(const nsACString& aFilename,
   return GetFileExt(aFilename, aFileExtensions, aLength) != nullptr;
 }
 
+static bool IsBinary(const nsACString& aFilename) {
+  return IsFileType(aFilename,
+                    ApplicationReputationService::kBinaryFileExtensions,
+                    ArrayLength(
+                        ApplicationReputationService::kBinaryFileExtensions)) ||
+         (!IsFileType(
+              aFilename, ApplicationReputationService::kNonBinaryExecutables,
+              ArrayLength(
+                  ApplicationReputationService::kNonBinaryExecutables)) &&
+          IsFileType(aFilename, sExecutableExts, ArrayLength(sExecutableExts)));
+}
+
 ClientDownloadRequest::DownloadType PendingLookup::GetDownloadType(
     const nsACString& aFilename) {
-  MOZ_ASSERT(IsFileType(aFilename, kBinaryFileExtensions,
-                        ArrayLength(kBinaryFileExtensions)));
+  MOZ_ASSERT(IsBinary(aFilename));
 
   // From
   // https://cs.chromium.org/chromium/src/chrome/common/safe_browsing/download_protection_util.cc?l=17
@@ -1290,8 +1370,7 @@ nsresult PendingLookup::DoLookupInternal() {
 
   rv = mQuery->GetSuggestedFileName(mFileName);
   if (NS_SUCCEEDED(rv) && !mFileName.IsEmpty()) {
-    mIsBinaryFile = IsFileType(mFileName, kBinaryFileExtensions,
-                               ArrayLength(kBinaryFileExtensions));
+    mIsBinaryFile = IsBinary(mFileName);
     LOG(("Suggested filename: %s [binary = %d, this = %p]", mFileName.get(),
          mIsBinaryFile, this));
   } else {
@@ -1448,6 +1527,9 @@ nsresult PendingLookup::ParseCertificates(nsIArray* aSigArray) {
 }
 
 nsresult PendingLookup::SendRemoteQuery() {
+  MOZ_ASSERT(!IsFileType(
+      mFileName, ApplicationReputationService::kNonBinaryExecutables,
+      ArrayLength(ApplicationReputationService::kNonBinaryExecutables)));
   Reason reason = Reason::NotSet;
   nsresult rv = SendRemoteQueryInternal(reason);
   if (NS_FAILED(rv)) {
@@ -1770,9 +1852,9 @@ nsresult PendingLookup::OnStopRequestInternal(nsIRequest* aRequest,
   // Clamp responses 0-7, we only know about 0-4 for now.
   Accumulate(mozilla::Telemetry::APPLICATION_REPUTATION_SERVER_VERDICT,
              std::min<uint32_t>(response.verdict(), 7));
+  const char* ext = GetFileExt(mFileName);
   AccumulateCategoricalKeyed(
-      nsCString(GetFileExt(mFileName, kBinaryFileExtensions,
-                           ArrayLength(kBinaryFileExtensions))),
+      nsCString(ext),
       VerdictToLabel(std::min<uint32_t>(response.verdict(), 7)));
   switch (response.verdict()) {
     case safe_browsing::ClientDownloadResponse::DANGEROUS:

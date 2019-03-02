@@ -53,6 +53,12 @@ partial interface HTMLVideoElement {
   // True if screen orientation is locked by video controls.
   [Pref="media.videocontrols.lock-video-orientation", Func="IsChromeOrXBLOrUAWidget"]
     attribute boolean mozIsOrientationLocked;
+
+  // Clones the frames playing in this <video> to the target. Cloning
+  // when either node is removed from their DOM trees. Throws if one or
+  // both <video> elements are not attached to a DOM tree.
+  [Throws, Func="IsChromeOrXBLOrUAWidget"]
+    void cloneElementVisually(HTMLVideoElement target);
 };
 
 // https://dvcs.w3.org/hg/html-media/raw-file/default/media-source/media-source.html#idl-def-HTMLVideoElement

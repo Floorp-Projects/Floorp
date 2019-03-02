@@ -36,22 +36,17 @@ add_task(async function() {
   is(view.getCellProperties(1, titleColumn), "icon",
     "second entry is the tab and has a favicon");
 
+  let newWindowOpened = BrowserTestUtils.waitForNewWindow();
+
   browser.messageManager.loadFrameScript(FRAME_SCRIPT, true);
 
   // Wait until the new window was restored.
-  let win = await waitForNewWindow();
+  let win = await newWindowOpened;
+
+  BrowserTestUtils.removeTab(tab);
   await BrowserTestUtils.closeWindow(win);
 
   let [{tabs: [{entries: [{url}]}]}] = JSON.parse(ss.getClosedWindowData());
   is(url, CRASH_URL, "session was restored correctly");
   ss.forgetClosedWindow(0);
 });
-
-function waitForNewWindow() {
-  return new Promise(resolve => {
-    Services.obs.addObserver(function observe(win, topic) {
-      Services.obs.removeObserver(observe, topic);
-      resolve(win);
-    }, "browser-delayed-startup-finished");
-  });
-}

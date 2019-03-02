@@ -12,8 +12,6 @@ const {
   fetchNetworkUpdatePacket,
 } = require("../utils/request-utils");
 
-const { div } = dom;
-
 /**
  * Renders a response header column in the requests list.  The actual
  * header to show is passed as a prop.
@@ -46,7 +44,7 @@ class RequestListColumnResponseHeader extends Component {
   render() {
     const header = getResponseHeader(this.props.item, this.props.header);
     return (
-      div({
+      dom.td({
         className: "requests-list-column requests-list-response-header",
         title: header,
       },

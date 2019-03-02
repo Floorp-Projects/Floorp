@@ -40,9 +40,6 @@
 namespace mozilla {
 namespace dom {
 
-static bool sReturnHighResTimeStamp = false;
-static bool sReturnHighResTimeStampIsSet = false;
-
 Event::Event(EventTarget* aOwner, nsPresContext* aPresContext,
              WidgetEvent* aEvent) {
   ConstructorInit(aOwner, aPresContext, aEvent);
@@ -56,13 +53,6 @@ void Event::ConstructorInit(EventTarget* aOwner, nsPresContext* aPresContext,
                             WidgetEvent* aEvent) {
   SetOwner(aOwner);
   mIsMainThreadEvent = NS_IsMainThread();
-
-  if (mIsMainThreadEvent && !sReturnHighResTimeStampIsSet) {
-    Preferences::AddBoolVarCache(&sReturnHighResTimeStamp,
-                                 "dom.event.highrestimestamp.enabled",
-                                 sReturnHighResTimeStamp);
-    sReturnHighResTimeStampIsSet = true;
-  }
 
   mPrivateDataDuplicated = false;
   mWantsPopupControlCheck = false;
@@ -692,15 +682,6 @@ void Event::SetReturnValue(bool aReturnValue, CallerType aCallerType) {
 }
 
 double Event::TimeStamp() {
-  if (!sReturnHighResTimeStamp) {
-    // In the situation where you have set a very old, not-very-supported
-    // non-default preference, we will always reduce the precision,
-    // regardless of system principal or not.
-    // The timestamp is absolute, so we supply a zero context mix-in.
-    double ret = static_cast<double>(mEvent->mTime);
-    return nsRFPService::ReduceTimePrecisionAsMSecs(ret, 0);
-  }
-
   if (mEvent->mTimeStamp.IsNull()) {
     return 0.0;
   }

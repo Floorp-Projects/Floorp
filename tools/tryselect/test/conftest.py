@@ -4,7 +4,10 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+import os
+
 import pytest
+import yaml
 from mock import MagicMock
 from moztest.resolve import TestResolver
 
@@ -40,3 +43,18 @@ def pytest_generate_tests(metafunc):
         tests = list(load_tests())
         ids = ['{} {}'.format(t[0], ' '.join(t[1])).strip() for t in tests]
         metafunc.parametrize('template,args,expected', tests, ids=ids)
+
+    elif all(fixture in metafunc.fixturenames for fixture in ('shared_name', 'shared_preset')):
+        preset_path = os.path.join(push.build.topsrcdir, 'tools', 'tryselect', 'try_presets.yml')
+        with open(preset_path, 'r') as fh:
+            presets = yaml.safe_load(fh).items()
+
+        ids = [p[0] for p in presets]
+
+        # Mark fuzzy presets on Windows xfail due to fzf not being installed.
+        if os.name == 'nt':
+            for i, preset in enumerate(presets):
+                if preset[1]['selector'] == 'fuzzy':
+                    presets[i] = pytest.param(*preset, marks=pytest.mark.xfail)
+
+        metafunc.parametrize('shared_name,shared_preset', presets, ids=ids)

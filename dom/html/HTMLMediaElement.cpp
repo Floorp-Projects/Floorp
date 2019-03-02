@@ -2056,6 +2056,7 @@ void HTMLMediaElement::ResetState() {
 
 void HTMLMediaElement::SelectResourceWrapper() {
   SelectResource();
+  MaybeBeginCloningVisually();
   mIsRunningSelectResource = false;
   mHaveQueuedSelectResource = false;
   mIsDoingExplicitLoad = false;
@@ -2183,6 +2184,7 @@ void HTMLMediaElement::NotifyMediaTrackEnabled(MediaTrack* aTrack) {
       VideoFrameContainer* container = GetVideoFrameContainer();
       if (mSrcStreamIsPlaying && container) {
         mSelectedVideoStreamTrack->AddVideoOutput(container);
+        MaybeBeginCloningVisually();
       }
       HTMLVideoElement* self = static_cast<HTMLVideoElement*>(this);
       if (self->VideoWidth() <= 1 && self->VideoHeight() <= 1) {
@@ -4591,6 +4593,8 @@ nsresult HTMLMediaElement::FinishDecoderSetup(MediaDecoder* aDecoder) {
     }
   }
 
+  MaybeBeginCloningVisually();
+
   return NS_OK;
 }
 
@@ -4681,6 +4685,7 @@ void HTMLMediaElement::UpdateSrcMediaStreamPlaying(uint32_t aFlags) {
     VideoFrameContainer* container = GetVideoFrameContainer();
     if (mSelectedVideoStreamTrack && container) {
       mSelectedVideoStreamTrack->AddVideoOutput(container);
+      MaybeBeginCloningVisually();
     }
 
     SetCapturedOutputStreamsEnabled(true);  // Unmute

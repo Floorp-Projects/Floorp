@@ -755,7 +755,8 @@ AddonWrapper = class {
 
     if (addon.icons) {
       for (let size in addon.icons) {
-        icons[size] = this.getResourceURI(addon.icons[size]).spec;
+        let path = addon.icons[size].replace(/^\//, "");
+        icons[size] = this.getResourceURI(path).spec;
       }
     }
 

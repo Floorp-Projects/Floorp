@@ -15,7 +15,7 @@ from mach.decorators import (
     SettingsProvider,
     SubCommand,
 )
-
+from mozboot.util import get_state_dir
 from mozbuild.base import BuildEnvironmentNotFoundException, MachCommandBase
 
 CONFIG_ENVIRONMENT_NOT_FOUND = '''
@@ -70,18 +70,41 @@ class TrySelect(MachCommandBase):
         self.subcommand = self._mach_context.handler.subcommand
         self.parser = self._mach_context.handler.parser
 
-    def handle_presets(self, save, preset, **kwargs):
+    def handle_presets(self, preset_action, save, preset, **kwargs):
         """Handle preset related arguments.
 
         This logic lives here so that the underlying selectors don't need
         special preset handling. They can all save and load presets the same
         way.
         """
-        from tryselect.preset import presets, migrate_old_presets
+        from tryselect.preset import MergedHandler, migrate_old_presets
         from tryselect.util.dicttools import merge
 
+        # Create our handler using both local and in-tree presets. The first
+        # path in this list will be treated as the 'user' file for the purposes
+        # of saving and editing. All subsequent paths are 'read-only'. We check
+        # an environment variable first for testing purposes.
+        if os.environ.get('MACH_TRY_PRESET_PATHS'):
+            preset_paths = os.environ['MACH_TRY_PRESET_PATHS'].split(os.pathsep)
+        else:
+            preset_paths = [
+                os.path.join(get_state_dir(), 'try_presets.yml'),
+                os.path.join(self.topsrcdir, 'tools', 'tryselect', 'try_presets.yml'),
+            ]
+
+        presets = MergedHandler(*preset_paths)
+        user_presets = presets.handlers[0]
+
         # TODO: Remove after Jan 1, 2020.
-        migrate_old_presets()
+        migrate_old_presets(user_presets)
+
+        if preset_action == 'list':
+            presets.list()
+            sys.exit()
+
+        if preset_action == 'edit':
+            user_presets.edit()
+            sys.exit()
 
         default = self.parser.get_default
         if save:
@@ -89,19 +112,18 @@ class TrySelect(MachCommandBase):
 
             # Only save non-default values for simplicity.
             kwargs = {k: v for k, v in kwargs.items() if v != default(k)}
-            presets.save(save, selector=selector, **kwargs)
+            user_presets.save(save, selector=selector, **kwargs)
             print('preset saved, run with: --preset={}'.format(save))
             sys.exit()
 
         if preset:
             if preset not in presets:
-                # TODO: This should live in the parser's validation method, but
-                # for now we want this check to run *after* preset migration.
                 self.parser.error("preset '{}' does not exist".format(preset))
 
             name = preset
             preset = presets[name]
             selector = preset['selector']
+            preset.pop('description', None)  # description isn't used by any selectors
 
             if not self.subcommand:
                 self.subcommand = selector
@@ -129,7 +151,7 @@ class TrySelect(MachCommandBase):
              category='ci',
              description='Push selected tasks to the try server',
              parser=generic_parser)
-    def try_default(self, argv, **kwargs):
+    def try_default(self, argv=None, **kwargs):
         """Push selected tests to the try server.
 
         The |mach try| command is a frontend for scheduling tasks to

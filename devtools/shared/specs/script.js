@@ -3,7 +3,16 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const {Arg, RetVal, generateActorSpec} = require("devtools/shared/protocol");
+const {Arg, RetVal, generateActorSpec, types} = require("devtools/shared/protocol");
+
+types.addDictType("available-breakpoint-group", {
+  name: "string",
+  events: "array:available-breakpoint-event",
+});
+types.addDictType("available-breakpoint-event", {
+  id: "string",
+  name: "string",
+});
 
 const threadSpec = generateActorSpec({
   typeName: "context",
@@ -36,6 +45,21 @@ const threadSpec = generateActorSpec({
       },
       response: {
         value: RetVal("boolean"),
+      },
+    },
+    getAvailableEventBreakpoints: {
+      response: {
+        value: RetVal("array:available-breakpoint-group"),
+      },
+    },
+    getActiveEventBreakpoints: {
+      response: {
+        ids: RetVal("array:string"),
+      },
+    },
+    setActiveEventBreakpoints: {
+      request: {
+        ids: Arg(0, "array:string"),
       },
     },
   },

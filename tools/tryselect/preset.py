@@ -14,15 +14,15 @@ from mozboot.util import get_state_dir
 
 
 class PresetHandler(object):
-    config_path = os.path.join(get_state_dir(), "try_presets.yml")
 
-    def __init__(self):
+    def __init__(self, path):
+        self.path = path
         self._presets = {}
 
     @property
     def presets(self):
-        if not self._presets and os.path.isfile(self.config_path):
-            with open(self.config_path, 'r') as fh:
+        if not self._presets and os.path.isfile(self.path):
+            with open(self.path, 'r') as fh:
                 self._presets = yaml.safe_load(fh) or {}
 
         return self._presets
@@ -33,7 +33,12 @@ class PresetHandler(object):
     def __getitem__(self, name):
         return self.presets[name]
 
+    def __len__(self):
+        return len(self.presets)
+
     def __str__(self):
+        if not self.presets:
+            return ''
         return yaml.safe_dump(self.presets, default_flow_style=False)
 
     def list(self):
@@ -47,28 +52,66 @@ class PresetHandler(object):
             print("error: must set the $EDITOR environment variable to use --edit-presets")
             return
 
-        subprocess.call([os.environ['EDITOR'], self.config_path])
+        subprocess.call([os.environ['EDITOR'], self.path])
 
     def save(self, name, **data):
         self.presets[name] = data
 
-        with open(self.config_path, "w") as fh:
+        with open(self.path, "w") as fh:
             fh.write(str(self))
 
 
-presets = PresetHandler()
+class MergedHandler(object):
+    def __init__(self, *paths):
+        """Helper class for dealing with multiple preset files."""
+        self.handlers = [PresetHandler(p) for p in paths]
+
+    def __contains__(self, name):
+        return any(name in handler for handler in self.handlers)
+
+    def __getitem__(self, name):
+        for handler in self.handlers:
+            if name in handler:
+                return handler[name]
+        raise KeyError(name)
+
+    def __len__(self):
+        return sum(len(h) for h in self.handlers)
+
+    def __str__(self):
+        all_presets = {
+            k: v
+            for handler in self.handlers
+            for k, v in handler.presets.items()
+        }
+        return yaml.safe_dump(all_presets, default_flow_style=False)
+
+    def list(self):
+        if len(self) == 0:
+            print("no presets found")
+            return
+
+        for handler in self.handlers:
+            val = str(handler)
+            if val:
+                val = '\n  '.join([''] + val.splitlines() + [''])  # indent all lines by 2 spaces
+                print("Presets from {}:".format(handler.path))
+                print(val)
 
 
-def migrate_old_presets():
+def migrate_old_presets(presets):
     """Move presets from the old `autotry.ini` format to the new
     `try_presets.yml` one.
+
+    Args:
+        presets (PresetHandler): Handler to migrate old presets into.
     """
     from .selectors.syntax import AutoTry, SyntaxParser
     old_preset_path = os.path.join(get_state_dir(), 'autotry.ini')
-    if os.path.isfile(presets.config_path) or not os.path.isfile(old_preset_path):
+    if os.path.isfile(presets.path) or not os.path.isfile(old_preset_path):
         return
 
-    print("migrating saved presets from '{}' to '{}'".format(old_preset_path, presets.config_path))
+    print("migrating saved presets from '{}' to '{}'".format(old_preset_path, presets.path))
     config = ConfigParser.ConfigParser()
     config.read(old_preset_path)
 

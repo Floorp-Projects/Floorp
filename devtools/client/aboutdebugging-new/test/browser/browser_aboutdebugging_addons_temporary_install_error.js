@@ -31,7 +31,7 @@ add_task(async function testInvalidJsonExtension() {
   await installTemporaryExtension(EXTENSION_PATH, EXTENSION_NAME, document);
 
   info("Wait until the error message disappears");
-  await waitUntil(() => !document.querySelector(".js-message"));
+  await waitUntil(() => !document.querySelector(".js-tmp-extension-install-error"));
 
   info("Wait for the temporary addon to be displayed as a debug target");
   await waitUntil(() => findDebugTargetByText(EXTENSION_NAME, document));
@@ -65,6 +65,6 @@ async function installBadExtension(path, document) {
   document.querySelector(".js-temporary-extension-install-button").click();
 
   info("Wait until the install error message appears");
-  await waitUntil(() => document.querySelector(".js-message"));
-  return document.querySelector(".js-message");
+  await waitUntil(() => document.querySelector(".js-tmp-extension-install-error"));
+  return document.querySelector(".js-tmp-extension-install-error");
 }

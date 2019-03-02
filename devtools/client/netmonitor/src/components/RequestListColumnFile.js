@@ -42,7 +42,7 @@ class RequestListColumnFile extends Component {
     }
 
     return (
-      div({
+      dom.td({
         className: "requests-list-column requests-list-file",
         title: urlDetails.unicodeUrl,
       },

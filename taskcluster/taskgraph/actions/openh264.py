@@ -28,4 +28,11 @@ def openh264_action(parameters, graph_config, input, task_group_id, task_id):
     to_run = [label
               for label, entry
               in full_task_graph.tasks.iteritems() if 'openh264' in entry.kind]
-    create_tasks(to_run, full_task_graph, label_to_taskid, parameters, decision_task_id)
+    create_tasks(
+        graph_config,
+        to_run,
+        full_task_graph,
+        label_to_taskid,
+        parameters,
+        decision_task_id,
+    )

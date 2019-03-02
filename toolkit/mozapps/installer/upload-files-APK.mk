@@ -57,19 +57,6 @@ INNER_ROBOCOP_PACKAGE=echo 'Testing is disabled - No Android Robocop for you'
 endif
 
 
-# Fennec's OMNIJAR_NAME can include a directory; for example, it might
-# be "assets/omni.ja". This path specifies where the omni.ja file
-# lives in the APK, but should not root the resources it contains
-# under assets/ (i.e., resources should not live at chrome://assets/).
-# packager.py writes /omni.ja in order to be consistent with the
-# layout expected by language repacks. Therefore, we move it to the
-# correct path here, in INNER_MAKE_PACKAGE. See comment about
-# OMNIJAR_NAME in configure.in.
-
-# OMNIJAR_DIR is './' for "omni.ja", 'assets/' for "assets/omni.ja".
-OMNIJAR_DIR := $(dir $(OMNIJAR_NAME))
-OMNIJAR_NAME := $(notdir $(OMNIJAR_NAME))
-
 # We force build an ap_ that does not check dependencies below.
 # Language repacks take advantage of this unchecked dependency ap_ to
 # insert additional resources (translated strings) into the ap_
@@ -109,17 +96,7 @@ repackage_fennec = \
 
 INNER_MAKE_PACKAGE = $(if $(UNPACKAGE),$(repackage_fennec),$(package_fennec))
 
-# Language repacks root the resources contained in assets/omni.ja
-# under assets/, but the repacks expect them to be rooted at /.
-# Therefore, we we move the omnijar back to / so the resources are
-# under the root here, in INNER_UNMAKE_PACKAGE. See comments about
-# OMNIJAR_NAME earlier in this file and in configure.in.
-
 INNER_UNMAKE_PACKAGE = \
   mkdir $(MOZ_PKG_DIR) && \
   ( cd $(MOZ_PKG_DIR) && \
-    $(UNZIP) $(UNPACKAGE) $(ROOT_FILES) && \
-    $(UNZIP) $(UNPACKAGE) $(OMNIJAR_DIR)$(OMNIJAR_NAME) && \
-    $(if $(filter-out ./,$(OMNIJAR_DIR)), \
-      mv $(OMNIJAR_DIR)$(OMNIJAR_NAME) $(OMNIJAR_NAME), \
-      true) )
+    $(UNZIP) $(UNPACKAGE) $(ROOT_FILES) $(OMNIJAR_NAME) )

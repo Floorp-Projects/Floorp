@@ -69,21 +69,11 @@ function runTests() {
          "input event should be dispatched with InputEvent interface");
       ok(!aEvent.cancelable, "input event must not be cancelable");
       ok(aEvent.bubbles, "input event must be bubbles");
-      if (SpecialPowers.getBoolPref("dom.event.highrestimestamp.enabled")) {
-        let duration = Math.abs(window.performance.now() - aEvent.timeStamp);
-        ok(duration < 30 * 1000,
-           "perhaps, timestamp wasn't set correctly :" + aEvent.timeStamp +
-           " (expected it to be within 30s of the current time but it " +
-           "differed by " + duration + "ms)");
-      } else {
-        var eventTime = new Date(aEvent.timeStamp);
-        let duration = Math.abs(Date.now() - aEvent.timeStamp);
-        ok(duration < 30 * 1000,
-           "perhaps, timestamp wasn't set correctly :" +
-           eventTime.toLocaleString() +
-           " (expected it to be within 30s of the current time but it " +
-           "differed by " + duration + "ms)");
-      }
+      let duration = Math.abs(window.performance.now() - aEvent.timeStamp);
+      ok(duration < 30 * 1000,
+         "perhaps, timestamp wasn't set correctly :" + aEvent.timeStamp +
+         " (expected it to be within 30s of the current time but it " +
+         "differed by " + duration + "ms)");
       inputEvent = aEvent;
     };
 

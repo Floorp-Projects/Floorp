@@ -1069,6 +1069,15 @@ class TestEmitterBasic(unittest.TestCase):
                 'topsrcdir or topobjdir'):
             objs = self.read_topsrcdir(reader)
 
+    def test_local_includes_file(self):
+        """Test that a filename can't be used in LOCAL_INCLUDES."""
+        reader = self.reader('local_includes-filename')
+
+        with self.assertRaisesRegexp(
+                SandboxValidationError,
+                'Path specified in LOCAL_INCLUDES is a filename'):
+            objs = self.read_topsrcdir(reader)
+
     def test_generated_includes(self):
         """Test that GENERATED_INCLUDES is emitted correctly."""
         reader = self.reader('generated_includes')

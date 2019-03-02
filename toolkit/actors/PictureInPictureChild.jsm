@@ -78,13 +78,9 @@ class PictureInPictureChild extends ActorChild {
       });
     }
 
-    let stream = originatingVideo.mozCaptureStream();
-
     let doc = this.content.document;
-    let playerVideo = doc.createElement("video");
-    playerVideo.srcObject = stream;
+    let playerVideo = originatingVideo.cloneNode();
     playerVideo.removeAttribute("controls");
-    playerVideo.setAttribute("autoplay", "true");
 
     // Mute the video and rely on the originating video's audio playback.
     // This way, we sidestep the AutoplayPolicy blocking stuff.
@@ -100,15 +96,9 @@ class PictureInPictureChild extends ActorChild {
     doc.body.style.overflow = "hidden";
     doc.body.style.margin = "0";
 
-    playerVideo.play();
-
-    // A little hack to make the current frame show up in the player
-    if (originatingVideo.paused) {
-      await originatingVideo.play();
-      await originatingVideo.pause();
-    }
-
     doc.body.appendChild(playerVideo);
+
+    originatingVideo.cloneElementVisually(playerVideo);
 
     let originatingWindow = originatingVideo.ownerGlobal;
     originatingWindow.addEventListener("unload", (e) => {

@@ -1,0 +1,18 @@
+---
+# Presets defined here will be available to all users. Run them with:
+#   $ mach try --preset <name>
+#
+# If editing this file, make sure to run:
+#   $ mach python-test tools/tryselect/test/test_presets.py
+#
+# Descriptions are required. Please keep this in alphabetical order.
+
+sample-suites:
+    selector: fuzzy
+    description: >-
+        Runs one chunk of every test suite plus all suites that aren't chunked.
+        It is useful for testing infrastructure changes that can affect the
+        harnesses themselves but are unlikely to break specific tests.
+    query:
+        - ^test- -1$
+        - ^test- !1$ !2$ !3$ !4$ !5$ !6$ !7$ !8$ !9$ !0$

@@ -177,7 +177,20 @@ apt-get -q -y -f install \
 
 # revert the list of repos
 cp sources.list.orig /etc/apt/sources.list
+
+# Get some bionic packages
+sed 's/xenial/bionic/g' /etc/apt/sources.list > /etc/apt/sources.list.d/bionic.list
+cat <<EOF > /etc/apt/preferences.d/pinning
+Package: *
+Pin: release n=xenial
+Pin-Priority: 900
+
+Package: *
+Pin: release a=bionic
+Pin-Priority: 800
+EOF
 apt-get update
+apt-get -y -f -t bionic install libfreetype6
 
 # clean up
 # Purge unneeded stuff from the image

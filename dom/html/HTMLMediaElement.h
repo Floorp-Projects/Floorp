@@ -298,7 +298,7 @@ class HTMLMediaElement : public nsGenericHTMLElement,
 
   // Update the visual size of the media. Called from the decoder on the
   // main thread when/if the size changes.
-  void UpdateMediaSize(const nsIntSize& aSize);
+  virtual void UpdateMediaSize(const nsIntSize& aSize);
   // Like UpdateMediaSize, but only updates the size if no size has yet
   // been set.
   void UpdateInitialMediaSize(const nsIntSize& aSize);
@@ -1719,6 +1719,8 @@ class HTMLMediaElement : public nsGenericHTMLElement,
   already_AddRefed<PlayPromise> CreatePlayPromise(ErrorResult& aRv) const;
 
   void UpdateHadAudibleAutoplayState();
+
+  virtual void MaybeBeginCloningVisually(){};
 
   /**
    * This function is called by AfterSetAttr and OnAttrSetButNotChanged.

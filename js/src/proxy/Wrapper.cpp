@@ -356,29 +356,24 @@ JS_FRIEND_API JSObject* js::UncheckedUnwrap(JSObject* wrapped,
 }
 
 JS_FRIEND_API JSObject* js::CheckedUnwrapStatic(JSObject* obj) {
-  // For now, just forward to the old API.  Once we remove it, we can
-  // inline it here, without the stopAtWindowProxy bits.
-  return CheckedUnwrap(obj);
-}
-
-JS_FRIEND_API JSObject* js::CheckedUnwrap(JSObject* obj,
-                                          bool stopAtWindowProxy) {
   while (true) {
     JSObject* wrapper = obj;
-    obj = UnwrapOneChecked(obj, stopAtWindowProxy);
+    obj = UnwrapOneCheckedStatic(obj);
     if (!obj || obj == wrapper) {
       return obj;
     }
   }
 }
 
-JS_FRIEND_API JSObject* js::UnwrapOneChecked(JSObject* obj,
-                                             bool stopAtWindowProxy) {
+JS_FRIEND_API JSObject* js::UnwrapOneCheckedStatic(JSObject* obj) {
   MOZ_ASSERT(!JS::RuntimeHeapIsCollecting());
   MOZ_ASSERT(CurrentThreadCanAccessRuntime(obj->runtimeFromAnyThread()));
 
-  if (!obj->is<WrapperObject>() ||
-      MOZ_UNLIKELY(stopAtWindowProxy && IsWindowProxy(obj))) {
+  // Note: callers that care about WindowProxy unwrapping should use
+  // CheckedUnwrapDynamic or UnwrapOneCheckedDynamic instead of this. We don't
+  // unwrap WindowProxy here to preserve legacy behavior and for consistency
+  // with CheckedUnwrapDynamic's default stopAtWindowProxy = true.
+  if (!obj->is<WrapperObject>() || MOZ_UNLIKELY(IsWindowProxy(obj))) {
     return obj;
   }
 

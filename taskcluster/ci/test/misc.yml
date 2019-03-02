@@ -13,9 +13,9 @@ geckoview-junit:
             default: default
     chunks:
         by-test-platform:
-            android-em-4.3-arm7-api-16-ccov/debug: 6
-            android-em-4.3-arm7-api-16/debug: 6
-            android-em-4.3-arm7-api-16/opt: 2
+            android-em-4.3-arm7-api-16-ccov/debug: 8
+            android-em-4.3-arm7-api-16/debug: 8
+            android-em-4.3-arm7-api-16/opt: 3
             default: 1
     mozharness:
         script: android_emulator_unittest.py

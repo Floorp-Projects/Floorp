@@ -131,12 +131,17 @@ class RuntimePage extends PureComponent {
         level: MESSAGE_LEVEL.ERROR,
       },
       dom.div(
-        {},
+        {
+          className: "js-tmp-extension-install-error",
+        },
         Localized(
           {
             id: "about-debugging-tmp-extension-install-error",
           },
-          dom.span({}, "There was an error during the temporary add-on installation")
+          dom.span(
+            { },
+            "There was an error during the temporary add-on installation"
+          )
         ),
         errors
       )

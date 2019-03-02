@@ -58,6 +58,10 @@ class FilterBar extends Component {
       "filterBox",
       this.wrapperNode.querySelector(".text-filter")
     );
+    this.props.attachRefToWebConsoleUI(
+      "clearButton",
+      this.wrapperNode.querySelector(".clear-button")
+    );
   }
 
   shouldComponentUpdate(nextProps, nextState) {
@@ -245,13 +249,21 @@ class FilterBar extends Component {
         dom.div({
           className: "devtools-separator",
         }),
-        dom.input({
-          className: "devtools-plaininput text-filter",
-          type: "search",
-          value: filter.text,
-          placeholder: l10n.getStr("webconsole.filterInput.placeholder"),
-          onInput: this.onSearchInput,
-        }),
+        dom.div(
+          { className: "devtools-searchbox has-clear-btn" },
+          dom.input({
+            className: "devtools-plaininput text-filter",
+            type: "search",
+            value: filter.text,
+            placeholder: l10n.getStr("webconsole.filterInput.placeholder"),
+            onInput: this.onSearchInput,
+          }),
+          dom.button({
+            className: "devtools-searchinput-clear clear-button",
+            hidden: filter.text == "",
+            onClick: this.onClickRemoveTextFilter,
+          }),
+        ),
         !hidePersistLogsCheckbox && FilterCheckbox({
           label: l10n.getStr("webconsole.enablePersistentLogs.label"),
           title: l10n.getStr("webconsole.enablePersistentLogs.tooltip"),

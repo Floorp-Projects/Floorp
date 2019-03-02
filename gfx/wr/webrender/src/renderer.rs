@@ -21,15 +21,27 @@
 //! directly with the `RenderBackend`. Aside from a few high-level operations
 //! like 'render now', most of interesting commands from the consumer go over
 //! that channel and operate on the `RenderBackend`.
+//!
+//! ## Space conversion guidelines
+//! At this stage, we shuld be operating with `DevicePixel` and `FramebufferPixel` only.
+//! "Framebuffer" space represents the final destination of our rendeing,
+//! and it happens to be Y-flipped on OpenGL. The conversion is done as follows:
+//!   - for rasterized primitives, the orthographics projection transforms
+//! the content rectangle to -1 to 1
+//!   - the viewport transformation is setup to map the whole range to
+//! the framebuffer rectangle provided by the document view, stored in `DrawTarget`
+//!   - all the direct framebuffer operations, like blitting, reading pixels, and setting
+//! up the scissor, are accepting already transformed coordinates, which we can get by
+//! calling `DrawTarget::to_framebuffer_rect`
 
-use api::{BlobImageHandler, ColorF, ColorU, DeviceIntPoint, DeviceIntRect, DeviceIntSize};
+use api::{BlobImageHandler, ColorF, ColorU};
 use api::{DocumentId, Epoch, ExternalImageId};
 use api::{ExternalImageType, FontRenderMode, FrameMsg, ImageFormat, PipelineId};
 use api::{ImageRendering, Checkpoint, NotificationRequest};
-use api::{MemoryReport, VoidPtrToSizeFn};
+use api::{DebugCommand, MemoryReport, VoidPtrToSizeFn};
 use api::{RenderApiSender, RenderNotifier, TexelRect, TextureTarget};
-use api::{channel};
-use api::DebugCommand;
+use api::channel;
+use api::units::*;
 pub use api::DebugFlags;
 use api::channel::PayloadReceiverHelperMethods;
 use batch::{BatchKind, BatchTextures, BrushBatchKind, ClipBatchList};
@@ -1573,7 +1585,7 @@ pub struct Renderer {
     /// Notification requests to be fulfilled after rendering.
     notifications: Vec<NotificationRequest>,
 
-    framebuffer_size: Option<DeviceIntSize>,
+    framebuffer_size: Option<FramebufferIntSize>,
 
     /// A lazily created texture for the zoom debugging widget.
     zoom_debug_texture: Option<Texture>,
@@ -2040,6 +2052,10 @@ impl Renderer {
         Ok((renderer, sender))
     }
 
+    pub fn framebuffer_size(&self) -> Option<FramebufferIntSize> {
+        self.framebuffer_size
+    }
+
     /// Update the current position of the debug cursor.
     pub fn set_cursor_position(
         &mut self,
@@ -2477,11 +2493,11 @@ impl Renderer {
             .filter_map(|&(_, ref render_doc)| {
                 match render_doc.frame.passes.last() {
                     Some(&RenderPass { kind: RenderPassKind::MainFramebuffer(ref target), .. })
-                        if target.needs_depth() => Some(render_doc.frame.inner_rect),
+                        if target.needs_depth() => Some(render_doc.frame.framebuffer_rect),
                     _ => None,
                 }
             })
-            .collect::<Vec<_>>();
+            .collect::<SmallVec<[_; 3]>>();
 
         for (i, rect) in document_rects.iter().enumerate() {
             for other in &document_rects[i+1 ..] {
@@ -2503,7 +2519,7 @@ impl Renderer {
     /// A Frame is supplied by calling [`generate_frame()`][webrender_api::Transaction::generate_frame].
     pub fn render(
         &mut self,
-        framebuffer_size: DeviceIntSize,
+        framebuffer_size: FramebufferIntSize,
     ) -> Result<RenderResults, Vec<RendererError>> {
         self.framebuffer_size = Some(framebuffer_size);
 
@@ -2529,7 +2545,7 @@ impl Renderer {
     // avoid doing a full frame render.
     fn render_impl(
         &mut self,
-        framebuffer_size: Option<DeviceIntSize>,
+        framebuffer_size: Option<FramebufferIntSize>,
     ) -> Result<RenderResults, Vec<RendererError>> {
         profile_scope!("render");
         let mut results = RenderResults::default();
@@ -2641,6 +2657,9 @@ impl Renderer {
                     fb_clear_depth,
                 );
 
+                if let Some(_) = framebuffer_size {
+                    self.draw_frame_debug_items(&frame.debug_items);
+                }
                 if self.debug_flags.contains(DebugFlags::PROFILER_DBG) {
                     frame_profiles.push(frame.profile_counters.clone());
                 }
@@ -2653,6 +2672,14 @@ impl Renderer {
             self.unlock_external_images();
             self.active_documents = active_documents;
         });
+
+        if let Some(framebuffer_size) = framebuffer_size {
+            self.draw_render_target_debug(framebuffer_size);
+            self.draw_texture_cache_debug(framebuffer_size);
+            self.draw_gpu_cache_debug(framebuffer_size);
+            self.draw_zoom_debug(framebuffer_size);
+            self.draw_epoch_debug();
+        }
 
         let current_time = precise_time_ns();
         if framebuffer_size.is_some() {
@@ -2727,7 +2754,7 @@ impl Renderer {
         }
 
         if self.debug_flags.contains(DebugFlags::ECHO_DRIVER_MESSAGES) {
-            self.device.echo_driver_messages();
+            Device::echo_driver_messages(self.device.gl());
         }
 
         results.stats.texture_upload_kb = self.profile_counters.texture_data_uploaded.get();
@@ -2953,15 +2980,16 @@ impl Renderer {
                             size
                         }
                         TextureUpdateSource::DebugClear => {
-                            self.device.bind_draw_target(DrawTarget::Texture {
+                            let draw_target = DrawTarget::Texture {
                                 texture,
                                 layer: layer_index as usize,
                                 with_depth: false,
-                            });
+                            };
+                            self.device.bind_draw_target(draw_target);
                             self.device.clear_target(
                                 Some(TEXTURE_CACHE_DBG_CLEAR_COLOR),
                                 None,
-                                Some(rect.to_i32())
+                                Some(draw_target.to_framebuffer_rect(rect.to_i32()))
                             );
                             0
                         }
@@ -3040,46 +3068,50 @@ impl Renderer {
         self.profile_counters.vertices.add(6 * data.len());
     }
 
+    //TODO: make this nicer. Currently we can't accept `&mut self` because the `DrawTarget` parameter
+    // needs to borrow self.texture_resolver
     fn handle_blits(
-        &mut self,
+        gpu_profile: &mut GpuProfiler<GpuProfileTag>,
+        device: &mut Device,
+        texture_resolver: &TextureResolver,
         blits: &[BlitJob],
         render_tasks: &RenderTaskTree,
+        draw_target: DrawTarget,
+        content_origin: &DeviceIntPoint,
     ) {
         if blits.is_empty() {
             return;
         }
 
-        let _timer = self.gpu_profile.start_timer(GPU_TAG_BLIT);
+        let _timer = gpu_profile.start_timer(GPU_TAG_BLIT);
 
         // TODO(gw): For now, we don't bother batching these by source texture.
         //           If if ever shows up as an issue, we can easily batch them.
         for blit in blits {
-            let source_rect = match blit.source {
+            let (source, layer, source_rect) = match blit.source {
                 BlitJobSource::Texture(texture_id, layer, source_rect) => {
                     // A blit from a texture into this target.
-                    let texture = self.texture_resolver
-                        .resolve(&texture_id)
-                        .expect("BUG: invalid source texture");
-                    self.device.bind_read_target(ReadTarget::Texture { texture, layer: layer as usize });
-                    source_rect
+                    (texture_id, layer as usize, source_rect)
                 }
                 BlitJobSource::RenderTask(task_id) => {
                     // A blit from the child render task into this target.
                     // TODO(gw): Support R8 format here once we start
                     //           creating mips for alpha masks.
-                    let texture = self.texture_resolver
-                        .resolve(&TextureSource::PrevPassColor)
-                        .expect("BUG: invalid source texture");
                     let source = &render_tasks[task_id];
                     let (source_rect, layer) = source.get_target_rect();
-                    self.device.bind_read_target(ReadTarget::Texture { texture, layer: layer.0 });
-                    source_rect
+                    (TextureSource::PrevPassColor, layer.0, source_rect)
                 }
             };
             debug_assert_eq!(source_rect.size, blit.target_rect.size);
-            self.device.blit_render_target(
-                source_rect,
-                blit.target_rect,
+            let texture = texture_resolver
+                .resolve(&source)
+                .expect("BUG: invalid source texture");
+            let read_target = DrawTarget::Texture { texture, layer, with_depth: false };
+
+            device.bind_read_target(read_target.into());
+            device.blit_render_target(
+                read_target.to_framebuffer_rect(source_rect),
+                draw_target.to_framebuffer_rect(blit.target_rect.translate(&-content_origin.to_vector())),
                 TextureFilter::Linear,
             );
         }
@@ -3124,7 +3156,7 @@ impl Renderer {
         &mut self,
         draw_target: DrawTarget,
         target: &ColorRenderTarget,
-        framebuffer_target_rect: DeviceIntRect,
+        content_origin: DeviceIntPoint,
         clear_color: Option<[f32; 4]>,
         clear_depth: Option<f32>,
         render_tasks: &RenderTaskTree,
@@ -3156,8 +3188,15 @@ impl Renderer {
                 self.device.enable_depth_write();
             }
 
-            let clear_rect = if !draw_target.is_default() {
-                if self.enable_clear_scissor {
+            let clear_rect = match draw_target {
+                DrawTarget::Default { rect, total_size } if rect.origin == FramebufferIntPoint::zero() && rect.size == total_size => {
+                    // whole screen is covered, no need for scissor
+                    None
+                }
+                DrawTarget::Default { rect, .. } => {
+                    Some(rect)
+                }
+                DrawTarget::Texture { .. } if self.enable_clear_scissor => {
                     // TODO(gw): Applying a scissor rect and minimal clear here
                     // is a very large performance win on the Intel and nVidia
                     // GPUs that I have tested with. It's possible it may be a
@@ -3168,20 +3207,11 @@ impl Renderer {
                     // target slices were minimum 2048x2048. Now that we size
                     // them adaptively, this may be less of a win (except perhaps
                     // on a mostly-unused last slice of a large texture array).
-                    Some(target.used_rect())
-                } else {
+                    Some(draw_target.to_framebuffer_rect(target.used_rect()))
+                }
+                DrawTarget::Texture { .. } => {
                     None
                 }
-            } else if framebuffer_target_rect == DeviceIntRect::new(DeviceIntPoint::zero(), draw_target.dimensions()) {
-                // whole screen is covered, no need for scissor
-                None
-            } else {
-                let mut rect = framebuffer_target_rect.to_i32();
-                // Note: `framebuffer_target_rect` needs a Y-flip before going to GL
-                // Note: at this point, the target rectangle is not guaranteed to be within the main framebuffer bounds
-                // but `clear_target_rect` is totally fine with negative origin, as long as width & height are positive
-                rect.origin.y = draw_target.dimensions().height as i32 - rect.origin.y - rect.size.height;
-                Some(rect)
             };
 
             self.device.clear_target(
@@ -3196,7 +3226,10 @@ impl Renderer {
         }
 
         // Handle any blits from the texture cache to this target.
-        self.handle_blits(&target.blits, render_tasks);
+        Self::handle_blits(
+            &mut self.gpu_profile, &mut self.device, &self.texture_resolver,
+            &target.blits, render_tasks, draw_target, &content_origin,
+        );
 
         // Draw any blurs for this target.
         // Blurs are rendered as a standard 2-pass
@@ -3260,7 +3293,7 @@ impl Renderer {
                 self.device.enable_scissor();
                 let scissor_rect = draw_target.build_scissor_rect(
                     alpha_batch_container.task_scissor_rect,
-                    framebuffer_target_rect,
+                    content_origin,
                 );
                 self.device.set_scissor_rect(scissor_rect)
             }
@@ -3296,7 +3329,7 @@ impl Renderer {
                             if let Some(region) = region {
                                 let scissor_rect = draw_target.build_scissor_rect(
                                     Some(region),
-                                    framebuffer_target_rect,
+                                    content_origin,
                                 );
                                 self.device.set_scissor_rect(scissor_rect);
                             }
@@ -3374,7 +3407,7 @@ impl Renderer {
                             if let Some(region) = region {
                                 let scissor_rect = draw_target.build_scissor_rect(
                                     Some(region),
-                                    framebuffer_target_rect,
+                                    content_origin,
                                 );
                                 self.device.set_scissor_rect(scissor_rect);
                             }
@@ -3432,36 +3465,28 @@ impl Renderer {
                         .resolve(&blit.target.texture_id)
                         .expect("BUG: invalid target texture");
 
-                    self.device.bind_draw_target(DrawTarget::Texture {
+                    let blit_target = DrawTarget::Texture {
                         texture,
                         layer: blit.target.texture_layer as usize,
                         with_depth: false,
-                    });
+                    };
+                    self.device.bind_draw_target(blit_target);
 
-                    let mut src_rect = DeviceIntRect::new(
-                        blit.src_offset,
+                    let src_rect = draw_target.to_framebuffer_rect(DeviceIntRect::new(
+                        blit.src_offset - content_origin.to_vector(),
                         blit.size,
-                    );
+                    ));
 
                     let target_rect = blit.target.uv_rect.to_i32();
 
-                    let mut dest_rect = DeviceIntRect::new(
-                        DeviceIntPoint::new(
-                            blit.dest_offset.x + target_rect.origin.x,
-                            blit.dest_offset.y + target_rect.origin.y,
-                        ),
+                    let dest_rect = blit_target.to_framebuffer_rect(DeviceIntRect::new(
+                        blit.dest_offset + (target_rect.origin - content_origin),
                         blit.size,
-                    );
+                    ));
 
-                    // Modify the src/dest rects since we are blitting from the framebuffer
-                    src_rect.origin.y = draw_target.dimensions().height as i32 - src_rect.size.height - src_rect.origin.y;
-                    dest_rect.origin.y += dest_rect.size.height;
-                    dest_rect.size.height = -dest_rect.size.height;
-
-                    self.device.blit_render_target(
+                    self.device.blit_render_target_invert_y(
                         src_rect,
                         dest_rect,
-                        TextureFilter::Linear,
                     );
                 }
 
@@ -3492,15 +3517,12 @@ impl Renderer {
                     }
                 };
                 let (src_rect, _) = render_tasks[output.task_id].get_target_rect();
-                let mut dest_rect = DeviceIntRect::new(DeviceIntPoint::zero(), output_size);
-
-                // Invert Y coordinates, to correctly convert between coordinate systems.
-                dest_rect.origin.y += dest_rect.size.height;
-                dest_rect.size.height *= -1;
-
                 self.device.bind_read_target(draw_target.into());
                 self.device.bind_external_draw_target(fbo_id);
-                self.device.blit_render_target(src_rect, dest_rect, TextureFilter::Linear);
+                self.device.blit_render_target_invert_y(
+                    draw_target.to_framebuffer_rect(src_rect.translate(&-content_origin.to_vector())),
+                    output_size.into(),
+                );
                 handler.unlock(output.pipeline_id);
             }
         }
@@ -3600,7 +3622,7 @@ impl Renderer {
                 self.device.clear_target(
                     Some(zero_color),
                     None,
-                    Some(rect),
+                    Some(draw_target.to_framebuffer_rect(rect)),
                 );
             }
 
@@ -3610,7 +3632,7 @@ impl Renderer {
                 self.device.clear_target(
                     Some(one_color),
                     None,
-                    Some(rect),
+                    Some(draw_target.to_framebuffer_rect(rect)),
                 );
             }
         }
@@ -3721,23 +3743,31 @@ impl Renderer {
             let texture = self.texture_resolver
                 .resolve(&texture_source)
                 .expect("BUG: invalid target texture");
-            self.device.bind_draw_target(DrawTarget::Texture {
+            let draw_target = DrawTarget::Texture {
                 texture,
                 layer,
                 with_depth: false,
-            });
+            };
+            self.device.bind_draw_target(draw_target);
+
+            self.device.disable_depth();
+            self.device.disable_depth_write();
+            self.set_blend(false, FramebufferKind::Other);
+
+            for rect in &target.clears {
+                self.device.clear_target(
+                    Some([0.0, 0.0, 0.0, 0.0]),
+                    None,
+                    Some(draw_target.to_framebuffer_rect(*rect)),
+                );
+            }
+
+            // Handle any blits to this texture from child tasks.
+            Self::handle_blits(
+                &mut self.gpu_profile, &mut self.device, &self.texture_resolver,
+                &target.blits, render_tasks, draw_target, &DeviceIntPoint::zero(),
+            );
         }
-
-        self.device.disable_depth();
-        self.device.disable_depth_write();
-        self.set_blend(false, FramebufferKind::Other);
-
-        for rect in &target.clears {
-            self.device.clear_target(Some([0.0, 0.0, 0.0, 0.0]), None, Some(*rect));
-        }
-
-        // Handle any blits to this texture from child tasks.
-        self.handle_blits(&target.blits, render_tasks);
 
         // Draw any borders for this target.
         if !target.border_segments_solid.is_empty() ||
@@ -4060,7 +4090,7 @@ impl Renderer {
     fn draw_tile_frame(
         &mut self,
         frame: &mut Frame,
-        framebuffer_size: Option<DeviceIntSize>,
+        framebuffer_size: Option<FramebufferIntSize>,
         frame_id: GpuFrameId,
         stats: &mut RendererStats,
         fb_clear_color: Option<ColorF>,
@@ -4098,19 +4128,24 @@ impl Renderer {
                     if let Some(framebuffer_size) = framebuffer_size {
                         stats.color_target_count += 1;
 
+                        let offset = frame.content_origin.to_f32();
+                        let size = frame.framebuffer_rect.size.to_f32();
                         let projection = Transform3D::ortho(
-                            0.0,
-                            framebuffer_size.width as f32,
-                            framebuffer_size.height as f32,
-                            0.0,
+                            offset.x,
+                            offset.x + size.width,
+                            offset.y + size.height,
+                            offset.y,
                             ORTHO_NEAR_PLANE,
                             ORTHO_FAR_PLANE,
                         );
 
                         self.draw_color_target(
-                            DrawTarget::Default(framebuffer_size),
+                            DrawTarget::Default {
+                                rect: frame.framebuffer_rect,
+                                total_size: framebuffer_size,
+                            },
                             target,
-                            frame.inner_rect,
+                            frame.content_origin,
                             fb_clear_color.map(|color| color.to_array()),
                             fb_clear_depth,
                             &frame.render_tasks,
@@ -4191,7 +4226,7 @@ impl Renderer {
                         self.draw_color_target(
                             draw_target,
                             target,
-                            frame.inner_rect,
+                            frame.content_origin,
                             Some([0.0, 0.0, 0.0, 0.0]),
                             clear_depth,
                             &frame.render_tasks,
@@ -4311,7 +4346,7 @@ impl Renderer {
         }
     }
 
-    fn draw_render_target_debug(&mut self, framebuffer_size: DeviceIntSize) {
+    fn draw_render_target_debug(&mut self, framebuffer_size: FramebufferIntSize) {
         if !self.debug_flags.contains(DebugFlags::RENDER_TARGET_DBG) {
             return;
         }
@@ -4336,7 +4371,7 @@ impl Renderer {
 
     fn draw_zoom_debug(
         &mut self,
-        framebuffer_size: DeviceIntSize,
+        framebuffer_size: FramebufferIntSize,
     ) {
         if !self.debug_flags.contains(DebugFlags::ZOOM_DBG) {
             return;
@@ -4372,9 +4407,9 @@ impl Renderer {
             target_size,
         );
 
-        let texture_rect = DeviceIntRect::new(
-            DeviceIntPoint::zero(),
-            source_rect.size,
+        let texture_rect = FramebufferIntRect::new(
+            FramebufferIntPoint::zero(),
+            FramebufferIntSize::from_untyped(&source_rect.size.to_untyped()),
         );
 
         debug_renderer.add_rect(
@@ -4397,20 +4432,15 @@ impl Renderer {
         }
 
         // Copy frame buffer into the zoom texture
-        self.device.bind_read_target(ReadTarget::Default);
+        let read_target = DrawTarget::new_default(framebuffer_size);
+        self.device.bind_read_target(read_target.into());
         self.device.bind_draw_target(DrawTarget::Texture {
             texture: self.zoom_debug_texture.as_ref().unwrap(),
             layer: 0,
             with_depth: false,
         });
         self.device.blit_render_target(
-            DeviceIntRect::new(
-                DeviceIntPoint::new(
-                    source_rect.origin.x,
-                    framebuffer_size.height - source_rect.size.height - source_rect.origin.y,
-                ),
-                source_rect.size,
-            ),
+            read_target.to_framebuffer_rect(source_rect),
             texture_rect,
             TextureFilter::Nearest,
         );
@@ -4420,21 +4450,15 @@ impl Renderer {
             texture: self.zoom_debug_texture.as_ref().unwrap(),
             layer: 0,
         });
-        self.device.bind_draw_target(DrawTarget::Default(framebuffer_size));
+        self.device.bind_draw_target(read_target);
         self.device.blit_render_target(
             texture_rect,
-            DeviceIntRect::new(
-                DeviceIntPoint::new(
-                    target_rect.origin.x,
-                    framebuffer_size.height - target_rect.size.height - target_rect.origin.y,
-                ),
-                target_rect.size,
-            ),
+            read_target.to_framebuffer_rect(target_rect),
             TextureFilter::Nearest,
         );
     }
 
-    fn draw_texture_cache_debug(&mut self, framebuffer_size: DeviceIntSize) {
+    fn draw_texture_cache_debug(&mut self, framebuffer_size: FramebufferIntSize) {
         if !self.debug_flags.contains(DebugFlags::TEXTURE_CACHE_DBG) {
             return;
         }
@@ -4469,7 +4493,7 @@ impl Renderer {
         device: &mut Device,
         debug_renderer: &mut DebugRenderer,
         mut textures: Vec<&Texture>,
-        framebuffer_size: DeviceIntSize,
+        framebuffer_size: FramebufferIntSize,
         bottom: i32,
         select_color: &Fn(&Texture) -> [f32; 4],
     ) {
@@ -4499,9 +4523,9 @@ impl Renderer {
         for texture in textures.iter() {
             let y = spacing + bottom;
             let dimensions = texture.get_dimensions();
-            let src_rect = DeviceIntRect::new(
-                DeviceIntPoint::zero(),
-                DeviceIntSize::new(dimensions.width as i32, dimensions.height as i32),
+            let src_rect = FramebufferIntRect::new(
+                FramebufferIntPoint::zero(),
+                FramebufferIntSize::new(dimensions.width as i32, dimensions.height as i32),
             );
 
             let layer_count = texture.get_layer_count() as usize;
@@ -4515,13 +4539,19 @@ impl Renderer {
                     return;
                 }
 
+                //TODO: properly use FramebufferPixel coordinates
+
                 // Draw the info tag.
                 let text_margin = 1;
                 let text_height = 14; // Visually aproximated.
                 let tag_height = text_height + text_margin * 2;
                 let tag_rect = rect(x, y, size, tag_height);
                 let tag_color = select_color(texture);
-                device.clear_target(Some(tag_color), None, Some(tag_rect));
+                device.clear_target(
+                    Some(tag_color),
+                    None,
+                    Some(FramebufferIntRect::from_untyped(&tag_rect.to_untyped())),
+                );
 
                 // Draw the dimensions onto the tag.
                 let dim = texture.get_dimensions();
@@ -4540,7 +4570,10 @@ impl Renderer {
                 // we're blitting from a texture to the main framebuffer, which
                 // use different conventions.
                 let dest_rect = rect(x, y + tag_height, size, size);
-                device.blit_render_target_invert_y(src_rect, dest_rect);
+                device.blit_render_target_invert_y(
+                    src_rect,
+                    FramebufferIntRect::from_untyped(&dest_rect),
+                );
                 i += 1;
             }
         }
@@ -4583,7 +4616,7 @@ impl Renderer {
         );
     }
 
-    fn draw_gpu_cache_debug(&mut self, framebuffer_size: DeviceIntSize) {
+    fn draw_gpu_cache_debug(&mut self, framebuffer_size: FramebufferIntSize) {
         if !self.debug_flags.contains(DebugFlags::GPU_CACHE_DBG) {
             return;
         }
@@ -4621,24 +4654,24 @@ impl Renderer {
     }
 
     /// Pass-through to `Device::read_pixels_into`, used by Gecko's WR bindings.
-    pub fn read_pixels_into(&mut self, rect: DeviceIntRect, format: ReadPixelsFormat, output: &mut [u8]) {
+    pub fn read_pixels_into(&mut self, rect: FramebufferIntRect, format: ReadPixelsFormat, output: &mut [u8]) {
         self.device.read_pixels_into(rect, format, output);
     }
 
-    pub fn read_pixels_rgba8(&mut self, rect: DeviceIntRect) -> Vec<u8> {
+    pub fn read_pixels_rgba8(&mut self, rect: FramebufferIntRect) -> Vec<u8> {
         let mut pixels = vec![0; (rect.size.width * rect.size.height * 4) as usize];
         self.device.read_pixels_into(rect, ReadPixelsFormat::Rgba8, &mut pixels);
         pixels
     }
 
-    pub fn read_gpu_cache(&mut self) -> (DeviceIntSize, Vec<u8>) {
+    pub fn read_gpu_cache(&mut self) -> (FramebufferIntSize, Vec<u8>) {
         let texture = self.gpu_cache_texture.texture.as_ref().unwrap();
-        let size = texture.get_dimensions();
+        let size = FramebufferIntSize::from_untyped(&texture.get_dimensions().to_untyped());
         let mut texels = vec![0; (size.width * size.height * 16) as usize];
         self.device.begin_frame();
         self.device.bind_read_target(ReadTarget::Texture { texture, layer: 0 });
         self.device.read_pixels_into(
-            DeviceIntRect::new(DeviceIntPoint::zero(), size),
+            size.into(),
             ReadPixelsFormat::Standard(ImageFormat::RGBAF32),
             &mut texels,
         );
@@ -4830,7 +4863,7 @@ pub trait ExternalImageHandler {
 /// call succeeds, when WR has issued the GL commands to copy the output
 /// to the texture handle.
 pub trait OutputImageHandler {
-    fn lock(&mut self, pipeline_id: PipelineId) -> Option<(u32, DeviceIntSize)>;
+    fn lock(&mut self, pipeline_id: PipelineId) -> Option<(u32, FramebufferIntSize)>;
     fn unlock(&mut self, pipeline_id: PipelineId);
 }
 
@@ -5031,6 +5064,7 @@ struct PlainTexture {
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 struct PlainRenderer {
+    framebuffer_size: Option<FramebufferIntSize>,
     gpu_cache: PlainTexture,
     gpu_cache_frame_id: FrameId,
     textures: FastHashMap<CacheTextureId, PlainTexture>,
@@ -5065,7 +5099,7 @@ impl ExternalImageHandler for DummyExternalImageHandler {
 
 #[cfg(feature = "replay")]
 impl OutputImageHandler for () {
-    fn lock(&mut self, _: PipelineId) -> Option<(u32, DeviceIntSize)> {
+    fn lock(&mut self, _: PipelineId) -> Option<(u32, FramebufferIntSize)> {
         None
     }
     fn unlock(&mut self, _: PipelineId) {
@@ -5091,27 +5125,26 @@ impl Renderer {
 
         let bytes_per_pixel = texture.get_format().bytes_per_pixel();
         let read_format = ReadPixelsFormat::Standard(texture.get_format());
-        let rect = DeviceIntRect::new(
-            DeviceIntPoint::zero(),
-            texture.get_dimensions(),
-        );
+        let rect_size = texture.get_dimensions();
 
         let mut file = fs::File::create(root.join(&short_path))
             .expect(&format!("Unable to create {}", short_path));
-        let bytes_per_layer = (rect.size.width * rect.size.height * bytes_per_pixel) as usize;
+        let bytes_per_layer = (rect_size.width * rect_size.height * bytes_per_pixel) as usize;
         let mut data = vec![0; bytes_per_layer];
 
         //TODO: instead of reading from an FBO with `read_pixels*`, we could
         // read from textures directly with `get_tex_image*`.
 
         for layer_id in 0 .. texture.get_layer_count() {
+            let rect = FramebufferIntSize::from_untyped(&rect_size.to_untyped()).into();
+
             device.attach_read_texture(texture, layer_id);
             #[cfg(feature = "png")]
             {
                 let mut png_data;
                 let (data_ref, format) = match texture.get_format() {
                     ImageFormat::RGBAF32 => {
-                        png_data = vec![0; (rect.size.width * rect.size.height * 4) as usize];
+                        png_data = vec![0; (rect_size.width * rect_size.height * 4) as usize];
                         device.read_pixels_into(rect, ReadPixelsFormat::Rgba8, &mut png_data);
                         (&png_data, ReadPixelsFormat::Rgba8)
                     }
@@ -5119,7 +5152,7 @@ impl Renderer {
                 };
                 CaptureConfig::save_png(
                     root.join(format!("textures/{}-{}.png", name, layer_id)),
-                    rect.size, format,
+                    rect_size, format,
                     data_ref,
                 );
             }
@@ -5130,7 +5163,7 @@ impl Renderer {
 
         PlainTexture {
             data: short_path,
-            size: (rect.size, texture.get_layer_count()),
+            size: (rect_size, texture.get_layer_count()),
             format: texture.get_format(),
             filter: texture.get_filter(),
         }
@@ -5266,6 +5299,7 @@ impl Renderer {
             info!("saving GPU cache");
             self.update_gpu_cache(); // flush pending updates
             let mut plain_self = PlainRenderer {
+                framebuffer_size: self.framebuffer_size,
                 gpu_cache: Self::save_texture(
                     &self.gpu_cache_texture.texture.as_ref().unwrap(),
                     "gpu", &config.root, &mut self.device,
@@ -5328,6 +5362,7 @@ impl Renderer {
 
         if let Some(renderer) = CaptureConfig::deserialize::<PlainRenderer, _>(&root, "renderer") {
             info!("loading cached textures");
+            self.framebuffer_size = renderer.framebuffer_size;
             self.device.begin_frame();
 
             for (_id, texture) in self.texture_resolver.texture_cache_map.drain() {

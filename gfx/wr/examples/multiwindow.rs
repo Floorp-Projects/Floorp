@@ -103,7 +103,7 @@ impl Window {
                 .get_inner_size()
                 .unwrap()
                 .to_physical(device_pixel_ratio as f64);
-            DeviceIntSize::new(size.width as i32, size.height as i32)
+            FramebufferIntSize::new(size.width as i32, size.height as i32)
         };
         let notifier = Box::new(Notifier::new(events_loop.create_proxy()));
         let (renderer, sender) = webrender::Renderer::new(gl.clone(), notifier, opts, None).unwrap();
@@ -182,7 +182,7 @@ impl Window {
                 .get_inner_size()
                 .unwrap()
                 .to_physical(device_pixel_ratio as f64);
-            DeviceIntSize::new(size.width as i32, size.height as i32)
+            FramebufferIntSize::new(size.width as i32, size.height as i32)
         };
         let layout_size = framebuffer_size.to_f32() / euclid::TypedScale::new(device_pixel_ratio);
         let mut txn = Transaction::new();

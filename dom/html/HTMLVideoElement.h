@@ -22,6 +22,9 @@ class VideoPlaybackQuality;
 
 class HTMLVideoElement final : public HTMLMediaElement {
  public:
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(HTMLVideoElement, HTMLMediaElement)
+
   typedef mozilla::dom::NodeInfo NodeInfo;
 
   explicit HTMLVideoElement(already_AddRefed<NodeInfo>&& aNodeInfo);
@@ -29,6 +32,9 @@ class HTMLVideoElement final : public HTMLMediaElement {
   NS_IMPL_FROMNODE_HTML_WITH_TAG(HTMLVideoElement, video)
 
   using HTMLMediaElement::GetPaused;
+
+  void Invalidate(bool aImageSizeChanged, Maybe<nsIntSize>& aNewIntrinsicSize,
+                  bool aForceInvalidate) override;
 
   virtual bool IsVideo() const override { return true; }
 
@@ -45,9 +51,14 @@ class HTMLVideoElement final : public HTMLMediaElement {
 
   virtual nsresult Clone(NodeInfo*, nsINode** aResult) const override;
 
+  virtual void UnbindFromTree(bool aDeep = true,
+                              bool aNullParent = true) override;
+
   // Set size with the current video frame's height and width.
   // If there is no video frame, returns NS_ERROR_FAILURE.
   nsresult GetVideoSize(nsIntSize* size);
+
+  virtual void UpdateMediaSize(const nsIntSize& aSize) override;
 
   virtual nsresult SetAcceptHeader(nsIHttpChannel* aChannel) override;
 
@@ -126,6 +137,8 @@ class HTMLVideoElement final : public HTMLMediaElement {
 
   void SetMozIsOrientationLocked(bool aLock) { mIsOrientationLocked = aLock; }
 
+  void CloneElementVisually(HTMLVideoElement& aTarget, ErrorResult& rv);
+
  protected:
   virtual ~HTMLVideoElement();
 
@@ -150,11 +163,33 @@ class HTMLVideoElement final : public HTMLMediaElement {
   bool mIsOrientationLocked;
 
  private:
+  bool SetVisualCloneTarget(HTMLVideoElement* aCloneTarget);
+  bool SetVisualCloneSource(HTMLVideoElement* aCloneSource);
+
+  // For video elements, we can clone the frames being played to
+  // a secondary video element. If we're doing that, we hold a
+  // reference to the video element we're cloning to in
+  // mVisualCloneSource.
+  //
+  // Please don't set this to non-nullptr values directly - use
+  // SetVisualCloneTarget() instead.
+  RefPtr<HTMLVideoElement> mVisualCloneTarget;
+  // If this video is the clone target of another video element,
+  // then mVisualCloneSource points to that originating video
+  // element.
+  //
+  // Please don't set this to non-nullptr values directly - use
+  // SetVisualCloneTarget() instead.
+  RefPtr<HTMLVideoElement> mVisualCloneSource;
+
   static void MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
                                     MappedDeclarations&);
 
   static bool IsVideoStatsEnabled();
   double TotalPlayTime() const;
+
+  virtual void MaybeBeginCloningVisually() override;
+  void EndCloningVisually();
 };
 
 }  // namespace dom

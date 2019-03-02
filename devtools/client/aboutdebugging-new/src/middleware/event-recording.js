@@ -74,7 +74,11 @@ function onConnectRuntimeSuccess(action, store) {
   const runtime = Object.assign({}, storeRuntime, {
     runtimeDetails: action.runtime.runtimeDetails,
   });
-  recordEvent("runtime_connected", getRuntimeEventExtras(runtime));
+  const extras = Object.assign({}, getRuntimeEventExtras(runtime), {
+    "runtime_os": action.runtime.runtimeDetails.info.os,
+    "runtime_version": action.runtime.runtimeDetails.info.version,
+  });
+  recordEvent("runtime_connected", extras);
 }
 
 function onDisconnectRuntimeSuccess(action, store) {

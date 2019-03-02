@@ -654,7 +654,7 @@
     </handlers>
   </binding>
 
-  <binding id="autocomplete-rich-result-popup" extends="chrome://global/content/bindings/popup.xml#popup">
+  <binding id="autocomplete-rich-result-popup">
     <content ignorekeys="true" level="top" consumeoutsideclicks="never">
       <xul:richlistbox anonid="richlistbox" class="autocomplete-richlistbox" flex="1"/>
       <xul:hbox>

@@ -15,6 +15,9 @@ const { ActorClassWithSpec, Actor } = require("devtools/shared/protocol");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const { assert, dumpn } = DevToolsUtils;
 const { threadSpec } = require("devtools/shared/specs/script");
+const {
+  getAvailableEventBreakpoints,
+} = require("devtools/server/actors/utils/event-breakpoints");
 
 loader.lazyRequireGetter(this, "findCssSelector", "devtools/shared/inspector/css-logic", true);
 loader.lazyRequireGetter(this, "EnvironmentActor", "devtools/server/actors/environment", true);
@@ -60,6 +63,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     this._scripts = null;
     this._xhrBreakpoints = [];
     this._observingNetwork = false;
+    this._eventBreakpoints = [];
 
     this._options = {
       autoBlackBox: false,
@@ -371,6 +375,16 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
       this._xhrBreakpoints.push({ path, method });
     }
     return this._updateNetworkObserver();
+  },
+
+  getAvailableEventBreakpoints: function() {
+    return getAvailableEventBreakpoints();
+  },
+  getActiveEventBreakpoints: function() {
+    return this._eventBreakpoints;
+  },
+  setActiveEventBreakpoints: function(ids) {
+    this._eventBreakpoints = ids;
   },
 
   _updateNetworkObserver() {

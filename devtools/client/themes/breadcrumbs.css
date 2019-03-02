@@ -5,10 +5,12 @@
 
  :root {
   --breadcrumb-id-class-color: #909090;
+  --breadcrumb-pseudo-class-text-color: var(--yellow-70) ;
  }
 
  .theme-dark:root {
   --breadcrumb-id-class-color: var(--theme-content-color1);
+  --breadcrumb-pseudo-class-text-color: var(--yellow-50);
  }
 
 /* Inspector HTMLBreadcrumbs */
@@ -161,5 +163,5 @@
 }
 
 .breadcrumbs-widget-item-pseudo-classes {
-  color: var(--theme-highlight-lightorange);
+  color: var(--breadcrumb-pseudo-class-text-color);
 }

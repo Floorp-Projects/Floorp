@@ -11,8 +11,8 @@
  */
 
 interface CharacterData : Node {
-  [TreatNullAs=EmptyString, Pure, SetterThrows]
-  attribute DOMString data;
+  [Pure, SetterThrows]
+  attribute [TreatNullAs=EmptyString] DOMString data;
   [Pure]
   readonly attribute unsigned long length;
   [Throws]

@@ -11,7 +11,7 @@ import runpy
 # (whether camelCase, _underscorePrefixed, etc.) and the given array of
 # extended attributes.
 def generateLine(propName, extendedAttrs):
-    return "  [%s] attribute DOMString %s;\n" % (", ".join(extendedAttrs),
+    return "  [%s] attribute [TreatNullAs=EmptyString] DOMString %s;\n" % (", ".join(extendedAttrs),
                                                  propName)
 def generate(output, idlFilename, dataFile):
     propList = runpy.run_path(dataFile)["data"]
@@ -21,7 +21,7 @@ def generate(output, idlFilename, dataFile):
             continue
         # Unfortunately, even some of the getters here are fallible
         # (e.g. on nsComputedDOMStyle).
-        extendedAttrs = ["CEReactions", "Throws", "TreatNullAs=EmptyString",
+        extendedAttrs = ["CEReactions", "Throws",
                          "SetterNeedsSubjectPrincipal=NonSystem"]
         if p.pref is not "":
             extendedAttrs.append('Pref="%s"' % p.pref)

@@ -23,6 +23,7 @@ class nsCSSPropertyIDSet;
 class nsAtom;
 class nsIFrame;
 class nsPresContext;
+enum class DisplayItemType : uint32_t;
 struct RawServoAnimationValueMap;
 typedef RawServoAnimationValueMap* RawServoAnimationValueMapBorrowedMut;
 
@@ -128,13 +129,13 @@ class EffectCompositor {
   bool HasPendingStyleUpdates() const;
 
   static bool HasAnimationsForCompositor(const nsIFrame* aFrame,
-                                         nsCSSPropertyID aProperty);
+                                         DisplayItemType aType);
 
   static nsTArray<RefPtr<dom::Animation>> GetAnimationsForCompositor(
-      const nsIFrame* aFrame, nsCSSPropertyID aProperty);
+      const nsIFrame* aFrame, const nsCSSPropertyIDSet& aPropertySet);
 
   static void ClearIsRunningOnCompositor(const nsIFrame* aFrame,
-                                         nsCSSPropertyID aProperty);
+                                         DisplayItemType aType);
 
   // Update animation cascade results for the specified (pseudo-)element
   // but only if we have marked the cascade as needing an update due a

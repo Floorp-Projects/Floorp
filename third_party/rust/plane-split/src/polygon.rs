@@ -530,9 +530,9 @@ impl<T, U> Polygon<T, U> where
             };
             // compute the cut point
             if let Some(t) = line.intersect_edge(*point0 .. *point1) {
-                //Note: it is expected that T is in [0, 1] range, but it can go outside of it
-                // by an epsilon due to computation inefficiencies, and it's fine.
-                debug_assert!(t >= -T::epsilon() && t <= T::one() + T::epsilon());
+                // Note: it is expected that T is in [0, 1] range, but it can go outside of it
+                // by a small amount due to computation inefficiencies, and it's fine.
+                debug_assert!(t >= -T::epsilon() * T::from(10.0).unwrap() && t <= T::one() + T::epsilon() * T::from(10.0).unwrap());
                 debug_assert_eq!(*cut, None);
                 let point = *point0 + (*point1 - *point0) * t;
                 *cut = Some((i, point));

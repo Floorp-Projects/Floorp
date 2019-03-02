@@ -36,150 +36,7 @@ namespace xpc {
 // transparent wrapper in the origin (non-chrome) compartment. When
 // an object with that special wrapper applied crosses into chrome,
 // we know to not apply an X-ray wrapper.
-//
-// These transparent wrappers are guaranteed to be same-compartment
-// with their target, but due to transplants may not be same-Realm
-// with it.  Since they should look as if we were operating on their
-// target, in its Realm, they need to enter its realm before actually
-// operating on it.  But since the compartments are the same, there's
-// no need to wrap values or objects or anything like that; we're just
-// entering the right Realm so security checks will work correctly.
-#define IMPL_PROXY_METHOD(returntype, name, typedargs, args)      \
-  returntype name typedargs const override {                      \
-    MOZ_ASSERT(js::GetObjectCompartment(wrapper) ==               \
-               js::GetObjectCompartment(wrappedObject(wrapper))); \
-    JSAutoRealm ar(cx, wrappedObject(wrapper));                   \
-    return Wrapper::name args;                                    \
-  }
-
-class XrayWaiver : public Wrapper {
- public:
-  explicit constexpr XrayWaiver()
-      : Wrapper(WrapperFactory::WAIVE_XRAY_WRAPPER_FLAG) {}
-
-  // We have to override all the things that CrossCompartmentWrapper overrides.
-
-  /* Standard internal methods */
-  IMPL_PROXY_METHOD(bool, getOwnPropertyDescriptor,
-                    (JSContext * cx, HandleObject wrapper, HandleId id,
-                     MutableHandle<PropertyDescriptor> desc),
-                    (cx, wrapper, id, desc))
-
-  IMPL_PROXY_METHOD(bool, defineProperty,
-                    (JSContext * cx, HandleObject wrapper, HandleId id,
-                     Handle<PropertyDescriptor> desc, ObjectOpResult& result),
-                    (cx, wrapper, id, desc, result))
-
-  IMPL_PROXY_METHOD(bool, ownPropertyKeys,
-                    (JSContext * cx, HandleObject wrapper, AutoIdVector& props),
-                    (cx, wrapper, props))
-
-  IMPL_PROXY_METHOD(bool, delete_,
-                    (JSContext * cx, HandleObject wrapper, HandleId id,
-                     ObjectOpResult& result),
-                    (cx, wrapper, id, result))
-
-  IMPL_PROXY_METHOD(bool, enumerate,
-                    (JSContext * cx, HandleObject wrapper, AutoIdVector& props),
-                    (cx, wrapper, props))
-
-  IMPL_PROXY_METHOD(bool, getPrototype,
-                    (JSContext * cx, HandleObject wrapper,
-                     MutableHandleObject protop),
-                    (cx, wrapper, protop))
-
-  IMPL_PROXY_METHOD(bool, setPrototype,
-                    (JSContext * cx, HandleObject wrapper, HandleObject proto,
-                     ObjectOpResult& result),
-                    (cx, wrapper, proto, result))
-
-  IMPL_PROXY_METHOD(bool, getPrototypeIfOrdinary,
-                    (JSContext * cx, HandleObject wrapper, bool* isOrdinary,
-                     MutableHandleObject protop),
-                    (cx, wrapper, isOrdinary, protop))
-
-  IMPL_PROXY_METHOD(bool, setImmutablePrototype,
-                    (JSContext * cx, HandleObject wrapper, bool* succeeded),
-                    (cx, wrapper, succeeded))
-
-  IMPL_PROXY_METHOD(bool, preventExtensions,
-                    (JSContext * cx, HandleObject wrapper,
-                     ObjectOpResult& result),
-                    (cx, wrapper, result))
-
-  IMPL_PROXY_METHOD(bool, isExtensible,
-                    (JSContext * cx, HandleObject wrapper, bool* extensible),
-                    (cx, wrapper, extensible))
-
-  IMPL_PROXY_METHOD(bool, has,
-                    (JSContext * cx, HandleObject wrapper, HandleId id,
-                     bool* bp),
-                    (cx, wrapper, id, bp))
-
-  IMPL_PROXY_METHOD(bool, get,
-                    (JSContext * cx, HandleObject wrapper, HandleValue receiver,
-                     HandleId id, MutableHandleValue vp),
-                    (cx, wrapper, receiver, id, vp))
-
-  IMPL_PROXY_METHOD(bool, set,
-                    (JSContext * cx, HandleObject wrapper, HandleId id,
-                     HandleValue v, HandleValue receiver,
-                     ObjectOpResult& result),
-                    (cx, wrapper, id, v, receiver, result))
-
-  IMPL_PROXY_METHOD(bool, call,
-                    (JSContext * cx, HandleObject wrapper,
-                     const CallArgs& args),
-                    (cx, wrapper, args))
-
-  IMPL_PROXY_METHOD(bool, construct,
-                    (JSContext * cx, HandleObject wrapper,
-                     const CallArgs& args),
-                    (cx, wrapper, args))
-
-  /* SpiderMonkey extensions. */
-  IMPL_PROXY_METHOD(bool, hasOwn,
-                    (JSContext * cx, HandleObject wrapper, HandleId id,
-                     bool* bp),
-                    (cx, wrapper, id, bp))
-
-  IMPL_PROXY_METHOD(bool, getOwnEnumerablePropertyKeys,
-                    (JSContext * cx, HandleObject wrapper, AutoIdVector& props),
-                    (cx, wrapper, props))
-
-  // nativeCall is the one thing that's not handed a wrapper directly.
-  bool nativeCall(JSContext* cx, IsAcceptableThis test, NativeImpl impl,
-                  const CallArgs& args) const override {
-    JSAutoRealm ar(cx, wrappedObject(&args.thisv().toObject()));
-    return Wrapper::nativeCall(cx, test, impl, args);
-  }
-
-  IMPL_PROXY_METHOD(bool, hasInstance,
-                    (JSContext * cx, HandleObject wrapper, MutableHandleValue v,
-                     bool* bp),
-                    (cx, wrapper, v, bp))
-
-  IMPL_PROXY_METHOD(const char*, className,
-                    (JSContext * cx, HandleObject wrapper), (cx, wrapper))
-
-  IMPL_PROXY_METHOD(JSString*, fun_toString,
-                    (JSContext * cx, HandleObject wrapper, bool isToSource),
-                    (cx, wrapper, isToSource))
-
-  IMPL_PROXY_METHOD(RegExpShared*, regexp_toShared,
-                    (JSContext * cx, HandleObject wrapper), (cx, wrapper))
-
-  IMPL_PROXY_METHOD(bool, boxedValue_unbox,
-                    (JSContext * cx, HandleObject wrapper,
-                     MutableHandleValue vp),
-                    (cx, wrapper, vp))
-
-  static const XrayWaiver singleton;
-};
-
-#undef IMPL_PROXY_METHOD
-
-const XrayWaiver XrayWaiver::singleton;
+const Wrapper XrayWaiver(WrapperFactory::WAIVE_XRAY_WRAPPER_FLAG);
 
 // When objects for which we waived the X-ray wrapper cross into
 // chrome, we wrap them into a special cross-compartment wrapper
@@ -206,14 +63,16 @@ JSObject* WrapperFactory::GetXrayWaiver(HandleObject obj) {
   return scope->mWaiverWrapperMap->Find(obj);
 }
 
-JSObject* WrapperFactory::CreateXrayWaiver(JSContext* cx, HandleObject obj) {
-  // The caller is required to have already done a lookup.
+JSObject* WrapperFactory::CreateXrayWaiver(JSContext* cx, HandleObject obj,
+                                           bool allowExisting) {
+  // The caller is required to have already done a lookup, unless it's
+  // trying to replace an existing waiver.
   // NB: This implictly performs the assertions of GetXrayWaiver.
-  MOZ_ASSERT(!GetXrayWaiver(obj));
+  MOZ_ASSERT(bool(GetXrayWaiver(obj)) == allowExisting);
   XPCWrappedNativeScope* scope = ObjectScope(obj);
 
   JSAutoRealm ar(cx, obj);
-  JSObject* waiver = Wrapper::New(cx, obj, &XrayWaiver::singleton);
+  JSObject* waiver = Wrapper::New(cx, obj, &XrayWaiver);
   if (!waiver) {
     return nullptr;
   }
@@ -615,8 +474,7 @@ static const Wrapper* SelectWrapper(bool securityWrapper, XrayType xrayType,
 
 JSObject* WrapperFactory::Rewrap(JSContext* cx, HandleObject existing,
                                  HandleObject obj) {
-  MOZ_ASSERT(!IsWrapper(obj) ||
-                 GetProxyHandler(obj) == &XrayWaiver::singleton ||
+  MOZ_ASSERT(!IsWrapper(obj) || GetProxyHandler(obj) == &XrayWaiver ||
                  js::IsWindowProxy(obj),
              "wrapped object passed to rewrap");
   MOZ_ASSERT(!js::IsWindow(obj));
@@ -832,33 +690,48 @@ bool WrapperFactory::WaiveXrayAndWrap(JSContext* cx,
  */
 
 static bool FixWaiverAfterTransplant(JSContext* cx, HandleObject oldWaiver,
-                                     HandleObject newobj) {
-  MOZ_ASSERT(Wrapper::wrapperHandler(oldWaiver) == &XrayWaiver::singleton);
+                                     HandleObject newobj,
+                                     bool crossCompartmentTransplant) {
+  MOZ_ASSERT(Wrapper::wrapperHandler(oldWaiver) == &XrayWaiver);
   MOZ_ASSERT(!js::IsCrossCompartmentWrapper(newobj));
 
-  // If the new compartment has a CCW for oldWaiver, nuke this CCW. This
-  // prevents confusing RemapAllWrappersForObject: it would call RemapWrapper
-  // with two same-compartment objects (the CCW and the new waiver).
-  //
-  // This can happen when loading a chrome page in a content frame and there
-  // exists a CCW from the chrome compartment to oldWaiver wrapping the window
-  // we just transplanted:
-  //
-  // Compartment 1  |  Compartment 2
-  // ----------------------------------------
-  // CCW1 -----------> oldWaiver --> CCW2 --+
-  // newWaiver                              |
-  // WindowProxy <--------------------------+
-  js::NukeCrossCompartmentWrapperIfExists(cx, js::GetObjectCompartment(newobj),
-                                          oldWaiver);
+  if (crossCompartmentTransplant) {
+    // If the new compartment has a CCW for oldWaiver, nuke this CCW. This
+    // prevents confusing RemapAllWrappersForObject: it would call RemapWrapper
+    // with two same-compartment objects (the CCW and the new waiver).
+    //
+    // This can happen when loading a chrome page in a content frame and there
+    // exists a CCW from the chrome compartment to oldWaiver wrapping the window
+    // we just transplanted:
+    //
+    // Compartment 1  |  Compartment 2
+    // ----------------------------------------
+    // CCW1 -----------> oldWaiver --> CCW2 --+
+    // newWaiver                              |
+    // WindowProxy <--------------------------+
+    js::NukeCrossCompartmentWrapperIfExists(
+        cx, js::GetObjectCompartment(newobj), oldWaiver);
+  } else {
+    // We kept the same object identity, so the waiver should be a
+    // waiver for our object, just in the wrong Realm.
+    MOZ_ASSERT(newobj == Wrapper::wrappedObject(oldWaiver));
+  }
 
-  // Create a waiver in the new compartment. We know there's not one already
-  // because we _just_ transplanted, which means that |newobj| was either
-  // created from scratch, or was previously cross-compartment wrapper (which
-  // should have no waiver). CreateXrayWaiver asserts this.
-  JSObject* newWaiver = WrapperFactory::CreateXrayWaiver(cx, newobj);
+  // Create a waiver in the new compartment. We know there's not one already in
+  // the crossCompartmentTransplant case because we _just_ transplanted, which
+  // means that |newobj| was either created from scratch, or was previously
+  // cross-compartment wrapper (which should have no waiver). On the other hand,
+  // in the !crossCompartmentTransplant case we know one already exists.
+  // CreateXrayWaiver asserts all this.
+  JSObject* newWaiver = WrapperFactory::CreateXrayWaiver(
+      cx, newobj, /* allowExisting = */ !crossCompartmentTransplant);
   if (!newWaiver) {
     return false;
+  }
+
+  if (!crossCompartmentTransplant) {
+    // CreateXrayWaiver should have updated the map to point to the new waiver.
+    MOZ_ASSERT(WrapperFactory::GetXrayWaiver(newobj) == newWaiver);
   }
 
   // Update all the cross-compartment references to oldWaiver to point to
@@ -867,30 +740,42 @@ static bool FixWaiverAfterTransplant(JSContext* cx, HandleObject oldWaiver,
     return false;
   }
 
-  // There should be no same-compartment references to oldWaiver, and we
-  // just remapped all cross-compartment references. It's dead, so we can
-  // remove it from the map.
-  XPCWrappedNativeScope* scope = ObjectScope(oldWaiver);
-  JSObject* key = Wrapper::wrappedObject(oldWaiver);
-  MOZ_ASSERT(scope->mWaiverWrapperMap->Find(key));
-  scope->mWaiverWrapperMap->Remove(key);
+  if (crossCompartmentTransplant) {
+    // There should be no same-compartment references to oldWaiver, and we
+    // just remapped all cross-compartment references. It's dead, so we can
+    // remove it from the map.
+    XPCWrappedNativeScope* scope = ObjectScope(oldWaiver);
+    JSObject* key = Wrapper::wrappedObject(oldWaiver);
+    MOZ_ASSERT(scope->mWaiverWrapperMap->Find(key));
+    scope->mWaiverWrapperMap->Remove(key);
+  }
+
   return true;
 }
 
 JSObject* TransplantObject(JSContext* cx, JS::HandleObject origobj,
                            JS::HandleObject target) {
   RootedObject oldWaiver(cx, WrapperFactory::GetXrayWaiver(origobj));
+  MOZ_ASSERT_IF(oldWaiver, GetNonCCWObjectRealm(oldWaiver) ==
+                               GetNonCCWObjectRealm(origobj));
   RootedObject newIdentity(cx, JS_TransplantObject(cx, origobj, target));
   if (!newIdentity || !oldWaiver) {
     return newIdentity;
   }
 
-  // If we transplanted within a compartment, oldWaiver is still valid.
-  if (newIdentity == origobj) {
-    return newIdentity;
+  bool crossCompartmentTransplant = (newIdentity != origobj);
+  if (!crossCompartmentTransplant) {
+    // We might still have been transplanted across realms within a single
+    // compartment.
+    if (GetNonCCWObjectRealm(oldWaiver) == GetNonCCWObjectRealm(newIdentity)) {
+      // The old waiver is same-realm with the new object; nothing else to do
+      // here.
+      return newIdentity;
+    }
   }
 
-  if (!FixWaiverAfterTransplant(cx, oldWaiver, newIdentity)) {
+  if (!FixWaiverAfterTransplant(cx, oldWaiver, newIdentity,
+                                crossCompartmentTransplant)) {
     return nullptr;
   }
   return newIdentity;

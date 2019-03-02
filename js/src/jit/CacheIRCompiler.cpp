@@ -1569,9 +1569,9 @@ bool CacheIRCompiler::emitGuardIsInt32Index() {
 bool CacheIRCompiler::emitGuardType() {
   JitSpew(JitSpew_Codegen, __FUNCTION__);
   ValOperandId inputId = reader.valOperandId();
-  JSValueType type = reader.valueType();
+  ValueType type = reader.valueType();
 
-  if (allocator.knownType(inputId) == type) {
+  if (allocator.knownType(inputId) == JSValueType(type)) {
     return true;
   }
 
@@ -1583,32 +1583,34 @@ bool CacheIRCompiler::emitGuardType() {
   }
 
   switch (type) {
-    case JSVAL_TYPE_STRING:
+    case ValueType::String:
       masm.branchTestString(Assembler::NotEqual, input, failure->label());
       break;
-    case JSVAL_TYPE_SYMBOL:
+    case ValueType::Symbol:
       masm.branchTestSymbol(Assembler::NotEqual, input, failure->label());
       break;
-    case JSVAL_TYPE_BIGINT:
+    case ValueType::BigInt:
       masm.branchTestBigInt(Assembler::NotEqual, input, failure->label());
       break;
-    case JSVAL_TYPE_INT32:
+    case ValueType::Int32:
       masm.branchTestInt32(Assembler::NotEqual, input, failure->label());
       break;
-    case JSVAL_TYPE_DOUBLE:
+    case ValueType::Double:
       masm.branchTestDouble(Assembler::NotEqual, input, failure->label());
       break;
-    case JSVAL_TYPE_BOOLEAN:
+    case ValueType::Boolean:
       masm.branchTestBoolean(Assembler::NotEqual, input, failure->label());
       break;
-    case JSVAL_TYPE_UNDEFINED:
+    case ValueType::Undefined:
       masm.branchTestUndefined(Assembler::NotEqual, input, failure->label());
       break;
-    case JSVAL_TYPE_NULL:
+    case ValueType::Null:
       masm.branchTestNull(Assembler::NotEqual, input, failure->label());
       break;
-    default:
-      MOZ_CRASH("Unexpected type");
+    case ValueType::Magic:
+    case ValueType::PrivateGCThing:
+    case ValueType::Object:
+      MOZ_CRASH("unexpected type");
   }
 
   return true;
