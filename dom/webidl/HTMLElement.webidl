@@ -25,8 +25,8 @@ interface HTMLElement : Element {
   [Constant]
   readonly attribute DOMStringMap dataset;
 
-  [CEReactions, GetterThrows, Pure, TreatNullAs=EmptyString]
-           attribute DOMString innerText;
+  [CEReactions, GetterThrows, Pure]
+           attribute [TreatNullAs=EmptyString] DOMString innerText;
 
   // user interaction
   [CEReactions, SetterThrows, Pure]

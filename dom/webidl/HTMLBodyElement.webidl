@@ -16,16 +16,16 @@ interface HTMLBodyElement : HTMLElement {
 };
 
 partial interface HTMLBodyElement {
-  [CEReactions, TreatNullAs=EmptyString, SetterThrows]
-  attribute DOMString text;
-  [CEReactions, TreatNullAs=EmptyString, SetterThrows]
-  attribute DOMString link;
-  [CEReactions, TreatNullAs=EmptyString, SetterThrows]
-  attribute DOMString vLink;
-  [CEReactions, TreatNullAs=EmptyString, SetterThrows]
-  attribute DOMString aLink;
-  [CEReactions, TreatNullAs=EmptyString, SetterThrows]
-  attribute DOMString bgColor;
+  [CEReactions, SetterThrows]
+  attribute [TreatNullAs=EmptyString] DOMString text;
+  [CEReactions, SetterThrows]
+  attribute [TreatNullAs=EmptyString] DOMString link;
+  [CEReactions, SetterThrows]
+  attribute [TreatNullAs=EmptyString] DOMString vLink;
+  [CEReactions, SetterThrows]
+  attribute [TreatNullAs=EmptyString] DOMString aLink;
+  [CEReactions, SetterThrows]
+  attribute [TreatNullAs=EmptyString] DOMString bgColor;
   [CEReactions, SetterThrows]
   attribute DOMString background;
 };
