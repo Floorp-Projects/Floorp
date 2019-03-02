@@ -63,7 +63,7 @@ if (isProduction) {
 const envConfig = getConfig();
 
 const extra = {
-  babelIncludes: ["react-aria-components"],
+  babelIncludes: ["react-aria-components"]
 };
 
 webpackConfig.plugins.push(new ObjectRestSpreadPlugin());
@@ -74,7 +74,7 @@ if (!isProduction) {
 } else {
   webpackConfig.output.libraryTarget = "umd";
   extra.excludeMap = mozillaCentralMappings;
-  extra.recordsPath = "bin/module-manifest.json"
+  extra.recordsPath = "bin/module-manifest.json";
 }
 
 module.exports = toolbox.toolboxConfig(webpackConfig, envConfig, extra);
