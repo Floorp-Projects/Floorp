@@ -5915,23 +5915,32 @@ class Parser(Tokenizer):
         p[0] = [p[2]]
         p[0].extend(p[3])
 
-    def p_DictionaryMember(self, p):
+    def p_DictionaryMemberRequired(self, p):
         """
-            DictionaryMember : Required Type IDENTIFIER Default SEMICOLON
+            DictionaryMember : REQUIRED TypeWithExtendedAttributes IDENTIFIER SEMICOLON
         """
-        # These quack a lot like optional arguments, so just treat them that way.
+        # These quack a lot like required arguments, so just treat them that way.
         t = p[2]
         assert isinstance(t, IDLType)
         identifier = IDLUnresolvedIdentifier(self.getLocation(p, 3), p[3])
-        defaultValue = p[4]
-        optional = not p[1]
-
-        if not optional and defaultValue:
-            raise WebIDLError("Required dictionary members can't have a default value.",
-                              [self.getLocation(p, 4)])
 
         p[0] = IDLArgument(self.getLocation(p, 3), identifier, t,
-                           optional=optional,
+                           optional=False,
+                           defaultValue=None, variadic=False,
+                           dictionaryMember=True)
+
+    def p_DictionaryMember(self, p):
+        """
+            DictionaryMember : Type IDENTIFIER Default SEMICOLON
+        """
+        # These quack a lot like optional arguments, so just treat them that way.
+        t = p[1]
+        assert isinstance(t, IDLType)
+        identifier = IDLUnresolvedIdentifier(self.getLocation(p, 2), p[2])
+        defaultValue = p[3]
+
+        p[0] = IDLArgument(self.getLocation(p, 2), identifier, t,
+                           optional=True,
                            defaultValue=defaultValue, variadic=False,
                            dictionaryMember=True)
 
@@ -6518,18 +6527,6 @@ class Parser(Tokenizer):
                           | REQUIRED
         """
         p[0] = p[1]
-
-    def p_Required(self, p):
-        """
-            Required : REQUIRED
-        """
-        p[0] = True
-
-    def p_RequiredEmpty(self, p):
-        """
-            Required :
-        """
-        p[0] = False
 
     def p_Ellipsis(self, p):
         """

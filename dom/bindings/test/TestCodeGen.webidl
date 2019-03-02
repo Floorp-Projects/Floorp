@@ -1320,10 +1320,20 @@ typedef [EnforceRange] octet OctetRange;
 typedef [Clamp] octet OctetClamp;
 typedef [TreatNullAs=EmptyString] DOMString NullEmptyString;
 
+dictionary TestAttributesOnDictionaryMembers {
+  [Clamp] octet a;
+  [ChromeOnly, Clamp] octet b;
+  required [Clamp] octet c;
+  [ChromeOnly] octet d;
+  // ChromeOnly doesn't mix with required, so we can't
+  // test [ChromeOnly] required [Clamp] octet e
+};
+
 interface TestAttributesOnTypes {
   void foo(OctetClamp thingy);
   void bar(OctetRange thingy);
   void baz(NullEmptyString thingy);
+  attribute [Clamp] octet someAttr;
   void argWithAttr([Clamp] octet arg0, optional [Clamp] octet arg1);
   // There aren't any argument-only attributes that we can test here,
   // TreatNonCallableAsNull isn't compatible with Clamp-able types
