@@ -462,28 +462,19 @@ NS_IMETHODIMP nsXULWindow::Destroy() {
   if (parent) {
     nsCOMPtr<nsIWidget> parentWidget;
     parent->GetMainWidget(getter_AddRefs(parentWidget));
-
-    if (parentWidget && parentWidget->IsVisible()) {
-      bool isParentHiddenWindow = false;
-
+    if (!parentWidget || parentWidget->IsVisible()) {
+      nsCOMPtr<nsIBaseWindow> baseHiddenWindow;
       if (appShell) {
-        bool hasHiddenWindow = false;
-        appShell->GetHasHiddenWindow(&hasHiddenWindow);
-        if (hasHiddenWindow) {
-          nsCOMPtr<nsIBaseWindow> baseHiddenWindow;
-          nsCOMPtr<nsIXULWindow> hiddenWindow;
-          appShell->GetHiddenWindow(getter_AddRefs(hiddenWindow));
-          if (hiddenWindow) {
-            baseHiddenWindow = do_GetInterface(hiddenWindow);
-            isParentHiddenWindow = (baseHiddenWindow == parent);
-          }
-        }
+        nsCOMPtr<nsIXULWindow> hiddenWindow;
+        appShell->GetHiddenWindow(getter_AddRefs(hiddenWindow));
+        if (hiddenWindow) baseHiddenWindow = do_GetInterface(hiddenWindow);
       }
-
       // somebody screwed up somewhere. hiddenwindow shouldn't be anybody's
       // parent. still, when it happens, skip activating it.
-      if (!isParentHiddenWindow) {
-        parentWidget->PlaceBehind(eZPlacementTop, 0, true);
+      if (baseHiddenWindow != parent) {
+        nsCOMPtr<nsIWidget> parentWidget;
+        parent->GetMainWidget(getter_AddRefs(parentWidget));
+        if (parentWidget) parentWidget->PlaceBehind(eZPlacementTop, 0, true);
       }
     }
   }
