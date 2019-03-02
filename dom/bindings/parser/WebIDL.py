@@ -6436,33 +6436,50 @@ class Parser(Tokenizer):
         """
         p[0] = []
 
-    def p_Argument(self, p):
+    def p_ArgumentOptional(self, p):
         """
-            Argument : ExtendedAttributeList Optional Type Ellipsis ArgumentName Default
+            Argument : ExtendedAttributeList OPTIONAL TypeWithExtendedAttributes Ellipsis ArgumentName Default
         """
         t = p[3]
         assert isinstance(t, IDLType)
         identifier = IDLUnresolvedIdentifier(self.getLocation(p, 5), p[5])
 
-        optional = p[2]
         variadic = p[4]
         defaultValue = p[6]
 
-        if not optional and defaultValue:
-            raise WebIDLError("Mandatory arguments can't have a default value.",
-                              [self.getLocation(p, 6)])
 
         # We can't test t.isAny() here and give it a default value as needed,
         # since at this point t is not a fully resolved type yet (e.g. it might
         # be a typedef).  We'll handle the 'any' case in IDLArgument.complete.
 
         if variadic:
-            if optional:
-                raise WebIDLError("Variadic arguments should not be marked optional.",
-                                  [self.getLocation(p, 2)])
-            optional = variadic
+            raise WebIDLError("Variadic arguments should not be marked optional.",
+                              [self.getLocation(p, 2)])
 
-        p[0] = IDLArgument(self.getLocation(p, 5), identifier, t, optional, defaultValue, variadic)
+        p[0] = IDLArgument(self.getLocation(p, 5), identifier, t, True, defaultValue, variadic)
+        p[0].addExtendedAttributes(p[1])
+
+    def p_Argument(self, p):
+        """
+            Argument : ExtendedAttributeList Type Ellipsis ArgumentName Default
+        """
+        t = p[2]
+        assert isinstance(t, IDLType)
+        identifier = IDLUnresolvedIdentifier(self.getLocation(p, 4), p[4])
+
+        variadic = p[3]
+        defaultValue = p[5]
+
+        if defaultValue:
+            raise WebIDLError("Mandatory arguments can't have a default value.",
+                              [self.getLocation(p, 5)])
+
+        # We can't test t.isAny() here and give it a default value as needed,
+        # since at this point t is not a fully resolved type yet (e.g. it might
+        # be a typedef).  We'll handle the 'any' case in IDLArgument.complete.
+
+        # variadic implies optional
+        p[0] = IDLArgument(self.getLocation(p, 4), identifier, t, variadic, defaultValue, variadic)
         p[0].addExtendedAttributes(p[1])
 
     def p_ArgumentName(self, p):
@@ -6501,18 +6518,6 @@ class Parser(Tokenizer):
                           | REQUIRED
         """
         p[0] = p[1]
-
-    def p_Optional(self, p):
-        """
-            Optional : OPTIONAL
-        """
-        p[0] = True
-
-    def p_OptionalEmpty(self, p):
-        """
-            Optional :
-        """
-        p[0] = False
 
     def p_Required(self, p):
         """
