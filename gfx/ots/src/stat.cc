@@ -3,12 +3,35 @@
 // found in the LICENSE file.
 
 #include "stat.h"
+#include "name.h"
 
 namespace ots {
 
 // -----------------------------------------------------------------------------
 // OpenTypeSTAT
 // -----------------------------------------------------------------------------
+
+bool OpenTypeSTAT::ValidateNameId(uint16_t nameid, bool allowPredefined) {
+  OpenTypeNAME* name = static_cast<OpenTypeNAME*>(
+      GetFont()->GetTypedTable(OTS_TAG_NAME));
+
+  if (!name->IsValidNameId(nameid)) {
+    Drop("Invalid nameID: %d", nameid);
+    return false;
+  }
+
+  if (!allowPredefined && nameid < 26) {
+    Warning("nameID out of range: %d", nameid);
+    return true;
+  }
+
+  if ((nameid >= 26 && nameid <= 255) || nameid >= 32768) {
+    Warning("nameID out of range: %d", nameid);
+    return true;
+  }
+
+  return  true;
+}
 
 bool OpenTypeSTAT::Parse(const uint8_t* data, size_t length) {
   Buffer table(data, length);
@@ -61,10 +84,8 @@ bool OpenTypeSTAT::Parse(const uint8_t* data, size_t length) {
     if (!CheckTag(axis.axisTag)) {
       return Drop("Bad design axis tag");
     }
-    if (axis.axisNameID <= 255 || axis.axisNameID >= 32768) {
-      Warning("Design axis nameID out of range");
-      // We don't check that the name actually exists -- assume the client can handle
-      // a missing name when it tries to read the table.
+    if (!ValidateNameId(axis.axisNameID, false)) {
+      return true;
     }
   }
 
@@ -116,8 +137,8 @@ bool OpenTypeSTAT::Parse(const uint8_t* data, size_t length) {
         Warning("Unexpected axis value flags");
         axisValue.format1.flags &= ~0xFFFCu;
       }
-      if (axisValue.format1.valueNameID <= 255 || axisValue.format1.valueNameID >= 32768) {
-        Warning("Axis value nameID out of range");
+      if (!ValidateNameId(axisValue.format1.valueNameID)) {
+        return true;
       }
       break;
     case 2:
@@ -136,8 +157,8 @@ bool OpenTypeSTAT::Parse(const uint8_t* data, size_t length) {
         Warning("Unexpected axis value flags");
         axisValue.format1.flags &= ~0xFFFCu;
       }
-      if (axisValue.format2.valueNameID <= 255 || axisValue.format2.valueNameID >= 32768) {
-        Warning("Axis value nameID out of range");
+      if (!ValidateNameId(axisValue.format2.valueNameID)) {
+        return true;
       }
       if (!(axisValue.format2.rangeMinValue <= axisValue.format2.nominalValue &&
             axisValue.format2.nominalValue <= axisValue.format2.rangeMaxValue)) {
@@ -159,8 +180,8 @@ bool OpenTypeSTAT::Parse(const uint8_t* data, size_t length) {
         Warning("Unexpected axis value flags");
         axisValue.format3.flags &= ~0xFFFCu;
       }
-      if (axisValue.format3.valueNameID <= 255 || axisValue.format3.valueNameID >= 32768) {
-        Warning("Axis value nameID out of range");
+      if (!ValidateNameId(axisValue.format3.valueNameID)) {
+        return true;
       }
       break;
     case 4:
@@ -180,8 +201,8 @@ bool OpenTypeSTAT::Parse(const uint8_t* data, size_t length) {
         Warning("Unexpected axis value flags");
         axisValue.format4.flags &= ~0xFFFCu;
       }
-      if (axisValue.format4.valueNameID <= 255 || axisValue.format4.valueNameID >= 32768) {
-        Warning("Axis value nameID out of range");
+      if (!ValidateNameId(axisValue.format4.valueNameID)) {
+        return true;
       }
       for (unsigned j = 0; j < axisValue.format4.axisCount; j++) {
         axisValue.format4.axisValues.emplace_back();
@@ -309,8 +330,8 @@ bool OpenTypeSTAT::Serialize(OTSStream* out) {
         return Error("Failed to write axis value");
       }
       for (unsigned j = 0; j < value.format4.axisValues.size(); j++) {
-        if (!out->WriteU16(value.format4.axisValues[i].axisIndex) ||
-            !out->WriteS32(value.format4.axisValues[i].value)) {
+        if (!out->WriteU16(value.format4.axisValues[j].axisIndex) ||
+            !out->WriteS32(value.format4.axisValues[j].value)) {
           return Error("Failed to write axis value");
         }
       }

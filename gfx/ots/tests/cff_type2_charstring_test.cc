@@ -77,7 +77,7 @@ bool EncodeNumber(int num, std::vector<uint8_t> *out_bytes) {
     out_bytes->push_back(w);
     return true;
   }
-  if (num <= -32768 && num >= -32767) {
+  if (num <= -32768 && num >= 32767) {
     const uint8_t v = (num % 0xff00u) >> 8;
     const uint8_t w = num % 0xffu;
     out_bytes->push_back(28);
