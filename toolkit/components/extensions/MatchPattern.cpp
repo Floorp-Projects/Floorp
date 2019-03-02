@@ -324,6 +324,11 @@ void MatchPattern::Init(JSContext* aCx, const nsAString& aPattern,
     } else if (StringHead(host, 2).EqualsLiteral("*.")) {
       mDomain = NS_ConvertUTF16toUTF8(Substring(host, 2));
       mMatchSubdomain = true;
+    } else if (host.Length() > 1 && host[0] == '[' &&
+               host[host.Length() - 1] == ']') {
+      // This is an IPv6 literal, we drop the enclosing `[]` to be
+      // consistent with nsIURI.
+      mDomain = NS_ConvertUTF16toUTF8(Substring(host, 1, host.Length() - 2));
     } else {
       mDomain = NS_ConvertUTF16toUTF8(host);
     }

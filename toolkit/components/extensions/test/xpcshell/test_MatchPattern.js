@@ -158,6 +158,16 @@ add_task(async function test_MatchPattern_matches() {
   fail({url: "unknown-scheme://foo", pattern: ["unknown-scheme:foo"], options: {restrictSchemes: false}});
   fail({url: "unknown-scheme:foo", pattern: ["unknown-scheme://foo"], options: {restrictSchemes: false}});
   fail({url: "unknown-scheme:foo", pattern: ["unknown-scheme://*"], options: {restrictSchemes: false}});
+
+  // Matchers for IPv6
+  pass({url: "http://[::1]/", pattern: ["http://[::1]/"]});
+  pass({url: "http://[2a03:4000:6:310e:216:3eff:fe53:99b]/", pattern: ["http://[2a03:4000:6:310e:216:3eff:fe53:99b]/"]});
+  fail({url: "http://[2:4:6:3:2:3:f:b]/", pattern: ["http://[2a03:4000:6:310e:216:3eff:fe53:99b]/"]});
+
+  // Before fixing Bug 1529230, the only way to match a specific IPv6 url is by droping the brackets in pattern,
+  // thus we keep this pattern valid for the sake of backward compatibility
+  pass({url: "http://[::1]/", pattern: ["http://::1/"]});
+  pass({url: "http://[2a03:4000:6:310e:216:3eff:fe53:99b]/", pattern: ["http://2a03:4000:6:310e:216:3eff:fe53:99b/"]});
 });
 
 add_task(async function test_MatchPattern_overlaps() {
