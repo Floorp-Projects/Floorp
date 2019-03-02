@@ -27,6 +27,12 @@ class ApplicationReputationService final
   NS_DECL_NSIAPPLICATIONREPUTATIONSERVICE
 
  public:
+  static const char* const kNonBinaryExecutables[2];
+#ifdef XP_WIN
+  static const char* const kBinaryFileExtensions[175];
+#else
+  static const char* const kBinaryFileExtensions[174];
+#endif
   static already_AddRefed<ApplicationReputationService> GetSingleton();
 
  private:
