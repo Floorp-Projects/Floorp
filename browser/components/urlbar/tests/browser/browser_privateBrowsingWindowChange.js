@@ -1,3 +1,6 @@
+/* Any copyright is dedicated to the Public Domain.
+ * http://creativecommons.org/publicdomain/zero/1.0/ */
+
 "use strict";
 
 /**
@@ -15,7 +18,7 @@ add_task(async function() {
   urlbar.dispatchEvent(focusEv);
   // And so we know input happened:
   let inputEv = new InputEvent("input", {data: "", view: win, bubbles: true});
-  urlbar.onInput(inputEv);
+  urlbar.inputField.dispatchEvent(inputEv);
   // Check it worked:
   is(urlbar.value, urlbarTestValue, "URL bar value should be there");
   is(win.gBrowser.selectedBrowser.userTypedValue, urlbarTestValue, "browser object should know the url bar value");
