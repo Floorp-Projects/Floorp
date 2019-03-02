@@ -287,11 +287,11 @@ var gPacedBundles =
   new TestcaseBundle(gPropList.stroke_dasharray,
                      [].concat(_pacedTestLists.lengthPctSVG, [
     new AnimTestcasePaced("7, 7, 7; 7, 10, 3; 1, 2, 3",
-                          { comp0:   "7, 7, 7",
-                            comp1_6: "7, 8.5, 5",
-                            comp1_3: "7, 10, 3",
-                            comp2_3: "4, 6, 3",
-                            comp1:   "1, 2, 3"
+                          { comp0:   "7px, 7px, 7px",
+                            comp1_6: "7px, 8.5px, 5px",
+                            comp1_3: "7px, 10px, 3px",
+                            comp2_3: "4px, 6px, 3px",
+                            comp1:   "1px, 2px, 3px"
                           }),
   ])),
   new TestcaseBundle(gPropList.stroke_dashoffset,
@@ -304,5 +304,4 @@ var gPacedBundles =
                                _pacedTestLists.lengthPx,
                                _pacedTestLists.lengthPctSVG,
                                _pacedTestLists.lengthPxPctSVG)),
-  // XXXdholbert TODO: test 'stroke-dasharray' once we support animating it
 ];

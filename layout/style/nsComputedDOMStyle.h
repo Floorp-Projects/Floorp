@@ -378,14 +378,8 @@ class nsComputedDOMStyle final : public nsDOMCSSDeclaration,
   already_AddRefed<CSSValue> DoGetMarkerEnd();
   already_AddRefed<CSSValue> DoGetMarkerMid();
   already_AddRefed<CSSValue> DoGetMarkerStart();
-  already_AddRefed<CSSValue> DoGetStrokeDasharray();
 
-  already_AddRefed<CSSValue> DoGetStrokeDashoffset();
-  already_AddRefed<CSSValue> DoGetStrokeWidth();
 
-  already_AddRefed<CSSValue> DoGetFillOpacity();
-  already_AddRefed<CSSValue> DoGetStrokeMiterlimit();
-  already_AddRefed<CSSValue> DoGetStrokeOpacity();
 
   already_AddRefed<CSSValue> DoGetFilter();
   already_AddRefed<CSSValue> DoGetPaintOrder();

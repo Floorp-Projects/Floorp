@@ -5006,7 +5006,7 @@ bool SVGTextFrame::ShouldRenderAsPath(nsTextFrame* aFrame,
   // Text has a stroke.
   if (style->HasStroke() &&
       SVGContentUtils::CoordToFloat(static_cast<SVGElement*>(GetContent()),
-                                    style->mStrokeWidth, true) > 0) {
+                                    style->mStrokeWidth) > 0) {
     return true;
   }
 
