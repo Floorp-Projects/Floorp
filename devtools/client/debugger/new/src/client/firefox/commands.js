@@ -92,7 +92,7 @@ function lookupConsoleClient(thread: string) {
 }
 
 function listWorkerThreadClients() {
-  return Object.values(workerClients).map(({ thread }) => thread);
+  return (Object.values(workerClients): any).map(({ thread }) => thread);
 }
 
 function resume(thread: string): Promise<*> {
@@ -172,7 +172,7 @@ function locationKey(location) {
   return `${(sourceUrl: any)}:${(sourceId: any)}:${line}:${(column: any)}`;
 }
 
-function waitForWorkers(shouldWait) {
+function waitForWorkers(shouldWait: boolean) {
   shouldWaitForWorkers = shouldWait;
 }
 
