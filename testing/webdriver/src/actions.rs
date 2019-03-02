@@ -929,7 +929,6 @@ mod test {
             "type":"pointerMove",
             "duration":100,
             "origin":{
-                "ELEMENT":"elem",
                 "element-6066-11e4-a52e-4f735466cecf":"elem"
             },
             "x":5,
@@ -951,7 +950,7 @@ mod test {
             "type":"pointerMove",
             "duration":100,
             "origin":{
-                "ELEMENT":"elem"
+                "element-6066-11e4-a52e-4f735466cecf":"elem"
             },
             "x":5,
             "y":10
