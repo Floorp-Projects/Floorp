@@ -30,8 +30,6 @@ const uint16_t kMaxDeltaFormatType = 3;
 // In variation fonts, Device Tables are replaced by VariationIndex tables,
 // indicated by this flag in the deltaFormat field.
 const uint16_t kVariationIndex = 0x8000;
-// The maximum number of class value.
-const uint16_t kMaxClassDefValue = 0xFFFF;
 
 struct ScriptRecord {
   uint32_t tag;
@@ -647,7 +645,7 @@ bool ParseContextFormat2(const ots::Font *font,
   }
   if (!ots::ParseClassDefTable(font, data + offset_class_def,
                                length - offset_class_def,
-                               num_glyphs, kMaxClassDefValue)) {
+                               num_glyphs, ots::kMaxClassDefValue)) {
     return OTS_FAILURE_MSG("Failed to parse class definition table in context format 2");
   }
 
@@ -1000,7 +998,7 @@ bool ParseChainContextFormat2(const ots::Font *font,
     }
     if (!ots::ParseClassDefTable(font, data + offset_backtrack_class_def,
                                  length - offset_backtrack_class_def,
-                                 num_glyphs, kMaxClassDefValue)) {
+                                 num_glyphs, ots::kMaxClassDefValue)) {
       return OTS_FAILURE_MSG("Failed to parse backtrack class defn table in chain context format 2");
     }
   }
@@ -1011,7 +1009,7 @@ bool ParseChainContextFormat2(const ots::Font *font,
   }
   if (!ots::ParseClassDefTable(font, data + offset_input_class_def,
                                length - offset_input_class_def,
-                               num_glyphs, kMaxClassDefValue)) {
+                               num_glyphs, ots::kMaxClassDefValue)) {
     return OTS_FAILURE_MSG("Failed to parse input class defn in chain context format 2");
   }
 
@@ -1022,7 +1020,7 @@ bool ParseChainContextFormat2(const ots::Font *font,
     }
     if (!ots::ParseClassDefTable(font, data + offset_lookahead_class_def,
                                  length - offset_lookahead_class_def,
-                                 num_glyphs, kMaxClassDefValue)) {
+                                 num_glyphs, ots::kMaxClassDefValue)) {
       return OTS_FAILURE_MSG("Failed to parse lookahead class defn in chain context format 2");
     }
   }
