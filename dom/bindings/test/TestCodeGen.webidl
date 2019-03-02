@@ -1324,4 +1324,7 @@ interface TestAttributesOnTypes {
   void foo(OctetClamp thingy);
   void bar(OctetRange thingy);
   void baz(NullEmptyString thingy);
+  void argWithAttr([Clamp] octet arg0, optional [Clamp] octet arg1);
+  // There aren't any argument-only attributes that we can test here,
+  // TreatNonCallableAsNull isn't compatible with Clamp-able types
 };
