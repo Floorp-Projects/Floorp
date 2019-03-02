@@ -3,9 +3,6 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<!-- This files relies on these specific Chrome/XBL globals -->
-<!-- globals PopupBoxObject -->
-
 <bindings id="popupBindings"
    xmlns="http://www.mozilla.org/xbl"
    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
@@ -160,10 +157,12 @@
           for (var menuitem = this.firstElementChild; menuitem; menuitem = menuitem.nextElementSibling) {
             if (menuitem.localName == "menuitem" && menuitem.hasAttribute("acceltext")) {
               var accel = document.getAnonymousElementByAttribute(menuitem, "anonid", "accel");
-              if (accel && accel.boxObject) {
+              if (accel) {
                 array.push(accel);
-                if (accel.boxObject.width > width)
-                  width = accel.boxObject.width;
+                let accelWidth = accel.getBoundingClientRect().width;
+                if (accelWidth > width) {
+                  width = accelWidth;
+                }
               }
             }
           }

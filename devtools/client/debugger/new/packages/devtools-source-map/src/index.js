@@ -77,6 +77,29 @@ export const getOriginalLocation = async (
   options: locationOptions = {}
 ): Promise<SourceLocation> => _getOriginalLocation(location, options);
 
+export const getGeneratedRangesForOriginal = async (
+  sourceId: SourceId,
+  url: string,
+  mergeUnmappedRegions?: boolean
+): Promise<
+  Array<{
+    start: {
+      line: number,
+      column: number
+    },
+    end: {
+      line: number,
+      column: number
+    }
+  }>
+> =>
+  dispatcher.invoke(
+    "getGeneratedRangesForOriginal",
+    sourceId,
+    url,
+    mergeUnmappedRegions
+  );
+
 export const getFileGeneratedRange = async (
   originalSource: Source
 ): Promise<?{ start: any, end: any }> =>

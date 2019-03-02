@@ -117,9 +117,6 @@
 #endif
 #endif
 
-@BINPATH@/components/WebVTT.manifest
-@BINPATH@/components/WebVTTParserWrapper.js
-
 #ifndef MOZ_GECKOVIEW_JAR
 #ifdef MOZ_UPDATER
 @BINPATH@/components/nsUpdateService.manifest
@@ -141,10 +138,6 @@
 ; Modules
 @BINPATH@/modules/*
 @BINPATH@/actors/*
-
-; Security Reports
-@BINPATH@/components/SecurityReporter.manifest
-@BINPATH@/components/SecurityReporter.js
 
 ; [Browser Chrome Files]
 @BINPATH@/chrome/toolkit@JAREXT@

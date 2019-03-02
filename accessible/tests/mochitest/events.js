@@ -1104,7 +1104,7 @@ function synthClick(aNodeOrID, aCheckerOrEventSeq, aArgs) {
       if (isHTMLElement(targetNode)) {
         x = targetNode.offsetWidth - 1;
       } else if (isXULElement(targetNode)) {
-        x = targetNode.boxObject.width - 1;
+        x = targetNode.getBoundingClientRect().width - 1;
       }
     }
     synthesizeMouse(targetNode, x, y, aArgs ? aArgs : {});

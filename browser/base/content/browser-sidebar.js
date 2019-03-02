@@ -245,7 +245,7 @@ var SidebarUI = {
       return true;
     }
 
-    this._box.setAttribute("width", sourceUI._box.boxObject.width);
+    this._box.setAttribute("width", sourceUI._box.getBoundingClientRect().width);
     this.showInitially(commandID);
 
     return true;

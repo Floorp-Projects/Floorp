@@ -85,7 +85,7 @@
     function setCrop(aID, aCropValue, aRemovedText, aInsertedText)
     {
       this.labelNode = getNode(aID);
-      this.width = this.labelNode.boxObject.width;
+      this.width = this.labelNode.getBoundingClientRect().width;
       this.charWidth = this.width / this.labelNode.value.length;
 
       this.eventSeq = [

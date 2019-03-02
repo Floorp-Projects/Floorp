@@ -10,6 +10,7 @@ const GripArrayRep = require("../../reps/grip-array");
 const GripMap = require("../../reps/grip-map");
 const GripMapEntryRep = require("../../reps/grip-map-entry");
 const ErrorRep = require("../../reps/error");
+const BigIntRep = require("../../reps/big-int");
 const { isLongString } = require("../../reps/string");
 
 const MAX_NUMERICAL_PROPERTIES = 100;
@@ -162,13 +163,14 @@ function nodeHasProperties(item: Node): boolean {
 
 function nodeIsPrimitive(item: Node): boolean {
   return (
-    !nodeHasChildren(item) &&
-    !nodeHasProperties(item) &&
-    !nodeIsEntries(item) &&
-    !nodeIsMapEntry(item) &&
-    !nodeHasAccessors(item) &&
-    !nodeIsBucket(item) &&
-    !nodeIsLongString(item)
+    nodeIsBigInt(item) ||
+    (!nodeHasChildren(item) &&
+      !nodeHasProperties(item) &&
+      !nodeIsEntries(item) &&
+      !nodeIsMapEntry(item) &&
+      !nodeHasAccessors(item) &&
+      !nodeIsBucket(item) &&
+      !nodeIsLongString(item))
   );
 }
 
@@ -229,6 +231,10 @@ function nodeIsError(item: Node): boolean {
 
 function nodeIsLongString(item: Node): boolean {
   return isLongString(getValue(item));
+}
+
+function nodeIsBigInt(item: Node): boolean {
+  return BigIntRep.supportsObject(getValue(item));
 }
 
 function nodeHasFullText(item: Node): boolean {

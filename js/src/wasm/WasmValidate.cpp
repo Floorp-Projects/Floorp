@@ -534,7 +534,7 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
         uint32_t unused;
         CHECK(iter.readSetGlobal(&unused, &nothing));
       }
-#ifdef ENABLE_WASM_GENERALIZED_TABLES
+#ifdef ENABLE_WASM_REFTYPES
       case uint16_t(Op::TableGet): {
         uint32_t unusedTableIndex;
         CHECK(iter.readTableGet(&unusedTableIndex, &nothing));
@@ -869,7 +869,7 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
                                           &nothing));
           }
 #endif
-#ifdef ENABLE_WASM_GENERALIZED_TABLES
+#ifdef ENABLE_WASM_REFTYPES
           case uint16_t(MiscOp::TableGrow): {
             uint32_t unusedTableIndex;
             CHECK(iter.readTableGrow(&unusedTableIndex, &nothing, &nothing));
@@ -1562,7 +1562,7 @@ static bool DecodeTableTypeAndLimits(Decoder& d, bool gcTypesEnabled,
   TableKind tableKind;
   if (elementType == uint8_t(TypeCode::AnyFunc)) {
     tableKind = TableKind::AnyFunction;
-#ifdef ENABLE_WASM_GENERALIZED_TABLES
+#ifdef ENABLE_WASM_REFTYPES
   } else if (elementType == uint8_t(TypeCode::AnyRef)) {
     if (!gcTypesEnabled) {
       return d.fail("reference types not enabled");
@@ -1570,10 +1570,10 @@ static bool DecodeTableTypeAndLimits(Decoder& d, bool gcTypesEnabled,
     tableKind = TableKind::AnyRef;
 #endif
   } else {
-#ifdef ENABLE_WASM_GENERALIZED_TABLES
-    return d.fail("expected 'anyfunc' or 'anyref' element type");
+#ifdef ENABLE_WASM_REFTYPES
+    return d.fail("expected 'funcref' or 'anyref' element type");
 #else
-    return d.fail("expected 'anyfunc' element type");
+    return d.fail("expected 'funcref' element type");
 #endif
   }
 
