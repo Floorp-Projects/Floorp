@@ -245,7 +245,7 @@ MozElements.NotificationBox = class NotificationBox {
   _showNotification(aNotification, aSlideIn, aSkipAnimation) {
     this._finishAnimation();
 
-    var height = aNotification.boxObject.height;
+    var height = aNotification.getBoundingClientRect().height;
     var skipAnimation = aSkipAnimation || height == 0 ||
       !this._allowAnimation;
     aNotification.classList.toggle("animated", !skipAnimation);

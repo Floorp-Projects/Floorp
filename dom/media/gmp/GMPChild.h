@@ -41,8 +41,6 @@ class GMPChild : public PGMPChild {
  private:
   friend class GMPContentChild;
 
-  bool ResolveLinks(nsCOMPtr<nsIFile>& aPath);
-
   bool GetUTF8LibPath(nsACString& aOutLibPath);
 
   mozilla::ipc::IPCResult RecvProvideStorageId(const nsCString& aStorageId);

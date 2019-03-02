@@ -103,6 +103,7 @@ while [ $# -gt 0 ]; do
         --enable-fips) gyp_params+=(-Ddisable_fips=0) ;;
         --enable-libpkix) gyp_params+=(-Ddisable_libpkix=0) ;;
         --mozpkix-only) gyp_params+=(-Dmozpkix_only=1 -Ddisable_tests=1 -Dsign_libs=0) ;;
+	-D*) gyp_params+=("$1") ;;
         *) show_help; exit 2 ;;
     esac
     shift

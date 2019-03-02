@@ -81,7 +81,7 @@
         // We have to calculate the orientation since view.canDrop will use
         // it and we want to be consistent with the dropfeedback.
         let rowHeight = this.rowHeight;
-        let eventY = event.clientY - this.treeBody.boxObject.y -
+        let eventY = event.clientY - this.treeBody.getBoundingClientRect().y -
           rowHeight * (cell.row - this.getFirstVisibleRow());
 
         let orientation = Ci.nsITreeView.DROP_BEFORE;

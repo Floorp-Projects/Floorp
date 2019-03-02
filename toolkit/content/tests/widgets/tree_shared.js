@@ -1013,7 +1013,7 @@ function synthesizeColumnDrag(aTree, aMouseDownColumnNumber, aMouseUpColumnNumbe
 
   // Target the initial mousedown in the middle of the column header so we
   // avoid the extra hit test space given to the splitter
-  var columnWidth = down.boxObject.width;
+  var columnWidth = down.getBoundingClientRect().width;
   var splitterHitWidth = columnWidth / 2;
   synthesizeMouse(down, splitterHitWidth, 3, { type: "mousedown"});
 

@@ -5081,15 +5081,6 @@ pref("layers.prefer-opengl", false);
 // Copy-on-write canvas
 pref("layers.shared-buffer-provider.enabled", true);
 
-#ifdef XP_WIN
-pref("layers.shared-buffer-provider.enabled", false);
-#endif
-
-#ifdef XP_MACOSX
-// cf. Bug 1324908
-pref("layers.shared-buffer-provider.enabled", false);
-#endif
-
 // Force all possible layers to be always active layers
 pref("layers.force-active", false);
 

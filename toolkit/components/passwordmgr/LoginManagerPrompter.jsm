@@ -913,11 +913,13 @@ LoginManagerPrompter.prototype = {
     };
 
     let writeDataToUI = () => {
-      // setAttribute is used since the <textbox> binding may not be attached yet.
+      // setAttribute is used in addition to setting the property since the
+      // <textbox> binding may not be attached yet.
       chromeDoc.getElementById("password-notification-username")
                .setAttribute("placeholder", usernamePlaceholder);
-      chromeDoc.getElementById("password-notification-username")
-               .setAttribute("value", login.username);
+      let nameField = chromeDoc.getElementById("password-notification-username");
+      nameField.setAttribute("value", login.username);
+      nameField.value = login.username;
 
       let toggleCheckbox = chromeDoc.getElementById("password-notification-visibilityToggle");
       toggleCheckbox.removeAttribute("checked");
@@ -925,6 +927,7 @@ LoginManagerPrompter.prototype = {
       // Ensure the type is reset so the field is masked.
       passwordField.setAttribute("type", "password");
       passwordField.setAttribute("value", login.password);
+      passwordField.value = login.password;
       updateButtonLabel();
     };
 

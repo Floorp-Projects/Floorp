@@ -1,5 +1,6 @@
-/* Any copyright is dedicated to the Public Domain.
- * http://creativecommons.org/publicdomain/zero/1.0/ */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 // Enable the Debugger
 pref("devtools.debugger.enabled", true);
@@ -39,8 +40,10 @@ pref("devtools.debugger.start-panel-collapsed", false);
 pref("devtools.debugger.end-panel-collapsed", false);
 pref("devtools.debugger.start-panel-size", 300);
 pref("devtools.debugger.end-panel-size", 300);
+pref("devtools.debugger.tabs", "[]");
 pref("devtools.debugger.tabsBlackBoxed", "[]");
 pref("devtools.debugger.pending-selected-location", "{}");
+pref("devtools.debugger.pending-breakpoints", "{}");
 pref("devtools.debugger.expressions", "[]");
 pref("devtools.debugger.event-listener-breakpoints", "[]");
 pref("devtools.debugger.file-search-case-sensitive", false);

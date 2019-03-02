@@ -84,11 +84,15 @@
 
             // Calculate positions taking care of arrowscrollbox
             let scrollbox = this._scrollBox;
-            let eventY = aEvent.layerY + (scrollbox.boxObject.y - this.boxObject.y);
-            let scrollboxOffset = scrollbox.scrollBoxObject.y -
-                                  (scrollbox.boxObject.y - this.boxObject.y);
-            let eltY = elt.boxObject.y - scrollboxOffset;
-            let eltHeight = elt.boxObject.height;
+
+            let thisY = this.getBoundingClientRect().y;
+            let scrollboxY = scrollbox.getBoundingClientRect().y;
+            let innerScrollboxY = scrollbox.scrollbox.getBoundingClientRect().y;
+
+            let eventY = aEvent.layerY + (scrollboxY - thisY);
+            let scrollboxOffset = innerScrollboxY - (scrollboxY - thisY);
+            let {y: eltY, height: eltHeight} = elt.getBoundingClientRect();
+            eltY -= scrollboxOffset;
 
             if (!elt._placesNode) {
               // If we are dragging over a non places node drop at the end.
@@ -434,21 +438,21 @@
         }
 
         // We should display the drop indicator relative to the arrowscrollbox.
-        let scrollbox = this._scrollBox.scrollBoxObject;
+        let scrollRect = this._scrollBox.scrollbox.getBoundingClientRect();
         let newMarginTop = 0;
         if (scrollDir == 0) {
           let elt = this.firstElementChild;
           while (elt && event.screenY > elt.screenY +
-                                        elt.boxObject.height / 2)
+                                        elt.getBoundingClientRect().height / 2)
             elt = elt.nextElementSibling;
           newMarginTop = elt ? elt.screenY - this._scrollBox.screenY :
-                               scrollbox.height;
+                               scrollRect.height;
         } else if (scrollDir == 1) {
-          newMarginTop = scrollbox.height;
+          newMarginTop = scrollRect.height;
         }
 
         // Set the new marginTop based on arrowscrollbox.
-        newMarginTop += scrollbox.y - this._scrollBox.boxObject.y;
+        newMarginTop += scrollRect.y - this._scrollBox.getBoundingClientRect().y;
         this._indicatorBar.firstElementChild.style.marginTop = newMarginTop + "px";
         this._indicatorBar.hidden = false;
 

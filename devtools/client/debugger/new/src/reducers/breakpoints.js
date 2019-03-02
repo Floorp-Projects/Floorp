@@ -111,10 +111,7 @@ function update(
     }
 
     case "ADD_BREAKPOINT_POSITIONS": {
-      const {
-        location: { sourceId },
-        positions
-      } = action;
+      const { sourceId, positions } = action;
       return {
         ...state,
         breakpointPositions: {
@@ -364,6 +361,13 @@ export function getBreakpointPositionsForSource(
   return positions && positions[sourceId];
 }
 
+export function hasBreakpointPositions(
+  state: OuterState,
+  sourceId: string
+): boolean {
+  return !!getBreakpointPositionsForSource(state, sourceId);
+}
+
 export function getBreakpointPositionsForLine(
   state: OuterState,
   sourceId: string,
@@ -371,7 +375,7 @@ export function getBreakpointPositionsForLine(
 ): ?BreakpointPositions {
   const positions = getBreakpointPositionsForSource(state, sourceId);
   if (!positions) {
-    return [];
+    return null;
   }
   return positions.filter(({ location, generatedLocation }) => {
     const loc = isOriginalId(sourceId) ? location : generatedLocation;

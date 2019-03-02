@@ -165,8 +165,6 @@
 @RESPATH@/browser/components/EnterprisePoliciesContent.js
 @RESPATH@/browser/components/EnterprisePolicies.manifest
 @RESPATH@/components/toolkitsearch.manifest
-@RESPATH@/components/WebVTT.manifest
-@RESPATH@/components/WebVTTParserWrapper.js
 @RESPATH@/components/extensions.manifest
 #ifdef MOZ_UPDATER
 @RESPATH@/components/nsUpdateService.manifest
@@ -214,10 +212,6 @@
 @RESPATH@/modules/*
 @RESPATH@/browser/actors/*
 @RESPATH@/actors/*
-
-; Security Reports
-@RESPATH@/components/SecurityReporter.manifest
-@RESPATH@/components/SecurityReporter.js
 
 ; ANGLE GLES-on-D3D rendering library
 #ifdef MOZ_ANGLE_RENDERER
