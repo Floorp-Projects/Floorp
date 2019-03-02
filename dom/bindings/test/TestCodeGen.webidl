@@ -1315,3 +1315,13 @@ interface TestCEReactionsInterface {
   getter DOMString (DOMString name);
   readonly attribute unsigned long length;
 };
+
+typedef [EnforceRange] octet OctetRange;
+typedef [Clamp] octet OctetClamp;
+typedef [TreatNullAs=EmptyString] DOMString NullEmptyString;
+
+interface TestAttributesOnTypes {
+  void foo(OctetClamp thingy);
+  void bar(OctetRange thingy);
+  void baz(NullEmptyString thingy);
+};
