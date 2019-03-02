@@ -1542,7 +1542,7 @@ float nsSVGUtils::GetStrokeWidth(nsIFrame* aFrame,
   }
 
   SVGElement* ctx = static_cast<SVGElement*>(content);
-  return SVGContentUtils::CoordToFloat(ctx, style->mStrokeWidth, true);
+  return SVGContentUtils::CoordToFloat(ctx, style->mStrokeWidth);
 }
 
 void nsSVGUtils::SetupStrokeGeometry(nsIFrame* aFrame, gfxContext* aContext,

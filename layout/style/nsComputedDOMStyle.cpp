@@ -3198,56 +3198,6 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetMarkerStart() {
   return val.forget();
 }
 
-already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetStrokeDasharray() {
-  const nsStyleSVG* svg = StyleSVG();
-
-  if (svg->mStrokeDasharray.IsEmpty()) {
-    RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-    val->SetIdent(eCSSKeyword_none);
-    return val.forget();
-  }
-
-  RefPtr<nsDOMCSSValueList> valueList = GetROCSSValueList(true);
-
-  for (uint32_t i = 0; i < svg->mStrokeDasharray.Length(); i++) {
-    RefPtr<nsROCSSPrimitiveValue> dash = new nsROCSSPrimitiveValue;
-    SetValueToCoord(dash, svg->mStrokeDasharray[i], true);
-    valueList->AppendCSSValue(dash.forget());
-  }
-
-  return valueList.forget();
-}
-
-already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetStrokeDashoffset() {
-  RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-  SetValueToCoord(val, StyleSVG()->mStrokeDashoffset, false);
-  return val.forget();
-}
-
-already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetStrokeWidth() {
-  RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-  SetValueToCoord(val, StyleSVG()->mStrokeWidth, true);
-  return val.forget();
-}
-
-already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetFillOpacity() {
-  RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-  val->SetNumber(StyleSVG()->mFillOpacity);
-  return val.forget();
-}
-
-already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetStrokeMiterlimit() {
-  RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-  val->SetNumber(StyleSVG()->mStrokeMiterlimit);
-  return val.forget();
-}
-
-already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetStrokeOpacity() {
-  RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-  val->SetNumber(StyleSVG()->mStrokeOpacity);
-  return val.forget();
-}
-
 void nsComputedDOMStyle::BoxValuesToString(
     nsAString& aString, const nsTArray<nsStyleCoord>& aBoxValues,
     bool aClampNegativeCalc) {
