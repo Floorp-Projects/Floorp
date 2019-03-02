@@ -49,7 +49,7 @@ interface HTMLTextAreaElement : HTMLElement {
   readonly attribute DOMString type;
   [CEReactions, Throws, Pure]
            attribute DOMString defaultValue;
-  [CEReactions, SetterThrows] attribute [TreatNullAs=EmptyString] DOMString value;
+  [CEReactions, SetterThrows, TreatNullAs=EmptyString] attribute DOMString value;
   readonly attribute unsigned long textLength;
 
   readonly attribute boolean willValidate;
