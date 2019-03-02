@@ -1,7 +1,6 @@
 use crate::command::{
     AddonInstallParameters, AddonUninstallParameters, GeckoContextParameters,
     GeckoExtensionCommand, GeckoExtensionRoute, XblLocatorParameters, CHROME_ELEMENT_KEY,
-    LEGACY_ELEMENT_KEY,
 };
 use mozprofile::preferences::Pref;
 use mozprofile::profile::Profile;
@@ -393,12 +392,10 @@ impl MarionetteSession {
         let chrome_element = data.get(CHROME_ELEMENT_KEY);
         let element = data.get(ELEMENT_KEY);
         let frame = data.get(FRAME_KEY);
-        let legacy_element = data.get(LEGACY_ELEMENT_KEY);
         let window = data.get(WINDOW_KEY);
 
         let value = try_opt!(
             element
-                .or(legacy_element)
                 .or(chrome_element)
                 .or(frame)
                 .or(window),

@@ -667,7 +667,6 @@ class BaselineInterpreterGenerator final : private BaselineInterpreterCodeGen {
   explicit BaselineInterpreterGenerator(JSContext* cx);
 };
 
-extern const VMFunction NewArrayCopyOnWriteInfo;
 extern const VMFunction ImplicitThisInfo;
 
 }  // namespace jit

@@ -639,6 +639,15 @@ class PresShell final : public nsIPresShell,
        */
       bool ComputeElementFromFrame(WidgetGUIEvent* aGUIEvent);
 
+      /**
+       * UpdateTouchEventTarget() updates mFrame, mPresShell and mContent if
+       * aGUIEvent is a touch event and there is new proper target.
+       *
+       * @param aGUIEvent       The handled event.  If it's not a touch event,
+       *                        this method does nothing.
+       */
+      void UpdateTouchEventTarget(WidgetGUIEvent* aGUIEvent);
+
       RefPtr<PresShell> mPresShell;
       nsIFrame* mFrame;
       nsCOMPtr<nsIContent> mContent;

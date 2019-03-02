@@ -409,10 +409,6 @@ Index::Index(const IndiceWrapper& aIndices, ByteStream* aSource,
       if (!haveSync) {
         continue;
       }
-      if (indice.start_composition == indice.end_composition) {
-        // Ignore this sample as it doesn't account for the buffered range.
-        continue;
-      }
       Sample sample;
       sample.mByteRange =
           MediaByteRange(indice.start_offset, indice.end_offset);
@@ -561,9 +557,11 @@ TimeIntervals Index::ConvertByteRangesToTimeRanges(
         }
       }
       if (end > start) {
-        timeRanges += TimeInterval(
-            TimeUnit::FromMicroseconds(mDataOffset[start].mTime.start),
-            TimeUnit::FromMicroseconds(mDataOffset[end - 1].mTime.end));
+        for (uint32_t i = start; i < end; i++) {
+          timeRanges += TimeInterval(
+              TimeUnit::FromMicroseconds(mDataOffset[i].mTime.start),
+              TimeUnit::FromMicroseconds(mDataOffset[i].mTime.end));
+        }
       }
       if (end < mDataOffset.Length()) {
         // Find samples in partial block contained in the byte range.

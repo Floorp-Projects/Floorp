@@ -9,18 +9,6 @@ const messages = [
 ];
 const ALGORITHMS = [
   {
-    initString: "md2",
-    initConstant: Ci.nsICryptoHash.MD2,
-    hexHashes: [
-      "03d85a0d629d2c442e987525319fc471",
-      "8350e5a3e24c153df2275c9f80692773",
-    ],
-    b64Hashes: [
-      "A9haDWKdLEQumHUlMZ/EcQ==",
-      "g1Dlo+JMFT3yJ1yfgGkncw==",
-    ],
-  },
-  {
     initString: "md5",
     initConstant: Ci.nsICryptoHash.MD5,
     hexHashes: [

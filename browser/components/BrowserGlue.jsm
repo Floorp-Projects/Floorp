@@ -1443,11 +1443,9 @@ BrowserGlue.prototype = {
   },
 
   _sendMediaTelemetry() {
-    let win = Services.wm.getMostRecentWindow("navigator:browser");
-    if (win) {
-      let v = win.document.createElementNS("http://www.w3.org/1999/xhtml", "video");
-      v.reportCanPlayTelemetry();
-    }
+    let win = Services.appShell.hiddenDOMWindow;
+    let v = win.document.createElementNS("http://www.w3.org/1999/xhtml", "video");
+    v.reportCanPlayTelemetry();
   },
 
   /**
@@ -2807,15 +2805,13 @@ BrowserGlue.prototype = {
    * Open preferences even if there are no open windows.
    */
   _openPreferences(...args) {
-    let chromeWindow = BrowserWindowTracker.getTopWindow();
-    if (chromeWindow) {
-      chromeWindow.openPreferences(...args);
+    if (Services.appShell.hiddenDOMWindow.openPreferences) {
+      Services.appShell.hiddenDOMWindow.openPreferences(...args);
       return;
     }
 
-    if (Services.appShell.hiddenDOMWindow.openPreferences) {
-      Services.appShell.hiddenDOMWindow.openPreferences(...args);
-    }
+    let chromeWindow = BrowserWindowTracker.getTopWindow();
+    chromeWindow.openPreferences(...args);
   },
 
   _openURLInNewWindow(url) {
