@@ -44,12 +44,6 @@
 
 /** Test for computation of values in property database **/
 
-var gBadComputed = {
-  // This is the only SVG-length property (i.e., length allowing
-  // unitless lengths) whose initial value is zero.
-  "stroke-dashoffset": [ "0", "-moz-objectValue" ],
-};
-
 var gBadComputedNoFrame = {
   // These are probably bogus tests...
   "-moz-margin-end": [ "0%", "calc(0% + 0px)" ],
@@ -77,10 +71,6 @@ var gBadComputedNoFrame = {
 };
 
 function xfail_value(property, value, is_initial, has_frame) {
-  if ((property in gBadComputed) &&
-      gBadComputed[property].includes(value))
-    return true;
-
   if (!has_frame && (property in gBadComputedNoFrame) &&
       gBadComputedNoFrame[property].includes(value))
     return true;

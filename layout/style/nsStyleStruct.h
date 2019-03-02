@@ -2708,11 +2708,11 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleSVG {
   RefPtr<mozilla::css::URLValue> mMarkerEnd;
   RefPtr<mozilla::css::URLValue> mMarkerMid;
   RefPtr<mozilla::css::URLValue> mMarkerStart;
-  nsTArray<nsStyleCoord> mStrokeDasharray;  // coord, percent, factor
+  nsTArray<mozilla::NonNegativeLengthPercentage> mStrokeDasharray;
   nsTArray<RefPtr<nsAtom>> mContextProps;
 
-  nsStyleCoord mStrokeDashoffset;  // coord, percent, factor
-  nsStyleCoord mStrokeWidth;       // coord, percent, factor
+  mozilla::LengthPercentage mStrokeDashoffset;
+  mozilla::NonNegativeLengthPercentage mStrokeWidth;
 
   float mFillOpacity;
   float mStrokeMiterlimit;

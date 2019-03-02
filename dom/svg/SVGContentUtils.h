@@ -13,6 +13,7 @@
 #include "mozilla/gfx/2D.h"  // for StrokeOptions
 #include "mozilla/gfx/Matrix.h"
 #include "mozilla/RangedPtr.h"
+#include "nsStyleCoord.h"
 #include "nsError.h"
 #include "nsStringFwd.h"
 #include "gfx2DGlue.h"
@@ -21,7 +22,6 @@ class nsIContent;
 
 class nsIFrame;
 class nsPresContext;
-class nsStyleCoord;
 
 namespace mozilla {
 class ComputedStyle;
@@ -321,9 +321,7 @@ class SVGContentUtils {
    * Converts an nsStyleCoord into a userspace value, resolving percentage
    * values relative to aContent's SVG viewport.
    */
-  static float CoordToFloat(dom::SVGElement* aContent,
-                            const nsStyleCoord& aCoord,
-                            bool aClampNegativeCalc);
+  static float CoordToFloat(dom::SVGElement* aContent, const LengthPercentage&);
   /**
    * Parse the SVG path string
    * Returns a path
