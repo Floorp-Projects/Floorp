@@ -11,7 +11,6 @@ const { getFormattedSize } = require("../utils/format-utils");
 const { L10N } = require("../utils/l10n");
 const { propertiesEqual } = require("../utils/request-utils");
 
-const { div } = dom;
 const SIZE_CACHED = L10N.getStr("networkMenu.sizeCached");
 const SIZE_SERVICE_WORKER = L10N.getStr("networkMenu.sizeServiceWorker");
 const SIZE_UNAVAILABLE = L10N.getStr("networkMenu.sizeUnavailable");
@@ -50,7 +49,10 @@ class RequestListColumnTransferredSize extends Component {
     const title = text == SIZE_UNAVAILABLE ? SIZE_UNAVAILABLE_TITLE : text;
 
     return (
-      div({ className: "requests-list-column requests-list-transferred", title: title },
+      dom.td({
+        className: "requests-list-column requests-list-transferred",
+        title: title,
+      },
         text
       )
     );

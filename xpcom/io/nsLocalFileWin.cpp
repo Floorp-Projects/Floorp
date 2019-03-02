@@ -14,6 +14,7 @@
 #include "GeckoProfiler.h"
 
 #include "nsLocalFile.h"
+#include "nsLocalFileCommon.h"
 #include "nsIDirectoryEnumerator.h"
 #include "nsNativeCharsetUtils.h"
 
@@ -2740,89 +2741,9 @@ nsLocalFile::IsExecutable(bool* aResult) {
       *p += (*p >= L'A' && *p <= L'Z') ? 'a' - 'A' : 0;
     }
 
-    // Search for any of the set of executable extensions.
-    static const char* const executableExts[] = {
-        // clang-format off
-      "ad",
-      "ade",         // access project extension
-      "adp",
-      "air",         // Adobe AIR installer
-      "app",         // executable application
-      "application", // from bug 348763
-      "asp",
-      "bas",
-      "bat",
-      "chm",
-      "cmd",
-      "com",
-      "cpl",
-      "crt",
-      "exe",
-      "fxp",         // FoxPro compiled app
-      "hlp",
-      "hta",
-      "inf",
-      "ins",
-      "isp",
-      "jar",         // java application bundle
-      "js",
-      "jse",
-      "lnk",
-      "mad",         // Access Module Shortcut
-      "maf",         // Access
-      "mag",         // Access Diagram Shortcut
-      "mam",         // Access Macro Shortcut
-      "maq",         // Access Query Shortcut
-      "mar",         // Access Report Shortcut
-      "mas",         // Access Stored Procedure
-      "mat",         // Access Table Shortcut
-      "mau",         // Media Attachment Unit
-      "mav",         // Access View Shortcut
-      "maw",         // Access Data Access Page
-      "mda",         // Access Add-in, MDA Access 2 Workgroup
-      "mdb",
-      "mde",
-      "mdt",         // Access Add-in Data
-      "mdw",         // Access Workgroup Information
-      "mdz",         // Access Wizard Template
-      "msc",
-      "msh",         // Microsoft Shell
-      "mshxml",      // Microsoft Shell
-      "msi",
-      "msp",
-      "mst",
-      "ops",         // Office Profile Settings
-      "pcd",
-      "pif",
-      "plg",         // Developer Studio Build Log
-      "prf",         // windows system file
-      "prg",
-      "pst",
-      "reg",
-      "scf",         // Windows explorer command
-      "scr",
-      "sct",
-      "settingcontent-ms",
-      "shb",
-      "shs",
-      "url",
-      "vb",
-      "vbe",
-      "vbs",
-      "vsd",
-      "vsmacros",    // Visual Studio .NET Binary-based Macro Project
-      "vss",
-      "vst",
-      "vsw",
-      "ws",
-      "wsc",
-      "wsf",
-      "wsh"
-        // clang-format on
-    };
-    nsDependentSubstring ext = Substring(path, dotIdx + 1);
-    for (size_t i = 0; i < ArrayLength(executableExts); ++i) {
-      if (ext.EqualsASCII(executableExts[i])) {
+    nsDependentSubstring ext = Substring(path, dotIdx);
+    for (size_t i = 0; i < ArrayLength(sExecutableExts); ++i) {
+      if (ext.EqualsASCII(sExecutableExts[i])) {
         // Found a match.  Set result and quit.
         *aResult = true;
         break;

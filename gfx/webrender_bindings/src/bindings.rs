@@ -207,7 +207,7 @@ pub struct DocumentHandle {
 }
 
 impl DocumentHandle {
-    pub fn new(api: RenderApi, size: DeviceIntSize, layer: i8) -> DocumentHandle {
+    pub fn new(api: RenderApi, size: FramebufferIntSize, layer: i8) -> DocumentHandle {
         let doc = api.add_document(size, layer);
         DocumentHandle {
             api: api,
@@ -676,7 +676,7 @@ pub extern "C" fn wr_renderer_render(renderer: &mut Renderer,
     if had_slow_frame {
       renderer.notify_slow_frame();
     }
-    match renderer.render(DeviceIntSize::new(width, height)) {
+    match renderer.render(FramebufferIntSize::new(width, height)) {
         Ok(results) => {
             *out_stats = results.stats;
             true
@@ -704,9 +704,7 @@ pub unsafe extern "C" fn wr_renderer_readback(renderer: &mut Renderer,
     assert!(is_in_render_thread());
 
     let mut slice = make_slice_mut(dst_buffer, buffer_size);
-    renderer.read_pixels_into(DeviceIntRect::new(
-                                DeviceIntPoint::new(0, 0),
-                                DeviceIntSize::new(width, height)),
+    renderer.read_pixels_into(FramebufferIntSize::new(width, height).into(),
                               ReadPixelsFormat::Standard(ImageFormat::BGRA8),
                               &mut slice);
 }
@@ -1179,7 +1177,7 @@ pub extern "C" fn wr_window_new(window_id: WrWindowId,
     unsafe {
         *out_max_texture_size = renderer.get_max_texture_size();
     }
-    let window_size = DeviceIntSize::new(window_width, window_height);
+    let window_size = FramebufferIntSize::new(window_width, window_height);
     let layer = 0;
     *out_handle = Box::into_raw(Box::new(
             DocumentHandle::new(sender.create_api_by_client(next_namespace_id()), window_size, layer)));
@@ -1192,7 +1190,7 @@ pub extern "C" fn wr_window_new(window_id: WrWindowId,
 pub extern "C" fn wr_api_create_document(
     root_dh: &mut DocumentHandle,
     out_handle: &mut *mut DocumentHandle,
-    doc_size: DeviceIntSize,
+    doc_size: FramebufferIntSize,
     layer: i8,
 ) {
     assert!(unsafe { is_in_compositor_thread() });
@@ -1379,13 +1377,11 @@ pub extern "C" fn wr_transaction_set_display_list(
 }
 
 #[no_mangle]
-pub extern "C" fn wr_transaction_set_window_parameters(
+pub extern "C" fn wr_transaction_set_document_view(
     txn: &mut Transaction,
-    window_size: &DeviceIntSize,
-    doc_rect: &DeviceIntRect,
+    doc_rect: &FramebufferIntRect,
 ) {
-    txn.set_window_parameters(
-        *window_size,
+    txn.set_document_view(
         *doc_rect,
         1.0,
     );

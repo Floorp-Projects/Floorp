@@ -67,6 +67,7 @@
 #include "mozilla/EffectCompositor.h"
 #include "mozilla/EffectSet.h"
 #include "mozilla/EventStates.h"
+#include "mozilla/HashTable.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/OperatorNewExtensions.h"
 #include "mozilla/PendingAnimationTracker.h"
@@ -457,8 +458,8 @@ enum class Send {
 static void AddAnimationForProperty(nsIFrame* aFrame,
                                     const AnimationProperty& aProperty,
                                     dom::Animation* aAnimation,
-                                    AnimationInfo& aAnimationInfo,
-                                    AnimationData& aData, Send aSendFlag) {
+                                    const AnimationData& aData, Send aSendFlag,
+                                    AnimationInfo& aAnimationInfo) {
   MOZ_ASSERT(aAnimation->GetEffect(),
              "Should not be adding an animation without an effect");
   MOZ_ASSERT(!aAnimation->GetCurrentOrPendingStartTime().IsNull() ||
@@ -567,10 +568,167 @@ static void AddAnimationForProperty(nsIFrame* aFrame,
   }
 }
 
+// Let's use an example to explain this function:
+//
+// We have 4 playing animations (without any !important rule or transition):
+// Animation A: [ transform, rotate ].
+// Animation B: [ rotate, scale ].
+// Animation C: [ transform, margin-left ].
+// Animation D: [ opacity, margin-left ].
+//
+// Normally, GetAnimationsForCompositor(|transform-like properties|) returns:
+// [ Animation A, Animation B, Animation C ], which is the first argument of
+// this function.
+//
+// In this function, we want to re-organize the list as (Note: don't care
+// the order of properties):
+// [
+//   { rotate:    [ Animation A, Animation B ] },
+//   { scale:     [ Animation B ] },
+//   { transform: [ Animation A, Animation C ] },
+// ]
+//
+// Therefore, AddAnimationsForProperty() will append each animation property
+// into AnimationInfo,  as a final list of layers::Animation:
+// [
+//   { rotate: Animation A },
+//   { rotate: Animation B },
+//   { scale: Animation B },
+//   { transform: Animation A },
+//   { transform: Animation C },
+// ]
+//
+// And then, for each transaction, we send this list to the compositor thread.
+static HashMap<nsCSSPropertyID, nsTArray<RefPtr<dom::Animation>>>
+GroupAnimationsByProperty(const nsTArray<RefPtr<dom::Animation>>& aAnimations,
+                          const nsCSSPropertyIDSet& aPropertySet) {
+  HashMap<nsCSSPropertyID, nsTArray<RefPtr<dom::Animation>>> groupedAnims;
+  for (const RefPtr<dom::Animation>& anim : aAnimations) {
+    const KeyframeEffect* effect = anim->GetEffect()->AsKeyframeEffect();
+    MOZ_ASSERT(effect);
+    for (const AnimationProperty& property : effect->Properties()) {
+      if (!aPropertySet.HasProperty(property.mProperty)) {
+        continue;
+      }
+
+      auto animsForPropertyPtr = groupedAnims.lookupForAdd(property.mProperty);
+      if (!animsForPropertyPtr) {
+        DebugOnly<bool> rv =
+            groupedAnims.add(animsForPropertyPtr, property.mProperty,
+                             nsTArray<RefPtr<dom::Animation>>());
+        MOZ_ASSERT(rv, "Should have enough memory");
+      }
+      animsForPropertyPtr->value().AppendElement(anim);
+    }
+  }
+  return groupedAnims;
+}
+
 static void AddAnimationsForProperty(
-    nsIFrame* aFrame, nsDisplayListBuilder* aBuilder, nsDisplayItem* aItem,
-    nsCSSPropertyID aProperty, AnimationInfo& aAnimationInfo, Send aSendFlag,
-    layers::LayersBackend aLayersBackend) {
+    nsIFrame* aFrame, const EffectSet* aEffects,
+    const nsTArray<RefPtr<dom::Animation>>& aCompositorAnimations,
+    const AnimationData& aData, nsCSSPropertyID aProperty, Send aSendFlag,
+    AnimationInfo& aAnimationInfo) {
+  // Add from first to last (since last overrides)
+  for (dom::Animation* anim : aCompositorAnimations) {
+    if (!anim->IsRelevant()) {
+      continue;
+    }
+
+    dom::KeyframeEffect* keyframeEffect =
+        anim->GetEffect() ? anim->GetEffect()->AsKeyframeEffect() : nullptr;
+    MOZ_ASSERT(keyframeEffect,
+               "A playing animation should have a keyframe effect");
+    const AnimationProperty* property =
+        keyframeEffect->GetEffectiveAnimationOfProperty(aProperty, *aEffects);
+    if (!property) {
+      continue;
+    }
+
+    // Note that if the property is overridden by !important rules,
+    // GetEffectiveAnimationOfProperty returns null instead.
+    // This is what we want, since if we have animations overridden by
+    // !important rules, we don't want to send them to the compositor.
+    MOZ_ASSERT(
+        anim->CascadeLevel() != EffectCompositor::CascadeLevel::Animations ||
+            !aEffects->PropertiesWithImportantRules().HasProperty(aProperty),
+        "GetEffectiveAnimationOfProperty already tested the property "
+        "is not overridden by !important rules");
+
+    // Don't add animations that are pending if their timeline does not
+    // track wallclock time. This is because any pending animations on layers
+    // will have their start time updated with the current wallclock time.
+    // If we can't convert that wallclock time back to an equivalent timeline
+    // time, we won't be able to update the content animation and it will end
+    // up being out of sync with the layer animation.
+    //
+    // Currently this only happens when the timeline is driven by a refresh
+    // driver under test control. In this case, the next time the refresh
+    // driver is advanced it will trigger any pending animations.
+    if (anim->Pending() &&
+        (anim->GetTimeline() && !anim->GetTimeline()->TracksWallclockTime())) {
+      continue;
+    }
+
+    AddAnimationForProperty(aFrame, *property, anim, aData, aSendFlag,
+                            aAnimationInfo);
+    keyframeEffect->SetIsRunningOnCompositor(aProperty, true);
+  }
+}
+
+static AnimationData CreateAnimationData(nsIFrame* aFrame, nsDisplayItem* aItem,
+                                         DisplayItemType aType,
+                                         layers::LayersBackend aLayersBackend) {
+  if (aType != DisplayItemType::TYPE_TRANSFORM) {
+    return AnimationData(null_t());
+  }
+
+  // XXX Performance here isn't ideal for SVG. We'd prefer to avoid resolving
+  // the dimensions of refBox. That said, we only get here if there are CSS
+  // animations or transitions on this element, and that is likely to be a
+  // lot rarer than transforms on SVG (the frequency of which drives the need
+  // for TransformReferenceBox).
+  TransformReferenceBox refBox(aFrame);
+  nsRect bounds(0, 0, refBox.Width(), refBox.Height());
+  // all data passed directly to the compositor should be in dev pixels
+  int32_t devPixelsToAppUnits = aFrame->PresContext()->AppUnitsPerDevPixel();
+  float scale = devPixelsToAppUnits;
+  Point3D offsetToTransformOrigin =
+      nsDisplayTransform::GetDeltaToTransformOrigin(aFrame, scale, &bounds);
+  nsPoint origin;
+  float scaleX = 1.0f;
+  float scaleY = 1.0f;
+  bool hasPerspectiveParent = false;
+  if (aLayersBackend == layers::LayersBackend::LAYERS_WR) {
+    // leave origin empty, because we are sending it separately on the
+    // stacking context that we are pushing to WR, and WR will automatically
+    // include it when picking up the animated transform values
+  } else if (aItem) {
+    // This branch is for display items to leverage the cache of
+    // nsDisplayListBuilder.
+    origin = aItem->ToReferenceFrame();
+  } else {
+    // This branch is running for restyling.
+    // Animations are animated at the coordination of the reference
+    // frame outside, not the given frame itself.  The given frame
+    // is also reference frame too, so the parent's reference frame
+    // are used.
+    nsIFrame* referenceFrame = nsLayoutUtils::GetReferenceFrame(
+        nsLayoutUtils::GetCrossDocParentFrame(aFrame));
+    origin = aFrame->GetOffsetToCrossDoc(referenceFrame);
+  }
+
+  return AnimationData(TransformData(origin, offsetToTransformOrigin, bounds,
+                                     devPixelsToAppUnits, scaleX, scaleY,
+                                     hasPerspectiveParent));
+}
+
+static void AddAnimationsForDisplayItem(nsIFrame* aFrame,
+                                        nsDisplayListBuilder* aBuilder,
+                                        nsDisplayItem* aItem,
+                                        DisplayItemType aType, Send aSendFlag,
+                                        layers::LayersBackend aLayersBackend,
+                                        AnimationInfo& aAnimationInfo) {
   if (aSendFlag == Send::NextTransaction) {
     aAnimationInfo.ClearAnimationsForNextTransaction();
   } else {
@@ -594,10 +752,12 @@ static void AddAnimationsForProperty(
       effects ? effects->GetAnimationGeneration() : 0;
   aAnimationInfo.SetAnimationGeneration(animationGeneration);
 
-  EffectCompositor::ClearIsRunningOnCompositor(styleFrame, aProperty);
-  nsTArray<RefPtr<dom::Animation>> compositorAnimations =
-      EffectCompositor::GetAnimationsForCompositor(styleFrame, aProperty);
-  if (compositorAnimations.IsEmpty()) {
+  EffectCompositor::ClearIsRunningOnCompositor(styleFrame, aType);
+  const nsCSSPropertyIDSet& propertySet =
+      LayerAnimationInfo::GetCSSPropertiesFor(aType);
+  const nsTArray<RefPtr<dom::Animation>> matchedAnimations =
+      EffectCompositor::GetAnimationsForCompositor(styleFrame, propertySet);
+  if (matchedAnimations.IsEmpty()) {
     return;
   }
 
@@ -612,115 +772,27 @@ static void AddAnimationsForProperty(
     return;
   }
 
-  AnimationData data;
-  if (aProperty == eCSSProperty_transform) {
-    // XXX Performance here isn't ideal for SVG. We'd prefer to avoid resolving
-    // the dimensions of refBox. That said, we only get here if there are CSS
-    // animations or transitions on this element, and that is likely to be a
-    // lot rarer than transforms on SVG (the frequency of which drives the need
-    // for TransformReferenceBox).
-    TransformReferenceBox refBox(aFrame);
-    nsRect bounds(0, 0, refBox.Width(), refBox.Height());
-    // all data passed directly to the compositor should be in dev pixels
-    int32_t devPixelsToAppUnits = aFrame->PresContext()->AppUnitsPerDevPixel();
-    float scale = devPixelsToAppUnits;
-    Point3D offsetToTransformOrigin =
-        nsDisplayTransform::GetDeltaToTransformOrigin(aFrame, scale, &bounds);
-    nsPoint origin;
-    float scaleX = 1.0f;
-    float scaleY = 1.0f;
-    bool hasPerspectiveParent = false;
-    if (aLayersBackend == layers::LayersBackend::LAYERS_WR) {
-      // leave origin empty, because we are sending it separately on the
-      // stacking context that we are pushing to WR, and WR will automatically
-      // include it when picking up the animated transform values
-    } else if (aItem) {
-      // This branch is for display items to leverage the cache of
-      // nsDisplayListBuilder.
-      origin = aItem->ToReferenceFrame();
-    } else {
-      // This branch is running for restyling.
-      // Animations are animated at the coordination of the reference
-      // frame outside, not the given frame itself.  The given frame
-      // is also reference frame too, so the parent's reference frame
-      // are used.
-      nsIFrame* referenceFrame = nsLayoutUtils::GetReferenceFrame(
-          nsLayoutUtils::GetCrossDocParentFrame(aFrame));
-      origin = aFrame->GetOffsetToCrossDoc(referenceFrame);
-    }
-
-    data = TransformData(origin, offsetToTransformOrigin, bounds,
-                         devPixelsToAppUnits, scaleX, scaleY,
-                         hasPerspectiveParent);
-  } else {
-    data = null_t();
-  }
-
-  MOZ_ASSERT(
-      nsCSSProps::PropHasFlags(aProperty, CSSPropFlags::CanAnimateOnCompositor),
-      "inconsistent property flags");
-
-  // Add from first to last (since last overrides)
-  for (size_t animIdx = 0; animIdx < compositorAnimations.Length(); animIdx++) {
-    dom::Animation* anim = compositorAnimations[animIdx];
-    if (!anim->IsRelevant()) {
-      continue;
-    }
-
-    dom::KeyframeEffect* keyframeEffect =
-        anim->GetEffect() ? anim->GetEffect()->AsKeyframeEffect() : nullptr;
-    MOZ_ASSERT(keyframeEffect,
-               "A playing animation should have a keyframe effect");
-    const AnimationProperty* property =
-        keyframeEffect->GetEffectiveAnimationOfProperty(aProperty, *effects);
-    if (!property) {
-      continue;
-    }
-
-    // Note that if the property is overridden by !important rules,
-    // GetEffectiveAnimationOfProperty returns null instead.
-    // This is what we want, since if we have animations overridden by
-    // !important rules, we don't want to send them to the compositor.
-    MOZ_ASSERT(
-        anim->CascadeLevel() != EffectCompositor::CascadeLevel::Animations ||
-            !EffectSet::GetEffectSet(styleFrame)
-                 ->PropertiesWithImportantRules()
-                 .HasProperty(aProperty),
-        "GetEffectiveAnimationOfProperty already tested the property "
-        "is not overridden by !important rules");
-
-    // Don't add animations that are pending if their timeline does not
-    // track wallclock time. This is because any pending animations on layers
-    // will have their start time updated with the current wallclock time.
-    // If we can't convert that wallclock time back to an equivalent timeline
-    // time, we won't be able to update the content animation and it will end
-    // up being out of sync with the layer animation.
-    //
-    // Currently this only happens when the timeline is driven by a refresh
-    // driver under test control. In this case, the next time the refresh
-    // driver is advanced it will trigger any pending animations.
-    if (anim->Pending() &&
-        (anim->GetTimeline() && !anim->GetTimeline()->TracksWallclockTime())) {
-      continue;
-    }
-
-    AddAnimationForProperty(aFrame, *property, anim, aAnimationInfo, data,
-                            aSendFlag);
-    keyframeEffect->SetIsRunningOnCompositor(aProperty, true);
+  const AnimationData data =
+      CreateAnimationData(aFrame, aItem, aType, aLayersBackend);
+  const HashMap<nsCSSPropertyID, nsTArray<RefPtr<dom::Animation>>>
+      compositorAnimations =
+          GroupAnimationsByProperty(matchedAnimations, propertySet);
+  for (auto iter = compositorAnimations.iter(); !iter.done(); iter.next()) {
+    AddAnimationsForProperty(aFrame, effects, iter.get().value(), data,
+                             iter.get().key(), aSendFlag, aAnimationInfo);
   }
 }
 
 static uint64_t AddAnimationsForWebRender(
-    nsDisplayItem* aItem, nsCSSPropertyID aProperty,
-    mozilla::layers::RenderRootStateManager* aManager,
+    nsDisplayItem* aItem, mozilla::layers::RenderRootStateManager* aManager,
     nsDisplayListBuilder* aDisplayListBuilder) {
   RefPtr<WebRenderAnimationData> animationData =
       aManager->CommandBuilder()
           .CreateOrRecycleWebRenderUserData<WebRenderAnimationData>(aItem);
   AnimationInfo& animationInfo = animationData->GetAnimationInfo();
-  AddAnimationsForProperty(aItem->Frame(), aDisplayListBuilder, aItem,
-                           aProperty, animationInfo, Send::Immediate,
-                           layers::LayersBackend::LAYERS_WR);
+  AddAnimationsForDisplayItem(aItem->Frame(), aDisplayListBuilder, aItem,
+                              aItem->GetType(), Send::Immediate,
+                              layers::LayersBackend::LAYERS_WR, animationInfo);
   animationInfo.StartPendingAnimations(
       aManager->LayerManager()->GetAnimationReadyTime());
 
@@ -800,11 +872,7 @@ static bool GenerateAndPushTextMask(nsIFrame* aFrame, gfxContext* aContext,
 /* static */
 void nsDisplayListBuilder::AddAnimationsAndTransitionsToLayer(
     Layer* aLayer, nsDisplayListBuilder* aBuilder, nsDisplayItem* aItem,
-    nsIFrame* aFrame, nsCSSPropertyID aProperty) {
-  MOZ_ASSERT(
-      nsCSSProps::PropHasFlags(aProperty, CSSPropFlags::CanAnimateOnCompositor),
-      "inconsistent property flags");
-
+    nsIFrame* aFrame, DisplayItemType aType) {
   // This function can be called in two ways:  from
   // nsDisplay*::BuildLayer while constructing a layer (with all
   // pointers non-null), or from RestyleManager's handling of
@@ -824,8 +892,9 @@ void nsDisplayListBuilder::AddAnimationsAndTransitionsToLayer(
 
   Send sendFlag = !aBuilder ? Send::NextTransaction : Send::Immediate;
   AnimationInfo& animationInfo = aLayer->GetAnimationInfo();
-  AddAnimationsForProperty(aFrame, aBuilder, aItem, aProperty, animationInfo,
-                           sendFlag, layers::LayersBackend::LAYERS_CLIENT);
+  AddAnimationsForDisplayItem(aFrame, aBuilder, aItem, aType, sendFlag,
+                              layers::LayersBackend::LAYERS_CLIENT,
+                              animationInfo);
   animationInfo.TransferMutatedFlagToLayer(aLayer);
 }
 
@@ -973,7 +1042,7 @@ nsRect nsDisplayListBuilder::OutOfFlowDisplayData::ComputeVisibleRectForFrame(
 
   if (aFrame->IsTransformed() &&
       mozilla::EffectCompositor::HasAnimationsForCompositor(
-          aFrame, eCSSProperty_transform)) {
+          aFrame, DisplayItemType::TYPE_TRANSFORM)) {
     /**
      * Add a fuzz factor to the overflow rectangle so that elements only
      * just out of view are pulled into the display list, so they can be
@@ -1800,7 +1869,7 @@ nsDisplayListBuilder::AGRState nsDisplayListBuilder::IsAnimatedGeometryRoot(
 
   if (aFrame->IsTransformed()) {
     aIsAsync = EffectCompositor::HasAnimationsForCompositor(
-        aFrame, eCSSProperty_transform);
+        aFrame, DisplayItemType::TYPE_TRANSFORM);
     return AGR_YES;
   }
 
@@ -4513,7 +4582,7 @@ bool nsDisplayBackgroundColor::CanApplyOpacity() const {
   // Don't apply opacity if the background color is animated since the color is
   // going to be changed on the compositor.
   return !EffectCompositor::HasAnimationsForCompositor(
-      mFrame, eCSSProperty_background_color);
+      mFrame, DisplayItemType::TYPE_BACKGROUND_COLOR);
 }
 
 LayerState nsDisplayBackgroundColor::GetLayerState(
@@ -4526,7 +4595,7 @@ LayerState nsDisplayBackgroundColor::GetLayerState(
   }
 
   if (EffectCompositor::HasAnimationsForCompositor(
-          mFrame, eCSSProperty_background_color)) {
+          mFrame, DisplayItemType::TYPE_BACKGROUND_COLOR)) {
     return LAYER_ACTIVE_FORCE;
   }
 
@@ -4554,7 +4623,7 @@ already_AddRefed<Layer> nsDisplayBackgroundColor::BuildLayer(
       aContainerParameters.mOffset.x, aContainerParameters.mOffset.y, 0));
 
   nsDisplayListBuilder::AddAnimationsAndTransitionsToLayer(
-      layer, aBuilder, this, mFrame, eCSSProperty_background_color);
+      layer, aBuilder, this, mFrame, GetType());
 
   return layer.forget();
 }
@@ -5811,7 +5880,7 @@ already_AddRefed<Layer> nsDisplayOpacity::BuildLayer(
 
   container->SetOpacity(mOpacity);
   nsDisplayListBuilder::AddAnimationsAndTransitionsToLayer(
-      container, aBuilder, this, mFrame, eCSSProperty_opacity);
+      container, aBuilder, this, mFrame, GetType());
   return container.forget();
 }
 
@@ -5833,8 +5902,8 @@ static bool IsItemTooSmallForActiveLayer(nsIFrame* aFrame) {
 bool nsDisplayOpacity::NeedsActiveLayer(nsDisplayListBuilder* aBuilder,
                                         nsIFrame* aFrame,
                                         bool aEnforceMinimumSize) {
-  if (EffectCompositor::HasAnimationsForCompositor(aFrame,
-                                                   eCSSProperty_opacity) ||
+  if (EffectCompositor::HasAnimationsForCompositor(
+          aFrame, DisplayItemType::TYPE_OPACITY) ||
       (ActiveLayerTracker::IsStyleAnimated(
            aBuilder, aFrame, nsCSSPropertyIDSet::OpacityProperties()) &&
        !(aEnforceMinimumSize && IsItemTooSmallForActiveLayer(aFrame)))) {
@@ -5852,8 +5921,8 @@ void nsDisplayOpacity::ApplyOpacity(nsDisplayListBuilder* aBuilder,
 }
 
 bool nsDisplayOpacity::CanApplyOpacity() const {
-  return !EffectCompositor::HasAnimationsForCompositor(mFrame,
-                                                       eCSSProperty_opacity);
+  return !EffectCompositor::HasAnimationsForCompositor(
+      mFrame, DisplayItemType::TYPE_OPACITY);
 }
 
 /**
@@ -6059,8 +6128,8 @@ bool nsDisplayOpacity::CreateWebRenderCommands(
     nsDisplayListBuilder* aDisplayListBuilder) {
   float* opacityForSC = &mOpacity;
 
-  uint64_t animationsId = AddAnimationsForWebRender(
-      this, eCSSProperty_opacity, aManager, aDisplayListBuilder);
+  uint64_t animationsId =
+      AddAnimationsForWebRender(this, aManager, aDisplayListBuilder);
   wr::WrAnimationProperty prop{
       wr::WrAnimationType::Opacity,
       animationsId,
@@ -7646,8 +7715,8 @@ auto nsDisplayTransform::ShouldPrerenderTransformedContent(
   // might have only just had its transform animated in which case
   // the ActiveLayerManager may not have been notified yet.
   if (!ActiveLayerTracker::IsTransformMaybeAnimated(aFrame) &&
-      !EffectCompositor::HasAnimationsForCompositor(aFrame,
-                                                    eCSSProperty_transform)) {
+      !EffectCompositor::HasAnimationsForCompositor(
+          aFrame, DisplayItemType::TYPE_TRANSFORM)) {
     EffectCompositor::SetPerformanceWarning(
         aFrame, eCSSProperty_transform,
         AnimationPerformanceWarning(
@@ -7902,8 +7971,8 @@ bool nsDisplayTransform::CreateWebRenderCommands(
     position.Round();
   }
 
-  uint64_t animationsId = AddAnimationsForWebRender(
-      this, eCSSProperty_transform, aManager, aDisplayListBuilder);
+  uint64_t animationsId =
+      AddAnimationsForWebRender(this, aManager, aDisplayListBuilder);
   wr::WrAnimationProperty prop{
       wr::WrAnimationType::Transform,
       animationsId,
@@ -8010,7 +8079,7 @@ already_AddRefed<Layer> nsDisplayTransform::BuildLayer(
   }
 
   nsDisplayListBuilder::AddAnimationsAndTransitionsToLayer(
-      container, aBuilder, this, mFrame, eCSSProperty_transform);
+      container, aBuilder, this, mFrame, GetType());
   if (mAllowAsyncAnimation && MayBeAnimated(aBuilder)) {
     // Only allow async updates to the transform if we're an animated layer,
     // since that's what triggers us to set the correct AGR in the constructor
@@ -8036,8 +8105,8 @@ bool nsDisplayTransform::MayBeAnimated(nsDisplayListBuilder* aBuilder,
   // already involved so there is less to be gained.
   // Therefore we check that the *post-transform* bounds of this item are
   // big enough to justify an active layer.
-  if (EffectCompositor::HasAnimationsForCompositor(mFrame,
-                                                   eCSSProperty_transform) ||
+  if (EffectCompositor::HasAnimationsForCompositor(
+          mFrame, DisplayItemType::TYPE_TRANSFORM) ||
       (ActiveLayerTracker::IsTransformAnimated(aBuilder, mFrame) &&
        !(aEnforceMinimumSize && IsItemTooSmallForActiveLayer(mFrame)))) {
     return true;

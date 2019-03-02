@@ -24,7 +24,7 @@ dictionary AesCbcParams : Algorithm {
 
 dictionary AesCtrParams : Algorithm {
   required BufferSource counter;
-  [EnforceRange] required octet length;
+  required [EnforceRange] octet length;
 };
 
 dictionary AesGcmParams : Algorithm {
@@ -39,7 +39,7 @@ dictionary HmacImportParams : Algorithm {
 
 dictionary Pbkdf2Params : Algorithm {
   required BufferSource salt;
-  [EnforceRange] required unsigned long iterations;
+  required [EnforceRange] unsigned long iterations;
   required AlgorithmIdentifier hash;
 };
 
@@ -48,7 +48,7 @@ dictionary RsaHashedImportParams {
 };
 
 dictionary AesKeyGenParams : Algorithm {
-  [EnforceRange] required unsigned short length;
+  required [EnforceRange] unsigned short length;
 };
 
 dictionary HmacKeyGenParams : Algorithm {
@@ -57,7 +57,7 @@ dictionary HmacKeyGenParams : Algorithm {
 };
 
 dictionary RsaHashedKeyGenParams : Algorithm {
-  [EnforceRange] required unsigned long modulusLength;
+  required [EnforceRange] unsigned long modulusLength;
   required BigInteger publicExponent;
   required AlgorithmIdentifier hash;
 };
@@ -67,7 +67,7 @@ dictionary RsaOaepParams : Algorithm {
 };
 
 dictionary RsaPssParams : Algorithm {
-  [EnforceRange] required unsigned long saltLength;
+  required [EnforceRange] unsigned long saltLength;
 };
 
 dictionary DhKeyGenParams : Algorithm {
@@ -80,7 +80,7 @@ dictionary EcKeyGenParams : Algorithm {
 };
 
 dictionary AesDerivedKeyParams : Algorithm {
-  [EnforceRange] required unsigned long length;
+  required [EnforceRange] unsigned long length;
 };
 
 dictionary HmacDerivedKeyParams : HmacImportParams {

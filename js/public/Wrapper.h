@@ -417,17 +417,9 @@ JS_FRIEND_API JSObject* UncheckedUnwrap(JSObject* obj,
 // that this cannot be called from the GC or off the main thread.
 JS_FRIEND_API JSObject* CheckedUnwrapStatic(JSObject* obj);
 
-// Old CheckedUnwrap API that we would like to remove once we convert all
-// callers to CheckedUnwrapStatic or CheckedUnwrapDynamic.  If stopAtWindowProxy
-// is true, then this returns the WindowProxy if a WindowProxy is encountered;
-// otherwise it will unwrap the WindowProxy and return a Window.
-JS_FRIEND_API JSObject* CheckedUnwrap(JSObject* obj,
-                                      bool stopAtWindowProxy = true);
-
 // Unwrap only the outermost security wrapper, with the same semantics as
 // above. This is the checked version of Wrapper::wrappedObject.
-JS_FRIEND_API JSObject* UnwrapOneChecked(JSObject* obj,
-                                         bool stopAtWindowProxy = true);
+JS_FRIEND_API JSObject* UnwrapOneCheckedStatic(JSObject* obj);
 
 // Given a JSObject, returns that object stripped of wrappers. At each stage,
 // the security wrapper has the opportunity to veto the unwrap. If

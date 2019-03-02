@@ -13,6 +13,10 @@ let windowActorOptions = {
     events: {
       "mozshowdropdown": {},
     },
+
+    observers: [
+      "test-js-window-actor-child-observer",
+    ],
   },
 };
 
@@ -138,6 +142,61 @@ add_task(async function test_events() {
     let actorParent = parent.getActor("Test");
     ok(actorParent, "JSWindowActorParent should have value.");
     is(subject.wrappedJSObject, actorParent, "Should have been recieved on the right actor");
+  });
+  ChromeUtils.unregisterWindowActor("Test");
+});
+
+add_task(async function test_observers() {
+  ChromeUtils.registerWindowActor("Test", windowActorOptions);
+  await BrowserTestUtils.withNewTab({gBrowser, url: URL}, async browser => {
+    await ContentTask.spawn(browser, {}, async function() {
+      const TOPIC = "test-js-window-actor-child-observer";
+      Services.obs.notifyObservers(content.window, TOPIC, "dataString");
+
+      let child = content.window.getWindowGlobalChild();
+      let actorChild = child.getActor("Test");
+      ok(actorChild, "JSWindowActorChild should have value.");
+      let {subject, topic, data} = actorChild.lastObserved;
+
+      is(subject.getWindowGlobalChild().getActor("Test"), actorChild, "Should have been recieved on the right actor");
+      is(topic, TOPIC, "Topic matches");
+      is(data, "dataString", "Data matches");
+    });
+  });
+  ChromeUtils.unregisterWindowActor("Test");
+});
+
+add_task(async function test_observers_with_null_data() {
+  ChromeUtils.registerWindowActor("Test", windowActorOptions);
+  await BrowserTestUtils.withNewTab({gBrowser, url: URL}, async browser => {
+    await ContentTask.spawn(browser, {}, async function() {
+      const TOPIC = "test-js-window-actor-child-observer";
+      Services.obs.notifyObservers(content.window, TOPIC);
+
+      let child = content.window.getWindowGlobalChild();
+      let actorChild = child.getActor("Test");
+      ok(actorChild, "JSWindowActorChild should have value.");
+      let {subject, topic, data} = actorChild.lastObserved;
+
+      is(subject.getWindowGlobalChild().getActor("Test"), actorChild, "Should have been recieved on the right actor");
+      is(topic, TOPIC, "Topic matches");
+      is(data, null, "Data matches");
+    });
+  });
+  ChromeUtils.unregisterWindowActor("Test");
+});
+
+add_task(async function test_observers_dont_notify_with_wrong_window() {
+  ChromeUtils.registerWindowActor("Test", windowActorOptions);
+  await BrowserTestUtils.withNewTab({gBrowser, url: URL}, async browser => {
+    await ContentTask.spawn(browser, {}, async function() {
+      const TOPIC = "test-js-window-actor-child-observer";
+      Services.obs.notifyObservers(null, TOPIC);
+      let child = content.window.getWindowGlobalChild();
+      let actorChild = child.getActor("Test");
+      ok(actorChild, "JSWindowActorChild should have value.");
+      is(actorChild.lastObserved, undefined, "Should not receive wrong window's observer notification!");
+    });
   });
   ChromeUtils.unregisterWindowActor("Test");
 });

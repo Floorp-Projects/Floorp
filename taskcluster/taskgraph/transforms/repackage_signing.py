@@ -52,8 +52,7 @@ def make_repackage_signing_description(config, jobs):
         else:
             treeherder.setdefault('symbol', 'rs(B)')
         dep_th_platform = dep_job.task.get('extra', {}).get('treeherder-platform')
-        treeherder.setdefault('platform',
-                              "{}/opt".format(dep_th_platform))
+        treeherder.setdefault('platform', dep_th_platform)
         treeherder.setdefault(
             'tier',
             dep_job.task.get('extra', {}).get('treeherder', {}).get('tier', 1)

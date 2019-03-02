@@ -19,18 +19,20 @@ Test preset with no subcommand
   Pushed via `mach try syntax`
 
   $ ./mach try $testargs --list-presets
-  foo:
-    no_artifact: true
-    platforms:
-    - linux
-    selector: syntax
-    tags:
-    - foo
-    talos:
-    - none
-    tests:
-    - mochitests
+  Presets from */mozbuild/try_presets.yml: (glob)
   
+    foo:
+      no_artifact: true
+      platforms:
+      - linux
+      selector: syntax
+      tags:
+      - foo
+      talos:
+      - none
+      tests:
+      - mochitests
+    
   $ unset EDITOR
   $ ./mach try $testargs --edit-presets
   error: must set the $EDITOR environment variable to use --edit-presets
@@ -66,30 +68,32 @@ Test preset with syntax subcommand
   Pushed via `mach try syntax`
 
   $ ./mach try syntax $testargs --list-presets
-  bar:
-    no_artifact: true
-    platforms:
-    - win32
-    push: false
-    selector: syntax
-    tags:
-    - bar
-    talos:
-    - all
-    tests:
-    - none
-  foo:
-    no_artifact: true
-    platforms:
-    - linux
-    selector: syntax
-    tags:
-    - foo
-    talos:
-    - none
-    tests:
-    - mochitests
+  Presets from */mozbuild/try_presets.yml: (glob)
   
+    bar:
+      no_artifact: true
+      platforms:
+      - win32
+      push: false
+      selector: syntax
+      tags:
+      - bar
+      talos:
+      - all
+      tests:
+      - none
+    foo:
+      no_artifact: true
+      platforms:
+      - linux
+      selector: syntax
+      tags:
+      - foo
+      talos:
+      - none
+      tests:
+      - mochitests
+    
   $ ./mach try syntax $testargs --edit-presets
   bar:
     no_artifact: true
@@ -177,36 +181,38 @@ Test preset with fuzzy subcommand
   }
   
   $ ./mach try fuzzy $testargs --list-presets
-  bar:
-    no_artifact: true
-    platforms:
-    - win32
-    push: false
-    selector: syntax
-    tags:
-    - bar
-    talos:
-    - all
-    tests:
-    - none
-  baz:
-    no_artifact: true
-    push: false
-    query:
-    - '''baz'
-    selector: fuzzy
-  foo:
-    no_artifact: true
-    platforms:
-    - linux
-    selector: syntax
-    tags:
-    - foo
-    talos:
-    - none
-    tests:
-    - mochitests
+  Presets from */mozbuild/try_presets.yml: (glob)
   
+    bar:
+      no_artifact: true
+      platforms:
+      - win32
+      push: false
+      selector: syntax
+      tags:
+      - bar
+      talos:
+      - all
+      tests:
+      - none
+    baz:
+      no_artifact: true
+      push: false
+      query:
+      - '''baz'
+      selector: fuzzy
+    foo:
+      no_artifact: true
+      platforms:
+      - linux
+      selector: syntax
+      tags:
+      - foo
+      talos:
+      - none
+      tests:
+      - mochitests
+    
   $ ./mach try fuzzy $testargs --edit-presets
   bar:
     no_artifact: true

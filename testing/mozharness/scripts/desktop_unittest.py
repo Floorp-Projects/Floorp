@@ -932,9 +932,11 @@ class DesktopUnittest(TestingMixin, MercurialScript, MozbaseMixin,
                     # 3) checking to see if the return code is in success_codes
 
                     success_codes = None
-                    if suite_category == 'reftest' and platform.platform().startswith('Windows-7'):
-                        # bug 1120644
-                        success_codes = [0, 1]
+                    if (suite_category == 'reftest'
+                            and '32bit' in platform.architecture()
+                            and platform.system() == "Windows"):
+                        # see bug 1120644, 1526777, 1531499
+                        success_codes = [1]
 
                     tbpl_status, log_level, summary = parser.evaluate_parser(return_code,
                                                                              success_codes,

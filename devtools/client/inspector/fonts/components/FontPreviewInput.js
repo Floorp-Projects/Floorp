@@ -59,7 +59,7 @@ class FontPreviewInput extends PureComponent {
         className: "devtools-searchinput",
         onChange: this.onChange,
         onFocus: this.onFocus,
-        maxlength: PREVIEW_TEXT_MAX_LENGTH,
+        maxLength: PREVIEW_TEXT_MAX_LENGTH,
         placeholder: getStr("fontinspector.previewTextPlaceholder"),
         ref: this.inputRef,
         type: "text",

@@ -242,6 +242,7 @@ class TreeNode extends Component {
       item: _propTypes2.default.any.isRequired,
       isExpandable: _propTypes2.default.bool.isRequired,
       onClick: _propTypes2.default.func,
+      shouldItemUpdate: _propTypes2.default.func,
       renderItem: _propTypes2.default.func.isRequired
     };
   }
@@ -270,7 +271,7 @@ class TreeNode extends Component {
   }
 
   shouldComponentUpdate(nextProps) {
-    return this.props.item !== nextProps.item || this.props.focused !== nextProps.focused || this.props.expanded !== nextProps.expanded;
+    return this.props.item !== nextProps.item || (this.props.shouldItemUpdate && this.props.shouldItemUpdate(this.props.item, nextProps.item)) || this.props.focused !== nextProps.focused || this.props.expanded !== nextProps.expanded;
   }
 
   /**
@@ -496,6 +497,17 @@ class Tree extends Component {
       //     // This item's children are stored in its `children` property.
       //     getChildren: item => item.children
       getChildren: _propTypes2.default.func.isRequired,
+
+      // A function to check if the tree node for the item should be updated.
+      //
+      // Type: shouldItemUpdate(prevItem: Item, nextItem: Item) -> Boolean
+      //
+      // Example:
+      //
+      //     // This item should be updated if it's type is a long string
+      //     shouldItemUpdate: (prevItem, nextItem) =>
+      //       nextItem.type === "longstring"
+      shouldItemUpdate: _propTypes2.default.func,
 
       // A function which takes an item and ArrowExpander component instance and
       // returns a component, or text, or anything else that React considers
@@ -1066,6 +1078,7 @@ class Tree extends Component {
         index: i,
         item,
         depth,
+        shouldItemUpdate: this.props.shouldItemUpdate,
         renderItem: this.props.renderItem,
         focused: focused === item,
         active: active === item,
@@ -3666,6 +3679,7 @@ const {
   getChildrenWithEvaluations,
   getActor,
   getParent,
+  getValue,
   nodeIsPrimitive,
   nodeHasGetter,
   nodeHasSetter
@@ -3888,6 +3902,7 @@ class ObjectInspector extends Component {
       onFocus: focusable ? this.focusItem : null,
       onActivate: focusable ? this.activateItem : null,
 
+      shouldItemUpdate,
       renderItem: (item, depth, focused, arrow, expanded) => ObjectInspectorItem({
         ...this.props,
         item,
@@ -3899,6 +3914,11 @@ class ObjectInspector extends Component {
       })
     });
   }
+}
+
+function shouldItemUpdate(prevItem, nextItem) {
+  const value = getValue(nextItem);
+  return value && value.type === "longString";
 }
 
 function mapStateToProps(state, props) {

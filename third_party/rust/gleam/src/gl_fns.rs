@@ -1594,6 +1594,9 @@ impl Gl for GlFns {
         unsafe {
             self.get_program_iv(program, ffi::INFO_LOG_LENGTH, &mut max_len);
         }
+        if max_len[0] == 0 {
+            return String::new();
+        }
         let mut result = vec![0u8; max_len[0] as usize];
         let mut result_len = 0 as GLsizei;
         unsafe {
@@ -1709,6 +1712,9 @@ impl Gl for GlFns {
         let mut max_len = [0];
         unsafe {
             self.get_shader_iv(shader, ffi::INFO_LOG_LENGTH, &mut max_len);
+        }
+        if max_len[0] == 0 {
+            return String::new();
         }
         let mut result = vec![0u8; max_len[0] as usize];
         let mut result_len = 0 as GLsizei;
@@ -1985,6 +1991,19 @@ impl Gl for GlFns {
     fn test_fence_apple(&self, fence: GLuint) {
         unsafe {
             self.ffi_gl_.TestFenceAPPLE(fence);
+        }
+    }
+
+    fn test_object_apple(&self, object: GLenum, name: GLuint) -> GLboolean {
+        unsafe {
+            self.ffi_gl_.TestObjectAPPLE(object, name)
+        }
+    }
+
+    fn finish_object_apple(&self, object: GLenum, name: GLuint) {
+        unsafe {
+            // the spec has a typo for name as GLint instead of GLuint
+            self.ffi_gl_.FinishObjectAPPLE(object, name as GLint);
         }
     }
 

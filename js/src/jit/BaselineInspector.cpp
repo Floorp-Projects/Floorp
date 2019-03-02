@@ -1662,8 +1662,8 @@ static MIRType GetCacheIRExpectedInputType(ICCacheIR_Monitored* stub) {
     return MIRType::Double;
   }
   if (reader.matchOp(CacheOp::GuardType, ValOperandId(0))) {
-    JSValueType type = reader.valueType();
-    return MIRTypeFromValueType(type);
+    ValueType type = reader.valueType();
+    return MIRTypeFromValueType(JSValueType(type));
   }
 
   MOZ_ASSERT_UNREACHABLE("Unexpected instruction");

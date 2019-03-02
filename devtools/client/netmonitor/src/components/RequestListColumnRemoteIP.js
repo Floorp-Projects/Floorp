@@ -9,8 +9,6 @@ const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { getFormattedIPAndPort } = require("../utils/format-utils");
 
-const { div } = dom;
-
 class RequestListColumnRemoteIP extends Component {
   static get propTypes() {
     return {
@@ -28,7 +26,10 @@ class RequestListColumnRemoteIP extends Component {
       getFormattedIPAndPort(remoteAddress, remotePort) : "unknown";
 
     return (
-      div({ className: "requests-list-column requests-list-remoteip", title: remoteIP },
+      dom.td({
+        className: "requests-list-column requests-list-remoteip",
+        title: remoteIP,
+      },
         remoteIP
       )
     );

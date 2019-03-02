@@ -16,7 +16,7 @@ add_task(async function() {
 
   // detach and set the listener on the new window
   let newWindow = gBrowser.replaceTabWithWindow(tabToDetach);
-  await promiseWaitForEvent(tabToDetach.linkedBrowser, "SwapDocShells");
+  await BrowserTestUtils.waitForEvent(tabToDetach.linkedBrowser, "SwapDocShells");
 
   is(newWindow.gBrowser.selectedTab.hasAttribute("busy"), true, "Busy attribute should be correct");
   is(newWindow.gBrowser.getIcon(), iconURLSpec, "Icon should be correct");

@@ -707,11 +707,8 @@ void CodeGenerator::visitShiftI(LShiftI* ins) {
         masm.Lsr(dest, lhs, rhsreg);
         if (ins->mir()->toUrsh()->fallible()) {
           /// x >>> 0 can overflow.
-          Label nonzero;
-          masm.Cbnz(rhsreg, &nonzero);
           masm.Cmp(dest, Operand(0));
           bailoutIf(Assembler::LessThan, ins->snapshot());
-          masm.bind(&nonzero);
         }
         break;
       default:

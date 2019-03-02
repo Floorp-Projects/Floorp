@@ -12166,7 +12166,7 @@ bool DebuggerObject::unwrap(JSContext* cx, HandleDebuggerObject object,
   RootedObject referent(cx, object->referent());
   Debugger* dbg = object->owner();
 
-  RootedObject unwrapped(cx, UnwrapOneChecked(referent));
+  RootedObject unwrapped(cx, UnwrapOneCheckedStatic(referent));
   if (!unwrapped) {
     result.set(nullptr);
     return true;

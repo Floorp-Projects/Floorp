@@ -336,10 +336,12 @@ function makeUrlbarResult(tokens, info) {
   let source;
   let tags = [];
   let comment = info.comment;
-  let hasTags = info.style.includes("tag");
-  if (info.style.includes("bookmark") || hasTags) {
+  // UnifiedComplete may return "bookmark", "bookmark-tag" or "tag". In the last
+  // case it should not be considered a bookmark, but an history item with tags.
+  // We don't show tags for non bookmarked items though.
+  if (info.style.includes("bookmark")) {
     source = UrlbarUtils.RESULT_SOURCE.BOOKMARKS;
-    if (hasTags) {
+    if (info.style.includes("tag")) {
       // Split title and tags.
       [comment, tags] = info.comment.split(TITLE_TAGS_SEPARATOR);
       // Tags are separated by a comma and in a random order.

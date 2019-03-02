@@ -349,9 +349,11 @@ nsresult nsCCUncollectableMarker::Observe(nsISupports* aSubject,
   nsCOMPtr<nsIAppShellService> appShell =
       do_GetService(NS_APPSHELLSERVICE_CONTRACTID);
   if (appShell) {
-    nsCOMPtr<nsIXULWindow> hw;
-    appShell->GetHiddenWindow(getter_AddRefs(hw));
-    if (hw) {
+    bool hasHiddenWindow = false;
+    appShell->GetHasHiddenWindow(&hasHiddenWindow);
+    if (hasHiddenWindow) {
+      nsCOMPtr<nsIXULWindow> hw;
+      appShell->GetHiddenWindow(getter_AddRefs(hw));
       nsCOMPtr<nsIDocShell> shell;
       hw->GetDocShell(getter_AddRefs(shell));
       MarkDocShell(shell, cleanupJS);
@@ -359,6 +361,7 @@ nsresult nsCCUncollectableMarker::Observe(nsISupports* aSubject,
     bool hasHiddenPrivateWindow = false;
     appShell->GetHasHiddenPrivateWindow(&hasHiddenPrivateWindow);
     if (hasHiddenPrivateWindow) {
+      nsCOMPtr<nsIXULWindow> hw;
       appShell->GetHiddenPrivateWindow(getter_AddRefs(hw));
       if (hw) {
         nsCOMPtr<nsIDocShell> shell;

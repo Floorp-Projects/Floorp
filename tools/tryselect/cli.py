@@ -6,11 +6,9 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import os
 import subprocess
-import sys
 import tempfile
 from argparse import ArgumentParser
 
-from .preset import presets
 from .templates import all_templates
 
 
@@ -46,15 +44,17 @@ COMMON_ARGUMENT_GROUPS = {
           'help': 'Load a saved selection.',
           }],
         [['--list-presets'],
-         {'action': 'store_true',
-          'dest': 'list_presets',
-          'default': False,
+         {'action': 'store_const',
+          'dest': 'preset_action',
+          'const': 'list',
+          'default': None,
           'help': 'List available preset selections.',
           }],
         [['--edit-presets'],
-         {'action': 'store_true',
-          'dest': 'edit_presets',
-          'default': False,
+         {'action': 'store_const',
+          'dest': 'preset_action',
+          'const': 'edit',
+          'default': None,
           'help': 'Edit the preset file.',
           }],
     ],
@@ -116,15 +116,6 @@ class BaseTryParser(ArgumentParser):
 
             if '{msg}' not in args.message:
                 args.message = '{}\n\n{}'.format(args.message, '{msg}')
-
-        if 'preset' in self.common_groups:
-            if args.list_presets:
-                presets.list()
-                sys.exit()
-
-            if args.edit_presets:
-                presets.edit()
-                sys.exit()
 
     def parse_known_args(self, *args, **kwargs):
         args, remainder = ArgumentParser.parse_known_args(self, *args, **kwargs)

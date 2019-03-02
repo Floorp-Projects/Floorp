@@ -48,7 +48,7 @@ mod display_list;
 mod font;
 mod gradient_builder;
 mod image;
-mod units;
+pub mod units;
 
 pub use api::*;
 pub use color::*;
@@ -57,4 +57,5 @@ pub use display_list::*;
 pub use font::*;
 pub use gradient_builder::*;
 pub use image::*;
+//TODO: stop re-exporting this
 pub use units::*;

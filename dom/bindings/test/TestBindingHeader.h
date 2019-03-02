@@ -1583,6 +1583,21 @@ class TestCEReactionsInterface : public nsISupports, public nsWrapperCache {
   void GetSupportedNames(nsTArray<nsString>&);
 };
 
+class TestAttributesOnTypes : public nsISupports, public nsWrapperCache {
+ public:
+  NS_DECL_ISUPPORTS
+
+  // We need a GetParentObject and GetDocGroup to make binding codegen happy
+  virtual nsISupports* GetParentObject();
+
+  void Foo(uint8_t arg);
+  void Bar(uint8_t arg);
+  void Baz(const nsAString& arg);
+  uint8_t SomeAttr();
+  void SetSomeAttr(uint8_t);
+  void ArgWithAttr(uint8_t arg1, const Optional<uint8_t>& arg2);
+};
+
 }  // namespace dom
 }  // namespace mozilla
 

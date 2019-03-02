@@ -8,8 +8,6 @@ const { Component } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
-const { div } = dom;
-
 class RequestListColumnScheme extends Component {
   static get propTypes() {
     return {
@@ -24,7 +22,7 @@ class RequestListColumnScheme extends Component {
   render() {
     const { urlDetails } = this.props.item;
     return (
-      div({
+      dom.td({
         className: "requests-list-column requests-list-scheme",
         title: urlDetails.scheme,
       },
