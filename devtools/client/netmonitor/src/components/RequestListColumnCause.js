@@ -38,7 +38,7 @@ class RequestListColumnCause extends Component {
     }
 
     return (
-      div({ className: "requests-list-column requests-list-cause", title: causeType },
+      dom.td({ className: "requests-list-column requests-list-cause", title: causeType },
         causeHasStack && div({
           className: "requests-list-cause-stack",
           onMouseDown: onCauseBadgeMouseDown,

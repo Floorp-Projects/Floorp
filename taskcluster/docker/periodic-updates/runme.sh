@@ -92,5 +92,7 @@ END
   chmod 600 "${HOME}/.arcrc"
 fi
 
+export HGPLAIN=1
+
 # shellcheck disable=SC2086
 /home/worker/scripts/periodic_file_updates.sh -p "${PRODUCT}" -b "${BRANCH}" -a ${PARAMS}

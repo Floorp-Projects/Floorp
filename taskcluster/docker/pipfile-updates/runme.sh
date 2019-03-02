@@ -60,5 +60,7 @@ END
   chmod 600 "${HOME}/.arcrc"
 fi
 
+export HGPLAIN=1
+
 # shellcheck disable=SC2086
 /home/worker/scripts/update_pipfiles.sh -b "${BRANCH}" -p "${PIPFILE_DIRECTORY}" ${PIP_ARG}

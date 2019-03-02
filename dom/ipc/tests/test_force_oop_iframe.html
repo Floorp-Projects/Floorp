@@ -13,7 +13,7 @@
 /* eslint-env mozilla/frame-script */
 
 add_task(async function() {
-  await SpecialPowers.pushPrefEnv({"set": [["browser.fission.oopif.attribute", true]]});
+  await SpecialPowers.pushPrefEnv({"set": [["fission.oopif.attribute", true]]});
 
   // This iframe should be loaded out of process. Unfortunately as of the time
   // of this test's creation, many different events which we could use to detect

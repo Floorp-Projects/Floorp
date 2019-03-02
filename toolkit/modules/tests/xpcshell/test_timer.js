@@ -63,11 +63,12 @@ add_task(async function test_setInterval() {
   let calls = 0;
 
   await new Promise((resolve) => {
-    imported.setInterval((param1, param2) => {
+    let interval2 = imported.setInterval((param1, param2) => {
       Assert.ok(true, "Should be called");
       Assert.equal(param1, 15, "first parameter is correct");
       Assert.equal(param2, "hola", "second parameter is correct");
       if (calls >= EXPECTED_CALLS) {
+        imported.clearInterval(interval2);
         resolve();
       }
       calls++;
@@ -88,11 +89,12 @@ add_task(async function test_setIntervalWithTarget() {
   let calls = 0;
 
   await new Promise((resolve) => {
-    imported.setIntervalWithTarget((param1, param2) => {
+    let interval2 = imported.setIntervalWithTarget((param1, param2) => {
       Assert.ok(true, "Should be called");
       Assert.equal(param1, 15, "first parameter is correct");
       Assert.equal(param2, "hola", "second parameter is correct");
       if (calls >= EXPECTED_CALLS) {
+        imported.clearInterval(interval2);
         resolve();
       }
       calls++;
@@ -118,4 +120,25 @@ add_task(async function test_setTimeoutWithTargetNonFunction() {
 add_task(async function test_setIntervalWithTargetNonFunction() {
   Assert.throws(() => { imported.setIntervalWithTarget({}, 0); },
                 /callback is not a function in setInterval/);
+});
+
+add_task(async function test_requestIdleCallback() {
+  let request1 = imported.requestIdleCallback(() => do_throw("Should not be called"));
+  Assert.equal(typeof request1, "number", "requestIdleCallback returns a number");
+  Assert.ok(request1 > 0, "setTimeout returns a positive number");
+
+  imported.cancelIdleCallback(request1);
+
+  await new Promise((resolve) => {
+    let request2 = imported.requestIdleCallback((deadline) => {
+      Assert.ok(true, "Should be called");
+      Assert.equal(typeof deadline.didTimeout, "boolean", "deadline parameter has .didTimeout property");
+      Assert.equal(typeof deadline.timeRemaining(), "number", "deadline parameter has .timeRemaining() function");
+      resolve();
+    }, {timeout: 100});
+
+    Assert.equal(typeof request2, "number", "requestIdleCallback returns a number");
+    Assert.ok(request2 > 0, "requestIdleCallback returns a positive number");
+    Assert.notEqual(request1, request2, "Calling requestIdleCallback again returns a different value");
+  });
 });

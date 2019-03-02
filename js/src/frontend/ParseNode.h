@@ -1958,10 +1958,10 @@ class ClassField : public BinaryNode {
                    name, initializer) {}
 
   static bool test(const ParseNode& node) {
-    return node.isKind(ParseNodeKind::ClassField);
+    bool match = node.isKind(ParseNodeKind::ClassField);
+    MOZ_ASSERT_IF(match, node.is<BinaryNode>());
+    return match;
   }
-
-  static constexpr TypeCode classTypeCode() { return TypeCode::Other; }
 
   ParseNode& name() const { return *left(); }
 

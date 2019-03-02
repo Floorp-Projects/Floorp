@@ -13,12 +13,6 @@
   height: 16px;
 }
 
-@media (-moz-windows-default-theme) {
-  .popup-notification-warning {
-    color: #aa1b08;
-  }
-}
-
 /* Swap the primary and secondary action, because Windows
  * platform conventions put the primary action on the left. */
 .popup-notification-primary-button {

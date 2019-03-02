@@ -39,8 +39,6 @@ class UrlbarInput {
    *   The initial options for UrlbarInput.
    * @param {object} options.textbox
    *   The <textbox> element.
-   * @param {object} options.panel
-   *   The <panel> element.
    * @param {UrlbarController} [options.controller]
    *   Optional fake controller to override the built-in UrlbarController.
    *   Intended for use in unit tests only.
@@ -49,9 +47,36 @@ class UrlbarInput {
     this.textbox = options.textbox;
     this.textbox.clickSelectsAll = UrlbarPrefs.get("clickSelectsAll");
 
-    this.panel = options.panel;
     this.window = this.textbox.ownerGlobal;
     this.document = this.window.document;
+
+    // Create the panel to contain results.
+    // In the future this may be moved to the view, so it can customize
+    // the container element.
+    let MozXULElement = this.window.MozXULElement;
+    this.document.getElementById("mainPopupSet").appendChild(
+      MozXULElement.parseXULToFragment(`
+        <panel id="urlbar-results"
+                role="group"
+                noautofocus="true"
+                hidden="true"
+                flip="none"
+                consumeoutsideclicks="never"
+                norolluponanchor="true"
+                level="parent">
+          <html:div class="urlbarView-body-outer">
+            <html:div class="urlbarView-body-inner">
+              <html:div class="urlbarView-results"/>
+            </html:div>
+          </html:div>
+          <hbox class="search-one-offs"
+                compact="true"
+                includecurrentengine="true"
+                disabletab="true"/>
+        </panel>
+      `));
+    this.panel = this.document.getElementById("urlbar-results");
+
     this.controller = options.controller || new UrlbarController({
       browserWindow: this.window,
     });
@@ -129,6 +154,35 @@ class UrlbarInput {
 
     // Tracks IME composition.
     this._compositionState == UrlbarUtils.COMPOSITION.NONE;
+  }
+
+  /**
+   * Uninitializes this input object, detaching it from the inputField.
+   */
+  uninit() {
+    this.inputField.removeEventListener("blur", this.eventBufferer);
+    this.inputField.removeEventListener("keydown", this.eventBufferer);
+    delete this.eventBufferer;
+    const inputFieldEvents = [
+      "focus", "input", "keyup", "mouseover", "paste", "scrollend", "select",
+      "overflow", "underflow", "dragstart", "dragover", "drop",
+    ];
+    for (let name of inputFieldEvents) {
+      this.inputField.removeEventListener(name, this);
+    }
+    this.removeEventListener("mousedown", this);
+
+    this.view.panel.remove();
+
+    this.inputField.controllers.removeControllerAt(0);
+
+    delete this.document;
+    delete this.window;
+    delete this.valueFormatter;
+    delete this.panel;
+    delete this.view;
+    delete this.controller;
+    delete this.textbox;
   }
 
   /**
@@ -825,7 +879,7 @@ class UrlbarInput {
     // remove the !triggeringPrincipal condition here.
     if (!params.triggeringPrincipal ||
         params.triggeringPrincipal.isSystemPrincipal) {
-      delete browser.canceledAuthenticationPromptCounter;
+      delete browser.authPromptAbuseCounter;
     }
 
     params.allowThirdPartyFixup = true;

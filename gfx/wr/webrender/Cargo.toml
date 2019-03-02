@@ -30,13 +30,13 @@ byteorder = "1.0"
 cfg-if = "0.1.2"
 cstr = "0.1.2"
 fxhash = "0.2.1"
-gleam = "0.6.9"
+gleam = "0.6.11"
 image = { optional = true, version = "0.21" }
 lazy_static = "1"
 log = "0.4"
 malloc_size_of_derive = "0.1"
 num-traits = "0.2"
-plane-split = "0.13.3"
+plane-split = "0.13.7"
 png = { optional = true, version = "0.14" }
 rayon = "1"
 ron = { optional = true, version = "0.1.7" }

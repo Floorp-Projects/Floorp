@@ -240,6 +240,10 @@ pref("browser.startup.blankWindow", true);
 pref("browser.startup.blankWindow", false);
 #endif
 
+// Don't create the hidden window during startup on
+// platforms that don't always need it (Win/Linux).
+pref("toolkit.lazyHiddenWindow", true);
+
 pref("browser.slowStartup.notificationDisabled", false);
 pref("browser.slowStartup.timeThreshold", 20000);
 pref("browser.slowStartup.maxSamples", 5);

@@ -64,6 +64,9 @@ class VideoSink : public MediaSink {
 
   void Shutdown() override;
 
+  void SetSecondaryVideoContainer(VideoFrameContainer* aSecondary) override;
+  void ClearSecondaryVideoContainer() override;
+
   nsCString GetDebugInfo() override;
 
  private:
@@ -109,6 +112,7 @@ class VideoSink : public MediaSink {
   RefPtr<MediaSink> mAudioSink;
   MediaQueue<VideoData>& mVideoQueue;
   VideoFrameContainer* mContainer;
+  RefPtr<VideoFrameContainer> mSecondaryContainer;
 
   // Producer ID to help ImageContainer distinguish different streams of
   // FrameIDs. A unique and immutable value per VideoSink.

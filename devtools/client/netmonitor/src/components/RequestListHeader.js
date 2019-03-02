@@ -167,9 +167,9 @@ class RequestListHeader extends Component {
     const { columns, scale, sort, sortBy, waterfallWidth } = this.props;
 
     return (
-      div({ className: "devtools-toolbar requests-list-headers-wrapper" },
-        div({
-          className: "devtools-toolbar requests-list-headers",
+      dom.thead({ className: "devtools-toolbar requests-list-headers-group" },
+        dom.tr({
+          className: "requests-list-headers",
           onContextMenu: this.onContextMenu,
         },
           HEADERS.filter((header) => columns[header.name]).map((header) => {
@@ -188,7 +188,7 @@ class RequestListHeader extends Component {
             }
 
             return (
-              div({
+              dom.td({
                 id: `requests-list-${boxName}-header-box`,
                 className: `requests-list-column requests-list-${boxName}`,
                 key: name,

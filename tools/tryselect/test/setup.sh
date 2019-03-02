@@ -1,5 +1,6 @@
 export topsrcdir=$TESTDIR/../../../
 export MOZBUILD_STATE_PATH=$TMP/mozbuild
+export MACH_TRY_PRESET_PATHS=$MOZBUILD_STATE_PATH/try_presets.yml
 
 export MACHRC=$TMP/machrc
 cat > $MACHRC << EOF

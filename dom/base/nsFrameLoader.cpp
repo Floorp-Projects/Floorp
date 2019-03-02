@@ -1797,7 +1797,7 @@ bool nsFrameLoader::ShouldUseRemoteProcess() {
 
   // Check if the force fission test attribute is enabled.
   if (XRE_IsContentProcess() &&
-      Preferences::GetBool("browser.fission.oopif.attribute", false) &&
+      Preferences::GetBool("fission.oopif.attribute", false) &&
       mOwnerContent->HasAttr(kNameSpaceID_None, nsGkAtoms::fission)) {
     return true;
   }

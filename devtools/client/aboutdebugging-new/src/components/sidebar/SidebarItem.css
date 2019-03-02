@@ -18,6 +18,11 @@
   -moz-user-select: none;
 }
 
+.sidebar-item--overflow {
+  min-height: var(--category-height);
+  height: auto;
+}
+
 .sidebar-item__link {
   display: block;
   height: 100%;

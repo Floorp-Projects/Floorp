@@ -17,7 +17,7 @@ class FontAxis extends PureComponent {
       axis: PropTypes.shape(Types.fontVariationAxis),
       disabled: PropTypes.bool.isRequired,
       onChange: PropTypes.func.isRequired,
-      value: PropTypes.string.isRequired,
+      value: PropTypes.number.isRequired,
     };
   }
 

@@ -4610,8 +4610,16 @@ nsresult XREMain::XRE_mainRun() {
   SaveToEnv("XRE_RESTARTED_BY_PROFILE_MANAGER=");
 
   if (!mShuttingDown) {
-    rv = appStartup->CreateHiddenWindow();
-    NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
+#ifdef XP_MACOSX
+    bool lazyHiddenWindow = false;
+#else
+    bool lazyHiddenWindow = Preferences::GetBool("toolkit.lazyHiddenWindow", false);
+#endif
+
+    if (!lazyHiddenWindow) {
+      rv = appStartup->CreateHiddenWindow();
+      NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
+    }
 
 #ifdef XP_WIN
     Preferences::RegisterCallbackAndCall(RegisterApplicationRestartChanged,

@@ -41,6 +41,7 @@
 #include "mozilla/LayerTimelineMarker.h"
 
 #include "mozilla/EffectCompositor.h"
+#include "mozilla/LayerAnimationInfo.h"
 #include "mozilla/Move.h"
 #include "mozilla/ReverseIterator.h"
 #include "mozilla/gfx/2D.h"
@@ -352,19 +353,15 @@ DisplayItemData::~DisplayItemData() {
 }
 
 void DisplayItemData::ClearAnimationCompositorState() {
-  if (mDisplayItemKey !=
-          static_cast<uint32_t>(DisplayItemType::TYPE_TRANSFORM) &&
-      mDisplayItemKey != static_cast<uint32_t>(DisplayItemType::TYPE_OPACITY)) {
+  DisplayItemType type = static_cast<DisplayItemType>(mDisplayItemKey);
+  // FIXME: Bug 1530857: Add background_color.
+  if (type != DisplayItemType::TYPE_TRANSFORM &&
+      type != DisplayItemType::TYPE_OPACITY) {
     return;
   }
 
   for (nsIFrame* frame : mFrameList) {
-    nsCSSPropertyID prop =
-        mDisplayItemKey ==
-                static_cast<uint32_t>(DisplayItemType::TYPE_TRANSFORM)
-            ? eCSSProperty_transform
-            : eCSSProperty_opacity;
-    EffectCompositor::ClearIsRunningOnCompositor(frame, prop);
+    EffectCompositor::ClearIsRunningOnCompositor(frame, type);
   }
 }
 
@@ -6047,8 +6044,11 @@ Size FrameLayerBuilder::ChooseScale(nsIFrame* aContainerFrame,
     // scale size for animation
     if (aContainerItem &&
         aContainerItem->GetType() == DisplayItemType::TYPE_TRANSFORM &&
-        EffectCompositor::HasAnimationsForCompositor(aContainerFrame,
-                                                     eCSSProperty_transform)) {
+        // FIXME: What we need is only transform, rotate, and scale, not
+        // translate, so it's be better to use a property set, instead of
+        // display item type here.
+        EffectCompositor::HasAnimationsForCompositor(
+            aContainerFrame, DisplayItemType::TYPE_TRANSFORM)) {
       nsSize displaySize =
           ComputeDesiredDisplaySizeForAnimation(aContainerFrame);
       // compute scale using the animation on the container, taking ancestors in

@@ -87,9 +87,11 @@ nsresult CallJSActorMethod(nsWrapperCache* aActor, const char* aName,
  * This object also can act as a carrier for methods and other state related to
  * a single protocol managed by the JSWindowActorService.
  */
-class JSWindowActorProtocol final : public nsIDOMEventListener {
+class JSWindowActorProtocol final : public nsIObserver,
+                                    public nsIDOMEventListener {
  public:
   NS_DECL_ISUPPORTS
+  NS_DECL_NSIOBSERVER
   NS_DECL_NSIDOMEVENTLISTENER
 
   static already_AddRefed<JSWindowActorProtocol> FromIPC(
@@ -114,6 +116,7 @@ class JSWindowActorProtocol final : public nsIDOMEventListener {
 
   struct ChildSide : public Sided {
     nsTArray<EventDecl> mEvents;
+    nsTArray<nsCString> mObservers;
   };
 
   const nsAString& Name() const { return mName; }
@@ -122,6 +125,8 @@ class JSWindowActorProtocol final : public nsIDOMEventListener {
 
   void RegisterListenersFor(EventTarget* aRoot);
   void UnregisterListenersFor(EventTarget* aRoot);
+  void AddObservers();
+  void RemoveObservers();
 
  private:
   explicit JSWindowActorProtocol(const nsAString& aName) : mName(aName) {}
@@ -133,7 +138,7 @@ class JSWindowActorProtocol final : public nsIDOMEventListener {
   ChildSide mChild;
 };
 
-NS_IMPL_ISUPPORTS(JSWindowActorProtocol, nsIDOMEventListener);
+NS_IMPL_ISUPPORTS(JSWindowActorProtocol, nsIObserver, nsIDOMEventListener);
 
 /* static */ already_AddRefed<JSWindowActorProtocol>
 JSWindowActorProtocol::FromIPC(const JSWindowActorInfo& aInfo) {
@@ -154,6 +159,7 @@ JSWindowActorProtocol::FromIPC(const JSWindowActorInfo& aInfo) {
     }
   }
 
+  proto->mChild.mObservers = aInfo.observers();
   return proto.forget();
 }
 
@@ -177,6 +183,7 @@ JSWindowActorInfo JSWindowActorProtocol::ToIPC() {
     }
   }
 
+  info.observers() = mChild.mObservers;
   return info;
 }
 
@@ -219,6 +226,10 @@ JSWindowActorProtocol::FromWebIDLOptions(const nsAString& aName,
     }
   }
 
+  if (aOptions.mChild.mObservers.WasPassed()) {
+    proto->mChild.mObservers = aOptions.mChild.mObservers.Value();
+  }
+
   return proto.forget();
 }
 
@@ -257,6 +268,67 @@ NS_IMETHODIMP JSWindowActorProtocol::HandleEvent(Event* aEvent) {
   return CallJSActorMethod(actor, "handleEvent", aEvent, &dummy);
 }
 
+NS_IMETHODIMP JSWindowActorProtocol::Observe(nsISupports* aSubject,
+                                             const char* aTopic,
+                                             const char16_t* aData) {
+  nsCOMPtr<nsPIDOMWindowInner> inner = do_QueryInterface(aSubject);
+  if (NS_WARN_IF(!inner)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  RefPtr<WindowGlobalChild> wgc = inner->GetWindowGlobalChild();
+  if (NS_WARN_IF(!wgc)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  // Ensure our actor is present.
+  ErrorResult error;
+  RefPtr<JSWindowActorChild> actor = wgc->GetActor(mName, error);
+  if (NS_WARN_IF(error.Failed())) {
+    return error.StealNSResult();
+  }
+
+  // Get the wrapper for our actor. If we don't have a wrapper, the target
+  // method won't be defined on it. so there's no reason to continue.
+  JS::Rooted<JSObject*> obj(RootingCx(), actor->GetWrapper());
+  if (NS_WARN_IF(!obj)) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+  // Enter the realm of our actor object to begin running script.
+  AutoEntryScript aes(obj, "JSWindowActorProtocol::Observe");
+  JSContext* cx = aes.cx();
+  JSAutoRealm ar(cx, obj);
+
+  JS::AutoValueArray<3> argv(cx);
+  if (NS_WARN_IF(
+          !ToJSValue(cx, aSubject, argv[0]) ||
+          !NonVoidByteStringToJsval(cx, nsDependentCString(aTopic), argv[1]))) {
+    JS_ClearPendingException(cx);
+    return NS_ERROR_FAILURE;
+  }
+
+  // aData is an optional parameter.
+  if (aData) {
+    if (NS_WARN_IF(!ToJSValue(cx, nsDependentString(aData), argv[2]))) {
+      JS_ClearPendingException(cx);
+      return NS_ERROR_FAILURE;
+    }
+  } else {
+    argv[2].setNull();
+  }
+
+  // Call the "observe" method on our actor.
+  JS::Rooted<JS::Value> dummy(cx);
+  if (NS_WARN_IF(!JS_CallFunctionName(cx, obj, "observe",
+                                      JS::HandleValueArray(argv), &dummy))) {
+    JS_ClearPendingException(cx);
+    return NS_ERROR_FAILURE;
+  }
+
+  return NS_OK;
+}
+
 void JSWindowActorProtocol::RegisterListenersFor(EventTarget* aRoot) {
   EventListenerManager* elm = aRoot->GetOrCreateListenerManager();
 
@@ -272,6 +344,24 @@ void JSWindowActorProtocol::UnregisterListenersFor(EventTarget* aRoot) {
   for (auto& event : mChild.mEvents) {
     elm->RemoveEventListenerByType(EventListenerHolder(this), event.mName,
                                    event.mFlags);
+  }
+}
+
+void JSWindowActorProtocol::AddObservers() {
+  nsCOMPtr<nsIObserverService> os = services::GetObserverService();
+  for (auto& topic : mChild.mObservers) {
+    // This makes the observer service hold an owning reference to the
+    // JSWindowActorProtocol. The JSWindowActorProtocol objects will be living
+    // for the full lifetime of the content process, thus the extra strong
+    // referencec doesn't have a negative impact.
+    os->AddObserver(this, topic.get(), false);
+  }
+}
+
+void JSWindowActorProtocol::RemoveObservers() {
+  nsCOMPtr<nsIObserverService> os = services::GetObserverService();
+  for (auto& topic : mChild.mObservers) {
+    os->RemoveObserver(this, topic.get());
   }
 }
 
@@ -323,6 +413,9 @@ void JSWindowActorService::RegisterWindowActor(
   for (EventTarget* root : mRoots) {
     proto->RegisterListenersFor(root);
   }
+
+  // Add observers to the protocol.
+  proto->AddObservers();
 }
 
 void JSWindowActorService::UnregisterWindowActor(const nsAString& aName) {
@@ -342,6 +435,9 @@ void JSWindowActorService::UnregisterWindowActor(const nsAString& aName) {
     for (EventTarget* root : mRoots) {
       proto->UnregisterListenersFor(root);
     }
+
+    // Remove observers for this actor from observer serivce.
+    proto->RemoveObservers();
   }
 }
 
@@ -360,6 +456,9 @@ void JSWindowActorService::LoadJSWindowActorInfos(
     for (EventTarget* root : mRoots) {
       proto->RegisterListenersFor(root);
     }
+
+    // Add observers for each actor.
+    proto->AddObservers();
   }
 }
 

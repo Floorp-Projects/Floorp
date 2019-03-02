@@ -53,6 +53,7 @@ You can choose to use a different default selector by configuring your ``~/.mozb
 
   configuration
   selectors/index
+  presets
 
 
 .. rubric:: Indices and tables

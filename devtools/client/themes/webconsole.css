@@ -1030,3 +1030,11 @@ body {
   width: 0;
   height: 0;
 }
+
+/* set to prevent the filter height from devtools-searchbox */
+.webconsole-filterbar-primary .devtools-searchbox {
+  align-self: stretch;
+  height: unset;
+  flex: 1 1 100%;
+  margin-inline-start: 1px;
+}

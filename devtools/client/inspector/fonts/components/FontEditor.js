@@ -123,6 +123,7 @@ class FontEditor extends PureComponent {
   renderFontGroup(family, fonts = []) {
     const group = fonts.map(font => {
       return FontName({
+        key: font.name,
         font,
         onToggleFontHighlight: this.props.onToggleFontHighlight,
       });
@@ -130,6 +131,7 @@ class FontEditor extends PureComponent {
 
     return dom.div(
       {
+        key: family,
         className: "font-group",
       },
       dom.div(
@@ -189,7 +191,7 @@ class FontEditor extends PureComponent {
    *        }
    * @return {DOMNode}
    */
-  renderInstances(fontInstances = [], selectedInstance) {
+  renderInstances(fontInstances = [], selectedInstance = {}) {
     // Append a "Custom" instance entry which represents the latest manual axes changes.
     const customInstance = {
       name: getStr("fontinspector.customInstanceName"),
@@ -201,8 +203,8 @@ class FontEditor extends PureComponent {
     const instanceOptions = fontInstances.map(instance =>
       dom.option(
         {
+          key: instance.name,
           value: instance.name,
-          selected: instance.name === selectedInstance.name ? "selected" : null,
         },
         instance.name
       )
@@ -212,6 +214,7 @@ class FontEditor extends PureComponent {
     const instanceSelect = dom.select(
       {
         className: "font-control-input font-value-select",
+        value: selectedInstance.name || customInstance.name,
         onChange: (e) => {
           const instance = fontInstances.find(inst => e.target.value === inst.name);
           instance && this.props.onInstanceChange(instance.name, instance.values);

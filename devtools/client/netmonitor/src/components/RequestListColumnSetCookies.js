@@ -9,8 +9,6 @@ const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { fetchNetworkUpdatePacket } = require("../utils/request-utils");
 
-const { div } = dom;
-
 class RequestListColumnSetCookies extends Component {
   static get propTypes() {
     return {
@@ -44,7 +42,7 @@ class RequestListColumnSetCookies extends Component {
       ? responseCookies.length
       : "";
     return (
-      div({
+      dom.td({
         className: "requests-list-column requests-list-set-cookies",
         title: responseCookiesLength,
       }, responseCookiesLength)

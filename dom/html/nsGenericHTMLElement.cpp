@@ -1976,6 +1976,10 @@ bool nsGenericHTMLFormElement::IsElementDisabledForEvents(WidgetEvent* aEvent,
   }
 
   switch (aEvent->mMessage) {
+    case eAnimationStart:
+    case eAnimationEnd:
+    case eAnimationIteration:
+    case eAnimationCancel:
     case eMouseMove:
     case eMouseOver:
     case eMouseOut:

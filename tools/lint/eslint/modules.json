@@ -225,7 +225,7 @@
   "test.jsm": ["Foo"],
   "test2.jsm": ["Bar"],
   "test_bug883784.jsm": ["Test"],
-  "Timer.jsm": ["setTimeout", "setTimeoutWithTarget", "clearTimeout", "setInterval", "setIntervalWithTarget", "clearInterval"],
+  "Timer.jsm": ["setTimeout", "setTimeoutWithTarget", "clearTimeout", "setInterval", "setIntervalWithTarget", "clearInterval", "requestIdleCallback", "cancelIdleCallback"],
   "TippyTopProvider.jsm": ["TippyTopProvider", "getDomain"],
   "Tokenize.jsm": ["tokenize", "toksToTfIdfVector"],
   "tokenserverclient.js": ["TokenServerClient", "TokenServerClientError", "TokenServerClientNetworkError", "TokenServerClientServerError"],

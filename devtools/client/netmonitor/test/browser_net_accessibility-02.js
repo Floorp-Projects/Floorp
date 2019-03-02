@@ -33,7 +33,7 @@ add_task(async function() {
   // Execute requests.
   await performRequests(monitor, tab, 2);
 
-  document.querySelector(".requests-list-contents").focus();
+  document.querySelector(".requests-list-row-group").focus();
 
   check(-1, false);
 
