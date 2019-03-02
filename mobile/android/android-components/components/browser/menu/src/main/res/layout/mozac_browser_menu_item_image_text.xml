@@ -25,5 +25,6 @@
             android:clickable="false"
             android:background="@android:color/transparent"
             android:gravity="center_vertical"
-            tools:text="Item"/>
+            tools:text="Item"
+            android:importantForAccessibility="no"/>
 </LinearLayout>
