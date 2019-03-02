@@ -20,7 +20,7 @@ XUL <splitter> collapsing tests
     SimpleTest.waitForExplicitFinish();
 
     function dragSplitter(offsetX, callback) {
-      var splitterWidth = splitter.boxObject.width;
+      var splitterWidth = splitter.getBoundingClientRect().width;
       synthesizeMouse(splitter, splitterWidth / 2, 2, {type: "mousedown"});
       synthesizeMouse(splitter, splitterWidth / 2, 1, {type: "mousemove"});
       SimpleTest.executeSoon(function() {
@@ -41,7 +41,7 @@ XUL <splitter> collapsing tests
     }
 
     function runPass(rightCollapsed, leftCollapsed, callback) {
-      var containerWidth = container.boxObject.width;
+      var containerWidth = container.getBoundingClientRect().width;
       var isRTL = getComputedStyle(splitter, null).direction == "rtl";
       dragSplitter(containerWidth, function() {
         if (rightCollapsed) {

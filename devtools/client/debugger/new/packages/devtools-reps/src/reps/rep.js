@@ -19,6 +19,7 @@ const Accessor = require("./accessor");
 // DOM types (grips)
 const Accessible = require("./accessible");
 const Attribute = require("./attribute");
+const BigInt = require("./big-int");
 const DateTime = require("./date-time");
 const Document = require("./document");
 const DocumentType = require("./document-type");
@@ -69,6 +70,7 @@ const reps = [
   Null,
   StringRep,
   Number,
+  BigInt,
   SymbolRep,
   InfinityRep,
   NaNRep,
@@ -129,6 +131,7 @@ module.exports = {
     Accessor,
     ArrayRep,
     Attribute,
+    BigInt,
     CommentNode,
     DateTime,
     Document,

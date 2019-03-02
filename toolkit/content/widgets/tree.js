@@ -274,7 +274,7 @@
           // only start column drag operation if there are at least 2 visible columns
           var visible = 0;
           for (var i = 0; i < cols.length; ++i)
-            if (cols[i].boxObject.width > 0) ++visible;
+            if (cols[i].getBoundingClientRect().width > 0) ++visible;
 
           if (visible > 1) {
             window.addEventListener("mousemove", this._onDragMouseMove, true);
@@ -337,8 +337,11 @@
     get _previousVisibleColumn() {
       var sib = this.boxObject.previousSibling;
       while (sib) {
-        if (sib.localName == "treecol" && sib.boxObject.width > 0 && sib.parentNode == this.parentNode)
+        if (sib.localName == "treecol" &&
+            sib.getBoundingClientRect().width > 0 &&
+            sib.parentNode == this.parentNode) {
           return sib;
+        }
         sib = sib.boxObject.previousSibling;
       }
       return null;
@@ -1018,11 +1021,11 @@
       }
       if (isRTL)
         columns.reverse();
-      var currentX = this.boxObject.x;
+      var currentX = this.getBoundingClientRect().x;
       var adjustedX = aX + this.horizontalPosition;
       for (var i = 0; i < columns.length; ++i) {
         col = columns[i];
-        var cw = col.element.boxObject.width;
+        var cw = col.element.getBoundingClientRect().width;
         if (cw > 0) {
           currentX += cw;
           if (currentX - (cw * aThresh) > adjustedX)

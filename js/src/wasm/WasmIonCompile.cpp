@@ -3113,7 +3113,7 @@ static bool EmitMemOrTableInit(FunctionCompiler& f, bool isMem) {
 }
 #endif  // ENABLE_WASM_BULKMEM_OPS
 
-#ifdef ENABLE_WASM_GENERALIZED_TABLES
+#ifdef ENABLE_WASM_REFTYPES
 // Note, table.{get,grow,set} on table(anyfunc) are currently rejected by the
 // verifier.
 
@@ -3311,7 +3311,7 @@ static bool EmitTableSize(FunctionCompiler& f) {
   f.iter().setResult(ret);
   return true;
 }
-#endif  // ENABLE_WASM_GENERALIZED_TABLES
+#endif  // ENABLE_WASM_REFTYPES
 
 #ifdef ENABLE_WASM_REFTYPES
 static bool EmitRefNull(FunctionCompiler& f) {
@@ -3425,7 +3425,7 @@ static bool EmitBodyExprs(FunctionCompiler& f) {
         CHECK(EmitGetGlobal(f));
       case uint16_t(Op::SetGlobal):
         CHECK(EmitSetGlobal(f));
-#ifdef ENABLE_WASM_GENERALIZED_TABLES
+#ifdef ENABLE_WASM_REFTYPES
       case uint16_t(Op::TableGet):
         CHECK(EmitTableGet(f));
       case uint16_t(Op::TableSet):
@@ -3849,7 +3849,7 @@ static bool EmitBodyExprs(FunctionCompiler& f) {
           case uint16_t(MiscOp::TableInit):
             CHECK(EmitMemOrTableInit(f, /*isMem=*/false));
 #endif
-#ifdef ENABLE_WASM_GENERALIZED_TABLES
+#ifdef ENABLE_WASM_REFTYPES
           case uint16_t(MiscOp::TableGrow):
             CHECK(EmitTableGrow(f));
           case uint16_t(MiscOp::TableSize):

@@ -53,11 +53,11 @@ add_task(async function testTempPermissionMultipleTabs() {
 
   let geoIcon = document.querySelector(".blocked-permission-icon[data-permission-id=geo]");
 
-  Assert.notEqual(geoIcon.boxObject.width, 0, "geo anchor should be visible");
+  Assert.notEqual(geoIcon.getBoundingClientRect().width, 0, "geo anchor should be visible");
 
   await BrowserTestUtils.switchTab(gBrowser, tab1);
 
-  Assert.equal(geoIcon.boxObject.width, 0, "geo anchor should not be visible");
+  Assert.equal(geoIcon.getBoundingClientRect().width, 0, "geo anchor should not be visible");
 
   SitePermissions.remove(uri, id, tab2.linkedBrowser);
   BrowserTestUtils.removeTab(tab1);

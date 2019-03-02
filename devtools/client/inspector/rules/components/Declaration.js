@@ -179,17 +179,23 @@ class Declaration extends PureComponent {
       isEnabled,
       isKnownProperty,
       isOverridden,
+      isPropertyChanged,
       name,
       value,
     } = this.props.declaration;
 
+    let declarationClassName = "ruleview-property";
+
+    if (!isEnabled || !isKnownProperty || isOverridden) {
+      declarationClassName += " ruleview-overridden";
+    }
+
+    if (isPropertyChanged) {
+      declarationClassName += " ruleview-changed";
+    }
+
     return (
-      dom.li(
-        {
-          className: "ruleview-property" +
-                     (!isEnabled || !isKnownProperty || isOverridden ?
-                      " ruleview-overridden" : ""),
-        },
+      dom.li({ className: declarationClassName },
         dom.div({ className: "ruleview-propertycontainer" },
           dom.div({
             className: "ruleview-enableproperty theme-checkbox" +

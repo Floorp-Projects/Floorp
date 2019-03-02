@@ -112,17 +112,31 @@ class Result extends Component {
           onClick: this.onHeaderClick
         },
         headerLabel,
-        showPacket &&
-          dom.button(
-            {
-              className: "copy-packet-button",
-              onClick: e => this.copyPacketToClipboard(e, packet)
-            },
-            "Copy as JSON"
-          )
+        dom.span({ className: "copy-label" }, "Copy"),
+        dom.button(
+          {
+            className: "copy-packet-button",
+            onClick: e => this.copyPacketToClipboard(e, packet.result)
+          },
+          "grip"
+        ),
+        dom.button(
+          {
+            className: "copy-packet-button",
+            onClick: e => this.copyPacketToClipboard(e, packet)
+          },
+          "packet"
+        )
       ),
-      showPacket &&
-        dom.div({ className: "packet-rep" }, Rep({ object: packet }))
+      ...(showPacket
+        ? Object.keys(packet).map(k =>
+            dom.div(
+              { className: "packet-rep" },
+              `${k}: `,
+              Rep({ object: packet[k], noGrip: true, mode: MODE.LONG })
+            )
+          )
+        : [])
     );
   }
 

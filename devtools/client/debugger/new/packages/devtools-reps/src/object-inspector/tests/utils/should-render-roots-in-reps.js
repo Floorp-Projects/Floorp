@@ -12,6 +12,7 @@ const gripStubs = require("../../../reps/stubs/grip");
 const gripArrayStubs = require("../../../reps/stubs/grip-array");
 const symbolStubs = require("../../../reps/stubs/symbol");
 const errorStubs = require("../../../reps/stubs/error");
+const bigIntStubs = require("../../../reps/stubs/big-int");
 
 describe("shouldRenderRootsInReps", () => {
   it("returns true for a string", () => {
@@ -29,6 +30,16 @@ describe("shouldRenderRootsInReps", () => {
       shouldRenderRootsInReps([
         {
           contents: { value: numberStubs.get("Int") }
+        }
+      ])
+    ).toBeTruthy();
+  });
+
+  it("returns true for a big int", () => {
+    expect(
+      shouldRenderRootsInReps([
+        {
+          contents: { value: bigIntStubs.get("1n") }
         }
       ])
     ).toBeTruthy();

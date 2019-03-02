@@ -82,13 +82,13 @@ void IDecodingTask::NotifyProgress(NotNull<RasterImage*> aImage,
 
   // We're forced to notify asynchronously.
   NotNull<RefPtr<RasterImage>> image = aImage;
-  mEventTarget->Dispatch(NS_NewRunnableFunction("IDecodingTask::NotifyProgress",
-                                                [=]() -> void {
-                                                  image->NotifyProgress(
-                                                      progress, invalidRect,
-                                                      frameCount, decoderFlags,
-                                                      surfaceFlags);
-                                                }),
+  mEventTarget->Dispatch(CreateMediumHighRunnable(NS_NewRunnableFunction(
+                             "IDecodingTask::NotifyProgress",
+                             [=]() -> void {
+                               image->NotifyProgress(progress, invalidRect,
+                                                     frameCount, decoderFlags,
+                                                     surfaceFlags);
+                             })),
                          NS_DISPATCH_NORMAL);
 }
 
@@ -118,15 +118,15 @@ void IDecodingTask::NotifyDecodeComplete(NotNull<RasterImage*> aImage,
 
   // We're forced to notify asynchronously.
   NotNull<RefPtr<RasterImage>> image = aImage;
-  mEventTarget->Dispatch(
-      NS_NewRunnableFunction("IDecodingTask::NotifyDecodeComplete",
+  mEventTarget->Dispatch(CreateMediumHighRunnable(NS_NewRunnableFunction(
+                             "IDecodingTask::NotifyDecodeComplete",
                              [=]() -> void {
                                image->NotifyDecodeComplete(
                                    finalStatus, metadata, telemetry, progress,
                                    invalidRect, frameCount, decoderFlags,
                                    surfaceFlags);
-                             }),
-      NS_DISPATCH_NORMAL);
+                             })),
+                         NS_DISPATCH_NORMAL);
 }
 
 ///////////////////////////////////////////////////////////////////////////////

@@ -13,7 +13,10 @@ XPIDL_SOURCES += [
     'nsISecurityReporter.idl',
 ]
 
-EXTRA_COMPONENTS += [
-    'SecurityReporter.js',
-    'SecurityReporter.manifest',
+EXTRA_JS_MODULES += [
+    'SecurityReporter.jsm',
+]
+
+XPCOM_MANIFESTS += [
+    'components.conf',
 ]

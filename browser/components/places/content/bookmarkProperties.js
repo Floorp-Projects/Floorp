@@ -264,7 +264,7 @@ var BookmarkPropertiesPanel = {
           this._height -= elementsHeight.get(id);
           elementsHeight.delete(id);
         } else {
-          elementsHeight.set(id, target.boxObject.height);
+          elementsHeight.set(id, target.getBoundingClientRect().height);
           this._height += elementsHeight.get(id);
         }
         window.resizeTo(window.outerWidth, this._height);
@@ -338,7 +338,7 @@ var BookmarkPropertiesPanel = {
         break;
       case "resize":
         for (let [id, oldHeight] of elementsHeight) {
-          let newHeight = document.getElementById(id).boxObject.height;
+          let newHeight = document.getElementById(id).getBoundingClientRect().height;
           this._height += -oldHeight + newHeight;
           elementsHeight.set(id, newHeight);
         }

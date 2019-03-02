@@ -77,7 +77,7 @@ var gSanitizePromptDialog = {
       this.prepareWarning();
       if (warningBox.hidden) {
         warningBox.hidden = false;
-        window.resizeBy(0, warningBox.boxObject.height);
+        window.resizeBy(0, warningBox.getBoundingClientRect().height);
       }
       document.l10n.setAttributes(document.documentElement, "dialog-title-everything");
       return;
@@ -85,7 +85,7 @@ var gSanitizePromptDialog = {
 
     // If clearing a specific time range
     if (!warningBox.hidden) {
-      window.resizeBy(0, -warningBox.boxObject.height);
+      window.resizeBy(0, -warningBox.getBoundingClientRect().height);
       warningBox.hidden = true;
     }
     document.l10n.setAttributes(document.documentElement, "dialog-title");

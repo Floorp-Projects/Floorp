@@ -223,6 +223,12 @@ nsFormFillController::AttachToBrowser(nsIDocShell* aDocShell,
   nsCOMPtr<nsPIDOMWindowOuter> window = GetWindowForDocShell(aDocShell);
   AddWindowListeners(window);
 
+  nsFocusManager* fm = nsFocusManager::GetFocusManager();
+  if (fm) {
+    nsCOMPtr<nsIContent> focusedContent = fm->GetFocusedElement();
+    this->HandleFocus(HTMLInputElement::FromNodeOrNull(focusedContent));
+  }
+
   return NS_OK;
 }
 
@@ -943,9 +949,8 @@ void nsFormFillController::MaybeStartControllingInput(
 #endif
 }
 
-nsresult nsFormFillController::Focus(Event* aEvent) {
-  nsCOMPtr<nsIContent> input = do_QueryInterface(aEvent->GetComposedTarget());
-  MaybeStartControllingInput(HTMLInputElement::FromNodeOrNull(input));
+nsresult nsFormFillController::HandleFocus(HTMLInputElement* aInput) {
+  MaybeStartControllingInput(aInput);
 
   // Bail if we didn't start controlling the input.
   if (!mFocusedInput) {
@@ -979,6 +984,11 @@ nsresult nsFormFillController::Focus(Event* aEvent) {
 #endif
 
   return NS_OK;
+}
+
+nsresult nsFormFillController::Focus(Event* aEvent) {
+  nsCOMPtr<nsIContent> input = do_QueryInterface(aEvent->GetComposedTarget());
+  return this->HandleFocus(HTMLInputElement::FromNodeOrNull(input));
 }
 
 nsresult nsFormFillController::KeyDown(Event* aEvent) {

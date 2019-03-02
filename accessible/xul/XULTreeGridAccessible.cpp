@@ -16,7 +16,6 @@
 #include "nsQueryObject.h"
 #include "nsTreeColumns.h"
 
-#include "nsIBoxObject.h"
 #include "nsIMutableArray.h"
 #include "nsPersistentProperties.h"
 #include "nsITreeSelection.h"
@@ -402,11 +401,6 @@ ENameValueFlag XULTreeGridCellAccessible::Name(nsString& aName) const {
 nsIntRect XULTreeGridCellAccessible::BoundsInCSSPixels() const {
   // Get bounds for tree cell and add x and y of treechildren element to
   // x and y of the cell.
-  nsCOMPtr<nsIBoxObject> boxObj = nsCoreUtils::GetTreeBodyBoxObject(mTree);
-  if (!boxObj) {
-    return nsIntRect();
-  }
-
   nsresult rv;
   nsIntRect rect =
       mTree->GetCoordsForCellItem(mRow, mColumn, NS_LITERAL_STRING("cell"), rv);
@@ -414,10 +408,20 @@ nsIntRect XULTreeGridCellAccessible::BoundsInCSSPixels() const {
     return nsIntRect();
   }
 
-  int32_t tcX = 0, tcY = 0;
-  boxObj->GetScreenX(&tcX);
-  boxObj->GetScreenY(&tcY);
-  return nsIntRect(rect.x + tcX, rect.y + tcY, rect.width, rect.height);
+  RefPtr<dom::Element> bodyElement = mTree->GetTreeBody();
+  if (!bodyElement || !bodyElement->IsXULElement()) {
+    return nsIntRect();
+  }
+
+  nsIFrame* bodyFrame = bodyElement->GetPrimaryFrame();
+  if (!bodyFrame) {
+    return nsIntRect();
+  }
+
+  CSSIntRect screenRect = bodyFrame->GetScreenRect();
+  rect.x += screenRect.x;
+  rect.y += screenRect.y;
+  return rect;
 }
 
 nsRect XULTreeGridCellAccessible::BoundsInAppUnits() const {

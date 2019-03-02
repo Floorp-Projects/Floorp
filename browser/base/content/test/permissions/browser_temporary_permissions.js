@@ -24,11 +24,11 @@ add_task(async function testTempPermissionChangeEvents() {
 
     let geoIcon = document.querySelector(".blocked-permission-icon[data-permission-id=geo]");
 
-    Assert.notEqual(geoIcon.boxObject.width, 0, "geo anchor should be visible");
+    Assert.notEqual(geoIcon.getBoundingClientRect().width, 0, "geo anchor should be visible");
 
     SitePermissions.remove(uri, id, browser);
 
-    Assert.equal(geoIcon.boxObject.width, 0, "geo anchor should not be visible");
+    Assert.equal(geoIcon.getBoundingClientRect().width, 0, "geo anchor should not be visible");
   });
 });
 

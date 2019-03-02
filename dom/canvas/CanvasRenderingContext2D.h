@@ -607,7 +607,9 @@ class CanvasRenderingContext2D final : public nsICanvasRenderingContextInternal,
    *
    * Returns true on success.
    */
-  bool EnsureTarget(const gfx::Rect* aCoveredRect = nullptr);
+  bool EnsureTarget(
+      const gfx::Rect* aCoveredRect = nullptr,
+      bool aWillClear = false);
 
   void RestoreClipsAndTransformToTarget();
 
@@ -664,9 +666,9 @@ class CanvasRenderingContext2D final : public nsICanvasRenderingContextInternal,
   /**
    * Returns true if we know for sure that the pattern for a given style is
    * opaque. Usefull to know if we can discard the content below in certain
-   * situations.
+   * situations. Optionally checks if the pattern is a color pattern.
    */
-  bool PatternIsOpaque(Style aStyle) const;
+  bool PatternIsOpaque(Style aStyle, bool* aIsColor = nullptr) const;
 
   nsLayoutUtils::SurfaceFromElementResult CachedSurfaceFromElement(
       Element* aElement);

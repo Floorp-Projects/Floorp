@@ -13,7 +13,7 @@ function boom()
   x.appendChild(document.createTextNode("A"));
   x.appendChild(document.createTextNode("\u202B" + "C"));
 
-  document.getBoxObjectFor(document.documentElement).height; // flush layout
+  document.documentElement.clientHeight; // flush layout
 
   x.normalize();
   x.appendChild(document.createTextNode("D"));

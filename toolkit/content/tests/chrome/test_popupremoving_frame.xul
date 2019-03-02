@@ -57,7 +57,7 @@ function modified(event)
   if (tohide) {
     tohide.hidden = true;
     // force a layout flush
-    $("frame").contentDocument.documentElement.boxObject.width;
+    $("frame").contentDocument.documentElement.clientWidth;
   }
 
   is(event.target, gMenus.shift(), event.target.id + " hidden");

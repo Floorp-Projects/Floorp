@@ -549,7 +549,7 @@ class ViewPopup extends BasePopup {
 
       // Store the initial height of the view, so that we never resize menu panel
       // sub-views smaller than the initial height of the menu.
-      this.viewHeight = viewNode.boxObject.height;
+      this.viewHeight = viewNode.getBoundingClientRect().height;
 
       this.extraHeight = {
         bottom: Math.max(0, screenBottom - popupBottom),

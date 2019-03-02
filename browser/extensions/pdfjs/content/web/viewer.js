@@ -2,7 +2,7 @@
  * @licstart The following is the entire license notice for the
  * Javascript code in this page
  *
- * Copyright 2018 Mozilla Foundation
+ * Copyright 2019 Mozilla Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -519,10 +519,7 @@ let PDFViewerApplication = {
   async _initializeViewerComponents() {
     const appConfig = this.appConfig;
     this.overlayManager = new _overlay_manager.OverlayManager();
-
-    const dispatchToDOM = _app_options.AppOptions.get('eventBusDispatchToDOM');
-
-    const eventBus = appConfig.eventBus || (0, _ui_utils.getGlobalEventBus)(dispatchToDOM);
+    const eventBus = appConfig.eventBus || (0, _ui_utils.getGlobalEventBus)(_app_options.AppOptions.get('eventBusDispatchToDOM'));
     this.eventBus = eventBus;
     let pdfRenderingQueue = new _pdf_rendering_queue.PDFRenderingQueue();
     pdfRenderingQueue.onIdle = this.cleanup.bind(this);
@@ -564,9 +561,8 @@ let PDFViewerApplication = {
     });
     pdfRenderingQueue.setViewer(this.pdfViewer);
     pdfLinkService.setViewer(this.pdfViewer);
-    let thumbnailContainer = appConfig.sidebar.thumbnailView;
     this.pdfThumbnailViewer = new _pdf_thumbnail_viewer.PDFThumbnailViewer({
-      container: thumbnailContainer,
+      container: appConfig.sidebar.thumbnailView,
       renderingQueue: pdfRenderingQueue,
       linkService: pdfLinkService,
       l10n: this.l10n
@@ -608,10 +604,13 @@ let PDFViewerApplication = {
       eventBus,
       downloadManager
     });
-    let sidebarConfig = Object.create(appConfig.sidebar);
-    sidebarConfig.pdfViewer = this.pdfViewer;
-    sidebarConfig.pdfThumbnailViewer = this.pdfThumbnailViewer;
-    this.pdfSidebar = new _pdf_sidebar.PDFSidebar(sidebarConfig, eventBus, this.l10n);
+    this.pdfSidebar = new _pdf_sidebar.PDFSidebar({
+      elements: appConfig.sidebar,
+      pdfViewer: this.pdfViewer,
+      pdfThumbnailViewer: this.pdfThumbnailViewer,
+      eventBus,
+      l10n: this.l10n
+    });
     this.pdfSidebar.onToggled = this.forceRendering.bind(this);
     this.pdfSidebarResizer = new _pdf_sidebar_resizer.PDFSidebarResizer(appConfig.sidebarResizer, eventBus, this.l10n);
   },
@@ -3714,7 +3713,7 @@ class PDFRenderingQueue {
     let numVisible = visibleViews.length;
 
     if (numVisible === 0) {
-      return false;
+      return null;
     }
 
     for (let i = 0; i < numVisible; ++i) {
@@ -3762,12 +3761,9 @@ class PDFRenderingQueue {
 
       case RenderingStates.INITIAL:
         this.highestPriorityPage = view.renderingId;
-
-        let continueRendering = () => {
+        view.draw().finally(() => {
           this.renderHighestPriority();
-        };
-
-        view.draw().then(continueRendering, continueRendering);
+        });
         break;
     }
 
@@ -3806,25 +3802,32 @@ const SidebarView = {
 exports.SidebarView = SidebarView;
 
 class PDFSidebar {
-  constructor(options, eventBus, l10n = _ui_utils.NullL10n) {
+  constructor({
+    elements,
+    pdfViewer,
+    pdfThumbnailViewer,
+    eventBus,
+    l10n = _ui_utils.NullL10n,
+    disableNotification = false
+  }) {
     this.isOpen = false;
     this.active = SidebarView.THUMBS;
     this.isInitialViewSet = false;
     this.onToggled = null;
-    this.pdfViewer = options.pdfViewer;
-    this.pdfThumbnailViewer = options.pdfThumbnailViewer;
-    this.outerContainer = options.outerContainer;
-    this.viewerContainer = options.viewerContainer;
-    this.toggleButton = options.toggleButton;
-    this.thumbnailButton = options.thumbnailButton;
-    this.outlineButton = options.outlineButton;
-    this.attachmentsButton = options.attachmentsButton;
-    this.thumbnailView = options.thumbnailView;
-    this.outlineView = options.outlineView;
-    this.attachmentsView = options.attachmentsView;
-    this.disableNotification = options.disableNotification || false;
+    this.pdfViewer = pdfViewer;
+    this.pdfThumbnailViewer = pdfThumbnailViewer;
+    this.outerContainer = elements.outerContainer;
+    this.viewerContainer = elements.viewerContainer;
+    this.toggleButton = elements.toggleButton;
+    this.thumbnailButton = elements.thumbnailButton;
+    this.outlineButton = elements.outlineButton;
+    this.attachmentsButton = elements.attachmentsButton;
+    this.thumbnailView = elements.thumbnailView;
+    this.outlineView = elements.outlineView;
+    this.attachmentsView = elements.attachmentsView;
     this.eventBus = eventBus;
     this.l10n = l10n;
+    this._disableNotification = disableNotification;
 
     this._addEventListeners();
   }
@@ -4023,7 +4026,7 @@ class PDFSidebar {
   }
 
   _showUINotification(view) {
-    if (this.disableNotification) {
+    if (this._disableNotification) {
       return;
     }
 
@@ -4049,7 +4052,7 @@ class PDFSidebar {
   }
 
   _hideUINotification(view) {
-    if (this.disableNotification) {
+    if (this._disableNotification) {
       return;
     }
 
