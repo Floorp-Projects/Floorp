@@ -976,10 +976,6 @@ class nsDocShell final : public nsDocLoader,
   nsCOMPtr<nsIURI> mCurrentURI;
   nsCOMPtr<nsIReferrerInfo> mReferrerInfo;
 
-#ifdef DEBUG
-  nsCOMPtr<nsIURI> mLastOpenedURI;
-#endif
-
   // Reference to the SHEntry for this docshell until the page is destroyed.
   // Somebody give me better name
   nsCOMPtr<nsISHEntry> mOSHE;
