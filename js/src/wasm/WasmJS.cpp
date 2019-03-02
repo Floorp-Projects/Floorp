@@ -2103,7 +2103,7 @@ bool WasmTableObject::construct(JSContext* cx, unsigned argc, Value* vp) {
       StringEqualsAscii(elementLinearStr, "funcref"))
   {
     tableKind = TableKind::AnyFunction;
-#ifdef ENABLE_WASM_GENERALIZED_TABLES
+#ifdef ENABLE_WASM_REFTYPES
   } else if (StringEqualsAscii(elementLinearStr, "anyref")) {
     if (!HasReftypesSupport(cx)) {
       JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
@@ -2113,7 +2113,7 @@ bool WasmTableObject::construct(JSContext* cx, unsigned argc, Value* vp) {
     tableKind = TableKind::AnyRef;
 #endif
   } else {
-#ifdef ENABLE_WASM_GENERALIZED_TABLES
+#ifdef ENABLE_WASM_REFTYPES
     JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
                              JSMSG_WASM_BAD_ELEMENT_GENERALIZED);
 #else

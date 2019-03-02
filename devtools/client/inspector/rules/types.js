@@ -56,6 +56,9 @@ const declaration = exports.declaration = {
   // Whether or not the the declaration is overridden.
   isOverridden: PropTypes.bool,
 
+  // Whether or not the declaration is changed by the user.
+  isPropertyChanged: PropTypes.bool,
+
   // The declaration's property name.
   name: PropTypes.string,
 

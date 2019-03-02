@@ -23,7 +23,6 @@
 #include "nsIAccessibleRelation.h"
 #include "nsIAutoCompleteInput.h"
 #include "nsIAutoCompletePopup.h"
-#include "nsIBoxObject.h"
 #include "nsIDOMXULMenuListElement.h"
 #include "nsIDOMXULMultSelectCntrlEl.h"
 #include "nsITreeSelection.h"
@@ -615,11 +614,6 @@ nsIntRect XULTreeItemAccessibleBase::BoundsInCSSPixels() const {
   // Get x coordinate and width from treechildren element, get y coordinate and
   // height from tree cell.
 
-  nsCOMPtr<nsIBoxObject> boxObj = nsCoreUtils::GetTreeBodyBoxObject(mTree);
-  if (!boxObj) {
-    return nsIntRect();
-  }
-
   RefPtr<nsTreeColumn> column = nsCoreUtils::GetFirstSensibleColumn(mTree);
 
   nsresult rv;
@@ -629,12 +623,22 @@ nsIntRect XULTreeItemAccessibleBase::BoundsInCSSPixels() const {
     return nsIntRect();
   }
 
-  boxObj->GetWidth(&rect.width);
+  RefPtr<dom::Element> bodyElement = mTree->GetTreeBody();
+  if (!bodyElement || !bodyElement->IsXULElement()) {
+    return nsIntRect();
+  }
 
-  int32_t tcX = 0, tcY = 0;
-  boxObj->GetScreenX(&tcX);
-  boxObj->GetScreenY(&tcY);
-  return nsIntRect(tcX, rect.y + tcY, rect.width, rect.height);
+  rect.width = bodyElement->ClientWidth();
+
+  nsIFrame* bodyFrame = bodyElement->GetPrimaryFrame();
+  if (!bodyFrame) {
+    return nsIntRect();
+  }
+
+  CSSIntRect screenRect = bodyFrame->GetScreenRect();
+  rect.x = screenRect.x;
+  rect.y += screenRect.y;
+  return rect;
 }
 
 nsRect XULTreeItemAccessibleBase::BoundsInAppUnits() const {

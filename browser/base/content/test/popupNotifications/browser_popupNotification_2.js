@@ -39,16 +39,16 @@ var tests = [
     },
     onShown(popup) {
       checkPopup(popup, this.notifyObj);
-      isnot(document.getElementById("geo-notification-icon").boxObject.width, 0,
+      isnot(document.getElementById("geo-notification-icon").getBoundingClientRect().width, 0,
             "geo anchor should be visible");
       dismissNotification(popup);
     },
     onHidden(popup) {
       let icon = document.getElementById("geo-notification-icon");
-      isnot(icon.boxObject.width, 0,
+      isnot(icon.getBoundingClientRect().width, 0,
             "geo anchor should be visible after dismissal");
       this.notification.remove();
-      is(icon.boxObject.width, 0,
+      is(icon.getBoundingClientRect().width, 0,
          "geo anchor should not be visible after removal");
     },
   },
@@ -178,7 +178,7 @@ var tests = [
       let promiseTopic = TestUtils.topicObserved("PopupNotifications-updateNotShowing");
       showNotification(notifyObj);
       await promiseTopic;
-      isnot(document.getElementById("geo-notification-icon").boxObject.width, 0,
+      isnot(document.getElementById("geo-notification-icon").getBoundingClientRect().width, 0,
             "geo anchor should be visible");
       goNext();
     },
@@ -192,7 +192,7 @@ var tests = [
       let promiseTopic = TestUtils.topicObserved("PopupNotifications-updateNotShowing");
       showNotification(notifyObj);
       await promiseTopic;
-      isnot(document.getElementById("autoplay-media-notification-icon").boxObject.width, 0,
+      isnot(document.getElementById("autoplay-media-notification-icon").getBoundingClientRect().width, 0,
             "autoplay media icon should be visible");
       goNext();
     },

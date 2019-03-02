@@ -18,6 +18,7 @@ DevToolsModules(
     'breakpoint.svg',
     'case-match.svg',
     'close.svg',
+    'column-marker.svg',
     'command-chevron.svg',
     'disable-pausing.svg',
     'file-small.svg',

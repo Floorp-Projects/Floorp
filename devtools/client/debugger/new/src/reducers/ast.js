@@ -9,27 +9,22 @@
  * @module reducers/ast
  */
 
-import * as I from "immutable";
-import makeRecord from "../utils/makeRecord";
-
 import type { AstLocation, SymbolDeclarations } from "../workers/parser";
 
-import type { Map } from "immutable";
 import type { Source } from "../types";
 import type { Action, DonePromiseAction } from "../actions/types";
-import type { Record } from "../utils/makeRecord";
 
 type EmptyLinesType = number[];
 
 export type Symbols = SymbolDeclarations | {| loading: true |};
-export type SymbolsMap = Map<string, Symbols>;
-export type EmptyLinesMap = Map<string, EmptyLinesType>;
+export type EmptyLinesMap = { [k: string]: EmptyLinesType };
+export type SymbolsMap = { [k: string]: Symbols };
 
 export type SourceMetaDataType = {
   framework: ?string
 };
 
-export type SourceMetaDataMap = Map<string, SourceMetaDataType>;
+export type SourceMetaDataMap = { [k: string]: SourceMetaDataType };
 
 export type Preview =
   | {| updating: true |}
@@ -44,74 +39,74 @@ export type Preview =
     |};
 
 export type ASTState = {
-  symbols: SymbolsMap,
-  emptyLines: EmptyLinesMap,
-  outOfScopeLocations: ?Array<AstLocation>,
-  inScopeLines: ?Array<Number>,
-  preview: Preview,
-  sourceMetaData: SourceMetaDataMap
+  +symbols: SymbolsMap,
+  +emptyLines: EmptyLinesMap,
+  +outOfScopeLocations: ?Array<AstLocation>,
+  +inScopeLines: ?Array<number>,
+  +preview: Preview,
+  +sourceMetaData: SourceMetaDataMap
 };
 
-export function initialASTState(): Record<ASTState> {
-  return makeRecord({
-    symbols: I.Map(),
-    emptyLines: I.Map(),
+export function initialASTState(): ASTState {
+  return {
+    symbols: {},
+    emptyLines: {},
     outOfScopeLocations: null,
     inScopeLines: null,
     preview: null,
-    sourceMetaData: I.Map()
-  })();
+    sourceMetaData: {}
+  };
 }
 
-function update(
-  state: Record<ASTState> = initialASTState(),
-  action: Action
-): Record<ASTState> {
+function update(state: ASTState = initialASTState(), action: Action): ASTState {
   switch (action.type) {
     case "SET_SYMBOLS": {
       const { sourceId } = action;
       if (action.status === "start") {
-        return state.setIn(["symbols", sourceId], { loading: true });
+        return {
+          ...state,
+          symbols: { ...state.symbols, [sourceId]: { loading: true } }
+        };
       }
 
       const value = ((action: any): DonePromiseAction).value;
-      return state.setIn(["symbols", sourceId], value);
+      return {
+        ...state,
+        symbols: { ...state.symbols, [sourceId]: value }
+      };
     }
 
     case "OUT_OF_SCOPE_LOCATIONS": {
-      return state.set("outOfScopeLocations", action.locations);
+      return { ...state, outOfScopeLocations: action.locations };
     }
 
     case "IN_SCOPE_LINES": {
-      return state.set("inScopeLines", action.lines);
+      return { ...state, inScopeLines: action.lines };
     }
 
     case "CLEAR_SELECTION": {
-      return state.set("preview", null);
+      return { ...state, preview: null };
     }
 
     case "SET_PREVIEW": {
       if (action.status == "start") {
-        return state.set("preview", { updating: true });
+        return { ...state, preview: { updating: true } };
       }
 
       if (!action.value) {
-        return state.set("preview", null);
+        return { ...state, preview: null };
       }
 
       // NOTE: if the preview does not exist, it has been cleared
-      if (state.get("preview")) {
-        return state.set("preview", {
-          ...action.value,
-          updating: false
-        });
+      if (state.preview) {
+        return { ...state, preview: { ...action.value, updating: false } };
       }
 
       return state;
     }
 
     case "RESUME": {
-      return state.set("outOfScopeLocations", null);
+      return { ...state, outOfScopeLocations: null };
     }
 
     case "NAVIGATE": {
@@ -119,10 +114,11 @@ function update(
     }
 
     case "SET_SOURCE_METADATA": {
-      return state.setIn(
-        ["sourceMetaData", action.sourceId],
-        action.sourceMetaData
-      );
+      const { sourceId, sourceMetaData } = action;
+      return {
+        ...state,
+        sourceMetaData: { ...state.sourceMetaData, [sourceId]: sourceMetaData }
+      };
     }
 
     default: {
@@ -133,14 +129,14 @@ function update(
 
 // NOTE: we'd like to have the app state fully typed
 // https://github.com/firefox-devtools/debugger/blob/master/src/reducers/sources.js#L179-L185
-type OuterState = { ast: Record<ASTState> };
+type OuterState = { ast: ASTState };
 
 export function getSymbols(state: OuterState, source: ?Source): ?Symbols {
   if (!source) {
     return null;
   }
 
-  return state.ast.symbols.get(source.id) || null;
+  return state.ast.symbols[source.id] || null;
 }
 
 export function hasSymbols(state: OuterState, source: Source): boolean {
@@ -162,6 +158,14 @@ export function isSymbolsLoading(state: OuterState, source: ?Source): boolean {
   return symbols.loading;
 }
 
+export function getOutOfScopeLocations(state: OuterState) {
+  return state.ast.outOfScopeLocations;
+}
+
+export function getPreview(state: OuterState) {
+  return state.ast.preview;
+}
+
 export function isEmptyLineInSource(
   state: OuterState,
   line: number,
@@ -171,29 +175,21 @@ export function isEmptyLineInSource(
   return emptyLines && emptyLines.includes(line);
 }
 
-export function getOutOfScopeLocations(state: OuterState) {
-  return state.ast.get("outOfScopeLocations");
-}
-
-export function getPreview(state: OuterState) {
-  return state.ast.get("preview");
-}
-
 const emptySourceMetaData = {};
 export function getSourceMetaData(state: OuterState, sourceId: string) {
-  return state.ast.sourceMetaData.get(sourceId) || emptySourceMetaData;
+  return state.ast.sourceMetaData[sourceId] || emptySourceMetaData;
 }
 
 export function hasSourceMetaData(state: OuterState, sourceId: string) {
-  return state.ast.hasIn(["sourceMetaData", sourceId]);
+  return state.ast.sourceMetaData[sourceId];
 }
 
 export function getInScopeLines(state: OuterState) {
-  return state.ast.get("inScopeLines");
+  return state.ast.inScopeLines;
 }
 
 export function isLineInScope(state: OuterState, line: number) {
-  const linesInScope = state.ast.get("inScopeLines");
+  const linesInScope = state.ast.inScopeLines;
   return linesInScope && linesInScope.includes(line);
 }
 
@@ -202,7 +198,7 @@ export function getEmptyLines(state: OuterState, sourceId: string) {
     return null;
   }
 
-  return state.ast.emptyLines.get(sourceId);
+  return state.ast.emptyLines[sourceId];
 }
 
 export default update;

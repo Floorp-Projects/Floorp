@@ -14,11 +14,11 @@
 <script id="script" xmlns="http://www.w3.org/1999/xhtml"><![CDATA[
 function doe() {
 document.getElementById('c').removeAttribute('style');
-document.documentElement.boxObject.height;
+document.documentElement.clientHeight;
 document.getElementById('b').removeAttribute('style');
 document.getElementById('a').setAttribute('selected', 'true');
 document.getElementById('a').setAttribute('style', 'position: fixed;');
-document.documentElement.boxObject.height;
+document.documentElement.clientHeight;
 document.getElementById('a').removeAttribute('style');
 }
 
