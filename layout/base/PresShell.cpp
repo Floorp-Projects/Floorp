@@ -6521,106 +6521,108 @@ nsresult PresShell::EventHandler::HandleEvent(nsIFrame* aFrame,
                                        aDontRetargetEvents);
   }
 
-  nsresult rv = NS_OK;
-
-  if (aFrame) {
-    PushCurrentEventInfo(nullptr, nullptr);
-
-    // key and IME related events go to the focused frame in this DOM window.
-    if (aGUIEvent->IsTargetedAtFocusedContent()) {
-      mPresShell->mCurrentEventContent = nullptr;
-
-      nsCOMPtr<nsPIDOMWindowOuter> window = GetDocument()->GetWindow();
-      nsCOMPtr<nsPIDOMWindowOuter> focusedWindow;
-      nsCOMPtr<nsIContent> eventTarget = nsFocusManager::GetFocusedDescendant(
-          window, nsFocusManager::eOnlyCurrentWindow,
-          getter_AddRefs(focusedWindow));
-
-      // otherwise, if there is no focused content or the focused content has
-      // no frame, just use the root content. This ensures that key events
-      // still get sent to the window properly if nothing is focused or if a
-      // frame goes away while it is focused.
-      if (!eventTarget || !eventTarget->GetPrimaryFrame()) {
-        eventTarget = GetDocument()->GetUnfocusedKeyEventTarget();
-      }
-
-      if (aGUIEvent->mMessage == eKeyDown) {
-        NS_IF_RELEASE(nsIPresShell::gKeyDownTarget);
-        NS_IF_ADDREF(nsIPresShell::gKeyDownTarget = eventTarget);
-      } else if ((aGUIEvent->mMessage == eKeyPress ||
-                  aGUIEvent->mMessage == eKeyUp) &&
-                 nsIPresShell::gKeyDownTarget) {
-        // If a different element is now focused for the keypress/keyup event
-        // than what was focused during the keydown event, check if the new
-        // focused element is not in a chrome document any more, and if so,
-        // retarget the event back at the keydown target. This prevents a
-        // content area from grabbing the focus from chrome in-between key
-        // events.
-        if (eventTarget) {
-          bool keyDownIsChrome = nsContentUtils::IsChromeDoc(
-              nsIPresShell::gKeyDownTarget->GetComposedDoc());
-          if (keyDownIsChrome !=
-                  nsContentUtils::IsChromeDoc(eventTarget->GetComposedDoc()) ||
-              (keyDownIsChrome && TabParent::GetFrom(eventTarget))) {
-            eventTarget = nsIPresShell::gKeyDownTarget;
-          }
-        }
-
-        if (aGUIEvent->mMessage == eKeyUp) {
-          NS_RELEASE(nsIPresShell::gKeyDownTarget);
-        }
-      }
-
-      mPresShell->mCurrentEventFrame = nullptr;
-      Document* targetDoc = eventTarget ? eventTarget->OwnerDoc() : nullptr;
-      if (targetDoc && targetDoc != GetDocument()) {
-        PopCurrentEventInfo();
-        nsCOMPtr<nsIPresShell> shell = targetDoc->GetShell();
-        if (shell) {
-          rv =
-              static_cast<PresShell*>(shell.get())
-                  ->HandleRetargetedEvent(aGUIEvent, aEventStatus, eventTarget);
-        }
-        return rv;
-      } else {
-        mPresShell->mCurrentEventContent = eventTarget;
-      }
-
-      if (!mPresShell->GetCurrentEventContent() ||
-          !mPresShell->GetCurrentEventFrame() ||
-          InZombieDocument(mPresShell->mCurrentEventContent)) {
-        rv = RetargetEventToParent(aGUIEvent, aEventStatus);
-        PopCurrentEventInfo();
-        return rv;
-      }
-    } else {
-      mPresShell->mCurrentEventFrame = aFrame;
-    }
-    if (mPresShell->GetCurrentEventFrame()) {
-      nsCOMPtr<nsIContent> overrideClickTarget;  // Required due to bug  1506439
-      rv = HandleEventInternal(aGUIEvent, aEventStatus, true,
-                               overrideClickTarget);
-    }
-
-#ifdef DEBUG
-    mPresShell->ShowEventTargetDebug();
-#endif
-    PopCurrentEventInfo();
-  } else {
-    // Activation events need to be dispatched even if no frame was found, since
-    // we don't want the focus to be out of sync.
-
+  // Activation events need to be dispatched even if no frame was found, since
+  // we don't want the focus to be out of sync.
+  if (!aFrame) {
     if (!NS_EVENT_NEEDS_FRAME(aGUIEvent)) {
       mPresShell->mCurrentEventFrame = nullptr;
       nsCOMPtr<nsIContent> overrideClickTarget;  // Required due to bug  1506439
       return HandleEventInternal(aGUIEvent, aEventStatus, true,
                                  overrideClickTarget);
-    } else if (aGUIEvent->HasKeyEventMessage()) {
+    }
+
+    if (aGUIEvent->HasKeyEventMessage()) {
       // Keypress events in new blank tabs should not be completely thrown away.
       // Retarget them -- the parent chrome shell might make use of them.
       return RetargetEventToParent(aGUIEvent, aEventStatus);
     }
+
+    return NS_OK;
   }
+
+  nsresult rv = NS_OK;
+
+  PushCurrentEventInfo(nullptr, nullptr);
+
+  // key and IME related events go to the focused frame in this DOM window.
+  if (aGUIEvent->IsTargetedAtFocusedContent()) {
+    mPresShell->mCurrentEventContent = nullptr;
+
+    nsCOMPtr<nsPIDOMWindowOuter> window = GetDocument()->GetWindow();
+    nsCOMPtr<nsPIDOMWindowOuter> focusedWindow;
+    nsCOMPtr<nsIContent> eventTarget = nsFocusManager::GetFocusedDescendant(
+        window, nsFocusManager::eOnlyCurrentWindow,
+        getter_AddRefs(focusedWindow));
+
+    // otherwise, if there is no focused content or the focused content has
+    // no frame, just use the root content. This ensures that key events
+    // still get sent to the window properly if nothing is focused or if a
+    // frame goes away while it is focused.
+    if (!eventTarget || !eventTarget->GetPrimaryFrame()) {
+      eventTarget = GetDocument()->GetUnfocusedKeyEventTarget();
+    }
+
+    if (aGUIEvent->mMessage == eKeyDown) {
+      NS_IF_RELEASE(nsIPresShell::gKeyDownTarget);
+      NS_IF_ADDREF(nsIPresShell::gKeyDownTarget = eventTarget);
+    } else if ((aGUIEvent->mMessage == eKeyPress ||
+                aGUIEvent->mMessage == eKeyUp) &&
+               nsIPresShell::gKeyDownTarget) {
+      // If a different element is now focused for the keypress/keyup event
+      // than what was focused during the keydown event, check if the new
+      // focused element is not in a chrome document any more, and if so,
+      // retarget the event back at the keydown target. This prevents a
+      // content area from grabbing the focus from chrome in-between key
+      // events.
+      if (eventTarget) {
+        bool keyDownIsChrome = nsContentUtils::IsChromeDoc(
+            nsIPresShell::gKeyDownTarget->GetComposedDoc());
+        if (keyDownIsChrome !=
+                nsContentUtils::IsChromeDoc(eventTarget->GetComposedDoc()) ||
+            (keyDownIsChrome && TabParent::GetFrom(eventTarget))) {
+          eventTarget = nsIPresShell::gKeyDownTarget;
+        }
+      }
+
+      if (aGUIEvent->mMessage == eKeyUp) {
+        NS_RELEASE(nsIPresShell::gKeyDownTarget);
+      }
+    }
+
+    mPresShell->mCurrentEventFrame = nullptr;
+    Document* targetDoc = eventTarget ? eventTarget->OwnerDoc() : nullptr;
+    if (targetDoc && targetDoc != GetDocument()) {
+      PopCurrentEventInfo();
+      nsCOMPtr<nsIPresShell> shell = targetDoc->GetShell();
+      if (shell) {
+        rv = static_cast<PresShell*>(shell.get())
+                 ->HandleRetargetedEvent(aGUIEvent, aEventStatus, eventTarget);
+      }
+      return rv;
+    } else {
+      mPresShell->mCurrentEventContent = eventTarget;
+    }
+
+    if (!mPresShell->GetCurrentEventContent() ||
+        !mPresShell->GetCurrentEventFrame() ||
+        InZombieDocument(mPresShell->mCurrentEventContent)) {
+      rv = RetargetEventToParent(aGUIEvent, aEventStatus);
+      PopCurrentEventInfo();
+      return rv;
+    }
+  } else {
+    mPresShell->mCurrentEventFrame = aFrame;
+  }
+  if (mPresShell->GetCurrentEventFrame()) {
+    nsCOMPtr<nsIContent> overrideClickTarget;  // Required due to bug  1506439
+    rv =
+        HandleEventInternal(aGUIEvent, aEventStatus, true, overrideClickTarget);
+  }
+
+#ifdef DEBUG
+  mPresShell->ShowEventTargetDebug();
+#endif
+  PopCurrentEventInfo();
 
   return rv;
 }
