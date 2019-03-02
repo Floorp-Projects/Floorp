@@ -75,6 +75,7 @@ EXPORTS += [
     'nsEscape.h',
     'nsLinebreakConverter.h',
     'nsLocalFile.h',
+    'nsLocalFileCommon.h',
     'nsMultiplexInputStream.h',
     'nsNativeCharsetUtils.h',
     'nsScriptableInputStream.h',
