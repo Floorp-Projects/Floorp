@@ -1279,15 +1279,24 @@ void nsXULPopupManager::FirePopupShowingEvent(nsIContent* aPopup,
   nsMenuPopupFrame* popupFrame = do_QueryFrame(aPopup->GetPrimaryFrame());
   if (!popupFrame) return;
 
-  popupFrame->GenerateFrames();
+  nsPresContext* presContext = popupFrame->PresContext();
+  nsCOMPtr<nsIPresShell> presShell = presContext->PresShell();
+  nsPopupType popupType = popupFrame->PopupType();
+
+  // generate the child frames if they have not already been generated
+  const bool generateFrames = popupFrame->IsLeaf();
+  MOZ_ASSERT_IF(generateFrames, !popupFrame->HasGeneratedChildren());
+  popupFrame->SetGeneratedChildren();
+  if (generateFrames) {
+    MOZ_ASSERT(popupFrame->PrincipalChildList().IsEmpty());
+    presShell->FrameConstructor()->GenerateChildFrames(popupFrame);
+  }
 
   // get the frame again
   nsIFrame* frame = aPopup->GetPrimaryFrame();
   if (!frame) return;
 
-  nsPresContext* presContext = popupFrame->PresContext();
-  nsCOMPtr<nsIPresShell> presShell = presContext->PresShell();
-  presShell->FrameNeedsReflow(popupFrame, nsIPresShell::eTreeChange,
+  presShell->FrameNeedsReflow(frame, nsIPresShell::eTreeChange,
                               NS_FRAME_HAS_DIRTY_CHILDREN);
 
   // cache the popup so that document.popupNode can retrieve the trigger node
@@ -1330,7 +1339,6 @@ void nsXULPopupManager::FirePopupShowingEvent(nsIContent* aPopup,
   // This is done after the popupshowing event in case that event is cancelled.
   // Using noautofocus="true" will disable this behaviour, which is needed for
   // the autocomplete widget as it manages focus itself.
-  nsPopupType popupType = popupFrame->PopupType();
   if (popupType == ePopupTypePanel &&
       !popup->AsElement()->AttrValueIs(kNameSpaceID_None,
                                        nsGkAtoms::noautofocus, nsGkAtoms::_true,
