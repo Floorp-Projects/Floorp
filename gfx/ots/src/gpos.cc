@@ -36,8 +36,6 @@ const unsigned kGposHeaderSize_1_0 = 10;
 const unsigned kGposHeaderSize_1_1 = 14;
 // The maximum format number for anchor tables.
 const uint16_t kMaxAnchorFormat = 3;
-// The maximum number of class value.
-const uint16_t kMaxClassDefValue = 0xFFFF;
 
 // Lookup type parsers.
 bool ParseSingleAdjustment(const ots::Font *font,
@@ -395,12 +393,12 @@ bool ParsePairPosFormat2(const ots::Font *font,
   // Check class definition tables.
   if (!ots::ParseClassDefTable(font, data + offset_class_def1,
                                length - offset_class_def1,
-                               num_glyphs, kMaxClassDefValue)) {
+                               num_glyphs, ots::kMaxClassDefValue)) {
     return OTS_FAILURE_MSG("Failed to parse class definition table 1");
   }
   if (!ots::ParseClassDefTable(font, data + offset_class_def2,
                                length - offset_class_def2,
-                               num_glyphs, kMaxClassDefValue)) {
+                               num_glyphs, ots::kMaxClassDefValue)) {
     return OTS_FAILURE_MSG("Failed to parse class definition table 2");
   }
 

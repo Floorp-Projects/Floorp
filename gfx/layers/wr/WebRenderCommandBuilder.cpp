@@ -2291,7 +2291,7 @@ class WebRenderMaskData : public WebRenderUserData {
   gfx::Size mScale;
 };
 
-Maybe<wr::WrImageMask> WebRenderCommandBuilder::BuildWrMaskImage(
+Maybe<wr::ImageMask> WebRenderCommandBuilder::BuildWrMaskImage(
     nsDisplayMasksAndClipPaths* aMaskItem, wr::DisplayListBuilder& aBuilder,
     wr::IpcResourceUpdateQueue& aResources, const StackingContextHelper& aSc,
     nsDisplayListBuilder* aDisplayListBuilder,
@@ -2412,7 +2412,7 @@ Maybe<wr::WrImageMask> WebRenderCommandBuilder::BuildWrMaskImage(
     }
   }
 
-  wr::WrImageMask imageMask;
+  wr::ImageMask imageMask;
   imageMask.image = wr::AsImageKey(maskData->mBlobKey.value());
   imageMask.rect = wr::ToLayoutRect(imageRect);
   imageMask.repeat = false;

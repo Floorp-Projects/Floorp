@@ -349,42 +349,6 @@ impl MutByteSlice {
 }
 
 #[repr(C)]
-#[derive(Debug, Clone, Copy)]
-pub struct WrImageMask {
-    image: WrImageKey,
-    rect: LayoutRect,
-    repeat: bool,
-}
-
-impl Into<ImageMask> for WrImageMask {
-    fn into(self) -> ImageMask {
-        ImageMask {
-            image: self.image,
-            rect: self.rect.into(),
-            repeat: self.repeat,
-        }
-    }
-}
-impl<'a> Into<ImageMask> for &'a WrImageMask {
-    fn into(self) -> ImageMask {
-        ImageMask {
-            image: self.image,
-            rect: self.rect.into(),
-            repeat: self.repeat,
-        }
-    }
-}
-impl From<ImageMask> for WrImageMask {
-    fn from(image_mask: ImageMask) -> Self {
-        WrImageMask {
-            image: image_mask.image,
-            rect: image_mask.rect.into(),
-            repeat: image_mask.repeat,
-        }
-    }
-}
-
-#[repr(C)]
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub struct WrImageDescriptor {
     pub format: ImageFormat,
@@ -2122,14 +2086,14 @@ pub extern "C" fn wr_dp_define_clip_with_parent_clip(
     clip_rect: LayoutRect,
     complex: *const ComplexClipRegion,
     complex_count: usize,
-    mask: *const WrImageMask,
+    mask: *const ImageMask,
 ) -> WrClipId {
     wr_dp_define_clip_impl(
         &mut state.frame_builder,
         parent.to_webrender(state.pipeline_id),
         clip_rect,
         make_slice(complex, complex_count),
-        unsafe { mask.as_ref() }.map(|m| m.into()),
+        unsafe { mask.as_ref() }.map(|m| *m),
     )
 }
 
@@ -2140,14 +2104,14 @@ pub extern "C" fn wr_dp_define_clip_with_parent_clip_chain(
     clip_rect: LayoutRect,
     complex: *const ComplexClipRegion,
     complex_count: usize,
-    mask: *const WrImageMask,
+    mask: *const ImageMask,
 ) -> WrClipId {
     wr_dp_define_clip_impl(
         &mut state.frame_builder,
         parent.to_webrender(state.pipeline_id),
         clip_rect,
         make_slice(complex, complex_count),
-        unsafe { mask.as_ref() }.map(|m| m.into()),
+        unsafe { mask.as_ref() }.map(|m| *m),
     )
 }
 
