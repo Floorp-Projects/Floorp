@@ -1,93 +1,11 @@
 /* globals sinon */
 "use strict";
 
-const {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js");
 ChromeUtils.import("resource://gre/modules/CanonicalJSON.jsm", this);
 ChromeUtils.import("resource://gre/modules/osfile.jsm", this);
 ChromeUtils.import("resource://normandy/lib/NormandyApi.jsm", this);
 
-load("utils.js"); /* globals withMockPreferences */
-
-class MockResponse {
-  constructor(content) {
-    this.content = content;
-  }
-
-  async text() {
-    return this.content;
-  }
-
-  async json() {
-    return JSON.parse(this.content);
-  }
-}
-
-function withServer(server, task) {
-  return withMockPreferences(async function inner(preferences) {
-    const serverUrl = `http://localhost:${server.identity.primaryPort}`;
-    preferences.set("app.normandy.api_url", `${serverUrl}/api/v1`);
-    preferences.set(
-      "security.content.signature.root_hash",
-      // Hash of the key that signs the normandy dev certificates
-      "4C:35:B1:C3:E3:12:D9:55:E7:78:ED:D0:A7:E7:8A:38:83:04:EF:01:BF:FA:03:29:B2:46:9F:3C:C5:EC:36:04"
-    );
-    NormandyApi.clearIndexCache();
-
-    try {
-      await task(serverUrl, preferences);
-    } finally {
-      await new Promise(resolve => server.stop(resolve));
-    }
-  });
-}
-
-function makeScriptServer(scriptPath) {
-  const server = new HttpServer();
-  server.registerContentType("sjs", "sjs");
-  server.registerFile("/", do_get_file(scriptPath));
-  server.start(-1);
-  return server;
-}
-
-function withScriptServer(scriptPath, task) {
-  return withServer(makeScriptServer(scriptPath), task);
-}
-
-function makeMockApiServer(directory) {
-  const server = new HttpServer();
-  server.registerDirectory("/", directory);
-
-  server.setIndexHandler(async function(request, response) {
-    response.processAsync();
-    const dir = request.getProperty("directory");
-    const index = dir.clone();
-    index.append("index.json");
-
-    if (!index.exists()) {
-      response.setStatusLine("1.1", 404, "Not Found");
-      response.write(`Cannot find path ${index.path}`);
-      response.finish();
-      return;
-    }
-
-    try {
-      const contents = await OS.File.read(index.path, {encoding: "utf-8"});
-      response.write(contents);
-    } catch (e) {
-      response.setStatusLine("1.1", 500, "Server error");
-      response.write(e.toString());
-    } finally {
-      response.finish();
-    }
-  });
-
-  server.start(-1);
-  return server;
-}
-
-function withMockApiServer(task) {
-  return withServer(makeMockApiServer(do_get_file("mock_api")), task);
-}
+load("utils.js"); /* globals withMockApiServer, MockResponse, withScriptServer, withServer, makeMockApiServer */
 
 add_task(withMockApiServer(async function test_get(serverUrl) {
   // Test that NormandyApi can fetch from the test server.
@@ -224,6 +142,19 @@ add_task(withMockApiServer(async function test_fetchActions() {
   ok(actionNames.includes("opt-out-study"));
   ok(actionNames.includes("show-heartbeat"));
   ok(actionNames.includes("preference-experiment"));
+}));
+
+add_task(withMockApiServer(async function test_fetchExtensionDetails() {
+  const extensionDetails = await NormandyApi.fetchExtensionDetails(1);
+  deepEqual(extensionDetails, {
+    "id": 1,
+    "name": "Normandy Fixture",
+    "xpi": "http://example.com/browser/toolkit/components/normandy/test/browser/fixtures/normandy.xpi",
+    "extension_id": "normandydriver@example.com",
+    "version": "1.0",
+    "hash": "ade1c14196ec4fe0aa0a6ba40ac433d7c8d1ec985581a8a94d43dc58991b5171",
+    "hash_algorithm": "sha256",
+  });
 }));
 
 add_task(withScriptServer("query_server.sjs", async function test_getTestServer(serverUrl) {

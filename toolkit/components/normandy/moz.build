@@ -19,5 +19,6 @@ XPCOM_MANIFESTS += [
 
 SPHINX_TREES['normandy'] = 'docs'
 
-BROWSER_CHROME_MANIFESTS += ['test/browser/browser.ini']
+TEST_DIRS += ['test/browser']
+
 XPCSHELL_TESTS_MANIFESTS += ['test/unit/xpcshell.ini']

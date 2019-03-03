@@ -1,4 +1,3 @@
-
 const {AddonTestUtils} = ChromeUtils.import("resource://testing-common/AddonTestUtils.jsm");
 const {ExtensionTestUtils} = ChromeUtils.import("resource://testing-common/ExtensionXPCShellUtils.jsm");
 const {AddonStudyAction} = ChromeUtils.import("resource://normandy/actions/AddonStudyAction.jsm");
@@ -7,7 +6,11 @@ const {AddonManager} = ChromeUtils.import("resource://gre/modules/AddonManager.j
 
 const global = this;
 
-add_task(async function test_addon_unenroll() {
+load("utils.js"); /* globals withMockApiServer, CryptoUtils */
+
+add_task(withMockApiServer(async function test_addon_unenroll(...args) {
+  const apiServer = args[args.length - 1];
+
   ExtensionTestUtils.init(global);
   AddonTestUtils.init(global);
   AddonTestUtils.createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
@@ -22,6 +25,8 @@ add_task(async function test_addon_unenroll() {
   // an unenroll listener.
   let xpi = AddonTestUtils.createTempWebExtensionFile({
     manifest: {
+      version: "1.0",
+
       applications: {
         gecko: { id: ID },
       },
@@ -91,6 +96,20 @@ add_task(async function test_addon_unenroll() {
   const server = AddonTestUtils.createHttpServer({hosts: ["example.com"]});
   server.registerFile("/study.xpi", xpi);
 
+  const API_ID = 999;
+  apiServer.registerPathHandler(`/api/v1/extension/${API_ID}/`, (request, response) => {
+    response.setStatusLine(request.httpVersion, 200, "OK");
+    response.write(JSON.stringify({
+      id: API_ID,
+      name: "Addon Unenroll Fixture",
+      xpi: "http://example.com/study.xpi",
+      extension_id: ID,
+      version: "1.0",
+      hash: CryptoUtils.getFileHash(xpi, "sha256"),
+      hash_algorithm: "sha256",
+    }));
+  });
+
   // Begin by telling Normandy to install the test extension above
   // that uses a webextension experiment to register a blocking callback
   // to be invoked when the study ends.
@@ -106,6 +125,7 @@ add_task(async function test_addon_unenroll() {
       name: "addon unenroll test",
       description: "testing",
       addonUrl: "http://example.com/study.xpi",
+      extensionApiId: API_ID,
     },
   });
 
@@ -133,4 +153,4 @@ add_task(async function test_addon_unenroll() {
 
   addon = await AddonManager.getAddonByID(ID);
   equal(addon, null, "After resolving studyEnded promise, extension is uninstalled");
-});
+}));

@@ -10,16 +10,6 @@ ChromeUtils.import("resource://normandy/lib/TelemetryEvents.jsm", this);
 // Initialize test utils
 AddonTestUtils.initMochitest(this);
 
-let _startArgsFactoryId = 1;
-function startArgsFactory(args) {
-  return Object.assign({
-    recipeId: _startArgsFactoryId++,
-    name: "Test",
-    description: "Test",
-    addonUrl: "http://test/addon.xpi",
-  }, args);
-}
-
 decorate_task(
   AddonStudies.withStudies(),
   async function testGetMissing() {
@@ -92,13 +82,30 @@ decorate_task(
 
 decorate_task(
   AddonStudies.withStudies([
+    addonStudyFactory({name: "foo"}),
+  ]),
+  async function testUpdate([study]) {
+    Assert.deepEqual(await AddonStudies.get(study.recipeId), study);
+
+    const updatedStudy = {
+      ...study,
+      name: "bar",
+    };
+    await AddonStudies.update(updatedStudy);
+
+    Assert.deepEqual(await AddonStudies.get(study.recipeId), updatedStudy);
+  }
+);
+
+decorate_task(
+  AddonStudies.withStudies([
     addonStudyFactory({active: true, addonId: "does.not.exist@example.com", studyEndDate: null}),
     addonStudyFactory({active: true, addonId: "installed@example.com"}),
     addonStudyFactory({active: false, addonId: "already.gone@example.com", studyEndDate: new Date(2012, 1)}),
   ]),
   withSendEventStub,
-  withInstalledWebExtension({id: "installed@example.com"}),
-  async function testInit([activeUninstalledStudy, activeInstalledStudy, inactiveStudy], sendEventStub) {
+  withInstalledWebExtension({id: "installed@example.com"}, /* expectUninstall: */ true),
+  async function testInit([activeUninstalledStudy, activeInstalledStudy, inactiveStudy], sendEventStub, [addonId, addonFile]) {
     await AddonStudies.init();
 
     const newActiveStudy = await AddonStudies.get(activeUninstalledStudy.recipeId);
@@ -135,6 +142,13 @@ decorate_task(
 
     // Only activeUninstalledStudy should have generated any events
     ok(sendEventStub.calledOnce, "no extra events should be generated");
+
+    // Clean up
+    const addon = await AddonManager.getAddonByID(addonId);
+    await addon.uninstall();
+    await TestUtils.topicObserved("shield-study-ended", (subject, message) => {
+      return message === `${activeInstalledStudy.recipeId}`;
+    });
   }
 );
 
@@ -146,7 +160,9 @@ decorate_task(
   async function testInit([study], [id, addonFile]) {
     const addon = await AddonManager.getAddonByID(id);
     await addon.uninstall();
-    await TestUtils.topicObserved("shield-study-ended");
+    await TestUtils.topicObserved("shield-study-ended", (subject, message) => {
+      return message === `${study.recipeId}`;
+    });
 
     const newStudy = await AddonStudies.get(study.recipeId);
     ok(!newStudy.active, "Studies are marked as inactive when their add-on is uninstalled.");
