@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_layers_CrossProcessCompositorBridgeParent_h
-#define mozilla_layers_CrossProcessCompositorBridgeParent_h
+#ifndef mozilla_layers_ContentCompositorBridgeParent_h
+#define mozilla_layers_ContentCompositorBridgeParent_h
 
 #include "mozilla/layers/CompositorBridgeParent.h"
 #include "mozilla/layers/CompositorThread.h"
@@ -22,12 +22,11 @@ class CompositorOptions;
  * these updates, it doesn't actually drive compositing itself. For that it
  * hands off work to the CompositorBridgeParent it's associated with.
  */
-class CrossProcessCompositorBridgeParent final
-    : public CompositorBridgeParentBase {
+class ContentCompositorBridgeParent final : public CompositorBridgeParentBase {
   friend class CompositorBridgeParent;
 
  public:
-  explicit CrossProcessCompositorBridgeParent(CompositorManagerParent* aManager)
+  explicit ContentCompositorBridgeParent(CompositorManagerParent* aManager)
       : CompositorBridgeParentBase(aManager),
         mNotifyAfterRemotePaint(false),
         mDestroyCalled(false) {}
@@ -186,14 +185,14 @@ class CrossProcessCompositorBridgeParent final
 
  private:
   // Private destructor, to discourage deletion outside of Release():
-  virtual ~CrossProcessCompositorBridgeParent();
+  virtual ~ContentCompositorBridgeParent();
 
   void DeferredDestroy();
 
   // There can be many CPCPs, and IPDL-generated code doesn't hold a
   // reference to top-level actors.  So we hold a reference to
   // ourself.  This is released (deferred) in ActorDestroy().
-  RefPtr<CrossProcessCompositorBridgeParent> mSelfRef;
+  RefPtr<ContentCompositorBridgeParent> mSelfRef;
 
   // If true, we should send a RemotePaintIsReady message when the layer
   // transaction is received
@@ -204,4 +203,4 @@ class CrossProcessCompositorBridgeParent final
 }  // namespace layers
 }  // namespace mozilla
 
-#endif  // mozilla_layers_CrossProcessCompositorBridgeParent_h
+#endif  // mozilla_layers_ContentCompositorBridgeParent_h

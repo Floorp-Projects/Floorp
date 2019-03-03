@@ -8,7 +8,7 @@
 #include "mozilla/gfx/GPUParent.h"
 #include "mozilla/webrender/RenderThread.h"
 #include "mozilla/layers/CompositorBridgeParent.h"
-#include "mozilla/layers/CrossProcessCompositorBridgeParent.h"
+#include "mozilla/layers/ContentCompositorBridgeParent.h"
 #include "mozilla/layers/CompositorThread.h"
 #include "mozilla/layers/SharedSurfacesParent.h"
 #include "nsAutoPtr.h"
@@ -202,8 +202,8 @@ PCompositorBridgeParent* CompositorManagerParent::AllocPCompositorBridgeParent(
     const CompositorBridgeOptions& aOpt) {
   switch (aOpt.type()) {
     case CompositorBridgeOptions::TContentCompositorOptions: {
-      CrossProcessCompositorBridgeParent* bridge =
-          new CrossProcessCompositorBridgeParent(this);
+      ContentCompositorBridgeParent* bridge =
+          new ContentCompositorBridgeParent(this);
       bridge->AddRef();
       return bridge;
     }
