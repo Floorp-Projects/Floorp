@@ -48,11 +48,23 @@ function getHomepagePref(useDefault) {
 
 let HomePage = {
   get(aWindow) {
+    let homePages = getHomepagePref();
     if (PrivateBrowsingUtils.permanentPrivateBrowsing ||
         (aWindow && PrivateBrowsingUtils.isWindowPrivate(aWindow))) {
       // If an extension controls the setting and does not have private
       // browsing permission, use the default setting.
-      let extensionInfo = ExtensionSettingsStore.getSetting("prefs", "homepage_override");
+      let extensionInfo;
+      try {
+        extensionInfo = ExtensionSettingsStore.getSetting("prefs", "homepage_override");
+      } catch (e) {
+        // ExtensionSettings may not be initialized if no extensions are enabled.  If
+        // we have some indication that an extension controls the homepage, return
+        // the defaults instead.
+        if (homePages.includes("moz-extension://")) {
+          return this.getDefault();
+        }
+      }
+
       if (extensionInfo) {
         let policy = WebExtensionPolicy.getByID(extensionInfo.id);
         if (!policy || !policy.privateBrowsingAllowed) {
@@ -61,7 +73,7 @@ let HomePage = {
       }
     }
 
-    return getHomepagePref();
+    return homePages;
   },
 
   getDefault() {
