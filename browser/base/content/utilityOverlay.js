@@ -30,7 +30,18 @@ Object.defineProperty(this, "BROWSER_NEW_TAB_URL", {
       }
       // If the extension does not have private browsing permission,
       // use about:privatebrowsing.
-      let extensionInfo = ExtensionSettingsStore.getSetting("url_overrides", "newTabURL");
+      let extensionInfo;
+      try {
+        extensionInfo = ExtensionSettingsStore.getSetting("url_overrides", "newTabURL");
+      } catch (e) {
+        // ExtensionSettings may not be initialized if no extensions are enabled.  If
+        // we have some indication that an extension controls the homepage, return
+        // the defaults instead.
+        if (aboutNewTabService.newTabURL.startsWith("moz-extension://")) {
+          return "about:privatebrowsing";
+        }
+      }
+
       if (extensionInfo) {
         let policy = WebExtensionPolicy.getByID(extensionInfo.id);
         if (!policy || !policy.privateBrowsingAllowed) {
