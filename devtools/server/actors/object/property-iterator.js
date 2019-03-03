@@ -113,8 +113,11 @@ const PropertyIteratorActor  = protocol.ActorClassWithSpec(propertyIteratorSpec,
  * Helper function to create a grip from a Map/Set entry
  */
 function gripFromEntry({ obj, hooks }, entry) {
+  if (!isWorker) {
+    entry = Cu.unwaiveXrays(entry);
+  }
   return hooks.createValueGrip(
-    ObjectUtils.makeDebuggeeValueIfNeeded(obj, Cu.unwaiveXrays(entry)));
+    ObjectUtils.makeDebuggeeValueIfNeeded(obj, entry));
 }
 
 function enumArrayProperties(objectActor, options) {
@@ -251,13 +254,27 @@ function enumMapEntries(objectActor) {
   // Even then though, we might want to continue waiving Xrays here for the
   // same reason we do so for Arrays above - this filtering behavior is likely
   // to be more confusing than beneficial in the case of Object previews.
-  const raw = objectActor.obj.unsafeDereference();
+  let keys, getValue;
+  if (isWorker) {
+    const keysIterator = DevToolsUtils.callPropertyOnObject(objectActor.obj, "keys");
+    keys = [...DevToolsUtils.makeDebuggeeIterator(keysIterator)];
+    const valuesIterator = DevToolsUtils.callPropertyOnObject(objectActor.obj, "values");
+    const values = [...DevToolsUtils.makeDebuggeeIterator(valuesIterator)];
+    const map = new Map();
+    for (let i = 0; i < keys.length; i++) {
+      map.set(keys[i], values[i]);
+    }
+    getValue = key => map.get(key);
+  } else {
+    const raw = objectActor.obj.unsafeDereference();
+    keys = [...Cu.waiveXrays(Map.prototype.keys.call(raw))];
+    getValue = key => Map.prototype.get.call(raw, key);
+  }
 
-  const keys = [...Cu.waiveXrays(Map.prototype.keys.call(raw))];
   return {
     [Symbol.iterator]: function* () {
       for (const key of keys) {
-        const value = Map.prototype.get.call(raw, key);
+        const value = getValue(key);
         yield [ key, value ].map(val => gripFromEntry(objectActor, val));
       }
     },
@@ -267,7 +284,7 @@ function enumMapEntries(objectActor) {
     },
     propertyDescription(index) {
       const key = keys[index];
-      const val = Map.prototype.get.call(raw, key);
+      const val = getValue(key);
       return {
         enumerable: true,
         value: {
@@ -374,8 +391,14 @@ function enumSetEntries(objectActor) {
   // This code is designed to handle untrusted objects, so we can safely
   // waive Xrays on the iterable, and relying on the Debugger machinery to
   // make sure we handle the resulting objects carefully.
-  const raw = objectActor.obj.unsafeDereference();
-  const values = [...Cu.waiveXrays(Set.prototype.values.call(raw))];
+  let values;
+  if (isWorker) {
+    const iterator = DevToolsUtils.callPropertyOnObject(objectActor.obj, "values");
+    values = [...DevToolsUtils.makeDebuggeeIterator(iterator)];
+  } else {
+    const raw = objectActor.obj.unsafeDereference();
+    values = [...Cu.waiveXrays(Set.prototype.values.call(raw))];
+  }
 
   return {
     [Symbol.iterator]: function* () {
