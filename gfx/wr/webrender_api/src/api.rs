@@ -15,7 +15,7 @@ use std::sync::Arc;
 use std::u32;
 // local imports
 use {display_item as di, font};
-use color::ColorF;
+use color::{ColorU, ColorF};
 use display_list::{BuiltDisplayList, BuiltDisplayListDescriptor};
 use image::{BlobImageData, BlobImageKey, ImageData, ImageDescriptor, ImageKey};
 use units::*;
@@ -813,6 +813,22 @@ impl PipelineId {
     }
 }
 
+#[derive(Copy, Clone, Debug, MallocSizeOf, Serialize, Deserialize)]
+pub enum ClipIntern {}
+#[derive(Copy, Clone, Debug, MallocSizeOf, Serialize, Deserialize)]
+pub enum FilterDataIntern {}
+
+/// Information specific to a primitive type that
+/// uniquely identifies a primitive template by key.
+#[derive(Debug, Clone, Eq, MallocSizeOf, PartialEq, Hash, Serialize, Deserialize)]
+pub enum PrimitiveKeyKind {
+    /// Clear an existing rect, used for special effects on some platforms.
+    Clear,
+    Rectangle {
+        color: ColorU,
+    },
+}
+
 /// Meta-macro to enumerate the various interner identifiers and types.
 ///
 /// IMPORTANT: Keep this synchronized with the list in mozilla-central located at
@@ -823,24 +839,24 @@ impl PipelineId {
 macro_rules! enumerate_interners {
     ($macro_name: ident) => {
         $macro_name! {
-            clip,
-            prim,
-            normal_border,
-            image_border,
-            image,
-            yuv_image,
-            line_decoration,
-            linear_grad,
-            radial_grad,
-            picture,
-            text_run,
-            filterdata,
+            clip: ClipIntern,
+            prim: PrimitiveKeyKind,
+            normal_border: NormalBorderPrim,
+            image_border: ImageBorder,
+            image: Image,
+            yuv_image: YuvImage,
+            line_decoration: LineDecoration,
+            linear_grad: LinearGradient,
+            radial_grad: RadialGradient,
+            picture: Picture,
+            text_run: TextRun,
+            filter_data: FilterDataIntern,
         }
     }
 }
 
 macro_rules! declare_interning_memory_report {
-    ( $( $name: ident, )+ ) => {
+    ( $( $name:ident : $ty:ident, )+ ) => {
         #[repr(C)]
         #[derive(AddAssign, Clone, Debug, Default, Deserialize, Serialize)]
         pub struct InternerSubReport {

@@ -3114,7 +3114,7 @@ impl PicturePrimitive {
                 PictureSurface::RenderTask(render_task_id)
             }
             PictureCompositeMode::ComponentTransferFilter(handle) => {
-                let filter_data = &mut data_stores.filterdata[handle];
+                let filter_data = &mut data_stores.filter_data[handle];
                 filter_data.update(frame_state);
 
                 let uv_rect_kind = calculate_uv_rect_kind(
