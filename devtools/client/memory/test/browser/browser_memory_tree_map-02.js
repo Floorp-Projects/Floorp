@@ -40,7 +40,7 @@ this.test = makeMemoryTest(TEST_URL, async function({ tab, panel }) {
     is(dragZoom.zoom, 0, "Zooming starts at 0");
     is(dragZoom.smoothZoom, 0, "Smoothed zooming starts at 0");
     is(rafMock.timesCalled, 0, "No RAFs have been queued");
-    is(style.transform, "translate(0px, 0px) scale(1)",
+    is(style.transform, "translate(0px) scale(1)",
        "No transforms have been done.");
 
     canvases.container.dispatchEvent(new WheelEvent("wheel", {
@@ -48,7 +48,7 @@ this.test = makeMemoryTest(TEST_URL, async function({ tab, panel }) {
       deltaMode: PIXEL_SCROLL_MODE,
     }));
 
-    is(style.transform, "translate(0px, 0px) scale(1.05)",
+    is(style.transform, "translate(0px) scale(1.05)",
        "The div has been slightly scaled.");
     is(dragZoom.zoom, PIXEL_DELTA * dragZoom.ZOOM_SPEED,
       "The zoom was increased");
@@ -68,7 +68,7 @@ this.test = makeMemoryTest(TEST_URL, async function({ tab, panel }) {
       lastCallCount = rafMock.timesCalled;
       rafMock.nextFrame();
     }
-    is(style.transform, "translate(0px, 0px) scale(1.1)",
+    is(style.transform, "translate(0px) scale(1.1)",
        "The scale has been fully applied");
     is(dragZoom.zoom, dragZoom.smoothZoom,
       "The smooth and target zoom values match");
