@@ -1827,20 +1827,14 @@ static bool IsStickyFrameActive(nsDisplayListBuilder* aBuilder,
   MOZ_ASSERT(aFrame->StyleDisplay()->mPosition == NS_STYLE_POSITION_STICKY);
 
   // Find the nearest scrollframe.
-  nsIFrame* cursor = aFrame;
-  nsIFrame* parent = aParent;
-  if (!parent) {
-    parent = nsLayoutUtils::GetCrossDocParentFrame(aFrame);
-  }
-  while (!parent->IsScrollFrame()) {
-    cursor = parent;
-    if ((parent = nsLayoutUtils::GetCrossDocParentFrame(cursor)) == nullptr) {
-      return false;
-    }
+  nsIScrollableFrame* sf = nsLayoutUtils::GetNearestScrollableFrame(
+      aFrame->GetParent(), nsLayoutUtils::SCROLLABLE_SAME_DOC |
+                               nsLayoutUtils::SCROLLABLE_INCLUDE_HIDDEN);
+  if (!sf) {
+    return false;
   }
 
-  nsIScrollableFrame* sf = do_QueryFrame(parent);
-  return sf->IsScrollingActive(aBuilder) && sf->GetScrolledFrame() == cursor;
+  return sf->IsScrollingActive(aBuilder);
 }
 
 nsDisplayListBuilder::AGRState nsDisplayListBuilder::IsAnimatedGeometryRoot(
