@@ -1,3 +1,6 @@
+/* Any copyright is dedicated to the Public Domain.
+ * http://creativecommons.org/publicdomain/zero/1.0/ */
+
 "use strict";
 
 /**
@@ -56,4 +59,3 @@ add_task(async function() {
   is(tab.linkedBrowser.userTypedValue, input, "Text still stored on browser");
   BrowserTestUtils.removeTab(tab);
 });
-

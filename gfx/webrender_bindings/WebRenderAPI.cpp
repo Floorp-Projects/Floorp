@@ -709,7 +709,7 @@ wr::WrClipChainId DisplayListBuilder::DefineClipChain(
 wr::WrClipId DisplayListBuilder::DefineClip(
     const Maybe<wr::WrSpaceAndClip>& aParent, const wr::LayoutRect& aClipRect,
     const nsTArray<wr::ComplexClipRegion>* aComplex,
-    const wr::WrImageMask* aMask) {
+    const wr::ImageMask* aMask) {
   WrClipId clipId;
   if (aParent) {
     clipId = wr_dp_define_clip_with_parent_clip(
