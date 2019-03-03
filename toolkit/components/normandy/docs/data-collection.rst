@@ -168,6 +168,32 @@ Enroll Failure
       is purposely limited to avoid leaking personally identifiable
       information. This should be considered a bug.
 
+Update
+   method
+      The string ``"update"``,
+   object
+      The string ``"addon_study"``,
+   value
+      The name of the study (``recipe.arguments.name``).
+   extra
+      addonId
+         The add-on's ID (example: ``"feature-study@shield.mozilla.com"``).
+      addonVersion
+         The add-on's version (example: ``"1.2.3"``).
+
+Update Failure
+   method
+      The string ``"updateFailed"``
+   object
+      The string ``"addon_study"``
+   value
+      The name of the study (``recipe.arguments.name``).
+   reason
+      A string containing the filename and line number of the code
+      that failed, and the name of the error thrown. This information
+      is purposely limited to avoid leaking personally identifiable
+      information. This should be considered a bug.
+
 Unenrollment
    method
       The string ``"unenroll"``.

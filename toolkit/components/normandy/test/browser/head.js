@@ -9,6 +9,11 @@ ChromeUtils.import("resource://normandy/lib/TelemetryEvents.jsm", this);
 ChromeUtils.defineModuleGetter(this, "TelemetryTestUtils",
                                "resource://testing-common/TelemetryTestUtils.jsm");
 
+const CryptoHash = Components.Constructor("@mozilla.org/security/hash;1",
+                                          "nsICryptoHash", "initWithString");
+const FileInputStream = Components.Constructor("@mozilla.org/network/file-input-stream;1",
+                                               "nsIFileInputStream", "init");
+
 // Load mocking/stubbing library, sinon
 // docs: http://sinonjs.org/docs/
 /* global sinon */
@@ -31,8 +36,8 @@ this.UUID_REGEX = /[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}/
 
 this.TEST_XPI_URL = (function() {
   const dir = getChromeDir(getResolvedURI(gTestPath));
-  dir.append("fixtures");
-  dir.append("normandy.xpi");
+  dir.append("addons");
+  dir.append("normandydriver-1.0.xpi");
   return Services.io.newFileURI(dir).spec;
 })();
 
@@ -129,7 +134,7 @@ this.withDriver = function(Assert, testFunction) {
 
 this.withMockNormandyApi = function(testFunction) {
   return async function inner(...args) {
-    const mockApi = {actions: [], recipes: [], implementations: {}};
+    const mockApi = {actions: [], recipes: [], implementations: {}, extensionDetails: {}};
 
     // Use callsFake instead of resolves so that the current values in mockApi are used.
     mockApi.fetchActions = sinon.stub(NormandyApi, "fetchActions").callsFake(async () => mockApi.actions);
@@ -143,6 +148,15 @@ this.withMockNormandyApi = function(testFunction) {
         return impl;
       }
     );
+    mockApi.fetchExtensionDetails = sinon.stub(NormandyApi, "fetchExtensionDetails").callsFake(
+      async extensionId => {
+        const details = mockApi.extensionDetails[extensionId];
+        if (!details) {
+          throw new Error(`Missing extension details for ${extensionId}`);
+        }
+        return details;
+      }
+    );
 
     try {
       await testFunction(mockApi, ...args);
@@ -150,6 +164,7 @@ this.withMockNormandyApi = function(testFunction) {
       mockApi.fetchActions.restore();
       mockApi.fetchRecipes.restore();
       mockApi.fetchImplementation.restore();
+      mockApi.fetchExtensionDetails.restore();
     }
   };
 };
@@ -295,6 +310,9 @@ this.addonStudyFactory = function(attrs) {
     addonUrl: "http://test/addon.xpi",
     addonVersion: "1.0.0",
     studyStartDate: new Date(),
+    extensionApiId: 1,
+    extensionHash: "ade1c14196ec4fe0aa0a6ba40ac433d7c8d1ec985581a8a94d43dc58991b5171",
+    extensionHashAlgorithm: "sha256",
   }, attrs);
 };
 
@@ -383,3 +401,29 @@ function mockLogger() {
   logStub.trace = sinon.stub();
   return logStub;
 }
+
+this.CryptoUtils = {
+  _getHashStringForCrypto(aCrypto) {
+    // return the two-digit hexadecimal code for a byte
+    let toHexString = charCode => ("0" + charCode.toString(16)).slice(-2);
+
+    // convert the binary hash data to a hex string.
+    let binary = aCrypto.finish(false);
+    let hash = Array.from(binary, c => toHexString(c.charCodeAt(0)));
+    return hash.join("").toLowerCase();
+  },
+
+  /**
+   * Get the computed hash for a given file
+   * @param {nsIFile} file The file to be hashed
+   * @param {string} [algorithm] The hashing algorithm to use
+   */
+  getFileHash(file, algorithm = "sha256") {
+    const crypto = CryptoHash(algorithm);
+    const fis = new FileInputStream(file, -1, -1, false);
+    crypto.updateFromStream(fis, file.fileSize);
+    const hash = this._getHashStringForCrypto(crypto);
+    fis.close();
+    return hash;
+  },
+};
