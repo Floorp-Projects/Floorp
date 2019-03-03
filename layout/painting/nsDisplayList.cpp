@@ -9188,7 +9188,7 @@ static Maybe<Pair<wr::WrClipId, HandleOpacity>> CreateWRClipPathAndMasks(
     return Some(MakePair(*clip, HandleOpacity::Yes));
   }
 
-  Maybe<wr::WrImageMask> mask = aManager->CommandBuilder().BuildWrMaskImage(
+  Maybe<wr::ImageMask> mask = aManager->CommandBuilder().BuildWrMaskImage(
       aDisplayItem, aBuilder, aResources, aSc, aDisplayListBuilder, aBounds);
   if (!mask) {
     return Nothing();

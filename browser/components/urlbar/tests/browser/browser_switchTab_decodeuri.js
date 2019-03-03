@@ -1,3 +1,13 @@
+/* Any copyright is dedicated to the Public Domain.
+ * http://creativecommons.org/publicdomain/zero/1.0/ */
+
+/**
+ * This test ensures that switch to tab still works when the URI contains an
+ * encoded part.
+ */
+
+"use strict";
+
 const TEST_PATH = getRootDirectory(gTestPath)
   .replace("chrome://mochitests/content", "http://example.org");
 const TEST_URL = `${TEST_PATH}dummy_page.html#test%7C1`;
@@ -14,17 +24,16 @@ add_task(async function test_switchtab_decodeuri() {
 
   info("Select autocomplete popup entry");
   EventUtils.synthesizeKey("KEY_ArrowDown");
-  ok(gURLBar.value.startsWith("moz-action:switchtab"), "switch to tab entry found");
+  let result = await UrlbarTestUtils.getDetailsOfResultAt(window,
+    UrlbarTestUtils.getSelectedIndex(window));
+  Assert.equal(result.type, UrlbarUtils.RESULT_TYPE.TAB_SWITCH);
 
   info("switch-to-tab");
-  await new Promise((resolve, reject) => {
-    // In case of success it should switch tab.
-    gBrowser.tabContainer.addEventListener("TabSelect", function() {
-      is(gBrowser.selectedTab, tab, "Should have switched to the right tab");
-      resolve();
-    }, {once: true});
-    EventUtils.synthesizeKey("KEY_Enter");
-  });
+  let tabSelectPromise = BrowserTestUtils.waitForEvent(window, "TabSelect", false);
+  EventUtils.synthesizeKey("KEY_Enter");
+  await tabSelectPromise;
+
+  Assert.equal(gBrowser.selectedTab, tab, "Should have switched to the right tab");
 
   gBrowser.removeCurrentTab();
   await PlacesUtils.history.clear();
