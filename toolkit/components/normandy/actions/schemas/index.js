@@ -70,6 +70,7 @@ const ActionSchemas = {
       "name",
       "description",
       "addonUrl",
+      "extensionApiId",
     ],
     properties: {
       name: {
@@ -87,6 +88,10 @@ const ActionSchemas = {
         type: "string",
         format: "uri",
         minLength: 1,
+      },
+      extensionApiId: {
+        description: "The record ID of the extension used for Normandy API calls.",
+        type: "integer",
       },
       isEnrollmentPaused: {
         description: "If true, new users will not be enrolled in the study.",

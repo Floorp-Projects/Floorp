@@ -164,6 +164,18 @@ var NormandyApi = {
     return this.fetchSignedObjects("action", filters);
   },
 
+  /**
+   * Fetch details for an extension from the server.
+   * @param extensionId {integer} The ID of the extension to look up
+   * @resolves {Object}
+   */
+  async fetchExtensionDetails(extensionId) {
+    const baseUrl = await this.getApiUrl("extension-list");
+    const extensionDetailsUrl = `${baseUrl}${extensionId}/`;
+    const response = await this.get(extensionDetailsUrl);
+    return response.json();
+  },
+
   async fetchImplementation(action) {
     const implementationUrl = new URL(this.absolutify(action.implementation_url));
 

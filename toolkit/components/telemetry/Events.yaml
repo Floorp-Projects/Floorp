@@ -260,16 +260,36 @@ normandy:
     expiry_version: never
 
   update:
-    objects: ["preference_rollout"]
+    objects: ["addon_study", "preference_rollout"]
     description: >
-      This event is fired when a client detects that a preference
-      rollout has changed on the server, and the new version of the
-      preference rollout is being applied over an existing, older
-      version previously fetched from the server.
+      This event is fired when a client detects that a recipe of the
+      ahove types has changed on the server, and the new version of the
+      recipe is being applied over an existing, older version previously
+      fetched from the server.
     extra_keys:
       previousState: >
-        This is the state of the rollout that had been applied previously.
-    bug_numbers: [1443560]
+        For preference_rollout recipes, the state of the rollout that had been applied
+        previously.
+      addonId: For addon_study recipes, the ID of the addon that was updated.
+      addonVersion: For addon_study recipes, the version of the addon that was installed.
+    bug_numbers: [1443560, 1474413]
+    notification_emails: ["normandy-notifications@mozilla.com"]
+    record_in_processes: [main]
+    release_channel_collection: opt-out
+    expiry_version: never
+
+  update_failed:
+    methods: ["updateFailed"]
+    objects: ["addon_study"]
+    description: >
+      Sent when applying a new version of a Normandy recipe of the above types (over an
+      existing, older version previously fetched from the server) has failed.
+    extra_keys:
+      reason: An error code describing the failure.
+      detail: >
+        Extra text describing the failure.
+        Currently only provided for addon_study.
+    bug_numbers: [1474413]
     notification_emails: ["normandy-notifications@mozilla.com"]
     record_in_processes: [main]
     release_channel_collection: opt-out

@@ -1,0 +1,24 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+BROWSER_CHROME_MANIFESTS += [
+  'browser.ini',
+]
+
+addons = [
+  'normandydriver-1.0',
+  'normandydriver-2.0',
+]
+
+output_dir = OBJDIR_FILES._tests.testing.mochitest.browser.toolkit.components.normandy.test.browser.addons
+
+for addon in addons:
+    indir = 'addons/%s' % addon
+    xpi = '%s.xpi' % indir
+
+    GENERATED_FILES += [xpi]
+    GENERATED_FILES[xpi].script = '../create_xpi.py'
+    GENERATED_FILES[xpi].inputs = [indir]
+
+    output_dir += ['!%s' % xpi]

@@ -19,6 +19,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   AddonManager: "resource://gre/modules/AddonManager.jsm",
   ActionSchemas: "resource://normandy/actions/schemas/index.js",
   AddonStudies: "resource://normandy/lib/AddonStudies.jsm",
+  NormandyApi: "resource://normandy/lib/NormandyApi.jsm",
   TelemetryEvents: "resource://normandy/lib/TelemetryEvents.jsm",
 });
 
@@ -44,11 +45,63 @@ class AddonStudyEnrollError extends Error {
         message = "the add-on failed to download";
         break;
       }
+      case "metadata-mismatch": {
+        message = "the server metadata does not match the downloaded add-on";
+        break;
+      }
+      case "install-failure": {
+        message = "the add-on failed to install";
+        break;
+      }
       default: {
         throw new Error(`Unexpected AddonStudyEnrollError reason: ${reason}`);
       }
     }
-    super(new Error(`Cannot install study add-on for ${studyName}: ${message}.`));
+    super(`Cannot install study add-on for ${studyName}: ${message}.`);
+    this.studyName = studyName;
+    this.extra = extra;
+  }
+}
+
+class AddonStudyUpdateError extends Error {
+  /**
+   * @param {string} studyName
+   * @param {object} extra Extra details to include when reporting the error to telemetry.
+   * @param {string} extra.reason The specific reason for the failure.
+   */
+  constructor(studyName, extra) {
+    let message;
+    let { reason } = extra;
+    switch (reason) {
+      case "addon-id-mismatch": {
+        message = "new add-on ID does not match old add-on ID";
+        break;
+      }
+      case "addon-does-not-exist": {
+        message = "an add-on with this ID does not exist";
+        break;
+      }
+      case "no-downgrade": {
+        message = "the add-on was an older version than is installed";
+        break;
+      }
+      case "metadata-mismatch": {
+        message = "the server metadata does not match the downloaded add-on";
+        break;
+      }
+      case "download-failure": {
+        message = "the add-on failed to download";
+        break;
+      }
+      case "install-failure": {
+        message = "the add-on failed to install";
+        break;
+      }
+      default: {
+        throw new Error(`Unexpected AddonStudyUpdateError reason: ${reason}`);
+      }
+    }
+    super(`Cannot update study add-on for ${studyName}: ${message}.`);
     this.studyName = studyName;
     this.extra = extra;
   }
@@ -84,20 +137,23 @@ class AddonStudyAction extends BaseAction {
    * client. It is responsible for:
    *
    *   - Enrolling studies the first time they are seen.
+   *   - Updating studies that have upgraded addons.
    *   - Marking studies as having been seen in this session.
    *
-   * If the recipe fails to enroll, it should throw to properly report its status.
+   * If the recipe fails to enroll or update, it should throw to properly report its status.
    */
   async _run(recipe) {
     this.seenRecipeIds.add(recipe.id);
 
     const hasStudy = await AddonStudies.has(recipe.id);
-    if (recipe.arguments.isEnrollmentPaused || hasStudy) {
-      // Recipe does not need anything done
-      return;
-    }
+    const { extensionApiId } = recipe.arguments;
+    const extensionDetails = await NormandyApi.fetchExtensionDetails(extensionApiId);
 
-    await this.enroll(recipe);
+    if (hasStudy) {
+      await this.update(recipe, extensionDetails);
+    } else {
+      await this.enroll(recipe, extensionDetails);
+    }
   }
 
   /**
@@ -121,10 +177,91 @@ class AddonStudyAction extends BaseAction {
   }
 
   /**
+   * Download and install the addon for a given recipe
+   *
+   * @param recipe Object describing the study to enroll in.
+   * @param extensionDetails Object describing the addon to be installed.
+   * @param onInstallStarted A function that returns a callback for the install listener.
+   * @param onComplete A callback function that is run on completion of the download.
+   * @param onFailedInstall A callback function that is run if the installation fails.
+   * @param errorClass The class of error to be thrown when exceptions occur.
+   * @param reportError A function that reports errors to Telemetry.
+   */
+  async downloadAndInstall(recipe, extensionDetails, onInstallStarted, onComplete, onFailedInstall, errorClass, reportError) {
+    const { name } = recipe.arguments;
+    const { hash, hash_algorithm } = extensionDetails;
+
+    const downloadDeferred = PromiseUtils.defer();
+    const installDeferred = PromiseUtils.defer();
+
+    const install = await AddonManager.getInstallForURL(extensionDetails.xpi, {
+      hash: `${hash_algorithm}:${hash}`,
+      telemetryInfo: {source: "internal"},
+    });
+
+    const listener = {
+      onDownloadFailed() {
+        downloadDeferred.reject(new errorClass(name, {
+          reason: "download-failure",
+          detail: AddonManager.errorToString(install.error),
+        }));
+      },
+
+      onDownloadEnded() {
+        downloadDeferred.resolve();
+        return false; // temporarily pause installation for Normandy bookkeeping
+      },
+
+      onInstallFailed() {
+        installDeferred.reject(new errorClass(name, {
+          reason: "install-failure",
+          detail: AddonManager.errorToString(install.error),
+        }));
+      },
+
+      onInstallEnded() {
+        installDeferred.resolve();
+      },
+    };
+
+    listener.onInstallStarted = onInstallStarted(installDeferred);
+
+    install.addListener(listener);
+
+    // Download the add-on
+    try {
+      install.install();
+      await downloadDeferred.promise;
+    } catch (err) {
+      reportError(err);
+      install.removeListener(listener);
+      throw err;
+    }
+
+    await onComplete(install, listener);
+
+    // Finish paused installation
+    try {
+      install.install();
+      await installDeferred.promise;
+    } catch (err) {
+      reportError(err);
+      install.removeListener(listener);
+      await onFailedInstall();
+      throw err;
+    }
+
+    install.removeListener(listener);
+
+    return [install.addon.id, install.addon.version];
+  }
+
+  /**
    * Enroll in the study represented by the given recipe.
    * @param recipe Object describing the study to enroll in.
+   * @param extensionDetails Object describing the addon to be installed.
    */
-  async enroll(recipe) {
+  async enroll(recipe, extensionDetails) {
     // This function first downloads the add-on to get its metadata. Then it
     // uses that metadata to record a study in `AddonStudies`. Then, it finishes
     // installing the add-on, and finally sends telemetry. If any of these steps
@@ -144,100 +281,166 @@ class AddonStudyAction extends BaseAction {
     // add-on installed but no record of it, which would leave it permanently
     // installed.
 
-    const { addonUrl, name, description } = recipe.arguments;
-
-    const downloadDeferred = PromiseUtils.defer();
-    const installDeferred = PromiseUtils.defer();
-
-    const install = await AddonManager.getInstallForURL(addonUrl, {
-      telemetryInfo: {source: "internal"},
-    });
-
-    const listener = {
-      onDownloadFailed() {
-        downloadDeferred.reject(new AddonStudyEnrollError(name, {
-          reason: "download-failure",
-          detail: AddonManager.errorToString(install.error),
-        }));
-      },
-
-      onDownloadEnded() {
-        downloadDeferred.resolve();
-        return false; // temporarily pause installation for Normandy bookkeeping
-      },
-
-      onInstallStarted(cbInstall) {
-        if (cbInstall.existingAddon) {
-          installDeferred.reject(new AddonStudyEnrollError(name, {reason: "conflicting-addon-id"}));
-          return false; // cancel the installation, no upgrades allowed
-        }
-        return true;
-      },
-
-      onInstallFailed() {
-        installDeferred.reject(new AddonStudyEnrollError(name, {
-          reason: "failed-to-install",
-          detail: AddonManager.errorToString(install.error),
-        }));
-      },
-
-      onInstallEnded() {
-        installDeferred.resolve();
-      },
-    };
-
-    install.addListener(listener);
-
-    // Download the add-on
-    try {
-      install.install();
-      await downloadDeferred.promise;
-    } catch (err) {
-      this.reportEnrollError(err);
-      install.removeListener(listener);
+    if (recipe.arguments.isEnrollmentPaused) {
+      // Recipe does not need anything done
       return;
     }
 
-    const addonId = install.addon.id;
+    const { extensionApiId, name, description } = recipe.arguments;
 
-    const study = {
-      recipeId: recipe.id,
-      name,
-      description,
-      addonId,
-      addonVersion: install.addon.version,
-      addonUrl,
-      active: true,
-      studyStartDate: new Date(),
+    const onInstallStarted = installDeferred => {
+      return cbInstall => {
+        const versionMatches = cbInstall.addon.version === extensionDetails.version;
+        const idMatches = cbInstall.addon.id === extensionDetails.extension_id;
+
+        if (cbInstall.existingAddon) {
+          installDeferred.reject(new AddonStudyEnrollError(name, {reason: "conflicting-addon-id"}));
+          return false; // cancel the installation, no upgrades allowed
+        } else if (!versionMatches || !idMatches) {
+          installDeferred.reject(new AddonStudyEnrollError(name, {
+            reason: "metadata-mismatch",
+          }));
+          return false; // cancel the installation, server metadata do not match downloaded add-on
+        }
+        return true;
+      };
     };
 
-    try {
-      await AddonStudies.add(study);
-    } catch (err) {
-      this.reportEnrollError(err);
-      install.removeListener(listener);
-      install.cancel();
-      throw err;
-    }
+    const onComplete = async (install, listener) => {
+      const study = {
+        recipeId: recipe.id,
+        name,
+        description,
+        addonId: install.addon.id,
+        addonVersion: install.addon.version,
+        addonUrl: extensionDetails.xpi,
+        extensionApiId,
+        extensionHash: extensionDetails.hash,
+        extensionHashAlgorithm: extensionDetails.hash_algorithm,
+        active: true,
+        studyStartDate: new Date(),
+      };
 
-    // finish paused installation
-    try {
-      install.install();
-      await installDeferred.promise;
-    } catch (err) {
-      this.reportEnrollError(err);
-      install.removeListener(listener);
+      try {
+        await AddonStudies.add(study);
+      } catch (err) {
+        this.reportEnrollError(err);
+        install.removeListener(listener);
+        install.cancel();
+        throw err;
+      }
+    };
+
+    const onFailedInstall = async () => {
       await AddonStudies.delete(recipe.id);
-      throw err;
+    };
+
+    const [installedId, installedVersion] = await this.downloadAndInstall(
+      recipe,
+      extensionDetails,
+      onInstallStarted,
+      onComplete,
+      onFailedInstall,
+      AddonStudyEnrollError,
+      this.reportEnrollError,
+    );
+
+    // All done, report success to Telemetry
+    TelemetryEvents.sendEvent("enroll", "addon_study", name, {
+      addonId: installedId,
+      addonVersion: installedVersion,
+    });
+  }
+
+  /**
+   * Update the study represented by the given recipe.
+   * @param recipe Object describing the study to be updated.
+   * @param extensionDetails Object describing the addon to be installed.
+   */
+  async update(recipe, extensionDetails) {
+    const study = await AddonStudies.get(recipe.id);
+    const { extensionApiId, name } = recipe.arguments;
+
+    let error;
+
+    if (study.addonId !== extensionDetails.extension_id) {
+      error = new AddonStudyUpdateError(name, {
+        reason: "addon-id-mismatch",
+      });
     }
 
-    // All done, report success to Telemetry and cleanup
-    TelemetryEvents.sendEvent("enroll", "addon_study", name, {
-      addonId: install.addon.id,
-      addonVersion: install.addon.version,
-    });
+    const versionCompare = Services.vc.compare(study.addonVersion, extensionDetails.version);
+    if (versionCompare > 0) {
+      error = new AddonStudyUpdateError(name, {
+        reason: "no-downgrade",
+      });
+    } else if (versionCompare === 0) {
+      return; // Unchanged, do nothing
+    }
 
-    install.removeListener(listener);
+    if (error) {
+      this.reportUpdateError(error);
+      throw error;
+    }
+
+    const onInstallStarted = installDeferred => {
+      return cbInstall => {
+        const versionMatches = cbInstall.addon.version === extensionDetails.version;
+        const idMatches = cbInstall.addon.id === extensionDetails.extension_id;
+
+        if (!cbInstall.existingAddon) {
+          installDeferred.reject(new AddonStudyUpdateError(name, {
+            reason: "addon-does-not-exist",
+          }));
+          return false; // cancel the installation, must upgrade an existing add-on
+        } else if (!versionMatches || !idMatches) {
+          installDeferred.reject(new AddonStudyUpdateError(name, {
+            reason: "metadata-mismatch",
+          }));
+          return false; // cancel the installation, server metadata do not match downloaded add-on
+        }
+
+        return true;
+      };
+    };
+
+    const onComplete = async (install, listener) => {
+      try {
+        await AddonStudies.update({
+          ...study,
+          addonVersion: install.addon.version,
+          addonUrl: extensionDetails.xpi,
+          extensionHash: extensionDetails.hash,
+          extensionHashAlgorithm: extensionDetails.hash_algorithm,
+          extensionApiId,
+        });
+      } catch (err) {
+        this.reportUpdateError(err);
+        install.removeListener(listener);
+        install.cancel();
+        throw err;
+      }
+    };
+
+    const onFailedInstall = () => {
+      AddonStudies.update(study);
+    };
+
+    const [installedId, installedVersion] = await this.downloadAndInstall(
+      recipe,
+      extensionDetails,
+      onInstallStarted,
+      onComplete,
+      onFailedInstall,
+      AddonStudyUpdateError,
+      this.reportUpdateError,
+    );
+
+    // All done, report success to Telemetry
+    TelemetryEvents.sendEvent("update", "addon_study", name, {
+      addonId: installedId,
+      addonVersion: installedVersion,
+    });
   }
 
   reportEnrollError(error) {
@@ -254,6 +457,25 @@ class AddonStudyAction extends BaseAction {
         */
       const safeErrorMessage = `${error.fileName}:${error.lineNumber}:${error.columnNumber} ${error.name}`;
       TelemetryEvents.sendEvent("enrollFailed", "addon_study", error.studyName, {
+        reason: safeErrorMessage.slice(0, 80),  // max length is 80 chars
+      });
+    }
+  }
+
+  reportUpdateError(error) {
+    if (error instanceof AddonStudyUpdateError) {
+      // One of our known errors. Report it nicely to telemetry
+      TelemetryEvents.sendEvent("updateFailed", "addon_study", error.studyName, error.extra);
+    } else {
+      /*
+        * Some unknown error. Add some helpful details, and report it to
+        * telemetry. The actual stack trace and error message could possibly
+        * contain PII, so we don't include them here. Instead include some
+        * information that should still be helpful, and is less likely to be
+        * unsafe.
+        */
+      const safeErrorMessage = `${error.fileName}:${error.lineNumber}:${error.columnNumber} ${error.name}`;
+      TelemetryEvents.sendEvent("updateFailed", "addon_study", error.studyName, {
         reason: safeErrorMessage.slice(0, 80),  // max length is 80 chars
       });
     }
