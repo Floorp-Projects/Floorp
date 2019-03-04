@@ -27,7 +27,7 @@ describe("TelemetryFeed", () => {
   let fakeHomePageUrl;
   let fakeHomePage;
   let fakeExtensionSettingsStore;
-  class PingCentre {sendPing() {} uninit() {}}
+  class PingCentre {sendPing() {} uninit() {} sendStructuredIngestionPing() {}}
   class UTEventReporting {sendUserEvent() {} sendSessionEndEvent() {} uninit() {}}
   class PerfService {
     getMostRecentAbsMarkStartByName() { return 1234; }
@@ -42,6 +42,8 @@ describe("TelemetryFeed", () => {
     PREF_IMPRESSION_ID,
     TELEMETRY_PREF,
     EVENTS_TELEMETRY_PREF,
+    STRUCTURED_INGESTION_TELEMETRY_PREF,
+    STRUCTURED_INGESTION_ENDPOINT_PREF,
   } = injector({
     "common/PerfService.jsm": {perfService},
     "lib/UTEventReporting.jsm": {UTEventReporting},
@@ -174,6 +176,21 @@ describe("TelemetryFeed", () => {
         instance._prefs.set(EVENTS_TELEMETRY_PREF, true);
 
         assert.propertyVal(instance, "eventTelemetryEnabled", true);
+      });
+    });
+    describe("Structured Ingestion telemetry pref changes from false to true", () => {
+      beforeEach(() => {
+        FakePrefs.prototype.prefs = {};
+        FakePrefs.prototype.prefs[STRUCTURED_INGESTION_TELEMETRY_PREF] = false;
+        instance = new TelemetryFeed();
+
+        assert.propertyVal(instance, "structuredIngestionTelemetryEnabled", false);
+      });
+
+      it("should set the enabled property to true", () => {
+        instance._prefs.set(STRUCTURED_INGESTION_TELEMETRY_PREF, true);
+
+        assert.propertyVal(instance, "structuredIngestionTelemetryEnabled", true);
       });
     });
   });
@@ -787,6 +804,19 @@ describe("TelemetryFeed", () => {
       assert.calledWith(instance.utEvents.sendUserEvent, event);
     });
   });
+  describe("#sendStructuredIngestionEvent", () => {
+    it("should call PingCentre sendStructuredIngestionPing", async () => {
+      FakePrefs.prototype.prefs[TELEMETRY_PREF] = true;
+      FakePrefs.prototype.prefs[STRUCTURED_INGESTION_TELEMETRY_PREF] = true;
+      const event = {};
+      instance = new TelemetryFeed();
+      sandbox.stub(instance.pingCentre, "sendStructuredIngestionPing");
+
+      await instance.sendStructuredIngestionEvent(event, "http://foo.com/base/");
+
+      assert.calledWith(instance.pingCentre.sendStructuredIngestionPing, event);
+    });
+  });
   describe("#sendASRouterEvent", () => {
     it("should call PingCentre for AS Router", async () => {
       FakePrefs.prototype.prefs.telemetry = true;
@@ -906,34 +936,6 @@ describe("TelemetryFeed", () => {
       instance.uninit();
 
       assert.calledOnce(stub);
-    });
-    it("should remove the a-s telemetry pref listener", () => {
-      FakePrefs.prototype.prefs[TELEMETRY_PREF] = true;
-      instance = new TelemetryFeed();
-
-      assert.property(instance._prefs.observers, TELEMETRY_PREF);
-
-      instance.uninit();
-
-      assert.notProperty(instance._prefs.observers, TELEMETRY_PREF);
-    });
-    it("should remove the a-s ut telemetry pref listener", () => {
-      FakePrefs.prototype.prefs[EVENTS_TELEMETRY_PREF] = true;
-      instance = new TelemetryFeed();
-
-      assert.property(instance._prefs.observers, EVENTS_TELEMETRY_PREF);
-
-      instance.uninit();
-
-      assert.notProperty(instance._prefs.observers, EVENTS_TELEMETRY_PREF);
-    });
-    it("should call Cu.reportError if this._prefs.ignore throws", () => {
-      globals.sandbox.stub(FakePrefs.prototype, "ignore").throws("Some Error");
-      instance = new TelemetryFeed();
-
-      instance.uninit();
-
-      assert.called(global.Cu.reportError);
     });
     it("should make this.browserOpenNewtabStart() stop observing browser-open-newtab-start and domwindowopened", async () => {
       await instance.init();
@@ -1201,8 +1203,8 @@ describe("TelemetryFeed", () => {
       const spy = sandbox.spy(instance, "sendEvent");
       const session = {
         impressionSets: {
-          source_foo: [{id: 1}, {id: 2}],
-          source_bar: [{id: 3}, {id: 4}],
+          source_foo: [{id: 1, pos: 0}, {id: 2, pos: 1}],
+          source_bar: [{id: 3, pos: 0}, {id: 4, pos: 1}],
         },
       };
       instance.sendDiscoveryStreamImpressions("foo", session);
@@ -1218,22 +1220,40 @@ describe("TelemetryFeed", () => {
     });
     it("should store impression to impressionSets", () => {
       const session = instance.addSession("new_session", "about:newtab");
-      instance.handleDiscoveryStreamImpressionStats("new_session", {source: "foo", tiles: [{id: 1}]});
+      instance.handleDiscoveryStreamImpressionStats("new_session",
+        {source: "foo", tiles: [{id: 1, pos: 0}]});
 
       assert.equal(Object.keys(session.impressionSets).length, 1);
-      assert.deepEqual(session.impressionSets.foo, [{id: 1}]);
+      assert.deepEqual(session.impressionSets.foo, [{id: 1, pos: 0}]);
 
       // Add another ping with the same source
-      instance.handleDiscoveryStreamImpressionStats("new_session", {source: "foo", tiles: [{id: 2}]});
+      instance.handleDiscoveryStreamImpressionStats("new_session",
+        {source: "foo", tiles: [{id: 2, pos: 1}]});
 
-      assert.deepEqual(session.impressionSets.foo, [{id: 1}, {id: 2}]);
+      assert.deepEqual(session.impressionSets.foo,
+        [{id: 1, pos: 0}, {id: 2, pos: 1}]);
 
       // Add another ping with a different source
-      instance.handleDiscoveryStreamImpressionStats("new_session", {source: "bar", tiles: [{id: 3}]});
+      instance.handleDiscoveryStreamImpressionStats("new_session",
+        {source: "bar", tiles: [{id: 3, pos: 2}]});
 
       assert.equal(Object.keys(session.impressionSets).length, 2);
-      assert.deepEqual(session.impressionSets.foo, [{id: 1}, {id: 2}]);
-      assert.deepEqual(session.impressionSets.bar, [{id: 3}]);
+      assert.deepEqual(session.impressionSets.foo, [{id: 1, pos: 0}, {id: 2, pos: 1}]);
+      assert.deepEqual(session.impressionSets.bar, [{id: 3, pos: 2}]);
+    });
+  });
+  describe("#_generateStructuredIngestionEndpoint", () => {
+    it("should generate a valid endpoint", () => {
+      const fakeEndpoint = "http://fakeendpoint.com/base/";
+      const fakeUUID = "{34f24486-f01a-9749-9c5b-21476af1fa77}";
+      const fakeUUIDWithoutBraces = fakeUUID.substring(1, fakeUUID.length - 1);
+      FakePrefs.prototype.prefs = {};
+      FakePrefs.prototype.prefs[STRUCTURED_INGESTION_ENDPOINT_PREF] = fakeEndpoint;
+      sandbox.stub(global.gUUIDGenerator, "generateUUID").returns(fakeUUID);
+      const feed = new TelemetryFeed();
+      const url = feed._generateStructuredIngestionEndpoint("testPingType", "1");
+
+      assert.equal(url, `${fakeEndpoint}/testPingType/1/${fakeUUIDWithoutBraces}`);
     });
   });
 });

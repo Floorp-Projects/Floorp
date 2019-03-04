@@ -440,6 +440,100 @@ describe("DiscoveryStreamFeed", () => {
     });
   });
 
+  describe("#transform", () => {
+    it("should return initial data if spocs are empty", () => {
+      const result = feed.transform({spocs: []});
+
+      assert.equal(result.spocs.length, 0);
+    });
+    it("should sort based on item_score", () => {
+      const result = feed.transform({
+        spocs: [
+          {campaign_id: 2, item_score: 0.8, min_score: 0.1},
+          {campaign_id: 3, item_score: 0.7, min_score: 0.1},
+          {campaign_id: 1, item_score: 0.9, min_score: 0.1},
+        ],
+      });
+
+      assert.deepEqual(result.spocs, [
+        {campaign_id: 1, item_score: 0.9, score: 0.9, min_score: 0.1},
+        {campaign_id: 2, item_score: 0.8, score: 0.8, min_score: 0.1},
+        {campaign_id: 3, item_score: 0.7, score: 0.7, min_score: 0.1},
+      ]);
+    });
+    it("should remove items with scores lower than min_score", () => {
+      const result = feed.transform({
+        spocs: [
+          {campaign_id: 2, item_score: 0.8, min_score: 0.9},
+          {campaign_id: 3, item_score: 0.7, min_score: 0.7},
+          {campaign_id: 1, item_score: 0.9, min_score: 0.8},
+        ],
+      });
+
+      assert.deepEqual(result.spocs, [
+        {campaign_id: 1, item_score: 0.9, score: 0.9, min_score: 0.8},
+        {campaign_id: 3, item_score: 0.7, score: 0.7, min_score: 0.7},
+      ]);
+    });
+    it("should add a score prop to spocs", () => {
+      const result = feed.transform({
+        spocs: [
+          {campaign_id: 1, item_score: 0.9, min_score: 0.1},
+        ],
+      });
+
+      assert.equal(result.spocs[0].score, 0.9);
+    });
+    it("should filter out duplicate campigns", () => {
+      const result = feed.transform({
+        spocs: [
+          {campaign_id: 2, item_score: 0.8, min_score: 0.1},
+          {campaign_id: 3, item_score: 0.6, min_score: 0.1},
+          {campaign_id: 1, item_score: 0.9, min_score: 0.1},
+          {campaign_id: 3, item_score: 0.7, min_score: 0.1},
+          {campaign_id: 1, item_score: 0.9, min_score: 0.1},
+        ],
+      });
+
+      assert.deepEqual(result.spocs, [
+        {campaign_id: 1, item_score: 0.9, score: 0.9, min_score: 0.1},
+        {campaign_id: 2, item_score: 0.8, score: 0.8, min_score: 0.1},
+        {campaign_id: 3, item_score: 0.7, score: 0.7, min_score: 0.1},
+      ]);
+    });
+    it("should filter out duplicate campigns while using spocs_per_domain", () => {
+      sandbox.stub(feed.store, "getState").returns({
+        DiscoveryStream: {
+          spocs: {spocs_per_domain: 2},
+        },
+      });
+
+      const result = feed.transform({
+        spocs: [
+          {campaign_id: 2, item_score: 0.8, min_score: 0.1},
+          {campaign_id: 3, item_score: 0.6, min_score: 0.1},
+          {campaign_id: 1, item_score: 0.6, min_score: 0.1},
+          {campaign_id: 3, item_score: 0.7, min_score: 0.1},
+          {campaign_id: 1, item_score: 0.9, min_score: 0.1},
+          {campaign_id: 2, item_score: 0.6, min_score: 0.1},
+          {campaign_id: 3, item_score: 0.7, min_score: 0.1},
+          {campaign_id: 1, item_score: 0.8, min_score: 0.1},
+          {campaign_id: 3, item_score: 0.7, min_score: 0.1},
+          {campaign_id: 1, item_score: 0.8, min_score: 0.1},
+        ],
+      });
+
+      assert.deepEqual(result.spocs, [
+        {campaign_id: 1, item_score: 0.9, score: 0.9, min_score: 0.1},
+        {campaign_id: 2, item_score: 0.8, score: 0.8, min_score: 0.1},
+        {campaign_id: 1, item_score: 0.8, score: 0.8, min_score: 0.1},
+        {campaign_id: 3, item_score: 0.7, score: 0.7, min_score: 0.1},
+        {campaign_id: 3, item_score: 0.7, score: 0.7, min_score: 0.1},
+        {campaign_id: 2, item_score: 0.6, score: 0.6, min_score: 0.1},
+      ]);
+    });
+  });
+
   describe("#filterSpocs", () => {
     it("should return filtered out spocs based on frequency caps", () => {
       const fakeSpocs = {
@@ -718,6 +812,8 @@ describe("DiscoveryStreamFeed", () => {
           spocs: [
             {
               campaign_id: "seen",
+              min_score: 0.1,
+              item_score: 1,
               caps: {
                 lifetime: 3,
                 campaign: {
@@ -728,6 +824,8 @@ describe("DiscoveryStreamFeed", () => {
             },
             {
               campaign_id: "not-seen",
+              min_score: 0.1,
+              item_score: 1,
               caps: {
                 lifetime: 3,
                 campaign: {
@@ -746,6 +844,9 @@ describe("DiscoveryStreamFeed", () => {
         spocs: [
           {
             campaign_id: "not-seen",
+            min_score: 0.1,
+            item_score: 1,
+            score: 1,
             caps: {
               lifetime: 3,
               campaign: {

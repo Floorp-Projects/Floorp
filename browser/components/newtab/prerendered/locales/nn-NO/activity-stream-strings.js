@@ -42,7 +42,7 @@ window.gActivityStreamStrings = {
   "prefs_home_description": "Vel kva for innhald du vil ha på Firefox-startsida di.",
   "prefs_content_discovery_header": "Firefox startside",
   "prefs_content_discovery_description": "Content Discovery in Firefox Home allows you to discover high-quality, relevant articles from across the web.",
-  "prefs_content_discovery_button": "Turn Off Content Discovery",
+  "prefs_content_discovery_button": "Slå av innhaldsoppdaging",
   "prefs_section_rows_option": "{num} rekkje;{num} rekkjer",
   "prefs_search_header": "Nettsøk",
   "prefs_topsites_description": "Sidene du besøkjer mest",
