@@ -422,46 +422,55 @@ const kEventConstructors = {
                                              },
 };
 
-for (var name of Object.keys(kEventConstructors)) {
-  if (!kEventConstructors[name].chromeOnly) {
-    continue;
+function test() {
+  for (var name of Object.keys(kEventConstructors)) {
+    if (!kEventConstructors[name].chromeOnly) {
+      continue;
+    }
+    if (window[name]) {
+      ok(false, name + " should be chrome only.");
+    }
+    window[name] = SpecialPowers.unwrap(SpecialPowers.wrap(window)[name]);
   }
-  if (window[name]) {
-    ok(false, name + " should be chrome only.");
-  }
-  window[name] = SpecialPowers.unwrap(SpecialPowers.wrap(window)[name]);
-}
 
-var props = Object.getOwnPropertyNames(window);
-for (var i = 0; i < props.length; i++) {
-  // Assume that event object must be named as "FooBarEvent".
-  if (!props[i].match(/^([A-Z][a-zA-Z]+)?Event$/)) {
-    continue;
-  }
-  if (!kEventConstructors[props[i]]) {
-    ok(false, "Unknown event found: " + props[i]);
-    continue;
-  }
-  if (!kEventConstructors[props[i]].create) {
-    todo(false, "Cannot create untrusted event of " + props[i]);
-    continue;
-  }
-  ok(true, "Creating " + props[i] + "...");
-  var event = kEventConstructors[props[i]].create("foo", {});
-  if (!event) {
-    ok(false, "Failed to create untrusted event: " + props[i]);
-    continue;
-  }
-  if (typeof(event.getModifierState) == "function") {
-    const kModifiers = [ "Shift", "Control", "Alt", "AltGr", "Meta", "CapsLock", "ScrollLock", "NumLock", "OS", "Fn", "FnLock", "Symbol", "SymbolLock" ];
-    for (var j = 0; j < kModifiers.length; j++) {
-      ok(true, "Calling " + props[i] + ".getModifierState(" + kModifiers[j] + ")...");
-      var modifierState = event.getModifierState(kModifiers[j]);
-      ok(true, props[i] + ".getModifierState(" + kModifiers[j] + ") = " + modifierState);
+  var props = Object.getOwnPropertyNames(window);
+  for (var i = 0; i < props.length; i++) {
+    // Assume that event object must be named as "FooBarEvent".
+    if (!props[i].match(/^([A-Z][a-zA-Z]+)?Event$/)) {
+      continue;
+    }
+    if (!kEventConstructors[props[i]]) {
+      ok(false, "Unknown event found: " + props[i]);
+      continue;
+    }
+    if (!kEventConstructors[props[i]].create) {
+      todo(false, "Cannot create untrusted event of " + props[i]);
+      continue;
+    }
+    ok(true, "Creating " + props[i] + "...");
+    var event = kEventConstructors[props[i]].create("foo", {});
+    if (!event) {
+      ok(false, "Failed to create untrusted event: " + props[i]);
+      continue;
+    }
+    if (typeof(event.getModifierState) == "function") {
+      const kModifiers = [ "Shift", "Control", "Alt", "AltGr", "Meta", "CapsLock", "ScrollLock", "NumLock", "OS", "Fn", "FnLock", "Symbol", "SymbolLock" ];
+      for (var j = 0; j < kModifiers.length; j++) {
+        ok(true, "Calling " + props[i] + ".getModifierState(" + kModifiers[j] + ")...");
+        var modifierState = event.getModifierState(kModifiers[j]);
+        ok(true, props[i] + ".getModifierState(" + kModifiers[j] + ") = " + modifierState);
+      }
     }
   }
 }
 
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv(
+  {"set": [["dom.w3c_touch_events.legacy_apis.enabled", true]]},
+  function() {
+    test();
+    SimpleTest.finish();
+  });
 </script>
 </pre>
 </body>
