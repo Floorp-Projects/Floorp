@@ -547,13 +547,26 @@ function checkRange(arr, minIx, maxIxPlusOne, expectedValue)
     checkRange(b, 0x00000, 0x10000, 0x00);
 }
 
-// Zero len with offset out-of-bounds gets an exception
+// Zero len with offset out-of-bounds is OK if it's at the edge of the
+// memory, but not if it is one past that.
 {
     let inst = wasmEvalText(
     `(module
        (memory (export "memory") 1 1)
        (func (export "testfn")
          (memory.fill (i32.const 0x10000) (i32.const 0x55) (i32.const 0))
+       )
+     )`
+    );
+    inst.exports.testfn();
+}
+
+{
+    let inst = wasmEvalText(
+    `(module
+       (memory (export "memory") 1 1)
+       (func (export "testfn")
+         (memory.fill (i32.const 0x10001) (i32.const 0x55) (i32.const 0))
        )
      )`
     );
@@ -715,7 +728,7 @@ function checkRange(arr, minIx, maxIxPlusOne, expectedValue)
     checkRange(b, 0x08000, 0x10000, 0xAA);
 }
 
-// Zero len with dest offset out-of-bounds is an exception
+// Zero len with dest offset out-of-bounds but at the edge of memory is OK
 {
     let inst = wasmEvalText(
     `(module
@@ -725,17 +738,43 @@ function checkRange(arr, minIx, maxIxPlusOne, expectedValue)
        )
      )`
     );
+    inst.exports.testfn();
+}
+
+// Ditto, but one further out is not OK.
+{
+    let inst = wasmEvalText(
+    `(module
+       (memory (export "memory") 1 1)
+       (func (export "testfn")
+         (memory.copy (i32.const 0x10001) (i32.const 0x7000) (i32.const 0))
+       )
+     )`
+    );
     assertErrorMessage(() => inst.exports.testfn(),
                        WebAssembly.RuntimeError, /index out of bounds/);
 }
 
-// Zero len with src offset out-of-bounds is an exception
+// Zero len with src offset out-of-bounds but at the edge of memory is OK
 {
     let inst = wasmEvalText(
     `(module
        (memory (export "memory") 1 1)
        (func (export "testfn")
          (memory.copy (i32.const 0x9000) (i32.const 0x10000) (i32.const 0))
+       )
+     )`
+    );
+    inst.exports.testfn();
+}
+
+// Ditto, but one element further out is not OK.
+{
+    let inst = wasmEvalText(
+    `(module
+       (memory (export "memory") 1 1)
+       (func (export "testfn")
+         (memory.copy (i32.const 0x9000) (i32.const 0x10001) (i32.const 0))
        )
      )`
     );
