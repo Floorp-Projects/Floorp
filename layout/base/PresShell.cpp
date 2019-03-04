@@ -6542,7 +6542,7 @@ nsresult PresShell::EventHandler::HandleEvent(nsIFrame* aFrame,
 
   nsresult rv = NS_OK;
 
-  PushCurrentEventInfo(nullptr, nullptr);
+  AutoCurrentEventInfoSetter eventInfoSetter(*this);
 
   if (aGUIEvent->IsTargetedAtFocusedContent()) {
     mPresShell->mCurrentEventContent = nullptr;
@@ -6554,7 +6554,6 @@ nsresult PresShell::EventHandler::HandleEvent(nsIFrame* aFrame,
     Document* targetDoc =
         eventTargetElement ? eventTargetElement->OwnerDoc() : nullptr;
     if (targetDoc && targetDoc != GetDocument()) {
-      PopCurrentEventInfo();
       nsCOMPtr<nsIPresShell> shell = targetDoc->GetShell();
       if (shell) {
         rv = static_cast<PresShell*>(shell.get())
@@ -6570,7 +6569,6 @@ nsresult PresShell::EventHandler::HandleEvent(nsIFrame* aFrame,
         !mPresShell->GetCurrentEventFrame() ||
         InZombieDocument(mPresShell->mCurrentEventContent)) {
       rv = RetargetEventToParent(aGUIEvent, aEventStatus);
-      PopCurrentEventInfo();
       return rv;
     }
   } else {
@@ -6585,7 +6583,6 @@ nsresult PresShell::EventHandler::HandleEvent(nsIFrame* aFrame,
 #ifdef DEBUG
   mPresShell->ShowEventTargetDebug();
 #endif
-  PopCurrentEventInfo();
 
   return rv;
 }
@@ -6749,15 +6746,13 @@ nsresult PresShell::EventHandler::HandleEventUsingCoordinates(
   // the only correct alternative; if the event was captured then it
   // must have been captured by us or some ancestor shell and we
   // now ask the subshell to dispatch it normally.
-  eventTargetData.mPresShell->PushCurrentEventInfo(eventTargetData.mFrame,
-                                                   eventTargetData.mContent);
   EventHandler eventHandler(*eventTargetData.mPresShell);
+  AutoCurrentEventInfoSetter eventInfoSetter(eventHandler, eventTargetData);
   nsresult rv = eventHandler.HandleEventInternal(
       aGUIEvent, aEventStatus, true, eventTargetData.mOverrideClickTarget);
 #ifdef DEBUG
   eventTargetData.mPresShell->ShowEventTargetDebug();
 #endif
-  eventTargetData.mPresShell->PopCurrentEventInfo();
   return rv;
 }
 
@@ -7577,10 +7572,10 @@ nsresult PresShell::EventHandler::HandleEventWithTarget(
                   aNewEventContent->GetComposedDoc() == GetDocument());
   AutoPointerEventTargetUpdater updater(mPresShell, aEvent, aNewEventFrame,
                                         aTargetContent);
-  PushCurrentEventInfo(aNewEventFrame, aNewEventContent);
+  AutoCurrentEventInfoSetter eventInfoSetter(*this, aNewEventFrame,
+                                             aNewEventContent);
   nsresult rv =
       HandleEventInternal(aEvent, aEventStatus, false, aOverrideClickTarget);
-  PopCurrentEventInfo();
   return rv;
 }
 
@@ -8136,6 +8131,9 @@ void PresShell::EventHandler::DispatchTouchEventToDOM(
 
     nsPresContext* context = doc->GetPresContext();
     if (!context) {
+      if (contentPresShell) {
+        contentPresShell->PopCurrentEventInfo();
+      }
       continue;
     }
 
