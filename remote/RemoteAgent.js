@@ -25,10 +25,6 @@ XPCOMUtils.defineLazyGetter(this, "log", Log.get);
 
 const ENABLED = "remote.enabled";
 const FORCE_LOCAL = "remote.force-local";
-const HTTPD = "remote.httpd";
-const SCHEME = `${HTTPD}.scheme`;
-const HOST = `${HTTPD}.host`;
-const PORT = `${HTTPD}.port`;
 
 const DEFAULT_HOST = "localhost";
 const DEFAULT_PORT = 9222;
@@ -85,9 +81,6 @@ class ParentRemoteAgent {
     }
 
     Preferences.set(RecommendedPreferences);
-    Preferences.set(SCHEME, this.scheme);
-    Preferences.set(HOST, this.host);
-    Preferences.set(PORT, this.port);
   }
 
   async close() {
@@ -95,7 +88,6 @@ class ParentRemoteAgent {
       try {
         await this.server.stop();
 
-        Preferences.resetBranch(HTTPD);
         Preferences.reset(Object.keys(RecommendedPreferences));
 
         this.tabs.stop();
