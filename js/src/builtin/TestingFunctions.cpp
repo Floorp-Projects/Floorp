@@ -41,7 +41,6 @@
 #include "jit/BaselineJIT.h"
 #include "jit/InlinableNatives.h"
 #include "jit/JitRealm.h"
-#include "js/ArrayBuffer.h"  // JS::{DetachArrayBuffer,GetArrayBufferLengthAndData,NewArrayBufferWithContents}
 #include "js/CharacterEncoding.h"
 #include "js/CompilationAndEvaluation.h"
 #include "js/CompileOptions.h"
@@ -2847,7 +2846,7 @@ class CloneBufferObject : public NativeObject {
       ArrayBufferObject* buffer = &args[0].toObject().as<ArrayBufferObject>();
       bool isSharedMemory;
       uint8_t* dataBytes = nullptr;
-      JS::GetArrayBufferLengthAndData(buffer, &nbytes, &isSharedMemory,
+      js::GetArrayBufferLengthAndData(buffer, &nbytes, &isSharedMemory,
                                       &dataBytes);
       MOZ_ASSERT(!isSharedMemory);
       data = reinterpret_cast<char*>(dataBytes);
@@ -2967,7 +2966,7 @@ class CloneBufferObject : public NativeObject {
     data->ReadBytes(iter, buffer.get(), size);
 
     auto* rawBuffer = buffer.release();
-    JSObject* arrayBuffer = JS::NewArrayBufferWithContents(cx, size, rawBuffer);
+    JSObject* arrayBuffer = JS_NewArrayBufferWithContents(cx, size, rawBuffer);
     if (!arrayBuffer) {
       js_free(rawBuffer);
       return false;
@@ -3191,7 +3190,7 @@ static bool DetachArrayBuffer(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   RootedObject obj(cx, &args[0].toObject());
-  if (!JS::DetachArrayBuffer(cx, obj)) {
+  if (!JS_DetachArrayBuffer(cx, obj)) {
     return false;
   }
 

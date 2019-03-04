@@ -2,11 +2,7 @@
  * vim: set ts=8 sts=2 et sw=2 tw=80:
  */
 
-#include <stdint.h>  // uint32_t
-
-#include "js/ArrayBuffer.h"  // JS::{DetachArrayBuffer,GetArrayBuffer{ByteLength,Data},IsArrayBufferObject,NewArrayBufferWithUserOwnedContents}
-#include "js/GCAPI.h"        // JS::AutoCheckCannotGC, JS_GC
-#include "js/RootingAPI.h"   // JS::Rooted
+#include "jsfriendapi.h"
 #include "jsapi-tests/tests.h"
 #include "vm/ArrayBufferObject.h"
 
@@ -22,12 +18,12 @@ static void GC(JSContext* cx) {
 }
 
 BEGIN_TEST(testArrayBufferWithUserOwnedContents) {
-  JS::Rooted<JSObject*> obj(cx, JS::NewArrayBufferWithUserOwnedContents(
-                                    cx, testDataLength, testData));
+  JS::RootedObject obj(
+      cx, JS_NewArrayBufferWithUserOwnedContents(cx, testDataLength, testData));
   GC(cx);
   CHECK(VerifyObject(obj, testDataLength));
   GC(cx);
-  JS::DetachArrayBuffer(cx, obj);
+  JS_DetachArrayBuffer(cx, obj);
   GC(cx);
   CHECK(VerifyObject(obj, 0));
 
@@ -38,11 +34,11 @@ bool VerifyObject(JS::HandleObject obj, uint32_t length) {
   JS::AutoCheckCannotGC nogc;
 
   CHECK(obj);
-  CHECK(JS::IsArrayBufferObject(obj));
-  CHECK_EQUAL(JS::GetArrayBufferByteLength(obj), length);
+  CHECK(JS_IsArrayBufferObject(obj));
+  CHECK_EQUAL(JS_GetArrayBufferByteLength(obj), length);
   bool sharedDummy;
   const char* data = reinterpret_cast<const char*>(
-      JS::GetArrayBufferData(obj, &sharedDummy, nogc));
+      JS_GetArrayBufferData(obj, &sharedDummy, nogc));
   if (length == testDataLength) {
     CHECK(data);
     CHECK(testData == data);

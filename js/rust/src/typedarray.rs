@@ -252,8 +252,8 @@ typed_array_element!(ArrayBufferU8,
                      u8,
                      UnwrapArrayBuffer,
                      GetArrayBufferLengthAndData,
-                     NewArrayBuffer,
-                     GetArrayBufferData);
+                     JS_NewArrayBuffer,
+                     JS_GetArrayBufferData);
 typed_array_element!(ArrayBufferViewU8,
                      u8,
                      UnwrapArrayBufferView,
