@@ -4287,6 +4287,7 @@ OverflowableToolbar.prototype = {
     let chevronId = this._toolbar.getAttribute("overflowbutton");
     this._chevron = doc.getElementById(chevronId);
     this._chevron.addEventListener("mousedown", this);
+    this._chevron.addEventListener("keypress", this);
     this._chevron.addEventListener("dragover", this);
     this._chevron.addEventListener("dragend", this);
 
@@ -4323,7 +4324,8 @@ OverflowableToolbar.prototype = {
     window.removeEventListener("resize", this);
     window.gNavToolbox.removeEventListener("customizationstarting", this);
     window.gNavToolbox.removeEventListener("aftercustomization", this);
-    this._chevron.removeEventListener("command", this);
+    this._chevron.removeEventListener("mousedown", this);
+    this._chevron.removeEventListener("keypress", this);
     this._chevron.removeEventListener("dragover", this);
     this._chevron.removeEventListener("dragend", this);
     this._panel.removeEventListener("popuphiding", this);
@@ -4361,6 +4363,12 @@ OverflowableToolbar.prototype = {
           this._onClickChevron(aEvent);
         } else {
           PanelMultiView.hidePopup(this._panel);
+        }
+        break;
+      case "keypress":
+        if (aEvent.target == this._chevron &&
+            (aEvent.key == " " || aEvent.key == "Enter")) {
+          this._onClickChevron(aEvent);
         }
         break;
       case "customizationstarting":
