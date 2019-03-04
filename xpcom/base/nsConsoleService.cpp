@@ -453,6 +453,14 @@ nsConsoleService::Reset() {
 }
 
 NS_IMETHODIMP
+nsConsoleService::ResetWindow(uint64_t windowInnerId) {
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+
+  ClearMessagesForWindowID(windowInnerId);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsConsoleService::Observe(nsISupports* aSubject, const char* aTopic,
                           const char16_t* aData) {
   if (!strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {

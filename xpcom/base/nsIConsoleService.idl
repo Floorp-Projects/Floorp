@@ -44,6 +44,11 @@ interface nsIConsoleService : nsISupports
      * Clear the message buffer (e.g. for privacy reasons).
      */
     void reset();
+
+    /**
+     * Clear the message buffer for a given window.
+     */
+    void resetWindow(in uint64_t windowInnerId);
 };
 
 
