@@ -16,6 +16,7 @@
 #include "mozilla/layers/FocusTarget.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/ServoStyleSet.h"
+#include "mozilla/StaticPtr.h"
 #include "mozilla/UniquePtr.h"
 #include "nsContentUtils.h"  // For AddScriptBlocker().
 #include "nsCRT.h"
@@ -576,6 +577,17 @@ class PresShell final : public nsIPresShell,
                                    nsIContent** aTargetContent,
                                    nsIContent* aOverrideClickTarget);
 
+    /**
+     * OnPresShellDestroy() is called when every PresShell instance is being
+     * destroyed.
+     */
+    static inline void OnPresShellDestroy(Document* aDocument) {
+      if (sLastKeyDownEventTargetElement &&
+          sLastKeyDownEventTargetElement->OwnerDoc() == aDocument) {
+        sLastKeyDownEventTargetElement = nullptr;
+      }
+    }
+
    private:
     static bool InZombieDocument(nsIContent* aContent);
     static nsIFrame* GetNearestFrameContainingPresShell(
@@ -966,6 +978,17 @@ class PresShell final : public nsIPresShell,
         nsIContent* aPointerCapturingContent, nsEventStatus* aEventStatus);
 
     /**
+     * ComputeFocusedEventTargetElement() returns event target element for
+     * aGUIEvent which should be handled with focused content.
+     * This may set/unset sLastKeyDownEventTarget if necessary.
+     *
+     * @param aGUIEvent                 The handling event.
+     * @return                          The element which should be the event
+     *                                  target of aGUIEvent.
+     */
+    Element* ComputeFocusedEventTargetElement(WidgetGUIEvent* aGUIEvent);
+
+    /**
      * XXX Needs better name.
      * HandleEventInternal() dispatches aEvent into the DOM tree and
      * notify EventStateManager of that.
@@ -1070,6 +1093,7 @@ class PresShell final : public nsIPresShell,
     OwningNonNull<PresShell> mPresShell;
     static TimeStamp sLastInputCreated;
     static TimeStamp sLastInputProcessed;
+    static StaticRefPtr<Element> sLastKeyDownEventTargetElement;
   };
 
   /**
