@@ -114,7 +114,7 @@ RefPtr<MediaDataDecoder::DecodePromise> RemoteDecoderChild::Decode(
   MediaRawDataIPDL sample(
       MediaDataIPDL(aSample->mOffset, aSample->mTime, aSample->mTimecode,
                     aSample->mDuration, aSample->mKeyframe),
-      buffer);
+      std::move(buffer));
   SendInput(sample);
 
   return mDecodePromise.Ensure(__func__);

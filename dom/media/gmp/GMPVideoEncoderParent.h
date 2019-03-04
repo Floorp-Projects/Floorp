@@ -58,7 +58,7 @@ class GMPVideoEncoderParent : public GMPVideoEncoderProxy,
     return AllocUnsafeShmem(aSize, aType, aMem);
 #endif
   }
-  void Dealloc(Shmem& aMem) override { DeallocShmem(aMem); }
+  void Dealloc(Shmem&& aMem) override { DeallocShmem(aMem); }
 
  private:
   virtual ~GMPVideoEncoderParent(){};

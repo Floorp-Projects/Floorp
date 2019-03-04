@@ -575,7 +575,7 @@ mozilla::ipc::IPCResult CamerasChild::RecvDeliverFrame(
   } else {
     LOG(("DeliverFrame called with dead callback"));
   }
-  SendReleaseFrame(shmem);
+  SendReleaseFrame(std::move(shmem));
   return IPC_OK();
 }
 
