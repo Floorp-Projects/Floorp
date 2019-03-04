@@ -655,21 +655,3 @@ def target_tasks_release_simulation(full_task_graph, parameters, graph_config):
             and filter_out_cron(t, parameters)
             and filter_for_target_project(t)
             and filter_out_android_on_esr(t)]
-
-
-@_target_task('codereview')
-def target_tasks_codereview(full_task_graph, parameters, graph_config):
-    """Select all code review tasks needed to produce a report"""
-
-    def filter(task):
-        # Ending tasks
-        if task.kind in ['code-review']:
-            return True
-
-        # Analyzer tasks
-        if task.attributes.get('code-review') is True:
-            return True
-
-        return False
-
-    return [l for l, t in full_task_graph.tasks.iteritems() if filter(t)]
