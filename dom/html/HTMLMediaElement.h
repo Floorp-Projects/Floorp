@@ -1668,6 +1668,11 @@ class HTMLMediaElement : public nsGenericHTMLElement,
   // audio.
   MozPromiseHolder<GenericNonExclusivePromise> mAllowedToPlayPromise;
 
+  // True if media has ever been blocked for autoplay, it's used to notify front
+  // end to show the correct blocking icon when the document goes back from
+  // bfcache.
+  bool mHasEverBeenBlockedForAutoplay = false;
+
  public:
   // Helper class to measure times for MSE telemetry stats
   class TimeDurationAccumulator {

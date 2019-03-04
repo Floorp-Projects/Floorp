@@ -3670,6 +3670,7 @@ void HTMLMediaElement::DispatchEventsWhenPlayWasNotAllowed() {
 #endif
   OwnerDoc()->MaybeNotifyAutoplayBlocked();
   ReportToConsole(nsIScriptError::warningFlag, "BlockAutoplayError");
+  mHasEverBeenBlockedForAutoplay = true;
 }
 
 void HTMLMediaElement::PlayInternal(bool aHandlingUserInput) {
@@ -5898,6 +5899,14 @@ void HTMLMediaElement::SuspendOrResumeElement(bool aPauseElement,
       if (mEventDeliveryPaused) {
         mEventDeliveryPaused = false;
         DispatchPendingMediaEvents();
+      }
+      // If the media element has been blocked and isn't still allowed to play
+      // when it comes back from the bfcache, we would notify front end to show
+      // the blocking icon in order to inform user that the site is still being
+      // blocked.
+      if (mHasEverBeenBlockedForAutoplay &&
+          !AutoplayPolicy::IsAllowedToPlay(*this)) {
+        OwnerDoc()->MaybeNotifyAutoplayBlocked();
       }
     }
   }
