@@ -2,17 +2,8 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-const {AddonManager} = ChromeUtils.import("resource://gre/modules/AddonManager.jsm");
-const {ExtensionPermissions} = ChromeUtils.import("resource://gre/modules/ExtensionPermissions.jsm");
-
-AddonTestUtils.init(this);
-AddonTestUtils.overrideCertDB();
-AddonTestUtils.createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1");
-AddonTestUtils.usePrivilegedSignatures = false;
-
 add_task(async function test_background_incognito() {
   info("Test background page incognito value with permanent private browsing enabled");
-  await AddonTestUtils.promiseStartupManager();
 
   Services.prefs.setBoolPref("extensions.allowPrivateBrowsingByDefault", false);
   Services.prefs.setBoolPref("browser.privatebrowsing.autostart", true);
@@ -21,16 +12,8 @@ add_task(async function test_background_incognito() {
     Services.prefs.clearUserPref("extensions.allowPrivateBrowsingByDefault");
   });
 
-  let extensionId = "@permTest";
-  // We do not need to override incognito here, an extension installed during
-  // permanent private browsing gets the permission during install.
   let extension = ExtensionTestUtils.loadExtension({
-    useAddonManager: "permanent",
-    manifest: {
-      applications: {
-        gecko: {id: extensionId},
-      },
-    },
+    incognitoOverride: "spanning",
     async background() {
       browser.test.assertEq(window, browser.extension.getBackgroundPage(),
                             "Caller should be able to access itself as a background page");
@@ -40,42 +23,37 @@ add_task(async function test_background_incognito() {
       browser.test.assertEq(browser.extension.inIncognitoContext, true,
                             "inIncognitoContext is true for permanent private browsing");
 
-      browser.test.sendMessage("incognito");
+      browser.test.notifyPass("incognito");
     },
   });
 
-  // Startup reason is ADDON_INSTALL
   await extension.startup();
 
-  await extension.awaitMessage("incognito");
+  await extension.awaitFinish("incognito");
 
-  let addon = await AddonManager.getAddonByID(extensionId);
-  await addon.disable();
-
-  // Permission remains when an extension is disabled.
-  let perms = await ExtensionPermissions.get(extensionId);
-  equal(perms.permissions.length, 1, "one permission");
-  equal(perms.permissions[0], "internal:privateBrowsingAllowed", "internal permission present");
-
-  // Startup reason is ADDON_ENABLE, the permission is
-  // not granted in this case, but the extension should
-  // still have permission.
-  await addon.enable();
-  await Promise.all([
-    extension.awaitStartup(),
-    extension.awaitMessage("incognito"),
-  ]);
-
-  // ExtensionPermissions should still have it.
-  perms = await ExtensionPermissions.get(extensionId);
-  equal(perms.permissions.length, 1, "one permission");
-  equal(perms.permissions[0], "internal:privateBrowsingAllowed", "internal permission present");
-
-  // This is the same as uninstall, no permissions after.
   await extension.unload();
+});
 
-  perms = await ExtensionPermissions.get(extensionId);
-  equal(perms.permissions.length, 0, "no permission");
+add_task(async function test_background_PPB_not_allowed() {
+  info("Test background page incognito value with permanent private browsing enabled");
 
-  await AddonTestUtils.promiseShutdownManager();
+  Services.prefs.setBoolPref("extensions.allowPrivateBrowsingByDefault", false);
+  Services.prefs.setBoolPref("browser.privatebrowsing.autostart", true);
+  registerCleanupFunction(() => {
+    Services.prefs.clearUserPref("browser.privatebrowsing.autostart");
+    Services.prefs.clearUserPref("extensions.allowPrivateBrowsingByDefault");
+  });
+
+  let extension = ExtensionTestUtils.loadExtension({
+    async background() {
+      browser.test.notifyFail("incognito");
+    },
+  });
+
+  await extension.startup();
+
+  let state = extension.extension.state;
+  ok(state.startsWith("Startup: Cancelled"), `extension startup state should be cancelled "${state}"`);
+
+  await extension.unload();
 });
