@@ -42,7 +42,6 @@ For developers
    Building.md
    Testing.md
    Releasing.md
-   ARM.md
 
 
 Communication
