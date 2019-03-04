@@ -68,7 +68,7 @@ bool GMPSharedMemManager::MgrDeallocShmem(GMPSharedMem::GMPMemoryClasses aClass,
   // XXX This works; there are better pool algorithms.  We need to avoid
   // "falling off a cliff" with too low a number
   if (GetGmpFreelist(aClass).Length() > 10) {
-    Dealloc(GetGmpFreelist(aClass)[0]);
+    Dealloc(std::move(GetGmpFreelist(aClass)[0]));
     GetGmpFreelist(aClass).RemoveElementAt(0);
     // The allocation numbers will be fubar on the Child!
     mData->mGmpAllocated[aClass]--;

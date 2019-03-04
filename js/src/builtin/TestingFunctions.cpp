@@ -5315,6 +5315,22 @@ static bool ObjectGlobal(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
+static bool IsSameCompartment(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  RootedObject callee(cx, &args.callee());
+
+  if (!args.get(0).isObject() || !args.get(1).isObject()) {
+    ReportUsageErrorASCII(cx, callee, "Both arguments must be objects");
+    return false;
+  }
+
+  RootedObject obj1(cx, UncheckedUnwrap(&args[0].toObject()));
+  RootedObject obj2(cx, UncheckedUnwrap(&args[1].toObject()));
+
+  args.rval().setBoolean(obj1->compartment() == obj2->compartment());
+  return true;
+}
+
 static bool FirstGlobalInCompartment(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   RootedObject callee(cx, &args.callee());
@@ -6308,6 +6324,11 @@ gc::ZealModeHelpText),
     JS_FN_HELP("objectGlobal", ObjectGlobal, 1, 0,
 "objectGlobal(obj)",
 "  Returns the object's global object or null if the object is a wrapper.\n"),
+
+    JS_FN_HELP("isSameCompartment", IsSameCompartment, 2, 0,
+"isSameCompartment(obj1, obj2)",
+"  Unwraps obj1 and obj2 and returns whether the unwrapped objects are\n"
+"  same-compartment.\n"),
 
     JS_FN_HELP("firstGlobalInCompartment", FirstGlobalInCompartment, 1, 0,
 "firstGlobalInCompartment(obj)",

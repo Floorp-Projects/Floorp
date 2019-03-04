@@ -692,27 +692,6 @@ exports.AnimationsActor = protocol.ActorClassWithSpec(animationsSpec, {
     }
   },
 
-  /**
-   * Iterates through all nodes below a given rootNode (optionally also in
-   * nested frames) and finds all existing animation players.
-   * @param {DOMNode} rootNode The root node to start iterating at. Animation
-   * players will *not* be reported for this node.
-   * @param {Boolean} traverseFrames Whether we should iterate through nested
-   * frames too.
-   * @return {Array} An array of AnimationPlayer objects.
-   */
-  getAllAnimations: function(rootNode, traverseFrames) {
-    if (!traverseFrames) {
-      return rootNode.getAnimations({subtree: true});
-    }
-
-    let animations = [];
-    for (const {document} of this.targetActor.windows) {
-      animations = [...animations, ...document.getAnimations({subtree: true})];
-    }
-    return animations;
-  },
-
   onWillNavigate: function({isTopLevel}) {
     if (isTopLevel) {
       this.stopAnimationPlayerUpdates();

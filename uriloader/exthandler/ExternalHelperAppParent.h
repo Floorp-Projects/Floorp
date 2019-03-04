@@ -90,7 +90,7 @@ class ExternalHelperAppParent
       const nsCString& aContentDispositionHeader,
       const uint32_t& aContentDispositionHint,
       const nsString& aContentDispositionFilename);
-  void Init(const mozilla::net::OptionalLoadInfoArgs& aLoadInfoArgs,
+  void Init(const Maybe<mozilla::net::LoadInfoArgs>& aLoadInfoArgs,
             const nsCString& aMimeContentType, const bool& aForceSave,
             const OptionalURIParams& aReferrer, PBrowserParent* aBrowser);
 

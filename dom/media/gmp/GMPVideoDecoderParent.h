@@ -60,7 +60,7 @@ class GMPVideoDecoderParent final : public PGMPVideoDecoderParent,
     return AllocUnsafeShmem(aSize, aType, aMem);
 #endif
   }
-  void Dealloc(Shmem& aMem) override { DeallocShmem(aMem); }
+  void Dealloc(Shmem&& aMem) override { DeallocShmem(aMem); }
 
  private:
   ~GMPVideoDecoderParent();

@@ -25,7 +25,7 @@ class WebrtcProxyChannelParent : public PWebrtcProxyChannelParent,
 
   mozilla::ipc::IPCResult RecvAsyncOpen(
       const nsCString& aHost, const int& aPort,
-      const OptionalLoadInfoArgs& aLoadInfoArgs,
+      const Maybe<LoadInfoArgs>& aLoadInfoArgs,
       const nsCString& aAlpn) override;
 
   mozilla::ipc::IPCResult RecvWrite(nsTArray<uint8_t>&& aWriteData) override;

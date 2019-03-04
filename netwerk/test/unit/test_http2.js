@@ -1182,59 +1182,6 @@ function run_next_test() {
   }
 }
 
-// Support for making sure we can talk to the invalid cert the server presents
-var CertOverrideListener = function(host, port, bits) {
-  this.host = host;
-  if (port) {
-    this.port = port;
-  }
-  this.bits = bits;
-};
-
-CertOverrideListener.prototype = {
-  host: null,
-  port: -1,
-  bits: null,
-
-  getInterface: function(aIID) {
-    return this.QueryInterface(aIID);
-  },
-
-  QueryInterface: function(aIID) {
-    if (aIID.equals(Ci.nsIBadCertListener2) ||
-        aIID.equals(Ci.nsIInterfaceRequestor) ||
-        aIID.equals(Ci.nsISupports))
-      return this;
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  },
-
-  notifyCertProblem: function(socketInfo, secInfo, targetHost) {
-    var cert = secInfo.serverCert;
-    var cos = Cc["@mozilla.org/security/certoverride;1"].
-              getService(Ci.nsICertOverrideService);
-    cos.rememberValidityOverride(this.host, this.port, cert, this.bits, false);
-    dump("Certificate Override in place\n");
-    return true;
-  },
-};
-
-function addCertOverride(host, port, bits) {
-  var req = new XMLHttpRequest();
-  try {
-    var url;
-    if (port) {
-      url = "https://" + host + ":" + port + "/";
-    } else {
-      url = "https://" + host + "/";
-    }
-    req.open("GET", url, false);
-    req.channel.notificationCallbacks = new CertOverrideListener(host, port, bits);
-    req.send(null);
-  } catch (e) {
-    // This will fail since the server is not trusted yet
-  }
-}
-
 var prefs;
 var spdypref;
 var spdypush;
@@ -1267,18 +1214,13 @@ function run_test() {
   speculativeLimit = prefs.getIntPref("network.http.speculative-parallel-limit");
   prefs.setIntPref("network.http.speculative-parallel-limit", 0);
 
-  // The moz-http2 cert is for foo.example.com and is signed by CA.cert.der
+  // The moz-http2 cert is for foo.example.com and is signed by http2-ca.pem
   // so add that cert to the trust list as a signing cert. Some older tests in
   // this suite use localhost with a TOFU exception, but new ones should use
   // foo.example.com
   let certdb = Cc["@mozilla.org/security/x509certdb;1"]
                   .getService(Ci.nsIX509CertDB);
-  addCertFromFile(certdb, "CA.cert.der", "CTu,u,u");
-
-  addCertOverride("localhost", serverPort,
-                  Ci.nsICertOverrideService.ERROR_UNTRUSTED |
-                  Ci.nsICertOverrideService.ERROR_MISMATCH |
-                  Ci.nsICertOverrideService.ERROR_TIME);
+  addCertFromFile(certdb, "http2-ca.pem", "CTu,u,u");
 
   // Enable all versions of spdy to see that we auto negotiate http/2
   spdypref = prefs.getBoolPref("network.http.spdy.enabled");
@@ -1310,19 +1252,4 @@ function run_test() {
 
   // And make go!
   run_next_test();
-}
-
-function readFile(file) {
-  let fstream = Cc["@mozilla.org/network/file-input-stream;1"]
-                  .createInstance(Ci.nsIFileInputStream);
-  fstream.init(file, -1, 0, 0);
-  let data = NetUtil.readInputStreamToString(fstream, fstream.available());
-  fstream.close();
-  return data;
-}
-
-function addCertFromFile(certdb, filename, trustString) {
-  let certFile = do_get_file(filename, false);
-  let der = readFile(certFile);
-  certdb.addCert(der, trustString);
 }

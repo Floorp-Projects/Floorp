@@ -82,6 +82,21 @@ async function performTests() {
   is(getL10NContextMenu(menuPopup).join("\n"), expectedContextMenu.join("\n"),
     "The context menu has the correct edit menu items");
 
+  const node = hud.jsterm.inputNode || hud.jsterm.node;
+  const inputContainer = node.closest(".jsterm-input-container");
+  await openContextMenu(hud, inputContainer);
+
+  expectedContextMenu = [
+    "#editmenu-undo (editmenu-undo) [disabled]",
+    "#editmenu-cut (editmenu-cut)",
+    "#editmenu-copy (editmenu-copy)",
+    "#editmenu-paste (editmenu-paste)",
+    "#editmenu-delete (editmenu-delete) [disabled]",
+    "#editmenu-selectAll (editmenu-select-all) [disabled]",
+  ];
+  is(getL10NContextMenu(menuPopup).join("\n"), expectedContextMenu.join("\n"),
+    "The context menu has the required elements");
+
   await hideContextMenu(hud);
   // Close the browser console.
   await HUDService.toggleBrowserConsole();

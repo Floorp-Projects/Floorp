@@ -198,7 +198,8 @@ class JitRuntime {
       JSContext* cx, uint32_t* noFrameRegPopOffsetOut);
 
   bool generateVMWrapper(JSContext* cx, MacroAssembler& masm,
-                         const VMFunctionData& f, uint32_t* wrapperOffset);
+                         const VMFunctionData& f, void* nativeFun,
+                         uint32_t* wrapperOffset);
   bool generateVMWrappers(JSContext* cx, MacroAssembler& masm);
 
   bool generateTLEventVM(MacroAssembler& masm, const VMFunctionData& f,

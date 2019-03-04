@@ -849,8 +849,8 @@ mozilla::ipc::IPCResult PluginInstanceParent::RecvShow(
   }
 
   if (mFrontSurface && gfxSharedImageSurface::IsSharedImage(mFrontSurface))
-    *prevSurface =
-        static_cast<gfxSharedImageSurface*>(mFrontSurface.get())->GetShmem();
+    *prevSurface = std::move(
+        static_cast<gfxSharedImageSurface*>(mFrontSurface.get())->GetShmem());
   else
     *prevSurface = null_t();
 
@@ -1161,7 +1161,7 @@ PluginInstanceParent::BackgroundDescriptor() {
              "Expected shared image surface");
   gfxSharedImageSurface* shmem =
       static_cast<gfxSharedImageSurface*>(mBackground.get());
-  return shmem->GetShmem();
+  return mozilla::plugins::SurfaceDescriptor(std::move(shmem->GetShmem()));
 #endif
 
   // If this is ever used, which it shouldn't be, it will trigger a
@@ -1552,8 +1552,8 @@ int16_t PluginInstanceParent::NPP_HandleEvent(void* event) {
         return false;
       }
 
-      if (!CallNPP_HandleEvent_Shmem(npremoteevent, mShSurface, &handled,
-                                     &mShSurface))
+      if (!CallNPP_HandleEvent_Shmem(npremoteevent, std::move(mShSurface),
+                                     &handled, &mShSurface))
         return false;  // no good way to handle errors here...
 
       if (!mShSurface.IsReadable()) {

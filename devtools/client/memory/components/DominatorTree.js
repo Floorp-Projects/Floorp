@@ -95,6 +95,7 @@ class DominatorTreeSiblingLinkClass extends Component {
         },
         dom.a(
           {
+            className: "load-more-link",
             onClick: () => onLoadMoreSiblings(item),
           },
           L10N.getStr("tree-item.load-more")

@@ -30,13 +30,13 @@ class XMLHttpRequestMainThread;
 }  // namespace dom
 
 namespace net {
-class OptionalLoadInfoArgs;
+class LoadInfoArgs;
 }  // namespace net
 
 namespace ipc {
 // we have to forward declare that function so we can use it as a friend.
 nsresult LoadInfoArgsToLoadInfo(
-    const mozilla::net::OptionalLoadInfoArgs& aLoadInfoArgs,
+    const Maybe<mozilla::net::LoadInfoArgs>& aLoadInfoArgs,
     nsILoadInfo** outLoadInfo);
 }  // namespace ipc
 
@@ -131,7 +131,7 @@ class LoadInfo final : public nsILoadInfo {
                           const RedirectHistoryArray& aArra);
 
   friend nsresult mozilla::ipc::LoadInfoArgsToLoadInfo(
-      const mozilla::net::OptionalLoadInfoArgs& aLoadInfoArgs,
+      const Maybe<mozilla::net::LoadInfoArgs>& aLoadInfoArgs,
       nsILoadInfo** outLoadInfo);
 
   ~LoadInfo() = default;

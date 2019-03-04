@@ -226,14 +226,14 @@ class NeckoParent : public PNeckoParent {
 
   PTrackingDummyChannelParent* AllocPTrackingDummyChannelParent(
       nsIURI* aURI, nsIURI* aTopWindowURI, const nsresult& aTopWindowURIResult,
-      const OptionalLoadInfoArgs& aLoadInfo);
+      const Maybe<LoadInfoArgs>& aLoadInfo);
 
   bool DeallocPTrackingDummyChannelParent(PTrackingDummyChannelParent* aChild);
 
   virtual mozilla::ipc::IPCResult RecvPTrackingDummyChannelConstructor(
       PTrackingDummyChannelParent* aActor, nsIURI* aURI, nsIURI* aTopWindowURI,
       const nsresult& aTopWindowURIResult,
-      const OptionalLoadInfoArgs& aLoadInfo) override;
+      const Maybe<LoadInfoArgs>& aLoadInfo) override;
 
   mozilla::ipc::IPCResult RecvInitSocketProcessBridge(
       InitSocketProcessBridgeResolver&& aResolver);

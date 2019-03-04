@@ -26,7 +26,7 @@ add_task(async function() {
   ok(!isFullscreenSizeMode(), "Should not be in fullscreen sizemode before we enter fullscreen.");
 
   BrowserFullScreen();
-  await waitForCondition(() => isFullscreenSizeMode());
+  await TestUtils.waitForCondition(() => isFullscreenSizeMode());
   ok(fullscreenButton.checked, "Fullscreen button should be checked when in fullscreen.");
 
   await startCustomizing();
@@ -41,7 +41,7 @@ add_task(async function() {
 
   BrowserFullScreen();
   fullscreenButton = document.getElementById("fullscreen-button");
-  await waitForCondition(() => !isFullscreenSizeMode());
+  await TestUtils.waitForCondition(() => !isFullscreenSizeMode());
   ok(!fullscreenButton.checked, "Fullscreen button should not be checked when not in fullscreen.");
   CustomizableUI.reset();
 });

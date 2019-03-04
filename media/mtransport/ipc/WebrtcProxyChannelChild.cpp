@@ -83,7 +83,7 @@ void WebrtcProxyChannelChild::AsyncOpen(const nsCString& aHost,
   nsCOMPtr<nsILoadInfo> loadInfo =
       new LoadInfo(aLoadingPrincipal, nullptr, nullptr, 0, 0);
 
-  OptionalLoadInfoArgs loadInfoArgs;
+  Maybe<LoadInfoArgs> loadInfoArgs;
   MOZ_ALWAYS_SUCCEEDS(LoadInfoToLoadInfoArgs(loadInfo, &loadInfoArgs));
 
   SendAsyncOpen(aHost, aPort, loadInfoArgs, aAlpn);

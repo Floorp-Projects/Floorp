@@ -103,12 +103,12 @@ static PBOverrideStatus PBOverrideStatusFromLoadContext(
 }
 
 static already_AddRefed<nsIPrincipal> GetRequestingPrincipal(
-    const OptionalLoadInfoArgs& aOptionalLoadInfoArgs) {
-  if (aOptionalLoadInfoArgs.type() != OptionalLoadInfoArgs::TLoadInfoArgs) {
+    const Maybe<LoadInfoArgs>& aOptionalLoadInfoArgs) {
+  if (aOptionalLoadInfoArgs.isNothing()) {
     return nullptr;
   }
 
-  const LoadInfoArgs& loadInfoArgs = aOptionalLoadInfoArgs.get_LoadInfoArgs();
+  const LoadInfoArgs& loadInfoArgs = aOptionalLoadInfoArgs.ref();
   const OptionalPrincipalInfo& optionalPrincipalInfo =
       loadInfoArgs.requestingPrincipalInfo();
 
@@ -909,15 +909,14 @@ mozilla::ipc::IPCResult NeckoParent::RecvGetExtensionFD(
 
 PTrackingDummyChannelParent* NeckoParent::AllocPTrackingDummyChannelParent(
     nsIURI* aURI, nsIURI* aTopWindowURI, const nsresult& aTopWindowURIResult,
-    const OptionalLoadInfoArgs& aLoadInfo) {
+    const Maybe<LoadInfoArgs>& aLoadInfo) {
   RefPtr<TrackingDummyChannelParent> c = new TrackingDummyChannelParent();
   return c.forget().take();
 }
 
 mozilla::ipc::IPCResult NeckoParent::RecvPTrackingDummyChannelConstructor(
     PTrackingDummyChannelParent* aActor, nsIURI* aURI, nsIURI* aTopWindowURI,
-    const nsresult& aTopWindowURIResult,
-    const OptionalLoadInfoArgs& aLoadInfo) {
+    const nsresult& aTopWindowURIResult, const Maybe<LoadInfoArgs>& aLoadInfo) {
   TrackingDummyChannelParent* p =
       static_cast<TrackingDummyChannelParent*>(aActor);
 

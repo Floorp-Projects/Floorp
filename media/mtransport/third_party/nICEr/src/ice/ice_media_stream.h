@@ -93,7 +93,7 @@ int nr_ice_media_stream_start_checks(nr_ice_peer_ctx *pctx, nr_ice_media_stream 
 int nr_ice_media_stream_service_pre_answer_requests(nr_ice_peer_ctx *pctx,nr_ice_media_stream *lstream,nr_ice_media_stream *pstream, int *serviced);
 int nr_ice_media_stream_unfreeze_pairs(nr_ice_peer_ctx *pctx, nr_ice_media_stream *stream);
 int nr_ice_media_stream_unfreeze_pairs_foundation(nr_ice_media_stream *stream, char *foundation);
-int nr_ice_media_stream_dump_state(nr_ice_peer_ctx *pctx, nr_ice_media_stream *stream,FILE *out);
+void nr_ice_media_stream_dump_state(nr_ice_peer_ctx *pctx, nr_ice_media_stream *stream, int log_level);
 void nr_ice_media_stream_component_nominated(nr_ice_media_stream *stream,nr_ice_component *component);
 void nr_ice_media_stream_component_failed(nr_ice_media_stream *stream,nr_ice_component *component);
 void nr_ice_media_stream_refresh_consent_all(nr_ice_media_stream *stream);

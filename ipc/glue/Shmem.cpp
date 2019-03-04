@@ -435,7 +435,7 @@ IPC::Message* Shmem::UnshareFrom(PrivateIPDLCaller, int32_t routingId) {
 }
 
 void IPDLParamTraits<Shmem>::Write(IPC::Message* aMsg, IProtocol* aActor,
-                                   Shmem& aParam) {
+                                   Shmem&& aParam) {
   WriteIPDLParam(aMsg, aActor, aParam.mId);
 
   aParam.RevokeRights(Shmem::PrivateIPDLCaller());

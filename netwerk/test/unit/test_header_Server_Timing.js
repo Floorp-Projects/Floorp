@@ -18,21 +18,6 @@ var responseServerTiming = [{metric:"metric", duration:"123.4", description:"des
 var trailerServerTiming = [{metric:"metric3", duration:"789.11", description:"description2"},
                            {metric:"metric4", duration:"1112.13", description:"description3"}];
 
-function readFile(file) {
-  let fstream = Cc["@mozilla.org/network/file-input-stream;1"]
-                  .createInstance(Ci.nsIFileInputStream);
-  fstream.init(file, -1, 0, 0);
-  let data = NetUtil.readInputStreamToString(fstream, fstream.available());
-  fstream.close();
-  return data;
-}
-
-function addCertFromFile(certdb, filename, trustString) {
-  let certFile = do_get_file(filename, false);
-  let der = readFile(certFile);
-  certdb.addCert(der, trustString);
-}
-
 function run_test()
 {
   do_test_pending();
@@ -41,7 +26,7 @@ function run_test()
   do_get_profile();
   let certdb = Cc["@mozilla.org/security/x509certdb;1"]
                   .getService(Ci.nsIX509CertDB);
-  addCertFromFile(certdb, "CA.cert.der", "CTu,u,u");
+  addCertFromFile(certdb, "http2-ca.pem", "CTu,u,u");
 
   Services.prefs.setCharPref("network.dns.localDomains", "foo.example.com");
   registerCleanupFunction(() => {

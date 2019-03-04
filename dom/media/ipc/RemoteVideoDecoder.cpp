@@ -184,7 +184,7 @@ void RemoteVideoDecoderParent::ProcessDecodedData(
     if (AllocShmem(image->GetDataSize(), Shmem::SharedMemory::TYPE_BASIC,
                    &buffer) &&
         image->GetDataSize() == buffer.Size<uint8_t>()) {
-      sdBuffer.data() = buffer;
+      sdBuffer.data() = std::move(buffer);
       image->BuildSurfaceDescriptorBuffer(sdBuffer);
     }
 

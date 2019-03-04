@@ -96,6 +96,11 @@ function _untrackWindowOrder(window) {
     _trackedWindows.splice(idx, 1);
 }
 
+function _trackPinnedTabs(window) {
+  Services.prefs.setIntPref("browser.tabs.firstWindowRestore.numPinnedTabs",
+                            window.gBrowser._numPinnedTabs);
+}
+
 // Methods that impact a window. Put into single object for organization.
 var WindowHelper = {
   addWindow(window) {
@@ -138,6 +143,7 @@ var WindowHelper = {
 
     _untrackWindowOrder(window);
     _trackWindowOrder(window);
+    _trackPinnedTabs(window);
 
     _updateCurrentContentOuterWindowID(window.gBrowser.selectedBrowser);
   },

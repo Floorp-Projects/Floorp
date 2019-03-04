@@ -34,7 +34,7 @@ bool TrackingDummyChannelChild::Create(
       httpChannelInternal->GetTopWindowURI(getter_AddRefs(topWindowURI));
 
   nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
-  OptionalLoadInfoArgs loadInfoArgs;
+  Maybe<LoadInfoArgs> loadInfoArgs;
   mozilla::ipc::LoadInfoToLoadInfoArgs(loadInfo, &loadInfoArgs);
 
   PTrackingDummyChannelChild* actor =

@@ -17,25 +17,21 @@ const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm")
 
 SimpleTest.waitForExplicitFinish();
 
-function isSameCompartment(global) {
-    // Note: if the global is in a different compartment, global.Math will be a
-    // cross-compartment wrapper (with class "Proxy").
-    return Cu.getClassName(global.Math, /* unwrap = */ false) === "Math";
-}
-
 function go() {
     var frame = $('subframe');
     frame.onload = null;
 
-    ok(isSameCompartment(frame.contentWindow),
+    var isSameCompartment = Cu.getJSTestingFunctions().isSameCompartment;
+
+    ok(isSameCompartment(window, frame.contentWindow),
        "System window is in same compartment");
 
     var sameCompSb = Cu.Sandbox(window);
-    ok(isSameCompartment(sameCompSb),
+    ok(isSameCompartment(window, sameCompSb),
        "System sandbox is in same compartment");
 
     var ownCompSb = Cu.Sandbox(window, {freshCompartment: true});
-    ok(!isSameCompartment(ownCompSb),
+    ok(!isSameCompartment(window, ownCompSb),
        "Sandbox created with freshCompartment is in separate compartment");
 
     // Sandbox created in fresh-compartment sandbox must be in shared
@@ -45,10 +41,10 @@ function go() {
         Cc["@mozilla.org/systemprincipal;1"].getService(Ci.nsIPrincipal);
       Cu.Sandbox(principal)
     `, ownCompSb);
-    ok(isSameCompartment(sb),
+    ok(isSameCompartment(window, sb),
        "System sandbox created in different compartment is in system compartment");
 
-    is(Cu.getClassName(XPCOMUtils, /* unwrap = */ false), "Object",
+    ok(isSameCompartment(window, XPCOMUtils),
        "Object defined in JSM is in same compartment");
 
     SimpleTest.finish();

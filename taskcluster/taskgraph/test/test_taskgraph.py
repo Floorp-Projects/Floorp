@@ -41,6 +41,7 @@ class TestTaskGraph(unittest.TestCase):
                 'attributes': {'attr': 'a-task', 'kind': 'test'},
                 'task': {'taskdef': True},
                 'dependencies': {'edgelabel': 'b'},
+                'soft_dependencies': [],
                 'optimization': None,
             },
             'b': {
@@ -49,6 +50,7 @@ class TestTaskGraph(unittest.TestCase):
                 'attributes': {'kind': 'test'},
                 'task': {'task': 'def'},
                 'dependencies': {},
+                'soft_dependencies': [],
                 'optimization': {'seta': None},
             }
         })

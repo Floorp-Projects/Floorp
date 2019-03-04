@@ -22,6 +22,7 @@ job-defaults:
         kind: build
         tier: 2
     run-on-projects: []
+    optimization: null
 
 jobs:
     linux64-searchfox/debug:

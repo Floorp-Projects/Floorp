@@ -13,7 +13,7 @@ const { bootstrap, L10N } = require("devtools-launchpad");
 
 window.L10N = L10N;
 // $FlowIgnore:
-window.L10N.setBundle(require("../assets/panel/debugger.properties"));
+window.L10N.setBundle(require("../../../locales/en-US/debugger.properties"));
 
 bootstrap(React, ReactDOM).then(connection => {
   onConnect(connection, require("devtools-source-map"), {

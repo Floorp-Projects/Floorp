@@ -198,6 +198,9 @@ class WebConsoleWrapper {
         const messageEl = target.closest(".message");
         const clipboardText = getElementText(messageEl);
 
+        const linkEl = target.closest("a[href]");
+        const url = linkEl && linkEl.href;
+
         const messageVariable = target.closest(".objectBox");
         // Ensure that console.group and console.groupCollapsed commands are not captured
         const variableText = (messageVariable
@@ -233,6 +236,7 @@ class WebConsoleWrapper {
           rootActorId,
           executionPoint,
           toolbox: this.toolbox,
+          url,
         });
 
         // Emit the "menu-open" event for testing.
@@ -279,7 +283,8 @@ class WebConsoleWrapper {
           }),
           onViewSourceInStyleEditor: frame => this.toolbox.viewSourceInStyleEditor(
             frame.url,
-            frame.line
+            frame.line,
+            frame.column
           ).then(() => {
             this.telemetry.recordEvent("jump_to_source", "webconsole",
                                        null, { "session_id": this.toolbox.sessionId }

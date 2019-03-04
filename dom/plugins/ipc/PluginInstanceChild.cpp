@@ -2722,8 +2722,8 @@ void PluginInstanceChild::NPN_SetCurrentAsyncSurface(NPAsyncSurface* surface,
 
       // Need a holder since IPDL zaps the object for mysterious reasons.
       Shmem shmemHolder = bitmap->mShmem;
-      SendShowDirectBitmap(shmemHolder, bitmap->mFormat, bitmap->mStride,
-                           bitmap->mSize, dirty);
+      SendShowDirectBitmap(std::move(shmemHolder), bitmap->mFormat,
+                           bitmap->mStride, bitmap->mSize, dirty);
       break;
     }
 #if defined(XP_WIN)
@@ -3569,8 +3569,8 @@ bool PluginInstanceChild::ShowPluginFrame() {
   } else
 #endif
       if (gfxSharedImageSurface::IsSharedImage(mCurrentSurface)) {
-    currSurf =
-        static_cast<gfxSharedImageSurface*>(mCurrentSurface.get())->GetShmem();
+    currSurf = std::move(
+        static_cast<gfxSharedImageSurface*>(mCurrentSurface.get())->GetShmem());
   } else {
     MOZ_CRASH("Surface type is not remotable");
     return false;

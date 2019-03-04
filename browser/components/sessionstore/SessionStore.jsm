@@ -249,8 +249,8 @@ var SessionStore = {
     return SessionStoreInternal.getWindowState(aWindow);
   },
 
-  setWindowState: function ss_setWindowState(aWindow, aState, aOverwrite) {
-    SessionStoreInternal.setWindowState(aWindow, aState, aOverwrite);
+  setWindowState: function ss_setWindowState(aWindow, aState, aOverwrite, aFirstWindow) {
+    SessionStoreInternal.setWindowState(aWindow, aState, aOverwrite, aFirstWindow);
   },
 
   getTabState: function ss_getTabState(aTab) {
@@ -731,6 +731,7 @@ var SessionStoreInternal = {
     this._prefBranch.addObserver("sessionstore.max_windows_undo", this, true);
 
     this._restore_on_demand = this._prefBranch.getBoolPref("sessionstore.restore_on_demand");
+    this._restore_pinned_tabs_on_demand = this._prefBranch.getBoolPref("sessionstore.restore_pinned_tabs_on_demand");
     this._prefBranch.addObserver("sessionstore.restore_on_demand", this, true);
 
     gResistFingerprintingEnabled = Services.prefs.getBoolPref("privacy.resistFingerprinting");
@@ -2499,12 +2500,15 @@ var SessionStoreInternal = {
     throw Components.Exception("Window is not tracked", Cr.NS_ERROR_INVALID_ARG);
   },
 
-  setWindowState: function ssi_setWindowState(aWindow, aState, aOverwrite) {
+  setWindowState: function ssi_setWindowState(aWindow, aState, aOverwrite, aFirstWindow) {
     if (!aWindow.__SSi) {
       throw Components.Exception("Window is not tracked", Cr.NS_ERROR_INVALID_ARG);
     }
 
-    this.restoreWindows(aWindow, aState, {overwriteTabs: aOverwrite});
+    this.restoreWindows(aWindow, aState, {
+      overwriteTabs: aOverwrite,
+      firstWindow: aFirstWindow,
+    });
 
     // Notify of changes to closed objects.
     this._notifyOfClosedObjectsChange();
@@ -3203,6 +3207,7 @@ var SessionStoreInternal = {
     if (!uriObj || (uriObj && !window.gBrowser.isLocalAboutURI(uriObj))) {
       tab.setAttribute("busy", "true");
     }
+    tab.removeAttribute("preopened");
 
     // Hack to ensure that the about:home, about:newtab, and about:welcome
     // favicon is loaded instantaneously, to avoid flickering and improve
@@ -3596,6 +3601,36 @@ var SessionStoreInternal = {
   },
 
   /**
+   * Handles the pinning / unpinning of a selected tab restored with
+   * restoreWindow.
+   *
+   * @param aWindow
+   *        Window reference to the window used for restoration
+   * @param aWinData
+   *        The window data we're restoring
+   * @param aRestoreIndex
+   *        The index of the tab data we're currently restoring
+   * @returns the selected tab
+   */
+  _updateRestoredSelectedTabPinnedState(aWindow, aWinData, aRestoreIndex) {
+    let tabbrowser = aWindow.gBrowser;
+    let tabData = aWinData.tabs[aRestoreIndex];
+    let tab = tabbrowser.selectedTab;
+    let needsUnpin = tab.pinned && !tabData.pinned;
+    let needsPin = !tab.pinned && tabData.pinned;
+    if (needsUnpin) {
+      tabbrowser.unpinTab(tab);
+    } else if (needsPin && tab == tabbrowser.tabs[aRestoreIndex]) {
+      tabbrowser.pinTab(tab);
+    } else if (needsPin) {
+      tabbrowser.removeTab(tabbrowser.tabs[aRestoreIndex]);
+      tabbrowser.pinTab(tab);
+      tabbrowser.moveTabTo(tab, aRestoreIndex);
+    }
+    return tab;
+  },
+
+  /**
    * restore features to a single window
    * @param aWindow
    *        Window reference to the window to use for restoration
@@ -3650,7 +3685,7 @@ var SessionStoreInternal = {
 
     // We need to keep track of the initially open tabs so that they
     // can be moved to the end of the restored tabs.
-    let initialTabs;
+    let initialTabs = [];
     if (!overwriteTabs && firstWindow) {
       initialTabs = Array.slice(tabbrowser.tabs);
     }
@@ -3658,8 +3693,11 @@ var SessionStoreInternal = {
     // Get rid of tabs that aren't needed anymore.
     if (overwriteTabs) {
       for (let i = tabbrowser.browsers.length - 1; i >= 0; i--) {
-        if (!tabbrowser.tabs[i].selected) {
+        if (!tabbrowser.tabs[i].selected &&
+            !tabbrowser.tabs[i].hasAttribute("preopened")) {
           tabbrowser.removeTab(tabbrowser.tabs[i]);
+        } else if (tabbrowser.tabs[i].hasAttribute("preopened")) {
+          initialTabs.push(tabbrowser.tabs[i]);
         }
       }
     }
@@ -3677,14 +3715,18 @@ var SessionStoreInternal = {
       // selecting a new tab.
       if (select &&
           tabbrowser.selectedTab.userContextId == userContextId) {
-        tab = tabbrowser.selectedTab;
-        if (!tabData.pinned) {
-          tabbrowser.unpinTab(tab);
-        }
+        tab = this._updateRestoredSelectedTabPinnedState(aWindow, winData, t);
+
         tabbrowser.moveTabToEnd();
         if (aWindow.gMultiProcessBrowser && !tab.linkedBrowser.isRemoteBrowser) {
           tabbrowser.updateBrowserRemoteness(tab.linkedBrowser, true);
         }
+      } else if (tabData.pinned &&
+          tabbrowser.tabs[t] &&
+          tabbrowser.tabs[t].pinned &&
+          !tabbrowser.tabs[t].linkedPanel) {
+        tab = tabbrowser.tabs[t];
+        tabbrowser.activatePreopenedPinnedTab(tab);
       }
 
       // Add a new tab if needed.
@@ -3733,11 +3775,14 @@ var SessionStoreInternal = {
     }
 
     // Move the originally open tabs to the end.
-    if (initialTabs) {
-      let endPosition = tabbrowser.tabs.length - 1;
-      for (let i = 0; i < initialTabs.length; i++) {
-        tabbrowser.unpinTab(initialTabs[i]);
-        tabbrowser.moveTabTo(initialTabs[i], endPosition);
+    let endPosition = tabbrowser.tabs.length - 1;
+    for (let tab of initialTabs) {
+      if (tab.hasAttribute("preopened") &&
+          !tab.linkedPanel) {
+        tabbrowser.removeTab(tab);
+      } else if (!tab.hasAttribute("preopened")) {
+        tabbrowser.unpinTab(tab);
+        tabbrowser.moveTabTo(tab, endPosition);
       }
     }
 
@@ -3998,6 +4043,9 @@ var SessionStoreInternal = {
     for (let t = 0; t < aTabs.length; t++) {
       if (t != selectedIndex) {
         this.restoreTab(aTabs[t], aTabData[t]);
+        if (this._restore_pinned_tabs_on_demand) {
+          aTabs[t].removeAttribute("preopened");
+        }
       }
     }
   },

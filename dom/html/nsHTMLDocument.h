@@ -73,7 +73,7 @@ class nsHTMLDocument : public mozilla::dom::Document, public nsIHTMLDocument {
 
   virtual bool IsWriting() override { return mWriteLevel != uint32_t(0); }
 
-  virtual nsIContent* GetUnfocusedKeyEventTarget() override;
+  virtual Element* GetUnfocusedKeyEventTarget() override;
 
   nsContentList* GetExistingForms() const { return mForms; }
 

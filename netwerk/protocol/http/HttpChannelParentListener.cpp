@@ -177,7 +177,7 @@ nsresult HttpChannelParentListener::TriggerCrossProcessRedirect(
         LOG(("Registered %p channel under id=%d", channel.get(),
              self->mRedirectChannelId));
 
-        OptionalLoadInfoArgs loadInfoArgs;
+        Maybe<LoadInfoArgs> loadInfoArgs;
         MOZ_ALWAYS_SUCCEEDS(LoadInfoToLoadInfoArgs(loadInfo, &loadInfoArgs));
 
         uint32_t newLoadFlags = nsIRequest::LOAD_NORMAL;

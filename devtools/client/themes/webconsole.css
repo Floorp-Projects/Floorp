@@ -963,10 +963,16 @@ body {
   height: 10px;
   background: url("chrome://devtools/skin/images/arrow.svg") no-repeat center;
   background-size: 10px;
+  transform: rotate(-90deg);
   /* Needed for alignment */
   margin-top: -1px;
   -moz-context-properties: fill;
   fill: var(--theme-icon-dimmed-color);
+}
+
+.webconsole-app .tree .arrow.expanded,
+.webconsole-app .object-inspector .tree-node .arrow.expanded {
+  transform: rotate(0deg);
 }
 
 /* Sidebar */
