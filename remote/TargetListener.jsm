@@ -27,7 +27,7 @@ class TargetListener {
     this.nextConnID = 0;
   }
 
-  get connected() {
+  get listening() {
     return !!this.listener && this.listener.listening;
   }
 
@@ -60,7 +60,7 @@ class TargetListener {
   }
 
   get url() {
-    if (this.connected) {
+    if (this.listening) {
       const {network, host, port} = this.listener;
       return `${network}://${host}:${port}/`;
     }
@@ -68,6 +68,6 @@ class TargetListener {
   }
 
   toString() {
-    return `[object Debugger ${this.url || "disconnected"}]`;
+    return `[object TargetListener ${this.url || "disconnected"}]`;
   }
 }
