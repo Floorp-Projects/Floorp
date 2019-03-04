@@ -10775,11 +10775,7 @@ CompositorHitTestInfo nsIFrame::GetCompositorHitTestInfo(
     }
   }
 
-  nsIDocShell* docShell = nullptr;
-  if (PresShell()->GetDocument()) {
-    docShell = PresShell()->GetDocument()->GetDocShell();
-  }
-  if (dom::TouchEvent::PrefEnabled(docShell)) {
+  if (aBuilder->IsTouchEventPrefEnabledDoc()) {
     // Inherit the touch-action flags from the parent, if there is one. We do
     // this because of how the touch-action on a frame combines the touch-action
     // from ancestor DOM elements. Refer to the documentation in
