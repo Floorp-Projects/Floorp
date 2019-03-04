@@ -46,6 +46,10 @@ using NonNegativeLengthPercentageOrAuto =
     StyleNonNegativeLengthPercentageOrAuto;
 using BorderRadius = StyleBorderRadius;
 
+bool StyleCSSPixelLength::IsZero() const {
+  return _0 == 0.0f;
+}
+
 nscoord StyleCSSPixelLength::ToAppUnits() const {
   // We want to resolve the length part of the calc() expression rounding 0.5
   // away from zero, instead of the default behavior of NSToCoordRoundWithClamp
@@ -95,7 +99,7 @@ nscoord LengthPercentage::ToLength() const {
 }
 
 bool LengthPercentage::ConvertsToPercentage() const {
-  return has_percentage && length._0 == 0.0f;
+  return has_percentage && length.IsZero();
 }
 
 float LengthPercentage::ToPercentage() const {
@@ -105,6 +109,10 @@ float LengthPercentage::ToPercentage() const {
 
 bool LengthPercentage::HasLengthAndPercentage() const {
   return !ConvertsToLength() && !ConvertsToPercentage();
+}
+
+bool LengthPercentage::IsDefinitelyZero() const {
+  return length.IsZero() && Percentage() == 0.0f;
 }
 
 CSSCoord LengthPercentage::ResolveToCSSPixels(CSSCoord aPercentageBasis) const {

@@ -734,11 +734,7 @@ void ReflowInput::InitResizeFlags(nsPresContext* aPresContext,
       mStylePosition->OffsetHasPercent(wm.PhysicalSide(eLogicalSideBStart)) ||
       !mStylePosition->mOffset.GetBEnd(wm).IsAuto() || mFrame->IsXULBoxFrame();
 
-  if (mStyleText->mLineHeight.GetUnit() == eStyleUnit_Enumerated) {
-    NS_ASSERTION(mStyleText->mLineHeight.GetIntValue() ==
-                     NS_STYLE_LINE_HEIGHT_BLOCK_HEIGHT,
-                 "bad line-height value");
-
+  if (mStyleText->mLineHeight.IsMozBlockHeight()) {
     // line-height depends on block bsize
     mFrame->AddStateBits(NS_FRAME_CONTAINS_RELATIVE_BSIZE);
     // but only on containing blocks if this frame is not a suitable block
@@ -2849,33 +2845,26 @@ static inline nscoord ComputeLineHeight(ComputedStyle* aComputedStyle,
                                         nsPresContext* aPresContext,
                                         nscoord aBlockBSize,
                                         float aFontSizeInflation) {
-  const nsStyleCoord& lhCoord = aComputedStyle->StyleText()->mLineHeight;
-
-  if (lhCoord.GetUnit() == eStyleUnit_Coord) {
-    nscoord result = lhCoord.GetCoordValue();
+  const StyleLineHeight& lineHeight = aComputedStyle->StyleText()->mLineHeight;
+  if (lineHeight.IsLength()) {
+    nscoord result = lineHeight.length._0.ToAppUnits();
     if (aFontSizeInflation != 1.0f) {
       result = NSToCoordRound(result * aFontSizeInflation);
     }
     return result;
   }
 
-  if (lhCoord.GetUnit() == eStyleUnit_Factor)
+  if (lineHeight.IsNumber()) {
     // For factor units the computed value of the line-height property
     // is found by multiplying the factor by the font's computed size
     // (adjusted for min-size prefs and text zoom).
-    return NSToCoordRound(lhCoord.GetFactorValue() * aFontSizeInflation *
+    return NSToCoordRound(lineHeight.number._0 * aFontSizeInflation *
                           aComputedStyle->StyleFont()->mFont.size);
+  }
 
-  NS_ASSERTION(lhCoord.GetUnit() == eStyleUnit_Normal ||
-                   lhCoord.GetUnit() == eStyleUnit_Enumerated,
-               "bad line-height unit");
-
-  if (lhCoord.GetUnit() == eStyleUnit_Enumerated) {
-    NS_ASSERTION(lhCoord.GetIntValue() == NS_STYLE_LINE_HEIGHT_BLOCK_HEIGHT,
-                 "bad line-height value");
-    if (aBlockBSize != NS_AUTOHEIGHT) {
-      return aBlockBSize;
-    }
+  MOZ_ASSERT(lineHeight.IsNormal() || lineHeight.IsMozBlockHeight());
+  if (lineHeight.IsMozBlockHeight() && aBlockBSize != NS_AUTOHEIGHT) {
+    return aBlockBSize;
   }
 
   RefPtr<nsFontMetrics> fm = nsLayoutUtils::GetFontMetricsForComputedStyle(

@@ -1729,7 +1729,7 @@ static gfxFont::Metrics GetFirstFontMetrics(gfxFontGroup* aFontGroup,
                                            : gfxFont::eHorizontal);
 }
 
-static gfxFloat GetSpaceWidthAppUnits(const gfxTextRun* aTextRun) {
+static nscoord GetSpaceWidthAppUnits(const gfxTextRun* aTextRun) {
   // Round the space width when converting to appunits the same way textruns
   // do.
   gfxFloat spaceWidthAppUnits =
@@ -1757,12 +1757,7 @@ static nscoord LetterSpacing(nsIFrame* aFrame,
   if (!aStyleText) {
     aStyleText = aFrame->StyleText();
   }
-
-  const nsStyleCoord& coord = aStyleText->mLetterSpacing;
-  if (eStyleUnit_Coord == coord.GetUnit()) {
-    return coord.GetCoordValue();
-  }
-  return 0;
+  return aStyleText->mLetterSpacing.ToAppUnits();
 }
 
 // This function converts non-coord values (e.g. percentages) to nscoord.
@@ -1775,12 +1770,9 @@ static nscoord WordSpacing(nsIFrame* aFrame, const gfxTextRun* aTextRun,
     aStyleText = aFrame->StyleText();
   }
 
-  const nsStyleCoord& coord = aStyleText->mWordSpacing;
-  if (coord.IsCoordPercentCalcUnit()) {
-    nscoord pctBasis = coord.HasPercent() ? GetSpaceWidthAppUnits(aTextRun) : 0;
-    return coord.ComputeCoordPercentCalc(pctBasis);
-  }
-  return 0;
+  return aStyleText->mWordSpacing.Resolve([&] {
+    return GetSpaceWidthAppUnits(aTextRun);
+  });
 }
 
 // Returns gfxTextRunFactory::TEXT_ENABLE_SPACING if non-standard
@@ -1792,20 +1784,14 @@ static gfx::ShapedTextFlags GetSpacingFlags(
   }
 
   const nsStyleText* styleText = aFrame->StyleText();
-  const nsStyleCoord& ls = styleText->mLetterSpacing;
-  const nsStyleCoord& ws = styleText->mWordSpacing;
+  const auto& ls = styleText->mLetterSpacing;
+  const auto& ws = styleText->mWordSpacing;
 
   // It's possible to have a calc() value that computes to zero but for which
   // IsDefinitelyZero() is false, in which case we'll return
   // TEXT_ENABLE_SPACING unnecessarily. That's ok because such cases are likely
   // to be rare, and avoiding TEXT_ENABLE_SPACING is just an optimization.
-  bool nonStandardSpacing =
-      (eStyleUnit_Coord == ls.GetUnit() && ls.GetCoordValue() != 0) ||
-      (eStyleUnit_Coord == ws.GetUnit() && ws.GetCoordValue() != 0) ||
-      (eStyleUnit_Percent == ws.GetUnit() && ws.GetPercentValue() != 0) ||
-      (eStyleUnit_Calc == ws.GetUnit() &&
-       !ws.GetCalcValue()->IsDefinitelyZero());
-
+  bool nonStandardSpacing = !ls.IsZero() || !ws.IsDefinitelyZero();
   return nonStandardSpacing ? gfx::ShapedTextFlags::TEXT_ENABLE_SPACING
                             : gfx::ShapedTextFlags();
 }

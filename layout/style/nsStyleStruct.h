@@ -1476,9 +1476,9 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleText {
   mozilla::StyleComplexColor mWebkitTextStrokeColor;
 
   mozilla::StyleNonNegativeLengthOrNumber mMozTabSize;
-  nsStyleCoord mWordSpacing;    // coord, percent, calc
-  nsStyleCoord mLetterSpacing;  // coord, normal
-  nsStyleCoord mLineHeight;     // coord, factor, normal
+  mozilla::LengthPercentage mWordSpacing;
+  mozilla::StyleLetterSpacing mLetterSpacing;
+  mozilla::StyleLineHeight mLineHeight;
   mozilla::LengthPercentage mTextIndent;
   nscoord mWebkitTextStrokeWidth;  // coord
 
