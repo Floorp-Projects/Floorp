@@ -81,16 +81,16 @@ this.sessionrestore = class extends ExtensionAPI {
           if (!Services.prefs.getBoolPref("talos.sessionrestore.norestore", false)) {
             throw new Error("Session was not restored!");
           }
-          await this.finishProfiling("This test measures the time between sessionRestoreInit " +
-                                     "and sessionRestored, ignore everything around that");
+          await this.finishProfiling("This test measures the time between process " +
+                                     "creation and sessionRestored.");
 
           didRestore = false;
         } else {
           await new Promise(resolve => {
             let observe = async () => {
               Services.obs.removeObserver(observe, StartupPerformance.RESTORED_TOPIC);
-              await this.finishProfiling("This test measures the time between sessionRestoreInit " +
-                                         "and the last restored tab, ignore everything around that");
+              await this.finishProfiling("This test measures the time between process " +
+                                         "creation and the last restored tab.");
 
               resolve();
             };
@@ -103,7 +103,7 @@ this.sessionrestore = class extends ExtensionAPI {
       let restoreTime = didRestore
                       ? StartupPerformance.latestRestoredTimeStamp
                       : startup_info.sessionRestored;
-      let duration = restoreTime - startup_info.sessionRestoreInit;
+      let duration = restoreTime - startup_info.process;
 
       // Report data to Talos, if possible.
       dump("__start_report" + duration + "__end_report\n\n");
