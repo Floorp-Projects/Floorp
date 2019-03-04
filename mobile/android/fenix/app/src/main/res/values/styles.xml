@@ -11,6 +11,8 @@
         <item name="android:windowBackground">@color/off_white</item>
         <item name="iconColor">@color/icons_light_mode</item>
         <item name="toolbarColor">@color/toolbar_light_mode</item>
+        <item name="colorPrimary">@color/off_white</item>
+        <item name="colorAccent">@color/session_border_color</item>
 
         <!-- Style the navigation bar -->
         <item name="navigationBarColorHome">@android:color/transparent</item>
@@ -36,6 +38,7 @@
         <item name="pillWrapperBackground">@color/off_white</item>
         <item name="awesomeBarTitleTextColor">@color/awesome_bar_title_color</item>
         <item name="awesomeBarDescriptionTextColor">@color/awesome_bar_description_color</item>
+        <item name="suggestionBackground">@color/photonBlue50</item>
 
         <!-- Browser fragment colors -->
         <item name="browserUrlBarBackground">@drawable/home_search_background_dark</item>
@@ -56,6 +59,8 @@
         <item name="android:windowBackground">@color/private_browsing_top_gradient</item>
         <item name="iconColor">@color/icons_dark_mode</item>
         <item name="toolbarColor">@color/toolbar_dark_mode</item>
+        <item name="colorPrimary">@color/private_browsing_primary</item>
+        <item name="colorAccent">@color/private_browsing_primary</item>
 
         <!-- Style the navigation bar -->
         <item name="navigationBarColorHome">@color/private_browsing_bottom_gradient</item>
@@ -81,6 +86,7 @@
         <item name="pillWrapperBackground">@color/private_browsing_top_gradient</item>
         <item name="awesomeBarTitleTextColor">@color/off_white</item>
         <item name="awesomeBarDescriptionTextColor">@color/photonGrey40</item>
+        <item name="suggestionBackground">@color/private_browsing_primary</item>
 
         <!-- Browser fragment colors -->
         <item name="browserUrlBarBackground">@drawable/home_search_background_private_dark</item>

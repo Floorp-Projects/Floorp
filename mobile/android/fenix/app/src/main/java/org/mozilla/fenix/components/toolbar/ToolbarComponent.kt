@@ -29,6 +29,8 @@ class ToolbarComponent(
         bus.getSafeManagedObservable(SearchChange::class.java)
     ) {
 
+    fun getView(): BrowserToolbar = uiView.toolbar
+
     override val reducer: Reducer<SearchState, SearchChange> = { state, change ->
         when (change) {
             is SearchChange.QueryChanged -> state.copy(query = change.query)
@@ -36,18 +38,25 @@ class ToolbarComponent(
     }
 
     override fun initView() = ToolbarUIView(sessionId, isPrivate, container, actionEmitter, changesObservable)
+
     init {
         render(reducer)
         applyTheme()
     }
 
-    fun getView(): BrowserToolbar = uiView.toolbar
-
     private fun applyTheme() {
-        getView().textColor = ContextCompat.getColor(container.context,
-            DefaultThemeManager.resolveAttribute(R.attr.awesomeBarTitleTextColor, container.context))
-        getView().hintColor = ContextCompat.getColor(container.context,
-            DefaultThemeManager.resolveAttribute(R.attr.awesomeBarDescriptionTextColor, container.context))
+        getView().suggestionBackgroundColor = ContextCompat.getColor(
+            container.context,
+            DefaultThemeManager.resolveAttribute(R.attr.suggestionBackground, container.context)
+        )
+        getView().textColor = ContextCompat.getColor(
+            container.context,
+            DefaultThemeManager.resolveAttribute(R.attr.awesomeBarTitleTextColor, container.context)
+        )
+        getView().hintColor = ContextCompat.getColor(
+            container.context,
+            DefaultThemeManager.resolveAttribute(R.attr.awesomeBarDescriptionTextColor, container.context)
+        )
     }
 }
 
