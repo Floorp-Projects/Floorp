@@ -1530,6 +1530,7 @@ window._gBrowser = {
     triggeringPrincipal,
     csp,
     userContextId,
+    fromExternal,
   } = {}) {
     if (!aURIs.length) {
       return;
@@ -1581,6 +1582,9 @@ window._gBrowser = {
       if (!allowInheritPrincipal) {
         flags |= Ci.nsIWebNavigation.LOAD_FLAGS_DISALLOW_INHERIT_PRINCIPAL;
       }
+      if (fromExternal) {
+        flags |= Ci.nsIWebNavigation.LOAD_FLAGS_FROM_EXTERNAL;
+      }
       try {
         browser.loadURI(aURIs[0], {
           flags,
@@ -1603,6 +1607,7 @@ window._gBrowser = {
         triggeringPrincipal,
         bulkOrderedOpen: multiple,
         csp,
+        fromExternal,
       };
       if (newIndex > -1) {
         params.index = newIndex;
@@ -1624,6 +1629,7 @@ window._gBrowser = {
         triggeringPrincipal,
         bulkOrderedOpen: true,
         csp,
+        fromExternal,
       };
       if (targetTabIndex > -1) {
         params.index = ++tabNum;
