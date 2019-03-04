@@ -26,10 +26,7 @@ function run_test() {
   prefs.setBoolPref("dom.push.enabled", true);
   prefs.setBoolPref("dom.push.connection.enabled", true);
 
-  addCertOverride("localhost", serverPort,
-                  Ci.nsICertOverrideService.ERROR_UNTRUSTED |
-                  Ci.nsICertOverrideService.ERROR_MISMATCH |
-                  Ci.nsICertOverrideService.ERROR_TIME);
+  trustHttp2CA();
 
   prefs.setIntPref("network.http.speculative-parallel-limit", oldPref);
 
