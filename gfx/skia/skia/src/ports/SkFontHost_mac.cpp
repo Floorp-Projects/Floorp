@@ -2337,19 +2337,6 @@ SkScalerContext* SkTypeface_Mac::onCreateScalerContext(const SkScalerContextEffe
 }
 
 void SkTypeface_Mac::onFilterRec(SkScalerContextRec* rec) const {
-    if (rec->fMaskFormat == SkMask::kLCD16_Format ||
-        rec->fFlags & SkScalerContext::kGenA8FromLCD_Flag) {
-        SkColor color = rec->getLuminanceColor();
-        int r = SkColorGetR(color);
-        int g = SkColorGetG(color);
-        int b = SkColorGetB(color);
-        // Choose whether to draw using a light-on-dark mask based on observed
-        // color/luminance thresholds that CoreText uses.
-        if (r >= 85 && g >= 85 && b >= 85 && r + g + b >= 2 * 255) {
-            rec->fFlags |= SkScalerContext::kLightOnDark_Flag;
-        }
-    }
-
     if (rec->fFlags & SkScalerContext::kLCD_BGROrder_Flag ||
         rec->fFlags & SkScalerContext::kLCD_Vertical_Flag)
     {
@@ -2430,6 +2417,21 @@ void SkTypeface_Mac::onFilterRec(SkScalerContextRec* rec) const {
     } else {
         //CoreGraphics dialates smoothed text as needed.
         rec->setContrast(0);
+    }
+
+    // Smoothing will be used if the format is either LCD or if there is hinting.
+    // In those cases, we need to choose the proper dilation mask based on the color.
+    if (rec->fMaskFormat == SkMask::kLCD16_Format ||
+        (rec->fMaskFormat == SkMask::kA8_Format && rec->getHinting() != SkPaint::kNo_Hinting)) {
+        SkColor color = rec->getLuminanceColor();
+        int r = SkColorGetR(color);
+        int g = SkColorGetG(color);
+        int b = SkColorGetB(color);
+        // Choose whether to draw using a light-on-dark mask based on observed
+        // color/luminance thresholds that CoreText uses.
+        if (r >= 85 && g >= 85 && b >= 85 && r + g + b >= 2 * 255) {
+            rec->fFlags |= SkScalerContext::kLightOnDark_Flag;
+        }
     }
 }
 
