@@ -93,7 +93,7 @@ void SMILAnimationController::Resume(uint32_t aType) {
 
   SMILTimeContainer::Resume(aType);
 
-  if (wasPaused && !mPauseState && mChildContainerTable.Count()) {
+  if (wasPaused && !mPauseState && !mChildContainerTable.IsEmpty()) {
     MaybeStartSampling(GetRefreshDriver());
     Sample();  // Run the first sample manually
   }
@@ -164,7 +164,7 @@ void SMILAnimationController::RegisterAnimationElement(
   mAnimationElementTable.PutEntry(aAnimationElement);
   if (mDeferredStartSampling) {
     mDeferredStartSampling = false;
-    if (mChildContainerTable.Count()) {
+    if (!mChildContainerTable.IsEmpty()) {
       // mAnimationElementTable was empty, but now we've added its 1st element
       MOZ_ASSERT(mAnimationElementTable.Count() == 1,
                  "we shouldn't have deferred sampling if we already had "
@@ -212,7 +212,7 @@ void SMILAnimationController::Unlink() { mLastCompositorTable = nullptr; }
 
 void SMILAnimationController::NotifyRefreshDriverCreated(
     nsRefreshDriver* aRefreshDriver) {
-  if (!mPauseState) {
+  if (!mPauseState && !mChildContainerTable.IsEmpty()) {
     MaybeStartSampling(aRefreshDriver);
   }
 }
@@ -708,7 +708,7 @@ nsresult SMILAnimationController::AddChild(SMILTimeContainer& aChild) {
 void SMILAnimationController::RemoveChild(SMILTimeContainer& aChild) {
   mChildContainerTable.RemoveEntry(&aChild);
 
-  if (!mPauseState && mChildContainerTable.Count() == 0) {
+  if (!mPauseState && mChildContainerTable.IsEmpty()) {
     StopSampling(GetRefreshDriver());
   }
 }
