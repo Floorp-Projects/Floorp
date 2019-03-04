@@ -5727,6 +5727,7 @@ class nsDisplayOwnLayer : public nsDisplayWrapList {
   nsDisplayOwnLayerFlags GetFlags() { return mFlags; }
   bool IsScrollThumbLayer() const;
   bool IsScrollbarContainer() const;
+  bool IsZoomingLayer() const;
 
  protected:
   nsDisplayOwnLayerFlags mFlags;
