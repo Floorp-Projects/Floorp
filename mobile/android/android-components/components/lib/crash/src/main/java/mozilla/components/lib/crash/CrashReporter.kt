@@ -161,6 +161,7 @@ class CrashReporter(
     )
 
     companion object {
+        @Volatile
         private var instance: CrashReporter? = null
 
         @VisibleForTesting internal fun reset() {

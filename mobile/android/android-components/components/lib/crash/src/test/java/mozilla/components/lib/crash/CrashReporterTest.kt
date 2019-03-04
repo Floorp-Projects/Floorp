@@ -29,6 +29,7 @@ import java.lang.IllegalArgumentException
 import java.lang.RuntimeException
 import org.robolectric.Robolectric
 import org.robolectric.Shadows.shadowOf
+import java.lang.reflect.Modifier
 
 @RunWith(RobolectricTestRunner::class)
 class CrashReporterTest {
@@ -252,5 +253,11 @@ class CrashReporterTest {
         assertEquals(true, receivedCrash.minidumpSuccess)
         assertEquals("extras.path", receivedCrash.extrasPath)
         assertEquals(false, receivedCrash.isFatal)
+    }
+
+    @Test
+    fun `CrashReporter instance writes are visible across threads`() {
+        val instanceField = CrashReporter::class.java.getDeclaredField("instance")
+        assertTrue(Modifier.isVolatile(instanceField.modifiers))
     }
 }
