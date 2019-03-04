@@ -194,3 +194,10 @@ them are specified, they must all be specified.
 ``comm_head_repository``
 ``comm_head_rev``
 ``comm_head_ref``
+
+Code Review
+-----------
+
+``phabricator_diff``
+   The code review process needs to know the Phabricator Differential diff that
+   started the analysis. This parameter must start with `PHID-DIFF-`
