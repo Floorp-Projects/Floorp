@@ -1147,6 +1147,7 @@ var MigrationUtils = Object.freeze({
   MIGRATION_ENTRYPOINT_PLACES: 3,
   MIGRATION_ENTRYPOINT_PASSWORDS: 4,
   MIGRATION_ENTRYPOINT_NEWTAB: 5,
+  MIGRATION_ENTRYPOINT_FILE_MENU: 6,
 
   _sourceNameToIdMapping: {
     "nothing":    1,
