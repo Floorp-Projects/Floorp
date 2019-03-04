@@ -83,7 +83,6 @@ add_task(async function test_urlbar_focus() {
 
 add_task(async function default_url() {
   const extension = ExtensionTestUtils.loadExtension({
-    incognitoOverride: "spanning",
     manifest: {
       permissions: ["tabs"],
     },
