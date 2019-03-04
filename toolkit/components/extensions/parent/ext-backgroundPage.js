@@ -9,6 +9,8 @@ var {
 
 ChromeUtils.defineModuleGetter(this, "ExtensionTelemetry",
                                "resource://gre/modules/ExtensionTelemetry.jsm");
+ChromeUtils.defineModuleGetter(this, "PrivateBrowsingUtils",
+                               "resource://gre/modules/PrivateBrowsingUtils.jsm");
 
 XPCOMUtils.defineLazyPreferenceGetter(this, "DELAYED_STARTUP",
                                       "extensions.webextensions.background-delayed-startup");
@@ -90,6 +92,13 @@ this.backgroundPage = class extends ExtensionAPI {
     let {extension} = this;
 
     this.bgPage = null;
+
+    // When in PPB background pages all run in a private context.  This check
+    // simply avoids an extraneous error in the console since the BaseContext
+    // will throw.
+    if (PrivateBrowsingUtils.permanentPrivateBrowsing && !extension.privateBrowsingAllowed) {
+      return;
+    }
 
     if (extension.startupReason !== "APP_STARTUP" || !DELAYED_STARTUP) {
       return this.build();
