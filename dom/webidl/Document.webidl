@@ -361,7 +361,7 @@ partial interface Document {
   // Touch bits
   // XXXbz I can't find the sane spec for this stuff, so just cribbing
   // from our xpidl for now.
-  [NewObject, Func="nsGenericHTMLElement::TouchEventsEnabled"]
+  [NewObject, Func="nsGenericHTMLElement::LegacyTouchAPIEnabled"]
   Touch createTouch(optional Window? view = null,
                     optional EventTarget? target = null,
                     optional long identifier = 0,
@@ -379,14 +379,14 @@ partial interface Document {
   // distinguishing arguments yet.  Once this hack is removed. we can also
   // remove the corresponding overload on Document, since Touch... and
   // sequence<Touch> look the same in the C++.
-  [NewObject, Func="nsGenericHTMLElement::TouchEventsEnabled"]
+  [NewObject, Func="nsGenericHTMLElement::LegacyTouchAPIEnabled"]
   TouchList createTouchList(Touch touch, Touch... touches);
   // XXXbz and another hack for the fact that we can't usefully have optional
   // distinguishing arguments but need a working zero-arg form of
   // createTouchList().
-  [NewObject, Func="nsGenericHTMLElement::TouchEventsEnabled"]
+  [NewObject, Func="nsGenericHTMLElement::LegacyTouchAPIEnabled"]
   TouchList createTouchList();
-  [NewObject, Func="nsGenericHTMLElement::TouchEventsEnabled"]
+  [NewObject, Func="nsGenericHTMLElement::LegacyTouchAPIEnabled"]
   TouchList createTouchList(sequence<Touch> touches);
 
   [ChromeOnly]
