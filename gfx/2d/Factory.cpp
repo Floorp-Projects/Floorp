@@ -871,8 +871,14 @@ RefPtr<ID2D1DeviceContext> Factory::GetD2DDeviceContext() {
     return *ptr;
   }
 
+  RefPtr<ID2D1Device> device = GetD2D1Device();
+
+  if (!device) {
+    return nullptr;
+  }
+
   RefPtr<ID2D1DeviceContext> dc;
-  HRESULT hr = mD2D1Device->CreateDeviceContext(
+  HRESULT hr = device->CreateDeviceContext(
       D2D1_DEVICE_CONTEXT_OPTIONS_ENABLE_MULTITHREADED_OPTIMIZATIONS,
       getter_AddRefs(dc));
 
