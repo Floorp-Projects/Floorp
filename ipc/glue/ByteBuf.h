@@ -71,7 +71,7 @@ struct ParamTraits<mozilla::ipc::ByteBuf> {
 
   // this is where we transfer the memory from the ByteBuf to IPDL, avoiding a
   // copy
-  static void Write(Message* aMsg, paramType& aParam) {
+  static void Write(Message* aMsg, paramType&& aParam) {
     WriteParam(aMsg, aParam.mLen);
     // hand over ownership of the buffer to the Message
     aMsg->WriteBytesZeroCopy(aParam.mData, aParam.mLen, aParam.mCapacity);
