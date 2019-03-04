@@ -15,9 +15,12 @@ const {Protocol} = ChromeUtils.import("chrome://remote/content/Protocol.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "log", Log.get);
 
-class Handler {
+class JSONHandler {
   register(server) {
-    server.registerPathHandler(this.path, this.rawHandle);
+    server.registerPathHandler(this.path, (req, resp) => {
+      resp.setHeader("content-type", "application/json");
+      this.rawHandle(req, new JSONWriter(resp));
+    });
   }
 
   rawHandle(request, response) {
@@ -28,15 +31,6 @@ class Handler {
     } catch (e) {
       log.warn(e);
     }
-  }
-}
-
-class JSONHandler extends Handler {
-  register(server) {
-    server.registerPathHandler(this.path, (req, resp) => {
-      resp.setHeader("content-type", "application/json");
-      this.rawHandle(req, new JSONWriter(resp));
-    });
   }
 }
 
