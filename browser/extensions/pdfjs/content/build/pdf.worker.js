@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-const pdfjsVersion = '2.2.42';
-const pdfjsBuild = '34022d2f';
+const pdfjsVersion = '2.2.51';
+const pdfjsBuild = 'c43396c2';
 
 const pdfjsCoreWorker = __w_pdfjs_require__(1);
 
@@ -377,7 +377,7 @@ var WorkerMessageHandler = {
     var cancelXHRs = null;
     var WorkerTasks = [];
     let apiVersion = docParams.apiVersion;
-    let workerVersion = '2.2.42';
+    let workerVersion = '2.2.51';
 
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
@@ -26752,17 +26752,19 @@ var Type1Font = function Type1FontClosure() {
       cff.strings = strings;
       cff.globalSubrIndex = new _cff_parser.CFFIndex();
       var count = glyphs.length;
-      var charsetArray = [0];
+      var charsetArray = ['.notdef'];
       var i, ii;
 
       for (i = 0; i < count; i++) {
-        var index = _cff_parser.CFFStandardStrings.indexOf(charstrings[i].glyphName);
+        let glyphName = charstrings[i].glyphName;
+
+        let index = _cff_parser.CFFStandardStrings.indexOf(glyphName);
 
         if (index === -1) {
-          index = strings.add(charstrings[i].glyphName);
+          strings.add(glyphName);
         }
 
-        charsetArray.push(index);
+        charsetArray.push(glyphName);
       }
 
       cff.charset = new _cff_parser.CFFCharset(false, 0, charsetArray);
@@ -27919,7 +27921,7 @@ var CFFStrings = function CFFStringsClosure() {
       return -1;
     },
     add: function CFFStrings_add(value) {
-      return this.strings.push(value) + NUM_STANDARD_CFF_STRINGS - 1;
+      this.strings.push(value);
     },
 
     get count() {
@@ -28532,6 +28534,7 @@ var CFFCompiler = function CFFCompilerClosure() {
         out[0] = 0;
         let charsetIndex = 0;
         let numCharsets = charset.charset.length;
+        let warned = false;
 
         for (let i = 1; i < out.length; i += 2) {
           let sid = 0;
@@ -28542,7 +28545,11 @@ var CFFCompiler = function CFFCompilerClosure() {
 
             if (sid === -1) {
               sid = 0;
-              (0, _util.warn)(`Couldn't find ${name} in CFF strings`);
+
+              if (!warned) {
+                warned = true;
+                (0, _util.warn)(`Couldn't find ${name} in CFF strings`);
+              }
             }
           }
 
