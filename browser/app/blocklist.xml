@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<blocklist lastupdate="1551250023025" xmlns="http://www.mozilla.org/2006/addons-blocklist">
+<blocklist lastupdate="1551399019543" xmlns="http://www.mozilla.org/2006/addons-blocklist">
   <emItems>
     <emItem blockID="i334" id="{0F827075-B026-42F3-885D-98981EE7B1AE}">
       <prefs/>
@@ -2529,6 +2529,26 @@
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
     <emItem blockID="37252271-9e38-46a9-b23a-2b6d7048c0db" id="/^((\{e0686c32-99b4-44d8-972f-88bf08b68f88\})|(\{b2225e4c-9d1d-472b-8aeb-5ff203bcff9a\}))$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="01825fea-8c5c-4d76-bd06-e1019c188056" id="{ba74c7ee-32b1-11e9-ade5-1f2222a4f325}">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="1d596a69-157f-4743-9465-f86d6452206b" id="Youtube-downloader@Myaddons.com">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="a30f9f2a-aa68-48b7-88cc-8a582405b385" id="Youtube-video@Myaddons.com">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="77a32be3-94ce-49c2-b129-fa2562a7f47b" id="/^((\{6745ccb4-833d-497e-b582-d98a5e790e8c\})|(\{cd205ddb-b106-4d2a-a965-5d1c610b5072\})|(\{218ec82e-2839-42da-acaa-e527454f4237\})|(\{7af25a3d-1caf-49f8-8be9-8ae6065db7c5\}))$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="7718be46-8e84-4bc7-a5a9-4c5de18378ee" id="/^((\{5084f455-bc8f-483c-b145-91245bcbfd64\})|(\{bd69d5d0-4b2f-48cb-bab5-dcf1e0f9c63b\}))$/">
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
