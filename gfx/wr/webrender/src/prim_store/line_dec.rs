@@ -7,16 +7,16 @@ use api::{
     LineOrientation, LineStyle, PremultipliedColorF, Shadow,
 };
 use app_units::Au;
-use display_list_flattener::{CreateShadow, IsVisible};
+use display_list_flattener::{AsInstanceKind, CreateShadow, IsVisible};
 use frame_builder::{FrameBuildingState};
 use gpu_cache::GpuDataRequest;
 use intern;
+use intern_types;
 use prim_store::{
     PrimKey, PrimKeyCommonData, PrimTemplate, PrimTemplateCommonData,
-    InternablePrimitive, PrimitiveSceneData, PrimitiveStore,
+    PrimitiveSceneData, PrimitiveStore,
 };
 use prim_store::PrimitiveInstanceKind;
-
 
 #[derive(Clone, Debug, Hash, MallocSizeOf, PartialEq, Eq)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
@@ -58,6 +58,22 @@ impl LineDecorationKey {
 }
 
 impl intern::InternDebug for LineDecorationKey {}
+
+impl AsInstanceKind<LineDecorationDataHandle> for LineDecorationKey {
+    /// Construct a primitive instance that matches the type
+    /// of primitive key.
+    fn as_instance_kind(
+        &self,
+        data_handle: LineDecorationDataHandle,
+        _: &mut PrimitiveStore,
+        _reference_frame_relative_offset: LayoutVector2D,
+    ) -> PrimitiveInstanceKind {
+        PrimitiveInstanceKind::LineDecoration {
+            data_handle,
+            cache_handle: None,
+        }
+    }
+}
 
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
@@ -119,16 +135,16 @@ impl From<LineDecorationKey> for LineDecorationTemplate {
     }
 }
 
-pub type LineDecorationDataHandle = intern::Handle<LineDecoration>;
+pub use intern_types::line_decoration::Handle as LineDecorationDataHandle;
 
 impl intern::Internable for LineDecoration {
-    type Key = LineDecorationKey;
+    type Marker = intern_types::line_decoration::Marker;
+    type Source = LineDecorationKey;
     type StoreData = LineDecorationTemplate;
     type InternData = PrimitiveSceneData;
-}
 
-impl InternablePrimitive for LineDecoration {
-    fn into_key(
+    /// Build a new key from self with `info`.
+    fn build_key(
         self,
         info: &LayoutPrimitiveInfo,
     ) -> LineDecorationKey {
@@ -136,18 +152,6 @@ impl InternablePrimitive for LineDecoration {
             info,
             self,
         )
-    }
-
-    fn make_instance_kind(
-        _key: LineDecorationKey,
-        data_handle: LineDecorationDataHandle,
-        _: &mut PrimitiveStore,
-        _reference_frame_relative_offset: LayoutVector2D,
-    ) -> PrimitiveInstanceKind {
-        PrimitiveInstanceKind::LineDecoration {
-            data_handle,
-            cache_handle: None,
-        }
     }
 }
 

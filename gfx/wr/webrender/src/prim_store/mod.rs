@@ -2,12 +2,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{BorderRadius, ClipMode, ColorF};
+use api::{BorderRadius, ClipMode, ColorF, PictureRect, ColorU, LayoutVector2D};
+use api::{DeviceIntRect, DevicePixelScale, DeviceRect, WorldVector2D};
 use api::{FilterOp, ImageRendering, TileOffset, RepeatMode, WorldPoint, WorldSize};
-use api::{PremultipliedColorF, PropertyBinding, Shadow};
-use api::{BoxShadowClipMode, LineStyle, LineOrientation, AuHelpers};
-use api::{LayoutPrimitiveInfo, PrimitiveKeyKind};
-use api::units::*;
+use api::{LayoutPoint, LayoutRect, LayoutSideOffsets, LayoutSize, PicturePoint};
+use api::{PremultipliedColorF, PropertyBinding, Shadow, DeviceVector2D};
+use api::{WorldPixel, BoxShadowClipMode, WorldRect, LayoutToWorldScale};
+use api::{PicturePixel, RasterPixel, LineStyle, LineOrientation, AuHelpers};
+use api::{LayoutPrimitiveInfo};
+use api::DevicePoint;
 use border::{get_max_scale_for_border, build_border_instances};
 use border::BorderSegmentCacheKey;
 use clip::{ClipStore};
@@ -15,7 +18,7 @@ use clip_scroll_tree::{ROOT_SPATIAL_NODE_INDEX, ClipScrollTree, SpatialNodeIndex
 use clip::{ClipDataStore, ClipNodeFlags, ClipChainId, ClipChainInstance, ClipItem};
 use debug_colors;
 use debug_render::DebugItem;
-use display_list_flattener::{CreateShadow, IsVisible};
+use display_list_flattener::{AsInstanceKind, CreateShadow, IsVisible};
 use euclid::{SideOffsets2D, TypedTransform3D, TypedRect, TypedScale, TypedSize2D};
 use frame_builder::{FrameBuildingContext, FrameBuildingState, PictureContext, PictureState};
 use frame_builder::{PrimitiveContext, FrameVisibilityContext, FrameVisibilityState};
@@ -57,7 +60,6 @@ pub mod image;
 pub mod line_dec;
 pub mod picture;
 pub mod text_run;
-pub mod interned;
 
 /// Counter for unique primitive IDs for debug tracing.
 #[cfg(debug_assertions)]
@@ -325,6 +327,19 @@ impl GpuCacheAddress {
 pub struct PrimitiveSceneData {
     pub prim_size: LayoutSize,
     pub is_backface_visible: bool,
+}
+
+/// Information specific to a primitive type that
+/// uniquely identifies a primitive template by key.
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+#[derive(Debug, Clone, Eq, MallocSizeOf, PartialEq, Hash)]
+pub enum PrimitiveKeyKind {
+    /// Clear an existing rect, used for special effects on some platforms.
+    Clear,
+    Rectangle {
+        color: ColorU,
+    },
 }
 
 #[cfg_attr(feature = "capture", derive(Serialize))]
@@ -619,6 +634,32 @@ impl PrimitiveKey {
 
 impl intern::InternDebug for PrimitiveKey {}
 
+impl AsInstanceKind<PrimitiveDataHandle> for PrimitiveKey {
+    /// Construct a primitive instance that matches the type
+    /// of primitive key.
+    fn as_instance_kind(
+        &self,
+        data_handle: PrimitiveDataHandle,
+        _: &mut PrimitiveStore,
+        _reference_frame_relative_offset: LayoutVector2D,
+    ) -> PrimitiveInstanceKind {
+        match self.kind {
+            PrimitiveKeyKind::Clear => {
+                PrimitiveInstanceKind::Clear {
+                    data_handle
+                }
+            }
+            PrimitiveKeyKind::Rectangle { .. } => {
+                PrimitiveInstanceKind::Rectangle {
+                    data_handle,
+                    opacity_binding_index: OpacityBindingIndex::INVALID,
+                    segment_instance_index: SegmentInstanceIndex::INVALID,
+                }
+            }
+        }
+    }
+}
+
 /// The shared information for a given primitive. This is interned and retained
 /// both across frames and display lists, by comparing the matching PrimitiveKey.
 #[cfg_attr(feature = "capture", derive(Serialize))]
@@ -634,9 +675,9 @@ pub enum PrimitiveTemplateKind {
 /// Construct the primitive template data from a primitive key. This
 /// is invoked when a primitive key is created and the interner
 /// doesn't currently contain a primitive with this key.
-impl From<PrimitiveKeyKind> for PrimitiveTemplateKind {
-    fn from(kind: PrimitiveKeyKind) -> Self {
-        match kind {
+impl PrimitiveKeyKind {
+    fn into_template(self) -> PrimitiveTemplateKind {
+        match self {
             PrimitiveKeyKind::Clear => {
                 PrimitiveTemplateKind::Clear
             }
@@ -705,10 +746,10 @@ impl ops::DerefMut for PrimitiveTemplate {
 
 impl From<PrimitiveKey> for PrimitiveTemplate {
     fn from(item: PrimitiveKey) -> Self {
-        PrimitiveTemplate {
-            common: PrimTemplateCommonData::with_key_common(item.common),
-            kind: item.kind.into(),
-        }
+        let common = PrimTemplateCommonData::with_key_common(item.common);
+        let kind = item.kind.into_template();
+
+        PrimitiveTemplate { common, kind, }
     }
 }
 
@@ -754,16 +795,13 @@ impl PrimitiveTemplate {
     }
 }
 
-type PrimitiveDataHandle = intern::Handle<PrimitiveKeyKind>;
-
 impl intern::Internable for PrimitiveKeyKind {
-    type Key = PrimitiveKey;
+    type Marker = ::intern_types::prim::Marker;
+    type Source = PrimitiveKey;
     type StoreData = PrimitiveTemplate;
     type InternData = PrimitiveSceneData;
-}
 
-impl InternablePrimitive for PrimitiveKeyKind {
-    fn into_key(
+    fn build_key(
         self,
         info: &LayoutPrimitiveInfo,
     ) -> PrimitiveKey {
@@ -773,29 +811,9 @@ impl InternablePrimitive for PrimitiveKeyKind {
             self,
         )
     }
-
-    fn make_instance_kind(
-        key: PrimitiveKey,
-        data_handle: PrimitiveDataHandle,
-        _: &mut PrimitiveStore,
-        _reference_frame_relative_offset: LayoutVector2D,
-    ) -> PrimitiveInstanceKind {
-        match key.kind {
-            PrimitiveKeyKind::Clear => {
-                PrimitiveInstanceKind::Clear {
-                    data_handle
-                }
-            }
-            PrimitiveKeyKind::Rectangle { .. } => {
-                PrimitiveInstanceKind::Rectangle {
-                    data_handle,
-                    opacity_binding_index: OpacityBindingIndex::INVALID,
-                    segment_instance_index: SegmentInstanceIndex::INVALID,
-                }
-            }
-        }
-    }
 }
+
+use intern_types::prim::Handle as PrimitiveDataHandle;
 
 // Maintains a list of opacity bindings that have been collapsed into
 // the color of a single primitive. This is an important optimization
@@ -3687,24 +3705,6 @@ fn update_opacity_binding(
         binding.current
     }
 }
-
-/// Trait for primitives that are directly internable.
-/// see DisplayListFlattener::add_primitive<P>
-pub trait InternablePrimitive: intern::Internable<InternData = PrimitiveSceneData> + Sized {
-    /// Build a new key from self with `info`.
-    fn into_key(
-        self,
-        info: &LayoutPrimitiveInfo,
-    ) -> Self::Key;
-
-    fn make_instance_kind(
-        key: Self::Key,
-        data_handle: intern::Handle<Self>,
-        prim_store: &mut PrimitiveStore,
-        reference_frame_relative_offset: LayoutVector2D,
-    ) -> PrimitiveInstanceKind;
-}
-
 
 #[test]
 #[cfg(target_pointer_width = "64")]

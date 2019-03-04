@@ -5,16 +5,18 @@
 use api::{AsyncBlobImageRasterizer, BlobImageRequest, BlobImageParams, BlobImageResult};
 use api::{DocumentId, PipelineId, ApiMsg, FrameMsg, ResourceUpdate, ExternalEvent, Epoch};
 use api::{BuiltDisplayList, ColorF, LayoutSize, NotificationRequest, Checkpoint, IdNamespace};
-use api::{ClipIntern, FilterDataIntern, MemoryReport, PrimitiveKeyKind};
+use api::{MemoryReport};
 use api::channel::MsgSender;
 #[cfg(feature = "capture")]
 use capture::CaptureConfig;
 use frame_builder::{FrameBuilderConfig, FrameBuilder};
 use clip_scroll_tree::ClipScrollTree;
 use display_list_flattener::DisplayListFlattener;
-use intern::{Internable, Interner, UpdateList};
+use intern::{Internable, Interner};
+use intern_types;
 use internal_types::{FastHashMap, FastHashSet};
 use malloc_size_of::{MallocSizeOf, MallocSizeOfOps};
+use prim_store::{PrimitiveKeyKind};
 use prim_store::PrimitiveStoreStats;
 use prim_store::borders::{ImageBorder, NormalBorderPrim};
 use prim_store::gradient::{LinearGradient, RadialGradient};
@@ -32,7 +34,6 @@ use time::precise_time_ns;
 use util::drain_filter;
 use std::thread;
 use std::time::Duration;
-
 
 /// Represents the work associated to a transaction before scene building.
 pub struct Transaction {
@@ -169,7 +170,7 @@ pub enum SceneSwapResult {
 }
 
 macro_rules! declare_interners {
-    ( $( $name:ident : $ty:ident, )+ ) => {
+    ( $( $name: ident, )+ ) => {
         /// This struct contains all items that can be shared between
         /// display lists. We want to intern and share the same clips,
         /// primitives and other things between display lists so that:
@@ -181,21 +182,13 @@ macro_rules! declare_interners {
         #[derive(Default)]
         pub struct Interners {
             $(
-                pub $name: Interner<$ty>,
+                pub $name: intern_types::$name::Interner,
             )+
         }
 
-        $(
-            impl AsMut<Interner<$ty>> for Interners {
-                fn as_mut(&mut self) -> &mut Interner<$ty> {
-                    &mut self.$name
-                }
-            }
-        )+
-
         pub struct InternerUpdates {
             $(
-                pub $name: UpdateList<<$ty as Internable>::Key>,
+                pub $name: intern_types::$name::UpdateList,
             )+
         }
 
@@ -223,6 +216,39 @@ macro_rules! declare_interners {
 }
 
 enumerate_interners!(declare_interners);
+
+// Access to `Interners` interners by `Internable`
+pub trait InternerMut<I: Internable>
+{
+    fn interner_mut(&mut self) -> &mut Interner<I::Source, I::InternData, I::Marker>;
+}
+
+macro_rules! impl_interner_mut {
+    ($($ty:ident: $mem:ident,)*) => {
+        $(impl InternerMut<$ty> for Interners {
+            fn interner_mut(&mut self) -> &mut Interner<
+                <$ty as Internable>::Source,
+                <$ty as Internable>::InternData,
+                <$ty as Internable>::Marker
+            > {
+                &mut self.$mem
+            }
+        })*
+    }
+}
+
+impl_interner_mut! {
+    Image: image,
+    ImageBorder: image_border,
+    LineDecoration: line_decoration,
+    LinearGradient: linear_grad,
+    NormalBorderPrim: normal_border,
+    Picture: picture,
+    PrimitiveKeyKind: prim,
+    RadialGradient: radial_grad,
+    TextRun: text_run,
+    YuvImage: yuv_image,
+}
 
 // A document in the scene builder contains the current scene,
 // as well as a persistent clip interner. This allows clips

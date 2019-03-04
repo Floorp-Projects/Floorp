@@ -7,10 +7,10 @@ use gpu_cache::{GpuCacheHandle};
 use frame_builder::FrameBuildingState;
 use gpu_cache::GpuDataRequest;
 use intern;
-use api::{FilterDataIntern, ComponentTransferFuncType};
+use api::{ComponentTransferFuncType};
 
 
-pub type FilterDataHandle = intern::Handle<FilterDataIntern>;
+pub use intern_types::filterdata::Handle as FilterDataHandle;
 
 #[derive(Debug, Clone, MallocSizeOf, PartialEq)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
@@ -142,12 +142,6 @@ impl SFilterDataTemplate {
                  || self.data.a_func != SFilterDataComponent::Identity);
         }
     }
-}
-
-impl intern::Internable for FilterDataIntern {
-    type Key = SFilterDataKey;
-    type StoreData = SFilterDataTemplate;
-    type InternData = ();
 }
 
 fn push_component_transfer_data(

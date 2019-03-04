@@ -2,14 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{BorderRadius, BoxShadowClipMode, ClipMode, ColorF, LayoutPrimitiveInfo, PrimitiveKeyKind};
-use api::MAX_BLUR_RADIUS;
-use api::units::*;
+use api::{BorderRadius, BoxShadowClipMode, ClipMode, ColorF, DeviceIntSize, LayoutPrimitiveInfo};
+use api::{LayoutRect, LayoutSize, LayoutVector2D, MAX_BLUR_RADIUS};
 use clip::ClipItemKey;
 use display_list_flattener::DisplayListFlattener;
 use gpu_cache::GpuCacheHandle;
 use gpu_types::BoxShadowStretchMode;
-use prim_store::ScrollNodeAndClipChain;
+use prim_store::{ScrollNodeAndClipChain, PrimitiveKeyKind};
 use render_task::RenderTaskCacheEntryHandle;
 use util::RectHelpers;
 

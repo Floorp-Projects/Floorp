@@ -5,19 +5,20 @@
 use api::{ColorF, DevicePixelScale, GlyphInstance, LayoutPrimitiveInfo};
 use api::{LayoutToWorldTransform, RasterSpace};
 use api::{LayoutVector2D, Shadow};
-use display_list_flattener::{CreateShadow, IsVisible};
+use display_list_flattener::{AsInstanceKind, CreateShadow, IsVisible};
 use frame_builder::{FrameBuildingState, PictureContext};
 use glyph_rasterizer::{FontInstance, FontTransform, GlyphKey, FONT_SIZE_LIMIT};
 use gpu_cache::GpuCache;
 use gpu_types::RasterizationSpace;
 use intern;
+use intern_types;
 use prim_store::{PrimitiveOpacity, PrimitiveSceneData,  PrimitiveScratchBuffer};
 use prim_store::{PrimitiveStore, PrimKeyCommonData, PrimTemplateCommonData};
 use render_task::{RenderTaskTree};
 use renderer::{MAX_VERTEX_TEXTURE_WIDTH};
 use resource_cache::{ResourceCache};
 use util::{MatrixHelpers};
-use prim_store::{InternablePrimitive, PrimitiveInstanceKind};
+use prim_store::PrimitiveInstanceKind;
 use std::ops;
 use std::sync::Arc;
 use storage;
@@ -51,6 +52,28 @@ impl TextRunKey {
 }
 
 impl intern::InternDebug for TextRunKey {}
+
+impl AsInstanceKind<TextRunDataHandle> for TextRunKey {
+    /// Construct a primitive instance that matches the type
+    /// of primitive key.
+    fn as_instance_kind(
+        &self,
+        data_handle: TextRunDataHandle,
+        prim_store: &mut PrimitiveStore,
+        reference_frame_relative_offset: LayoutVector2D,
+    ) -> PrimitiveInstanceKind {
+        let run_index = prim_store.text_runs.push(TextRunPrimitive {
+            used_font: self.font.clone(),
+            glyph_keys_range: storage::Range::empty(),
+            reference_frame_relative_offset,
+            shadow: self.shadow,
+            raster_space: RasterizationSpace::Screen,
+            inverse_raster_scale: 1.0,
+        });
+
+        PrimitiveInstanceKind::TextRun{ data_handle, run_index }
+    }
+}
 
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
@@ -134,26 +157,22 @@ impl TextRunTemplate {
     }
 }
 
-pub type TextRunDataHandle = intern::Handle<TextRun>;
+pub use intern_types::text_run::Handle as TextRunDataHandle;
 
-#[derive(Debug, MallocSizeOf)]
-#[cfg_attr(feature = "capture", derive(Serialize))]
-#[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct TextRun {
     pub font: FontInstance,
-    #[ignore_malloc_size_of = "Measured via PrimaryArc"]
     pub glyphs: Arc<Vec<GlyphInstance>>,
     pub shadow: bool,
 }
 
 impl intern::Internable for TextRun {
-    type Key = TextRunKey;
+    type Marker = intern_types::text_run::Marker;
+    type Source = TextRunKey;
     type StoreData = TextRunTemplate;
     type InternData = PrimitiveSceneData;
-}
 
-impl InternablePrimitive for TextRun {
-    fn into_key(
+    /// Build a new key from self with `info`.
+    fn build_key(
         self,
         info: &LayoutPrimitiveInfo,
     ) -> TextRunKey {
@@ -161,24 +180,6 @@ impl InternablePrimitive for TextRun {
             info,
             self,
         )
-    }
-
-    fn make_instance_kind(
-        key: TextRunKey,
-        data_handle: TextRunDataHandle,
-        prim_store: &mut PrimitiveStore,
-        reference_frame_relative_offset: LayoutVector2D,
-    ) -> PrimitiveInstanceKind {
-        let run_index = prim_store.text_runs.push(TextRunPrimitive {
-            used_font: key.font.clone(),
-            glyph_keys_range: storage::Range::empty(),
-            reference_frame_relative_offset,
-            shadow: key.shadow,
-            raster_space: RasterizationSpace::Screen,
-            inverse_raster_scale: 1.0,
-        });
-
-        PrimitiveInstanceKind::TextRun{ data_handle, run_index }
     }
 }
 

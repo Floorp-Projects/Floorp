@@ -1464,7 +1464,7 @@ impl AlphaBatchBuilder {
                                     .expect("bug: surface must be allocated by now");
 
 
-                                let filter_data = &ctx.data_stores.filter_data[handle];
+                                let filter_data = &ctx.data_stores.filterdata[handle];
                                 let filter_mode : i32 = 13 |
                                     ((filter_data.data.r_func.to_int() << 28 |
                                       filter_data.data.g_func.to_int() << 24 |
