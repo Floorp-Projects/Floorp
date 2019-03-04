@@ -136,13 +136,10 @@ class PingCentre {
     return region;
   }
 
-  async sendPing(data, options) {
+  async _createPing(data, options) {
     let filter = options && options.filter;
     let experiments = TelemetryEnvironment.getActiveExperiments();
     let experimentsString = this._createExperimentsString(experiments, filter);
-    if (!this.enabled) {
-      return Promise.resolve();
-    }
 
     let clientID = data.client_id || await this.telemetryClientId;
     let locale = data.locale || Services.locale.appLocaleAsLangTag;
@@ -163,6 +160,16 @@ class PingCentre {
     }
     payload.region = this._getRegion();
 
+    return payload;
+  }
+
+  async sendPing(data, options) {
+    if (!this.enabled) {
+      return Promise.resolve();
+    }
+
+    const payload = await this._createPing(data, options);
+
     if (this.logging) {
       // performance related pings cause a lot of logging, so we mute them
       if (data.action !== "activity_stream_performance") {
@@ -176,6 +183,32 @@ class PingCentre {
       }
     }).catch(e => {
       Cu.reportError(`Ping failure with error: ${e}`);
+    });
+  }
+
+  /**
+   * Sends a ping to the Structured Ingestion telemetry pipeline.
+   *
+   * @param {Object} data     The payload to be sent.
+   * @param {String} endpoint The destination endpoint. Note that Structured Ingestion
+   *                          requires a different endpoint for each ping. It's up to the
+   *                          caller to provide that. See more details at
+   *                          https://github.com/mozilla/gcp-ingestion/blob/master/docs/edge.md#postput-request
+   * @param {Object} options  Other options for this ping.
+   */
+  async sendStructuredIngestionPing(data, endpoint, options) {
+    if (!this.enabled) {
+      return Promise.resolve();
+    }
+
+    const payload = await this._createPing(data, options);
+
+    return fetch(endpoint, {method: "POST", body: JSON.stringify(payload)}).then(response => {
+      if (!response.ok) {
+        Cu.reportError(`Structured Ingestion ping failure with HTTP response code: ${response.status}`);
+      }
+    }).catch(e => {
+      Cu.reportError(`Structured Ingestion ping failure with error: ${e}`);
     });
   }
 

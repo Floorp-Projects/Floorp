@@ -150,6 +150,7 @@ for (const type of [
   "OPEN_ABOUT_PAGE",
   "OPEN_PREFERENCES_PAGE",
   "SHOW_FIREFOX_ACCOUNTS",
+  "PIN_CURRENT_TAB",
 ]) {
   ASRouterActions[type] = type;
 }

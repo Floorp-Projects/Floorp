@@ -30,6 +30,7 @@ Please note that some targeting attributes require stricter controls on the tele
 * [totalBookmarksCount](#totalbookmarkscount)
 * [usesFirefoxSync](#usesfirefoxsync)
 * [xpinstallEnabled](#xpinstallEnabled)
+* [hasPinnedTabs](#haspinnedtabs)
 
 ## Detailed usage
 
@@ -441,4 +442,14 @@ Pref used by system administrators to disallow add-ons from installed altogether
 
 ```ts
 declare const xpinstallEnabled: boolean;
+```
+
+### `hasPinnedTabs`
+
+Does the user have any pinned tabs in any windows.
+
+#### Definition
+
+```ts
+declare const hasPinnedTabs: boolean;
 ```
