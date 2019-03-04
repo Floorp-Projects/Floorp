@@ -1277,8 +1277,9 @@ nsresult EventDispatcher::DispatchDOMEvent(nsISupports* aTarget,
     return NS_NewDOMScrollAreaEvent(aOwner, aPresContext, nullptr);
   }
   if (aEventType.LowerCaseEqualsLiteral("touchevent") &&
-      TouchEvent::PrefEnabled(
-          nsContentUtils::GetDocShellForEventTarget(aOwner))) {
+      TouchEvent::LegacyAPIEnabled(
+          nsContentUtils::GetDocShellForEventTarget(aOwner),
+          aCallerType == CallerType::System)) {
     return NS_NewDOMTouchEvent(aOwner, aPresContext, nullptr);
   }
   if (aEventType.LowerCaseEqualsLiteral("hashchangeevent")) {
