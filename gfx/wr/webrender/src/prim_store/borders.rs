@@ -9,16 +9,15 @@ use api::{
 };
 use border::create_border_segments;
 use border::NormalBorderAu;
-use display_list_flattener::{AsInstanceKind, CreateShadow, IsVisible};
+use display_list_flattener::{CreateShadow, IsVisible};
 use frame_builder::{FrameBuildingState};
 use gpu_cache::GpuDataRequest;
 use intern;
-use intern_types;
 use prim_store::{
     BorderSegmentInfo, BrushSegment, NinePatchDescriptor, PrimKey,
     PrimKeyCommonData, PrimTemplate, PrimTemplateCommonData,
     PrimitiveInstanceKind, PrimitiveOpacity, PrimitiveSceneData,
-    PrimitiveStore
+    PrimitiveStore, InternablePrimitive,
 };
 use resource_cache::ImageRequest;
 use storage;
@@ -48,22 +47,6 @@ impl NormalBorderKey {
 }
 
 impl intern::InternDebug for NormalBorderKey {}
-
-impl AsInstanceKind<NormalBorderDataHandle> for NormalBorderKey {
-    /// Construct a primitive instance that matches the type
-    /// of primitive key.
-    fn as_instance_kind(
-        &self,
-        data_handle: NormalBorderDataHandle,
-        _: &mut PrimitiveStore,
-        _reference_frame_relative_offset: LayoutVector2D,
-    ) -> PrimitiveInstanceKind {
-        PrimitiveInstanceKind::NormalBorder {
-            data_handle,
-            cache_handles: storage::Range::empty(),
-        }
-    }
-}
 
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
@@ -160,16 +143,16 @@ impl From<NormalBorderKey> for NormalBorderTemplate {
     }
 }
 
-pub use intern_types::normal_border::Handle as NormalBorderDataHandle;
+pub type NormalBorderDataHandle = intern::Handle<NormalBorderPrim>;
 
 impl intern::Internable for NormalBorderPrim {
-    type Marker = intern_types::normal_border::Marker;
-    type Source = NormalBorderKey;
+    type Key = NormalBorderKey;
     type StoreData = NormalBorderTemplate;
     type InternData = PrimitiveSceneData;
+}
 
-    /// Build a new key from self with `info`.
-    fn build_key(
+impl InternablePrimitive for NormalBorderPrim {
+    fn into_key(
         self,
         info: &LayoutPrimitiveInfo,
     ) -> NormalBorderKey {
@@ -177,6 +160,18 @@ impl intern::Internable for NormalBorderPrim {
             info,
             self,
         )
+    }
+
+    fn make_instance_kind(
+        _key: NormalBorderKey,
+        data_handle: NormalBorderDataHandle,
+        _: &mut PrimitiveStore,
+        _reference_frame_relative_offset: LayoutVector2D,
+    ) -> PrimitiveInstanceKind {
+        PrimitiveInstanceKind::NormalBorder {
+            data_handle,
+            cache_handles: storage::Range::empty(),
+        }
     }
 }
 
@@ -225,20 +220,6 @@ impl ImageBorderKey {
 
 impl intern::InternDebug for ImageBorderKey {}
 
-impl AsInstanceKind<ImageBorderDataHandle> for ImageBorderKey {
-    /// Construct a primitive instance that matches the type
-    /// of primitive key.
-    fn as_instance_kind(
-        &self,
-        data_handle: ImageBorderDataHandle,
-        _: &mut PrimitiveStore,
-        _reference_frame_relative_offset: LayoutVector2D,
-    ) -> PrimitiveInstanceKind {
-        PrimitiveInstanceKind::ImageBorder {
-            data_handle
-        }
-    }
-}
 
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
@@ -330,16 +311,16 @@ impl From<ImageBorderKey> for ImageBorderTemplate {
     }
 }
 
-pub use intern_types::image_border::Handle as ImageBorderDataHandle;
+pub type ImageBorderDataHandle = intern::Handle<ImageBorder>;
 
 impl intern::Internable for ImageBorder {
-    type Marker = intern_types::image_border::Marker;
-    type Source = ImageBorderKey;
+    type Key = ImageBorderKey;
     type StoreData = ImageBorderTemplate;
     type InternData = PrimitiveSceneData;
+}
 
-    /// Build a new key from self with `info`.
-    fn build_key(
+impl InternablePrimitive for ImageBorder {
+    fn into_key(
         self,
         info: &LayoutPrimitiveInfo,
     ) -> ImageBorderKey {
@@ -347,6 +328,17 @@ impl intern::Internable for ImageBorder {
             info,
             self,
         )
+    }
+
+    fn make_instance_kind(
+        _key: ImageBorderKey,
+        data_handle: ImageBorderDataHandle,
+        _: &mut PrimitiveStore,
+        _reference_frame_relative_offset: LayoutVector2D,
+    ) -> PrimitiveInstanceKind {
+        PrimitiveInstanceKind::ImageBorder {
+            data_handle
+        }
     }
 }
 
