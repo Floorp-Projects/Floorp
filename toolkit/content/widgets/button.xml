@@ -190,7 +190,7 @@
     </handlers>
   </binding>
 
-  <binding id="button" display="xul:button"
+  <binding id="button"
            extends="chrome://global/content/bindings/button.xml#button-base">
     <content>
       <children includes="observes|template|menupopup|panel|tooltip"/>
@@ -203,7 +203,7 @@
     </content>
   </binding>
 
-  <binding id="menu" display="xul:menu"
+  <binding id="menu"
            extends="chrome://global/content/bindings/button.xml#button">
     <content>
       <children includes="observes|template|menupopup|panel|tooltip"/>
