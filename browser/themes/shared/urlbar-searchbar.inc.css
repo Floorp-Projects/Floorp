@@ -185,6 +185,8 @@
   list-style-image: url("chrome://browser/skin/send-to-device.svg");
 }
 
+#pageAction-panel-pinTab:-moz-locale-dir(rtl) > .toolbarbutton-icon,
+#pageAction-urlbar-pinTab:-moz-locale-dir(rtl),
 #pageAction-panel-sendToDevice:-moz-locale-dir(rtl) > .toolbarbutton-icon,
 #pageAction-urlbar-sendToDevice:-moz-locale-dir(rtl) {
   transform: scaleX(-1);
