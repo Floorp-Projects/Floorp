@@ -755,7 +755,7 @@ void nsHTMLDocument::SetCompatibilityMode(nsCompatibility aMode) {
   }
 }
 
-nsIContent* nsHTMLDocument::GetUnfocusedKeyEventTarget() {
+Element* nsHTMLDocument::GetUnfocusedKeyEventTarget() {
   if (nsGenericHTMLElement* body = GetBody()) {
     return body;
   }
