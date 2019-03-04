@@ -2020,6 +2020,110 @@ extern JS_PUBLIC_API bool IsSetObject(JSContext* cx, JS::HandleObject obj,
 JS_PUBLIC_API void JS_SetAllNonReservedSlotsToUndefined(JSContext* cx,
                                                         JSObject* objArg);
 
+/**
+ * Create a new ArrayBuffer with the given |contents|, which may be null only
+ * if |nbytes == 0|.  |contents| must be allocated compatible with deallocation
+ * by |JS_free|.
+ *
+ * If and only if an ArrayBuffer is successfully created and returned,
+ * ownership of |contents| is transferred to the new ArrayBuffer.
+ */
+extern JS_PUBLIC_API JSObject* JS_NewArrayBufferWithContents(JSContext* cx,
+                                                             size_t nbytes,
+                                                             void* contents);
+
+namespace JS {
+
+using BufferContentsFreeFunc = void (*)(void* contents, void* userData);
+
+} /* namespace JS */
+
+/**
+ * Create a new ArrayBuffer with the given contents. The contents must not be
+ * modified by any other code, internal or external.
+ *
+ * When the ArrayBuffer is ready to be disposed of, `freeFunc(contents,
+ * freeUserData)` will be called to release the ArrayBuffer's reference on the
+ * contents.
+ *
+ * `freeFunc()` must not call any JSAPI functions that could cause a garbage
+ * collection.
+ *
+ * The caller must keep the buffer alive until `freeFunc()` is called, or, if
+ * `freeFunc` is null, until the JSRuntime is destroyed.
+ *
+ * The caller must not access the buffer on other threads. The JS engine will
+ * not allow the buffer to be transferred to other threads. If you try to
+ * transfer an external ArrayBuffer to another thread, the data is copied to a
+ * new malloc buffer. `freeFunc()` must be threadsafe, and may be called from
+ * any thread.
+ *
+ * This allows ArrayBuffers to be used with embedder objects that use reference
+ * counting, for example. In that case the caller is responsible
+ * for incrementing the reference count before passing the contents to this
+ * function. This also allows using non-reference-counted contents that must be
+ * freed with some function other than free().
+ */
+extern JS_PUBLIC_API JSObject* JS_NewExternalArrayBuffer(
+    JSContext* cx, size_t nbytes, void* contents,
+    JS::BufferContentsFreeFunc freeFunc, void* freeUserData = nullptr);
+
+/**
+ * Create a new ArrayBuffer with the given non-null |contents|.
+ *
+ * Ownership of |contents| remains with the caller: it isn't transferred to the
+ * returned ArrayBuffer.  Callers of this function *must* ensure that they
+ * perform these two steps, in this order, to properly relinquish ownership of
+ * |contents|:
+ *
+ *   1. Call |JS_DetachArrayBuffer| on the buffer returned by this function.
+ *      (|JS_DetachArrayBuffer| is generally fallible, but a call under these
+ *      circumstances is guaranteed to succeed.)
+ *   2. |contents| may be deallocated or discarded consistent with the manner
+ *      in which it was allocated.
+ *
+ * Do not simply allow the returned buffer to be garbage-collected before
+ * deallocating |contents|, because in general there is no way to know *when*
+ * an object is fully garbage-collected to the point where this would be safe.
+ */
+extern JS_PUBLIC_API JSObject* JS_NewArrayBufferWithUserOwnedContents(
+    JSContext* cx, size_t nbytes, void* contents);
+
+/**
+ * Steal the contents of the given ArrayBuffer. The ArrayBuffer has its length
+ * set to 0 and its contents array cleared. The caller takes ownership of the
+ * return value and must free it or transfer ownership via
+ * JS_NewArrayBufferWithContents when done using it.
+ */
+extern JS_PUBLIC_API void* JS_StealArrayBufferContents(JSContext* cx,
+                                                       JS::HandleObject obj);
+
+/**
+ * Create a new mapped ArrayBuffer with the given memory mapped contents. It
+ * must be legal to free the contents pointer by unmapping it. On success,
+ * ownership is transferred to the new mapped ArrayBuffer.
+ */
+extern JS_PUBLIC_API JSObject* JS_NewMappedArrayBufferWithContents(
+    JSContext* cx, size_t nbytes, void* contents);
+
+/**
+ * Create memory mapped ArrayBuffer contents.
+ * Caller must take care of closing fd after calling this function.
+ */
+extern JS_PUBLIC_API void* JS_CreateMappedArrayBufferContents(int fd,
+                                                              size_t offset,
+                                                              size_t length);
+
+/**
+ * Release the allocated resource of mapped ArrayBuffer contents before the
+ * object is created.
+ * If a new object has been created by JS_NewMappedArrayBufferWithContents()
+ * with this content, then JS_DetachArrayBuffer() should be used instead to
+ * release the resource used by the object.
+ */
+extern JS_PUBLIC_API void JS_ReleaseMappedArrayBufferContents(void* contents,
+                                                              size_t length);
+
 extern JS_PUBLIC_API JS::Value JS_GetReservedSlot(JSObject* obj,
                                                   uint32_t index);
 

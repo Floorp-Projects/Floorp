@@ -84,7 +84,6 @@
 #include "jit/JitcodeMap.h"
 #include "jit/JitRealm.h"
 #include "jit/shared/CodeGenerator-shared.h"
-#include "js/ArrayBuffer.h"  // JS::{CreateMappedArrayBufferContents,NewMappedArrayBufferWithContents,IsArrayBufferObject,GetArrayBufferLengthAndData}
 #include "js/BuildId.h"  // JS::BuildIdCharVector, JS::SetProcessBuildIdOp
 #include "js/CharacterEncoding.h"
 #include "js/CompilationAndEvaluation.h"
@@ -1537,7 +1536,7 @@ static bool CreateMappedArrayBuffer(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   void* contents =
-      JS::CreateMappedArrayBufferContents(GET_FD_FROM_FILE(file), offset, size);
+      JS_CreateMappedArrayBufferContents(GET_FD_FROM_FILE(file), offset, size);
   if (!contents) {
     JS_ReportErrorASCII(cx,
                         "failed to allocate mapped array buffer contents "
@@ -1545,8 +1544,7 @@ static bool CreateMappedArrayBuffer(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  RootedObject obj(cx,
-                   JS::NewMappedArrayBufferWithContents(cx, size, contents));
+  RootedObject obj(cx, JS_NewMappedArrayBufferWithContents(cx, size, contents));
   if (!obj) {
     return false;
   }
@@ -5034,7 +5032,7 @@ static bool BinParse(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   RootedObject objBuf(cx, &args[0].toObject());
-  if (!JS::IsArrayBufferObject(objBuf)) {
+  if (!JS_IsArrayBufferObject(objBuf)) {
     const char* typeName = InformalValueTypeName(args[0]);
     JS_ReportErrorASCII(cx, "expected ArrayBuffer to parse, got %s", typeName);
     return false;
@@ -5043,8 +5041,8 @@ static bool BinParse(JSContext* cx, unsigned argc, Value* vp) {
   uint32_t buf_length = 0;
   bool buf_isSharedMemory = false;
   uint8_t* buf_data = nullptr;
-  JS::GetArrayBufferLengthAndData(objBuf, &buf_length, &buf_isSharedMemory,
-                                  &buf_data);
+  GetArrayBufferLengthAndData(objBuf, &buf_length, &buf_isSharedMemory,
+                              &buf_data);
   MOZ_ASSERT(buf_data);
 
   // Extract argument 2: Options.

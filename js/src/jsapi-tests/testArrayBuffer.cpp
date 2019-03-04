@@ -5,7 +5,6 @@
 #include "jsfriendapi.h"
 
 #include "builtin/TestingFunctions.h"
-#include "js/ArrayBuffer.h"  // JS::{GetArrayBuffer{ByteLength,Data},IsArrayBufferObject,NewArrayBuffer{,WithContents},StealArrayBufferContents}
 #include "js/MemoryFunctions.h"
 #include "jsapi-tests/tests.h"
 
@@ -22,13 +21,13 @@ BEGIN_TEST(testArrayBuffer_bug720949_steal) {
   JS::HandleObject testArray[NUM_TEST_BUFFERS] = {tarray_len1, tarray_len200};
 
   // Single-element ArrayBuffer (uses fixed slots for storage)
-  CHECK(buf_len1 = JS::NewArrayBuffer(cx, sizes[0]));
+  CHECK(buf_len1 = JS_NewArrayBuffer(cx, sizes[0]));
   CHECK(tarray_len1 = JS_NewInt32ArrayWithBuffer(cx, testBuf[0], 0, -1));
 
   CHECK(JS_SetElement(cx, testArray[0], 0, MAGIC_VALUE_1));
 
   // Many-element ArrayBuffer (uses dynamic storage)
-  CHECK(buf_len200 = JS::NewArrayBuffer(cx, 200 * sizeof(uint32_t)));
+  CHECK(buf_len200 = JS_NewArrayBuffer(cx, 200 * sizeof(uint32_t)));
   CHECK(tarray_len200 = JS_NewInt32ArrayWithBuffer(cx, testBuf[1], 0, -1));
 
   for (unsigned i = 0; i < NUM_TEST_BUFFERS; i++) {
@@ -38,8 +37,8 @@ BEGIN_TEST(testArrayBuffer_bug720949_steal) {
     JS::RootedValue v(cx);
 
     // Byte lengths should all agree
-    CHECK(JS::IsArrayBufferObject(obj));
-    CHECK_EQUAL(JS::GetArrayBufferByteLength(obj), size);
+    CHECK(JS_IsArrayBufferObject(obj));
+    CHECK_EQUAL(JS_GetArrayBufferByteLength(obj), size);
     CHECK(JS_GetProperty(cx, obj, "byteLength", &v));
     CHECK(v.isInt32(size));
     CHECK(JS_GetProperty(cx, view, "byteLength", &v));
@@ -50,7 +49,7 @@ BEGIN_TEST(testArrayBuffer_bug720949_steal) {
     {
       JS::AutoCheckCannotGC nogc;
       bool sharedDummy;
-      uint8_t* data = JS::GetArrayBufferData(obj, &sharedDummy, nogc);
+      uint8_t* data = JS_GetArrayBufferData(obj, &sharedDummy, nogc);
       CHECK(data != nullptr);
       *reinterpret_cast<uint32_t*>(data) = MAGIC_VALUE_2;
     }
@@ -58,29 +57,28 @@ BEGIN_TEST(testArrayBuffer_bug720949_steal) {
     CHECK(v.isInt32(MAGIC_VALUE_2));
 
     // Steal the contents
-    void* contents = JS::StealArrayBufferContents(cx, obj);
+    void* contents = JS_StealArrayBufferContents(cx, obj);
     CHECK(contents != nullptr);
 
-    CHECK(JS::IsDetachedArrayBufferObject(obj));
+    CHECK(JS_IsDetachedArrayBufferObject(obj));
 
     // Transfer to a new ArrayBuffer
-    JS::RootedObject dst(cx,
-                         JS::NewArrayBufferWithContents(cx, size, contents));
-    CHECK(JS::IsArrayBufferObject(dst));
+    JS::RootedObject dst(cx, JS_NewArrayBufferWithContents(cx, size, contents));
+    CHECK(JS_IsArrayBufferObject(dst));
     {
       JS::AutoCheckCannotGC nogc;
       bool sharedDummy;
-      (void)JS::GetArrayBufferData(obj, &sharedDummy, nogc);
+      (void)JS_GetArrayBufferData(obj, &sharedDummy, nogc);
     }
 
     JS::RootedObject dstview(cx, JS_NewInt32ArrayWithBuffer(cx, dst, 0, -1));
     CHECK(dstview != nullptr);
 
-    CHECK_EQUAL(JS::GetArrayBufferByteLength(dst), size);
+    CHECK_EQUAL(JS_GetArrayBufferByteLength(dst), size);
     {
       JS::AutoCheckCannotGC nogc;
       bool sharedDummy;
-      uint8_t* data = JS::GetArrayBufferData(dst, &sharedDummy, nogc);
+      uint8_t* data = JS_GetArrayBufferData(dst, &sharedDummy, nogc);
       CHECK(data != nullptr);
       CHECK_EQUAL(*reinterpret_cast<uint32_t*>(data), MAGIC_VALUE_2);
     }
@@ -97,20 +95,20 @@ BEGIN_TEST(testArrayBuffer_bug720949_viewList) {
   JS::RootedObject buffer(cx);
 
   // No views
-  buffer = JS::NewArrayBuffer(cx, 2000);
+  buffer = JS_NewArrayBuffer(cx, 2000);
   buffer = nullptr;
   GC(cx);
 
   // One view.
   {
-    buffer = JS::NewArrayBuffer(cx, 2000);
+    buffer = JS_NewArrayBuffer(cx, 2000);
     JS::RootedObject view(cx, JS_NewUint8ArrayWithBuffer(cx, buffer, 0, -1));
-    void* contents = JS::StealArrayBufferContents(cx, buffer);
+    void* contents = JS_StealArrayBufferContents(cx, buffer);
     CHECK(contents != nullptr);
     JS_free(nullptr, contents);
     GC(cx);
     CHECK(hasDetachedBuffer(view));
-    CHECK(JS::IsDetachedArrayBufferObject(buffer));
+    CHECK(JS_IsDetachedArrayBufferObject(buffer));
     view = nullptr;
     GC(cx);
     buffer = nullptr;
@@ -119,7 +117,7 @@ BEGIN_TEST(testArrayBuffer_bug720949_viewList) {
 
   // Two views
   {
-    buffer = JS::NewArrayBuffer(cx, 2000);
+    buffer = JS_NewArrayBuffer(cx, 2000);
 
     JS::RootedObject view1(cx, JS_NewUint8ArrayWithBuffer(cx, buffer, 0, -1));
     JS::RootedObject view2(cx, JS_NewUint8ArrayWithBuffer(cx, buffer, 1, 200));
@@ -130,13 +128,13 @@ BEGIN_TEST(testArrayBuffer_bug720949_viewList) {
     view2 = JS_NewUint8ArrayWithBuffer(cx, buffer, 1, 200);
 
     // Detach
-    void* contents = JS::StealArrayBufferContents(cx, buffer);
+    void* contents = JS_StealArrayBufferContents(cx, buffer);
     CHECK(contents != nullptr);
     JS_free(nullptr, contents);
 
     CHECK(hasDetachedBuffer(view1));
     CHECK(hasDetachedBuffer(view2));
-    CHECK(JS::IsDetachedArrayBufferObject(buffer));
+    CHECK(JS_IsDetachedArrayBufferObject(buffer));
 
     view1 = nullptr;
     GC(cx);
@@ -166,15 +164,15 @@ BEGIN_TEST(testArrayBuffer_customFreeFunc) {
 
   // The buffer takes ownership of the data.
   JS::RootedObject buffer(
-      cx, JS::NewExternalArrayBuffer(cx, data.len(), data.contents(),
-                                     &ExternalData::freeCallback, &data));
+      cx, JS_NewExternalArrayBuffer(cx, data.len(), data.contents(),
+                                    &ExternalData::freeCallback, &data));
   CHECK(buffer);
   CHECK(!data.wasFreed());
 
   uint32_t len;
   bool isShared;
   uint8_t* bufferData;
-  JS::GetArrayBufferLengthAndData(buffer, &len, &isShared, &bufferData);
+  js::GetArrayBufferLengthAndData(buffer, &len, &isShared, &bufferData);
   CHECK_EQUAL(len, data.len());
   CHECK(bufferData == data.contents());
   CHECK(strcmp(reinterpret_cast<char*>(bufferData), data.asString()) == 0);
@@ -193,14 +191,14 @@ BEGIN_TEST(testArrayBuffer_staticContents) {
 
   // When not passing a free function, the buffer doesn't own the data.
   JS::RootedObject buffer(
-      cx, JS::NewExternalArrayBuffer(cx, data.len(), data.contents(), nullptr));
+      cx, JS_NewExternalArrayBuffer(cx, data.len(), data.contents(), nullptr));
   CHECK(buffer);
   CHECK(!data.wasFreed());
 
   uint32_t len;
   bool isShared;
   uint8_t* bufferData;
-  JS::GetArrayBufferLengthAndData(buffer, &len, &isShared, &bufferData);
+  js::GetArrayBufferLengthAndData(buffer, &len, &isShared, &bufferData);
   CHECK_EQUAL(len, data.len());
   CHECK(bufferData == data.contents());
   CHECK(strcmp(reinterpret_cast<char*>(bufferData), data.asString()) == 0);
@@ -219,12 +217,12 @@ BEGIN_TEST(testArrayBuffer_stealDetachExternal) {
   static const char dataBytes[] = "One two three four";
   ExternalData data(dataBytes);
   JS::RootedObject buffer(
-      cx, JS::NewExternalArrayBuffer(cx, data.len(), data.contents(),
-                                     &ExternalData::freeCallback, &data));
+      cx, JS_NewExternalArrayBuffer(cx, data.len(), data.contents(),
+                                    &ExternalData::freeCallback, &data));
   CHECK(buffer);
   CHECK(!data.wasFreed());
 
-  void* stolenContents = JS::StealArrayBufferContents(cx, buffer);
+  void* stolenContents = JS_StealArrayBufferContents(cx, buffer);
 
   // External buffers are stealable: the data is copied into freshly allocated
   // memory, and the buffer's data pointer is cleared (immediately freeing the
@@ -232,7 +230,7 @@ BEGIN_TEST(testArrayBuffer_stealDetachExternal) {
   CHECK(stolenContents != data.contents());
   CHECK(strcmp(reinterpret_cast<char*>(stolenContents), dataBytes) == 0);
   CHECK(data.wasFreed());
-  CHECK(JS::IsDetachedArrayBufferObject(buffer));
+  CHECK(JS_IsDetachedArrayBufferObject(buffer));
 
   JS_free(cx, stolenContents);
   return true;
@@ -252,8 +250,8 @@ BEGIN_TEST(testArrayBuffer_serializeExternal) {
 
   ExternalData data("One two three four");
   JS::RootedObject externalBuffer(
-      cx, JS::NewExternalArrayBuffer(cx, data.len(), data.contents(),
-                                     &ExternalData::freeCallback, &data));
+      cx, JS_NewExternalArrayBuffer(cx, data.len(), data.contents(),
+                                    &ExternalData::freeCallback, &data));
   CHECK(externalBuffer);
   CHECK(!data.wasFreed());
 

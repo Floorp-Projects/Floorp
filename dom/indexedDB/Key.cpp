@@ -9,7 +9,6 @@
 #include <algorithm>
 #include <stdint.h>  // for UINT32_MAX, uintptr_t
 #include "IndexedDatabaseManager.h"
-#include "js/ArrayBuffer.h"  // JS::{IsArrayBufferObject,NewArrayBuffer{,WithContents},GetArrayBufferLengthAndData}
 #include "js/Date.h"
 #include "js/MemoryFunctions.h"
 #include "js/Value.h"
@@ -297,7 +296,7 @@ nsresult Key::EncodeJSValInternal(JSContext* aCx, JS::Handle<JS::Value> aVal,
       return NS_OK;
     }
 
-    if (JS::IsArrayBufferObject(obj)) {
+    if (JS_IsArrayBufferObject(obj)) {
       return EncodeBinary(obj, /* aIsViewObject */ false, aTypeOffset);
     }
 
@@ -636,7 +635,7 @@ nsresult Key::EncodeBinary(JSObject* aObject, bool aIsViewObject,
     js::GetArrayBufferViewLengthAndData(aObject, &bufferLength, &unused,
                                         &bufferData);
   } else {
-    JS::GetArrayBufferLengthAndData(aObject, &bufferLength, &unused,
+    js::GetArrayBufferLengthAndData(aObject, &bufferLength, &unused,
                                     &bufferData);
   }
 
@@ -662,7 +661,7 @@ JSObject* Key::DecodeBinary(const unsigned char*& aPos,
   }
 
   if (!size) {
-    return JS::NewArrayBuffer(aCx, 0);
+    return JS_NewArrayBuffer(aCx, 0);
   }
 
   uint8_t* out = static_cast<uint8_t*>(JS_malloc(aCx, size));
@@ -697,7 +696,7 @@ JSObject* Key::DecodeBinary(const unsigned char*& aPos,
   MOZ_ASSERT(static_cast<size_t>(pos - out) == size,
              "Should have written the whole buffer");
 
-  return JS::NewArrayBufferWithContents(aCx, size, out);
+  return JS_NewArrayBufferWithContents(aCx, size, out);
 }
 
 nsresult Key::BindToStatement(mozIStorageStatement* aStatement,

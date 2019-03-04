@@ -1,3 +1,4 @@
+
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -79,9 +80,7 @@
 #include "nsURLHelper.h"
 #include "nsNetUtil.h"
 #include "nsIURLParser.h"
-#include "js/ArrayBuffer.h"    // JS::NewArrayBufferWithContents
-#include "js/GCAnnotations.h"  // JS_HAZ_ROOTED
-#include "js/RootingAPI.h"     // JS::{{,Mutable}Handle,Rooted}
+#include "js/GCAnnotations.h"
 #include "mozilla/PeerIdentity.h"
 #include "mozilla/dom/RTCCertificate.h"
 #include "mozilla/dom/RTCDTMFSenderBinding.h"
@@ -1805,7 +1804,7 @@ void PeerConnectionImpl::DumpPacket_m(size_t level, dom::mozPacketDumpType type,
 
   JS::Rooted<JSObject*> jsobj(
       jsapi.cx(),
-      JS::NewArrayBufferWithContents(jsapi.cx(), size, packet.release()));
+      JS_NewArrayBufferWithContents(jsapi.cx(), size, packet.release()));
 
   RootedSpiderMonkeyInterface<ArrayBuffer> arrayBuffer(jsapi.cx());
   if (!arrayBuffer.Init(jsobj)) {

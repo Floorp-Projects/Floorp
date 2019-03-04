@@ -39,10 +39,8 @@
 #include "gc/FreeOp.h"
 #include "gc/Policy.h"
 #include "jit/AtomicOperations.h"
-#include "js/ArrayBuffer.h"  // JS::{IsArrayBufferObject,GetArrayBufferData,GetArrayBuffer{ByteLength,Data}}
 #include "js/CharacterEncoding.h"
 #include "js/PropertySpec.h"
-#include "js/SharedArrayBuffer.h"  // JS::{GetSharedArrayBuffer{ByteLength,Data},IsSharedArrayBufferObject}
 #include "js/StableStringChars.h"
 #include "js/UniquePtr.h"
 #include "js/Utility.h"
@@ -3385,7 +3383,7 @@ static bool ImplicitConvert(JSContext* cx, HandleValue val,
                              arrObj, arrIndex);
         }
         break;
-      } else if (val.isObject() && JS::IsArrayBufferObject(valObj)) {
+      } else if (val.isObject() && JS_IsArrayBufferObject(valObj)) {
         // Convert ArrayBuffer to pointer without any copy. This is only valid
         // when converting an argument to a function call, as it is possible for
         // the pointer to be invalidated by anything that runs JS code. (It is
@@ -3398,7 +3396,7 @@ static bool ImplicitConvert(JSContext* cx, HandleValue val,
         {
           JS::AutoCheckCannotGC nogc;
           bool isShared;
-          ptr = JS::GetArrayBufferData(valObj, &isShared, nogc);
+          ptr = JS_GetArrayBufferData(valObj, &isShared, nogc);
           MOZ_ASSERT(!isShared);  // Because ArrayBuffer
         }
         if (!ptr) {
@@ -3407,7 +3405,7 @@ static bool ImplicitConvert(JSContext* cx, HandleValue val,
         }
         *static_cast<void**>(buffer) = ptr;
         break;
-      } else if (val.isObject() && JS::IsSharedArrayBufferObject(valObj)) {
+      } else if (val.isObject() && JS_IsSharedArrayBufferObject(valObj)) {
         // CTypes has not yet opted in to allowing shared memory pointers
         // to escape.  Exporting a pointer to the shared buffer without
         // indicating sharedness would expose client code to races.
@@ -3562,8 +3560,8 @@ static bool ImplicitConvert(JSContext* cx, HandleValue val,
           // copy the array.
           const bool bufferShared = cls == ESClass::SharedArrayBuffer;
           uint32_t sourceLength =
-              bufferShared ? JS::GetSharedArrayBufferByteLength(valObj)
-                           : JS::GetArrayBufferByteLength(valObj);
+              bufferShared ? JS_GetSharedArrayBufferByteLength(valObj)
+                           : JS_GetArrayBufferByteLength(valObj);
           size_t elementSize = CType::GetSize(baseType);
           size_t arraySize = elementSize * targetLength;
           if (arraySize != size_t(sourceLength)) {
@@ -3577,9 +3575,9 @@ static bool ImplicitConvert(JSContext* cx, HandleValue val,
           SharedMem<void*> src =
               (bufferShared
                    ? SharedMem<void*>::shared(
-                         JS::GetSharedArrayBufferData(valObj, &isShared, nogc))
+                         JS_GetSharedArrayBufferData(valObj, &isShared, nogc))
                    : SharedMem<void*>::unshared(
-                         JS::GetArrayBufferData(valObj, &isShared, nogc)));
+                         JS_GetArrayBufferData(valObj, &isShared, nogc)));
           MOZ_ASSERT(isShared == bufferShared);
           jit::AtomicOperations::memcpySafeWhenRacy(target, src, sourceLength);
           break;
