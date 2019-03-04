@@ -92,3 +92,10 @@ on a maximum number of Unicode characters (defined in the API docs), since is
 the most expedient implementation-wise. Other or future implementations may
 perform this truncation based on the number of UTF8 bytes instead, which is
 ultimately what matters for ping size.
+
+## Defining background state
+These docs refer to application 'background' state in several places. This specifically means when 
+the activity is no longer visible to the user, it has entered the Stopped state, and the system 
+invokes the [onStop()](https://developer.android.com/reference/android/app/Activity.html#onStop()) callback. 
+This may occur, for example, when a newly launched activity covers the entire screen. The system may 
+also call onStop() when the activity has finished running, and is about to be terminated.
