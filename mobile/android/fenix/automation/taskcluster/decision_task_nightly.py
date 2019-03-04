@@ -45,6 +45,7 @@ def generate_build_task(apks, is_staging):
         )
     )
     sentry_secret = '{}project/mobile/fenix/sentry'.format('garbage/staging/' if is_staging else '')
+    adjust_secret = '{}project/mobile/fenix/adjust'.format('garbage/staging/' if is_staging else '')
 
     return taskcluster.slugId(), BUILDER.build_task(
         name="(Fenix) Build task",
@@ -53,7 +54,8 @@ def generate_build_task(apks, is_staging):
             checkout +
             ' && python automation/taskcluster/helper/get-secret.py'
             ' -s {} -k dsn -f .sentry_token'.format(sentry_secret) +
-            ' && python automation/taskcluster/adjust/get-secret.py get-secret.py -s project/mobile/fenix/adjust -k Greenfield -f .adjust_token' if not is_staging else '' +
+            ' && python automation/taskcluster/helper/get-secret.py'
+            '-s {} -k Greenfield -f .adjust_token'.format(adjust_secret)
             ' && ./gradlew --no-daemon -PcrashReports=true clean test assembleGreenfieldRelease'),
         features={
             "chainOfTrust": True,
@@ -61,7 +63,8 @@ def generate_build_task(apks, is_staging):
         },
         artifacts=artifacts,
         scopes=[
-            "secrets:get:{}".format(sentry_secret)
+            "secrets:get:{}".format(sentry_secret),
+            "secrets:get:{}".format(adjust_secret)
         ]
     )
 
