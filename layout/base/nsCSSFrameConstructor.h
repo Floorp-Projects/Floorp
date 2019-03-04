@@ -1523,6 +1523,8 @@ class nsCSSFrameConstructor final : public nsFrameManager {
                                                          ComputedStyle&);
   // sXULTextBoxData used for both labels and descriptions
   static const FrameConstructionData sXULTextBoxData;
+  static const FrameConstructionData* FindXULButtonData(const Element&,
+                                                        ComputedStyle&);
   static const FrameConstructionData* FindXULLabelData(const Element&,
                                                        ComputedStyle&);
   static const FrameConstructionData* FindXULDescriptionData(const Element&,
