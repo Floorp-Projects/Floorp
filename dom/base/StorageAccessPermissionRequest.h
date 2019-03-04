@@ -47,10 +47,15 @@ class StorageAccessPermissionRequest final
       CancelCallback&& aCancelCallback);
   ~StorageAccessPermissionRequest();
 
+  unsigned CalculateSimulatedDelay();
+
+  static void CallAutoGrantCallback(nsITimer* aTimer, void* aClosure);
+
   AllowCallback mAllowCallback;
   AllowAutoGrantCallback mAllowAutoGrantCallback;
   AllowAnySiteCallback mAllowAnySiteCallback;
   CancelCallback mCancelCallback;
+  nsCOMPtr<nsITimer> mTimer;
   nsTArray<PermissionRequest> mPermissionRequests;
   bool mCallbackCalled;
 };
