@@ -8,7 +8,6 @@
 #include "mozilla/TypeTraits.h"
 #include "mozilla/UniquePtr.h"
 
-#include "js/ArrayBuffer.h"  // JS::NewArrayBuffer
 #include "js/RootingAPI.h"
 #include "jsapi-tests/tests.h"
 #include "vm/Runtime.h"
@@ -181,8 +180,8 @@ BEGIN_TEST(testUnbarrieredEquality) {
 
   // Use ArrayBuffers because they have finalizers, which allows using them
   // in ObjectPtr without awkward conversations about nursery allocatability.
-  JS::RootedObject robj(cx, JS::NewArrayBuffer(cx, 20));
-  JS::RootedObject robj2(cx, JS::NewArrayBuffer(cx, 30));
+  JS::RootedObject robj(cx, JS_NewArrayBuffer(cx, 20));
+  JS::RootedObject robj2(cx, JS_NewArrayBuffer(cx, 30));
   cx->runtime()->gc.evictNursery();  // Need tenured objects
 
   // Need some bare pointers to compare against.

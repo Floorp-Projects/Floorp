@@ -3,7 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "builtin/TestingFunctions.h"
-#include "js/ArrayBuffer.h"  // JS::{IsArrayBufferObject,GetArrayBufferLengthAndData,NewExternalArrayBuffer}
 #include "js/StructuredClone.h"
 
 #include "jsapi-tests/tests.h"
@@ -94,8 +93,8 @@ BEGIN_TEST(testStructuredClone_externalArrayBuffer) {
     JSAutoRealm ar(cx, g1);
 
     JS::RootedObject obj(
-        cx, JS::NewExternalArrayBuffer(cx, data.len(), data.contents(),
-                                       &ExternalData::freeCallback, &data));
+        cx, JS_NewExternalArrayBuffer(cx, data.len(), data.contents(),
+                                      &ExternalData::freeCallback, &data));
     CHECK(!data.wasFreed());
 
     v1 = JS::ObjectOrNullValue(obj);
@@ -115,7 +114,7 @@ BEGIN_TEST(testStructuredClone_externalArrayBuffer) {
     uint32_t len;
     bool isShared;
     uint8_t* clonedData;
-    JS::GetArrayBufferLengthAndData(obj, &len, &isShared, &clonedData);
+    js::GetArrayBufferLengthAndData(obj, &len, &isShared, &clonedData);
 
     // The contents of the two array buffers should be equal, but not the
     // same pointer.
@@ -147,8 +146,8 @@ BEGIN_TEST(testStructuredClone_externalArrayBufferDifferentThreadOrProcess) {
 bool testStructuredCloneCopy(JS::StructuredCloneScope scope) {
   ExternalData data("One two three four");
   JS::RootedObject buffer(
-      cx, JS::NewExternalArrayBuffer(cx, data.len(), data.contents(),
-                                     &ExternalData::freeCallback, &data));
+      cx, JS_NewExternalArrayBuffer(cx, data.len(), data.contents(),
+                                    &ExternalData::freeCallback, &data));
   CHECK(buffer);
   CHECK(!data.wasFreed());
 
@@ -157,12 +156,12 @@ bool testStructuredCloneCopy(JS::StructuredCloneScope scope) {
   CHECK(clone(scope, v1, &v2));
   JS::RootedObject bufferOut(cx, v2.toObjectOrNull());
   CHECK(bufferOut);
-  CHECK(JS::IsArrayBufferObject(bufferOut));
+  CHECK(JS_IsArrayBufferObject(bufferOut));
 
   uint32_t len;
   bool isShared;
   uint8_t* clonedData;
-  JS::GetArrayBufferLengthAndData(bufferOut, &len, &isShared, &clonedData);
+  js::GetArrayBufferLengthAndData(bufferOut, &len, &isShared, &clonedData);
 
   // Cloning should copy the data, so the contents of the two array buffers
   // should be equal, but not the same pointer.

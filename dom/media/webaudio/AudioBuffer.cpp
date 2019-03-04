@@ -7,7 +7,6 @@
 #include "AudioBuffer.h"
 #include "mozilla/dom/AudioBufferBinding.h"
 #include "jsfriendapi.h"
-#include "js/ArrayBuffer.h"  // JS::StealArrayBufferContents
 #include "mozilla/ErrorResult.h"
 #include "AudioSegment.h"
 #include "AudioChannelFormat.h"
@@ -427,7 +426,7 @@ AudioBuffer::StealJSArrayDataIntoSharedChannels(JSContext* aJSContext) {
     // RestoreJSChannelData, where they are created unshared.
     MOZ_ASSERT(!isSharedMemory);
     auto stolenData = arrayBuffer
-                          ? static_cast<float*>(JS::StealArrayBufferContents(
+                          ? static_cast<float*>(JS_StealArrayBufferContents(
                                 aJSContext, arrayBuffer))
                           : nullptr;
     if (stolenData) {

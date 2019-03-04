@@ -301,7 +301,7 @@ void MediaDecodeTask::FinishDecode() {
   mDecodeJob.mBuffer.mChannelData.SetLength(channelCount);
 #if AUDIO_OUTPUT_FORMAT == AUDIO_FORMAT_FLOAT32
   // This buffer has separate channel arrays that could be transferred to
-  // JS::NewArrayBufferWithContents(), but AudioBuffer::RestoreJSChannelData()
+  // JS_NewArrayBufferWithContents(), but AudioBuffer::RestoreJSChannelData()
   // does not yet take advantage of this.
   RefPtr<ThreadSharedFloatArrayBufferList> buffer =
       ThreadSharedFloatArrayBufferList::Create(channelCount, resampledFrames,

@@ -76,12 +76,9 @@
 #include "nsStringBuffer.h"
 #include "nsIFileChannel.h"
 #include "mozilla/Telemetry.h"
-#include "js/ArrayBuffer.h"  // JS::{Create,Release}MappedArrayBufferContents,New{,Mapped}ArrayBufferWithContents
-#include "js/JSON.h"         // JS_ParseJSON
+#include "js/JSON.h"
 #include "js/MemoryFunctions.h"
-#include "js/RootingAPI.h"  // JS::{{,Mutable}Handle,Rooted}
-#include "js/Value.h"       // JS::{,Undefined}Value
-#include "jsapi.h"          // JS_ClearPendingException
+#include "jsfriendapi.h"
 #include "GeckoProfiler.h"
 #include "mozilla/dom/XMLHttpRequestBinding.h"
 #include "mozilla/Attributes.h"
@@ -3632,7 +3629,7 @@ void ArrayBufferBuilder::reset() {
   }
 
   if (mMapPtr) {
-    JS::ReleaseMappedArrayBufferContents(mMapPtr, mLength);
+    JS_ReleaseMappedArrayBufferContents(mMapPtr, mLength);
     mMapPtr = nullptr;
   }
 
@@ -3708,9 +3705,9 @@ bool ArrayBufferBuilder::append(const uint8_t* aNewData, uint32_t aDataLen,
 
 JSObject* ArrayBufferBuilder::getArrayBuffer(JSContext* aCx) {
   if (mMapPtr) {
-    JSObject* obj = JS::NewMappedArrayBufferWithContents(aCx, mLength, mMapPtr);
+    JSObject* obj = JS_NewMappedArrayBufferWithContents(aCx, mLength, mMapPtr);
     if (!obj) {
-      JS::ReleaseMappedArrayBufferContents(mMapPtr, mLength);
+      JS_ReleaseMappedArrayBufferContents(mMapPtr, mLength);
     }
     mMapPtr = nullptr;
 
@@ -3727,7 +3724,7 @@ JSObject* ArrayBufferBuilder::getArrayBuffer(JSContext* aCx) {
     }
   }
 
-  JSObject* obj = JS::NewArrayBufferWithContents(aCx, mLength, mDataPtr);
+  JSObject* obj = JS_NewArrayBufferWithContents(aCx, mLength, mDataPtr);
   mLength = mCapacity = 0;
   if (!obj) {
     js_free(mDataPtr);
@@ -3761,7 +3758,7 @@ nsresult ArrayBufferBuilder::mapToFileInPackage(const nsCString& aFile,
     if (NS_FAILED(rv)) {
       return rv;
     }
-    mMapPtr = JS::CreateMappedArrayBufferContents(
+    mMapPtr = JS_CreateMappedArrayBufferContents(
         PR_FileDesc2NativeHandle(pr_fd), offset, size);
     if (mMapPtr) {
       mLength = size;

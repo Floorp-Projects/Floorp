@@ -36,11 +36,9 @@
 #include "gc/Barrier.h"
 #include "gc/FreeOp.h"
 #include "gc/Memory.h"
-#include "js/ArrayBuffer.h"
 #include "js/Conversions.h"
 #include "js/MemoryMetrics.h"
 #include "js/PropertySpec.h"
-#include "js/SharedArrayBuffer.h"
 #include "js/Wrapper.h"
 #include "util/Windows.h"
 #include "vm/GlobalObject.h"
@@ -1646,14 +1644,14 @@ bool JSObject::is<js::ArrayBufferObjectMaybeShared>() const {
   return is<ArrayBufferObject>() || is<SharedArrayBufferObject>();
 }
 
-JS_FRIEND_API uint32_t JS::GetArrayBufferByteLength(JSObject* obj) {
+JS_FRIEND_API uint32_t JS_GetArrayBufferByteLength(JSObject* obj) {
   ArrayBufferObject* aobj = obj->maybeUnwrapAs<ArrayBufferObject>();
   return aobj ? aobj->byteLength() : 0;
 }
 
-JS_FRIEND_API uint8_t* JS::GetArrayBufferData(JSObject* obj,
-                                              bool* isSharedMemory,
-                                              const JS::AutoRequireNoGC&) {
+JS_FRIEND_API uint8_t* JS_GetArrayBufferData(JSObject* obj,
+                                             bool* isSharedMemory,
+                                             const JS::AutoRequireNoGC&) {
   ArrayBufferObject* aobj = obj->maybeUnwrapIf<ArrayBufferObject>();
   if (!aobj) {
     return nullptr;
@@ -1662,7 +1660,7 @@ JS_FRIEND_API uint8_t* JS::GetArrayBufferData(JSObject* obj,
   return aobj->dataPointer();
 }
 
-JS_FRIEND_API bool JS::DetachArrayBuffer(JSContext* cx, HandleObject obj) {
+JS_FRIEND_API bool JS_DetachArrayBuffer(JSContext* cx, HandleObject obj) {
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
   cx->check(obj);
@@ -1684,7 +1682,7 @@ JS_FRIEND_API bool JS::DetachArrayBuffer(JSContext* cx, HandleObject obj) {
   return true;
 }
 
-JS_FRIEND_API bool JS::IsDetachedArrayBufferObject(JSObject* obj) {
+JS_FRIEND_API bool JS_IsDetachedArrayBufferObject(JSObject* obj) {
   ArrayBufferObject* aobj = obj->maybeUnwrapIf<ArrayBufferObject>();
   if (!aobj) {
     return false;
@@ -1693,16 +1691,16 @@ JS_FRIEND_API bool JS::IsDetachedArrayBufferObject(JSObject* obj) {
   return aobj->isDetached();
 }
 
-JS_FRIEND_API JSObject* JS::NewArrayBuffer(JSContext* cx, uint32_t nbytes) {
+JS_FRIEND_API JSObject* JS_NewArrayBuffer(JSContext* cx, uint32_t nbytes) {
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
 
   return ArrayBufferObject::createZeroed(cx, nbytes);
 }
 
-JS_PUBLIC_API JSObject* JS::NewArrayBufferWithContents(JSContext* cx,
-                                                       size_t nbytes,
-                                                       void* data) {
+JS_PUBLIC_API JSObject* JS_NewArrayBufferWithContents(JSContext* cx,
+                                                      size_t nbytes,
+                                                      void* data) {
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
   MOZ_ASSERT_IF(!data, nbytes == 0);
@@ -1718,7 +1716,7 @@ JS_PUBLIC_API JSObject* JS::NewArrayBufferWithContents(JSContext* cx,
   return ArrayBufferObject::createForContents(cx, nbytes, contents);
 }
 
-JS_PUBLIC_API JSObject* JS::NewExternalArrayBuffer(
+JS_PUBLIC_API JSObject* JS_NewExternalArrayBuffer(
     JSContext* cx, size_t nbytes, void* data,
     JS::BufferContentsFreeFunc freeFunc, void* freeUserData) {
   AssertHeapIsIdle();
@@ -1734,9 +1732,9 @@ JS_PUBLIC_API JSObject* JS::NewExternalArrayBuffer(
   return ArrayBufferObject::createForContents(cx, nbytes, contents);
 }
 
-JS_PUBLIC_API JSObject* JS::NewArrayBufferWithUserOwnedContents(JSContext* cx,
-                                                                size_t nbytes,
-                                                                void* data) {
+JS_PUBLIC_API JSObject* JS_NewArrayBufferWithUserOwnedContents(JSContext* cx,
+                                                               size_t nbytes,
+                                                               void* data) {
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
 
@@ -1748,24 +1746,24 @@ JS_PUBLIC_API JSObject* JS::NewArrayBufferWithUserOwnedContents(JSContext* cx,
   return ArrayBufferObject::createForContents(cx, nbytes, contents);
 }
 
-JS_FRIEND_API bool JS::IsArrayBufferObject(JSObject* obj) {
+JS_FRIEND_API bool JS_IsArrayBufferObject(JSObject* obj) {
   return obj->canUnwrapAs<ArrayBufferObject>();
 }
 
-JS_FRIEND_API bool JS::ArrayBufferHasData(JSObject* obj) {
+JS_FRIEND_API bool JS_ArrayBufferHasData(JSObject* obj) {
   return !obj->unwrapAs<ArrayBufferObject>().isDetached();
 }
 
-JS_FRIEND_API JSObject* JS::UnwrapArrayBuffer(JSObject* obj) {
+JS_FRIEND_API JSObject* js::UnwrapArrayBuffer(JSObject* obj) {
   return obj->maybeUnwrapIf<ArrayBufferObject>();
 }
 
-JS_FRIEND_API JSObject* JS::UnwrapSharedArrayBuffer(JSObject* obj) {
+JS_FRIEND_API JSObject* js::UnwrapSharedArrayBuffer(JSObject* obj) {
   return obj->maybeUnwrapIf<SharedArrayBufferObject>();
 }
 
-JS_PUBLIC_API void* JS::StealArrayBufferContents(JSContext* cx,
-                                                 HandleObject objArg) {
+JS_PUBLIC_API void* JS_StealArrayBufferContents(JSContext* cx,
+                                                HandleObject objArg) {
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
   cx->check(objArg);
@@ -1799,9 +1797,9 @@ JS_PUBLIC_API void* JS::StealArrayBufferContents(JSContext* cx,
   return ArrayBufferObject::stealMallocedContents(cx, buffer);
 }
 
-JS_PUBLIC_API JSObject* JS::NewMappedArrayBufferWithContents(JSContext* cx,
-                                                             size_t nbytes,
-                                                             void* data) {
+JS_PUBLIC_API JSObject* JS_NewMappedArrayBufferWithContents(JSContext* cx,
+                                                            size_t nbytes,
+                                                            void* data) {
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
 
@@ -1813,17 +1811,17 @@ JS_PUBLIC_API JSObject* JS::NewMappedArrayBufferWithContents(JSContext* cx,
   return ArrayBufferObject::createForContents(cx, nbytes, contents);
 }
 
-JS_PUBLIC_API void* JS::CreateMappedArrayBufferContents(int fd, size_t offset,
-                                                        size_t length) {
+JS_PUBLIC_API void* JS_CreateMappedArrayBufferContents(int fd, size_t offset,
+                                                       size_t length) {
   return ArrayBufferObject::createMappedContents(fd, offset, length).data();
 }
 
-JS_PUBLIC_API void JS::ReleaseMappedArrayBufferContents(void* contents,
-                                                        size_t length) {
+JS_PUBLIC_API void JS_ReleaseMappedArrayBufferContents(void* contents,
+                                                       size_t length) {
   gc::DeallocateMappedContent(contents, length);
 }
 
-JS_FRIEND_API bool JS::IsMappedArrayBufferObject(JSObject* obj) {
+JS_FRIEND_API bool JS_IsMappedArrayBufferObject(JSObject* obj) {
   ArrayBufferObject* aobj = obj->maybeUnwrapIf<ArrayBufferObject>();
   if (!aobj) {
     return false;
@@ -1832,9 +1830,9 @@ JS_FRIEND_API bool JS::IsMappedArrayBufferObject(JSObject* obj) {
   return aobj->isMapped();
 }
 
-JS_FRIEND_API JSObject* JS::GetObjectAsArrayBuffer(JSObject* obj,
-                                                   uint32_t* length,
-                                                   uint8_t** data) {
+JS_FRIEND_API JSObject* JS_GetObjectAsArrayBuffer(JSObject* obj,
+                                                  uint32_t* length,
+                                                  uint8_t** data) {
   ArrayBufferObject* aobj = obj->maybeUnwrapIf<ArrayBufferObject>();
   if (!aobj) {
     return nullptr;
@@ -1846,7 +1844,7 @@ JS_FRIEND_API JSObject* JS::GetObjectAsArrayBuffer(JSObject* obj,
   return aobj;
 }
 
-JS_FRIEND_API void JS::GetArrayBufferLengthAndData(JSObject* obj,
+JS_FRIEND_API void js::GetArrayBufferLengthAndData(JSObject* obj,
                                                    uint32_t* length,
                                                    bool* isSharedMemory,
                                                    uint8_t** data) {

@@ -36,10 +36,8 @@
 
 #include "jsapi.h"
 #include "jsfriendapi.h"
-#include "js/ArrayBuffer.h"  // JS::GetArrayBufferByteLength,IsArrayBufferObject,NewArrayBufferWithContents,StealArrayBufferContents
 #include "js/Conversions.h"
 #include "js/MemoryFunctions.h"
-#include "js/UniquePtr.h"
 #include "js/Utility.h"
 #include "xpcpublic.h"
 
@@ -358,7 +356,7 @@ nsresult TypedArrayResult::GetCacheableResult(
   MOZ_ASSERT(contents.data);
 
   JS::Rooted<JSObject*> arrayBuffer(
-      cx, JS::NewArrayBufferWithContents(cx, contents.nbytes, contents.data));
+      cx, JS_NewArrayBufferWithContents(cx, contents.nbytes, contents.data));
   if (!arrayBuffer) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -891,9 +889,9 @@ class DoWriteAtomicEvent : public AbstractDoEvent {
    * @param aPath The path of the file.
    */
   DoWriteAtomicEvent(
-      const nsAString& aPath, UniquePtr<char[], JS::FreePolicy> aBuffer,
-      const uint64_t aBytes, const nsAString& aTmpPath,
-      const nsAString& aBackupTo, const bool aFlush, const bool aNoOverwrite,
+      const nsAString& aPath, UniquePtr<char> aBuffer, const uint64_t aBytes,
+      const nsAString& aTmpPath, const nsAString& aBackupTo, const bool aFlush,
+      const bool aNoOverwrite,
       nsMainThreadPtrHandle<nsINativeOSFileSuccessCallback>& aOnSuccess,
       nsMainThreadPtrHandle<nsINativeOSFileErrorCallback>& aOnError)
       : AbstractDoEvent(aOnSuccess, aOnError),
@@ -1122,7 +1120,7 @@ class DoWriteAtomicEvent : public AbstractDoEvent {
   }
 
   const nsString mPath;
-  const UniquePtr<char[], JS::FreePolicy> mBuffer;
+  const UniquePtr<char> mBuffer;
   const int32_t mBytes;
   const nsString mTmpPath;
   const nsString mBackupTo;
@@ -1203,7 +1201,7 @@ NativeOSFileInternalsService::WriteAtomic(
   MOZ_ASSERT(NS_IsMainThread());
   // Extract typed-array/string into buffer. We also need to store the length
   // of the buffer as that may be required if not provided in `aOptions`.
-  UniquePtr<char[], JS::FreePolicy> buffer;
+  UniquePtr<char> buffer;
   int32_t bytes;
 
   // The incoming buffer must be an Object.
@@ -1215,13 +1213,13 @@ NativeOSFileInternalsService::WriteAtomic(
   if (!JS_ValueToObject(cx, aBuffer, &bufferObject)) {
     return NS_ERROR_FAILURE;
   }
-  if (!JS::IsArrayBufferObject(bufferObject.get())) {
+  if (!JS_IsArrayBufferObject(bufferObject.get())) {
     return NS_ERROR_INVALID_ARG;
   }
 
-  bytes = JS::GetArrayBufferByteLength(bufferObject.get());
+  bytes = JS_GetArrayBufferByteLength(bufferObject.get());
   buffer.reset(
-      static_cast<char*>(JS::StealArrayBufferContents(cx, bufferObject)));
+      static_cast<char*>(JS_StealArrayBufferContents(cx, bufferObject)));
 
   if (!buffer) {
     return NS_ERROR_FAILURE;
