@@ -236,6 +236,7 @@ def get_decision_parameters(config, options):
             get_hg_commit_message(os.path.join(GECKO, product_dir)))
     parameters['hg_branch'] = get_hg_revision_branch(GECKO, revision=parameters['head_rev'])
     parameters['next_version'] = None
+    parameters['phabricator_diff'] = None
     parameters['release_type'] = ''
     parameters['release_eta'] = ''
     parameters['release_enable_partners'] = False
