@@ -25,6 +25,7 @@
 #include "mozilla/dom/ServiceWorkerRegistrar.h"
 #include "mozilla/dom/ServiceWorkerRegistration.h"
 #include "mozilla/dom/SVGElement.h"
+#include "mozilla/dom/TouchEvent.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/layers/PLayerTransaction.h"
 #include "mozilla/ShapeUtils.h"
@@ -1422,12 +1423,14 @@ void nsDisplayListBuilder::EnterPresShell(nsIFrame* aReferenceFrame,
           : nullptr;
 
   nsPresContext* pc = aReferenceFrame->PresContext();
-  nsCOMPtr<nsIDocShell> docShell = pc->GetDocShell();
+  mIsInChromePresContext = pc->IsChrome();
+  nsIDocShell* docShell = pc->GetDocShell();
+
   if (docShell) {
     docShell->GetWindowDraggingAllowed(&mWindowDraggingAllowed);
   }
 
-  mIsInChromePresContext = pc->IsChrome();
+  state->mTouchEventPrefEnabledDoc = dom::TouchEvent::PrefEnabled(docShell);
 
   if (!buildCaret) {
     return;
@@ -1518,11 +1521,11 @@ void nsDisplayListBuilder::LeavePresShell(nsIFrame* aReferenceFrame,
   }
 
   ResetMarkedFramesForDisplayList(aReferenceFrame);
-  mPresShellStates.SetLength(mPresShellStates.Length() - 1);
+  mPresShellStates.RemoveLastElement();
 
   if (!mPresShellStates.IsEmpty()) {
     nsPresContext* pc = CurrentPresContext();
-    nsCOMPtr<nsIDocShell> docShell = pc->GetDocShell();
+    nsIDocShell* docShell = pc->GetDocShell();
     if (docShell) {
       docShell->GetWindowDraggingAllowed(&mWindowDraggingAllowed);
     }
