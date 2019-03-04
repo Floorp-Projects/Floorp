@@ -49,7 +49,7 @@ class PageAction {
 
     this._popupStateChange = this._popupStateChange.bind(this);
     this._collapse = this._collapse.bind(this);
-    this._handleClick = this._handleClick.bind(this);
+    this._showPopupOnClick = this._showPopupOnClick.bind(this);
     this.dispatchUserAction = this.dispatchUserAction.bind(this);
 
     this._l10n = new Localization([
@@ -60,7 +60,7 @@ class PageAction {
     this.stateTransitionTimeoutIDs = [];
   }
 
-  async show(recommendation, shouldExpand = false) {
+  async showAddressBarNotifier(recommendation, shouldExpand = false) {
     this.container.hidden = false;
 
     this.label.value = await this.getStrings(recommendation.content.notification_text);
@@ -71,7 +71,7 @@ class PageAction {
     let [{width}] = await this.window.promiseDocumentFlushed(() => this.label.getClientRects());
     this.urlbar.style.setProperty("--cfr-label-width", `${width}px`);
 
-    this.container.addEventListener("click", this._handleClick);
+    this.container.addEventListener("click", this._showPopupOnClick);
     // Collapse the recommendation on url bar focus in order to free up more
     // space to display and edit the url
     this.urlbar.addEventListener("focus", this._collapse);
@@ -93,11 +93,11 @@ class PageAction {
     }
   }
 
-  hide() {
+  hideAddressBarNotifier() {
     this.container.hidden = true;
     this._clearScheduledStateChanges();
     this.urlbar.removeAttribute("cfr-recommendation-state");
-    this.container.removeEventListener("click", this._handleClick);
+    this.container.removeEventListener("click", this._showPopupOnClick);
     this.urlbar.removeEventListener("focus", this._collapse);
     if (this.currentNotification) {
       this.window.PopupNotifications.remove(this.currentNotification);
@@ -221,27 +221,8 @@ class PageAction {
     return subAttribute ? mainString.attributes[subAttribute] : mainString;
   }
 
-  /**
-   * Respond to a user click on the recommendation by showing a doorhanger/
-   * popup notification
-   */
-  async _handleClick(event) { // eslint-disable-line max-statements
-    const browser = this.window.gBrowser.selectedBrowser;
-    if (!RecommendationMap.has(browser)) {
-      // There's no recommendation for this browser, so the user shouldn't have
-      // been able to click
-      this.hide();
-      return;
-    }
-    const {id, content} = RecommendationMap.get(browser);
-
-    // The recommendation should remain either collapsed or expanded while the
-    // doorhanger is showing
-    this._clearScheduledStateChanges();
-
-    // A hacky way of setting the popup anchor outside the usual url bar icon box
-    // See https://searchfox.org/mozilla-central/rev/847b64cc28b74b44c379f9bff4f415b97da1c6d7/toolkit/modules/PopupNotifications.jsm#42
-    browser.cfrpopupnotificationanchor = this.container;
+  async _renderPopup(message, browser) { // eslint-disable-line max-statements
+    const {id, content} = message;
 
     const headerLabel = this.window.document.getElementById("cfr-notification-header-label");
     const headerLink = this.window.document.getElementById("cfr-notification-header-link");
@@ -329,7 +310,7 @@ class PageAction {
         primary.action.data.url = await CFRPageActions._fetchLatestAddonVersion(content.addon.id); // eslint-disable-line no-use-before-define
         this._blockMessage(id);
         this.dispatchUserAction(primary.action);
-        this.hide();
+        this.hideAddressBarNotifier();
         this._sendTelemetry({message_id: id, bucket_id: content.bucket_id, event: "INSTALL"});
         RecommendationMap.delete(browser);
       },
@@ -347,7 +328,7 @@ class PageAction {
       accessKey: secondaryBtnStrings[1].attributes.accesskey,
       callback: () => {
         this._blockMessage(id);
-        this.hide();
+        this.hideAddressBarNotifier();
         this._sendTelemetry({message_id: id, bucket_id: content.bucket_id, event: "BLOCK"});
         RecommendationMap.delete(browser);
       },
@@ -366,7 +347,7 @@ class PageAction {
       eventCallback: this._popupStateChange,
     };
 
-    this._sendTelemetry({message_id: id, bucket_id: content.bucket_id, event: "CLICK_DOORHANGER"});
+    // Actually show the notification
     this.currentNotification = this.window.PopupNotifications.show(
       browser,
       POPUP_NOTIFICATION_ID,
@@ -376,6 +357,33 @@ class PageAction {
       secondaryActions,
       options
     );
+  }
+
+  /**
+   * Respond to a user click on the recommendation by showing a doorhanger/
+   * popup notification
+   */
+  async _showPopupOnClick(event) {
+    const browser = this.window.gBrowser.selectedBrowser;
+    if (!RecommendationMap.has(browser)) {
+      // There's no recommendation for this browser, so the user shouldn't have
+      // been able to click
+      this.hideAddressBarNotifier();
+      return;
+    }
+    const message = RecommendationMap.get(browser);
+    const {id, content} = message;
+
+    // The recommendation should remain either collapsed or expanded while the
+    // doorhanger is showing
+    this._clearScheduledStateChanges(browser, message);
+
+    // A hacky way of setting the popup anchor outside the usual url bar icon box
+    // See https://searchfox.org/mozilla-central/rev/847b64cc28b74b44c379f9bff4f415b97da1c6d7/toolkit/modules/PopupNotifications.jsm#42
+    browser.cfrpopupnotificationanchor = this.container;
+
+    this._sendTelemetry({message_id: id, bucket_id: content.bucket_id, event: "CLICK_DOORHANGER"});
+    await this._renderPopup(message, browser);
   }
 }
 
@@ -404,21 +412,21 @@ const CFRPageActions = {
       if (isHostMatch(browser, recommendation.host)) {
         // The browser has a recommendation specified with this host, so show
         // the page action
-        pageAction.show(recommendation);
+        pageAction.showAddressBarNotifier(recommendation);
       } else if (recommendation.retain) {
         // Keep the recommendation first time the user navigates away just in
         // case they will go back to the previous page
-        pageAction.hide();
+        pageAction.hideAddressBarNotifier();
         recommendation.retain = false;
       } else {
         // The user has navigated away from the specified host in the given
         // browser, so the recommendation is no longer valid and should be removed
         RecommendationMap.delete(browser);
-        pageAction.hide();
+        pageAction.hideAddressBarNotifier();
       }
     } else {
       // There's no recommendation specified for this browser, so hide the page action
-      pageAction.hide();
+      pageAction.hideAddressBarNotifier();
     }
   },
 
@@ -456,7 +464,7 @@ const CFRPageActions = {
     if (!PageActionMap.has(win)) {
       PageActionMap.set(win, new PageAction(win, dispatchToASRouter));
     }
-    await PageActionMap.get(win).show(recommendation, true);
+    await PageActionMap.get(win).showAddressBarNotifier(recommendation, true);
     return true;
   },
 
@@ -481,7 +489,7 @@ const CFRPageActions = {
     if (!PageActionMap.has(win)) {
       PageActionMap.set(win, new PageAction(win, dispatchToASRouter));
     }
-    await PageActionMap.get(win).show(recommendation, true);
+    await PageActionMap.get(win).showAddressBarNotifier(recommendation, true);
     return true;
   },
 
@@ -494,7 +502,7 @@ const CFRPageActions = {
       if (win.closed || !PageActionMap.has(win)) {
         continue;
       }
-      PageActionMap.get(win).hide();
+      PageActionMap.get(win).hideAddressBarNotifier();
     }
     // WeakMaps don't have a `clear` method
     PageActionMap = new WeakMap();

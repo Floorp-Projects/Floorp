@@ -40,9 +40,9 @@ window.gActivityStreamStrings = {
   "section_disclaimer_topstories_buttontext": "Selvä",
   "prefs_home_header": "Firefoxin aloitussivun sisältö",
   "prefs_home_description": "Valitse Firefoxin aloitussivulle haluamasi sisältö.",
-  "prefs_content_discovery_header": "Firefox Home",
-  "prefs_content_discovery_description": "Content Discovery in Firefox Home allows you to discover high-quality, relevant articles from across the web.",
-  "prefs_content_discovery_button": "Turn Off Content Discovery",
+  "prefs_content_discovery_header": "Firefoxin aloitussivu",
+  "prefs_content_discovery_description": "Firefoxin aloitussivun sisällön esittely näyttää laadukkaita ja olennaisia artikkeleita ympäri verkkoa.",
+  "prefs_content_discovery_button": "Poista sisällön esittely käytöstä",
   "prefs_section_rows_option": "{num} rivi;{num} riviä",
   "prefs_search_header": "Verkkohaku",
   "prefs_topsites_description": "Useimmin vierailemasi sivustot",
@@ -110,6 +110,5 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "tietosuojakäytännön",
   "firstrun_continue_to_login": "Jatka",
   "firstrun_skip_login": "Ohita tämä vaihe",
-  "context_menu_title": "Avaa valikko",
-  "pocket_learn_more": "Lue lisää"
+  "context_menu_title": "Avaa valikko"
 };

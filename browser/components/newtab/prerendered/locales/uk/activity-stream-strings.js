@@ -44,7 +44,7 @@ window.gActivityStreamStrings = {
   "prefs_content_discovery_description": "Огляд вмісту в домівці Firefox дозволяє вам знаходити високоякісні, цікаві статті з усього інтернету.",
   "prefs_content_discovery_button": "Вимкнути огляд вмісту",
   "prefs_section_rows_option": "{num} рядок;{num} рядки;{num} рядків",
-  "prefs_search_header": "Веб пошук",
+  "prefs_search_header": "Пошук в Інтернеті",
   "prefs_topsites_description": "Сайти, які ви відвідуєте найчастіше",
   "prefs_topstories_description2": "Чудові матеріали з усього інтернету, відібрані спеціально для вас",
   "prefs_topstories_options_sponsored_label": "Матеріали від спонсорів",

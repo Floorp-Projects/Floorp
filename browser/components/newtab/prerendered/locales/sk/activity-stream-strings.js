@@ -40,9 +40,9 @@ window.gActivityStreamStrings = {
   "section_disclaimer_topstories_buttontext": "Ok, rozumiem",
   "prefs_home_header": "Obsah domovskej stránky Firefoxu",
   "prefs_home_description": "Vyberte si obsah, ktorý chcete mať na domovskej stránke svojho Firefoxu.",
-  "prefs_content_discovery_header": "Firefox Home",
-  "prefs_content_discovery_description": "Content Discovery in Firefox Home allows you to discover high-quality, relevant articles from across the web.",
-  "prefs_content_discovery_button": "Turn Off Content Discovery",
+  "prefs_content_discovery_header": "Domovská stránka Firefoxu",
+  "prefs_content_discovery_description": "Odporúčanie obsahu na domovskej stránke Firefoxu vám umožňuje objaviť vysokokvalitné a relevantné články z celého internetu.",
+  "prefs_content_discovery_button": "Vypnúť odporúčanie obsahu",
   "prefs_section_rows_option": "{num} riadok;{num} riadky;{num} riadkov",
   "prefs_search_header": "Vyhľadávanie na webe",
   "prefs_topsites_description": "Najnavštevovanejšie stránky",
@@ -110,6 +110,5 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "zásadami ochrany súkromia",
   "firstrun_continue_to_login": "Pokračovať",
   "firstrun_skip_login": "Preskočiť tento krok",
-  "context_menu_title": "Otvorí ponuku",
-  "pocket_learn_more": "Ďalšie informácie"
+  "context_menu_title": "Otvorí ponuku"
 };
