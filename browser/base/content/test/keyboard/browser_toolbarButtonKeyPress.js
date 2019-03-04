@@ -247,3 +247,22 @@ add_task(async function testBookmarksmenuButtonPress() {
   await hidden;
   CustomizableUI.reset();
 });
+
+// Test activation of the overflow button from the keyboard.
+// The overflow menu should appear and focus should move inside it.
+add_task(async function testOverflowButtonPress() {
+  // Move something to the overflow menu to make the button appear.
+  CustomizableUI.addWidgetToArea("developer-button", CustomizableUI.AREA_FIXED_OVERFLOW_PANEL);
+  let button = document.getElementById("nav-bar-overflow-button");
+  forceFocus(button);
+  let view = document.getElementById("widget-overflow-mainView");
+  let focused = BrowserTestUtils.waitForEvent(view, "focus", true);
+  EventUtils.synthesizeKey(" ");
+  await focused;
+  ok(true, "Focus inside overflow menu after toolbar button pressed");
+  let panel = document.getElementById("widget-overflow");
+  let hidden = BrowserTestUtils.waitForEvent(panel, "popuphidden");
+  panel.hidePopup();
+  await hidden;
+  CustomizableUI.reset();
+});
