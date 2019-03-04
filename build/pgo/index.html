@@ -55,9 +55,9 @@
      w.close();
      w = window.open(list[idx++]);
      if (idx < list.length) {
-       window.setTimeout(loadURL, interval);
+     window.setTimeout(loadURL, interval);
      } else {
-       window.postMessage("quit");
+         window.setTimeout(Quitter.quit, interval);
      }
  }
  var i;
@@ -66,4 +66,4 @@
      document.write(list[i]);
      document.write("<br>");
  }
-</script>
+  </script>
