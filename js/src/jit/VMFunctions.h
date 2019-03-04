@@ -128,9 +128,6 @@ enum MaybeTailCall : bool { TailCall, NonTailCall };
 
 // Data for a VM function. All VMFunctionDatas are stored in a constexpr array.
 struct VMFunctionData {
-  // Address of the C function.
-  void* wrapped;
-
 #if defined(JS_JITSPEW) || defined(JS_TRACE_LOGGING)
   // Informative name of the wrapped function. The name should not be present
   // in release builds in order to save memory.
@@ -293,14 +290,14 @@ struct VMFunctionData {
     return count;
   }
 
-  constexpr VMFunctionData(void* wrapped, const char* name,
-                           uint32_t explicitArgs, uint32_t argumentProperties,
+  constexpr VMFunctionData(const char* name, uint32_t explicitArgs,
+                           uint32_t argumentProperties,
                            uint32_t argumentPassedInFloatRegs,
                            uint64_t argRootTypes, DataType outParam,
                            RootType outParamRootType, DataType returnType,
                            uint8_t extraValuesToPop = 0,
                            MaybeTailCall expectTailCall = NonTailCall)
-      : wrapped(wrapped),
+      :
 #if defined(JS_JITSPEW) || defined(JS_TRACE_LOGGING)
         name_(name),
 #endif
@@ -324,7 +321,7 @@ struct VMFunctionData {
   // static initializers for old-style VMFunction definitions with Clang. We can
   // do this after bug 1530937 converts all of them.
   constexpr VMFunctionData(const VMFunctionData& o)
-      : wrapped(o.wrapped),
+      :
 #if defined(JS_JITSPEW) || defined(JS_TRACE_LOGGING)
         name_(o.name_),
 #endif
@@ -343,6 +340,9 @@ struct VMFunctionData {
 // TODO(bug 1530937): remove VMFunction and FunctionInfo after converting all VM
 // functions to the new design.
 struct VMFunction : public VMFunctionData {
+  // Address of the C function.
+  void* wrapped;
+
   // Global linked list of all VMFunctions.
   static VMFunction* functions;
   VMFunction* next;
@@ -354,13 +354,15 @@ struct VMFunction : public VMFunctionData {
                        RootType outParamRootType, DataType returnType,
                        uint8_t extraValuesToPop = 0,
                        MaybeTailCall expectTailCall = NonTailCall)
-      : VMFunctionData(wrapped, name, explicitArgs, argumentProperties,
+      : VMFunctionData(name, explicitArgs, argumentProperties,
                        argumentPassedInFloatRegs, argRootTypes, outParam,
                        outParamRootType, returnType, extraValuesToPop,
                        expectTailCall),
+        wrapped(wrapped),
         next(nullptr) {}
 
-  VMFunction(const VMFunction& o) : VMFunctionData(o), next(functions) {
+  VMFunction(const VMFunction& o)
+      : VMFunctionData(o), wrapped(o.wrapped), next(functions) {
     // Add this to the global list of VMFunctions.
     functions = this;
   }

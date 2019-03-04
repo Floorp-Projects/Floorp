@@ -67,16 +67,16 @@ struct VMFunctionDataHelper<R (*)(JSContext*, Args...)>
   static constexpr uint64_t argumentRootTypes() {
     return BitMask<TypeToRootType, uint64_t, 3, Args...>::result;
   }
-  constexpr VMFunctionDataHelper(Fun fun, const char* name,
-                                 PopValues extraValuesToPop = PopValues(0))
-      : VMFunctionData((void*)fun, name, explicitArgs(), argumentProperties(),
+  constexpr explicit VMFunctionDataHelper(
+      const char* name, PopValues extraValuesToPop = PopValues(0))
+      : VMFunctionData(name, explicitArgs(), argumentProperties(),
                        argumentPassedInFloatRegs(), argumentRootTypes(),
                        outParam(), outParamRootType(), returnType(),
                        extraValuesToPop.numValues, NonTailCall) {}
-  constexpr VMFunctionDataHelper(Fun fun, const char* name,
-                                 MaybeTailCall expectTailCall,
-                                 PopValues extraValuesToPop = PopValues(0))
-      : VMFunctionData((void*)fun, name, explicitArgs(), argumentProperties(),
+  constexpr explicit VMFunctionDataHelper(
+      const char* name, MaybeTailCall expectTailCall,
+      PopValues extraValuesToPop = PopValues(0))
+      : VMFunctionData(name, explicitArgs(), argumentProperties(),
                        argumentPassedInFloatRegs(), argumentRootTypes(),
                        outParam(), outParamRootType(), returnType(),
                        extraValuesToPop.numValues, expectTailCall) {}
@@ -91,8 +91,7 @@ struct VMFunctionDataHelper<R (*)(JSContext*, Args...)>
 
 // Generate VMFunctionData array.
 static constexpr VMFunctionData vmFunctions[] = {
-#define DEF_VMFUNCTION(name, fp) \
-  VMFunctionDataHelper<decltype(&(::fp))>(::fp, #name),
+#define DEF_VMFUNCTION(name, fp) VMFunctionDataHelper<decltype(&(::fp))>(#name),
     VMFUNCTION_LIST(DEF_VMFUNCTION)
 #undef DEF_VMFUNCTION
 };
@@ -100,6 +99,16 @@ static constexpr VMFunctionData vmFunctions[] = {
 #if MOZ_IS_GCC
 #  pragma GCC diagnostic pop
 #endif
+
+// Generate array storing C++ function pointers. These pointers are not stored
+// in VMFunctionData because there's no good way to cast them to void* in
+// constexpr code. Compilers are smart enough to treat the const array below as
+// constexpr.
+static void* const vmFunctionTargets[] = {
+#define DEF_VMFUNCTION(name, fp) (void*)(::fp),
+    VMFUNCTION_LIST(DEF_VMFUNCTION)
+#undef DEF_VMFUNCTION
+};
 
 const VMFunctionData& GetVMFunction(VMFunctionId id) {
   return vmFunctions[size_t(id)];
@@ -134,7 +143,7 @@ bool JitRuntime::generateVMWrappers(JSContext* cx, MacroAssembler& masm) {
     JitSpew(JitSpew_Codegen, "# VM function wrapper (%s)", fun.name());
 
     uint32_t offset;
-    if (!generateVMWrapper(cx, masm, fun, &offset)) {
+    if (!generateVMWrapper(cx, masm, fun, vmFunctionTargets[i], &offset)) {
       return false;
     }
 
