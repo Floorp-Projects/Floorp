@@ -65,6 +65,18 @@ For example, a test task must depend on the build task creating the artifact it
 tests, and this dependency edge is named 'build'.  The task graph generation
 process later resolves these dependencies to specific taskIds.
 
+Dependencies are typically used to ensure that prerequisites to a task, such as
+creation of binary artifacts, are completed before that task runs. But
+dependencies can also be used to schedule follow-up work such as summarizing
+test results. In the latter case, the summarization task will "pull in" all of
+the tasks it depends on, even if those tasks might otherwise be optimized away.
+The fix for this situation is "soft dependencies".
+To add a task depending only on tasks remaining after the optimization process
+completed, you can use `soft-dependencies`, as a list of optimized tasks labels.
+This is useful for tasks that should not pull other tasks into the graph, but do
+need to run after them, if they are in the graph (signing task after an optional
+build or reporting on tasks outputs).
+
 Decision Task
 -------------
 
