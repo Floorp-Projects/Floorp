@@ -585,7 +585,7 @@ add_task(async function test_permissions_prompt() {
 });
 
 // Check that internal permissions can not be set and are not returned by the API.
-add_task(async function test_internal_permissions() {
+add_task(async function test_internal_permisisons() {
   Services.prefs.setBoolPref("extensions.allowPrivateBrowsingByDefault", false);
 
   function background() {
@@ -617,6 +617,7 @@ add_task(async function test_internal_permissions() {
       description: "permissions test",
       manifest_version: 2,
       version: "1.0",
+
       permissions: [],
     },
     useAddonManager: "permanent",

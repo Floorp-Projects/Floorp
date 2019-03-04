@@ -530,18 +530,11 @@ VARCACHE_PREF(
 // Extension prefs
 //---------------------------------------------------------------------------
 
-#ifdef ANDROID
-// Private browsing opt-in is only supported on Firefox desktop.
-# define PREF_VALUE true
-#else
-# define PREF_VALUE false
-#endif
 VARCACHE_PREF(
   "extensions.allowPrivateBrowsingByDefault",
    extensions_allowPrivateBrowsingByDefault,
-  bool, PREF_VALUE
+  bool, true
 )
-#undef PREF_VALUE
 
 //---------------------------------------------------------------------------
 // Full-screen prefs

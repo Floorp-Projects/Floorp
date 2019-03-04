@@ -12,7 +12,6 @@ add_task(async function perma_private_browsing_mode() {
                true, "Permanent private browsing is enabled");
 
   let extension = ExtensionTestUtils.loadExtension({
-    incognitoOverride: "spanning",
     manifest: {
       "permissions": ["tabs", "cookies"],
     },
