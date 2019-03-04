@@ -371,7 +371,12 @@ class AdjustedTargetForFilter {
     mTarget = mFinalTarget->CreateSimilarDrawTarget(mSourceGraphicRect.Size(),
                                                     SurfaceFormat::B8G8R8A8);
 
-    if (!mTarget) {
+    if (mTarget) {
+      // See bug 1524554.
+      mTarget->ClearRect(gfx::Rect());
+    }
+
+    if (!mTarget || !mTarget->IsValid()) {
       // XXX - Deal with the situation where our temp size is too big to
       // fit in a texture (bug 1066622).
       mTarget = mFinalTarget;
@@ -393,7 +398,13 @@ class AdjustedTargetForFilter {
 
     RefPtr<DrawTarget> dt = mFinalTarget->CreateSimilarDrawTarget(
         aRect.Size(), SurfaceFormat::B8G8R8A8);
-    if (!dt) {
+
+    if (dt) {
+      // See bug 1524554.
+      dt->ClearRect(gfx::Rect());
+    }
+
+    if (!dt || !dt->IsValid()) {
       aRect.SetEmpty();
       return nullptr;
     }
@@ -482,7 +493,12 @@ class AdjustedTargetForShadow {
     mTarget = mFinalTarget->CreateShadowDrawTarget(
         mTempRect.Size(), SurfaceFormat::B8G8R8A8, mSigma);
 
-    if (!mTarget) {
+    if (mTarget) {
+      // See bug 1524554.
+      mTarget->ClearRect(gfx::Rect());
+    }
+
+    if (!mTarget || !mTarget->IsValid()) {
       // XXX - Deal with the situation where our temp size is too big to
       // fit in a texture (bug 1066622).
       mTarget = mFinalTarget;
@@ -4473,7 +4489,12 @@ static already_AddRefed<SourceSurface> ExtractSubrect(SourceSurface* aSurface,
   RefPtr<DrawTarget> subrectDT = aTargetDT->CreateSimilarDrawTarget(
       roundedOutSourceRectInt.Size(), SurfaceFormat::B8G8R8A8);
 
-  if (!subrectDT) {
+  if (subrectDT) {
+    // See bug 1524554.
+    subrectDT->ClearRect(gfx::Rect());
+  }
+
+  if (!subrectDT || !subrectDT->IsValid()) {
     RefPtr<SourceSurface> surface(aSurface);
     return surface.forget();
   }
