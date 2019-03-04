@@ -216,7 +216,7 @@ template <>
 struct IPDLParamTraits<Shmem> {
   typedef Shmem paramType;
 
-  static void Write(IPC::Message* aMsg, IProtocol* aActor, paramType& aParam);
+  static void Write(IPC::Message* aMsg, IProtocol* aActor, paramType&& aParam);
   static bool Read(const IPC::Message* aMsg, PickleIterator* aIter,
                    IProtocol* aActor, paramType* aResult);
 

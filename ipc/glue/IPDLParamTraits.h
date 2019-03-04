@@ -100,13 +100,12 @@ struct IPDLParamTraits<nsTArray<T>> {
   }
 
   // Some serializers need to take a mutable reference to their backing object,
-  // such as Shmem segments and Byte Buffers. These serializers take the backing
-  // data and move it into the IPC layer for efficiency. They currently take
-  // these references as mutable lvalue references rather than rvalue
-  // references, (bug 1441651). This overload of Write on nsTArray is needed, as
-  // occasionally these types appear inside of IPDL arrays.
+  // such as Shmem segments and Byte Buffers. These serializers take the
+  // backing data and move it into the IPC layer for efficiency. This overload
+  // of Write on nsTArray is needed, as occasionally these types appear inside
+  // of IPDL arrays.
   static inline void Write(IPC::Message* aMsg, IProtocol* aActor,
-                           nsTArray<T>& aParam) {
+                           nsTArray<T>&& aParam) {
     WriteInternal(aMsg, aActor, aParam);
   }
 
@@ -163,7 +162,7 @@ struct IPDLParamTraits<nsTArray<T>> {
       aMsg->WriteBytes(aParam.Elements(), pickledLength.value());
     } else {
       for (uint32_t index = 0; index < length; index++) {
-        WriteIPDLParam(aMsg, aActor, aParam.Elements()[index]);
+        WriteIPDLParam(aMsg, aActor, std::move(aParam.Elements()[index]));
       }
     }
   }
