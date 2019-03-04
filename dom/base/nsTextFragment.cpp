@@ -490,3 +490,40 @@ void nsTextFragment::UpdateBidiFlag(const char16_t* aBuffer, uint32_t aLength) {
     }
   }
 }
+
+bool nsTextFragment::TextEquals(const nsTextFragment& aOther) const {
+  if (!Is2b()) {
+    // We're 1-byte.
+    if (!aOther.Is2b()) {
+      nsDependentCString ourStr(Get1b(), GetLength());
+      return ourStr.Equals(
+          nsDependentCString(aOther.Get1b(), aOther.GetLength()));
+    }
+
+    // We're 1-byte, the other thing is 2-byte.  Instead of implementing a
+    // separate codepath for this, just use our code below.
+    return aOther.TextEquals(*this);
+  }
+
+  nsDependentString ourStr(Get2b(), GetLength());
+  if (aOther.Is2b()) {
+    return ourStr.Equals(nsDependentString(aOther.Get2b(), aOther.GetLength()));
+  }
+
+  // We can't use EqualsASCII here, because the other string might not
+  // actually be ASCII.  Just roll our own compare; do it in the simple way.
+  // Bug 1532356 tracks not having to roll our own.
+  if (GetLength() != aOther.GetLength()) {
+    return false;
+  }
+
+  const char16_t* ourChars = Get2b();
+  const char* otherChars = aOther.Get1b();
+  for (uint32_t i = 0; i < GetLength(); ++i) {
+    if (ourChars[i] != static_cast<char16_t>(otherChars[i])) {
+      return false;
+    }
+  }
+
+  return true;
+}
