@@ -22,6 +22,7 @@ apt-get install -y --no-install-recommends \
     jq \
     libdbus-glib-1-2 \
     libgtk-3-0 \
+    libx11-xcb1 \
     libxml2-utils \
     libxt6 \
     python \
