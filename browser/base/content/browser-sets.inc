@@ -32,6 +32,7 @@
     <command id="cmd_pageSetup" oncommand="PrintUtils.showPageSetup();"/>
     <command id="cmd_print" oncommand="PrintUtils.printWindow(window.gBrowser.selectedBrowser.outerWindowID, window.gBrowser.selectedBrowser);"/>
     <command id="cmd_printPreview" oncommand="PrintUtils.printPreview(PrintPreviewListener);"/>
+    <command id="cmd_importFromAnotherBrowser" oncommand="MigrationUtils.showMigrationWizard(window, [MigrationUtils.MIGRATION_ENTRYPOINT_FILE_MENU]);"/>
     <command id="cmd_close" oncommand="BrowserCloseTabOrWindow(event);"/>
     <command id="cmd_closeWindow" oncommand="BrowserTryToCloseWindow()"/>
     <command id="cmd_toggleMute" oncommand="gBrowser.toggleMuteAudioOnMultiSelectedTabs(gBrowser.selectedTab)"/>

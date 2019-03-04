@@ -6307,7 +6307,7 @@
     "kind": "enumerated",
     "n_values": 10,
     "releaseChannelCollection": "opt-out",
-    "description": "Where the migration wizard was entered from. 0=Other/catch-all, 1=first-run, 2=refresh-firefox, 3=Places window, 4=Password manager"
+    "description": "Where the migration wizard was entered from. 0=Other/catch-all, 1=first-run, 2=refresh-firefox, 3=Places window, 4=Password manager, 5=New tab, 6=File menu"
   },
   "FX_MIGRATION_SOURCE_BROWSER": {
     "record_in_processes": ["main", "content"],
