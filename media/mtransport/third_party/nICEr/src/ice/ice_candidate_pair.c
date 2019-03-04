@@ -586,11 +586,9 @@ void nr_ice_candidate_pair_set_state(nr_ice_peer_ctx *pctx, nr_ice_cand_pair *pa
     }
   }
 
-int nr_ice_candidate_pair_dump_state(nr_ice_cand_pair *pair, FILE *out)
+void nr_ice_candidate_pair_dump_state(nr_ice_cand_pair *pair, int log_level)
   {
-    /*r_log(LOG_ICE,LOG_DEBUG,"CAND-PAIR(%s): pair %s: state=%s, priority=0x%llx\n",pair->codeword,pair->as_string,nr_ice_cand_pair_states[pair->state],pair->priority);*/
-
-    return(0);
+    r_log(LOG_ICE,log_level,"CAND-PAIR(%s): pair %s: state=%s, priority=0x%llx\n",pair->codeword,pair->as_string,nr_ice_cand_pair_states[pair->state],pair->priority);
   }
 
 

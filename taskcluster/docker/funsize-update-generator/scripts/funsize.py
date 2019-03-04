@@ -156,26 +156,28 @@ async def run_command(cmd, cwd='/', env=None, label=None, silent=False):
         env = dict()
     process = await asyncio.create_subprocess_shell(cmd,
                                                     stdout=asyncio.subprocess.PIPE,
-                                                    stderr=asyncio.subprocess.STDOUT,
+                                                    stderr=asyncio.subprocess.PIPE,
                                                     cwd=cwd, env=env)
-    stdout, stderr = await process.communicate()
+    if label:
+        label = "{}: ".format(label)
+    else:
+        label = ""
 
-    await process.wait()
+    async def read_output(stream, label, printcmd):
+        while True:
+            line = await stream.readline()
+            if line == b'':
+                break
+            printcmd("%s%s", label, line.decode('utf-8'))
 
     if silent:
-        return
-
-    if not stderr:
-        stderr = ""
-    if not stdout:
-        stdout = ""
-
-    label = "{}: ".format(label)
-
-    for line in stdout.splitlines():
-        log.debug("%s%s", label, line.decode('utf-8'))
-    for line in stderr.splitlines():
-        log.warn("%s%s", label, line.decode('utf-8'))
+        await process.wait()
+    else:
+        await asyncio.gather(
+            read_output(process.stdout, label, log.info),
+            read_output(process.stderr, label, log.warn)
+            )
+        await process.wait()
 
 
 async def unpack(work_env, mar, dest_dir):

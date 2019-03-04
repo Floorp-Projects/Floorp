@@ -3871,7 +3871,7 @@ Element* Document::GetRootElement() const {
              : GetRootElementInternal();
 }
 
-nsIContent* Document::GetUnfocusedKeyEventTarget() { return GetRootElement(); }
+Element* Document::GetUnfocusedKeyEventTarget() { return GetRootElement(); }
 
 Element* Document::GetRootElementInternal() const {
   // We invoke GetRootElement() immediately before the servo traversal, so we

@@ -103,22 +103,22 @@ bool UrlClassifierCommon::ShouldEnableClassifier(nsIChannel* aChannel) {
     return false;
   }
 
+  nsCOMPtr<nsIURI> topWinURI;
+  nsCOMPtr<nsIHttpChannelInternal> channel = do_QueryInterface(aChannel);
+  if (!channel) {
+    UC_LOG(("nsChannelClassifier: Not an HTTP channel"));
+    return false;
+  }
+
+  rv = channel->GetTopWindowURI(getter_AddRefs(topWinURI));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return false;
+  }
+
   // Tracking protection will be enabled so return without updating
   // the security state. If any channels are subsequently cancelled
   // (page elements blocked) the state will be then updated.
   if (UC_LOG_ENABLED()) {
-    nsCOMPtr<nsIURI> topWinURI;
-    nsCOMPtr<nsIHttpChannelInternal> channel = do_QueryInterface(aChannel);
-    if (!channel) {
-      UC_LOG(("nsChannelClassifier: Not an HTTP channel"));
-      return false;
-    }
-
-    nsresult rv = channel->GetTopWindowURI(getter_AddRefs(topWinURI));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return false;
-    }
-
     nsCString chanSpec = chanURI->GetSpecOrDefault();
     chanSpec.Truncate(
         std::min(chanSpec.Length(), UrlClassifierCommon::sMaxSpecLength));
@@ -228,6 +228,7 @@ nsresult UrlClassifierCommon::CreatePairwiseWhiteListURI(nsIChannel* aChannel,
   nsCOMPtr<nsIURI> topWinURI;
   rv = chan->GetTopWindowURI(getter_AddRefs(topWinURI));
   NS_ENSURE_SUCCESS(rv, rv);
+
   if (!topWinURI) {
     if (UC_LOG_ENABLED()) {
       nsresult rv;

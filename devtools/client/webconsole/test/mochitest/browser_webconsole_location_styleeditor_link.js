@@ -41,11 +41,12 @@ async function testViewSource(hud, toolbox, text) {
   info("style editor window focused");
   const href = frameLinkNode.getAttribute("data-url");
   const line = frameLinkNode.getAttribute("data-line");
+  const column = frameLinkNode.getAttribute("data-column");
   ok(line, "found source line");
 
   const editor = getEditorForHref(panel.UI, href);
   ok(editor, "found style editor for " + href);
-  await performLineCheck(panel.UI, editor, line - 1);
+  await checkCursorPosition(panel.UI, editor, line - 1, column - 1);
 }
 
 async function onStyleEditorReady(panel) {
@@ -72,13 +73,15 @@ function getEditorForHref(styleEditorUI, href) {
   return foundEditor;
 }
 
-async function performLineCheck(styleEditorUI, editor, line) {
+async function checkCursorPosition(styleEditorUI, editor, line, column) {
   info("wait for source editor to load");
   // Get out of the styleeditor-selected event loop.
   await waitForTick();
 
   is(editor.sourceEditor.getCursor().line, line,
      "correct line is selected");
+  is(editor.sourceEditor.getCursor().ch, column,
+     "correct column is selected");
   is(styleEditorUI.selectedStyleSheetIndex, editor.styleSheet.styleSheetIndex,
      "correct stylesheet is selected in the editor");
 }

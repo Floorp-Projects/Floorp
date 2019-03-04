@@ -2051,8 +2051,6 @@ class nsIPresShell : public nsStubDocumentObserver {
 
   uint32_t mPresShellId;
 
-  static nsIContent* gKeyDownTarget;
-
   // Cached font inflation values. This is done to prevent changing of font
   // inflation until a page is reloaded.
   uint32_t mFontSizeInflationEmPerLine;

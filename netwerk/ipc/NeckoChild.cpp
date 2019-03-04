@@ -411,7 +411,7 @@ mozilla::ipc::IPCResult NeckoChild::RecvNetworkChangeNotification(
 
 PTrackingDummyChannelChild* NeckoChild::AllocPTrackingDummyChannelChild(
     nsIURI* aURI, nsIURI* aTopWindowURI, const nsresult& aTopWindowURIResult,
-    const OptionalLoadInfoArgs& aLoadInfo) {
+    const Maybe<LoadInfoArgs>& aLoadInfo) {
   return new TrackingDummyChannelChild();
 }
 

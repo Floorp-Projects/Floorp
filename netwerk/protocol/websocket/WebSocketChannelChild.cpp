@@ -445,7 +445,7 @@ WebSocketChannelChild::AsyncOpen(nsIURI* aURI, const nsACString& aOrigin,
   AddIPDLReference();
 
   OptionalURIParams uri;
-  OptionalLoadInfoArgs loadInfoArgs;
+  Maybe<LoadInfoArgs> loadInfoArgs;
   OptionalTransportProvider transportProvider;
 
   if (!mIsServerSide) {
@@ -457,7 +457,7 @@ WebSocketChannelChild::AsyncOpen(nsIURI* aURI, const nsACString& aOrigin,
     transportProvider = void_t();
   } else {
     uri = void_t();
-    loadInfoArgs = void_t();
+    loadInfoArgs = Nothing();
 
     MOZ_ASSERT(mServerTransportProvider);
     PTransportProviderChild* ipcChild;

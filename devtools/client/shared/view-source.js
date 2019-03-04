@@ -21,11 +21,11 @@ var { gDevTools } = require("devtools/client/framework/devtools");
  * @return {Promise<boolean>}
  */
 exports.viewSourceInStyleEditor = async function(toolbox, sourceURL,
-                                                        sourceLine) {
+                                                        sourceLine, sourceColumn) {
   const panel = await toolbox.loadTool("styleeditor");
 
   try {
-    await panel.selectStyleSheet(sourceURL, sourceLine);
+    await panel.selectStyleSheet(sourceURL, sourceLine, sourceColumn);
     await toolbox.selectTool("styleeditor");
     return true;
   } catch (e) {

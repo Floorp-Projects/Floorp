@@ -19,7 +19,7 @@ namespace net {
 
 mozilla::ipc::IPCResult WebrtcProxyChannelParent::RecvAsyncOpen(
     const nsCString& aHost, const int& aPort,
-    const OptionalLoadInfoArgs& aLoadInfoArgs, const nsCString& aAlpn) {
+    const Maybe<LoadInfoArgs>& aLoadInfoArgs, const nsCString& aAlpn) {
   LOG(("WebrtcProxyChannelParent::RecvAsyncOpen %p to %s:%d\n", this,
        aHost.get(), aPort));
 

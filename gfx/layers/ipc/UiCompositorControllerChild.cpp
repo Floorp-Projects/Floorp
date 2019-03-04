@@ -166,7 +166,7 @@ bool UiCompositorControllerChild::ToolbarPixelsToCompositor(
     return false;
   }
 
-  return SendToolbarPixelsToCompositor(aMem, aSize);
+  return SendToolbarPixelsToCompositor(std::move(aMem), aSize);
 }
 
 void UiCompositorControllerChild::Destroy() {

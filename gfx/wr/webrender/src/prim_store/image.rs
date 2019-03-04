@@ -8,16 +8,15 @@ use api::{
     PremultipliedColorF, Shadow, TileOffset, YuvColorSpace, YuvFormat, LayoutVector2D,
 };
 use api::ImageKey as ApiImageKey;
-use display_list_flattener::{AsInstanceKind, CreateShadow, IsVisible};
+use display_list_flattener::{CreateShadow, IsVisible};
 use frame_builder::FrameBuildingState;
 use gpu_cache::{GpuDataRequest};
-use intern::{Internable, InternDebug};
-use intern_types;
+use intern::{Internable, InternDebug, Handle as InternHandle};
 use prim_store::{
     EdgeAaSegmentMask, OpacityBindingIndex, PrimitiveInstanceKind,
     PrimitiveOpacity, PrimitiveSceneData, PrimKey, PrimKeyCommonData,
     PrimTemplate, PrimTemplateCommonData, PrimitiveStore, SegmentInstanceIndex,
-    SizeKey
+    SizeKey, InternablePrimitive,
 };
 use render_task::{
     BlitSource, RenderTask, RenderTaskCacheEntryHandle, RenderTaskCacheKey,
@@ -100,31 +99,6 @@ impl ImageKey {
 }
 
 impl InternDebug for ImageKey {}
-
-impl AsInstanceKind<ImageDataHandle> for ImageKey {
-    /// Construct a primitive instance that matches the type
-    /// of primitive key.
-    fn as_instance_kind(
-        &self,
-        data_handle: ImageDataHandle,
-        prim_store: &mut PrimitiveStore,
-        _reference_frame_relative_offset: LayoutVector2D,
-    ) -> PrimitiveInstanceKind {
-        // TODO(gw): Refactor this to not need a separate image
-        //           instance (see ImageInstance struct).
-        let image_instance_index = prim_store.images.push(ImageInstance {
-            opacity_binding_index: OpacityBindingIndex::INVALID,
-            segment_instance_index: SegmentInstanceIndex::INVALID,
-            tight_local_clip_rect: LayoutRect::zero(),
-            visible_tiles: Vec::new(),
-        });
-
-        PrimitiveInstanceKind::Image {
-            data_handle,
-            image_instance_index,
-        }
-    }
-}
 
 // Where to find the texture data for an image primitive.
 #[cfg_attr(feature = "capture", derive(Serialize))]
@@ -338,16 +312,16 @@ impl From<ImageKey> for ImageTemplate {
     }
 }
 
-pub use intern_types::image::Handle as ImageDataHandle;
+pub type ImageDataHandle = InternHandle<Image>;
 
 impl Internable for Image {
-    type Marker = intern_types::image::Marker;
-    type Source = ImageKey;
+    type Key = ImageKey;
     type StoreData = ImageTemplate;
     type InternData = PrimitiveSceneData;
+}
 
-    /// Build a new key from self with `info`.
-    fn build_key(
+impl InternablePrimitive for Image {
+    fn into_key(
         self,
         info: &LayoutPrimitiveInfo,
     ) -> ImageKey {
@@ -356,6 +330,27 @@ impl Internable for Image {
             info.rect.size,
             self
         )
+    }
+
+    fn make_instance_kind(
+        _key: ImageKey,
+        data_handle: ImageDataHandle,
+        prim_store: &mut PrimitiveStore,
+        _reference_frame_relative_offset: LayoutVector2D,
+    ) -> PrimitiveInstanceKind {
+        // TODO(gw): Refactor this to not need a separate image
+        //           instance (see ImageInstance struct).
+        let image_instance_index = prim_store.images.push(ImageInstance {
+            opacity_binding_index: OpacityBindingIndex::INVALID,
+            segment_instance_index: SegmentInstanceIndex::INVALID,
+            tight_local_clip_rect: LayoutRect::zero(),
+            visible_tiles: Vec::new(),
+        });
+
+        PrimitiveInstanceKind::Image {
+            data_handle,
+            image_instance_index,
+        }
     }
 }
 
@@ -412,22 +407,6 @@ impl YuvImageKey {
 }
 
 impl InternDebug for YuvImageKey {}
-
-impl AsInstanceKind<YuvImageDataHandle> for YuvImageKey {
-    /// Construct a primitive instance that matches the type
-    /// of primitive key.
-    fn as_instance_kind(
-        &self,
-        data_handle: YuvImageDataHandle,
-        _prim_store: &mut PrimitiveStore,
-        _reference_frame_relative_offset: LayoutVector2D,
-    ) -> PrimitiveInstanceKind {
-        PrimitiveInstanceKind::YuvImage {
-            data_handle,
-            segment_instance_index: SegmentInstanceIndex::INVALID
-        }
-    }
-}
 
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
@@ -505,24 +484,36 @@ impl From<YuvImageKey> for YuvImageTemplate {
     }
 }
 
-pub use intern_types::yuv_image::Handle as YuvImageDataHandle;
+pub type YuvImageDataHandle = InternHandle<YuvImage>;
 
 impl Internable for YuvImage {
-    type Marker = intern_types::yuv_image::Marker;
-    type Source = YuvImageKey;
+    type Key = YuvImageKey;
     type StoreData = YuvImageTemplate;
     type InternData = PrimitiveSceneData;
+}
 
-    /// Build a new key from self with `info`.
-    fn build_key(
+impl InternablePrimitive for YuvImage {
+    fn into_key(
         self,
         info: &LayoutPrimitiveInfo,
     ) -> YuvImageKey {
         YuvImageKey::new(
             info.is_backface_visible,
             info.rect.size,
-            self
+            self,
         )
+    }
+
+    fn make_instance_kind(
+        _key: YuvImageKey,
+        data_handle: YuvImageDataHandle,
+        _prim_store: &mut PrimitiveStore,
+        _reference_frame_relative_offset: LayoutVector2D,
+    ) -> PrimitiveInstanceKind {
+        PrimitiveInstanceKind::YuvImage {
+            data_handle,
+            segment_instance_index: SegmentInstanceIndex::INVALID
+        }
     }
 }
 

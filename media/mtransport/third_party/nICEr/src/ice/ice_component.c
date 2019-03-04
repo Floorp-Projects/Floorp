@@ -1737,3 +1737,21 @@ int nr_ice_component_get_default_candidate(nr_ice_component *comp, nr_ice_candid
 
   }
 
+
+void nr_ice_component_dump_state(nr_ice_component *comp, int log_level)
+  {
+    nr_ice_candidate *cand;
+
+    if (comp->local_component) {
+      r_log(LOG_ICE,log_level,"ICE(%s)/ICE-STREAM(%s): Remote component %d in state %d - dumping candidates",comp->ctx->label,comp->stream->label,comp->component_id,comp->state);
+    } else {
+      r_log(LOG_ICE,log_level,"ICE(%s)/ICE-STREAM(%s): Local component %d - dumping candidates",comp->ctx->label,comp->stream->label,comp->component_id);
+    }
+
+    cand=TAILQ_FIRST(&comp->candidates);
+    while(cand){
+      r_log(LOG_ICE,log_level,"ICE(%s)/ICE-STREAM(%s)/CAND(%s): %s",comp->ctx->label,comp->stream->label,cand->codeword,cand->label);
+      cand=TAILQ_NEXT(cand,entry_comp);
+    }
+  }
+

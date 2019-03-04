@@ -626,28 +626,18 @@ void nr_ice_peer_ctx_stream_started_checks(nr_ice_peer_ctx *pctx, nr_ice_media_s
     }
   }
 
-#ifndef NDEBUG
-int nr_ice_peer_ctx_dump_state(nr_ice_peer_ctx *pctx,FILE *out)
+void nr_ice_peer_ctx_dump_state(nr_ice_peer_ctx *pctx, int log_level)
   {
-    int r,_status;
     nr_ice_media_stream *stream;
 
-    fprintf(out,"PEER %s STATE DUMP\n",pctx->label);
-    fprintf(out,"==========================================\n");
+    r_log(LOG_ICE,log_level,"PEER %s STATE DUMP",pctx->label);
+    r_log(LOG_ICE,log_level,"==========================================");
     stream=STAILQ_FIRST(&pctx->peer_streams);
     while(stream){
-      if(r=nr_ice_media_stream_dump_state(pctx,stream,out))
-        ABORT(r);
-
-      stream=STAILQ_NEXT(stream,entry);
+      nr_ice_media_stream_dump_state(pctx,stream,log_level);
     }
-    fprintf(out,"==========================================\n");
-
-    _status=0;
-  abort:
-    return(_status);
+    r_log(LOG_ICE,log_level,"==========================================");
   }
-#endif
 
 void nr_ice_peer_ctx_refresh_consent_all_streams(nr_ice_peer_ctx *pctx)
   {

@@ -2327,11 +2327,12 @@
       GetFullPathName $R8 "$R9"
       IfErrors end_GetLongPath +1 ; If the path doesn't exist return an empty string.
 
-      System::Call 'kernel32::GetLongPathNameW(w R8, w .R7, i 1024)i .R6'
-      StrCmp "$R7" "" +4 +1 ; Empty string when GetLongPathNameW is not present.
-      StrCmp $R6 0 +3 +1    ; Should never equal 0 since the path exists.
-      StrCpy $R9 "$R7"
-      GoTo end_GetLongPath
+      ; Make the drive letter uppercase.
+      StrCpy $R9 "$R8" 1    ; Copy the first char.
+      StrCpy $R8 "$R8" "" 1 ; Copy everything after the first char.
+      ; Convert the first char to uppercase.
+      System::Call "User32::CharUpper(w R9 R9)i"
+      StrCpy $R8 "$R9$R8"   ; Copy the uppercase char and the rest of the chars.
 
       ; Do it the hard way.
       StrCpy $R4 0     ; Stores the position in the string of the last \ found.
