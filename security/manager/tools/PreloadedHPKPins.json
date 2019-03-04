@@ -188,10 +188,11 @@
     { "name": "sync.services.mozilla.com", "include_subdomains": true,
       "pins": "mozilla_services", "test_mode": false, "id": 13 },
     // Catch-all for all CDN resources, including product delivery
+    // Telemetry IDs added in bug 1521983.
     { "name": "cdn.mozilla.net", "include_subdomains": true,
-      "pins": "mozilla_services", "test_mode": false },
+      "pins": "mozilla_services", "test_mode": false, "id": 16 },
     { "name": "cdn.mozilla.org", "include_subdomains": true,
-      "pins": "mozilla_services", "test_mode": false },
+      "pins": "mozilla_services", "test_mode": false, "id": 17 },
     { "name": "download.mozilla.org", "include_subdomains": false,
       "pins": "mozilla_services", "test_mode": false, "id": 14 },
     // Catch-all for everything hosted under services.mozilla.com
@@ -218,7 +219,7 @@
     // Example domain to collect per-host stats for telemetry tests.
     { "name": "exclude-subdomains.pinning.example.com",
       "include_subdomains": false, "pins": "mozilla_test",
-      "test_mode": false, "id": 0 },
+      "test_mode": false },
     { "name": "test-mode.pinning.example.com", "include_subdomains": true,
       "pins": "mozilla_test", "test_mode": true },
     // Expand twitter's pinset to include all of *.twitter.com and use

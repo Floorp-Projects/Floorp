@@ -11197,20 +11197,6 @@
     "kind": "boolean",
     "description": "Certificate pinning test results (0 = failure, 1 = success)"
   },
-  "CERT_PINNING_MOZ_RESULTS": {
-    "record_in_processes": ["main", "content"],
-    "alert_emails": ["pinning@mozilla.org"],
-    "expires_in_version": "never",
-    "kind": "boolean",
-    "description": "Certificate pinning results for Mozilla sites (0 = failure, 1 = success)"
-  },
-  "CERT_PINNING_MOZ_TEST_RESULTS": {
-    "record_in_processes": ["main", "content"],
-    "alert_emails": ["pinning@mozilla.org"],
-    "expires_in_version": "never",
-    "kind": "boolean",
-    "description": "Certificate pinning test results for Mozilla sites (0 = failure, 1 = success)"
-  },
   "CERT_PINNING_MOZ_RESULTS_BY_HOST": {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["dkeeler@mozilla.com", "pinning@mozilla.org"],
