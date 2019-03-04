@@ -271,7 +271,7 @@ class BrowserFragment : Fragment(), BackHandler {
                 .selectedSession?.url?.apply { requireContext().share(this) }
             ToolbarMenu.Item.NewPrivateTab -> {
                 val directions = BrowserFragmentDirections
-                    .actionBrowserFragmentToSearchFragment(requireComponents.core.sessionManager.selectedSession?.id)
+                    .actionBrowserFragmentToSearchFragment(null)
                 Navigation.findNavController(view!!).navigate(directions)
                 (activity as HomeActivity).browsingModeManager.mode = BrowsingModeManager.Mode.Private
             }
