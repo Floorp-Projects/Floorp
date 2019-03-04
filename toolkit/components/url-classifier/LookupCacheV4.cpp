@@ -164,11 +164,74 @@ nsresult LookupCacheV4::ClearPrefixes() {
 }
 
 nsresult LookupCacheV4::StoreToFile(nsCOMPtr<nsIFile>& aFile) {
-  return mVLPrefixSet->StoreToFile(aFile);
+  NS_ENSURE_ARG_POINTER(aFile);
+
+  nsCOMPtr<nsIOutputStream> localOutFile;
+  nsresult rv =
+      NS_NewLocalFileOutputStream(getter_AddRefs(localOutFile), aFile,
+                                  PR_WRONLY | PR_TRUNCATE | PR_CREATE_FILE);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  uint32_t fileSize = 0;
+  // Preallocate the file storage
+  {
+    nsCOMPtr<nsIFileOutputStream> fos(do_QueryInterface(localOutFile));
+    Telemetry::AutoTimer<Telemetry::URLCLASSIFIER_VLPS_FALLOCATE_TIME> timer;
+
+    fileSize = mVLPrefixSet->CalculatePreallocateSize();
+
+    Unused << fos->Preallocate(fileSize);
+  }
+
+  // Convert to buffered stream
+  nsCOMPtr<nsIOutputStream> out;
+  rv = NS_NewBufferedOutputStream(getter_AddRefs(out), localOutFile.forget(),
+                                  std::min(fileSize, MAX_BUFFER_SIZE));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = mVLPrefixSet->WritePrefixes(out);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  LOG(("[%s] Storing PrefixSet successful", mTableName.get()));
+  return NS_OK;
 }
 
 nsresult LookupCacheV4::LoadFromFile(nsCOMPtr<nsIFile>& aFile) {
-  return mVLPrefixSet->LoadFromFile(aFile);
+  Telemetry::AutoTimer<Telemetry::URLCLASSIFIER_VLPS_FILELOAD_TIME> timer;
+
+  nsCOMPtr<nsIInputStream> localInFile;
+  nsresult rv = NS_NewLocalFileInputStream(getter_AddRefs(localInFile), aFile,
+                                           PR_RDONLY | nsIFile::OS_READAHEAD);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Calculate how big the file is, make sure our read buffer isn't bigger
+  // than the file itself which is just wasting memory.
+  int64_t fileSize;
+  rv = aFile->GetFileSize(&fileSize);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (fileSize < 0 || fileSize > UINT32_MAX) {
+    return NS_ERROR_FAILURE;
+  }
+
+  uint32_t bufferSize =
+      std::min<uint32_t>(static_cast<uint32_t>(fileSize), MAX_BUFFER_SIZE);
+
+  // Convert to buffered stream
+  nsCOMPtr<nsIInputStream> in;
+  rv = NS_NewBufferedInputStream(getter_AddRefs(in), localInFile.forget(),
+                                 bufferSize);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = mVLPrefixSet->LoadPrefixes(in);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  mPrimed = true;
+  LOG(("[%s] Loading PrefixSet successful", mTableName.get()));
+
+  return NS_OK;
 }
 
 size_t LookupCacheV4::SizeOfPrefixSet() const {
