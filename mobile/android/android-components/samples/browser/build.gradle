@@ -133,6 +133,7 @@ dependencies {
     implementation project(':feature-contextmenu')
     implementation project(':feature-customtabs')
     implementation project(':feature-intent')
+    implementation project(':feature-readerview')
     implementation project(':feature-search')
     implementation project(':feature-session')
     implementation project(':feature-toolbar')

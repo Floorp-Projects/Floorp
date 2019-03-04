@@ -42,6 +42,7 @@ open class DefaultComponents(private val applicationContext: Context) {
         DefaultSettings().apply {
             historyTrackingDelegate = HistoryDelegate(historyStorage)
             requestInterceptor = SampleRequestInterceptor(applicationContext)
+            remoteDebuggingEnabled = true
             supportMultipleWindows = true
         }
     }

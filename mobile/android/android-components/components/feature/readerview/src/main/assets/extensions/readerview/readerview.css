@@ -1,0 +1,285 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* Avoid adding ID selector rules in this style sheet, since they could
+ * inadvertently match elements in the article content. */
+
+html {
+  -moz-text-size-adjust: none;
+}
+
+body {
+  padding: 20px;
+  transition-property: background-color, color;
+  transition-duration: 0.4s;
+  max-width: 35em;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+body.light {
+  background-color: #ffffff;
+  color: #222222;
+}
+
+body.sepia {
+  color: #5b4636;
+  background-color: #f4ecd8;
+}
+
+body.dark {
+  background-color: #222222;
+  color: #eeeeee;
+}
+
+body.sans-serif {
+  font-family: sans-serif;
+}
+
+body.serif {
+  font-family: serif;
+}
+
+/* Override some controls and content styles based on color scheme */
+
+body.light > .container > .header > .domain {
+  color: #ee7600;
+  border-bottom-color: #d0d0d0;
+}
+
+body.light > .container > .header > h1 {
+  color: #222222;
+}
+
+body.light > .container > .header > .credits {
+  color: #898989;
+}
+
+body.dark > .container > .header > .domain {
+  color: #ff9400;
+  border-bottom-color: #777777;
+}
+
+body.dark > .container > .header > h1 {
+  color: #eeeeee;
+}
+
+body.dark > .container > .header > .credits {
+  color: #aaaaaa;
+}
+
+body.sepia > .container > .header > .domain {
+  border-bottom-color: #5b4636 !important;
+}
+
+body.sepia > .container > .footer {
+  background-color: #dedad4 !important;
+}
+
+body.light > .container > .content .caption,
+body.light > .container > .content .wp-caption-text,
+body.light > .container > .content figcaption {
+  color: #898989;
+}
+
+body.dark > .container > .content .caption,
+body.dark > .container > .content .wp-caption-text,
+body.dark > .container > .content figcaption {
+  color: #aaaaaa;
+}
+
+body.light > .container > .content blockquote {
+  color: #898989 !important;
+  border-left-color: #d0d0d0 !important;
+}
+
+body.sepia blockquote {
+  border-inline-start: 2px solid #5b4636 !important;
+}
+
+body.dark > .container > .content blockquote {
+  color: #aaaaaa !important;
+  border-left-color: #777777 !important;
+}
+
+.reader-message {
+  margin-top: 40px;
+  text-align: center;
+  width: 100%;
+  font-size: 0.9em;
+}
+
+.header {
+  text-align: start;
+  padding-bottom: 10px;
+}
+
+.domain,
+.credits {
+  font-size: 0.9em;
+  font-family: sans-serif;
+}
+
+.domain {
+  margin-top: 10px;
+  padding-bottom: 10px;
+  color: #00acff !important;
+  text-decoration: none;
+}
+
+.domain-border {
+  margin-top: 15px;
+  border-bottom: 1.5px solid #777777;
+  width: 50%;
+}
+
+.header > h1 {
+  font-size: 1.33em;
+  font-weight: 700;
+  line-height: 1.1em;
+  width: 100%;
+  margin: 0px;
+  margin-top: 32px;
+  margin-bottom: 16px;
+  padding: 0px;
+}
+
+.header > .credits {
+  padding: 0px;
+  margin: 0px;
+  margin-bottom: 32px;
+}
+
+/*======= Article content =======*/
+
+.moz-reader-content {
+  margin-left: -20px;
+  margin-right: -20px;
+  font-size: 1em;
+}
+
+.moz-reader-content a {
+  text-decoration: underline !important;
+  font-weight: normal;
+}
+
+.moz-reader-content a,
+.moz-reader-content a:visited,
+.moz-reader-content a:hover,
+.moz-reader-content a:active {
+  color: #00acff !important;
+}
+
+.moz-reader-content h2 {
+  margin-bottom: 20px !important;
+}
+
+.moz-reader-content * {
+  max-width: 100% !important;
+  height: auto !important;
+}
+
+.moz-reader-content p {
+  line-height: 1.4em !important;
+  margin: 0px !important;
+  margin-bottom: 20px !important;
+}
+
+/* Covers all images showing edge-to-edge using a
+   an optional caption text */
+.moz-reader-content .wp-caption,
+.moz-reader-content figure {
+  display: block !important;
+  width: 100% !important;
+  margin: 0px !important;
+  margin-bottom: 32px !important;
+}
+
+/* Images marked to be shown edge-to-edge with an
+   optional captio ntext */
+.moz-reader-content p > img:only-child,
+.moz-reader-content p > a:only-child > img:only-child,
+.moz-reader-content .wp-caption img,
+.moz-reader-content figure img {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Account for body padding to make image full width */
+.moz-reader-content img[moz-reader-full-width] {
+  width: calc(100% + 40px);
+  margin-left: -20px;
+  margin-right: -20px;
+  max-width: none !important;
+}
+
+/* Image caption text */
+.moz-reader-content .caption,
+.moz-reader-content .wp-caption-text,
+.moz-reader-content figcaption {
+  font-size: 0.9em;
+  font-family: sans-serif;
+  margin: 0px !important;
+  padding-top: 4px !important;
+}
+
+/* Ensure all pre-formatted code inside the reader content
+   are properly wrapped inside content width */
+.moz-reader-content code,
+.moz-reader-content pre {
+  white-space: pre-wrap !important;
+  margin-bottom: 20px !important;
+}
+
+.moz-reader-content blockquote {
+  margin: 0px !important;
+  margin-bottom: 20px !important;
+  padding: 0px !important;
+  padding-inline-start: 16px !important;
+  border: 0px !important;
+  border-left: 2px solid !important;
+}
+
+.moz-reader-content ul,
+.moz-reader-content ol {
+  margin: 0px !important;
+  margin-bottom: 20px !important;
+  padding: 0px !important;
+  line-height: 1.5em;
+}
+
+.moz-reader-content ul {
+  padding-inline-start: 30px !important;
+  list-style: disc !important;
+}
+
+.moz-reader-content ol {
+  padding-inline-start: 35px !important;
+  list-style: decimal !important;
+}
+
+/* Hide elements with common "hidden" class names */
+.moz-reader-content .visually-hidden,
+.moz-reader-content .visuallyhidden,
+.moz-reader-content .hidden,
+.moz-reader-content .invisible,
+.moz-reader-content .sr-only {
+}
+
+/* Enforce wordpress and similar emoji/smileys aren't sized to be full-width,
+ * see bug 1399616 for context. */
+.moz-reader-content img.wp-smiley,
+.moz-reader-content img.emoji {
+  display: inline-block;
+  border-width: 0;
+  /* height: auto is implied from `.moz-reader-content *` rule. */
+  width: 1em;
+  margin: 0 .07em;
+  padding: 0;
+}
+
+.reader-show-element {
+  display: initial;
+}

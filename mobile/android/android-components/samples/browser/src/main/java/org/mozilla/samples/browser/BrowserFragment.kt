@@ -18,6 +18,7 @@ import mozilla.components.feature.contextmenu.ContextMenuFeature
 import mozilla.components.feature.customtabs.CustomTabsToolbarFeature
 import mozilla.components.feature.downloads.DownloadsFeature
 import mozilla.components.feature.prompts.PromptFeature
+import mozilla.components.feature.readerview.ReaderViewFeature
 import mozilla.components.feature.session.CoordinateScrollingFeature
 import mozilla.components.feature.session.SessionFeature
 import mozilla.components.feature.session.ThumbnailsFeature
@@ -42,7 +43,9 @@ class BrowserFragment : Fragment(), BackHandler {
     private val findInPageIntegration = ViewBoundFeatureWrapper<FindInPageIntegration>()
     private val sitePermissionsFeature = ViewBoundFeatureWrapper<SitePermissionsFeature>()
     private val thumbnailsFeature = ViewBoundFeatureWrapper<ThumbnailsFeature>()
+    private val readerViewFeature = ViewBoundFeatureWrapper<ReaderViewFeature>()
 
+    @Suppress("LongMethod")
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val layout = inflater.inflate(R.layout.fragment_browser, container, false)
 
@@ -149,6 +152,12 @@ class BrowserFragment : Fragment(), BackHandler {
             owner = this,
             view = layout)
 
+        readerViewFeature.set(
+            feature = ReaderViewFeature(requireContext(), components.engine, components.sessionManager),
+            owner = this,
+            view = layout
+        )
+
         // Observe the lifecycle for supported features
         lifecycle.addObservers(
             scrollFeature,
@@ -180,6 +189,7 @@ class BrowserFragment : Fragment(), BackHandler {
             toolbarFeature.onBackPressed() -> true
             sessionFeature.onBackPressed() -> true
             customTabsToolbarFeature.onBackPressed() -> true
+            readerViewFeature.onBackPressed() -> true
             else -> false
         }
     }
