@@ -1113,9 +1113,9 @@ stubPreparedMessages.set(`console.timeEnd('bar')`, new ConsoleMessage({
   "type": "timeEnd",
   "helperType": null,
   "level": "log",
-  "messageText": "bar: 1.21ms",
+  "messageText": "bar: 1.21ms - timer ended",
   "parameters": null,
-  "repeatId": "{\"frame\":{\"source\":\"http://example.com/browser/devtools/client/webconsole/test/fixtures/stub-generators/test-console-api.html\",\"sourceId\":\"server1.conn0.child1/source59\",\"line\":6,\"column\":9},\"groupId\":null,\"indent\":0,\"level\":\"log\",\"messageText\":\"bar: 1.21ms\",\"parameters\":null,\"source\":\"console-api\",\"type\":\"timeEnd\",\"userProvidedStyles\":[],\"private\":false,\"stacktrace\":null}",
+  "repeatId": "{\"frame\":{\"source\":\"http://example.com/browser/devtools/client/webconsole/test/fixtures/stub-generators/test-console-api.html\",\"sourceId\":\"server1.conn0.child1/source59\",\"line\":6,\"column\":9},\"groupId\":null,\"indent\":0,\"level\":\"log\",\"messageText\":\"bar: 1.21ms - timer ended\",\"parameters\":null,\"source\":\"console-api\",\"type\":\"timeEnd\",\"userProvidedStyles\":[],\"private\":false,\"stacktrace\":null}",
   "stacktrace": null,
   "frame": {
     "source": "http://example.com/browser/devtools/client/webconsole/test/fixtures/stub-generators/test-console-api.html",
