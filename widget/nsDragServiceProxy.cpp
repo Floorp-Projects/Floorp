@@ -68,7 +68,7 @@ nsresult nsDragServiceProxy::InvokeDragSessionImpl(
         }
 
         mozilla::Unused << child->SendInvokeDragSession(
-            dataTransfers, aActionType, surfaceData, stride,
+            dataTransfers, aActionType, std::move(surfaceData), stride,
             dataSurface->GetFormat(), dragRect, IPC::Principal(principal));
         StartDragSession();
         return NS_OK;

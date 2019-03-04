@@ -114,7 +114,7 @@ void RemoteAudioDecoderParent::ProcessDecodedData(
     RemoteAudioDataIPDL output(
         MediaDataIPDL(data->mOffset, data->mTime, data->mTimecode,
                       data->mDuration, data->mKeyframe),
-        audio->mChannels, audio->mRate, audio->mChannelMap, buffer);
+        audio->mChannels, audio->mRate, audio->mChannelMap, std::move(buffer));
 
     Unused << SendOutput(output);
   }
