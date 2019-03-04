@@ -20,6 +20,7 @@ class TextTrackList;
 class TextTrackCue;
 class TextTrackCueList;
 class HTMLTrackElement;
+class HTMLMediaElement;
 
 enum TextTrackSource { Track, AddTextTrack, MediaResourceSpecific };
 
@@ -101,6 +102,8 @@ class TextTrack final : public DOMEventTargetHelper {
 
  private:
   ~TextTrack();
+
+  HTMLMediaElement* GetMediaElement();
 
   RefPtr<TextTrackList> mTextTrackList;
 
