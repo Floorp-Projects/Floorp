@@ -88,7 +88,7 @@ function setResolution(aDocument, aZoom) {
 function getChildAtPoint(aIdentifier, aX, aY, aFindDeepestChild) {
   var acc = getAccessible(aIdentifier);
   if (!acc)
-    return;
+    return null;
 
   var [screenX, screenY] = getBoundsForDOMElm(acc.DOMNode);
 

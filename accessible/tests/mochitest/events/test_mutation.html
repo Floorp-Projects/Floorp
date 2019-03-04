@@ -86,6 +86,8 @@
 
         if (aEventType == kShowEvent)
           return nsIAccessibleEvent.EVENT_SHOW;
+
+        return 0;
       };
 
       this.getEventSeq = function mutateA11yTree_getEventSeq() {
@@ -159,11 +161,11 @@
         newElm.removeAttribute("id");
 
         var targets = aTargetsFunc ?
-          aTargetsFunc.call(null, newElm) : [newElm];
+          aTargetsFunc(newElm) : [newElm];
         this.setTargets(kShowEvent, targets);
 
         if (aReorderTargetFunc) {
-          var reorderTarget = aReorderTargetFunc.call(null, this.DOMNode);
+          var reorderTarget = aReorderTargetFunc(this.DOMNode);
           this.setTarget(kReorderEvent, reorderTarget);
         }
 
@@ -195,11 +197,10 @@
       };
 
       if (aTargetsFunc && (eventTypes & kHideEvent))
-        this.setTargets(kHideEvent, aTargetsFunc.call(null, this.DOMNode));
+        this.setTargets(kHideEvent, aTargetsFunc(this.DOMNode));
 
       if (aReorderTargetFunc && (eventTypes & kReorderEvent))
-        this.setTarget(kReorderEvent,
-                       aReorderTargetFunc.call(null, this.DOMNode));
+        this.setTarget(kReorderEvent, aReorderTargetFunc(this.DOMNode));
     }
 
     /**
