@@ -6,6 +6,7 @@ package org.mozilla.fenix
 
 import android.app.Activity
 import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import android.util.AttributeSet
 import android.view.View
@@ -24,6 +25,7 @@ import mozilla.components.support.ktx.kotlin.toNormalizedUrl
 import mozilla.components.support.utils.SafeIntent
 import org.mozilla.fenix.ext.components
 
+@SuppressWarnings("TooManyFunctions")
 open class HomeActivity : AppCompatActivity() {
     val themeManager = DefaultThemeManager().also {
         it.onThemeChange = { theme ->
@@ -51,9 +53,12 @@ open class HomeActivity : AppCompatActivity() {
         setSupportActionBar(navigationToolbar)
         NavigationUI.setupWithNavController(navigationToolbar, hostNavController, appBarConfiguration)
 
-        if (intent?.extras?.getBoolean(OPEN_TO_BROWSER) == true) {
-            handleOpenedFromExternalSource()
-        }
+        handleOpenedFromExternalSourceIfNecessary()
+    }
+
+    override fun onNewIntent(intent: Intent?) {
+        super.onNewIntent(intent)
+        handleOpenedFromExternalSourceIfNecessary()
     }
 
     override fun onCreateView(
@@ -87,6 +92,12 @@ open class HomeActivity : AppCompatActivity() {
             currentFocus?.also {
                 this.hideSoftInputFromWindow(it.windowToken, 0)
             }
+        }
+    }
+
+    private fun handleOpenedFromExternalSourceIfNecessary() {
+        if (intent?.extras?.getBoolean(OPEN_TO_BROWSER) == true) {
+            handleOpenedFromExternalSource()
         }
     }
 
