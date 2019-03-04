@@ -1,7 +1,5 @@
 job-defaults:
     always-target: true
-    attributes:
-        code-review: true
     treeherder:
         kind: test
         tier: 1
