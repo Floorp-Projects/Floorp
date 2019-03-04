@@ -295,3 +295,10 @@ The update channel the build is configured to use.
 openh264_rev
 ============
 Only used for openh264 plugin builds, used to signify the revision (and thus inform artifact name) of the given build.
+
+code-review
+===========
+If a task set this boolean attribute to `true`, it will be processed by the code
+review bot, the task will ran for every new Phabricator diff.
+Any supported and detected issue will be automatically reported on the
+Phabricator revision.
