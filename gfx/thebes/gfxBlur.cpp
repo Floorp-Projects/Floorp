@@ -88,6 +88,10 @@ already_AddRefed<DrawTarget> gfxAlphaBoxBlur::InitDrawTarget(
     mDrawTarget = aReferenceDT->CreateShadowDrawTarget(
         mBlur.GetSize(), SurfaceFormat::A8,
         AlphaBoxBlur::CalculateBlurSigma(aBlurRadius.width));
+    if (mDrawTarget) {
+      // See Bug 1526045 - this is to force DT initialization.
+      mDrawTarget->ClearRect(gfx::Rect());
+    }
   } else {
     // Make an alpha-only surface to draw on. We will play with the data after
     // everything is drawn to create a blur effect.
