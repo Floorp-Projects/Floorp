@@ -200,4 +200,5 @@ people before profit. Our mission: keep the Internet open and accessible to all.
     <!-- Text for the button to clear selected history items. The first parameter
         is the number of items you have selected -->
     <string name="history_delete_some">Delete %1$d Items</string>
+    <string name="full_screen_notification">Entering full screen mode</string>
 </resources>
