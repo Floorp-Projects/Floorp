@@ -846,11 +846,8 @@ add_task(async function testExtensionControlledProxyConfig() {
 
   verifyState(mainDoc, false);
 
-  // Install an extension that controls proxy settings. The extension needs
-  // incognitoOverride because controlling the proxy.settings requires private
-  // browsing access.
+  // Install an extension that controls proxy settings.
   let extension = ExtensionTestUtils.loadExtension({
-    incognitoOverride: "spanning",
     useAddonManager: "permanent",
     manifest: {
       name: "set_proxy",

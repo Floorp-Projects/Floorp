@@ -28,7 +28,6 @@ add_task(async function invalid_cookieStoreId() {
   ]});
 
   let extension = ExtensionTestUtils.loadExtension({
-    incognitoOverride: "spanning",
     manifest: {
       permissions: ["cookies"],
     },
@@ -65,7 +64,6 @@ add_task(async function perma_private_browsing_mode() {
   await SpecialPowers.pushPrefEnv({set: [["browser.privatebrowsing.autostart", true]]});
 
   let extension = ExtensionTestUtils.loadExtension({
-    incognitoOverride: "spanning",
     manifest: {
       "permissions": ["tabs", "cookies"],
     },
@@ -242,7 +240,6 @@ add_task(async function cookieStoreId_and_tabId() {
   ]});
 
   let extension = ExtensionTestUtils.loadExtension({
-    incognitoOverride: "spanning",
     manifest: {
       permissions: ["cookies"],
     },
