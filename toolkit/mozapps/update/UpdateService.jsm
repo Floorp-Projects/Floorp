@@ -6,11 +6,13 @@
 
 "use strict";
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-const {FileUtils} = ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {AUSTLMY} = ChromeUtils.import("resource://gre/modules/UpdateTelemetry.jsm");
 const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+const {AUSTLMY} = ChromeUtils.import("resource://gre/modules/UpdateTelemetry.jsm");
+const {FileUtils} = ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
+const {OS} = ChromeUtils.import("resource://gre/modules/osfile.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+
 XPCOMUtils.defineLazyGlobalGetters(this, ["DOMParser", "XMLHttpRequest"]);
 
 XPCOMUtils.defineLazyModuleGetters(this, {
@@ -41,6 +43,7 @@ const PREF_APP_UPDATE_ELEVATE_MAXATTEMPTS  = "app.update.elevate.maxAttempts";
 const PREF_APP_UPDATE_DISABLEDFORTESTING   = "app.update.disabledForTesting";
 const PREF_APP_UPDATE_IDLETIME             = "app.update.idletime";
 const PREF_APP_UPDATE_LOG                  = "app.update.log";
+const PREF_APP_UPDATE_LOG_FILE             = "app.update.log.file";
 const PREF_APP_UPDATE_NOTIFIEDUNSUPPORTED  = "app.update.notifiedUnsupported";
 const PREF_APP_UPDATE_POSTUPDATE           = "app.update.postupdate";
 const PREF_APP_UPDATE_PROMPTWAITTIME       = "app.update.promptWaitTime";
@@ -60,8 +63,9 @@ const URI_UPDATE_NS             = "http://www.mozilla.org/2005/app-update";
 const URI_UPDATE_PROMPT_DIALOG  = "chrome://mozapps/content/update/updates.xul";
 const URI_UPDATES_PROPERTIES    = "chrome://mozapps/locale/update/updates.properties";
 
-const KEY_UPDROOT         = "UpdRootD";
 const KEY_EXECUTABLE      = "XREExeF";
+const KEY_PROFILE_DIR     = "ProfD";
+const KEY_UPDROOT         = "UpdRootD";
 
 const DIR_UPDATES         = "updates";
 
@@ -75,6 +79,7 @@ const FILE_UPDATE_MAR        = "update.mar";
 const FILE_UPDATE_STATUS     = "update.status";
 const FILE_UPDATE_TEST       = "update.test";
 const FILE_UPDATE_VERSION    = "update.version";
+const FILE_UPDATE_MESSAGES   = "update_messages.log";
 
 const STATE_NONE            = "null";
 const STATE_DOWNLOADING     = "downloading";
@@ -205,9 +210,17 @@ var gUpdateMutexHandle = null;
 // The permissions of the update directory should be fixed no more than once per
 // session
 var gUpdateDirPermissionFixAttempted = false;
+// This is used for serializing writes to the update log file
+var gLogfileWritePromise;
 
 XPCOMUtils.defineLazyGetter(this, "gLogEnabled", function aus_gLogEnabled() {
-  return Services.prefs.getBoolPref(PREF_APP_UPDATE_LOG, false);
+  return Services.prefs.getBoolPref(PREF_APP_UPDATE_LOG, false) ||
+         Services.prefs.getBoolPref(PREF_APP_UPDATE_LOG_FILE, false);
+});
+
+XPCOMUtils.defineLazyGetter(this, "gLogfileEnabled",
+                            function aus_gLogfileEnabled() {
+  return Services.prefs.getBoolPref(PREF_APP_UPDATE_LOG_FILE, false);
 });
 
 XPCOMUtils.defineLazyGetter(this, "gUpdateBundle", function aus_gUpdateBundle() {
@@ -522,7 +535,8 @@ function getCanStageUpdates() {
 }
 
 /**
- * Logs a string to the error console.
+ * Logs a string to the error console. If enabled, also logs to the update
+ * messages file.
  * @param   string
  *          The string to write to the error console.
  */
@@ -530,6 +544,39 @@ function LOG(string) {
   if (gLogEnabled) {
     dump("*** AUS:SVC " + string + "\n");
     Services.console.logStringMessage("AUS:SVC " + string);
+
+    if (gLogfileEnabled) {
+      if (!gLogfileWritePromise) {
+        let logfile = Services.dirsvc.get(KEY_PROFILE_DIR, Ci.nsIFile);
+        logfile.append(FILE_UPDATE_MESSAGES);
+        gLogfileWritePromise = OS.File.open(logfile.path,
+                                            {write: true, append: true})
+                               .catch(error => {
+          dump("*** AUS:SVC Unable to open messages file: " + error + "\n");
+          Services.console.logStringMessage("AUS:SVC Unable to open messages " +
+                                            "file: " + error);
+          // Reject on failure so that writes are not attempted without a file
+          // handle.
+          return Promise.reject(error);
+        });
+      }
+      gLogfileWritePromise = gLogfileWritePromise.then(async logfile => {
+        // Catch failures from write promises and always return the logfile.
+        // This allows subsequent write attempts and ensures that the file
+        // handle keeps getting passed down the promise chain so that it will
+        // be properly closed on shutdown.
+        try {
+          let encoded = new TextEncoder().encode(string + "\n");
+          await logfile.write(encoded);
+          await logfile.flush();
+        } catch (e) {
+          dump("*** AUS:SVC Unable to write to messages file: " + e + "\n");
+          Services.console.logStringMessage("AUS:SVC Unable to write to " +
+                                            "messages file: " + e);
+        }
+        return logfile;
+      });
+    }
   }
 }
 
@@ -1703,7 +1750,10 @@ function UpdateService() {
   // profile-before-change since nsIUpdateManager uses profile-before-change
   // to shutdown and write the update xml files.
   Services.obs.addObserver(this, "quit-application");
+  // This one call observes PREF_APP_UPDATE_LOG and PREF_APP_UPDATE_LOG_FILE
   Services.prefs.addObserver(PREF_APP_UPDATE_LOG, this);
+
+  this._logStatus();
 }
 
 UpdateService.prototype = {
@@ -1743,7 +1793,7 @@ UpdateService.prototype = {
    * @param   data
    *          Additional data
    */
-  observe: function AUS_observe(subject, topic, data) {
+  observe: async function AUS_observe(subject, topic, data) {
     switch (topic) {
       case "post-update-processing":
         // This pref was not cleared out of profiles after it stopped being used
@@ -1781,8 +1831,20 @@ UpdateService.prototype = {
         this._offlineStatusChanged(data);
         break;
       case "nsPref:changed":
-        if (data == PREF_APP_UPDATE_LOG) {
-          gLogEnabled = Services.prefs.getBoolPref(PREF_APP_UPDATE_LOG, false);
+        if (data == PREF_APP_UPDATE_LOG || data == PREF_APP_UPDATE_LOG_FILE) {
+          gLogEnabled; // Assigning this before it is lazy-loaded is an error.
+          gLogEnabled =
+            Services.prefs.getBoolPref(PREF_APP_UPDATE_LOG, false) ||
+            Services.prefs.getBoolPref(PREF_APP_UPDATE_LOG_FILE, false);
+        }
+        if (data == PREF_APP_UPDATE_LOG_FILE) {
+          gLogfileEnabled; // Assigning this before it is lazy-loaded is an
+                           // error.
+          gLogfileEnabled =
+            Services.prefs.getBoolPref(PREF_APP_UPDATE_LOG_FILE, false);
+          if (gLogfileEnabled) {
+            this._logStatus();
+          }
         }
         break;
       case "quit-application":
@@ -1805,6 +1867,15 @@ UpdateService.prototype = {
         // In case an update check is in progress.
         Cc["@mozilla.org/updates/update-checker;1"].
           createInstance(Ci.nsIUpdateChecker).stopCurrentCheck();
+
+        if (gLogfileWritePromise) {
+          // Intentionally passing a null function for the failure case, which
+          // occurs when the file was not opened successfully.
+          gLogfileWritePromise = gLogfileWritePromise.then(logfile => {
+            logfile.close();
+          }, () => {});
+          await gLogfileWritePromise;
+        }
         break;
       case "test-close-handle-update-mutex":
         if (Cu.isInAutomation) {
@@ -2671,6 +2742,23 @@ UpdateService.prototype = {
    */
   get isDownloading() {
     return this._downloader && this._downloader.isBusy;
+  },
+
+  _logStatus: function AUS__logStatus() {
+    if (!gLogEnabled) {
+      return;
+    }
+    // These getters print their own logging
+    this.canCheckForUpdates;
+    this.canApplyUpdates;
+    this.canStageUpdates;
+    LOG("Elevation required: " + this.elevationRequired);
+    LOG("Update being handled by other instance: " +
+        this.isOtherInstanceHandlingUpdates);
+    LOG("Downloading: " + !!this.isDownloading);
+    if (this._downloader) {
+      LOG("Downloading complete update: " + this._downloader.isCompleteUpdate);
+    }
   },
 
   classID: UPDATESERVICE_CID,
