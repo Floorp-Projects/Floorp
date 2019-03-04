@@ -1157,9 +1157,9 @@ function handleRequest(req, res) {
 }
 
 // Set up the SSL certs for our server - this server has a cert for foo.example.com
-// signed by netwerk/tests/unit/CA.cert.der
+// signed by netwerk/tests/unit/http2-ca.pem
 var options = {
-  key: fs.readFileSync(__dirname + '/http2-key.pem'),
+  key: fs.readFileSync(__dirname + '/http2-cert.key'),
   cert: fs.readFileSync(__dirname + '/http2-cert.pem'),
 };
 
