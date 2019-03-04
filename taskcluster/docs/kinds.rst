@@ -61,12 +61,6 @@ unit tests, source-code analysis, or measurement work. While source-test tasks r
 a source checkout, it is still possible for them to depend on a build artifact, though
 often they do not.
 
-code-review
------------
-
-Publish issues found by source-test tasks on Phabricator.
-This is a part of Release Management code review Bot.
-
 upload-symbols
 --------------
 
