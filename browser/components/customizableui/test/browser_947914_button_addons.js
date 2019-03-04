@@ -21,8 +21,8 @@ add_task(async function() {
   addonsButton.click();
 
   newTab = gBrowser.selectedTab;
-  await waitForCondition(() => gBrowser.currentURI &&
-                               gBrowser.currentURI.spec == "about:addons");
+  await TestUtils.waitForCondition(() => gBrowser.currentURI &&
+                                         gBrowser.currentURI.spec == "about:addons");
 
   let addonsPage = gBrowser.selectedBrowser.contentWindow.document.
                             getElementById("addons-page");
