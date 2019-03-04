@@ -128,15 +128,6 @@ struct LoadInfoArgs
 };
 
 /**
- * Not every channel necessarily has a loadInfo attached.
- */
-union OptionalLoadInfoArgs
-{
-  void_t;
-  LoadInfoArgs;
-};
-
-/**
  * This structure is used to carry selected properties of a LoadInfo
  * object to child processes to merge LoadInfo changes from the parent
  * process.  We don't want to use LoadInfoArgs for that since it's
@@ -244,7 +235,7 @@ struct HttpChannelOpenArgs
   bool                        allowAltSvc;
   bool                        beConservative;
   uint32_t                    tlsFlags;
-  OptionalLoadInfoArgs        loadInfo;
+  LoadInfoArgs?               loadInfo;
   OptionalHttpResponseHead    synthesizedResponseHead;
   nsCString                   synthesizedSecurityInfoSerialization;
   uint32_t                    cacheKey;
@@ -294,7 +285,7 @@ struct FTPChannelOpenArgs
   uint64_t                  startPos;
   nsCString                 entityID;
   IPCStream?                uploadStream;
-  OptionalLoadInfoArgs      loadInfo;
+  LoadInfoArgs?             loadInfo;
   uint32_t                  loadFlags;
 };
 

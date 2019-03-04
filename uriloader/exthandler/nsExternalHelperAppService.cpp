@@ -638,7 +638,7 @@ nsresult nsExternalHelperAppService::DoContentContentProcessHelper(
   SerializeURI(uri, uriParams);
   SerializeURI(referrer, referrerParams);
 
-  mozilla::net::OptionalLoadInfoArgs loadInfoArgs;
+  Maybe<mozilla::net::LoadInfoArgs> loadInfoArgs;
   MOZ_ALWAYS_SUCCEEDS(LoadInfoToLoadInfoArgs(loadInfo, &loadInfoArgs));
 
   // Now we build a protocol for forwarding our data to the parent.  The

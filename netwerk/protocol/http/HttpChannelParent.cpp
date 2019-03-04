@@ -395,7 +395,7 @@ bool HttpChannelParent::DoAsyncOpen(
     const bool& doResumeAt, const uint64_t& startPos, const nsCString& entityID,
     const bool& chooseApplicationCache, const nsCString& appCacheClientID,
     const bool& allowSpdy, const bool& allowAltSvc, const bool& beConservative,
-    const uint32_t& tlsFlags, const OptionalLoadInfoArgs& aLoadInfoArgs,
+    const uint32_t& tlsFlags, const Maybe<LoadInfoArgs>& aLoadInfoArgs,
     const OptionalHttpResponseHead& aSynthesizedResponseHead,
     const nsCString& aSecurityInfoSerialization, const uint32_t& aCacheKey,
     const uint64_t& aRequestContextID,
