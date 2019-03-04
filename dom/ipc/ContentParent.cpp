@@ -3632,7 +3632,7 @@ bool ContentParent::DeallocPPSMContentDownloaderParent(
 
 PExternalHelperAppParent* ContentParent::AllocPExternalHelperAppParent(
     const OptionalURIParams& uri,
-    const mozilla::net::OptionalLoadInfoArgs& aLoadInfoArgs,
+    const Maybe<mozilla::net::LoadInfoArgs>& aLoadInfoArgs,
     const nsCString& aMimeContentType, const nsCString& aContentDisposition,
     const uint32_t& aContentDispositionHint,
     const nsString& aContentDispositionFilename, const bool& aForceSave,
@@ -3655,8 +3655,9 @@ bool ContentParent::DeallocPExternalHelperAppParent(
 
 mozilla::ipc::IPCResult ContentParent::RecvPExternalHelperAppConstructor(
     PExternalHelperAppParent* actor, const OptionalURIParams& uri,
-    const OptionalLoadInfoArgs& loadInfoArgs, const nsCString& aMimeContentType,
-    const nsCString& aContentDisposition, const uint32_t& aContentDispositionHint,
+    const Maybe<LoadInfoArgs>& loadInfoArgs, const nsCString& aMimeContentType,
+    const nsCString& aContentDisposition,
+    const uint32_t& aContentDispositionHint,
     const nsString& aContentDispositionFilename, const bool& aForceSave,
     const int64_t& aContentLength, const bool& aWasFileChannel,
     const OptionalURIParams& aReferrer, PBrowserParent* aBrowser) {

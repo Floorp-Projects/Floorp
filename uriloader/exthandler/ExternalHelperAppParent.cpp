@@ -85,11 +85,10 @@ void UpdateContentContext(nsIStreamListener* aListener,
   static_cast<nsExternalAppHandler*>(aListener)->SetContentContext(window);
 }
 
-void ExternalHelperAppParent::Init(const mozilla::net::OptionalLoadInfoArgs& aLoadInfoArgs,
-                                   const nsCString& aMimeContentType,
-                                   const bool& aForceSave,
-                                   const OptionalURIParams& aReferrer,
-                                   PBrowserParent* aBrowser) {
+void ExternalHelperAppParent::Init(
+    const Maybe<mozilla::net::LoadInfoArgs>& aLoadInfoArgs,
+    const nsCString& aMimeContentType, const bool& aForceSave,
+    const OptionalURIParams& aReferrer, PBrowserParent* aBrowser) {
   mozilla::ipc::LoadInfoArgsToLoadInfo(aLoadInfoArgs,
                                        getter_AddRefs(mLoadInfo));
 

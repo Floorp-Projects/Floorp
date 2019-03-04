@@ -19,7 +19,7 @@ async protocol PWebrtcProxyChannel
 parent:
   async AsyncOpen(nsCString aHost,
                   int32_t aPort,
-                  OptionalLoadInfoArgs aLoadInfoArgs,
+                  LoadInfoArgs? aLoadInfoArgs,
                   nsCString aAlpn);
   async Write(uint8_t[] aWriteData);
   async Close();

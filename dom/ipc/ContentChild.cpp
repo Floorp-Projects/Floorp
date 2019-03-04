@@ -2018,7 +2018,7 @@ bool ContentChild::DeallocPPSMContentDownloaderChild(
 
 PExternalHelperAppChild* ContentChild::AllocPExternalHelperAppChild(
     const OptionalURIParams& uri,
-    const mozilla::net::OptionalLoadInfoArgs& aLoadInfoArgs,
+    const Maybe<mozilla::net::LoadInfoArgs>& aLoadInfoArgs,
     const nsCString& aMimeContentType, const nsCString& aContentDisposition,
     const uint32_t& aContentDispositionHint,
     const nsString& aContentDispositionFilename, const bool& aForceSave,
@@ -3555,7 +3555,7 @@ mozilla::ipc::IPCResult ContentChild::RecvSaveRecording(
 
 mozilla::ipc::IPCResult ContentChild::RecvCrossProcessRedirect(
     const uint32_t& aRegistrarId, nsIURI* aURI, const uint32_t& aNewLoadFlags,
-    const OptionalLoadInfoArgs& aLoadInfo, const uint64_t& aChannelId,
+    const Maybe<LoadInfoArgs>& aLoadInfo, const uint64_t& aChannelId,
     nsIURI* aOriginalURI, const uint64_t& aIdentifier) {
   nsCOMPtr<nsILoadInfo> loadInfo;
   nsresult rv =

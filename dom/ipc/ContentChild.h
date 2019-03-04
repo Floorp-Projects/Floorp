@@ -280,7 +280,7 @@ class ContentChild final : public PContentChild,
 
   PExternalHelperAppChild* AllocPExternalHelperAppChild(
       const OptionalURIParams& uri,
-      const mozilla::net::OptionalLoadInfoArgs& aLoadInfoArgs,
+      const Maybe<mozilla::net::LoadInfoArgs>& aLoadInfoArgs,
       const nsCString& aMimeContentType, const nsCString& aContentDisposition,
       const uint32_t& aContentDispositionHint,
       const nsString& aContentDispositionFilename, const bool& aForceSave,
@@ -680,9 +680,8 @@ class ContentChild final : public PContentChild,
 
   mozilla::ipc::IPCResult RecvCrossProcessRedirect(
       const uint32_t& aRegistrarId, nsIURI* aURI, const uint32_t& aNewLoadFlags,
-      const OptionalLoadInfoArgs& aLoadInfoForwarder,
-      const uint64_t& aChannelId, nsIURI* aOriginalURI,
-      const uint64_t& aIdentifier);
+      const Maybe<LoadInfoArgs>& aLoadInfoForwarder, const uint64_t& aChannelId,
+      nsIURI* aOriginalURI, const uint64_t& aIdentifier);
 
 #ifdef NIGHTLY_BUILD
   // Fetch the current number of pending input events.
