@@ -280,8 +280,6 @@ const AccessibilityEventObserver = {
       eventManager.handleAccEvent(event);
     } catch (x) {
       Logger.logException(x, "Error handing accessible event");
-    } finally {
-      return;
     }
   },
 };

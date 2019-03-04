@@ -90,6 +90,8 @@
           default:
             return INVOKER_ACTION_FAILED;
         }
+        // 0 means the action succeeded.
+        return 0;
       };
 
       this.getEventType = function coalescenceBase_getEventType(aAction) {
@@ -99,6 +101,7 @@
           case kAddElm: case kShowElm:
             return EVENT_SHOW;
         }
+        return 0;
       };
 
       this.getActionName = function coalescenceBase_getActionName(aAction) {
