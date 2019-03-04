@@ -125,7 +125,7 @@ function transformConsoleAPICallPacket(packet) {
         // if corresponding console.time() was called before.
         const duration = Math.round(timer.duration * 100) / 100;
         if (type === "timeEnd") {
-          messageText = l10n.getFormatStr("timeEnd", [timer.name, duration]);
+          messageText = l10n.getFormatStr("console.timeEnd", [timer.name, duration]);
           parameters = null;
         } else if (type === "timeLog") {
           const [, ...rest] = parameters;
