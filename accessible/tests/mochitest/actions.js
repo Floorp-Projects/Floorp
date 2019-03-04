@@ -132,6 +132,7 @@ function actionInvoker(aAccOrElmOrId, aActionIndex, aActionName, aEventSeq) {
       ok(false, "doAction(" + aActionIndex + ") failed with: " + e.name);
       return INVOKER_ACTION_FAILED;
     }
+    return null;
   };
 
   this.eventSeq = aEventSeq;
