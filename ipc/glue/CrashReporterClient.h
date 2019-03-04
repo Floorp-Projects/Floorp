@@ -43,7 +43,7 @@ class CrashReporterClient {
 
     InitSingletonWithShmem(shmem);
     Unused << aToplevelProtocol->SendInitCrashReporter(
-        shmem, CrashReporter::CurrentThreadId());
+        std::move(shmem), CrashReporter::CurrentThreadId());
     return true;
   }
 

@@ -7508,7 +7508,7 @@ void nsContentUtils::TransferableToIPCTransferable(
 
         IPCDataTransferItem* item = aIPCDataTransfer->items().AppendElement();
         item->flavor() = flavorStr;
-        item->data() = dataAsShmem;
+        item->data() = std::move(dataAsShmem);
       } else if (nsCOMPtr<nsIInputStream> stream = do_QueryInterface(data)) {
         // Images to be pasted on the clipboard are nsIInputStreams
         nsCString imageData;
@@ -7521,7 +7521,7 @@ void nsContentUtils::TransferableToIPCTransferable(
 
         IPCDataTransferItem* item = aIPCDataTransfer->items().AppendElement();
         item->flavor() = flavorStr;
-        item->data() = imageDataShmem;
+        item->data() = std::move(imageDataShmem);
       } else if (nsCOMPtr<imgIContainer> image = do_QueryInterface(data)) {
         // Images to be placed on the clipboard are imgIContainers.
         RefPtr<mozilla::gfx::SourceSurface> surface = image->GetFrame(
@@ -7549,7 +7549,7 @@ void nsContentUtils::TransferableToIPCTransferable(
         IPCDataTransferItem* item = aIPCDataTransfer->items().AppendElement();
         item->flavor() = flavorStr;
         // Turn item->data() into an nsCString prior to accessing it.
-        item->data() = surfaceData.ref();
+        item->data() = std::move(surfaceData.ref());
 
         IPCDataTransferImage& imageDetails = item->imageDetails();
         mozilla::gfx::IntSize size = dataSurface->GetSize();
@@ -7580,7 +7580,7 @@ void nsContentUtils::TransferableToIPCTransferable(
               IPCDataTransferItem* item =
                   aIPCDataTransfer->items().AppendElement();
               item->flavor() = type;
-              item->data() = dataAsShmem;
+              item->data() = std::move(dataAsShmem);
             }
 
             continue;

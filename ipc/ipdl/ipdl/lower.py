@@ -698,6 +698,8 @@ necessarily a C++ reference."""
         """Return this decl's C++ Type with inparam semantics."""
         if self.ipdltype.isIPDL() and self.ipdltype.isActor():
             return self.bareType(side)
+        elif _cxxTypeNeedsMoveForSend(self.ipdltype):
+            return self.rvalueRefType(side)
         return self.constRefType(side)
 
     def moveType(self, side):
@@ -978,7 +980,7 @@ class MessageDecl(ipdl.ast.MessageDecl):
         name = _sendPrefix(self.decl.type) + self.baseName()
         if self.decl.type.isCtor():
             name += 'Constructor'
-        return ExprVar(name)
+        return name
 
     def hasReply(self):
         return (self.decl.type.hasReply()
@@ -2106,7 +2108,7 @@ class _ParamTraits():
             ct = c.bareType(fq=True)
             readcase.addstmts([
                 StmtDecl(Decl(ct, tmpvar.name), init=c.defaultValue(fq=True)),
-                StmtExpr(ExprAssn(ExprDeref(cls.var), tmpvar)),
+                StmtExpr(ExprAssn(ExprDeref(cls.var), ExprMove(tmpvar))),
                 cls._checkedRead(c.ipdltype,
                                  ExprAddrOf(ExprCall(ExprSelect(cls.var, '->',
                                                                 c.getTypeName()))),
@@ -2534,7 +2536,7 @@ def _generateCxxUnion(ud):
             StmtExpr(ExprAssn(mtypevar, c.enumvar()))])
         cls.addstmts([copyctor, Whitespace.NL])
 
-        if not _cxxTypeCanMove(c.ipdltype):
+        if not _cxxTypeCanMove(c.ipdltype) or _cxxTypeNeedsMoveForSend(c.ipdltype):
             continue
         movector = ConstructorDefn(ConstructorDecl(
             ud.name, params=[Decl(c.forceMoveType(), othervar.name)]))
@@ -2641,7 +2643,7 @@ def _generateCxxUnion(ud):
         cls.addstmts([opeq, Whitespace.NL])
 
         # Union& operator=(T&&)
-        if not _cxxTypeCanMove(c.ipdltype):
+        if not _cxxTypeCanMove(c.ipdltype) or _cxxTypeNeedsMoveForSend(c.ipdltype):
             continue
 
         opeq = MethodDefn(MethodDecl(
@@ -4118,13 +4120,6 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         case.addstmt(StmtReturn(_Result.Processed))
         return (lbl, case)
 
-    @staticmethod
-    def hasMoveableParams(md):
-        for param in md.decl.type.params:
-            if _cxxTypeCanMoveSend(param):
-                return True
-        return False
-
     def genAsyncSendMethod(self, md):
         method = MethodDefn(self.makeSendMethodDecl(md))
         msgvar, stmts = self.makeMessage(md, errfnSend)
@@ -4137,16 +4132,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                         + sendstmts
                         + [StmtReturn(retvar)])
 
-        if self.hasMoveableParams(md):
-            movemethod = MethodDefn(self.makeSendMethodDecl(md, paramsems='move'))
-            movemethod.addstmts(stmts
-                                + [Whitespace.NL]
-                                + self.genVerifyMessage(md.decl.type.verify, md.params,
-                                                        errfnSend, ExprVar('msg__'))
-                                + sendstmts
-                                + [StmtReturn(retvar)])
-        else:
-            movemethod = None
+        movemethod = None
 
         # Add the promise overload if we need one.
         if md.returns:
@@ -4185,21 +4171,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             + [Whitespace.NL,
                 StmtReturn.TRUE])
 
-        if self.hasMoveableParams(md):
-            movemethod = MethodDefn(self.makeSendMethodDecl(md, paramsems='move'))
-            movemethod.addstmts(
-                serstmts
-                + self.genVerifyMessage(md.decl.type.verify, md.params, errfnSend,
-                                        ExprVar('msg__'))
-                + [Whitespace.NL,
-                    StmtDecl(Decl(Type('Message'), replyvar.name))]
-                + sendstmts
-                + [failif]
-                + desstmts
-                + [Whitespace.NL,
-                    StmtReturn.TRUE])
-        else:
-            movemethod = None
+        movemethod = None
 
         return method, movemethod
 
@@ -4679,7 +4651,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
 
         args = [p.var() for p in md.params] + [resolvefn, rejectfn]
         stmts += [Whitespace.NL,
-                  StmtExpr(ExprCall(ExprVar(md.sendMethod().name), args=args)),
+                  StmtExpr(ExprCall(ExprVar(md.sendMethod()), args=args)),
                   StmtReturn(retpromise)]
         return stmts
 
@@ -4750,7 +4722,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             returnsems = 'out'
             rettype = Type.BOOL
         decl = MethodDecl(
-            md.sendMethod().name,
+            md.sendMethod(),
             params=md.makeCxxParams(paramsems, returnsems=returnsems,
                                     side=self.side, implicit=implicit),
             warn_unused=(self.side == 'parent' and returnsems != 'callback'),

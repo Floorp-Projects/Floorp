@@ -270,7 +270,7 @@ bool ChromiumCDMParent::InitCDMInputBuffer(gmp::CDMInputBuffer& aBuffer,
           ? crypto.mIV
           : crypto.mConstantIV;
   aBuffer = gmp::CDMInputBuffer(
-      shmem, crypto.mKeyId, iv, aSample->mTime.ToMicroseconds(),
+      std::move(shmem), crypto.mKeyId, iv, aSample->mTime.ToMicroseconds(),
       aSample->mDuration.ToMicroseconds(), crypto.mPlainSizes,
       crypto.mEncryptedSizes, crypto.mCryptByteBlock, crypto.mSkipByteBlock,
       encryptionScheme);
@@ -291,7 +291,7 @@ bool ChromiumCDMParent::SendBufferToCDM(uint32_t aSizeInBytes) {
   if (!AllocShmem(aSizeInBytes, Shmem::SharedMemory::TYPE_BASIC, &shmem)) {
     return false;
   }
-  if (!SendGiveBuffer(shmem)) {
+  if (!SendGiveBuffer(std::move(shmem))) {
     DeallocShmem(shmem);
     return false;
   }
@@ -713,7 +713,7 @@ ipc::IPCResult ChromiumCDMParent::RecvDecodedShmem(const CDMVideoFrame& aFrame,
 
   // Return the shmem to the CDM so the shmem can be reused to send us
   // another frame.
-  if (!SendGiveBuffer(aShmem)) {
+  if (!SendGiveBuffer(std::move(aShmem))) {
     mDecodePromise.RejectIfExists(
         MediaResult(NS_ERROR_OUT_OF_MEMORY,
                     RESULT_DETAIL("Can't return shmem to CDM process")),

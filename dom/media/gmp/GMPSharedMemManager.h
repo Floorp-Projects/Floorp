@@ -68,7 +68,7 @@ class GMPSharedMemManager {
   virtual bool Alloc(size_t aSize,
                      ipc::Shmem::SharedMemory::SharedMemoryType aType,
                      ipc::Shmem* aMem) = 0;
-  virtual void Dealloc(ipc::Shmem& aMem) = 0;
+  virtual void Dealloc(ipc::Shmem&& aMem) = 0;
 
  private:
   nsTArray<ipc::Shmem>& GetGmpFreelist(GMPSharedMem::GMPMemoryClasses aTypes) {
