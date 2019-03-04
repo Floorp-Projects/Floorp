@@ -101,11 +101,6 @@ class nsSubDocumentFrame final : public nsAtomicContainerFrame,
   bool ReflowFinished() override;
   void ReflowCallbackCanceled() override;
 
-  bool ShouldClampScrollPosition() {
-    nsFrameLoader* frameLoader = FrameLoader();
-    return !frameLoader || frameLoader->ShouldClampScrollPosition();
-  }
-
   /**
    * Return true if pointer event hit-testing should be allowed to target
    * content in the subdocument.
