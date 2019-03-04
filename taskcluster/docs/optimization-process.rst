@@ -65,6 +65,9 @@ simultaneously rewrites all dependencies to refer to taskIds instead of labels.
 To do so, it assigns a taskId to each retained task and uses the replacement
 taskId for all replaced tasks.
 
+The `soft-dependencies` are then solved for each task, by adding all the
+remaining tasks in the subgraph from that list to its `dependencies`.
+
 The result is an optimized taskgraph with tasks named by taskId instead of
 label. At this phase, the edges in the task graph diverge from the
 ``task.dependencies`` attributes, as the latter may contain dependencies

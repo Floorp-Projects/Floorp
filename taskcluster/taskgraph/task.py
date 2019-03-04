@@ -19,6 +19,8 @@ class Task(object):
     - optimization: optimization to apply to the task (see taskgraph.optimize)
     - dependencies: tasks this one depends on, in the form {name: label}, for example
       {'build': 'build-linux64/opt', 'docker-image': 'build-docker-image-desktop-test'}
+    - soft_dependencies: tasks this one may depend on if they are available post
+      optimisation. They are set as a list of tasks label.
 
     And later, as the task-graph processing proceeds:
 
@@ -35,6 +37,7 @@ class Task(object):
     task_id = attr.ib(default=None, init=False)
     optimization = attr.ib(default=None)
     dependencies = attr.ib(factory=dict)
+    soft_dependencies = attr.ib(factory=list)
     release_artifacts = attr.ib(
         converter=attr.converters.optional(frozenset),
         default=None,
@@ -49,6 +52,7 @@ class Task(object):
             'label': self.label,
             'attributes': self.attributes,
             'dependencies': self.dependencies,
+            'soft_dependencies': self.soft_dependencies,
             'optimization': self.optimization,
             'task': self.task,
         }
@@ -72,6 +76,7 @@ class Task(object):
             task=task_dict['task'],
             optimization=task_dict['optimization'],
             dependencies=task_dict.get('dependencies'),
+            soft_dependencies=task_dict.get('soft_dependencies'),
             release_artifacts=task_dict.get('release-artifacts'),
         )
         if 'task_id' in task_dict:
