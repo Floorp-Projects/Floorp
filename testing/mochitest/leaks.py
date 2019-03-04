@@ -21,7 +21,9 @@ class ShutdownLeaks(object):
         self.logger = logger
         self.tests = []
         self.leakedWindows = {}
+        self.hiddenWindowsCount = 0
         self.leakedDocShells = set()
+        self.hiddenDocShellsCount = 0
         self.currentTest = None
         self.seenShutdown = set()
 
@@ -79,6 +81,19 @@ class ShutdownLeaks(object):
                                                                x for x in test["leakedDocShells"]]
                                                               )))
 
+            if test["hiddenWindowsCount"] > 0:
+                # Note: to figure out how many hidden windows were created, we divide
+                # this number by 2, because 1 hidden window creation implies in
+                # 1 outer window + 1 inner window.
+                self.logger.info(
+                    "TEST-INFO | %s | This test created %d hidden window(s)"
+                    % (test["fileName"], test["hiddenWindowsCount"] / 2))
+
+            if test["hiddenDocShellsCount"] > 0:
+                self.logger.info(
+                    "TEST-INFO | %s | This test created %d hidden docshell(s)"
+                    % (test["fileName"], test["hiddenDocShellsCount"]))
+
         return failures
 
     def _logWindow(self, line):
@@ -101,7 +116,11 @@ class ShutdownLeaks(object):
             else:
                 windows.discard(key)
         elif int(pid) in self.seenShutdown and not created:
-            self.leakedWindows[key] = self._parseValue(line, "url")
+            url = self._parseValue(line, "url")
+            if not self._isHiddenWindowURL(url):
+                self.leakedWindows[key] = url
+            else:
+                self.hiddenWindowsCount += 1
 
     def _logDocShell(self, line):
         created = line[:2] == "++"
@@ -123,7 +142,11 @@ class ShutdownLeaks(object):
             else:
                 docShells.discard(key)
         elif int(pid) in self.seenShutdown and not created:
-            self.leakedDocShells.add(key)
+            url = self._parseValue(line, "url")
+            if not self._isHiddenWindowURL(url):
+                self.leakedDocShells.add(key)
+            else:
+                self.hiddenDocShellsCount += 1
 
     def _parseValue(self, line, name):
         match = re.search("\[%s = (.+?)\]" % name, line)
@@ -139,14 +162,16 @@ class ShutdownLeaks(object):
                 id for id in test["windows"] if id in self.leakedWindows]
             test["leakedWindows"] = [self.leakedWindows[id]
                                      for id in leakedWindows]
+            test["hiddenWindowsCount"] = self.hiddenWindowsCount
             test["leakedWindowsString"] = ', '.join(
                 ["[pid = %s] [serial = %s]" % x for x in leakedWindows])
             test["leakedDocShells"] = [
                 id for id in test["docShells"] if id in self.leakedDocShells]
+            test["hiddenDocShellsCount"] = self.hiddenDocShellsCount
             test["leakCount"] = len(
                 test["leakedWindows"]) + len(test["leakedDocShells"])
 
-            if test["leakCount"]:
+            if test["leakCount"] or test["hiddenWindowsCount"] or test["hiddenDocShellsCount"]:
                 leakingTests.append(test)
 
         return sorted(leakingTests, key=itemgetter("leakCount"), reverse=True)
@@ -161,6 +186,10 @@ class ShutdownLeaks(object):
                 counted.add(url)
 
         return sorted(counts, key=itemgetter(1), reverse=True)
+
+    def _isHiddenWindowURL(self, url):
+        return (url == "resource://gre-resources/hiddenWindow.html" or  # Win / Linux
+                url == "chrome://browser/content/hiddenWindow.xul")     # Mac
 
 
 class LSANLeaks(object):
