@@ -500,9 +500,10 @@ class PresShell final : public nsIPresShell,
    public:
     EventHandler() = delete;
     EventHandler(const EventHandler& aOther) = delete;
-    explicit EventHandler(PresShell& aPresShell) : mPresShell(aPresShell) {}
+    explicit EventHandler(PresShell& aPresShell)
+        : mPresShell(aPresShell), mCurrentEventInfoSetter(nullptr) {}
     explicit EventHandler(RefPtr<PresShell>&& aPresShell)
-        : mPresShell(aPresShell.forget()) {}
+        : mPresShell(aPresShell.forget()), mCurrentEventInfoSetter(nullptr) {}
 
     /**
      * HandleEvent() may dispatch aGUIEvent.  This may redirect the event to
@@ -536,16 +537,13 @@ class PresShell final : public nsIPresShell,
     nsresult HandleRetargetedEvent(WidgetGUIEvent* aGUIEvent,
                                    nsEventStatus* aEventStatus,
                                    nsIContent* aTarget) {
-      mPresShell->PushCurrentEventInfo(nullptr, nullptr);
-      mPresShell->mCurrentEventContent = aTarget;
-      nsresult rv = NS_OK;
-      if (mPresShell->GetCurrentEventFrame()) {
-        nsCOMPtr<nsIContent> overrideClickTarget;
-        rv = HandleEventInternal(aGUIEvent, aEventStatus, true,
-                                 overrideClickTarget);
+      AutoCurrentEventInfoSetter eventInfoSetter(*this, nullptr, aTarget);
+      if (!mPresShell->GetCurrentEventFrame()) {
+        return NS_OK;
       }
-      mPresShell->PopCurrentEventInfo();
-      return rv;
+      nsCOMPtr<nsIContent> overrideClickTarget;
+      return HandleEventInternal(aGUIEvent, aEventStatus, true,
+                                 overrideClickTarget);
     }
 
     /**
@@ -1067,19 +1065,50 @@ class PresShell final : public nsIPresShell,
                                  bool aTouchIsNew);
 
     /**
+     * AutoCurrentEventInfoSetter() pushes and pops current event info of
+     * aEventHandler.mPresShell.
+     */
+    struct MOZ_STACK_CLASS AutoCurrentEventInfoSetter final {
+      explicit AutoCurrentEventInfoSetter(EventHandler& aEventHandler)
+          : mEventHandler(aEventHandler) {
+        MOZ_DIAGNOSTIC_ASSERT(!mEventHandler.mCurrentEventInfoSetter);
+        mEventHandler.mCurrentEventInfoSetter = this;
+        mEventHandler.mPresShell->PushCurrentEventInfo(nullptr, nullptr);
+      }
+      AutoCurrentEventInfoSetter(EventHandler& aEventHandler, nsIFrame* aFrame,
+                                 nsIContent* aContent)
+          : mEventHandler(aEventHandler) {
+        MOZ_DIAGNOSTIC_ASSERT(!mEventHandler.mCurrentEventInfoSetter);
+        mEventHandler.mCurrentEventInfoSetter = this;
+        mEventHandler.mPresShell->PushCurrentEventInfo(aFrame, aContent);
+      }
+      AutoCurrentEventInfoSetter(EventHandler& aEventHandler,
+                                 EventTargetData& aEventTargetData)
+          : mEventHandler(aEventHandler) {
+        MOZ_DIAGNOSTIC_ASSERT(!mEventHandler.mCurrentEventInfoSetter);
+        mEventHandler.mCurrentEventInfoSetter = this;
+        mEventHandler.mPresShell->PushCurrentEventInfo(
+            aEventTargetData.mFrame, aEventTargetData.mContent);
+      }
+      ~AutoCurrentEventInfoSetter() {
+        mEventHandler.mPresShell->PopCurrentEventInfo();
+        mEventHandler.mCurrentEventInfoSetter = nullptr;
+      }
+
+     private:
+      EventHandler& mEventHandler;
+    };
+
+    /**
      * Wrapper methods to access methods of mPresShell.
      */
     nsPresContext* GetPresContext() const {
       return mPresShell->GetPresContext();
     }
     Document* GetDocument() const { return mPresShell->GetDocument(); }
-    void PushCurrentEventInfo(nsIFrame* aFrame, nsIContent* aContent) {
-      mPresShell->PushCurrentEventInfo(aFrame, aContent);
-    }
     nsCSSFrameConstructor* FrameConstructor() const {
       return mPresShell->FrameConstructor();
     }
-    void PopCurrentEventInfo() { mPresShell->PopCurrentEventInfo(); }
     already_AddRefed<nsPIDOMWindowOuter> GetFocusedDOMWindowInOurWindow() {
       return mPresShell->GetFocusedDOMWindowInOurWindow();
     }
@@ -1091,6 +1120,7 @@ class PresShell final : public nsIPresShell,
     }
 
     OwningNonNull<PresShell> mPresShell;
+    AutoCurrentEventInfoSetter* mCurrentEventInfoSetter;
     static TimeStamp sLastInputCreated;
     static TimeStamp sLastInputProcessed;
     static StaticRefPtr<Element> sLastKeyDownEventTargetElement;
