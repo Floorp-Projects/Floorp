@@ -6,15 +6,14 @@ use api::{
     ColorF, ColorU,ExtendMode, GradientStop, LayoutPoint, LayoutSize,
     LayoutPrimitiveInfo, PremultipliedColorF, LayoutVector2D,
 };
-use display_list_flattener::{AsInstanceKind, IsVisible};
+use display_list_flattener::IsVisible;
 use frame_builder::FrameBuildingState;
 use gpu_cache::{GpuCacheHandle, GpuDataRequest};
-use intern::{Internable, InternDebug};
-use intern_types;
+use intern::{Internable, InternDebug, Handle as InternHandle};
 use prim_store::{BrushSegment, GradientTileRange};
 use prim_store::{PrimitiveInstanceKind, PrimitiveOpacity, PrimitiveSceneData};
 use prim_store::{PrimKeyCommonData, PrimTemplateCommonData, PrimitiveStore};
-use prim_store::{NinePatchDescriptor, PointKey, SizeKey};
+use prim_store::{NinePatchDescriptor, PointKey, SizeKey, InternablePrimitive};
 use std::{hash, ops::{Deref, DerefMut}, mem};
 use util::pack_as_float;
 
@@ -76,22 +75,6 @@ impl LinearGradientKey {
 }
 
 impl InternDebug for LinearGradientKey {}
-
-impl AsInstanceKind<LinearGradientDataHandle> for LinearGradientKey {
-    /// Construct a primitive instance that matches the type
-    /// of primitive key.
-    fn as_instance_kind(
-        &self,
-        data_handle: LinearGradientDataHandle,
-        _prim_store: &mut PrimitiveStore,
-        _reference_frame_relative_offset: LayoutVector2D,
-    ) -> PrimitiveInstanceKind {
-        PrimitiveInstanceKind::LinearGradient {
-            data_handle,
-            visible_tiles_range: GradientTileRange::empty(),
-        }
-    }
-}
 
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
@@ -227,8 +210,11 @@ impl LinearGradientTemplate {
     }
 }
 
-pub type LinearGradientDataHandle = intern_types::linear_grad::Handle;
+pub type LinearGradientDataHandle = InternHandle<LinearGradient>;
 
+#[derive(Debug, MallocSizeOf)]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct LinearGradient {
     pub extend_mode: ExtendMode,
     pub start_point: PointKey,
@@ -241,13 +227,13 @@ pub struct LinearGradient {
 }
 
 impl Internable for LinearGradient {
-    type Marker = intern_types::linear_grad::Marker;
-    type Source = LinearGradientKey;
+    type Key = LinearGradientKey;
     type StoreData = LinearGradientTemplate;
     type InternData = PrimitiveSceneData;
+}
 
-    /// Build a new key from self with `info`.
-    fn build_key(
+impl InternablePrimitive for LinearGradient {
+    fn into_key(
         self,
         info: &LayoutPrimitiveInfo,
     ) -> LinearGradientKey {
@@ -256,6 +242,18 @@ impl Internable for LinearGradient {
             info.rect.size,
             self
         )
+    }
+
+    fn make_instance_kind(
+        _key: LinearGradientKey,
+        data_handle: LinearGradientDataHandle,
+        _prim_store: &mut PrimitiveStore,
+        _reference_frame_relative_offset: LayoutVector2D,
+    ) -> PrimitiveInstanceKind {
+        PrimitiveInstanceKind::LinearGradient {
+            data_handle,
+            visible_tiles_range: GradientTileRange::empty(),
+        }
     }
 }
 
@@ -325,22 +323,6 @@ impl RadialGradientKey {
 }
 
 impl InternDebug for RadialGradientKey {}
-
-impl AsInstanceKind<RadialGradientDataHandle> for RadialGradientKey {
-    /// Construct a primitive instance that matches the type
-    /// of primitive key.
-    fn as_instance_kind(
-        &self,
-        data_handle: RadialGradientDataHandle,
-        _prim_store: &mut PrimitiveStore,
-        _reference_frame_relative_offset: LayoutVector2D,
-    ) -> PrimitiveInstanceKind {
-        PrimitiveInstanceKind::RadialGradient {
-            data_handle,
-            visible_tiles_range: GradientTileRange::empty(),
-        }
-    }
-}
 
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
@@ -447,8 +429,11 @@ impl RadialGradientTemplate {
     }
 }
 
-pub type RadialGradientDataHandle = intern_types::radial_grad::Handle;
+pub type RadialGradientDataHandle = InternHandle<RadialGradient>;
 
+#[derive(Debug, MallocSizeOf)]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct RadialGradient {
     pub extend_mode: ExtendMode,
     pub center: PointKey,
@@ -460,13 +445,13 @@ pub struct RadialGradient {
 }
 
 impl Internable for RadialGradient {
-    type Marker = intern_types::radial_grad::Marker;
-    type Source = RadialGradientKey;
+    type Key = RadialGradientKey;
     type StoreData = RadialGradientTemplate;
     type InternData = PrimitiveSceneData;
+}
 
-    /// Build a new key from self with `info`.
-    fn build_key(
+impl InternablePrimitive for RadialGradient {
+    fn into_key(
         self,
         info: &LayoutPrimitiveInfo,
     ) -> RadialGradientKey {
@@ -475,6 +460,18 @@ impl Internable for RadialGradient {
             info.rect.size,
             self,
         )
+    }
+
+    fn make_instance_kind(
+        _key: RadialGradientKey,
+        data_handle: RadialGradientDataHandle,
+        _prim_store: &mut PrimitiveStore,
+        _reference_frame_relative_offset: LayoutVector2D,
+    ) -> PrimitiveInstanceKind {
+        PrimitiveInstanceKind::RadialGradient {
+            data_handle,
+            visible_tiles_range: GradientTileRange::empty(),
+        }
     }
 }
 
