@@ -147,6 +147,13 @@ TabSources.prototype = {
     return sourceActor;
   },
 
+  getOrCreateSourceActor(source) {
+    if (this.hasSourceActor(source)) {
+      return this.getSourceActor(source);
+    }
+    return this.createSourceActor(source);
+  },
+
   getSourceActorByInternalSourceId: function(id) {
     if (!this._sourcesByInternalSourceId) {
       this._sourcesByInternalSourceId = new Map();
@@ -158,10 +165,7 @@ TabSources.prototype = {
     }
     const source = this._sourcesByInternalSourceId.get(id);
     if (source) {
-      if (this.hasSourceActor(source)) {
-        return this.getSourceActor(source);
-      }
-      return this.createSourceActor(source);
+      return this.getOrCreateSourceActor(source);
     }
     return null;
   },

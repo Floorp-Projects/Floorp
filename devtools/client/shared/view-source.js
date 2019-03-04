@@ -52,7 +52,8 @@ exports.viewSourceInStyleEditor = async function(toolbox, sourceURL,
 exports.viewSourceInDebugger = async function(toolbox, sourceURL, sourceLine, sourceId,
                                               reason = "unknown") {
   const dbg = await toolbox.loadTool("jsdebugger");
-  const source = dbg.getSourceByURL(sourceURL) || dbg.getSourceByActorId(sourceId);
+  const source =
+    sourceId ? dbg.getSourceByActorId(sourceId) : dbg.getSourceByURL(sourceURL);
   if (source) {
     await toolbox.selectTool("jsdebugger", reason);
     dbg.selectSource(source.id, sourceLine);
