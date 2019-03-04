@@ -30,8 +30,10 @@ class VariableLengthPrefixSet final : public nsIMemoryReporter {
   nsresult GetFixedLengthPrefixes(FallibleTArray<uint32_t>& aPrefixes);
   nsresult Matches(const nsACString& aFullHash, uint32_t* aLength) const;
   nsresult IsEmpty(bool* aEmpty) const;
-  nsresult LoadFromFile(nsCOMPtr<nsIFile>& aFile);
-  nsresult StoreToFile(nsCOMPtr<nsIFile>& aFile) const;
+
+  nsresult WritePrefixes(nsCOMPtr<nsIOutputStream>& out) const;
+  nsresult LoadPrefixes(nsCOMPtr<nsIInputStream>& in);
+  uint32_t CalculatePreallocateSize() const;
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 
@@ -46,10 +48,6 @@ class VariableLengthPrefixSet final : public nsIMemoryReporter {
 
   bool BinarySearch(const nsACString& aFullHash, const nsACString& aPrefixes,
                     uint32_t aPrefixSize) const;
-
-  uint32_t CalculatePreallocateSize() const;
-  nsresult WritePrefixes(nsCOMPtr<nsIOutputStream>& out) const;
-  nsresult LoadPrefixes(nsCOMPtr<nsIInputStream>& in);
 
   // Lock to prevent races between the url-classifier thread (which does most
   // of the operations) and the main thread (which does memory reporting).
