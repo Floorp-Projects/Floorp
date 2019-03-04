@@ -11,11 +11,14 @@ import android.app.Notification;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
+
+import com.squareup.picasso.Picasso;
 
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.GeckoActivityMonitor;
@@ -23,8 +26,9 @@ import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoService;
 import org.mozilla.gecko.NotificationListener;
 import org.mozilla.gecko.R;
-import org.mozilla.gecko.util.BitmapUtils;
+import org.mozilla.gecko.util.ThreadUtils;
 
+import java.io.IOException;
 import java.util.HashMap;
 
 /**
@@ -40,6 +44,8 @@ public final class NotificationClient implements NotificationListener {
     private final NotificationManagerCompat mNotificationManager;
 
     private final HashMap<String, Notification> mNotifications = new HashMap<>();
+    private final int notificationLargeIconHeight;
+    private final int notificationLargeIconWidth;
 
     /**
      * Notification associated with this service's foreground state.
@@ -56,6 +62,12 @@ public final class NotificationClient implements NotificationListener {
     public NotificationClient(Context context) {
         mContext = context.getApplicationContext();
         mNotificationManager = NotificationManagerCompat.from(mContext);
+
+        Resources resources = mContext.getResources();
+        notificationLargeIconHeight = resources
+                .getDimensionPixelSize(android.R.dimen.notification_large_icon_height);
+        notificationLargeIconWidth = resources
+                .getDimensionPixelSize(android.R.dimen.notification_large_icon_width);
     }
 
     @Override // NotificationListener
@@ -161,8 +173,22 @@ public final class NotificationClient implements NotificationListener {
 
         // Fetch icon.
         if (!imageUrl.isEmpty()) {
-            final Bitmap image = BitmapUtils.decodeUrl(imageUrl);
-            builder.setLargeIcon(image);
+            ThreadUtils.postToBackgroundThread(() -> {
+                Bitmap largeIcon = null;
+                try {
+                    largeIcon = Picasso.with(mContext)
+                            .load(imageUrl)
+                            .resize(notificationLargeIconWidth, notificationLargeIconHeight)
+                            .centerInside()
+                            .get();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+                if (largeIcon != null) {
+                    updateLargeIconForExistingNotification(name, largeIcon, builder);
+                }
+            });
         }
 
         builder.setWhen(System.currentTimeMillis());
@@ -362,5 +388,31 @@ public final class NotificationClient implements NotificationListener {
         }
 
         removeForegroundNotificationLocked();
+    }
+
+    /**
+     * Update the largeIcon for an already posted {@link NotificationCompat}.
+     * <br>
+     * It may be a foreground notification or not and it may have already been removed
+     * in which case nothing will happen.
+     *
+     * @param notificationName the unique name by which to identify a particular notification
+     * @param largeIcon image to be used as {@link Notification#getLargeIcon()}
+     * @param builder the builder for the original notification. Holds all previous configuration.
+     */
+    private synchronized void updateLargeIconForExistingNotification(@NonNull final String notificationName,
+                                                        @NonNull final Bitmap largeIcon,
+                                                        @NonNull final NotificationCompat.Builder builder) {
+        // check if the notification hasn't been removed in the meantime
+        Notification notification = mNotifications.get(notificationName);
+
+        if (notification == null) {
+            return;
+        }
+
+        builder.setOnlyAlertOnce(true)
+                .setLargeIcon(largeIcon);
+
+        add(notificationName, builder.build());
     }
 }
