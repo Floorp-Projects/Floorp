@@ -4422,18 +4422,32 @@ bool js::GetProperty(JSContext* cx, HandleValue v, HandlePropertyName name,
   // create a wrapper object.
   if (v.isPrimitive() && !v.isNullOrUndefined()) {
     NativeObject* proto;
-    if (v.isNumber()) {
-      proto = GlobalObject::getOrCreateNumberPrototype(cx, cx->global());
-    } else if (v.isString()) {
-      proto = GlobalObject::getOrCreateStringPrototype(cx, cx->global());
-    } else if (v.isBoolean()) {
-      proto = GlobalObject::getOrCreateBooleanPrototype(cx, cx->global());
-    } else if (v.isBigInt()) {
-      proto = GlobalObject::getOrCreateBigIntPrototype(cx, cx->global());
-    } else {
-      MOZ_ASSERT(v.isSymbol());
-      proto = GlobalObject::getOrCreateSymbolPrototype(cx, cx->global());
+
+    switch (v.type()) {
+      case ValueType::Double:
+      case ValueType::Int32:
+        proto = GlobalObject::getOrCreateNumberPrototype(cx, cx->global());
+        break;
+      case ValueType::Boolean:
+        proto = GlobalObject::getOrCreateBooleanPrototype(cx, cx->global());
+        break;
+      case ValueType::String:
+        proto = GlobalObject::getOrCreateStringPrototype(cx, cx->global());
+        break;
+      case ValueType::Symbol:
+        proto = GlobalObject::getOrCreateSymbolPrototype(cx, cx->global());
+        break;
+      case ValueType::BigInt:
+        proto = GlobalObject::getOrCreateBigIntPrototype(cx, cx->global());
+        break;
+      case ValueType::Undefined:
+      case ValueType::Null:
+      case ValueType::Magic:
+      case ValueType::PrivateGCThing:
+      case ValueType::Object:
+        MOZ_CRASH("unexpected type");
     }
+
     if (!proto) {
       return false;
     }
