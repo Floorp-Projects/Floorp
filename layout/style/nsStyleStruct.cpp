@@ -3711,9 +3711,9 @@ nsStyleText::nsStyleText(const Document& aDocument)
       mWebkitTextStrokeColor(StyleComplexColor::CurrentColor()),
       mMozTabSize(
           StyleNonNegativeLengthOrNumber::Number(NS_STYLE_TABSIZE_INITIAL)),
-      mWordSpacing(0, nsStyleCoord::CoordConstructor),
-      mLetterSpacing(eStyleUnit_Normal),
-      mLineHeight(eStyleUnit_Normal),
+      mWordSpacing(LengthPercentage::Zero()),
+      mLetterSpacing({0.}),
+      mLineHeight(StyleLineHeight::Normal()),
       mTextIndent(LengthPercentage::Zero()),
       mWebkitTextStrokeWidth(0),
       mTextShadow(nullptr) {

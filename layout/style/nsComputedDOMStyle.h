@@ -294,7 +294,6 @@ class nsComputedDOMStyle final : public nsDOMCSSDeclaration,
   already_AddRefed<CSSValue> DoGetBorderTopLeftRadius();
   already_AddRefed<CSSValue> DoGetBorderTopRightRadius();
 
-
   /* Border Image */
   already_AddRefed<CSSValue> DoGetBorderImageWidth();
 
@@ -314,7 +313,6 @@ class nsComputedDOMStyle final : public nsDOMCSSDeclaration,
   already_AddRefed<CSSValue> DoGetOutlineRadiusTopLeft();
   already_AddRefed<CSSValue> DoGetOutlineRadiusTopRight();
 
-
   /* Text Properties */
   already_AddRefed<CSSValue> DoGetInitialLetter();
   already_AddRefed<CSSValue> DoGetLineHeight();
@@ -326,8 +324,6 @@ class nsComputedDOMStyle final : public nsDOMCSSDeclaration,
   already_AddRefed<CSSValue> DoGetTextEmphasisStyle();
   already_AddRefed<CSSValue> DoGetTextOverflow();
   already_AddRefed<CSSValue> DoGetTextShadow();
-  already_AddRefed<CSSValue> DoGetLetterSpacing();
-  already_AddRefed<CSSValue> DoGetWordSpacing();
   already_AddRefed<CSSValue> DoGetWebkitTextStrokeWidth();
 
   /* Display properties */
@@ -378,8 +374,6 @@ class nsComputedDOMStyle final : public nsDOMCSSDeclaration,
   already_AddRefed<CSSValue> DoGetMarkerEnd();
   already_AddRefed<CSSValue> DoGetMarkerMid();
   already_AddRefed<CSSValue> DoGetMarkerStart();
-
-
 
   already_AddRefed<CSSValue> DoGetFilter();
   already_AddRefed<CSSValue> DoGetPaintOrder();
