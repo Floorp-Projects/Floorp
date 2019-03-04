@@ -40,7 +40,7 @@ class ThreadSharedFloatArrayBufferList final : public ThreadSharedObject {
   }
   /**
    * Create with buffers suitable for transfer to
-   * JS_NewArrayBufferWithContents().  The buffer contents are uninitialized
+   * JS::NewArrayBufferWithContents().  The buffer contents are uninitialized
    * and so should be set using GetDataForWrite().
    */
   static already_AddRefed<ThreadSharedFloatArrayBufferList> Create(

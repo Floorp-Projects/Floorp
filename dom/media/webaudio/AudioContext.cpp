@@ -58,6 +58,7 @@
 #include "DynamicsCompressorNode.h"
 #include "GainNode.h"
 #include "IIRFilterNode.h"
+#include "js/ArrayBuffer.h"  // JS::StealArrayBufferContents
 #include "MediaElementAudioSourceNode.h"
 #include "MediaStreamAudioDestinationNode.h"
 #include "MediaStreamAudioSourceNode.h"
@@ -584,7 +585,7 @@ already_AddRefed<Promise> AudioContext::DecodeAudioData(
   // Detach the array buffer
   size_t length = aBuffer.Length();
 
-  uint8_t* data = static_cast<uint8_t*>(JS_StealArrayBufferContents(cx, obj));
+  uint8_t* data = static_cast<uint8_t*>(JS::StealArrayBufferContents(cx, obj));
 
   // Sniff the content of the media.
   // Failed type sniffing will be handled by AsyncDecodeWebAudio.
