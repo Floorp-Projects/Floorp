@@ -9,6 +9,7 @@
 
 #include "mozilla/Mutex.h"
 #include "mozilla/TimeStamp.h"
+#include "prio.h"
 
 namespace mozilla {
 namespace net {
@@ -42,6 +43,8 @@ class PollableEvent {
   bool IsSignallingAlive(TimeDuration const &timeout);
 
   PRFileDesc *PollableFD() { return mReadFD; }
+
+  static const PRInt16 sPollFlags;
 
  private:
   PRFileDesc *mWriteFD;
