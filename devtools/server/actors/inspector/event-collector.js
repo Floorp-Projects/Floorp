@@ -708,7 +708,9 @@ class ReactEventCollector extends MainEventCollector {
  * The exposed class responsible for gathering events.
  */
 class EventCollector {
-  constructor() {
+  constructor(targetActor) {
+    this.targetActor = targetActor;
+
     // The event collector array. Please preserve the order otherwise there will
     // be multiple failing tests.
     this.eventCollectors = [
@@ -864,6 +866,7 @@ class EventCollector {
       let line = 0;
       let native = false;
       let url = "";
+      let sourceActor = "";
 
       // If the listener is an object with a 'handleEvent' method, use that.
       if (listenerDO.class === "Object" || /^XUL\w*Element$/.test(listenerDO.class)) {
@@ -900,6 +903,8 @@ class EventCollector {
 
         line = script.startLine;
         url = script.url;
+        const actor = this.targetActor.sources.getOrCreateSourceActor(script.source);
+        sourceActor = actor ? actor.actorID : null;
 
         // Checking for the string "[native code]" is the only way at this point
         // to check for native code. Even if this provides a false positive then
@@ -957,6 +962,7 @@ class EventCollector {
                           override.capturing : capturing,
         hide: typeof override.hide !== "undefined" ? override.hide : hide,
         native,
+        sourceActor,
       };
 
       // Hide the debugger icon for DOM0 and native listeners. DOM0 listeners are
