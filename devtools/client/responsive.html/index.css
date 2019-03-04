@@ -85,32 +85,71 @@ body,
   display: grid;
   grid-template-columns: auto min-content;
   width: 100%;
-  min-height: 29px;
   -moz-user-select: none;
 }
 
 #toolbar-center-controls,
 #toolbar-end-controls {
-  display: flex;
-  align-items: center;
-}
-
-#toolbar-center-controls {
-  flex: 1;
-  justify-content: center;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-rows: 29px;
   margin: 1px;
 }
 
-#toolbar.left-aligned #toolbar-center-controls {
-  justify-content: start;
+#toolbar-center-controls {
+  grid-template-columns:
+    [device-selector]
+    minmax(auto, 90px)
+    [separator]
+    max-content
+    [size-selector]
+    max-content
+    [rotate-icon]
+    max-content
+    [separator]
+    max-content
+    [dpr]
+    minmax(auto, 60px)
+    [separator]
+    max-content
+    [throttling]
+    minmax(auto, 90px)
+    [separator]
+    max-content
+    [touch-simulation]
+    max-content;
 }
 
-#toolbar.left-aligned #toolbar-end-controls {
-  justify-self: end;
+#toolbar.user-agent #toolbar-center-controls {
+  grid-template-columns:
+    [device-selector]
+    minmax(auto, 90px)
+    [separator]
+    max-content
+    [size-selector]
+    max-content
+    [rotate-icon]
+    max-content
+    [separator]
+    max-content
+    [dpr]
+    minmax(auto, 60px)
+    [separator]
+    max-content
+    [throttling]
+    minmax(auto, 90px)
+    [separator]
+    max-content
+    [ua]
+    minmax(auto, 300px)
+    [separator]
+    max-content
+    [touch-simulation]
+    max-content;
 }
 
-#rotate-button::before {
-  background-image: url("./images/rotate-viewport.svg");
+#toolbar:not(.left-aligned) #toolbar-center-controls {
+  justify-content: center;
 }
 
 #user-agent-label {
@@ -118,16 +157,65 @@ body,
   align-items: center;
   margin-inline-start: 3px;
   margin-inline-end: 3px;
-  width: 300px;
-}
-
-#user-agent-label:focus-within {
-  flex: 1;
 }
 
 #user-agent-input {
-  margin-inline-start: 3px;;
-  width: 100%;
+  margin-inline-start: 3px;
+  flex: 1;
+}
+
+@media (max-width: 520px) {
+  /* When room becomes scarce, no need to constrain the selectors with a minmax like we
+     do in larger viewports, here they can occupy 1fr */
+  #toolbar.user-agent #toolbar-center-controls {
+    grid-template-columns:
+      [device-selector]
+      .8fr
+      [separator]
+      max-content
+      [size-selector]
+      max-content
+      [rotate-icon]
+      max-content
+      [separator]
+      max-content
+      [dpr]
+      .6fr
+      [separator]
+      max-content
+      [throttling]
+      1fr
+      [separator]
+      max-content
+      [touch-simulation]
+      max-content;
+  }
+
+  /* Drop the user agent label to the next line if there isn't enough space */
+  #user-agent-label {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    margin-inline-start: 9px;
+  }
+
+  /* Since the UA is hidden, no need for a separator after it */
+  #user-agent-label + .devtools-separator {
+    display: none;
+  }
+
+  /* When the UA label is here and it's on a second line, draw a separator between the
+     2 lines*/
+  #toolbar.user-agent {
+    background-image: linear-gradient(to bottom,
+      transparent calc(50% - .5px),
+      var(--separator-border-color) calc(50% - .5px),
+      var(--separator-border-color) calc(50% + .5px),
+      transparent 0);
+  }
+}
+
+#rotate-button::before {
+  background-image: url("./images/rotate-viewport.svg");
 }
 
 #touch-simulation-button::before {
