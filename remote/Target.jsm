@@ -31,14 +31,12 @@ class Target {
   connect() {
     Services.obs.addObserver(this, "message-manager-disconnect");
     this.debugger.listen();
-    this.emit("connect");
   }
 
   disconnect() {
     Services.obs.removeObserver(this, "message-manager-disconnect");
     // TODO(ato): Disconnect existing client sockets
     this.debugger.close();
-    this.emit("disconnect");
   }
 
   get id() {
