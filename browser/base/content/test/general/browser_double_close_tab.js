@@ -66,7 +66,7 @@ add_task(async function() {
     // Click once:
     document.getAnonymousElementByAttribute(testTab, "anonid", "close-button").click();
   });
-  await promiseWaitForCondition(() => !testTab.parentNode);
+  await TestUtils.waitForCondition(() => !testTab.parentNode);
   ok(!testTab.parentNode, "Tab should be closed completely");
 });
 
