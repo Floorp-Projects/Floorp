@@ -16,6 +16,8 @@ than 24 hours but never shorter than 24 hours.
 The `metrics` ping contains all of the metrics defined in `metrics.yaml` that don't specify a ping or 
 where `default` is specified in their [`send in pings`](https://mozilla.github.io/glean_parser/metrics-yaml.html#send-in-pings) property.
 
+Additionally, error metrics in the `glean.error` category are included in the `metrics` ping.
+
 The `metrics` ping shall also include the common [`ping_info`](pings.md#the-ping_info-section) section found in all pings.
 
 ### Querying ping contents
