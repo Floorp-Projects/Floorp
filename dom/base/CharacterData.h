@@ -208,14 +208,6 @@ class CharacterData : public nsIContent {
   NS_DECL_CYCLE_COLLECTION_SKIPPABLE_SCRIPT_HOLDER_CLASS_INHERITED(
       CharacterData, nsIContent)
 
-  /**
-   * Compare two CharacterData nodes for text equality.
-   */
-  MOZ_MUST_USE
-  bool TextEquals(const CharacterData* aOther) const {
-    return mText.TextEquals(aOther->mText);
-  }
-
  protected:
   virtual ~CharacterData();
 
