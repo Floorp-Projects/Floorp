@@ -176,8 +176,6 @@ var SessionSaverInternal = {
     // Schedule a state save.
     this._wasIdle = this._isIdle;
     this._timeoutID = setTimeout(() => {
-      let hiddenDOMWindow = Services.appShell.hiddenDOMWindow;
-
       // Execute _saveStateAsync when we have enough idle time. Otherwise,
       // another idle request is made to schedule _saveStateAsync again.
       let saveStateAsyncWhenIdle = (deadline) => {
@@ -185,13 +183,13 @@ var SessionSaverInternal = {
         // _saveStateAsync is around 5.9ms (median). Therefore,
         // we'll not execute the function when the idle time is less than 5ms.
         if (deadline.timeRemaining() < 5) {
-          this._idleCallbackID = hiddenDOMWindow.requestIdleCallback(saveStateAsyncWhenIdle);
+          this._idleCallbackID = requestIdleCallback(saveStateAsyncWhenIdle);
           return;
         }
         this._saveStateAsync();
       };
 
-      this._idleCallbackID = hiddenDOMWindow.requestIdleCallback(saveStateAsyncWhenIdle);
+      this._idleCallbackID = requestIdleCallback(saveStateAsyncWhenIdle);
     }, delay);
   },
 
@@ -209,7 +207,7 @@ var SessionSaverInternal = {
   cancel() {
     clearTimeout(this._timeoutID);
     this._timeoutID = null;
-    Services.appShell.hiddenDOMWindow.cancelIdleCallback(this._idleCallbackID);
+    cancelIdleCallback(this._idleCallbackID);
     this._idleCallbackID = null;
   },
 
