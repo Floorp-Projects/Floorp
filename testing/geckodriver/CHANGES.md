@@ -239,7 +239,7 @@ to the standard.
   [Jeremy Lempereur].
 
 - Many documentation improvements, now published on
-  https://firefox-source-docs.mozilla.org/testing/geckodriver/geckodriver/.
+  https://firefox-source-docs.mozilla.org/testing/geckodriver/.
 
 
 0.21.0 (2018-06-15)
