@@ -493,9 +493,37 @@ class TabParent final : public PBrowserParent,
 
   const TabId GetTabId() const { return mTabId; }
 
+  // Helper for transforming a point
+  LayoutDeviceIntPoint TransformPoint(
+      const LayoutDeviceIntPoint& aPoint,
+      const LayoutDeviceToLayoutDeviceMatrix4x4& aMatrix);
+  LayoutDevicePoint TransformPoint(
+      const LayoutDevicePoint& aPoint,
+      const LayoutDeviceToLayoutDeviceMatrix4x4& aMatrix);
+
+  // Transform a coordinate from the parent process coordinate space to the
+  // child process coordinate space.
+  LayoutDeviceIntPoint TransformParentToChild(
+      const LayoutDeviceIntPoint& aPoint);
+  LayoutDevicePoint TransformParentToChild(const LayoutDevicePoint& aPoint);
+
+  // Transform a coordinate from the child process coordinate space to the
+  // parent process coordinate space.
+  LayoutDeviceIntPoint TransformChildToParent(
+      const LayoutDeviceIntPoint& aPoint);
+  LayoutDevicePoint TransformChildToParent(const LayoutDevicePoint& aPoint);
+  LayoutDeviceIntRect TransformChildToParent(const LayoutDeviceIntRect& aRect);
+
+  // Returns the matrix that transforms event coordinates from the coordinate
+  // space of the child process to the coordinate space of the parent process.
+  LayoutDeviceToLayoutDeviceMatrix4x4 GetChildToParentConversionMatrix();
+
   // Returns the offset from the origin of our frameloader's nearest widget to
   // the origin of its layout frame. This offset is used to translate event
   // coordinates relative to the PuppetWidget origin in the child process.
+  //
+  // GOING AWAY. PLEASE AVOID ADDING CALLERS. Use the above tranformation
+  // methods instead.
   LayoutDeviceIntPoint GetChildProcessOffset();
 
   // Returns the offset from the on-screen origin of our top-level window's
