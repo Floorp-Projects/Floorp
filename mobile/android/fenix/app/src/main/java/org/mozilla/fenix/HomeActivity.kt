@@ -53,12 +53,12 @@ open class HomeActivity : AppCompatActivity() {
         setSupportActionBar(navigationToolbar)
         NavigationUI.setupWithNavController(navigationToolbar, hostNavController, appBarConfiguration)
 
-        handleOpenedFromExternalSourceIfNecessary()
+        handleOpenedFromExternalSourceIfNecessary(intent)
     }
 
     override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
-        handleOpenedFromExternalSourceIfNecessary()
+        handleOpenedFromExternalSourceIfNecessary(intent)
     }
 
     override fun onCreateView(
@@ -95,7 +95,7 @@ open class HomeActivity : AppCompatActivity() {
         }
     }
 
-    private fun handleOpenedFromExternalSourceIfNecessary() {
+    private fun handleOpenedFromExternalSourceIfNecessary(intent: Intent?) {
         if (intent?.extras?.getBoolean(OPEN_TO_BROWSER) == true) {
             handleOpenedFromExternalSource()
         }
