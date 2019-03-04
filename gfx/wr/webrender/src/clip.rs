@@ -6,7 +6,7 @@ use api::{BorderRadius, ClipMode, ComplexClipRegion, DeviceIntRect, DevicePixelS
 use api::{ImageRendering, LayoutRect, LayoutSize, LayoutPoint, LayoutVector2D};
 use api::{BoxShadowClipMode, LayoutToWorldScale, PicturePixel, WorldPixel};
 use api::{PictureRect, LayoutPixel, WorldPoint, WorldSize, WorldRect, LayoutToWorldTransform};
-use api::{ClipIntern, ImageKey};
+use api::{ImageKey};
 use app_units::Au;
 use border::{ensure_no_corner_overlap, BorderRadiusAu};
 use box_shadow::{BLUR_SAMPLE_SCALE, BoxShadowClipSource, BoxShadowCacheKey};
@@ -104,8 +104,8 @@ use util::{extract_inner_rect_safe, project_rect, ScaleOffset};
 
 // Type definitions for interning clip nodes.
 
-pub type ClipDataStore = intern::DataStore<ClipIntern>;
-type ClipDataHandle = intern::Handle<ClipIntern>;
+pub use intern_types::clip::Store as ClipDataStore;
+use intern_types::clip::Handle as ClipDataHandle;
 
 // Result of comparing a clip node instance against a local rect.
 #[derive(Debug)]
@@ -846,12 +846,6 @@ impl ClipItemKey {
 }
 
 impl intern::InternDebug for ClipItemKey {}
-
-impl intern::Internable for ClipIntern {
-    type Key = ClipItemKey;
-    type StoreData = ClipNode;
-    type InternData = ();
-}
 
 #[derive(Debug, MallocSizeOf)]
 #[cfg_attr(feature = "capture", derive(Serialize))]

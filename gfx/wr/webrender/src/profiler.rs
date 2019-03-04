@@ -453,7 +453,7 @@ pub struct IpcProfileCounters {
 }
 
 macro_rules! declare_intern_profile_counters {
-    ( $( $name:ident : $ty:ty, )+ ) => {
+    ( $( $name: ident, )+ ) => {
         #[derive(Clone)]
         pub struct InternProfileCounters {
             $(
@@ -522,7 +522,6 @@ impl BackendProfileCounters {
                 total_time: TimeProfileCounter::new("Total Display List Time", false),
                 display_lists: ResourceProfileCounter::new("Display Lists Sent"),
             },
-            //TODO: generate this by a macro
             intern: InternProfileCounters {
                 prim: ResourceProfileCounter::new("Interned primitives"),
                 image: ResourceProfileCounter::new("Interned images"),
@@ -535,7 +534,7 @@ impl BackendProfileCounters {
                 text_run: ResourceProfileCounter::new("Interned text runs"),
                 yuv_image: ResourceProfileCounter::new("Interned YUV images"),
                 clip: ResourceProfileCounter::new("Interned clips"),
-                filter_data: ResourceProfileCounter::new("Interned filter data"),
+                filterdata: ResourceProfileCounter::new("Interned filterdata"),
             },
         }
     }
