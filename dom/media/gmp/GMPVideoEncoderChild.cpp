@@ -199,9 +199,9 @@ bool GMPVideoEncoderChild::Alloc(size_t aSize,
   return rv;
 }
 
-void GMPVideoEncoderChild::Dealloc(Shmem& aMem) {
+void GMPVideoEncoderChild::Dealloc(Shmem&& aMem) {
 #ifndef SHMEM_ALLOC_IN_CHILD
-  SendParentShmemForPool(aMem);
+  SendParentShmemForPool(std::move(aMem));
 #else
   DeallocShmem(aMem);
 #endif

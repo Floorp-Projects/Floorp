@@ -95,7 +95,7 @@ class NeckoChild : public PNeckoChild {
 
   PTrackingDummyChannelChild* AllocPTrackingDummyChannelChild(
       nsIURI* aURI, nsIURI* aTopWindowURI, const nsresult& aTopWindowURIResult,
-      const OptionalLoadInfoArgs& aLoadInfo);
+      const Maybe<LoadInfoArgs>& aLoadInfo);
 
   bool DeallocPTrackingDummyChannelChild(PTrackingDummyChannelChild* aChannel);
 };

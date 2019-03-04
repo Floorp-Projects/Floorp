@@ -1102,7 +1102,9 @@ nsContextMenu.prototype = {
     // nsIExternalHelperAppService.doContent, which will wait for the
     // appropriate MIME-type headers and then prompt the user with a
     // file picker
-    function saveAsListener() {}
+    function saveAsListener(principal) {
+      this._triggeringPrincipal = principal;
+    }
     saveAsListener.prototype = {
       extListener: null,
 
@@ -1146,7 +1148,7 @@ nsContextMenu.prototype = {
           // do it the old fashioned way, which will pick the best filename
           // it can without waiting.
           saveURL(linkURL, linkText, dialogTitle, bypassCache, false, docURI,
-                  doc, isContentWindowPrivate);
+                  doc, isContentWindowPrivate, this._triggeringPrincipal);
         }
         if (this.extListener)
           this.extListener.onStopRequest(aRequest, aStatusCode);
@@ -1226,7 +1228,7 @@ nsContextMenu.prototype = {
                            timer.TYPE_ONE_SHOT);
 
     // kick off the channel with our proxy object as the listener
-    channel.asyncOpen(new saveAsListener());
+    channel.asyncOpen(new saveAsListener(this.principal));
   },
 
   // Save URL of clicked-on link.

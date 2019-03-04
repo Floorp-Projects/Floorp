@@ -48,6 +48,7 @@ function createContextMenu(webConsoleUI, parentNode, {
   rootActorId,
   executionPoint,
   toolbox,
+  url,
 }) {
   const win = parentNode.ownerDocument.defaultView;
   const selection = win.getSelection();
@@ -204,6 +205,15 @@ function createContextMenu(webConsoleUI, parentNode, {
         const threadClient = toolbox.threadClient;
         threadClient.timeWarp(executionPoint);
       },
+    }));
+  }
+
+  if (url) {
+    menu.append(new MenuItem({
+      id: "console-menu-copy-url",
+      label: l10n.getStr("webconsole.menu.copyURL.label"),
+      accesskey: l10n.getStr("webconsole.menu.copyURL.accesskey"),
+      click: () => clipboardHelper.copyString(url),
     }));
   }
 

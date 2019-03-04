@@ -168,7 +168,7 @@ mozilla::ipc::IPCResult TestEndpointOpensChild::RecvStart() {
   gChildThread->message_loop()->PostTask(
       NewRunnableFunction("OpenChild", OpenChild, a, std::move(child)));
 
-  if (!SendStartSubprotocol(parent)) {
+  if (!SendStartSubprotocol(std::move(parent))) {
     fail("send StartSubprotocol");
   }
 

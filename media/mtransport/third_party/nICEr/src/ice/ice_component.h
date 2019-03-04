@@ -102,6 +102,7 @@ int nr_ice_component_get_default_candidate(nr_ice_component *comp, nr_ice_candid
 void nr_ice_component_consent_destroy(nr_ice_component *comp);
 void nr_ice_component_refresh_consent_now(nr_ice_component *comp);
 void nr_ice_component_disconnected(nr_ice_component *comp);
+void nr_ice_component_dump_state(nr_ice_component *comp, int log_level);
 
 #ifdef __cplusplus
 }

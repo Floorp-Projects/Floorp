@@ -15,6 +15,7 @@ use api::{DocumentId, DocumentLayer, ExternalScrollId, FrameMsg, HitTestFlags, H
 use api::{IdNamespace, MemoryReport, PipelineId, RenderNotifier, SceneMsg, ScrollClamping};
 use api::{ScrollLocation, ScrollNodeState, TransactionMsg, ResourceUpdate, BlobImageKey};
 use api::{NotificationRequest, Checkpoint};
+use api::{ClipIntern, FilterDataIntern, PrimitiveKeyKind};
 use api::units::*;
 use api::channel::{MsgReceiver, MsgSender, Payload};
 #[cfg(feature = "capture")]
@@ -28,12 +29,13 @@ use frame_builder::{FrameBuilder, FrameBuilderConfig};
 use glyph_rasterizer::{FontInstance};
 use gpu_cache::GpuCache;
 use hit_test::{HitTest, HitTester};
-use intern_types;
+use intern::DataStore;
 use internal_types::{DebugOutput, FastHashMap, FastHashSet, RenderedDocument, ResultMsg};
 use malloc_size_of::{MallocSizeOf, MallocSizeOfOps};
 use picture::RetainedTiles;
 use prim_store::{PrimitiveScratchBuffer, PrimitiveInstance};
 use prim_store::{PrimitiveInstanceKind, PrimTemplateCommonData};
+use prim_store::interned::*;
 use profiler::{BackendProfileCounters, IpcProfileCounters, ResourceProfileCounters};
 use record::ApiRecordingReceiver;
 use render_task::RenderTaskTreeCounters;
@@ -210,7 +212,7 @@ impl FrameStamp {
 }
 
 macro_rules! declare_data_stores {
-    ( $( $name: ident, )+ ) => {
+    ( $( $name:ident : $ty:ty, )+ ) => {
         /// A collection of resources that are shared by clips, primitives
         /// between display lists.
         #[cfg_attr(feature = "capture", derive(Serialize))]
@@ -218,7 +220,7 @@ macro_rules! declare_data_stores {
         #[derive(Default)]
         pub struct DataStores {
             $(
-                pub $name: intern_types::$name::Store,
+                pub $name: DataStore<$ty>,
             )+
         }
 

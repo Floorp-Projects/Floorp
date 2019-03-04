@@ -1204,7 +1204,7 @@ void LayerManagerComposite::HandlePixelsTarget() {
   gl->fReadPixels(0, 0, bufferWidth, bufferHeight, LOCAL_GL_RGBA,
                   LOCAL_GL_UNSIGNED_BYTE, mem.get<uint8_t>());
   Unused << mScreenPixelsTarget->SendScreenPixels(
-      mem, ScreenIntSize(bufferWidth, bufferHeight));
+      std::move(mem), ScreenIntSize(bufferWidth, bufferHeight));
   mScreenPixelsTarget = nullptr;
 }
 #endif

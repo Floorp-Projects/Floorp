@@ -85,7 +85,7 @@ void nr_ice_peer_ctx_refresh_consent_all_streams(nr_ice_peer_ctx *pctx);
 void nr_ice_peer_ctx_disconnect_all_streams(nr_ice_peer_ctx *pctx);
 void nr_ice_peer_ctx_disconnected(nr_ice_peer_ctx *pctx);
 void nr_ice_peer_ctx_connected(nr_ice_peer_ctx *pctx);
-int nr_ice_peer_ctx_dump_state(nr_ice_peer_ctx *pctx,FILE *out);
+void nr_ice_peer_ctx_dump_state(nr_ice_peer_ctx *pctx, int log_level);
 int nr_ice_peer_ctx_log_state(nr_ice_peer_ctx *pctx);
 void nr_ice_peer_ctx_check_if_connected(nr_ice_peer_ctx *pctx);
 int nr_ice_peer_ctx_find_component(nr_ice_peer_ctx *pctx, nr_ice_media_stream *str, int component_id, nr_ice_component **compp);

@@ -27,9 +27,6 @@
 #include "mozilla/dom/nsCSPContext.h"
 
 namespace mozilla {
-namespace net {
-class OptionalLoadInfoArgs;
-}
 
 using mozilla::BasePrincipal;
 using mozilla::Maybe;
@@ -368,10 +365,10 @@ nsresult RHEntryToRHEntryInfo(nsIRedirectHistoryEntry* aRHEntry,
 }
 
 nsresult LoadInfoToLoadInfoArgs(nsILoadInfo* aLoadInfo,
-                                OptionalLoadInfoArgs* aOptionalLoadInfoArgs) {
+                                Maybe<LoadInfoArgs>* aOptionalLoadInfoArgs) {
   if (!aLoadInfo) {
     // if there is no loadInfo, then there is nothing to serialize
-    *aOptionalLoadInfoArgs = void_t();
+    *aOptionalLoadInfoArgs = Nothing();
     return NS_OK;
   }
 
@@ -488,7 +485,7 @@ nsresult LoadInfoToLoadInfoArgs(nsILoadInfo* aLoadInfo,
   nsAutoString cspNonce;
   Unused << NS_WARN_IF(NS_FAILED(aLoadInfo->GetCspNonce(cspNonce)));
 
-  *aOptionalLoadInfoArgs = LoadInfoArgs(
+  *aOptionalLoadInfoArgs = Some(LoadInfoArgs(
       loadingPrincipalInfo, triggeringPrincipalInfo, principalToInheritInfo,
       sandboxedLoadingPrincipalInfo, topLevelPrincipalInfo,
       topLevelStorageAreaPrincipalInfo, optionalResultPrincipalURI,
@@ -518,20 +515,20 @@ nsresult LoadInfoToLoadInfoArgs(nsILoadInfo* aLoadInfo,
       aLoadInfo->GetDocumentHasUserInteracted(),
       aLoadInfo->GetDocumentHasLoaded(), cspNonce,
       aLoadInfo->GetIsFromProcessingFrameAttributes(),
-      aLoadInfo->GetOpenerPolicy());
+      aLoadInfo->GetOpenerPolicy()));
 
   return NS_OK;
 }
 
 nsresult LoadInfoArgsToLoadInfo(
-    const OptionalLoadInfoArgs& aOptionalLoadInfoArgs,
+    const Maybe<LoadInfoArgs>& aOptionalLoadInfoArgs,
     nsILoadInfo** outLoadInfo) {
-  if (aOptionalLoadInfoArgs.type() == OptionalLoadInfoArgs::Tvoid_t) {
+  if (aOptionalLoadInfoArgs.isNothing()) {
     *outLoadInfo = nullptr;
     return NS_OK;
   }
 
-  const LoadInfoArgs& loadInfoArgs = aOptionalLoadInfoArgs.get_LoadInfoArgs();
+  const LoadInfoArgs& loadInfoArgs = aOptionalLoadInfoArgs.ref();
 
   nsresult rv = NS_OK;
   nsCOMPtr<nsIPrincipal> loadingPrincipal;

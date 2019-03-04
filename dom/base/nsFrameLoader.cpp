@@ -396,11 +396,21 @@ nsresult nsFrameLoader::ReallyStartLoadingInternal() {
     loadState->SetTriggeringPrincipal(mOwnerContent->NodePrincipal());
   }
 
-  // Currently we query the CSP from the principal, but after
-  // Bug 1529877 we should query the CSP from within GetURL and
-  // store it as a member, similar to mTriggeringPrincipal.
+  // Expanded Principals override the CSP of the document, hence we first check
+  // if the triggeringPrincipal overrides the document's principal. If so, let's
+  // query the CSP from that Principal, otherwise we use the document's CSP.
+  // Note that even after Bug 965637, Expanded Principals will hold their own
+  // CSP.
   nsCOMPtr<nsIContentSecurityPolicy> csp;
-  loadState->TriggeringPrincipal()->GetCsp(getter_AddRefs(csp));
+  if (BasePrincipal::Cast(loadState->TriggeringPrincipal())
+          ->OverridesCSP(mOwnerContent->NodePrincipal())) {
+    loadState->TriggeringPrincipal()->GetCsp(getter_AddRefs(csp));
+  } else {
+    // Currently the NodePrincipal holds the CSP for a document. After
+    // Bug 965637 we can query the CSP from mOwnerContent->OwnerDoc()
+    // instead of mOwnerContent->NodePrincipal().
+    mOwnerContent->NodePrincipal()->GetCsp(getter_AddRefs(csp));
+  }
   loadState->SetCsp(csp);
 
   nsCOMPtr<nsIURI> referrer;

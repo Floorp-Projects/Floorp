@@ -298,7 +298,7 @@ bool JitRuntime::initialize(JSContext* cx) {
     }
     JitSpew(JitSpew_Codegen, "# VM function wrapper (%s)", fun->name());
     uint32_t offset;
-    if (!generateVMWrapper(cx, masm, *fun, &offset)) {
+    if (!generateVMWrapper(cx, masm, *fun, fun->wrapped, &offset)) {
       return false;
     }
     if (!functionWrappers_->putNew(fun, offset)) {

@@ -71,6 +71,7 @@ class Kind(object):
                       task=task_dict['task'],
                       optimization=task_dict.get('optimization'),
                       dependencies=task_dict.get('dependencies'),
+                      soft_dependencies=task_dict.get('soft-dependencies'),
                       release_artifacts=task_dict.get('release-artifacts'),
                       )
                  for task_dict in transforms(trans_config, inputs)]

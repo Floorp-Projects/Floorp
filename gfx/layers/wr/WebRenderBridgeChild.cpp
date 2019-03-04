@@ -98,7 +98,8 @@ void WebRenderBridgeChild::UpdateResources(
   nsTArray<ipc::Shmem> largeShmems;
   aResources.Flush(resourceUpdates, smallShmems, largeShmems);
 
-  this->SendUpdateResources(resourceUpdates, smallShmems, largeShmems);
+  this->SendUpdateResources(resourceUpdates, smallShmems,
+                            std::move(largeShmems));
 }
 
 void WebRenderBridgeChild::EndTransaction(
@@ -123,12 +124,12 @@ void WebRenderBridgeChild::EndTransaction(
   nsTArray<ipc::Shmem> largeShmems;
   aResources.Flush(resourceUpdates, smallShmems, largeShmems);
 
-  this->SendSetDisplayList(aSize, mParentCommands, mDestroyedActors,
-                           GetFwdTransactionId(), aTransactionId, aContentSize,
-                           dlData, aDL.dl_desc, aScrollData, resourceUpdates,
-                           smallShmems, largeShmems, mIdNamespace,
-                           aContainsSVGGroup, aVsyncId, aVsyncStartTime,
-                           aRefreshStartTime, aTxnStartTime, aTxnURL, fwdTime);
+  this->SendSetDisplayList(
+      aSize, mParentCommands, mDestroyedActors, GetFwdTransactionId(),
+      aTransactionId, aContentSize, std::move(dlData), aDL.dl_desc, aScrollData,
+      resourceUpdates, smallShmems, std::move(largeShmems), mIdNamespace,
+      aContainsSVGGroup, aVsyncId, aVsyncStartTime, aRefreshStartTime,
+      aTxnStartTime, aTxnURL, fwdTime);
 
   mParentCommands.Clear();
   mDestroyedActors.Clear();
@@ -158,8 +159,8 @@ void WebRenderBridgeChild::EndEmptyTransaction(
   this->SendEmptyTransaction(
       aFocusTarget, aUpdates, aPaintSequenceNumber, mParentCommands,
       mDestroyedActors, GetFwdTransactionId(), aTransactionId, resourceUpdates,
-      smallShmems, largeShmems, mIdNamespace, aVsyncId, aVsyncStartTime,
-      aRefreshStartTime, aTxnStartTime, aTxnURL, fwdTime);
+      smallShmems, std::move(largeShmems), mIdNamespace, aVsyncId,
+      aVsyncStartTime, aRefreshStartTime, aTxnStartTime, aTxnURL, fwdTime);
   mParentCommands.Clear();
   mDestroyedActors.Clear();
   mIsInTransaction = false;

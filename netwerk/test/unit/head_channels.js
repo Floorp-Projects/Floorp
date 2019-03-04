@@ -237,3 +237,22 @@ OriginAttributes.prototype = {
   inIsolatedMozBrowser: false,
   privateBrowsingId: 0
 };
+
+function readFile(file) {
+  let fstream = Cc["@mozilla.org/network/file-input-stream;1"]
+                  .createInstance(Ci.nsIFileInputStream);
+  fstream.init(file, -1, 0, 0);
+  let data = NetUtil.readInputStreamToString(fstream, fstream.available());
+  fstream.close();
+  return data;
+}
+
+function addCertFromFile(certdb, filename, trustString) {
+  let certFile = do_get_file(filename, false);
+  let pem = readFile(certFile)
+              .replace(/-----BEGIN CERTIFICATE-----/, "")
+              .replace(/-----END CERTIFICATE-----/, "")
+              .replace(/[\r\n]/g, "");
+  certdb.addCertFromBase64(pem, trustString);
+}
+

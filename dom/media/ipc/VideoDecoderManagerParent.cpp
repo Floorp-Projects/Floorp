@@ -265,7 +265,7 @@ mozilla::ipc::IPCResult VideoDecoderManagerParent::RecvReadback(
   dt->Flush();
 
   *aResult = SurfaceDescriptorBuffer(RGBDescriptor(size, format, true),
-                                     MemoryOrShmem(buffer));
+                                     MemoryOrShmem(std::move(buffer)));
   return IPC_OK();
 }
 

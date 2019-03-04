@@ -2670,7 +2670,11 @@ bool JSStructuredCloneReader::readTransferMap() {
       return false;
     }
 
-    MOZ_ASSERT(tag != SCTAG_TRANSFER_MAP_PENDING_ENTRY);
+    if (tag == SCTAG_TRANSFER_MAP_PENDING_ENTRY) {
+      ReportDataCloneError(cx, callbacks, JS_SCERR_TRANSFERABLE);
+      return false;
+    }
+
     RootedObject obj(cx);
 
     void* content;
@@ -2712,7 +2716,10 @@ bool JSStructuredCloneReader::readTransferMap() {
       if (!in.readPair(&tag, &data)) {
         return false;
       }
-      MOZ_ASSERT(tag == SCTAG_ARRAY_BUFFER_OBJECT);
+      if (tag != SCTAG_ARRAY_BUFFER_OBJECT) {
+        ReportDataCloneError(cx, callbacks, JS_SCERR_TRANSFERABLE);
+        return false;
+      }
       RootedValue val(cx);
       if (!readArrayBuffer(data, &val)) {
         return false;

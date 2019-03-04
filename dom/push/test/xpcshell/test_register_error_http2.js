@@ -54,10 +54,7 @@ add_task(async function test_TLS() {
   var oldPref = prefs.getIntPref("network.http.speculative-parallel-limit");
   prefs.setIntPref("network.http.speculative-parallel-limit", 0);
 
-  addCertOverride("localhost", serverPort,
-                  Ci.nsICertOverrideService.ERROR_UNTRUSTED |
-                  Ci.nsICertOverrideService.ERROR_MISMATCH |
-                  Ci.nsICertOverrideService.ERROR_TIME);
+  trustHttp2CA();
 
   prefs.setIntPref("network.http.speculative-parallel-limit", oldPref);
 });

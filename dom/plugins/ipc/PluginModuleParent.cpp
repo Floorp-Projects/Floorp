@@ -530,7 +530,7 @@ bool PluginModuleChromeParent::InitCrashReporter() {
   }
 
   NativeThreadId threadId;
-  if (!CallInitCrashReporter(shmem, &threadId)) {
+  if (!CallInitCrashReporter(std::move(shmem), &threadId)) {
     return false;
   }
 

@@ -1342,7 +1342,7 @@ class Document : public nsINode,
    * Gets the event target to dispatch key events to if there is no focused
    * content in the document.
    */
-  virtual nsIContent* GetUnfocusedKeyEventTarget();
+  virtual Element* GetUnfocusedKeyEventTarget();
 
   /**
    * Retrieve information about the viewport as a data structure.

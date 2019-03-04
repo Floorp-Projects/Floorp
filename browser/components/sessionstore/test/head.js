@@ -190,8 +190,9 @@ async function setBrowserState(state, win = window) {
   await promiseWindowRestored(win);
 }
 
-async function setWindowState(win, state, overwrite = false) {
-  ss.setWindowState(win, typeof state != "string" ? JSON.stringify(state) : state, overwrite);
+async function setWindowState(win, state, overwrite = false, firstWindow = false) {
+  ss.setWindowState(win, typeof state != "string" ? JSON.stringify(state) : state,
+                    overwrite, firstWindow);
   await promiseWindowRestored(win);
 }
 
