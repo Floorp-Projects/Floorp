@@ -8,13 +8,13 @@ use api::{
 };
 use intern::ItemUid;
 use app_units::Au;
-use display_list_flattener::IsVisible;
-use intern::{Internable, InternDebug, Handle as InternHandle};
+use display_list_flattener::{AsInstanceKind, IsVisible};
+use intern::{Internable, InternDebug};
+use intern_types;
 use picture::PictureCompositeMode;
 use prim_store::{
     PrimKey, PrimKeyCommonData, PrimTemplate, PrimTemplateCommonData,
     PrimitiveInstanceKind, PrimitiveSceneData, PrimitiveStore, VectorKey,
-    InternablePrimitive,
 };
 
 /// Represents a hashable description of how a picture primitive
@@ -161,6 +161,21 @@ impl PictureKey {
 
 impl InternDebug for PictureKey {}
 
+impl AsInstanceKind<PictureDataHandle> for PictureKey {
+    /// Construct a primitive instance that matches the type
+    /// of primitive key.
+    fn as_instance_kind(
+        &self,
+        _: PictureDataHandle,
+        _: &mut PrimitiveStore,
+        _reference_frame_relative_offset: LayoutVector2D,
+    ) -> PrimitiveInstanceKind {
+        // Should never be hit as this method should not be
+        // called for pictures.
+        unreachable!();
+    }
+}
+
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 #[derive(MallocSizeOf)]
@@ -179,35 +194,24 @@ impl From<PictureKey> for PictureTemplate {
     }
 }
 
-pub type PictureDataHandle = InternHandle<Picture>;
+pub use intern_types::picture::Handle as PictureDataHandle;
 
 impl Internable for Picture {
-    type Key = PictureKey;
+    type Marker = intern_types::picture::Marker;
+    type Source = PictureKey;
     type StoreData = PictureTemplate;
     type InternData = PrimitiveSceneData;
-}
 
-impl InternablePrimitive for Picture {
-    fn into_key(
+    /// Build a new key from self with `info`.
+    fn build_key(
         self,
         info: &LayoutPrimitiveInfo,
     ) -> PictureKey {
         PictureKey::new(
             info.is_backface_visible,
             info.rect.size,
-            self,
+            self
         )
-    }
-
-    fn make_instance_kind(
-        _key: PictureKey,
-        _: PictureDataHandle,
-        _: &mut PrimitiveStore,
-        _reference_frame_relative_offset: LayoutVector2D,
-    ) -> PrimitiveInstanceKind {
-        // Should never be hit as this method should not be
-        // called for pictures.
-        unreachable!();
     }
 }
 
