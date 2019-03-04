@@ -1701,6 +1701,12 @@ WebConsoleActor.prototype =
     delete result.innerID;
     delete result.consoleID;
 
+    if (result.stacktrace) {
+      result.stacktrace = Array.map(result.stacktrace, (frame) => {
+        return { ...frame, sourceId: this.getActorIdForInternalSourceId(frame.sourceId) };
+      });
+    }
+
     result.arguments = Array.map(message.arguments || [], (obj) => {
       const dbgObj = this.makeDebuggeeValue(obj, useObjectGlobal);
       return this.createValueGrip(dbgObj);
