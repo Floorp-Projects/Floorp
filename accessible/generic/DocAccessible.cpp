@@ -1339,21 +1339,26 @@ void DocAccessible::DoInitialUpdate() {
     if (IPCAccessibilityActive()) {
       nsIDocShell* docShell = mDocumentNode->GetDocShell();
       if (RefPtr<dom::TabChild> tabChild = dom::TabChild::GetFrom(docShell)) {
-        DocAccessibleChild* ipcDoc = new DocAccessibleChild(this, tabChild);
-        SetIPCDoc(ipcDoc);
+        DocAccessibleChild* ipcDoc = IPCDoc();
+        if (!ipcDoc) {
+          ipcDoc = new DocAccessibleChild(this, tabChild);
+          SetIPCDoc(ipcDoc);
+
+#if defined(XP_WIN)
+          IAccessibleHolder holder(
+              CreateHolderFromAccessible(WrapNotNull(this)));
+          MOZ_ASSERT(!holder.IsNull());
+          int32_t childID = AccessibleWrap::GetChildIDFor(this);
+#else
+          int32_t holder = 0, childID = 0;
+#endif
+          tabChild->SendPDocAccessibleConstructor(ipcDoc, nullptr, 0, childID,
+                                                  holder);
+        }
+
         if (IsRoot()) {
           tabChild->SetTopLevelDocAccessibleChild(ipcDoc);
         }
-
-#if defined(XP_WIN)
-        IAccessibleHolder holder(CreateHolderFromAccessible(WrapNotNull(this)));
-        MOZ_ASSERT(!holder.IsNull());
-        int32_t childID = AccessibleWrap::GetChildIDFor(this);
-#else
-        int32_t holder = 0, childID = 0;
-#endif
-        tabChild->SendPDocAccessibleConstructor(ipcDoc, nullptr, 0, childID,
-                                                holder);
       }
     }
   }
@@ -2252,6 +2257,11 @@ bool DocAccessible::IsLoadEventTarget() const {
 
   // It's content (not chrome) root document.
   return (treeItem->ItemType() == nsIDocShellTreeItem::typeContent);
+}
+
+void DocAccessible::SetIPCDoc(DocAccessibleChild* aIPCDoc) {
+  MOZ_ASSERT(!mIPCDoc || !aIPCDoc, "Clobbering an attached IPCDoc!");
+  mIPCDoc = aIPCDoc;
 }
 
 void DocAccessible::DispatchScrollingEvent(uint32_t aEventType) {
