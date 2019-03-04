@@ -447,8 +447,6 @@ class ScrollFrameHelper : public nsIReflowCallback {
 
   void MarkScrollbarsDirtyForReflow() const;
 
-  bool ShouldClampScrollPosition() const;
-
   bool IsAlwaysActive() const;
   void MarkEverScrolled();
   void MarkRecentlyScrolled();
