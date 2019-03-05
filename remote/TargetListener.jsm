@@ -25,6 +25,7 @@ class TargetListener {
     this.listener = null;
     this.sessions = new Map();
     this.nextConnID = 0;
+    this.onConnectionAccepted = this.onConnectionAccepted.bind(this);
   }
 
   get listening() {
@@ -37,13 +38,13 @@ class TargetListener {
     }
 
     this.listener = new SocketListener();
-    this.listener.on("accepted", this.onConnectionAccepted.bind(this));
+    this.listener.on("accepted", this.onConnectionAccepted);
 
     this.listener.listen("ws", 0 /* atomically allocated port */);
   }
 
   close() {
-    this.listener.off("accepted", this.onConnectionAccepted.bind(this));
+    this.listener.off("accepted", this.onConnectionAccepted);
     for (const [conn, session] of this.sessions) {
       session.destructor();
       conn.close();
