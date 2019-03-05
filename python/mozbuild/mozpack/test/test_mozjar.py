@@ -164,10 +164,10 @@ class TestJar(unittest.TestCase):
 
         if os.sep == '\\':
             self.assertEqual(files[3].filename, 'baz/backslash',
-                'backslashes in filenames on Windows should get normalized')
+                             'backslashes in filenames on Windows should get normalized')
         else:
             self.assertEqual(files[3].filename, 'baz\\backslash',
-                'backslashes in filenames on POSIX platform are untouched')
+                             'backslashes in filenames on POSIX platform are untouched')
 
         s = MockDest()
         with JarWriter(fileobj=s, compress=False) as jar:
@@ -307,8 +307,10 @@ class TestJarLog(unittest.TestCase):
             ' deeply/nested/stuff',
         ]))
         log = JarLog(fileobj=s)
-        canonicalize = lambda p: \
-            mozpath.normsep(os.path.normcase(os.path.realpath(p)))
+
+        def canonicalize(p):
+            return mozpath.normsep(os.path.normcase(os.path.realpath(p)))
+
         baz_jar = canonicalize('bar/baz.jar')
         qux_zip = canonicalize('qux.zip')
         self.assertEqual(set(log.keys()), set([

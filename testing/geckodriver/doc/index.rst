@@ -14,7 +14,7 @@ You can consult the `change log`_ for a record of all notable changes
 to the program.  Releases_ are made available on GitHub.
 
 .. _WebDriver protocol: https://w3c.github.io/webdriver/#protocol
-.. _Firefox remote protocol: https://firefox-source-docs.mozilla.org/testing/marionette/marionette/Protocol.html
+.. _Firefox remote protocol: https://firefox-source-docs.mozilla.org/testing/marionette/Protocol.html
 .. _change log: https://github.com/mozilla/geckodriver/releases
 .. _Releases: https://github.com/mozilla/geckodriver/releases
 

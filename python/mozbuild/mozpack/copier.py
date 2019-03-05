@@ -103,7 +103,7 @@ class FileRegistry(object):
         items = self.match(pattern)
         if not items:
             return errors.error("Can't remove %s: %s" % (pattern,
-                                "not matching anything previously added"))
+                                                         "not matching anything previously added"))
         for i in items:
             del self._files[i]
             self._required_directories.subtract(self._partial_paths(i))
@@ -262,6 +262,7 @@ class FileCopier(FileRegistry):
     FileRegistry with the ability to copy the registered files to a separate
     directory.
     '''
+
     def copy(self, destination, skip_if_older=True,
              remove_unaccounted=True,
              remove_all_directory_symlinks=True,
@@ -319,7 +320,7 @@ class FileCopier(FileRegistry):
 
         required_dirs = set([destination])
         required_dirs |= set(os.path.normpath(os.path.join(destination, d))
-            for d in self.required_directories())
+                             for d in self.required_directories())
 
         # Ensure destination directories are in place and proper.
         #
@@ -364,7 +365,7 @@ class FileCopier(FileRegistry):
                                  for p in remove_unaccounted.paths())
             existing_dirs = set(os.path.normpath(os.path.join(destination, p))
                                 for p in remove_unaccounted
-                                         .required_directories())
+                                .required_directories())
             existing_dirs |= {os.path.normpath(destination)}
         else:
             # While we have remove_unaccounted, it doesn't apply to empty
@@ -423,7 +424,7 @@ class FileCopier(FileRegistry):
                     destfile = os.path.normpath(os.path.join(destination, p))
                     fs.append((destfile, e.submit(f.copy, destfile, skip_if_older)))
 
-            copy_results = [(destfile, f.result) for destfile, f in fs]
+            copy_results = [(path, f.result) for path, f in fs]
         else:
             for p, f in self:
                 destfile = os.path.normpath(os.path.join(destination, p))
@@ -507,6 +508,7 @@ class Jarrer(FileRegistry, BaseFile):
     FileRegistry with the ability to copy and pack the registered files as a
     jar file. Also acts as a BaseFile instance, to be copied with a FileCopier.
     '''
+
     def __init__(self, compress=True):
         '''
         Create a Jarrer instance. See mozpack.mozjar.JarWriter documentation
@@ -540,6 +542,7 @@ class Jarrer(FileRegistry, BaseFile):
                 dest.write(data) # Creates a Deflater and write data there
                 dest.read()      # Re-opens the Deflater and reads from it
             '''
+
             def __init__(self, orig=None, compress=True):
                 self.mode = None
                 self.deflater = orig

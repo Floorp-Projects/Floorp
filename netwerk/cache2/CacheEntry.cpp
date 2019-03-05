@@ -1223,9 +1223,9 @@ nsresult CacheEntry::OpenOutputStream(int64_t offset, int64_t predictedSize,
   return NS_OK;
 }
 
-nsresult CacheEntry::OpenAlternativeOutputStream(const nsACString &type,
-                                                 int64_t predictedSize,
-                                                 nsIOutputStream **_retval) {
+nsresult CacheEntry::OpenAlternativeOutputStream(
+    const nsACString &type, int64_t predictedSize,
+    nsIAsyncOutputStream **_retval) {
   LOG(("CacheEntry::OpenAlternativeOutputStream [this=%p, type=%s]", this,
        PromiseFlatCString(type).get()));
 
@@ -1248,7 +1248,7 @@ nsresult CacheEntry::OpenAlternativeOutputStream(const nsACString &type,
     return NS_ERROR_FILE_TOO_BIG;
   }
 
-  nsCOMPtr<nsIOutputStream> stream;
+  nsCOMPtr<nsIAsyncOutputStream> stream;
   rv = mFile->OpenAlternativeOutputStream(
       nullptr, PromiseFlatCString(type).get(), getter_AddRefs(stream));
   NS_ENSURE_SUCCESS(rv, rv);

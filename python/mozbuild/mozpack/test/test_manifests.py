@@ -28,7 +28,7 @@ class TestInstallManifest(TestWithTmpDir):
         f = self.tmppath('manifest')
         open(f, 'wb').write('junk\n')
         with self.assertRaises(UnreadableInstallManifest):
-            m = InstallManifest(f)
+            InstallManifest(f)
 
     def test_adds(self):
         m = InstallManifest()
@@ -77,7 +77,8 @@ class TestInstallManifest(TestWithTmpDir):
         m = InstallManifest()
         m.add_link(self.tmppath('s_source'), 's_dest')
         m.add_copy(self.tmppath('c_source'), 'c_dest')
-        m.add_preprocess(self.tmppath('p_source'), 'p_dest', self.tmppath('p_source.pp'), '#', {'FOO':'BAR', 'BAZ':'QUX'})
+        m.add_preprocess(self.tmppath('p_source'), 'p_dest', self.tmppath(
+            'p_source.pp'), '#', {'FOO': 'BAR', 'BAZ': 'QUX'})
         m.add_required_exists('e_dest')
         m.add_optional_exists('o_dest')
         m.add_pattern_link('ps_base', '*', 'ps_dest')
@@ -226,7 +227,7 @@ class TestInstallManifest(TestWithTmpDir):
         self.assertEqual(result.updated_files, set(self.tmppath(p) for p in (
             'dest/s_dest', 'dest/c_dest', 'dest/p_dest', 'dest/content')))
         self.assertEqual(result.existing_files,
-            set([self.tmppath('dest/e_dest'), self.tmppath('dest/o_dest')]))
+                         set([self.tmppath('dest/e_dest'), self.tmppath('dest/o_dest')]))
         self.assertEqual(result.removed_files, {to_delete})
         self.assertEqual(result.removed_directories, set())
 
@@ -251,7 +252,8 @@ class TestInstallManifest(TestWithTmpDir):
         # Create and write a manifest with the preprocessed file, then apply it.
         # This should write out our preprocessed file.
         m = InstallManifest()
-        m.add_preprocess(self.tmppath('p_source'), 'p_dest', deps, '#', {'FOO':'BAR', 'BAZ':'QUX'})
+        m.add_preprocess(self.tmppath('p_source'), 'p_dest',
+                         deps, '#', {'FOO': 'BAR', 'BAZ': 'QUX'})
         m.write(path=manifest)
 
         m = InstallManifest(path=manifest)
@@ -268,7 +270,7 @@ class TestInstallManifest(TestWithTmpDir):
         # Since this manifest does not exist on the disk, there should not be a
         # dependency on it, and the preprocessed file should not be modified.
         m2 = InstallManifest()
-        m2.add_preprocess(self.tmppath('p_source'), 'p_dest', deps, '#', {'DEPTEST':True})
+        m2.add_preprocess(self.tmppath('p_source'), 'p_dest', deps, '#', {'DEPTEST': True})
         c = FileCopier()
         m2.populate_registry(c)
         result = c.copy(dest)
@@ -332,7 +334,7 @@ class TestInstallManifest(TestWithTmpDir):
 
         # Create and write a manifest with the preprocessed file.
         m = InstallManifest()
-        m.add_preprocess(source, 'p_dest', deps, '#', {'FOO':'BAR', 'BAZ':'QUX'})
+        m.add_preprocess(source, 'p_dest', deps, '#', {'FOO': 'BAR', 'BAZ': 'QUX'})
         m.write(path=manifest)
 
         time = os.path.getmtime(source) - 5

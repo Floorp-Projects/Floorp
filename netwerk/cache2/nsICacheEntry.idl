@@ -7,6 +7,7 @@
 
 interface nsIInputStream;
 interface nsIOutputStream;
+interface nsIAsyncOutputStream;
 interface nsICacheEntryDoomCallback;
 
 interface nsICacheListener;
@@ -265,7 +266,7 @@ interface nsICacheEntry : nsISupports
    *
    * If there is alt-data already saved, it will be overwritten.
    */
-  nsIOutputStream openAlternativeOutputStream(in ACString type, in long long predictedSize);
+  nsIAsyncOutputStream openAlternativeOutputStream(in ACString type, in long long predictedSize);
 
   /**
    * Opens and returns an input stream that can be used to read the alternative

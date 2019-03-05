@@ -70,7 +70,7 @@
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Unused.h"
 #include "nsIScriptError.h"
-#include "nsIOutputStream.h"
+#include "nsIAsyncOutputStream.h"
 
 using JS::SourceText;
 
@@ -2870,7 +2870,7 @@ void ScriptLoader::EncodeRequestBytecode(JSContext* aCx,
   // Open the output stream to the cache entry alternate data storage. This
   // might fail if the stream is already open by another request, in which
   // case, we just ignore the current one.
-  nsCOMPtr<nsIOutputStream> output;
+  nsCOMPtr<nsIAsyncOutputStream> output;
   rv = aRequest->mCacheInfo->OpenAlternativeOutputStream(
       nsContentUtils::JSBytecodeMimeType(), aRequest->mScriptBytecode.length(),
       getter_AddRefs(output));
@@ -2882,8 +2882,9 @@ void ScriptLoader::EncodeRequestBytecode(JSContext* aCx,
     return;
   }
   MOZ_ASSERT(output);
+
   auto closeOutStream = mozilla::MakeScopeExit([&]() {
-    nsresult rv = output->Close();
+    rv = output->CloseWithStatus(rv);
     LOG(("ScriptLoadRequest (%p): Closing (rv = %X)", aRequest, unsigned(rv)));
   });
 
