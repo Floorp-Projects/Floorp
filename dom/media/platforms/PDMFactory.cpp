@@ -319,6 +319,14 @@ bool PDMFactory::Supports(const TrackInfo& aTrackInfo,
   if (mEMEPDM) {
     return mEMEPDM->Supports(aTrackInfo, aDiagnostics);
   }
+  if (VPXDecoder::IsVPX(aTrackInfo.mMimeType,
+                        VPXDecoder::VP8 | VPXDecoder::VP9)) {
+    // Work around bug 1521370, where trying to instantiate an external decoder
+    // could cause a crash.
+    // We always ship a VP8/VP9 decoder (libvpx) and optionally we have ffvpx.
+    // So we can speed up the test by assuming that this codec is supported.
+    return true;
+  }
   RefPtr<PlatformDecoderModule> current = GetDecoder(aTrackInfo, aDiagnostics);
   return !!current;
 }
