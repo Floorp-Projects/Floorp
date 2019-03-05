@@ -8,7 +8,7 @@
 
 var EXPORTED_SYMBOLS = ["WebSocketDebuggerTransport"];
 
-const {EventEmitter} = ChromeUtils.import("chrome://remote/content/EventEmitter.jsm");
+const {EventEmitter} = ChromeUtils.import("resource://gre/modules/EventEmitter.jsm");
 
 function WebSocketDebuggerTransport(socket) {
   EventEmitter.decorate(this);

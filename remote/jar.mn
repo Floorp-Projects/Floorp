@@ -7,7 +7,6 @@ remote.jar:
   content/Connection.jsm (Connection.jsm)
   content/ContentProcessSession.jsm (ContentProcessSession.jsm)
   content/Error.jsm (Error.jsm)
-  content/EventEmitter.jsm (EventEmitter.jsm)
   content/Handler.jsm (Handler.jsm)
   content/Log.jsm (Log.jsm)
   content/Observer.jsm (Observer.jsm)

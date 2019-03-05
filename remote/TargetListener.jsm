@@ -57,10 +57,11 @@ class TargetListener {
    * SocketListener's `accepted` listener. Called whenever a new WebSocket connection is
    * established.
    *
+   * @param String eventName
    * @param WebSocketDebuggerTransport transport
    * @param SocketListener listener
    */
-  onConnectionAccepted(transport, listener) {
+  onConnectionAccepted(eventName, transport, listener) {
     const conn = new Connection(this.nextConnID++, transport);
     transport.ready();
     this.sessions.set(conn, new Session(conn, this.target));
