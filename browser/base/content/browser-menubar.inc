@@ -11,7 +11,8 @@
             <menu id="file-menu" label="&fileMenu.label;"
                   accesskey="&fileMenu.accesskey;">
               <menupopup id="menu_FilePopup"
-                         onpopupshowing="updateFileMenuUserContextUIVisibility('menu_newUserContext');">
+                         onpopupshowing="updateFileMenuUserContextUIVisibility('menu_newUserContext');
+                                         updateFileMenuImportUIVisibility('cmd_importFromAnotherBrowser');">
                 <menuitem id="menu_newNavigatorTab"
                           label="&tabCmd.label;"
                           command="cmd_newNavigatorTab"
@@ -84,6 +85,11 @@
                           accesskey="&printCmd.accesskey;"
                           key="printKb"
                           command="cmd_print"/>
+                <menuseparator/>
+                <menuitem id="menu_importFromAnotherBrowser"
+                          label="&importFromAnotherBrowserCmd.label;"
+                          accesskey="&importFromAnotherBrowserCmd.accesskey;"
+                          command="cmd_importFromAnotherBrowser"/>
                 <menuseparator/>
                 <menuitem id="goOfflineMenuitem"
                           label="&goOfflineCmd.label;"

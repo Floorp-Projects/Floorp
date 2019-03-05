@@ -357,7 +357,7 @@ PAltDataOutputStreamParent* NeckoParent::AllocPAltDataOutputStreamParent(
     const nsCString& type, const int64_t& predictedSize,
     PHttpChannelParent* channel) {
   HttpChannelParent* chan = static_cast<HttpChannelParent*>(channel);
-  nsCOMPtr<nsIOutputStream> stream;
+  nsCOMPtr<nsIAsyncOutputStream> stream;
   nsresult rv = chan->OpenAlternativeOutputStream(type, predictedSize,
                                                   getter_AddRefs(stream));
   AltDataOutputStreamParent* parent = new AltDataOutputStreamParent(stream);
