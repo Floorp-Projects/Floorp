@@ -89,5 +89,6 @@ class TestErrorsImpl(TestErrors, unittest.TestCase):
             'Error: foo:1: c',
         ])
 
+
 if __name__ == '__main__':
     mozunit.main()

@@ -13,7 +13,7 @@ geckodriver’s [source code] is made available under the [Mozilla
 Public License].
 
 [WebDriver protocol]: https://w3c.github.io/webdriver/#protocol
-[Firefox remote protocol]: https://firefox-source-docs.mozilla.org/testing/marionette/marionette/Protocol.html
+[Firefox remote protocol]: https://firefox-source-docs.mozilla.org/testing/marionette/Protocol.html
 [source code]: https://hg.mozilla.org/mozilla-unified/file/tip/testing/geckodriver
 [Mozilla Public License]: https://www.mozilla.org/en-US/MPL/2.0/
 [WebDriver]: https://developer.mozilla.org/en-US/docs/Web/WebDriver
@@ -44,14 +44,14 @@ Documentation
   * [Python API](https://seleniumhq.github.io/selenium/docs/api/py/)
   * [Ruby API](https://seleniumhq.github.io/selenium/docs/api/rb/)
 
-* [geckodriver usage](https://firefox-source-docs.mozilla.org/testing/geckodriver/geckodriver/Usage.html)
-  * [Supported platforms](https://firefox-source-docs.mozilla.org/testing/geckodriver/geckodriver/Support.html)
-  * [Firefox capabilities](https://firefox-source-docs.mozilla.org/testing/geckodriver/geckodriver/Capabilities.html)
-  * [Capabilities example](https://firefox-source-docs.mozilla.org/testing/geckodriver/geckodriver/Capabilities.html#capabilities-example)
-  * [Enabling trace logs](https://firefox-source-docs.mozilla.org/testing/geckodriver/geckodriver/TraceLogs.html)
-  * [Analyzing crash data from Firefox](https://firefox-source-docs.mozilla.org/testing/geckodriver/geckodriver/CrashReports.html)
+* [geckodriver usage](https://firefox-source-docs.mozilla.org/testing/geckodriver/Usage.html)
+  * [Supported platforms](https://firefox-source-docs.mozilla.org/testing/geckodriver/Support.html)
+  * [Firefox capabilities](https://firefox-source-docs.mozilla.org/testing/geckodriver/Capabilities.html)
+  * [Capabilities example](https://firefox-source-docs.mozilla.org/testing/geckodriver/Capabilities.html#capabilities-example)
+  * [Enabling trace logs](https://firefox-source-docs.mozilla.org/testing/geckodriver/TraceLogs.html)
+  * [Analyzing crash data from Firefox](https://firefox-source-docs.mozilla.org/testing/geckodriver/CrashReports.html)
 
-* [Contributing](https://firefox-source-docs.mozilla.org/testing/geckodriver/geckodriver/#for-developers)
+* [Contributing](https://firefox-source-docs.mozilla.org/testing/geckodriver/#for-developers)
 
 
 Source code
@@ -62,7 +62,7 @@ We only use this GitHub repository for issue tracking and making releases.
 See our [contribution documentation] for more information.
 
 [mozilla-central]: https://hg.mozilla.org/mozilla-central/file/tip/testing/geckodriver
-[contribution documentation]: https://firefox-source-docs.mozilla.org/testing/geckodriver/geckodriver/#for-developers
+[contribution documentation]: https://firefox-source-docs.mozilla.org/testing/geckodriver/#for-developers
 
 
 Contact
