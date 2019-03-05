@@ -16,7 +16,7 @@ add_task(async function() {
 
   // this is not implemented yet
   // assertHighlightLocation(dbg, "math.min.js:formatted", 18);
-
+  // await selectSource(dbg, "math.min.js")
   await addBreakpoint(dbg, ppSrc, 18);
 
   invokeInTab("arithmetic");
