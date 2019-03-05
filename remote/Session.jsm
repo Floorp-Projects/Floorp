@@ -55,7 +55,7 @@ class Session {
       }
     } catch (e) {
       const error = formatError(e, {stack: true});
-      this.connection.send({id, error});
+      this.connection.send({id, error: { message: error }});
     }
   }
 
@@ -104,7 +104,7 @@ class Session {
       break;
 
     case "remote:error":
-      this.connection.send({id, error: formatError(error, {stack: true})});
+      this.connection.send({id, error: { message: formatError(error, {stack: true}) }});
       break;
     }
   }
