@@ -441,7 +441,7 @@ void RemoteWorkerChild::CloseWorkerOnMainThread() {
 
   // The holder will be notified by this.
   if (mWorkerState == eRunning) {
-    MOZ_ASSERT(mWorkerPrivate);
+    MOZ_RELEASE_ASSERT(mWorkerPrivate);
     mWorkerPrivate->Cancel();
   }
 }
