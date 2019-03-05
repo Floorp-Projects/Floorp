@@ -319,9 +319,6 @@ var snapshotFormatters = {
     function addRow(where, key, value) {
       addRows(where, [buildRow(key, value)]);
     }
-    if (data.clearTypeParameters !== undefined) {
-      addRow("diagnostics", "clear-type-parameters", data.clearTypeParameters);
-    }
     if ("info" in data) {
       apzInfo = formatApzInfo(data.info);
 

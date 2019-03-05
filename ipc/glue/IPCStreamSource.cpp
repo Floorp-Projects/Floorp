@@ -119,12 +119,10 @@ bool IPCStreamSource::Initialize() {
   // worker threads, but not other threads. Main-thread and PBackground thread
   // do not need anything special in order to be kept alive.
   if (!NS_IsMainThread()) {
-    mozilla::dom::WorkerPrivate* workerPrivate =
-        mozilla::dom::GetCurrentThreadWorkerPrivate();
-    if (workerPrivate) {
-      RefPtr<mozilla::dom::StrongWorkerRef> workerRef =
-          mozilla::dom::StrongWorkerRef::Create(workerPrivate,
-                                                "IPCStreamSource");
+    if (const auto workerPrivate = dom::GetCurrentThreadWorkerPrivate()) {
+      RefPtr<dom::StrongWorkerRef> workerRef =
+          dom::StrongWorkerRef::CreateForcibly(workerPrivate,
+                                               "IPCStreamSource");
       if (NS_WARN_IF(!workerRef)) {
         return false;
       }

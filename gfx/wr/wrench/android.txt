@@ -1,0 +1,51 @@
+Running Wrench on Android devices.
+==================================
+
+Setting up the environment:
+---------------------------
+
+Follow the steps at https://github.com/tomaka/android-rs-glue#setting-up-your-environment, with exceptions:
+    - Instead of downloading the NDK and SDK, reference the ones downloaded by Gecko in ~/.mozbuild/
+
+    - Don't install cargo-apk (currently published version has a bug related to SDK versions, hopefully 0.4.2+ will be published soon).
+      Instead, build it from source:
+        git clone https://github.com/tomaka/android-rs-glue
+        cd android-rs-glue/cargo-apk
+        cargo build
+
+    - Consider adding ~/.mozbuild/android-sdk-linux/platform-tools to your path, for the adb commands below.
+
+Compiling and running:
+----------------------
+
+    Compile wrench:
+        cd wrench
+        <cargo-apk dir>/target/cargo-apk build
+
+    Install the APK:
+        adb install -r ../target/android-artifacts/app/build/outputs/apk/app-debug.apk
+
+    Set command line arguments:
+        adb shell
+        echo "load reftests/aa/rounded-rects.yaml" >/sdcard/wrench_args
+        exit
+
+    Run the application:
+        adb shell am start -n org.mozilla.wrench/rust.wrench.MainActivity
+            (or click the icon in the launcher)
+
+Release mode:
+-------------
+
+    Building in release does work, but you need to sign and align the APK manually. We will automate this in future. For now,
+
+    Generate a signing key (once):
+        keytool -genkey -v -keystore wrench-release-key.keystore -alias wrench_key -keyalg RSA -keysize 2048 -validity 10000
+
+    Sign the APK:
+        jarsigner -verbose -keystore wrench-release-key.keystore <apk path>/app-release-unsigned.apk wrench_key
+
+    Align the APK:
+        zipalign -f -v 4 <apk path>/app-release-unsigned.apk <apk path>/app-release.apk
+
+    Now the signed APK can be installed - you will probably need to uninstall the debug APK if you have that installed first.

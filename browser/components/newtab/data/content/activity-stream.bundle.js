@@ -219,7 +219,7 @@ for (const type of ["ADDONS_INFO_REQUEST", "ADDONS_INFO_RESPONSE", "ARCHIVE_FROM
 // as call-to-action buttons in snippets, onboarding tour, etc.
 const ASRouterActions = {};
 
-for (const type of ["INSTALL_ADDON_FROM_URL", "OPEN_APPLICATIONS_MENU", "OPEN_PRIVATE_BROWSER_WINDOW", "OPEN_URL", "OPEN_ABOUT_PAGE", "OPEN_PREFERENCES_PAGE", "SHOW_FIREFOX_ACCOUNTS"]) {
+for (const type of ["INSTALL_ADDON_FROM_URL", "OPEN_APPLICATIONS_MENU", "OPEN_PRIVATE_BROWSER_WINDOW", "OPEN_URL", "OPEN_ABOUT_PAGE", "OPEN_PREFERENCES_PAGE", "SHOW_FIREFOX_ACCOUNTS", "PIN_CURRENT_TAB"]) {
   ASRouterActions[type] = type;
 }
 
@@ -3937,7 +3937,7 @@ class ImpressionStats extends react__WEBPACK_IMPORTED_MODULE_1___default.a.PureC
     if (this._needsImpressionStats(cards)) {
       props.dispatch(common_Actions_jsm__WEBPACK_IMPORTED_MODULE_0__["actionCreators"].DiscoveryStreamImpressionStats({
         source: props.source.toUpperCase(),
-        tiles: cards.map(link => ({ id: link.id }))
+        tiles: cards.map(link => ({ id: link.id, pos: link.pos }))
       }));
       this.impressionCardGuids = cards.map(link => link.id);
     }
@@ -7299,13 +7299,13 @@ class DSCard_DSCard extends external_React_default.a.PureComponent {
       this.props.dispatch(Actions["actionCreators"].UserEvent({
         event: "CLICK",
         source: this.props.type.toUpperCase(),
-        action_position: this.props.index
+        action_position: this.props.pos
       }));
 
       this.props.dispatch(Actions["actionCreators"].ImpressionStats({
         source: this.props.type.toUpperCase(),
         click: 0,
-        tiles: [{ id: this.props.id, pos: this.props.index }]
+        tiles: [{ id: this.props.id, pos: this.props.pos }]
       }));
     }
   }
@@ -7358,7 +7358,7 @@ class DSCard_DSCard extends external_React_default.a.PureComponent {
       ),
       external_React_default.a.createElement(ImpressionStats["ImpressionStats"], {
         campaignId: this.props.campaignId,
-        rows: [{ id: this.props.id }],
+        rows: [{ id: this.props.id, pos: this.props.pos }],
         dispatch: this.props.dispatch,
         source: this.props.type })
     );
@@ -7379,13 +7379,13 @@ class CardGrid_CardGrid extends external_React_default.a.PureComponent {
 
     let cards = data.recommendations.slice(0, this.props.items).map((rec, index) => external_React_default.a.createElement(DSCard_DSCard, {
       key: `dscard-${index}`,
+      pos: rec.pos,
       campaignId: rec.campaign_id,
       image_src: rec.image_src,
       title: rec.title,
       excerpt: rec.excerpt,
       url: rec.url,
       id: rec.id,
-      index: index,
       type: this.props.type,
       context: rec.context,
       dispatch: this.props.dispatch,
@@ -7473,13 +7473,13 @@ class List_ListItem extends external_React_default.a.PureComponent {
       this.props.dispatch(Actions["actionCreators"].UserEvent({
         event: "CLICK",
         source: this.props.type.toUpperCase(),
-        action_position: this.props.index
+        action_position: this.props.pos
       }));
 
       this.props.dispatch(Actions["actionCreators"].ImpressionStats({
         source: this.props.type.toUpperCase(),
         click: 0,
-        tiles: [{ id: this.props.id, pos: this.props.index }]
+        tiles: [{ id: this.props.id, pos: this.props.pos }]
       }));
     }
   }
@@ -7531,7 +7531,7 @@ class List_ListItem extends external_React_default.a.PureComponent {
         external_React_default.a.createElement("div", { className: "ds-list-image", style: { backgroundImage: `url(${this.props.image_src})` } }),
         external_React_default.a.createElement(ImpressionStats["ImpressionStats"], {
           campaignId: this.props.campaignId,
-          rows: [{ id: this.props.id }],
+          rows: [{ id: this.props.id, pos: this.props.pos }],
           dispatch: this.props.dispatch,
           source: this.props.type })
       )
@@ -7555,7 +7555,7 @@ function _List(props) {
     excerpt: rec.excerpt,
     id: rec.id,
     image_src: rec.image_src,
-    index: index,
+    pos: rec.pos,
     title: rec.title,
     context: rec.context,
     type: props.type,
@@ -7606,13 +7606,13 @@ class Hero_Hero extends external_React_default.a.PureComponent {
       this.props.dispatch(Actions["actionCreators"].UserEvent({
         event: "CLICK",
         source: this.props.type.toUpperCase(),
-        action_position: 0
+        action_position: this.heroRec.pos
       }));
 
       this.props.dispatch(Actions["actionCreators"].ImpressionStats({
         source: this.props.type.toUpperCase(),
         click: 0,
-        tiles: [{ id: this.heroRec.id, pos: 0 }]
+        tiles: [{ id: this.heroRec.id, pos: this.heroRec.pos }]
       }));
     }
   }
@@ -7628,7 +7628,6 @@ class Hero_Hero extends external_React_default.a.PureComponent {
     let [heroRec, ...otherRecs] = data.recommendations.slice(0, this.props.items);
     this.heroRec = heroRec;
 
-    // Note that `{index + 1}` is necessary below for telemetry since we treat heroRec as index 0.
     let cards = otherRecs.map((rec, index) => external_React_default.a.createElement(DSCard_DSCard, {
       campaignId: rec.campaign_id,
       key: `dscard-${index}`,
@@ -7636,7 +7635,7 @@ class Hero_Hero extends external_React_default.a.PureComponent {
       title: rec.title,
       url: rec.url,
       id: rec.id,
-      index: index + 1,
+      pos: rec.pos,
       type: this.props.type,
       dispatch: this.props.dispatch,
       context: rec.context,
@@ -7698,7 +7697,7 @@ class Hero_Hero extends external_React_default.a.PureComponent {
           ),
           external_React_default.a.createElement(ImpressionStats["ImpressionStats"], {
             campaignId: heroRec.campaignId,
-            rows: [{ id: heroRec.id }],
+            rows: [{ id: heroRec.id, pos: heroRec.pos }],
             dispatch: this.props.dispatch,
             source: this.props.type })
         ),
@@ -7943,6 +7942,8 @@ function layoutRender(layout, feeds, spocs) {
     return data;
   }
 
+  const positions = {};
+
   return layout.map(row => Object.assign({}, row, {
 
     // Loops through all the components and adds a .data property
@@ -7952,6 +7953,8 @@ function layoutRender(layout, feeds, spocs) {
         return component;
       }
 
+      positions[component.type] = positions[component.type] || 0;
+
       let { data } = feeds.data[component.feed.url];
 
       if (component && component.properties && component.properties.offset) {
@@ -7960,7 +7963,21 @@ function layoutRender(layout, feeds, spocs) {
         });
       }
 
-      return Object.assign({}, component, { data: maybeInjectSpocs(data, component.spocs) });
+      data = maybeInjectSpocs(data, component.spocs);
+
+      let items = 0;
+      if (component.properties && component.properties.items) {
+        items = Math.min(component.properties.items, data.recommendations.length);
+      }
+
+      // loop through a component items
+      // Store the items position sequentially for multiple components of the same type.
+      // Example: A second card grid starts pos offset from the last card grid.
+      for (let i = 0; i < items; i++) {
+        data.recommendations[i].pos = positions[component.type]++;
+      }
+
+      return Object.assign({}, component, { data });
     })
   }));
 });

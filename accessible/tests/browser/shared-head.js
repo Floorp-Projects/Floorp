@@ -335,6 +335,7 @@ function findAccessibleChildByID(accessible, id, interfaces) {
       return queryInterfaces(found, interfaces);
     }
   }
+  return null;
 }
 
 function queryInterfaces(accessible, interfaces) {

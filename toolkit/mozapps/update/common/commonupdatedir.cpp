@@ -395,26 +395,6 @@ nsresult GetInstallHash(const char16_t* installPath, const char* vendor,
   MOZ_ASSERT(installPath != nullptr,
              "Install path must not be null in GetInstallHash");
 
-#ifdef XP_WIN
-  // The Windows installer caches this hash value in the registry
-  SimpleAutoString regPath;
-  regPath.AutoAllocAndAssignSprintf(L"SOFTWARE\\%S\\%S\\TaskBarIDs",
-                                    vendor ? vendor : "Mozilla",
-                                    MOZ_APP_BASENAME);
-  if (regPath.Length() != 0) {
-    bool gotCachedHash =
-        GetCachedHash(installPath, HKEY_LOCAL_MACHINE, regPath, result);
-    if (gotCachedHash) {
-      return NS_OK;
-    }
-    gotCachedHash =
-        GetCachedHash(installPath, HKEY_CURRENT_USER, regPath, result);
-    if (gotCachedHash) {
-      return NS_OK;
-    }
-  }
-#endif
-
   // Unable to get the cached hash, so compute it.
   size_t pathSize =
       std::char_traits<char16_t>::length(installPath) * sizeof(*installPath);
@@ -597,9 +577,27 @@ static HRESULT GetUpdateDirectory(const wchar_t* installPath,
   SimpleAutoString updatePath;
   if (installPath) {
     mozilla::UniquePtr<NS_tchar[]> hash;
-    bool useCompatibilityMode = (whichDir == WhichUpdateDir::UserAppData);
-    nsresult rv = GetInstallHash(reinterpret_cast<const char16_t*>(installPath),
-                                 vendor, hash, useCompatibilityMode);
+
+    // The Windows installer caches this hash value in the registry
+    bool gotHash = false;
+    SimpleAutoString regPath;
+    regPath.AutoAllocAndAssignSprintf(L"SOFTWARE\\%S\\%S\\TaskBarIDs",
+                                      vendor ? vendor : "Mozilla",
+                                      MOZ_APP_BASENAME);
+    if (regPath.Length() != 0) {
+      gotHash = GetCachedHash(reinterpret_cast<const char16_t*>(installPath),
+                              HKEY_LOCAL_MACHINE, regPath, hash);
+      if (!gotHash) {
+        gotHash = GetCachedHash(reinterpret_cast<const char16_t*>(installPath),
+                                HKEY_CURRENT_USER, regPath, hash);
+      }
+    }
+    nsresult rv = NS_OK;
+    if (!gotHash) {
+      bool useCompatibilityMode = (whichDir == WhichUpdateDir::UserAppData);
+      rv = GetInstallHash(reinterpret_cast<const char16_t*>(installPath),
+                          vendor, hash, useCompatibilityMode);
+    }
     if (NS_SUCCEEDED(rv)) {
       const wchar_t midPathDirName[] = NS_T(UPDATE_PATH_MID_DIR_NAME);
       size_t updatePathLen = basePath.Length() + 1 /* path separator */ +

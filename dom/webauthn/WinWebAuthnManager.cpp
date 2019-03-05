@@ -476,6 +476,12 @@ void WinWebAuthnManager::Sign(PWebAuthnTransactionParent* aTransactionParent,
   // User Verification Requirement
   DWORD winUserVerificationReq = WEBAUTHN_USER_VERIFICATION_REQUIREMENT_ANY;
 
+  // RPID
+  PCWSTR rpID = nullptr;
+
+  // Attachment
+  DWORD winAttachment = WEBAUTHN_AUTHENTICATOR_ATTACHMENT_ANY;
+
   // AppId
   BOOL bU2fAppIdUsed = FALSE;
   BOOL* pbU2fAppIdUsed = nullptr;
@@ -499,6 +505,9 @@ void WinWebAuthnManager::Sign(PWebAuthnTransactionParent* aTransactionParent,
       }
     }
 
+    // RPID
+    rpID = aInfo.RpId().get();
+
     // User Verification Requirement
     UserVerificationRequirement userVerificationReq =
         static_cast<UserVerificationRequirement>(
@@ -521,6 +530,12 @@ void WinWebAuthnManager::Sign(PWebAuthnTransactionParent* aTransactionParent,
         winUserVerificationReq = WEBAUTHN_USER_VERIFICATION_REQUIREMENT_ANY;
         break;
     }
+  } else {
+    rpID = aInfo.Origin().get();
+    winAppIdentifier = aInfo.RpId().get();
+    pbU2fAppIdUsed = &bU2fAppIdUsed;
+    winAttachment = WEBAUTHN_AUTHENTICATOR_ATTACHMENT_CROSS_PLATFORM_U2F_V2;
+    winUserVerificationReq = WEBAUTHN_USER_VERIFICATION_REQUIREMENT_DISCOURAGED;
   }
 
   // allow Credentials
@@ -590,7 +605,7 @@ void WinWebAuthnManager::Sign(PWebAuthnTransactionParent* aTransactionParent,
   HWND hWnd = GetForegroundWindow();
 
   HRESULT hr =
-      gWinWebauthnGetAssertion(hWnd, aInfo.RpId().get(), &WebAuthNClientData,
+      gWinWebauthnGetAssertion(hWnd, rpID, &WebAuthNClientData,
                                &WebAuthNAssertionOptions, &pWebAuthNAssertion);
 
   mCancellationIds.erase(aTransactionId);

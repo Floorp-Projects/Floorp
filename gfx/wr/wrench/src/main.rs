@@ -67,6 +67,7 @@ use perf::PerfHarness;
 use png::save_flipped;
 use rawtest::RawtestHarness;
 use reftest::{ReftestHarness, ReftestOptions};
+use std::fs;
 #[cfg(feature = "headless")]
 use std::ffi::CString;
 #[cfg(feature = "headless")]
@@ -395,9 +396,24 @@ fn main() {
     env_logger::init();
 
     let args_yaml = load_yaml!("args.yaml");
-    let args = clap::App::from_yaml(args_yaml)
-        .setting(clap::AppSettings::ArgRequiredElseHelp)
-        .get_matches();
+    let clap = clap::App::from_yaml(args_yaml)
+        .setting(clap::AppSettings::ArgRequiredElseHelp);
+
+    // On android devices, attempt to read command line arguments
+    // from a text file located at /sdcard/wrench_args.
+    let args = if cfg!(target_os = "android") {
+        let mut args = vec!["wrench".to_string()];
+
+        if let Ok(wrench_args) = fs::read_to_string("/sdcard/wrench_args") {
+            for arg in wrench_args.split_whitespace() {
+                args.push(arg.to_string());
+            }
+        }
+
+        clap.get_matches_from(&args)
+    } else {
+        clap.get_matches()
+    };
 
     // handle some global arguments
     let res_path = args.value_of("shaders").map(|s| PathBuf::from(s));
@@ -570,6 +586,13 @@ fn render<'a>(
     thing.do_frame(wrench);
 
     let mut debug_flags = DebugFlags::empty();
+
+    // Default the profile overlay on for android.
+    if cfg!(target_os = "android") {
+        debug_flags.toggle(DebugFlags::PROFILER_DBG);
+        wrench.api.send_debug_cmd(DebugCommand::SetFlags(debug_flags));
+    }
+
     let mut body = |wrench: &mut Wrench, events: Vec<winit::Event>| {
         let mut do_frame = false;
         let mut do_render = false;
@@ -782,15 +805,25 @@ fn render<'a>(
                 let mut pending_events = Vec::new();
 
                 // Block the thread until at least one event arrives
-                events_loop.run_forever(|event| {
-                    pending_events.push(event);
-                    winit::ControlFlow::Break
-                });
+                // On Android, we are generally profiling when running
+                // wrench, and don't want to block on UI events.
+                if cfg!(not(target_os = "android")) {
+                    events_loop.run_forever(|event| {
+                        pending_events.push(event);
+                        winit::ControlFlow::Break
+                    });
+                }
 
                 // Collect any other pending events that are also available
                 events_loop.poll_events(|event| {
                     pending_events.push(event);
                 });
+
+                // Ensure there is at least one event present so that the
+                // frame gets rendered.
+                if pending_events.is_empty() {
+                    pending_events.push(winit::Event::Awakened);
+                }
 
                 // Process all of those pending events in the next vsync period
                 if body(wrench, pending_events) == winit::ControlFlow::Break {

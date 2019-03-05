@@ -132,6 +132,15 @@ const PREFS_CONFIG = new Map([
     value: AppConstants.EARLY_BETA_OR_EARLIER,
     value_local_dev: false,
   }],
+  ["telemetry.structuredIngestion", {
+    title: "Enable Structured Ingestion Telemetry data collection",
+    value: AppConstants.EARLY_BETA_OR_EARLIER,
+    value_local_dev: false,
+  }],
+  ["telemetry.structuredIngestion.endpoint", {
+    title: "Structured Ingestion telemetry server endpoint",
+    value: "https://incoming.telemetry.mozilla.org/submit/activity-stream",
+  }],
   ["telemetry.ping.endpoint", {
     title: "Telemetry server endpoint",
     value: "https://tiles.services.mozilla.com/v4/links/activity-stream",

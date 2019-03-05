@@ -78,3 +78,7 @@ scripts:
   # This is just to make sure we don't make commits with failing tests
   # or uncompiled yamscripts.yml. Run automatically with husky.
   prepush: =>lint && =>yamscripts
+
+  # Utility scripts for use when vendoring in Node packages
+  vendor:
+    react: node ./bin/vendor-react.js

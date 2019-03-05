@@ -51,7 +51,7 @@
 #include "mozilla/layers/CompositorThread.h"
 #include "mozilla/layers/CompositorTypes.h"
 #include "mozilla/layers/CompositorVsyncScheduler.h"
-#include "mozilla/layers/CrossProcessCompositorBridgeParent.h"
+#include "mozilla/layers/ContentCompositorBridgeParent.h"
 #include "mozilla/layers/FrameUniformityData.h"
 #include "mozilla/layers/ImageBridgeParent.h"
 #include "mozilla/layers/LayerManagerComposite.h"
@@ -1652,7 +1652,7 @@ mozilla::ipc::IPCResult CompositorBridgeParent::RecvAdoptChild(
   RefPtr<APZUpdater> oldApzUpdater;
   APZCTreeManagerParent* parent;
   bool scheduleComposition = false;
-  RefPtr<CrossProcessCompositorBridgeParent> cpcp;
+  RefPtr<ContentCompositorBridgeParent> cpcp;
   RefPtr<WebRenderBridgeParent> childWrBridge;
 
   {  // scope lock
@@ -2121,7 +2121,7 @@ void CompositorBridgeParent::NotifyDidComposite(TransactionId aTransactionId,
   ForEachIndirectLayerTree([&](LayerTreeState* lts,
                                const LayersId& aLayersId) -> void {
     if (lts->mCrossProcessParent && lts->mParent == this) {
-      CrossProcessCompositorBridgeParent* cpcp = lts->mCrossProcessParent;
+      ContentCompositorBridgeParent* cpcp = lts->mCrossProcessParent;
       cpcp->DidCompositeLocked(aLayersId, aId, aCompositeStart, aCompositeEnd);
     }
   });
@@ -2136,7 +2136,7 @@ void CompositorBridgeParent::InvalidateRemoteLayers() {
   ForEachIndirectLayerTree(
       [](LayerTreeState* lts, const LayersId& aLayersId) -> void {
         if (lts->mCrossProcessParent) {
-          CrossProcessCompositorBridgeParent* cpcp = lts->mCrossProcessParent;
+          ContentCompositorBridgeParent* cpcp = lts->mCrossProcessParent;
           Unused << cpcp->SendInvalidateLayers(aLayersId);
         }
       });

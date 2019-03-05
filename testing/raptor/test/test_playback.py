@@ -27,8 +27,8 @@ def test_get_playback(get_binary):
     config['obj_path'] = os.path.dirname(get_binary('firefox'))
     config['playback_tool'] = 'mitmproxy'
     config['playback_binary_manifest'] = 'mitmproxy-rel-bin-osx.manifest'
-    config['playback_pageset_manifest'] = 'mitmproxy-playback-set.manifest'
-    config['playback_recordings'] = 'mitmproxy-recording-amazon.mp'
+    config['playback_pageset_manifest'] = 'mitmproxy-recordings-raptor-tp6-1.manifest'
+    config['playback_recordings'] = 'amazon.mp'
     config['binary'] = get_binary('firefox')
     config['run_local'] = run_local
 

@@ -201,12 +201,9 @@ LogicalSize nsTextControlFrame::CalcIntrinsicSize(
 
   // Increment width with cols * letter-spacing.
   {
-    const nsStyleCoord& lsCoord = StyleText()->mLetterSpacing;
-    if (eStyleUnit_Coord == lsCoord.GetUnit()) {
-      nscoord letterSpacing = lsCoord.GetCoordValue();
-      if (letterSpacing != 0) {
-        intrinsicSize.ISize(aWM) += cols * letterSpacing;
-      }
+    const StyleLength& letterSpacing = StyleText()->mLetterSpacing;
+    if (!letterSpacing.IsZero()) {
+      intrinsicSize.ISize(aWM) += cols * letterSpacing.ToAppUnits();
     }
   }
 

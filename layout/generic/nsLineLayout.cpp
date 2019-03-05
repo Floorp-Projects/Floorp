@@ -1877,7 +1877,7 @@ void nsLineLayout::VerticalAlignFrames(PerSpanData* psd) {
     // the frame block size if the user has left line-height == normal
     const nsStyleText* styleText = spanFrame->StyleText();
     if (spanFramePFD->mIsLetterFrame && !spanFrame->GetPrevInFlow() &&
-        styleText->mLineHeight.GetUnit() == eStyleUnit_Normal) {
+        styleText->mLineHeight.IsNormal()) {
       logicalBSize = spanFramePFD->mBounds.BSize(lineWM);
     }
 
@@ -2191,7 +2191,7 @@ void nsLineLayout::VerticalAlignFrames(PerSpanData* psd) {
         // line-height=normal.
         canUpdate =
             pfd->mIsNonWhitespaceTextFrame &&
-            frame->StyleText()->mLineHeight.GetUnit() == eStyleUnit_Normal;
+            frame->StyleText()->mLineHeight.IsNormal();
       } else {
         canUpdate = !pfd->mIsPlaceholder;
       }

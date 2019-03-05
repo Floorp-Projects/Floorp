@@ -607,21 +607,35 @@ describe("Top Stories Feed", () => {
       assert.notCalled(instance.UserDomainAffinityProvider);
     });
     it("should use init and callback from affinityProividerSwitcher using v2", async () => {
-      sinon.stub(instance, "doContentUpdate");
-      sinon.stub(instance, "rotate");
-      sinon.stub(instance, "transform");
       const stories = {recommendations: {}};
+      sinon.stub(instance, "doContentUpdate");
+      sinon.stub(instance, "rotate").returns(stories);
+      sinon.stub(instance, "transform");
       instance.cache.get = () => ({stories});
       instance.cache.set = sinon.spy();
       instance.affinityProvider = {getAffinities: () => ({})};
       await instance.onPersonalityProviderInit();
 
       assert.calledOnce(instance.doContentUpdate);
+      assert.calledWith(instance.doContentUpdate, {stories: {recommendations: {}}}, false);
       assert.calledOnce(instance.rotate);
       assert.calledOnce(instance.transform);
       const {args} = instance.cache.set.firstCall;
       assert.equal(args[0], "domainAffinities");
       assert.equal(args[1]._timestamp, 0);
+    });
+    it("should call dispatchUpdateEvent from affinityProividerSwitcher using v2", async () => {
+      const stories = {recommendations: {}};
+      sinon.stub(instance, "rotate").returns(stories);
+      sinon.stub(instance, "transform");
+      sinon.spy(instance, "dispatchUpdateEvent");
+      instance.cache.get = () => ({stories});
+      instance.cache.set = sinon.spy();
+      instance.affinityProvider = {getAffinities: () => ({})};
+
+      await instance.onPersonalityProviderInit();
+
+      assert.calledOnce(instance.dispatchUpdateEvent);
     });
     it("should return an object for UserDomainAffinityProvider", () => {
       assert.equal(typeof instance.UserDomainAffinityProvider(), "object");
@@ -1178,19 +1192,18 @@ describe("Top Stories Feed", () => {
     it("should return updated stories and topics on system tick", async () => {
       await instance.onInit();
       sinon.spy(instance, "dispatchUpdateEvent");
-      instance.stories = [{"guid": "rec1"}, {"guid": "rec2"}, {"guid": "rec3"}];
-      instance.topics = {
-        "_timestamp": 123,
-        "topics": [{"name": "topic1", "url": "url-topic1"}, {"name": "topic2", "url": "url-topic2"}],
-      };
+      const stories = [{"guid": "rec1"}, {"guid": "rec2"}, {"guid": "rec3"}];
+      const topics = [{"name": "topic1", "url": "url-topic1"}, {"name": "topic2", "url": "url-topic2"}];
+      clock.tick(TOPICS_UPDATE_TIME);
+      globals.sandbox.stub(instance, "fetchStories").resolves(stories);
+      globals.sandbox.stub(instance, "fetchTopics").resolves(topics);
+
       await instance.onAction({type: at.SYSTEM_TICK});
+
       assert.calledOnce(instance.dispatchUpdateEvent);
       assert.calledWith(instance.dispatchUpdateEvent, false, {
         rows: [{"guid": "rec1"}, {"guid": "rec2"}, {"guid": "rec3"}],
-        topics: {
-          _timestamp: 123,
-          topics: [{"name": "topic1", "url": "url-topic1"}, {"name": "topic2", "url": "url-topic2"}],
-        },
+        topics: [{"name": "topic1", "url": "url-topic1"}, {"name": "topic2", "url": "url-topic2"}],
         read_more_endpoint: undefined,
       });
     });
@@ -1340,6 +1353,21 @@ describe("Top Stories Feed", () => {
       await instance.loadCachedData();
       assert.notCalled(sectionsManagerStub.updateSection);
     });
+    it("should use store rows if no stories sent to doContentUpdate", async () => {
+      instance.store = {
+        getState() {
+          return {
+            Sections: [{id: "topstories", rows: [1, 2, 3]}],
+          };
+        },
+      };
+      sinon.spy(instance, "dispatchUpdateEvent");
+
+      instance.doContentUpdate({}, false);
+
+      assert.calledOnce(instance.dispatchUpdateEvent);
+      assert.calledWith(instance.dispatchUpdateEvent, false, {rows: [1, 2, 3]});
+    });
     it("should broadcast in doContentUpdate when updating from cache", async () => {
       sectionsManagerStub.sections.set("topstories", {options: {stories_referrer: "referrer"}});
       globals.set("NewTabUtils", {blockedLinks: {isBlocked: () => {}}});
@@ -1349,7 +1377,24 @@ describe("Top Stories Feed", () => {
       instance.cache.get = () => ({stories, topics});
       await instance.onInit();
       assert.calledOnce(instance.doContentUpdate);
-      assert.calledWith(instance.doContentUpdate, true);
+      assert.calledWith(instance.doContentUpdate, {
+        stories: [{
+          context: undefined,
+          description: undefined,
+          guid: undefined,
+          hostname: undefined,
+          icon: undefined,
+          image: undefined,
+          min_score: 0,
+          referrer: "referrer",
+          score: 1,
+          spoc_meta: {  },
+          title: undefined,
+          type: "trending",
+          url: undefined,
+        }],
+        topics: [{}],
+      }, true);
     });
     it("should initialize user domain affinity provider from cache if personalization is preffed on", async () => {
       const domainAffinities = {

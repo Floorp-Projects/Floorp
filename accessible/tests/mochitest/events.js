@@ -157,8 +157,10 @@ function waitForImageMap(aImageMapID, aTestFunc) {
   waveOverImageMap(aImageMapID);
 
   var imageMapAcc = getAccessible(aImageMapID);
-  if (imageMapAcc.firstChild)
-    return aTestFunc();
+  if (imageMapAcc.firstChild) {
+    aTestFunc();
+    return;
+  }
 
   waitForEvent(EVENT_REORDER, imageMapAcc, aTestFunc);
 }
@@ -319,6 +321,7 @@ function eventQueue(aEventType) {
   /**
    * Process next invoker.
    */
+  // eslint-disable-next-line complexity
   this.processNextInvoker = function eventQueue_processNextInvoker() {
     // Some scenario was matched, we wait on next invoker processing.
     if (this.mNextInvokerStatus == kInvokerCanceled) {
@@ -486,6 +489,7 @@ function eventQueue(aEventType) {
   /**
    * Handle events for the current invoker.
    */
+  // eslint-disable-next-line complexity
   this.handleEvent = function eventQueue_handleEvent(aEvent) {
     var invoker = this.getInvoker();
     if (!invoker) // skip events before test was started
@@ -1953,6 +1957,7 @@ var gA11yEventApplicantsCount = 0;
 
 var gA11yEventObserver =
 {
+  // eslint-disable-next-line complexity
   observe: function observe(aSubject, aTopic, aData) {
     if (aTopic != "accessible-event")
       return;

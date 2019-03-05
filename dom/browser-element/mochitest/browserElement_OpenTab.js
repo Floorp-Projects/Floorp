@@ -15,20 +15,14 @@ function runTest() {
 
   let x = 2;
   let y = 2;
-  // First we force a reflow so that getChildProcessOffset actually returns
-  // meaningful data.
-  iframe.getBoundingClientRect();
-  // We need to make sure the event coordinates are actually inside the iframe,
-  // relative to the chome window.
-  let tabParent = SpecialPowers.wrap(iframe)
-                  .frameLoader.tabParent;
-  if (tabParent) {
-    let offsetX = {};
-    let offsetY = {};
-    tabParent.getChildProcessOffset(offsetX, offsetY);
-    x -= offsetX.value;
-    y -= offsetY.value;
-  }
+  // This test used to try to transform the coordinates from child
+  // to parent coordinate space by first calling
+  // iframe.getBoundingClientRect();
+  // to refresh offsets and then calling
+  // var tabParent = SpecialPowers.wrap(iframe)
+  //                .frameLoader.tabParent;
+  // and calling tabParent.getChildProcessOffset(offsetX, offsetY) if
+  // tabParent was not null, but tabParent was always null.
 
   let sendCtrlClick = () => {
     let nsIDOMWindowUtils = SpecialPowers.Ci.nsIDOMWindowUtils;

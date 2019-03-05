@@ -156,7 +156,7 @@ function testAbsentRelation(aIdentifier, aRelType, aUnrelatedIdentifiers) {
 function getRelationByType(aIdentifier, aRelType) {
   var acc = getAccessible(aIdentifier);
   if (!acc)
-    return;
+    return null;
 
   var relation = null;
   try {

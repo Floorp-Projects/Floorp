@@ -1913,8 +1913,7 @@ class Extension extends ExtensionData {
       // Extensions expliticy stating not_allowed will never get permission.
       if (!allowPrivateBrowsingByDefault && this.manifest.incognito !== "not_allowed" &&
           !this.permissions.has(PRIVATE_ALLOWED_PERMISSION)) {
-        if ((this.isPrivileged && !this.addonData.temporarilyInstalled) ||
-            (PrivateBrowsingUtils.permanentPrivateBrowsing && this.startupReason == "ADDON_INSTALL")) {
+        if (this.isPrivileged && !this.addonData.temporarilyInstalled) {
           // Add to EP so it is preserved after ADDON_INSTALL.  We don't wait on the add here
           // since we are pushing the value into this.permissions.  EP will eventually save.
           ExtensionPermissions.add(this.id, {permissions: [PRIVATE_ALLOWED_PERMISSION], origins: []});
@@ -1945,6 +1944,17 @@ class Extension extends ExtensionData {
 
       resolveReadyPromise(this.policy);
 
+      // When in PPB skip any startup and disable the policy if the extension
+      // does not have permission.
+      if (PrivateBrowsingUtils.permanentPrivateBrowsing && !this.privateBrowsingAllowed) {
+        this.state = "Startup: Cancelled: (not running in permenant private browsing mode)";
+
+        this.policy.active = false;
+
+        this.cleanupGeneratedFile();
+        return;
+      }
+
       // The "startup" Management event sent on the extension instance itself
       // is emitted just before the Management "startup" event,
       // and it is used to run code that needs to be executed before
@@ -1967,7 +1977,6 @@ class Extension extends ExtensionData {
 
       Management.emit("ready", this);
       this.emit("ready");
-      ExtensionTelemetry.extensionStartup.stopwatchFinish(this);
 
       this.state = "Startup: Complete";
     } catch (errors) {
@@ -1985,6 +1994,8 @@ class Extension extends ExtensionData {
       this.cleanupGeneratedFile();
 
       throw errors;
+    } finally {
+      ExtensionTelemetry.extensionStartup.stopwatchFinish(this);
     }
   }
 

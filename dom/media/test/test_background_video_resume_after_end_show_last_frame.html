@@ -101,7 +101,7 @@ startTest({
   tests: gDecodeSuspendTests,
 
   runTest: (test, token) => {
-    let v = appendVideoToDoc(test.name, token);
+    let v = appendVideoToDocWithoutLoad(token);
     let vReference = appendVideoToDocWithoutLoad(token+"-ref");
     manager.started(token);
 
@@ -110,7 +110,11 @@ startTest({
      * resuming video decoder should seek to the last frame.
      * This issue was found in bug 1358057.
      */
-    Promise.all([waitUntilPlaying(v), loadAndWaitUntilLoadedmetadata(vReference, test.name, "auto")])
+    waitUntilVisible(v)
+      .then(() => {
+        return Promise.all([loadAndWaitUntilLoadedmetadata(v, test.name), loadAndWaitUntilLoadedmetadata(vReference, test.name, "auto")]);
+      })
+      .then(() => waitUntilPlaying(v))
       .then(() => testVideoSuspendsWhenHidden(v))
       .then(() => {
         return Promise.all([waitUntilEnded(v), waitUntilSeekToLastFrame(vReference)]);

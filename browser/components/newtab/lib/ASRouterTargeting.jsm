@@ -292,6 +292,18 @@ const TargetingGetters = {
   get needsUpdate() {
     return QueryCache.queries.CheckBrowserNeedsUpdate.get();
   },
+  get hasPinnedTabs() {
+    for (let win of Services.wm.getEnumerator("navigator:browser")) {
+      if (win.closed) {
+        continue;
+      }
+      if (win.ownerGlobal.gBrowser.visibleTabs.filter(t => t.pinned).length) {
+        return true;
+      }
+    }
+
+    return false;
+  },
 };
 
 this.ASRouterTargeting = {
@@ -302,15 +314,22 @@ this.ASRouterTargeting = {
     OTHER_ERROR: "OTHER_ERROR",
   },
 
-  isMatch(filterExpression, customContext) {
-    let context = this.Environment;
-    if (customContext) {
-      context = {};
-      Object.defineProperties(context, Object.getOwnPropertyDescriptors(this.Environment));
-      Object.defineProperties(context, Object.getOwnPropertyDescriptors(customContext));
+  // Combines the getter properties of two objects without evaluating them
+  combineContexts(contextA = {}, contextB = {}) {
+    const sameProperty = Object.keys(contextA).find(p => Object.keys(contextB).includes(p));
+    if (sameProperty) {
+      Cu.reportError(`Property ${sameProperty} exists in both contexts and is overwritten.`);
     }
 
-    return FilterExpressions.eval(filterExpression, context);
+    const context = {};
+    Object.defineProperties(context, Object.getOwnPropertyDescriptors(contextA));
+    Object.defineProperties(context, Object.getOwnPropertyDescriptors(contextB));
+
+    return context;
+  },
+
+  isMatch(filterExpression, customContext) {
+    return FilterExpressions.eval(filterExpression, this.combineContexts(this.Environment, customContext));
   },
 
   isTriggerMatch(trigger = {}, candidateMessageTrigger = {}) {
@@ -362,6 +381,8 @@ this.ASRouterTargeting = {
   async findMatchingMessage({messages, trigger, context, onError}) {
     const weightSortedMessages = sortMessagesByWeightedRank([...messages]);
     const sortedMessages = sortMessagesByTargeting(weightSortedMessages);
+    const triggerContext = trigger ? trigger.context : {};
+    const combinedContext = this.combineContexts(context, triggerContext);
 
     for (const candidate of sortedMessages) {
       if (
@@ -369,7 +390,7 @@ this.ASRouterTargeting = {
         (trigger ? this.isTriggerMatch(trigger, candidate.trigger) : !candidate.trigger) &&
         // If a trigger expression was passed to this function, the message should match it.
         // Otherwise, we should choose a message with no trigger property (i.e. a message that can show up at any time)
-        await this.checkMessageTargeting(candidate, context, onError)
+        await this.checkMessageTargeting(candidate, combinedContext, onError)
       ) {
         return candidate;
       }

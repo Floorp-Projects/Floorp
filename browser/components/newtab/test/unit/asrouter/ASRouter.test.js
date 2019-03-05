@@ -926,6 +926,18 @@ describe("ASRouter", () => {
       });
     });
 
+    describe("#onMessage: PIN_CURRENT_TAB", () => {
+      it("should call pin tab with the selectedTab", async () => {
+        const msg = fakeExecuteUserAction({type: "PIN_CURRENT_TAB"});
+        const {gBrowser} = msg.target.browser.ownerGlobal;
+
+        await Router.onMessage(msg);
+
+        assert.calledOnce(gBrowser.pinTab);
+        assert.calledWithExactly(gBrowser.pinTab, gBrowser.selectedTab);
+      });
+    });
+
     describe("#dispatch(action, target)", () => {
       it("should an action and target to onMessage", async () => {
         // use the IMPRESSION action to make sure actions are actually getting processed

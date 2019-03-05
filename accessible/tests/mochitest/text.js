@@ -607,4 +607,5 @@ function boundaryToString(aBoundaryType) {
     case BOUNDARY_LINE_END:
       return "line end";
   }
+  return "unknown";
 }

@@ -1039,6 +1039,9 @@ class _ASRouter {
         this._updateOnboardingState();
         await MessageLoaderUtils.installAddonFromURL(target.browser, action.data.url);
         break;
+      case ra.PIN_CURRENT_TAB:
+        target.browser.ownerGlobal.gBrowser.pinTab(target.browser.ownerGlobal.gBrowser.selectedTab);
+        break;
       case ra.SHOW_FIREFOX_ACCOUNTS:
         const url = await FxAccounts.config.promiseSignUpURI("snippets");
         // We want to replace the current tab.

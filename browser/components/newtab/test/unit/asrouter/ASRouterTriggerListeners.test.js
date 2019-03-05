@@ -8,6 +8,7 @@ describe("ASRouterTriggerListeners", () => {
   let existingWindow;
   const triggerHandler = () => {};
   const openURLListener = ASRouterTriggerListeners.get("openURL");
+  const frequentVisitsListener = ASRouterTriggerListeners.get("frequentVisits");
   const hosts = ["www.mozilla.com", "www.mozilla.org"];
 
   function resetEnumeratorStub(windows) {
@@ -20,7 +21,7 @@ describe("ASRouterTriggerListeners", () => {
     sandbox = sinon.createSandbox();
     registerWindowNotificationStub = sandbox.stub(global.Services.ww, "registerNotification");
     unregisterWindoNotificationStub = sandbox.stub(global.Services.ww, "unregisterNotification");
-    existingWindow = {gBrowser: {addTabsProgressListener: sandbox.stub(), removeTabsProgressListener: sandbox.stub()}, gBrowserInit: {delayedStartupFinished: true}};
+    existingWindow = {gBrowser: {addTabsProgressListener: sandbox.stub(), removeTabsProgressListener: sandbox.stub(), currentURI: {host: ""}}, gBrowserInit: {delayedStartupFinished: true}, addEventListener: sinon.stub(), removeEventListener: sinon.stub()};
     windowEnumeratorStub = sandbox.stub(global.Services.wm, "getEnumerator");
     resetEnumeratorStub([existingWindow]);
     sandbox.spy(openURLListener, "init");
@@ -28,6 +29,60 @@ describe("ASRouterTriggerListeners", () => {
   });
   afterEach(() => {
     sandbox.restore();
+  });
+
+  describe("frequentVisits", () => {
+    let _triggerHandler;
+    beforeEach(async () => {
+      _triggerHandler = sandbox.stub();
+      sandbox.useFakeTimers();
+      await frequentVisitsListener.init(_triggerHandler, hosts);
+    });
+    afterEach(() => {
+      sandbox.clock.restore();
+      frequentVisitsListener.uninit();
+    });
+    it("should be initialized", () => {
+      assert.isTrue(frequentVisitsListener._initialized);
+    });
+    it("should listen for TabSelect events", () => {
+      assert.calledOnce(existingWindow.addEventListener);
+      assert.calledWith(existingWindow.addEventListener, "TabSelect", frequentVisitsListener.onTabSwitch);
+    });
+    it("should call _triggerHandler if the visit is valid (is recoreded)", () => {
+      frequentVisitsListener.triggerHandler({}, "www.mozilla.com");
+
+      assert.calledOnce(_triggerHandler);
+    });
+    it("should call _triggerHandler only once", () => {
+      frequentVisitsListener.triggerHandler({}, "www.mozilla.com");
+      frequentVisitsListener.triggerHandler({}, "www.mozilla.com");
+
+      assert.calledOnce(_triggerHandler);
+    });
+    it("should call _triggerHandler again after 15 minutes", () => {
+      frequentVisitsListener.triggerHandler({}, "www.mozilla.com");
+      sandbox.clock.tick(15 * 60 * 1000 + 1);
+      frequentVisitsListener.triggerHandler({}, "www.mozilla.com");
+
+      assert.calledTwice(_triggerHandler);
+    });
+    it("should call triggerHandler on valid hosts", () => {
+      const stub = sandbox.stub(frequentVisitsListener, "triggerHandler");
+      existingWindow.gBrowser.currentURI.host = hosts[0]; // eslint-disable-line prefer-destructuring
+
+      frequentVisitsListener.onTabSwitch({target: {ownerGlobal: existingWindow}});
+
+      assert.calledOnce(stub);
+    });
+    it("should not call triggerHandler on invalid hosts", () => {
+      const stub = sandbox.stub(frequentVisitsListener, "triggerHandler");
+      existingWindow.gBrowser.currentURI.host = "foo.com";
+
+      frequentVisitsListener.onTabSwitch({target: {ownerGlobal: existingWindow}});
+
+      assert.notCalled(stub);
+    });
   });
 
   describe("openURL listener", () => {

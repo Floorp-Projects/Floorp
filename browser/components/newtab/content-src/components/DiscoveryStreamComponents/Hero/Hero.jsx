@@ -16,13 +16,13 @@ export class Hero extends React.PureComponent {
       this.props.dispatch(ac.UserEvent({
         event: "CLICK",
         source: this.props.type.toUpperCase(),
-        action_position: 0,
+        action_position: this.heroRec.pos,
       }));
 
       this.props.dispatch(ac.ImpressionStats({
         source: this.props.type.toUpperCase(),
         click: 0,
-        tiles: [{id: this.heroRec.id, pos: 0}],
+        tiles: [{id: this.heroRec.id, pos: this.heroRec.pos}],
       }));
     }
   }
@@ -40,7 +40,6 @@ export class Hero extends React.PureComponent {
     let [heroRec, ...otherRecs] = data.recommendations.slice(0, this.props.items);
     this.heroRec = heroRec;
 
-    // Note that `{index + 1}` is necessary below for telemetry since we treat heroRec as index 0.
     let cards = otherRecs.map((rec, index) => (
       <DSCard
         campaignId={rec.campaign_id}
@@ -49,7 +48,7 @@ export class Hero extends React.PureComponent {
         title={rec.title}
         url={rec.url}
         id={rec.id}
-        index={index + 1}
+        pos={rec.pos}
         type={this.props.type}
         dispatch={this.props.dispatch}
         context={rec.context}
@@ -87,7 +86,7 @@ export class Hero extends React.PureComponent {
             </div>
             <ImpressionStats
               campaignId={heroRec.campaignId}
-              rows={[{id: heroRec.id}]}
+              rows={[{id: heroRec.id, pos: heroRec.pos}]}
               dispatch={this.props.dispatch}
               source={this.props.type} />
           </SafeAnchor>

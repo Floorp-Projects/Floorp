@@ -153,7 +153,10 @@ this.FaviconFeed = class FaviconFeed {
    * Get the site tippy top data from Remote Settings.
    */
   async getSite(domain) {
-    const sites = await this.tippyTop.get({filters: {domain}});
+    const sites = await this.tippyTop.get({
+      filters: {domain},
+      syncIfEmpty: false,
+    });
     return sites.length ? sites[0] : null;
   }
 
