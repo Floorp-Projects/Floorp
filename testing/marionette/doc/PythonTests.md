@@ -60,12 +60,12 @@ Assertions are provided courtesy of [unittest].  For example:
 The API
 -------
 
-The full API documentation is found at
-<http://marionette-client.readthedocs.io>, but the key objects are:
+The full API documentation is found [here], but the key objects are:
 
   * `MarionetteTestCase`: a subclass for `unittest.TestCase`
     used as a base class for all tests to run.
 
   * [`Marionette`]: client that speaks to Firefox.
 
-[`Marionette`]: http://marionette-client.readthedocs.io/en/master/reference.html#marionette
+[here]: ../../../python/marionette_driver.html
+[`Marionette`]: ../../../python/marionette_driver.html#marionette_driver.marionette.Marionette

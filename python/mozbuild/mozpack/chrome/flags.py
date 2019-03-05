@@ -17,6 +17,7 @@ class Flag(object):
         "flag=yes|true|1"
         "flag=no|false|0"
     '''
+
     def __init__(self, name):
         '''
         Initialize a Flag with the given name.
@@ -72,6 +73,7 @@ class StringFlag(object):
         "flag=string"
         "flag!=string"
     '''
+
     def __init__(self, name):
         '''
         Initialize a StringFlag with the given name.
@@ -141,6 +143,7 @@ class VersionFlag(object):
         "flag>=version"
         "flag>version"
     '''
+
     def __init__(self, name):
         '''
         Initialize a VersionFlag with the given name.
@@ -237,10 +240,10 @@ class Flags(OrderedDict):
         for f in flags:
             name = self.RE.split(f)
             name = name[0]
-            if not name in self.FLAGS:
+            if name not in self.FLAGS:
                 errors.fatal('Unknown flag: %s' % name)
                 continue
-            if not name in self:
+            if name not in self:
                 self[name] = self.FLAGS[name](name)
             self[name].add_definition(f)
 
@@ -260,7 +263,7 @@ class Flags(OrderedDict):
             flags.match(application='foo', appversion='3.0') returns False
         '''
         for name, value in filter.iteritems():
-            if not name in self:
+            if name not in self:
                 continue
             if not self[name].matches(value):
                 return False
