@@ -1,3 +1,6 @@
+/* Any copyright is dedicated to the Public Domain.
+   http://creativecommons.org/publicdomain/zero/1.0/ */
+
 /**
  * If install.ini lists a default profile for this build but that profile no
  * longer exists don't try to steal the old-style default even if it was used
