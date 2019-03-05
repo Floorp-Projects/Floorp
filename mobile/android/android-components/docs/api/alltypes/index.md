@@ -223,6 +223,7 @@
 | [mozilla.components.tooling.lint.LintIssueRegistry](../mozilla.components.tooling.lint/-lint-issue-registry/index.md) | Registry which provides a list of our custom lint checks to be performed on an Android project. |
 | [mozilla.components.tooling.lint.LintLogChecks](../mozilla.components.tooling.lint/-lint-log-checks/index.md) | Custom lint checks related to logging. |
 | [kotlin.collections.List](../mozilla.components.lib.jexl.ext/kotlin.collections.-list/index.md) (extensions in package mozilla.components.lib.jexl.ext) |  |
+| [android.arch.lifecycle.LiveData](../mozilla.components.support.android.test/android.arch.lifecycle.-live-data/index.md) (extensions in package mozilla.components.support.android.test) |  |
 | [org.mozilla.telemetry.measurement.LocaleMeasurement](../org.mozilla.telemetry.measurement/-locale-measurement/index.md) |  |
 | [mozilla.components.browser.search.provider.localization.LocaleSearchLocalizationProvider](../mozilla.components.browser.search.provider.localization/-locale-search-localization-provider/index.md) | LocalizationProvider implementation that only provides the language and country from the system's default languageTag. |
 | [mozilla.components.support.base.log.Log](../mozilla.components.support.base.log/-log/index.md) | API for logging messages and exceptions. |
@@ -263,6 +264,7 @@
 | [mozilla.components.concept.engine.permission.PermissionRequest](../mozilla.components.concept.engine.permission/-permission-request/index.md) | Represents a permission request, used when engines need access to protected resources. Every request must be handled by either calling [grant](../mozilla.components.concept.engine.permission/-permission-request/grant.md) or [reject](../mozilla.components.concept.engine.permission/-permission-request/reject.md). |
 | [mozilla.components.service.fxa.PersistCallback](../mozilla.components.service.fxa/-persist-callback.md) |  |
 | [mozilla.components.service.glean.scheduler.PingUploadWorker](../mozilla.components.service.glean.scheduler/-ping-upload-worker/index.md) | This class is the worker class used by [WorkManager](#) to handle uploading the ping to the server. |
+| [mozilla.components.service.pocket.Placeholder](../mozilla.components.service.pocket/-placeholder/index.md) |  |
 | [mozilla.components.browser.storage.sync.PlacesHistoryStorage](../mozilla.components.browser.storage.sync/-places-history-storage/index.md) | Implementation of the [HistoryStorage](../mozilla.components.concept.storage/-history-storage/index.md) which is backed by a Rust Places lib via [PlacesConnection](#). |
 | [org.mozilla.telemetry.measurement.PocketIdMeasurement](../org.mozilla.telemetry.measurement/-pocket-id-measurement/index.md) | A unique, randomly generated UUID for this pocket client for fire-tv instance. This is distinct from the telemetry clientId. The clientId should not be able to be tied to the pocketId in any way. |
 | [org.mozilla.telemetry.measurement.ProcessStartTimestampMeasurement](../org.mozilla.telemetry.measurement/-process-start-timestamp-measurement/index.md) |  |
