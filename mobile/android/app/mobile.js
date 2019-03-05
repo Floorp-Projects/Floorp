@@ -580,6 +580,10 @@ pref("media.autoplay.default", 1); // 0=Allowed, 1=Blocked
 // Enable WebSpeech speech synthesis
 pref("media.webspeech.synth.enabled", true);
 
+// OpenH264 is visible in about:plugins, and enabled, by default.
+pref("media.gmp-gmpopenh264.visible", true);
+pref("media.gmp-gmpopenh264.enabled", true);
+
 // optimize images memory usage
 pref("image.downscale-during-decode.enabled", true);
 
