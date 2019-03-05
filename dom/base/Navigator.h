@@ -57,7 +57,6 @@ class BatteryManager;
 
 class Promise;
 
-class MozIdleObserver;
 class Gamepad;
 class GamepadServiceTest;
 class NavigatorUserMediaSuccessCallback;
@@ -158,8 +157,6 @@ class Navigator final : public nsISupports, public nsWrapperCache {
   bool JavaEnabled() { return false; }
   uint64_t HardwareConcurrency();
   bool TaintEnabled() { return false; }
-  void AddIdleObserver(MozIdleObserver& aObserver, ErrorResult& aRv);
-  void RemoveIdleObserver(MozIdleObserver& aObserver, ErrorResult& aRv);
 
   already_AddRefed<LegacyMozTCPSocket> MozTCPSocket();
   network::Connection* GetConnection(ErrorResult& aRv);
