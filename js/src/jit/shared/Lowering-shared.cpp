@@ -287,3 +287,16 @@ void LIRGeneratorShared::assignSafepoint(LInstruction* ins, MInstruction* mir,
     return;
   }
 }
+
+void LIRGeneratorShared::assignWasmSafepoint(LInstruction* ins,
+                                             MInstruction* mir) {
+  MOZ_ASSERT(!osiPoint_);
+  MOZ_ASSERT(!ins->safepoint());
+
+  ins->initSafepoint(alloc());
+
+  if (!lirGraph_.noteNeedsSafepoint(ins)) {
+    abort(AbortReason::Alloc, "noteNeedsSafepoint failed");
+    return;
+  }
+}

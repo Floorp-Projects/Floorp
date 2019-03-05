@@ -12028,10 +12028,13 @@ class MWasmCall final : public MVariadicInstruction, public NoTypePolicy::Data {
   wasm::CallSiteDesc desc_;
   wasm::CalleeDesc callee_;
   FixedList<AnyRegister> argRegs_;
+  uint32_t stackArgAreaSizeUnaligned_;
   ABIArg instanceArg_;
 
-  MWasmCall(const wasm::CallSiteDesc& desc, const wasm::CalleeDesc& callee)
-      : MVariadicInstruction(classOpcode), desc_(desc), callee_(callee) {}
+  MWasmCall(const wasm::CallSiteDesc& desc, const wasm::CalleeDesc& callee,
+            uint32_t stackArgAreaSizeUnaligned)
+      : MVariadicInstruction(classOpcode), desc_(desc), callee_(callee),
+        stackArgAreaSizeUnaligned_(stackArgAreaSizeUnaligned) {}
 
  public:
   INSTRUCTION_HEADER(WasmCall)
@@ -12045,12 +12048,13 @@ class MWasmCall final : public MVariadicInstruction, public NoTypePolicy::Data {
 
   static MWasmCall* New(TempAllocator& alloc, const wasm::CallSiteDesc& desc,
                         const wasm::CalleeDesc& callee, const Args& args,
-                        MIRType resultType, MDefinition* tableIndex = nullptr);
+                        MIRType resultType, uint32_t stackArgAreaSizeUnaligned,
+                        MDefinition* tableIndex = nullptr);
 
   static MWasmCall* NewBuiltinInstanceMethodCall(
       TempAllocator& alloc, const wasm::CallSiteDesc& desc,
       const wasm::SymbolicAddress builtin, const ABIArg& instanceArg,
-      const Args& args, MIRType resultType);
+      const Args& args, MIRType resultType, uint32_t stackArgAreaSizeUnaligned);
 
   size_t numArgs() const { return argRegs_.length(); }
   AnyRegister registerForArg(size_t index) const {
@@ -12059,6 +12063,9 @@ class MWasmCall final : public MVariadicInstruction, public NoTypePolicy::Data {
   }
   const wasm::CallSiteDesc& desc() const { return desc_; }
   const wasm::CalleeDesc& callee() const { return callee_; }
+  uint32_t stackArgAreaSizeUnaligned() const {
+    return stackArgAreaSizeUnaligned_;
+  }
 
   bool possiblyCalls() const override { return true; }
 

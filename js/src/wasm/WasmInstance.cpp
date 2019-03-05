@@ -1398,6 +1398,12 @@ uintptr_t Instance::traceFrame(JSTracer* trc, const wasm::WasmFrameIter& wfi,
   // Do what we can to assert that, for consecutive wasm frames, their stack
   // maps also abut exactly.  This is a useful sanity check on the sizing of
   // stack maps.
+  //
+  // In debug builds, the stackmap construction machinery goes to considerable
+  // efforts to ensure that the stackmaps for consecutive frames abut exactly.
+  // This is so as to ensure there are no areas of stack inadvertently ignored
+  // by a stackmap, nor covered by two stackmaps.  Hence any failure of this
+  // assertion is serious and should be investigated.
   MOZ_ASSERT_IF(highestByteVisitedInPrevFrame != 0,
                 highestByteVisitedInPrevFrame + 1 == scanStart);
 
