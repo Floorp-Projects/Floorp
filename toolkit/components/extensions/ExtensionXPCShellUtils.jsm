@@ -586,12 +586,13 @@ class AOMExtensionWrapper extends ExtensionWrapper {
 }
 
 class InstallableWrapper extends AOMExtensionWrapper {
-  constructor(testScope, xpiFile, installType, installTelemetryInfo) {
+  constructor(testScope, xpiFile, addonData = {}) {
     super(testScope);
 
     this.file = xpiFile;
-    this.installType = installType;
-    this.installTelemetryInfo = installTelemetryInfo;
+    this.addonData = addonData;
+    this.installType = addonData.useAddonManager || "temporary";
+    this.installTelemetryInfo = addonData.amInstallTelemetryInfo;
 
     this.cleanupFiles = [xpiFile];
   }
@@ -617,7 +618,26 @@ class InstallableWrapper extends AOMExtensionWrapper {
     }
   }
 
-  _install(xpiFile) {
+  _setIncognitoOverride() {
+    // this.id is not set yet so grab it from the manifest data to set
+    // the incognito permission.
+    let {addonData} = this;
+    if (addonData && addonData.incognitoOverride) {
+      try {
+        let {id} = addonData.manifest.applications.gecko;
+        if (id) {
+          return ExtensionTestCommon.setIncognitoOverride({id, addonData});
+        }
+      } catch (e) {}
+      throw new Error("Extension ID is required for setting incognito permission.");
+    }
+  }
+
+  async _install(xpiFile) {
+    // Timing here is different than in MockExtension so we need to handle
+    // incognitoOverride early.
+    await this._setIncognitoOverride();
+
     if (this.installType === "temporary") {
       return AddonManager.installTemporaryAddon(xpiFile).then(addon => {
         this.id = addon.id;
@@ -783,9 +803,14 @@ var ExtensionTestUtils = {
 
   loadExtension(data) {
     if (data.useAddonManager) {
+      // If we're using incognitoOverride, we'll need to ensure
+      // an ID is available before generating the XPI.
+      if (data.incognitoOverride) {
+        ExtensionTestCommon.setExtensionID(data);
+      }
       let xpiFile = ExtensionTestCommon.generateXPI(data);
 
-      return this.loadExtensionXPI(xpiFile, data.useAddonManager, data.amInstallTelemetryInfo);
+      return this.loadExtensionXPI(xpiFile, data);
     }
 
     let extension = ExtensionTestCommon.generate(data);
@@ -793,8 +818,8 @@ var ExtensionTestUtils = {
     return new ExtensionWrapper(this.currentScope, extension);
   },
 
-  loadExtensionXPI(xpiFile, useAddonManager = "temporary", installTelemetryInfo) {
-    return new InstallableWrapper(this.currentScope, xpiFile, useAddonManager, installTelemetryInfo);
+  loadExtensionXPI(xpiFile, data) {
+    return new InstallableWrapper(this.currentScope, xpiFile, data);
   },
 
   // Create a wrapper for a webextension that will be installed
