@@ -1,4 +1,3 @@
-// Copyright © 2016-2017 winapi-rs developers
 // Licensed under the Apache License, Version 2.0
 // <LICENSE-APACHE or http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
 // <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your option.
@@ -10,7 +9,9 @@
 #![allow(bad_style, overflowing_literals, unused_macros)]
 #![recursion_limit = "2563"]
 #![no_std]
-#![cfg_attr(feature = "cargo-clippy", allow(absurd_extreme_comparisons, cast_lossless, cast_ptr_alignment, const_static_lifetime, erasing_op, excessive_precision, identity_op, many_single_char_names, module_inception, too_many_arguments, transmute_int_to_float, unreadable_literal, unseparated_literal_suffix))]
+//Uncomment as needed or once minimum Rust version is bumped to 1.18
+//#![cfg_attr(feature = "cargo-clippy", warn(clippy::pedantic))]
+//#![cfg_attr(feature = "cargo-clippy", allow(clippy::absurd_extreme_comparisons, clippy::cast_lossless, clippy::cast_possible_truncation, clippy::cast_possible_wrap, clippy::cast_precision_loss, clippy::cast_ptr_alignment, clippy::cast_sign_loss, clippy::const_static_lifetime, clippy::doc_markdown, clippy::empty_enum, clippy::erasing_op, clippy::excessive_precision, clippy::expl_impl_clone_on_copy, clippy::identity_op, clippy::if_not_else, clippy::many_single_char_names, clippy::module_inception, clippy::cast_possible_truncation, clippy::too_many_arguments, clippy::transmute_int_to_float, clippy::trivially_copy_pass_by_ref, clippy::unreadable_literal, clippy::unseparated_literal_suffix, clippy::used_underscore_binding))]
 
 #[cfg(feature = "std")]
 extern crate std;

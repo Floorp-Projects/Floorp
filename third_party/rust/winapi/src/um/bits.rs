@@ -1,4 +1,3 @@
-// Copyright © 2015-2017 winapi-rs developers
 // Licensed under the Apache License, Version 2.0
 // <LICENSE-APACHE or http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
 // <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your option.
@@ -9,6 +8,8 @@ use shared::guiddef::{GUID, REFGUID};
 use shared::minwindef::{BOOL, DWORD, FILETIME, ULONG};
 use um::unknwnbase::{IUnknown, IUnknownVtbl};
 use um::winnt::{HRESULT, LPCWSTR, LPWSTR, WCHAR};
+RIDL!{#[uuid(0x4991d34b, 0x80a1, 0x4291, 0x83, 0xb6, 0x33, 0x28, 0x36, 0x6b, 0x90, 0x97)]
+class BackgroundCopyManager;}
 pub const BG_SIZE_UNKNOWN: UINT64 = -1i64 as u64;
 STRUCT!{struct BG_FILE_PROGRESS {
     BytesTotal: UINT64,

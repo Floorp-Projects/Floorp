@@ -3176,7 +3176,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 [[package]]
 name = "winapi"
 version = "0.3.6"
-source = "git+https://github.com/froydnj/winapi-rs?branch=aarch64#4e52ee2112ce4efce3ed496db8afe4100d4751d5"
+source = "git+https://github.com/froydnj/winapi-rs?branch=aarch64#ac8afeb7006b272bfaa470d8a252c959c175ffec"
 dependencies = [
  "winapi-i686-pc-windows-gnu 0.4.0 (git+https://github.com/froydnj/winapi-rs?branch=aarch64)",
  "winapi-x86_64-pc-windows-gnu 0.4.0 (git+https://github.com/froydnj/winapi-rs?branch=aarch64)",
@@ -3190,12 +3190,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 [[package]]
 name = "winapi-i686-pc-windows-gnu"
 version = "0.4.0"
-source = "git+https://github.com/froydnj/winapi-rs?branch=aarch64#4e52ee2112ce4efce3ed496db8afe4100d4751d5"
+source = "git+https://github.com/froydnj/winapi-rs?branch=aarch64#ac8afeb7006b272bfaa470d8a252c959c175ffec"
 
 [[package]]
 name = "winapi-x86_64-pc-windows-gnu"
 version = "0.4.0"
-source = "git+https://github.com/froydnj/winapi-rs?branch=aarch64#4e52ee2112ce4efce3ed496db8afe4100d4751d5"
+source = "git+https://github.com/froydnj/winapi-rs?branch=aarch64#ac8afeb7006b272bfaa470d8a252c959c175ffec"
 
 [[package]]
 name = "wincolor"

@@ -1,4 +1,3 @@
-// Copyright © 2015-2017 winapi-rs developers
 // Licensed under the Apache License, Version 2.0
 // <LICENSE-APACHE or http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
 // <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your option.
@@ -705,7 +704,7 @@ pub fn HTTPAPI_LESS_VERSION(version: HTTPAPI_VERSION, major: USHORT, minor: USHO
 pub fn HTTPAPI_VERSION_GREATER_OR_EQUAL(
     version: HTTPAPI_VERSION,
     major: USHORT,
-    minor: USHORT
+    minor: USHORT,
 ) -> bool {
     !HTTPAPI_LESS_VERSION(version, major, minor)
 }
@@ -883,7 +882,7 @@ extern "system" {
         pReserved: PVOID,
     ) -> ULONG;
     pub fn HttpShutdownRequestQueue(
-        ReqQueueHandle: HANDLE
+        ReqQueueHandle: HANDLE,
     ) -> ULONG;
     pub fn HttpReceiveClientCertificate(
         ReqQueueHandle: HANDLE,

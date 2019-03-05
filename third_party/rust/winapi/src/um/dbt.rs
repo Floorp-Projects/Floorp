@@ -1,4 +1,3 @@
-// Copyright © 2018 winapi-rs developers
 // Licensed under the Apache License, Version 2.0
 // <LICENSE-APACHE or http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
 // <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your option.
@@ -138,7 +137,7 @@ STRUCT!{struct DEV_BROADCAST_DEVICEINTERFACE_A {
     dbcc_devicetype: DWORD,
     dbcc_reserved: DWORD,
     dbcc_classguid: GUID,
-    dbcc_name: [c_char; 1], 
+    dbcc_name: [c_char; 1],
 }}
 pub type PDEV_BROADCAST_DEVICEINTERFACE_A = *mut DEV_BROADCAST_DEVICEINTERFACE_A;
 STRUCT!{struct DEV_BROADCAST_DEVICEINTERFACE_W {

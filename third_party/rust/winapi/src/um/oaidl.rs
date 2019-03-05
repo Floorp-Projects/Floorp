@@ -1,4 +1,3 @@
-// Copyright © 2015-2017 winapi-rs developers
 // Licensed under the Apache License, Version 2.0
 // <LICENSE-APACHE or http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
 // <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your option.
@@ -629,18 +628,18 @@ interface IDispatch(IDispatchVtbl): IUnknown(IUnknownVtbl) {
 RIDL!{#[uuid(0x0000002F, 0x0000, 0x0000, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46)]
 interface IRecordInfo(IRecordInfoVtbl): IUnknown(IUnknownVtbl){
     fn RecordInit(
-        pvNew: PVOID, 
+        pvNew: PVOID,
     ) -> HRESULT,
     fn RecordClear(
         pvExisting: PVOID,
     ) -> HRESULT,
     fn RecordCopy(
-        pvExisting: PVOID, 
+        pvExisting: PVOID,
         pvNew: PVOID,
     ) -> HRESULT,
     fn GetGuid(
-        pguid: *mut GUID, 
-    ) -> HRESULT, 
+        pguid: *mut GUID,
+    ) -> HRESULT,
     fn GetName(
         pbstrName: *mut BSTR,
     ) -> HRESULT,
@@ -651,26 +650,26 @@ interface IRecordInfo(IRecordInfoVtbl): IUnknown(IUnknownVtbl){
         ppTypeInfo: *mut *mut ITypeInfo,
     ) -> HRESULT,
     fn GetField(
-        pvData: PVOID, 
-        szFieldName: LPCOLESTR, 
+        pvData: PVOID,
+        szFieldName: LPCOLESTR,
         pvarField: *mut VARIANT,
     ) -> HRESULT,
     fn GetFieldNoCopy(
-        pvData: PVOID, 
-        szFieldName: LPCOLESTR, 
-        pvarField: *mut VARIANT, 
-        ppvDataCArray: *mut PVOID, 
+        pvData: PVOID,
+        szFieldName: LPCOLESTR,
+        pvarField: *mut VARIANT,
+        ppvDataCArray: *mut PVOID,
     ) -> HRESULT,
     fn PutField(
-        wFlags: ULONG, 
-        pvData: PVOID, 
-        szFieldName: LPCOLESTR, 
+        wFlags: ULONG,
+        pvData: PVOID,
+        szFieldName: LPCOLESTR,
         pvarField: *mut VARIANT,
     ) -> HRESULT,
     fn PutFieldNoCopy(
-        wFlags: ULONG, 
-        pvData: PVOID, 
-        szFieldName: LPCOLESTR, 
+        wFlags: ULONG,
+        pvData: PVOID,
+        szFieldName: LPCOLESTR,
         pvarField: *mut VARIANT,
     ) -> HRESULT,
     fn GetFieldNames(
@@ -678,18 +677,50 @@ interface IRecordInfo(IRecordInfoVtbl): IUnknown(IUnknownVtbl){
         rgBstrNames: *mut BSTR,
     ) -> HRESULT,
     fn IsMatchingType(
-        pRecordInfo: *mut IRecordInfo, 
+        pRecordInfo: *mut IRecordInfo,
     ) -> BOOL,
     fn RecordCreate() -> PVOID,
     fn RecordCreateCopy(
-        pvSource: PVOID, 
+        pvSource: PVOID,
         ppvDest: *mut PVOID,
-    ) -> HRESULT, 
+    ) -> HRESULT,
     fn RecordDestroy(
         pvRecord: PVOID,
     ) -> HRESULT,
 }}
-pub enum ITypeComp {} // FIXME
+pub type LPTYPECOMP = *mut ITypeComp;
+ENUM!{enum DESCKIND {
+    DESCKIND_NONE = 0,
+    DESCKIND_FUNCDESC = DESCKIND_NONE + 1,
+    DESCKIND_VARDESC = DESCKIND_FUNCDESC + 1,
+    DESCKIND_TYPECOMP = DESCKIND_VARDESC + 1,
+    DESCKIND_IMPLICITAPPOBJ = DESCKIND_TYPECOMP + 1,
+    DESCKIND_MAX = DESCKIND_IMPLICITAPPOBJ + 1,
+}}
+UNION!{union BINDPTR {
+    [usize; 1],
+    lpfuncdesc lpfuncdesc_mut: *mut FUNCDESC,
+    lpvardesc lpvardesc_mut: *mut VARDESC,
+    lptcomp lptcomp_mut: *mut ITypeComp,
+}}
+pub type LPBINDPTR = *mut BINDPTR;
+RIDL!{#[uuid(0x00020403, 0x0000, 0x0000, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46)]
+interface ITypeComp(ITypeCompVtbl): IUnknown(IUnknownVtbl) {
+    fn Bind(
+        szName: LPOLESTR,
+        lHashVal: ULONG,
+        wFlags: WORD,
+        ppTInfo: *mut *mut ITypeInfo,
+        pDescKind: *mut DESCKIND,
+        pBindPtr: *mut BINDPTR,
+    ) -> HRESULT,
+    fn BindType(
+        szName: LPOLESTR,
+        lHashVal: ULONG,
+        ppTInfo: *mut *mut ITypeInfo,
+        ppTComp: *mut *mut ITypeComp,
+    ) -> HRESULT,
+}}
 ENUM!{enum SYSKIND {
     SYS_WIN16 = 0,
     SYS_WIN32,

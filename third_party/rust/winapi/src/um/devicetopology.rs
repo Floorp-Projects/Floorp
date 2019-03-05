@@ -1,4 +1,3 @@
-// Copyright © 2018 winapi-rs developers
 // Licensed under the Apache License, Version 2.0
 // <LICENSE-APACHE or http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
 // <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your option.
@@ -459,3 +458,5 @@ interface IDeviceTopology(IDeviceTopologyVtbl): IUnknown(IUnknownVtbl) {
         ppParts: *mut *mut IPartsList,
     ) -> HRESULT,
 }}
+RIDL!{#[uuid(0x1df639d0, 0x5ec1, 0x47aa, 0x93, 0x79, 0x82, 0x8d, 0xc1, 0xaa, 0x8c, 0x59)]
+class DeviceTopology;}
