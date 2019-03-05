@@ -1852,7 +1852,7 @@ bool HeapTypeSetKey::needsBarrier(CompilerConstraintList* constraints) {
     return false;
   }
   bool result = types->unknownObject() || types->getObjectCount() > 0 ||
-                types->hasAnyFlag(TYPE_FLAG_PRIMITIVE_GCTHING);
+                types->hasAnyFlag(TYPE_FLAG_STRING | TYPE_FLAG_SYMBOL);
   if (!result) {
     freeze(constraints);
   }
