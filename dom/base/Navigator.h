@@ -126,19 +126,15 @@ class Navigator final : public nsISupports, public nsWrapperCache {
   Geolocation* GetGeolocation(ErrorResult& aRv);
   Promise* GetBattery(ErrorResult& aRv);
 
-  static void AppName(nsAString& aAppName, nsIPrincipal* aCallerPrincipal,
-                      bool aUsePrefOverriddenValue);
+  static void AppName(nsAString& aAppName, bool aUsePrefOverriddenValue);
 
   static nsresult GetPlatform(nsAString& aPlatform,
-                              nsIPrincipal* aCallerPrincipal,
                               bool aUsePrefOverriddenValue);
 
   static nsresult GetAppVersion(nsAString& aAppVersion,
-                                nsIPrincipal* aCallerPrincipal,
                                 bool aUsePrefOverriddenValue);
 
   static nsresult GetUserAgent(nsPIDOMWindowInner* aWindow,
-                               nsIPrincipal* aCallerPrincipal,
                                bool aIsCallerChrome, nsAString& aUserAgent);
 
   // Clears the user agent cache by calling:
@@ -241,10 +237,6 @@ class Navigator final : public nsISupports, public nsWrapperCache {
 
   bool SendBeaconInternal(const nsAString& aUrl, BodyExtractorBase* aBody,
                           BeaconType aType, ErrorResult& aRv);
-
-  nsIDocShell* GetDocShell() const {
-    return mWindow ? mWindow->GetDocShell() : nullptr;
-  }
 
   RefPtr<nsMimeTypeArray> mMimeTypes;
   RefPtr<nsPluginArray> mPlugins;

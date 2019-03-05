@@ -304,7 +304,6 @@ class nsContentUtils {
   // This function can be called both in the main thread and worker threads.
   static bool ShouldResistFingerprinting();
   static bool ShouldResistFingerprinting(nsIDocShell* aDocShell);
-  static bool ShouldResistFingerprinting(nsIPrincipal* aPrincipal);
   static bool ShouldResistFingerprinting(const Document* aDoc);
 
   // Prevent system colors from being exposed to CSS or canvas.
