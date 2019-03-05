@@ -1,4 +1,3 @@
-// Copyright © 2016-2017 winapi-rs developers
 // Licensed under the Apache License, Version 2.0
 // <LICENSE-APACHE or http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
 // <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your option.
@@ -1627,8 +1626,7 @@ pub const SP_BACKUP_DEMANDPASS: DWORD = 0x00000002;
 pub const SP_BACKUP_SPECIAL: DWORD = 0x00000004;
 pub const SP_BACKUP_BOOTFILE: DWORD = 0x00000008;
 extern "system" {
-    pub fn SetupOpenFileQueue(
-    ) -> HSPFILEQ;
+    pub fn SetupOpenFileQueue() -> HSPFILEQ;
     pub fn SetupCloseFileQueue(
         QueueHandle: HSPFILEQ,
     ) -> BOOL;

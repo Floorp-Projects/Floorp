@@ -1,4 +1,3 @@
-// Copyright © 2015-2017 winapi-rs developers
 // Licensed under the Apache License, Version 2.0
 // <LICENSE-APACHE or http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
 // <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your option.
@@ -31,6 +30,7 @@ pub const IP_BLOCK_SOURCE: c_int = 17;
 pub const IP_UNBLOCK_SOURCE: c_int = 18;
 pub const IP_PKTINFO: c_int = 19;
 pub const IP_RECEIVE_BROADCAST: c_int = 22;
+pub const IP_RECVDSTADDR: c_int = 25;
 UNION!{union SOCKADDR_IN6_LH_u {
     [u32; 1],
     sin6_scope_id sin6_scope_id_mut: ULONG,
@@ -80,3 +80,13 @@ STRUCT!{struct IPV6_MREQ {
     ipv6mr_interface: ULONG,
 }}
 pub type PIPV6_MREQ = *mut IPV6_MREQ;
+STRUCT!{struct IN_PKTINFO {
+    ipi_addr: IN_ADDR,
+    ipi_ifindex: ULONG,
+}}
+pub type PIN_PKTINFO = *mut IN_PKTINFO;
+STRUCT!{struct IN6_PKTINFO {
+    ipi6_addr: IN6_ADDR,
+    ipi6_ifindex: ULONG,
+}}
+pub type PIN6_PKTINFO = *mut IN6_PKTINFO;

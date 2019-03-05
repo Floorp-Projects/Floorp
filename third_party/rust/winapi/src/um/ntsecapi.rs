@@ -1,4 +1,3 @@
-// Copyright © 2015-2017 winapi-rs developers
 // Licensed under the Apache License, Version 2.0
 // <LICENSE-APACHE or http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
 // <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your option.
@@ -1624,7 +1623,7 @@ extern "system" {
         ppAuditPolicy: *mut PAUDIT_POLICY_INFORMATION,
     ) -> BOOLEAN;
     pub fn AuditEnumeratePerUserPolicy(
-        ppAuditSidArray: *mut PPOLICY_AUDIT_SID_ARRAY
+        ppAuditSidArray: *mut PPOLICY_AUDIT_SID_ARRAY,
     ) -> BOOLEAN;
     pub fn AuditComputeEffectivePolicyBySid(
         pSid: *const SID,
@@ -1694,7 +1693,7 @@ extern "system" {
     ) -> BOOLEAN;
     pub fn AuditQueryGlobalSaclA(
         ObjectTypeName: PCSTR,
-        Acl: *mut PACL
+        Acl: *mut PACL,
     ) -> BOOLEAN;
     pub fn AuditFree(
         Buffer: PVOID,

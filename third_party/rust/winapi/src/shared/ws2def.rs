@@ -1,4 +1,3 @@
-// Copyright © 2015-2017 winapi-rs developers
 // Licensed under the Apache License, Version 2.0
 // <LICENSE-APACHE or http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
 // <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your option.
@@ -144,10 +143,6 @@ pub const IOC_WS2: DWORD = 0x08000000;
 pub const IOC_PROTOCOL: DWORD = 0x10000000;
 pub const IOC_VENDOR: DWORD = 0x18000000;
 pub const IOC_WSK: DWORD = IOC_WS2 | 0x07000000;
-macro_rules! _WSAIO { ($x:expr, $y:expr) => { IOC_VOID | $x | $y } }
-macro_rules! _WSAIOR { ($x:expr, $y:expr) => { IOC_OUT | $x | $y } }
-macro_rules! _WSAIOW { ($x:expr, $y:expr) => { IOC_IN | $x | $y } }
-macro_rules! _WSAIORW { ($x:expr, $y:expr) => { IOC_INOUT | $x | $y } }
 pub const SIO_ASSOCIATE_HANDLE: DWORD = _WSAIOW!(IOC_WS2, 1);
 pub const SIO_ENABLE_CIRCULAR_QUEUEING: DWORD = _WSAIO!(IOC_WS2, 2);
 pub const SIO_FIND_ROUTE: DWORD = _WSAIOR!(IOC_WS2, 3);

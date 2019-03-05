@@ -1,4 +1,3 @@
-// Copyright © 2016-2018 winapi-rs developers
 // Licensed under the Apache License, Version 2.0
 // <LICENSE-APACHE or http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
 // <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your option.
@@ -173,10 +172,7 @@ pub type RTL_REFERENCE_COUNT = LONG_PTR;
 pub type PRTL_REFERENCE_COUNT = *mut LONG_PTR;
 pub type RTL_REFERENCE_COUNT32 = LONG;
 pub type PRTL_REFERENCE_COUNT32 = *mut LONG;
-STRUCT!{struct LUID {
-    LowPart: DWORD,
-    HighPart: LONG,
-}}
+pub use shared::ntdef::LUID;
 pub type PLUID = *mut LUID;
 pub type DWORDLONG = ULONGLONG;
 pub type PDWORDLONG = *mut DWORDLONG;
@@ -3982,10 +3978,12 @@ pub const PAGE_EXECUTE_WRITECOPY: DWORD = 0x80;
 pub const PAGE_GUARD: DWORD = 0x100;
 pub const PAGE_NOCACHE: DWORD = 0x200;
 pub const PAGE_WRITECOMBINE: DWORD = 0x400;
+pub const PAGE_ENCLAVE_THREAD_CONTROL: DWORD = 0x80000000;
 pub const PAGE_REVERT_TO_FILE_MAP: DWORD = 0x80000000;
 pub const PAGE_TARGETS_NO_UPDATE: DWORD = 0x40000000;
 pub const PAGE_TARGETS_INVALID: DWORD = 0x40000000;
 pub const PAGE_ENCLAVE_UNVALIDATED: DWORD = 0x20000000;
+pub const PAGE_ENCLAVE_DECOMMIT: DWORD = 0x10000000;
 pub const MEM_COMMIT: DWORD = 0x1000;
 pub const MEM_RESERVE: DWORD = 0x2000;
 pub const MEM_DECOMMIT: DWORD = 0x4000;
@@ -4017,6 +4015,7 @@ pub const MEM_IMAGE: DWORD = SEC_IMAGE;
 pub const WRITE_WATCH_FLAG_RESET: DWORD = 0x01;
 pub const MEM_UNMAP_WITH_TRANSIENT_BOOST: DWORD = 0x01;
 pub const ENCLAVE_TYPE_SGX: DWORD = 0x00000001;
+pub const ENCLAVE_TYPE_SGX2: DWORD = 0x00000002;
 STRUCT!{struct ENCLAVE_CREATE_INFO_SGX {
     Secs: [BYTE; 4096],
 }}
