@@ -1,3 +1,6 @@
+/* Any copyright is dedicated to the Public Domain.
+   http://creativecommons.org/publicdomain/zero/1.0/ */
+
 /*
  * Tests that an old-style default profile previously used by this build but
  * that has already been claimed by a different build gets stolen by this build.
