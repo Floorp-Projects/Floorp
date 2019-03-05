@@ -427,8 +427,9 @@ Instance::memCopy(Instance* instance, uint32_t dstByteOffset,
   uint32_t memLen = mem->volatileMemoryLength();
 
   if (len == 0) {
-    // Even though the length is zero, we must check for a valid offset.
-    if (dstByteOffset < memLen && srcByteOffset < memLen) {
+    // Even though the length is zero, we must check for a valid offset.  But
+    // zero-length operations at the edge of the memory are allowed.
+    if (dstByteOffset <= memLen && srcByteOffset <= memLen) {
       return 0;
     }
   } else {
@@ -513,8 +514,9 @@ Instance::memFill(Instance* instance, uint32_t byteOffset, uint32_t value,
   uint32_t memLen = mem->volatileMemoryLength();
 
   if (len == 0) {
-    // Even though the length is zero, we must check for a valid offset.
-    if (byteOffset < memLen) {
+    // Even though the length is zero, we must check for a valid offset.  But
+    // zero-length operations at the edge of the memory are allowed.
+    if (byteOffset <= memLen) {
       return 0;
     }
   } else {
@@ -585,8 +587,10 @@ Instance::memInit(Instance* instance, uint32_t dstOffset, uint32_t srcOffset,
   //   memoryBase[ dstOffset .. dstOffset + len - 1 ]
 
   if (len == 0) {
-    // Even though the length is zero, we must check for valid offsets.
-    if (dstOffset < memLen && srcOffset < segLen) {
+    // Even though the length is zero, we must check for valid offsets.  But
+    // zero-length operations at the edge of the memory or the segment are
+    // allowed.
+    if (dstOffset <= memLen && srcOffset <= segLen) {
       return 0;
     }
   } else {
@@ -645,9 +649,10 @@ Instance::tableCopy(Instance* instance, uint32_t dstOffset, uint32_t srcOffset,
   uint32_t dstTableLen = dstTable->length();
 
   if (len == 0) {
-    // Even though the number of items to copy is zero, we must check
-    // for valid offsets.
-    if (dstOffset < dstTableLen && srcOffset < srcTableLen) {
+    // Even though the number of items to copy is zero, we must check for valid
+    // offsets.  But zero-length operations at the edge of the table are
+    // allowed.
+    if (dstOffset <= dstTableLen && srcOffset <= srcTableLen) {
       return 0;
     }
   } else {
@@ -809,8 +814,9 @@ Instance::tableInit(Instance* instance, uint32_t dstOffset, uint32_t srcOffset,
   //   tableBase[ dstOffset .. dstOffset + len - 1 ]
 
   if (len == 0) {
-    // Even though the length is zero, we must check for valid offsets.
-    if (dstOffset < tableLen && srcOffset < segLen) {
+    // Even though the length is zero, we must check for valid offsets.  But
+    // zero-length operations at the edge of the table or segment are allowed.
+    if (dstOffset <= tableLen && srcOffset <= segLen) {
       return 0;
     }
   } else {
