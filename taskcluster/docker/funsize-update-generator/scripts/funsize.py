@@ -168,7 +168,7 @@ async def run_command(cmd, cwd='/', env=None, label=None, silent=False):
             line = await stream.readline()
             if line == b'':
                 break
-            printcmd("%s%s", label, line.decode('utf-8'))
+            printcmd("%s%s", label, line.decode('utf-8').rstrip())
 
     if silent:
         await process.wait()
