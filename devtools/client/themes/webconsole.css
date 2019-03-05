@@ -975,6 +975,11 @@ body {
   transform: rotate(0deg);
 }
 
+.webconsole-app .tree.focused .arrow,
+.webconsole-app .object-inspector .tree-node.focused .arrow {
+  fill: currentColor
+}
+
 /* Sidebar */
 .sidebar {
   display: flex;
