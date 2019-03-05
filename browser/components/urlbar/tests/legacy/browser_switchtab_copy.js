@@ -2,9 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const TEST_PATH = getRootDirectory(gTestPath)
-  .replace("chrome://mochitests/content", "http://example.com");
-const TEST_URL = `${TEST_PATH}dummy_page.html`;
+const TEST_URL = `${TEST_BASE_URL}dummy_page.html`;
 var testActionURL = "moz-action:switchtab," + JSON.stringify({url: TEST_URL});
 const testURL = gURLBar.trimValue(TEST_URL);
 var testTab;

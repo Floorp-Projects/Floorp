@@ -9,15 +9,14 @@
  * change takes place.
  */
 add_task(async function() {
-  const TEST_PATH = getRootDirectory(gTestPath).replace("chrome://mochitests/content", "http://example.com");
-  await BrowserTestUtils.withNewTab(TEST_PATH + "dummy_page.html", async function(browser) {
+  await BrowserTestUtils.withNewTab(TEST_BASE_URL + "dummy_page.html", async function(browser) {
     gURLBar.value = "";
 
-    let locationChangePromise = BrowserTestUtils.waitForLocationChange(gBrowser, TEST_PATH + "dummy_page2.html");
+    let locationChangePromise = BrowserTestUtils.waitForLocationChange(gBrowser, TEST_BASE_URL + "dummy_page2.html");
     await ContentTask.spawn(browser, null, function() {
       content.history.pushState({}, "Page 2", "dummy_page2.html");
     });
     await locationChangePromise;
-    is(gURLBar.value, TEST_PATH + "dummy_page2.html", "Should have updated the URL bar.");
+    is(gURLBar.value, TEST_BASE_URL + "dummy_page2.html", "Should have updated the URL bar.");
   });
 });

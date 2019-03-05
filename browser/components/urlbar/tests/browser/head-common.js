@@ -12,6 +12,10 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   UrlbarTokenizer: "resource:///modules/UrlbarTokenizer.jsm",
 });
 
+XPCOMUtils.defineLazyGetter(this, "TEST_BASE_URL", () =>
+  getRootDirectory(gTestPath).replace("chrome://mochitests/content",
+                                      "https://example.com"));
+
 SearchTestUtils.init(Assert, registerCleanupFunction);
 
 function is_element_visible(element, msg) {
