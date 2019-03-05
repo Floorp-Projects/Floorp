@@ -38,7 +38,10 @@ class ChangesApp extends PureComponent {
     return dom.button(
       {
         className: "changes__copy-all-changes-button",
-        onClick: this.props.onCopyAllChanges,
+        onClick: e => {
+          e.stopPropagation();
+          this.props.onCopyAllChanges();
+        },
         title: getStr("changes.contextmenu.copyAllChangesDescription"),
       },
       getStr("changes.contextmenu.copyAllChanges")
@@ -50,6 +53,7 @@ class ChangesApp extends PureComponent {
       {
         className: "changes__copy-rule-button",
         onClick: e => {
+          e.stopPropagation();
           this.props.onCopyRule(ruleId);
         },
         title: getStr("changes.contextmenu.copyRuleDescription"),
