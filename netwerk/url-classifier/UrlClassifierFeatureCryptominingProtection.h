@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_net_UrlClassifierFeatureCryptomining_h
-#define mozilla_net_UrlClassifierFeatureCryptomining_h
+#ifndef mozilla_net_UrlClassifierFeatureCryptominingProtection_h
+#define mozilla_net_UrlClassifierFeatureCryptominingProtection_h
 
 #include "UrlClassifierFeatureBase.h"
 
@@ -14,14 +14,15 @@ class nsIChannel;
 namespace mozilla {
 namespace net {
 
-class UrlClassifierFeatureCryptomining final : public UrlClassifierFeatureBase {
+class UrlClassifierFeatureCryptominingProtection final
+    : public UrlClassifierFeatureBase {
  public:
   static const char* Name();
 
   static void MaybeShutdown();
 
-  static already_AddRefed<UrlClassifierFeatureCryptomining> MaybeCreate(
-      nsIChannel* aChannel);
+  static already_AddRefed<UrlClassifierFeatureCryptominingProtection>
+  MaybeCreate(nsIChannel* aChannel);
 
   static already_AddRefed<nsIUrlClassifierFeature> GetIfNameMatches(
       const nsACString& aName);
@@ -34,7 +35,7 @@ class UrlClassifierFeatureCryptomining final : public UrlClassifierFeatureBase {
                               nsIURI** aURI) override;
 
  private:
-  UrlClassifierFeatureCryptomining();
+  UrlClassifierFeatureCryptominingProtection();
 
   static void MaybeInitialize();
 };
@@ -42,4 +43,4 @@ class UrlClassifierFeatureCryptomining final : public UrlClassifierFeatureBase {
 }  // namespace net
 }  // namespace mozilla
 
-#endif  // mozilla_net_UrlClassifierFeatureCryptomining_h
+#endif  // mozilla_net_UrlClassifierFeatureCryptominingProtection_h

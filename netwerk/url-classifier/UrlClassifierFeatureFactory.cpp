@@ -7,7 +7,7 @@
 #include "mozilla/net/UrlClassifierFeatureFactory.h"
 
 // List of Features
-#include "UrlClassifierFeatureCryptomining.h"
+#include "UrlClassifierFeatureCryptominingProtection.h"
 #include "UrlClassifierFeatureFingerprintingProtection.h"
 #include "UrlClassifierFeatureFlash.h"
 #include "UrlClassifierFeatureLoginReputation.h"
@@ -28,7 +28,7 @@ void UrlClassifierFeatureFactory::Shutdown() {
     return;
   }
 
-  UrlClassifierFeatureCryptomining::MaybeShutdown();
+  UrlClassifierFeatureCryptominingProtection::MaybeShutdown();
   UrlClassifierFeatureFingerprintingProtection::MaybeShutdown();
   UrlClassifierFeatureFlash::MaybeShutdown();
   UrlClassifierFeatureLoginReputation::MaybeShutdown();
@@ -51,8 +51,8 @@ void UrlClassifierFeatureFactory::GetFeaturesFromChannel(
   // feature order, and this could produce different results with a different
   // feature ordering.
 
-  // Cryptomining
-  feature = UrlClassifierFeatureCryptomining::MaybeCreate(aChannel);
+  // Cryptomining Protection
+  feature = UrlClassifierFeatureCryptominingProtection::MaybeCreate(aChannel);
   if (feature) {
     aFeatures.AppendElement(feature);
   }
@@ -102,8 +102,8 @@ UrlClassifierFeatureFactory::GetFeatureByName(const nsACString& aName) {
 
   nsCOMPtr<nsIUrlClassifierFeature> feature;
 
-  // Cryptomining
-  feature = UrlClassifierFeatureCryptomining::GetIfNameMatches(aName);
+  // Cryptomining Protection
+  feature = UrlClassifierFeatureCryptominingProtection::GetIfNameMatches(aName);
   if (feature) {
     return feature.forget();
   }
@@ -154,9 +154,9 @@ void UrlClassifierFeatureFactory::GetFeatureNames(nsTArray<nsCString>& aArray) {
     return;
   }
 
-  // Cryptomining
+  // Cryptomining Protection
   nsAutoCString name;
-  name.Assign(UrlClassifierFeatureCryptomining::Name());
+  name.Assign(UrlClassifierFeatureCryptominingProtection::Name());
   if (!name.IsEmpty()) {
     aArray.AppendElement(name);
   }
