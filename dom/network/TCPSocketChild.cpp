@@ -14,8 +14,10 @@
 #include "nsITCPSocketCallback.h"
 #include "TCPSocket.h"
 #include "nsContentUtils.h"
-#include "jsapi.h"
-#include "jsfriendapi.h"
+#include "js/ArrayBuffer.h"  // JS::NewArrayBufferWithContents
+#include "js/RootingAPI.h"   // JS::MutableHandle
+#include "js/Utility.h"  // js::ArrayBufferContentsArena, JS::FreePolicy, js_pod_arena_malloc
+#include "js/Value.h"  // JS::Value
 
 using mozilla::net::gNeckoChild;
 
@@ -31,9 +33,9 @@ bool DeserializeArrayBuffer(JSContext* cx,
   memcpy(data.get(), aBuffer.Elements(), aBuffer.Length());
 
   JSObject* obj =
-      JS_NewArrayBufferWithContents(cx, aBuffer.Length(), data.get());
+      JS::NewArrayBufferWithContents(cx, aBuffer.Length(), data.get());
   if (!obj) return false;
-  // If JS_NewArrayBufferWithContents returns non-null, the ownership of
+  // If JS::NewArrayBufferWithContents returns non-null, the ownership of
   // the data is transfered to obj, so we release the ownership here.
   mozilla::Unused << data.release();
 
