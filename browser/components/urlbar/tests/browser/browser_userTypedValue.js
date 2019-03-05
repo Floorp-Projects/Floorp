@@ -1,6 +1,8 @@
+/* Any copyright is dedicated to the Public Domain.
+ * http://creativecommons.org/publicdomain/zero/1.0/ */
+
 function test() {
-  const TEST_PATH = getRootDirectory(gTestPath).replace("chrome://mochitests/content", "https://example.com");
-  const URI = TEST_PATH + "file_userTypedValue.html";
+  const URI = TEST_BASE_URL + "file_userTypedValue.html";
   window.browserDOMWindow.openURI(makeURI(URI),
                                   null,
                                   Ci.nsIBrowserDOMWindow.OPEN_NEWTAB,

@@ -1,8 +1,9 @@
+/* Any copyright is dedicated to the Public Domain.
+ * http://creativecommons.org/publicdomain/zero/1.0/ */
+
 "use strict";
 
-const TEST_PATH = getRootDirectory(gTestPath)
-  .replace("chrome://mochitests/content", "http://www.example.com");
-const TEST_URL = `${TEST_PATH}file_blank_but_not_blank.html`;
+const TEST_URL = `${TEST_BASE_URL}file_blank_but_not_blank.html`;
 
 add_task(async function() {
   for (let page of gInitialPages) {

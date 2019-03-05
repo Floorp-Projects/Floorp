@@ -3,10 +3,8 @@
 
 "use strict";
 
-const TEST_PATH = getRootDirectory(gTestPath).replace("chrome://mochitests/content", "https://example.com");
-
 add_task(async function() {
-  await BrowserTestUtils.withNewTab(TEST_PATH + "dummy_page.html", async function(browser) {
+  await BrowserTestUtils.withNewTab(TEST_BASE_URL + "dummy_page.html", async function(browser) {
     let windowOpenedPromise = BrowserTestUtils.waitForNewWindow();
     await ContentTask.spawn(browser, null, function() {
       content.window.open("", "_BLANK", "toolbar=no,height=300,width=500");
