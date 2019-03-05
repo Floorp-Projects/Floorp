@@ -111,6 +111,12 @@ IPCResult RemoteFrameParent::RecvRenderLayers(
   return IPC_OK();
 }
 
+IPCResult RemoteFrameParent::RecvNavigateByKey(
+    const bool& aForward, const bool& aForDocumentNavigation) {
+  Unused << mTabParent->SendNavigateByKey(aForward, aForDocumentNavigation);
+  return IPC_OK();
+}
+
 void RemoteFrameParent::ActorDestroy(ActorDestroyReason aWhy) {
   mIPCOpen = false;
 }
