@@ -151,7 +151,8 @@ const POLICIES_TESTS = [
     },
     lockedPrefs: {
       "xpinstall.enabled": false,
-      "browser.newtabpage.activity-stream.asrouter.userprefs.cfr": false,
+      "browser.newtabpage.activity-stream.asrouter.userprefs.cfr.addons": false,
+      "browser.newtabpage.activity-stream.asrouter.userprefs.cfr.features": false,
     },
   },
 
@@ -263,7 +264,8 @@ const POLICIES_TESTS = [
       "DisableFirefoxStudies": true,
     },
     lockedPrefs: {
-      "browser.newtabpage.activity-stream.asrouter.userprefs.cfr": false,
+      "browser.newtabpage.activity-stream.asrouter.userprefs.cfr.addons": false,
+      "browser.newtabpage.activity-stream.asrouter.userprefs.cfr.features": false,
     },
   },
 ];

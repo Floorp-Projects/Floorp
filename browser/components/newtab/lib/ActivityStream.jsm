@@ -206,8 +206,12 @@ const PREFS_CONFIG = new Map([
     title: "Are the asrouter devtools enabled?",
     value: false,
   }],
-  ["asrouter.userprefs.cfr", {
-    title: "Does the user allow CFR recommendations?",
+  ["asrouter.userprefs.cfr.addons", {
+    title: "Does the user allow CFR addon recommendations?",
+    value: true,
+  }],
+  ["asrouter.userprefs.cfr.features", {
+    title: "Does the user allow CFR feature recommendations?",
     value: true,
   }],
   ["asrouter.providers.onboarding", {
