@@ -88,7 +88,7 @@ ContentCompositorBridgeParent::AllocPLayerTransactionParent(
   }
 
   if (state && state->mLayerManager) {
-    state->mCrossProcessParent = this;
+    state->mContentCompositorBridgeParent = this;
     HostLayerManager* lm = state->mLayerManager;
     CompositorAnimationStorage* animStorage =
         state->mParent ? state->mParent->GetAnimationStorage() : nullptr;
@@ -254,7 +254,7 @@ ContentCompositorBridgeParent::AllocPWebRenderBridgeParent(
 
   {  // scope lock
     MonitorAutoLock lock(*sIndirectLayerTreesLock);
-    sIndirectLayerTrees[layersId].mCrossProcessParent = this;
+    sIndirectLayerTrees[layersId].mContentCompositorBridgeParent = this;
     sIndirectLayerTrees[layersId].mWrBridge = parent;
   }
 
@@ -280,7 +280,7 @@ mozilla::ipc::IPCResult ContentCompositorBridgeParent::RecvNotifyChildCreated(
   for (LayerTreeMap::iterator it = sIndirectLayerTrees.begin();
        it != sIndirectLayerTrees.end(); it++) {
     CompositorBridgeParent::LayerTreeState* lts = &it->second;
-    if (lts->mParent && lts->mCrossProcessParent == this) {
+    if (lts->mParent && lts->mContentCompositorBridgeParent == this) {
       lts->mParent->NotifyChildCreated(child);
       *aOptions = lts->mParent->GetOptions();
       return IPC_OK();
