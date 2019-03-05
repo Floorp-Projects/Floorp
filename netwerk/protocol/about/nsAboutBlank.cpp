@@ -40,12 +40,8 @@ nsAboutBlank::GetURIFlags(nsIURI* aURI, uint32_t* result) {
 
 nsresult nsAboutBlank::Create(nsISupports* aOuter, REFNSIID aIID,
                               void** aResult) {
-  nsAboutBlank* about = new nsAboutBlank();
-  if (about == nullptr) return NS_ERROR_OUT_OF_MEMORY;
-  NS_ADDREF(about);
-  nsresult rv = about->QueryInterface(aIID, aResult);
-  NS_RELEASE(about);
-  return rv;
+  RefPtr<nsAboutBlank> about = new nsAboutBlank();
+  return about->QueryInterface(aIID, aResult);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

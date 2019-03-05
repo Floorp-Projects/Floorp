@@ -94,7 +94,7 @@ nsFtpState::nsFtpState()
   LOG_INFO(("FTP:(%p) nsFtpState created", this));
 
   // make sure handler stays around
-  NS_ADDREF(gFtpHandler);
+  mHandler = gFtpHandler;
 }
 
 nsFtpState::~nsFtpState() {
@@ -103,8 +103,7 @@ nsFtpState::~nsFtpState() {
   if (mProxyRequest) mProxyRequest->Cancel(NS_ERROR_FAILURE);
 
   // release reference to handler
-  nsFtpProtocolHandler *handler = gFtpHandler;
-  NS_RELEASE(handler);
+  mHandler = nullptr;
 }
 
 // nsIInputStreamCallback implementation

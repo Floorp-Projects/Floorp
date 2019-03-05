@@ -552,12 +552,8 @@ nsAboutCache::GetURIFlags(nsIURI *aURI, uint32_t *result) {
 // static
 nsresult nsAboutCache::Create(nsISupports *aOuter, REFNSIID aIID,
                               void **aResult) {
-  nsAboutCache *about = new nsAboutCache();
-  if (about == nullptr) return NS_ERROR_OUT_OF_MEMORY;
-  NS_ADDREF(about);
-  nsresult rv = about->QueryInterface(aIID, aResult);
-  NS_RELEASE(about);
-  return rv;
+  RefPtr<nsAboutCache> about = new nsAboutCache();
+  return about->QueryInterface(aIID, aResult);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

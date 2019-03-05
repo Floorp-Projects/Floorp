@@ -29,12 +29,8 @@ nsresult nsStreamLoader::Create(nsISupports *aOuter, REFNSIID aIID,
                                 void **aResult) {
   if (aOuter) return NS_ERROR_NO_AGGREGATION;
 
-  nsStreamLoader *it = new nsStreamLoader();
-  if (it == nullptr) return NS_ERROR_OUT_OF_MEMORY;
-  NS_ADDREF(it);
-  nsresult rv = it->QueryInterface(aIID, aResult);
-  NS_RELEASE(it);
-  return rv;
+  RefPtr<nsStreamLoader> it = new nsStreamLoader();
+  return it->QueryInterface(aIID, aResult);
 }
 
 NS_IMPL_ISUPPORTS(nsStreamLoader, nsIStreamLoader, nsIRequestObserver,
@@ -48,7 +44,8 @@ nsStreamLoader::GetNumBytesRead(uint32_t *aNumBytes) {
 
 NS_IMETHODIMP
 nsStreamLoader::GetRequest(nsIRequest **aRequest) {
-  NS_IF_ADDREF(*aRequest = mRequest);
+  nsCOMPtr<nsIRequest> req = mRequest;
+  req.forget(aRequest);
   return NS_OK;
 }
 

@@ -715,10 +715,9 @@ nsIOService::GetProtocolHandler(const char *scheme,
       nsAutoCString spec(scheme);
       spec.Append(':');
 
-      nsIURI *uri;
-      rv = (*result)->NewURI(spec, nullptr, nullptr, &uri);
+      nsCOMPtr<nsIURI> uri;
+      rv = (*result)->NewURI(spec, nullptr, nullptr, getter_AddRefs(uri));
       if (NS_SUCCEEDED(rv)) {
-        NS_RELEASE(uri);
         return rv;
       }
 

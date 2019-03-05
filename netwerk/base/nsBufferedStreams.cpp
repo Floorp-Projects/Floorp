@@ -60,11 +60,10 @@ nsBufferedStream::~nsBufferedStream() { Close(); }
 
 NS_IMPL_ISUPPORTS(nsBufferedStream, nsITellableStream, nsISeekableStream)
 
-nsresult nsBufferedStream::Init(nsISupports* stream, uint32_t bufferSize) {
-  NS_ASSERTION(stream, "need to supply a stream");
+nsresult nsBufferedStream::Init(nsISupports* aStream, uint32_t bufferSize) {
+  NS_ASSERTION(aStream, "need to supply a stream");
   NS_ASSERTION(mStream == nullptr, "already inited");
-  mStream = stream;
-  NS_IF_ADDREF(mStream);
+  mStream = aStream;  // we keep a reference until nsBufferedStream::Close
   mBufferSize = bufferSize;
   mBufferStartOffset = 0;
   mCursor = 0;
@@ -76,7 +75,8 @@ nsresult nsBufferedStream::Init(nsISupports* stream, uint32_t bufferSize) {
 }
 
 nsresult nsBufferedStream::Close() {
-  NS_IF_RELEASE(mStream);
+  // Drop the reference from nsBufferedStream::Init()
+  mStream = nullptr;
   if (mBuffer) {
     delete[] mBuffer;
     mBuffer = nullptr;
@@ -260,8 +260,8 @@ nsBufferedStream::SetEOF() {
 }
 
 nsresult nsBufferedStream::GetData(nsISupports** aResult) {
-  nsCOMPtr<nsISupports> rv(mStream);
-  *aResult = rv.forget().take();
+  nsCOMPtr<nsISupports> stream(mStream);
+  stream.forget(aResult);
   return NS_OK;
 }
 
@@ -310,14 +310,8 @@ nsresult nsBufferedInputStream::Create(nsISupports* aOuter, REFNSIID aIID,
                                        void** aResult) {
   NS_ENSURE_NO_AGGREGATION(aOuter);
 
-  nsBufferedInputStream* stream = new nsBufferedInputStream();
-  if (stream == nullptr) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  NS_ADDREF(stream);
-  nsresult rv = stream->QueryInterface(aIID, aResult);
-  NS_RELEASE(stream);
-  return rv;
+  RefPtr<nsBufferedInputStream> stream = new nsBufferedInputStream();
+  return stream->QueryInterface(aIID, aResult);
 }
 
 NS_IMETHODIMP
@@ -365,7 +359,6 @@ nsBufferedInputStream::Close() {
           "bsBuffedInputStream::Close().");
     };
 #endif
-    NS_RELEASE(mStream);
   }
 
   rv2 = nsBufferedStream::Close();
@@ -584,8 +577,8 @@ nsBufferedInputStream::GetUnbufferedStream(nsISupports** aStream) {
   mBufferStartOffset += mCursor;
   mFillPoint = mCursor = 0;
 
-  *aStream = mStream;
-  NS_IF_ADDREF(*aStream);
+  nsCOMPtr<nsISupports> stream = mStream;
+  stream.forget(aStream);
   return NS_OK;
 }
 
@@ -732,7 +725,7 @@ nsBufferedInputStream::GetData(nsIInputStream** aResult) {
   nsCOMPtr<nsISupports> stream;
   nsBufferedStream::GetData(getter_AddRefs(stream));
   nsCOMPtr<nsIInputStream> inputStream = do_QueryInterface(stream);
-  *aResult = inputStream.forget().take();
+  inputStream.forget(aResult);
   return NS_OK;
 }
 
@@ -846,14 +839,8 @@ nsresult nsBufferedOutputStream::Create(nsISupports* aOuter, REFNSIID aIID,
                                         void** aResult) {
   NS_ENSURE_NO_AGGREGATION(aOuter);
 
-  nsBufferedOutputStream* stream = new nsBufferedOutputStream();
-  if (stream == nullptr) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  NS_ADDREF(stream);
-  nsresult rv = stream->QueryInterface(aIID, aResult);
-  NS_RELEASE(stream);
-  return rv;
+  RefPtr<nsBufferedOutputStream> stream = new nsBufferedOutputStream();
+  return stream->QueryInterface(aIID, aResult);
 }
 
 NS_IMETHODIMP
@@ -890,7 +877,6 @@ nsBufferedOutputStream::Close() {
           "returned error (rv2).");
     }
 #endif
-    NS_RELEASE(mStream);
   }
   rv3 = nsBufferedStream::Close();
 
@@ -1174,8 +1160,8 @@ nsBufferedOutputStream::GetUnbufferedStream(nsISupports** aStream) {
     }
   }
 
-  *aStream = mStream;
-  NS_IF_ADDREF(*aStream);
+  nsCOMPtr<nsISupports> stream = mStream;
+  stream.forget(aStream);
   return NS_OK;
 }
 
@@ -1184,7 +1170,7 @@ nsBufferedOutputStream::GetData(nsIOutputStream** aResult) {
   nsCOMPtr<nsISupports> stream;
   nsBufferedStream::GetData(getter_AddRefs(stream));
   nsCOMPtr<nsIOutputStream> outputStream = do_QueryInterface(stream);
-  *aResult = outputStream.forget().take();
+  outputStream.forget(aResult);
   return NS_OK;
 }
 #undef METER

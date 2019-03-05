@@ -642,15 +642,11 @@ nsresult nsCacheService::Create(nsISupports *aOuter, const nsIID &aIID,
 
   if (aOuter != nullptr) return NS_ERROR_NO_AGGREGATION;
 
-  nsCacheService *cacheService = new nsCacheService();
-  if (cacheService == nullptr) return NS_ERROR_OUT_OF_MEMORY;
-
-  NS_ADDREF(cacheService);
+  RefPtr<nsCacheService> cacheService = new nsCacheService();
   rv = cacheService->Init();
   if (NS_SUCCEEDED(rv)) {
     rv = cacheService->QueryInterface(aIID, aResult);
   }
-  NS_RELEASE(cacheService);
   return rv;
 }
 
@@ -920,23 +916,22 @@ nsresult nsCacheService::CreateCustomOfflineDevice(
   if (!mInitialized) return NS_ERROR_NOT_AVAILABLE;
   if (!mEnableOfflineDevice) return NS_ERROR_NOT_AVAILABLE;
 
-  *aDevice = new nsOfflineCacheDevice;
-
-  NS_ADDREF(*aDevice);
+  RefPtr<nsOfflineCacheDevice> device = new nsOfflineCacheDevice();
 
   // set the preferences
-  (*aDevice)->SetCacheParentDirectory(aProfileDir);
-  (*aDevice)->SetCapacity(aQuota);
+  device->SetCacheParentDirectory(aProfileDir);
+  device->SetCapacity(aQuota);
 
-  nsresult rv = (*aDevice)->InitWithSqlite(mStorageService);
+  nsresult rv = device->InitWithSqlite(mStorageService);
   if (NS_FAILED(rv)) {
     CACHE_LOG_DEBUG(("OfflineDevice->InitWithSqlite() failed (0x%.8" PRIx32
                      ")\n",
                      static_cast<uint32_t>(rv)));
     CACHE_LOG_DEBUG(("    - disabling offline cache for this session.\n"));
-
-    NS_RELEASE(*aDevice);
+    device = nullptr;
   }
+
+  device.forget(aDevice);
   return rv;
 }
 
