@@ -295,6 +295,16 @@ REFTEST TEST-END | file:///a == file:///b`,
 [task 2018-12-29T04:29:49.053Z] REFTEST TEST-END | a2 == b2`,
       "expected": { "pass": 0, "unexpected": 1, "random": 0, "skip": 0 },
     },
+    { "name": "wpt reftests (Linux local; Bug 1530008)",
+      "log": `SUITE-START | Running 1 tests
+TEST-START | /css/css-backgrounds/border-image-6.html
+TEST-UNEXPECTED-FAIL | /css/css-backgrounds/border-image-6.html | Testing http://web-platform.test:8000/css/css-backgrounds/border-image-6.html == http://web-platform.test:8000/css/css-backgrounds/border-image-6-ref.html
+REFTEST   IMAGE 1 (TEST): data:image/png;base64,
+REFTEST   IMAGE 2 (REFERENCE): data:image/png;base64,
+TEST-INFO took 425ms
+SUITE-END | took 2s`,
+      "expected": { "pass": 0, "unexpected": 1, "random": 0, "skip": 0 },
+    },
   ];
 
   var current_test = 0;
@@ -350,9 +360,8 @@ function process_log(contents) {
       // we do them separately.
       match = line.match(/^(?:.*? (?:INFO|ERROR) -\s+)(.*)$/);
     }
-    if (!match)
-      continue;
-    line = match[1];
+    if (match)
+      line = match[1];
     match = line.match(/^(TEST-PASS|TEST-UNEXPECTED-PASS|TEST-FAIL|TEST-KNOWN-FAIL|TEST-UNEXPECTED-FAIL|TEST-DEBUG-INFO)(\(EXPECTED RANDOM\)|) \| ([^\|]+)(?: \|(.*)|$)/);
     if (match) {
       var state = match[1];
