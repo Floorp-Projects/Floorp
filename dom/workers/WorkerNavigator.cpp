@@ -141,7 +141,8 @@ class GetUserAgentRunnable final : public WorkerMainThreadRunnable {
     nsCOMPtr<nsPIDOMWindowInner> window = mWorkerPrivate->GetWindow();
 
     bool isCallerChrome = mWorkerPrivate->UsesSystemPrincipal();
-    nsresult rv = dom::Navigator::GetUserAgent(window, isCallerChrome, mUA);
+    nsresult rv = dom::Navigator::GetUserAgent(
+        window, mWorkerPrivate->GetPrincipal(), isCallerChrome, mUA);
     if (NS_FAILED(rv)) {
       NS_WARNING("Failed to retrieve user-agent from the worker thread.");
     }
