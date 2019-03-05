@@ -1840,7 +1840,7 @@ void DrawTargetSkia::PushLayerWithBlend(bool aOpaque, Float aOpacity,
   SkMatrix clipMatrix;
   GfxMatrixToSkiaMatrix(aMaskTransform, clipMatrix);
   if (aMask) {
-    clipMatrix.postTranslate(aMask->GetRect().X(), aMask->GetRect().Y());
+    clipMatrix.preTranslate(aMask->GetRect().X(), aMask->GetRect().Y());
   }
 
   SkCanvas::SaveLayerRec saveRec(
