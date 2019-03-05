@@ -53,7 +53,7 @@ def generate_build_task(apks, is_staging):
             checkout +
             ' && python automation/taskcluster/helper/get-secret.py'
             ' -s {} -k dsn -f .sentry_token'.format(sentry_secret) +
-            ' && ./gradlew --no-daemon -PcrashReports=true clean test assembleGreenfieldRelease'),
+            ' && ./gradlew --no-daemon -PcrashReports=true clean test assembleRelease'),
         features={
             "chainOfTrust": True,
             "taskclusterProxy": True
