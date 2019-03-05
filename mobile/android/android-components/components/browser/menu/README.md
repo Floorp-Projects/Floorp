@@ -64,7 +64,6 @@ prefer height size.
     BrowserMenuImageText(
        label = "Share",
        imageResource = R.drawable.mozac_ic_share,
-       contentDescription = "Sharing menu item",
        iconTintColorResource = R.color.photonBlue90
     ) {
         Toast.makeText(applicationContext, "Share", Toast.LENGTH_SHORT).show()

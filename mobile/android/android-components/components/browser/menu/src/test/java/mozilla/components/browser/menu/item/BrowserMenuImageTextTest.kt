@@ -34,7 +34,6 @@ class BrowserMenuImageTextTest {
         val item = BrowserMenuImageText(
             "label",
             android.R.drawable.ic_menu_report_image,
-            "contentDescription",
             android.R.color.black
         ) {
             onClickWasPress = true
@@ -47,11 +46,10 @@ class BrowserMenuImageTextTest {
     }
 
     @Test
-    fun `browser menu ImageText should have the right text, image, content description and iconTintColorResource`() {
+    fun `browser menu ImageText should have the right text, image, and iconTintColorResource`() {
         val item = BrowserMenuImageText(
             "label",
             android.R.drawable.ic_menu_report_image,
-            "contentDescription",
             android.R.color.black
         ) {
         }
@@ -63,8 +61,6 @@ class BrowserMenuImageTextTest {
 
         val imageView = view.findViewById<AppCompatImageView>(R.id.image)
 
-        assertEquals(imageView.contentDescription, "contentDescription")
-
         assertNotNull(imageView.drawable)
 
         assertNotNull(imageView.imageTintList)
@@ -74,8 +70,8 @@ class BrowserMenuImageTextTest {
     fun `browser menu ImageText with with no iconTintColorResource must not have an imageTintList`() {
         val item = BrowserMenuImageText(
             "label",
-            android.R.drawable.ic_menu_report_image,
-            "contentDescription")
+            android.R.drawable.ic_menu_report_image
+        )
 
         val view = inflate(item)
 

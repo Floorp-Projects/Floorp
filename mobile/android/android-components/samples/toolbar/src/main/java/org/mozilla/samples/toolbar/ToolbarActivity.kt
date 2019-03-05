@@ -164,14 +164,12 @@ class ToolbarActivity : AppCompatActivity() {
 
         val share = BrowserMenuImageText(
             "Share",
-            R.drawable.mozac_ic_share,
-            contentDescription = "Sharing menu item"
+            R.drawable.mozac_ic_share
         ) { /* Do nothing */ }
 
         val search = BrowserMenuImageText(
             "Search",
-            R.drawable.mozac_ic_search,
-            contentDescription = "Sharing menu item"
+            R.drawable.mozac_ic_search
         ) { /* Do nothing */ }
 
         val builder = BrowserMenuBuilder(listOf(share, BrowserMenuDivider(), search))

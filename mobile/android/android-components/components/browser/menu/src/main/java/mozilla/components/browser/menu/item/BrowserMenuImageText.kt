@@ -21,15 +21,14 @@ private const val NO_ID = -1
  *
  * @param label The visible label of this menu item.
  * @param imageResource ID of a drawable resource to be shown as icon.
- * @param contentDescription The image's content description, used for accessibility support.
  * @param iconTintColorResource Optional ID of color resource to tint the icon.
+ * @param textColorResource Optional ID of color resource to tint the text.
  * @param listener Callback to be invoked when this menu item is clicked.
  */
 class BrowserMenuImageText(
     private val label: String,
     @DrawableRes
     private val imageResource: Int,
-    private val contentDescription: String,
     @ColorRes
     private val iconTintColorResource: Int = NO_ID,
     @ColorRes
@@ -65,7 +64,6 @@ class BrowserMenuImageText(
 
         with(imageView) {
             setImageResource(imageResource)
-            contentDescription = this@BrowserMenuImageText.contentDescription
 
             if (iconTintColorResource != NO_ID) {
                 imageView.imageTintList = ContextCompat.getColorStateList(view.context, iconTintColorResource)

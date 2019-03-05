@@ -104,7 +104,7 @@ open class DefaultComponents(private val applicationContext: Context) {
     private val menuItems by lazy {
         listOf(
                 menuToolbar,
-                BrowserMenuImageText("Share", R.drawable.mozac_ic_share, "share button", android.R.color.black) {
+                BrowserMenuImageText("Share", R.drawable.mozac_ic_share, android.R.color.black) {
                     Toast.makeText(applicationContext, "Share", Toast.LENGTH_SHORT).show()
                 },
                 SimpleBrowserMenuItem("Settings") {
