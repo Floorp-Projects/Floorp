@@ -101,7 +101,10 @@ ProxyStream::ProxyStream(REFIID aIID, const BYTE* aInitBuf,
         return;
       }
 
-      bool popOk = aEnv->Pop();
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+      bool popOk =
+#endif
+          aEnv->Pop();
       MOZ_DIAGNOSTIC_ASSERT(popOk);
     });
 
@@ -299,7 +302,10 @@ ProxyStream::ProxyStream(REFIID aIID, IUnknown* aObject, Environment* aEnv,
         return;
       }
 
-      bool popOk = aEnv->Pop();
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+      bool popOk =
+#endif
+          aEnv->Pop();
       MOZ_DIAGNOSTIC_ASSERT(popOk);
     });
 
