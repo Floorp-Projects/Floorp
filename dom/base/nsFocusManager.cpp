@@ -51,6 +51,7 @@
 #include "mozilla/dom/HTMLImageElement.h"
 #include "mozilla/dom/HTMLInputElement.h"
 #include "mozilla/dom/HTMLSlotElement.h"
+#include "mozilla/dom/RemoteFrameChild.h"
 #include "mozilla/dom/Text.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventStateManager.h"
@@ -3464,6 +3465,13 @@ nsresult nsFocusManager::GetNextTabbableContent(
           TabParent* remote = TabParent::GetFrom(currentContent);
           if (remote) {
             remote->NavigateByKey(aForward, aForDocumentNavigation);
+            return NS_SUCCESS_DOM_NO_OPERATION;
+          }
+
+          // Same as above but for out-of-process iframes
+          RemoteFrameChild* rfc = RemoteFrameChild::GetFrom(currentContent);
+          if (rfc) {
+            rfc->NavigateByKey(aForward, aForDocumentNavigation);
             return NS_SUCCESS_DOM_NO_OPERATION;
           }
 
