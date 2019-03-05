@@ -1001,15 +1001,17 @@ bool TabParent::DeallocPWindowGlobalParent(PWindowGlobalParent* aActor) {
   return true;
 }
 
-IPCResult TabParent::RecvPRemoteFrameConstructor(PRemoteFrameParent* aActor,
-                                                 const nsString& aName,
-                                                 const nsString& aRemoteType) {
-  static_cast<RemoteFrameParent*>(aActor)->Init(aName, aRemoteType);
+IPCResult TabParent::RecvPRemoteFrameConstructor(
+    PRemoteFrameParent* aActor, const nsString& aName,
+    const nsString& aRemoteType, BrowsingContext* aBrowsingContext) {
+  static_cast<RemoteFrameParent*>(aActor)->Init(
+      aName, aRemoteType, CanonicalBrowsingContext::Cast(aBrowsingContext));
   return IPC_OK();
 }
 
 PRemoteFrameParent* TabParent::AllocPRemoteFrameParent(
-    const nsString& aName, const nsString& aRemoteType) {
+    const nsString& aName, const nsString& aRemoteType,
+    BrowsingContext* aBrowsingContext) {
   // Reference freed in DeallocPRemoteFrameParent.
   return do_AddRef(new RemoteFrameParent()).take();
 }

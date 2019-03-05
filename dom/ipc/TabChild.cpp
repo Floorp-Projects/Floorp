@@ -3180,7 +3180,8 @@ bool TabChild::DeallocPWindowGlobalChild(PWindowGlobalChild* aActor) {
 }
 
 PRemoteFrameChild* TabChild::AllocPRemoteFrameChild(const nsString&,
-                                                    const nsString&) {
+                                                    const nsString&,
+                                                    BrowsingContext*) {
   MOZ_CRASH("We should never be manually allocating PRemoteFrameChild actors");
   return nullptr;
 }

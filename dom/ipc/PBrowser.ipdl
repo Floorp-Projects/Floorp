@@ -178,7 +178,8 @@ parent:
     /**
      * Construct a new Remote iframe actor.
      */
-    async PRemoteFrame(nsString aPresentationURL, nsString aRemoteType);
+    async PRemoteFrame(nsString aPresentationURL, nsString aRemoteType,
+                       BrowsingContext aBrowsingContext);
 
     /**
      * Sends an NS_NATIVE_CHILD_OF_SHAREABLE_WINDOW to be adopted by the
