@@ -266,8 +266,8 @@ class nsMenuPopupFrame final : public nsBoxFrame,
   nsresult SetPopupPosition(nsIFrame* aAnchorFrame, bool aIsMove,
                             bool aSizedToPopup, bool aNotify);
 
-  bool HasGeneratedChildren() { return mGeneratedChildren; }
-  void SetGeneratedChildren() { mGeneratedChildren = true; }
+  // Force the children to be generated if they have not already been generated.
+  void GenerateFrames();
 
   // called when the Enter key is pressed while the popup is open. This will
   // just pass the call down to the current menu, if any. If a current menu

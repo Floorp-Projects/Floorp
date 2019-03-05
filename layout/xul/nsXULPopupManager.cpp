@@ -1279,25 +1279,18 @@ void nsXULPopupManager::FirePopupShowingEvent(nsIContent* aPopup,
   nsMenuPopupFrame* popupFrame = do_QueryFrame(aPopup->GetPrimaryFrame());
   if (!popupFrame) return;
 
-  nsPresContext* presContext = popupFrame->PresContext();
-  nsCOMPtr<nsIPresShell> presShell = presContext->PresShell();
-  nsPopupType popupType = popupFrame->PopupType();
-
-  // generate the child frames if they have not already been generated
-  const bool generateFrames = popupFrame->IsLeaf();
-  MOZ_ASSERT_IF(generateFrames, !popupFrame->HasGeneratedChildren());
-  popupFrame->SetGeneratedChildren();
-  if (generateFrames) {
-    MOZ_ASSERT(popupFrame->PrincipalChildList().IsEmpty());
-    presShell->FrameConstructor()->GenerateChildFrames(popupFrame);
-  }
+  popupFrame->GenerateFrames();
 
   // get the frame again
-  nsIFrame* frame = aPopup->GetPrimaryFrame();
-  if (!frame) return;
+  popupFrame = do_QueryFrame(aPopup->GetPrimaryFrame());
+  if (!popupFrame) return;
 
-  presShell->FrameNeedsReflow(frame, nsIPresShell::eTreeChange,
+  nsPresContext* presContext = popupFrame->PresContext();
+  nsCOMPtr<nsIPresShell> presShell = presContext->PresShell();
+  presShell->FrameNeedsReflow(popupFrame, nsIPresShell::eTreeChange,
                               NS_FRAME_HAS_DIRTY_CHILDREN);
+
+  nsPopupType popupType = popupFrame->PopupType();
 
   // cache the popup so that document.popupNode can retrieve the trigger node
   // during the popupshowing event. It will be cleared below after the event
