@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "UrlClassifierFeatureFingerprinting.h"
+#include "UrlClassifierFeatureFingerprintingProtection.h"
 
 #include "mozilla/AntiTrackingCommon.h"
 #include "mozilla/net/UrlClassifierCommon.h"
@@ -30,11 +30,13 @@ namespace {
 #define TABLE_FINGERPRINTING_BLACKLIST_PREF "fingerprinting-blacklist-pref"
 #define TABLE_FINGERPRINTING_WHITELIST_PREF "fingerprinting-whitelist-pref"
 
-StaticRefPtr<UrlClassifierFeatureFingerprinting> gFeatureFingerprinting;
+StaticRefPtr<UrlClassifierFeatureFingerprintingProtection>
+    gFeatureFingerprintingProtection;
 
 }  // namespace
 
-UrlClassifierFeatureFingerprinting::UrlClassifierFeatureFingerprinting()
+UrlClassifierFeatureFingerprintingProtection::
+    UrlClassifierFeatureFingerprintingProtection()
     : UrlClassifierFeatureBase(
           NS_LITERAL_CSTRING(FINGERPRINTING_FEATURE_NAME),
           NS_LITERAL_CSTRING(URLCLASSIFIER_FINGERPRINTING_BLACKLIST),
@@ -47,37 +49,41 @@ UrlClassifierFeatureFingerprinting::UrlClassifierFeatureFingerprinting()
           NS_LITERAL_CSTRING(TABLE_FINGERPRINTING_WHITELIST_PREF),
           EmptyCString()) {}
 
-/* static */ const char* UrlClassifierFeatureFingerprinting::Name() {
+/* static */ const char* UrlClassifierFeatureFingerprintingProtection::Name() {
   return FINGERPRINTING_FEATURE_NAME;
 }
 
 /* static */
-void UrlClassifierFeatureFingerprinting::MaybeInitialize() {
-  UC_LOG(("UrlClassifierFeatureFingerprinting: MaybeInitialize"));
+void UrlClassifierFeatureFingerprintingProtection::MaybeInitialize() {
+  UC_LOG(("UrlClassifierFeatureFingerprintingProtection: MaybeInitialize"));
 
-  if (!gFeatureFingerprinting) {
-    gFeatureFingerprinting = new UrlClassifierFeatureFingerprinting();
-    gFeatureFingerprinting->InitializePreferences();
+  if (!gFeatureFingerprintingProtection) {
+    gFeatureFingerprintingProtection =
+        new UrlClassifierFeatureFingerprintingProtection();
+    gFeatureFingerprintingProtection->InitializePreferences();
   }
 }
 
 /* static */
-void UrlClassifierFeatureFingerprinting::MaybeShutdown() {
-  UC_LOG(("UrlClassifierFeatureFingerprinting: MaybeShutdown"));
+void UrlClassifierFeatureFingerprintingProtection::MaybeShutdown() {
+  UC_LOG(("UrlClassifierFeatureFingerprintingProtection: MaybeShutdown"));
 
-  if (gFeatureFingerprinting) {
-    gFeatureFingerprinting->ShutdownPreferences();
-    gFeatureFingerprinting = nullptr;
+  if (gFeatureFingerprintingProtection) {
+    gFeatureFingerprintingProtection->ShutdownPreferences();
+    gFeatureFingerprintingProtection = nullptr;
   }
 }
 
 /* static */
-already_AddRefed<UrlClassifierFeatureFingerprinting>
-UrlClassifierFeatureFingerprinting::MaybeCreate(nsIChannel* aChannel) {
+already_AddRefed<UrlClassifierFeatureFingerprintingProtection>
+UrlClassifierFeatureFingerprintingProtection::MaybeCreate(
+    nsIChannel* aChannel) {
   MOZ_ASSERT(aChannel);
 
-  UC_LOG(("UrlClassifierFeatureFingerprinting: MaybeCreate for channel %p",
-          aChannel));
+  UC_LOG(
+      ("UrlClassifierFeatureFingerprintingProtection: MaybeCreate for channel "
+       "%p",
+       aChannel));
 
   if (!StaticPrefs::privacy_trackingprotection_fingerprinting_enabled()) {
     return nullptr;
@@ -97,7 +103,8 @@ UrlClassifierFeatureFingerprinting::MaybeCreate(nsIChannel* aChannel) {
       spec.Truncate(
           std::min(spec.Length(), UrlClassifierCommon::sMaxSpecLength));
       UC_LOG(
-          ("UrlClassifierFeatureFingerprinting: Skipping fingerprinting checks "
+          ("UrlClassifierFeatureFingerprintingProtection: Skipping "
+           "fingerprinting checks "
            "for first party or top-level load channel[%p] "
            "with uri %s",
            aChannel, spec.get()));
@@ -111,30 +118,32 @@ UrlClassifierFeatureFingerprinting::MaybeCreate(nsIChannel* aChannel) {
   }
 
   MaybeInitialize();
-  MOZ_ASSERT(gFeatureFingerprinting);
+  MOZ_ASSERT(gFeatureFingerprintingProtection);
 
-  RefPtr<UrlClassifierFeatureFingerprinting> self = gFeatureFingerprinting;
+  RefPtr<UrlClassifierFeatureFingerprintingProtection> self =
+      gFeatureFingerprintingProtection;
   return self.forget();
 }
 
 /* static */
 already_AddRefed<nsIUrlClassifierFeature>
-UrlClassifierFeatureFingerprinting::GetIfNameMatches(const nsACString& aName) {
+UrlClassifierFeatureFingerprintingProtection::GetIfNameMatches(
+    const nsACString& aName) {
   if (!aName.EqualsLiteral(FINGERPRINTING_FEATURE_NAME)) {
     return nullptr;
   }
 
   MaybeInitialize();
-  MOZ_ASSERT(gFeatureFingerprinting);
+  MOZ_ASSERT(gFeatureFingerprintingProtection);
 
-  RefPtr<UrlClassifierFeatureFingerprinting> self = gFeatureFingerprinting;
+  RefPtr<UrlClassifierFeatureFingerprintingProtection> self =
+      gFeatureFingerprintingProtection;
   return self.forget();
 }
 
 NS_IMETHODIMP
-UrlClassifierFeatureFingerprinting::ProcessChannel(nsIChannel* aChannel,
-                                                   const nsACString& aList,
-                                                   bool* aShouldContinue) {
+UrlClassifierFeatureFingerprintingProtection::ProcessChannel(
+    nsIChannel* aChannel, const nsACString& aList, bool* aShouldContinue) {
   NS_ENSURE_ARG_POINTER(aChannel);
   NS_ENSURE_ARG_POINTER(aShouldContinue);
 
@@ -158,7 +167,8 @@ UrlClassifierFeatureFingerprinting::ProcessChannel(nsIChannel* aChannel,
                                            EmptyCString(), EmptyCString());
 
     UC_LOG(
-        ("UrlClassifierFeatureFingerprinting::ProcessChannel, cancelling "
+        ("UrlClassifierFeatureFingerprintingProtection::ProcessChannel, "
+         "cancelling "
          "channel[%p]",
          aChannel));
     nsCOMPtr<nsIHttpChannelInternal> httpChannel = do_QueryInterface(aChannel);
@@ -175,7 +185,7 @@ UrlClassifierFeatureFingerprinting::ProcessChannel(nsIChannel* aChannel,
 }
 
 NS_IMETHODIMP
-UrlClassifierFeatureFingerprinting::GetURIByListType(
+UrlClassifierFeatureFingerprintingProtection::GetURIByListType(
     nsIChannel* aChannel, nsIUrlClassifierFeature::listType aListType,
     nsIURI** aURI) {
   NS_ENSURE_ARG_POINTER(aChannel);
