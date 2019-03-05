@@ -496,7 +496,7 @@ class CompositorBridgeParent final : public CompositorBridgeParentBase,
     // Pointer to the ContentCompositorBridgeParent. Used by APZCs to share
     // their FrameMetrics with the corresponding child process that holds
     // the PCompositorBridgeChild
-    ContentCompositorBridgeParent* mCrossProcessParent;
+    ContentCompositorBridgeParent* mContentCompositorBridgeParent;
     TargetConfig mTargetConfig;
     LayerTransactionParent* mLayerTree;
     nsTArray<PluginWindowData> mPluginData;
