@@ -152,6 +152,16 @@ test(function() {
   assert_equals(xmlString, '<root xmlns:ns2="uri2"><child xmlns:ns1="uri1" xmlns:ns1="uri3" ns1:attr1="value1"/></root>');
 }, 'Check if "ns1" is generated even if the element already has xmlns:ns1.');
 
+test(function() {
+  const root = (new Document()).createElement('root');
+  root.setAttributeNS('http://www.w3.org/1999/xlink', 'href', 'v');
+  assert_equals(serialize(root), '<root xmlns:ns1="http://www.w3.org/1999/xlink" ns1:href="v"/>');
+
+  const root2 = (new Document()).createElement('root');
+  root2.setAttributeNS('http://www.w3.org/1999/xlink', 'xl:type', 'v');
+  assert_equals(serialize(root2), '<root xmlns:xl="http://www.w3.org/1999/xlink" xl:type="v"/>');
+}, 'Check if no special handling for XLink namespace unlike HTML serializer.');
+
 </script>
  </body>
 </html>
