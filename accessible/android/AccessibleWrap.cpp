@@ -169,6 +169,12 @@ nsresult AccessibleWrap::HandleAccEvent(AccEvent* aEvent) {
                                      event->MaxScrollY());
       break;
     }
+    case nsIAccessibleEvent::EVENT_ANNOUNCEMENT: {
+      AccAnnouncementEvent* event = downcast_accEvent(aEvent);
+      sessionAcc->SendAnnouncementEvent(accessible, event->Announcement(),
+                                        event->Priority());
+      break;
+    }
     default:
       break;
   }
