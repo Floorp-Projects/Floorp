@@ -7,6 +7,7 @@
 const { PureComponent } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+const { LocalizationHelper } = require("devtools/shared/l10n");
 
 loader.lazyGetter(this, "Rep", function() {
   return require("devtools/client/shared/components/reps/reps").REPS.Rep;
@@ -16,6 +17,9 @@ loader.lazyGetter(this, "MODE", function() {
 });
 
 loader.lazyRequireGetter(this, "translateNodeFrontToGrip", "devtools/client/inspector/shared/utils", true);
+
+const BOXMODEL_STRINGS_URI = "devtools/client/locales/boxmodel.properties";
+const BOXMODEL_L10N = new LocalizationHelper(BOXMODEL_STRINGS_URI);
 
 class ComputedProperty extends PureComponent {
   static get propTypes() {
@@ -56,7 +60,13 @@ class ComputedProperty extends PureComponent {
 
     return (
       dom.div({ className: "reference-element" },
-        dom.span({ className: "reference-element-type" }, referenceElementType),
+        dom.span(
+          {
+            className: "reference-element-type",
+            title: BOXMODEL_L10N.getStr("boxmodel.offsetParent.title"),
+          },
+          referenceElementType
+        ),
         Rep({
           defaultRep: referenceElement,
           mode: MODE.TINY,
