@@ -550,7 +550,7 @@ textbox[type="autocomplete"] {
 }
 
 panel[type="autocomplete-richlistbox"] {
-  -moz-binding: url("chrome://global/content/bindings/autocomplete.xml#autocomplete-rich-result-popup");
+  -moz-binding: none;
 }
 
 .autocomplete-richlistbox {

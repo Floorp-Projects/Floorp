@@ -40,7 +40,8 @@
   <popupset id="mainPopupSet">
     <tooltip id="aHTMLTooltip" page="true"/>
 
-    <panel type="autocomplete-richlistbox"
+    <panel is="autocomplete-richlistbox-popup"
+           type="autocomplete-richlistbox"
            id="PopupAutoComplete"
            noautofocus="true"
            hidden="true"
