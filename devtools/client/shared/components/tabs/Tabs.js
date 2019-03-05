@@ -39,7 +39,7 @@ define(function(require, exports, module) {
           PropTypes.string,
           PropTypes.object,
         ]),
-        tabActive: PropTypes.number,
+        activeTab: PropTypes.number,
         onMount: PropTypes.func,
         onBeforeChange: PropTypes.func,
         onAfterChange: PropTypes.func,
@@ -62,7 +62,7 @@ define(function(require, exports, module) {
 
     static get defaultProps() {
       return {
-        tabActive: 0,
+        activeTab: 0,
         showAllTabsMenu: false,
         renderOnlySelected: false,
       };
@@ -72,7 +72,7 @@ define(function(require, exports, module) {
       super(props);
 
       this.state = {
-        tabActive: props.tabActive,
+        activeTab: props.activeTab,
 
         // This array is used to store an object containing information on whether a tab
         // at a specified index has already been created (e.g. selected at least once) and
@@ -113,14 +113,14 @@ define(function(require, exports, module) {
         node.addEventListener("underflow", this.onUnderflow);
       }
 
-      const index = this.state.tabActive;
+      const index = this.state.activeTab;
       if (this.props.onMount) {
         this.props.onMount(index);
       }
     }
 
     componentWillReceiveProps(nextProps) {
-      let { children, tabActive } = nextProps;
+      let { children, activeTab } = nextProps;
       const panels = children.filter(panel => panel);
       let created = [...this.state.created];
 
@@ -143,18 +143,18 @@ define(function(require, exports, module) {
         });
       }
 
-      // Check type of 'tabActive' props to see if it's valid (it's 0-based index).
-      if (typeof tabActive === "number") {
+      // Check type of 'activeTab' props to see if it's valid (it's 0-based index).
+      if (typeof activeTab === "number") {
         // Reset to index 0 if index overflows the range of panel array
-        tabActive = (tabActive < panels.length && tabActive >= 0) ?
-          tabActive : 0;
+        activeTab = (activeTab < panels.length && activeTab >= 0) ?
+          activeTab : 0;
 
-        created[tabActive] = Object.assign({}, created[tabActive], {
+        created[activeTab] = Object.assign({}, created[activeTab], {
           isCreated: true,
         });
 
         this.setState({
-          tabActive,
+          activeTab,
         });
       }
 
@@ -197,20 +197,20 @@ define(function(require, exports, module) {
         return;
       }
 
-      let tabActive = this.state.tabActive;
+      let activeTab = this.state.activeTab;
       const tabCount = this.props.children.length;
 
       switch (event.code) {
         case "ArrowRight":
-          tabActive = Math.min(tabCount - 1, tabActive + 1);
+          activeTab = Math.min(tabCount - 1, activeTab + 1);
           break;
         case "ArrowLeft":
-          tabActive = Math.max(0, tabActive - 1);
+          activeTab = Math.max(0, activeTab - 1);
           break;
       }
 
-      if (this.state.tabActive != tabActive) {
-        this.setActive(tabActive);
+      if (this.state.activeTab != activeTab) {
+        this.setActive(activeTab);
       }
     }
 
@@ -242,7 +242,7 @@ define(function(require, exports, module) {
 
       const newState = Object.assign({}, this.state, {
         created,
-        tabActive: index,
+        activeTab: index,
       });
 
       this.setState(newState, () => {
@@ -282,7 +282,7 @@ define(function(require, exports, module) {
           } = tab.props;
 
           const ref = "tab-menu-" + index;
-          const isTabSelected = this.state.tabActive === index;
+          const isTabSelected = this.state.activeTab === index;
 
           const className = [
             "tabs-menu-item",
@@ -357,7 +357,7 @@ define(function(require, exports, module) {
         children = [children];
       }
 
-      const selectedIndex = this.state.tabActive;
+      const selectedIndex = this.state.activeTab;
 
       const panels = children
         .map((tab) => typeof tab === "function" ? tab() : tab)

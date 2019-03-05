@@ -23,7 +23,7 @@ define(function(require, exports, module) {
     static get propTypes() {
       return {
         jsonText: PropTypes.instanceOf(Text),
-        tabActive: PropTypes.number,
+        activeTab: PropTypes.number,
         actions: PropTypes.object,
         headers: PropTypes.object,
         searchFilter: PropTypes.string,
@@ -45,20 +45,20 @@ define(function(require, exports, module) {
         json: props.json,
         expandedNodes: props.expandedNodes,
         jsonText: props.jsonText,
-        tabActive: props.tabActive,
+        activeTab: props.activeTab,
       };
 
       this.onTabChanged = this.onTabChanged.bind(this);
     }
 
     onTabChanged(index) {
-      this.setState({tabActive: index});
+      this.setState({activeTab: index});
     }
 
     render() {
       return (
         Tabs({
-          tabActive: this.state.tabActive,
+          activeTab: this.state.activeTab,
           onAfterChange: this.onTabChanged},
           TabPanel({
             id: "json",
