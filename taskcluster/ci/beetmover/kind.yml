@@ -29,6 +29,7 @@ not-for-build-platforms:
     - win64-devedition-nightly/opt
     - linux64-asan-reporter-nightly/opt
     - win64-asan-reporter-nightly/opt
+    - android-geckoview-fat-aar-nightly/opt
 
 job-template:
     shipping-phase: promote
