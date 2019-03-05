@@ -19,7 +19,6 @@ const {
   getAvailableEventBreakpoints,
 } = require("devtools/server/actors/utils/event-breakpoints");
 
-loader.lazyRequireGetter(this, "findCssSelector", "devtools/shared/inspector/css-logic", true);
 loader.lazyRequireGetter(this, "EnvironmentActor", "devtools/server/actors/environment", true);
 loader.lazyRequireGetter(this, "BreakpointActorMap", "devtools/server/actors/utils/breakpoint-actor-map", true);
 loader.lazyRequireGetter(this, "PauseScopedObjectActor", "devtools/server/actors/pause-scoped", true);
@@ -1231,85 +1230,6 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
   },
 
   /**
-   * Handle a protocol request to retrieve all the event listeners on the page.
-   */
-  onEventListeners: function(request) {
-    // This request is only supported in content debugging.
-    if (!this.global) {
-      return {
-        error: "notImplemented",
-        message: "eventListeners request is only supported in content debugging",
-      };
-    }
-
-    let nodes = this.global.document.getElementsByTagName("*");
-    nodes = [this.global].concat([].slice.call(nodes));
-    const listeners = [];
-
-    for (const node of nodes) {
-      const handlers = Services.els.getListenerInfoFor(node);
-
-      for (const handler of handlers) {
-        // Create a form object for serializing the listener via the protocol.
-        const listenerForm = Object.create(null);
-        const listener = handler.listenerObject;
-        // Native event listeners don't provide any listenerObject or type and
-        // are not that useful to a JS debugger.
-        if (!listener || !handler.type) {
-          continue;
-        }
-
-        // There will be no tagName if the event listener is set on the window.
-        const selector = node.tagName ? findCssSelector(node) : "window";
-        const nodeDO = this.globalDebugObject.makeDebuggeeValue(node);
-        listenerForm.node = {
-          selector: selector,
-          object: createValueGrip(nodeDO, this._pausePool, this.objectGrip),
-        };
-        listenerForm.type = handler.type;
-        listenerForm.capturing = handler.capturing;
-        listenerForm.allowsUntrusted = handler.allowsUntrusted;
-        listenerForm.inSystemEventGroup = handler.inSystemEventGroup;
-        const handlerName = "on" + listenerForm.type;
-        listenerForm.isEventHandler = false;
-        if (typeof node.hasAttribute !== "undefined") {
-          listenerForm.isEventHandler = !!node.hasAttribute(handlerName);
-        }
-        if (node[handlerName]) {
-          listenerForm.isEventHandler = !!node[handlerName];
-        }
-        // Get the Debugger.Object for the listener object.
-        let listenerDO = this.globalDebugObject.makeDebuggeeValue(listener);
-        // If the listener is an object with a 'handleEvent' method, use that.
-        if (listenerDO.class === "Object" || /^XUL\w*Element$/.test(listenerDO.class)) {
-          // For some events we don't have permission to access the
-          // 'handleEvent' property when running in content scope.
-          if (!listenerDO.unwrap()) {
-            continue;
-          }
-          let heDesc;
-          while (!heDesc && listenerDO) {
-            heDesc = listenerDO.getOwnPropertyDescriptor("handleEvent");
-            listenerDO = listenerDO.proto;
-          }
-          if (heDesc && heDesc.value) {
-            listenerDO = heDesc.value;
-          }
-        }
-        // When the listener is a bound function, we are actually interested in
-        // the target function.
-        while (listenerDO.isBoundFunction) {
-          listenerDO = listenerDO.boundTargetFunction;
-        }
-        listenerForm.function = createValueGrip(listenerDO, this._pausePool,
-          this.objectGrip);
-        listeners.push(listenerForm);
-      }
-    }
-    return { listeners: listeners };
-  },
-
-  /**
    * Return the Debug.Frame for a frame mentioned by the protocol.
    */
   _requestFrame: function(frameID) {
@@ -1855,7 +1775,6 @@ Object.assign(ThreadActor.prototype.requestTypes, {
   "clientEvaluate": ThreadActor.prototype.onClientEvaluate,
   "frames": ThreadActor.prototype.onFrames,
   "interrupt": ThreadActor.prototype.onInterrupt,
-  "eventListeners": ThreadActor.prototype.onEventListeners,
   "releaseMany": ThreadActor.prototype.onReleaseMany,
   "sources": ThreadActor.prototype.onSources,
   "threadGrips": ThreadActor.prototype.onThreadGrips,
