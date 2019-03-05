@@ -5323,10 +5323,6 @@ pref("memory.dump_reports_on_oom", false);
 // Number of stack frames to capture in createObjectURL for about:memory.
 pref("memory.blob_report.stack_frames", 0);
 
-// Disable idle observer fuzz, because only privileged content can access idle
-// observers (bug 780507).
-pref("dom.idle-observers-api.fuzz_time.disabled", true);
-
 // Activates the activity monitor
 pref("io.activity.enabled", false);
 
