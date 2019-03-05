@@ -6481,8 +6481,6 @@ nsINode* Document::AdoptNode(nsINode& aAdoptedNode, ErrorResult& rv) {
   return adoptedNode;
 }
 
-bool Document::UseWidthDeviceWidthFallbackViewport() const { return false; }
-
 void Document::ParseWidthAndHeightInMetaViewport(
     const nsAString& aWidthString, const nsAString& aHeightString,
     const nsAString& aScaleString) {
@@ -6522,9 +6520,6 @@ void Document::ParseWidthAndHeightInMetaViewport(
       mMinWidth = nsViewportInfo::ExtendToZoom;
       mMaxWidth = nsViewportInfo::ExtendToZoom;
     }
-  } else if (aHeightString.IsEmpty() && UseWidthDeviceWidthFallbackViewport()) {
-    mMinWidth = nsViewportInfo::ExtendToZoom;
-    mMaxWidth = nsViewportInfo::DeviceSize;
   }
 
   mMinHeight = nsViewportInfo::Auto;
@@ -6797,16 +6792,8 @@ nsViewportInfo Document::GetViewportInfo(const ScreenIntSize& aDisplaySize) {
       // https://drafts.csswg.org/css-device-adapt/#resolve-width
       if (width == nsViewportInfo::Auto) {
         if (height == nsViewportInfo::Auto || aDisplaySize.height == 0) {
-          // If we don't have any applicable viewport width constraints, this is
-          // most likely a desktop page written without mobile devices in mind.
-          // We use the desktop mode viewport for those pages by default,
-          // because a narrow viewport based on typical mobile device screen
-          // sizes (especially in portrait mode) will frequently break the
-          // layout of such pages. To keep text readable in that case, we rely
-          // on font inflation instead.
-
-          // Divide by fullZoom to stretch CSS pixel size of viewport in order
-          // to keep device pixel size unchanged after full zoom applied.
+          // Stretch CSS pixel size of viewport to keep device pixel size
+          // unchanged after full zoom applied.
           // See bug 974242.
           width = gfxPrefs::DesktopViewportWidth() / fullZoom;
         } else {
