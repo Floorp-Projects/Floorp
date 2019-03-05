@@ -442,8 +442,9 @@ mozilla::ipc::IPCResult DocAccessibleParent::RecvAnnouncementEvent(
     return IPC_OK();
   }
 
-  // XXX: A future patch will add platform support for this event type.
-  // Right now, we just need to support XPC for testing.
+#  if defined(ANDROID)
+  ProxyAnnouncementEvent(target, aAnnouncement, aPriority);
+#  endif
 
   if (!nsCoreUtils::AccEventObserversExist()) {
     return IPC_OK();

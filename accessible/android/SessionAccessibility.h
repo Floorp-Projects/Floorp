@@ -96,6 +96,8 @@ class SessionAccessibility final
   void SendClickedEvent(AccessibleWrap* aAccessible, bool aChecked);
   void SendWindowContentChangedEvent();
   void SendWindowStateChangedEvent(AccessibleWrap* aAccessible);
+  void SendAnnouncementEvent(AccessibleWrap* aAccessible,
+                             const nsString& aAnnouncement, uint16_t aPriority);
 
   // Cache methods
   void ReplaceViewportCache(
