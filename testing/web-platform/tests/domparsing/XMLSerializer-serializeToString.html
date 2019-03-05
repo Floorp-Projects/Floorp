@@ -9,6 +9,8 @@
  <body>
     <h1>domparsing_XMLSerializer_serializeToString</h1>
   <script>
+const XMLNS_URI = 'http://www.w3.org/2000/xmlns/';
+
 function createXmlDoc(){
   var input = '<?xml version="1.0" encoding="UTF-8"?><root><child1>value1</child1></root>';
   var parser = new DOMParser();
@@ -48,6 +50,26 @@ test(function() {
   var xmlString = (new XMLSerializer()).serializeToString(root);
   assert_equals(xmlString, '<root xmlns="urn:bar"><outer xmlns=""><inner>value1</inner></outer></root>');
 }, 'Check if there is no redundant empty namespace declaration.');
+
+test(function() {
+  const root = parse('<root xmlns="uri1"/>');
+  const child = root.ownerDocument.createElement('child');
+  child.setAttributeNS(XMLNS_URI, 'xmlns', 'FAIL1');
+  root.appendChild(child);
+  const child2 = root.ownerDocument.createElementNS('uri2', 'child2');
+  child2.setAttributeNS(XMLNS_URI, 'xmlns', 'FAIL2');
+  root.appendChild(child2);
+  const child3 = root.ownerDocument.createElementNS('uri1', 'child3');
+  child3.setAttributeNS(XMLNS_URI, 'xmlns', 'FAIL3');
+  root.appendChild(child3);
+  const child4 = root.ownerDocument.createElementNS('uri4', 'child4');
+  child4.setAttributeNS(XMLNS_URI, 'xmlns', 'uri4');
+  root.appendChild(child4);
+  const child5 = root.ownerDocument.createElement('child5');
+  child5.setAttributeNS(XMLNS_URI, 'xmlns', '');
+  root.appendChild(child5);
+  assert_equals(serialize(root), '<root xmlns="uri1"><child xmlns=""/><child2 xmlns="uri2"/><child3/><child4 xmlns="uri4"/><child5 xmlns=""/></root>');
+}, 'Check if inconsistent xmlns="..." is dropped.');
 
 test(function() {
   let root = parse('<r xmlns:xx="uri"></r>');
