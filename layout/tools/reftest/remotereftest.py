@@ -196,8 +196,6 @@ class RemoteReftest(RefTest):
         if not self.device.is_app_installed(expected):
             raise Exception("%s is not installed on this device" % expected)
 
-        self.automation.deleteANRs()
-        self.automation.deleteTombstones()
         self.device.clear_logcat()
 
         self.device.rm(self.remoteCache, force=True, recursive=True)
