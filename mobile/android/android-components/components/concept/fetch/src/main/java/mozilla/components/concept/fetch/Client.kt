@@ -16,7 +16,8 @@ import java.io.IOException
  */
 abstract class Client {
     /**
-     * Starts the process of fetching a resource from the network as described by the [Request] object.
+     * Starts the process of fetching a resource from the network as described by the [Request] object. This call is
+     * synchronous.
      *
      * A [Response] may keep references to open streams. Therefore it's important to always close the [Response] or
      * its [Response.Body].
