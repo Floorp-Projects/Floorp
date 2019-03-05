@@ -247,40 +247,42 @@ static size_t globalToTlsOffset(size_t globalOffset) {
 
 CraneliftModuleEnvironment::CraneliftModuleEnvironment(
     const ModuleEnvironment& env)
-    : env(env), min_memory_length(env.minMemoryLength) {}
+    : env(&env),
+      min_memory_length(env.minMemoryLength)
+{}
 
 TypeCode env_unpack(BD_ValType valType) {
   return TypeCode(UnpackTypeCodeType(PackedTypeCode(valType.packed)));
 }
 
 const FuncTypeWithId* env_function_signature(
-    const CraneliftModuleEnvironment* env, size_t funcIndex) {
-  return env->env.funcTypes[funcIndex];
+    const CraneliftModuleEnvironment* wrapper, size_t funcIndex) {
+  return wrapper->env->funcTypes[funcIndex];
 }
 
-size_t env_func_import_tls_offset(const CraneliftModuleEnvironment* env,
+size_t env_func_import_tls_offset(const CraneliftModuleEnvironment* wrapper,
                                   size_t funcIndex) {
-  return globalToTlsOffset(env->env.funcImportGlobalDataOffsets[funcIndex]);
+  return globalToTlsOffset(wrapper->env->funcImportGlobalDataOffsets[funcIndex]);
 }
 
-bool env_func_is_import(const CraneliftModuleEnvironment* env,
+bool env_func_is_import(const CraneliftModuleEnvironment* wrapper,
                         size_t funcIndex) {
-  return env->env.funcIsImport(funcIndex);
+  return wrapper->env->funcIsImport(funcIndex);
 }
 
-const FuncTypeWithId* env_signature(const CraneliftModuleEnvironment* env,
+const FuncTypeWithId* env_signature(const CraneliftModuleEnvironment* wrapper,
                                     size_t funcTypeIndex) {
-  return &env->env.types[funcTypeIndex].funcType();
+  return &wrapper->env->types[funcTypeIndex].funcType();
 }
 
-const TableDesc* env_table(const CraneliftModuleEnvironment* env,
+const TableDesc* env_table(const CraneliftModuleEnvironment* wrapper,
                            size_t tableIndex) {
-  return &env->env.tables[tableIndex];
+  return &wrapper->env->tables[tableIndex];
 }
 
-const GlobalDesc* env_global(const CraneliftModuleEnvironment* env,
+const GlobalDesc* env_global(const CraneliftModuleEnvironment* wrapper,
                              size_t globalIndex) {
-  return &env->env.globals[globalIndex];
+  return &wrapper->env->globals[globalIndex];
 }
 
 bool wasm::CraneliftCompileFunctions(const ModuleEnvironment& env,
@@ -332,8 +334,7 @@ bool wasm::CraneliftCompileFunctions(const ModuleEnvironment& env,
       return false;
     }
 
-    if (!code->codeRanges.emplaceBack(func.index, func.lineOrBytecode,
-                                      offsets)) {
+    if (!code->codeRanges.emplaceBack(func.index, lineOrBytecode, offsets)) {
       return false;
     }
   }
