@@ -328,7 +328,8 @@ var Policies = {
     onBeforeAddons(manager, param) {
       if (param) {
         manager.disallowFeature("Shield");
-        setAndLockPref("browser.newtabpage.activity-stream.asrouter.userprefs.cfr", false);
+        setAndLockPref("browser.newtabpage.activity-stream.asrouter.userprefs.cfr.addons", false);
+        setAndLockPref("browser.newtabpage.activity-stream.asrouter.userprefs.cfr.features", false);
       }
     },
   },
@@ -683,7 +684,8 @@ var Policies = {
         setAndLockPref("xpinstall.enabled", param.Default);
         if (!param.Default) {
           blockAboutPage(manager, "about:debugging");
-          setAndLockPref("browser.newtabpage.activity-stream.asrouter.userprefs.cfr", false);
+          setAndLockPref("browser.newtabpage.activity-stream.asrouter.userprefs.cfr.addons", false);
+          setAndLockPref("browser.newtabpage.activity-stream.asrouter.userprefs.cfr.features", false);
           manager.disallowFeature("xpinstall");
         }
       }
