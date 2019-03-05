@@ -6,11 +6,21 @@ function skipPausing(dbg) {
   return waitForState(dbg, state => dbg.selectors.getSkipPausing(state))
 }
 
+/*
+ * Tests toggling the skip pausing button and 
+ * invoking functions without pausing.
+ */
+
 add_task(async function() {
   let dbg = await initDebugger("doc-scripts.html");
   await addBreakpoint(dbg, "simple3", 2);
 
   await skipPausing(dbg);
-  const res = await invokeInTab("simple")
-  is(res, 3, "simple() successfully completed")
+  let res = await invokeInTab("simple");
+  is(res, 3, "simple() successfully completed");
+
+  info("Reload and invoke again");
+  reload(dbg, "simple3");
+  res = await invokeInTab("simple");
+  is(res, 3, "simple() successfully completed");
 });

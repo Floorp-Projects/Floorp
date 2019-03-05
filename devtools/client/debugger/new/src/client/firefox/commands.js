@@ -95,6 +95,14 @@ function listWorkerThreadClients() {
   return (Object.values(workerClients): any).map(({ thread }) => thread);
 }
 
+function forEachWorkerThread(iteratee) {
+  const promises = listWorkerThreadClients().map(thread => iteratee(thread));
+
+  if (shouldWaitForWorkers) {
+    return Promise.all(promises);
+  }
+}
+
 function resume(thread: string): Promise<*> {
   return new Promise(resolve => {
     lookupThreadClient(thread).resume(resolve);
@@ -189,15 +197,7 @@ async function setBreakpoint(
   // setting its breakpoint, but this leads to more consistent behavior if the
   // user sets a breakpoint and immediately starts interacting with the page.
   // If the main thread stops responding then we're toast regardless.
-  if (shouldWaitForWorkers) {
-    for (const thread of listWorkerThreadClients()) {
-      await thread.setBreakpoint(location, options);
-    }
-  } else {
-    for (const thread of listWorkerThreadClients()) {
-      thread.setBreakpoint(location, options);
-    }
-  }
+  await forEachWorkerThread(thread => thread.setBreakpoint(location, options));
 }
 
 async function removeBreakpoint(location: BreakpointLocation) {
@@ -206,15 +206,7 @@ async function removeBreakpoint(location: BreakpointLocation) {
 
   // Remove breakpoints without waiting for the thread to respond, for the same
   // reason as in setBreakpoint.
-  if (shouldWaitForWorkers) {
-    for (const thread of listWorkerThreadClients()) {
-      await thread.removeBreakpoint(location);
-    }
-  } else {
-    for (const thread of listWorkerThreadClients()) {
-      thread.removeBreakpoint(location);
-    }
-  }
+  await forEachWorkerThread(thread => thread.removeBreakpoint(location));
 }
 
 async function evaluateInFrame(script: Script, options: EvaluateParam) {
@@ -320,13 +312,9 @@ async function blackBox(
   }
 }
 
-async function setSkipPausing(thread: string, shouldSkip: boolean) {
-  const client = lookupThreadClient(thread);
-  return client.request({
-    skip: shouldSkip,
-    to: client.actor,
-    type: "skipBreakpoints"
-  });
+async function setSkipPausing(shouldSkip: boolean) {
+  await threadClient.skipBreakpoints(shouldSkip);
+  await forEachWorkerThread(thread => thread.skipBreakpoints(shouldSkip));
 }
 
 function interrupt(thread: string): Promise<*> {
