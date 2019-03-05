@@ -1583,7 +1583,7 @@ bool nsIFrame::HasOpacityInternal(float aThreshold,
     return false;
   }
 
-  return ((IsPrimaryFrame() ||
+  return ((nsLayoutUtils::IsPrimaryStyleFrame(this) ||
            nsLayoutUtils::FirstContinuationOrIBSplitSibling(this)
                ->IsPrimaryFrame()) &&
           nsLayoutUtils::HasAnimationOfPropertySet(

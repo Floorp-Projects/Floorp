@@ -25,6 +25,7 @@ test-pref(layers.offmainthreadcomposition.async-animations,false) == stacking-co
 == stacking-context-transform-win-in-delay-on-main-thread.html stacking-context-animation-ref.html
 == stacking-context-transform-wins-over-transition.html stacking-context-animation-ref.html
 == stacking-context-opacity-1-animation.html stacking-context-animation-ref.html
+== stacking-context-opacity-1-on-table.html stacking-context-animation-ref.html
 == stacking-context-opacity-1-with-fill-backwards.html stacking-context-animation-ref.html
 == stacking-context-opacity-1-with-fill-forwards.html stacking-context-animation-ref.html
 == stacking-context-paused-on-opacity-1.html stacking-context-animation-ref.html

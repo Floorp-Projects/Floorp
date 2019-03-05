@@ -400,6 +400,12 @@ class nsLayoutUtils {
   static nsIFrame* GetPrimaryFrameFromStyleFrame(nsIFrame* aStyleFrame);
 
   /**
+   * Similar to nsIFrame::IsPrimaryFrame except that this will return true
+   * for the inner table frame rather than for its wrapper frame.
+   */
+  static bool IsPrimaryStyleFrame(const nsIFrame* aFrame);
+
+  /**
    * Gets the real primary frame associated with the content object.
    *
    * In the case of absolutely positioned elements and floated elements,
