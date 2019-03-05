@@ -105,24 +105,20 @@ NS_IMETHODIMP
 nsViewSourceHandler::NewChannel(nsIURI *uri, nsILoadInfo *aLoadInfo,
                                 nsIChannel **result) {
   NS_ENSURE_ARG_POINTER(uri);
-  nsViewSourceChannel *channel = new nsViewSourceChannel();
-  if (!channel) return NS_ERROR_OUT_OF_MEMORY;
-  NS_ADDREF(channel);
+  RefPtr<nsViewSourceChannel> channel = new nsViewSourceChannel();
 
   nsresult rv = channel->Init(uri);
   if (NS_FAILED(rv)) {
-    NS_RELEASE(channel);
     return rv;
   }
 
   // set the loadInfo on the new channel
   rv = channel->SetLoadInfo(aLoadInfo);
   if (NS_FAILED(rv)) {
-    NS_RELEASE(channel);
     return rv;
   }
 
-  *result = static_cast<nsIViewSourceChannel *>(channel);
+  *result = channel.forget().downcast<nsIViewSourceChannel>().take();
   return NS_OK;
 }
 

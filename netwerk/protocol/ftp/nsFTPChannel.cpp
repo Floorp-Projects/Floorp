@@ -45,10 +45,10 @@ nsFtpChannel::SetUploadStream(nsIInputStream *stream,
 }
 
 NS_IMETHODIMP
-nsFtpChannel::GetUploadStream(nsIInputStream **stream) {
-  NS_ENSURE_ARG_POINTER(stream);
-  *stream = mUploadStream;
-  NS_IF_ADDREF(*stream);
+nsFtpChannel::GetUploadStream(nsIInputStream **aStream) {
+  NS_ENSURE_ARG_POINTER(aStream);
+  nsCOMPtr<nsIInputStream> stream = mUploadStream;
+  stream.forget(aStream);
   return NS_OK;
 }
 
@@ -74,8 +74,8 @@ nsFtpChannel::GetEntityID(nsACString &entityID) {
 //-----------------------------------------------------------------------------
 NS_IMETHODIMP
 nsFtpChannel::GetProxyInfo(nsIProxyInfo **aProxyInfo) {
-  *aProxyInfo = ProxyInfo();
-  NS_IF_ADDREF(*aProxyInfo);
+  nsCOMPtr<nsIProxyInfo> info = ProxyInfo();
+  info.forget(aProxyInfo);
   return NS_OK;
 }
 
@@ -85,17 +85,14 @@ nsresult nsFtpChannel::OpenContentStream(bool async, nsIInputStream **result,
                                          nsIChannel **channel) {
   if (!async) return NS_ERROR_NOT_IMPLEMENTED;
 
-  nsFtpState *state = new nsFtpState();
-  if (!state) return NS_ERROR_OUT_OF_MEMORY;
-  NS_ADDREF(state);
+  RefPtr<nsFtpState> state = new nsFtpState();
 
   nsresult rv = state->Init(this);
   if (NS_FAILED(rv)) {
-    NS_RELEASE(state);
     return rv;
   }
 
-  *result = state;
+  state.forget(result);
   return NS_OK;
 }
 
