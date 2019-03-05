@@ -6,9 +6,16 @@
 
 TEST_DIRS += ['tests']
 
-for var in ('target', 'MOZ_CONFIGURE_OPTIONS', 'CC', 'CC_VERSION', 'CXX',
+for var in ('MOZ_CONFIGURE_OPTIONS', 'CC', 'CC_VERSION', 'CXX',
             'RUSTC', 'RUSTC_VERSION'):
     DEFINES[var] = CONFIG[var]
+
+if CONFIG['MOZ_ANDROID_FAT_AAR_TARGETS']:
+    # Turn ["arch1=url1", "arch2=url2"] into "arch1</td><td>arch2".  Yes, this
+    # relies on not sanitizing the interpolated string.
+    DEFINES['target'] = '</td><td>'.join(sorted(arch.split('=')[0] for arch in CONFIG['MOZ_ANDROID_FAT_AAR_TARGETS']))
+else:
+    DEFINES['target'] = CONFIG['target']
 
 DEFINES['CFLAGS'] = ' '.join(CONFIG['OS_CFLAGS'])
 
