@@ -9,6 +9,9 @@
 namespace mozilla {
 namespace layers {
 
+CanvasInitializeData::CanvasInitializeData() = default;
+CanvasInitializeData::~CanvasInitializeData() = default;
+
 CanvasRenderer::CanvasRenderer()
     : mPreTransCallback(nullptr),
       mPreTransCallbackData(nullptr),
