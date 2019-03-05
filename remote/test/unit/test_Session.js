@@ -3,14 +3,12 @@
 
 "use strict";
 
-const {EventEmitter} = ChromeUtils.import("chrome://remote/content/EventEmitter.jsm");
 const {Session} = ChromeUtils.import("chrome://remote/content/Session.jsm");
 
 const connection = {onmessage: () => {}};
 
 class MockTarget {
   constructor() {
-    EventEmitter.decorate(this);
   }
 
   get browsingContext() {
