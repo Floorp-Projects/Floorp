@@ -25,10 +25,10 @@ class WindowGlobalChild;
 namespace mozilla {
 namespace dom {
 
-class JSWindowActorChild final : public nsWrapperCache {
+class JSWindowActorChild final : public nsISupports, public nsWrapperCache {
  public:
-  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(JSWindowActorChild)
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(JSWindowActorChild)
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(JSWindowActorChild)
 
  protected:
   ~JSWindowActorChild() = default;
