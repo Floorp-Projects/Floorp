@@ -6,8 +6,9 @@
 #include <algorithm>
 #include "ArrayBufferInputStream.h"
 #include "nsStreamUtils.h"
-#include "jsapi.h"
-#include "jsfriendapi.h"
+#include "js/ArrayBuffer.h"  // JS::{GetArrayBuffer{ByteLength,Data},IsArrayBufferObject}
+#include "js/RootingAPI.h"  // JS::{Handle,Rooted}
+#include "js/Value.h"       // JS::Value
 #include "mozilla/UniquePtrExtensions.h"
 #include "mozilla/dom/ScriptSettings.h"
 
@@ -27,12 +28,12 @@ ArrayBufferInputStream::SetData(JS::Handle<JS::Value> aBuffer,
   if (!aBuffer.isObject()) {
     return NS_ERROR_FAILURE;
   }
-  JS::RootedObject arrayBuffer(RootingCx(), &aBuffer.toObject());
-  if (!JS_IsArrayBufferObject(arrayBuffer)) {
+  JS::Rooted<JSObject *> arrayBuffer(RootingCx(), &aBuffer.toObject());
+  if (!JS::IsArrayBufferObject(arrayBuffer)) {
     return NS_ERROR_FAILURE;
   }
 
-  uint32_t buflen = JS_GetArrayBufferByteLength(arrayBuffer);
+  uint32_t buflen = JS::GetArrayBufferByteLength(arrayBuffer);
   uint32_t offset = std::min(buflen, aByteOffset);
   uint32_t bufferLength = std::min(buflen - offset, aLength);
 
@@ -46,7 +47,7 @@ ArrayBufferInputStream::SetData(JS::Handle<JS::Value> aBuffer,
   JS::AutoCheckCannotGC nogc;
   bool isShared;
   char *src =
-      (char *)JS_GetArrayBufferData(arrayBuffer, &isShared, nogc) + offset;
+      (char *)JS::GetArrayBufferData(arrayBuffer, &isShared, nogc) + offset;
   memcpy(&mArrayBuffer[0], src, mBufferLength);
   return NS_OK;
 }

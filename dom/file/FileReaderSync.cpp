@@ -6,7 +6,9 @@
 
 #include "FileReaderSync.h"
 
-#include "jsfriendapi.h"
+#include "js/ArrayBuffer.h"  // JS::NewArrayBufferWithContents
+#include "js/RootingAPI.h"   // JS::{,Mutable}Handle
+#include "js/Utility.h"  // js::ArrayBufferContentsArena, JS::FreePolicy, js_pod_arena_malloc
 #include "mozilla/Unused.h"
 #include "mozilla/Base64.h"
 #include "mozilla/dom/File.h"
@@ -83,7 +85,7 @@ void FileReaderSync::ReadAsArrayBuffer(JSContext* aCx,
   }
 
   JSObject* arrayBuffer =
-      JS_NewArrayBufferWithContents(aCx, blobSize, bufferData.get());
+      JS::NewArrayBufferWithContents(aCx, blobSize, bufferData.get());
   if (!arrayBuffer) {
     aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
     return;
