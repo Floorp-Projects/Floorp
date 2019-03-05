@@ -4013,19 +4013,14 @@ bool BaselineCodeGen<Handler>::emit_JSOP_TYPEOFEXPR() {
   return emit_JSOP_TYPEOF();
 }
 
-typedef bool (*ThrowMsgFn)(JSContext*, const unsigned);
-static const VMFunction ThrowMsgInfo =
-    FunctionInfo<ThrowMsgFn>(js::ThrowMsgOperation, "ThrowMsgOperation");
-
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_JSOP_THROWMSG() {
   prepareVMCall();
   pushUint16BytecodeOperandArg();
-  return callVM(ThrowMsgInfo);
-}
 
-typedef bool (*ThrowFn)(JSContext*, HandleValue);
-static const VMFunction ThrowInfo = FunctionInfo<ThrowFn>(js::Throw, "Throw");
+  using Fn = bool (*)(JSContext*, const unsigned);
+  return callVM<Fn, js::ThrowMsgOperation>();
+}
 
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_JSOP_THROW() {
@@ -4035,7 +4030,8 @@ bool BaselineCodeGen<Handler>::emit_JSOP_THROW() {
   prepareVMCall();
   pushArg(R0);
 
-  return callVM(ThrowInfo);
+  using Fn = bool (*)(JSContext*, HandleValue);
+  return callVM<Fn, js::ThrowOperation>();
 }
 
 template <typename Handler>
@@ -4107,7 +4103,9 @@ bool BaselineCodeGen<Handler>::emit_JSOP_RETSUB() {
   // R0 is |true|. We need to throw R1.
   prepareVMCall();
   pushArg(R1);
-  if (!callVM(ThrowInfo)) {
+
+  using Fn = bool (*)(JSContext*, HandleValue);
+  if (!callVM<Fn, js::ThrowOperation>()) {
     return false;
   }
 
@@ -4170,11 +4168,6 @@ MOZ_MUST_USE bool BaselineInterpreterCodeGen::emitDebugInstrumentation(
   return true;
 }
 
-typedef bool (*PushLexicalEnvFn)(JSContext*, BaselineFrame*,
-                                 Handle<LexicalScope*>);
-static const VMFunction PushLexicalEnvInfo =
-    FunctionInfo<PushLexicalEnvFn>(jit::PushLexicalEnv, "PushLexicalEnv");
-
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_JSOP_PUSHLEXICALENV() {
   // Call a stub to push the block on the block chain.
@@ -4184,18 +4177,9 @@ bool BaselineCodeGen<Handler>::emit_JSOP_PUSHLEXICALENV() {
   pushScriptScopeArg();
   pushArg(R0.scratchReg());
 
-  return callVM(PushLexicalEnvInfo);
+  using Fn = bool (*)(JSContext*, BaselineFrame*, Handle<LexicalScope*>);
+  return callVM<Fn, jit::PushLexicalEnv>();
 }
-
-typedef bool (*PopLexicalEnvFn)(JSContext*, BaselineFrame*);
-static const VMFunction PopLexicalEnvInfo =
-    FunctionInfo<PopLexicalEnvFn>(jit::PopLexicalEnv, "PopLexicalEnv");
-
-typedef bool (*DebugLeaveThenPopLexicalEnvFn)(JSContext*, BaselineFrame*,
-                                              jsbytecode*);
-static const VMFunction DebugLeaveThenPopLexicalEnvInfo =
-    FunctionInfo<DebugLeaveThenPopLexicalEnvFn>(
-        jit::DebugLeaveThenPopLexicalEnv, "DebugLeaveThenPopLexicalEnv");
 
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_JSOP_POPLEXICALENV() {
@@ -4207,27 +4191,19 @@ bool BaselineCodeGen<Handler>::emit_JSOP_POPLEXICALENV() {
     prepareVMCall();
     pushBytecodePCArg();
     pushArg(R0.scratchReg());
-    return callVM(DebugLeaveThenPopLexicalEnvInfo);
+
+    using Fn = bool (*)(JSContext*, BaselineFrame*, jsbytecode*);
+    return callVM<Fn, jit::DebugLeaveThenPopLexicalEnv>();
   };
   auto ifNotDebuggee = [this]() {
     prepareVMCall();
     pushArg(R0.scratchReg());
-    return callVM(PopLexicalEnvInfo);
+
+    using Fn = bool (*)(JSContext*, BaselineFrame*);
+    return callVM<Fn, jit::PopLexicalEnv>();
   };
   return emitDebugInstrumentation(ifDebuggee, mozilla::Some(ifNotDebuggee));
 }
-
-typedef bool (*FreshenLexicalEnvFn)(JSContext*, BaselineFrame*);
-static const VMFunction FreshenLexicalEnvInfo =
-    FunctionInfo<FreshenLexicalEnvFn>(jit::FreshenLexicalEnv,
-                                      "FreshenLexicalEnv");
-
-typedef bool (*DebugLeaveThenFreshenLexicalEnvFn)(JSContext*, BaselineFrame*,
-                                                  jsbytecode*);
-static const VMFunction DebugLeaveThenFreshenLexicalEnvInfo =
-    FunctionInfo<DebugLeaveThenFreshenLexicalEnvFn>(
-        jit::DebugLeaveThenFreshenLexicalEnv,
-        "DebugLeaveThenFreshenLexicalEnv");
 
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_JSOP_FRESHENLEXICALENV() {
@@ -4239,27 +4215,19 @@ bool BaselineCodeGen<Handler>::emit_JSOP_FRESHENLEXICALENV() {
     prepareVMCall();
     pushBytecodePCArg();
     pushArg(R0.scratchReg());
-    return callVM(DebugLeaveThenFreshenLexicalEnvInfo);
+
+    using Fn = bool (*)(JSContext*, BaselineFrame*, jsbytecode*);
+    return callVM<Fn, jit::DebugLeaveThenFreshenLexicalEnv>();
   };
   auto ifNotDebuggee = [this]() {
     prepareVMCall();
     pushArg(R0.scratchReg());
-    return callVM(FreshenLexicalEnvInfo);
+
+    using Fn = bool (*)(JSContext*, BaselineFrame*);
+    return callVM<Fn, jit::FreshenLexicalEnv>();
   };
   return emitDebugInstrumentation(ifDebuggee, mozilla::Some(ifNotDebuggee));
 }
-
-typedef bool (*RecreateLexicalEnvFn)(JSContext*, BaselineFrame*);
-static const VMFunction RecreateLexicalEnvInfo =
-    FunctionInfo<RecreateLexicalEnvFn>(jit::RecreateLexicalEnv,
-                                       "RecreateLexicalEnv");
-
-typedef bool (*DebugLeaveThenRecreateLexicalEnvFn)(JSContext*, BaselineFrame*,
-                                                   jsbytecode*);
-static const VMFunction DebugLeaveThenRecreateLexicalEnvInfo =
-    FunctionInfo<DebugLeaveThenRecreateLexicalEnvFn>(
-        jit::DebugLeaveThenRecreateLexicalEnv,
-        "DebugLeaveThenRecreateLexicalEnv");
 
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_JSOP_RECREATELEXICALENV() {
@@ -4271,20 +4239,19 @@ bool BaselineCodeGen<Handler>::emit_JSOP_RECREATELEXICALENV() {
     prepareVMCall();
     pushBytecodePCArg();
     pushArg(R0.scratchReg());
-    return callVM(DebugLeaveThenRecreateLexicalEnvInfo);
+
+    using Fn = bool (*)(JSContext*, BaselineFrame*, jsbytecode*);
+    return callVM<Fn, jit::DebugLeaveThenRecreateLexicalEnv>();
   };
   auto ifNotDebuggee = [this]() {
     prepareVMCall();
     pushArg(R0.scratchReg());
-    return callVM(RecreateLexicalEnvInfo);
+
+    using Fn = bool (*)(JSContext*, BaselineFrame*);
+    return callVM<Fn, jit::RecreateLexicalEnv>();
   };
   return emitDebugInstrumentation(ifDebuggee, mozilla::Some(ifNotDebuggee));
 }
-
-typedef bool (*DebugLeaveLexicalEnvFn)(JSContext*, BaselineFrame*, jsbytecode*);
-static const VMFunction DebugLeaveLexicalEnvInfo =
-    FunctionInfo<DebugLeaveLexicalEnvFn>(jit::DebugLeaveLexicalEnv,
-                                         "DebugLeaveLexicalEnv");
 
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_JSOP_DEBUGLEAVELEXICALENV() {
@@ -4293,14 +4260,12 @@ bool BaselineCodeGen<Handler>::emit_JSOP_DEBUGLEAVELEXICALENV() {
     masm.loadBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
     pushBytecodePCArg();
     pushArg(R0.scratchReg());
-    return callVM(DebugLeaveLexicalEnvInfo);
+
+    using Fn = bool (*)(JSContext*, BaselineFrame*, jsbytecode*);
+    return callVM<Fn, jit::DebugLeaveLexicalEnv>();
   };
   return emitDebugInstrumentation(ifDebuggee);
 }
-
-typedef bool (*PushVarEnvFn)(JSContext*, BaselineFrame*, HandleScope);
-static const VMFunction PushVarEnvInfo =
-    FunctionInfo<PushVarEnvFn>(jit::PushVarEnv, "PushVarEnv");
 
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_JSOP_PUSHVARENV() {
@@ -4309,12 +4274,9 @@ bool BaselineCodeGen<Handler>::emit_JSOP_PUSHVARENV() {
   pushScriptScopeArg();
   pushArg(R0.scratchReg());
 
-  return callVM(PushVarEnvInfo);
+  using Fn = bool (*)(JSContext*, BaselineFrame*, HandleScope);
+  return callVM<Fn, jit::PushVarEnv>();
 }
-
-typedef bool (*PopVarEnvFn)(JSContext*, BaselineFrame*);
-static const VMFunction PopVarEnvInfo =
-    FunctionInfo<PopVarEnvFn>(jit::PopVarEnv, "PopVarEnv");
 
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_JSOP_POPVARENV() {
@@ -4322,13 +4284,9 @@ bool BaselineCodeGen<Handler>::emit_JSOP_POPVARENV() {
   masm.loadBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
   pushArg(R0.scratchReg());
 
-  return callVM(PopVarEnvInfo);
+  using Fn = bool (*)(JSContext*, BaselineFrame*);
+  return callVM<Fn, jit::PopVarEnv>();
 }
-
-typedef bool (*EnterWithFn)(JSContext*, BaselineFrame*, HandleValue,
-                            Handle<WithScope*>);
-static const VMFunction EnterWithInfo =
-    FunctionInfo<EnterWithFn>(jit::EnterWith, "EnterWith");
 
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_JSOP_ENTERWITH() {
@@ -4343,12 +4301,10 @@ bool BaselineCodeGen<Handler>::emit_JSOP_ENTERWITH() {
   pushArg(R0);
   pushArg(R1.scratchReg());
 
-  return callVM(EnterWithInfo);
+  using Fn =
+      bool (*)(JSContext*, BaselineFrame*, HandleValue, Handle<WithScope*>);
+  return callVM<Fn, jit::EnterWith>();
 }
-
-typedef bool (*LeaveWithFn)(JSContext*, BaselineFrame*);
-static const VMFunction LeaveWithInfo =
-    FunctionInfo<LeaveWithFn>(jit::LeaveWith, "LeaveWith");
 
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_JSOP_LEAVEWITH() {
@@ -4358,31 +4314,22 @@ bool BaselineCodeGen<Handler>::emit_JSOP_LEAVEWITH() {
   masm.loadBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
   pushArg(R0.scratchReg());
 
-  return callVM(LeaveWithInfo);
+  using Fn = bool (*)(JSContext*, BaselineFrame*);
+  return callVM<Fn, jit::LeaveWith>();
 }
-
-typedef bool (*GetAndClearExceptionFn)(JSContext*, MutableHandleValue);
-static const VMFunction GetAndClearExceptionInfo =
-    FunctionInfo<GetAndClearExceptionFn>(GetAndClearException,
-                                         "GetAndClearException");
 
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_JSOP_EXCEPTION() {
   prepareVMCall();
 
-  if (!callVM(GetAndClearExceptionInfo)) {
+  using Fn = bool (*)(JSContext*, MutableHandleValue);
+  if (!callVM<Fn, GetAndClearException>()) {
     return false;
   }
 
   frame.push(R0);
   return true;
 }
-
-typedef bool (*OnDebuggerStatementFn)(JSContext*, BaselineFrame*,
-                                      jsbytecode* pc, bool*);
-static const VMFunction OnDebuggerStatementInfo =
-    FunctionInfo<OnDebuggerStatementFn>(jit::OnDebuggerStatement,
-                                        "OnDebuggerStatement");
 
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_JSOP_DEBUGGER() {
@@ -4393,7 +4340,8 @@ bool BaselineCodeGen<Handler>::emit_JSOP_DEBUGGER() {
   masm.loadBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
   pushArg(R0.scratchReg());
 
-  if (!callVM(OnDebuggerStatementInfo)) {
+  using Fn = bool (*)(JSContext*, BaselineFrame*, jsbytecode*, bool*);
+  if (!callVM<Fn, jit::OnDebuggerStatement>()) {
     return false;
   }
 
@@ -4407,10 +4355,6 @@ bool BaselineCodeGen<Handler>::emit_JSOP_DEBUGGER() {
   masm.bind(&done);
   return true;
 }
-
-typedef bool (*DebugEpilogueFn)(JSContext*, BaselineFrame*, jsbytecode*);
-static const VMFunction DebugEpilogueInfo = FunctionInfo<DebugEpilogueFn>(
-    jit::DebugEpilogueOnBaselineReturn, "DebugEpilogueOnBaselineReturn");
 
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emitReturn() {
@@ -4426,7 +4370,9 @@ bool BaselineCodeGen<Handler>::emitReturn() {
     prepareVMCall();
     pushBytecodePCArg();
     pushArg(R0.scratchReg());
-    if (!callVM(DebugEpilogueInfo)) {
+
+    using Fn = bool (*)(JSContext*, BaselineFrame*, jsbytecode*);
+    if (!callVM<Fn, jit::DebugEpilogueOnBaselineReturn>()) {
       return false;
     }
 
@@ -4491,10 +4437,6 @@ bool BaselineCodeGen<Handler>::emit_JSOP_RETRVAL() {
   return emitReturn();
 }
 
-typedef bool (*ToIdFn)(JSContext*, HandleValue, MutableHandleValue);
-static const VMFunction ToIdInfo =
-    FunctionInfo<ToIdFn>(js::ToIdOperation, "ToIdOperation");
-
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_JSOP_TOID() {
   // Load index in R0, but keep values on the stack for the decompiler.
@@ -4511,7 +4453,8 @@ bool BaselineCodeGen<Handler>::emit_JSOP_TOID() {
 
   pushArg(R0);
 
-  if (!callVM(ToIdInfo)) {
+  using Fn = bool (*)(JSContext*, HandleValue, MutableHandleValue);
+  if (!callVM<Fn, js::ToIdOperation>()) {
     return false;
   }
 
@@ -4520,10 +4463,6 @@ bool BaselineCodeGen<Handler>::emit_JSOP_TOID() {
   frame.push(R0);
   return true;
 }
-
-typedef JSObject* (*ToAsyncIterFn)(JSContext*, HandleObject, HandleValue);
-static const VMFunction ToAsyncIterInfo =
-    FunctionInfo<ToAsyncIterFn>(js::CreateAsyncFromSyncIterator, "ToAsyncIter");
 
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_JSOP_TOASYNCITER() {
@@ -4535,7 +4474,8 @@ bool BaselineCodeGen<Handler>::emit_JSOP_TOASYNCITER() {
   pushArg(R1);
   pushArg(R0.scratchReg());
 
-  if (!callVM(ToAsyncIterInfo)) {
+  using Fn = JSObject* (*)(JSContext*, HandleObject, HandleValue);
+  if (!callVM<Fn, js::CreateAsyncFromSyncIterator>()) {
     return false;
   }
 
@@ -4545,10 +4485,6 @@ bool BaselineCodeGen<Handler>::emit_JSOP_TOASYNCITER() {
   return true;
 }
 
-typedef bool (*TrySkipAwaitFn)(JSContext*, HandleValue, MutableHandleValue);
-static const VMFunction TrySkipAwaitInfo =
-    FunctionInfo<TrySkipAwaitFn>(jit::TrySkipAwait, "TrySkipAwait");
-
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_JSOP_TRYSKIPAWAIT() {
   frame.syncStack(0);
@@ -4557,7 +4493,8 @@ bool BaselineCodeGen<Handler>::emit_JSOP_TRYSKIPAWAIT() {
   prepareVMCall();
   pushArg(R0);
 
-  if (!callVM(TrySkipAwaitInfo)) {
+  using Fn = bool (*)(JSContext*, HandleValue, MutableHandleValue);
+  if (!callVM<Fn, jit::TrySkipAwait>()) {
     return false;
   }
 
@@ -4579,13 +4516,6 @@ bool BaselineCodeGen<Handler>::emit_JSOP_TRYSKIPAWAIT() {
   return true;
 }
 
-typedef JSObject* (*AsyncFunctionAwaitFn)(JSContext*,
-                                          Handle<AsyncFunctionGeneratorObject*>,
-                                          HandleValue);
-static const VMFunction AsyncFunctionAwaitInfo =
-    FunctionInfo<AsyncFunctionAwaitFn>(js::AsyncFunctionAwait,
-                                       "AsyncFunctionAwait");
-
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_JSOP_ASYNCAWAIT() {
   frame.syncStack(0);
@@ -4596,7 +4526,9 @@ bool BaselineCodeGen<Handler>::emit_JSOP_ASYNCAWAIT() {
   pushArg(R1);
   pushArg(R0.scratchReg());
 
-  if (!callVM(AsyncFunctionAwaitInfo)) {
+  using Fn = JSObject* (*)(JSContext*, Handle<AsyncFunctionGeneratorObject*>,
+                           HandleValue);
+  if (!callVM<Fn, js::AsyncFunctionAwait>()) {
     return false;
   }
 
@@ -4605,13 +4537,6 @@ bool BaselineCodeGen<Handler>::emit_JSOP_ASYNCAWAIT() {
   frame.push(R0);
   return true;
 }
-
-typedef JSObject* (*AsyncFunctionResolveFn)(
-    JSContext*, Handle<AsyncFunctionGeneratorObject*>, HandleValue,
-    AsyncFunctionResolveKind);
-static const VMFunction AsyncFunctionResolveInfo =
-    FunctionInfo<AsyncFunctionResolveFn>(js::AsyncFunctionResolve,
-                                         "AsyncFunctionResolve");
 
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_JSOP_ASYNCRESOLVE() {
@@ -4624,7 +4549,9 @@ bool BaselineCodeGen<Handler>::emit_JSOP_ASYNCRESOLVE() {
   pushArg(R1);
   pushArg(R0.scratchReg());
 
-  if (!callVM(AsyncFunctionResolveInfo)) {
+  using Fn = JSObject* (*)(JSContext*, Handle<AsyncFunctionGeneratorObject*>,
+                           HandleValue, AsyncFunctionResolveKind);
+  if (!callVM<Fn, js::AsyncFunctionResolve>()) {
     return false;
   }
 
@@ -4633,11 +4560,6 @@ bool BaselineCodeGen<Handler>::emit_JSOP_ASYNCRESOLVE() {
   frame.push(R0);
   return true;
 }
-
-typedef bool (*ThrowObjectCoercibleFn)(JSContext*, HandleValue);
-static const VMFunction ThrowObjectCoercibleInfo =
-    FunctionInfo<ThrowObjectCoercibleFn>(ThrowObjectCoercible,
-                                         "ThrowObjectCoercible");
 
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_JSOP_CHECKOBJCOERCIBLE() {
@@ -4654,17 +4576,14 @@ bool BaselineCodeGen<Handler>::emit_JSOP_CHECKOBJCOERCIBLE() {
 
   pushArg(R0);
 
-  if (!callVM(ThrowObjectCoercibleInfo)) {
+  using Fn = bool (*)(JSContext*, HandleValue);
+  if (!callVM<Fn, ThrowObjectCoercible>()) {
     return false;
   }
 
   masm.bind(&done);
   return true;
 }
-
-typedef JSString* (*ToStringFn)(JSContext*, HandleValue);
-static const VMFunction ToStringInfo =
-    FunctionInfo<ToStringFn>(ToStringSlow, "ToStringSlow");
 
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_JSOP_TOSTRING() {
@@ -4680,7 +4599,8 @@ bool BaselineCodeGen<Handler>::emit_JSOP_TOSTRING() {
   pushArg(R0);
 
   // Call ToStringSlow which doesn't handle string inputs.
-  if (!callVM(ToStringInfo)) {
+  using Fn = JSString* (*)(JSContext*, HandleValue);
+  if (!callVM<Fn, ToStringSlow<CanGC>>()) {
     return false;
   }
 

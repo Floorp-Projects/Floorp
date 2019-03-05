@@ -11115,7 +11115,7 @@ void CodeGenerator::visitSetPropertyCache(LSetPropertyCache* ins) {
 
 typedef bool (*ThrowFn)(JSContext*, HandleValue);
 static const VMFunction ThrowInfoCodeGen =
-    FunctionInfo<ThrowFn>(js::Throw, "Throw");
+    FunctionInfo<ThrowFn>(js::ThrowOperation, "ThrowOperation");
 
 void CodeGenerator::visitThrow(LThrow* lir) {
   pushArg(ToValue(lir, LThrow::Value));
