@@ -18,8 +18,8 @@ add_task(async function() {
   const simple2 = findSource(dbg, "simple2.js");
 
   // Set the initial breakpoint.
+  await selectSource(dbg, "simple1");
   await addBreakpoint(dbg, simple1, 4);
-  ok(!getSelectedSource(getState()), "No selected source");
 
   // Call the function that we set a breakpoint in.
   invokeInTab("main");
@@ -43,6 +43,7 @@ add_task(async function() {
   // Make sure that we can set a breakpoint on a line out of the
   // viewport, and that pausing there scrolls the editor to it.
   let longSrc = findSource(dbg, "long.js");
+  await selectSource(dbg, "long.js");
   await addBreakpoint(dbg, longSrc, 66);
 
   invokeInTab("testModel");

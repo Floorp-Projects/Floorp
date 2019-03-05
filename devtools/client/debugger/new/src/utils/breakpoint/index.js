@@ -13,7 +13,8 @@ import assert from "../assert";
 import { features } from "../prefs";
 import { getSelectedLocation } from "../source-maps";
 
-export { getASTLocation, findScopeByName } from "./astBreakpointLocation";
+export * from "./astBreakpointLocation";
+export * from "./breakpointPositions";
 
 import type {
   Source,
@@ -23,7 +24,8 @@ import type {
   PendingLocation,
   Breakpoint,
   BreakpointLocation,
-  PendingBreakpoint
+  PendingBreakpoint,
+  MappedLocation
 } from "../../types";
 
 import type { State } from "../../reducers/types";
@@ -37,15 +39,6 @@ export function firstString(...args: string[]) {
     }
   }
   return null;
-}
-
-export function locationMoved(
-  location: SourceLocation,
-  newLocation: SourceLocation
-) {
-  return (
-    location.line !== newLocation.line || location.column !== newLocation.column
-  );
 }
 
 // The ID for a Breakpoint is derived from its location in its Source.
@@ -164,25 +157,19 @@ export function breakpointExists(state: State, location: SourceLocation) {
 }
 
 export function createBreakpoint(
-  location: SourceLocation,
+  mappedLocation: MappedLocation,
   overrides: Object = {}
 ): Breakpoint {
-  const {
-    disabled,
-    generatedLocation,
-    astLocation,
-    text,
-    originalText,
-    options
-  } = overrides;
+  const { disabled, astLocation, text, originalText, options } = overrides;
 
   const defaultASTLocation = {
     name: undefined,
-    offset: location,
+    offset: mappedLocation.location,
     index: 0
   };
   const properties = {
-    id: makeBreakpointId(location),
+    id: makeBreakpointId(mappedLocation.location),
+    ...mappedLocation,
     options: {
       condition: options.condition || null,
       logValue: options.logValue || null,
@@ -191,8 +178,6 @@ export function createBreakpoint(
     disabled: disabled || false,
     loading: false,
     astLocation: astLocation || defaultASTLocation,
-    generatedLocation: generatedLocation || location,
-    location,
     text,
     originalText
   };

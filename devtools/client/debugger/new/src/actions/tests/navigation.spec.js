@@ -23,11 +23,11 @@ const {
 } = selectors;
 
 const threadClient = {
-  sourceContents: () =>
-    Promise.resolve({
-      source: "function foo1() {\n  const foo = 5; return foo;\n}",
-      contentType: "text/javascript"
-    })
+  sourceContents: async () => ({
+    source: "function foo1() {\n  const foo = 5; return foo;\n}",
+    contentType: "text/javascript"
+  }),
+  getBreakpointPositions: async () => ({})
 };
 
 describe("navigation", () => {

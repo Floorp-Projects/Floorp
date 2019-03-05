@@ -76,5 +76,6 @@ export const sourceThreadClient = {
   },
   threadClient: async () => {},
   getFrameScopes: async () => {},
-  evaluateExpressions: async () => {}
+  evaluateExpressions: async () => {},
+  getBreakpointPositions: async () => ({})
 };

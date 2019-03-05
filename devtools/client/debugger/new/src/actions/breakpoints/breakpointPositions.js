@@ -5,55 +5,74 @@
 // @flow
 
 import { isOriginalId, originalToGeneratedId } from "devtools-source-map";
+import { uniqBy } from "lodash";
 
-import { getSourceFromId, hasBreakpointPositions } from "../../selectors";
+import {
+  getSource,
+  getSourceFromId,
+  hasBreakpointPositions,
+  getBreakpointPositionsForSource
+} from "../../selectors";
 
+import type { MappedLocation, SourceLocation } from "../../types";
 import type { ThunkArgs } from "../../actions/types";
 import { getOriginalLocation } from "../../utils/source-maps";
+import { makeBreakpointId } from "../../utils/breakpoint";
+import typeof SourceMaps from "../../../packages/devtools-source-map/src";
 
 const requests = new Map();
 
-async function mapLocations(generatedLocations, state, source, sourceMaps) {
+async function mapLocations(
+  generatedLocations: SourceLocation[],
+  { sourceMaps }: { sourceMaps: SourceMaps }
+) {
   return Promise.all(
-    generatedLocations.map(async generatedLocation => {
-      const location = await getOriginalLocation(
-        generatedLocation,
-        source,
-        sourceMaps
-      );
+    (generatedLocations: any).map(async (generatedLocation: SourceLocation) => {
+      const location = await getOriginalLocation(generatedLocation, sourceMaps);
 
       return { location, generatedLocation };
     })
   );
 }
 
-function convertToList(results, sourceId) {
+function filterByUniqLocation(positions: MappedLocation[]) {
+  return uniqBy(positions, ({ location }) => makeBreakpointId(location));
+}
+
+function convertToList(results, source) {
+  const { id, url } = source;
   const positions = [];
 
   for (const line in results) {
     for (const column of results[line]) {
-      positions.push({ line: Number(line), column: column, sourceId });
+      positions.push({
+        line: Number(line),
+        column: column,
+        sourceId: id,
+        sourceUrl: url
+      });
     }
   }
 
   return positions;
 }
 
-async function getBreakpointPositions(
-  sourceId,
-  { client, dispatch, getState, sourceMaps }
-) {
-  let source = getSourceFromId(getState(), sourceId);
+async function _setBreakpointPositions(sourceId, thunkArgs) {
+  const { client, dispatch, getState, sourceMaps } = thunkArgs;
+  let generatedSource = getSource(getState(), sourceId);
+  if (!generatedSource) {
+    return;
+  }
 
   let results = {};
   if (isOriginalId(sourceId)) {
     const ranges = await sourceMaps.getGeneratedRangesForOriginal(
       sourceId,
-      source.url,
+      generatedSource.url,
       true
     );
-    sourceId = originalToGeneratedId(sourceId);
-    source = getSourceFromId(getState(), sourceId);
+    const generatedSourceId = originalToGeneratedId(sourceId);
+    generatedSource = getSourceFromId(getState(), generatedSourceId);
 
     // Note: While looping here may not look ideal, in the vast majority of
     // cases, the number of ranges here should be very small, and is quite
@@ -67,25 +86,26 @@ async function getBreakpointPositions(
         range.end.column = 0;
       }
 
-      const bps = await client.getBreakpointPositions(source.actors[0], range);
+      const bps = await client.getBreakpointPositions(generatedSource, range);
       for (const line in bps) {
         results[line] = (results[line] || []).concat(bps[line]);
       }
     }
   } else {
-    results = await client.getBreakpointPositions(source.actors[0]);
+    results = await client.getBreakpointPositions(generatedSource);
   }
 
-  const positions = convertToList(results, sourceId);
-  return mapLocations(positions, getState(), source, sourceMaps);
+  let positions = convertToList(results, generatedSource);
+  positions = await mapLocations(positions, thunkArgs);
+  positions = filterByUniqLocation(positions);
+  dispatch({ type: "ADD_BREAKPOINT_POSITIONS", sourceId, positions });
 }
 
 export function setBreakpointPositions(sourceId: string) {
   return async (thunkArgs: ThunkArgs) => {
-    const { dispatch, getState } = thunkArgs;
-
+    const { getState } = thunkArgs;
     if (hasBreakpointPositions(getState(), sourceId)) {
-      return;
+      return getBreakpointPositionsForSource(getState(), sourceId);
     }
 
     if (!requests.has(sourceId)) {
@@ -93,11 +113,7 @@ export function setBreakpointPositions(sourceId: string) {
         sourceId,
         (async () => {
           try {
-            dispatch({
-              type: "ADD_BREAKPOINT_POSITIONS",
-              sourceId,
-              positions: await getBreakpointPositions(sourceId, thunkArgs)
-            });
+            await _setBreakpointPositions(sourceId, thunkArgs);
           } finally {
             requests.delete(sourceId);
           }
@@ -106,5 +122,6 @@ export function setBreakpointPositions(sourceId: string) {
     }
 
     await requests.get(sourceId);
+    return getBreakpointPositionsForSource(getState(), sourceId);
   };
 }
