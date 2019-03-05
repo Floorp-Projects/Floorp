@@ -46,6 +46,7 @@
 #include "mozilla/UniquePtr.h"
 #include "nsIToolkitShellService.h"
 #include "mozilla/Telemetry.h"
+#include "nsProxyRelease.h"
 
 using namespace mozilla;
 
@@ -80,6 +81,52 @@ nsTArray<UniquePtr<KeyValue>> GetSectionStrings(nsINIParser* aParser,
   nsTArray<UniquePtr<KeyValue>> result;
   aParser->GetStrings(aSection, &GetStrings, &result);
   return result;
+}
+
+void RemoveProfileFiles(nsIToolkitProfile* aProfile, bool aInBackground) {
+  nsCOMPtr<nsIFile> rootDir;
+  aProfile->GetRootDir(getter_AddRefs(rootDir));
+  nsCOMPtr<nsIFile> localDir;
+  aProfile->GetLocalDir(getter_AddRefs(localDir));
+
+  // Just lock the directories, don't mark the profile as locked or the lock
+  // will attempt to release its reference to the profile on the background
+  // thread which will assert.
+  nsCOMPtr<nsIProfileLock> lock;
+  nsresult rv =
+      NS_LockProfilePath(rootDir, localDir, nullptr, getter_AddRefs(lock));
+  NS_ENSURE_SUCCESS_VOID(rv);
+
+  nsCOMPtr<nsIRunnable> runnable = NS_NewRunnableFunction(
+      "nsToolkitProfile::RemoveProfileFiles",
+      [rootDir, localDir, lock]() mutable {
+        bool equals;
+        nsresult rv = rootDir->Equals(localDir, &equals);
+        // The root dir might contain the temp dir, so remove
+        // the temp dir first.
+        if (NS_SUCCEEDED(rv) && !equals) {
+          localDir->Remove(true);
+        }
+
+        // Ideally we'd unlock after deleting but since the lock is a file
+        // in the profile we must unlock before removing.
+        lock->Unlock();
+        // nsIProfileLock is not threadsafe so release our reference to it on
+        // the main thread.
+        NS_ReleaseOnMainThreadSystemGroup(
+            "nsToolkitProfile::RemoveProfileFiles::Unlock", lock.forget());
+
+        rv = rootDir->Remove(true);
+        NS_ENSURE_SUCCESS_VOID(rv);
+      });
+
+  if (aInBackground) {
+    nsCOMPtr<nsIEventTarget> target =
+        do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID);
+    target->Dispatch(runnable, NS_DISPATCH_NORMAL);
+  } else {
+    runnable->Run();
+  }
 }
 
 nsToolkitProfile::nsToolkitProfile(const nsACString& aName, nsIFile* aRootDir,
@@ -178,38 +225,7 @@ nsresult nsToolkitProfile::RemoveInternal(bool aRemoveFiles,
   }
 
   if (aRemoveFiles) {
-    // Check if another instance is using this profile.
-    nsCOMPtr<nsIProfileLock> lock;
-    nsresult rv = Lock(nullptr, getter_AddRefs(lock));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsCOMPtr<nsIFile> rootDir(mRootDir);
-    nsCOMPtr<nsIFile> localDir(mLocalDir);
-
-    nsCOMPtr<nsIRunnable> runnable = NS_NewRunnableFunction(
-        "nsToolkitProfile::RemoveInternal", [rootDir, localDir, lock]() {
-          bool equals;
-          nsresult rv = rootDir->Equals(localDir, &equals);
-          // The root dir might contain the temp dir, so remove
-          // the temp dir first.
-          if (NS_SUCCEEDED(rv) && !equals) {
-            localDir->Remove(true);
-          }
-
-          // Ideally we'd unlock after deleting but since the lock is a file
-          // in the profile we must unlock before removing.
-          lock->Unlock();
-
-          rootDir->Remove(true);
-        });
-
-    if (aInBackground) {
-      nsCOMPtr<nsIEventTarget> target =
-          do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID);
-      target->Dispatch(runnable, NS_DISPATCH_NORMAL);
-    } else {
-      runnable->Run();
-    }
+    RemoveProfileFiles(this, aInBackground);
   }
 
   nsINIParser* db = &nsToolkitProfileService::gService->mProfileDB;
@@ -372,7 +388,13 @@ nsToolkitProfileService::nsToolkitProfileService()
 #endif
       mCreatedAlternateProfile(false),
       mStartupReason(NS_LITERAL_STRING("unknown")),
-      mMaybeLockProfile(false) {
+      mMaybeLockProfile(false),
+      mProfileDBExists(false),
+      mProfileDBFileSize(0),
+      mProfileDBModifiedTime(0),
+      mInstallDBExists(false),
+      mInstallDBFileSize(0),
+      mInstallDBModifiedTime(0) {
 #ifdef MOZ_DEV_EDITION
   mUseDevEditionProfile = true;
 #endif
@@ -405,7 +427,13 @@ void nsToolkitProfileService::CompleteStartup() {
 
     if (isDefaultApp) {
       mProfileDB.SetString(mInstallSection.get(), "Locked", "1");
-      Flush();
+
+      // There is a very small chance that this could fail if something else
+      // overwrote the profiles database since we started up, probably less than
+      // a second ago. There isn't really a sane response here, all the other
+      // profile changes are already flushed so whether we fail to flush here or
+      // force quit the app makes no difference.
+      NS_ENSURE_SUCCESS_VOID(Flush());
     }
   }
 }
@@ -483,20 +511,22 @@ bool nsToolkitProfileService::IsProfileForCurrentInstall(
  * default install or the profile has been explicitely chosen by some other
  * means then we won't use it.
  *
- * Returns true if we chose to make the profile the new dedicated default.
+ * aResult will be set to true if we chose to make the profile the new dedicated
+ * default.
  */
-bool nsToolkitProfileService::MaybeMakeDefaultDedicatedProfile(
-    nsIToolkitProfile* aProfile) {
+nsresult nsToolkitProfileService::MaybeMakeDefaultDedicatedProfile(
+    nsIToolkitProfile* aProfile, bool* aResult) {
   nsresult rv;
+  *aResult = false;
 
   // If the profile was last used by a different install then we won't use it.
   if (!IsProfileForCurrentInstall(aProfile)) {
-    return false;
+    return NS_OK;
   }
 
   nsCString descriptor;
   rv = GetProfileDescriptor(aProfile, descriptor, nullptr);
-  NS_ENSURE_SUCCESS(rv, false);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // Get a list of all the installs.
   nsTArray<nsCString> installs = GetKnownInstalls();
@@ -523,7 +553,7 @@ bool nsToolkitProfileService::MaybeMakeDefaultDedicatedProfile(
     nsCString isLocked;
     rv = mProfileDB.GetString(install.get(), "Locked", isLocked);
     if (NS_SUCCEEDED(rv) && isLocked.Equals("1")) {
-      return false;
+      return NS_OK;
     }
 
     inUseInstalls.AppendElement(install);
@@ -546,13 +576,92 @@ bool nsToolkitProfileService::MaybeMakeDefaultDedicatedProfile(
   mProfileDB.DeleteString(mInstallSection.get(), "Locked");
 
   // Persist the changes.
-  Flush();
+  rv = Flush();
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // Once XPCOM is available check if this is the default application and if so
   // lock the profile again.
   mMaybeLockProfile = true;
+  *aResult = true;
 
-  return true;
+  return NS_OK;
+}
+
+bool
+IsFileOutdated(nsIFile* aFile, bool aExists, PRTime aLastModified,
+               int64_t aLastSize) {
+  nsCOMPtr<nsIFile> file;
+  nsresult rv = aFile->Clone(getter_AddRefs(file));
+  if (NS_FAILED(rv)) {
+    return false;
+  }
+
+  bool exists;
+  rv = aFile->Exists(&exists);
+  if (NS_FAILED(rv) || exists != aExists) {
+    return true;
+  }
+
+  if (!exists) {
+    return false;
+  }
+
+  int64_t size;
+  rv = aFile->GetFileSize(&size);
+  if (NS_FAILED(rv) || size != aLastSize) {
+    return true;
+  }
+
+  PRTime time;
+  rv = aFile->GetLastModifiedTime(&time);
+  if (NS_FAILED(rv) || time != aLastModified) {
+    return true;
+  }
+
+  return false;
+}
+
+nsresult
+UpdateFileStats(nsIFile* aFile, bool* aExists, PRTime* aLastModified,
+                int64_t* aLastSize) {
+  nsCOMPtr<nsIFile> file;
+  nsresult rv = aFile->Clone(getter_AddRefs(file));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = file->Exists(aExists);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!(*aExists)) {
+    *aLastModified = 0;
+    *aLastSize = 0;
+    return NS_OK;
+  }
+
+  rv = file->GetFileSize(aLastSize);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = file->GetLastModifiedTime(aLastModified);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsToolkitProfileService::GetIsListOutdated(bool *aResult) {
+  if (IsFileOutdated(mProfileDBFile, mProfileDBExists, mProfileDBModifiedTime,
+                     mProfileDBFileSize)) {
+    *aResult = true;
+    return NS_OK;
+  }
+
+  if (IsFileOutdated(mInstallDBFile, mInstallDBExists, mInstallDBModifiedTime,
+                     mInstallDBFileSize)) {
+    *aResult = true;
+    return NS_OK;
+  }
+
+  *aResult = false;
+  return NS_OK;
 }
 
 struct ImportInstallsClosure {
@@ -604,11 +713,18 @@ nsresult nsToolkitProfileService::Init() {
   rv = mInstallDBFile->AppendNative(NS_LITERAL_CSTRING("installs.ini"));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  rv = UpdateFileStats(mInstallDBFile, &mInstallDBExists,
+                       &mInstallDBModifiedTime, &mInstallDBFileSize);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   nsAutoCString buffer;
 
-  bool exists;
-  rv = mProfileDBFile->IsFile(&exists);
-  if (NS_SUCCEEDED(rv) && exists) {
+  rv = UpdateFileStats(mProfileDBFile, &mProfileDBExists,
+                       &mProfileDBModifiedTime, &mProfileDBFileSize);
+  if (NS_SUCCEEDED(rv) && mProfileDBExists) {
+    mProfileDBFile->GetFileSize(&mProfileDBFileSize);
+    mProfileDBFile->GetLastModifiedTime(&mProfileDBModifiedTime);
+
     rv = mProfileDB.Init(mProfileDBFile);
     // Init does not fail on parsing errors, only on OOM/really unexpected
     // conditions.
@@ -627,9 +743,7 @@ nsresult nsToolkitProfileService::Init() {
       // any install data from the backup.
       nsINIParser installDB;
 
-      rv = mInstallDBFile->IsFile(&exists);
-      if (NS_SUCCEEDED(rv) && exists &&
-          NS_SUCCEEDED(installDB.Init(mInstallDBFile))) {
+      if (mInstallDBExists && NS_SUCCEEDED(installDB.Init(mInstallDBFile))) {
         // There is install data to import.
         ImportInstallsClosure closure = {&installDB, &mProfileDB};
         installDB.GetSections(&ImportInstalls, &closure);
@@ -1055,7 +1169,10 @@ nsresult nsToolkitProfileService::SelectStartupProfile(
         // profile is the previous default so we should either make it the
         // default profile for this install or push the user to a new profile.
 
-        if (MaybeMakeDefaultDedicatedProfile(profile)) {
+        bool result;
+        rv = MaybeMakeDefaultDedicatedProfile(profile, &result);
+        NS_ENSURE_SUCCESS(rv, rv);
+        if (result) {
           mStartupReason = NS_LITERAL_STRING("restart-claimed-default");
 
           mCurrent = profile;
@@ -1074,7 +1191,8 @@ nsresult nsToolkitProfileService::SelectStartupProfile(
             return rv;
           }
 
-          Flush();
+          rv = Flush();
+          NS_ENSURE_SUCCESS(rv, rv);
 
           mStartupReason = NS_LITERAL_STRING("restart-skipped-default");
           *aDidCreate = true;
@@ -1178,14 +1296,10 @@ nsresult nsToolkitProfileService::SelectStartupProfile(
                          getter_AddRefs(profile));
     }
     // Some pathological arguments can make it this far
-    if (NS_FAILED(rv)) {
+    if (NS_FAILED(rv) || NS_FAILED(Flush())) {
       PR_fprintf(PR_STDERR, "Error creating profile.\n");
-      return rv;
     }
-    rv = NS_ERROR_ABORT;
-    Flush();
-
-    return rv;
+    return NS_ERROR_ABORT;
   }
 
   // Check the -p command line argument. It either accepts a profile name and
@@ -1279,7 +1393,10 @@ nsresult nsToolkitProfileService::SelectStartupProfile(
         // generated by bug 1518591) or it is from an ancient version. We'll opt
         // to leave it for older versions in this case.
         if (exists) {
-          if (MaybeMakeDefaultDedicatedProfile(profile)) {
+          bool result;
+          rv = MaybeMakeDefaultDedicatedProfile(profile, &result);
+          NS_ENSURE_SUCCESS(rv, rv);
+          if (result) {
             mStartupReason = NS_LITERAL_STRING("firstrun-claimed-default");
 
             mCurrent = profile;
@@ -1312,7 +1429,8 @@ nsresult nsToolkitProfileService::SelectStartupProfile(
         SetNormalDefault(newProfile);
       }
 
-      Flush();
+      rv = Flush();
+      NS_ENSURE_SUCCESS(rv, rv);
 
       if (mCreatedAlternateProfile) {
         mStartupReason = NS_LITERAL_STRING("firstrun-skipped-default");
@@ -1373,12 +1491,11 @@ nsresult nsToolkitProfileService::CreateResetProfile(
                               newProfileName, getter_AddRefs(newProfile));
   if (NS_FAILED(rv)) return rv;
 
-  rv = Flush();
-  if (NS_FAILED(rv)) return rv;
-
   mCurrent = newProfile;
   newProfile.forget(aNewProfile);
 
+  // Don't flush the changes yet. That will happen once the migration
+  // successfully completes.
   return NS_OK;
 }
 
@@ -1415,6 +1532,8 @@ nsresult nsToolkitProfileService::ApplyResetProfile(
   nsresult rv = aOldProfile->GetName(name);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // Don't remove the old profile's files until after we've successfully flushed
+  // the profile changes to disk.
   rv = aOldProfile->Remove(false);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1423,7 +1542,15 @@ nsresult nsToolkitProfileService::ApplyResetProfile(
   rv = mCurrent->SetName(name);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return Flush();
+  rv = Flush();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Now that the profile changes are flushed, try to remove the old profile's
+  // files. If we fail the worst that will happen is that an orphan directory is
+  // left. Let this run in the background while we start up.
+  RemoveProfileFiles(aOldProfile, true);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1692,6 +1819,10 @@ nsToolkitProfileService::GetProfileCount(uint32_t* aResult) {
 
 NS_IMETHODIMP
 nsToolkitProfileService::Flush() {
+  if (GetIsListOutdated()) {
+    return NS_ERROR_DATABASE_CHANGED;
+  }
+
   nsresult rv;
 
   // If we aren't using dedicated profiles then nothing about the list of
@@ -1735,16 +1866,25 @@ nsToolkitProfileService::Flush() {
       }
 
       fclose(writeFile);
+
+      rv = UpdateFileStats(mInstallDBFile, &mInstallDBExists,
+                          &mInstallDBModifiedTime, &mInstallDBFileSize);
+      NS_ENSURE_SUCCESS(rv, rv);
     } else {
       rv = mInstallDBFile->Remove(false);
       if (NS_FAILED(rv) && rv != NS_ERROR_FILE_TARGET_DOES_NOT_EXIST &&
           rv != NS_ERROR_FILE_NOT_FOUND) {
         return rv;
       }
+      mInstallDBExists = false;
     }
   }
 
   rv = mProfileDB.WriteToFile(mProfileDBFile);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = UpdateFileStats(mProfileDBFile, &mProfileDBExists,
+                       &mProfileDBModifiedTime, &mProfileDBFileSize);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;

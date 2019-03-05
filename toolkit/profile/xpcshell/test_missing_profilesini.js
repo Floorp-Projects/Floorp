@@ -1,3 +1,6 @@
+/* Any copyright is dedicated to the Public Domain.
+   http://creativecommons.org/publicdomain/zero/1.0/ */
+
 /**
  * When profiles.ini is missing there isn't any point in restoring from any
  * installs.ini, the profiles it refers to are gone anyway.

@@ -16,6 +16,7 @@ var gDialogParams;
 var gProfileManagerBundle;
 var gBrandBundle;
 var gProfileService;
+var gNeedsFlush = false;
 
 function startup() {
   try {
@@ -57,7 +58,49 @@ function startup() {
   }
 }
 
-function acceptDialog() {
+function flush(cancelled) {
+  updateStartupPrefs();
+
+  gDialogParams.SetInt(1, document.getElementById("offlineState").checked ? 1 : 0);
+
+  if (gNeedsFlush) {
+    try {
+      gProfileService.flush();
+    } catch (e) {
+      let productName = gBrandBundle.getString("brandProductName");
+      let appName = gBrandBundle.getString("brandShortName");
+
+      let title = gProfileManagerBundle.getString("flushFailTitle");
+      let restartButton = gProfileManagerBundle.getFormattedString("flushFailRestartButton",
+                                                                  [appName]);
+      let exitButton = gProfileManagerBundle.getString("flushFailExitButton");
+
+      let message;
+      if (e.result == undefined) {
+        message = gProfileManagerBundle.getFormattedString("conflictMessage",
+                                                          [productName, appName]);
+      } else {
+        message = gProfileManagerBundle.getString("flushFailMessage");
+      }
+
+      const PS = Ci.nsIPromptService;
+      let result = Services.prompt.confirmEx(window, title, message,
+                                            (PS.BUTTON_POS_0 * PS.BUTTON_TITLE_IS_STRING) +
+                                            (PS.BUTTON_POS_1 * PS.BUTTON_TITLE_IS_STRING),
+                                            restartButton, exitButton, null, null, {});
+
+      gDialogParams.SetInt(0, result == 0 ? Ci.nsIToolkitProfileService.restart
+                                          : Ci.nsIToolkitProfileService.exit);
+      return;
+    }
+    gNeedsFlush = false;
+  }
+
+  gDialogParams.SetInt(0, cancelled ? Ci.nsIToolkitProfileService.exit
+                                    : Ci.nsIToolkitProfileService.launchWithProfile);
+}
+
+function acceptDialog(event) {
   var appName = gBrandBundle.getString("brandShortName");
 
   var profilesElement = document.getElementById("profiles");
@@ -74,30 +117,33 @@ function acceptDialog() {
   gDialogParams.objects.insertElementAt(selectedProfile.profile.rootDir, 0);
   gDialogParams.objects.insertElementAt(selectedProfile.profile.localDir, 1);
 
-  try {
-    gProfileService.defaultProfile = selectedProfile.profile;
-  } catch (e) {
-    // This can happen on dev-edition. We'll still restart with the selected
-    // profile based on the lock's directories.
+  if (gProfileService.defaultProfile != selectedProfile.profile) {
+    try {
+      gProfileService.defaultProfile = selectedProfile.profile;
+      gNeedsFlush = true;
+    } catch (e) {
+      // This can happen on dev-edition. We'll still restart with the selected
+      // profile based on the lock's directories.
+    }
   }
-  updateStartupPrefs();
 
-  gDialogParams.SetInt(0, 1);
-  /* Bug 257777 */
-  gDialogParams.SetInt(1, document.getElementById("offlineState").checked ? 1 : 0);
+  flush(false);
 
   return true;
 }
 
 function exitDialog() {
-  updateStartupPrefs();
+  flush(true);
 
   return true;
 }
 
 function updateStartupPrefs() {
   var autoSelectLastProfile = document.getElementById("autoSelectLastProfile");
-  gProfileService.startWithLastProfile = autoSelectLastProfile.checked;
+  if (gProfileService.startWithLastProfile != autoSelectLastProfile.checked) {
+    gProfileService.startWithLastProfile = autoSelectLastProfile.checked;
+    gNeedsFlush = true;
+  }
 }
 
 // handle key event on listboxes
@@ -141,6 +187,8 @@ function CreateProfile(aProfile) {
 
   profilesElement.ensureElementIsVisible(listitem);
   profilesElement.selectItem(listitem);
+
+  gNeedsFlush = true;
 }
 
 // rename the selected profile
@@ -169,6 +217,7 @@ function RenameProfile() {
 
     try {
       selectedProfile.name = newName;
+      gNeedsFlush = true;
     } catch (e) {
       var alTitle = gProfileManagerBundle.getString("profileNameInvalidTitle");
       var alMsg = gProfileManagerBundle.getFormattedString("profileNameInvalid", [newName]);
@@ -222,6 +271,7 @@ function ConfirmDelete() {
 
   try {
     selectedProfile.remove(deleteFiles);
+    gNeedsFlush = true;
   } catch (e) {
     let title = gProfileManagerBundle.getString("profileDeletionFailedTitle");
     let msg = gProfileManagerBundle.getString("profileDeletionFailed");

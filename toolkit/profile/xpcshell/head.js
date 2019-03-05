@@ -1,6 +1,5 @@
 /* Any copyright is dedicated to the Public Domain.
- * http://creativecommons.org/publicdomain/zero/1.0/
- */
+   http://creativecommons.org/publicdomain/zero/1.0/ */
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
@@ -100,7 +99,7 @@ function selectStartupProfile(args = [], isResetting = false) {
   if (profile.value) {
     Assert.ok(rootDir.value.equals(profile.value.rootDir), "Should have matched the root dir.");
     Assert.ok(localDir.value.equals(profile.value.localDir), "Should have matched the local dir.");
-    Assert.equal(service.currentProfile, profile.value, "Should have marked the profile as the current profile.");
+    Assert.ok(service.currentProfile === profile.value, "Should have marked the profile as the current profile.");
   } else {
     Assert.ok(!service.currentProfile, "Should be no current profile.");
   }
@@ -330,7 +329,6 @@ function readInstallsIni() {
   };
 
   if (!target.exists()) {
-    dump("Missing installs.ini\n");
     return installData;
   }
 

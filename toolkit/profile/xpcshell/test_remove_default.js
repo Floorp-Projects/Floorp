@@ -1,3 +1,6 @@
+/* Any copyright is dedicated to the Public Domain.
+   http://creativecommons.org/publicdomain/zero/1.0/ */
+
 /**
  * Tests that calling nsIToolkitProfile.remove on the default profile correctly
  * removes the profile.
