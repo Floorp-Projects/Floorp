@@ -243,8 +243,10 @@ void Navigator::GetUserAgent(nsAString& aUserAgent, CallerType aCallerType,
     }
   }
 
-  nsresult rv =
-      GetUserAgent(window, aCallerType == CallerType::System, aUserAgent);
+  nsCOMPtr<Document> doc = mWindow->GetExtantDoc();
+
+  nsresult rv = GetUserAgent(window, doc ? doc->NodePrincipal() : nullptr,
+                             aCallerType == CallerType::System, aUserAgent);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     aRv.Throw(rv);
   }
@@ -272,8 +274,10 @@ void Navigator::GetAppCodeName(nsAString& aAppCodeName, ErrorResult& aRv) {
 
 void Navigator::GetAppVersion(nsAString& aAppVersion, CallerType aCallerType,
                               ErrorResult& aRv) const {
+  nsCOMPtr<Document> doc = mWindow->GetExtantDoc();
+
   nsresult rv = GetAppVersion(
-      aAppVersion,
+      aAppVersion, doc ? doc->NodePrincipal() : nullptr,
       /* aUsePrefOverriddenValue = */ aCallerType != CallerType::System);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     aRv.Throw(rv);
@@ -281,7 +285,9 @@ void Navigator::GetAppVersion(nsAString& aAppVersion, CallerType aCallerType,
 }
 
 void Navigator::GetAppName(nsAString& aAppName, CallerType aCallerType) const {
-  AppName(aAppName,
+  nsCOMPtr<Document> doc = mWindow->GetExtantDoc();
+
+  AppName(aAppName, doc ? doc->NodePrincipal() : nullptr,
           /* aUsePrefOverriddenValue = */ aCallerType != CallerType::System);
 }
 
@@ -368,8 +374,10 @@ void Navigator::GetLanguages(nsTArray<nsString>& aLanguages) {
 
 void Navigator::GetPlatform(nsAString& aPlatform, CallerType aCallerType,
                             ErrorResult& aRv) const {
+  nsCOMPtr<Document> doc = mWindow->GetExtantDoc();
+
   nsresult rv = GetPlatform(
-      aPlatform,
+      aPlatform, doc ? doc->NodePrincipal() : nullptr,
       /* aUsePrefOverriddenValue = */ aCallerType != CallerType::System);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     aRv.Throw(rv);
@@ -1027,8 +1035,7 @@ BeaconStreamListener::OnStartRequest(nsIRequest* aRequest) {
 }
 
 NS_IMETHODIMP
-BeaconStreamListener::OnStopRequest(nsIRequest* aRequest,
-                                    nsresult aStatus) {
+BeaconStreamListener::OnStopRequest(nsIRequest* aRequest, nsresult aStatus) {
   return NS_OK;
 }
 
@@ -1524,13 +1531,14 @@ already_AddRefed<nsPIDOMWindowInner> Navigator::GetWindowFromGlobal(
 }
 
 nsresult Navigator::GetPlatform(nsAString& aPlatform,
+                                nsIPrincipal* aCallerPrincipal,
                                 bool aUsePrefOverriddenValue) {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (aUsePrefOverriddenValue) {
     // If fingerprinting resistance is on, we will spoof this value. See
     // nsRFPService.h for details about spoofed values.
-    if (nsContentUtils::ShouldResistFingerprinting()) {
+    if (nsContentUtils::ShouldResistFingerprinting(aCallerPrincipal)) {
       aPlatform.AssignLiteral(SPOOFED_PLATFORM);
       return NS_OK;
     }
@@ -1574,13 +1582,14 @@ nsresult Navigator::GetPlatform(nsAString& aPlatform,
 
 /* static */
 nsresult Navigator::GetAppVersion(nsAString& aAppVersion,
+                                  nsIPrincipal* aCallerPrincipal,
                                   bool aUsePrefOverriddenValue) {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (aUsePrefOverriddenValue) {
     // If fingerprinting resistance is on, we will spoof this value. See
     // nsRFPService.h for details about spoofed values.
-    if (nsContentUtils::ShouldResistFingerprinting()) {
+    if (nsContentUtils::ShouldResistFingerprinting(aCallerPrincipal)) {
       aAppVersion.AssignLiteral(SPOOFED_APPVERSION);
       return NS_OK;
     }
@@ -1617,13 +1626,14 @@ nsresult Navigator::GetAppVersion(nsAString& aAppVersion,
 }
 
 /* static */
-void Navigator::AppName(nsAString& aAppName, bool aUsePrefOverriddenValue) {
+void Navigator::AppName(nsAString& aAppName, nsIPrincipal* aCallerPrincipal,
+                        bool aUsePrefOverriddenValue) {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (aUsePrefOverriddenValue) {
     // If fingerprinting resistance is on, we will spoof this value. See
     // nsRFPService.h for details about spoofed values.
-    if (nsContentUtils::ShouldResistFingerprinting()) {
+    if (nsContentUtils::ShouldResistFingerprinting(aCallerPrincipal)) {
       aAppName.AssignLiteral(SPOOFED_APPNAME);
       return;
     }
@@ -1646,12 +1656,16 @@ void Navigator::ClearUserAgentCache() {
 }
 
 nsresult Navigator::GetUserAgent(nsPIDOMWindowInner* aWindow,
+                                 nsIPrincipal* aCallerPrincipal,
                                  bool aIsCallerChrome, nsAString& aUserAgent) {
   MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT_IF(aIsCallerChrome,
+                nsContentUtils::IsSystemPrincipal(aCallerPrincipal));
 
   // We will skip the override and pass to httpHandler to get spoofed userAgent
   // when 'privacy.resistFingerprinting' is true.
-  if (!aIsCallerChrome && !nsContentUtils::ShouldResistFingerprinting()) {
+  if (!aIsCallerChrome &&
+      !nsContentUtils::ShouldResistFingerprinting(aCallerPrincipal)) {
     nsAutoString override;
     nsresult rv =
         mozilla::Preferences::GetString("general.useragent.override", override);
@@ -1665,7 +1679,8 @@ nsresult Navigator::GetUserAgent(nsPIDOMWindowInner* aWindow,
   // When the caller is content and 'privacy.resistFingerprinting' is true,
   // return a spoofed userAgent which reveals the platform but not the
   // specific OS version, etc.
-  if (!aIsCallerChrome && nsContentUtils::ShouldResistFingerprinting()) {
+  if (!aIsCallerChrome &&
+      nsContentUtils::ShouldResistFingerprinting(aCallerPrincipal)) {
     nsAutoCString spoofedUA;
     nsRFPService::GetSpoofedUserAgent(spoofedUA, false);
     CopyASCIItoUTF16(spoofedUA, aUserAgent);
@@ -1691,7 +1706,8 @@ nsresult Navigator::GetUserAgent(nsPIDOMWindowInner* aWindow,
   // ignore the User-Agent header from the document channel when
   // 'privacy.resistFingerprinting' is true.
   if (!aWindow ||
-      (nsContentUtils::ShouldResistFingerprinting() && !aIsCallerChrome)) {
+      (nsContentUtils::ShouldResistFingerprinting(aCallerPrincipal) &&
+       !aIsCallerChrome)) {
     return NS_OK;
   }
 
