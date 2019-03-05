@@ -199,6 +199,7 @@ class ConsoleOutput extends Component {
     return (
       dom.div({
         className: "webconsole-output",
+        role: "main",
         onContextMenu: this.onContextMenu,
         ref: node => {
           this.outputNode = node;

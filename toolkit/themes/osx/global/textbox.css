@@ -14,8 +14,7 @@ textbox {
   color: -moz-FieldText;
 }
 
-html|*.textbox-input,
-html|*.textbox-textarea {
+html|*.textbox-input {
   -moz-appearance: none;
   margin: 0;
   border: none;
@@ -55,8 +54,7 @@ textbox.plain {
   border: none !important;
 }
 
-textbox.plain html|*.textbox-input,
-textbox.plain html|*.textbox-textarea {
+textbox.plain html|*.textbox-input {
   padding: 0px !important;
 }
 
@@ -77,7 +75,7 @@ textbox[type="search"] {
 .textbox-search-clear:not([disabled]) {
   cursor: default;
 }
- 
+
 .textbox-search-icons:not([selectedIndex="1"]) {
   visibility: hidden;
 }

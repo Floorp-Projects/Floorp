@@ -32,6 +32,9 @@
 
   <script type="application/javascript" src="chrome://global/content/contentAreaUtils.js"/>
   <script type="application/javascript" src="chrome://mozapps/content/update/updates.js"/>
+  <script type="application/javascript" src="chrome://global/content/globalOverlay.js"/>
+
+#include ../../../../toolkit/content/editMenuCommands.inc.xul
 
 #if defined(XP_MACOSX) && MOZ_BUILD_APP == browser
 #include ../../../../browser/base/content/macWindow.inc.xul
@@ -142,8 +145,7 @@
     <vbox class="update-content" flex="1">
       <label id="errorIntro">&error.label;</label>
       <separator/>
-      <textbox class="plain" readonly="true" id="errorReason" multiline="true"
-               rows="3"/>
+      <html:textarea class="plain" readonly="true" id="errorReason" rows="3"/>
       <separator/>
       <label id="errorManual">&errorManual.label;</label>
       <hbox>

@@ -75,6 +75,6 @@
   <label id="label1" value="Hello"/>
   <label id="label2">Hello</label>
 
-  <textbox id="tbox1" value="test" multiline="true"/>
+  <textbox id="tbox1" value="test"/>
   </vbox>
 </window>

@@ -87,7 +87,7 @@ struct CacheResponse
   HeadersGuardEnum headersGuard;
   CacheReadStreamOrVoid body;
   IPCChannelInfo channelInfo;
-  OptionalPrincipalInfo principalInfo;
+  PrincipalInfo? principalInfo;
   uint32_t paddingInfo;
   int64_t paddingSize;
 };

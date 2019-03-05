@@ -1,9 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const TEST_PATH = getRootDirectory(gTestPath)
-  .replace("chrome://mochitests/content", "http://example.com");
-const REDIRECT_FROM = `${TEST_PATH}redirect_error.sjs`;
+const REDIRECT_FROM = `${TEST_BASE_URL}redirect_error.sjs`;
 
 const REDIRECT_TO = "https://www.bank1.com/"; // Bad-cert host.
 

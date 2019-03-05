@@ -193,6 +193,42 @@ class UrlbarController {
   }
 
   /**
+   * Checks whether a keyboard event that would normally open the view should
+   * instead be handled natively by the input field.
+   * On certain platforms, the up and down keys can be used to move the caret,
+   * in which case we only want to open the view if the caret is at the
+   * start or end of the input.
+   *
+   * @param {KeyboardEvent} event
+   *   The DOM KeyboardEvent.
+   * @returns {boolean}
+   *   Returns true if the event should move the caret instead of opening the
+   *   view.
+   */
+  keyEventMovesCaret(event) {
+    if (this.view.isOpen) {
+      return false;
+    }
+    if (AppConstants.platform != "macosx" &&
+        AppConstants.platform != "linux") {
+      return false;
+    }
+    let isArrowUp = event.keyCode == KeyEvent.DOM_VK_UP;
+    let isArrowDown = event.keyCode == KeyEvent.DOM_VK_DOWN;
+    if (!isArrowUp && !isArrowDown) {
+      return false;
+    }
+    let start = this.input.selectionStart;
+    let end = this.input.selectionEnd;
+    if (end != start ||
+        (isArrowUp && start > 0) ||
+        (isArrowDown && end < this.input.textValue.length)) {
+      return true;
+    }
+    return false;
+  }
+
+  /**
    * Receives keyboard events from the input and handles those that should
    * navigate within the view or pick the currently selected item.
    *
@@ -261,6 +297,9 @@ class UrlbarController {
             { reverse: event.keyCode == KeyEvent.DOM_VK_UP ||
                        event.keyCode == KeyEvent.DOM_VK_PAGE_UP });
         } else {
+          if (this.keyEventMovesCaret(event)) {
+            break;
+          }
           this.input.startQuery();
         }
         event.preventDefault();

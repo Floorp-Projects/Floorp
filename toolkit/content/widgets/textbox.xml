@@ -128,8 +128,7 @@
         <body>
           // According to https://html.spec.whatwg.org/#do-not-apply,
           // setSelectionRange() is only available on a limited set of input types.
-          if (this.inputField.type == "text" ||
-              this.inputField.tagName == "html:textarea") {
+          if (this.inputField.type == "text") {
             this.inputField.setSelectionRange( aSelectionStart, aSelectionEnd );
           }
         </body>
@@ -395,14 +394,5 @@
         ]]>
       </handler>
     </handlers>
-  </binding>
-
-  <binding id="textarea" extends="chrome://global/content/bindings/textbox.xml#textbox">
-    <content>
-      <xul:moz-input-box anonid="moz-input-box" flex="1" xbl:inherits="context,spellcheck">
-        <html:textarea class="textbox-textarea" anonid="input"
-                       xbl:inherits="xbl:text=value,disabled,tabindex,rows,cols,readonly,wrap,placeholder,mozactionhint,spellcheck"><children/></html:textarea>
-      </xul:moz-input-box>
-    </content>
   </binding>
 </bindings>

@@ -35,7 +35,10 @@ function refreshUI() {
         let lock = profile.lock({});
         lock.unlock();
       } catch (e) {
-        isInUse = true;
+        if (e.result != Cr.NS_ERROR_FILE_TARGET_DOES_NOT_EXIST &&
+            e.result != Cr.NS_ERROR_FILE_NOT_DIRECTORY) {
+          isInUse = true;
+        }
       }
     }
     display({
@@ -58,12 +61,6 @@ function refreshUI() {
 
   let restartNormalModeButton = document.getElementById("restart-button");
   restartNormalModeButton.onclick = function() { restart(false); };
-}
-
-function openDirectory(dir) {
-  let nsLocalFile = Components.Constructor("@mozilla.org/file/local;1",
-                                           "nsIFile", "initWithPath");
-  new nsLocalFile(dir).reveal();
 }
 
 function display(profileData) {
@@ -107,16 +104,19 @@ function display(profileData) {
     tr.appendChild(td);
 
     if (dir) {
-      td.appendChild(document.createTextNode(value));
-      let button = document.createElement("button");
-      button.setAttribute("class", "opendir");
-      document.l10n.setAttributes(button, "profiles-opendir");
+      td.appendChild(document.createTextNode(value.path));
 
-      td.appendChild(button);
+      if (value.exists()) {
+        let button = document.createElement("button");
+        button.setAttribute("class", "opendir");
+        document.l10n.setAttributes(button, "profiles-opendir");
 
-      button.addEventListener("click", function(e) {
-        openDirectory(value);
-      });
+        td.appendChild(button);
+
+        button.addEventListener("click", function(e) {
+          value.reveal();
+        });
+      }
     } else {
       document.l10n.setAttributes(td, value);
     }
@@ -125,10 +125,10 @@ function display(profileData) {
   createItem("profiles-is-default",
     profileData.isDefault ? "profiles-yes" : "profiles-no");
 
-  createItem("profiles-rootdir", profileData.profile.rootDir.path, true);
+  createItem("profiles-rootdir", profileData.profile.rootDir, true);
 
   if (profileData.profile.localDir.path != profileData.profile.rootDir.path) {
-    createItem("profiles-localdir", profileData.profile.localDir.path, true);
+    createItem("profiles-localdir", profileData.profile.localDir, true);
   }
 
   let renameButton = document.createElement("button");

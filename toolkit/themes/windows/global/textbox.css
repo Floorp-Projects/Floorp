@@ -21,8 +21,7 @@ textbox {
   color: -moz-FieldText;
 }
 
-html|*.textbox-input,
-html|*.textbox-textarea {
+html|*.textbox-input {
   -moz-appearance: none;
   margin: 0;
   border: none;
@@ -33,9 +32,6 @@ html|*.textbox-textarea {
   text-shadow: inherit;
   box-sizing: border-box;
   -moz-box-flex: 1;
-}
-
-html|*.textbox-input {
   text-align: inherit;
 }
 
@@ -74,8 +70,7 @@ textbox.plain {
   border: none !important;
 }
 
-textbox.plain html|*.textbox-input,
-textbox.plain html|*.textbox-textarea {
+textbox.plain html|*.textbox-input {
   padding: 0px !important;
 }
 
@@ -120,4 +115,3 @@ textbox:not([searchbutton]) > moz-input-box > .textbox-search-sign {
 toolbarpaletteitem > toolbaritem > textbox > moz-input-box > html|*.textbox-input {
   visibility: hidden;
 }
-

@@ -330,7 +330,7 @@
           </vbox>
           <vbox class="identity-popup-breakageReportView-collection-section">
             <label>&contentBlocking.breakageReportView.collection.comments.label;</label>
-            <textbox multiline="true" id="identity-popup-breakageReportView-collection-comments"/>
+            <html:textarea id="identity-popup-breakageReportView-collection-comments"/>
           </vbox>
         </vbox>
         <vbox id="identity-popup-breakageReportView-footer"

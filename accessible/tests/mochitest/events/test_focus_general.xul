@@ -32,8 +32,6 @@
 
       gQueue.push(new synthFocus("textbox",
                                  new focusChecker(getNode("textbox").inputField)));
-      gQueue.push(new synthFocus("textbox_multiline",
-                                 new focusChecker(getNode("textbox_multiline").inputField)));
       gQueue.push(new synthFocusOnFrame("editabledoc"));
       gQueue.push(new synthFocus("radioclothes",
                                  new focusChecker("radiosweater")));
@@ -88,7 +86,6 @@
 
     <vbox flex="1">
       <textbox id="textbox" value="hello"/>
-      <textbox id="textbox_multiline" multiline="true" value="hello"/>
       <iframe id="editabledoc" src="focus.html"/>
       <radiogroup id="radioclothes">
         <radio id="radiosweater" label="radiosweater"/>

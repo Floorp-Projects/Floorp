@@ -213,7 +213,7 @@ linted. In the case of ``flake8``, it might look like:
     import subprocess
     from distutils.spawn import find_executable
 
-    def setup(root):
+    def setup(root, **lintargs):
         if not find_executable('flake8'):
             subprocess.call(['pip', 'install', 'flake8'])
 

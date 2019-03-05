@@ -333,10 +333,6 @@ function interrupt(thread: string): Promise<*> {
   return lookupThreadClient(thread).interrupt();
 }
 
-function eventListeners(): Promise<*> {
-  return threadClient.eventListeners();
-}
-
 function setEventListenerBreakpoints(eventTypes: EventListenerBreakpoints) {
   // TODO: Figure out what sendpoint we want to hit
 }
@@ -439,7 +435,6 @@ const clientCommands = {
   createObjectClient,
   releaseActor,
   interrupt,
-  eventListeners,
   pauseGrip,
   resume,
   stepIn,

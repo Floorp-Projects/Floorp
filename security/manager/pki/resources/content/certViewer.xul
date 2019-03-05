@@ -22,6 +22,7 @@
 </linkset>
 
 <script type="application/javascript" src="chrome://pippki/content/pippki.js"/>
+<script type="application/javascript" src="chrome://global/content/globalOverlay.js"/>
 <script type="application/javascript"
         src="chrome://pippki/content/certViewer.js"/>
 <html:style>
@@ -39,6 +40,8 @@
     font-weight: normal;
   }
 </html:style>
+
+#include ../../../../../toolkit/content/editMenuCommands.inc.xul
 
   <tabbox flex="1">
     <tabs>
@@ -113,8 +116,8 @@
           <tr>
             <th scope="row" data-l10n-id="certmgr-cert-detail-sha-256-fingerprint"></th>
             <td>
-              <xul:textbox id="sha256fingerprint" class="plain" readonly="true" multiline="true"
-                       style="height: 6ex; width: 48ch; font-family: monospace;"/>
+              <textarea id="sha256fingerprint" class="plain" readonly="true"
+                        style="height: 6ex; width: 48ch; font-family: monospace; background: none;"/>
             </td>
           </tr>
           <tr>
@@ -142,9 +145,8 @@
         </tree>
 
         <label class="header" data-l10n-id="certmgr-fields" control="certDumpVal"/>
-        <textbox id="certDumpVal" multiline="true" flex="1"
-                 readonly="true" style="height: 11em; font-family: -moz-fixed;"/>
-
+        <html:textarea id="certDumpVal" flex="1" readonly="true"
+                       style="height: 11em; font-family: -moz-fixed;"/>
         <separator class="thin"/>
         <hbox>
           <button id="export_cert" class="normal" data-l10n-id="certmgr-export"

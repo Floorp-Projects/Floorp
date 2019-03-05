@@ -8,6 +8,7 @@
 import datetime
 import glob
 import os
+import posixpath
 import re
 import signal
 import subprocess
@@ -415,6 +416,70 @@ class AndroidMixin(object):
                 self.info("Killing pid %d." % pid)
                 os.kill(pid, signal.SIGKILL)
 
+    def delete_ANRs(self):
+        remote_dir = self.device.stack_trace_dir
+        try:
+            if not self.device.is_dir(remote_dir, root=True):
+                self.mkdir(remote_dir, root=True)
+                self.chmod(remote_dir, root=True)
+                self.info("%s created" % remote_dir)
+                return
+            for trace_file in self.device.ls(remote_dir, root=True):
+                trace_path = posixpath.join(remote_dir, trace_file)
+                self.device.chmod(trace_path, root=True)
+                self.device.rm(trace_path, root=True)
+                self.info("%s deleted" % trace_path)
+        except Exception as e:
+            self.info("failed to delete %s: %s %s" % (remote_dir, type(e).__name__, str(e)))
+
+    def check_for_ANRs(self):
+        """
+        Copy ANR (stack trace) files from device to upload directory.
+        """
+        dirs = self.query_abs_dirs()
+        remote_dir = self.device.stack_trace_dir
+        try:
+            if not self.device.is_dir(remote_dir):
+                self.info("%s not found; ANR check skipped" % remote_dir)
+                return
+            self.device.chmod(remote_dir, recursive=True, root=True)
+            self.device.pull(remote_dir, dirs['abs_blob_upload_dir'])
+            self.delete_ANRs()
+        except Exception as e:
+            self.info("failed to pull %s: %s %s" % (remote_dir, type(e).__name__, str(e)))
+
+    def delete_tombstones(self):
+        remote_dir = "/data/tombstones"
+        try:
+            if not self.device.is_dir(remote_dir, root=True):
+                self.mkdir(remote_dir, root=True)
+                self.chmod(remote_dir, root=True)
+                self.info("%s created" % remote_dir)
+                return
+            for trace_file in self.device.ls(remote_dir, root=True):
+                trace_path = posixpath.join(remote_dir, trace_file)
+                self.device.chmod(trace_path, root=True)
+                self.device.rm(trace_path, root=True)
+                self.info("%s deleted" % trace_path)
+        except Exception as e:
+            self.info("failed to delete %s: %s %s" % (remote_dir, type(e).__name__, str(e)))
+
+    def check_for_tombstones(self):
+        """
+        Copy tombstone files from device to upload directory.
+        """
+        dirs = self.query_abs_dirs()
+        remote_dir = "/data/tombstones"
+        try:
+            if not self.device.is_dir(remote_dir):
+                self.info("%s not found; tombstone check skipped" % remote_dir)
+                return
+            self.device.chmod(remote_dir, recursive=True, root=True)
+            self.device.pull(remote_dir, dirs['abs_blob_upload_dir'])
+            self.delete_tombstones()
+        except Exception as e:
+            self.info("failed to pull %s: %s %s" % (remote_dir, type(e).__name__, str(e)))
+
     # Script actions
 
     def setup_avds(self):
@@ -500,6 +565,8 @@ class AndroidMixin(object):
         self.mkdir_p(self.query_abs_dirs()['abs_blob_upload_dir'])
         self.dump_perf_info()
         self.logcat_start()
+        self.delete_ANRs()
+        self.delete_tombstones()
         # Get a post-boot device process list for diagnostics
         self.info(self.shell_output('ps'))
 
@@ -532,6 +599,8 @@ class AndroidMixin(object):
 
         for t in self.timers:
             t.cancel()
+        self.check_for_ANRs()
+        self.check_for_tombstones()
         self.logcat_stop()
         if self.is_emulator:
             self.kill_processes(self.config["emulator_process_name"])
