@@ -354,22 +354,20 @@ already_AddRefed<TabChild> TabChild::Create(ContentChild* aManager,
                                             const TabId& aTabId,
                                             const TabId& aSameTabGroupAs,
                                             const TabContext& aContext,
-                                            BrowsingContext* aBrowsingContext,
                                             uint32_t aChromeFlags) {
   RefPtr<TabChild> groupChild = FindTabChild(aSameTabGroupAs);
   dom::TabGroup* group = groupChild ? groupChild->TabGroup() : nullptr;
-  RefPtr<TabChild> iframe = new TabChild(aManager, aTabId, group, aContext,
-                                         aBrowsingContext, aChromeFlags);
+  RefPtr<TabChild> iframe =
+      new TabChild(aManager, aTabId, group, aContext, aChromeFlags);
   return iframe.forget();
 }
 
 TabChild::TabChild(ContentChild* aManager, const TabId& aTabId,
                    dom::TabGroup* aTabGroup, const TabContext& aContext,
-                   BrowsingContext* aBrowsingContext, uint32_t aChromeFlags)
+                   uint32_t aChromeFlags)
     : TabContext(aContext),
       mTabGroup(aTabGroup),
       mManager(aManager),
-      mBrowsingContext(aBrowsingContext),
       mChromeFlags(aChromeFlags),
       mMaxTouchPoints(0),
       mLayersId{0},
@@ -523,8 +521,9 @@ nsresult TabChild::Init(mozIDOMWindowProxy* aParent) {
                                   nullptr  // HandleWidgetEvent
   );
 
-  mWebBrowser = nsWebBrowser::Create(this, mPuppetWidget, OriginAttributesRef(),
-                                     mBrowsingContext);
+  mWebBrowser =
+      nsWebBrowser::Create(this, mPuppetWidget, OriginAttributesRef(), aParent,
+                           nsIDocShellTreeItem::typeContentWrapper);
   nsIWebBrowser* webBrowser = mWebBrowser;
 
   mWebNav = do_QueryInterface(webBrowser);
@@ -553,6 +552,11 @@ nsresult TabChild::Init(mozIDOMWindowProxy* aParent) {
   loadContext->SetPrivateBrowsing(OriginAttributesRef().mPrivateBrowsingId > 0);
   loadContext->SetRemoteTabs(mChromeFlags &
                              nsIWebBrowserChrome::CHROME_REMOTE_WINDOW);
+
+  // Send our browsing context to the parent process.
+  RefPtr<BrowsingContext> browsingContext =
+      nsDocShell::Cast(docShell)->GetBrowsingContext();
+  SendRootBrowsingContext(browsingContext);
 
   // Few lines before, baseWindow->Create() will end up creating a new
   // window root in nsGlobalWindow::SetDocShell.
@@ -3180,8 +3184,7 @@ bool TabChild::DeallocPWindowGlobalChild(PWindowGlobalChild* aActor) {
 }
 
 PRemoteFrameChild* TabChild::AllocPRemoteFrameChild(const nsString&,
-                                                    const nsString&,
-                                                    BrowsingContext*) {
+                                                    const nsString&) {
   MOZ_CRASH("We should never be manually allocating PRemoteFrameChild actors");
   return nullptr;
 }

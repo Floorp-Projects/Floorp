@@ -912,15 +912,9 @@ nsresult ContentChild::ProvideWindowCommon(
     tabGroup = new TabGroup();
   }
 
-  RefPtr<BrowsingContext> openerBC =
-      aParent ? nsPIDOMWindowOuter::From(aParent)->GetBrowsingContext()
-              : nullptr;
-  RefPtr<BrowsingContext> browsingContext = BrowsingContext::Create(
-      nullptr, openerBC, aName, BrowsingContext::Type::Content);
-
   TabContext newTabContext = aTabOpener ? *aTabOpener : TabContext();
-  RefPtr<TabChild> newChild = new TabChild(this, tabId, tabGroup, newTabContext,
-                                           browsingContext, aChromeFlags);
+  RefPtr<TabChild> newChild =
+      new TabChild(this, tabId, tabGroup, newTabContext, aChromeFlags);
 
   if (aTabOpener) {
     MOZ_ASSERT(ipcContext->type() == IPCTabContext::TPopupIPCTabContext);
@@ -934,7 +928,7 @@ nsresult ContentChild::ProvideWindowCommon(
   Unused << SendPBrowserConstructor(
       // We release this ref in DeallocPBrowserChild
       RefPtr<TabChild>(newChild).forget().take(), tabId, TabId(0), *ipcContext,
-      aChromeFlags, GetID(), browsingContext, IsForBrowser());
+      aChromeFlags, GetID(), IsForBrowser());
 
   // Now that |newChild| has had its IPC link established, call |Init| to set it
   // up.
@@ -1703,11 +1697,12 @@ bool ContentChild::DeallocPJavaScriptChild(PJavaScriptChild* aChild) {
   return true;
 }
 
-PBrowserChild* ContentChild::AllocPBrowserChild(
-    const TabId& aTabId, const TabId& aSameTabGroupAs,
-    const IPCTabContext& aContext, const uint32_t& aChromeFlags,
-    const ContentParentId& aCpID, BrowsingContext* aBrowsingContext,
-    const bool& aIsForBrowser) {
+PBrowserChild* ContentChild::AllocPBrowserChild(const TabId& aTabId,
+                                                const TabId& aSameTabGroupAs,
+                                                const IPCTabContext& aContext,
+                                                const uint32_t& aChromeFlags,
+                                                const ContentParentId& aCpID,
+                                                const bool& aIsForBrowser) {
   // We'll happily accept any kind of IPCTabContext here; we don't need to
   // check that it's of a certain type for security purposes, because we
   // believe whatever the parent process tells us.
@@ -1721,9 +1716,9 @@ PBrowserChild* ContentChild::AllocPBrowserChild(
     MOZ_CRASH("Invalid TabContext received from the parent process.");
   }
 
-  RefPtr<TabChild> child = TabChild::Create(
-      static_cast<ContentChild*>(this), aTabId, aSameTabGroupAs,
-      tc.GetTabContext(), aBrowsingContext, aChromeFlags);
+  RefPtr<TabChild> child =
+      TabChild::Create(static_cast<ContentChild*>(this), aTabId,
+                       aSameTabGroupAs, tc.GetTabContext(), aChromeFlags);
 
   // The ref here is released in DeallocPBrowserChild.
   return child.forget().take();
@@ -1732,22 +1727,20 @@ PBrowserChild* ContentChild::AllocPBrowserChild(
 bool ContentChild::SendPBrowserConstructor(
     PBrowserChild* aActor, const TabId& aTabId, const TabId& aSameTabGroupAs,
     const IPCTabContext& aContext, const uint32_t& aChromeFlags,
-    const ContentParentId& aCpID, BrowsingContext* aBrowsingContext,
-    const bool& aIsForBrowser) {
+    const ContentParentId& aCpID, const bool& aIsForBrowser) {
   if (IsShuttingDown()) {
     return false;
   }
 
   return PContentChild::SendPBrowserConstructor(aActor, aTabId, aSameTabGroupAs,
                                                 aContext, aChromeFlags, aCpID,
-                                                aBrowsingContext, aIsForBrowser);
+                                                aIsForBrowser);
 }
 
 mozilla::ipc::IPCResult ContentChild::RecvPBrowserConstructor(
     PBrowserChild* aActor, const TabId& aTabId, const TabId& aSameTabGroupAs,
     const IPCTabContext& aContext, const uint32_t& aChromeFlags,
-    const ContentParentId& aCpID, BrowsingContext* aBrowsingContext,
-    const bool& aIsForBrowser) {
+    const ContentParentId& aCpID, const bool& aIsForBrowser) {
   MOZ_ASSERT(!IsShuttingDown());
 
   static bool hasRunOnce = false;
@@ -3684,35 +3677,6 @@ PContentChild::Result ContentChild::OnMessageReceived(const Message& aMsg,
   }
 
   return result;
-}
-
-mozilla::ipc::IPCResult ContentChild::RecvAttachBrowsingContext(
-    BrowsingContext* aParent, BrowsingContext* aOpener,
-    BrowsingContextId aChildId, const nsString& aName) {
-  RefPtr<BrowsingContext> child = BrowsingContext::Get(aChildId);
-  MOZ_RELEASE_ASSERT(!child || child->IsCached());
-
-  if (!child) {
-    child = BrowsingContext::CreateFromIPC(aParent, aOpener, aName,
-                                           (uint64_t)aChildId, nullptr);
-  }
-
-  child->Attach(/* aFromIPC */ true);
-
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult ContentChild::RecvDetachBrowsingContext(
-    BrowsingContext* aContext, bool aMoveToBFCache) {
-  MOZ_RELEASE_ASSERT(aContext);
-
-  if (aMoveToBFCache) {
-    aContext->CacheChildren(/* aFromIPC */ true);
-  } else {
-    aContext->Detach(/* aFromIPC */ true);
-  }
-
-  return IPC_OK();
 }
 
 mozilla::ipc::IPCResult ContentChild::RecvWindowClose(BrowsingContext* aContext,

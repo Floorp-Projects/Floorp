@@ -12,7 +12,6 @@
 
 namespace mozilla {
 namespace dom {
-class BrowsingContext;
 
 /**
  * Child side for a remote frame.
@@ -28,14 +27,9 @@ class RemoteFrameChild : public PRemoteFrameChild {
 
   mozilla::layers::LayersId GetLayersId() { return mLayersId; }
 
-  BrowsingContext* GetBrowsingContext() { return mBrowsingContext; }
-
-  // XXX(nika): We should have a load context here. (bug 1532664)
-  nsILoadContext* GetLoadContext() { return nullptr; }
-
-  static already_AddRefed<RemoteFrameChild> Create(
-      nsFrameLoader* aFrameLoader, const TabContext& aContext,
-      const nsString& aRemoteType, BrowsingContext* aBrowsingContext);
+  static already_AddRefed<RemoteFrameChild> Create(nsFrameLoader* aFrameLoader,
+                                                   const TabContext& aContext,
+                                                   const nsString& aRemoteType);
 
   void UpdateDimensions(const nsIntRect& aRect,
                         const mozilla::ScreenIntSize& aSize);
@@ -49,14 +43,12 @@ class RemoteFrameChild : public PRemoteFrameChild {
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
  private:
-  explicit RemoteFrameChild(nsFrameLoader* aFrameLoader,
-                            BrowsingContext* aBrowsingContext);
+  explicit RemoteFrameChild(nsFrameLoader* aFrameLoader);
   ~RemoteFrameChild();
 
   mozilla::layers::LayersId mLayersId;
   bool mIPCOpen;
   RefPtr<nsFrameLoader> mFrameLoader;
-  RefPtr<BrowsingContext> mBrowsingContext;
 };
 
 }  // namespace dom

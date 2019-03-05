@@ -144,9 +144,7 @@ NS_IMPL_ISUPPORTS(TabParent, nsITabParent, nsIAuthPromptProvider,
                   nsISupportsWeakReference)
 
 TabParent::TabParent(ContentParent* aManager, const TabId& aTabId,
-                     const TabContext& aContext,
-                     CanonicalBrowsingContext* aBrowsingContext,
-                     uint32_t aChromeFlags)
+                     const TabContext& aContext, uint32_t aChromeFlags)
     : TabContext(aContext),
       mFrameElement(nullptr),
       mContentCache(*this),
@@ -164,7 +162,6 @@ TabParent::TabParent(ContentParent* aManager, const TabId& aTabId,
       mIsDestroyed(false),
       mChromeFlags(aChromeFlags),
       mDragValid(false),
-      mBrowsingContext(aBrowsingContext),
       mTabId(aTabId),
       mCreatingWindow(false),
       mCursor(eCursorInvalid),
@@ -1001,17 +998,15 @@ bool TabParent::DeallocPWindowGlobalParent(PWindowGlobalParent* aActor) {
   return true;
 }
 
-IPCResult TabParent::RecvPRemoteFrameConstructor(
-    PRemoteFrameParent* aActor, const nsString& aName,
-    const nsString& aRemoteType, BrowsingContext* aBrowsingContext) {
-  static_cast<RemoteFrameParent*>(aActor)->Init(
-      aName, aRemoteType, CanonicalBrowsingContext::Cast(aBrowsingContext));
+IPCResult TabParent::RecvPRemoteFrameConstructor(PRemoteFrameParent* aActor,
+                                                 const nsString& aName,
+                                                 const nsString& aRemoteType) {
+  static_cast<RemoteFrameParent*>(aActor)->Init(aName, aRemoteType);
   return IPC_OK();
 }
 
 PRemoteFrameParent* TabParent::AllocPRemoteFrameParent(
-    const nsString& aName, const nsString& aRemoteType,
-    BrowsingContext* aBrowsingContext) {
+    const nsString& aName, const nsString& aRemoteType) {
   // Reference freed in DeallocPRemoteFrameParent.
   return do_AddRef(new RemoteFrameParent()).take();
 }
@@ -3474,6 +3469,14 @@ mozilla::ipc::IPCResult TabParent::RecvGetSystemFont(nsCString* aFontName) {
   if (widget) {
     widget->GetSystemFont(*aFontName);
   }
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult TabParent::RecvRootBrowsingContext(
+    BrowsingContext* aBrowsingContext) {
+  MOZ_ASSERT(!mBrowsingContext, "May only set browsing context once!");
+  mBrowsingContext = CanonicalBrowsingContext::Cast(aBrowsingContext);
+  MOZ_ASSERT(mBrowsingContext, "Invalid ID!");
   return IPC_OK();
 }
 

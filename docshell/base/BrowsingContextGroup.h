@@ -43,9 +43,6 @@ class BrowsingContextGroup final : public nsWrapperCache {
   void Subscribe(ContentParent* aOriginProcess);
   void Unsubscribe(ContentParent* aOriginProcess);
 
-  // Force the given ContentParent to subscribe to our BrowsingContextGroup.
-  void EnsureSubscribed(ContentParent* aProcess);
-
   ContentParents::Iterator ContentParentsIter() { return mSubscribers.Iter(); }
 
   // Get a reference to the list of toplevel contexts in this
