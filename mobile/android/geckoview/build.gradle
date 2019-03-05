@@ -1,5 +1,21 @@
 buildDir "${topobjdir}/gradle/build/mobile/android/geckoview"
 
+buildscript {
+    repositories {
+        gradle.mozconfig.substs.GRADLE_MAVEN_REPOSITORIES.each { repository ->
+            maven {
+                url repository
+            }
+        }
+    }
+
+    // Used in fat_aar.gradle.  See
+    // http://gradle.1045684.n5.nabble.com/Issue-with-imports-in-external-build-scripts-tp3322487p3322906.html.
+    dependencies {
+        classpath 'commons-codec:commons-codec:1.11'
+    }
+}
+
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 
@@ -516,4 +532,16 @@ apiLint {
     changelogFileName = 'src/main/java/org/mozilla/geckoview/doc-files/CHANGELOG.md'
     skipClassesRegex = ['^org.mozilla.geckoview.BuildConfig$']
     lintFilters = ['GV']
+}
+
+// Plugin is always applied so that its dependencies are downloaded, even if the
+// functionality isn't used.
+apply plugin: 'de.undercouch.download'
+
+if (mozconfig.substs.MOZ_ANDROID_FAT_AAR_TARGETS) {
+    // This is frustrating, but here we are: frustrated.  See
+    // https://stackoverflow.com/a/37060550.
+    ext.DigestUtils = org.apache.commons.codec.digest.DigestUtils
+
+    apply from: "${topsrcdir}/mobile/android/geckoview/fat_aar.gradle"
 }

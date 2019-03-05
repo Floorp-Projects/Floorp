@@ -174,3 +174,18 @@ def check_android_gcm(android_gcm,
         if not google_play_services:
             die('You must specify --with-google-play-services when'
                 ' building with MOZ_ANDROID_GCM=1')
+
+# Automation will set this to ("arch=https://...", ...) via the TC environment.
+option(env='MOZ_ANDROID_FAT_AAR_TARGETS',
+       nargs='*',
+       help='Comma-separated arch=URL pairs mapping Android architectures '
+            'to URLs to maven.target.zip archives.')
+
+@depends('MOZ_ANDROID_FAT_AAR_TARGETS')
+def fat_aar_targets(values):
+    for value in values:
+        if not value.count('=') == 1:
+            die('MOZ_ANDROID_FAT_AAR_TARGETS entries must be of the form "arch=URL": "{}"'.format(value))
+    return values
+
+set_config('MOZ_ANDROID_FAT_AAR_TARGETS', fat_aar_targets)
