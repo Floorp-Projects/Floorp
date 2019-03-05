@@ -1,3 +1,6 @@
+/* Any copyright is dedicated to the Public Domain.
+   http://creativecommons.org/publicdomain/zero/1.0/ */
+
 /*
  * Tests that an old-style default profile not previously used by this build gets
  * used in a snap environment.
