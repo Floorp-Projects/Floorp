@@ -167,7 +167,7 @@
     <!-- Button in the current session menu. Archives the session when pressed -->
     <string name="current_session_archive">Archive</string>
     <!-- Button in the current session menu. Opens the share menu when pressed -->
-    <string name="current_session_send_and_share">Share</string>
+    <string name="current_session_send_and_share">Send and Share</string>
     <!-- Content description (not visible, for screen readers etc.): Title icon for current session menu -->
     <string name="current_session_image">Current session image</string>
 
