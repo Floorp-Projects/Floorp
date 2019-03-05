@@ -7004,6 +7004,11 @@ void CodeGenerator::visitComputeThis(LComputeThis* lir) {
   masm.bind(ool->rejoin());
 }
 
+typedef bool (*ImplicitThisFn)(JSContext*, HandleObject, HandlePropertyName,
+                               MutableHandleValue);
+static const VMFunction ImplicitThisInfo = FunctionInfo<ImplicitThisFn>(
+    ImplicitThisOperation, "ImplicitThisOperation");
+
 void CodeGenerator::visitImplicitThis(LImplicitThis* lir) {
   pushArg(ImmGCPtr(lir->mir()->name()));
   pushArg(ToRegister(lir->env()));

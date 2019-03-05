@@ -1845,8 +1845,8 @@ bool GetPrototypeOf(JSContext* cx, HandleObject target,
 
 typedef bool (*SetObjectElementFn)(JSContext*, HandleObject, HandleValue,
                                    HandleValue, HandleValue, bool);
-const VMFunction SetObjectElementInfo =
-    FunctionInfo<SetObjectElementFn>(js::SetObjectElement, "SetObjectElement");
+const VMFunction SetObjectElementInfo = FunctionInfo<SetObjectElementFn>(
+    js::SetObjectElementWithReceiver, "SetObjectElementWithReceiver");
 
 typedef JSString* (*ConcatStringsFn)(JSContext*, HandleString, HandleString);
 const VMFunction ConcatStringsInfo =
@@ -1987,13 +1987,12 @@ const VMFunction GetSparseElementHelperInfo =
     FunctionInfo<GetSparseElementHelperFn>(GetSparseElementHelper,
                                            "getSparseElementHelper");
 
-static bool DoToNumber(JSContext* cx, HandleValue arg, MutableHandleValue ret) {
+bool DoToNumber(JSContext* cx, HandleValue arg, MutableHandleValue ret) {
   ret.set(arg);
   return ToNumber(cx, ret);
 }
 
-static bool DoToNumeric(JSContext* cx, HandleValue arg,
-                        MutableHandleValue ret) {
+bool DoToNumeric(JSContext* cx, HandleValue arg, MutableHandleValue ret) {
   ret.set(arg);
   return ToNumeric(cx, ret);
 }
