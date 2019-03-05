@@ -152,7 +152,7 @@ void GamepadManager::AddListener(nsGlobalWindowInner* aWindow) {
   }
 
   if (!mEnabled || mShuttingDown ||
-      nsContentUtils::ShouldResistFingerprinting()) {
+      nsContentUtils::ShouldResistFingerprinting(aWindow->GetExtantDoc())) {
     return;
   }
 
@@ -289,12 +289,6 @@ void GamepadManager::FireAxisMoveEvent(EventTarget* aTarget, Gamepad* aGamepad,
 }
 
 void GamepadManager::NewConnectionEvent(uint32_t aIndex, bool aConnected) {
-  // Do not fire gamepadconnected and gamepaddisconnected events when
-  // privacy.resistFingerprinting is true.
-  if (nsContentUtils::ShouldResistFingerprinting()) {
-    return;
-  }
-
   if (mShuttingDown) {
     return;
   }
@@ -310,6 +304,13 @@ void GamepadManager::NewConnectionEvent(uint32_t aIndex, bool aConnected) {
 
   if (aConnected) {
     for (uint32_t i = 0; i < listeners.Length(); i++) {
+      // Do not fire gamepadconnected and gamepaddisconnected events when
+      // privacy.resistFingerprinting is true.
+      if (nsContentUtils::ShouldResistFingerprinting(
+              listeners[i]->GetExtantDoc())) {
+        continue;
+      }
+
       // Only send events to non-background windows
       if (!listeners[i]->AsInner()->IsCurrentInnerWindow() ||
           listeners[i]->GetOuterWindow()->IsBackground()) {
@@ -336,6 +337,13 @@ void GamepadManager::NewConnectionEvent(uint32_t aIndex, bool aConnected) {
     for (uint32_t i = 0; i < listeners.Length(); i++) {
       // Even background windows get these events, so we don't have to
       // deal with the hassle of syncing the state of removed gamepads.
+
+      // Do not fire gamepadconnected and gamepaddisconnected events when
+      // privacy.resistFingerprinting is true.
+      if (nsContentUtils::ShouldResistFingerprinting(
+              listeners[i]->GetExtantDoc())) {
+        continue;
+      }
 
       if (WindowHasSeenGamepad(listeners[i], aIndex)) {
         RefPtr<Gamepad> listenerGamepad = listeners[i]->GetGamepad(aIndex);
@@ -365,9 +373,11 @@ void GamepadManager::FireConnectionEvent(EventTarget* aTarget,
   aTarget->DispatchEvent(*event);
 }
 
-void GamepadManager::SyncGamepadState(uint32_t aIndex, Gamepad* aGamepad) {
+void GamepadManager::SyncGamepadState(uint32_t aIndex,
+                                      nsGlobalWindowInner* aWindow,
+                                      Gamepad* aGamepad) {
   if (mShuttingDown || !mEnabled ||
-      nsContentUtils::ShouldResistFingerprinting()) {
+      nsContentUtils::ShouldResistFingerprinting(aWindow->GetExtantDoc())) {
     return;
   }
 
