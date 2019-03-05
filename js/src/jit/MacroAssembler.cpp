@@ -3427,31 +3427,33 @@ void MacroAssembler::wasmInterruptCheck(Register tls,
   bind(&ok);
 }
 
-void MacroAssembler::wasmReserveStackChecked(uint32_t amount,
-                                             wasm::BytecodeOffset trapOffset) {
-  // If the frame is large, don't bump sp until after the stack limit check so
-  // that the trap handler isn't called with a wild sp.
-
+std::pair<CodeOffset, uint32_t>
+MacroAssembler::wasmReserveStackChecked(uint32_t amount,
+                                        wasm::BytecodeOffset trapOffset) {
   if (amount > MAX_UNCHECKED_LEAF_FRAME_SIZE) {
+    // The frame is large.  Don't bump sp until after the stack limit check so
+    // that the trap handler isn't called with a wild sp.
     Label ok;
     Register scratch = ABINonArgReg0;
     moveStackPtrTo(scratch);
     subPtr(Address(WasmTlsReg, offsetof(wasm::TlsData, stackLimit)), scratch);
     branchPtr(Assembler::GreaterThan, scratch, Imm32(amount), &ok);
     wasmTrap(wasm::Trap::StackOverflow, trapOffset);
+    CodeOffset trapInsnOffset = CodeOffset(currentOffset());
     bind(&ok);
+    reserveStack(amount);
+    return std::pair<CodeOffset, uint32_t>(trapInsnOffset, 0);
   }
 
   reserveStack(amount);
-
-  if (amount <= MAX_UNCHECKED_LEAF_FRAME_SIZE) {
-    Label ok;
-    branchStackPtrRhs(Assembler::Below,
-                      Address(WasmTlsReg, offsetof(wasm::TlsData, stackLimit)),
-                      &ok);
-    wasmTrap(wasm::Trap::StackOverflow, trapOffset);
-    bind(&ok);
-  }
+  Label ok;
+  branchStackPtrRhs(Assembler::Below,
+                    Address(WasmTlsReg, offsetof(wasm::TlsData, stackLimit)),
+                    &ok);
+  wasmTrap(wasm::Trap::StackOverflow, trapOffset);
+  CodeOffset trapInsnOffset = CodeOffset(currentOffset());
+  bind(&ok);
+  return std::pair<CodeOffset,uint32_t>(trapInsnOffset, amount);
 }
 
 CodeOffset MacroAssembler::wasmCallImport(const wasm::CallSiteDesc& desc,

@@ -24,9 +24,11 @@
 
 #include "wasm/WasmBaselineCompile.h"
 #include "wasm/WasmBuiltins.h"
+#include "wasm/WasmGC.h"
 #include "wasm/WasmGenerator.h"
 #include "wasm/WasmOpIter.h"
 #include "wasm/WasmSignalHandlers.h"
+#include "wasm/WasmStubs.h"
 #include "wasm/WasmValidate.h"
 
 using namespace js;
@@ -1063,7 +1065,8 @@ class FunctionCompiler {
     CallSiteDesc desc(lineOrBytecode, CallSiteDesc::Func);
     MIRType ret = ToMIRType(funcType.ret());
     auto callee = CalleeDesc::function(funcIndex);
-    auto* ins = MWasmCall::New(alloc(), desc, callee, call.regArgs_, ret);
+    auto* ins = MWasmCall::New(alloc(), desc, callee, call.regArgs_, ret,
+                               StackArgAreaSizeUnaligned(funcType.args()));
     if (!ins) {
       return false;
     }
@@ -1107,7 +1110,9 @@ class FunctionCompiler {
 
     CallSiteDesc desc(lineOrBytecode, CallSiteDesc::Dynamic);
     auto* ins = MWasmCall::New(alloc(), desc, callee, call.regArgs_,
-                               ToMIRType(funcType.ret()), index);
+                               ToMIRType(funcType.ret()),
+                               StackArgAreaSizeUnaligned(funcType.args()),
+                               index);
     if (!ins) {
       return false;
     }
@@ -1128,7 +1133,8 @@ class FunctionCompiler {
     CallSiteDesc desc(lineOrBytecode, CallSiteDesc::Dynamic);
     auto callee = CalleeDesc::import(globalDataOffset);
     auto* ins = MWasmCall::New(alloc(), desc, callee, call.regArgs_,
-                               ToMIRType(funcType.ret()));
+                               ToMIRType(funcType.ret()),
+                               StackArgAreaSizeUnaligned(funcType.args()));
     if (!ins) {
       return false;
     }
@@ -1149,7 +1155,8 @@ class FunctionCompiler {
     CallSiteDesc desc(lineOrBytecode, CallSiteDesc::Symbolic);
     auto callee = CalleeDesc::builtin(builtin.identity);
     auto* ins =
-        MWasmCall::New(alloc(), desc, callee, call.regArgs_, builtin.retType);
+        MWasmCall::New(alloc(), desc, callee, call.regArgs_, builtin.retType,
+                       StackArgAreaSizeUnaligned(builtin));
     if (!ins) {
       return false;
     }
@@ -1171,7 +1178,7 @@ class FunctionCompiler {
     CallSiteDesc desc(lineOrBytecode, CallSiteDesc::Symbolic);
     auto* ins = MWasmCall::NewBuiltinInstanceMethodCall(
         alloc(), desc, builtin.identity, call.instanceArg_, call.regArgs_,
-        builtin.retType);
+        builtin.retType, StackArgAreaSizeUnaligned(builtin));
     if (!ins) {
       return false;
     }
@@ -4157,13 +4164,25 @@ bool wasm::IonCompileFunctions(const ModuleEnvironment& env, LifoAlloc& lifo,
     return false;
   }
 
+  // Create a description of the stack layout created by GenerateTrapExit().
+  MachineState trapExitLayout;
+  size_t trapExitLayoutNumWords;
+  GenerateTrapExitMachineState(&trapExitLayout, &trapExitLayoutNumWords);
+
   for (const FuncCompileInput& func : inputs) {
+    JitSpew(JitSpew_Codegen, "# ========================================");
+    JitSpew(JitSpew_Codegen, "# ==");
+    JitSpew(JitSpew_Codegen,
+            "# wasm::IonCompileFunctions: starting on function index %d",
+            (int)func.index);
+
     Decoder d(func.begin, func.end, func.lineOrBytecode, error);
 
     // Build the local types vector.
 
+    const ValTypeVector& argTys = env.funcTypes[func.index]->args();
     ValTypeVector locals;
-    if (!locals.appendAll(env.funcTypes[func.index]->args())) {
+    if (!locals.appendAll(argTys)) {
       return false;
     }
     if (!DecodeLocalEntries(d, env.types, env.gcTypesEnabled(), &locals)) {
@@ -4217,7 +4236,9 @@ bool wasm::IonCompileFunctions(const ModuleEnvironment& env, LifoAlloc& lifo,
 
       BytecodeOffset prologueTrapOffset(func.lineOrBytecode);
       FuncOffsets offsets;
-      if (!codegen.generateWasm(funcTypeId, prologueTrapOffset, &offsets)) {
+      if (!codegen.generateWasm(funcTypeId, prologueTrapOffset, argTys,
+                                trapExitLayout, trapExitLayoutNumWords,
+                                &offsets, &code->stackMaps)) {
         return false;
       }
 
@@ -4226,6 +4247,12 @@ bool wasm::IonCompileFunctions(const ModuleEnvironment& env, LifoAlloc& lifo,
         return false;
       }
     }
+
+    JitSpew(JitSpew_Codegen,
+            "# wasm::IonCompileFunctions: completed function index %d",
+            (int)func.index);
+    JitSpew(JitSpew_Codegen, "# ==");
+    JitSpew(JitSpew_Codegen, "# ========================================");
   }
 
   masm.finish();

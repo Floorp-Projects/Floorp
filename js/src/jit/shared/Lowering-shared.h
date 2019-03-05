@@ -323,6 +323,9 @@ class LIRGeneratorShared {
   void assignSafepoint(LInstruction* ins, MInstruction* mir,
                        BailoutKind kind = Bailout_DuringVMCall);
 
+  // Marks this instruction as needing a wasm safepoint.
+  void assignWasmSafepoint(LInstruction* ins, MInstruction* mir);
+
   void lowerConstantDouble(double d, MInstruction* mir) {
     define(new (alloc()) LDouble(d), mir);
   }
