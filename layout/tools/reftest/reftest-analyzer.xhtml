@@ -225,6 +225,7 @@ function test_parsing() {
     { "name": "empty log",
       "log": "",
       "expected": { "pass": 0, "unexpected": 0, "random": 0, "skip": 0 },
+      "expected_images": 0,
     },
     { "name": "android log",
       "log": `[task 2018-12-28T10:36:45.718Z] 10:36:45     INFO -  REFTEST TEST-START | a == b
@@ -241,6 +242,7 @@ function test_parsing() {
 [task 2018-12-28T10:37:16.982Z] 10:37:16     INFO -  REFTEST TEST-PASS | a2 == b2 | image comparison, max difference: 0, number of differing pixels: 0
 [task 2018-12-28T10:37:16.982Z] 10:37:16     INFO -  REFTEST TEST-END | a2 == b2`,
       "expected": { "pass": 1, "unexpected": 1, "random": 0, "skip": 0 },
+      "expected_images": 2,
     },
     { "name": "local reftest run (Linux)",
       "log": `REFTEST TEST-START | file:///a == file:///b
@@ -249,6 +251,7 @@ REFTEST TEST-LOAD | file:///b | 73 / 86 (84%)
 REFTEST TEST-PASS | file:///a == file:///b | image comparison, max difference: 0, number of differing pixels: 0
 REFTEST TEST-END | file:///a == file:///b`,
       "expected": { "pass": 1, "unexpected": 0, "random": 0, "skip": 0 },
+      "expected_images": 0,
     },
     { "name": "wpt reftests (Linux automation)",
       "log": `16:50:43     INFO - TEST-START | /a
@@ -264,6 +267,7 @@ REFTEST TEST-END | file:///a == file:///b`,
 16:50:44     INFO - REFTEST   IMAGE 2 (REFERENCE): data:image/png;base64,
 16:50:44     INFO - TEST-INFO took 840ms`,
       "expected": { "pass": 1, "unexpected": 1, "random": 0, "skip": 0 },
+      "expected_images": 2,
     },
     { "name": "windows log",
       "log": `12:17:14     INFO - REFTEST TEST-START | a == b
@@ -285,6 +289,7 @@ REFTEST TEST-END | file:///a == file:///b`,
 12:01:09     INFO - REFTEST TEST-KNOWN-FAIL | a3 == b3 | image comparison, max difference: 255, number of differing pixels: 9654
 12:01:09     INFO - REFTEST TEST-END | a3 == b3`,
       "expected": { "pass": 1, "unexpected": 1, "random": 1, "skip": 0 },
+      "expected_images": 2,
     },
     { "name": "webrender wrench log (windows)",
       "log": `[task 2018-12-29T04:29:48.800Z] REFTEST a == b
@@ -294,6 +299,7 @@ REFTEST TEST-END | file:///a == file:///b`,
 [task 2018-12-29T04:29:49.053Z] REFTEST   IMAGE 2 (REFERENCE): data:image/png;
 [task 2018-12-29T04:29:49.053Z] REFTEST TEST-END | a2 == b2`,
       "expected": { "pass": 0, "unexpected": 1, "random": 0, "skip": 0 },
+      "expected_images": 2,
     },
     { "name": "wpt reftests (Linux local; Bug 1530008)",
       "log": `SUITE-START | Running 1 tests
@@ -304,6 +310,29 @@ REFTEST   IMAGE 2 (REFERENCE): data:image/png;base64,
 TEST-INFO took 425ms
 SUITE-END | took 2s`,
       "expected": { "pass": 0, "unexpected": 1, "random": 0, "skip": 0 },
+      "expected_images": 2,
+    },
+    { "name": "local reftest run with timestamps (Linux; Bug 1167712)",
+      "log": ` 0:05.21 REFTEST TEST-START | a
+ 0:05.21 REFTEST REFTEST TEST-LOAD | a | 0 / 1 (0%)
+ 0:05.27 REFTEST REFTEST TEST-LOAD | b | 0 / 1 (0%)
+ 0:05.66 REFTEST TEST-UNEXPECTED-FAIL | a | image comparison (==), max difference: 106, number of differing pixels: 800
+ 0:05.67 REFTEST REFTEST   IMAGE 1 (TEST): data:image/png;base64,
+ 0:05.67 REFTEST REFTEST   IMAGE 2 (REFERENCE): data:image/png;base64,
+ 0:05.73 REFTEST REFTEST TEST-END | a`,
+      "expected": { "pass": 0, "unexpected": 1, "random": 0, "skip": 0 },
+      "expected_images": 2,
+    },
+    { "name": "reftest run with whitespace compressed (Treeherder; Bug 1084322)",
+      "log": ` REFTEST TEST-START | a
+REFTEST TEST-LOAD | a | 0 / 1 (0%)
+REFTEST TEST-LOAD | b | 0 / 1 (0%)
+REFTEST TEST-UNEXPECTED-FAIL | a | image comparison (==), max difference: 106, number of differing pixels: 800
+REFTEST REFTEST IMAGE 1 (TEST): data:image/png;base64,
+REFTEST REFTEST IMAGE 2 (REFERENCE): data:image/png;base64,
+REFTEST REFTEST TEST-END | a`,
+      "expected": { "pass": 0, "unexpected": 1, "random": 0, "skip": 0 },
+      "expected_images": 2,
     },
   ];
 
@@ -313,6 +342,7 @@ SUITE-END | took 2s`,
   // actually just check the results of parsing.
   build_viewer = function() {
     var expected = testcases[current_test].expected;
+    var expected_images = testcases[current_test].expected_images;
     for (var result of gTestItems) {
       for (let type in expected) { // type is "pass", "unexpected" etc.
         if (result[type]) {
@@ -327,6 +357,16 @@ SUITE-END | took 2s`,
         failed = true;
       }
     }
+
+    let total_images = 0;
+    for (var result of gTestItems) {
+      total_images += result.images.length;
+    }
+    if (total_images !== expected_images) {
+      console.log(`Failure: for testcase ${testcases[current_test].name} got ${total_images} images, expected ${expected_images}`);
+      failed = true;
+    }
+
     if (!failed) {
       console.log(`Success for testcase ${testcases[current_test].name}`);
     }
@@ -352,7 +392,7 @@ function process_log(contents) {
     // Ignore duplicated output in logcat.
     if (line.match(/I\/Gecko.*?REFTEST/))
       continue;
-    var match = line.match(/^.*?(?:REFTEST\s+)(.*)$/);
+    var match = line.match(/^.*?(?:REFTEST\s+)+(.*)$/);
     if (!match) {
       // WPT reftests don't always have the "REFTEST" prefix but do have
       // mozharness prefixing. Trying to match both prefixes optionally with a
@@ -381,7 +421,7 @@ function process_log(contents) {
         });
       continue;
     }
-    match = line.match(/IMAGE([^:]*): (data:.*)$/);
+    match = line.match(/^IMAGE([^:]*): (data:.*)$/);
     if (match) {
       var item = gTestItems[gTestItems.length - 1];
       item.images.push(match[2]);
