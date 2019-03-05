@@ -103,6 +103,7 @@ class ScriptPreloader : public nsIObserver,
 
  private:
   Result<Ok, nsresult> InitCacheInternal(JS::HandleObject scope = nullptr);
+  JSScript* GetCachedScriptInternal(JSContext* cx, const nsCString& name);
 
  public:
   void Trace(JSTracer* trc);
