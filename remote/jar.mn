@@ -11,7 +11,7 @@ remote.jar:
   content/Handler.jsm (Handler.jsm)
   content/Log.jsm (Log.jsm)
   content/Observer.jsm (Observer.jsm)
-  content/Prefs.jsm (Prefs.jsm)
+  content/RecommendedPreferences.jsm (RecommendedPreferences.jsm)
   content/Protocol.jsm (Protocol.jsm)
   content/Session.jsm (Session.jsm)
   content/Sync.jsm (Sync.jsm)
