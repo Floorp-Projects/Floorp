@@ -751,6 +751,7 @@ with modules["XPCONNECT"]:
 with modules["PROFILE"]:
     errors["NS_ERROR_LAUNCHED_CHILD_PROCESS"] = FAILURE(200)
     errors["NS_ERROR_SHOW_PROFILE_MANAGER"] = FAILURE(201)
+    errors["NS_ERROR_DATABASE_CHANGED"] = FAILURE(202)
 
 
 # =======================================================================

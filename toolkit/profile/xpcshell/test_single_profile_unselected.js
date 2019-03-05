@@ -1,3 +1,6 @@
+/* Any copyright is dedicated to the Public Domain.
+   http://creativecommons.org/publicdomain/zero/1.0/ */
+
 /*
  * Previous versions of Firefox automatically used a single profile even if it
  * wasn't marked as the default. So we should try to upgrade that one if it was
