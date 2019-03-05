@@ -7,7 +7,7 @@
 /**
  * Currently supported HAR version.
  */
-const HAR_VERSION = "1.1";
+const HAR_VERSION = "1.2";
 
 function buildHarLog(appInfo) {
   return {
