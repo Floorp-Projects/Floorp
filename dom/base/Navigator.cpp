@@ -381,7 +381,7 @@ void Navigator::GetOscpu(nsAString& aOSCPU, CallerType aCallerType,
   if (aCallerType != CallerType::System) {
     // If fingerprinting resistance is on, we will spoof this value. See
     // nsRFPService.h for details about spoofed values.
-    if (nsContentUtils::ShouldResistFingerprinting()) {
+    if (nsContentUtils::ShouldResistFingerprinting(GetDocShell())) {
       aOSCPU.AssignLiteral(SPOOFED_OSCPU);
       return;
     }
@@ -517,7 +517,7 @@ void Navigator::GetBuildID(nsAString& aBuildID, CallerType aCallerType,
   if (aCallerType != CallerType::System) {
     // If fingerprinting resistance is on, we will spoof this value. See
     // nsRFPService.h for details about spoofed values.
-    if (nsContentUtils::ShouldResistFingerprinting()) {
+    if (nsContentUtils::ShouldResistFingerprinting(GetDocShell())) {
       aBuildID.AssignLiteral(LEGACY_BUILD_ID);
       return;
     }
