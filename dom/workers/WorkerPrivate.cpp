@@ -1032,8 +1032,8 @@ class WorkerPrivate::MemoryReporter final : public nsIMemoryReporter {
 
       WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
       MOZ_ASSERT(workerPrivate);
-      MOZ_ALWAYS_SUCCEEDS(
-          workerPrivate->DispatchToMainThread(mFinishCollectRunnable.forget()));
+      MOZ_ALWAYS_SUCCEEDS(workerPrivate->DispatchToMainThreadForMessaging(
+          mFinishCollectRunnable.forget()));
     }
   };
 
@@ -1337,9 +1337,9 @@ nsresult WorkerPrivate::Dispatch(already_AddRefed<WorkerRunnable> aRunnable,
   return DispatchLockHeld(std::move(aRunnable), aSyncLoopTarget, lock);
 }
 
-nsresult WorkerPrivate::DispatchLockHeld(already_AddRefed<WorkerRunnable> aRunnable,
-                                         nsIEventTarget* aSyncLoopTarget,
-                                         const MutexAutoLock& aProofOfLock) {
+nsresult WorkerPrivate::DispatchLockHeld(
+    already_AddRefed<WorkerRunnable> aRunnable, nsIEventTarget* aSyncLoopTarget,
+    const MutexAutoLock& aProofOfLock) {
   // May be called on any thread!
   RefPtr<WorkerRunnable> runnable(aRunnable);
 
@@ -1378,8 +1378,7 @@ nsresult WorkerPrivate::DispatchLockHeld(already_AddRefed<WorkerRunnable> aRunna
     // they should not be delivered to a frozen worker. But frozen workers
     // aren't drawing from the thread's main event queue anyway, only from
     // mControlQueue.
-    rv = mThread->DispatchAnyThread(WorkerThreadFriendKey(),
-                                    runnable.forget());
+    rv = mThread->DispatchAnyThread(WorkerThreadFriendKey(), runnable.forget());
   }
 
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -2125,6 +2124,8 @@ WorkerPrivate::WorkerPrivate(WorkerPrivate* aParent,
   // that ThrottledEventQueue can only be created on the main thread at the
   // moment.
   if (aParent) {
+    mMainThreadEventTargetForMessaging =
+        aParent->mMainThreadEventTargetForMessaging;
     mMainThreadEventTarget = aParent->mMainThreadEventTarget;
     mMainThreadDebuggeeEventTarget = aParent->mMainThreadDebuggeeEventTarget;
     return;
@@ -2141,7 +2142,14 @@ WorkerPrivate::WorkerPrivate(WorkerPrivate* aParent,
 
   // Throttle events to the main thread using a ThrottledEventQueue specific to
   // this tree of worker threads.
-  mMainThreadEventTarget = ThrottledEventQueue::Create(target);
+  mMainThreadEventTargetForMessaging = ThrottledEventQueue::Create(target);
+  if (StaticPrefs::dom_worker_use_medium_high_event_queue()) {
+    mMainThreadEventTarget =
+        ThrottledEventQueue::Create(GetMainThreadSerialEventTarget(),
+                                    nsIRunnablePriority::PRIORITY_MEDIUMHIGH);
+  } else {
+    mMainThreadEventTarget = mMainThreadEventTargetForMessaging;
+  }
   mMainThreadDebuggeeEventTarget = ThrottledEventQueue::Create(target);
   if (IsParentWindowPaused() || IsFrozen()) {
     MOZ_ALWAYS_SUCCEEDS(mMainThreadDebuggeeEventTarget->SetIsPaused(true));
@@ -2254,9 +2262,7 @@ already_AddRefed<WorkerPrivate> WorkerPrivate::Constructor(
   return worker.forget();
 }
 
-nsresult
-WorkerPrivate::SetIsDebuggerReady(bool aReady)
-{
+nsresult WorkerPrivate::SetIsDebuggerReady(bool aReady) {
   AssertIsOnParentThread();
   MutexAutoLock lock(mMutex);
 
@@ -2750,7 +2756,7 @@ void WorkerPrivate::DoRunLoop(JSContext* aCx) {
     // If the worker thread is spamming the main thread faster than it can
     // process the work, then pause the worker thread until the main thread
     // catches up.
-    size_t queuedEvents = mMainThreadEventTarget->Length() +
+    size_t queuedEvents = mMainThreadEventTargetForMessaging->Length() +
                           mMainThreadDebuggeeEventTarget->Length();
     if (queuedEvents > 5000) {
       // Note, postMessage uses mMainThreadDebuggeeEventTarget!
@@ -2781,6 +2787,22 @@ void WorkerPrivate::OnProcessNextEvent() {
 void WorkerPrivate::AfterProcessNextEvent() {
   AssertIsOnWorkerThread();
   MOZ_ASSERT(CycleCollectedJSContext::Get()->RecursionDepth());
+}
+
+nsIEventTarget* WorkerPrivate::MainThreadEventTargetForMessaging() {
+  return mMainThreadEventTargetForMessaging;
+}
+
+nsresult WorkerPrivate::DispatchToMainThreadForMessaging(nsIRunnable* aRunnable,
+                                                         uint32_t aFlags) {
+  nsCOMPtr<nsIRunnable> r = aRunnable;
+  return DispatchToMainThreadForMessaging(r.forget(), aFlags);
+}
+
+nsresult WorkerPrivate::DispatchToMainThreadForMessaging(
+    already_AddRefed<nsIRunnable> aRunnable, uint32_t aFlags) {
+  return mMainThreadEventTargetForMessaging->Dispatch(std::move(aRunnable),
+                                                      aFlags);
 }
 
 nsIEventTarget* WorkerPrivate::MainThreadEventTarget() {
@@ -3148,9 +3170,12 @@ void WorkerPrivate::ScheduleDeletion(WorkerRanOrNot aRanOrNot) {
       NS_WARNING("Failed to dispatch runnable!");
     }
   } else {
+    // Note, this uses the lower priority DispatchToMainThreadForMessaging for
+    // dispatching TopLevelWorkerFinishedRunnable to the main thread so that
+    // other relevant runnables are guaranteed to run before it.
     RefPtr<TopLevelWorkerFinishedRunnable> runnable =
         new TopLevelWorkerFinishedRunnable(this);
-    if (NS_FAILED(DispatchToMainThread(runnable.forget()))) {
+    if (NS_FAILED(DispatchToMainThreadForMessaging(runnable.forget()))) {
       NS_WARNING("Failed to dispatch runnable!");
     }
   }

@@ -62,18 +62,28 @@ class ThrottledEventQueue::Inner final : public nsISupports {
   // The runnable which is dispatched to the underlying base target.  Since
   // we only execute one event at a time we just re-use a single instance
   // of this class while there are events left in the queue.
-  class Executor final : public Runnable {
+  class Executor final : public Runnable, public nsIRunnablePriority {
     // The Inner whose runnables we execute. mInner->mExecutor points
     // to this executor, forming a reference loop.
     RefPtr<Inner> mInner;
+
+    ~Executor() = default;
 
    public:
     explicit Executor(Inner* aInner)
         : Runnable("ThrottledEventQueue::Inner::Executor"), mInner(aInner) {}
 
+    NS_DECL_ISUPPORTS_INHERITED
+
     NS_IMETHODIMP
     Run() override {
       mInner->ExecuteRunnable();
+      return NS_OK;
+    }
+
+    NS_IMETHODIMP
+    GetPriority(uint32_t* aPriority) override {
+      *aPriority = mInner->mPriority;
       return NS_OK;
     }
 
@@ -103,14 +113,17 @@ class ThrottledEventQueue::Inner final : public nsISupports {
   // Used from any thread; protected by mMutex.
   nsCOMPtr<nsIRunnable> mExecutor;
 
+  const uint32_t mPriority;
+
   // True if this queue is currently paused.
   // Used from any thread; protected by mMutex.
   bool mIsPaused;
 
-  explicit Inner(nsISerialEventTarget* aBaseTarget)
+  explicit Inner(nsISerialEventTarget* aBaseTarget, uint32_t aPriority)
       : mMutex("ThrottledEventQueue"),
         mIdleCondVar(mMutex, "ThrottledEventQueue:Idle"),
         mBaseTarget(aBaseTarget),
+        mPriority(aPriority),
         mIsPaused(false) {}
 
   ~Inner() {
@@ -231,12 +244,13 @@ class ThrottledEventQueue::Inner final : public nsISupports {
   }
 
  public:
-  static already_AddRefed<Inner> Create(nsISerialEventTarget* aBaseTarget) {
+  static already_AddRefed<Inner> Create(nsISerialEventTarget* aBaseTarget,
+                                        uint32_t aPriority) {
     MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT(ClearOnShutdown_Internal::sCurrentShutdownPhase ==
                ShutdownPhase::NotInShutdown);
 
-    RefPtr<Inner> ref = new Inner(aBaseTarget);
+    RefPtr<Inner> ref = new Inner(aBaseTarget, aPriority);
     return ref.forget();
   }
 
@@ -332,6 +346,9 @@ class ThrottledEventQueue::Inner final : public nsISupports {
 
 NS_IMPL_ISUPPORTS(ThrottledEventQueue::Inner, nsISupports);
 
+NS_IMPL_ISUPPORTS_INHERITED(ThrottledEventQueue::Inner::Executor, Runnable,
+                            nsIRunnablePriority)
+
 NS_IMPL_ISUPPORTS(ThrottledEventQueue, ThrottledEventQueue, nsIEventTarget,
                   nsISerialEventTarget);
 
@@ -341,11 +358,11 @@ ThrottledEventQueue::ThrottledEventQueue(already_AddRefed<Inner> aInner)
 }
 
 already_AddRefed<ThrottledEventQueue> ThrottledEventQueue::Create(
-    nsISerialEventTarget* aBaseTarget) {
+    nsISerialEventTarget* aBaseTarget, uint32_t aPriority) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aBaseTarget);
 
-  RefPtr<Inner> inner = Inner::Create(aBaseTarget);
+  RefPtr<Inner> inner = Inner::Create(aBaseTarget, aPriority);
 
   RefPtr<ThrottledEventQueue> ref = new ThrottledEventQueue(inner.forget());
   return ref.forget();
