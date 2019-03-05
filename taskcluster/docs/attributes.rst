@@ -302,14 +302,3 @@ If a task set this boolean attribute to `true`, it will be processed by the code
 review bot, the task will ran for every new Phabricator diff.
 Any supported and detected issue will be automatically reported on the
 Phabricator revision.
-
-disable-push-apk
-================
-Some GeckoView-only Android tasks produce APKs that shouldn't be
-pushed to the Google Play Store.  Set this to ``true`` to disable
-pushing.
-
-disable-build-signing
-=====================
-Some GeckoView-only tasks produce APKs, but not APKs that should be
-signed.  Set this to ``true`` to disable APK signing.
