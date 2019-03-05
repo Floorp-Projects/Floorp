@@ -140,7 +140,7 @@
   </groupbox>
   <separator class="thin"/>
   <label data-l10n-id="connection-proxy-noproxy" control="networkProxyNone"/>
-  <textbox id="networkProxyNone" preference="network.proxy.no_proxies_on" multiline="true" rows="2"/>
+  <html:textarea id="networkProxyNone" preference="network.proxy.no_proxies_on" rows="2"/>
   <label control="networkProxyNone" data-l10n-id="connection-proxy-noproxy-desc" />
   <checkbox id="autologinProxy"
             data-l10n-id="connection-proxy-autologin"

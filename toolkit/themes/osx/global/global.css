@@ -8,6 +8,7 @@
 
 %include shared.inc
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+@namespace html url("http://www.w3.org/1999/xhtml");
 
 %include ../../shared/global.inc.css
 
@@ -130,13 +131,6 @@ separator.groove[orient="vertical"] {
   width: 0;
   margin-left: 0.4em;
   margin-right: 0.4em;
-}
-
-.plain {
-  -moz-appearance: none;
-  margin: 0 !important;
-  border: none;
-  padding: 0;
 }
 
 description,
@@ -264,4 +258,3 @@ popupnotificationcontent {
 .popup-internal-box > .scrollbutton-down[disabled="true"] {
   visibility: collapse;
 }
-

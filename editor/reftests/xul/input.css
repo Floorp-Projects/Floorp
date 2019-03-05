@@ -1,30 +1,18 @@
 @namespace url('http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul');
 @namespace html url('http://www.w3.org/1999/xhtml');
 
-:root > html|input,
-:root > html|textarea {
+:root > html|input {
   margin: 2px 4px;
   padding: 2px 2px 3px;
   padding-inline-start: 5px;
 }
 
-#mac > html|input,
-#mac > html|textarea {
+#mac > html|input {
   margin: 4px;
   padding: 0 1px;
 }
 
-textbox[multiline="true"],
-html|textarea {
-  border: none !important;
-  -moz-appearance: none !important;
-  background-color: white !important;
-  border-top-right-radius: 0;
-  border-bottom-left-radius: 0;
-}
-
-html|input,
-html|textarea {
+html|input {
   font: inherit;
 }
 

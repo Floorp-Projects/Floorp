@@ -52,8 +52,8 @@ function runConnectionTests(win) {
   let networkProxyTypePref = win.Preferences.get("network.proxy.type");
 
   // make sure the networkProxyNone textbox is formatted properly
-  is(networkProxyNone.getAttribute("multiline"), "true",
-     "networkProxyNone textbox is multiline");
+  is(networkProxyNone.localName, "textarea",
+     "networkProxyNone is a textarea");
   is(networkProxyNone.getAttribute("rows"), "2",
      "networkProxyNone textbox has two rows");
 

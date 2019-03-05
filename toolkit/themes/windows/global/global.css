@@ -173,13 +173,6 @@ separator.groove[orient="vertical"] {
   margin-right: 0.4em;
 }
 
-.plain {
-  -moz-appearance: none;
-  margin: 0 !important;
-  border: none;
-  padding: 0;
-}
-
 description,
 label {
   cursor: default;

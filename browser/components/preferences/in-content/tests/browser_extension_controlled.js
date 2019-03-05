@@ -757,7 +757,7 @@ add_task(async function testExtensionControlledProxyConfig() {
         return {
           manualControls: [
             ...manualControlContainer.querySelectorAll("label[data-l10n-id]:not([control=networkProxyNone])"),
-            ...manualControlContainer.querySelectorAll("textbox:not(#networkProxyNone)"),
+            ...manualControlContainer.querySelectorAll("textbox"),
             ...manualControlContainer.querySelectorAll("checkbox"),
             ...doc.querySelectorAll("#networkProxySOCKSVersion > radio")],
           pacControls: [doc.getElementById("networkProxyAutoconfigURL")],
