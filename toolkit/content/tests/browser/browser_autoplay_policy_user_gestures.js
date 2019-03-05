@@ -11,7 +11,12 @@ var UserGestures = {
 var UserGestureTests = [
   {type: UserGestures.MOUSE_CLICK, isActivationGesture: true},
   {type: UserGestures.MOUSE_MOVE, isActivationGesture: false},
-  {type: UserGestures.KEYBOARD_PRESS, isActivationGesture: true},
+  // test different keycode here. printable key, non-printable key and other
+  // special keys.
+  {type: UserGestures.KEYBOARD_PRESS, isActivationGesture: true, keyCode: "a"},
+  {type: UserGestures.KEYBOARD_PRESS, isActivationGesture: false, keyCode: "VK_ESCAPE"},
+  {type: UserGestures.KEYBOARD_PRESS, isActivationGesture: true, keyCode: "VK_RETURN"},
+  {type: UserGestures.KEYBOARD_PRESS, isActivationGesture: true, keyCode: "VK_SPACE"},
 ];
 
 function setup_test_preference() {
@@ -33,7 +38,7 @@ function simulateUserGesture(gesture, targetBrowser) {
       return BrowserTestUtils.synthesizeMouseAtCenter("body", {type: "mousemove"},
                                                       targetBrowser);
     case UserGestures.KEYBOARD_PRESS:
-      return BrowserTestUtils.sendChar("a", targetBrowser);
+      return BrowserTestUtils.synthesizeKey(gesture.keyCode, {}, targetBrowser);
     default:
       ok(false, "undefined user gesture");
       return false;
