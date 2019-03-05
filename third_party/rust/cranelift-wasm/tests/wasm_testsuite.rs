@@ -14,7 +14,7 @@ use wabt::wat2wasm;
 
 #[test]
 fn testsuite() {
-    let mut paths: Vec<_> = fs::read_dir("../../wasmtests")
+    let mut paths: Vec<_> = fs::read_dir("../wasmtests")
         .unwrap()
         .map(|r| r.unwrap())
         .filter(|p| {
@@ -39,7 +39,7 @@ fn testsuite() {
 fn use_fallthrough_return() {
     let flags = Flags::new(settings::builder());
     handle_module(
-        Path::new("../../wasmtests/use_fallthrough_return.wat"),
+        Path::new("../wasmtests/use_fallthrough_return.wat"),
         &flags,
         ReturnMode::FallthroughReturn,
     );
