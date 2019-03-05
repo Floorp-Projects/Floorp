@@ -195,6 +195,10 @@ select.playback-rate-selector.devtools-button:not(:empty):not(:disabled):not(.ch
   white-space: nowrap;
 }
 
+.animation-target .objectBox .open-inspector {
+  flex: none;
+}
+
 .animation-target .objectBox:hover .open-inspector {
   background-color: var(--comment-node-color);
 }
