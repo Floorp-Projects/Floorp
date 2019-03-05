@@ -70,7 +70,7 @@ class NothingToLint(Exception):
     """
 
 
-def setup(root):
+def setup(root, **lintargs):
     if not pip.reinstall_program(FLAKE8_REQUIREMENTS_PATH):
         print(FLAKE8_INSTALL_ERROR)
         return 1

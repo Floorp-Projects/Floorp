@@ -134,7 +134,7 @@ class LintRoller(object):
                 continue
 
             try:
-                res = findobject(linter['setup'])(self.root)
+                res = findobject(linter['setup'])(**self.lintargs)
             except Exception:
                 traceback.print_exc()
                 res = 1
