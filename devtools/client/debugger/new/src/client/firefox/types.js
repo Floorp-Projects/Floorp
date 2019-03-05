@@ -358,7 +358,8 @@ export type ThreadClient = {
   actor: ActorId,
   request: (payload: Object) => Promise<*>,
   url: string,
-  setEventListenerBreakpoints: (string[]) => void
+  setEventListenerBreakpoints: (string[]) => void,
+  skipBreakpoints: boolean => Promise<{| skip: boolean |}>
 };
 
 export type FirefoxClientConnection = {
