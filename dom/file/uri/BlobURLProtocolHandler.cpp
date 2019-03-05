@@ -754,26 +754,16 @@ BlobURLProtocolHandler::NewURI(const nsACString& aSpec, const char* aCharset,
                                nsIURI* aBaseURI, nsIURI** aResult) {
   *aResult = nullptr;
 
-  nsCOMPtr<nsIURI> uri;
-  nsresult rv =
-      NS_MutateURI(new BlobURL::Mutator()).SetSpec(aSpec).Finalize(uri);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   bool revoked = true;
   DataInfo* info = GetDataInfo(aSpec);
   if (info && info->mObjectType == DataInfo::eBlobImpl) {
     revoked = info->mRevoked;
   }
 
-  RefPtr<BlobURL> blobURL;
-  rv = uri->QueryInterface(kHOSTOBJECTURICID, getter_AddRefs(blobURL));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  MOZ_ASSERT(blobURL);
-  blobURL->mRevoked = revoked;
-
-  uri.forget(aResult);
-  return NS_OK;
+  return NS_MutateURI(new BlobURL::Mutator())
+      .SetSpec(aSpec)
+      .Apply(NS_MutatorMethod(&nsIBlobURLMutator::SetRevoked, revoked))
+      .Finalize(aResult);
 }
 
 NS_IMETHODIMP
