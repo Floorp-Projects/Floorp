@@ -60,15 +60,15 @@ def passes(files, config, **lintargs):
     return []
 
 
-def setup(root):
+def setup(**lintargs):
     print('setup passed')
 
 
-def setupfailed(root):
+def setupfailed(**lintargs):
     print('setup failed')
     return 1
 
 
-def setupraised(root):
+def setupraised(**lintargs):
     print('setup raised')
     raise LintException('oh no setup failed')
