@@ -624,6 +624,13 @@ class ContentChild final : public PContentChild,
   bool DeallocPSessionStorageObserverChild(
       PSessionStorageObserverChild* aActor);
 
+  PSHEntryChild* AllocPSHEntryChild(const PSHEntryOrSharedID& aEntryOrSharedID);
+  void DeallocPSHEntryChild(PSHEntryChild*);
+
+  PSHistoryChild* AllocPSHistoryChild(BrowsingContext* aContext);
+
+  void DeallocPSHistoryChild(PSHistoryChild* aActor);
+
   nsTArray<LookAndFeelInt>& LookAndFeelCache() { return mLookAndFeelCache; }
 
   /**
@@ -681,6 +688,8 @@ class ContentChild final : public PContentChild,
     mBrowsingContextFieldEpoch++;
     return mBrowsingContextFieldEpoch;
   }
+
+  mozilla::ipc::IPCResult RecvDestroySHEntrySharedState(const uint64_t& aID);
 
 #ifdef NIGHTLY_BUILD
   // Fetch the current number of pending input events.

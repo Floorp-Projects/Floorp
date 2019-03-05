@@ -6,9 +6,14 @@
 
 #include "mozilla/dom/ChildSHistory.h"
 #include "mozilla/dom/ChildSHistoryBinding.h"
+#include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/ContentFrameMessageManager.h"
+#include "mozilla/dom/SHEntryChild.h"
+#include "mozilla/dom/SHistoryChild.h"
+#include "mozilla/StaticPrefs_fission.h"
 #include "nsIMessageManager.h"
 #include "nsComponentManagerUtils.h"
+#include "nsSHEntry.h"
 #include "nsSHistory.h"
 #include "nsDocShell.h"
 #include "nsISHEntry.h"
@@ -17,9 +22,20 @@
 namespace mozilla {
 namespace dom {
 
+static already_AddRefed<nsISHistory> CreateSHistory(nsDocShell* aDocShell) {
+  if (XRE_IsContentProcess() && StaticPrefs::fission_sessionHistoryInParent()) {
+    return do_AddRef(static_cast<SHistoryChild*>(
+        ContentChild::GetSingleton()->SendPSHistoryConstructor(
+            aDocShell->GetBrowsingContext())));
+  }
+
+  nsCOMPtr<nsISHistory> history =
+      new nsSHistory(aDocShell->GetBrowsingContext(), aDocShell->HistoryID());
+  return history.forget();
+}
+
 ChildSHistory::ChildSHistory(nsDocShell* aDocShell)
-    : mDocShell(aDocShell), mHistory(new nsSHistory(aDocShell->GetBrowsingContext(),
-                                                    aDocShell->HistoryID())) {}
+    : mDocShell(aDocShell), mHistory(CreateSHistory(aDocShell)) {}
 
 ChildSHistory::~ChildSHistory() {}
 
@@ -107,6 +123,17 @@ nsISupports* ChildSHistory::GetParentObject() const {
   }
   // else we must be unlinked... can that happen here?
   return ToSupports(mm);
+}
+
+already_AddRefed<nsISHEntry> CreateSHEntry() {
+  uint64_t sharedID = SHEntryChildShared::CreateSharedID();
+  if (XRE_IsContentProcess() && StaticPrefs::fission_sessionHistoryInParent()) {
+    return do_AddRef(static_cast<SHEntryChild*>(
+        ContentChild::GetSingleton()->SendPSHEntryConstructor(sharedID)));
+  }
+
+  nsCOMPtr<nsISHEntry> entry = new nsLegacySHEntry(sharedID);
+  return entry.forget();
 }
 
 }  // namespace dom

@@ -1,0 +1,63 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PContent;
+include protocol PSHEntry;
+
+include DOMTypes;
+include NewPSHEntry;
+
+using refcounted class mozilla::dom::BrowsingContext from "mozilla/dom/BrowsingContext.h";
+using refcounted class nsDocShellLoadState from "mozilla/dom/DocShellMessageUtils.h";
+
+using struct nsID from "nsID.h";
+using struct mozilla::null_t from "ipc/IPCMessageUtils.h";
+
+namespace mozilla {
+namespace dom {
+
+struct LoadSHEntryData
+{
+  MaybeNewPSHEntry shEntry;
+  BrowsingContext browsingContext;
+  nsDocShellLoadState loadState;
+};
+
+union LoadSHEntryResult {
+  nsresult;
+  LoadSHEntryData;
+};
+
+sync protocol PSHistory {
+  manager PContent;
+
+parent:
+  sync GetCount() returns (int32_t count);
+  sync GetIndex() returns (int32_t index);
+  sync SetIndex(int32_t index) returns (nsresult result);
+  sync GetRequestedIndex() returns (int32_t index);
+  sync InternalSetRequestedIndex(int32_t index);
+  sync GetEntryAtIndex(int32_t index) returns (nsresult result, MaybeNewPSHEntry entry);
+  sync PurgeHistory(int32_t numEntries) returns (nsresult result);
+  sync ReloadCurrentEntry() returns (LoadSHEntryResult load);
+  sync GotoIndex(int32_t index) returns (LoadSHEntryResult load);
+  sync GetIndexOfEntry(PSHEntry entry) returns (int32_t index);
+  sync AddEntry(PSHEntry entry, bool persist) returns (nsresult result, int32_t entriesPurged);
+  sync UpdateIndex();
+  sync ReplaceEntry(int32_t index, PSHEntry entry) returns (nsresult result);
+  sync NotifyOnHistoryReload() returns (bool ok);
+  sync EvictOutOfRangeContentViewers(int32_t index);
+  sync EvictAllContentViewers();
+  sync RemoveDynEntries(int32_t index, PSHEntry entry);
+  sync RemoveEntries(nsID[] ids, int32_t index) returns (bool didRemove);
+  sync Reload(uint32_t reloadFlags) returns (LoadSHEntryResult load);
+  sync GetAllEntries() returns (MaybeNewPSHEntry[] entries);
+  sync FindEntryForBFCache(uint64_t sharedID, bool includeCurrentEntry) returns (MaybeNewPSHEntry entries, int32_t startIndex);
+  sync Evict(PSHEntry[] entry);
+
+  async __delete__();
+};
+
+} // namespace dom
+} // namespace mozilla

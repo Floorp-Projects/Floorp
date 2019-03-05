@@ -27,11 +27,17 @@ interface nsIReferrerInfo;
 %{C++
 #include "nsRect.h"
 class nsDocShellEditorData;
-class nsSHEntryShared;
+
+namespace mozilla {
+namespace dom {
+
+class SHEntrySharedParentState;
+
+}
+}
 %}
 [ref] native nsIntRect(nsIntRect);
 [ptr] native nsDocShellEditorDataPtr(nsDocShellEditorData);
-[ptr] native nsSHEntryShared(nsSHEntryShared);
 
 [builtinclass, scriptable, uuid(0dad26b8-a259-42c7-93f1-2fa7fc076e45)]
 interface nsISHEntry : nsISupports
@@ -172,7 +178,7 @@ interface nsISHEntry : nsISupports
      * The history ID of the docshell.
      */
     // Would be [infallible], but we don't support that property for nsIDPtr.
-    attribute nsIDPtr docshellID;
+    attribute nsIDRef docshellID;
 
     [infallible] readonly attribute nsIBFCacheEntry BFCacheEntry;
 
@@ -202,7 +208,7 @@ interface nsISHEntry : nsISupports
      * Sets/gets the current scroll restoration state,
      * if true == "manual", false == "auto".
      */
-    [infallible] attribute boolean scrollRestorationIsManual;
+    attribute boolean scrollRestorationIsManual;
 
     /**
      * Flag to indicate that the history entry was originally loaded in the
@@ -287,8 +293,8 @@ interface nsISHEntry : nsISupports
     /** Additional ways to create an entry */
     [noscript] void create(in nsIURI URI, in AString title,
                            in nsIInputStream inputStream,
-                           in nsILayoutHistoryState layoutHistoryState,
-                           in unsigned long cacheKey, in ACString contentType,
+                           in unsigned long cacheKey,
+                           in ACString contentType,
                            in nsIPrincipal triggeringPrincipal,
                            in nsIPrincipal principalToInherit,
                            in nsIPrincipal storagePrincipalToInherit,
@@ -328,11 +334,6 @@ interface nsISHEntry : nsISupports
     boolean hasDynamicallyAddedChild();
 
     /**
-     * Helper method for accessing `docshellID` from C++
-     */
-    [noscript, notxpcom] nsID DocshellID();
-
-    /**
      * Does this SHEntry point to the given BFCache entry? If so, evicting
      * the BFCache entry will evict the SHEntry, since the two entries
      * correspond to the same document.
@@ -369,16 +370,6 @@ interface nsISHEntry : nsISupports
      * in js, but easier to maintain and less opaque.
      */
     void setLoadTypeAsHistory();
-
-    /**
-     * Some state, particularly that related to the back/forward cache, is
-     * shared between SHEntries which correspond to the same document.  This
-     * method gets a pointer to that shared state.
-     *
-     * This shared state is the SHEntry's BFCacheEntry.  So
-     * hasBFCacheEntry(getSharedState()) is guaranteed to return true.
-     */
-    [noscript, notxpcom] nsSHEntryShared getSharedState();
 
     /**
      * Add a new child SHEntry. If offset is -1 adds to the end of the list.

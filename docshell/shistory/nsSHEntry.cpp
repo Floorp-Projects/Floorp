@@ -29,8 +29,8 @@ namespace dom = mozilla::dom;
 
 static uint32_t gEntryID = 0;
 
-nsSHEntry::nsSHEntry()
-    : mShared(new nsSHEntryShared()),
+nsSHEntry::nsSHEntry(dom::SHEntrySharedParentState* aState)
+    : mShared(aState),
       mLoadType(0),
       mID(gEntryID++),
       mScrollPositionX(0),
@@ -172,13 +172,17 @@ nsSHEntry::SetReferrerInfo(nsIReferrerInfo* aReferrerInfo) {
 
 NS_IMETHODIMP
 nsSHEntry::SetContentViewer(nsIContentViewer* aViewer) {
-  return mShared->SetContentViewer(aViewer);
+  MOZ_CRASH(
+      "Classes inheriting from nsSHEntry should implement this. "
+      "Bug 1546344 will clean this up.");
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsSHEntry::GetContentViewer(nsIContentViewer** aResult) {
-  *aResult = mShared->mContentViewer;
-  NS_IF_ADDREF(*aResult);
+  MOZ_CRASH(
+      "Classes inheriting from nsSHEntry should implement this. "
+      "Bug 1546344 will clean this up.");
   return NS_OK;
 }
 
@@ -230,32 +234,25 @@ nsSHEntry::SetPostData(nsIInputStream* aPostData) {
 
 NS_IMETHODIMP
 nsSHEntry::GetLayoutHistoryState(nsILayoutHistoryState** aResult) {
-  *aResult = mShared->mLayoutHistoryState;
-  NS_IF_ADDREF(*aResult);
+  MOZ_CRASH(
+      "Classes inheriting from nsSHEntry should implement this. "
+      "Bug 1546344 will clean this up.");
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsSHEntry::SetLayoutHistoryState(nsILayoutHistoryState* aState) {
-  mShared->mLayoutHistoryState = aState;
-  if (mShared->mLayoutHistoryState) {
-    mShared->mLayoutHistoryState->SetScrollPositionOnly(
-        !mShared->mSaveLayoutState);
-  }
-
+  MOZ_CRASH(
+      "Classes inheriting from nsSHEntry should implement this. "
+      "Bug 1546344 will clean this up.");
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsSHEntry::InitLayoutHistoryState(nsILayoutHistoryState** aState) {
-  if (!mShared->mLayoutHistoryState) {
-    nsCOMPtr<nsILayoutHistoryState> historyState;
-    historyState = NS_NewLayoutHistoryState();
-    SetLayoutHistoryState(historyState);
-  }
-
-  nsCOMPtr<nsILayoutHistoryState> state = GetLayoutHistoryState();
-  state.forget(aState);
+  MOZ_CRASH(
+      "Classes inheriting from nsSHEntry should implement this. "
+      "Bug 1546344 will clean this up.");
   return NS_OK;
 }
 
@@ -283,8 +280,6 @@ nsSHEntry::SetID(uint32_t aID) {
   return NS_OK;
 }
 
-nsSHEntryShared* nsSHEntry::GetSharedState() { return mShared; }
-
 NS_IMETHODIMP
 nsSHEntry::GetIsSubFrame(bool* aFlag) {
   *aFlag = mShared->mIsFrameNavigation;
@@ -311,17 +306,17 @@ nsSHEntry::SetCacheKey(uint32_t aCacheKey) {
 
 NS_IMETHODIMP
 nsSHEntry::GetSaveLayoutStateFlag(bool* aFlag) {
-  *aFlag = mShared->mSaveLayoutState;
+  MOZ_CRASH(
+      "Classes inheriting from nsSHEntry should implement this. "
+      "Bug 1546344 will clean this up.");
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsSHEntry::SetSaveLayoutStateFlag(bool aFlag) {
-  mShared->mSaveLayoutState = aFlag;
-  if (mShared->mLayoutHistoryState) {
-    mShared->mLayoutHistoryState->SetScrollPositionOnly(!aFlag);
-  }
-
+  MOZ_CRASH(
+      "Classes inheriting from nsSHEntry should implement this. "
+      "Bug 1546344 will clean this up.");
   return NS_OK;
 }
 
@@ -351,9 +346,8 @@ nsSHEntry::SetContentType(const nsACString& aContentType) {
 
 NS_IMETHODIMP
 nsSHEntry::Create(nsIURI* aURI, const nsAString& aTitle,
-                  nsIInputStream* aInputStream,
-                  nsILayoutHistoryState* aLayoutHistoryState,
-                  uint32_t aCacheKey, const nsACString& aContentType,
+                  nsIInputStream* aInputStream, uint32_t aCacheKey,
+                  const nsACString& aContentType,
                   nsIPrincipal* aTriggeringPrincipal,
                   nsIPrincipal* aPrincipalToInherit,
                   nsIPrincipal* aStoragePrincipalToInherit,
@@ -384,10 +378,6 @@ nsSHEntry::Create(nsIURI* aURI, const nsAString& aTitle,
   // all subframe navigations, sets the flag to true.
   mShared->mIsFrameNavigation = false;
 
-  // By default we save LayoutHistoryState
-  mShared->mSaveLayoutState = true;
-  mShared->mLayoutHistoryState = aLayoutHistoryState;
-
   // By default the page is not expired
   mShared->mExpired = false;
 
@@ -401,8 +391,9 @@ nsSHEntry::Create(nsIURI* aURI, const nsAString& aTitle,
 
 NS_IMETHODIMP
 nsSHEntry::Clone(nsISHEntry** aResult) {
-  *aResult = new nsSHEntry(*this);
-  NS_ADDREF(*aResult);
+  MOZ_CRASH(
+      "Classes inheriting from nsSHEntry should implement this. "
+      "Bug 1546344 will clean this up.");
   return NS_OK;
 }
 
@@ -426,13 +417,17 @@ nsSHEntry::SetParent(nsISHEntry* aParent) {
 
 NS_IMETHODIMP
 nsSHEntry::SetWindowState(nsISupports* aState) {
-  mShared->mWindowState = aState;
+  MOZ_CRASH(
+      "Classes inheriting from nsSHEntry should implement this. "
+      "Bug 1546344 will clean this up.");
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsSHEntry::GetWindowState(nsISupports** aState) {
-  NS_IF_ADDREF(*aState = mShared->mWindowState);
+  MOZ_CRASH(
+      "Classes inheriting from nsSHEntry should implement this. "
+      "Bug 1546344 will clean this up.");
   return NS_OK;
 }
 
@@ -499,17 +494,23 @@ nsSHEntry::SetCsp(nsIContentSecurityPolicy* aCsp) {
 
 NS_IMETHODIMP
 nsSHEntry::GetBFCacheEntry(nsIBFCacheEntry** aEntry) {
-  NS_IF_ADDREF(*aEntry = mShared);
+  MOZ_CRASH(
+      "Classes inheriting from nsSHEntry should implement this. "
+      "Bug 1546344 will clean this up.");
   return NS_OK;
 }
 
 bool nsSHEntry::HasBFCacheEntry(nsIBFCacheEntry* aEntry) {
-  return static_cast<nsIBFCacheEntry*>(mShared) == aEntry;
+  MOZ_CRASH(
+      "Classes inheriting from nsSHEntry should implement this. "
+      "Bug 1546344 will clean this up.");
+  return false;
 }
 
 NS_IMETHODIMP
 nsSHEntry::AdoptBFCacheEntry(nsISHEntry* aEntry) {
-  nsSHEntryShared* shared = aEntry->GetSharedState();
+  dom::SHEntrySharedParentState* shared =
+      static_cast<nsSHEntry*>(aEntry)->mShared;
   NS_ENSURE_STATE(shared);
 
   mShared = shared;
@@ -520,13 +521,15 @@ NS_IMETHODIMP
 nsSHEntry::SharesDocumentWith(nsISHEntry* aEntry, bool* aOut) {
   NS_ENSURE_ARG_POINTER(aOut);
 
-  *aOut = mShared == aEntry->GetSharedState();
+  *aOut = mShared == static_cast<nsSHEntry*>(aEntry)->mShared;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsSHEntry::AbandonBFCacheEntry() {
-  mShared = nsSHEntryShared::Duplicate(mShared);
+  MOZ_CRASH(
+      "Classes inheriting from nsSHEntry should implement this. "
+      "Bug 1546344 will clean this up.");
   return NS_OK;
 }
 
@@ -734,13 +737,19 @@ NS_IMETHODIMP
 nsSHEntry::ReplaceChild(nsISHEntry* aNewEntry) {
   NS_ENSURE_STATE(aNewEntry);
 
-  nsID docshellID = aNewEntry->DocshellID();
+  nsID docshellID;
+  aNewEntry->GetDocshellID(docshellID);
 
   for (int32_t i = 0; i < mChildren.Count(); ++i) {
-    if (mChildren[i] && docshellID == mChildren[i]->DocshellID()) {
-      mChildren[i]->SetParent(nullptr);
-      mChildren.ReplaceObjectAt(aNewEntry, i);
-      return aNewEntry->SetParent(this);
+    if (mChildren[i]) {
+      nsID childDocshellID;
+      nsresult rv = mChildren[i]->GetDocshellID(childDocshellID);
+      NS_ENSURE_SUCCESS(rv, rv);
+      if (docshellID == childDocshellID) {
+        mChildren[i]->SetParent(nullptr);
+        mChildren.ReplaceObjectAt(aNewEntry, i);
+        return aNewEntry->SetParent(this);
+      }
     }
   }
   return NS_ERROR_FAILURE;
@@ -748,48 +757,68 @@ nsSHEntry::ReplaceChild(nsISHEntry* aNewEntry) {
 
 NS_IMETHODIMP_(void)
 nsSHEntry::AddChildShell(nsIDocShellTreeItem* aShell) {
-  MOZ_ASSERT(aShell, "Null child shell added to history entry");
-  mShared->mChildShells.AppendObject(aShell);
+  MOZ_CRASH(
+      "Classes inheriting from nsSHEntry should implement this. "
+      "Bug 1546344 will clean this up.");
 }
 
 NS_IMETHODIMP
 nsSHEntry::ChildShellAt(int32_t aIndex, nsIDocShellTreeItem** aShell) {
-  NS_IF_ADDREF(*aShell = mShared->mChildShells.SafeObjectAt(aIndex));
+  MOZ_CRASH(
+      "Classes inheriting from nsSHEntry should implement this. "
+      "Bug 1546344 will clean this up.");
   return NS_OK;
 }
 
 NS_IMETHODIMP_(void)
-nsSHEntry::ClearChildShells() { mShared->mChildShells.Clear(); }
+nsSHEntry::ClearChildShells() {
+  MOZ_CRASH(
+      "Classes inheriting from nsSHEntry should implement this. "
+      "Bug 1546344 will clean this up.");
+}
 
 NS_IMETHODIMP
 nsSHEntry::GetRefreshURIList(nsIMutableArray** aList) {
-  NS_IF_ADDREF(*aList = mShared->mRefreshURIList);
+  MOZ_CRASH(
+      "Classes inheriting from nsSHEntry should implement this. "
+      "Bug 1546344 will clean this up.");
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsSHEntry::SetRefreshURIList(nsIMutableArray* aList) {
-  mShared->mRefreshURIList = aList;
+  MOZ_CRASH(
+      "Classes inheriting from nsSHEntry should implement this. "
+      "Bug 1546344 will clean this up.");
   return NS_OK;
 }
 
 NS_IMETHODIMP_(void)
-nsSHEntry::SyncPresentationState() { mShared->SyncPresentationState(); }
+nsSHEntry::SyncPresentationState() {
+  MOZ_CRASH(
+      "Classes inheriting from nsSHEntry should implement this. "
+      "Bug 1546344 will clean this up.");
+}
 
 nsDocShellEditorData* nsSHEntry::ForgetEditorData() {
-  // XXX jlebar Check how this is used.
-  return mShared->mEditorData.forget();
+  MOZ_CRASH(
+      "Classes inheriting from nsSHEntry should implement this. "
+      "Bug 1546344 will clean this up.");
+  return nullptr;
 }
 
 void nsSHEntry::SetEditorData(nsDocShellEditorData* aData) {
-  NS_ASSERTION(!(aData && mShared->mEditorData),
-               "We're going to overwrite an owning ref!");
-  if (mShared->mEditorData != aData) {
-    mShared->mEditorData = aData;
-  }
+  MOZ_CRASH(
+      "Classes inheriting from nsSHEntry should implement this. "
+      "Bug 1546344 will clean this up.");
 }
 
-bool nsSHEntry::HasDetachedEditor() { return mShared->mEditorData != nullptr; }
+bool nsSHEntry::HasDetachedEditor() {
+  MOZ_CRASH(
+      "Classes inheriting from nsSHEntry should implement this. "
+      "Bug 1546344 will clean this up.");
+  return false;
+}
 
 NS_IMETHODIMP
 nsSHEntry::GetStateData(nsIStructuredCloneContainer** aContainer) {
@@ -822,16 +851,14 @@ nsSHEntry::HasDynamicallyAddedChild(bool* aAdded) {
 }
 
 NS_IMETHODIMP
-nsSHEntry::GetDocshellID(nsID** aID) {
-  *aID = mShared->mDocShellID.Clone();
+nsSHEntry::GetDocshellID(nsID& aID) {
+  aID = mShared->mDocShellID;
   return NS_OK;
 }
 
-const nsID nsSHEntry::DocshellID() { return mShared->mDocShellID; }
-
 NS_IMETHODIMP
-nsSHEntry::SetDocshellID(const nsID* aID) {
-  mShared->mDocShellID = *aID;
+nsSHEntry::SetDocshellID(const nsID& aID) {
+  mShared->mDocShellID = aID;
   return NS_OK;
 }
 
@@ -880,4 +907,184 @@ NS_IMETHODIMP
 nsSHEntry::SetPersist(bool aPersist) {
   mPersist = aPersist;
   return NS_OK;
+}
+
+void nsSHEntry::EvictContentViewer() {
+  nsCOMPtr<nsIContentViewer> viewer = GetContentViewer();
+  if (viewer) {
+    // Drop the presentation state before destroying the viewer, so that
+    // document teardown is able to correctly persist the state.
+    SetContentViewer(nullptr);
+    SyncPresentationState();
+    viewer->Destroy();
+  }
+}
+
+nsLegacySHEntry::nsLegacySHEntry(uint64_t aID)
+    : nsSHEntry(new nsSHEntryShared(aID)) {}
+
+NS_IMETHODIMP
+nsLegacySHEntry::SetContentViewer(nsIContentViewer* aViewer) {
+  return GetState()->SetContentViewer(aViewer);
+}
+
+NS_IMETHODIMP
+nsLegacySHEntry::GetContentViewer(nsIContentViewer** aResult) {
+  *aResult = GetState()->mContentViewer;
+  NS_IF_ADDREF(*aResult);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsLegacySHEntry::GetLayoutHistoryState(nsILayoutHistoryState** aResult) {
+  *aResult = GetState()->mLayoutHistoryState;
+  NS_IF_ADDREF(*aResult);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsLegacySHEntry::SetLayoutHistoryState(nsILayoutHistoryState* aState) {
+  GetState()->mLayoutHistoryState = aState;
+  if (GetState()->mLayoutHistoryState) {
+    GetState()->mLayoutHistoryState->SetScrollPositionOnly(
+        !GetState()->mSaveLayoutState);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsLegacySHEntry::InitLayoutHistoryState(nsILayoutHistoryState** aState) {
+  if (!GetState()->mLayoutHistoryState) {
+    nsCOMPtr<nsILayoutHistoryState> historyState;
+    historyState = NS_NewLayoutHistoryState();
+    SetLayoutHistoryState(historyState);
+  }
+
+  nsCOMPtr<nsILayoutHistoryState> state = GetLayoutHistoryState();
+  state.forget(aState);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsLegacySHEntry::Create(nsIURI* aURI, const nsAString& aTitle,
+                        nsIInputStream* aInputStream, uint32_t aCacheKey,
+                        const nsACString& aContentType,
+                        nsIPrincipal* aTriggeringPrincipal,
+                        nsIPrincipal* aPrincipalToInherit,
+                        nsIContentSecurityPolicy* aCsp, const nsID& aDocShellID,
+                        bool aDynamicCreation) {
+  GetState()->mLayoutHistoryState = nullptr;
+
+  // By default we save LayoutHistoryState
+  GetState()->mSaveLayoutState = true;
+
+  return nsSHEntry::Create(aURI, aTitle, aInputStream, aCacheKey, aContentType,
+                           aTriggeringPrincipal, aPrincipalToInherit, aCsp,
+                           aDocShellID, aDynamicCreation);
+}
+
+NS_IMETHODIMP
+nsLegacySHEntry::Clone(nsISHEntry** aResult) {
+  nsCOMPtr<nsISHEntry> entry = new nsLegacySHEntry(*this);
+  entry.forget(aResult);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsLegacySHEntry::GetSaveLayoutStateFlag(bool* aFlag) {
+  *aFlag = GetState()->mSaveLayoutState;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsLegacySHEntry::SetSaveLayoutStateFlag(bool aFlag) {
+  GetState()->mSaveLayoutState = aFlag;
+  if (GetState()->mLayoutHistoryState) {
+    GetState()->mLayoutHistoryState->SetScrollPositionOnly(!aFlag);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsLegacySHEntry::SetWindowState(nsISupports* aState) {
+  GetState()->mWindowState = aState;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsLegacySHEntry::GetWindowState(nsISupports** aState) {
+  NS_IF_ADDREF(*aState = GetState()->mWindowState);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsLegacySHEntry::GetRefreshURIList(nsIMutableArray** aList) {
+  NS_IF_ADDREF(*aList = GetState()->mRefreshURIList);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsLegacySHEntry::SetRefreshURIList(nsIMutableArray* aList) {
+  GetState()->mRefreshURIList = aList;
+  return NS_OK;
+}
+
+NS_IMETHODIMP_(void)
+nsLegacySHEntry::AddChildShell(nsIDocShellTreeItem* aShell) {
+  MOZ_ASSERT(aShell, "Null child shell added to history entry");
+  GetState()->mChildShells.AppendObject(aShell);
+}
+
+NS_IMETHODIMP
+nsLegacySHEntry::ChildShellAt(int32_t aIndex, nsIDocShellTreeItem** aShell) {
+  NS_IF_ADDREF(*aShell = GetState()->mChildShells.SafeObjectAt(aIndex));
+  return NS_OK;
+}
+
+NS_IMETHODIMP_(void)
+nsLegacySHEntry::ClearChildShells() { GetState()->mChildShells.Clear(); }
+
+NS_IMETHODIMP_(void)
+nsLegacySHEntry::SyncPresentationState() {
+  GetState()->SyncPresentationState();
+}
+
+nsDocShellEditorData* nsLegacySHEntry::ForgetEditorData() {
+  // XXX jlebar Check how this is used.
+  return GetState()->mEditorData.forget();
+}
+
+void nsLegacySHEntry::SetEditorData(nsDocShellEditorData* aData) {
+  NS_ASSERTION(!(aData && GetState()->mEditorData),
+               "We're going to overwrite an owning ref!");
+  if (GetState()->mEditorData != aData) {
+    GetState()->mEditorData = aData;
+  }
+}
+
+bool nsLegacySHEntry::HasDetachedEditor() {
+  return GetState()->mEditorData != nullptr;
+}
+
+NS_IMETHODIMP
+nsLegacySHEntry::GetBFCacheEntry(nsIBFCacheEntry** aEntry) {
+  NS_IF_ADDREF(*aEntry = GetState());
+  return NS_OK;
+}
+
+bool nsLegacySHEntry::HasBFCacheEntry(nsIBFCacheEntry* aEntry) {
+  return static_cast<nsIBFCacheEntry*>(GetState()) == aEntry;
+}
+
+NS_IMETHODIMP
+nsLegacySHEntry::AbandonBFCacheEntry() {
+  mShared = nsSHEntryShared::Duplicate(
+      GetState(), mozilla::dom::SHEntryChildShared::CreateSharedID());
+  return NS_OK;
+}
+
+nsSHEntryShared* nsLegacySHEntry::GetState() {
+  return static_cast<nsSHEntryShared*>(mShared.get());
 }
