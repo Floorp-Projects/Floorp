@@ -1265,9 +1265,9 @@ InterceptedHttpChannel::GetAlternativeDataType(nsACString& aType) {
 }
 
 NS_IMETHODIMP
-InterceptedHttpChannel::OpenAlternativeOutputStream(const nsACString& type,
-                                                    int64_t predictedSize,
-                                                    nsIOutputStream** _retval) {
+InterceptedHttpChannel::OpenAlternativeOutputStream(
+    const nsACString& type, int64_t predictedSize,
+    nsIAsyncOutputStream** _retval) {
   if (mSynthesizedCacheInfo) {
     return mSynthesizedCacheInfo->OpenAlternativeOutputStream(
         type, predictedSize, _retval);
