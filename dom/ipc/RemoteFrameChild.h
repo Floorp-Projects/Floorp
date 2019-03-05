@@ -36,6 +36,8 @@ class RemoteFrameChild : public PRemoteFrameChild {
 
   void NavigateByKey(bool aForward, bool aForDocumentNavigation);
 
+  void Activate();
+
   static RemoteFrameChild* GetFrom(nsFrameLoader* aFrameLoader);
 
   static RemoteFrameChild* GetFrom(nsIContent* aContent);
