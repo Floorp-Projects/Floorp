@@ -37,4 +37,7 @@
     <!-- Text for a negative button in a permission request dialog, this button will do not give
     access to this permission-->
     <string name="mozac_feature_sitepermissions_not_allow">Don\'t allow</string>
+
+    <!-- Text for a checkbox in a permission request dialog, this will allow to not show again the prompt-->
+    <string name="mozac_feature_sitepermissions_do_not_ask_again_on_this_site">Don\'t ask again on this site</string>
 </resources>

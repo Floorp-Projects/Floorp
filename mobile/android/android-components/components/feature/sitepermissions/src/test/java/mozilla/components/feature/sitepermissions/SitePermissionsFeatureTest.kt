@@ -8,6 +8,7 @@ import android.content.pm.PackageManager.PERMISSION_DENIED
 import android.content.pm.PackageManager.PERMISSION_GRANTED
 import android.view.View
 import androidx.test.core.app.ApplicationProvider
+import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.Engine
@@ -18,18 +19,27 @@ import mozilla.components.concept.engine.permission.Permission.ContentGeoLocatio
 import mozilla.components.concept.engine.permission.Permission.ContentNotification
 import mozilla.components.concept.engine.permission.Permission.ContentVideoCamera
 import mozilla.components.concept.engine.permission.Permission.ContentVideoCapture
+import mozilla.components.concept.engine.permission.Permission.Generic
 import mozilla.components.concept.engine.permission.PermissionRequest
+import mozilla.components.feature.sitepermissions.SitePermissions.Status.NO_DECISION
+import mozilla.components.feature.sitepermissions.SitePermissions.Status.ALLOWED
+import mozilla.components.feature.sitepermissions.SitePermissions.Status.BLOCKED
 import mozilla.components.support.base.observer.Consumable
+import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
 import mozilla.components.ui.doorhanger.DoorhangerPrompt
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito
+import org.mockito.Mockito.anyString
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.doReturn
+import org.mockito.Mockito.times
 import org.robolectric.RobolectricTestRunner
 import java.security.InvalidParameterException
 
@@ -40,6 +50,7 @@ class SitePermissionsFeatureTest {
     private lateinit var mockSessionManager: SessionManager
     private lateinit var sitePermissionFeature: SitePermissionsFeature
     private lateinit var mockOnNeedToRequestPermissions: OnNeedToRequestPermissions
+    private lateinit var mockStorage: SitePermissionsStorage
 
     @Before
     fun setup() {
@@ -47,11 +58,13 @@ class SitePermissionsFeatureTest {
         anchorView = View(ApplicationProvider.getApplicationContext())
         mockSessionManager = Mockito.spy(SessionManager(engine))
         mockOnNeedToRequestPermissions = mock()
+        mockStorage = mock()
 
         sitePermissionFeature = SitePermissionsFeature(
             anchorView = anchorView,
             sessionManager = mockSessionManager,
-            onNeedToRequestPermissions = mockOnNeedToRequestPermissions
+            onNeedToRequestPermissions = mockOnNeedToRequestPermissions,
+            storage = mockStorage
         )
     }
 
@@ -91,7 +104,7 @@ class SitePermissionsFeatureTest {
 
         val mockPermissionRequest: PermissionRequest = mock()
 
-        doReturn(listOf(Permission.Generic("", ""))).`when`(mockPermissionRequest).permissions
+        doReturn(listOf(Generic("", ""))).`when`(mockPermissionRequest).permissions
 
         session.contentPermissionRequest = Consumable.from(mockPermissionRequest)
     }
@@ -127,9 +140,6 @@ class SitePermissionsFeatureTest {
 
     @Test
     fun `granting a content permission must call grant and consume contentPermissionRequest`() {
-        val session = getSelectedSession()
-        var grantWasCalled = false
-
         val permissions = listOf(
             ContentGeoLocation(),
             ContentNotification(),
@@ -138,6 +148,8 @@ class SitePermissionsFeatureTest {
         )
 
         permissions.forEach { permission ->
+            val session = getSelectedSession()
+            var grantWasCalled = false
 
             val permissionRequest: PermissionRequest = object : PermissionRequest {
                 override val uri: String?
@@ -152,23 +164,186 @@ class SitePermissionsFeatureTest {
                 override fun reject() = Unit
             }
 
+            mockStorage = mock()
             session.contentPermissionRequest = Consumable.from(permissionRequest)
 
-            val prompt = sitePermissionFeature.onContentPermissionRequested(session, permissionRequest)
+            runBlocking {
+                val prompt = sitePermissionFeature.onContentPermissionRequested(session, permissionRequest)
+                val positiveButton = prompt!!.buttons.find { it.positive }
+                positiveButton?.onClick?.invoke()
+                assertTrue(grantWasCalled)
+                assertTrue(session.contentPermissionRequest.isConsumed())
 
-            val positiveButton = prompt.buttons.find { it.positive }
-            positiveButton?.onClick?.invoke()
+                if (permissionRequest.shouldIncludeDoNotAskAgainCheckBox()) {
+                    val checkBox = sitePermissionFeature.findDoNotAskAgainCheckBox(
+                        prompt.controlGroups.first().controls
+                    )
 
-            assertTrue(grantWasCalled)
-            assertTrue(session.contentPermissionRequest.isConsumed())
+                    assertNotNull(checkBox)
+                }
+            }
         }
     }
 
     @Test
-    fun `rejecting a content permission must call reject and consume contentPermissionRequest`() {
-        val session = getSelectedSession()
-        var rejectWasCalled = false
+    fun `storing a new SitePermissions must call save on the store`() {
+        val sitePermissionsList = listOf(ContentGeoLocation())
+        val request: PermissionRequest = mock()
 
+        sitePermissionFeature.storeSitePermissions(request, sitePermissionsList, ALLOWED)
+        verify(mockStorage).findSitePermissionsBy(anyString())
+        verify(mockStorage).save(any())
+    }
+
+    @Test
+    fun `storing an already existing SitePermissions must call update on the store`() {
+        val sitePermissionsList = listOf(
+            ContentGeoLocation(),
+            ContentNotification(),
+            ContentAudioCapture(),
+            ContentAudioMicrophone(),
+            Generic(id = null)
+        )
+
+        var exceptionThrown = false
+
+        sitePermissionsList.forEachIndexed { index, permission ->
+            val mockRequest: PermissionRequest = mock()
+            val sitePermissionFromStorage: SitePermissions = mock()
+            val permissions = listOf(permission)
+            doReturn(sitePermissionFromStorage).`when`(mockStorage).findSitePermissionsBy(anyString())
+            doReturn(permissions).`when`(mockRequest).permissions
+
+            try {
+                sitePermissionFeature.storeSitePermissions(mockRequest, permissions, ALLOWED)
+                verify(mockStorage, times(index + 1)).findSitePermissionsBy(anyString())
+                verify(mockStorage, times(index + 1)).update(any())
+            } catch (e: InvalidParameterException) {
+                exceptionThrown = true
+            }
+        }
+        assertTrue(exceptionThrown)
+    }
+
+    @Test
+    fun `requesting a content permissions with an already stored allowed permission will auto granted it and not show a prompt`() {
+        val request: PermissionRequest = mock()
+        val sitePermissionFromStorage: SitePermissions = mock()
+        val permissionList = listOf(ContentGeoLocation())
+
+        doReturn(permissionList).`when`(request).permissions
+        doReturn(sitePermissionFromStorage).`when`(mockStorage).findSitePermissionsBy(anyString())
+        doReturn(ALLOWED).`when`(sitePermissionFromStorage).location
+
+        runBlocking {
+            val prompt = sitePermissionFeature.onContentPermissionRequested(mock(), request)
+            verify(mockStorage).findSitePermissionsBy(anyString())
+            verify(request).grant(permissionList)
+            assertNull(prompt)
+        }
+    }
+
+    @Test
+    fun `requesting a content permissions with an already stored blocked permission will auto block it and not show a prompt`() {
+        val request: PermissionRequest = mock()
+        val sitePermissionFromStorage: SitePermissions = mock()
+        val permissionList = listOf(ContentGeoLocation())
+
+        doReturn(permissionList).`when`(request).permissions
+        doReturn(sitePermissionFromStorage).`when`(mockStorage).findSitePermissionsBy(anyString())
+        doReturn(BLOCKED).`when`(sitePermissionFromStorage).location
+
+        runBlocking {
+            val prompt = sitePermissionFeature.onContentPermissionRequested(mock(), request)
+            verify(mockStorage).findSitePermissionsBy(anyString())
+            verify(request).reject()
+            assertNull(prompt)
+        }
+    }
+
+    @Test
+    fun `requesting a content permissions with already permissions and doNotAskAgain equals false on the store, will show a prompt`() {
+        val request: PermissionRequest = mock()
+        val sitePermissionFromStorage: SitePermissions = mock()
+        val permissionList = listOf(ContentGeoLocation())
+
+        doReturn(permissionList).`when`(request).permissions
+        doReturn(sitePermissionFromStorage).`when`(mockStorage).findSitePermissionsBy(anyString())
+        doReturn(NO_DECISION).`when`(sitePermissionFromStorage).location
+
+        runBlocking {
+            val prompt = sitePermissionFeature.onContentPermissionRequested(mock(), request)
+            verify(mockStorage).findSitePermissionsBy(anyString())
+            verify(request, times(0)).grant(permissionList)
+            assertNotNull(prompt)
+        }
+    }
+
+    @Test
+    fun `is SitePermission granted in the storage`() {
+        val sitePermissionsList = listOf(
+            ContentGeoLocation(),
+            ContentNotification(),
+            ContentAudioCapture(),
+            ContentAudioMicrophone(),
+            ContentVideoCamera(),
+            ContentVideoCapture()
+        )
+
+        sitePermissionsList.forEach { permission ->
+            val request: PermissionRequest = mock()
+            val sitePermissionFromStorage: SitePermissions = mock()
+
+            doReturn(listOf(permission)).`when`(request).permissions
+            doReturn(sitePermissionFromStorage).`when`(mockStorage).findSitePermissionsBy(anyString())
+            doReturn(ALLOWED).`when`(sitePermissionFromStorage).location
+            doReturn(ALLOWED).`when`(sitePermissionFromStorage).notification
+            doReturn(ALLOWED).`when`(sitePermissionFromStorage).cameraBack
+            doReturn(ALLOWED).`when`(sitePermissionFromStorage).cameraFront
+            doReturn(ALLOWED).`when`(sitePermissionFromStorage).microphone
+
+            val isAllowed = sitePermissionFromStorage.isGranted(request)
+            assertTrue(isAllowed)
+        }
+    }
+
+    @Test
+    fun `is SitePermission blocked in the storage`() {
+        val sitePermissionsList = listOf(
+            ContentGeoLocation(),
+            ContentNotification(),
+            ContentAudioCapture(),
+            ContentAudioMicrophone(),
+            ContentVideoCamera(),
+            ContentVideoCapture(),
+            Generic(id = null)
+        )
+
+        var exceptionThrown = false
+        sitePermissionsList.forEach { permission ->
+            val request: PermissionRequest = mock()
+            val sitePermissionFromStorage: SitePermissions = mock()
+
+            doReturn(listOf(permission)).`when`(request).permissions
+            doReturn(sitePermissionFromStorage).`when`(mockStorage).findSitePermissionsBy(anyString())
+            doReturn(BLOCKED).`when`(sitePermissionFromStorage).location
+            doReturn(BLOCKED).`when`(sitePermissionFromStorage).notification
+            doReturn(BLOCKED).`when`(sitePermissionFromStorage).cameraBack
+            doReturn(BLOCKED).`when`(sitePermissionFromStorage).cameraFront
+            doReturn(BLOCKED).`when`(sitePermissionFromStorage).microphone
+
+            try {
+                val isAllowed = sitePermissionFromStorage.isGranted(request)
+                assertFalse(isAllowed)
+            } catch (e: InvalidParameterException) {
+                exceptionThrown = true
+            }
+        }
+        assertTrue(exceptionThrown)
+    }
+
+    @Test
+    fun `rejecting a content permission must call reject and consume contentPermissionRequest`() {
         val permissions = listOf(
             ContentGeoLocation(),
             ContentNotification(),
@@ -177,6 +352,9 @@ class SitePermissionsFeatureTest {
         )
 
         permissions.forEach { permission ->
+            val session = getSelectedSession()
+            var rejectWasCalled = false
+
             val permissionRequest: PermissionRequest = object : PermissionRequest {
                 override val uri: String?
                     get() = "http://www.mozilla.org"
@@ -192,27 +370,29 @@ class SitePermissionsFeatureTest {
 
             session.contentPermissionRequest = Consumable.from(permissionRequest)
 
-            val prompt = sitePermissionFeature.onContentPermissionRequested(session, permissionRequest)
+            runBlocking {
+                val prompt = sitePermissionFeature.onContentPermissionRequested(session, permissionRequest)
+                val negativeButton = prompt!!.buttons.find { !it.positive }
+                negativeButton!!.onClick.invoke()
 
-            val negativeButton = prompt.buttons.find { !it.positive }
-            negativeButton!!.onClick.invoke()
-
-            assertTrue(rejectWasCalled)
-            assertTrue(session.contentPermissionRequest.isConsumed())
+                assertTrue(rejectWasCalled)
+                assertTrue(session.contentPermissionRequest.isConsumed())
+            }
         }
     }
 
     @Test
     fun `granting a camera permission must call grant and consume contentPermissionRequest`() {
-        val session = getSelectedSession()
-        var grantWasCalled = false
 
         val permissions = listOf(
-                ContentVideoCapture("", "back camera"),
-                ContentVideoCamera("", "front camera")
+            ContentVideoCapture("", "back camera"),
+            ContentVideoCamera("", "front camera")
         )
 
         permissions.forEachIndexed { index, _ ->
+
+            val session = getSelectedSession()
+            var grantWasCalled = false
 
             val permissionRequest: PermissionRequest = object : PermissionRequest {
                 override val uri: String?
@@ -230,32 +410,36 @@ class SitePermissionsFeatureTest {
 
             session.contentPermissionRequest = Consumable.from(permissionRequest)
 
-            val prompt = sitePermissionFeature.onContentPermissionRequested(session, permissionRequest)
+            runBlocking {
+                val prompt = sitePermissionFeature.onContentPermissionRequested(session, permissionRequest)
+                val radioButton =
+                    prompt!!.controlGroups.first().controls[index] as DoorhangerPrompt.Control.RadioButton
 
-            val radioButton = prompt.controlGroups.first().controls[index] as DoorhangerPrompt.Control.RadioButton
+                // Simulating a user click either on the back/front camera option
+                radioButton.checked = true
 
-            // Simulating a user click either on the back/front camera option
-            radioButton.checked = true
+                val positiveButton = prompt.buttons.find { it.positive }
+                positiveButton?.onClick?.invoke()
 
-            val positiveButton = prompt.buttons.find { it.positive }
-            positiveButton?.onClick?.invoke()
-
-            assertTrue(grantWasCalled)
-            assertTrue(session.contentPermissionRequest.isConsumed())
+                assertTrue(grantWasCalled)
+                assertTrue(session.contentPermissionRequest.isConsumed())
+            }
         }
     }
 
     @Test
     fun `rejecting a camera content permission must call reject and consume contentPermissionRequest`() {
-        val session = getSelectedSession()
-        var rejectWasCalled = false
 
         val permissions = listOf(
-                ContentVideoCapture("", "back camera"),
-                ContentVideoCamera("", "front camera")
+            ContentVideoCapture("", "back camera"),
+            ContentVideoCamera("", "front camera")
         )
 
         permissions.forEachIndexed { index, _ ->
+
+            val session = getSelectedSession()
+            var rejectWasCalled = false
+
             val permissionRequest: PermissionRequest = object : PermissionRequest {
                 override val uri: String?
                     get() = "http://www.mozilla.org"
@@ -272,13 +456,14 @@ class SitePermissionsFeatureTest {
 
             session.contentPermissionRequest = Consumable.from(permissionRequest)
 
-            val prompt = sitePermissionFeature.onContentPermissionRequested(session, permissionRequest)
+            runBlocking {
+                val prompt = sitePermissionFeature.onContentPermissionRequested(session, permissionRequest)
+                val negativeButton = prompt!!.buttons.find { !it.positive }
+                negativeButton!!.onClick.invoke()
 
-            val negativeButton = prompt.buttons.find { !it.positive }
-            negativeButton!!.onClick.invoke()
-
-            assertTrue(rejectWasCalled)
-            assertTrue(session.contentPermissionRequest.isConsumed())
+                assertTrue(rejectWasCalled)
+                assertTrue(session.contentPermissionRequest.isConsumed())
+            }
         }
     }
 
@@ -300,6 +485,7 @@ class SitePermissionsFeatureTest {
             override fun grant(permissions: List<Permission>) {
                 grantWasCalled = true
             }
+
             override fun containsVideoAndAudioSources() = true
 
             override fun reject() = Unit
@@ -307,18 +493,19 @@ class SitePermissionsFeatureTest {
 
         session.contentPermissionRequest = Consumable.from(permissionRequest)
 
-        val prompt = sitePermissionFeature.onContentPermissionRequested(session, permissionRequest)
+        runBlocking {
+            val prompt = sitePermissionFeature.onContentPermissionRequested(session, permissionRequest)
+            prompt!!.controlGroups.forEach { control ->
+                val radioButton = control.controls.first() as DoorhangerPrompt.Control.RadioButton
+                radioButton.checked = true
+            }
 
-        prompt.controlGroups.forEach { control ->
-            val radioButton = control.controls.first() as DoorhangerPrompt.Control.RadioButton
-            radioButton.checked = true
+            val positiveButton = prompt.buttons.find { it.positive }
+            positiveButton?.onClick?.invoke()
+
+            assertTrue(grantWasCalled)
+            assertTrue(session.contentPermissionRequest.isConsumed())
         }
-
-        val positiveButton = prompt.buttons.find { it.positive }
-        positiveButton?.onClick?.invoke()
-
-        assertTrue(grantWasCalled)
-        assertTrue(session.contentPermissionRequest.isConsumed())
     }
 
     @Test
@@ -335,6 +522,7 @@ class SitePermissionsFeatureTest {
                     ContentVideoCamera("", "front camera"),
                     ContentAudioMicrophone()
                 )
+
             override fun reject() {
                 rejectWasCalled = true
             }
@@ -346,13 +534,14 @@ class SitePermissionsFeatureTest {
 
         session.contentPermissionRequest = Consumable.from(permissionRequest)
 
-        val prompt = sitePermissionFeature.onContentPermissionRequested(session, permissionRequest)
+        runBlocking {
+            val prompt = sitePermissionFeature.onContentPermissionRequested(session, permissionRequest)
+            val positiveButton = prompt!!.buttons.find { !it.positive }
+            positiveButton?.onClick?.invoke()
 
-        val positiveButton = prompt.buttons.find { !it.positive }
-        positiveButton?.onClick?.invoke()
-
-        assertTrue(rejectWasCalled)
-        assertTrue(session.contentPermissionRequest.isConsumed())
+            assertTrue(rejectWasCalled)
+            assertTrue(session.contentPermissionRequest.isConsumed())
+        }
     }
 
     @Test(expected = NoSuchElementException::class)
@@ -363,7 +552,8 @@ class SitePermissionsFeatureTest {
         )
 
         val cameraControlGroup = sitePermissionFeature.createControlGroupForCameraPermission(
-            cameraPermissions = permissions
+            cameraPermissions = permissions,
+            shouldIncludeDoNotAskAgainCheckBox = false
         )
 
         cameraControlGroup.controls.forEach { control ->

@@ -8,6 +8,7 @@ import mozilla.components.feature.sitepermissions.SitePermissions.Status.BLOCKED
 import mozilla.components.feature.sitepermissions.SitePermissions.Status.NO_DECISION
 import mozilla.components.feature.sitepermissions.SitePermissions.Status.ALLOWED
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Test
 
 class StatusConverterTest {
@@ -24,6 +25,9 @@ class StatusConverterTest {
 
         status = converter.toStatus(ALLOWED.id)
         assertEquals(status, ALLOWED)
+
+        status = converter.toStatus(Int.MAX_VALUE)
+        assertNull(status)
     }
 
     @Test
