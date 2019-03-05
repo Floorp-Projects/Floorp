@@ -257,8 +257,10 @@ open class GleanInternalAPI internal constructor () {
      * Send a list of pings by name.
      *
      * Both the ping collection and ping uploading happens asyncronously.
+     * If the ping currently contains no content, it will not be sent.
      *
      * @param pingNames List of pings to send.
+     * @return true if any pings were actually sent.
      */
     internal fun sendPings(pingNames: List<String>): Boolean {
         if (!isInitialized()) {
