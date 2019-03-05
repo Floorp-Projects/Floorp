@@ -1612,6 +1612,18 @@ nsresult nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame,
   return NS_OK;
 }
 
+void nsMenuPopupFrame::GenerateFrames()
+{
+  const bool generateFrames = IsLeaf();
+  MOZ_ASSERT_IF(generateFrames, !mGeneratedChildren);
+  mGeneratedChildren = true;
+  if (generateFrames) {
+    MOZ_ASSERT(PrincipalChildList().IsEmpty());
+    nsCOMPtr<nsIPresShell> presShell = PresContext()->PresShell();
+    presShell->FrameConstructor()->GenerateChildFrames(this);
+  }
+}
+
 /* virtual */
 nsMenuFrame* nsMenuPopupFrame::GetCurrentMenuItem() { return mCurrentMenu; }
 

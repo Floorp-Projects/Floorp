@@ -27,6 +27,14 @@
     <menuitem id="b4" label="Four"/>
   </menupopup>
 </menulist>
+<menulist id="list3" sizetopopup="none">
+  <menupopup>
+    <menuitem id="s1" label="One"/>
+    <menuitem id="s2" label="Two"/>
+    <menuitem id="s3" label="Three"/>
+    <menuitem id="s4" label="Four"/>
+  </menupopup>
+</menulist>
 
 <script class="testbody" type="application/javascript">
 <![CDATA[
@@ -273,6 +281,16 @@ function checkCursorNavigation()
 
   if (ismac) {
     list.open = false;
+  }
+
+  // Finally, test a menulist with sizetopopup="none" to ensure keyboard navigation
+  // still works when the popup has not been opened.
+  if (!ismac) {
+    let unsizedMenulist = document.getElementById("list3");
+    unsizedMenulist.focus();
+    synthesizeKey("KEY_ArrowDown");
+    is(unsizedMenulist.selectedIndex, 1, "correct menulist index on keydown");
+    is(unsizedMenulist.label, "Two", "correct menulist label on keydown");
   }
 
   SimpleTest.finish();
