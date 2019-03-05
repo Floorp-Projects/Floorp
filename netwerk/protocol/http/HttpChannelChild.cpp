@@ -3076,7 +3076,7 @@ HttpChannelChild::GetAlternativeDataType(nsACString& aType) {
 NS_IMETHODIMP
 HttpChannelChild::OpenAlternativeOutputStream(const nsACString& aType,
                                               int64_t aPredictedSize,
-                                              nsIOutputStream** _retval) {
+                                              nsIAsyncOutputStream** _retval) {
   MOZ_ASSERT(NS_IsMainThread(), "Main thread only");
 
   if (mSynthesizedCacheInfo) {

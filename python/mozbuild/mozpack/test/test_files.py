@@ -101,7 +101,6 @@ class TestWithTmpDir(unittest.TestCase):
 
             self.hardlink_supported = True
 
-
     def tearDown(self):
         mozfile.rmtree(self.tmpdir)
 
@@ -158,6 +157,7 @@ class TestDest(TestWithTmpDir):
         dest.close()
         dest.write('qux')
         self.assertEqual(dest.read(), 'qux')
+
 
 rand = ''.join(random.choice(string.letters) for i in xrange(131597))
 samples = [
@@ -573,12 +573,13 @@ class TestPreprocessedFile(TestWithTmpDir):
             tmp.write('#define FOO\nPREPROCESSED')
 
         f = PreprocessedFile(pp_source, depfile_path=deps, marker='#',
-            defines={'FOO': True})
+                             defines={'FOO': True})
         self.assertTrue(f.copy(dest))
 
         self.assertEqual('PREPROCESSED', open(dest, 'rb').read())
         self.assertFalse(os.path.islink(dest))
         self.assertEqual('', open(source, 'rb').read())
+
 
 class TestExistingFile(TestWithTmpDir):
     def test_required_missing_dest(self):
@@ -691,6 +692,7 @@ class TestGeneratedFile(TestWithTmpDir):
         self.assertEqual(data['num_calls'], 1)
         self.assertEqual('content', f.read())
         self.assertEqual(data['num_calls'], 2)
+
 
 class TestDeflatedFile(TestWithTmpDir):
     def test_deflated_file(self):
@@ -807,6 +809,7 @@ class TestManifestFile(TestWithTmpDir):
         self.assertEqual(content[:42], f.open().read(42))
         self.assertEqual(content, f.open().read())
 
+
 # Compiled typelib for the following IDL:
 #     interface foo;
 #     [scriptable, uuid(5f70da76-519c-4858-b71e-e3c92333e2d6)]
@@ -903,7 +906,7 @@ class TestMinifiedJavaScript(TestWithTmpDir):
     def test_minified_verify_success(self):
         orig_f = GeneratedFile('\n'.join(self.orig_lines))
         min_f = MinifiedJavaScript(orig_f,
-            verify_command=self._verify_command('0'))
+                                   verify_command=self._verify_command('0'))
 
         mini_lines = min_f.open().readlines()
         self.assertTrue(mini_lines)
@@ -913,14 +916,14 @@ class TestMinifiedJavaScript(TestWithTmpDir):
         orig_f = GeneratedFile('\n'.join(self.orig_lines))
         errors.out = StringIO()
         min_f = MinifiedJavaScript(orig_f,
-            verify_command=self._verify_command('1'))
+                                   verify_command=self._verify_command('1'))
 
         mini_lines = min_f.open().readlines()
         output = errors.out.getvalue()
         errors.out = sys.stderr
         self.assertEqual(output,
-            'Warning: JS minification verification failed for <unknown>:\n'
-            'Warning: Error message\n')
+                         'Warning: JS minification verification failed for <unknown>:\n'
+                         'Warning: Error message\n')
         self.assertEqual(mini_lines, orig_f.open().readlines())
 
 
@@ -1060,9 +1063,9 @@ class TestFileFinder(MatchTestTemplate, TestWithTmpDir):
 
         self.finder = FileFinder(self.tmpdir, ignore=['foo/bar', 'bar'])
         self.do_check('**', ['barz', 'foo/baz', 'foo/qux/1', 'foo/qux/2/test',
-            'foo/qux/2/test2', 'foo/qux/bar'])
+                             'foo/qux/2/test2', 'foo/qux/bar'])
         self.do_check('foo/**', ['foo/baz', 'foo/qux/1', 'foo/qux/2/test',
-            'foo/qux/2/test2', 'foo/qux/bar'])
+                                 'foo/qux/2/test2', 'foo/qux/bar'])
 
     def test_ignored_patterns(self):
         """Ignore entries with patterns should be honored."""
@@ -1079,15 +1082,15 @@ class TestFileFinder(MatchTestTemplate, TestWithTmpDir):
         self.prepare_match_test(with_dotfiles=True)
         self.finder = FileFinder(self.tmpdir, find_dotfiles=True)
         self.do_check('**', ['bar', 'foo/.foo', 'foo/.bar/foo',
-            'foo/bar', 'foo/baz', 'foo/qux/1', 'foo/qux/bar',
-            'foo/qux/2/test', 'foo/qux/2/test2'])
+                             'foo/bar', 'foo/baz', 'foo/qux/1', 'foo/qux/bar',
+                             'foo/qux/2/test', 'foo/qux/2/test2'])
 
     def test_dotfiles_plus_ignore(self):
         self.prepare_match_test(with_dotfiles=True)
         self.finder = FileFinder(self.tmpdir, find_dotfiles=True,
                                  ignore=['foo/.bar/**'])
         self.do_check('foo/**', ['foo/.foo', 'foo/bar', 'foo/baz',
-            'foo/qux/1', 'foo/qux/bar', 'foo/qux/2/test', 'foo/qux/2/test2'])
+                                 'foo/qux/1', 'foo/qux/bar', 'foo/qux/2/test', 'foo/qux/2/test2'])
 
 
 class TestJarFinder(MatchTestTemplate, TestWithTmpDir):
@@ -1107,6 +1110,7 @@ class TestJarFinder(MatchTestTemplate, TestWithTmpDir):
 
         self.assertIsNone(self.finder.get('does-not-exist'))
         self.assertIsInstance(self.finder.get('bar'), DeflatedFile)
+
 
 class TestTarFinder(MatchTestTemplate, TestWithTmpDir):
     def add(self, path):

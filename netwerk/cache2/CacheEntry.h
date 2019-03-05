@@ -94,7 +94,7 @@ class CacheEntry final : public nsIRunnable, public CacheFileListener {
   nsresult GetAltDataType(nsACString &aAltDataType);
   nsresult OpenAlternativeOutputStream(const nsACString &type,
                                        int64_t predictedSize,
-                                       nsIOutputStream **_retval);
+                                       nsIAsyncOutputStream **_retval);
   nsresult OpenAlternativeInputStream(const nsACString &type,
                                       nsIInputStream **_retval);
   nsresult GetLoadContextInfo(nsILoadContextInfo **aLoadContextInfo);
@@ -516,9 +516,9 @@ class CacheEntryHandle final : public nsICacheEntry {
   NS_IMETHOD GetAltDataType(nsACString &aType) override {
     return mEntry->GetAltDataType(aType);
   }
-  NS_IMETHOD OpenAlternativeOutputStream(const nsACString &type,
-                                         int64_t predictedSize,
-                                         nsIOutputStream **_retval) override {
+  NS_IMETHOD OpenAlternativeOutputStream(
+      const nsACString &type, int64_t predictedSize,
+      nsIAsyncOutputStream **_retval) override {
     return mEntry->OpenAlternativeOutputStream(type, predictedSize, _retval);
   }
   NS_IMETHOD OpenAlternativeInputStream(const nsACString &type,

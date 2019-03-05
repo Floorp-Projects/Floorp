@@ -119,6 +119,7 @@ class BaseTestFileRegistry(MatchTestTemplate):
         self.registry.remove('bar/zot')
         self.registry.add('bar/zot', GeneratedFile('barzot'))
 
+
 class TestFileRegistry(BaseTestFileRegistry, unittest.TestCase):
     def test_partial_paths(self):
         cases = {
@@ -180,7 +181,7 @@ class TestFileRegistrySubtree(BaseTestFileRegistry, unittest.TestCase):
         self.do_test_file_registry(self.create_registry())
 
     def test_registry_paths_subtree(self):
-        registry = FileRegistry()
+        FileRegistry()
         self.do_test_registry_paths(self.create_registry())
 
 
@@ -215,7 +216,7 @@ class TestFileCopier(TestWithTmpDir):
                          set(['foo/deep/nested/directory', 'qux']))
 
         self.assertEqual(result.updated_files, set(self.tmppath(p) for p in
-            self.all_files(self.tmpdir)))
+                                                   self.all_files(self.tmpdir)))
         self.assertEqual(result.existing_files, set())
         self.assertEqual(result.removed_files, set())
         self.assertEqual(result.removed_directories, set())
@@ -226,7 +227,8 @@ class TestFileCopier(TestWithTmpDir):
         self.assertEqual(self.all_files(self.tmpdir), set(copier.paths()))
         self.assertEqual(self.all_dirs(self.tmpdir), set(['qux']))
         self.assertEqual(result.removed_files, set(self.tmppath(p) for p in
-            ('foo/bar', 'foo/qux', 'foo/deep/nested/directory/file')))
+                                                   ('foo/bar', 'foo/qux',
+                                                    'foo/deep/nested/directory/file')))
 
     def test_symlink_directory_replaced(self):
         """Directory symlinks in destination are replaced if they need to be
@@ -281,8 +283,8 @@ class TestFileCopier(TestWithTmpDir):
         # the symlinked directory remains (as does its containing
         # directory).
         result = copier.copy(dest, remove_unaccounted=False,
-            remove_empty_directories=True,
-            remove_all_directory_symlinks=False)
+                             remove_empty_directories=True,
+                             remove_all_directory_symlinks=False)
 
         st = os.lstat(link)
         self.assertTrue(stat.S_ISLNK(st.st_mode))
@@ -297,8 +299,8 @@ class TestFileCopier(TestWithTmpDir):
         # If remove_unaccounted but not remove_empty_directories, then
         # only the symlinked directory is removed.
         result = copier.copy(dest, remove_unaccounted=True,
-            remove_empty_directories=False,
-            remove_all_directory_symlinks=False)
+                             remove_empty_directories=False,
+                             remove_all_directory_symlinks=False)
 
         st = os.lstat(self.tmppath('dest/zot'))
         self.assertFalse(stat.S_ISLNK(st.st_mode))
@@ -316,8 +318,8 @@ class TestFileCopier(TestWithTmpDir):
         os.symlink(dummy, link)
 
         result = copier.copy(dest, remove_unaccounted=True,
-            remove_empty_directories=True,
-            remove_all_directory_symlinks=False)
+                             remove_empty_directories=True,
+                             remove_all_directory_symlinks=False)
 
         self.assertEqual(result.removed_files, set([link]))
         self.assertEqual(result.removed_directories, set([self.tmppath('dest/zot')]))
@@ -363,11 +365,11 @@ class TestFileCopier(TestWithTmpDir):
         result = copier.copy(self.tmpdir, remove_unaccounted=False)
 
         self.assertEqual(self.all_files(self.tmpdir), set(['foo', 'bar',
-            'populateddir/foo']))
+                                                           'populateddir/foo']))
         self.assertEqual(self.all_dirs(self.tmpdir), set(['populateddir']))
         self.assertEqual(result.removed_files, set())
         self.assertEqual(result.removed_directories,
-            set([self.tmppath('emptydir')]))
+                         set([self.tmppath('emptydir')]))
 
     def test_no_remove_empty_directories(self):
         copier = FileCopier()
@@ -384,12 +386,12 @@ class TestFileCopier(TestWithTmpDir):
             pass
 
         result = copier.copy(self.tmpdir, remove_unaccounted=False,
-            remove_empty_directories=False)
+                             remove_empty_directories=False)
 
         self.assertEqual(self.all_files(self.tmpdir), set(['foo', 'bar',
-            'populateddir/foo']))
+                                                           'populateddir/foo']))
         self.assertEqual(self.all_dirs(self.tmpdir), set(['emptydir',
-            'populateddir']))
+                                                          'populateddir']))
         self.assertEqual(result.removed_files, set())
         self.assertEqual(result.removed_directories, set())
 
@@ -433,15 +435,15 @@ class TestFileCopier(TestWithTmpDir):
 
         os.makedirs(os.path.join(dest, 'bar'))
         with open(os.path.join(dest, 'bar', 'bar'), 'w') as fh:
-            fh.write('barbar');
+            fh.write('barbar')
         os.makedirs(os.path.join(dest, 'foo', 'toto'))
         with open(os.path.join(dest, 'foo', 'toto', 'toto'), 'w') as fh:
-            fh.write('foototototo');
+            fh.write('foototototo')
 
         result = copier.copy(dest, remove_unaccounted=False)
 
         self.assertEqual(self.all_files(dest),
-                         set(copier.paths()) | { 'foo/toto/toto', 'bar/bar'})
+                         set(copier.paths()) | {'foo/toto/toto', 'bar/bar'})
         self.assertEqual(self.all_dirs(dest),
                          {'foo/bar', 'foo/hoge', 'foo/toto', 'bar'})
 
@@ -453,14 +455,15 @@ class TestFileCopier(TestWithTmpDir):
         result = copier2.copy(dest, remove_unaccounted=copier)
 
         self.assertEqual(self.all_files(dest),
-                         set(copier2.paths()) | { 'foo/toto/toto', 'bar/bar'})
+                         set(copier2.paths()) | {'foo/toto/toto', 'bar/bar'})
         self.assertEqual(self.all_dirs(dest),
                          {'foo/hoge', 'foo/toto', 'bar'})
         self.assertEqual(result.updated_files,
                          {self.tmppath('dest/foo/hoge/fuga')})
         self.assertEqual(result.existing_files, set())
         self.assertEqual(result.removed_files, {self.tmppath(p) for p in
-            ('dest/foo/bar/baz', 'dest/foo/bar/qux', 'dest/foo/toto/tata')})
+                                                ('dest/foo/bar/baz', 'dest/foo/bar/qux',
+                                                 'dest/foo/toto/tata')})
         self.assertEqual(result.removed_directories,
                          {self.tmppath('dest/foo/bar')})
 
@@ -506,9 +509,8 @@ class TestJarrer(unittest.TestCase):
         dest.seek(0)
         jar = JarReader(fileobj=dest)
         self.assertEqual([f.filename for f in jar], preloaded +
-                         [p for p in copier.paths() if not p in preloaded])
+                         [p for p in copier.paths() if p not in preloaded])
         self.assertEqual(jar.last_preloaded, preloaded[-1])
-
 
     def test_jarrer_compress(self):
         copier = Jarrer()

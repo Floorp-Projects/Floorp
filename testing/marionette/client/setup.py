@@ -24,7 +24,7 @@ def get_version():
 setup(name='marionette_driver',
       version=get_version(),
       description="Marionette Driver",
-      long_description='See http://marionette-client.readthedocs.org/en/latest/',
+      long_description='See https://firefox-source-docs.mozilla.org/python/marionette_driver.html',
       # Get strings from http://pypi.python.org/pypi?%3Aaction=list_classifiers
       classifiers=[
           'Development Status :: 5 - Production/Stable',

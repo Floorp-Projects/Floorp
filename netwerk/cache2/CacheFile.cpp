@@ -902,7 +902,7 @@ nsresult CacheFile::OpenOutputStream(CacheOutputCloseListener *aCloseListener,
 
 nsresult CacheFile::OpenAlternativeOutputStream(
     CacheOutputCloseListener *aCloseListener, const char *aAltDataType,
-    nsIOutputStream **_retval) {
+    nsIAsyncOutputStream **_retval) {
   CacheFileAutoLock lock(this);
 
   MOZ_ASSERT(mHandle || mMemoryOnly || mOpeningFile);
