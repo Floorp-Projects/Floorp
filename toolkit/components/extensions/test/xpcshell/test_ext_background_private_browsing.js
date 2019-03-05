@@ -33,27 +33,3 @@ add_task(async function test_background_incognito() {
 
   await extension.unload();
 });
-
-add_task(async function test_background_PPB_not_allowed() {
-  info("Test background page incognito value with permanent private browsing enabled");
-
-  Services.prefs.setBoolPref("extensions.allowPrivateBrowsingByDefault", false);
-  Services.prefs.setBoolPref("browser.privatebrowsing.autostart", true);
-  registerCleanupFunction(() => {
-    Services.prefs.clearUserPref("browser.privatebrowsing.autostart");
-    Services.prefs.clearUserPref("extensions.allowPrivateBrowsingByDefault");
-  });
-
-  let extension = ExtensionTestUtils.loadExtension({
-    async background() {
-      browser.test.notifyFail("incognito");
-    },
-  });
-
-  await extension.startup();
-
-  let state = extension.extension.state;
-  ok(state.startsWith("Startup: Cancelled"), `extension startup state should be cancelled "${state}"`);
-
-  await extension.unload();
-});
