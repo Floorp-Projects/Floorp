@@ -242,6 +242,11 @@ class UrlbarEventBufferer {
       return false;
     }
 
+    if (DEFERRED_KEY_CODES.has(event.keyCode) &&
+        this.input.controller.keyEventMovesCaret(event)) {
+      return false;
+    }
+
     // This is an event that we'd defer, but if enough time has passed since the
     // start of the search, we don't want to block the user's workflow anymore.
     if (this._lastQuery.startDate + DEFERRING_TIMEOUT_MS <= Cu.now()) {
