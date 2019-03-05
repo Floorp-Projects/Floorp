@@ -376,7 +376,7 @@ add_task(async function testCustomOptionsVisibility() {
 add_task(async function testPolicyCategorization() {
   Services.prefs.setStringPref(CAT_PREF, "standard");
   is(Services.prefs.getStringPref(CAT_PREF), "standard", `${CAT_PREF} starts on standard`);
-  is(Services.prefs.getBoolPref(TP_PREF), false, `${TP_PREF} starts on false`);
+  ok(!Services.prefs.prefHasUserValue(TP_PREF), `${TP_PREF} starts with the default value`);
   PoliciesPrefTracker.start();
 
   await EnterprisePolicyTesting.setupPolicyEngineWithJson({
@@ -390,7 +390,7 @@ add_task(async function testPolicyCategorization() {
 
   Services.prefs.setStringPref(CAT_PREF, "standard");
   is(Services.prefs.getStringPref(CAT_PREF), "standard", `${CAT_PREF} starts on standard`);
-  is(Services.prefs.getIntPref(NCB_PREF), 4, `${NCB_PREF} starts on 4`);
+  ok(!Services.prefs.prefHasUserValue(NCB_PREF), `${NCB_PREF} starts with the default value`);
 
   let uiUpdatedPromise = TestUtils.topicObserved("privacy-pane-tp-ui-updated");
   await EnterprisePolicyTesting.setupPolicyEngineWithJson({
@@ -403,7 +403,7 @@ add_task(async function testPolicyCategorization() {
   await openPreferencesViaOpenPreferencesAPI("privacy", {leaveOpen: true});
   await uiUpdatedPromise;
 
-  EnterprisePolicyTesting.checkPolicyPref(NCB_PREF, 1, true);
+  EnterprisePolicyTesting.checkPolicyPref(NCB_PREF, Ci.nsICookieService.BEHAVIOR_REJECT_FOREIGN, true);
   is(Services.prefs.getStringPref(CAT_PREF), "custom", `${CAT_PREF} has been set to custom`);
 
   let doc = gBrowser.contentDocument;
