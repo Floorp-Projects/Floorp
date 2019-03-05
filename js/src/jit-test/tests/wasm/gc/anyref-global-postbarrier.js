@@ -65,7 +65,15 @@ if (!isSingleStepProfilingEnabled)
 enableGeckoProfiling();
 
 const EXPECTED_STACKS = [
-    ['', '!>', '0,!>', '<,0,!>', 'GC postbarrier,0,!>', '<,0,!>', '0,!>', '!>', ''],
+    // Expected output for (simulator+baseline).
+    ['', '!>', '0,!>', '<,0,!>', 'GC postbarrier,0,!>',
+     '<,0,!>', '0,!>', '!>', ''],
+
+    // Expected output for (simulator+via-Ion).
+    ['', '!>', '0,!>', '<,0,!>', 'filtering GC postbarrier,0,!>',
+     '<,0,!>', '0,!>', '!>', ''],
+
+    // Expected output for other configurations.
     ['', '!>', '0,!>', '!>', ''],
 ];
 
