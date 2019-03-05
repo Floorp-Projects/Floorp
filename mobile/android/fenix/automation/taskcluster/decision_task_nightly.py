@@ -55,7 +55,7 @@ def generate_build_task(apks, is_staging):
             ' && python automation/taskcluster/helper/get-secret.py'
             ' -s {} -k dsn -f .sentry_token'.format(sentry_secret) +
             ' && python automation/taskcluster/helper/get-secret.py'
-            '-s {} -k Greenfield -f .adjust_token'.format(adjust_secret)
+            '-s {} -k Greenfield -f .adjust_token'.format(adjust_secret) +
             ' && ./gradlew --no-daemon -PcrashReports=true clean test assembleGreenfieldRelease'),
         features={
             "chainOfTrust": True,
