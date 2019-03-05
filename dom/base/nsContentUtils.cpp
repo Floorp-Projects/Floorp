@@ -70,6 +70,7 @@
 #include "mozilla/dom/IPCBlobUtils.h"
 #include "mozilla/dom/NodeBinding.h"
 #include "mozilla/dom/Promise.h"
+#include "mozilla/dom/RemoteFrameChild.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/TabParent.h"
 #include "mozilla/dom/Text.h"
@@ -6188,7 +6189,8 @@ bool nsContentUtils::IsSubDocumentTabbable(nsIContent* aContent) {
 
   // If the subdocument lives in another process, the frame is
   // tabbable.
-  if (EventStateManager::IsRemoteTarget(aContent)) {
+  if (EventStateManager::IsRemoteTarget(aContent) ||
+      RemoteFrameChild::GetFrom(aContent)) {
     return true;
   }
 
