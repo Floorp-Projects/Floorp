@@ -69,8 +69,6 @@ class MochiRemote(MochitestDesktop):
         if not self.device.is_app_installed(expected):
             raise Exception("%s is not installed on this device" % expected)
 
-        self.automation.deleteANRs()
-        self.automation.deleteTombstones()
         self.device.clear_logcat()
 
         self.remoteModulesDir = posixpath.join(options.remoteTestRoot, "modules/")

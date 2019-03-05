@@ -96,8 +96,6 @@ class RobocopTestRunner(MochitestDesktop):
         # trying to start new ones.
         self.killNamedProc('ssltunnel')
         self.killNamedProc('xpcshell')
-        self.auto.deleteANRs()
-        self.auto.deleteTombstones()
         procName = self.options.app.split('/')[-1]
         self.device.stop_application(procName)
         if self.device.process_exist(procName):
