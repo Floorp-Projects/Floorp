@@ -154,6 +154,9 @@ class TrySelect(MachCommandBase):
             if context is not None:
                 kwargs['templates'].update(context)
 
+            for name in cls.dests:
+                del kwargs[name]
+
         return kwargs
 
     def run(self, **kwargs):
