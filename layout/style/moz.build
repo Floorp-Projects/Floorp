@@ -187,8 +187,10 @@ UNIFIED_SOURCES += [
     'MediaQueryList.cpp',
     'nsAnimationManager.cpp',
     'nsComputedDOMStyle.cpp',
+    'nsCSSAnonBoxes.cpp',
     'nsCSSKeywords.cpp',
     'nsCSSProps.cpp',
+    'nsCSSPseudoElements.cpp',
     'nsCSSValue.cpp',
     'nsDOMCSSAttrDeclaration.cpp',
     'nsDOMCSSDeclaration.cpp',
@@ -198,6 +200,7 @@ UNIFIED_SOURCES += [
     'nsHTMLCSSStyleSheet.cpp',
     'nsHTMLStyleSheet.cpp',
     'nsICSSDeclaration.cpp',
+    'nsLayoutStylesheetCache.cpp',
     'nsMediaFeatures.cpp',
     'nsROCSSPrimitiveValue.cpp',
     'nsStyleCoord.cpp',
@@ -220,14 +223,6 @@ UNIFIED_SOURCES += [
     'StyleComplexColor.cpp',
     'StyleSheet.cpp',
     'URLExtraData.cpp',
-]
-
-SOURCES += [
-    'nsCSSAnonBoxes.cpp',
-    'nsCSSPseudoElements.cpp',
-    # nsLayoutStylesheetCache.cpp uses nsExceptionHandler.h, which includes
-    # windows.h.
-    'nsLayoutStylesheetCache.cpp',
 ]
 
 include('/ipc/chromium/chromium-config.mozbuild')
