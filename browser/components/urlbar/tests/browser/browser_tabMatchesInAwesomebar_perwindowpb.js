@@ -8,9 +8,7 @@
  * private browsing and the other is normal, or vice-versa.
  */
 
-const TEST_PATH = getRootDirectory(gTestPath)
-  .replace("chrome://mochitests/content", "http://example.com");
-const TEST_URL = `${TEST_PATH}dummy_page.html`;
+const TEST_URL = `${TEST_BASE_URL}dummy_page.html`;
 
 add_task(async function() {
   let normalWindow = await BrowserTestUtils.openNewBrowserWindow();
@@ -66,7 +64,9 @@ async function runTest(aSourceWindow, aDestWindow, aExpectSwitch, aCallback) {
      "The test tab doesn't have the busy attribute");
 
   // Wait for the Awesomebar popup to appear.
-  await promiseAutocompleteResultPopup(TEST_URL, aDestWindow);
+  // Use a slice to workaround bug 1507755.
+  let searchString = UrlbarPrefs.get("quantumbar") ? TEST_URL : TEST_URL.slice(1);
+  await promiseAutocompleteResultPopup(searchString, aDestWindow);
 
   info(`awesomebar popup appeared. aExpectSwitch: ${aExpectSwitch}`);
   // Make sure the last match is selected.

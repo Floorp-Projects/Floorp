@@ -757,7 +757,7 @@ add_task(async function testExtensionControlledProxyConfig() {
         return {
           manualControls: [
             ...manualControlContainer.querySelectorAll("label[data-l10n-id]:not([control=networkProxyNone])"),
-            ...manualControlContainer.querySelectorAll("textbox:not(#networkProxyNone)"),
+            ...manualControlContainer.querySelectorAll("textbox"),
             ...manualControlContainer.querySelectorAll("checkbox"),
             ...doc.querySelectorAll("#networkProxySOCKSVersion > radio")],
           pacControls: [doc.getElementById("networkProxyAutoconfigURL")],
@@ -846,8 +846,11 @@ add_task(async function testExtensionControlledProxyConfig() {
 
   verifyState(mainDoc, false);
 
-  // Install an extension that controls proxy settings.
+  // Install an extension that controls proxy settings. The extension needs
+  // incognitoOverride because controlling the proxy.settings requires private
+  // browsing access.
   let extension = ExtensionTestUtils.loadExtension({
+    incognitoOverride: "spanning",
     useAddonManager: "permanent",
     manifest: {
       name: "set_proxy",

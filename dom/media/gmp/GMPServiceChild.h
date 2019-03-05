@@ -49,7 +49,7 @@ class GeckoMediaPluginServiceChild : public GeckoMediaPluginService {
     // Nothing to do here.
   }
 
-  virtual RefPtr<GetGMPContentParentPromise> GetContentParent(
+  RefPtr<GetGMPContentParentPromise> GetContentParent(
       GMPCrashHelper* aHelper, const nsACString& aNodeIdString,
       const nsCString& aAPI, const nsTArray<nsCString>& aTags) override;
 

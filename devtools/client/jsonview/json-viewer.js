@@ -22,7 +22,7 @@ define(function(require, exports, module) {
     jsonText: JSONView.json,
     jsonPretty: null,
     headers: JSONView.headers,
-    tabActive: 0,
+    activeTab: 0,
     prettified: false,
     expandedNodes: new Set(),
   };
@@ -139,13 +139,13 @@ define(function(require, exports, module) {
     if (document.readyState == "loading") {
       // If the JSON has not been loaded yet, render the Raw Data tab first.
       input.json = {};
-      input.tabActive = 1;
+      input.activeTab = 1;
       return new Promise(resolve => {
         document.addEventListener("DOMContentLoaded", resolve, {once: true});
       }).then(parseJSON).then(() => {
         // Now update the state and switch to the JSON tab.
         theApp.setState({
-          tabActive: 0,
+          activeTab: 0,
           json: input.json,
           expandedNodes: input.expandedNodes,
         });

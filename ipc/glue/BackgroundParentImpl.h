@@ -243,9 +243,9 @@ class BackgroundParentImpl : public PBackgroundParent {
       dom::cache::PCacheStreamControlParent* aActor) override;
 
   virtual PUDPSocketParent* AllocPUDPSocketParent(
-      const OptionalPrincipalInfo& pInfo, const nsCString& aFilter) override;
+      const Maybe<PrincipalInfo>& pInfo, const nsCString& aFilter) override;
   virtual mozilla::ipc::IPCResult RecvPUDPSocketConstructor(
-      PUDPSocketParent*, const OptionalPrincipalInfo& aPrincipalInfo,
+      PUDPSocketParent*, const Maybe<PrincipalInfo>& aPrincipalInfo,
       const nsCString& aFilter) override;
   virtual bool DeallocPUDPSocketParent(PUDPSocketParent*) override;
 

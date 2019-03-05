@@ -33,7 +33,7 @@ and try again.
 """.strip()
 
 
-def setup(root):
+def setup(root, **lintargs):
     setup_helper.set_project_root(root)
 
     if not setup_helper.check_node_executables_valid():

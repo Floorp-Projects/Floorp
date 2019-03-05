@@ -340,6 +340,18 @@ ExtensionTestCommon = class ExtensionTestCommon {
     return ExtensionPermissions.add(id, {permissions: ["internal:privateBrowsingAllowed"], origins: []});
   }
 
+  static setExtensionID(data) {
+    try {
+      if (data.manifest.applications.gecko.id) {
+        return;
+      }
+    } catch (e) {
+      // No ID is set.
+    }
+    provide(data, ["manifest", "applications", "gecko", "id"],
+            uuidGen.generateUUID().number);
+  }
+
   /**
    * Generates a new extension using |Extension.generateXPI|, and initializes a
    * new |Extension| instance which will execute it.

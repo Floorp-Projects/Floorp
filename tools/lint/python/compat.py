@@ -73,7 +73,7 @@ def run_linter(python, paths, config, **lintargs):
     return results
 
 
-def setuppy2(root):
+def setuppy2(**lintargs):
     return setup('python2')
 
 
@@ -81,7 +81,7 @@ def lintpy2(*args, **kwargs):
     return run_linter('python2', *args, **kwargs)
 
 
-def setuppy3(root):
+def setuppy3(**lintargs):
     return setup('python3')
 
 

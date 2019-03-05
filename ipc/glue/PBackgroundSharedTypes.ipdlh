@@ -58,11 +58,5 @@ union PrincipalInfo
   ExpandedPrincipalInfo;
 };
 
-union OptionalPrincipalInfo
-{
-  void_t;
-  PrincipalInfo;
-};
-
 } // namespace ipc
 } // namespace mozilla

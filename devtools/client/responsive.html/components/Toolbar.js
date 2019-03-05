@@ -99,6 +99,7 @@ class Toolbar extends PureComponent {
       screenshot,
       selectedDevice,
       selectedPixelRatio,
+      showUserAgentInput,
       touchSimulationEnabled,
       viewport,
     } = this.props;
@@ -107,7 +108,10 @@ class Toolbar extends PureComponent {
       dom.header(
         {
           id: "toolbar",
-          className: leftAlignmentEnabled ? "left-aligned" : "",
+          className: [
+            leftAlignmentEnabled ? "left-aligned" : "",
+            showUserAgentInput ? "user-agent" : "",
+          ].join(" ").trim(),
         },
         dom.div(
           { id: "toolbar-center-controls" },

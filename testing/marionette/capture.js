@@ -133,13 +133,6 @@ capture.canvas = function(win, left, top, width, height,
     canvas.height = canvasHeight;
   }
 
-  if (width * scale > MAX_SKIA_DIMENSIONS) {
-    width = Math.floor(MAX_SKIA_DIMENSIONS / scale);
-  }
-  if (height * scale > MAX_SKIA_DIMENSIONS) {
-    height = Math.floor(MAX_SKIA_DIMENSIONS / scale);
-  }
-
   let ctx = canvas.getContext(CONTEXT_2D);
   if (flags === null) {
     flags = ctx.DRAWWINDOW_DRAW_CARET;

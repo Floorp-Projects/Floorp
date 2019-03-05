@@ -330,7 +330,7 @@ class Tabbar extends Component {
           renderOnlySelected: this.props.renderOnlySelected,
           showAllTabsMenu: this.props.showAllTabsMenu,
           sidebarToggleButton: this.props.sidebarToggleButton,
-          tabActive: this.state.activeTab,
+          activeTab: this.state.activeTab,
           onAfterChange: this.onTabChanged,
         },
           tabs

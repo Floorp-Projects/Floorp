@@ -3960,7 +3960,6 @@ nsCSSFrameConstructor::FindXULTagData(const Element& aElement, nsAtom* aTag,
 
   static const FrameConstructionDataByTag sXULTagData[] = {
 #ifdef MOZ_XUL
-      SCROLLABLE_XUL_CREATE(button, NS_NewButtonBoxFrame),
       SCROLLABLE_XUL_CREATE(thumb, NS_NewButtonBoxFrame),
       SCROLLABLE_XUL_CREATE(checkbox, NS_NewButtonBoxFrame),
       SCROLLABLE_XUL_CREATE(radio, NS_NewButtonBoxFrame),
@@ -3974,6 +3973,8 @@ nsCSSFrameConstructor::FindXULTagData(const Element& aElement, nsAtom* aTag,
       SIMPLE_XUL_CREATE(treechildren, NS_NewTreeBodyFrame),
       SIMPLE_XUL_CREATE(treecol, NS_NewTreeColFrame),
       SIMPLE_XUL_CREATE(text, NS_NewTextBoxFrame),
+      SIMPLE_TAG_CHAIN(button, nsCSSFrameConstructor::FindXULButtonData),
+      SIMPLE_TAG_CHAIN(toolbarbutton, nsCSSFrameConstructor::FindXULButtonData),
       SIMPLE_TAG_CHAIN(label, nsCSSFrameConstructor::FindXULLabelData),
       SIMPLE_TAG_CHAIN(description,
                        nsCSSFrameConstructor::FindXULDescriptionData),
@@ -4018,6 +4019,22 @@ nsCSSFrameConstructor::FindPopupGroupData(const Element& aElement,
 const nsCSSFrameConstructor::FrameConstructionData
     nsCSSFrameConstructor::sXULTextBoxData =
         SIMPLE_XUL_FCDATA(NS_NewTextBoxFrame);
+
+/* static */
+const nsCSSFrameConstructor::FrameConstructionData*
+nsCSSFrameConstructor::FindXULButtonData(const Element& aElement,
+                                         ComputedStyle&) {
+  static const FrameConstructionData sXULMenuData =
+      SIMPLE_XUL_FCDATA(NS_NewMenuFrame);
+  if (aElement.AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
+                           nsGkAtoms::menu, eCaseMatters)) {
+    return &sXULMenuData;
+  }
+
+  static const FrameConstructionData sXULButtonData =
+      SCROLLABLE_XUL_FCDATA(NS_NewButtonBoxFrame);
+  return &sXULButtonData;
+}
 
 /* static */
 const nsCSSFrameConstructor::FrameConstructionData*

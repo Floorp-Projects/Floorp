@@ -44,15 +44,6 @@
                  "password textbox");
 
       //////////////////////////////////////////////////////////////////////////
-      // Textarea
-      testStates(getInput("textarea"),
-                 STATE_FOCUSABLE,
-                 EXT_STATE_EDITABLE | EXT_STATE_MULTI_LINE,
-                 STATE_PROTECTED | STATE_UNAVAILABLE,
-                 EXT_STATE_SUPPORTS_AUTOCOMPLETION,
-                 "multiline textbox");
-
-      //////////////////////////////////////////////////////////////////////////
       // Readonly textbox
       testStates(getInput("readonly_textbox"),
                  STATE_FOCUSABLE | STATE_READONLY,
@@ -69,24 +60,6 @@
                  STATE_FOCUSABLE | STATE_PROTECTED,
                  EXT_STATE_SUPPORTS_AUTOCOMPLETION,
                  "readonly textbox");
-
-      //////////////////////////////////////////////////////////////////////////
-      // Readonly textarea
-      testStates(getInput("readonly_textarea"),
-                 STATE_FOCUSABLE | STATE_READONLY,
-                 EXT_STATE_EDITABLE | EXT_STATE_MULTI_LINE,
-                 STATE_PROTECTED | STATE_UNAVAILABLE,
-                 EXT_STATE_SUPPORTS_AUTOCOMPLETION,
-                 "readonly multiline textbox");
-
-      //////////////////////////////////////////////////////////////////////////
-      // Disabled textarea
-      testStates(getInput("disabled_textarea"),
-                 STATE_UNAVAILABLE,
-                 EXT_STATE_EDITABLE| EXT_STATE_MULTI_LINE,
-                 STATE_PROTECTED | STATE_FOCUSABLE,
-                 EXT_STATE_SUPPORTS_AUTOCOMPLETION,
-                 "readonly multiline textbox");
 
       //////////////////////////////////////////////////////////////////////////
       // Search textbox without search button, searches as you type and filters
@@ -136,14 +109,9 @@
   <vbox flex="1">
     <textbox id="textbox"/>
     <textbox id="password" type="password"/>
-    <textbox id="textarea" multiline="true" cols="80" rows="5"/>
 
     <textbox id="readonly_textbox" readonly="true"/>
     <textbox id="disabled_textbox" disabled="true"/>
-    <textbox id="readonly_textarea" multiline="true" readonly="true"
-             cols="80" rows="5"/>
-    <textbox id="disabled_textarea" multiline="true" disabled="true"
-             cols="80" rows="5"/>
 
     <textbox id="searchbox" flex="1" type="search" results="historyTree"/>
     <textbox id="searchfield" placeholder="Search all add-ons"

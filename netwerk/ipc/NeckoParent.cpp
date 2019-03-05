@@ -65,7 +65,6 @@ using mozilla::dom::TCPServerSocketParent;
 using mozilla::dom::TCPSocketParent;
 using mozilla::dom::UDPSocketParent;
 using mozilla::ipc::LoadInfoArgsToLoadInfo;
-using mozilla::ipc::OptionalPrincipalInfo;
 using mozilla::ipc::PrincipalInfo;
 using mozilla::net::PTCPServerSocketParent;
 using mozilla::net::PTCPSocketParent;
@@ -109,15 +108,14 @@ static already_AddRefed<nsIPrincipal> GetRequestingPrincipal(
   }
 
   const LoadInfoArgs& loadInfoArgs = aOptionalLoadInfoArgs.ref();
-  const OptionalPrincipalInfo& optionalPrincipalInfo =
+  const Maybe<PrincipalInfo>& optionalPrincipalInfo =
       loadInfoArgs.requestingPrincipalInfo();
 
-  if (optionalPrincipalInfo.type() != OptionalPrincipalInfo::TPrincipalInfo) {
+  if (optionalPrincipalInfo.isNothing()) {
     return nullptr;
   }
 
-  const PrincipalInfo& principalInfo =
-      optionalPrincipalInfo.get_PrincipalInfo();
+  const PrincipalInfo& principalInfo = optionalPrincipalInfo.ref();
 
   return PrincipalInfoToPrincipal(principalInfo);
 }

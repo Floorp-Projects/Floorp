@@ -38,9 +38,6 @@
       // default textbox
       testAccessibleTree("txc", accTree);
 
-      // multiline
-      testAccessibleTree("txc_multiline", accTree);
-
       //////////////////////////////////////////////////////////////////////////
       // search textbox
       accTree =
@@ -164,7 +161,6 @@
       <textbox id="txc_search_searchbutton" searchbutton="true" type="search" value="hello"/>
       <textbox id="txc_number" type="number" value="44"/>
       <textbox id="txc_password" type="password" value="hello"/>
-      <textbox id="txc_multiline" multiline="true" value="hello"/>
       <textbox id="txc_autocomplete" type="autocomplete" value="hello"/>
     </vbox>
   </hbox>

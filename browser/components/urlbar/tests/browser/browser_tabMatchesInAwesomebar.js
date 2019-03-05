@@ -13,11 +13,9 @@
 
 requestLongerTimeout(2);
 
-const TEST_PATH = getRootDirectory(gTestPath)
-  .replace("chrome://mochitests/content", "http://example.com");
 const TEST_URL_BASES = [
-  `${TEST_PATH}dummy_page.html#tabmatch`,
-  `${TEST_PATH}moz.png#tabmatch`,
+  `${TEST_BASE_URL}dummy_page.html#tabmatch`,
+  `${TEST_BASE_URL}moz.png#tabmatch`,
 ];
 
 const RESTRICT_TOKEN_OPENPAGE = "%";

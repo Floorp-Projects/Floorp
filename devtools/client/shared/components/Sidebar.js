@@ -27,7 +27,7 @@ class Sidebar extends PureComponent {
         expandPaneTitle: PropTypes.string.isRequired,
         onClick: PropTypes.func.isRequired,
       }),
-      tabActive: PropTypes.number,
+      activeTab: PropTypes.number,
     };
   }
 
@@ -66,7 +66,7 @@ class Sidebar extends PureComponent {
       onAllTabsMenuClick,
       renderOnlySelected,
       showAllTabsMenu,
-      tabActive,
+      activeTab,
     } = this.props;
 
     return (
@@ -76,7 +76,7 @@ class Sidebar extends PureComponent {
         renderOnlySelected,
         renderSidebarToggle,
         showAllTabsMenu,
-        tabActive,
+        activeTab,
       },
         children
       )

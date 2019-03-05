@@ -80,14 +80,9 @@ class nsHistory;
 class nsGlobalWindowObserver;
 class nsGlobalWindowInner;
 class nsDOMWindowUtils;
-class nsIIdleService;
 struct nsRect;
 
 class nsWindowSizes;
-
-class IdleRequestExecutor;
-
-struct IdleObserverHolder;
 
 namespace mozilla {
 class AbstractThread;
@@ -104,8 +99,6 @@ class External;
 class Function;
 class Gamepad;
 enum class ImageBitmapFormat : uint8_t;
-class IdleRequest;
-class IdleRequestCallback;
 class IncrementalRunnable;
 class IntlUtils;
 class Location;
@@ -725,29 +718,6 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
                            mozilla::dom::CallerType aCallerType,
                            mozilla::ErrorResult& aError);
 
-  // Array of idle observers that are notified of idle events.
-  nsTObserverArray<IdleObserverHolder> mIdleObservers;
-
-  // Idle timer used for function callbacks to notify idle observers.
-  nsCOMPtr<nsITimer> mIdleTimer;
-
-  // Idle fuzz time added to idle timer callbacks.
-  uint32_t mIdleFuzzFactor;
-
-  // Index in mArrayIdleObservers
-  // Next idle observer to notify user idle status
-  int32_t mIdleCallbackIndex;
-
-  // If false then the topic is "active"
-  // If true then the topic is "idle"
-  bool mCurrentlyIdle;
-
-  // Set to true when a fuzz time needs to be applied
-  // to active notifications to the idle observer.
-  bool mAddActiveEventFuzzTime;
-
-  nsCOMPtr<nsIIdleService> mIdleService;
-
   RefPtr<mozilla::dom::WakeLock> mWakeLock;
 
   friend class HashchangeCallback;
@@ -1177,7 +1147,6 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
   friend class mozilla::dom::PostMessageEvent;
   friend class DesktopNotification;
   friend class mozilla::dom::TimeoutManager;
-  friend class IdleRequestExecutor;
   friend class nsGlobalWindowInner;
 };
 

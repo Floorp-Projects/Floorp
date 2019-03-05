@@ -2938,7 +2938,8 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
       HandleValue value = REGS.stackHandleAt(-1);
 
       bool strict = JSOp(*REGS.pc) == JSOP_STRICTSETELEM_SUPER;
-      if (!SetObjectElement(cx, obj, index, value, receiver, strict)) {
+      if (!SetObjectElementWithReceiver(cx, obj, index, value, receiver,
+                                        strict)) {
         goto error;
       }
       REGS.sp[-4] = value;
@@ -3881,7 +3882,7 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
       CHECK_BRANCH();
       ReservedRooted<Value> v(&rootValue0);
       POP_COPY_TO(v);
-      MOZ_ALWAYS_FALSE(Throw(cx, v));
+      MOZ_ALWAYS_FALSE(ThrowOperation(cx, v));
       /* let the code at error try to catch the exception. */
       goto error;
     }
@@ -4403,7 +4404,7 @@ prologue_error:
   goto prologue_return_continuation;
 }
 
-bool js::Throw(JSContext* cx, HandleValue v) {
+bool js::ThrowOperation(JSContext* cx, HandleValue v) {
   MOZ_ASSERT(!cx->isExceptionPending());
   cx->setPendingException(v);
   return false;
@@ -4814,9 +4815,9 @@ bool js::SetObjectElement(JSContext* cx, HandleObject obj, HandleValue index,
                                    pc);
 }
 
-bool js::SetObjectElement(JSContext* cx, HandleObject obj, HandleValue index,
-                          HandleValue value, HandleValue receiver,
-                          bool strict) {
+bool js::SetObjectElementWithReceiver(JSContext* cx, HandleObject obj,
+                                      HandleValue index, HandleValue value,
+                                      HandleValue receiver, bool strict) {
   RootedId id(cx);
   if (!ToPropertyKey(cx, index, &id)) {
     return false;

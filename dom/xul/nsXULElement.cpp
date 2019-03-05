@@ -1091,28 +1091,33 @@ nsresult nsXULElement::PreHandleEvent(EventChainVisitor& aVisitor) {
 
 nsChangeHint nsXULElement::GetAttributeChangeHint(const nsAtom* aAttribute,
                                                   int32_t aModType) const {
-  nsChangeHint retval(nsChangeHint(0));
-
   if (aAttribute == nsGkAtoms::value &&
       (aModType == MutationEvent_Binding::REMOVAL ||
-       aModType == MutationEvent_Binding::ADDITION)) {
-    if (IsAnyOfXULElements(nsGkAtoms::label, nsGkAtoms::description))
-      // Label and description dynamically morph between a normal
-      // block and a cropping single-line XUL text frame.  If the
-      // value attribute is being added or removed, then we need to
-      // return a hint of frame change.  (See bugzilla bug 95475 for
-      // details.)
-      retval = nsChangeHint_ReconstructFrame;
-  } else {
-    // if left or top changes we reflow. This will happen in xul
-    // containers that manage positioned children such as a stack.
-    if (nsGkAtoms::left == aAttribute || nsGkAtoms::top == aAttribute ||
-        nsGkAtoms::right == aAttribute || nsGkAtoms::bottom == aAttribute ||
-        nsGkAtoms::start == aAttribute || nsGkAtoms::end == aAttribute)
-      retval = NS_STYLE_HINT_REFLOW;
+       aModType == MutationEvent_Binding::ADDITION) &&
+      IsAnyOfXULElements(nsGkAtoms::label, nsGkAtoms::description)) {
+    // Label and description dynamically morph between a normal
+    // block and a cropping single-line XUL text frame.  If the
+    // value attribute is being added or removed, then we need to
+    // return a hint of frame change.  (See bugzilla bug 95475 for
+    // details.)
+    return nsChangeHint_ReconstructFrame;
   }
 
-  return retval;
+  if (aAttribute == nsGkAtoms::type &&
+      IsAnyOfXULElements(nsGkAtoms::toolbarbutton, nsGkAtoms::button)) {
+    // type=menu switches from a button frame to a menu frame.
+    return nsChangeHint_ReconstructFrame;
+  }
+
+  // if left or top changes we reflow. This will happen in xul
+  // containers that manage positioned children such as a stack.
+  if (nsGkAtoms::left == aAttribute || nsGkAtoms::top == aAttribute ||
+      nsGkAtoms::right == aAttribute || nsGkAtoms::bottom == aAttribute ||
+      nsGkAtoms::start == aAttribute || nsGkAtoms::end == aAttribute) {
+    return NS_STYLE_HINT_REFLOW;
+  }
+
+  return nsChangeHint(0);
 }
 
 NS_IMETHODIMP_(bool)

@@ -9,7 +9,7 @@
    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
    xmlns:xbl="http://www.mozilla.org/xbl">
 
-  <binding id="toolbarbutton" display="xul:button"
+  <binding id="toolbarbutton"
            extends="chrome://global/content/bindings/button.xml#button-base">
     <implementation>
       <property name="multilineLabel"
@@ -28,7 +28,7 @@
     </content>
   </binding>
 
-  <binding id="menu" display="xul:menu"
+  <binding id="menu"
            extends="chrome://global/content/bindings/toolbarbutton.xml#toolbarbutton">
   </binding>
 
@@ -50,7 +50,7 @@
     </content>
   </binding>
 
-  <binding id="toolbarbutton-badged-menu" display="xul:menu"
+  <binding id="toolbarbutton-badged-menu"
            extends="chrome://global/content/bindings/toolbarbutton.xml#toolbarbutton-badged">
   </binding>
 </bindings>

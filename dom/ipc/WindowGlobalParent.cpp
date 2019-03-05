@@ -209,7 +209,8 @@ already_AddRefed<JSWindowActorParent> WindowGlobalParent::GetActor(
   }
 
   JS::RootedObject obj(RootingCx());
-  actorSvc->ConstructActor(aName, /* aParentSide */ true, &obj, aRv);
+  actorSvc->ConstructActor(aName, /* aParentSide */ true, mBrowsingContext,
+                           &obj, aRv);
   if (aRv.Failed()) {
     return nullptr;
   }

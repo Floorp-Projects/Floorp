@@ -1,6 +1,7 @@
-const TEST_PATH = getRootDirectory(gTestPath)
-  .replace("chrome://mochitests/content", "http://example.com");
-const TEST_URL = `${TEST_PATH}dummy_page.html`;
+/* Any copyright is dedicated to the Public Domain.
+ * https://creativecommons.org/publicdomain/zero/1.0/ */
+
+const TEST_URL = `${TEST_BASE_URL}dummy_page.html`;
 
 async function addBookmark(bookmark) {
   if (bookmark.keyword) {
