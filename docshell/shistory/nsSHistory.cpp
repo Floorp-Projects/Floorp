@@ -34,6 +34,7 @@
 #include "mozilla/dom/TabGroup.h"
 
 using namespace mozilla;
+using namespace mozilla::dom;
 
 #define PREF_SHISTORY_SIZE "browser.sessionhistory.max_entries"
 #define PREF_SHISTORY_MAX_TOTAL_VIEWERS \
@@ -191,26 +192,19 @@ void nsSHistory::EvictContentViewerForEntry(nsISHEntry* aEntry) {
   }
 }
 
-nsSHistory::nsSHistory(nsDocShell* aRootDocShell)
-    : mIndex(-1), mRequestedIndex(-1), mRootDocShell(aRootDocShell) {
+nsSHistory::nsSHistory(BrowsingContext* aRootBC, const nsID& aRootDocShellID)
+    : mIndex(-1),
+      mRequestedIndex(-1),
+      mRootBC(aRootBC),
+      mRootDocShellID(aRootDocShellID) {
   // Add this new SHistory object to the list
   gSHistoryList.insertBack(this);
 
-  // Init mHistoryTracker on setting mRootDocShell so we can bind its event
+  // Init mHistoryTracker on setting mRootBC so we can bind its event
   // target to the tabGroup.
-  nsCOMPtr<nsPIDOMWindowOuter> win = mRootDocShell->GetWindow();
-  if (win) {
-    // Seamonkey moves shistory between <xul:browser>s when restoring a tab.
-    // Let's try not to break our friend too badly...
-    if (mHistoryTracker) {
-      NS_WARNING(
-          "Change the root docshell of a shistory is unsafe and "
-          "potentially problematic.");
-      mHistoryTracker->AgeAllGenerations();
-    }
-
+  nsPIDOMWindowOuter* win;
+  if (mRootBC && (win = mRootBC->GetDOMWindow())) {
     nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(win);
-
     mHistoryTracker = mozilla::MakeUnique<HistoryTracker>(
         this,
         mozilla::Preferences::GetUint(CONTENT_VIEWER_TIMEOUT_SECONDS,
@@ -570,9 +564,8 @@ nsSHistory::AddEntry(nsISHEntry* aSHEntry, bool aPersist) {
 
   // If we have a root docshell, update the docshell id of the root shentry to
   // match the id of that docshell
-  if (mRootDocShell) {
-    nsID docshellID = mRootDocShell->HistoryID();
-    aSHEntry->SetDocshellID(&docshellID);
+  if (mRootBC) {
+    aSHEntry->SetDocshellID(&mRootDocShellID);
   }
 
   if (currentTxn && !currentTxn->GetPersist()) {
@@ -602,7 +595,7 @@ nsSHistory::AddEntry(nsISHEntry* aSHEntry, bool aPersist) {
 }
 
 NS_IMETHODIMP_(void)
-nsSHistory::ClearRootDocShell() { mRootDocShell = nullptr; }
+nsSHistory::ClearRootBrowsingContext() { mRootBC = nullptr; }
 
 /* Get size of the history list */
 NS_IMETHODIMP
@@ -720,8 +713,8 @@ nsSHistory::PurgeHistory(int32_t aNumEntries) {
   mRequestedIndex -= aNumEntries;
   mRequestedIndex = std::max(mRequestedIndex, -1);
 
-  if (mRootDocShell) {
-    mRootDocShell->HistoryPurged(aNumEntries);
+  if (mRootBC && mRootBC->GetDocShell()) {
+    mRootBC->GetDocShell()->HistoryPurged(aNumEntries);
   }
 
   return NS_OK;
@@ -1208,8 +1201,9 @@ bool nsSHistory::RemoveDuplicate(int32_t aIndex, bool aKeepNext) {
   if (IsSameTree(root1, root2)) {
     mEntries.RemoveElementAt(aIndex);
 
-    if (mRootDocShell) {
-      static_cast<nsDocShell*>(mRootDocShell)->HistoryEntryRemoved(aIndex);
+    if (mRootBC && mRootBC->GetDocShell()) {
+      static_cast<nsDocShell*>(mRootBC->GetDocShell())
+          ->HistoryEntryRemoved(aIndex);
     }
 
     // Adjust our indices to reflect the removed entry.
@@ -1255,8 +1249,8 @@ nsSHistory::RemoveEntries(nsTArray<nsID>& aIDs, int32_t aStartIndex) {
     }
     --index;
   }
-  if (didRemove && mRootDocShell) {
-    mRootDocShell->DispatchLocationChangeEvent();
+  if (didRemove && mRootBC && mRootBC->GetDocShell()) {
+    mRootBC->GetDocShell()->DispatchLocationChangeEvent();
   }
 }
 
@@ -1315,7 +1309,7 @@ nsresult nsSHistory::LoadNextPossibleEntry(int32_t aNewIndex, long aLoadType,
 
 nsresult nsSHistory::LoadEntry(int32_t aIndex, long aLoadType,
                                uint32_t aHistCmd) {
-  if (!mRootDocShell) {
+  if (!mRootBC) {
     return NS_ERROR_FAILURE;
   }
 
@@ -1355,13 +1349,13 @@ nsresult nsSHistory::LoadEntry(int32_t aIndex, long aLoadType,
 
   if (mRequestedIndex == mIndex) {
     // Possibly a reload case
-    return InitiateLoad(nextEntry, mRootDocShell, aLoadType);
+    return InitiateLoad(nextEntry, mRootBC, aLoadType);
   }
 
   // Going back or forward.
   bool differenceFound = false;
-  nsresult rv = LoadDifferingEntries(prevEntry, nextEntry, mRootDocShell,
-                                     aLoadType, differenceFound);
+  nsresult rv = LoadDifferingEntries(prevEntry, nextEntry, mRootBC, aLoadType,
+                                     differenceFound);
   if (!differenceFound) {
     // We did not find any differences. Go further in the history.
     return LoadNextPossibleEntry(aIndex, aLoadType, aHistCmd);
@@ -1372,7 +1366,8 @@ nsresult nsSHistory::LoadEntry(int32_t aIndex, long aLoadType,
 
 nsresult nsSHistory::LoadDifferingEntries(nsISHEntry* aPrevEntry,
                                           nsISHEntry* aNextEntry,
-                                          nsIDocShell* aParent, long aLoadType,
+                                          BrowsingContext* aParent,
+                                          long aLoadType,
                                           bool& aDifferenceFound) {
   if (!aPrevEntry || !aNextEntry || !aParent) {
     return NS_ERROR_FAILURE;
@@ -1387,26 +1382,17 @@ nsresult nsSHistory::LoadDifferingEntries(nsISHEntry* aPrevEntry,
     aDifferenceFound = true;
 
     // Set the Subframe flag if not navigating the root docshell.
-    aNextEntry->SetIsSubFrame(aParent != mRootDocShell);
+    aNextEntry->SetIsSubFrame(aParent != mRootBC);
     return InitiateLoad(aNextEntry, aParent, aLoadType);
   }
 
   // The entries are the same, so compare any child frames
   int32_t pcnt = aPrevEntry->GetChildCount();
   int32_t ncnt = aNextEntry->GetChildCount();
-  int32_t dsCount = 0;
-  aParent->GetInProcessChildCount(&dsCount);
 
-  // Create an array for child docshells.
-  nsCOMArray<nsIDocShell> docshells;
-  for (int32_t i = 0; i < dsCount; ++i) {
-    nsCOMPtr<nsIDocShellTreeItem> treeItem;
-    aParent->GetInProcessChildAt(i, getter_AddRefs(treeItem));
-    nsCOMPtr<nsIDocShell> shell = do_QueryInterface(treeItem);
-    if (shell) {
-      docshells.AppendElement(shell.forget());
-    }
-  }
+  // Create an array for child browsing contexts.
+  nsTArray<RefPtr<BrowsingContext>> browsingContexts;
+  aParent->GetChildren(browsingContexts);
 
   // Search for something to load next.
   for (int32_t i = 0; i < ncnt; ++i) {
@@ -1419,17 +1405,14 @@ nsresult nsSHistory::LoadDifferingEntries(nsISHEntry* aPrevEntry,
     nsID docshellID = nChild->DocshellID();
 
     // Then find the associated docshell.
-    nsIDocShell* dsChild = nullptr;
-    int32_t count = docshells.Count();
-    for (int32_t j = 0; j < count; ++j) {
-      nsIDocShell* shell = docshells[j];
-      nsID shellID = shell->HistoryID();
-      if (shellID == docshellID) {
-        dsChild = shell;
+    RefPtr<BrowsingContext> bcChild;
+    for (const RefPtr<BrowsingContext>& bc : browsingContexts) {
+      if (bc->GetHistoryID() == docshellID) {
+        bcChild = bc;
         break;
       }
     }
-    if (!dsChild) {
+    if (!bcChild) {
       continue;
     }
 
@@ -1451,13 +1434,13 @@ nsresult nsSHistory::LoadDifferingEntries(nsISHEntry* aPrevEntry,
     // Finally recursively call this method.
     // This will either load a new page to shell or some subshell or
     // do nothing.
-    LoadDifferingEntries(pChild, nChild, dsChild, aLoadType, aDifferenceFound);
+    LoadDifferingEntries(pChild, nChild, bcChild, aLoadType, aDifferenceFound);
   }
   return result;
 }
 
 nsresult nsSHistory::InitiateLoad(nsISHEntry* aFrameEntry,
-                                  nsIDocShell* aFrameDS, long aLoadType) {
+                                  BrowsingContext* aFrameDS, long aLoadType) {
   NS_ENSURE_STATE(aFrameDS && aFrameEntry);
 
   nsCOMPtr<nsIURI> newURI = aFrameEntry->GetURI();
@@ -1486,5 +1469,10 @@ nsresult nsSHistory::InitiateLoad(nsISHEntry* aFrameEntry,
   loadState->SetCsp(csp);
 
   // Time to initiate a document load
-  return aFrameDS->LoadURI(loadState, false);
+  return LoadURI(aFrameEntry, aFrameDS, loadState);
+}
+
+nsresult nsSHistory::LoadURI(nsISHEntry* aFrameEntry, BrowsingContext* aFrameBC,
+                             nsDocShellLoadState* aLoadState) {
+  return aFrameBC->GetDocShell()->LoadURI(aLoadState, false);
 }
