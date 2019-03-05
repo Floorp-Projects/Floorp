@@ -107,6 +107,7 @@ UNIFIED_SOURCES += [
     'TaskQueue.cpp',
     'ThreadEventQueue.cpp',
     'ThreadEventTarget.cpp',
+    'ThreadLocalVariables.cpp',
     'ThrottledEventQueue.cpp',
     'TimerThread.cpp',
 ]

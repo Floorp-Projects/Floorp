@@ -572,6 +572,7 @@ void nsThread::InitCommon() {
 #endif
   }
 
+  InitThreadLocalVariables();
   AddToThreadList();
 }
 

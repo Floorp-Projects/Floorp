@@ -66,6 +66,13 @@ nsChromeProtocolHandler::GetProtocolFlags(uint32_t *result) {
 NS_IMETHODIMP
 nsChromeProtocolHandler::NewURI(const nsACString &aSpec, const char *aCharset,
                                 nsIURI *aBaseURI, nsIURI **result) {
+  return nsChromeProtocolHandler::CreateNewURI(aSpec, aCharset, aBaseURI,
+                                               result);
+}
+
+/* static */ nsresult nsChromeProtocolHandler::CreateNewURI(
+    const nsACString &aSpec, const char *aCharset, nsIURI *aBaseURI,
+    nsIURI **result) {
   // Chrome: URLs (currently) have no additional structure beyond that provided
   // by standard URLs, so there is no "outer" given to CreateInstance
   nsresult rv;
