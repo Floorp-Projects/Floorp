@@ -134,3 +134,17 @@ def enable_full_crashsymbols(config, jobs):
             logger.debug("Disabling full symbol generation for %s", job['name'])
             job['worker']['env']['MOZ_DISABLE_FULL_SYMBOLS'] = '1'
         yield job
+
+
+@transforms.add
+def use_artifact(config, jobs):
+    if config.params['try_mode'] == 'try_task_config':
+        use_artifact = config.params['try_task_config'] \
+            .get('templates', {}).get('artifact', {}).get('enabled')
+    else:
+        use_artifact = False
+    for job in jobs:
+        if config.kind == 'build' and use_artifact:
+            job['treeherder']['symbol'] += 'a'
+            job['worker']['env']['USE_ARTIFACT'] = '1'
+        yield job

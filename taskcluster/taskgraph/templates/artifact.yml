@@ -1,15 +1,3 @@
+# This file is empty to keep mach try fuzzy happy until it doesn't use
+# {"templates": {"artifact": {"enabled": "1"}}} to enable artifact builds.
 ---
-$if: task["tags"]
-then:
-    $if: task.tags["kind"] == "build"
-    then:
-        task:
-            $mergeDeep:
-                - $eval: task
-                - extra:
-                      treeherder:
-                          symbol: Ba
-                - payload:
-                      env:
-                          USE_ARTIFACT:
-                              $eval: input.enabled
