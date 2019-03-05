@@ -28,6 +28,7 @@ NS_DEFINE_INPUTTYPE(InsertHorizontalRule, "insertHorizontalRule")
 NS_DEFINE_INPUTTYPE(InsertFromYank, "insertFromYank")
 NS_DEFINE_INPUTTYPE(InsertFromDrop, "insertFromDrop")
 NS_DEFINE_INPUTTYPE(InsertFromPaste, "insertFromPaste")
+NS_DEFINE_INPUTTYPE(InsertFromPasteAsQuotation, "insertFromPasteAsQuotation")
 NS_DEFINE_INPUTTYPE(InsertTranspose, "insertTranspose")
 NS_DEFINE_INPUTTYPE(InsertCompositionText, "insertCompositionText")
 NS_DEFINE_INPUTTYPE(InsertFromComposition,
