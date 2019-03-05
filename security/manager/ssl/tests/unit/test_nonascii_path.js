@@ -19,9 +19,7 @@ env.set("XPCSHELL_TEST_PROFILE_DIR", file.path);
 
 file = do_get_profile(); // must be called before getting nsIX509CertDB
 Assert.ok(/[^\x20-\x7f]/.test(file.path), "the profile path should contain a non-ASCII character");
-// Due to 8.3 names being enabled on Thunderbird's Buildbot, this will fail. It passes
-// on TaskCluster, so this check can be removed when Buildbot is dropped.
-if (mozinfo.os == "win" && AppConstants.MOZ_APP_NAME != "thunderbird") {
+if (mozinfo.os == "win") {
   file.QueryInterface(Ci.nsILocalFileWin);
   Assert.ok(/[^\x20-\x7f]/.test(file.canonicalPath), "the profile short path should contain a non-ASCII character");
 }
