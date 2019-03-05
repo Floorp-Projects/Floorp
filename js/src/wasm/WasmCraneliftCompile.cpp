@@ -70,6 +70,7 @@ static bool GenerateCraneliftCode(WasmMacroAssembler& masm,
                                   const CraneliftCompiledFunc& func,
                                   const FuncTypeIdDesc& funcTypeId,
                                   uint32_t lineOrBytecode,
+                                  uint32_t funcBytecodeSize,
                                   FuncOffsets* offsets) {
   wasm::GenerateFunctionPrologue(masm, funcTypeId, mozilla::Nothing(), offsets);
 
@@ -113,11 +114,19 @@ static bool GenerateCraneliftCode(WasmMacroAssembler& masm,
     }
 
 #ifdef DEBUG
-    CheckedInt<uint32_t> checkedBytecodeOffset = lineOrBytecode;
-    checkedBytecodeOffset += metadata.srcLoc;
-    MOZ_ASSERT(checkedBytecodeOffset.isValid());
+    // Check code offsets.
+    MOZ_ASSERT(offset.value() >= offsets->normalEntry);
+    MOZ_ASSERT(offset.value() < offsets->ret);
+
+    // Check bytecode offsets.
+    if (metadata.srcLoc > 0 && lineOrBytecode > 0) {
+      MOZ_ASSERT(metadata.srcLoc >= lineOrBytecode);
+      MOZ_ASSERT(metadata.srcLoc < lineOrBytecode + funcBytecodeSize);
+    }
 #endif
-    uint32_t bytecodeOffset = lineOrBytecode + metadata.srcLoc;
+    // TODO(bug 1532716): Cranelift gives null bytecode offsets for symbolic
+    // accesses.
+    uint32_t bytecodeOffset = metadata.srcLoc ? metadata.srcLoc : lineOrBytecode;
 
     switch (metadata.which) {
       case CraneliftMetadataEntry::Which::DirectCall: {
@@ -183,7 +192,9 @@ CraneliftFuncCompileInput::CraneliftFuncCompileInput(
     const FuncCompileInput& func)
     : bytecode(func.begin),
       bytecodeSize(func.end - func.begin),
-      index(func.index) {}
+      index(func.index),
+      offset_in_module(func.lineOrBytecode)
+    {}
 
 #ifndef WASM_HUGE_MEMORY
 static_assert(offsetof(TlsData, boundsCheckLimit) == sizeof(size_t),
@@ -313,7 +324,9 @@ bool wasm::CraneliftCompileFunctions(const ModuleEnvironment& env,
 
   for (const FuncCompileInput& func : inputs) {
     Decoder d(func.begin, func.end, func.lineOrBytecode, error);
-    if (!ValidateFunctionBody(env, func.index, func.end - func.begin, d)) {
+
+    size_t funcBytecodeSize = func.end - func.begin;
+    if (!ValidateFunctionBody(env, func.index, funcBytecodeSize, d)) {
       return false;
     }
 
@@ -330,7 +343,7 @@ bool wasm::CraneliftCompileFunctions(const ModuleEnvironment& env,
 
     FuncOffsets offsets;
     if (!GenerateCraneliftCode(masm, clifFunc, funcTypeId, lineOrBytecode,
-                               &offsets)) {
+                               funcBytecodeSize, &offsets)) {
       return false;
     }
 
