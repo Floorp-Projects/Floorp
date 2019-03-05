@@ -144,7 +144,9 @@ NS_IMPL_ISUPPORTS(TabParent, nsITabParent, nsIAuthPromptProvider,
                   nsISupportsWeakReference)
 
 TabParent::TabParent(ContentParent* aManager, const TabId& aTabId,
-                     const TabContext& aContext, uint32_t aChromeFlags)
+                     const TabContext& aContext,
+                     CanonicalBrowsingContext* aBrowsingContext,
+                     uint32_t aChromeFlags)
     : TabContext(aContext),
       mFrameElement(nullptr),
       mContentCache(*this),
@@ -162,6 +164,7 @@ TabParent::TabParent(ContentParent* aManager, const TabId& aTabId,
       mIsDestroyed(false),
       mChromeFlags(aChromeFlags),
       mDragValid(false),
+      mBrowsingContext(aBrowsingContext),
       mTabId(aTabId),
       mCreatingWindow(false),
       mCursor(eCursorInvalid),
@@ -3469,14 +3472,6 @@ mozilla::ipc::IPCResult TabParent::RecvGetSystemFont(nsCString* aFontName) {
   if (widget) {
     widget->GetSystemFont(*aFontName);
   }
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult TabParent::RecvRootBrowsingContext(
-    BrowsingContext* aBrowsingContext) {
-  MOZ_ASSERT(!mBrowsingContext, "May only set browsing context once!");
-  mBrowsingContext = CanonicalBrowsingContext::Cast(aBrowsingContext);
-  MOZ_ASSERT(mBrowsingContext, "Invalid ID!");
   return IPC_OK();
 }
 

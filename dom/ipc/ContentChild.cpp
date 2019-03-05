@@ -912,9 +912,15 @@ nsresult ContentChild::ProvideWindowCommon(
     tabGroup = new TabGroup();
   }
 
+  RefPtr<BrowsingContext> openerBC =
+      aParent ? nsPIDOMWindowOuter::From(aParent)->GetBrowsingContext()
+              : nullptr;
+  RefPtr<BrowsingContext> browsingContext = BrowsingContext::Create(
+      nullptr, openerBC, aName, BrowsingContext::Type::Content);
+
   TabContext newTabContext = aTabOpener ? *aTabOpener : TabContext();
-  RefPtr<TabChild> newChild =
-      new TabChild(this, tabId, tabGroup, newTabContext, aChromeFlags);
+  RefPtr<TabChild> newChild = new TabChild(this, tabId, tabGroup, newTabContext,
+                                           browsingContext, aChromeFlags);
 
   if (aTabOpener) {
     MOZ_ASSERT(ipcContext->type() == IPCTabContext::TPopupIPCTabContext);
@@ -928,7 +934,7 @@ nsresult ContentChild::ProvideWindowCommon(
   Unused << SendPBrowserConstructor(
       // We release this ref in DeallocPBrowserChild
       RefPtr<TabChild>(newChild).forget().take(), tabId, TabId(0), *ipcContext,
-      aChromeFlags, GetID(), IsForBrowser());
+      aChromeFlags, GetID(), browsingContext, IsForBrowser());
 
   // Now that |newChild| has had its IPC link established, call |Init| to set it
   // up.
@@ -1697,12 +1703,11 @@ bool ContentChild::DeallocPJavaScriptChild(PJavaScriptChild* aChild) {
   return true;
 }
 
-PBrowserChild* ContentChild::AllocPBrowserChild(const TabId& aTabId,
-                                                const TabId& aSameTabGroupAs,
-                                                const IPCTabContext& aContext,
-                                                const uint32_t& aChromeFlags,
-                                                const ContentParentId& aCpID,
-                                                const bool& aIsForBrowser) {
+PBrowserChild* ContentChild::AllocPBrowserChild(
+    const TabId& aTabId, const TabId& aSameTabGroupAs,
+    const IPCTabContext& aContext, const uint32_t& aChromeFlags,
+    const ContentParentId& aCpID, BrowsingContext* aBrowsingContext,
+    const bool& aIsForBrowser) {
   // We'll happily accept any kind of IPCTabContext here; we don't need to
   // check that it's of a certain type for security purposes, because we
   // believe whatever the parent process tells us.
@@ -1716,9 +1721,9 @@ PBrowserChild* ContentChild::AllocPBrowserChild(const TabId& aTabId,
     MOZ_CRASH("Invalid TabContext received from the parent process.");
   }
 
-  RefPtr<TabChild> child =
-      TabChild::Create(static_cast<ContentChild*>(this), aTabId,
-                       aSameTabGroupAs, tc.GetTabContext(), aChromeFlags);
+  RefPtr<TabChild> child = TabChild::Create(
+      static_cast<ContentChild*>(this), aTabId, aSameTabGroupAs,
+      tc.GetTabContext(), aBrowsingContext, aChromeFlags);
 
   // The ref here is released in DeallocPBrowserChild.
   return child.forget().take();
@@ -1727,20 +1732,22 @@ PBrowserChild* ContentChild::AllocPBrowserChild(const TabId& aTabId,
 bool ContentChild::SendPBrowserConstructor(
     PBrowserChild* aActor, const TabId& aTabId, const TabId& aSameTabGroupAs,
     const IPCTabContext& aContext, const uint32_t& aChromeFlags,
-    const ContentParentId& aCpID, const bool& aIsForBrowser) {
+    const ContentParentId& aCpID, BrowsingContext* aBrowsingContext,
+    const bool& aIsForBrowser) {
   if (IsShuttingDown()) {
     return false;
   }
 
   return PContentChild::SendPBrowserConstructor(aActor, aTabId, aSameTabGroupAs,
                                                 aContext, aChromeFlags, aCpID,
-                                                aIsForBrowser);
+                                                aBrowsingContext, aIsForBrowser);
 }
 
 mozilla::ipc::IPCResult ContentChild::RecvPBrowserConstructor(
     PBrowserChild* aActor, const TabId& aTabId, const TabId& aSameTabGroupAs,
     const IPCTabContext& aContext, const uint32_t& aChromeFlags,
-    const ContentParentId& aCpID, const bool& aIsForBrowser) {
+    const ContentParentId& aCpID, BrowsingContext* aBrowsingContext,
+    const bool& aIsForBrowser) {
   MOZ_ASSERT(!IsShuttingDown());
 
   static bool hasRunOnce = false;
