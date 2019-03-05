@@ -1852,6 +1852,12 @@ void nsFocusManager::Focus(nsPIDOMWindowOuter* aWindow, Element* aElement,
           remote->Activate();
           LOGFOCUS(("Remote browser activated"));
         }
+
+        // Same as above but for out-of-process iframes
+        if (RemoteFrameChild* rfc = RemoteFrameChild::GetFrom(aElement)) {
+          rfc->Activate();
+          LOGFOCUS(("Out-of-process iframe activated"));
+        }
       }
 
       IMEStateManager::OnChangeFocus(presContext, aElement,

@@ -117,6 +117,11 @@ IPCResult RemoteFrameParent::RecvNavigateByKey(
   return IPC_OK();
 }
 
+IPCResult RemoteFrameParent::RecvActivate() {
+  mTabParent->Activate();
+  return IPC_OK();
+}
+
 void RemoteFrameParent::ActorDestroy(ActorDestroyReason aWhy) {
   mIPCOpen = false;
 }
