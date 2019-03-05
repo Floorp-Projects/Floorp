@@ -308,6 +308,39 @@ nsresult LookupCacheV4::StoreToFile(nsCOMPtr<nsIFile>& aFile) {
   }
 
   LOG(("[%s] Storing PrefixSet successful", mTableName.get()));
+
+  // This is to remove old ".pset" files if exist
+  Unused << CleanOldPrefixSet();
+  return NS_OK;
+}
+
+nsresult LookupCacheV4::CleanOldPrefixSet() {
+  nsCOMPtr<nsIFile> file;
+  nsresult rv = mStoreDirectory->Clone(getter_AddRefs(file));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = file->AppendNative(mTableName + NS_LITERAL_CSTRING(".pset"));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  bool exists;
+  rv = file->Exists(&exists);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  if (exists) {
+    rv = file->Remove(false);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    LOG(("[%s] Old PrefixSet is succuessfully removed!", mTableName.get()));
+  }
+
   return NS_OK;
 }
 
