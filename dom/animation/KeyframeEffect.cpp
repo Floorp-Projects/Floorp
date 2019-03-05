@@ -227,7 +227,6 @@ void KeyframeEffect::SetKeyframes(nsTArray<Keyframe>&& aKeyframes,
   // style (e.g. the target element is not associated with any document).
   if (aStyle) {
     UpdateProperties(aStyle);
-    MaybeUpdateFrameForCompositor();
   }
 }
 
@@ -956,8 +955,6 @@ void KeyframeEffect::SetTarget(
       UpdateProperties(computedStyle);
     }
 
-    MaybeUpdateFrameForCompositor();
-
     RequestRestyle(EffectCompositor::RestyleType::Layer);
 
     nsAutoAnimationMutationBatch mb(mTarget->mElement->OwnerDoc());
@@ -1645,24 +1642,6 @@ bool KeyframeEffect::CanIgnoreIfNotVisible() const {
   // change hint on the segment corresponding to computedTiming.progress.
   return NS_IsHintSubset(mCumulativeChangeHint,
                          nsChangeHint_Hints_CanIgnoreIfNotVisible);
-}
-
-void KeyframeEffect::MaybeUpdateFrameForCompositor() {
-  nsIFrame* frame = GetStyleFrame();
-  if (!frame) {
-    return;
-  }
-
-  // FIXME: Bug 1272495: If this effect does not win in the cascade, the
-  // NS_FRAME_MAY_BE_TRANSFORMED flag should be removed when the animation
-  // will be removed from effect set or the transform keyframes are removed
-  // by setKeyframes. The latter case will be hard to solve though.
-  for (const AnimationProperty& property : mProperties) {
-    if (property.mProperty == eCSSProperty_transform) {
-      frame->AddStateBits(NS_FRAME_MAY_BE_TRANSFORMED);
-      return;
-    }
-  }
 }
 
 void KeyframeEffect::MarkCascadeNeedsUpdate() {
