@@ -58,20 +58,6 @@ static void Register(BrowsingContext* aBrowsingContext) {
   aBrowsingContext->Group()->Register(aBrowsingContext);
 }
 
-static void Sync(BrowsingContext* aBrowsingContext) {
-  if (!XRE_IsContentProcess()) {
-    return;
-  }
-
-  auto cc = ContentChild::GetSingleton();
-  MOZ_DIAGNOSTIC_ASSERT(cc);
-  RefPtr<BrowsingContext> parent = aBrowsingContext->GetParent();
-  BrowsingContext* opener = aBrowsingContext->GetOpener();
-  cc->SendAttachBrowsingContext(parent, opener,
-                                BrowsingContextId(aBrowsingContext->Id()),
-                                aBrowsingContext->Name());
-}
-
 BrowsingContext* BrowsingContext::TopLevelBrowsingContext() {
   BrowsingContext* bc = this;
   while (bc->mParent) {
@@ -161,7 +147,7 @@ already_AddRefed<BrowsingContext> BrowsingContext::CreateFromIPC(
 
   Register(context);
 
-  context->Attach();
+  // Caller handles attaching us to the tree.
 
   return context.forget();
 }
@@ -197,7 +183,7 @@ void BrowsingContext::SetDocShell(nsIDocShell* aDocShell) {
   mDocShell = aDocShell;
 }
 
-void BrowsingContext::Attach() {
+void BrowsingContext::Attach(bool aFromIPC) {
   MOZ_LOG(GetLog(), LogLevel::Debug,
           ("%s: %s 0x%08" PRIx64 " to 0x%08" PRIx64,
            XRE_IsParentProcess() ? "Parent" : "Child",
@@ -211,10 +197,16 @@ void BrowsingContext::Attach() {
 
   children->AppendElement(this);
 
-  Sync(this);
+  // Send attach to our parent if we need to.
+  if (!aFromIPC && XRE_IsContentProcess()) {
+    auto cc = ContentChild::GetSingleton();
+    MOZ_DIAGNOSTIC_ASSERT(cc);
+    cc->SendAttachBrowsingContext(
+        mParent, mOpener, BrowsingContextId(mBrowsingContextId), Name());
+  }
 }
 
-void BrowsingContext::Detach() {
+void BrowsingContext::Detach(bool aFromIPC) {
   MOZ_LOG(GetLog(), LogLevel::Debug,
           ("%s: Detaching 0x%08" PRIx64 " from 0x%08" PRIx64,
            XRE_IsParentProcess() ? "Parent" : "Child", Id(),
@@ -242,16 +234,14 @@ void BrowsingContext::Detach() {
 
   Group()->Unregister(this);
 
-  if (!XRE_IsContentProcess()) {
-    return;
+  if (!aFromIPC && XRE_IsContentProcess()) {
+    auto cc = ContentChild::GetSingleton();
+    MOZ_DIAGNOSTIC_ASSERT(cc);
+    cc->SendDetachBrowsingContext(this, false /* aMoveToBFCache */);
   }
-
-  auto cc = ContentChild::GetSingleton();
-  MOZ_DIAGNOSTIC_ASSERT(cc);
-  cc->SendDetachBrowsingContext(this, false /* aMoveToBFCache */);
 }
 
-void BrowsingContext::CacheChildren() {
+void BrowsingContext::CacheChildren(bool aFromIPC) {
   if (mChildren.IsEmpty()) {
     return;
   }
@@ -267,13 +257,11 @@ void BrowsingContext::CacheChildren() {
   }
   mChildren.Clear();
 
-  if (!XRE_IsContentProcess()) {
-    return;
+  if (!aFromIPC && XRE_IsContentProcess()) {
+    auto cc = ContentChild::GetSingleton();
+    MOZ_DIAGNOSTIC_ASSERT(cc);
+    cc->SendDetachBrowsingContext(this, true /* aMoveToBFCache */);
   }
-
-  auto cc = ContentChild::GetSingleton();
-  MOZ_DIAGNOSTIC_ASSERT(cc);
-  cc->SendDetachBrowsingContext(this, true /* aMoveToBFCache */);
 }
 
 bool BrowsingContext::IsCached() { return sCachedBrowsingContexts->has(Id()); }
