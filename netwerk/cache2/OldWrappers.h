@@ -42,9 +42,9 @@ class _OldCacheEntryWrapper : public nsICacheEntry {
     return !mOldDesc ? NS_ERROR_NULL_POINTER
                      : mOldDesc->OpenOutputStream(offset, _retval);
   }
-  NS_IMETHOD OpenAlternativeOutputStream(const nsACString &type,
-                                         int64_t predictedSize,
-                                         nsIOutputStream **_retval) override {
+  NS_IMETHOD OpenAlternativeOutputStream(
+      const nsACString &type, int64_t predictedSize,
+      nsIAsyncOutputStream **_retval) override {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
   NS_IMETHOD OpenAlternativeInputStream(const nsACString &type,
