@@ -155,6 +155,34 @@ test(function() {
 }, 'Check if attribute serialization takes into account of the same prefix declared in an ancestor element');
 
 test(function() {
+  assert_equals(serialize(parse('<root><child/></root>')), '<root><child/></root>');
+  assert_equals(serialize(parse('<root><child xmlns=""/></root>')), '<root><child/></root>');
+  assert_equals(serialize(parse('<root xmlns="u1"><child xmlns="u1"/></root>')), '<root xmlns="u1"><child/></root>');
+  assert_equals(serialize(parse('<root xmlns="u1"><p:child xmlns:p="u1"/></root>')), '<root xmlns="u1"><child xmlns:p="u1"/></root>');
+}, 'Check if start tag serialization drops element prefix if the namespace is same as inherited default namespace.');
+
+test(function() {
+  const root = parse('<root xmlns:p1="u1"><child xmlns:p2="u1"/></root>');
+  const child2 = root.ownerDocument.createElementNS('u1', 'child2');
+  root.firstChild.appendChild(child2);
+  assert_equals(serialize(root), '<root xmlns:p1="u1"><child xmlns:p2="u1"><p2:child2/></child></root>');
+}, 'Check if start tag serialization finds an appropriate prefix.');
+
+test(function() {
+  const root = (new Document()).createElementNS('uri1', 'p:root');
+  root.setAttributeNS(XMLNS_URI, 'xmlns:p', 'uri2');
+  assert_equals(serialize(root), '<ns1:root xmlns:ns1="uri1" xmlns:p="uri2"/>');
+}, 'Check if start tag serialization takes into account of its xmlns:* attributes');
+
+test(function() {
+  const root = (new Document()).createElement('root');
+  root.setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:p', 'uri2');
+  const child = root.ownerDocument.createElementNS('uri1', 'p:child');
+  root.appendChild(child);
+  assert_equals(serialize(root), '<root xmlns:p="uri2"><p:child xmlns:p="uri1"/></root>');
+}, 'Check if start tag serialization applied the original prefix even if it is declared in an ancestor element.');
+
+test(function() {
   const input = '<root><child1/><child2/></root>';
   const root = (new DOMParser()).parseFromString(input, 'text/xml').documentElement;
   root.firstChild.setAttributeNS('uri1', 'attr1', 'value1');
