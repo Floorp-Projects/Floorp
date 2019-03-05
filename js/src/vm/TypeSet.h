@@ -87,10 +87,16 @@ enum : uint32_t {
   TYPE_FLAG_LAZYARGS = 0x100,
   TYPE_FLAG_ANYOBJECT = 0x200,
 
+  /* Mask containing all "immediate" primitives (not heap-allocated) */
+  TYPE_FLAG_PRIMITIVE_IMMEDIATE = TYPE_FLAG_UNDEFINED | TYPE_FLAG_NULL |
+      TYPE_FLAG_BOOLEAN | TYPE_FLAG_INT32 | TYPE_FLAG_DOUBLE,
+  /* Mask containing all GCThing primitives (heap-allocated) */
+  TYPE_FLAG_PRIMITIVE_GCTHING =
+      TYPE_FLAG_STRING | TYPE_FLAG_SYMBOL | TYPE_FLAG_BIGINT,
+
   /* Mask containing all primitives */
-  TYPE_FLAG_PRIMITIVE = TYPE_FLAG_UNDEFINED | TYPE_FLAG_NULL |
-                        TYPE_FLAG_BOOLEAN | TYPE_FLAG_INT32 | TYPE_FLAG_DOUBLE |
-                        TYPE_FLAG_STRING | TYPE_FLAG_SYMBOL | TYPE_FLAG_BIGINT,
+  TYPE_FLAG_PRIMITIVE =
+      TYPE_FLAG_PRIMITIVE_IMMEDIATE | TYPE_FLAG_PRIMITIVE_GCTHING,
 
   /* Mask/shift for the number of objects in objectSet */
   TYPE_FLAG_OBJECT_COUNT_MASK = 0x3c00,
