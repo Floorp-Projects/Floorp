@@ -510,7 +510,7 @@ void RenderCompositorANGLE::WaitForPreviousPresentQuery() {
   while (mWaitForPresentQueries.size() >= waitLatency) {
     RefPtr<ID3D11Query>& query = mWaitForPresentQueries.front();
     BOOL result;
-    layers::WaitForGPUQuery(mDevice, mCtx, query, &result);
+    layers::WaitForFrameGPUQuery(mDevice, mCtx, query, &result);
 
     // Recycle query for later use.
     mRecycledQuery = query;
