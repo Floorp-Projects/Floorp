@@ -90,8 +90,6 @@ class GeckoMediaPluginServiceParent final
   void CrashPlugins();
   void NotifySyncShutdownComplete();
 
-  void ProcessPossiblePlugin(nsIFile* aDir);
-
   void RemoveOnGMPThread(const nsAString& aDirectory,
                          const bool aDeleteFromDisk, const bool aCanDefer);
 
