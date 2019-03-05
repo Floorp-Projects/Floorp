@@ -497,7 +497,10 @@
       <textbox id="richautocomplete" type="autocomplete"
                autocompletesearch="test-a11y-search"
                autocompletepopup="richpopup"/>
-      <panel id="richpopup" type="autocomplete-richlistbox" noautofocus="true"/>
+      <panel is="autocomplete-richlistbox-popup"
+             id="richpopup"
+             type="autocomplete-richlistbox"
+             noautofocus="true"/>
 
       <iframe id="iframe"/>
 
