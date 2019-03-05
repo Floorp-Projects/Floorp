@@ -43,8 +43,10 @@
 
 #include "builtin/DataViewObject.h"
 #include "builtin/MapObject.h"
+#include "js/ArrayBuffer.h"  // JS::{ArrayBufferHasData,DetachArrayBuffer,IsArrayBufferObject,New{,Mapped}ArrayBufferWithContents,ReleaseMappedArrayBufferContents}
 #include "js/Date.h"
 #include "js/GCHashTable.h"
+#include "js/SharedArrayBuffer.h"  // JS::IsSharedArrayBufferObject
 #include "js/Wrapper.h"
 #include "vm/BigIntType.h"
 #include "vm/JSContext.h"
@@ -981,7 +983,7 @@ void JSStructuredCloneData::discardTransferables() {
     if (ownership == JS::SCTAG_TMO_ALLOC_DATA) {
       js_free(content);
     } else if (ownership == JS::SCTAG_TMO_MAPPED_DATA) {
-      JS_ReleaseMappedArrayBufferContents(content, extraData);
+      JS::ReleaseMappedArrayBufferContents(content, extraData);
     } else if (freeTransfer) {
       freeTransfer(tag, JS::TransferableOwnership(ownership), content,
                    extraData, closure_);
@@ -1670,13 +1672,13 @@ bool JSStructuredCloneWriter::startWrite(HandleValue v) {
                writeString(SCTAG_STRING, re->getSource());
       }
       case ESClass::ArrayBuffer: {
-        if (JS_IsArrayBufferObject(obj) && JS_ArrayBufferHasData(obj)) {
+        if (JS::IsArrayBufferObject(obj) && JS::ArrayBufferHasData(obj)) {
           return writeArrayBuffer(obj);
         }
         break;
       }
       case ESClass::SharedArrayBuffer:
-        if (JS_IsSharedArrayBufferObject(obj)) {
+        if (JS::IsSharedArrayBufferObject(obj)) {
           return writeSharedArrayBuffer(obj);
         }
         break;
@@ -1862,7 +1864,7 @@ bool JSStructuredCloneWriter::transferOwnership() {
         point = out.iter();
         point += pointOffset;
 
-        if (!JS_DetachArrayBuffer(cx, arrayBuffer)) {
+        if (!JS::DetachArrayBuffer(cx, arrayBuffer)) {
           return false;
         }
       } else {
@@ -2700,9 +2702,9 @@ bool JSStructuredCloneReader::readTransferMap() {
       MOZ_ASSERT(data == JS::SCTAG_TMO_ALLOC_DATA ||
                  data == JS::SCTAG_TMO_MAPPED_DATA);
       if (data == JS::SCTAG_TMO_ALLOC_DATA) {
-        obj = JS_NewArrayBufferWithContents(cx, nbytes, content);
+        obj = JS::NewArrayBufferWithContents(cx, nbytes, content);
       } else if (data == JS::SCTAG_TMO_MAPPED_DATA) {
-        obj = JS_NewMappedArrayBufferWithContents(cx, nbytes, content);
+        obj = JS::NewMappedArrayBufferWithContents(cx, nbytes, content);
       }
     } else if (tag == SCTAG_TRANSFER_MAP_STORED_ARRAY_BUFFER) {
       auto savedPos = in.tell();

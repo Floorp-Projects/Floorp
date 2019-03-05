@@ -28,7 +28,9 @@
 #include "ScriptedNotificationObserver.h"
 #include "imgIScriptedNotificationObserver.h"
 #include "gfxPlatform.h"
-#include "jsfriendapi.h"
+#include "js/ArrayBuffer.h"
+#include "js/RootingAPI.h"  // JS::{Handle,Rooted}
+#include "js/Value.h"       // JS::Value
 
 using namespace mozilla::gfx;
 
@@ -169,7 +171,7 @@ imgTools::~imgTools() { /* destructor code */
 }
 
 NS_IMETHODIMP
-imgTools::DecodeImageFromArrayBuffer(JS::HandleValue aArrayBuffer,
+imgTools::DecodeImageFromArrayBuffer(JS::Handle<JS::Value> aArrayBuffer,
                                      const nsACString& aMimeType,
                                      JSContext* aCx,
                                      imgIContainer** aContainer) {
@@ -178,7 +180,7 @@ imgTools::DecodeImageFromArrayBuffer(JS::HandleValue aArrayBuffer,
   }
 
   JS::Rooted<JSObject*> obj(aCx,
-                            js::UnwrapArrayBuffer(&aArrayBuffer.toObject()));
+                            JS::UnwrapArrayBuffer(&aArrayBuffer.toObject()));
   if (!obj) {
     return NS_ERROR_FAILURE;
   }
@@ -187,7 +189,7 @@ imgTools::DecodeImageFromArrayBuffer(JS::HandleValue aArrayBuffer,
   uint32_t bufferLength = 0;
   bool isSharedMemory = false;
 
-  js::GetArrayBufferLengthAndData(obj, &bufferLength, &isSharedMemory,
+  JS::GetArrayBufferLengthAndData(obj, &bufferLength, &isSharedMemory,
                                   &bufferData);
   return DecodeImageFromBuffer((char*)bufferData, bufferLength, aMimeType,
                                aContainer);
