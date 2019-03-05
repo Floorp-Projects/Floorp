@@ -46,17 +46,23 @@ class XDRBufferBase {
 
   size_t cursor() const { return cursor_; }
 
-#ifdef DEBUG
   // This function records if the cursor got changed by codeAlign or by any
   // other read/write of data. This is used for AutoXDRTree assertions, as a
   // way to ensure that the last thing done is properly setting the alignment
   // with codeAlign function.
-  void setAligned(bool aligned) { aligned_ = aligned; }
-  bool isAligned() const { return aligned_; }
-#else
-  void setAligned(bool) const {}
-  bool isAligned() const { return true; }
+  void setAligned(bool aligned) {
+#ifdef DEBUG
+    aligned_ = aligned;
 #endif
+  }
+
+  bool isAligned() const {
+#ifdef DEBUG
+    return aligned_;
+#else
+    return true;
+#endif
+  }
 
  protected:
   JSContext* const context_;
