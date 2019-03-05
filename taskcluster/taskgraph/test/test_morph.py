@@ -149,26 +149,6 @@ def get_morphed(make_taskgraph):
     return inner
 
 
-def test_template_artifact(get_morphed):
-    morphed = get_morphed({
-        'templates': {
-            'artifact': {'enabled': 1}
-        },
-    })
-
-    assert len(morphed.tasks) == 2
-
-    for t in morphed.tasks.values():
-        if t.kind == 'build':
-            assert t.task['extra']['treeherder']['group'] == 'tc'
-            assert t.task['extra']['treeherder']['symbol'] == 'Ba'
-            assert t.task['payload']['env']['USE_ARTIFACT'] == 1
-        else:
-            assert t.task['extra']['treeherder']['group'] == 'tc'
-            assert t.task['extra']['treeherder']['symbol'] == 't'
-            assert 'USE_ARTIFACT' not in t.task['payload']['env']
-
-
 def test_template_env(get_morphed):
     morphed = get_morphed({
         'templates': {
