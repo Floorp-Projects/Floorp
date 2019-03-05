@@ -8,6 +8,7 @@ with Files("**"):
     BUG_COMPONENT = ("Core", "XPCOM")
 
 TEST_DIRS += ['test']
+BROWSER_CHROME_MANIFESTS += ['test/browser.ini']
 
 EXPORTS.mozilla.scache += [
     'StartupCache.h',

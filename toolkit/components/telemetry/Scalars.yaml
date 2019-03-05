@@ -2495,6 +2495,23 @@ startup:
     record_in_processes:
       - main
 
+script.preloader:
+  mainthread_recompile:
+    bug_numbers:
+      - 1364235
+    description:
+      How many times we ended up recompiling a script from the script preloader
+      on the main thread.
+    expires: "73"
+    keyed: false
+    kind: uint
+    notification_emails:
+      - dothayer@mozilla.com
+    release_channel_collection: opt-out
+    record_in_processes:
+      - 'main'
+      - 'content'
+
 # The following section is for probes testing the Telemetry system. They will not be
 # submitted in pings and are only used for testing.
 telemetry.test:
