@@ -4,15 +4,17 @@ const FAKE_PROVIDERS = [{id: "foo"}, {id: "bar"}];
 const PROVIDER_PREF_BRANCH = "browser.newtabpage.activity-stream.asrouter.providers.";
 const DEVTOOLS_PREF = "browser.newtabpage.activity-stream.asrouter.devtoolsEnabled";
 const SNIPPETS_USER_PREF = "browser.newtabpage.activity-stream.feeds.snippets";
-const CFR_USER_PREF = "browser.newtabpage.activity-stream.asrouter.userprefs.cfr";
+const CFR_USER_PREF_ADDONS = "browser.newtabpage.activity-stream.asrouter.userprefs.cfr.addons";
+const CFR_USER_PREF_FEATURES = "browser.newtabpage.activity-stream.asrouter.userprefs.cfr.features";
 
 /** NUMBER_OF_PREFS_TO_OBSERVE includes:
  *  1. asrouter.providers. pref branch
  *  2. asrouter.devtoolsEnabled
  *  3. browser.newtabpage.activity-stream.feeds.snippets (user preference - snippets)
- *  4. browser.newtabpage.activity-stream.asrouter.userprefs.cfr (user preference - cfr)
+ *  4. browser.newtabpage.activity-stream.asrouter.userprefs.cfr.addons (user preference - cfr)
+ *  4. browser.newtabpage.activity-stream.asrouter.userprefs.cfr.features (user preference - cfr)
  */
-const NUMBER_OF_PREFS_TO_OBSERVE = 4;
+const NUMBER_OF_PREFS_TO_OBSERVE = 5;
 
 describe("ASRouterPreferences", () => {
   let ASRouterPreferences;
@@ -187,9 +189,10 @@ describe("ASRouterPreferences", () => {
   describe("#getAllUserPreferences", () => {
     it("should return all user preferences", () => {
       boolPrefStub.withArgs(SNIPPETS_USER_PREF).returns(true);
-      boolPrefStub.withArgs(CFR_USER_PREF).returns(false);
+      boolPrefStub.withArgs(CFR_USER_PREF_ADDONS).returns(false);
+      boolPrefStub.withArgs(CFR_USER_PREF_FEATURES).returns(true);
       const result = ASRouterPreferences.getAllUserPreferences();
-      assert.deepEqual(result, {snippets: true, cfr: false});
+      assert.deepEqual(result, {snippets: true, cfrAddons: false, cfrFeatures: true});
     });
   });
   describe("#enableOrDisableProvider", () => {
@@ -242,7 +245,8 @@ describe("ASRouterPreferences", () => {
         assert.calledWith(resetStub, getPrefNameForProvider(provider.id));
       });
       assert.calledWith(resetStub, SNIPPETS_USER_PREF);
-      assert.calledWith(resetStub, CFR_USER_PREF);
+      assert.calledWith(resetStub, CFR_USER_PREF_ADDONS);
+      assert.calledWith(resetStub, CFR_USER_PREF_FEATURES);
     });
   });
   describe("observer, listeners", () => {
@@ -301,6 +305,42 @@ describe("ASRouterPreferences", () => {
 
       ASRouterPreferences.observe(null, null, DEVTOOLS_PREF);
       assert.notCalled(callback);
+    });
+  });
+  describe("_migratePrefs", () => {
+    beforeEach(() => {
+      sandbox.stub(global.Services.prefs, "setBoolPref");
+      sandbox.stub(global.Services.prefs, "clearUserPref");
+    });
+    it("should not do anything if userpref was not modified", () => {
+      ASRouterPreferences.init();
+
+      assert.notCalled(global.Services.prefs.getBoolPref);
+      assert.notCalled(global.Services.prefs.setBoolPref);
+    });
+    it("should not do migration if newPref was modified", () => {
+      sandbox.stub(global.Services.prefs, "prefHasUserValue").returns(true);
+
+      ASRouterPreferences.init();
+
+      assert.notCalled(global.Services.prefs.getBoolPref);
+      assert.notCalled(global.Services.prefs.setBoolPref);
+      assert.calledOnce(global.Services.prefs.clearUserPref);
+      assert.calledWith(global.Services.prefs.clearUserPref, "browser.newtabpage.activity-stream.asrouter.userprefs.cfr");
+    });
+    it("should migrate userprefs.cfr", () => {
+      const hasUserValueStub = sandbox.stub(global.Services.prefs, "prefHasUserValue");
+      hasUserValueStub.onCall(0).returns(true);
+      hasUserValueStub.returns(false);
+
+      ASRouterPreferences.init();
+
+      assert.calledOnce(global.Services.prefs.getBoolPref);
+      assert.calledWith(global.Services.prefs.getBoolPref, "browser.newtabpage.activity-stream.asrouter.userprefs.cfr");
+      assert.calledOnce(global.Services.prefs.setBoolPref);
+      assert.calledWith(global.Services.prefs.setBoolPref, CFR_USER_PREF_ADDONS, false);
+      assert.calledOnce(global.Services.prefs.clearUserPref);
+      assert.calledWith(global.Services.prefs.clearUserPref, "browser.newtabpage.activity-stream.asrouter.userprefs.cfr");
     });
   });
 });

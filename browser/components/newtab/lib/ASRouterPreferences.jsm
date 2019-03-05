@@ -16,9 +16,15 @@ const DEFAULT_STATE = {
   _devtoolsPref: DEVTOOLS_PREF,
 };
 
+const MIGRATE_PREFS = [
+  // Old pref, New pref
+  ["browser.newtabpage.activity-stream.asrouter.userprefs.cfr", "browser.newtabpage.activity-stream.asrouter.userprefs.cfr.addons"],
+];
+
 const USER_PREFERENCES = {
   snippets: "browser.newtabpage.activity-stream.feeds.snippets",
-  cfr: "browser.newtabpage.activity-stream.asrouter.userprefs.cfr",
+  cfrAddons: "browser.newtabpage.activity-stream.asrouter.userprefs.cfr.addons",
+  cfrFeatures: "browser.newtabpage.activity-stream.asrouter.userprefs.cfr.features",
 };
 
 const TEST_PROVIDER = {
@@ -48,6 +54,24 @@ class _ASRouterPreferences {
       }
       return filtered;
     }, []);
+  }
+
+  // XXX Bug 1531734
+  // Required for 67 when the pref change will happen
+  _migratePrefs() {
+    for (let [oldPref, newPref] of MIGRATE_PREFS) {
+      if (!Services.prefs.prefHasUserValue(oldPref)) {
+        continue;
+      }
+      if (Services.prefs.prefHasUserValue(newPref)) {
+        Services.prefs.clearUserPref(oldPref);
+        continue;
+      }
+      // If the pref was user modified we assume it was set to false
+      const oldValue = Services.prefs.getBoolPref(oldPref, false);
+      Services.prefs.clearUserPref(oldPref);
+      Services.prefs.setBoolPref(newPref, oldValue);
+    }
   }
 
   get providers() {
@@ -144,6 +168,7 @@ class _ASRouterPreferences {
     if (this._initialized) {
       return;
     }
+    this._migratePrefs();
     Services.prefs.addObserver(this._providerPrefBranch, this);
     Services.prefs.addObserver(this._devtoolsPref, this);
     for (const id of Object.keys(USER_PREFERENCES)) {
