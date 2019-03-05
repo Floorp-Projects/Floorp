@@ -104,6 +104,9 @@ enum class EditAction {
   // ePaste indicates to paste clipboard data.
   ePaste,
 
+  // ePasteAsQuotation indicates to paste clipboard data as quotation.
+  ePasteAsQuotation,
+
   // eDrop indicates that user drops dragging item into the editor.
   eDrop,
 
@@ -492,6 +495,8 @@ inline EditorInputType ToInputType(EditAction aEditAction) {
       return EditorInputType::eInsertFromDrop;
     case EditAction::ePaste:
       return EditorInputType::eInsertFromPaste;
+    case EditAction::ePasteAsQuotation:
+      return EditorInputType::eInsertFromPasteAsQuotation;
     case EditAction::eUpdateComposition:
       return EditorInputType::eInsertCompositionText;
     case EditAction::eCommitComposition:

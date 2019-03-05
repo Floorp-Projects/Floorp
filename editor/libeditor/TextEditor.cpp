@@ -1986,7 +1986,7 @@ nsresult TextEditor::PasteAsQuotationAsAction(int32_t aClipboardType,
   MOZ_ASSERT(aClipboardType == nsIClipboard::kGlobalClipboard ||
              aClipboardType == nsIClipboard::kSelectionClipboard);
 
-  AutoEditActionDataSetter editActionData(*this, EditAction::ePaste);
+  AutoEditActionDataSetter editActionData(*this, EditAction::ePasteAsQuotation);
   if (NS_WARN_IF(!editActionData.CanHandle())) {
     return NS_ERROR_NOT_INITIALIZED;
   }

@@ -140,6 +140,7 @@ inline bool IsDataAvailableOnTextEditor(EditorInputType aInputType) {
     case EditorInputType::eInsertCompositionText:
     case EditorInputType::eInsertFromComposition:  // Only level 2
     case EditorInputType::eInsertFromPaste:
+    case EditorInputType::eInsertFromPasteAsQuotation:
     case EditorInputType::eInsertTranspose:
     case EditorInputType::eInsertFromDrop:
     case EditorInputType::eInsertReplacementText:
@@ -180,6 +181,7 @@ inline bool IsDataAvailableOnHTMLEditor(EditorInputType aInputType) {
 inline bool IsDataTransferAvailableOnHTMLEditor(EditorInputType aInputType) {
   switch (aInputType) {
     case EditorInputType::eInsertFromPaste:
+    case EditorInputType::eInsertFromPasteAsQuotation:
     case EditorInputType::eInsertFromDrop:
     case EditorInputType::eInsertTranspose:
     case EditorInputType::eInsertReplacementText:
