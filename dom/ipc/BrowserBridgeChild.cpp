@@ -4,21 +4,22 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/dom/RemoteFrameChild.h"
-
+#include "mozilla/dom/BrowserBridgeChild.h"
+#include "nsFrameLoader.h"
 #include "nsFrameLoaderOwner.h"
+#include "nsQueryObject.h"
 
 using namespace mozilla::ipc;
 
 namespace mozilla {
 namespace dom {
 
-RemoteFrameChild::RemoteFrameChild(nsFrameLoader* aFrameLoader)
+BrowserBridgeChild::BrowserBridgeChild(nsFrameLoader* aFrameLoader)
     : mLayersId{0}, mIPCOpen(true), mFrameLoader(aFrameLoader) {}
 
-RemoteFrameChild::~RemoteFrameChild() {}
+BrowserBridgeChild::~BrowserBridgeChild() {}
 
-already_AddRefed<RemoteFrameChild> RemoteFrameChild::Create(
+already_AddRefed<BrowserBridgeChild> BrowserBridgeChild::Create(
     nsFrameLoader* aFrameLoader, const TabContext& aContext,
     const nsString& aRemoteType) {
   MOZ_ASSERT(XRE_IsContentProcess());
@@ -33,18 +34,19 @@ already_AddRefed<RemoteFrameChild> RemoteFrameChild::Create(
   RefPtr<TabChild> tabChild = TabChild::GetFrom(docShell);
   MOZ_DIAGNOSTIC_ASSERT(tabChild);
 
-  RefPtr<RemoteFrameChild> remoteFrame = new RemoteFrameChild(aFrameLoader);
-  // Reference is freed in TabChild::DeallocPRemoteFrameChild.
-  tabChild->SendPRemoteFrameConstructor(
-      do_AddRef(remoteFrame).take(),
+  RefPtr<BrowserBridgeChild> browserBridge =
+      new BrowserBridgeChild(aFrameLoader);
+  // Reference is freed in TabChild::DeallocPBrowserBridgeChild.
+  tabChild->SendPBrowserBridgeConstructor(
+      do_AddRef(browserBridge).take(),
       PromiseFlatString(aContext.PresentationURL()), aRemoteType);
-  remoteFrame->mIPCOpen = true;
+  browserBridge->mIPCOpen = true;
 
-  return remoteFrame.forget();
+  return browserBridge.forget();
 }
 
-void RemoteFrameChild::UpdateDimensions(const nsIntRect& aRect,
-                                        const mozilla::ScreenIntSize& aSize) {
+void BrowserBridgeChild::UpdateDimensions(const nsIntRect& aRect,
+                                          const mozilla::ScreenIntSize& aSize) {
   MOZ_DIAGNOSTIC_ASSERT(mIPCOpen);
 
   RefPtr<Element> owner = mFrameLoader->GetOwnerContent();
@@ -75,23 +77,23 @@ void RemoteFrameChild::UpdateDimensions(const nsIntRect& aRect,
   Unused << SendUpdateDimensions(di);
 }
 
-void RemoteFrameChild::NavigateByKey(bool aForward,
-                                     bool aForDocumentNavigation) {
+void BrowserBridgeChild::NavigateByKey(bool aForward,
+                                       bool aForDocumentNavigation) {
   Unused << SendNavigateByKey(aForward, aForDocumentNavigation);
 }
 
-void RemoteFrameChild::Activate() { Unused << SendActivate(); }
+void BrowserBridgeChild::Activate() { Unused << SendActivate(); }
 
 /*static*/
-RemoteFrameChild* RemoteFrameChild::GetFrom(nsFrameLoader* aFrameLoader) {
+BrowserBridgeChild* BrowserBridgeChild::GetFrom(nsFrameLoader* aFrameLoader) {
   if (!aFrameLoader) {
     return nullptr;
   }
-  return aFrameLoader->GetRemoteFrameChild();
+  return aFrameLoader->GetBrowserBridgeChild();
 }
 
 /*static*/
-RemoteFrameChild* RemoteFrameChild::GetFrom(nsIContent* aContent) {
+BrowserBridgeChild* BrowserBridgeChild::GetFrom(nsIContent* aContent) {
   RefPtr<nsFrameLoaderOwner> loaderOwner = do_QueryObject(aContent);
   if (!loaderOwner) {
     return nullptr;
@@ -100,14 +102,14 @@ RemoteFrameChild* RemoteFrameChild::GetFrom(nsIContent* aContent) {
   return GetFrom(frameLoader);
 }
 
-IPCResult RemoteFrameChild::RecvSetLayersId(
+IPCResult BrowserBridgeChild::RecvSetLayersId(
     const mozilla::layers::LayersId& aLayersId) {
   MOZ_ASSERT(!mLayersId.IsValid() && aLayersId.IsValid());
   mLayersId = aLayersId;
   return IPC_OK();
 }
 
-void RemoteFrameChild::ActorDestroy(ActorDestroyReason aWhy) {
+void BrowserBridgeChild::ActorDestroy(ActorDestroyReason aWhy) {
   mIPCOpen = false;
 }
 

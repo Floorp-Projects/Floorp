@@ -28,6 +28,8 @@ EXPORTS.mozilla.dom.ipc += [
 ]
 
 EXPORTS.mozilla.dom += [
+    'BrowserBridgeChild.h',
+    'BrowserBridgeParent.h',
     'CoalescedInputData.h',
     'CoalescedMouseData.h',
     'CoalescedWheelData.h',
@@ -44,8 +46,6 @@ EXPORTS.mozilla.dom += [
     'JSWindowActorService.h',
     'MemoryReportRequest.h',
     'PermissionMessageUtils.h',
-    'RemoteFrameChild.h',
-    'RemoteFrameParent.h',
     'TabChild.h',
     'TabContext.h',
     'TabMessageUtils.h',
@@ -64,6 +64,8 @@ EXPORTS.mozilla += [
 ]
 
 UNIFIED_SOURCES += [
+    'BrowserBridgeChild.cpp',
+    'BrowserBridgeParent.cpp',
     'CoalescedMouseData.cpp',
     'CoalescedWheelData.cpp',
     'ColorPickerParent.cpp',
@@ -82,8 +84,6 @@ UNIFIED_SOURCES += [
     'PermissionMessageUtils.cpp',
     'PreallocatedProcessManager.cpp',
     'ProcessPriorityManager.cpp',
-    'RemoteFrameChild.cpp',
-    'RemoteFrameParent.cpp',
     'SharedMap.cpp',
     'SharedStringMap.cpp',
     'StructuredCloneData.cpp',
@@ -106,6 +106,7 @@ IPDL_SOURCES += [
     'DOMTypes.ipdlh',
     'MemoryReportTypes.ipdlh',
     'PBrowser.ipdl',
+    'PBrowserBridge.ipdl',
     'PBrowserOrId.ipdlh',
     'PColorPicker.ipdl',
     'PContent.ipdl',
@@ -117,7 +118,6 @@ IPDL_SOURCES += [
     'PPluginWidget.ipdl',
     'PProcessHangMonitor.ipdl',
     'PrefsTypes.ipdlh',
-    'PRemoteFrame.ipdl',
     'PTabContext.ipdlh',
     'PURLClassifier.ipdl',
     'PURLClassifierInfo.ipdlh',

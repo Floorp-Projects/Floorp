@@ -4,20 +4,20 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_RemoteFrameParent_h
-#define mozilla_dom_RemoteFrameParent_h
+#ifndef mozilla_dom_BrowserBridgeParent_h
+#define mozilla_dom_BrowserBridgeParent_h
 
-#include "mozilla/dom/PRemoteFrameParent.h"
+#include "mozilla/dom/PBrowserBridgeParent.h"
 #include "mozilla/dom/TabParent.h"
 
 namespace mozilla {
 namespace dom {
 
-class RemoteFrameParent : public PRemoteFrameParent {
+class BrowserBridgeParent : public PBrowserBridgeParent {
  public:
-  NS_INLINE_DECL_REFCOUNTING(RemoteFrameParent);
+  NS_INLINE_DECL_REFCOUNTING(BrowserBridgeParent);
 
-  RemoteFrameParent();
+  BrowserBridgeParent();
 
   // Initialize this actor after performing startup.
   nsresult Init(const nsString& aPresentationURL, const nsString& aRemoteType);
@@ -27,11 +27,11 @@ class RemoteFrameParent : public PRemoteFrameParent {
   // Get our manager actor.
   TabParent* Manager() {
     MOZ_ASSERT(mIPCOpen);
-    return static_cast<TabParent*>(PRemoteFrameParent::Manager());
+    return static_cast<TabParent*>(PBrowserBridgeParent::Manager());
   }
 
  protected:
-  friend class PRemoteFrameParent;
+  friend class PBrowserBridgeParent;
 
   mozilla::ipc::IPCResult RecvShow(const ScreenIntSize& aSize,
                                    const bool& aParentIsActive,
@@ -51,7 +51,7 @@ class RemoteFrameParent : public PRemoteFrameParent {
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
  private:
-  ~RemoteFrameParent();
+  ~BrowserBridgeParent();
 
   RefPtr<TabParent> mTabParent;
   bool mIPCOpen;
@@ -60,4 +60,4 @@ class RemoteFrameParent : public PRemoteFrameParent {
 }  // namespace dom
 }  // namespace mozilla
 
-#endif  // !defined(mozilla_dom_RemoteFrameParent_h)
+#endif  // !defined(mozilla_dom_BrowserBridgeParent_h)
