@@ -2989,9 +2989,7 @@ class nsDisplayList {
   }
 
   virtual ~nsDisplayList() {
-    if (mSentinel.mAbove) {
-      NS_WARNING("Nonempty list left over?");
-    }
+    MOZ_RELEASE_ASSERT(!mSentinel.mAbove, "Nonempty list left over?");
   }
 
   nsDisplayList(nsDisplayList&& aOther) {
