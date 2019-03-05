@@ -146,8 +146,8 @@ var LoginManagerContent = {
   },
 
   _messages: [
-    "RemoteLogins:loginsFound",
-    "RemoteLogins:loginsAutoCompleted",
+    "PasswordManager:loginsFound",
+    "PasswordManager:loginsAutoCompleted",
   ],
 
   /**
@@ -236,7 +236,7 @@ var LoginManagerContent = {
   },
 
   receiveMessage(msg, topWindow) {
-    if (msg.name == "RemoteLogins:fillForm") {
+    if (msg.name == "PasswordManager:fillForm") {
       this.fillForm({
         topDocument: topWindow.document,
         loginFormOrigin: msg.data.loginFormOrigin,
@@ -249,7 +249,7 @@ var LoginManagerContent = {
 
     let request = this._takeRequest(msg);
     switch (msg.name) {
-      case "RemoteLogins:loginsFound": {
+      case "PasswordManager:loginsFound": {
         let loginsFound = LoginHelper.vanillaObjectsToLogins(msg.data.logins);
         request.promise.resolve({
           form: request.form,
@@ -259,7 +259,7 @@ var LoginManagerContent = {
         break;
       }
 
-      case "RemoteLogins:loginsAutoCompleted": {
+      case "PasswordManager:loginsAutoCompleted": {
         let loginsFound = LoginHelper.vanillaObjectsToLogins(msg.data.logins);
         let messageManager = msg.target;
         request.promise.resolve({ logins: loginsFound, messageManager });
@@ -294,7 +294,7 @@ var LoginManagerContent = {
                         options };
 
     return this._sendRequest(messageManager, requestData,
-                             "RemoteLogins:findLogins",
+                             "PasswordManager:findLogins",
                              messageData);
   },
 
@@ -325,7 +325,7 @@ var LoginManagerContent = {
     };
 
     return this._sendRequest(messageManager, requestData,
-                             "RemoteLogins:autoCompleteLogins",
+                             "PasswordManager:autoCompleteLogins",
                              messageData);
   },
 
@@ -551,7 +551,7 @@ var LoginManagerContent = {
     };
 
     let messageManager = topWindow.docShell.messageManager;
-    messageManager.sendAsyncMessage("RemoteLogins:insecureLoginFormPresent", {
+    messageManager.sendAsyncMessage("PasswordManager:insecureLoginFormPresent", {
       hasInsecureLoginForms: hasInsecureLoginForms(topWindow),
     });
   },
@@ -1049,7 +1049,7 @@ var LoginManagerContent = {
       openerTopWindowID = win.opener.top.windowUtils.outerWindowID;
     }
 
-    messageManager.sendAsyncMessage("RemoteLogins:onFormSubmit",
+    messageManager.sendAsyncMessage("PasswordManager:onFormSubmit",
                                     { hostname,
                                       formSubmitURL,
                                       usernameField: mockUsername,
@@ -1692,7 +1692,7 @@ UserAutoCompleteResult.prototype = {
     if (removeFromDB) {
       if (this._messageManager) {
         let vanilla = LoginHelper.loginToVanillaObject(removedLogin);
-        this._messageManager.sendAsyncMessage("RemoteLogins:removeLogin",
+        this._messageManager.sendAsyncMessage("PasswordManager:removeLogin",
                                               { login: vanilla });
       } else {
         Services.logins.removeLogin(removedLogin);

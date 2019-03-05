@@ -530,12 +530,12 @@ const listeners = {
     "Reader:FaviconRequest": ["ReaderParent"],
     "Reader:UpdateReaderButton": ["ReaderParent"],
     // PLEASE KEEP THIS LIST IN SYNC WITH THE MOBILE LISTENERS IN BrowserCLH.js
-    "RemoteLogins:findLogins": ["LoginManagerParent"],
-    "RemoteLogins:findRecipes": ["LoginManagerParent"],
-    "RemoteLogins:onFormSubmit": ["LoginManagerParent"],
-    "RemoteLogins:autoCompleteLogins": ["LoginManagerParent"],
-    "RemoteLogins:removeLogin": ["LoginManagerParent"],
-    "RemoteLogins:insecureLoginFormPresent": ["LoginManagerParent"],
+    "PasswordManager:findLogins": ["LoginManagerParent"],
+    "PasswordManager:findRecipes": ["LoginManagerParent"],
+    "PasswordManager:onFormSubmit": ["LoginManagerParent"],
+    "PasswordManager:autoCompleteLogins": ["LoginManagerParent"],
+    "PasswordManager:removeLogin": ["LoginManagerParent"],
+    "PasswordManager:insecureLoginFormPresent": ["LoginManagerParent"],
     // PLEASE KEEP THIS LIST IN SYNC WITH THE MOBILE LISTENERS IN BrowserCLH.js
     "rtcpeer:CancelRequest": ["webrtcUI"],
     "rtcpeer:Request": ["webrtcUI"],
