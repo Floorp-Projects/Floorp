@@ -42,6 +42,11 @@ parent:
    */
   async NavigateByKey(bool aForward, bool aForDocumentNavigation);
 
+  /**
+   * Sending an activate message moves focus to the iframe.
+   */
+  async Activate();
+
 };
 
 }  // namespace dom
