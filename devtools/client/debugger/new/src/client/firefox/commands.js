@@ -186,7 +186,10 @@ function maybeGenerateLogGroupId(options) {
 function maybeClearLogpoint(location) {
   const bp = breakpoints[locationKey(location)];
   if (bp && bp.options.logGroupId && tabTarget.activeConsole) {
-    tabTarget.activeConsole.emit("clearLogpointMessages", bp.options.logGroupId);
+    tabTarget.activeConsole.emit(
+      "clearLogpointMessages",
+      bp.options.logGroupId
+    );
   }
 }
 
