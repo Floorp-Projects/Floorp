@@ -469,6 +469,12 @@ VARCACHE_PREF(
   RelaxedAtomicUint32, 30000 /* 30 seconds */
 )
 
+VARCACHE_PREF(
+  "dom.worker.use_medium_high_event_queue",
+   dom_worker_use_medium_high_event_queue,
+  RelaxedAtomicBool, true
+)
+
 // Enable content type normalization of XHR uploads via MIME Sniffing standard
 // Disabled for now in bz1499136
 VARCACHE_PREF(

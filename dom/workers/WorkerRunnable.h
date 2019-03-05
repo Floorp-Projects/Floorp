@@ -397,6 +397,8 @@ class WorkerProxyToMainThreadRunnable : public Runnable {
  public:
   bool Dispatch(WorkerPrivate* aWorkerPrivate);
 
+  virtual bool ForMessaging() const { return false; }
+
  private:
   NS_IMETHOD Run() override;
 
