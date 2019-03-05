@@ -41,8 +41,8 @@ window.gActivityStreamStrings = {
   "prefs_home_header": "เนื้อหาหน้าแรก Firefox",
   "prefs_home_description": "เลือกเนื้อหาที่คุณต้องการในหน้าจอหน้าแรก Firefox ของคุณ",
   "prefs_content_discovery_header": "Firefox Home",
-  "prefs_content_discovery_description": "Content Discovery in Firefox Home allows you to discover high-quality, relevant articles from across the web.",
-  "prefs_content_discovery_button": "Turn Off Content Discovery",
+  "prefs_content_discovery_description": "Content Discovery ใน Firefox Home ช่วยให้คุณค้นพบบทความที่มีคุณภาพและมีความเกี่ยวข้องสูงจากทั่วทั้งเว็บ",
+  "prefs_content_discovery_button": "ปิดการค้นพบเนื้อหา",
   "prefs_section_rows_option": "{num} แถว",
   "prefs_search_header": "การค้นหาเว็บ",
   "prefs_topsites_description": "ไซต์ที่คุณเยี่ยมชมมากที่สุด",
@@ -78,9 +78,9 @@ window.gActivityStreamStrings = {
   "pocket_read_more": "หัวข้อยอดนิยม:",
   "pocket_read_even_more": "ดูเรื่องราวเพิ่มเติม",
   "pocket_more_reccommendations": "คำแนะนำเพิ่มเติม",
-  "pocket_how_it_works": "How it works",
+  "pocket_how_it_works": "วิธีการทำงาน",
   "pocket_cta_button": "รับ Pocket",
-  "pocket_cta_text": "Save the stories you love in Pocket, and fuel your mind with fascinating reads.",
+  "pocket_cta_text": "บันทึกเรื่องราวที่คุณรักลงใน Pocket และเติมเต็มสมองของคุณด้วยบทความที่น่าหลงใหล",
   "highlights_empty_state": "เริ่มการท่องเว็บและเราจะแสดงบทความ, วิดีโอ และหน้าอื่น ๆ บางส่วนที่ยอดเยี่ยมที่คุณได้เยี่ยมชมหรือเพิ่มที่คั่นหน้าไว้ล่าสุดที่นี่",
   "topstories_empty_state": "คุณได้อ่านเรื่องราวครบทั้งหมดแล้ว คุณสามารถกลับมาตรวจดูเรื่องราวเด่นจาก {provider} ได้ภายหลัง อดใจรอไม่ได้งั้นหรือ? เลือกหัวข้อยอดนิยมเพื่อค้นหาเรื่องราวที่ยอดเยี่ยมจากเว็บต่าง ๆ",
   "manual_migration_explanation2": "ลอง Firefox ด้วยที่คั่นหน้า, ประวัติ และรหัสผ่านจากเบราว์เซอร์อื่น",
@@ -110,6 +110,5 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "ประกาศความเป็นส่วนตัว",
   "firstrun_continue_to_login": "ดำเนินการต่อ",
   "firstrun_skip_login": "ข้ามขั้นตอนนี้",
-  "context_menu_title": "เปิดเมนู",
-  "pocket_learn_more": "เรียนรู้เพิ่มเติม"
+  "context_menu_title": "เปิดเมนู"
 };

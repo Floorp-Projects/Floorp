@@ -101,7 +101,6 @@ LONGHANDS_NOT_SERIALIZED_WITH_SERVO = [
     "grid-row-start",
     "grid-template-areas",
     "initial-letter",
-    "letter-spacing",
     "marker-end",
     "marker-mid",
     "marker-start",
@@ -140,7 +139,6 @@ LONGHANDS_NOT_SERIALIZED_WITH_SERVO = [
     "vertical-align",
     "-webkit-text-stroke-width",
     "will-change",
-    "word-spacing",
 ]
 
 def serialized_by_servo(prop):

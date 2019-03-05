@@ -81,7 +81,7 @@ class HostLayerManager;
 class IAPZCTreeManager;
 class LayerTransactionParent;
 class PAPZParent;
-class CrossProcessCompositorBridgeParent;
+class ContentCompositorBridgeParent;
 class CompositorThreadHolder;
 class InProcessCompositorSession;
 class WebRenderBridgeParent;
@@ -337,7 +337,7 @@ class CompositorBridgeParent final : public CompositorBridgeParentBase,
   }
 
   // Unused for chrome <-> compositor communication (which this class does).
-  // @see CrossProcessCompositorBridgeParent::RecvRequestNotifyAfterRemotePaint
+  // @see ContentCompositorBridgeParent::RecvRequestNotifyAfterRemotePaint
   mozilla::ipc::IPCResult RecvRequestNotifyAfterRemotePaint() override {
     return IPC_OK();
   };
@@ -493,10 +493,10 @@ class CompositorBridgeParent final : public CompositorBridgeParentBase,
     RefPtr<CompositorBridgeParent> mParent;
     HostLayerManager* mLayerManager;
     RefPtr<WebRenderBridgeParent> mWrBridge;
-    // Pointer to the CrossProcessCompositorBridgeParent. Used by APZCs to share
+    // Pointer to the ContentCompositorBridgeParent. Used by APZCs to share
     // their FrameMetrics with the corresponding child process that holds
     // the PCompositorBridgeChild
-    CrossProcessCompositorBridgeParent* mCrossProcessParent;
+    ContentCompositorBridgeParent* mCrossProcessParent;
     TargetConfig mTargetConfig;
     LayerTransactionParent* mLayerTree;
     nsTArray<PluginWindowData> mPluginData;
@@ -581,7 +581,7 @@ class CompositorBridgeParent final : public CompositorBridgeParentBase,
   bool DeallocPAPZCTreeManagerParent(PAPZCTreeManagerParent* aActor) override;
 
   // Helper method so that we don't have to expose mApzcTreeManager to
-  // CrossProcessCompositorBridgeParent.
+  // ContentCompositorBridgeParent.
   void AllocateAPZCTreeManagerParent(
       const MonitorAutoLock& aProofOfLayerTreeStateLock,
       const LayersId& aLayersId, LayerTreeState& aLayerTreeStateToUpdate);

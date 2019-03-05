@@ -77,7 +77,8 @@ def create_args():
                      debug_mode=False,
                      page_cycles=None,
                      page_timeout=None,
-                     host=None)
+                     host=None,
+                     run_local=True)
 
     def inner(**kwargs):
         for next_arg in kwargs:

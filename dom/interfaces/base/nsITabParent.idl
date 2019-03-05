@@ -11,8 +11,6 @@ webidl Element;
 [builtinclass, scriptable, uuid(8e49f7b0-1f98-4939-bf91-e9c39cd56434)]
 interface nsITabParent : nsISupports
 {
-  void getChildProcessOffset(out int32_t aCssX, out int32_t aCssY);
-
   /**
    * Manages the docshell active state of the remote browser. Setting the
    * docShell to be active will also cause it to render layers and upload

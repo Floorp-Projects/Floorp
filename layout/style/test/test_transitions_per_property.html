@@ -1284,11 +1284,10 @@ function test_length_clamped_or_unclamped(prop, is_clamped) {
   div.style.setProperty("transition-timing-function", FUNC_NEGATIVE, "");
   div.style.setProperty("transition-property", "none", "");
   div.style.setProperty(prop, "0px", "");
-  is(cs.getPropertyValue(prop), "0px",
-     "length-valued property " + prop + ": flush before clamping test");
+  let zero_val = cs.getPropertyValue(prop); // Flushes
   div.style.setProperty("transition-property", prop, "");
   div.style.setProperty(prop, "100px", "");
-  (is_clamped ? is : isnot)(cs.getPropertyValue(prop), "0px",
+  (is_clamped ? is : isnot)(cs.getPropertyValue(prop), zero_val,
      "length-valued property " + prop + ": clamping of negatives");
   div.style.setProperty("transition-timing-function", "linear", "");
 }

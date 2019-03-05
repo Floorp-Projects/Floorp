@@ -1110,7 +1110,19 @@ impl GpuCacheTexture {
         // Create the new texture.
         assert!(height >= 2, "Height is too small for ANGLE");
         let new_size = DeviceIntSize::new(MAX_VERTEX_TEXTURE_WIDTH as _, height);
-        let rt_info = Some(RenderTargetInfo { has_depth: false });
+        // If glCopyImageSubData is supported, this texture doesn't need
+        // to be a render target. This prevents GL errors due to framebuffer
+        // incompleteness on devices that don't support RGBAF32 render targets.
+        // TODO(gw): We still need a proper solution for the subset of devices
+        //           that don't support glCopyImageSubData *OR* rendering to a
+        //           RGBAF32 render target. These devices will currently fail
+        //           to resize the GPU cache texture.
+        let supports_copy_image_sub_data = device.get_capabilities().supports_copy_image_sub_data;
+        let rt_info =  if supports_copy_image_sub_data {
+            None
+        } else {
+            Some(RenderTargetInfo { has_depth: false })
+        };
         let mut texture = device.create_texture(
             TextureTarget::Default,
             ImageFormat::RGBAF32,

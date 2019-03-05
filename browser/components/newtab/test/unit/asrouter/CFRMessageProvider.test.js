@@ -11,7 +11,7 @@ const REGULAR_IDS = [
 ];
 
 describe("CFRMessageProvider", () => {
-  it("should have a total of 3 messages", () => {
+  it("should have a total of 4 messages", () => {
     assert.lengthOf(messages, 3);
   });
   it("should have one message each for the three regular addons", () => {
@@ -27,7 +27,9 @@ describe("CFRMessageProvider", () => {
       // Ensure that the CFR messages that are recommending an addon have this targeting.
       // In the future when we can do targeting based on category, this test will change.
       // See bug 1494778 and 1497653
-      assert.include(message.targeting, `(xpinstallEnabled == true)`);
+      if (message.id !== "PIN_TAB") {
+        assert.include(message.targeting, `(xpinstallEnabled == true)`);
+      }
     }
   });
 });

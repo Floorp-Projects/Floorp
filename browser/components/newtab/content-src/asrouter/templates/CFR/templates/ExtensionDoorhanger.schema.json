@@ -299,5 +299,5 @@
     }
   },
   "additionalProperties": false,
-  "required": ["bucket_id", "notification_text", "heading_text", "addon", "text", "buttons"]
+  "required": ["bucket_id", "notification_text", "heading_text", "text", "buttons"]
 }

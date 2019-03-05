@@ -2012,14 +2012,25 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetInitialLetter() {
 already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetLineHeight() {
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
 
-  nscoord lineHeight;
-  if (GetLineHeightCoord(lineHeight)) {
-    val->SetAppUnits(lineHeight);
-  } else {
-    SetValueToCoord(val, StyleText()->mLineHeight, true, nullptr,
-                    nsCSSProps::kLineHeightKTable);
+  {
+    nscoord lineHeight;
+    if (GetLineHeightCoord(lineHeight)) {
+      val->SetAppUnits(lineHeight);
+      return val.forget();
+    }
   }
 
+  auto& lh = StyleText()->mLineHeight;
+  if (lh.IsLength()) {
+    val->SetAppUnits(lh.length._0.ToAppUnits());
+  } else if (lh.IsNumber()) {
+    val->SetNumber(lh.number._0);
+  } else if (lh.IsMozBlockHeight()) {
+    val->SetIdent(eCSSKeyword__moz_block_height);
+  } else {
+    MOZ_ASSERT(lh.IsNormal());
+    val->SetIdent(eCSSKeyword_normal);
+  }
   return val.forget();
 }
 
@@ -2186,18 +2197,6 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetTextOverflow() {
 
 already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetTextShadow() {
   return GetCSSShadowArray(StyleText()->mTextShadow, false);
-}
-
-already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetLetterSpacing() {
-  RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-  SetValueToCoord(val, StyleText()->mLetterSpacing, false);
-  return val.forget();
-}
-
-already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetWordSpacing() {
-  RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-  SetValueToCoord(val, StyleText()->mWordSpacing, false);
-  return val.forget();
 }
 
 already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetWebkitTextStrokeWidth() {
@@ -2674,7 +2673,7 @@ bool nsComputedDOMStyle::GetLineHeightCoord(nscoord& aCoord) {
   AssertFlushedPendingReflows();
 
   nscoord blockHeight = NS_AUTOHEIGHT;
-  if (StyleText()->mLineHeight.GetUnit() == eStyleUnit_Enumerated) {
+  if (StyleText()->mLineHeight.IsMozBlockHeight()) {
     if (!mInnerFrame) return false;
 
     if (nsLayoutUtils::IsNonWrapperBlock(mInnerFrame)) {

@@ -6,7 +6,7 @@ function testName(aAccOrElmOrID, aName, aMsg, aTodo) {
 
   var acc = getAccessible(aAccOrElmOrID);
   if (!acc)
-    return;
+    return "";
 
   var func = aTodo ? todo_is : is;
   var txtID = prettyName(aAccOrElmOrID);

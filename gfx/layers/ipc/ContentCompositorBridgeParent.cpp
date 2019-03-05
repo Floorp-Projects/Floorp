@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/layers/CrossProcessCompositorBridgeParent.h"
+#include "mozilla/layers/ContentCompositorBridgeParent.h"
 
 #include <stdint.h>  // for uint64_t
 
@@ -51,23 +51,23 @@ void UpdateIndirectTree(LayersId aId, Layer* aRoot,
 void EraseLayerState(LayersId aId);
 
 mozilla::ipc::IPCResult
-CrossProcessCompositorBridgeParent::RecvRequestNotifyAfterRemotePaint() {
+ContentCompositorBridgeParent::RecvRequestNotifyAfterRemotePaint() {
   mNotifyAfterRemotePaint = true;
   return IPC_OK();
 }
 
-void CrossProcessCompositorBridgeParent::ActorDestroy(ActorDestroyReason aWhy) {
+void ContentCompositorBridgeParent::ActorDestroy(ActorDestroyReason aWhy) {
   mCanSend = false;
 
   // We must keep this object alive untill the code handling message
   // reception is finished on this thread.
   MessageLoop::current()->PostTask(NewRunnableMethod(
-      "layers::CrossProcessCompositorBridgeParent::DeferredDestroy", this,
-      &CrossProcessCompositorBridgeParent::DeferredDestroy));
+      "layers::ContentCompositorBridgeParent::DeferredDestroy", this,
+      &ContentCompositorBridgeParent::DeferredDestroy));
 }
 
 PLayerTransactionParent*
-CrossProcessCompositorBridgeParent::AllocPLayerTransactionParent(
+ContentCompositorBridgeParent::AllocPLayerTransactionParent(
     const nsTArray<LayersBackend>&, const LayersId& aId) {
   MOZ_ASSERT(aId.IsValid());
 
@@ -109,7 +109,7 @@ CrossProcessCompositorBridgeParent::AllocPLayerTransactionParent(
   return p;
 }
 
-bool CrossProcessCompositorBridgeParent::DeallocPLayerTransactionParent(
+bool ContentCompositorBridgeParent::DeallocPLayerTransactionParent(
     PLayerTransactionParent* aLayers) {
   LayerTransactionParent* slp = static_cast<LayerTransactionParent*>(aLayers);
   EraseLayerState(slp->GetId());
@@ -118,7 +118,7 @@ bool CrossProcessCompositorBridgeParent::DeallocPLayerTransactionParent(
 }
 
 PAPZCTreeManagerParent*
-CrossProcessCompositorBridgeParent::AllocPAPZCTreeManagerParent(
+ContentCompositorBridgeParent::AllocPAPZCTreeManagerParent(
     const LayersId& aLayersId) {
   // Check to see if this child process has access to this layer tree.
   if (!LayerTreeOwnerTracker::Get()->IsMapped(aLayersId, OtherPid())) {
@@ -148,7 +148,7 @@ CrossProcessCompositorBridgeParent::AllocPAPZCTreeManagerParent(
   state.mParent->AllocateAPZCTreeManagerParent(lock, aLayersId, state);
   return state.mApzcTreeManagerParent;
 }
-bool CrossProcessCompositorBridgeParent::DeallocPAPZCTreeManagerParent(
+bool ContentCompositorBridgeParent::DeallocPAPZCTreeManagerParent(
     PAPZCTreeManagerParent* aActor) {
   APZCTreeManagerParent* parent = static_cast<APZCTreeManagerParent*>(aActor);
 
@@ -165,7 +165,7 @@ bool CrossProcessCompositorBridgeParent::DeallocPAPZCTreeManagerParent(
   return true;
 }
 
-PAPZParent* CrossProcessCompositorBridgeParent::AllocPAPZParent(
+PAPZParent* ContentCompositorBridgeParent::AllocPAPZParent(
     const LayersId& aLayersId) {
   // Check to see if this child process has access to this layer tree.
   if (!LayerTreeOwnerTracker::Get()->IsMapped(aLayersId, OtherPid())) {
@@ -188,7 +188,7 @@ PAPZParent* CrossProcessCompositorBridgeParent::AllocPAPZParent(
   return controller;
 }
 
-bool CrossProcessCompositorBridgeParent::DeallocPAPZParent(PAPZParent* aActor) {
+bool ContentCompositorBridgeParent::DeallocPAPZParent(PAPZParent* aActor) {
   RemoteContentController* controller =
       static_cast<RemoteContentController*>(aActor);
   controller->Release();
@@ -196,7 +196,7 @@ bool CrossProcessCompositorBridgeParent::DeallocPAPZParent(PAPZParent* aActor) {
 }
 
 PWebRenderBridgeParent*
-CrossProcessCompositorBridgeParent::AllocPWebRenderBridgeParent(
+ContentCompositorBridgeParent::AllocPWebRenderBridgeParent(
     const wr::PipelineId& aPipelineId, const LayoutDeviceIntSize& aSize) {
 #ifndef MOZ_BUILD_WEBRENDER
   // Extra guard since this in the parent process and we don't want a malicious
@@ -261,7 +261,7 @@ CrossProcessCompositorBridgeParent::AllocPWebRenderBridgeParent(
   return parent;
 }
 
-bool CrossProcessCompositorBridgeParent::DeallocPWebRenderBridgeParent(
+bool ContentCompositorBridgeParent::DeallocPWebRenderBridgeParent(
     PWebRenderBridgeParent* aActor) {
 #ifndef MOZ_BUILD_WEBRENDER
   // Extra guard since this in the parent process and we don't want a malicious
@@ -274,8 +274,7 @@ bool CrossProcessCompositorBridgeParent::DeallocPWebRenderBridgeParent(
   return true;
 }
 
-mozilla::ipc::IPCResult
-CrossProcessCompositorBridgeParent::RecvNotifyChildCreated(
+mozilla::ipc::IPCResult ContentCompositorBridgeParent::RecvNotifyChildCreated(
     const LayersId& child, CompositorOptions* aOptions) {
   MonitorAutoLock lock(*sIndirectLayerTreesLock);
   for (LayerTreeMap::iterator it = sIndirectLayerTrees.begin();
@@ -291,7 +290,7 @@ CrossProcessCompositorBridgeParent::RecvNotifyChildCreated(
 }
 
 mozilla::ipc::IPCResult
-CrossProcessCompositorBridgeParent::RecvMapAndNotifyChildCreated(
+ContentCompositorBridgeParent::RecvMapAndNotifyChildCreated(
     const LayersId& child, const base::ProcessId& pid,
     CompositorOptions* aOptions) {
   // This can only be called from the browser process, as the mapping
@@ -299,8 +298,7 @@ CrossProcessCompositorBridgeParent::RecvMapAndNotifyChildCreated(
   return IPC_FAIL_NO_REASON(this);
 }
 
-mozilla::ipc::IPCResult
-CrossProcessCompositorBridgeParent::RecvCheckContentOnlyTDR(
+mozilla::ipc::IPCResult ContentCompositorBridgeParent::RecvCheckContentOnlyTDR(
     const uint32_t& sequenceNum, bool* isContentOnlyTDR) {
   *isContentOnlyTDR = false;
 #ifdef XP_WIN
@@ -320,7 +318,7 @@ CrossProcessCompositorBridgeParent::RecvCheckContentOnlyTDR(
   return IPC_OK();
 };
 
-void CrossProcessCompositorBridgeParent::ShadowLayersUpdated(
+void ContentCompositorBridgeParent::ShadowLayersUpdated(
     LayerTransactionParent* aLayerTree, const TransactionInfo& aInfo,
     bool aHitTestUpdate) {
   LayersId id = aLayerTree->GetId();
@@ -398,7 +396,7 @@ void CrossProcessCompositorBridgeParent::ShadowLayersUpdated(
       aInfo.fwdTime());
 }
 
-void CrossProcessCompositorBridgeParent::DidCompositeLocked(
+void ContentCompositorBridgeParent::DidCompositeLocked(
     LayersId aId, const VsyncId& aVsyncId, TimeStamp& aCompositeStart,
     TimeStamp& aCompositeEnd) {
   sIndirectLayerTreesLock->AssertCurrentThreadOwns();
@@ -414,7 +412,7 @@ void CrossProcessCompositorBridgeParent::DidCompositeLocked(
   }
 }
 
-void CrossProcessCompositorBridgeParent::ScheduleComposite(
+void ContentCompositorBridgeParent::ScheduleComposite(
     LayerTransactionParent* aLayerTree) {
   LayersId id = aLayerTree->GetId();
   MOZ_ASSERT(id.IsValid());
@@ -428,7 +426,7 @@ void CrossProcessCompositorBridgeParent::ScheduleComposite(
   }
 }
 
-void CrossProcessCompositorBridgeParent::NotifyClearCachedResources(
+void ContentCompositorBridgeParent::NotifyClearCachedResources(
     LayerTransactionParent* aLayerTree) {
   LayersId id = aLayerTree->GetId();
   MOZ_ASSERT(id.IsValid());
@@ -443,8 +441,8 @@ void CrossProcessCompositorBridgeParent::NotifyClearCachedResources(
   }
 }
 
-bool CrossProcessCompositorBridgeParent::SetTestSampleTime(
-    const LayersId& aId, const TimeStamp& aTime) {
+bool ContentCompositorBridgeParent::SetTestSampleTime(const LayersId& aId,
+                                                      const TimeStamp& aTime) {
   MOZ_ASSERT(aId.IsValid());
   const CompositorBridgeParent::LayerTreeState* state =
       CompositorBridgeParent::GetIndirectShadowTree(aId);
@@ -456,7 +454,7 @@ bool CrossProcessCompositorBridgeParent::SetTestSampleTime(
   return state->mParent->SetTestSampleTime(aId, aTime);
 }
 
-void CrossProcessCompositorBridgeParent::LeaveTestMode(const LayersId& aId) {
+void ContentCompositorBridgeParent::LeaveTestMode(const LayersId& aId) {
   MOZ_ASSERT(aId.IsValid());
   const CompositorBridgeParent::LayerTreeState* state =
       CompositorBridgeParent::GetIndirectShadowTree(aId);
@@ -468,7 +466,7 @@ void CrossProcessCompositorBridgeParent::LeaveTestMode(const LayersId& aId) {
   state->mParent->LeaveTestMode(aId);
 }
 
-void CrossProcessCompositorBridgeParent::ApplyAsyncProperties(
+void ContentCompositorBridgeParent::ApplyAsyncProperties(
     LayerTransactionParent* aLayerTree, TransformsToSkip aSkip) {
   LayersId id = aLayerTree->GetId();
   MOZ_ASSERT(id.IsValid());
@@ -482,7 +480,7 @@ void CrossProcessCompositorBridgeParent::ApplyAsyncProperties(
   state->mParent->ApplyAsyncProperties(aLayerTree, aSkip);
 }
 
-void CrossProcessCompositorBridgeParent::SetTestAsyncScrollOffset(
+void ContentCompositorBridgeParent::SetTestAsyncScrollOffset(
     const LayersId& aLayersId, const ScrollableLayerGuid::ViewID& aScrollId,
     const CSSPoint& aPoint) {
   MOZ_ASSERT(aLayersId.IsValid());
@@ -496,7 +494,7 @@ void CrossProcessCompositorBridgeParent::SetTestAsyncScrollOffset(
   state->mParent->SetTestAsyncScrollOffset(aLayersId, aScrollId, aPoint);
 }
 
-void CrossProcessCompositorBridgeParent::SetTestAsyncZoom(
+void ContentCompositorBridgeParent::SetTestAsyncZoom(
     const LayersId& aLayersId, const ScrollableLayerGuid::ViewID& aScrollId,
     const LayerToParentLayerScale& aZoom) {
   MOZ_ASSERT(aLayersId.IsValid());
@@ -510,7 +508,7 @@ void CrossProcessCompositorBridgeParent::SetTestAsyncZoom(
   state->mParent->SetTestAsyncZoom(aLayersId, aScrollId, aZoom);
 }
 
-void CrossProcessCompositorBridgeParent::FlushApzRepaints(
+void ContentCompositorBridgeParent::FlushApzRepaints(
     const LayersId& aLayersId) {
   MOZ_ASSERT(aLayersId.IsValid());
   const CompositorBridgeParent::LayerTreeState* state =
@@ -522,8 +520,8 @@ void CrossProcessCompositorBridgeParent::FlushApzRepaints(
   state->mParent->FlushApzRepaints(aLayersId);
 }
 
-void CrossProcessCompositorBridgeParent::GetAPZTestData(
-    const LayersId& aLayersId, APZTestData* aOutData) {
+void ContentCompositorBridgeParent::GetAPZTestData(const LayersId& aLayersId,
+                                                   APZTestData* aOutData) {
   MOZ_ASSERT(aLayersId.IsValid());
   const CompositorBridgeParent::LayerTreeState* state =
       CompositorBridgeParent::GetIndirectShadowTree(aLayersId);
@@ -534,7 +532,7 @@ void CrossProcessCompositorBridgeParent::GetAPZTestData(
   state->mParent->GetAPZTestData(aLayersId, aOutData);
 }
 
-void CrossProcessCompositorBridgeParent::SetConfirmedTargetAPZC(
+void ContentCompositorBridgeParent::SetConfirmedTargetAPZC(
     const LayersId& aLayersId, const uint64_t& aInputBlockId,
     const nsTArray<ScrollableLayerGuid>& aTargets) {
   MOZ_ASSERT(aLayersId.IsValid());
@@ -547,8 +545,7 @@ void CrossProcessCompositorBridgeParent::SetConfirmedTargetAPZC(
   state->mParent->SetConfirmedTargetAPZC(aLayersId, aInputBlockId, aTargets);
 }
 
-AsyncCompositionManager*
-CrossProcessCompositorBridgeParent::GetCompositionManager(
+AsyncCompositionManager* ContentCompositorBridgeParent::GetCompositionManager(
     LayerTransactionParent* aLayerTree) {
   LayersId id = aLayerTree->GetId();
   const CompositorBridgeParent::LayerTreeState* state =
@@ -561,15 +558,13 @@ CrossProcessCompositorBridgeParent::GetCompositionManager(
   return state->mParent->GetCompositionManager(aLayerTree);
 }
 
-void CrossProcessCompositorBridgeParent::DeferredDestroy() {
-  mSelfRef = nullptr;
-}
+void ContentCompositorBridgeParent::DeferredDestroy() { mSelfRef = nullptr; }
 
-CrossProcessCompositorBridgeParent::~CrossProcessCompositorBridgeParent() {
+ContentCompositorBridgeParent::~ContentCompositorBridgeParent() {
   MOZ_ASSERT(XRE_GetIOMessageLoop());
 }
 
-PTextureParent* CrossProcessCompositorBridgeParent::AllocPTextureParent(
+PTextureParent* ContentCompositorBridgeParent::AllocPTextureParent(
     const SurfaceDescriptor& aSharedData, const ReadLockDescriptor& aReadLock,
     const LayersBackend& aLayersBackend, const TextureFlags& aFlags,
     const LayersId& aId, const uint64_t& aSerial,
@@ -606,16 +601,16 @@ PTextureParent* CrossProcessCompositorBridgeParent::AllocPTextureParent(
                                       aExternalImageId);
 }
 
-bool CrossProcessCompositorBridgeParent::DeallocPTextureParent(
+bool ContentCompositorBridgeParent::DeallocPTextureParent(
     PTextureParent* actor) {
   return TextureHost::DestroyIPDLActor(actor);
 }
 
-bool CrossProcessCompositorBridgeParent::IsSameProcess() const {
+bool ContentCompositorBridgeParent::IsSameProcess() const {
   return OtherPid() == base::GetCurrentProcId();
 }
 
-void CrossProcessCompositorBridgeParent::UpdatePaintTime(
+void ContentCompositorBridgeParent::UpdatePaintTime(
     LayerTransactionParent* aLayerTree, const TimeDuration& aPaintTime) {
   LayersId id = aLayerTree->GetId();
   MOZ_ASSERT(id.IsValid());
@@ -629,7 +624,7 @@ void CrossProcessCompositorBridgeParent::UpdatePaintTime(
   state->mParent->UpdatePaintTime(aLayerTree, aPaintTime);
 }
 
-void CrossProcessCompositorBridgeParent::RegisterPayload(
+void ContentCompositorBridgeParent::RegisterPayload(
     LayerTransactionParent* aLayerTree,
     const InfallibleTArray<CompositionPayload>& aPayload) {
   LayersId id = aLayerTree->GetId();
@@ -644,7 +639,7 @@ void CrossProcessCompositorBridgeParent::RegisterPayload(
   state->mParent->RegisterPayload(aLayerTree, aPayload);
 }
 
-void CrossProcessCompositorBridgeParent::ObserveLayersUpdate(
+void ContentCompositorBridgeParent::ObserveLayersUpdate(
     LayersId aLayersId, LayersObserverEpoch aEpoch, bool aActive) {
   MOZ_ASSERT(aLayersId.IsValid());
 

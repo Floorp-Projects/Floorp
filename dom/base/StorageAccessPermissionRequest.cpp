@@ -5,6 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "StorageAccessPermissionRequest.h"
+#include "mozilla/StaticPrefs.h"
+#include <cstdlib>
 
 namespace mozilla {
 namespace dom {
@@ -39,6 +41,7 @@ NS_IMETHODIMP
 StorageAccessPermissionRequest::Cancel() {
   if (!mCallbackCalled) {
     mCallbackCalled = true;
+    mTimer = nullptr;
     mCancelCallback();
   }
   return NS_OK;
@@ -59,7 +62,20 @@ StorageAccessPermissionRequest::Allow(JS::HandleValue aChoices) {
       mAllowAnySiteCallback();
     } else if (choices.Length() == 1 &&
                choices[0].choice().EqualsLiteral("allow-auto-grant")) {
-      mAllowAutoGrantCallback();
+      unsigned simulatedDelay = CalculateSimulatedDelay();
+      if (simulatedDelay) {
+        MOZ_ASSERT(!mTimer);
+        RefPtr<StorageAccessPermissionRequest> self = this;
+        rv = NS_NewTimerWithFuncCallback(
+            getter_AddRefs(mTimer), CallAutoGrantCallback, this, simulatedDelay,
+            nsITimer::TYPE_ONE_SHOT, "DelayedAllowAutoGrantCallback");
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return rv;
+        }
+        NS_ADDREF(this);
+      } else {
+        mAllowAutoGrantCallback();
+      }
     } else {
       mAllowCallback();
     }
@@ -86,6 +102,30 @@ StorageAccessPermissionRequest::Create(
           std::move(aAllowAutoGrantCallback), std::move(aAllowAnySiteCallback),
           std::move(aCancelCallback));
   return request.forget();
+}
+
+unsigned StorageAccessPermissionRequest::CalculateSimulatedDelay() {
+  if (!StaticPrefs::dom_storage_access_auto_grants_delayed()) {
+    return 0;
+  }
+
+  // Generate a random time value that is at least 5 seconds and at most 15
+  // minutes.
+  std::srand(static_cast<unsigned>(PR_Now()));
+
+  const unsigned kMin = 5000;
+  const unsigned kMax = 6000;
+  const unsigned random = std::abs(std::rand());
+
+  return kMin + random % (kMax - kMin);
+}
+
+void StorageAccessPermissionRequest::CallAutoGrantCallback(nsITimer* aTimer,
+                                                           void* aClosure) {
+  auto self = static_cast<StorageAccessPermissionRequest*>(aClosure);
+  self->mAllowAutoGrantCallback();
+  self->mTimer = nullptr;
+  NS_RELEASE(self);
 }
 
 }  // namespace dom

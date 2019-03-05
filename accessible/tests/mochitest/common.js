@@ -157,8 +157,10 @@ function addA11yLoadEvent(aFunc, aWindow) {
         var accDoc = getAccessible(targetDocument);
         var state = {};
         accDoc.getState(state, {});
-        if (state.value & STATE_BUSY)
-          return waitForDocLoad();
+        if (state.value & STATE_BUSY) {
+          waitForDocLoad();
+          return;
+        }
 
         window.setTimeout(aFunc, 0);
       },
@@ -388,6 +390,7 @@ const kSkipTreeFullCheck = 1;
  *                                      fields
  * @param aFlags          [in, optional] flags, see constants above
  */
+// eslint-disable-next-line complexity
 function testAccessibleTree(aAccOrElmOrID, aAccTree, aFlags) {
   var acc = getAccessible(aAccOrElmOrID);
   if (!acc)
@@ -745,6 +748,7 @@ function getAccessibleDOMNodeID(accessible) {
     // property corresponds to the "id" of its body element.
     return accessible.id;
   } catch (e) { /* This will fail if accessible is not a proxy. */ }
+  return null;
 }
 
 /**

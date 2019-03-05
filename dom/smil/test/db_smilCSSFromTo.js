@@ -149,6 +149,16 @@ var _fromToTestLists = {
   ],
 };
 
+function _tweakForLetterSpacing(testcases) {
+  return testcases.map(function(t) {
+    let valMap = Object.assign({}, t.computedValMap);
+    for (let prop of Object.keys(valMap))
+      if (valMap[prop] == "0px")
+        valMap[prop] = "normal";
+    return new AnimTestcaseFromTo(t.from, t.to, valMap)
+  });
+}
+
 // List of attribute/testcase-list bundles to be tested
 var gFromToBundles = [
   new TestcaseBundle(gPropList.clip, [
@@ -341,13 +351,9 @@ var gFromToBundles = [
                              toComp: "optimizespeed" }),
   ]),
   new TestcaseBundle(gPropList.letter_spacing,
-                     [].concat(_fromToTestLists.lengthNoUnits,
-                               _fromToTestLists.lengthPx,
-                               _fromToTestLists.lengthPxPctSVG)),
-  new TestcaseBundle(gPropList.letter_spacing,
-                     _fromToTestLists.lengthPctSVG,
-                     "pct->pct animations don't currently work for " +
-                     "*-spacing properties"),
+                     _tweakForLetterSpacing(
+                       [].concat(_fromToTestLists.lengthNoUnits,
+                                 _fromToTestLists.lengthPx))),
   new TestcaseBundle(gPropList.lighting_color,
                      [].concat(_fromToTestLists.color,
                                _fromToTestLists.colorFromInheritWhite)),

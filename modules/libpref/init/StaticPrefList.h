@@ -520,6 +520,12 @@ VARCACHE_PREF(
   bool, false
 )
 
+VARCACHE_PREF(
+  "dom.storage_access.auto_grants.delayed",
+   dom_storage_access_auto_grants_delayed,
+  bool, true
+)
+
 //---------------------------------------------------------------------------
 // Extension prefs
 //---------------------------------------------------------------------------

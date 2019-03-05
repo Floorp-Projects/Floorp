@@ -309,9 +309,34 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
       type: at.DISCOVERY_STREAM_SPOCS_UPDATE,
       data: {
         lastUpdated: spocs.lastUpdated,
-        spocs: this.filterSpocs(spocs.data),
+        spocs: this.transform(this.filterSpocs(spocs.data)),
       },
     });
+  }
+
+  transform(data) {
+    if (data && data.spocs && data.spocs.length) {
+      const spocsPerDomain = this.store.getState().DiscoveryStream.spocs.spocs_per_domain || 1;
+      const campaignMap = {};
+      return {
+        ...data,
+        spocs: data.spocs
+          .map(s => ({...s, score: s.item_score}))
+          .filter(s => s.score >= s.min_score)
+          .sort((a, b) => b.score - a.score)
+          .filter(s => {
+            if (!campaignMap[s.campaign_id]) {
+              campaignMap[s.campaign_id] = 1;
+              return true;
+            } else if (campaignMap[s.campaign_id] < spocsPerDomain) {
+              campaignMap[s.campaign_id]++;
+              return true;
+            }
+            return false;
+          }),
+      };
+    }
+    return data;
   }
 
   // Filter spocs based on frequency caps
@@ -686,7 +711,7 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
             type: at.DISCOVERY_STREAM_SPOCS_UPDATE,
             data: {
               lastUpdated: spocs.lastUpdated,
-              spocs: this.filterSpocs(spocs.data),
+              spocs: this.transform(this.filterSpocs(spocs.data)),
             },
           }));
         }
