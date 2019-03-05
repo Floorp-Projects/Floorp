@@ -18,6 +18,7 @@
 #include "nsStreamUtils.h"
 #include "nsStringStream.h"
 
+#include "js/ArrayBuffer.h"  // JS::NewArrayBufferWithContents
 #include "js/JSON.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/Exceptions.h"
@@ -386,8 +387,8 @@ void BodyUtil::ConsumeArrayBuffer(JSContext* aCx,
                                   uint32_t aInputLength, uint8_t* aInput,
                                   ErrorResult& aRv) {
   JS::Rooted<JSObject*> arrayBuffer(aCx);
-  arrayBuffer = JS_NewArrayBufferWithContents(aCx, aInputLength,
-                                              reinterpret_cast<void*>(aInput));
+  arrayBuffer = JS::NewArrayBufferWithContents(aCx, aInputLength,
+                                               reinterpret_cast<void*>(aInput));
   if (!arrayBuffer) {
     JS_ClearPendingException(aCx);
     aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
