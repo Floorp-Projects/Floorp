@@ -9,8 +9,12 @@ import android.content.SharedPreferences
 import androidx.test.core.app.ApplicationProvider
 import mozilla.components.service.glean.Lifetime
 import mozilla.components.service.glean.CounterMetricType
+import mozilla.components.service.glean.error.ErrorRecording.ErrorType
+import mozilla.components.service.glean.error.ErrorRecording.testGetNumRecordedErrors
+import mozilla.components.service.glean.resetGlean
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertFalse
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -24,8 +28,7 @@ class CountersStorageEngineTest {
 
     @Before
     fun setUp() {
-        CountersStorageEngine.applicationContext = ApplicationProvider.getApplicationContext()
-        CountersStorageEngine.clearAllStores()
+        resetGlean()
     }
 
     @Test
@@ -187,5 +190,32 @@ class CountersStorageEngineTest {
         // Check that this serializes to the expected JSON format.
         assertEquals("{\"telemetry.counter_metric\":1}",
             snapshot.toString())
+    }
+
+    @Test
+    fun `counters must not increment when passed zero or negative`() {
+        // Define a 'counterMetric' counter metric, which will be stored in "store1".
+        val counterMetric = CounterMetricType(
+            disabled = false,
+            category = "telemetry",
+            lifetime = Lifetime.Application,
+            name = "counter_metric",
+            sendInPings = listOf("store1")
+        )
+
+        // Attempt to increment the counter with zero
+        counterMetric.add(0)
+        // Check that nothing was recorded.
+        assertFalse("Counters must not be recorded if incremented with zero",
+            counterMetric.testHasValue())
+
+        // Attempt to increment the counter with negative
+        counterMetric.add(-1)
+        // Check that nothing was recorded.
+        assertFalse("Counters must not be recorded if incremented with negative",
+            counterMetric.testHasValue())
+
+        // Make sure that the errors have been recorded
+        assertEquals(2, testGetNumRecordedErrors(counterMetric, ErrorType.InvalidValue))
     }
 }

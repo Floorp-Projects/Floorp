@@ -7,6 +7,8 @@ package mozilla.components.service.glean.storages
 import android.annotation.SuppressLint
 import android.content.SharedPreferences
 import mozilla.components.service.glean.CommonMetricData
+import mozilla.components.service.glean.error.ErrorRecording.recordError
+import mozilla.components.service.glean.error.ErrorRecording.ErrorType
 import mozilla.components.support.base.log.logger.Logger
 
 /**
@@ -52,6 +54,16 @@ internal open class CountersStorageEngineImplementation(
         metricData: CommonMetricData,
         amount: Int
     ) {
+        if (amount <= 0) {
+            recordError(
+                metricData,
+                ErrorType.InvalidValue,
+                "Added negative or zero value $amount",
+                logger
+            )
+            return
+        }
+
         // Use a custom combiner to add the amount to the existing counters rather than overwriting
         super.recordScalar(metricData, amount, null) { currentValue, newAmount ->
             currentValue?.let { it + newAmount } ?: newAmount

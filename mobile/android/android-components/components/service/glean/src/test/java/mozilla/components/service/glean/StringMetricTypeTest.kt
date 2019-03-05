@@ -6,8 +6,6 @@ package mozilla.components.service.glean
 
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.ObsoleteCoroutinesApi
-import mozilla.components.service.glean.error.ErrorRecording.ErrorType
-import mozilla.components.service.glean.error.ErrorRecording.testGetNumRecordedErrors
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -66,29 +64,6 @@ class StringMetricTypeTest {
         // Check that data was properly recorded.
         assertTrue(stringMetric.testHasValue())
         assertEquals("overriddenValue", stringMetric.testGetValue())
-    }
-
-    @Test
-    fun `The API truncates long string values`() {
-        // Define a 'stringMetric' string metric, which will be stored in "store1"
-        val stringMetric = StringMetricType(
-            disabled = false,
-            category = "telemetry",
-            lifetime = Lifetime.Application,
-            name = "string_metric",
-            sendInPings = listOf("store1")
-        )
-
-        stringMetric.set("0123456789012345678901234567890123456789012345678901234567890123456789")
-        // Check that data was truncated.
-        assertTrue(stringMetric.testHasValue())
-        assertEquals(
-            "01234567890123456789012345678901234567890123456789",
-            stringMetric.testGetValue()
-        )
-
-        // Make sure the error has been recorded
-        assertEquals(1, testGetNumRecordedErrors(stringMetric, ErrorType.InvalidValue))
     }
 
     @Test

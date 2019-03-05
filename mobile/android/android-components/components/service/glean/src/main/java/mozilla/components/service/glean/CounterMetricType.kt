@@ -7,8 +7,6 @@ package mozilla.components.service.glean
 import android.support.annotation.VisibleForTesting
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
-import mozilla.components.service.glean.error.ErrorRecording.ErrorType
-import mozilla.components.service.glean.error.ErrorRecording.recordError
 import mozilla.components.service.glean.storages.CountersStorageEngine
 import mozilla.components.support.base.log.logger.Logger
 
@@ -44,16 +42,6 @@ data class CounterMetricType(
      */
     fun add(amount: Int = 1) {
         if (!shouldRecord(logger)) {
-            return
-        }
-
-        if (amount <= 0) {
-            recordError(
-                this,
-                ErrorType.InvalidValue,
-                "Added negative value $amount to counter",
-                logger
-            )
             return
         }
 

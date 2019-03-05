@@ -7,6 +7,8 @@ import android.os.SystemClock
 import androidx.test.core.app.ApplicationProvider
 import androidx.work.testing.WorkManagerTestInitHelper
 import mozilla.components.service.glean.checkPingSchema
+import mozilla.components.service.glean.error.ErrorRecording.ErrorType
+import mozilla.components.service.glean.error.ErrorRecording.testGetNumRecordedErrors
 import mozilla.components.service.glean.Lifetime
 import mozilla.components.service.glean.EventMetricType
 import mozilla.components.service.glean.FakeDispatchersInTest
@@ -21,6 +23,8 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
+import org.junit.Assert.assertFalse
 import org.junit.Rule
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -46,11 +50,17 @@ class EventsStorageEngineTest {
     fun `record() properly records without optional arguments`() {
         val storeNames = listOf("store1", "store2")
 
+        val event = EventMetricType(
+            disabled = false,
+            category = "telemetry",
+            name = "test_event_no_optional",
+            lifetime = Lifetime.Ping,
+            sendInPings = storeNames
+        )
+
         // Record the event in the stores, without providing optional arguments.
         EventsStorageEngine.record(
-                stores = storeNames,
-                category = "telemetry",
-                name = "test_event_no_optional",
+                metricData = event,
                 monotonicElapsedMs = SystemClock.elapsedRealtime()
         )
 
@@ -69,11 +79,18 @@ class EventsStorageEngineTest {
     fun `record() properly records with optional arguments`() {
         val storeNames = listOf("store1", "store2")
 
-        // Record the event in the stores, without providing optional arguments.
+        val event = EventMetricType(
+            disabled = false,
+            category = "telemetry",
+            name = "test_event_with_optional",
+            lifetime = Lifetime.Ping,
+            sendInPings = storeNames,
+            allowedExtraKeys = listOf("key1", "key2")
+        )
+
+        // Record the event in the stores, providing optional arguments.
         EventsStorageEngine.record(
-                stores = storeNames,
-                category = "telemetry",
-                name = "test_event_with_optional",
+                metricData = event,
                 monotonicElapsedMs = SystemClock.elapsedRealtime(),
                 extra = mapOf("key1" to "value1", "key2" to "value2")
         )
@@ -92,13 +109,19 @@ class EventsStorageEngineTest {
     fun `record() computes the correct time since process start`() {
         val expectedTimeSinceStart: Long = 37
 
+        val event = EventMetricType(
+            disabled = false,
+            category = "telemetry",
+            name = "test_event_time",
+            lifetime = Lifetime.Ping,
+            sendInPings = listOf("store1")
+        )
+
         // Sleep a bit Record the event in the store.
         SystemClock.sleep(expectedTimeSinceStart)
         EventsStorageEngine.record(
-                stores = listOf("store1"),
-                category = "telemetry",
-                name = "test_event_time",
-                monotonicElapsedMs = SystemClock.elapsedRealtime()
+            metricData = event,
+            monotonicElapsedMs = SystemClock.elapsedRealtime()
         )
 
         val snapshot = EventsStorageEngine.getSnapshot(storeName = "store1", clearStore = false)
@@ -120,11 +143,17 @@ class EventsStorageEngineTest {
     fun `getSnapshot() correctly clears the stores`() {
         val storeNames = listOf("store1", "store2")
 
+        val event = EventMetricType(
+            disabled = false,
+            category = "telemetry",
+            name = "test_event_clear",
+            lifetime = Lifetime.Ping,
+            sendInPings = storeNames
+        )
+
         // Record the event in the stores, without providing optional arguments.
         EventsStorageEngine.record(
-                stores = storeNames,
-                category = "telemetry",
-                name = "test_event_clear",
+                metricData = event,
                 monotonicElapsedMs = SystemClock.elapsedRealtime()
         )
 
@@ -148,11 +177,17 @@ class EventsStorageEngineTest {
 
     @Test
     fun `Events are serialized in the correct JSON format (no extra)`() {
-        // Record the event in the store, without providing optional arguments.
-        EventsStorageEngine.record(
-            stores = listOf("store1"),
+        val event = EventMetricType(
+            disabled = false,
             category = "telemetry",
             name = "test_event_clear",
+            lifetime = Lifetime.Ping,
+            sendInPings = listOf("store1")
+        )
+
+        // Record the event in the store, without providing optional arguments.
+        EventsStorageEngine.record(
+            metricData = event,
             monotonicElapsedMs = SystemClock.elapsedRealtime()
         )
 
@@ -168,11 +203,18 @@ class EventsStorageEngineTest {
 
     @Test
     fun `Events are serialized in the correct JSON format (with extra)`() {
-        // Record the event in the store, without providing optional arguments.
-        EventsStorageEngine.record(
-            stores = listOf("store1"),
+        val event = EventMetricType(
+            disabled = false,
             category = "telemetry",
             name = "test_event_clear",
+            lifetime = Lifetime.Ping,
+            sendInPings = listOf("store1"),
+            allowedExtraKeys = listOf("someExtra")
+        )
+
+        // Record the event in the store, without providing optional arguments.
+        EventsStorageEngine.record(
+            metricData = event,
             monotonicElapsedMs = SystemClock.elapsedRealtime(),
             extra = mapOf("someExtra" to "field")
         )
@@ -238,5 +280,74 @@ class EventsStorageEngineTest {
         for (i in 0..9) {
             assertEquals("${i + 500}", remaining[i].extra?.get("test_event_number"))
         }
+    }
+
+    @Test
+    fun `using 'extra' without declaring allowed keys must not be recorded`() {
+        val testEvent = EventMetricType(
+            disabled = false,
+            category = "ui",
+            lifetime = Lifetime.Ping,
+            name = "testEvent",
+            sendInPings = listOf("store1")
+        )
+
+        testEvent.record(
+            extra = mapOf("unknownExtra" to "someValue", "unknownExtra2" to "test"))
+
+        // Check that nothing was recorded.
+        assertFalse("Events must not be recorded if they use unknown extra keys",
+            testEvent.testHasValue())
+        assertEquals(1, testGetNumRecordedErrors(testEvent, ErrorType.InvalidValue))
+    }
+
+    @Test
+    fun `unknown 'extra' keys must not be recorded`() {
+        val testEvent = EventMetricType(
+            disabled = false,
+            category = "ui",
+            lifetime = Lifetime.Ping,
+            name = "testEvent",
+            sendInPings = listOf("store1"),
+            allowedExtraKeys = listOf("extra1", "extra2")
+        )
+
+        testEvent.record(
+            extra = mapOf("unknownExtra" to "someValue", "extra1" to "test"))
+
+        // Check that nothing was recorded.
+        assertFalse("Events must not be recorded if they use unknown extra keys",
+            testEvent.testHasValue())
+        assertEquals(1, testGetNumRecordedErrors(testEvent, ErrorType.InvalidValue))
+    }
+
+    @Test
+    fun `'extra' keys must be recorded and truncated if needed`() {
+        val testEvent = EventMetricType(
+            disabled = false,
+            category = "ui",
+            lifetime = Lifetime.Ping,
+            name = "testEvent",
+            sendInPings = listOf("store1"),
+            allowedExtraKeys = listOf("extra1", "truncatedExtra")
+        )
+
+        val testValue = "LeanGleanByFrank"
+        testEvent.record(
+            extra = mapOf("extra1" to testValue, "truncatedExtra" to testValue.repeat(10)))
+
+        // Check that nothing was recorded.
+        val snapshot = testEvent.testGetValue()
+        assertEquals(1, snapshot.size)
+        assertEquals("ui", snapshot.first().category)
+        assertEquals("testEvent", snapshot.first().name)
+
+        assertTrue(
+            "'extra' keys must be correctly recorded and truncated",
+            mapOf(
+                "extra1" to testValue,
+                "truncatedExtra" to (testValue.repeat(10)).substring(0, EventsStorageEngine.MAX_LENGTH_EXTRA_KEY_VALUE)
+            ) == snapshot.first().extra)
+        assertEquals(1, testGetNumRecordedErrors(testEvent, ErrorType.InvalidValue))
     }
 }

@@ -7,8 +7,6 @@ package mozilla.components.service.glean
 import android.support.annotation.VisibleForTesting
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
-import mozilla.components.service.glean.error.ErrorRecording.ErrorType
-import mozilla.components.service.glean.error.ErrorRecording.recordError
 import mozilla.components.service.glean.storages.StringListsStorageEngine
 import mozilla.components.support.base.log.logger.Logger
 
@@ -36,18 +34,9 @@ data class StringListMetricType(
     // Holds the Job returned from launch{} for awaiting purposes
     private var ioTask: Job? = null
 
-    companion object {
-        // Maximum length of any passed value string, in characters.
-        const val MAX_STRING_LENGTH = 50
-    }
-
     /**
      * Appends a string value to one or more string list metric stores.  If the string exceeds the
-     * maximum string length, defined as [MAX_STRING_LENGTH], it will be truncated.
-     *
-     * If adding the string to the lists would exceed the maximum value defined as
-     * [StringListsStorageEngine.MAX_LIST_LENGTH_VALUE], then the storage engine will drop the new
-     * value and it will not be added to the list.
+     * maximum string length or if the list exceeds the maximum length it will be truncated.
      *
      * @param value This is a user defined string value. The maximum length of
      *              this string is [MAX_STRING_LENGTH].
@@ -57,53 +46,25 @@ data class StringListMetricType(
             return
         }
 
-        val truncatedValue = value.let {
-            if (it.length > MAX_STRING_LENGTH) {
-                recordError(
-                    this,
-                    ErrorType.InvalidValue,
-                    "Individual value length ${it.length} exceeds maximum of $MAX_STRING_LENGTH",
-                    logger
-                )
-                return@let it.substring(0, MAX_STRING_LENGTH)
-            }
-            it
-        }
-
         @Suppress("EXPERIMENTAL_API_USAGE")
         ioTask = Dispatchers.API.launch {
             // Delegate storing the string to the storage engine.
             StringListsStorageEngine.add(
                 metricData = this@StringListMetricType,
-                value = truncatedValue
+                value = value
             )
         }
     }
 
     /**
-     * Sets a string list to one or more metric stores.
+     * Sets a string list to one or more metric stores. If any string exceeds the maximum string
+     * length or if the list exceeds the maximum length it will be truncated.
      *
-     * @param value This is a user defined string list. The maximum length of each string in the
-     *              list is defined by [MAX_STRING_LENGTH], while the maximum length of the list itself is
-     *              defined by [StringListsStorageEngine.MAX_LIST_LENGTH_VALUE].  If a longer list is passed
-     *              into this function, then the additional values will be dropped from the list and the list,
-     *              up to the [StringListsStorageEngine.MAX_LIST_LENGTH_VALUE], will still be recorded.
+     * @param value This is a user defined string list.
      */
     fun set(value: List<String>) {
         if (!shouldRecord(logger)) {
             return
-        }
-
-        val stringList = value.map {
-            if (it.length > MAX_STRING_LENGTH) {
-                recordError(
-                    this,
-                    ErrorType.InvalidValue,
-                    "Individual value length ${it.length} exceeds maximum of $MAX_STRING_LENGTH",
-                    logger
-                )
-            }
-            it.take(MAX_STRING_LENGTH)
         }
 
         @Suppress("EXPERIMENTAL_API_USAGE")
@@ -111,7 +72,7 @@ data class StringListMetricType(
             // Delegate storing the string list to the storage engine.
             StringListsStorageEngine.set(
                 metricData = this@StringListMetricType,
-                value = stringList
+                value = value
             )
         }
     }

@@ -7,10 +7,16 @@ package mozilla.components.service.glean.storages
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.test.core.app.ApplicationProvider
+import mozilla.components.service.glean.error.ErrorRecording.ErrorType
+import mozilla.components.service.glean.error.ErrorRecording.testGetNumRecordedErrors
 import mozilla.components.service.glean.Lifetime
 import mozilla.components.service.glean.StringListMetricType
+import mozilla.components.service.glean.resetGlean
+import org.json.JSONArray
+import org.json.JSONObject
 import org.junit.Assert
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -23,8 +29,7 @@ class StringListsStorageEngineTest {
 
     @Before
     fun setUp() {
-        StringListsStorageEngine.applicationContext = ApplicationProvider.getApplicationContext()
-        StringListsStorageEngine.clearAllStores()
+        resetGlean()
     }
 
     @Test
@@ -111,6 +116,8 @@ class StringListsStorageEngineTest {
             StringListsStorageEngineImplementation.MAX_LIST_LENGTH_VALUE,
             snapshot["telemetry.string_list_metric"]?.count()
         )
+
+        assertEquals(1, testGetNumRecordedErrors(metric, ErrorType.InvalidValue))
     }
 
     @Test
@@ -160,6 +167,9 @@ class StringListsStorageEngineTest {
             StringListsStorageEngineImplementation.MAX_LIST_LENGTH_VALUE,
             snapshot2["telemetry.string_list_metric"]?.count()
         )
+
+        assertEquals(StringListsStorageEngineImplementation.MAX_LIST_LENGTH_VALUE / 2,
+            testGetNumRecordedErrors(metric, ErrorType.InvalidValue))
     }
 
     @Test
@@ -189,6 +199,8 @@ class StringListsStorageEngineTest {
             StringListsStorageEngineImplementation.MAX_LIST_LENGTH_VALUE,
             snapshot["telemetry.string_list_metric"]?.count()
         )
+
+        assertEquals(1, testGetNumRecordedErrors(metric, ErrorType.InvalidValue))
     }
 
     @Test
@@ -305,5 +317,37 @@ class StringListsStorageEngineTest {
             "{\"telemetry.string_list_metric\":[\"First\",\"Second\"]}",
             json.toString()
         )
+    }
+
+    @Test
+    fun `The API truncates long string values`() {
+        // Define a 'stringMetric' string metric, which will be stored in "store1"
+        val stringListMetric = StringListMetricType(
+            disabled = false,
+            category = "telemetry",
+            lifetime = Lifetime.Application,
+            name = "string_list_metric",
+            sendInPings = listOf("store1")
+        )
+
+        val longString = "a".repeat(StringListsStorageEngineImplementation.MAX_STRING_LENGTH + 10)
+
+        // Check that data was truncated via add() method.
+        StringListsStorageEngine.add(stringListMetric, longString)
+        var snapshot = StringListsStorageEngine.getSnapshotAsJSON("store1", true) as JSONObject
+        var stringList = snapshot["telemetry.string_list_metric"] as JSONArray
+        assertEquals(longString.take(StringListsStorageEngineImplementation.MAX_STRING_LENGTH),
+            stringList[0])
+
+        // Check that data was truncated via set() method.
+        StringListsStorageEngine.set(stringListMetric, listOf(longString))
+        snapshot = StringListsStorageEngine.getSnapshotAsJSON("store1", true) as JSONObject
+        stringList = snapshot["telemetry.string_list_metric"] as JSONArray
+        assertEquals(1, stringList.length())
+        assertTrue(stringListMetric.testHasValue())
+        assertEquals(longString.take(StringListsStorageEngineImplementation.MAX_STRING_LENGTH),
+            stringList[0])
+
+        assertEquals(2, testGetNumRecordedErrors(stringListMetric, ErrorType.InvalidValue))
     }
 }

@@ -9,7 +9,12 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.os.SystemClock
 import android.support.annotation.VisibleForTesting
+import mozilla.components.service.glean.error.ErrorRecording.recordError
+import mozilla.components.service.glean.error.ErrorRecording.ErrorType
+import mozilla.components.service.glean.EventMetricType
+import mozilla.components.service.glean.Lifetime
 import mozilla.components.service.glean.scheduler.PingUploadWorker
+import mozilla.components.support.base.log.logger.Logger
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -36,29 +41,76 @@ internal object EventsStorageEngine : StorageEngine {
     // to the docs, the used clock is guaranteed to be monotonic.
     private val startTime: Long = SystemClock.elapsedRealtime()
 
+    // Maximum length of any string value in the extra dictionary, in characters
+    internal const val MAX_LENGTH_EXTRA_KEY_VALUE = 100
+
+    private val logger = Logger("glean/EventsStorageEngine")
+
     /**
      * Record an event in the desired stores.
      *
-     * @param stores the list of stores to record the event into
-     * @param category the category of the event
-     * @param name the name of the event
+     * @param metricData the [EventMetricType] instance being recorded
      * @param monotonicElapsedMs the monotonic elapsed time since boot, in milliseconds
      * @param extra an optional, user defined String to String map used to provide richer event
      *              context if needed
      */
     fun record(
-        stores: List<String>,
-        category: String,
-        name: String,
+        metricData: EventMetricType,
         monotonicElapsedMs: Long,
         extra: Map<String, String>? = null
     ) {
+        if (metricData.lifetime != Lifetime.Ping) {
+            recordError(
+                metricData,
+                ErrorType.InvalidValue,
+                "Must have `Ping` lifetime.",
+                logger
+            )
+            return
+        }
+
+        // Check if the provided extra keys are allowed and have sane values.
+        val truncatedExtraKeys = extra?.toMutableMap()?.let { eventKeys ->
+            if (metricData.allowedExtraKeys == null) {
+                recordError(
+                    metricData,
+                    ErrorType.InvalidValue,
+                    "Cannot use extra keys when there are no extra keys defined.",
+                    logger
+                )
+                return
+            }
+
+            for ((key, extraValue) in eventKeys) {
+                if (!metricData.allowedExtraKeys.contains(key)) {
+                    recordError(
+                        metricData,
+                        ErrorType.InvalidValue,
+                        "Extra key '$key' is not allowed",
+                        logger
+                    )
+                    return
+                }
+
+                if (extraValue.length > MAX_LENGTH_EXTRA_KEY_VALUE) {
+                    recordError(
+                        metricData,
+                        ErrorType.InvalidValue,
+                        "Extra key length ${extraValue.length} exceeds maximum of $MAX_LENGTH_EXTRA_KEY_VALUE",
+                        logger
+                    )
+                    eventKeys[key] = extraValue.substring(0, MAX_LENGTH_EXTRA_KEY_VALUE)
+                }
+            }
+            eventKeys
+        }
+
         val msSinceStart = monotonicElapsedMs - startTime
-        val event = RecordedEventData(category, name, msSinceStart, extra)
+        val event = RecordedEventData(metricData.category, metricData.name, msSinceStart, truncatedExtraKeys)
 
         // Record a copy of the event in all the needed stores.
         synchronized(this) {
-            for (storeName in stores) {
+            for (storeName in metricData.getStorageNames()) {
                 val storeData = eventStores.getOrPut(storeName) { mutableListOf() }
                 storeData.add(event.copy())
                 if (storeData.size == Glean.configuration.maxEvents &&

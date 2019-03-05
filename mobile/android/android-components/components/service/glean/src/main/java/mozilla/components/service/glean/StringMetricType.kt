@@ -7,8 +7,6 @@ package mozilla.components.service.glean
 import android.support.annotation.VisibleForTesting
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
-import mozilla.components.service.glean.error.ErrorRecording.ErrorType
-import mozilla.components.service.glean.error.ErrorRecording.recordError
 import mozilla.components.service.glean.storages.StringsStorageEngine
 import mozilla.components.support.base.log.logger.Logger
 
@@ -36,33 +34,15 @@ data class StringMetricType(
     // Holds the Job returned from launch{} for awaiting purposes
     private var ioTask: Job? = null
 
-    companion object {
-        // Maximum length of any passed value string, in characters.
-        private const val MAX_LENGTH_VALUE = 50
-    }
-
     /**
      * Set a string value.
      *
-     * @param value This is a user defined string value. If the length of the string
-     * exceeds [MAX_LENGTH_VALUE] characters, it will be truncated.
+     * @param value This is a user defined string value. If the length of the string exceeds
+     *              the maximum length, it will be truncated.
      */
     fun set(value: String) {
         if (!shouldRecord(logger)) {
             return
-        }
-
-        val truncatedValue = value.let {
-            if (it.length > MAX_LENGTH_VALUE) {
-                recordError(
-                    this,
-                    ErrorType.InvalidValue,
-                    "Value length ${it.length} exceeds maximum of $MAX_LENGTH_VALUE",
-                    logger
-                )
-                return@let it.substring(0, MAX_LENGTH_VALUE)
-            }
-            it
         }
 
         @Suppress("EXPERIMENTAL_API_USAGE")
@@ -70,7 +50,7 @@ data class StringMetricType(
             // Delegate storing the string to the storage engine.
             StringsStorageEngine.record(
                 this@StringMetricType,
-                value = truncatedValue
+                value = value
             )
         }
     }

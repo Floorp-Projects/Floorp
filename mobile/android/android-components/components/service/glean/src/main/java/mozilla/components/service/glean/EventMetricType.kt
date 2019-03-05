@@ -8,8 +8,6 @@ import android.os.SystemClock
 import android.support.annotation.VisibleForTesting
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
-import mozilla.components.service.glean.error.ErrorRecording.ErrorType
-import mozilla.components.service.glean.error.ErrorRecording.recordError
 import mozilla.components.service.glean.storages.EventsStorageEngine
 import mozilla.components.service.glean.storages.RecordedEventData
 import mozilla.components.support.base.log.logger.Logger
@@ -39,11 +37,6 @@ data class EventMetricType(
     // Holds the Job returned from launch{} for awaiting purposes
     private var ioTask: Job? = null
 
-    companion object {
-        // Maximum length of any string value in the extra dictionary, in characters
-        internal const val MAX_LENGTH_EXTRA_KEY_VALUE = 100
-    }
-
     /**
      * Record an event by using the information provided by the instance of this class.
      *
@@ -57,47 +50,6 @@ data class EventMetricType(
             return
         }
 
-        if (lifetime != Lifetime.Ping) {
-            logger.warn("$category.$name can only have a Ping lifetime")
-            return
-        }
-
-        // Check if the provided extra keys are allowed and have sane values.
-        val truncatedExtraKeys = extra?.toMutableMap()?.let { eventKeys ->
-            if (allowedExtraKeys == null) {
-                recordError(
-                    this,
-                    ErrorType.InvalidValue,
-                    "Cannot use extra keys when there are no extra keys defined.",
-                    logger
-                )
-                return
-            }
-
-            for ((key, extraValue) in eventKeys) {
-                if (!allowedExtraKeys.contains(key)) {
-                    recordError(
-                        this,
-                        ErrorType.InvalidValue,
-                        "Extra key '$key' is not allowed",
-                        logger
-                    )
-                    return
-                }
-
-                if (extraValue.length > MAX_LENGTH_EXTRA_KEY_VALUE) {
-                    recordError(
-                        this,
-                        ErrorType.InvalidValue,
-                        "Extra key length ${extraValue.length} exceeds maximum of $MAX_LENGTH_EXTRA_KEY_VALUE",
-                        logger
-                    )
-                    eventKeys[key] = extraValue.substring(0, MAX_LENGTH_EXTRA_KEY_VALUE)
-                }
-            }
-            eventKeys
-        }
-
         // We capture the event time now, since we don't know when the async code below
         // might get executed.
         val monotonicElapsed = SystemClock.elapsedRealtime()
@@ -106,11 +58,9 @@ data class EventMetricType(
         ioTask = Dispatchers.API.launch {
             // Delegate storing the event to the storage engine.
             EventsStorageEngine.record(
-                stores = getStorageNames(),
-                category = category,
-                name = name,
+                metricData = this@EventMetricType,
                 monotonicElapsedMs = monotonicElapsed,
-                extra = truncatedExtraKeys
+                extra = extra
             )
         }
     }

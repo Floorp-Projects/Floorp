@@ -41,7 +41,6 @@ data class DatetimeMetricType(
      * @param value The [Date] value to set. If not provided, will record the current time.
      */
     fun set(value: Date = Date()) {
-        // TODO report errors through other special metrics handled by the SDK. See bug 1499761.
         if (!shouldRecord(logger)) {
             return
         }
@@ -67,7 +66,6 @@ data class DatetimeMetricType(
      */
     @VisibleForTesting(otherwise = VisibleForTesting.NONE)
     internal fun set(value: Calendar) {
-        // TODO report errors through other special metrics handled by the SDK. See bug 1499761.
         if (!shouldRecord(logger)) {
             return
         }

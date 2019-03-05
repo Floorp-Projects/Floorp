@@ -6,10 +6,6 @@ package mozilla.components.service.glean
 
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.ObsoleteCoroutinesApi
-import mozilla.components.service.glean.StringListMetricType.Companion.MAX_STRING_LENGTH
-import mozilla.components.service.glean.error.ErrorRecording.ErrorType
-import mozilla.components.service.glean.error.ErrorRecording.testGetNumRecordedErrors
-import mozilla.components.service.glean.storages.StringListsStorageEngineImplementation
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Assert.assertFalse
@@ -113,61 +109,6 @@ class StringListMetricTypeTest {
         assertEquals("value2", snapshot2[1])
         assertEquals("value3", snapshot2[2])
         assertEquals("added1", snapshot2[3])
-    }
-
-    @Test
-    fun `The API truncates long string values`() {
-        // Define a 'stringMetric' string metric, which will be stored in "store1"
-        val stringListMetric = StringListMetricType(
-            disabled = false,
-            category = "telemetry",
-            lifetime = Lifetime.Application,
-            name = "string_list_metric",
-            sendInPings = listOf("store1")
-        )
-
-        val longString = "a".repeat(MAX_STRING_LENGTH + 10)
-
-        // Check that data was truncated via add() method.
-        stringListMetric.add(longString)
-        var snapshot = stringListMetric.testGetValue()
-        assertEquals(1, snapshot.size)
-        assertTrue(stringListMetric.testHasValue())
-        assertEquals(longString.take(MAX_STRING_LENGTH), snapshot[0])
-
-        // Check that data was truncated via set() method.
-        stringListMetric.set(listOf(longString))
-        snapshot = stringListMetric.testGetValue()
-        assertEquals(1, snapshot.size)
-        assertTrue(stringListMetric.testHasValue())
-        assertEquals(longString.take(MAX_STRING_LENGTH), snapshot[0])
-
-        assertEquals(2, testGetNumRecordedErrors(stringListMetric, ErrorType.InvalidValue))
-    }
-
-    @Test
-    fun `The API errors when attempting to add to a list beyond max`() {
-        // Define a 'stringMetric' string metric, which will be stored in "store1"
-        val stringListMetric = StringListMetricType(
-            disabled = false,
-            category = "telemetry",
-            lifetime = Lifetime.Application,
-            name = "string_list_metric",
-            sendInPings = listOf("store1")
-        )
-
-        for (i in 1..StringListsStorageEngineImplementation.MAX_LIST_LENGTH_VALUE + 1) {
-            stringListMetric.add("value$i")
-        }
-
-        // Check that list was truncated.
-        val snapshot = stringListMetric.testGetValue()
-        assertTrue(stringListMetric.testHasValue())
-        assertEquals(
-            StringListsStorageEngineImplementation.MAX_LIST_LENGTH_VALUE,
-            snapshot.count()
-        )
-        assertEquals(1, testGetNumRecordedErrors(stringListMetric, ErrorType.InvalidValue))
     }
 
     @Test

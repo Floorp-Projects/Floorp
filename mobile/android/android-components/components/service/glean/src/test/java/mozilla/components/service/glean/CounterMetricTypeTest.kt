@@ -6,8 +6,6 @@ package mozilla.components.service.glean
 
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.ObsoleteCoroutinesApi
-import mozilla.components.service.glean.error.ErrorRecording.ErrorType
-import mozilla.components.service.glean.error.ErrorRecording.testGetNumRecordedErrors
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -87,33 +85,6 @@ class CounterMetricTypeTest {
         // Check that nothing was recorded.
         assertFalse("Counters must not be recorded if they are disabled",
             counterMetric.testHasValue())
-    }
-
-    @Test
-    fun `counters must not increment when passed zero or negative`() {
-        // Define a 'counterMetric' counter metric, which will be stored in "store1".
-        val counterMetric = CounterMetricType(
-                disabled = false,
-                category = "telemetry",
-                lifetime = Lifetime.Application,
-                name = "counter_metric",
-                sendInPings = listOf("store1")
-        )
-
-        // Attempt to increment the counter with zero
-        counterMetric.add(0)
-        // Check that nothing was recorded.
-        assertFalse("Counters must not be recorded if incremented with zero",
-            counterMetric.testHasValue())
-
-        // Attempt to increment the counter with negative
-        counterMetric.add(-1)
-        // Check that nothing was recorded.
-        assertFalse("Counters must not be recorded if incremented with negative",
-            counterMetric.testHasValue())
-
-        // Make sure that the errors have been recorded
-        assertEquals(2, testGetNumRecordedErrors(counterMetric, ErrorType.InvalidValue))
     }
 
     @Test

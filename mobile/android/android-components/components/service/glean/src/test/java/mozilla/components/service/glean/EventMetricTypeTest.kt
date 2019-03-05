@@ -7,13 +7,10 @@ package mozilla.components.service.glean
 import android.os.SystemClock
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.ObsoleteCoroutinesApi
-import mozilla.components.service.glean.error.ErrorRecording.ErrorType
-import mozilla.components.service.glean.error.ErrorRecording.testGetNumRecordedErrors
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Assert.assertFalse
 import org.junit.Test
-
 import org.junit.Before
 import org.junit.Rule
 import org.junit.runner.RunWith
@@ -155,75 +152,6 @@ class EventMetricTypeTest {
         // Check that nothing was recorded.
         assertFalse("Events must not be recorded if they are disabled",
             click.testHasValue())
-    }
-
-    @Test
-    fun `using 'extra' without declaring allowed keys must not be recorded`() {
-        val testEvent = EventMetricType(
-            disabled = false,
-            category = "ui",
-            lifetime = Lifetime.Ping,
-            name = "testEvent",
-            sendInPings = listOf("store1")
-        )
-
-        testEvent.record(
-            extra = mapOf("unknownExtra" to "someValue", "unknownExtra2" to "test"))
-
-        // Check that nothing was recorded.
-        assertFalse("Events must not be recorded if they use unknown extra keys",
-            testEvent.testHasValue())
-        assertEquals(1, testGetNumRecordedErrors(testEvent, ErrorType.InvalidValue))
-    }
-
-    @Test
-    fun `unknown 'extra' keys must not be recorded`() {
-        val testEvent = EventMetricType(
-            disabled = false,
-            category = "ui",
-            lifetime = Lifetime.Ping,
-            name = "testEvent",
-            sendInPings = listOf("store1"),
-            allowedExtraKeys = listOf("extra1", "extra2")
-        )
-
-        testEvent.record(
-            extra = mapOf("unknownExtra" to "someValue", "extra1" to "test"))
-
-        // Check that nothing was recorded.
-        assertFalse("Events must not be recorded if they use unknown extra keys",
-            testEvent.testHasValue())
-        assertEquals(1, testGetNumRecordedErrors(testEvent, ErrorType.InvalidValue))
-    }
-
-    @Test
-    fun `'extra' keys must be recorded and truncated if needed`() {
-        val testEvent = EventMetricType(
-            disabled = false,
-            category = "ui",
-            lifetime = Lifetime.Ping,
-            name = "testEvent",
-            sendInPings = listOf("store1"),
-            allowedExtraKeys = listOf("extra1", "truncatedExtra")
-        )
-
-        val testValue = "LeanGleanByFrank"
-        testEvent.record(
-            extra = mapOf("extra1" to testValue, "truncatedExtra" to testValue.repeat(10)))
-
-        // Check that nothing was recorded.
-        val snapshot = testEvent.testGetValue()
-        assertEquals(1, snapshot.size)
-        assertEquals("ui", snapshot.first().category)
-        assertEquals("testEvent", snapshot.first().name)
-
-        assertTrue(
-            "'extra' keys must be correctly recorded and truncated",
-            mapOf(
-            "extra1" to testValue,
-            "truncatedExtra" to (testValue.repeat(10)).substring(0, EventMetricType.MAX_LENGTH_EXTRA_KEY_VALUE)
-        ) == snapshot.first().extra)
-        assertEquals(1, testGetNumRecordedErrors(testEvent, ErrorType.InvalidValue))
     }
 
     @Test(expected = NullPointerException::class)

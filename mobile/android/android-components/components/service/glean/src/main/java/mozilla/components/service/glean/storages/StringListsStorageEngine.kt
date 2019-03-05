@@ -28,10 +28,11 @@ internal object StringListsStorageEngine : StringListsStorageEngineImplementatio
 internal open class StringListsStorageEngineImplementation(
     override val logger: Logger = Logger("glean/StringsListsStorageEngine")
 ) : GenericScalarStorageEngine<List<String>>() {
-
     companion object {
         // Maximum length of any list
         const val MAX_LIST_LENGTH_VALUE = 20
+        // Maximum length of any string in the list
+        const val MAX_STRING_LENGTH = 50
     }
 
     override fun deserializeSingleMetric(metricName: String, value: Any?): List<String>? {
@@ -79,8 +80,21 @@ internal open class StringListsStorageEngineImplementation(
         metricData: CommonMetricData,
         value: String
     ) {
+        val truncatedValue = value.let {
+            if (it.length > MAX_STRING_LENGTH) {
+                recordError(
+                    metricData,
+                    ErrorType.InvalidValue,
+                    "Individual value length ${it.length} exceeds maximum of $MAX_STRING_LENGTH",
+                    logger
+                )
+                return@let it.substring(0, MAX_STRING_LENGTH)
+            }
+            it
+        }
+
         // Use a custom combiner to add the string to the existing list rather than overwriting
-        super.recordScalar(metricData, listOf(value), null) { currentValue, newValue ->
+        super.recordScalar(metricData, listOf(truncatedValue), null) { currentValue, newValue ->
             currentValue?.let {
                 if (it.count() + 1 > MAX_LIST_LENGTH_VALUE) {
                     recordError(
@@ -109,7 +123,19 @@ internal open class StringListsStorageEngineImplementation(
         metricData: CommonMetricData,
         value: List<String>
     ) {
-        if (value.count() > MAX_LIST_LENGTH_VALUE) {
+        val stringList = value.map {
+            if (it.length > MAX_STRING_LENGTH) {
+                recordError(
+                    metricData,
+                    ErrorType.InvalidValue,
+                    "String too long ${it.length} > $MAX_STRING_LENGTH",
+                    logger
+                )
+            }
+            it.take(MAX_STRING_LENGTH)
+        }
+
+        if (stringList.count() > MAX_LIST_LENGTH_VALUE) {
             recordError(
                 metricData,
                 ErrorType.InvalidValue,
@@ -118,6 +144,6 @@ internal open class StringListsStorageEngineImplementation(
             )
         }
 
-        super.recordScalar(metricData, value.take(MAX_LIST_LENGTH_VALUE))
+        super.recordScalar(metricData, stringList.take(MAX_LIST_LENGTH_VALUE))
     }
 }

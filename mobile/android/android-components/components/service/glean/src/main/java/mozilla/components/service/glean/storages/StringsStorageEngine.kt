@@ -7,6 +7,8 @@ package mozilla.components.service.glean.storages
 import android.annotation.SuppressLint
 import android.content.SharedPreferences
 import mozilla.components.service.glean.CommonMetricData
+import mozilla.components.service.glean.error.ErrorRecording.ErrorType
+import mozilla.components.service.glean.error.ErrorRecording.recordError
 import mozilla.components.support.base.log.logger.Logger
 
 /**
@@ -24,6 +26,10 @@ internal object StringsStorageEngine : StringsStorageEngineImplementation()
 internal open class StringsStorageEngineImplementation(
     override val logger: Logger = Logger("glean/StringsStorageEngine")
 ) : GenericScalarStorageEngine<String>() {
+    companion object {
+        // Maximum length of any passed value string, in characters.
+        private const val MAX_LENGTH_VALUE = 50
+    }
 
     override fun deserializeSingleMetric(metricName: String, value: Any?): String? {
         return value as? String
@@ -49,6 +55,19 @@ internal open class StringsStorageEngineImplementation(
         metricData: CommonMetricData,
         value: String
     ) {
-        super.recordScalar(metricData, value)
+        val truncatedValue = value.let {
+            if (it.length > MAX_LENGTH_VALUE) {
+                recordError(
+                    metricData,
+                    ErrorType.InvalidValue,
+                    "Value length ${it.length} exceeds maximum of $MAX_LENGTH_VALUE",
+                    logger
+                )
+                return@let it.substring(0, MAX_LENGTH_VALUE)
+            }
+            it
+        }
+
+        super.recordScalar(metricData, truncatedValue)
     }
 }
