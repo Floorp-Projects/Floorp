@@ -67,7 +67,8 @@ void MediaError::GetMessage(nsAString& aResult) const {
   }
 
   if (!nsContentUtils::IsCallerChrome() &&
-      nsContentUtils::ShouldResistFingerprinting() && shouldBlank) {
+      nsContentUtils::ShouldResistFingerprinting(mParent->OwnerDoc()) &&
+      shouldBlank) {
     aResult.Truncate();
     return;
   }
