@@ -1,4 +1,3 @@
-// Copyright © 2017 winapi-rs developers
 // Licensed under the Apache License, Version 2.0
 // <LICENSE-APACHE or http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
 // <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your option.
@@ -111,8 +110,7 @@ ENUM!{enum D3D11_1_CREATE_DEVICE_CONTEXT_STATE_FLAG {
 }}
 RIDL!{#[uuid(0x5c1e0d8a, 0x7c23, 0x48f9, 0x8c, 0x59, 0xa9, 0x29, 0x58, 0xce, 0xff, 0x11)]
 interface ID3DDeviceContextState(ID3DDeviceContextStateVtbl):
-    ID3D11DeviceChild(ID3D11DeviceChildVtbl) {
-}}
+    ID3D11DeviceChild(ID3D11DeviceChildVtbl) {}}
 RIDL!{#[uuid(0xbb2c6faa, 0xb5fb, 0x4082, 0x8e, 0x6b, 0x38, 0x8b, 0x8c, 0xfa, 0x90, 0xe1)]
 interface ID3D11DeviceContext1(ID3D11DeviceContext1Vtbl):
     ID3D11DeviceContext(ID3D11DeviceContextVtbl) {

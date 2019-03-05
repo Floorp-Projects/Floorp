@@ -1,4 +1,3 @@
-// Copyright © 2015-2017 winapi-rs developers
 // Licensed under the Apache License, Version 2.0
 // <LICENSE-APACHE or http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
 // <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your option.
@@ -12,7 +11,9 @@ use shared::dxgitype::{DXGI_RATIONAL, DXGI_SAMPLE_DESC};
 use shared::guiddef::{GUID, REFGUID, REFIID};
 use shared::minwindef::{BOOL, BYTE, DWORD, FLOAT, HMODULE, INT, UINT, USHORT};
 use shared::windef::{RECT, SIZE};
-use um::d3dcommon::{D3D_DRIVER_TYPE, D3D_FEATURE_LEVEL, D3D_PRIMITIVE, D3D_PRIMITIVE_TOPOLOGY, D3D_SRV_DIMENSION};
+use um::d3dcommon::{
+    D3D_DRIVER_TYPE, D3D_FEATURE_LEVEL, D3D_PRIMITIVE, D3D_PRIMITIVE_TOPOLOGY, D3D_SRV_DIMENSION,
+};
 use um::unknwnbase::{IUnknown, IUnknownVtbl};
 use um::winnt::{HANDLE, HRESULT, LPCSTR, LPSTR, ULONGLONG};
 pub const D3D11_16BIT_INDEX_STRIP_CUT_VALUE: DWORD = 0xffff;

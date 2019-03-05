@@ -1,4 +1,3 @@
-// Copyright © 2015-2017 winapi-rs developers
 // Licensed under the Apache License, Version 2.0
 // <LICENSE-APACHE or http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
 // <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your option.
@@ -135,26 +134,26 @@ extern "system" {
         pszDescription: PCWSTR,
         pCapabilities: PSID_AND_ATTRIBUTES,
         dwCapabilityCount: DWORD,
-        ppSidAppContainerSid: *mut PSID
+        ppSidAppContainerSid: *mut PSID,
     ) -> HRESULT;
     pub fn DeleteAppContainerProfile(
-        pszAppContainerName: PCWSTR
+        pszAppContainerName: PCWSTR,
     ) -> HRESULT;
     pub fn GetAppContainerRegistryLocation(
         desiredAccess: REGSAM,
-        phAppContainerKey: PHKEY
+        phAppContainerKey: PHKEY,
     ) -> HRESULT;
     pub fn GetAppContainerFolderPath(
         pszAppContainerSid: PCWSTR,
-        ppszPath: *mut PWSTR
+        ppszPath: *mut PWSTR,
     ) -> HRESULT;
     pub fn DeriveAppContainerSidFromAppContainerName(
         pszAppContainerName: PCWSTR,
-        ppsidAppContainerSid: *mut PSID
+        ppsidAppContainerSid: *mut PSID,
     ) -> HRESULT;
     pub fn DeriveRestrictedAppContainerSidFromAppContainerSidAndRestrictedName(
         psidAppContainerSid: PSID,
         pszRestrictedAppContainerName: PCWSTR,
-        ppsidRestrictedAppContainerSid: *mut PSID
+        ppsidRestrictedAppContainerSid: *mut PSID,
     ) -> HRESULT;
 }

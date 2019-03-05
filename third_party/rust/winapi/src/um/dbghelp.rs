@@ -1,4 +1,3 @@
-// Copyright © 2015-2017 winapi-rs developers
 // Licensed under the Apache License, Version 2.0
 // <LICENSE-APACHE or http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
 // <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your option.
@@ -427,7 +426,7 @@ extern "system" {
     pub fn FindDebugInfoFile(
         FileName: PCSTR,
         SymbolPath: PCSTR,
-        DebugFilePath: PSTR
+        DebugFilePath: PSTR,
     ) -> HANDLE;
     pub fn FindDebugInfoFileEx(
         FileName: PCSTR,
@@ -446,7 +445,7 @@ extern "system" {
     pub fn FindExecutableImage(
         FileName: PCSTR,
         SymbolPath: PCSTR,
-        ImageFilePath: PSTR
+        ImageFilePath: PSTR,
     ) -> HANDLE;
     pub fn FindExecutableImageEx(
         FileName: PCSTR,
@@ -539,14 +538,14 @@ extern "system" {
         LastRvaSection: *mut PIMAGE_SECTION_HEADER,
     ) -> PVOID;
     pub fn SymCleanup(
-        hProcess: HANDLE
+        hProcess: HANDLE,
     ) -> BOOL;
     pub fn SymEnumSymbolsW(
         hProcess: HANDLE,
         BaseOfDll: ULONG64,
         Mask: PCWSTR,
         EnumSymbolsCallback: PSYM_ENUMERATESYMBOLS_CALLBACKW,
-        CallerData: PVOID
+        CallerData: PVOID,
     ) -> BOOL;
     pub fn SymFindDebugInfoFile(
         hProcess: HANDLE,
@@ -609,7 +608,7 @@ extern "system" {
     pub fn SymFromNameW(
         hProcess: HANDLE,
         Name: PCWSTR,
-        Symbol: PSYMBOL_INFOW
+        Symbol: PSYMBOL_INFOW,
     ) -> BOOL;
     pub fn SymFunctionTableAccess64(
         hProcess: HANDLE,
@@ -644,15 +643,15 @@ extern "system" {
         BaseOfDll: DWORD64,
         SizeOfDll: DWORD,
         Data: PMODLOAD_DATA,
-        Flags: DWORD
+        Flags: DWORD,
     ) -> DWORD64;
     pub fn SymUnloadModule(
         hProcess: HANDLE,
-        BaseOfDll: DWORD
+        BaseOfDll: DWORD,
     ) -> BOOL;
     pub fn SymUnloadModule64(
         hProcess: HANDLE,
-        BaseOfDll: DWORD64
+        BaseOfDll: DWORD64,
     ) -> BOOL;
     #[cfg(any(target_arch = "x86", target_arch = "arm"))]
     pub fn MapDebugInformation(

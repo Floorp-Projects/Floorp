@@ -1,4 +1,3 @@
-// Copyright © 2017 winapi-rs developers
 // Licensed under the Apache License, Version 2.0
 // <LICENSE-APACHE or http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
 // <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your option.
@@ -36,7 +35,7 @@ extern "system" {
         NodeMask: UINT,
         ppDevice: *mut *mut ID3D11Device,
         ppImmediateContext: *mut *mut ID3D11DeviceContext,
-        pChosenFeatureLevel: *mut D3D_FEATURE_LEVEL
+        pChosenFeatureLevel: *mut D3D_FEATURE_LEVEL,
     ) -> HRESULT;
 }
 STRUCT!{struct D3D11_RESOURCE_FLAGS {
