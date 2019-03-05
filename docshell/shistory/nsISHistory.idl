@@ -6,7 +6,6 @@
 #include "nsISupports.idl"
 
 interface nsIBFCacheEntry;
-interface nsIDocShell;
 interface nsISHEntry;
 interface nsISHistoryListener;
 interface nsIURI;
@@ -248,4 +247,7 @@ interface nsISHistory: nsISupports
    */
   [noscript, notxpcom]
   void RemoveEntries(in nsDocshellIDArray aIDs, in long aStartIndex);
+
+  [noscript]
+  void Reload(in unsigned long aReloadFlags);
 };

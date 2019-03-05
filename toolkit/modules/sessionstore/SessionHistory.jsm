@@ -262,8 +262,9 @@ var SessionHistoryInternal = {
     entry.docIdentifier = shEntry.BFCacheEntry.ID;
 
     if (shEntry.stateData != null) {
-      entry.structuredCloneState = shEntry.stateData.getDataAsBase64();
-      entry.structuredCloneVersion = shEntry.stateData.formatVersion;
+      let stateData = shEntry.stateData;
+      entry.structuredCloneState = stateData.getDataAsBase64();
+      entry.structuredCloneVersion = stateData.formatVersion;
     }
 
     if (shEntry.childCount > 0 && !shEntry.hasDynamicallyAddedChild()) {
@@ -467,14 +468,15 @@ var SessionHistoryInternal = {
     }
 
     if (entry.structuredCloneState && entry.structuredCloneVersion) {
-      shEntry.stateData = Cc[
+      var stateData = Cc[
         "@mozilla.org/docshell/structured-clone-container;1"
       ].createInstance(Ci.nsIStructuredCloneContainer);
 
-      shEntry.stateData.initFromBase64(
+      stateData.initFromBase64(
         entry.structuredCloneState,
         entry.structuredCloneVersion
       );
+      shEntry.stateData = stateData;
     }
 
     if (entry.scrollRestorationIsManual) {

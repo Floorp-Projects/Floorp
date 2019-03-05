@@ -46,6 +46,8 @@ include protocol PRemoteDecoderManager;
 include protocol PProfiler;
 include protocol PScriptCache;
 include protocol PSessionStorageObserver;
+include protocol PSHEntry;
+include protocol PSHistory;
 include protocol PBenchmarkStorage;
 include DOMTypes;
 include JavaScriptTypes;
@@ -64,6 +66,7 @@ include ClientIPCTypes;
 include HangTypes;
 include PrefsTypes;
 include NeckoChannelParams;
+include NewPSHEntry;
 
 #if defined(MOZ_SANDBOX) && defined(MOZ_DEBUG) && defined(ENABLE_TESTS)
 include protocol PSandboxTesting;
@@ -365,6 +368,8 @@ nested(upto inside_cpow) sync protocol PContent
     manages PScriptCache;
     manages PLoginReputation;
     manages PSessionStorageObserver;
+    manages PSHEntry;
+    manages PSHistory;
     manages PBenchmarkStorage;
 
     // Depending on exactly how the new browser is being created, it might be
@@ -835,6 +840,8 @@ child:
     async InitSandboxTesting(Endpoint<PSandboxTestingChild> aEndpoint);
 #endif
 
+    async DestroySHEntrySharedState(uint64_t aID);
+
 parent:
     async InitBackground(Endpoint<PBackgroundParent> aEndpoint);
 
@@ -910,6 +917,11 @@ parent:
     async PLoginReputation(URIParams formURI);
 
     async PSessionStorageObserver();
+
+    async PSHistory(BrowsingContext aContext);
+
+    // Clone from entry or use shared id.
+    sync PSHEntry(PSHEntryOrSharedID entryOrSharedID);
 
     async PBenchmarkStorage();
 
