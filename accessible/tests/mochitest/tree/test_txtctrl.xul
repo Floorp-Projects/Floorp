@@ -133,7 +133,7 @@
         testAccessibleTree("txc_autocomplete", accTree);
         SimpleTest.finish();
       });
-      txc.popup;
+      txc.popup.initialize();
     }
 
     SimpleTest.waitForExplicitFinish();
