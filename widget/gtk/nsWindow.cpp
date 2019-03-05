@@ -3473,6 +3473,10 @@ nsresult nsWindow::Create(nsIWidget *aParent, nsNativeWidget aNativeParent,
         g_object_unref(group);
       }
 
+      if (aInitData->mAlwaysOnTop) {
+        gtk_window_set_keep_above(GTK_WINDOW(mShell), TRUE);
+      }
+
       // Create a container to hold child windows and child GtkWidgets.
       GtkWidget *container = moz_container_new();
       mContainer = MOZ_CONTAINER(container);
