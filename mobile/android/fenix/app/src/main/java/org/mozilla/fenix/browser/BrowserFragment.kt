@@ -16,6 +16,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import androidx.navigation.NavOptions
 import androidx.navigation.Navigation
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.component_search.*
@@ -270,10 +271,13 @@ class BrowserFragment : Fragment(), BackHandler {
             ToolbarMenu.Item.Share -> requireComponents.core.sessionManager
                 .selectedSession?.url?.apply { requireContext().share(this) }
             ToolbarMenu.Item.NewPrivateTab -> {
+                val navBuilder = NavOptions.Builder()
+                val navOptions = navBuilder.setPopUpTo(R.id.homeFragment, false).build()
                 val directions = BrowserFragmentDirections
                     .actionBrowserFragmentToSearchFragment(null)
-                Navigation.findNavController(view!!).navigate(directions)
-                (activity as HomeActivity).browsingModeManager.mode = BrowsingModeManager.Mode.Private
+                Navigation.findNavController(view!!).navigate(directions, navOptions)
+                (activity as HomeActivity).browsingModeManager.mode =
+                    BrowsingModeManager.Mode.Private
             }
             ToolbarMenu.Item.FindInPage -> FindInPageIntegration.launch?.invoke()
             ToolbarMenu.Item.ReportIssue -> requireComponents.core.sessionManager

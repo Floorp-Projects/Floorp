@@ -83,6 +83,7 @@ class HomeFragment : Fragment() {
         return view
     }
 
+    @SuppressWarnings("ComplexMethod")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -162,6 +163,9 @@ class HomeFragment : Fragment() {
             browsingModeManager.mode = when (browsingModeManager.mode) {
                 BrowsingModeManager.Mode.Normal -> BrowsingModeManager.Mode.Private
                 BrowsingModeManager.Mode.Private -> BrowsingModeManager.Mode.Normal
+            }
+            Navigation.findNavController(it).apply {
+                popBackStack(R.id.nav_graph, false)
             }
         }
     }
