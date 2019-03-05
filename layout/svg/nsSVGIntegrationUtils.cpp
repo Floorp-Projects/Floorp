@@ -538,8 +538,9 @@ static MaskPaintResult CreateAndPaintMaskSurface(
                                                        SurfaceFormat::A8)) {
     return paintResult;
   }
-  RefPtr<DrawTarget> maskDT = ctx.GetDrawTarget()->CreateSimilarDrawTarget(
-      maskSurfaceRect.Size(), SurfaceFormat::A8);
+  RefPtr<DrawTarget> maskDT = ctx.GetDrawTarget()->CreateClippedDrawTarget(
+      maskSurfaceRect.Size(), Matrix::Translation(aParams.maskRect.TopLeft()),
+      SurfaceFormat::A8);
   if (!maskDT || !maskDT->IsValid()) {
     return paintResult;
   }

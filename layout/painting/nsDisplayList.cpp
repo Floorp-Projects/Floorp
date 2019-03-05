@@ -835,9 +835,10 @@ static bool GenerateAndPushTextMask(nsIFrame* aFrame, gfxContext* aContext,
       RoundedOut(ToRect(sourceCtx->GetClipExtents(gfxContext::eDeviceSpace)));
 
   Matrix currentMatrix = sourceCtx->CurrentMatrix();
-  Matrix maskTransform =
-      currentMatrix * Matrix::Translation(-drawRect.x, -drawRect.y);
-  maskTransform.Invert();
+  Matrix invCurrentMatrix = currentMatrix;
+  invCurrentMatrix.Invert();
+  Matrix maskSurfaceDeviceOffsetTranslation =
+      Matrix::Translation(drawRect.TopLeft());
 
   // Create a mask surface.
   RefPtr<DrawTarget> sourceTarget = sourceCtx->GetDrawTarget();
@@ -846,7 +847,7 @@ static bool GenerateAndPushTextMask(nsIFrame* aFrame, gfxContext* aContext,
     return false;
   }
   RefPtr<DrawTarget> maskDT = sourceTarget->CreateClippedDrawTarget(
-      drawRect.Size(), maskTransform * currentMatrix, SurfaceFormat::A8);
+      drawRect.Size(), maskSurfaceDeviceOffsetTranslation, SurfaceFormat::A8);
   if (!maskDT || !maskDT->IsValid()) {
     return false;
   }
@@ -864,8 +865,9 @@ static bool GenerateAndPushTextMask(nsIFrame* aFrame, gfxContext* aContext,
   // Push the generated mask into aContext, so that the caller can pop and
   // blend with it.
   RefPtr<SourceSurface> maskSurface = maskDT->Snapshot();
-  sourceCtx->PushGroupForBlendBack(gfxContentType::COLOR_ALPHA, 1.0,
-                                   maskSurface, maskTransform);
+  sourceCtx->PushGroupForBlendBack(
+      gfxContentType::COLOR_ALPHA, 1.0, maskSurface,
+      maskSurfaceDeviceOffsetTranslation * invCurrentMatrix);
 
   return true;
 }
