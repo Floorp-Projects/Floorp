@@ -428,7 +428,7 @@ bool BackgroundChildImpl::DeallocPVsyncChild(PVsyncChild* aActor) {
 }
 
 PUDPSocketChild* BackgroundChildImpl::AllocPUDPSocketChild(
-    const OptionalPrincipalInfo& aPrincipalInfo, const nsCString& aFilter) {
+    const Maybe<PrincipalInfo>& aPrincipalInfo, const nsCString& aFilter) {
   MOZ_CRASH("AllocPUDPSocket should not be called");
   return nullptr;
 }

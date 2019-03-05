@@ -2216,10 +2216,9 @@ nsresult InsertEntry(mozIStorageConnection* aConn, CacheId aCacheId,
 
   nsAutoCString serializedInfo;
   // We only allow content serviceworkers right now.
-  if (aResponse.principalInfo().type() ==
-      mozilla::ipc::OptionalPrincipalInfo::TPrincipalInfo) {
+  if (aResponse.principalInfo().isSome()) {
     const mozilla::ipc::PrincipalInfo& principalInfo =
-        aResponse.principalInfo().get_PrincipalInfo();
+        aResponse.principalInfo().ref();
     MOZ_DIAGNOSTIC_ASSERT(principalInfo.type() ==
                           mozilla::ipc::PrincipalInfo::TContentPrincipalInfo);
     const mozilla::ipc::ContentPrincipalInfo& cInfo =
@@ -2469,7 +2468,7 @@ nsresult ReadResponse(mozIStorageConnection* aConn, EntryId aEntryId,
     return rv;
   }
 
-  aSavedResponseOut->mValue.principalInfo() = void_t();
+  aSavedResponseOut->mValue.principalInfo() = Nothing();
   if (!serializedInfo.IsEmpty()) {
     nsAutoCString specNoSuffix;
     OriginAttributes attrs;
@@ -2495,8 +2494,8 @@ nsresult ReadResponse(mozIStorageConnection* aConn, EntryId aEntryId,
     // CSP is recovered from the headers, no need to initialise it here.
     nsTArray<mozilla::ipc::ContentSecurityPolicy> policies;
     aSavedResponseOut->mValue.principalInfo() =
-        mozilla::ipc::ContentPrincipalInfo(attrs, origin, specNoSuffix,
-                                           Nothing(), std::move(policies));
+        Some(mozilla::ipc::ContentPrincipalInfo(
+            attrs, origin, specNoSuffix, Nothing(), std::move(policies)));
   }
 
   bool nullPadding = false;
