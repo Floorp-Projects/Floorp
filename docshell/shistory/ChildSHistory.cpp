@@ -18,7 +18,8 @@ namespace mozilla {
 namespace dom {
 
 ChildSHistory::ChildSHistory(nsDocShell* aDocShell)
-    : mDocShell(aDocShell), mHistory(new nsSHistory(aDocShell)) {}
+    : mDocShell(aDocShell), mHistory(new nsSHistory(aDocShell->GetBrowsingContext(),
+                                                    aDocShell->HistoryID())) {}
 
 ChildSHistory::~ChildSHistory() {}
 
