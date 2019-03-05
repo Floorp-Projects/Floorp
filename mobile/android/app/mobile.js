@@ -380,6 +380,9 @@ pref("browser.ui.zoom.force-user-scalable", false);
 // With the typical screen sizes on mobile devices, we want to wrap page sources by default.
 pref("view_source.wrap_long_lines", true);
 
+// Ditto for plain text documents.
+pref("plain_text.wrap_long_lines", true);
+
 
 pref("ui.touch.radius.enabled", false);
 pref("ui.touch.radius.leftmm", 3);
