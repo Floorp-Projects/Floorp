@@ -232,8 +232,7 @@ class TabChild final : public TabChildBase,
    * Create a new TabChild object.
    */
   TabChild(ContentChild* aManager, const TabId& aTabId, TabGroup* aTabGroup,
-           const TabContext& aContext, BrowsingContext* aBrowsingContext,
-           uint32_t aChromeFlags);
+           const TabContext& aContext, uint32_t aChromeFlags);
 
   nsresult Init(mozIDOMWindowProxy* aParent);
 
@@ -242,7 +241,6 @@ class TabChild final : public TabChildBase,
                                            const TabId& aTabId,
                                            const TabId& aSameTabGroupAs,
                                            const TabContext& aContext,
-                                           BrowsingContext* aBrowsingContext,
                                            uint32_t aChromeFlags);
 
   // Let managees query if it is safe to send messages.
@@ -673,8 +671,7 @@ class TabChild final : public TabChildBase,
   virtual bool DeallocPWindowGlobalChild(PWindowGlobalChild* aActor) override;
 
   virtual PRemoteFrameChild* AllocPRemoteFrameChild(
-      const nsString& aName, const nsString& aRemoteType,
-      BrowsingContext* aBrowsingContext) override;
+      const nsString& aName, const nsString& aRemoteType) override;
 
   virtual bool DeallocPRemoteFrameChild(PRemoteFrameChild* aActor) override;
 
@@ -807,7 +804,6 @@ class TabChild final : public TabChildBase,
   RefPtr<PuppetWidget> mPuppetWidget;
   nsCOMPtr<nsIURI> mLastURI;
   RefPtr<ContentChild> mManager;
-  RefPtr<BrowsingContext> mBrowsingContext;
   uint32_t mChromeFlags;
   uint32_t mMaxTouchPoints;
   layers::LayersId mLayersId;

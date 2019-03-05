@@ -58,6 +58,20 @@ static void Register(BrowsingContext* aBrowsingContext) {
   aBrowsingContext->Group()->Register(aBrowsingContext);
 }
 
+static void Sync(BrowsingContext* aBrowsingContext) {
+  if (!XRE_IsContentProcess()) {
+    return;
+  }
+
+  auto cc = ContentChild::GetSingleton();
+  MOZ_DIAGNOSTIC_ASSERT(cc);
+  RefPtr<BrowsingContext> parent = aBrowsingContext->GetParent();
+  BrowsingContext* opener = aBrowsingContext->GetOpener();
+  cc->SendAttachBrowsingContext(parent, opener,
+                                BrowsingContextId(aBrowsingContext->Id()),
+                                aBrowsingContext->Name());
+}
+
 BrowsingContext* BrowsingContext::TopLevelBrowsingContext() {
   BrowsingContext* bc = this;
   while (bc->mParent) {
@@ -147,7 +161,7 @@ already_AddRefed<BrowsingContext> BrowsingContext::CreateFromIPC(
 
   Register(context);
 
-  // Caller handles attaching us to the tree.
+  context->Attach();
 
   return context.forget();
 }
@@ -158,11 +172,11 @@ BrowsingContext::BrowsingContext(BrowsingContext* aParent,
                                  uint64_t aBrowsingContextId, Type aType)
     : mName(aName),
       mClosed(false),
-      mOpener(aOpener),
-      mIsActivatedByUserGesture(false),
       mType(aType),
       mBrowsingContextId(aBrowsingContextId),
-      mParent(aParent) {
+      mParent(aParent),
+      mOpener(aOpener),
+      mIsActivatedByUserGesture(false) {
   // Specify our group in our constructor. We will explicitly join the group
   // when we are registered, as doing so will take a reference.
   if (mParent) {
@@ -183,7 +197,7 @@ void BrowsingContext::SetDocShell(nsIDocShell* aDocShell) {
   mDocShell = aDocShell;
 }
 
-void BrowsingContext::Attach(bool aFromIPC) {
+void BrowsingContext::Attach() {
   MOZ_LOG(GetLog(), LogLevel::Debug,
           ("%s: %s 0x%08" PRIx64 " to 0x%08" PRIx64,
            XRE_IsParentProcess() ? "Parent" : "Child",
@@ -197,16 +211,10 @@ void BrowsingContext::Attach(bool aFromIPC) {
 
   children->AppendElement(this);
 
-  // Send attach to our parent if we need to.
-  if (!aFromIPC && XRE_IsContentProcess()) {
-    auto cc = ContentChild::GetSingleton();
-    MOZ_DIAGNOSTIC_ASSERT(cc);
-    cc->SendAttachBrowsingContext(
-        mParent, mOpener, BrowsingContextId(mBrowsingContextId), Name());
-  }
+  Sync(this);
 }
 
-void BrowsingContext::Detach(bool aFromIPC) {
+void BrowsingContext::Detach() {
   MOZ_LOG(GetLog(), LogLevel::Debug,
           ("%s: Detaching 0x%08" PRIx64 " from 0x%08" PRIx64,
            XRE_IsParentProcess() ? "Parent" : "Child", Id(),
@@ -234,18 +242,16 @@ void BrowsingContext::Detach(bool aFromIPC) {
 
   Group()->Unregister(this);
 
-  // By definition, we no longer are the current process for this
-  // BrowsingContext - clear our now-dead nsDocShell reference.
-  mDocShell = nullptr;
-
-  if (!aFromIPC && XRE_IsContentProcess()) {
-    auto cc = ContentChild::GetSingleton();
-    MOZ_DIAGNOSTIC_ASSERT(cc);
-    cc->SendDetachBrowsingContext(this, false /* aMoveToBFCache */);
+  if (!XRE_IsContentProcess()) {
+    return;
   }
+
+  auto cc = ContentChild::GetSingleton();
+  MOZ_DIAGNOSTIC_ASSERT(cc);
+  cc->SendDetachBrowsingContext(this, false /* aMoveToBFCache */);
 }
 
-void BrowsingContext::CacheChildren(bool aFromIPC) {
+void BrowsingContext::CacheChildren() {
   if (mChildren.IsEmpty()) {
     return;
   }
@@ -261,11 +267,13 @@ void BrowsingContext::CacheChildren(bool aFromIPC) {
   }
   mChildren.Clear();
 
-  if (!aFromIPC && XRE_IsContentProcess()) {
-    auto cc = ContentChild::GetSingleton();
-    MOZ_DIAGNOSTIC_ASSERT(cc);
-    cc->SendDetachBrowsingContext(this, true /* aMoveToBFCache */);
+  if (!XRE_IsContentProcess()) {
+    return;
   }
+
+  auto cc = ContentChild::GetSingleton();
+  MOZ_DIAGNOSTIC_ASSERT(cc);
+  cc->SendDetachBrowsingContext(this, true /* aMoveToBFCache */);
 }
 
 bool BrowsingContext::IsCached() { return sCachedBrowsingContexts->has(Id()); }
@@ -273,6 +281,22 @@ bool BrowsingContext::IsCached() { return sCachedBrowsingContexts->has(Id()); }
 void BrowsingContext::GetChildren(
     nsTArray<RefPtr<BrowsingContext>>& aChildren) {
   MOZ_ALWAYS_TRUE(aChildren.AppendElements(mChildren));
+}
+
+void BrowsingContext::SetOpener(BrowsingContext* aOpener) {
+  if (mOpener == aOpener) {
+    return;
+  }
+
+  mOpener = aOpener;
+
+  if (!XRE_IsContentProcess()) {
+    return;
+  }
+
+  auto cc = ContentChild::GetSingleton();
+  MOZ_DIAGNOSTIC_ASSERT(cc);
+  cc->SendSetOpenerBrowsingContext(this, aOpener);
 }
 
 // FindWithName follows the rules for choosing a browsing context,
@@ -456,7 +480,14 @@ void BrowsingContext::NotifyUserGestureActivation() {
   RefPtr<BrowsingContext> topLevelBC = TopLevelBrowsingContext();
   USER_ACTIVATION_LOG("Get top level browsing context 0x%08" PRIx64,
                       topLevelBC->Id());
-  topLevelBC->SetIsActivatedByUserGesture(true);
+  topLevelBC->SetUserGestureActivation();
+
+  if (!XRE_IsContentProcess()) {
+    return;
+  }
+  auto cc = ContentChild::GetSingleton();
+  MOZ_ASSERT(cc);
+  cc->SendSetUserGestureActivation(topLevelBC, true);
 }
 
 void BrowsingContext::NotifyResetUserGestureActivation() {
@@ -466,19 +497,39 @@ void BrowsingContext::NotifyResetUserGestureActivation() {
   RefPtr<BrowsingContext> topLevelBC = TopLevelBrowsingContext();
   USER_ACTIVATION_LOG("Get top level browsing context 0x%08" PRIx64,
                       topLevelBC->Id());
-  topLevelBC->SetIsActivatedByUserGesture(false);
+  topLevelBC->ResetUserGestureActivation();
+
+  if (!XRE_IsContentProcess()) {
+    return;
+  }
+  auto cc = ContentChild::GetSingleton();
+  MOZ_ASSERT(cc);
+  cc->SendSetUserGestureActivation(topLevelBC, false);
+}
+
+void BrowsingContext::SetUserGestureActivation() {
+  MOZ_ASSERT(!mParent, "Set user activation flag on non top-level context!");
+  USER_ACTIVATION_LOG(
+      "Set user gesture activation for browsing context 0x%08" PRIx64, Id());
+  mIsActivatedByUserGesture = true;
 }
 
 bool BrowsingContext::GetUserGestureActivation() {
   RefPtr<BrowsingContext> topLevelBC = TopLevelBrowsingContext();
-  return topLevelBC->GetIsActivatedByUserGesture();
+  return topLevelBC->mIsActivatedByUserGesture;
+}
+
+void BrowsingContext::ResetUserGestureActivation() {
+  MOZ_ASSERT(!mParent, "Clear user activation flag on non top-level context!");
+  USER_ACTIVATION_LOG(
+      "Reset user gesture activation for browsing context 0x%08" PRIx64, Id());
+  mIsActivatedByUserGesture = false;
 }
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(BrowsingContext)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(BrowsingContext)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocShell, mChildren, mParent, mOpener,
-                                  mGroup)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocShell, mChildren, mParent, mGroup)
   if (XRE_IsParentProcess()) {
     CanonicalBrowsingContext::Cast(tmp)->Unlink();
   }
@@ -486,8 +537,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(BrowsingContext)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(BrowsingContext)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocShell, mChildren, mParent, mOpener,
-                                    mGroup)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocShell, mChildren, mParent, mGroup)
   if (XRE_IsParentProcess()) {
     CanonicalBrowsingContext::Cast(tmp)->Traverse(cb);
   }
@@ -564,7 +614,7 @@ Nullable<WindowProxyHolder> BrowsingContext::GetTop(ErrorResult& aError) {
 void BrowsingContext::GetOpener(JSContext* aCx,
                                 JS::MutableHandle<JS::Value> aOpener,
                                 ErrorResult& aError) const {
-  BrowsingContext* opener = GetOpener();
+  auto* opener = GetOpener();
   if (!opener) {
     aOpener.setNull();
     return;
