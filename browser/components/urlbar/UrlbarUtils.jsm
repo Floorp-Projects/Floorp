@@ -18,7 +18,6 @@ var EXPORTED_SYMBOLS = [
 
 const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetters(this, {
-  BinarySearch: "resource://gre/modules/BinarySearch.jsm",
   BrowserUtils: "resource://gre/modules/BrowserUtils.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
   PlacesUIUtils: "resource:///modules/PlacesUIUtils.jsm",
@@ -232,23 +231,32 @@ var UrlbarUtils = {
    *          The array is sorted by match indexes ascending.
    */
   getTokenMatches(tokens, str) {
-    return tokens.reduce((matches, token) => {
-      let index = 0;
+    // To generate non-overlapping ranges, we start from a 0-filled array with
+    // the same length of the string, and use it as a collision marker, setting
+    // 1 where a token matches.
+    let hits = new Array(str.length).fill(0);
+    for (let token of tokens) {
       // Ideally we should never hit the empty token case, but just in case
       // the value check protects us from an infinite loop.
-      while (index >= 0 && token.value) {
-        index = str.indexOf(token.value, index);
+      for (let index = 0, needle = token.value; index >= 0 && needle;) {
+        index = str.indexOf(needle, index);
         if (index >= 0) {
-          let match = [index, token.value.length];
-          let matchesIndex = BinarySearch.insertionIndexOf((a, b) => {
-            return a[0] - b[0];
-          }, matches, match);
-          matches.splice(matchesIndex, 0, match);
-          index += token.value.length;
+          hits.fill(1, index, index + needle.length);
+          index += needle.length;
         }
       }
-      return matches;
-    }, []);
+    }
+    // Starting from the collision array, generate [start, len] tuples
+    // representing the ranges to be highlighted.
+    let ranges = [];
+    for (let index = hits.indexOf(1); index >= 0 && index < hits.length;) {
+      let len = 0;
+      for (let j = index; j < hits.length && hits[j]; ++j, ++len);
+      ranges.push([index, len]);
+      // Move to the next 1.
+      index = hits.indexOf(1, index + len);
+    }
+    return ranges;
   },
 
   /**
