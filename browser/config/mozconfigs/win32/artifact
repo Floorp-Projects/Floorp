@@ -9,4 +9,3 @@ export MOZILLA_OFFICIAL=1
 . "$topsrcdir/build/mozconfig.common.override"
 
 . "$topsrcdir/build/mozconfig.artifact"
-ac_add_options --enable-artifact-build-symbols
