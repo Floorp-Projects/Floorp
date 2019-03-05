@@ -28,16 +28,23 @@ namespace jit {
   _(BaselineThrowInitializedThis, js::jit::BaselineThrowInitializedThis)       \
   _(BaselineThrowUninitializedThis, js::jit::BaselineThrowUninitializedThis)   \
   _(BindVarOperation, js::BindVarOperation)                                    \
+  _(BuiltinProtoOperation, js::BuiltinProtoOperation)                          \
+  _(CheckClassHeritageOperation, js::CheckClassHeritageOperation)              \
+  _(CheckGlobalOrEvalDeclarationConflicts,                                     \
+    js::CheckGlobalOrEvalDeclarationConflicts)                                 \
   _(CheckIsCallable, js::jit::CheckIsCallable)                                 \
   _(CheckOverRecursedBaseline, js::jit::CheckOverRecursedBaseline)             \
   _(CloneRegExpObject, js::CloneRegExpObject)                                  \
   _(CreateAsyncFromSyncIterator, js::CreateAsyncFromSyncIterator)              \
+  _(CreateGenerator, js::jit::CreateGenerator)                                 \
+  _(DebugAfterYield, js::jit::DebugAfterYield)                                 \
   _(DebugEpilogueOnBaselineReturn, js::jit::DebugEpilogueOnBaselineReturn)     \
   _(DebugLeaveLexicalEnv, js::jit::DebugLeaveLexicalEnv)                       \
   _(DebugLeaveThenFreshenLexicalEnv, js::jit::DebugLeaveThenFreshenLexicalEnv) \
   _(DebugLeaveThenPopLexicalEnv, js::jit::DebugLeaveThenPopLexicalEnv)         \
   _(DebugLeaveThenRecreateLexicalEnv,                                          \
     js::jit::DebugLeaveThenRecreateLexicalEnv)                                 \
+  _(Debug_CheckSelfHosted, js::Debug_CheckSelfHosted)                          \
   _(DefFunOperation, js::DefFunOperation)                                      \
   _(DefLexicalOperation, js::DefLexicalOperation)                              \
   _(DefVarOperation, js::DefVarOperation)                                      \
@@ -46,21 +53,35 @@ namespace jit {
   _(DeleteNameOperation, js::DeleteNameOperation)                              \
   _(DeletePropertyNonStrict, js::DeletePropertyJit<false>)                     \
   _(DeletePropertyStrict, js::DeletePropertyJit<true>)                         \
+  _(DoToNumber, js::jit::DoToNumber)                                           \
+  _(DoToNumeric, js::jit::DoToNumeric)                                         \
   _(EnterWith, js::jit::EnterWith)                                             \
+  _(FinalSuspend, js::jit::FinalSuspend)                                       \
   _(FreshenLexicalEnv, js::jit::FreshenLexicalEnv)                             \
+  _(FunWithProtoOperation, js::FunWithProtoOperation)                          \
   _(GetAndClearException, js::GetAndClearException)                            \
   _(GetImportOperation, js::GetImportOperation)                                \
   _(GetNonSyntacticGlobalThis, js::GetNonSyntacticGlobalThis)                  \
+  _(GetOrCreateModuleMetaObject, js::GetOrCreateModuleMetaObject)              \
+  _(HomeObjectSuperBase, js::HomeObjectSuperBase)                              \
+  _(ImplicitThisOperation, js::ImplicitThisOperation)                          \
+  _(ImportMetaOperation, js::ImportMetaOperation)                              \
   _(InitElemGetterSetterOperation, js::InitElemGetterSetterOperation)          \
+  _(InitFunctionEnvironmentObjects, js::jit::InitFunctionEnvironmentObjects)   \
   _(InitPropGetterSetterOperation, js::InitPropGetterSetterOperation)          \
+  _(InterpretResume, js::jit::InterpretResume)                                 \
   _(InterruptCheck, js::jit::InterruptCheck)                                   \
   _(IonCompileScriptForBaseline, js::jit::IonCompileScriptForBaseline)         \
   _(Lambda, js::Lambda)                                                        \
   _(LambdaArrow, js::LambdaArrow)                                              \
   _(LeaveWith, js::jit::LeaveWith)                                             \
+  _(MakeDefaultConstructor, js::MakeDefaultConstructor)                        \
   _(MutatePrototype, js::jit::MutatePrototype)                                 \
+  _(NewArgumentsObject, js::jit::NewArgumentsObject)                           \
   _(NewArrayCopyOnWriteOperation, js::NewArrayCopyOnWriteOperation)            \
   _(NewDenseCopyOnWriteArray, js::NewDenseCopyOnWriteArray)                    \
+  _(NormalSuspend, js::jit::NormalSuspend)                                     \
+  _(ObjectWithProtoOperation, js::ObjectWithProtoOperation)                    \
   _(OnDebuggerStatement, js::jit::OnDebuggerStatement)                         \
   _(OptimizeSpreadCall, js::OptimizeSpreadCall)                                \
   _(PopLexicalEnv, js::jit::PopLexicalEnv)                                     \
@@ -71,8 +92,11 @@ namespace jit {
   _(RecreateLexicalEnv, js::jit::RecreateLexicalEnv)                           \
   _(SetFunctionName, js::SetFunctionName)                                      \
   _(SetIntrinsicOperation, js::SetIntrinsicOperation)                          \
+  _(SetObjectElementWithReceiver, js::SetObjectElementWithReceiver)            \
   _(SetPropertySuper, js::SetPropertySuper)                                    \
   _(SingletonObjectLiteralOperation, js::SingletonObjectLiteralOperation)      \
+  _(StartDynamicModuleImport, js::StartDynamicModuleImport)                    \
+  _(SuperFunOperation, js::SuperFunOperation)                                  \
   _(ThrowBadDerivedReturn, js::jit::ThrowBadDerivedReturn)                     \
   _(ThrowCheckIsObject, js::ThrowCheckIsObject)                                \
   _(ThrowMsgOperation, js::ThrowMsgOperation)                                  \
