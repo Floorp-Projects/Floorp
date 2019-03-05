@@ -7,7 +7,6 @@
 #include "vm/Xdr.h"
 
 #include "mozilla/ArrayUtils.h"
-#include "mozilla/PodOperations.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/Utf8.h"
 
