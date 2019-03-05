@@ -29,9 +29,7 @@ function assertURL(result, expectedUrl, input, postData) {
   }
 }
 
-const TEST_PATH = getRootDirectory(gTestPath)
-  .replace("chrome://mochitests/content", "http://mochi.test:8888");
-const TEST_URL = `${TEST_PATH}print_postdata.sjs`;
+const TEST_URL = `${TEST_BASE_URL}print_postdata.sjs`;
 
 add_task(async function setup() {
   await PlacesUtils.keywords.insert({ keyword: "get",
@@ -56,7 +54,7 @@ add_task(async function test_display_keyword_without_query() {
 
   Assert.equal(result.type, UrlbarUtils.RESULT_TYPE.KEYWORD,
     "Should have a keyword result");
-  Assert.equal(result.displayed.title, "mochi.test:8888",
+  Assert.equal(result.displayed.title, "example.com",
     "Node should contain the name of the bookmark");
   Assert.equal(result.displayed.action,
     Services.strings.createBundle("chrome://global/locale/autocomplete.properties")
@@ -71,7 +69,7 @@ add_task(async function test_keyword_using_get() {
 
   Assert.equal(result.type, UrlbarUtils.RESULT_TYPE.KEYWORD,
     "Should have a keyword result");
-  Assert.equal(result.displayed.title, "mochi.test:8888: something",
+  Assert.equal(result.displayed.title, "example.com: something",
      "Node should contain the name of the bookmark and query");
   Assert.ok(!result.displayed.action, "Should have an empty action");
 
@@ -122,7 +120,7 @@ add_task(async function test_keyword_using_post() {
 
   Assert.equal(result.type, UrlbarUtils.RESULT_TYPE.KEYWORD,
     "Should have a keyword result");
-  Assert.equal(result.displayed.title, "mochi.test:8888: something",
+  Assert.equal(result.displayed.title, "example.com: something",
      "Node should contain the name of the bookmark and query");
   Assert.ok(!result.displayed.action, "Should have an empty action");
 

@@ -59,8 +59,7 @@ add_task(async function() {
   const PORT = socket.port;
   registerCleanupFunction(() => { socket.close(); });
 
-  const TEST_PATH = getRootDirectory(gTestPath).replace("chrome://mochitests/content", "https://example.com");
-  const BASE_PAGE = TEST_PATH + "dummy_page.html";
+  const BASE_PAGE = TEST_BASE_URL + "dummy_page.html";
   const SLOW_HOST = `https://localhost:${PORT}/`;
   info("Using URLs: " + SLOW_HOST);
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, BASE_PAGE);
@@ -105,8 +104,7 @@ add_task(async function() {
   const PORT2 = socket2.port;
   registerCleanupFunction(() => { socket.close(); socket2.close(); });
 
-  const TEST_PATH = getRootDirectory(gTestPath).replace("chrome://mochitests/content", "https://example.com");
-  const BASE_PAGE = TEST_PATH + "dummy_page.html";
+  const BASE_PAGE = TEST_BASE_URL + "dummy_page.html";
   const SLOW_HOST1 = `https://localhost:${PORT1}/`;
   const SLOW_HOST2 = `https://localhost:${PORT2}/`;
   info("Using URLs: " + SLOW_HOST1 + " and " + SLOW_HOST2);
