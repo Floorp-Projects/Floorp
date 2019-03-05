@@ -15,6 +15,7 @@ import com.adjust.sdk.LogLevel
 import mozilla.components.service.glean.Glean
 
 object AdjustHelper {
+    @Suppress("UnreachableCode")
     fun setupAdjustIfNeeded(application: FenixApplication) {
         // RELEASE: Enable Adjust - This class has different implementations for all build types.
         return
