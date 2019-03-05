@@ -54,7 +54,6 @@ class DocGroup;
 class Document;
 class TabGroup;
 class Element;
-class MozIdleObserver;
 class Navigator;
 class Performance;
 class Report;
@@ -342,11 +341,6 @@ class nsPIDOMWindowInner : public mozIDOMWindow {
   mozilla::dom::EventTarget* GetChromeEventHandler() const {
     return mChromeEventHandler;
   }
-
-  virtual nsresult RegisterIdleObserver(
-      mozilla::dom::MozIdleObserver& aIdleObserver) = 0;
-  virtual nsresult UnregisterIdleObserver(
-      mozilla::dom::MozIdleObserver& aIdleObserver) = 0;
 
   mozilla::dom::EventTarget* GetParentTarget() {
     if (!mParentTarget) {
