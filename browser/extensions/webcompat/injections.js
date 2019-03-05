@@ -75,6 +75,15 @@ for (const injection of [
       runAt: "document_start",
       allFrames: true,
     },
+  }, {
+    id: "bug1526977",
+    platform: "desktop",
+    domain: "sreedharscce.in",
+    bug: "1526977",
+    contentScripts: {
+      matches: ["*://*.sreedharscce.in/authenticate"],
+      css: [{file: "injections/css/bug1526977-sreedharscce.in-login-fix.css"}],
+    },
   },
 ]) {
   Injections.push(injection);

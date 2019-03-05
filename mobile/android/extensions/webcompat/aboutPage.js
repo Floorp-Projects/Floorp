@@ -23,6 +23,10 @@ const ShouldStart = ["default", "nightly", "nightly-try"].includes(AppConstants.
 
 this.aboutPage = class extends ExtensionAPI {
   onStartup() {
+    if (!ShouldStart) {
+      return;
+    }
+
     const {rootURI} = this.extension;
 
     resProto.setSubstitution(ResourceSubstitution,
@@ -32,6 +36,10 @@ this.aboutPage = class extends ExtensionAPI {
   }
 
   onShutdown() {
+    if (!ShouldStart) {
+      return;
+    }
+
     resProto.setSubstitution(ResourceSubstitution, null);
 
     Services.ppmm.removeDelayedProcessScript(ProcessScriptURL);
