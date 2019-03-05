@@ -1633,9 +1633,12 @@ void RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList) {
           !(primaryFrame->GetStateBits() & NS_FRAME_MAY_BE_TRANSFORMED) &&
           primaryFrame->HasAnimationOfTransform()) {
         // If we have an nsChangeHint_UpdateTransformLayer hint but no
-        // corresponding frame bit, it's possible we have a transform animation
-        // with transform style 'none' that was initialized independently from
-        // this frame and associated after the fact.
+        // corresponding frame bit, we most likely have a transform animation
+        // that was added or updated after this frame was created (otherwise
+        // we would have set the frame bit when we initialized the frame)
+        // and which sets the transform to 'none' (otherwise we would have set
+        // the frame bit when we got the nsChangeHint_AddOrRemoveTransform
+        // hint).
         //
         // In that case we should set the frame bit.
         for (nsIFrame* cont = primaryFrame; cont;
