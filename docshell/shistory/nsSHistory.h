@@ -23,9 +23,15 @@ class nsDocShell;
 class nsSHistoryObserver;
 class nsISHEntry;
 
-class nsSHistory final : public mozilla::LinkedListElement<nsSHistory>,
-                         public nsISHistory,
-                         public nsSupportsWeakReference {
+namespace mozilla {
+namespace dom {
+class LoadSHEntryResult;
+}
+}  // namespace mozilla
+
+class nsSHistory : public mozilla::LinkedListElement<nsSHistory>,
+                   public nsISHistory,
+                   public nsSupportsWeakReference {
  public:
   // The timer based history tracker is used to evict bfcache on expiration.
   class HistoryTracker final : public nsExpirationTracker<nsSHEntryShared, 3> {
@@ -62,11 +68,6 @@ class nsSHistory final : public mozilla::LinkedListElement<nsSHistory>,
   NS_DECL_ISUPPORTS
   NS_DECL_NSISHISTORY
 
-  nsresult Reload(uint32_t aReloadFlags);
-  virtual nsresult LoadURI(nsISHEntry* aFrameEntry,
-                           mozilla::dom::BrowsingContext* aFrameBc,
-                           nsDocShellLoadState* aLoadState);
-
   // One time initialization method called upon docshell module construction
   static nsresult Startup();
   static void Shutdown();
@@ -79,7 +80,7 @@ class nsSHistory final : public mozilla::LinkedListElement<nsSHistory>,
   static uint32_t GetMaxTotalViewers() { return sHistoryMaxTotalViewers; }
 
   // Get the root SHEntry from a given entry.
-  static nsISHEntry* GetRootSHEntry(nsISHEntry* aEntry);
+  static already_AddRefed<nsISHEntry> GetRootSHEntry(nsISHEntry* aEntry);
 
   // Callback prototype for WalkHistoryEntries.
   // aEntry is the child history entry, aShell is its corresponding docshell,
@@ -117,9 +118,12 @@ class nsSHistory final : public mozilla::LinkedListElement<nsSHistory>,
                                      WalkHistoryEntriesFunc aCallback,
                                      void* aData);
 
- private:
-  virtual ~nsSHistory();
-  friend class nsSHistoryObserver;
+  nsTArray<nsCOMPtr<nsISHEntry>>& Entries() { return mEntries; }
+
+  nsresult AddEntry(nsISHEntry* aSHEntry, bool aPersist,
+                    int32_t* aEntriesPurged);
+  void RemoveEntries(nsTArray<nsID>& aIDs, int32_t aStartIndex,
+                     bool* aDidRemove);
 
   // The size of the window of SHEntries which can have alive viewers in the
   // bfcache around the currently active SHEntry.
@@ -128,14 +132,34 @@ class nsSHistory final : public mozilla::LinkedListElement<nsSHistory>,
   // index + VIEWER_WINDOW alive.
   static const int32_t VIEWER_WINDOW = 3;
 
+  struct LoadEntryResult {
+    RefPtr<mozilla::dom::BrowsingContext> mBrowsingContext;
+    RefPtr<nsDocShellLoadState> mLoadState;
+  };
+
+  nsresult Reload(uint32_t aReloadFlags, LoadEntryResult& aLoadResult);
+  nsresult ReloadCurrentEntry(LoadEntryResult& aLoadResult);
+  nsresult GotoIndex(int32_t aIndex, LoadEntryResult& aLoadResult);
+
+  void WindowIndices(int32_t aIndex, int32_t* aOutStartIndex,
+                     int32_t* aOutEndIndex);
+
+ protected:
+  virtual ~nsSHistory();
+
+ private:
+  friend class nsSHistoryObserver;
+
   nsresult LoadDifferingEntries(nsISHEntry* aPrevEntry, nsISHEntry* aNextEntry,
                                 mozilla::dom::BrowsingContext* aRootBC,
-                                long aLoadType, bool& aDifferenceFound);
-  virtual nsresult InitiateLoad(nsISHEntry* aFrameEntry,
-                                mozilla::dom::BrowsingContext* aFrameBC,
-                                long aLoadType);
+                                long aLoadType, bool& aDifferenceFound,
+                                LoadEntryResult& aLoadResult);
+  nsresult InitiateLoad(nsISHEntry* aFrameEntry,
+                        mozilla::dom::BrowsingContext* aFrameBC, long aLoadType,
+                        LoadEntryResult& aLoadResult);
 
-  nsresult LoadEntry(int32_t aIndex, long aLoadType, uint32_t aHistCmd);
+  nsresult LoadEntry(int32_t aIndex, long aLoadType, uint32_t aHistCmd,
+                     LoadEntryResult& aLoad);
 
 #ifdef DEBUG
   nsresult PrintHistory();
@@ -158,25 +182,27 @@ class nsSHistory final : public mozilla::LinkedListElement<nsSHistory>,
   static uint32_t CalcMaxTotalViewers();
 
   nsresult LoadNextPossibleEntry(int32_t aNewIndex, long aLoadType,
-                                 uint32_t aHistCmd);
+                                 uint32_t aHistCmd,
+                                 LoadEntryResult& aLoadResult);
 
   // aIndex is the index of the entry which may be removed.
   // If aKeepNext is true, aIndex is compared to aIndex + 1,
   // otherwise comparison is done to aIndex - 1.
   bool RemoveDuplicate(int32_t aIndex, bool aKeepNext);
 
+  // Length of mEntries.
+  int32_t Length() { return int32_t(mEntries.Length()); }
+
+ protected:
+  bool mIsRemote;
+
+ private:
   // Track all bfcache entries and evict on expiration.
   mozilla::UniquePtr<HistoryTracker> mHistoryTracker;
 
   nsTArray<nsCOMPtr<nsISHEntry>> mEntries;  // entries are never null
   int32_t mIndex;                           // -1 means "no index"
   int32_t mRequestedIndex;                  // -1 means "no requested index"
-
-  void WindowIndices(int32_t aIndex, int32_t* aOutStartIndex,
-                     int32_t* aOutEndIndex);
-
-  // Length of mEntries.
-  int32_t Length() { return int32_t(mEntries.Length()); }
 
   // Session History listeners
   nsAutoTObserverArray<nsWeakPtr, 2> mListeners;

@@ -2835,6 +2835,13 @@
   value: false
   mirror: always
 
+# Store the session history in the parent process, and access it over IPC
+# from the child processes.
+- name: fission.sessionHistoryInParent
+  type: bool
+  value: false
+  mirror: always
+
 #---------------------------------------------------------------------------
 # Prefs starting with "font."
 #---------------------------------------------------------------------------

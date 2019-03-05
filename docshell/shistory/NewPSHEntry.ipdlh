@@ -1,0 +1,27 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PSHEntry;
+
+namespace mozilla {
+namespace dom {
+
+union PSHEntryOrSharedID
+{
+  PSHEntry;
+  uint64_t;
+};
+
+struct NewPSHEntry {
+  ManagedEndpoint<PSHEntryChild> endpoint;
+  uint64_t sharedID;
+};
+
+union MaybeNewPSHEntry {
+  nullable PSHEntry;
+  NewPSHEntry;
+};
+
+} // namespace dom
+} // namespace mozilla
