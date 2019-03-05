@@ -78,14 +78,8 @@ static uint32_t HashName(const char *aName, uint16_t nameLen);
 
 class ZipArchiveLogger {
  public:
-  void Write(const nsACString &zip, const char *entry) const {
-    if (!XRE_IsParentProcess()) {
-      return;
-    }
+  void Init(const char *env) {
     if (!fd) {
-      char *env = PR_GetEnv("MOZ_JAR_LOG_FILE");
-      if (!env) return;
-
       nsCOMPtr<nsIFile> logFile;
       nsresult rv = NS_NewLocalFile(NS_ConvertUTF8toUTF16(env), false,
                                     getter_AddRefs(logFile));
@@ -116,11 +110,16 @@ class ZipArchiveLogger {
 #endif
       fd = file;
     }
-    nsCString buf(zip);
-    buf.Append(' ');
-    buf.Append(entry);
-    buf.Append('\n');
-    PR_Write(fd, buf.get(), buf.Length());
+  }
+
+  void Write(const nsACString &zip, const char *entry) const {
+    if (fd) {
+      nsCString buf(zip);
+      buf.Append(' ');
+      buf.Append(entry);
+      buf.Append('\n');
+      PR_Write(fd, buf.get(), buf.Length());
+    }
   }
 
   void AddRef() {
@@ -138,7 +137,7 @@ class ZipArchiveLogger {
 
  private:
   int refCnt;
-  mutable PRFileDesc *fd;
+  PRFileDesc *fd;
 };
 
 static ZipArchiveLogger zipLog;
@@ -336,7 +335,13 @@ nsresult nsZipArchive::OpenArchive(nsZipHandle *aZipHandle, PRFileDesc *aFd) {
   //-- get table of contents for archive
   nsresult rv = BuildFileList(aFd);
   if (NS_SUCCEEDED(rv)) {
-    if (aZipHandle->mFile) aZipHandle->mFile.GetURIString(mURI);
+    if (aZipHandle->mFile && XRE_IsParentProcess()) {
+      static char *env = PR_GetEnv("MOZ_JAR_LOG_FILE");
+      if (env) {
+        zipLog.Init(env);
+        aZipHandle->mFile.GetURIString(mURI);
+      }
+    }
   }
   return rv;
 }
@@ -427,7 +432,9 @@ nsZipItem *nsZipArchive::GetItem(const char *aEntryName) {
           (!memcmp(aEntryName, item->Name(), len))) {
         // Successful GetItem() is a good indicator that the file is about to be
         // read
-        zipLog.Write(mURI, aEntryName);
+        if (mURI.Length()) {
+          zipLog.Write(mURI, aEntryName);
+        }
         return item;  //-- found it
       }
       item = item->next;
