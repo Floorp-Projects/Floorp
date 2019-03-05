@@ -238,6 +238,10 @@ class Navigator final : public nsISupports, public nsWrapperCache {
   bool SendBeaconInternal(const nsAString& aUrl, BodyExtractorBase* aBody,
                           BeaconType aType, ErrorResult& aRv);
 
+  nsIDocShell* GetDocShell() const {
+    return mWindow ? mWindow->GetDocShell() : nullptr;
+  }
+
   RefPtr<nsMimeTypeArray> mMimeTypes;
   RefPtr<nsPluginArray> mPlugins;
   RefPtr<Permissions> mPermissions;
