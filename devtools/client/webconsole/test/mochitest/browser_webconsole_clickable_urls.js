@@ -12,23 +12,43 @@ const TEST_URI = "data:text/html;charset=utf8,Clickable URLS";
 
 add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
+  const currentTab = gBrowser.selectedTab;
 
-  const url = "http://example.com/";
-  await ContentTask.spawn(gBrowser.selectedBrowser, url, function(uri) {
-    content.wrappedJSObject.console.log(uri);
+  const firstURL = "http://example.com/";
+  const secondURL = "http://example.com/?id=secondURL";
+  ContentTask.spawn(gBrowser.selectedBrowser, [firstURL, secondURL], (urls) => {
+    content.wrappedJSObject.console.log("Visit ", urls[0], " and ", urls[1]);
   });
 
-  const node = await waitFor(() => findMessage(hud, url));
-  const link = node.querySelector("a.url");
+  const node = await waitFor(() => findMessage(hud, firstURL));
+  const [urlEl1, urlEl2] = Array.from(node.querySelectorAll("a.url"));
 
-  const onTabLoaded = BrowserTestUtils.waitForNewTab(gBrowser, url, true);
+  let onTabLoaded = BrowserTestUtils.waitForNewTab(gBrowser, firstURL, true);
 
-  info("Clicking on the link");
-  link.click();
+  info("Clicking on the first link");
+  urlEl1.click();
 
-  const newTab = await onTabLoaded;
+  let newTab = await onTabLoaded;
   // We only need to check that newTab is truthy since
   // BrowserTestUtils.waitForNewTab checks the URL.
   ok(newTab, "The expected tab was opened.");
-  BrowserTestUtils.removeTab(newTab);
+
+  info("Select the first tab again");
+  gBrowser.selectedTab = currentTab;
+
+  info("Ctrl/Cmd + Click on the second link");
+  onTabLoaded = BrowserTestUtils.waitForNewTab(gBrowser, secondURL, true);
+
+  const isMacOS = Services.appinfo.OS === "Darwin";
+  EventUtils.sendMouseEvent({
+    type: "click",
+    [isMacOS ? "metaKey" : "ctrlKey"]: true,
+  }, urlEl2, hud.ui.window);
+
+  newTab = await onTabLoaded;
+
+  ok(newTab, "The expected tab was opened.");
+  is(newTab._tPos, currentTab._tPos + 1,
+    "The new tab was opened in the position to the right of the current tab");
+  is(gBrowser.selectedTab, currentTab, "The tab was opened in the background");
 });
