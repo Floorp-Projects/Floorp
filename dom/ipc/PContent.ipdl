@@ -393,8 +393,7 @@ both:
     // Keep the last 3 attributes in sync with GetProcessAttributes!
     async PBrowser(TabId tabId, TabId sameTabGroupAs,
                    IPCTabContext context, uint32_t chromeFlags,
-                   ContentParentId cpId, BrowsingContext browsingContext,
-                   bool isForBrowser);
+                   ContentParentId cpId, bool isForBrowser);
 
     async PFileDescriptorSet(FileDescriptor fd);
 
@@ -1228,26 +1227,6 @@ parent:
 
     async StoreUserInteractionAsPermission(Principal aPrincipal);
 
-both:
-    async CommitBrowsingContextTransaction(BrowsingContext aContext,
-                                           BrowsingContextTransaction aTransaction);
-
-    async AsyncMessage(nsString aMessage, CpowEntry[] aCpows,
-                       Principal aPrincipal, ClonedMessageData aData);
-
-    /**
-     * Notify `push-subscription-modified` observers in the parent and child.
-     */
-    async NotifyPushSubscriptionModifiedObservers(nsCString scope,
-                                                  Principal principal);
-
-    /**
-     * Send a Push error message to all service worker clients in the parent or
-     * child.
-     */
-    async PushError(nsCString scope, Principal principal, nsString message,
-                    uint32_t flags);
-
     /**
      * Sync the BrowsingContext with id 'aContextId' and name 'aName' to the
      * parent, and attach it to the BrowsingContext 'aParentContext'. If
@@ -1275,6 +1254,39 @@ both:
      */
     async DetachBrowsingContext(BrowsingContext aContext,
                                 bool aMoveToBFCache);
+
+    /**
+     * Set the opener of browsing context 'aContext' to the browsing context
+     * with id 'aOpenerId'.
+     */
+    async SetOpenerBrowsingContext(BrowsingContext aContext,
+                                   BrowsingContext aOpenerContext);
+
+    /**
+     * Notify parent to update user gesture activation flag.
+     */
+    async SetUserGestureActivation(BrowsingContext aContext,
+                                   bool aNewValue);
+
+both:
+    async CommitBrowsingContextTransaction(BrowsingContext aContext,
+                                           BrowsingContextTransaction aTransaction);
+
+    async AsyncMessage(nsString aMessage, CpowEntry[] aCpows,
+                       Principal aPrincipal, ClonedMessageData aData);
+
+    /**
+     * Notify `push-subscription-modified` observers in the parent and child.
+     */
+    async NotifyPushSubscriptionModifiedObservers(nsCString scope,
+                                                  Principal principal);
+
+    /**
+     * Send a Push error message to all service worker clients in the parent or
+     * child.
+     */
+    async PushError(nsCString scope, Principal principal, nsString message,
+                    uint32_t flags);
 
     async WindowClose(BrowsingContext aContext, bool aTrustedCaller);
     async WindowFocus(BrowsingContext aContext);
