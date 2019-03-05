@@ -26,7 +26,7 @@ class SourceSurfaceOffset : public SourceSurface {
   virtual SurfaceType GetType() const override { return SurfaceType::OFFSET; }
   virtual IntSize GetSize() const override { return mSurface->GetSize(); }
   virtual IntRect GetRect() const override {
-    return IntRect(mOffset, mSurface->GetSize());
+    return mSurface->GetRect() + mOffset;
   }
   virtual SurfaceFormat GetFormat() const override {
     return mSurface->GetFormat();
@@ -59,6 +59,8 @@ class DrawTargetOffset : public DrawTarget {
     return mDrawTarget->GetBackendType();
   }
   virtual already_AddRefed<SourceSurface> Snapshot() override;
+  virtual already_AddRefed<SourceSurface> IntoLuminanceSource(
+      LuminanceType aLuminanceType, float aOpacity) override;
   virtual void DetachAllSnapshots() override;
   virtual IntSize GetSize() const override { return mDrawTarget->GetSize(); }
   virtual IntRect GetRect() const override {
