@@ -54,6 +54,9 @@ void CopyableCanvasRenderer::Initialize(const CanvasInitializeData& aData) {
   CanvasRenderer::Initialize(aData);
 
   if (aData.mGLContext) {
+    if (aData.mGLContext->IsDestroyed()) {
+      return;
+    }
     mGLContext = aData.mGLContext;
     mIsAlphaPremultiplied = aData.mIsGLAlphaPremult;
     mOriginPos = gl::OriginPos::BottomLeft;
@@ -71,10 +74,6 @@ void CopyableCanvasRenderer::Initialize(const CanvasInitializeData& aData) {
   } else if (aData.mRenderer) {
     mAsyncRenderer = aData.mRenderer;
     mOriginPos = gl::OriginPos::BottomLeft;
-  } else {
-    MOZ_CRASH(
-        "GFX: CanvasRenderer created without BufferProvider, DrawTarget or "
-        "GLContext?");
   }
 
   mOpaque = !aData.mHasAlpha;

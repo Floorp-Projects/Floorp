@@ -294,8 +294,10 @@ static already_AddRefed<TextureClient> TexClientFromReadback(
       MOZ_CRASH("GFX: Bad `read{Format,Type}`.");
     }
 
-    MOZ_ASSERT(texClient);
-    if (!texClient) return nullptr;
+    if (!texClient) {
+      gfxWarning() << "Couldn't create texClient for readback.";
+      return nullptr;
+    }
 
     // With a texClient, we can lock for writing.
     TextureClientAutoLock autoLock(texClient, OpenMode::OPEN_WRITE);
@@ -461,10 +463,9 @@ void CanvasClientSharedSurface::UpdateRenderer(gfx::IntSize aSize,
     asyncRenderer->CopyFromTextureClient(mReadbackClient);
   }
 
-  MOZ_ASSERT(newFront);
   if (!newFront) {
     // May happen in a release build in case of memory pressure.
-    gfxCriticalError()
+    gfxWarning()
         << "Failed to allocate a TextureClient for SharedSurface Canvas. Size: "
         << aSize;
     return;
