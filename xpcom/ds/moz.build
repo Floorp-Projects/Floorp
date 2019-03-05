@@ -112,6 +112,7 @@ UNIFIED_SOURCES += [
     'nsCRT.cpp',
     'nsDeque.cpp',
     'nsEnumeratorUtils.cpp',
+    'nsGkAtoms.cpp',
     'nsHashPropertyBag.cpp',
     'nsINIParserImpl.cpp',
     'nsObserverList.cpp',
@@ -128,10 +129,6 @@ UNIFIED_SOURCES += [
     'nsVariant.cpp',
     'PLDHashTable.cpp',
     'Tokenizer.cpp',
-]
-
-SOURCES += [
-    'nsGkAtoms.cpp',
 ]
 
 LOCAL_INCLUDES += [
