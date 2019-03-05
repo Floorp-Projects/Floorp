@@ -5,20 +5,25 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/RemoteFrameChild.h"
+#include "mozilla/dom/BrowsingContext.h"
 
 using namespace mozilla::ipc;
 
 namespace mozilla {
 namespace dom {
 
-RemoteFrameChild::RemoteFrameChild(nsFrameLoader* aFrameLoader)
-    : mLayersId{0}, mIPCOpen(true), mFrameLoader(aFrameLoader) {}
+RemoteFrameChild::RemoteFrameChild(nsFrameLoader* aFrameLoader,
+                                   BrowsingContext* aBrowsingContext)
+    : mLayersId{0},
+      mIPCOpen(true),
+      mFrameLoader(aFrameLoader),
+      mBrowsingContext(aBrowsingContext) {}
 
 RemoteFrameChild::~RemoteFrameChild() {}
 
 already_AddRefed<RemoteFrameChild> RemoteFrameChild::Create(
     nsFrameLoader* aFrameLoader, const TabContext& aContext,
-    const nsString& aRemoteType) {
+    const nsString& aRemoteType, BrowsingContext* aBrowsingContext) {
   MOZ_ASSERT(XRE_IsContentProcess());
 
   // Determine our embedder's TabChild actor.
@@ -31,11 +36,14 @@ already_AddRefed<RemoteFrameChild> RemoteFrameChild::Create(
   RefPtr<TabChild> tabChild = TabChild::GetFrom(docShell);
   MOZ_DIAGNOSTIC_ASSERT(tabChild);
 
-  RefPtr<RemoteFrameChild> remoteFrame = new RemoteFrameChild(aFrameLoader);
+  RefPtr<RemoteFrameChild> remoteFrame =
+      new RemoteFrameChild(aFrameLoader, aBrowsingContext);
+
   // Reference is freed in TabChild::DeallocPRemoteFrameChild.
   tabChild->SendPRemoteFrameConstructor(
       do_AddRef(remoteFrame).take(),
-      PromiseFlatString(aContext.PresentationURL()), aRemoteType);
+      PromiseFlatString(aContext.PresentationURL()), aRemoteType,
+      aBrowsingContext);
   remoteFrame->mIPCOpen = true;
 
   return remoteFrame.forget();
