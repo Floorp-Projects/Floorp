@@ -104,6 +104,7 @@ add_task(async function test_downloads() {
     manifest: {
       permissions: ["downloads"],
     },
+    incognitoOverride: "spanning",
   });
 
   function download(options) {

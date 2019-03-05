@@ -68,6 +68,7 @@ add_task(async function test_browser_settings() {
     manifest: {
       permissions: ["proxy"],
     },
+    incognitoOverride: "spanning",
     useAddonManager: "temporary",
   });
 
@@ -417,6 +418,7 @@ add_task(async function test_bad_value_proxy_config() {
     manifest: {
       permissions: ["proxy"],
     },
+    incognitoOverride: "spanning",
   });
 
   await extension.startup();
