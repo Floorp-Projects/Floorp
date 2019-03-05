@@ -36,6 +36,12 @@ parent:
   async Show(ScreenIntSize size, bool parentIsActive, nsSizeMode sizeMode);
   async UpdateDimensions(DimensionInfo dimensions) compressall;
   async RenderLayers(bool aEnabled, bool aForceRepaint, LayersObserverEpoch aEpoch);
+
+  /**
+   * Navigate by key (Tab/Shift+Tab/F6/Shift+f6).
+   */
+  async NavigateByKey(bool aForward, bool aForDocumentNavigation);
+
 };
 
 }  // namespace dom
