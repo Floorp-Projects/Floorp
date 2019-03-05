@@ -17,6 +17,7 @@ import mozilla.components.service.glean.Glean
 object AdjustHelper {
     fun setupAdjustIfNeeded(application: FenixApplication) {
         // RELEASE: Enable Adjust - This class has different implementations for all build types.
+        return
 
         if (TextUtils.isEmpty(BuildConfig.ADJUST_TOKEN)) {
             throw IllegalStateException("No adjust token defined for release build")
