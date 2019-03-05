@@ -536,7 +536,7 @@ var AboutReaderListener = {
 };
 AboutReaderListener.init();
 
-addMessageListener("RemoteLogins:fillForm", function(message) {
+addMessageListener("PasswordManager:fillForm", function(message) {
   LoginManagerContent.receiveMessage(message, content);
 });
 

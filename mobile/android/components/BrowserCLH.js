@@ -72,12 +72,12 @@ BrowserCLH.prototype = {
           mm: [
             // PLEASE KEEP THIS LIST IN SYNC WITH THE DESKTOP LIST IN
             // BrowserGlue.jsm
-            "RemoteLogins:findLogins",
-            "RemoteLogins:findRecipes",
-            "RemoteLogins:onFormSubmit",
-            "RemoteLogins:autoCompleteLogins",
-            "RemoteLogins:removeLogin",
-            "RemoteLogins:insecureLoginFormPresent",
+            "PasswordManager:findLogins",
+            "PasswordManager:findRecipes",
+            "PasswordManager:onFormSubmit",
+            "PasswordManager:autoCompleteLogins",
+            "PasswordManager:removeLogin",
+            "PasswordManager:insecureLoginFormPresent",
             // PLEASE KEEP THIS LIST IN SYNC WITH THE DESKTOP LIST IN
             // BrowserGlue.jsm
           ],
