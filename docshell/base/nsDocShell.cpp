@@ -429,7 +429,7 @@ nsDocShell::~nsDocShell() {
   Destroy();
 
   if (mSessionHistory) {
-    mSessionHistory->LegacySHistory()->ClearRootDocShell();
+    mSessionHistory->LegacySHistory()->ClearRootBrowsingContext();
   }
 
   if (--gDocShellCount == 0) {

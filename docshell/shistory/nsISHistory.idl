@@ -149,11 +149,11 @@ interface nsISHistory: nsISupports
   void addEntry(in nsISHEntry aEntry, in boolean aPersist);
 
   /**
-   * Clear the reference to the toplevel docshell object that this SHistory
-   * object belongs to.
+   * Clear the reference to the toplevel browsing context object that this
+   * SHistory object belongs to.
    */
   [noscript, notxpcom]
-  void ClearRootDocShell();
+  void ClearRootBrowsingContext();
 
   /**
    * Update the index maintained by sessionHistory
