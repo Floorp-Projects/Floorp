@@ -59,7 +59,7 @@ permalink: /changelog/
   * [BrowserAwesomeBar](https://mozac.org/api/mozilla.components.browser.awesomebar/-browser-awesome-bar/) is now replacing suggestions "in-place" if their ids match. Additionally `BrowserAwesomeBar` now automatically scrolls to the top whenever the entered text changes.
   
 * **feature-customtabs**
- * Now returns false in `onBackPressed()` if feature is not initialized
+  * Now returns false in `onBackPressed()` if feature is not initialized
 
 * **support-android-test**
   * 🆕 New component to be used for helpers used in instrumented (on device) tests (`src/androidTest`). This component complements `support-test` which is focused on helpers used in local unit tests (`src/test`).
