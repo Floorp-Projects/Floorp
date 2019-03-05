@@ -9,9 +9,7 @@
 
 "use strict";
 
-const TEST_PATH = getRootDirectory(gTestPath)
-  .replace("chrome://mochitests/content", "http://example.com");
-const TEST_URL = `${TEST_PATH}dummy_page.html`;
+const TEST_URL = `${TEST_BASE_URL}dummy_page.html`;
 
 add_task(async function() {
   let charsToDelete, deletedURLTab, fullURLTab, partialURLTab, testPartialURL, testURL;

@@ -346,15 +346,14 @@ class BaselineCodeGen {
                                        Register scratch1, Register scratch2);
 
   enum CallVMPhase { POST_INITIALIZE, CHECK_OVER_RECURSED };
-  bool callVM(const VMFunctionData& fun, TrampolinePtr code,
-              CallVMPhase phase = POST_INITIALIZE);
-  bool callVM(const VMFunction& fun, CallVMPhase phase = POST_INITIALIZE);
+  bool callVMInternal(VMFunctionId id, CallVMPhase phase);
 
   template <typename Fn, Fn fn>
   bool callVM(CallVMPhase phase = POST_INITIALIZE);
 
-  bool callVMNonOp(const VMFunction& fun, CallVMPhase phase = POST_INITIALIZE) {
-    if (!callVM(fun, phase)) {
+  template <typename Fn, Fn fn>
+  bool callVMNonOp(CallVMPhase phase = POST_INITIALIZE) {
+    if (!callVM<Fn, fn>(phase)) {
       return false;
     }
     handler.markLastRetAddrEntryKind(RetAddrEntry::Kind::NonOpCallVM);
@@ -666,8 +665,6 @@ class BaselineInterpreterGenerator final : private BaselineInterpreterCodeGen {
  public:
   explicit BaselineInterpreterGenerator(JSContext* cx);
 };
-
-extern const VMFunction ImplicitThisInfo;
 
 }  // namespace jit
 }  // namespace js

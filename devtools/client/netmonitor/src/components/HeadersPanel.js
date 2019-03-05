@@ -69,7 +69,7 @@ class HeadersPanel extends Component {
     return {
       connector: PropTypes.object.isRequired,
       cloneSelectedRequest: PropTypes.func.isRequired,
-      member: PropTypes.object.isRequired,
+      member: PropTypes.object,
       request: PropTypes.object.isRequired,
       renderValue: PropTypes.func,
       openLink: PropTypes.func,

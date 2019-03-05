@@ -665,28 +665,6 @@ void VibrateWindowListener::RemoveListener() {
 
 }  // namespace
 
-void Navigator::AddIdleObserver(MozIdleObserver& aIdleObserver,
-                                ErrorResult& aRv) {
-  if (!mWindow) {
-    aRv.Throw(NS_ERROR_UNEXPECTED);
-    return;
-  }
-  if (NS_FAILED(mWindow->RegisterIdleObserver(aIdleObserver))) {
-    NS_WARNING("Failed to add idle observer.");
-  }
-}
-
-void Navigator::RemoveIdleObserver(MozIdleObserver& aIdleObserver,
-                                   ErrorResult& aRv) {
-  if (!mWindow) {
-    aRv.Throw(NS_ERROR_UNEXPECTED);
-    return;
-  }
-  if (NS_FAILED(mWindow->UnregisterIdleObserver(aIdleObserver))) {
-    NS_WARNING("Failed to remove idle observer.");
-  }
-}
-
 void Navigator::SetVibrationPermission(bool aPermitted, bool aPersistent) {
   MOZ_ASSERT(NS_IsMainThread());
 

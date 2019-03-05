@@ -370,16 +370,6 @@ ThreadClient.prototype = {
   }),
 
   /**
-   * Return the event listeners defined on the page.
-   *
-   * @param onResponse Function
-   *        Called with the thread's response.
-   */
-  eventListeners: DebuggerClient.requester({
-    type: "eventListeners",
-  }),
-
-  /**
    * Request the loaded sources for the current thread.
    *
    * @param onResponse Function

@@ -163,7 +163,7 @@ class BackgroundChildImpl : public PBackgroundChild {
   virtual bool DeallocPVsyncChild(PVsyncChild* aActor) override;
 
   virtual PUDPSocketChild* AllocPUDPSocketChild(
-      const OptionalPrincipalInfo& aPrincipalInfo,
+      const Maybe<PrincipalInfo>& aPrincipalInfo,
       const nsCString& aFilter) override;
   virtual bool DeallocPUDPSocketChild(PUDPSocketChild* aActor) override;
 

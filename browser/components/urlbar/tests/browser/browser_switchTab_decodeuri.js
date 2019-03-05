@@ -8,9 +8,7 @@
 
 "use strict";
 
-const TEST_PATH = getRootDirectory(gTestPath)
-  .replace("chrome://mochitests/content", "http://example.org");
-const TEST_URL = `${TEST_PATH}dummy_page.html#test%7C1`;
+const TEST_URL = `${TEST_BASE_URL}dummy_page.html#test%7C1`;
 
 add_task(async function test_switchtab_decodeuri() {
   info("Opening first tab");

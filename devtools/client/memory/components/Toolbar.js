@@ -14,12 +14,8 @@ const { viewState } = require("../constants");
 class Toolbar extends Component {
   static get propTypes() {
     return {
-      censusDisplays: PropTypes.arrayOf(PropTypes.shape({
-        displayName: PropTypes.string.isRequired,
-      })).isRequired,
-      censusDisplay: PropTypes.shape({
-        displayName: PropTypes.string.isRequired,
-      }).isRequired,
+      censusDisplays: PropTypes.arrayOf(models.censusDisplay).isRequired,
+      censusDisplay: models.censusDisplay.isRequired,
       onTakeSnapshotClick: PropTypes.func.isRequired,
       onImportClick: PropTypes.func.isRequired,
       onClearSnapshotsClick: PropTypes.func.isRequired,
@@ -32,16 +28,10 @@ class Toolbar extends Component {
       onToggleDiffing: PropTypes.func.isRequired,
       view: models.view.isRequired,
       onViewChange: PropTypes.func.isRequired,
-      labelDisplays: PropTypes.arrayOf(PropTypes.shape({
-        displayName: PropTypes.string.isRequired,
-      })).isRequired,
-      labelDisplay: PropTypes.shape({
-        displayName: PropTypes.string.isRequired,
-      }).isRequired,
+      labelDisplays: PropTypes.arrayOf(models.labelDisplay).isRequired,
+      labelDisplay: models.labelDisplay.isRequired,
       onLabelDisplayChange: PropTypes.func.isRequired,
-      treeMapDisplays: PropTypes.arrayOf(PropTypes.shape({
-        displayName: PropTypes.string.isRequired,
-      })).isRequired,
+      treeMapDisplays: PropTypes.arrayOf(models.treeMapDisplay).isRequired,
       onTreeMapDisplayChange: PropTypes.func.isRequired,
       snapshots: PropTypes.arrayOf(models.snapshot).isRequired,
     };

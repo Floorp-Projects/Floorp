@@ -120,6 +120,8 @@ class JSWindowActorProtocol final : public nsIObserver,
   };
 
   const nsAString& Name() const { return mName; }
+  bool AllFrames() const { return mAllFrames; }
+  bool IncludeChrome() const { return mIncludeChrome; }
   const ParentSide& Parent() const { return mParent; }
   const ChildSide& Child() const { return mChild; }
 
@@ -134,6 +136,8 @@ class JSWindowActorProtocol final : public nsIObserver,
   ~JSWindowActorProtocol() = default;
 
   nsString mName;
+  bool mAllFrames = false;
+  bool mIncludeChrome = false;
   ParentSide mParent;
   ChildSide mChild;
 };
@@ -145,6 +149,10 @@ JSWindowActorProtocol::FromIPC(const JSWindowActorInfo& aInfo) {
   MOZ_DIAGNOSTIC_ASSERT(XRE_IsContentProcess());
 
   RefPtr<JSWindowActorProtocol> proto = new JSWindowActorProtocol(aInfo.name());
+  // Content processes cannot load chrome browsing contexts, so this flag is
+  // irrelevant and not propagated.
+  proto->mIncludeChrome = false;
+  proto->mAllFrames = aInfo.allFrames();
   proto->mChild.mModuleURI.Assign(aInfo.url());
 
   proto->mChild.mEvents.SetCapacity(aInfo.events().Length());
@@ -168,6 +176,7 @@ JSWindowActorInfo JSWindowActorProtocol::ToIPC() {
 
   JSWindowActorInfo info;
   info.name() = mName;
+  info.allFrames() = mAllFrames;
   info.url() = mChild.mModuleURI;
 
   info.events().SetCapacity(mChild.mEvents.Length());
@@ -194,6 +203,8 @@ JSWindowActorProtocol::FromWebIDLOptions(const nsAString& aName,
   MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
 
   RefPtr<JSWindowActorProtocol> proto = new JSWindowActorProtocol(aName);
+  proto->mAllFrames = aOptions.mAllFrames;
+
   proto->mParent.mModuleURI = aOptions.mParent.mModuleURI;
   proto->mChild.mModuleURI = aOptions.mChild.mModuleURI;
 
@@ -259,8 +270,14 @@ NS_IMETHODIMP JSWindowActorProtocol::HandleEvent(Event* aEvent) {
   // Ensure our actor is present.
   ErrorResult error;
   RefPtr<JSWindowActorChild> actor = wgc->GetActor(mName, error);
-  if (NS_WARN_IF(error.Failed())) {
-    return error.StealNSResult();
+  if (error.Failed()) {
+    nsresult rv = error.StealNSResult();
+
+    // Don't raise an error if creation of our actor was vetoed.
+    if (rv == NS_ERROR_NOT_AVAILABLE) {
+      return NS_OK;
+    }
+    return rv;
   }
 
   // Call the "handleEvent" method on our actor.
@@ -474,6 +491,7 @@ void JSWindowActorService::GetJSWindowActorInfos(
 
 void JSWindowActorService::ConstructActor(const nsAString& aName,
                                           bool aParentSide,
+                                          BrowsingContext* aBrowsingContext,
                                           JS::MutableHandleObject aActor,
                                           ErrorResult& aRv) {
   MOZ_ASSERT_IF(aParentSide, XRE_IsParentProcess());
@@ -495,6 +513,18 @@ void JSWindowActorService::ConstructActor(const nsAString& aName,
     side = &proto->Parent();
   } else {
     side = &proto->Child();
+  }
+
+  // Check if our current BrowsingContext matches the requirements for this
+  // actor to load.
+  if (!proto->AllFrames() && aBrowsingContext->GetParent()) {
+    aRv.Throw(NS_ERROR_NOT_AVAILABLE);
+    return;
+  }
+
+  if (!proto->IncludeChrome() && !aBrowsingContext->IsContent()) {
+    aRv.Throw(NS_ERROR_NOT_AVAILABLE);
+    return;
   }
 
   // Load the module using mozJSComponentLoader.

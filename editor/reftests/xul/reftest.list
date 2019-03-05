@@ -4,8 +4,6 @@ fails-if(Android) skip-if(winWidget) == empty-1.xul empty-ref.xul # Windows: bug
 # Therefore, the equlity tests below should be marked as failing.
 fails-if(Android) fails-if(windowsDefaultTheme&&/^Windows\x20NT\x20(5\.[12]|6\.[012]|10\.0)/.test(http.oscpu)) == autocomplete-1.xul autocomplete-ref.xul # bug 783658
 fails-if(Android) fails-if(windowsDefaultTheme&&/^Windows\x20NT\x20(5\.[12]|6\.[012]|10\.0)/.test(http.oscpu)) == emptyautocomplete-1.xul emptyautocomplete-ref.xul # bug 783658
-!= emptymultiline-1.xul emptymultiline-ref.xul
-fails-if(Android) == emptymultiline-2.xul emptymultiline-ref.xul # bug 783658
 fails-if(Android) skip-if(winWidget) == emptytextbox-1.xul emptytextbox-ref.xul # Windows: bug 1239170
 fails-if(Android) skip-if(winWidget) == emptytextbox-2.xul emptytextbox-ref.xul # Windows: bug 1239170
 != emptytextbox-4.xul emptytextbox-ref.xul

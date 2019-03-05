@@ -17,15 +17,15 @@
          onpopupshown="onPanelShown(event);"
          onpopuphidden="onPanelHidden(event);">
     <vbox id="vbox">
-      <textbox id="textbox" onfocus="onFocusPanelTextbox(event);"
-               multiline="true" cols="20" rows="4" style="font-size: 36px;"/>
+      <html:textarea id="textbox" onfocus="onFocusPanelTextbox(event);"
+                     cols="20" rows="4" style="font-size: 36px;"/>
     </vbox>
   </panel>
 
 <body  xmlns="http://www.w3.org/1999/xhtml">
 <p id="display">
 <div id="div" style="margin: 0; padding: 0; font-size: 36px;">Here is a text frame.</div>
-<textarea style="margin: 0;" id="textarea" cols="20" rows="4"></textarea><br/>
+<textarea style="margin: 0; font-family: -moz-fixed;" id="textarea" cols="20" rows="4"></textarea><br/>
 <iframe id="iframe" width="300" height="150"
         src="data:text/html,&lt;textarea id='textarea' cols='20' rows='4'&gt;&lt;/textarea&gt;"></iframe><br/>
 <iframe id="iframe2" width="300" height="150"
@@ -37,7 +37,7 @@
 <input id="input" type="text"/><br/>
 </p>
 <div id="content" style="display: none">
-  
+
 </div>
 <pre id="test">
 </pre>
@@ -3172,7 +3172,7 @@ function runCharAtPointTest(aFocusedEditor, aTargetName)
 {
   aFocusedEditor.value = "This is a test of the\nContent Events";
                        // 012345678901234567890  12345678901234
-                       // 0         1         2           3    
+                       // 0         1         2           3
 
   aFocusedEditor.focus();
 
