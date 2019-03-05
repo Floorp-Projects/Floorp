@@ -73,8 +73,10 @@ class BrowserFragment : Fragment(), BackHandler {
 
         TabsToolbarFeature(layout.toolbar, components.sessionManager, sessionId, ::showTabs)
 
-        AwesomeBarFeature(layout.awesomeBar, layout.toolbar, layout.engineView)
-            .addHistoryProvider(components.historyStorage, components.sessionUseCases.loadUrl)
+        AwesomeBarFeature(layout.awesomeBar, layout.toolbar, layout.engineView, components.icons)
+            .addHistoryProvider(
+                components.historyStorage,
+                components.sessionUseCases.loadUrl)
             .addSessionProvider(components.sessionManager, components.tabsUseCases.selectTab)
             .addSearchProvider(
                 components.searchEngineManager.getDefaultSearchEngine(requireContext()),

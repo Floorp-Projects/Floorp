@@ -8,7 +8,9 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.graphics.Bitmap
+import mozilla.components.browser.icons.BrowserIcons
 import mozilla.components.concept.awesomebar.AwesomeBar
+import mozilla.components.feature.awesomebar.internal.loadLambda
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.support.utils.WebURLFinder
 import java.util.UUID
@@ -23,7 +25,8 @@ class ClipboardSuggestionProvider(
     context: Context,
     private val loadUrlUseCase: SessionUseCases.LoadUrlUseCase,
     private val icon: Bitmap? = null,
-    private val title: String? = null
+    private val title: String? = null,
+    private val icons: BrowserIcons? = null
 ) : AwesomeBar.SuggestionProvider {
     override val id: String = UUID.randomUUID().toString()
 
@@ -39,7 +42,7 @@ class ClipboardSuggestionProvider(
             id = url,
             description = url,
             flags = setOf(AwesomeBar.Suggestion.Flag.CLIPBOARD),
-            icon = { _, _ -> icon },
+            icon = icons.loadLambda(url, icon),
             title = title,
             onSuggestionClicked = {
                 loadUrlUseCase.invoke(url)

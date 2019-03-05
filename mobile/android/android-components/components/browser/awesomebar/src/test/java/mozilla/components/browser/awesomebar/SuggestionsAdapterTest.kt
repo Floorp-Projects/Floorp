@@ -209,6 +209,17 @@ class SuggestionsAdapterTest {
         assertEquals(holder, viewHolder.actual)
     }
 
+    @Test
+    fun `onViewRecycled will be forwarded to view holder`() {
+        val adapter = spy(SuggestionsAdapter(mock()))
+        val viewHolder: SuggestionViewHolder = mock()
+        val wrapper = ViewHolderWrapper(viewHolder, mock())
+
+        adapter.onViewRecycled(wrapper)
+
+        verify(viewHolder).recycle()
+    }
+
     private fun mockProvider(
         shouldClearSuggestions: Boolean = true
     ): AwesomeBar.SuggestionProvider {

@@ -4,11 +4,17 @@
 
 package mozilla.components.browser.awesomebar.layout
 
+import android.support.annotation.VisibleForTesting
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import mozilla.components.browser.awesomebar.BrowserAwesomeBar
 import mozilla.components.browser.awesomebar.R
 import mozilla.components.browser.awesomebar.widget.FlowLayout
@@ -28,13 +34,12 @@ internal sealed class DefaultSuggestionViewHolder {
         private val descriptionView = view.findViewById<TextView>(R.id.mozac_browser_awesomebar_description).apply {
             setTextColor(awesomeBar.styling.descriptionTextColor)
         }
-        private val iconView = view.findViewById<ImageView>(R.id.mozac_browser_awesomebar_icon)
+        private val iconLoader = IconLoader(view.findViewById(R.id.mozac_browser_awesomebar_icon))
 
         override fun bind(suggestion: AwesomeBar.Suggestion, selectionListener: () -> Unit) {
             val title = if (suggestion.title.isNullOrEmpty()) suggestion.description else suggestion.title
 
-            val icon = suggestion.icon.invoke(iconView.measuredWidth, iconView.measuredHeight)
-            iconView.setImageBitmap(icon)
+            iconLoader.load(suggestion)
 
             titleView.text = title
             descriptionView.text = suggestion.description
@@ -43,6 +48,10 @@ internal sealed class DefaultSuggestionViewHolder {
                 suggestion.onSuggestionClicked?.invoke()
                 selectionListener.invoke()
             }
+        }
+
+        override fun recycle() {
+            iconLoader.cancel()
         }
 
         companion object {
@@ -57,19 +66,16 @@ internal sealed class DefaultSuggestionViewHolder {
         private val awesomeBar: BrowserAwesomeBar,
         view: View
     ) : SuggestionViewHolder(view) {
-        private val iconView = view.findViewById<ImageView>(R.id.mozac_browser_awesomebar_icon)
         private val chipsView = view.findViewById<FlowLayout>(R.id.mozac_browser_awesomebar_chips).apply {
             spacing = awesomeBar.styling.chipSpacing
         }
+        private val inflater = LayoutInflater.from(view.context)
+        private val iconLoader = IconLoader(view.findViewById(R.id.mozac_browser_awesomebar_icon))
 
         override fun bind(suggestion: AwesomeBar.Suggestion, selectionListener: () -> Unit) {
             chipsView.removeAllViews()
 
-            val inflater = LayoutInflater.from(view.context)
-
-            suggestion.icon.invoke(iconView.measuredWidth, iconView.measuredHeight)?.let { bitmap ->
-                iconView.setImageBitmap(bitmap)
-            }
+            iconLoader.load(suggestion)
 
             suggestion
                 .chips
@@ -92,8 +98,44 @@ internal sealed class DefaultSuggestionViewHolder {
                 }
         }
 
+        override fun recycle() {
+            iconLoader.cancel()
+        }
+
         companion object {
             val LAYOUT_ID = R.layout.mozac_browser_awesomebar_item_chips
         }
+    }
+}
+
+/**
+ * Helper class for loading icons asynchronously.
+ */
+internal class IconLoader(
+    private val iconView: ImageView
+) {
+    private val scope = CoroutineScope(Dispatchers.Main)
+    @VisibleForTesting internal var iconJob: Job? = null
+
+    fun load(suggestion: AwesomeBar.Suggestion) {
+        cancel()
+
+        val icon = suggestion.icon ?: return
+
+        iconJob = scope.launch {
+            val bitmap = withContext(Dispatchers.IO) {
+                icon.invoke(iconView.measuredWidth, iconView.measuredHeight)
+            }
+
+            if (bitmap != null) {
+                iconView.setImageBitmap(bitmap)
+            }
+        }
+    }
+
+    fun cancel() {
+        iconView.setImageBitmap(null)
+
+        iconJob?.cancel()
     }
 }

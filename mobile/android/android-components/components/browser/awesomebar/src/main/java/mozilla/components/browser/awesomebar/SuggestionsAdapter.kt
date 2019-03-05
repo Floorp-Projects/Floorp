@@ -120,6 +120,10 @@ internal class SuggestionsAdapter(
         val suggestion = suggestions[position]
         holder.actual.bind(suggestion) { awesomeBar.listener?.invoke() }
     }
+
+    override fun onViewRecycled(holder: ViewHolderWrapper) {
+        holder.actual.recycle()
+    }
 }
 
 internal class SuggestionDiffCallback(

@@ -11,6 +11,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import mozilla.components.browser.domains.autocomplete.ShippedDomainsProvider
 import mozilla.components.browser.engine.system.SystemEngine
+import mozilla.components.browser.icons.BrowserIcons
 import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.menu.item.BrowserMenuItemToolbar
 import mozilla.components.browser.menu.item.BrowserMenuCheckbox
@@ -48,6 +49,8 @@ open class DefaultComponents(private val applicationContext: Context) {
     open val engine: Engine by lazy {
         SystemEngine(applicationContext, engineSettings)
     }
+
+    val icons by lazy { BrowserIcons(applicationContext) }
 
     // Storage
     val historyStorage by lazy { InMemoryHistoryStorage() }

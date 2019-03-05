@@ -6,6 +6,7 @@ package mozilla.components.feature.awesomebar
 
 import android.content.Context
 import android.view.View
+import mozilla.components.browser.icons.BrowserIcons
 import mozilla.components.browser.search.SearchEngine
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.awesomebar.AwesomeBar
@@ -28,6 +29,7 @@ class AwesomeBarFeature(
     private val awesomeBar: AwesomeBar,
     private val toolbar: Toolbar,
     private val engineView: EngineView? = null,
+    private val icons: BrowserIcons? = null,
     private val onEditStart: (() -> Unit)? = null,
     private val onEditComplete: (() -> Unit)? = null
 ) {
@@ -56,7 +58,7 @@ class AwesomeBarFeature(
         sessionManager: SessionManager,
         selectTabUseCase: TabsUseCases.SelectTabUseCase
     ): AwesomeBarFeature {
-        val provider = SessionSuggestionProvider(sessionManager, selectTabUseCase)
+        val provider = SessionSuggestionProvider(sessionManager, selectTabUseCase, icons)
         awesomeBar.addProviders(provider)
         return this
     }
@@ -81,7 +83,7 @@ class AwesomeBarFeature(
         historyStorage: HistoryStorage,
         loadUrlUseCase: SessionUseCases.LoadUrlUseCase
     ): AwesomeBarFeature {
-        awesomeBar.addProviders(HistoryStorageSuggestionProvider(historyStorage, loadUrlUseCase))
+        awesomeBar.addProviders(HistoryStorageSuggestionProvider(historyStorage, loadUrlUseCase, icons))
         return this
     }
 
@@ -89,7 +91,7 @@ class AwesomeBarFeature(
         context: Context,
         loadUrlUseCase: SessionUseCases.LoadUrlUseCase
     ): AwesomeBarFeature {
-        awesomeBar.addProviders(ClipboardSuggestionProvider(context, loadUrlUseCase))
+        awesomeBar.addProviders(ClipboardSuggestionProvider(context, loadUrlUseCase, icons = icons))
         return this
     }
 

@@ -4,8 +4,10 @@
 
 package mozilla.components.feature.awesomebar.provider
 
+import mozilla.components.browser.icons.BrowserIcons
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.awesomebar.AwesomeBar
+import mozilla.components.feature.awesomebar.internal.loadLambda
 import mozilla.components.feature.tabs.TabsUseCases
 import java.util.UUID
 
@@ -15,7 +17,8 @@ import java.util.UUID
  */
 class SessionSuggestionProvider(
     private val sessionManager: SessionManager,
-    private val selectTabUseCase: TabsUseCases.SelectTabUseCase
+    private val selectTabUseCase: TabsUseCases.SelectTabUseCase,
+    private val icons: BrowserIcons? = null
 ) : AwesomeBar.SuggestionProvider {
     override val id: String = UUID.randomUUID().toString()
 
@@ -36,6 +39,7 @@ class SessionSuggestionProvider(
                         id = session.id,
                         title = session.title,
                         description = session.url,
+                        icon = icons.loadLambda(session.url),
                         onSuggestionClicked = { selectTabUseCase.invoke(session) }
                     )
                 )

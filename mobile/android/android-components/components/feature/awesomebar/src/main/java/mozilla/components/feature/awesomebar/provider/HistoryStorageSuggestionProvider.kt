@@ -4,9 +4,11 @@
 
 package mozilla.components.feature.awesomebar.provider
 
+import mozilla.components.browser.icons.BrowserIcons
 import mozilla.components.concept.awesomebar.AwesomeBar
 import mozilla.components.concept.storage.HistoryStorage
 import mozilla.components.concept.storage.SearchResult
+import mozilla.components.feature.awesomebar.internal.loadLambda
 import mozilla.components.feature.session.SessionUseCases
 import java.util.UUID
 
@@ -18,7 +20,8 @@ private const val HISTORY_SUGGESTION_LIMIT = 20
  */
 class HistoryStorageSuggestionProvider(
     private val historyStorage: HistoryStorage,
-    private val loadUrlUseCase: SessionUseCases.LoadUrlUseCase
+    private val loadUrlUseCase: SessionUseCases.LoadUrlUseCase,
+    private val icons: BrowserIcons? = null
 ) : AwesomeBar.SuggestionProvider {
 
     override val id: String = UUID.randomUUID().toString()
@@ -39,6 +42,7 @@ class HistoryStorageSuggestionProvider(
             AwesomeBar.Suggestion(
                 provider = this@HistoryStorageSuggestionProvider,
                 id = it.id,
+                icon = icons.loadLambda(it.url),
                 title = it.title,
                 description = it.url,
                 score = it.score,

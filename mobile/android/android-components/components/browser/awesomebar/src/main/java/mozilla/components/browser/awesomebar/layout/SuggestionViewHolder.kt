@@ -17,4 +17,10 @@ abstract class SuggestionViewHolder(
      * [selectionListener] function.
      */
     abstract fun bind(suggestion: AwesomeBar.Suggestion, selectionListener: () -> Unit)
+
+    /**
+     * Notifies this [SuggestionViewHolder] that it has been recycled. If this holder (or its views) keep references to
+     * large or expensive data such as large bitmaps, this may be a good place to release those resources.
+     */
+    open fun recycle(): Unit = Unit
 }

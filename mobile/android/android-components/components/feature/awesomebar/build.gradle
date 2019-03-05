@@ -30,6 +30,7 @@ dependencies {
 
     implementation project(':browser-session')
     implementation project(':browser-search')
+    implementation project(':browser-icons')
 
     implementation project(':feature-tabs')
     implementation project(':feature-session')
