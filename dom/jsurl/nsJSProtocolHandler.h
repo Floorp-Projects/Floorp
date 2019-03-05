@@ -8,7 +8,6 @@
 
 #include "mozilla/Attributes.h"
 #include "nsIProtocolHandler.h"
-#include "nsITextToSubURI.h"
 #include "nsIURI.h"
 #include "nsIMutable.h"
 #include "nsISerializable.h"
@@ -54,13 +53,14 @@ class nsJSProtocolHandler : public nsIProtocolHandler {
 
   nsresult Init();
 
+  static nsresult CreateNewURI(const nsACString& aSpec, const char* aCharset,
+                               nsIURI* aBaseURI, nsIURI** result);
+
  protected:
   virtual ~nsJSProtocolHandler();
 
-  nsresult EnsureUTF8Spec(const nsCString& aSpec, const char* aCharset,
-                          nsACString& aUTF8Spec);
-
-  nsCOMPtr<nsITextToSubURI> mTextToSubURI;
+  static nsresult EnsureUTF8Spec(const nsCString& aSpec, const char* aCharset,
+                                 nsACString& aUTF8Spec);
 };
 
 class nsJSURI final : public mozilla::net::nsSimpleURI {
