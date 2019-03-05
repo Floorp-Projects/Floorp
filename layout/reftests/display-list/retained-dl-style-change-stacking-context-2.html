@@ -1,0 +1,23 @@
+<html class="reftest-wait">
+<head>
+<style>
+  body {
+    margin: 0px;
+  }
+</style>
+</head>
+<body>
+  <div style="transform-origin: left top 0px; transform: translate(50px, 0px) scale(0.5);">
+    <div id="first" style="width: 100px; height: 200px; background-color: green; float: left;" class="reftest-no-display-list"></div>
+    <div id="second" style="width: 100px; height: 200px; position: absolute; transform: translate(100px, 0px); background-color: red;"></div>
+  </div>
+</body>
+<script>
+function doTest() {
+  document.getElementById("second").style.backgroundColor = "green";
+  document.documentElement.removeAttribute("class");
+}
+
+window.addEventListener("MozReftestInvalidate", doTest);
+</script>
+</html>

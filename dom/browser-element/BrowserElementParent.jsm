@@ -506,24 +506,11 @@ BrowserElementParent.prototype = {
     }
   },
 
-  getChildProcessOffset: function() {
-    let offset = { x: 0, y: 0 };
-    let tabParent = this._frameLoader.tabParent;
-    if (tabParent) {
-      let offsetX = {};
-      let offsetY = {};
-      tabParent.getChildProcessOffset(offsetX, offsetY);
-      offset.x = offsetX.value;
-      offset.y = offsetY.value;
-    }
-    return offset;
-  },
-
   sendMouseEvent: defineNoReturnMethod(function(type, x, y, button, clickCount, modifiers) {
-    let offset = this.getChildProcessOffset();
-    x += offset.x;
-    y += offset.y;
-
+    // This method used to attempt to transform from the parent
+    // coordinate space to the child coordinate space, but the
+    // transform was always a no-op, because this._frameLoader.tabParent
+    // was null.
     this._sendAsyncMsg("send-mouse-event", {
       "type": type,
       "x": x,

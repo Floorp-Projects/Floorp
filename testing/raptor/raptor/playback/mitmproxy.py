@@ -394,7 +394,7 @@ class MitmproxyAndroid(Mitmproxy):
             tooltool_download(_dest, self.config['run_local'], self.raptor_dir)
 
             # the production bitbar container host is always linux
-            self.certutil = os.path.join(self.raptor_dir, 'host-utils-66.0a1.en-US.linux-x86_64')
+            self.certutil = os.path.join(self.raptor_dir, 'host-utils-67.0a1.en-US.linux-x86_64')
 
             # must add hostutils/certutil to the path
             os.environ['LD_LIBRARY_PATH'] = self.certutil

@@ -816,6 +816,12 @@ bool nsINode::IsEqualNode(nsINode* aOther) {
     return false;
   }
 
+  // Might as well do a quick check to avoid walking our kids if we're
+  // obviously the same.
+  if (aOther == this) {
+    return true;
+  }
+
   nsAutoString string1, string2;
 
   nsINode* node1 = this;
@@ -868,12 +874,10 @@ bool nsINode::IsEqualNode(nsINode* aOther) {
       case PROCESSING_INSTRUCTION_NODE: {
         MOZ_ASSERT(node1->IsCharacterData());
         MOZ_ASSERT(node2->IsCharacterData());
-        string1.Truncate();
-        static_cast<CharacterData*>(node1)->AppendTextTo(string1);
-        string2.Truncate();
-        static_cast<CharacterData*>(node2)->AppendTextTo(string2);
+        auto* data1 = static_cast<CharacterData*>(node1);
+        auto* data2 = static_cast<CharacterData*>(node2);
 
-        if (!string1.Equals(string2)) {
+        if (!data1->TextEquals(data2)) {
           return false;
         }
 

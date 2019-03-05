@@ -49,6 +49,7 @@ job_description_schema = Schema({
     Optional('job-from'): task_description_schema['job-from'],
     Optional('dependencies'): task_description_schema['dependencies'],
     Optional('soft-dependencies'): task_description_schema['soft-dependencies'],
+    Optional('requires'): task_description_schema['requires'],
     Optional('expires-after'): task_description_schema['expires-after'],
     Optional('routes'): task_description_schema['routes'],
     Optional('scopes'): task_description_schema['scopes'],

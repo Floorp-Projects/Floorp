@@ -13,20 +13,14 @@ function runTest() {
   document.body.appendChild(iframe);
   var x = 10;
   var y = 10;
-  // First we force a reflow so that getChildProcessOffset actually returns
-  // meaningful data.
-  iframe.getBoundingClientRect();
-  // We need to make sure the event coordinates are actually inside the iframe,
-  // relative to the chome window.
-  var tabParent = SpecialPowers.wrap(iframe)
-                  .frameLoader.tabParent;
-  if (tabParent) {
-    let offsetX = {};
-    let offsetY = {};
-    tabParent.getChildProcessOffset(offsetX, offsetY);
-    x -= offsetX.value;
-    y -= offsetY.value;
-  }
+  // This test used to try to transform the coordinates from child
+  // to parent coordinate space by first calling
+  // iframe.getBoundingClientRect();
+  // to refresh offsets and then calling
+  // var tabParent = SpecialPowers.wrap(iframe)
+  //                .frameLoader.tabParent;
+  // and calling tabParent.getChildProcessOffset(offsetX, offsetY) if
+  // tabParent was not null, but tabParent was always null.
 
   iframe.addEventListener("mozbrowserloadend", function onloadend(e) {
     iframe.sendMouseEvent("mousedown", x, y, 0, 1, 0);

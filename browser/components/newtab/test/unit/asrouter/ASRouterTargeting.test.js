@@ -70,4 +70,23 @@ describe("#CachedTargetingGetter", () => {
     assert.isDefined(result);
     assert.equal(result.id, "FXA_1");
   });
+  describe("combineContexts", () => {
+    it("should combine the properties of the two objects", () => {
+      const joined = ASRouterTargeting.combineContexts({
+        get foo() { return "foo"; },
+      }, {
+        get bar() { return "bar"; },
+      });
+      assert.propertyVal(joined, "foo", "foo");
+      assert.propertyVal(joined, "bar", "bar");
+    });
+    it("should warn when properties overlap", () => {
+      ASRouterTargeting.combineContexts({
+        get foo() { return "foo"; },
+      }, {
+        get foo() { return "bar"; },
+      });
+      assert.calledOnce(global.Cu.reportError);
+    });
+  });
 });

@@ -87,7 +87,7 @@ INVALID_MANIFESTS = [{'apps': 'firefox',
 
 @pytest.mark.parametrize('app', ['firefox', 'chrome', 'geckoview', 'refbrow', 'fenix'])
 def test_get_browser_test_list(app):
-    test_list = get_browser_test_list(app)
+    test_list = get_browser_test_list(app, run_local=True)
     if app != "fenix":
         assert len(test_list) > 0
     else:
@@ -108,7 +108,7 @@ def test_get_raptor_test_list_firefox(create_args):
     args = create_args()
 
     test_list = get_raptor_test_list(args, mozinfo.os)
-    assert len(test_list) == 3
+    assert len(test_list) == 4
 
     subtests = ['raptor-tp6-google-firefox', 'raptor-tp6-amazon-firefox',
                 'raptor-tp6-facebook-firefox', 'raptor-tp6-youtube-firefox']
@@ -127,13 +127,12 @@ def test_get_raptor_test_list_chrome(create_args):
 
 
 def test_get_raptor_test_list_geckoview(create_args):
-    return
-#   args = create_args(app="geckoview",
-#                      test="raptor-unity-webgl")
-#
-#   test_list = get_raptor_test_list(args, mozinfo.os)
-#   assert len(test_list) == 1
-#   assert test_list[0]['name'] == 'raptor-unity-webgl-geckoview'
+    args = create_args(app="geckoview",
+                       test="raptor-unity-webgl")
+
+    test_list = get_raptor_test_list(args, mozinfo.os)
+    assert len(test_list) == 1
+    assert test_list[0]['name'] == 'raptor-unity-webgl-geckoview'
 
 
 def test_get_raptor_test_list_gecko_profiling(create_args):
