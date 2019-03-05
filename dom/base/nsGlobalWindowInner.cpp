@@ -5927,7 +5927,7 @@ void nsGlobalWindowInner::SyncGamepadState() {
   if (mHasSeenGamepadInput) {
     RefPtr<GamepadManager> gamepadManager(GamepadManager::GetService());
     for (auto iter = mGamepads.Iter(); !iter.Done(); iter.Next()) {
-      gamepadManager->SyncGamepadState(iter.Key(), iter.UserData());
+      gamepadManager->SyncGamepadState(iter.Key(), this, iter.UserData());
     }
   }
 }
