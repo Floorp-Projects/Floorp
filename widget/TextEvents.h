@@ -299,6 +299,22 @@ class WidgetKeyboardEvent : public WidgetInputEvent {
     return result;
   }
 
+  bool CanUserGestureActivateTarget() const {
+    // Printable keys, 'carriage return' and 'space' are supported user gestures
+    // for activating the document. However, if supported key is being pressed
+    // combining with other operation keys, such like alt, control ..etc., we
+    // won't activate the target for them because at that time user might
+    // interact with browser or window manager which doesn't necessarily
+    // demonstrate user's intent to play media.
+    const bool isCombiningWithOperationKeys = (IsControl() && !IsAltGraph()) ||
+                                              (IsAlt() && !IsAltGraph()) ||
+                                              IsMeta() || IsOS();
+    const bool isEnterOrSpaceKey =
+        mKeyNameIndex == KEY_NAME_INDEX_Enter || mKeyCode == NS_VK_SPACE;
+    return (PseudoCharCode() || isEnterOrSpaceKey) &&
+           !isCombiningWithOperationKeys;
+  }
+
   // OS translated Unicode chars which are used for accesskey and accelkey
   // handling. The handlers will try from first character to last character.
   nsTArray<AlternativeCharCode> mAlternativeCharCodes;
