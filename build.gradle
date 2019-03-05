@@ -86,8 +86,6 @@ buildscript {
         classpath 'com.getkeepsafe.dexcount:dexcount-gradle-plugin:0.8.2'
         classpath 'org.apache.commons:commons-exec:1.3'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-        // Downloading archives from Taskcluster.
-        classpath 'de.undercouch:gradle-download-task:3.4.3'
     }
 }
 

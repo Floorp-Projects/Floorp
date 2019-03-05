@@ -1,21 +1,5 @@
 buildDir "${topobjdir}/gradle/build/mobile/android/geckoview"
 
-buildscript {
-    repositories {
-        gradle.mozconfig.substs.GRADLE_MAVEN_REPOSITORIES.each { repository ->
-            maven {
-                url repository
-            }
-        }
-    }
-
-    // Used in fat_aar.gradle.  See
-    // http://gradle.1045684.n5.nabble.com/Issue-with-imports-in-external-build-scripts-tp3322487p3322906.html.
-    dependencies {
-        classpath 'commons-codec:commons-codec:1.11'
-    }
-}
-
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 
@@ -331,20 +315,10 @@ publishing {
                     groupId = 'org.mozilla.geckoview'
 
                     if (mozconfig.substs.MOZ_UPDATE_CHANNEL == 'release') {
-                        // Release artifacts don't specify the channel, for the sake of simplicity.
-                        artifactId = 'geckoview'
+                        // release artifacts don't specify the channel, for the sake of simplicity
+                        artifactId = "geckoview-${mozconfig.substs.ANDROID_CPU_ARCH}"
                     } else {
-                        artifactId = "geckoview-${mozconfig.substs.MOZ_UPDATE_CHANNEL}"
-                    }
-
-                    if (mozconfig.substs.MOZILLA_OFFICIAL && !mozconfig.substs.MOZ_ANDROID_FAT_AAR_TARGETS) {
-                        // In automation, per-architecture artifacts identify
-                        // the architecture; multi-architecture artifacts don't.
-                        // When building locally, we produce a "skinny AAR" with
-                        // one target architecture masquerading as a "fat AAR"
-                        // to enable Gradle composite builds to substitute this
-                        // project into consumers easily.
-                        artifactId = "${artifactId}-${mozconfig.substs.ANDROID_CPU_ARCH}"
+                        artifactId = "geckoview-${mozconfig.substs.MOZ_UPDATE_CHANNEL}-${mozconfig.substs.ANDROID_CPU_ARCH}"
                     }
 
                     url = 'https://wiki.mozilla.org/Mobile/GeckoView'
@@ -542,16 +516,4 @@ apiLint {
     changelogFileName = 'src/main/java/org/mozilla/geckoview/doc-files/CHANGELOG.md'
     skipClassesRegex = ['^org.mozilla.geckoview.BuildConfig$']
     lintFilters = ['GV']
-}
-
-// Plugin is always applied so that its dependencies are downloaded, even if the
-// functionality isn't used.
-apply plugin: 'de.undercouch.download'
-
-if (mozconfig.substs.MOZ_ANDROID_FAT_AAR_TARGETS) {
-    // This is frustrating, but here we are: frustrated.  See
-    // https://stackoverflow.com/a/37060550.
-    ext.DigestUtils = org.apache.commons.codec.digest.DigestUtils
-
-    apply from: "${topsrcdir}/mobile/android/geckoview/fat_aar.gradle"
 }
