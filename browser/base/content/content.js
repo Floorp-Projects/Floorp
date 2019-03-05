@@ -29,7 +29,7 @@ XPCOMUtils.defineLazyGetter(this, "LoginManagerContent", () => {
 });
 
 // NOTE: Much of this logic is duplicated in BrowserCLH.js for Android.
-addMessageListener("RemoteLogins:fillForm", function(message) {
+addMessageListener("PasswordManager:fillForm", function(message) {
   // intercept if ContextMenu.jsm had sent a plain object for remote targets
   message.objects.inputElement = ContextMenuChild.getTarget(global, message, "inputElement");
   LoginManagerContent.receiveMessage(message, content);

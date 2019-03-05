@@ -237,7 +237,7 @@ var LoginRecipesContent = {
     let mm = win.docShell.messageManager;
 
     log.warn("getRecipes: falling back to a synchronous message for:", aHost);
-    recipes = mm.sendSyncMessage("RemoteLogins:findRecipes", { formOrigin: aHost })[0];
+    recipes = mm.sendSyncMessage("PasswordManager:findRecipes", { formOrigin: aHost })[0];
     this.cacheRecipes(aHost, win, recipes);
 
     return recipes;
