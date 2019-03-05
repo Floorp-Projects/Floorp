@@ -3,12 +3,11 @@
 const TEST_PAGE = "http://mochi.test:8888/browser/browser/base/content/test/general/file_double_close_tab.html";
 var testTab;
 
-SpecialPowers.pushPrefEnv({"set": [["dom.require_user_interaction_for_beforeunload", false]]});
-
 function waitForDialog(callback) {
   function onTabModalDialogLoaded(node) {
     Services.obs.removeObserver(onTabModalDialogLoaded, "tabmodal-dialog-loaded");
-    callback(node);
+    // Allow dialog's onLoad call to run to completion
+    Promise.resolve().then(() => callback(node));
   }
 
   // Listen for the dialog being created
@@ -38,8 +37,9 @@ function waitForDialogDestroyed(node, callback) {
 }
 
 add_task(async function() {
-  testTab = gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
-  await promiseTabLoadEvent(testTab, TEST_PAGE);
+  await SpecialPowers.pushPrefEnv({"set": [["dom.require_user_interaction_for_beforeunload", false]]});
+
+  testTab = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_PAGE);
   // XXXgijs the reason this has nesting and callbacks rather than promises is
   // that DOM promises resolve on the next tick. So they're scheduled
   // in an event queue. So when we spin a new event queue for a modal dialog...
@@ -70,11 +70,13 @@ add_task(async function() {
   ok(!testTab.parentNode, "Tab should be closed completely");
 });
 
-registerCleanupFunction(function() {
+registerCleanupFunction(async function() {
   if (testTab.parentNode) {
     // Remove the handler, or closing this tab will prove tricky:
     try {
-      testTab.linkedBrowser.contentWindow.onbeforeunload = null;
+      await ContentTask.spawn(testTab.linkedBrowser, null, function() {
+        content.window.onbeforeunload = null;
+      });
     } catch (ex) {}
     gBrowser.removeTab(testTab);
   }
