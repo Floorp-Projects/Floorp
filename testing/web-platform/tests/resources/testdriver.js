@@ -197,7 +197,7 @@
         }
     };
 
-    var manual = {
+    window.test_driver_internal = {
         /**
          * This flag should be set to `true` by any code which implements the
          * internal methods defined below for automation purposes. Doing so
@@ -283,7 +283,4 @@
             return Promise.reject(new Error("unimplemented"));
         }
     };
-
-    window.test_driver_internal = Object.create(manual);
-
 })();
