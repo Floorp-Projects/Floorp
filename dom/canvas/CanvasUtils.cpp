@@ -49,7 +49,7 @@ namespace CanvasUtils {
 bool IsImageExtractionAllowed(Document* aDocument, JSContext* aCx,
                               nsIPrincipal& aPrincipal) {
   // Do the rest of the checks only if privacy.resistFingerprinting is on.
-  if (!nsContentUtils::ShouldResistFingerprinting()) {
+  if (!nsContentUtils::ShouldResistFingerprinting(aDocument)) {
     return true;
   }
 
