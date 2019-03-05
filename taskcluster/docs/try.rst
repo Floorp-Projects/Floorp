@@ -98,7 +98,7 @@ from the ``try_task_config.json`` like this:
       "version": 1,
       "tasks": [...],
       "templates": {
-        artifact: {"enabled": 1}
+        env: {"FOO": "bar"}
       }
     }
 
