@@ -214,6 +214,10 @@ const MozElementMixin = Base => class MozElement extends Base {
     } else {
       child.removeAttribute(attrNewName);
     }
+
+    if (attrNewName == "accesskey" && child.formatAccessKey) {
+      child.formatAccessKey(false);
+    }
   }
 
   /**
