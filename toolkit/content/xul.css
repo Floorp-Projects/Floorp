@@ -519,25 +519,17 @@ textbox {
   text-shadow: none;
 }
 
-textbox[multiline="true"] {
-  -moz-binding: url("chrome://global/content/bindings/textbox.xml#textarea");
-}
-
-html|textarea.textbox-textarea {
-  resize: none;
-}
-
-textbox[resizable="true"] > moz-input-box > html|textarea.textbox-textarea {
-  resize: both;
-}
-
 textbox[type="search"] {
   -moz-binding: url("chrome://global/content/bindings/textbox.xml#search-textbox");
 }
 
+/* Prefix with (xul|*):root to workaround HTML tests loading xul.css */
+:root html|textarea:not([resizable="true"]) {
+  resize: none;
+}
+
 @supports -moz-bool-pref("layout.css.emulate-moz-box-with-flex") {
-  html|*.textbox-input,
-  html|*.textbox-textarea {
+  html|*.textbox-input {
     /* Be block-level, so that -moz-box-flex can take effect, when we are an item
        in a -moz-box being emulated by modified modern flex. */
     display: block;
