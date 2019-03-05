@@ -828,12 +828,9 @@ void EventStateManager::NotifyTargetUserActivation(WidgetEvent* aEvent,
   }
 
   // Don't gesture activate for key events for keys which are likely
-  // to be interaction with the browser, OS, or likely to be scrolling.
+  // to be interaction with the browser, OS.
   WidgetKeyboardEvent* keyEvent = aEvent->AsKeyboardEvent();
-  if (keyEvent && (!keyEvent->PseudoCharCode() ||
-                   (keyEvent->IsControl() && !keyEvent->IsAltGraph()) ||
-                   (keyEvent->IsAlt() && !keyEvent->IsAltGraph()) ||
-                   keyEvent->IsMeta() || keyEvent->IsOS())) {
+  if (keyEvent && !keyEvent->CanUserGestureActivateTarget()) {
     return;
   }
 
