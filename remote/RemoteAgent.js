@@ -36,8 +36,12 @@ class ParentRemoteAgent {
     this.targets = new Targets();
 
     this.tabs = new TabObserver({registerExisting: true});
-    this.tabs.on("open", tab => this.targets.connect(tab.linkedBrowser));
-    this.tabs.on("close", tab => this.targets.disconnect(tab.linkedBrowser));
+    this.tabs.on("open", (eventName, tab) => {
+      this.targets.connect(tab.linkedBrowser);
+    });
+    this.tabs.on("close", (eventName, tab) => {
+      this.targets.disconnect(tab.linkedBrowser);
+    });
 
     // This allows getting access to the underlying JS object
     // of the '@mozilla.org/remote/agent' XPCOM components.

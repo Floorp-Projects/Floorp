@@ -12,7 +12,7 @@ var EXPORTED_SYMBOLS = [
 ];
 
 const {DOMContentLoadedPromise} = ChromeUtils.import("chrome://remote/content/Sync.jsm");
-const {EventEmitter} = ChromeUtils.import("chrome://remote/content/EventEmitter.jsm");
+const {EventEmitter} = ChromeUtils.import("resource://gre/modules/EventEmitter.jsm");
 const {Log} = ChromeUtils.import("chrome://remote/content/Log.jsm");
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -129,7 +129,7 @@ class TabObserver {
 
   // WindowObserver
 
-  async onWindowOpen(window) {
+  async onWindowOpen(eventName, window) {
     if (!window.gBrowser) {
       return;
     }

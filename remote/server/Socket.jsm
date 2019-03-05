@@ -11,7 +11,7 @@ var EXPORTED_SYMBOLS = [
 
 // This is an XPCOM-service-ified copy of ../devtools/shared/security/socket.js.
 
-const {EventEmitter} = ChromeUtils.import("chrome://remote/content/EventEmitter.jsm");
+const {EventEmitter} = ChromeUtils.import("resource://gre/modules/EventEmitter.jsm");
 const {Log} = ChromeUtils.import("chrome://remote/content/Log.jsm");
 const {Preferences} = ChromeUtils.import("resource://gre/modules/Preferences.jsm");
 const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -135,7 +135,7 @@ this.SocketListener = class SocketListener {
     return null;
   }
 
-  onAllowedConnection(transport) {
+  onAllowedConnection(eventName, transport) {
     this.emit("accepted", transport, this);
   }
 
