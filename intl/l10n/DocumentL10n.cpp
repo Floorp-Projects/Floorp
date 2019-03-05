@@ -16,6 +16,12 @@
 #include "nsContentUtils.h"
 #include "xpcprivate.h"
 
+#define INTL_APP_LOCALES_CHANGED "intl:app-locales-changed"
+
+#define L10N_PSEUDO_PREF "intl.l10n.pseudo"
+
+static const char* kObservedPrefs[] = {L10N_PSEUDO_PREF, nullptr};
+
 namespace mozilla {
 namespace dom {
 
@@ -63,15 +69,28 @@ PromiseResolver::~PromiseResolver() { mPromise = nullptr; }
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(DocumentL10n, mDocument, mDOMLocalization,
                                       mContentSink, mReady)
 
-NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(DocumentL10n, AddRef)
-NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(DocumentL10n, Release)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(DocumentL10n)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(DocumentL10n)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DocumentL10n)
+  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIObserver)
+  NS_INTERFACE_MAP_ENTRY(nsIObserver)
+  NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
+NS_INTERFACE_MAP_END
 
 DocumentL10n::DocumentL10n(Document* aDocument)
     : mDocument(aDocument), mState(DocumentL10nState::Initialized) {
   mContentSink = do_QueryInterface(aDocument->GetCurrentContentSink());
 }
 
-DocumentL10n::~DocumentL10n() {}
+DocumentL10n::~DocumentL10n() {
+  nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+  if (obs) {
+    obs->RemoveObserver(this, INTL_APP_LOCALES_CHANGED);
+  }
+
+  Preferences::RemoveObservers(this, kObservedPrefs);
+}
 
 bool DocumentL10n::Init(nsTArray<nsString>& aResourceIds) {
   nsCOMPtr<mozIDOMLocalizationJSM> jsm =
@@ -105,11 +124,39 @@ bool DocumentL10n::Init(nsTArray<nsString>& aResourceIds) {
   // DOMLocalization to allow it to retranslate
   // the document when locale changes or pseudolocalization
   // gets turned on.
-  if (NS_FAILED(mDOMLocalization->RegisterObservers())) {
-    return false;
-  }
+  RegisterObservers();
 
   return true;
+}
+
+void DocumentL10n::RegisterObservers() {
+  DebugOnly<nsresult> rv = Preferences::AddWeakObservers(this, kObservedPrefs);
+  MOZ_ASSERT(NS_SUCCEEDED(rv), "Adding observers failed.");
+
+  nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+  if (obs) {
+    obs->AddObserver(this, INTL_APP_LOCALES_CHANGED, true);
+  }
+}
+
+NS_IMETHODIMP
+DocumentL10n::Observe(nsISupports* aSubject, const char* aTopic,
+                      const char16_t* aData) {
+  if (!strcmp(aTopic, INTL_APP_LOCALES_CHANGED)) {
+    if (mDOMLocalization) {
+      mDOMLocalization->OnChange();
+    }
+  } else {
+    MOZ_ASSERT(!strcmp("nsPref:changed", aTopic));
+    nsDependentString pref(aData);
+    if (pref.EqualsLiteral(L10N_PSEUDO_PREF)) {
+      if (mDOMLocalization) {
+        mDOMLocalization->OnChange();
+      }
+    }
+  }
+
+  return NS_OK;
 }
 
 void DocumentL10n::Destroy() {
