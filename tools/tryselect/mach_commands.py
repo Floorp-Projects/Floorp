@@ -147,9 +147,21 @@ class TrySelect(MachCommandBase):
 
         return kwargs
 
+    def handle_templates(self, **kwargs):
+        kwargs.setdefault('templates', {})
+        for cls in self.parser.templates.itervalues():
+            context = cls.context(**kwargs)
+            if context is not None:
+                kwargs['templates'].update(context)
+
+        return kwargs
+
     def run(self, **kwargs):
         if 'preset' in self.parser.common_groups:
             kwargs = self.handle_presets(**kwargs)
+
+        if self.parser.templates:
+            kwargs = self.handle_templates(**kwargs)
 
         mod = importlib.import_module('tryselect.selectors.{}'.format(self.subcommand))
         return mod.run(**kwargs)

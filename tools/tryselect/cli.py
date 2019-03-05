@@ -99,7 +99,6 @@ class BaseTryParser(ArgumentParser):
                 group.add_argument(*cli, **kwargs)
 
         group = self.add_argument_group("template arguments")
-        self.set_defaults(templates={})
         self.templates = {t: all_templates[t]() for t in self.templates}
         for template in self.templates.values():
             template.add_arguments(group)
@@ -120,11 +119,4 @@ class BaseTryParser(ArgumentParser):
     def parse_known_args(self, *args, **kwargs):
         args, remainder = ArgumentParser.parse_known_args(self, *args, **kwargs)
         self.validate(args)
-
-        if self.templates:
-            for cls in self.templates.itervalues():
-                context = cls.context(**vars(args))
-                if context is not None:
-                    args.templates.update(context)
-
         return args, remainder
