@@ -1,3 +1,6 @@
+/* Any copyright is dedicated to the Public Domain.
+   http://creativecommons.org/publicdomain/zero/1.0/ */
+
 /*
  * Tests that when the default application claims the old-style default profile
  * it locks it to itself.
