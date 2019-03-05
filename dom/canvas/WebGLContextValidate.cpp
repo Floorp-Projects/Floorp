@@ -471,14 +471,6 @@ bool WebGLContext::InitAndValidateGL(FailureReason* const out_failReason) {
   gl->fGetFloatv(driverPName, mGLAliasedPointSizeRange);
 
   ////////////////
-  bool shouldResistFingerprinting =
-      mCanvasElement ?
-                     // If we're constructed from a canvas element
-          nsContentUtils::ShouldResistFingerprinting(GetOwnerDoc())
-                     :
-                     // If we're constructed from an offscreen canvas
-          nsContentUtils::ShouldResistFingerprinting(
-              mOffscreenCanvas->GetOwnerGlobal()->PrincipalOrNull());
 
   if (gfxPrefs::WebGLMinCapabilityMode()) {
     bool ok = true;
@@ -513,7 +505,7 @@ bool WebGLContext::InitAndValidateGL(FailureReason* const out_failReason) {
     }
 
     mDisableFragHighP = true;
-  } else if (shouldResistFingerprinting) {
+  } else if (nsContentUtils::ShouldResistFingerprinting()) {
     bool ok = true;
 
     ok &= RestrictCap(&mGLMaxTextureSize, kCommonMaxTextureSize);

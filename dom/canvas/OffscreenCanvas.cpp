@@ -255,9 +255,7 @@ already_AddRefed<Promise> OffscreenCanvas::ToBlob(JSContext* aCx,
   // so that we can decide when usePlaceholder should be true/false?
   // See https://trac.torproject.org/18599
   // For now, we always return a placeholder if fingerprinting resistance is on.
-  dom::WorkerPrivate* workerPrivate = dom::GetCurrentThreadWorkerPrivate();
-  bool usePlaceholder =
-      nsContentUtils::ShouldResistFingerprinting(workerPrivate->GetPrincipal());
+  bool usePlaceholder = nsContentUtils::ShouldResistFingerprinting();
   CanvasRenderingContextHelper::ToBlob(aCx, global, callback, aType, aParams,
                                        usePlaceholder, aRv);
 
