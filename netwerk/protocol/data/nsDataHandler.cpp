@@ -51,6 +51,13 @@ NS_IMETHODIMP
 nsDataHandler::NewURI(const nsACString& aSpec,
                       const char* aCharset,  // ignore charset info
                       nsIURI* aBaseURI, nsIURI** result) {
+  return nsDataHandler::CreateNewURI(aSpec, aCharset, aBaseURI, result);
+}
+
+/* static */ nsresult nsDataHandler::CreateNewURI(const nsACString& aSpec,
+                                                  const char* aCharset,
+                                                  nsIURI* aBaseURI,
+                                                  nsIURI** result) {
   nsresult rv;
   nsCOMPtr<nsIURI> uri;
 
