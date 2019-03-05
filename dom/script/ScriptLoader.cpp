@@ -2899,6 +2899,8 @@ void ScriptLoader::EncodeRequestBytecode(JSContext* aCx,
     return;
   }
 
+  MOZ_RELEASE_ASSERT(aRequest->mScriptBytecode.length() == n);
+
   bytecodeFailed.release();
   TRACE_FOR_TEST_NONE(aRequest->Element(), "scriptloader_bytecode_saved");
 }

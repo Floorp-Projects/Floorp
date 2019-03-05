@@ -165,6 +165,12 @@ void DrawTargetOffset::PushLayer(bool aOpaque, Float aOpacity,
   SetPermitSubpixelAA(mDrawTarget->GetPermitSubpixelAA());
 }
 
+already_AddRefed<SourceSurface> DrawTargetOffset::IntoLuminanceSource(
+    LuminanceType aLuminanceType, float aOpacity) {
+  return MakeAndAddRef<SourceSurfaceOffset>(
+      DrawTarget::IntoLuminanceSource(aLuminanceType, aOpacity), mOrigin);
+}
+
 void DrawTargetOffset::PushLayerWithBlend(bool aOpaque, Float aOpacity,
                                           SourceSurface* aMask,
                                           const Matrix& aMaskTransform,

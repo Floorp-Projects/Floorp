@@ -2001,21 +2001,20 @@ inline bool RecordedCreateClippedDrawTarget::PlayEvent(
   const IntRect baseRect = aTranslator->GetReferenceDrawTarget()->GetRect();
   const IntRect transformedRect = RoundedToInt(
       mTransform.Inverse().TransformBounds(IntRectToRect(baseRect)));
-  const IntRect intersection =
+  IntRect intersection =
       IntRect(IntPoint(0, 0), mMaxSize).Intersect(transformedRect);
+
+  // Making 0 size DrawTargets isn't great. So let's make sure we have a size of
+  // at least 1
+  if (intersection.width == 0) intersection.width = 1;
+  if (intersection.height == 0) intersection.height = 1;
 
   RefPtr<DrawTarget> newDT =
       aTranslator->GetReferenceDrawTarget()->CreateSimilarDrawTarget(
-          intersection.Size(), SurfaceFormat::A8);
+          intersection.Size(), mFormat);
   // It's overkill to use a TiledDrawTarget for a single tile
   // but it was the easiest way to get the offset handling working
-  gfx::TileSet tileset;
-  gfx::Tile tile;
-  tile.mDrawTarget = newDT;
-  tile.mTileOrigin = gfx::IntPoint(intersection.X(), intersection.Y());
-  tileset.mTiles = &tile;
-  tileset.mTileCount = 1;
-  newDT = gfx::Factory::CreateTiledDrawTarget(tileset);
+  newDT = gfx::Factory::CreateOffsetDrawTarget(newDT, intersection.TopLeft());
 
   // If we couldn't create a DrawTarget this will probably cause us to crash
   // with nullptr later in the playback, so return false to abort.

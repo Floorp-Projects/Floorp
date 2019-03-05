@@ -84,11 +84,15 @@ already_AddRefed<SourceSurface> nsSVGMaskFrame::GetMaskForMaskedFrame(
 
   RefPtr<DrawTarget> maskDT;
   if (maskType == NS_STYLE_MASK_TYPE_LUMINANCE) {
-    maskDT = context->GetDrawTarget()->CreateSimilarDrawTarget(
-        maskSurfaceSize, SurfaceFormat::B8G8R8A8);
+    maskDT = context->GetDrawTarget()->CreateClippedDrawTarget(
+        maskSurfaceSize,
+        Matrix::Translation(maskSurfaceRect.x, maskSurfaceRect.y),
+        SurfaceFormat::B8G8R8A8);
   } else {
-    maskDT = context->GetDrawTarget()->CreateSimilarDrawTarget(
-        maskSurfaceSize, SurfaceFormat::A8);
+    maskDT = context->GetDrawTarget()->CreateClippedDrawTarget(
+        maskSurfaceSize,
+        Matrix::Translation(maskSurfaceRect.x, maskSurfaceRect.y),
+        SurfaceFormat::A8);
   }
 
   if (!maskDT || !maskDT->IsValid()) {
