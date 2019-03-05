@@ -17,7 +17,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   ProtocolHandler: "chrome://remote/content/Handler.jsm",
   RecommendedPreferences: "chrome://remote/content/RecommendedPreferences.jsm",
   TabObserver: "chrome://remote/content/WindowManager.jsm",
-  Target: "chrome://remote/content/Target.jsm",
   Targets: "chrome://remote/content/Targets.jsm",
   TargetListHandler: "chrome://remote/content/Handler.jsm",
 });
