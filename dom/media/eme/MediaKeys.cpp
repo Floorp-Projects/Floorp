@@ -35,14 +35,37 @@ namespace mozilla {
 
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(MediaKeys, mElement, mParent,
-                                      mKeySessions, mPromises,
-                                      mPendingSessions);
+// We don't use NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE because we need to
+// unregister our MediaKeys from mDocument's activity listeners. If we don't do
+// this then cycle collection can null mDocument before our dtor runs and the
+// observer ptr held by mDocument will dangle.
+NS_IMPL_CYCLE_COLLECTION_CLASS(MediaKeys)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(MediaKeys)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mElement)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mParent)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mKeySessions)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPromises)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPendingSessions)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocument)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+NS_IMPL_CYCLE_COLLECTION_TRACE_WRAPPERCACHE(MediaKeys)
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(MediaKeys)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mElement)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mParent)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mKeySessions)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mPromises)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mPendingSessions)
+  tmp->UnregisterActivityObserver();
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocument)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
 NS_IMPL_CYCLE_COLLECTING_ADDREF(MediaKeys)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(MediaKeys)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(MediaKeys)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
+  NS_INTERFACE_MAP_ENTRY(nsIDocumentActivity)
 NS_INTERFACE_MAP_END
 
 MediaKeys::MediaKeys(nsPIDOMWindowInner* aParent, const nsAString& aKeySystem,
@@ -56,8 +79,36 @@ MediaKeys::MediaKeys(nsPIDOMWindowInner* aParent, const nsAString& aKeySystem,
 }
 
 MediaKeys::~MediaKeys() {
+  UnregisterActivityObserver();
+  mDocument = nullptr;
   Shutdown();
   EME_LOG("MediaKeys[%p] destroyed", this);
+}
+
+void MediaKeys::RegisterActivityObserver() {
+  MOZ_ASSERT(mDocument);
+  if (mDocument) {
+    mDocument->RegisterActivityObserver(this);
+  }
+}
+
+void MediaKeys::UnregisterActivityObserver() {
+  if (mDocument) {
+    mDocument->UnregisterActivityObserver(this);
+  }
+}
+
+// NS_DECL_NSIDOCUMENTACTIVITY
+void MediaKeys::NotifyOwnerDocumentActivityChanged() {
+  EME_LOG("MediaKeys[%p] NotifyOwnerDocumentActivityChanged()", this);
+  // If our owning document is no longer active we should shutdown.
+  if (!mDocument->IsCurrentActiveDocument()) {
+    EME_LOG(
+        "MediaKeys[%p] NotifyOwnerDocumentActivityChanged() owning document is "
+        "not active, shutting down!",
+        this);
+    Shutdown();
+  }
 }
 
 void MediaKeys::Terminated() {
@@ -378,7 +429,9 @@ already_AddRefed<DetailedPromise> MediaKeys::Init(ErrorResult& aRv) {
     return promise.forget();
   }
 
-  mTopLevelPrincipal = top->GetExtantDoc()->NodePrincipal();
+  mDocument = top->GetExtantDoc();
+
+  mTopLevelPrincipal = mDocument->NodePrincipal();
 
   if (!mPrincipal || !mTopLevelPrincipal) {
     NS_WARNING("Failed to get principals when creating MediaKeys");
@@ -428,6 +481,8 @@ already_AddRefed<DetailedPromise> MediaKeys::Init(ErrorResult& aRv) {
   mProxy->Init(mCreatePromiseId, NS_ConvertUTF8toUTF16(origin),
                NS_ConvertUTF8toUTF16(topLevelOrigin),
                KeySystemToGMPName(mKeySystem));
+
+  RegisterActivityObserver();
 
   return promise.forget();
 }
