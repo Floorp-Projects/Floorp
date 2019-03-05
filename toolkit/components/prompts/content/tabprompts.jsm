@@ -245,8 +245,8 @@ var TabModalPrompt = class {
   }
 
   onResize() {
-    let availWidth = this.element.clientWidth;
-    let availHeight = this.element.clientHeight;
+    let availWidth = this.clientWidth;
+    let availHeight = this.clientHeight;
     if (availWidth == this.availWidth && availHeight == this.availHeight)
       return;
     this.availWidth = availWidth;
