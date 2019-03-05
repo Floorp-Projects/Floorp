@@ -95,7 +95,7 @@ class HomeFragment : Fragment() {
         tabsComponent.tabList.isNestedScrollingEnabled = false
         sessionsComponent.view.isNestedScrollingEnabled = false
 
-        val bundles = requireComponents.core.sessionStorage.bundles(temporaryNumberOfSessions)
+        val bundles = requireComponents.core.sessionStorage.bundles(limit = temporaryNumberOfSessions)
 
         bundles.observe(this, Observer { sessionBundles ->
             val archivedSessions = sessionBundles
