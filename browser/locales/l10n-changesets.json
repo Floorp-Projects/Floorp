@@ -303,7 +303,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "73dc50ad8f79"
+        "revision": "486391846f97"
     },
     "de": {
         "platforms": [
@@ -320,7 +320,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "2682d385a043"
+        "revision": "09d039762d46"
     },
     "dsb": {
         "platforms": [
@@ -422,7 +422,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "cda8d47f8fd3"
+        "revision": "41ce74b5462b"
     },
     "es-AR": {
         "platforms": [
@@ -473,7 +473,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "6d0192bcfb0d"
+        "revision": "09efc76ebbf8"
     },
     "es-MX": {
         "platforms": [
