@@ -2074,15 +2074,6 @@ bool nsContentUtils::ShouldResistFingerprinting(const Document* aDoc) {
 }
 
 /* static */
-bool nsContentUtils::ShouldResistFingerprinting(nsIPrincipal* aPrincipal) {
-  if (!aPrincipal) {
-    return false;
-  }
-  bool isChrome = nsContentUtils::IsSystemPrincipal(aPrincipal);
-  return !isChrome && ShouldResistFingerprinting();
-}
-
-/* static */
 bool nsContentUtils::UseStandinsForNativeColors() {
   return ShouldResistFingerprinting() ||
          StaticPrefs::ui_use_standins_for_native_colors();
