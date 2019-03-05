@@ -1685,12 +1685,12 @@ static void SetupLauncherProcessPref() {
   // In addition to the launcher pref itself, we also tie the launcher process
   // state to the SHIELD opt-out pref.
 
-#    if defined(NIGHTLY_BUILD)
+#    if defined(NIGHTLY_BUILD) || (MOZ_UPDATE_CHANNEL == beta)
   // On Nightly, fire the callback immediately to ensure the pref is reflected
   // to the registry and we get immediate enablement of the launcher process
   // for all users.
   Preferences::RegisterCallbackAndCall(&OnLauncherPrefChanged, kShieldPrefName);
-#    endif  // defined(NIGHTLY_BUILD)
+#    endif  // defined(NIGHTLY_BUILD) || (MOZ_UPDATE_CHANNEL == beta)
 
   mozilla::LauncherRegistryInfo launcherRegInfo;
 
@@ -1710,11 +1710,11 @@ static void SetupLauncherProcessPref() {
 
   Preferences::RegisterCallback(&OnLauncherPrefChanged,
                                 PREF_WIN_LAUNCHER_PROCESS_ENABLED);
-#    if !defined(NIGHTLY_BUILD)
+#    if !defined(NIGHTLY_BUILD) && (MOZ_UPDATE_CHANNEL != beta)
   // We register for SHIELD notifications, but we don't fire the callback
   // immediately in the non-Nightly case.
   Preferences::RegisterCallback(&OnLauncherPrefChanged, kShieldPrefName);
-#    endif  // !defined(NIGHTLY_BUILD)
+#    endif  // !defined(NIGHTLY_BUILD) && (MOZ_UPDATE_CHANNEL != beta)
 }
 
 #  endif  // defined(MOZ_LAUNCHER_PROCESS)

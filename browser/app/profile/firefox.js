@@ -1833,13 +1833,13 @@ pref("browser.engagement.recent_visited_origins.expiry", 86400); // 24 * 60 * 60
 pref("browser.aboutConfig.showWarning", true);
 
 #if defined(XP_WIN) && defined(MOZ_LAUNCHER_PROCESS)
-#if defined(NIGHTLY_BUILD)
+#if defined(NIGHTLY_BUILD) || (MOZ_UPDATE_CHANNEL == beta)
 // Enable launcher process by default on Nightly
 pref("browser.launcherProcess.enabled", true);
 #else
 // Launcher process is disabled by default, will be selectively enabled via SHIELD
 pref("browser.launcherProcess.enabled", false);
-#endif  // defined(NIGHTLY_BUILD)
-#endif // defined(XP_WIN) && defined(MOZ_LAUNCHER_PROCESS)
+#endif  // defined(NIGHTLY_BUILD) || (MOZ_UPDATE_CHANNEL == beta)
+#endif  // defined(XP_WIN) && defined(MOZ_LAUNCHER_PROCESS)
 
 pref("browser.toolbars.keyboard_navigation", false);
