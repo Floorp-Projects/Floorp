@@ -85,6 +85,7 @@ void MediaKeys::Terminated() {
 }
 
 void MediaKeys::Shutdown() {
+  EME_LOG("MediaKeys[%p]::Shutdown()", this);
   if (mProxy) {
     mProxy->Shutdown();
     mProxy = nullptr;
@@ -159,10 +160,11 @@ PromiseId MediaKeys::StorePromise(DetailedPromise* aPromise) {
   MOZ_ASSERT(aPromise);
   uint32_t id = sEMEPromiseCount++;
 
-  EME_LOG("MediaKeys[%p]::StorePromise() id=%d", this, id);
+  EME_LOG("MediaKeys[%p]::StorePromise() id=%" PRIu32, this, id);
 
   // Keep MediaKeys alive for the lifetime of its promises. Any still-pending
   // promises are rejected in Shutdown().
+  EME_LOG("MediaKeys[%p]::StorePromise() calling AddRef()", this);
   AddRef();
 
 #ifdef DEBUG
@@ -186,25 +188,34 @@ void MediaKeys::ConnectPendingPromiseIdWithToken(PromiseId aId,
 }
 
 already_AddRefed<DetailedPromise> MediaKeys::RetrievePromise(PromiseId aId) {
+  EME_LOG("MediaKeys[%p]::RetrievePromise(aId=%" PRIu32 ")", this, aId);
   if (!mPromises.Contains(aId)) {
-    NS_WARNING(
-        nsPrintfCString("Tried to retrieve a non-existent promise id=%d", aId)
-            .get());
+    EME_LOG("MediaKeys[%p]::RetrievePromise(aId=%" PRIu32
+            ") tried to retrieve non-existent promise!",
+            this, aId);
+    NS_WARNING(nsPrintfCString(
+                   "Tried to retrieve a non-existent promise id=%" PRIu32, aId)
+                   .get());
     return nullptr;
   }
   RefPtr<DetailedPromise> promise;
   mPromises.Remove(aId, getter_AddRefs(promise));
+  EME_LOG("MediaKeys[%p]::RetrievePromise(aId=%" PRIu32 ") calling Release()",
+          this, aId);
   Release();
   return promise.forget();
 }
 
 void MediaKeys::RejectPromise(PromiseId aId, nsresult aExceptionCode,
                               const nsCString& aReason) {
-  EME_LOG("MediaKeys[%p]::RejectPromise(%d, 0x%" PRIx32 ")", this, aId,
+  EME_LOG("MediaKeys[%p]::RejectPromise(%" PRIu32 ", 0x%" PRIx32 ")", this, aId,
           static_cast<uint32_t>(aExceptionCode));
 
   RefPtr<DetailedPromise> promise(RetrievePromise(aId));
   if (!promise) {
+    EME_LOG("MediaKeys[%p]::RejectPromise(%" PRIu32 ", 0x%" PRIx32
+            ") couldn't retrieve promise! Bailing!",
+            this, aId, static_cast<uint32_t>(aExceptionCode));
     return;
   }
 
@@ -224,6 +235,9 @@ void MediaKeys::RejectPromise(PromiseId aId, nsresult aExceptionCode,
 
   if (mCreatePromiseId == aId) {
     // Note: This will probably destroy the MediaKeys object!
+    EME_LOG("MediaKeys[%p]::RejectPromise(%" PRIu32 ", 0x%" PRIx32
+            ") calling Release()",
+            this, aId, static_cast<uint32_t>(aExceptionCode));
     Release();
   }
 }
@@ -251,7 +265,7 @@ void MediaKeys::OnSessionIdReady(MediaKeySession* aSession) {
 }
 
 void MediaKeys::ResolvePromise(PromiseId aId) {
-  EME_LOG("MediaKeys[%p]::ResolvePromise(%d)", this, aId);
+  EME_LOG("MediaKeys[%p]::ResolvePromise(%" PRIu32 ")", this, aId);
 
   RefPtr<DetailedPromise> promise(RetrievePromise(aId));
   MOZ_ASSERT(!mPromises.Contains(aId));
@@ -308,6 +322,7 @@ class MediaKeysGMPCrashHelper : public GMPCrashHelper {
 
 already_AddRefed<CDMProxy> MediaKeys::CreateCDMProxy(
     nsIEventTarget* aMainThread) {
+  EME_LOG("MediaKeys[%p]::CreateCDMProxy()", this);
   RefPtr<CDMProxy> proxy;
 #ifdef MOZ_WIDGET_ANDROID
   if (IsWidevineKeySystem(mKeySystem)) {
@@ -329,6 +344,7 @@ already_AddRefed<CDMProxy> MediaKeys::CreateCDMProxy(
 }
 
 already_AddRefed<DetailedPromise> MediaKeys::Init(ErrorResult& aRv) {
+  EME_LOG("MediaKeys[%p]::Init()", this);
   RefPtr<DetailedPromise> promise(
       MakePromise(aRv, NS_LITERAL_CSTRING("MediaKeys::Init()")));
   if (aRv.Failed()) {
@@ -407,6 +423,7 @@ already_AddRefed<DetailedPromise> MediaKeys::Init(ErrorResult& aRv) {
   // rejected.
   MOZ_ASSERT(!mCreatePromiseId, "Should only be created once!");
   mCreatePromiseId = StorePromise(promise);
+  EME_LOG("MediaKeys[%p]::Init() calling AddRef()", this);
   AddRef();
   mProxy->Init(mCreatePromiseId, NS_ConvertUTF8toUTF16(origin),
                NS_ConvertUTF8toUTF16(topLevelOrigin),
@@ -416,14 +433,19 @@ already_AddRefed<DetailedPromise> MediaKeys::Init(ErrorResult& aRv) {
 }
 
 void MediaKeys::OnCDMCreated(PromiseId aId, const uint32_t aPluginId) {
+  EME_LOG("MediaKeys[%p]::OnCDMCreated(aId=%" PRIu32 ", aPluginId=%" PRIu32 ")",
+          this, aId, aPluginId);
   RefPtr<DetailedPromise> promise(RetrievePromise(aId));
   if (!promise) {
     return;
   }
   RefPtr<MediaKeys> keys(this);
-  EME_LOG("MediaKeys[%p]::OnCDMCreated() resolve promise id=%d", this, aId);
+
   promise->MaybeResolve(keys);
   if (mCreatePromiseId == aId) {
+    EME_LOG("MediaKeys[%p]::OnCDMCreated(aId=%" PRIu32 ", aPluginId=%" PRIu32
+            ") calling Release()",
+            this, aId, aPluginId);
     Release();
   }
 
@@ -446,8 +468,10 @@ static bool IsSessionTypeSupported(const MediaKeySessionType aSessionType,
 
 already_AddRefed<MediaKeySession> MediaKeys::CreateSession(
     JSContext* aCx, MediaKeySessionType aSessionType, ErrorResult& aRv) {
+  EME_LOG("MediaKeys[%p]::CreateSession(aCx=%p, aSessionType=%" PRIu8 ")", this,
+          aCx, static_cast<uint8_t>(aSessionType));
   if (!IsSessionTypeSupported(aSessionType, mConfig)) {
-    EME_LOG("MediaKeys[%p] CreateSession() failed, unsupported session type",
+    EME_LOG("MediaKeys[%p]::CreateSession() failed, unsupported session type",
             this);
     aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
     return nullptr;
@@ -470,13 +494,17 @@ already_AddRefed<MediaKeySession> MediaKeys::CreateSession(
   DDLINKCHILD("session", session.get());
 
   // Add session to the set of sessions awaiting their sessionId being ready.
+  EME_LOG("MediaKeys[%p]::CreateSession(aCx=%p, aSessionType=%" PRIu8
+          ") putting session with token=%" PRIu32 " into mPendingSessions",
+          this, aCx, static_cast<uint8_t>(aSessionType), session->Token());
   mPendingSessions.Put(session->Token(), session);
 
   return session.forget();
 }
 
 void MediaKeys::OnSessionLoaded(PromiseId aId, bool aSuccess) {
-  EME_LOG("MediaKeys[%p]::OnSessionLoaded() resolve promise id=%d", this, aId);
+  EME_LOG("MediaKeys[%p]::OnSessionLoaded() resolve promise id=%" PRIu32, this,
+          aId);
 
   ResolvePromiseWithResult(aId, aSuccess);
 }
@@ -506,6 +534,7 @@ already_AddRefed<MediaKeySession> MediaKeys::GetSession(
 
 already_AddRefed<MediaKeySession> MediaKeys::GetPendingSession(
     uint32_t aToken) {
+  EME_LOG("MediaKeys[%p]::GetPendingSession(aToken=%" PRIu32 ")", this, aToken);
   RefPtr<MediaKeySession> session;
   mPendingSessions.Get(aToken, getter_AddRefs(session));
   mPendingSessions.Remove(aToken);
@@ -601,8 +630,8 @@ void MediaKeys::ResolvePromiseWithKeyStatus(PromiseId aId,
   }
   RefPtr<MediaKeys> keys(this);
   EME_LOG(
-      "MediaKeys[%p]::ResolvePromiseWithKeyStatus() resolve promise id=%d, "
-      "keystatus=%" PRIu8,
+      "MediaKeys[%p]::ResolvePromiseWithKeyStatus() resolve promise id=%" PRIu32
+      ", keystatus=%" PRIu8,
       this, aId, static_cast<uint8_t>(aMediaKeyStatus));
   promise->MaybeResolve(aMediaKeyStatus);
 }
