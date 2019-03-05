@@ -905,6 +905,20 @@ bool nsIFrame::HasDisplayItem(nsDisplayItem* aItem) {
   return items->Contains(aItem);
 }
 
+bool nsIFrame::HasDisplayItem(uint32_t aKey) {
+  DisplayItemArray* items = GetProperty(DisplayItems());
+  if (!items) {
+    return false;
+  }
+
+  for (nsDisplayItem* i : *items) {
+    if (i->GetPerFrameKey() == aKey) {
+      return true;
+    }
+  }
+  return false;
+}
+
 void nsIFrame::RemoveDisplayItemDataForDeletion() {
   // Destroying a WebRenderUserDataTable can cause destruction of other objects
   // which can remove frame properties in their destructor. If we delete a frame
@@ -3404,17 +3418,46 @@ void nsIFrame::BuildDisplayListForStackingContext(
 static nsDisplayItem* WrapInWrapList(nsDisplayListBuilder* aBuilder,
                                      nsIFrame* aFrame, nsDisplayList* aList,
                                      const ActiveScrolledRoot* aContainerASR,
-                                     bool aCanSkipWrapList = false) {
+                                     bool aBuiltContainerItem = false) {
   nsDisplayItem* item = aList->GetBottom();
   if (!item) {
     return nullptr;
   }
 
-  if (aCanSkipWrapList) {
-    MOZ_ASSERT(!item->GetAbove());
+  // We need a wrap list if there are multiple items, or if the single
+  // item has a different frame.
+  bool needsWrapList = item->GetAbove() || item->Frame() != aFrame;
+
+  // If we don't need a wrap list, and we're doing a full build, or if
+  // we have an explicit container item that guarantees to wrap all other
+  // items then we can skip.
+  if (!needsWrapList && (!aBuilder->IsPartialUpdate() || aBuiltContainerItem)) {
     aList->RemoveBottom();
     return item;
   }
+
+  // If we're doing a partial build and we didn't need a wrap list
+  // previously then we can try to work from there.
+  if (aBuilder->IsPartialUpdate() &&
+      !aFrame->HasDisplayItem(uint32_t(DisplayItemType::TYPE_WRAP_LIST))) {
+    // If we now need a wrap list, mark this frame as modified so that merging
+    // removes the unwrapped item. We don't need to add to the dirty rect since
+    // not needing a wrap list means that we must have only had a display item
+    // from this frame, which we're already building items for. All new items
+    // will have already been included in the dirty area.
+    if (needsWrapList) {
+      aBuilder->MarkFrameModifiedDuringBuilding(aFrame);
+    } else {
+      aList->RemoveBottom();
+      return item;
+    }
+  }
+
+  // The last case is when we previously had a wrap list, but no longer
+  // need it. Unfortunately we can't differentiate this case from a partial
+  // build where other children exist but we just didn't build them.
+  // TODO:RetainedDisplayListBuilder's merge phase has the full list and
+  // could strip them out.
 
   // Clear clip rect for the construction of the items below. Since we're
   // clipping all their contents, they themselves don't need to be clipped.
@@ -3729,17 +3772,17 @@ void nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder* aBuilder,
   nsDisplayList list;
   nsDisplayList extraPositionedDescendants;
   const ActiveScrolledRoot* wrapListASR;
-  bool canSkipWrapList = false;
+  bool builtContainerItem = false;
   if (isStackingContext) {
     // True stacking context.
     // For stacking contexts, BuildDisplayListForStackingContext handles
     // clipping and MarkAbsoluteFramesForDisplayList.
     nsDisplayListBuilder::AutoContainerASRTracker contASRTracker(aBuilder);
     child->BuildDisplayListForStackingContext(aBuilder, &list,
-                                              &canSkipWrapList);
+                                              &builtContainerItem);
     wrapListASR = contASRTracker.GetContainerASR();
     if (aBuilder->GetCaretFrame() == child) {
-      canSkipWrapList = false;
+      builtContainerItem = false;
     }
   } else {
     Maybe<nsRect> clipPropClip =
@@ -3795,7 +3838,7 @@ void nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder* aBuilder,
     child->BuildDisplayList(aBuilder, pseudoStack);
     aBuilder->Check();
     if (aBuilder->DisplayCaret(child, pseudoStack.Content())) {
-      canSkipWrapList = false;
+      builtContainerItem = false;
     }
     wrapListASR = contASRTracker.GetContainerASR();
 
@@ -3817,8 +3860,8 @@ void nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder* aBuilder,
     // Genuine stacking contexts, and positioned pseudo-stacking-contexts,
     // go in this level.
     if (!list.IsEmpty()) {
-      nsDisplayItem* item =
-          WrapInWrapList(aBuilder, child, &list, wrapListASR, canSkipWrapList);
+      nsDisplayItem* item = WrapInWrapList(aBuilder, child, &list, wrapListASR,
+                                           builtContainerItem);
       if (isSVG) {
         aLists.Content()->AppendToTop(item);
       } else {
