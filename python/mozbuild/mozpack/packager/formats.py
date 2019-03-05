@@ -6,7 +6,6 @@ from __future__ import absolute_import
 
 from mozpack.chrome.manifest import (
     Manifest,
-    ManifestEntryWithRelPath,
     ManifestInterfaces,
     ManifestChrome,
     ManifestBinaryComponent,
@@ -67,6 +66,7 @@ class PiecemealFormatter(object):
     Generic formatter that dispatches across different sub-formatters
     according to paths.
     '''
+
     def __init__(self, copier):
         assert isinstance(copier, (FileRegistry, FileRegistrySubtree))
         self.copier = copier
@@ -116,6 +116,7 @@ class FlatFormatter(PiecemealFormatter):
     '''
     Formatter for the flat package format.
     '''
+
     def _add_base(self, base, addon=False):
         self._sub_formatter[base] = FlatSubFormatter(
             FileRegistrySubtree(base, self.copier))
@@ -125,6 +126,7 @@ class FlatSubFormatter(object):
     '''
     Sub-formatter for the flat package format.
     '''
+
     def __init__(self, copier):
         assert isinstance(copier, (FileRegistry, FileRegistrySubtree))
         self.copier = copier
@@ -149,7 +151,7 @@ class FlatSubFormatter(object):
                 parent = mozpath.dirname(entry.base)
                 relbase = mozpath.basename(entry.base)
                 relpath = mozpath.join(relbase,
-                                            mozpath.basename(path))
+                                       mozpath.basename(path))
                 self.add_manifest(Manifest(parent, relpath))
             self.copier.add(path, ManifestFile(entry.base))
 
@@ -190,9 +192,10 @@ class JarFormatter(PiecemealFormatter):
     manifest entries for resources are registered after chrome manifest
     entries.
     '''
+
     def __init__(self, copier, compress=True):
         PiecemealFormatter.__init__(self, copier)
-        self._compress=compress
+        self._compress = compress
 
     def _add_base(self, base, addon=False):
         if addon is True:
@@ -212,6 +215,7 @@ class JarSubFormatter(PiecemealFormatter):
     dispatches the chrome data to, and a FlatSubFormatter for the non-chrome
     files.
     '''
+
     def __init__(self, copier, compress=True):
         PiecemealFormatter.__init__(self, copier)
         self._frozen_chrome = False
@@ -252,6 +256,7 @@ class OmniJarFormatter(JarFormatter):
     '''
     Formatter for the omnijar package format.
     '''
+
     def __init__(self, copier, omnijar_name, compress=True, non_resources=()):
         JarFormatter.__init__(self, copier, compress)
         self._omnijar_name = omnijar_name
@@ -277,6 +282,7 @@ class OmniJarSubFormatter(PiecemealFormatter):
     that dispatches between a FlatSubFormatter for the resources data and
     another FlatSubFormatter for the other files.
     '''
+
     def __init__(self, copier, omnijar_name, compress=True, non_resources=()):
         PiecemealFormatter.__init__(self, copier)
         self._omnijar_name = omnijar_name
@@ -315,8 +321,8 @@ class OmniJarSubFormatter(PiecemealFormatter):
             return path[-1].endswith(('.js', '.xpt'))
         if path[0] == 'res':
             return len(path) == 1 or \
-                (path[1] != 'cursors' and \
-                 path[1] != 'touchbar' and \
+                (path[1] != 'cursors' and
+                 path[1] != 'touchbar' and
                  path[1] != 'MainMenu.nib')
         if path[0] == 'defaults':
             return len(path) != 3 or \

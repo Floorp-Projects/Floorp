@@ -4,7 +4,7 @@
 
 #include "nsISupports.idl"
 
-interface nsIOutputStream;
+interface nsIAsyncOutputStream;
 interface nsIInputStream;
 
 %{C++
@@ -150,7 +150,10 @@ interface nsICacheInfoChannel : nsISupports
    * Must be called after the OnStopRequest that delivered the real data.
    * The consumer may choose to replace the saved alt representation.
    * Opening the output stream will fail if there are any open input streams
-   * reading the already saved alt representation.
+   * reading the already saved alt representation. After successfully opening
+   * an output stream, if there is an error before the entire alt data can be
+   * written successfully, the client must signal failure by passing an error
+   * code to CloseWithStatus().
    *
    * @param type
    *        type of the alternative data representation
@@ -160,5 +163,5 @@ interface nsICacheInfoChannel : nsISupports
    *        an error is thrown. If the size isn't known in advance, -1 should be
    *        passed.
    */
-  nsIOutputStream openAlternativeOutputStream(in ACString type, in long long predictedSize);
+  nsIAsyncOutputStream openAlternativeOutputStream(in ACString type, in long long predictedSize);
 };

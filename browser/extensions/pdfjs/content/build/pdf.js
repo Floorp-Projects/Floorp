@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-var pdfjsVersion = '2.2.42';
-var pdfjsBuild = '34022d2f';
+var pdfjsVersion = '2.2.51';
+var pdfjsBuild = 'c43396c2';
 
 var pdfjsSharedUtil = __w_pdfjs_require__(1);
 
@@ -1295,7 +1295,7 @@ function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
 
   return worker.messageHandler.sendWithPromise('GetDocRequest', {
     docId,
-    apiVersion: '2.2.42',
+    apiVersion: '2.2.51',
     source: {
       data: source.data,
       url: source.url,
@@ -3038,9 +3038,9 @@ const InternalRenderTask = function InternalRenderTaskClosure() {
   return InternalRenderTask;
 }();
 
-const version = '2.2.42';
+const version = '2.2.51';
 exports.version = version;
-const build = '34022d2f';
+const build = 'c43396c2';
 exports.build = build;
 
 /***/ }),
@@ -8457,6 +8457,14 @@ var renderTextLayer = function renderTextLayerClosure() {
     this._capability = (0, _util.createPromiseCapability)();
     this._renderTimer = null;
     this._bounds = [];
+
+    this._capability.promise.finally(() => {
+      if (this._layoutTextCtx) {
+        this._layoutTextCtx.canvas.width = 0;
+        this._layoutTextCtx.canvas.height = 0;
+        this._layoutTextCtx = null;
+      }
+    });
   }
 
   TextLayerRenderTask.prototype = {
@@ -8465,20 +8473,20 @@ var renderTextLayer = function renderTextLayerClosure() {
     },
 
     cancel: function TextLayer_cancel() {
+      this._canceled = true;
+
       if (this._reader) {
-        this._reader.cancel(new _util.AbortException('text layer task cancelled'));
+        this._reader.cancel(new _util.AbortException('TextLayer task cancelled.'));
 
         this._reader = null;
       }
-
-      this._canceled = true;
 
       if (this._renderTimer !== null) {
         clearTimeout(this._renderTimer);
         this._renderTimer = null;
       }
 
-      this._capability.reject('canceled');
+      this._capability.reject(new Error('TextLayer task cancelled.'));
     },
 
     _processItems(items, styleCache) {

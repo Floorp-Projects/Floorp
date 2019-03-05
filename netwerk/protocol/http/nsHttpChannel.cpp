@@ -8377,7 +8377,7 @@ nsHttpChannel::GetAlternativeDataType(nsACString &aType) {
 NS_IMETHODIMP
 nsHttpChannel::OpenAlternativeOutputStream(const nsACString &type,
                                            int64_t predictedSize,
-                                           nsIOutputStream **_retval) {
+                                           nsIAsyncOutputStream **_retval) {
   // OnStopRequest will clear mCacheEntry, but we may use mAltDataCacheEntry
   // if the consumer called PreferAlternativeDataType()
   nsCOMPtr<nsICacheEntry> cacheEntry =

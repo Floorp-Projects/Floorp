@@ -94,7 +94,8 @@ VertexInfo write_vertex(RectWithSize instance_rect,
                         float z,
                         Transform transform,
                         PictureTask task,
-                        RectWithSize snap_rect) {
+                        RectWithSize snap_rect,
+                        bool snap_to_primitive) {
 
     // Select the corner of the local rect that we are processing.
     vec2 local_pos = instance_rect.p0 + instance_rect.size * aPosition.xy;
@@ -102,9 +103,16 @@ VertexInfo write_vertex(RectWithSize instance_rect,
     // Clamp to the two local clip rects.
     vec2 clamped_local_pos = clamp_rect(local_pos, local_clip_rect);
 
-    // Compute the visible rect to snap against. This ensures segments along the
-    // edges are snapped consistently with other nearby primitives.
-    RectWithSize visible_rect = intersect_rects(local_clip_rect, snap_rect);
+    RectWithSize visible_rect;
+    if (snap_to_primitive) {
+        // We are producing a picture. The snap rect has already taken into
+        // account the clipping we wish to consider for snapping purposes.
+        visible_rect = snap_rect;
+    } else {
+        // Compute the visible rect to snap against. This ensures segments along
+        // the edges are snapped consistently with other nearby primitives.
+        visible_rect = intersect_rects(local_clip_rect, snap_rect);
+    }
 
     /// Compute the snapping offset.
     vec2 snap_offset = compute_snap_offset(

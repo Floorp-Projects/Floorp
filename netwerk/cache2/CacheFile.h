@@ -81,7 +81,7 @@ class CacheFile final : public CacheFileChunkListener,
                               nsIOutputStream **_retval);
   NS_IMETHOD OpenAlternativeOutputStream(
       CacheOutputCloseListener *aCloseListener, const char *aAltDataType,
-      nsIOutputStream **_retval);
+      nsIAsyncOutputStream **_retval);
   NS_IMETHOD SetMemoryOnly();
   NS_IMETHOD Doom(CacheFileListener *aCallback);
 

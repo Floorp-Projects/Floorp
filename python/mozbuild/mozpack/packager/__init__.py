@@ -28,10 +28,10 @@ class Component(object):
     '''
     Class that represents a component in a package manifest.
     '''
+
     def __init__(self, name, destdir='', xz_compress=False):
         if name.find(' ') > 0:
-            errors.fatal('Malformed manifest: space in component name "%s"'
-                         % component)
+            errors.fatal('Malformed manifest: space in component name "%s"' % name)
         self._name = name
         self._destdir = destdir
         self._xz_compress = xz_compress
@@ -151,6 +151,7 @@ class PackageManifestParser(object):
     The add and remove methods of the sink object are called with the
     current Component instance and a path.
     '''
+
     def __init__(self, sink):
         '''
         Initialize the package manifest parser with the given sink.
@@ -183,6 +184,7 @@ class PreprocessorOutputWrapper(object):
     File-like helper to handle the preprocessor output and send it to a parser.
     The parser's handle_line method is called in the relevant errors.context.
     '''
+
     def __init__(self, preprocessor, parser):
         self._parser = parser
         self._pp = preprocessor
@@ -217,6 +219,7 @@ class CallDeque(deque):
     '''
     Queue of function calls to make.
     '''
+
     def append(self, function, *args):
         deque.append(self, (errors.get_context(), function, args))
 
@@ -240,6 +243,7 @@ class SimplePackager(object):
     given first that the simple manifest contents can't guarantee before the
     end of the input.
     '''
+
     def __init__(self, formatter):
         self.formatter = formatter
         # Queue for formatter.add_interfaces()/add_manifest() calls.
@@ -287,7 +291,7 @@ class SimplePackager(object):
                     parsed = json.loads(manifest)
                 except ValueError:
                     pass
-                if isinstance(parsed, dict) and parsed.has_key('manifest_version'):
+                if isinstance(parsed, dict) and 'manifest_version' in parsed:
                     self._add_addon(mozpath.dirname(path), True)
 
     def _add_addon(self, path, addon_type):
@@ -295,11 +299,11 @@ class SimplePackager(object):
         Add the given BaseFile to the collection of addons if a parent
         directory is not already in the collection.
         '''
-        if mozpath.basedir(path, self._addons) != None:
+        if mozpath.basedir(path, self._addons) is not None:
             return
 
         for dir in self._addons:
-            if mozpath.basedir(dir, [path]) != None:
+            if mozpath.basedir(dir, [path]) is not None:
                 del self._addons[dir]
                 break
 
@@ -345,7 +349,7 @@ class SimplePackager(object):
         '''
         all_bases = set(mozpath.dirname(m)
                         for m in self._manifests
-                                 - set(self._included_manifests))
+                        - set(self._included_manifests))
         if not addons:
             all_bases -= set(self._addons)
         else:
@@ -384,6 +388,7 @@ class SimpleManifestSink(object):
     Entries starting with bin/ are searched under bin/ in the FileFinder, but
     are packaged without the bin/ prefix.
     '''
+
     def __init__(self, finder, formatter):
         '''
         Initialize the SimpleManifestSink. The given FileFinder is used to
@@ -438,7 +443,7 @@ class SimpleManifestSink(object):
             paths = [mozpath.dirname(m) for m in self._manifests]
             path = mozpath.dirname(mozpath.commonprefix(paths))
             for p, f in self._finder.find(mozpath.join(path,
-                                          'chrome.manifest')):
-                if not p in self._manifests:
+                                                       'chrome.manifest')):
+                if p not in self._manifests:
                     self.packager.add(SimpleManifestSink.normalize_path(p), f)
         self.packager.close()

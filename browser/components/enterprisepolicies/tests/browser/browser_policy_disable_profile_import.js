@@ -34,3 +34,19 @@ add_task(async function test_disable_profile_import() {
 
   checkLockedPref("browser.newtabpage.activity-stream.migrationExpired", true);
 });
+
+add_task(async function test_file_menu() {
+  updateFileMenuImportUIVisibility("cmd_importFromAnotherBrowser");
+
+  let command = document.getElementById("cmd_importFromAnotherBrowser");
+  ok(command.getAttribute("disabled"),
+     "The `Import from Another Browser…` menu item command should be disabled");
+
+  if (Services.appinfo.OS == "Darwin") {
+    // We would need to have a lot of boilerplate to open the menus on Windows
+    // and Linux to test this there.
+    let menuitem = document.getElementById("menu_importFromAnotherBrowser");
+    ok(menuitem.disabled,
+       "The `Import from Another Browser…` menu item should be disabled");
+  }
+});
