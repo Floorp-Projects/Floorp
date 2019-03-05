@@ -639,7 +639,9 @@ class LifeCycleEventWatcher final : public ExtendableEventCallback {
                                 [self]() { self->ReportResult(false); });
     if (NS_WARN_IF(!mWorkerRef)) {
       mCallback->SetResult(false);
-      nsresult rv = workerPrivate->DispatchToMainThread(mCallback);
+      // Using DispatchToMainThreadForMessaging so that state update on
+      // the main thread doesn't happen too soon.
+      nsresult rv = workerPrivate->DispatchToMainThreadForMessaging(mCallback);
       Unused << NS_WARN_IF(NS_FAILED(rv));
       return false;
     }
@@ -655,7 +657,9 @@ class LifeCycleEventWatcher final : public ExtendableEventCallback {
     }
 
     mCallback->SetResult(aResult);
-    nsresult rv = mWorkerRef->Private()->DispatchToMainThread(mCallback);
+    // Using DispatchToMainThreadForMessaging so that state update on
+    // the main thread doesn't happen too soon.
+    nsresult rv = mWorkerRef->Private()->DispatchToMainThreadForMessaging(mCallback);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       MOZ_CRASH("Failed to dispatch life cycle event handler.");
     }
