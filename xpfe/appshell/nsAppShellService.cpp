@@ -91,13 +91,23 @@ nsAppShellService::SetScreenId(uint32_t aScreenId) {
   return NS_OK;
 }
 
+void nsAppShellService::EnsureHiddenWindow() {
+  if (!mHiddenWindow) {
+    (void)CreateHiddenWindowHelper(/* aIsPrivate = */ false);
+  }
+}
+
 void nsAppShellService::EnsurePrivateHiddenWindow() {
   if (!mHiddenPrivateWindow) {
-    CreateHiddenWindowHelper(true);
+    (void)CreateHiddenWindowHelper(/* aIsPrivate = */ true);
   }
 }
 
 nsresult nsAppShellService::CreateHiddenWindowHelper(bool aIsPrivate) {
+  if (!XRE_IsParentProcess()) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
   nsresult rv;
   int32_t initialHeight = 100, initialWidth = 100;
 
@@ -719,6 +729,8 @@ NS_IMETHODIMP
 nsAppShellService::GetHiddenWindow(nsIXULWindow** aWindow) {
   NS_ENSURE_ARG_POINTER(aWindow);
 
+  EnsureHiddenWindow();
+
   *aWindow = mHiddenWindow;
   NS_IF_ADDREF(*aWindow);
   return *aWindow ? NS_OK : NS_ERROR_FAILURE;
@@ -726,6 +738,10 @@ nsAppShellService::GetHiddenWindow(nsIXULWindow** aWindow) {
 
 NS_IMETHODIMP
 nsAppShellService::GetHiddenDOMWindow(mozIDOMWindowProxy** aWindow) {
+  NS_ENSURE_ARG_POINTER(aWindow);
+
+  EnsureHiddenWindow();
+
   nsresult rv;
   nsCOMPtr<nsIDocShell> docShell;
   NS_ENSURE_TRUE(mHiddenWindow, NS_ERROR_FAILURE);
@@ -752,6 +768,8 @@ nsAppShellService::GetHiddenPrivateWindow(nsIXULWindow** aWindow) {
 
 NS_IMETHODIMP
 nsAppShellService::GetHiddenPrivateDOMWindow(mozIDOMWindowProxy** aWindow) {
+  NS_ENSURE_ARG_POINTER(aWindow);
+
   EnsurePrivateHiddenWindow();
 
   nsresult rv;
@@ -765,6 +783,14 @@ nsAppShellService::GetHiddenPrivateDOMWindow(mozIDOMWindowProxy** aWindow) {
   nsCOMPtr<nsPIDOMWindowOuter> hiddenPrivateDOMWindow(docShell->GetWindow());
   hiddenPrivateDOMWindow.forget(aWindow);
   return *aWindow ? NS_OK : NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsAppShellService::GetHasHiddenWindow(bool* aHasHiddenWindow) {
+  NS_ENSURE_ARG_POINTER(aHasHiddenWindow);
+
+  *aHasHiddenWindow = !!mHiddenWindow;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
