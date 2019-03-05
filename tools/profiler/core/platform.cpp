@@ -777,12 +777,32 @@ class ActivePS {
 
 #if !defined(RELEASE_OR_BETA)
   static void UnregisterIOInterposer(PSLockRef) {
-    if (!sInstance->mInterposeObserver) return;
+    if (!sInstance->mInterposeObserver) {
+      return;
+    }
 
     IOInterposer::Unregister(IOInterposeObserver::OpAll,
                              sInstance->mInterposeObserver);
 
     sInstance->mInterposeObserver = nullptr;
+  }
+
+  static void PauseIOInterposer(PSLockRef) {
+    if (!sInstance->mInterposeObserver) {
+      return;
+    }
+
+    IOInterposer::Unregister(IOInterposeObserver::OpAll,
+                             sInstance->mInterposeObserver);
+  }
+
+  static void ResumeIOInterposer(PSLockRef) {
+    if (!sInstance->mInterposeObserver) {
+      return;
+    }
+
+    IOInterposer::Register(IOInterposeObserver::OpAll,
+                           sInstance->mInterposeObserver);
   }
 #endif
 
@@ -2092,8 +2112,15 @@ bool profiler_stream_json_for_this_process(SpliceableJSONWriter& aWriter,
     return false;
   }
 
+#if !defined(RELEASE_OR_BETA)
+  ActivePS::PauseIOInterposer(lock);
+#endif
+
   locked_profiler_stream_json_for_this_process(lock, aWriter, aSinceTime,
                                                aIsShuttingDown);
+#if !defined(RELEASE_OR_BETA)
+  ActivePS::ResumeIOInterposer(lock);
+#endif
 
   return true;
 }
