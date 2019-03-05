@@ -93,13 +93,13 @@
         "platforms": [
             "android-multilocale"
         ],
-        "revision": "a548e3e31aba"
+        "revision": "486391846f97"
     },
     "de": {
         "platforms": [
             "android-multilocale"
         ],
-        "revision": "2d8283a98bf9"
+        "revision": "09d039762d46"
     },
     "dsb": {
         "platforms": [
@@ -135,7 +135,7 @@
         "platforms": [
             "android-multilocale"
         ],
-        "revision": "cda8d47f8fd3"
+        "revision": "3bd1e8095201"
     },
     "es-AR": {
         "platforms": [
