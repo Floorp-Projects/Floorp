@@ -28,43 +28,33 @@ class CopyableCanvasRenderer;
 class PersistentBufferProvider;
 class WebRenderCanvasRendererAsync;
 
-struct CanvasInitializeData {
-  CanvasInitializeData()
-      : mBufferProvider(nullptr),
-        mGLContext(nullptr),
-        mRenderer(nullptr),
-        mPreTransCallback(nullptr),
-        mPreTransCallbackData(nullptr),
-        mDidTransCallback(nullptr),
-        mDidTransCallbackData(nullptr),
-        mFrontbufferGLTex(0),
-        mSize(0, 0),
-        mHasAlpha(false),
-        mIsGLAlphaPremult(true) {}
+struct CanvasInitializeData final {
+  CanvasInitializeData();
+  ~CanvasInitializeData();
 
   // One of these three must be specified for Canvas2D, but never more than one
-  PersistentBufferProvider*
+  RefPtr<PersistentBufferProvider>
       mBufferProvider;  // A BufferProvider for the Canvas contents
-  mozilla::gl::GLContext* mGLContext;  // or this, for GL.
-  AsyncCanvasRenderer* mRenderer;      // or this, for OffscreenCanvas
+  RefPtr<mozilla::gl::GLContext> mGLContext;  // or this, for GL.
+  RefPtr<AsyncCanvasRenderer> mRenderer;      // or this, for OffscreenCanvas
 
   typedef void (*TransactionCallback)(void* closureData);
-  TransactionCallback mPreTransCallback;
-  void* mPreTransCallbackData;
-  TransactionCallback mDidTransCallback;
-  void* mDidTransCallbackData;
+  TransactionCallback mPreTransCallback = nullptr;
+  void* mPreTransCallbackData = nullptr;
+  TransactionCallback mDidTransCallback = nullptr;
+  void* mDidTransCallbackData = nullptr;
 
   // Frontbuffer override
-  uint32_t mFrontbufferGLTex;
+  uint32_t mFrontbufferGLTex = 0;
 
   // The size of the canvas content
-  gfx::IntSize mSize;
+  gfx::IntSize mSize = {0,0};
 
   // Whether the canvas drawingbuffer has an alpha channel.
-  bool mHasAlpha;
+  bool mHasAlpha = false;
 
   // Whether mGLContext contains data that is alpha-premultiplied.
-  bool mIsGLAlphaPremult;
+  bool mIsGLAlphaPremult = true;
 };
 
 // Based class which used for canvas rendering. There are many derived classes
