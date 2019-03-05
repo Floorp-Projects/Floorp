@@ -175,7 +175,7 @@ INCLUDES = \
 
 include $(MOZILLA_DIR)/config/static-checking-config.mk
 
-ifdef MOZ_PROFILE_GENERATE
+ifndef MOZ_LTO
 MOZ_LTO_CFLAGS :=
 MOZ_LTO_LDFLAGS :=
 endif
