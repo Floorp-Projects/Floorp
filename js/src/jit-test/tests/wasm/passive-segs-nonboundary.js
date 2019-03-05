@@ -24,11 +24,11 @@ let tab_expmod_t =
 
 // .. and this one imports those 5 functions.  It adds 5 of its own, creates a
 // 30 element table using both active and passive initialisers, with a mixture
-// of the imported and local functions.  |testfn| is exported.  It uses the
-// supplied |insn| to modify the table somehow, and then will indirect-call
-// the table entry number specified as a parameter.  That will either return a
-// value 0 to 9 indicating the function called, or will throw an exception if
-// the table entry is empty.
+// of the imported and local functions.  |setup| and |check| are exported.
+// |setup| uses the supplied |insn| to modify the table somehow.  |check| will
+// indirect-call the table entry number specified as a parameter.  That will
+// either return a value 0 to 9 indicating the function called, or will throw an
+// exception if the table entry is empty.
 function gen_tab_impmod_t(insn)
 {
   let t =
@@ -55,8 +55,9 @@ function gen_tab_impmod_t(insn)
      (func (result i32) (i32.const 8))
      (func (result i32) (i32.const 9))  ;; index 9
 
-     (func (export "testfn") (param i32) (result i32)
-       ${insn}
+     (func (export "setup")
+       ${insn})
+     (func (export "check") (param i32) (result i32)
        ;; call the selected table entry, which will either return a value,
        ;; or will cause an exception.
        get_local 0      ;; callIx
@@ -79,18 +80,20 @@ function tab_test(instruction, expected_result_vector)
     let tab_impmod_t = gen_tab_impmod_t(instruction);
     let tab_impmod_b = wasmTextToBinary(tab_impmod_t);
 
+    let inst = new Instance(new Module(tab_impmod_b),
+                            {a:{if0:tab_expmod_i.exports.ef0,
+                                if1:tab_expmod_i.exports.ef1,
+                                if2:tab_expmod_i.exports.ef2,
+                                if3:tab_expmod_i.exports.ef3,
+                                if4:tab_expmod_i.exports.ef4
+                               }});
+    inst.exports.setup();
+
     for (let i = 0; i < expected_result_vector.length; i++) {
-        let inst = new Instance(new Module(tab_impmod_b),
-                                {a:{if0:tab_expmod_i.exports.ef0,
-                                    if1:tab_expmod_i.exports.ef1,
-                                    if2:tab_expmod_i.exports.ef2,
-                                    if3:tab_expmod_i.exports.ef3,
-                                    if4:tab_expmod_i.exports.ef4
-                                   }});
         let expected = expected_result_vector[i];
         let actual = undefined;
         try {
-            actual = inst.exports.testfn(i);
+            actual = inst.exports.check(i);
             assertEq(actual !== null, true);
         } catch (e) {
             if (!(e instanceof Error &&
@@ -547,13 +550,26 @@ function checkRange(arr, minIx, maxIxPlusOne, expectedValue)
     checkRange(b, 0x00000, 0x10000, 0x00);
 }
 
-// Zero len with offset out-of-bounds gets an exception
+// Zero len with offset out-of-bounds is OK if it's at the edge of the
+// memory, but not if it is one past that.
 {
     let inst = wasmEvalText(
     `(module
        (memory (export "memory") 1 1)
        (func (export "testfn")
          (memory.fill (i32.const 0x10000) (i32.const 0x55) (i32.const 0))
+       )
+     )`
+    );
+    inst.exports.testfn();
+}
+
+{
+    let inst = wasmEvalText(
+    `(module
+       (memory (export "memory") 1 1)
+       (func (export "testfn")
+         (memory.fill (i32.const 0x10001) (i32.const 0x55) (i32.const 0))
        )
      )`
     );
@@ -715,7 +731,7 @@ function checkRange(arr, minIx, maxIxPlusOne, expectedValue)
     checkRange(b, 0x08000, 0x10000, 0xAA);
 }
 
-// Zero len with dest offset out-of-bounds is an exception
+// Zero len with dest offset out-of-bounds but at the edge of memory is OK
 {
     let inst = wasmEvalText(
     `(module
@@ -725,17 +741,43 @@ function checkRange(arr, minIx, maxIxPlusOne, expectedValue)
        )
      )`
     );
+    inst.exports.testfn();
+}
+
+// Ditto, but one further out is not OK.
+{
+    let inst = wasmEvalText(
+    `(module
+       (memory (export "memory") 1 1)
+       (func (export "testfn")
+         (memory.copy (i32.const 0x10001) (i32.const 0x7000) (i32.const 0))
+       )
+     )`
+    );
     assertErrorMessage(() => inst.exports.testfn(),
                        WebAssembly.RuntimeError, /index out of bounds/);
 }
 
-// Zero len with src offset out-of-bounds is an exception
+// Zero len with src offset out-of-bounds but at the edge of memory is OK
 {
     let inst = wasmEvalText(
     `(module
        (memory (export "memory") 1 1)
        (func (export "testfn")
          (memory.copy (i32.const 0x9000) (i32.const 0x10000) (i32.const 0))
+       )
+     )`
+    );
+    inst.exports.testfn();
+}
+
+// Ditto, but one element further out is not OK.
+{
+    let inst = wasmEvalText(
+    `(module
+       (memory (export "memory") 1 1)
+       (func (export "testfn")
+         (memory.copy (i32.const 0x9000) (i32.const 0x10001) (i32.const 0))
        )
      )`
     );

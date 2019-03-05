@@ -1268,6 +1268,13 @@ nsMenuFrame::SetActiveChild(dom::Element* aChild) {
   nsMenuPopupFrame* popupFrame = GetPopup();
   if (!popupFrame) return NS_ERROR_FAILURE;
 
+  // Force the child frames within the popup to be generated.
+  AutoWeakFrame weakFrame(popupFrame);
+  popupFrame->GenerateFrames();
+  if (!weakFrame.IsAlive()) {
+    return NS_OK;
+  }
+
   if (!aChild) {
     // Remove the current selection
     popupFrame->ChangeMenuItem(nullptr, false, false);

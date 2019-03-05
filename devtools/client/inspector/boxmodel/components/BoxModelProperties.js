@@ -9,7 +9,7 @@ const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { LocalizationHelper } = require("devtools/shared/l10n");
 
-const ComputedProperty = createFactory(require("devtools/client/inspector/layout/components/ComputedProperty"));
+const ComputedProperty = createFactory(require("devtools/client/inspector/boxmodel/components/ComputedProperty"));
 
 const Types = require("../types");
 
