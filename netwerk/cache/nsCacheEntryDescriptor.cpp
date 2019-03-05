@@ -81,8 +81,9 @@ nsCacheEntryDescriptor::nsCacheEntryDescriptor(nsCacheEntry *entry,
       mDoomedOnClose(false),
       mClosingDescriptor(false) {
   PR_INIT_CLIST(this);
-  NS_ADDREF(nsCacheService::GlobalInstance());  // ensure it lives for the
-                                                // lifetime of the descriptor
+  // We need to make sure the cache service lives for the entire lifetime
+  // of the descriptor
+  mCacheService = nsCacheService::GlobalInstance();
 }
 
 nsCacheEntryDescriptor::~nsCacheEntryDescriptor() {
@@ -95,9 +96,6 @@ nsCacheEntryDescriptor::~nsCacheEntryDescriptor() {
 
   NS_ASSERTION(mInputWrappers.IsEmpty(), "We have still some input wrapper!");
   NS_ASSERTION(!mOutputWrapper, "We have still an output wrapper!");
-
-  nsCacheService *service = nsCacheService::GlobalInstance();
-  NS_RELEASE(service);
 }
 
 NS_IMETHODIMP
@@ -285,7 +283,7 @@ nsCacheEntryDescriptor::OpenInputStream(uint32_t offset,
                                         nsIInputStream **result) {
   NS_ENSURE_ARG_POINTER(result);
 
-  nsInputStreamWrapper *cacheInput = nullptr;
+  RefPtr<nsInputStreamWrapper> cacheInput;
   {
     nsCacheServiceAutoLock lock(
         LOCK_TELEM(NSCACHEENTRYDESCRIPTOR_OPENINPUTSTREAM));
@@ -312,7 +310,7 @@ nsCacheEntryDescriptor::OpenInputStream(uint32_t offset,
     mInputWrappers.AppendElement(cacheInput);
   }
 
-  NS_ADDREF(*result = cacheInput);
+  cacheInput.forget(result);
   return NS_OK;
 }
 
@@ -321,7 +319,7 @@ nsCacheEntryDescriptor::OpenOutputStream(uint32_t offset,
                                          nsIOutputStream **result) {
   NS_ENSURE_ARG_POINTER(result);
 
-  nsOutputStreamWrapper *cacheOutput = nullptr;
+  RefPtr<nsOutputStreamWrapper> cacheOutput;
   {
     nsCacheServiceAutoLock lock(
         LOCK_TELEM(NSCACHEENTRYDESCRIPTOR_OPENOUTPUTSTREAM));
@@ -353,7 +351,7 @@ nsCacheEntryDescriptor::OpenOutputStream(uint32_t offset,
     mOutputWrapper = cacheOutput;
   }
 
-  NS_ADDREF(*result = cacheOutput);
+  cacheOutput.forget(result);
   return NS_OK;
 }
 

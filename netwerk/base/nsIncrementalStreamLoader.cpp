@@ -25,12 +25,8 @@ nsresult nsIncrementalStreamLoader::Create(nsISupports *aOuter, REFNSIID aIID,
                                            void **aResult) {
   if (aOuter) return NS_ERROR_NO_AGGREGATION;
 
-  nsIncrementalStreamLoader *it = new nsIncrementalStreamLoader();
-  if (it == nullptr) return NS_ERROR_OUT_OF_MEMORY;
-  NS_ADDREF(it);
-  nsresult rv = it->QueryInterface(aIID, aResult);
-  NS_RELEASE(it);
-  return rv;
+  RefPtr<nsIncrementalStreamLoader> it = new nsIncrementalStreamLoader();
+  return it->QueryInterface(aIID, aResult);
 }
 
 NS_IMPL_ISUPPORTS(nsIncrementalStreamLoader, nsIIncrementalStreamLoader,
