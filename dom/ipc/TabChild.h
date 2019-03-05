@@ -670,10 +670,10 @@ class TabChild final : public TabChildBase,
 
   virtual bool DeallocPWindowGlobalChild(PWindowGlobalChild* aActor) override;
 
-  virtual PRemoteFrameChild* AllocPRemoteFrameChild(
+  virtual PBrowserBridgeChild* AllocPBrowserBridgeChild(
       const nsString& aName, const nsString& aRemoteType) override;
 
-  virtual bool DeallocPRemoteFrameChild(PRemoteFrameChild* aActor) override;
+  virtual bool DeallocPBrowserBridgeChild(PBrowserBridgeChild* aActor) override;
 
   virtual mozilla::ipc::IPCResult RecvDestroy() override;
 

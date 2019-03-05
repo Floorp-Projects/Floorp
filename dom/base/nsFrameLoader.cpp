@@ -104,7 +104,7 @@
 #include "mozilla/dom/ChildSHistory.h"
 #include "mozilla/dom/CanonicalBrowsingContext.h"
 #include "mozilla/dom/ContentChild.h"
-#include "mozilla/dom/RemoteFrameChild.h"
+#include "mozilla/dom/BrowserBridgeChild.h"
 
 #include "mozilla/dom/HTMLBodyElement.h"
 
@@ -344,15 +344,15 @@ nsresult nsFrameLoader::ReallyStartLoadingInternal() {
   AUTO_PROFILER_LABEL("nsFrameLoader::ReallyStartLoadingInternal", OTHER);
 
   if (IsRemoteFrame()) {
-    if (!mRemoteBrowser && !mRemoteFrameChild && !TryRemoteBrowser()) {
+    if (!mRemoteBrowser && !mBrowserBridgeChild && !TryRemoteBrowser()) {
       NS_WARNING("Couldn't create child process for iframe.");
       return NS_ERROR_FAILURE;
     }
 
-    if (mRemoteFrameChild) {
+    if (mBrowserBridgeChild) {
       nsAutoCString spec;
       mURIToLoad->GetSpec(spec);
-      Unused << mRemoteFrameChild->SendLoadURL(spec);
+      Unused << mBrowserBridgeChild->SendLoadURL(spec);
     } else {
       // FIXME get error codes from child
       mRemoteBrowser->LoadURL(mURIToLoad);
@@ -806,7 +806,7 @@ bool nsFrameLoader::ShowRemoteFrame(const ScreenIntSize& size,
   NS_ASSERTION(IsRemoteFrame(),
                "ShowRemote only makes sense on remote frames.");
 
-  if (!mRemoteBrowser && !mRemoteFrameChild && !TryRemoteBrowser()) {
+  if (!mRemoteBrowser && !mBrowserBridgeChild && !TryRemoteBrowser()) {
     NS_ERROR("Couldn't create child process.");
     return false;
   }
@@ -825,7 +825,7 @@ bool nsFrameLoader::ShowRemoteFrame(const ScreenIntSize& size,
       return false;
     }
 
-    if (mRemoteFrameChild) {
+    if (mBrowserBridgeChild) {
       nsCOMPtr<nsISupports> container =
           mOwnerContent->OwnerDoc()->GetContainer();
       nsCOMPtr<nsIBaseWindow> baseWindow = do_QueryInterface(container);
@@ -834,7 +834,7 @@ bool nsFrameLoader::ShowRemoteFrame(const ScreenIntSize& size,
       nsSizeMode sizeMode =
           mainWidget ? mainWidget->SizeMode() : nsSizeMode_Normal;
 
-      Unused << mRemoteFrameChild->SendShow(
+      Unused << mBrowserBridgeChild->SendShow(
           size, ParentWindowIsActive(mOwnerContent->OwnerDoc()), sizeMode);
       mRemoteBrowserShown = true;
       return true;
@@ -863,8 +863,8 @@ bool nsFrameLoader::ShowRemoteFrame(const ScreenIntSize& size,
     if (!aFrame || !(aFrame->GetStateBits() & NS_FRAME_FIRST_REFLOW)) {
       if (mRemoteBrowser) {
         mRemoteBrowser->UpdateDimensions(dimensions, size);
-      } else if (mRemoteFrameChild) {
-        mRemoteFrameChild->UpdateDimensions(dimensions, size);
+      } else if (mBrowserBridgeChild) {
+        mBrowserBridgeChild->UpdateDimensions(dimensions, size);
       }
     }
   }
@@ -955,7 +955,7 @@ nsresult nsFrameLoader::SwapWithOtherRemoteLoader(
   }
 
   // FIXME: Consider supporting FrameLoader swapping for remote sub frames.
-  if (mRemoteFrameChild) {
+  if (mBrowserBridgeChild) {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
@@ -1686,9 +1686,9 @@ void nsFrameLoader::DestroyDocShell() {
     mRemoteBrowser->Destroy();
   }
 
-  if (mRemoteFrameChild) {
-    Unused << mRemoteFrameChild->Send__delete__(mRemoteFrameChild);
-    mRemoteFrameChild = nullptr;
+  if (mBrowserBridgeChild) {
+    Unused << mBrowserBridgeChild->Send__delete__(mBrowserBridgeChild);
+    mBrowserBridgeChild = nullptr;
   }
 
   // Fire the "unload" event if we're in-process.
@@ -1732,9 +1732,9 @@ void nsFrameLoader::DestroyComplete() {
     mRemoteBrowser = nullptr;
   }
 
-  if (mRemoteFrameChild) {
-    Unused << mRemoteFrameChild->Send__delete__(mRemoteFrameChild);
-    mRemoteFrameChild = nullptr;
+  if (mBrowserBridgeChild) {
+    Unused << mBrowserBridgeChild->Send__delete__(mBrowserBridgeChild);
+    mBrowserBridgeChild = nullptr;
   }
 
   if (mMessageManager) {
@@ -2298,7 +2298,7 @@ nsresult nsFrameLoader::GetWindowDimensions(nsIntRect& aRect) {
 
 nsresult nsFrameLoader::UpdatePositionAndSize(nsSubDocumentFrame* aIFrame) {
   if (IsRemoteFrame()) {
-    if (mRemoteBrowser || mRemoteFrameChild) {
+    if (mRemoteBrowser || mBrowserBridgeChild) {
       ScreenIntSize size = aIFrame->GetSubdocumentSize();
       // If we were not able to show remote frame before, we should probably
       // retry now to send correct showInfo.
@@ -2310,8 +2310,8 @@ nsresult nsFrameLoader::UpdatePositionAndSize(nsSubDocumentFrame* aIFrame) {
       mLazySize = size;
       if (mRemoteBrowser) {
         mRemoteBrowser->UpdateDimensions(dimensions, size);
-      } else if (mRemoteFrameChild) {
-        mRemoteFrameChild->UpdateDimensions(dimensions, size);
+      } else if (mBrowserBridgeChild) {
+        mBrowserBridgeChild->UpdateDimensions(dimensions, size);
       }
     }
     return NS_OK;
@@ -2391,7 +2391,7 @@ static Tuple<ContentParent*, TabParent*> GetContentParent(Element* aBrowser) {
 }
 
 bool nsFrameLoader::TryRemoteBrowser() {
-  NS_ASSERTION(!mRemoteBrowser && !mRemoteFrameChild,
+  NS_ASSERTION(!mRemoteBrowser && !mBrowserBridgeChild,
                "TryRemoteBrowser called with a remote browser already?");
 
   if (!mOwnerContent) {
@@ -2508,11 +2508,11 @@ bool nsFrameLoader::TryRemoteBrowser() {
 
   nsCOMPtr<Element> ownerElement = mOwnerContent;
 
-  // If we're in a content process, create a RemoteFrameChild actor.
+  // If we're in a content process, create a BrowserBridgeChild actor.
   if (XRE_IsContentProcess()) {
-    mRemoteFrameChild = RemoteFrameChild::Create(
+    mBrowserBridgeChild = BrowserBridgeChild::Create(
         this, context, NS_LITERAL_STRING(DEFAULT_REMOTE_TYPE));
-    return !!mRemoteFrameChild;
+    return !!mBrowserBridgeChild;
   }
 
   mRemoteBrowser =
@@ -2586,8 +2586,8 @@ mozilla::dom::PBrowserParent* nsFrameLoader::GetRemoteBrowser() const {
   return mRemoteBrowser;
 }
 
-mozilla::dom::RemoteFrameChild* nsFrameLoader::GetRemoteFrameChild() const {
-  return mRemoteFrameChild;
+mozilla::dom::BrowserBridgeChild* nsFrameLoader::GetBrowserBridgeChild() const {
+  return mBrowserBridgeChild;
 }
 
 mozilla::layers::LayersId nsFrameLoader::GetLayersId() const {
@@ -2595,8 +2595,8 @@ mozilla::layers::LayersId nsFrameLoader::GetLayersId() const {
   if (mRemoteBrowser) {
     return mRemoteBrowser->GetRenderFrame()->GetLayersId();
   }
-  if (mRemoteFrameChild) {
-    return mRemoteFrameChild->GetLayersId();
+  if (mBrowserBridgeChild) {
+    return mBrowserBridgeChild->GetLayersId();
   }
   return mozilla::layers::LayersId{};
 }

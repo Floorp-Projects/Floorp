@@ -4,22 +4,23 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/dom/RemoteFrameParent.h"
+#include "mozilla/dom/BrowserBridgeParent.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/ContentProcessManager.h"
 
 using namespace mozilla::ipc;
 using namespace mozilla::layout;
+using namespace mozilla::hal;
 
 namespace mozilla {
 namespace dom {
 
-RemoteFrameParent::RemoteFrameParent() : mIPCOpen(false) {}
+BrowserBridgeParent::BrowserBridgeParent() : mIPCOpen(false) {}
 
-RemoteFrameParent::~RemoteFrameParent() {}
+BrowserBridgeParent::~BrowserBridgeParent() {}
 
-nsresult RemoteFrameParent::Init(const nsString& aPresentationURL,
-                                 const nsString& aRemoteType) {
+nsresult BrowserBridgeParent::Init(const nsString& aPresentationURL,
+                                   const nsString& aRemoteType) {
   mIPCOpen = true;
 
   // FIXME: This should actually use a non-bogus TabContext, probably inherited
@@ -80,9 +81,9 @@ nsresult RemoteFrameParent::Init(const nsString& aPresentationURL,
   return NS_OK;
 }
 
-IPCResult RemoteFrameParent::RecvShow(const ScreenIntSize& aSize,
-                                      const bool& aParentIsActive,
-                                      const nsSizeMode& aSizeMode) {
+IPCResult BrowserBridgeParent::RecvShow(const ScreenIntSize& aSize,
+                                        const bool& aParentIsActive,
+                                        const nsSizeMode& aSizeMode) {
   RenderFrame* rf = mTabParent->GetRenderFrame();
   if (!rf->AttachLayerManager()) {
     MOZ_CRASH();
@@ -93,36 +94,36 @@ IPCResult RemoteFrameParent::RecvShow(const ScreenIntSize& aSize,
   return IPC_OK();
 }
 
-IPCResult RemoteFrameParent::RecvLoadURL(const nsCString& aUrl) {
+IPCResult BrowserBridgeParent::RecvLoadURL(const nsCString& aUrl) {
   Unused << mTabParent->SendLoadURL(aUrl, mTabParent->GetShowInfo());
   return IPC_OK();
 }
 
-IPCResult RemoteFrameParent::RecvUpdateDimensions(
+IPCResult BrowserBridgeParent::RecvUpdateDimensions(
     const DimensionInfo& aDimensions) {
   Unused << mTabParent->SendUpdateDimensions(aDimensions);
   return IPC_OK();
 }
 
-IPCResult RemoteFrameParent::RecvRenderLayers(
+IPCResult BrowserBridgeParent::RecvRenderLayers(
     const bool& aEnabled, const bool& aForceRepaint,
     const layers::LayersObserverEpoch& aEpoch) {
   Unused << mTabParent->SendRenderLayers(aEnabled, aForceRepaint, aEpoch);
   return IPC_OK();
 }
 
-IPCResult RemoteFrameParent::RecvNavigateByKey(
+IPCResult BrowserBridgeParent::RecvNavigateByKey(
     const bool& aForward, const bool& aForDocumentNavigation) {
   Unused << mTabParent->SendNavigateByKey(aForward, aForDocumentNavigation);
   return IPC_OK();
 }
 
-IPCResult RemoteFrameParent::RecvActivate() {
+IPCResult BrowserBridgeParent::RecvActivate() {
   mTabParent->Activate();
   return IPC_OK();
 }
 
-void RemoteFrameParent::ActorDestroy(ActorDestroyReason aWhy) {
+void BrowserBridgeParent::ActorDestroy(ActorDestroyReason aWhy) {
   mIPCOpen = false;
 }
 
