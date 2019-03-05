@@ -220,7 +220,7 @@ function addAttributeFromCert(nodeName, value) {
     document.l10n.setAttributes(node, "not-present");
     return;
   }
-  node.setAttribute("value", value);
+  node.value = value;
 }
 
 /**

@@ -446,6 +446,7 @@ const Preferences = window.Preferences = (function() {
       case "checkbox":
       case "input":
       case "radiogroup":
+      case "textarea":
       case "textbox":
       case "menulist":
         return true;
