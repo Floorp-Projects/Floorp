@@ -343,7 +343,7 @@ def is_opt_task(task):
     return any(platform in task for platform in OPT_TASK_PATTERNS)
 
 
-def run(templates={}, full=False, parameters=None, push=True, message='{msg}', **kwargs):
+def run(templates={}, full=False, parameters=None, push=True, message='{msg}', closed_tree=False):
     download_coverage_mapping(vcs.base_ref)
 
     changed_sources = vcs.get_outgoing_files()
@@ -379,4 +379,4 @@ def run(templates={}, full=False, parameters=None, push=True, message='{msg}', *
     # Build commit message.
     msg = 'try coverage - ' + test_count_message
     return push_to_try('coverage', message.format(msg=msg), tasks, templates, push=push,
-                       closed_tree=kwargs['closed_tree'])
+                       closed_tree=closed_tree)
