@@ -652,6 +652,13 @@ impl GlyphRasterizer {
 
     pub fn prepare_font(&self, font: &mut FontInstance) {
         FontContext::prepare_font(font);
+
+        // Quantize the transform to minimize thrashing of the glyph cache, but
+        // only quantize the transform when preparing to access the glyph cache.
+        // This way, the glyph subpixel positions, which are calculated before
+        // this, can still use the precise transform which is required to match
+        // the subpixel positions computed for glyphs in the text run shader.
+        font.transform = font.transform.quantize();
     }
 
     pub fn get_glyph_dimensions(
