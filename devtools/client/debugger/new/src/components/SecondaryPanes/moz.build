@@ -8,7 +8,7 @@ DIRS += [
     'Frames',
 ]
 
-DebuggerModules(
+CompiledModules(
     'CommandBar.js',
     'EventListeners.js',
     'Expressions.js',

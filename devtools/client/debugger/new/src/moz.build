@@ -13,7 +13,7 @@ DIRS += [
     'workers',
 ]
 
-DebuggerModules(
+CompiledModules(
     'main.development.js',
     'main.js',
     'vendors.js',

@@ -7,7 +7,7 @@ DIRS += [
 
 ]
 
-DebuggerModules(
+CompiledModules(
     'index.js',
     'Outline.js',
     'OutlineFilter.js',

@@ -7,6 +7,6 @@ DIRS += [
 
 ]
 
-DebuggerModules(
+CompiledModules(
     'index.js',
 )
