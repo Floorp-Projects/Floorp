@@ -1051,6 +1051,14 @@ class PresShell final : public nsIPresShell,
                                  nsIContent* aOverrideClickTarget);
 
     /**
+     * RecordEventHandlingResponsePerformance() records event handling response
+     * performance with telemetry.
+     *
+     * @param aEvent            The handled event.
+     */
+    void RecordEventHandlingResponsePerformance(const WidgetEvent* aEvent);
+
+    /**
      * This and the next two helper methods are used to target and position the
      * context menu when the keyboard shortcut is used to open it.
      *
