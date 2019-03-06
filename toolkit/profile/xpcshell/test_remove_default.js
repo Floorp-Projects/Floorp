@@ -13,27 +13,23 @@ add_task(async () => {
       path: defaultProfile.leafName,
       default: true,
     }],
-  };
-  writeProfilesIni(profilesIni);
-
-  let installsIni = {
     installs: {
       [hash]: {
         default: defaultProfile.leafName,
       },
     },
   };
-  writeInstallsIni(installsIni);
+  writeProfilesIni(profilesIni);
 
   let service = getProfileService();
-  checkProfileService(profilesIni, installsIni);
+  checkProfileService(profilesIni);
 
   let { profile, didCreate } = selectStartupProfile();
   Assert.ok(!didCreate, "Should have not created a new profile.");
   Assert.equal(profile.name, "default", "Should have selected the default profile.");
   Assert.equal(profile, service.defaultProfile, "Should have selected the default profile.");
 
-  checkProfileService(profilesIni, installsIni);
+  checkProfileService(profilesIni);
 
   // In an actual run of Firefox we wouldn't be able to delete the profile in
   // use because it would be locked. But we don't actually lock the profile in
@@ -45,9 +41,10 @@ add_task(async () => {
 
   // These are the modifications that should have been made.
   profilesIni.profiles.pop();
-  installsIni.installs[hash].default = "";
+  profilesIni.installs[hash].default = "";
 
-  checkProfileService(profilesIni, installsIni);
+  // The data isn't flushed to disk so don't check the backup here.
+  checkProfileService(profilesIni, false);
 
   service.flush();
 
@@ -56,6 +53,6 @@ add_task(async () => {
 
   // checkProfileService doesn't differentiate between a blank default profile
   // for the install and a missing install.
-  let installs = readInstallsIni();
-  Assert.equal(installs.installs[hash].default, "", "Should be a blank default profile.");
+  profilesIni = readProfilesIni();
+  Assert.equal(profilesIni.installs[hash].default, "", "Should be a blank default profile.");
 });

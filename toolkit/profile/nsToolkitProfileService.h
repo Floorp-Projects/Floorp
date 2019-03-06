@@ -28,7 +28,7 @@ class nsToolkitProfile final : public nsIToolkitProfile {
   ~nsToolkitProfile() = default;
 
   nsToolkitProfile(const nsACString& aName, nsIFile* aRootDir,
-                   nsIFile* aLocalDir, nsToolkitProfile* aPrev);
+                   nsIFile* aLocalDir, nsToolkitProfile* aPrev, bool aFromDB);
 
   nsresult RemoveInternal(bool aRemoveFiles, bool aInBackground);
 
@@ -38,6 +38,8 @@ class nsToolkitProfile final : public nsIToolkitProfile {
   nsCOMPtr<nsIFile> mRootDir;
   nsCOMPtr<nsIFile> mLocalDir;
   nsIProfileLock* mLock;
+  uint32_t mIndex;
+  nsCString mSection;
 };
 
 class nsToolkitProfileLock final : public nsIProfileLock {
@@ -103,6 +105,7 @@ class nsToolkitProfileService final : public nsIToolkitProfileService {
   bool MaybeMakeDefaultDedicatedProfile(nsIToolkitProfile* aProfile);
   bool IsSnapEnvironment();
   nsresult CreateDefaultProfile(nsIToolkitProfile** aResult);
+  void SetNormalDefault(nsIToolkitProfile* aProfile);
 
   // Returns the known install hashes from the installs database. Modifying the
   // installs database is safe while iterating the returned array.
@@ -126,13 +129,13 @@ class nsToolkitProfileService final : public nsIToolkitProfileService {
   // The directory that holds the cache files for profiles.
   nsCOMPtr<nsIFile> mTempData;
   // The location of profiles.ini.
-  nsCOMPtr<nsIFile> mListFile;
+  nsCOMPtr<nsIFile> mProfileDBFile;
   // The location of installs.ini.
-  nsCOMPtr<nsIFile> mInstallFile;
-  // The data loaded from installs.ini.
-  nsINIParser mInstallData;
-  // The install hash for the currently running install.
-  nsCString mInstallHash;
+  nsCOMPtr<nsIFile> mInstallDBFile;
+  // The data loaded from profiles.ini.
+  nsINIParser mProfileDB;
+  // The section in the profiles db for the current install.
+  nsCString mInstallSection;
   // Whether to start with the selected profile by default.
   bool mStartWithLast;
   // True if during startup it appeared that this is the first run.
