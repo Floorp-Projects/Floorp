@@ -127,12 +127,12 @@ data class Response(
  * Returns true if the response was successful (status in the range 200-299) or false otherwise.
  */
 @Suppress("MagicNumber")
-val Response.success: Boolean
+val Response.isSuccess: Boolean
     get() = status in 200..299
 
 /**
  * Returns true if the response was a client error (status in the range 400-499) or false otherwise.
  */
 @Suppress("MagicNumber")
-val Response.clientError: Boolean
+val Response.isClientError: Boolean
     get() = status in 400..499

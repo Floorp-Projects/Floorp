@@ -9,7 +9,7 @@ import kotlinx.coroutines.runBlocking
 import mozilla.components.concept.fetch.Client
 import mozilla.components.concept.fetch.MutableHeaders
 import mozilla.components.concept.fetch.Request
-import mozilla.components.concept.fetch.success
+import mozilla.components.concept.fetch.isSuccess
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import okio.Buffer
@@ -283,7 +283,7 @@ abstract class FetchTestCases {
 
             // Verify response
 
-            assertTrue(response.success)
+            assertTrue(response.isSuccess)
             assertEquals(201, response.status)
 
             assertEquals("Thank you!", response.body.string())

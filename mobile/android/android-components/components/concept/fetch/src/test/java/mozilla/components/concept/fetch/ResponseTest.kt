@@ -123,23 +123,23 @@ class ResponseTest {
 
     @Test
     fun `success() extension function returns true for 2xx response codes`() {
-        assertTrue(Response("https://www.mozilla.org", 200, headers = mock(), body = mock()).success)
-        assertTrue(Response("https://www.mozilla.org", 203, headers = mock(), body = mock()).success)
+        assertTrue(Response("https://www.mozilla.org", 200, headers = mock(), body = mock()).isSuccess)
+        assertTrue(Response("https://www.mozilla.org", 203, headers = mock(), body = mock()).isSuccess)
 
-        assertFalse(Response("https://www.mozilla.org", 404, headers = mock(), body = mock()).success)
-        assertFalse(Response("https://www.mozilla.org", 500, headers = mock(), body = mock()).success)
-        assertFalse(Response("https://www.mozilla.org", 302, headers = mock(), body = mock()).success)
+        assertFalse(Response("https://www.mozilla.org", 404, headers = mock(), body = mock()).isSuccess)
+        assertFalse(Response("https://www.mozilla.org", 500, headers = mock(), body = mock()).isSuccess)
+        assertFalse(Response("https://www.mozilla.org", 302, headers = mock(), body = mock()).isSuccess)
     }
 
     @Test
     fun `clientError() extension function returns true for 4xx response codes`() {
-        assertTrue(Response("https://www.mozilla.org", 404, headers = mock(), body = mock()).clientError)
-        assertTrue(Response("https://www.mozilla.org", 403, headers = mock(), body = mock()).clientError)
+        assertTrue(Response("https://www.mozilla.org", 404, headers = mock(), body = mock()).isClientError)
+        assertTrue(Response("https://www.mozilla.org", 403, headers = mock(), body = mock()).isClientError)
 
-        assertFalse(Response("https://www.mozilla.org", 200, headers = mock(), body = mock()).clientError)
-        assertFalse(Response("https://www.mozilla.org", 203, headers = mock(), body = mock()).clientError)
-        assertFalse(Response("https://www.mozilla.org", 500, headers = mock(), body = mock()).clientError)
-        assertFalse(Response("https://www.mozilla.org", 302, headers = mock(), body = mock()).clientError)
+        assertFalse(Response("https://www.mozilla.org", 200, headers = mock(), body = mock()).isClientError)
+        assertFalse(Response("https://www.mozilla.org", 203, headers = mock(), body = mock()).isClientError)
+        assertFalse(Response("https://www.mozilla.org", 500, headers = mock(), body = mock()).isClientError)
+        assertFalse(Response("https://www.mozilla.org", 302, headers = mock(), body = mock()).isClientError)
     }
 
     @Test

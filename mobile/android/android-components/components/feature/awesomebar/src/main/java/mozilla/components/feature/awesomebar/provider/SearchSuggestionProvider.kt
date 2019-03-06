@@ -9,7 +9,7 @@ import mozilla.components.browser.search.suggestions.SearchSuggestionClient
 import mozilla.components.concept.awesomebar.AwesomeBar
 import mozilla.components.concept.fetch.Client
 import mozilla.components.concept.fetch.Request
-import mozilla.components.concept.fetch.success
+import mozilla.components.concept.fetch.isSuccess
 import mozilla.components.feature.search.SearchUseCases
 import mozilla.components.support.base.log.logger.Logger
 import java.io.IOException
@@ -144,7 +144,7 @@ class SearchSuggestionProvider(
             )
 
             val response = fetchClient.fetch(request)
-            if (!response.success) {
+            if (!response.isSuccess) {
                 return null
             }
 

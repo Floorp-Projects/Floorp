@@ -12,7 +12,7 @@ import mozilla.components.concept.fetch.Client
 import mozilla.components.concept.fetch.MutableHeaders
 import mozilla.components.concept.fetch.Request
 import mozilla.components.concept.fetch.Response
-import mozilla.components.concept.fetch.success
+import mozilla.components.concept.fetch.isSuccess
 import java.io.IOException
 
 /**
@@ -49,7 +49,7 @@ internal class PocketEndpointRaw(
             null
         }
 
-        return response?.use { if (response.success) response.body.string() else null }
+        return response?.use { if (response.isSuccess) response.body.string() else null }
     }
 
     companion object {
