@@ -218,6 +218,7 @@ def parse_message(message):
     parser.add_argument('--tag', dest='tag', action='store', default=None)
     parser.add_argument('--no-retry', dest='no_retry', action='store_true')
     parser.add_argument('--include-nightly', dest='include_nightly', action='store_true')
+    parser.add_argument('--artifact', dest='artifact', action='store_true')
 
     # While we are transitioning from BB to TC, we want to push jobs to tc-worker
     # machines but not overload machines with every try push. Therefore, we add
@@ -276,6 +277,7 @@ class TryOptionSyntax(object):
         self.profile = False
         self.tag = None
         self.no_retry = False
+        self.artifact = False
 
         options = parameters['try_options']
         if not options:
@@ -296,6 +298,7 @@ class TryOptionSyntax(object):
         self.profile = options['profile']
         self.tag = options['tag']
         self.no_retry = options['no_retry']
+        self.artifact = options['artifact']
         self.include_nightly = options['include_nightly']
 
     def parse_jobs(self, jobs_arg):
@@ -635,4 +638,5 @@ class TryOptionSyntax(object):
             "profile: " + str(self.profile),
             "tag: " + str(self.tag),
             "no_retry: " + str(self.no_retry),
+            "artifact: " + str(self.artifact),
         ])
