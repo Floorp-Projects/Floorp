@@ -6,6 +6,8 @@
 
 ChromeUtils.defineModuleGetter(
   this, "UptakeTelemetry", "resource://services-common/uptake-telemetry.js");
+ChromeUtils.defineModuleGetter(
+  this, "Services", "resource://gre/modules/Services.jsm");
 
 var EXPORTED_SYMBOLS = ["Uptake"];
 
@@ -37,6 +39,8 @@ var Uptake = {
 
   reportRecipe(recipe, status) {
     UptakeTelemetry.report(COMPONENT, status, { source: `${COMPONENT}/recipe/${recipe.id}` });
+    const revisionId = parseInt(recipe.revision_id, 10);
+    Services.telemetry.keyedScalarSet("normandy.recipe_freshness", recipe.id, revisionId);
   },
 
   reportAction(actionName, status) {
