@@ -76,8 +76,6 @@ class nsBindingManager final : public nsStubMutationObserver {
                                    mozilla::dom::Document* aOldDocument,
                                    DestructorHandling aDestructorHandling);
 
-  nsAtom* ResolveTag(nsIContent* aContent, int32_t* aNameSpaceID);
-
   /**
    * Return the nodelist of "anonymous" kids for this node.  This might
    * actually include some of the nodes actual DOM kids, if there are
