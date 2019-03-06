@@ -791,7 +791,7 @@ ElementEditor.prototype = {
 
   onCustomBadgeClick: function() {
     const { url, line } = this.node.customElementLocation;
-    this.markup.toolbox.viewSourceInDebugger(url, line, "show_custom_element");
+    this.markup.toolbox.viewSourceInDebugger(url, line, null, "show_custom_element");
   },
 
   onExpandBadgeClick: function() {
