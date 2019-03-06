@@ -27,7 +27,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1530608
   // Test 1: same-origin iframe.
   function testFrame1() {
     var frameWin = document.getElementById("frame1").contentWindow;
-    todo(isSameCompartment(window, frameWin),
+    ok(isSameCompartment(window, frameWin),
        "Same-origin iframe must be same-compartment");
     finishIfDone();
   }
@@ -48,7 +48,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1530608
 
     // Now load a same-origin page in this iframe.
     frame.onload = function() {
-      todo(isSameCompartment(window, frame.contentWindow),
+      ok(isSameCompartment(window, frame.contentWindow),
          "Frame must be same-compartment now");
       finishIfDone();
     };
@@ -59,7 +59,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1530608
   addLoadEvent(function() {
     var frame = document.createElement("iframe");
     document.body.appendChild(frame);
-    todo(isSameCompartment(window, frame.contentWindow),
+    ok(isSameCompartment(window, frame.contentWindow),
        "Newly created iframe must be same-compartment");
     finishIfDone();
   });
