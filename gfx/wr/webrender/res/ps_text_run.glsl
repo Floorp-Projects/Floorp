@@ -192,10 +192,10 @@ void main(void) {
     RectWithSize glyph_rect = RectWithSize(res.offset + glyph_transform * (text_offset + glyph.offset),
                                            res.uv_rect.zw - res.uv_rect.xy);
 #else
-    float inverse_raster_scale = float(ph.user_data.z) / 65535.0;
+    float raster_scale = float(ph.user_data.z) / 65535.0;
 
     // Scale from glyph space to local space.
-    float scale = inverse_raster_scale * res.scale / task.device_pixel_scale;
+    float scale = res.scale / (raster_scale * task.device_pixel_scale);
 
     // Compute the glyph rect in local space.
     RectWithSize glyph_rect = RectWithSize(scale * res.offset + text_offset + glyph.offset,
