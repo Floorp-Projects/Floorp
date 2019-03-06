@@ -249,7 +249,6 @@ nsresult nsAutoConfig::downloadAutoConfig() {
       getter_AddRefs(channel), url, nsContentUtils::GetSystemPrincipal(),
       nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
       nsIContentPolicy::TYPE_OTHER,
-      nullptr,  // nsICookieSettings
       nullptr,  // PerformanceStorage
       nullptr,  // loadGroup
       nullptr,  // aCallbacks
