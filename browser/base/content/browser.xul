@@ -103,6 +103,7 @@ xmlns="http://www.w3.org/1999/xhtml"
   Services.scriptloader.loadSubScript("chrome://browser/content/browser-sidebar.js", this);
   Services.scriptloader.loadSubScript("chrome://browser/content/browser-tabsintitlebar.js", this);
   Services.scriptloader.loadSubScript("chrome://browser/content/tabbrowser.js", this);
+  Services.scriptloader.loadSubScript("chrome://browser/content/search/autocomplete-popup.js", this);
   Services.scriptloader.loadSubScript("chrome://browser/content/search/searchbar.js", this);
 
   window.onload = gBrowserInit.onLoad.bind(gBrowserInit);
@@ -247,7 +248,8 @@ xmlns="http://www.w3.org/1999/xhtml"
            nomaxresults="true" />
 
     <!-- for search with one-off buttons -->
-    <panel type="autocomplete-richlistbox"
+    <panel is="search-autocomplete-richlistbox-popup"
+           type="autocomplete-richlistbox"
            id="PopupSearchAutoComplete"
            role="group"
            noautofocus="true"

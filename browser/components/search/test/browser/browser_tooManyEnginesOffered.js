@@ -5,9 +5,7 @@
 // itself.
 
 const searchPopup = document.getElementById("PopupSearchAutoComplete");
-const oneOffsContainer =
-  document.getAnonymousElementByAttribute(searchPopup, "anonid",
-                                          "search-one-off-buttons");
+const oneOffsContainer = searchPopup.searchOneOffsContainer;
 
 add_task(async function test_setup() {
   await gCUITestUtils.addSearchBar();
