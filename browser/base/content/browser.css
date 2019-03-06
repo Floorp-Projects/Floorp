@@ -752,10 +752,6 @@ html|input.urlbar-input {
   margin-inline-start: 0;
 }
 
-#PopupSearchAutoComplete {
-  -moz-binding: url("chrome://browser/content/search/search.xml#browser-search-autocomplete-result-popup");
-}
-
 #PopupAutoCompleteRichResult {
   -moz-binding: url("chrome://browser/content/urlbarBindings.xml#urlbar-rich-result-popup");
 }

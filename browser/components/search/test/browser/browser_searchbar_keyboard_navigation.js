@@ -1,9 +1,7 @@
 // Tests that keyboard navigation in the search panel works as designed.
 
 const searchPopup = document.getElementById("PopupSearchAutoComplete");
-const oneOffsContainer =
-  document.getAnonymousElementByAttribute(searchPopup, "anonid",
-                                          "search-one-off-buttons");
+const oneOffsContainer = searchPopup.searchOneOffsContainer;
 
 const kValues = ["foo1", "foo2", "foo3"];
 const kUserValue = "foo";

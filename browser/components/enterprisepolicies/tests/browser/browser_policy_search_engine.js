@@ -30,9 +30,7 @@ async function test_opensearch(shouldWork) {
 
   searchBarButton.click();
   await promiseSearchPopupShown;
-  let oneOffsContainer = document.getAnonymousElementByAttribute(searchPopup,
-                                                                 "anonid",
-                                                                 "search-one-off-buttons");
+  let oneOffsContainer = searchPopup.searchOneOffsContainer;
   let engineListElement = oneOffsContainer.querySelector(".search-add-engines");
   if (shouldWork) {
     ok(engineListElement.firstElementChild,
