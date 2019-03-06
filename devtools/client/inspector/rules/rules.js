@@ -1656,6 +1656,10 @@ CssRuleView.prototype = {
 
         // If there is no matching property, then look in computed properties.
         for (const computed of textProp.computed) {
+          if (computed.overridden) {
+            continue;
+          }
+
           if (computed.name === name) {
             if (!this.inspector.is3PaneModeEnabled) {
               this.inspector.sidebar.select("ruleview");
