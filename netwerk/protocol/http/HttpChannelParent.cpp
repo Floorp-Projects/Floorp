@@ -382,11 +382,11 @@ void HttpChannelParent::InvokeAsyncOpen(nsresult rv) {
 }
 
 bool HttpChannelParent::DoAsyncOpen(
-    const URIParams& aURI, const OptionalURIParams& aOriginalURI,
-    const OptionalURIParams& aDocURI,
-    const OptionalURIParams& aOriginalReferrerURI,
-    const uint32_t& aReferrerPolicy, const OptionalURIParams& aAPIRedirectToURI,
-    const OptionalURIParams& aTopWindowURI, nsIPrincipal* aTopWindowPrincipal,
+    const URIParams& aURI, const Maybe<URIParams>& aOriginalURI,
+    const Maybe<URIParams>& aDocURI,
+    const Maybe<URIParams>& aOriginalReferrerURI,
+    const uint32_t& aReferrerPolicy, const Maybe<URIParams>& aAPIRedirectToURI,
+    const Maybe<URIParams>& aTopWindowURI, nsIPrincipal* aTopWindowPrincipal,
     const uint32_t& aLoadFlags, const RequestHeaderTuples& requestHeaders,
     const nsCString& requestMethod, const Maybe<IPCStream>& uploadStream,
     const bool& uploadStreamHasHeaders, const int16_t& priority,
@@ -827,8 +827,8 @@ mozilla::ipc::IPCResult HttpChannelParent::RecvRedirect2Verify(
     const nsresult& aResult, const RequestHeaderTuples& changedHeaders,
     const ChildLoadInfoForwarderArgs& aLoadInfoForwarder,
     const uint32_t& loadFlags, const uint32_t& referrerPolicy,
-    const OptionalURIParams& aReferrerURI,
-    const OptionalURIParams& aAPIRedirectURI,
+    const Maybe<URIParams>& aReferrerURI,
+    const Maybe<URIParams>& aAPIRedirectURI,
     const OptionalCorsPreflightArgs& aCorsPreflightArgs,
     const bool& aChooseAppcache) {
   LOG(("HttpChannelParent::RecvRedirect2Verify [this=%p result=%" PRIx32 "]\n",

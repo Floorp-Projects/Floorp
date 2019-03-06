@@ -3631,13 +3631,13 @@ bool ContentParent::DeallocPPSMContentDownloaderParent(
 }
 
 PExternalHelperAppParent* ContentParent::AllocPExternalHelperAppParent(
-    const OptionalURIParams& uri,
+    const Maybe<URIParams>& uri,
     const Maybe<mozilla::net::LoadInfoArgs>& aLoadInfoArgs,
     const nsCString& aMimeContentType, const nsCString& aContentDisposition,
     const uint32_t& aContentDispositionHint,
     const nsString& aContentDispositionFilename, const bool& aForceSave,
     const int64_t& aContentLength, const bool& aWasFileChannel,
-    const OptionalURIParams& aReferrer, PBrowserParent* aBrowser) {
+    const Maybe<URIParams>& aReferrer, PBrowserParent* aBrowser) {
   ExternalHelperAppParent* parent = new ExternalHelperAppParent(
       uri, aContentLength, aWasFileChannel, aContentDisposition,
       aContentDispositionHint, aContentDispositionFilename);
@@ -3654,13 +3654,13 @@ bool ContentParent::DeallocPExternalHelperAppParent(
 }
 
 mozilla::ipc::IPCResult ContentParent::RecvPExternalHelperAppConstructor(
-    PExternalHelperAppParent* actor, const OptionalURIParams& uri,
+    PExternalHelperAppParent* actor, const Maybe<URIParams>& uri,
     const Maybe<LoadInfoArgs>& loadInfoArgs, const nsCString& aMimeContentType,
     const nsCString& aContentDisposition,
     const uint32_t& aContentDispositionHint,
     const nsString& aContentDispositionFilename, const bool& aForceSave,
     const int64_t& aContentLength, const bool& aWasFileChannel,
-    const OptionalURIParams& aReferrer, PBrowserParent* aBrowser) {
+    const Maybe<URIParams>& aReferrer, PBrowserParent* aBrowser) {
   static_cast<ExternalHelperAppParent*>(actor)->Init(
       loadInfoArgs, aMimeContentType, aForceSave, aReferrer, aBrowser);
   return IPC_OK();
@@ -4185,9 +4185,9 @@ nsresult ContentParent::DoSendAsyncMessage(JSContext* aCx,
 
 mozilla::ipc::IPCResult ContentParent::RecvKeywordToURI(
     const nsCString& aKeyword, nsString* aProviderName,
-    RefPtr<nsIInputStream>* aPostData, OptionalURIParams* aURI) {
+    RefPtr<nsIInputStream>* aPostData, Maybe<URIParams>* aURI) {
   *aPostData = nullptr;
-  *aURI = void_t();
+  *aURI = Nothing();
 
   nsCOMPtr<nsIURIFixup> fixup = components::URIFixup::Service();
   if (!fixup) {
@@ -4872,7 +4872,7 @@ mozilla::ipc::IPCResult ContentParent::RecvCreateWindow(
     PBrowserParent* aThisTab, PBrowserParent* aNewTab,
     const uint32_t& aChromeFlags, const bool& aCalledFromJS,
     const bool& aPositionSpecified, const bool& aSizeSpecified,
-    const OptionalURIParams& aURIToLoad, const nsCString& aFeatures,
+    const Maybe<URIParams>& aURIToLoad, const nsCString& aFeatures,
     const nsCString& aBaseURI, const float& aFullZoom,
     const IPC::Principal& aTriggeringPrincipal, nsIContentSecurityPolicy* aCsp,
     const uint32_t& aReferrerPolicy, CreateWindowResolver&& aResolve) {
@@ -4952,7 +4952,7 @@ mozilla::ipc::IPCResult ContentParent::RecvCreateWindow(
 mozilla::ipc::IPCResult ContentParent::RecvCreateWindowInDifferentProcess(
     PBrowserParent* aThisTab, const uint32_t& aChromeFlags,
     const bool& aCalledFromJS, const bool& aPositionSpecified,
-    const bool& aSizeSpecified, const OptionalURIParams& aURIToLoad,
+    const bool& aSizeSpecified, const Maybe<URIParams>& aURIToLoad,
     const nsCString& aFeatures, const nsCString& aBaseURI,
     const float& aFullZoom, const nsString& aName,
     const IPC::Principal& aTriggeringPrincipal, nsIContentSecurityPolicy* aCsp,

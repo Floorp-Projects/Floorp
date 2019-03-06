@@ -277,7 +277,7 @@ struct XPCOMInitData
     nsString[] dictionaries;
     ClipboardCapabilities clipboardCaps;
     DomainPolicyClone domainPolicy;
-    OptionalURIParams userContentSheetURL;
+    URIParams? userContentSheetURL;
     GfxVarUpdate[] gfxNonDefaultVarUpdates;
     ContentDeviceData contentDeviceData;
     GfxInfoFeatureStatus[] gfxFeatureStatus;
@@ -587,7 +587,7 @@ child:
                          LayoutDeviceIntPoint aDragEndPoint,
                          uint32_t aKeyModifiers);
 
-    async DomainSetChanged(uint32_t aSetType, uint32_t aChangeType, OptionalURIParams aDomain);
+    async DomainSetChanged(uint32_t aSetType, uint32_t aChangeType, URIParams? aDomain);
 
     /**
      * Notify the child to shutdown. The child will in turn call FinishShutdown
@@ -901,7 +901,7 @@ parent:
 
     async PPSMContentDownloader(uint32_t aCertType);
 
-    async PExternalHelperApp(OptionalURIParams uri,
+    async PExternalHelperApp(URIParams? uri,
                              LoadInfoArgs? loadInfoArgs,
                              nsCString aMimeContentType,
                              nsCString aContentDisposition,
@@ -910,7 +910,7 @@ parent:
                              bool aForceSave,
                              int64_t aContentLength,
                              bool aWasFileChannel,
-                             OptionalURIParams aReferrer,
+                             URIParams? aReferrer,
                              nullable PBrowser aBrowser);
 
     async PHandlerService();
@@ -971,7 +971,7 @@ parent:
     async DeviceReset();
 
     sync KeywordToURI(nsCString keyword)
-        returns (nsString providerName, nsIInputStream postData, OptionalURIParams uri);
+        returns (nsString providerName, nsIInputStream postData, URIParams? uri);
 
     sync NotifyKeywordSearchLoading(nsString providerName, nsString keyword);
 
@@ -1120,7 +1120,7 @@ parent:
                        bool aCalledFromJS,
                        bool aPositionSpecified,
                        bool aSizeSpecified,
-                       OptionalURIParams aURIToLoad,
+                       URIParams? aURIToLoad,
                        nsCString aFeatures,
                        nsCString aBaseURI,
                        float aFullZoom,
@@ -1135,7 +1135,7 @@ parent:
       bool aCalledFromJS,
       bool aPositionSpecified,
       bool aSizeSpecified,
-      OptionalURIParams aURIToLoad,
+      URIParams? aURIToLoad,
       nsCString aFeatures,
       nsCString aBaseURI,
       float aFullZoom,

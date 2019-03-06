@@ -45,7 +45,7 @@ struct PreferredAlternativeDataTypeParams
 struct RedirectHistoryEntryInfo
 {
   PrincipalInfo       principalInfo;
-  OptionalURIParams   referrerUri;
+  URIParams?          referrerUri;
   nsCString           remoteAddress;
 };
 
@@ -57,7 +57,7 @@ struct LoadInfoArgs
   PrincipalInfo?              sandboxedLoadingPrincipalInfo;
   PrincipalInfo?              topLevelPrincipalInfo;
   PrincipalInfo?              topLevelStorageAreaPrincipalInfo;
-  OptionalURIParams           resultPrincipalURI;
+  URIParams?                  resultPrincipalURI;
   uint32_t                    securityFlags;
   uint32_t                    contentPolicyType;
   uint32_t                    tainting;
@@ -209,12 +209,12 @@ struct HttpChannelOpenArgs
   // - TODO: bug 571161: unclear if any HTTP channel clients ever
   // set originalURI != uri (about:credits?); also not clear if
   // chrome channel would ever need to know.  Get rid of next arg?
-  OptionalURIParams           original;
-  OptionalURIParams           doc;
-  OptionalURIParams           originalReferrer;
+  URIParams?                  original;
+  URIParams?                  doc;
+  URIParams?                  originalReferrer;
   uint32_t                    referrerPolicy;
-  OptionalURIParams           apiRedirectTo;
-  OptionalURIParams           topWindowURI;
+  URIParams?                  apiRedirectTo;
+  URIParams?                  topWindowURI;
   nsIPrincipal                topWindowPrincipal;
   uint32_t                    loadFlags;
   RequestHeaderTuples         requestHeaders;

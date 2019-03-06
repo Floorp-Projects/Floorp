@@ -552,9 +552,9 @@ void nsMozIconURI::Serialize(URIParams& aParams) {
       return;
     }
 
-    params.uri() = iconURLParams;
+    params.uri() = Some(std::move(iconURLParams));
   } else {
-    params.uri() = void_t();
+    params.uri() = Nothing();
   }
 
   params.size() = mSize;
@@ -573,8 +573,8 @@ bool nsMozIconURI::Deserialize(const URIParams& aParams) {
   }
 
   const IconURIParams& params = aParams.get_IconURIParams();
-  if (params.uri().type() != OptionalURIParams::Tvoid_t) {
-    nsCOMPtr<nsIURI> uri = DeserializeURI(params.uri().get_URIParams());
+  if (params.uri().isSome()) {
+    nsCOMPtr<nsIURI> uri = DeserializeURI(params.uri().ref());
     mIconURL = do_QueryInterface(uri);
     if (!mIconURL) {
       MOZ_ASSERT_UNREACHABLE("bad nsIURI passed");

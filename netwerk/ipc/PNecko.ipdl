@@ -88,10 +88,10 @@ parent:
   async PWebSocketEventListener(uint64_t aInnerWindowID);
 
   /* Predictor Methods */
-  async PredPredict(OptionalURIParams targetURI, OptionalURIParams sourceURI,
+  async PredPredict(URIParams? targetURI, URIParams? sourceURI,
                     uint32_t reason, OriginAttributes originAttributes,
                     bool hasVerifier);
-  async PredLearn(URIParams targetURI, OptionalURIParams sourceURI,
+  async PredLearn(URIParams targetURI, URIParams? sourceURI,
                   uint32_t reason, OriginAttributes originAttributes);
   async PredReset();
 

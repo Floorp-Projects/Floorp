@@ -549,7 +549,7 @@ nsresult CookieServiceChild::SetCookieStringInternal(nsIURI *aHostURI,
   URIParams hostURIParams;
   SerializeURI(aHostURI, hostURIParams);
 
-  OptionalURIParams channelURIParams;
+  Maybe<URIParams> channelURIParams;
   mozilla::OriginAttributes attrs;
   if (aChannel) {
     nsCOMPtr<nsIURI> channelURI;

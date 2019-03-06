@@ -20,7 +20,7 @@ class URI;
 namespace mozilla {
 
 namespace ipc {
-class OptionalURIParams;
+class URIParams;
 }  // namespace ipc
 
 namespace net {
@@ -61,7 +61,6 @@ class ExternalHelperAppParent
       public nsIStreamListener,
       public net::PrivateBrowsingChannel<ExternalHelperAppParent>,
       public nsIExternalHelperAppParent {
-  typedef mozilla::ipc::OptionalURIParams OptionalURIParams;
 
  public:
   NS_DECL_ISUPPORTS_INHERITED
@@ -84,15 +83,16 @@ class ExternalHelperAppParent
 
   bool WasFileChannel() override { return mWasFileChannel; }
 
-  ExternalHelperAppParent(
-      const OptionalURIParams& uri,
-      const int64_t& contentLength, const bool& wasFileChannel,
-      const nsCString& aContentDispositionHeader,
-      const uint32_t& aContentDispositionHint,
-      const nsString& aContentDispositionFilename);
+  ExternalHelperAppParent(const Maybe<mozilla::ipc::URIParams>& uri,
+                          const int64_t& contentLength,
+                          const bool& wasFileChannel,
+                          const nsCString& aContentDispositionHeader,
+                          const uint32_t& aContentDispositionHint,
+                          const nsString& aContentDispositionFilename);
   void Init(const Maybe<mozilla::net::LoadInfoArgs>& aLoadInfoArgs,
             const nsCString& aMimeContentType, const bool& aForceSave,
-            const OptionalURIParams& aReferrer, PBrowserParent* aBrowser);
+            const Maybe<mozilla::ipc::URIParams>& aReferrer,
+            PBrowserParent* aBrowser);
 
  protected:
   virtual ~ExternalHelperAppParent();

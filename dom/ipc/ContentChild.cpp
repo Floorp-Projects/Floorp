@@ -873,7 +873,7 @@ nsresult ContentChild::ProvideWindowCommon(
       return rv;
     }
 
-    OptionalURIParams uriToLoad;
+    Maybe<URIParams> uriToLoad;
     SerializeURI(aURI, uriToLoad);
     Unused << SendCreateWindowInDifferentProcess(
         aTabOpener, aChromeFlags, aCalledFromJS, aPositionSpecified,
@@ -1073,11 +1073,9 @@ nsresult ContentChild::ProvideWindowCommon(
       return rv;
     }
 
-    OptionalURIParams uriToLoad;
+    Maybe<URIParams> uriToLoad;
     if (aURI) {
       SerializeURI(aURI, uriToLoad);
-    } else {
-      uriToLoad = mozilla::void_t();
     }
 
     SendCreateWindow(aTabOpener, newChild, aChromeFlags, aCalledFromJS,
@@ -2017,13 +2015,13 @@ bool ContentChild::DeallocPPSMContentDownloaderChild(
 }
 
 PExternalHelperAppChild* ContentChild::AllocPExternalHelperAppChild(
-    const OptionalURIParams& uri,
+    const Maybe<URIParams>& uri,
     const Maybe<mozilla::net::LoadInfoArgs>& aLoadInfoArgs,
     const nsCString& aMimeContentType, const nsCString& aContentDisposition,
     const uint32_t& aContentDispositionHint,
     const nsString& aContentDispositionFilename, const bool& aForceSave,
     const int64_t& aContentLength, const bool& aWasFileChannel,
-    const OptionalURIParams& aReferrer, PBrowserChild* aBrowser) {
+    const Maybe<URIParams>& aReferrer, PBrowserChild* aBrowser) {
   auto* child = new ExternalHelperAppChild();
   child->AddRef();
   return child;
@@ -2742,7 +2740,7 @@ bool ContentChild::DeallocPOfflineCacheUpdateChild(
 
 mozilla::ipc::IPCResult ContentChild::RecvDomainSetChanged(
     const uint32_t& aSetType, const uint32_t& aChangeType,
-    const OptionalURIParams& aDomain) {
+    const Maybe<URIParams>& aDomain) {
   if (aChangeType == ACTIVATE_POLICY) {
     if (mPolicy) {
       return IPC_OK();

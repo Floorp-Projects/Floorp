@@ -31,7 +31,7 @@ static nsresult BroadcastDomainSetChange(DomainSetType aSetType,
     return NS_OK;
   }
 
-  OptionalURIParams uri;
+  Maybe<URIParams> uri;
   SerializeURI(aDomain, uri);
 
   for (uint32_t i = 0; i < parents.Length(); i++) {
