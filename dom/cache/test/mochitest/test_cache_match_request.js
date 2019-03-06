@@ -48,7 +48,7 @@ function testRequest(request, unknownRequest, requestWithAlternateQueryString,
     return Promise.all(
       ["HEAD", "POST", "PUT", "DELETE", "OPTIONS"]
         .map(function(method) {
-          var r = new Request(request, {method: method});
+          var r = new Request(request, {method});
           return c.add(r)
             .then(function() {
               ok(false, "Promise should be rejected");
@@ -72,7 +72,7 @@ function testRequest(request, unknownRequest, requestWithAlternateQueryString,
     return Promise.all(
       ["HEAD", "POST", "PUT", "DELETE", "OPTIONS"]
         .map(function(method) {
-          var req = new Request(request, {method: method});
+          var req = new Request(request, {method});
           return c.match(req)
             .then(function(r) {
               is(typeof r, "undefined", "Searching for a request with a non-GET method should not succeed");
@@ -102,10 +102,10 @@ function testRequest(request, unknownRequest, requestWithAlternateQueryString,
   }).then(function() {
     return caches.match(request, {cacheName: name + "mambojambo"})
       .then(function(result) {
-        is(typeof r, "undefined", 'Searching in the wrong cache should resolve to undefined');
+        is(typeof r, "undefined", "Searching in the wrong cache should resolve to undefined");
         return caches.has(name + "mambojambo");
       }).then(function(hasCache) {
-        ok(!hasCache, 'The wrong cache should still not exist');
+        ok(!hasCache, "The wrong cache should still not exist");
       });
   }).then(function() {
     // Make sure that cacheName is ignored on Cache

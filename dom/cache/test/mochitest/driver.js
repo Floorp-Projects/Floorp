@@ -23,7 +23,7 @@ function runTests(testFile, order) {
               ["dom.caches.testing.enabled", true],
               ["dom.serviceWorkers.enabled", true],
               ["dom.serviceWorkers.testing.enabled", true],
-              ["dom.serviceWorkers.exemptFromPerDomainMax", true]]
+              ["dom.serviceWorkers.exemptFromPerDomainMax", true]],
     });
   }
 
@@ -73,10 +73,10 @@ function runTests(testFile, order) {
           if (event.data.context != "Window") {
             return;
           }
-          if (event.data.type == 'finish') {
+          if (event.data.type == "finish") {
             window.removeEventListener("message", onMessage);
             resolve();
-          } else if (event.data.type == 'status') {
+          } else if (event.data.type == "status") {
             ok(event.data.status, event.data.context + ": " + event.data.msg);
           }
         });
