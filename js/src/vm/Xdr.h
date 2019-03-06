@@ -484,8 +484,6 @@ class XDRState : public XDRCoderBase {
   XDRResult codeChars(JS::Latin1Char* chars, size_t nchars);
   XDRResult codeChars(mozilla::Utf8Unit* units, size_t nchars);
 
-  // If |nchars > 0|, this calls |codeAlign(sizeof(char16_t))| so callers
-  // don't have to.
   XDRResult codeChars(char16_t* chars, size_t nchars);
 
   XDRResult codeFunction(JS::MutableHandleFunction objp,

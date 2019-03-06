@@ -86,21 +86,22 @@ XDRResult XDRState<mode>::codeChars(char16_t* chars, size_t nchars) {
     return Ok();
   }
 
-  // Align the buffer to avoid unaligned loads.
-  MOZ_TRY(codeAlign(sizeof(char16_t)));
-
   size_t nbytes = nchars * sizeof(char16_t);
   if (mode == XDR_ENCODE) {
     uint8_t* ptr = buf.write(nbytes);
     if (!ptr) {
       return fail(JS::TranscodeResult_Throw);
     }
+
+    // |mozilla::NativeEndian| correctly handles writing into unaligned |ptr|.
     mozilla::NativeEndian::copyAndSwapToLittleEndian(ptr, chars, nchars);
   } else {
     const uint8_t* ptr = buf.read(nbytes);
     if (!ptr) {
       return fail(JS::TranscodeResult_Failure_BadDecode);
     }
+
+    // |mozilla::NativeEndian| correctly handles reading from unaligned |ptr|.
     mozilla::NativeEndian::copyAndSwapFromLittleEndian(chars, ptr, nchars);
   }
   return Ok();

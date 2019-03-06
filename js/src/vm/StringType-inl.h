@@ -86,9 +86,10 @@ static MOZ_ALWAYS_INLINE JSInlineString* NewInlineString(
   return s;
 }
 
-template <typename CharT>
-static MOZ_ALWAYS_INLINE JSFlatString* TryEmptyOrStaticString(
-    JSContext* cx, const CharT* chars, size_t n) {
+template <typename Chars>
+static MOZ_ALWAYS_INLINE JSFlatString* TryEmptyOrStaticString(JSContext* cx,
+                                                              Chars chars,
+                                                              size_t n) {
   // Measurements on popular websites indicate empty strings are pretty common
   // and most strings with length 1 or 2 are in the StaticStrings table. For
   // length 3 strings that's only about 1%, so we check n <= 2.
@@ -103,6 +104,14 @@ static MOZ_ALWAYS_INLINE JSFlatString* TryEmptyOrStaticString(
   }
 
   return nullptr;
+}
+
+template <typename CharT, typename = typename std::enable_if<
+                              !std::is_const<CharT>::value>::type>
+static MOZ_ALWAYS_INLINE JSFlatString* TryEmptyOrStaticString(JSContext* cx,
+                                                              CharT* chars,
+                                                              size_t n) {
+  return TryEmptyOrStaticString(cx, const_cast<const CharT*>(chars), n);
 }
 
 } /* namespace js */

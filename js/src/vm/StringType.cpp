@@ -1539,6 +1539,16 @@ static bool CanStoreCharsAsLatin1(const Latin1Char* s, size_t length) {
   MOZ_CRASH("Shouldn't be called for Latin1 chars");
 }
 
+static bool CanStoreCharsAsLatin1(LittleEndianChars chars, size_t length) {
+  for (size_t i = 0; i < length; i++) {
+    if (chars[i] > JSString::MAX_LATIN1_CHAR) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 template <AllowGC allowGC>
 static MOZ_ALWAYS_INLINE JSInlineString* NewInlineStringDeflated(
     JSContext* cx, mozilla::Range<const char16_t> chars) {
@@ -1587,6 +1597,38 @@ template <AllowGC allowGC>
 static JSFlatString* NewStringDeflated(JSContext* cx, const Latin1Char* s,
                                        size_t n) {
   MOZ_CRASH("Shouldn't be called for Latin1 chars");
+}
+
+static JSFlatString* NewStringDeflatedFromLittleEndianNoGC(
+    JSContext* cx, LittleEndianChars chars, size_t length) {
+  MOZ_ASSERT(CanStoreCharsAsLatin1(chars, length));
+
+  if (JSInlineString::lengthFits<Latin1Char>(length)) {
+    Latin1Char* storage;
+    JSInlineString* str = AllocateInlineString<NoGC>(cx, length, &storage);
+    if (!str) {
+      return nullptr;
+    }
+
+    FillFromCompatibleAndTerminate(storage, chars, length);
+    return str;
+  }
+
+  auto news = cx->make_pod_array<Latin1Char>(length + 1);
+  if (!news) {
+    cx->recoverFromOutOfMemory();
+    return nullptr;
+  }
+
+  FillFromCompatibleAndTerminate(news.get(), chars, length);
+
+  JSFlatString* str = JSFlatString::new_<NoGC>(cx, news.get(), length);
+  if (!str) {
+    return nullptr;
+  }
+
+  mozilla::Unused << news.release();
+  return str;
 }
 
 template <typename CharT>
@@ -1756,6 +1798,36 @@ template JSFlatString* NewStringCopyNDontDeflate<NoGC>(JSContext* cx,
                                                        const Latin1Char* s,
                                                        size_t n);
 
+static JSFlatString* NewUndeflatedStringFromLittleEndianNoGC(
+    JSContext* cx, LittleEndianChars chars, size_t length) {
+  if (JSInlineString::lengthFits<char16_t>(length)) {
+    char16_t* storage;
+    JSInlineString* str = AllocateInlineString<NoGC>(cx, length, &storage);
+    if (!str) {
+      return nullptr;
+    }
+
+    FillAndTerminate(storage, chars, length);
+    return str;
+  }
+
+  auto news = cx->make_pod_array<char16_t>(length + 1);
+  if (!news) {
+    cx->recoverFromOutOfMemory();
+    return nullptr;
+  }
+
+  FillAndTerminate(news.get(), chars, length);
+
+  if (JSFlatString* str = JSFlatString::new_<NoGC>(cx, news.get(), length)) {
+    // Successful JSFlatString::new_ took ownership of |news.release()|.
+    mozilla::Unused << news.release();
+    return str;
+  }
+
+  return nullptr;
+}
+
 JSFlatString* NewLatin1StringZ(JSContext* cx, UniqueChars chars) {
   size_t length = strlen(chars.get());
   UniqueLatin1Chars latin1(reinterpret_cast<Latin1Char*>(chars.release()));
@@ -1782,6 +1854,20 @@ template JSFlatString* NewStringCopyN<CanGC>(JSContext* cx, const Latin1Char* s,
 
 template JSFlatString* NewStringCopyN<NoGC>(JSContext* cx, const Latin1Char* s,
                                             size_t n);
+
+JSFlatString* NewStringFromLittleEndianNoGC(JSContext* cx,
+                                            LittleEndianChars chars,
+                                            size_t length) {
+  if (JSFlatString* str = TryEmptyOrStaticString(cx, chars, length)) {
+    return str;
+  }
+
+  if (CanStoreCharsAsLatin1(chars, length)) {
+    return NewStringDeflatedFromLittleEndianNoGC(cx, chars, length);
+  }
+
+  return NewUndeflatedStringFromLittleEndianNoGC(cx, chars, length);
+}
 
 template <js::AllowGC allowGC>
 JSFlatString* NewStringCopyUTF8N(JSContext* cx, const JS::UTF8Chars utf8) {
