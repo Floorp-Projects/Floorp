@@ -321,7 +321,7 @@ function restart(safeMode) {
     return;
   }
 
-  let flags = Ci.nsIAppStartup.eAttemptQuit | Ci.nsIAppStartup.eRestartNotSameProfile;
+  let flags = Ci.nsIAppStartup.eAttemptQuit | Ci.nsIAppStartup.eRestart;
 
   if (safeMode) {
     Services.startup.restartInSafeMode(flags);
