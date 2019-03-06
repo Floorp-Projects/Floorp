@@ -1,6 +1,6 @@
 /* global toolbox, createDebuggerContext, waitForSources, testUrl,
           waitForPaused, addBreakpoint, assertPausedLocation, stepIn,
-          findSource, removeBreakpoint, resume, selectSource */
+          findSource, removeBreakpoint, resume */
 
 info(`START: ${new Error().lineNumber}`);
 
@@ -34,7 +34,6 @@ info(`START: ${new Error().lineNumber}`);
   script.click();
 
   const onPaused = waitForPaused(dbg);
-  await selectSource(dbg, fileName);
   await addBreakpoint(dbg, fileName, 2);
 
   await onPaused;

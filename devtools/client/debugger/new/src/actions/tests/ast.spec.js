@@ -35,8 +35,7 @@ const threadClient = {
   getFrameScopes: async () => {},
   evaluate: async expression => ({ result: evaluationResult[expression] }),
   evaluateExpressions: async expressions =>
-    expressions.map(expression => ({ result: evaluationResult[expression] })),
-  getBreakpointPositions: async () => ({})
+    expressions.map(expression => ({ result: evaluationResult[expression] }))
 };
 
 const sourceMaps = {
@@ -44,8 +43,7 @@ const sourceMaps = {
     id,
     text: sourceTexts[id],
     contentType: "text/javascript"
-  }),
-  getGeneratedRangesForOriginal: async () => []
+  })
 };
 
 const sourceTexts = {

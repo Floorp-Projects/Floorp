@@ -45,14 +45,6 @@ function createStore(client: any, initialState: any = {}, sourceMapsMock: any) {
     newSources: sources => store.dispatch(actions.newSources(sources))
   });
 
-  store.thunkArgs = () => ({
-    dispatch: store.dispatch,
-    getState: store.getState,
-    client,
-    sourceMaps,
-    panel: {}
-  });
-
   return store;
 }
 

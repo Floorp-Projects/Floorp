@@ -6,8 +6,6 @@
 
 import { PROMISE } from "../utils/middleware/promise";
 import { getGeneratedSource, getSource } from "../../selectors";
-import { setBreakpointPositions } from "../breakpoints";
-
 import * as parser from "../../workers/parser";
 import { isLoaded, isOriginal } from "../../utils/source";
 import { Telemetry } from "devtools-modules";
@@ -88,9 +86,8 @@ export function loadSourceText(source: ?Source) {
       await dispatch(loadSourceText(generatedSource));
     }
 
-    if (!newSource.isWasm && isLoaded(newSource)) {
+    if (!newSource.isWasm) {
       await parser.setSource(newSource);
-      await dispatch(setBreakpointPositions(newSource.id));
     }
 
     // signal that the action is finished

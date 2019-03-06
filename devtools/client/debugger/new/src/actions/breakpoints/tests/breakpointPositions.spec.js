@@ -31,18 +31,8 @@ describe("breakpointPositions", () => {
       selectors.getBreakpointPositionsForSource(getState(), "foo")
     ).toEqual([
       {
-        location: {
-          line: 9,
-          column: 1,
-          sourceId: "foo",
-          sourceUrl: "http://localhost:8000/examples/foo"
-        },
-        generatedLocation: {
-          line: 9,
-          column: 1,
-          sourceId: "foo",
-          sourceUrl: "http://localhost:8000/examples/foo"
-        }
+        location: { line: 9, column: 1, sourceId: "foo" },
+        generatedLocation: { line: 9, column: 1, sourceId: "foo" }
       }
     ]);
   });
@@ -73,18 +63,8 @@ describe("breakpointPositions", () => {
       selectors.getBreakpointPositionsForSource(getState(), "foo")
     ).toEqual([
       {
-        location: {
-          line: 9,
-          column: 1,
-          sourceId: "foo",
-          sourceUrl: "http://localhost:8000/examples/foo"
-        },
-        generatedLocation: {
-          line: 9,
-          column: 1,
-          sourceId: "foo",
-          sourceUrl: "http://localhost:8000/examples/foo"
-        }
+        location: { line: 9, column: 1, sourceId: "foo" },
+        generatedLocation: { line: 9, column: 1, sourceId: "foo" }
       }
     ]);
 
