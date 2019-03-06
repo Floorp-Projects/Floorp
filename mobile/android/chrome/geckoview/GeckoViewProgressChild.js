@@ -18,8 +18,7 @@ class GeckoViewProgressChild extends GeckoViewChildModule {
 
     ProgressTracker.onInit(this);
 
-    const flags = Ci.nsIWebProgress.NOTIFY_PROGRESS |
-                  Ci.nsIWebProgress.NOTIFY_STATE_NETWORK |
+    const flags = Ci.nsIWebProgress.NOTIFY_STATE_NETWORK |
                   Ci.nsIWebProgress.NOTIFY_LOCATION;
     this.progressFilter =
       Cc["@mozilla.org/appshell/component/browser-status-filter;1"]
@@ -28,13 +27,6 @@ class GeckoViewProgressChild extends GeckoViewChildModule {
     const webProgress = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
                         .getInterface(Ci.nsIWebProgress);
     webProgress.addProgressListener(this.progressFilter, flags);
-  }
-
-  onProgressChange(aWebProgress, aRequest, aCurSelf, aMaxSelf, aCurTotal, aMaxTotal) {
-    debug `onProgressChange ${aCurSelf}/${aMaxSelf} ${aCurTotal}/${aMaxTotal}`;
-
-    ProgressTracker.handleProgress(null, aCurTotal, aMaxTotal);
-    ProgressTracker.updateProgress();
   }
 
   onStateChange(aWebProgress, aRequest, aStateFlags, aStatus) {
@@ -208,9 +200,6 @@ const ProgressTracker = {
       firstPaint: false,
       pageShow: false,
       parsed: false,
-      totalReceived: 1,
-      totalExpected: 1,
-      channels: {},
     };
   },
 
@@ -224,37 +213,7 @@ const ProgressTracker = {
       firstPaint: this._data.firstPaint,
       pageShow: this._data.pageShow,
       parsed: this._data.parsed,
-      totalReceived: this._data.totalReceived,
-      totalExpected: this._data.totalExpected,
     };
-  },
-
-  handleProgress: function(aChannelUri, aProgress, aMax) {
-    debug `ProgressTracker handleProgress ${aChannelUri} ${aProgress}/${aMax}`;
-
-    let data = this._data;
-
-    if (!data.uri) {
-      return;
-    }
-
-    aChannelUri = aChannelUri || data.uri;
-
-    const now = content.performance.now();
-
-    if (!data.channels[aChannelUri]) {
-      data.channels[aChannelUri] = {
-        received: aProgress,
-        max: aMax,
-        expected: (aMax > 0 ? aMax : aProgress * 2),
-        lastUpdate: now,
-      };
-    } else {
-      let channelProgress = data.channels[aChannelUri];
-      channelProgress.received = Math.max(channelProgress.received, aProgress);
-      channelProgress.expected = Math.max(channelProgress.expected, aMax);
-      channelProgress.lastUpdate = now;
-    }
   },
 
   updateProgress: function() {
@@ -266,58 +225,25 @@ const ProgressTracker = {
       return;
     }
 
-    const now = content.performance.now();
-
     let progress = 0;
-
-    if (data.pageStart) {
-      progress += 10;
-    }
-    if (data.firstPaint) {
-      progress += 15;
-    }
-    if (data.parsed) {
-      progress += 15;
-    }
-    if (data.pageShow) {
-      progress += 15;
-    }
-    if (data.locationChange) {
-      progress += 10;
-    }
-
-    data.totalReceived = 1;
-    data.totalExpected = 1;
-    const channelOverdue = now - 300;
-
-    for (let channel in data.channels) {
-      if (data.channels[channel].max < 1 &&
-          channelOverdue > data.channels[channel].lastUpdate) {
-        data.channels[channel].expected = data.channels[channel].received;
-      }
-      data.totalReceived += data.channels[channel].received;
-      data.totalExpected += data.channels[channel].expected;
-    }
-
-    const minExpected = 1024 * 1;
-    const maxExpected = 1024 * 1024 * 0.5;
-
-    if (data.pageStop ||
-        (data.pageStart && data.firstPaint && data.parsed && data.pageShow &&
-         data.totalReceived > minExpected &&
-         data.totalReceived >= data.totalExpected)) {
+    if (data.pageStop || data.pageShow) {
       progress = 100;
-    } else {
-      const a = Math.min(1, (data.totalExpected / maxExpected)) * 30;
-      progress += data.totalReceived / data.totalExpected * a;
+    } else if (data.firstPaint) {
+      progress = 80;
+    } else if (data.parsed) {
+      progress = 55;
+    } else if (data.locationChange) {
+      progress = 30;
+    } else if (data.pageStart) {
+      progress = 15;
     }
-
-    debug `ProgressTracker updateProgress data=${this._debugData()}
-           progress=${progress}`;
 
     if (data.prev >= progress) {
       return;
     }
+
+    debug `ProgressTracker updateProgress data=${this._debugData()}
+           progress=${progress}`;
 
     this.eventDispatcher.sendRequest({
       type: "GeckoView:ProgressChanged",
@@ -326,7 +252,7 @@ const ProgressTracker = {
 
     data.prev = progress;
 
-    if (progress === 100) {
+    if (progress >= 100) {
       PAGE_LOAD_PROGRESS_PROBE.finish();
     }
   },
