@@ -145,7 +145,7 @@
     <vbox class="update-content" flex="1">
       <label id="errorIntro">&error.label;</label>
       <separator/>
-      <html:textarea class="plain" readonly="true" id="errorReason" rows="3"/>
+      <html:textarea class="plain" readonly="readonly" id="errorReason" rows="3"/>
       <separator/>
       <label id="errorManual">&errorManual.label;</label>
       <hbox>
