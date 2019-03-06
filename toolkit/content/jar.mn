@@ -105,6 +105,7 @@ toolkit.jar:
    content/global/elements/textbox.js          (widgets/textbox.js)
    content/global/elements/videocontrols.js    (widgets/videocontrols.js)
    content/global/elements/tree.js             (widgets/tree.js)
+   content/global/elements/wizard.js           (widgets/wizard.js)
 #ifdef XP_MACOSX
    content/global/macWindowMenu.js
 #endif
