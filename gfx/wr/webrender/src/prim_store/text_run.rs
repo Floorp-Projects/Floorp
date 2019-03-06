@@ -256,8 +256,7 @@ impl TextRunPrimitive {
 
         // Get the font transform matrix (skew / scale) from the complete transform.
         let font_transform = if transform_glyphs {
-            // Quantize the transform to minimize thrashing of the glyph cache.
-            FontTransform::from(transform).quantize()
+            FontTransform::from(transform)
         } else {
             FontTransform::identity()
         };
