@@ -1902,6 +1902,47 @@ class _ParamTraits():
         return block
 
     @classmethod
+    def bulkSentinelKey(cls, fields):
+        return ' | '.join(f.basename for f in fields)
+
+    @classmethod
+    def checkedBulkWrite(cls, size, fields):
+        block = Block()
+        first = fields[0]
+
+        block.addstmts([
+            StmtExpr(ExprCall(ExprSelect(cls.msgvar, '->', 'WriteBytes'),
+                              args=[ExprAddrOf(ExprCall(first.getMethod(thisexpr=cls.var,
+                                                                        sel='.'))),
+                                    ExprLiteral.Int(size * len(fields))]))
+        ])
+        block.addstmts(cls.writeSentinel(cls.msgvar, cls.bulkSentinelKey(fields)))
+
+        return block
+
+    @classmethod
+    def checkedBulkRead(cls, size, fields):
+        block = Block()
+        first = fields[0]
+
+        readbytes = ExprCall(ExprSelect(cls.msgvar, '->', 'ReadBytesInto'),
+                             args=[cls.itervar,
+                                   ExprAddrOf(ExprCall(first.getMethod(thisexpr=cls.var,
+                                                                       sel='->'))),
+                                   ExprLiteral.Int(size * len(fields))])
+        ifbad = StmtIf(ExprNot(readbytes))
+        errmsg = 'Error bulk reading fields from %s' % first.ipdltype.name()
+        ifbad.addifstmts([cls.fatalError(errmsg),
+                          StmtReturn.FALSE])
+        block.addstmt(ifbad)
+        block.addstmts(cls.readSentinel(cls.msgvar,
+                                        cls.itervar,
+                                        cls.bulkSentinelKey(fields),
+                                        errfnSentinel()(errmsg)))
+
+        return block
+
+    @classmethod
     def checkedRead(cls, ipdltype, var,
                     msgvar, itervar, errfn,
                     paramtype, sentinelKey,
@@ -2078,27 +2119,39 @@ class _ParamTraits():
         write = []
         read = []
 
-        # The iteration order here doesn't particularly matter, but we choose
-        # member order for ideally better cache performance.
-        for f in sd.fields_member_order():
-            writefield = cls.checkedWrite(f.ipdltype,
-                                          get('.', f),
-                                          cls.msgvar,
-                                          sentinelKey=f.basename,
-                                          actor=cls.actor)
-            readfield = cls._checkedRead(f.ipdltype,
-                                         ExprAddrOf(get('->', f)), f.basename,
-                                         '\'' + f.getMethod().name + '\' ' +
-                                         '(' + f.ipdltype.name() + ') member of ' +
-                                         '\'' + structtype.name() + '\'')
+        for (size, fields) in itertools.groupby(sd.fields_member_order(),
+                                                lambda f: pod_size(f.ipdltype)):
+            fields = list(fields)
 
-            # Wrap the read/write in a side check if the field is special.
-            if f.special:
-                writefield = cls.ifsideis(f.side, writefield)
-                readfield = cls.ifsideis(f.side, readfield)
+            if size == pod_size_sentinel:
+                for f in fields:
+                    writefield = cls.checkedWrite(f.ipdltype,
+                                                  get('.', f),
+                                                  cls.msgvar,
+                                                  sentinelKey=f.basename,
+                                                  actor=cls.actor)
+                    readfield = cls._checkedRead(f.ipdltype,
+                                                 ExprAddrOf(get('->', f)), f.basename,
+                                                 '\'' + f.getMethod().name + '\' ' +
+                                                 '(' + f.ipdltype.name() + ') member of ' +
+                                                 '\'' + structtype.name() + '\'')
 
-            write.append(writefield)
-            read.append(readfield)
+                    # Wrap the read/write in a side check if the field is special.
+                    if f.special:
+                        writefield = cls.ifsideis(f.side, writefield)
+                        readfield = cls.ifsideis(f.side, readfield)
+
+                    write.append(writefield)
+                    read.append(readfield)
+            else:
+                for f in fields:
+                    assert not f.special
+
+                writefield = cls.checkedBulkWrite(size, fields)
+                readfield = cls.checkedBulkRead(size, fields)
+
+                write.append(writefield)
+                read.append(readfield)
 
         read.append(StmtReturn.TRUE)
 
