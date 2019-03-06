@@ -654,6 +654,17 @@ static bool WasmCachingIsSupported(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
+static bool WasmUsesCranelift(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+#ifdef ENABLE_WASM_CRANELIFT
+  bool usesCranelift = cx->options().wasmCranelift();
+#else
+  bool usesCranelift = false;
+#endif
+  args.rval().setBoolean(usesCranelift);
+  return true;
+}
+
 static bool WasmThreadsSupported(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   bool isSupported = wasm::HasSupport(cx);
@@ -5982,6 +5993,12 @@ gc::ZealModeHelpText),
     JS_FN_HELP("wasmCachingIsSupported", WasmCachingIsSupported, 0, 0,
 "wasmCachingIsSupported()",
 "  Returns a boolean indicating whether WebAssembly caching is supported by the runtime."),
+
+    JS_FN_HELP("wasmUsesCranelift", WasmUsesCranelift, 0, 0,
+"wasmUsesCranelift()",
+"  Returns a boolean indicating whether Cranelift is currently enabled for backend\n"
+"  compilation. This doesn't necessarily mean a module will be compiled with \n"
+"  Cranelift (e.g. when baseline is also enabled)."),
 
     JS_FN_HELP("wasmThreadsSupported", WasmThreadsSupported, 0, 0,
 "wasmThreadsSupported()",
