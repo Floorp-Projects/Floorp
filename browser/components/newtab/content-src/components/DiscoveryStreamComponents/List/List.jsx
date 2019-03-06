@@ -34,7 +34,11 @@ export class ListItem extends React.PureComponent {
   render() {
     return (
       <li className="ds-list-item">
-        <SafeAnchor url={this.props.url} className="ds-list-item-link" onLinkClick={this.onLinkClick}>
+        <SafeAnchor
+          className="ds-list-item-link"
+          dispatch={this.props.dispatch}
+          onLinkClick={this.onLinkClick}
+          url={this.props.url}>
           <div className="ds-list-item-text">
             <div>
               <div className="ds-list-item-title">{this.props.title}</div>
