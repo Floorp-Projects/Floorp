@@ -29,7 +29,7 @@ class KeyValueParseError(Exception):
         Exception.__init__(self, msg)
 
 
-def parse_key_value(strings, separator='=', context='key, value: '):
+def parse_key_value(strings, separator='=', context='key, value'):
     """Parse string-serialized key-value pairs in the form of `key = value`.
 
     Args:
@@ -47,7 +47,7 @@ def parse_key_value(strings, separator='=', context='key, value: '):
     missing = [string for string in strings if separator not in string]
     if missing:
         raise KeyValueParseError(
-            "Error: syntax error in %s" %
+            "Error: syntax error in %s: %s" %
             (context, ','.join(missing)), errors=missing)
     return [string.split(separator, 1) for string in strings]
 
