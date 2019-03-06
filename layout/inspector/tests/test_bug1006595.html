@@ -36,6 +36,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1006595
   var varProps = InspectorUtils.getSubpropertiesForCSSProperty("--foo");
   arraysEqual(varProps, ["--foo"], "'--foo' subproperties");
 
+  try {
+    InspectorUtils.cssPropertySupportsType("padding", 0);
+    ok(false, "Invalid types throw");
+  } catch (ex) {
+    ok(true, "Invalid types don't crash");
+  }
+
   ok(InspectorUtils.cssPropertyIsShorthand("padding"), "'padding' is a shorthand")
   ok(!InspectorUtils.cssPropertyIsShorthand("color"), "'color' is not a shorthand")
 
