@@ -5303,7 +5303,7 @@ ArrayObject* js::NewArrayCopyOnWriteOperation(JSContext* cx,
     return nullptr;
   }
 
-  return NewDenseCopyOnWriteArray(cx, baseobj, gc::DefaultHeap);
+  return NewDenseCopyOnWriteArray(cx, baseobj);
 }
 
 void js::ReportRuntimeLexicalError(JSContext* cx, unsigned errorNumber,
