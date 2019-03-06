@@ -369,7 +369,8 @@ class SeleniumRefTestExecutor(RefTestExecutor):
             """return [window.outerWidth - window.innerWidth,
                        window.outerHeight - window.innerHeight];"""
         )
-        self.protocol.webdriver.set_window_rect(0, 0, 800 + width_offset, 600 + height_offset)
+        self.protocol.webdriver.set_window_size(0, 0)
+        self.protocol.webdriver.set_window_position(800 + width_offset, 600 + height_offset)
 
         result = self.implementation.run_test(test)
 
