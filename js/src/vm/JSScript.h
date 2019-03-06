@@ -1910,8 +1910,7 @@ class JSScript : public js::gc::TenuredCell {
                                       uint32_t nresumeoffsets);
 
  private:
-  static void initFromFunctionBox(js::HandleScript script,
-                                  js::frontend::FunctionBox* funbox);
+  void initFromFunctionBox(js::frontend::FunctionBox* funbox);
 
  public:
   static bool fullyInitFromEmitter(JSContext* cx, js::HandleScript script,

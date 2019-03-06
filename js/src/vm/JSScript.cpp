@@ -3525,45 +3525,30 @@ static bool NeedsFunctionEnvironmentObjects(frontend::BytecodeEmitter* bce) {
   return false;
 }
 
-/* static */
-void JSScript::initFromFunctionBox(HandleScript script,
-                                   frontend::FunctionBox* funbox) {
-  JSFunction* fun = funbox->function();
-  if (fun->isInterpretedLazy()) {
-    fun->setUnlazifiedScript(script);
-  } else {
-    fun->setScript(script);
-  }
+void JSScript::initFromFunctionBox(frontend::FunctionBox* funbox) {
+  funLength_ = funbox->length;
 
-  script->setFlag(ImmutableFlags::FunHasExtensibleScope,
-                  funbox->hasExtensibleScope());
-  script->setFlag(ImmutableFlags::NeedsHomeObject, funbox->needsHomeObject());
-  script->setFlag(ImmutableFlags::IsDerivedClassConstructor,
-                  funbox->isDerivedClassConstructor());
+  setFlag(ImmutableFlags::FunHasExtensibleScope, funbox->hasExtensibleScope());
+  setFlag(ImmutableFlags::NeedsHomeObject, funbox->needsHomeObject());
+  setFlag(ImmutableFlags::IsDerivedClassConstructor,
+          funbox->isDerivedClassConstructor());
+  setFlag(ImmutableFlags::HasMappedArgsObj, funbox->hasMappedArgsObj());
+  setFlag(ImmutableFlags::FunctionHasThisBinding, funbox->hasThisBinding());
+  setFlag(ImmutableFlags::FunctionHasExtraBodyVarScope,
+          funbox->hasExtraBodyVarScope());
+  setFlag(ImmutableFlags::IsGenerator, funbox->isGenerator());
+  setFlag(ImmutableFlags::IsAsync, funbox->isAsync());
+  setFlag(ImmutableFlags::HasRest, funbox->hasRest());
+  setFlag(ImmutableFlags::HasInnerFunctions, funbox->hasInnerFunctions());
 
   if (funbox->argumentsHasLocalBinding()) {
-    script->setArgumentsHasVarBinding();
+    setArgumentsHasVarBinding();
     if (funbox->definitelyNeedsArgsObj()) {
-      script->setNeedsArgsObj(true);
+      setNeedsArgsObj(true);
     }
   } else {
     MOZ_ASSERT(!funbox->definitelyNeedsArgsObj());
   }
-  script->setFlag(ImmutableFlags::HasMappedArgsObj, funbox->hasMappedArgsObj());
-
-  script->setFlag(ImmutableFlags::FunctionHasThisBinding,
-                  funbox->hasThisBinding());
-  script->setFlag(ImmutableFlags::FunctionHasExtraBodyVarScope,
-                  funbox->hasExtraBodyVarScope());
-
-  script->funLength_ = funbox->length;
-
-  script->setFlag(ImmutableFlags::IsGenerator, funbox->isGenerator());
-  script->setFlag(ImmutableFlags::IsAsync, funbox->isAsync());
-  script->setFlag(ImmutableFlags::HasRest, funbox->hasRest());
-
-  script->setFlag(ImmutableFlags::HasInnerFunctions,
-                  funbox->hasInnerFunctions());
 }
 
 /* static */
@@ -3612,6 +3597,11 @@ bool JSScript::fullyInitFromEmitter(JSContext* cx, HandleScript script,
   script->setFlag(ImmutableFlags::NeedsFunctionEnvironmentObjects,
                   NeedsFunctionEnvironmentObjects(bce));
 
+  // Initialize script flags from FunctionBox
+  if (bce->sc->isFunctionBox()) {
+    script->initFromFunctionBox(bce->sc->asFunctionBox());
+  }
+
   // Create and initialize PrivateScriptData
   if (!PrivateScriptData::InitFromEmitter(cx, script, bce)) {
     return false;
@@ -3625,11 +3615,16 @@ bool JSScript::fullyInitFromEmitter(JSContext* cx, HandleScript script,
     return false;
   }
 
-  // There shouldn't be any fallible operation after initFromFunctionBox,
-  // JSFunction::hasUncompletedScript relies on the fact that the existence
-  // of the pointer to JSScript means the pointed JSScript is complete.
+  // NOTE: JSScript is now constructed and should be linked in.
+
+  // Link JSFunction to this JSScript.
   if (bce->sc->isFunctionBox()) {
-    initFromFunctionBox(script, bce->sc->asFunctionBox());
+    JSFunction* fun = bce->sc->asFunctionBox()->function();
+    if (fun->isInterpretedLazy()) {
+      fun->setUnlazifiedScript(script);
+    } else {
+      fun->setScript(script);
+    }
   }
 
   // Part of the parse result – the scope containing each inner function – must
