@@ -2,6 +2,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+function findBreakpoint(dbg, url, line, column = 0) {
+  const {
+    selectors: { getBreakpoint },
+    getState
+  } = dbg;
+  const source = findSource(dbg, url);
+  const location = { sourceId: source.id, line, column };
+  return getBreakpoint(getState(), location);
+}
+
 function getLineEl(dbg, line) {
   const lines = dbg.win.document.querySelectorAll(".CodeMirror-code > div");
   return lines[line - 1];
@@ -106,7 +116,7 @@ async function setLogPoint(dbg, index, value) {
 
 add_task(async function() {
   const dbg = await initDebugger("doc-scripts.html", "simple2");
-  await pushPref("devtools.debugger.features.column-breakpoints", true);
+  await pushPref("devtools.debugger.features.column-breakpoints", false);
   await pushPref("devtools.debugger.features.log-points", true);
 
   await selectSource(dbg, "simple2");
