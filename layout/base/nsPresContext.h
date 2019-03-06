@@ -13,6 +13,7 @@
 #include "mozilla/MediaFeatureChange.h"
 #include "mozilla/NotNull.h"
 #include "mozilla/ScrollStyles.h"
+#include "mozilla/PreferenceSheet.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/WeakPtr.h"
 #include "nsColor.h"
@@ -85,12 +86,6 @@ class Document;
 class Element;
 }  // namespace dom
 }  // namespace mozilla
-
-// supported values for cached bool types
-//
-// FIXME(emilio): We have StaticPrefs now, probably all of these should be
-// migrated.
-enum nsPresContext_CachedBoolPrefType { kPresContext_UnderlineLinks = 1 };
 
 // supported values for cached integer pref types
 enum nsPresContext_CachedIntPrefType {
@@ -359,21 +354,6 @@ class nsPresContext : public nsISupports,
    */
   void StopEmulatingMedium();
 
-  /** Get a cached boolean pref, by its type */
-  // *  - initially created for bugs 31816, 20760, 22963
-  bool GetCachedBoolPref(nsPresContext_CachedBoolPrefType aPrefType) const {
-    // If called with a constant parameter, the compiler should optimize
-    // this switch statement away.
-    switch (aPrefType) {
-      case kPresContext_UnderlineLinks:
-        return mUnderlineLinks;
-      default:
-        NS_ERROR("Invalid arg passed to GetCachedBoolPref");
-    }
-
-    return false;
-  }
-
   /** Get a cached integer pref, by its type */
   // *  - initially created for bugs 30910, 61883, 74186, 84398
   int32_t GetCachedIntPref(nsPresContext_CachedIntPrefType aPrefType) const {
@@ -391,28 +371,12 @@ class nsPresContext : public nsISupports,
     return false;
   }
 
-  /**
-   * Get the default colors
-   */
-  nscolor DefaultColor() const { return mDefaultColor; }
-  nscolor DefaultBackgroundColor() const { return mBackgroundColor; }
-  nscolor DefaultLinkColor() const { return mLinkColor; }
-  nscolor DefaultActiveLinkColor() const { return mActiveLinkColor; }
-  nscolor DefaultVisitedLinkColor() const { return mVisitedLinkColor; }
-  nscolor FocusBackgroundColor() const { return mFocusBackgroundColor; }
-  nscolor FocusTextColor() const { return mFocusTextColor; }
-
-  /**
-   * Body text color, for use in quirks mode only.
-   */
-  nscolor BodyTextColor() const { return mBodyTextColor; }
-  void SetBodyTextColor(nscolor aColor) { mBodyTextColor = aColor; }
-
-  bool GetUseFocusColors() const { return mUseFocusColors; }
-  uint8_t FocusRingWidth() const { return mFocusRingWidth; }
-  bool GetFocusRingOnAnything() const { return mFocusRingOnAnything; }
-  uint8_t GetFocusRingStyle() const { return mFocusRingStyle; }
-
+  const mozilla::PreferenceSheet::Prefs& PrefSheetPrefs() const {
+    return mozilla::PreferenceSheet::PrefsFor(*mDocument);
+  }
+  nscolor DefaultBackgroundColor() const {
+    return PrefSheetPrefs().mDefaultBackgroundColor;
+  }
 
   nsISupports* GetContainerWeak() const;
 
@@ -1220,18 +1184,6 @@ class nsPresContext : public nsISupports,
   float mPageScale;
   float mPPScale;
 
-  nscolor mDefaultColor;
-  nscolor mBackgroundColor;
-
-  nscolor mLinkColor;
-  nscolor mActiveLinkColor;
-  nscolor mVisitedLinkColor;
-
-  nscolor mFocusBackgroundColor;
-  nscolor mFocusTextColor;
-
-  nscolor mBodyTextColor;
-
   // This is a non-owning pointer. May be null. If non-null, it's guaranteed to
   // be pointing to an element that's still alive, because we'll reset it in
   // UpdateViewportScrollStylesOverride() as part of the cleanup code when
@@ -1241,8 +1193,6 @@ class nsPresContext : public nsISupports,
   // by Element::UnbindFromTree().)
   mozilla::dom::Element* MOZ_NON_OWNING_REF mViewportScrollOverrideElement;
   ScrollStyles mViewportScrollStyles;
-
-  uint8_t mFocusRingWidth;
 
   bool mExistThrottledUpdates;
 
@@ -1278,7 +1228,6 @@ class nsPresContext : public nsISupports,
   unsigned mPendingInterruptFromTest : 1;
   unsigned mInterruptsEnabled : 1;
   unsigned mUseDocumentColors : 1;
-  unsigned mUnderlineLinks : 1;
   unsigned mSendAfterPaintToContent : 1;
   unsigned mUseFocusColors : 1;
   unsigned mFocusRingOnAnything : 1;
@@ -1346,8 +1295,6 @@ class nsPresContext : public nsISupports,
 
  protected:
   virtual ~nsPresContext();
-
-  nscolor MakeColorPref(const nsString& aColor);
 
   void LastRelease();
 
