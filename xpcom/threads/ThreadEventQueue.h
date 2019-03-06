@@ -53,8 +53,27 @@ class ThreadEventQueue final : public SynchronizedEventQueue {
   void SuspendInputEventPrioritization() final;
   void ResumeInputEventPrioritization() final;
 
-  already_AddRefed<nsISerialEventTarget> PushEventQueue() final;
-  void PopEventQueue(nsIEventTarget* aTarget) final;
+  /**
+   * This method causes any events currently enqueued on the thread to be
+   * suppressed until PopEventQueue is called, and any event dispatched to this
+   * thread's nsIEventTarget will queue as well. Calls to PushEventQueue may be
+   * nested and must each be paired with a call to PopEventQueue in order to
+   * restore the original state of the thread. The returned nsIEventTarget may
+   * be used to push events onto the nested queue. Dispatching will be disabled
+   * once the event queue is popped. The thread will only ever process pending
+   * events for the innermost event queue. Must only be called on the target
+   * thread.
+   */
+  already_AddRefed<nsISerialEventTarget> PushEventQueue();
+
+  /**
+   * Revert a call to PushEventQueue. When an event queue is popped, any events
+   * remaining in the queue are appended to the elder queue. This also causes
+   * the nsIEventTarget returned from PushEventQueue to stop dispatching events.
+   * Must only be called on the target thread, and with the innermost event
+   * queue.
+   */
+  void PopEventQueue(nsIEventTarget* aTarget);
 
   already_AddRefed<nsIThreadObserver> GetObserver() final;
   already_AddRefed<nsIThreadObserver> GetObserverOnThread() final;

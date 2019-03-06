@@ -976,9 +976,14 @@ nsresult RequestHelper::StartAndReturnResponse(LSRequestResponse& aResponse) {
   {
     auto thread = static_cast<nsThread*>(NS_GetCurrentThread());
 
-    const nsLocalExecutionGuard localExecution(thread->EnterLocalExecution());
-    mNestedEventTarget = localExecution.GetEventTarget();
+    auto queue =
+        static_cast<ThreadEventQueue<EventQueue>*>(thread->EventQueue());
+
+    mNestedEventTarget = queue->PushEventQueue();
     MOZ_ASSERT(mNestedEventTarget);
+
+    auto autoPopEventQueue = mozilla::MakeScopeExit(
+        [&] { queue->PopEventQueue(mNestedEventTarget); });
 
     mNestedEventTargetWrapper =
         new NestedEventTargetWrapper(mNestedEventTarget);
@@ -1025,7 +1030,7 @@ nsresult RequestHelper::StartAndReturnResponse(LSRequestResponse& aResponse) {
         }
 
         return false;
-      }, thread));
+      }));
     }
 
     // If mWaiting is still set to true, it means that the event loop spinning
@@ -1062,10 +1067,11 @@ nsresult RequestHelper::StartAndReturnResponse(LSRequestResponse& aResponse) {
       return NS_ERROR_FAILURE;
     }
 
-    // localExecution will be destructed when we leave this scope. If the event
-    // loop spinning was aborted and other threads dispatched new runnables to
-    // the nested event queue, they will be moved to the main event queue here
-    // and later asynchronusly processed.  So nothing will be lost.
+    // PopEventQueue will be called automatically when we leave this scope.
+    // If the event loop spinning was aborted and other threads dispatched new
+    // runnables to the nested event queue, they will be moved to the main
+    // event queue here and later asynchronusly processed.  So nothing will be
+    // lost.
   }
 
   if (NS_WARN_IF(NS_FAILED(mResultCode))) {

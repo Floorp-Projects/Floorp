@@ -47,7 +47,6 @@
 #  include "ProfilerMarkerPayload.h"
 #endif
 #include "InputEventStatistics.h"
-#include "ThreadEventQueue.h"
 #include "ThreadEventTarget.h"
 #include "ThreadDelay.h"
 
@@ -1058,18 +1057,6 @@ nsThread::ProcessNextEvent(bool aMayWait, bool* aResult) {
   // yet.
   bool reallyWait = aMayWait && (mNestedEventLoopDepth > 0 || !ShuttingDown());
 
-  if (mIsInLocalExecutionMode) {
-    EventQueuePriority priority;
-    if (const nsCOMPtr<nsIRunnable> event =
-            mEvents->GetEvent(reallyWait, &priority)) {
-      *aResult = true;
-      event->Run();
-    } else {
-      *aResult = false;
-    }
-    return NS_OK;
-  }
-
   if (IsMainThread()) {
     DoMainThreadSpecificProcessing(reallyWait);
   }
@@ -1407,26 +1394,3 @@ nsThread::GetEventTarget(nsIEventTarget** aEventTarget) {
 nsIEventTarget* nsThread::EventTarget() { return this; }
 
 nsISerialEventTarget* nsThread::SerialEventTarget() { return this; }
-
-nsLocalExecutionRecord nsThread::EnterLocalExecution() {
-  MOZ_RELEASE_ASSERT(!mIsInLocalExecutionMode);
-  MOZ_ASSERT(IsOnCurrentThread());
-  MOZ_ASSERT(EventQueue());
-  return nsLocalExecutionRecord(*EventQueue(), mIsInLocalExecutionMode);
-}
-
-nsLocalExecutionGuard::nsLocalExecutionGuard(
-    nsLocalExecutionRecord&& aLocalExecutionRecord)
-    : mEventQueueStack(aLocalExecutionRecord.mEventQueueStack),
-      mLocalEventTarget(mEventQueueStack.PushEventQueue()),
-      mLocalExecutionFlag(aLocalExecutionRecord.mLocalExecutionFlag) {
-  MOZ_ASSERT(mLocalEventTarget);
-  MOZ_ASSERT(!mLocalExecutionFlag);
-  mLocalExecutionFlag = true;
-}
-
-nsLocalExecutionGuard::~nsLocalExecutionGuard() {
-  MOZ_ASSERT(mLocalExecutionFlag);
-  mLocalExecutionFlag = false;
-  mEventQueueStack.PopEventQueue(mLocalEventTarget);
-}
