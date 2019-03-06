@@ -397,12 +397,5 @@ bool PollableEvent::IsSignallingAlive(TimeDuration const &timeout) {
 #endif  // DEBUG
 }
 
-#ifdef USEPIPE
-/* static */ const PRInt16 PollableEvent::sPollFlags = PR_POLL_READ;
-#else
-/* static */ const PRInt16 PollableEvent::sPollFlags =
-    PR_POLL_READ | PR_POLL_EXCEPT;
-#endif
-
 }  // namespace net
 }  // namespace mozilla
