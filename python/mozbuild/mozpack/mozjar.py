@@ -14,7 +14,6 @@ from zipfile import (
     ZIP_DEFLATED,
 )
 from collections import OrderedDict
-from urlparse import urlparse, ParseResult
 import mozpack.path as mozpath
 from mozbuild.util import memoize
 
