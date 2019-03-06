@@ -199,8 +199,7 @@ class XMLHttpRequestMainThread final : public XMLHttpRequest,
   XMLHttpRequestMainThread();
 
   void Construct(nsIPrincipal* aPrincipal, nsIGlobalObject* aGlobalObject,
-                 nsICookieSettings* aCookieSettings, nsIURI* aBaseURI = nullptr,
-                 nsILoadGroup* aLoadGroup = nullptr,
+                 nsIURI* aBaseURI = nullptr, nsILoadGroup* aLoadGroup = nullptr,
                  PerformanceStorage* aPerformanceStorage = nullptr,
                  nsICSPEventListener* aCSPEventListener = nullptr) {
     MOZ_ASSERT(aPrincipal);
@@ -208,7 +207,6 @@ class XMLHttpRequestMainThread final : public XMLHttpRequest,
     BindToOwner(aGlobalObject);
     mBaseURI = aBaseURI;
     mLoadGroup = aLoadGroup;
-    mCookieSettings = aCookieSettings;
     mPerformanceStorage = aPerformanceStorage;
     mCSPEventListener = aCSPEventListener;
   }
@@ -495,8 +493,6 @@ class XMLHttpRequestMainThread final : public XMLHttpRequest,
   RefPtr<Document> mResponseXML;
 
   nsCOMPtr<nsIStreamListener> mXMLParserStreamListener;
-
-  nsCOMPtr<nsICookieSettings> mCookieSettings;
 
   RefPtr<PerformanceStorage> mPerformanceStorage;
   nsCOMPtr<nsICSPEventListener> mCSPEventListener;

@@ -730,12 +730,6 @@ class WorkerPrivate : public RelativeTimeline {
            mLoadInfo.mFirstPartyStorageAccessGranted;
   }
 
-  nsICookieSettings* CookieSettings() const {
-    // Any thread.
-    MOZ_ASSERT(mLoadInfo.mCookieSettings);
-    return mLoadInfo.mCookieSettings;
-  }
-
   const OriginAttributes& GetOriginAttributes() const {
     return mLoadInfo.mOriginAttributes;
   }

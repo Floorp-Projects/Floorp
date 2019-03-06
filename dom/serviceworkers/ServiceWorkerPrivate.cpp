@@ -40,7 +40,6 @@
 #include "mozilla/dom/WorkerRunnable.h"
 #include "mozilla/dom/WorkerScope.h"
 #include "mozilla/dom/ipc/StructuredCloneData.h"
-#include "mozilla/net/CookieSettings.h"
 #include "mozilla/net/NeckoChannelParams.h"
 #include "mozilla/StaticPrefs.h"
 #include "mozilla/Unused.h"
@@ -1728,10 +1727,6 @@ nsresult ServiceWorkerPrivate::SpawnWorkerIfNeeded(WakeUpReason aWhy,
       nsContentUtils::StorageAllowedForServiceWorker(info.mPrincipal);
   info.mStorageAllowed =
       access > nsContentUtils::StorageAccess::ePrivateBrowsing;
-
-  info.mCookieSettings = mozilla::net::CookieSettings::Create();
-  MOZ_ASSERT(info.mCookieSettings);
-
   info.mOriginAttributes = mInfo->GetOriginAttributes();
 
   // Verify that we don't have any CSP on pristine principal.

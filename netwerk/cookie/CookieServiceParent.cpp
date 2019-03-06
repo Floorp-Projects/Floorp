@@ -28,17 +28,28 @@ namespace {
 
 // Ignore failures from this function, as they only affect whether we do or
 // don't show a dialog box in private browsing mode if the user sets a pref.
-nsresult CreateDummyChannel(nsIURI *aHostURI, nsILoadInfo *aLoadInfo,
-                            nsIChannel **aChannel) {
-  nsCOMPtr<nsIChannel> dummyChannel;
-  nsresult rv =
-      NS_NewChannelInternal(getter_AddRefs(dummyChannel), aHostURI, aLoadInfo);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+void CreateDummyChannel(nsIURI *aHostURI, nsIURI *aChannelURI,
+                        OriginAttributes &aAttrs, nsIChannel **aChannel) {
+  nsCOMPtr<nsIPrincipal> principal =
+      BasePrincipal::CreateCodebasePrincipal(aHostURI, aAttrs);
+  if (!principal) {
+    return;
   }
 
+  // The following channel is never openend, so it does not matter what
+  // securityFlags we pass; let's follow the principle of least privilege.
+  nsCOMPtr<nsIChannel> dummyChannel;
+  NS_NewChannel(getter_AddRefs(dummyChannel), aChannelURI, principal,
+                nsILoadInfo::SEC_REQUIRE_SAME_ORIGIN_DATA_IS_BLOCKED,
+                nsIContentPolicy::TYPE_INVALID);
+  nsCOMPtr<nsIPrivateBrowsingChannel> pbChannel =
+      do_QueryInterface(dummyChannel);
+  if (!pbChannel) {
+    return;
+  }
+
+  pbChannel->SetPrivate(aAttrs.mPrivateBrowsingId > 0);
   dummyChannel.forget(aChannel);
-  return NS_OK;
 }
 
 }  // namespace
@@ -205,10 +216,10 @@ void CookieServiceParent::ActorDestroy(ActorDestroyReason aWhy) {
 
 mozilla::ipc::IPCResult CookieServiceParent::RecvSetCookieString(
     const URIParams &aHost, const Maybe<URIParams> &aChannelURI,
-    const Maybe<LoadInfoArgs> &aLoadInfoArgs, const bool &aIsForeign,
-    const bool &aIsTrackingResource,
+    const bool &aIsForeign, const bool &aIsTrackingResource,
     const bool &aFirstPartyStorageAccessGranted, const nsCString &aCookieString,
-    const nsCString &aServerTime, const bool &aFromHttp) {
+    const nsCString &aServerTime, const OriginAttributes &aAttrs,
+    const bool &aFromHttp) {
   if (!mCookieService) return IPC_OK();
 
   // Deserialize URI. Having a host URI is mandatory and should always be
@@ -218,10 +229,6 @@ mozilla::ipc::IPCResult CookieServiceParent::RecvSetCookieString(
 
   nsCOMPtr<nsIURI> channelURI = DeserializeURI(aChannelURI);
 
-  nsCOMPtr<nsILoadInfo> loadInfo;
-  Unused << NS_WARN_IF(NS_FAILED(
-      LoadInfoArgsToLoadInfo(aLoadInfoArgs, getter_AddRefs(loadInfo))));
-
   // This is a gross hack. We've already computed everything we need to know
   // for whether to set this cookie or not, but we need to communicate all of
   // this information through to nsICookiePermission, which indirectly
@@ -230,27 +237,19 @@ mozilla::ipc::IPCResult CookieServiceParent::RecvSetCookieString(
   // with aIsForeign before we have to worry about nsCookiePermission trying
   // to use the channel to inspect it.
   nsCOMPtr<nsIChannel> dummyChannel;
-  nsresult rv =
-      CreateDummyChannel(channelURI, loadInfo, getter_AddRefs(dummyChannel));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    // No reason to kill the content process.
-    return IPC_OK();
-  }
+  CreateDummyChannel(hostURI, channelURI,
+                     const_cast<OriginAttributes &>(aAttrs),
+                     getter_AddRefs(dummyChannel));
 
   // NB: dummyChannel could be null if something failed in CreateDummyChannel.
   nsDependentCString cookieString(aCookieString, 0);
-
-  OriginAttributes attrs;
-  if (loadInfo) {
-    attrs = loadInfo->GetOriginAttributes();
-  }
 
   // We set this to true while processing this cookie update, to make sure
   // we don't send it back to the same content process.
   mProcessingCookie = true;
   mCookieService->SetCookieStringInternal(
       hostURI, aIsForeign, aIsTrackingResource, aFirstPartyStorageAccessGranted,
-      cookieString, aServerTime, aFromHttp, attrs, dummyChannel);
+      cookieString, aServerTime, aFromHttp, aAttrs, dummyChannel);
   mProcessingCookie = false;
   return IPC_OK();
 }

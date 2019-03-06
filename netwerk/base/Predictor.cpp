@@ -1246,8 +1246,7 @@ nsresult Predictor::Prefetch(nsIURI *uri, nsIURI *referrer,
   nsresult rv = NS_NewChannel(
       getter_AddRefs(channel), uri, nsContentUtils::GetSystemPrincipal(),
       nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
-      nsIContentPolicy::TYPE_OTHER, nullptr, /* nsICookieSettings */
-      nullptr,                               /* aPerformanceStorage */
+      nsIContentPolicy::TYPE_OTHER, nullptr, /* aPerformanceStorage */
       nullptr,                               /* aLoadGroup */
       nullptr,                               /* aCallbacks */
       nsIRequest::LOAD_BACKGROUND);

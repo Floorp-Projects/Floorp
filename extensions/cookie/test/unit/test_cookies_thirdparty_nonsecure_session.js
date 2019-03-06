@@ -25,9 +25,6 @@ function* do_run_test() {
   // Set up a profile.
   let profile = do_get_profile();
 
-  // We don't want to have CookieSettings blocking this test.
-  Services.prefs.setBoolPref("network.cookieSettings.unblocked_for_testing", true);
-
   // Create URIs and channels pointing to foo.com and bar.com.
   // We will use these to put foo.com into first and third party contexts.
   var spec1 = "http://foo.com/foo.html";

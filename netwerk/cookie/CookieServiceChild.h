@@ -19,7 +19,6 @@
 class nsCookie;
 class nsICookiePermission;
 class nsIEffectiveTLDService;
-class nsILoadInfo;
 
 struct nsCookieAttributes;
 
@@ -61,10 +60,13 @@ class CookieServiceChild : public PCookieServiceChild,
   nsresult GetCookieStringInternal(nsIURI *aHostURI, nsIChannel *aChannel,
                                    char **aCookieString);
 
-  void GetCookieStringFromCookieHashTable(
-      nsIURI *aHostURI, bool aIsForeign, bool aIsTrackingResource,
-      bool aFirstPartyStorageAccessGranted, bool aIsSafeTopLevelNav,
-      bool aIsSameSiteForeign, nsIChannel *aChannel, nsCString &aCookieString);
+  void GetCookieStringFromCookieHashTable(nsIURI *aHostURI, bool aIsForeign,
+                                          bool aIsTrackingResource,
+                                          bool aFirstPartyStorageAccessGranted,
+                                          bool aIsSafeTopLevelNav,
+                                          bool aIsSameSiteForeign,
+                                          const OriginAttributes &aAttrs,
+                                          nsCString &aCookieString);
 
   nsresult SetCookieStringInternal(nsIURI *aHostURI, nsIChannel *aChannel,
                                    const char *aCookieString,
@@ -82,7 +84,7 @@ class CookieServiceChild : public PCookieServiceChild,
 
   void PrefChanged(nsIPrefBranch *aPrefBranch);
 
-  bool RequireThirdPartyCheck(nsILoadInfo *aLoadInfo);
+  bool RequireThirdPartyCheck();
 
   mozilla::ipc::IPCResult RecvTrackCookiesLoad(
       nsTArray<CookieStruct> &&aCookiesList, const OriginAttributes &aAttrs);
@@ -105,6 +107,7 @@ class CookieServiceChild : public PCookieServiceChild,
   nsCOMPtr<nsITimer> mCookieTimer;
   nsCOMPtr<mozIThirdPartyUtil> mThirdPartyUtil;
   nsCOMPtr<nsIEffectiveTLDService> mTLDService;
+  uint8_t mCookieBehavior;
   bool mThirdPartySession;
   bool mThirdPartyNonsecureSession;
   bool mIPCOpen;

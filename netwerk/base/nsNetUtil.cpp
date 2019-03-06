@@ -298,20 +298,19 @@ nsresult NS_NewChannel(nsIChannel **outChannel, nsIURI *aUri,
                        nsIPrincipal *aLoadingPrincipal,
                        nsSecurityFlags aSecurityFlags,
                        nsContentPolicyType aContentPolicyType,
-                       nsICookieSettings *aCookieSettings /* = nullptr */,
-                       PerformanceStorage *aPerformanceStorage /* = nullptr */,
+                       PerformanceStorage *aPerformanceStorage /* nullptr */,
                        nsILoadGroup *aLoadGroup /* = nullptr */,
                        nsIInterfaceRequestor *aCallbacks /* = nullptr */,
                        nsLoadFlags aLoadFlags /* = nsIRequest::LOAD_NORMAL */,
                        nsIIOService *aIoService /* = nullptr */) {
-  return NS_NewChannelInternal(
-      outChannel, aUri,
-      nullptr,  // aLoadingNode,
-      aLoadingPrincipal,
-      nullptr,  // aTriggeringPrincipal
-      Maybe<ClientInfo>(), Maybe<ServiceWorkerDescriptor>(), aSecurityFlags,
-      aContentPolicyType, aCookieSettings, aPerformanceStorage, aLoadGroup,
-      aCallbacks, aLoadFlags, aIoService);
+  return NS_NewChannelInternal(outChannel, aUri,
+                               nullptr,  // aLoadingNode,
+                               aLoadingPrincipal,
+                               nullptr,  // aTriggeringPrincipal
+                               Maybe<ClientInfo>(),
+                               Maybe<ServiceWorkerDescriptor>(), aSecurityFlags,
+                               aContentPolicyType, aPerformanceStorage,
+                               aLoadGroup, aCallbacks, aLoadFlags, aIoService);
 }
 
 nsresult NS_NewChannel(nsIChannel **outChannel, nsIURI *aUri,
@@ -320,8 +319,7 @@ nsresult NS_NewChannel(nsIChannel **outChannel, nsIURI *aUri,
                        const Maybe<ServiceWorkerDescriptor> &aController,
                        nsSecurityFlags aSecurityFlags,
                        nsContentPolicyType aContentPolicyType,
-                       nsICookieSettings *aCookieSettings /* = nullptr */,
-                       PerformanceStorage *aPerformanceStorage /* = nullptr */,
+                       PerformanceStorage *aPerformanceStorage /* nullptr */,
                        nsILoadGroup *aLoadGroup /* = nullptr */,
                        nsIInterfaceRequestor *aCallbacks /* = nullptr */,
                        nsLoadFlags aLoadFlags /* = nsIRequest::LOAD_NORMAL */,
@@ -337,9 +335,8 @@ nsresult NS_NewChannel(nsIChannel **outChannel, nsIURI *aUri,
                                aLoadingPrincipal,
                                nullptr,  // aTriggeringPrincipal
                                loadingClientInfo, aController, aSecurityFlags,
-                               aContentPolicyType, aCookieSettings,
-                               aPerformanceStorage, aLoadGroup, aCallbacks,
-                               aLoadFlags, aIoService);
+                               aContentPolicyType, aPerformanceStorage,
+                               aLoadGroup, aCallbacks, aLoadFlags, aIoService);
 }
 
 nsresult NS_NewChannelInternal(
@@ -348,8 +345,7 @@ nsresult NS_NewChannelInternal(
     const Maybe<ClientInfo> &aLoadingClientInfo,
     const Maybe<ServiceWorkerDescriptor> &aController,
     nsSecurityFlags aSecurityFlags, nsContentPolicyType aContentPolicyType,
-    nsICookieSettings *aCookieSettings /* = nullptr */,
-    PerformanceStorage *aPerformanceStorage /* = nullptr */,
+    PerformanceStorage *aPerformanceStorage /* nullptr */,
     nsILoadGroup *aLoadGroup /* = nullptr */,
     nsIInterfaceRequestor *aCallbacks /* = nullptr */,
     nsLoadFlags aLoadFlags /* = nsIRequest::LOAD_NORMAL */,
@@ -393,16 +389,9 @@ nsresult NS_NewChannelInternal(
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  if (aPerformanceStorage || aCookieSettings) {
+  if (aPerformanceStorage) {
     nsCOMPtr<nsILoadInfo> loadInfo = channel->LoadInfo();
-
-    if (aPerformanceStorage) {
-      loadInfo->SetPerformanceStorage(aPerformanceStorage);
-    }
-
-    if (aCookieSettings) {
-      loadInfo->SetCookieSettings(aCookieSettings);
-    }
+    loadInfo->SetPerformanceStorage(aPerformanceStorage);
   }
 
   channel.forget(outChannel);
@@ -426,8 +415,7 @@ NS_NewChannelWithTriggeringPrincipal(
       outChannel, aUri, aLoadingNode, aLoadingNode->NodePrincipal(),
       aTriggeringPrincipal, Maybe<ClientInfo>(),
       Maybe<ServiceWorkerDescriptor>(), aSecurityFlags, aContentPolicyType,
-      aLoadingNode->OwnerDoc()->CookieSettings(), aPerformanceStorage,
-      aLoadGroup, aCallbacks, aLoadFlags, aIoService);
+      aPerformanceStorage, aLoadGroup, aCallbacks, aLoadFlags, aIoService);
 }
 
 // See NS_NewChannelInternal for usage and argument description
@@ -435,7 +423,6 @@ nsresult NS_NewChannelWithTriggeringPrincipal(
     nsIChannel **outChannel, nsIURI *aUri, nsIPrincipal *aLoadingPrincipal,
     nsIPrincipal *aTriggeringPrincipal, nsSecurityFlags aSecurityFlags,
     nsContentPolicyType aContentPolicyType,
-    nsICookieSettings *aCookieSettings /* = nullptr */,
     PerformanceStorage *aPerformanceStorage /* = nullptr */,
     nsILoadGroup *aLoadGroup /* = nullptr */,
     nsIInterfaceRequestor *aCallbacks /* = nullptr */,
@@ -448,8 +435,7 @@ nsresult NS_NewChannelWithTriggeringPrincipal(
       nullptr,  // aLoadingNode
       aLoadingPrincipal, aTriggeringPrincipal, Maybe<ClientInfo>(),
       Maybe<ServiceWorkerDescriptor>(), aSecurityFlags, aContentPolicyType,
-      aCookieSettings, aPerformanceStorage, aLoadGroup, aCallbacks, aLoadFlags,
-      aIoService);
+      aPerformanceStorage, aLoadGroup, aCallbacks, aLoadFlags, aIoService);
 }
 
 // See NS_NewChannelInternal for usage and argument description
@@ -458,7 +444,6 @@ nsresult NS_NewChannelWithTriggeringPrincipal(
     nsIPrincipal *aTriggeringPrincipal, const ClientInfo &aLoadingClientInfo,
     const Maybe<ServiceWorkerDescriptor> &aController,
     nsSecurityFlags aSecurityFlags, nsContentPolicyType aContentPolicyType,
-    nsICookieSettings *aCookieSettings /* = nullptr */,
     PerformanceStorage *aPerformanceStorage /* = nullptr */,
     nsILoadGroup *aLoadGroup /* = nullptr */,
     nsIInterfaceRequestor *aCallbacks /* = nullptr */,
@@ -470,12 +455,12 @@ nsresult NS_NewChannelWithTriggeringPrincipal(
   Maybe<ClientInfo> loadingClientInfo;
   loadingClientInfo.emplace(aLoadingClientInfo);
 
-  return NS_NewChannelInternal(
-      outChannel, aUri,
-      nullptr,  // aLoadingNode
-      aLoadingPrincipal, aTriggeringPrincipal, loadingClientInfo, aController,
-      aSecurityFlags, aContentPolicyType, aCookieSettings, aPerformanceStorage,
-      aLoadGroup, aCallbacks, aLoadFlags, aIoService);
+  return NS_NewChannelInternal(outChannel, aUri,
+                               nullptr,  // aLoadingNode
+                               aLoadingPrincipal, aTriggeringPrincipal,
+                               loadingClientInfo, aController, aSecurityFlags,
+                               aContentPolicyType, aPerformanceStorage,
+                               aLoadGroup, aCallbacks, aLoadFlags, aIoService);
 }
 
 nsresult NS_NewChannel(nsIChannel **outChannel, nsIURI *aUri,
@@ -491,8 +476,8 @@ nsresult NS_NewChannel(nsIChannel **outChannel, nsIURI *aUri,
       outChannel, aUri, aLoadingNode, aLoadingNode->NodePrincipal(),
       nullptr,  // aTriggeringPrincipal
       Maybe<ClientInfo>(), Maybe<ServiceWorkerDescriptor>(), aSecurityFlags,
-      aContentPolicyType, aLoadingNode->OwnerDoc()->CookieSettings(),
-      aPerformanceStorage, aLoadGroup, aCallbacks, aLoadFlags, aIoService);
+      aContentPolicyType, aPerformanceStorage, aLoadGroup, aCallbacks,
+      aLoadFlags, aIoService);
 }
 
 nsresult NS_GetIsDocumentChannel(nsIChannel *aChannel, bool *aIsDocument) {
@@ -924,7 +909,6 @@ nsresult NS_NewStreamLoaderInternal(
       nullptr,  // aTriggeringPrincipal
       Maybe<ClientInfo>(), Maybe<ServiceWorkerDescriptor>(), aSecurityFlags,
       aContentPolicyType,
-      nullptr,  // nsICookieSettings
       nullptr,  // PerformanceStorage
       aLoadGroup, aCallbacks, aLoadFlags);
 

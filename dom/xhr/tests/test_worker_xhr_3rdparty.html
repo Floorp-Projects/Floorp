@@ -14,32 +14,57 @@ Tests of DOM Worker Threads XHR(Bug 450452 )
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=450452">DOM Worker Threads XHR (Bug 450452)</a>
+<p id="display"></p>
+<div id="content" style="display: none">
 
 </div>
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
-  document.cookie = "a=cookie_is_set";
+  var worker = new Worker("xhr_worker.js");
 
-  SpecialPowers.pushPrefEnv({ set: [[ "network.cookie.cookieBehavior", 1 ]] },
-                            () => {
-    let w = window.open("window_worker_xhr_3rdparty.html");
+  var gotUploadLoad = false, gotLoadend = false;
 
-    onmessage = e => {
-      if (e.data.type == "finish") {
-        w.close();
+  worker.onmessage = function(event) {
+    is(event.target, worker);
+    var args = event.data;
+    switch (args.type) {
+      case "progress": {
+        ok(parseInt(args.current) <= parseInt(args.total));
+      } break;
+      case "error": {
+        ok(false, "XHR error: " + args.error);
+      } break;
+      case "upload.load": {
+        gotUploadLoad = true;
+      } break;
+      case "load": {
+        ok(gotUploadLoad, "Should have gotten upload load event");
+        gotLoadend = true;
+        is(args.data, "a=cookie_is_set", "correct data");
+        document.getElementById("content").textContent = args.data;
+      } break;
+      case "loadend": {
+        ok(gotLoadend, "Should have gotten load.");
         SimpleTest.finish();
-        return;
+        break;
       }
-
-      if (e.data.type == "test") {
-        ok(e.data.test, e.data.msg);
-        return;
+      default: {
+        ok(false, "Unexpected message");
+        SimpleTest.finish();
       }
-
-      ok(false, "Invalid message.");
     }
-  });
+  };
+
+  worker.onerror = function(event) {
+    is(event.target, worker);
+    ok(false, "Worker had an error:" + event.message);
+    SimpleTest.finish();
+  }
+
+  document.cookie = "a=cookie_is_set";
+  SpecialPowers.pushPrefEnv({ set: [[ "network.cookie.cookieBehavior", 1 ]] },
+                            () => worker.postMessage("worker_file_getcookie.sjs"));
 
   SimpleTest.waitForExplicitFinish();
 
