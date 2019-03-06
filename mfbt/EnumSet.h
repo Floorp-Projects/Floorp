@@ -44,7 +44,7 @@ class EnumSet {
       : mBitField(bitFor(aEnum1) | bitFor(aEnum2) | bitFor(aEnum3) |
                   bitFor(aEnum4)) {}
 
-  MOZ_IMPLICIT EnumSet(std::initializer_list<T> list) : mBitField(0) {
+  constexpr MOZ_IMPLICIT EnumSet(std::initializer_list<T> list) : mBitField(0) {
     for (auto value : list) {
       (*this) += value;
     }
@@ -55,7 +55,7 @@ class EnumSet {
   /**
    * Add an element
    */
-  void operator+=(T aEnum) {
+  constexpr void operator+=(T aEnum) {
     incVersion();
     mBitField |= bitFor(aEnum);
   }
@@ -63,7 +63,7 @@ class EnumSet {
   /**
    * Add an element
    */
-  EnumSet operator+(T aEnum) const {
+  constexpr EnumSet operator+(T aEnum) const {
     EnumSet result(*this);
     result += aEnum;
     return result;
@@ -284,7 +284,7 @@ class EnumSet {
     return Serialized(1) << bitNumber;
   }
 
-  void incVersion() {
+  constexpr void incVersion() {
 #ifdef DEBUG
     mVersion++;
 #endif

@@ -366,29 +366,29 @@ static const float PretenureGroupThreshold = 3000;
  * JSGC_ALLOCATION_THRESHOLD_FACTOR and
  * JSGC_ALLOCATION_THRESHOLD_FACTOR_AVOID_INTERRUPT parameters.
  */
-static const float MinAllocationThresholdFactor = 0.9f;
+static constexpr float MinAllocationThresholdFactor = 0.9f;
 
 /*
  * We may start to collect a zone before its trigger threshold is reached if
  * GCRuntime::maybeGC() is called for that zone or we start collecting other
  * zones. These eager threshold factors are not configurable.
  */
-static const float HighFrequencyEagerAllocTriggerFactor = 0.85f;
-static const float LowFrequencyEagerAllocTriggerFactor = 0.9f;
+static constexpr float HighFrequencyEagerAllocTriggerFactor = 0.85f;
+static constexpr float LowFrequencyEagerAllocTriggerFactor = 0.9f;
 
 /*
  * Don't allow heap growth factors to be set so low that collections could
  * reduce the trigger threshold.
  */
-static const float MinHighFrequencyHeapGrowthFactor =
+static constexpr float MinHighFrequencyHeapGrowthFactor =
     1.0f /
     Min(HighFrequencyEagerAllocTriggerFactor, MinAllocationThresholdFactor);
-static const float MinLowFrequencyHeapGrowthFactor =
+static constexpr float MinLowFrequencyHeapGrowthFactor =
     1.0f /
     Min(LowFrequencyEagerAllocTriggerFactor, MinAllocationThresholdFactor);
 
 /* Increase the IGC marking slice time if we are in highFrequencyGC mode. */
-static const int IGC_MARK_SLICE_MULTIPLIER = 2;
+static constexpr int IGC_MARK_SLICE_MULTIPLIER = 2;
 
 const AllocKind gc::slotsToThingKind[] = {
     // clang-format off
@@ -475,7 +475,7 @@ struct js::gc::FinalizePhase {
 /*
  * Finalization order for objects swept incrementally on the main thread.
  */
-static const FinalizePhase ForegroundObjectFinalizePhase = {
+static constexpr FinalizePhase ForegroundObjectFinalizePhase = {
     gcstats::PhaseKind::SWEEP_OBJECT,
     {AllocKind::OBJECT0, AllocKind::OBJECT2, AllocKind::OBJECT4,
      AllocKind::OBJECT8, AllocKind::OBJECT12, AllocKind::OBJECT16}};
@@ -483,13 +483,13 @@ static const FinalizePhase ForegroundObjectFinalizePhase = {
 /*
  * Finalization order for GC things swept incrementally on the main thread.
  */
-static const FinalizePhase ForegroundNonObjectFinalizePhase = {
+static constexpr FinalizePhase ForegroundNonObjectFinalizePhase = {
     gcstats::PhaseKind::SWEEP_SCRIPT, {AllocKind::SCRIPT, AllocKind::JITCODE}};
 
 /*
  * Finalization order for GC things swept on the background thread.
  */
-static const FinalizePhase BackgroundFinalizePhases[] = {
+static constexpr FinalizePhase BackgroundFinalizePhases[] = {
     {gcstats::PhaseKind::SWEEP_SCRIPT, {AllocKind::LAZY_SCRIPT}},
     {gcstats::PhaseKind::SWEEP_OBJECT,
      {AllocKind::FUNCTION, AllocKind::FUNCTION_EXTENDED,
@@ -2802,14 +2802,14 @@ void GCRuntime::updateCellPointers(Zone* zone, AllocKinds kinds,
 // Since we want to minimize the number of phases, arrange kinds into three
 // arbitrary phases.
 
-static const AllocKinds UpdatePhaseOne{
+static constexpr AllocKinds UpdatePhaseOne{
     AllocKind::SCRIPT,         AllocKind::BASE_SHAPE,   AllocKind::SHAPE,
     AllocKind::ACCESSOR_SHAPE, AllocKind::OBJECT_GROUP, AllocKind::STRING,
     AllocKind::JITCODE};
 
 // UpdatePhaseTwo is typed object descriptor objects.
 
-static const AllocKinds UpdatePhaseThree{
+static constexpr AllocKinds UpdatePhaseThree{
     AllocKind::LAZY_SCRIPT, AllocKind::SCOPE,
     AllocKind::FUNCTION,    AllocKind::FUNCTION_EXTENDED,
     AllocKind::OBJECT0,     AllocKind::OBJECT0_BACKGROUND,
