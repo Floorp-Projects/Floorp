@@ -204,7 +204,7 @@ def filter_target_task(task):
 
 
 def run(update=False, query=None, templates=None, full=False, parameters=None, save_query=False,
-        push=True, message='{msg}', paths=None, **kwargs):
+        push=True, message='{msg}', paths=None, exact=False, closed_tree=False):
     fzf = fzf_bootstrap(update)
 
     if not fzf:
@@ -235,7 +235,7 @@ def run(update=False, query=None, templates=None, full=False, parameters=None, s
         '--print-query',
     ]
 
-    if kwargs['exact']:
+    if exact:
         base_cmd.append('--exact')
 
     query = query or []
@@ -274,4 +274,4 @@ def run(update=False, query=None, templates=None, full=False, parameters=None, s
     if args:
         msg = "{} {}".format(msg, '&'.join(args))
     return push_to_try('fuzzy', message.format(msg=msg), selected, templates, push=push,
-                       closed_tree=kwargs["closed_tree"])
+                       closed_tree=closed_tree)

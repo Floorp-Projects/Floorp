@@ -59,7 +59,7 @@ class ReleaseParser(BaseTryParser):
         self.set_defaults(migrations=[])
 
 
-def run(version, migrations, limit_locales, tasks, push=True, message='{msg}', **kwargs):
+def run(version, migrations, limit_locales, tasks, push=True, message='{msg}', closed_tree=False):
     app_version = attr.evolve(version, beta_number=None, is_esr=False)
 
     files_to_change = {
@@ -108,7 +108,7 @@ def run(version, migrations, limit_locales, tasks, push=True, message='{msg}', *
     msg = 'staging release: {}'.format(version)
     return push_to_try(
         'release', message.format(msg=msg),
-        push=push, closed_tree=kwargs["closed_tree"],
+        push=push, closed_tree=closed_tree,
         try_task_config=task_config,
         files_to_change=files_to_change,
     )

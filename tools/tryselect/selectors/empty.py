@@ -13,7 +13,7 @@ class EmptyParser(BaseTryParser):
     common_groups = ['push']
 
 
-def run(message='{msg}', push=True, **kwargs):
+def run(message='{msg}', push=True, closed_tree=False):
     msg = 'No try selector specified, use "Add New Jobs" to select tasks.'
     return push_to_try('empty', message.format(msg=msg), [], push=push,
-                       closed_tree=kwargs["closed_tree"])
+                       closed_tree=closed_tree)
