@@ -836,11 +836,10 @@ ComputedStyleStrong Servo_ComputedValues_ResolveXULTreePseudoStyle(
 void Servo_SetExplicitStyle(RawGeckoElementBorrowed element,
                             ComputedStyleBorrowed primary_style);
 
-bool Servo_HasAuthorSpecifiedRules(ComputedStyleBorrowed style,
+bool Servo_HasAuthorSpecifiedRules(RawServoStyleSetBorrowed set,
+                                   ComputedStyleBorrowed style,
                                    RawGeckoElementBorrowed element,
-                                   mozilla::PseudoStyleType pseudo_type,
-                                   uint32_t rule_type_mask,
-                                   bool author_colors_allowed);
+                                   uint32_t rule_type_mask);
 
 // Resolves style for an element or pseudo-element without processing pending
 // restyles first. The Element and its ancestors may be unstyled, have pending

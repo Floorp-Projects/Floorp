@@ -39,7 +39,7 @@ bool PreferenceSheet::ShouldUseChromePrefs(const Document& aDoc) {
     (aDoc.IsBeingUsedAsImage() && aDoc.IsDocumentURISchemeChrome());
 }
 
-bool PreferenceSheet::UseAccessibilityTheme(bool aIsChrome) {
+static bool UseAccessibilityTheme(bool aIsChrome) {
   return !aIsChrome &&
          !!LookAndFeel::GetInt(LookAndFeel::eIntID_UseAccessibilityTheme, 0);
 }
@@ -47,6 +47,8 @@ bool PreferenceSheet::UseAccessibilityTheme(bool aIsChrome) {
 void PreferenceSheet::Prefs::Load(bool aIsChrome) {
   *this = {};
 
+  mIsChrome = aIsChrome;
+  mUseAccessibilityTheme = UseAccessibilityTheme(aIsChrome);
   mUnderlineLinks = StaticPrefs::browser_underline_anchors();
 
   mUseFocusColors = StaticPrefs::browser_display_use_focus_colors();
@@ -54,7 +56,7 @@ void PreferenceSheet::Prefs::Load(bool aIsChrome) {
   mFocusRingStyle = StaticPrefs::browser_display_focus_ring_style();
   mFocusRingOnAnything = StaticPrefs::browser_display_focus_ring_on_anything();
 
-  const bool usePrefColors = !aIsChrome && !UseAccessibilityTheme(aIsChrome) &&
+  const bool usePrefColors = !aIsChrome && !mUseAccessibilityTheme &&
                              !StaticPrefs::browser_display_use_system_colors();
 
   if (nsContentUtils::UseStandinsForNativeColors()) {

@@ -841,14 +841,6 @@ class nsPresContext : public nsISupports,
   bool HasAuthorSpecifiedRules(const nsIFrame* aFrame,
                                uint32_t ruleTypeMask) const;
 
-  // Is it OK to let the page specify colors and backgrounds?
-  bool UseDocumentColors() const {
-    MOZ_ASSERT(mUseDocumentColors || !(IsChrome() || IsChromeOriginImage()),
-               "We should never have a chrome doc or image that can't use its "
-               "colors.");
-    return mUseDocumentColors;
-  }
-
   // Explicitly enable and disable paint flashing.
   void SetPaintFlashing(bool aPaintFlashing) {
     mPaintFlashing = aPaintFlashing;
@@ -1227,7 +1219,6 @@ class nsPresContext : public nsISupports,
   unsigned mHasPendingInterrupt : 1;
   unsigned mPendingInterruptFromTest : 1;
   unsigned mInterruptsEnabled : 1;
-  unsigned mUseDocumentColors : 1;
   unsigned mSendAfterPaintToContent : 1;
   unsigned mUseFocusColors : 1;
   unsigned mFocusRingOnAnything : 1;
