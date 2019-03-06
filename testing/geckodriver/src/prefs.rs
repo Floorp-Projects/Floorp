@@ -47,11 +47,6 @@ lazy_static! {
         // Skip check for default browser on startup
         ("browser.shell.checkDefaultBrowser", Pref::new(false)),
 
-        // Disable Android snippets
-        ("browser.snippets.enabled", Pref::new(false)),
-        ("browser.snippets.syncPromo.enabled", Pref::new(false)),
-        ("browser.snippets.firstrunHomepage.enabled", Pref::new(false)),
-
         // Do not redirect user when a milestone upgrade of Firefox
         // is detected
         ("browser.startup.homepage_override.mstone", Pref::new("ignore")),

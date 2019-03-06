@@ -22,9 +22,6 @@ user_pref("browser.pagethumbnails.capturing_disabled", true);
 user_pref("browser.search.region", "US");
 // This will prevent HTTP requests for region defaults.
 user_pref("browser.search.geoSpecificDefaults", false);
-// Disable android snippets
-user_pref("browser.snippets.enabled", false);
-user_pref("browser.snippets.syncPromo.enabled", false);
 // Disable webapp updates.  Yes, it is supposed to be an integer.
 user_pref("browser.webapps.checkForUpdates", 0);
 // We do not wish to display datareporting policy notifications as it might

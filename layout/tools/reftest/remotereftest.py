@@ -299,7 +299,6 @@ class RemoteReftest(RefTest):
         profileDir = profile.profile
         prefs = {}
         prefs["app.update.url.android"] = ""
-        prefs["browser.firstrun.show.localepicker"] = False
         prefs["reftest.remote"] = True
         prefs["datareporting.policy.dataSubmissionPolicyBypassAcceptance"] = True
         # move necko cache to a location that can be cleaned up
