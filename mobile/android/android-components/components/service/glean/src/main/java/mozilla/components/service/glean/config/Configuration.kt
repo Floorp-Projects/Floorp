@@ -4,6 +4,8 @@
 
 package mozilla.components.service.glean.config
 
+import mozilla.components.concept.fetch.Client
+import mozilla.components.lib.fetch.httpurlconnection.HttpURLConnectionClient
 import mozilla.components.service.glean.BuildConfig
 
 /**
@@ -17,12 +19,14 @@ import mozilla.components.service.glean.BuildConfig
  *           the [serverEndpoint]
  * @property maxEvents the number of events to store before the events ping is sent
  * @property logPings whether to log ping contents to the console.
+ * @property httpClient The HTTP client implementation to use for uploading pings.
  */
 data class Configuration(
     val serverEndpoint: String = "https://incoming.telemetry.mozilla.org",
     val userAgent: String = "Glean/${BuildConfig.LIBRARY_VERSION} (Android)",
-    val connectionTimeout: Int = 10000,
-    val readTimeout: Int = 30000,
+    val connectionTimeout: Long = 10000,
+    val readTimeout: Long = 30000,
     val maxEvents: Int = 500,
-    val logPings: Boolean = false
+    val logPings: Boolean = false,
+    val httpClient: Client = HttpURLConnectionClient()
 )

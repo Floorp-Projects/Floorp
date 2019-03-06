@@ -5,17 +5,19 @@
 package mozilla.components.service.glean.net
 
 import android.support.annotation.VisibleForTesting
+import android.support.annotation.VisibleForTesting.PRIVATE
+import mozilla.components.concept.fetch.Client
+import mozilla.components.concept.fetch.MutableHeaders
+import mozilla.components.concept.fetch.Request
+import mozilla.components.concept.fetch.clientError
+import mozilla.components.concept.fetch.success
 import mozilla.components.service.glean.BuildConfig
 import mozilla.components.service.glean.config.Configuration
 import mozilla.components.support.base.log.logger.Logger
-import java.io.IOException
-import java.net.CookieHandler
-import java.net.CookieManager
-import java.net.HttpURLConnection
-import java.net.MalformedURLException
-import java.net.URL
 import org.json.JSONException
 import org.json.JSONObject
+import java.io.IOException
+import java.util.concurrent.TimeUnit
 
 /**
  * A simple ping Uploader, which implements a "send once" policy, never
@@ -35,15 +37,13 @@ internal class HttpPingUploader : PingUploader {
     private fun logPing(path: String, data: String, config: Configuration) {
         if (config.logPings) {
             // Parse and reserialize the JSON so it has indentation and is human-readable.
-            val indented = try {
+            try {
                 val json = JSONObject(data)
-                json.toString(2)
+                val indented = json.toString(2)
+
+                logger.debug("Glean ping to URL: $path\n$indented")
             } catch (e: JSONException) {
                 logger.debug("Exception parsing ping as JSON: $e") // $COVERAGE-IGNORE$
-                null // $COVERAGE-IGNORE$
-            }
-            indented?.let {
-                logger.debug("Glean ping to URL: $path\n$it")
             }
         }
     }
@@ -62,46 +62,56 @@ internal class HttpPingUploader : PingUploader {
      *         or faced an unrecoverable error), false if there was a recoverable
      *         error callers can deal with.
      */
-    @Suppress("ReturnCount", "MagicNumber")
     override fun upload(path: String, data: String, config: Configuration): Boolean {
         logPing(path, data, config)
 
-        var connection: HttpURLConnection? = null
-        try {
-            connection = openConnection(config.serverEndpoint, path)
-            connection.requestMethod = "POST"
-            connection.connectTimeout = config.connectionTimeout
-            connection.readTimeout = config.readTimeout
-            connection.doOutput = true
+        val request = buildRequest(path, data, config)
 
-            connection.setRequestProperty("Content-Type", "application/json; charset=utf-8")
-            connection.setRequestProperty("User-Agent", config.userAgent)
-            connection.setRequestProperty("Date", createDateHeaderValue())
+        return try {
+            performUpload(config.httpClient, request)
+        } catch (e: IOException) {
+            logger.warn("IOException while uploading ping", e)
+            false
+        }
+    }
 
+    @VisibleForTesting(otherwise = PRIVATE)
+    internal fun buildRequest(path: String, data: String, config: Configuration) = Request(
+        url = config.serverEndpoint + path,
+        method = Request.Method.POST,
+        connectTimeout = Pair(config.connectionTimeout, TimeUnit.MILLISECONDS),
+        readTimeout = Pair(config.readTimeout, TimeUnit.MILLISECONDS),
+        headers = MutableHeaders(
+            "Content-Type" to "application/json; charset=utf-8",
+            "User-Agent" to config.userAgent,
+            "Date" to createDateHeaderValue(),
             // Add headers for supporting the legacy pipeline.
-            connection.setRequestProperty("X-Client-Type", "Glean")
-            connection.setRequestProperty("X-Client-Version", BuildConfig.LIBRARY_VERSION)
+            "X-Client-Type" to "Glean",
+            "X-Client-Version" to BuildConfig.LIBRARY_VERSION
+        ),
+        // Make sure we are not sending cookies. Unfortunately, HttpURLConnection doesn't
+        // offer a better API to do that, so we nuke all cookies going to our telemetry
+        // endpoint.
+        cookiePolicy = Request.CookiePolicy.OMIT,
+        body = Request.Body.fromString(data)
+    )
 
-            // Make sure we are not sending cookies. Unfortunately, HttpURLConnection doesn't
-            // offer a better API to do that, so we nuke all cookies going to our telemetry
-            // endpoint.
-            removeCookies(config.serverEndpoint)
+    @Throws(IOException::class)
+    internal fun performUpload(client: Client, request: Request): Boolean {
+        client.fetch(request).use { response ->
+            logger.debug("Ping upload: ${response.status}")
 
-            // Finally upload.
-            val responseCode = doUpload(connection, data)
-
-            logger.debug("Ping upload: $responseCode")
-
-            when (responseCode) {
-                in HttpURLConnection.HTTP_OK..(HttpURLConnection.HTTP_OK + 99) -> {
+            when {
+                response.success -> {
                     // Known success errors (2xx):
                     // 200 - OK. Request accepted into the pipeline.
 
                     // We treat all success codes as successful upload even though we only expect 200.
-                    logger.debug("Ping successfully sent ($responseCode)")
+                    logger.debug("Ping successfully sent (${response.status})")
                     return true
                 }
-                in HttpURLConnection.HTTP_BAD_REQUEST..(HttpURLConnection.HTTP_BAD_REQUEST + 99) -> {
+
+                response.clientError -> {
                     // Known client (4xx) errors:
                     // 404 - not found - POST/PUT to an unknown namespace
                     // 405 - wrong request type (anything other than POST/PUT)
@@ -113,67 +123,19 @@ internal class HttpPingUploader : PingUploader {
                     // Something our client did is not correct. It's unlikely that the client is going
                     // to recover from this by re-trying again, so we just log and error and report a
                     // successful upload to the service.
-                    logger.error("Server returned client error code: $responseCode")
+                    logger.error("Server returned client error code: ${response.status}")
                     return true
                 }
+
                 else -> {
                     // Known other errors:
                     // 500 - internal error
 
                     // For all other errors we log a warning an try again at a later time.
-                    logger.warn("Server returned response code: $responseCode")
+                    logger.warn("Server returned response code: ${response.status}")
                     return false
                 }
             }
-        } catch (e: MalformedURLException) {
-            // There's nothing we can do to recover from this here. So let's just log an error and
-            // notify the service that this job has been completed - even though we didn't upload
-            // anything to the server.
-            logger.error("Could not upload telemetry due to malformed URL", e)
-            return true
-        } catch (e: IOException) {
-            logger.warn("IOException while uploading ping", e)
-            return false
-        } finally {
-            connection?.disconnect()
         }
-    }
-
-    /**
-     * Remove all the cookies related to the server endpoint, so
-     * that nothing other than ping data travels to the endpoint.
-     *
-     * @param serverEndpoint the server address
-     */
-    internal fun removeCookies(serverEndpoint: String) {
-        (CookieHandler.getDefault() as? CookieManager)?.let { cookieManager ->
-            val submissionUrl = try {
-                URL(serverEndpoint)
-            } catch (e: MalformedURLException) {
-                null
-            }
-
-            submissionUrl?.let {
-                val uri = it.toURI()
-                for (cookie in cookieManager.cookieStore.get(uri)) {
-                    cookieManager.cookieStore.remove(uri, cookie)
-                }
-            }
-        }
-    }
-
-    @Throws(IOException::class)
-    fun doUpload(connection: HttpURLConnection, data: String): Int {
-        connection.outputStream.bufferedWriter().use {
-            it.write(data)
-            it.flush()
-        }
-
-        return connection.responseCode
-    }
-
-    @VisibleForTesting @Throws(IOException::class)
-    fun openConnection(endpoint: String, path: String): HttpURLConnection {
-        return URL(endpoint + path).openConnection() as HttpURLConnection
     }
 }
