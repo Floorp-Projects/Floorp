@@ -39,6 +39,7 @@ function WebConsoleConnectionProxy(webConsoleUI, target) {
   this._connectionTimeout = this._connectionTimeout.bind(this);
   this._onLastPrivateContextExited =
     this._onLastPrivateContextExited.bind(this);
+  this._clearLogpointMessages = this._clearLogpointMessages.bind(this);
 }
 
 WebConsoleConnectionProxy.prototype = {
@@ -193,6 +194,7 @@ WebConsoleConnectionProxy.prototype = {
     this.webConsoleClient.on("consoleAPICall", this._onConsoleAPICall);
     this.webConsoleClient.on("lastPrivateContextExited",
                              this._onLastPrivateContextExited);
+    this.webConsoleClient.on("clearLogpointMessages", this._clearLogpointMessages);
 
     const msgs = ["PageError", "ConsoleAPI"];
     const cachedMessages = await this.webConsoleClient.getCachedMessages(msgs);
@@ -304,6 +306,12 @@ WebConsoleConnectionProxy.prototype = {
     }
     packet.type = "consoleAPICall";
     this.dispatchMessageAdd(packet);
+  },
+
+  _clearLogpointMessages(logpointId) {
+    if (this.webConsoleUI) {
+      this.webConsoleUI.wrapper.dispatchClearLogpointMessages(logpointId);
+    }
   },
 
   /**
@@ -421,6 +429,7 @@ WebConsoleConnectionProxy.prototype = {
                                this._onLastPrivateContextExited);
     this.webConsoleClient.off("networkEvent", this._onNetworkEvent);
     this.webConsoleClient.off("networkEventUpdate", this._onNetworkEventUpdate);
+    this.webConsoleClient.off("clearLogpointMessages", this._clearLogpointMessages);
     this.target.off("will-navigate", this._onTabWillNavigate);
     this.target.off("navigate", this._onTabNavigated);
 

@@ -6,8 +6,6 @@
 
 "use strict";
 
-// To disable all Web Replay tests, see browser.ini
-
 // Test basic recovery of crashed child processes in web replay.
 add_task(async function() {
   const tab = BrowserTestUtils.addTab(gBrowser, null, { recordExecution: "*" });

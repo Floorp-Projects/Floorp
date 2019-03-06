@@ -23,6 +23,44 @@
 namespace js {
 namespace wasm {
 
+bool GenerateStackmapEntriesForTrapExit(
+    const ValTypeVector& args, const MachineState& trapExitLayout,
+    const size_t trapExitLayoutNumWords,  ExitStubMapVector* extras) {
+  MOZ_ASSERT(extras->empty());
+
+  // If this doesn't hold, we can't distinguish saved and not-saved
+  // registers in the MachineState.  See MachineState::MachineState().
+  MOZ_ASSERT(trapExitLayoutNumWords < 0x100);
+
+  if (!extras->appendN(false, trapExitLayoutNumWords)) {
+    return false;
+  }
+
+  for (ABIArgIter<const ValTypeVector> i(args); !i.done(); i++) {
+    MOZ_ASSERT(i.mirType() != MIRType::Pointer);
+    if (!i->argInRegister() || i.mirType() != MIRType::RefOrNull) {
+      continue;
+    }
+
+    size_t offsetFromTop =
+       reinterpret_cast<size_t>(trapExitLayout.address(i->gpr()));
+
+    // If this doesn't hold, the associated register wasn't saved by
+    // the trap exit stub.  Better to crash now than much later, in
+    // some obscure place, and possibly with security consequences.
+    MOZ_RELEASE_ASSERT(offsetFromTop < trapExitLayoutNumWords);
+
+    // offsetFromTop is an offset in words down from the highest
+    // address in the exit stub save area.  Switch it around to be an
+    // offset up from the bottom of the (integer register) save area.
+    size_t offsetFromBottom = trapExitLayoutNumWords - 1 - offsetFromTop;
+
+    (*extras)[offsetFromBottom] = true;
+  }
+
+  return true;
+}
+
 void EmitWasmPreBarrierGuard(MacroAssembler& masm, Register tls,
                              Register scratch, Register valueAddr,
                              Label* skipBarrier) {

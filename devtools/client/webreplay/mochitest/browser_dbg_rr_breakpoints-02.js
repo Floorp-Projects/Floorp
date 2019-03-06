@@ -6,8 +6,6 @@
 
 "use strict";
 
-// To disable all Web Replay tests, see browser.ini
-
 // Test unhandled divergence while evaluating at a breakpoint with Web Replay.
 add_task(async function() {
   const dbg = await attachRecordingDebugger("doc_rr_basic.html",

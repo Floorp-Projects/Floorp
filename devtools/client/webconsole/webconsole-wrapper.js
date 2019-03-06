@@ -548,6 +548,10 @@ class WebConsoleWrapper {
     this.setTimeoutIfNeeded();
   }
 
+  dispatchClearLogpointMessages(logpointId) {
+    store.dispatch(actions.messagesClearLogpoint(logpointId));
+  }
+
   dispatchClearHistory() {
     store.dispatch(actions.clearHistory());
   }

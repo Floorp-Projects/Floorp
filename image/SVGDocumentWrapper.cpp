@@ -25,9 +25,7 @@
 #include "nsServiceManagerUtils.h"
 #include "mozilla/dom/SVGSVGElement.h"
 #include "SVGObserverUtils.h"
-#include "mozilla/dom/SVGAnimatedLength.h"
 #include "nsMimeTypes.h"
-#include "DOMSVGLength.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/ImageTracker.h"
 

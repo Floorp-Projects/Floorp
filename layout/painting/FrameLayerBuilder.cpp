@@ -2605,7 +2605,7 @@ already_AddRefed<PaintedLayer> ContainerState::AttemptToRecyclePaintedLayer(
   return layer.forget();
 }
 
-void ReleaseLayerUserData(void* aData) {
+static void ReleaseLayerUserData(void* aData) {
   PaintedDisplayItemLayerUserData* userData =
       static_cast<PaintedDisplayItemLayerUserData*>(aData);
   userData->Release();
