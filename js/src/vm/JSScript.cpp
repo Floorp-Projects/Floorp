@@ -2850,7 +2850,9 @@ bool ScriptSource::setSourceMapURL(JSContext* cx,
   return sourceMapURL_ != nullptr;
 }
 
-/* static */ mozilla::Atomic<uint32_t> ScriptSource::idCount_;
+/* static */ mozilla::Atomic<uint32_t, mozilla::SequentiallyConsistent,
+                             mozilla::recordreplay::Behavior::DontPreserve>
+    ScriptSource::idCount_;
 
 /*
  * [SMDOC] JSScript data layout (shared)
