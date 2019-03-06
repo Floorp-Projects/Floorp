@@ -28,7 +28,11 @@ export class DSCard extends React.PureComponent {
 
   render() {
     return (
-      <SafeAnchor url={this.props.url} className="ds-card" onLinkClick={this.onLinkClick}>
+      <SafeAnchor
+        className="ds-card"
+        dispatch={this.props.dispatch}
+        onLinkClick={this.onLinkClick}
+        url={this.props.url}>
         <div className="img-wrapper">
           <div className="img" style={{backgroundImage: `url(${this.props.image_src}`}} />
         </div>
