@@ -17,6 +17,7 @@ from mozpack.test.test_files import MockDest
 import unittest
 import mozunit
 from cStringIO import StringIO
+from urllib import pathname2url
 import mozpack.path as mozpath
 import os
 
@@ -289,32 +290,55 @@ class TestPreload(unittest.TestCase):
 
 class TestJarLog(unittest.TestCase):
     def test_jarlog(self):
+        base = 'file:' + pathname2url(os.path.abspath(os.curdir))
         s = StringIO('\n'.join([
-            'bar/baz.jar first',
-            'bar/baz.jar second',
-            'bar/baz.jar third',
-            'bar/baz.jar second',
-            'bar/baz.jar second',
-            'omni.ja stuff',
-            'bar/baz.jar first',
-            'omni.ja other/stuff',
-            'omni.ja stuff',
-            'bar/baz.jar third',
+            base + '/bar/baz.jar first',
+            base + '/bar/baz.jar second',
+            base + '/bar/baz.jar third',
+            base + '/bar/baz.jar second',
+            base + '/bar/baz.jar second',
+            'jar:' + base + '/qux.zip!/omni.ja stuff',
+            base + '/bar/baz.jar first',
+            'jar:' + base + '/qux.zip!/omni.ja other/stuff',
+            'jar:' + base + '/qux.zip!/omni.ja stuff',
+            base + '/bar/baz.jar third',
+            'jar:jar:' + base + '/qux.zip!/baz/baz.jar!/omni.ja nested/stuff',
+            'jar:jar:jar:' + base + '/qux.zip!/baz/baz.jar!/foo.zip!/omni.ja' +
+            ' deeply/nested/stuff',
         ]))
         log = JarLog(fileobj=s)
+
+        def canonicalize(p):
+            return mozpath.normsep(os.path.normcase(os.path.realpath(p)))
+
+        baz_jar = canonicalize('bar/baz.jar')
+        qux_zip = canonicalize('qux.zip')
         self.assertEqual(set(log.keys()), set([
-            'bar/baz.jar',
-            'omni.ja',
+            baz_jar,
+            (qux_zip, 'omni.ja'),
+            (qux_zip, 'baz/baz.jar', 'omni.ja'),
+            (qux_zip, 'baz/baz.jar', 'foo.zip', 'omni.ja'),
         ]))
-        self.assertEqual(log['bar/baz.jar'], [
+        self.assertEqual(log[baz_jar], [
             'first',
             'second',
             'third',
         ])
-        self.assertEqual(log['omni.ja'], [
+        self.assertEqual(log[(qux_zip, 'omni.ja')], [
             'stuff',
             'other/stuff',
         ])
+        self.assertEqual(log[(qux_zip, 'baz/baz.jar', 'omni.ja')],
+                         ['nested/stuff'])
+        self.assertEqual(log[(qux_zip, 'baz/baz.jar', 'foo.zip',
+                              'omni.ja')], ['deeply/nested/stuff'])
+
+        # The above tests also indirectly check the value returned by
+        # JarLog.canonicalize for various jar: and file: urls, but
+        # JarLog.canonicalize also supports plain paths.
+        self.assertEqual(JarLog.canonicalize(os.path.abspath('bar/baz.jar')),
+                         baz_jar)
+        self.assertEqual(JarLog.canonicalize('bar/baz.jar'), baz_jar)
 
 
 if __name__ == '__main__':
