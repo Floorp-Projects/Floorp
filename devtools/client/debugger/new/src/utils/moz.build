@@ -10,7 +10,7 @@ DIRS += [
     'sources-tree',
 ]
 
-DebuggerModules(
+CompiledModules(
     'assert.js',
     'ast.js',
     'asyncStoreHelper.js',

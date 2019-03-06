@@ -7,7 +7,7 @@ DIRS += [
 
 ]
 
-DebuggerModules(
+CompiledModules(
     'Breakpoint.js',
     'BreakpointHeading.js',
     'BreakpointHeadingsContextMenu.js',

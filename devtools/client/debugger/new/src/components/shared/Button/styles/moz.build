@@ -7,7 +7,7 @@ DIRS += [
 
 ]
 
-DebuggerModules(
+CompiledModules(
     'CloseButton.css',
     'CommandBarButton.css',
     'PaneToggleButton.css',
