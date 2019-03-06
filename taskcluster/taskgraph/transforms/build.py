@@ -13,6 +13,8 @@ from taskgraph.util.attributes import RELEASE_PROJECTS
 from taskgraph.util.schema import resolve_keyed_by
 from taskgraph.util.workertypes import worker_type_implementation
 
+from mozbuild.artifact_builds import JOB_CHOICES as ARTIFACT_JOBS
+
 import logging
 logger = logging.getLogger(__name__)
 
@@ -146,7 +148,8 @@ def use_artifact(config, jobs):
     else:
         use_artifact = False
     for job in jobs:
-        if config.kind == 'build' and use_artifact:
+        if config.kind == 'build' and use_artifact and \
+                job.get('index', {}).get('job-name') in ARTIFACT_JOBS:
             job['treeherder']['symbol'] += 'a'
             job['worker']['env']['USE_ARTIFACT'] = '1'
         yield job
