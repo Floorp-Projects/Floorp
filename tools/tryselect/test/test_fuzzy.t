@@ -68,6 +68,27 @@ Test multiple selectors
   }
   
 
+Test query intersection
+
+  $ ./mach try fuzzy $testargs --and -q "'foo" -q "'opt"
+  Commit message:
+  Fuzzy query='foo&query='opt
+  
+  Pushed via `mach try fuzzy`
+  Calculated try_task_config.json:
+  {
+      "tasks": [
+          "test/foo-opt"
+      ],
+      "templates": {
+          "env": {
+              "TRY_SELECTOR": "fuzzy"
+          }
+      },
+      "version": 1
+  }
+  
+
 
 Test exact match
 
