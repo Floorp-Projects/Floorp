@@ -457,6 +457,10 @@ void WebRenderLayerManager::SetLayersObserverEpoch(LayersObserverEpoch aEpoch) {
 void WebRenderLayerManager::DidComposite(
     TransactionId aTransactionId, const mozilla::TimeStamp& aCompositeStart,
     const mozilla::TimeStamp& aCompositeEnd) {
+  if (IsDestroyed()) {
+    return;
+  }
+
   MOZ_ASSERT(mWidget);
 
   // Notifying the observers may tick the refresh driver which can cause
