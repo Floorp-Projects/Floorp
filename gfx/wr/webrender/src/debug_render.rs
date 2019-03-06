@@ -313,6 +313,7 @@ impl DebugRenderer {
         &mut self,
         device: &mut Device,
         viewport_size: Option<FramebufferIntSize>,
+        scale: f32,
     ) {
         if let Some(viewport_size) = viewport_size {
             device.disable_depth();
@@ -321,8 +322,8 @@ impl DebugRenderer {
 
             let projection = Transform3D::ortho(
                 0.0,
-                viewport_size.width as f32,
-                viewport_size.height as f32,
+                viewport_size.width as f32 * scale,
+                viewport_size.height as f32 * scale,
                 0.0,
                 ORTHO_NEAR_PLANE,
                 ORTHO_FAR_PLANE,

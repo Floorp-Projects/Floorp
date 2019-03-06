@@ -2782,7 +2782,9 @@ impl Renderer {
             let _gm = self.gpu_profile.start_marker("end frame");
             self.gpu_profile.end_frame();
             if let Some(debug_renderer) = self.debug.try_get_mut() {
-                debug_renderer.render(&mut self.device, framebuffer_size);
+                let small_screen = self.debug_flags.contains(DebugFlags::SMALL_SCREEN);
+                let scale = if small_screen { 1.6 } else { 1.0 };
+                debug_renderer.render(&mut self.device, framebuffer_size, scale);
             }
             // See comment for texture_resolver.begin_frame() for explanation
             // of why this must be done after all rendering, including debug
