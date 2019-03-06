@@ -13,6 +13,7 @@
 ../mozbase/moznetwork
 ../mozbase/mozprocess
 ../mozbase/mozprofile
+../mozbase/mozproxy
 ../mozbase/mozrunner
 ../mozbase/mozscreenshot
 ../mozbase/moztest
