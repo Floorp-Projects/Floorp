@@ -780,6 +780,9 @@ class MarionetteRefTestExecutor(RefTestExecutor):
             self.logger.warning("Exception during reftest teardown:\n%s" %
                                 traceback.format_exc(e))
 
+    def reset(self):
+        self.implementation.reset(**self.implementation_kwargs)
+
     def is_alive(self):
         return self.protocol.is_alive
 
@@ -860,6 +863,10 @@ class InternalRefTestImplementation(object):
                                 if value > 1}
         self.executor.protocol.marionette.set_context(self.executor.protocol.marionette.CONTEXT_CHROME)
         self.executor.protocol.marionette._send_message("reftest:setup", data)
+
+    def reset(self, screenshot=None):
+        self.teardown()
+        self.setup(screenshot)
 
     def run_test(self, test):
         references = self.get_references(test)
