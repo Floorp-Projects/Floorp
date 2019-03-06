@@ -7,13 +7,13 @@ var client;
 var context;
 
 function ok(a, msg) {
-  client.postMessage({type: 'status', status: !!a,
-                      msg: a + ": " + msg, context: context});
+  client.postMessage({type: "status", status: !!a,
+                      msg: a + ": " + msg, context});
 }
 
 function is(a, b, msg) {
-  client.postMessage({type: 'status', status: a === b,
-                      msg: a + " === " + b + ": " + msg, context: context });
+  client.postMessage({type: "status", status: a === b,
+                      msg: a + " === " + b + ": " + msg, context });
 }
 
 function workerTestArrayEquals(a, b) {
@@ -29,83 +29,83 @@ function workerTestArrayEquals(a, b) {
 }
 
 function testDone() {
-  client.postMessage({ type: 'finish', context: context });
+  client.postMessage({ type: "finish", context });
 }
 
 function workerTestGetPrefs(prefs, cb) {
-  addEventListener('message', function workerTestGetPrefsCB(e) {
-    if (e.data.type != 'returnPrefs' ||
+  addEventListener("message", function workerTestGetPrefsCB(e) {
+    if (e.data.type != "returnPrefs" ||
         !workerTestArrayEquals(prefs, e.data.prefs)) {
       return;
     }
-    removeEventListener('message', workerTestGetPrefsCB);
+    removeEventListener("message", workerTestGetPrefsCB);
     cb(e.data.result);
   });
   client.postMessage({
-    type: 'getPrefs',
-    context: context,
-    prefs: prefs
+    type: "getPrefs",
+    context,
+    prefs,
   });
 }
 
 function workerTestGetPermissions(permissions, cb) {
-  addEventListener('message', function workerTestGetPermissionsCB(e) {
-    if (e.data.type != 'returnPermissions' ||
+  addEventListener("message", function workerTestGetPermissionsCB(e) {
+    if (e.data.type != "returnPermissions" ||
         !workerTestArrayEquals(permissions, e.data.permissions)) {
       return;
     }
-    removeEventListener('message', workerTestGetPermissionsCB);
+    removeEventListener("message", workerTestGetPermissionsCB);
     cb(e.data.result);
   });
   client.postMessage({
-    type: 'getPermissions',
-    context: context,
-    permissions: permissions
+    type: "getPermissions",
+    context,
+    permissions,
   });
 }
 
 function workerTestGetVersion(cb) {
-  addEventListener('message', function workerTestGetVersionCB(e) {
-    if (e.data.type !== 'returnVersion') {
+  addEventListener("message", function workerTestGetVersionCB(e) {
+    if (e.data.type !== "returnVersion") {
       return;
     }
-    removeEventListener('message', workerTestGetVersionCB);
+    removeEventListener("message", workerTestGetVersionCB);
     cb(e.data.result);
   });
   client.postMessage({
-    context: context,
-    type: 'getVersion'
+    context,
+    type: "getVersion",
   });
 }
 
 function workerTestGetUserAgent(cb) {
-  addEventListener('message', function workerTestGetUserAgentCB(e) {
-    if (e.data.type !== 'returnUserAgent') {
+  addEventListener("message", function workerTestGetUserAgentCB(e) {
+    if (e.data.type !== "returnUserAgent") {
       return;
     }
-    removeEventListener('message', workerTestGetUserAgentCB);
+    removeEventListener("message", workerTestGetUserAgentCB);
     cb(e.data.result);
   });
   client.postMessage({
-    context: context,
-    type: 'getUserAgent'
+    context,
+    type: "getUserAgent",
   });
 }
 
 var completeInstall = null;
 
-addEventListener('message', function workerWrapperOnMessage(e) {
-  removeEventListener('message', workerWrapperOnMessage);
+addEventListener("message", function workerWrapperOnMessage(e) {
+  removeEventListener("message", workerWrapperOnMessage);
   var data = e.data;
   function runScript() {
     try {
       importScripts(data.script);
-    } catch(e) {
+    } catch (e) {
       client.postMessage({
-        type: 'status',
+        type: "status",
         status: false,
-        context: context,
-        msg: 'worker failed to import ' + data.script + "; error: " + e.message
+        context,
+        msg: "worker failed to import " + data.script + "; error: " + e.message,
       });
     }
   }
@@ -133,4 +133,4 @@ addEventListener('message', function workerWrapperOnMessage(e) {
 
 addEventListener("install", e => {
   e.waitUntil(new Promise(resolve => completeInstall = resolve));
-})
+});

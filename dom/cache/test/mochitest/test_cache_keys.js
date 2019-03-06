@@ -45,7 +45,7 @@ caches.open(name).then(function(cache) {
   return Promise.all(
     ["POST", "PUT", "DELETE", "OPTIONS"]
       .map(function(method) {
-        var req = new Request(tests[2], {method: method});
+        var req = new Request(tests[2], {method});
         return c.keys(req)
           .then(function(keys) {
             is(keys.length, 0, "No request should be matched without ignoreMethod");

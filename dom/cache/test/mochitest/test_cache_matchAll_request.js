@@ -60,7 +60,7 @@ function testRequest(request1, request2, request3, unknownRequest,
     return Promise.all(
       ["HEAD", "POST", "PUT", "DELETE", "OPTIONS"]
         .map(function(method) {
-          var r = new Request(request1, {method: method});
+          var r = new Request(request1, {method});
           return c.add(r)
             .then(function() {
               ok(false, "Promise should be rejected");
@@ -86,7 +86,7 @@ function testRequest(request1, request2, request3, unknownRequest,
     return Promise.all(
       ["HEAD", "POST", "PUT", "DELETE", "OPTIONS"]
         .map(function(method) {
-          var req = new Request(request1, {method: method});
+          var req = new Request(request1, {method});
           return c.matchAll(req)
             .then(function(r) {
               is(r.length, 0, "Searching for a request with a non-GET method should not succeed");
@@ -109,7 +109,7 @@ function testRequest(request1, request2, request3, unknownRequest,
     is(r.length, 2, "Should find 2 items");
     return Promise.all([
       checkResponse(r[0], response1, response1Text),
-      checkResponse(r[1], response3, response3Text)
+      checkResponse(r[1], response3, response3Text),
     ]);
   }).then(function() {
     return c.matchAll(request3);
@@ -122,15 +122,15 @@ function testRequest(request1, request2, request3, unknownRequest,
     is(r.length, 2, "Should find 2 items");
     return Promise.all([
       checkResponse(r[0], response1, response1Text),
-      checkResponse(r[1], response3, response3Text)
+      checkResponse(r[1], response3, response3Text),
     ]);
   }).then(function() {
     return caches.match(request1, {cacheName: name + "mambojambo"})
       .then(function() {
-        is(typeof r, "undefined", 'Searching in the wrong cache should resolve to undefined');
+        is(typeof r, "undefined", "Searching in the wrong cache should resolve to undefined");
         return caches.has(name + "mambojambo");
       }).then(function(hasCache) {
-        ok(!hasCache, 'The wrong cache should still not exist');
+        ok(!hasCache, "The wrong cache should still not exist");
       });
   }).then(function() {
     return c.matchAll(unknownRequest);
@@ -164,7 +164,7 @@ function testRequest(request1, request2, request3, unknownRequest,
     is(r.length, 2, "Should find 2 items");
     return Promise.all([
       checkResponse(r[0], response1, response1Text),
-      checkResponse(r[1], response3, response3Text)
+      checkResponse(r[1], response3, response3Text),
     ]);
   }).then(function() {
     // Now, drop the cache, reopen and verify that we can't find the request any more.

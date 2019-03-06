@@ -2,16 +2,16 @@
 <script>
   var context = "Window";
   function ok(a, msg) {
-    parent.postMessage({type: 'status', status: !!a,
-                        msg: a + ": " + msg, context: context}, "*");
+    parent.postMessage({type: "status", status: !!a,
+                        msg: a + ": " + msg, context}, "*");
   }
 
   function is(a, b, msg) {
-    parent.postMessage({type: 'status', status: a === b,
-                        msg: a + " === " + b + ": " + msg, context: context}, "*");
+    parent.postMessage({type: "status", status: a === b,
+                        msg: a + " === " + b + ": " + msg, context}, "*");
   }
 
   function testDone() {
-    parent.postMessage({type: 'finish', context: context}, "*");
+    parent.postMessage({type: "finish", context}, "*");
   }
 </script>

@@ -9,17 +9,17 @@ function serviceWorkerTestExec(testFile) {
                    registration.active;
       var iframe;
 
-      window.addEventListener("message",function onMessage(event) {
+      window.addEventListener("message", function onMessage(event) {
         if (event.data.context != "ServiceWorker") {
           return;
         }
-        if (event.data.type == 'finish') {
+        if (event.data.type == "finish") {
           window.removeEventListener("message", onMessage);
           iframe.remove();
           registration.unregister()
             .then(resolve)
             .catch(reject);
-        } else if (event.data.type == 'status') {
+        } else if (event.data.type == "status") {
           ok(event.data.status, event.data.context + ": " + event.data.msg);
         }
       });
