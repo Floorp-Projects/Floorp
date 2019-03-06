@@ -291,8 +291,8 @@ nsresult RemoteWorkerChild::ExecWorkerOnMainThread(
   }
 
   Maybe<ClientInfo> clientInfo;
-  if (aData.clientInfo().type() == OptionalIPCClientInfo::TIPCClientInfo) {
-    clientInfo.emplace(ClientInfo(aData.clientInfo().get_IPCClientInfo()));
+  if (aData.clientInfo().isSome()) {
+    clientInfo.emplace(ClientInfo(aData.clientInfo().ref()));
   }
 
   // Top level workers' main script use the document charset for the script
