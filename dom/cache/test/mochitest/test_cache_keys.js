@@ -1,3 +1,5 @@
+/* global context testDone:true */
+
 var name = "keys" + context;
 var c;
 
@@ -35,9 +37,9 @@ caches.open(name).then(function(cache) {
   ok(keys[0].url.includes(tests[1]), "Valid URL");
   // Try to see if ignoreSearch works as expected.
   return c.keys(new Request("//mochi.test:8888/?foo"), {ignoreSearch: true});
-}).then(function(keys) {
-  is(keys.length, tests.length, "Same number of elements");
-  keys.forEach(function(r, i) {
+}).then(function(key_arr) {
+  is(key_arr.length, tests.length, "Same number of elements");
+  key_arr.forEach(function(r, i) {
     ok(r instanceof Request, "Valid request object");
     ok(r.url.includes(tests[i]), "Valid URL");
   });

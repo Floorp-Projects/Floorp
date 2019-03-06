@@ -1,3 +1,5 @@
+/* global context testDone:true */
+
 var url = "test_cache.js";
 var cache;
 var fetchResponse;

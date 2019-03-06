@@ -1,3 +1,5 @@
+/* eslint-env worker */
+
 // Any copyright is dedicated to the Public Domain.
 // http://creativecommons.org/publicdomain/zero/1.0/
 //
@@ -100,12 +102,12 @@ addEventListener("message", function workerWrapperOnMessage(e) {
   function runScript() {
     try {
       importScripts(data.script);
-    } catch (e) {
+    } catch (err) {
       client.postMessage({
         type: "status",
         status: false,
         context,
-        msg: "worker failed to import " + data.script + "; error: " + e.message,
+        msg: "worker failed to import " + data.script + "; error: " + err.message,
       });
     }
   }

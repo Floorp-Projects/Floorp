@@ -39,7 +39,7 @@ function workerTestExec(script) {
       } else if (event.data.type == "status") {
         ok(event.data.status, event.data.context + ": " + event.data.msg);
       } else if (event.data.type == "getPrefs") {
-        var result = {};
+        let result = {};
         event.data.prefs.forEach(function(pref) {
           result[pref] = SpecialPowers.Services.prefs.getBoolPref(pref);
         });
@@ -49,7 +49,7 @@ function workerTestExec(script) {
           result,
         });
       } else if (event.data.type == "getPermissions") {
-        var result = {};
+        let result = {};
         event.data.permissions.forEach(function(permission) {
           result[permission] = SpecialPowers.hasPermission(permission, window.document);
         });
@@ -59,7 +59,7 @@ function workerTestExec(script) {
           result,
         });
       } else if (event.data.type == "getVersion") {
-        var result = SpecialPowers.Cc["@mozilla.org/xre/app-info;1"].getService(SpecialPowers.Ci.nsIXULAppInfo).version;
+        let result = Services.appinfo.version;
         worker.postMessage({
           type: "returnVersion",
           result,

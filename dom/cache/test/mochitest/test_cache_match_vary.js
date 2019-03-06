@@ -1,3 +1,5 @@
+/* global context testDone:true */
+
 var requestURL = "//mochi.test:8888/tests/dom/cache/test/mochitest/vary.sjs?" + context;
 var name = "match-vary" + context;
 
@@ -36,8 +38,8 @@ function setupTestMultipleEntries(headers) {
     var response, responseText, cache;
     Promise.all(headers.map(function(h) {
       return fetch(requestURL, {headers: h});
-    })).then(function(r) {
-        response = r;
+    })).then(function(res) {
+        response = res;
         return Promise.all(response.map(function(r) {
           return r.text();
         }));
@@ -115,7 +117,6 @@ function testStar() {
         is(err.name, "TypeError", "Attempting to store a Response with a Vary:* header must fail");
       });
   }
-  var test;
   return new Promise(function(resolve, reject) {
     var cache;
     caches.open(name).then(function(c) {
