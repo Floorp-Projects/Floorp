@@ -22,12 +22,13 @@ function runTests() {
       waitedForPaint++;
       moveBy = -moveBy;
       $("abs").style.left = ($("abs").offsetLeft + moveBy) + "px";
-      var x = document.documentElement.offsetHeight;
+      document.documentElement.offsetHeight;
       var pc = testplugin.getPaintCount ? testplugin.getPaintCount() : -2;
       if (waitedForPaint == 20 || (pc != testplugin.last_paint_count && pc >= 0)) {
         setTimeout(func, 0);
-      } else
+      } else {
         setTimeout(waitForPaintCountIncrement, 50);
+      }
     }
     waitForPaintCountIncrement();
   }

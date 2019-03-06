@@ -20,6 +20,8 @@
 
   var didPaint = function() {};
 
+  var p = null;
+
   function startTest() {
     if (p.getPaintCount() < 1) {
       setTimeout(startTest, 0);

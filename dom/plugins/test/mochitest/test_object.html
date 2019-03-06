@@ -244,7 +244,7 @@ function eachList() {
   },
       };
 
-
+      // eslint-disable-next-line complexity
       function testObject(obj, state) {
         // If our test combination both sets noChannel but no explicit type
         // it shouldn't load ever.
@@ -316,7 +316,7 @@ function eachList() {
         // should spawn synchronously.
         let scripted = false;
         try {
-          let x = obj.getObjectValue();
+          obj.getObjectValue();
           scripted = true;
         } catch (e) {}
         is(scripted, shouldBeSpawnable, "check plugin scriptability");
