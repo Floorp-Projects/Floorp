@@ -143,12 +143,12 @@ static inline HashNumber AddContainerToHash(const Container& c,
 }
 
 template <class T>
-static inline T Min(T t1, T t2) {
+static constexpr inline T Min(T t1, T t2) {
   return t1 < t2 ? t1 : t2;
 }
 
 template <class T>
-static inline T Max(T t1, T t2) {
+static constexpr inline T Max(T t1, T t2) {
   return t1 > t2 ? t1 : t2;
 }
 
