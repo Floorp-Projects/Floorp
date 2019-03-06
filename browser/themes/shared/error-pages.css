@@ -25,7 +25,38 @@ body {
   flex: 1;
 }
 
+.illustrated #errorPageContainer {
+  min-height: 300px;
+  display: flex;
+  flex-direction: column;
+  background-position: left center;
+}
+
+.illustrated[dir="rtl"] #errorPageContainer {
+  background-position: right center;
+}
+
+.illustrated .title {
+  background: none;
+  padding-inline-start: 0;
+  margin-inline-start: 0;
+}
+
+.illustrated #text-container {
+  margin: auto;
+  padding-inline-start: 38%;
+}
+
+.illustrated #errorPageContainer {
+  background-repeat: no-repeat;
+  background-size: 38%;
+}
+
 @media only screen and (max-width: 959px) {
+  body {
+    padding: 0 75px;
+  }
+
   .title {
     background-image: none !important;
     padding-inline-start: 0;
@@ -38,10 +69,6 @@ body {
 }
 
 @media only screen and (max-width: 640px) {
-  body {
-    padding: 0 75px;
-  }
-
   .title-text {
     padding-bottom: 0;
     border-bottom: none;
@@ -49,9 +76,41 @@ body {
 }
 
 @media only screen and (max-width: 480px) {
+  body {
+    padding: 0 38px;
+  }
+
+  .container {
+    min-width: 0;
+  }
+
   .button-container button {
     width: 100%;
     margin: 0.66em 0 0;
+  }
+
+  .title-text {
+    font-size: 26px;
+  }
+}
+
+@media only screen and (max-width: 320px) {
+  body {
+    padding: 0 12px;
+  }
+
+  /* At some point the screen gets so small that the cute
+   * critter image takes up too much valuable screen real
+   * estate to keep it showing. */
+  #errorPageContainer {
+    background-image: none !important;
+  }
+
+  /* When the critter is hidden, also use the full screen
+   * size for the error text */
+  .illustrated #text-container {
+    margin: unset;
+    padding-inline-start: 0;
   }
 }
 

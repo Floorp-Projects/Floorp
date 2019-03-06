@@ -304,9 +304,23 @@ function initPage() {
   }
 }
 
+// This function centers the error container after its content updates.
+// It is currently duplicated in NetErrorChild.jsm to avoid having to do
+// async communication to the page that would result in flicker.
+// TODO(johannh): Get rid of this duplication.
 function updateContainerPosition() {
   let textContainer = document.getElementById("text-container");
-  textContainer.style.marginTop = `calc(50vh - ${textContainer.clientHeight / 2}px)`;
+  // Using the vh CSS property our margin adapts nicely to window size changes.
+  // Unfortunately, this doesn't work correctly in iframes, which is why we need
+  // to manually compute the height there.
+  if (window.parent == window) {
+    textContainer.style.marginTop = `calc(50vh - ${textContainer.clientHeight / 2}px)`;
+  } else {
+    let offset = (document.documentElement.clientHeight / 2) - (textContainer.clientHeight / 2);
+    if (offset > 0) {
+      textContainer.style.marginTop = `${offset}px`;
+    }
+  }
 }
 
 function initPageCaptivePortal() {
