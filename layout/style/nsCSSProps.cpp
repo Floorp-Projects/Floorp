@@ -347,15 +347,6 @@ const KTableEntry nsCSSProps::kLineHeightKTable[] = {
     {eCSSKeyword__moz_block_height, NS_STYLE_LINE_HEIGHT_BLOCK_HEIGHT},
     {eCSSKeyword_UNKNOWN, -1}};
 
-const KTableEntry nsCSSProps::kContainKTable[] = {
-    {eCSSKeyword_none, NS_STYLE_CONTAIN_NONE},
-    {eCSSKeyword_strict, NS_STYLE_CONTAIN_STRICT},
-    {eCSSKeyword_content, NS_STYLE_CONTAIN_CONTENT},
-    {eCSSKeyword_layout, NS_STYLE_CONTAIN_LAYOUT},
-    {eCSSKeyword_paint, NS_STYLE_CONTAIN_PAINT},
-    {eCSSKeyword_size, NS_STYLE_CONTAIN_SIZE},
-    {eCSSKeyword_UNKNOWN, -1}};
-
 const KTableEntry nsCSSProps::kTextAlignKTable[] = {
     {eCSSKeyword_left, NS_STYLE_TEXT_ALIGN_LEFT},
     {eCSSKeyword_right, NS_STYLE_TEXT_ALIGN_RIGHT},
