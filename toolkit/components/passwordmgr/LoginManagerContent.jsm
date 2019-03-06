@@ -1119,7 +1119,6 @@ var LoginManagerContent = {
     }
 
     log("_fillForm", form.elements);
-    let ignoreAutocomplete = true;
     // Will be set to one of AUTOFILL_RESULT in the `try` block.
     let autofillResult = -1;
     const AUTOFILL_RESULT = {
@@ -1211,13 +1210,6 @@ var LoginManagerContent = {
         return;
       }
 
-      var isAutocompleteOff = false;
-      if (this._isAutocompleteDisabled(form) ||
-          this._isAutocompleteDisabled(usernameField) ||
-          this._isAutocompleteDisabled(passwordField)) {
-        isAutocompleteOff = true;
-      }
-
       // Discard logins which have username/password values that don't
       // fit into the fields (as specified by the maxlength attribute).
       // The user couldn't enter these values anyway, and it helps
@@ -1249,9 +1241,11 @@ var LoginManagerContent = {
         return;
       }
 
+      const passwordACFieldName = passwordField.getAutocompleteInfo().fieldName;
+
       // If the password field has the autocomplete value of "new-password"
       // and we're autofilling without user interaction, there's nothing to do.
-      if (!userTriggered && passwordField.getAutocompleteInfo().fieldName == "new-password") {
+      if (!userTriggered && passwordACFieldName == "new-password") {
         log("not filling form, password field has the autocomplete new-password value");
         autofillResult = AUTOFILL_RESULT.PASSWORD_AUTOCOMPLETE_NEW_PASSWORD;
         return;
@@ -1322,8 +1316,10 @@ var LoginManagerContent = {
         return;
       }
 
-      if (isAutocompleteOff && !ignoreAutocomplete) {
-        log("Not filling the login because we're respecting autocomplete=off");
+      if (!userTriggered &&
+          passwordACFieldName == "off" &&
+          !LoginHelper.autocompleteOff) {
+        log("Not autofilling the login because we're respecting autocomplete=off");
         autofillResult = AUTOFILL_RESULT.AUTOCOMPLETE_OFF;
         return;
       }
@@ -1331,7 +1327,7 @@ var LoginManagerContent = {
       // Fill the form
 
       if (usernameField) {
-      // Don't modify the username field if it's disabled or readOnly so we preserve its case.
+        // Don't modify the username field if it's disabled or readOnly so we preserve its case.
         let disabledOrReadOnly = usernameField.disabled || usernameField.readOnly;
 
         let userNameDiffers = selectedLogin.username != usernameField.value;
