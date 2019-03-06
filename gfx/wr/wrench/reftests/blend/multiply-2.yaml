@@ -1,14 +1,13 @@
-# test that we handle the backdrop size to be smaller than the source
 ---
 root:
   items:
         - type: rect
-          bounds: [25, 25, 50, 50]
-          color: green
+          bounds: [0, 0, 100, 100]
+          color: [0, 255, 0]
         - type: stacking-context
           bounds: [0, 0, 100, 100]
           mix-blend-mode: multiply
           items:
             - type: rect
               bounds: [0, 0, 100, 100]
-              color: green
+              color: [255, 128, 0]
