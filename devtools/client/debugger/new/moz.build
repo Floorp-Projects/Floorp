@@ -9,7 +9,7 @@ DIRS += [
   'src',
 ]
 
-include('../../shared/build/node-templates.mozbuild')
+include('node-templates.mozbuild')
 
 DevToolsModules(
     'panel.js',

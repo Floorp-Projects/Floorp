@@ -8,7 +8,7 @@ DIRS += [
     'Preview',
 ]
 
-CompiledModules(
+DebuggerModules(
     'Breakpoint.js',
     'Breakpoints.js',
     'ColumnBreakpoint.js',

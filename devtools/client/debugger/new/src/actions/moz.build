@@ -11,7 +11,7 @@ DIRS += [
     'utils',
 ]
 
-CompiledModules(
+DebuggerModules(
     'ast.js',
     'debuggee.js',
     'event-listeners.js',

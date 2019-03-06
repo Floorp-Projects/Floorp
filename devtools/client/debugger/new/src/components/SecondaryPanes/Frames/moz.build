@@ -7,7 +7,7 @@ DIRS += [
 
 ]
 
-CompiledModules(
+DebuggerModules(
     'Frame.js',
     'FrameIndent.js',
     'FrameMenu.js',
