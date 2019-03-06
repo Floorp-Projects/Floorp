@@ -19,6 +19,7 @@
 
 class nsIChannel;
 class nsIContentSecurityPolicy;
+class nsICookieSettings;
 class nsILoadGroup;
 class nsIPrincipal;
 class nsIRunnable;
@@ -49,6 +50,9 @@ struct WorkerLoadInfoData {
   // If we load a data: URL, mPrincipal will be a null principal.
   nsCOMPtr<nsIPrincipal> mLoadingPrincipal;
   nsCOMPtr<nsIPrincipal> mPrincipal;
+
+  // Taken from the parent context.
+  nsCOMPtr<nsICookieSettings> mCookieSettings;
 
   nsCOMPtr<nsIScriptContext> mScriptContext;
   nsCOMPtr<nsPIDOMWindowInner> mWindow;

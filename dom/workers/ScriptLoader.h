@@ -16,6 +16,7 @@ class nsIURI;
 
 class nsILoadGroup;
 class nsIChannel;
+class nsICookieSettings;
 
 namespace mozilla {
 
@@ -33,7 +34,8 @@ namespace workerinternals {
 nsresult ChannelFromScriptURLMainThread(
     nsIPrincipal* aPrincipal, Document* aParentDoc, nsILoadGroup* aLoadGroup,
     nsIURI* aScriptURL, const Maybe<ClientInfo>& aClientInfo,
-    nsContentPolicyType aContentPolicyType, nsIChannel** aChannel);
+    nsContentPolicyType aContentPolicyType, nsICookieSettings* aCookieSettings,
+    nsIChannel** aChannel);
 
 nsresult ChannelFromScriptURLWorkerThread(JSContext* aCx,
                                           WorkerPrivate* aParent,

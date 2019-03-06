@@ -21,6 +21,7 @@
 #include "mozilla/net/ReferrerPolicy.h"
 
 class nsIConsoleReportCollector;
+class nsICookieSettings;
 class nsICSPEventListener;
 class nsIEventTarget;
 class nsIOutputStream;
@@ -101,6 +102,7 @@ class FetchDriver final : public nsIStreamListener,
 
   FetchDriver(InternalRequest* aRequest, nsIPrincipal* aPrincipal,
               nsILoadGroup* aLoadGroup, nsIEventTarget* aMainThreadEventTarget,
+              nsICookieSettings* aCookieSettings,
               PerformanceStorage* aPerformanceStorage, bool aIsTrackingFetch);
 
   nsresult Fetch(AbortSignalImpl* aSignalImpl, FetchDriverObserver* aObserver);
@@ -135,6 +137,8 @@ class FetchDriver final : public nsIStreamListener,
   nsCOMPtr<nsIChannel> mChannel;
   nsAutoPtr<SRICheckDataVerifier> mSRIDataVerifier;
   nsCOMPtr<nsIEventTarget> mMainThreadEventTarget;
+
+  nsCOMPtr<nsICookieSettings> mCookieSettings;
 
   // This is set only when Fetch is used in workers.
   RefPtr<PerformanceStorage> mPerformanceStorage;

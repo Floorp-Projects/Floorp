@@ -835,10 +835,11 @@ static nsresult NewImageChannel(
     // outside a document, in which case the triggeringPrincipal and
     // triggeringPrincipal should always be the systemPrincipal.
     // However, there are exceptions: one is Notifications which create a
-    // channel in the parent prcoess in which case we can't get a
+    // channel in the parent process in which case we can't get a
     // requestingNode.
     rv = NS_NewChannel(aResult, aURI, nsContentUtils::GetSystemPrincipal(),
                        securityFlags, aPolicyType,
+                       nullptr,  // nsICookieSettings
                        nullptr,  // PerformanceStorage
                        nullptr,  // loadGroup
                        callbacks, aLoadFlags);

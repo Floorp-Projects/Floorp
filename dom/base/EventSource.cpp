@@ -82,7 +82,8 @@ class EventSourceImpl final : public nsIObserver,
   NS_DECL_NSIEVENTTARGET_FULL
   NS_DECL_NSITHREADRETARGETABLESTREAMLISTENER
 
-  explicit EventSourceImpl(EventSource* aEventSource);
+  EventSourceImpl(EventSource* aEventSource,
+                  nsICookieSettings* aCookieSettings);
 
   enum { CONNECTING = 0U, OPEN = 1U, CLOSED = 2U };
 
@@ -291,6 +292,8 @@ class EventSourceImpl final : public nsIObserver,
   uint64_t mInnerWindowID;
 
  private:
+  nsCOMPtr<nsICookieSettings> mCookieSettings;
+
   // Pointer to the target thread for checking whether we are
   // on the target thread. This is intentionally a non-owning
   // pointer in order not to affect the thread destruction
@@ -316,7 +319,8 @@ NS_IMPL_ISUPPORTS(EventSourceImpl, nsIObserver, nsIStreamListener,
                   nsIInterfaceRequestor, nsISupportsWeakReference,
                   nsIEventTarget, nsIThreadRetargetableStreamListener)
 
-EventSourceImpl::EventSourceImpl(EventSource* aEventSource)
+EventSourceImpl::EventSourceImpl(EventSource* aEventSource,
+                                 nsICookieSettings* aCookieSettings)
     : mEventSource(aEventSource),
       mReconnectionTime(0),
       mStatus(PARSE_STATE_OFF),
@@ -328,6 +332,7 @@ EventSourceImpl::EventSourceImpl(EventSource* aEventSource)
       mScriptLine(0),
       mScriptColumn(0),
       mInnerWindowID(0),
+      mCookieSettings(aCookieSettings),
       mTargetThread(NS_GetCurrentThread()) {
   MOZ_ASSERT(mEventSource);
   if (!mIsMainThread) {
@@ -971,6 +976,8 @@ nsresult EventSourceImpl::InitChannelAndRequestEventSource() {
   nsCOMPtr<nsIChannel> channel;
   // If we have the document, use it
   if (doc) {
+    MOZ_ASSERT(mCookieSettings == doc->CookieSettings());
+
     nsCOMPtr<nsILoadGroup> loadGroup = doc->GetDocumentLoadGroup();
     rv = NS_NewChannel(getter_AddRefs(channel), mSrc, doc, securityFlags,
                        nsIContentPolicy::TYPE_INTERNAL_EVENTSOURCE,
@@ -982,6 +989,7 @@ nsresult EventSourceImpl::InitChannelAndRequestEventSource() {
     // otherwise use the principal
     rv = NS_NewChannel(getter_AddRefs(channel), mSrc, mPrincipal, securityFlags,
                        nsIContentPolicy::TYPE_INTERNAL_EVENTSOURCE,
+                       mCookieSettings,
                        nullptr,     // aPerformanceStorage
                        nullptr,     // loadGroup
                        nullptr,     // aCallbacks
@@ -1777,12 +1785,14 @@ EventSourceImpl::CheckListenerChain() {
 ////////////////////////////////////////////////////////////////////////////////
 
 EventSource::EventSource(nsPIDOMWindowInner* aOwnerWindow,
+                         nsICookieSettings* aCookieSettings,
                          bool aWithCredentials)
     : DOMEventTargetHelper(aOwnerWindow),
       mWithCredentials(aWithCredentials),
       mIsMainThread(true),
       mKeepingAlive(false) {
-  mImpl = new EventSourceImpl(this);
+  MOZ_ASSERT(aCookieSettings);
+  mImpl = new EventSourceImpl(this, aCookieSettings);
 }
 
 EventSource::~EventSource() {}
@@ -1806,8 +1816,24 @@ already_AddRefed<EventSource> EventSource::Constructor(
 
   MOZ_ASSERT(!NS_IsMainThread() || ownerWindow);
 
-  RefPtr<EventSource> eventSource =
-      new EventSource(ownerWindow, aEventSourceInitDict.mWithCredentials);
+  nsCOMPtr<nsICookieSettings> cookieSettings;
+  if (ownerWindow) {
+    Document* doc = ownerWindow->GetExtantDoc();
+    if (NS_WARN_IF(!doc)) {
+      aRv.Throw(NS_ERROR_FAILURE);
+      return nullptr;
+    }
+
+    cookieSettings = doc->CookieSettings();
+  } else {
+    // Worker side.
+    WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
+    MOZ_ASSERT(workerPrivate);
+    cookieSettings = workerPrivate->CookieSettings();
+  }
+
+  RefPtr<EventSource> eventSource = new EventSource(
+      ownerWindow, cookieSettings, aEventSourceInitDict.mWithCredentials);
   RefPtr<EventSourceImpl> eventSourceImp = eventSource->mImpl;
 
   if (NS_IsMainThread()) {
