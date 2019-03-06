@@ -229,6 +229,11 @@ NS_IMETHODIMP
 nsObserverService::RemoveObserver(nsIObserver* aObserver, const char* aTopic) {
   LOG(("nsObserverService::RemoveObserver(%p: %s)", (void*)aObserver, aTopic));
 
+  if (mShuttingDown) {
+    // The service is shutting down. Let's ignore this call.
+    return NS_OK;
+  }
+
   MOZ_TRY(EnsureValidCall());
   if (NS_WARN_IF(!aObserver) || NS_WARN_IF(!aTopic)) {
     return NS_ERROR_INVALID_ARG;

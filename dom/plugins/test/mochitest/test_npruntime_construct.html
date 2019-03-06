@@ -18,15 +18,15 @@
   <script type="application/javascript">
     function MyFunc(arg) {
       is(arg, "hi", "Argument passed to constructor function");
-      this.localProp = 'local';
+      this.localProp = "local";
     }
-    MyFunc.prototype.protoProp = 't';
+    MyFunc.prototype.protoProp = "t";
 
-    var theplugin = document.getElementById('theplugin');
+    var theplugin = document.getElementById("theplugin");
 
     ok(theplugin.constructObject(Array) instanceof Array, "Constructed Array");
     var o = theplugin.constructObject(MyFunc, "hi");
     ok(o instanceof MyFunc, "Constructed MyFunc");
-    is(o.localProp, 'local', "this property correct");
-    is(o.protoProp, 't', "prototype property correct");
+    is(o.localProp, "local", "this property correct");
+    is(o.protoProp, "t", "prototype property correct");
   </script>

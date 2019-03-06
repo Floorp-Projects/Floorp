@@ -29,7 +29,7 @@ cached_download () {
     else
         echo "Downloading '${url}' and placing in cache..."
         rm -f "${output_file}"
-        $retry wget -O "${output_file}" --progress=dot:mega --server-response --no-check-certificate "${url}" 2>&1
+        $retry wget -O "${output_file}" --progress=dot:mega --server-response "${url}" 2>&1
         local exit_code=$?
         if [ "${exit_code}" == 0 ]; then
             echo "${url}" >> "${cache_dir}/urls.list"

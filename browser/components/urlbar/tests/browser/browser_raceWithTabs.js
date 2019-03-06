@@ -4,6 +4,12 @@
 const TEST_URL = `${TEST_BASE_URL}dummy_page.html`;
 
 async function addBookmark(bookmark) {
+  info("Creating bookmark and keyword");
+  let bm = await PlacesUtils.bookmarks.insert({
+    parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+    url: bookmark.url,
+    title: bookmark.title,
+  });
   if (bookmark.keyword) {
     await PlacesUtils.keywords.insert({
       keyword: bookmark.keyword,
@@ -11,50 +17,56 @@ async function addBookmark(bookmark) {
     });
   }
 
-  let bm = await PlacesUtils.bookmarks.insert({
-    parentGuid: PlacesUtils.bookmarks.unfiledGuid,
-    url: bookmark.url,
-    title: bookmark.title,
-  });
-
   registerCleanupFunction(async function() {
-    await PlacesUtils.bookmarks.remove(bm);
     if (bookmark.keyword) {
       await PlacesUtils.keywords.remove(bookmark.keyword);
     }
+    await PlacesUtils.bookmarks.remove(bm);
   });
 }
 
 /**
- * Check that if the user hits enter and ctrl-t at the same time, we open the URL in the right tab.
+ * Check that if the user hits enter and ctrl-t at the same time, we open the
+ * URL in the right tab.
  */
 add_task(async function hitEnterLoadInRightTab() {
-  info("Opening new tab");
-  let oldTabCreatedPromise = BrowserTestUtils.waitForEvent(gBrowser.tabContainer, "TabOpen");
-  BrowserOpenTab();
-  let oldTab = (await oldTabCreatedPromise).target;
-  let oldTabLoadedPromise = BrowserTestUtils.browserLoaded(oldTab.linkedBrowser, false, TEST_URL);
-  oldTabLoadedPromise.then(() => info("Old tab loaded"));
-  let newTabCreatedPromise = BrowserTestUtils.waitForEvent(gBrowser.tabContainer, "TabOpen");
+  await addBookmark({
+    title: "Test for keyword bookmark and URL",
+    url: TEST_URL,
+    keyword: "urlbarkeyword",
+  });
 
-  info("Creating bookmark and keyword");
-  await addBookmark({title: "Test for keyword bookmark and URL", url: TEST_URL, keyword: "urlbarkeyword"});
+  info("Opening a tab");
+  let oldTabOpenPromise = BrowserTestUtils.waitForEvent(gBrowser.tabContainer,
+                                                        "TabOpen");
+  BrowserOpenTab();
+  let oldTab = (await oldTabOpenPromise).target;
+  let oldTabLoadedPromise = BrowserTestUtils.browserLoaded(oldTab.linkedBrowser,
+                                                           false, TEST_URL);
+  oldTabLoadedPromise.then(() => info("Old tab loaded"));
+
   info("Filling URL bar, sending <return> and opening a tab");
+  let tabOpenPromise = BrowserTestUtils.waitForEvent(gBrowser.tabContainer,
+                                                     "TabOpen");
   gURLBar.value = "urlbarkeyword";
+  gURLBar.focus();
   gURLBar.select();
   EventUtils.sendKey("return");
+
+  info("Immediately open a second tab");
   BrowserOpenTab();
-  info("Waiting for new tab");
-  let newTab = (await newTabCreatedPromise).target;
+  let newTab = (await tabOpenPromise).target;
+
   info("Created new tab; waiting for either tab to load");
-  let newTabLoadedPromise = BrowserTestUtils.browserLoaded(newTab.linkedBrowser, false, TEST_URL);
+  let newTabLoadedPromise = BrowserTestUtils.browserLoaded(newTab.linkedBrowser,
+                                                           false, TEST_URL);
   newTabLoadedPromise.then(() => info("New tab loaded"));
   await Promise.race([newTabLoadedPromise, oldTabLoadedPromise]);
-  is(newTab.linkedBrowser.currentURI.spec, "about:newtab", "New tab still has about:newtab");
+  is(newTab.linkedBrowser.currentURI.spec, "about:newtab",
+                                           "New tab still has about:newtab");
   is(oldTab.linkedBrowser.currentURI.spec, TEST_URL, "Old tab loaded URL");
-  info("Closing new tab");
+
+  info("Closing tabs");
   BrowserTestUtils.removeTab(newTab);
-  info("Closing old tab");
   BrowserTestUtils.removeTab(oldTab);
-  info("Finished");
 });

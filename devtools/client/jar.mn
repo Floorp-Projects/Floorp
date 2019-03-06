@@ -218,8 +218,6 @@ devtools.jar:
     skin/images/arrow-e.svg (themes/images/arrow-e.svg)
     skin/images/search-clear.svg (themes/images/search-clear.svg)
     skin/images/reload.svg (themes/images/reload.svg)
-    skin/images/file-type-general.svg (netmonitor/src/assets/icons/file-type-general.svg)
-    skin/images/file-type-image.svg (netmonitor/src/assets/icons/file-type-image.svg)
     skin/images/security-state-broken.svg (themes/images/security-state-broken.svg)
     skin/images/security-state-insecure.svg (themes/images/security-state-insecure.svg)
     skin/images/security-state-secure.svg (themes/images/security-state-secure.svg)

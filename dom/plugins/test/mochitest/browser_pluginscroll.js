@@ -1,5 +1,7 @@
 var gTestRoot = getRootDirectory(gTestPath).replace("chrome://mochitests/content/", "http://127.0.0.1:8888/");
 
+const {Preferences} = ChromeUtils.import("resource://gre/modules/Preferences.jsm");
+
 /**
  * tests for plugin windows and scroll
  */
@@ -10,7 +12,7 @@ function coordinatesRelativeToWindow(aX, aY, aElement) {
   var rect = aElement.getBoundingClientRect();
   return {
     x: targetWindow.mozInnerScreenX + ((rect.left + aX) * scale),
-    y: targetWindow.mozInnerScreenY + ((rect.top + aY) * scale)
+    y: targetWindow.mozInnerScreenY + ((rect.top + aY) * scale),
   };
 }
 
@@ -19,7 +21,7 @@ var pluginHideEnabled = Preferences.get("gfx.e10s.hide-plugins-for-scroll", true
 
 
 add_task(async function() {
-  registerCleanupFunction(function () {
+  registerCleanupFunction(function() {
     setTestPluginEnabledState(Ci.nsIPluginTag.STATE_CLICKTOPLAY, "Test Plug-in");
   });
 });
@@ -56,7 +58,6 @@ add_task(async function() {
 
   setTestPluginEnabledState(Ci.nsIPluginTag.STATE_ENABLED, "Test Plug-in");
 
-  let testTab = gBrowser.selectedTab;
   let pluginTab = await BrowserTestUtils.openNewForegroundTab(gBrowser, gTestRoot + "plugin_test.html");
 
   result = await ContentTask.spawn(pluginTab.linkedBrowser, null, async function() {
@@ -121,7 +122,6 @@ add_task(async function() {
 
   setTestPluginEnabledState(Ci.nsIPluginTag.STATE_ENABLED, "Test Plug-in");
 
-  let testTab = gBrowser.selectedTab;
   let pluginTab = await BrowserTestUtils.openNewForegroundTab(gBrowser, gTestRoot + "plugin_subframe_test.html");
 
   result = await ContentTask.spawn(pluginTab.linkedBrowser, null, async function() {
@@ -183,7 +183,6 @@ add_task(async function() {
 
   setTestPluginEnabledState(Ci.nsIPluginTag.STATE_ENABLED, "Test Plug-in");
 
-  let testTab = gBrowser.selectedTab;
   let pluginTab = await BrowserTestUtils.openNewForegroundTab(gBrowser, gTestRoot + "plugin_test.html");
 
   result = await ContentTask.spawn(pluginTab.linkedBrowser, null, async function() {
@@ -248,7 +247,6 @@ add_task(async function() {
 
   setTestPluginEnabledState(Ci.nsIPluginTag.STATE_ENABLED, "Test Plug-in");
 
-  let testTab = gBrowser.selectedTab;
   let pluginTab = await BrowserTestUtils.openNewForegroundTab(gBrowser, gTestRoot + "plugin_subframe_test.html");
 
   result = await ContentTask.spawn(pluginTab.linkedBrowser, null, async function() {

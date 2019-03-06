@@ -589,14 +589,11 @@ nsresult nsSplitterFrameInner::MouseDown(Event* aMouseEvent) {
 
   nsIFrame* childBox = nsBox::GetChildXULBox(mParentBox);
 
-  while (nullptr != childBox) {
+  while (childBox) {
     nsIContent* content = childBox->GetContent();
-    int32_t dummy;
-    nsAtom* atom =
-        content->OwnerDoc()->BindingManager()->ResolveTag(content, &dummy);
 
     // skip over any splitters
-    if (atom != nsGkAtoms::splitter) {
+    if (content->NodeInfo()->NameAtom() != nsGkAtoms::splitter) {
       nsSize prefSize = childBox->GetXULPrefSize(state);
       nsSize minSize = childBox->GetXULMinSize(state);
       nsSize maxSize =

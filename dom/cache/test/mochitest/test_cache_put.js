@@ -1,23 +1,25 @@
-var url = 'test_cache.js';
+/* global context testDone:true */
+
+var url = "test_cache.js";
 var cache;
 var fetchResponse;
 Promise.all([fetch(url),
-             caches.open('putter' + context)]).then(function(results) {
+             caches.open("putter" + context)]).then(function(results) {
   fetchResponse = results[0];
   cache = results[1];
   return cache.put(url, fetchResponse.clone());
 }).then(function(result) {
-  is(undefined, result, 'Successful put() should resolve undefined');
+  is(undefined, result, "Successful put() should resolve undefined");
   return cache.match(url);
 }).then(function(response) {
-  ok(response, 'match() should find resppnse that was previously put()');
-  ok(response.url.endsWith(url), 'matched response should match original url');
+  ok(response, "match() should find resppnse that was previously put()");
+  ok(response.url.endsWith(url), "matched response should match original url");
   return Promise.all([fetchResponse.text(),
                       response.text()]);
 }).then(function(results) {
   // suppress large assert spam unless it's relevent
   if (results[0] !== results[1]) {
-    is(results[0], results[1], 'stored response body should match original');
+    is(results[0], results[1], "stored response body should match original");
   }
 
   // Now, try to overwrite the request with a different response object.
@@ -43,7 +45,7 @@ Promise.all([fetch(url),
   // TODO: Verify that trying to store a response with an error raises a TypeError
   // when bug 1147178 is fixed.
 
-  return caches.delete('putter' + context);
+  return caches.delete("putter" + context);
 }).then(function(deleted) {
   ok(deleted, "The cache should be deleted successfully");
   testDone();

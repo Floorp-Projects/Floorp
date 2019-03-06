@@ -1,6 +1,8 @@
-var request = new Request("//mochi.test:8888/?" + context + "#fragment");
+/* global context testDone:true */
+
+var req = new Request("//mochi.test:8888/?" + context + "#fragment");
 var requestWithAltQS = new Request("//mochi.test:8888/?queryString");
-var unknownRequest = new Request("//mochi.test:8888/non/existing/path?" + context);
+var unknownReq = new Request("//mochi.test:8888/non/existing/path?" + context);
 var response;
 var c;
 var responseText;
@@ -25,16 +27,16 @@ function checkResponse(r, expectedBody) {
     }
   });
 }
-fetch(new Request(request)).then(function(r) {
+fetch(new Request(req)).then(function(r) {
   response = r;
   return response.text();
 }).then(function(text) {
   responseText = text;
-  return testRequest(request, unknownRequest, requestWithAltQS,
-                     request.url.replace("#fragment", "#other"));
+  return testRequest(req, unknownReq, requestWithAltQS,
+                     req.url.replace("#fragment", "#other"));
 }).then(function() {
-  return testRequest(request.url, unknownRequest.url, requestWithAltQS.url,
-                     request.url.replace("#fragment", "#other"));
+  return testRequest(req.url, unknownReq.url, requestWithAltQS.url,
+                     req.url.replace("#fragment", "#other"));
 }).then(function() {
   testDone();
 });
@@ -48,7 +50,7 @@ function testRequest(request, unknownRequest, requestWithAlternateQueryString,
     return Promise.all(
       ["HEAD", "POST", "PUT", "DELETE", "OPTIONS"]
         .map(function(method) {
-          var r = new Request(request, {method: method});
+          var r = new Request(request, {method});
           return c.add(r)
             .then(function() {
               ok(false, "Promise should be rejected");
@@ -72,11 +74,11 @@ function testRequest(request, unknownRequest, requestWithAlternateQueryString,
     return Promise.all(
       ["HEAD", "POST", "PUT", "DELETE", "OPTIONS"]
         .map(function(method) {
-          var req = new Request(request, {method: method});
-          return c.match(req)
+          var req1 = new Request(request, {method});
+          return c.match(req1)
             .then(function(r) {
               is(typeof r, "undefined", "Searching for a request with a non-GET method should not succeed");
-              return c.match(req, {ignoreMethod: true});
+              return c.match(req1, {ignoreMethod: true});
             }).then(function(r) {
               return checkResponse(r);
             });
@@ -102,10 +104,10 @@ function testRequest(request, unknownRequest, requestWithAlternateQueryString,
   }).then(function() {
     return caches.match(request, {cacheName: name + "mambojambo"})
       .then(function(result) {
-        is(typeof r, "undefined", 'Searching in the wrong cache should resolve to undefined');
+        is(typeof r, "undefined", "Searching in the wrong cache should resolve to undefined");
         return caches.has(name + "mambojambo");
       }).then(function(hasCache) {
-        ok(!hasCache, 'The wrong cache should still not exist');
+        ok(!hasCache, "The wrong cache should still not exist");
       });
   }).then(function() {
     // Make sure that cacheName is ignored on Cache

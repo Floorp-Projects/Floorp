@@ -22,7 +22,7 @@
   var p = null;
 
   function startTest() {
-    p = document.getElementById('theplugin');
+    p = document.getElementById("theplugin");
 
     // Wait for the plugin to have painted once
     var interval = setInterval(function() {
@@ -38,7 +38,7 @@
   var startY;
 
   function doScroll() {
-    let [x, y, w, h] = p.getWindowPosition();
+    let y = p.getWindowPosition()[1];
     startY = y;
 
     scrollBy(0, kScrollAmount);
@@ -46,7 +46,7 @@
   }
 
   function checkScroll() {
-    let [x, y, w, h] = p.getWindowPosition();
+    let y = p.getWindowPosition()[1];
 
     is(y, startY - kScrollAmount, "Window should be informed of its new position.");
     SimpleTest.finish();

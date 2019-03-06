@@ -15,49 +15,45 @@
     var timeoutPref = "dom.ipc.plugins.timeoutSecs";
     SpecialPowers.setIntPref(timeoutPref, 5);
 
-    var iframe = document.getElementById('iframe1');
-    var p = iframe.contentDocument.getElementById('plugin1');
+    var iframe = document.getElementById("iframe1");
+    var p = iframe.contentDocument.getElementById("plugin1");
 
     p.setColor("FFFF00FF");
 
     try {
       p.hang();
       ok(false, "p.hang() should throw an exception");
-    }
-    catch (e) {
+    } catch (e) {
       ok(true, "p.hang() should throw an exception");
     }
 
     try {
       p.setColor("FFFF0000");
       ok(false, "p.setColor should throw after the plugin crashes");
-    }
-    catch (e) {
+    } catch (e) {
       ok(true, "p.setColor should throw after the plugin crashes");
     }
 
     window.frameLoaded = function reloaded() {
-      var p = iframe.contentDocument.getElementById('plugin1');
+      var p1 = iframe.contentDocument.getElementById("plugin1");
       try {
-        p.setColor('FF00FF00');
+        p1.setColor("FF00FF00");
         ok(true, "Reloading worked");
-      }
-      catch (e) {
+      } catch (e) {
         ok(false, "Reloading didn't give us a usable plugin");
       }
 
       try {
         SpecialPowers.clearUserPref(timeoutPref);
-      }
-      catch(e) {
+      } catch (e) {
         ok(false, "Couldn't reset timeout pref");
       }
 
       SimpleTest.finish();
-    }
+    };
 
     iframe.contentWindow.location.reload();
-  }
+  };
 
   </script>
   <iframe id="iframe1" src="crashing_subpage.html" width="600" height="600"></iframe>

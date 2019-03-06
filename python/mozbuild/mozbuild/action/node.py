@@ -10,7 +10,7 @@ import subprocess
 import sys
 
 SCRIPT_ALLOWLIST = [
-        buildconfig.topsrcdir + "/devtools/client/debugger/new/build/copy-module.js"
+        buildconfig.topsrcdir + "/devtools/client/shared/build/build.js"
     ]
 
 ALLOWLIST_ERROR = '''

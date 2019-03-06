@@ -1,3 +1,4 @@
+/* eslint-env mozilla/frame-script */
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
@@ -15,7 +16,7 @@ function getTestPlugin(pluginName) {
   return null;
 }
 
-addMessageListener('check-plugin-unload', function(message) {
+addMessageListener("check-plugin-unload", function(message) {
   var tag = getTestPlugin();
-  var results = sendAsyncMessage("check-plugin-unload", tag.loaded);
+  sendAsyncMessage("check-plugin-unload", tag.loaded);
 });

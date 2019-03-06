@@ -6540,8 +6540,6 @@ nsresult PresShell::EventHandler::HandleEvent(nsIFrame* aFrame,
     return NS_OK;
   }
 
-  nsresult rv = NS_OK;
-
   AutoCurrentEventInfoSetter eventInfoSetter(*this);
 
   if (aGUIEvent->IsTargetedAtFocusedContent()) {
@@ -6551,29 +6549,25 @@ nsresult PresShell::EventHandler::HandleEvent(nsIFrame* aFrame,
         ComputeFocusedEventTargetElement(aGUIEvent);
 
     mPresShell->mCurrentEventFrame = nullptr;
-    Document* targetDoc =
-        eventTargetElement ? eventTargetElement->OwnerDoc() : nullptr;
-    if (targetDoc && targetDoc != GetDocument()) {
-      nsCOMPtr<nsIPresShell> shell = targetDoc->GetShell();
-      if (shell) {
-        rv = static_cast<PresShell*>(shell.get())
-                 ->HandleRetargetedEvent(aGUIEvent, aEventStatus,
-                                         eventTargetElement);
+    if (eventTargetElement) {
+      nsresult rv = NS_OK;
+      if (MaybeHandleEventWithAnotherPresShell(eventTargetElement, aGUIEvent,
+                                               aEventStatus, &rv)) {
+        return rv;
       }
-      return rv;
-    } else {
-      mPresShell->mCurrentEventContent = eventTargetElement;
     }
+    mPresShell->mCurrentEventContent = eventTargetElement;
 
     if (!mPresShell->GetCurrentEventContent() ||
         !mPresShell->GetCurrentEventFrame() ||
         InZombieDocument(mPresShell->mCurrentEventContent)) {
-      rv = RetargetEventToParent(aGUIEvent, aEventStatus);
-      return rv;
+      return RetargetEventToParent(aGUIEvent, aEventStatus);
     }
   } else {
     mPresShell->mCurrentEventFrame = aFrame;
   }
+
+  nsresult rv = NS_OK;
   if (mPresShell->GetCurrentEventFrame()) {
     nsCOMPtr<nsIContent> overrideClickTarget;  // Required due to bug  1506439
     rv =
@@ -7510,6 +7504,34 @@ Element* PresShell::EventHandler::ComputeFocusedEventTargetElement(
     default:
       return eventTargetElement;
   }
+}
+
+bool PresShell::EventHandler::MaybeHandleEventWithAnotherPresShell(
+    Element* aEventTargetElement, WidgetGUIEvent* aGUIEvent,
+    nsEventStatus* aEventStatus, nsresult* aRv) {
+  MOZ_ASSERT(aEventTargetElement);
+  MOZ_ASSERT(aGUIEvent);
+  MOZ_ASSERT(!aGUIEvent->IsUsingCoordinates());
+  MOZ_ASSERT(aEventStatus);
+  MOZ_ASSERT(aRv);
+
+  Document* eventTargetDocument = aEventTargetElement->OwnerDoc();
+  if (!eventTargetDocument || eventTargetDocument == GetDocument()) {
+    *aRv = NS_OK;
+    return false;
+  }
+
+  RefPtr<PresShell> eventTargetPresShell =
+      static_cast<PresShell*>(eventTargetDocument->GetShell());
+  if (!eventTargetPresShell) {
+    *aRv = NS_OK;
+    return true;  // No PresShell can handle the event.
+  }
+
+  EventHandler eventHandler(std::move(eventTargetPresShell));
+  *aRv = eventHandler.HandleRetargetedEvent(aGUIEvent, aEventStatus,
+                                            aEventTargetElement);
+  return true;
 }
 
 Document* PresShell::GetPrimaryContentDocument() {

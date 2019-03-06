@@ -108,7 +108,6 @@ class nsXBLBinding final {
   void ExecuteDetachedHandler();
   void UnhookEventHandlers();
 
-  nsAtom* GetBaseTag(int32_t* aNameSpaceID);
   nsXBLBinding* RootBinding();
 
   // Resolve all the fields for this binding and all ancestor bindings on the

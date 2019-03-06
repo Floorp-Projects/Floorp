@@ -1,6 +1,8 @@
-var request1 = new Request("//mochi.test:8888/?1&" + context + "#fragment");
-var request2 = new Request("//mochi.test:8888/?2&" + context);
-var request3 = new Request("//mochi.test:8888/?3&" + context);
+/* global context testDone:true */
+
+var req1 = new Request("//mochi.test:8888/?1&" + context + "#fragment");
+var req2 = new Request("//mochi.test:8888/?2&" + context);
+var req3 = new Request("//mochi.test:8888/?3&" + context);
 var requestWithAltQS = new Request("//mochi.test:8888/?queryString");
 var unknownRequest = new Request("//mochi.test:8888/non/existing/path?" + context);
 var response1, response3;
@@ -25,30 +27,30 @@ function checkResponse(r, response, responseText) {
   });
 }
 
-fetch(new Request(request1)).then(function(r) {
+fetch(new Request(req1)).then(function(r) {
   response1 = r;
   return response1.text();
 }).then(function(text) {
   response1Text = text;
-  return fetch(new Request(request3));
+  return fetch(new Request(req3));
 }).then(function(r) {
   response3 = r;
   return response3.text();
 }).then(function(text) {
   response3Text = text;
-  return testRequest(request1, request2, request3, unknownRequest,
+  return testRequest(req1, req2, req3, unknownRequest,
                      requestWithAltQS,
-                     request1.url.replace("#fragment", "#other"));
+                     req1.url.replace("#fragment", "#other"));
 }).then(function() {
-  return testRequest(request1.url, request2.url, request3.url,
+  return testRequest(req1.url, req2.url, req3.url,
                      unknownRequest.url, requestWithAltQS.url,
-                     request1.url.replace("#fragment", "#other"));
+                     req1.url.replace("#fragment", "#other"));
 }).then(function() {
   testDone();
 });
 
 // The request arguments can either be a URL string, or a Request object.
-function testRequest(request1, request2, request3, unknownRequest,
+function testRequest(request1, request2, request3, unknownReq,
                      requestWithAlternateQueryString,
                      requestWithDifferentFragment) {
   return caches.open(name).then(function(cache) {
@@ -60,7 +62,7 @@ function testRequest(request1, request2, request3, unknownRequest,
     return Promise.all(
       ["HEAD", "POST", "PUT", "DELETE", "OPTIONS"]
         .map(function(method) {
-          var r = new Request(request1, {method: method});
+          var r = new Request(request1, {method});
           return c.add(r)
             .then(function() {
               ok(false, "Promise should be rejected");
@@ -86,7 +88,7 @@ function testRequest(request1, request2, request3, unknownRequest,
     return Promise.all(
       ["HEAD", "POST", "PUT", "DELETE", "OPTIONS"]
         .map(function(method) {
-          var req = new Request(request1, {method: method});
+          var req = new Request(request1, {method});
           return c.matchAll(req)
             .then(function(r) {
               is(r.length, 0, "Searching for a request with a non-GET method should not succeed");
@@ -109,7 +111,7 @@ function testRequest(request1, request2, request3, unknownRequest,
     is(r.length, 2, "Should find 2 items");
     return Promise.all([
       checkResponse(r[0], response1, response1Text),
-      checkResponse(r[1], response3, response3Text)
+      checkResponse(r[1], response3, response3Text),
     ]);
   }).then(function() {
     return c.matchAll(request3);
@@ -122,21 +124,21 @@ function testRequest(request1, request2, request3, unknownRequest,
     is(r.length, 2, "Should find 2 items");
     return Promise.all([
       checkResponse(r[0], response1, response1Text),
-      checkResponse(r[1], response3, response3Text)
+      checkResponse(r[1], response3, response3Text),
     ]);
   }).then(function() {
     return caches.match(request1, {cacheName: name + "mambojambo"})
       .then(function() {
-        is(typeof r, "undefined", 'Searching in the wrong cache should resolve to undefined');
+        is(typeof r, "undefined", "Searching in the wrong cache should resolve to undefined");
         return caches.has(name + "mambojambo");
       }).then(function(hasCache) {
-        ok(!hasCache, 'The wrong cache should still not exist');
+        ok(!hasCache, "The wrong cache should still not exist");
       });
   }).then(function() {
-    return c.matchAll(unknownRequest);
+    return c.matchAll(unknownReq);
   }).then(function(r) {
     is(r.length, 0, "Searching for an unknown request should not succeed");
-    return caches.match(unknownRequest, {cacheName: name});
+    return caches.match(unknownReq, {cacheName: name});
   }).then(function(r) {
     is(typeof r, "undefined", "Searching for an unknown request should not succeed");
     // Make sure that cacheName is ignored on Cache
@@ -164,7 +166,7 @@ function testRequest(request1, request2, request3, unknownRequest,
     is(r.length, 2, "Should find 2 items");
     return Promise.all([
       checkResponse(r[0], response1, response1Text),
-      checkResponse(r[1], response3, response3Text)
+      checkResponse(r[1], response3, response3Text),
     ]);
   }).then(function() {
     // Now, drop the cache, reopen and verify that we can't find the request any more.

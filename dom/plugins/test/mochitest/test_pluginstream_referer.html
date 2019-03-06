@@ -15,14 +15,14 @@
   function testDone() {
     --pending;
     if (0 == pending)
-      SimpleTest.finish()
+      SimpleTest.finish();
   }
 
   function runTests() {
-    var p = document.getElementById('plugin1');
-    var p2 = document.getElementById('plugin2');
+    var p = document.getElementById("plugin1");
+    var p2 = document.getElementById("plugin2");
 
-    ok(p.streamTest('plugin-stream-referer.sjs', false, null, null,
+    ok(p.streamTest("plugin-stream-referer.sjs", false, null, null,
                     function(r, t) {
                       is(r, 0, "GET plugin-stream-referer.sjs");
                       is(t, "Referer found: " + window.location,
@@ -30,14 +30,14 @@
                       testDone();
                     }, null, true), "referer GET");
 
-    ok(p.streamTest('plugin-stream-referer.sjs', true, "Dummy Data", null,
+    ok(p.streamTest("plugin-stream-referer.sjs", true, "Dummy Data", null,
                     function(r, t) {
                       is(r, 0, "POST plugin-stream-referer.sjs");
                       is(t, "No Referer found", "POST Referer absent");
                       testDone();
                     }, null, true), "referer POST");
 
-    ok(p2.streamTest('plugin-stream-referer.sjs', false, null, null,
+    ok(p2.streamTest("plugin-stream-referer.sjs", false, null, null,
                      function(r, t) {
                        is(r, 0, "GET plugin-stream-referer.sjs (2)");
                        var expectedreferer = String(window.location).replace("test_pluginstream_referer.html", "loremipsum.xtest");
@@ -45,7 +45,6 @@
                           "GET Referer correct with plugin src");
                        testDone();
                      }, null, true), "referer GET (2)");
-                            
   }
   </script>
 

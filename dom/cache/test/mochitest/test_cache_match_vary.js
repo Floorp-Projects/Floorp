@@ -1,3 +1,5 @@
+/* global context testDone:true */
+
 var requestURL = "//mochi.test:8888/tests/dom/cache/test/mochitest/vary.sjs?" + context;
 var name = "match-vary" + context;
 
@@ -36,8 +38,8 @@ function setupTestMultipleEntries(headers) {
     var response, responseText, cache;
     Promise.all(headers.map(function(h) {
       return fetch(requestURL, {headers: h});
-    })).then(function(r) {
-        response = r;
+    })).then(function(res) {
+        response = res;
         return Promise.all(response.map(function(r) {
           return r.text();
         }));
@@ -50,7 +52,7 @@ function setupTestMultipleEntries(headers) {
           return c.add(new Request(requestURL, {headers: h}));
         }));
       }).then(function() {
-        resolve({response: response, responseText: responseText, cache: cache});
+        resolve({response, responseText, cache});
       }).catch(function(err) {
         reject(err);
       });
@@ -115,7 +117,6 @@ function testStar() {
         is(err.name, "TypeError", "Attempting to store a Response with a Vary:* header must fail");
       });
   }
-  var test;
   return new Promise(function(resolve, reject) {
     var cache;
     caches.open(name).then(function(c) {
@@ -257,7 +258,7 @@ function testMultipleCacheEntries() {
   ]).then(function(t) {
     test = t;
     return test.cache.matchAll();
-  }).then(function (r) {
+  }).then(function(r) {
     is(r.length, 2, "Two cache entries should be stored in the DB");
     // Ensure that searching without specifying an Accept-Language header fails.
     return test.cache.matchAll(requestURL);

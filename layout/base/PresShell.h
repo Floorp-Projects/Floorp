@@ -525,28 +525,6 @@ class PresShell final : public nsIPresShell,
                          bool aDontRetargetEvents, nsEventStatus* aEventStatus);
 
     /**
-     * HandleRetargetedEvent() dispatches aGUIEvent on the PresShell without
-     * retargetting.  This should be used only when caller computes final
-     * target of aGUIEvent.
-     *
-     * @param aGUIEvent         Event to be dispatched.
-     * @param aEventStatus      [in/out] EventStatus of aGUIEvent.
-     * @param aTarget           The final target of aGUIEvent.
-     */
-    MOZ_CAN_RUN_SCRIPT
-    nsresult HandleRetargetedEvent(WidgetGUIEvent* aGUIEvent,
-                                   nsEventStatus* aEventStatus,
-                                   nsIContent* aTarget) {
-      AutoCurrentEventInfoSetter eventInfoSetter(*this, nullptr, aTarget);
-      if (!mPresShell->GetCurrentEventFrame()) {
-        return NS_OK;
-      }
-      nsCOMPtr<nsIContent> overrideClickTarget;
-      return HandleEventInternal(aGUIEvent, aEventStatus, true,
-                                 overrideClickTarget);
-    }
-
-    /**
      * HandleEventWithTarget() tries to dispatch aEvent on aContent after
      * setting current event target content to aNewEventContent and current
      * event frame to aNewEventFrame temporarily.  Note that this supports
@@ -987,6 +965,49 @@ class PresShell final : public nsIPresShell,
     Element* ComputeFocusedEventTargetElement(WidgetGUIEvent* aGUIEvent);
 
     /**
+     * MaybeHandleEventWithAnotherPresShell() may handle aGUIEvent with another
+     * PresShell.
+     *
+     * @param aEventTargetElement       The event target element of aGUIEvent.
+     * @param aGUIEvent                 Handling event.
+     * @param aEventStatus              [in/out] EventStatus of aGUIEvent.
+     * @param aRv                       [out] Returns error if this gets an
+     *                                  error handling the event.
+     * @return                          false if caller needs to keep handling
+     *                                  the event by itself.
+     *                                  true if caller shouldn't keep handling
+     *                                  the event.  Note that when no PresShell
+     *                                  can handle the event, this returns true.
+     */
+    MOZ_CAN_RUN_SCRIPT
+    bool MaybeHandleEventWithAnotherPresShell(Element* aEventTargetElement,
+                                              WidgetGUIEvent* aGUIEvent,
+                                              nsEventStatus* aEventStatus,
+                                              nsresult* aRv);
+
+    /**
+     * HandleRetargetedEvent() dispatches aGUIEvent on the PresShell without
+     * retargetting.  This should be used only when caller computes final
+     * target of aGUIEvent.
+     *
+     * @param aGUIEvent         Event to be dispatched.
+     * @param aEventStatus      [in/out] EventStatus of aGUIEvent.
+     * @param aTarget           The final target of aGUIEvent.
+     */
+    MOZ_CAN_RUN_SCRIPT
+    nsresult HandleRetargetedEvent(WidgetGUIEvent* aGUIEvent,
+                                   nsEventStatus* aEventStatus,
+                                   nsIContent* aTarget) {
+      AutoCurrentEventInfoSetter eventInfoSetter(*this, nullptr, aTarget);
+      if (!mPresShell->GetCurrentEventFrame()) {
+        return NS_OK;
+      }
+      nsCOMPtr<nsIContent> overrideClickTarget;
+      return HandleEventInternal(aGUIEvent, aEventStatus, true,
+                                 overrideClickTarget);
+    }
+
+    /**
      * XXX Needs better name.
      * HandleEventInternal() dispatches aEvent into the DOM tree and
      * notify EventStateManager of that.
@@ -1125,22 +1146,6 @@ class PresShell final : public nsIPresShell,
     static TimeStamp sLastInputProcessed;
     static StaticRefPtr<Element> sLastKeyDownEventTargetElement;
   };
-
-  /**
-   * Helper method of EventHandler::HandleEvent().  This is called when the
-   * event is dispatched without ref-point and dispatched by
-   * EventHandler::HandleEvent().
-   *
-   * See EventHandler::HandleRetargetedEvent() for the detail of the arguments.
-   */
-  MOZ_CAN_RUN_SCRIPT
-  nsresult HandleRetargetedEvent(WidgetGUIEvent* aGUIEvent,
-                                 nsEventStatus* aEventStatus,
-                                 nsIContent* aTarget) {
-    MOZ_ASSERT(aGUIEvent);
-    EventHandler eventHandler(*this);
-    return eventHandler.HandleRetargetedEvent(aGUIEvent, aEventStatus, aTarget);
-  }
 
   void SynthesizeMouseMove(bool aFromScroll) override;
 

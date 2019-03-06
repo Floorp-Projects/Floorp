@@ -18,7 +18,11 @@ const { getChangesStylesheet } = require("./selectors/changes");
 const {
   TELEMETRY_SCALAR_CONTEXTMENU,
   TELEMETRY_SCALAR_CONTEXTMENU_COPY,
+  TELEMETRY_SCALAR_CONTEXTMENU_COPY_DECLARATION,
+  TELEMETRY_SCALAR_CONTEXTMENU_COPY_RULE,
   TELEMETRY_SCALAR_COPY,
+  TELEMETRY_SCALAR_COPY_ALL_CHANGES,
+  TELEMETRY_SCALAR_COPY_RULE,
 } = require("./constants");
 
 const {
@@ -113,6 +117,7 @@ class ChangesView {
    */
   copyAllChanges() {
     this.copyChanges();
+    this.telemetry.scalarAdd(TELEMETRY_SCALAR_COPY_ALL_CHANGES, 1);
   }
 
   /**
@@ -160,20 +165,30 @@ class ChangesView {
     const isRemoved = element.classList.contains("diff-remove");
     const text = isRemoved ? `/* ${name}: ${value}; */` : `${name}: ${value};`;
     clipboardHelper.copyString(text);
+    this.telemetry.scalarAdd(TELEMETRY_SCALAR_CONTEXTMENU_COPY_DECLARATION, 1);
   }
 
   /**
-   * Handler for the "Copy Rule" option from the context menu.
+   * Handler for the "Copy Rule" option from the context menu and "Copy Rule" button.
    * Gets the full content of the target CSS rule (including any changes applied)
    * and copies it to the clipboard.
    *
    * @param {String} ruleId
    *        Rule id of the target CSS rule.
+   * @param {Boolean} usingContextMenu
+   *        True if the handler is invoked from the context menu.
+   *        (Default) False if invoked from the button.
    */
-  async copyRule(ruleId) {
+  async copyRule(ruleId, usingContextMenu = false) {
     const rule = await this.inspector.pageStyle.getRule(ruleId);
     const text = await rule.getRuleText();
     clipboardHelper.copyString(text);
+
+    if (usingContextMenu) {
+      this.telemetry.scalarAdd(TELEMETRY_SCALAR_CONTEXTMENU_COPY_RULE, 1);
+    } else {
+      this.telemetry.scalarAdd(TELEMETRY_SCALAR_COPY_RULE, 1);
+    }
   }
 
   /**

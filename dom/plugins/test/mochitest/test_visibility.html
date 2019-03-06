@@ -20,6 +20,8 @@
 
   var didPaint = function() {};
 
+  var p = null;
+
   function startTest() {
     if (p.getPaintCount() < 1) {
       setTimeout(startTest, 0);
@@ -35,7 +37,7 @@
 
     didPaint = part2;
 
-    p.style.visibility = 'visible';
+    p.style.visibility = "visible";
   }
 
   function part2() {
@@ -44,7 +46,7 @@
 
     didPaint = part3;
 
-    p.setColor('FF0000FF'); // this causes an invalidate/repaint
+    p.setColor("FF0000FF"); // this causes an invalidate/repaint
   }
 
   const kTimeout = 5000; // 5 seconds
@@ -59,7 +61,7 @@
       ok(false, "Plugin should not paint when it is invisible.");
     };
 
-    p.style.visibility = 'hidden';
+    p.style.visibility = "hidden";
 
     part4GiveUp = Date.now() + kTimeout;
     part4Interval = setInterval(part4, 100);
@@ -78,7 +80,7 @@
     clearInterval(part4Interval);
 
     ok(true, "Plugin became invisible again.");
-    p.setColor('FF00FF00');
+    p.setColor("FF00FF00");
     setTimeout(SimpleTest.finish, 500);
     // wait to make sure we don't actually paint
   }
@@ -96,5 +98,5 @@
   <embed id="theplugin" class="hidden" type="application/x-test" drawmode="solid" color="FFFF0000" paintscript="inPaint()"></embed>
   
   <script type="application/javascript">
-  var p = document.getElementById('theplugin');
+  var p = document.getElementById("theplugin");
   </script>

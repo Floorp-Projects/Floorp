@@ -68,8 +68,8 @@ function show() {
 }
 
 function invalidate() {
-  paintCountIs(clipped, 1, "partially clipped plugin painted once");  
-  
+  paintCountIs(clipped, 1, "partially clipped plugin painted once");
+
   clipped.setColor("FF00FF00"); // plugin invalidates
 
   waitForPaint(done);
@@ -78,7 +78,7 @@ function invalidate() {
 function done() {
   paintCountIs(clipped, 2, "painted after invalidate");
 
-  SimpleTest.finish();  
+  SimpleTest.finish();
 }
 
 function waitForPaint(func) {
@@ -86,6 +86,7 @@ function waitForPaint(func) {
   // Ensure the waiter has had a style change, so that this will
   // change its size and cause a paint.
   paint_waiter.style.backgroundColor = paint_waiter.style.backgroundColor == "blue" ? "yellow" : "blue";
+  // eslint-disable-next-line no-unused-vars
   var flush = paint_waiter.offsetHeight;
   paint_waiter.style.height = "1px";
   waitForPaintHelper(func);

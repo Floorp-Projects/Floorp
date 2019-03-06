@@ -1,15 +1,15 @@
   SimpleTest.waitForExplicitFinish();
 
   function frameLoaded(finishWhenCalled = true, lastObject = false) {
-    var testframe = document.getElementById('testframe');
+    var testframe = document.getElementById("testframe");
     function getNode(list) {
       if (list.length === 0)
         return undefined;
       return lastObject ? list[list.length - 1] : list[0];
     }
-    var embed = getNode(document.getElementsByTagName('embed'));
+    var embed = getNode(document.getElementsByTagName("embed"));
     if (undefined === embed)
-      embed = getNode(document.getElementsByTagName('object'));
+      embed = getNode(document.getElementsByTagName("object"));
 
     // In the file:// URI case, this ends up being cross-origin.
     // Skip these checks in that case.
@@ -24,8 +24,8 @@
           embed.getAttribute("data");
 
       var req = new XMLHttpRequest();
-      req.open('GET', filename, false);
-      req.overrideMimeType('text/plain; charset=x-user-defined');
+      req.open("GET", filename, false);
+      req.overrideMimeType("text/plain; charset=x-user-defined");
       req.send(null);
       is(req.status, 200, "bad XMLHttpRequest status");
       is(content, req.responseText.replace(/\r\n/g, "\n"),

@@ -29,11 +29,12 @@
       d1.appendChild(p);
 
       // Forces the plugin to be respawned
+      // eslint-disable-next-line no-self-assign
       p.src = p.src;
 
       destroyed = false;
       exceptionThrown = false;
-      runTests(function () {
+      runTests(function() {
         SimpleTest.finish();
       });
     });
@@ -54,9 +55,9 @@
   }
 
   function runTests(callback) {
-    p = document.getElementById('plugin1');
-    d1 = document.getElementById('div1');
-    d2 = document.getElementById('div2');
+    p = document.getElementById("plugin1");
+    d1 = document.getElementById("div1");
+    d2 = document.getElementById("div2");
 
     // First tests involve moving the instance from one div to another.
     p.startWatchingInstanceCount();

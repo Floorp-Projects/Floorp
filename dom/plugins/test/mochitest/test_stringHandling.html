@@ -16,7 +16,7 @@
     function runTests() {
       try {
         var plugin = document.getElementById("plugin1");
-        var badData = 'foo ' + '\x00'.repeat(260000);
+        var badData = "foo " + "\x00".repeat(260000);
         var ret = plugin.echoString(badData);
         ok(true, "Did not crash.");
         is(ret, badData, "Returned string should equal what we passed in.");
