@@ -19,6 +19,7 @@ class Search(private val context: Context) {
      */
     val searchEngineManager by lazy {
         SearchEngineManager().apply {
+            registerForLocaleUpdates(context)
             GlobalScope.launch {
                 load(context).await()
             }

@@ -15,4 +15,9 @@
     <dimen name="session_card_padding">16dp</dimen>
     <dimen name="tab_border_width">2dp</dimen>
     <dimen name="tab_corner_radius">8dp</dimen>
+    <dimen name="preference_icon_drawable_size">24dp</dimen>
+    <dimen name="search_engine_radio_button_height">48dp</dimen>
+    <dimen name="radio_button_drawable_padding">32dp</dimen>
+    <dimen name="radio_button_padding_horizontal">16dp</dimen>
+    <dimen name="radio_button_padding_vertical">12dp</dimen>
 </resources>

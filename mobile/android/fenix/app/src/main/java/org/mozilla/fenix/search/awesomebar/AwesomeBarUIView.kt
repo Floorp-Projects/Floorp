@@ -1,4 +1,5 @@
 package org.mozilla.fenix.search.awesomebar
+
 /* This Source Code Form is subject to the terms of the Mozilla Public
    License, v. 2.0. If a copy of the MPL was not distributed with this
    file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -25,7 +26,11 @@ class AwesomeBarUIView(
     actionEmitter: Observer<AwesomeBarAction>,
     changesObservable: Observable<AwesomeBarChange>
 ) :
-    UIView<AwesomeBarState, AwesomeBarAction, AwesomeBarChange>(container, actionEmitter, changesObservable) {
+    UIView<AwesomeBarState, AwesomeBarAction, AwesomeBarChange>(
+        container,
+        actionEmitter,
+        changesObservable
+    ) {
     override val view: BrowserAwesomeBar = LayoutInflater.from(container.context)
         .inflate(R.layout.component_awesomebar, container, true)
         .findViewById(R.id.awesomeBar)

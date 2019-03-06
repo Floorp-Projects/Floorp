@@ -3,6 +3,7 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <resources>
     <string name="pref_key_make_default_browser" translatable="false">pref_key_make_default_browser</string>
+    <string name="pref_key_search_engine_settings" translatable="false">pref_key_search_engine_settings</string>
     <string name="pref_key_search_engine" translatable="false">pref_key_search_engine</string>
     <string name="pref_key_passwords" translatable="false">pref_key_passwords</string>
     <string name="pref_key_credit_cards_addresses" translatable="false">pref_key_credit_cards_addresses</string>
@@ -31,5 +32,8 @@
     <string name="pref_key_sync_now" translatable="false">pref_key_sync_now</string>
     <string name="pref_key_sync_history" translatable="false">pref_key_sync_history</string>
     <string name="pref_key_sign_out" translatable="false">pref_key_sign_out</string>
+
+    <!-- Search Settings -->
+    <string name="pref_key_show_search_suggestions" translatable="false">pref_key_show_search_suggestions</string>
 
 </resources>

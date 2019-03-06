@@ -29,7 +29,7 @@
         app:iconSpaceReserved="false">
         <androidx.preference.Preference
             android:icon="@drawable/ic_search"
-            android:key="@string/pref_key_search_engine"
+            android:key="@string/pref_key_search_engine_settings"
             android:title="@string/preferences_search_engine" />
 
         <androidx.preference.Preference

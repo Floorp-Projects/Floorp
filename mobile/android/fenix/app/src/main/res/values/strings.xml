@@ -102,6 +102,9 @@
     <!-- Preference for developers -->
     <string name="preference_leakcanary">Leak Canary</string>
 
+    <!-- Preference title for switch preference to show search suggestions -->
+    <string name="preferences_show_search_suggestions">Show search suggestions</string>
+
     <!-- Preference for account settings -->
     <string name="preferences_account_settings">Account Settings</string>
 

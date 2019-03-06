@@ -45,6 +45,7 @@ import org.mozilla.fenix.mvi.ActionBusFactory
 import org.mozilla.fenix.mvi.getAutoDisposeObservable
 import org.mozilla.fenix.mvi.getManagedEmitter
 import org.mozilla.fenix.settings.SupportUtils
+import org.mozilla.fenix.utils.Settings
 import kotlin.math.roundToInt
 
 fun SessionBundleStorage.archive(sessionManager: SessionManager) {
@@ -110,7 +111,10 @@ class HomeFragment : Fragment() {
             getManagedEmitter<SessionsChange>().onNext(SessionsChange.Changed(archivedSessions))
         })
 
-        val searchIcon = requireComponents.search.searchEngineManager.getDefaultSearchEngine(requireContext()).let {
+        val searchIcon = requireComponents.search.searchEngineManager.getDefaultSearchEngine(
+            requireContext(),
+            Settings.getInstance(requireContext()).defaultSearchEngineName
+        ).let {
             BitmapDrawable(resources, it.icon)
         }
 
