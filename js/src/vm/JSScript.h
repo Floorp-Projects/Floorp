@@ -619,7 +619,9 @@ class ScriptSource {
   uint32_t id_;
 
   // How many ids have been handed out to sources.
-  static mozilla::Atomic<uint32_t> idCount_;
+  static mozilla::Atomic<uint32_t, mozilla::SequentiallyConsistent,
+                         mozilla::recordreplay::Behavior::DontPreserve>
+      idCount_;
 
   // True if we can call JSRuntime::sourceHook to load the source on
   // demand. If sourceRetrievable_ and hasSourceText() are false, it is not
