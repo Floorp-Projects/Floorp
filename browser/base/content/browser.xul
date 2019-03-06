@@ -236,7 +236,8 @@ xmlns="http://www.w3.org/1999/xhtml"
 
     <!-- for search and content formfill/pw manager -->
 
-    <panel type="autocomplete-richlistbox"
+    <panel is="autocomplete-richlistbox-popup"
+           type="autocomplete-richlistbox"
            id="PopupAutoComplete"
            role="group"
            noautofocus="true"

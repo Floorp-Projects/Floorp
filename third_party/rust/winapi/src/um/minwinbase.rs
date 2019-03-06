@@ -1,4 +1,3 @@
-// Copyright © 2016-2017 winapi-rs developers
 // Licensed under the Apache License, Version 2.0
 // <LICENSE-APACHE or http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
 // <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your option.
@@ -214,6 +213,10 @@ FN!{stdcall PTHREAD_START_ROUTINE(
     lpThreadParameter: LPVOID,
 ) -> DWORD}
 pub type LPTHREAD_START_ROUTINE = PTHREAD_START_ROUTINE;
+FN!{stdcall PENCLAVE_ROUTINE(
+    lpThreadParameter: LPVOID,
+) -> DWORD}
+pub type LPENCLAVE_ROUTINE = PENCLAVE_ROUTINE;
 STRUCT!{struct EXCEPTION_DEBUG_INFO {
     ExceptionRecord: EXCEPTION_RECORD,
     dwFirstChance: DWORD,

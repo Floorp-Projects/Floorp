@@ -4,11 +4,10 @@
 
  /* CSS Variables specific to the Changes panel that aren't defined by the themes */
  :root {
-   --changes-button-copy-all-background-color--hover: var(--grey-90-a10);
-   --changes-button-copy-all-background-color--active: var(--grey-90-a15);
-   --changes-button-copy-rule-background-color: var(--grey-90-a10);
-   --changes-button-copy-rule-background-color--hover: var(--grey-90-a15);
-   --changes-button-copy-rule-background-color--active: var(--grey-90-a20);
+   --changes-button-copy-all-background-color--hover: var(--grey-90-a05);
+   --changes-button-copy-all-background-color--active: var(--grey-90-a10);
+   --changes-button-copy-rule-background-color: var(--grey-90-a05);
+   --changes-button-copy-rule-background-color--active: var(--grey-90-a10);
    --diff-add-background-color: #f1feec;
    --diff-add-text-color: #54983f;
    --diff-remove-background-color: #fbf2f5;
@@ -27,8 +26,7 @@
   --changes-button-copy-all-background-color--hover: var(--grey-10-a10);
   --changes-button-copy-all-background-color--active: var(--grey-10-a15);
   --changes-button-copy-rule-background-color: var(--grey-10-a10);
-  --changes-button-copy-rule-background-color--hover: var(--grey-10-a15);
-  --changes-button-copy-rule-background-color--active: var(--grey-10-a20);
+  --changes-button-copy-rule-background-color--active: var(--grey-10-a15);
   --diff-add-background-color: rgba(18, 188, 0, 0.15);
   --diff-add-text-color: #12BC00;
   --diff-remove-background-color: rgba(255, 0, 57, 0.15);
@@ -132,10 +130,6 @@
   position: absolute;
   right: 5px;
   top: 2px;
-}
-
-.changes__copy-rule-button:hover {
-  background-color: var(--changes-button-copy-rule-background-color--hover);
 }
 
 .changes__copy-rule-button:active {

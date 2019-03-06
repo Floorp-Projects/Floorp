@@ -401,13 +401,15 @@ nsIncrementalDownload::Init(nsIURI *uri, nsIFile *dest, int32_t chunkSize,
 
 NS_IMETHODIMP
 nsIncrementalDownload::GetURI(nsIURI **result) {
-  NS_IF_ADDREF(*result = mURI);
+  nsCOMPtr<nsIURI> uri = mURI;
+  uri.forget(result);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsIncrementalDownload::GetFinalURI(nsIURI **result) {
-  NS_IF_ADDREF(*result = mFinalURI);
+  nsCOMPtr<nsIURI> uri = mFinalURI;
+  uri.forget(result);
   return NS_OK;
 }
 
@@ -826,11 +828,6 @@ extern nsresult net_NewIncrementalDownload(nsISupports *outer, const nsIID &iid,
                                            void **result) {
   if (outer) return NS_ERROR_NO_AGGREGATION;
 
-  nsIncrementalDownload *d = new nsIncrementalDownload();
-  if (!d) return NS_ERROR_OUT_OF_MEMORY;
-
-  NS_ADDREF(d);
-  nsresult rv = d->QueryInterface(iid, result);
-  NS_RELEASE(d);
-  return rv;
+  RefPtr<nsIncrementalDownload> d = new nsIncrementalDownload();
+  return d->QueryInterface(iid, result);
 }

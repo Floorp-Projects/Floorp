@@ -7,7 +7,6 @@
 var Services = require("Services");
 loader.lazyRequireGetter(this, "Tools", "devtools/client/definitions", true);
 loader.lazyRequireGetter(this, "gDevTools", "devtools/client/framework/devtools", true);
-loader.lazyRequireGetter(this, "DebuggerServer", "devtools/server/main", true);
 loader.lazyRequireGetter(this, "DebuggerClient", "devtools/shared/client/debugger-client", true);
 loader.lazyRequireGetter(this, "l10n", "devtools/client/webconsole/webconsole-l10n");
 loader.lazyRequireGetter(this, "WebConsole", "devtools/client/webconsole/webconsole");
@@ -125,10 +124,22 @@ HUDService.prototype = {
     }
 
     async function connect() {
+      // Because the debugger can't be running in the same compartment than its debuggee,
+      // we have to load the server in a dedicated Loader, flagged with
+      // invisibleToDebugger, which will force it to be loaded in another compartment.
+      // The console ends up using the debugger in autocomplete.
+      const ChromeUtils = require("ChromeUtils");
+      const { DevToolsLoader } =
+        ChromeUtils.import("resource://devtools/shared/Loader.jsm");
+      const loader = new DevToolsLoader();
+      loader.invisibleToDebugger = true;
+      const { DebuggerServer } = loader.require("devtools/server/main");
+
+      DebuggerServer.init();
+
       // Ensure that the root actor and the target-scoped actors have been registered on
       // the DebuggerServer, so that the Browser Console can retrieve the console actors.
       // (See Bug 1416105 for rationale).
-      DebuggerServer.init();
       DebuggerServer.registerActors({ root: true, target: true });
 
       DebuggerServer.allowChromeProcess = true;

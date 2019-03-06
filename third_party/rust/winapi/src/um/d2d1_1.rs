@@ -1,4 +1,3 @@
-// Copyright © 2017 winapi-rs developers
 // Licensed under the Apache License, Version 2.0
 // <LICENSE-APACHE or http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
 // <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your option.
@@ -820,29 +819,29 @@ extern "system" {
     pub fn D2D1CreateDevice(
         dxgiDevice: *const IDXGIDevice,
         creationProperties: *const D2D1_CREATION_PROPERTIES,
-        d2dDevice: *mut *mut ID2D1Device
+        d2dDevice: *mut *mut ID2D1Device,
     ) -> HRESULT;
     pub fn D2D1CreateDeviceContext(
         dxgiSurface: *const IDXGISurface,
         creationProperties: *const D2D1_CREATION_PROPERTIES,
-        d2dDeviceContext: *mut *mut ID2D1DeviceContext
+        d2dDeviceContext: *mut *mut ID2D1DeviceContext,
     ) -> HRESULT;
     pub fn D2D1ConvertColorSpace(
         sourceColorSpace: D2D1_COLOR_SPACE,
         destinationColorSpace: D2D1_COLOR_SPACE,
-        color: *const D2D1_COLOR_F
+        color: *const D2D1_COLOR_F,
     ) -> D2D1_COLOR_F;
     pub fn D2D1SinCos(
         angle: FLOAT,
         s: *mut FLOAT,
-        c: *mut FLOAT
+        c: *mut FLOAT,
     ) -> ();
     pub fn D2D1Tan(
-        angle: FLOAT
+        angle: FLOAT,
     ) -> FLOAT;
     pub fn D2D1Vec3Length(
         x: FLOAT,
         y: FLOAT,
-        z: FLOAT
+        z: FLOAT,
     ) -> FLOAT;
 }

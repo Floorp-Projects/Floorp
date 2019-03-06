@@ -22,7 +22,7 @@ function sendPacket(dbg: any, packet: any, callback: () => void) {
   dbg.client.sendPacket(packet, callback || console.log);
 }
 
-function sendPacketToThread(dbg: Object, packet: any, callback: () => void) {
+function sendPacketToThread(dbg: Object, packet: any, callback: Function = () => {}) {
   sendPacket(
     dbg,
     { to: dbg.connection.tabConnection.threadClient.actor, ...packet },
@@ -70,7 +70,8 @@ export function setupHelper(obj: Object) {
       findSources: url => findSources(dbg, url),
       evaluate: (expression, cbk) => evaluate(dbg, expression, cbk),
       sendPacketToThread: (packet, cbk) => sendPacketToThread(dbg, packet, cbk),
-      sendPacket: (packet, cbk) => sendPacket(dbg, packet, cbk)
+      sendPacket: (packet, cbk) => sendPacket(dbg, packet, cbk),
+      dumpThread: () => sendPacketToThread(dbg, { type: "dumpThread" })
     },
     formatters: {
       visibleColumnBreakpoints: () => _formatColumnBreapoints(dbg)

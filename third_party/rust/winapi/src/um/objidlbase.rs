@@ -1,4 +1,3 @@
-// Copyright © 2016-2017 winapi-rs developers
 // Licensed under the Apache License, Version 2.0
 // <LICENSE-APACHE or http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
 // <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your option.
@@ -57,11 +56,9 @@ interface IMarshal(IMarshalVtbl): IUnknown(IUnknownVtbl) {
     ) -> HRESULT,
 }}
 RIDL!{#[uuid(0xecc8691b, 0xc1db, 0x4dc0, 0x85, 0x5e, 0x65, 0xf6, 0xc5, 0x51, 0xaf, 0x49)]
-interface INoMarshal(INoMarshalVtbl): IUnknown(IUnknownVtbl) {
-}}
+interface INoMarshal(INoMarshalVtbl): IUnknown(IUnknownVtbl) {}}
 RIDL!{#[uuid(0x94ea2b94, 0xe9cc, 0x49e0, 0xc0, 0xff, 0xee, 0x64, 0xca, 0x8f, 0x5b, 0x90)]
-interface IAgileObject(IAgileObjectVtbl): IUnknown(IUnknownVtbl) {
-}}
+interface IAgileObject(IAgileObjectVtbl): IUnknown(IUnknownVtbl) {}}
 ENUM!{enum ACTIVATIONTYPE {
     ACTIVATIONTYPE_UNCATEGORIZED = 0,
     ACTIVATIONTYPE_FROM_MONIKER = 0x1,
@@ -80,8 +77,7 @@ interface IActivationFilter(IActivationFilterVtbl): IUnknown(IUnknownVtbl) {
 }}
 pub type LPMARSHAL2 = *mut IMarshal2;
 RIDL!{#[uuid(0x000001cf, 0x0000, 0x0000, 0xc0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46)]
-interface IMarshal2(IMarshal2Vtbl): IMarshal(IMarshalVtbl) {
-}}
+interface IMarshal2(IMarshal2Vtbl): IMarshal(IMarshalVtbl) {}}
 pub type LPMALLOC = *mut IMalloc;
 RIDL!{#[uuid(0x00000002, 0x0000, 0x0000, 0xc0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46)]
 interface IMalloc(IMallocVtbl): IUnknown(IUnknownVtbl) {
@@ -927,8 +923,7 @@ interface IProcessInitControl(IProcessInitControlVtbl): IUnknown(IUnknownVtbl) {
     ) -> HRESULT,
 }}
 RIDL!{#[uuid(0x00000040, 0x0000, 0x0000, 0xc0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46)]
-interface IFastRundown(IFastRundownVtbl): IUnknown(IUnknownVtbl) {
-}}
+interface IFastRundown(IFastRundownVtbl): IUnknown(IUnknownVtbl) {}}
 ENUM!{enum CO_MARSHALING_CONTEXT_ATTRIBUTES {
     CO_MARSHALING_SOURCE_IS_APP_CONTAINER = 0,
     CO_MARSHALING_CONTEXT_ATTRIBUTE_RESERVED_1 = 0x80000000,

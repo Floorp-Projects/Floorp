@@ -49,7 +49,7 @@ add_task(async function test_autocompleteFromUsername() {
   await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, newTab.linkedBrowser);
   await autocompletePopupShown;
 
-  let richlistbox = document.getAnonymousNodes(autocompletePopup)[0];
+  let richlistbox = autocompletePopup.richlistbox;
   is(richlistbox.localName, "richlistbox", "The richlistbox should be the first anonymous node");
   for (let i = 0; i < autocompletePopup.view.matchCount; i++) {
     if (richlistbox.selectedItem &&

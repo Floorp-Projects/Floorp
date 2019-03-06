@@ -34,6 +34,14 @@ class RemoteFrameChild : public PRemoteFrameChild {
   void UpdateDimensions(const nsIntRect& aRect,
                         const mozilla::ScreenIntSize& aSize);
 
+  void NavigateByKey(bool aForward, bool aForDocumentNavigation);
+
+  void Activate();
+
+  static RemoteFrameChild* GetFrom(nsFrameLoader* aFrameLoader);
+
+  static RemoteFrameChild* GetFrom(nsIContent* aContent);
+
  protected:
   friend class PRemoteFrameChild;
 

@@ -68,7 +68,8 @@
         />
     </menulist>
 
-    <panel type="autocomplete-richlistbox"
+    <panel is="autocomplete-richlistbox-popup"
+           type="autocomplete-richlistbox"
            id="PopupAutoComplete"
            noautofocus="true"
            hidden="true"

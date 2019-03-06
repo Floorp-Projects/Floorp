@@ -14,7 +14,10 @@
          autocompletesearch="simple"
          onsearchcomplete="checkSearchCompleted();"
          autocompletepopup="richpopup"/>
-<panel id="richpopup" type="autocomplete-richlistbox" noautofocus="true"/>
+<panel is="autocomplete-richlistbox-popup"
+       id="richpopup"
+       type="autocomplete-richlistbox"
+       noautofocus="true"/>
 
 <script class="testbody" type="application/javascript">
 <![CDATA[

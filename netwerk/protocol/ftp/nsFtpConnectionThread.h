@@ -182,6 +182,8 @@ class nsFtpState final : public nsBaseContentStream,
   ///////////////////////////////////
   // Private members
 
+  nsCOMPtr<nsIProxiedProtocolHandler> mHandler;  // Ref to gFtpHandler
+
   // ****** state machine vars
   FTP_STATE mState;        // the current state
   FTP_STATE mNextState;    // the next state

@@ -5,6 +5,7 @@ XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
 const {actionTypes: at} = ChromeUtils.import("resource://activity-stream/common/Actions.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
   DownloadsCommon: "resource:///modules/DownloadsCommon.jsm",
   DownloadsViewUI: "resource:///modules/DownloadsViewUI.jsm",
   FileUtils: "resource://gre/modules/FileUtils.jsm",
@@ -41,8 +42,8 @@ this.DownloadsManager = class DownloadsManager {
 
   init(store) {
     this._store = store;
-    this._browser = Services.appShell.hiddenDOMWindow;
-    this._downloadData = DownloadsCommon.getData(this._browser.ownerGlobal, true, false, true);
+    this._downloadData = DownloadsCommon.getData(null /* null for non-private downloads */, 
+                                                 true, false, true);
     this._downloadData.addView(this);
   }
 
@@ -141,7 +142,7 @@ this.DownloadsManager = class DownloadsManager {
         doDownloadAction(download => {
           DownloadsCommon.openDownloadedFile(
             new FileUtils.File(download.target.path), null,
-            this._browser.ownerGlobal);
+            BrowserWindowTracker.getTopWindow());
         });
         break;
       case at.UNINIT:

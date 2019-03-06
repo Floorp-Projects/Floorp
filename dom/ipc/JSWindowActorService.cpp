@@ -557,7 +557,8 @@ void JSWindowActorService::ConstructActor(const nsAString& aName,
   }
 }
 
-void JSWindowActorService::ReceiveMessage(JS::RootedObject& aObj,
+void JSWindowActorService::ReceiveMessage(nsISupports* aTarget,
+                                          JS::RootedObject& aObj,
                                           const nsString& aMessageName,
                                           ipc::StructuredCloneData& aData) {
   IgnoredErrorResult error;
@@ -579,9 +580,12 @@ void JSWindowActorService::ReceiveMessage(JS::RootedObject& aObj,
 
   RootedDictionary<ReceiveMessageArgument> argument(cx);
   argument.mObjects = JS_NewPlainObject(cx);
+  argument.mTarget = aTarget;
   argument.mName = aMessageName;
   argument.mData = json;
   argument.mJson = json;
+  argument.mSync = false;
+
   JS::RootedValue argv(cx);
   if (NS_WARN_IF(!ToJSValue(cx, argument, &argv))) {
     return;

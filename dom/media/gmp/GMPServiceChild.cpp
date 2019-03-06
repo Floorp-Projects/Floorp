@@ -33,7 +33,7 @@ namespace mozilla {
 #ifdef __CLASS__
 #  undef __CLASS__
 #endif
-#define __CLASS__ "GMPService"
+#define __CLASS__ "GMPServiceChild"
 
 namespace gmp {
 

@@ -309,7 +309,11 @@ nsresult BackgroundFileSaver::GetWorkerThreadAttention(
 // Called on the worker thread.
 // static
 void BackgroundFileSaver::AsyncCopyCallback(void *aClosure, nsresult aStatus) {
-  BackgroundFileSaver *self = (BackgroundFileSaver *)aClosure;
+  // We called NS_ADDREF_THIS when NS_AsyncCopy started, to keep the object
+  // alive even if other references disappeared.  At the end of this method,
+  // we've finished using the object and can safely release our reference.
+  RefPtr<BackgroundFileSaver> self =
+      dont_AddRef((BackgroundFileSaver *)aClosure);
   {
     MutexAutoLock lock(self->mLock);
 
@@ -325,11 +329,6 @@ void BackgroundFileSaver::AsyncCopyCallback(void *aClosure, nsresult aStatus) {
   }
 
   (void)self->ProcessAttention();
-
-  // We called NS_ADDREF_THIS when NS_AsyncCopy started, to keep the object
-  // alive even if other references disappeared.  At this point, we've finished
-  // using the object and can safely release our reference.
-  NS_RELEASE(self);
 }
 
 // Called on the worker thread.

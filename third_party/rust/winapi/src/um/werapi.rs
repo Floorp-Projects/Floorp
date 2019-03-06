@@ -1,4 +1,3 @@
-// Copyright © 2015-2017 winapi-rs developers
 // Licensed under the Apache License, Version 2.0
 // <LICENSE-APACHE or http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
 // <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your option.
@@ -19,29 +18,29 @@ extern "system" {
         dwFlags: DWORD,
     ) -> HRESULT;
     pub fn WerUnregisterFile(
-        pwzFilePath: PCWSTR
+        pwzFilePath: PCWSTR,
     ) -> HRESULT;
     pub fn WerRegisterMemoryBlock(
         pvAddress: PVOID,
-        dwSize: DWORD
+        dwSize: DWORD,
     ) -> HRESULT;
     pub fn WerUnregisterMemoryBlock(
-        pvAddress: PVOID
+        pvAddress: PVOID,
     ) -> HRESULT;
     pub fn WerSetFlags(
-        dwFlags: DWORD
+        dwFlags: DWORD,
     ) -> HRESULT;
     pub fn WerGetFlags(
         hProcess: HANDLE,
-        pdwFlags: PDWORD
+        pdwFlags: PDWORD,
     ) -> HRESULT;
     pub fn WerAddExcludedApplication(
         pwzExeName: PCWSTR,
-        bAllUsers: BOOL
+        bAllUsers: BOOL,
     ) -> HRESULT;
     pub fn WerRemoveExcludedApplication(
         pwzExeName: PCWSTR,
-        bAllUsers: BOOL
+        bAllUsers: BOOL,
     ) -> HRESULT;
     pub fn WerRegisterRuntimeExceptionModule(
         pwszOutOfProcessCallbackDll: PCWSTR,

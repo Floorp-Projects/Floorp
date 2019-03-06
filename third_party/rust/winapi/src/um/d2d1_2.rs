@@ -1,4 +1,3 @@
-// Copyright © 2017 winapi-rs developers
 // Licensed under the Apache License, Version 2.0
 // <LICENSE-APACHE or http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
 // <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your option.
@@ -21,10 +20,11 @@ ENUM!{enum D2D1_RENDERING_PRIORITY {
     D2D1_RENDERING_PRIORITY_FORCE_DWORD = 0xffffffff,
 }}
 RIDL!{#[uuid(0xa16907d7, 0xbc02, 0x4801, 0x99, 0xe8, 0x8c, 0xf7, 0xf4, 0x85, 0xf7, 0x74)]
-interface ID2D1GeometryRealization(ID2D1GeometryRealizationVtbl): ID2D1Resource(ID2D1ResourceVtbl) {
-}}
+interface ID2D1GeometryRealization(ID2D1GeometryRealizationVtbl):
+    ID2D1Resource(ID2D1ResourceVtbl) {}}
 RIDL!{#[uuid(0xd37f57e4, 0x6908, 0x459f, 0xa1, 0x99, 0xe7, 0x2f, 0x24, 0xf7, 0x99, 0x87)]
-interface ID2D1DeviceContext1(ID2D1DeviceContext1Vtbl): ID2D1DeviceContext(ID2D1DeviceContextVtbl) {
+interface ID2D1DeviceContext1(ID2D1DeviceContext1Vtbl):
+    ID2D1DeviceContext(ID2D1DeviceContextVtbl) {
     fn CreateFilledGeometryRealization(
         geometry: *mut ID2D1Geometry,
         flatteningTolerance: FLOAT,

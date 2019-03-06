@@ -57,7 +57,7 @@ add_task(async function test_autocomplete_footer() {
     await promiseShown;
     ok(promiseShown, "autocomplete shown");
 
-    let footer = document.getAnonymousElementByAttribute(popup, "originaltype", "loginsFooter");
+    let footer = popup.querySelector(`[originaltype="loginsFooter"]`);
     ok(footer, "Got footer richlistitem");
 
     await TestUtils.waitForCondition(() => {
