@@ -3724,7 +3724,8 @@ var SessionStoreInternal = {
       } else if (tabData.pinned &&
           tabbrowser.tabs[t] &&
           tabbrowser.tabs[t].pinned &&
-          !tabbrowser.tabs[t].linkedPanel) {
+          !tabbrowser.tabs[t].linkedPanel &&
+          tabbrowser.tabs[t].userContextId == userContextId) {
         tab = tabbrowser.tabs[t];
         tabbrowser.activatePreopenedPinnedTab(tab);
       }
