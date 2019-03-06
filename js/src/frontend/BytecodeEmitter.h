@@ -46,6 +46,7 @@ struct CGObjectList {
 
   unsigned add(ObjectBox* objbox);
   void finish(mozilla::Span<GCPtrObject> array);
+  void finishInnerFunctions();
 };
 
 struct MOZ_STACK_CLASS CGScopeList {

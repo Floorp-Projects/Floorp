@@ -9693,10 +9693,17 @@ void CGObjectList::finish(mozilla::Span<GCPtrObject> array) {
   for (GCPtrObject& obj : mozilla::Reversed(array)) {
     MOZ_ASSERT(obj == nullptr);
     MOZ_ASSERT(objbox->object()->isTenured());
+    obj.init(objbox->object());
+    objbox = objbox->emitLink;
+  }
+}
+
+void CGObjectList::finishInnerFunctions() {
+  ObjectBox* objbox = lastbox;
+  while (objbox) {
     if (objbox->isFunctionBox()) {
       objbox->asFunctionBox()->finish();
     }
-    obj.init(objbox->object());
     objbox = objbox->emitLink;
   }
 }
