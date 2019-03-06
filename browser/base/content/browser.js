@@ -1574,7 +1574,7 @@ var gBrowserInit = {
     let safeMode = document.getElementById("helpSafeMode");
     if (Services.appinfo.inSafeMode) {
       safeMode.label = safeMode.getAttribute("stoplabel");
-      safeMode.accesskey = safeMode.getAttribute("stopaccesskey");
+      safeMode.accessKey = safeMode.getAttribute("stopaccesskey");
     }
 
     // BiDi UI
