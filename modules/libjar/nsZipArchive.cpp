@@ -22,6 +22,7 @@
 #include "mozilla/Logging.h"
 #include "mozilla/UniquePtrExtensions.h"
 #include "stdlib.h"
+#include "nsDirectoryService.h"
 #include "nsWildCard.h"
 #include "nsXULAppAPI.h"
 #include "nsZipArchive.h"
@@ -339,7 +340,46 @@ nsresult nsZipArchive::OpenArchive(nsZipHandle *aZipHandle, PRFileDesc *aFd) {
       static char *env = PR_GetEnv("MOZ_JAR_LOG_FILE");
       if (env) {
         zipLog.Init(env);
-        aZipHandle->mFile.GetURIString(mURI);
+        // We only log accesses in jar/zip archives within the NS_GRE_DIR
+        // and/or the APK on Android. For the former, we log the archive path
+        // relative to NS_GRE_DIR, and for the latter, the nested-archive
+        // path within the APK. This makes the path match the path of the
+        // archives relative to the packaged dist/$APP_NAME directory in a
+        // build.
+        if (aZipHandle->mFile.IsZip()) {
+          // Nested archive, likely omni.ja in APK.
+          aZipHandle->mFile.GetPath(mURI);
+        } else if (nsDirectoryService::gService) {
+          // We can reach here through the initialization of Omnijar from
+          // XRE_InitCommandLine, which happens before the directory service
+          // is initialized. When that happens, it means the opened archive is
+          // the APK, and we don't care to log that one, so we just skip
+          // when the directory service is not initialized.
+          nsCOMPtr<nsIFile> dir = aZipHandle->mFile.GetBaseFile();
+          nsCOMPtr<nsIFile> gre_dir;
+          nsAutoCString path;
+          if (NS_SUCCEEDED(nsDirectoryService::gService->Get(
+                  NS_GRE_DIR, NS_GET_IID(nsIFile), getter_AddRefs(gre_dir)))) {
+            nsAutoCString leaf;
+            nsCOMPtr<nsIFile> parent;
+            while (NS_SUCCEEDED(dir->GetNativeLeafName(leaf)) &&
+                   NS_SUCCEEDED(dir->GetParent(getter_AddRefs(parent)))) {
+              if (!parent) {
+                break;
+              }
+              dir = parent;
+              if (path.Length()) {
+                path.Insert('/', 0);
+              }
+              path.Insert(leaf, 0);
+              bool equals;
+              if (NS_SUCCEEDED(dir->Equals(gre_dir, &equals)) && equals) {
+                mURI.Assign(path);
+                break;
+              }
+            }
+          }
+        }
       }
     }
   }
