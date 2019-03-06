@@ -72,6 +72,15 @@ enum class ResumeKind { Normal, Throw };
 static bool AsyncFunctionResume(JSContext* cx,
                                 Handle<AsyncFunctionGeneratorObject*> generator,
                                 ResumeKind kind, HandleValue valueOrReason) {
+  // We're enqueuing the promise job for Await before suspending the execution
+  // of the async function. So when either the debugger or OOM errors terminate
+  // the execution after JSOP_ASYNCAWAIT, but before JSOP_AWAIT, we're in an
+  // inconsistent state, because we don't have a resume index set and therefore
+  // don't know where to resume the async function. Return here in that case.
+  if (generator->isClosed()) {
+    return true;
+  }
+
   Rooted<PromiseObject*> resultPromise(cx, generator->promise());
 
   RootedObject stack(cx);
@@ -87,8 +96,6 @@ static bool AsyncFunctionResume(JSContext* cx,
     }
   }
 
-  MOZ_ASSERT(!generator->isClosed(),
-             "closed generator when resuming async function");
   MOZ_ASSERT(generator->isSuspended(),
              "non-suspended generator when resuming async function");
 
@@ -103,6 +110,15 @@ static bool AsyncFunctionResume(JSContext* cx,
                               &generatorOrValue)) {
     if (!generator->isClosed()) {
       generator->setClosed();
+
+      // Handle the OOM case mentioned above.
+      if (cx->isExceptionPending()) {
+        RootedValue exn(cx);
+        if (!GetAndClearException(cx, &exn)) {
+          return false;
+        }
+        return AsyncFunctionThrown(cx, resultPromise, exn);
+      }
     }
     return false;
   }
