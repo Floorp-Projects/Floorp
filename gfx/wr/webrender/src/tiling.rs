@@ -20,7 +20,7 @@ use internal_types::{CacheTextureId, FastHashMap, SavedTargetIndex, TextureSourc
 #[cfg(feature = "pathfinder")]
 use pathfinder_partitioner::mesh::Mesh;
 use picture::{RecordedDirtyRegion, SurfaceInfo};
-use prim_store::{PictureIndex, PrimitiveStore, DeferredResolve, PrimitiveScratchBuffer};
+use prim_store::{PrimitiveStore, DeferredResolve, PrimitiveScratchBuffer};
 use profiler::FrameProfileCounters;
 use render_backend::{DataStores, FrameId};
 use render_task::{BlitSource, RenderTaskAddress, RenderTaskId, RenderTaskKind};
@@ -60,18 +60,6 @@ pub struct RenderTargetContext<'a, 'rc> {
     pub scratch: &'a PrimitiveScratchBuffer,
     pub screen_world_rect: WorldRect,
     pub globals: &'a FrameGlobalResources,
-}
-
-impl<'a, 'rc> RenderTargetContext<'a, 'rc> {
-    /// Returns true if a picture has a surface that is visible.
-    pub fn is_picture_surface_visible(&self, index: PictureIndex) -> bool {
-        match self.prim_store.pictures[index.0].raster_config {
-            Some(ref raster_config) => {
-                self.surfaces[raster_config.surface_index.0].surface.is_some()
-            }
-            None => false,
-        }
-    }
 }
 
 /// Represents a number of rendering operations on a surface.
@@ -360,6 +348,7 @@ pub struct ColorRenderTarget {
     // List of blur operations to apply for this render target.
     pub vertical_blurs: Vec<BlurInstance>,
     pub horizontal_blurs: Vec<BlurInstance>,
+    pub readbacks: Vec<DeviceIntRect>,
     pub scalings: Vec<ScalingInstance>,
     pub blits: Vec<BlitJob>,
     // List of frame buffer outputs for this render target.
@@ -381,6 +370,7 @@ impl RenderTarget for ColorRenderTarget {
             alpha_batch_containers: Vec::new(),
             vertical_blurs: Vec::new(),
             horizontal_blurs: Vec::new(),
+            readbacks: Vec::new(),
             scalings: Vec::new(),
             blits: Vec::new(),
             outputs: Vec::new(),
@@ -511,6 +501,9 @@ impl RenderTarget for ColorRenderTarget {
             RenderTaskKind::Glyph(..) => {
                 // FIXME(pcwalton): Support color glyphs.
                 panic!("Glyphs should not be added to color target!");
+            }
+            RenderTaskKind::Readback(device_rect) => {
+                self.readbacks.push(device_rect);
             }
             RenderTaskKind::Scaling(..) => {
                 self.scalings.push(ScalingInstance {
@@ -644,6 +637,7 @@ impl RenderTarget for AlphaRenderTarget {
         }
 
         match task.kind {
+            RenderTaskKind::Readback(..) |
             RenderTaskKind::Picture(..) |
             RenderTaskKind::Blit(..) |
             RenderTaskKind::Border(..) |
@@ -825,6 +819,7 @@ impl TextureCacheRenderTarget {
             RenderTaskKind::Picture(..) |
             RenderTaskKind::ClipRegion(..) |
             RenderTaskKind::CacheMask(..) |
+            RenderTaskKind::Readback(..) |
             RenderTaskKind::Scaling(..) => {
                 panic!("BUG: unexpected task kind for texture cache target");
             }

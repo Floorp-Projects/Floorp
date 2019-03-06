@@ -64,7 +64,7 @@ pub enum PictureCompositeKey {
 impl From<Option<PictureCompositeMode>> for PictureCompositeKey {
     fn from(mode: Option<PictureCompositeMode>) -> Self {
         match mode {
-            Some(PictureCompositeMode::MixBlend { mode, .. }) => {
+            Some(PictureCompositeMode::MixBlend(mode)) => {
                 match mode {
                     MixBlendMode::Normal => PictureCompositeKey::Identity,
                     MixBlendMode::Multiply => PictureCompositeKey::Multiply,
@@ -123,7 +123,6 @@ impl From<Option<PictureCompositeMode>> for PictureCompositeKey {
             Some(PictureCompositeMode::ComponentTransferFilter(handle)) => {
                 PictureCompositeKey::ComponentTransfer(handle.uid())
             }
-            Some(PictureCompositeMode::Puppet { .. }) |
             Some(PictureCompositeMode::Blit(_)) |
             Some(PictureCompositeMode::TileCache { .. }) |
             None => {
