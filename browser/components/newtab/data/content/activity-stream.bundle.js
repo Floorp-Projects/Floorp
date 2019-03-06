@@ -7255,7 +7255,35 @@ var external_React_default = /*#__PURE__*/__webpack_require__.n(external_React_)
 // CONCATENATED MODULE: ./content-src/components/DiscoveryStreamComponents/SafeAnchor/SafeAnchor.jsx
 
 
+
 class SafeAnchor_SafeAnchor extends external_React_default.a.PureComponent {
+  constructor(props) {
+    super(props);
+    this.onClick = this.onClick.bind(this);
+  }
+
+  onClick(event) {
+    // Use dispatch instead of normal link click behavior to include referrer
+    if (this.props.dispatch) {
+      event.preventDefault();
+      const { altKey, button, ctrlKey, metaKey, shiftKey } = event;
+      this.props.dispatch(Actions["actionCreators"].OnlyToMain({
+        type: Actions["actionTypes"].OPEN_LINK,
+        data: {
+          event: { altKey, button, ctrlKey, metaKey, shiftKey },
+          referrer: "https://getpocket.com/recommendations",
+          // Use the anchor's url, which could have been cleaned up
+          url: event.currentTarget.href
+        }
+      }));
+    }
+
+    // Propagate event if there's a handler
+    if (this.props.onLinkClick) {
+      this.props.onLinkClick(event);
+    }
+  }
+
   safeURI(url) {
     let protocol = null;
     try {
@@ -7273,10 +7301,10 @@ class SafeAnchor_SafeAnchor extends external_React_default.a.PureComponent {
   }
 
   render() {
-    const { url, className, onLinkClick } = this.props;
+    const { url, className } = this.props;
     return external_React_default.a.createElement(
       "a",
-      { href: this.safeURI(url), className: className, onClick: onLinkClick },
+      { href: this.safeURI(url), className: className, onClick: this.onClick },
       this.props.children
     );
   }
@@ -7313,7 +7341,11 @@ class DSCard_DSCard extends external_React_default.a.PureComponent {
   render() {
     return external_React_default.a.createElement(
       SafeAnchor_SafeAnchor,
-      { url: this.props.url, className: "ds-card", onLinkClick: this.onLinkClick },
+      {
+        className: "ds-card",
+        dispatch: this.props.dispatch,
+        onLinkClick: this.onLinkClick,
+        url: this.props.url },
       external_React_default.a.createElement(
         "div",
         { className: "img-wrapper" },
@@ -7490,7 +7522,11 @@ class List_ListItem extends external_React_default.a.PureComponent {
       { className: "ds-list-item" },
       external_React_default.a.createElement(
         SafeAnchor_SafeAnchor,
-        { url: this.props.url, className: "ds-list-item-link", onLinkClick: this.onLinkClick },
+        {
+          className: "ds-list-item-link",
+          dispatch: this.props.dispatch,
+          onLinkClick: this.onLinkClick,
+          url: this.props.url },
         external_React_default.a.createElement(
           "div",
           { className: "ds-list-item-text" },
@@ -7662,7 +7698,11 @@ class Hero_Hero extends external_React_default.a.PureComponent {
         { className: `ds-hero ds-hero-${this.props.border}` },
         external_React_default.a.createElement(
           SafeAnchor_SafeAnchor,
-          { url: heroRec.url, className: "wrapper", onLinkClick: this.onLinkClick },
+          {
+            className: "wrapper",
+            dispatch: this.props.dispatch,
+            onLinkClick: this.onLinkClick,
+            url: heroRec.url },
           external_React_default.a.createElement(
             "div",
             { className: "img-wrapper" },
