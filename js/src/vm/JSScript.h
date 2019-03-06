@@ -1898,7 +1898,6 @@ class JSScript : public js::gc::TenuredCell {
  private:
   static void initFromFunctionBox(js::HandleScript script,
                                   js::frontend::FunctionBox* funbox);
-  static void initFromModuleContext(js::HandleScript script);
 
  public:
   static bool fullyInitFromEmitter(JSContext* cx, js::HandleScript script,
