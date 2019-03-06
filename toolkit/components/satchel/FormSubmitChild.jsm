@@ -28,7 +28,6 @@ class FormSubmitChild extends ActorChild {
   }
 
   cleanup() {
-    super.cleanup();
     Services.prefs.removeObserver("browser.formfill.", this);
   }
 
