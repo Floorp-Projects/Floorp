@@ -31,6 +31,7 @@
     </tr>
   </tbody>
 </table>
+#if defined(CC) && defined(CXX) && defined(RUSTC)
 <h2>Build tools</h2>
 <table>
   <tbody>
@@ -56,6 +57,7 @@
     </tr>
   </tbody>
 </table>
+#endif
 <h2>Configure options</h2>
 <p>@MOZ_CONFIGURE_OPTIONS@</p>
 #ifdef ANDROID
