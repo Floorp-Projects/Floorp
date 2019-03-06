@@ -40,7 +40,7 @@ class RenderCompositorEGL : public RenderCompositor {
  protected:
   static already_AddRefed<gl::GLContext> CreateGLContext(
       RefPtr<widget::CompositorWidget> aWidget);
-  static EGLSurface CreateEGLSurface(widget::CompositorWidget* aWidget);
+  EGLSurface CreateEGLSurface();
 
   void DestroyEGLSurface();
 

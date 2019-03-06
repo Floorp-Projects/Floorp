@@ -91,9 +91,9 @@ class GLContextEGL : public GLContext {
       CreateContextFlags flags, const gfx::IntSize& size,
       const SurfaceCaps& minCaps, nsACString* const out_FailureId);
 
-#if defined(MOZ_WAYLAND)
+#if defined(MOZ_WAYLAND) || defined(MOZ_WIDGET_ANDROID)
   static EGLSurface CreateEGLSurfaceForCompositorWidget(
-      widget::CompositorWidget* aCompositorWidget, bool aForceAccelerated);
+      widget::CompositorWidget* aCompositorWidget, const EGLConfig aConfig);
 #endif
  protected:
   friend class GLContextProviderEGL;
