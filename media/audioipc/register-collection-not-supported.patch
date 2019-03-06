@@ -1,0 +1,22 @@
+diff --git a/media/audioipc/client/src/context.rs b/media/audioipc/client/src/context.rs
+--- a/media/audioipc/client/src/context.rs
++++ b/media/audioipc/client/src/context.rs
+@@ -265,17 +265,17 @@ impl ContextOps for ClientContext {
+ 
+     fn register_device_collection_changed(
+         &mut self,
+         _dev_type: DeviceType,
+         _collection_changed_callback: ffi::cubeb_device_collection_changed_callback,
+         _user_ptr: *mut c_void,
+     ) -> Result<()> {
+         assert_not_in_callback();
+-        Ok(())
++        Err(Error::not_supported())
+     }
+ }
+ 
+ impl Drop for ClientContext {
+     fn drop(&mut self) {
+         debug!("ClientContext dropped...");
+         let _ = send_recv!(self.rpc(), ClientDisconnect => ClientDisconnected);
+         unsafe {

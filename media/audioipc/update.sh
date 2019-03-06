@@ -11,8 +11,6 @@ for crate in audioipc client server; do
     cp -pr $1/$crate/src/ $crate/src/
 done
 
-rm audioipc/src/cmsghdr.c
-
 if [ -d $1/.git ]; then
   rev=$(cd $1 && git rev-parse --verify HEAD)
   date=$(cd $1 && git show -s --format=%ci HEAD)
@@ -34,3 +32,5 @@ fi
 echo "Applying gecko.patch on top of $rev"
 patch -p3 < gecko.patch
 
+echo "Applying register-collection-not-supported.patch on top of $rev"
+patch -p3 < register-collection-not-supported.patch
