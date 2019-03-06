@@ -2,12 +2,27 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
+const {AddonTestUtils} = ChromeUtils.import("resource://testing-common/AddonTestUtils.jsm");
+
 const SECUREROOT = "https://example.com/browser/toolkit/mozapps/extensions/test/xpinstall/";
 const PROGRESS_NOTIFICATION = "addon-progress";
 
 const CHROMEROOT = extractChromeRoot(gTestPath);
 
 var gApp = document.getElementById("bundle_brand").getString("brandShortName");
+
+AddonTestUtils.initMochitest(this);
+AddonTestUtils.hookAMTelemetryEvents();
+
+// Assert on the expected "addonsManager.action" telemetry events (and optional filter events to verify
+// by using a given actionType).
+function assertActionAMTelemetryEvent(expectedActionEvents, assertMessage, {actionType} = {}) {
+  const events = AddonTestUtils.getAMTelemetryEvents().filter(({method, extra}) => {
+    return method === "action" && (!actionType ? true : extra && extra.action === actionType);
+  });
+
+  Assert.deepEqual(events, expectedActionEvents, assertMessage);
+}
 
 function waitForTick() {
   return new Promise(resolve => executeSoon(resolve));
@@ -468,6 +483,20 @@ async function test_urlBar() {
   let policy = WebExtensionPolicy.getByID(addon.id);
   ok(policy.privateBrowsingAllowed, "private browsing permission granted");
 
+  // Verify that the expected telemetry event has been collected for the extension allowed on
+  // PB windows from the "post install" notification doorhanger.
+  assertActionAMTelemetryEvent([{
+    method: "action",
+    object: "doorhanger",
+    value: "on",
+    extra: {
+      action: "privateBrowsingAllowed",
+      view: "postInstall",
+      addonId: addon.id,
+      type: "extension",
+    },
+  }], "Expect telemetry events for privateBrowsingAllowed action", {actionType: "privateBrowsingAllowed"});
+
   addon.uninstall();
 
   Services.prefs.clearUserPref("extensions.allowPrivateBrowsingByDefault");
@@ -674,5 +703,10 @@ add_task(async function() {
     info("Running " + TESTS[i].name);
     gTestStart = Date.now();
     await TESTS[i]();
+
+    // Check that no unexpected telemetry events for the privateBrowsingAllowed action has been
+    // collected while running the test case.
+    assertActionAMTelemetryEvent([], "Expect no telemetry events for privateBrowsingAllowed actions",
+                                 {actionType: "privateBrowsingAllowed"});
   }
 });
