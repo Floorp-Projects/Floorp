@@ -46,32 +46,22 @@ enum ScopeStringPrefixMode { eUseDirectory, eUsePath };
 
 nsresult GetRequiredScopeStringPrefix(nsIURI* aScriptURI, nsACString& aPrefix,
                                       ScopeStringPrefixMode aPrefixMode) {
-  nsresult rv = aScriptURI->GetPrePath(aPrefix);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
+  nsresult rv;
   if (aPrefixMode == eUseDirectory) {
     nsCOMPtr<nsIURL> scriptURL(do_QueryInterface(aScriptURI));
     if (NS_WARN_IF(!scriptURL)) {
       return NS_ERROR_FAILURE;
     }
 
-    nsAutoCString dir;
-    rv = scriptURL->GetDirectory(dir);
+    rv = scriptURL->GetDirectory(aPrefix);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
-
-    aPrefix.Append(dir);
   } else if (aPrefixMode == eUsePath) {
-    nsAutoCString path;
-    rv = aScriptURI->GetPathQueryRef(path);
+    rv = aScriptURI->GetPathQueryRef(aPrefix);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
-
-    aPrefix.Append(path);
   } else {
     MOZ_ASSERT_UNREACHABLE("Invalid value for aPrefixMode");
   }
@@ -372,7 +362,21 @@ void ServiceWorkerUpdateJob::ComparisonResult(nsresult aStatus,
     }
   }
 
-  if (!StringBeginsWith(mRegistration->Scope(), maxPrefix)) {
+  nsCOMPtr<nsIURI> scopeURI;
+  rv = NS_NewURI(getter_AddRefs(scopeURI), mRegistration->Scope(), nullptr, scriptURI);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    FailUpdateJob(NS_ERROR_FAILURE);
+    return;
+  }
+
+  nsAutoCString scopeString;
+  rv = scopeURI->GetPathQueryRef(scopeString);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    FailUpdateJob(NS_ERROR_FAILURE);
+    return;
+  }
+
+  if (!StringBeginsWith(scopeString, maxPrefix)) {
     nsAutoString message;
     NS_ConvertUTF8toUTF16 reportScope(mRegistration->Scope());
     NS_ConvertUTF8toUTF16 reportMaxPrefix(maxPrefix);
