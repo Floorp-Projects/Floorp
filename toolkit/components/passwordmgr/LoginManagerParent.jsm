@@ -89,14 +89,13 @@ var LoginManagerParent = {
 
       case "PasswordManager:onFormSubmit": {
         // TODO Verify msg.target's principals against the formOrigin?
-        this.onFormSubmit({hostname: data.hostname,
-                           formSubmitURL: data.formSubmitURL,
-                           autoFilledLoginGuid: data.autoFilledLoginGuid,
-                           usernameField: data.usernameField,
-                           newPasswordField: data.newPasswordField,
-                           oldPasswordField: data.oldPasswordField,
-                           openerTopWindowID: data.openerTopWindowID,
-                           target: msg.target});
+        this.onFormSubmit(data.hostname,
+                          data.formSubmitURL,
+                          data.usernameField,
+                          data.newPasswordField,
+                          data.oldPasswordField,
+                          data.openerTopWindowID,
+                          msg.target);
         break;
       }
 
@@ -289,10 +288,10 @@ var LoginManagerParent = {
     });
   },
 
-  onFormSubmit({hostname, formSubmitURL, autoFilledLoginGuid,
-                usernameField, newPasswordField,
-                oldPasswordField, openerTopWindowID,
-                target}) {
+  onFormSubmit(hostname, formSubmitURL,
+               usernameField, newPasswordField,
+               oldPasswordField, openerTopWindowID,
+               target) {
     function getPrompter() {
       var prompterSvc = Cc["@mozilla.org/login-manager/prompter;1"].
                         createInstance(Ci.nsILoginManagerPrompter);
@@ -342,19 +341,6 @@ var LoginManagerParent = {
                    newPasswordField.value,
                    (usernameField ? usernameField.name : ""),
                    newPasswordField.name);
-
-    if (autoFilledLoginGuid) {
-      let loginsForGuid = LoginHelper.searchLoginsWithObject({
-        guid: autoFilledLoginGuid,
-      });
-      if (loginsForGuid.length == 1 &&
-          loginsForGuid[0].password == formLogin.password &&
-          loginsForGuid[0].username == formLogin.username) {
-        log("The filled login matches the form submission. Nothing to change.");
-        recordLoginUse(loginsForGuid[0]);
-        return;
-      }
-    }
 
     // Below here we have one login per hostPort + action + username with the
     // matching scheme being preferred.
