@@ -1990,7 +1990,7 @@ struct Stk {
   }
 };
 
-typedef Vector<Stk, 8, SystemAllocPolicy> StkVector;
+typedef Vector<Stk, 0, SystemAllocPolicy> StkVector;
 
 // MachineStackTracker, used for stack-slot pointerness tracking.
 
@@ -2565,8 +2565,9 @@ class BaseCompiler final : public BaseCompilerInterface {
   BaseCompiler(const ModuleEnvironment& env, const FuncCompileInput& input,
                const ValTypeVector& locals, const MachineState& trapExitLayout,
                size_t trapExitLayoutNumWords, Decoder& decoder,
-               TempAllocator* alloc, MacroAssembler* masm,
+               StkVector& stkSource, TempAllocator* alloc, MacroAssembler* masm,
                StackMaps* stackMaps);
+  ~BaseCompiler();
 
   MOZ_MUST_USE bool init();
 
@@ -2865,7 +2866,21 @@ class BaseCompiler final : public BaseCompilerInterface {
   // to avoid problems with control flow and messy register usage
   // patterns.
 
+  // This is the value stack actually used during compilation.  It is a
+  // StkVector rather than a StkVector& since constantly dereferencing a
+  // StkVector& adds about 0.5% or more to the compiler's dynamic instruction
+  // count.
   StkVector stk_;
+
+  // BaselineCompileFunctions() "lends" us the StkVector to use in this
+  // BaseCompiler object, and that is installed in |stk_| in our constructor.
+  // This is so as to avoid having to malloc/free the vector's contents at
+  // each creation/destruction of a BaseCompiler object.  It does however mean
+  // that we need to hold on to a reference to BaselineCompileFunctions()'s
+  // vector, so we can swap (give) its contents back when this BaseCompiler
+  // object is destroyed.  This significantly reduces the heap turnover of the
+  // baseline compiler.  See bug 1532592.
+  StkVector& stkSource_;
 
 #ifdef DEBUG
   size_t countMemRefsOnStk() {
@@ -11776,8 +11791,8 @@ BaseCompiler::BaseCompiler(const ModuleEnvironment& env,
                            const ValTypeVector& locals,
                            const MachineState& trapExitLayout,
                            size_t trapExitLayoutNumWords, Decoder& decoder,
-                           TempAllocator* alloc, MacroAssembler* masm,
-                           StackMaps* stackMaps)
+                           StkVector& stkSource, TempAllocator* alloc,
+                           MacroAssembler* masm, StackMaps* stackMaps)
     : env_(env),
       iter_(env, decoder),
       func_(func),
@@ -11799,7 +11814,28 @@ BaseCompiler::BaseCompiler(const ModuleEnvironment& env,
       joinRegI64_(RegI64(ReturnReg64)),
       joinRegPtr_(RegPtr(ReturnReg)),
       joinRegF32_(RegF32(ReturnFloat32Reg)),
-      joinRegF64_(RegF64(ReturnDoubleReg)) {}
+      joinRegF64_(RegF64(ReturnDoubleReg)),
+      stkSource_(stkSource) {
+  // Our caller, BaselineCompileFunctions, will lend us the vector contents to
+  // use for the eval stack.  To get hold of those contents, we'll temporarily
+  // installing an empty one in its place.
+  MOZ_ASSERT(stk_.empty());
+  stk_.swap(stkSource_);
+
+  // Assuming that previously processed wasm functions are well formed, the
+  // eval stack should now be empty.  But empty it anyway; any non-emptyness
+  // at this point will cause chaos.
+  stk_.clear();
+}
+
+BaseCompiler::~BaseCompiler() {
+  stk_.swap(stkSource_);
+  // We've returned the eval stack vector contents to our caller,
+  // BaselineCompileFunctions.  We expect the vector we get in return to be
+  // empty since that's what we swapped for the stack vector in our
+  // constructor.
+  MOZ_ASSERT(stk_.empty());
+}
 
 bool BaseCompiler::init() {
   if (!SigD_.append(ValType::F64)) {
@@ -11880,6 +11916,14 @@ bool js::wasm::BaselineCompileFunctions(const ModuleEnvironment& env,
   size_t trapExitLayoutNumWords;
   GenerateTrapExitMachineState(&trapExitLayout, &trapExitLayoutNumWords);
 
+  // The compiler's operand stack.  We reuse it across all functions so as to
+  // avoid malloc/free.  Presize it to 128 elements in the hope of avoiding
+  // reallocation later.
+  StkVector stk;
+  if (!stk.reserve(128)) {
+    return false;
+  }
+
   for (const FuncCompileInput& func : inputs) {
     Decoder d(func.begin, func.end, func.lineOrBytecode, error);
 
@@ -11896,7 +11940,7 @@ bool js::wasm::BaselineCompileFunctions(const ModuleEnvironment& env,
     // One-pass baseline compilation.
 
     BaseCompiler f(env, func, locals, trapExitLayout, trapExitLayoutNumWords, d,
-                   &alloc, &masm, &code->stackMaps);
+                   stk, &alloc, &masm, &code->stackMaps);
     if (!f.init()) {
       return false;
     }
