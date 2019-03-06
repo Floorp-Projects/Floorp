@@ -2252,24 +2252,6 @@ void Gecko_ReportUnexpectedCSSError(const StyleSheet* aSheet,
   reporter.OutputError(lineNumber, colNumber, sourceValue);
 }
 
-void Gecko_AddBufferToCrashReport(const void* addr, size_t len) {
-  MOZ_ASSERT(NS_IsMainThread());
-  nsCOMPtr<nsICrashReporter> cr =
-      do_GetService("@mozilla.org/toolkit/crash-reporter;1");
-  NS_ENSURE_TRUE_VOID(cr);
-  cr->RegisterAppMemory((uint64_t)addr, len);
-}
-
-void Gecko_AnnotateCrashReport(const char* key_str, const char* value_str) {
-  MOZ_ASSERT(NS_IsMainThread());
-  nsDependentCString key(key_str);
-  nsDependentCString value(value_str);
-  nsCOMPtr<nsICrashReporter> cr =
-      do_GetService("@mozilla.org/toolkit/crash-reporter;1");
-  NS_ENSURE_TRUE_VOID(cr);
-  cr->AnnotateCrashReport(key, value);
-}
-
 void Gecko_ContentList_AppendAll(nsSimpleContentList* aList,
                                  const Element** aElements, size_t aLength) {
   MOZ_ASSERT(NS_IsMainThread());

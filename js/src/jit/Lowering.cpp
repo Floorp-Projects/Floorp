@@ -2555,6 +2555,8 @@ void LIRGenerator::visitWasmInterruptCheck(MWasmInterruptCheck* ins) {
   auto* lir =
       new (alloc()) LWasmInterruptCheck(useRegisterAtStart(ins->tlsPtr()));
   add(lir, ins);
+
+  assignWasmSafepoint(lir, ins);
 }
 
 void LIRGenerator::visitWasmTrap(MWasmTrap* ins) {
@@ -4513,6 +4515,8 @@ void LIRGenerator::visitWasmCall(MWasmCall* ins) {
   } else {
     defineReturn(lir, ins);
   }
+
+  assignWasmSafepoint(lir, ins);
 }
 
 void LIRGenerator::visitSetDOMProperty(MSetDOMProperty* ins) {

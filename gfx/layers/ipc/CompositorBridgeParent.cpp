@@ -222,7 +222,7 @@ CompositorBridgeParent::LayerTreeState::LayerTreeState()
     : mApzcTreeManagerParent(nullptr),
       mParent(nullptr),
       mLayerManager(nullptr),
-      mCrossProcessParent(nullptr),
+      mContentCompositorBridgeParent(nullptr),
       mLayerTree(nullptr),
       mUpdatedPluginDataAvailable(false) {}
 
@@ -1680,7 +1680,7 @@ mozilla::ipc::IPCResult CompositorBridgeParent::RecvAdoptChild(
     }
     if (mWrBridge) {
       childWrBridge = sIndirectLayerTrees[child].mWrBridge;
-      cpcp = sIndirectLayerTrees[child].mCrossProcessParent;
+      cpcp = sIndirectLayerTrees[child].mContentCompositorBridgeParent;
     }
     parent = sIndirectLayerTrees[child].mApzcTreeManagerParent;
   }
@@ -1986,7 +1986,7 @@ CompositorBridgeParent::LayerTreeState::GetCompositorController() const {
 
 MetricsSharingController*
 CompositorBridgeParent::LayerTreeState::CrossProcessSharingController() const {
-  return mCrossProcessParent;
+  return mContentCompositorBridgeParent;
 }
 
 MetricsSharingController*
@@ -2120,8 +2120,8 @@ void CompositorBridgeParent::NotifyDidComposite(TransactionId aTransactionId,
   MonitorAutoLock lock(*sIndirectLayerTreesLock);
   ForEachIndirectLayerTree([&](LayerTreeState* lts,
                                const LayersId& aLayersId) -> void {
-    if (lts->mCrossProcessParent && lts->mParent == this) {
-      ContentCompositorBridgeParent* cpcp = lts->mCrossProcessParent;
+    if (lts->mContentCompositorBridgeParent && lts->mParent == this) {
+      ContentCompositorBridgeParent* cpcp = lts->mContentCompositorBridgeParent;
       cpcp->DidCompositeLocked(aLayersId, aId, aCompositeStart, aCompositeEnd);
     }
   });
@@ -2135,8 +2135,8 @@ void CompositorBridgeParent::InvalidateRemoteLayers() {
   MonitorAutoLock lock(*sIndirectLayerTreesLock);
   ForEachIndirectLayerTree(
       [](LayerTreeState* lts, const LayersId& aLayersId) -> void {
-        if (lts->mCrossProcessParent) {
-          ContentCompositorBridgeParent* cpcp = lts->mCrossProcessParent;
+        if (lts->mContentCompositorBridgeParent) {
+          ContentCompositorBridgeParent* cpcp = lts->mContentCompositorBridgeParent;
           Unused << cpcp->SendInvalidateLayers(aLayersId);
         }
       });

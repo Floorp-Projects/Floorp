@@ -6,8 +6,6 @@
 
 "use strict";
 
-// To disable all Web Replay tests, see browser.ini
-
 // Test basic recording of a tab without any debugging.
 add_task(async function() {
   const recordingTab = BrowserTestUtils.addTab(gBrowser, null, { recordExecution: "*" });

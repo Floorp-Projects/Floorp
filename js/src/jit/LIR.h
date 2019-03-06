@@ -1352,6 +1352,25 @@ class LSafepoint : public TempObject {
   // List of slots which have slots/elements pointers.
   SlotList slotsOrElementsSlots_;
 
+  // Wasm only: with what kind of instruction is this LSafepoint associated?
+  // true => wasm trap, false => wasm call.
+  bool isWasmTrap_;
+
+  // Wasm only: what is the value of masm.framePushed() that corresponds to
+  // the lowest-addressed word covered by the StackMap that we will generate
+  // from this LSafepoint?  This depends on the instruction:
+  //
+  // if isWasmTrap_ == true:
+  //    masm.framePushed() unmodified.  Note that when constructing the
+  //    StackMap we will add entries below this point to take account of
+  //    registers dumped on the stack as a result of the trap.
+  //
+  // if isWasmTrap_ == false:
+  //    masm.framePushed() - StackArgAreaSizeUnaligned(arg types for the call),
+  //    because the map does not include the outgoing args themselves, but
+  //    it does cover any and all alignment space above them.
+  uint32_t framePushedAtStackMapBase_;
+
  public:
   void assertInvariants() {
     // Every register in valueRegs and gcRegs should also be in liveRegs.
@@ -1371,7 +1390,9 @@ class LSafepoint : public TempObject {
         nunboxParts_(alloc)
 #endif
         ,
-        slotsOrElementsSlots_(alloc) {
+        slotsOrElementsSlots_(alloc),
+        isWasmTrap_(false),
+        framePushedAtStackMapBase_(0) {
     assertInvariants();
   }
   void addLiveRegister(AnyRegister reg) {
@@ -1613,6 +1634,17 @@ class LSafepoint : public TempObject {
   void setOsiCallPointOffset(uint32_t osiCallPointOffset) {
     MOZ_ASSERT(!osiCallPointOffset_);
     osiCallPointOffset_ = osiCallPointOffset;
+  }
+
+  bool isWasmTrap() const { return isWasmTrap_; }
+  void setIsWasmTrap() { isWasmTrap_ = true; }
+
+  uint32_t framePushedAtStackMapBase() const {
+    return framePushedAtStackMapBase_;
+  }
+  void setFramePushedAtStackMapBase(uint32_t n) {
+    MOZ_ASSERT(framePushedAtStackMapBase_ == 0);
+    framePushedAtStackMapBase_ = n;
   }
 };
 
