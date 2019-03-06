@@ -83,11 +83,11 @@ SimpleTest.waitForExplicitFinish();
 SpecialPowers.pushPrefEnv({
   "set": [["dom.caches.enabled", true],
           ["dom.caches.testing.enabled", true],
-          ["dom.quotaManager.testing", true]]
+          ["dom.quotaManager.testing", true]],
 }, async function() {
-  const name = 'cacheUpdateUsage';
-  const url = 'test_cache_add.js';
-  const other_url = 'test_cache_put.js';
+  const name = "cacheUpdateUsage";
+  const url = "test_cache_add.js";
+  const other_url = "test_cache_put.js";
 
   // This test mainly ensure DOM Cache updates its usage to QuotaManager when
   // executing an operation which creates/deletes files. To do this, we verify
@@ -108,7 +108,7 @@ SpecialPowers.pushPrefEnv({
 
   info("Stage 2.2: Verify caches.delete.");
   var deleted = await caches.delete(name);
-  ok(deleted, 'Cache storage should be deleted');
+  ok(deleted, "Cache storage should be deleted");
   // Reference from test_cache_orphanced_body.html. It ensures that all
   // the runnables have been flushed through the threads.
   await caches.has(name);

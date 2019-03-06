@@ -65,7 +65,7 @@ SpecialPowers.pushPrefEnv({
           ["dom.caches.testing.enabled", true],
           ["dom.quotaManager.testing", true]],
 }, function() {
-  var name = 'foo';
+  var name = "foo";
   var cache = null;
   var initialUsage = 0;
   var fullUsage = 0;
@@ -77,7 +77,7 @@ SpecialPowers.pushPrefEnv({
   }).then(function() {
     return storageUsage();
   }).then(function(usage) {
-    is(0, usage, 'disk usage should be zero to start');
+    is(0, usage, "disk usage should be zero to start");
     return caches.open(name);
   }).then(function(c) {
     cache = c;
@@ -90,7 +90,7 @@ SpecialPowers.pushPrefEnv({
   }).then(function() {
     return cache.keys();
   }).then(function(keyList) {
-    is(keyList.length, largeUrlList.length, 'Large URL list is stored in cache');
+    is(keyList.length, largeUrlList.length, "Large URL list is stored in cache");
     cache = null;
     // Ensure the Cache DOM object is gone before proceeding.  If its alive
     // it will keep the related entries on-disk as well.
@@ -102,10 +102,10 @@ SpecialPowers.pushPrefEnv({
     return storageUsage();
   }).then(function(usage) {
     fullUsage = usage;
-    ok(fullUsage > initialUsage, 'disk usage should have grown');
+    ok(fullUsage > initialUsage, "disk usage should have grown");
     return caches.delete(name);
   }).then(function(result) {
-    ok(result, 'cache should be deleted');
+    ok(result, "cache should be deleted");
     // This is a bit superfluous, but its necessary to make sure the Cache is
     // fully deleted before we proceed.  The deletion actually takes place in
     // two async steps.  We don't want to resetStorage() until the second step
@@ -113,7 +113,7 @@ SpecialPowers.pushPrefEnv({
     // runnables have been flushed through the threads, etc.
     return caches.has(name);
   }).then(function(result) {
-    ok(!result, 'cache should not exist in storage');
+    ok(!result, "cache should not exist in storage");
     // reset the quota manager storage to ensure the DB connection is flushed
     return resetStorage();
   }).then(function() {
@@ -122,8 +122,8 @@ SpecialPowers.pushPrefEnv({
     endUsage = usage;
     dump("### ### initial:" + initialUsage + ", full:" + fullUsage +
          ", end:" + endUsage + "\n");
-    ok(endUsage < (fullUsage / 2), 'disk usage should have shrank significantly');
-    ok(endUsage > initialUsage, 'disk usage should not shrink back to orig size');
+    ok(endUsage < (fullUsage / 2), "disk usage should have shrank significantly");
+    ok(endUsage > initialUsage, "disk usage should not shrink back to orig size");
     SimpleTest.finish();
   });
 });

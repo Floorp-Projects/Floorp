@@ -50,7 +50,7 @@ function setupTestMultipleEntries(headers) {
           return c.add(new Request(requestURL, {headers: h}));
         }));
       }).then(function() {
-        resolve({response: response, responseText: responseText, cache: cache});
+        resolve({response, responseText, cache});
       }).catch(function(err) {
         reject(err);
       });
@@ -257,7 +257,7 @@ function testMultipleCacheEntries() {
   ]).then(function(t) {
     test = t;
     return test.cache.matchAll();
-  }).then(function (r) {
+  }).then(function(r) {
     is(r.length, 2, "Two cache entries should be stored in the DB");
     // Ensure that searching without specifying an Accept-Language header fails.
     return test.cache.matchAll(requestURL);
