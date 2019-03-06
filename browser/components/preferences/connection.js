@@ -7,6 +7,8 @@
 /* import-globals-from ../../../toolkit/content/preferencesBindings.js */
 /* import-globals-from in-content/extensionControlled.js */
 
+document.documentElement.addEventListener("dialoghelp", window.top.openPrefsHelp);
+
 Preferences.addAll([
   // Add network.proxy.autoconfig_url before network.proxy.type so they're
   // both initialized when network.proxy.type initialization triggers a call to
