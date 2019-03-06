@@ -23,9 +23,6 @@ add_task(async () => {
       name: "dev-edition-default",
       path: devProfile.leafName,
     }],
-  });
-
-  writeInstallsIni({
     installs: {
       [hash]: {
         default: dedicatedProfile.leafName,
@@ -40,7 +37,6 @@ add_task(async () => {
   checkStartupReason("default");
 
   let profileData = readProfilesIni();
-  let installData = readInstallsIni();
 
   Assert.ok(profileData.options.startWithLastProfile, "Should be set to start with the last profile.");
   Assert.equal(profileData.profiles.length, 3, "Should have the right number of profiles.");
@@ -55,11 +51,11 @@ add_task(async () => {
   Assert.equal(profile.path, defaultProfile.leafName, "Should be the original default profile.");
   Assert.ok(profile.default, "Should be marked as the old-style default.");
 
-  Assert.equal(Object.keys(installData.installs).length, 2, "Should be two known installs.");
-  Assert.equal(installData.installs[hash].default, dedicatedProfile.leafName, "Should have kept the default for this install.");
-  Assert.equal(installData.installs.otherhash.default, "foobar", "Should have kept the default for the other install.");
+  Assert.equal(Object.keys(profileData.installs).length, 2, "Should be two known installs.");
+  Assert.equal(profileData.installs[hash].default, dedicatedProfile.leafName, "Should have kept the default for this install.");
+  Assert.equal(profileData.installs.otherhash.default, "foobar", "Should have kept the default for the other install.");
 
-  checkProfileService(profileData, installData);
+  checkProfileService(profileData);
 
   Assert.ok(!didCreate, "Should not have created a new profile.");
   Assert.ok(selectedProfile.rootDir.equals(dedicatedProfile), "Should be using the right directory.");
