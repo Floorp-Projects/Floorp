@@ -1268,19 +1268,25 @@ WebConsoleActor.prototype =
    * The "clearMessagesCache" request handler.
    */
   clearMessagesCache: function() {
-    // TODO: Bug 717611 - Web Console clear button does not clear cached errors
-    const windowId = !this.parentActor.isRootActor ?
-                   WebConsoleUtils.getInnerWindowId(this.window) : null;
-    const ConsoleAPIStorage = Cc["@mozilla.org/consoleAPI-storage;1"]
-                              .getService(Ci.nsIConsoleAPIStorage);
+    const windowId = !this.parentActor.isRootActor
+      ? WebConsoleUtils.getInnerWindowId(this.window)
+      : null;
+    const ConsoleAPIStorage =
+      Cc["@mozilla.org/consoleAPI-storage;1"].getService(Ci.nsIConsoleAPIStorage);
     ConsoleAPIStorage.clearEvents(windowId);
 
     CONSOLE_WORKER_IDS.forEach((id) => {
       ConsoleAPIStorage.clearEvents(id);
     });
 
+    // If were dealing with the root actor (e.g. the browser console), we want to remove
+    // every cached messages. Calling this.consoleServiceListener.clearCachedMessages
+    // wouldn't work as even the browser console has a window, and that would only clear
+    // cached messages for that window (and not the content messages for example).
     if (this.parentActor.isRootActor) {
       Services.console.reset();
+    } else {
+      this.consoleServiceListener.clearCachedMessages();
     }
   },
 
