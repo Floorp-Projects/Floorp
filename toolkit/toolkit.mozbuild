@@ -159,6 +159,7 @@ DIRS += [
 if 'gtk' in CONFIG['MOZ_WIDGET_TOOLKIT']:
     DIRS += [
         '/toolkit/system/gnome',
+        '/widget/xremoteclient',
     ]
 
 if CONFIG['ENABLE_MARIONETTE']:

@@ -8,44 +8,31 @@
 #ifndef __nsRemoteService_h__
 #define __nsRemoteService_h__
 
-#include "nsRemoteServer.h"
+#include "nsIRemoteService.h"
 #include "nsIObserverService.h"
 #include "nsIObserver.h"
 #include "nsPIDOMWindow.h"
-#include "mozilla/UniquePtr.h"
-#include "nsIFile.h"
-#include "nsProfileLock.h"
 
-enum RemoteResult {
-  REMOTE_NOT_FOUND = 0,
-  REMOTE_FOUND = 1,
-  REMOTE_ARG_BAD = 2
-};
-
-class nsRemoteService final : public nsIObserver {
+class nsRemoteService final : public nsIRemoteService, public nsIObserver {
  public:
   // We will be a static singleton, so don't use the ordinary methods.
   NS_DECL_ISUPPORTS
+  NS_DECL_NSIREMOTESERVICE
   NS_DECL_NSIOBSERVER
 
-  explicit nsRemoteService(const char* aProgram);
-  void SetProfile(nsACString& aProfile);
+  static const char* HandleCommandLine(const char* aBuffer,
+                                       uint32_t aTimestamp);
 
-  void LockStartup();
-  void UnlockStartup();
+  nsCOMPtr<nsIRemoteService> mDBusRemoteService;
+  nsCOMPtr<nsIRemoteService> mGtkRemoteService;
 
-  RemoteResult StartClient(const char* aDesktopStartupID);
-  void StartupServer();
-  void ShutdownServer();
+  nsRemoteService() {}
 
  private:
   ~nsRemoteService();
 
-  mozilla::UniquePtr<nsRemoteServer> mRemoteServer;
-  nsProfileLock mRemoteLock;
-  nsCOMPtr<nsIFile> mRemoteLockDir;
-  nsCString mProgram;
-  nsCString mProfile;
+  static void SetDesktopStartupIDOrTimestamp(
+      const nsACString& aDesktopStartupID, uint32_t aTimestamp);
 };
 
 #endif  // __nsRemoteService_h__

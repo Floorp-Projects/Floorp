@@ -7,33 +7,31 @@
 with Files('**'):
     BUG_COMPONENT = ('Toolkit', 'Startup and Profile System')
 
+XPIDL_SOURCES += [
+    'nsIRemoteService.idl',
+]
+
+XPIDL_MODULE = 'toolkitremote'
+
 SOURCES += [
-    'nsRemoteService.cpp',
+    'nsXRemoteService.cpp',
 ]
 
 if 'gtk' in CONFIG['MOZ_WIDGET_TOOLKIT']:
     SOURCES += [
-        'nsGTKRemoteServer.cpp',
-        'nsUnixRemoteServer.cpp',
-        'nsXRemoteClient.cpp',
-        'nsXRemoteServer.cpp',
-        'RemoteUtils.cpp',
+        'nsGTKRemoteService.cpp',
+        'nsRemoteService.cpp',
     ]
     if CONFIG['MOZ_ENABLE_DBUS']:
         SOURCES += [
-            'nsDBusRemoteClient.cpp',
-            'nsDBusRemoteServer.cpp',
+            'nsDBusRemoteService.cpp',
         ]
         CXXFLAGS += CONFIG['MOZ_DBUS_GLIB_CFLAGS']
-    CXXFLAGS += CONFIG['TK_CFLAGS']
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
-    SOURCES += [
-        'nsWinRemoteClient.cpp',
-        'nsWinRemoteServer.cpp',
+    XPCOM_MANIFESTS += [
+        'components.conf',
     ]
 
-LOCAL_INCLUDES += [
-    '../../profile',
-]
 FINAL_LIBRARY = 'xul'
+
+CXXFLAGS += CONFIG['TK_CFLAGS']
