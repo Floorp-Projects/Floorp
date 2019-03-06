@@ -9,7 +9,6 @@ use display_list_flattener::{CreateShadow, IsVisible};
 use frame_builder::{FrameBuildingState, PictureContext};
 use glyph_rasterizer::{FontInstance, FontTransform, GlyphKey, FONT_SIZE_LIMIT};
 use gpu_cache::GpuCache;
-use gpu_types::RasterizationSpace;
 use intern;
 use prim_store::{PrimitiveOpacity, PrimitiveSceneData,  PrimitiveScratchBuffer};
 use prim_store::{PrimitiveStore, PrimKeyCommonData, PrimTemplateCommonData};
@@ -174,8 +173,7 @@ impl InternablePrimitive for TextRun {
             glyph_keys_range: storage::Range::empty(),
             reference_frame_relative_offset,
             shadow: key.shadow,
-            raster_space: RasterizationSpace::Screen,
-            inverse_raster_scale: 1.0,
+            raster_space: RasterSpace::Screen,
         });
 
         PrimitiveInstanceKind::TextRun{ data_handle, run_index }
@@ -213,8 +211,7 @@ pub struct TextRunPrimitive {
     pub glyph_keys_range: storage::Range<GlyphKey>,
     pub reference_frame_relative_offset: LayoutVector2D,
     pub shadow: bool,
-    pub raster_space: RasterizationSpace,
-    pub inverse_raster_scale: f32,
+    pub raster_space: RasterSpace,
 }
 
 impl TextRunPrimitive {
@@ -232,11 +229,7 @@ impl TextRunPrimitive {
         //           will implicitly be part of the device pixel ratio for
         //           the (cached) local space surface, and so this code
         //           will no longer be required.
-        let raster_scale = match raster_space {
-            RasterSpace::Screen => 1.0,
-            RasterSpace::Local(scale) => scale.max(0.001),
-        };
-        self.inverse_raster_scale = 1.0 / raster_scale;
+        let raster_scale = raster_space.local_scale().unwrap_or(1.0).max(0.001);
 
         // Get the current font size in device pixels
         let device_font_size = specified_font.size.scale_by(device_pixel_scale.0 * raster_scale);
@@ -262,11 +255,7 @@ impl TextRunPrimitive {
         };
 
         // Record the raster space the text needs to be snapped in.
-        self.raster_space = if raster_space == RasterSpace::Screen {
-            RasterizationSpace::Screen
-        } else {
-            RasterizationSpace::Local
-        };
+        self.raster_space = raster_space;
 
         // If the transform or device size is different, then the caller of
         // this method needs to know to rebuild the glyphs.
