@@ -1,8 +1,0 @@
-. "$topsrcdir/build/mozconfig.artifact.automation"
-
-. "$topsrcdir/build/unix/mozconfig.linux32"
-. "$topsrcdir/build/mozconfig.common.override"
-
-. "$topsrcdir/build/mozconfig.artifact"
-
-ac_add_options --enable-debug

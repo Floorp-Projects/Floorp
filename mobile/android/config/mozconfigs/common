@@ -3,7 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 # This file is included at the top of all native android mozconfigs
-if [ -z "$NO_NDK" ]; then
+if [ -z "$NO_NDK" -a -z "$USE_ARTIFACT" ]; then
   . "$topsrcdir/build/mozconfig.stylo"
 fi
 
@@ -25,7 +25,7 @@ ac_add_options --with-android-sdk="$topsrcdir/android-sdk-linux"
 ac_add_options --with-gradle="$topsrcdir/android-gradle-dependencies/gradle-dist/bin/gradle"
 export GRADLE_MAVEN_REPOSITORIES="file://$topsrcdir/android-gradle-dependencies/google","file://$topsrcdir/android-gradle-dependencies/jcenter","file://$topsrcdir/android-gradle-dependencies/gradle-plugins"
 
-if [ -z "$NO_NDK" ]; then
+if [ -z "$NO_NDK" -a -z "$USE_ARTIFACT" ]; then
     # We use our own clang instead of the NDK's clang.
     CC="$topsrcdir/clang/bin/clang"
     CXX="$topsrcdir/clang/bin/clang++"

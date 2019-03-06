@@ -1,9 +1,0 @@
-. "$topsrcdir/build/mozconfig.artifact.automation"
-
-# Needed to set SourceRepository in application.ini (used by Talos)
-export MOZILLA_OFFICIAL=1
-
-. "$topsrcdir/build/macosx/mozconfig.common"
-. "$topsrcdir/build/mozconfig.common.override"
-
-. "$topsrcdir/build/mozconfig.artifact"

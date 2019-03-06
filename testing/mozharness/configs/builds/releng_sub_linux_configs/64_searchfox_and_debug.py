@@ -36,6 +36,4 @@ config = {
     # This doesn't actually inherit from anything.
     'mozconfig_platform': 'linux64',
     'mozconfig_variant': 'debug-searchfox-clang',
-    #######################
-    'artifact_flag_build_variant_in_try': None,
 }

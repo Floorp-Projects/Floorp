@@ -33,6 +33,4 @@ config = {
     # This doesn't actually inherit from anything.
     'mozconfig_platform': 'linux64',
     'mozconfig_variant': 'debug-static-analysis-clang',
-    #######################
-    'artifact_flag_build_variant_in_try': None,
 }
