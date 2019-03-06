@@ -72,7 +72,7 @@ download_mars () {
       if [ "$test_only" == "1" ]
       then
         echo "Testing $URL"
-        curl -k -s -I -L $URL
+        curl -s -I -L $URL
         return
       else
         cached_download "update/${patch_type}.mar" "${URL}"

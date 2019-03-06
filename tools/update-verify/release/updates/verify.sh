@@ -158,7 +158,7 @@ do
       else
         mkdir -p updates/${update_path}/complete
         mkdir -p updates/${update_path}/partial
-        $retry wget --no-check-certificate -q -O ${patch_type} updates/${update_path}/${patch_type}/update.xml "${aus_server}/update/3/${update_path}/update.xml?force=1"
+        $retry wget -q -O ${patch_type} updates/${update_path}/${patch_type}/update.xml "${aus_server}/update/3/${update_path}/update.xml?force=1"
 
       fi
       if [ "$runmode" == "$COMPLETE" ]
