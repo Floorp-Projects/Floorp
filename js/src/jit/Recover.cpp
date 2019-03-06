@@ -1254,13 +1254,10 @@ bool RNewArray::recover(JSContext* cx, SnapshotIterator& iter) const {
 bool MNewArrayCopyOnWrite::writeRecoverData(CompactBufferWriter& writer) const {
   MOZ_ASSERT(canRecoverOnBailout());
   writer.writeUnsigned(uint32_t(RInstruction::Recover_NewArrayCopyOnWrite));
-  writer.writeByte(initialHeap());
   return true;
 }
 
-RNewArrayCopyOnWrite::RNewArrayCopyOnWrite(CompactBufferReader& reader) {
-  initialHeap_ = gc::InitialHeap(reader.readByte());
-}
+RNewArrayCopyOnWrite::RNewArrayCopyOnWrite(CompactBufferReader& reader) {}
 
 bool RNewArrayCopyOnWrite::recover(JSContext* cx,
                                    SnapshotIterator& iter) const {
@@ -1268,8 +1265,7 @@ bool RNewArrayCopyOnWrite::recover(JSContext* cx,
                                    &iter.read().toObject().as<ArrayObject>());
   RootedValue result(cx);
 
-  ArrayObject* resultObject =
-      NewDenseCopyOnWriteArray(cx, templateObject, initialHeap_);
+  ArrayObject* resultObject = NewDenseCopyOnWriteArray(cx, templateObject);
   if (!resultObject) {
     return false;
   }
