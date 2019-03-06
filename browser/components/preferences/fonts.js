@@ -18,6 +18,8 @@ const kFontSizeFmtVariable      = "font.size.variable.%LANG%";
 const kFontSizeFmtFixed         = "font.size.fixed.%LANG%";
 const kFontMinSizeFmt           = "font.minimum-size.%LANG%";
 
+document.documentElement.addEventListener("dialoghelp", window.top.openPrefsHelp);
+
 Preferences.addAll([
   { id: "font.language.group", type: "wstring" },
   { id: "browser.display.use_document_fonts", type: "int" },
