@@ -161,6 +161,17 @@ ConsoleServiceListener.prototype =
     });
   },
 
+  clearCachedMessages: function() {
+    // if !this.window, we're in a browser console. Still need to filter
+    // private messages.
+    if (!this.window) {
+      Services.console.reset();
+    } else {
+      WebConsoleUtils.getInnerWindowIDsForFrames(this.window)
+        .forEach(id => Services.console.resetWindow(id));
+    }
+  },
+
   /**
    * Remove the nsIConsoleService listener.
    */
