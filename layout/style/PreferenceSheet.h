@@ -31,6 +31,9 @@ struct PreferenceSheet {
     nscolor mFocusTextColor = mDefaultColor;
     nscolor mFocusBackgroundColor = mDefaultBackgroundColor;
 
+    bool mIsChrome = false;
+    bool mUseAccessibilityTheme = false;
+
     bool mUnderlineLinks = true;
     bool mUseFocusColors = false;
     uint8_t mFocusRingWidth = 1;
@@ -63,7 +66,6 @@ struct PreferenceSheet {
   }
 
   static bool ShouldUseChromePrefs(const dom::Document&);
-  static bool UseAccessibilityTheme(bool aIsChrome);
   static const Prefs& PrefsFor(const dom::Document& aDocument) {
     return ShouldUseChromePrefs(aDocument) ? ChromePrefs() : ContentPrefs();
   }
