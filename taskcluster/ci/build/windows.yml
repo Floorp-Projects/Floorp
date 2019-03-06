@@ -571,7 +571,6 @@ win32-rusttests/opt:
             - builds/taskcluster_base_win32.py
         extra-config:
             stage_platform: win32-rusttests
-            artifact_flag_build_variant_in_try: null
             build_targets: ['pre-export', 'export', 'recurse_rusttests']
             disable_package_metrics: true
         mozconfig-variant: rusttests
@@ -610,7 +609,6 @@ win32-rusttests/debug:
             - builds/taskcluster_base_win32.py
         extra-config:
             stage_platform: win32-rusttests
-            artifact_flag_build_variant_in_try: null
             build_targets: ['pre-export', 'export', 'recurse_rusttests']
             disable_package_metrics: true
         mozconfig-variant: rusttests-debug

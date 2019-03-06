@@ -13,6 +13,5 @@ config = {
          '--upload-message', 'Update {project} javadoc to rev {revision}',
         ],
     ],
-    'artifact_flag_build_variant_in_try': None, # There's no artifact equivalent.
     'max_build_output_timeout': 0,
 }

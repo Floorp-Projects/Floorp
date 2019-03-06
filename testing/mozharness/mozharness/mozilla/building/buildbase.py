@@ -353,10 +353,8 @@ class BuildOptionParser(object):
         'tsan': 'builds/releng_sub_%s_configs/%s_tsan.py',
         'cross-debug': 'builds/releng_sub_%s_configs/%s_cross_debug.py',
         'cross-debug-searchfox': 'builds/releng_sub_%s_configs/%s_cross_debug_searchfox.py',
-        'cross-debug-artifact': 'builds/releng_sub_%s_configs/%s_cross_debug_artifact.py',
         'cross-noopt-debug': 'builds/releng_sub_%s_configs/%s_cross_noopt_debug.py',
         'cross-fuzzing-asan': 'builds/releng_sub_%s_configs/%s_cross_fuzzing_asan.py',
-        'cross-artifact': 'builds/releng_sub_%s_configs/%s_cross_artifact.py',
         'debug': 'builds/releng_sub_%s_configs/%s_debug.py',
         'fuzzing-debug': 'builds/releng_sub_%s_configs/%s_fuzzing_debug.py',
         'asan-and-debug': 'builds/releng_sub_%s_configs/%s_asan_and_debug.py',
@@ -369,29 +367,21 @@ class BuildOptionParser(object):
         'api-16-gradle-dependencies':
             'builds/releng_sub_%s_configs/%s_api_16_gradle_dependencies.py',
         'api-16': 'builds/releng_sub_%s_configs/%s_api_16.py',
-        'api-16-artifact': 'builds/releng_sub_%s_configs/%s_api_16_artifact.py',
         'api-16-debug': 'builds/releng_sub_%s_configs/%s_api_16_debug.py',
         'api-16-debug-ccov': 'builds/releng_sub_%s_configs/%s_api_16_debug_ccov.py',
-        'api-16-debug-artifact': 'builds/releng_sub_%s_configs/%s_api_16_debug_artifact.py',
         'api-16-debug-searchfox': 'builds/releng_sub_%s_configs/%s_api_16_debug_searchfox.py',
         'api-16-gradle': 'builds/releng_sub_%s_configs/%s_api_16_gradle.py',
-        'api-16-gradle-artifact': 'builds/releng_sub_%s_configs/%s_api_16_gradle_artifact.py',
         'api-16-without-google-play-services':
             'builds/releng_sub_%s_configs/%s_api_16_without_google_play_services.py',
         'rusttests': 'builds/releng_sub_%s_configs/%s_rusttests.py',
         'rusttests-debug': 'builds/releng_sub_%s_configs/%s_rusttests_debug.py',
         'x86': 'builds/releng_sub_%s_configs/%s_x86.py',
-        'x86-artifact': 'builds/releng_sub_%s_configs/%s_x86_artifact.py',
         'x86-fuzzing-debug': 'builds/releng_sub_%s_configs/%s_x86_fuzzing_debug.py',
         'x86_64': 'builds/releng_sub_%s_configs/%s_x86_64.py',
-        'x86_64-artifact': 'builds/releng_sub_%s_configs/%s_x86_64_artifact.py',
         'x86_64-debug': 'builds/releng_sub_%s_configs/%s_x86_64_debug.py',
-        'x86_64-debug-artifact': 'builds/releng_sub_%s_configs/%s_x86_64_debug_artifact.py',
         'api-16-partner-sample1': 'builds/releng_sub_%s_configs/%s_api_16_partner_sample1.py',
         'aarch64': 'builds/releng_sub_%s_configs/%s_aarch64.py',
-        'aarch64-artifact': 'builds/releng_sub_%s_configs/%s_aarch64_artifact.py',
         'aarch64-debug': 'builds/releng_sub_%s_configs/%s_aarch64_debug.py',
-        'aarch64-debug-artifact': 'builds/releng_sub_%s_configs/%s_aarch64_debug_artifact.py',
         'android-test': 'builds/releng_sub_%s_configs/%s_test.py',
         'android-test-ccov': 'builds/releng_sub_%s_configs/%s_test_ccov.py',
         'android-checkstyle': 'builds/releng_sub_%s_configs/%s_checkstyle.py',
@@ -400,8 +390,6 @@ class BuildOptionParser(object):
         'android-findbugs': 'builds/releng_sub_%s_configs/%s_findbugs.py',
         'android-geckoview-docs': 'builds/releng_sub_%s_configs/%s_geckoview_docs.py',
         'valgrind': 'builds/releng_sub_%s_configs/%s_valgrind.py',
-        'artifact': 'builds/releng_sub_%s_configs/%s_artifact.py',
-        'debug-artifact': 'builds/releng_sub_%s_configs/%s_debug_artifact.py',
         'tup': 'builds/releng_sub_%s_configs/%s_tup.py',
     }
     build_pool_cfg_file = 'builds/build_pool_specifics.py'
@@ -1288,7 +1276,7 @@ or run without that action (ie: --no-{action})"
         )
 
     def check_test(self):
-        if self.config.get('forced_artifact_build'):
+        if os.environ.get('USE_ARTIFACT'):
             self.info('Skipping due to forced artifact build.')
             return
         c = self.config
@@ -1626,7 +1614,7 @@ or run without that action (ie: --no-{action})"
         """
         self.info('Collecting build metrics')
 
-        if self.config.get('forced_artifact_build'):
+        if os.environ.get('USE_ARTIFACT'):
             self.info('Skipping due to forced artifact build.')
             return
 
