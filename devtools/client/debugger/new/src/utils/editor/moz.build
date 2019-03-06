@@ -7,7 +7,7 @@ DIRS += [
 
 ]
 
-DebuggerModules(
+CompiledModules(
     'create-editor.js',
     'get-expression.js',
     'get-token-location.js',

@@ -7,7 +7,7 @@ DIRS += [
 
 ]
 
-DebuggerModules(
+CompiledModules(
     'astBreakpointLocation.js',
     'breakpointPositions.js',
     'index.js',

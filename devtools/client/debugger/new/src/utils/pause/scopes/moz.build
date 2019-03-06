@@ -7,7 +7,7 @@ DIRS += [
 
 ]
 
-DebuggerModules(
+CompiledModules(
     'getScope.js',
     'getVariables.js',
     'index.js',
