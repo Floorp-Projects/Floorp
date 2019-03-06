@@ -32,17 +32,20 @@ var gFileContent02 = "hello.world.02('bug651942');";
 var gFileContent03 = "hello.world.03('bug651942');";
 var gFileContent04 = "hello.world.04('bug651942');";
 
-async function startTest() {
+// Return a promise that will be resolved after one event loop turn.
+function snooze() {
+  return new Promise(resolve => setTimeout(resolve, 0));
+}
+
+async function testAddedToRecent() {
   gScratchpad = gScratchpadWindow.Scratchpad;
 
   gFile01 = await createAndLoadTemporaryFile(gFileName01, gFileContent01);
   gFile02 = await createAndLoadTemporaryFile(gFileName02, gFileContent02);
   gFile03 = await createAndLoadTemporaryFile(gFileName03, gFileContent03);
-}
 
-// Test to see if the three files we created in the 'startTest()'-method have
-// been added to the list of recent files.
-async function testAddedToRecent() {
+  // Test to see if the files we just created have been added to the list of
+  // recent files.
   lists.recentFiles01 = gScratchpad.getRecentFiles();
 
   is(lists.recentFiles01.length, 3,
@@ -50,11 +53,9 @@ async function testAddedToRecent() {
 
   // Create a 4th file, this should clear the oldest file.
   gFile04 = await createAndLoadTemporaryFile(gFileName04, gFileContent04);
-}
 
-// We have opened a 4th file. Test to see if the oldest recent file was removed,
-// and that the other files were reordered successfully.
-function testOverwriteRecent() {
+  // Test to see if the oldest recent file was removed,
+  // and that the other files were reordered successfully.
   lists.recentFiles02 = gScratchpad.getRecentFiles();
 
   is(lists.recentFiles02[0], lists.recentFiles01[1],
@@ -65,12 +66,10 @@ function testOverwriteRecent() {
         "File04: was added successfully.");
 
   // Open the oldest recent file.
-  gScratchpad.openFile(0);
-}
+  await gScratchpad.openFile(0);
 
-// We have opened the "oldest"-recent file. Test to see if it is now the most
-// recent file, and that the other files were reordered successfully.
-function testOpenOldestRecent() {
+  // Test to see if it is now the most recent file, and that the other files
+  // were reordered successfully.
   lists.recentFiles03 = gScratchpad.getRecentFiles();
 
   is(lists.recentFiles02[0], lists.recentFiles03[2],
@@ -79,24 +78,34 @@ function testOpenOldestRecent() {
      "File03 was reordered successfully in the 'recent files'-list.");
   is(lists.recentFiles02[2], lists.recentFiles03[1],
      "File02 was reordered successfully in the 'recent files'-list.");
-
-  Services.prefs.setIntPref("devtools.scratchpad.recentFilesMax", 0);
 }
 
-// The "devtools.scratchpad.recentFilesMax"-preference was set to zero (0).
-// This should disable the "Open Recent"-menu by hiding it (this should not
-// remove any files from the list). Test to see if it's been hidden.
-function testHideMenu() {
+async function testHideMenu() {
+  Services.prefs.setIntPref("devtools.scratchpad.recentFilesMax", 0);
+
+  // Give the Scratchpad UI time to react to the pref change, via its observer.
+  // This is a race condition; to fix it, Scratchpad would need to give us some
+  // indication that it was finished responding to a pref update - perhaps by
+  // emitting an event.
+  await snooze();
+
+  // The "devtools.scratchpad.recentFilesMax"-preference was set to zero (0).
+  // This should disable the "Open Recent"-menu by hiding it (this should not
+  // remove any files from the list). Test to see if it's been hidden.
   const menu = gScratchpadWindow.document.getElementById("sp-open_recent-menu");
   ok(menu.hasAttribute("hidden"), "The menu was hidden successfully.");
-
-  Services.prefs.setIntPref("devtools.scratchpad.recentFilesMax", 2);
 }
 
-// We have set the recentFilesMax-pref to one (1), this enables the feature,
-// removes the two oldest files, rebuilds the menu and removes the
-// "hidden"-attribute from it. Test to see if this works.
-function testChangedMaxRecent() {
+async function testEnableMenu() {
+  Services.prefs.setIntPref("devtools.scratchpad.recentFilesMax", 2);
+
+  // Give the Scratchpad UI time to react to the pref change. This is a race
+  // condition; see the comment in testHideMenu.
+  await snooze();
+
+  // We have set the recentFilesMax pref to a nonzero value. This enables the
+  // feature, removes the oldest files, rebuilds the menu and removes the
+  // "hidden"-attribute from it. Test to see if this works.
   const menu = gScratchpadWindow.document.getElementById("sp-open_recent-menu");
   ok(!menu.hasAttribute("hidden"), "The menu is visible. \\o/");
 
@@ -117,30 +126,24 @@ function testChangedMaxRecent() {
 
   is(correctMenuItem, true,
      "Two recent files were successfully removed from the 'Open Recent'-menu");
+}
 
+async function testOpenDeletedFile() {
   // We now remove one file from the harddrive and use the recent-menuitem for
   // it to make sure the user is notified that the file no longer exists.
   // This is tested in testOpenDeletedFile().
   gFile04.remove(false);
 
-  // Make sure the file has been deleted before continuing to avoid
-  // intermittent oranges.
-  waitForFileDeletion();
-}
-
-function waitForFileDeletion() {
-  if (gFile04.exists()) {
-    executeSoon(waitForFileDeletion);
-    return;
+  // Make sure the file has been deleted before continuing.
+  while (gFile04.exists()) {
+    await snooze();
   }
-
   gFile04 = null;
-  gScratchpad.openFile(0);
-}
 
-// By now we should have two recent files stored in the list but one of the
-// files should be missing on the harddrive.
-function testOpenDeletedFile() {
+  // By now we should have two recent files stored in the list but one of the
+  // files should be missing on the harddrive.
+  await gScratchpad.openFile(0);
+
   const doc = gScratchpadWindow.document;
   const popup = doc.getElementById("sp-menu-open_recentPopup");
 
@@ -155,13 +158,19 @@ function testOpenDeletedFile() {
   is(gScratchpad.notificationBox.currentNotification.messageText.textContent,
      gScratchpad.strings.GetStringFromName("fileNoLongerExists.notification"),
      "The notification label is correct.");
-
-  gScratchpad.clearRecentFiles();
 }
 
-// We have cleared the last file. Test to see if the last file was removed,
-// the menu is empty and was disabled successfully.
-function testClearedAll() {
+async function testClearAll() {
+  gScratchpad.clearRecentFiles();
+
+  // Give the UI time to react to the recent files being cleared out. This is a
+  // race condition. The clearRecentFiles method works asynchronously, but
+  // there is no way to wait for it to finish. A single event loop turn should
+  // be good enough.
+  await snooze();
+
+  // We have cleared the last file. Test to see if the last file was removed,
+  // the menu is empty and was disabled successfully.
   const doc = gScratchpadWindow.document;
   const menu = doc.getElementById("sp-open_recent-menu");
   const popup = doc.getElementById("sp-menu-open_recentPopup");
@@ -171,8 +180,6 @@ function testClearedAll() {
   is(popup.children.length, 0, "All menuitems removed successfully.");
   ok(menu.hasAttribute("disabled"),
      "No files in the menu, it was disabled successfully.");
-
-  finishTest();
 }
 
 async function createAndLoadTemporaryFile(aFileName, aFileContent) {
@@ -212,124 +219,33 @@ function checkIfMenuIsPopulated() {
   }
 }
 
-/**
- * The PreferenceObserver listens for preference changes while Scratchpad is
- * running.
- */
-var PreferenceObserver = {
-  _initialized: false,
-
-  _timesFired: 0,
-  set timesFired(aNewValue) {
-    this._timesFired = aNewValue;
-  },
-  get timesFired() {
-    return this._timesFired;
-  },
-
-  init: function PO_init() {
-    if (this._initialized) {
-      return;
-    }
-
-    this.branch = Services.prefs.getBranch("devtools.scratchpad.");
-    this.branch.addObserver("", this);
-    this._initialized = true;
-  },
-
-  async observe(message, topic, data) {
-    if (topic != "nsPref:changed") {
-      return;
-    }
-
-    if (this._inProgress) {
-      await this._inProgress;
-    }
-
-    this._inProgress = new Promise(async resolve => {
-      info(`Times fired: ${this.timesFired}`);
-      switch (this.timesFired) {
-        case 0:
-          this.timesFired = 1;
-          break;
-        case 1:
-          this.timesFired = 2;
-          break;
-        case 2:
-          this.timesFired = 3;
-          await testAddedToRecent();
-          break;
-        case 3:
-          this.timesFired = 4;
-          testOverwriteRecent();
-          break;
-        case 4:
-          this.timesFired = 5;
-          testOpenOldestRecent();
-          break;
-        case 5:
-          this.timesFired = 6;
-          testHideMenu();
-          break;
-        case 6:
-          this.timesFired = 7;
-          testChangedMaxRecent();
-          break;
-        case 7:
-          this.timesFired = 8;
-          testOpenDeletedFile();
-          break;
-        case 8:
-          this.timesFired = 9;
-          testClearedAll();
-          break;
-      }
-
-      this._inProgress = null;
-      resolve();
-    });
-  },
-
-  uninit: function PO_uninit() {
-    this.branch.removeObserver("", this);
-  },
-};
-
-function test() {
+async function test() {
   waitForExplicitFinish();
 
   registerCleanupFunction(function() {
     gFile01.remove(false);
-    gFile01 = null;
     gFile02.remove(false);
-    gFile02 = null;
     gFile03.remove(false);
-    gFile03 = null;
-    // gFile04 was removed earlier.
-    lists.recentFiles01 = null;
-    lists.recentFiles02 = null;
-    lists.recentFiles03 = null;
-    lists.recentFiles04 = null;
-    gScratchpad = null;
-
-    PreferenceObserver.uninit();
+    // If all tests passed, gFile04 was already removed, but just in case:
+    if (gFile04) {
+      gFile04.remove(false);
+    }
     Services.prefs.clearUserPref("devtools.scratchpad.recentFilesMax");
   });
 
   Services.prefs.setIntPref("devtools.scratchpad.recentFilesMax", 3);
 
-  // Initiate the preference observer after we have set the temporary recent
-  // files max for this test.
-  PreferenceObserver.init();
-
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
-  BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser).then(function() {
-    openScratchpad(startTest);
-  });
-
+  const loaded = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
   BrowserTestUtils.loadURI(gBrowser, "data:text/html,<p>test recent files in Scratchpad");
-}
+  await loaded;
+  await new Promise(openScratchpad);
 
-function finishTest() {
+  await testAddedToRecent();
+  await testHideMenu();
+  await testEnableMenu();
+  await testOpenDeletedFile();
+  await testClearAll();
+
   finish();
 }
