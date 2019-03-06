@@ -23,16 +23,21 @@ from mozrunner import runners
 
 # need this so raptor imports work both from /raptor and via mach
 here = os.path.abspath(os.path.dirname(__file__))
+paths = [here]
 if os.environ.get('SCRIPTSPATH', None) is not None:
     # in production it is env SCRIPTS_PATH
-    mozharness_dir = os.environ['SCRIPTSPATH']
+    paths.append(os.environ['SCRIPTSPATH'])
 else:
     # locally it's in source tree
-    mozharness_dir = os.path.join(here, '../../../mozharness')
-sys.path.insert(0, mozharness_dir)
+    paths.append(os.path.join(here, '..', '..', 'mozharness'))
 
-webext_dir = os.path.join(os.path.dirname(here), 'webext')
-sys.path.insert(0, here)
+webext_dir = os.path.join(here, '..', 'webext')
+paths.append(webext_dir)
+
+for path in paths:
+    if not os.path.exists(path):
+        raise IOError("%s does not exist. " % path)
+    sys.path.insert(0, path)
 
 try:
     from mozbuild.base import MozbuildObject
@@ -46,7 +51,7 @@ from control_server import RaptorControlServer
 from gen_test_config import gen_test_config
 from outputhandler import OutputHandler
 from manifest import get_raptor_test_list
-from playback import get_playback
+from mozproxy import get_playback
 from results import RaptorResultsHandler
 from gecko_profile import GeckoProfile
 from power import init_geckoview_power_test, finish_geckoview_power_test
@@ -196,6 +201,12 @@ class Raptor(object):
         _key = 'playback_pageset_zip_%s' % self.config['platform']
         self.config['playback_pageset_zip'] = test.get(_key, None)
         self.config['playback_recordings'] = test.get('playback_recordings', None)
+        playback_dir = os.path.join(here, 'playback')
+        for key in ('playback_pageset_manifest', 'playback_pageset_zip'):
+            if self.config.get(key) is None:
+                continue
+            self.config[key] = os.path.join(playback_dir, self.config[key])
+        self.config['custom_script'] = os.path.join(playback_dir, 'alternate-server-replay.py')
 
     def serve_benchmark_source(self, test):
         # benchmark-type tests require the benchmark test to be served out

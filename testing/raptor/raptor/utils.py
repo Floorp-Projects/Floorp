@@ -6,14 +6,11 @@
 from __future__ import absolute_import
 
 import os
-import signal
 import subprocess
 import sys
 import time
-import urllib
 
 from mozlog import get_proxy_logger, get_default_logger
-from mozprocess import ProcessHandler
 
 LOG = get_proxy_logger(component="raptor-utils")
 here = os.path.dirname(os.path.realpath(__file__))
@@ -60,57 +57,6 @@ def transform_platform(str_to_transform, config_platform, config_processor=None)
             str_to_transform = str_to_transform.replace('{x64}', '')
 
     return str_to_transform
-
-
-def tooltool_download(manifest, run_local, raptor_dir):
-    """Download a file from tooltool using the provided tooltool manifest"""
-    def outputHandler(line):
-        LOG.info(line)
-    if run_local:
-        command = [sys.executable,
-                   TOOLTOOL_PATH,
-                   'fetch',
-                   '-o',
-                   '-m', manifest]
-    else:
-        # we want to use the tooltool cache in production
-        if os.environ.get('TOOLTOOLCACHE', None) is not None:
-            _cache = os.environ['TOOLTOOLCACHE']
-        else:
-            _cache = "/builds/tooltool_cache"
-
-        command = [sys.executable,
-                   TOOLTOOL_PATH,
-                   'fetch',
-                   '-o',
-                   '-m', manifest,
-                   '-c',
-                   _cache]
-
-    proc = ProcessHandler(
-        command, processOutputLine=outputHandler, storeOutput=False,
-        cwd=raptor_dir)
-
-    proc.run()
-
-    try:
-        proc.wait()
-    except Exception:
-        if proc.poll() is None:
-            proc.kill(signal.SIGTERM)
-
-
-def download_file_from_url(url, local_dest):
-    """Receive a file in a URL and download it, i.e. for the hostutils tooltool manifest
-    the url received would be formatted like this:
-    https://hg.mozilla.org/try/raw-file/acb5abf52c04da7d4548fa13bd6c6848a90c32b8/testing/
-      config/tooltool-manifests/linux64/hostutils.manifest"""
-    if os.path.exists(local_dest):
-        LOG.info("file already exists at: %s" % local_dest)
-        return True
-    LOG.info("downloading: %s to %s" % (url, local_dest))
-    _file, _headers = urllib.urlretrieve(url, local_dest)
-    return os.path.exists(local_dest)
 
 
 def view_gecko_profile(ffox_bin):

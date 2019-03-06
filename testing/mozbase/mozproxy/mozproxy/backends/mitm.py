@@ -10,47 +10,41 @@ import sys
 import time
 
 import mozinfo
-
-from mozlog import get_proxy_logger
 from mozprocess import ProcessHandler
 
-from .base import Playback
+from mozproxy.backends.base import Playback
+from mozproxy.utils import (
+    transform_platform,
+    tooltool_download,
+    download_file_from_url,
+    LOG,
+)
 
-here = os.path.dirname(os.path.realpath(__file__))
-LOG = get_proxy_logger(component='raptor-mitmproxy')
 
-# needed so unit tests can find their imports
-if os.environ.get('SCRIPTSPATH', None) is not None:
-    # in production it is env SCRIPTS_PATH
-    mozharness_dir = os.environ['SCRIPTSPATH']
-else:
-    # locally it's in source tree
-    mozharness_dir = os.path.join(here, '../../../mozharness')
-sys.path.insert(0, mozharness_dir)
-
-raptor_dir = os.path.join(here, '..')
-sys.path.insert(0, raptor_dir)
-
-from utils import transform_platform, tooltool_download, download_file_from_url
-
+here = os.path.dirname(__file__)
 # path for mitmproxy certificate, generated auto after mitmdump is started
 # on local machine it is 'HOME', however it is different on production machines
 try:
-    DEFAULT_CERT_PATH = os.path.join(os.getenv('HOME'),
-                                     '.mitmproxy', 'mitmproxy-ca-cert.cer')
+    DEFAULT_CERT_PATH = os.path.join(
+        os.getenv("HOME"), ".mitmproxy", "mitmproxy-ca-cert.cer"
+    )
 except Exception:
-    DEFAULT_CERT_PATH = os.path.join(os.getenv('HOMEDRIVE'), os.getenv('HOMEPATH'),
-                                     '.mitmproxy', 'mitmproxy-ca-cert.cer')
+    DEFAULT_CERT_PATH = os.path.join(
+        os.getenv("HOMEDRIVE"),
+        os.getenv("HOMEPATH"),
+        ".mitmproxy",
+        "mitmproxy-ca-cert.cer",
+    )
 
 # On Windows, deal with mozilla-build having forward slashes in $HOME:
-if os.name == 'nt' and '/' in DEFAULT_CERT_PATH:
-    DEFAULT_CERT_PATH = DEFAULT_CERT_PATH.replace('/', '\\')
+if os.name == "nt" and "/" in DEFAULT_CERT_PATH:
+    DEFAULT_CERT_PATH = DEFAULT_CERT_PATH.replace("/", "\\")
 
 # sleep in seconds after issuing a `mitmdump` command
 MITMDUMP_SLEEP = 10
 
 # to install mitmproxy certificate into Firefox and turn on/off proxy
-POLICIES_CONTENT_ON = '''{
+POLICIES_CONTENT_ON = """{
   "policies": {
     "Certificates": {
       "Install": ["%(cert)s"]
@@ -63,145 +57,166 @@ POLICIES_CONTENT_ON = '''{
       "Locked": true
     }
   }
-}'''
+}"""
 
-POLICIES_CONTENT_OFF = '''{
+POLICIES_CONTENT_OFF = """{
   "policies": {
     "Proxy": {
       "Mode": "none",
       "Locked": false
     }
   }
-}'''
+}"""
 
 
 class Mitmproxy(Playback):
-
     def __init__(self, config):
         self.config = config
         self.mitmproxy_proc = None
         self.mitmdump_path = None
-        self.recordings = config.get('playback_recordings', None)
-        self.browser_path = config.get('binary', None)
+        self.recordings = config.get("playback_recordings")
+        self.browser_path = config.get("binary")
 
-        # raptor_dir is where we will download all mitmproxy required files
+        # mozproxy_dir is where we will download all mitmproxy required files
         # when running locally it comes from obj_path via mozharness/mach
-        if self.config.get("obj_path", None) is not None:
-            self.raptor_dir = self.config.get("obj_path")
+        if self.config.get("obj_path") is not None:
+            self.mozproxy_dir = self.config.get("obj_path")
         else:
             # in production it is ../tasks/task_N/build/, in production that dir
             # is not available as an envvar, however MOZ_UPLOAD_DIR is set as
             # ../tasks/task_N/build/blobber_upload_dir so take that and go up 1 level
-            self.raptor_dir = os.path.dirname(os.path.dirname(os.environ['MOZ_UPLOAD_DIR']))
+            self.mozproxy_dir = os.path.dirname(
+                os.path.dirname(os.environ["MOZ_UPLOAD_DIR"])
+            )
 
-        # add raptor to raptor_dir
-        self.raptor_dir = os.path.join(self.raptor_dir, "testing", "raptor")
-        self.recordings_path = self.raptor_dir
-        LOG.info("raptor_dir used for mitmproxy downloads and exe files: %s" % self.raptor_dir)
+        self.mozproxy_dir = os.path.join(self.mozproxy_dir, "testing", "mozproxy")
+        self.recordings_path = self.mozproxy_dir
+        LOG.info(
+            "mozproxy_dir used for mitmproxy downloads and exe files: %s"
+            % self.mozproxy_dir
+        )
 
         # go ahead and download and setup mitmproxy
         self.download()
 
         # mitmproxy must be started before setup, so that the CA cert is available
         self.start()
+
+        # XXX if this fails, we fail to create an insatnce and mitdump has
+        # started and become a ghost
         self.setup()
 
     def download(self):
         """Download and unpack mitmproxy binary and pageset using tooltool"""
-        if not os.path.exists(self.raptor_dir):
-            os.makedirs(self.raptor_dir)
+        if not os.path.exists(self.mozproxy_dir):
+            os.makedirs(self.mozproxy_dir)
 
         LOG.info("downloading mitmproxy binary")
-        _manifest = os.path.join(here, self.config['playback_binary_manifest'])
-        transformed_manifest = transform_platform(_manifest, self.config['platform'])
-        tooltool_download(transformed_manifest, self.config['run_local'], self.raptor_dir)
+        _manifest = os.path.join(here, self.config["playback_binary_manifest"])
+        transformed_manifest = transform_platform(_manifest, self.config["platform"])
+        tooltool_download(
+            transformed_manifest, self.config["run_local"], self.mozproxy_dir
+        )
 
         # we use one pageset for all platforms
         LOG.info("downloading mitmproxy pageset")
-        _manifest = os.path.join(here, self.config['playback_pageset_manifest'])
-        transformed_manifest = transform_platform(_manifest, self.config['platform'])
-        tooltool_download(transformed_manifest, self.config['run_local'], self.raptor_dir)
-        return
+        _manifest = self.config["playback_pageset_manifest"]
+        transformed_manifest = transform_platform(_manifest, self.config["platform"])
+        tooltool_download(
+            transformed_manifest, self.config["run_local"], self.mozproxy_dir
+        )
 
     def start(self):
         """Start playing back the mitmproxy recording."""
 
-        self.mitmdump_path = os.path.join(self.raptor_dir, 'mitmdump')
+        self.mitmdump_path = os.path.join(self.mozproxy_dir, "mitmdump")
 
         recordings_list = self.recordings.split()
-        self.mitmproxy_proc = self.start_mitmproxy_playback(self.mitmdump_path,
-                                                            self.recordings_path,
-                                                            recordings_list,
-                                                            self.browser_path)
-        return
+        self.mitmproxy_proc = self.start_mitmproxy_playback(
+            self.mitmdump_path, self.recordings_path, recordings_list, self.browser_path
+        )
 
     def stop(self):
         self.stop_mitmproxy_playback()
-        return
 
-    def start_mitmproxy_playback(self,
-                                 mitmdump_path,
-                                 mitmproxy_recording_path,
-                                 mitmproxy_recordings_list,
-                                 browser_path):
+    def start_mitmproxy_playback(
+        self,
+        mitmdump_path,
+        mitmproxy_recording_path,
+        mitmproxy_recordings_list,
+        browser_path,
+    ):
         """Startup mitmproxy and replay the specified flow file"""
 
         LOG.info("mitmdump path: %s" % mitmdump_path)
         LOG.info("recording path: %s" % mitmproxy_recording_path)
         LOG.info("recordings list: %s" % mitmproxy_recordings_list)
         LOG.info("browser path: %s" % browser_path)
-
         mitmproxy_recordings = []
         # recording names can be provided in comma-separated list; build py list including path
         for recording in mitmproxy_recordings_list:
             if not os.path.isfile(os.path.join(mitmproxy_recording_path, recording)):
-                LOG.critical('Recording file {} cannot be found!'.
-                             format(os.path.join(mitmproxy_recording_path, recording)))
-                raise Exception('Recording file {} cannot be found!'.
-                                format(os.path.join(mitmproxy_recording_path, recording)))
+                LOG.critical(
+                    "Recording file {} cannot be found!".format(
+                        os.path.join(mitmproxy_recording_path, recording)
+                    )
+                )
+                raise Exception(
+                    "Recording file {} cannot be found!".format(
+                        os.path.join(mitmproxy_recording_path, recording)
+                    )
+                )
 
-            mitmproxy_recordings.append(os.path.join(mitmproxy_recording_path, recording))
-
-        # cmd line to start mitmproxy playback using custom playback script is as follows:
-        # <path>/mitmdump -s "<path>mitmdump-alternate-server-replay/alternate-server-replay.py
-        #  <path>recording-1.mp <path>recording-2.mp..."
-        param = os.path.join(here, 'alternate-server-replay.py')
-        env = os.environ.copy()
-
-        # this part is platform-specific
-        if mozinfo.os == 'win':
-            param2 = '""' + param.replace('\\', '\\\\\\') + ' ' + \
-                     ' '.join(mitmproxy_recordings).replace('\\', '\\\\\\') + '""'
-            sys.path.insert(1, mitmdump_path)
-        else:
-            # mac and linux
-            param2 = param + ' ' + ' '.join(mitmproxy_recordings)
+            mitmproxy_recordings.append(
+                os.path.join(mitmproxy_recording_path, recording)
+            )
 
         # mitmproxy needs some DLL's that are a part of Firefox itself, so add to path
+        env = os.environ.copy()
         env["PATH"] = os.path.dirname(browser_path) + ";" + env["PATH"]
+        command = [mitmdump_path, "-k", "-q"]
 
-        command = [mitmdump_path, '-k', '-q', '-s', param2]
+        if "custom_script" in self.config:
+            # cmd line to start mitmproxy playback using custom playback script is as follows:
+            # <path>/mitmdump -s "<path>/alternate-server-replay.py
+            #  <path>recording-1.mp <path>recording-2.mp..."
+            custom_script = self.config["custom_script"] + " " + " ".join(mitmproxy_recordings)
+
+            # this part is platform-specific
+            if mozinfo.os == "win":
+                custom_script = '""' + custom_script.replace("\\", "\\\\\\") + '""'
+                sys.path.insert(1, mitmdump_path)
+
+            command.extend(["-s", custom_script])
 
         LOG.info("Starting mitmproxy playback using env path: %s" % env["PATH"])
-        LOG.info("Starting mitmproxy playback using command: %s" % ' '.join(command))
+        LOG.info("Starting mitmproxy playback using command: %s" % " ".join(command))
         # to turn off mitmproxy log output, use these params for Popen:
         # Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env)
         mitmproxy_proc = ProcessHandler(command, env=env)
         mitmproxy_proc.run()
 
+        # XXX replace the code below with a loop with a connection attempt
+        # Bug 1532557
         time.sleep(MITMDUMP_SLEEP)
         data = mitmproxy_proc.poll()
         if data is None:  # None value indicates process hasn't terminated
-            LOG.info("Mitmproxy playback successfully started as pid %d" % mitmproxy_proc.pid)
+            LOG.info(
+                "Mitmproxy playback successfully started as pid %d" % mitmproxy_proc.pid
+            )
             return mitmproxy_proc
         # cannot continue as we won't be able to playback the pages
-        LOG.error('Aborting: mitmproxy playback process failed to start, poll returned: %s' % data)
+        LOG.error(
+            "Aborting: mitmproxy playback process failed to start, poll returned: %s"
+            % data
+        )
+        # XXX here we might end up with a ghost mitmproxy
         sys.exit()
 
     def stop_mitmproxy_playback(self):
         """Stop the mitproxy server playback"""
         mitmproxy_proc = self.mitmproxy_proc
-        LOG.info("Stopping mitmproxy playback, klling process %d" % mitmproxy_proc.pid)
+        LOG.info("Stopping mitmproxy playback, killing process %d" % mitmproxy_proc.pid)
         mitmproxy_proc.kill()
 
         time.sleep(MITMDUMP_SLEEP)
@@ -217,19 +232,21 @@ class Mitmproxy(Playback):
 
 
 class MitmproxyDesktop(Mitmproxy):
-
     def __init__(self, config):
         Mitmproxy.__init__(self, config)
 
     def setup(self):
-        """For Firefox we need to install the generated mitmproxy CA cert. For Chromium this is
-        not necessary as it will be started with the --ignore-certificate-errors cmd line arg"""
-        if self.config['app'] == "firefox":
-            # install the generated CA certificate into Firefox desktop
-            self.install_mitmproxy_cert(self.mitmproxy_proc,
-                                        self.browser_path)
-        else:
+        """
+        Installs certificates.
+
+        For Firefox we need to install the generated mitmproxy CA cert. For
+        Chromium this is not necessary as it will be started with the
+        --ignore-certificate-errors cmd line arg.
+        """
+        if not self.config["app"] == "firefox":
             return
+        # install the generated CA certificate into Firefox desktop
+        self.install_mitmproxy_cert(self.mitmproxy_proc, self.browser_path)
 
     def install_mitmproxy_cert(self, mitmproxy_proc, browser_path):
         """Install the CA certificate generated by mitmproxy, into Firefox
@@ -243,15 +260,15 @@ class MitmproxyDesktop(Mitmproxy):
         self.policies_dir = os.path.dirname(browser_path)
         # on macosx we need to remove the last folders 'MacOS'
         # and the policies json needs to go in ../Content/Resources/
-        if 'mac' in self.config['platform']:
+        if "mac" in self.config["platform"]:
             self.policies_dir = os.path.join(self.policies_dir[:-6], "Resources")
         # for all platforms the policies json goes in a 'distribution' dir
         self.policies_dir = os.path.join(self.policies_dir, "distribution")
 
         self.cert_path = DEFAULT_CERT_PATH
         # for windows only
-        if mozinfo.os == 'win':
-            self.cert_path = self.cert_path.replace('\\', '\\\\')
+        if mozinfo.os == "win":
+            self.cert_path = self.cert_path.replace("\\", "\\\\")
 
         if not os.path.exists(self.policies_dir):
             LOG.info("creating folder: %s" % self.policies_dir)
@@ -259,14 +276,17 @@ class MitmproxyDesktop(Mitmproxy):
         else:
             LOG.info("folder already exists: %s" % self.policies_dir)
 
-        self.write_policies_json(self.policies_dir,
-                                 policies_content=POLICIES_CONTENT_ON %
-                                 {'cert': self.cert_path,
-                                  'host': self.config['host']})
+        self.write_policies_json(
+            self.policies_dir,
+            policies_content=POLICIES_CONTENT_ON
+            % {"cert": self.cert_path, "host": self.config["host"]},
+        )
 
         # cannot continue if failed to add CA cert to Firefox, need to check
         if not self.is_mitmproxy_cert_installed():
-            LOG.error('Aborting: failed to install mitmproxy CA cert into Firefox desktop')
+            LOG.error(
+                "Aborting: failed to install mitmproxy CA cert into Firefox desktop"
+            )
             self.stop_mitmproxy_playback()
             sys.exit()
 
@@ -274,14 +294,14 @@ class MitmproxyDesktop(Mitmproxy):
         policies_file = os.path.join(location, "policies.json")
         LOG.info("writing: %s" % policies_file)
 
-        with open(policies_file, 'w') as fd:
+        with open(policies_file, "w") as fd:
             fd.write(policies_content)
 
     def read_policies_json(self, location):
         policies_file = os.path.join(location, "policies.json")
         LOG.info("reading: %s" % policies_file)
 
-        with open(policies_file, 'r') as fd:
+        with open(policies_file, "r") as fd:
             return fd.read()
 
     def is_mitmproxy_cert_installed(self):
@@ -291,9 +311,10 @@ class MitmproxyDesktop(Mitmproxy):
             contents = self.read_policies_json(self.policies_dir)
             LOG.info("Firefox policies file contents:")
             LOG.info(contents)
-            if (POLICIES_CONTENT_ON % {
-                'cert': self.cert_path,
-                'host': self.config['host']}) in contents:
+            if (
+                POLICIES_CONTENT_ON
+                % {"cert": self.cert_path, "host": self.config["host"]}
+            ) in contents:
                 LOG.info("Verified mitmproxy CA certificate is installed in Firefox")
             else:
 
@@ -306,33 +327,29 @@ class MitmproxyDesktop(Mitmproxy):
     def stop(self):
         self.stop_mitmproxy_playback()
         self.turn_off_browser_proxy()
-        return
 
     def turn_off_browser_proxy(self):
         """Turn off the browser proxy that was used for mitmproxy playback. In Firefox
         we need to change the autoconfig files to revert the proxy; for Chromium the proxy
         was setup on the cmd line, so nothing is required here."""
-        if self.config['app'] == "firefox":
+        if self.config["app"] == "firefox":
             LOG.info("Turning off the browser proxy")
 
-            self.write_policies_json(self.policies_dir,
-                                     policies_content=POLICIES_CONTENT_OFF)
+            self.write_policies_json(
+                self.policies_dir, policies_content=POLICIES_CONTENT_OFF
+            )
 
 
 class MitmproxyAndroid(Mitmproxy):
-
     def __init__(self, config, android_device):
         Mitmproxy.__init__(self, config)
         self.android_device = android_device
 
     def setup(self):
         """For geckoview we need to install the generated mitmproxy CA cert"""
-        if self.config['app'] in ["geckoview", "refbrow", "fenix"]:
+        if self.config["app"] in ["geckoview", "refbrow", "fenix"]:
             # install the generated CA certificate into android geckoview
-            self.install_mitmproxy_cert(self.mitmproxy_proc,
-                                        self.browser_path)
-        else:
-            return
+            self.install_mitmproxy_cert(self.mitmproxy_proc, self.browser_path)
 
     def install_mitmproxy_cert(self, mitmproxy_proc, browser_path):
         """Install the CA certificate generated by mitmproxy, into geckoview android
@@ -384,17 +401,17 @@ class MitmproxyAndroid(Mitmproxy):
                 raise
 
             # first need to download the hostutils tooltool manifest file itself
-            _dest = os.path.join(self.raptor_dir, 'hostutils.manifest')
+            _dest = os.path.join(self.mozproxy_dir, 'hostutils.manifest')
             have_manifest = download_file_from_url(manifest_url, _dest)
             if not have_manifest:
                 LOG.critical('failed to download the hostutils tooltool manifest')
                 raise
 
             # now use the manifest to download hostutils so we can get certutil
-            tooltool_download(_dest, self.config['run_local'], self.raptor_dir)
+            tooltool_download(_dest, self.config['run_local'], self.mozproxy_dir)
 
             # the production bitbar container host is always linux
-            self.certutil = os.path.join(self.raptor_dir, 'host-utils-67.0a1.en-US.linux-x86_64')
+            self.certutil = os.path.join(self.mozproxy_dir, 'host-utils-67.0a1.en-US.linux-x86_64')
 
             # must add hostutils/certutil to the path
             os.environ['LD_LIBRARY_PATH'] = self.certutil
@@ -413,9 +430,11 @@ class MitmproxyAndroid(Mitmproxy):
         self.local_cert_path = DEFAULT_CERT_PATH
 
         # check if the nss ca cert db already exists in the device profile
-        LOG.info("checking if the nss cert db already exists in the android browser profile")
-        param1 = "sql:%s/" % self.config['local_profile_dir']
-        command = [self.certutil, '-d', param1, '-L']
+        LOG.info(
+            "checking if the nss cert db already exists in the android browser profile"
+        )
+        param1 = "sql:%s/" % self.config["local_profile_dir"]
+        command = [self.certutil, "-d", param1, "-L"]
 
         try:
             subprocess.check_output(command, env=os.environ.copy())
@@ -432,10 +451,10 @@ class MitmproxyAndroid(Mitmproxy):
         if not cert_db_exists:
             # create cert db if it doesn't already exist; it may exist already
             # if a previous pageload test ran in the same test suite
-            param1 = "sql:%s/" % self.config['local_profile_dir']
-            command = [self.certutil, '-N', '-v', '-d', param1, '--empty-password']
+            param1 = "sql:%s/" % self.config["local_profile_dir"]
+            command = [self.certutil, "-N", "-v", "-d", param1, "--empty-password"]
 
-            LOG.info("creating nss cert database using command: %s" % ' '.join(command))
+            LOG.info("creating nss cert database using command: %s" % " ".join(command))
             cmd_proc = subprocess.Popen(command, env=os.environ.copy())
             time.sleep(self.CERTUTIL_SLEEP)
             cmd_terminated = cmd_proc.poll()
@@ -444,15 +463,30 @@ class MitmproxyAndroid(Mitmproxy):
                 raise
 
         # import mitmproxy cert into the db
-        command = [self.certutil, '-A', '-d', param1, '-n',
-                   'mitmproxy-cert', '-t', 'TC,,', '-a', '-i', self.local_cert_path]
+        command = [
+            self.certutil,
+            "-A",
+            "-d",
+            param1,
+            "-n",
+            "mitmproxy-cert",
+            "-t",
+            "TC,,",
+            "-a",
+            "-i",
+            self.local_cert_path,
+        ]
 
-        LOG.info("importing mitmproxy cert into db using command: %s" % ' '.join(command))
+        LOG.info(
+            "importing mitmproxy cert into db using command: %s" % " ".join(command)
+        )
         cmd_proc = subprocess.Popen(command, env=os.environ.copy())
         time.sleep(self.CERTUTIL_SLEEP)
         cmd_terminated = cmd_proc.poll()
         if cmd_terminated is None:  # None value indicates process hasn't terminated
-            LOG.critical("command to import mitmproxy cert into cert db failed to complete")
+            LOG.critical(
+                "command to import mitmproxy cert into cert db failed to complete"
+            )
 
         # cannot continue if failed to add CA cert to Firefox, need to check
         if not self.is_mitmproxy_cert_installed():
@@ -465,9 +499,11 @@ class MitmproxyAndroid(Mitmproxy):
         LOG.info("verifying that the mitmproxy ca cert is installed on android")
 
         # list the certifcates that are in the nss cert db (inside the browser profile dir)
-        LOG.info("getting the list of certs in the nss cert db in the android browser profile")
-        param1 = "sql:%s/" % self.config['local_profile_dir']
-        command = [self.certutil, '-d', param1, '-L']
+        LOG.info(
+            "getting the list of certs in the nss cert db in the android browser profile"
+        )
+        param1 = "sql:%s/" % self.config["local_profile_dir"]
+        command = [self.certutil, "-d", param1, "-L"]
 
         try:
             cmd_output = subprocess.check_output(command, env=os.environ.copy())
@@ -480,7 +516,9 @@ class MitmproxyAndroid(Mitmproxy):
         # check output from the certutil command, see if 'mitmproxy-cert' is listed
         time.sleep(self.CERTUTIL_SLEEP)
         LOG.info(cmd_output)
-        if 'mitmproxy-cert' in cmd_output:
-            LOG.info("verfied the mitmproxy-cert is installed in the nss cert db on android")
+        if "mitmproxy-cert" in cmd_output:
+            LOG.info(
+                "verfied the mitmproxy-cert is installed in the nss cert db on android"
+            )
             return True
         return False

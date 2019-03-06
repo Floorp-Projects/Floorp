@@ -18,7 +18,7 @@ LOG = get_proxy_logger(component="raptor-manifest")
 required_settings = ['apps', 'type', 'page_cycles', 'test_url', 'measure',
                      'unit', 'lower_is_better', 'alert_threshold']
 
-playback_settings = ['playback_binary_manifest', 'playback_pageset_manifest',
+playback_settings = ['playback_pageset_manifest',
                      'playback_recordings']
 
 
