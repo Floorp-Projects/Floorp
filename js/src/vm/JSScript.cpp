@@ -3463,6 +3463,29 @@ static bool HasAnyAliasedFormal(frontend::BytecodeEmitter* bce) {
   return false;
 }
 
+static bool NeedsFunctionEnvironmentObjects(frontend::BytecodeEmitter* bce) {
+  // See JSFunction::needsCallObject()
+  js::Scope* bodyScope = bce->bodyScope();
+  if (bodyScope->kind() == js::ScopeKind::Function) {
+    if (bodyScope->hasEnvironment()) {
+      return true;
+    }
+  }
+
+  // See JSScript::maybeNamedLambdaScope()
+  js::Scope* outerScope = bce->outermostScope();
+  if (outerScope->kind() == js::ScopeKind::NamedLambda ||
+      outerScope->kind() == js::ScopeKind::StrictNamedLambda) {
+    MOZ_ASSERT(bce->sc->asFunctionBox()->function()->isNamedLambda());
+
+    if (outerScope->hasEnvironment()) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 /* static */
 void JSScript::initFromFunctionBox(HandleScript script,
                                    frontend::FunctionBox* funbox) {
@@ -3502,10 +3525,6 @@ void JSScript::initFromFunctionBox(HandleScript script,
 
   script->setFlag(ImmutableFlags::HasInnerFunctions,
                   funbox->hasInnerFunctions());
-
-  script->setFlag(
-      ImmutableFlags::NeedsFunctionEnvironmentObjects,
-      (fun->needsCallObject() || fun->needsNamedLambdaEnvironment()));
 }
 
 /* static */
@@ -3593,6 +3612,8 @@ bool JSScript::fullyInitFromEmitter(JSContext* cx, HandleScript script,
                   bce->outermostScope()->hasOnChain(ScopeKind::NonSyntactic));
   script->setFlag(ImmutableFlags::FunHasAnyAliasedFormal,
                   HasAnyAliasedFormal(bce));
+  script->setFlag(ImmutableFlags::NeedsFunctionEnvironmentObjects,
+                  NeedsFunctionEnvironmentObjects(bce));
 
   // There shouldn't be any fallible operation after initFromFunctionBox,
   // JSFunction::hasUncompletedScript relies on the fact that the existence
