@@ -39,6 +39,7 @@
       ["function test() { return 3; } test();", 3],
       ["testMe(3)", 6],
       ["testMe(new Object(3))", 6],
+      // eslint-disable-next-line no-new-object
       ["new Object(3)", new Object(3)],
       ["new Array(1, 2, 3, 4)", [1, 2, 3, 4]],
       ["document.getElementById('display')",

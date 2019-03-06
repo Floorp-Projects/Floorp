@@ -40,7 +40,7 @@
            ok(true, "Test plugin unloaded in chrome process");
            SimpleTest.finish();
          } else {
-           var results = script.sendAsyncMessage("check-plugin-unload");
+           script.sendAsyncMessage("check-plugin-unload");
          }
        }
        testContentUnload();

@@ -127,7 +127,7 @@ function continueTest() {
   var test = tests[Math.floor(index / 2)];
 
   var p = gTestWindow.document.createElement("p");
-  p.innerHTML = "Plugin Stream Test " + index;
+  p.textContent = "Plugin Stream Test " + Number(index);
   gTestWindow.document.getElementById("test").appendChild(p);
 
   if (test.frame) {

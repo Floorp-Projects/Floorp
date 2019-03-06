@@ -24,9 +24,9 @@
    }
 
    function runTests() {
-     p = document.getElementById("plugin1");
+     var p = document.getElementById("plugin1");
      ok(p.setColor != undefined, "Static plugin parameter (salign/scale) ordering were correct");
-     p2 = document.getElementById("plugin2");
+     var p2 = document.getElementById("plugin2");
      ok(p2.setColor != undefined, "Dynamic plugin parameter (salign/scale) ordering were correct");
      SimpleTest.finish();
    }

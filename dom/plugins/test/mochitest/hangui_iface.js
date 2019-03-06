@@ -1,10 +1,14 @@
+/* eslint-env mozilla/chrome-worker */
+
 var user32;
 var sendMessage;
 var getDlgItem;
 var messageBox;
 var watcher;
 
+/* import-globals-from hangui_common.js */
 importScripts("hangui_common.js");
+/* import-globals-from dialog_watcher.js */
 importScripts("dialog_watcher.js");
 
 function initCTypes() {

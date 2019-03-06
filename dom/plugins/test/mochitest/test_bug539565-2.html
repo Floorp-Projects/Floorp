@@ -22,12 +22,13 @@ function runTests() {
       waitedForPaint++;
       moveBy = -moveBy;
       $("abs").style.left = ($("abs").offsetLeft + moveBy) + "px";
-      var x = document.documentElement.offsetHeight;
+      document.documentElement.offsetHeight;
       var pc = testplugin.getPaintCount ? testplugin.getPaintCount() : -2;
       if (waitedForPaint == 20 || (pc != testplugin.last_paint_count && pc >= 0)) {
         setTimeout(func, 0);
-      } else
+      } else {
         setTimeout(waitForPaintCountIncrement, 50);
+      }
     }
     waitForPaintCountIncrement();
   }
@@ -76,7 +77,7 @@ function runTests() {
     var container = $("container");
     container.style.MozTransformOrigin = "0px 0px";
     container.style.MozTransform = "scale(0.5)";
-    var x = document.documentElement.offsetHeight;
+    document.documentElement.offsetHeight;
     click(60, 52, function() { verify("4", 240, 208, test5); });
   }
   function test5() { // fullZoom=2 + scale(2)
@@ -84,7 +85,7 @@ function runTests() {
     var container = $("container");
     container.style.MozTransformOrigin = "0px 0px";
     container.style.MozTransform = "scale(2)";
-    var x = document.documentElement.offsetHeight;
+    document.documentElement.offsetHeight;
     click(108, 112, function() { verify("5", 108, 112, endTest); });
   }
 

@@ -47,6 +47,7 @@
     // Triggering a paint and waiting for it to be flushed makes sure
     // that both plugin and platform see the plugin element as visible.
     // See bug 805330 for details.
+    /* global waitForAllPaintsFlushed */
     plugin.setColor("FF000088");
     waitForAllPaintsFlushed(afterPaintsFlushed);
   }

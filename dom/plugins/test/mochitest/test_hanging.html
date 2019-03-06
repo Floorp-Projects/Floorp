@@ -35,9 +35,9 @@
     }
 
     window.frameLoaded = function reloaded() {
-      var p = iframe.contentDocument.getElementById("plugin1");
+      var p1 = iframe.contentDocument.getElementById("plugin1");
       try {
-        p.setColor("FF00FF00");
+        p1.setColor("FF00FF00");
         ok(true, "Reloading worked");
       } catch (e) {
         ok(false, "Reloading didn't give us a usable plugin");

@@ -26,8 +26,6 @@ SpecialPowers.pushPrefEnv({"set": [["security.allow_eval_with_system_principal",
                                     true]]});
 setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 const hangUITimeoutPref = "dom.ipc.plugins.hangUITimeoutSecs";
 const hangUIMinDisplayPref = "dom.ipc.plugins.hangUIMinDisplaySecs";
 const timeoutPref = "dom.ipc.plugins.timeoutSecs";
