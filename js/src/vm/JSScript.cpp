@@ -3550,17 +3550,21 @@ bool JSScript::fullyInitFromEmitter(JSContext* cx, HandleScript script,
   }
 
   uint32_t natoms = bce->atomIndices->count();
+
+  // Initialize POD fields
+  script->lineno_ = bce->firstLine;
+  script->mainOffset_ = bce->mainOffset();
+  script->nfixed_ = bce->maxFixedSlots;
+  script->nslots_ = nslots;
+  script->bodyScopeIndex_ = bce->bodyScopeIndex;
+  script->numBytecodeTypeSets_ = bce->typesetCount;
+
   if (!createPrivateScriptData(
           cx, script, bce->scopeList.length(), bce->numberList.length(),
           bce->objectList.length, bce->tryNoteList.length(),
           bce->scopeNoteList.length(), bce->resumeOffsetList.length())) {
     return false;
   }
-
-  MOZ_ASSERT(script->mainOffset() == 0);
-  script->mainOffset_ = bce->mainOffset();
-  script->numBytecodeTypeSets_ = bce->typesetCount;
-  script->lineno_ = bce->firstLine;
 
   // The + 1 is to account for the final SN_MAKE_TERMINATOR that is appended
   // when the notes are copied to their final destination by copySrcNotes.
@@ -3607,10 +3611,6 @@ bool JSScript::fullyInitFromEmitter(JSContext* cx, HandleScript script,
   script->setFlag(ImmutableFlags::HasSingletons, bce->hasSingletons);
   script->setFlag(ImmutableFlags::IsForEval, bce->sc->isEvalContext());
   script->setFlag(ImmutableFlags::IsModule, bce->sc->isModuleContext());
-
-  script->nfixed_ = bce->maxFixedSlots;
-  script->nslots_ = nslots;
-  script->bodyScopeIndex_ = bce->bodyScopeIndex;
   script->setFlag(ImmutableFlags::HasNonSyntacticScope,
                   bce->outermostScope()->hasOnChain(ScopeKind::NonSyntactic));
   script->setFlag(ImmutableFlags::FunHasAnyAliasedFormal,
