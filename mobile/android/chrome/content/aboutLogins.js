@@ -293,12 +293,18 @@ var Logins = {
 
       for (let i = 0; i < logins.length; i++) {
         if (logins[i].username == origUsername) {
-          let clone = logins[i].clone();
-          clone.username = newUsername;
-          clone.password = newPassword;
-          clone.hostname = newDomain;
-          Services.logins.removeLogin(logins[i]);
-          Services.logins.addLogin(clone);
+          let propBag = Cc["@mozilla.org/hash-property-bag;1"].
+            createInstance(Ci.nsIWritablePropertyBag);
+          if (newUsername !== origUsername) {
+            propBag.setProperty("username", newUsername);
+          }
+          if (newPassword !== origPassword) {
+            propBag.setProperty("password", newPassword);
+          }
+          if (newDomain !== origDomain) {
+            propBag.setProperty("hostname", newDomain);
+          }
+          Services.logins.modifyLogin(logins[i], propBag);
           break;
         }
       }
