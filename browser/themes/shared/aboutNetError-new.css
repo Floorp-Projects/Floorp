@@ -152,6 +152,9 @@ body:not(:-moz-any(.clockSkewError,.badStsCert,.neterror)) #advancedButton {
 
 #automaticallyReportInFuture {
   cursor: pointer;
+  /* Prevent the checkbox from looking super
+   * squeezed on small viewports */
+  flex-shrink: 0;
 }
 
 #errorCode:not([href]) {
@@ -208,33 +211,6 @@ body:not(:-moz-any(.clockSkewError,.badStsCert,.neterror)) #advancedButton {
   display: none;
 }
 
-.illustrated #errorPageContainer {
-  min-height: 300px;
-  display: flex;
-  flex-direction: column;
-  background-position: left center;
-}
-
-.illustrated[dir="rtl"] #errorPageContainer {
-  background-position: right center;
-}
-
-.illustrated .title {
-  background: none;
-  padding-inline-start: 0;
-  margin-inline-start: 0;
-}
-
-.illustrated #text-container {
-  margin: auto;
-  padding-inline-start: 38%;
-}
-
-.illustrated #errorPageContainer {
-  background-repeat: no-repeat;
-  background-size: 38%;
-}
-
 .connectionFailure #errorPageContainer,
 .netInterrupt #errorPageContainer,
 .netTimeout #errorPageContainer,
@@ -289,4 +265,29 @@ body:not(:-moz-any(.clockSkewError,.badStsCert,.neterror)) #advancedButton {
 
 #wrongSystemTimeWithoutReferencePanel {
   display: none;
+}
+
+@media only screen and (max-width: 959px) {
+  #certificateErrorText {
+    /* The encoded certificate chain looks better when we're not
+     * wrapping words on big screens, but at some point we need
+     * to wrap to avoid overflowing */
+    word-wrap: anywhere;
+  }
+}
+
+@media only screen and (max-width: 480px) {
+  #badCertTechnicalInfo {
+    margin: 10px 10px 5px;
+  }
+
+  #viewCertificate {
+    margin: 0 10px;
+  }
+
+  #errorCode[href] {
+    /* Break the error code to avoid long codes overflowing the screen */
+    white-space: normal;
+    word-wrap: anywhere;
+  }
 }
