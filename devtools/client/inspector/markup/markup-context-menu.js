@@ -187,7 +187,7 @@ class MarkupContextMenu {
    */
   _jumpToCustomElementDefinition() {
     const { url, line } = this.selection.nodeFront.customElementLocation;
-    this.toolbox.viewSourceInDebugger(url, line, "show_custom_element");
+    this.toolbox.viewSourceInDebugger(url, line, null, "show_custom_element");
   }
 
   /**
