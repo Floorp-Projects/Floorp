@@ -4824,9 +4824,7 @@ static MOZ_MUST_USE bool IsTopMostAsyncFunctionCall(JSContext* cx) {
   if (iter.done()) {
     return false;
   }
-  if (!iter.calleeTemplate()) {
-    return false;
-  }
+  MOZ_ASSERT(iter.isFunctionFrame());
   MOZ_ASSERT(iter.calleeTemplate()->isAsync());
 
 #ifdef DEBUG
@@ -4849,14 +4847,22 @@ static MOZ_MUST_USE bool IsTopMostAsyncFunctionCall(JSContext* cx) {
     MOZ_ASSERT(!isGenerator);
     return false;
   }
-  if (!iter.calleeTemplate()) {
-    return false;
+
+  // Always skip InterpretGeneratorResume if present.
+  JSFunction* fun = iter.calleeTemplate();
+  if (IsSelfHostedFunctionWithName(fun, cx->names().InterpretGeneratorResume)) {
+    ++iter;
+
+    if (iter.done()) {
+      return false;
+    }
+
+    MOZ_ASSERT(iter.isFunctionFrame());
+    fun = iter.calleeTemplate();
   }
 
-  if (!IsSelfHostedFunctionWithName(iter.calleeTemplate(),
-                                    cx->names().AsyncFunctionNext) &&
-      !IsSelfHostedFunctionWithName(iter.calleeTemplate(),
-                                    cx->names().AsyncGeneratorNext)) {
+  if (!IsSelfHostedFunctionWithName(fun, cx->names().AsyncFunctionNext) &&
+      !IsSelfHostedFunctionWithName(fun, cx->names().AsyncGeneratorNext)) {
     return false;
   }
 
