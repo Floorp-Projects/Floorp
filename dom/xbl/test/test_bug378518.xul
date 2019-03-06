@@ -13,7 +13,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=378518
   <bindings xmlns="http://www.mozilla.org/xbl"
     xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-      <binding id="mybinding" extends="xul:checkbox">
+      <binding id="mybinding">
           <content>
           </content>
       </binding>
@@ -44,8 +44,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=378518
 
   <!-- test code goes here -->
   <script type="application/javascript"> <![CDATA[
-
-    SimpleTest.expectAssertions(1);
 
     var myBoxClicked = false;
     var myCheckBoxClicked = false;

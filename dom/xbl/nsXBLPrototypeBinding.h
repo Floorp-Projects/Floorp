@@ -362,10 +362,6 @@ class nsXBLPrototypeBinding final
   nsInterfaceHashtable<IIDHashKey, nsIContent>
       mInterfaceTable;  // A table of cached interfaces that we support.
 
-  int32_t mBaseNameSpaceID;  // If we extend a tagname/namespace, then that
-                             // information will
-  RefPtr<nsAtom> mBaseTag;   // be stored in here.
-
   nsCOMArray<nsXBLKeyEventHandler> mKeyHandlers;
 };
 
