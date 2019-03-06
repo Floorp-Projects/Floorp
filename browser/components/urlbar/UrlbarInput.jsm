@@ -130,18 +130,18 @@ class UrlbarInput {
       return new UrlbarValueFormatter(this);
     });
 
-    // The event bufferer handles some events, queues them up, and calls back
-    // our handleEvent at the right time.
+    // The event bufferer can be used to defer events that may affect users
+    // muscle memory; for example quickly pressing DOWN+ENTER should end up
+    // on a predictable result, regardless of the search status. The event
+    // bufferer will invoke the handling code at the right time.
     this.eventBufferer = new UrlbarEventBufferer(this);
-    this.inputField.addEventListener("blur", this.eventBufferer);
-    this.inputField.addEventListener("keydown", this.eventBufferer);
 
-    const inputFieldEvents = [
-      "focus", "input", "keyup", "mouseover", "paste", "scrollend", "select",
-      "overflow", "underflow", "dragstart", "dragover", "drop",
-      "compositionstart", "compositionend",
+    this._inputFieldEvents = [
+      "blur", "focus", "input", "keydown", "keyup", "mouseover", "paste",
+      "scrollend", "select", "overflow", "underflow", "dragstart", "dragover",
+      "drop", "compositionstart", "compositionend",
     ];
-    for (let name of inputFieldEvents) {
+    for (let name of this._inputFieldEvents) {
       this.inputField.addEventListener(name, this);
     }
 
@@ -160,14 +160,7 @@ class UrlbarInput {
    * Uninitializes this input object, detaching it from the inputField.
    */
   uninit() {
-    this.inputField.removeEventListener("blur", this.eventBufferer);
-    this.inputField.removeEventListener("keydown", this.eventBufferer);
-    delete this.eventBufferer;
-    const inputFieldEvents = [
-      "focus", "input", "keyup", "mouseover", "paste", "scrollend", "select",
-      "overflow", "underflow", "dragstart", "dragover", "drop",
-    ];
-    for (let name of inputFieldEvents) {
+    for (let name of this._inputFieldEvents) {
       this.inputField.removeEventListener(name, this);
     }
     this.removeEventListener("mousedown", this);
@@ -178,6 +171,7 @@ class UrlbarInput {
 
     delete this.document;
     delete this.window;
+    delete this.eventBufferer;
     delete this.valueFormatter;
     delete this.panel;
     delete this.view;
@@ -747,6 +741,10 @@ class UrlbarInput {
   }
 
   _toggleActionOverride(event) {
+    // Ignore repeated KeyboardEvents.
+    if (event.repeat) {
+      return;
+    }
     if (event.keyCode == KeyEvent.DOM_VK_SHIFT ||
         event.keyCode == KeyEvent.DOM_VK_ALT ||
         event.keyCode == (AppConstants.platform == "macosx" ?
@@ -1167,8 +1165,10 @@ class UrlbarInput {
   }
 
   _on_keydown(event) {
-    this.controller.handleKeyNavigation(event);
     this._toggleActionOverride(event);
+    this.eventBufferer.maybeDeferEvent(event, () => {
+      this.controller.handleKeyNavigation(event);
+    });
   }
 
   _on_keyup(event) {
