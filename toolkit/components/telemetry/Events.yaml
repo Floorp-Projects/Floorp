@@ -158,14 +158,16 @@ addonsManager:
     release_channel_collection: opt-out
   action:
     description: >
-      An action method event is triggered when a user performs an action through the UI on an add-on. The object is
-      where in the product the action was performed.
+      An action method event is triggered when a user performs an action through the UI on an add-on
+      (besides the object "appUpgrade" which is referred to action performed automatically for the user
+      as part of a Firefox upgrade). The object is where in the product the action was performed.
     objects:
       - aboutAddons
       - browserAction
       - customize
       - pageAction
       - doorhanger
+      - appUpgrade
     extra_keys:
       action: >
         The action that was performed. Options include disable, enable, uninstall, undo, contribute, preferences,
@@ -178,7 +180,7 @@ addonsManager:
     notification_emails: ["addons-dev-internal@mozilla.com"]
     expiry_version: "73"
     record_in_processes: ["main"]
-    bug_numbers: [1500147, 1513344]
+    bug_numbers: [1500147, 1513344, 1529347]
     release_channel_collection: opt-out
 
 extensions.data:
