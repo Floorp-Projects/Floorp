@@ -21,10 +21,10 @@ function runTests() {
     composition: {
       string: data,
       clauses: [
-        { length: data.length, attr: COMPOSITION_ATTR_RAW_CLAUSE }
-      ]
+        { length: data.length, attr: COMPOSITION_ATTR_RAW_CLAUSE },
+      ],
     },
-    caret: {start: data.length, length: 0}
+    caret: {start: data.length, length: 0},
   });
   is(plugin.getLastCompositionText(), data, "can get composition string");
   synthesizeComposition({ type: "compositioncommit", data: "" });

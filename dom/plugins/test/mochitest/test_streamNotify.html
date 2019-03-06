@@ -11,7 +11,7 @@
 
   var pending = 5;
   function testDone() {
-    dump("testDone: " + pending + "\n")
+    dump("testDone: " + pending + "\n");
     --pending;
 
     // Wait for a bit so that any unexpected notifications from the
@@ -21,7 +21,7 @@
   }
 
   function runTests() {
-    var p = document.getElementById('plugin1');
+    var p = document.getElementById("plugin1");
 
     ok(p.streamTest("loremipsum.txt", false, null, null,
                     function(r, t) {

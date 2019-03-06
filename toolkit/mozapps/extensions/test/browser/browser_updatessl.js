@@ -106,14 +106,6 @@ function run_update_tests(callback) {
   run_next_update_test();
 }
 
-// Add overrides for the bad certificates
-function addCertOverrides() {
-  addCertOverride("nocert.example.com", Ci.nsICertOverrideService.ERROR_MISMATCH);
-  addCertOverride("self-signed.example.com", Ci.nsICertOverrideService.ERROR_UNTRUSTED);
-  addCertOverride("untrusted.example.com", Ci.nsICertOverrideService.ERROR_UNTRUSTED);
-  addCertOverride("expired.example.com", Ci.nsICertOverrideService.ERROR_TIME);
-}
-
 // Runs tests with built-in certificates required and no certificate exceptions.
 add_test(function() {
   // Tests that a simple update.json retrieval works as expected.
@@ -239,10 +231,14 @@ add_test(function() {
   run_update_tests(run_next_test);
 });
 
+// Set up overrides for the next test.
+add_test(() => {
+  addCertOverrides().then(run_next_test);
+});
+
 // Runs tests with built-in certificates required and all certificate exceptions.
 add_test(function() {
   Services.prefs.clearUserPref(PREF_UPDATE_REQUIREBUILTINCERTS);
-  addCertOverrides();
 
   // Tests that a simple update.json retrieval works as expected.
   add_update_test(HTTP, null, SUCCESS);

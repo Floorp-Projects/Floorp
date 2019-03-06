@@ -1,17 +1,19 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+/* globals process, __filename, __dirname */
+
+"use strict";
 
 const Babel = require("./babel");
 const fs = require("fs");
 const _path = require("path");
-const { execFileSync } = require("child_process");
 
 const EXCLUDED_FILES = {
   "../assets/panel/debugger.properties": "devtools/shared/flags",
   "devtools-connection": "devtools/shared/flags",
   "chrome-remote-interface": "devtools/shared/flags",
-  "devtools-launchpad": "devtools/shared/flags"
+  "devtools-launchpad": "devtools/shared/flags",
 };
 
 const mappings =  Object.assign(
@@ -30,7 +32,7 @@ const mappings =  Object.assign(
     "prop-types": "devtools/client/shared/vendor/react-prop-types",
     "devtools-services": "Services",
     "wasmparser/dist/WasmParser": "devtools/client/shared/vendor/WasmParser",
-    "wasmparser/dist/WasmDis": "devtools/client/shared/vendor/WasmDis"
+    "wasmparser/dist/WasmDis": "devtools/client/shared/vendor/WasmDis",
   },
   EXCLUDED_FILES
 );
@@ -44,10 +46,6 @@ mappings["devtools-source-map"] = "devtools/client/shared/source-map/index.js";
 
 function isRequire(t, node) {
   return node && t.isCallExpression(node) && node.callee.name == "require";
-}
-
-function isImport(t, node) {
-  return node && t.isImportDeclaration(node);
 }
 
 // List of vendored modules.
@@ -66,27 +64,27 @@ const VENDORS = [
   "react-aria-components/src/tabs",
   "react-transition-group/Transition",
   "reselect",
-  "Svg"
+  "Svg",
 ];
 
 const moduleMapping = {
   Telemetry: "devtools/client/shared/telemetry",
-  asyncStorage: "devtools/shared/async-storage"
+  asyncStorage: "devtools/shared/async-storage",
 };
 
 /*
- * Updates devtools-modules imports such as
- * `import { Telemetry } from "devtools-modules"`
- * so that we can customize how we resolve certain modules in the package
- *
- * In the case of multiple declarations we need to move
- * the telemetry module into its own import.
- */
+* Updates devtools-modules imports such as
+* `import { Telemetry } from "devtools-modules"`
+* so that we can customize how we resolve certain modules in the package
+*
+* In the case of multiple declarations we need to move
+* the telemetry module into its own import.
+*/
 function updateDevtoolsModulesImport(path, t) {
   const specifiers = path.node.specifiers;
 
   for (let i = 0; i < specifiers.length; i++) {
-    let specifier = specifiers[i];
+    const specifier = specifiers[i];
     const localName = specifier.local.name;
     if (localName in moduleMapping) {
       const newImport = t.importDeclaration(
@@ -108,9 +106,9 @@ function updateDevtoolsModulesImport(path, t) {
 }
 
 /**
- * This Babel plugin is used to transpile a single Debugger module into a module that
- * can be loaded in Firefox via the regular DevTools loader.
- */
+* This Babel plugin is used to transpile a single Debugger module into a module that
+* can be loaded in Firefox via the regular DevTools loader.
+*/
 function transformMC({ types: t }) {
   return {
     visitor: {
@@ -195,45 +193,22 @@ function transformMC({ types: t }) {
           !(value.startsWith("devtools") || mappingValues.includes(value))
         ) {
           path.replaceWith(t.stringLiteral(`${value}/index`));
-          return;
         }
-      }
-    }
+      },
+    },
   };
-};
+}
 
 Babel.registerPlugin("transform-mc", transformMC);
 
-function transform(filePath) {
-  const doc = fs.readFileSync(filePath, "utf8");
-  const out = Babel.transform(doc, {
-    plugins: [
-			"transform-flow-strip-types",
-			"syntax-trailing-function-commas",
-			"transform-class-properties",
-			"transform-es2015-modules-commonjs",
-			"transform-react-jsx",
-      			"syntax-object-rest-spread",
-      ["transform-mc", { mappings, vendors: VENDORS, filePath }]
-    ]
-  });
-
-  return out.code;
-}
-
-const deps = [
-  __filename,
-  _path.resolve(__dirname, "babel.js")
-];
-
-for (let i = 2; i < process.argv.length; i++) {
-  const srcPath = process.argv[i];
-  const code = transform(srcPath);
-  const filePath = _path.basename(srcPath);
-  fs.writeFileSync(filePath, code);
-  deps.push(srcPath);
-}
-
-// Print all dependencies prefixed with 'dep:' in order to help node.py, the script that
-// calls this module, to report back the precise list of all dependencies.
-console.log(deps.map(file => "dep:" + file).join("\n"));
+module.exports = function(filePath) {
+  return [
+    "transform-flow-strip-types",
+    "syntax-trailing-function-commas",
+    "transform-class-properties",
+    "transform-es2015-modules-commonjs",
+    "transform-react-jsx",
+    "syntax-object-rest-spread",
+    ["transform-mc", { mappings, vendors: VENDORS, filePath }],
+  ];
+};

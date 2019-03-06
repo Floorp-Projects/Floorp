@@ -22,7 +22,7 @@ Tests for plugin stream error conditions.
 </div>
 <div id="test">
 <script class="testbody" type="text/javascript">
-////
+// //
 // These tests verify that nothing "bad" happens when a plugin returns an
 // error from one of the NPP_ stream functions.  "Bad" is defined here
 // as the plugin being terminated, or NPP_ stream functions being
@@ -43,47 +43,47 @@ var tests = [
     "streammode": "normal",
     "functiontofail": "npp_newstream",
     "failurecode": "1",
-    "frame": "testframe"
+    "frame": "testframe",
   },
   {
     "src": "loremipsum.txt",
     "streammode": "normal",
     "functiontofail": "npp_newstream",
     "failurecode": "3",
-    "frame": "testframe"
+    "frame": "testframe",
   },
   {
     "src": "loremipsum.txt",
     "streammode": "normal",
     "functiontofail": "npp_newstream",
     "failurecode": "5",
-    "frame": "testframe"
+    "frame": "testframe",
   },
   {
     "geturl": "loremipsum.txt",
     "streammode": "normal",
     "functiontofail": "npp_newstream",
     "failurecode": "1",
-    "frame": "testframe"
+    "frame": "testframe",
   },
   {
     "src": "loremipsum.txt",
     "streammode": "normal",
     "functiontofail": "npp_write",
-    "frame": "testframe"
+    "frame": "testframe",
   },
   {
     "src": "loremipsum.txt",
     "streammode": "asfile",
     "functiontofail": "npp_write",
-    "frame": "testframe"
+    "frame": "testframe",
   },
   {
     "src": "loremipsum.txt",
     "streammode": "normal",
     "functiontofail": "npp_destroystream",
     "failurecode": "1",
-    "frame": "testframe"
+    "frame": "testframe",
   },
 ];
 
@@ -127,7 +127,7 @@ function continueTest() {
   var test = tests[Math.floor(index / 2)];
 
   var p = gTestWindow.document.createElement("p");
-  p.innerHTML = "Plugin Stream Test " + index;
+  p.textContent = "Plugin Stream Test " + Number(index);
   gTestWindow.document.getElementById("test").appendChild(p);
 
   if (test.frame) {

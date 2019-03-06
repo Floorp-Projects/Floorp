@@ -13,7 +13,7 @@
   window.frameLoaded = function frameLoaded_toCrash() {
     SimpleTest.expectChildProcessCrash();
 
-    crashAndGetCrashServiceRecord("triggerXError", function (cm, crash) {
+    crashAndGetCrashServiceRecord("triggerXError", function(cm, crash) {
       var isPluginCrash = crash.isOfType(cm.PROCESS_TYPE_PLUGIN, cm.CRASH_TYPE_CRASH);
       ok(isPluginCrash, "Record should be a plugin crash");
       if (!isPluginCrash) {
@@ -21,7 +21,6 @@
       }
       SimpleTest.finish();
     });
-
-  }
+  };
   </script>
   <iframe id="iframe1" src="crashing_subpage.html" width="600" height="600"></iframe>

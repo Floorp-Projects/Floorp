@@ -204,22 +204,6 @@ void nsBindingManager::RemovedFromDocumentInternal(
   aContent->SetXBLInsertionPoint(nullptr);
 }
 
-nsAtom* nsBindingManager::ResolveTag(nsIContent* aContent,
-                                     int32_t* aNameSpaceID) {
-  nsXBLBinding* binding = aContent->GetXBLBinding();
-
-  if (binding) {
-    nsAtom* base = binding->GetBaseTag(aNameSpaceID);
-
-    if (base) {
-      return base;
-    }
-  }
-
-  *aNameSpaceID = aContent->GetNameSpaceID();
-  return aContent->NodeInfo()->NameAtom();
-}
-
 nsINodeList* nsBindingManager::GetAnonymousNodesFor(nsIContent* aContent) {
   nsXBLBinding* binding = GetBindingWithContent(aContent);
   return binding ? binding->GetAnonymousNodeList() : nullptr;

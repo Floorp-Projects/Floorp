@@ -6,30 +6,32 @@
  * and are CC licensed by https://www.flickr.com/photos/legofenris/.
  */
 
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+
 // services required be initialized in order to run CacheStorage
-var ss = Cc['@mozilla.org/storage/service;1']
+var ss = Cc["@mozilla.org/storage/service;1"]
          .createInstance(Ci.mozIStorageService);
-var sts = Cc['@mozilla.org/network/stream-transport-service;1']
+var sts = Cc["@mozilla.org/network/stream-transport-service;1"]
           .getService(Ci.nsIStreamTransportService);
-var hash = Cc['@mozilla.org/security/hash;1']
+var hash = Cc["@mozilla.org/security/hash;1"]
            .createInstance(Ci.nsICryptoHash);
 
 // Expose Cache and Fetch symbols on the global
-Cu.importGlobalProperties(['caches', 'File', 'fetch']);
+Cu.importGlobalProperties(["caches", "File", "fetch"]);
 
 // Extract a zip file into the profile
 function create_test_profile(zipFileName) {
   do_get_profile();
 
-  var directoryService = Cc['@mozilla.org/file/directory_service;1']
-                         .getService(Ci.nsIProperties);
-  var profileDir = directoryService.get('ProfD', Ci.nsIFile);
-  var currentDir = directoryService.get('CurWorkD', Ci.nsIFile);
+  var directoryService = Services.dirsvc;
+
+  var profileDir = directoryService.get("ProfD", Ci.nsIFile);
+  var currentDir = directoryService.get("CurWorkD", Ci.nsIFile);
 
   var packageFile = currentDir.clone();
   packageFile.append(zipFileName);
 
-  var zipReader = Cc['@mozilla.org/libjar/zip-reader;1']
+  var zipReader = Cc["@mozilla.org/libjar/zip-reader;1"]
                   .createInstance(Ci.nsIZipReader);
   zipReader.open(packageFile);
 
@@ -40,20 +42,20 @@ function create_test_profile(zipFileName) {
     var zipentry = zipReader.getEntry(entryName);
 
     var file = profileDir.clone();
-    entryName.split('/').forEach(function(part) {
+    entryName.split("/").forEach(function(part) {
       file.append(part);
     });
 
     if (zipentry.isDirectory) {
-      file.create(Ci.nsIFile.DIRECTORY_TYPE, parseInt('0755', 8));
+      file.create(Ci.nsIFile.DIRECTORY_TYPE, parseInt("0755", 8));
     } else {
       var istream = zipReader.getInputStream(entryName);
 
-      var ostream = Cc['@mozilla.org/network/file-output-stream;1']
+      var ostream = Cc["@mozilla.org/network/file-output-stream;1"]
                     .createInstance(Ci.nsIFileOutputStream);
-      ostream.init(file, -1, parseInt('0644', 8), 0);
+      ostream.init(file, -1, parseInt("0644", 8), 0);
 
-      var bostream = Cc['@mozilla.org/network/buffered-output-stream;1']
+      var bostream = Cc["@mozilla.org/network/buffered-output-stream;1"]
                      .createInstance(Ci.nsIBufferedOutputStream);
       bostream.init(ostream, 32 * 1024);
 
@@ -67,10 +69,8 @@ function create_test_profile(zipFileName) {
   zipReader.close();
 }
 
-function getCacheDir()
-{
-  let dirService = Cc["@mozilla.org/file/directory_service;1"]
-                   .getService(Ci.nsIProperties);
+function getCacheDir() {
+  let dirService = Services.dirsvc;
 
   let profileDir = dirService.get("ProfD", Ci.nsIFile);
   let cacheDir = profileDir.clone();

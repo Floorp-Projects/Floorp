@@ -3293,14 +3293,15 @@ nsCSSFrameConstructor::FindDataByInt(int32_t aInt, const Element& aElement,
 
 /* static */
 const nsCSSFrameConstructor::FrameConstructionData*
-nsCSSFrameConstructor::FindDataByTag(nsAtom* aTag, const Element& aElement,
+nsCSSFrameConstructor::FindDataByTag(const Element& aElement,
                                      ComputedStyle& aStyle,
                                      const FrameConstructionDataByTag* aDataPtr,
                                      uint32_t aDataLength) {
+  const nsAtom* tag = aElement.NodeInfo()->NameAtom();
   for (const FrameConstructionDataByTag *curData = aDataPtr,
                                         *endData = aDataPtr + aDataLength;
        curData != endData; ++curData) {
-    if (curData->mTag == aTag) {
+    if (curData->mTag == tag) {
       const FrameConstructionData* data = &curData->mData;
       if (data->mBits & FCDATA_FUNC_IS_DATA_GETTER) {
         return data->mFunc.mDataGetter(aElement, aStyle);
@@ -3396,7 +3397,7 @@ nsCSSFrameConstructor::FindHTMLData(const Element& aElement,
       COMPLEX_TAG_CREATE(details,
                          &nsCSSFrameConstructor::ConstructDetailsFrame)};
 
-  return FindDataByTag(tag, aElement, aStyle, sHTMLData,
+  return FindDataByTag(aElement, aStyle, sHTMLData,
                        ArrayLength(sHTMLData));
 }
 
@@ -3954,7 +3955,7 @@ static nsIFrame* NS_NewGridBoxFrame(nsIPresShell* aPresShell,
 
 /* static */
 const nsCSSFrameConstructor::FrameConstructionData*
-nsCSSFrameConstructor::FindXULTagData(const Element& aElement, nsAtom* aTag,
+nsCSSFrameConstructor::FindXULTagData(const Element& aElement,
                                       ComputedStyle& aStyle) {
   MOZ_ASSERT(aElement.IsXULElement());
 
@@ -3997,8 +3998,7 @@ nsCSSFrameConstructor::FindXULTagData(const Element& aElement, nsAtom* aTag,
       SIMPLE_XUL_CREATE(scrollbar, NS_NewScrollbarFrame),
       SIMPLE_XUL_CREATE(scrollbarbutton, NS_NewScrollbarButtonFrame)};
 
-  return FindDataByTag(aTag, aElement, aStyle, sXULTagData,
-                       ArrayLength(sXULTagData));
+  return FindDataByTag(aElement, aStyle, sXULTagData, ArrayLength(sXULTagData));
 }
 
 #ifdef MOZ_XUL
@@ -4757,8 +4757,7 @@ nsCSSFrameConstructor::FindMathMLData(const Element& aElement,
       SIMPLE_MATHML_CREATE(menclose_, NS_NewMathMLmencloseFrame),
       SIMPLE_MATHML_CREATE(semantics_, NS_NewMathMLsemanticsFrame)};
 
-  return FindDataByTag(tag, aElement, aStyle, sMathMLData,
-                       ArrayLength(sMathMLData));
+  return FindDataByTag(aElement, aStyle, sMathMLData, ArrayLength(sMathMLData));
 }
 
 nsContainerFrame* nsCSSFrameConstructor::ConstructFrameWithAnonymousChild(
@@ -5065,7 +5064,7 @@ nsCSSFrameConstructor::FindSVGData(const Element& aElement,
       SIMPLE_SVG_CREATE(feTurbulence, NS_NewSVGFELeafFrame)};
 
   const FrameConstructionData* data =
-      FindDataByTag(tag, aElement, aStyle, sSVGData, ArrayLength(sSVGData));
+      FindDataByTag(aElement, aStyle, sSVGData, ArrayLength(sSVGData));
 
   if (!data) {
     data = &sContainerData;
@@ -5218,7 +5217,7 @@ static bool ShouldSuppressFrameInNonOpenDetails(
 const nsCSSFrameConstructor::FrameConstructionData*
 nsCSSFrameConstructor::FindDataForContent(nsIContent& aContent,
                                           ComputedStyle& aStyle,
-                                          nsIFrame* aParentFrame, nsAtom* aTag,
+                                          nsIFrame* aParentFrame,
                                           uint32_t aFlags) {
   MOZ_ASSERT(aStyle.StyleDisplay()->mDisplay != StyleDisplay::None &&
                  aStyle.StyleDisplay()->mDisplay != StyleDisplay::Contents,
@@ -5228,14 +5227,13 @@ nsCSSFrameConstructor::FindDataForContent(nsIContent& aContent,
     return FindTextData(*text, aParentFrame);
   }
 
-  return FindElementData(*aContent.AsElement(), aStyle, aParentFrame, aTag,
-                         aFlags);
+  return FindElementData(*aContent.AsElement(), aStyle, aParentFrame, aFlags);
 }
 
 const nsCSSFrameConstructor::FrameConstructionData*
 nsCSSFrameConstructor::FindElementData(const Element& aElement,
                                        ComputedStyle& aStyle,
-                                       nsIFrame* aParentFrame, nsAtom* aTag,
+                                       nsIFrame* aParentFrame,
                                        uint32_t aFlags) {
   // Don't create frames for non-SVG element children of SVG elements.
   if (!aElement.IsSVGElement()) {
@@ -5248,8 +5246,7 @@ nsCSSFrameConstructor::FindElementData(const Element& aElement,
     }
   }
 
-  if (auto* data =
-          FindElementTagData(aElement, aStyle, aParentFrame, aTag, aFlags)) {
+  if (auto* data = FindElementTagData(aElement, aStyle, aParentFrame, aFlags)) {
     return data;
   }
 
@@ -5272,7 +5269,7 @@ nsCSSFrameConstructor::FindElementData(const Element& aElement,
 const nsCSSFrameConstructor::FrameConstructionData*
 nsCSSFrameConstructor::FindElementTagData(const Element& aElement,
                                           ComputedStyle& aStyle,
-                                          nsIFrame* aParentFrame, nsAtom* aTag,
+                                          nsIFrame* aParentFrame,
                                           uint32_t aFlags) {
   switch (aElement.GetNameSpaceID()) {
     case kNameSpaceID_XHTML:
@@ -5284,7 +5281,7 @@ nsCSSFrameConstructor::FindElementTagData(const Element& aElement,
                          aFlags & ITEM_IS_WITHIN_SVG_TEXT,
                          aFlags & ITEM_ALLOWS_TEXT_PATH_CHILD, aStyle);
     case kNameSpaceID_XUL:
-      return FindXULTagData(aElement, aTag, aStyle);
+      return FindXULTagData(aElement, aStyle);
     default:
       return nullptr;
   }
@@ -5292,19 +5289,16 @@ nsCSSFrameConstructor::FindElementTagData(const Element& aElement,
 
 nsCSSFrameConstructor::XBLBindingLoadInfo::XBLBindingLoadInfo(
     already_AddRefed<ComputedStyle>&& aStyle,
-    mozilla::UniquePtr<PendingBinding> aPendingBinding, nsAtom* aTag)
+    UniquePtr<PendingBinding> aPendingBinding)
     : mStyle(std::move(aStyle)),
-      mPendingBinding(std::move(aPendingBinding)),
-      mTag(aTag) {
-  MOZ_ASSERT(mTag);
+      mPendingBinding(std::move(aPendingBinding)) {
   MOZ_ASSERT(mStyle);
 }
 
 nsCSSFrameConstructor::XBLBindingLoadInfo::XBLBindingLoadInfo(
     nsIContent& aContent, ComputedStyle& aStyle)
     : mStyle(&aStyle),
-      mPendingBinding(nullptr),
-      mTag(aContent.NodeInfo()->NameAtom()) {}
+      mPendingBinding(nullptr) {}
 
 nsCSSFrameConstructor::XBLBindingLoadInfo::XBLBindingLoadInfo() = default;
 
@@ -5344,18 +5338,7 @@ nsCSSFrameConstructor::LoadXBLBindingIfNeeded(nsIContent& aContent,
           ? mPresShell->StyleSet()->ResolveServoStyle(*aContent.AsElement())
           : do_AddRef(&aStyle);
 
-  nsAtom* tag = aContent.NodeInfo()->NameAtom();
-  if (aContent.IsXULElement()) {
-    int32_t overridenNamespace;
-    nsAtom* overridenTag =
-        mDocument->BindingManager()->ResolveTag(&aContent, &overridenNamespace);
-    // Only allow overriding from & to XUL.
-    if (overridenNamespace == kNameSpaceID_XUL) {
-      tag = overridenTag;
-    }
-  }
-
-  return {style.forget(), std::move(newPendingBinding), tag};
+  return {style.forget(), std::move(newPendingBinding)};
 }
 
 void nsCSSFrameConstructor::AddFrameConstructionItemsInternal(
@@ -5371,11 +5354,10 @@ void nsCSSFrameConstructor::AddFrameConstructionItemsInternal(
 
   PendingBinding* pendingBinding = nullptr;
   RefPtr<ComputedStyle> style;
-  nsAtom* tag;
   {
     XBLBindingLoadInfo xblInfo =
         LoadXBLBindingIfNeeded(*aContent, *aComputedStyle, aFlags);
-    if (!xblInfo.mTag) {
+    if (!xblInfo.mStyle) {
       return;
     }
 
@@ -5386,8 +5368,6 @@ void nsCSSFrameConstructor::AddFrameConstructionItemsInternal(
 
     style = xblInfo.mStyle.forget();
     aComputedStyle = style.get();
-
-    tag = xblInfo.mTag;
   }
 
   const bool isGeneratedContent = !!(aFlags & ITEM_IS_GENERATED_CONTENT);
@@ -5446,7 +5426,7 @@ void nsCSSFrameConstructor::AddFrameConstructionItemsInternal(
   }
 
   const FrameConstructionData* data =
-      FindDataForContent(*aContent, *style, aParentFrame, tag, aFlags);
+      FindDataForContent(*aContent, *style, aParentFrame, aFlags);
   if (!data || data->mBits & FCDATA_SUPPRESS_FRAME) {
     return;
   }
@@ -5508,8 +5488,7 @@ void nsCSSFrameConstructor::AddFrameConstructionItemsInternal(
     item->mContent->AddRef();
   }
   item->mIsRootPopupgroup = aContent->IsRootOfNativeAnonymousSubtree() &&
-                            aContent->IsXULElement() &&
-                            tag == nsGkAtoms::popupgroup;
+                            aContent->IsXULElement(nsGkAtoms::popupgroup);
   if (item->mIsRootPopupgroup) {
     aState.mHavePendingPopupgroup = true;
   }

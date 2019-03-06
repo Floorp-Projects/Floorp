@@ -12,6 +12,7 @@ loader.lazyRequireGetter(this, "viewSource", "devtools/client/shared/view-source
 loader.lazyRequireGetter(this, "openDocLink", "devtools/client/shared/link", true);
 
 var gHudId = 0;
+const isMacOS = Services.appinfo.OS === "Darwin";
 
 /**
  * A WebConsole instance is an interactive console initialized *per target*
@@ -148,8 +149,11 @@ class WebConsole {
    * @param string link
    *        The URL you want to open in a new tab.
    */
-  openLink(link, e) {
-    openDocLink(link);
+  openLink(link, e = {}) {
+    openDocLink(link, {
+      relatedToCurrent: true,
+      inBackground: isMacOS ? e.metaKey : e.ctrlKey,
+    });
   }
 
   /**

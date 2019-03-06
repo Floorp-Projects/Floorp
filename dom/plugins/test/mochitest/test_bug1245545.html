@@ -12,7 +12,7 @@
      SimpleTest.waitForExplicitFinish();
      setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
      SpecialPowers.pushPrefEnv({ "set": [
-       ['dom.ipc.plugins.unloadTimeoutSecs', 0]
+       ["dom.ipc.plugins.unloadTimeoutSecs", 0],
      ] });
 
      function startTest() {
@@ -40,7 +40,7 @@
            ok(true, "Test plugin unloaded in chrome process");
            SimpleTest.finish();
          } else {
-           var results = script.sendAsyncMessage("check-plugin-unload");
+           script.sendAsyncMessage("check-plugin-unload");
          }
        }
        testContentUnload();

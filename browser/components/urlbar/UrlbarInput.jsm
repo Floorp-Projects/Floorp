@@ -345,7 +345,7 @@ class UrlbarInput {
             browser.lastLocationChange == lastLocationChange) {
           openParams.postData = data.postData;
           openParams.allowInheritPrincipal = data.mayInheritPrincipal;
-          this._loadURL(data.url, where, openParams);
+          this._loadURL(data.url, where, openParams, browser);
         }
       });
       return;
@@ -856,10 +856,10 @@ class UrlbarInput {
    *   The POST data associated with a search submission.
    * @param {boolean} [params.allowInheritPrincipal]
    *   If the principal may be inherited
+   * @param {object} browser [optional] the browser to use for the load.
    */
-  _loadURL(url, openUILinkWhere, params) {
-    let browser = this.window.gBrowser.selectedBrowser;
-
+  _loadURL(url, openUILinkWhere, params,
+           browser = this.window.gBrowser.selectedBrowser) {
     this.value = url;
     browser.userTypedValue = url;
 

@@ -65,13 +65,12 @@ SpecialPowers.pushPrefEnv({
           ["dom.caches.testing.enabled", true],
           ["dom.quotaManager.testing", true]],
 }, function() {
-  var name = 'toBeOrphaned';
+  var name = "toBeOrphaned";
   var cache = null;
   var initialUsage = 0;
   var fullUsage = 0;
-  var resetUsage = 0;
   var endUsage = 0;
-  var url = 'test_cache_add.js';
+  var url = "test_cache_add.js";
 
   // start from a fresh origin directory so other tests do not influence our
   // results
@@ -80,7 +79,7 @@ SpecialPowers.pushPrefEnv({
   }).then(function() {
     return storageUsage();
   }).then(function(usage) {
-    is(0, usage, 'disk usage should be zero to start');
+    is(0, usage, "disk usage should be zero to start");
   })
 
   // Initialize and populate an initial cache to get the base sqlite pages
@@ -94,7 +93,7 @@ SpecialPowers.pushPrefEnv({
   }).then(function() {
     return caches.delete(name);
   }).then(function(deleted) {
-    ok(deleted, 'cache should be deleted');
+    ok(deleted, "cache should be deleted");
 
     // This is a bit superfluous, but its necessary to make sure the Cache is
     // fully deleted before we proceed.  The deletion actually takes place in
@@ -122,7 +121,7 @@ SpecialPowers.pushPrefEnv({
   }).then(function() {
     return caches.delete(name);
   }).then(function(deleted) {
-    ok(deleted, 'cache should be deleted');
+    ok(deleted, "cache should be deleted");
   })
 
   // Reset the quota dir while the cache is deleted, but still referenced
@@ -133,7 +132,7 @@ SpecialPowers.pushPrefEnv({
     return storageUsage();
   }).then(function(usage) {
     fullUsage = usage;
-    ok(fullUsage > initialUsage, 'disk usage should have grown');
+    ok(fullUsage > initialUsage, "disk usage should have grown");
   })
 
   // Now perform a new Cache operation that will reopen the origin.  This
@@ -141,7 +140,7 @@ SpecialPowers.pushPrefEnv({
   .then(function() {
     return caches.has(name);
   }).then(function(result) {
-    ok(!result, 'cache should not exist in storage');
+    ok(!result, "cache should not exist in storage");
   })
 
   // Finally, verify orphaned data was cleaned up by re-checking the disk
@@ -155,8 +154,8 @@ SpecialPowers.pushPrefEnv({
     endUsage = usage;
     dump("### ### initial:" + initialUsage + ", full:" + fullUsage +
          ", end:" + endUsage + "\n");
-    ok(endUsage < fullUsage, 'disk usage should have shrank');
-    is(endUsage, initialUsage, 'disk usage should return to original');
+    ok(endUsage < fullUsage, "disk usage should have shrank");
+    is(endUsage, initialUsage, "disk usage should return to original");
     SimpleTest.finish();
   });
 });

@@ -7,7 +7,7 @@ DIRS += [
 
 ]
 
-DebuggerModules(
+CompiledModules(
     'annotateFrames.js',
     'collapseFrames.js',
     'displayName.js',

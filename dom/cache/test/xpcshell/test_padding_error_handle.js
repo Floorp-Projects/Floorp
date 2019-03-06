@@ -10,7 +10,7 @@ function getTempPaddingFilePath() {
   return temporaryPaddingFile;
 }
 
-function createTempPaddingFile () {
+function createTempPaddingFile() {
   let temporaryPaddingFile = getTempPaddingFilePath();
   temporaryPaddingFile.create(Ci.nsIFile.NORMAL_FILE_TYPE, parseInt("0644", 8));
 
@@ -20,7 +20,7 @@ function createTempPaddingFile () {
 
 async function run_test() {
   do_test_pending();
-  create_test_profile('schema_25_profile.zip');
+  create_test_profile("schema_25_profile.zip");
   let cache = await caches.open("test");
 
   // Step 1: Verify cache.match won't fail when there is a temporary padding

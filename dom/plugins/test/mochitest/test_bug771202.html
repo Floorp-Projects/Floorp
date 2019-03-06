@@ -21,13 +21,13 @@ setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
 
 function go() {
   // Set things up.
-  var win = document.getElementById('ifr').contentWindow;
-  var plugin = win.document.getElementById('pluginElement');
+  var win = document.getElementById("ifr").contentWindow;
+  var plugin = win.document.getElementById("pluginElement");
   var testValue = plugin.getObjectValue();
 
   function checkPlugin() {
       dump("About to call checkObjectValue\n");
-      ok(plugin.checkObjectValue(testValue), 'Plugin proto should work correctly');
+      ok(plugin.checkObjectValue(testValue), "Plugin proto should work correctly");
   }
   // First, check things before transplanting.
   checkPlugin();

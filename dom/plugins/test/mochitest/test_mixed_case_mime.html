@@ -11,7 +11,7 @@
   setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED, "Second Test Plug-in");
 
   function frameLoaded() {
-    var contentDocument = document.getElementById('testframe').contentDocument;
+    var contentDocument = document.getElementById("testframe").contentDocument;
     ok(contentDocument.body.innerHTML.length > 0, "Frame content shouldn't be empty.");
     ok(contentDocument.plugins.length > 0, "Frame content should have a plugin.");
     var plugin = contentDocument.plugins[0];

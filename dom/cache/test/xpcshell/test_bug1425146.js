@@ -42,12 +42,12 @@ async function run_test() {
   // 5. Add "create_cache.js".
   // 6. Replace the "storage.sqlite" created by FF56 (storage v2.0) with the
   //    "storage.sqlite" created by FF57 (storage v2.1)
-  create_test_profile('bug1425146_profile.zip');
+  create_test_profile("bug1425146_profile.zip");
 
   try {
     await caches.open("test");
     ok(true, "Should not have thrown");
-  } catch(ex) {
+  } catch (ex) {
     ok(false, "Should not have thrown");
   }
 
