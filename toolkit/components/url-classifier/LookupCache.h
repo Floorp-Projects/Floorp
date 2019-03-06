@@ -231,9 +231,6 @@ class LookupCache {
   virtual nsresult Has(const Completion& aCompletion, bool* aHas,
                        uint32_t* aMatchLength, bool* aConfirmed) = 0;
 
-  virtual nsresult StoreToFile(nsCOMPtr<nsIFile>& aFile) = 0;
-  virtual nsresult LoadFromFile(nsCOMPtr<nsIFile>& aFile) = 0;
-
   virtual bool IsEmpty() const = 0;
 
   virtual void ClearAll();
@@ -253,17 +250,14 @@ class LookupCache {
  private:
   nsresult LoadPrefixSet();
 
+  virtual nsresult StoreToFile(nsCOMPtr<nsIFile>& aFile) = 0;
+  virtual nsresult LoadFromFile(nsCOMPtr<nsIFile>& aFile) = 0;
   virtual size_t SizeOfPrefixSet() const = 0;
-  virtual nsCString GetPrefixSetSuffix() const = 0;
 
   virtual int Ver() const = 0;
 
-  virtual nsresult LoadLegacyFile() = 0;
-
  protected:
   virtual ~LookupCache() {}
-
-  static const uint32_t MAX_BUFFER_SIZE = 64 * 1024;
 
   // Check completions in positive cache and prefix in negative cache.
   // 'aHas' and 'aConfirmed' are output parameters.
@@ -298,9 +292,6 @@ class LookupCacheV2 final : public LookupCache {
   virtual nsresult Has(const Completion& aCompletion, bool* aHas,
                        uint32_t* aMatchLength, bool* aConfirmed) override;
 
-  virtual nsresult StoreToFile(nsCOMPtr<nsIFile>& aFile) override;
-  virtual nsresult LoadFromFile(nsCOMPtr<nsIFile>& aFile) override;
-
   virtual bool IsEmpty() const override;
 
   nsresult Build(AddPrefixArray& aAddPrefixes, AddCompleteArray& aAddCompletes);
@@ -323,15 +314,14 @@ class LookupCacheV2 final : public LookupCache {
   nsresult ReadCompletions();
 
   virtual nsresult ClearPrefixes() override;
+  virtual nsresult StoreToFile(nsCOMPtr<nsIFile>& aFile) override;
+  virtual nsresult LoadFromFile(nsCOMPtr<nsIFile>& aFile) override;
   virtual size_t SizeOfPrefixSet() const override;
-  virtual nsCString GetPrefixSetSuffix() const override;
 
  private:
   ~LookupCacheV2() {}
 
   virtual int Ver() const override { return VER; }
-
-  virtual nsresult LoadLegacyFile() override;
 
   // Construct a Prefix Set with known prefixes.
   // This will Clear() aAddPrefixes when done.
