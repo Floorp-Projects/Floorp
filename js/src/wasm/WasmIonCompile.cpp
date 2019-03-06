@@ -3818,49 +3818,49 @@ static bool EmitBodyExprs(FunctionCompiler& f) {
       // Miscellaneous operations
       case uint16_t(Op::MiscPrefix): {
         switch (op.b1) {
-          case uint16_t(MiscOp::I32TruncSSatF32):
-          case uint16_t(MiscOp::I32TruncUSatF32):
+          case uint32_t(MiscOp::I32TruncSSatF32):
+          case uint32_t(MiscOp::I32TruncUSatF32):
             CHECK(EmitTruncate(f, ValType::F32, ValType::I32,
                                MiscOp(op.b1) == MiscOp::I32TruncUSatF32, true));
-          case uint16_t(MiscOp::I32TruncSSatF64):
-          case uint16_t(MiscOp::I32TruncUSatF64):
+          case uint32_t(MiscOp::I32TruncSSatF64):
+          case uint32_t(MiscOp::I32TruncUSatF64):
             CHECK(EmitTruncate(f, ValType::F64, ValType::I32,
                                MiscOp(op.b1) == MiscOp::I32TruncUSatF64, true));
-          case uint16_t(MiscOp::I64TruncSSatF32):
-          case uint16_t(MiscOp::I64TruncUSatF32):
+          case uint32_t(MiscOp::I64TruncSSatF32):
+          case uint32_t(MiscOp::I64TruncUSatF32):
             CHECK(EmitTruncate(f, ValType::F32, ValType::I64,
                                MiscOp(op.b1) == MiscOp::I64TruncUSatF32, true));
-          case uint16_t(MiscOp::I64TruncSSatF64):
-          case uint16_t(MiscOp::I64TruncUSatF64):
+          case uint32_t(MiscOp::I64TruncSSatF64):
+          case uint32_t(MiscOp::I64TruncUSatF64):
             CHECK(EmitTruncate(f, ValType::F64, ValType::I64,
                                MiscOp(op.b1) == MiscOp::I64TruncUSatF64, true));
 #ifdef ENABLE_WASM_BULKMEM_OPS
-          case uint16_t(MiscOp::MemCopy):
+          case uint32_t(MiscOp::MemCopy):
             CHECK(EmitMemOrTableCopy(f, /*isMem=*/true));
-          case uint16_t(MiscOp::DataDrop):
+          case uint32_t(MiscOp::DataDrop):
             CHECK(EmitDataOrElemDrop(f, /*isData=*/true));
-          case uint16_t(MiscOp::MemFill):
+          case uint32_t(MiscOp::MemFill):
             CHECK(EmitMemFill(f));
-          case uint16_t(MiscOp::MemInit):
+          case uint32_t(MiscOp::MemInit):
             CHECK(EmitMemOrTableInit(f, /*isMem=*/true));
-          case uint16_t(MiscOp::TableCopy):
+          case uint32_t(MiscOp::TableCopy):
             CHECK(EmitMemOrTableCopy(f, /*isMem=*/false));
-          case uint16_t(MiscOp::ElemDrop):
+          case uint32_t(MiscOp::ElemDrop):
             CHECK(EmitDataOrElemDrop(f, /*isData=*/false));
-          case uint16_t(MiscOp::TableInit):
+          case uint32_t(MiscOp::TableInit):
             CHECK(EmitMemOrTableInit(f, /*isMem=*/false));
 #endif
 #ifdef ENABLE_WASM_REFTYPES
-          case uint16_t(MiscOp::TableGrow):
+          case uint32_t(MiscOp::TableGrow):
             CHECK(EmitTableGrow(f));
-          case uint16_t(MiscOp::TableSize):
+          case uint32_t(MiscOp::TableSize):
             CHECK(EmitTableSize(f));
 #endif
 #ifdef ENABLE_WASM_GC
-          case uint16_t(MiscOp::StructNew):
-          case uint16_t(MiscOp::StructGet):
-          case uint16_t(MiscOp::StructSet):
-          case uint16_t(MiscOp::StructNarrow):
+          case uint32_t(MiscOp::StructNew):
+          case uint32_t(MiscOp::StructGet):
+          case uint32_t(MiscOp::StructSet):
+          case uint32_t(MiscOp::StructNarrow):
             // Not yet supported
             return f.iter().unrecognizedOpcode(&op);
 #endif
@@ -3873,182 +3873,182 @@ static bool EmitBodyExprs(FunctionCompiler& f) {
       // Thread operations
       case uint16_t(Op::ThreadPrefix): {
         switch (op.b1) {
-          case uint16_t(ThreadOp::Wake):
+          case uint32_t(ThreadOp::Wake):
             CHECK(EmitWake(f));
 
-          case uint16_t(ThreadOp::I32Wait):
+          case uint32_t(ThreadOp::I32Wait):
             CHECK(EmitWait(f, ValType::I32, 4));
-          case uint16_t(ThreadOp::I64Wait):
+          case uint32_t(ThreadOp::I64Wait):
             CHECK(EmitWait(f, ValType::I64, 8));
 
-          case uint16_t(ThreadOp::I32AtomicLoad):
+          case uint32_t(ThreadOp::I32AtomicLoad):
             CHECK(EmitAtomicLoad(f, ValType::I32, Scalar::Int32));
-          case uint16_t(ThreadOp::I64AtomicLoad):
+          case uint32_t(ThreadOp::I64AtomicLoad):
             CHECK(EmitAtomicLoad(f, ValType::I64, Scalar::Int64));
-          case uint16_t(ThreadOp::I32AtomicLoad8U):
+          case uint32_t(ThreadOp::I32AtomicLoad8U):
             CHECK(EmitAtomicLoad(f, ValType::I32, Scalar::Uint8));
-          case uint16_t(ThreadOp::I32AtomicLoad16U):
+          case uint32_t(ThreadOp::I32AtomicLoad16U):
             CHECK(EmitAtomicLoad(f, ValType::I32, Scalar::Uint16));
-          case uint16_t(ThreadOp::I64AtomicLoad8U):
+          case uint32_t(ThreadOp::I64AtomicLoad8U):
             CHECK(EmitAtomicLoad(f, ValType::I64, Scalar::Uint8));
-          case uint16_t(ThreadOp::I64AtomicLoad16U):
+          case uint32_t(ThreadOp::I64AtomicLoad16U):
             CHECK(EmitAtomicLoad(f, ValType::I64, Scalar::Uint16));
-          case uint16_t(ThreadOp::I64AtomicLoad32U):
+          case uint32_t(ThreadOp::I64AtomicLoad32U):
             CHECK(EmitAtomicLoad(f, ValType::I64, Scalar::Uint32));
 
-          case uint16_t(ThreadOp::I32AtomicStore):
+          case uint32_t(ThreadOp::I32AtomicStore):
             CHECK(EmitAtomicStore(f, ValType::I32, Scalar::Int32));
-          case uint16_t(ThreadOp::I64AtomicStore):
+          case uint32_t(ThreadOp::I64AtomicStore):
             CHECK(EmitAtomicStore(f, ValType::I64, Scalar::Int64));
-          case uint16_t(ThreadOp::I32AtomicStore8U):
+          case uint32_t(ThreadOp::I32AtomicStore8U):
             CHECK(EmitAtomicStore(f, ValType::I32, Scalar::Uint8));
-          case uint16_t(ThreadOp::I32AtomicStore16U):
+          case uint32_t(ThreadOp::I32AtomicStore16U):
             CHECK(EmitAtomicStore(f, ValType::I32, Scalar::Uint16));
-          case uint16_t(ThreadOp::I64AtomicStore8U):
+          case uint32_t(ThreadOp::I64AtomicStore8U):
             CHECK(EmitAtomicStore(f, ValType::I64, Scalar::Uint8));
-          case uint16_t(ThreadOp::I64AtomicStore16U):
+          case uint32_t(ThreadOp::I64AtomicStore16U):
             CHECK(EmitAtomicStore(f, ValType::I64, Scalar::Uint16));
-          case uint16_t(ThreadOp::I64AtomicStore32U):
+          case uint32_t(ThreadOp::I64AtomicStore32U):
             CHECK(EmitAtomicStore(f, ValType::I64, Scalar::Uint32));
 
-          case uint16_t(ThreadOp::I32AtomicAdd):
+          case uint32_t(ThreadOp::I32AtomicAdd):
             CHECK(EmitAtomicRMW(f, ValType::I32, Scalar::Int32,
                                 AtomicFetchAddOp));
-          case uint16_t(ThreadOp::I64AtomicAdd):
+          case uint32_t(ThreadOp::I64AtomicAdd):
             CHECK(EmitAtomicRMW(f, ValType::I64, Scalar::Int64,
                                 AtomicFetchAddOp));
-          case uint16_t(ThreadOp::I32AtomicAdd8U):
+          case uint32_t(ThreadOp::I32AtomicAdd8U):
             CHECK(EmitAtomicRMW(f, ValType::I32, Scalar::Uint8,
                                 AtomicFetchAddOp));
-          case uint16_t(ThreadOp::I32AtomicAdd16U):
+          case uint32_t(ThreadOp::I32AtomicAdd16U):
             CHECK(EmitAtomicRMW(f, ValType::I32, Scalar::Uint16,
                                 AtomicFetchAddOp));
-          case uint16_t(ThreadOp::I64AtomicAdd8U):
+          case uint32_t(ThreadOp::I64AtomicAdd8U):
             CHECK(EmitAtomicRMW(f, ValType::I64, Scalar::Uint8,
                                 AtomicFetchAddOp));
-          case uint16_t(ThreadOp::I64AtomicAdd16U):
+          case uint32_t(ThreadOp::I64AtomicAdd16U):
             CHECK(EmitAtomicRMW(f, ValType::I64, Scalar::Uint16,
                                 AtomicFetchAddOp));
-          case uint16_t(ThreadOp::I64AtomicAdd32U):
+          case uint32_t(ThreadOp::I64AtomicAdd32U):
             CHECK(EmitAtomicRMW(f, ValType::I64, Scalar::Uint32,
                                 AtomicFetchAddOp));
 
-          case uint16_t(ThreadOp::I32AtomicSub):
+          case uint32_t(ThreadOp::I32AtomicSub):
             CHECK(EmitAtomicRMW(f, ValType::I32, Scalar::Int32,
                                 AtomicFetchSubOp));
-          case uint16_t(ThreadOp::I64AtomicSub):
+          case uint32_t(ThreadOp::I64AtomicSub):
             CHECK(EmitAtomicRMW(f, ValType::I64, Scalar::Int64,
                                 AtomicFetchSubOp));
-          case uint16_t(ThreadOp::I32AtomicSub8U):
+          case uint32_t(ThreadOp::I32AtomicSub8U):
             CHECK(EmitAtomicRMW(f, ValType::I32, Scalar::Uint8,
                                 AtomicFetchSubOp));
-          case uint16_t(ThreadOp::I32AtomicSub16U):
+          case uint32_t(ThreadOp::I32AtomicSub16U):
             CHECK(EmitAtomicRMW(f, ValType::I32, Scalar::Uint16,
                                 AtomicFetchSubOp));
-          case uint16_t(ThreadOp::I64AtomicSub8U):
+          case uint32_t(ThreadOp::I64AtomicSub8U):
             CHECK(EmitAtomicRMW(f, ValType::I64, Scalar::Uint8,
                                 AtomicFetchSubOp));
-          case uint16_t(ThreadOp::I64AtomicSub16U):
+          case uint32_t(ThreadOp::I64AtomicSub16U):
             CHECK(EmitAtomicRMW(f, ValType::I64, Scalar::Uint16,
                                 AtomicFetchSubOp));
-          case uint16_t(ThreadOp::I64AtomicSub32U):
+          case uint32_t(ThreadOp::I64AtomicSub32U):
             CHECK(EmitAtomicRMW(f, ValType::I64, Scalar::Uint32,
                                 AtomicFetchSubOp));
 
-          case uint16_t(ThreadOp::I32AtomicAnd):
+          case uint32_t(ThreadOp::I32AtomicAnd):
             CHECK(EmitAtomicRMW(f, ValType::I32, Scalar::Int32,
                                 AtomicFetchAndOp));
-          case uint16_t(ThreadOp::I64AtomicAnd):
+          case uint32_t(ThreadOp::I64AtomicAnd):
             CHECK(EmitAtomicRMW(f, ValType::I64, Scalar::Int64,
                                 AtomicFetchAndOp));
-          case uint16_t(ThreadOp::I32AtomicAnd8U):
+          case uint32_t(ThreadOp::I32AtomicAnd8U):
             CHECK(EmitAtomicRMW(f, ValType::I32, Scalar::Uint8,
                                 AtomicFetchAndOp));
-          case uint16_t(ThreadOp::I32AtomicAnd16U):
+          case uint32_t(ThreadOp::I32AtomicAnd16U):
             CHECK(EmitAtomicRMW(f, ValType::I32, Scalar::Uint16,
                                 AtomicFetchAndOp));
-          case uint16_t(ThreadOp::I64AtomicAnd8U):
+          case uint32_t(ThreadOp::I64AtomicAnd8U):
             CHECK(EmitAtomicRMW(f, ValType::I64, Scalar::Uint8,
                                 AtomicFetchAndOp));
-          case uint16_t(ThreadOp::I64AtomicAnd16U):
+          case uint32_t(ThreadOp::I64AtomicAnd16U):
             CHECK(EmitAtomicRMW(f, ValType::I64, Scalar::Uint16,
                                 AtomicFetchAndOp));
-          case uint16_t(ThreadOp::I64AtomicAnd32U):
+          case uint32_t(ThreadOp::I64AtomicAnd32U):
             CHECK(EmitAtomicRMW(f, ValType::I64, Scalar::Uint32,
                                 AtomicFetchAndOp));
 
-          case uint16_t(ThreadOp::I32AtomicOr):
+          case uint32_t(ThreadOp::I32AtomicOr):
             CHECK(
                 EmitAtomicRMW(f, ValType::I32, Scalar::Int32, AtomicFetchOrOp));
-          case uint16_t(ThreadOp::I64AtomicOr):
+          case uint32_t(ThreadOp::I64AtomicOr):
             CHECK(
                 EmitAtomicRMW(f, ValType::I64, Scalar::Int64, AtomicFetchOrOp));
-          case uint16_t(ThreadOp::I32AtomicOr8U):
+          case uint32_t(ThreadOp::I32AtomicOr8U):
             CHECK(
                 EmitAtomicRMW(f, ValType::I32, Scalar::Uint8, AtomicFetchOrOp));
-          case uint16_t(ThreadOp::I32AtomicOr16U):
+          case uint32_t(ThreadOp::I32AtomicOr16U):
             CHECK(EmitAtomicRMW(f, ValType::I32, Scalar::Uint16,
                                 AtomicFetchOrOp));
-          case uint16_t(ThreadOp::I64AtomicOr8U):
+          case uint32_t(ThreadOp::I64AtomicOr8U):
             CHECK(
                 EmitAtomicRMW(f, ValType::I64, Scalar::Uint8, AtomicFetchOrOp));
-          case uint16_t(ThreadOp::I64AtomicOr16U):
+          case uint32_t(ThreadOp::I64AtomicOr16U):
             CHECK(EmitAtomicRMW(f, ValType::I64, Scalar::Uint16,
                                 AtomicFetchOrOp));
-          case uint16_t(ThreadOp::I64AtomicOr32U):
+          case uint32_t(ThreadOp::I64AtomicOr32U):
             CHECK(EmitAtomicRMW(f, ValType::I64, Scalar::Uint32,
                                 AtomicFetchOrOp));
 
-          case uint16_t(ThreadOp::I32AtomicXor):
+          case uint32_t(ThreadOp::I32AtomicXor):
             CHECK(EmitAtomicRMW(f, ValType::I32, Scalar::Int32,
                                 AtomicFetchXorOp));
-          case uint16_t(ThreadOp::I64AtomicXor):
+          case uint32_t(ThreadOp::I64AtomicXor):
             CHECK(EmitAtomicRMW(f, ValType::I64, Scalar::Int64,
                                 AtomicFetchXorOp));
-          case uint16_t(ThreadOp::I32AtomicXor8U):
+          case uint32_t(ThreadOp::I32AtomicXor8U):
             CHECK(EmitAtomicRMW(f, ValType::I32, Scalar::Uint8,
                                 AtomicFetchXorOp));
-          case uint16_t(ThreadOp::I32AtomicXor16U):
+          case uint32_t(ThreadOp::I32AtomicXor16U):
             CHECK(EmitAtomicRMW(f, ValType::I32, Scalar::Uint16,
                                 AtomicFetchXorOp));
-          case uint16_t(ThreadOp::I64AtomicXor8U):
+          case uint32_t(ThreadOp::I64AtomicXor8U):
             CHECK(EmitAtomicRMW(f, ValType::I64, Scalar::Uint8,
                                 AtomicFetchXorOp));
-          case uint16_t(ThreadOp::I64AtomicXor16U):
+          case uint32_t(ThreadOp::I64AtomicXor16U):
             CHECK(EmitAtomicRMW(f, ValType::I64, Scalar::Uint16,
                                 AtomicFetchXorOp));
-          case uint16_t(ThreadOp::I64AtomicXor32U):
+          case uint32_t(ThreadOp::I64AtomicXor32U):
             CHECK(EmitAtomicRMW(f, ValType::I64, Scalar::Uint32,
                                 AtomicFetchXorOp));
 
-          case uint16_t(ThreadOp::I32AtomicXchg):
+          case uint32_t(ThreadOp::I32AtomicXchg):
             CHECK(EmitAtomicXchg(f, ValType::I32, Scalar::Int32));
-          case uint16_t(ThreadOp::I64AtomicXchg):
+          case uint32_t(ThreadOp::I64AtomicXchg):
             CHECK(EmitAtomicXchg(f, ValType::I64, Scalar::Int64));
-          case uint16_t(ThreadOp::I32AtomicXchg8U):
+          case uint32_t(ThreadOp::I32AtomicXchg8U):
             CHECK(EmitAtomicXchg(f, ValType::I32, Scalar::Uint8));
-          case uint16_t(ThreadOp::I32AtomicXchg16U):
+          case uint32_t(ThreadOp::I32AtomicXchg16U):
             CHECK(EmitAtomicXchg(f, ValType::I32, Scalar::Uint16));
-          case uint16_t(ThreadOp::I64AtomicXchg8U):
+          case uint32_t(ThreadOp::I64AtomicXchg8U):
             CHECK(EmitAtomicXchg(f, ValType::I64, Scalar::Uint8));
-          case uint16_t(ThreadOp::I64AtomicXchg16U):
+          case uint32_t(ThreadOp::I64AtomicXchg16U):
             CHECK(EmitAtomicXchg(f, ValType::I64, Scalar::Uint16));
-          case uint16_t(ThreadOp::I64AtomicXchg32U):
+          case uint32_t(ThreadOp::I64AtomicXchg32U):
             CHECK(EmitAtomicXchg(f, ValType::I64, Scalar::Uint32));
 
-          case uint16_t(ThreadOp::I32AtomicCmpXchg):
+          case uint32_t(ThreadOp::I32AtomicCmpXchg):
             CHECK(EmitAtomicCmpXchg(f, ValType::I32, Scalar::Int32));
-          case uint16_t(ThreadOp::I64AtomicCmpXchg):
+          case uint32_t(ThreadOp::I64AtomicCmpXchg):
             CHECK(EmitAtomicCmpXchg(f, ValType::I64, Scalar::Int64));
-          case uint16_t(ThreadOp::I32AtomicCmpXchg8U):
+          case uint32_t(ThreadOp::I32AtomicCmpXchg8U):
             CHECK(EmitAtomicCmpXchg(f, ValType::I32, Scalar::Uint8));
-          case uint16_t(ThreadOp::I32AtomicCmpXchg16U):
+          case uint32_t(ThreadOp::I32AtomicCmpXchg16U):
             CHECK(EmitAtomicCmpXchg(f, ValType::I32, Scalar::Uint16));
-          case uint16_t(ThreadOp::I64AtomicCmpXchg8U):
+          case uint32_t(ThreadOp::I64AtomicCmpXchg8U):
             CHECK(EmitAtomicCmpXchg(f, ValType::I64, Scalar::Uint8));
-          case uint16_t(ThreadOp::I64AtomicCmpXchg16U):
+          case uint32_t(ThreadOp::I64AtomicCmpXchg16U):
             CHECK(EmitAtomicCmpXchg(f, ValType::I64, Scalar::Uint16));
-          case uint16_t(ThreadOp::I64AtomicCmpXchg32U):
+          case uint32_t(ThreadOp::I64AtomicCmpXchg32U):
             CHECK(EmitAtomicCmpXchg(f, ValType::I64, Scalar::Uint32));
 
           default:
@@ -4063,66 +4063,66 @@ static bool EmitBodyExprs(FunctionCompiler& f) {
           return f.iter().unrecognizedOpcode(&op);
         }
         switch (op.b1) {
-          case uint16_t(MozOp::TeeGlobal):
+          case uint32_t(MozOp::TeeGlobal):
             CHECK(EmitTeeGlobal(f));
-          case uint16_t(MozOp::I32Min):
-          case uint16_t(MozOp::I32Max):
+          case uint32_t(MozOp::I32Min):
+          case uint32_t(MozOp::I32Max):
             CHECK(EmitMinMax(f, ValType::I32, MIRType::Int32,
                              MozOp(op.b1) == MozOp::I32Max));
-          case uint16_t(MozOp::I32Neg):
+          case uint32_t(MozOp::I32Neg):
             CHECK(EmitUnaryWithType<MWasmNeg>(f, ValType::I32, MIRType::Int32));
-          case uint16_t(MozOp::I32BitNot):
+          case uint32_t(MozOp::I32BitNot):
             CHECK(EmitBitNot(f, ValType::I32));
-          case uint16_t(MozOp::I32Abs):
+          case uint32_t(MozOp::I32Abs):
             CHECK(EmitUnaryWithType<MAbs>(f, ValType::I32, MIRType::Int32));
-          case uint16_t(MozOp::F32TeeStoreF64):
+          case uint32_t(MozOp::F32TeeStoreF64):
             CHECK(EmitTeeStoreWithCoercion(f, ValType::F32, Scalar::Float64));
-          case uint16_t(MozOp::F64TeeStoreF32):
+          case uint32_t(MozOp::F64TeeStoreF32):
             CHECK(EmitTeeStoreWithCoercion(f, ValType::F64, Scalar::Float32));
-          case uint16_t(MozOp::I32TeeStore8):
+          case uint32_t(MozOp::I32TeeStore8):
             CHECK(EmitTeeStore(f, ValType::I32, Scalar::Int8));
-          case uint16_t(MozOp::I32TeeStore16):
+          case uint32_t(MozOp::I32TeeStore16):
             CHECK(EmitTeeStore(f, ValType::I32, Scalar::Int16));
-          case uint16_t(MozOp::I64TeeStore8):
+          case uint32_t(MozOp::I64TeeStore8):
             CHECK(EmitTeeStore(f, ValType::I64, Scalar::Int8));
-          case uint16_t(MozOp::I64TeeStore16):
+          case uint32_t(MozOp::I64TeeStore16):
             CHECK(EmitTeeStore(f, ValType::I64, Scalar::Int16));
-          case uint16_t(MozOp::I64TeeStore32):
+          case uint32_t(MozOp::I64TeeStore32):
             CHECK(EmitTeeStore(f, ValType::I64, Scalar::Int32));
-          case uint16_t(MozOp::I32TeeStore):
+          case uint32_t(MozOp::I32TeeStore):
             CHECK(EmitTeeStore(f, ValType::I32, Scalar::Int32));
-          case uint16_t(MozOp::I64TeeStore):
+          case uint32_t(MozOp::I64TeeStore):
             CHECK(EmitTeeStore(f, ValType::I64, Scalar::Int64));
-          case uint16_t(MozOp::F32TeeStore):
+          case uint32_t(MozOp::F32TeeStore):
             CHECK(EmitTeeStore(f, ValType::F32, Scalar::Float32));
-          case uint16_t(MozOp::F64TeeStore):
+          case uint32_t(MozOp::F64TeeStore):
             CHECK(EmitTeeStore(f, ValType::F64, Scalar::Float64));
-          case uint16_t(MozOp::F64Mod):
+          case uint32_t(MozOp::F64Mod):
             CHECK(EmitRem(f, ValType::F64, MIRType::Double,
                           /* isUnsigned = */ false));
-          case uint16_t(MozOp::F64Sin):
+          case uint32_t(MozOp::F64Sin):
             CHECK(EmitUnaryMathBuiltinCall(f, SASigSinD));
-          case uint16_t(MozOp::F64Cos):
+          case uint32_t(MozOp::F64Cos):
             CHECK(EmitUnaryMathBuiltinCall(f, SASigCosD));
-          case uint16_t(MozOp::F64Tan):
+          case uint32_t(MozOp::F64Tan):
             CHECK(EmitUnaryMathBuiltinCall(f, SASigTanD));
-          case uint16_t(MozOp::F64Asin):
+          case uint32_t(MozOp::F64Asin):
             CHECK(EmitUnaryMathBuiltinCall(f, SASigASinD));
-          case uint16_t(MozOp::F64Acos):
+          case uint32_t(MozOp::F64Acos):
             CHECK(EmitUnaryMathBuiltinCall(f, SASigACosD));
-          case uint16_t(MozOp::F64Atan):
+          case uint32_t(MozOp::F64Atan):
             CHECK(EmitUnaryMathBuiltinCall(f, SASigATanD));
-          case uint16_t(MozOp::F64Exp):
+          case uint32_t(MozOp::F64Exp):
             CHECK(EmitUnaryMathBuiltinCall(f, SASigExpD));
-          case uint16_t(MozOp::F64Log):
+          case uint32_t(MozOp::F64Log):
             CHECK(EmitUnaryMathBuiltinCall(f, SASigLogD));
-          case uint16_t(MozOp::F64Pow):
+          case uint32_t(MozOp::F64Pow):
             CHECK(EmitBinaryMathBuiltinCall(f, SASigPowD));
-          case uint16_t(MozOp::F64Atan2):
+          case uint32_t(MozOp::F64Atan2):
             CHECK(EmitBinaryMathBuiltinCall(f, SASigATan2D));
-          case uint16_t(MozOp::OldCallDirect):
+          case uint32_t(MozOp::OldCallDirect):
             CHECK(EmitCall(f, /* asmJSFuncDef = */ true));
-          case uint16_t(MozOp::OldCallIndirect):
+          case uint32_t(MozOp::OldCallIndirect):
             CHECK(EmitCallIndirect(f, /* oldStyle = */ true));
 
           default:
