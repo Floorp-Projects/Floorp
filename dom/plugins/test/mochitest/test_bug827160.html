@@ -38,7 +38,7 @@ setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED, "Second T
 <script type="application/javascript">
 SimpleTest.waitForExplicitFinish();
 
-window.addEventListener("load", function () {
+window.addEventListener("load", function() {
   const OBJLC = SpecialPowers.Ci.nsIObjectLoadingContent;
   is(SpecialPowers.wrap(document.getElementById("shouldLoad")).displayedType, OBJLC.TYPE_PLUGIN, "Testing object load without type, failed expected load");
   is(SpecialPowers.wrap(document.getElementById("shouldIgnoreType")).displayedType, OBJLC.TYPE_PLUGIN, "Testing object load with type, failed expected load");

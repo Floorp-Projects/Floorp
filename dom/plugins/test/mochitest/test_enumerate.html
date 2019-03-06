@@ -20,7 +20,7 @@
       for (var n in pluginElement) {
         ++c;
         ok(n in pluginElement, "Enumerated property which doesn't exist?");
-        if (n == 'setColor')
+        if (n == "setColor")
           foundSetColor = true;
       }
       ok(c > 0, "Should have enumerated some properties");

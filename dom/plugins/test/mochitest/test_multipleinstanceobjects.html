@@ -9,8 +9,8 @@
   setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
 
   function runTests() {
-    var p1 = document.getElementById('plugin1');
-    var p2 = document.getElementById('plugin2');
+    var p1 = document.getElementById("plugin1");
+    var p2 = document.getElementById("plugin2");
 
     var o = p1.getObjectValue();
     ok(p1.checkObjectValue(o), "Plugin objects passed to the same instance are identical.");

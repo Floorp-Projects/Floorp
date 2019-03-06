@@ -9,8 +9,8 @@
   setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
 
   window.frameLoaded = function frameLoaded_toCrash() {
-    var iframe = document.getElementById('iframe1');
-    var p = iframe.contentDocument.getElementById('plugin1');
+    var iframe = document.getElementById("iframe1");
+    var p = iframe.contentDocument.getElementById("plugin1");
 
     // This test is for bug 550026, which is inherently nondeterministic.
     // If we hit that bug, the browser process would crash when the plugin
@@ -34,13 +34,11 @@
           SimpleTest.finish();
         },
         1000);
-    }
-    catch (e) {
+    } catch (e) {
       ok(true, "p.crashInNestedLoop() should throw an exception");
       SimpleTest.finish();
     }
-
-  }
+  };
 
   </script>
   <iframe id="iframe1" src="crashing_subpage.html" width="600" height="600"></iframe>
