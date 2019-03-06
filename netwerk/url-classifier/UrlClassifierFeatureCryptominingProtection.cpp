@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "UrlClassifierFeatureCryptomining.h"
+#include "UrlClassifierFeatureCryptominingProtection.h"
 
 #include "mozilla/AntiTrackingCommon.h"
 #include "mozilla/net/UrlClassifierCommon.h"
@@ -30,11 +30,13 @@ namespace {
 #define TABLE_CRYPTOMINING_BLACKLIST_PREF "cryptomining-blacklist-pref"
 #define TABLE_CRYPTOMINING_WHITELIST_PREF "cryptomining-whitelist-pref"
 
-StaticRefPtr<UrlClassifierFeatureCryptomining> gFeatureCryptomining;
+StaticRefPtr<UrlClassifierFeatureCryptominingProtection>
+    gFeatureCryptominingProtection;
 
 }  // namespace
 
-UrlClassifierFeatureCryptomining::UrlClassifierFeatureCryptomining()
+UrlClassifierFeatureCryptominingProtection::
+    UrlClassifierFeatureCryptominingProtection()
     : UrlClassifierFeatureBase(
           NS_LITERAL_CSTRING(CRYPTOMINING_FEATURE_NAME),
           NS_LITERAL_CSTRING(URLCLASSIFIER_CRYPTOMINING_BLACKLIST),
@@ -45,37 +47,39 @@ UrlClassifierFeatureCryptomining::UrlClassifierFeatureCryptomining()
           NS_LITERAL_CSTRING(TABLE_CRYPTOMINING_WHITELIST_PREF),
           EmptyCString()) {}
 
-/* static */ const char* UrlClassifierFeatureCryptomining::Name() {
+/* static */ const char* UrlClassifierFeatureCryptominingProtection::Name() {
   return CRYPTOMINING_FEATURE_NAME;
 }
 
 /* static */
-void UrlClassifierFeatureCryptomining::MaybeInitialize() {
-  UC_LOG(("UrlClassifierFeatureCryptomining: MaybeInitialize"));
+void UrlClassifierFeatureCryptominingProtection::MaybeInitialize() {
+  UC_LOG(("UrlClassifierFeatureCryptominingProtection: MaybeInitialize"));
 
-  if (!gFeatureCryptomining) {
-    gFeatureCryptomining = new UrlClassifierFeatureCryptomining();
-    gFeatureCryptomining->InitializePreferences();
+  if (!gFeatureCryptominingProtection) {
+    gFeatureCryptominingProtection =
+        new UrlClassifierFeatureCryptominingProtection();
+    gFeatureCryptominingProtection->InitializePreferences();
   }
 }
 
 /* static */
-void UrlClassifierFeatureCryptomining::MaybeShutdown() {
-  UC_LOG(("UrlClassifierFeatureCryptomining: MaybeShutdown"));
+void UrlClassifierFeatureCryptominingProtection::MaybeShutdown() {
+  UC_LOG(("UrlClassifierFeatureCryptominingProtection: MaybeShutdown"));
 
-  if (gFeatureCryptomining) {
-    gFeatureCryptomining->ShutdownPreferences();
-    gFeatureCryptomining = nullptr;
+  if (gFeatureCryptominingProtection) {
+    gFeatureCryptominingProtection->ShutdownPreferences();
+    gFeatureCryptominingProtection = nullptr;
   }
 }
 
 /* static */
-already_AddRefed<UrlClassifierFeatureCryptomining>
-UrlClassifierFeatureCryptomining::MaybeCreate(nsIChannel* aChannel) {
+already_AddRefed<UrlClassifierFeatureCryptominingProtection>
+UrlClassifierFeatureCryptominingProtection::MaybeCreate(nsIChannel* aChannel) {
   MOZ_ASSERT(aChannel);
 
-  UC_LOG(("UrlClassifierFeatureCryptomining: MaybeCreate for channel %p",
-          aChannel));
+  UC_LOG(
+      ("UrlClassifierFeatureCryptominingProtection: MaybeCreate for channel %p",
+       aChannel));
 
   if (!StaticPrefs::privacy_trackingprotection_cryptomining_enabled()) {
     return nullptr;
@@ -95,7 +99,8 @@ UrlClassifierFeatureCryptomining::MaybeCreate(nsIChannel* aChannel) {
       spec.Truncate(
           std::min(spec.Length(), UrlClassifierCommon::sMaxSpecLength));
       UC_LOG(
-          ("UrlClassifierFeatureCryptomining: Skipping cryptomining checks "
+          ("UrlClassifierFeatureCryptominingProtection: Skipping cryptomining "
+           "checks "
            "for first party or top-level load channel[%p] "
            "with uri %s",
            aChannel, spec.get()));
@@ -109,30 +114,32 @@ UrlClassifierFeatureCryptomining::MaybeCreate(nsIChannel* aChannel) {
   }
 
   MaybeInitialize();
-  MOZ_ASSERT(gFeatureCryptomining);
+  MOZ_ASSERT(gFeatureCryptominingProtection);
 
-  RefPtr<UrlClassifierFeatureCryptomining> self = gFeatureCryptomining;
+  RefPtr<UrlClassifierFeatureCryptominingProtection> self =
+      gFeatureCryptominingProtection;
   return self.forget();
 }
 
 /* static */
 already_AddRefed<nsIUrlClassifierFeature>
-UrlClassifierFeatureCryptomining::GetIfNameMatches(const nsACString& aName) {
+UrlClassifierFeatureCryptominingProtection::GetIfNameMatches(
+    const nsACString& aName) {
   if (!aName.EqualsLiteral(CRYPTOMINING_FEATURE_NAME)) {
     return nullptr;
   }
 
   MaybeInitialize();
-  MOZ_ASSERT(gFeatureCryptomining);
+  MOZ_ASSERT(gFeatureCryptominingProtection);
 
-  RefPtr<UrlClassifierFeatureCryptomining> self = gFeatureCryptomining;
+  RefPtr<UrlClassifierFeatureCryptominingProtection> self =
+      gFeatureCryptominingProtection;
   return self.forget();
 }
 
 NS_IMETHODIMP
-UrlClassifierFeatureCryptomining::ProcessChannel(nsIChannel* aChannel,
-                                                 const nsACString& aList,
-                                                 bool* aShouldContinue) {
+UrlClassifierFeatureCryptominingProtection::ProcessChannel(
+    nsIChannel* aChannel, const nsACString& aList, bool* aShouldContinue) {
   NS_ENSURE_ARG_POINTER(aChannel);
   NS_ENSURE_ARG_POINTER(aShouldContinue);
 
@@ -156,7 +163,8 @@ UrlClassifierFeatureCryptomining::ProcessChannel(nsIChannel* aChannel,
                                            EmptyCString());
 
     UC_LOG(
-        ("UrlClassifierFeatureCryptomining::ProcessChannel, cancelling "
+        ("UrlClassifierFeatureCryptominingProtection::ProcessChannel, "
+         "cancelling "
          "channel[%p]",
          aChannel));
     nsCOMPtr<nsIHttpChannelInternal> httpChannel = do_QueryInterface(aChannel);
@@ -173,7 +181,7 @@ UrlClassifierFeatureCryptomining::ProcessChannel(nsIChannel* aChannel,
 }
 
 NS_IMETHODIMP
-UrlClassifierFeatureCryptomining::GetURIByListType(
+UrlClassifierFeatureCryptominingProtection::GetURIByListType(
     nsIChannel* aChannel, nsIUrlClassifierFeature::listType aListType,
     nsIURI** aURI) {
   NS_ENSURE_ARG_POINTER(aChannel);
