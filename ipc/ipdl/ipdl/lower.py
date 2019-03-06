@@ -5,6 +5,7 @@
 import re
 from copy import deepcopy
 from collections import OrderedDict
+import itertools
 
 import ipdl.ast
 import ipdl.builtin
@@ -2296,6 +2297,37 @@ before this struct.  Some types generate multiple kinds.'''
     def visitStateType(self, v): assert 0
 
 
+def _fieldStaticAssertions(sd):
+    staticasserts = []
+    for (size, fields) in itertools.groupby(sd.fields_member_order(),
+                                            lambda f: pod_size(f.ipdltype)):
+        if size == pod_size_sentinel:
+            continue
+
+        fields = list(fields)
+        if len(fields) == 1:
+            continue
+
+        # If we get here, we have a list of fields of some certain size that we
+        # would like to assume are laid out consecutively in memory with no
+        # padding between fields.  The types of the fields (integers, booleans,
+        # and floats) are such that we don't have to worry about internal
+        # padding in the fields themselves.  We check our assumptions via
+        # static_assert.
+        start_offset = ExprCall(ExprVar('offsetof'),
+                                args=[ExprVar(sd.name), fields[0].memberVar()])
+        end_offset = ExprCall(ExprVar('offsetof'),
+                              args=[ExprVar(sd.name), fields[-1].memberVar()])
+        diff = ExprBinary(end_offset, '-', start_offset)
+        eqcheck = ExprBinary(diff, '==', ExprLiteral.Int(size * (len(fields) - 1)))
+        assert_ = ExprCall(ExprVar('static_assert'),
+                           args=[eqcheck,
+                                 ExprLiteral.String("Bad assumptions about field layout!")])
+        staticasserts.append(StmtExpr(assert_))
+
+    return staticasserts
+
+
 def _generateCxxStruct(sd):
     ''' '''
     # compute all the typedefs and forward decls we need to make
@@ -2392,6 +2424,20 @@ def _generateCxxStruct(sd):
 
     # private:
     struct.addstmt(Label.PRIVATE)
+
+    # Static assertions to ensure our assumptions about field layout match
+    # what the compiler is actually producing.  We define this as a member
+    # function, rather than throwing the assertions in the constructor or
+    # similar, because we don't want to evaluate the static assertions every
+    # time the header file containing the structure is included.
+    staticasserts = _fieldStaticAssertions(sd)
+    if staticasserts:
+        method = MethodDefn(MethodDecl('StaticAssertions',
+                                       params=[],
+                                       ret=Type.VOID,
+                                       const=True))
+        method.addstmts(staticasserts)
+        struct.addstmts([method])
 
     # members
     struct.addstmts([StmtDecl(Decl(f.bareType(), f.memberVar().name))
