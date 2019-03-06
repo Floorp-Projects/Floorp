@@ -3588,8 +3588,6 @@ bool JSScript::fullyInitFromEmitter(JSContext* cx, HandleScript script,
     return false;
   }
 
-  uint32_t natoms = bce->atomIndices->count();
-
   // Initialize POD fields
   script->lineno_ = bce->firstLine;
   script->mainOffset_ = bce->mainOffset();
@@ -3619,19 +3617,10 @@ bool JSScript::fullyInitFromEmitter(JSContext* cx, HandleScript script,
     return false;
   }
 
-  // The + 1 is to account for the final SN_MAKE_TERMINATOR that is appended
-  // when the notes are copied to their final destination by copySrcNotes.
-  uint32_t nsrcnotes = bce->notes().length() + 1;
-  uint32_t codeLength = bce->code().length();
-  if (!script->createSharedScriptData(cx, codeLength, nsrcnotes, natoms)) {
+  // Create and initialize SharedScriptData
+  if (!SharedScriptData::InitFromEmitter(cx, script, bce)) {
     return false;
   }
-
-  jsbytecode* code = script->code();
-  PodCopy<jsbytecode>(code, bce->code().begin(), codeLength);
-  bce->copySrcNotes((jssrcnote*)(code + script->length()), nsrcnotes);
-  InitAtomMap(*bce->atomIndices, script->atoms());
-
   if (!script->shareScriptData(cx)) {
     return false;
   }
@@ -4552,6 +4541,30 @@ bool JSScript::hasBreakpointsAt(jsbytecode* pc) {
   }
 
   return site->enabledCount > 0;
+}
+
+/* static */ bool SharedScriptData::InitFromEmitter(
+    JSContext* cx, js::HandleScript script, frontend::BytecodeEmitter* bce) {
+  uint32_t natoms = bce->atomIndices->count();
+  uint32_t codeLength = bce->code().length();
+
+  // The + 1 is to account for the final SN_MAKE_TERMINATOR that is appended
+  // when the notes are copied to their final destination by copySrcNotes.
+  uint32_t noteLength = bce->notes().length() + 1;
+
+  // Create and initialize SharedScriptData
+  if (!script->createSharedScriptData(cx, codeLength, noteLength, natoms)) {
+    return false;
+  }
+
+  js::SharedScriptData* data = script->scriptData_;
+
+  // Initialize trailing arrays
+  std::copy_n(bce->code().begin(), codeLength, data->code());
+  bce->copySrcNotes(data->notes(), noteLength);
+  InitAtomMap(*bce->atomIndices, data->atoms());
+
+  return true;
 }
 
 void SharedScriptData::traceChildren(JSTracer* trc) {
