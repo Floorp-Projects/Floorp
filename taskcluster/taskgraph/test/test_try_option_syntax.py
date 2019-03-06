@@ -356,6 +356,12 @@ class TestTryOptionSyntax(unittest.TestCase):
         tos = TryOptionSyntax(parameters, graph_with_jobs, GRAPH_CONFIG)
         self.assertTrue(tos.no_retry)
 
+    def test_artifact(self):
+        "--artifact sets artifact to true"
+        parameters = {'try_options': parse_message('try: --artifact')}
+        tos = TryOptionSyntax(parameters, graph_with_jobs, GRAPH_CONFIG)
+        self.assertTrue(tos.artifact)
+
 
 if __name__ == '__main__':
     main()
