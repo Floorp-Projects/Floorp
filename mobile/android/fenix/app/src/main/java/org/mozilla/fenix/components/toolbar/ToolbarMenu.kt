@@ -68,7 +68,6 @@ class ToolbarMenu(
             BrowserMenuImageText(
                 context.getString(R.string.browser_menu_help),
                 R.drawable.ic_help,
-                context.getString(R.string.browser_menu_help),
                 DefaultThemeManager.resolveAttribute(R.attr.browserToolbarMenuIcons, context)
             ) {
                 onItemTapped.invoke(Item.Help)
@@ -77,7 +76,6 @@ class ToolbarMenu(
             BrowserMenuImageText(
                 context.getString(R.string.browser_menu_settings),
                 R.drawable.ic_settings,
-                context.getString(R.string.browser_menu_settings),
                 DefaultThemeManager.resolveAttribute(R.attr.browserToolbarMenuIcons, context)
             ) {
                 onItemTapped.invoke(Item.Settings)
@@ -86,7 +84,6 @@ class ToolbarMenu(
             BrowserMenuImageText(
                 context.getString(R.string.browser_menu_library),
                 R.drawable.ic_library,
-                context.getString(R.string.browser_menu_library),
                 DefaultThemeManager.resolveAttribute(R.attr.browserToolbarMenuIcons, context)
             ) {
                 onItemTapped.invoke(Item.Library)
@@ -102,7 +99,6 @@ class ToolbarMenu(
             BrowserMenuImageText(
                 context.getString(R.string.browser_menu_find_in_page),
                 R.drawable.mozac_ic_search,
-                context.getString(R.string.browser_menu_find_in_page),
                 DefaultThemeManager.resolveAttribute(R.attr.browserToolbarMenuIcons, context)
             ) {
                 onItemTapped.invoke(Item.FindInPage)
@@ -111,7 +107,6 @@ class ToolbarMenu(
             BrowserMenuImageText(
                 context.getString(R.string.browser_menu_private_tab),
                 R.drawable.ic_private_browsing,
-                context.getString(R.string.browser_menu_private_tab),
                 DefaultThemeManager.resolveAttribute(R.attr.browserToolbarMenuIcons, context)
             ) {
                 onItemTapped.invoke(Item.NewPrivateTab)
@@ -120,7 +115,6 @@ class ToolbarMenu(
             BrowserMenuImageText(
                 context.getString(R.string.browser_menu_new_tab),
                 R.drawable.ic_new,
-                context.getString(R.string.browser_menu_new_tab),
                 DefaultThemeManager.resolveAttribute(R.attr.browserToolbarMenuIcons, context)
             ) {
                 onItemTapped.invoke(Item.NewTab)
@@ -129,7 +123,6 @@ class ToolbarMenu(
             BrowserMenuImageText(
                 context.getString(R.string.browser_menu_share),
                 R.drawable.mozac_ic_share,
-                context.getString(R.string.browser_menu_share),
                 DefaultThemeManager.resolveAttribute(R.attr.browserToolbarMenuIcons, context)
             ) {
                 onItemTapped.invoke(Item.Share)
@@ -138,7 +131,6 @@ class ToolbarMenu(
             BrowserMenuImageText(
                 context.getString(R.string.browser_menu_report_issue),
                 R.drawable.ic_report_issues,
-                context.getString(R.string.browser_menu_report_issue),
                 DefaultThemeManager.resolveAttribute(R.attr.browserToolbarMenuIcons, context)
             ) {
                 onItemTapped.invoke(Item.ReportIssue)
