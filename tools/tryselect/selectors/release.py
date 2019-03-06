@@ -59,11 +59,7 @@ class ReleaseParser(BaseTryParser):
         self.set_defaults(migrations=[])
 
 
-def run_try_release(
-    version, migrations, limit_locales, tasks,
-    push=True, message='{msg}', **kwargs
-):
-
+def run(version, migrations, limit_locales, tasks, push=True, message='{msg}', **kwargs):
     app_version = attr.evolve(version, beta_number=None, is_esr=False)
 
     files_to_change = {
