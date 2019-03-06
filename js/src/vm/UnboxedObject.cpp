@@ -716,12 +716,6 @@ bool UnboxedLayout::makeNativeGroup(JSContext* cx, ObjectGroup* group) {
       if (nativeGroup->unknownProperties(sweepNative)) {
         break;
       }
-
-      HeapTypeSet* nativeProperty =
-          nativeGroup->maybeGetProperty(sweepNative, id);
-      if (nativeProperty && nativeProperty->canSetDefinite(i)) {
-        nativeProperty->setDefinite(i);
-      }
     }
   } else {
     // If we skip, though, the new group had better agree.
