@@ -23,7 +23,7 @@ import { loadSourceText } from "./loadSourceText";
 import { prefs } from "../../utils/prefs";
 import { shouldPrettyPrint, isMinified } from "../../utils/source";
 import { createLocation } from "../../utils/location";
-import { mapLocation } from "../../utils/source-maps";
+import { getMappedLocation } from "../../utils/source-maps";
 
 import {
   getSource,
@@ -133,7 +133,7 @@ export function selectLocation(
       selectedSource &&
       isOriginalId(selectedSource.id) != isOriginalId(location.sourceId)
     ) {
-      location = await mapLocation(getState(), sourceMaps, location);
+      location = await getMappedLocation(getState(), sourceMaps, location);
       source = getSourceFromId(getState(), location.sourceId);
     }
 
@@ -192,7 +192,11 @@ export function jumpToMappedLocation(location: SourceLocation) {
       return;
     }
 
-    const pairedLocation = await mapLocation(getState(), sourceMaps, location);
+    const pairedLocation = await getMappedLocation(
+      getState(),
+      sourceMaps,
+      location
+    );
 
     return dispatch(selectSpecificLocation({ ...pairedLocation }));
   };

@@ -41,6 +41,7 @@ export async function getGeneratedLocation(
 
 export async function getOriginalLocation(
   generatedLocation: SourceLocation,
+  source: Source,
   sourceMaps: SourceMaps
 ) {
   if (isOriginalId(generatedLocation.sourceId)) {
@@ -51,36 +52,6 @@ export async function getOriginalLocation(
 }
 
 export async function getMappedLocation(
-  state: Object,
-  sourceMaps: Object,
-  location: SourceLocation
-): Promise<MappedLocation> {
-  const source = getSource(state, location.sourceId);
-
-  if (!source) {
-    throw new Error(`no source ${location.sourceId}`);
-  }
-
-  if (isOriginalId(location.sourceId)) {
-    const generatedLocation = await getGeneratedLocation(
-      state,
-      source,
-      location,
-      sourceMaps
-    );
-    return { location, generatedLocation };
-  }
-
-  const generatedLocation = location;
-  const originalLocation = await sourceMaps.getOriginalLocation(
-    generatedLocation,
-    source
-  );
-
-  return { location: originalLocation, generatedLocation };
-}
-
-export async function mapLocation(
   state: Object,
   sourceMaps: Object,
   location: SourceLocation
@@ -98,14 +69,10 @@ export async function mapLocation(
   return sourceMaps.getOriginalLocation(location, source);
 }
 
-export function isOriginalSource(source: ?Source) {
-  return source && isOriginalId(source.id);
-}
-
 export function getSelectedLocation(
   mappedLocation: MappedLocation,
   selectedSource: ?Source
-): SourceLocation {
+) {
   return selectedSource && isGenerated(selectedSource)
     ? mappedLocation.generatedLocation
     : mappedLocation.location;

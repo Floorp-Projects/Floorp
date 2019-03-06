@@ -79,7 +79,7 @@ add_task(async function() {
     [`aVar === "var3"`, `aLet === "let3"`, `aConst === "const3"`]
   );
 
-  await evalInConsoleAtPoint(dbg, "webpack3-babel6", "babel-classes", { line: 8, column: 16 }, [
+  await evalInConsoleAtPoint(dbg, "webpack3-babel6", "babel-classes", { line: 8, column: 6 }, [
     `this.hasOwnProperty("bound")`,
   ]);
 

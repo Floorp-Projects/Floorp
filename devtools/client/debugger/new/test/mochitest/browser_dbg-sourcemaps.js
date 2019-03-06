@@ -17,9 +17,8 @@ function assertBreakpointExists(dbg, source, line) {
   );
 }
 
-async function assertEditorBreakpoint(dbg, line, shouldExist) {
-  const el = await getLineEl(dbg, line);
-  const exists = !!el.querySelector(".new-breakpoint");
+function assertEditorBreakpoint(dbg, line, shouldExist) {
+  const exists = !!getLineEl(dbg, line).querySelector(".new-breakpoint");
   ok(
     exists === shouldExist,
     "Breakpoint " +
@@ -29,17 +28,13 @@ async function assertEditorBreakpoint(dbg, line, shouldExist) {
   );
 }
 
-async function getLineEl(dbg, line) {
-  let el = await codeMirrorGutterElement(dbg, line);
-  while (el && !el.matches(".CodeMirror-code > div")) {
-    el = el.parentElement;
-  }
-  return el;
+function getLineEl(dbg, line) {
+  const lines = dbg.win.document.querySelectorAll(".CodeMirror-code > div");
+  return lines[line - 1];
 }
 
-async function clickGutter(dbg, line) {
-  const el = await codeMirrorGutterElement(dbg, line);
-  clickDOMElement(dbg, el);
+function clickGutter(dbg, line) {
+  clickElement(dbg, "gutter", line);
 }
 
 add_task(async function() {
@@ -59,11 +54,11 @@ add_task(async function() {
 
   await selectSource(dbg, bundleSrc);
 
-  await clickGutter(dbg, 70);
+  await clickGutter(dbg, 13);
   await waitForDispatch(dbg, "ADD_BREAKPOINT");
-  assertEditorBreakpoint(dbg, 70, true);
+  assertEditorBreakpoint(dbg, 13, true);
 
-  await clickGutter(dbg, 70);
+  await clickGutter(dbg, 13);
   await waitForDispatch(dbg, "REMOVE_BREAKPOINT");
   is(getBreakpointCount(getState()), 0, "No breakpoints exists");
 

@@ -2,7 +2,7 @@
 
 exports[`initializing when pending breakpoints exist in prefs syncs pending breakpoints 1`] = `
 Object {
-  "http://localhost:8000/examples/bar.js:5:2": Object {
+  "http://localhost:8000/examples/bar.js:5:": Object {
     "astLocation": Object {
       "index": 0,
       "name": undefined,
@@ -12,12 +12,12 @@ Object {
     },
     "disabled": false,
     "generatedLocation": Object {
-      "column": 2,
+      "column": undefined,
       "line": 5,
       "sourceUrl": "http://localhost:8000/examples/bar.js",
     },
     "location": Object {
-      "column": 2,
+      "column": undefined,
       "line": 5,
       "sourceId": "",
       "sourceUrl": "http://localhost:8000/examples/bar.js",
@@ -36,20 +36,20 @@ Object {
     "index": 0,
     "name": undefined,
     "offset": Object {
-      "column": 1,
+      "column": 0,
       "line": 5,
-      "sourceId": "foo.js",
+      "sourceId": "foo.js/originalSource",
       "sourceUrl": "http://localhost:8000/examples/foo.js",
     },
   },
   "disabled": false,
   "generatedLocation": Object {
-    "column": 1,
+    "column": undefined,
     "line": 5,
     "sourceUrl": "http://localhost:8000/examples/foo.js",
   },
   "location": Object {
-    "column": 1,
+    "column": 0,
     "line": 5,
     "sourceUrl": "http://localhost:8000/examples/foo.js",
   },
@@ -69,13 +69,13 @@ Object {
     "offset": Object {
       "column": 0,
       "line": 5,
-      "sourceId": "foo",
+      "sourceId": "foo/originalSource",
       "sourceUrl": "http://localhost:8000/examples/foo",
     },
   },
   "disabled": false,
   "generatedLocation": Object {
-    "column": 0,
+    "column": undefined,
     "line": 5,
     "sourceUrl": "http://localhost:8000/examples/foo",
   },
@@ -100,13 +100,13 @@ Object {
     "offset": Object {
       "column": 0,
       "line": 5,
-      "sourceId": "foo2",
+      "sourceId": "foo2/originalSource",
       "sourceUrl": "http://localhost:8000/examples/foo2",
     },
   },
   "disabled": false,
   "generatedLocation": Object {
-    "column": 0,
+    "column": undefined,
     "line": 5,
     "sourceUrl": "http://localhost:8000/examples/foo2",
   },

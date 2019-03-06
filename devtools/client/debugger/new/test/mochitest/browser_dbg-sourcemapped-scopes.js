@@ -85,7 +85,7 @@ function targetToFlags(target) {
   const rollupOptimized = isRollup ? "(optimized away)" : null;
   const webpackImportGetter = isWebpack ? "Getter" : null;
   const webpack4ImportGetter = isWebpack4 ? "Getter" : null;
-  const maybeLineStart = col => col;
+  const maybeLineStart = hasBabel ? col => col : col => 0;
   const defaultExport = isWebpack4
       ? name => `${name}()`
       : name => [name, "(optimized away)"];
@@ -183,7 +183,7 @@ async function testEvalMaps(dbg) {
   ]) {
     const { defaultExport } = targetToFlags(target);
 
-    await breakpointScopes(dbg, target, "eval-maps", { line: 14, column: 4 }, [
+    await breakpointScopes(dbg, target, "eval-maps", { line: 14, column: 0 }, [
       "Block",
       ["<this>", "Window"],
       ["three", "5"],

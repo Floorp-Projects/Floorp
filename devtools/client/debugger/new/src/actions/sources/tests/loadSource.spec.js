@@ -46,8 +46,7 @@ describe("loadSourceText", () => {
         new Promise(r => {
           count++;
           resolve = r;
-        }),
-      getBreakpointPositions: async () => ({})
+        })
     });
     const id = "foo";
     const baseSource = makeSource(id, { loadedState: "unloaded" });
@@ -79,8 +78,7 @@ describe("loadSourceText", () => {
         new Promise(r => {
           count++;
           resolve = r;
-        }),
-      getBreakpointPositions: async () => ({})
+        })
     });
     const id = "foo";
     const baseSource = makeSource(id, { loadedState: "unloaded" });
