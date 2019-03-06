@@ -28,11 +28,15 @@
 
 namespace mozilla {
 class CycleCollectedJSContext;
+class EventQueue;
+template <typename>
+class ThreadEventQueue;
 class ThreadEventTarget;
 }  // namespace mozilla
 
 using mozilla::NotNull;
 
+class nsLocalExecutionRecord;
 class nsThreadEnumerator;
 
 // See https://www.w3.org/TR/longtasks
@@ -141,6 +145,21 @@ class nsThread : public nsIThreadInternal,
     return mLastLongNonIdleTaskEnd;
   }
 
+  // When entering local execution mode a new event queue is created and used as
+  // an event source. This queue is only accessible through an
+  // nsLocalExecutionGuard constructed from the nsLocalExecutionRecord returned
+  // by this function, effectively restricting the events that get run while in
+  // local execution mode to those dispatched by the owner of the guard object.
+  //
+  // Local execution is not nestable. When the nsLocalExecutionGuard is
+  // destructed, the thread exits the local execution mode.
+  //
+  // Note that code run in local execution mode is not considered a task in the
+  // spec sense. Events from the local queue are considered part of the
+  // enclosing task and as such do not trigger profiling hooks, observer
+  // notifications, etc.
+  nsLocalExecutionRecord EnterLocalExecution();
+
  private:
   void DoMainThreadSpecificProcessing(bool aReallyWait);
 
@@ -227,6 +246,52 @@ class nsThread : public nsIThreadInternal,
   mozilla::TimeStamp mNextIdleDeadline;
 
   RefPtr<mozilla::PerformanceCounter> mCurrentPerformanceCounter;
+
+  bool mIsInLocalExecutionMode = false;
+};
+
+class nsLocalExecutionRecord;
+
+// This RAII class controls the duration of the associated nsThread's local
+// execution mode and provides access to the local event target. (See
+// nsThread::EnterLocalExecution() for details.) It is constructed from an
+// nsLocalExecutionRecord, which can only be constructed by nsThread.
+class MOZ_RAII nsLocalExecutionGuard final {
+ public:
+  MOZ_IMPLICIT nsLocalExecutionGuard(
+      nsLocalExecutionRecord&& aLocalExecutionRecord);
+  nsLocalExecutionGuard(const nsLocalExecutionGuard&) = delete;
+  nsLocalExecutionGuard(nsLocalExecutionGuard&&) = delete;
+  ~nsLocalExecutionGuard();
+
+  nsCOMPtr<nsISerialEventTarget> GetEventTarget() const {
+    return mLocalEventTarget;
+  }
+
+ private:
+  mozilla::SynchronizedEventQueue& mEventQueueStack;
+  nsCOMPtr<nsISerialEventTarget> mLocalEventTarget;
+  bool& mLocalExecutionFlag;
+};
+
+class MOZ_TEMPORARY_CLASS nsLocalExecutionRecord final {
+ private:
+  friend class nsThread;
+  friend class nsLocalExecutionGuard;
+
+  nsLocalExecutionRecord(mozilla::SynchronizedEventQueue& aEventQueueStack,
+                         bool& aLocalExecutionFlag)
+      : mEventQueueStack(aEventQueueStack),
+        mLocalExecutionFlag(aLocalExecutionFlag) {}
+
+  nsLocalExecutionRecord(nsLocalExecutionRecord&&) = default;
+
+ public:
+  nsLocalExecutionRecord(const nsLocalExecutionRecord&) = delete;
+
+ private:
+  mozilla::SynchronizedEventQueue& mEventQueueStack;
+  bool& mLocalExecutionFlag;
 };
 
 class MOZ_STACK_CLASS nsThreadEnumerator final {
