@@ -17,7 +17,6 @@
 
 #include <windows.h>
 #include <winternl.h>
-#include <io.h>
 
 #pragma warning(push)
 #pragma warning(disable : 4275 4530)  // See msvc-stl-wrapper.template.h
@@ -33,7 +32,6 @@
 #include "mozilla/CmdLineAndEnvUtils.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/ScopeExit.h"
-#include "mozilla/Sprintf.h"
 #include "mozilla/StackWalk_windows.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtr.h"
@@ -42,6 +40,7 @@
 #include "nsWindowsHelpers.h"
 #include "WindowsDllBlocklist.h"
 #include "mozilla/AutoProfilerLabel.h"
+#include "mozilla/glue/Debug.h"
 #include "mozilla/glue/WindowsDllServices.h"
 
 using namespace mozilla;
@@ -63,28 +62,6 @@ static uint32_t sInitFlags;
 static bool sBlocklistInitAttempted;
 static bool sBlocklistInitFailed;
 static bool sUser32BeforeBlocklist;
-
-// Duplicated from xpcom glue. Ideally this should be shared.
-void printf_stderr(const char* fmt, ...) {
-  if (IsDebuggerPresent()) {
-    char buf[2048];
-    va_list args;
-    va_start(args, fmt);
-    VsprintfLiteral(buf, fmt, args);
-    va_end(args);
-    OutputDebugStringA(buf);
-  }
-
-  FILE* fp = _fdopen(_dup(2), "a");
-  if (!fp) return;
-
-  va_list args;
-  va_start(args, fmt);
-  vfprintf(fp, fmt, args);
-  va_end(args);
-
-  fclose(fp);
-}
 
 // This feature is enabled only on NIGHTLY, only for the main process.
 inline static bool IsUntrustedDllsHandlerEnabled() {
