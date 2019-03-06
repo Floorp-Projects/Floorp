@@ -6,8 +6,6 @@
 
 "use strict";
 
-// To disable all Web Replay tests, see browser.ini
-
 // Test hitting breakpoints when rewinding past the point where the breakpoint
 // script was created.
 add_task(async function() {

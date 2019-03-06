@@ -34,7 +34,20 @@ startProfiling();
 gczeal(4, 1);
 e.set(obj);
 gczeal(0);
-assertEqPreciseStacks(endProfiling(), [['', '!>', '0,!>', '!>', '']]);
+assertEqPreciseStacks(
+    endProfiling(),
+    [
+        // Expected output for (simulator+via-Ion).
+        ['', '!>', '0,!>', '<,0,!>', 'filtering GC postbarrier,0,!>',
+         '<,0,!>', '0,!>', '!>', ''],
+
+        // Expected output for (simulator+baseline).
+        ['', '!>', '0,!>', '<,0,!>', 'GC postbarrier,0,!>',
+         '<,0,!>', '0,!>', '!>', ''],
+
+        // Expected output for other configurations.
+        ['', '!>', '0,!>', '!>', ''],
+    ]);
 
 startProfiling();
 gczeal(4, 1);
@@ -42,4 +55,14 @@ e.set(null);
 gczeal(0);
 
 // We're losing stack info in the prebarrier code.
-assertEqPreciseStacks(endProfiling(), [['', '!>', '0,!>', '', '0,!>', '!>', '']]);
+assertEqPreciseStacks(
+    endProfiling(),
+    [
+        // Expected output for (simulator+via-Ion).
+        ['', '!>', '0,!>', '', '0,!>', '<,0,!>', 'filtering GC postbarrier,0,!>',
+         '<,0,!>', '0,!>', '!>', ''],
+
+        // Expected output for other configurations.
+        ['', '!>', '0,!>', '', '0,!>', '!>', ''],
+    ]);
+

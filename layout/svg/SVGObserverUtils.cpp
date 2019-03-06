@@ -966,7 +966,7 @@ typedef nsInterfaceHashtable<nsRefPtrHashKey<URLAndReferrerInfo>,
 using PaintingPropertyDescriptor =
     const mozilla::FramePropertyDescriptor<nsSVGPaintingProperty>*;
 
-void DestroyFilterProperty(SVGFilterObserverListForCSSProp* aProp) {
+static void DestroyFilterProperty(SVGFilterObserverListForCSSProp* aProp) {
   // SVGFilterObserverListForCSSProp is cycle-collected, so dropping the last
   // reference doesn't necessarily destroy it. We need to tell it that the
   // frame has now become invalid.

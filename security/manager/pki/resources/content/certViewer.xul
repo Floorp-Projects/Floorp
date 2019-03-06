@@ -145,7 +145,7 @@
         </tree>
 
         <label class="header" data-l10n-id="certmgr-fields" control="certDumpVal"/>
-        <html:textarea id="certDumpVal" flex="1" readonly="true"
+        <html:textarea id="certDumpVal" flex="1" readonly="readonly"
                        style="height: 11em; font-family: -moz-fixed;"/>
         <separator class="thin"/>
         <hbox>

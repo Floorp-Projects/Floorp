@@ -166,6 +166,9 @@ void LBlock::dump(GenericPrinter& out) {
   }
   for (LInstructionIterator iter = begin(); iter != end(); iter++) {
     iter->dump(out);
+    if (iter->safepoint()) {
+      out.printf(" SAFEPOINT(0x%p) ", iter->safepoint());
+    }
     out.printf("\n");
   }
 }

@@ -420,7 +420,7 @@ bool FontFaceSet::HasRuleFontFace(FontFace* aFontFace) {
 }
 #endif
 
-bool IsPdfJs(nsIPrincipal* aPrincipal) {
+static bool IsPdfJs(nsIPrincipal* aPrincipal) {
   if (!aPrincipal) {
     return false;
   }
