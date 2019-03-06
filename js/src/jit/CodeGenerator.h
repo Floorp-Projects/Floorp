@@ -76,8 +76,16 @@ class CodeGenerator final : public CodeGeneratorSpecific {
   void verifyOsiPointRegs(LSafepoint* safepoint);
 #endif
 
-  void callVM(const VMFunction& f, LInstruction* ins,
+  void callVMInternal(const VMFunctionData& fun, TrampolinePtr code,
+                      LInstruction* ins, const Register* dynStack);
+  void callVMInternal(VMFunctionId id, LInstruction* ins,
+                      const Register* dynStack);
+
+  void callVM(const VMFunction& fun, LInstruction* ins,
               const Register* dynStack = nullptr);
+
+  template <typename Fn, Fn fn>
+  void callVM(LInstruction* ins, const Register* dynStack = nullptr);
 
   template <class ArgSeq, class StoreOutputTo>
   inline OutOfLineCode* oolCallVM(const VMFunction& fun, LInstruction* ins,
