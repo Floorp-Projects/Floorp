@@ -1782,7 +1782,6 @@ struct MOZ_STACK_CLASS CompartmentFinderState {
   JS::Compartment* compartment;
 };
 
-#if 0 /* Temporarily disabled; will reenable in bug 1533105 */
 static JS::CompartmentIterResult FindSameOriginCompartment(
     JSContext* aCx, void* aData, JS::Compartment* aCompartment) {
   auto* data = static_cast<CompartmentFinderState*>(aData);
@@ -1807,7 +1806,6 @@ static JS::CompartmentIterResult FindSameOriginCompartment(
   data->compartment = aCompartment;
   return JS::CompartmentIterResult::Stop;
 }
-#endif
 
 static JS::RealmCreationOptions& SelectZone(
     JSContext* aCx, nsIPrincipal* aPrincipal, nsGlobalWindowInner* aNewInner,
@@ -1828,7 +1826,6 @@ static JS::RealmCreationOptions& SelectZone(
 
     // If we have a top-level window, use its zone.
     if (top && top->GetGlobalJSObject()) {
-#if 0 /* Temporarily disabled; will reenable in bug 1533105 */
       JS::Zone* zone = JS::GetObjectZone(top->GetGlobalJSObject());
       // Now try to find an existing compartment that's same-origin
       // with our principal.
@@ -1837,7 +1834,6 @@ static JS::RealmCreationOptions& SelectZone(
       if (data.compartment) {
         return aOptions.setExistingCompartment(data.compartment);
       }
-#endif
       return aOptions.setNewCompartmentInExistingZone(top->GetGlobalJSObject());
     }
   }
