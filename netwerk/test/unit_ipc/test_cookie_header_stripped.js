@@ -29,11 +29,13 @@ function run_test() {
     Services.cookies.removeCookiesWithOriginAttributes("{}", TEST_DOMAIN);
     Services.prefs.clearUserPref("network.dns.localDomains");
     Services.prefs.clearUserPref("network.cookie.cookieBehavior");
+    Services.prefs.clearUserPref("network.cookieSettings.unblocked_for_testing");
 
     httpserv.stop();
     httpserv = null;
   });
 
+  Services.prefs.setBoolPref("network.cookieSettings.unblocked_for_testing", true);
   Services.prefs.setCharPref("network.dns.localDomains", TEST_DOMAIN);
   Services.prefs.setIntPref("network.cookie.cookieBehavior", 0);
   Services.cookies.removeCookiesWithOriginAttributes("{}", TEST_DOMAIN);

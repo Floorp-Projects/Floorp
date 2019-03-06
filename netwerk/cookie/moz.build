@@ -50,6 +50,10 @@ if CONFIG['NECKO_COOKIES']:
         'test/browser/browser.ini',
     ]
 
+    MOCHITEST_MANIFESTS += [
+        'test/mochitest/mochitest.ini',
+    ]
+
 IPDL_SOURCES = [
     'PCookieService.ipdl',
 ]
