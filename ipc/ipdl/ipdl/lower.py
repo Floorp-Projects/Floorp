@@ -763,6 +763,16 @@ class _CompoundTypeComponent(_HybridDecl):
 
 
 class StructDecl(ipdl.ast.StructDecl, HasFQName):
+    def fields_ipdl_order(self):
+        for f in self.fields:
+            yield f
+
+    def fields_member_order(self):
+        assert len(self.packed_field_order) == len(self.fields)
+
+        for i in self.packed_field_order:
+            yield self.fields[i]
+
     @staticmethod
     def upgrade(structDecl):
         assert isinstance(structDecl, ipdl.ast.StructDecl)
@@ -2054,7 +2064,9 @@ class _ParamTraits():
         write = []
         read = []
 
-        for f in sd.fields:
+        # The iteration order here doesn't particularly matter, but we choose
+        # member order for ideally better cache performance.
+        for f in sd.fields_member_order():
             writefield = cls.checkedWrite(f.ipdltype,
                                           get('.', f),
                                           cls.msgvar,
@@ -2290,12 +2302,14 @@ def _generateCxxStruct(sd):
     constreftype = Type(sd.name, const=True, ref=True)
 
     def fieldsAsParamList():
-        return [Decl(f.inType(), f.argVar().name) for f in sd.fields]
+        return [Decl(f.inType(), f.argVar().name) for f in sd.fields_ipdl_order()]
 
     # If this is an empty struct (no fields), then the default ctor
     # and "create-with-fields" ctors are equivalent.  So don't bother
     # with the default ctor.
     if len(sd.fields):
+        assert len(sd.fields) == len(sd.packed_field_order)
+
         # Struct()
         defctor = ConstructorDefn(ConstructorDecl(sd.name, force_inline=True))
 
@@ -2304,7 +2318,8 @@ def _generateCxxStruct(sd):
         # normally to their default values, and will initialize any actor member
         # pointers to the correct default value of `nullptr`. Other C++ types
         # with custom constructors must also provide a default constructor.
-        defctor.memberinits = [ExprMemberInit(f.memberVar()) for f in sd.fields]
+        defctor.memberinits = [ExprMemberInit(f.memberVar())
+                               for f in sd.fields_member_order()]
         struct.addstmts([defctor, Whitespace.NL])
 
     # Struct(const field1& _f1, ...)
@@ -2313,7 +2328,7 @@ def _generateCxxStruct(sd):
                                               force_inline=True))
     valctor.memberinits = [ExprMemberInit(f.memberVar(),
                                           args=[f.argVar()])
-                           for f in sd.fields]
+                           for f in sd.fields_member_order()]
     struct.addstmts([valctor, Whitespace.NL])
 
     # The default copy, move, and assignment constructors, and the default
@@ -2326,7 +2341,7 @@ def _generateCxxStruct(sd):
         params=[Decl(constreftype, ovar.name)],
         ret=Type.BOOL,
         const=True))
-    for f in sd.fields:
+    for f in sd.fields_ipdl_order():
         ifneq = StmtIf(ExprNot(
             ExprBinary(ExprCall(f.getMethod()), '==',
                        ExprCall(f.getMethod(ovar)))))
@@ -2347,7 +2362,7 @@ def _generateCxxStruct(sd):
 
     # field1& f1()
     # const field1& f1() const
-    for f in sd.fields:
+    for f in sd.fields_ipdl_order():
         get = MethodDefn(MethodDecl(f.getMethod().name,
                                     params=[],
                                     ret=f.refType(),
@@ -2367,7 +2382,7 @@ def _generateCxxStruct(sd):
 
     # members
     struct.addstmts([StmtDecl(Decl(f.bareType(), f.memberVar().name))
-                     for f in sd.fields])
+                     for f in sd.fields_member_order()])
 
     return forwarddeclstmts, fulldecltypes, struct
 
