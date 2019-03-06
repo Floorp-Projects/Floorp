@@ -1049,11 +1049,9 @@ var LoginManagerContent = {
       openerTopWindowID = win.opener.top.windowUtils.outerWindowID;
     }
 
-    let autoFilledLogin = this.stateForDocument(doc).fillsByRootElement.get(form.rootElement);
     messageManager.sendAsyncMessage("PasswordManager:onFormSubmit",
                                     { hostname,
                                       formSubmitURL,
-                                      autoFilledLoginGuid: autoFilledLogin && autoFilledLogin.guid,
                                       usernameField: mockUsername,
                                       newPasswordField: mockPassword,
                                       oldPasswordField: mockOldPassword,
