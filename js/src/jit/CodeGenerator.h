@@ -35,6 +35,9 @@
 namespace js {
 namespace jit {
 
+template <class ArgSeq, class StoreOutputTo>
+class OutOfLineCallVM;
+
 enum class SwitchTableType { Inline, OutOfLine };
 
 template <SwitchTableType tableType>
@@ -67,6 +70,19 @@ class CodeGenerator final : public CodeGeneratorSpecific {
   ConstantOrRegister toConstantOrRegister(LInstruction* lir, size_t n,
                                           MIRType type);
 
+#ifdef CHECK_OSIPOINT_REGISTERS
+  void resetOsiPointRegs(LSafepoint* safepoint);
+  bool shouldVerifyOsiPointRegs(LSafepoint* safepoint);
+  void verifyOsiPointRegs(LSafepoint* safepoint);
+#endif
+
+  void callVM(const VMFunction& f, LInstruction* ins,
+              const Register* dynStack = nullptr);
+
+  template <class ArgSeq, class StoreOutputTo>
+  inline OutOfLineCode* oolCallVM(const VMFunction& fun, LInstruction* ins,
+                                  const ArgSeq& args, const StoreOutputTo& out);
+
  public:
   CodeGenerator(MIRGenerator* gen, LIRGraph* graph,
                 MacroAssembler* masm = nullptr);
@@ -86,6 +102,9 @@ class CodeGenerator final : public CodeGeneratorSpecific {
   void emitOOLTestObject(Register objreg, Label* ifTruthy, Label* ifFalsy,
                          Register scratch);
   void emitIntToString(Register input, Register output, Label* ool);
+
+  template <class ArgSeq, class StoreOutputTo>
+  void visitOutOfLineCallVM(OutOfLineCallVM<ArgSeq, StoreOutputTo>* ool);
 
   void visitOutOfLineRegExpMatcher(OutOfLineRegExpMatcher* ool);
   void visitOutOfLineRegExpSearcher(OutOfLineRegExpSearcher* ool);
