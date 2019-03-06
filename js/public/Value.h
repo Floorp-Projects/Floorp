@@ -655,8 +655,11 @@ union alignas(8) Value {
   bool isMagic() const { return toTag() == JSVAL_TAG_MAGIC; }
 
   bool isMagic(JSWhyMagic why) const {
-    MOZ_ASSERT_IF(isMagic(), s_.payload_.why_ == why);
-    return isMagic();
+    if (!isMagic()) {
+      return false;
+    }
+    MOZ_RELEASE_ASSERT(s_.payload_.why_ == why);
+    return true;
   }
 
   JS::TraceKind traceKind() const {
