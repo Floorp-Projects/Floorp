@@ -3349,17 +3349,19 @@ pub extern "C" fn Servo_SetExplicitStyle(
 
 #[no_mangle]
 pub extern "C" fn Servo_HasAuthorSpecifiedRules(
+    raw_data: RawServoStyleSetBorrowed,
     style: ComputedStyleBorrowed,
     element: RawGeckoElementBorrowed,
-    pseudo_type: PseudoStyleType,
     rule_type_mask: u32,
-    author_colors_allowed: bool,
 ) -> bool {
+    let data = PerDocumentStyleData::from_ffi(raw_data).borrow();
     let element = GeckoElement(element);
-    let pseudo = PseudoElement::from_pseudo_type(pseudo_type);
 
     let guard = (*GLOBAL_STYLE_DATA).shared_lock.read();
     let guards = StylesheetGuards::same(&guard);
+
+    let pseudo = style.pseudo();
+    let author_colors_allowed = data.stylist.device().use_document_colors();
 
     style.rules().has_author_specified_rules(
         element,
@@ -3576,7 +3578,8 @@ pub extern "C" fn Servo_ComputedValues_GetStyleRuleList(
 pub extern "C" fn Servo_StyleSet_Init(
     pres_context: RawGeckoPresContextBorrowed,
 ) -> *mut RawServoStyleSet {
-    let data = Box::new(PerDocumentStyleData::new(pres_context));
+    let doc = pres_context.mDocument.mRawPtr;
+    let data = Box::new(PerDocumentStyleData::new(doc));
     Box::into_raw(data) as *mut RawServoStyleSet
 }
 
@@ -3594,9 +3597,8 @@ pub extern "C" fn Servo_StyleSet_Drop(data: RawServoStyleSetOwned) {
 #[no_mangle]
 pub unsafe extern "C" fn Servo_StyleSet_CompatModeChanged(raw_data: RawServoStyleSetBorrowed) {
     let mut data = PerDocumentStyleData::from_ffi(raw_data).borrow_mut();
-    let doc = &*data.stylist.device().pres_context().mDocument.mRawPtr;
-    data.stylist
-        .set_quirks_mode(QuirksMode::from(doc.mCompatMode));
+    let quirks_mode = data.stylist.device().document().mCompatMode;
+    data.stylist.set_quirks_mode(quirks_mode.into());
 }
 
 fn parse_property_into(

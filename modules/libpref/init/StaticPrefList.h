@@ -581,6 +581,14 @@ VARCACHE_PREF(
   bool, true
 )
 
+// 0 = default: always, except in high contrast mode
+// 1 = always
+// 2 = never
+VARCACHE_PREF(
+  "browser.display.document_color_use",
+   browser_display_document_color_use,
+  uint32_t, 0
+)
 VARCACHE_PREF(
   "browser.display.use_focus_colors",
    browser_display_use_focus_colors,

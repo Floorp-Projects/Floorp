@@ -170,7 +170,6 @@ nsPresContext::nsPresContext(dom::Document* aDocument, nsPresContextType aType)
       mHasPendingInterrupt(false),
       mPendingInterruptFromTest(false),
       mInterruptsEnabled(false),
-      mUseDocumentColors(true),
       mSendAfterPaintToContent(false),
       mUseFocusColors(false),
       mDrawImageBackground(true),  // always draw the background
@@ -344,28 +343,6 @@ void nsPresContext::GetDocumentColorPreferences() {
   // but in some reference tests, that is not the case.
   gfxPrefs::GetSingleton();
   PreferenceSheet::EnsureInitialized();
-
-  static int32_t sDocumentColorsSetting;
-  static bool sDocumentColorsSettingPrefCached = false;
-  if (!sDocumentColorsSettingPrefCached) {
-    sDocumentColorsSettingPrefCached = true;
-    Preferences::AddIntVarCache(&sDocumentColorsSetting,
-                                "browser.display.document_color_use", 0);
-  }
-
-  // Now deal with the pref:
-  // 0 = default: always, except in high contrast mode
-  // 1 = always
-  // 2 = never
-  if (sDocumentColorsSetting == 1 || mDocument->IsBeingUsedAsImage()) {
-    mUseDocumentColors = true;
-  } else if (sDocumentColorsSetting == 2) {
-    mUseDocumentColors = IsChrome() || IsChromeOriginImage();
-  } else {
-    bool useAccessibilityTheme =
-        PreferenceSheet::UseAccessibilityTheme(IsChrome());
-    mUseDocumentColors = !useAccessibilityTheme;
-  }
 }
 
 void nsPresContext::GetUserPreferences() {
@@ -1662,9 +1639,9 @@ bool nsPresContext::HasAuthorSpecifiedRules(const nsIFrame* aFrame,
   if (aFrame->Style()->IsAnonBox()) {
     return false;
   }
-  return Servo_HasAuthorSpecifiedRules(aFrame->Style(), elem,
-                                       aFrame->Style()->GetPseudoType(),
-                                       aRuleTypeMask, UseDocumentColors());
+
+  auto* set = PresShell()->StyleSet()->RawSet();
+  return Servo_HasAuthorSpecifiedRules(set, aFrame->Style(), elem, aRuleTypeMask);
 }
 
 gfxUserFontSet* nsPresContext::GetUserFontSet() {
