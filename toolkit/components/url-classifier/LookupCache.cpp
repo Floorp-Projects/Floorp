@@ -451,7 +451,14 @@ nsresult LookupCache::LoadPrefixSet() {
     }
     mPrimed = true;
   } else {
-    LOG(("no (usable) stored PrefixSet found"));
+    // The only scenario we load the old .pset file is when we haven't received
+    // a SafeBrowsng update before. After receiving an update, new .vlpset will
+    // be stored while old .pset will be removed.
+    if (NS_SUCCEEDED(LoadLegacyFile())) {
+      mPrimed = true;
+    } else {
+      LOG(("no (usable) stored PrefixSet found"));
+    }
   }
 
 #ifdef DEBUG
@@ -680,6 +687,8 @@ nsresult LookupCacheV2::StoreToFile(nsCOMPtr<nsIFile>& aFile) {
   LOG(("[%s] Storing PrefixSet successful", mTableName.get()));
   return NS_OK;
 }
+
+nsresult LookupCacheV2::LoadLegacyFile() { return NS_ERROR_NOT_IMPLEMENTED; }
 
 nsresult LookupCacheV2::LoadFromFile(nsCOMPtr<nsIFile>& aFile) {
   Telemetry::AutoTimer<Telemetry::URLCLASSIFIER_PS_FILELOAD_TIME> timer;
