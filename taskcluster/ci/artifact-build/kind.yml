@@ -32,6 +32,7 @@ jobs:
             env:
                 PERFHERDER_EXTRA_OPTIONS: artifact
                 MOZ_ARTIFACT_TASK: {task-reference: '<linux64-opt>'}
+                USE_ARTIFACT: '1'
         run:
             using: mozharness
             actions: [get-secrets, build]
