@@ -7,6 +7,8 @@
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 
+document.documentElement.addEventListener("dialoghelp", window.top.openPrefsHelp);
+
 Preferences.addAll([
   { id: "intl.accept_languages", type: "wstring" },
   { id: "pref.browser.language.disable_button.up", type: "bool" },

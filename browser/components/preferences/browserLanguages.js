@@ -18,6 +18,8 @@ ChromeUtils.defineModuleGetter(this, "RemoteSettings",
 ChromeUtils.defineModuleGetter(this, "SelectionChangedMenulist",
                                "resource:///modules/SelectionChangedMenulist.jsm");
 
+document.documentElement.addEventListener("dialoghelp", window.top.openPrefsHelp);
+
 /* This dialog provides an interface for managing what language the browser is
  * displayed in.
  *
