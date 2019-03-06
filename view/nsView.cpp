@@ -1041,6 +1041,15 @@ void nsView::RequestRepaint() {
   }
 }
 
+bool nsView::ShouldNotBeVisible() {
+  if (mFrame && mFrame->IsMenuPopupFrame()) {
+    nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
+    return !pm || !pm->IsPopupOpen(mFrame->GetContent());
+  }
+
+  return false;
+}
+
 nsEventStatus nsView::HandleEvent(WidgetGUIEvent* aEvent,
                                   bool aUseAttachedEvents) {
   MOZ_ASSERT(nullptr != aEvent->mWidget, "null widget ptr");

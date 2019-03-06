@@ -70,6 +70,11 @@ void nsIWidgetListener::DidCompositeWindow(
 
 void nsIWidgetListener::RequestRepaint() {}
 
+bool nsIWidgetListener::ShouldNotBeVisible() {
+  // Returns false to assume that nothing should happen in most cases.
+  return true;
+}
+
 nsEventStatus nsIWidgetListener::HandleEvent(WidgetGUIEvent* aEvent,
                                              bool aUseAttachedEvents) {
   return nsEventStatus_eIgnore;
