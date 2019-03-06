@@ -1046,7 +1046,9 @@ class _ASRouter {
         await MessageLoaderUtils.installAddonFromURL(target.browser, action.data.url);
         break;
       case ra.PIN_CURRENT_TAB:
-        target.browser.ownerGlobal.gBrowser.pinTab(target.browser.ownerGlobal.gBrowser.selectedTab);
+        let tab = target.browser.ownerGlobal.gBrowser.selectedTab;
+        target.browser.ownerGlobal.gBrowser.pinTab(tab);
+        target.browser.ownerGlobal.ConfirmationHint.show(tab, "pinTab", {showDescription: true});
         break;
       case ra.SHOW_FIREFOX_ACCOUNTS:
         const url = await FxAccounts.config.promiseSignUpURI("snippets");
