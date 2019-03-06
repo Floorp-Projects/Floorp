@@ -5,7 +5,7 @@
 use api::{AlphaType, ClipMode, DeviceIntRect, DeviceIntPoint, DeviceIntSize, WorldRect};
 use api::{ExternalImageType, FilterOp, ImageRendering, LayoutRect, DeviceRect, DevicePixelScale};
 use api::{YuvColorSpace, YuvFormat, PictureRect, ColorDepth, LayoutPoint, DevicePoint, LayoutSize};
-use api::{PremultipliedColorF};
+use api::{PremultipliedColorF, RasterSpace};
 use clip::{ClipDataStore, ClipNodeFlags, ClipNodeRange, ClipItem, ClipStore, ClipNodeInstance};
 use clip_scroll_tree::{ClipScrollTree, ROOT_SPATIAL_NODE_INDEX, SpatialNodeIndex, CoordinateSystemId};
 use glyph_rasterizer::GlyphFormat;
@@ -845,13 +845,14 @@ impl AlphaBatchBuilder {
                             }
                         };
 
+                        let raster_scale = run.raster_space.local_scale().unwrap_or(1.0).max(0.001);
                         let prim_header_index = prim_headers.push(
                             &prim_header,
                             z_id,
                             [
                                 (run.reference_frame_relative_offset.x * 256.0) as i32,
                                 (run.reference_frame_relative_offset.y * 256.0) as i32,
-                                (run.inverse_raster_scale * 65535.0).round() as i32,
+                                (raster_scale * 65535.0).round() as i32,
                             ],
                         );
                         let key = BatchKey::new(kind, blend_mode, textures);
@@ -864,10 +865,14 @@ impl AlphaBatchBuilder {
                             z_id,
                         );
 
+                        let rasterization_space = match run.raster_space {
+                            RasterSpace::Screen => RasterizationSpace::Screen,
+                            RasterSpace::Local(..) => RasterizationSpace::Local,
+                        };
                         for glyph in glyphs {
                             batch.push(base_instance.build(
                                 glyph.index_in_text_run |
-                                (run.raster_space as i32) << 16,
+                                (rasterization_space as i32) << 16,
                                 glyph.uv_rect_address.as_int(),
                                 (subpx_dir as u32 as i32) << 16 |
                                 (color_mode as u32 as i32),
