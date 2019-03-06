@@ -22,7 +22,7 @@ struct nsTimingFunction {
 
   bool IsLinear() const {
     return mTiming.IsKeyword() &&
-           mTiming.keyword._0 == mozilla::StyleTimingKeyword::Linear;
+           mTiming.AsKeyword() == mozilla::StyleTimingKeyword::Linear;
   }
 
   bool operator==(const nsTimingFunction& aOther) const {

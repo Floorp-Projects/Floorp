@@ -1319,7 +1319,7 @@ void nsIFrame::SyncFrameViewProperties(nsView* aView) {
     ComputedStyle* sc = Style();
     const nsStylePosition* position = sc->StylePosition();
     if (position->mZIndex.IsInteger()) {
-      zIndex = position->mZIndex.integer._0;
+      zIndex = position->mZIndex.AsInteger();
     } else {
       MOZ_ASSERT(position->mZIndex.IsAuto());
       autoZIndex = true;

@@ -327,8 +327,8 @@ WebRenderAPI::~WebRenderAPI() {
 }
 
 void WebRenderAPI::UpdateDebugFlags(uint32_t aFlags) {
-  if (mDebugFlags.mBits != aFlags) {
-    mDebugFlags.mBits = aFlags;
+  if (mDebugFlags.bits != aFlags) {
+    mDebugFlags.bits = aFlags;
     wr_api_set_debug_flags(mDocHandle, mDebugFlags);
   }
 }

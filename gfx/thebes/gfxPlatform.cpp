@@ -541,37 +541,42 @@ void RecordingPrefChanged(const char* aPrefName, void* aClosure) {
 #define WR_DEBUG_PREF "gfx.webrender.debug"
 
 static void WebRenderDebugPrefChangeCallback(const char* aPrefName, void*) {
-  int32_t flags = 0;
+  wr::DebugFlags flags{0};
 #define GFX_WEBRENDER_DEBUG(suffix, bit)                   \
   if (Preferences::GetBool(WR_DEBUG_PREF suffix, false)) { \
     flags |= (bit);                                        \
   }
 
-  // TODO: It would be nice to get the bit patterns directly from the rust code.
-  GFX_WEBRENDER_DEBUG(".profiler", 1 << 0)
-  GFX_WEBRENDER_DEBUG(".render-targets", 1 << 1)
-  GFX_WEBRENDER_DEBUG(".texture-cache", 1 << 2)
-  GFX_WEBRENDER_DEBUG(".gpu-time-queries", 1 << 3)
-  GFX_WEBRENDER_DEBUG(".gpu-sample-queries", 1 << 4)
-  GFX_WEBRENDER_DEBUG(".disable-batching", 1 << 5)
-  GFX_WEBRENDER_DEBUG(".epochs", 1 << 6)
-  GFX_WEBRENDER_DEBUG(".compact-profiler", 1 << 7)
-  GFX_WEBRENDER_DEBUG(".echo-driver-messages", 1 << 8)
-  GFX_WEBRENDER_DEBUG(".new-frame-indicator", 1 << 9)
-  GFX_WEBRENDER_DEBUG(".new-scene-indicator", 1 << 10)
-  GFX_WEBRENDER_DEBUG(".show-overdraw", 1 << 11)
-  GFX_WEBRENDER_DEBUG(".gpu-cache", 1 << 12)
-  GFX_WEBRENDER_DEBUG(".slow-frame-indicator", 1 << 13)
-  GFX_WEBRENDER_DEBUG(".texture-cache.clear-evicted", 1 << 14)
-  GFX_WEBRENDER_DEBUG(".picture-caching", 1 << 15)
-  GFX_WEBRENDER_DEBUG(".texture-cache.disable-shrink", 1 << 16)
-  GFX_WEBRENDER_DEBUG(".primitives", 1 << 17)
+  GFX_WEBRENDER_DEBUG(".profiler", wr::DebugFlags_PROFILER_DBG)
+  GFX_WEBRENDER_DEBUG(".render-targets", wr::DebugFlags_RENDER_TARGET_DBG)
+  GFX_WEBRENDER_DEBUG(".texture-cache", wr::DebugFlags_TEXTURE_CACHE_DBG)
+  GFX_WEBRENDER_DEBUG(".gpu-time-queries", wr::DebugFlags_GPU_TIME_QUERIES)
+  GFX_WEBRENDER_DEBUG(".gpu-sample-queries", wr::DebugFlags_GPU_SAMPLE_QUERIES)
+  GFX_WEBRENDER_DEBUG(".disable-batching", wr::DebugFlags_DISABLE_BATCHING)
+  GFX_WEBRENDER_DEBUG(".epochs", wr::DebugFlags_EPOCHS)
+  GFX_WEBRENDER_DEBUG(".compact-profiler", wr::DebugFlags_COMPACT_PROFILER)
+  GFX_WEBRENDER_DEBUG(".echo-driver-messages",
+                      wr::DebugFlags_ECHO_DRIVER_MESSAGES)
+  GFX_WEBRENDER_DEBUG(".new-frame-indicator",
+                      wr::DebugFlags_NEW_FRAME_INDICATOR)
+  GFX_WEBRENDER_DEBUG(".new-scene-indicator",
+                      wr::DebugFlags_NEW_SCENE_INDICATOR)
+  GFX_WEBRENDER_DEBUG(".show-overdraw", wr::DebugFlags_SHOW_OVERDRAW)
+  GFX_WEBRENDER_DEBUG(".gpu-cache", wr::DebugFlags_GPU_CACHE_DBG)
+  GFX_WEBRENDER_DEBUG(".slow-frame-indicator",
+                      wr::DebugFlags_SLOW_FRAME_INDICATOR)
+  GFX_WEBRENDER_DEBUG(".texture-cache.clear-evicted",
+                      wr::DebugFlags_TEXTURE_CACHE_DBG_CLEAR_EVICTED)
+  GFX_WEBRENDER_DEBUG(".picture-caching", wr::DebugFlags_PICTURE_CACHING_DBG)
+  GFX_WEBRENDER_DEBUG(".texture-cache.disable-shrink",
+                      wr::DebugFlags_TEXTURE_CACHE_DBG_DISABLE_SHRINK)
+  GFX_WEBRENDER_DEBUG(".primitives", wr::DebugFlags_PRIMITIVE_DBG)
   // Bit 18 is for the zoom display, which requires the mouse position and thus
   // currently only works in wrench.
-  GFX_WEBRENDER_DEBUG(".small-screen", 1 << 19)
+  GFX_WEBRENDER_DEBUG(".small-screen", wr::DebugFlags_SMALL_SCREEN)
 #undef GFX_WEBRENDER_DEBUG
 
-  gfx::gfxVars::SetWebRenderDebugFlags(flags);
+  gfx::gfxVars::SetWebRenderDebugFlags(flags.bits);
 }
 
 #if defined(USE_SKIA)
@@ -879,7 +884,7 @@ void gfxPlatform::Init() {
         gfxPrefs::WebGLForceMSAA());
     // Prefs that don't fit into any of the other sections
     forcedPrefs.AppendPrintf("-T%d%d%d) ", gfxPrefs::AndroidRGB16Force(),
-                             0, // SkiaGL canvas no longer supported
+                             0,  // SkiaGL canvas no longer supported
                              gfxPrefs::ForceShmemTiles());
     ScopedGfxFeatureReporter::AppNote(forcedPrefs);
   }
