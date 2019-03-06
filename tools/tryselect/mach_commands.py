@@ -122,7 +122,7 @@ class TrySelect(MachCommandBase):
 
             name = preset
             preset = presets[name]
-            selector = preset['selector']
+            selector = preset.pop('selector')
             preset.pop('description', None)  # description isn't used by any selectors
 
             if not self.subcommand:
