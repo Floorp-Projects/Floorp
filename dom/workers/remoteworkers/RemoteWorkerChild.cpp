@@ -201,8 +201,9 @@ RemoteWorkerChild::~RemoteWorkerChild() {
 }
 
 void RemoteWorkerChild::ActorDestroy(ActorDestroyReason aWhy) {
+  MOZ_ACCESS_THREAD_BOUND(mLauncherData, data);
   mIPCActive = false;
-  mPendingOps.Clear();
+  data->mPendingOps.Clear();
 }
 
 void RemoteWorkerChild::ExecWorker(const RemoteWorkerData& aData) {
@@ -367,10 +368,10 @@ void RemoteWorkerChild::ShutdownOnWorker() {
 }
 
 void RemoteWorkerChild::WorkerTerminated() {
-  MOZ_ASSERT(RemoteWorkerService::Thread()->IsOnCurrentThread());
+  MOZ_ACCESS_THREAD_BOUND(mLauncherData, data);
 
   mWorkerState = eTerminated;
-  mPendingOps.Clear();
+  data->mPendingOps.Clear();
 
   if (!mIPCActive) {
     return;
@@ -469,13 +470,15 @@ void RemoteWorkerChild::FlushReportsOnMainThread(
 }
 
 IPCResult RemoteWorkerChild::RecvExecOp(const RemoteWorkerOp& aOp) {
+  MOZ_ACCESS_THREAD_BOUND(mLauncherData, data);
+
   if (!mIPCActive) {
     return IPC_OK();
   }
 
   // The worker is not ready yet.
   if (mWorkerState == ePending) {
-    mPendingOps.AppendElement(aOp);
+    data->mPendingOps.AppendElement(aOp);
     return IPC_OK();
   }
 
@@ -589,7 +592,7 @@ void RemoteWorkerChild::CreationSucceededOnAnyThread() {
 }
 
 void RemoteWorkerChild::CreationSucceeded() {
-  MOZ_ASSERT(RemoteWorkerService::Thread()->IsOnCurrentThread());
+  MOZ_ACCESS_THREAD_BOUND(mLauncherData, data);
 
   // The worker is created but we need to terminate it already.
   if (mWorkerState == ePendingTerminated) {
@@ -610,11 +613,11 @@ void RemoteWorkerChild::CreationSucceeded() {
     return;
   }
 
-  for (const RemoteWorkerOp& op : mPendingOps) {
+  for (const RemoteWorkerOp& op : data->mPendingOps) {
     RecvExecOp(op);
   }
 
-  mPendingOps.Clear();
+  data->mPendingOps.Clear();
 
   Unused << SendCreated(true);
 }
@@ -629,10 +632,10 @@ void RemoteWorkerChild::CreationFailedOnAnyThread() {
 }
 
 void RemoteWorkerChild::CreationFailed() {
-  MOZ_ASSERT(RemoteWorkerService::Thread()->IsOnCurrentThread());
+  MOZ_ACCESS_THREAD_BOUND(mLauncherData, data);
 
   mWorkerState = eTerminated;
-  mPendingOps.Clear();
+  data->mPendingOps.Clear();
 
   if (!mIPCActive) {
     return;
