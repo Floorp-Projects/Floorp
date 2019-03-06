@@ -57,12 +57,10 @@ RenderCompositorEGL::CreateGLContext(RefPtr<widget::CompositorWidget> aWidget) {
   return gl.forget();
 }
 
-/* static */
-EGLSurface RenderCompositorEGL::CreateEGLSurface(
-    widget::CompositorWidget* aWidget) {
+EGLSurface RenderCompositorEGL::CreateEGLSurface() {
   EGLSurface surface = EGL_NO_SURFACE;
   surface = gl::GLContextEGL::CreateEGLSurfaceForCompositorWidget(
-      aWidget, /* aForceAccelerated */ true);
+      mWidget, gl::GLContextEGL::Cast(gl())->mConfig);
   if (surface == EGL_NO_SURFACE) {
     gfxCriticalNote << "Failed to create EGLSurface";
   }
@@ -84,7 +82,7 @@ bool RenderCompositorEGL::BeginFrame() {
       mWidget->AsX11()->WaylandRequestsUpdatingEGLSurface()) {
     // Destroy EGLSurface if it exists.
     DestroyEGLSurface();
-    mEGLSurface = CreateEGLSurface(mWidget);
+    mEGLSurface = CreateEGLSurface();
     gl::GLContextEGL::Cast(gl())->SetEGLSurfaceOverride(mEGLSurface);
   }
 
