@@ -67,19 +67,19 @@ StyleSheet* nsLayoutStylesheetCache::GetUserChromeSheet() {
   return mUserChromeSheet;
 }
 
-StyleSheet* nsLayoutStylesheetCache::ChromePreferenceSheet(
-    nsPresContext* aPresContext) {
+StyleSheet* nsLayoutStylesheetCache::ChromePreferenceSheet() {
   if (!mChromePreferenceSheet) {
-    BuildPreferenceSheet(&mChromePreferenceSheet, aPresContext);
+    BuildPreferenceSheet(&mChromePreferenceSheet,
+                         PreferenceSheet::ChromePrefs());
   }
 
   return mChromePreferenceSheet;
 }
 
-StyleSheet* nsLayoutStylesheetCache::ContentPreferenceSheet(
-    nsPresContext* aPresContext) {
+StyleSheet* nsLayoutStylesheetCache::ContentPreferenceSheet() {
   if (!mContentPreferenceSheet) {
-    BuildPreferenceSheet(&mContentPreferenceSheet, aPresContext);
+    BuildPreferenceSheet(&mContentPreferenceSheet,
+                         PreferenceSheet::ContentPrefs());
   }
 
   return mContentPreferenceSheet;
@@ -320,7 +320,7 @@ void nsLayoutStylesheetCache::InvalidatePreferenceSheets() {
 }
 
 void nsLayoutStylesheetCache::BuildPreferenceSheet(
-    RefPtr<StyleSheet>* aSheet, nsPresContext* aPresContext) {
+    RefPtr<StyleSheet>* aSheet, const PreferenceSheet::Prefs& aPrefs) {
   *aSheet = new StyleSheet(eAgentSheetFeatures, CORS_NONE,
                            mozilla::net::RP_Unset, dom::SRIMetadata());
 
@@ -346,9 +346,9 @@ void nsLayoutStylesheetCache::BuildPreferenceSheet(
       "@namespace svg url(http://www.w3.org/2000/svg);\n");
 
   // Rules for link styling.
-  nscolor linkColor = aPresContext->DefaultLinkColor();
-  nscolor activeColor = aPresContext->DefaultActiveLinkColor();
-  nscolor visitedColor = aPresContext->DefaultVisitedLinkColor();
+  nscolor linkColor = aPrefs.mLinkColor;
+  nscolor activeColor = aPrefs.mActiveLinkColor;
+  nscolor visitedColor = aPrefs.mVisitedLinkColor;
 
   sheetText.AppendPrintf(
       "*|*:link { color: #%02x%02x%02x; }\n"
@@ -357,17 +357,16 @@ void nsLayoutStylesheetCache::BuildPreferenceSheet(
       NS_GET_R_G_B(linkColor), NS_GET_R_G_B(activeColor),
       NS_GET_R_G_B(visitedColor));
 
-  bool underlineLinks =
-      aPresContext->GetCachedBoolPref(kPresContext_UnderlineLinks);
+  bool underlineLinks = aPrefs.mUnderlineLinks;
   sheetText.AppendPrintf("*|*:any-link%s { text-decoration: %s; }\n",
                          underlineLinks ? ":not(svg|a)" : "",
                          underlineLinks ? "underline" : "none");
 
   // Rules for focus styling.
 
-  bool focusRingOnAnything = aPresContext->GetFocusRingOnAnything();
-  uint8_t focusRingWidth = aPresContext->FocusRingWidth();
-  uint8_t focusRingStyle = aPresContext->GetFocusRingStyle();
+  bool focusRingOnAnything = aPrefs.mFocusRingOnAnything;
+  uint8_t focusRingWidth = aPrefs.mFocusRingWidth;
+  uint8_t focusRingStyle = aPrefs.mFocusRingStyle;
 
   if ((focusRingWidth != 1 && focusRingWidth <= 4) || focusRingOnAnything) {
     if (focusRingWidth != 1) {
@@ -400,9 +399,9 @@ void nsLayoutStylesheetCache::BuildPreferenceSheet(
                             : "");
   }
 
-  if (aPresContext->GetUseFocusColors()) {
-    nscolor focusText = aPresContext->FocusTextColor();
-    nscolor focusBG = aPresContext->FocusBackgroundColor();
+  if (aPrefs.mUseFocusColors) {
+    nscolor focusText = aPrefs.mFocusTextColor;
+    nscolor focusBG = aPrefs.mFocusBackgroundColor;
     sheetText.AppendPrintf(
         "*:focus, *:focus > font { color: #%02x%02x%02x !important; "
         "background-color: #%02x%02x%02x !important; }\n",

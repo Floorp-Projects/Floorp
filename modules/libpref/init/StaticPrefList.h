@@ -554,6 +554,54 @@ VARCACHE_PREF(
 )
 
 //---------------------------------------------------------------------------
+// Preference stylesheet prefs.
+//---------------------------------------------------------------------------
+
+VARCACHE_PREF(
+  "browser.display.focus_ring_on_anything",
+   browser_display_focus_ring_on_anything,
+  bool, false
+)
+
+VARCACHE_PREF(
+  "browser.display.focus_ring_width",
+   browser_display_focus_ring_width,
+  uint32_t, 1
+)
+
+VARCACHE_PREF(
+  "browser.display.focus_ring_style",
+   browser_display_focus_ring_style,
+  bool, false
+)
+
+VARCACHE_PREF(
+  "browser.display.use_system_colors",
+   browser_display_use_system_colors,
+  bool, true
+)
+
+VARCACHE_PREF(
+  "browser.display.use_focus_colors",
+   browser_display_use_focus_colors,
+  bool, false
+)
+
+VARCACHE_PREF(
+  "browser.underline_anchors",
+   browser_underline_anchors,
+  bool, true
+)
+
+PREF("browser.display.foreground_color", String, "")
+PREF("browser.display.background_color", String, "")
+PREF("browser.display.focus_background_color", String, "")
+PREF("browser.display.focus_text_color", String, "")
+PREF("browser.anchor_color", String, "")
+PREF("browser.active_color", String, "")
+PREF("browser.visited_color", String, "")
+
+//---------------------------------------------------------------------------
 // Graphics prefs
 //---------------------------------------------------------------------------
 

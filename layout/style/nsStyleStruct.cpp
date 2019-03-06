@@ -35,6 +35,7 @@
 #include "mozilla/dom/ImageTracker.h"
 #include "mozilla/CORSMode.h"
 #include "mozilla/ClearOnShutdown.h"
+#include "mozilla/PreferenceSheet.h"
 #include "mozilla/Likely.h"
 #include "nsIURI.h"
 #include "mozilla/dom/Document.h"
@@ -1666,8 +1667,7 @@ nsChangeHint nsStyleTableBorder::CalcDifference(
 //
 
 static nscolor DefaultColor(const Document& aDocument) {
-  auto* pc = aDocument.GetPresContext();
-  return pc ? pc->DefaultColor() : NS_RGB(0, 0, 0);
+  return PreferenceSheet::PrefsFor(aDocument).mDefaultColor;
 }
 
 nsStyleColor::nsStyleColor(const Document& aDocument)

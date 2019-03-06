@@ -765,6 +765,10 @@ Document::DocumentTheme Gecko_GetDocumentLWTheme(const Document* aDocument) {
   return aDocument->ThreadSafeGetDocumentLWTheme();
 }
 
+const PreferenceSheet::Prefs* Gecko_GetPrefSheetPrefs(const Document* aDoc) {
+  return &PreferenceSheet::PrefsFor(*aDoc);
+}
+
 bool Gecko_IsTableBorderNonzero(RawGeckoElementBorrowed aElement) {
   if (!aElement->IsHTMLElement(nsGkAtoms::table)) {
     return false;

@@ -110,21 +110,6 @@ class ContainerLayerPresContext : public LayerUserData {
   nsPresContext* mPresContext;
 };
 
-nscolor nsPresContext::MakeColorPref(const nsString& aColor) {
-  ServoStyleSet* styleSet = mShell ? mShell->StyleSet() : nullptr;
-
-  nscolor result;
-  bool ok =
-      ServoCSSParser::ComputeColor(styleSet, NS_RGB(0, 0, 0), aColor, &result);
-
-  if (!ok) {
-    // Any better choices?
-    result = NS_RGB(0, 0, 0);
-  }
-
-  return result;
-}
-
 bool nsPresContext::IsDOMPaintEventPending() {
   if (!mTransactions.IsEmpty()) {
     return true;
@@ -172,17 +157,8 @@ nsPresContext::nsPresContext(dom::Document* aDocument, nsPresContextType aType)
       mPageSize(-1, -1),
       mPageScale(0.0),
       mPPScale(1.0f),
-      mDefaultColor(NS_RGBA(0, 0, 0, 0)),
-      mBackgroundColor(NS_RGB(0xFF, 0xFF, 0xFF)),
-      mLinkColor(NS_RGB(0x00, 0x00, 0xEE)),
-      mActiveLinkColor(NS_RGB(0xEE, 0x00, 0x00)),
-      mVisitedLinkColor(NS_RGB(0x55, 0x1A, 0x8B)),
-      mFocusBackgroundColor(mBackgroundColor),
-      mFocusTextColor(mDefaultColor),
-      mBodyTextColor(mDefaultColor),
       mViewportScrollOverrideElement(nullptr),
       mViewportScrollStyles(StyleOverflow::Auto, StyleOverflow::Auto),
-      mFocusRingWidth(1),
       mExistThrottledUpdates(false),
       // mImageAnimationMode is initialised below, in constructor body
       mImageAnimationModePref(imgIContainer::kNormalAnimMode),
@@ -195,11 +171,8 @@ nsPresContext::nsPresContext(dom::Document* aDocument, nsPresContextType aType)
       mPendingInterruptFromTest(false),
       mInterruptsEnabled(false),
       mUseDocumentColors(true),
-      mUnderlineLinks(true),
       mSendAfterPaintToContent(false),
       mUseFocusColors(false),
-      mFocusRingOnAnything(false),
-      mFocusRingStyle(false),
       mDrawImageBackground(true),  // always draw the background
       mDrawColorBackground(true),
       // mNeverAnimate is initialised below, in constructor body
@@ -370,9 +343,8 @@ void nsPresContext::GetDocumentColorPreferences() {
   // they would already be, because gfxPlatform would have been created,
   // but in some reference tests, that is not the case.
   gfxPrefs::GetSingleton();
+  PreferenceSheet::EnsureInitialized();
 
-  int32_t useAccessibilityTheme = 0;
-  bool usePrefColors = true;
   static int32_t sDocumentColorsSetting;
   static bool sDocumentColorsSettingPrefCached = false;
   if (!sDocumentColorsSettingPrefCached) {
@@ -380,49 +352,6 @@ void nsPresContext::GetDocumentColorPreferences() {
     Preferences::AddIntVarCache(&sDocumentColorsSetting,
                                 "browser.display.document_color_use", 0);
   }
-
-  if (IsChrome() || IsChromeOriginImage()) {
-    usePrefColors = false;
-  } else {
-    useAccessibilityTheme =
-        LookAndFeel::GetInt(LookAndFeel::eIntID_UseAccessibilityTheme, 0);
-    usePrefColors = !useAccessibilityTheme;
-  }
-  if (usePrefColors) {
-    usePrefColors =
-        !Preferences::GetBool("browser.display.use_system_colors", false);
-  }
-
-  if (nsContentUtils::UseStandinsForNativeColors()) {
-    // Once the |nsContentUtils::UseStandinsForNativeColors()| is true,
-    // use fixed color values instead of preferred colors and system colors.
-    mDefaultColor = LookAndFeel::GetColorUsingStandins(
-        LookAndFeel::eColorID_windowtext, NS_RGB(0x00, 0x00, 0x00));
-    mBackgroundColor = LookAndFeel::GetColorUsingStandins(
-        LookAndFeel::eColorID_window, NS_RGB(0xff, 0xff, 0xff));
-  } else if (usePrefColors) {
-    nsAutoString colorStr;
-    Preferences::GetString("browser.display.foreground_color", colorStr);
-    if (!colorStr.IsEmpty()) {
-      mDefaultColor = MakeColorPref(colorStr);
-    }
-
-    colorStr.Truncate();
-    Preferences::GetString("browser.display.background_color", colorStr);
-    if (!colorStr.IsEmpty()) {
-      mBackgroundColor = MakeColorPref(colorStr);
-    }
-  } else {
-    mDefaultColor = LookAndFeel::GetColor(
-        LookAndFeel::eColorID_WindowForeground, NS_RGB(0x00, 0x00, 0x00));
-    mBackgroundColor = LookAndFeel::GetColor(
-        LookAndFeel::eColorID_WindowBackground, NS_RGB(0xFF, 0xFF, 0xFF));
-  }
-
-  // Wherever we got the default background color from, ensure it is
-  // opaque.
-  mBackgroundColor =
-      NS_ComposeColors(NS_RGB(0xFF, 0xFF, 0xFF), mBackgroundColor);
 
   // Now deal with the pref:
   // 0 = default: always, except in high contrast mode
@@ -433,8 +362,8 @@ void nsPresContext::GetDocumentColorPreferences() {
   } else if (sDocumentColorsSetting == 2) {
     mUseDocumentColors = IsChrome() || IsChromeOriginImage();
   } else {
-    MOZ_ASSERT(!useAccessibilityTheme || !(IsChrome() || IsChromeOriginImage()),
-               "The accessibility theme should only be on for non-chrome");
+    bool useAccessibilityTheme =
+        PreferenceSheet::UseAccessibilityTheme(IsChrome());
     mUseDocumentColors = !useAccessibilityTheme;
   }
 }
@@ -454,57 +383,6 @@ void nsPresContext::GetUserPreferences() {
 
   mSendAfterPaintToContent = Preferences::GetBool(
       "dom.send_after_paint_to_content", mSendAfterPaintToContent);
-
-  // * link colors
-  mUnderlineLinks =
-      Preferences::GetBool("browser.underline_anchors", mUnderlineLinks);
-
-  nsAutoString colorStr;
-  Preferences::GetString("browser.anchor_color", colorStr);
-  if (!colorStr.IsEmpty()) {
-    mLinkColor = MakeColorPref(colorStr);
-  }
-
-  colorStr.Truncate();
-  Preferences::GetString("browser.active_color", colorStr);
-  if (!colorStr.IsEmpty()) {
-    mActiveLinkColor = MakeColorPref(colorStr);
-  }
-
-  colorStr.Truncate();
-  Preferences::GetString("browser.visited_color", colorStr);
-  if (!colorStr.IsEmpty()) {
-    mVisitedLinkColor = MakeColorPref(colorStr);
-  }
-
-  mUseFocusColors =
-      Preferences::GetBool("browser.display.use_focus_colors", mUseFocusColors);
-
-  mFocusTextColor = mDefaultColor;
-  mFocusBackgroundColor = mBackgroundColor;
-
-  colorStr.Truncate();
-  Preferences::GetString("browser.display.focus_text_color", colorStr);
-  if (!colorStr.IsEmpty()) {
-    mFocusTextColor = MakeColorPref(colorStr);
-  }
-
-  colorStr.Truncate();
-  Preferences::GetString("browser.display.focus_background_color", colorStr);
-  if (!colorStr.IsEmpty()) {
-    mFocusBackgroundColor = MakeColorPref(colorStr);
-  }
-
-  mFocusRingWidth =
-      Preferences::GetInt("browser.display.focus_ring_width", mFocusRingWidth);
-
-  mFocusRingOnAnything = Preferences::GetBool(
-      "browser.display.focus_ring_on_anything", mFocusRingOnAnything);
-
-  mFocusRingStyle =
-      Preferences::GetInt("browser.display.focus_ring_style", mFocusRingStyle);
-
-  mBodyTextColor = mDefaultColor;
 
   mPrefScrollbarSide = Preferences::GetInt("layout.scrollbar.side");
 
@@ -638,6 +516,7 @@ void nsPresContext::PreferenceChanged(const char* aPrefName) {
   // The first pres context that has its pref changed runnable called will
   // be the one to cause the reconstruction of the pref style sheet.
   nsLayoutStylesheetCache::InvalidatePreferenceSheets();
+  PreferenceSheet::Refresh();
   DispatchPrefChangedRunnableIfNeeded();
 
   if (prefName.EqualsLiteral("nglayout.debug.paint_flashing") ||
@@ -1477,6 +1356,8 @@ void nsPresContext::SysColorChangedInternal() {
 
   // Invalidate cached '-moz-windows-accent-color-applies' media query:
   RefreshSystemMetrics();
+
+  PreferenceSheet::Refresh();
 
   // Reset default background and foreground colors for the document since
   // they may be using system colors
