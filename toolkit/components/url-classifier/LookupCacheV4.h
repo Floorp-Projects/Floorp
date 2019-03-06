@@ -59,6 +59,8 @@ class LookupCacheV4 final : public LookupCache {
 
   virtual int Ver() const override { return VER; }
 
+  virtual nsresult LoadLegacyFile() override;
+
   struct Header {
     uint32_t magic;
     uint32_t version;
