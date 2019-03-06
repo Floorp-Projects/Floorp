@@ -214,9 +214,6 @@ class WebDriverProtocol(Protocol):
         self.webdriver.start()
 
 
-    def after_conect(self):
-        pass
-
     def teardown(self):
         self.logger.debug("Hanging up on WebDriver session")
         try:
