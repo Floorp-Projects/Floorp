@@ -386,11 +386,13 @@ window._gBrowser = {
 
   _preopenPinnedTabs() {
     let numPinnedTabs = 0;
-    let windows = browserWindows();
-    windows.getNext();
-    let isOnlyWindow = !windows.hasMoreElements();
-    if (isOnlyWindow) {
-      numPinnedTabs = Services.prefs.getIntPref("browser.tabs.firstWindowRestore.numPinnedTabs", 0);
+    if (!PrivateBrowsingUtils.isWindowPrivate(window)) {
+      let windows = browserWindows();
+      windows.getNext();
+      let isOnlyWindow = !windows.hasMoreElements();
+      if (isOnlyWindow) {
+        numPinnedTabs = Services.prefs.getIntPref("browser.tabs.firstWindowRestore.numPinnedTabs", 0);
+      }
     }
 
     for (let i = 0; i < numPinnedTabs; i++) {
@@ -632,7 +634,8 @@ window._gBrowser = {
   },
 
   _maybeUpdateNumPinnedTabsPref() {
-    if (BrowserWindowTracker.getTopWindow() == window) {
+    if (!PrivateBrowsingUtils.isWindowPrivate(window) &&
+        BrowserWindowTracker.getTopWindow() == window) {
       Services.prefs.setIntPref("browser.tabs.firstWindowRestore.numPinnedTabs",
                                 this._numPinnedTabs);
     }
