@@ -362,33 +362,50 @@ ReplayDebugger.prototype = {
     }
   },
 
-  _virtualConsoleLog(position, text, callback) {
-    this._searches.push({ position, text, callback, results: [] });
+  _virtualConsoleLog(position, text, condition, callback) {
+    this._searches.push({ position, text, condition, callback, results: [] });
     this._searchControl.reset();
   },
 
+  _evaluateVirtualConsoleLog(search) {
+    const frameData = this._searchControl.sendRequest({
+      type: "getFrame",
+      index: NewestFrameIndex,
+    });
+    if (!("index" in frameData)) {
+      return null;
+    }
+    if (search.condition) {
+      const rv = this._searchControl.sendRequest({
+        type: "frameEvaluate",
+        index: frameData.index,
+        text: search.condition,
+        convertOptions: { snapshot: true },
+      });
+      const crv = this._convertCompletionValue(rv);
+      if ("return" in crv && !crv.return) {
+        return null;
+      }
+    }
+    const rv = this._searchControl.sendRequest({
+      type: "frameEvaluate",
+      index: frameData.index,
+      text: search.text,
+      convertOptions: { snapshot: true },
+    });
+    return this._convertCompletionValue(rv);
+  },
+
   _onSearchPause(point) {
-    for (const { position, text, callback, results } of this._searches) {
-      if (RecordReplayControl.positionSubsumes(position, point.position)) {
-        if (!results.some(existing => point.progress == existing.progress)) {
-          let evaluateResult;
-          if (text) {
-            const frameData = this._searchControl.sendRequest({
-              type: "getFrame",
-              index: NewestFrameIndex,
-            });
-            if ("index" in frameData) {
-              const rv = this._searchControl.sendRequest({
-                type: "frameEvaluate",
-                index: frameData.index,
-                text,
-                convertOptions: { snapshot: true },
-              });
-              evaluateResult = this._convertCompletionValue(rv);
-            }
+    for (const search of this._searches) {
+      if (RecordReplayControl.positionSubsumes(search.position, point.position)) {
+        if (!search.results.some(existing => point.progress == existing.progress)) {
+          search.results.push(point);
+
+          const evaluateResult = this._evaluateVirtualConsoleLog(search);
+          if (evaluateResult) {
+            search.callback(point, evaluateResult);
           }
-          results.push(point);
-          callback(point, evaluateResult);
         }
       }
     }
@@ -747,9 +764,9 @@ ReplayDebuggerScript.prototype = {
     });
   },
 
-  replayVirtualConsoleLog(offset, text, callback) {
+  replayVirtualConsoleLog(offset, text, condition, callback) {
     this._dbg._virtualConsoleLog({ kind: "Break", script: this._data.id, offset },
-                                 text, callback);
+                                 text, condition, callback);
   },
 
   get isGeneratorFunction() { NYI(); },

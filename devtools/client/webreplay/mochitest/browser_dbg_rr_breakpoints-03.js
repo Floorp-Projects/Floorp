@@ -6,8 +6,6 @@
 
 "use strict";
 
-// To disable all Web Replay tests, see browser.ini
-
 // Test some issues when stepping around after hitting a breakpoint while recording.
 add_task(async function() {
   const dbg = await attachRecordingDebugger("doc_rr_continuous.html");

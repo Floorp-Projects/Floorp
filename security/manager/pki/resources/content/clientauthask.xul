@@ -42,7 +42,7 @@
     <menupopup/>
 </menulist>
 <description>&clientAuthAsk.message3;</description>
-<html:textarea readonly="true" id="details" style="height: 11em;"/>
+<html:textarea readonly="readonly" id="details" style="height: 11em;"/>
 <checkbox id="rememberBox" checked="true"/>
 
 </dialog>
