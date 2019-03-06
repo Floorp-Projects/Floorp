@@ -21,7 +21,7 @@ typedef nsTArray<_Prefix> _PrefixArray;
 
 #define GTEST_SAFEBROWSING_DIR NS_LITERAL_CSTRING("safebrowsing")
 #define GTEST_TABLE NS_LITERAL_CSTRING("gtest-malware-proto")
-#define GTEST_PREFIXFILE NS_LITERAL_CSTRING("gtest-malware-proto.vlpset")
+#define GTEST_PREFIXFILE NS_LITERAL_CSTRING("gtest-malware-proto.pset")
 
 // This function removes common elements of inArray and outArray from
 // outArray. This is used by partial update testcase to ensure partial update
@@ -54,7 +54,7 @@ static void MergeAndSortArray(const _PrefixArray& array1,
   output.Sort();
 }
 
-static void CalculateSHA256(_PrefixArray& prefixArray, nsCString& sha256) {
+static void CalculateCheckSum(_PrefixArray& prefixArray, nsCString& checksum) {
   prefixArray.Sort();
 
   nsresult rv;
@@ -68,7 +68,7 @@ static void CalculateSHA256(_PrefixArray& prefixArray, nsCString& sha256) {
         reinterpret_cast<uint8_t*>(const_cast<char*>(prefix.get())),
         prefix.Length());
   }
-  cryptoHash->Finish(false, sha256);
+  cryptoHash->Finish(false, checksum);
 }
 
 // N: Number of prefixes, MIN/MAX: minimum/maximum prefix size
@@ -114,7 +114,7 @@ static void CreateRandomRemovalIndices(uint32_t N, uint32_t MAX,
 
 // Function to generate TableUpdateV4.
 static void GenerateUpdateData(bool fullUpdate, PrefixStringMap& add,
-                               nsTArray<uint32_t>* removal, nsCString* sha256,
+                               nsTArray<uint32_t>* removal, nsCString* checksum,
                                TableUpdateArray& tableUpdates) {
   RefPtr<TableUpdateV4> tableUpdate = new TableUpdateV4(GTEST_TABLE);
   tableUpdate->SetFullUpdate(fullUpdate);
@@ -128,12 +128,12 @@ static void GenerateUpdateData(bool fullUpdate, PrefixStringMap& add,
     tableUpdate->NewRemovalIndices(removal->Elements(), removal->Length());
   }
 
-  if (sha256) {
-    std::string stdSHA256;
-    stdSHA256.assign(const_cast<char*>(sha256->BeginReading()),
-                     sha256->Length());
+  if (checksum) {
+    std::string stdChecksum;
+    stdChecksum.assign(const_cast<char*>(checksum->BeginReading()),
+                       checksum->Length());
 
-    tableUpdate->SetSHA256(stdSHA256);
+    tableUpdate->NewChecksum(stdChecksum);
   }
 
   tableUpdates.AppendElement(tableUpdate);
@@ -143,17 +143,16 @@ static void VerifyPrefixSet(PrefixStringMap& expected) {
   // Verify the prefix set is written to disk.
   nsCOMPtr<nsIFile> file;
   NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(file));
+
   file->AppendNative(GTEST_SAFEBROWSING_DIR);
-
-  RefPtr<LookupCacheV4> lookup =
-      new LookupCacheV4(GTEST_TABLE, NS_LITERAL_CSTRING("test"), file);
-  lookup->Init();
-
   file->AppendNative(GTEST_PREFIXFILE);
-  lookup->LoadFromFile(file);
+
+  RefPtr<VariableLengthPrefixSet> load = new VariableLengthPrefixSet;
+  load->Init(GTEST_TABLE);
 
   PrefixStringMap prefixesInFile;
-  lookup->GetPrefixes(prefixesInFile);
+  load->LoadFromFile(file);
+  load->GetPrefixes(prefixesInFile);
 
   for (auto iter = expected.ConstIter(); !iter.Done(); iter.Next()) {
     nsCString* expectedPrefix = iter.Data();
@@ -201,18 +200,18 @@ static void testUpdate(TableUpdateArray& tableUpdates,
   VerifyPrefixSet(expected);
 }
 
-static void testFullUpdate(PrefixStringMap& add, nsCString* sha256) {
+static void testFullUpdate(PrefixStringMap& add, nsCString* checksum) {
   TableUpdateArray tableUpdates;
 
-  GenerateUpdateData(true, add, nullptr, sha256, tableUpdates);
+  GenerateUpdateData(true, add, nullptr, checksum, tableUpdates);
 
   testUpdate(tableUpdates, add);
 }
 
 static void testPartialUpdate(PrefixStringMap& add, nsTArray<uint32_t>* removal,
-                              nsCString* sha256, PrefixStringMap& expected) {
+                              nsCString* checksum, PrefixStringMap& expected) {
   TableUpdateArray tableUpdates;
-  GenerateUpdateData(false, add, removal, sha256, tableUpdates);
+  GenerateUpdateData(false, add, removal, checksum, tableUpdates);
 
   testUpdate(tableUpdates, expected);
 }
@@ -234,32 +233,32 @@ static void testOpenLookupCache() {
 }
 
 // Tests start from here.
-TEST(UrlClassifierTableUpdateV4, FixLengthPSetFullUpdate) {
+TEST(UrlClassifierTableUpdateV4, FixLenghtPSetFullUpdate) {
   srand(time(NULL));
 
   _PrefixArray array;
   PrefixStringMap map;
-  nsCString sha256;
+  nsCString checksum;
 
   CreateRandomSortedPrefixArray(5000, 4, 4, array);
   PrefixArrayToPrefixStringMap(array, map);
-  CalculateSHA256(array, sha256);
+  CalculateCheckSum(array, checksum);
 
-  testFullUpdate(map, &sha256);
+  testFullUpdate(map, &checksum);
 
   Clear();
 }
 
-TEST(UrlClassifierTableUpdateV4, VariableLengthPSetFullUpdate) {
+TEST(UrlClassifierTableUpdateV4, VariableLenghtPSetFullUpdate) {
   _PrefixArray array;
   PrefixStringMap map;
-  nsCString sha256;
+  nsCString checksum;
 
   CreateRandomSortedPrefixArray(5000, 5, 32, array);
   PrefixArrayToPrefixStringMap(array, map);
-  CalculateSHA256(array, sha256);
+  CalculateCheckSum(array, checksum);
 
-  testFullUpdate(map, &sha256);
+  testFullUpdate(map, &checksum);
 
   Clear();
 }
@@ -268,14 +267,14 @@ TEST(UrlClassifierTableUpdateV4, VariableLengthPSetFullUpdate) {
 TEST(UrlClassifierTableUpdateV4, MixedPSetFullUpdate) {
   _PrefixArray array;
   PrefixStringMap map;
-  nsCString sha256;
+  nsCString checksum;
 
   CreateRandomSortedPrefixArray(5000, 4, 4, array);
   CreateRandomSortedPrefixArray(1000, 5, 32, array);
   PrefixArrayToPrefixStringMap(array, map);
-  CalculateSHA256(array, sha256);
+  CalculateCheckSum(array, checksum);
 
-  testFullUpdate(map, &sha256);
+  testFullUpdate(map, &checksum);
 
   Clear();
 }
@@ -286,21 +285,21 @@ TEST(UrlClassifierTableUpdateV4, PartialUpdateWithRemoval) {
   // Apply a full update first.
   {
     PrefixStringMap fMap;
-    nsCString sha256;
+    nsCString checksum;
 
     CreateRandomSortedPrefixArray(10000, 4, 4, fArray);
     CreateRandomSortedPrefixArray(2000, 5, 32, fArray);
     PrefixArrayToPrefixStringMap(fArray, fMap);
-    CalculateSHA256(fArray, sha256);
+    CalculateCheckSum(fArray, checksum);
 
-    testFullUpdate(fMap, &sha256);
+    testFullUpdate(fMap, &checksum);
   }
 
   // Apply a partial update with removal.
   {
     _PrefixArray pArray, mergedArray;
     PrefixStringMap pMap, mergedMap;
-    nsCString sha256;
+    nsCString checksum;
 
     CreateRandomSortedPrefixArray(5000, 4, 4, pArray);
     CreateRandomSortedPrefixArray(1000, 5, 32, pArray);
@@ -315,9 +314,9 @@ TEST(UrlClassifierTableUpdateV4, PartialUpdateWithRemoval) {
     // Calculate the expected prefix map.
     MergeAndSortArray(fArray, pArray, mergedArray);
     PrefixArrayToPrefixStringMap(mergedArray, mergedMap);
-    CalculateSHA256(mergedArray, sha256);
+    CalculateCheckSum(mergedArray, checksum);
 
-    testPartialUpdate(pMap, &removal, &sha256, mergedMap);
+    testPartialUpdate(pMap, &removal, &checksum, mergedMap);
   }
 
   Clear();
@@ -329,21 +328,21 @@ TEST(UrlClassifierTableUpdateV4, PartialUpdateWithoutRemoval) {
   // Apply a full update first.
   {
     PrefixStringMap fMap;
-    nsCString sha256;
+    nsCString checksum;
 
     CreateRandomSortedPrefixArray(10000, 4, 4, fArray);
     CreateRandomSortedPrefixArray(2000, 5, 32, fArray);
     PrefixArrayToPrefixStringMap(fArray, fMap);
-    CalculateSHA256(fArray, sha256);
+    CalculateCheckSum(fArray, checksum);
 
-    testFullUpdate(fMap, &sha256);
+    testFullUpdate(fMap, &checksum);
   }
 
   // Apply a partial update without removal
   {
     _PrefixArray pArray, mergedArray;
     PrefixStringMap pMap, mergedMap;
-    nsCString sha256;
+    nsCString checksum;
 
     CreateRandomSortedPrefixArray(5000, 4, 4, pArray);
     CreateRandomSortedPrefixArray(1000, 5, 32, pArray);
@@ -353,9 +352,9 @@ TEST(UrlClassifierTableUpdateV4, PartialUpdateWithoutRemoval) {
     // Calculate the expected prefix map.
     MergeAndSortArray(fArray, pArray, mergedArray);
     PrefixArrayToPrefixStringMap(mergedArray, mergedMap);
-    CalculateSHA256(mergedArray, sha256);
+    CalculateCheckSum(mergedArray, checksum);
 
-    testPartialUpdate(pMap, nullptr, &sha256, mergedMap);
+    testPartialUpdate(pMap, nullptr, &checksum, mergedMap);
   }
 
   Clear();
@@ -369,13 +368,13 @@ TEST(UrlClassifierTableUpdateV4, PartialUpdatePrefixAlreadyExist) {
   // Apply a full update fist.
   {
     PrefixStringMap fMap;
-    nsCString sha256;
+    nsCString checksum;
 
     CreateRandomSortedPrefixArray(1000, 4, 32, fArray);
     PrefixArrayToPrefixStringMap(fArray, fMap);
-    CalculateSHA256(fArray, sha256);
+    CalculateCheckSum(fArray, checksum);
 
-    testFullUpdate(fMap, &sha256);
+    testFullUpdate(fMap, &checksum);
   }
 
   // Apply a partial update which contains a prefix in previous full update.
@@ -402,14 +401,14 @@ TEST(UrlClassifierTableUpdateV4, PartialUpdatePrefixAlreadyExist) {
 TEST(UrlClassifierTableUpdateV4, OnlyPartialUpdate) {
   _PrefixArray pArray;
   PrefixStringMap pMap;
-  nsCString sha256;
+  nsCString checksum;
 
   CreateRandomSortedPrefixArray(5000, 4, 4, pArray);
   CreateRandomSortedPrefixArray(1000, 5, 32, pArray);
   PrefixArrayToPrefixStringMap(pArray, pMap);
-  CalculateSHA256(pArray, sha256);
+  CalculateCheckSum(pArray, checksum);
 
-  testPartialUpdate(pMap, nullptr, &sha256, pMap);
+  testPartialUpdate(pMap, nullptr, &checksum, pMap);
 
   Clear();
 }
@@ -421,21 +420,21 @@ TEST(UrlClassifierTableUpdateV4, PartialUpdateOnlyRemoval) {
   // Apply a full update first.
   {
     PrefixStringMap fMap;
-    nsCString sha256;
+    nsCString checksum;
 
     CreateRandomSortedPrefixArray(5000, 4, 4, fArray);
     CreateRandomSortedPrefixArray(1000, 5, 32, fArray);
     PrefixArrayToPrefixStringMap(fArray, fMap);
-    CalculateSHA256(fArray, sha256);
+    CalculateCheckSum(fArray, checksum);
 
-    testFullUpdate(fMap, &sha256);
+    testFullUpdate(fMap, &checksum);
   }
 
   // Apply a partial update without add prefix, only contain removal indices.
   {
     _PrefixArray pArray;
     PrefixStringMap pMap, mergedMap;
-    nsCString sha256;
+    nsCString checksum;
 
     // Remove 1/5 of elements of original prefix set.
     nsTArray<uint32_t> removal;
@@ -443,9 +442,9 @@ TEST(UrlClassifierTableUpdateV4, PartialUpdateOnlyRemoval) {
     RemoveElements(removal, fArray);
 
     PrefixArrayToPrefixStringMap(fArray, mergedMap);
-    CalculateSHA256(fArray, sha256);
+    CalculateCheckSum(fArray, checksum);
 
-    testPartialUpdate(pMap, &removal, &sha256, mergedMap);
+    testPartialUpdate(pMap, &removal, &checksum, mergedMap);
   }
 
   Clear();
@@ -455,7 +454,7 @@ TEST(UrlClassifierTableUpdateV4, PartialUpdateOnlyRemoval) {
 TEST(UrlClassifierTableUpdateV4, MultipleTableUpdates) {
   _PrefixArray fArray, pArray, mergedArray;
   PrefixStringMap fMap, pMap, mergedMap;
-  nsCString sha256;
+  nsCString checksum;
 
   TableUpdateArray tableUpdates;
 
@@ -463,9 +462,9 @@ TEST(UrlClassifierTableUpdateV4, MultipleTableUpdates) {
   CreateRandomSortedPrefixArray(10000, 4, 4, fArray);
   CreateRandomSortedPrefixArray(2000, 5, 32, fArray);
   PrefixArrayToPrefixStringMap(fArray, fMap);
-  CalculateSHA256(fArray, sha256);
+  CalculateCheckSum(fArray, checksum);
 
-  GenerateUpdateData(true, fMap, nullptr, &sha256, tableUpdates);
+  GenerateUpdateData(true, fMap, nullptr, &checksum, tableUpdates);
 
   // Generate second partial update
   CreateRandomSortedPrefixArray(3000, 4, 4, pArray);
@@ -474,9 +473,9 @@ TEST(UrlClassifierTableUpdateV4, MultipleTableUpdates) {
   PrefixArrayToPrefixStringMap(pArray, pMap);
 
   MergeAndSortArray(fArray, pArray, mergedArray);
-  CalculateSHA256(mergedArray, sha256);
+  CalculateCheckSum(mergedArray, checksum);
 
-  GenerateUpdateData(false, pMap, nullptr, &sha256, tableUpdates);
+  GenerateUpdateData(false, pMap, nullptr, &checksum, tableUpdates);
 
   // Generate thrid partial update
   fArray.AppendElements(pArray);
@@ -494,9 +493,9 @@ TEST(UrlClassifierTableUpdateV4, MultipleTableUpdates) {
 
   MergeAndSortArray(fArray, pArray, mergedArray);
   PrefixArrayToPrefixStringMap(mergedArray, mergedMap);
-  CalculateSHA256(mergedArray, sha256);
+  CalculateCheckSum(mergedArray, checksum);
 
-  GenerateUpdateData(false, pMap, &removal, &sha256, tableUpdates);
+  GenerateUpdateData(false, pMap, &removal, &checksum, tableUpdates);
 
   testUpdate(tableUpdates, mergedMap);
 
@@ -511,22 +510,22 @@ TEST(UrlClassifierTableUpdateV4, MultiplePartialUpdateTableUpdates) {
   // Apply a full update first
   {
     PrefixStringMap fMap;
-    nsCString sha256;
+    nsCString checksum;
 
     // Generate first full udpate
     CreateRandomSortedPrefixArray(10000, 4, 4, fArray);
     CreateRandomSortedPrefixArray(3000, 5, 32, fArray);
     PrefixArrayToPrefixStringMap(fArray, fMap);
-    CalculateSHA256(fArray, sha256);
+    CalculateCheckSum(fArray, checksum);
 
-    testFullUpdate(fMap, &sha256);
+    testFullUpdate(fMap, &checksum);
   }
 
   // Apply multiple partial updates in one table update
   {
     _PrefixArray pArray, mergedArray;
     PrefixStringMap pMap, mergedMap;
-    nsCString sha256;
+    nsCString checksum;
     nsTArray<uint32_t> removal;
     TableUpdateArray tableUpdates;
 
@@ -541,9 +540,9 @@ TEST(UrlClassifierTableUpdateV4, MultiplePartialUpdateTableUpdates) {
     RemoveElements(removal, fArray);
 
     MergeAndSortArray(fArray, pArray, mergedArray);
-    CalculateSHA256(mergedArray, sha256);
+    CalculateCheckSum(mergedArray, checksum);
 
-    GenerateUpdateData(false, pMap, &removal, &sha256, tableUpdates);
+    GenerateUpdateData(false, pMap, &removal, &checksum, tableUpdates);
 
     fArray.AppendElements(pArray);
     fArray.Sort();
@@ -562,9 +561,9 @@ TEST(UrlClassifierTableUpdateV4, MultiplePartialUpdateTableUpdates) {
 
     MergeAndSortArray(fArray, pArray, mergedArray);
     PrefixArrayToPrefixStringMap(mergedArray, mergedMap);
-    CalculateSHA256(mergedArray, sha256);
+    CalculateCheckSum(mergedArray, checksum);
 
-    GenerateUpdateData(false, pMap, &removal, &sha256, tableUpdates);
+    GenerateUpdateData(false, pMap, &removal, &checksum, tableUpdates);
 
     testUpdate(tableUpdates, mergedMap);
   }
@@ -579,13 +578,13 @@ TEST(UrlClassifierTableUpdateV4, RemovalIndexTooLarge) {
   // Apply a full update first
   {
     PrefixStringMap fMap;
-    nsCString sha256;
+    nsCString checksum;
 
     CreateRandomSortedPrefixArray(1000, 4, 32, fArray);
     PrefixArrayToPrefixStringMap(fArray, fMap);
-    CalculateSHA256(fArray, sha256);
+    CalculateCheckSum(fArray, checksum);
 
-    testFullUpdate(fMap, &sha256);
+    testFullUpdate(fMap, &checksum);
   }
 
   // Apply a partial update with removal indice array larger than
@@ -616,31 +615,31 @@ TEST(UrlClassifierTableUpdateV4, ChecksumMismatch) {
   {
     _PrefixArray fArray;
     PrefixStringMap fMap;
-    nsCString sha256;
+    nsCString checksum;
 
     CreateRandomSortedPrefixArray(1000, 4, 32, fArray);
     PrefixArrayToPrefixStringMap(fArray, fMap);
-    CalculateSHA256(fArray, sha256);
+    CalculateCheckSum(fArray, checksum);
 
-    testFullUpdate(fMap, &sha256);
+    testFullUpdate(fMap, &checksum);
   }
 
-  // Apply a partial update with incorrect sha256
+  // Apply a partial update with incorrect checksum
   {
     _PrefixArray pArray;
     PrefixStringMap pMap;
-    nsCString sha256;
+    nsCString checksum;
     TableUpdateArray tableUpdates;
 
     CreateRandomSortedPrefixArray(200, 4, 32, pArray);
     PrefixArrayToPrefixStringMap(pArray, pMap);
 
-    // sha256 should be calculated with both old prefix set and add prefix
-    // set, here we only calculate sha256 with add prefix set to check if
+    // Checksum should be calculated with both old prefix set and add prefix
+    // set, here we only calculate checksum with add prefix set to check if
     // applyUpdate will return failure.
-    CalculateSHA256(pArray, sha256);
+    CalculateCheckSum(pArray, checksum);
 
-    GenerateUpdateData(false, pMap, nullptr, &sha256, tableUpdates);
+    GenerateUpdateData(false, pMap, nullptr, &checksum, tableUpdates);
     testUpdateFail(tableUpdates);
   }
 
@@ -648,25 +647,25 @@ TEST(UrlClassifierTableUpdateV4, ChecksumMismatch) {
 }
 
 TEST(UrlClassifierTableUpdateV4, ApplyUpdateThenLoad) {
-  // Apply update with sha256
+  // Apply update with checksum
   {
     _PrefixArray fArray;
     PrefixStringMap fMap;
-    nsCString sha256;
+    nsCString checksum;
 
     CreateRandomSortedPrefixArray(1000, 4, 32, fArray);
     PrefixArrayToPrefixStringMap(fArray, fMap);
-    CalculateSHA256(fArray, sha256);
+    CalculateCheckSum(fArray, checksum);
 
-    testFullUpdate(fMap, &sha256);
+    testFullUpdate(fMap, &checksum);
 
-    // Open lookup cache will load prefix set and verify the sha256
+    // Open lookup cache will load prefix set and verify the checksum
     testOpenLookupCache();
   }
 
   Clear();
 
-  // Apply update without sha256
+  // Apply update without checksum
   {
     _PrefixArray fArray;
     PrefixStringMap fMap;
@@ -707,15 +706,15 @@ TEST(UrlClassifierTableUpdateV4, ApplyUpdateWithFixedChecksum) {
   PrefixStringMap fMap;
   PrefixArrayToPrefixStringMap(fArray, fMap);
 
-  nsCString sha256(
+  nsCString checksum(
       "\xae\x18\x94\xd7\xd0\x83\x5f\xc1"
       "\x58\x59\x5c\x2c\x72\xb9\x6e\x5e"
       "\xf4\xe8\x0a\x6b\xff\x5e\x6b\x81"
       "\x65\x34\x06\x16\x06\x59\xa0\x67");
 
-  testFullUpdate(fMap, &sha256);
+  testFullUpdate(fMap, &checksum);
 
-  // Open lookup cache will load prefix set and verify the sha256
+  // Open lookup cache will load prefix set and verify the checksum
   testOpenLookupCache();
 
   Clear();
@@ -729,27 +728,27 @@ TEST(UrlClassifierTableUpdateV4, EmptyUpdate) {
 
   _PrefixArray array;
   PrefixStringMap map;
-  nsCString sha256;
+  nsCString checksum;
 
-  CalculateSHA256(array, sha256);
+  CalculateCheckSum(array, checksum);
 
   // Test apply empty full/partial update before we already
   // have data in DB.
-  testFullUpdate(emptyAddition, &sha256);
-  testPartialUpdate(emptyAddition, &emptyRemoval, &sha256, map);
+  testFullUpdate(emptyAddition, &checksum);
+  testPartialUpdate(emptyAddition, &emptyRemoval, &checksum, map);
 
   // Apply an full update.
   CreateRandomSortedPrefixArray(100, 4, 4, array);
   CreateRandomSortedPrefixArray(10, 5, 32, array);
   PrefixArrayToPrefixStringMap(array, map);
-  CalculateSHA256(array, sha256);
+  CalculateCheckSum(array, checksum);
 
-  testFullUpdate(map, &sha256);
+  testFullUpdate(map, &checksum);
 
   // Test apply empty full/partial update when we already
   // have data in DB
-  testPartialUpdate(emptyAddition, &emptyRemoval, &sha256, map);
-  testFullUpdate(emptyAddition, &sha256);
+  testPartialUpdate(emptyAddition, &emptyRemoval, &checksum, map);
+  testFullUpdate(emptyAddition, &checksum);
 
   Clear();
 }
@@ -763,15 +762,16 @@ TEST(UrlClassifierTableUpdateV4, EmptyUpdate2) {
   CreateRandomSortedPrefixArray(10, 5, 32, array);
   RefPtr<LookupCacheV4> cache = SetupLookupCache<LookupCacheV4>(array);
 
-  // Setup TableUpdate object with only sha256 from previous update(initial
+  // Setup TableUpdate object with only checksum from previous update(initial
   // data).
-  nsCString sha256;
-  CalculateSHA256(array, sha256);
-  std::string stdSHA256;
-  stdSHA256.assign(const_cast<char*>(sha256.BeginReading()), sha256.Length());
+  nsCString checksum;
+  CalculateCheckSum(array, checksum);
+  std::string stdChecksum;
+  stdChecksum.assign(const_cast<char*>(checksum.BeginReading()),
+                     checksum.Length());
 
   RefPtr<TableUpdateV4> tableUpdate = new TableUpdateV4(GTEST_TABLE);
-  tableUpdate->SetSHA256(stdSHA256);
+  tableUpdate->NewChecksum(stdChecksum);
 
   // Apply update directly through LookupCache interface
   PrefixStringMap input, output;
