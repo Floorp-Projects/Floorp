@@ -393,6 +393,7 @@ class nsView final : public nsIWidgetListener {
       const mozilla::TimeStamp& aCompositeStart,
       const mozilla::TimeStamp& aCompositeEnd) override;
   virtual void RequestRepaint() override;
+  virtual bool ShouldNotBeVisible() override;
   virtual nsEventStatus HandleEvent(mozilla::WidgetGUIEvent* aEvent,
                                     bool aUseAttachedEvents) override;
 
