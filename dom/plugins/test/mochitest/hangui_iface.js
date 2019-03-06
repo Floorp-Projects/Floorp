@@ -112,7 +112,7 @@ self.onmessage = function(event) {
       postSuccess(params);
     }
   }
-}
+};
 
 self.onerror = function(event) {
   var msg = "Error: " + event.message + " at " + event.filename + ":" + event.lineno;

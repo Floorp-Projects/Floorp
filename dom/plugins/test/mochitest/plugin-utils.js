@@ -46,8 +46,7 @@ function crashAndGetCrashServiceRecord(crashMethodName, callback) {
   // First, clear the crash record store.
   info("Waiting for pruneOldCrashes");
   var future = new Date(Date.now() + 1000 * 60 * 60 * 24);
-  crashMan.pruneOldCrashes(future).then(function () {
-
+  crashMan.pruneOldCrashes(future).then(function() {
     var iframe = document.getElementById("iframe1");
     var p = iframe.contentDocument.getElementById("plugin1");
 
@@ -55,8 +54,7 @@ function crashAndGetCrashServiceRecord(crashMethodName, callback) {
     try {
       p[crashMethodName]();
       ok(false, "p." + crashMethodName + "() should throw an exception");
-    }
-    catch (e) {
+    } catch (e) {
       ok(true, "p." + crashMethodName + "() should throw an exception");
     }
 
@@ -64,7 +62,7 @@ function crashAndGetCrashServiceRecord(crashMethodName, callback) {
     // the new record.
     function tryGetCrash() {
       info("Waiting for getCrashes");
-      crashMan.getCrashes().then(SpecialPowers.wrapCallback(function (crashes) {
+      crashMan.getCrashes().then(SpecialPowers.wrapCallback(function(crashes) {
         if (crashes.length) {
           is(crashes.length, 1, "There should be only one record");
           var crash = SpecialPowers.wrap(crashes[0]);
@@ -77,18 +75,16 @@ function crashAndGetCrashServiceRecord(crashMethodName, callback) {
              "Record's crash date should be nowish: " +
              "now=" + crashDateMS + " recordDate=" + dateMS);
           callback(crashMan, crash);
-        }
-        else {
+        } else {
           setTimeout(tryGetCrash, 1000);
         }
-      }), function (err) {
+      }), function(err) {
         ok(false, "Error getting crashes: " + err);
         SimpleTest.finish();
       });
     }
     setTimeout(tryGetCrash, 1000);
-
-  }, function () {
+  }, function() {
     ok(false, "pruneOldCrashes error");
     SimpleTest.finish();
   });
@@ -97,7 +93,7 @@ function crashAndGetCrashServiceRecord(crashMethodName, callback) {
 /**
  * Returns a promise which resolves on `mozFullScreenChange`.
  */
-function promiseFullScreenChange(){
+function promiseFullScreenChange() {
   return new Promise(resolve => {
     document.addEventListener("fullscreenchange", function(e) {
       resolve();
@@ -115,8 +111,7 @@ function crashPlugin(plugin) {
     try {
       plugin.crash();
       reject();
-    }
-    catch (e) {
+    } catch (e) {
       resolve();
     }
   });

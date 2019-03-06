@@ -20,7 +20,7 @@ SimpleTest.waitForExplicitFinish();
 setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
 
 function go() {
-  var plugin = document.getElementById('plugin');
+  var plugin = document.getElementById("plugin");
 
   // Get wrapped npobject from plugin (plugin.__proto__)
   var val = plugin.getObjectValue();
@@ -41,7 +41,7 @@ function go() {
   }
 
   // Spin the event loop so the instantiation can complete
-  window.setTimeout(function () {
+  window.setTimeout(function() {
     ok(pluginCheck(), "Shouldn't explode");
 
     // All done.

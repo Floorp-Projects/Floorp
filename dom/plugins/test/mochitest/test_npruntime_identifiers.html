@@ -11,7 +11,7 @@
   <p id="display"></p>
 
   <script class="testbody" type="application/javascript">
-  ////
+  // //
   // This test exercises NP identifiers by querying the reflector to make sure
   // that identifiers are translated to values correctly.
   
@@ -28,7 +28,7 @@
     var i, prop, randomnumber;
 
     for (i = 0; i < 20; ++i) {
-      randomnumber=Math.floor(Math.random()*1001);
+      randomnumber = Math.floor(Math.random() * 1001);
       prop = "prop" + randomnumber;
       is(reflector[prop], prop, "Property " + prop);
     }
@@ -45,8 +45,8 @@
       is(reflector[prop], prop, "Property " + prop);
     }
 
-    is(reflector.a, 'a', "Property .a");
-    is(reflector['a'], 'a', "Property ['a']");
+    is(reflector.a, "a", "Property .a");
+    is(reflector.a, "a", "Property ['a']");
     reflector = null;
 
     SpecialPowers.gc();
@@ -54,9 +54,8 @@
     ++testsRun;
     if (testsRun == 3) {
       SimpleTest.finish();
-    }
-    else {
-      document.getElementById('subframe').contentWindow.location.reload(true);
+    } else {
+      document.getElementById("subframe").contentWindow.location.reload(true);
     }
   }
   </script>
