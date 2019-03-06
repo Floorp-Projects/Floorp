@@ -2243,34 +2243,6 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetDisplay() {
   return val.forget();
 }
 
-already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetContain() {
-  RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-
-  int32_t mask = StyleDisplay()->mContain;
-
-  if (mask == 0) {
-    val->SetIdent(eCSSKeyword_none);
-  } else if (mask & NS_STYLE_CONTAIN_STRICT) {
-    NS_ASSERTION(
-        mask == (NS_STYLE_CONTAIN_STRICT | NS_STYLE_CONTAIN_ALL_BITS),
-        "contain: strict should imply contain: size layout style paint");
-    val->SetIdent(eCSSKeyword_strict);
-  } else if (mask & NS_STYLE_CONTAIN_CONTENT) {
-    NS_ASSERTION(
-        mask == (NS_STYLE_CONTAIN_CONTENT | NS_STYLE_CONTAIN_CONTENT_BITS),
-        "contain: content should imply contain: layout style paint");
-    val->SetIdent(eCSSKeyword_content);
-  } else {
-    nsAutoString valueStr;
-    nsStyleUtil::AppendBitmaskCSSValue(nsCSSProps::kContainKTable, mask,
-                                       NS_STYLE_CONTAIN_SIZE,
-                                       NS_STYLE_CONTAIN_PAINT, valueStr);
-    val->SetString(valueStr);
-  }
-
-  return val.forget();
-}
-
 already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetWillChange() {
   const nsTArray<RefPtr<nsAtom>>& willChange = StyleDisplay()->mWillChange;
 
