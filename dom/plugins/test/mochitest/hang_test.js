@@ -7,11 +7,11 @@ var observerFired = false;
 var testObserver = {
   idleHang: true,
 
-  observe: function(subject, topic, data) {
+  observe(subject, topic, data) {
     observerFired = true;
     ok(true, "Observer fired");
     is(topic, "plugin-crashed", "Checking correct topic");
-    is(data,  null, "Checking null data");
+    is(data, null, "Checking null data");
     ok((subject instanceof Ci.nsIPropertyBag2), "got Propbag");
     ok((subject instanceof Ci.nsIWritablePropertyBag2), "got writable Propbag");
 
@@ -36,19 +36,19 @@ var testObserver = {
     // check additional dumps
 
     ok("additional_minidumps" in extraData, "got field for additional minidumps");
-    let additionalDumps = extraData.additional_minidumps.split(',');
-    ok(additionalDumps.includes('browser'), "browser in additional_minidumps");
+    let additionalDumps = extraData.additional_minidumps.split(",");
+    ok(additionalDumps.includes("browser"), "browser in additional_minidumps");
 
     for (let name of additionalDumps) {
       let file = profD.clone();
       file.append(pluginId + "-" + name + ".dmp");
-      ok(file.exists(), "additional dump '"+name+"' exists");
+      ok(file.exists(), "additional dump '" + name + "' exists");
     }
 
     // check cpu usage field
 
     ok("PluginCpuUsage" in extraData, "got extra field for plugin cpu usage");
-    let cpuUsage = parseFloat(extraData["PluginCpuUsage"]);
+    let cpuUsage = parseFloat(extraData.PluginCpuUsage);
     if (this.idleHang) {
       ok(cpuUsage == 0, "plugin cpu usage is 0%");
     } else {
@@ -56,13 +56,7 @@ var testObserver = {
     }
   },
 
-  QueryInterface: function(iid) {
-    if (iid.equals(Ci.nsIObserver) ||
-        iid.equals(Ci.nsISupportsWeakReference) ||
-        iid.equals(Ci.nsISupports))
-      return this;
-    throw Cr.NS_NOINTERFACE;
-  }
+  QueryInterface: ChromeUtils.generateQI(["nsIObserver", "nsISupportsWeakReference"]),
 };
 
 
@@ -72,7 +66,7 @@ function onPluginCrashed(aEvent) {
   is(aEvent.type, "PluginCrashed", "event is correct type");
 
   var pluginElement = document.getElementById("plugin1");
-  is (pluginElement, aEvent.target, "Plugin crashed event target is plugin element");
+  is(pluginElement, aEvent.target, "Plugin crashed event target is plugin element");
 
   ok(aEvent instanceof PluginCrashedEvent,
      "plugin crashed event has the right interface");

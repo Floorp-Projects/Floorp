@@ -120,7 +120,7 @@ DialogWatcher.prototype.getWindowText = function(hwnd) {
 
 DialogWatcher.prototype.processWindowEvents = function(timeout) {
   var onWinEvent = function(self, hook, event, hwnd, idObject, idChild, dwEventThread, dwmsEventTime) {
-    var nhwnd = Number(hwnd)
+    var nhwnd = Number(hwnd);
     if (event == EVENT_OBJECT_SHOW) {
       if (nhwnd == self.hwnd) {
         // We've already picked up this event via FindWindow

@@ -12,9 +12,9 @@
   SpecialPowers.setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
 
   function runTests() {
-    var p1 = document.getElementById('plugin1');
-    var p2 = document.getElementById('plugin2');
-    var p3 = document.getElementById('plugin3');
+    var p1 = document.getElementById("plugin1");
+    var p2 = document.getElementById("plugin2");
+    var p3 = document.getElementById("plugin3");
     is(p1.hasWidget(), false, "Flash is always windowless mode even if wmode=window");
     is(p2.hasWidget(), false, "Flash is always windowless mode even if wmode=anything");
     is(p3.hasWidget(), false, "Flash is always windowless mode even if no wmode");

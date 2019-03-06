@@ -1,7 +1,7 @@
 var gTestRoot = getRootDirectory(gTestPath).replace("chrome://mochitests/content/", "http://127.0.0.1:8888/");
 
 // simple tab load helper, pilfered from browser plugin tests
-function promiseTabLoad(tab, url, eventType="load") {
+function promiseTabLoad(tab, url, eventType = "load") {
   return new Promise((resolve) => {
     function handle(event) {
       if (event.originalTarget != tab.linkedBrowser.contentDocument ||
@@ -32,7 +32,7 @@ function promiseWaitForEvent(object, eventName, capturing = false, chrome = fals
 }
 
 add_task(async function() {
-  registerCleanupFunction(function () {
+  registerCleanupFunction(function() {
     window.focus();
   });
 });

@@ -14,7 +14,7 @@
   setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
 
   function frameLoaded() {
-    var testframe = document.getElementById('pluginframe');
+    var testframe = document.getElementById("pluginframe");
     // We have to use SpecialPowers because nptest.cpp prepends
     // data: whichs makes the frame cross origin with the including page.
     var wrappedDoc = SpecialPowers.wrap(testframe).contentDocument;

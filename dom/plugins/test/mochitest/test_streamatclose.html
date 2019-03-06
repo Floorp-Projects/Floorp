@@ -18,7 +18,7 @@
   var p = null;
 
   function startTest() {
-    p = document.getElementById('embedtest');
+    p = document.getElementById("embedtest");
     ok(p.streamTest("neverending.sjs", false, null, null,
                     function(r, t) {
                       is(r, 2, "Stream should have failed");

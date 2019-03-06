@@ -11,7 +11,7 @@
 
     <script class="testbody" type="application/javascript">
       if (typeof Object.getPrototypeOf !== "function") {
-        if (typeof "test".__proto__ === "object") {
+        if (typeof"test".__proto__ === "object") {
           Object.getPrototypeOf = function(object) {
             return object.__proto__;
           };

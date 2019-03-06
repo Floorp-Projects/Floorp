@@ -16,11 +16,11 @@
 
     function synthesizeNativeMouseEvent(aX, aY, aNativeMsg, aModifiers, aElement, aCallback) {
       var observer = {
-        observe: function(aSubject, aTopic, aData) {
-          if (aCallback && aTopic == "mouseevent") {
-            aCallback(aData);
-          }
-        }
+        observe(aSubject, aTopic, aData) {
+      if (aCallback && aTopic == "mouseevent") {
+        aCallback(aData);
+      }
+    },
       };
       SpecialPowers.DOMWindowUtils.sendNativeMouseEvent(aX, aY, aNativeMsg, aModifiers, aElement, observer);
       return true;

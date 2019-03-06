@@ -10,7 +10,7 @@ function coordinatesRelativeToWindow(aX, aY, aElement) {
   var rect = aElement.getBoundingClientRect();
   return {
     x: targetWindow.mozInnerScreenX + ((rect.left + aX) * scale),
-    y: targetWindow.mozInnerScreenY + ((rect.top + aY) * scale)
+    y: targetWindow.mozInnerScreenY + ((rect.top + aY) * scale),
   };
 }
 
@@ -19,7 +19,7 @@ var pluginHideEnabled = Preferences.get("gfx.e10s.hide-plugins-for-scroll", true
 
 
 add_task(async function() {
-  registerCleanupFunction(function () {
+  registerCleanupFunction(function() {
     setTestPluginEnabledState(Ci.nsIPluginTag.STATE_CLICKTOPLAY, "Test Plug-in");
   });
 });

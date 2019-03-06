@@ -27,8 +27,8 @@ setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
 var frameLoadCount = 0;
 
 function frameNavBlocked() {
-  isnot(SpecialPowers.wrap(window.frame1).location.href.indexOf('chrome://'),
-        0, 'plugin shouldnt be able to cause navigation to chrome URLs');
+  isnot(SpecialPowers.wrap(window.frame1).location.href.indexOf("chrome://"),
+        0, "plugin shouldnt be able to cause navigation to chrome URLs");
   SimpleTest.finish();
 }
 

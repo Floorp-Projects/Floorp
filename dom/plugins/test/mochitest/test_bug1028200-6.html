@@ -54,8 +54,8 @@
       });
 
       add_task(async function() {
-        let fullScreenElement = document.getElementById('iframe1');
-        let plugin = document.getElementById('plugin1');
+        let fullScreenElement = document.getElementById("iframe1");
+        let plugin = document.getElementById("plugin1");
 
         let fullScreenChange = promiseFullScreenChange();
         fullScreenElement.mozRequestFullScreen();
@@ -84,7 +84,7 @@
             document.removeEventListener("fullscreenchange", onFullScreenChange);
             clearTimeout(timeoutId);
             reject();
-          }
+          };
           document.addEventListener("fullscreenchange", onFullScreenChange);
           timeoutId = setTimeout(() => {
             document.removeEventListener("fullscreenchange", onFullScreenChange);
@@ -98,7 +98,7 @@
           ok(false, "Element is still fullscreen");
         });
       });
-    }
+    };
   </script>
 
   <iframe id="iframe1"></iframe>

@@ -10,19 +10,19 @@
   SimpleTest.waitForExplicitFinish();
   setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
 
-  var iframe = document.getElementById('iframe1');
+  var iframe = document.getElementById("iframe1");
 
   function mainLoaded() {
     SimpleTest.expectChildProcessCrash();
 
-    var p = iframe.contentDocument.createElement('embed');
-    p.setAttribute('id', 'plugin1');
-    p.setAttribute('type', 'application/x-test');
-    p.setAttribute('width', '400');
-    p.setAttribute('height', '400');
-    p.setAttribute('drawmode', 'solid');
-    p.setAttribute('color', 'FF00FFFF');
-    p.setAttribute('newCrash', 'true');
+    var p = iframe.contentDocument.createElement("embed");
+    p.setAttribute("id", "plugin1");
+    p.setAttribute("type", "application/x-test");
+    p.setAttribute("width", "400");
+    p.setAttribute("height", "400");
+    p.setAttribute("drawmode", "solid");
+    p.setAttribute("color", "FF00FFFF");
+    p.setAttribute("newCrash", "true");
     iframe.contentDocument.body.appendChild(p);
 
     // The plugin will now crash when it is instantiated, but
@@ -36,18 +36,17 @@
            "Plugin should have crashed on creation");
 
         window.frameLoaded = reloaded1;
-        iframe.contentWindow.location.replace('crashing_subpage.html');
-      })
+        iframe.contentWindow.location.replace("crashing_subpage.html");
+      });
     });
   }
 
   function reloaded1() {
-    var p = iframe.contentDocument.getElementById('plugin1');
+    var p = iframe.contentDocument.getElementById("plugin1");
     try {
-      p.setColor('FF00FF00');
+      p.setColor("FF00FF00");
       ok(true, "Reloading after crash-on-new worked");
-    }
-    catch (e) {
+    } catch (e) {
       ok(false, "Reloading after crash-on-new didn't give us a usable plugin");
     }
     p.crashOnDestroy();
@@ -61,12 +60,11 @@
   }
 
   function reloaded2() {
-    var p = iframe.contentDocument.getElementById('plugin1');
+    var p = iframe.contentDocument.getElementById("plugin1");
     try {
-      p.setColor('FF00FF00');
+      p.setColor("FF00FF00");
       ok(true, "Reloading after crash-on-destroy worked");
-    }
-    catch (e) {
+    } catch (e) {
       ok(false, "Reloading after crash-on-destroy didn't give us a usable plugin");
     }
     SimpleTest.finish();

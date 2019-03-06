@@ -68,8 +68,8 @@ function show() {
 }
 
 function invalidate() {
-  paintCountIs(clipped, 1, "partially clipped plugin painted once");  
-  
+  paintCountIs(clipped, 1, "partially clipped plugin painted once");
+
   clipped.setColor("FF00FF00"); // plugin invalidates
 
   waitForPaint(done);
@@ -78,7 +78,7 @@ function invalidate() {
 function done() {
   paintCountIs(clipped, 2, "painted after invalidate");
 
-  SimpleTest.finish();  
+  SimpleTest.finish();
 }
 
 function waitForPaint(func) {

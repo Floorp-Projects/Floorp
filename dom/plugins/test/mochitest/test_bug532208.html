@@ -15,10 +15,9 @@ setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
 
 function runTests() {
   try {
-    document.getElementById('plugin1').getPaintCount();
+    document.getElementById("plugin1").getPaintCount();
     ok(true, "Data delivery didn't crash");
-  }
-  catch (e) {
+  } catch (e) {
     ok(false, "Data delivery crashed");
   }
   SimpleTest.finish();

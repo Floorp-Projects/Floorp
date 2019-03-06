@@ -22,10 +22,9 @@
       // just verify that we throw. There's no reason why getNPNVdocumentOrigin _would_
       // be confused in this case anyway.
       try {
-        window.location.toString = function() { return 'http://victim.rckc.at/'; }
+        window.location.toString = function() { return "http://victim.rckc.at/"; };
         ok(false, "Should throw when shadowing window.location.toString");
-      }
-      catch (e) {
+      } catch (e) {
         ok(true, "Should throw when shadowing window.location.toString");
       }
 
