@@ -3530,6 +3530,14 @@ void JSScript::initFromFunctionBox(HandleScript script,
 /* static */
 bool JSScript::fullyInitFromEmitter(JSContext* cx, HandleScript script,
                                     frontend::BytecodeEmitter* bce) {
+  MOZ_ASSERT(!script->data_, "JSScript already initialized");
+
+  // If initialization fails, we must call JSScript::freeScriptData in order to
+  // neuter the script. Various things that iterate raw scripts in a GC arena
+  // use the presense of this data to detect if initialization is complete.
+  auto scriptDataGuard =
+      mozilla::MakeScopeExit([&] { script->freeScriptData(); });
+
   /* The counts of indexed things must be checked during code generation. */
   MOZ_ASSERT(bce->atomIndices->count() <= INDEX_LIMIT);
   MOZ_ASSERT(bce->objectList.length <= INDEX_LIMIT);
@@ -3561,11 +3569,6 @@ bool JSScript::fullyInitFromEmitter(JSContext* cx, HandleScript script,
   if (!script->createSharedScriptData(cx, codeLength, nsrcnotes, natoms)) {
     return false;
   }
-
-  // Any fallible operation after JSScript::createSharedScriptData should
-  // reset JSScript.scriptData_, in order to treat this script as
-  // uncompleted, in JSScript::isUncompleted.  JSScript::shareScriptData
-  // resets it before returning false.
 
   jsbytecode* code = script->code();
   PodCopy<jsbytecode>(code, bce->code().begin(), codeLength);
@@ -3632,6 +3635,7 @@ bool JSScript::fullyInitFromEmitter(JSContext* cx, HandleScript script,
   script->assertValidJumpTargets();
 #endif
 
+  scriptDataGuard.release();
   return true;
 }
 
