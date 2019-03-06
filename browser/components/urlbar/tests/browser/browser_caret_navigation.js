@@ -64,7 +64,7 @@ function checkIfKeyStartsQuery(key, shouldStartQuery) {
   };
   gURLBar.controller.addQueryListener(queryListener);
   EventUtils.synthesizeKey(key);
-  gURLBar.eventBufferer.replayAllDeferredEvents();
+  gURLBar.eventBufferer.replayDeferredEvents(false);
   gURLBar.controller.removeQueryListener(queryListener);
   Assert.equal(queryStarted, shouldStartQuery,
                `${key}: Should${shouldStartQuery ? "" : "n't"} have started a query`);

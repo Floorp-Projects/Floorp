@@ -58,7 +58,12 @@ class UrlbarEventBufferer {
    */
   constructor(input) {
     this.input = input;
-    // A queue of deferred events.
+    this.input.inputField.addEventListener("blur", this);
+
+    // A queue of {event, callback} objects representing deferred events.
+    // The callback is invoked when it's the right time to handle the event,
+    // but it may also never be invoked, if the context changed and the event
+    // became obsolete.
     this._eventsQueue = [];
     // If this timer fires, we will unconditionally replay all the deferred
     // events so that, after a certain point, we don't keep blocking the user's
@@ -110,43 +115,54 @@ class UrlbarEventBufferer {
   onQueryResults(queryContext) {
     this._lastQuery.results = queryContext.results;
     // Ensure this runs after other results handling code.
-    Services.tm.dispatchToMainThread(this.replaySafeDeferredEvents.bind(this));
+    Services.tm.dispatchToMainThread(() => {
+      this.replayDeferredEvents(true);
+    });
   }
 
   /**
-   * Receives DOM events, eventually queues them up, and passes them back to the
-   * input object when it's the right time.
+   * Handles DOM events.
    * @param {Event} event DOM event from the <textbox>.
-   * @returns {boolean}
    */
   handleEvent(event) {
-    switch (event.type) {
-      case "keydown":
-        if (this.shouldDeferEvent(event)) {
-          this.deferEvent(event);
-          return false;
-        }
-        break;
-      case "blur":
-        logger.debug("Clearing queue on blur");
-        // The input field was blurred, pending events don't matter anymore.
-        // Clear the timeout and the queue.
-        this._eventsQueue.length = 0;
-        if (this._deferringTimeout) {
-          clearTimeout(this._deferringTimeout);
-          this._deferringTimeout = null;
-        }
-        break;
+    if (event.type == "blur") {
+      logger.debug("Clearing queue on blur");
+      // The input field was blurred, pending events don't matter anymore.
+      // Clear the timeout and the queue.
+      this._eventsQueue.length = 0;
+      if (this._deferringTimeout) {
+        clearTimeout(this._deferringTimeout);
+        this._deferringTimeout = null;
+      }
     }
-    // Just pass back the event to the input object.
-    return this.input.handleEvent(event);
+  }
+
+  /**
+   * Receives DOM events, eventually queues them up, and calls back when it's
+   * the right time to handle the event.
+   * @param {Event} event DOM event from the <textbox>.
+   * @param {Function} callback to be invoked when it's the right time to handle
+   *        the event.
+   */
+  maybeDeferEvent(event, callback) {
+    if (!callback) {
+      throw new Error("Must provide a callback");
+    }
+    if (this.shouldDeferEvent(event)) {
+      this.deferEvent(event, callback);
+      return;
+    }
+    // If it has not been deferred, handle the callback immediately.
+    callback();
   }
 
   /**
    * Adds a deferrable event to the deferred event queue.
    * @param {Event} event The event to defer.
+   * @param {Function} callback to be invoked when it's the right time to handle
+   *        the event.
    */
-  deferEvent(event) {
+  deferEvent(event, callback) {
     // TODO: once one-off buttons are implemented, figure out if the following
     // is true for the quantum bar as well: somehow event.defaultPrevented ends
     // up true for deferred events.  Autocomplete ignores defaultPrevented
@@ -162,61 +178,47 @@ class UrlbarEventBufferer {
     // Also store the current search string, as an added safety check. If the
     // string will differ later, the event is stale and should be dropped.
     event.searchString = this._lastQuery.searchString;
-    this._eventsQueue.push(event);
+    this._eventsQueue.push({event, callback});
 
     if (!this._deferringTimeout) {
       let elapsed = Cu.now() - this._lastQuery.startDate;
       let remaining = DEFERRING_TIMEOUT_MS - elapsed;
       this._deferringTimeout = setTimeout(() => {
-        this.replayAllDeferredEvents();
+        this.replayDeferredEvents(false);
         this._deferringTimeout = null;
       }, Math.max(0, remaining));
     }
   }
 
   /**
-   * Unconditionally replays all deferred key events.  This does not check
-   * whether it's safe to replay the events; use replaySafeDeferredEvents
-   * for that.  Use this method when you must replay all events, so that it
-   * does not appear that we ignored the user's input.
+   * Replays deferred key events.
+   * @param {boolean} onlyIfSafe replays only if it's a safe time to do so.
+   *        Setting this to false will replay all the queue events, without any
+   *        checks, that is something we want to do only if the deferring
+   *        timeout elapsed, and we don't want to appear ignoring user's input.
    */
-  replayAllDeferredEvents() {
-    let event = this._eventsQueue.shift();
-    if (!event) {
-      return;
+  replayDeferredEvents(onlyIfSafe) {
+    if (typeof onlyIfSafe != "boolean") {
+      throw new Error("Must provide a boolean argument");
     }
-    this.replayDeferredEvent(event);
-    Services.tm.dispatchToMainThread(this.replayAllDeferredEvents.bind(this));
-  }
-
-  /**
-   * Replays deferred events if it's a safe time to do it.
-   * @see isSafeToPlayDeferredEvent
-   */
-  replaySafeDeferredEvents() {
     if (!this._eventsQueue.length) {
       return;
     }
-    let event = this._eventsQueue[0];
-    if (!this.isSafeToPlayDeferredEvent(event)) {
+
+    let {event, callback} = this._eventsQueue[0];
+    if (onlyIfSafe && !this.isSafeToPlayDeferredEvent(event)) {
       return;
     }
+
     // Remove the event from the queue and play it.
     this._eventsQueue.shift();
-    this.replayDeferredEvent(event);
-    // Continue with the next event.
-    Services.tm.dispatchToMainThread(this.replaySafeDeferredEvents.bind(this));
-  }
-
-  /**
-   * Replays a deferred event.
-   * @param {Event} event The deferred event to replay.
-   */
-  replayDeferredEvent(event) {
-    // Safety check: handle only if the search string didn't change.
+    // Safety check: handle only if the search string didn't change meanwhile.
     if (event.searchString == this._lastQuery.searchString) {
-      this.input.handleEvent(event);
+      callback();
     }
+    Services.tm.dispatchToMainThread(() => {
+      this.replayDeferredEvents(onlyIfSafe);
+    });
   }
 
   /**
