@@ -4,7 +4,7 @@ mar_required_size="${2}"
 
 mar_headers_file="$(mktemp -t mar_headers.XXXXXXXXXX)"
 mar_headers_debug_file="$(mktemp -t mar_headers_debug.XXXXXXXXXX)"
-curl --retry 50 --retry-max-time 300 -k -s -i -r 0-2 -L -v "${mar_url}" > "${mar_headers_file}" 2>"${mar_headers_debug_file}"
+curl --retry 50 --retry-max-time 300 -s -i -r 0-2 -L -v "${mar_url}" > "${mar_headers_file}" 2>"${mar_headers_debug_file}"
 mar_file_curl_exit_code=$?
 
 # Bug 894368 - HTTP 408's are not handled by the "curl --retry" mechanism; in this case retry in bash
@@ -12,7 +12,7 @@ attempts=1
 while [ "$((++attempts))" -lt 50 ] && grep 'HTTP/1\.1 408 Request Timeout' "${mar_headers_file}" &>/dev/null
 do
     sleep 1
-    curl --retry 50 --retry-max-time 300 -k -s -i -r 0-2 -L -v "${mar_url}" > "${mar_headers_file}" 2>"${mar_headers_debug_file}"
+    curl --retry 50 --retry-max-time 300 -s -i -r 0-2 -L -v "${mar_url}" > "${mar_headers_file}" 2>"${mar_headers_debug_file}"
     mar_file_curl_exit_code=$?
 done
 
