@@ -150,7 +150,6 @@ class nsXBLBinding final {
   // MEMBER VARIABLES
  protected:
   bool mMarkedForDeath;
-  bool mUsingContentXBLScope;
 
   nsXBLPrototypeBinding*
       mPrototypeBinding;  // Weak, but we're holding a ref to the docinfo
