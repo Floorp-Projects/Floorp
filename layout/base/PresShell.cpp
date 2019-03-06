@@ -1444,19 +1444,13 @@ void nsIPresShell::UpdatePreferenceStyles() {
     return;
   }
 
-  // We need to pass in mPresContext so that if the nsLayoutStylesheetCache
-  // needs to recreate the pref style sheet, it has somewhere to get the
-  // pref styling information from.  All pres contexts for
-  // IsChromeOriginImage() == false will have the same pref styling information,
-  // and similarly for IsChromeOriginImage() == true, so it doesn't really
-  // matter which pres context we pass in when it does need to be recreated.
-  // (See nsPresContext::GetDocumentColorPreferences for how whether we
-  // are a chrome origin image affects some pref styling information.)
+  PreferenceSheet::EnsureInitialized();
   auto cache = nsLayoutStylesheetCache::Singleton();
+
   RefPtr<StyleSheet> newPrefSheet =
-      mPresContext->IsChromeOriginImage()
-          ? cache->ChromePreferenceSheet(mPresContext)
-          : cache->ContentPreferenceSheet(mPresContext);
+      PreferenceSheet::ShouldUseChromePrefs(*mDocument)
+          ? cache->ChromePreferenceSheet()
+          : cache->ContentPreferenceSheet();
 
   if (mPrefStyleSheet == newPrefSheet) {
     return;

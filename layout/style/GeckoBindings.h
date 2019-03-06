@@ -17,6 +17,7 @@
 #include "mozilla/css/SheetLoadData.h"
 #include "mozilla/EffectCompositor.h"
 #include "mozilla/ComputedTimingFunction.h"
+#include "mozilla/PreferenceSheet.h"
 #include "nsCSSValue.h"
 #include "nsStyleStruct.h"
 
@@ -136,6 +137,9 @@ bool Gecko_MatchLang(RawGeckoElementBorrowed element, nsAtom* override_lang,
 nsAtom* Gecko_GetXMLLangValue(RawGeckoElementBorrowed element);
 
 mozilla::dom::Document::DocumentTheme Gecko_GetDocumentLWTheme(
+    const mozilla::dom::Document*);
+
+const mozilla::PreferenceSheet::Prefs* Gecko_GetPrefSheetPrefs(
     const mozilla::dom::Document*);
 
 bool Gecko_IsTableBorderNonzero(RawGeckoElementBorrowed element);
