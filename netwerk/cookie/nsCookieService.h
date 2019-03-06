@@ -8,6 +8,7 @@
 
 #include "nsICookieService.h"
 #include "nsICookieManager.h"
+#include "nsICookiePermission.h"
 #include "nsIObserver.h"
 #include "nsWeakReference.h"
 
@@ -38,6 +39,7 @@
 using mozilla::OriginAttributes;
 
 class nsICookiePermission;
+class nsICookieSettings;
 class nsIEffectiveTLDService;
 class nsIIDNService;
 class nsIPrefBranch;
@@ -258,13 +260,16 @@ class nsCookieService final : public nsICookieService,
                            nsIChannel *aChannel, bool &aSetCookie,
                            mozIThirdPartyUtil *aThirdPartyUtil);
   static CookieStatus CheckPrefs(
-      nsICookiePermission *aPermissionServices, uint8_t aCookieBehavior,
-      bool aThirdPartySession, bool aThirdPartyNonsecureSession,
-      nsIURI *aHostURI, bool aIsForeign, bool aIsTrackingResource,
-      bool aIsFirstPartyStorageAccessGranted, const char *aCookieHeader,
-      const int aNumOfCookies, const OriginAttributes &aOriginAttrs,
-      uint32_t *aRejectedReason);
+      nsICookieSettings *aCookieSettings, bool aThirdPartySession,
+      bool aThirdPartyNonsecureSession, nsIURI *aHostURI, bool aIsForeign,
+      bool aIsTrackingResource, bool aIsFirstPartyStorageAccessGranted,
+      const char *aCookieHeader, const int aNumOfCookies,
+      const OriginAttributes &aOriginAttrs, uint32_t *aRejectedReason);
   static int64_t ParseServerTime(const nsCString &aServerTime);
+
+  static already_AddRefed<nsICookieSettings> GetCookieSettings(
+      nsIChannel *aChannel);
+
   void GetCookiesForURI(nsIURI *aHostURI, nsIChannel *aChannel, bool aIsForeign,
                         bool aIsTrackingResource,
                         bool aFirstPartyStorageAccessGranted,
@@ -398,9 +403,6 @@ class nsCookieService final : public nsICookieService,
   RefPtr<DBState> mDefaultDBState;
   RefPtr<DBState> mPrivateDBState;
 
-  // cached prefs
-  uint8_t mCookieBehavior;  // BEHAVIOR_{ACCEPT, REJECTFOREIGN, REJECT,
-                            // LIMITFOREIGN}
   bool mThirdPartySession;
   bool mThirdPartyNonsecureSession;
   uint16_t mMaxNumberOfCookies;

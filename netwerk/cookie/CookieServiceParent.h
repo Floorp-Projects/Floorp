@@ -46,10 +46,12 @@ class CookieServiceParent : public PCookieServiceParent {
 
   mozilla::ipc::IPCResult RecvSetCookieString(
       const URIParams &aHost, const Maybe<URIParams> &aChannelURI,
-      const bool &aIsForeign, const bool &aIsTrackingResource,
+      const Maybe<LoadInfoArgs> &aLoadInfoArgs, const bool &aIsForeign,
+      const bool &aIsTrackingResource,
       const bool &aFirstPartyStorageAccessGranted,
       const nsCString &aCookieString, const nsCString &aServerTime,
-      const OriginAttributes &aAttrs, const bool &aFromHttp);
+      const bool &aFromHttp);
+
   mozilla::ipc::IPCResult RecvPrepareCookieList(
       const URIParams &aHost, const bool &aIsForeign,
       const bool &aIsTackingResource,
