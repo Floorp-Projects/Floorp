@@ -123,6 +123,7 @@ Test preset with fuzzy subcommand
 
   $ ./mach try fuzzy $testargs --save baz -q "'foo" --rebuild 5
   preset saved, run with: --preset=baz
+
   $ ./mach try fuzzy $testargs --preset baz
   Commit message:
   Fuzzy query='foo
@@ -188,6 +189,27 @@ Queries can be appended to presets
       "version": 1
   }
   
+
+  $ ./mach try $testargs --preset baz -xq "'opt"
+  Commit message:
+  Fuzzy query='foo&query='opt
+  
+  Pushed via `mach try fuzzy`
+  Calculated try_task_config.json:
+  {
+      "tasks": [
+          "test/foo-opt"
+      ],
+      "templates": {
+          "env": {
+              "TRY_SELECTOR": "fuzzy"
+          },
+          "rebuild": 5
+      },
+      "version": 1
+  }
+  
+
   $ ./mach try fuzzy $testargs --list-presets
   Presets from */mozbuild/try_presets.yml: (glob)
   

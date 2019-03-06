@@ -92,6 +92,14 @@ class FuzzyParser(BaseTryParser):
                   "from the interface. Specifying multiple times schedules "
                   "the union of computed tasks.",
           }],
+        [['-x', '--and'],
+         {'dest': 'intersection',
+          'action': 'store_true',
+          'default': False,
+          'help': "When specifying queries on the command line with -q/--query, "
+                  "use the intersection of tasks rather than the union. This is "
+                  "especially useful for post filtering presets.",
+          }],
         [['-e', '--exact'],
          {'action': 'store_true',
           'default': False,
@@ -204,7 +212,8 @@ def filter_target_task(task):
 
 
 def run(update=False, query=None, templates=None, full=False, parameters=None, save_query=False,
-        push=True, message='{msg}', paths=None, exact=False, closed_tree=False):
+        push=True, message='{msg}', paths=None, exact=False, closed_tree=False,
+        intersection=False):
     fzf = fzf_bootstrap(update)
 
     if not fzf:
@@ -254,8 +263,13 @@ def run(update=False, query=None, templates=None, full=False, parameters=None, s
     for command in commands:
         query, tasks = run_fzf(command, all_tasks)
         if tasks:
+            tasks = set(tasks)
             queries.append(query)
-            selected.update(tasks)
+
+            if intersection and selected:
+                selected &= tasks
+            else:
+                selected |= tasks
 
     if not selected:
         print("no tasks selected")

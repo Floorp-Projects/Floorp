@@ -68,6 +68,41 @@ For example:
 
     ^start 'exact | !ignore fuzzy end$
 
+Specifying Queries on the Command Line
+--------------------------------------
+
+Sometimes it's more convenient to skip the interactive interface and specify a query on the command
+line with ``-q/--query``. This is equivalent to opening the interface then typing:
+``<query><ctrl-a><enter>``.
+
+For example:
+
+.. code-block:: shell
+
+    # selects all mochitest tasks
+    $ mach try fuzzy --query "mochitest"
+
+You can pass in multiple queries at once and the results of each will be joined together:
+
+.. code-block:: shell
+
+    # selects all mochitest and reftest tasks
+    $ mach try fuzzy -q "mochitest" -q "reftest"
+
+If instead you want the intersection of queries, you can pass in ``-x/--and``:
+
+.. code-block:: shell
+
+    # selects all windows mochitest tasks
+    $ mach try fuzzy --and -q "mochitest" -q "windows"
+
+Using query intersections is especially useful with presets:
+
+.. code-block:: shell
+
+    # selects all windows perf tasks
+    $ mach try fuzzy --preset perf -xq "windows"
+
 Test Paths
 ----------
 
@@ -121,9 +156,10 @@ Additional Arguments
 
 There are a few additional command line arguments you may wish to use:
 
-``-q/--query``
-Instead of opening the interactive interface, automatically apply the specified
-query. This is equivalent to opening the interface then typing: ``<query><ctrl-a><enter>``.
+``-e/--exact``
+By default, fzf treats terms as a fuzzy match and prefixing a term with ``'`` turns it into an exact
+match. If passing in ``--exact``, this behaviour is reversed. Non-prefixed terms become exact, and a
+``'`` prefix makes a term fuzzy.
 
 ``--full``
 By default, only target tasks (e.g tasks that would normally run on mozilla-central)
