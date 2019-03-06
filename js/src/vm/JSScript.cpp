@@ -549,9 +549,9 @@ XDRResult js::PrivateScriptData::XDR(XDRState<mode>* xdr, HandleScript script,
                                      HandleScriptSourceObject sourceObject,
                                      HandleScope scriptEnclosingScope,
                                      HandleFunction fun) {
+  uint32_t nscopes = 0;
   uint32_t nconsts = 0;
   uint32_t nobjects = 0;
-  uint32_t nscopes = 0;
   uint32_t ntrynotes = 0;
   uint32_t nscopenotes = 0;
   uint32_t nresumeoffsets = 0;
@@ -3223,6 +3223,45 @@ PrivateScriptData* PrivateScriptData::new_(JSContext* cx, uint32_t nscopes,
                                      nscopenotes, nresumeoffsets);
 }
 
+/* static */ bool PrivateScriptData::InitFromEmitter(
+    JSContext* cx, js::HandleScript script, frontend::BytecodeEmitter* bce) {
+  uint32_t nscopes = bce->scopeList.length();
+  uint32_t nconsts = bce->numberList.length();
+  uint32_t nobjects = bce->objectList.length;
+  uint32_t ntrynotes = bce->tryNoteList.length();
+  uint32_t nscopenotes = bce->scopeNoteList.length();
+  uint32_t nresumeoffsets = bce->resumeOffsetList.length();
+
+  // Create and initialize PrivateScriptData
+  if (!JSScript::createPrivateScriptData(cx, script, nscopes, nconsts, nobjects,
+                                         ntrynotes, nscopenotes,
+                                         nresumeoffsets)) {
+    return false;
+  }
+
+  js::PrivateScriptData* data = script->data_;
+  if (nscopes) {
+    bce->scopeList.finish(data->scopes());
+  }
+  if (nconsts) {
+    bce->numberList.finish(data->consts());
+  }
+  if (nobjects) {
+    bce->objectList.finish(data->objects());
+  }
+  if (ntrynotes) {
+    bce->tryNoteList.finish(data->tryNotes());
+  }
+  if (nscopenotes) {
+    bce->scopeNoteList.finish(data->scopeNotes());
+  }
+  if (nresumeoffsets) {
+    bce->resumeOffsetList.finish(data->resumeOffsets());
+  }
+
+  return true;
+}
+
 void PrivateScriptData::traceChildren(JSTracer* trc) {
   auto scopearray = scopes();
   TraceRange(trc, scopearray.size(), scopearray.data(), "scopes");
@@ -3575,10 +3614,8 @@ bool JSScript::fullyInitFromEmitter(JSContext* cx, HandleScript script,
   script->setFlag(ImmutableFlags::NeedsFunctionEnvironmentObjects,
                   NeedsFunctionEnvironmentObjects(bce));
 
-  if (!createPrivateScriptData(
-          cx, script, bce->scopeList.length(), bce->numberList.length(),
-          bce->objectList.length, bce->tryNoteList.length(),
-          bce->scopeNoteList.length(), bce->resumeOffsetList.length())) {
+  // Create and initialize PrivateScriptData
+  if (!PrivateScriptData::InitFromEmitter(cx, script, bce)) {
     return false;
   }
 
@@ -3597,26 +3634,6 @@ bool JSScript::fullyInitFromEmitter(JSContext* cx, HandleScript script,
 
   if (!script->shareScriptData(cx)) {
     return false;
-  }
-
-  js::PrivateScriptData* data = script->data_;
-  if (bce->numberList.length() != 0) {
-    bce->numberList.finish(data->consts());
-  }
-  if (bce->objectList.length != 0) {
-    bce->objectList.finish(data->objects());
-  }
-  if (bce->scopeList.length() != 0) {
-    bce->scopeList.finish(data->scopes());
-  }
-  if (bce->tryNoteList.length() != 0) {
-    bce->tryNoteList.finish(data->tryNotes());
-  }
-  if (bce->scopeNoteList.length() != 0) {
-    bce->scopeNoteList.finish(data->scopeNotes());
-  }
-  if (bce->resumeOffsetList.length() != 0) {
-    bce->resumeOffsetList.finish(data->resumeOffsets());
   }
 
   // There shouldn't be any fallible operation after initFromFunctionBox,
