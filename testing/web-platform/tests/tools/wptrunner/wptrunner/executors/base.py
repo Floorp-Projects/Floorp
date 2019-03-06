@@ -152,6 +152,11 @@ class TestExecutor(object):
         if self.protocol is not None:
             self.protocol.teardown()
 
+    def reset(self):
+        """Re-initialize internal state to facilitate repeated test execution
+        as implemented by the `--rerun` command-line argument."""
+        pass
+
     def run_test(self, test):
         """Run a particular test.
 
@@ -266,6 +271,9 @@ class RefTestImplementation(object):
 
         self.message.append("%s %s" % (test.url, rv[0]))
         return True, rv
+
+    def reset(self):
+        self.screenshot_cache.clear()
 
     def is_pass(self, lhs_hash, rhs_hash, relation):
         assert relation in ("==", "!=")
