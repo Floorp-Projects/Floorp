@@ -33,7 +33,7 @@ export function getASTLocation(
   return { name: undefined, offset: location, index: 0 };
 }
 
-export async function findFunctionByName(
+export async function findScopeByName(
   source: Source,
   name: ?string,
   index: number

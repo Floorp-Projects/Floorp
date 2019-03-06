@@ -90,7 +90,6 @@ add_task(async function() {
   await addBreakpoint(dbg, "simple-worker", 10);
   invokeInTab("sayHello");
   dbg.actions.selectThread(worker1Thread);
-
   await waitForPaused(dbg);
   assertPausedAtSourceAndLine(dbg, workerSource.id, 10);
 
