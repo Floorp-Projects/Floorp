@@ -51,47 +51,47 @@ impl CraneliftCompiledFunc {
 }
 
 impl CraneliftMetadataEntry {
-    pub fn direct_call(offset: CodeOffset, func_index: FuncIndex, srcloc: SourceLoc) -> Self {
+    pub fn direct_call(code_offset: CodeOffset, func_index: FuncIndex, srcloc: SourceLoc) -> Self {
         Self {
             which: CraneliftMetadataEntry_Which_DirectCall,
-            offset,
-            srcLoc: srcloc.bits(),
+            codeOffset: code_offset,
+            moduleBytecodeOffset: srcloc.bits(),
             extra: func_index.index(),
         }
     }
 
-    pub fn indirect_call(offset: CodeOffset, srcloc: SourceLoc) -> Self {
+    pub fn indirect_call(code_offset: CodeOffset, srcloc: SourceLoc) -> Self {
         Self {
             which: CraneliftMetadataEntry_Which_IndirectCall,
-            offset,
-            srcLoc: srcloc.bits(),
+            codeOffset: code_offset,
+            moduleBytecodeOffset: srcloc.bits(),
             extra: 0,
         }
     }
 
-    pub fn trap(offset: CodeOffset, srcloc: SourceLoc, which: Trap) -> Self {
+    pub fn trap(code_offset: CodeOffset, srcloc: SourceLoc, which: Trap) -> Self {
         Self {
             which: CraneliftMetadataEntry_Which_Trap,
-            offset,
-            srcLoc: srcloc.bits(),
+            codeOffset: code_offset,
+            moduleBytecodeOffset: srcloc.bits(),
             extra: which as usize,
         }
     }
 
-    pub fn memory_access(offset: CodeOffset, srcloc: SourceLoc) -> Self {
+    pub fn memory_access(code_offset: CodeOffset, srcloc: SourceLoc) -> Self {
         Self {
             which: CraneliftMetadataEntry_Which_MemoryAccess,
-            offset,
-            srcLoc: srcloc.bits(),
+            codeOffset: code_offset,
+            moduleBytecodeOffset: srcloc.bits(),
             extra: 0,
         }
     }
 
-    pub fn symbolic_access(offset: CodeOffset, sym: BD_SymbolicAddress) -> Self {
+    pub fn symbolic_access(code_offset: CodeOffset, sym: BD_SymbolicAddress) -> Self {
         Self {
             which: CraneliftMetadataEntry_Which_SymbolicAccess,
-            offset,
-            srcLoc: 0,
+            codeOffset: code_offset,
+            moduleBytecodeOffset: 0,
             extra: sym as usize,
         }
     }
