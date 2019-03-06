@@ -108,7 +108,7 @@ static bool GenerateCraneliftCode(WasmMacroAssembler& masm,
     const CraneliftMetadataEntry& metadata = func.metadatas[i];
 
     CheckedInt<size_t> offset = funcBase;
-    offset += metadata.offset;
+    offset += metadata.codeOffset;
     if (!offset.isValid()) {
       return false;
     }
@@ -119,15 +119,17 @@ static bool GenerateCraneliftCode(WasmMacroAssembler& masm,
     MOZ_ASSERT(offset.value() < offsets->ret);
 
     // Check bytecode offsets.
-    if (metadata.srcLoc > 0 && lineOrBytecode > 0) {
-      MOZ_ASSERT(metadata.srcLoc >= lineOrBytecode);
-      MOZ_ASSERT(metadata.srcLoc < lineOrBytecode + funcBytecodeSize);
+    if (metadata.moduleBytecodeOffset > 0 && lineOrBytecode > 0) {
+      MOZ_ASSERT(metadata.moduleBytecodeOffset >= lineOrBytecode);
+      MOZ_ASSERT(metadata.moduleBytecodeOffset <
+                 lineOrBytecode + funcBytecodeSize);
     }
 #endif
     // TODO(bug 1532716): Cranelift gives null bytecode offsets for symbolic
     // accesses.
-    uint32_t bytecodeOffset =
-        metadata.srcLoc ? metadata.srcLoc : lineOrBytecode;
+    uint32_t bytecodeOffset = metadata.moduleBytecodeOffset
+                                  ? metadata.moduleBytecodeOffset
+                                  : lineOrBytecode;
 
     switch (metadata.which) {
       case CraneliftMetadataEntry::Which::DirectCall: {
