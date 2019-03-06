@@ -153,6 +153,6 @@ addMessageListener("setMasterPassword", ({ enable }) => {
   }
 });
 
-Services.mm.addMessageListener("RemoteLogins:onFormSubmit", function onFormSubmit(message) {
+Services.mm.addMessageListener("PasswordManager:onFormSubmit", function onFormSubmit(message) {
   sendAsyncMessage("formSubmissionProcessed", message.data, message.objects);
 });

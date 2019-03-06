@@ -1,4 +1,3 @@
-// Copyright © 2017 winapi-rs developers
 // Licensed under the Apache License, Version 2.0
 // <LICENSE-APACHE or http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
 // <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your option.
@@ -13,7 +12,7 @@ use um::accctrl::{
     PTRUSTEE_W, SE_OBJECT_TYPE, TRUSTEE_FORM, TRUSTEE_TYPE
 };
 use um::winnt::{
-    HANDLE, LPCSTR, LPCWSTR, LPSTR, LPWSTR, PACCESS_MASK, PACL, PGENERIC_MAPPING, 
+    HANDLE, LPCSTR, LPCWSTR, LPSTR, LPWSTR, PACCESS_MASK, PACL, PGENERIC_MAPPING,
     PSECURITY_DESCRIPTOR, PSID, PVOID, SECURITY_INFORMATION
 };
 FN!{cdecl FN_PROGRESS(
@@ -49,12 +48,12 @@ extern "system" {
     pub fn GetEffectiveRightsFromAclA(
         pacl: PACL,
         pTrustee: PTRUSTEE_A,
-        pAccessRight: PACCESS_MASK
+        pAccessRight: PACCESS_MASK,
     ) -> DWORD;
     pub fn GetEffectiveRightsFromAclW(
         pacl: PACL,
         pTrustee: PTRUSTEE_W,
-        pAccessRight: PACCESS_MASK
+        pAccessRight: PACCESS_MASK,
     ) -> DWORD;
     pub fn GetAuditedPermissionsFromAclA(
         pAcl: PACL,

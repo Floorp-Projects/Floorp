@@ -1,4 +1,3 @@
-// Copyright © 2015-2017 winapi-rs developers
 // Licensed under the Apache License, Version 2.0
 // <LICENSE-APACHE or http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
 // <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your option.
@@ -2551,7 +2550,8 @@ interface ID3D12Device(ID3D12DeviceVtbl): ID3D12Object(ID3D12ObjectVtbl) {
     #[fixme] fn GetAdapterLuid() -> LUID,
 }}
 RIDL!{#[uuid(0xc64226a8, 0x9201, 0x46af, 0xb4, 0xcc, 0x53, 0xfb, 0x9f, 0xf7, 0x41, 0x4f)]
-interface ID3D12PipelineLibrary(ID3D12PipelineLibraryVtbl): ID3D12DeviceChild(ID3D12DeviceChildVtbl) {
+interface ID3D12PipelineLibrary(ID3D12PipelineLibraryVtbl):
+    ID3D12DeviceChild(ID3D12DeviceChildVtbl) {
     fn StorePipeline(
         pName: LPCWSTR,
         pPipeline: *mut ID3D12PipelineState,
@@ -2575,7 +2575,8 @@ interface ID3D12PipelineLibrary(ID3D12PipelineLibraryVtbl): ID3D12DeviceChild(ID
     ) -> HRESULT,
 }}
 RIDL!{#[uuid(0x80eabf42, 0x2568, 0x4e5e, 0xbd, 0x82, 0xc3, 0x7f, 0x86, 0x96, 0x1d, 0xc3)]
-interface ID3D12PipelineLibrary1(ID3D12PipelineLibrary1Vtbl): ID3D12PipelineLibrary(ID3D12PipelineLibraryVtbl) {
+interface ID3D12PipelineLibrary1(ID3D12PipelineLibrary1Vtbl):
+    ID3D12PipelineLibrary(ID3D12PipelineLibraryVtbl) {
     fn LoadPipeline(
         pName: LPCWSTR,
         pDesc: *const D3D12_PIPELINE_STATE_STREAM_DESC,
@@ -2662,7 +2663,7 @@ FN!{stdcall PFN_D3D12_GET_DEBUG_INTERFACE(
 extern "system" {
     pub fn D3D12GetDebugInterface(
         riid: REFGUID,
-        ppvDebug: *mut *mut c_void
+        ppvDebug: *mut *mut c_void,
     ) -> HRESULT;
     pub fn D3D12EnableExperimentalFeatures(
         NumFeatures: UINT,

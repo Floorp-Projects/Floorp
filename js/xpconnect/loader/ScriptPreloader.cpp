@@ -899,12 +899,23 @@ JSScript* ScriptPreloader::GetCachedScript(JSContext* cx,
   // If a script is used by both the parent and the child, it's stored only
   // in the child cache.
   if (mChildCache) {
-    auto script = mChildCache->GetCachedScript(cx, path);
+    RootedScript script(cx, mChildCache->GetCachedScriptInternal(cx, path));
     if (script) {
+      Telemetry::AccumulateCategorical(
+          Telemetry::LABELS_SCRIPT_PRELOADER_REQUESTS::HitChild);
       return script;
     }
   }
 
+  RootedScript script(cx, GetCachedScriptInternal(cx, path));
+  Telemetry::AccumulateCategorical(
+      script ? Telemetry::LABELS_SCRIPT_PRELOADER_REQUESTS::Hit
+             : Telemetry::LABELS_SCRIPT_PRELOADER_REQUESTS::Miss);
+  return script;
+}
+
+JSScript* ScriptPreloader::GetCachedScriptInternal(JSContext* cx,
+                                                   const nsCString& path) {
   auto script = mScripts.Get(path);
   if (script) {
     return WaitForCachedScript(cx, script);
@@ -939,6 +950,8 @@ JSScript* ScriptPreloader::WaitForCachedScript(JSContext* cx,
       LOG(Info, "Script is small enough to recompile on main thread\n");
 
       script->mReadyToExecute = true;
+      Telemetry::ScalarAdd(
+          Telemetry::ScalarID::SCRIPT_PRELOADER_MAINTHREAD_RECOMPILE, 1);
     } else {
       while (!script->mReadyToExecute) {
         mal.Wait();
@@ -948,7 +961,9 @@ JSScript* ScriptPreloader::WaitForCachedScript(JSContext* cx,
       }
     }
 
-    LOG(Debug, "Waited %fms\n", (TimeStamp::Now() - start).ToMilliseconds());
+    double waitedMS = (TimeStamp::Now() - start).ToMilliseconds();
+    Telemetry::Accumulate(Telemetry::SCRIPT_PRELOADER_WAIT_TIME, int(waitedMS));
+    LOG(Debug, "Waited %fms\n", waitedMS);
   }
 
   return script->GetJSScript(cx);

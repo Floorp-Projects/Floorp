@@ -1,4 +1,3 @@
-// Copyright © 2017 winapi-rs developers
 // Licensed under the Apache License, Version 2.0
 // <LICENSE-APACHE or http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
 // <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your option.
@@ -352,7 +351,8 @@ interface ID2D1SourceTransform(ID2D1SourceTransformVtbl): ID2D1Transform(ID2D1Tr
     ) -> HRESULT,
 }}
 RIDL!{#[uuid(0x1a799d8a, 0x69f7, 0x4e4c, 0x9f, 0xed, 0x43, 0x7c, 0xcc, 0x66, 0x84, 0xcc)]
-interface ID2D1ConcreteTransform(ID2D1ConcreteTransformVtbl): ID2D1TransformNode(ID2D1TransformNodeVtbl) {
+interface ID2D1ConcreteTransform(ID2D1ConcreteTransformVtbl):
+    ID2D1TransformNode(ID2D1TransformNodeVtbl) {
     fn SetOutputBuffer(
         bufferPrecision: D2D1_BUFFER_PRECISION,
         channelDepth: D2D1_CHANNEL_DEPTH,
@@ -362,7 +362,8 @@ interface ID2D1ConcreteTransform(ID2D1ConcreteTransformVtbl): ID2D1TransformNode
     ) -> (),
 }}
 RIDL!{#[uuid(0x63ac0b32, 0xba44, 0x450f, 0x88, 0x06, 0x7f, 0x4c, 0xa1, 0xff, 0x2f, 0x1b)]
-interface ID2D1BlendTransform(ID2D1BlendTransformVtbl): ID2D1ConcreteTransform(ID2D1ConcreteTransformVtbl) {
+interface ID2D1BlendTransform(ID2D1BlendTransformVtbl):
+    ID2D1ConcreteTransform(ID2D1ConcreteTransformVtbl) {
     fn SetDescription(
         description: *const D2D1_BLEND_DESCRIPTION,
     ) -> (),
@@ -371,7 +372,8 @@ interface ID2D1BlendTransform(ID2D1BlendTransformVtbl): ID2D1ConcreteTransform(I
     ) -> (),
 }}
 RIDL!{#[uuid(0x4998735c, 0x3a19, 0x473c, 0x97, 0x81, 0x65, 0x68, 0x47, 0xe3, 0xa3, 0x47)]
-interface ID2D1BorderTransform(ID2D1BorderTransformVtbl): ID2D1ConcreteTransform(ID2D1ConcreteTransformVtbl) {
+interface ID2D1BorderTransform(ID2D1BorderTransformVtbl):
+    ID2D1ConcreteTransform(ID2D1ConcreteTransformVtbl) {
     fn SetExtendModeX(
         extendMode: D2D1_EXTEND_MODE,
     ) -> (),
@@ -382,7 +384,8 @@ interface ID2D1BorderTransform(ID2D1BorderTransformVtbl): ID2D1ConcreteTransform
     fn GetExtendModeY() -> D2D1_EXTEND_MODE,
 }}
 RIDL!{#[uuid(0x3fe6adea, 0x7643, 0x4f53, 0xbd, 0x14, 0xa0, 0xce, 0x63, 0xf2, 0x40, 0x42)]
-interface ID2D1OffsetTransform(ID2D1OffsetTransformVtbl): ID2D1TransformNode(ID2D1TransformNodeVtbl) {
+interface ID2D1OffsetTransform(ID2D1OffsetTransformVtbl):
+    ID2D1TransformNode(ID2D1TransformNodeVtbl) {
     fn SetOffset(
         offset: D2D_POINT_2L,
     ) -> (),

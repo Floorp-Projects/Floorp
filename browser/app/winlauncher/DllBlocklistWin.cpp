@@ -306,47 +306,6 @@ static NTSTATUS NTAPI patched_NtMapViewOfSection(
 
 namespace mozilla {
 
-class MOZ_RAII AutoVirtualProtect final {
- public:
-  AutoVirtualProtect(void* aAddress, size_t aLength, DWORD aProtFlags,
-                     HANDLE aTargetProcess = nullptr)
-      : mAddress(aAddress),
-        mLength(aLength),
-        mTargetProcess(aTargetProcess),
-        mPrevProt(0),
-        mError(WindowsError::CreateSuccess()) {
-    if (!::VirtualProtectEx(aTargetProcess, aAddress, aLength, aProtFlags,
-                            &mPrevProt)) {
-      mError = WindowsError::FromLastError();
-    }
-  }
-
-  ~AutoVirtualProtect() {
-    if (mError.IsFailure()) {
-      return;
-    }
-
-    ::VirtualProtectEx(mTargetProcess, mAddress, mLength, mPrevProt,
-                       &mPrevProt);
-  }
-
-  explicit operator bool() const { return mError.IsSuccess(); }
-
-  WindowsError GetError() const { return mError; }
-
-  AutoVirtualProtect(const AutoVirtualProtect&) = delete;
-  AutoVirtualProtect(AutoVirtualProtect&&) = delete;
-  AutoVirtualProtect& operator=(const AutoVirtualProtect&) = delete;
-  AutoVirtualProtect& operator=(AutoVirtualProtect&&) = delete;
-
- private:
-  void* mAddress;
-  size_t mLength;
-  HANDLE mTargetProcess;
-  DWORD mPrevProt;
-  WindowsError mError;
-};
-
 LauncherVoidResult InitializeDllBlocklistOOP(HANDLE aChildProcess) {
   mozilla::CrossProcessDllInterceptor intcpt(aChildProcess);
   intcpt.Init(L"ntdll.dll");

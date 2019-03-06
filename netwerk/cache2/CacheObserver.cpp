@@ -21,7 +21,7 @@
 namespace mozilla {
 namespace net {
 
-CacheObserver* CacheObserver::sSelf = nullptr;
+StaticRefPtr<CacheObserver> CacheObserver::sSelf;
 
 static float const kDefaultHalfLifeHours = 24.0F;  // 24 hours
 float CacheObserver::sHalfLifeHours = kDefaultHalfLifeHours;
@@ -113,7 +113,6 @@ nsresult CacheObserver::Init() {
   }
 
   sSelf = new CacheObserver();
-  NS_ADDREF(sSelf);
 
   obs->AddObserver(sSelf, "prefservice:after-app-defaults", true);
   obs->AddObserver(sSelf, "profile-do-change", true);
@@ -133,7 +132,7 @@ nsresult CacheObserver::Shutdown() {
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  NS_RELEASE(sSelf);
+  sSelf = nullptr;
   return NS_OK;
 }
 
@@ -253,8 +252,8 @@ void CacheObserver::SetDiskCacheCapacity(uint32_t aCapacity) {
     sSelf->StoreDiskCacheCapacity();
   } else {
     nsCOMPtr<nsIRunnable> event =
-        NewRunnableMethod("net::CacheObserver::StoreDiskCacheCapacity", sSelf,
-                          &CacheObserver::StoreDiskCacheCapacity);
+        NewRunnableMethod("net::CacheObserver::StoreDiskCacheCapacity",
+                          sSelf.get(), &CacheObserver::StoreDiskCacheCapacity);
     NS_DispatchToMainThread(event);
   }
 }
@@ -276,8 +275,8 @@ void CacheObserver::SetCacheFSReported() {
     sSelf->StoreCacheFSReported();
   } else {
     nsCOMPtr<nsIRunnable> event =
-        NewRunnableMethod("net::CacheObserver::StoreCacheFSReported", sSelf,
-                          &CacheObserver::StoreCacheFSReported);
+        NewRunnableMethod("net::CacheObserver::StoreCacheFSReported",
+                          sSelf.get(), &CacheObserver::StoreCacheFSReported);
     NS_DispatchToMainThread(event);
   }
 }
@@ -299,8 +298,8 @@ void CacheObserver::SetHashStatsReported() {
     sSelf->StoreHashStatsReported();
   } else {
     nsCOMPtr<nsIRunnable> event =
-        NewRunnableMethod("net::CacheObserver::StoreHashStatsReported", sSelf,
-                          &CacheObserver::StoreHashStatsReported);
+        NewRunnableMethod("net::CacheObserver::StoreHashStatsReported",
+                          sSelf.get(), &CacheObserver::StoreHashStatsReported);
     NS_DispatchToMainThread(event);
   }
 }

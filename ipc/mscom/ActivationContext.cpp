@@ -200,7 +200,7 @@ void ActivationContextRegion::Activate() {
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
   BOOL activated =
 #endif
-    ::ActivateActCtx(mActCtx.mActCtx, &mActCookie);
+      ::ActivateActCtx(mActCtx.mActCtx, &mActCookie);
   MOZ_DIAGNOSTIC_ASSERT(activated);
 }
 

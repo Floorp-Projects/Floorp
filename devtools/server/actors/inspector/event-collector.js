@@ -14,6 +14,7 @@ const {
   isBeforePseudoElement,
   isNativeAnonymous,
 } = require("devtools/shared/layout/utils");
+const Debugger = require("Debugger");
 
 // eslint-disable-next-line
 const JQUERY_LIVE_REGEX = /return typeof \w+.*.event\.triggered[\s\S]*\.event\.(dispatch|handle).*arguments/;
@@ -744,6 +745,18 @@ class EventCollector {
   }
 
   /**
+   * We allow displaying chrome events if the page is chrome or if
+   * `devtools.chrome.enabled = true`.
+   */
+  get chromeEnabled() {
+    if (typeof this._chromeEnabled === "undefined") {
+      this._chromeEnabled = Services.prefs.getBoolPref("devtools.chrome.enabled");
+    }
+
+    return this._chromeEnabled;
+  }
+
+  /**
    *
    * @param  {DOMNode} node
    *         The node for which events are to be gathered.
@@ -762,7 +775,18 @@ class EventCollector {
    */
   getEventListeners(node) {
     const listenerArray = [];
-    const dbg = new Debugger();
+    let dbg;
+    if (!this.chromeEnabled) {
+      dbg = new Debugger();
+    } else {
+      // When the chrome pref is turned on, we may try to debug system compartments.
+      // But since bug 1517210, the server is also loaded using the system principal
+      // and so here, we have to ensure using a special Debugger instance, loaded
+      // in a compartment flagged with invisibleToDebugger=true. This helps the Debugger
+      // know about the precise boundary between debuggee and debugger code.
+      const ChromeDebugger = require("ChromeDebugger");
+      dbg = new ChromeDebugger();
+    }
 
     for (const collector of this.eventCollectors) {
       const listeners = collector.getListeners(node);

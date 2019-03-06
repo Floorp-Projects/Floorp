@@ -1,4 +1,3 @@
-// Copyright © 2015-2017 winapi-rs developers
 // Licensed under the Apache License, Version 2.0
 // <LICENSE-APACHE or http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
 // <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your option.
@@ -7,10 +6,7 @@
 //! error code definitions for the Win32 API functions
 use ctypes::{c_long, c_ulong};
 use shared::minwindef::DWORD;
-#[inline]
-pub fn SUCCEEDED(hr: HRESULT) -> bool {
-    hr >= 0
-}
+use shared::wtypesbase::SCODE;
 pub const FACILITY_XPS: HRESULT = 82;
 pub const FACILITY_XAML: HRESULT = 43;
 pub const FACILITY_USN: HRESULT = 129;
@@ -2946,24 +2942,63 @@ pub const STORE_ERROR_LICENSE_REVOKED: DWORD = 15864;
 pub const SEVERITY_SUCCESS: HRESULT = 0;
 pub const SEVERITY_ERROR: HRESULT = 1;
 #[inline]
+pub fn SUCCEEDED(hr: HRESULT) -> bool {
+    hr >= 0
+}
+#[inline]
+pub fn FAILED(hr: HRESULT) -> bool {
+    hr < 0
+}
+#[inline]
+pub fn IS_ERROR(hr: HRESULT) -> bool {
+    (hr as u32) >> 31 == (SEVERITY_ERROR as u32)
+}
+#[inline]
+pub fn HRESULT_CODE(hr: HRESULT) -> HRESULT {
+    hr & 0xFFFF
+}
+#[inline]
+pub fn SCODE_CODE(sc: SCODE) -> HRESULT {
+    sc & 0xFFFF
+}
+#[inline]
+pub fn HRESULT_FACILITY(hr: HRESULT) -> HRESULT {
+    (hr >> 16) & 0x1fff
+}
+#[inline]
+pub fn SCODE_FACILITY(sc: SCODE) -> HRESULT {
+    (sc >> 16) & 0x1fff
+}
+#[inline]
+pub fn HRESULT_SEVERITY(hr: HRESULT) -> HRESULT {
+    (hr >> 31) & 0x1
+}
+#[inline]
+pub fn SCODE_SEVERITY(sc: SCODE) -> HRESULT {
+    (sc >> 31) & 0x1
+}
+#[inline]
 pub fn MAKE_HRESULT(sev: HRESULT, fac: HRESULT, code: HRESULT) -> HRESULT {
+    (sev << 31) | (fac << 16) | code
+}
+#[inline]
+pub fn MAKE_SCODE(sev: HRESULT, fac: HRESULT, code: HRESULT) -> SCODE {
     (sev << 31) | (fac << 16) | code
 }
 pub const FACILITY_NT_BIT: HRESULT = 0x10000000;
 #[inline]
 pub fn HRESULT_FROM_WIN32(x: c_ulong) -> HRESULT {
-    let hr = x as HRESULT;
-    if hr <= 0 {
-        hr
+    if x as i32 <= 0 {
+        x as i32
     } else {
-        ((x & 0x0000FFFF) | ((FACILITY_WIN32 as u32) << 16) | 0x80000000) as HRESULT
+        ((x & 0x0000FFFF) | ((FACILITY_WIN32 as u32) << 16) | 0x80000000) as i32
     }
 }
+pub type HRESULT = c_long;
 #[inline]
 pub fn HRESULT_FROM_NT(x: c_ulong) -> HRESULT {
-    (x | FACILITY_NT_BIT as u32) as HRESULT
+    (x | FACILITY_NT_BIT as u32) as i32
 }
-pub type HRESULT = c_long;
 pub const NOERROR: HRESULT = 0;
 pub const E_UNEXPECTED: HRESULT = 0x8000FFFF;
 pub const E_NOTIMPL: HRESULT = 0x80004001;

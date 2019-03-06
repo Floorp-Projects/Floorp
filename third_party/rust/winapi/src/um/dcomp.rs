@@ -1,4 +1,3 @@
-// Copyright © 2017 winapi-rs developers
 // Licensed under the Apache License, Version 2.0
 // <LICENSE-APACHE or http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
 // <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your option.
@@ -209,23 +208,19 @@ interface IDCompositionVisual(IDCompositionVisualVtbl): IUnknown(IUnknownVtbl) {
     fn RemoveVisual(
         visual: *const IDCompositionVisual,
     ) -> HRESULT,
-    fn RemoveAllVisuals(
-    ) -> HRESULT,
+    fn RemoveAllVisuals() -> HRESULT,
     fn SetCompositeMode(
         compositeMode: DCOMPOSITION_COMPOSITE_MODE,
     ) -> HRESULT,
 }}
 RIDL!{#[uuid(0xec81b08f, 0xbfcb, 0x4e8d, 0xb1, 0x93, 0xa9, 0x15, 0x58, 0x79, 0x99, 0xe8)]
-interface IDCompositionEffect(IDCompositionEffectVtbl): IUnknown(IUnknownVtbl) {
-}}
+interface IDCompositionEffect(IDCompositionEffectVtbl): IUnknown(IUnknownVtbl) {}}
 RIDL!{#[uuid(0x71185722, 0x246b, 0x41f2, 0xaa, 0xd1, 0x04, 0x43, 0xf7, 0xf4, 0xbf, 0xc2)]
 interface IDCompositionTransform3D(IDCompositionTransform3DVtbl):
-    IDCompositionEffect(IDCompositionEffectVtbl) {
-}}
+    IDCompositionEffect(IDCompositionEffectVtbl) {}}
 RIDL!{#[uuid(0xfd55faa7, 0x37e0, 0x4c20, 0x95, 0xd2, 0x9b, 0xe4, 0x5b, 0xc3, 0x3f, 0x55)]
 interface IDCompositionTransform(IDCompositionTransformVtbl):
-    IDCompositionTransform3D(IDCompositionTransform3DVtbl) {
-}}
+    IDCompositionTransform3D(IDCompositionTransform3DVtbl) {}}
 RIDL!{#[uuid(0x06791122, 0xc6f0, 0x417d, 0x83, 0x23, 0x26, 0x9e, 0x98, 0x7f, 0x59, 0x54)]
 interface IDCompositionTranslateTransform(IDCompositionTranslateTransformVtbl):
     IDCompositionTransform(IDCompositionTransformVtbl) {
@@ -476,8 +471,7 @@ interface IDCompositionMatrixTransform3D(IDCompositionMatrixTransform3DVtbl):
     ) -> HRESULT,
 }}
 RIDL!{#[uuid(0x64ac3703, 0x9d3f, 0x45ec, 0xa1, 0x09, 0x7c, 0xac, 0x0e, 0x7a, 0x13, 0xa7)]
-interface IDCompositionClip(IDCompositionClipVtbl): IUnknown(IUnknownVtbl) {
-}}
+interface IDCompositionClip(IDCompositionClipVtbl): IUnknown(IUnknownVtbl) {}}
 RIDL!{#[uuid(0x9842ad7d, 0xd9cf, 0x4908, 0xae, 0xd7, 0x48, 0xb5, 0x1d, 0xa5, 0xe7, 0xc2)]
 interface IDCompositionRectangleClip(IDCompositionRectangleClipVtbl):
     IDCompositionClip(IDCompositionClipVtbl) {

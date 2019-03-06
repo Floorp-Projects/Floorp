@@ -1,4 +1,3 @@
-// Copyright © 2017 winapi-rs developers
 // Licensed under the Apache License, Version 2.0
 // <LICENSE-APACHE or http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
 // <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your option.
@@ -12,7 +11,7 @@ extern "system" {
     ) -> BOOL;
     pub fn GetNumaNodeProcessorMaskEx(
         Node: USHORT,
-        ProcessorMask: PGROUP_AFFINITY
+        ProcessorMask: PGROUP_AFFINITY,
     ) -> BOOL;
     pub fn GetNumaProximityNodeEx(
         ProximityId: ULONG,

@@ -6,6 +6,8 @@
 
 #include "mozilla/dom/RemoteFrameChild.h"
 
+#include "nsFrameLoaderOwner.h"
+
 using namespace mozilla::ipc;
 
 namespace mozilla {
@@ -71,6 +73,31 @@ void RemoteFrameChild::UpdateDimensions(const nsIntRect& aRect,
                    chromeOffset);
 
   Unused << SendUpdateDimensions(di);
+}
+
+void RemoteFrameChild::NavigateByKey(bool aForward,
+                                     bool aForDocumentNavigation) {
+  Unused << SendNavigateByKey(aForward, aForDocumentNavigation);
+}
+
+void RemoteFrameChild::Activate() { Unused << SendActivate(); }
+
+/*static*/
+RemoteFrameChild* RemoteFrameChild::GetFrom(nsFrameLoader* aFrameLoader) {
+  if (!aFrameLoader) {
+    return nullptr;
+  }
+  return aFrameLoader->GetRemoteFrameChild();
+}
+
+/*static*/
+RemoteFrameChild* RemoteFrameChild::GetFrom(nsIContent* aContent) {
+  RefPtr<nsFrameLoaderOwner> loaderOwner = do_QueryObject(aContent);
+  if (!loaderOwner) {
+    return nullptr;
+  }
+  RefPtr<nsFrameLoader> frameLoader = loaderOwner->GetFrameLoader();
+  return GetFrom(frameLoader);
 }
 
 IPCResult RemoteFrameChild::RecvSetLayersId(

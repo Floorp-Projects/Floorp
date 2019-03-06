@@ -148,7 +148,7 @@ void WindowGlobalChild::HandleAsyncMessage(const nsString& aActorName,
     return;
   }
 
-  actorSvc->ReceiveMessage(obj, aMessageName, aData);
+  actorSvc->ReceiveMessage(actor, obj, aMessageName, aData);
 }
 
 already_AddRefed<JSWindowActorChild> WindowGlobalChild::GetActor(

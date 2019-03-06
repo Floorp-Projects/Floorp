@@ -4,8 +4,7 @@
 
 restart-required-title = Restart Required
 restart-required-header = Sorry. We just need to do one small thing to keep going.
-restart-required-intro-brand = { -brand-short-name } has just been updated in the background. Click Restart { -brand-short-name } to finish
-    applying it.
+restart-required-intro-brand = { -brand-short-name } has just been updated in the background. Click Restart { -brand-short-name } to complete the update.
 restart-required-description = We will restore all your pages, windows and tabs afterwards, so you can be on your way quickly.
 
 restart-button-label = Restart { -brand-short-name }

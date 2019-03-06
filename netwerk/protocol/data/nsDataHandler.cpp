@@ -19,12 +19,8 @@ NS_IMPL_ISUPPORTS(nsDataHandler, nsIProtocolHandler, nsISupportsWeakReference)
 
 nsresult nsDataHandler::Create(nsISupports* aOuter, const nsIID& aIID,
                                void** aResult) {
-  nsDataHandler* ph = new nsDataHandler();
-  if (ph == nullptr) return NS_ERROR_OUT_OF_MEMORY;
-  NS_ADDREF(ph);
-  nsresult rv = ph->QueryInterface(aIID, aResult);
-  NS_RELEASE(ph);
-  return rv;
+  RefPtr<nsDataHandler> ph = new nsDataHandler();
+  return ph->QueryInterface(aIID, aResult);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -97,28 +93,25 @@ NS_IMETHODIMP
 nsDataHandler::NewChannel(nsIURI* uri, nsILoadInfo* aLoadInfo,
                           nsIChannel** result) {
   NS_ENSURE_ARG_POINTER(uri);
-  nsDataChannel* channel;
+  RefPtr<nsDataChannel> channel;
   if (XRE_IsParentProcess()) {
     channel = new nsDataChannel(uri);
   } else {
     channel = new mozilla::net::DataChannelChild(uri);
   }
-  NS_ADDREF(channel);
 
   nsresult rv = channel->Init();
   if (NS_FAILED(rv)) {
-    NS_RELEASE(channel);
     return rv;
   }
 
   // set the loadInfo on the new channel
   rv = channel->SetLoadInfo(aLoadInfo);
   if (NS_FAILED(rv)) {
-    NS_RELEASE(channel);
     return rv;
   }
 
-  *result = channel;
+  channel.forget(result);
   return NS_OK;
 }
 
