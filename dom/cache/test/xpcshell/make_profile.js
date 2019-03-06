@@ -6,6 +6,8 @@
  * and are CC licensed by https://www.flickr.com/photos/legofenris/.
  */
 
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+
 // Enumerate the directory tree and store results in entryList as
 //
 //  { path: 'a/b/c', file: <nsIFile> }
@@ -81,8 +83,7 @@ function resetQuotaManager() {
     var qm = Cc["@mozilla.org/dom/quota/manager;1"]
              .getService(Ci.nsIQuotaManager);
 
-    var prefService = Cc["@mozilla.org/preferences-service;1"]
-                      .getService(Ci.nsIPrefService);
+    var prefService = Services.prefs;
 
     // enable quota manager testing mode
     var pref = "dom.quotaManager.testing";
@@ -100,8 +101,7 @@ function run_test() {
   do_test_pending();
   do_get_profile();
 
-  var directoryService = Cc["@mozilla.org/file/directory_service;1"]
-                         .getService(Ci.nsIProperties);
+  var directoryService = Services.dirsvc;
   var profileDir = directoryService.get("ProfD", Ci.nsIFile);
   var currentDir = directoryService.get("CurWorkD", Ci.nsIFile);
 

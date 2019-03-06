@@ -76,7 +76,7 @@ async function waitForIOToComplete(cache, request) {
   await cache.match(request);
 
   // Finally, wait for -wal file finish its job.
-  return await resetStorage();
+  return resetStorage();
 }
 
 SimpleTest.waitForExplicitFinish();
@@ -137,7 +137,7 @@ SpecialPowers.pushPrefEnv({
 
   info("Stage 3.3: Verify cache.put.");
   cache = await caches.open(name);
-  response = await fetch(other_url);
+  let response = await fetch(other_url);
   await cache.put(other_url, response);
   await verifyUsage();
   info("Stage 3.3.1: Delete cache.");

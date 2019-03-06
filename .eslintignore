@@ -170,8 +170,6 @@ dom/base/test/unit_ipc/**
 dom/base/test/jsmodules/**
 dom/bindings/**
 dom/browser-element/**
-dom/cache/test/mochitest/**
-dom/cache/test/xpcshell/**
 dom/canvas/**
 dom/encoding/**
 dom/events/**

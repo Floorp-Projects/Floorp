@@ -1,12 +1,14 @@
+/* global context testDone:true */
+
 var cache = null;
 var name = "https_" + context;
 var urlBase = "https://example.com/tests/dom/cache/test/mochitest";
 var url1 = urlBase + "/test_cache.js";
 var url2 = urlBase + "/test_cache_add.js";
 
-function addOpaque(cache, url) {
+function addOpaque(c, url) {
   return fetch(new Request(url, { mode: "no-cors" })).then(function(response) {
-    return cache.put(url, response);
+    return c.put(url, response);
   });
 }
 
