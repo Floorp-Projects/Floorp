@@ -13,6 +13,7 @@ function skipPausing(dbg) {
 
 add_task(async function() {
   let dbg = await initDebugger("doc-scripts.html");
+  await selectSource(dbg, "simple3")
   await addBreakpoint(dbg, "simple3", 2);
 
   await skipPausing(dbg);

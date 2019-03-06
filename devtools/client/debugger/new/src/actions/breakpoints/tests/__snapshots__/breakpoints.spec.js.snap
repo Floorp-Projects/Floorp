@@ -9,6 +9,7 @@ Array [
           "index": 0,
           "name": undefined,
           "offset": Object {
+            "column": 1,
             "line": 2,
             "sourceId": "a",
             "sourceUrl": "http://localhost:8000/examples/a",
@@ -16,13 +17,15 @@ Array [
         },
         "disabled": false,
         "generatedLocation": Object {
+          "column": 1,
           "line": 2,
           "sourceId": "a",
           "sourceUrl": "http://localhost:8000/examples/a",
         },
-        "id": "a:2:",
+        "id": "a:2:1",
         "loading": false,
         "location": Object {
+          "column": 1,
           "line": 2,
           "sourceId": "a",
           "sourceUrl": "http://localhost:8000/examples/a",
@@ -64,6 +67,7 @@ Object {
     "index": 0,
     "name": undefined,
     "offset": Object {
+      "column": 0,
       "line": 1,
       "sourceId": "a.js",
       "sourceUrl": "http://localhost:8000/examples/a.js",
@@ -71,6 +75,7 @@ Object {
   },
   "disabled": false,
   "generatedLocation": Object {
+    "column": 0,
     "line": 1,
     "sourceId": "a.js",
     "sourceUrl": "http://localhost:8000/examples/a.js",
@@ -102,6 +107,7 @@ Array [
           "index": 0,
           "name": undefined,
           "offset": Object {
+            "column": 1,
             "line": 5,
             "sourceId": "a",
             "sourceUrl": "http://localhost:8000/examples/a",
@@ -109,13 +115,15 @@ Array [
         },
         "disabled": true,
         "generatedLocation": Object {
+          "column": 1,
           "line": 5,
           "sourceId": "a",
           "sourceUrl": "http://localhost:8000/examples/a",
         },
-        "id": "a:5:",
+        "id": "a:5:1",
         "loading": false,
         "location": Object {
+          "column": 1,
           "line": 5,
           "sourceId": "a",
           "sourceUrl": "http://localhost:8000/examples/a",

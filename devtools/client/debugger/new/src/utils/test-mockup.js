@@ -22,6 +22,7 @@ import type {
   WasmSource,
   Source,
   SourceId,
+  SourceLocation,
   Why
 } from "../types";
 
@@ -151,6 +152,14 @@ function makeMockExpression(value: Object): Expression {
     from: "from",
     updating: false
   };
+}
+
+export function makeMappedLocation(
+  location: SourceLocation,
+  generatedLocation: ?SourceLocation
+) {
+  generatedLocation = generatedLocation || location;
+  return { location, generatedLocation };
 }
 
 export {

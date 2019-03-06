@@ -18,39 +18,28 @@ const {
   getTextSearchStatus
 } = selectors;
 
-const threadClient = {
-  sourceContents: function({ source }) {
-    return new Promise((resolve, reject) => {
-      switch (source) {
-        case "foo1":
-          resolve({
-            source: "function foo1() {\n  const foo = 5; return foo;\n}",
-            contentType: "text/javascript"
-          });
-          break;
-        case "foo2":
-          resolve({
-            source: "function foo2(x, y) {\n  return x + y;\n}",
-            contentType: "text/javascript"
-          });
-          break;
-        case "bar":
-          resolve({
-            source: "function bla(x, y) {\n const bar = 4; return 2;\n}",
-            contentType: "text/javascript"
-          });
-          break;
-        case "bar:formatted":
-          resolve({
-            source: "function bla(x, y) {\n const bar = 4; return 2;\n}",
-            contentType: "text/javascript"
-          });
-          break;
-      }
-
-      reject(`unknown source: ${source}`);
-    });
+const sources = {
+  foo1: {
+    source: "function foo1() {\n  const foo = 5; return foo;\n}",
+    contentType: "text/javascript"
+  },
+  foo2: {
+    source: "function foo2(x, y) {\n  return x + y;\n}",
+    contentType: "text/javascript"
+  },
+  bar: {
+    source: "function bla(x, y) {\n const bar = 4; return 2;\n}",
+    contentType: "text/javascript"
+  },
+  "bar:formatted": {
+    source: "function bla(x, y) {\n const bar = 4; return 2;\n}",
+    contentType: "text/javascript"
   }
+};
+
+const threadClient = {
+  sourceContents: async ({ source }) => sources[source],
+  getBreakpointPositions: async () => ({})
 };
 
 describe("project text search", () => {
@@ -87,7 +76,8 @@ describe("project text search", () => {
         source: "function bla(x, y) {\n const bar = 4; return 2;\n}",
         contentType: "text/javascript"
       }),
-      getOriginalURLs: async () => [source2.url]
+      getOriginalURLs: async () => [source2.url],
+      getGeneratedRangesForOriginal: async () => []
     };
 
     const { dispatch, getState } = createStore(threadClient, {}, mockMaps);

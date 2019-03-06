@@ -42,24 +42,24 @@ add_task(async function() {
   await waitForLoadedSource(dbg, "debugger-statements.html");
   assertPausedLocation(dbg);
 
-  // resume
+  info("resume");
   await clickResume(dbg);
   await waitForPaused(dbg);
   assertPausedLocation(dbg);
 
-  // step over
+  info("step over");
   await clickStepOver(dbg);
   assertPausedLocation(dbg);
 
-  // step into
+  info("step into");
   await clickStepIn(dbg);
   assertPausedLocation(dbg);
 
-  // step over
+  info("step over");
   await clickStepOver(dbg);
   assertPausedLocation(dbg);
 
-  // step out
+  info("step out");
   await clickStepOut(dbg);
   assertPausedLocation(dbg);
 });

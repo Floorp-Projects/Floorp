@@ -6,7 +6,7 @@
 
 import assert from "../../utils/assert";
 import { recordEvent } from "../../utils/telemetry";
-import { remapBreakpoints } from "../breakpoints";
+import { remapBreakpoints, setBreakpointPositions } from "../breakpoints";
 
 import { setSymbols } from "../ast";
 import { prettyPrint } from "../../workers/pretty-print";
@@ -66,8 +66,8 @@ export function createPrettySource(sourceId: string) {
     };
 
     setSource(loadedPrettySource);
-
     dispatch(({ type: "UPDATE_SOURCE", source: loadedPrettySource }: Action));
+    await dispatch(setBreakpointPositions(loadedPrettySource.id));
 
     return prettySource;
   };
