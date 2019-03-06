@@ -935,7 +935,7 @@ child:
 
 parent:
     /** Records a history visit. */
-    async VisitURI(URIParams aURI, OptionalURIParams aLastVisitedURI,
+    async VisitURI(URIParams aURI, URIParams? aLastVisitedURI,
                    uint32_t aFlags);
 
     /** Fetches the visited status for an array of URIs (Android-only). */

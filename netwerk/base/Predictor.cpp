@@ -539,7 +539,7 @@ class PredictorLearnRunnable final : public Runnable {
     ipc::URIParams serTargetURI;
     SerializeURI(mTargetURI, serTargetURI);
 
-    ipc::OptionalURIParams serSourceURI;
+    Maybe<ipc::URIParams> serSourceURI;
     SerializeURI(mSourceURI, serSourceURI);
 
     PREDICTOR_LOG(("predictor::learn (async) forwarding to parent"));
@@ -657,7 +657,7 @@ Predictor::PredictNative(nsIURI *targetURI, nsIURI *sourceURI,
 
     PREDICTOR_LOG(("    called on child process"));
 
-    ipc::OptionalURIParams serTargetURI, serSourceURI;
+    Maybe<ipc::URIParams> serTargetURI, serSourceURI;
     SerializeURI(targetURI, serTargetURI);
     SerializeURI(sourceURI, serSourceURI);
 

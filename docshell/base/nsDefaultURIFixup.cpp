@@ -410,7 +410,7 @@ nsDefaultURIFixup::KeywordToURI(const nsACString& aKeyword,
     }
 
     RefPtr<nsIInputStream> postData;
-    ipc::OptionalURIParams uri;
+    Maybe<ipc::URIParams> uri;
     nsAutoString providerName;
     if (!contentChild->SendKeywordToURI(keyword, &providerName, &postData,
                                         &uri)) {

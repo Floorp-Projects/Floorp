@@ -45,7 +45,7 @@ class CookieServiceParent : public PCookieServiceParent {
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
   mozilla::ipc::IPCResult RecvSetCookieString(
-      const URIParams &aHost, const OptionalURIParams &aChannelURI,
+      const URIParams &aHost, const Maybe<URIParams> &aChannelURI,
       const bool &aIsForeign, const bool &aIsTrackingResource,
       const bool &aFirstPartyStorageAccessGranted,
       const nsCString &aCookieString, const nsCString &aServerTime,

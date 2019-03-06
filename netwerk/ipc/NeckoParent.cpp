@@ -743,8 +743,8 @@ mozilla::ipc::IPCResult NeckoParent::RecvOnAuthCancelled(
 
 /* Predictor Messages */
 mozilla::ipc::IPCResult NeckoParent::RecvPredPredict(
-    const ipc::OptionalURIParams& aTargetURI,
-    const ipc::OptionalURIParams& aSourceURI, const uint32_t& aReason,
+    const Maybe<ipc::URIParams>& aTargetURI,
+    const Maybe<ipc::URIParams>& aSourceURI, const uint32_t& aReason,
     const OriginAttributes& aOriginAttributes, const bool& hasVerifier) {
   nsCOMPtr<nsIURI> targetURI = DeserializeURI(aTargetURI);
   nsCOMPtr<nsIURI> sourceURI = DeserializeURI(aSourceURI);
@@ -765,7 +765,7 @@ mozilla::ipc::IPCResult NeckoParent::RecvPredPredict(
 }
 
 mozilla::ipc::IPCResult NeckoParent::RecvPredLearn(
-    const ipc::URIParams& aTargetURI, const ipc::OptionalURIParams& aSourceURI,
+    const ipc::URIParams& aTargetURI, const Maybe<ipc::URIParams>& aSourceURI,
     const uint32_t& aReason, const OriginAttributes& aOriginAttributes) {
   nsCOMPtr<nsIURI> targetURI = DeserializeURI(aTargetURI);
   nsCOMPtr<nsIURI> sourceURI = DeserializeURI(aSourceURI);

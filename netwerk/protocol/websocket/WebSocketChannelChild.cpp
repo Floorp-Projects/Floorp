@@ -444,21 +444,18 @@ WebSocketChannelChild::AsyncOpen(nsIURI* aURI, const nsACString& aOrigin,
   // Corresponding release in DeallocPWebSocket
   AddIPDLReference();
 
-  OptionalURIParams uri;
+  Maybe<URIParams> uri;
   Maybe<LoadInfoArgs> loadInfoArgs;
   OptionalTransportProvider transportProvider;
 
   if (!mIsServerSide) {
-    uri = URIParams();
-    SerializeURI(aURI, uri.get_URIParams());
+    uri.emplace(URIParams());
+    SerializeURI(aURI, uri.ref());
     nsresult rv = LoadInfoToLoadInfoArgs(mLoadInfo, &loadInfoArgs);
     NS_ENSURE_SUCCESS(rv, rv);
 
     transportProvider = void_t();
   } else {
-    uri = void_t();
-    loadInfoArgs = Nothing();
-
     MOZ_ASSERT(mServerTransportProvider);
     PTransportProviderChild* ipcChild;
     nsresult rv = mServerTransportProvider->GetIPCChild(&ipcChild);

@@ -360,7 +360,7 @@ GeckoViewHistory::VisitURI(nsIWidget* aWidget, nsIURI* aURI,
     URIParams uri;
     SerializeURI(aURI, uri);
 
-    OptionalURIParams lastVisitedURI;
+    Maybe<URIParams> lastVisitedURI;
     SerializeURI(aLastVisitedURI, lastVisitedURI);
 
     // If we're in the content process, send the visit to the parent. The parent

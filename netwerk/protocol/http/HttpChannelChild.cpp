@@ -2141,11 +2141,11 @@ NS_IMETHODIMP
 HttpChannelChild::OnRedirectVerifyCallback(nsresult result) {
   LOG(("HttpChannelChild::OnRedirectVerifyCallback [this=%p]\n", this));
   MOZ_ASSERT(NS_IsMainThread());
-  OptionalURIParams redirectURI;
+  Maybe<URIParams> redirectURI;
   nsresult rv;
 
   uint32_t referrerPolicy = REFERRER_POLICY_UNSET;
-  OptionalURIParams referrerURI;
+  Maybe<URIParams> referrerURI;
   SerializeURI(nullptr, referrerURI);
 
   nsCOMPtr<nsIHttpChannel> newHttpChannel =

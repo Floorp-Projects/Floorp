@@ -17,23 +17,23 @@ namespace ipc {
 
 void SerializeURI(nsIURI* aURI, URIParams& aParams);
 
-void SerializeURI(nsIURI* aURI, OptionalURIParams& aParams);
+void SerializeURI(nsIURI* aURI, Maybe<URIParams>& aParams);
 
 already_AddRefed<nsIURI> DeserializeURI(const URIParams& aParams);
 
-already_AddRefed<nsIURI> DeserializeURI(const OptionalURIParams& aParams);
+already_AddRefed<nsIURI> DeserializeURI(const Maybe<URIParams>& aParams);
 
 template <>
 struct IPDLParamTraits<nsIURI> {
   static void Write(IPC::Message* aMsg, IProtocol* aActor, nsIURI* aParam) {
-    OptionalURIParams params;
+    Maybe<URIParams> params;
     SerializeURI(aParam, params);
     WriteIPDLParam(aMsg, aActor, params);
   }
 
   static bool Read(const IPC::Message* aMsg, PickleIterator* aIter,
                    IProtocol* aActor, RefPtr<nsIURI>* aResult) {
-    OptionalURIParams params;
+    Maybe<URIParams> params;
     if (!ReadIPDLParam(aMsg, aIter, aActor, &params)) {
       return false;
     }

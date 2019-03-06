@@ -51,6 +51,7 @@
 #include "nsILoadInfo.h"
 #include "nsContentSecurityManager.h"
 
+#include "mozilla/Maybe.h"
 #include "mozilla/ipc/URIUtils.h"
 
 using mozilla::dom::AutoEntryScript;
@@ -1231,7 +1232,7 @@ NS_IMETHODIMP_(void) nsJSURI::Serialize(mozilla::ipc::URIParams& aParams) {
   if (mBaseURI) {
     SerializeURI(mBaseURI, jsParams.baseURI());
   } else {
-    jsParams.baseURI() = mozilla::void_t();
+    jsParams.baseURI() = mozilla::Nothing();
   }
 
   aParams = jsParams;
@@ -1248,8 +1249,8 @@ bool nsJSURI::Deserialize(const mozilla::ipc::URIParams& aParams) {
   const JSURIParams& jsParams = aParams.get_JSURIParams();
   mozilla::net::nsSimpleURI::Deserialize(jsParams.simpleParams());
 
-  if (jsParams.baseURI().type() != OptionalURIParams::Tvoid_t) {
-    mBaseURI = DeserializeURI(jsParams.baseURI().get_URIParams());
+  if (jsParams.baseURI().isSome()) {
+    mBaseURI = DeserializeURI(jsParams.baseURI().ref());
   } else {
     mBaseURI = nullptr;
   }

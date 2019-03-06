@@ -62,7 +62,6 @@ nsresult GetObjDir(nsIFile** aObjDir);
 #endif /* XP_MACOSX */
 
 namespace ipc {
-class OptionalURIParams;
 class URIParams;
 }  // namespace ipc
 
@@ -85,7 +84,6 @@ class ContentChild final : public PContentChild,
                            public mozilla::ipc::IShmemAllocator {
   typedef mozilla::dom::ClonedMessageData ClonedMessageData;
   typedef mozilla::ipc::FileDescriptor FileDescriptor;
-  typedef mozilla::ipc::OptionalURIParams OptionalURIParams;
   typedef mozilla::ipc::PFileDescriptorSetChild PFileDescriptorSetChild;
   typedef mozilla::ipc::URIParams URIParams;
 
@@ -279,13 +277,13 @@ class ContentChild final : public PContentChild,
       PPSMContentDownloaderChild* aDownloader);
 
   PExternalHelperAppChild* AllocPExternalHelperAppChild(
-      const OptionalURIParams& uri,
+      const Maybe<URIParams>& uri,
       const Maybe<mozilla::net::LoadInfoArgs>& aLoadInfoArgs,
       const nsCString& aMimeContentType, const nsCString& aContentDisposition,
       const uint32_t& aContentDispositionHint,
       const nsString& aContentDispositionFilename, const bool& aForceSave,
       const int64_t& aContentLength, const bool& aWasFileChannel,
-      const OptionalURIParams& aReferrer, PBrowserChild* aBrowser);
+      const Maybe<URIParams>& aReferrer, PBrowserChild* aBrowser);
 
   bool DeallocPExternalHelperAppChild(PExternalHelperAppChild* aService);
 
@@ -450,9 +448,9 @@ class ContentChild final : public PContentChild,
 
   mozilla::ipc::IPCResult RecvUpdateWindow(const uintptr_t& aChildId);
 
-  mozilla::ipc::IPCResult RecvDomainSetChanged(
-      const uint32_t& aSetType, const uint32_t& aChangeType,
-      const OptionalURIParams& aDomain);
+  mozilla::ipc::IPCResult RecvDomainSetChanged(const uint32_t& aSetType,
+                                               const uint32_t& aChangeType,
+                                               const Maybe<URIParams>& aDomain);
 
   mozilla::ipc::IPCResult RecvShutdown();
 

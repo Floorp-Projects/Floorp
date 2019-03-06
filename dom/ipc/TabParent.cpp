@@ -3393,7 +3393,7 @@ mozilla::ipc::IPCResult TabParent::RecvShowCanvasPermissionPrompt(
 }
 
 mozilla::ipc::IPCResult TabParent::RecvVisitURI(
-    const URIParams& aURI, const OptionalURIParams& aLastVisitedURI,
+    const URIParams& aURI, const Maybe<URIParams>& aLastVisitedURI,
     const uint32_t& aFlags) {
   nsCOMPtr<nsIURI> ourURI = DeserializeURI(aURI);
   if (!ourURI) {

@@ -424,7 +424,7 @@ nsresult LoadInfoToLoadInfoArgs(nsILoadInfo* aLoadInfo,
         Some(topLevelStorageAreaPrincipalInfoTemp);
   }
 
-  OptionalURIParams optionalResultPrincipalURI = mozilla::void_t();
+  Maybe<URIParams> optionalResultPrincipalURI;
   nsCOMPtr<nsIURI> resultPrincipalURI;
   Unused << aLoadInfo->GetResultPrincipalURI(
       getter_AddRefs(resultPrincipalURI));
@@ -573,7 +573,7 @@ nsresult LoadInfoArgsToLoadInfo(
   }
 
   nsCOMPtr<nsIURI> resultPrincipalURI;
-  if (loadInfoArgs.resultPrincipalURI().type() != OptionalURIParams::Tvoid_t) {
+  if (loadInfoArgs.resultPrincipalURI().isSome()) {
     resultPrincipalURI = DeserializeURI(loadInfoArgs.resultPrincipalURI());
     NS_ENSURE_TRUE(resultPrincipalURI, NS_ERROR_UNEXPECTED);
   }
