@@ -73,8 +73,8 @@ inline NativeObject* NewObjectCache::newObjectFromHit(JSContext* cx,
   }
 
   NativeObject* obj = static_cast<NativeObject*>(
-      Allocate<JSObject, NoGC>(cx, entry->kind,
-                               /* nDynamicSlots = */ 0, heap, group->clasp()));
+      AllocateObject<NoGC>(cx, entry->kind, /* nDynamicSlots = */ 0,
+                           heap, group->clasp()));
   if (!obj) {
     return nullptr;
   }
