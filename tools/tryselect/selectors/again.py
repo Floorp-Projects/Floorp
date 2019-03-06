@@ -65,7 +65,7 @@ def migrate_old_history():
         shutil.rmtree(old_history_dir)
 
 
-def run_try_again(index=0, purge=False, list_configs=False, message='{msg}', **pushargs):
+def run(index=0, purge=False, list_configs=False, message='{msg}', **pushargs):
     # TODO: Remove after January 1st, 2020.
     migrate_old_history()
 

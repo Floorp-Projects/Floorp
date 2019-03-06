@@ -13,7 +13,7 @@ import mozpack.path as mozpath
 from moztest.resolve import TestResolver
 
 from ..cli import BaseTryParser
-from ..push import push_to_try
+from ..push import build, push_to_try
 
 here = os.path.abspath(os.path.dirname(__file__))
 
@@ -310,10 +310,9 @@ class AutoTry(object):
         "xpcshell",
     ]
 
-    def __init__(self, topsrcdir, mach_context):
-        self.topsrcdir = topsrcdir
+    def __init__(self):
+        self.topsrcdir = build.topsrcdir
         self._resolver = None
-        self.mach_context = mach_context
 
     @property
     def resolver(self):
@@ -606,3 +605,8 @@ class AutoTry(object):
 
         push_to_try('syntax', kwargs["message"].format(msg=msg), push=kwargs['push'],
                     closed_tree=kwargs["closed_tree"])
+
+
+def run(**kwargs):
+    at = AutoTry()
+    return at.run(**kwargs)

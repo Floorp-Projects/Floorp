@@ -147,6 +147,13 @@ class TrySelect(MachCommandBase):
 
         return kwargs
 
+    def run(self, **kwargs):
+        if 'preset' in self.parser.common_groups:
+            kwargs = self.handle_presets(**kwargs)
+
+        mod = importlib.import_module('tryselect.selectors.{}'.format(self.subcommand))
+        return mod.run(**kwargs)
+
     @Command('try',
              category='ci',
              description='Push selected tasks to the try server',
@@ -219,15 +226,15 @@ class TrySelect(MachCommandBase):
 
           ^start 'exact | !ignore fuzzy end$
         """
-        from tryselect.selectors.fuzzy import run_fuzzy_try
         if kwargs.get('save') and not kwargs.get('query'):
             # If saving preset without -q/--query, allow user to use the
             # interface to build the query.
             kwargs_copy = kwargs.copy()
             kwargs_copy['push'] = False
-            kwargs['query'] = run_fuzzy_try(**kwargs_copy)
+            kwargs_copy['save'] = None
+            kwargs['query'] = self.run(save_query=True, **kwargs_copy)
 
-        return run_fuzzy_try(**self.handle_presets(**kwargs))
+        return self.run(**kwargs)
 
     @SubCommand('try',
                 'chooser',
@@ -245,8 +252,7 @@ class TrySelect(MachCommandBase):
         self._activate_virtualenv()
         self.virtualenv_manager.install_pip_package('flask')
 
-        from tryselect.selectors.chooser import run_try_chooser
-        return run_try_chooser(**kwargs)
+        return self.run(**kwargs)
 
     @SubCommand('try',
                 'again',
@@ -254,8 +260,7 @@ class TrySelect(MachCommandBase):
                             'push again.',
                 parser=get_parser('again'))
     def try_again(self, **kwargs):
-        from tryselect.selectors.again import run_try_again
-        return run_try_again(**kwargs)
+        return self.run(**kwargs)
 
     @SubCommand('try',
                 'empty',
@@ -270,8 +275,7 @@ class TrySelect(MachCommandBase):
         via Treeherder's Add New Jobs feature, located in the per-push
         menu.
         """
-        from tryselect.selectors.empty import run_empty_try
-        return run_empty_try(**kwargs)
+        return self.run(**kwargs)
 
     @SubCommand('try',
                 'syntax',
@@ -315,9 +319,6 @@ class TrySelect(MachCommandBase):
         (installable from mach vcs-setup --git).
 
         """
-        from tryselect.selectors.syntax import AutoTry
-
-        kwargs = self.handle_presets(**kwargs)
         try:
             if self.substs.get("MOZ_ARTIFACT_BUILDS"):
                 kwargs['local_artifact_build'] = True
@@ -332,8 +333,7 @@ class TrySelect(MachCommandBase):
             print(CONFIG_ENVIRONMENT_NOT_FOUND)
             sys.exit(1)
 
-        at = AutoTry(self.topsrcdir, self._mach_context)
-        return at.run(**kwargs)
+        return self.run(**kwargs)
 
     @SubCommand('try',
                 'coverage',
@@ -342,8 +342,7 @@ class TrySelect(MachCommandBase):
     def try_coverage(self, **kwargs):
         """Select which tasks to use using coverage data.
         """
-        from tryselect.selectors.coverage import run_coverage_try
-        return run_coverage_try(**kwargs)
+        return self.run(**kwargs)
 
     @SubCommand('try',
                 'release',
@@ -352,5 +351,4 @@ class TrySelect(MachCommandBase):
     def try_release(self, **kwargs):
         """Push the current tree to try, configured for a staging release.
         """
-        from tryselect.selectors.release import run_try_release
-        return run_try_release(**kwargs)
+        return self.run(**kwargs)

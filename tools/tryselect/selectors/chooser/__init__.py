@@ -22,9 +22,9 @@ class ChooserParser(BaseTryParser):
     templates = ['artifact', 'env', 'rebuild', 'chemspill-prio', 'gecko-profile']
 
 
-def run_try_chooser(update=False, query=None, templates=None, full=False, parameters=None,
-                    save=False, preset=None, mod_presets=False, push=True, message='{msg}',
-                    **kwargs):
+def run(update=False, query=None, templates=None, full=False, parameters=None,
+        save=False, preset=None, mod_presets=False, push=True, message='{msg}',
+        **kwargs):
     from .app import create_application
     check_working_directory(push)
 

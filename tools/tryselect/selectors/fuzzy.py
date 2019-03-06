@@ -108,7 +108,7 @@ class FuzzyParser(BaseTryParser):
     templates = ['artifact', 'path', 'env', 'rebuild', 'chemspill-prio', 'gecko-profile']
 
 
-def run(cmd, cwd=None):
+def run_cmd(cmd, cwd=None):
     is_win = platform.system() == 'Windows'
     return subprocess.call(cmd, cwd=cwd, shell=True if is_win else False)
 
@@ -119,7 +119,7 @@ def run_fzf_install_script(fzf_path):
     else:
         cmd = ['./install', '--bin']
 
-    if run(cmd, cwd=fzf_path):
+    if run_cmd(cmd, cwd=fzf_path):
         print(FZF_INSTALL_FAILED)
         sys.exit(1)
 
@@ -144,7 +144,7 @@ def fzf_bootstrap(update=False):
         return find_executable('fzf', os.path.join(fzf_path, 'bin'))
 
     if update:
-        ret = run(['git', 'pull'], cwd=fzf_path)
+        ret = run_cmd(['git', 'pull'], cwd=fzf_path)
         if ret:
             print("Update fzf failed.")
             sys.exit(1)
@@ -203,8 +203,8 @@ def filter_target_task(task):
     return not any(re.search(pattern, task) for pattern in TARGET_TASK_FILTERS)
 
 
-def run_fuzzy_try(update=False, query=None, templates=None, full=False, parameters=None,
-                  save=False, push=True, message='{msg}', paths=None, **kwargs):
+def run(update=False, query=None, templates=None, full=False, parameters=None, save_query=False,
+        push=True, message='{msg}', paths=None, **kwargs):
     fzf = fzf_bootstrap(update)
 
     if not fzf:
@@ -261,7 +261,7 @@ def run_fuzzy_try(update=False, query=None, templates=None, full=False, paramete
         print("no tasks selected")
         return
 
-    if save:
+    if save_query:
         return queries
 
     # build commit message
