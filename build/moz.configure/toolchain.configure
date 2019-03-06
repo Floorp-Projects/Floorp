@@ -1545,6 +1545,7 @@ set_config('PGO_JARLOG_PATH', depends_if('--with-pgo-jarlog')(lambda p: p))
 # ==============================================================
 
 js_option('--enable-lto',
+          env='MOZ_LTO',
           nargs='?',
           choices=('full', 'thin'),
           help='Enable LTO')
