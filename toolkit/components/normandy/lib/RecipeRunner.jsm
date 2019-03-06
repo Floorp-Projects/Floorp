@@ -50,7 +50,7 @@ const PREFS_TO_WATCH = [
 
 XPCOMUtils.defineLazyGetter(this, "gRemoteSettingsClient", () => {
   return RemoteSettings(REMOTE_SETTINGS_COLLECTION, {
-    filterFunc: async recipe => RecipeRunner.checkFilter(recipe) ? recipe : null,
+    filterFunc: async recipe => (await RecipeRunner.checkFilter(recipe)) ? recipe : null,
   });
 });
 
@@ -299,13 +299,24 @@ var RecipeRunner = {
    */
   async checkFilter(recipe) {
     const context = this.getFilterContext(recipe);
+    let result;
     try {
-      const result = await FilterExpressions.eval(recipe.filter_expression, context);
-      return !!result;
+      result = await FilterExpressions.eval(recipe.filter_expression, context);
     } catch (err) {
       log.error(`Error checking filter for "${recipe.name}". Filter: [${recipe.filter_expression}]. Error: "${err}"`);
+      Uptake.reportRecipe(recipe, Uptake.RECIPE_FILTER_BROKEN);
       return false;
     }
+
+    if (!result) {
+      // This represents a terminal state for the given recipe, so
+      // report its outcome. Others are reported when executed in
+      // ActionsManager.
+      Uptake.reportRecipe(recipe, Uptake.RECIPE_DIDNT_MATCH_FILTER);
+      return false;
+    }
+
+    return true;
   },
 
   /**
@@ -334,5 +345,19 @@ var RecipeRunner = {
       Services.prefs.setCharPref(API_URL_PREF, oldApiUrl);
       this.clearCaches();
     }
+  },
+
+  /**
+   * Offer a mechanism to get access to the lazily-instantiated
+   * gRemoteSettingsClient, because if someone instantiates it
+   * themselves, it won't have the options we provided in this module,
+   * and it will prevent instantiation by this module later.
+   *
+   * This is only meant to be used in testing, where it is a
+   * convenient hook to store data in the underlying remote-settings
+   * collection.
+   */
+  get _remoteSettingsClientForTesting() {
+    return gRemoteSettingsClient;
   },
 };
