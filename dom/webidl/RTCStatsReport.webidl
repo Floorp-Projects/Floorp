@@ -33,46 +33,57 @@ dictionary RTCRtpStreamStats : RTCStats {
   DOMString mediaType;
   DOMString kind;
   DOMString transportId;
-  DOMString codecId;
-  // Local only measurements, RTCP related but not communicated via RTCP. Not
-  // present in RTCP case. See Bug 1367562
+};
+
+dictionary RTCReceivedRtpStreamStats: RTCRtpStreamStats {
+  unsigned long packetsReceived;
+  unsigned long packetsLost;
+  double jitter;
+  unsigned long discardedPackets; // non-standard alias for packetsDiscarded
+  unsigned long packetsDiscarded;
+};
+
+dictionary RTCInboundRtpStreamStats : RTCReceivedRtpStreamStats {
+  DOMString remoteId;
+  unsigned long framesDecoded;
+  unsigned long long bytesReceived;
+  unsigned long nackCount;
   unsigned long firCount;
   unsigned long pliCount;
-  unsigned long nackCount;
-  unsigned long long qpSum;
-
-  DOMString remoteId; // See Bug 1515716
-  DOMString localId;  // See Bug 1515716
-  DOMString mediaTrackId;
-
-  // Video encoder/decoder measurements, not present in RTCP case
-  double bitrateMean;
-  double bitrateStdDev;
-  double framerateMean;
-  double framerateStdDev;
+  double bitrateMean; // deprecated, to be removed in Bug 1367562
+  double bitrateStdDev; // deprecated, to be removed in Bug 1367562
+  double framerateMean; // deprecated, to be removed in Bug 1367562
+  double framerateStdDev; // deprecated, to be removed in Bug 1367562
 };
 
-dictionary RTCInboundRTPStreamStats : RTCRtpStreamStats {
-  unsigned long packetsReceived;
-  unsigned long long bytesReceived;
-  double jitter;
-  unsigned long packetsLost;
+dictionary RTCRemoteInboundRtpStreamStats : RTCReceivedRtpStreamStats {
+  DOMString localId;
+  long long bytesReceived; // Deprecated, to be removed in Bug 1529405
   double roundTripTime;
-
-  // Video decoder measurement, not present in RTCP case
-  unsigned long discardedPackets;
-  unsigned long framesDecoded;
 };
 
-
-dictionary RTCOutboundRTPStreamStats : RTCRtpStreamStats {
+dictionary RTCSentRtpStreamStats : RTCRtpStreamStats {
   unsigned long packetsSent;
   unsigned long long bytesSent;
-  double targetBitrate;  // config encoder bitrate target of this SSRC in bits/s
+};
 
-  // Video encoder measurements, not present in RTCP case
-  unsigned long droppedFrames;
+dictionary RTCOutboundRtpStreamStats : RTCSentRtpStreamStats {
+  DOMString remoteId;
   unsigned long framesEncoded;
+  unsigned long long qpSum;
+  unsigned long nackCount;
+  unsigned long firCount;
+  unsigned long pliCount;
+  double bitrateMean; // deprecated, to be removed in Bug 1367562
+  double bitrateStdDev; // deprecated, to be removed in Bug 1367562
+  double framerateMean; // deprecated, to be removed in Bug 1367562
+  double framerateStdDev; // deprecated, to be removed in Bug 1367562
+  unsigned long droppedFrames; // non-spec alias for framesDropped
+  							   // to be deprecated in Bug 1225720
+};
+
+dictionary RTCRemoteOutboundRtpStreamStats : RTCSentRtpStreamStats {
+  DOMString localId;
 };
 
 dictionary RTCMediaStreamTrackStats : RTCStats {
@@ -177,27 +188,29 @@ dictionary RTCCodecStats : RTCStats {
 // to be received from c++
 
 dictionary RTCStatsReportInternal {
-  DOMString                               pcid = "";
-  sequence<RTCInboundRTPStreamStats>      inboundRTPStreamStats;
-  sequence<RTCOutboundRTPStreamStats>     outboundRTPStreamStats;
-  sequence<RTCRTPContributingSourceStats> rtpContributingSourceStats;
-  sequence<RTCMediaStreamTrackStats>      mediaStreamTrackStats;
-  sequence<RTCMediaStreamStats>           mediaStreamStats;
-  sequence<RTCTransportStats>             transportStats;
-  sequence<RTCIceComponentStats>          iceComponentStats;
-  sequence<RTCIceCandidatePairStats>      iceCandidatePairStats;
-  sequence<RTCIceCandidateStats>          iceCandidateStats;
-  sequence<RTCCodecStats>                 codecStats;
-  DOMString                               localSdp;
-  DOMString                               remoteSdp;
-  DOMHighResTimeStamp                     timestamp;
-  unsigned long                           iceRestarts;
-  unsigned long                           iceRollbacks;
-  boolean                                 offerer; // Is the PC the offerer
-  boolean                                 closed; // Is the PC now closed
-  sequence<RTCIceCandidateStats>          trickledIceCandidateStats;
-  sequence<DOMString>                     rawLocalCandidates;
-  sequence<DOMString>                     rawRemoteCandidates;
+  DOMString                                 pcid = "";
+  sequence<RTCInboundRtpStreamStats>        inboundRtpStreamStats;
+  sequence<RTCOutboundRtpStreamStats>       outboundRtpStreamStats;
+  sequence<RTCRemoteInboundRtpStreamStats>  remoteInboundRtpStreamStats;
+  sequence<RTCRemoteOutboundRtpStreamStats> remoteOutboundRtpStreamStats;
+  sequence<RTCRTPContributingSourceStats>   rtpContributingSourceStats;
+  sequence<RTCMediaStreamTrackStats>        mediaStreamTrackStats;
+  sequence<RTCMediaStreamStats>             mediaStreamStats;
+  sequence<RTCTransportStats>               transportStats;
+  sequence<RTCIceComponentStats>            iceComponentStats;
+  sequence<RTCIceCandidatePairStats>        iceCandidatePairStats;
+  sequence<RTCIceCandidateStats>            iceCandidateStats;
+  sequence<RTCCodecStats>                   codecStats;
+  DOMString                                 localSdp;
+  DOMString                                 remoteSdp;
+  DOMHighResTimeStamp                       timestamp;
+  unsigned long                             iceRestarts;
+  unsigned long                             iceRollbacks;
+  boolean                                   offerer; // Is the PC the offerer
+  boolean                                   closed; // Is the PC now closed
+  sequence<RTCIceCandidateStats>            trickledIceCandidateStats;
+  sequence<DOMString>                       rawLocalCandidates;
+  sequence<DOMString>                       rawRemoteCandidates;
 };
 
 [Pref="media.peerconnection.enabled",
