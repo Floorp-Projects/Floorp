@@ -993,36 +993,41 @@ AntiTrackingCommon::SaveFirstPartyStorageAccessGrantedForOriginOnParentProcess(
     rv = permManager->AddFromPrincipal(
         aTrackingPrincipal, NS_LITERAL_CSTRING("cookie"),
         nsICookiePermission::ACCESS_ALLOW, expirationType, when);
-  } else {
-    uint32_t privateBrowsingId = 0;
-    rv = aParentPrincipal->GetPrivateBrowsingId(&privateBrowsingId);
-    if ((!NS_WARN_IF(NS_FAILED(rv)) && privateBrowsingId > 0) ||
-        (aAllowMode == eAllowAutoGrant)) {
-      // If we are coming from a private window or are automatically granting a
-      // permission, make sure to store a session-only permission which won't
-      // get persisted to disk.
-      expirationType = nsIPermissionManager::EXPIRE_SESSION;
-      when = 0;
-    }
-
-    nsAutoCString type;
-    CreatePermissionKey(aTrackingOrigin, aGrantedOrigin, type);
-
-    LOG(
-        ("Computed permission key: %s, expiry: %u, proceeding to save in the "
-         "permission manager",
-         type.get(), expirationTime));
-
-    rv = permManager->AddFromPrincipal(aParentPrincipal, type,
-                                       nsIPermissionManager::ALLOW_ACTION,
-                                       expirationType, when);
-
-    if (NS_SUCCEEDED(rv) && (aAllowMode == eAllowAutoGrant)) {
-      // Make sure temporary access grants do not survive more than 24 hours.
-      TemporaryAccessGrantObserver::Create(permManager, aParentPrincipal, type);
-    }
+    Unused << NS_WARN_IF(NS_FAILED(rv));
   }
+
+  // We must grant the storage permission also if we allow it for any site
+  // because the setting 'cookie' permission is not applied to existing
+  // documents (See CookieSettings documentation).
+
+  uint32_t privateBrowsingId = 0;
+  rv = aParentPrincipal->GetPrivateBrowsingId(&privateBrowsingId);
+  if ((!NS_WARN_IF(NS_FAILED(rv)) && privateBrowsingId > 0) ||
+      (aAllowMode == eAllowAutoGrant)) {
+    // If we are coming from a private window or are automatically granting a
+    // permission, make sure to store a session-only permission which won't
+    // get persisted to disk.
+    expirationType = nsIPermissionManager::EXPIRE_SESSION;
+    when = 0;
+  }
+
+  nsAutoCString type;
+  CreatePermissionKey(aTrackingOrigin, aGrantedOrigin, type);
+
+  LOG(
+      ("Computed permission key: %s, expiry: %u, proceeding to save in the "
+       "permission manager",
+       type.get(), expirationTime));
+
+  rv = permManager->AddFromPrincipal(aParentPrincipal, type,
+                                     nsIPermissionManager::ALLOW_ACTION,
+                                     expirationType, when);
   Unused << NS_WARN_IF(NS_FAILED(rv));
+
+  if (NS_SUCCEEDED(rv) && (aAllowMode == eAllowAutoGrant)) {
+    // Make sure temporary access grants do not survive more than 24 hours.
+    TemporaryAccessGrantObserver::Create(permManager, aParentPrincipal, type);
+  }
 
   LOG(("Result: %s", NS_SUCCEEDED(rv) ? "success" : "failure"));
   return FirstPartyStorageAccessGrantPromise::CreateAndResolve(rv, __func__);
