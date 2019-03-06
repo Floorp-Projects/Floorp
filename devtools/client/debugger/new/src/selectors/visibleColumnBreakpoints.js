@@ -3,24 +3,28 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-import { groupBy, sortedUniqBy } from "lodash";
+import { groupBy } from "lodash";
 import { createSelector } from "reselect";
 
 import {
   getViewport,
+  getSource,
   getSelectedSource,
-  getBreakpointPositions
+  getBreakpointPositions,
+  getBreakpointPositionsForSource
 } from "../selectors";
 import { getVisibleBreakpoints } from "./visibleBreakpoints";
-import { makeBreakpointId } from "../utils/breakpoint";
-import type { Selector } from "../reducers/types";
+import { getSelectedLocation } from "../utils/source-maps";
+import type { Selector, State } from "../reducers/types";
 
 import type {
   SourceLocation,
   PartialPosition,
   Breakpoint,
   Range,
-  BreakpointPositions
+  BreakpointPositions,
+  BreakpointPosition,
+  Source
 } from "../types";
 
 export type ColumnBreakpoint = {|
@@ -44,13 +48,20 @@ function inViewport(viewport, location) {
   return viewport && contains(location, viewport);
 }
 
-function groupBreakpoints(breakpoints) {
+function groupBreakpoints(breakpoints, selectedSource) {
   if (!breakpoints) {
     return {};
   }
-  const map: any = groupBy(breakpoints, ({ location }) => location.line);
+  const map: any = groupBy(
+    breakpoints,
+    breakpoint => getSelectedLocation(breakpoint, selectedSource).line
+  );
+
   for (const line in map) {
-    map[line] = groupBy(map[line], ({ location }) => location.column);
+    map[line] = groupBy(
+      map[line],
+      breakpoint => getSelectedLocation(breakpoint, selectedSource).column
+    );
   }
 
   return map;
@@ -65,70 +76,74 @@ function findBreakpoint(location, breakpointMap) {
   }
 }
 
-function getLineCount(columnBreakpoints) {
+function filterByLineCount(positions, selectedSource) {
   const lineCount = {};
-  columnBreakpoints.forEach(({ location: { line } }) => {
+
+  for (const breakpoint of positions) {
+    const { line } = getSelectedLocation(breakpoint, selectedSource);
     if (!lineCount[line]) {
       lineCount[line] = 0;
     }
 
     lineCount[line] = lineCount[line] + 1;
-  });
+  }
 
-  return lineCount;
+  return positions.filter(
+    breakpoint =>
+      lineCount[getSelectedLocation(breakpoint, selectedSource).line] > 1
+  );
 }
 
-export function formatColumnBreakpoints(columnBreakpoints: ColumnBreakpoints) {
-  console.log(
-    "Column Breakpoints\n\n",
-    columnBreakpoints
-      .map(
-        ({ location, breakpoint }) =>
-          `(${location.line}, ${location.column || ""}) ${
-            breakpoint && breakpoint.disabled ? "disabled" : ""
-          }`
-      )
-      .join("\n")
-  );
+function filterVisible(positions, selectedSource, viewport) {
+  return positions.filter(columnBreakpoint => {
+    const location = getSelectedLocation(columnBreakpoint, selectedSource);
+    return inViewport(viewport, location);
+  });
+}
+
+function filterByBreakpoints(positions, selectedSource, breakpointMap) {
+  return positions.filter(position => {
+    const location = getSelectedLocation(position, selectedSource);
+    return breakpointMap[location.line];
+  });
+}
+
+function formatPositions(
+  positions: BreakpointPositions,
+  selectedSource,
+  breakpointMap
+) {
+  return (positions: any).map((position: BreakpointPosition) => {
+    const location = getSelectedLocation(position, selectedSource);
+    return {
+      location,
+      breakpoint: findBreakpoint(location, breakpointMap)
+    };
+  });
 }
 
 export function getColumnBreakpoints(
   positions: ?BreakpointPositions,
   breakpoints: ?(Breakpoint[]),
-  viewport: Range
+  viewport: Range,
+  selectedSource: ?Source
 ) {
   if (!positions) {
     return [];
   }
 
-  const breakpointMap = groupBreakpoints(breakpoints);
-
   // We only want to show a column breakpoint if several conditions are matched
-  // 1. there is a breakpoint on that line
-  // 2. the position is in the current viewport
-  // 4. it is the first breakpoint to appear at that generated location
-  // 5. there is atleast one other breakpoint on that line
+  // - it is the first breakpoint to appear at an the original location
+  // - the position is in the current viewport
+  // - there is atleast one other breakpoint on that line
+  // - there is a breakpoint on that line
+  const breakpointMap = groupBreakpoints(breakpoints, selectedSource);
 
-  let columnBreakpoints = positions.filter(
-    ({ location }) =>
-      breakpointMap[location.line] && inViewport(viewport, location)
-  );
+  positions = filterByLineCount(positions, selectedSource);
+  positions = filterVisible(positions, selectedSource, viewport);
+  positions = filterByBreakpoints(positions, selectedSource, breakpointMap);
 
-  // 4. Only show one column breakpoint per generated location
-  columnBreakpoints = sortedUniqBy(columnBreakpoints, ({ generatedLocation }) =>
-    makeBreakpointId(generatedLocation)
-  );
-
-  // 5. Check that there is atleast one other possible breakpoint on the line
-  const lineCount = getLineCount(columnBreakpoints);
-  columnBreakpoints = columnBreakpoints.filter(
-    ({ location: { line } }) => lineCount[line] > 1
-  );
-
-  return (columnBreakpoints: any).map(({ location }) => ({
-    location,
-    breakpoint: findBreakpoint(location, breakpointMap)
-  }));
+  return formatPositions(positions, selectedSource, breakpointMap);
 }
 
 const getVisibleBreakpointPositions = createSelector(
@@ -146,3 +161,35 @@ export const visibleColumnBreakpoints: Selector<
   getSelectedSource,
   getColumnBreakpoints
 );
+
+export function getFirstBreakpointPosition(
+  state: State,
+  { line, sourceId }: SourceLocation
+) {
+  const positions = getBreakpointPositionsForSource(state, sourceId);
+  const source = getSource(state, sourceId);
+
+  if (!source || !positions) {
+    return;
+  }
+
+  return positions.find(
+    position => getSelectedLocation(position, source).line == line
+  );
+}
+
+export function getFirstVisibleBreakpointPosition(
+  state: State,
+  { line }: SourceLocation
+) {
+  const positions = getVisibleBreakpointPositions(state);
+  const selectedSource = getSelectedSource(state);
+
+  if (!selectedSource || !positions) {
+    return;
+  }
+
+  return positions.find(
+    position => getSelectedLocation(position, selectedSource).line == line
+  );
+}
