@@ -141,6 +141,8 @@ def use_artifact(config, jobs):
     if config.params['try_mode'] == 'try_task_config':
         use_artifact = config.params['try_task_config'] \
             .get('templates', {}).get('artifact', {}).get('enabled')
+    elif config.params['try_mode'] == 'try_option_syntax':
+        use_artifact = config.params['try_options'].get('artifact')
     else:
         use_artifact = False
     for job in jobs:

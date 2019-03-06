@@ -89,7 +89,7 @@ class FxDesktopBuild(BuildScript, TryToolsMixin, object):
         """grab properties if we are running this in automation"""
         super(FxDesktopBuild, self)._pre_config_lock(rw_config)
         c = self.config
-        if self.try_message_has_flag('artifact') or os.environ.get('USE_ARTIFACT'):
+        if os.environ.get('USE_ARTIFACT'):
             # Not all jobs that look like builds can be made into artifact
             # builds (for example, various SAN builds will not make sense as
             # artifact builds).  By default, only a vanilla debug or opt build
