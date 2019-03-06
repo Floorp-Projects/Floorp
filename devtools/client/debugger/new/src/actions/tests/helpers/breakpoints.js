@@ -11,12 +11,12 @@ export function mockPendingBreakpoint(overrides: Object = {}) {
       sourceId: "",
       sourceUrl: sourceUrl || "http://localhost:8000/examples/bar.js",
       line: line || 5,
-      column: column || undefined
+      column: column || 1
     },
     generatedLocation: {
       sourceUrl: sourceUrl || "http://localhost:8000/examples/bar.js",
       line: line || 5,
-      column: column || undefined
+      column: column || 1
     },
     astLocation: {
       name: undefined,

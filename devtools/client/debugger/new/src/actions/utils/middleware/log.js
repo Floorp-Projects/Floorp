@@ -10,7 +10,7 @@ import type { ThunkArgs } from "../../types";
 
 const blacklist = [
   "SET_POPUP_OBJECT_PROPERTIES",
-  "SET_PAUSE_POINTS",
+  "ADD_BREAKPOINT_POSITIONS",
   "SET_SYMBOLS",
   "OUT_OF_SCOPE_LOCATIONS",
   "MAP_SCOPES",
@@ -18,7 +18,9 @@ const blacklist = [
   "ADD_SCOPES",
   "IN_SCOPE_LINES",
   "REMOVE_BREAKPOINT",
-  "NODE_PROPERTIES_LOADED"
+  "NODE_PROPERTIES_LOADED",
+  "SET_FOCUSED_SOURCE_ITEM",
+  "NODE_EXPAND"
 ];
 
 function cloneAction(action: any) {

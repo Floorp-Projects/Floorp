@@ -230,7 +230,8 @@ describe("sources", () => {
       {
         getOriginalLocation: async location => ({ ...location, line: 12 }),
         getGeneratedLocation: async location => ({ ...location, line: 12 }),
-        getOriginalSourceText: async () => ({ source: "" })
+        getOriginalSourceText: async () => ({ source: "" }),
+        getGeneratedRangesForOriginal: async () => []
       }
     );
 
@@ -254,10 +255,16 @@ describe("sources", () => {
     const { dispatch, getState } = createStore(
       sourceThreadClient,
       {},
-      { getOriginalLocation: async location => ({ ...location, line: 12 }) }
+      {
+        getOriginalLocation: async location => ({ ...location, line: 12 }),
+        getGeneratedRangesForOriginal: async () => [],
+        getOriginalSourceText: async () => ({ source: "" })
+      }
     );
 
+    await dispatch(actions.newSource(makeSource("base.js")));
     const baseSource = makeOriginalSource("base.js");
+
     await dispatch(actions.newSource(baseSource));
     await dispatch(actions.selectSource(baseSource.id));
 
