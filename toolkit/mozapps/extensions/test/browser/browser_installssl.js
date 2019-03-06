@@ -106,14 +106,6 @@ function run_install_tests(callback) {
   run_next_install_test();
 }
 
-// Add overrides for the bad certificates
-function addCertOverrides() {
-  addCertOverride("nocert.example.com", Ci.nsICertOverrideService.ERROR_MISMATCH);
-  addCertOverride("self-signed.example.com", Ci.nsICertOverrideService.ERROR_UNTRUSTED);
-  addCertOverride("untrusted.example.com", Ci.nsICertOverrideService.ERROR_UNTRUSTED);
-  addCertOverride("expired.example.com", Ci.nsICertOverrideService.ERROR_TIME);
-}
-
 // Runs tests with built-in certificates required, no certificate exceptions
 // and no hashes
 add_test(function() {
@@ -240,11 +232,15 @@ add_test(function() {
   run_install_tests(run_next_test);
 });
 
+// Set up overrides for the next test.
+add_test(() => {
+  addCertOverrides().then(run_next_test);
+});
+
 // Runs tests with built-in certificates required, all certificate exceptions
 // and no hashes
 add_test(function() {
   Services.prefs.clearUserPref(PREF_INSTALL_REQUIREBUILTINCERTS);
-  addCertOverrides();
 
   // Tests that a simple install works as expected.
   add_install_test(HTTP, null, SUCCESS);
