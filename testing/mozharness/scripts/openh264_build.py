@@ -149,7 +149,7 @@ class OpenH264Build(TransferMixin, VCSScript, TooltoolMixin):
             self.error('missing a required key.')
 
     def query_package_name(self):
-        if self.config['arch'] == "x64":
+        if self.config['arch'] == 'x64':
             bits = '64'
         else:
             bits = '32'
@@ -164,10 +164,13 @@ class OpenH264Build(TransferMixin, VCSScript, TooltoolMixin):
                     version=version, bits=bits)
             else:
                 return 'openh264-linux{bits}-{version}.zip'.format(version=version, bits=bits)
-        elif sys.platform == 'darwin':
-            return 'openh264-macosx{bits}-{version}.zip'.format(version=version, bits=bits)
         elif sys.platform == 'win32':
-            return 'openh264-win{bits}-{version}.zip'.format(version=version, bits=bits)
+            if self.config['arch'] == 'aarch64':
+                return 'openh264-win64-aarch64-{version}.zip'.format(
+                    version=version)
+            else:
+                return 'openh264-win{bits}-{version}.zip'.format(
+                    version=version, bits=bits)
         self.fatal("can't determine platform")
 
     def query_make_params(self):
@@ -210,6 +213,10 @@ class OpenH264Build(TransferMixin, VCSScript, TooltoolMixin):
             if self.config['arch'] == 'x86':
                 retval.append("ARCH=x86")
                 retval.append("CFLAGS=-m32")
+            elif self.config['arch'] == 'aarch64':
+                retval.append("ARCH=arm64")
+                retval.append("CFLAGS=--target=aarch64-windows-msvc")
+                retval.append("CXX_LINK_O=-nologo --target=aarch64-windows-msvc -Fe$@")
             else:
                 retval.append("ARCH=x86_64")
         else:
@@ -263,6 +270,24 @@ class OpenH264Build(TransferMixin, VCSScript, TooltoolMixin):
             self.copytree(os.path.join(dirs['abs_work_dir'], 'src', 'dom',
                                        'media', 'gmp', 'gmp-api'),
                           os.path.join(repo_dir, 'gmp-api'))
+
+            # We need gas-preprocessor.pl for arm64 builds
+            if self.config['arch'] == 'aarch64':
+                openh264_dir = os.path.join(dirs['abs_work_dir'], 'openh264')
+                self.download_file(('https://raw.githubusercontent.com/libav/'
+                                    'gas-preprocessor/c2bc63c96678d9739509e58'
+                                    '7aa30c94bdc0e636d/gas-preprocessor.pl'),
+                                   parent_dir=openh264_dir)
+                self.chmod(os.path.join(openh264_dir, 'gas-preprocessor.pl'),
+                           744)
+
+                # gas-preprocessor.pl expects cpp to exist
+                # os.symlink is not available on Windows until we switch to
+                # Python 3.
+                os.system('ln -s %s %s' % (
+                          os.path.join(dirs['abs_work_dir'], 'src', 'clang',
+                                       'bin', 'clang.exe'),
+                          os.path.join(openh264_dir, 'cpp')))
             return 0
 
         repos = [
