@@ -1752,6 +1752,14 @@ VARCACHE_PREF(
   bool, true
 )
 
+// Allow CookieSettings to be unblocked for channels without a document.
+// This is for testing only.
+VARCACHE_PREF(
+  "network.cookieSettings.unblocked_for_testing",
+   network_cookieSettings_unblocked_for_testing,
+  bool, false
+)
+
 VARCACHE_PREF(
   "network.predictor.enable-hover-on-ssl",
    network_predictor_enable_hover_on_ssl,
