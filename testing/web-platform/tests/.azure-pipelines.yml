@@ -10,9 +10,7 @@
 # project is required:
 #  - The "Build pull requests from forks of this repository" setting must be
 #    enabled: https://docs.microsoft.com/en-us/azure/devops/pipelines/repos/github#validate-contributions-from-forks
-#  - A scheduled build needs to be set up for the the epochs/daily branch.
-#  - To get results from scheduled builds into wpt.fyi, a service connection
-#    named wpt.fyi with URL https://wpt.fyi is needed.
+#  - A scheduled build needs to be set up for one of the epochs/* branches.
 #  - Self-hosted agents for Windows 10 are used:
 #    - 'Hosted Windows Client' is the latest Windows 10
 #    - 'Hosted Windows Client Next' is Windows 10 Insider Preview
@@ -201,7 +199,9 @@ jobs:
 # documentation at the top of this file for required setup.
 - job: results_safari_preview
   displayName: 'all tests (Safari Technology Preview)'
-  condition: eq(variables['Build.Reason'], 'Schedule')
+  condition: |
+    or(eq(variables['Build.Reason'], 'Schedule'),
+       and(eq(variables['Build.Reason'], 'Manual'), variables['run_all_safari_preview']))
   strategy:
     parallel: 4 # chosen to make runtime ~2h
   timeoutInMinutes: 360
