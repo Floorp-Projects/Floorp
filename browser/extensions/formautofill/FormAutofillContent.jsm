@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/*
+/**
  * Form Autofill content process module.
  */
 
@@ -183,6 +183,10 @@ AutofillProfileAutoCompleteSearch.prototype = {
         // none of form autofill result will be cached in other places and make the
         // result out of sync.
         autocompleteController.resetInternalState();
+      } else {
+        // Clear the cache so that we don't try to autofill from it after falling
+        // back to form history.
+        ProfileAutocomplete.lastProfileAutoCompleteResult = null;
       }
     });
   },
