@@ -30,9 +30,11 @@ import mozilla.components.service.fxa.Profile
 import mozilla.components.support.ktx.android.graphics.toDataUri
 import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.FenixApplication
+import org.mozilla.fenix.HomeActivity
+import org.mozilla.fenix.BrowserDirection
+import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.getPreferenceKey
 import org.mozilla.fenix.ext.requireComponents
-import org.mozilla.fenix.R
 import org.mozilla.fenix.R.string.pref_key_leakcanary
 import org.mozilla.fenix.R.string.pref_key_feedback
 import org.mozilla.fenix.R.string.pref_key_help
@@ -129,16 +131,13 @@ class SettingsFragment : PreferenceFragmentCompat(), CoroutineScope, AccountObse
     private fun getClickListenerForSignIn(): OnPreferenceClickListener {
         return OnPreferenceClickListener {
             requireComponents.services.accountsAuthFeature.beginAuthentication()
-            // TODO the "back button" behaviour here is pretty poor. The sign-in web content populates session history,
+            // TODO The sign-in web content populates session history,
             // so pressing "back" after signing in won't take us back into the settings screen, but rather up the
             // session history stack.
             // We could auto-close this tab once we get to the end of the authentication process?
             // Via an interceptor, perhaps.
             view?.let {
-                Navigation.findNavController(it)
-                    .navigate(
-                        SettingsFragmentDirections.actionGlobalBrowser(null)
-                    )
+                (activity as HomeActivity).openToBrowser(null, BrowserDirection.FromHome)
             }
             true
         }
@@ -225,8 +224,7 @@ class SettingsFragment : PreferenceFragmentCompat(), CoroutineScope, AccountObse
     private fun navigateToSettingsArticle() {
         val newSession = requireComponents.core.sessionManager.selectedSession?.id
         view?.let {
-            Navigation.findNavController(it)
-                .navigate(SettingsFragmentDirections.actionGlobalBrowser(newSession))
+            (activity as HomeActivity).openToBrowser(newSession, BrowserDirection.FromSettings)
         }
     }
 

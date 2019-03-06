@@ -28,6 +28,7 @@ import mozilla.components.feature.session.bundling.SessionBundleStorage
 import org.mozilla.fenix.BrowsingModeManager
 import org.mozilla.fenix.DefaultThemeManager
 import org.mozilla.fenix.HomeActivity
+import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.home.sessions.ArchivedSession
@@ -257,7 +258,8 @@ class HomeFragment : Fragment() {
             override fun onClick(widget: View?) {
                 requireComponents.useCases.tabsUseCases.addPrivateTab
                     .invoke(SupportUtils.getSumoURLForTopic(context!!, SupportUtils.SumoTopic.PRIVATE_BROWSING_MYTHS))
-                (activity as HomeActivity).openToBrowser(requireComponents.core.sessionManager.selectedSession?.id)
+                (activity as HomeActivity).openToBrowser(requireComponents.core.sessionManager.selectedSession?.id,
+                    BrowserDirection.FromHome)
             }
         }
         val textWithLink = SpannableString(descriptionText).apply {
@@ -354,7 +356,6 @@ class HomeFragment : Fragment() {
         const val toolbarPaddingDp = 12f
         const val firstKeyTriggerFrame = 55
         const val secondKeyTriggerFrame = 90
-
         const val temporaryNumberOfSessions = 25
     }
 }

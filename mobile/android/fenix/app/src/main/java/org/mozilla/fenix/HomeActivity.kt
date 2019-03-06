@@ -24,6 +24,9 @@ import mozilla.components.support.ktx.kotlin.isUrl
 import mozilla.components.support.ktx.kotlin.toNormalizedUrl
 import mozilla.components.support.utils.SafeIntent
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.home.HomeFragmentDirections
+import org.mozilla.fenix.search.SearchFragmentDirections
+import org.mozilla.fenix.settings.SettingsFragmentDirections
 
 @SuppressWarnings("TooManyFunctions")
 open class HomeActivity : AppCompatActivity() {
@@ -103,18 +106,29 @@ open class HomeActivity : AppCompatActivity() {
 
     private fun handleOpenedFromExternalSource() {
         intent?.putExtra(OPEN_TO_BROWSER, false)
-        openToBrowser(SafeIntent(intent).getStringExtra(IntentProcessor.ACTIVE_SESSION_ID))
+        openToBrowser(SafeIntent(intent).getStringExtra(IntentProcessor.ACTIVE_SESSION_ID), BrowserDirection.FromGlobal)
     }
 
-    // Since we must always call load after navigation, we only directly expose the load when coupled with open.
-    fun openToBrowserAndLoad(text: String, sessionId: String? = null) {
-        openToBrowser(sessionId)
+    fun openToBrowserAndLoad(text: String, sessionId: String? = null, from: BrowserDirection) {
+        openToBrowser(sessionId, from)
         load(text, sessionId)
     }
 
-    fun openToBrowser(sessionId: String?) {
+    fun openToBrowser(sessionId: String?, from: BrowserDirection) {
         val host = supportFragmentManager.findFragmentById(R.id.container) as NavHostFragment
-        val directions = NavGraphDirections.actionGlobalBrowser(sessionId)
+
+        val directions = when (from) {
+            BrowserDirection.FromGlobal -> {
+                NavGraphDirections.actionGlobalBrowser(sessionId).apply {
+                    host.navController.popBackStack()
+                }
+            }
+            BrowserDirection.FromHome -> HomeFragmentDirections.actionHomeFragmentToBrowserFragment(sessionId)
+            BrowserDirection.FromSearch -> SearchFragmentDirections.actionSearchFragmentToBrowserFragment(sessionId)
+            BrowserDirection.FromSettings ->
+                SettingsFragmentDirections.actionSettingsFragmentToBrowserFragment(sessionId)
+        }
+
         host.navController.navigate(directions)
     }
 
@@ -146,4 +160,8 @@ open class HomeActivity : AppCompatActivity() {
     companion object {
         const val OPEN_TO_BROWSER = "open_to_browser"
     }
+}
+
+enum class BrowserDirection {
+    FromGlobal, FromHome, FromSearch, FromSettings
 }
