@@ -161,7 +161,8 @@ class ThumbnailHelper final
                           nsPresContext::CSSPixelsToAppUnits(aPageRect.height));
     const uint32_t renderDocFlags =
         nsIPresShell::RENDER_IGNORE_VIEWPORT_SCROLLING |
-        nsIPresShell::RENDER_DOCUMENT_RELATIVE;
+        nsIPresShell::RENDER_DOCUMENT_RELATIVE |
+        nsIPresShell::RENDER_DRAWWINDOW_NOT_FLUSHING;
     const nscolor bgColor = NS_RGB(255, 255, 255);
 
     if (NS_FAILED(presShell->RenderDocument(drawRect, renderDocFlags, bgColor,
