@@ -314,8 +314,8 @@ void ChildDNSService::NotifyRequestDone(DNSRequestChild *aDnsRequest) {
   nsTArray<RefPtr<DNSRequestChild>> *hashEntry;
 
   if (mPendingRequests.Get(key, &hashEntry)) {
-    int idx;
-    if ((idx = hashEntry->IndexOf(aDnsRequest))) {
+    auto idx = hashEntry->IndexOf(aDnsRequest);
+    if (idx != nsTArray<RefPtr<DNSRequestChild>>::NoIndex) {
       hashEntry->RemoveElementAt(idx);
       if (hashEntry->IsEmpty()) {
         mPendingRequests.Remove(key);
