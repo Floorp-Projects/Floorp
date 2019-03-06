@@ -26,10 +26,7 @@ add_task(async () => {
       name: "Profile3",
       path: "Path3",
     }],
-  };
-
-  // Another install is using the profile but it isn't locked.
-  let installData = {
+    // Another install is using the profile but it isn't locked.
     installs: {
       otherinstall: {
         default: root.leafName,
@@ -38,8 +35,7 @@ add_task(async () => {
   };
 
   writeProfilesIni(profileData);
-  writeInstallsIni(installData);
-  checkProfileService(profileData, installData);
+  checkProfileService(profileData);
 
   let env = Cc["@mozilla.org/process/environment;1"].
             getService(Ci.nsIEnvironment);
@@ -64,9 +60,8 @@ add_task(async () => {
   Assert.ok(profileData.profiles[0].default, "Should still be the old default profile.");
 
   let hash = xreDirProvider.getInstallHash();
-  installData = readInstallsIni();
   // The info about the other install will have been removed so it goes through first run on next startup.
-  Assert.equal(Object.keys(installData.installs).length, 1, "Should be one known install.");
-  Assert.equal(installData.installs[hash].default, root.leafName, "Should have marked the original default profile as the default for this install.");
-  Assert.ok(!installData.installs[hash].locked, "Should not have locked as we're not the default app.");
+  Assert.equal(Object.keys(profileData.installs).length, 1, "Should be one known install.");
+  Assert.equal(profileData.installs[hash].default, root.leafName, "Should have marked the original default profile as the default for this install.");
+  Assert.ok(!profileData.installs[hash].locked, "Should not have locked as we're not the default app.");
 });
