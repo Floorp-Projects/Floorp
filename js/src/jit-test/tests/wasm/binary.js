@@ -244,7 +244,10 @@ for (let op of undefinedOpcodes) {
 // Prefixed opcodes
 
 function checkIllegalPrefixed(prefix, opcode) {
-    let binary = moduleWithSections([v2vSigSection, declSection([0]), bodySection([funcBody({locals:[], body:[prefix, opcode]})])]);
+    let binary = moduleWithSections([v2vSigSection,
+                                     declSection([0]),
+                                     bodySection([funcBody({locals:[],
+                                                            body:[prefix, ...varU32(opcode)]})])]);
     assertErrorMessage(() => wasmEval(binary), CompileError, /unrecognized opcode/);
     assertEq(WebAssembly.validate(binary), false);
 }
