@@ -12,7 +12,7 @@ add_task(async function() {
 
   ok(!testWindow.gFindBarInitialized, "find bar is not initialized");
 
-  let findBarOpenPromise = promiseWaitForEvent(testWindow.gBrowser, "findbaropen");
+  let findBarOpenPromise = BrowserTestUtils.waitForEvent(testWindow.gBrowser, "findbaropen");
   EventUtils.synthesizeKey("/", {}, testWindow);
   await findBarOpenPromise;
 
