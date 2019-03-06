@@ -30,6 +30,8 @@
 #  error "Unknown architecture!"
 #endif
 
+#include "wasm/WasmGC.h"
+
 namespace js {
 namespace jit {
 
@@ -73,7 +75,11 @@ class CodeGenerator final : public CodeGeneratorSpecific {
   MOZ_MUST_USE bool generate();
   MOZ_MUST_USE bool generateWasm(wasm::FuncTypeIdDesc funcTypeId,
                                  wasm::BytecodeOffset trapOffset,
-                                 wasm::FuncOffsets* offsets);
+                                 const wasm::ValTypeVector& argTys,
+                                 const MachineState& trapExitLayout,
+                                 size_t trapExitLayoutNumWords,
+                                 wasm::FuncOffsets* offsets,
+                                 wasm::StackMaps* stackMaps);
 
   MOZ_MUST_USE bool link(JSContext* cx, CompilerConstraintList* constraints);
 
@@ -235,7 +241,8 @@ class CodeGenerator final : public CodeGeneratorSpecific {
   template <class OrderedHashTable>
   void emitLoadIteratorValues(Register result, Register temp, Register front);
 
-  void emitWasmCallBase(MWasmCall* mir, bool needsBoundsCheck);
+  template <size_t Defs>
+  void emitWasmCallBase(LWasmCallBase<Defs>* lir);
 
   template <size_t NumDefs>
   void emitIonToWasmCallBase(LIonToWasmCallBase<NumDefs>* lir);

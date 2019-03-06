@@ -222,7 +222,8 @@ export type TabTarget = {
       cursor: number,
       func: Function,
       frameId: ?string
-    ) => void
+    ) => void,
+    emit: (string, any) => void
   },
   form: { consoleActor: any },
   root: any,
@@ -231,7 +232,8 @@ export type TabTarget = {
   reload: () => Promise<*>,
   destroy: () => void,
   isBrowsingContext: boolean,
-  isContentProcess: boolean
+  isContentProcess: boolean,
+  traits: Object
 };
 
 /**

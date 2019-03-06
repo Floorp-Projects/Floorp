@@ -608,6 +608,7 @@ void MDefinition::printOpcode(GenericPrinter& out) const {
     out.printf(" ");
     if (getUseFor(j)->hasProducer()) {
       getOperand(j)->printName(out);
+      out.printf(":%s", StringFromMIRType(getOperand(j)->type()));
     } else {
       out.printf("(null)");
     }
@@ -616,6 +617,7 @@ void MDefinition::printOpcode(GenericPrinter& out) const {
 
 void MDefinition::dump(GenericPrinter& out) const {
   printName(out);
+  out.printf(":%s", StringFromMIRType(type()));
   out.printf(" = ");
   printOpcode(out);
   out.printf("\n");
@@ -1246,7 +1248,7 @@ bool MWasmFloatConstant::congruentTo(const MDefinition* ins) const {
 }
 
 HashNumber MWasmNullConstant::valueHash() const {
-  return ConstantValueHash(MIRType::Pointer, 0);
+  return ConstantValueHash(MIRType::RefOrNull, 0);
 }
 
 #ifdef JS_JITSPEW
@@ -5492,8 +5494,11 @@ MDefinition* MWasmUnsignedToFloat32::foldsTo(TempAllocator& alloc) {
 
 MWasmCall* MWasmCall::New(TempAllocator& alloc, const wasm::CallSiteDesc& desc,
                           const wasm::CalleeDesc& callee, const Args& args,
-                          MIRType resultType, MDefinition* tableIndex) {
-  MWasmCall* call = new (alloc) MWasmCall(desc, callee);
+                          MIRType resultType,
+                          uint32_t stackArgAreaSizeUnaligned,
+                          MDefinition* tableIndex) {
+  MWasmCall* call = new (alloc) MWasmCall(desc, callee,
+                                          stackArgAreaSizeUnaligned);
   call->setResultType(resultType);
 
   if (!call->argRegs_.init(alloc, args.length())) {
@@ -5521,10 +5526,11 @@ MWasmCall* MWasmCall::New(TempAllocator& alloc, const wasm::CallSiteDesc& desc,
 MWasmCall* MWasmCall::NewBuiltinInstanceMethodCall(
     TempAllocator& alloc, const wasm::CallSiteDesc& desc,
     const wasm::SymbolicAddress builtin, const ABIArg& instanceArg,
-    const Args& args, MIRType resultType) {
+    const Args& args, MIRType resultType, uint32_t stackArgAreaSizeUnaligned) {
   auto callee = wasm::CalleeDesc::builtinInstanceMethod(builtin);
   MWasmCall* call =
-      MWasmCall::New(alloc, desc, callee, args, resultType, nullptr);
+      MWasmCall::New(alloc, desc, callee, args, resultType,
+                     stackArgAreaSizeUnaligned, nullptr);
   if (!call) {
     return nullptr;
   }
