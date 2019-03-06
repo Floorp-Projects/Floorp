@@ -39,6 +39,20 @@ job-defaults:
                     - raptor/android_hw_config.py
                 default:
                     - raptor/linux_config.py
+    fetches:
+        by-test-platform:
+            win.*64.*:
+                fetch:
+                    - win64-chromium
+            win.*32.*:
+                fetch:
+                    - win32-chromium
+            macosx.*:
+                fetch:
+                    - mac-chromium
+            default:
+                fetch:
+                    - linux64-chromium
 
 raptor-tp6-1-chrome:
     description: "Raptor tp6-1 on Chrome"
@@ -229,8 +243,23 @@ raptor-unity-webgl-chrome:
             - --test=raptor-unity-webgl
             - --app=chrome
     fetches:
-        fetch:
-            - unity-webgl
+        by-test-platform:
+            win.*64.*:
+                fetch:
+                    - win64-chromium
+                    - unity-webgl
+            win.*32.*:
+                fetch:
+                    - win32-chromium
+                    - unity-webgl
+            macosx.*:
+                fetch:
+                    - mac-chromium
+                    - unity-webgl
+            default:
+                fetch:
+                    - linux64-chromium
+                    - unity-webgl
 
 raptor-wasm-misc-chrome:
     description: "Raptor WASM Misc on Chrome"
@@ -243,8 +272,23 @@ raptor-wasm-misc-chrome:
             - --test=raptor-wasm-misc
             - --app=chrome
     fetches:
-        fetch:
-            - wasm-misc
+        by-test-platform:
+            win.*64.*:
+                fetch:
+                    - win64-chromium
+                    - wasm-misc
+            win.*32.*:
+                fetch:
+                    - win32-chromium
+                    - wasm-misc
+            macosx.*:
+                fetch:
+                    - mac-chromium
+                    - wasm-misc
+            default:
+                fetch:
+                    - linux64-chromium
+                    - wasm-misc
 
 raptor-assorted-dom-chrome:
     description: "Raptor Assorted-Dom on Chrome"
@@ -258,8 +302,23 @@ raptor-assorted-dom-chrome:
             - --test=raptor-assorted-dom
             - --app=chrome
     fetches:
-        fetch:
-            - assorted-dom
+        by-test-platform:
+            win.*64.*:
+                fetch:
+                    - win64-chromium
+                    - assorted-dom
+            win.*32.*:
+                fetch:
+                    - win32-chromium
+                    - assorted-dom
+            macosx.*:
+                fetch:
+                    - mac-chromium
+                    - assorted-dom
+            default:
+                fetch:
+                    - linux64-chromium
+                    - assorted-dom
 
 raptor-wasm-godot-chrome:
     description: "Raptor Wasm Godot on Chrome"

@@ -430,9 +430,12 @@ test_description_schema = Schema({
     ),
 
     # A list of artifacts to install from 'fetch' tasks.
-    Optional('fetches'): {
-        basestring: [basestring],
-    },
+    Optional('fetches'): optionally_keyed_by(
+        'test-platform',
+        {
+            basestring: [basestring]
+        }
+    ),
 }, required=True)
 
 
@@ -747,6 +750,7 @@ def handle_keyed_by(config, tests):
         'workdir',
         'worker-type',
         'virtualization',
+        'fetches',
     ]
     for test in tests:
         for field in fields:
