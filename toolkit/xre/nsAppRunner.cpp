@@ -187,8 +187,17 @@
 #endif
 
 // for X remote support
-#if defined(MOZ_HAS_REMOTE)
-#  include "nsRemoteService.h"
+#if defined(MOZ_WIDGET_GTK)
+#  include "XRemoteClient.h"
+#  include "nsIRemoteService.h"
+#  include "nsProfileLock.h"
+#  include "SpecialSystemDirectory.h"
+#  include <sched.h>
+#  ifdef MOZ_ENABLE_DBUS
+#    include "DBusRemoteClient.h"
+#  endif
+// Time to wait for the remoting service to start
+#  define MOZ_XREMOTE_START_TIMEOUT_SEC 5
 #endif
 
 #if defined(DEBUG) && defined(XP_WIN32)
@@ -303,9 +312,6 @@ void XRE_LibFuzzerSetDriver(LibFuzzerDriver aDriver) {
 #  endif
 #endif  // FUZZING
 
-// Undo X11/X.h's definition of None
-#undef None
-
 namespace mozilla {
 int (*RunGTest)(int*, char**) = 0;
 }  // namespace mozilla
@@ -398,6 +404,12 @@ static MOZ_FORMAT_PRINTF(2, 3) void Output(bool isError, const char* fmt, ...) {
   va_end(ap);
 }
 
+enum RemoteResult {
+  REMOTE_NOT_FOUND = 0,
+  REMOTE_FOUND = 1,
+  REMOTE_ARG_BAD = 2
+};
+
 /**
  * Check for a commandline flag. If the flag takes a parameter, the
  * parameter is returned in aParam. Flags may be in the form -arg or
@@ -424,6 +436,70 @@ static ArgResult CheckArg(const char* aArg, const char** aParam = nullptr,
 static ArgResult CheckArgExists(const char* aArg) {
   return CheckArg(aArg, nullptr, CheckArgFlag::None);
 }
+
+#if defined(XP_WIN)
+/**
+ * Check for a commandline flag from the windows shell and remove it from the
+ * argv used when restarting. Flags MUST be in the form -arg.
+ *
+ * @param aArg the parameter to check. Must be lowercase.
+ */
+static ArgResult CheckArgShell(const char* aArg) {
+  char** curarg = gRestartArgv + 1;  // skip argv[0]
+
+  while (*curarg) {
+    char* arg = curarg[0];
+
+    if (arg[0] == '-') {
+      ++arg;
+
+      if (strimatch(aArg, arg)) {
+        do {
+          *curarg = *(curarg + 1);
+          ++curarg;
+        } while (*curarg);
+
+        --gRestartArgc;
+
+        return ARG_FOUND;
+      }
+    }
+
+    ++curarg;
+  }
+
+  return ARG_NONE;
+}
+
+/**
+ * Enabled Native App Support to process DDE messages when the app needs to
+ * restart and the app has been launched by the Windows shell to open an url.
+ * When aWait is false this will process the DDE events manually. This prevents
+ * Windows from displaying an error message due to the DDE message not being
+ * acknowledged.
+ */
+static void ProcessDDE(nsINativeAppSupport* aNative, bool aWait) {
+  // When the app is launched by the windows shell the windows shell
+  // expects the app to be available for DDE messages and if it isn't
+  // windows displays an error dialog. To prevent the error the DDE server
+  // is enabled and pending events are processed when the app needs to
+  // restart after it was launched by the shell with the requestpending
+  // argument. The requestpending pending argument is removed to
+  // differentiate it from being launched when an app restart is not
+  // required.
+  ArgResult ar;
+  ar = CheckArgShell("requestpending");
+  if (ar == ARG_FOUND) {
+    aNative->Enable();  // enable win32 DDE responses
+    if (aWait) {
+      // This is just a guesstimate based on testing different values.
+      // If count is 8 or less windows will display an error dialog.
+      int32_t count = 20;
+      SpinEventLoopUntil([&]() { return --count < 0; });
+    }
+  }
+}
+#endif
 
 bool gSafeMode = false;
 
@@ -1416,12 +1492,10 @@ static void DumpHelp() {
       "  --profile <path>   Start with profile at <path>.\n"
       "  --migration        Start with migration wizard.\n"
       "  --ProfileManager   Start with ProfileManager.\n"
-#ifdef MOZ_HAS_REMOTE
       "  --no-remote        Do not accept or send remote commands; implies\n"
       "                     --new-instance.\n"
       "  --new-instance     Open new instance, not a new window in running "
       "instance.\n"
-#endif
       "  --UILocale <locale> Start with <locale> resources as UI Locale.\n"
       "  --safe-mode        Disables extensions and themes for this session.\n"
 #ifdef MOZ_BLOCK_PROFILE_DOWNGRADE
@@ -1470,6 +1544,76 @@ static inline void DumpVersion() {
   }
   printf("\n");
 }
+
+#if defined(MOZ_WIDGET_GTK)
+static RemoteResult ParseRemoteCommandLine(nsCString& program,
+                                           const char** profile,
+                                           const char** username) {
+  ArgResult ar;
+
+  ar = CheckArg("p", profile, CheckArgFlag::None);
+  if (ar == ARG_BAD) {
+    // Leave it to the normal command line handling to handle this situation.
+    return REMOTE_NOT_FOUND;
+  }
+
+  const char* temp = nullptr;
+  ar = CheckArg("a", &temp, CheckArgFlag::CheckOSInt | CheckArgFlag::RemoveArg);
+  if (ar == ARG_BAD) {
+    PR_fprintf(PR_STDERR, "Error: argument -a requires an application name\n");
+    return REMOTE_ARG_BAD;
+  }
+  if (ar == ARG_FOUND) {
+    program.Assign(temp);
+  }
+
+  ar = CheckArg("u", username,
+                CheckArgFlag::CheckOSInt | CheckArgFlag::RemoveArg);
+  if (ar == ARG_BAD) {
+    PR_fprintf(PR_STDERR, "Error: argument -u requires a username\n");
+    return REMOTE_ARG_BAD;
+  }
+
+  return REMOTE_FOUND;
+}
+
+static RemoteResult StartRemoteClient(const char* aDesktopStartupID,
+                                      nsCString& program, const char* profile,
+                                      const char* username) {
+  nsAutoPtr<nsRemoteClient> client;
+
+  bool useX11Remote = GDK_IS_X11_DISPLAY(gdk_display_get_default());
+
+#  if defined(MOZ_ENABLE_DBUS)
+  if (!useX11Remote) {
+    client = new DBusRemoteClient();
+  }
+#  endif
+  if (useX11Remote) {
+    client = new XRemoteClient();
+  }
+
+  nsresult rv = client ? client->Init() : NS_ERROR_FAILURE;
+  if (NS_FAILED(rv)) return REMOTE_NOT_FOUND;
+
+  nsCString response;
+  bool success = false;
+  rv = client->SendCommandLine(program.get(), username, profile, gArgc, gArgv,
+                               aDesktopStartupID, getter_Copies(response),
+                               &success);
+  // did the command fail?
+  if (!success) return REMOTE_NOT_FOUND;
+
+  // The "command not parseable" error is returned when the
+  // nsICommandLineHandler throws a NS_ERROR_ABORT.
+  if (response.EqualsLiteral("500 command not parseable"))
+    return REMOTE_ARG_BAD;
+
+  if (NS_FAILED(rv)) return REMOTE_NOT_FOUND;
+
+  return REMOTE_FOUND;
+}
+#endif  // MOZ_WIDGET_GTK
 
 void XRE_InitOmnijar(nsIFile* greOmni, nsIFile* appOmni) {
   mozilla::Omnijar::Init(greOmni, appOmni);
@@ -1582,7 +1726,7 @@ static void SetupLauncherProcessPref() {
 // it was initially started with.
 static nsresult LaunchChild(nsINativeAppSupport* aNative,
                             bool aBlankCommandLine = false) {
-  aNative->Quit();  // destroy message window
+  aNative->Quit();  // release DDE mutex, if we're holding it
 
   // Restart this process by exec'ing it into the current process
   // if supported by the platform.  Otherwise, use NSPR.
@@ -1849,6 +1993,12 @@ static ReturnAbortOnError ShowProfileManager(
 #ifdef XP_MACOSX
     CommandLineServiceMac::SetupMacCommandLine(gRestartArgc, gRestartArgv,
                                                true);
+#endif
+
+#ifdef XP_WIN
+    // we don't have to wait here because profile manager window will pump
+    // and DDE message will be handled
+    ProcessDDE(aNative, false);
 #endif
 
     {  // extra scoping is needed so we release these components before xpcom
@@ -2782,12 +2932,9 @@ class XREMain {
   XREMain()
       : mStartOffline(false),
         mShuttingDown(false)
-#ifdef MOZ_HAS_REMOTE
-        ,
-        mDisableRemote(false)
-#endif
 #if defined(MOZ_WIDGET_GTK)
         ,
+        mDisableRemote(false),
         mGdkDisplay(nullptr)
 #endif
             {};
@@ -2809,19 +2956,22 @@ class XREMain {
   nsCOMPtr<nsIFile> mProfD;
   nsCOMPtr<nsIFile> mProfLD;
   nsCOMPtr<nsIProfileLock> mProfileLock;
-#if defined(MOZ_HAS_REMOTE)
-  RefPtr<nsRemoteService> mRemoteService;
+#if defined(MOZ_WIDGET_GTK)
+  nsCOMPtr<nsIRemoteService> mRemoteService;
+  nsProfileLock mRemoteLock;
+  nsCOMPtr<nsIFile> mRemoteLockDir;
 #endif
 
   UniquePtr<ScopedXPCOMStartup> mScopedXPCOM;
   UniquePtr<XREAppData> mAppData;
 
   nsXREDirProvider mDirProvider;
+  nsAutoCString mProfileName;
   nsAutoCString mDesktopStartupID;
 
   bool mStartOffline;
   bool mShuttingDown;
-#if defined(MOZ_HAS_REMOTE)
+#if defined(MOZ_WIDGET_GTK)
   bool mDisableRemote;
 #endif
 
@@ -3324,7 +3474,6 @@ int XREMain::XRE_mainInit(bool* aExitFlag) {
   CrashReporter::AnnotateCrashReport(CrashReporter::Annotation::SafeMode,
                                      gSafeMode);
 
-#if defined(MOZ_HAS_REMOTE)
   // Handle --no-remote and --new-instance command line arguments. Setup
   // the environment to better accommodate other components and various
   // restart scenarios.
@@ -3338,9 +3487,6 @@ int XREMain::XRE_mainInit(bool* aExitFlag) {
   }
   if (ar == ARG_FOUND) {
     SaveToEnv("MOZ_NO_REMOTE=1");
-    mDisableRemote = true;
-  } else if (EnvHasValue("MOZ_NO_REMOTE")) {
-    mDisableRemote = true;
   }
 
   ar = CheckArg("new-instance", nullptr,
@@ -3351,10 +3497,9 @@ int XREMain::XRE_mainInit(bool* aExitFlag) {
                "--osint is specified\n");
     return 1;
   }
-  if (ar == ARG_FOUND || EnvHasValue("MOZ_NEW_INSTANCE")) {
-    mDisableRemote = true;
+  if (ar == ARG_FOUND) {
+    SaveToEnv("MOZ_NEW_INSTANCE=1");
   }
-#endif
 
   ar = CheckArg("offline", nullptr,
                 CheckArgFlag::CheckOSInt | CheckArgFlag::RemoveArg);
@@ -3751,12 +3896,6 @@ int XREMain::XRE_mainStartup(bool* aExitFlag) {
     return result;
   }
 
-#ifdef MOZ_HAS_REMOTE
-  if (gfxPlatform::IsHeadless()) {
-    mDisableRemote = true;
-  }
-#endif
-
 #ifdef MOZ_X11
   // Init X11 in thread-safe mode. Must be called prior to the first call to
   // XOpenDisplay (called inside gdk_display_open). This is a requirement for
@@ -3827,14 +3966,93 @@ int XREMain::XRE_mainStartup(bool* aExitFlag) {
           gdk_display_manager_open_display(gdk_display_manager_get(), nullptr);
     }
 #  endif
+  } else {
+    mDisableRemote = true;
   }
 #endif
-#if defined(MOZ_HAS_REMOTE)
+#if defined(MOZ_WIDGET_GTK)
   // handle --remote now that xpcom is fired up
-  if (!mDisableRemote) {
-    mRemoteService = new nsRemoteService(gAppData->remotingName);
-    if (mRemoteService) {
-      mRemoteService->LockStartup();
+  bool newInstance;
+  {
+    char* e = PR_GetEnv("MOZ_NO_REMOTE");
+    mDisableRemote = (mDisableRemote || (e && *e));
+    if (mDisableRemote) {
+      newInstance = true;
+    } else {
+      e = PR_GetEnv("MOZ_NEW_INSTANCE");
+      newInstance = (e && *e);
+    }
+  }
+
+  if (!newInstance) {
+    nsAutoCString program(gAppData->remotingName);
+    ToLowerCase(program);
+
+    const char* username = getenv("LOGNAME");
+    const char* profile = nullptr;
+
+    RemoteResult rr = ParseRemoteCommandLine(program, &profile, &username);
+    if (rr == REMOTE_ARG_BAD) {
+      return 1;
+    }
+
+    if (!username) {
+      struct passwd* pw = getpwuid(geteuid());
+      if (pw && pw->pw_name) {
+        // Beware that another call to getpwent/getpwname/getpwuid will
+        // overwrite pw, but we don't have such another call between here and
+        // when username is used last.
+        username = pw->pw_name;
+      }
+    }
+
+    nsCOMPtr<nsIFile> mutexDir;
+    rv = GetSpecialSystemDirectory(OS_TemporaryDirectory,
+                                   getter_AddRefs(mutexDir));
+    if (NS_SUCCEEDED(rv)) {
+      nsAutoCString mutexPath = program + NS_LITERAL_CSTRING("_");
+      // In the unlikely even that LOGNAME is not set and getpwuid failed, just
+      // don't put the username in the mutex directory. It will conflict with
+      // other users mutex, but the worst that can happen is that they wait for
+      // MOZ_XREMOTE_START_TIMEOUT_SEC during startup in that case.
+      if (username) {
+        mutexPath.Append(username);
+      }
+      if (profile) {
+        mutexPath.Append(NS_LITERAL_CSTRING("_") + nsDependentCString(profile));
+      }
+      mutexDir->AppendNative(mutexPath);
+
+      rv = mutexDir->Create(nsIFile::DIRECTORY_TYPE, 0700);
+      if (NS_SUCCEEDED(rv) || rv == NS_ERROR_FILE_ALREADY_EXISTS) {
+        mRemoteLockDir = mutexDir;
+      }
+    }
+
+    if (mRemoteLockDir) {
+      const TimeStamp epoch = mozilla::TimeStamp::Now();
+      do {
+        rv = mRemoteLock.Lock(mRemoteLockDir, nullptr);
+        if (NS_SUCCEEDED(rv)) break;
+        sched_yield();
+      } while ((TimeStamp::Now() - epoch) <
+               TimeDuration::FromSeconds(MOZ_XREMOTE_START_TIMEOUT_SEC));
+      if (NS_FAILED(rv)) {
+        NS_WARNING("Cannot lock XRemote start mutex");
+      }
+    }
+
+    // Try to remote the entire command line. If this fails, start up normally.
+    const char* desktopStartupIDPtr =
+        mDesktopStartupID.IsEmpty() ? nullptr : mDesktopStartupID.get();
+
+    rr = StartRemoteClient(desktopStartupIDPtr, program, profile, username);
+    if (rr == REMOTE_FOUND) {
+      *aExitFlag = true;
+      return 0;
+    }
+    if (rr == REMOTE_ARG_BAD) {
+      return 1;
     }
   }
 #endif
@@ -3958,40 +4176,6 @@ int XREMain::XRE_mainStartup(bool* aExitFlag) {
     return 1;
   }
 
-#if defined(MOZ_HAS_REMOTE)
-  if (mRemoteService) {
-    // We want a unique profile name to identify the remote instance.
-    nsCString profileName;
-    if (profile) {
-      rv = profile->GetName(profileName);
-    }
-    if (!profile || NS_FAILED(rv) || profileName.IsEmpty()) {
-      // Couldn't get a name from the profile. Use the directory name?
-      nsString leafName;
-      rv = mProfD->GetLeafName(leafName);
-      if (NS_SUCCEEDED(rv)) {
-        profileName = NS_ConvertUTF16toUTF8(leafName);
-      }
-    }
-
-    mRemoteService->SetProfile(profileName);
-
-    // Try to remote the entire command line. If this fails, start up
-    // normally.
-    const char* desktopStartupIDPtr =
-        mDesktopStartupID.IsEmpty() ? nullptr : mDesktopStartupID.get();
-
-    RemoteResult rr = mRemoteService->StartClient(desktopStartupIDPtr);
-    if (rr == REMOTE_FOUND) {
-      *aExitFlag = true;
-      return 0;
-    }
-    if (rr == REMOTE_ARG_BAD) {
-      return 1;
-    }
-  }
-#endif
-
   // We always want to lock the profile even if we're actually going to reset
   // it later.
   rv = LockProfile(mNativeApp, mProfD, mProfLD, profile,
@@ -4031,6 +4215,13 @@ int XREMain::XRE_mainStartup(bool* aExitFlag) {
     } else {
       NS_WARNING("Profile reset failed.");
       return 1;
+    }
+  }
+
+  if (profile) {
+    rv = profile->GetName(mProfileName);
+    if (NS_FAILED(rv)) {
+      mProfileName.Truncate(0);
     }
   }
 
@@ -4486,12 +4677,17 @@ nsresult XREMain::XRE_mainRun() {
   }
 
   if (!mShuttingDown) {
-#if defined(MOZ_HAS_REMOTE)
+#if defined(MOZ_WIDGET_GTK)
     // if we have X remote support, start listening for requests on the
     // proxy window.
-    if (mRemoteService) {
-      mRemoteService->StartupServer();
-      mRemoteService->UnlockStartup();
+    if (!mDisableRemote)
+      mRemoteService = do_GetService("@mozilla.org/toolkit/remote-service;1");
+    if (mRemoteService)
+      mRemoteService->Startup(mAppData->remotingName, mProfileName.get());
+    if (mRemoteLockDir) {
+      mRemoteLock.Unlock();
+      mRemoteLock.Cleanup();
+      mRemoteLockDir->Remove(false);
     }
 #endif /* MOZ_WIDGET_GTK */
 
@@ -4694,10 +4890,10 @@ int XREMain::XRE_main(int argc, char* argv[], const BootstrapConfig& aConfig) {
   }
 
   if (!mShuttingDown) {
-#if defined(MOZ_HAS_REMOTE)
+#if defined(MOZ_WIDGET_GTK)
     // shut down the x remote proxy window
     if (mRemoteService) {
-      mRemoteService->ShutdownServer();
+      mRemoteService->Shutdown();
     }
 #endif /* MOZ_WIDGET_GTK */
   }
