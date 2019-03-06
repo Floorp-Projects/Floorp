@@ -198,12 +198,10 @@ already_AddRefed<SharedWorker> SharedWorker::Constructor(
 
   bool isSecureContext = JS::GetIsSecureContext(js::GetContextRealm(cx));
 
-  OptionalIPCClientInfo ipcClientInfo;
+  Maybe<IPCClientInfo> ipcClientInfo;
   Maybe<ClientInfo> clientInfo = window->GetClientInfo();
   if (clientInfo.isSome()) {
-    ipcClientInfo = clientInfo.value().ToIPC();
-  } else {
-    ipcClientInfo = void_t();
+    ipcClientInfo.emplace(clientInfo.value().ToIPC());
   }
 
   bool storageAccessAllowed =

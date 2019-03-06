@@ -457,24 +457,24 @@ nsresult LoadInfoToLoadInfoArgs(nsILoadInfo* aLoadInfo,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  OptionalIPCClientInfo ipcClientInfo = mozilla::void_t();
+  Maybe<IPCClientInfo> ipcClientInfo;
   const Maybe<ClientInfo>& clientInfo = aLoadInfo->GetClientInfo();
   if (clientInfo.isSome()) {
-    ipcClientInfo = clientInfo.ref().ToIPC();
+    ipcClientInfo.emplace(clientInfo.ref().ToIPC());
   }
 
-  OptionalIPCClientInfo ipcReservedClientInfo = mozilla::void_t();
+  Maybe<IPCClientInfo> ipcReservedClientInfo;
   const Maybe<ClientInfo>& reservedClientInfo =
       aLoadInfo->GetReservedClientInfo();
   if (reservedClientInfo.isSome()) {
-    ipcReservedClientInfo = reservedClientInfo.ref().ToIPC();
+    ipcReservedClientInfo.emplace(reservedClientInfo.ref().ToIPC());
   }
 
-  OptionalIPCClientInfo ipcInitialClientInfo = mozilla::void_t();
+  Maybe<IPCClientInfo> ipcInitialClientInfo;
   const Maybe<ClientInfo>& initialClientInfo =
       aLoadInfo->GetInitialClientInfo();
   if (initialClientInfo.isSome()) {
-    ipcInitialClientInfo = initialClientInfo.ref().ToIPC();
+    ipcInitialClientInfo.emplace(initialClientInfo.ref().ToIPC());
   }
 
   OptionalIPCServiceWorkerDescriptor ipcController = mozilla::void_t();
@@ -607,23 +607,20 @@ nsresult LoadInfoArgsToLoadInfo(
   }
 
   Maybe<ClientInfo> clientInfo;
-  if (loadInfoArgs.clientInfo().type() != OptionalIPCClientInfo::Tvoid_t) {
-    clientInfo.emplace(
-        ClientInfo(loadInfoArgs.clientInfo().get_IPCClientInfo()));
+  if (loadInfoArgs.clientInfo().isSome()) {
+    clientInfo.emplace(ClientInfo(loadInfoArgs.clientInfo().ref()));
   }
 
   Maybe<ClientInfo> reservedClientInfo;
-  if (loadInfoArgs.reservedClientInfo().type() !=
-      OptionalIPCClientInfo::Tvoid_t) {
+  if (loadInfoArgs.reservedClientInfo().isSome()) {
     reservedClientInfo.emplace(
-        ClientInfo(loadInfoArgs.reservedClientInfo().get_IPCClientInfo()));
+        ClientInfo(loadInfoArgs.reservedClientInfo().ref()));
   }
 
   Maybe<ClientInfo> initialClientInfo;
-  if (loadInfoArgs.initialClientInfo().type() !=
-      OptionalIPCClientInfo::Tvoid_t) {
+  if (loadInfoArgs.initialClientInfo().isSome()) {
     initialClientInfo.emplace(
-        ClientInfo(loadInfoArgs.initialClientInfo().get_IPCClientInfo()));
+        ClientInfo(loadInfoArgs.initialClientInfo().ref()));
   }
 
   // We can have an initial client info or a reserved client info, but not both.
@@ -751,20 +748,20 @@ void LoadInfoToChildLoadInfoForwarder(
     nsILoadInfo* aLoadInfo, ChildLoadInfoForwarderArgs* aForwarderArgsOut) {
   if (!aLoadInfo) {
     *aForwarderArgsOut =
-        ChildLoadInfoForwarderArgs(void_t(), void_t(), void_t());
+        ChildLoadInfoForwarderArgs(Nothing(), Nothing(), void_t());
     return;
   }
 
-  OptionalIPCClientInfo ipcReserved = void_t();
+  Maybe<IPCClientInfo> ipcReserved;
   Maybe<ClientInfo> reserved(aLoadInfo->GetReservedClientInfo());
   if (reserved.isSome()) {
-    ipcReserved = reserved.ref().ToIPC();
+    ipcReserved.emplace(reserved.ref().ToIPC());
   }
 
-  OptionalIPCClientInfo ipcInitial = void_t();
+  Maybe<IPCClientInfo> ipcInitial;
   Maybe<ClientInfo> initial(aLoadInfo->GetInitialClientInfo());
   if (initial.isSome()) {
-    ipcInitial = initial.ref().ToIPC();
+    ipcInitial.emplace(initial.ref().ToIPC());
   }
 
   OptionalIPCServiceWorkerDescriptor ipcController = void_t();
@@ -785,14 +782,14 @@ nsresult MergeChildLoadInfoForwarder(
 
   Maybe<ClientInfo> reservedClientInfo;
   auto& ipcReserved = aForwarderArgs.reservedClientInfo();
-  if (ipcReserved.type() != OptionalIPCClientInfo::Tvoid_t) {
-    reservedClientInfo.emplace(ClientInfo(ipcReserved.get_IPCClientInfo()));
+  if (ipcReserved.isSome()) {
+    reservedClientInfo.emplace(ClientInfo(ipcReserved.ref()));
   }
 
   Maybe<ClientInfo> initialClientInfo;
   auto& ipcInitial = aForwarderArgs.initialClientInfo();
-  if (ipcInitial.type() != OptionalIPCClientInfo::Tvoid_t) {
-    initialClientInfo.emplace(ClientInfo(ipcInitial.get_IPCClientInfo()));
+  if (ipcInitial.isSome()) {
+    initialClientInfo.emplace(ClientInfo(ipcInitial.ref()));
   }
 
   // There should only be at most one reserved or initial ClientInfo.
