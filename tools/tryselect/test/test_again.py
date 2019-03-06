@@ -32,7 +32,7 @@ def test_try_again(monkeypatch):
     monkeypatch.setattr(push, 'push_to_try', fake_push_to_try)
     reload(again)
 
-    args, kwargs = again.run_try_again()
+    args, kwargs = again.run()
 
     assert args[0] == 'again'
     assert args[1] == 'Fuzzy message'
@@ -53,7 +53,7 @@ def test_no_push_does_not_generate_history(tmpdir):
 
     push.push_to_try('fuzzy', 'Fuzzy', ['foo', 'bar'], {'artifact': True}, push=False)
     assert not os.path.isfile(push.history_path)
-    assert again.run_try_again() == 1
+    assert again.run() == 1
 
 
 if __name__ == '__main__':

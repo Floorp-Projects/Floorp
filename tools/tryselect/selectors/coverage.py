@@ -343,9 +343,7 @@ def is_opt_task(task):
     return any(platform in task for platform in OPT_TASK_PATTERNS)
 
 
-def run_coverage_try(templates={}, full=False, parameters=None,
-                     push=True, message='{msg}', **kwargs):
-
+def run(templates={}, full=False, parameters=None, push=True, message='{msg}', **kwargs):
     download_coverage_mapping(vcs.base_ref)
 
     changed_sources = vcs.get_outgoing_files()
