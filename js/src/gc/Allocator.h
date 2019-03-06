@@ -17,47 +17,52 @@ namespace js {
 
 struct Class;
 
-// Allocate a new GC thing. After a successful allocation the caller must
-// fully initialize the thing before calling any function that can potentially
-// trigger GC. This will ensure that GC tracing never sees junk values stored
-// in the partially initialized thing.
-
+// Allocate a new GC thing that's not a JSObject or a string.
+//
+// After a successful allocation the caller must fully initialize the thing
+// before calling any function that can potentially trigger GC. This will ensure
+// that GC tracing never sees junk values stored in the partially initialized
+// thing.
 template <typename T, AllowGC allowGC = CanGC>
 T* Allocate(JSContext* cx);
 
-// Use for JSObject. A longer signature that includes additional information in
-// support of various optimizations. If dynamic slots are requested they will be
-// allocated and the pointer stored directly in |NativeObject::slots_|.
-template <typename, AllowGC allowGC = CanGC>
-JSObject* Allocate(JSContext* cx, gc::AllocKind kind, size_t nDynamicSlots,
-                   gc::InitialHeap heap, const Class* clasp);
+// Allocate a JSObject.
+//
+// A longer signature that includes additional information in support of various
+// optimizations. If dynamic slots are requested they will be allocated and the
+// pointer stored directly in |NativeObject::slots_|.
+template <AllowGC allowGC = CanGC>
+JSObject* AllocateObject(JSContext* cx, gc::AllocKind kind, size_t nDynamicSlots,
+                         gc::InitialHeap heap, const Class* clasp);
 
 // Internal function used for nursery-allocatable strings.
 template <typename StringAllocT, AllowGC allowGC = CanGC>
-StringAllocT* AllocateString(JSContext* cx, gc::InitialHeap heap);
+StringAllocT* AllocateStringImpl(JSContext* cx, gc::InitialHeap heap);
 
+// Allocate a string.
+//
 // Use for nursery-allocatable strings. Returns a value cast to the correct
 // type.
 template <typename StringT, AllowGC allowGC = CanGC>
-StringT* Allocate(JSContext* cx, gc::InitialHeap heap) {
-  return static_cast<StringT*>(js::AllocateString<JSString, allowGC>(cx, heap));
+StringT* AllocateString(JSContext* cx, gc::InitialHeap heap) {
+  return static_cast<StringT*>(AllocateStringImpl<JSString, allowGC>(cx, heap));
 }
 
 // Specialization for JSFatInlineString that must use a different allocation
 // type. Note that we have to explicitly specialize for both values of AllowGC
 // because partial function specialization is not allowed.
 template <>
-inline JSFatInlineString* Allocate<JSFatInlineString, CanGC>(
+inline JSFatInlineString* AllocateString<JSFatInlineString, CanGC>(
     JSContext* cx, gc::InitialHeap heap) {
   return static_cast<JSFatInlineString*>(
-      js::AllocateString<JSFatInlineString, CanGC>(cx, heap));
+      js::AllocateStringImpl<JSFatInlineString, CanGC>(cx, heap));
 }
 
 template <>
-inline JSFatInlineString* Allocate<JSFatInlineString, NoGC>(
+inline JSFatInlineString* AllocateString<JSFatInlineString, NoGC>(
     JSContext* cx, gc::InitialHeap heap) {
   return static_cast<JSFatInlineString*>(
-      js::AllocateString<JSFatInlineString, NoGC>(cx, heap));
+      js::AllocateStringImpl<JSFatInlineString, NoGC>(cx, heap));
 }
 
 }  // namespace js
