@@ -27,11 +27,6 @@ internal object ExperimentsStorageEngine : StorageEngine {
     // Maximum length of the experiment and branch names, in characters.
     private const val MAX_ID_LENGTH = 30
 
-    data class RecordedExperimentData(
-        val branch: String,
-        val extra: Map<String, String>? = null
-    )
-
     private val experiments: MutableMap<String, RecordedExperimentData> = mutableMapOf()
 
     /**
@@ -141,3 +136,9 @@ internal object ExperimentsStorageEngine : StorageEngine {
         experiments.clear()
     }
 }
+
+@VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+data class RecordedExperimentData(
+    val branch: String,
+    val extra: Map<String, String>? = null
+)

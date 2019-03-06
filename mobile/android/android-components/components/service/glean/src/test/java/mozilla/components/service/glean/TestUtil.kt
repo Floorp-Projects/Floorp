@@ -17,6 +17,7 @@ import mozilla.components.service.glean.config.Configuration
 import mozilla.components.service.glean.firstrun.FileFirstRunDetector
 import mozilla.components.service.glean.ping.PingMaker
 import mozilla.components.service.glean.scheduler.PingUploadWorker
+import mozilla.components.service.glean.storages.ExperimentsStorageEngine
 import mozilla.components.service.glean.storages.StorageEngineManager
 import org.json.JSONObject
 import org.junit.Assert
@@ -114,6 +115,9 @@ internal fun resetGlean(
     // Clear all the stored data.
     val storageManager = StorageEngineManager(applicationContext = context)
     storageManager.clearAllStores()
+    // The experiments storage engine needs to be cleared manually as it's not listed
+    // in the `StorageEngineManager`.
+    ExperimentsStorageEngine.clearAllStores()
     // Clear the "first run" flag.
     val firstRun = FileFirstRunDetector(File(context.applicationInfo.dataDir, Glean.GLEAN_DATA_DIR))
     firstRun.reset()

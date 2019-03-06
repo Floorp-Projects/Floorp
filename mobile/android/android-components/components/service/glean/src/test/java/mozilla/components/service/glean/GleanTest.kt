@@ -12,8 +12,6 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.work.testing.WorkManagerTestInitHelper
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.ObsoleteCoroutinesApi
-import mozilla.components.service.glean.storages.EventsStorageEngine
-import mozilla.components.service.glean.storages.ExperimentsStorageEngine
 import mozilla.components.service.glean.storages.StringsStorageEngine
 import mozilla.components.service.glean.scheduler.GleanLifecycleObserver
 import mozilla.components.service.glean.scheduler.MetricsPingScheduler
@@ -59,7 +57,6 @@ class GleanTest {
     @After
     fun resetGlobalState() {
         Glean.setUploadEnabled(true)
-        Glean.clearExperiments()
     }
 
     @Test
@@ -71,7 +68,6 @@ class GleanTest {
                 name = "string_metric",
                 sendInPings = listOf("store1")
         )
-        Glean.testClearAllData()
         Glean.setUploadEnabled(false)
         assertEquals(false, Glean.getUploadEnabled())
         stringMetric.set("foo")
@@ -92,12 +88,33 @@ class GleanTest {
     }
 
     @Test
+    fun `test experiments recording`() {
+        Glean.setExperimentActive(
+            "experiment_test", "branch_a"
+        )
+        Glean.setExperimentActive(
+            "experiment_api", "branch_b",
+            mapOf("test_key" to "value")
+        )
+        assertTrue(Glean.testIsExperimentActive("experiment_api"))
+        assertTrue(Glean.testIsExperimentActive("experiment_test"))
+
+        Glean.setExperimentInactive("experiment_test")
+
+        assertTrue(Glean.testIsExperimentActive("experiment_api"))
+        assertFalse(Glean.testIsExperimentActive("experiment_test"))
+
+        val storedData = Glean.testGetExperimentData("experiment_api")
+        assertEquals("branch_b", storedData.branch)
+        assertEquals(1, storedData.extra?.size)
+        assertEquals("value", storedData.extra?.getValue("test_key"))
+    }
+
+    @Test
     fun `test sending of default pings`() {
         val server = MockWebServer()
         server.enqueue(MockResponse().setBody("OK"))
 
-        StringsStorageEngine.clearAllStores()
-        ExperimentsStorageEngine.clearAllStores()
         val stringMetric = StringMetricType(
             disabled = false,
             category = "telemetry",
@@ -122,6 +139,9 @@ class GleanTest {
                 mapOf("key" to "value")
             )
             Glean.setExperimentInactive("experiment1")
+
+            assertTrue(Glean.testIsExperimentActive("experiment2"))
+            assertFalse(Glean.testIsExperimentActive("experiment1"))
 
             Glean.metricsPingScheduler.clearSchedulerData()
             Glean.handleEvent(Glean.PingEvent.Default)
@@ -157,7 +177,6 @@ class GleanTest {
         val server = MockWebServer()
         server.enqueue(MockResponse().setBody("OK"))
 
-        EventsStorageEngine.clearAllStores()
         val click = EventMetricType(
             disabled = false,
             category = "ui",
@@ -230,7 +249,6 @@ class GleanTest {
         val server = MockWebServer()
         server.enqueue(MockResponse().setBody("OK"))
 
-        StringsStorageEngine.clearAllStores()
         val metricToSend = StringMetricType(
             disabled = false,
             category = "telemetry",
@@ -321,7 +339,6 @@ class GleanTest {
             name = "string_metric",
             sendInPings = listOf("store1")
         )
-        Glean.testClearAllData()
         Glean.initialized = false
         stringMetric.set("foo")
         assertNull(
@@ -354,9 +371,6 @@ class GleanTest {
 
     @Test
     fun `Don't schedule pings if metrics disabled`() {
-        Glean.testClearAllData()
-
-        resetGlean()
         Glean.setUploadEnabled(false)
 
         Glean.handleEvent(Glean.PingEvent.Background)
@@ -366,8 +380,6 @@ class GleanTest {
 
     @Test
     fun `Don't schedule pings if there is no ping content`() {
-        EventsStorageEngine.clearAllStores()
-
         resetGlean(getContextWithMockedInfo())
 
         Glean.handleEvent(Glean.PingEvent.Background)

@@ -214,7 +214,6 @@ class EventMetricTypeTest {
             sendInPings = listOf("store1"),
             allowedExtraKeys = listOf("test_name")
         )
-        Glean.testClearAllData()
         assertEquals(true, Glean.getUploadEnabled())
         Glean.setUploadEnabled(true)
         eventMetric.record(mapOf("test_name" to "event1"))

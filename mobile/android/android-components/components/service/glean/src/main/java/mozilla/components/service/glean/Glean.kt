@@ -24,6 +24,7 @@ import mozilla.components.service.glean.storages.PingStorageEngine
 import mozilla.components.service.glean.storages.ExperimentsStorageEngine
 import mozilla.components.service.glean.storages.UuidsStorageEngine
 import mozilla.components.service.glean.storages.DatetimesStorageEngine
+import mozilla.components.service.glean.storages.RecordedExperimentData
 import mozilla.components.service.glean.storages.StringsStorageEngine
 import mozilla.components.support.base.log.logger.Logger
 
@@ -147,9 +148,27 @@ open class GleanInternalAPI internal constructor () {
         ExperimentsStorageEngine.setExperimentInactive(experimentId)
     }
 
-    @VisibleForTesting
-    internal fun clearExperiments() {
-        ExperimentsStorageEngine.clearAllStores()
+    /**
+     * Tests whether an experiment is active, for testing purposes only.
+     *
+     * @param experimentId the id of the experiment to look for.
+     * @return true if the experiment is active and reported in pings, otherwise false
+     */
+    @VisibleForTesting(otherwise = VisibleForTesting.NONE)
+    fun testIsExperimentActive(experimentId: String): Boolean {
+        return ExperimentsStorageEngine.getSnapshot()[experimentId] != null
+    }
+
+    /**
+     * Returns the stored data for the requested active experiment, for testing purposes only.
+     *
+     * @param experimentId the id of the experiment to look for.
+     * @return the [RecordedExperimentData] for the experiment
+     * @throws [NullPointerException] if the requested experiment is not active
+     */
+    @VisibleForTesting(otherwise = VisibleForTesting.NONE)
+    fun testGetExperimentData(experimentId: String): RecordedExperimentData {
+        return ExperimentsStorageEngine.getSnapshot().getValue(experimentId)
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
@@ -286,15 +305,6 @@ open class GleanInternalAPI internal constructor () {
         }
 
         return hasPingContent
-    }
-
-    /**
-     * Test only function to clear all storages and metrics.  Note that this also includes 'user'
-     * lifetime metrics so be aware that things like clientId will be wiped as well.
-     */
-    @VisibleForTesting(otherwise = VisibleForTesting.NONE)
-    fun testClearAllData() {
-        storageEngineManager.clearAllStores()
     }
 
     /**
