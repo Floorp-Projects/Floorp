@@ -62,11 +62,13 @@
     </hbox>
 #endif
 
-    <stack>
-      <!-- if width and height are not present, they default to 300x150 and stretch the stack -->
-      <html:canvas id="screen" width="1" height="1" role="presentation"/>
-      <image id="monitor"/>
-    </stack>
+    <vbox align="center">
+      <stack>
+        <!-- if width and height are not present, they default to 300x150 and stretch the stack -->
+        <html:canvas id="screen" width="1" height="1" role="presentation"/>
+        <image id="monitor"/>
+      </stack>
+    </vbox>
 
 #ifdef XP_MACOSX
     <separator/>
