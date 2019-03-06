@@ -77,10 +77,6 @@ class nsXBLKeyEventHandler : public nsIDOMEventListener {
     mIsBoundToChrome = aIsBoundToChrome;
   }
 
-  void SetUsingContentXBLScope(bool aUsingContentXBLScope) {
-    mUsingContentXBLScope = aUsingContentXBLScope;
-  }
-
  private:
   nsXBLKeyEventHandler();
   virtual ~nsXBLKeyEventHandler();
@@ -94,7 +90,6 @@ class nsXBLKeyEventHandler : public nsIDOMEventListener {
   uint8_t mPhase;
   uint8_t mType;
   bool mIsBoundToChrome;
-  bool mUsingContentXBLScope;
 };
 
 already_AddRefed<nsXBLEventHandler> NS_NewXBLEventHandler(
