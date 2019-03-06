@@ -67,13 +67,15 @@ nsIPrincipal* GetPrincipalFromThreadSafeWorkerRef(
 class InitializeRunnable final : public WorkerMainThreadRunnable {
  public:
   InitializeRunnable(ThreadSafeWorkerRef* aWorkerRef, nsACString& aOrigin,
-                     PrincipalInfo& aPrincipalInfo, ErrorResult& aRv)
+                     PrincipalInfo& aPrincipalInfo, bool* aThirdPartyWindow,
+                     ErrorResult& aRv)
       : WorkerMainThreadRunnable(
             aWorkerRef->Private(),
             NS_LITERAL_CSTRING("BroadcastChannel :: Initialize")),
         mWorkerRef(aWorkerRef),
         mOrigin(aOrigin),
         mPrincipalInfo(aPrincipalInfo),
+        mThirdPartyWindow(aThirdPartyWindow),
         mRv(aRv) {
     MOZ_ASSERT(mWorkerRef);
   }
@@ -109,6 +111,9 @@ class InitializeRunnable final : public WorkerMainThreadRunnable {
       return true;
     }
 
+    *mThirdPartyWindow =
+        nsContentUtils::IsThirdPartyWindowOrChannel(window, nullptr, nullptr);
+
     return true;
   }
 
@@ -116,6 +121,7 @@ class InitializeRunnable final : public WorkerMainThreadRunnable {
   RefPtr<ThreadSafeWorkerRef> mWorkerRef;
   nsACString& mOrigin;
   PrincipalInfo& mPrincipalInfo;
+  bool* mThirdPartyWindow;
   ErrorResult& mRv;
 };
 
@@ -242,14 +248,6 @@ already_AddRefed<BroadcastChannel> BroadcastChannel::Constructor(
       return nullptr;
     }
 
-    // We want to allow opaque origins.
-    if (!principal->GetIsNullPrincipal() &&
-        nsContentUtils::StorageAllowedForWindow(window) <=
-            nsContentUtils::StorageAccess::eDeny) {
-      aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
-      return nullptr;
-    }
-
     aRv = principal->GetOrigin(origin);
     if (NS_WARN_IF(aRv.Failed())) {
       return nullptr;
@@ -257,6 +255,13 @@ already_AddRefed<BroadcastChannel> BroadcastChannel::Constructor(
 
     aRv = PrincipalToPrincipalInfo(principal, &principalInfo);
     if (NS_WARN_IF(aRv.Failed())) {
+      return nullptr;
+    }
+
+    if (nsContentUtils::IsThirdPartyWindowOrChannel(window, nullptr, nullptr) &&
+        nsContentUtils::StorageAllowedForWindow(window) !=
+            nsContentUtils::StorageAccess::eAllow) {
+      aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
       return nullptr;
     }
   } else {
@@ -276,15 +281,16 @@ already_AddRefed<BroadcastChannel> BroadcastChannel::Constructor(
 
     RefPtr<ThreadSafeWorkerRef> tsr = new ThreadSafeWorkerRef(workerRef);
 
-    RefPtr<InitializeRunnable> runnable =
-        new InitializeRunnable(tsr, origin, principalInfo, aRv);
+    bool thirdPartyWindow = false;
+
+    RefPtr<InitializeRunnable> runnable = new InitializeRunnable(
+        tsr, origin, principalInfo, &thirdPartyWindow, aRv);
     runnable->Dispatch(Canceling, aRv);
     if (aRv.Failed()) {
       return nullptr;
     }
 
-    if (principalInfo.type() != PrincipalInfo::TNullPrincipalInfo &&
-        !workerPrivate->IsStorageAllowed()) {
+    if (thirdPartyWindow && !workerPrivate->IsStorageAllowed()) {
       aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
       return nullptr;
     }

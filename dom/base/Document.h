@@ -12,8 +12,7 @@
 #include "nsCOMArray.h"         // for member
 #include "nsCompatibility.h"    // for member
 #include "nsCOMPtr.h"           // for member
-#include "nsICookieSettings.h"
-#include "nsGkAtoms.h"  // for static class members
+#include "nsGkAtoms.h"          // for static class members
 #include "nsIApplicationCache.h"
 #include "nsIApplicationCacheContainer.h"
 #include "nsIContentViewer.h"
@@ -1488,9 +1487,6 @@ class Document : public nsINode,
   // Helper method that returns true if the document has storage-access sandbox
   // flag.
   bool StorageAccessSandboxed() const;
-
-  // Returns the cookie settings for this and sub contexts.
-  nsICookieSettings* CookieSettings();
 
   // Increments the document generation.
   inline void Changed() { ++mGeneration; }
@@ -4693,8 +4689,6 @@ class Document : public nsINode,
   float mSavedResolution;
 
   bool mPendingInitialTranslation;
-
-  nsCOMPtr<nsICookieSettings> mCookieSettings;
 
   // Document generation. Gets incremented everytime it changes.
   int32_t mGeneration;

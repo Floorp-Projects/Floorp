@@ -7,8 +7,6 @@
 #include "XMLHttpRequest.h"
 #include "XMLHttpRequestMainThread.h"
 #include "XMLHttpRequestWorker.h"
-#include "mozilla/net/CookieSettings.h"
-#include "nsGlobalWindowInner.h"
 
 namespace mozilla {
 namespace dom {
@@ -27,23 +25,8 @@ already_AddRefed<XMLHttpRequest> XMLHttpRequest::Constructor(
       return nullptr;
     }
 
-    nsCOMPtr<nsICookieSettings> cookieSettings;
-    nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(global);
-    if (window) {
-      Document* document = window->GetExtantDoc();
-      if (NS_WARN_IF(!document)) {
-        aRv.Throw(NS_ERROR_FAILURE);
-        return nullptr;
-      }
-
-      cookieSettings = document->CookieSettings();
-    } else {
-      // We are here because this is a sandbox.
-      cookieSettings = net::CookieSettings::Create();
-    }
-
     RefPtr<XMLHttpRequestMainThread> req = new XMLHttpRequestMainThread();
-    req->Construct(principal->GetPrincipal(), global, cookieSettings);
+    req->Construct(principal->GetPrincipal(), global);
     req->InitParameters(aParams.mMozAnon, aParams.mMozSystem);
     return req.forget();
   }
