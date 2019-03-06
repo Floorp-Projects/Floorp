@@ -875,7 +875,7 @@ UnboxedPlainObject* UnboxedPlainObject::create(JSContext* cx,
     AutoSweepObjectGroup sweep(group);
     allocKind = group->unboxedLayout(sweep).getAllocKind();
   }
-  gc::InitialHeap heap = GetInitialHeap(newKind, &class_);
+  gc::InitialHeap heap = GetInitialHeap(newKind, group);
 
   MOZ_ASSERT(newKind != SingletonObject);
 
