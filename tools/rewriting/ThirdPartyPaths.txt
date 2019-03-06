@@ -1,5 +1,6 @@
 browser/components/translation/cld2/
 db/sqlite3/src/
+devtools/client/shared/build/babel.js
 devtools/client/shared/sourceeditor/codemirror/
 devtools/client/shared/sourceeditor/tern/
 devtools/shared/heapsnapshot/CoreDump.pb.cc
