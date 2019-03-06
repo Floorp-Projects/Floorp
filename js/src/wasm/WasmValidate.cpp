@@ -817,51 +817,51 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
         CHECK(iter.readUnreachable());
       case uint16_t(Op::MiscPrefix): {
         switch (op.b1) {
-          case uint16_t(MiscOp::I32TruncSSatF32):
-          case uint16_t(MiscOp::I32TruncUSatF32):
+          case uint32_t(MiscOp::I32TruncSSatF32):
+          case uint32_t(MiscOp::I32TruncUSatF32):
             CHECK(iter.readConversion(ValType::F32, ValType::I32, &nothing));
-          case uint16_t(MiscOp::I32TruncSSatF64):
-          case uint16_t(MiscOp::I32TruncUSatF64):
+          case uint32_t(MiscOp::I32TruncSSatF64):
+          case uint32_t(MiscOp::I32TruncUSatF64):
             CHECK(iter.readConversion(ValType::F64, ValType::I32, &nothing));
-          case uint16_t(MiscOp::I64TruncSSatF32):
-          case uint16_t(MiscOp::I64TruncUSatF32):
+          case uint32_t(MiscOp::I64TruncSSatF32):
+          case uint32_t(MiscOp::I64TruncUSatF32):
             CHECK(iter.readConversion(ValType::F32, ValType::I64, &nothing));
-          case uint16_t(MiscOp::I64TruncSSatF64):
-          case uint16_t(MiscOp::I64TruncUSatF64):
+          case uint32_t(MiscOp::I64TruncSSatF64):
+          case uint32_t(MiscOp::I64TruncUSatF64):
             CHECK(iter.readConversion(ValType::F64, ValType::I64, &nothing));
 #ifdef ENABLE_WASM_BULKMEM_OPS
-          case uint16_t(MiscOp::MemCopy): {
+          case uint32_t(MiscOp::MemCopy): {
             uint32_t unusedDestMemIndex;
             uint32_t unusedSrcMemIndex;
             CHECK(iter.readMemOrTableCopy(/*isMem=*/true, &unusedDestMemIndex,
                                           &nothing, &unusedSrcMemIndex,
                                           &nothing, &nothing));
           }
-          case uint16_t(MiscOp::DataDrop): {
+          case uint32_t(MiscOp::DataDrop): {
             uint32_t unusedSegIndex;
             CHECK(iter.readDataOrElemDrop(/*isData=*/true, &unusedSegIndex));
           }
-          case uint16_t(MiscOp::MemFill):
+          case uint32_t(MiscOp::MemFill):
             CHECK(iter.readMemFill(&nothing, &nothing, &nothing));
-          case uint16_t(MiscOp::MemInit): {
+          case uint32_t(MiscOp::MemInit): {
             uint32_t unusedSegIndex;
             uint32_t unusedTableIndex;
             CHECK(iter.readMemOrTableInit(/*isMem=*/true, &unusedSegIndex,
                                           &unusedTableIndex, &nothing, &nothing,
                                           &nothing));
           }
-          case uint16_t(MiscOp::TableCopy): {
+          case uint32_t(MiscOp::TableCopy): {
             uint32_t unusedDestTableIndex;
             uint32_t unusedSrcTableIndex;
             CHECK(iter.readMemOrTableCopy(
                 /*isMem=*/false, &unusedDestTableIndex, &nothing,
                 &unusedSrcTableIndex, &nothing, &nothing));
           }
-          case uint16_t(MiscOp::ElemDrop): {
+          case uint32_t(MiscOp::ElemDrop): {
             uint32_t unusedSegIndex;
             CHECK(iter.readDataOrElemDrop(/*isData=*/false, &unusedSegIndex));
           }
-          case uint16_t(MiscOp::TableInit): {
+          case uint32_t(MiscOp::TableInit): {
             uint32_t unusedSegIndex;
             uint32_t unusedTableIndex;
             CHECK(iter.readMemOrTableInit(/*isMem=*/false, &unusedSegIndex,
@@ -870,17 +870,17 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
           }
 #endif
 #ifdef ENABLE_WASM_REFTYPES
-          case uint16_t(MiscOp::TableGrow): {
+          case uint32_t(MiscOp::TableGrow): {
             uint32_t unusedTableIndex;
             CHECK(iter.readTableGrow(&unusedTableIndex, &nothing, &nothing));
           }
-          case uint16_t(MiscOp::TableSize): {
+          case uint32_t(MiscOp::TableSize): {
             uint32_t unusedTableIndex;
             CHECK(iter.readTableSize(&unusedTableIndex));
           }
 #endif
 #ifdef ENABLE_WASM_GC
-          case uint16_t(MiscOp::StructNew): {
+          case uint32_t(MiscOp::StructNew): {
             if (!env.gcTypesEnabled()) {
               return iter.unrecognizedOpcode(&op);
             }
@@ -888,14 +888,14 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
             ValidatingOpIter::ValueVector unusedArgs;
             CHECK(iter.readStructNew(&unusedUint, &unusedArgs));
           }
-          case uint16_t(MiscOp::StructGet): {
+          case uint32_t(MiscOp::StructGet): {
             if (!env.gcTypesEnabled()) {
               return iter.unrecognizedOpcode(&op);
             }
             uint32_t unusedUint1, unusedUint2;
             CHECK(iter.readStructGet(&unusedUint1, &unusedUint2, &nothing));
           }
-          case uint16_t(MiscOp::StructSet): {
+          case uint32_t(MiscOp::StructSet): {
             if (!env.gcTypesEnabled()) {
               return iter.unrecognizedOpcode(&op);
             }
@@ -903,7 +903,7 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
             CHECK(iter.readStructSet(&unusedUint1, &unusedUint2, &nothing,
                                      &nothing));
           }
-          case uint16_t(MiscOp::StructNarrow): {
+          case uint32_t(MiscOp::StructNarrow): {
             if (!env.gcTypesEnabled()) {
               return iter.unrecognizedOpcode(&op);
             }
@@ -937,168 +937,168 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
 #endif
       case uint16_t(Op::ThreadPrefix): {
         switch (op.b1) {
-          case uint16_t(ThreadOp::Wake): {
+          case uint32_t(ThreadOp::Wake): {
             LinearMemoryAddress<Nothing> addr;
             CHECK(iter.readWake(&addr, &nothing));
           }
-          case uint16_t(ThreadOp::I32Wait): {
+          case uint32_t(ThreadOp::I32Wait): {
             LinearMemoryAddress<Nothing> addr;
             CHECK(iter.readWait(&addr, ValType::I32, 4, &nothing, &nothing));
           }
-          case uint16_t(ThreadOp::I64Wait): {
+          case uint32_t(ThreadOp::I64Wait): {
             LinearMemoryAddress<Nothing> addr;
             CHECK(iter.readWait(&addr, ValType::I64, 8, &nothing, &nothing));
           }
-          case uint16_t(ThreadOp::I32AtomicLoad): {
+          case uint32_t(ThreadOp::I32AtomicLoad): {
             LinearMemoryAddress<Nothing> addr;
             CHECK(iter.readAtomicLoad(&addr, ValType::I32, 4));
           }
-          case uint16_t(ThreadOp::I64AtomicLoad): {
+          case uint32_t(ThreadOp::I64AtomicLoad): {
             LinearMemoryAddress<Nothing> addr;
             CHECK(iter.readAtomicLoad(&addr, ValType::I64, 8));
           }
-          case uint16_t(ThreadOp::I32AtomicLoad8U): {
+          case uint32_t(ThreadOp::I32AtomicLoad8U): {
             LinearMemoryAddress<Nothing> addr;
             CHECK(iter.readAtomicLoad(&addr, ValType::I32, 1));
           }
-          case uint16_t(ThreadOp::I32AtomicLoad16U): {
+          case uint32_t(ThreadOp::I32AtomicLoad16U): {
             LinearMemoryAddress<Nothing> addr;
             CHECK(iter.readAtomicLoad(&addr, ValType::I32, 2));
           }
-          case uint16_t(ThreadOp::I64AtomicLoad8U): {
+          case uint32_t(ThreadOp::I64AtomicLoad8U): {
             LinearMemoryAddress<Nothing> addr;
             CHECK(iter.readAtomicLoad(&addr, ValType::I64, 1));
           }
-          case uint16_t(ThreadOp::I64AtomicLoad16U): {
+          case uint32_t(ThreadOp::I64AtomicLoad16U): {
             LinearMemoryAddress<Nothing> addr;
             CHECK(iter.readAtomicLoad(&addr, ValType::I64, 2));
           }
-          case uint16_t(ThreadOp::I64AtomicLoad32U): {
+          case uint32_t(ThreadOp::I64AtomicLoad32U): {
             LinearMemoryAddress<Nothing> addr;
             CHECK(iter.readAtomicLoad(&addr, ValType::I64, 4));
           }
-          case uint16_t(ThreadOp::I32AtomicStore): {
+          case uint32_t(ThreadOp::I32AtomicStore): {
             LinearMemoryAddress<Nothing> addr;
             CHECK(iter.readAtomicStore(&addr, ValType::I32, 4, &nothing));
           }
-          case uint16_t(ThreadOp::I64AtomicStore): {
+          case uint32_t(ThreadOp::I64AtomicStore): {
             LinearMemoryAddress<Nothing> addr;
             CHECK(iter.readAtomicStore(&addr, ValType::I64, 8, &nothing));
           }
-          case uint16_t(ThreadOp::I32AtomicStore8U): {
+          case uint32_t(ThreadOp::I32AtomicStore8U): {
             LinearMemoryAddress<Nothing> addr;
             CHECK(iter.readAtomicStore(&addr, ValType::I32, 1, &nothing));
           }
-          case uint16_t(ThreadOp::I32AtomicStore16U): {
+          case uint32_t(ThreadOp::I32AtomicStore16U): {
             LinearMemoryAddress<Nothing> addr;
             CHECK(iter.readAtomicStore(&addr, ValType::I32, 2, &nothing));
           }
-          case uint16_t(ThreadOp::I64AtomicStore8U): {
+          case uint32_t(ThreadOp::I64AtomicStore8U): {
             LinearMemoryAddress<Nothing> addr;
             CHECK(iter.readAtomicStore(&addr, ValType::I64, 1, &nothing));
           }
-          case uint16_t(ThreadOp::I64AtomicStore16U): {
+          case uint32_t(ThreadOp::I64AtomicStore16U): {
             LinearMemoryAddress<Nothing> addr;
             CHECK(iter.readAtomicStore(&addr, ValType::I64, 2, &nothing));
           }
-          case uint16_t(ThreadOp::I64AtomicStore32U): {
+          case uint32_t(ThreadOp::I64AtomicStore32U): {
             LinearMemoryAddress<Nothing> addr;
             CHECK(iter.readAtomicStore(&addr, ValType::I64, 4, &nothing));
           }
-          case uint16_t(ThreadOp::I32AtomicAdd):
-          case uint16_t(ThreadOp::I32AtomicSub):
-          case uint16_t(ThreadOp::I32AtomicAnd):
-          case uint16_t(ThreadOp::I32AtomicOr):
-          case uint16_t(ThreadOp::I32AtomicXor):
-          case uint16_t(ThreadOp::I32AtomicXchg): {
+          case uint32_t(ThreadOp::I32AtomicAdd):
+          case uint32_t(ThreadOp::I32AtomicSub):
+          case uint32_t(ThreadOp::I32AtomicAnd):
+          case uint32_t(ThreadOp::I32AtomicOr):
+          case uint32_t(ThreadOp::I32AtomicXor):
+          case uint32_t(ThreadOp::I32AtomicXchg): {
             LinearMemoryAddress<Nothing> addr;
             CHECK(iter.readAtomicRMW(&addr, ValType::I32, 4, &nothing));
           }
-          case uint16_t(ThreadOp::I64AtomicAdd):
-          case uint16_t(ThreadOp::I64AtomicSub):
-          case uint16_t(ThreadOp::I64AtomicAnd):
-          case uint16_t(ThreadOp::I64AtomicOr):
-          case uint16_t(ThreadOp::I64AtomicXor):
-          case uint16_t(ThreadOp::I64AtomicXchg): {
+          case uint32_t(ThreadOp::I64AtomicAdd):
+          case uint32_t(ThreadOp::I64AtomicSub):
+          case uint32_t(ThreadOp::I64AtomicAnd):
+          case uint32_t(ThreadOp::I64AtomicOr):
+          case uint32_t(ThreadOp::I64AtomicXor):
+          case uint32_t(ThreadOp::I64AtomicXchg): {
             LinearMemoryAddress<Nothing> addr;
             CHECK(iter.readAtomicRMW(&addr, ValType::I64, 8, &nothing));
           }
-          case uint16_t(ThreadOp::I32AtomicAdd8U):
-          case uint16_t(ThreadOp::I32AtomicSub8U):
-          case uint16_t(ThreadOp::I32AtomicAnd8U):
-          case uint16_t(ThreadOp::I32AtomicOr8U):
-          case uint16_t(ThreadOp::I32AtomicXor8U):
-          case uint16_t(ThreadOp::I32AtomicXchg8U): {
+          case uint32_t(ThreadOp::I32AtomicAdd8U):
+          case uint32_t(ThreadOp::I32AtomicSub8U):
+          case uint32_t(ThreadOp::I32AtomicAnd8U):
+          case uint32_t(ThreadOp::I32AtomicOr8U):
+          case uint32_t(ThreadOp::I32AtomicXor8U):
+          case uint32_t(ThreadOp::I32AtomicXchg8U): {
             LinearMemoryAddress<Nothing> addr;
             CHECK(iter.readAtomicRMW(&addr, ValType::I32, 1, &nothing));
           }
-          case uint16_t(ThreadOp::I32AtomicAdd16U):
-          case uint16_t(ThreadOp::I32AtomicSub16U):
-          case uint16_t(ThreadOp::I32AtomicAnd16U):
-          case uint16_t(ThreadOp::I32AtomicOr16U):
-          case uint16_t(ThreadOp::I32AtomicXor16U):
-          case uint16_t(ThreadOp::I32AtomicXchg16U): {
+          case uint32_t(ThreadOp::I32AtomicAdd16U):
+          case uint32_t(ThreadOp::I32AtomicSub16U):
+          case uint32_t(ThreadOp::I32AtomicAnd16U):
+          case uint32_t(ThreadOp::I32AtomicOr16U):
+          case uint32_t(ThreadOp::I32AtomicXor16U):
+          case uint32_t(ThreadOp::I32AtomicXchg16U): {
             LinearMemoryAddress<Nothing> addr;
             CHECK(iter.readAtomicRMW(&addr, ValType::I32, 2, &nothing));
           }
-          case uint16_t(ThreadOp::I64AtomicAdd8U):
-          case uint16_t(ThreadOp::I64AtomicSub8U):
-          case uint16_t(ThreadOp::I64AtomicAnd8U):
-          case uint16_t(ThreadOp::I64AtomicOr8U):
-          case uint16_t(ThreadOp::I64AtomicXor8U):
-          case uint16_t(ThreadOp::I64AtomicXchg8U): {
+          case uint32_t(ThreadOp::I64AtomicAdd8U):
+          case uint32_t(ThreadOp::I64AtomicSub8U):
+          case uint32_t(ThreadOp::I64AtomicAnd8U):
+          case uint32_t(ThreadOp::I64AtomicOr8U):
+          case uint32_t(ThreadOp::I64AtomicXor8U):
+          case uint32_t(ThreadOp::I64AtomicXchg8U): {
             LinearMemoryAddress<Nothing> addr;
             CHECK(iter.readAtomicRMW(&addr, ValType::I64, 1, &nothing));
           }
-          case uint16_t(ThreadOp::I64AtomicAdd16U):
-          case uint16_t(ThreadOp::I64AtomicSub16U):
-          case uint16_t(ThreadOp::I64AtomicAnd16U):
-          case uint16_t(ThreadOp::I64AtomicOr16U):
-          case uint16_t(ThreadOp::I64AtomicXor16U):
-          case uint16_t(ThreadOp::I64AtomicXchg16U): {
+          case uint32_t(ThreadOp::I64AtomicAdd16U):
+          case uint32_t(ThreadOp::I64AtomicSub16U):
+          case uint32_t(ThreadOp::I64AtomicAnd16U):
+          case uint32_t(ThreadOp::I64AtomicOr16U):
+          case uint32_t(ThreadOp::I64AtomicXor16U):
+          case uint32_t(ThreadOp::I64AtomicXchg16U): {
             LinearMemoryAddress<Nothing> addr;
             CHECK(iter.readAtomicRMW(&addr, ValType::I64, 2, &nothing));
           }
-          case uint16_t(ThreadOp::I64AtomicAdd32U):
-          case uint16_t(ThreadOp::I64AtomicSub32U):
-          case uint16_t(ThreadOp::I64AtomicAnd32U):
-          case uint16_t(ThreadOp::I64AtomicOr32U):
-          case uint16_t(ThreadOp::I64AtomicXor32U):
-          case uint16_t(ThreadOp::I64AtomicXchg32U): {
+          case uint32_t(ThreadOp::I64AtomicAdd32U):
+          case uint32_t(ThreadOp::I64AtomicSub32U):
+          case uint32_t(ThreadOp::I64AtomicAnd32U):
+          case uint32_t(ThreadOp::I64AtomicOr32U):
+          case uint32_t(ThreadOp::I64AtomicXor32U):
+          case uint32_t(ThreadOp::I64AtomicXchg32U): {
             LinearMemoryAddress<Nothing> addr;
             CHECK(iter.readAtomicRMW(&addr, ValType::I64, 4, &nothing));
           }
-          case uint16_t(ThreadOp::I32AtomicCmpXchg): {
+          case uint32_t(ThreadOp::I32AtomicCmpXchg): {
             LinearMemoryAddress<Nothing> addr;
             CHECK(iter.readAtomicCmpXchg(&addr, ValType::I32, 4, &nothing,
                                          &nothing));
           }
-          case uint16_t(ThreadOp::I64AtomicCmpXchg): {
+          case uint32_t(ThreadOp::I64AtomicCmpXchg): {
             LinearMemoryAddress<Nothing> addr;
             CHECK(iter.readAtomicCmpXchg(&addr, ValType::I64, 8, &nothing,
                                          &nothing));
           }
-          case uint16_t(ThreadOp::I32AtomicCmpXchg8U): {
+          case uint32_t(ThreadOp::I32AtomicCmpXchg8U): {
             LinearMemoryAddress<Nothing> addr;
             CHECK(iter.readAtomicCmpXchg(&addr, ValType::I32, 1, &nothing,
                                          &nothing));
           }
-          case uint16_t(ThreadOp::I32AtomicCmpXchg16U): {
+          case uint32_t(ThreadOp::I32AtomicCmpXchg16U): {
             LinearMemoryAddress<Nothing> addr;
             CHECK(iter.readAtomicCmpXchg(&addr, ValType::I32, 2, &nothing,
                                          &nothing));
           }
-          case uint16_t(ThreadOp::I64AtomicCmpXchg8U): {
+          case uint32_t(ThreadOp::I64AtomicCmpXchg8U): {
             LinearMemoryAddress<Nothing> addr;
             CHECK(iter.readAtomicCmpXchg(&addr, ValType::I64, 1, &nothing,
                                          &nothing));
           }
-          case uint16_t(ThreadOp::I64AtomicCmpXchg16U): {
+          case uint32_t(ThreadOp::I64AtomicCmpXchg16U): {
             LinearMemoryAddress<Nothing> addr;
             CHECK(iter.readAtomicCmpXchg(&addr, ValType::I64, 2, &nothing,
                                          &nothing));
           }
-          case uint16_t(ThreadOp::I64AtomicCmpXchg32U): {
+          case uint32_t(ThreadOp::I64AtomicCmpXchg32U): {
             LinearMemoryAddress<Nothing> addr;
             CHECK(iter.readAtomicCmpXchg(&addr, ValType::I64, 4, &nothing,
                                          &nothing));
