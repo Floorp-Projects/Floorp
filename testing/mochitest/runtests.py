@@ -857,6 +857,7 @@ class MochitestDesktop(object):
         self.manifest = None
         self.tests_by_manifest = defaultdict(list)
         self.prefs_by_manifest = defaultdict(set)
+        self.env_vars_by_manifest = defaultdict(set)
         self._active_tests = None
         self.currentTests = None
         self._locations = None
@@ -866,6 +867,7 @@ class MochitestDesktop(object):
         self.mozLogs = None
         self.start_script_kwargs = {}
         self.extraPrefs = {}
+        self.extraEnv = {}
 
         if logger_options.get('log'):
             self.log = logger_options['log']
@@ -1485,11 +1487,13 @@ toolbar#nav-bar {
             manifest_relpath = os.path.relpath(test['manifest'], manifest_root)
             self.tests_by_manifest[manifest_relpath].append(tp)
             self.prefs_by_manifest[manifest_relpath].add(test.get('prefs'))
+            self.env_vars_by_manifest[manifest_relpath].add(test.get('environment'))
 
-            if 'prefs' in test and not options.runByManifest and 'disabled' not in test:
-                self.log.error("parsing {}: runByManifest mode must be enabled to "
-                               "set the `prefs` key".format(manifest_relpath))
-                sys.exit(1)
+            for key in ['prefs', 'environment']:
+                if key in test and not options.runByManifest and 'disabled' not in test:
+                    self.log.error("parsing {}: runByManifest mode must be enabled to "
+                                   "set the `{}` key".format(manifest_relpath, key))
+                    sys.exit(1)
 
             testob = {'path': tp, 'manifest': manifest_relpath}
             if 'disabled' in test:
@@ -1517,6 +1521,13 @@ toolbar#nav-bar {
             self.log.error("The 'prefs' key must be set in the DEFAULT section of a "
                            "manifest. Fix the following manifests: {}".format(
                             '\n'.join(pref_not_default)))
+            sys.exit(1)
+        # The 'environment' key needs to be set in the DEFAULT section too.
+        env_not_default = [m for m, p in self.env_vars_by_manifest.iteritems() if len(p) > 1]
+        if env_not_default:
+            self.log.error("The 'environment' key must be set in the DEFAULT section of a "
+                           "manifest. Fix the following manifests: {}".format(
+                            '\n'.join(env_not_default)))
             sys.exit(1)
 
         def path_sort(ob1, ob2):
@@ -1629,6 +1640,16 @@ toolbar#nav-bar {
         if (options.flavor == 'browser' or not options.e10s) and \
            'MOZ_CRASHREPORTER_SHUTDOWN' in browserEnv:
             del browserEnv["MOZ_CRASHREPORTER_SHUTDOWN"]
+
+        try:
+            browserEnv.update(
+                dict(
+                    parse_key_value(
+                        self.extraEnv,
+                        context='environment variable in manifest')))
+        except KeyValueParseError as e:
+            self.log.error(str(e))
+            return None
 
         # These variables are necessary for correct application startup; change
         # via the commandline at your own risk.
@@ -2591,6 +2612,14 @@ toolbar#nav-bar {
                 self.log.info("The following extra prefs will be set:\n  {}".format(
                     '\n  '.join(prefs)))
                 self.extraPrefs.update(parse_preferences(prefs))
+
+            envVars = list(self.env_vars_by_manifest[m])[0]
+            self.extraEnv = {}
+            if envVars:
+                self.extraEnv = envVars.strip().split()
+                self.log.info(
+                    "The following extra environment variables will be set:\n  {}".format(
+                        '\n  '.join(self.extraEnv)))
 
             # If we are using --run-by-manifest, we should not use the profile path (if) provided
             # by the user, since we need to create a new directory for each run. We would face
