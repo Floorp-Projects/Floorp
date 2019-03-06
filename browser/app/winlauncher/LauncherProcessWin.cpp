@@ -6,17 +6,16 @@
 
 #include "LauncherProcessWin.h"
 
-#include <io.h>  // For printf_stderr
 #include <string.h>
 
 #include "mozilla/Attributes.h"
 #include "mozilla/CmdLineAndEnvUtils.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/DynamicallyLinkedFunctionPtr.h"
+#include "mozilla/glue/Debug.h"
 #include "mozilla/LauncherResult.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/SafeMode.h"
-#include "mozilla/Sprintf.h"  // For printf_stderr
 #include "mozilla/UniquePtr.h"
 #include "mozilla/WindowsVersion.h"
 #include "mozilla/WinHeaderOnlyUtils.h"
@@ -104,28 +103,6 @@ static mozilla::LauncherFlags ProcessCmdLine(int& aArgc, wchar_t* aArgv[]) {
   }
 
   return result;
-}
-
-// Duplicated from xpcom glue. Ideally this should be shared.
-static void printf_stderr(const char* fmt, ...) {
-  if (IsDebuggerPresent()) {
-    char buf[2048];
-    va_list args;
-    va_start(args, fmt);
-    VsprintfLiteral(buf, fmt, args);
-    va_end(args);
-    OutputDebugStringA(buf);
-  }
-
-  FILE* fp = _fdopen(_dup(2), "a");
-  if (!fp) return;
-
-  va_list args;
-  va_start(args, fmt);
-  vfprintf(fp, fmt, args);
-  va_end(args);
-
-  fclose(fp);
 }
 
 static void MaybeBreakForBrowserDebugging() {
