@@ -23,6 +23,7 @@
 #include "js/HashTable.h"
 #include "threading/ExclusiveData.h"
 #include "vm/MutexIDs.h"
+#include "wasm/WasmGC.h"
 #include "wasm/WasmTypes.h"
 
 namespace js {

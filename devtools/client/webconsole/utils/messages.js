@@ -194,6 +194,7 @@ function transformConsoleAPICallPacket(packet) {
     prefix: message.prefix,
     private: message.private,
     executionPoint: message.executionPoint,
+    logpointId: message.logpointId,
   });
 }
 

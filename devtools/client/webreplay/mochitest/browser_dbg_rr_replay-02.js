@@ -6,8 +6,6 @@
 
 "use strict";
 
-// To disable all Web Replay tests, see browser.ini
-
 // Test ending a recording at a breakpoint and then separately replaying to the end.
 add_task(async function() {
   waitForExplicitFinish();

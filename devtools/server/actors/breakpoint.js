@@ -44,7 +44,7 @@ function BreakpointActor(threadActor, location) {
 BreakpointActor.prototype = {
   setOptions(options) {
     for (const [script, offsets] of this.scripts) {
-      this._updateOptionsForScript(script, offsets, this.options, options);
+      this._updateOptionsForScript(script, offsets, options);
     }
 
     this.options = options;
@@ -73,15 +73,14 @@ BreakpointActor.prototype = {
       script.setBreakpoint(offset, this);
     }
 
-    this._updateOptionsForScript(script, offsets, null, this.options);
+    this._updateOptionsForScript(script, offsets, this.options);
   },
 
   /**
    * Remove the breakpoints from associated scripts and clear the script cache.
    */
   removeScripts: function() {
-    for (const [script, offsets] of this.scripts) {
-      this._updateOptionsForScript(script, offsets, this.options, null);
+    for (const [script] of this.scripts) {
       script.clearBreakpoint(this);
     }
     this.scripts.clear();
@@ -89,26 +88,25 @@ BreakpointActor.prototype = {
 
   // Update any state affected by changing options on a script this breakpoint
   // is associated with.
-  _updateOptionsForScript(script, offsets, oldOptions, newOptions) {
-    if (this.threadActor.dbg.replaying) {
-      // When replaying, logging breakpoints are handled using an API to get logged
-      // messages from throughout the recording.
-      const oldLogValue = oldOptions && oldOptions.logValue;
-      const newLogValue = newOptions && newOptions.logValue;
-      if (oldLogValue != newLogValue) {
-        for (const offset of offsets) {
-          const { lineNumber, columnNumber } = script.getOffsetLocation(offset);
-          script.replayVirtualConsoleLog(offset, newLogValue, (point, rv) => {
+  _updateOptionsForScript(script, offsets, options) {
+    // When replaying, logging breakpoints are handled using an API to get logged
+    // messages from throughout the recording.
+    if (this.threadActor.dbg.replaying && options.logValue) {
+      for (const offset of offsets) {
+        const { lineNumber, columnNumber } = script.getOffsetLocation(offset);
+        script.replayVirtualConsoleLog(
+          offset, options.logValue, options.condition, (executionPoint, rv) => {
             const message = {
               filename: script.url,
               lineNumber,
               columnNumber,
-              executionPoint: point,
+              executionPoint,
               "arguments": ["return" in rv ? rv.return : rv.throw],
+              logpointId: options.logGroupId,
             };
             this.threadActor._parent._consoleActor.onConsoleAPICall(message);
-          });
-        }
+          }
+        );
       }
     }
   },

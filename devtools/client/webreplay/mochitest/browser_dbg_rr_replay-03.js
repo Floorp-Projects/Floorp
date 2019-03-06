@@ -6,8 +6,6 @@
 
 "use strict";
 
-// To disable all Web Replay tests, see browser.ini
-
 // Test for saving a recording and then replaying it in a new tab,
 // with rewinding disabled.
 add_task(async function() {

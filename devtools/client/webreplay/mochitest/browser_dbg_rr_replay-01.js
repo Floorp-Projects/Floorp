@@ -6,8 +6,6 @@
 
 "use strict";
 
-// To disable all Web Replay tests, see browser.ini
-
 // Basic test for saving a recording and then replaying it in a new tab.
 add_task(async function() {
   const recordingFile = newRecordingFile();
