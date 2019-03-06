@@ -552,7 +552,7 @@ if (wasmBulkMemSupported()) {
     // element segment is completely OOB.
     assertEq(typeof tbl.get(0), "function");
     assertEq(tbl.get(1), null);
-} else {
+} else if (!wasmUsesCranelift()) {
     assertEq(tbl.get(0), null);
     assertEq(tbl.get(1), null);
 }
@@ -571,7 +571,7 @@ if (wasmBulkMemSupported()) {
     assertEq(typeof tbl.get(0), "function");
     assertEq(typeof tbl.get(1), "function");
     assertEq(mem8[0], 1);
-} else {
+} else if (!wasmUsesCranelift()) {
     assertEq(tbl.get(0), null);
     assertEq(tbl.get(1), null);
     assertEq(mem8[0], 0);
