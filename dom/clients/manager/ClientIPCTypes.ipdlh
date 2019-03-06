@@ -34,12 +34,6 @@ struct IPCClientInfo
   FrameType frameType;
 };
 
-union OptionalIPCClientInfo
-{
-  IPCClientInfo;
-  void_t;
-};
-
 struct IPCClientWindowState
 {
   VisibilityState visibilityState;
