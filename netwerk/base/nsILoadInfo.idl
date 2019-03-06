@@ -431,7 +431,7 @@ interface nsILoadInfo : nsISupports
    * The cookie settings inherited from the top-level document's loadInfo.
    * It cannot be null.
    */
-  readonly attribute nsICookieSettings cookieSettings;
+  attribute nsICookieSettings cookieSettings;
 
   /**
    * If forceInheritPrincipal is true, the data coming from the channel should

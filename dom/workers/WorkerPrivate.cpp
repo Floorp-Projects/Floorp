@@ -59,6 +59,7 @@
 #include "ScriptLoader.h"
 #include "mozilla/dom/ServiceWorkerEvents.h"
 #include "mozilla/dom/ServiceWorkerManager.h"
+#include "mozilla/net/CookieSettings.h"
 #include "WorkerCSPEventListener.h"
 #include "WorkerDebugger.h"
 #include "WorkerDebuggerManager.h"
@@ -2475,6 +2476,7 @@ nsresult WorkerPrivate::GetLoadInfo(JSContext* aCx, nsPIDOMWindowInner* aWindow,
       nsContentUtils::StorageAccess access =
           nsContentUtils::StorageAllowedForWindow(globalWindow);
       loadInfo.mStorageAllowed = access > nsContentUtils::StorageAccess::eDeny;
+      loadInfo.mCookieSettings = document->CookieSettings();
       loadInfo.mOriginAttributes =
           nsContentUtils::GetOriginAttributes(document);
       loadInfo.mParentController = globalWindow->GetController();
@@ -2520,6 +2522,9 @@ nsresult WorkerPrivate::GetLoadInfo(JSContext* aCx, nsPIDOMWindowInner* aWindow,
       loadInfo.mFromWindow = false;
       loadInfo.mWindowID = UINT64_MAX;
       loadInfo.mStorageAllowed = true;
+      loadInfo.mCookieSettings = mozilla::net::CookieSettings::Create();
+      MOZ_ASSERT(loadInfo.mCookieSettings);
+
       loadInfo.mOriginAttributes = OriginAttributes();
     }
 
@@ -2539,10 +2544,10 @@ nsresult WorkerPrivate::GetLoadInfo(JSContext* aCx, nsPIDOMWindowInner* aWindow,
         getter_AddRefs(url), aScriptURL, document, loadInfo.mBaseURI);
     NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_SYNTAX_ERR);
 
-    rv = ChannelFromScriptURLMainThread(loadInfo.mLoadingPrincipal, document,
-                                        loadInfo.mLoadGroup, url, clientInfo,
-                                        ContentPolicyType(aWorkerType),
-                                        getter_AddRefs(loadInfo.mChannel));
+    rv = ChannelFromScriptURLMainThread(
+        loadInfo.mLoadingPrincipal, document, loadInfo.mLoadGroup, url,
+        clientInfo, ContentPolicyType(aWorkerType), loadInfo.mCookieSettings,
+        getter_AddRefs(loadInfo.mChannel));
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = NS_GetFinalChannelURI(loadInfo.mChannel,
