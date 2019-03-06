@@ -236,6 +236,18 @@
   padding: 10px var(--arrowpanel-padding);
 }
 
+#contextual-feature-recommendation-notification[data-notification-category="cfrFeatures"] .popup-notification-body-container,
+#contextual-feature-recommendation-notification[data-notification-category="cfrFeatures"] #cfr-notification-footer-addon-info,
+#contextual-feature-recommendation-notification[data-notification-category="cfrAddons"] #cfr-notification-feature-steps {
+  display: none;
+}
+
+#cfr-notification-feature-steps {
+  display: flex;
+  flex-direction: column;
+  margin-top: 10px;
+}
+
 #cfr-notification-footer-text,
 #cfr-notification-footer-users,
 #cfr-notification-footer-learn-more-link {
