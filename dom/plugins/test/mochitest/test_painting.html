@@ -86,6 +86,7 @@ function waitForPaint(func) {
   // Ensure the waiter has had a style change, so that this will
   // change its size and cause a paint.
   paint_waiter.style.backgroundColor = paint_waiter.style.backgroundColor == "blue" ? "yellow" : "blue";
+  // eslint-disable-next-line no-unused-vars
   var flush = paint_waiter.offsetHeight;
   paint_waiter.style.height = "1px";
   waitForPaintHelper(func);

@@ -189,7 +189,6 @@ dom/network/**
 dom/payments/**
 dom/performance/**
 dom/permission/**
-dom/plugins/test/mochitest/**
 dom/plugins/test/unit/**
 dom/promise/**
 dom/push/**

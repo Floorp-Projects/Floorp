@@ -38,7 +38,7 @@
   var startY;
 
   function doScroll() {
-    let [x, y, w, h] = p.getWindowPosition();
+    let y = p.getWindowPosition()[1];
     startY = y;
 
     scrollBy(0, kScrollAmount);
@@ -46,7 +46,7 @@
   }
 
   function checkScroll() {
-    let [x, y, w, h] = p.getWindowPosition();
+    let y = p.getWindowPosition()[1];
 
     is(y, startY - kScrollAmount, "Window should be informed of its new position.");
     SimpleTest.finish();

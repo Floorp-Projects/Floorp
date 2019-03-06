@@ -21,7 +21,6 @@ document.body.appendChild(i);
 i.addEventListener("load", function loaded() {
   var id = i.contentDocument;
   var e = id.createElement("embed");
-  var callbackrun = false;
   e.width = 200;
   e.height = 200;
   e.type = "application/x-test";
@@ -33,7 +32,6 @@ i.addEventListener("load", function loaded() {
     ob.removeChild(i);
     id.body.clientTop;
     id.body.removeChild(e);
-    callbackrun = true;
   });
   id.body.appendChild(e);
   e.clientTop;

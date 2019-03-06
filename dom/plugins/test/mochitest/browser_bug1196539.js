@@ -20,7 +20,6 @@ add_task(async function() {
 
   setTestPluginEnabledState(Ci.nsIPluginTag.STATE_ENABLED, "Test Plug-in");
 
-  let testTab = gBrowser.selectedTab;
   let pluginTab = await BrowserTestUtils.openNewForegroundTab(gBrowser, gTestRoot + "plugin_test.html");
   let homeTab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:home");
 

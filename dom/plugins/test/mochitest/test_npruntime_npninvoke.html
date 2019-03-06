@@ -26,8 +26,8 @@
   function returnArgs() {
     if (arguments.length == 1)
       return arguments[0];
-    var arr = new Array();
-    for (i = 0; i < arguments.length; i++) {
+    var arr = [];
+    for (var i = 0; i < arguments.length; i++) {
       arr.push(arguments[i]);
     }
     return arr;

@@ -1,5 +1,6 @@
 
 const {parseKeyValuePairsFromFile} = ChromeUtils.import("resource://gre/modules/KeyValueParser.jsm");
+var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 var success = false;
 var observerFired = false;
@@ -19,9 +20,7 @@ var testObserver = {
     isnot(pluginId, "", "got a non-empty plugin crash id");
 
     // check plugin dump and extra files
-    let directoryService =
-      Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
-    let profD = directoryService.get("ProfD", Ci.nsIFile);
+    let profD = Services.dirsvc.get("ProfD", Ci.nsIFile);
     profD.append("minidumps");
     let pluginDumpFile = profD.clone();
     pluginDumpFile.append(pluginId + ".dmp");
@@ -82,9 +81,7 @@ function onPluginCrashed(aEvent) {
   ok("submittedCrashReport" in aEvent, "submittedCrashReport is a property of event");
   is(typeof aEvent.submittedCrashReport, "boolean", "submittedCrashReport is correct type");
 
-  var os = Cc["@mozilla.org/observer-service;1"].
-           getService(Ci.nsIObserverService);
-  os.removeObserver(testObserver, "plugin-crashed");
+  Services.obs.removeObserver(testObserver, "plugin-crashed");
 
   SimpleTest.finish();
 }

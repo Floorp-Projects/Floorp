@@ -1,3 +1,5 @@
+/* eslint-env mozilla/chrome-worker */
+
 const EVENT_OBJECT_SHOW = 0x8002;
 const EVENT_OBJECT_HIDE = 0x8003;
 const WINEVENT_OUTOFCONTEXT = 0;
@@ -7,6 +9,7 @@ const INFINITE = 0xFFFFFFFF;
 const WAIT_OBJECT_0 = 0;
 const WAIT_TIMEOUT = 258;
 const PM_NOREMOVE = 0;
+var user32;
 
 function DialogWatcher(titleText, onDialogStart, onDialogEnd) {
   this.titleText = titleText;
@@ -116,6 +119,7 @@ DialogWatcher.prototype.getWindowText = function(hwnd) {
   if (this.getWindowTextW(hwnd, buffer, buffer.length)) {
     return buffer.readString();
   }
+  return undefined;
 };
 
 DialogWatcher.prototype.processWindowEvents = function(timeout) {
@@ -147,7 +151,7 @@ DialogWatcher.prototype.processWindowEvents = function(timeout) {
                                   0, callback, 0, 0,
                                   WINEVENT_OUTOFCONTEXT | WINEVENT_SKIPOWNPROCESS);
   if (!hook) {
-    return;
+    return null;
   }
   // Check if the window is already showing
   var hwnd = this.findWindow(null, this.titleText);

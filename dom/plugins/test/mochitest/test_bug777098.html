@@ -27,6 +27,7 @@ function go() {
 
   // Force a re-instantiate by re-setting dummy uri,
   // making val a wrapper for a dead plugin
+  // eslint-disable-next-line no-self-assign
   plugin.data = plugin.data;
 
   // The correct behavior is an exception, if plugin.checkObjectValue succeeds
