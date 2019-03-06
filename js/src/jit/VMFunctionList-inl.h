@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "jit/BaselineIC.h"
+#include "jit/IonIC.h"
 #include "jit/JitRealm.h"
 #include "jit/VMFunctions.h"
 #include "vm/AsyncFunction.h"
@@ -71,7 +72,19 @@ namespace jit {
   _(InitPropGetterSetterOperation, js::InitPropGetterSetterOperation)          \
   _(InterpretResume, js::jit::InterpretResume)                                 \
   _(InterruptCheck, js::jit::InterruptCheck)                                   \
+  _(IonBinaryArithICUpdate, js::jit::IonBinaryArithIC::update)                 \
+  _(IonBindNameICUpdate, js::jit::IonBindNameIC::update)                       \
+  _(IonCompareICUpdate, js::jit::IonCompareIC::update)                         \
   _(IonCompileScriptForBaseline, js::jit::IonCompileScriptForBaseline)         \
+  _(IonGetIteratorICUpdate, js::jit::IonGetIteratorIC::update)                 \
+  _(IonGetNameICUpdate, js::jit::IonGetNameIC::update)                         \
+  _(IonGetPropSuperICUpdate, js::jit::IonGetPropSuperIC::update)               \
+  _(IonGetPropertyICUpdate, js::jit::IonGetPropertyIC::update)                 \
+  _(IonHasOwnICUpdate, js::jit::IonHasOwnIC::update)                           \
+  _(IonInICUpdate, js::jit::IonInIC::update)                                   \
+  _(IonInstanceOfICUpdate, js::jit::IonInstanceOfIC::update)                   \
+  _(IonSetPropertyICUpdate, js::jit::IonSetPropertyIC::update)                 \
+  _(IonUnaryArithICUpdate, js::jit::IonUnaryArithIC::update)                   \
   _(Lambda, js::Lambda)                                                        \
   _(LambdaArrow, js::LambdaArrow)                                              \
   _(LeaveWith, js::jit::LeaveWith)                                             \
