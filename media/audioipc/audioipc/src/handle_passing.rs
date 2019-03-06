@@ -3,64 +3,20 @@
 // This program is made available under an ISC-style license.  See the
 // accompanying file LICENSE for details
 
-use async::{AsyncRecvMsg, AsyncSendMsg};
+use tokio_io::{AsyncRead, AsyncWrite};
 use bytes::{Bytes, BytesMut, IntoBuf};
-use cmsg;
 use codec::Codec;
 use futures::{AsyncSink, Poll, Sink, StartSend, Stream};
 use messages::AssocRawPlatformHandle;
 use std::collections::VecDeque;
-use std::os::unix::io::RawFd;
-use std::{fmt, io, mem};
+use std::{fmt, io};
 
 const INITIAL_CAPACITY: usize = 1024;
 const BACKPRESSURE_THRESHOLD: usize = 4 * INITIAL_CAPACITY;
-const FDS_CAPACITY: usize = 16;
-
-struct IncomingFds {
-    cmsg: BytesMut,
-    recv_fds: Option<cmsg::ControlMsgIter>,
-}
-
-impl IncomingFds {
-    pub fn new(c: usize) -> Self {
-        let capacity = c * cmsg::space(mem::size_of::<[RawFd; 3]>());
-        IncomingFds {
-            cmsg: BytesMut::with_capacity(capacity),
-            recv_fds: None,
-        }
-    }
-
-    pub fn take_fds(&mut self) -> Option<[RawFd; 3]> {
-        loop {
-            let fds = self
-                .recv_fds
-                .as_mut()
-                .and_then(|recv_fds| recv_fds.next())
-                .and_then(|fds| Some(clone_into_array(&fds)));
-
-            if fds.is_some() {
-                return fds;
-            }
-
-            if self.cmsg.is_empty() {
-                return None;
-            }
-
-            self.recv_fds = Some(cmsg::iterator(self.cmsg.take().freeze()));
-        }
-    }
-
-    pub fn cmsg(&mut self) -> &mut BytesMut {
-        self.cmsg.reserve(cmsg::space(mem::size_of::<[RawFd; 3]>()));
-        &mut self.cmsg
-    }
-}
 
 #[derive(Debug)]
 struct Frame {
     msgs: Bytes,
-    fds: Option<Bytes>,
 }
 
 /// A unified `Stream` and `Sink` interface over an I/O object, using
@@ -70,25 +26,23 @@ pub struct FramedWithPlatformHandles<A, C> {
     codec: C,
     // Stream
     read_buf: BytesMut,
-    incoming_fds: IncomingFds,
     is_readable: bool,
     eof: bool,
     // Sink
     frames: VecDeque<Frame>,
     write_buf: BytesMut,
-    outgoing_fds: BytesMut,
 }
 
 impl<A, C> FramedWithPlatformHandles<A, C>
 where
-    A: AsyncSendMsg,
+    A: AsyncWrite,
 {
     // If there is a buffered frame, try to write it to `A`
     fn do_write(&mut self) -> Poll<(), io::Error> {
         trace!("do_write...");
         // Create a frame from any pending message in `write_buf`.
         if !self.write_buf.is_empty() {
-            self.set_frame(None);
+            self.set_frame();
         }
 
         trace!("pending frames: {:?}", self.frames);
@@ -98,13 +52,9 @@ where
         loop {
             let n = match self.frames.front() {
                 Some(frame) => {
-                    trace!("sending msg {:?}, fds {:?}", frame.msgs, frame.fds);
+                    trace!("sending msg {:?}", frame.msgs);
                     let mut msgs = frame.msgs.clone().into_buf();
-                    let mut fds = match frame.fds {
-                        Some(ref fds) => fds.clone(),
-                        None => Bytes::new(),
-                    }.into_buf();
-                    try_ready!(self.io.send_msg_buf(&mut msgs, &fds))
+                    try_ready!(self.io.write_buf(&mut msgs))
                 }
                 _ => {
                     // No pending frames.
@@ -116,23 +66,12 @@ where
                 Some(mut frame) => {
                     processed += 1;
 
-                    // Close any fds that have been sent. The fds are
-                    // encoded in cmsg format inside frame.fds. Use
-                    // the cmsg iterator to access msg and extract
-                    // RawFds.
-                    frame.fds.take().and_then(|cmsg| {
-                        for fds in cmsg::iterator(cmsg) {
-                            close_fds(&*fds)
-                        }
-                        Some(())
-                    });
-
                     if n != frame.msgs.len() {
                         // If only part of the message was sent then
                         // re-queue the remaining message at the head
-                        // of the queue. (Don't need to resend the fds
-                        // since they've been sent with the first
-                        // part.)
+                        // of the queue. (Don't need to resend the
+                        // handles since they've been sent with the
+                        // first part.)
                         drop(frame.msgs.split_to(n));
                         self.frames.push_front(frame);
                         break;
@@ -147,23 +86,22 @@ where
         Ok(().into())
     }
 
-    fn set_frame(&mut self, fds: Option<Bytes>) {
+    fn set_frame(&mut self) {
         if self.write_buf.is_empty() {
-            assert!(fds.is_none());
             trace!("set_frame: No pending messages...");
             return;
         }
 
         let msgs = self.write_buf.take().freeze();
-        trace!("set_frame: msgs={:?} fds={:?}", msgs, fds);
+        trace!("set_frame: msgs={:?}", msgs);
 
-        self.frames.push_back(Frame { msgs, fds });
+        self.frames.push_back(Frame { msgs });
     }
 }
 
 impl<A, C> Stream for FramedWithPlatformHandles<A, C>
 where
-    A: AsyncRecvMsg,
+    A: AsyncRead,
     C: Codec,
     C::Out: AssocRawPlatformHandle,
 {
@@ -179,16 +117,14 @@ where
             // readable again, at which point the stream is terminated.
             if self.is_readable {
                 if self.eof {
-                    let mut item = try!(self.codec.decode_eof(&mut self.read_buf));
-                    item.take_platform_handles(|| self.incoming_fds.take_fds());
+                    let item = try!(self.codec.decode_eof(&mut self.read_buf));
                     return Ok(Some(item).into());
                 }
 
                 trace!("attempting to decode a frame");
 
-                if let Some(mut item) = try!(self.codec.decode(&mut self.read_buf)) {
+                if let Some(item) = try!(self.codec.decode(&mut self.read_buf)) {
                     trace!("frame decoded from buffer");
-                    item.take_platform_handles(|| self.incoming_fds.take_fds());
                     return Ok(Some(item).into());
                 }
 
@@ -200,9 +136,9 @@ where
             // Otherwise, try to read more data and try again. Make sure we've
             // got room for at least one byte to read to ensure that we don't
             // get a spurious 0 that looks like EOF
-            let (n, _) = try_ready!(
+            let n = try_ready!(
                 self.io
-                    .recv_msg_buf(&mut self.read_buf, self.incoming_fds.cmsg())
+                    .read_buf(&mut self.read_buf)
             );
 
             if n == 0 {
@@ -216,14 +152,14 @@ where
 
 impl<A, C> Sink for FramedWithPlatformHandles<A, C>
 where
-    A: AsyncSendMsg,
+    A: AsyncWrite,
     C: Codec,
     C::In: AssocRawPlatformHandle + fmt::Debug,
 {
     type SinkItem = C::In;
     type SinkError = io::Error;
 
-    fn start_send(&mut self, item: Self::SinkItem) -> StartSend<Self::SinkItem, Self::SinkError> {
+    fn start_send(&mut self, mut item: Self::SinkItem) -> StartSend<Self::SinkItem, Self::SinkError> {
         trace!("start_send: item={:?}", item);
 
         // If the buffer is already over BACKPRESSURE_THRESHOLD,
@@ -236,21 +172,24 @@ where
             }
         }
 
-        let fds = item.platform_handles();
+        let mut got_handles = false;
+        if let Some((handles, target_pid)) = item.platform_handles() {
+            got_handles = true;
+            let remote_handles = unsafe {
+                [duplicate_platformhandle(handles[0], target_pid)?,
+                 duplicate_platformhandle(handles[1], target_pid)?,
+                 duplicate_platformhandle(handles[2], target_pid)?]
+            };
+            trace!("item handles: {:?} remote_handles: {:?}", handles, remote_handles);
+            item.take_platform_handles(|| Some(remote_handles));
+        }
+
         try!(self.codec.encode(item, &mut self.write_buf));
-        let fds = fds.and_then(|fds| {
-            cmsg::builder(&mut self.outgoing_fds)
-                .rights(&fds.0[..])
-                .finish()
-                .ok()
-        });
 
-        trace!("item fds: {:?}", fds);
-
-        if fds.is_some() {
+        if got_handles {
             // Enforce splitting sends on messages that contain file
             // descriptors.
-            self.set_frame(fds);
+            self.set_frame();
         }
 
         Ok(AsyncSink::Ready)
@@ -278,84 +217,40 @@ pub fn framed_with_platformhandles<A, C>(io: A, codec: C) -> FramedWithPlatformH
         io: io,
         codec: codec,
         read_buf: BytesMut::with_capacity(INITIAL_CAPACITY),
-        incoming_fds: IncomingFds::new(FDS_CAPACITY),
         is_readable: false,
         eof: false,
         frames: VecDeque::new(),
         write_buf: BytesMut::with_capacity(INITIAL_CAPACITY),
-        outgoing_fds: BytesMut::with_capacity(
-            FDS_CAPACITY * cmsg::space(mem::size_of::<[RawFd; 3]>()),
-        ),
     }
 }
 
-fn clone_into_array<A, T>(slice: &[T]) -> A
-where
-    A: Sized + Default + AsMut<[T]>,
-    T: Clone,
-{
-    let mut a = Default::default();
-    <A as AsMut<[T]>>::as_mut(&mut a).clone_from_slice(slice);
-    a
-}
+use winapi::um::{processthreadsapi, winnt, handleapi};
+use winapi::shared::minwindef::{DWORD, FALSE};
+use super::PlatformHandleType;
 
-fn close_fds(fds: &[RawFd]) {
-    for fd in fds {
-        unsafe {
-            super::close_platformhandle(*fd);
-        }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use bytes::BufMut;
-    use libc;
-    use std;
-
-    extern {
-        fn cmsghdr_bytes(size: *mut libc::size_t) -> *const libc::uint8_t;
+// source_handle is effectively taken ownership of (consumed) and
+// closed when duplicate_platformhandle is called.
+// TODO: Make this transfer more explicit via the type system.
+unsafe fn duplicate_platformhandle(source_handle: PlatformHandleType,
+                                   target_pid: DWORD) -> Result<PlatformHandleType, std::io::Error> {
+    let source = processthreadsapi::GetCurrentProcess();
+    let target = processthreadsapi::OpenProcess(winnt::PROCESS_DUP_HANDLE,
+                                                FALSE,
+                                                target_pid);
+    if !super::valid_handle(target) {
+        return Err(std::io::Error::new(std::io::ErrorKind::Other, "invalid target process"));
     }
 
-    fn cmsg_bytes() -> &'static [u8] {
-        let mut size = 0;
-        unsafe {
-            let ptr = cmsghdr_bytes(&mut size);
-            std::slice::from_raw_parts(ptr, size)
-        }
+    let mut target_handle = std::ptr::null_mut();
+    let ok = handleapi::DuplicateHandle(source,
+                                        source_handle,
+                                        target,
+                                        &mut target_handle,
+                                        0,
+                                        FALSE,
+                                        winnt::DUPLICATE_CLOSE_SOURCE | winnt::DUPLICATE_SAME_ACCESS);
+    if ok == FALSE {
+        return Err(std::io::Error::new(std::io::ErrorKind::Other, "DuplicateHandle failed"));
     }
-
-    #[test]
-    fn single_cmsg() {
-        let mut incoming = super::IncomingFds::new(16);
-
-        incoming.cmsg().put_slice(cmsg_bytes());
-        assert!(incoming.take_fds().is_some());
-        assert!(incoming.take_fds().is_none());
-    }
-
-    #[test]
-    fn multiple_cmsg_1() {
-        let mut incoming = super::IncomingFds::new(16);
-
-        incoming.cmsg().put_slice(cmsg_bytes());
-        assert!(incoming.take_fds().is_some());
-        incoming.cmsg().put_slice(cmsg_bytes());
-        assert!(incoming.take_fds().is_some());
-        assert!(incoming.take_fds().is_none());
-    }
-
-    #[test]
-    fn multiple_cmsg_2() {
-        let mut incoming = super::IncomingFds::new(16);
-        println!("cmsg_bytes() {}", cmsg_bytes().len());
-
-        incoming.cmsg().put_slice(cmsg_bytes());
-        incoming.cmsg().put_slice(cmsg_bytes());
-        assert!(incoming.take_fds().is_some());
-        incoming.cmsg().put_slice(cmsg_bytes());
-        assert!(incoming.take_fds().is_some());
-        assert!(incoming.take_fds().is_some());
-        assert!(incoming.take_fds().is_none());
-    }
+    Ok(target_handle)
 }
