@@ -31,6 +31,9 @@
 // returned from the gethash server. They are not serialized,
 // only cached until the next update.
 
+// Name of the persistent PrefixSet storage
+#define PREFIXSET_SUFFIX ".pset"
+
 #define V2_CACHE_DURATION_SEC (15 * 60)
 
 // MOZ_LOG=UrlClassifierDbService:5
@@ -117,7 +120,7 @@ nsresult LookupCache::WriteFile() {
   nsresult rv = mStoreDirectory->Clone(getter_AddRefs(psFile));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = psFile->AppendNative(mTableName + GetPrefixSetSuffix());
+  rv = psFile->AppendNative(mTableName + NS_LITERAL_CSTRING(PREFIXSET_SUFFIX));
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = StoreToFile(psFile);
@@ -436,7 +439,7 @@ nsresult LookupCache::LoadPrefixSet() {
   nsresult rv = mStoreDirectory->Clone(getter_AddRefs(psFile));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = psFile->AppendNative(mTableName + GetPrefixSetSuffix());
+  rv = psFile->AppendNative(mTableName + NS_LITERAL_CSTRING(PREFIXSET_SUFFIX));
   NS_ENSURE_SUCCESS(rv, rv);
 
   bool exists;
@@ -451,14 +454,7 @@ nsresult LookupCache::LoadPrefixSet() {
     }
     mPrimed = true;
   } else {
-    // The only scenario we load the old .pset file is when we haven't received
-    // a SafeBrowsng update before. After receiving an update, new .vlpset will
-    // be stored while old .pset will be removed.
-    if (NS_SUCCEEDED(LoadLegacyFile())) {
-      mPrimed = true;
-    } else {
-      LOG(("no (usable) stored PrefixSet found"));
-    }
+    LOG(("no (usable) stored PrefixSet found"));
   }
 
 #ifdef DEBUG
@@ -655,83 +651,15 @@ nsresult LookupCacheV2::ClearPrefixes() {
 }
 
 nsresult LookupCacheV2::StoreToFile(nsCOMPtr<nsIFile>& aFile) {
-  nsCOMPtr<nsIOutputStream> localOutFile;
-  nsresult rv =
-      NS_NewLocalFileOutputStream(getter_AddRefs(localOutFile), aFile,
-                                  PR_WRONLY | PR_TRUNCATE | PR_CREATE_FILE);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  uint32_t fileSize;
-
-  // Preallocate the file storage
-  {
-    nsCOMPtr<nsIFileOutputStream> fos(do_QueryInterface(localOutFile));
-    Telemetry::AutoTimer<Telemetry::URLCLASSIFIER_PS_FALLOCATE_TIME> timer;
-
-    fileSize = mPrefixSet->CalculatePreallocateSize();
-
-    // Ignore failure, the preallocation is a hint and we write out the entire
-    // file later on
-    Unused << fos->Preallocate(fileSize);
-  }
-
-  // Convert to buffered stream
-  nsCOMPtr<nsIOutputStream> out;
-  rv = NS_NewBufferedOutputStream(getter_AddRefs(out), localOutFile.forget(),
-                                  std::min(fileSize, MAX_BUFFER_SIZE));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = mPrefixSet->WritePrefixes(out);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  LOG(("[%s] Storing PrefixSet successful", mTableName.get()));
-  return NS_OK;
+  return mPrefixSet->StoreToFile(aFile);
 }
 
-nsresult LookupCacheV2::LoadLegacyFile() { return NS_ERROR_NOT_IMPLEMENTED; }
-
 nsresult LookupCacheV2::LoadFromFile(nsCOMPtr<nsIFile>& aFile) {
-  Telemetry::AutoTimer<Telemetry::URLCLASSIFIER_PS_FILELOAD_TIME> timer;
-
-  nsCOMPtr<nsIInputStream> localInFile;
-  nsresult rv = NS_NewLocalFileInputStream(getter_AddRefs(localInFile), aFile,
-                                           PR_RDONLY | nsIFile::OS_READAHEAD);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Calculate how big the file is, make sure our read buffer isn't bigger
-  // than the file itself which is just wasting memory.
-  int64_t fileSize;
-  rv = aFile->GetFileSize(&fileSize);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (fileSize < 0 || fileSize > UINT32_MAX) {
-    return NS_ERROR_FAILURE;
-  }
-
-  uint32_t bufferSize =
-      std::min<uint32_t>(static_cast<uint32_t>(fileSize), MAX_BUFFER_SIZE);
-
-  // Convert to buffered stream
-  nsCOMPtr<nsIInputStream> in;
-  rv = NS_NewBufferedInputStream(getter_AddRefs(in), localInFile.forget(),
-                                 bufferSize);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = mPrefixSet->LoadPrefixes(in);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  mPrimed = true;
-  LOG(("[%s] Loading PrefixSet successful", mTableName.get()));
-
-  return NS_OK;
+  return mPrefixSet->LoadFromFile(aFile);
 }
 
 size_t LookupCacheV2::SizeOfPrefixSet() const {
   return mPrefixSet->SizeOfIncludingThis(moz_malloc_size_of);
-}
-
-nsCString LookupCacheV2::GetPrefixSetSuffix() const {
-  return NS_LITERAL_CSTRING(".pset");
 }
 
 #ifdef DEBUG
