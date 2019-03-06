@@ -379,11 +379,6 @@ class FennecInstance(GeckoInstance):
         "browser.dom.window.dump.enabled": True,
         "devtools.console.stdout.chrome": True,
 
-        # Disable Android snippets
-        "browser.snippets.enabled": False,
-        "browser.snippets.syncPromo.enabled": False,
-        "browser.snippets.firstrunHomepage.enabled": False,
-
         # Disable safebrowsing components
         "browser.safebrowsing.blockedURIs.enabled": False,
         "browser.safebrowsing.downloads.enabled": False,

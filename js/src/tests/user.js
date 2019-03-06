@@ -31,8 +31,5 @@ user_pref("plugins.flashBlock.enabled", false);
 user_pref("privacy.trackingprotection.annotate_channels", false);
 user_pref("privacy.trackingprotection.enabled", false);
 user_pref("privacy.trackingprotection.pbmode.enabled", false);
-user_pref("browser.snippets.enabled", false);
-user_pref("browser.snippets.syncPromo.enabled", false);
-user_pref("browser.snippets.firstrunHomepage.enabled", false);
 user_pref("general.useragent.updates.enabled", false);
 user_pref("browser.webapps.checkForUpdates", 0);

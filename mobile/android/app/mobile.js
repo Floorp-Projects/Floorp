@@ -597,10 +597,6 @@ pref("urlclassifier.downloadBlockTable", "");
 // The Potentially Harmful Apps list replaces the malware one on Android.
 pref("urlclassifier.malwareTable", "goog-harmful-proto,goog-unwanted-proto,test-harmful-simple,test-malware-simple,test-unwanted-simple");
 
-// True if this is the first time we are showing about:firstrun
-pref("browser.firstrun.show.uidiscovery", true);
-pref("browser.firstrun.show.localepicker", false);
-
 // True if you always want dump() to work
 //
 // On Android, you also need to do the following for the output
@@ -735,26 +731,6 @@ pref("browser.ui.linkify.phone", false);
 
 // Enables/disables Spatial Navigation
 pref("snav.enabled", true);
-
-// This url, if changed, MUST continue to point to an https url. Pulling arbitrary content to inject into
-// this page over http opens us up to a man-in-the-middle attack that we'd rather not face. If you are a downstream
-// repackager of this code using an alternate snippet url, please keep your users safe
-pref("browser.snippets.updateUrl", "https://snippets.cdn.mozilla.net/json/%SNIPPETS_VERSION%/%NAME%/%VERSION%/%APPBUILDID%/%BUILD_TARGET%/%LOCALE%/%CHANNEL%/%OS_VERSION%/%DISTRIBUTION%/%DISTRIBUTION_VERSION%/");
-
-// How frequently we check for new snippets, in seconds (1 day)
-pref("browser.snippets.updateInterval", 86400);
-
-// URL used to check for user's country code. Please do not directly use this code or Snippets key.
-// Contact MLS team for your own credentials. https://location.services.mozilla.com/contact
-pref("browser.snippets.geoUrl", "https://location.services.mozilla.com/v1/country?key=fff72d56-b040-4205-9a11-82feda9d83a3");
-
-// URL used to ping metrics with stats about which snippets have been shown
-pref("browser.snippets.statsUrl", "https://snippets-stats.mozilla.org/mobile");
-
-// These prefs require a restart to take effect.
-pref("browser.snippets.enabled", true);
-pref("browser.snippets.syncPromo.enabled", true);
-pref("browser.snippets.firstrunHomepage.enabled", true);
 
 // The mode of home provider syncing.
 // 0: Sync always
