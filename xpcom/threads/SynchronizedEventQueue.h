@@ -13,6 +13,8 @@
 #include "mozilla/Mutex.h"
 #include "nsTObserverArray.h"
 
+class nsIEventTarget;
+class nsISerialEventTarget;
 class nsIThreadObserver;
 
 namespace mozilla {
@@ -87,6 +89,28 @@ class SynchronizedEventQueue : public ThreadTargetSink {
       mozilla::MallocSizeOf aMallocSizeOf) const override {
     return mEventObservers.ShallowSizeOfExcludingThis(aMallocSizeOf);
   }
+
+  /**
+   * This method causes any events currently enqueued on the thread to be
+   * suppressed until PopEventQueue is called, and any event dispatched to this
+   * thread's nsIEventTarget will queue as well. Calls to PushEventQueue may be
+   * nested and must each be paired with a call to PopEventQueue in order to
+   * restore the original state of the thread. The returned nsIEventTarget may
+   * be used to push events onto the nested queue. Dispatching will be disabled
+   * once the event queue is popped. The thread will only ever process pending
+   * events for the innermost event queue. Must only be called on the target
+   * thread.
+   */
+  virtual already_AddRefed<nsISerialEventTarget> PushEventQueue() = 0;
+
+  /**
+   * Revert a call to PushEventQueue. When an event queue is popped, any events
+   * remaining in the queue are appended to the elder queue. This also causes
+   * the nsIEventTarget returned from PushEventQueue to stop dispatching events.
+   * Must only be called on the target thread, and with the innermost event
+   * queue.
+   */
+  virtual void PopEventQueue(nsIEventTarget* aTarget) = 0;
 
  protected:
   virtual ~SynchronizedEventQueue() {}
