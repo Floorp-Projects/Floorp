@@ -566,7 +566,7 @@ class UrlbarView {
   }
 
   _on_SelectedOneOffButtonChanged() {
-    if (!this._queryContext) {
+    if (!this.isOpen || !this._queryContext) {
       return;
     }
 
