@@ -36,18 +36,6 @@ describe("visible column breakpoints", () => {
     expect(columnBps).toMatchSnapshot();
   });
 
-  it("duplicate generated locations", () => {
-    const viewport = {
-      start: { line: 1, column: 0 },
-      end: { line: 10, column: 10 }
-    };
-    const pausePoints = [pp(1, 1), pp(1, 1), pp(1, 3)];
-    const breakpoints = [bp(1, 1)];
-
-    const columnBps = getColumnBreakpoints(pausePoints, breakpoints, viewport);
-    expect(columnBps).toMatchSnapshot();
-  });
-
   it("ignores single breakpoints", () => {
     const viewport = {
       start: { line: 1, column: 0 },

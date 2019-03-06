@@ -12,12 +12,14 @@ import type {
   ActorId,
   BreakpointLocation,
   BreakpointOptions,
+  PendingLocation,
   EventListenerBreakpoints,
   Frame,
   FrameId,
   Script,
   SourceId,
   SourceActor,
+  Source,
   Worker,
   Range
 } from "../../types";
@@ -175,9 +177,10 @@ function removeXHRBreakpoint(path: string, method: string) {
 
 // Get the string key to use for a breakpoint location.
 // See also duplicate code in breakpoint-actor-map.js :(
-function locationKey(location) {
-  const { sourceUrl, sourceId, line, column } = location;
-  return `${(sourceUrl: any)}:${(sourceId: any)}:${line}:${(column: any)}`;
+function locationKey(location: BreakpointLocation) {
+  const { sourceUrl, line, column } = location;
+  const sourceId = location.sourceId || "";
+  return `${(sourceUrl: any)}:${sourceId}:${line}:${(column: any)}`;
 }
 
 function waitForWorkers(shouldWait: boolean) {
@@ -200,8 +203,8 @@ async function setBreakpoint(
   await forEachWorkerThread(thread => thread.setBreakpoint(location, options));
 }
 
-async function removeBreakpoint(location: BreakpointLocation) {
-  delete breakpoints[locationKey(location)];
+async function removeBreakpoint(location: PendingLocation) {
+  delete breakpoints[locationKey((location: any))];
   await threadClient.removeBreakpoint(location);
 
   // Remove breakpoints without waiting for the thread to respond, for the same
@@ -405,9 +408,10 @@ function getMainThread() {
 }
 
 async function getBreakpointPositions(
-  sourceActor: SourceActor,
+  source: Source,
   range: ?Range
 ): Promise<{ [string]: number[] }> {
+  const sourceActor = source.actors[0];
   const { thread, actor } = sourceActor;
   const sourceThreadClient = lookupThreadClient(thread);
   const sourceClient = sourceThreadClient.source({ actor });
