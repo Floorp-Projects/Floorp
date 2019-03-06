@@ -2,7 +2,7 @@
 
 # &lt;init&gt;
 
-`SessionSuggestionProvider(sessionManager: `[`SessionManager`](../../mozilla.components.browser.session/-session-manager/index.md)`, selectTabUseCase: `[`SelectTabUseCase`](../../mozilla.components.feature.tabs/-tabs-use-cases/-select-tab-use-case/index.md)`)`
+`SessionSuggestionProvider(sessionManager: `[`SessionManager`](../../mozilla.components.browser.session/-session-manager/index.md)`, selectTabUseCase: `[`SelectTabUseCase`](../../mozilla.components.feature.tabs/-tabs-use-cases/-select-tab-use-case/index.md)`, icons: `[`BrowserIcons`](../../mozilla.components.browser.icons/-browser-icons/index.md)`? = null)`
 
 A [AwesomeBar.SuggestionProvider](../../mozilla.components.concept.awesomebar/-awesome-bar/-suggestion-provider/index.md) implementation that provides suggestions based on the sessions in the
 [SessionManager](../../mozilla.components.browser.session/-session-manager/index.md) (Open tabs).

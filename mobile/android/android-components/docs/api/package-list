@@ -141,6 +141,7 @@ mozilla.components.service.fxa
 mozilla.components.service.glean
 mozilla.components.service.glean.config
 mozilla.components.service.glean.debug
+mozilla.components.service.glean.error
 mozilla.components.service.glean.scheduler
 mozilla.components.service.glean.storages
 mozilla.components.service.pocket

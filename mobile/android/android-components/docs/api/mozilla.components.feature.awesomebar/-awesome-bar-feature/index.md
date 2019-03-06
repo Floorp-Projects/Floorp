@@ -2,7 +2,7 @@
 
 # AwesomeBarFeature
 
-`class AwesomeBarFeature` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/awesomebar/src/main/java/mozilla/components/feature/awesomebar/AwesomeBarFeature.kt#L27)
+`class AwesomeBarFeature` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/awesomebar/src/main/java/mozilla/components/feature/awesomebar/AwesomeBarFeature.kt#L28)
 
 Connects an [AwesomeBar](../../mozilla.components.concept.awesomebar/-awesome-bar/index.md) with a [Toolbar](../../mozilla.components.concept.toolbar/-toolbar/index.md) and allows adding multiple [AwesomeBar.SuggestionProvider](../../mozilla.components.concept.awesomebar/-awesome-bar/-suggestion-provider/index.md) implementations.
 
@@ -10,7 +10,7 @@ Connects an [AwesomeBar](../../mozilla.components.concept.awesomebar/-awesome-ba
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `AwesomeBarFeature(awesomeBar: `[`AwesomeBar`](../../mozilla.components.concept.awesomebar/-awesome-bar/index.md)`, toolbar: `[`Toolbar`](../../mozilla.components.concept.toolbar/-toolbar/index.md)`, engineView: `[`EngineView`](../../mozilla.components.concept.engine/-engine-view/index.md)`? = null, onEditStart: () -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)` = null, onEditComplete: () -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)` = null)`<br>Connects an [AwesomeBar](../../mozilla.components.concept.awesomebar/-awesome-bar/index.md) with a [Toolbar](../../mozilla.components.concept.toolbar/-toolbar/index.md) and allows adding multiple [AwesomeBar.SuggestionProvider](../../mozilla.components.concept.awesomebar/-awesome-bar/-suggestion-provider/index.md) implementations. |
+| [&lt;init&gt;](-init-.md) | `AwesomeBarFeature(awesomeBar: `[`AwesomeBar`](../../mozilla.components.concept.awesomebar/-awesome-bar/index.md)`, toolbar: `[`Toolbar`](../../mozilla.components.concept.toolbar/-toolbar/index.md)`, engineView: `[`EngineView`](../../mozilla.components.concept.engine/-engine-view/index.md)`? = null, icons: `[`BrowserIcons`](../../mozilla.components.browser.icons/-browser-icons/index.md)`? = null, onEditStart: () -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)` = null, onEditComplete: () -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)` = null)`<br>Connects an [AwesomeBar](../../mozilla.components.concept.awesomebar/-awesome-bar/index.md) with a [Toolbar](../../mozilla.components.concept.toolbar/-toolbar/index.md) and allows adding multiple [AwesomeBar.SuggestionProvider](../../mozilla.components.concept.awesomebar/-awesome-bar/-suggestion-provider/index.md) implementations. |
 
 ### Functions
 

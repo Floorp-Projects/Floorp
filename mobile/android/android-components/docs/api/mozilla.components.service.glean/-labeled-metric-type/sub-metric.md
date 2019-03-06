@@ -2,4 +2,4 @@
 
 # subMetric
 
-`val subMetric: `[`T`](index.md#T) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/LabeledMetricType.kt#L30)
+`val subMetric: `[`T`](index.md#T) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/LabeledMetricType.kt#L32)

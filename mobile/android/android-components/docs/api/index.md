@@ -93,6 +93,7 @@
 | [mozilla.components.service.glean](mozilla.components.service.glean/index.md) |  |
 | [mozilla.components.service.glean.config](mozilla.components.service.glean.config/index.md) |  |
 | [mozilla.components.service.glean.debug](mozilla.components.service.glean.debug/index.md) |  |
+| [mozilla.components.service.glean.error](mozilla.components.service.glean.error/index.md) |  |
 | [mozilla.components.service.glean.scheduler](mozilla.components.service.glean.scheduler/index.md) |  |
 | [mozilla.components.service.glean.storages](mozilla.components.service.glean.storages/index.md) |  |
 | [mozilla.components.service.pocket](mozilla.components.service.pocket/index.md) |  |

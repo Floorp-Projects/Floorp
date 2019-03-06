@@ -6,7 +6,8 @@
 
 Overrides [Client.fetch](../../mozilla.components.concept.fetch/-client/fetch.md)
 
-Starts the process of fetching a resource from the network as described by the [Request](../../mozilla.components.concept.fetch/-request/index.md) object.
+Starts the process of fetching a resource from the network as described by the [Request](../../mozilla.components.concept.fetch/-request/index.md) object. This call is
+synchronous.
 
 A [Response](../../mozilla.components.concept.fetch/-response/index.md) may keep references to open streams. Therefore it's important to always close the [Response](../../mozilla.components.concept.fetch/-response/index.md) or
 its [Response.Body](../../mozilla.components.concept.fetch/-response/-body/index.md).

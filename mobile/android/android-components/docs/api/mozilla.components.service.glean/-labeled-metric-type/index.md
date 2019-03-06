@@ -2,7 +2,7 @@
 
 # LabeledMetricType
 
-`data class LabeledMetricType<T> : `[`CommonMetricData`](../-common-metric-data/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/LabeledMetricType.kt#L24)
+`data class LabeledMetricType<T> : `[`CommonMetricData`](../-common-metric-data/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/LabeledMetricType.kt#L26)
 
 This implements the developer facing API for labeled metrics.
 

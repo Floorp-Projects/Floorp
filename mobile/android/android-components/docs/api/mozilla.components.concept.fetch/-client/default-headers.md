@@ -2,7 +2,7 @@
 
 # defaultHeaders
 
-`protected val defaultHeaders: `[`Headers`](../-headers/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/fetch/src/main/java/mozilla/components/concept/fetch/Client.kt#L45)
+`protected val defaultHeaders: `[`Headers`](../-headers/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/fetch/src/main/java/mozilla/components/concept/fetch/Client.kt#L46)
 
 List of default headers that should be added to every request unless overridden by the headers in the request.
 

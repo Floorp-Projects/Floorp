@@ -2,7 +2,7 @@
 
 # ClipboardSuggestionProvider
 
-`class ClipboardSuggestionProvider : `[`SuggestionProvider`](../../mozilla.components.concept.awesomebar/-awesome-bar/-suggestion-provider/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/awesomebar/src/main/java/mozilla/components/feature/awesomebar/provider/ClipboardSuggestionProvider.kt#L22)
+`class ClipboardSuggestionProvider : `[`SuggestionProvider`](../../mozilla.components.concept.awesomebar/-awesome-bar/-suggestion-provider/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/awesomebar/src/main/java/mozilla/components/feature/awesomebar/provider/ClipboardSuggestionProvider.kt#L24)
 
 An [AwesomeBar.SuggestionProvider](../../mozilla.components.concept.awesomebar/-awesome-bar/-suggestion-provider/index.md) implementation that returns a suggestions for an URL in the clipboard (if there's
 any).
@@ -11,7 +11,7 @@ any).
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `ClipboardSuggestionProvider(context: `[`Context`](https://developer.android.com/reference/android/content/Context.html)`, loadUrlUseCase: `[`LoadUrlUseCase`](../../mozilla.components.feature.session/-session-use-cases/-load-url-use-case/index.md)`, icon: `[`Bitmap`](https://developer.android.com/reference/android/graphics/Bitmap.html)`? = null, title: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`? = null)`<br>An [AwesomeBar.SuggestionProvider](../../mozilla.components.concept.awesomebar/-awesome-bar/-suggestion-provider/index.md) implementation that returns a suggestions for an URL in the clipboard (if there's any). |
+| [&lt;init&gt;](-init-.md) | `ClipboardSuggestionProvider(context: `[`Context`](https://developer.android.com/reference/android/content/Context.html)`, loadUrlUseCase: `[`LoadUrlUseCase`](../../mozilla.components.feature.session/-session-use-cases/-load-url-use-case/index.md)`, icon: `[`Bitmap`](https://developer.android.com/reference/android/graphics/Bitmap.html)`? = null, title: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`? = null, icons: `[`BrowserIcons`](../../mozilla.components.browser.icons/-browser-icons/index.md)`? = null)`<br>An [AwesomeBar.SuggestionProvider](../../mozilla.components.concept.awesomebar/-awesome-bar/-suggestion-provider/index.md) implementation that returns a suggestions for an URL in the clipboard (if there's any). |
 
 ### Properties
 

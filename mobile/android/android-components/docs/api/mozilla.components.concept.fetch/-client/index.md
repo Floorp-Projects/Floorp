@@ -27,7 +27,7 @@ https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API
 
 | Name | Summary |
 |---|---|
-| [fetch](fetch.md) | `abstract fun fetch(request: `[`Request`](../-request/index.md)`): `[`Response`](../-response/index.md)<br>Starts the process of fetching a resource from the network as described by the [Request](../-request/index.md) object. |
+| [fetch](fetch.md) | `abstract fun fetch(request: `[`Request`](../-request/index.md)`): `[`Response`](../-response/index.md)<br>Starts the process of fetching a resource from the network as described by the [Request](../-request/index.md) object. This call is synchronous. |
 
 ### Inheritors
 

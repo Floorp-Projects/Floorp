@@ -2,7 +2,7 @@
 
 # HistoryStorageSuggestionProvider
 
-`class HistoryStorageSuggestionProvider : `[`SuggestionProvider`](../../mozilla.components.concept.awesomebar/-awesome-bar/-suggestion-provider/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/awesomebar/src/main/java/mozilla/components/feature/awesomebar/provider/HistoryStorageSuggestionProvider.kt#L19)
+`class HistoryStorageSuggestionProvider : `[`SuggestionProvider`](../../mozilla.components.concept.awesomebar/-awesome-bar/-suggestion-provider/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/awesomebar/src/main/java/mozilla/components/feature/awesomebar/provider/HistoryStorageSuggestionProvider.kt#L21)
 
 A [AwesomeBar.SuggestionProvider](../../mozilla.components.concept.awesomebar/-awesome-bar/-suggestion-provider/index.md) implementation that provides suggestions based on the browsing
 history stored in the [HistoryStorage](../../mozilla.components.concept.storage/-history-storage/index.md).
@@ -11,7 +11,7 @@ history stored in the [HistoryStorage](../../mozilla.components.concept.storage/
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `HistoryStorageSuggestionProvider(historyStorage: `[`HistoryStorage`](../../mozilla.components.concept.storage/-history-storage/index.md)`, loadUrlUseCase: `[`LoadUrlUseCase`](../../mozilla.components.feature.session/-session-use-cases/-load-url-use-case/index.md)`)`<br>A [AwesomeBar.SuggestionProvider](../../mozilla.components.concept.awesomebar/-awesome-bar/-suggestion-provider/index.md) implementation that provides suggestions based on the browsing history stored in the [HistoryStorage](../../mozilla.components.concept.storage/-history-storage/index.md). |
+| [&lt;init&gt;](-init-.md) | `HistoryStorageSuggestionProvider(historyStorage: `[`HistoryStorage`](../../mozilla.components.concept.storage/-history-storage/index.md)`, loadUrlUseCase: `[`LoadUrlUseCase`](../../mozilla.components.feature.session/-session-use-cases/-load-url-use-case/index.md)`, icons: `[`BrowserIcons`](../../mozilla.components.browser.icons/-browser-icons/index.md)`? = null)`<br>A [AwesomeBar.SuggestionProvider](../../mozilla.components.concept.awesomebar/-awesome-bar/-suggestion-provider/index.md) implementation that provides suggestions based on the browsing history stored in the [HistoryStorage](../../mozilla.components.concept.storage/-history-storage/index.md). |
 
 ### Properties
 
