@@ -3741,10 +3741,10 @@ nsCSSBorderImageRenderer::nsCSSBorderImageRenderer(
     nscoord borderDimension = SideIsVertical(s) ? mArea.width : mArea.height;
     double value;
     if (slice.IsNumber()) {
-      value = nsPresContext::CSSPixelsToAppUnits(NS_lround(slice.number._0));
+      value = nsPresContext::CSSPixelsToAppUnits(NS_lround(slice.AsNumber()));
     } else {
       MOZ_ASSERT(slice.IsPercentage());
-      value = slice.percentage._0._0 * imgDimension;
+      value = slice.AsPercentage()._0 * imgDimension;
     }
     if (value < 0) value = 0;
     if (value > imgDimension) value = imgDimension;

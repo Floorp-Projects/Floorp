@@ -41,7 +41,6 @@ typedef wr::WrFontKey FontKey;
 typedef wr::WrFontInstanceKey FontInstanceKey;
 typedef wr::WrEpoch Epoch;
 typedef wr::WrExternalImageId ExternalImageId;
-typedef wr::WrDebugFlags DebugFlags;
 
 typedef mozilla::Maybe<mozilla::wr::IdNamespace> MaybeIdNamespace;
 typedef mozilla::Maybe<mozilla::wr::ImageMask> MaybeImageMask;
@@ -59,9 +58,7 @@ struct ExternalImageKeyPair {
 WindowId NewWindowId();
 
 inline DebugFlags NewDebugFlags(uint32_t aFlags) {
-  DebugFlags flags;
-  flags.mBits = aFlags;
-  return flags;
+  return {aFlags};
 }
 
 inline Maybe<wr::ImageFormat> SurfaceFormatToImageFormat(
