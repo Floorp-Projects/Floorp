@@ -7,6 +7,7 @@
 #include "vm/StringType-inl.h"
 
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/Casting.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/HashFunctions.h"
 #include "mozilla/MathAlgorithms.h"
@@ -17,7 +18,8 @@
 #include "mozilla/TypeTraits.h"
 #include "mozilla/Unused.h"
 
-#include <algorithm>
+#include <algorithm>  // std::{all_of,copy_n,enable_if,is_const,move}
+#include <type_traits>  // std::is_unsigned
 
 #include "jsfriendapi.h"
 
@@ -40,6 +42,7 @@
 using namespace js;
 
 using mozilla::ArrayEqual;
+using mozilla::AssertedCast;
 using mozilla::IsAsciiDigit;
 using mozilla::IsNegativeZero;
 using mozilla::IsSame;
@@ -796,6 +799,61 @@ template JSString* js::ConcatStrings<CanGC>(JSContext* cx, HandleString left,
 template JSString* js::ConcatStrings<NoGC>(JSContext* cx, JSString* const& left,
                                            JSString* const& right);
 
+/**
+ * Copy |src[0..length]| to |dest[0..length]| when copying doesn't narrow and
+ * therefore can't lose information.
+ */
+template <typename Dest, typename Source>
+static void FillAndTerminate(Dest* dest, Source src, size_t length) {
+  static_assert(sizeof(src[length]) <= sizeof(dest[length]),
+                "source → destination conversion must not narrow");
+
+  for (size_t i = 0; i < length; i++) {
+    auto srcChar = src[i];
+    static_assert(std::is_unsigned<decltype(srcChar)>::value &&
+                  std::is_unsigned<Dest>::value,
+                  "source/destination characters are unsigned for simplicity");
+    *dest++ = srcChar;
+  }
+
+  *dest = '\0';
+}
+
+template <typename Dest, typename Src,
+          typename = typename std::enable_if<!std::is_const<Src>::value>::type>
+static void FillAndTerminate(Dest* dest, Src* src, size_t length) {
+  FillAndTerminate(dest, const_cast<const Src*>(src), length);
+}
+
+/**
+ * Copy |src[0..length]| to |dest[0..length]| when copying *does* narrow, but
+ * the user guarantees every runtime |src[i]| value can be stored without change
+ * of value in |dest[i]|.
+ */
+template <typename Dest, typename Source>
+static void FillFromCompatibleAndTerminate(Dest* dest, Source src,
+                                           size_t length) {
+  static_assert(sizeof(src[length]) > sizeof(dest[length]),
+                "source → destination conversion must be narrowing");
+
+  for (size_t i = 0; i < length; i++) {
+    auto srcChar = src[i];
+    static_assert(std::is_unsigned<decltype(srcChar)>::value &&
+                  std::is_unsigned<Dest>::value,
+                  "source/destination characters are unsigned for simplicity");
+    *dest++ = AssertedCast<Dest>(src[i]);
+  }
+
+  *dest = '\0';
+}
+
+template <typename Dest, typename Src,
+          typename = typename std::enable_if<!std::is_const<Src>::value>::type>
+static void FillFromCompatibleAndTerminate(Dest* dest, Src* src,
+                                           size_t length) {
+  FillFromCompatibleAndTerminate(dest, const_cast<const Src*>(src), length);
+}
+
 template <typename CharT>
 JSFlatString* JSDependentString::undependInternal(JSContext* cx) {
   size_t n = length();
@@ -812,8 +870,7 @@ JSFlatString* JSDependentString::undependInternal(JSContext* cx) {
   }
 
   AutoCheckCannotGC nogc;
-  PodCopy(s.get(), nonInlineChars<CharT>(nogc), n);
-  s[n] = '\0';
+  FillAndTerminate(s.get(), nonInlineChars<CharT>(nogc), n);
   setNonInlineChars<CharT>(s.release());
 
   /*
@@ -1326,9 +1383,8 @@ bool AutoStableStringChars::copyAndInflateLatin1Chars(
     return false;
   }
 
-  CopyAndInflateChars(chars, linearString->rawLatin1Chars(),
-                      linearString->length());
-  chars[linearString->length()] = 0;
+  FillAndTerminate(chars, linearString->rawLatin1Chars(),
+                   linearString->length());
 
   state_ = TwoByte;
   twoByteChars_ = chars;
@@ -1344,8 +1400,7 @@ bool AutoStableStringChars::copyLatin1Chars(JSContext* cx,
     return false;
   }
 
-  PodCopy(chars, linearString->rawLatin1Chars(), length);
-  chars[length] = 0;
+  FillAndTerminate(chars, linearString->rawLatin1Chars(), length);
 
   state_ = Latin1;
   latin1Chars_ = chars;
@@ -1361,8 +1416,7 @@ bool AutoStableStringChars::copyTwoByteChars(JSContext* cx,
     return false;
   }
 
-  PodCopy(chars, linearString->rawTwoByteChars(), length);
-  chars[length] = 0;
+  FillAndTerminate(chars, linearString->rawTwoByteChars(), length);
 
   state_ = TwoByte;
   twoByteChars_ = chars;
@@ -1402,8 +1456,7 @@ JSFlatString* JSExternalString::ensureFlat(JSContext* cx) {
   // Copy the chars before finalizing the string.
   {
     AutoCheckCannotGC nogc;
-    PodCopy(s.get(), nonInlineChars<char16_t>(nogc), n);
-    s[n] = '\0';
+    FillAndTerminate(s.get(), nonInlineChars<char16_t>(nogc), n);
   }
 
   // Release the external chars.
@@ -1496,11 +1549,8 @@ static MOZ_ALWAYS_INLINE JSInlineString* NewInlineStringDeflated(
     return nullptr;
   }
 
-  for (size_t i = 0; i < len; i++) {
-    MOZ_ASSERT(chars[i] <= JSString::MAX_LATIN1_CHAR);
-    storage[i] = Latin1Char(chars[i]);
-  }
-  storage[len] = '\0';
+  MOZ_ASSERT(CanStoreCharsAsLatin1(chars.begin().get(), len));
+  FillFromCompatibleAndTerminate(storage, chars, len);
   return str;
 }
 
@@ -1521,11 +1571,8 @@ static JSFlatString* NewStringDeflated(JSContext* cx, const char16_t* s,
     return nullptr;
   }
 
-  for (size_t i = 0; i < n; i++) {
-    MOZ_ASSERT(s[i] <= JSString::MAX_LATIN1_CHAR);
-    news[i] = Latin1Char(s[i]);
-  }
-  news[n] = '\0';
+  MOZ_ASSERT(CanStoreCharsAsLatin1(s, n));
+  FillFromCompatibleAndTerminate(news.get(), s, n);
 
   JSFlatString* str = JSFlatString::new_<allowGC>(cx, news.get(), n);
   if (!str) {
@@ -1682,8 +1729,7 @@ JSFlatString* NewStringCopyNDontDeflate(JSContext* cx, const CharT* s,
     return nullptr;
   }
 
-  PodCopy(news.get(), s, n);
-  news[n] = 0;
+  FillAndTerminate(news.get(), s, n);
 
   JSFlatString* str = JSFlatString::new_<allowGC>(cx, news.get(), n);
   if (!str) {
@@ -2093,8 +2139,7 @@ UniqueChars js::EncodeLatin1(JSContext* cx, JSString* str) {
     return nullptr;
   }
 
-  mozilla::PodCopy(buf, linear->latin1Chars(nogc), len);
-  buf[len] = '\0';
+  FillAndTerminate(buf, linear->latin1Chars(nogc), len);
   return UniqueChars(reinterpret_cast<char*>(buf));
 }
 
