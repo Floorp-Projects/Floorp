@@ -3559,6 +3559,22 @@ bool JSScript::fullyInitFromEmitter(JSContext* cx, HandleScript script,
   script->bodyScopeIndex_ = bce->bodyScopeIndex;
   script->numBytecodeTypeSets_ = bce->typesetCount;
 
+  // Initialize script flags from BytecodeEmitter
+  script->setFlag(ImmutableFlags::Strict, bce->sc->strict());
+  script->setFlag(ImmutableFlags::ExplicitUseStrict,
+                  bce->sc->hasExplicitUseStrict());
+  script->setFlag(ImmutableFlags::BindingsAccessedDynamically,
+                  bce->sc->bindingsAccessedDynamically());
+  script->setFlag(ImmutableFlags::HasSingletons, bce->hasSingletons);
+  script->setFlag(ImmutableFlags::IsForEval, bce->sc->isEvalContext());
+  script->setFlag(ImmutableFlags::IsModule, bce->sc->isModuleContext());
+  script->setFlag(ImmutableFlags::HasNonSyntacticScope,
+                  bce->outermostScope()->hasOnChain(ScopeKind::NonSyntactic));
+  script->setFlag(ImmutableFlags::FunHasAnyAliasedFormal,
+                  HasAnyAliasedFormal(bce));
+  script->setFlag(ImmutableFlags::NeedsFunctionEnvironmentObjects,
+                  NeedsFunctionEnvironmentObjects(bce));
+
   if (!createPrivateScriptData(
           cx, script, bce->scopeList.length(), bce->numberList.length(),
           bce->objectList.length, bce->tryNoteList.length(),
@@ -3602,21 +3618,6 @@ bool JSScript::fullyInitFromEmitter(JSContext* cx, HandleScript script,
   if (bce->resumeOffsetList.length() != 0) {
     bce->resumeOffsetList.finish(data->resumeOffsets());
   }
-
-  script->setFlag(ImmutableFlags::Strict, bce->sc->strict());
-  script->setFlag(ImmutableFlags::ExplicitUseStrict,
-                  bce->sc->hasExplicitUseStrict());
-  script->setFlag(ImmutableFlags::BindingsAccessedDynamically,
-                  bce->sc->bindingsAccessedDynamically());
-  script->setFlag(ImmutableFlags::HasSingletons, bce->hasSingletons);
-  script->setFlag(ImmutableFlags::IsForEval, bce->sc->isEvalContext());
-  script->setFlag(ImmutableFlags::IsModule, bce->sc->isModuleContext());
-  script->setFlag(ImmutableFlags::HasNonSyntacticScope,
-                  bce->outermostScope()->hasOnChain(ScopeKind::NonSyntactic));
-  script->setFlag(ImmutableFlags::FunHasAnyAliasedFormal,
-                  HasAnyAliasedFormal(bce));
-  script->setFlag(ImmutableFlags::NeedsFunctionEnvironmentObjects,
-                  NeedsFunctionEnvironmentObjects(bce));
 
   // There shouldn't be any fallible operation after initFromFunctionBox,
   // JSFunction::hasUncompletedScript relies on the fact that the existence
