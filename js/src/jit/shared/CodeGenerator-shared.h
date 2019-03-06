@@ -30,9 +30,6 @@ class CodeGenerator;
 class MacroAssembler;
 class IonIC;
 
-template <class ArgSeq, class StoreOutputTo>
-class OutOfLineCallVM;
-
 class OutOfLineTruncateSlow;
 
 struct ReciprocalMulConstants {
@@ -189,12 +186,6 @@ class CodeGeneratorShared : public LElementVisitor {
   }
 
  protected:
-#ifdef CHECK_OSIPOINT_REGISTERS
-  void resetOsiPointRegs(LSafepoint* safepoint);
-  bool shouldVerifyOsiPointRegs(LSafepoint* safepoint);
-  void verifyOsiPointRegs(LSafepoint* safepoint);
-#endif
-
   bool addNativeToBytecodeEntry(const BytecodeSite* site);
   void dumpNativeToBytecodeEntries();
   void dumpNativeToBytecodeEntry(uint32_t idx);
@@ -419,13 +410,6 @@ class CodeGeneratorShared : public LElementVisitor {
   }
 
  protected:
-  void callVM(const VMFunction& f, LInstruction* ins,
-              const Register* dynStack = nullptr);
-
-  template <class ArgSeq, class StoreOutputTo>
-  inline OutOfLineCode* oolCallVM(const VMFunction& fun, LInstruction* ins,
-                                  const ArgSeq& args, const StoreOutputTo& out);
-
   void addIC(LInstruction* lir, size_t cacheIndex);
 
   ReciprocalMulConstants computeDivisionConstants(uint32_t d, int maxLog);
@@ -457,9 +441,6 @@ class CodeGeneratorShared : public LElementVisitor {
   CodeGeneratorShared(MIRGenerator* gen, LIRGraph* graph, MacroAssembler* masm);
 
  public:
-  template <class ArgSeq, class StoreOutputTo>
-  void visitOutOfLineCallVM(OutOfLineCallVM<ArgSeq, StoreOutputTo>* ool);
-
   void visitOutOfLineTruncateSlow(OutOfLineTruncateSlow* ool);
 
   bool omitOverRecursedCheck() const;
@@ -551,187 +532,6 @@ class OutOfLineCodeBase : public OutOfLineCode {
  public:
   virtual void accept(T* codegen) = 0;
 };
-
-// ArgSeq store arguments for OutOfLineCallVM.
-//
-// OutOfLineCallVM are created with "oolCallVM" function. The third argument of
-// this function is an instance of a class which provides a "generate" in charge
-// of pushing the argument, with "pushArg", for a VMFunction.
-//
-// Such list of arguments can be created by using the "ArgList" function which
-// creates one instance of "ArgSeq", where the type of the arguments are
-// inferred from the type of the arguments.
-//
-// The list of arguments must be written in the same order as if you were
-// calling the function in C++.
-//
-// Example:
-//   ArgList(ToRegister(lir->lhs()), ToRegister(lir->rhs()))
-
-template <typename... ArgTypes>
-class ArgSeq;
-
-template <>
-class ArgSeq<> {
- public:
-  ArgSeq() {}
-
-  inline void generate(CodeGeneratorShared* codegen) const {}
-
-#ifdef DEBUG
-  static constexpr size_t numArgs = 0;
-#endif
-};
-
-template <typename HeadType, typename... TailTypes>
-class ArgSeq<HeadType, TailTypes...> : public ArgSeq<TailTypes...> {
- private:
-  using RawHeadType = typename mozilla::RemoveReference<HeadType>::Type;
-  RawHeadType head_;
-
- public:
-  template <typename ProvidedHead, typename... ProvidedTail>
-  explicit ArgSeq(ProvidedHead&& head, ProvidedTail&&... tail)
-      : ArgSeq<TailTypes...>(std::forward<ProvidedTail>(tail)...),
-        head_(std::forward<ProvidedHead>(head)) {}
-
-  // Arguments are pushed in reverse order, from last argument to first
-  // argument.
-  inline void generate(CodeGeneratorShared* codegen) const {
-    this->ArgSeq<TailTypes...>::generate(codegen);
-    codegen->pushArg(head_);
-  }
-
-#ifdef DEBUG
-  static constexpr size_t numArgs = sizeof...(TailTypes) + 1;
-#endif
-};
-
-template <typename... ArgTypes>
-inline ArgSeq<ArgTypes...> ArgList(ArgTypes&&... args) {
-  return ArgSeq<ArgTypes...>(std::forward<ArgTypes>(args)...);
-}
-
-// Store wrappers, to generate the right move of data after the VM call.
-
-struct StoreNothing {
-  inline void generate(CodeGeneratorShared* codegen) const {}
-  inline LiveRegisterSet clobbered() const {
-    return LiveRegisterSet();  // No register gets clobbered
-  }
-};
-
-class StoreRegisterTo {
- private:
-  Register out_;
-
- public:
-  explicit StoreRegisterTo(Register out) : out_(out) {}
-
-  inline void generate(CodeGeneratorShared* codegen) const {
-    // It's okay to use storePointerResultTo here - the VMFunction wrapper
-    // ensures the upper bytes are zero for bool/int32 return values.
-    codegen->storePointerResultTo(out_);
-  }
-  inline LiveRegisterSet clobbered() const {
-    LiveRegisterSet set;
-    set.add(out_);
-    return set;
-  }
-};
-
-class StoreFloatRegisterTo {
- private:
-  FloatRegister out_;
-
- public:
-  explicit StoreFloatRegisterTo(FloatRegister out) : out_(out) {}
-
-  inline void generate(CodeGeneratorShared* codegen) const {
-    codegen->storeFloatResultTo(out_);
-  }
-  inline LiveRegisterSet clobbered() const {
-    LiveRegisterSet set;
-    set.add(out_);
-    return set;
-  }
-};
-
-template <typename Output>
-class StoreValueTo_ {
- private:
-  Output out_;
-
- public:
-  explicit StoreValueTo_(const Output& out) : out_(out) {}
-
-  inline void generate(CodeGeneratorShared* codegen) const {
-    codegen->storeResultValueTo(out_);
-  }
-  inline LiveRegisterSet clobbered() const {
-    LiveRegisterSet set;
-    set.add(out_);
-    return set;
-  }
-};
-
-template <typename Output>
-StoreValueTo_<Output> StoreValueTo(const Output& out) {
-  return StoreValueTo_<Output>(out);
-}
-
-template <class ArgSeq, class StoreOutputTo>
-class OutOfLineCallVM : public OutOfLineCodeBase<CodeGeneratorShared> {
- private:
-  LInstruction* lir_;
-  const VMFunction& fun_;
-  ArgSeq args_;
-  StoreOutputTo out_;
-
- public:
-  OutOfLineCallVM(LInstruction* lir, const VMFunction& fun, const ArgSeq& args,
-                  const StoreOutputTo& out)
-      : lir_(lir), fun_(fun), args_(args), out_(out) {}
-
-  void accept(CodeGeneratorShared* codegen) override {
-    codegen->visitOutOfLineCallVM(this);
-  }
-
-  LInstruction* lir() const { return lir_; }
-  const VMFunction& function() const { return fun_; }
-  const ArgSeq& args() const { return args_; }
-  const StoreOutputTo& out() const { return out_; }
-};
-
-template <class ArgSeq, class StoreOutputTo>
-inline OutOfLineCode* CodeGeneratorShared::oolCallVM(const VMFunction& fun,
-                                                     LInstruction* lir,
-                                                     const ArgSeq& args,
-                                                     const StoreOutputTo& out) {
-  MOZ_ASSERT(lir->mirRaw());
-  MOZ_ASSERT(lir->mirRaw()->isInstruction());
-  MOZ_ASSERT(fun.explicitArgs == args.numArgs);
-  MOZ_ASSERT(fun.returnsData() !=
-             (mozilla::IsSame<StoreOutputTo, StoreNothing>::value));
-
-  OutOfLineCode* ool =
-      new (alloc()) OutOfLineCallVM<ArgSeq, StoreOutputTo>(lir, fun, args, out);
-  addOutOfLineCode(ool, lir->mirRaw()->toInstruction());
-  return ool;
-}
-
-template <class ArgSeq, class StoreOutputTo>
-void CodeGeneratorShared::visitOutOfLineCallVM(
-    OutOfLineCallVM<ArgSeq, StoreOutputTo>* ool) {
-  LInstruction* lir = ool->lir();
-
-  saveLive(lir);
-  ool->args().generate(this);
-  callVM(ool->function(), lir);
-  ool->out().generate(this);
-  restoreLiveIgnore(lir, ool->out().clobbered());
-  masm.jump(ool->rejoin());
-}
 
 template <class CodeGen>
 class OutOfLineWasmTruncateCheckBase : public OutOfLineCodeBase<CodeGen> {
