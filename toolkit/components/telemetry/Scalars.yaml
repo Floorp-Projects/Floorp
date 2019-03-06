@@ -2005,6 +2005,21 @@ telemetry.discarded:
     record_in_processes:
       - 'all_childs'
 
+normandy:
+  recipe_freshness:
+    bug_numbers:
+      - 1530508
+    description: >
+      For each recipe ID seen by the Normandy client, its last_modified.
+    expires: "never"
+    keyed: true
+    kind: uint
+    notification_emails:
+      - product-delivery@mozilla.com
+    release_channel_collection: opt-out
+    record_in_processes:
+      - main
+
 # The following section contains graphics-related scalars.
 gfx.advanced.layers:
   failure_id:
