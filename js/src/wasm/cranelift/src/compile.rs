@@ -33,6 +33,12 @@ use std::mem;
 use utils::DashResult;
 use wasm2clif::{init_sig, native_pointer_size, TransEnv};
 
+// Namespace for user-defined functions.
+const USER_FUNCTION_NAMESPACE: u32 = 0;
+
+// Namespace for builtins functions that are translated to symbolic accesses in Spidermonkey.
+const SYMBOLIC_FUNCTION_NAMESPACE: u32 = 1;
+
 /// The result of a function's compilation: code + metadata.
 pub struct CompiledFunc {
     pub frame_pushed: StackSize,
@@ -146,14 +152,14 @@ impl<'a, 'b> BatchCompiler<'a, 'b> {
         }
 
         {
-            let eenv = &mut EmitEnv::new(&mut self.current_func.metadata);
+            let emit_env = &mut EmitEnv::new(&mut self.current_func.metadata);
             let mut trap_sink = NullTrapSink {};
             unsafe {
                 let code_buffer = &mut self.current_func.code_buffer;
                 self.context.emit_to_memory(
                     &*self.isa,
                     code_buffer.as_mut_ptr(),
-                    eenv,
+                    emit_env,
                     &mut trap_sink,
                 )
             };
@@ -257,6 +263,19 @@ impl<'a, 'b> BatchCompiler<'a, 'b> {
         }
     }
 
+    fn srcloc(&self, inst: ir::Inst) -> ir::SourceLoc {
+        let srcloc = self.context.func.srclocs[inst];
+        debug_assert!(
+            !srcloc.is_default(),
+            "No source location on {}",
+            self.context
+                .func
+                .dfg
+                .display_inst(inst, Some(self.isa.as_ref()))
+        );
+        srcloc
+    }
+
     /// Emit metadata for direct call `inst`.
     fn call_metadata(
         &self,
@@ -275,20 +294,17 @@ impl<'a, 'b> BatchCompiler<'a, 'b> {
 
         let func_index = match *callee {
             ir::ExternalName::User {
-                namespace: 0,
+                namespace: USER_FUNCTION_NAMESPACE,
                 index,
             } => FuncIndex::new(index as usize),
             _ => panic!("Direct call to {} unsupported", callee),
         };
 
-        let srcloc = func.srclocs[inst];
-        assert!(
-            !srcloc.is_default(),
-            "No source location on {}",
-            func.dfg.display_inst(inst, Some(self.isa.as_ref()))
-        );
-
-        metadata.push(bd::MetadataEntry::direct_call(ret_addr, func_index, srcloc));
+        metadata.push(bd::MetadataEntry::direct_call(
+            ret_addr,
+            func_index,
+            self.srcloc(inst),
+        ));
     }
 
     /// Emit metadata for indirect call `inst`.
@@ -298,8 +314,6 @@ impl<'a, 'b> BatchCompiler<'a, 'b> {
         inst: ir::Inst,
         ret_addr: CodeOffset,
     ) {
-        let func = &self.context.func;
-
         // A call_indirect instruction can represent either a table call or a far call to a runtime
         // function. The CallSiteDesc::Kind enum does distinguish between the two, but it is not
         // clear that the information is used anywhere. For now, we won't bother distinguishing
@@ -308,15 +322,10 @@ impl<'a, 'b> BatchCompiler<'a, 'b> {
         // If we do need to make a distinction in the future, it is probably easiest to add a
         // `call_far` instruction to Cranelift that encodes like an indirect call, but includes the
         // callee like a direct call.
-
-        let srcloc = func.srclocs[inst];
-        assert!(
-            !srcloc.is_default(),
-            "No source location on {}",
-            func.dfg.display_inst(inst, Some(self.isa.as_ref()))
-        );
-
-        metadata.push(bd::MetadataEntry::indirect_call(ret_addr, srcloc));
+        metadata.push(bd::MetadataEntry::indirect_call(
+            ret_addr,
+            self.srcloc(inst),
+        ));
     }
 
     fn trap_metadata(
@@ -353,16 +362,9 @@ impl<'a, 'b> BatchCompiler<'a, 'b> {
             ir::TrapCode::User(_) => panic!("Uncovered trap code {}", code),
         };
 
-        let srcloc = func.srclocs[inst];
-        assert!(
-            !srcloc.is_default(),
-            "No source location on {}",
-            func.dfg.display_inst(inst, Some(self.isa.as_ref()))
-        );
-
         metadata.push(bd::MetadataEntry::trap(
             offset + trap_offset,
-            srcloc,
+            self.srcloc(inst),
             bd_trap,
         ));
     }
@@ -389,14 +391,7 @@ impl<'a, 'b> BatchCompiler<'a, 'b> {
             return;
         }
 
-        let srcloc = func.srclocs[inst];
-        assert!(
-            !srcloc.is_default(),
-            "No source location on {}",
-            func.dfg.display_inst(inst, Some(self.isa.as_ref()))
-        );
-
-        metadata.push(bd::MetadataEntry::memory_access(offset, srcloc));
+        metadata.push(bd::MetadataEntry::memory_access(offset, self.srcloc(inst)));
     }
 }
 
@@ -409,7 +404,7 @@ impl<'a, 'b> fmt::Display for BatchCompiler<'a, 'b> {
 /// Create a Cranelift function name representing a WebAssembly function with `index`.
 pub fn wasm_function_name(func: FuncIndex) -> ir::ExternalName {
     ir::ExternalName::User {
-        namespace: 0,
+        namespace: USER_FUNCTION_NAMESPACE,
         index: func.index() as u32,
     }
 }
@@ -417,7 +412,7 @@ pub fn wasm_function_name(func: FuncIndex) -> ir::ExternalName {
 /// Create a Cranelift function name representing a builtin function.
 pub fn symbolic_function_name(sym: bd::SymbolicAddress) -> ir::ExternalName {
     ir::ExternalName::User {
-        namespace: 1,
+        namespace: SYMBOLIC_FUNCTION_NAMESPACE,
         index: sym as u32,
     }
 }
@@ -447,20 +442,26 @@ impl<'a> RelocSink for EmitEnv<'a> {
     ) {
         // Decode the function name.
         match *name {
-            ir::ExternalName::User { namespace: 0, .. } => {
-                // This is a direct function call handled by `emit_metadata` above.
-            }
             ir::ExternalName::User {
-                namespace: 1,
+                namespace: USER_FUNCTION_NAMESPACE,
+                ..
+            } => {
+                // This is a direct function call handled by `call_metadata` above.
+            }
+
+            ir::ExternalName::User {
+                namespace: SYMBOLIC_FUNCTION_NAMESPACE,
                 index,
             } => {
                 // This is a symbolic function reference encoded by `symbolic_function_name()`.
                 let sym = index.into();
+
                 // The symbolic access patch address points *after* the stored pointer.
                 let offset = offset + native_pointer_size() as u32;
                 self.metadata
                     .push(bd::MetadataEntry::symbolic_access(offset, sym));
             }
+
             ir::ExternalName::LibCall(call) => {
                 let sym = match call {
                     ir::LibCall::CeilF32 => bd::SymbolicAddress::CeilF32,
@@ -475,6 +476,7 @@ impl<'a> RelocSink for EmitEnv<'a> {
                         panic!("Don't understand external {}", name);
                     }
                 };
+
                 // The symbolic access patch address points *after* the stored pointer.
                 let offset = offset + native_pointer_size() as u32;
                 self.metadata
