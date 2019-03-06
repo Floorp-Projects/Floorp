@@ -1225,6 +1225,51 @@ ssl_scheme()
     html "</TABLE><BR>"
 }
 
+############################ ssl_scheme_stress ##########################
+# local shell function to test strsclnt and selfserv handling of signature schemes
+#########################################################################
+ssl_scheme_stress()
+{
+    if [ "$SERVER_MODE" = "fips" -o "$CLIENT_MODE" = "fips" ] ; then
+        echo "$SCRIPTNAME: skipping  $testname (non-FIPS only)"
+        return 0
+    fi
+
+    html_head "SSL SCHEME $NORM_EXT - server $SERVER_MODE/client $CLIENT_MODE"
+
+    NO_ECC_CERTS=1
+    schemes=("rsa_pkcs1_sha256" "rsa_pss_rsae_sha256" "rsa_pkcs1_sha256,rsa_pss_rsae_sha256")
+    for sscheme in "${schemes[@]}"; do
+        for cscheme in "${schemes[@]}"; do
+            testname="ssl_scheme server='$sscheme' client='$cscheme'"
+            echo "${testname}"
+
+            start_selfserv -V tls1.2:tls1.2 -J "$sscheme"
+
+            echo "strsclnt -q -p ${PORT} -d ${P_R_CLIENTDIR} $verbose ${CLIENT_OPTIONS} \\"
+            echo "         -V tls1.2:tls1.2 -J "$cscheme" ${HOSTADDR} < ${REQUEST_FILE}"
+            ${PROFTOOL} ${BINDIR}/strsclnt -q -p ${PORT} ${CLIENT_OPTIONS} \
+                        -d ${P_R_CLIENTDIR} $verbose -V tls1.2:tls1.2 -J "$cscheme" ${HOSTADDR} < ${REQUEST_FILE} 2>&1
+            ret=$?
+            # If both schemes include just one option and those options don't
+            # match, then the test should fail; otherwise, assume that it works.
+            if [ "${cscheme#*,}" = "$cscheme" -a \
+                 "${sscheme#*,}" = "$sscheme" -a \
+                 "$cscheme" != "$sscheme" ]; then
+                expected=1
+            else
+                expected=0
+            fi
+            html_msg $ret $expected "${testname}" \
+                     "produced a returncode of $ret, expected is $expected"
+            kill_selfserv
+        done
+    done
+    NO_ECC_CERTS=0
+
+    html "</TABLE><BR>"
+}
+
 ############################## ssl_cleanup #############################
 # local shell function to finish this script (no exit since it might be
 # sourced)
@@ -1267,6 +1312,7 @@ ssl_run()
             ;;
         "scheme")
             ssl_scheme
+            ssl_scheme_stress
             ;;
          esac
     done
