@@ -1775,9 +1775,10 @@ SECStatus SSLExp_AeadDecrypt(const SSLAeadContext *ctx, PRUint64 counter,
 
 SECStatus SSLExp_HkdfExtract(PRUint16 version, PRUint16 cipherSuite,
                              PK11SymKey *salt, PK11SymKey *ikm, PK11SymKey **keyp);
-SECStatus SSLExp_HkdfDeriveSecret(PRUint16 version, PRUint16 cipherSuite, PK11SymKey *prk,
-                                  const char *label, unsigned int labelLen,
-                                  PK11SymKey **key);
+SECStatus SSLExp_HkdfExpandLabel(PRUint16 version, PRUint16 cipherSuite, PK11SymKey *prk,
+                                 const PRUint8 *hsHash, unsigned int hsHashLen,
+                                 const char *label, unsigned int labelLen,
+                                 PK11SymKey **key);
 
 SEC_END_PROTOS
 

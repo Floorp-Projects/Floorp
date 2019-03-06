@@ -180,6 +180,10 @@ For certificate requests, ASCII output defaults to standard output unless redire
       </varlistentry>
 
       <varlistentry>
+	<term>--simple-self-signed</term>
+	<listitem><para>When printing the certificate chain, don't search for a chain if issuer name equals to subject name.</para></listitem>
+      </varlistentry>
+      <varlistentry>
         <term>-b validity-time</term>
         <listitem><para>Specify a time at which a certificate is required to be valid. Use when checking certificate validity with the <option>-V</option> option. The format of the <emphasis>validity-time</emphasis> argument is <emphasis>YYMMDDHHMMSS[+HHMM|-HHMM|Z]</emphasis>, which allows offsets to be set relative to the validity end time. Specifying seconds (<emphasis>SS</emphasis>) is optional. When specifying an explicit time, use a Z at the end of the term, <emphasis>YYMMDDHHMMSSZ</emphasis>, to close it. When specifying an offset time, use <emphasis>YYMMDDHHMMSS+HHMM</emphasis> or <emphasis>YYMMDDHHMMSS-HHMM</emphasis> for adding or subtracting time, respectively.
 </para>
