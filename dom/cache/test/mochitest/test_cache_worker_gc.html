@@ -13,10 +13,10 @@
 <script class="testbody" type="text/javascript">
 function startWorker() {
   return new Promise(resolve => {
-    var w = new Worker('idle_worker.js');
-    w.addEventListener('message', function onMessage(evt) {
-      if (evt.data === 'LOADED') {
-        w.removeEventListener('message', onMessage);
+    var w = new Worker("idle_worker.js");
+    w.addEventListener("message", function onMessage(evt) {
+      if (evt.data === "LOADED") {
+        w.removeEventListener("message", onMessage);
         resolve(w);
       }
     });
@@ -34,11 +34,11 @@ SimpleTest.waitForExplicitFinish();
 async function test() {
   let w = await startWorker();
   let weakWorker = SpecialPowers.Cu.getWeakReference(w);
-  ok(weakWorker, 'worker supports weak reference');
+  ok(weakWorker, "worker supports weak reference");
   w = null;
   await gc();
   await gc();
-  ok(!weakWorker.get(), 'worker weak reference should be garbage collected');
+  ok(!weakWorker.get(), "worker weak reference should be garbage collected");
   SimpleTest.finish();
 }
 

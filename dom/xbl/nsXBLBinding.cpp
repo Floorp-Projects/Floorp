@@ -513,13 +513,6 @@ nsresult nsXBLBinding::InstallImplementation() {
   return NS_OK;
 }
 
-nsAtom* nsXBLBinding::GetBaseTag(int32_t* aNameSpaceID) {
-  nsAtom* tag = mPrototypeBinding->GetBaseTag(aNameSpaceID);
-  if (!tag && mNextBinding) return mNextBinding->GetBaseTag(aNameSpaceID);
-
-  return tag;
-}
-
 void nsXBLBinding::AttributeChanged(nsAtom* aAttribute, int32_t aNameSpaceID,
                                     bool aRemoveFlag, bool aNotify) {
   // XXX Change if we ever allow multiple bindings in a chain to contribute

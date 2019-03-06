@@ -15,19 +15,19 @@
   
   // global test function
   function testMe(arg) {
-    var result = arg+arg;
+    var result = arg + arg;
     for (var i = 1; i < arguments.length; i++) {
       result += arguments[i] + arguments[i];
     }
     return result;
   }
 
-  ////
+  // //
   // This test exercises NPN_Evaluate using the test plugin's
-  // npnEvaluateTest method.  This method calls NPN_Evaluate on 
+  // npnEvaluateTest method.  This method calls NPN_Evaluate on
   // a string argument passed to it, and returns the eval result.
   // The array below drives the tests; each array member has two
-  // members:  the first is a string to eval, and the second is 
+  // members:  the first is a string to eval, and the second is
   // the expected result of the eval.
   //
 
@@ -39,15 +39,16 @@
       ["function test() { return 3; } test();", 3],
       ["testMe(3)", 6],
       ["testMe(new Object(3))", 6],
+      // eslint-disable-next-line no-new-object
       ["new Object(3)", new Object(3)],
       ["new Array(1, 2, 3, 4)", [1, 2, 3, 4]],
-      ["document.getElementById('display')", 
+      ["document.getElementById('display')",
           document.getElementById("display")],
       ["encodeURI('a = b')", "a%20=%20b"],
-      ["document.getElementById('testdiv').innerHTML = 'Hello world!'", 
+      ["document.getElementById('testdiv').innerHTML = 'Hello world!'",
           "Hello world!"],
-      ["function test2() { var x = {a: '1', b: '2'}; return x; } test2();", 
-          {a: '1', b: '2'}],
+      ["function test2() { var x = {a: '1', b: '2'}; return x; } test2();",
+          {a: "1", b: "2"}],
       ["(function() { var ret; try { win = window.open(); win.document.writeln('wibble'); ret = 'no error' } catch(e) { ret = e.name; } win.close(); return ret; })()", "no error"],
     ];
 
@@ -64,26 +65,26 @@
           json_result = result.toString();
       if (typeof(expected) == "function")
           json_expected = expected.toString();
-      is(json_result, json_expected, 
+      is(json_result, json_expected,
           "npnEvaluateTest returned an unexpected value");
-      is(typeof(result), typeof(expected), 
+      is(typeof(result), typeof(expected),
           "npnEvaluateTest return value was of unexpected type");
-      var success = (json_result == json_expected && 
+      var success = (json_result == json_expected &&
           typeof(result) == typeof(expected));
       $("verbose").appendChild(
-          createEl('span',null, (success ? "pass" : "fail") + ": eval(" + test[0] + ")"));
+          createEl("span", null, (success ? "pass" : "fail") + ": eval(" + test[0] + ")"));
       $("verbose").appendChild(
-          createEl('span', null," == " + json_result + "(" + 
-          typeof(result) + "), expected " + json_expected + "(" + 
+          createEl("span", null, " == " + json_result + "(" +
+          typeof(result) + "), expected " + json_expected + "(" +
           typeof(expected) + ")"));
       $("verbose").appendChild(
-          createEl('br')
+          createEl("br")
           );
     }
-    
-    is(document.getElementById('testdiv').innerHTML, "Hello world!",
+  
+    is(document.getElementById("testdiv").innerHTML, "Hello world!",
       "innerHTML not set correctly via NPN_Evaluate");
-    
+  
     SimpleTest.finish();
   }
   </script>

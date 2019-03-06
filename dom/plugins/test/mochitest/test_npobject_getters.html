@@ -5,16 +5,16 @@
 
 <body onload="runTests()">
   <script class="testbody" type="application/javascript">
-  dump('lastScript\n');
+  dump("lastScript\n");
 
   SimpleTest.waitForExplicitFinish();
   setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
 
   function runTests() {
     ok(
-      document.getElementById('plugin1').pluginFoundElement,
+      document.getElementById("plugin1").pluginFoundElement,
       "plugin1.pluginFoundElement (NPNVPluginElementNPObject) - " +
-      document.getElementById('plugin1').pluginFoundElement
+      document.getElementById("plugin1").pluginFoundElement
     );
     ok(
       window.pluginFoundWindow,

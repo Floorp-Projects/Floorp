@@ -597,40 +597,37 @@ CategoryUtilities.prototype = {
   },
 };
 
-function CertOverrideListener(host, bits) {
-  this.host = host;
-  this.bits = bits;
+// Returns a promise that will resolve when the certificate error override has been added, or reject
+// if there is some failure.
+function addCertOverride(host, bits) {
+  return new Promise((resolve, reject) => {
+    let req = new XMLHttpRequest();
+    req.open("GET", "https://" + host + "/");
+    req.onload = reject;
+    req.onerror = () => {
+      if (req.channel && req.channel.securityInfo) {
+        let securityInfo = req.channel.securityInfo.QueryInterface(Ci.nsITransportSecurityInfo);
+        if (securityInfo.serverCert) {
+          let cos = Cc["@mozilla.org/security/certoverride;1"]
+                      .getService(Ci.nsICertOverrideService);
+          cos.rememberValidityOverride(host, -1, securityInfo.serverCert, bits, false);
+          resolve();
+          return;
+        }
+      }
+      reject();
+    };
+    req.send(null);
+  });
 }
 
-CertOverrideListener.prototype = {
-  host: null,
-  bits: null,
-
-  getInterface(aIID) {
-    return this.QueryInterface(aIID);
-  },
-
-  QueryInterface: ChromeUtils.generateQI(["nsIBadCertListener2", "nsIInterfaceRequestor"]),
-
-  notifyCertProblem(socketInfo, secInfo, targetHost) {
-    var cert = secInfo.serverCert;
-    var cos = Cc["@mozilla.org/security/certoverride;1"].
-              getService(Ci.nsICertOverrideService);
-    cos.rememberValidityOverride(this.host, -1, cert, this.bits, false);
-    return true;
-  },
-};
-
-// Add overrides for the bad certificates
-function addCertOverride(host, bits) {
-  var req = new XMLHttpRequest();
-  try {
-    req.open("GET", "https://" + host + "/", false);
-    req.channel.notificationCallbacks = new CertOverrideListener(host, bits);
-    req.send(null);
-  } catch (e) {
-    // This request will fail since the SSL server is not trusted yet
-  }
+// Returns a promise that will resolve when the necessary certificate overrides have been added.
+function addCertOverrides() {
+  return Promise.all(
+    [addCertOverride("nocert.example.com", Ci.nsICertOverrideService.ERROR_MISMATCH),
+     addCertOverride("self-signed.example.com", Ci.nsICertOverrideService.ERROR_UNTRUSTED),
+     addCertOverride("untrusted.example.com", Ci.nsICertOverrideService.ERROR_UNTRUSTED),
+     addCertOverride("expired.example.com", Ci.nsICertOverrideService.ERROR_TIME)]);
 }
 
 /** *** Mock Provider *****/

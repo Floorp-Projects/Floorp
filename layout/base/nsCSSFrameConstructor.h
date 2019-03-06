@@ -774,27 +774,24 @@ class nsCSSFrameConstructor final : public nsFrameManager {
   struct MOZ_STACK_CLASS XBLBindingLoadInfo {
     RefPtr<ComputedStyle> mStyle;
     mozilla::UniquePtr<PendingBinding> mPendingBinding;
-    nsAtom* mTag = nullptr;
 
     // For the 'no binding loaded' case.
     XBLBindingLoadInfo(nsIContent&, ComputedStyle&);
 
     // For the case we actually load an XBL binding.
     XBLBindingLoadInfo(already_AddRefed<ComputedStyle>&& aStyle,
-                       mozilla::UniquePtr<PendingBinding> aPendingBinding,
-                       nsAtom* aTag);
+                       mozilla::UniquePtr<PendingBinding> aPendingBinding);
 
     // For the error case.
     XBLBindingLoadInfo();
   };
 
-  // Returns null mStyle / mTag members to signal an error.
+  // Returns null mStyle member to signal an error.
   XBLBindingLoadInfo LoadXBLBindingIfNeeded(nsIContent&, ComputedStyle&,
                                             uint32_t aFlags);
 
   const FrameConstructionData* FindDataForContent(nsIContent&, ComputedStyle&,
                                                   nsIFrame* aParentFrame,
-                                                  nsAtom* aTag,
                                                   uint32_t aFlags);
 
   // aParentFrame might be null.  If it is, that means it was an inline frame.
@@ -802,11 +799,10 @@ class nsCSSFrameConstructor final : public nsFrameManager {
                                                    nsIFrame* aParentFrame);
   const FrameConstructionData* FindElementData(const Element&, ComputedStyle&,
                                                nsIFrame* aParentFrame,
-                                               nsAtom* aTag, uint32_t aFlags);
+                                               uint32_t aFlags);
   const FrameConstructionData* FindElementTagData(const Element&,
                                                   ComputedStyle&,
                                                   nsIFrame* aParentFrame,
-                                                  nsAtom* aTag,
                                                   uint32_t aFlags);
 
   /* A function that takes an integer, content, style, and array of
@@ -828,7 +824,7 @@ class nsCSSFrameConstructor final : public nsFrameManager {
    * actually match, aTagFound will be true, even if the return value is null.
    */
   static const FrameConstructionData* FindDataByTag(
-      nsAtom* aTag, const Element& aElement, ComputedStyle& aComputedStyle,
+      const Element& aElement, ComputedStyle& aComputedStyle,
       const FrameConstructionDataByTag* aDataPtr, uint32_t aDataLength);
 
   /* A class representing a list of FrameConstructionItems.  Instances of this
@@ -1515,7 +1511,6 @@ class nsCSSFrameConstructor final : public nsFrameManager {
   // NOTE(emilio): This gets the overloaded tag and namespace id since they can
   // be overriden by extends="" in XBL.
   static const FrameConstructionData* FindXULTagData(const Element&,
-                                                     nsAtom* aTag,
                                                      ComputedStyle&);
   // XUL data-finding helper functions and structures
 #ifdef MOZ_XUL

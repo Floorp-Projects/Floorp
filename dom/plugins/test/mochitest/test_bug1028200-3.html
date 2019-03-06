@@ -32,6 +32,7 @@
         this.document.mozCancelFullScreen();
         return fullScreenChange;
       }
+      return Promise.resolve();
     });
 
     /**
@@ -54,10 +55,10 @@
       });
 
       add_task(async function() {
-        let fullScreenElement = document.getElementById('iframe1');
-        let plugin = document.getElementById('iframe1')
-             .contentDocument.getElementById('iframe2')
-             .contentDocument.getElementById('plugin1');
+        let fullScreenElement = document.getElementById("iframe1");
+        let plugin = document.getElementById("iframe1")
+             .contentDocument.getElementById("iframe2")
+             .contentDocument.getElementById("plugin1");
 
         let fullScreenChange = promiseFullScreenChange();
         fullScreenElement.mozRequestFullScreen();
@@ -85,7 +86,7 @@
             document.removeEventListener("fullscreenchange", onFullScreenChange);
             clearTimeout(timeoutId);
             resolve();
-          }
+          };
           document.addEventListener("fullscreenchange", onFullScreenChange);
           timeoutId = setTimeout(() => {
             document.removeEventListener("fullscreenchange", onFullScreenChange);
@@ -99,7 +100,7 @@
           ok(false, "Element is no longer fullscreen");
         });
       });
-    }
+    };
   </script>
 
   <iframe id="iframe1" src="1028200-subpageB.html" height="600" width="600"></iframe>

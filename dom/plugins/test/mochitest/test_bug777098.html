@@ -20,13 +20,14 @@ SimpleTest.waitForExplicitFinish();
 setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
 
 function go() {
-  var plugin = document.getElementById('plugin');
+  var plugin = document.getElementById("plugin");
 
   // Get wrapped npobject from plugin (plugin.__proto__)
   var val = plugin.getObjectValue();
 
   // Force a re-instantiate by re-setting dummy uri,
   // making val a wrapper for a dead plugin
+  // eslint-disable-next-line no-self-assign
   plugin.data = plugin.data;
 
   // The correct behavior is an exception, if plugin.checkObjectValue succeeds
@@ -41,7 +42,7 @@ function go() {
   }
 
   // Spin the event loop so the instantiation can complete
-  window.setTimeout(function () {
+  window.setTimeout(function() {
     ok(pluginCheck(), "Shouldn't explode");
 
     // All done.

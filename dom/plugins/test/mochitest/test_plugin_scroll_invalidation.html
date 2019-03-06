@@ -46,7 +46,7 @@ function scrollAround() {
   var paints = getPaintCounts();
 
   for (var i = 0; i < paints.length; ++i) {
-    isnot(paints[i], 0, "embed " + scrolling_plugins[i].id + " is painted"); 
+    isnot(paints[i], 0, "embed " + scrolling_plugins[i].id + " is painted");
   }
 
   last_paint_counts = paints;
@@ -70,7 +70,7 @@ function done() {
   for (var i = 0; i < paints.length; ++i) {
     is(paints[i], last_paint_counts[i], "embed " + scrolling_plugins[i].id + " is not painted on scroll");
   }
-  SimpleTest.finish();  
+  SimpleTest.finish();
 }
 
 // Waits for the paint_waiter plugin to be repainted and then
@@ -83,7 +83,7 @@ function waitForPaint(func) {
 
   // Fiddle with the style in a way that should force some repainting
   paint_waiter.style.width =
-    (paint_waiter.getBoundingClientRect().width + 1) + "px"; 
+    (paint_waiter.getBoundingClientRect().width + 1) + "px";
   paint_waiter.style.height = "1px";
 
   function waitForPaintHelper() {

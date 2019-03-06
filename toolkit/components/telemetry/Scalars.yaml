@@ -1659,6 +1659,34 @@ devtools.changesview:
     record_in_processes:
       - 'main'
 
+  copy_all_changes:
+    bug_numbers:
+      - 1532583
+    description: >
+      Number of times the Copy All Changes button is used in the Changes panel.
+    expires: "70"
+    kind: uint
+    notification_emails:
+      - dev-developer-tools@lists.mozilla.org
+      - mbalfanz@mozilla.com
+    release_channel_collection: opt-out
+    record_in_processes:
+      - 'main'
+
+  copy_rule:
+    bug_numbers:
+      - 1532583
+    description: >
+      Number of times the Copy Rule button is used in the Changes panel.
+    expires: "70"
+    kind: uint
+    notification_emails:
+      - dev-developer-tools@lists.mozilla.org
+      - mbalfanz@mozilla.com
+    release_channel_collection: opt-out
+    record_in_processes:
+      - 'main'
+
   contextmenu:
     bug_numbers:
       - 1522843
@@ -1679,6 +1707,36 @@ devtools.changesview:
     description: >
       Number of times the Copy option is picked from the Changes panel context menu.
     expires: "69"
+    kind: uint
+    notification_emails:
+      - dev-developer-tools@lists.mozilla.org
+      - mbalfanz@mozilla.com
+    release_channel_collection: opt-out
+    record_in_processes:
+      - 'main'
+
+  contextmenu_copy_declaration:
+    bug_numbers:
+      - 1532583
+    description: >
+      Number of times the Copy Declaration option is picked from the Changes panel
+      context menu.
+    expires: "70"
+    kind: uint
+    notification_emails:
+      - dev-developer-tools@lists.mozilla.org
+      - mbalfanz@mozilla.com
+    release_channel_collection: opt-out
+    record_in_processes:
+      - 'main'
+
+  contextmenu_copy_rule:
+    bug_numbers:
+      - 1532583
+    description: >
+      Number of times the Copy Rule option is picked from the Changes panel
+      context menu.
+    expires: "70"
     kind: uint
     notification_emails:
       - dev-developer-tools@lists.mozilla.org

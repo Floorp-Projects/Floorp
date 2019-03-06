@@ -28,59 +28,54 @@
 
 function workerTestExec(script) {
   return new Promise(function(resolve, reject) {
-    var worker = new Worker('worker_wrapper.js');
+    var worker = new Worker("worker_wrapper.js");
     worker.onmessage = function(event) {
       is(event.data.context, "Worker",
          "Correct context for messages received on the worker");
-      if (event.data.type == 'finish') {
+      if (event.data.type == "finish") {
         worker.terminate();
         SpecialPowers.forceGC();
         resolve();
-
-      } else if (event.data.type == 'status') {
+      } else if (event.data.type == "status") {
         ok(event.data.status, event.data.context + ": " + event.data.msg);
-
-      } else if (event.data.type == 'getPrefs') {
-        var result = {};
+      } else if (event.data.type == "getPrefs") {
+        let result = {};
         event.data.prefs.forEach(function(pref) {
           result[pref] = SpecialPowers.Services.prefs.getBoolPref(pref);
         });
         worker.postMessage({
-          type: 'returnPrefs',
+          type: "returnPrefs",
           prefs: event.data.prefs,
-          result: result
+          result,
         });
-
-      } else if (event.data.type == 'getPermissions') {
-        var result = {};
+      } else if (event.data.type == "getPermissions") {
+        let result = {};
         event.data.permissions.forEach(function(permission) {
           result[permission] = SpecialPowers.hasPermission(permission, window.document);
         });
         worker.postMessage({
-          type: 'returnPermissions',
+          type: "returnPermissions",
           permissions: event.data.permissions,
-          result: result
+          result,
         });
-
-      } else if (event.data.type == 'getVersion') {
-        var result = SpecialPowers.Cc['@mozilla.org/xre/app-info;1'].getService(SpecialPowers.Ci.nsIXULAppInfo).version;
+      } else if (event.data.type == "getVersion") {
+        let result = Services.appinfo.version;
         worker.postMessage({
-          type: 'returnVersion',
-          result: result
+          type: "returnVersion",
+          result,
         });
-
-      } else if (event.data.type == 'getUserAgent') {
+      } else if (event.data.type == "getUserAgent") {
         worker.postMessage({
-          type: 'returnUserAgent',
-          result: navigator.userAgent
+          type: "returnUserAgent",
+          result: navigator.userAgent,
         });
       }
-    }
-
-    worker.onerror = function(event) {
-      reject('Worker had an error: ' + event.data);
     };
 
-    worker.postMessage({ script: script });
+    worker.onerror = function(event) {
+      reject("Worker had an error: " + event.data);
+    };
+
+    worker.postMessage({ script });
   });
 }

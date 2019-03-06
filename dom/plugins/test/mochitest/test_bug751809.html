@@ -22,15 +22,15 @@
   const utils = window.windowUtils;
 
   function go() {
-    var plugin = document.getElementById('plugin');
+    var plugin = document.getElementById("plugin");
     var objLoadingContent = SpecialPowers.wrap(plugin);
     ok(!objLoadingContent.activated, "plugin should not be activated");
-    
+  
     SimpleTest.waitForFocus(afterWindowFocus);
   }
 
   function afterWindowFocus() {
-    var plugin = document.getElementById('plugin');
+    var plugin = document.getElementById("plugin");
     var objLoadingContent = SpecialPowers.wrap(plugin);
 
     objLoadingContent.playPlugin();
@@ -38,24 +38,25 @@
     SimpleTest.waitForCondition(condition, afterPluginActivation,
                                 "Waited too long for plugin to activate");
   }
-    
+  
   function afterPluginActivation() {
-    var plugin = document.getElementById('plugin');
+    var plugin = document.getElementById("plugin");
     var objLoadingContent = SpecialPowers.wrap(plugin);
     ok(objLoadingContent.activated, "plugin should be activated now");
 
     // Triggering a paint and waiting for it to be flushed makes sure
     // that both plugin and platform see the plugin element as visible.
     // See bug 805330 for details.
+    /* global waitForAllPaintsFlushed */
     plugin.setColor("FF000088");
     waitForAllPaintsFlushed(afterPaintsFlushed);
   }
 
   function afterPaintsFlushed() {
-    var plugin = document.getElementById('plugin');
+    var plugin = document.getElementById("plugin");
     try {
       is(plugin.getMouseUpEventCount(), 0, "Plugin should not have received mouse events yet.");
-    } catch(e) {
+    } catch (e) {
       ok(false, "plugin.getMouseUpEventCount() shouldn't throw");
     }
 
@@ -66,10 +67,10 @@
   }
 
   function afterFirstClick() {
-    var plugin = document.getElementById('plugin');
+    var plugin = document.getElementById("plugin");
     try {
       is(plugin.getMouseUpEventCount(), 1, "Plugin should have received 1 mouse up event.");
-    } catch(e) {
+    } catch (e) {
       ok(false, "plugin.getMouseUpEventCount() shouldn't throw");
     }
 

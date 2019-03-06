@@ -18,11 +18,11 @@
     var timeoutPref = "dom.ipc.plugins.timeoutSecs";
     SpecialPowers.setIntPref(timeoutPref, 5);
 
-    crashAndGetCrashServiceRecord("hang", function (cm, crash) {
+    crashAndGetCrashServiceRecord("hang", function(cm, crash) {
       ok(crash.isOfType(cm.PROCESS_TYPE_PLUGIN, cm.CRASH_TYPE_HANG),
          "Record should be a plugin hang");
       SimpleTest.finish();
     });
-  }
+  };
   </script>
   <iframe id="iframe1" src="crashing_subpage.html" width="600" height="600"></iframe>

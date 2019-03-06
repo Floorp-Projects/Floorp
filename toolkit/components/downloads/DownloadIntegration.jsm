@@ -459,6 +459,41 @@ var DownloadIntegration = {
   },
 
   /**
+   * Builds a key and URL value pair for the "Zone.Identifier" Alternate Data
+   * Stream.
+   *
+   * @param aKey
+   *        String to write before the "=" sign. This is not validated.
+   * @param aUrl
+   *        URL string to write after the "=" sign. Only the "http(s)" and
+   *        "ftp" schemes are allowed, and usernames and passwords are
+   *        stripped.
+   * @param [optional] aFallback
+   *        Value to place after the "=" sign in case the URL scheme is not
+   *        allowed. If unspecified, an empty string is returned when the
+   *        scheme is not allowed.
+   *
+   * @return Line to add to the stream, including the final CRLF, or an empty
+   *         string if the validation failed.
+   */
+  _zoneIdKey(aKey, aUrl, aFallback) {
+    try {
+      let url;
+      const uri = NetUtil.newURI(aUrl);
+      if (["http", "https", "ftp"].includes(uri.scheme)) {
+        url = uri.mutate().setUserPass("").finalize().spec;
+      } else if (aFallback) {
+        url = aFallback;
+      } else {
+        return "";
+      }
+      return aKey + "=" + url + "\r\n";
+    } catch (e) {
+      return "";
+    }
+  },
+
+  /**
    * Performs platform-specific operations when a download is done.
    *
    * aParam aDownload
@@ -497,7 +532,13 @@ var DownloadIntegration = {
             { winAllowLengthBeyondMaxPathWithCaveats: true }
           );
           try {
-            await stream.write(new TextEncoder().encode("[ZoneTransfer]\r\nZoneId=" + zone + "\r\n"));
+            let zoneId = "[ZoneTransfer]\r\nZoneId=" + zone + "\r\n";
+            if (!aDownload.source.isPrivate) {
+              zoneId +=
+                this._zoneIdKey("ReferrerUrl", aDownload.source.referrer) +
+                this._zoneIdKey("HostUrl", aDownload.source.url, "about:internet");
+            }
+            await stream.write(new TextEncoder().encode(zoneId));
           } finally {
             await stream.close();
           }

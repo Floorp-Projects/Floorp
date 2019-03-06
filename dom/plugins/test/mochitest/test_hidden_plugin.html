@@ -8,16 +8,15 @@
 
 <body>
   <script type="application/javascript">
-  "use strict"
+  "use strict";
   {
     SimpleTest.waitForExplicitFinish();
     let ph = SpecialPowers.Cc["@mozilla.org/plugin/host;1"].getService(SpecialPowers.Ci.nsIPluginHost);
     let plugins = ph.getPluginTags();
     let testPluginName = plugins[0].name;
-    let oldPrefVal = null;
     let prefName = "plugins.navigator.hidden_ctp_plugin";
     try {
-      oldPrefVal = SpecialPowers.getCharPref(prefName);
+      SpecialPowers.getCharPref(prefName);
     } catch (ex) {}
     let promise = SpecialPowers.pushPrefEnv({ set: [[prefName, testPluginName]]});
     promise.then(function() {

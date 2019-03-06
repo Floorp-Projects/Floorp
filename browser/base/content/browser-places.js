@@ -453,7 +453,7 @@ var PlacesCommandHook = {
     });
     PlacesUIUtils.showBookmarkDialog({ action: "add",
                                        type: "bookmark",
-                                       uri: makeURI(url),
+                                       uri: Services.io.newURI(url),
                                        title,
                                        defaultInsertionPoint,
                                        hiddenRows: [ "location", "keyword" ],

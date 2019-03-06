@@ -2067,12 +2067,6 @@ nsPrefBranch::nsPrefBranch(const char* aPrefRoot, PrefValueKind aKind)
 
 nsPrefBranch::~nsPrefBranch() {
   FreeObserverList();
-
-  nsCOMPtr<nsIObserverService> observerService =
-      mozilla::services::GetObserverService();
-  if (observerService) {
-    observerService->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
-  }
 }
 
 NS_IMPL_ISUPPORTS(nsPrefBranch, nsIPrefBranch, nsIObserver,
@@ -2780,6 +2774,13 @@ void nsPrefBranch::FreeObserverList() {
                                     Preferences::PrefixMatch);
     iter.Remove();
   }
+
+  nsCOMPtr<nsIObserverService> observerService =
+      mozilla::services::GetObserverService();
+  if (observerService) {
+    observerService->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
+  }
+
   mFreeingObserverList = false;
 }
 

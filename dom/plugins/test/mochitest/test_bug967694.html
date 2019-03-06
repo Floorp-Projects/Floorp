@@ -52,7 +52,7 @@ ok(thrown, "Function call should have thrown");
 ok(!spPlugin.hasRunningPlugin, "Plugin should not have spawned");
 
 // Try property access from content
-var hi = plugin._testShouldntExistContent;
+hi = plugin._testShouldntExistContent;
 ok(spPlugin.hasRunningPlugin, "Should've caused plugin to spawn");
 
 // Property set

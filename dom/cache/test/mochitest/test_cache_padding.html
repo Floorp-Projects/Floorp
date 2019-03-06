@@ -76,7 +76,7 @@ async function waitForIOToComplete(cache, request) {
   await cache.match(request);
 
   // Finally, wait for -wal file finish its job.
-  return await resetStorage();
+  return resetStorage();
 }
 
 function fetchOpaqueResponse(url) {
@@ -87,9 +87,8 @@ SimpleTest.waitForExplicitFinish();
 SpecialPowers.pushPrefEnv({
   "set": [["dom.caches.enabled", true],
           ["dom.caches.testing.enabled", true],
-          ["dom.quotaManager.testing", true]]
+          ["dom.quotaManager.testing", true]],
 }, async function() {
-
   // This test is mainly to verify we only generate different padding size for
   // the opaque response which is comming from netwrok.
   // Besides, this test utilizes verifyUsage() to ensure Cache Acions does
@@ -101,10 +100,10 @@ SpecialPowers.pushPrefEnv({
   // Note: For the cloned and cached opaque response, the padding size shouldn't
   // be changed. Thus, it makes the attacker harder to get the padding size.
 
-  const name = 'cachePadding';
-  const other_name = 'cachePaddingOther';
-  const cors_base = 'https://example.com/test/dom/cache/test/mochitest/';
-  const url = 'test_cache_add.js';
+  const name = "cachePadding";
+  const other_name = "cachePaddingOther";
+  const cors_base = "https://example.com/test/dom/cache/test/mochitest/";
+  const url = "test_cache_add.js";
 
   await setupTestIframe();
 

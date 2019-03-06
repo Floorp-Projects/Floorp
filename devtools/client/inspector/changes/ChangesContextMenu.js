@@ -64,7 +64,7 @@ class ChangesContextMenu {
       // Copy Rule option
       menu.append(new MenuItem({
         label: getStr("changes.contextmenu.copyRule"),
-        click: () => this._onCopyRule(ruleId),
+        click: () => this._onCopyRule(ruleId, true),
       }));
 
       // Copy Declaration option. Visible only if there is a declaration element target.
