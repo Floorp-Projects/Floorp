@@ -1,6 +1,0 @@
-. "$topsrcdir/build/mozconfig.artifact.automation"
-
-. "$topsrcdir/browser/config/mozconfigs/linux32/common-opt"
-. "$topsrcdir/build/mozconfig.common.override"
-
-. "$topsrcdir/build/mozconfig.artifact"

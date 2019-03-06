@@ -26,6 +26,4 @@ config = {
                 '/bin:/usr/sbin:/sbin:/usr/local/bin:/usr/X11/bin',
     },
     'mozconfig_variant': 'debug-searchfox',
-    'artifact_flag_build_variant_in_try': None,
-    #######################
 }

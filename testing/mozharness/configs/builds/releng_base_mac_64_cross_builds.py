@@ -52,6 +52,5 @@ config = {
     },
     'mozconfig_platform': 'macosx64',
     'mozconfig_variant': 'nightly',
-    'artifact_flag_build_variant_in_try': 'cross-artifact',
     #########################################################################
 }
