@@ -53,7 +53,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   NetUtil: "resource://gre/modules/NetUtil.jsm",
   OS: "resource://gre/modules/osfile.jsm",
   PluralForm: "resource://gre/modules/PluralForm.jsm",
-  PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
   Schemas: "resource://gre/modules/Schemas.jsm",
   XPIProvider: "resource://gre/modules/addons/XPIProvider.jsm",
 });
@@ -1906,10 +1905,7 @@ class Extension extends ExtensionData {
         return;
       }
 
-      // We automatically add permissions to some extensions:
-      // 1. system/built-in extensions
-      // 2. all extensions when in permanent private browsing
-      //
+      // We automatically add permissions to system/built-in extensions.
       // Extensions expliticy stating not_allowed will never get permission.
       if (!allowPrivateBrowsingByDefault && this.manifest.incognito !== "not_allowed" &&
           !this.permissions.has(PRIVATE_ALLOWED_PERMISSION)) {
@@ -1943,17 +1939,6 @@ class Extension extends ExtensionData {
       }
 
       resolveReadyPromise(this.policy);
-
-      // When in PPB skip any startup and disable the policy if the extension
-      // does not have permission.
-      if (PrivateBrowsingUtils.permanentPrivateBrowsing && !this.privateBrowsingAllowed) {
-        this.state = "Startup: Cancelled: (not running in permenant private browsing mode)";
-
-        this.policy.active = false;
-
-        this.cleanupGeneratedFile();
-        return;
-      }
 
       // The "startup" Management event sent on the extension instance itself
       // is emitted just before the Management "startup" event,

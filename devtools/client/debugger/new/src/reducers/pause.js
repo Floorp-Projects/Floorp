@@ -70,21 +70,22 @@ type ThreadPauseState = {
   command: Command,
   lastCommand: Command,
   wasStepping: boolean,
-  previousLocation: ?MappedLocation,
-  skipPausing: boolean
+  previousLocation: ?MappedLocation
 };
 
 // Pause state describing all threads.
 export type PauseState = {
   currentThread: string,
   canRewind: boolean,
-  threads: { [string]: ThreadPauseState }
+  threads: { [string]: ThreadPauseState },
+  skipPausing: boolean
 };
 
 export const createPauseState = (): PauseState => ({
   currentThread: "UnknownThread",
   threads: {},
-  canRewind: false
+  canRewind: false,
+  skipPausing: prefs.skipPausing
 });
 
 const resumedPauseState = {
@@ -107,8 +108,7 @@ const createInitialPauseState = () => ({
   canRewind: false,
   command: null,
   lastCommand: null,
-  previousLocation: null,
-  skipPausing: prefs.skipPausing
+  previousLocation: null
 });
 
 function getThreadPauseState(state: PauseState, thread: string) {
@@ -304,7 +304,7 @@ function update(
       const { skipPausing } = action;
       prefs.skipPausing = skipPausing;
 
-      return updateThreadState({ skipPausing });
+      return { ...state, skipPausing };
     }
   }
 
@@ -553,7 +553,7 @@ export const getSelectedFrame: Selector<?Frame> = createSelector(
 );
 
 export function getSkipPausing(state: OuterState) {
-  return getCurrentPauseState(state).skipPausing;
+  return state.pause.skipPausing;
 }
 
 // NOTE: currently only used for chrome

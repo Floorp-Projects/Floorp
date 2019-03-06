@@ -246,6 +246,13 @@ void VRManager::RunTasks() {
   // is active or once per vsync when a VR presentation is
   // not active.
 
+  if (!mInitialized) {
+    // We may have been destroyed but still have messages
+    // in the queue from mTaskTimer.  Bail out to avoid
+    // running them.
+    return;
+  }
+
   TimeStamp now = TimeStamp::Now();
   double lastTickMs = mAccumulator100ms;
   double deltaTime = 0.0f;
