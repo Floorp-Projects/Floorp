@@ -11,10 +11,7 @@ import BreakpointsContextMenu from "../BreakpointsContextMenu";
 import { createBreakpoint } from "../../../../utils/breakpoint";
 import { buildMenu } from "devtools-contextmenu";
 
-import {
-  makeMockSource,
-  makeMappedLocation
-} from "../../../../utils/test-mockup";
+import { makeMockSource } from "../../../../utils/test-mockup";
 
 jest.mock("devtools-contextmenu");
 
@@ -27,12 +24,12 @@ function render(disabled = false) {
 function generateDefaults(disabled) {
   const breakpoints = [
     createBreakpoint(
-      makeMappedLocation({
+      {
         line: 1,
         column: undefined,
         sourceId: "source-https://example.com/main.js",
         sourceUrl: "https://example.com/main.js"
-      }),
+      },
       {
         id: "https://example.com/main.js:1:",
         disabled: disabled,
@@ -44,12 +41,12 @@ function generateDefaults(disabled) {
       }
     ),
     createBreakpoint(
-      makeMappedLocation({
+      {
         line: 2,
         column: undefined,
         sourceId: "source-https://example.com/main.js",
         sourceUrl: "https://example.com/main.js"
-      }),
+      },
       {
         id: "https://example.com/main.js:2:",
         disabled: disabled,
@@ -59,12 +56,12 @@ function generateDefaults(disabled) {
       }
     ),
     createBreakpoint(
-      makeMappedLocation({
+      {
         line: 3,
         column: undefined,
         sourceId: "source-https://example.com/main.js",
         sourceUrl: "https://example.com/main.js"
-      }),
+      },
       {
         id: "https://example.com/main.js:3:",
         disabled: disabled,

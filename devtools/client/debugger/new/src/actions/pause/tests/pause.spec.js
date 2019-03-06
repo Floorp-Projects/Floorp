@@ -30,7 +30,7 @@ const mockThreadClient = {
   evaluate: async () => {},
   evaluateInFrame: async () => {},
   evaluateExpressions: async () => {},
-  resume: async () => {},
+
   getFrameScopes: async frame => frame.scope,
   setBreakpoint: () => new Promise(_resolve => {}),
   sourceContents: ({ source }) => {
@@ -69,8 +69,7 @@ const mockThreadClient = {
           });
       }
     });
-  },
-  getBreakpointPositions: async () => ({})
+  }
 };
 
 const mockFrameId = "1";
@@ -321,8 +320,7 @@ describe("pause", () => {
         getOriginalSourceText: async () => ({
           source: "fn fooBar() {}\nfn barZoo() { fooBar() }",
           contentType: "text/rust"
-        }),
-        getGeneratedRangesForOriginal: async () => []
+        })
       };
 
       const store = createStore(mockThreadClient, {}, sourceMapsMock);

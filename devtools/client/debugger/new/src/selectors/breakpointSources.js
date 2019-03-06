@@ -28,11 +28,7 @@ function getBreakpointsForSource(
   breakpoints: Breakpoint[]
 ) {
   return breakpoints
-    .sort(
-      (a, b) =>
-        getSelectedLocation(a, selectedSource).line -
-        getSelectedLocation(b, selectedSource).line
-    )
+    .sort((a, b) => a.location.line - b.location.line)
     .filter(
       bp =>
         !bp.options.hidden &&
@@ -46,12 +42,9 @@ function getBreakpointsForSource(
 
 function findBreakpointSources(
   sources: SourcesMap,
-  breakpoints: Breakpoint[],
-  selectedSource: ?Source
+  breakpoints: Breakpoint[]
 ): Source[] {
-  const sourceIds: string[] = uniq(
-    breakpoints.map(bp => getSelectedLocation(bp, selectedSource).sourceId)
-  );
+  const sourceIds: string[] = uniq(breakpoints.map(bp => bp.location.sourceId));
 
   const breakpointSources = sourceIds
     .map(id => sources[id])
@@ -65,7 +58,7 @@ export const getBreakpointSources: Selector<BreakpointSources> = createSelector(
   getSources,
   getSelectedSource,
   (breakpoints: Breakpoint[], sources: SourcesMap, selectedSource: ?Source) =>
-    findBreakpointSources(sources, breakpoints, selectedSource)
+    findBreakpointSources(sources, breakpoints)
       .map(source => ({
         source,
         breakpoints: getBreakpointsForSource(
