@@ -40,6 +40,7 @@ var LoginHelper = {
 
   updateSignonPrefs() {
     this.autofillForms = Services.prefs.getBoolPref("signon.autofillForms");
+    this.autocompleteOff = Services.prefs.getBoolPref("signon.autofillForms.autocompleteOff");
     this.debug = Services.prefs.getBoolPref("signon.debug");
     this.enabled = Services.prefs.getBoolPref("signon.rememberSignons");
     this.formlessCaptureEnabled = Services.prefs.getBoolPref("signon.formlessCapture.enabled");
