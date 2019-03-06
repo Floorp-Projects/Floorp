@@ -8,6 +8,17 @@ AddonTestUtils.init(this);
 AddonTestUtils.overrideCertDB();
 AddonTestUtils.createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "42");
 AddonTestUtils.usePrivilegedSignatures = false;
+AddonTestUtils.hookAMTelemetryEvents();
+
+// Assert on the expected "addonsManager.action" telemetry events (and optional filter events to verify
+// by using a given actionType).
+function assertActionAMTelemetryEvent(expectedActionEvents, assertMessage, {actionType} = {}) {
+  const events = AddonTestUtils.getAMTelemetryEvents().filter(({method, extra}) => {
+    return method === "action" && (!actionType ? true : extra && extra.action === actionType);
+  });
+
+  Assert.deepEqual(events, expectedActionEvents, assertMessage);
+}
 
 async function runIncognitoTest(extensionData, privateBrowsingAllowed, allowPrivateBrowsingByDefault) {
   Services.prefs.setBoolPref("extensions.allowPrivateBrowsingByDefault", allowPrivateBrowsingByDefault);
@@ -129,4 +140,19 @@ add_task(async function test_extension_incognito_spanning_grandfathered() {
   await disabledWrapper.unload();
   Services.prefs.clearUserPref("extensions.allowPrivateBrowsingByDefault");
   Services.prefs.clearUserPref("extensions.incognito.migrated");
+
+  const expectedEvents = [{
+    method: "action",
+    object: "appUpgrade",
+    value: "on",
+    extra: {
+      addonId: "@grandfathered",
+      action: "privateBrowsingAllowed",
+    },
+  }];
+
+  assertActionAMTelemetryEvent(
+    expectedEvents,
+    "Got the expected telemetry events for the grandfathered extensions",
+    {actionType: "privateBrowsingAllowed"});
 });
