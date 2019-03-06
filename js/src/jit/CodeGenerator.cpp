@@ -586,73 +586,6 @@ void CodeGeneratorShared::addIC(LInstruction* lir, size_t cacheIndex) {
   cache->setRejoinLabel(CodeOffset(ool->rejoin()->offset()));
 }
 
-typedef bool (*IonGetPropertyICFn)(JSContext*, HandleScript, IonGetPropertyIC*,
-                                   HandleValue, HandleValue,
-                                   MutableHandleValue);
-static const VMFunction IonGetPropertyICInfo = FunctionInfo<IonGetPropertyICFn>(
-    IonGetPropertyIC::update, "IonGetPropertyIC::update");
-
-typedef bool (*IonSetPropertyICFn)(JSContext*, HandleScript, IonSetPropertyIC*,
-                                   HandleObject, HandleValue, HandleValue);
-static const VMFunction IonSetPropertyICInfo = FunctionInfo<IonSetPropertyICFn>(
-    IonSetPropertyIC::update, "IonSetPropertyIC::update");
-
-typedef bool (*IonGetPropSuperICFn)(JSContext*, HandleScript,
-                                    IonGetPropSuperIC*, HandleObject,
-                                    HandleValue, HandleValue,
-                                    MutableHandleValue);
-static const VMFunction IonGetPropSuperICInfo =
-    FunctionInfo<IonGetPropSuperICFn>(IonGetPropSuperIC::update,
-                                      "IonGetPropSuperIC::update");
-
-typedef bool (*IonGetNameICFn)(JSContext*, HandleScript, IonGetNameIC*,
-                               HandleObject, MutableHandleValue);
-static const VMFunction IonGetNameICInfo =
-    FunctionInfo<IonGetNameICFn>(IonGetNameIC::update, "IonGetNameIC::update");
-
-typedef bool (*IonHasOwnICFn)(JSContext*, HandleScript, IonHasOwnIC*,
-                              HandleValue, HandleValue, int32_t*);
-static const VMFunction IonHasOwnICInfo =
-    FunctionInfo<IonHasOwnICFn>(IonHasOwnIC::update, "IonHasOwnIC::update");
-
-typedef JSObject* (*IonBindNameICFn)(JSContext*, HandleScript, IonBindNameIC*,
-                                     HandleObject);
-static const VMFunction IonBindNameICInfo = FunctionInfo<IonBindNameICFn>(
-    IonBindNameIC::update, "IonBindNameIC::update");
-
-typedef JSObject* (*IonGetIteratorICFn)(JSContext*, HandleScript,
-                                        IonGetIteratorIC*, HandleValue);
-static const VMFunction IonGetIteratorICInfo = FunctionInfo<IonGetIteratorICFn>(
-    IonGetIteratorIC::update, "IonGetIteratorIC::update");
-
-typedef bool (*IonInICFn)(JSContext*, HandleScript, IonInIC*, HandleValue,
-                          HandleObject, bool*);
-static const VMFunction IonInICInfo =
-    FunctionInfo<IonInICFn>(IonInIC::update, "IonInIC::update");
-
-typedef bool (*IonInstanceOfICFn)(JSContext*, HandleScript, IonInstanceOfIC*,
-                                  HandleValue lhs, HandleObject rhs, bool* res);
-static const VMFunction IonInstanceOfInfo = FunctionInfo<IonInstanceOfICFn>(
-    IonInstanceOfIC::update, "IonInstanceOfIC::update");
-
-typedef bool (*IonUnaryArithICFn)(JSContext* cx, HandleScript outerScript,
-                                  IonUnaryArithIC* stub, HandleValue val,
-                                  MutableHandleValue res);
-static const VMFunction IonUnaryArithICInfo = FunctionInfo<IonUnaryArithICFn>(
-    IonUnaryArithIC::update, "IonUnaryArithIC::update");
-
-typedef bool (*IonBinaryArithICFn)(JSContext* cx, HandleScript outerScript,
-                                   IonBinaryArithIC* stub, HandleValue lhs,
-                                   HandleValue rhs, MutableHandleValue res);
-static const VMFunction IonBinaryArithICInfo = FunctionInfo<IonBinaryArithICFn>(
-    IonBinaryArithIC::update, "IonBinaryArithIC::update");
-
-typedef bool (*IonCompareICFn)(JSContext* cx, HandleScript outerScript,
-                               IonCompareIC* stub, HandleValue lhs,
-                               HandleValue rhs, bool* res);
-static const VMFunction IonCompareICInfo =
-    FunctionInfo<IonCompareICFn>(IonCompareIC::update, "IonCompareIC::update");
-
 void CodeGenerator::visitOutOfLineICFallback(OutOfLineICFallback* ool) {
   LInstruction* lir = ool->lir();
   size_t cacheIndex = ool->cacheIndex();
@@ -675,7 +608,9 @@ void CodeGenerator::visitOutOfLineICFallback(OutOfLineICFallback* ool) {
       icInfo_[cacheInfoIndex].icOffsetForPush = pushArgWithPatch(ImmWord(-1));
       pushArg(ImmGCPtr(gen->info().script()));
 
-      callVM(IonGetPropertyICInfo, lir);
+      using Fn = bool (*)(JSContext*, HandleScript, IonGetPropertyIC*,
+                          HandleValue, HandleValue, MutableHandleValue);
+      callVM<Fn, IonGetPropertyIC::update>(lir);
 
       StoreValueTo(getPropIC->output()).generate(this);
       restoreLiveIgnore(lir, StoreValueTo(getPropIC->output()).clobbered());
@@ -695,7 +630,10 @@ void CodeGenerator::visitOutOfLineICFallback(OutOfLineICFallback* ool) {
       icInfo_[cacheInfoIndex].icOffsetForPush = pushArgWithPatch(ImmWord(-1));
       pushArg(ImmGCPtr(gen->info().script()));
 
-      callVM(IonGetPropSuperICInfo, lir);
+      using Fn =
+          bool (*)(JSContext*, HandleScript, IonGetPropSuperIC*, HandleObject,
+                   HandleValue, HandleValue, MutableHandleValue);
+      callVM<Fn, IonGetPropSuperIC::update>(lir);
 
       StoreValueTo(getPropSuperIC->output()).generate(this);
       restoreLiveIgnore(lir,
@@ -716,7 +654,9 @@ void CodeGenerator::visitOutOfLineICFallback(OutOfLineICFallback* ool) {
       icInfo_[cacheInfoIndex].icOffsetForPush = pushArgWithPatch(ImmWord(-1));
       pushArg(ImmGCPtr(gen->info().script()));
 
-      callVM(IonSetPropertyICInfo, lir);
+      using Fn = bool (*)(JSContext*, HandleScript, IonSetPropertyIC*,
+                          HandleObject, HandleValue, HandleValue);
+      callVM<Fn, IonSetPropertyIC::update>(lir);
 
       restoreLive(lir);
 
@@ -732,7 +672,9 @@ void CodeGenerator::visitOutOfLineICFallback(OutOfLineICFallback* ool) {
       icInfo_[cacheInfoIndex].icOffsetForPush = pushArgWithPatch(ImmWord(-1));
       pushArg(ImmGCPtr(gen->info().script()));
 
-      callVM(IonGetNameICInfo, lir);
+      using Fn = bool (*)(JSContext*, HandleScript, IonGetNameIC*, HandleObject,
+                          MutableHandleValue);
+      callVM<Fn, IonGetNameIC::update>(lir);
 
       StoreValueTo(getNameIC->output()).generate(this);
       restoreLiveIgnore(lir, StoreValueTo(getNameIC->output()).clobbered());
@@ -749,7 +691,9 @@ void CodeGenerator::visitOutOfLineICFallback(OutOfLineICFallback* ool) {
       icInfo_[cacheInfoIndex].icOffsetForPush = pushArgWithPatch(ImmWord(-1));
       pushArg(ImmGCPtr(gen->info().script()));
 
-      callVM(IonBindNameICInfo, lir);
+      using Fn =
+          JSObject* (*)(JSContext*, HandleScript, IonBindNameIC*, HandleObject);
+      callVM<Fn, IonBindNameIC::update>(lir);
 
       StoreRegisterTo(bindNameIC->output()).generate(this);
       restoreLiveIgnore(lir, StoreRegisterTo(bindNameIC->output()).clobbered());
@@ -766,7 +710,9 @@ void CodeGenerator::visitOutOfLineICFallback(OutOfLineICFallback* ool) {
       icInfo_[cacheInfoIndex].icOffsetForPush = pushArgWithPatch(ImmWord(-1));
       pushArg(ImmGCPtr(gen->info().script()));
 
-      callVM(IonGetIteratorICInfo, lir);
+      using Fn = JSObject* (*)(JSContext*, HandleScript, IonGetIteratorIC*,
+                               HandleValue);
+      callVM<Fn, IonGetIteratorIC::update>(lir);
 
       StoreRegisterTo(getIteratorIC->output()).generate(this);
       restoreLiveIgnore(lir,
@@ -785,7 +731,9 @@ void CodeGenerator::visitOutOfLineICFallback(OutOfLineICFallback* ool) {
       icInfo_[cacheInfoIndex].icOffsetForPush = pushArgWithPatch(ImmWord(-1));
       pushArg(ImmGCPtr(gen->info().script()));
 
-      callVM(IonInICInfo, lir);
+      using Fn = bool (*)(JSContext*, HandleScript, IonInIC*, HandleValue,
+                          HandleObject, bool*);
+      callVM<Fn, IonInIC::update>(lir);
 
       StoreRegisterTo(inIC->output()).generate(this);
       restoreLiveIgnore(lir, StoreRegisterTo(inIC->output()).clobbered());
@@ -803,7 +751,9 @@ void CodeGenerator::visitOutOfLineICFallback(OutOfLineICFallback* ool) {
       icInfo_[cacheInfoIndex].icOffsetForPush = pushArgWithPatch(ImmWord(-1));
       pushArg(ImmGCPtr(gen->info().script()));
 
-      callVM(IonHasOwnICInfo, lir);
+      using Fn = bool (*)(JSContext*, HandleScript, IonHasOwnIC*, HandleValue,
+                          HandleValue, int32_t*);
+      callVM<Fn, IonHasOwnIC::update>(lir);
 
       StoreRegisterTo(hasOwnIC->output()).generate(this);
       restoreLiveIgnore(lir, StoreRegisterTo(hasOwnIC->output()).clobbered());
@@ -821,7 +771,9 @@ void CodeGenerator::visitOutOfLineICFallback(OutOfLineICFallback* ool) {
       icInfo_[cacheInfoIndex].icOffsetForPush = pushArgWithPatch(ImmWord(-1));
       pushArg(ImmGCPtr(gen->info().script()));
 
-      callVM(IonInstanceOfInfo, lir);
+      using Fn = bool (*)(JSContext*, HandleScript, IonInstanceOfIC*,
+                          HandleValue lhs, HandleObject rhs, bool* res);
+      callVM<Fn, IonInstanceOfIC::update>(lir);
 
       StoreRegisterTo(hasInstanceOfIC->output()).generate(this);
       restoreLiveIgnore(lir,
@@ -838,7 +790,11 @@ void CodeGenerator::visitOutOfLineICFallback(OutOfLineICFallback* ool) {
       pushArg(unaryArithIC->input());
       icInfo_[cacheInfoIndex].icOffsetForPush = pushArgWithPatch(ImmWord(-1));
       pushArg(ImmGCPtr(gen->info().script()));
-      callVM(IonUnaryArithICInfo, lir);
+
+      using Fn = bool (*)(JSContext * cx, HandleScript outerScript,
+                          IonUnaryArithIC * stub, HandleValue val,
+                          MutableHandleValue res);
+      callVM<Fn, IonUnaryArithIC::update>(lir);
 
       StoreValueTo(unaryArithIC->output()).generate(this);
       restoreLiveIgnore(lir, StoreValueTo(unaryArithIC->output()).clobbered());
@@ -855,7 +811,11 @@ void CodeGenerator::visitOutOfLineICFallback(OutOfLineICFallback* ool) {
       pushArg(binaryArithIC->lhs());
       icInfo_[cacheInfoIndex].icOffsetForPush = pushArgWithPatch(ImmWord(-1));
       pushArg(ImmGCPtr(gen->info().script()));
-      callVM(IonBinaryArithICInfo, lir);
+
+      using Fn = bool (*)(JSContext * cx, HandleScript outerScript,
+                          IonBinaryArithIC * stub, HandleValue lhs,
+                          HandleValue rhs, MutableHandleValue res);
+      callVM<Fn, IonBinaryArithIC::update>(lir);
 
       StoreValueTo(binaryArithIC->output()).generate(this);
       restoreLiveIgnore(lir, StoreValueTo(binaryArithIC->output()).clobbered());
@@ -872,7 +832,11 @@ void CodeGenerator::visitOutOfLineICFallback(OutOfLineICFallback* ool) {
       pushArg(compareIC->lhs());
       icInfo_[cacheInfoIndex].icOffsetForPush = pushArgWithPatch(ImmWord(-1));
       pushArg(ImmGCPtr(gen->info().script()));
-      callVM(IonCompareICInfo, lir);
+
+      using Fn = bool (*)(JSContext * cx, HandleScript outerScript,
+                          IonCompareIC * stub, HandleValue lhs, HandleValue rhs,
+                          bool* res);
+      callVM<Fn, IonCompareIC::update>(lir);
 
       StoreRegisterTo(compareIC->output()).generate(this);
       restoreLiveIgnore(lir, StoreRegisterTo(compareIC->output()).clobbered());
