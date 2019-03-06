@@ -15,6 +15,15 @@
 
 #ifdef MOZ_PHOENIX
 
+// Splash screen dialog ID.
+#  define IDD_SPLASH 100
+
+// Splash screen bitmap ID.
+#  define IDB_SPLASH 101
+
+// DDE application name
+#  define ID_DDE_APPLICATION_NAME 102
+
 #  define IDI_APPICON 1
 #  define IDI_DOCUMENT 2
 #  define IDI_NEWWINDOW 3

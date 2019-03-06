@@ -5,27 +5,28 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef __nsDBusRemoteServer_h__
-#define __nsDBusRemoteServer_h__
+#ifndef __nsDBusRemoteService_h__
+#define __nsDBusRemoteService_h__
 
-#include "nsRemoteServer.h"
-#include "nsUnixRemoteServer.h"
+#include "nsIRemoteService.h"
 #include "mozilla/DBusHelpers.h"
+#include "nsString.h"
 
-class nsDBusRemoteServer final : public nsRemoteServer,
-                                 public nsUnixRemoteServer {
+class nsDBusRemoteService final : public nsIRemoteService {
  public:
-  nsDBusRemoteServer() : mConnection(nullptr), mAppName(nullptr) {}
-  ~nsDBusRemoteServer() override { Shutdown(); }
+  // We will be a static singleton, so don't use the ordinary methods.
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIREMOTESERVICE
 
-  nsresult Startup(const char *aAppName, const char *aProfileName) override;
-  void Shutdown() override;
+  nsDBusRemoteService() : mConnection(nullptr), mAppName(nullptr) {}
 
   DBusHandlerResult HandleDBusMessage(DBusConnection *aConnection,
                                       DBusMessage *msg);
   void UnregisterDBusInterface(DBusConnection *aConnection);
 
  private:
+  ~nsDBusRemoteService() {}
+
   DBusHandlerResult OpenURL(DBusMessage *msg);
   DBusHandlerResult Introspect(DBusMessage *msg);
 
@@ -35,4 +36,4 @@ class nsDBusRemoteServer final : public nsRemoteServer,
   nsCString mPathName;
 };
 
-#endif  // __nsDBusRemoteServer_h__
+#endif  // __nsDBusRemoteService_h__

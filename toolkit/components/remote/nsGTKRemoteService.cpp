@@ -5,7 +5,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsGTKRemoteServer.h"
+#include "nsGTKRemoteService.h"
 
 #include <gtk/gtk.h>
 #include <gdk/gdk.h>
@@ -23,13 +23,13 @@
 
 #include "nsGTKToolkit.h"
 
-nsresult nsGTKRemoteServer::Startup(const char* aAppName,
-                                    const char* aProfileName) {
+NS_IMPL_ISUPPORTS(nsGTKRemoteService, nsIRemoteService)
+
+NS_IMETHODIMP
+nsGTKRemoteService::Startup(const char* aAppName, const char* aProfileName) {
   NS_ASSERTION(aAppName, "Don't pass a null appname!");
 
-  if (mServerWindow) {
-    return NS_ERROR_ALREADY_INITIALIZED;
-  }
+  if (mServerWindow) return NS_ERROR_ALREADY_INITIALIZED;
 
   XRemoteBaseStartup(aAppName, aProfileName);
 
@@ -40,35 +40,36 @@ nsresult nsGTKRemoteServer::Startup(const char* aAppName,
   return NS_OK;
 }
 
-void nsGTKRemoteServer::Shutdown() {
-  if (!mServerWindow) {
-    return;
-  }
+NS_IMETHODIMP
+nsGTKRemoteService::Shutdown() {
+  if (!mServerWindow) return NS_ERROR_NOT_INITIALIZED;
 
   gtk_widget_destroy(mServerWindow);
   mServerWindow = nullptr;
+
+  return NS_OK;
 }
 
-void nsGTKRemoteServer::HandleCommandsFor(GtkWidget* widget) {
+void nsGTKRemoteService::HandleCommandsFor(GtkWidget* widget) {
   g_signal_connect(G_OBJECT(widget), "property_notify_event",
-                   G_CALLBACK(HandlePropertyChange), this);
+                   G_CALLBACK(HandlePropertyChange), nullptr);
 
   gtk_widget_add_events(widget, GDK_PROPERTY_CHANGE_MASK);
 
   Window window = gdk_x11_window_get_xid(gtk_widget_get_window(widget));
-  nsXRemoteServer::HandleCommandsFor(window);
+  nsXRemoteService::HandleCommandsFor(window);
 }
 
-gboolean nsGTKRemoteServer::HandlePropertyChange(GtkWidget* aWidget,
-                                                 GdkEventProperty* pevent,
-                                                 nsGTKRemoteServer* aThis) {
+gboolean nsGTKRemoteService::HandlePropertyChange(GtkWidget* aWidget,
+                                                  GdkEventProperty* pevent,
+                                                  void* aData) {
   if (pevent->state == GDK_PROPERTY_NEW_VALUE) {
     Atom changedAtom = gdk_x11_atom_to_xatom(pevent->atom);
 
     XID window = gdk_x11_window_get_xid(gtk_widget_get_window(aWidget));
-    return aThis->HandleNewProperty(
-        window, GDK_DISPLAY_XDISPLAY(gdk_display_get_default()), pevent->time,
-        changedAtom);
+    return HandleNewProperty(window,
+                             GDK_DISPLAY_XDISPLAY(gdk_display_get_default()),
+                             pevent->time, changedAtom);
   }
   return FALSE;
 }

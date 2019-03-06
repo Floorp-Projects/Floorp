@@ -91,6 +91,9 @@ const wchar_t k3rdPartyWindowProp[] = L"Mozilla3rdPartyWindow";
 // This isn't defined before Windows XP.
 enum { WM_XP_THEMECHANGED = 0x031A };
 
+char16_t gAppMessageWindowName[256] = {0};
+int32_t gAppMessageWindowNameLength = 0;
+
 nsTArray<HWND>* gNeuteredWindows = nullptr;
 
 typedef nsTArray<nsAutoPtr<DeferredMessage> > DeferredMessageArray;
@@ -468,6 +471,34 @@ static bool WindowIsDeferredWindow(HWND hWnd) {
   // 'ShockwaveFlashFullScreen' - flash fullscreen window
   if (className.EqualsLiteral("ShockwaveFlashFullScreen")) {
     SetPropW(hWnd, k3rdPartyWindowProp, (HANDLE)1);
+    return true;
+  }
+
+  // nsNativeAppSupport makes a window like "FirefoxMessageWindow" based on the
+  // toolkit app's name. It's pretty expensive to calculate this so we only try
+  // once.
+  if (gAppMessageWindowNameLength == 0) {
+    nsCOMPtr<nsIXULAppInfo> appInfo =
+        do_GetService("@mozilla.org/xre/app-info;1");
+    if (appInfo) {
+      nsAutoCString appName;
+      if (NS_SUCCEEDED(appInfo->GetName(appName))) {
+        appName.AppendLiteral("MessageWindow");
+        nsDependentString windowName(gAppMessageWindowName);
+        CopyUTF8toUTF16(appName, windowName);
+        gAppMessageWindowNameLength = windowName.Length();
+      }
+    }
+
+    // Don't try again if that failed.
+    if (gAppMessageWindowNameLength == 0) {
+      gAppMessageWindowNameLength = -1;
+    }
+  }
+
+  if (gAppMessageWindowNameLength != -1 &&
+      className.Equals(nsDependentString(gAppMessageWindowName,
+                                         gAppMessageWindowNameLength))) {
     return true;
   }
 
