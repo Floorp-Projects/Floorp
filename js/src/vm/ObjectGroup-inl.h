@@ -54,8 +54,13 @@ inline bool ObjectGroup::unknownProperties(const AutoSweepObjectGroup& sweep) {
 }
 
 inline bool ObjectGroup::shouldPreTenure(const AutoSweepObjectGroup& sweep) {
-  return hasAnyFlags(sweep, OBJECT_FLAG_PRE_TENURE) &&
-         !unknownProperties(sweep);
+  MOZ_ASSERT(sweep.group() == this);
+  return shouldPreTenureDontCheckGeneration();
+}
+
+inline bool ObjectGroup::shouldPreTenureDontCheckGeneration() {
+  return hasAnyFlagsDontCheckGeneration(OBJECT_FLAG_PRE_TENURE) &&
+         !unknownPropertiesDontCheckGeneration();
 }
 
 inline bool ObjectGroup::canPreTenure(const AutoSweepObjectGroup& sweep) {
