@@ -169,9 +169,6 @@ class nsComputedDOMStyle final : public nsDOMCSSDeclaration,
    */
   typedef bool (nsComputedDOMStyle::*PercentageBaseGetter)(nscoord&);
 
-  already_AddRefed<CSSValue> GetEllipseRadii(const mozilla::BorderRadius&,
-                                             mozilla::Corner aFullCorner);
-
   already_AddRefed<CSSValue> GetOffsetWidthFor(mozilla::Side);
   already_AddRefed<CSSValue> GetAbsoluteOffset(mozilla::Side);
   nscoord GetUsedAbsoluteOffset(mozilla::Side);
@@ -289,10 +286,6 @@ class nsComputedDOMStyle final : public nsDOMCSSDeclaration,
   already_AddRefed<CSSValue> DoGetBorderBottomWidth();
   already_AddRefed<CSSValue> DoGetBorderLeftWidth();
   already_AddRefed<CSSValue> DoGetBorderRightWidth();
-  already_AddRefed<CSSValue> DoGetBorderBottomLeftRadius();
-  already_AddRefed<CSSValue> DoGetBorderBottomRightRadius();
-  already_AddRefed<CSSValue> DoGetBorderTopLeftRadius();
-  already_AddRefed<CSSValue> DoGetBorderTopRightRadius();
 
   /* Border Image */
   already_AddRefed<CSSValue> DoGetBorderImageWidth();
@@ -308,10 +301,6 @@ class nsComputedDOMStyle final : public nsDOMCSSDeclaration,
 
   /* Outline Properties */
   already_AddRefed<CSSValue> DoGetOutlineWidth();
-  already_AddRefed<CSSValue> DoGetOutlineRadiusBottomLeft();
-  already_AddRefed<CSSValue> DoGetOutlineRadiusBottomRight();
-  already_AddRefed<CSSValue> DoGetOutlineRadiusTopLeft();
-  already_AddRefed<CSSValue> DoGetOutlineRadiusTopRight();
 
   /* Text Properties */
   already_AddRefed<CSSValue> DoGetInitialLetter();

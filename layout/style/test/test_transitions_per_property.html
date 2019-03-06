@@ -2138,10 +2138,10 @@ function test_radius_transition(prop) {
      "radius-valued property " + prop + ": computed value before transition");
   div.style.setProperty("transition-property", prop, "");
   div.style.setProperty(prop, "64px 16px", "");
-  is(cs.getPropertyValue(prop), "calc(16px + 4.6875%) calc(4px + 9.375%)",
+  is(cs.getPropertyValue(prop), "calc(4.6875% + 16px) calc(9.375% + 4px)",
      "radius-valued property " + prop + ": interpolation of radius with mixed units");
   check_distance(prop, "6.25% 12.5%",
-                 "calc(16px + 4.6875%) calc(4px + 9.375%)",
+                 "calc(4.6875% + 16px) calc(9.375% + 4px)",
                  "64px 16px");
 
   div.style.setProperty("transition-property", "none", "");

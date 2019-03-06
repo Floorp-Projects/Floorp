@@ -1785,22 +1785,6 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetBorderSpacing() {
   return valueList.forget();
 }
 
-already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetBorderBottomLeftRadius() {
-  return GetEllipseRadii(StyleBorder()->mBorderRadius, eCornerBottomLeft);
-}
-
-already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetBorderBottomRightRadius() {
-  return GetEllipseRadii(StyleBorder()->mBorderRadius, eCornerBottomRight);
-}
-
-already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetBorderTopLeftRadius() {
-  return GetEllipseRadii(StyleBorder()->mBorderRadius, eCornerTopLeft);
-}
-
-already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetBorderTopRightRadius() {
-  return GetEllipseRadii(StyleBorder()->mBorderRadius, eCornerTopRight);
-}
-
 already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetBorderTopWidth() {
   return GetBorderWidthFor(eSideTop);
 }
@@ -1885,48 +1869,6 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetOutlineWidth() {
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
   val->SetAppUnits(StyleOutline()->GetOutlineWidth());
   return val.forget();
-}
-
-already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetOutlineRadiusBottomLeft() {
-  return GetEllipseRadii(StyleOutline()->mOutlineRadius, eCornerBottomLeft);
-}
-
-already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetOutlineRadiusBottomRight() {
-  return GetEllipseRadii(StyleOutline()->mOutlineRadius, eCornerBottomRight);
-}
-
-already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetOutlineRadiusTopLeft() {
-  return GetEllipseRadii(StyleOutline()->mOutlineRadius, eCornerTopLeft);
-}
-
-already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetOutlineRadiusTopRight() {
-  return GetEllipseRadii(StyleOutline()->mOutlineRadius, eCornerTopRight);
-}
-
-already_AddRefed<CSSValue> nsComputedDOMStyle::GetEllipseRadii(
-    const BorderRadius& aRadius, Corner aFullCorner) {
-  const auto& radiusX = aRadius.Get(FullToHalfCorner(aFullCorner, false));
-  const auto& radiusY = aRadius.Get(FullToHalfCorner(aFullCorner, true));
-
-  // for compatibility, return a single value if X and Y are equal
-  if (radiusX == radiusY) {
-    RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-    SetValueToLengthPercentage(val, radiusX, true);
-    return val.forget();
-  }
-
-  RefPtr<nsDOMCSSValueList> valueList = GetROCSSValueList(false);
-
-  RefPtr<nsROCSSPrimitiveValue> valX = new nsROCSSPrimitiveValue;
-  RefPtr<nsROCSSPrimitiveValue> valY = new nsROCSSPrimitiveValue;
-
-  SetValueToLengthPercentage(valX, radiusX, true);
-  SetValueToLengthPercentage(valY, radiusY, true);
-
-  valueList->AppendCSSValue(valX.forget());
-  valueList->AppendCSSValue(valY.forget());
-
-  return valueList.forget();
 }
 
 already_AddRefed<CSSValue> nsComputedDOMStyle::GetCSSShadowArray(
