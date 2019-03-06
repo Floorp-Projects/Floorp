@@ -89,6 +89,7 @@ class TestRunner(object):
         the associated methods"""
         self.setup()
         commands = {"run_test": self.run_test,
+                    "reset": self.reset,
                     "stop": self.stop,
                     "wait": self.wait}
         while True:
@@ -105,6 +106,9 @@ class TestRunner(object):
 
     def stop(self):
         return Stop
+
+    def reset(self):
+        self.executor.reset()
 
     def run_test(self, test):
         try:
@@ -538,6 +542,7 @@ class TestRunnerManager(threading.Thread):
         self.logger.test_start(self.state.test.id)
         if self.rerun > 1:
             self.logger.info("Run %d/%d" % (self.run_count, self.rerun))
+            self.send_message("reset")
         self.run_count += 1
         self.send_message("run_test", self.state.test)
 
