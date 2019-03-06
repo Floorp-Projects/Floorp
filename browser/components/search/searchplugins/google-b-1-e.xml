@@ -10,6 +10,7 @@
 <Url type="application/x-suggestions+json" method="GET" template="https://www.google.com/complete/search?client=firefox&amp;q={searchTerms}"/>
 <Url type="text/html" method="GET" template="https://www.google.com/search" rel="searchform">
   <Param name="client" value="firefox-b-1-e"/>
+  <MozParam name="channel" condition="pref" pref="google_channel_us"/>
   <Param name="q" value="{searchTerms}"/>
 </Url>
 </SearchPlugin>
