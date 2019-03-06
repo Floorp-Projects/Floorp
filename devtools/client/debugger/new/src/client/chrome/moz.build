@@ -7,7 +7,7 @@ DIRS += [
 
 ]
 
-CompiledModules(
+DebuggerModules(
     'commands.js',
     'create.js',
     'events.js',

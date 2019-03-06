@@ -1,0 +1,35 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+@template
+def DebuggerModules(*modules):
+    # Compute where to put transpiled files into omni.ja package
+    # All DevTools modules are used via resource://devtools/ URI
+    # See devtools/shared/jar.mn for how this resource is mapped into jar package.
+    base = FINAL_TARGET_FILES.chrome.devtools.modules
+
+    # Now, navigate to the right sub-directory into devtools root modules folder
+    for dir in RELATIVEDIR.split('/'):
+        base = base[dir]
+
+    size = 0
+    for m in modules:
+        base += ["!" + m]
+        size += 1
+
+    if size == 0:
+      return
+
+    # For the same reason as https://searchfox.org/mozilla-central/source/mobile/android/base/moz.build#180-184
+    # we have to insert a first entry as recursivemake overrides the first entry and we end up with empty files
+    # for the first file only.
+    outputs = tuple(("node.stub",) + modules)
+    GENERATED_FILES += [outputs]
+
+    bundle = GENERATED_FILES[outputs]
+    bundle.script = '/python/mozbuild/mozbuild/action/node.py:generate'
+    bundle.inputs = ['/devtools/client/debugger/new/build/copy-module.js']
+    bundle.inputs.extend(modules)

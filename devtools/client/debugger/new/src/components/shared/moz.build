@@ -7,7 +7,7 @@ DIRS += [
     'Button',
 ]
 
-CompiledModules(
+DebuggerModules(
     'AccessibleImage.js',
     'Accordion.js',
     'Badge.js',
