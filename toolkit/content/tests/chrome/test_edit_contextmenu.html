@@ -27,6 +27,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1513343
       synthesizeKey("x", {}, win);
       is(textarea.value, "x", "initial value");
 
+      textarea.select();
+      synthesizeKey("c", { accelKey: true }, win); // copy to clipboard
+      synthesizeKey("KEY_ArrowRight", {}, win); // drop selection to disable cut and copy context menu items
+
       win.document.addEventListener("contextmenu", (e) => {
         info("Calling prevent default on the first contextmenu event");
         e.preventDefault();
