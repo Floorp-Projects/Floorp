@@ -179,8 +179,6 @@ var whitelist = [
    platforms: ["linux", "win"]},
   // Referenced by the webcompat system addon for localization
   {file: "resource://gre/localization/en-US/toolkit/about/aboutCompat.ftl"},
-  // Bug 1532703
-  {file: "resource://app/localization/en-US/browser/aboutConfig.ftl"},
 ];
 
 whitelist = new Set(whitelist.filter(item =>
