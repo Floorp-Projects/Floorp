@@ -141,12 +141,10 @@ nscoord LengthPercentage::Resolve(T aPercentageGetter,
     return ToLength();
   }
   nscoord basis = aPercentageGetter();
-  NS_WARNING_ASSERTION(basis >= 0, "nscoord overflow?");
   return length.ToAppUnits() + aPercentageRounder(basis * Percentage());
 }
 
 nscoord LengthPercentage::Resolve(nscoord aPercentageBasis) const {
-  NS_WARNING_ASSERTION(aPercentageBasis >= 0, "nscoord overflow?");
   return Resolve([=] { return aPercentageBasis; }, NSToCoordFloorClamped);
 }
 
