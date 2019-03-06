@@ -4284,6 +4284,8 @@ void JSObject::debugCheckNewObject(ObjectGroup* group, Shape* shape,
                     clasp->isProxy());
   MOZ_ASSERT_IF(group->hasUnanalyzedPreliminaryObjects(),
                 heap == gc::TenuredHeap);
+  MOZ_ASSERT_IF(group->shouldPreTenureDontCheckGeneration(),
+                heap == gc::TenuredHeap);
 
   MOZ_ASSERT(!group->realm()->hasObjectPendingMetadata());
 
