@@ -6540,45 +6540,11 @@ nsresult PresShell::EventHandler::HandleEvent(nsIFrame* aFrame,
     return NS_OK;
   }
 
-  AutoCurrentEventInfoSetter eventInfoSetter(*this);
-
   if (aGUIEvent->IsTargetedAtFocusedContent()) {
-    mPresShell->mCurrentEventContent = nullptr;
-
-    RefPtr<Element> eventTargetElement =
-        ComputeFocusedEventTargetElement(aGUIEvent);
-
-    mPresShell->mCurrentEventFrame = nullptr;
-    if (eventTargetElement) {
-      nsresult rv = NS_OK;
-      if (MaybeHandleEventWithAnotherPresShell(eventTargetElement, aGUIEvent,
-                                               aEventStatus, &rv)) {
-        return rv;
-      }
-    }
-    mPresShell->mCurrentEventContent = eventTargetElement;
-
-    if (!mPresShell->GetCurrentEventContent() ||
-        !mPresShell->GetCurrentEventFrame() ||
-        InZombieDocument(mPresShell->mCurrentEventContent)) {
-      return RetargetEventToParent(aGUIEvent, aEventStatus);
-    }
-  } else {
-    mPresShell->mCurrentEventFrame = aFrame;
+    return HandleEventAtFocusedContent(aGUIEvent, aEventStatus);
   }
 
-  nsresult rv = NS_OK;
-  if (mPresShell->GetCurrentEventFrame()) {
-    nsCOMPtr<nsIContent> overrideClickTarget;  // Required due to bug  1506439
-    rv =
-        HandleEventInternal(aGUIEvent, aEventStatus, true, overrideClickTarget);
-  }
-
-#ifdef DEBUG
-  mPresShell->ShowEventTargetDebug();
-#endif
-
-  return rv;
+  return HandleEventWithFrameForPresShell(aFrame, aGUIEvent, aEventStatus);
 }
 
 nsresult PresShell::EventHandler::HandleEventUsingCoordinates(
@@ -7452,6 +7418,46 @@ PresShell::EventHandler::HandleEventWithPointerCapturingContentWithoutItsFrame(
       overrideClickTarget);
 }
 
+nsresult PresShell::EventHandler::HandleEventAtFocusedContent(
+    WidgetGUIEvent* aGUIEvent, nsEventStatus* aEventStatus) {
+  MOZ_ASSERT(aGUIEvent);
+  MOZ_ASSERT(aGUIEvent->IsTargetedAtFocusedContent());
+  MOZ_ASSERT(aEventStatus);
+
+  AutoCurrentEventInfoSetter eventInfoSetter(*this);
+
+  RefPtr<Element> eventTargetElement =
+      ComputeFocusedEventTargetElement(aGUIEvent);
+
+  mPresShell->mCurrentEventFrame = nullptr;
+  if (eventTargetElement) {
+    nsresult rv = NS_OK;
+    if (MaybeHandleEventWithAnotherPresShell(eventTargetElement, aGUIEvent,
+                                             aEventStatus, &rv)) {
+      return rv;
+    }
+  }
+
+  // If we cannot handle the event with mPresShell, let's try to handle it
+  // with parent PresShell.
+  mPresShell->mCurrentEventContent = eventTargetElement;
+  if (!mPresShell->GetCurrentEventContent() ||
+      !mPresShell->GetCurrentEventFrame() ||
+      InZombieDocument(mPresShell->mCurrentEventContent)) {
+    return RetargetEventToParent(aGUIEvent, aEventStatus);
+  }
+
+  nsCOMPtr<nsIContent> overrideClickTarget;  // Required due to bug  1506439
+  nsresult rv =
+      HandleEventInternal(aGUIEvent, aEventStatus, true, overrideClickTarget);
+
+#ifdef DEBUG
+  mPresShell->ShowEventTargetDebug();
+#endif
+
+  return rv;
+}
+
 Element* PresShell::EventHandler::ComputeFocusedEventTargetElement(
     WidgetGUIEvent* aGUIEvent) {
   MOZ_ASSERT(aGUIEvent);
@@ -7532,6 +7538,31 @@ bool PresShell::EventHandler::MaybeHandleEventWithAnotherPresShell(
   *aRv = eventHandler.HandleRetargetedEvent(aGUIEvent, aEventStatus,
                                             aEventTargetElement);
   return true;
+}
+
+nsresult PresShell::EventHandler::HandleEventWithFrameForPresShell(
+    nsIFrame* aFrameForPresShell, WidgetGUIEvent* aGUIEvent,
+    nsEventStatus* aEventStatus) {
+  MOZ_ASSERT(aGUIEvent);
+  MOZ_ASSERT(!aGUIEvent->IsUsingCoordinates());
+  MOZ_ASSERT(!aGUIEvent->IsTargetedAtFocusedContent());
+  MOZ_ASSERT(aEventStatus);
+
+  AutoCurrentEventInfoSetter eventInfoSetter(*this, aFrameForPresShell,
+                                             nullptr);
+
+  nsresult rv = NS_OK;
+  if (mPresShell->GetCurrentEventFrame()) {
+    nsCOMPtr<nsIContent> overrideClickTarget;  // Required due to bug  1506439
+    rv =
+        HandleEventInternal(aGUIEvent, aEventStatus, true, overrideClickTarget);
+  }
+
+#ifdef DEBUG
+  mPresShell->ShowEventTargetDebug();
+#endif
+
+  return rv;
 }
 
 Document* PresShell::GetPrimaryContentDocument() {
