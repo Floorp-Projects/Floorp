@@ -81,10 +81,6 @@ export function setOutOfScopeLocations() {
 
     const source = getSourceFromId(getState(), location.sourceId);
 
-    if (!isLoaded(source)) {
-      return;
-    }
-
     let locations = null;
     if (location.line && source && !source.isWasm && isPaused(getState())) {
       locations = await parser.findOutOfScopeLocations(

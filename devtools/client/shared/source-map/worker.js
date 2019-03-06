@@ -7249,8 +7249,6 @@ async function getGeneratedRangesForOriginal(sourceId, url, mergeUnmappedRegions
   assert(isOriginalId(sourceId), "Source is not an original source");
 
   const map = await getSourceMap(originalToGeneratedId(sourceId));
-
-  // NOTE: this is only needed for Flow
   if (!map) {
     return [];
   }
@@ -7260,18 +7258,9 @@ async function getGeneratedRangesForOriginal(sourceId, url, mergeUnmappedRegions
     map.computeColumnSpans();
   }
 
-  if (!GENERATED_MAPPINGS.has(map)) {
-    GENERATED_MAPPINGS.set(map, new Map());
-  }
-
-  const generatedRangesMap = GENERATED_MAPPINGS.get(map);
-  if (!generatedRangesMap) {
-    return [];
-  }
-
-  if (generatedRangesMap.has(sourceId)) {
-    // NOTE we need to coerce the result to an array for Flow
-    return generatedRangesMap.get(sourceId) || [];
+  const cachedGeneratedMappingsForOriginal = GENERATED_MAPPINGS.get(map);
+  if (cachedGeneratedMappingsForOriginal) {
+    return cachedGeneratedMappingsForOriginal;
   }
 
   // Gather groups of mappings on the generated file, with new groups created
@@ -7333,7 +7322,7 @@ async function getGeneratedRangesForOriginal(sourceId, url, mergeUnmappedRegions
     }
   }
 
-  generatedRangesMap.set(sourceId, generatedMappingsForOriginal);
+  GENERATED_MAPPINGS.set(map, generatedMappingsForOriginal);
   return generatedMappingsForOriginal;
 }
 

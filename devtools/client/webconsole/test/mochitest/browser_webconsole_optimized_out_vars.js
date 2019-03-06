@@ -20,7 +20,6 @@ add_task(async function() {
   const toolbox = gDevTools.getToolbox(hud.target);
   const dbg = createDebuggerContext(toolbox);
 
-  await selectSource(dbg, "test-closure-optimized-out.html");
   await addBreakpoint(dbg, "test-closure-optimized-out.html", breakpointLine);
 
   // Cause the debuggee to pause

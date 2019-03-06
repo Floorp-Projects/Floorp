@@ -22,7 +22,6 @@ add_task(async function() {
   // Make sure that we can set a breakpoint on a line out of the
   // viewport, and that pausing there scrolls the editor to it.
   let longSrc = findSource(dbg, "long.js");
-  await selectSource(dbg, "long.js")
   await addBreakpoint(dbg, longSrc, 66);
   invokeInTab("testModel");
   await waitForPaused(dbg, "long.js");

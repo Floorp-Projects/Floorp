@@ -30,7 +30,18 @@ add_task(async function() {
     "Original source text loaded correctly"
   );
 
+  // Test that breakpoint sliding is not attempted. The breakpoint
+  // should not move anywhere.
+  await addBreakpoint(dbg, entrySrc, 13);
+  is(getBreakpointCount(getState()), 1, "One breakpoint exists");
+
+  ok(
+    getBreakpoint(getState(), { sourceId: entrySrc.id, line: 13 }),
+    "Breakpoint has correct line"
+  );
+
   await addBreakpoint(dbg, entrySrc, 5);
+
   await addBreakpoint(dbg, entrySrc, 15, 0);
   await disableBreakpoint(dbg, entrySrc, 15, 0);
 
@@ -41,11 +52,11 @@ add_task(async function() {
   await waitForPaused(dbg);
   assertPausedLocation(dbg);
 
-  await waitForBreakpointCount(dbg, 2);
-  is(getBreakpointCount(getState()), 2, "Three breakpoints exist");
+  await waitForBreakpointCount(dbg, 3);
+  is(getBreakpointCount(getState()), 3, "Three breakpoints exist");
 
   ok(
-    getBreakpoint(getState(), { sourceId: entrySrc.id, line: 15, column: 0 }),
+    getBreakpoint(getState(), { sourceId: entrySrc.id, line: 13 }),
     "Breakpoint has correct line"
   );
 
@@ -53,7 +64,6 @@ add_task(async function() {
     getBreakpoint(getState(), {
       sourceId: entrySrc.id,
       line: 15,
-      column: 0,
       disabled: true
     }),
     "Breakpoint has correct line"
