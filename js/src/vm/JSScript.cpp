@@ -3452,6 +3452,17 @@ static void InitAtomMap(frontend::AtomIndexMap& indices, GCPtrAtom* atoms) {
   }
 }
 
+static bool HasAnyAliasedFormal(frontend::BytecodeEmitter* bce) {
+  PositionalFormalParameterIter fi(bce->bodyScope());
+  for (; fi; fi++) {
+    // Check if the formal parameter is closed over.
+    if (fi.closedOver()) {
+      return true;
+    }
+  }
+  return false;
+}
+
 /* static */
 void JSScript::initFromFunctionBox(HandleScript script,
                                    frontend::FunctionBox* funbox) {
@@ -3488,12 +3499,6 @@ void JSScript::initFromFunctionBox(HandleScript script,
   script->setFlag(ImmutableFlags::IsGenerator, funbox->isGenerator());
   script->setFlag(ImmutableFlags::IsAsync, funbox->isAsync());
   script->setFlag(ImmutableFlags::HasRest, funbox->hasRest());
-
-  PositionalFormalParameterIter fi(script);
-  while (fi && !fi.closedOver()) {
-    fi++;
-  }
-  script->setFlag(ImmutableFlags::FunHasAnyAliasedFormal, !!fi);
 
   script->setFlag(ImmutableFlags::HasInnerFunctions,
                   funbox->hasInnerFunctions());
@@ -3586,6 +3591,8 @@ bool JSScript::fullyInitFromEmitter(JSContext* cx, HandleScript script,
   script->bodyScopeIndex_ = bce->bodyScopeIndex;
   script->setFlag(ImmutableFlags::HasNonSyntacticScope,
                   bce->outermostScope()->hasOnChain(ScopeKind::NonSyntactic));
+  script->setFlag(ImmutableFlags::FunHasAnyAliasedFormal,
+                  HasAnyAliasedFormal(bce));
 
   // There shouldn't be any fallible operation after initFromFunctionBox,
   // JSFunction::hasUncompletedScript relies on the fact that the existence
