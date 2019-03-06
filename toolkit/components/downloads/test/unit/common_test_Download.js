@@ -354,16 +354,52 @@ add_task(async function test_windows_zoneInformation() {
                                          ["T".repeat(256) + ".txt"]);
   longTargetFile.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0o600);
 
-  for (let targetFile of [normalTargetFile, longTargetFile]) {
+  const httpSourceUrl = httpUrl("source.txt");
+  const dataSourceUrl = "data:text/html," + TEST_DATA_SHORT;
+  const tests = [
+    { expectedZoneId: "[ZoneTransfer]\r\nZoneId=3\r\n" +
+                      "HostUrl=" + httpSourceUrl + "\r\n" },
+    { targetFile: longTargetFile,
+      expectedZoneId: "[ZoneTransfer]\r\nZoneId=3\r\n" +
+                      "HostUrl=" + httpSourceUrl + "\r\n" },
+    { sourceUrl: dataSourceUrl,
+      expectedZoneId: "[ZoneTransfer]\r\nZoneId=3\r\n" +
+                      "HostUrl=about:internet\r\n" },
+    { options: { referrer: TEST_REFERRER_URL },
+      expectedZoneId: "[ZoneTransfer]\r\nZoneId=3\r\n" +
+                      "ReferrerUrl=" + TEST_REFERRER_URL + "\r\n" +
+                      "HostUrl=" + httpSourceUrl + "\r\n" },
+    { options: { referrer: dataSourceUrl },
+      expectedZoneId: "[ZoneTransfer]\r\nZoneId=3\r\n" +
+                      "HostUrl=" + httpSourceUrl + "\r\n" },
+    { options: { referrer: "http://example.com/a\rb\nc" },
+      expectedZoneId: "[ZoneTransfer]\r\nZoneId=3\r\n" +
+                      "ReferrerUrl=http://example.com/abc\r\n" +
+                      "HostUrl=" + httpSourceUrl + "\r\n" },
+    { options: { referrer: "ftp://user:pass@example.com/" },
+      expectedZoneId: "[ZoneTransfer]\r\nZoneId=3\r\n" +
+                      "ReferrerUrl=ftp://example.com/\r\n" +
+                      "HostUrl=" + httpSourceUrl + "\r\n" },
+    { options: { isPrivate: true },
+      expectedZoneId: "[ZoneTransfer]\r\nZoneId=3\r\n" },
+    { options: { referrer: TEST_REFERRER_URL, isPrivate: true },
+      expectedZoneId: "[ZoneTransfer]\r\nZoneId=3\r\n" },
+  ];
+  for (const test of tests) {
+    const sourceUrl = test.sourceUrl || httpSourceUrl;
+    const targetFile = test.targetFile || normalTargetFile;
+    info(targetFile.path);
     try {
       if (!gUseLegacySaver) {
         let download = await Downloads.createDownload({
-          source: httpUrl("source.txt"),
+          source: test.options ? Object.assign({ url: sourceUrl }, test.options)
+                               : sourceUrl,
           target: targetFile.path,
         });
         await download.start();
       } else {
-        let download = await promiseStartLegacyDownload(null, { targetFile });
+        let download = await promiseStartLegacyDownload(sourceUrl,
+          Object.assign({ targetFile }, test.options || {}));
         await promiseDownloadStopped(download);
       }
       await promiseVerifyContents(targetFile.path, TEST_DATA_SHORT);
@@ -373,7 +409,7 @@ add_task(async function test_windows_zoneInformation() {
                  { winAllowLengthBeyondMaxPathWithCaveats: true });
       try {
         Assert.equal(new TextDecoder().decode(await file.read()),
-                     "[ZoneTransfer]\r\nZoneId=3\r\n");
+                     test.expectedZoneId);
       } finally {
         file.close();
       }
