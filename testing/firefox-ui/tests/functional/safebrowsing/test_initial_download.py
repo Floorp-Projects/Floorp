@@ -17,7 +17,7 @@ class TestSafeBrowsingInitialDownload(PuppeteerMixin, MarionetteTestCase):
     ]
 
     v4_file_extensions = [
-        'pset',
+        'vlpset',
         'metadata',
     ]
 
