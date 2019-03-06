@@ -93,7 +93,6 @@ static const JSClass gPrototypeJSClass = {
 // Constructors/Destructors
 nsXBLBinding::nsXBLBinding(nsXBLPrototypeBinding* aBinding)
     : mMarkedForDeath(false),
-      mUsingContentXBLScope(false),
       mPrototypeBinding(aBinding),
       mBoundElement(nullptr) {
   NS_ASSERTION(mPrototypeBinding, "Must have a prototype binding!");
@@ -209,13 +208,6 @@ void nsXBLBinding::UnbindAnonymousContent(Document* aDocument,
 void nsXBLBinding::SetBoundElement(Element* aElement) {
   mBoundElement = aElement;
   if (mNextBinding) mNextBinding->SetBoundElement(aElement);
-
-  if (!mBoundElement) {
-    return;
-  }
-
-  // mUsingContentXBLScope can go away.  See bug 1527116.
-  mUsingContentXBLScope = false;
 }
 
 bool nsXBLBinding::HasStyleSheets() const {
@@ -450,8 +442,7 @@ void nsXBLBinding::InstallEventHandlers() {
 
           bool hasAllowUntrustedAttr = curr->HasAllowUntrustedAttr();
           if ((hasAllowUntrustedAttr && curr->AllowUntrustedEvents()) ||
-              (!hasAllowUntrustedAttr && !isChromeDoc &&
-               !mUsingContentXBLScope)) {
+              (!hasAllowUntrustedAttr && !isChromeDoc)) {
             flags.mAllowUntrustedEvents = true;
           }
 
@@ -466,7 +457,6 @@ void nsXBLBinding::InstallEventHandlers() {
       for (i = 0; i < keyHandlers->Count(); ++i) {
         nsXBLKeyEventHandler* handler = keyHandlers->ObjectAt(i);
         handler->SetIsBoundToChrome(isChromeDoc);
-        handler->SetUsingContentXBLScope(mUsingContentXBLScope);
 
         nsAutoString type;
         handler->GetEventName(type);
