@@ -1311,6 +1311,32 @@ class TranslationUnit(ipdl.ast.TranslationUnit):
 
 # -----------------------------------------------------------------------------
 
+pod_types = {
+    'bool': 1,
+    'int8_t': 1,
+    'uint8_t': 1,
+    'int16_t': 2,
+    'uint16_t': 2,
+    'int32_t': 4,
+    'uint32_t': 4,
+    'int64_t': 8,
+    'uint64_t': 8,
+    'float': 4,
+    'double': 8,
+}
+max_pod_size = max(pod_types.values())
+# We claim that all types we don't recognize are automatically "bigger"
+# than pod types for ease of sorting.
+pod_size_sentinel = max_pod_size * 2
+
+
+def pod_size(ipdltype):
+    if not isinstance(ipdltype, ipdl.type.ImportedCxxType):
+        return pod_size_sentinel
+
+    return pod_types.get(ipdltype.name(), pod_size_sentinel)
+
+
 class _DecorateWithCxxStuff(ipdl.ast.Visitor):
     """Phase 1 of lowering: decorate the IPDL AST with information
 relevant to C++ code generation.
@@ -1382,7 +1408,20 @@ with some new IPDL/C++ nodes that are tuned for C++ codegen."""
                                                   side='child'))
                 else:
                     newfields.append(_StructField(ftype, f.name, sd))
+
+            # Compute a permutation of the fields for in-memory storage such
+            # that the memory layout of the structure will be well-packed.
+            permutation = range(len(newfields))
+
+            # Note that the results of `pod_size` ensure that non-POD fields
+            # sort before POD ones.
+            def size(idx):
+                return pod_size(newfields[idx].ipdltype)
+
+            permutation.sort(key=size, reverse=True)
+
             sd.fields = newfields
+            sd.packed_field_order = permutation
             StructDecl.upgrade(sd)
 
         if sd.decl.fullname is not None:

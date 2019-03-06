@@ -266,6 +266,11 @@ class StructDecl(NamespacedNode):
     def __init__(self, loc, name, fields):
         NamespacedNode.__init__(self, loc, name)
         self.fields = fields
+        # A list of indices into `fields` for determining the order in
+        # which fields are laid out in memory.  We don't just reorder
+        # `fields` itself so as to keep the ordering reasonably stable
+        # for e.g. C++ constructors when new fields are added.
+        self.packed_field_ordering = []
 
 
 class UnionDecl(NamespacedNode):
