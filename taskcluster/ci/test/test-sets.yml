@@ -357,7 +357,6 @@ android-common-tests:
     - crashtest
     - geckoview-junit
     - jsreftest
-    - marionette
     - mochitest
     - mochitest-chrome
     - mochitest-clipboard
@@ -380,6 +379,7 @@ android-x86_64-opt-tests:
 
 android-x86_64-tests:
     - jsreftest
+    - marionette
     - mochitest-clipboard
     - mochitest-gpu
     # various reftest (plain) failures; bug 1501582
