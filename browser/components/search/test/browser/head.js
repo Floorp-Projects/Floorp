@@ -175,9 +175,7 @@ function promiseTabLoadEvent(tab, url) {
 function getOneOffs() {
   let oneOffs = [];
   let searchPopup = document.getElementById("PopupSearchAutoComplete");
-  let oneOffsContainer =
-    document.getAnonymousElementByAttribute(searchPopup, "anonid",
-                                            "search-one-off-buttons");
+  let oneOffsContainer = searchPopup.searchOneOffsContainer;
   let oneOff =
     oneOffsContainer.querySelector(".search-panel-one-offs");
   for (oneOff = oneOff.firstChild; oneOff; oneOff = oneOff.nextSibling) {
