@@ -150,6 +150,8 @@ class nsCSSPseudoElements {
     return (kPseudoElementFlags[size_t(aType)] & aFlags) != 0;
   }
 
+  static nsStaticAtom* GetAtomBase();
+
   static const uint32_t kPseudoElementFlags[size_t(Type::CSSPseudoElementsEnd)];
 };
 
