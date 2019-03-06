@@ -35,8 +35,8 @@ var Uptake = {
     UptakeTelemetry.report(COMPONENT, status, { source: `${COMPONENT}/runner` });
   },
 
-  reportRecipe(recipeId, status) {
-    UptakeTelemetry.report(COMPONENT, status, { source: `${COMPONENT}/recipe/${recipeId}` });
+  reportRecipe(recipe, status) {
+    UptakeTelemetry.report(COMPONENT, status, { source: `${COMPONENT}/recipe/${recipe.id}` });
   },
 
   reportAction(actionName, status) {
