@@ -6,6 +6,8 @@
  * and are CC licensed by https://www.flickr.com/photos/legofenris/.
  */
 
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+
 // services required be initialized in order to run CacheStorage
 var ss = Cc["@mozilla.org/storage/service;1"]
          .createInstance(Ci.mozIStorageService);
@@ -21,8 +23,8 @@ Cu.importGlobalProperties(["caches", "File", "fetch"]);
 function create_test_profile(zipFileName) {
   do_get_profile();
 
-  var directoryService = Cc["@mozilla.org/file/directory_service;1"]
-                         .getService(Ci.nsIProperties);
+  var directoryService = Services.dirsvc;
+
   var profileDir = directoryService.get("ProfD", Ci.nsIFile);
   var currentDir = directoryService.get("CurWorkD", Ci.nsIFile);
 
@@ -68,8 +70,7 @@ function create_test_profile(zipFileName) {
 }
 
 function getCacheDir() {
-  let dirService = Cc["@mozilla.org/file/directory_service;1"]
-                   .getService(Ci.nsIProperties);
+  let dirService = Services.dirsvc;
 
   let profileDir = dirService.get("ProfD", Ci.nsIFile);
   let cacheDir = profileDir.clone();

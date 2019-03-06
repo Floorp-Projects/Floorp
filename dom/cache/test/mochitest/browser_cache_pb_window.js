@@ -1,3 +1,4 @@
+/* eslint-disable no-shadow */
 var name = "pb-window-cache";
 
 function testMatch(browser) {

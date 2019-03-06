@@ -1,3 +1,5 @@
+/* global context testDone:true */
+
 let cache;
 let url = "foo.html";
 let redirectURL = "http://example.com/foo-bar.html";

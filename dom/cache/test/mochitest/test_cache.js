@@ -1,3 +1,5 @@
+/* global context testDone:true */
+
 var c = null;
 var request = "http://example.com/hmm?q=foobar" + context;
 var response = new Response("This is some Response!");
@@ -51,16 +53,16 @@ caches.open(name).then(function(openCache) {
   return Promise.all([snafu, snafu.match(keys[0]), snafu.match("ftp://invalid")]);
 }).then(function(args) {
   var snafu = args[0];
-  var response = args[1];
-  ok(response instanceof Response, "value should be a Response");
-  is(response.status, 200, "Response status should be 200");
+  var res = args[1];
+  ok(res instanceof Response, "value should be a Response");
+  is(res.status, 200, "Response status should be 200");
   is(undefined, args[2], "Match with invalid scheme should resolve undefined");
-  return Promise.all([snafu, snafu.put("./cachekey2", response)]);
+  return Promise.all([snafu, snafu.put("./cachekey2", res)]);
 }).then(function(args) {
   var snafu = args[0];
   return snafu.match("./cachekey2");
-}).then(function(response) {
-  return response.text().then(function(v) {
+}).then(function(res) {
+  return res.text().then(function(v) {
     is(v, "Hello world", "Response body should match original");
   });
 }).then(function() {

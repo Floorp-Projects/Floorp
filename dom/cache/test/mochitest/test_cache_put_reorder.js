@@ -1,3 +1,5 @@
+/* global context testDone:true */
+
 var name = "putreorder" + context;
 var c;
 

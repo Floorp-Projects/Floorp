@@ -1,3 +1,5 @@
+/* global context testDone:true */
+
 var singleUrl = "./test_cache_add.js";
 var urlList = [
   "./empty.html",

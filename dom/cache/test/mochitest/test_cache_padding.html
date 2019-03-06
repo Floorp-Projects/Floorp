@@ -76,7 +76,7 @@ async function waitForIOToComplete(cache, request) {
   await cache.match(request);
 
   // Finally, wait for -wal file finish its job.
-  return await resetStorage();
+  return resetStorage();
 }
 
 function fetchOpaqueResponse(url) {
