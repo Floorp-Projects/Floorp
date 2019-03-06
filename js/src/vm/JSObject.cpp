@@ -792,7 +792,7 @@ static inline JSObject* NewObject(JSContext* cx, HandleObjectGroup group,
     return nullptr;
   }
 
-  gc::InitialHeap heap = GetInitialHeap(newKind, clasp);
+  gc::InitialHeap heap = GetInitialHeap(newKind, group);
 
   JSObject* obj;
   if (clasp->isJSFunction()) {
@@ -975,7 +975,7 @@ JSObject* js::NewObjectWithGroupCommon(JSContext* cx, HandleObjectGroup group,
     NewObjectCache::EntryIndex entry = -1;
     if (cache.lookupGroup(group, allocKind, &entry)) {
       JSObject* obj = cache.newObjectFromHit(
-          cx, entry, GetInitialHeap(newKind, group->clasp()));
+          cx, entry, GetInitialHeap(newKind, group));
       if (obj) {
         return obj;
       }

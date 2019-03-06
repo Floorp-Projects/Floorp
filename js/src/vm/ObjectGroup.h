@@ -404,6 +404,10 @@ class ObjectGroup : public gc::TenuredCell {
   inline bool hasAllFlags(const AutoSweepObjectGroup& sweep,
                           ObjectGroupFlags flags);
 
+  bool hasAnyFlagsDontCheckGeneration(ObjectGroupFlags flags) {
+    MOZ_ASSERT((flags & OBJECT_FLAG_DYNAMIC_MASK) == flags);
+    return !!(this->flagsDontCheckGeneration() & flags);
+  }
   bool hasAllFlagsDontCheckGeneration(ObjectGroupFlags flags) {
     MOZ_ASSERT((flags & OBJECT_FLAG_DYNAMIC_MASK) == flags);
     return (this->flagsDontCheckGeneration() & flags) == flags;
@@ -418,6 +422,7 @@ class ObjectGroup : public gc::TenuredCell {
   }
 
   inline bool shouldPreTenure(const AutoSweepObjectGroup& sweep);
+  inline bool shouldPreTenureDontCheckGeneration();
 
   gc::InitialHeap initialHeap(CompilerConstraintList* constraints);
 
