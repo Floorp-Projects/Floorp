@@ -7,7 +7,7 @@ DIRS += [
 
 ]
 
-DebuggerModules(
+CompiledModules(
     'addBreakpoint.js',
     'breakpointPositions.js',
     'index.js',
