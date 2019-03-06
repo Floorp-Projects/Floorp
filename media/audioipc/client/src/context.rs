@@ -5,7 +5,7 @@
 
 use assert_not_in_callback;
 use audioipc::codec::LengthDelimitedCodec;
-use audioipc::platformhandle_passing::{framed_with_platformhandles, FramedWithPlatformHandles};
+use audioipc::fd_passing::{framed_with_fds, FramedWithFds};
 use audioipc::{core, rpc};
 use audioipc::{messages, ClientMessage, ServerMessage};
 use cubeb_backend::{
@@ -14,13 +14,17 @@ use cubeb_backend::{
 };
 use futures::Future;
 use futures_cpupool::{self, CpuPool};
+use libc;
 use std::ffi::{CStr, CString};
 use std::os::raw::c_void;
+use std::os::unix::io::FromRawFd;
+use std::os::unix::net;
 use std::sync::mpsc;
 use std::thread;
 use std::{fmt, io, mem, ptr};
 use stream;
 use tokio_core::reactor::{Handle, Remote};
+use tokio_uds::UnixStream;
 use {ClientStream, CPUPOOL_INIT_PARAMS, G_SERVER_FD};
 
 struct CubebClient;
@@ -28,7 +32,7 @@ struct CubebClient;
 impl rpc::Client for CubebClient {
     type Request = ServerMessage;
     type Response = ClientMessage;
-    type Transport = FramedWithPlatformHandles<audioipc::AsyncMessageStream, LengthDelimitedCodec<Self::Request, Self::Response>>;
+    type Transport = FramedWithFds<UnixStream, LengthDelimitedCodec<Self::Request, Self::Response>>;
 }
 
 macro_rules! t(
@@ -69,10 +73,10 @@ impl ClientContext {
 }
 
 // TODO: encapsulate connect, etc inside audioipc.
-fn open_server_stream() -> Result<audioipc::MessageStream> {
+fn open_server_stream() -> Result<net::UnixStream> {
     unsafe {
         if let Some(fd) = G_SERVER_FD {
-            return Ok(audioipc::MessageStream::from_raw_fd(fd.as_raw()));
+            return Ok(net::UnixStream::from_raw_fd(fd));
         }
 
         Err(Error::default())
@@ -82,11 +86,11 @@ fn open_server_stream() -> Result<audioipc::MessageStream> {
 impl ContextOps for ClientContext {
     fn init(_context_name: Option<&CStr>) -> Result<Context> {
         fn bind_and_send_client(
-            stream: audioipc::AsyncMessageStream,
+            stream: UnixStream,
             handle: &Handle,
             tx_rpc: &mpsc::Sender<rpc::ClientProxy<ServerMessage, ClientMessage>>,
         ) -> Option<()> {
-            let transport = framed_with_platformhandles(stream, Default::default());
+            let transport = framed_with_fds(stream, Default::default());
             let rpc = rpc::bind_client::<CubebClient>(transport, handle);
             // If send fails then the rx end has closed
             // which is unlikely here.
@@ -117,7 +121,7 @@ impl ContextOps for ClientContext {
 
             open_server_stream()
                 .ok()
-                .and_then(|stream| stream.into_tokio_ipc(&handle).ok())
+                .and_then(|stream| UnixStream::from_stream(stream, &handle).ok())
                 .and_then(|stream| bind_and_send_client(stream, &handle, &tx_rpc))
                 .ok_or_else(|| {
                     io::Error::new(
@@ -135,8 +139,6 @@ impl ContextOps for ClientContext {
             .pool_size(params.pool_size)
             .stack_size(params.stack_size)
             .create();
-
-        send_recv!(rpc, ClientConnect(std::process::id()) => ClientConnected)?;
 
         let ctx = Box::new(ClientContext {
             _ops: &CLIENT_OPS as *const _,
@@ -278,7 +280,7 @@ impl Drop for ClientContext {
         let _ = send_recv!(self.rpc(), ClientDisconnect => ClientDisconnected);
         unsafe {
             if G_SERVER_FD.is_some() {
-                G_SERVER_FD.take().unwrap().close();
+                libc::close(super::G_SERVER_FD.take().unwrap());
             }
         }
     }
