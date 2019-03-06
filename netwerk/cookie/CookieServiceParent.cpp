@@ -215,7 +215,7 @@ void CookieServiceParent::ActorDestroy(ActorDestroyReason aWhy) {
 }
 
 mozilla::ipc::IPCResult CookieServiceParent::RecvSetCookieString(
-    const URIParams &aHost, const OptionalURIParams &aChannelURI,
+    const URIParams &aHost, const Maybe<URIParams> &aChannelURI,
     const bool &aIsForeign, const bool &aIsTrackingResource,
     const bool &aFirstPartyStorageAccessGranted, const nsCString &aCookieString,
     const nsCString &aServerTime, const OriginAttributes &aAttrs,

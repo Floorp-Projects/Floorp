@@ -634,7 +634,7 @@ nsresult nsExternalHelperAppService::DoContentContentProcessHelper(
   nsCOMPtr<nsIURI> referrer;
   NS_GetReferrerFromChannel(channel, getter_AddRefs(referrer));
 
-  OptionalURIParams uriParams, referrerParams;
+  Maybe<URIParams> uriParams, referrerParams;
   SerializeURI(uri, uriParams);
   SerializeURI(referrer, referrerParams);
 

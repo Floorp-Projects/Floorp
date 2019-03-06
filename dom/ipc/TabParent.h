@@ -626,7 +626,7 @@ class TabParent final : public PBrowserParent,
   mozilla::ipc::IPCResult RecvGetSystemFont(nsCString* aFontName);
 
   mozilla::ipc::IPCResult RecvVisitURI(const URIParams& aURI,
-                                       const OptionalURIParams& aLastVisitedURI,
+                                       const Maybe<URIParams>& aLastVisitedURI,
                                        const uint32_t& aFlags);
 
   mozilla::ipc::IPCResult RecvQueryVisitedState(

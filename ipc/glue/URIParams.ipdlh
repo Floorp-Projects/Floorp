@@ -54,7 +54,7 @@ struct JARURIParams
 
 struct IconURIParams
 {
-  OptionalURIParams uri;
+  URIParams? uri;
   uint32_t size;
   nsCString contentType;
   nsCString fileName;
@@ -86,16 +86,10 @@ union URIParams
   HostObjectURIParams;
 };
 
-union OptionalURIParams
-{
-  void_t;
-  URIParams;
-};
-
 struct JSURIParams
 {
   SimpleURIParams simpleParams;
-  OptionalURIParams baseURI;
+  URIParams? baseURI;
 };
 
 struct SimpleNestedURIParams

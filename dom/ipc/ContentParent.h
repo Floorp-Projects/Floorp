@@ -81,7 +81,6 @@ class PrintingParent;
 
 namespace ipc {
 class CrashReporterHost;
-class OptionalURIParams;
 class PFileDescriptorSetParent;
 class URIParams;
 class TestShellParent;
@@ -130,7 +129,6 @@ class ContentParent final : public PContentParent,
                             public CPOWManagerGetter,
                             public mozilla::ipc::IShmemAllocator {
   typedef mozilla::ipc::GeckoChildProcessHost GeckoChildProcessHost;
-  typedef mozilla::ipc::OptionalURIParams OptionalURIParams;
   typedef mozilla::ipc::PFileDescriptorSetParent PFileDescriptorSetParent;
   typedef mozilla::ipc::TestShellParent TestShellParent;
   typedef mozilla::ipc::URIParams URIParams;
@@ -514,7 +512,7 @@ class ContentParent final : public PContentParent,
       PBrowserParent* aThisTabParent, PBrowserParent* aNewTab,
       const uint32_t& aChromeFlags, const bool& aCalledFromJS,
       const bool& aPositionSpecified, const bool& aSizeSpecified,
-      const OptionalURIParams& aURIToLoad, const nsCString& aFeatures,
+      const Maybe<URIParams>& aURIToLoad, const nsCString& aFeatures,
       const nsCString& aBaseURI, const float& aFullZoom,
       const IPC::Principal& aTriggeringPrincipal,
       nsIContentSecurityPolicy* aCsp, const uint32_t& aReferrerPolicy,
@@ -523,7 +521,7 @@ class ContentParent final : public PContentParent,
   mozilla::ipc::IPCResult RecvCreateWindowInDifferentProcess(
       PBrowserParent* aThisTab, const uint32_t& aChromeFlags,
       const bool& aCalledFromJS, const bool& aPositionSpecified,
-      const bool& aSizeSpecified, const OptionalURIParams& aURIToLoad,
+      const bool& aSizeSpecified, const Maybe<URIParams>& aURIToLoad,
       const nsCString& aFeatures, const nsCString& aBaseURI,
       const float& aFullZoom, const nsString& aName,
       const IPC::Principal& aTriggeringPrincipal,
@@ -875,24 +873,24 @@ class ContentParent final : public PContentParent,
       PPSMContentDownloaderParent* aDownloader);
 
   PExternalHelperAppParent* AllocPExternalHelperAppParent(
-      const OptionalURIParams& aUri,
+      const Maybe<URIParams>& aUri,
       const Maybe<mozilla::net::LoadInfoArgs>& aLoadInfoArgs,
       const nsCString& aMimeContentType, const nsCString& aContentDisposition,
       const uint32_t& aContentDispositionHint,
       const nsString& aContentDispositionFilename, const bool& aForceSave,
       const int64_t& aContentLength, const bool& aWasFileChannel,
-      const OptionalURIParams& aReferrer, PBrowserParent* aBrowser);
+      const Maybe<URIParams>& aReferrer, PBrowserParent* aBrowser);
 
   bool DeallocPExternalHelperAppParent(PExternalHelperAppParent* aService);
 
   mozilla::ipc::IPCResult RecvPExternalHelperAppConstructor(
-      PExternalHelperAppParent* actor, const OptionalURIParams& uri,
+      PExternalHelperAppParent* actor, const Maybe<URIParams>& uri,
       const Maybe<LoadInfoArgs>& loadInfoArgs,
       const nsCString& aMimeContentType, const nsCString& aContentDisposition,
       const uint32_t& aContentDispositionHint,
       const nsString& aContentDispositionFilename, const bool& aForceSave,
       const int64_t& aContentLength, const bool& aWasFileChannel,
-      const OptionalURIParams& aReferrer, PBrowserParent* aBrowser) override;
+      const Maybe<URIParams>& aReferrer, PBrowserParent* aBrowser) override;
 
   PHandlerServiceParent* AllocPHandlerServiceParent();
 
@@ -1039,7 +1037,7 @@ class ContentParent final : public PContentParent,
   mozilla::ipc::IPCResult RecvKeywordToURI(const nsCString& aKeyword,
                                            nsString* aProviderName,
                                            RefPtr<nsIInputStream>* aPostData,
-                                           OptionalURIParams* aURI);
+                                           Maybe<URIParams>* aURI);
 
   mozilla::ipc::IPCResult RecvNotifyKeywordSearchLoading(
       const nsString& aProvider, const nsString& aKeyword);

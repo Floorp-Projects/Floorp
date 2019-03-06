@@ -2008,7 +2008,7 @@ History::VisitURI(nsIWidget* aWidget, nsIURI* aURI, nsIURI* aLastVisitedURI,
     URIParams uri;
     SerializeURI(aURI, uri);
 
-    OptionalURIParams lastVisitedURI;
+    Maybe<URIParams> lastVisitedURI;
     SerializeURI(aLastVisitedURI, lastVisitedURI);
 
     NS_ENSURE_ARG(aWidget);

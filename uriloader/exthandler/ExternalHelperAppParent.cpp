@@ -33,9 +33,8 @@ NS_IMPL_ISUPPORTS_INHERITED(ExternalHelperAppParent, nsHashPropertyBag,
                             nsIStreamListener, nsIExternalHelperAppParent)
 
 ExternalHelperAppParent::ExternalHelperAppParent(
-    const OptionalURIParams& uri,
-    const int64_t& aContentLength, const bool& aWasFileChannel,
-    const nsCString& aContentDispositionHeader,
+    const Maybe<URIParams>& uri, const int64_t& aContentLength,
+    const bool& aWasFileChannel, const nsCString& aContentDispositionHeader,
     const uint32_t& aContentDispositionHint,
     const nsString& aContentDispositionFilename)
     : mURI(DeserializeURI(uri)),
@@ -88,7 +87,7 @@ void UpdateContentContext(nsIStreamListener* aListener,
 void ExternalHelperAppParent::Init(
     const Maybe<mozilla::net::LoadInfoArgs>& aLoadInfoArgs,
     const nsCString& aMimeContentType, const bool& aForceSave,
-    const OptionalURIParams& aReferrer, PBrowserParent* aBrowser) {
+    const Maybe<URIParams>& aReferrer, PBrowserParent* aBrowser) {
   mozilla::ipc::LoadInfoArgsToLoadInfo(aLoadInfoArgs,
                                        getter_AddRefs(mLoadInfo));
 
