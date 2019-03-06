@@ -1,4 +1,3 @@
-// Copyright © 2017 winapi-rs developers
 // Licensed under the Apache License, Version 2.0
 // <LICENSE-APACHE or http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
 // <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your option.
@@ -2815,8 +2814,7 @@ interface ISpeechVoiceStatus(ISpeechVoiceStatusVtbl): IDispatch(IDispatchVtbl) {
     ) -> HRESULT,
 }}
 RIDL!{#[uuid(0xa372acd1, 0x3bef, 0x4bbd, 0x8f, 0xfb, 0xcb, 0x3e, 0x2b, 0x41, 0x6a, 0xf8)]
-interface _ISpeechVoiceEvents(_ISpeechVoiceEventsVtbl): IDispatch(IDispatchVtbl) {
-}}
+interface _ISpeechVoiceEvents(_ISpeechVoiceEventsVtbl): IDispatch(IDispatchVtbl) {}}
 RIDL!{#[uuid(0x2d5f1c0c, 0xbd75, 0x4b08, 0x94, 0x78, 0x3b, 0x11, 0xfe, 0xa2, 0x58, 0x6c)]
 interface ISpeechRecognizer(ISpeechRecognizerVtbl): IDispatch(IDispatchVtbl) {
     fn putref_Recognizer(
@@ -3095,8 +3093,7 @@ interface ISpeechRecoGrammar(ISpeechRecoGrammarVtbl): IDispatch(IDispatchVtbl) {
     ) -> HRESULT,
 }}
 RIDL!{#[uuid(0x7b8fcb42, 0x0e9d, 0x4f00, 0xa0, 0x48, 0x7b, 0x04, 0xd6, 0x17, 0x9d, 0x3d)]
-interface _ISpeechRecoContextEvents(_ISpeechRecoContextEventsVtbl): IDispatch(IDispatchVtbl) {
-}}
+interface _ISpeechRecoContextEvents(_ISpeechRecoContextEventsVtbl): IDispatch(IDispatchVtbl) {}}
 RIDL!{#[uuid(0xafe719cf, 0x5dd1, 0x44f2, 0x99, 0x9c, 0x7a, 0x39, 0x9f, 0x1c, 0xfc, 0xcc)]
 interface ISpeechGrammarRule(ISpeechGrammarRuleVtbl): IDispatch(IDispatchVtbl) {
     fn get_Attributes(

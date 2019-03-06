@@ -439,12 +439,22 @@ nsDocShell::~nsDocShell() {
   MOZ_LOG(gDocShellLeakLog, LogLevel::Debug, ("DOCSHELL %p destroyed\n", this));
 
 #ifdef DEBUG
+  nsAutoCString url;
+  if (mLastOpenedURI) {
+    url = mLastOpenedURI->GetSpecOrDefault();
+
+    // Data URLs can be very long, so truncate to avoid flooding the log.
+    const uint32_t maxURLLength = 1000;
+    if (url.Length() > maxURLLength) {
+      url.Truncate(maxURLLength);
+    }
+  }
   // We're counting the number of |nsDocShells| to help find leaks
   --gNumberOfDocShells;
   if (!PR_GetEnv("MOZ_QUIET")) {
-    printf_stderr("--DOCSHELL %p == %ld [pid = %d] [id = %s]\n", (void*)this,
-                  gNumberOfDocShells, getpid(),
-                  nsIDToCString(mHistoryID).get());
+    printf_stderr("--DOCSHELL %p == %ld [pid = %d] [id = %s] [url = %s]\n",
+                  (void*)this, gNumberOfDocShells, getpid(),
+                  nsIDToCString(mHistoryID).get(), url.get());
   }
 #endif
 }
@@ -1169,6 +1179,10 @@ bool nsDocShell::SetCurrentURI(nsIURI* aURI, nsIRequest* aRequest,
   }
 
   mCurrentURI = aURI;
+
+#ifdef DEBUG
+  mLastOpenedURI = aURI;
+#endif
 
   if (!NS_IsAboutBlank(mCurrentURI)) {
     mHasLoadedNonBlankURI = true;

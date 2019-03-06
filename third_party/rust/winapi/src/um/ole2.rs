@@ -1,4 +1,3 @@
-// Copyright © 2018 winapi-rs developers
 // Licensed under the Apache License, Version 2.0
 // <LICENSE-APACHE or http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
 // <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your option.
@@ -10,7 +9,7 @@ use um::oleidl::LPDROPTARGET;
 use um::winnt::HRESULT;
 extern "system" {
     pub fn OleInitialize(
-        pvReserved: LPVOID
+        pvReserved: LPVOID,
     ) -> HRESULT;
     pub fn RegisterDragDrop(
         hwnd: HWND,

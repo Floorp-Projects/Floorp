@@ -6,6 +6,7 @@
 
 with Files("**"):
     BUG_COMPONENT = ("Core", "Widget: Android")
+    SCHEDULES.exclusive = ['android']
 
 with Files("*CompositorWidget*"):
     BUG_COMPONENT = ("Core", "Graphics")

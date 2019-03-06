@@ -1,4 +1,3 @@
-// Copyright © 2017 winapi-rs developers
 // Licensed under the Apache License, Version 2.0
 // <LICENSE-APACHE or http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
 // <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your option.
@@ -609,11 +608,13 @@ pub const POLICY_MODE_DENY_NETWORK: ULONG = SECURITY_ACCESS_DENY_NETWORK_LOGON;
 pub const POLICY_MODE_DENY_BATCH: ULONG = SECURITY_ACCESS_DENY_BATCH_LOGON;
 pub const POLICY_MODE_DENY_SERVICE: ULONG = SECURITY_ACCESS_DENY_SERVICE_LOGON;
 pub const POLICY_MODE_REMOTE_INTERACTIVE: ULONG = SECURITY_ACCESS_REMOTE_INTERACTIVE_LOGON;
-pub const POLICY_MODE_DENY_REMOTE_INTERACTIVE: ULONG = SECURITY_ACCESS_DENY_REMOTE_INTERACTIVE_LOGON;
+pub const POLICY_MODE_DENY_REMOTE_INTERACTIVE: ULONG =
+    SECURITY_ACCESS_DENY_REMOTE_INTERACTIVE_LOGON;
 pub const POLICY_MODE_ALL: ULONG = POLICY_MODE_INTERACTIVE | POLICY_MODE_NETWORK
     | POLICY_MODE_BATCH | POLICY_MODE_SERVICE | POLICY_MODE_PROXY | POLICY_MODE_DENY_INTERACTIVE
-    | POLICY_MODE_DENY_NETWORK | SECURITY_ACCESS_DENY_BATCH_LOGON | SECURITY_ACCESS_DENY_SERVICE_LOGON
-    | POLICY_MODE_REMOTE_INTERACTIVE | POLICY_MODE_DENY_REMOTE_INTERACTIVE ;
+    | POLICY_MODE_DENY_NETWORK | SECURITY_ACCESS_DENY_BATCH_LOGON
+    | SECURITY_ACCESS_DENY_SERVICE_LOGON | POLICY_MODE_REMOTE_INTERACTIVE
+    | POLICY_MODE_DENY_REMOTE_INTERACTIVE ;
 pub const POLICY_MODE_ALL_NT4: ULONG = POLICY_MODE_INTERACTIVE | POLICY_MODE_NETWORK
     | POLICY_MODE_BATCH | POLICY_MODE_SERVICE;
 ENUM!{enum POLICY_LSA_SERVER_ROLE {
@@ -830,7 +831,8 @@ pub type PTRUSTED_DOMAIN_INFORMATION_BASIC = PLSA_TRUST_INFORMATION;
 pub const TRUST_DIRECTION_DISABLED: ULONG = 0x00000000;
 pub const TRUST_DIRECTION_INBOUND: ULONG = 0x00000001;
 pub const TRUST_DIRECTION_OUTBOUND: ULONG = 0x00000002;
-pub const TRUST_DIRECTION_BIDIRECTIONAL: ULONG = TRUST_DIRECTION_INBOUND | TRUST_DIRECTION_OUTBOUND;
+pub const TRUST_DIRECTION_BIDIRECTIONAL: ULONG = TRUST_DIRECTION_INBOUND
+    | TRUST_DIRECTION_OUTBOUND;
 pub const TRUST_TYPE_DOWNLEVEL: ULONG = 0x00000001;
 pub const TRUST_TYPE_UPLEVEL: ULONG = 0x00000002;
 pub const TRUST_TYPE_MIT: ULONG = 0x00000003;
@@ -1005,7 +1007,7 @@ extern "system" {
     pub fn LsaSetSecurityObject(
         ObjectHandle: LSA_HANDLE,
         SecurityInformation: SECURITY_INFORMATION,
-        SecurityDescriptor: PSECURITY_DESCRIPTOR
+        SecurityDescriptor: PSECURITY_DESCRIPTOR,
     ) -> NTSTATUS;
     pub fn LsaChangePassword(
         ServerName: PLSA_UNICODE_STRING,
@@ -1249,7 +1251,7 @@ extern "system" {
     ) -> NTSTATUS;
     pub fn LsaSetQuotasForAccount(
         AccountHandle: LSA_HANDLE,
-        QuotaLimits: PQUOTA_LIMITS
+        QuotaLimits: PQUOTA_LIMITS,
     ) -> NTSTATUS;
     pub fn LsaGetSystemAccessAccount(
         AccountHandle: LSA_HANDLE,
@@ -1291,7 +1293,7 @@ extern "system" {
         CurrentValue: *mut PLSA_UNICODE_STRING,
         CurrentValueSetTime: PLARGE_INTEGER,
         OldValue: *mut PLSA_UNICODE_STRING,
-        OldValueSetTime: PLARGE_INTEGER
+        OldValueSetTime: PLARGE_INTEGER,
     ) -> NTSTATUS;
     pub fn LsaLookupPrivilegeValue(
         PolicyHandle: LSA_HANDLE,
@@ -1330,7 +1332,8 @@ pub const SE_DENY_NETWORK_LOGON_NAME: &'static str = "SeDenyNetworkLogonRight";
 pub const SE_DENY_BATCH_LOGON_NAME: &'static str = "SeDenyBatchLogonRight";
 pub const SE_DENY_SERVICE_LOGON_NAME: &'static str = "SeDenyServiceLogonRight";
 pub const SE_REMOTE_INTERACTIVE_LOGON_NAME: &'static str = "SeRemoteInteractiveLogonRight";
-pub const SE_DENY_REMOTE_INTERACTIVE_LOGON_NAME: &'static str = "SeDenyRemoteInteractiveLogonRight";
+pub const SE_DENY_REMOTE_INTERACTIVE_LOGON_NAME: &'static str =
+    "SeDenyRemoteInteractiveLogonRight";
 extern "system" {
     pub fn LsaEnumerateAccountsWithUserRight(
         PolictHandle: LSA_HANDLE,

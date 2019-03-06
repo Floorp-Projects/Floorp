@@ -82,7 +82,7 @@ class CacheObserver : public nsIObserver, public nsSupportsWeakReference {
   }
 
  private:
-  static CacheObserver* sSelf;
+  static StaticRefPtr<CacheObserver> sSelf;
 
   void StoreDiskCacheCapacity();
   void StoreCacheFSReported();

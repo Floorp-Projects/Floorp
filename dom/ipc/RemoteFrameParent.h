@@ -43,6 +43,11 @@ class RemoteFrameParent : public PRemoteFrameParent {
                                            const bool& aForceRepaint,
                                            const LayersObserverEpoch& aEpoch);
 
+  mozilla::ipc::IPCResult RecvNavigateByKey(const bool& aForward,
+                                            const bool& aForDocumentNavigation);
+
+  mozilla::ipc::IPCResult RecvActivate();
+
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
  private:

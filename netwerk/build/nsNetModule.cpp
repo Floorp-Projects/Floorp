@@ -103,7 +103,7 @@ static BaseWebSocketChannel* WebSocketChannelConstructor(bool aSecure) {
                              void** aResult) {                   \
     nsresult rv;                                                 \
                                                                  \
-    BaseWebSocketChannel* inst;                                  \
+    RefPtr<BaseWebSocketChannel> inst;                           \
                                                                  \
     *aResult = nullptr;                                          \
     if (nullptr != aOuter) {                                     \
@@ -111,10 +111,7 @@ static BaseWebSocketChannel* WebSocketChannelConstructor(bool aSecure) {
       return rv;                                                 \
     }                                                            \
     inst = WebSocketChannelConstructor(secure);                  \
-    NS_ADDREF(inst);                                             \
-    rv = inst->QueryInterface(aIID, aResult);                    \
-    NS_RELEASE(inst);                                            \
-    return rv;                                                   \
+    return inst->QueryInterface(aIID, aResult);                  \
   }
 
 WEB_SOCKET_HANDLER_CONSTRUCTOR(WebSocketChannel, false)
@@ -181,8 +178,8 @@ nsresult CreateNewStreamConvServiceFactory(nsISupports* aOuter, REFNSIID aIID,
     *aResult = nullptr;
     return NS_ERROR_NO_AGGREGATION;
   }
-  nsStreamConverterService* inst = nullptr;
-  nsresult rv = NS_NewStreamConv(&inst);
+  RefPtr<nsStreamConverterService> inst;
+  nsresult rv = NS_NewStreamConv(getter_AddRefs(inst));
   if (NS_FAILED(rv)) {
     *aResult = nullptr;
     return rv;
@@ -191,7 +188,6 @@ nsresult CreateNewStreamConvServiceFactory(nsISupports* aOuter, REFNSIID aIID,
   if (NS_FAILED(rv)) {
     *aResult = nullptr;
   }
-  NS_RELEASE(inst); /* get rid of extra refcnt */
   return rv;
 }
 
@@ -204,8 +200,8 @@ nsresult CreateNewFTPDirListingConv(nsISupports* aOuter, REFNSIID aIID,
     *aResult = nullptr;
     return NS_ERROR_NO_AGGREGATION;
   }
-  nsFTPDirListingConv* inst = nullptr;
-  nsresult rv = NS_NewFTPDirListingConv(&inst);
+  RefPtr<nsFTPDirListingConv> inst;
+  nsresult rv = NS_NewFTPDirListingConv(getter_AddRefs(inst));
   if (NS_FAILED(rv)) {
     *aResult = nullptr;
     return rv;
@@ -214,7 +210,6 @@ nsresult CreateNewFTPDirListingConv(nsISupports* aOuter, REFNSIID aIID,
   if (NS_FAILED(rv)) {
     *aResult = nullptr;
   }
-  NS_RELEASE(inst); /* get rid of extra refcnt */
   return rv;
 }
 
@@ -227,8 +222,8 @@ nsresult CreateNewMultiMixedConvFactory(nsISupports* aOuter, REFNSIID aIID,
     *aResult = nullptr;
     return NS_ERROR_NO_AGGREGATION;
   }
-  nsMultiMixedConv* inst = nullptr;
-  nsresult rv = NS_NewMultiMixedConv(&inst);
+  RefPtr<nsMultiMixedConv> inst;
+  nsresult rv = NS_NewMultiMixedConv(getter_AddRefs(inst));
   if (NS_FAILED(rv)) {
     *aResult = nullptr;
     return rv;
@@ -237,7 +232,6 @@ nsresult CreateNewMultiMixedConvFactory(nsISupports* aOuter, REFNSIID aIID,
   if (NS_FAILED(rv)) {
     *aResult = nullptr;
   }
-  NS_RELEASE(inst); /* get rid of extra refcnt */
   return rv;
 }
 
@@ -250,8 +244,8 @@ nsresult CreateNewTXTToHTMLConvFactory(nsISupports* aOuter, REFNSIID aIID,
     *aResult = nullptr;
     return NS_ERROR_NO_AGGREGATION;
   }
-  mozTXTToHTMLConv* inst = nullptr;
-  nsresult rv = MOZ_NewTXTToHTMLConv(&inst);
+  RefPtr<mozTXTToHTMLConv> inst;
+  nsresult rv = MOZ_NewTXTToHTMLConv(getter_AddRefs(inst));
   if (NS_FAILED(rv)) {
     *aResult = nullptr;
     return rv;
@@ -260,7 +254,6 @@ nsresult CreateNewTXTToHTMLConvFactory(nsISupports* aOuter, REFNSIID aIID,
   if (NS_FAILED(rv)) {
     *aResult = nullptr;
   }
-  NS_RELEASE(inst); /* get rid of extra refcnt */
   return rv;
 }
 
@@ -273,8 +266,8 @@ nsresult CreateNewHTTPCompressConvFactory(nsISupports* aOuter, REFNSIID aIID,
     *aResult = nullptr;
     return NS_ERROR_NO_AGGREGATION;
   }
-  mozilla::net::nsHTTPCompressConv* inst = nullptr;
-  nsresult rv = NS_NewHTTPCompressConv(&inst);
+  RefPtr<mozilla::net::nsHTTPCompressConv> inst;
+  nsresult rv = NS_NewHTTPCompressConv(getter_AddRefs(inst));
   if (NS_FAILED(rv)) {
     *aResult = nullptr;
     return rv;
@@ -283,14 +276,11 @@ nsresult CreateNewHTTPCompressConvFactory(nsISupports* aOuter, REFNSIID aIID,
   if (NS_FAILED(rv)) {
     *aResult = nullptr;
   }
-  NS_RELEASE(inst); /* get rid of extra refcnt */
   return rv;
 }
 
 nsresult CreateNewUnknownDecoderFactory(nsISupports* aOuter, REFNSIID aIID,
                                         void** aResult) {
-  nsresult rv;
-
   if (!aResult) {
     return NS_ERROR_NULL_POINTER;
   }
@@ -300,23 +290,12 @@ nsresult CreateNewUnknownDecoderFactory(nsISupports* aOuter, REFNSIID aIID,
     return NS_ERROR_NO_AGGREGATION;
   }
 
-  nsUnknownDecoder* inst;
-
-  inst = new nsUnknownDecoder();
-  if (!inst) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  NS_ADDREF(inst);
-  rv = inst->QueryInterface(aIID, aResult);
-  NS_RELEASE(inst);
-
-  return rv;
+  RefPtr<nsUnknownDecoder> inst = new nsUnknownDecoder();
+  return inst->QueryInterface(aIID, aResult);
 }
 
 nsresult CreateNewBinaryDetectorFactory(nsISupports* aOuter, REFNSIID aIID,
                                         void** aResult) {
-  nsresult rv;
-
   if (!aResult) {
     return NS_ERROR_NULL_POINTER;
   }
@@ -326,15 +305,8 @@ nsresult CreateNewBinaryDetectorFactory(nsISupports* aOuter, REFNSIID aIID,
     return NS_ERROR_NO_AGGREGATION;
   }
 
-  auto* inst = new nsBinaryDetector();
-  if (!inst) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  NS_ADDREF(inst);
-  rv = inst->QueryInterface(aIID, aResult);
-  NS_RELEASE(inst);
-
-  return rv;
+  RefPtr<nsBinaryDetector> inst = new nsBinaryDetector();
+  return inst->QueryInterface(aIID, aResult);
 }
 
 ///////////////////////////////////////////////////////////////////////////////

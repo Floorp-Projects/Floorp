@@ -26,7 +26,7 @@ add_task(async function test_clickInsecureFieldWarning() {
     await promiseShown;
     ok(promiseShown, "autocomplete shown");
 
-    let warningItem = document.getAnonymousElementByAttribute(popup, "type", "insecureWarning");
+    let warningItem = popup.querySelector(`[type="insecureWarning"]`);
     ok(warningItem, "Got warning richlistitem");
 
     await BrowserTestUtils.waitForCondition(() => !warningItem.collapsed, "Wait for warning to show");

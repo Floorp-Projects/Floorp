@@ -470,8 +470,7 @@ var Sanitizer = {
 
         // Keep track of the time in case we get stuck in la-la-land because of onbeforeunload
         // dialogs
-        let existingWindow = Services.appShell.hiddenDOMWindow;
-        let startDate = existingWindow.performance.now();
+        let startDate = Date.now();
 
         // First check if all these windows are OK with being closed:
         let windowList = [];
@@ -487,10 +486,14 @@ var Sanitizer = {
           // hit until the prompt has been dismissed. If more than 1 minute has elapsed since we
           // started prompting, stop, because the user might not even remember initiating the
           // 'forget', and the timespans will be all wrong by now anyway:
-          if (existingWindow.performance.now() > (startDate + 60 * 1000)) {
+          if (Date.now() > (startDate + 60 * 1000)) {
             this._resetAllWindowClosures(windowList);
             throw new Error("Sanitize could not close windows: timeout");
           }
+        }
+
+        if (windowList.length == 0) {
+          return;
         }
 
         // If/once we get here, we should actually be able to close all windows.
@@ -503,8 +506,8 @@ var Sanitizer = {
         let handler = Cc["@mozilla.org/browser/clh;1"].getService(Ci.nsIBrowserHandler);
         let defaultArgs = handler.defaultArgs;
         let features = "chrome,all,dialog=no," + privateStateForNewWindow;
-        let newWindow = existingWindow.openDialog(AppConstants.BROWSER_CHROME_URL, "_blank",
-                                                  features, defaultArgs);
+        let newWindow = windowList[0].openDialog(AppConstants.BROWSER_CHROME_URL, "_blank",
+                                                 features, defaultArgs);
 
         let onFullScreen = null;
         if (AppConstants.platform == "macosx") {

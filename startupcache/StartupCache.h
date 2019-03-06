@@ -118,7 +118,7 @@ class StartupCache : public nsIMemoryReporter {
                      uint32_t length);
 
   // Removes the cache file.
-  void InvalidateCache();
+  void InvalidateCache(bool memoryOnly = false);
 
   // Signal that data should not be loaded from the cache file
   static void IgnoreDiskCache();

@@ -1765,6 +1765,13 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     return true;
   },
 
+  onDump: function() {
+    return {
+      pauseOnExceptions: this._options.pauseOnExceptions,
+      ignoreCaughtExceptions: this._options.ignoreCaughtExceptions,
+      skipBreakpoints: this.skipBreakpoints,
+    };
+  },
 });
 
 Object.assign(ThreadActor.prototype.requestTypes, {
@@ -1779,6 +1786,7 @@ Object.assign(ThreadActor.prototype.requestTypes, {
   "sources": ThreadActor.prototype.onSources,
   "threadGrips": ThreadActor.prototype.onThreadGrips,
   "skipBreakpoints": ThreadActor.prototype.onSkipBreakpoints,
+  "dumpThread": ThreadActor.prototype.onDump,
 });
 
 exports.ThreadActor = ThreadActor;

@@ -2802,13 +2802,12 @@ RefPtr<RTCStatsQueryPromise> PeerConnectionImpl::ExecuteStatsQuery_s(
       // continue if we don't have a valid conduit
       continue;
     }
-    const MediaPipeline& mp = *aPipelines[p];
-    bool isAudio = (mp.Conduit()->type() == MediaSessionConduit::AUDIO);
-    nsString kind =
-        isAudio ? NS_LITERAL_STRING("audio") : NS_LITERAL_STRING("video");
-    nsString idstr = kind;
-    idstr.AppendLiteral("_");
-    idstr.AppendInt((uint32_t)p);
+    const MediaPipeline &mp = *aPipelines[p];
+    auto asVideo = mp.Conduit()->AsVideoSessionConduit();
+    nsString kind = asVideo.isNothing() ? NS_LITERAL_STRING("audio")
+                                        : NS_LITERAL_STRING("video");
+    nsString idstr = kind + NS_LITERAL_STRING("_");
+    idstr.AppendInt(static_cast<uint32_t>(p));
 
     // TODO(@@NG):ssrcs handle Conduits having multiple stats at the same level
     // This is pending spec work
@@ -2875,14 +2874,14 @@ RefPtr<RTCStatsQueryPromise> PeerConnectionImpl::ExecuteStatsQuery_s(
           if (mp.Conduit()->GetSendPacketTypeStats(&counters)) {
             s.mNackCount.Construct(counters.nack_packets);
             // Fill in video only packet type stats
-            if (!isAudio) {
+            if(asVideo) {
               s.mFirCount.Construct(counters.fir_packets);
               s.mPliCount.Construct(counters.pli_packets);
             }
           }
 
           // Lastly, fill in video encoder stats if this is video
-          if (!isAudio) {
+          asVideo.apply([&s](auto conduit) {
             double framerateMean;
             double framerateStdDev;
             double bitrateMean;
@@ -2890,7 +2889,7 @@ RefPtr<RTCStatsQueryPromise> PeerConnectionImpl::ExecuteStatsQuery_s(
             uint32_t droppedFrames;
             uint32_t framesEncoded;
             Maybe<uint64_t> qpSum;
-            if (mp.Conduit()->GetVideoEncoderStats(
+            if (conduit->GetVideoEncoderStats(
                     &framerateMean, &framerateStdDev, &bitrateMean,
                     &bitrateStdDev, &droppedFrames, &framesEncoded, &qpSum)) {
               s.mFramerateMean.Construct(framerateMean);
@@ -2901,7 +2900,7 @@ RefPtr<RTCStatsQueryPromise> PeerConnectionImpl::ExecuteStatsQuery_s(
               s.mFramesEncoded.Construct(framesEncoded);
               qpSum.apply([&s](uint64_t aQp) { s.mQpSum.Construct(aQp); });
             }
-          }
+          });
           query->report->mOutboundRTPStreamStats.Value().AppendElement(
               s, fallible);
         }
@@ -2961,20 +2960,20 @@ RefPtr<RTCStatsQueryPromise> PeerConnectionImpl::ExecuteStatsQuery_s(
         if (mp.Conduit()->GetRecvPacketTypeStats(&counters)) {
           s.mNackCount.Construct(counters.nack_packets);
           // Fill in video only packet type stats
-          if (!isAudio) {
+          if (asVideo) {
             s.mFirCount.Construct(counters.fir_packets);
             s.mPliCount.Construct(counters.pli_packets);
           }
         }
         // Lastly, fill in video decoder stats if this is video
-        if (!isAudio) {
+        asVideo.apply([&s](auto conduit) {
           double framerateMean;
           double framerateStdDev;
           double bitrateMean;
           double bitrateStdDev;
           uint32_t discardedPackets;
           uint32_t framesDecoded;
-          if (mp.Conduit()->GetVideoDecoderStats(
+          if (conduit->GetVideoDecoderStats(
                   &framerateMean, &framerateStdDev, &bitrateMean,
                   &bitrateStdDev, &discardedPackets, &framesDecoded)) {
             s.mFramerateMean.Construct(framerateMean);
@@ -2984,7 +2983,7 @@ RefPtr<RTCStatsQueryPromise> PeerConnectionImpl::ExecuteStatsQuery_s(
             s.mDiscardedPackets.Construct(discardedPackets);
             s.mFramesDecoded.Construct(framesDecoded);
           }
-        }
+        });
         query->report->mInboundRTPStreamStats.Value().AppendElement(s,
                                                                     fallible);
         // Fill in Contributing Source statistics

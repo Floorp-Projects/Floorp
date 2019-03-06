@@ -1,4 +1,3 @@
-// Copyright © 2015-2017 winapi-rs developers
 // Licensed under the Apache License, Version 2.0
 // <LICENSE-APACHE or http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
 // <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your option.
@@ -13,13 +12,11 @@ use shared::winerror::{FACILITY_ITF, SEVERITY_ERROR};
 use um::wingdi::ABC;
 use um::winnt::{HRESULT, LONG, WCHAR};
 pub const SCRIPT_UNDEFINED: WORD = 0;
-pub const USP_E_SCRIPT_NOT_IN_FONT: HRESULT = MAKE_HRESULT!(
-    SEVERITY_ERROR, FACILITY_ITF, 0x200
-);
+pub const USP_E_SCRIPT_NOT_IN_FONT: HRESULT = MAKE_HRESULT!(SEVERITY_ERROR, FACILITY_ITF, 0x200);
 DECLARE_HANDLE!{SCRIPT_CACHE, SCRIPT_CACHE__}
 extern "system" {
     pub fn ScriptFreeCache(
-        psc: *mut SCRIPT_CACHE
+        psc: *mut SCRIPT_CACHE,
     ) -> HRESULT;
 }
 STRUCT!{struct SCRIPT_CONTROL {
@@ -342,20 +339,20 @@ extern "system" {
         pssa: *mut SCRIPT_STRING_ANALYSIS,
     ) -> HRESULT;
     pub fn ScriptStringFree(
-        pssa: *mut SCRIPT_STRING_ANALYSIS
+        pssa: *mut SCRIPT_STRING_ANALYSIS,
     ) -> HRESULT;
     pub fn ScriptString_pSize(
-        ssa: SCRIPT_STRING_ANALYSIS
+        ssa: SCRIPT_STRING_ANALYSIS,
     ) -> *const SIZE;
     pub fn ScriptString_pcOutChars(
-        ssa: SCRIPT_STRING_ANALYSIS
+        ssa: SCRIPT_STRING_ANALYSIS,
     ) -> *const c_int;
     pub fn ScriptString_pLogAttr(
-        ssa: SCRIPT_STRING_ANALYSIS
+        ssa: SCRIPT_STRING_ANALYSIS,
     ) -> *const SCRIPT_LOGATTR;
     pub fn ScriptStringGetOrder(
         ssa: SCRIPT_STRING_ANALYSIS,
-        puOrder: *mut UINT
+        puOrder: *mut UINT,
     ) -> HRESULT;
     pub fn ScriptStringCPtoX(
         ssa: SCRIPT_STRING_ANALYSIS,
@@ -371,10 +368,10 @@ extern "system" {
     ) -> HRESULT;
     pub fn ScriptStringGetLogicalWidths(
         ssa: SCRIPT_STRING_ANALYSIS,
-        dpiDx: *mut c_int
+        dpiDx: *mut c_int,
     ) -> HRESULT;
     pub fn ScriptStringValidate(
-        ssa: SCRIPT_STRING_ANALYSIS
+        ssa: SCRIPT_STRING_ANALYSIS,
     ) -> HRESULT;
     pub fn ScriptStringOut(
         ssa: SCRIPT_STRING_ANALYSIS,
@@ -394,7 +391,7 @@ extern "system" {
     pub fn ScriptIsComplex(
         pwcInChars: *const WCHAR,
         cInChars: c_int,
-        dwFlags: DWORD
+        dwFlags: DWORD,
     ) -> HRESULT;
 }
 STRUCT!{struct SCRIPT_DIGITSUBSTITUTE {
