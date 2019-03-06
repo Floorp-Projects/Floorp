@@ -1322,6 +1322,7 @@ class PositionalFormalParameterIter : public BindingIter {
   }
 
  public:
+  explicit PositionalFormalParameterIter(Scope* scope);
   explicit PositionalFormalParameterIter(JSScript* script);
 
   void operator++(int) {

@@ -349,6 +349,10 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
 
   Scope* outermostScope() const { return scopeList.vector[0]; }
   Scope* innermostScope() const;
+  Scope* bodyScope() const {
+      MOZ_ASSERT(bodyScopeIndex < scopeList.length());
+      return scopeList.vector[bodyScopeIndex];
+  }
 
   MOZ_ALWAYS_INLINE
   MOZ_MUST_USE bool makeAtomIndex(JSAtom* atom, uint32_t* indexp) {
