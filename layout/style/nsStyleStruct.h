@@ -1067,7 +1067,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleOutline {
     }
     if (GetOutlineWidth() > 0) {
       MOZ_ASSERT(
-          mOutlineStyle.border_style._0 != mozilla::StyleBorderStyle::None,
+          mOutlineStyle.AsBorderStyle() != mozilla::StyleBorderStyle::None,
           "outline-style: none implies outline-width of zero");
       return true;
     }

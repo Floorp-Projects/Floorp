@@ -777,7 +777,7 @@ impl ProfilerHooks for GeckoProfilerHooks {
     }
 }
 
-const PROFILER_HOOKS: GeckoProfilerHooks = GeckoProfilerHooks {};
+static PROFILER_HOOKS: GeckoProfilerHooks = GeckoProfilerHooks {};
 
 #[allow(improper_ctypes)] // this is needed so that rustc doesn't complain about passing the &mut Transaction to an extern function
 extern "C" {
@@ -1203,17 +1203,9 @@ pub unsafe extern "C" fn wr_api_notify_memory_pressure(dh: &mut DocumentHandle) 
     dh.api.notify_memory_pressure();
 }
 
-/// cbindgen:field-names=[mBits]
-#[repr(C)]
-pub struct WrDebugFlags {
-    bits: u32,
-}
-
 #[no_mangle]
-pub extern "C" fn wr_api_set_debug_flags(dh: &mut DocumentHandle, flags: WrDebugFlags) {
-    if let Some(dbg_flags) = DebugFlags::from_bits(flags.bits) {
-        dh.api.set_debug_flags(dbg_flags);
-    }
+pub extern "C" fn wr_api_set_debug_flags(dh: &mut DocumentHandle, flags: DebugFlags) {
+    dh.api.set_debug_flags(flags);
 }
 
 #[no_mangle]

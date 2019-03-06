@@ -15,8 +15,7 @@ language = "C++"
 namespaces = ["mozilla", "wr"]
 
 [export]
-# Skip constants because we don't have any
-item_types = ["globals", "enums", "structs", "unions", "typedefs", "opaque", "functions"]
+item_types = ["globals", "enums", "structs", "unions", "typedefs", "opaque", "functions", "constants"]
 
 [parse]
 parse_deps = true
@@ -34,6 +33,9 @@ derive_eq = true
 [enum]
 add_sentinel = true
 derive_helper_methods = true
+
+[macro_expansion]
+bitflags = true
 
 [defines]
 "target_os = windows" = "XP_WIN"
