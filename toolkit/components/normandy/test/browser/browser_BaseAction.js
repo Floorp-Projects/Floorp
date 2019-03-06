@@ -80,7 +80,7 @@ decorate_task(
     await action.runRecipe(recipe);
     Assert.deepEqual(
       reportRecipeStub.args,
-      [[recipe.id, Uptake.RECIPE_SUCCESS]],
+      [[recipe, Uptake.RECIPE_SUCCESS]],
       "per-recipe uptake telemetry should be reported",
     );
   },
@@ -120,7 +120,7 @@ decorate_task(
 
     Assert.deepEqual(
       reportRecipeStub.args,
-      [[recipe1.id, Uptake.RECIPE_SUCCESS]],
+      [[recipe1, Uptake.RECIPE_SUCCESS]],
       "Only recipes executed prior to finalizer should report uptake telemetry",
     );
   },
@@ -151,7 +151,7 @@ decorate_task(
 
     Assert.deepEqual(
       reportRecipeStub.args,
-      [[recipe.id, Uptake.RECIPE_ACTION_DISABLED]],
+      [[recipe, Uptake.RECIPE_ACTION_DISABLED]],
       "Recipe should report recipe status as action disabled",
     );
 
@@ -179,7 +179,7 @@ decorate_task(
 
     Assert.deepEqual(
       reportRecipeStub.args,
-      [[recipe.id, Uptake.RECIPE_EXECUTION_ERROR]],
+      [[recipe, Uptake.RECIPE_EXECUTION_ERROR]],
       "Recipe should report recipe execution error",
     );
 
@@ -203,7 +203,7 @@ decorate_task(
 
     Assert.deepEqual(
       reportRecipeStub.args,
-      [[recipe.id, Uptake.RECIPE_SUCCESS]],
+      [[recipe, Uptake.RECIPE_SUCCESS]],
       "Recipe should report success",
     );
 
@@ -243,7 +243,7 @@ decorate_task(
 
     Assert.deepEqual(
       reportRecipeStub.args,
-      [[recipe.id, Uptake.RECIPE_ACTION_DISABLED]],
+      [[recipe, Uptake.RECIPE_ACTION_DISABLED]],
       "Recipe should report recipe status as action disabled",
     );
   },

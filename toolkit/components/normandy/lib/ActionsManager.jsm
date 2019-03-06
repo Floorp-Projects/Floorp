@@ -117,13 +117,13 @@ class ActionsManager {
           status = Uptake.RECIPE_EXECUTION_ERROR;
         }
       }
-      Uptake.reportRecipe(recipe.id, status);
+      Uptake.reportRecipe(recipe, status);
     } else {
       log.error(
         `Could not execute recipe ${recipe.name}:`,
         `Action ${recipe.action} is either missing or invalid.`
       );
-      Uptake.reportRecipe(recipe.id, Uptake.RECIPE_INVALID_ACTION);
+      Uptake.reportRecipe(recipe, Uptake.RECIPE_INVALID_ACTION);
     }
   }
 
