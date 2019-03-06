@@ -285,7 +285,7 @@ void WebGLContext::BindBufferRange(GLenum target, GLuint index,
 
 ////////////////////////////////////////
 
-void WebGLContext::BufferDataImpl(GLenum target, size_t dataLen,
+void WebGLContext::BufferDataImpl(GLenum target, uint64_t dataLen,
                                   const uint8_t* data, GLenum usage) {
   const auto& buffer = ValidateBufferSelection(target);
   if (!buffer) return;
@@ -310,8 +310,8 @@ void WebGLContext::BufferData(GLenum target, WebGLsizeiptr size, GLenum usage) {
   const UniqueBuffer zeroBuffer(calloc(checkedSize.value(), 1u));
   if (!zeroBuffer) return ErrorOutOfMemory("Failed to allocate zeros.");
 
-  BufferDataImpl(target, checkedSize.value(), (const uint8_t*)zeroBuffer.get(),
-                 usage);
+  BufferDataImpl(target, uint64_t{checkedSize.value()},
+                 (const uint8_t*)zeroBuffer.get(), usage);
 }
 
 void WebGLContext::BufferData(GLenum target,
@@ -346,7 +346,7 @@ void WebGLContext::BufferData(GLenum target, const dom::ArrayBufferView& src,
 ////////////////////////////////////////
 
 void WebGLContext::BufferSubDataImpl(GLenum target, WebGLsizeiptr dstByteOffset,
-                                     size_t dataLen, const uint8_t* data) {
+                                     uint64_t dataLen, const uint8_t* data) {
   const FuncScope funcScope(*this, "bufferSubData");
 
   if (!ValidateNonNegative("byteOffset", dstByteOffset)) return;
@@ -354,7 +354,7 @@ void WebGLContext::BufferSubDataImpl(GLenum target, WebGLsizeiptr dstByteOffset,
   const auto& buffer = ValidateBufferSelection(target);
   if (!buffer) return;
 
-  buffer->BufferSubData(target, size_t(dstByteOffset), dataLen, data);
+  buffer->BufferSubData(target, uint64_t(dstByteOffset), dataLen, data);
 }
 
 ////
