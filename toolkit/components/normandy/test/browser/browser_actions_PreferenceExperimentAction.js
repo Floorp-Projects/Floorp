@@ -43,7 +43,7 @@ decorate_task(
     // runRecipe catches exceptions thrown by _run(), so
     // explicitly check for reported success here.
     Assert.deepEqual(reportRecipe.args,
-                     [[recipe.id, Uptake.RECIPE_SUCCESS]]);
+                     [[recipe, Uptake.RECIPE_SUCCESS]]);
   }
 );
 
@@ -68,7 +68,7 @@ decorate_task(
     Assert.deepEqual(action.log.debug.args,
                      [["Skipping post-execution hook for PreferenceExperimentAction because it is disabled."]]);
     Assert.deepEqual(reportRecipe.args,
-                     [[recipe.id, Uptake.RECIPE_ACTION_DISABLED]]);
+                     [[recipe, Uptake.RECIPE_ACTION_DISABLED]]);
     Assert.deepEqual(reportAction.args,
                      [[action.name, Uptake.ACTION_SUCCESS]]);
   }
@@ -198,7 +198,7 @@ decorate_task(
     await action.finalize();
 
     Assert.deepEqual(reportRecipeStub.args,
-                     [[recipe.id, Uptake.RECIPE_EXECUTION_ERROR]]);
+                     [[recipe, Uptake.RECIPE_EXECUTION_ERROR]]);
     Assert.deepEqual(startStub.args, [], "start not called");
     // No way to get access to log message/Error thrown
   }
