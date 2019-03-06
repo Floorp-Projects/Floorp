@@ -14,6 +14,7 @@ import android.support.annotation.NonNull;
 import android.text.TextUtils;
 
 import org.mozilla.gecko.AppConstants;
+import org.mozilla.gecko.BrowserApp;
 import org.mozilla.gecko.Experiments;
 import org.mozilla.gecko.MmaConstants;
 import org.mozilla.gecko.PrefsHelper;
@@ -32,6 +33,8 @@ import org.mozilla.gecko.util.ThreadUtils;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+
+import static android.content.Context.MODE_PRIVATE;
 
 
 public class MmaDelegate {
@@ -281,13 +284,22 @@ public class MmaDelegate {
         return mmaHelper.getPanelConfig(context, panelConfigType, useLocalValues);
     }
 
-    public static String getDeviceId(Activity activity) {
+    private static String getDeviceId(Activity activity) {
         if (SwitchBoard.isInExperiment(activity, Experiments.LEANPLUM_DEBUG)) {
             return DEBUG_LEANPLUM_DEVICE_ID;
         }
 
         final SharedPreferences prefs = activity.getPreferences(Context.MODE_PRIVATE);
         return prefs.getString(KEY_ANDROID_PREF_STRING_LEANPLUM_DEVICE_ID, null);
+    }
+
+    public static String getDeviceId(Context context) {
+        if (SwitchBoard.isInExperiment(context, Experiments.LEANPLUM_DEBUG)) {
+            return DEBUG_LEANPLUM_DEVICE_ID;
+        }
+
+        //MMA preferences are stored in the initialising activity's preferences, which in our case is BrowserApp.
+        return context.getSharedPreferences(BrowserApp.class.getName(), MODE_PRIVATE).getString(MmaDelegate.KEY_ANDROID_PREF_STRING_LEANPLUM_DEVICE_ID, null);
     }
 
     private static void setDeviceId(Activity activity, String deviceId) {
