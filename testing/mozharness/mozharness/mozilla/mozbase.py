@@ -33,7 +33,7 @@ class MozbaseMixin(object):
 
         for m in ('mozfile', 'mozlog', 'mozinfo', 'moznetwork', 'mozhttpd',
                   'mozcrash', 'mozinstall', 'mozdevice', 'mozprofile',
-                  'mozprocess', 'mozrunner'):
+                  'mozprocess', 'mozproxy', 'mozrunner'):
             self.register_virtualenv_module(
                 m, url=os.path.join(mozbase_dir, m)
             )

@@ -2,12 +2,11 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-# abstract class for all playback tools
 from __future__ import absolute_import
-
 from abc import ABCMeta, abstractmethod
 
 
+# abstract class for all playback tools
 class Playback(object):
     __metaclass__ = ABCMeta
 
