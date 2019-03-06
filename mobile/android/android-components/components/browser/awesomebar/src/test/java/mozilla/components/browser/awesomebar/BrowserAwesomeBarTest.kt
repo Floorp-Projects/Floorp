@@ -19,6 +19,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
+import org.mockito.Mockito.never
 import org.mockito.Mockito.verifyNoMoreInteractions
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows.shadowOf
@@ -130,6 +131,51 @@ class BrowserAwesomeBarTest {
 
             assertTrue(providerTriggered)
             assertTrue(providerCancelled)
+        }
+    }
+
+    @Test
+    fun `removeProvider removes the provider`() {
+        runBlocking(testMainScope.coroutineContext) {
+            val provider1 = mockProvider()
+            val provider2 = mockProvider()
+            val provider3 = mockProvider()
+
+            val awesomeBar = BrowserAwesomeBar(context)
+            val adapter: SuggestionsAdapter = mock()
+            awesomeBar.suggestionsAdapter = adapter
+
+            awesomeBar.addProviders(provider1, provider2)
+            awesomeBar.removeProviders(provider2)
+            awesomeBar.addProviders(provider3)
+
+            awesomeBar.onInputStarted()
+
+            // Confirm that only provider2's suggestions were removed
+            verify(adapter, never()).removeSuggestions(provider1)
+            verify(adapter).removeSuggestions(provider2)
+            verify(adapter, never()).removeSuggestions(provider1)
+
+            verify(provider1).onInputStarted()
+            verify(provider2, never()).onInputStarted()
+            verify(provider3).onInputStarted()
+        }
+    }
+
+    @Test
+    fun `removeAllProviders removes all providers`() {
+        runBlocking(testMainScope.coroutineContext) {
+            val provider1 = mockProvider()
+            val provider2 = mockProvider()
+
+            val awesomeBar = BrowserAwesomeBar(context)
+            awesomeBar.addProviders(provider1, provider2)
+            awesomeBar.removeAllProviders()
+
+            awesomeBar.onInputStarted()
+
+            verify(provider1, never()).onInputStarted()
+            verify(provider2, never()).onInputStarted()
         }
     }
 

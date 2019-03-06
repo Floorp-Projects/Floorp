@@ -25,6 +25,16 @@ interface AwesomeBar {
     fun addProviders(vararg providers: SuggestionProvider)
 
     /**
+     * Removes the following [SuggestionProvider]
+     */
+    fun removeProviders(vararg providers: SuggestionProvider)
+
+    /**
+     * Removes all [SuggestionProviders]
+     */
+    fun removeAllProviders()
+
+    /**
      * Fired when the user starts interacting with the awesome bar by entering text in the toolbar.
      */
     fun onInputStarted() = Unit

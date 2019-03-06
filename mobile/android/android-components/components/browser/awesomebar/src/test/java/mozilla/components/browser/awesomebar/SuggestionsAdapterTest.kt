@@ -47,6 +47,21 @@ class SuggestionsAdapterTest {
     }
 
     @Test
+    fun `removeSuggestions() should remove suggestions of provider`() {
+        val adapter = SuggestionsAdapter(mock())
+        val provider = mockProvider()
+        val suggestions = listOf<AwesomeBar.Suggestion>(
+                mock(), mock(), mock())
+
+        assertEquals(0, adapter.itemCount)
+
+        adapter.addSuggestions(provider, suggestions)
+        adapter.removeSuggestions(provider)
+
+        assertEquals(0, adapter.itemCount)
+    }
+
+    @Test
     fun `clearSuggestions removes suggestions from adapter`() {
         val adapter = SuggestionsAdapter(mock())
 

@@ -65,6 +65,13 @@ internal class SuggestionsAdapter(
         updateTo(updatedSuggestions.sortedByDescending { it.score })
     }
 
+    fun removeSuggestions(provider: AwesomeBar.SuggestionProvider) = synchronized(suggestions) {
+        val updatedSuggestions = suggestions.toMutableList()
+
+        suggestionMap[provider]?.let { updatedSuggestions.removeAll(it) }
+        updateTo(updatedSuggestions)
+    }
+
     /**
      * Removes all suggestions except the ones from providers that have set shouldClearSuggestions to false.
      */

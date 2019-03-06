@@ -76,6 +76,28 @@ class BrowserAwesomeBar @JvmOverloads constructor(
     @Synchronized
     override fun addProviders(vararg providers: AwesomeBar.SuggestionProvider) {
         this.providers.addAll(providers)
+        scrollToPosition(0)
+    }
+
+    @Synchronized
+    override fun removeProviders(vararg providers: AwesomeBar.SuggestionProvider) {
+        providers.forEach {
+            it.onInputCancelled()
+            suggestionsAdapter.removeSuggestions(it)
+            this.providers.remove(it)
+        }
+    }
+
+    @Synchronized
+    override fun removeAllProviders() {
+        val providerIterator = providers.iterator()
+
+        while (providerIterator.hasNext()) {
+            val provider = providerIterator.next()
+            provider.onInputCancelled()
+            suggestionsAdapter.removeSuggestions(provider)
+            providerIterator.remove()
+        }
     }
 
     @Synchronized
