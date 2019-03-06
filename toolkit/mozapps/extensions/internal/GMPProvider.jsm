@@ -48,7 +48,7 @@ const GMP_PLUGINS = [
     // license without having bug 624602 fixed yet, and intentionally ignores
     // localisation.
     licenseURL:      "chrome://mozapps/content/extensions/OpenH264-license.txt",
-    homepageURL:     "http://www.openh264.org/",
+    homepageURL:     "https://www.openh264.org/",
   },
   {
     id:              WIDEVINE_ID,
