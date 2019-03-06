@@ -68,6 +68,7 @@ from taskgraph.util.taskcluster import (
     list_artifacts,
 )
 
+from mozbuild.artifact_builds import JOB_CHOICES
 from mozbuild.util import (
     ensureParentDir,
     FileAvoidWrite,
@@ -533,34 +534,21 @@ class WinArtifactJob(ArtifactJob):
                              'matched an archive path.'.format(
                                  patterns=self.artifact_patterns))
 
-# Keep the keys of this map in sync with the |mach artifact| --job
-# options.  The keys of this map correspond to entries at
-# https://tools.taskcluster.net/index/artifacts/#gecko.v2.mozilla-central.latest/gecko.v2.mozilla-central.latest
-# The values correpsond to a pair of (<package regex>, <test archive regex>).
+
+def startswithwhich(s, prefixes):
+    for prefix in prefixes:
+        if s.startswith(prefix):
+            return prefix
+
+
 JOB_DETAILS = {
-    'android-api-16-opt': AndroidArtifactJob,
-    'android-api-16-debug': AndroidArtifactJob,
-    'android-x86-opt': AndroidArtifactJob,
-    'android-x86_64-opt': AndroidArtifactJob,
-    'android-x86_64-debug': AndroidArtifactJob,
-    'android-aarch64-opt': AndroidArtifactJob,
-    'android-aarch64-debug': AndroidArtifactJob,
-    'linux-opt': LinuxArtifactJob,
-    'linux-pgo': LinuxArtifactJob,
-    'linux-debug': LinuxArtifactJob,
-    'linux64-opt': LinuxArtifactJob,
-    'linux64-pgo': LinuxArtifactJob,
-    'linux64-debug': LinuxArtifactJob,
-    'macosx64-opt': MacArtifactJob,
-    'macosx64-debug': MacArtifactJob,
-    'win32-opt': WinArtifactJob,
-    'win32-pgo': WinArtifactJob,
-    'win32-debug': WinArtifactJob,
-    'win64-opt': WinArtifactJob,
-    'win64-pgo': WinArtifactJob,
-    'win64-debug': WinArtifactJob,
-    'win64-aarch64-opt': WinArtifactJob,
-    'win64-aarch64-debug': WinArtifactJob,
+    j: {
+        'android': AndroidArtifactJob,
+        'linux': LinuxArtifactJob,
+        'macosx': MacArtifactJob,
+        'win': WinArtifactJob,
+    }[startswithwhich(j, ('android', 'linux', 'macosx', 'win'))]
+    for j in JOB_CHOICES
 }
 
 
