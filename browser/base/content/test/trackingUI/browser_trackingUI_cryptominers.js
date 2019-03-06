@@ -6,6 +6,7 @@
 
 const TRACKING_PAGE = "http://example.org/browser/browser/base/content/test/trackingUI/trackingPage.html";
 const CM_PREF = "privacy.trackingprotection.cryptomining.enabled";
+let cmHistogram;
 
 add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({set: [
@@ -15,9 +16,14 @@ add_task(async function setup() {
     [ "privacy.trackingprotection.annotate_channels", false ],
     [ "privacy.trackingprotection.fingerprinting.enabled", false ],
   ]});
+  cmHistogram = Services.telemetry.getHistogramById("CRYPTOMINERS_BLOCKED_COUNT");
+  registerCleanupFunction(() => {
+    cmHistogram.clear();
+  });
 });
 
 async function testIdentityState(hasException) {
+  cmHistogram.clear();
   let promise = BrowserTestUtils.openNewForegroundTab({url: TRACKING_PAGE, gBrowser});
   let [tab] = await Promise.all([promise, waitForContentBlockingEvent()]);
 
@@ -49,10 +55,13 @@ async function testIdentityState(hasException) {
     await loaded;
   }
 
+  testTelemetry(1, 1, hasException);
+
   BrowserTestUtils.removeTab(tab);
 }
 
 async function testSubview(hasException) {
+  cmHistogram.clear();
   let promise = BrowserTestUtils.openNewForegroundTab({url: TRACKING_PAGE, gBrowser});
   let [tab] = await Promise.all([promise, waitForContentBlockingEvent()]);
 
@@ -100,7 +109,16 @@ async function testSubview(hasException) {
     await loaded;
   }
 
+  testTelemetry(1, 1, hasException);
+
   BrowserTestUtils.removeTab(tab);
+}
+
+function testTelemetry(pagesVisited, pagesWithBlockableContent, hasException) {
+  let results = cmHistogram.snapshot();
+  Assert.equal(results.values[0], pagesVisited, "The correct number of page loads have been recorded");
+  let expectedValue = hasException ? 2 : 1;
+  Assert.equal(results.values[expectedValue], pagesWithBlockableContent, "The correct number of cryptominers have been recorded as blocked or allowed.");
 }
 
 add_task(async function test() {
