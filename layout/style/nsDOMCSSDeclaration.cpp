@@ -194,7 +194,7 @@ nsDOMCSSDeclaration::SetProperty(const nsAString& aPropertyName,
   bool important;
   if (aPriority.IsEmpty()) {
     important = false;
-  } else if (aPriority.EqualsLiteral("important")) {
+  } else if (aPriority.LowerCaseEqualsASCII("important")) {
     important = true;
   } else {
     // XXX silent failure?
