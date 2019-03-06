@@ -59,9 +59,6 @@ ChromeUtils.defineModuleGetter(this, "Prompt",
 ChromeUtils.defineModuleGetter(this, "HelperApps",
                                "resource://gre/modules/HelperApps.jsm");
 
-ChromeUtils.defineModuleGetter(this, "SSLExceptions",
-                               "resource://gre/modules/SSLExceptions.jsm");
-
 ChromeUtils.defineModuleGetter(this, "FormHistory",
                                "resource://gre/modules/FormHistory.jsm");
 
@@ -5048,18 +5045,27 @@ var ErrorPageEventHandler = {
           let temp = errorDoc.getElementById("temporaryExceptionButton");
           if (target == temp || target == perm) {
             // Handle setting an cert exception and reloading the page
-            try {
-              // Add a new SSL exception for this URL
-              let uri = Services.io.newURI(errorDoc.location.href);
-              let sslExceptions = new SSLExceptions();
-
-              if (target == perm)
-                sslExceptions.addPermanentException(uri, errorDoc.defaultView);
-              else
-                sslExceptions.addTemporaryException(uri, errorDoc.defaultView);
-            } catch (e) {
-              dump("Failed to set cert exception: " + e + "\n");
+            let uri = Services.io.newURI(errorDoc.location.href);
+            let docShell = BrowserApp.selectedBrowser.docShell;
+            let securityInfo = docShell.failedChannel.securityInfo;
+            securityInfo.QueryInterface(Ci.nsITransportSecurityInfo);
+            let cert = securityInfo.serverCert;
+            let overrideService = Cc["@mozilla.org/security/certoverride;1"]
+                                    .getService(Ci.nsICertOverrideService);
+            let flags = 0;
+            if (securityInfo.isUntrusted) {
+              flags |= overrideService.ERROR_UNTRUSTED;
             }
+            if (securityInfo.isDomainMismatch) {
+              flags |= overrideService.ERROR_MISMATCH;
+            }
+            if (securityInfo.isNotValidAtThisTime) {
+              flags |= overrideService.ERROR_TIME;
+            }
+            let temporary = (target == temp) ||
+                            PrivateBrowsingUtils.isWindowPrivate(errorDoc.defaultView);
+            overrideService.rememberValidityOverride(uri.asciiHost, uri.port, cert, flags,
+                                                     temporary);
             errorDoc.location.reload();
           } else if (target == errorDoc.getElementById("getMeOutOfHereButton")) {
             errorDoc.location = "about:home";
