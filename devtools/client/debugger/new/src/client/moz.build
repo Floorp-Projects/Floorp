@@ -8,7 +8,7 @@ DIRS += [
     'firefox',
 ]
 
-CompiledModules(
+DebuggerModules(
     'chrome.js',
     'firefox.js',
     'index.js',

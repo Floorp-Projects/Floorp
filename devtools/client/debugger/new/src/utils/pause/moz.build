@@ -9,7 +9,7 @@ DIRS += [
     'scopes',
 ]
 
-CompiledModules(
+DebuggerModules(
     'index.js',
     'why.js',
 )
