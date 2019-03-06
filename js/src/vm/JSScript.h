@@ -1447,6 +1447,9 @@ class alignas(JS::Value) PrivateScriptData final {
   static bool Clone(JSContext* cx, js::HandleScript src, js::HandleScript dst,
                     js::MutableHandle<JS::GCVector<js::Scope*>> scopes);
 
+  static bool InitFromEmitter(JSContext* cx, js::HandleScript script,
+                              js::frontend::BytecodeEmitter* bce);
+
   void traceChildren(JSTracer* trc);
 };
 
@@ -1864,6 +1867,10 @@ class JSScript : public js::gc::TenuredCell {
       JSContext* cx, js::HandleScript src, js::HandleScript dst,
       js::MutableHandle<JS::GCVector<js::Scope*>> scopes);
 
+  friend bool js::PrivateScriptData::InitFromEmitter(
+      JSContext* cx, js::HandleScript script,
+      js::frontend::BytecodeEmitter* bce);
+
   friend JSScript* js::detail::CopyScript(
       JSContext* cx, js::HandleScript src,
       js::HandleScriptSourceObject sourceObject,
@@ -1911,6 +1918,7 @@ class JSScript : public js::gc::TenuredCell {
  private:
   // Assert that jump targets are within the code array of the script.
   void assertValidJumpTargets() const;
+
  public:
 #endif
 
