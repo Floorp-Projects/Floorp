@@ -9,7 +9,7 @@ job-defaults:
             by-test-platform:
                 android-em.*:
                     - android/android_common.py
-                    - android/androidarm_4_3.py
+                    - android/androidx86_7_0.py
                 macosx.*:
                     - marionette/prod_config.py
                     - marionette/mac_taskcluster_config.py
@@ -22,18 +22,9 @@ job-defaults:
 marionette:
     description: "Marionette unittest run"
     treeherder-symbol: Mn
-    max-run-time:
-        by-test-platform:
-            android-em.*: 3600
-            default: 5400
-    instance-size:
-        by-test-platform:
-            android-em.*: xlarge
-            default: default
-    chunks:
-        by-test-platform:
-            android-em.*: 10
-            default: 1
+    max-run-time: 5400
+    instance-size: default
+    chunks: 1
 
 marionette-headless:
     description: "Marionette headless unittest run"
