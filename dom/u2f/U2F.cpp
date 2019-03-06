@@ -15,6 +15,10 @@
 #include "nsNetUtil.h"
 #include "nsURLParsers.h"
 
+#ifdef OS_WIN
+#include "WinWebAuthnManager.h"
+#endif
+
 using namespace mozilla::ipc;
 
 // Forward decl because of nsHTMLDocument.h's complex dependency on
@@ -253,7 +257,13 @@ void U2F::Register(const nsAString& aAppId,
     return;
   }
 
+#ifdef OS_WIN
+  if (!WinWebAuthnManager::AreWebAuthNApisAvailable()) {
+    ListenForVisibilityEvents();
+  }
+#else
   ListenForVisibilityEvents();
+#endif
 
   NS_ConvertUTF16toUTF8 clientData(clientDataJSON);
   uint32_t adjustedTimeoutMillis = AdjustedTimeoutMillis(opt_aTimeoutSeconds);
@@ -391,7 +401,13 @@ void U2F::Sign(const nsAString& aAppId, const nsAString& aChallenge,
     return;
   }
 
+#ifdef OS_WIN
+  if (!WinWebAuthnManager::AreWebAuthNApisAvailable()) {
+    ListenForVisibilityEvents();
+  }
+#else
   ListenForVisibilityEvents();
+#endif
 
   // Always blank for U2F
   nsTArray<WebAuthnExtension> extensions;
