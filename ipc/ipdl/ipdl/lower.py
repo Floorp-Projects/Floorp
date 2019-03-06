@@ -1856,6 +1856,28 @@ class _ParamTraits():
                                  args=[ExprLiteral.String(reason)]))
 
     @classmethod
+    def writeSentinel(cls, msgvar, sentinelKey):
+        return [
+            Whitespace('// Sentinel = ' + repr(sentinelKey) + '\n', indent=True),
+            StmtExpr(ExprCall(ExprSelect(msgvar, '->', 'WriteSentinel'),
+                              args=[ExprLiteral.Int(hashfunc(sentinelKey))]))
+        ]
+
+    @classmethod
+    def readSentinel(cls, msgvar, itervar, sentinelKey, sentinelFail):
+        # Read the sentinel
+        assert sentinelKey
+        read = ExprCall(ExprSelect(msgvar, '->', 'ReadSentinel'),
+                        args=[itervar, ExprLiteral.Int(hashfunc(sentinelKey))])
+        ifsentinel = StmtIf(ExprNot(read))
+        ifsentinel.addifstmts(sentinelFail)
+
+        return [
+            Whitespace('// Sentinel = ' + repr(sentinelKey) + '\n', indent=True),
+            ifsentinel,
+        ]
+
+    @classmethod
     def write(cls, var, msgvar, actor, ipdltype=None):
         # WARNING: This doesn't set AutoForActor for you, make sure this is
         # only called when the actor is already correctly set.
@@ -1874,10 +1896,8 @@ class _ParamTraits():
 
         block.addstmts([
             StmtExpr(cls.write(var, msgvar, actor, ipdltype)),
-            Whitespace('// Sentinel = ' + repr(sentinelKey) + '\n', indent=True),
-            StmtExpr(ExprCall(ExprSelect(msgvar, '->', 'WriteSentinel'),
-                              args=[ExprLiteral.Int(hashfunc(sentinelKey))]))
         ])
+        block.addstmts(cls.writeSentinel(msgvar, sentinelKey))
         return block
 
     @classmethod
@@ -1901,15 +1921,8 @@ class _ParamTraits():
             ifnull.addifstmts(errfn(*paramtype))
             block.addstmt(ifnull)
 
-        # Read the sentinel
-        assert sentinelKey
-        block.addstmt(Whitespace('// Sentinel = ' + repr(sentinelKey) + '\n',
-                                 indent=True))
-        read = ExprCall(ExprSelect(msgvar, '->', 'ReadSentinel'),
-                        args=[itervar, ExprLiteral.Int(hashfunc(sentinelKey))])
-        ifsentinel = StmtIf(ExprNot(read))
-        ifsentinel.addifstmts(errfnSentinel(*paramtype))
-        block.addstmt(ifsentinel)
+        block.addstmts(cls.readSentinel(msgvar, itervar, sentinelKey,
+                                        errfnSentinel(*paramtype)))
 
         return block
 
