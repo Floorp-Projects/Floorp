@@ -11,6 +11,8 @@
 #include "mozilla/Range.h"
 #include "mozilla/TextUtils.h"
 
+#include <type_traits>  // std::is_same
+
 #include "jsapi.h"
 #include "jsfriendapi.h"
 
@@ -1331,6 +1333,24 @@ MOZ_ALWAYS_INLINE JSAtom* JSFlatString::morphAtomizedStringIntoPermanentAtom(
 
 namespace js {
 
+/**
+ * An indexable characters class exposing unaligned, little-endian encoded
+ * char16_t data.
+ */
+class LittleEndianChars {
+ public:
+  explicit constexpr LittleEndianChars(const uint8_t* leTwoByte)
+      : current(leTwoByte) {}
+
+  constexpr char16_t operator[](size_t index) const {
+    size_t offset = index * sizeof(char16_t);
+    return (current[offset + 1] << 8) | current[offset];
+  }
+
+ private:
+  const uint8_t* current;
+};
+
 class StaticStrings {
  private:
   /* Bigger chars cannot be in a length-2 string. */
@@ -1382,8 +1402,14 @@ class StaticStrings {
   static bool isStatic(JSAtom* atom);
 
   /* Return null if no static atom exists for the given (chars, length). */
-  template <typename CharT>
-  MOZ_ALWAYS_INLINE JSAtom* lookup(const CharT* chars, size_t length) {
+  template <typename Chars>
+  MOZ_ALWAYS_INLINE JSAtom* lookup(Chars chars, size_t length) {
+    static_assert(std::is_same<Chars, const Latin1Char*>::value ||
+                      std::is_same<Chars, const char16_t*>::value ||
+                      std::is_same<Chars, LittleEndianChars>::value,
+                  "for understandability, |chars| must be one of a few "
+                  "identified types");
+
     switch (length) {
       case 1: {
         char16_t c = chars[0];
@@ -1421,6 +1447,19 @@ class StaticStrings {
     }
 
     return nullptr;
+  }
+
+  template <typename CharT, typename = typename std::enable_if<
+                                std::is_same<CharT, char>::value ||
+                                std::is_same<CharT, const char>::value ||
+                                !std::is_const<CharT>::value>::type>
+  MOZ_ALWAYS_INLINE JSAtom* lookup(CharT* chars, size_t length) {
+    // Collapse calls for |char*| or |const char*| into |const unsigned char*|
+    // to avoid excess instantiations.  Collapse the remaining |CharT*| to
+    // |const CharT*| for the same reason.
+    using UnsignedCharT = typename std::make_unsigned<CharT>::type;
+    UnsignedCharT* unsignedChars = reinterpret_cast<UnsignedCharT*>(chars);
+    return lookup(const_cast<const UnsignedCharT*>(unsignedChars), length);
   }
 
  private:
@@ -1559,6 +1598,13 @@ inline JSFlatString* NewStringCopyUTF8Z(JSContext* cx,
 JSString* NewMaybeExternalString(JSContext* cx, const char16_t* s, size_t n,
                                  const JSStringFinalizer* fin,
                                  bool* allocatedExternal);
+
+/**
+ * Allocate a new string consisting of |chars[0..length]| characters.
+ */
+extern JSFlatString* NewStringFromLittleEndianNoGC(JSContext* cx,
+                                                   LittleEndianChars chars,
+                                                   size_t length);
 
 JS_STATIC_ASSERT(sizeof(HashNumber) == 4);
 
