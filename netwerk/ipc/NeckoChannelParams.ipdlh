@@ -28,6 +28,24 @@ namespace mozilla {
 namespace net {
 
 //-----------------------------------------------------------------------------
+// CookieSettings IPDL structs
+//-----------------------------------------------------------------------------
+
+struct CookiePermissionData
+{
+  PrincipalInfo principalInfo;
+  uint32_t cookiePermission;
+};
+
+struct CookieSettingsArgs
+{
+  // Copy of the cookie behavior and permissions for the top-level document.
+  uint32_t cookieBehavior;
+  CookiePermissionData[] cookiePermissions;
+  bool isFixed;
+};
+
+//-----------------------------------------------------------------------------
 // Preferrer alternative data type
 //-----------------------------------------------------------------------------
 
@@ -125,6 +143,8 @@ struct LoadInfoArgs
   nsString                    cspNonce;
   bool                        isFromProcessingFrameAttributes;
   CrossOriginOpenerPolicy     openerPolicy;
+
+  CookieSettingsArgs cookieSettings;
 };
 
 /**
@@ -157,6 +177,8 @@ struct ParentLoadInfoForwarderArgs
   bool documentHasLoaded;
 
   CrossOriginOpenerPolicy openerPolicy;
+
+  CookieSettingsArgs? cookieSettings;
 
   // IMPORTANT: when you add new properites here you must also update
   // LoadInfoToParentLoadInfoForwarder and MergeParentLoadInfoForwarder
