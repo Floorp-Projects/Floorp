@@ -15,6 +15,9 @@ permalink: /changelog/
 * **browser-menu**
   * ⚠️ **This is a breaking API change!**: Removed redundant `BrowserMenuImageText` `contentDescription`
 
+* **feature-downloads**
+  * Fixing bug #2265. In some occasions, when trying to download a file, the download failed and the download notification shows "Unsuccessful download".
+
 # 0.45.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.44.0...v0.45.0)

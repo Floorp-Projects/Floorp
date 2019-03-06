@@ -73,15 +73,15 @@ class DownloadManager(
 
         val request = Request(Uri.parse(download.url))
             .setNotificationVisibility(VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
-            .setMimeType(download.contentType)
-            .addRequestHeader("User-Agent", download.userAgent)
 
-        if (cookie.isNotEmpty()) {
-            request.addRequestHeader("Cookie", cookie)
+        if (!download.contentType.isNullOrEmpty()) {
+            request.setMimeType(download.contentType)
         }
 
-        if (refererURL.isNotEmpty()) {
-            request.addRequestHeader("Referer", refererURL)
+        with(request) {
+            addRequestHeaderSafely("User-Agent", download.userAgent)
+            addRequestHeaderSafely("Cookie", cookie)
+            addRequestHeaderSafely("Referer", refererURL)
         }
 
         request.setDestinationInExternalPublicDir(download.destinationDirectory, fileName)
@@ -158,4 +158,11 @@ class DownloadManager(
         Toast.makeText(applicationContext, R.string.mozac_feature_downloads_file_not_supported, Toast.LENGTH_LONG)
             .show()
     }
+}
+
+internal fun Request.addRequestHeaderSafely(name: String, value: String?) {
+    if (value.isNullOrEmpty()) {
+        return
+    }
+    addRequestHeader(name, value)
 }

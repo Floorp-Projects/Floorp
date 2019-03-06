@@ -7,16 +7,21 @@ package mozilla.components.feature.downloads
 import android.Manifest.permission.INTERNET
 import android.Manifest.permission.WRITE_EXTERNAL_STORAGE
 import android.app.DownloadManager.ACTION_DOWNLOAD_COMPLETE
+import android.app.DownloadManager.Request
 import android.content.Context
 import android.content.Intent
 import androidx.test.core.app.ApplicationProvider
-import org.junit.Assert.assertFalse
 import mozilla.components.browser.session.Download
+import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.grantPermission
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.ArgumentMatchers.anyString
+import org.mockito.Mockito.verify
+import org.mockito.Mockito.verifyZeroInteractions
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
@@ -97,6 +102,25 @@ class DownloadManagerTest {
         notifyDownloadCompleted(id)
 
         assertFalse(downloadCompleted)
+    }
+
+    @Test
+    fun `no null or empty headers can be added to the DownloadManager`() {
+        val mockRequest: Request = mock()
+
+        mockRequest.addRequestHeaderSafely("User-Agent", "")
+
+        verifyZeroInteractions(mockRequest)
+
+        mockRequest.addRequestHeaderSafely("User-Agent", null)
+
+        verifyZeroInteractions(mockRequest)
+
+        val fireFox = "Mozilla/5.0 (Windows NT 5.1; rv:7.0.1) Gecko/20100101 Firefox/7.0.1"
+
+        mockRequest.addRequestHeaderSafely("User-Agent", fireFox)
+
+        verify(mockRequest).addRequestHeader(anyString(), anyString())
     }
 
     private fun notifyDownloadCompleted(id: Long) {
