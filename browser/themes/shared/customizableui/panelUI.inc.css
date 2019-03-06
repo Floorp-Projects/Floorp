@@ -250,6 +250,11 @@ panel[photon] > .panel-arrowcontainer > .panel-arrowcontent {
   height: 14px;
 }
 
+/* Don't show the checkmark if there is a description */
+#confirmation-hint.with-description #confirmation-hint-checkmark-animation-container  {
+  display: none;
+}
+
 #confirmation-hint-checkmark-animation-container[animate] > #confirmation-hint-checkmark-image {
   position: absolute;
   background-image: url(chrome://browser/skin/check-animation.svg);
@@ -291,6 +296,14 @@ panel[photon] > .panel-arrowcontainer > .panel-arrowcontent {
 #confirmation-hint-message {
   margin-inline-start: 7px;
   margin-inline-end: 0;
+}
+
+#confirmation-hint.with-description #confirmation-hint-message {
+  font-size: 1.2em;
+  font-weight: 600;
+}
+
+#confirmation-hint:not(.with-description) #confirmation-hint-message {
   transform: scale(.8);
   opacity: 0;
   transition: transform 120ms cubic-bezier(.25,1.27,.35,1.18),

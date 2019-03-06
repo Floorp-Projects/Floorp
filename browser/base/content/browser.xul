@@ -581,9 +581,12 @@ xmlns="http://www.w3.org/1999/xhtml"
            tabspecific="true"
            noautofocus="true">
       <hbox id="confirmation-hint-checkmark-animation-container">
-        <image id="confirmation-hint-checkmark-image"/>
+       <image id="confirmation-hint-checkmark-image"/>
       </hbox>
-      <label id="confirmation-hint-message"/>
+      <vbox>
+       <label id="confirmation-hint-message"/>
+       <label id="confirmation-hint-description"/>
+      </vbox>
     </panel>
 
     <menupopup id="pageActionContextMenu"
