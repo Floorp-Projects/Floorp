@@ -21,7 +21,7 @@ typedef nsTArray<_Prefix> _PrefixArray;
 
 #define GTEST_SAFEBROWSING_DIR NS_LITERAL_CSTRING("safebrowsing")
 #define GTEST_TABLE NS_LITERAL_CSTRING("gtest-malware-proto")
-#define GTEST_PREFIXFILE NS_LITERAL_CSTRING("gtest-malware-proto.pset")
+#define GTEST_PREFIXFILE NS_LITERAL_CSTRING("gtest-malware-proto.vlpset")
 
 // This function removes common elements of inArray and outArray from
 // outArray. This is used by partial update testcase to ensure partial update

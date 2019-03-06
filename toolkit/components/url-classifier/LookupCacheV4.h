@@ -51,11 +51,21 @@ class LookupCacheV4 final : public LookupCache {
  protected:
   virtual nsresult ClearPrefixes() override;
   virtual size_t SizeOfPrefixSet() const override;
+  virtual nsCString GetPrefixSetSuffix() const override;
+  nsCString GetMetadataSuffix() const;
 
  private:
   ~LookupCacheV4() {}
 
   virtual int Ver() const override { return VER; }
+
+  struct Header {
+    uint32_t magic;
+    uint32_t version;
+  };
+
+  nsresult SanityCheck(const Header& aHeader);
+  nsresult VerifyCRC32(nsCOMPtr<nsIInputStream>& aIn);
 
   RefPtr<VariableLengthPrefixSet> mVLPrefixSet;
 };
