@@ -599,8 +599,11 @@ class AndroidMixin(object):
 
         for t in self.timers:
             t.cancel()
-        self.check_for_ANRs()
-        self.check_for_tombstones()
+        if self.worst_status != TBPL_RETRY:
+            self.check_for_ANRs()
+            self.check_for_tombstones()
+        else:
+            self.info("ANR and tombstone checks skipped due to TBPL_RETRY")
         self.logcat_stop()
         if self.is_emulator:
             self.kill_processes(self.config["emulator_process_name"])
