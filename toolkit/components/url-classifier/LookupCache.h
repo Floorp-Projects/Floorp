@@ -254,6 +254,7 @@ class LookupCache {
   nsresult LoadPrefixSet();
 
   virtual size_t SizeOfPrefixSet() const = 0;
+  virtual nsCString GetPrefixSetSuffix() const = 0;
 
   virtual int Ver() const = 0;
 
@@ -321,6 +322,7 @@ class LookupCacheV2 final : public LookupCache {
 
   virtual nsresult ClearPrefixes() override;
   virtual size_t SizeOfPrefixSet() const override;
+  virtual nsCString GetPrefixSetSuffix() const override;
 
  private:
   ~LookupCacheV2() {}
