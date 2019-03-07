@@ -27,7 +27,7 @@ describe("<ImpressionStats>", () => {
   }
 
   const DEFAULT_PROPS = {
-    rows: [{id: 1}, {id: 2}, {id: 3}],
+    rows: [{id: 1, pos: 0}, {id: 2, pos: 1}, {id: 3, pos: 2}],
     source: SOURCE,
     IntersectionObserver: buildIntersectionObserver(FullIntersectEntries),
     document: {
@@ -87,7 +87,8 @@ describe("<ImpressionStats>", () => {
     const [action] = dispatch.firstCall.args;
     assert.equal(action.type, at.DISCOVERY_STREAM_IMPRESSION_STATS);
     assert.equal(action.data.source, SOURCE);
-    assert.deepEqual(action.data.tiles, [{id: 1}, {id: 2}, {id: 3}]);
+    assert.deepEqual(action.data.tiles,
+      [{id: 1, pos: 0}, {id: 2, pos: 1}, {id: 3, pos: 2}]);
   });
   it("should send a DISCOVERY_STREAM_SPOC_IMPRESSION when the wrapped item has a campaignId", () => {
     const dispatch = sinon.spy();
@@ -111,14 +112,15 @@ describe("<ImpressionStats>", () => {
     // Simulating the full intersection change with a row change
     wrapper.setProps({
       ...props,
-      ...{rows: [{id: 1}, {id: 2}, {id: 3}]},
+      ...{rows: [{id: 1, pos: 0}, {id: 2, pos: 1}, {id: 3, pos: 2}]},
       ...{IntersectionObserver: buildIntersectionObserver(FullIntersectEntries)},
     });
 
     assert.calledOnce(dispatch);
 
     const [action] = dispatch.firstCall.args;
-    assert.deepEqual(action.data.tiles, [{id: 1}, {id: 2}, {id: 3}]);
+    assert.deepEqual(action.data.tiles,
+      [{id: 1, pos: 0}, {id: 2, pos: 1}, {id: 3, pos: 2}]);
   });
   it("should send an impression if props are updated and props.rows are different", () => {
     const props = {dispatch: sinon.spy()};
@@ -126,7 +128,7 @@ describe("<ImpressionStats>", () => {
     props.dispatch.resetHistory();
 
     // New rows
-    wrapper.setProps({...DEFAULT_PROPS, ...{rows: [{id: 4}]}});
+    wrapper.setProps({...DEFAULT_PROPS, ...{rows: [{id: 4, pos: 3}]}});
 
     assert.calledOnce(props.dispatch);
   });
@@ -181,8 +183,8 @@ describe("<ImpressionStats>", () => {
     const wrapper = renderImpressionStats(props);
 
     // Update twice
-    wrapper.setProps({...props, ...{rows: [{id: 123}]}});
-    wrapper.setProps({...props, ...{rows: [{id: 2432}]}});
+    wrapper.setProps({...props, ...{rows: [{id: 123, pos: 4}]}});
+    wrapper.setProps({...props, ...{rows: [{id: 2432, pos: 5}]}});
 
     assert.notCalled(props.dispatch);
 
@@ -193,6 +195,6 @@ describe("<ImpressionStats>", () => {
     // Make sure we only sent the latest event
     assert.calledOnce(props.dispatch);
     const [action] = props.dispatch.firstCall.args;
-    assert.deepEqual(action.data.tiles, [{id: 2432}]);
+    assert.deepEqual(action.data.tiles, [{id: 2432, pos: 5}]);
   });
 });

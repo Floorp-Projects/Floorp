@@ -20,13 +20,13 @@ export class ListItem extends React.PureComponent {
       this.props.dispatch(ac.UserEvent({
         event: "CLICK",
         source: this.props.type.toUpperCase(),
-        action_position: this.props.index,
+        action_position: this.props.pos,
       }));
 
       this.props.dispatch(ac.ImpressionStats({
         source: this.props.type.toUpperCase(),
         click: 0,
-        tiles: [{id: this.props.id, pos: this.props.index}],
+        tiles: [{id: this.props.id, pos: this.props.pos}],
       }));
     }
   }
@@ -53,7 +53,7 @@ export class ListItem extends React.PureComponent {
           <div className="ds-list-image" style={{backgroundImage: `url(${this.props.image_src})`}} />
           <ImpressionStats
             campaignId={this.props.campaignId}
-            rows={[{id: this.props.id}]}
+            rows={[{id: this.props.id, pos: this.props.pos}]}
             dispatch={this.props.dispatch}
             source={this.props.type} />
         </SafeAnchor>
@@ -80,7 +80,7 @@ export function _List(props) {
       excerpt={rec.excerpt}
       id={rec.id}
       image_src={rec.image_src}
-      index={index}
+      pos={rec.pos}
       title={rec.title}
       context={rec.context}
       type={props.type}

@@ -35,6 +35,8 @@ export const selectLayoutRender = createSelector(
       return data;
     }
 
+    const positions = {};
+
     return layout.map(row => ({
       ...row,
 
@@ -45,6 +47,8 @@ export const selectLayoutRender = createSelector(
           return component;
         }
 
+        positions[component.type] = positions[component.type] || 0;
+
         let {data} = feeds.data[component.feed.url];
 
         if (component && component.properties && component.properties.offset) {
@@ -54,7 +58,21 @@ export const selectLayoutRender = createSelector(
           };
         }
 
-        return {...component, data: maybeInjectSpocs(data, component.spocs)};
+        data = maybeInjectSpocs(data, component.spocs);
+
+        let items = 0;
+        if (component.properties && component.properties.items) {
+          items = Math.min(component.properties.items, data.recommendations.length);
+        }
+
+        // loop through a component items
+        // Store the items position sequentially for multiple components of the same type.
+        // Example: A second card grid starts pos offset from the last card grid.
+        for (let i = 0; i < items; i++) {
+          data.recommendations[i].pos = positions[component.type]++;
+        }
+
+        return {...component, data};
       }),
     }));
   }

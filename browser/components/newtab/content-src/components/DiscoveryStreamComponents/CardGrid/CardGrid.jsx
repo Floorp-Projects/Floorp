@@ -15,13 +15,13 @@ export class CardGrid extends React.PureComponent {
     let cards = data.recommendations.slice(0, this.props.items).map((rec, index) => (
       <DSCard
         key={`dscard-${index}`}
+        pos={rec.pos}
         campaignId={rec.campaign_id}
         image_src={rec.image_src}
         title={rec.title}
         excerpt={rec.excerpt}
         url={rec.url}
         id={rec.id}
-        index={index}
         type={this.props.type}
         context={rec.context}
         dispatch={this.props.dispatch}
