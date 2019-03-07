@@ -4053,7 +4053,7 @@ struct {
     EXP(HelloRetryRequestCallback),
     EXP(InstallExtensionHooks),
     EXP(HkdfExtract),
-    EXP(HkdfDeriveSecret),
+    EXP(HkdfExpandLabel),
     EXP(KeyUpdate),
     EXP(MakeAead),
     EXP(RecordLayerData),
