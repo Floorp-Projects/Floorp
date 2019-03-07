@@ -46,14 +46,11 @@ function run_test() {
 
   Assert.equal(formatter.formatURL(advancedUrl), advancedUrlRef);
 
-  for (let val of ["MOZILLA_API_KEY", "GOOGLE_LOCATION_SERVICE_API_KEY", "GOOGLE_SAFEBROWSING_API_KEY", "BING_API_CLIENTID", "BING_API_KEY"]) {
+  for (let val of ["MOZILLA_API_KEY", "GOOGLE_API_KEY", "BING_API_CLIENTID", "BING_API_KEY"]) {
     let url = "http://test.mozilla.com/?val=%" + val + "%";
     Assert.notEqual(formatter.formatURL(url), url);
   }
 
-  let url_sb = "http://test.mozilla.com/%GOOGLE_SAFEBROWSING_API_KEY%/?val=%GOOGLE_SAFEBROWSING_API_KEY%";
-  Assert.equal(formatter.trimSensitiveURLs(formatter.formatURL(url_sb)), "http://test.mozilla.com/[trimmed-google-api-key]/?val=[trimmed-google-api-key]");
-
-  let url_gls = "http://test.mozilla.com/%GOOGLE_LOCATION_SERVICE_API_KEY%/?val=%GOOGLE_LOCATION_SERVICE_API_KEY%";
-  Assert.equal(formatter.trimSensitiveURLs(formatter.formatURL(url_gls)), "http://test.mozilla.com/[trimmed-google-api-key]/?val=[trimmed-google-api-key]");
+  let url = "http://test.mozilla.com/%GOOGLE_API_KEY%/?val=%GOOGLE_API_KEY%";
+  Assert.equal(formatter.trimSensitiveURLs(formatter.formatURL(url)), "http://test.mozilla.com/[trimmed-google-api-key]/?val=[trimmed-google-api-key]");
 }
