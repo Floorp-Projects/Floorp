@@ -1004,7 +1004,11 @@ class UrlbarInput {
 
   _on_blur(event) {
     this.formatValue();
-    this.view.close(UrlbarUtils.CANCEL_REASON.BLUR);
+    // Respect the autohide preference for easier inspecting/debugging via
+    // the browser toolbox.
+    if (!UrlbarPrefs.get("ui.popup.disable_autohide")) {
+      this.view.close(UrlbarUtils.CANCEL_REASON.BLUR);
+    }
   }
 
   _on_focus(event) {
