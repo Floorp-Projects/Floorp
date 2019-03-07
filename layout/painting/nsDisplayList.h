@@ -6468,14 +6468,16 @@ class nsDisplayTransform : public nsDisplayHitTestInfoItem {
    */
   nsDisplayTransform(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                      nsDisplayList* aList, const nsRect& aChildrenBuildingRect,
-                     uint32_t aIndex = 0, bool aAllowAsyncAnimation = false);
+                     uint32_t aIndex);
+
   nsDisplayTransform(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                      nsDisplayList* aList, const nsRect& aChildrenBuildingRect,
-                     ComputeTransformFunction aTransformGetter,
-                     uint32_t aIndex = 0);
+                     uint32_t aIndex, bool aAllowAsyncAnimation);
+
   nsDisplayTransform(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                      nsDisplayList* aList, const nsRect& aChildrenBuildingRect,
-                     const Matrix4x4& aTransform, uint32_t aIndex = 0);
+                     uint32_t aIndex,
+                     ComputeTransformFunction aTransformGetter);
 
 #ifdef NS_BUILD_REFCNT_LOGGING
   ~nsDisplayTransform() override { MOZ_COUNT_DTOR(nsDisplayTransform); }
