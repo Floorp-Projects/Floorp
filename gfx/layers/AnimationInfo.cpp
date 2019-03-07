@@ -221,8 +221,7 @@ void AnimationInfo::EnumerateGenerationOnFrame(
     return;
   }
 
-  FrameLayerBuilder::EnumerateGenerationForDedicatedLayers(
-      aFrame, LayerAnimationInfo::sDisplayItemTypes, aCallback);
+  FrameLayerBuilder::EnumerateGenerationForDedicatedLayers(aFrame, aCallback);
 }
 
 }  // namespace layers
