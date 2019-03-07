@@ -5,10 +5,9 @@
 package mozilla.components.concept.engine
 
 import android.graphics.Bitmap
-import android.support.annotation.CallSuper
+import androidx.annotation.CallSuper
 import mozilla.components.concept.engine.media.Media
 import mozilla.components.concept.engine.permission.PermissionRequest
-
 import mozilla.components.concept.engine.prompt.PromptRequest
 import mozilla.components.concept.engine.window.WindowRequest
 import mozilla.components.support.base.observer.Observable

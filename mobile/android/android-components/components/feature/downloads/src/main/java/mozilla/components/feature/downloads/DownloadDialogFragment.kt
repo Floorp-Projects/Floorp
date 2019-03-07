@@ -4,7 +4,7 @@
 package mozilla.components.feature.downloads
 
 import android.os.Bundle
-import android.support.v4.app.DialogFragment
+import androidx.fragment.app.DialogFragment
 import mozilla.components.browser.session.Download
 
 /**

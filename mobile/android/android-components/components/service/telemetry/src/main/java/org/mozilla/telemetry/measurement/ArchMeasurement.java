@@ -5,7 +5,7 @@
 package org.mozilla.telemetry.measurement;
 
 import android.os.Build;
-import android.support.annotation.VisibleForTesting;
+import androidx.annotation.VisibleForTesting;
 
 import java.util.Locale;
 

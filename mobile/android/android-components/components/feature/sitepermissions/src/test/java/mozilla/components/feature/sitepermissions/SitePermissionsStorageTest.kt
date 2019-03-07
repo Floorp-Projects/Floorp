@@ -4,10 +4,10 @@
 
 package mozilla.components.feature.sitepermissions
 
-import android.arch.paging.DataSource
-import android.arch.persistence.db.SupportSQLiteOpenHelper
-import android.arch.persistence.room.DatabaseConfiguration
-import android.arch.persistence.room.InvalidationTracker
+import androidx.paging.DataSource
+import androidx.room.DatabaseConfiguration
+import androidx.room.InvalidationTracker
+import androidx.sqlite.db.SupportSQLiteOpenHelper
 import mozilla.components.feature.sitepermissions.SitePermissions.Status.ALLOWED
 import mozilla.components.feature.sitepermissions.SitePermissions.Status.BLOCKED
 import mozilla.components.feature.sitepermissions.SitePermissions.Status.NO_DECISION

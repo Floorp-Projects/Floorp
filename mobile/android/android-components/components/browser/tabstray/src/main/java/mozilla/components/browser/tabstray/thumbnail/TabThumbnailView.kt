@@ -7,9 +7,9 @@
 package mozilla.components.browser.tabstray.thumbnail
 
 import android.content.Context
-import android.support.annotation.VisibleForTesting
-import android.support.v7.widget.AppCompatImageView
 import android.util.AttributeSet
+import androidx.annotation.VisibleForTesting
+import androidx.appcompat.widget.AppCompatImageView
 
 class TabThumbnailView(context: Context, attrs: AttributeSet) : AppCompatImageView(context, attrs) {
 

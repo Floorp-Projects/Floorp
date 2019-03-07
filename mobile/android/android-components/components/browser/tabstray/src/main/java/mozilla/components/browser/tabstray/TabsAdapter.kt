@@ -4,9 +4,9 @@
 
 package mozilla.components.browser.tabstray
 
-import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.recyclerview.widget.RecyclerView
 import mozilla.components.browser.session.Session
 import mozilla.components.concept.tabstray.TabsTray
 import mozilla.components.support.base.observer.Observable

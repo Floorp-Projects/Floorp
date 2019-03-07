@@ -6,10 +6,10 @@ package mozilla.components.feature.downloads
 import android.app.Dialog
 import android.content.Context
 import android.os.Bundle
-import android.support.annotation.StringRes
-import android.support.annotation.StyleRes
-import android.support.annotation.VisibleForTesting
-import android.support.v7.app.AlertDialog
+import androidx.annotation.StringRes
+import androidx.annotation.StyleRes
+import androidx.annotation.VisibleForTesting
+import androidx.appcompat.app.AlertDialog
 import mozilla.components.feature.downloads.R.string.mozac_feature_downloads_dialog_cancel
 import mozilla.components.feature.downloads.R.string.mozac_feature_downloads_dialog_download
 import mozilla.components.feature.downloads.R.string.mozac_feature_downloads_dialog_title
@@ -99,6 +99,6 @@ class SimpleDownloadDialogFragment : DownloadDialogFragment() {
     }
 
     private fun requireBundle(): Bundle {
-        return arguments ?: throw IllegalStateException("Fragment " + this + " arguments is not set.")
+        return arguments ?: throw IllegalStateException("Fragment $this arguments is not set.")
     }
 }

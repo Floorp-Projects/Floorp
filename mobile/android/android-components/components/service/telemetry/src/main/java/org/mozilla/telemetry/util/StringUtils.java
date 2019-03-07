@@ -4,8 +4,8 @@
 
 package org.mozilla.telemetry.util;
 
-import android.support.annotation.NonNull;
-import android.support.annotation.RestrictTo;
+import androidx.annotation.NonNull;
+import androidx.annotation.RestrictTo;
 
 @RestrictTo(RestrictTo.Scope.LIBRARY)
 public class StringUtils {

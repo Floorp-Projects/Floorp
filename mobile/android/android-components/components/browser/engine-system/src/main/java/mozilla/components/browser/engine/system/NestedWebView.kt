@@ -6,9 +6,8 @@ package mozilla.components.browser.engine.system
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.support.annotation.VisibleForTesting
-import android.support.v4.view.NestedScrollingChild
-import android.support.v4.view.NestedScrollingChildHelper
+import androidx.core.view.NestedScrollingChild
+import androidx.core.view.NestedScrollingChildHelper
 import android.view.MotionEvent
 import android.view.MotionEvent.ACTION_MOVE
 import android.view.MotionEvent.ACTION_DOWN
@@ -16,6 +15,8 @@ import android.view.MotionEvent.ACTION_UP
 import android.view.MotionEvent.ACTION_CANCEL
 import android.view.MotionEvent.obtain
 import android.webkit.WebView
+import androidx.annotation.VisibleForTesting
+import androidx.core.view.ViewCompat
 
 /**
  * WebView that supports nested scrolls (for using in a CoordinatorLayout).
@@ -81,7 +82,7 @@ class NestedWebView(context: Context) : WebView(context), NestedScrollingChild {
 
             ACTION_DOWN -> {
                 lastY = eventY
-                startNestedScroll(SCROLL_AXIS_VERTICAL)
+                startNestedScroll(ViewCompat.SCROLL_AXIS_VERTICAL)
             }
 
             // We don't care about other touch events

@@ -4,7 +4,7 @@
 
 package mozilla.components.browser.session
 
-import android.support.annotation.GuardedBy
+import androidx.annotation.GuardedBy
 import mozilla.components.browser.session.engine.EngineObserver
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession

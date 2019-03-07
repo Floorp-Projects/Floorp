@@ -5,7 +5,7 @@
 package mozilla.components.browser.engine.gecko.fetch
 
 import android.content.Context
-import android.support.annotation.VisibleForTesting
+import androidx.annotation.VisibleForTesting
 import mozilla.components.concept.fetch.Client
 import mozilla.components.concept.fetch.Headers
 import mozilla.components.concept.fetch.MutableHeaders

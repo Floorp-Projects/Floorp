@@ -4,11 +4,11 @@
 
 package mozilla.components.service.glean
 
-import android.arch.lifecycle.ProcessLifecycleOwner
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
-import android.support.annotation.VisibleForTesting
+import androidx.annotation.VisibleForTesting
+import androidx.lifecycle.ProcessLifecycleOwner
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.joinAll
 import mozilla.components.service.glean.GleanMetrics.GleanBaseline

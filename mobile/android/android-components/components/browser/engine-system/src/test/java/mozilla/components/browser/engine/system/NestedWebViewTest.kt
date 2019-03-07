@@ -5,12 +5,12 @@
 package mozilla.components.browser.engine.system
 
 import android.content.Context
-import android.support.v4.view.NestedScrollingChildHelper
-import android.support.v4.view.ViewCompat.SCROLL_AXIS_VERTICAL
 import android.view.MotionEvent.ACTION_CANCEL
 import android.view.MotionEvent.ACTION_DOWN
 import android.view.MotionEvent.ACTION_MOVE
 import android.view.MotionEvent.ACTION_UP
+import androidx.core.view.NestedScrollingChildHelper
+import androidx.core.view.ViewCompat.SCROLL_AXIS_VERTICAL
 import androidx.test.core.app.ApplicationProvider
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.mockMotionEvent

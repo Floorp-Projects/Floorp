@@ -4,7 +4,7 @@
 
 package mozilla.components.feature.findinpage
 
-import android.support.annotation.VisibleForTesting
+import androidx.annotation.VisibleForTesting
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.EngineView

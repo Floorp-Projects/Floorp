@@ -16,7 +16,7 @@ android {
         versionCode 1
         versionName "1.0"
 
-        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
     buildTypes {
@@ -83,11 +83,6 @@ android {
         if (flavors.contains("servo") && !flavors.contains("arm") && !flavors.contains("x86")) {
             setIgnore(true)
         }
-    }
-
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
     }
 }
 
@@ -167,10 +162,10 @@ dependencies {
     geckoReleaseX86Implementation Gecko.geckoview_release_x86
     geckoReleaseAarch64Implementation Gecko.geckoview_release_aarch64
 
-    implementation Dependencies.support_design
+    implementation Dependencies.google_material
 
     implementation Dependencies.kotlin_stdlib
 
-    implementation Dependencies.support_appcompat
-    implementation Dependencies.support_constraintlayout
+    implementation Dependencies.androidx_appcompat
+    implementation Dependencies.androidx_constraintlayout
 }

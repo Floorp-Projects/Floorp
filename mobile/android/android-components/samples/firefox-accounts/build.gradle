@@ -16,7 +16,7 @@ android {
         versionCode 1
         versionName "1.0"
 
-        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
     buildTypes {
@@ -40,11 +40,11 @@ dependencies {
     implementation project(':feature-qr')
     implementation project(':support-base')
 
-    implementation Dependencies.support_constraintlayout
+    implementation Dependencies.androidx_constraintlayout
 
     implementation Dependencies.kotlin_stdlib
     implementation Dependencies.kotlin_coroutines
 
-    implementation Dependencies.support_appcompat
-    implementation Dependencies.support_customtabs
+    implementation Dependencies.androidx_appcompat
+    implementation Dependencies.androidx_browser
 }

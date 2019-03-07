@@ -4,7 +4,7 @@
 
 package mozilla.components.feature.toolbar
 
-import android.support.annotation.ColorInt
+import androidx.annotation.ColorInt
 import mozilla.components.concept.toolbar.Toolbar
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.feature.session.SessionUseCases

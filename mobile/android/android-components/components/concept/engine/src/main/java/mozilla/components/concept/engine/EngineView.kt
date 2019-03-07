@@ -4,11 +4,10 @@
 
 package mozilla.components.concept.engine
 
-import android.arch.lifecycle.Lifecycle
-import android.arch.lifecycle.LifecycleObserver
-import android.arch.lifecycle.OnLifecycleEvent
 import android.graphics.Bitmap
 import android.view.View
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.OnLifecycleEvent
 
 /**
  * View component that renders web content.
@@ -77,7 +76,7 @@ interface EngineView {
 /**
  * [LifecycleObserver] which dispatches lifecycle events to an [EngineView].
  */
-class LifecycleObserver(val engineView: EngineView) : LifecycleObserver {
+class LifecycleObserver(val engineView: EngineView) : androidx.lifecycle.LifecycleObserver {
 
     @OnLifecycleEvent(Lifecycle.Event.ON_PAUSE)
     fun onPause() {

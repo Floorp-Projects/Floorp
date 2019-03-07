@@ -4,12 +4,12 @@
 
 package mozilla.components.support.base.feature
 
-import android.arch.lifecycle.Lifecycle
-import android.arch.lifecycle.LifecycleObserver
-import android.arch.lifecycle.LifecycleOwner
-import android.arch.lifecycle.OnLifecycleEvent
-import android.support.annotation.VisibleForTesting
 import android.view.View
+import androidx.annotation.VisibleForTesting
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleObserver
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.OnLifecycleEvent
 
 /**
  * Wrapper for [LifecycleAwareFeature] instances that keep a strong references to a [View]. This wrapper is helpful

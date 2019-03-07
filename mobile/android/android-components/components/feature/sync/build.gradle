@@ -29,7 +29,7 @@ dependencies {
     // its consumers. Use 'api' here instead of 'implementation' to make that easier.
     api project(':support-base')
 
-    implementation Dependencies.arch_workmanager
+    implementation Dependencies.androidx_work_runtime
 
     testImplementation Dependencies.testing_junit
     testImplementation Dependencies.testing_robolectric

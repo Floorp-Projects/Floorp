@@ -31,8 +31,8 @@ dependencies {
     implementation project(':ui-colors')
     implementation project(':support-ktx')
 
-    implementation Dependencies.support_appcompat
-    implementation Dependencies.support_design
+    implementation Dependencies.androidx_appcompat
+    implementation Dependencies.google_material
     implementation Dependencies.kotlin_stdlib
     implementation Dependencies.kotlin_coroutines
 

@@ -12,6 +12,8 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Config.kt)
 
+* ℹ️ **Migrated all components to [AndroidX](https://developer.android.com/jetpack/androidx).**
+
 * **feature-readerview**
   * 🆕 New component/feature that provides reader mode functionality. To see a complete and working example of how to integrate this new component, check out the `ReaderViewIntegration` class in our [Sample Browser](https://github.com/mozilla-mobile/android-components/tree/master/samples/browser).
   ```kotlin

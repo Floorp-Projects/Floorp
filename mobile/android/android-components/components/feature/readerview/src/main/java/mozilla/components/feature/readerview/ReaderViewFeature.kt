@@ -6,7 +6,7 @@ package mozilla.components.feature.readerview
 
 import android.content.Context
 import android.content.SharedPreferences
-import android.support.annotation.VisibleForTesting
+import androidx.annotation.VisibleForTesting
 import mozilla.components.browser.session.SelectionAwareSessionObserver
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager

@@ -6,9 +6,9 @@ package mozilla.components.feature.qr
 
 import android.Manifest.permission.CAMERA
 import android.content.Context
-import android.support.annotation.MainThread
-import android.support.annotation.VisibleForTesting
-import android.support.v4.app.FragmentManager
+import androidx.annotation.MainThread
+import androidx.annotation.VisibleForTesting
+import androidx.fragment.app.FragmentManager
 import mozilla.components.support.base.feature.BackHandler
 import mozilla.components.support.base.feature.LifecycleAwareFeature
 import mozilla.components.support.ktx.android.content.isPermissionGranted

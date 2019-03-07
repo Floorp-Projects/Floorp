@@ -6,15 +6,15 @@ package mozilla.components.feature.findinpage.view
 
 import android.content.Context
 import android.content.res.ColorStateList
-import android.support.annotation.VisibleForTesting
-import android.support.constraint.ConstraintLayout
-import android.support.v7.widget.AppCompatImageButton
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.AttributeSet
 import android.util.TypedValue.COMPLEX_UNIT_PX
 import android.widget.EditText
 import android.widget.TextView
+import androidx.annotation.VisibleForTesting
+import androidx.appcompat.widget.AppCompatImageButton
+import androidx.constraintlayout.widget.ConstraintLayout
 import mozilla.components.browser.session.Session
 import mozilla.components.feature.findinpage.R
 import mozilla.components.support.ktx.android.view.hideKeyboard

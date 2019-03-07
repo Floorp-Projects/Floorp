@@ -12,8 +12,6 @@ import android.net.http.SslError
 import android.os.Build
 import android.os.Handler
 import android.os.Message
-import android.support.annotation.VisibleForTesting
-import android.support.annotation.VisibleForTesting.PRIVATE
 import android.util.AttributeSet
 import android.view.View
 import android.webkit.CookieManager
@@ -37,6 +35,8 @@ import android.webkit.WebView.HitTestResult.SRC_ANCHOR_TYPE
 import android.webkit.WebView.HitTestResult.SRC_IMAGE_ANCHOR_TYPE
 import android.webkit.WebViewClient
 import android.widget.FrameLayout
+import androidx.annotation.VisibleForTesting
+import androidx.annotation.VisibleForTesting.PRIVATE
 import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.engine.system.matcher.UrlMatcher
 import mozilla.components.browser.engine.system.permission.SystemPermissionRequest

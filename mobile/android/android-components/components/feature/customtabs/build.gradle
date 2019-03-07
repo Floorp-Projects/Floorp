@@ -34,7 +34,7 @@ dependencies {
     implementation Dependencies.kotlin_stdlib
     implementation Dependencies.kotlin_coroutines
 
-    api Dependencies.support_customtabs
+    api Dependencies.androidx_browser
 
     testImplementation project(':support-test')
 

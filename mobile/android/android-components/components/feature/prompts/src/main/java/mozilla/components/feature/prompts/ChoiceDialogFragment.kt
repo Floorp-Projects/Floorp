@@ -8,13 +8,13 @@ import android.annotation.SuppressLint
 import android.app.Dialog
 import android.os.Bundle
 import android.os.Parcelable
-import android.support.annotation.VisibleForTesting
-import android.support.annotation.VisibleForTesting.PRIVATE
-import android.support.v7.app.AlertDialog
-import android.support.v7.widget.LinearLayoutManager
-import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
+import androidx.annotation.VisibleForTesting
+import androidx.annotation.VisibleForTesting.PRIVATE
+import androidx.appcompat.app.AlertDialog
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import mozilla.components.concept.engine.prompt.Choice
 
 private const val KEY_CHOICES = "KEY_CHOICES"
@@ -73,7 +73,7 @@ internal class ChoiceDialogFragment : PromptDialogFragment() {
     internal fun createDialogContentView(inflater: LayoutInflater): View {
         val view = inflater.inflate(R.layout.mozac_feature_choice_dialogs, null)
         view.findViewById<RecyclerView>(R.id.recyclerView).apply {
-            layoutManager = LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false)
+            layoutManager = LinearLayoutManager(context, RecyclerView.VERTICAL, false)
             adapter = ChoiceAdapter(this@ChoiceDialogFragment, inflater)
         }
         return view

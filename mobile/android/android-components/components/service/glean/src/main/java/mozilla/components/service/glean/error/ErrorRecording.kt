@@ -5,7 +5,7 @@
 
 package mozilla.components.service.glean.error
 
-import android.support.annotation.VisibleForTesting
+import androidx.annotation.VisibleForTesting
 import mozilla.components.service.glean.Dispatchers
 import mozilla.components.service.glean.private.CommonMetricData
 import mozilla.components.service.glean.private.CounterMetricType

@@ -40,7 +40,7 @@ dependencies {
 
     implementation Dependencies.kotlin_stdlib
     implementation Dependencies.kotlin_coroutines
-    implementation Dependencies.support_annotations
+    implementation Dependencies.androidx_annotation
 
     testImplementation project(':support-test')
     testImplementation project(':lib-fetch-httpurlconnection')

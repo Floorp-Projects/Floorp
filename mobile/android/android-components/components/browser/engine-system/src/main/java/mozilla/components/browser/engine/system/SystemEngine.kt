@@ -5,10 +5,10 @@
 package mozilla.components.browser.engine.system
 
 import android.content.Context
-import android.support.annotation.VisibleForTesting
 import android.util.AttributeSet
 import android.webkit.WebSettings
 import android.webkit.WebView
+import androidx.annotation.VisibleForTesting
 import mozilla.components.concept.engine.DefaultSettings
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession

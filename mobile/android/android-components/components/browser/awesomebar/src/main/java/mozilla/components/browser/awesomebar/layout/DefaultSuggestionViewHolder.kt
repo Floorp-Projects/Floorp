@@ -4,12 +4,12 @@
 
 package mozilla.components.browser.awesomebar.layout
 
-import android.support.annotation.VisibleForTesting
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.annotation.VisibleForTesting
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -121,7 +121,8 @@ internal class IconLoader(
     private val iconView: ImageView
 ) {
     private val scope = CoroutineScope(Dispatchers.Main)
-    @VisibleForTesting internal var iconJob: Job? = null
+    @VisibleForTesting
+    internal var iconJob: Job? = null
 
     fun load(suggestion: AwesomeBar.Suggestion) {
         cancel()

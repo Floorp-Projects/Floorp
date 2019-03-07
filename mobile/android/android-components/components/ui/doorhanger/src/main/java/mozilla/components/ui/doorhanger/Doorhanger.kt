@@ -7,12 +7,12 @@ package mozilla.components.ui.doorhanger
 import android.annotation.SuppressLint
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
-import android.support.annotation.VisibleForTesting
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
 import android.widget.PopupWindow
+import androidx.annotation.VisibleForTesting
 
 /**
  * A [Doorhanger] is a floating heads-up popup that can be anchored to a view. They are presented to notify the user

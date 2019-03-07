@@ -10,31 +10,30 @@ import android.app.Activity.RESULT_OK
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
-import android.support.annotation.VisibleForTesting
-import android.support.annotation.VisibleForTesting.PRIVATE
-import android.support.v4.app.Fragment
-import android.support.v4.app.FragmentManager
+import androidx.annotation.VisibleForTesting
+import androidx.annotation.VisibleForTesting.PRIVATE
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentManager
 import mozilla.components.browser.session.SelectionAwareSessionObserver
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.prompt.Choice
 import mozilla.components.concept.engine.prompt.PromptRequest
-import mozilla.components.concept.engine.prompt.PromptRequest.TextPrompt
-import mozilla.components.concept.engine.prompt.PromptRequest.Color
-import mozilla.components.concept.engine.prompt.PromptRequest.Authentication
 import mozilla.components.concept.engine.prompt.PromptRequest.Alert
+import mozilla.components.concept.engine.prompt.PromptRequest.Authentication
+import mozilla.components.concept.engine.prompt.PromptRequest.Color
+import mozilla.components.concept.engine.prompt.PromptRequest.File
+import mozilla.components.concept.engine.prompt.PromptRequest.MenuChoice
 import mozilla.components.concept.engine.prompt.PromptRequest.MultipleChoice
 import mozilla.components.concept.engine.prompt.PromptRequest.SingleChoice
-import mozilla.components.concept.engine.prompt.PromptRequest.MenuChoice
-import mozilla.components.concept.engine.prompt.PromptRequest.File
-import mozilla.components.feature.prompts.ChoiceDialogFragment.Companion.MULTIPLE_CHOICE_DIALOG_TYPE
+import mozilla.components.concept.engine.prompt.PromptRequest.TextPrompt
+import mozilla.components.concept.engine.prompt.PromptRequest.TimeSelection
 import mozilla.components.feature.prompts.ChoiceDialogFragment.Companion.MENU_CHOICE_DIALOG_TYPE
+import mozilla.components.feature.prompts.ChoiceDialogFragment.Companion.MULTIPLE_CHOICE_DIALOG_TYPE
 import mozilla.components.feature.prompts.ChoiceDialogFragment.Companion.SINGLE_CHOICE_DIALOG_TYPE
 import mozilla.components.support.base.feature.LifecycleAwareFeature
 import mozilla.components.support.ktx.android.content.isPermissionGranted
 import java.security.InvalidParameterException
-import mozilla.components.concept.engine.prompt.PromptRequest.TimeSelection
-
 import java.util.Date
 
 @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)

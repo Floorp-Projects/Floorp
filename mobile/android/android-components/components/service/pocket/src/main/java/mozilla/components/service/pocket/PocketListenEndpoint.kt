@@ -4,7 +4,7 @@
 
 package mozilla.components.service.pocket
 
-import android.support.annotation.WorkerThread
+import androidx.annotation.WorkerThread
 import mozilla.components.concept.fetch.Client
 import mozilla.components.service.pocket.PocketListenEndpoint.Companion.newInstance
 import mozilla.components.service.pocket.data.PocketListenArticleMetadata

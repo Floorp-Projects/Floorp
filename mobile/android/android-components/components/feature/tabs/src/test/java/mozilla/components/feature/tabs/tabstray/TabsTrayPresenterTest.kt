@@ -4,7 +4,7 @@
 
 package mozilla.components.feature.tabs.tabstray
 
-import android.arch.lifecycle.LifecycleOwner
+import androidx.lifecycle.LifecycleOwner
 import android.view.View
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager

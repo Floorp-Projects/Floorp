@@ -6,7 +6,7 @@ package mozilla.components.service.glean.storages
 
 import android.annotation.SuppressLint
 import android.content.SharedPreferences
-import android.support.annotation.VisibleForTesting
+import androidx.annotation.VisibleForTesting
 import mozilla.components.service.glean.private.CommonMetricData
 import mozilla.components.service.glean.private.TimeUnit
 import mozilla.components.service.glean.utils.getAdjustedTime

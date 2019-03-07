@@ -32,9 +32,9 @@ dependencies {
     implementation project(':ui-icons')
     implementation project(':ui-colors')
 
-    implementation Dependencies.support_appcompat
-    implementation Dependencies.support_cardview
-    api Dependencies.support_recyclerview
+    implementation Dependencies.androidx_appcompat
+    implementation Dependencies.androidx_cardview
+    api Dependencies.androidx_recyclerview
 
     implementation Dependencies.kotlin_stdlib
 

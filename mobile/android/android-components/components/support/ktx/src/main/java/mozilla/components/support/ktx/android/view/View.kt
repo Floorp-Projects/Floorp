@@ -7,7 +7,7 @@ package mozilla.components.support.ktx.android.view
 import android.content.Context
 import android.os.Handler
 import android.os.Looper
-import android.support.v4.view.ViewCompat
+import androidx.core.view.ViewCompat
 import android.view.View
 import android.view.inputmethod.InputMethodManager
 import mozilla.components.support.base.android.Padding

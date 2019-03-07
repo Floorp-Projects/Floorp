@@ -5,7 +5,7 @@
 package mozilla.components.service.glean.storages
 
 import android.content.Context
-import android.support.annotation.VisibleForTesting
+import androidx.annotation.VisibleForTesting
 import mozilla.components.service.glean.private.BooleanMetricType
 import mozilla.components.service.glean.private.CounterMetricType
 import mozilla.components.service.glean.private.DatetimeMetricType

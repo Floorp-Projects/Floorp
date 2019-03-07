@@ -5,7 +5,7 @@
 package mozilla.components.feature.intent
 
 import android.content.Intent
-import android.support.customtabs.CustomTabsIntent
+import androidx.browser.customtabs.CustomTabsIntent
 import mozilla.components.browser.search.SearchEngine
 import mozilla.components.browser.search.SearchEngineManager
 import mozilla.components.browser.session.Session

@@ -6,7 +6,7 @@ package mozilla.components.browser.engine.gecko.prompt
 
 import android.content.Context
 import android.net.Uri
-import android.support.annotation.VisibleForTesting
+import androidx.annotation.VisibleForTesting
 import mozilla.components.browser.engine.gecko.GeckoEngineSession
 import mozilla.components.concept.engine.prompt.Choice
 import mozilla.components.concept.engine.prompt.PromptRequest.TimeSelection

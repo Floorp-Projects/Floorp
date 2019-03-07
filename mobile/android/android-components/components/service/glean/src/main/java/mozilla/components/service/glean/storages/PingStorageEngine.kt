@@ -5,7 +5,7 @@
 package mozilla.components.service.glean.storages
 
 import android.content.Context
-import android.support.annotation.VisibleForTesting
+import androidx.annotation.VisibleForTesting
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.Dispatchers as KotlinDispatchers

@@ -7,8 +7,8 @@ package mozilla.components.feature.customtabs
 import android.app.Service
 import android.net.Uri
 import android.os.Bundle
-import android.support.customtabs.CustomTabsService
-import android.support.customtabs.CustomTabsSessionToken
+import androidx.browser.customtabs.CustomTabsService
+import androidx.browser.customtabs.CustomTabsSessionToken
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import mozilla.components.concept.engine.Engine
@@ -71,7 +71,7 @@ abstract class AbstractCustomTabsService : CustomTabsService() {
     }
 
     override fun postMessage(sessionToken: CustomTabsSessionToken?, message: String?, extras: Bundle?): Int {
-        return 0
+        return CustomTabsService.RESULT_FAILURE_DISALLOWED
     }
 
     override fun validateRelationship(

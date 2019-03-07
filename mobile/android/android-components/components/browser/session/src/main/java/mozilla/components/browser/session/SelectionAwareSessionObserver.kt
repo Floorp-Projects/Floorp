@@ -4,7 +4,7 @@
 
 package mozilla.components.browser.session
 
-import android.support.annotation.CallSuper
+import androidx.annotation.CallSuper
 
 /**
  * This class is a combination of [Session.Observer] and

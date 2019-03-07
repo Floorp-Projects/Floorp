@@ -7,10 +7,10 @@
 package mozilla.components.browser.menu.item
 
 import android.content.Context
-import android.support.v7.widget.AppCompatImageView
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.TextView
+import androidx.appcompat.widget.AppCompatImageView
 import androidx.test.core.app.ApplicationProvider
 import mozilla.components.browser.menu.BrowserMenu
 import mozilla.components.browser.menu.R

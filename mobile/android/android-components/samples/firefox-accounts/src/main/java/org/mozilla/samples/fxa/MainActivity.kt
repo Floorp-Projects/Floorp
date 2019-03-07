@@ -7,13 +7,13 @@ package org.mozilla.samples.fxa
 import android.content.Context
 import android.net.Uri
 import android.os.Bundle
-import android.support.v7.app.AppCompatActivity
-import android.support.customtabs.CustomTabsIntent
+import androidx.browser.customtabs.CustomTabsIntent
 import android.view.View
 import android.content.Intent
-import android.support.v4.app.ActivityCompat
 import android.widget.CheckBox
 import android.widget.TextView
+import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job

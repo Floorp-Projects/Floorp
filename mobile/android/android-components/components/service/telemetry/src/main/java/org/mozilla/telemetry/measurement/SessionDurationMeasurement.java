@@ -5,7 +5,7 @@
 package org.mozilla.telemetry.measurement;
 
 import android.content.SharedPreferences;
-import android.support.annotation.VisibleForTesting;
+import androidx.annotation.VisibleForTesting;
 
 import org.mozilla.telemetry.config.TelemetryConfiguration;
 

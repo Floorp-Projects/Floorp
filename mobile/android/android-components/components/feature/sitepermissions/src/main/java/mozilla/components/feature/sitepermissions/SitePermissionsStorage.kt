@@ -4,16 +4,16 @@
 
 package mozilla.components.feature.sitepermissions
 
-import android.arch.paging.DataSource
 import android.content.Context
-import android.support.annotation.VisibleForTesting
+import androidx.annotation.VisibleForTesting
+import androidx.paging.DataSource
 import mozilla.components.feature.sitepermissions.SitePermissions.Status
 import mozilla.components.feature.sitepermissions.SitePermissions.Status.ALLOWED
 import mozilla.components.feature.sitepermissions.SitePermissionsStorage.Permission.BLUETOOTH
-import mozilla.components.feature.sitepermissions.SitePermissionsStorage.Permission.MICROPHONE
 import mozilla.components.feature.sitepermissions.SitePermissionsStorage.Permission.CAMERA
 import mozilla.components.feature.sitepermissions.SitePermissionsStorage.Permission.LOCAL_STORAGE
 import mozilla.components.feature.sitepermissions.SitePermissionsStorage.Permission.LOCATION
+import mozilla.components.feature.sitepermissions.SitePermissionsStorage.Permission.MICROPHONE
 import mozilla.components.feature.sitepermissions.SitePermissionsStorage.Permission.NOTIFICATION
 import mozilla.components.feature.sitepermissions.db.SitePermissionsDatabase
 import mozilla.components.feature.sitepermissions.db.toSitePermissionsEntity

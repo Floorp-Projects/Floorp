@@ -7,8 +7,8 @@
 package mozilla.components.browser.tabstray
 
 import android.content.Context
-import android.support.v7.widget.helper.ItemTouchHelper
 import android.view.LayoutInflater
+import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.test.core.app.ApplicationProvider
 import mozilla.components.concept.tabstray.TabsTray
 import mozilla.components.support.base.observer.Observable

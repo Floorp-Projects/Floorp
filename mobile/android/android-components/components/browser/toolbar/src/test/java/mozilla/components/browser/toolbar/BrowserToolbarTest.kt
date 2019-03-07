@@ -8,7 +8,6 @@ import android.content.Context
 import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.Drawable
-import android.support.v13.view.inputmethod.EditorInfoCompat
 import android.util.AttributeSet
 import android.view.View
 import android.view.ViewParent
@@ -16,6 +15,7 @@ import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityManager
 import android.widget.ImageButton
 import android.widget.LinearLayout
+import androidx.core.view.inputmethod.EditorInfoCompat
 import androidx.test.core.app.ApplicationProvider
 import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.toolbar.BrowserToolbar.Companion.ACTION_PADDING_DP

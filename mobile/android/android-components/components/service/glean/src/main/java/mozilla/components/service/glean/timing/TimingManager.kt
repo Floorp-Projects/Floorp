@@ -5,7 +5,7 @@
 package mozilla.components.service.glean.timing
 
 import android.os.SystemClock
-import android.support.annotation.VisibleForTesting
+import androidx.annotation.VisibleForTesting
 import mozilla.components.service.glean.error.ErrorRecording
 import mozilla.components.service.glean.error.ErrorRecording.recordError
 import mozilla.components.service.glean.private.CommonMetricData

@@ -132,6 +132,11 @@ subprojects {
                 packagingOptions {
                     exclude 'META-INF/atomicfu.kotlin_module'
                 }
+
+                compileOptions {
+                    sourceCompatibility 1.8
+                    targetCompatibility 1.8
+                }
             }
 
             if (project.hasProperty("coverage") && project.name != "support-test") {

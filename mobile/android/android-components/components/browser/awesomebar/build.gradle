@@ -31,8 +31,8 @@ dependencies {
 
     implementation project(':support-ktx')
 
-    api Dependencies.support_recyclerview
-    implementation Dependencies.support_constraintlayout
+    api Dependencies.androidx_recyclerview
+    implementation Dependencies.androidx_constraintlayout
 
     implementation Dependencies.kotlin_stdlib
     implementation Dependencies.kotlin_coroutines

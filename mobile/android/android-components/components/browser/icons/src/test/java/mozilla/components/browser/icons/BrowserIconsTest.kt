@@ -57,7 +57,8 @@ class BrowserIconsTest {
         val server = MockWebServer()
 
         server.enqueue(MockResponse().setBody(
-            Okio.buffer(Okio.source(javaClass.getResourceAsStream("/png/mozac.png")!!)).buffer()
+
+            Okio.buffer(Okio.source(javaClass.getResourceAsStream("/png/mozac.png")!!)).buffer
         ))
 
         server.start()
@@ -107,7 +108,7 @@ class BrowserIconsTest {
         val server = MockWebServer()
 
         server.enqueue(MockResponse().setBody(
-            Okio.buffer(Okio.source(javaClass.getResourceAsStream("/png/mozac.png")!!)).buffer()
+            Okio.buffer(Okio.source(javaClass.getResourceAsStream("/png/mozac.png")!!)).buffer
         ))
 
         server.start()

@@ -12,7 +12,7 @@
         android:gravity="center_vertical"
         android:focusable="true">
 
-    <android.support.v7.widget.AppCompatImageView
+    <androidx.appcompat.widget.AppCompatImageView
             android:id="@+id/image"
             style="@style/Mozac.Browser.Menu.Item.ImageText.Icon"
             android:clickable="false"

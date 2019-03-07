@@ -9,14 +9,14 @@ import android.content.DialogInterface
 import android.os.Build
 import android.os.Build.VERSION_CODES.M
 import android.os.Bundle
-import android.support.annotation.VisibleForTesting
-import android.support.annotation.VisibleForTesting.PRIVATE
-import android.support.v7.app.AlertDialog
 import android.text.format.DateFormat
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.DatePicker
 import android.widget.TimePicker
+import androidx.annotation.VisibleForTesting
+import androidx.annotation.VisibleForTesting.PRIVATE
+import androidx.appcompat.app.AlertDialog
 import java.util.Calendar
 import java.util.Date
 

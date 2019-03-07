@@ -4,14 +4,14 @@
 
 package mozilla.components.feature.session.bundling.db
 
-import android.arch.persistence.room.ColumnInfo
-import android.arch.persistence.room.Entity
-import android.arch.persistence.room.PrimaryKey
 import android.content.Context
-import android.support.annotation.VisibleForTesting
-import android.support.annotation.VisibleForTesting.PRIVATE
-import android.support.annotation.WorkerThread
 import android.util.AtomicFile
+import androidx.annotation.VisibleForTesting
+import androidx.annotation.VisibleForTesting.PRIVATE
+import androidx.annotation.WorkerThread
+import androidx.room.ColumnInfo
+import androidx.room.Entity
+import androidx.room.PrimaryKey
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.Engine
 import mozilla.components.feature.session.bundling.SessionBundle

@@ -4,7 +4,7 @@
 
 package mozilla.components.feature.sync
 
-import android.support.annotation.VisibleForTesting
+import androidx.annotation.VisibleForTesting
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import mozilla.components.concept.sync.AuthException

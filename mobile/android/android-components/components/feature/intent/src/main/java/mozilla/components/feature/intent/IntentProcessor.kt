@@ -114,7 +114,8 @@ class IntentProcessor(
      * @return true if the intent was processed, otherwise false.
      */
     fun process(intent: Intent): Boolean {
-        return handlers[intent.action]?.invoke(intent) ?: false
+        val action = intent.action ?: return false
+        return handlers[action]?.invoke(intent) ?: false
     }
 
     /**

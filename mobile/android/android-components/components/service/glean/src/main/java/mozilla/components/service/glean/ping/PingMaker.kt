@@ -6,7 +6,7 @@ package mozilla.components.service.glean.ping
 
 import android.content.Context
 import android.content.SharedPreferences
-import android.support.annotation.VisibleForTesting
+import androidx.annotation.VisibleForTesting
 import mozilla.components.service.glean.BuildConfig
 import mozilla.components.service.glean.private.PingType
 import mozilla.components.service.glean.storages.StorageEngineManager

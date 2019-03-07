@@ -7,9 +7,9 @@
 package mozilla.components.feature.readerview.view
 
 import android.content.Context
-import android.support.v7.widget.AppCompatButton
-import android.support.v7.widget.AppCompatRadioButton
 import android.view.View
+import androidx.appcompat.widget.AppCompatButton
+import androidx.appcompat.widget.AppCompatRadioButton
 import androidx.test.core.app.ApplicationProvider
 import mozilla.components.feature.readerview.R
 import mozilla.components.feature.readerview.ReaderViewFeature

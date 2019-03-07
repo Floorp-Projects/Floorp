@@ -25,7 +25,7 @@ dependencies {
     implementation project(':support-base')
     implementation project(':concept-fetch')
 
-    implementation Dependencies.support_annotations
+    implementation Dependencies.androidx_annotation
 
     implementation Dependencies.kotlin_stdlib
 

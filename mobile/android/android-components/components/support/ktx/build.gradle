@@ -12,7 +12,7 @@ android {
         minSdkVersion config.minSdkVersion
         targetSdkVersion config.targetSdkVersion
 
-        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
     buildTypes {
@@ -25,7 +25,7 @@ android {
 
 dependencies {
     implementation Dependencies.kotlin_stdlib
-    implementation Dependencies.support_compat
+    implementation Dependencies.androidx_core
 
     implementation project(':support-base')
     implementation project(':support-utils')

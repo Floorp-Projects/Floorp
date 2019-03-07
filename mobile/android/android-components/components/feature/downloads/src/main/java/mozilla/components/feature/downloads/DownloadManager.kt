@@ -16,8 +16,8 @@ import android.content.Context.DOWNLOAD_SERVICE
 import android.content.Intent
 import android.content.IntentFilter
 import android.net.Uri
-import android.support.annotation.RequiresPermission
 import android.widget.Toast
+import androidx.annotation.RequiresPermission
 import mozilla.components.browser.session.Download
 import mozilla.components.support.ktx.android.content.appName
 import mozilla.components.support.ktx.android.content.isPermissionGranted
@@ -49,7 +49,7 @@ class DownloadManager(
      * @param cookie any additional cookie to add as part of the download request.
      * @return the id reference of the scheduled download.
      */
-    @RequiresPermission(allOf = arrayOf(INTERNET, WRITE_EXTERNAL_STORAGE))
+    @RequiresPermission(allOf = [INTERNET, WRITE_EXTERNAL_STORAGE])
     fun download(
         download: Download,
         refererURL: String = "",
@@ -115,7 +115,7 @@ class DownloadManager(
     }
 
     private fun getFileName(download: Download): String? {
-        return if (!download.fileName.isNullOrEmpty()) {
+        return if (!download.fileName.isEmpty()) {
             download.fileName
         } else {
             DownloadUtils.guessFileName(

@@ -11,8 +11,8 @@ import android.graphics.Bitmap
 import android.graphics.Color
 import android.graphics.drawable.BitmapDrawable
 import android.net.Uri
-import android.support.annotation.VisibleForTesting
-import android.support.v4.content.ContextCompat
+import androidx.annotation.VisibleForTesting
+import androidx.core.content.ContextCompat
 import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.menu.BrowserMenuItem
 import mozilla.components.browser.menu.item.SimpleBrowserMenuItem

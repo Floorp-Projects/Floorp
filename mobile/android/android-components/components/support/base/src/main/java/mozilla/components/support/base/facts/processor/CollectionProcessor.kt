@@ -4,7 +4,7 @@
 
 package mozilla.components.support.base.facts.processor
 
-import android.support.annotation.VisibleForTesting
+import androidx.annotation.VisibleForTesting
 import mozilla.components.support.base.facts.Fact
 import mozilla.components.support.base.facts.FactProcessor
 import mozilla.components.support.base.facts.Facts

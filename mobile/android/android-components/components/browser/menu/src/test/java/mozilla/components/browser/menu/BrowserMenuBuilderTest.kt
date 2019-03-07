@@ -4,9 +4,9 @@
 
 package mozilla.components.browser.menu
 
-import android.support.v7.widget.RecyclerView
 import android.view.View
 import android.widget.ImageButton
+import androidx.recyclerview.widget.RecyclerView
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Test

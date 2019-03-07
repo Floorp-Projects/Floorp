@@ -4,11 +4,11 @@
 
 package mozilla.components.browser.menu.item
 
-import android.support.v4.content.ContextCompat
-import android.support.v7.widget.AppCompatImageButton
+import androidx.core.content.ContextCompat
 import android.util.TypedValue
 import android.view.View
 import android.widget.LinearLayout
+import androidx.appcompat.widget.AppCompatImageButton
 import mozilla.components.browser.menu.BrowserMenu
 import mozilla.components.browser.menu.BrowserMenuItem
 import mozilla.components.browser.menu.R

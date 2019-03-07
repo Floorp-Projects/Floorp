@@ -4,7 +4,7 @@
 
 package mozilla.components.browser.storage.memory
 
-import android.support.annotation.VisibleForTesting
+import androidx.annotation.VisibleForTesting
 import mozilla.components.concept.storage.HistoryAutocompleteResult
 import mozilla.components.concept.storage.HistoryStorage
 import mozilla.components.concept.storage.PageObservation
@@ -103,8 +103,7 @@ class InMemoryHistoryStorage : HistoryStorage {
         }
         // Calculate maxScore so that we can invert our scoring.
         // Lower Levenshtein distance should produce a higher score.
-        val maxScore = urlMatches.maxBy { it.score }?.score
-        if (maxScore == null) return@synchronized listOf()
+        val maxScore = urlMatches.maxBy { it.score }?.score ?: return@synchronized listOf()
 
         // TODO exclude non-matching results entirely? Score that implies complete mismatch.
         matchedUrls.asSequence().sortedBy { it.value }.map {

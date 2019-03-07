@@ -9,12 +9,12 @@ import android.content.DialogInterface.BUTTON_NEGATIVE
 import android.content.DialogInterface.BUTTON_POSITIVE
 import android.content.DialogInterface.BUTTON_NEUTRAL
 import android.os.Build.VERSION_CODES.LOLLIPOP
-import android.support.v7.app.AlertDialog
-import android.support.v7.appcompat.R
+
 import android.view.ContextThemeWrapper
 import android.widget.DatePicker
 import android.widget.TextView
 import android.widget.TimePicker
+import androidx.appcompat.app.AlertDialog
 import androidx.test.core.app.ApplicationProvider
 import mozilla.components.feature.prompts.TimePickerDialogFragment.Companion.SELECTION_TYPE_DATE_AND_TIME
 import mozilla.components.feature.prompts.TimePickerDialogFragment.Companion.SELECTION_TYPE_TIME
@@ -53,7 +53,7 @@ class TimePickerDialogFragmentTest {
         val dialog = fragment.onCreateDialog(null)
         dialog.show()
 
-        val titleTextView = dialog.findViewById<TextView>(android.support.v7.appcompat.R.id.alertTitle)
+        val titleTextView = dialog.findViewById<TextView>(androidx.appcompat.R.id.alertTitle)
         val datePicker = dialog.findViewById<DatePicker>(mozilla.components.feature.prompts.R.id.date_picker)
 
         assertEquals(titleTextView.text, "title")

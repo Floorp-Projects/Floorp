@@ -6,7 +6,7 @@ package mozilla.components.service.glean.scheduler
 
 import android.content.Context
 import android.content.SharedPreferences
-import android.support.annotation.VisibleForTesting
+import androidx.annotation.VisibleForTesting
 import android.text.format.DateUtils
 import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder

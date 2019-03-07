@@ -5,10 +5,10 @@
 package mozilla.components.browser.session.storage
 
 import android.content.Context
-import android.support.annotation.CheckResult
-import android.support.annotation.VisibleForTesting
-import android.support.annotation.WorkerThread
 import android.util.AtomicFile
+import androidx.annotation.CheckResult
+import androidx.annotation.VisibleForTesting
+import androidx.annotation.WorkerThread
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.session.ext.readSnapshot
 import mozilla.components.browser.session.ext.writeSnapshot

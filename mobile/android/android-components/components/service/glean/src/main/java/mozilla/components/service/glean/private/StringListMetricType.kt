@@ -4,7 +4,7 @@
 
 package mozilla.components.service.glean.private
 
-import android.support.annotation.VisibleForTesting
+import androidx.annotation.VisibleForTesting
 import mozilla.components.service.glean.Dispatchers
 import mozilla.components.service.glean.storages.StringListsStorageEngine
 import mozilla.components.support.base.log.logger.Logger

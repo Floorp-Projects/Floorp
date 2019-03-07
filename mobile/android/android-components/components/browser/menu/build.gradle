@@ -24,9 +24,9 @@ android {
 dependencies {
     implementation project(':support-ktx')
 
-    implementation Dependencies.support_appcompat
-    implementation Dependencies.support_recyclerview
-    implementation Dependencies.support_cardview
+    implementation Dependencies.androidx_appcompat
+    implementation Dependencies.androidx_recyclerview
+    implementation Dependencies.androidx_cardview
 
     implementation Dependencies.kotlin_stdlib
 

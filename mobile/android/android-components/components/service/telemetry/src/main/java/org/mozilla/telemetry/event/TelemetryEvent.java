@@ -5,15 +5,13 @@
 package org.mozilla.telemetry.event;
 
 import android.os.SystemClock;
-import android.support.annotation.CheckResult;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.annotation.RestrictTo;
-
+import androidx.annotation.CheckResult;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.mozilla.telemetry.TelemetryHolder;
-import org.mozilla.telemetry.ping.TelemetryEventPingBuilder;
 import org.mozilla.telemetry.util.StringUtils;
 
 import java.util.HashMap;

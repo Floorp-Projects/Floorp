@@ -4,10 +4,10 @@
 
 package mozilla.components.support.base.observer
 
-import android.arch.lifecycle.GenericLifecycleObserver
-import android.arch.lifecycle.Lifecycle
-import android.arch.lifecycle.LifecycleOwner
 import android.view.View
+import androidx.lifecycle.GenericLifecycleObserver
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleOwner
 import java.util.Collections
 import java.util.WeakHashMap
 

@@ -5,11 +5,11 @@
 package mozilla.components.browser.menu
 
 import android.content.Context
-import android.support.design.widget.CoordinatorLayout
-import android.support.v7.widget.RecyclerView
+import androidx.recyclerview.widget.RecyclerView
 import android.view.Gravity
 import android.view.View
 import android.widget.Button
+import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.test.core.app.ApplicationProvider
 import mozilla.components.browser.menu.item.SimpleBrowserMenuItem
 import mozilla.components.support.test.mock

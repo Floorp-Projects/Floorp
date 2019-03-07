@@ -1,12 +1,11 @@
 package mozilla.components.feature.prompts
 
-import android.support.v7.widget.RecyclerView
-import android.support.v7.widget.RecyclerView.ViewHolder
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.CheckedTextView
 import android.widget.TextView
+import androidx.recyclerview.widget.RecyclerView
 import mozilla.components.concept.engine.prompt.Choice
 import java.lang.IllegalArgumentException
 
@@ -16,7 +15,7 @@ import java.lang.IllegalArgumentException
 internal class ChoiceAdapter(
     private val fragment: ChoiceDialogFragment,
     private val inflater: LayoutInflater
-) : RecyclerView.Adapter<ViewHolder>() {
+) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     companion object {
         internal const val TYPE_MULTIPLE = 1
@@ -43,7 +42,7 @@ internal class ChoiceAdapter(
         }
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, type: Int): ViewHolder {
+    override fun onCreateViewHolder(parent: ViewGroup, type: Int): RecyclerView.ViewHolder {
 
         val layoutId = getLayoutId(type)
         val view = inflater.inflate(layoutId, parent, false)
@@ -66,7 +65,7 @@ internal class ChoiceAdapter(
 
     override fun getItemCount(): Int = choices.size
 
-    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+    override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
 
         val choice = choices[position]
         when (holder) {
@@ -105,7 +104,7 @@ internal class ChoiceAdapter(
     /**
      * View holder for a single choice item.
      */
-    internal class SingleViewHolder(itemView: View) : ViewHolder(itemView) {
+    internal class SingleViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         internal val labelView = itemView.findViewById<CheckedTextView>(R.id.labelView)
 
         fun bind(choice: Choice, fragment: ChoiceDialogFragment) {
@@ -126,7 +125,7 @@ internal class ChoiceAdapter(
     /**
      * View holder for a Multiple choice item.
      */
-    internal class MultipleViewHolder(itemView: View) : ViewHolder(itemView) {
+    internal class MultipleViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         internal val labelView = itemView.findViewById<CheckedTextView>(R.id.labelView)
 
         fun bind(choice: Choice, fragment: ChoiceDialogFragment) {
@@ -152,7 +151,7 @@ internal class ChoiceAdapter(
     /**
      * View holder for a Menu choice item.
      */
-    internal class MenuViewHolder(itemView: View) : ViewHolder(itemView) {
+    internal class MenuViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         internal val labelView = itemView.findViewById<TextView>(R.id.labelView)
 
         fun bind(choice: Choice, fragment: ChoiceDialogFragment) {
@@ -171,12 +170,12 @@ internal class ChoiceAdapter(
     /**
      * View holder for a menu separator choice item.
      */
-    internal class MenuSeparatorViewHolder(itemView: View) : ViewHolder(itemView)
+    internal class MenuSeparatorViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView)
 
     /**
      * View holder for a group choice item.
      */
-    internal class GroupViewHolder(itemView: View) : ViewHolder(itemView) {
+    internal class GroupViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         internal val labelView = itemView.findViewById<TextView>(R.id.labelView)
 
         fun bind(choice: Choice) {

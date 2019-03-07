@@ -4,9 +4,9 @@
 
 package mozilla.components.feature.toolbar.internal
 
-import android.support.annotation.VisibleForTesting
 import android.text.SpannableStringBuilder
 import android.text.style.ForegroundColorSpan
+import androidx.annotation.VisibleForTesting
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job

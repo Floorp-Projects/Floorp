@@ -5,7 +5,7 @@
 package mozilla.components.service.pocket
 
 import android.net.Uri
-import android.support.annotation.WorkerThread
+import androidx.annotation.WorkerThread
 import mozilla.components.concept.fetch.Client
 import mozilla.components.concept.fetch.Headers.Names.USER_AGENT
 import mozilla.components.concept.fetch.MutableHeaders

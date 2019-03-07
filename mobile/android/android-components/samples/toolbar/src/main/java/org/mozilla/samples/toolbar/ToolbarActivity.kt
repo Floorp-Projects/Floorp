@@ -6,11 +6,12 @@ package org.mozilla.samples.toolbar
 
 import android.content.res.Resources
 import android.os.Bundle
-import android.support.annotation.DrawableRes
-import android.support.v4.content.ContextCompat
-import android.support.v7.app.AppCompatActivity
-import android.support.v7.widget.LinearLayoutManager
 import android.view.View
+import androidx.annotation.DrawableRes
+import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.activity_toolbar.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -36,7 +37,7 @@ import mozilla.components.support.ktx.android.view.hideKeyboard
 /**
  * This sample application shows how to use and customize the browser-toolbar component.
  */
-@Suppress("TooManyFunctions", "MagicNumber")
+@Suppress("TooManyFunctions", "MagicNumber", "LargeClass")
 class ToolbarActivity : AppCompatActivity() {
     private val shippedDomainsProvider = ShippedDomainsProvider()
     private val customDomainsProvider = CustomDomainsProvider()
@@ -60,8 +61,9 @@ class ToolbarActivity : AppCompatActivity() {
             ToolbarConfiguration.PRIVATE_MODE -> setupDefaultToolbar(private = true)
         }
 
+        val recyclerView: RecyclerView = findViewById(R.id.recyclerView)
         recyclerView.adapter = ConfigurationAdapter(configuration)
-        recyclerView.layoutManager = LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false)
+        recyclerView.layoutManager = LinearLayoutManager(this, RecyclerView.VERTICAL, false)
 
         ToolbarAutocompleteFeature(toolbar).apply {
             this.addDomainProvider(shippedDomainsProvider)

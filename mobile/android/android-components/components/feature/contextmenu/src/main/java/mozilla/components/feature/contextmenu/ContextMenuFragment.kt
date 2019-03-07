@@ -7,16 +7,16 @@ package mozilla.components.feature.contextmenu
 import android.annotation.SuppressLint
 import android.app.Dialog
 import android.os.Bundle
-import android.support.annotation.VisibleForTesting
-import android.support.v4.app.DialogFragment
-import android.support.v7.app.AlertDialog
-import android.support.v7.widget.AppCompatTextView
-import android.support.v7.widget.LinearLayoutManager
-import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.annotation.VisibleForTesting
+import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.widget.AppCompatTextView
+import androidx.fragment.app.DialogFragment
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import mozilla.components.browser.session.Session
 
 private const val KEY_TITLE = "title"
@@ -63,7 +63,7 @@ class ContextMenuFragment : DialogFragment() {
         val view = inflater.inflate(R.layout.mozac_feature_contextmenu_dialog, null)
 
         view.findViewById<RecyclerView>(R.id.recyclerView).apply {
-            layoutManager = LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false)
+            layoutManager = LinearLayoutManager(context, RecyclerView.VERTICAL, false)
             adapter = ContextMenuAdapter(this@ContextMenuFragment, inflater)
         }
 

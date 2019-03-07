@@ -6,10 +6,6 @@ package mozilla.components.browser.toolbar.display
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.support.v4.content.ContextCompat
-import android.support.v7.widget.AppCompatImageButton
-import android.support.v7.widget.AppCompatImageView
-import android.support.v7.widget.AppCompatTextView
 import android.text.TextUtils
 import android.util.TypedValue
 import android.view.Gravity
@@ -17,6 +13,10 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.accessibility.AccessibilityEvent
 import android.widget.ProgressBar
+import androidx.appcompat.widget.AppCompatImageButton
+import androidx.appcompat.widget.AppCompatImageView
+import androidx.appcompat.widget.AppCompatTextView
+import androidx.core.content.ContextCompat
 import mozilla.components.browser.menu.BrowserMenu
 import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.toolbar.BrowserToolbar
@@ -37,10 +37,12 @@ import mozilla.components.ui.icons.R.drawable.mozac_ic_lock
  * Sub-component of the browser toolbar responsible for displaying the URL and related controls.
  *
  * Structure:
+ * ```
  *   +-------------+------+-----------------------+----------+------+
  *   | navigation  | icon | url       [ page    ] | browser  | menu |
  *   |   actions   |      |           [ actions ] | actions  |      |
  *   +-------------+------+-----------------------+----------+------+
+ * ```
  *
  * Navigation actions (optional):
  *     A dynamic list of clickable icons usually used for navigation on larger devices
@@ -440,7 +442,7 @@ internal class DisplayToolbar(
         //   |   actions   |      |           [ actions ] | actions  |      |
         //   +-------------+------+-----------------------+----------+------+
 
-        val pageActionsWidth = pageActions
+        pageActions
             .mapNotNull { it.view }
             .reversed()
             .fold(0) { usedWidth, view ->

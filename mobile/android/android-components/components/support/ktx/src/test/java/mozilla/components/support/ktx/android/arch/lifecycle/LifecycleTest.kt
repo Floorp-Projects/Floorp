@@ -6,8 +6,8 @@
 
 package mozilla.components.support.ktx.android.arch.lifecycle
 
-import android.arch.lifecycle.Lifecycle
-import android.arch.lifecycle.LifecycleObserver
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleObserver
 import mozilla.components.support.test.mock
 import org.junit.Test
 import org.mockito.Mockito.verify

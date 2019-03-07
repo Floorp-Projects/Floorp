@@ -6,8 +6,8 @@ package mozilla.components.feature.downloads
 
 import android.Manifest.permission.INTERNET
 import android.Manifest.permission.WRITE_EXTERNAL_STORAGE
-import android.support.v4.app.FragmentManager
-import android.support.v4.content.PermissionChecker
+import androidx.core.content.PermissionChecker
+import androidx.fragment.app.FragmentManager
 import org.junit.Assert.assertTrue
 import mozilla.components.browser.session.Download
 import mozilla.components.browser.session.Session

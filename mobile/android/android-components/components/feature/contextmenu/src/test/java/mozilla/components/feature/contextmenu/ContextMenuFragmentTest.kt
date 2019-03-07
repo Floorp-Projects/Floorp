@@ -5,7 +5,7 @@
 package mozilla.components.feature.contextmenu
 
 import android.content.Context
-import android.support.v7.widget.RecyclerView
+import androidx.recyclerview.widget.RecyclerView
 import android.view.ContextThemeWrapper
 import android.view.LayoutInflater
 import android.widget.LinearLayout

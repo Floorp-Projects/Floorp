@@ -7,8 +7,8 @@
 package mozilla.components.browser.tabstray
 
 import android.graphics.Canvas
-import android.support.v7.widget.RecyclerView
-import android.support.v7.widget.helper.ItemTouchHelper
+import androidx.recyclerview.widget.ItemTouchHelper
+import androidx.recyclerview.widget.RecyclerView
 import mozilla.components.concept.tabstray.TabsTray
 import mozilla.components.support.base.observer.Observable
 

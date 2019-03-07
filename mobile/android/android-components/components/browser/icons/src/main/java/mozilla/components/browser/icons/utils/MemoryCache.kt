@@ -5,8 +5,8 @@
 package mozilla.components.browser.icons.utils
 
 import android.graphics.Bitmap
-import android.support.annotation.VisibleForTesting
 import android.util.LruCache
+import androidx.annotation.VisibleForTesting
 import mozilla.components.browser.icons.Icon
 import mozilla.components.browser.icons.IconRequest
 import mozilla.components.browser.icons.loader.MemoryIconLoader.LoaderMemoryCache

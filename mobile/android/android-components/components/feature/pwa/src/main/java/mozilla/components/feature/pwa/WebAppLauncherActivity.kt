@@ -7,9 +7,9 @@ package mozilla.components.feature.pwa
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.os.Bundle
-import android.support.annotation.VisibleForTesting
-import android.support.annotation.VisibleForTesting.PRIVATE
-import android.support.v7.app.AppCompatActivity
+import androidx.annotation.VisibleForTesting
+import androidx.annotation.VisibleForTesting.PRIVATE
+import androidx.appcompat.app.AppCompatActivity
 import mozilla.components.browser.session.manifest.WebAppManifest
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.ktx.kotlin.toUri

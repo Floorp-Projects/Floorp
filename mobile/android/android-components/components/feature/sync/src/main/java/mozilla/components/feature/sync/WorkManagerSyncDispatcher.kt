@@ -5,7 +5,7 @@
 package mozilla.components.feature.sync
 
 import android.content.Context
-import android.support.annotation.UiThread
+import androidx.annotation.UiThread
 import androidx.work.Constraints
 import androidx.work.CoroutineWorker
 import androidx.work.Data

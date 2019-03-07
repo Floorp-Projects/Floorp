@@ -14,7 +14,7 @@ android {
         minSdkVersion config.minSdkVersion
         targetSdkVersion config.targetSdkVersion
 
-        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
     buildTypes {
@@ -37,7 +37,7 @@ dependencies {
     implementation Dependencies.kotlin_stdlib
 
     // We expose the app-compat as API so that consumers get access to the Lifecycle classes automatically
-    api Dependencies.support_appcompat
+    api Dependencies.androidx_appcompat
 
     testImplementation project(':support-test')
 

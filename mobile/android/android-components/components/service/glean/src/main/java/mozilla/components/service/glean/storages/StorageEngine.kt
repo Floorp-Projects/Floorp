@@ -5,7 +5,7 @@
 package mozilla.components.service.glean.storages
 
 import android.content.Context
-import android.support.annotation.VisibleForTesting
+import androidx.annotation.VisibleForTesting
 
 /**
  * Base interface intended to be implemented by the different

@@ -10,7 +10,7 @@ import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Color
 import android.os.Bundle
-import android.support.customtabs.CustomTabsIntent
+import androidx.browser.customtabs.CustomTabsIntent
 import android.util.DisplayMetrics
 import androidx.test.core.app.ApplicationProvider
 import mozilla.components.support.test.mock

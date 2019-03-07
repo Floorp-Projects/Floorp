@@ -12,7 +12,7 @@
         android:clickable="true"
         android:focusable="true"
         tools:background="#ffffffff"
-        tools:parentTag="android.support.constraint.ConstraintLayout">
+        tools:parentTag="androidx.constraintlayout.widget.ConstraintLayout">
 
     <EditText
             android:id="@+id/find_in_page_query_text"
@@ -45,7 +45,7 @@
             app:layout_constraintTop_toTopOf="parent"
             tools:text="10/20"/>
 
-    <android.support.v7.widget.AppCompatImageButton
+    <androidx.appcompat.widget.AppCompatImageButton
             android:id="@+id/find_in_page_prev_btn"
             style="@style/Mozac.Feature.FindInPage.Buttons"
             android:contentDescription="@string/mozac_feature_findindpage_previous_result"
@@ -55,7 +55,7 @@
             app:layout_constraintStart_toEndOf="@+id/find_in_page_result_text"
             app:layout_constraintTop_toTopOf="parent"/>
 
-    <android.support.v7.widget.AppCompatImageButton
+    <androidx.appcompat.widget.AppCompatImageButton
             android:id="@+id/find_in_page_next_btn"
             style="@style/Mozac.Feature.FindInPage.Buttons"
             android:contentDescription="@string/mozac_feature_findindpage_next_result"
@@ -65,7 +65,7 @@
             app:layout_constraintStart_toEndOf="@+id/find_in_page_prev_btn"
             app:layout_constraintTop_toTopOf="parent"/>
 
-    <android.support.v7.widget.AppCompatImageButton
+    <androidx.appcompat.widget.AppCompatImageButton
             android:id="@+id/find_in_page_close_btn"
             style="@style/Mozac.Feature.FindInPage.Buttons"
             android:contentDescription="@string/mozac_feature_findindpage_dismiss"

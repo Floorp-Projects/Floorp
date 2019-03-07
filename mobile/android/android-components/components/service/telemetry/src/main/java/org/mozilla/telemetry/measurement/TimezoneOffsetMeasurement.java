@@ -4,8 +4,8 @@
 
 package org.mozilla.telemetry.measurement;
 
-import android.support.annotation.NonNull;
-import android.support.annotation.VisibleForTesting;
+import androidx.annotation.NonNull;
+import androidx.annotation.VisibleForTesting;
 
 import java.util.Calendar;
 import java.util.concurrent.TimeUnit;

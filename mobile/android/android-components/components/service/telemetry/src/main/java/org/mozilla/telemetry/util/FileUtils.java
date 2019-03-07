@@ -4,7 +4,7 @@
 
 package org.mozilla.telemetry.util;
 
-import android.support.annotation.RestrictTo;
+import androidx.annotation.RestrictTo;
 
 import java.io.File;
 import java.io.FilenameFilter;

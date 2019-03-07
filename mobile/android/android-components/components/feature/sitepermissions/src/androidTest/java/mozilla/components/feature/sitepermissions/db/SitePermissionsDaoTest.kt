@@ -4,8 +4,8 @@
 
 package mozilla.components.feature.sitepermissions.db
 
-import android.arch.persistence.room.Room
 import android.content.Context
+import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import mozilla.components.feature.sitepermissions.SitePermissions
 import mozilla.components.feature.sitepermissions.SitePermissions.Status.ALLOWED

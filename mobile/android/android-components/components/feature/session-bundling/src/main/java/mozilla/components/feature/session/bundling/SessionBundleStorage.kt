@@ -4,14 +4,14 @@
 
 package mozilla.components.feature.session.bundling
 
-import android.arch.lifecycle.LiveData
-import android.arch.lifecycle.ProcessLifecycleOwner
-import android.arch.lifecycle.Transformations
-import android.arch.paging.DataSource
 import android.content.Context
-import android.support.annotation.CheckResult
-import android.support.annotation.VisibleForTesting
-import android.support.annotation.WorkerThread
+import androidx.annotation.CheckResult
+import androidx.annotation.VisibleForTesting
+import androidx.annotation.WorkerThread
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.ProcessLifecycleOwner
+import androidx.lifecycle.Transformations
+import androidx.paging.DataSource
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.session.ext.writeSnapshot

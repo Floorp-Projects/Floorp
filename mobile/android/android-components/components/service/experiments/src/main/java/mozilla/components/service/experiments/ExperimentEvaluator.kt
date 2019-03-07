@@ -7,7 +7,7 @@ package mozilla.components.service.experiments
 import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Looper
-import android.support.annotation.VisibleForTesting
+import androidx.annotation.VisibleForTesting
 import android.text.TextUtils
 import mozilla.components.support.base.log.logger.Logger
 import java.util.zip.CRC32

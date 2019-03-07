@@ -4,7 +4,7 @@
 
 package mozilla.components.feature.session.bundling
 
-import android.support.annotation.WorkerThread
+import androidx.annotation.WorkerThread
 import mozilla.components.browser.session.SessionManager
 
 /**

@@ -4,12 +4,12 @@ import android.content.Context
 import android.content.DialogInterface.BUTTON_NEGATIVE
 import android.content.DialogInterface.BUTTON_POSITIVE
 import android.os.Parcelable
-import android.support.v7.app.AlertDialog
-import android.support.v7.widget.RecyclerView
+import androidx.recyclerview.widget.RecyclerView
 import android.view.ContextThemeWrapper
 import android.view.LayoutInflater
 import android.widget.LinearLayout
 import android.widget.TextView
+import androidx.appcompat.app.AlertDialog
 import androidx.test.core.app.ApplicationProvider.getApplicationContext
 import mozilla.components.concept.engine.prompt.Choice
 import mozilla.components.feature.prompts.ChoiceAdapter.Companion.TYPE_GROUP
@@ -43,7 +43,7 @@ import org.mockito.Mockito.times
 class ChoiceDialogFragmentTest {
 
     private val context: Context
-        get() = ContextThemeWrapper(getApplicationContext(), android.support.v7.appcompat.R.style.Theme_AppCompat)
+        get() = ContextThemeWrapper(getApplicationContext<Context>(), androidx.appcompat.R.style.Theme_AppCompat)
 
     @Test
     fun `Build single choice dialog`() {

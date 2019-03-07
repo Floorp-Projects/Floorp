@@ -8,11 +8,11 @@ import android.Manifest.permission.RECORD_AUDIO
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.PackageManager
-import android.support.annotation.DrawableRes
-import android.support.annotation.StringRes
-import android.support.annotation.VisibleForTesting
-import android.support.v4.content.ContextCompat
 import android.view.View
+import androidx.annotation.DrawableRes
+import androidx.annotation.StringRes
+import androidx.annotation.VisibleForTesting
+import androidx.core.content.ContextCompat
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch

@@ -39,8 +39,8 @@ android {
 dependencies {
     implementation Dependencies.kotlin_stdlib
     implementation Dependencies.kotlin_coroutines
-    implementation Dependencies.arch_lifecycle
-    implementation Dependencies.arch_workmanager
+    implementation Dependencies.androidx_lifecycle_extensions
+    implementation Dependencies.androidx_work_runtime
 
     implementation project(':support-ktx')
     implementation project(':support-base')

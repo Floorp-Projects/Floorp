@@ -7,8 +7,8 @@ package mozilla.components.feature.qr
 import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
-import android.support.v4.app.FragmentManager
-import android.support.v4.app.FragmentTransaction
+import androidx.fragment.app.FragmentManager
+import androidx.fragment.app.FragmentTransaction
 import androidx.test.core.app.ApplicationProvider
 import mozilla.components.feature.qr.QrFeature.Companion.QR_FRAGMENT_TAG
 import mozilla.components.support.test.any

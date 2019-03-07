@@ -6,7 +6,7 @@ package mozilla.components.service.experiments.debug
 
 import android.app.Activity
 import android.os.Bundle
-import android.support.annotation.VisibleForTesting
+import androidx.annotation.VisibleForTesting
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job

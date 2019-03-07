@@ -5,7 +5,6 @@
 package mozilla.components.ui.doorhanger
 
 import android.content.Context
-import android.support.v7.content.res.AppCompatResources
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
@@ -14,6 +13,7 @@ import android.widget.LinearLayout
 import android.widget.RadioButton
 import android.widget.RadioGroup
 import android.widget.TextView
+import androidx.appcompat.content.res.AppCompatResources
 import androidx.test.core.app.ApplicationProvider
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse

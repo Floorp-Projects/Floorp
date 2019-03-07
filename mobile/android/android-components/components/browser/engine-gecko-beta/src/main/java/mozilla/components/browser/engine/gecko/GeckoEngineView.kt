@@ -6,12 +6,11 @@ package mozilla.components.browser.engine.gecko
 
 import android.content.Context
 import android.graphics.Bitmap
-import android.support.v4.view.ViewCompat
 import android.util.AttributeSet
 import android.widget.FrameLayout
+import androidx.core.view.ViewCompat
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineView
-
 import org.mozilla.geckoview.GeckoResult
 
 /**
@@ -34,6 +33,7 @@ class GeckoEngineView @JvmOverloads constructor(
     }.apply {
         // Explicitly mark this view as important for autofill. The default "auto" doesn't seem to trigger any
         // autofill behavior for us here.
+        @Suppress("WrongConstant")
         ViewCompat.setImportantForAutofill(this, 0x1 /* View.IMPORTANT_FOR_AUTOFILL_YES */)
     }
 

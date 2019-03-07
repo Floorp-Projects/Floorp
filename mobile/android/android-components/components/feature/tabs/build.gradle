@@ -33,8 +33,8 @@ dependencies {
     implementation project(':ui-tabcounter')
     implementation project(':support-ktx')
 
-    implementation Dependencies.support_fragment
-    implementation Dependencies.support_recyclerview
+    implementation Dependencies.androidx_fragment
+    implementation Dependencies.androidx_recyclerview
 
     implementation Dependencies.kotlin_stdlib
     implementation Dependencies.kotlin_coroutines

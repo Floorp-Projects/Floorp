@@ -7,8 +7,8 @@
 package org.mozilla.samples.browser.integration
 
 import android.content.Context
-import android.support.design.widget.FloatingActionButton
-import android.support.v4.content.ContextCompat
+import androidx.core.content.ContextCompat
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.concept.engine.Engine

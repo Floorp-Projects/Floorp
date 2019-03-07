@@ -6,7 +6,7 @@ package mozilla.components.feature.prompts
 
 import android.app.Dialog
 import android.os.Bundle
-import android.support.v7.app.AlertDialog
+import androidx.appcompat.app.AlertDialog
 
 internal const val KEY_POSITIVE_BUTTON = "KEY_POSITIVE_BUTTON"
 internal const val KEY_NEGATIVE_BUTTON = "KEY_NEGATIVE_BUTTON"

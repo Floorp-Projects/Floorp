@@ -6,11 +6,11 @@ package mozilla.components.feature.prompts
 
 import android.content.Context
 import android.content.DialogInterface
-import android.support.v7.app.AlertDialog
 import android.view.ContextThemeWrapper
 import android.view.View.GONE
 import android.widget.EditText
 import android.widget.TextView
+import androidx.appcompat.app.AlertDialog
 import androidx.test.core.app.ApplicationProvider
 import mozilla.components.feature.prompts.R.id
 import mozilla.components.support.test.mock
@@ -27,8 +27,8 @@ class AuthenticationDialogFragmentTest {
 
     private val context: Context
         get() = ContextThemeWrapper(
-            ApplicationProvider.getApplicationContext(),
-            android.support.v7.appcompat.R.style.Theme_AppCompat
+            ApplicationProvider.getApplicationContext<Context>(),
+            androidx.appcompat.R.style.Theme_AppCompat
         )
 
     @Test
@@ -51,7 +51,7 @@ class AuthenticationDialogFragmentTest {
 
         dialog.show()
 
-        val titleTextView = dialog.findViewById<TextView>(android.support.v7.appcompat.R.id.alertTitle)
+        val titleTextView = dialog.findViewById<TextView>(androidx.appcompat.R.id.alertTitle)
         val messageTextView = dialog.findViewById<TextView>(android.R.id.message)
         val usernameEditText = dialog.findViewById<EditText>(id.username)
         val passwordEditText = dialog.findViewById<EditText>(id.password)
@@ -120,7 +120,7 @@ class AuthenticationDialogFragmentTest {
 
         dialog.show()
 
-        val titleTextView = dialog.findViewById<TextView>(android.support.v7.appcompat.R.id.alertTitle)
+        val titleTextView = dialog.findViewById<TextView>(androidx.appcompat.R.id.alertTitle)
 
         val defaultTitle = context.getString(AuthenticationDialogFragment.DEFAULT_TITLE)
         assertEquals(titleTextView.text.toString(), defaultTitle)

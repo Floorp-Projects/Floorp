@@ -10,14 +10,14 @@ import android.content.DialogInterface
 import android.graphics.Color
 import android.graphics.PorterDuff
 import android.os.Bundle
-import android.support.annotation.VisibleForTesting
-import android.support.v7.app.AlertDialog
-import android.support.v7.widget.LinearLayoutManager
-import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.annotation.VisibleForTesting
+import androidx.appcompat.app.AlertDialog
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 
 private const val KEY_SELECTED_COLOR = "KEY_SELECTED_COLOR"
 
@@ -151,7 +151,7 @@ internal class ColorPickerDialogFragment : PromptDialogFragment() {
 
     private fun initRecyclerView(view: View, inflater: LayoutInflater) {
         view.findViewById<RecyclerView>(R.id.recyclerView).apply {
-            layoutManager = LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false)
+            layoutManager = LinearLayoutManager(context, RecyclerView.VERTICAL, false)
             adapter = ColorAdapter(this@ColorPickerDialogFragment, inflater)
         }
     }

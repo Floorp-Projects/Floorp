@@ -7,14 +7,14 @@ package mozilla.components.browser.menu
 import android.annotation.SuppressLint
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
-import android.support.design.widget.CoordinatorLayout
-import android.support.v7.widget.LinearLayoutManager
-import android.support.v7.widget.RecyclerView
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.WindowManager
 import android.widget.PopupWindow
+import androidx.coordinatorlayout.widget.CoordinatorLayout
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import mozilla.components.support.ktx.android.content.res.pxToDp
 import mozilla.components.support.ktx.android.view.isRTL
 
@@ -33,7 +33,7 @@ class BrowserMenu internal constructor(
         adapter.menu = this
 
         val menuList: RecyclerView = view.findViewById(R.id.mozac_browser_menu_recyclerView)
-        menuList.layoutManager = LinearLayoutManager(anchor.context, LinearLayoutManager.VERTICAL, false)
+        menuList.layoutManager = LinearLayoutManager(anchor.context, RecyclerView.VERTICAL, false)
         menuList.adapter = adapter
 
         return PopupWindow(

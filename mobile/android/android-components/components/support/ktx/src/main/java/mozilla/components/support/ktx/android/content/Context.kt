@@ -14,8 +14,8 @@ import android.content.Intent.EXTRA_TEXT
 import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
 import android.content.pm.PackageManager.PERMISSION_GRANTED
 import android.os.Process
-import android.support.annotation.VisibleForTesting
-import android.support.v4.content.ContextCompat.checkSelfPermission
+import androidx.annotation.VisibleForTesting
+import androidx.core.content.ContextCompat.checkSelfPermission
 import mozilla.components.support.base.log.Log
 import mozilla.components.support.ktx.R
 

@@ -5,10 +5,10 @@
 package mozilla.components.browser.tabstray
 
 import android.content.Context
-import android.support.v7.widget.GridLayoutManager
-import android.support.v7.widget.RecyclerView
 import android.util.AttributeSet
 import android.view.View
+import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import mozilla.components.concept.tabstray.TabsTray
 
 const val DEFAULT_ITEM_BACKGROUND_COLOR = 0xFFFFFFFF.toInt()

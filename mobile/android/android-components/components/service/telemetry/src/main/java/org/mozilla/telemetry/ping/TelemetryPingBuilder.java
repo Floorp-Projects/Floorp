@@ -4,9 +4,9 @@
 
 package org.mozilla.telemetry.ping;
 
-import android.support.annotation.NonNull;
-import android.support.annotation.RestrictTo;
-import android.support.annotation.VisibleForTesting;
+import androidx.annotation.NonNull;
+import androidx.annotation.RestrictTo;
+import androidx.annotation.VisibleForTesting;
 
 import org.mozilla.telemetry.config.TelemetryConfiguration;
 import org.mozilla.telemetry.measurement.ClientIdMeasurement;

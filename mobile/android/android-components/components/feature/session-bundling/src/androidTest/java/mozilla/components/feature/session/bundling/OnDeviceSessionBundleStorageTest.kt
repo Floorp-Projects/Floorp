@@ -4,11 +4,11 @@
 
 package mozilla.components.feature.session.bundling
 
-import android.arch.persistence.db.framework.FrameworkSQLiteOpenHelperFactory
-import android.arch.persistence.room.Room
-import android.arch.persistence.room.testing.MigrationTestHelper
 import android.content.Context
 import android.util.AttributeSet
+import androidx.room.Room
+import androidx.room.testing.MigrationTestHelper
+import androidx.sqlite.db.framework.FrameworkSQLiteOpenHelperFactory
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.platform.app.InstrumentationRegistry
 import mozilla.components.browser.session.Session

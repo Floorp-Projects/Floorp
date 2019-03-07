@@ -4,8 +4,8 @@
 
 package mozilla.components.feature.session
 
-import android.support.design.widget.AppBarLayout
 import android.view.View
+import com.google.android.material.appbar.AppBarLayout
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.Engine

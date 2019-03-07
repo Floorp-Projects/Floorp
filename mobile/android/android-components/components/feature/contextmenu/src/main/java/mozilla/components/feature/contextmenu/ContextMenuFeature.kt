@@ -4,9 +4,9 @@
 
 package mozilla.components.feature.contextmenu
 
-import android.support.annotation.VisibleForTesting
-import android.support.v4.app.FragmentManager
 import android.view.HapticFeedbackConstants
+import androidx.annotation.VisibleForTesting
+import androidx.fragment.app.FragmentManager
 import mozilla.components.browser.session.SelectionAwareSessionObserver
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager

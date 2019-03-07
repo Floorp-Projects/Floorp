@@ -6,7 +6,7 @@
 
 package mozilla.components.concept.push
 
-import android.support.annotation.CallSuper
+import androidx.annotation.CallSuper
 
 /**
  * A push notification processor that handles registration and new messages from the [PushService] provided.

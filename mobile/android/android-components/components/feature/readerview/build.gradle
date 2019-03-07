@@ -33,7 +33,7 @@ dependencies {
     implementation Dependencies.kotlin_stdlib
     implementation Dependencies.kotlin_coroutines
 
-    implementation Dependencies.support_constraintlayout
+    implementation Dependencies.androidx_constraintlayout
 
     testImplementation project(':support-test')
     testImplementation Dependencies.androidx_test_core

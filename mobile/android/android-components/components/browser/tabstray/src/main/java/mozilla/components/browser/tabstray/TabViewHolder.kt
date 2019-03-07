@@ -5,11 +5,11 @@
 package mozilla.components.browser.tabstray
 
 import android.content.res.ColorStateList
-import android.support.v7.widget.AppCompatImageButton
-import android.support.v7.widget.CardView
-import android.support.v7.widget.RecyclerView
 import android.view.View
 import android.widget.TextView
+import androidx.appcompat.widget.AppCompatImageButton
+import androidx.cardview.widget.CardView
+import androidx.recyclerview.widget.RecyclerView
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.tabstray.thumbnail.TabThumbnailView
 import mozilla.components.concept.tabstray.TabsTray

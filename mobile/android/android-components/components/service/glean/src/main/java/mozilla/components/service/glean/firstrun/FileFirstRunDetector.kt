@@ -4,7 +4,7 @@
 
 package mozilla.components.service.glean.firstrun
 
-import android.support.annotation.VisibleForTesting
+import androidx.annotation.VisibleForTesting
 import mozilla.components.support.base.log.logger.Logger
 import java.io.File
 import java.io.IOException

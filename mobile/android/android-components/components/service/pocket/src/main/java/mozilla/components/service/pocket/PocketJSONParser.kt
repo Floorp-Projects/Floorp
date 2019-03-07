@@ -4,8 +4,8 @@
 
 package mozilla.components.service.pocket
 
-import android.support.annotation.VisibleForTesting
-import android.support.annotation.VisibleForTesting.PRIVATE
+import androidx.annotation.VisibleForTesting
+import androidx.annotation.VisibleForTesting.PRIVATE
 import mozilla.components.service.pocket.data.PocketGlobalVideoRecommendation
 import mozilla.components.support.ktx.android.org.json.mapNotNull
 import org.json.JSONArray

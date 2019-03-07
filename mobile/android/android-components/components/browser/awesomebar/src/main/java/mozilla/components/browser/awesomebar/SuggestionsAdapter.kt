@@ -4,13 +4,13 @@
 
 package mozilla.components.browser.awesomebar
 
-import android.support.annotation.GuardedBy
-import android.support.annotation.VisibleForTesting
-import android.support.v7.util.DiffUtil
-import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.annotation.GuardedBy
+import androidx.annotation.VisibleForTesting
+import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.RecyclerView
 import mozilla.components.browser.awesomebar.layout.DefaultSuggestionLayout
 import mozilla.components.browser.awesomebar.layout.SuggestionLayout
 import mozilla.components.browser.awesomebar.layout.SuggestionViewHolder

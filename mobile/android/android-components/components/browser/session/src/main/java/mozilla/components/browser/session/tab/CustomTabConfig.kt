@@ -8,9 +8,9 @@ import android.app.PendingIntent
 import android.graphics.Bitmap
 import android.os.Bundle
 import android.os.Parcelable
-import android.support.annotation.ColorInt
-import android.support.customtabs.CustomTabsIntent
+import androidx.browser.customtabs.CustomTabsIntent
 import android.util.DisplayMetrics
+import androidx.annotation.ColorInt
 
 import mozilla.components.support.utils.SafeBundle
 import mozilla.components.support.utils.SafeIntent

@@ -4,9 +4,9 @@
 
 package mozilla.components.service.pocket
 
-import android.support.annotation.VisibleForTesting
-import android.support.annotation.VisibleForTesting.PRIVATE
-import android.support.annotation.WorkerThread
+import androidx.annotation.VisibleForTesting
+import androidx.annotation.VisibleForTesting.PRIVATE
+import androidx.annotation.WorkerThread
 import mozilla.components.concept.fetch.Client
 import mozilla.components.concept.fetch.Headers.Names.CONTENT_TYPE
 import mozilla.components.concept.fetch.Headers.Names.USER_AGENT

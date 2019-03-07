@@ -8,9 +8,9 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
-import android.support.annotation.VisibleForTesting
-import android.support.design.widget.Snackbar
 import android.view.View
+import androidx.annotation.VisibleForTesting
+import com.google.android.material.snackbar.Snackbar
 import mozilla.components.browser.session.Download
 import mozilla.components.browser.session.Session
 import mozilla.components.concept.engine.HitResult

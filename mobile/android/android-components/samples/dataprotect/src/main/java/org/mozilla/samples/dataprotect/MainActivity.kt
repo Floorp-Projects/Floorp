@@ -5,13 +5,13 @@
 package org.mozilla.samples.dataprotect
 
 import android.content.SharedPreferences
-import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.preference.PreferenceManager
-import android.support.v7.widget.LinearLayoutManager
-import android.support.v7.widget.RecyclerView
 import android.util.Base64
 import android.widget.Button
+import androidx.appcompat.app.AppCompatActivity
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import mozilla.components.lib.dataprotect.Keystore
 import mozilla.components.support.base.log.logger.Logger
 import org.mozilla.samples.dataprotect.Constants.B64_FLAGS

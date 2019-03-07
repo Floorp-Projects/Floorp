@@ -6,11 +6,11 @@ package mozilla.components.feature.prompts
 
 import android.content.Context
 import android.content.DialogInterface
-import android.support.v7.app.AlertDialog
-import android.support.v7.widget.RecyclerView
+import androidx.recyclerview.widget.RecyclerView
 import android.view.ContextThemeWrapper
 import android.widget.LinearLayout
 import android.widget.TextView
+import androidx.appcompat.app.AlertDialog
 import androidx.test.core.app.ApplicationProvider
 import mozilla.components.feature.prompts.ColorPickerDialogFragment.ColorAdapter
 import mozilla.components.feature.prompts.ColorPickerDialogFragment.ColorViewHolder
@@ -28,8 +28,8 @@ class ColorPickerDialogFragmentTest {
 
     private val context: Context
         get() = ContextThemeWrapper(
-            ApplicationProvider.getApplicationContext(),
-            android.support.v7.appcompat.R.style.Theme_AppCompat
+            ApplicationProvider.getApplicationContext<Context>(),
+            androidx.appcompat.R.style.Theme_AppCompat
         )
 
     @Test

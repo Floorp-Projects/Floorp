@@ -4,14 +4,14 @@
 
 package mozilla.components.feature.session.bundling
 
-import android.arch.lifecycle.LiveData
-import android.arch.paging.DataSource
-import android.arch.persistence.db.SupportSQLiteOpenHelper
-import android.arch.persistence.room.DatabaseConfiguration
-import android.arch.persistence.room.InvalidationTracker
+import androidx.lifecycle.LiveData
 import android.content.Context
 import android.util.AtomicFile
 import android.util.AttributeSet
+import androidx.paging.DataSource
+import androidx.room.DatabaseConfiguration
+import androidx.room.InvalidationTracker
+import androidx.sqlite.db.SupportSQLiteOpenHelper
 import androidx.test.core.app.ApplicationProvider
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager

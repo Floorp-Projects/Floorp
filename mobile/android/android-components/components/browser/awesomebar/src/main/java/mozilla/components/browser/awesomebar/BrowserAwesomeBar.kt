@@ -5,12 +5,12 @@
 package mozilla.components.browser.awesomebar
 
 import android.content.Context
-import android.support.annotation.MainThread
-import android.support.annotation.VisibleForTesting
-import android.support.v7.widget.LinearLayoutManager
-import android.support.v7.widget.RecyclerView
 import android.util.AttributeSet
 import android.util.LruCache
+import androidx.annotation.MainThread
+import androidx.annotation.VisibleForTesting
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -68,7 +68,7 @@ class BrowserAwesomeBar @JvmOverloads constructor(
     var transformer: SuggestionTransformer? = null
 
     init {
-        layoutManager = LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false)
+        layoutManager = LinearLayoutManager(context, RecyclerView.VERTICAL, false)
         adapter = suggestionsAdapter
 
         val attr = context.obtainStyledAttributes(attrs, R.styleable.BrowserAwesomeBar, defStyleAttr, 0)

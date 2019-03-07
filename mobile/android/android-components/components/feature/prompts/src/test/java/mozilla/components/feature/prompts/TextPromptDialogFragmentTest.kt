@@ -8,10 +8,10 @@ import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import android.content.DialogInterface
 import android.content.DialogInterface.BUTTON_POSITIVE
-import android.support.v7.app.AlertDialog
 import android.view.ContextThemeWrapper
 import android.widget.CheckBox
 import android.widget.TextView
+import androidx.appcompat.app.AlertDialog
 import mozilla.components.support.test.mock
 import mozilla.components.feature.prompts.R.id
 import mozilla.components.support.ktx.android.view.isVisible
@@ -30,8 +30,8 @@ class TextPromptDialogFragmentTest {
 
     private val context: Context
         get() = ContextThemeWrapper(
-            ApplicationProvider.getApplicationContext(),
-            android.support.v7.appcompat.R.style.Theme_AppCompat
+            ApplicationProvider.getApplicationContext<Context>(),
+            androidx.appcompat.R.style.Theme_AppCompat
         )
 
     @Test
@@ -47,7 +47,7 @@ class TextPromptDialogFragmentTest {
 
         dialog.show()
 
-        val titleTextView = dialog.findViewById<TextView>(android.support.v7.appcompat.R.id.alertTitle)
+        val titleTextView = dialog.findViewById<TextView>(androidx.appcompat.R.id.alertTitle)
         val inputLabel = dialog.findViewById<TextView>(id.input_label)
         val inputValue = dialog.findViewById<TextView>(id.input_value)
         val checkBox = dialog.findViewById<CheckBox>(id.no_more_dialogs_check_box)

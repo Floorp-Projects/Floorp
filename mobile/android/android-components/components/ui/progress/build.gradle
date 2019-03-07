@@ -26,7 +26,7 @@ dependencies {
 
     implementation Dependencies.kotlin_stdlib
 
-    implementation Dependencies.support_appcompat
+    implementation Dependencies.androidx_appcompat
 
     testImplementation Dependencies.testing_junit
     testImplementation Dependencies.testing_robolectric

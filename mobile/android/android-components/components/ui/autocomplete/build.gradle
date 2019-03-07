@@ -12,7 +12,7 @@ android {
         minSdkVersion config.minSdkVersion
         targetSdkVersion config.targetSdkVersion
 
-        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
     buildTypes {
@@ -26,7 +26,7 @@ android {
 dependencies {
     implementation Dependencies.kotlin_stdlib
 
-    implementation Dependencies.support_appcompat
+    implementation Dependencies.androidx_appcompat
 
     testImplementation Dependencies.testing_junit
     testImplementation Dependencies.testing_robolectric

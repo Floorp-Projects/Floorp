@@ -9,7 +9,7 @@ import android.app.job.JobParameters;
 import android.app.job.JobService;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
-import android.support.annotation.VisibleForTesting;
+import androidx.annotation.VisibleForTesting;
 import android.util.Log;
 
 import org.mozilla.telemetry.Telemetry;

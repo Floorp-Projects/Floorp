@@ -16,10 +16,10 @@
 package mozilla.components.support.base.android.view
 
 import android.content.Context
-import android.support.annotation.VisibleForTesting
 import android.util.AttributeSet
 import android.view.TextureView
 import android.view.View
+import androidx.annotation.VisibleForTesting
 
 /**
  * A [TextureView] that can be adjusted to a specified aspect ratio.

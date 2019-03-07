@@ -5,8 +5,8 @@
 package mozilla.components.feature.findinpage.view
 
 import android.content.Context
-import android.support.v7.widget.AppCompatImageButton
 import android.widget.EditText
+import androidx.appcompat.widget.AppCompatImageButton
 import androidx.test.core.app.ApplicationProvider
 import mozilla.components.browser.session.Session
 import mozilla.components.feature.findinpage.R

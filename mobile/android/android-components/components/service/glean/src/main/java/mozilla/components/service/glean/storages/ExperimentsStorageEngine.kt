@@ -9,7 +9,7 @@ import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.ktx.android.org.json.toJSON
 
 import android.content.Context
-import android.support.annotation.VisibleForTesting
+import androidx.annotation.VisibleForTesting
 import org.json.JSONObject
 
 /**

@@ -10,6 +10,7 @@ import android.os.Bundle
 import android.os.IBinder
 import android.support.customtabs.ICustomTabsCallback
 import android.support.customtabs.ICustomTabsService
+import androidx.browser.customtabs.CustomTabsService
 import mozilla.components.concept.engine.Engine
 import mozilla.components.feature.customtabs.AbstractCustomTabsService
 import mozilla.components.support.test.mock
@@ -48,7 +49,8 @@ class AbstractCustomTabsServiceTest {
         assertNull(stub.extraCommand("", mock(Bundle::class.java)))
         assertFalse(stub.updateVisuals(mock(ICustomTabsCallback::class.java), mock(Bundle::class.java)))
         assertFalse(stub.requestPostMessageChannel(mock(ICustomTabsCallback::class.java), mock(Uri::class.java)))
-        assertEquals(0, stub.postMessage(mock(ICustomTabsCallback::class.java), "", mock(Bundle::class.java)))
+        assertEquals(CustomTabsService.RESULT_FAILURE_DISALLOWED,
+            stub.postMessage(mock(ICustomTabsCallback::class.java), "", mock(Bundle::class.java)))
         assertFalse(stub.validateRelationship(
             mock(ICustomTabsCallback::class.java),
             0,

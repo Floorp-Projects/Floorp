@@ -4,7 +4,7 @@
 
 package mozilla.components.service.pocket.ext
 
-import android.support.annotation.WorkerThread
+import androidx.annotation.WorkerThread
 import mozilla.components.concept.fetch.Client
 import mozilla.components.concept.fetch.Request
 import mozilla.components.concept.fetch.Response

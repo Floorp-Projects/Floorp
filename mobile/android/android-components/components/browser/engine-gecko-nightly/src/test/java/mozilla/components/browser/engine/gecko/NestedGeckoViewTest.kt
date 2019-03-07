@@ -6,12 +6,12 @@ package mozilla.components.browser.engine.gecko
 
 import android.app.Activity
 import android.content.Context
-import android.support.v4.view.NestedScrollingChildHelper
-import android.support.v4.view.ViewCompat.SCROLL_AXIS_VERTICAL
 import android.view.MotionEvent.ACTION_CANCEL
 import android.view.MotionEvent.ACTION_DOWN
 import android.view.MotionEvent.ACTION_MOVE
 import android.view.MotionEvent.ACTION_UP
+import androidx.core.view.NestedScrollingChildHelper
+import androidx.core.view.ViewCompat.SCROLL_AXIS_VERTICAL
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.mockMotionEvent
 import org.junit.Assert.assertEquals

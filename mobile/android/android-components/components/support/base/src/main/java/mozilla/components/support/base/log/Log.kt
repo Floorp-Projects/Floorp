@@ -4,7 +4,7 @@
 
 package mozilla.components.support.base.log
 
-import android.support.annotation.VisibleForTesting
+import androidx.annotation.VisibleForTesting
 import mozilla.components.support.base.log.sink.LogSink
 
 /**
@@ -65,7 +65,8 @@ object Log {
     }
 
     // Only for testing
-    @VisibleForTesting fun reset() {
+    @VisibleForTesting
+    fun reset() {
         logLevel = Priority.DEBUG
 
         synchronized(sinks) {

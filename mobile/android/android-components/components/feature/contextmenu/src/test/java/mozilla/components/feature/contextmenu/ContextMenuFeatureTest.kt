@@ -5,10 +5,11 @@
 package mozilla.components.feature.contextmenu
 
 import android.content.Context
-import android.support.v4.app.FragmentManager
-import android.support.v4.app.FragmentTransaction
 import android.view.HapticFeedbackConstants
 import android.view.View
+import androidx.fragment.app.FragmentManager
+import androidx.fragment.app.FragmentTransaction
+import androidx.test.core.app.ApplicationProvider
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.EngineView
@@ -30,12 +31,12 @@ import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoMoreInteractions
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.RuntimeEnvironment
 import java.util.UUID
 
 @RunWith(RobolectricTestRunner::class)
 class ContextMenuFeatureTest {
-    private val context: Context get() = RuntimeEnvironment.application
+    private val context: Context
+        get() = ApplicationProvider.getApplicationContext()
 
     @Test
     fun `New HitResult for selected session will cause fragment transaction`() {

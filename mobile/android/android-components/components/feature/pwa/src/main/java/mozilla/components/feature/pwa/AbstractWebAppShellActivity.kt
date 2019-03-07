@@ -5,8 +5,8 @@
 package mozilla.components.feature.pwa
 
 import android.os.Bundle
-import android.support.annotation.VisibleForTesting
-import android.support.v7.app.AppCompatActivity
+import androidx.annotation.VisibleForTesting
+import androidx.appcompat.app.AppCompatActivity
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.session.manifest.WebAppManifest

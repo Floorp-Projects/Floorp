@@ -4,9 +4,9 @@
 
 package mozilla.components.browser.session.storage
 
-import android.arch.lifecycle.Lifecycle
-import android.arch.lifecycle.LifecycleOwner
-import android.arch.lifecycle.LifecycleRegistry
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.LifecycleRegistry
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import kotlinx.coroutines.Job

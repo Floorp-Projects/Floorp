@@ -4,9 +4,9 @@
 
 package mozilla.components.service.glean.scheduler
 
-import android.arch.lifecycle.Lifecycle
-import android.arch.lifecycle.LifecycleObserver
-import android.arch.lifecycle.OnLifecycleEvent
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleObserver
+import androidx.lifecycle.OnLifecycleEvent
 import mozilla.components.service.glean.Glean
 import mozilla.components.service.glean.GleanMetrics.GleanBaseline
 

@@ -27,7 +27,7 @@ dependencies {
     implementation project(':support-ktx')
 
     implementation Dependencies.kotlin_stdlib
-    implementation Dependencies.support_design
+    implementation Dependencies.google_material
 
     testImplementation Dependencies.androidx_test_core
 

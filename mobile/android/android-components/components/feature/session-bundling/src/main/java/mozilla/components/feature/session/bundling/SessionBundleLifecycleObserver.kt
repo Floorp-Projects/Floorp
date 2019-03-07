@@ -4,10 +4,10 @@
 
 package mozilla.components.feature.session.bundling
 
-import android.arch.lifecycle.Lifecycle
-import android.arch.lifecycle.LifecycleObserver
-import android.arch.lifecycle.OnLifecycleEvent
-import android.support.annotation.VisibleForTesting
+import androidx.annotation.VisibleForTesting
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleObserver
+import androidx.lifecycle.OnLifecycleEvent
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
@@ -34,7 +34,8 @@ internal class SessionBundleLifecycleObserver(
     private val sessionManager: SessionManager
 ) : LifecycleObserver {
     private val logger = Logger("SessionBundleLifecycleObserver")
-    @VisibleForTesting internal var backgroundJob: Job? = null
+    @VisibleForTesting
+    internal var backgroundJob: Job? = null
     @VisibleForTesting internal var mainDispatcher: CoroutineDispatcher = Dispatchers.Main
 
     @OnLifecycleEvent(Lifecycle.Event.ON_START)

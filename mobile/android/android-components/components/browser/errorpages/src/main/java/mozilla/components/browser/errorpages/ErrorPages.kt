@@ -1,8 +1,8 @@
 package mozilla.components.browser.errorpages
 
 import android.content.Context
-import android.support.annotation.RawRes
-import android.support.annotation.StringRes
+import androidx.annotation.RawRes
+import androidx.annotation.StringRes
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this

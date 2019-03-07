@@ -8,12 +8,12 @@ package mozilla.components.feature.readerview.view
 
 import android.content.Context
 import android.graphics.Rect
-import android.support.annotation.IdRes
-import android.support.constraint.ConstraintLayout
-import android.support.v7.widget.AppCompatButton
 import android.util.AttributeSet
 import android.view.View
 import android.widget.RadioGroup
+import androidx.annotation.IdRes
+import androidx.appcompat.widget.AppCompatButton
+import androidx.constraintlayout.widget.ConstraintLayout
 import mozilla.components.feature.readerview.R
 import mozilla.components.feature.readerview.ReaderViewFeature.ColorScheme
 import mozilla.components.feature.readerview.ReaderViewFeature.FontType

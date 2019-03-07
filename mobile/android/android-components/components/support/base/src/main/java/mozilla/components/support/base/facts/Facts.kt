@@ -4,7 +4,7 @@
 
 package mozilla.components.support.base.facts
 
-import android.support.annotation.VisibleForTesting
+import androidx.annotation.VisibleForTesting
 
 /**
  * Global API for collecting [Fact] objects and forwarding them to [FactProcessor] instances.

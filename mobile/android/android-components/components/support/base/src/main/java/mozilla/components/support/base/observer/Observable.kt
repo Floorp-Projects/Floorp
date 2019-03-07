@@ -1,7 +1,7 @@
 package mozilla.components.support.base.observer
 
-import android.arch.lifecycle.LifecycleOwner
 import android.view.View
+import androidx.lifecycle.LifecycleOwner
 
 /**
  * Interface for observables. This interface is implemented by ObserverRegistry so that classes that

@@ -6,7 +6,7 @@ package mozilla.components.feature.contextmenu
 
 import android.content.ClipboardManager
 import android.content.Context
-import android.support.design.widget.CoordinatorLayout
+import androidx.coordinatorlayout.widget.CoordinatorLayout
 import android.view.View
 import mozilla.components.browser.session.Download
 import mozilla.components.browser.session.Session

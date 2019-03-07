@@ -4,10 +4,10 @@
 
 package mozilla.components.browser.menu.item
 
-import android.support.annotation.ColorRes
-import android.support.v4.content.ContextCompat
+import androidx.core.content.ContextCompat
 import android.view.View
 import android.widget.TextView
+import androidx.annotation.ColorRes
 import mozilla.components.browser.menu.BrowserMenu
 import mozilla.components.browser.menu.BrowserMenuItem
 import mozilla.components.browser.menu.R

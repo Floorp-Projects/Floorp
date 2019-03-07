@@ -5,7 +5,7 @@
 package mozilla.components.service.experiments
 
 import android.content.Context
-import android.support.annotation.VisibleForTesting
+import androidx.annotation.VisibleForTesting
 
 /**
  * An ActiveExperiment is an experiment that has a branch assigned.

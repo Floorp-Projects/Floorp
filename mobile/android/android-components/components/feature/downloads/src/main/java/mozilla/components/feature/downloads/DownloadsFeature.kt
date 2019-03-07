@@ -8,7 +8,7 @@ import android.Manifest.permission.INTERNET
 import android.Manifest.permission.WRITE_EXTERNAL_STORAGE
 import android.annotation.SuppressLint
 import android.content.Context
-import android.support.v4.app.FragmentManager
+import androidx.fragment.app.FragmentManager
 import mozilla.components.browser.session.Download
 import mozilla.components.browser.session.SelectionAwareSessionObserver
 import mozilla.components.browser.session.Session

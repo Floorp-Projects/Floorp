@@ -4,7 +4,7 @@
 
 package mozilla.components.feature.prompts
 
-import android.support.v4.app.DialogFragment
+import androidx.fragment.app.DialogFragment
 
 internal const val KEY_SESSION_ID = "KEY_SESSION_ID"
 internal const val KEY_TITLE = "KEY_TITLE"

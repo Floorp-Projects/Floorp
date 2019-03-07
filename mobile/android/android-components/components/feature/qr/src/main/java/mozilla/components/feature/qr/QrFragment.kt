@@ -36,13 +36,13 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.HandlerThread
 import android.os.Looper
-import android.support.v4.app.Fragment
 import android.util.Size
 import android.view.LayoutInflater
 import android.view.Surface
 import android.view.TextureView
 import android.view.View
 import android.view.ViewGroup
+import androidx.fragment.app.Fragment
 
 import com.google.zxing.BinaryBitmap
 import com.google.zxing.MultiFormatReader

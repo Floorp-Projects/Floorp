@@ -6,8 +6,8 @@ package mozilla.components.feature.downloads
 
 import android.app.Application
 import android.content.DialogInterface.BUTTON_POSITIVE
-import android.support.v4.app.FragmentManager
-import android.support.v7.app.AlertDialog
+import androidx.appcompat.app.AlertDialog
+import androidx.fragment.app.FragmentManager
 import mozilla.components.browser.session.Download
 import org.junit.Assert.assertTrue
 import org.junit.Before

@@ -5,13 +5,13 @@
 package mozilla.components.concept.toolbar
 
 import android.graphics.drawable.Drawable
-import android.support.annotation.DrawableRes
-import android.support.v7.widget.AppCompatImageButton
-import android.support.v7.widget.AppCompatImageView
 import android.util.TypedValue
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageButton
+import androidx.annotation.DrawableRes
+import androidx.appcompat.widget.AppCompatImageButton
+import androidx.appcompat.widget.AppCompatImageView
 import mozilla.components.support.base.android.Padding
 import mozilla.components.support.ktx.android.view.setPadding
 import java.lang.ref.WeakReference

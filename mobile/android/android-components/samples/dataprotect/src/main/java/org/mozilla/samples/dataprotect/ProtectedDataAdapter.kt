@@ -5,12 +5,12 @@
 package org.mozilla.samples.dataprotect
 
 import android.content.SharedPreferences
-import android.support.v7.widget.RecyclerView
 import android.util.Base64
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.recyclerview.widget.RecyclerView
 import mozilla.components.lib.dataprotect.Keystore
 import org.mozilla.samples.dataprotect.Constants.B64_FLAGS
 import java.nio.charset.StandardCharsets

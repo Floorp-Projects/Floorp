@@ -4,8 +4,8 @@
 
 package mozilla.components.browser.awesomebar.layout
 
-import android.support.annotation.LayoutRes
 import android.view.View
+import androidx.annotation.LayoutRes
 import mozilla.components.browser.awesomebar.BrowserAwesomeBar
 import mozilla.components.concept.awesomebar.AwesomeBar
 

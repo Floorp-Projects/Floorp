@@ -8,7 +8,6 @@ import android.annotation.SuppressLint
 import android.app.Dialog
 import android.content.DialogInterface
 import android.os.Bundle
-import android.support.v7.app.AlertDialog
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.LayoutInflater
@@ -17,6 +16,7 @@ import android.view.View.VISIBLE
 import android.widget.CheckBox
 import android.widget.EditText
 import android.widget.TextView
+import androidx.appcompat.app.AlertDialog
 
 private const val KEY_MANY_ALERTS = "KEY_MANY_ALERTS"
 private const val KEY_USER_CHECK_BOX = "KEY_USER_CHECK_BOX"

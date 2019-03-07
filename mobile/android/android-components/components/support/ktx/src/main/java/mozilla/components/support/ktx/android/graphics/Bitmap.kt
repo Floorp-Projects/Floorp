@@ -9,8 +9,8 @@ import android.graphics.BitmapShader
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.Shader.TileMode
-import android.support.annotation.CheckResult
 import android.util.Base64
+import androidx.annotation.CheckResult
 import java.io.ByteArrayOutputStream
 
 /**

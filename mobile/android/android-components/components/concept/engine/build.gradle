@@ -27,7 +27,7 @@ android {
 
 dependencies {
     implementation Dependencies.kotlin_stdlib
-    implementation Dependencies.support_annotations
+    implementation Dependencies.androidx_annotation
     implementation Dependencies.kotlin_coroutines
 
     // We expose this as API because we are using Observable in our public API and do not want every
