@@ -1624,23 +1624,29 @@ nsresult NS_NewURI(
 }
 
 nsresult NS_NewURI(
-    nsIURI **result, const nsAString &spec, const char *charset /* = nullptr */,
-    nsIURI *baseURI /* = nullptr */,
+    nsIURI **result, const nsAString &aSpec,
+    const char *charset /* = nullptr */, nsIURI *baseURI /* = nullptr */,
     nsIIOService
         *ioService /* = nullptr */)  // pass in nsIIOService to optimize callers
 {
-  return NS_NewURI(result, NS_ConvertUTF16toUTF8(spec), charset, baseURI,
-                   ioService);
+  nsAutoCString spec;
+  if (!AppendUTF16toUTF8(aSpec, spec, mozilla::fallible)) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  return NS_NewURI(result, spec, charset, baseURI, ioService);
 }
 
 nsresult NS_NewURI(
-    nsIURI **result, const nsAString &spec, NotNull<const Encoding *> encoding,
+    nsIURI **result, const nsAString &aSpec, NotNull<const Encoding *> encoding,
     nsIURI *baseURI /* = nullptr */,
     nsIIOService
         *ioService /* = nullptr */)  // pass in nsIIOService to optimize callers
 {
-  return NS_NewURI(result, NS_ConvertUTF16toUTF8(spec), encoding, baseURI,
-                   ioService);
+  nsAutoCString spec;
+  if (!AppendUTF16toUTF8(aSpec, spec, mozilla::fallible)) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  return NS_NewURI(result, spec, encoding, baseURI, ioService);
 }
 
 nsresult NS_NewURI(
