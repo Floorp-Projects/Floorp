@@ -19,6 +19,8 @@ class Connection {
 
     this.transport.hooks = this;
     this.onmessage = () => {};
+
+    this.transport.ready();
   }
 
   send(message) {
