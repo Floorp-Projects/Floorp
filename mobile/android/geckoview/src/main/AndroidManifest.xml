@@ -48,11 +48,11 @@
                 android:process=":media">
         </service>
         <service
-                android:name="org.mozilla.gecko.process.GeckoServiceChildProcess$geckomediaplugin"
+                android:name="org.mozilla.gecko.process.GeckoServiceChildProcess$gmplugin"
                 android:enabled="true"
                 android:exported="false"
                 android:isolatedProcess="false"
-                android:process=":geckomediaplugin">
+                android:process=":gmplugin">
         </service>
         <service
                 android:name="org.mozilla.gecko.process.GeckoServiceChildProcess$tab"

@@ -141,7 +141,7 @@ public class GeckoServiceChildProcess extends Service {
         return false;
     }
 
-    public static final class geckomediaplugin extends GeckoServiceChildProcess {}
+    public static final class gmplugin extends GeckoServiceChildProcess {}
 
     public static final class tab extends GeckoServiceChildProcess {}
 }
