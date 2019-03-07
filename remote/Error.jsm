@@ -6,7 +6,7 @@
 
 var EXPORTED_SYMBOLS = [
   "FatalError",
-  "formatError",
+  "RemoteAgentError",
   "UnknownMethodError",
   "UnsupportedError",
 ];
@@ -34,8 +34,12 @@ class RemoteAgentError extends Error {
     log.error(formatError(this));
   }
 
-  format() {
-    return formatError(this);
+  toString({stack = false} = {}) {
+    return RemoteAgentError.format(this, {stack});
+  }
+
+  static format(e, {stack = false} = {}) {
+    return formatError(e, {stack});
   }
 }
 
@@ -52,10 +56,10 @@ class FatalError extends RemoteAgentError {
   }
 
   notify() {
-    log.fatal(this.format());
+    log.fatal(this.toString());
   }
 
-  format() {
+  toString() {
     return formatError(this, {stack: true});
   }
 
@@ -75,7 +79,7 @@ function formatError(error, {stack = false} = {}) {
 
   ls.push(`${error.name}: ${error.message ? `${error.message}:` : ""}`);
 
-  if (stack) {
+  if (stack && error.stack) {
     const stack = error.stack.trim().split("\n");
     ls.push(stack.map(line => `\t${line}`).join("\n"));
 
