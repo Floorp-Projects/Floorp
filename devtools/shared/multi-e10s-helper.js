@@ -5,6 +5,13 @@
 "use strict";
 
 const Services = require("Services");
+const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
+
+XPCOMUtils.defineLazyServiceGetter(
+  this, "swm",
+  "@mozilla.org/serviceworkers/manager;1",
+  "nsIServiceWorkerManager"
+);
 
 /**
  * This helper provides info on whether we are in multi e10s mode or not.
@@ -39,11 +46,19 @@ function removeMultiE10sListener(listener) {
   Services.prefs.removeObserver(MULTI_OPTOUT_PREF, listener);
 }
 
+// TODO to be refactored as `canDebugServiceWorkers` (and
+// logic in the consumers of the function to be changed)
+// See Bug 1531349
 function isMultiE10s() {
   const isE10s = Services.appinfo.browserTabsRemoteAutostart;
   const processCount = Services.appinfo.maxWebProcessCount;
+  const multiE10s =  isE10s && processCount > 1;
+  const isNewSWImplementation = swm.isParentInterceptEnabled();
 
-  return isE10s && processCount > 1;
+  // When can we debug Service Workers?
+  // If we're running the new implementation, OR if not in multiprocess mode
+  const canDebugSW = isNewSWImplementation || !multiE10s;
+  return !canDebugSW;
 }
 
 module.exports = {

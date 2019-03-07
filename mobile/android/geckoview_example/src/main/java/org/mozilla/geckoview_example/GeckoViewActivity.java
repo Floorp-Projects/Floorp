@@ -661,6 +661,20 @@ public class GeckoViewActivity extends AppCompatActivity {
         public void onMediaPermissionRequest(final GeckoSession session, final String uri,
                                            final MediaSource[] video, final MediaSource[] audio,
                                            final MediaCallback callback) {
+            // If we don't have device permissions at this point, just automatically reject the request
+            // as we will have already have requested device permissions before getting to this point
+            // and if we've reached here and we don't have permissions then that means that the user
+            // denied them.
+            if ((audio != null
+                    && ContextCompat.checkSelfPermission(GeckoViewActivity.this,
+                        Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED)
+                || (video != null
+                    && ContextCompat.checkSelfPermission(GeckoViewActivity.this,
+                        Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED)) {
+                callback.reject();
+                return;
+            }
+
             final String host = Uri.parse(uri).getAuthority();
             final String title;
             if (audio == null) {

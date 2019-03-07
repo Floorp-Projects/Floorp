@@ -515,6 +515,7 @@ function clearDebuggerPreferences() {
   Services.prefs.clearUserPref("devtools.debugger.call-stack-visible");
   Services.prefs.clearUserPref("devtools.debugger.scopes-visible");
   Services.prefs.clearUserPref("devtools.debugger.skip-pausing");
+  pushPref("devtools.debugger.map-scopes-enabled", true);
 }
 
 /**

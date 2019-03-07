@@ -153,6 +153,11 @@ function classMethod(id, body, kind, static) {
                      kind: kind,
                      static: static });
 }
+function classField(id, initializer) {
+    return Pattern({ type: "ClassField",
+                     name: id,
+                     initializer: initializer });
+}
 
 function funExpr(id, args, body, gen) {
     return Pattern({ type: "FunctionExpression",

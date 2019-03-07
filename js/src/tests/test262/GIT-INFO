@@ -1,7 +1,5 @@
-commit 59b89a1c834faadc359aecc882587b513877b59b
-Author: Leo Balter <leonardo.balter@gmail.com>
-Date:   Tue Feb 26 11:01:57 2019 -0500
+commit c822f4c92914333d197191b2b3dec4e923acb4a3
+Author: André Bargull <andre.bargull@gmail.com>
+Date:   Wed Mar 6 09:24:44 2019 -0800
 
-    Merge pull request #2083 from leobalter/2034/yaml-extra-lines
-    
-    Add lint check for leading empty lines in description and info blocks
+    Fix existing linting errors, update error phase, and add a new flags linter (#2086)

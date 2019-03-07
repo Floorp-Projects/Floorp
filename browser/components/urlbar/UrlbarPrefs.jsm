@@ -140,6 +140,7 @@ const PREF_URLBAR_DEFAULTS = new Map([
 const PREF_OTHER_DEFAULTS = new Map([
   ["keyword.enabled", true],
   ["browser.search.suggest.enabled", true],
+  ["ui.popup.disable_autohide", false],
 ]);
 
 // Maps preferences under browser.urlbar.suggest to behavior names, as defined

@@ -900,6 +900,8 @@ pub enum CSSWideKeyword {
     Inherit,
     /// The `unset` keyword.
     Unset,
+    /// The `revert` keyword.
+    Revert,
 }
 
 impl CSSWideKeyword {
@@ -908,6 +910,7 @@ impl CSSWideKeyword {
             CSSWideKeyword::Initial => "initial",
             CSSWideKeyword::Inherit => "inherit",
             CSSWideKeyword::Unset => "unset",
+            CSSWideKeyword::Revert => "revert",
         }
     }
 }
@@ -921,6 +924,7 @@ impl CSSWideKeyword {
                 "initial" => CSSWideKeyword::Initial,
                 "inherit" => CSSWideKeyword::Inherit,
                 "unset" => CSSWideKeyword::Unset,
+                "revert" => CSSWideKeyword::Revert,
                 _ => return Err(()),
             }
         };
@@ -2103,6 +2107,7 @@ impl PropertyDeclaration {
     }
 
     /// Returns a CSS-wide keyword if the declaration's value is one.
+    #[inline]
     pub fn get_css_wide_keyword(&self) -> Option<CSSWideKeyword> {
         match *self {
             PropertyDeclaration::CSSWideKeyword(ref declaration) => {
@@ -3436,22 +3441,16 @@ impl<'a> StyleBuilder<'a> {
     }
 
     % for property in data.longhands:
-    % if property.ident != "font_size":
+    % if not property.style_struct.inherited:
     /// Inherit `${property.ident}` from our parent style.
     #[allow(non_snake_case)]
     pub fn inherit_${property.ident}(&mut self) {
         let inherited_struct =
-        % if property.style_struct.inherited:
-            self.inherited_style.get_${property.style_struct.name_lower}();
-        % else:
             self.inherited_style_ignoring_first_line
                 .get_${property.style_struct.name_lower}();
-        % endif
 
-        % if not property.style_struct.inherited:
-        self.flags.insert(ComputedValueFlags::INHERITS_RESET_STYLE);
         self.modified_reset = true;
-        % endif
+        self.flags.insert(ComputedValueFlags::INHERITS_RESET_STYLE);
 
         % if property.ident == "content":
         self.flags.insert(ComputedValueFlags::INHERITS_CONTENT);
@@ -3473,16 +3472,12 @@ impl<'a> StyleBuilder<'a> {
                 % endif
             );
     }
-
+    % elif property.name != "font-size":
     /// Reset `${property.ident}` to the initial value.
     #[allow(non_snake_case)]
     pub fn reset_${property.ident}(&mut self) {
         let reset_struct =
             self.reset_style.get_${property.style_struct.name_lower}();
-
-        % if not property.style_struct.inherited:
-        self.modified_reset = true;
-        % endif
 
         if self.${property.style_struct.ident}.ptr_eq(reset_struct) {
             return;
@@ -3496,6 +3491,7 @@ impl<'a> StyleBuilder<'a> {
                 % endif
             );
     }
+    % endif
 
     % if not property.is_vector:
     /// Set the `${property.ident}` to the computed value `value`.
@@ -3516,7 +3512,6 @@ impl<'a> StyleBuilder<'a> {
                 % endif
             );
     }
-    % endif
     % endif
     % endfor
     <% del property %>

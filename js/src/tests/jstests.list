@@ -19,6 +19,14 @@ skip script non262/fields/field_types.js
 skip script non262/fields/literal.js
 skip script non262/fields/mixed_methods.js
 skip script non262/fields/quirks.js
+skip script non262/reflect-parse/class-fields.js
+
+
+###########################################################################
+# Generated jstests.list for test262 when inline |reftest| isn't possible #
+###########################################################################
+
+include test262/jstests.list
 
 
 #################################################################
@@ -132,7 +140,6 @@ skip script test262/built-ins/TypedArray/prototype/map/BigInt/speciesctor-get-ct
 skip script test262/built-ins/TypedArray/prototype/map/BigInt/speciesctor-get-species-custom-ctor.js
 skip script test262/built-ins/TypedArray/prototype/map/BigInt/speciesctor-get-species-abrupt.js
 skip script test262/built-ins/TypedArray/prototype/map/BigInt/speciesctor-get-ctor-abrupt.js
-
 
 # Anonymous functions have own name property in SpiderMonkey
 skip script test262/language/expressions/assignment/fn-name-lhs-cover.js
@@ -1127,16 +1134,6 @@ skip script test262/annexB/language/eval-code/indirect/global-if-decl-else-decl-
 skip script test262/annexB/language/eval-code/indirect/global-block-decl-eval-global-existing-global-init.js
 skip script test262/annexB/language/eval-code/indirect/global-switch-case-eval-global-existing-global-init.js
 
-# Need to fix increment/decrement of arguments or eval -- bug 1530883.
-skip script test262/language/expressions/postfix-increment/eval.js
-skip script test262/language/expressions/postfix-increment/arguments.js
-skip script test262/language/expressions/prefix-decrement/eval.js
-skip script test262/language/expressions/prefix-decrement/arguments.js
-skip script test262/language/expressions/prefix-increment/eval.js
-skip script test262/language/expressions/prefix-increment/arguments.js
-skip script test262/language/expressions/postfix-decrement/eval.js
-skip script test262/language/expressions/postfix-decrement/arguments.js
-
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1340307
 skip script test262/language/module-code/instn-resolve-empty-export.js
 skip script test262/language/module-code/instn-resolve-empty-import.js
@@ -1208,9 +1205,6 @@ skip script test262/annexB/built-ins/Function/createdynfn-html-close-comment-par
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1462745
 skip script test262/annexB/language/function-code/block-decl-nested-blocks-with-fun-decl.js
 
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1406171
-skip script test262/built-ins/Reflect/ownKeys/return-on-corresponding-order-large-index.js
-
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1473229
 skip include test262/intl402/RelativeTimeFormat/prototype/formatToParts/jstests.list
 
@@ -1238,6 +1232,7 @@ skip script test262/language/expressions/import.meta/syntax/invalid-assignment-t
 # before we can run the updated test -- bug 1531091.
 skip script test262/intl402/Collator/missing-unicode-ext-value-defaults-to-true.js
 
+
 ###########################################################
 # Tests disabled due to issues in test262 importer script #
 ###########################################################
@@ -1245,44 +1240,7 @@ skip script test262/intl402/Collator/missing-unicode-ext-value-defaults-to-true.
 # test262 importer merges all includes in a per directory shell.js file, breaking this harness test case.
 skip script test262/harness/detachArrayBuffer.js
 
-# The hashbang tests are usually raw tests -- which means they must be run
-# with no alterations.  (This because "#!" only denotes a single-line comment if
-# it appears at the very start of the script, and nowhere else.)  But jstests.py
-# expects to be told how tests should run, and what to expect from them, per the
-# // |reftest| comment on the first line -- exactly where the "#!" must appear
-# if it is to appear.  (Same for the various fake hashbangs that aren't
-# *actually* hashbangs, if they are to test what they were intended to test.)
-#
-# So for now -- until we can figure out a way to encode "this is a negative
-# test" in a way that doesn't require changing the raw source of the test --
-# these tests must be explicitly skipped.  See bug 1531202.
-skip script test262/language/comments/hashbang/escaped-hashbang.js
-skip script test262/language/comments/hashbang/preceding-hashbang.js
-skip script test262/language/comments/hashbang/escaped-hash-043.js
-skip script test262/language/comments/hashbang/preceding-line-comment.js
-skip script test262/language/comments/hashbang/escaped-hash-x23.js
-skip script test262/language/comments/hashbang/escaped-hash-u0023.js
-skip script test262/language/comments/hashbang/escaped-bang-u0021.js
-skip script test262/language/comments/hashbang/preceding-empty-statement.js
-skip script test262/language/comments/hashbang/escaped-bang-x21.js
-skip script test262/language/comments/hashbang/multi-line-comment.js
-skip script test262/language/comments/hashbang/escaped-bang-041.js
-skip script test262/language/comments/hashbang/preceding-directive-prologue.js
-skip script test262/language/comments/hashbang/preceding-multi-line-comment.js
-skip script test262/language/comments/hashbang/escaped-hash-u23.js
-skip script test262/language/comments/hashbang/escaped-bang-u21.js
-skip script test262/language/comments/hashbang/preceding-directive-prologue-sc.js
-skip script test262/language/comments/hashbang/preceding-whitespace.js
-
 
 ####################################################
 # Tests disabled due to invalid test expectations  #
 ####################################################
-
-# https://github.com/tc39/test262/pull/1965
-skip script test262/language/expressions/dynamic-import/indirect-resolution.js
-skip script test262/language/expressions/dynamic-import/namespace/default-property-not-set-own.js
-
-# https://github.com/tc39/test262/pull/2023
-skip script test262/language/statements/try/early-catch-var.js
-skip script test262/language/eval-code/direct/var-env-lower-lex-catch-non-strict.js

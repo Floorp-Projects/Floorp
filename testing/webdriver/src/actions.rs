@@ -199,7 +199,7 @@ impl<'de> Deserialize<'de> for PointerOrigin {
         let value = Value::deserialize(deserializer)?;
         if let Some(web_element) = value.get(ELEMENT_KEY) {
             String::deserialize(web_element)
-                .map(|id| PointerOrigin::Element(WebElement { id }))
+                .map(|id| PointerOrigin::Element(WebElement(id)))
                 .map_err(de::Error::custom)
         } else if value == "pointer" {
             Ok(PointerOrigin::Pointer)
@@ -218,7 +218,7 @@ fn serialize_webelement_id<S>(element: &WebElement, serializer: S) -> Result<S::
 where
     S: Serializer,
 {
-    element.id.serialize(serializer)
+    element.to_string().serialize(serializer)
 }
 
 fn deserialize_to_option_i64<'de, D>(deserializer: D) -> Result<Option<i64>, D::Error>
@@ -915,7 +915,7 @@ mod test {
         }"#;
         let data = PointerAction::Move(PointerMoveAction {
             duration: Some(100),
-            origin: PointerOrigin::Element(WebElement { id: "elem".into() }),
+            origin: PointerOrigin::Element(WebElement("elem".into())),
             x: Some(5),
             y: Some(10),
         });
@@ -936,7 +936,7 @@ mod test {
         }"#;
         let data = PointerAction::Move(PointerMoveAction {
             duration: Some(100),
-            origin: PointerOrigin::Element(WebElement { id: "elem".into() }),
+            origin: PointerOrigin::Element(WebElement("elem".into())),
             x: Some(5),
             y: Some(10),
         });
@@ -1116,7 +1116,7 @@ mod test {
     #[test]
     fn test_json_pointer_origin_web_element() {
         let json = r#"{"element-6066-11e4-a52e-4f735466cecf":"elem"}"#;
-        let data = PointerOrigin::Element(WebElement { id: "elem".into() });
+        let data = PointerOrigin::Element(WebElement("elem".into()));
 
         check_serialize_deserialize(&json, &data);
     }

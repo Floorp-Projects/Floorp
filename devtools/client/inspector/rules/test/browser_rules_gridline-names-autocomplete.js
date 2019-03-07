@@ -37,7 +37,8 @@ const newAreaTestData = [
   ["c", {}, "col1-start", OPEN, SELECTED, CHANGE],
   ["VK_BACK_SPACE", {}, "c", !OPEN, !SELECTED, CHANGE],
   ["VK_BACK_SPACE", {}, "", !OPEN, !SELECTED, CHANGE],
-  ["r", {}, "row1-start", OPEN, SELECTED, CHANGE],
+  ["r", {}, "revert", OPEN, SELECTED, CHANGE],
+  ["VK_DOWN", {}, "row1-start", OPEN, SELECTED, CHANGE],
   ["r", {}, "rr", !OPEN, !SELECTED, CHANGE],
   ["VK_BACK_SPACE", {}, "r", !OPEN, !SELECTED, CHANGE],
   ["o", {}, "row1-start", OPEN, SELECTED, CHANGE],
@@ -57,7 +58,8 @@ const newRowTestData = [
   "grid-line-names-updated",
   ["c", {}, "c", !OPEN, !SELECTED, CHANGE],
   ["VK_BACK_SPACE", {}, "", !OPEN, !SELECTED, CHANGE],
-  ["r", {}, "row1-start", OPEN, SELECTED, CHANGE],
+  ["r", {}, "revert", OPEN, SELECTED, CHANGE],
+  ["VK_DOWN", {}, "row1-start", OPEN, SELECTED, CHANGE],
   ["VK_TAB", {}, "", !OPEN, !SELECTED, CHANGE],
 ];
 

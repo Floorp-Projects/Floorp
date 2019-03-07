@@ -72,8 +72,8 @@ function releaseActor(actor: String) {
   return debuggerClient.release(actor);
 }
 
-function sendPacket(packet: Object, callback?: Function = r => r) {
-  return debuggerClient.request(packet).then(callback);
+function sendPacket(packet: Object) {
+  return debuggerClient.request(packet)
 }
 
 function lookupThreadClient(thread: string) {

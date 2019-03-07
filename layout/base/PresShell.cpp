@@ -7807,7 +7807,7 @@ nsresult PresShell::EventHandler::HandleEventInternal(
     // bug 329430
     aEvent->mTarget = nullptr;
 
-    TimeStamp handlerStartTime = TimeStamp::Now();
+    HandlingTimeAccumulator handlingTimeAccumulator(*this, aEvent);
 
     // 1. Give event to event manager for pre event state changes and
     //    generation of synthetic events.
@@ -7924,47 +7924,6 @@ nsresult PresShell::EventHandler::HandleEventInternal(
       }
       default:
         break;
-    }
-
-    if (aEvent->IsTrusted() && aEvent->mTimeStamp > mPresShell->mLastOSWake) {
-      switch (aEvent->mMessage) {
-        case eKeyPress:
-        case eKeyDown:
-        case eKeyUp:
-          Telemetry::AccumulateTimeDelta(
-              Telemetry::INPUT_EVENT_HANDLED_KEYBOARD_MS, handlerStartTime);
-          break;
-        case eMouseDown:
-          Telemetry::AccumulateTimeDelta(
-              Telemetry::INPUT_EVENT_HANDLED_MOUSE_DOWN_MS, handlerStartTime);
-          break;
-        case eMouseUp:
-          Telemetry::AccumulateTimeDelta(
-              Telemetry::INPUT_EVENT_HANDLED_MOUSE_UP_MS, handlerStartTime);
-          break;
-        case eMouseMove:
-          if (aEvent->mFlags.mHandledByAPZ) {
-            Telemetry::AccumulateTimeDelta(
-                Telemetry::INPUT_EVENT_HANDLED_APZ_MOUSE_MOVE_MS,
-                handlerStartTime);
-          }
-          break;
-        case eWheel:
-          if (aEvent->mFlags.mHandledByAPZ) {
-            Telemetry::AccumulateTimeDelta(
-                Telemetry::INPUT_EVENT_HANDLED_APZ_WHEEL_MS, handlerStartTime);
-          }
-          break;
-        case eTouchMove:
-          if (aEvent->mFlags.mHandledByAPZ) {
-            Telemetry::AccumulateTimeDelta(
-                Telemetry::INPUT_EVENT_HANDLED_APZ_TOUCH_MOVE_MS,
-                handlerStartTime);
-          }
-          break;
-        default:
-          break;
-      }
     }
   }
   RecordEventHandlingResponsePerformance(aEvent);
@@ -10962,4 +10921,62 @@ void PresShell::EventHandler::EventTargetData::UpdateTouchEventTarget(
   // Touch events (except touchstart) are dispatching to the captured
   // element. Get correct shell from it.
   mPresShell = newPresShell;
+}
+
+/******************************************************************************
+ * PresShell::EventHandler::HandlingTimeAccumulator
+ ******************************************************************************/
+
+PresShell::EventHandler::HandlingTimeAccumulator::HandlingTimeAccumulator(
+    const PresShell::EventHandler& aEventHandler, const WidgetEvent* aEvent)
+    : mEventHandler(aEventHandler),
+      mEvent(aEvent),
+      mHandlingStartTime(TimeStamp::Now()) {
+  MOZ_ASSERT(mEvent);
+}
+
+PresShell::EventHandler::HandlingTimeAccumulator::~HandlingTimeAccumulator() {
+  if (!mEvent->IsTrusted() ||
+      mEvent->mTimeStamp <= mEventHandler.mPresShell->mLastOSWake) {
+    return;
+  }
+
+  switch (mEvent->mMessage) {
+    case eKeyPress:
+    case eKeyDown:
+    case eKeyUp:
+      Telemetry::AccumulateTimeDelta(Telemetry::INPUT_EVENT_HANDLED_KEYBOARD_MS,
+                                     mHandlingStartTime);
+      return;
+    case eMouseDown:
+      Telemetry::AccumulateTimeDelta(
+          Telemetry::INPUT_EVENT_HANDLED_MOUSE_DOWN_MS, mHandlingStartTime);
+      return;
+    case eMouseUp:
+      Telemetry::AccumulateTimeDelta(Telemetry::INPUT_EVENT_HANDLED_MOUSE_UP_MS,
+                                     mHandlingStartTime);
+      return;
+    case eMouseMove:
+      if (mEvent->mFlags.mHandledByAPZ) {
+        Telemetry::AccumulateTimeDelta(
+            Telemetry::INPUT_EVENT_HANDLED_APZ_MOUSE_MOVE_MS,
+            mHandlingStartTime);
+      }
+      return;
+    case eWheel:
+      if (mEvent->mFlags.mHandledByAPZ) {
+        Telemetry::AccumulateTimeDelta(
+            Telemetry::INPUT_EVENT_HANDLED_APZ_WHEEL_MS, mHandlingStartTime);
+      }
+      return;
+    case eTouchMove:
+      if (mEvent->mFlags.mHandledByAPZ) {
+        Telemetry::AccumulateTimeDelta(
+            Telemetry::INPUT_EVENT_HANDLED_APZ_TOUCH_MOVE_MS,
+            mHandlingStartTime);
+      }
+      return;
+    default:
+      return;
+  }
 }
