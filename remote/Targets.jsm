@@ -6,6 +6,7 @@
 
 var EXPORTED_SYMBOLS = ["Targets"];
 
+const {EventEmitter} = ChromeUtils.import("resource://gre/modules/EventEmitter.jsm");
 const {MessagePromise} = ChromeUtils.import("chrome://remote/content/Sync.jsm");
 const {Target} = ChromeUtils.import("chrome://remote/content/Target.jsm");
 
@@ -13,9 +14,11 @@ class Targets {
   constructor() {
     // browser context ID -> Target<XULElement>
     this._targets = new Map();
+
+    EventEmitter.decorate(this);
   }
 
-  /** @param BrowserElement browser */
+  /** @param {BrowserElement} browser */
   async connect(browser) {
     // The tab may just have been created and not fully initialized yet.
     // Target class expects BrowserElement.browsingContext to be defined
@@ -28,9 +31,10 @@ class Targets {
     const target = new Target(browser);
     target.connect();
     this._targets.set(target.id, target);
+    this.emit("connect", target);
   }
 
-  /** @param BrowserElement browser */
+  /** @param {BrowserElement} browser */
   disconnect(browser) {
     // Ignore the browsers that haven't had time to initialize.
     if (!browser.browsingContext) {
@@ -39,6 +43,7 @@ class Targets {
 
     const target = this._targets.get(browser.browsingContext.id);
     if (target) {
+      this.emit("disconnect", target);
       target.disconnect();
       this._targets.delete(target.id);
     }
