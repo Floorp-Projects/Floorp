@@ -559,7 +559,7 @@
                             </hbox>
                           </row>
                           <hbox class="detail-row-footer" id="detail-privateBrowsing-row-footer">
-                            <description class="indent preferences-description" data-l10n-id="detail-private-browsing-description">
+                            <description class="indent preferences-description" data-l10n-id="detail-private-browsing-description2">
                               <label id="detail-private-browsing-learnmore-link" class="learnMore" data-l10n-name="detail-private-browsing-learn-more" is="text-link"/>
                             </description>
                           </hbox>
