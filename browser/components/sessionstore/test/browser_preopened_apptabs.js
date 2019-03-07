@@ -23,43 +23,116 @@ registerCleanupFunction(function() {
   Services.prefs.clearUserPref(PREF_NUM_PINNED_TABS);
 });
 
-let testCases = [
-  {numPinnedPref: 5, selected: 3, overrideTabs: false},
-  {numPinnedPref: 5, selected: 3, overrideTabs: true},
-  {numPinnedPref: 5, selected: 1, overrideTabs: false},
-  {numPinnedPref: 5, selected: 1, overrideTabs: true},
-  {numPinnedPref: 3, selected: 3, overrideTabs: false},
-  {numPinnedPref: 3, selected: 3, overrideTabs: true},
-  {numPinnedPref: 3, selected: 1, overrideTabs: false},
-  {numPinnedPref: 3, selected: 1, overrideTabs: true},
-  {numPinnedPref: 1, selected: 3, overrideTabs: false},
-  {numPinnedPref: 1, selected: 3, overrideTabs: true},
-  {numPinnedPref: 1, selected: 1, overrideTabs: false},
-  {numPinnedPref: 1, selected: 1, overrideTabs: true},
-  {numPinnedPref: 0, selected: 3, overrideTabs: false},
-  {numPinnedPref: 0, selected: 3, overrideTabs: true},
-  {numPinnedPref: 0, selected: 1, overrideTabs: false},
-  {numPinnedPref: 0, selected: 1, overrideTabs: true},
-];
+add_task(async function testPrefSynced() {
+  Services.prefs.setIntPref(PREF_NUM_PINNED_TABS, 3);
 
-for (let {numPinnedPref, selected, overrideTabs} of testCases) {
-  add_task(async function testPrefSynced() {
-    Services.prefs.setIntPref(PREF_NUM_PINNED_TABS, numPinnedPref);
+  let state = { windows: [{ tabs: [
+    { entries: [{ url: "http://example.org/#1", triggeringPrincipal_base64 }], pinned: true },
+    { entries: [{ url: "http://example.org/#2", triggeringPrincipal_base64 }], pinned: true },
+    { entries: [{ url: "http://example.org/#3", triggeringPrincipal_base64 }], pinned: true },
+  ], selected: 3 }] };
 
-    let state = { windows: [{ tabs: [
-      { entries: [{ url: "http://example.org/#1", triggeringPrincipal_base64 }], pinned: true, userContextId: 0 },
-      { entries: [{ url: "http://example.org/#2", triggeringPrincipal_base64 }], pinned: true, userContextId: 0 },
-      { entries: [{ url: "http://example.org/#3", triggeringPrincipal_base64 }], pinned: true, userContextId: 0 },
-    ], selected }] };
+  muffleMainWindowType();
+  let win = await BrowserTestUtils.openNewBrowserWindow();
+  Assert.equal([...win.gBrowser.tabs].filter(t => t.pinned).length, 3);
+  Assert.equal([...win.gBrowser.tabs].filter(t => !!t.linkedPanel).length, 1);
+  await setWindowState(win, state, false, true);
+  Assert.equal([...win.gBrowser.tabs].filter(t => t.pinned).length, 3);
+  Assert.equal([...win.gBrowser.tabs].filter(t => !!t.linkedPanel).length, 4);
+  await BrowserTestUtils.closeWindow(win);
+});
 
-    muffleMainWindowType();
-    let win = await BrowserTestUtils.openNewBrowserWindow();
-    Assert.equal([...win.gBrowser.tabs].filter(t => t.pinned).length, numPinnedPref);
-    Assert.equal([...win.gBrowser.tabs].filter(t => !!t.linkedPanel).length, 1);
-    await setWindowState(win, state, overrideTabs, true);
-    Assert.equal([...win.gBrowser.tabs].filter(t => t.pinned).length, 3);
-    Assert.equal([...win.gBrowser.tabs].filter(t => !!t.linkedPanel).length,
-                 overrideTabs ? 3 : 4);
-    await BrowserTestUtils.closeWindow(win);
-  });
-}
+add_task(async function testPrefSyncedSelected() {
+  Services.prefs.setIntPref(PREF_NUM_PINNED_TABS, 3);
+
+  let state = { windows: [{ tabs: [
+    { entries: [{ url: "http://example.org/#1", triggeringPrincipal_base64 }], pinned: true },
+    { entries: [{ url: "http://example.org/#2", triggeringPrincipal_base64 }], pinned: true },
+    { entries: [{ url: "http://example.org/#3", triggeringPrincipal_base64 }], pinned: true },
+  ], selected: 1 }] };
+
+  muffleMainWindowType();
+  let win = await BrowserTestUtils.openNewBrowserWindow();
+  Assert.equal([...win.gBrowser.tabs].filter(t => t.pinned).length, 3);
+  Assert.equal([...win.gBrowser.tabs].filter(t => !!t.linkedPanel).length, 1);
+  await setWindowState(win, state, false, true);
+  Assert.equal([...win.gBrowser.tabs].filter(t => t.pinned).length, 3);
+  Assert.equal([...win.gBrowser.tabs].filter(t => !!t.linkedPanel).length, 4);
+  await BrowserTestUtils.closeWindow(win);
+});
+
+add_task(async function testPrefTooHigh() {
+  Services.prefs.setIntPref(PREF_NUM_PINNED_TABS, 5);
+
+  let state = { windows: [{ tabs: [
+    { entries: [{ url: "http://example.org/#1", triggeringPrincipal_base64 }], pinned: true },
+    { entries: [{ url: "http://example.org/#2", triggeringPrincipal_base64 }], pinned: true },
+    { entries: [{ url: "http://example.org/#3", triggeringPrincipal_base64 }], pinned: true },
+  ], selected: 3 }] };
+
+  muffleMainWindowType();
+  let win = await BrowserTestUtils.openNewBrowserWindow();
+  Assert.equal([...win.gBrowser.tabs].filter(t => t.pinned).length, 5);
+  Assert.equal([...win.gBrowser.tabs].filter(t => !!t.linkedPanel).length, 1);
+  await setWindowState(win, state, false, true);
+  Assert.equal([...win.gBrowser.tabs].filter(t => t.pinned).length, 3);
+  Assert.equal([...win.gBrowser.tabs].filter(t => !!t.linkedPanel).length, 4);
+  await BrowserTestUtils.closeWindow(win);
+});
+
+add_task(async function testPrefTooLow() {
+  Services.prefs.setIntPref(PREF_NUM_PINNED_TABS, 1);
+
+  let state = { windows: [{ tabs: [
+    { entries: [{ url: "http://example.org/#1", triggeringPrincipal_base64 }], pinned: true },
+    { entries: [{ url: "http://example.org/#2", triggeringPrincipal_base64 }], pinned: true },
+    { entries: [{ url: "http://example.org/#3", triggeringPrincipal_base64 }], pinned: true },
+  ], selected: 3 }] };
+
+  muffleMainWindowType();
+  let win = await BrowserTestUtils.openNewBrowserWindow();
+  Assert.equal([...win.gBrowser.tabs].filter(t => t.pinned).length, 1);
+  Assert.equal([...win.gBrowser.tabs].filter(t => !!t.linkedPanel).length, 1);
+  await setWindowState(win, state, false, true);
+  Assert.equal([...win.gBrowser.tabs].filter(t => t.pinned).length, 3);
+  Assert.equal([...win.gBrowser.tabs].filter(t => !!t.linkedPanel).length, 4);
+  await BrowserTestUtils.closeWindow(win);
+});
+
+add_task(async function testPrefTooHighSelected() {
+  Services.prefs.setIntPref(PREF_NUM_PINNED_TABS, 5);
+
+  let state = { windows: [{ tabs: [
+    { entries: [{ url: "http://example.org/#1", triggeringPrincipal_base64 }], pinned: true },
+    { entries: [{ url: "http://example.org/#2", triggeringPrincipal_base64 }], pinned: true },
+    { entries: [{ url: "http://example.org/#3", triggeringPrincipal_base64 }], pinned: true },
+  ], selected: 1 }] };
+
+  muffleMainWindowType();
+  let win = await BrowserTestUtils.openNewBrowserWindow();
+  Assert.equal([...win.gBrowser.tabs].filter(t => t.pinned).length, 5);
+  Assert.equal([...win.gBrowser.tabs].filter(t => !!t.linkedPanel).length, 1);
+  await setWindowState(win, state, false, true);
+  Assert.equal([...win.gBrowser.tabs].filter(t => t.pinned).length, 3);
+  Assert.equal([...win.gBrowser.tabs].filter(t => !!t.linkedPanel).length, 4);
+  await BrowserTestUtils.closeWindow(win);
+});
+
+add_task(async function testPrefTooLowSelected() {
+  Services.prefs.setIntPref(PREF_NUM_PINNED_TABS, 1);
+
+  let state = { windows: [{ tabs: [
+    { entries: [{ url: "http://example.org/#1", triggeringPrincipal_base64 }], pinned: true },
+    { entries: [{ url: "http://example.org/#2", triggeringPrincipal_base64 }], pinned: true },
+    { entries: [{ url: "http://example.org/#3", triggeringPrincipal_base64 }], pinned: true },
+  ], selected: 1 }] };
+
+  muffleMainWindowType();
+  let win = await BrowserTestUtils.openNewBrowserWindow();
+  Assert.equal([...win.gBrowser.tabs].filter(t => t.pinned).length, 1);
+  Assert.equal([...win.gBrowser.tabs].filter(t => !!t.linkedPanel).length, 1);
+  await setWindowState(win, state, false, true);
+  Assert.equal([...win.gBrowser.tabs].filter(t => t.pinned).length, 3);
+  Assert.equal([...win.gBrowser.tabs].filter(t => !!t.linkedPanel).length, 4);
+  await BrowserTestUtils.closeWindow(win);
+});
