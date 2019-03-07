@@ -304,7 +304,7 @@ PersistentBufferProviderShared::BorrowDrawTarget(
       }
 
       if (!tex) {
-        gfxCriticalNote() << "Unexpected BufferProvider over-production.";
+        gfxCriticalError() << "Unexpected BufferProvider over-production.";
         // It would be pretty bad to keep piling textures up at this point so we
         // call NotifyInactive to remove some of our textures.
         NotifyInactive();
