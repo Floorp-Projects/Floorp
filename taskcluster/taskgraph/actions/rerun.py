@@ -7,7 +7,6 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import logging
-import sys
 
 from taskgraph.util.taskcluster import (
     status_task,
@@ -54,9 +53,9 @@ def rerun_action(parameters, graph_config, input, task_group_id, task_id):
 
     status = status_task(task_id)
     if status not in RERUN_STATES:
-        logger.error(
-            "Refusing to rerun {}: state {} not in {}!".format(label, status, RERUN_STATES)
+        logger.warning(
+            "No need to to rerun {}: state '{}' not in {}!".format(label, status, RERUN_STATES)
         )
-        sys.exit(1)
+        return
     rerun_task(task_id)
     logger.info('Reran {}'.format(label))
