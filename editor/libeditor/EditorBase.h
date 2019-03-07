@@ -99,64 +99,6 @@ namespace widget {
 struct IMEState;
 }  // namespace widget
 
-/**
- * CachedWeakPtr stores a pointer to a class which inherits nsIWeakReference.
- * If the instance of the class has already been destroyed, this returns
- * nullptr.  Otherwise, returns cached pointer.
- * If class T inherits nsISupports a lot, specify Base explicitly for avoiding
- * ambiguous conversion to nsISupports.
- */
-template <class T, class Base = nsISupports>
-class CachedWeakPtr final {
- public:
-  CachedWeakPtr<T, Base>() : mCache(nullptr) {}
-  explicit CachedWeakPtr<T, Base>(T* aObject) {
-    mWeakPtr = do_GetWeakReference(static_cast<Base*>(aObject));
-    mCache = aObject;
-  }
-  explicit CachedWeakPtr<T, Base>(const nsCOMPtr<T>& aOther) {
-    mWeakPtr = do_GetWeakReference(static_cast<Base*>(aOther.get()));
-    mCache = aOther;
-  }
-  explicit CachedWeakPtr<T, Base>(already_AddRefed<T>& aOther) {
-    RefPtr<T> other = aOther;
-    mWeakPtr = do_GetWeakReference(static_cast<Base*>(other.get()));
-    mCache = other;
-  }
-
-  CachedWeakPtr<T, Base>& operator=(T* aObject) {
-    mWeakPtr = do_GetWeakReference(static_cast<Base*>(aObject));
-    mCache = aObject;
-    return *this;
-  }
-  CachedWeakPtr<T, Base>& operator=(const nsCOMPtr<T>& aOther) {
-    mWeakPtr = do_GetWeakReference(static_cast<Base*>(aOther.get()));
-    mCache = aOther;
-    return *this;
-  }
-  CachedWeakPtr<T, Base>& operator=(already_AddRefed<T>& aOther) {
-    RefPtr<T> other = aOther;
-    mWeakPtr = do_GetWeakReference(static_cast<Base*>(other.get()));
-    mCache = other;
-    return *this;
-  }
-
-  bool IsAlive() const { return mWeakPtr && mWeakPtr->IsAlive(); }
-
-  explicit operator bool() const { return mWeakPtr; }
-  operator T*() const { return get(); }
-  T* get() const {
-    if (mCache && !mWeakPtr->IsAlive()) {
-      const_cast<CachedWeakPtr<T, Base>*>(this)->mCache = nullptr;
-    }
-    return mCache;
-  }
-
- private:
-  nsWeakPtr mWeakPtr;
-  T* MOZ_NON_OWNING_REF mCache;
-};
-
 #define kMOZEditorBogusNodeAttrAtom nsGkAtoms::mozeditorbogusnode
 #define kMOZEditorBogusNodeValue NS_LITERAL_STRING("TRUE")
 
