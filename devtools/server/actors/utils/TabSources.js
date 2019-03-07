@@ -173,8 +173,8 @@ TabSources.prototype = {
   getSourceActorsByURL: function(url) {
     const rv = [];
     if (url) {
-      for (const [, actor] of this._sourceActors) {
-        if (actor.url === url) {
+      for (const [source, actor] of this._sourceActors) {
+        if (source.url === url) {
           rv.push(actor);
         }
       }
