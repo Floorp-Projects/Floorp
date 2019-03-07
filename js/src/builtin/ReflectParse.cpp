@@ -611,6 +611,8 @@ class NodeBuilder {
   MOZ_MUST_USE bool classMethod(HandleValue name, HandleValue body,
                                 PropKind kind, bool isStatic, TokenPos* pos,
                                 MutableHandleValue dst);
+  MOZ_MUST_USE bool classField(HandleValue name, HandleValue body,
+                               TokenPos* pos, MutableHandleValue dst);
 
   /*
    * expressions
@@ -1528,6 +1530,17 @@ bool NodeBuilder::classMethod(HandleValue name, HandleValue body, PropKind kind,
                  kindName, "static", isStaticVal, dst);
 }
 
+bool NodeBuilder::classField(HandleValue name, HandleValue initializer,
+                             TokenPos* pos, MutableHandleValue dst) {
+  RootedValue cb(cx, callbacks[AST_CLASS_FIELD]);
+  if (!cb.isNull()) {
+    return callback(cb, name, initializer, pos, dst);
+  }
+
+  return newNode(AST_CLASS_FIELD, pos, "name", name, "initializer", initializer,
+                 dst);
+}
+
 bool NodeBuilder::classMembers(NodeVector& members, MutableHandleValue dst) {
   return newArray(members, dst);
 }
@@ -1649,6 +1662,7 @@ class ASTSerializer {
   bool property(ParseNode* pn, MutableHandleValue dst);
 
   bool classMethod(ClassMethod* classMethod, MutableHandleValue dst);
+  bool classField(ClassField* classField, MutableHandleValue dst);
 
   bool optIdentifier(HandleAtom atom, TokenPos* pos, MutableHandleValue dst) {
     if (!atom) {
@@ -2457,18 +2471,24 @@ bool ASTSerializer::statement(ParseNode* pn, MutableHandleValue dst) {
 
       for (ParseNode* item : memberList->contents()) {
         if (item->is<ClassField>()) {
-          // TODO(khyperia): Implement private field access.
-          return false;
-        }
+          ClassField* field = &item->as<ClassField>();
+          MOZ_ASSERT(memberList->pn_pos.encloses(field->pn_pos));
 
-        ClassMethod* method = &item->as<ClassMethod>();
-        MOZ_ASSERT(memberList->pn_pos.encloses(method->pn_pos));
+          RootedValue prop(cx);
+          if (!classField(field, &prop)) {
+            return false;
+          }
+          members.infallibleAppend(prop);
+        } else {
+          ClassMethod* method = &item->as<ClassMethod>();
+          MOZ_ASSERT(memberList->pn_pos.encloses(method->pn_pos));
 
-        RootedValue prop(cx);
-        if (!classMethod(method, &prop)) {
-          return false;
+          RootedValue prop(cx);
+          if (!classMethod(method, &prop)) {
+            return false;
+          }
+          members.infallibleAppend(prop);
         }
-        members.infallibleAppend(prop);
       }
 
       return builder.classMembers(members, dst);
@@ -2505,6 +2525,29 @@ bool ASTSerializer::classMethod(ClassMethod* classMethod,
          expression(&classMethod->method(), &val) &&
          builder.classMethod(key, val, kind, isStatic, &classMethod->pn_pos,
                              dst);
+}
+
+bool ASTSerializer::classField(ClassField* classField, MutableHandleValue dst) {
+  RootedValue key(cx), val(cx);
+  // Dig through the lambda and get to the actual expression
+  if (classField->hasInitializer()) {
+    ParseNode* value = classField->initializer()
+                           .body()
+                           ->head()
+                           ->as<LexicalScopeNode>()
+                           .scopeBody()
+                           ->as<ListNode>()
+                           .head()
+                           ->as<UnaryNode>()
+                           .kid()
+                           ->as<AssignmentNode>()
+                           .right();
+    if (!expression(value, &val)) {
+      return false;
+    }
+  }
+  return propertyName(&classField->name(), &key) &&
+         builder.classField(key, val, &classField->pn_pos, dst);
 }
 
 bool ASTSerializer::leftAssociate(ListNode* node, MutableHandleValue dst) {

@@ -19,6 +19,7 @@ skip script non262/fields/field_types.js
 skip script non262/fields/literal.js
 skip script non262/fields/mixed_methods.js
 skip script non262/fields/quirks.js
+skip script non262/reflect-parse/class-fields.js
 
 
 #################################################################
