@@ -31,9 +31,6 @@
 // returned from the gethash server. They are not serialized,
 // only cached until the next update.
 
-// Name of the persistent PrefixSet storage
-#define PREFIXSET_SUFFIX ".pset"
-
 #define V2_CACHE_DURATION_SEC (15 * 60)
 
 // MOZ_LOG=UrlClassifierDbService:5
@@ -122,7 +119,7 @@ nsresult LookupCache::WriteFile() {
   nsresult rv = mStoreDirectory->Clone(getter_AddRefs(psFile));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = psFile->AppendNative(mTableName + NS_LITERAL_CSTRING(PREFIXSET_SUFFIX));
+  rv = psFile->AppendNative(mTableName + GetPrefixSetSuffix());
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = StoreToFile(psFile);
@@ -441,7 +438,7 @@ nsresult LookupCache::LoadPrefixSet() {
   nsresult rv = mStoreDirectory->Clone(getter_AddRefs(psFile));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = psFile->AppendNative(mTableName + NS_LITERAL_CSTRING(PREFIXSET_SUFFIX));
+  rv = psFile->AppendNative(mTableName + GetPrefixSetSuffix());
   NS_ENSURE_SUCCESS(rv, rv);
 
   bool exists;
@@ -724,6 +721,10 @@ nsresult LookupCacheV2::LoadFromFile(nsCOMPtr<nsIFile>& aFile) {
 
 size_t LookupCacheV2::SizeOfPrefixSet() const {
   return mPrefixSet->SizeOfIncludingThis(moz_malloc_size_of);
+}
+
+nsCString LookupCacheV2::GetPrefixSetSuffix() const {
+  return NS_LITERAL_CSTRING(".pset");
 }
 
 #ifdef DEBUG

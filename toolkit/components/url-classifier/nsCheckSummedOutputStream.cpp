@@ -7,6 +7,7 @@
 #include "nsIFile.h"
 #include "nsISupportsImpl.h"
 #include "nsCheckSummedOutputStream.h"
+#include "crc32c.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsCheckSummedOutputStream
@@ -46,6 +47,39 @@ nsCheckSummedOutputStream::Write(const char *buf, uint32_t count,
                                  uint32_t *result) {
   nsresult rv = mHash->Update(reinterpret_cast<const uint8_t *>(buf), count);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  return nsBufferedOutputStream::Write(buf, count, result);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// nsCrc32CheckSumedOutputStream
+NS_IMPL_ISUPPORTS_INHERITED(nsCrc32CheckSumedOutputStream,
+                            nsBufferedOutputStream, nsISafeOutputStream)
+
+NS_IMETHODIMP
+nsCrc32CheckSumedOutputStream::Init(nsIOutputStream *stream,
+                                    uint32_t bufferSize) {
+  mCheckSum = ~0;
+
+  return nsBufferedOutputStream::Init(stream, bufferSize);
+}
+
+NS_IMETHODIMP
+nsCrc32CheckSumedOutputStream::Finish() {
+  uint32_t written;
+  nsresult rv = nsBufferedOutputStream::Write(
+      reinterpret_cast<const char *>(&mCheckSum), sizeof(mCheckSum), &written);
+  NS_ASSERTION(written == sizeof(mCheckSum), "Error writing stream checksum");
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return nsBufferedOutputStream::Finish();
+}
+
+NS_IMETHODIMP
+nsCrc32CheckSumedOutputStream::Write(const char *buf, uint32_t count,
+                                     uint32_t *result) {
+  mCheckSum =
+      ComputeCrc32c(mCheckSum, reinterpret_cast<const uint8_t *>(buf), count);
 
   return nsBufferedOutputStream::Write(buf, count, result);
 }

@@ -53,4 +53,36 @@ inline nsresult NS_NewCheckSummedOutputStream(nsIOutputStream **result,
   return rv;
 }
 
+class nsCrc32CheckSumedOutputStream : public nsBufferedOutputStream {
+ public:
+  NS_DECL_ISUPPORTS_INHERITED
+
+  static const uint32_t CHECKSUM_SIZE = 4;
+
+  nsCrc32CheckSumedOutputStream() = default;
+
+  NS_IMETHOD Finish() override;
+  NS_IMETHOD Write(const char *buf, uint32_t count, uint32_t *result) override;
+  NS_IMETHOD Init(nsIOutputStream *stream, uint32_t bufferSize) override;
+
+ protected:
+  virtual ~nsCrc32CheckSumedOutputStream() { nsBufferedOutputStream::Close(); }
+
+  uint32_t mCheckSum;
+};
+
+inline nsresult NS_NewCrc32OutputStream(
+    nsIOutputStream **aResult, already_AddRefed<nsIOutputStream> aOutput,
+    uint32_t aBufferSize) {
+  nsCOMPtr<nsIOutputStream> out = std::move(aOutput);
+
+  nsCOMPtr<nsIBufferedOutputStream> bufferOutput =
+      new nsCrc32CheckSumedOutputStream();
+  nsresult rv = bufferOutput->Init(out, aBufferSize);
+  if (NS_SUCCEEDED(rv)) {
+    bufferOutput.forget(aResult);
+  }
+  return rv;
+}
+
 #endif
