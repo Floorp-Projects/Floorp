@@ -111,6 +111,8 @@ IonBuilder::InliningResult IonBuilder::inlineNativeCall(CallInfo& callInfo,
     // Array intrinsics.
     case InlinableNative::IntrinsicNewArrayIterator:
       return inlineNewIterator(callInfo, MNewIterator::ArrayIterator);
+    case InlinableNative::IntrinsicArrayIteratorPrototypeOptimizable:
+      return inlineArrayIteratorPrototypeOptimizable(callInfo);
 
     // Atomic natives.
     case InlinableNative::AtomicsCompareExchange:
@@ -1124,6 +1126,20 @@ IonBuilder::InliningResult IonBuilder::inlineNewIterator(
   current->push(ins);
 
   MOZ_TRY(resumeAfter(ins));
+  return InliningStatus_Inlined;
+}
+
+IonBuilder::InliningResult IonBuilder::inlineArrayIteratorPrototypeOptimizable(
+    CallInfo& callInfo) {
+  MOZ_ASSERT(!callInfo.constructing());
+  MOZ_ASSERT(callInfo.argc() == 0);
+
+  if (!ensureArrayIteratorPrototypeNextNotModified()) {
+    return InliningStatus_NotInlined;
+  }
+
+  callInfo.setImplicitlyUsedUnchecked();
+  pushConstant(BooleanValue(true));
   return InliningStatus_Inlined;
 }
 

@@ -381,23 +381,26 @@ function ArrayReduce(callbackfn/*, initialValue*/) {
         accumulator = arguments[1];
     } else {
         /* Step 5. */
+        // Add an explicit |throw| here and below to inform Ion that the
+        // ThrowTypeError calls exit this function.
         if (len === 0)
-            ThrowTypeError(JSMSG_EMPTY_ARRAY_REDUCE);
-        if (IsPackedArray(O)) {
-            accumulator = O[k++];
-        } else {
-            var kPresent = false;
-            for (; k < len; k++) {
-                if (k in O) {
-                    accumulator = O[k];
-                    kPresent = true;
-                    k++;
-                    break;
-                }
+            throw ThrowTypeError(JSMSG_EMPTY_ARRAY_REDUCE);
+
+        // Use a |do-while| loop to let Ion know that the loop will definitely
+        // be entered at least once. When Ion is then also able to inline the
+        // |in| operator, it can optimize away the whole loop.
+        var kPresent = false;
+        do {
+            if (k in O) {
+                kPresent = true;
+                break;
             }
-            if (!kPresent)
-              ThrowTypeError(JSMSG_EMPTY_ARRAY_REDUCE);
-        }
+        } while (++k < len);
+        if (!kPresent)
+          throw ThrowTypeError(JSMSG_EMPTY_ARRAY_REDUCE);
+
+        // Moved outside of the loop to ensure the assignment is non-conditional.
+        accumulator = O[k++];
     }
 
     /* Step 9. */
@@ -449,23 +452,26 @@ function ArrayReduceRight(callbackfn/*, initialValue*/) {
         accumulator = arguments[1];
     } else {
         /* Step 5. */
+        // Add an explicit |throw| here and below to inform Ion that the
+        // ThrowTypeError calls exit this function.
         if (len === 0)
-            ThrowTypeError(JSMSG_EMPTY_ARRAY_REDUCE);
-        if (IsPackedArray(O)) {
-            accumulator = O[k--];
-        } else {
-            var kPresent = false;
-            for (; k >= 0; k--) {
-                if (k in O) {
-                    accumulator = O[k];
-                    kPresent = true;
-                    k--;
-                    break;
-                }
+            throw ThrowTypeError(JSMSG_EMPTY_ARRAY_REDUCE);
+
+        // Use a |do-while| loop to let Ion know that the loop will definitely
+        // be entered at least once. When Ion is then also able to inline the
+        // |in| operator, it can optimize away the whole loop.
+        var kPresent = false;
+        do {
+            if (k in O) {
+                kPresent = true;
+                break;
             }
-            if (!kPresent)
-                ThrowTypeError(JSMSG_EMPTY_ARRAY_REDUCE);
-        }
+        } while (--k >= 0);
+        if (!kPresent)
+            throw ThrowTypeError(JSMSG_EMPTY_ARRAY_REDUCE);
+
+        // Moved outside of the loop to ensure the assignment is non-conditional.
+        accumulator = O[k--];
     }
 
     /* Step 9. */

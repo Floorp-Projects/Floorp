@@ -401,6 +401,15 @@ class WorkerPrivate : public RelativeTimeline {
   // Get the event target to use when dispatching to the main thread
   // from this Worker thread.  This may be the main thread itself or
   // a ThrottledEventQueue to the main thread.
+  nsIEventTarget* MainThreadEventTargetForMessaging();
+
+  nsresult DispatchToMainThreadForMessaging(
+      nsIRunnable* aRunnable, uint32_t aFlags = NS_DISPATCH_NORMAL);
+
+  nsresult DispatchToMainThreadForMessaging(
+      already_AddRefed<nsIRunnable> aRunnable,
+      uint32_t aFlags = NS_DISPATCH_NORMAL);
+
   nsIEventTarget* MainThreadEventTarget();
 
   nsresult DispatchToMainThread(nsIRunnable* aRunnable,
@@ -973,6 +982,7 @@ class WorkerPrivate : public RelativeTimeline {
   PRThread* mPRThread;
 
   // Accessed from main thread
+  RefPtr<ThrottledEventQueue> mMainThreadEventTargetForMessaging;
   RefPtr<ThrottledEventQueue> mMainThreadEventTarget;
 
   // Accessed from worker thread and destructing thread

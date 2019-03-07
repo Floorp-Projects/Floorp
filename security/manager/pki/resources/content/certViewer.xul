@@ -116,7 +116,7 @@
           <tr>
             <th scope="row" data-l10n-id="certmgr-cert-detail-sha-256-fingerprint"></th>
             <td>
-              <textarea id="sha256fingerprint" class="plain" readonly="true"
+              <textarea id="sha256fingerprint" class="plain" readonly="readonly"
                         style="height: 6ex; width: 48ch; font-family: monospace; background: none;"/>
             </td>
           </tr>
