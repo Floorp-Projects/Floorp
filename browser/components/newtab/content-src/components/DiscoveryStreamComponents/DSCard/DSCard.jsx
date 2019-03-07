@@ -15,13 +15,13 @@ export class DSCard extends React.PureComponent {
       this.props.dispatch(ac.UserEvent({
         event: "CLICK",
         source: this.props.type.toUpperCase(),
-        action_position: this.props.index,
+        action_position: this.props.pos,
       }));
 
       this.props.dispatch(ac.ImpressionStats({
         source: this.props.type.toUpperCase(),
         click: 0,
-        tiles: [{id: this.props.id, pos: this.props.index}],
+        tiles: [{id: this.props.id, pos: this.props.pos}],
       }));
     }
   }
@@ -49,7 +49,7 @@ export class DSCard extends React.PureComponent {
         </div>
         <ImpressionStats
           campaignId={this.props.campaignId}
-          rows={[{id: this.props.id}]}
+          rows={[{id: this.props.id, pos: this.props.pos}]}
           dispatch={this.props.dispatch}
           source={this.props.type} />
       </SafeAnchor>
