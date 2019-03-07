@@ -437,6 +437,10 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
 
   void EnsureUAOverridesInit();
 
+  // Checks if there are any user certs or active smart cards on a different
+  // thread. Updates mSpeculativeConnectEnabled when done.
+  void MaybeEnableSpeculativeConnect();
+
  private:
   // cached services
   nsMainThreadPtrHandle<nsIIOService> mIOService;
@@ -450,6 +454,10 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
 
   // the connection manager
   RefPtr<nsHttpConnectionMgr> mConnMgr;
+
+  // This thread is used for performing operations that should not block
+  // the main thread.
+  nsCOMPtr<nsIThread> mBackgroundThread;
 
   //
   // prefs
@@ -597,10 +605,6 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
   // when starting a new speculative connection.
   uint32_t mParallelSpeculativeConnectLimit;
 
-  // We may disable speculative connect if the browser has user certificates
-  // installed as that might randomly popup the certificate choosing window.
-  bool mSpeculativeConnectEnabled;
-
   // For Rate Pacing of HTTP/1 requests through a netwerk/base/EventTokenBucket
   // Active requests <= *MinParallelism are not subject to the rate pacing
   bool mRequestTokenBucketEnabled;
@@ -640,6 +644,10 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
 
   // The ratio for dispatching transactions from the focused window.
   float mFocusedWindowTransactionRatio;
+
+  // We may disable speculative connect if the browser has user certificates
+  // installed as that might randomly popup the certificate choosing window.
+  Atomic<bool, Relaxed> mSpeculativeConnectEnabled;
 
   Atomic<bool, Relaxed> mUseFastOpen;
   Atomic<bool, Relaxed> mFastOpenSupported;
