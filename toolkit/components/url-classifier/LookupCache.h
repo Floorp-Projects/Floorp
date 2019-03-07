@@ -258,6 +258,8 @@ class LookupCache {
 
   virtual int Ver() const = 0;
 
+  virtual nsresult LoadLegacyFile() = 0;
+
  protected:
   virtual ~LookupCache() {}
 
@@ -328,6 +330,8 @@ class LookupCacheV2 final : public LookupCache {
   ~LookupCacheV2() {}
 
   virtual int Ver() const override { return VER; }
+
+  virtual nsresult LoadLegacyFile() override;
 
   // Construct a Prefix Set with known prefixes.
   // This will Clear() aAddPrefixes when done.
