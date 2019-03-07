@@ -8,7 +8,7 @@ authors = [
 description = "Remote Cubeb IPC"
 
 [dependencies]
-cubeb = "0.5.2"
+cubeb = "0.5.4"
 bincode = "1.0"
 bytes = "0.4"
 futures = "0.1.18"
@@ -22,7 +22,12 @@ serde_derive = "1.*.*"
 tokio-core = "0.1"
 tokio-io = "0.1"
 tokio-uds = "0.1.7"
+winapi = "0.3.6"
+mio-named-pipes = "=0.1.5"
 
 [dependencies.error-chain]
 version = "0.11.0"
 default-features = false
+
+[build-dependencies]
+cc = "1.0"
