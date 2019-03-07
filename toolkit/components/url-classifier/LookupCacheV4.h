@@ -66,6 +66,7 @@ class LookupCacheV4 final : public LookupCache {
 
   nsresult SanityCheck(const Header& aHeader);
   nsresult VerifyCRC32(nsCOMPtr<nsIInputStream>& aIn);
+  nsresult CleanOldPrefixSet();
 
   RefPtr<VariableLengthPrefixSet> mVLPrefixSet;
 };
