@@ -21,6 +21,7 @@ import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.base.log.sink.AndroidLogSink
 import mozilla.components.support.rustlog.RustLog
 import org.mozilla.fenix.AdjustHelper.setupAdjustIfNeeded
+import org.mozilla.fenix.LeanplumHelper.setupLeanplumIfNeeded
 import org.mozilla.fenix.components.Components
 import java.io.File
 
@@ -49,6 +50,7 @@ open class FenixApplication : Application() {
         setupGlean(this)
         loadExperiments()
         setupAdjustIfNeeded(this)
+        setupLeanplumIfNeeded(this)
     }
 
     protected open fun setupLeakCanary() {

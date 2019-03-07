@@ -73,3 +73,7 @@ gen-external-apklibs
 
 # macOS
 .DS_Store
+
+# Token files
+.leanplum_token
+.adjust_token

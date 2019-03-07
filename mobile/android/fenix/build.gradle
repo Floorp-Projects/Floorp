@@ -30,6 +30,9 @@ allprojects {
         maven {
             url "https://maven.mozilla.org/maven2"
         }
+        maven {
+            url "https://repo.leanplum.com/"
+        }
         jcenter()
     }
 }

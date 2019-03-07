@@ -181,11 +181,11 @@ android.applicationVariants.all { variant ->
     def buildDate = Config.generateBuildDate()
     buildConfigField 'String', 'BUILD_DATE', '"' + buildDate + '"'
 
-// -------------------------------------------------------------------------------------------------
-// Adjust: Read token from locale file if it exists (Only release builds)
-// -------------------------------------------------------------------------------------------------
-
     def variantName = variant.getName()
+
+// -------------------------------------------------------------------------------------------------
+// Adjust: Read token from local file if it exists (Only release builds)
+// -------------------------------------------------------------------------------------------------
 
     print("Adjust token: ")
 
@@ -201,6 +201,25 @@ android.applicationVariants.all { variant ->
     } else {
         buildConfigField 'String', 'ADJUST_TOKEN', 'null'
         println("--")
+    }
+
+// -------------------------------------------------------------------------------------------------
+// Leanplum: Read token from local file if it exists
+// -------------------------------------------------------------------------------------------------
+
+    print("Leanplum token: ")
+
+    try {
+        def parts = new File("${rootDir}/.leanplum_token").text.trim().split(":")
+        def id = parts[0]
+        def key = parts[1]
+        buildConfigField 'String', 'LEANPLUM_ID', '"' + id + '"'
+        buildConfigField 'String', 'LEANPLUM_TOKEN', '"' + key + '"'
+        println "(Added from .leanplum_token file)"
+    } catch (FileNotFoundException ignored) {
+        buildConfigField 'String', 'LEANPLUM_ID', 'null'
+        buildConfigField 'String', 'LEANPLUM_TOKEN', 'null'
+        println("X_X")
     }
 }
 
@@ -223,6 +242,8 @@ dependencies {
     implementation Deps.anko_constraintlayout
 
     implementation Deps.sentry
+
+    implementation Deps.leanplum
 
     implementation Deps.mozilla_concept_engine
     implementation Deps.mozilla_concept_storage

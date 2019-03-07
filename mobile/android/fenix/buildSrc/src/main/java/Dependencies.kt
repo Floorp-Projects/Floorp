@@ -11,6 +11,7 @@ private object Versions {
     const val anko = "0.10.8"
     const val sentry = "1.7.10"
     const val leakcanary = "1.6.3"
+    const val leanplum = "4.3.1"
 
     const val androidx_appcompat = "1.1.0-alpha02"
     const val androidx_constraint_layout = "2.0.0-alpha2"
@@ -109,6 +110,8 @@ object Deps {
     const val sentry = "io.sentry:sentry-android:${Versions.sentry}"
     const val leakcanary = "com.squareup.leakcanary:leakcanary-android:${Versions.leakcanary}"
     const val leakcanary_noop = "com.squareup.leakcanary:leakcanary-android-no-op:${Versions.leakcanary}"
+
+    const val leanplum = "com.leanplum:leanplum-core:${Versions.leanplum}"
 
     const val tools_test_runner = "com.android.support.test:runner:${Versions.test_tools}"
     const val tools_espresso_core = "com.android.support.test.espresso:espresso-core:${Versions.espresso_core}"
