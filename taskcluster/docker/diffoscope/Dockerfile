@@ -13,25 +13,17 @@ RUN apt-get install \
       bzip2 \
       curl \
       enjarify \
-      diffoscope \
+      diffoscope/stretch-backports \
       jsbeautifier \
       libc++abi1 \
       locales \
       openjdk-8-jdk-headless \
       python3-progressbar \
-      python3-setuptools \
-      python2.7 \
-      python-pip \
       unzip \
       zip \
-      git \
       && \
     sed -i '/en_US.UTF-8/s/^# *//' /etc/locale.gen && \
-    locale-gen && \
-    git clone https://salsa.debian.org/reproducible-builds/diffoscope.git /tmp/diffoscope && \
-    git -C /tmp/diffoscope checkout 202caf9d5d134e95f870d5f19f89511d635c27e4 && \
-    (cd /tmp/diffoscope && python3 setup.py install ) && \
-    rm -rf /tmp/diffoscope
+    locale-gen
 
 COPY get_and_diffoscope /builds/worker/bin/get_and_diffoscope
 
