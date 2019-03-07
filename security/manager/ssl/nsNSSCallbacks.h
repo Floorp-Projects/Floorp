@@ -14,6 +14,7 @@
 #include "nspr.h"
 #include "nsString.h"
 #include "pk11func.h"
+#include "mozpkix/pkix.h"
 #include "mozpkix/pkixtypes.h"
 
 using mozilla::OriginAttributes;
@@ -28,10 +29,10 @@ void HandshakeCallback(PRFileDesc* fd, void* client_data);
 SECStatus CanFalseStartCallback(PRFileDesc* fd, void* client_data,
                                 PRBool* canFalseStart);
 
-mozilla::pkix::Result DoOCSPRequest(const nsCString& aiaLocation,
-                                    const OriginAttributes& originAttributes,
-                                    Vector<uint8_t>&& ocspRequest,
-                                    TimeDuration timeout,
-                                    /*out*/ Vector<uint8_t>& result);
+mozilla::pkix::Result DoOCSPRequest(
+    const nsCString& aiaLocation, const OriginAttributes& originAttributes,
+    uint8_t (&ocspRequest)[mozilla::pkix::OCSP_REQUEST_MAX_LENGTH],
+    size_t ocspRequestLength, TimeDuration timeout,
+    /*out*/ Vector<uint8_t>& result);
 
 #endif  // nsNSSCallbacks_h
