@@ -4904,8 +4904,12 @@ bool jit::AnalyzeArgumentsUsage(JSContext* cx, JSScript* scriptArg) {
   // formals which may be stored as part of a call object, don't use lazy
   // arguments. The compiler can then assume that accesses through
   // arguments[i] will be on unaliased variables.
-  if (script->funHasAnyAliasedFormal() && argumentsContentsObserved) {
-    return true;
+  if (argumentsContentsObserved) {
+    for (PositionalFormalParameterIter fi(script); fi; fi++) {
+      if (fi.closedOver()) {
+        return true;
+      }
+    }
   }
 
   script->setNeedsArgsObj(false);
