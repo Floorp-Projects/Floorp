@@ -20,14 +20,13 @@ private object Versions {
     const val androidx_lifecycle = "2.0.0"
     const val androidx_fragment = "1.1.0-alpha04"
     const val androidx_safeargs = "1.0.0-beta01"
+    const val androidx_navigation = "2.0.0-rc02"
 
     const val appservices_gradle_plugin = "0.3.1"
     const val mozilla_android_components = "0.46.0-SNAPSHOT"
 
     const val test_tools = "1.0.2"
     const val espresso_core = "2.2.2"
-
-    const val android_arch_navigation = "1.0.0-rc02"
 
     const val autodispose = "1.1.0"
     const val adjust = "4.11.4"
@@ -122,8 +121,8 @@ object Deps {
     const val androidx_lifecycle_runtime = "androidx.lifecycle:lifecycle-runtime:${Versions.androidx_lifecycle}"
     const val androidx_preference = "androidx.preference:preference-ktx:${Versions.androidx_preference}"
     const val androidx_safeargs = "android.arch.navigation:navigation-safe-args-gradle-plugin:${Versions.androidx_safeargs}"
-    const val android_arch_navigation = "android.arch.navigation:navigation-fragment:${Versions.android_arch_navigation}"
-    const val android_arch_navigation_ui = "android.arch.navigation:navigation-ui:${Versions.android_arch_navigation}"
+    const val androidx_navigation_fragment = "androidx.navigation:navigation-fragment:${Versions.androidx_navigation}"
+    const val androidx_navigation_ui = "androidx.navigation:navigation-ui:${Versions.androidx_navigation}"
 
     const val autodispose = "com.uber.autodispose:autodispose:${Versions.autodispose}"
     const val autodispose_android = "com.uber.autodispose:autodispose-android:${Versions.autodispose}"

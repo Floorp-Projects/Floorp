@@ -272,8 +272,8 @@ dependencies {
     implementation Deps.androidx_legacy
     implementation Deps.androidx_preference
     implementation Deps.androidx_fragment
-    implementation Deps.android_arch_navigation
-    implementation Deps.android_arch_navigation_ui
+    implementation Deps.androidx_navigation_fragment
+    implementation Deps.androidx_navigation_ui
 
     implementation Deps.autodispose
 
