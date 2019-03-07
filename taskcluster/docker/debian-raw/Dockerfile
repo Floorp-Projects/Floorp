@@ -25,6 +25,7 @@ RUN for s in debian_$DIST debian_$DIST-updates debian_$DIST-backports debian-sec
     ) > /etc/apt/apt.conf.d/99taskcluster
 
 RUN apt-get update && \
+    apt-get dist-upgrade && \
     apt-get install \
       apt-transport-https \
       ca-certificates
