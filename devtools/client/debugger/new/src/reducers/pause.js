@@ -13,7 +13,7 @@
 import { createSelector } from "reselect";
 import { isGeneratedId } from "devtools-source-map";
 import { prefs } from "../utils/prefs";
-import { getSelectedSource } from "./sources";
+import { getSelectedSourceId } from "./sources";
 
 import type { OriginalScope } from "../utils/pause/mapScopes";
 import type { Action } from "../actions/types";
@@ -78,14 +78,16 @@ export type PauseState = {
   currentThread: string,
   canRewind: boolean,
   threads: { [string]: ThreadPauseState },
-  skipPausing: boolean
+  skipPausing: boolean,
+  mapScopes: boolean
 };
 
 export const createPauseState = (): PauseState => ({
   currentThread: "UnknownThread",
   threads: {},
   canRewind: false,
-  skipPausing: prefs.skipPausing
+  skipPausing: prefs.skipPausing,
+  mapScopes: prefs.mapScopes
 });
 
 const resumedPauseState = {
@@ -306,6 +308,12 @@ function update(
 
       return { ...state, skipPausing };
     }
+
+    case "TOGGLE_MAP_SCOPES": {
+      const { mapScopes } = action;
+      prefs.mapScopes = mapScopes;
+      return { ...state, mapScopes };
+    }
   }
 
   return state;
@@ -503,19 +511,26 @@ export function getFrameScope(
 }
 
 export function getSelectedScope(state: OuterState) {
-  const source = getSelectedSource(state);
+  const sourceId = getSelectedSourceId(state);
   const frameId = getSelectedFrameId(state);
 
-  if (!source) {
-    return null;
-  }
-
-  const frameScope = getFrameScope(state, source.id, frameId);
+  const frameScope = getFrameScope(state, sourceId, frameId);
   if (!frameScope) {
     return null;
   }
 
   return frameScope.scope || null;
+}
+
+export function getSelectedOriginalScope(state: OuterState) {
+  const sourceId = getSelectedSourceId(state);
+  const frameId = getSelectedFrameId(state);
+  return getOriginalFrameScope(state, sourceId, frameId);
+}
+
+export function getSelectedGeneratedScope(state: OuterState) {
+  const frameId = getSelectedFrameId(state);
+  return getGeneratedFrameScope(state, frameId);
 }
 
 export function getSelectedScopeMappings(
@@ -554,6 +569,10 @@ export const getSelectedFrame: Selector<?Frame> = createSelector(
 
 export function getSkipPausing(state: OuterState) {
   return state.pause.skipPausing;
+}
+
+export function getMapScopes(state: OuterState) {
+  return state.pause.mapScopes;
 }
 
 // NOTE: currently only used for chrome
