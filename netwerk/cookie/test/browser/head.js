@@ -23,7 +23,6 @@ this.CookiePolicyHelper = {
     this._createTest(testName,
                      config.cookieJarAccessAllowed,
                      config.cookieJarAccessDenied,
-                     config.cleanup,
                      config.prefs,
                      {
                        fromBehavior: BEHAVIOR_ACCEPT,
@@ -36,7 +35,6 @@ this.CookiePolicyHelper = {
     this._createTest(testName,
                      config.cookieJarAccessDenied,
                      config.cookieJarAccessAllowed,
-                     config.cleanup,
                      config.prefs,
                      {
                        fromBehavior: BEHAVIOR_REJECT,
@@ -49,7 +47,6 @@ this.CookiePolicyHelper = {
     this._createTest(testName,
                      config.cookieJarAccessAllowed,
                      config.cookieJarAccessDenied,
-                     config.cleanup,
                      config.prefs,
                      {
                        fromBehavior: BEHAVIOR_REJECT,
@@ -62,7 +59,6 @@ this.CookiePolicyHelper = {
     this._createTest(testName,
                      config.cookieJarAccessDenied,
                      config.cookieJarAccessAllowed,
-                     config.cleanup,
                      config.prefs,
                      {
                        fromBehavior: BEHAVIOR_ACCEPT,
@@ -72,7 +68,7 @@ this.CookiePolicyHelper = {
                      });
   },
 
-  _createTest(testName, goodCb, badCb, cleanupCb, prefs, config) {
+  _createTest(testName, goodCb, badCb, prefs, config) {
     add_task(async _ => {
       info("Starting " + testName + ": " + config.toSource());
 
