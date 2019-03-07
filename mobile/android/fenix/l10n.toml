@@ -1,0 +1,17 @@
+
+basepath = "."
+
+locales = [
+]
+
+# Expose the following branches to localization
+# Changes to this list should be announced to the l10n team ahead of time.
+branches = [
+    "master",
+]
+
+[env]
+
+[[paths]]
+  reference = "app/src/main/res/values/strings.xml"
+  l10n = "app/src/main/res/values-{android_locale}/strings.xml"
