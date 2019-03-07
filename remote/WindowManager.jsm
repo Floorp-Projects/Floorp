@@ -7,7 +7,6 @@
 var EXPORTED_SYMBOLS = [
   "TabObserver",
   "WindowObserver",
-  "WindowManager",
 ];
 
 const {DOMContentLoadedPromise} = ChromeUtils.import("chrome://remote/content/Sync.jsm");
@@ -147,28 +146,3 @@ class TabObserver {
     // TODO(ato): Is TabClose fired when the window closes?
   }
 }
-
-/**
- * Determine if WindowProxy is part of the boundary window.
- *
- * @param {DOMWindow} boundary
- * @param {DOMWindow} target
- *
- * @return {boolean}
- */
-function isWindowIncluded(boundary, target) {
-  if (target === boundary) {
-    return true;
-  }
-
-  // TODO(ato): Pretty sure this is not Fission compatible,
-  // but then this is a problem that needs to be solved in nsIConsoleAPI.
-  const {parent} = target;
-  if (!parent || parent === boundary) {
-    return false;
-  }
-
-  return isWindowIncluded(boundary, parent);
-}
-
-var WindowManager = {isWindowIncluded};
