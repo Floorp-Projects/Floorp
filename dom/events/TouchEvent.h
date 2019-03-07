@@ -97,6 +97,8 @@ class TouchEvent : public UIEvent {
   static bool PlatformSupportsTouch();
   static bool PrefEnabled(JSContext* aCx, JSObject* aGlobal);
   static bool PrefEnabled(nsIDocShell* aDocShell);
+  static bool LegacyAPIEnabled(JSContext* aCx, JSObject* aGlobal);
+  static bool LegacyAPIEnabled(nsIDocShell* aDocShell, bool aCallerIsSystem);
 
   static already_AddRefed<TouchEvent> Constructor(const GlobalObject& aGlobal,
                                                   const nsAString& aType,

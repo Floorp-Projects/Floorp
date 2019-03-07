@@ -442,20 +442,6 @@
     </handlers>
   </binding>
 
-  <binding id="wizardpage">
-    <implementation>
-      <field name="pageIndex">-1</field>
-
-      <property name="pageid" onget="return this.getAttribute('pageid');"
-                              onset="this.setAttribute('pageid', val);"/>
-
-      <property name="next"   onget="return this.getAttribute('next');"
-                              onset="this.setAttribute('next', val);
-                                     this.parentNode._accessMethod = 'random';
-                                     return val;"/>
-    </implementation>
-  </binding>
-
 #ifdef XP_MACOSX
   <binding id="wizard-header">
     <content>
@@ -537,7 +523,7 @@
             </xul:hbox>
             <xul:hbox>
               <xul:button label="&button-next-unix.label;" accesskey="&button-next-unix.accesskey;"
-                          class="wizard-button" dlgtype="next" 
+                          class="wizard-button" dlgtype="next"
                           default="true" flex="1"/>
             </xul:hbox>
           </xul:deck>
@@ -551,7 +537,7 @@
             </xul:hbox>
             <xul:hbox>
               <xul:button label="&button-next-win.label;" accesskey="&button-next-win.accesskey;"
-                          class="wizard-button" dlgtype="next" 
+                          class="wizard-button" dlgtype="next"
                           default="true" flex="1"/>
             </xul:hbox>
           </xul:deck>
