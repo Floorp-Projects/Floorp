@@ -927,16 +927,10 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
 #endif
 #ifdef ENABLE_WASM_REFTYPES
       case uint16_t(Op::RefNull): {
-        if (!env.gcTypesEnabled()) {
-          return iter.unrecognizedOpcode(&op);
-        }
         CHECK(iter.readRefNull());
         break;
       }
       case uint16_t(Op::RefIsNull): {
-        if (!env.gcTypesEnabled()) {
-          return iter.unrecognizedOpcode(&op);
-        }
         CHECK(iter.readConversion(ValType::AnyRef, ValType::I32, &nothing));
         break;
       }
@@ -1355,7 +1349,7 @@ static bool DecodeStructType(Decoder& d, ModuleEnvironment* env,
   return true;
 }
 
-#ifdef ENABLE_WASM_REFTYPES
+#ifdef ENABLE_WASM_GC
 static bool DecodeGCFeatureOptInSection(Decoder& d, ModuleEnvironment* env) {
   MaybeSectionRange range;
   if (!d.startSection(SectionId::GcFeatureOptIn, env, &range,
@@ -1564,9 +1558,6 @@ static bool DecodeTableTypeAndLimits(Decoder& d, bool gcTypesEnabled,
     tableKind = TableKind::AnyFunction;
 #ifdef ENABLE_WASM_REFTYPES
   } else if (elementType == uint8_t(TypeCode::AnyRef)) {
-    if (!gcTypesEnabled) {
-      return d.fail("reference types not enabled");
-    }
     tableKind = TableKind::AnyRef;
 #endif
   } else {
@@ -1935,9 +1926,6 @@ static bool DecodeInitializerExpression(Decoder& d, ModuleEnvironment* env,
       break;
     }
     case uint16_t(Op::RefNull): {
-      if (!env->gcTypesEnabled()) {
-        return d.fail("unexpected initializer expression");
-      }
       if (!expected.isReference()) {
         return d.fail(
             "type mismatch: initializer type and expected type don't match");
@@ -1945,6 +1933,9 @@ static bool DecodeInitializerExpression(Decoder& d, ModuleEnvironment* env,
       if (expected == ValType::AnyRef) {
         *init = InitExpr(LitVal(AnyRef::null()));
       } else {
+        if (!env->gcTypesEnabled()) {
+          return d.fail("unexpected initializer expression");
+        }
         *init = InitExpr(LitVal(expected, nullptr));
       }
       break;
@@ -1964,8 +1955,15 @@ static bool DecodeInitializerExpression(Decoder& d, ModuleEnvironment* env,
             "initializer expression must reference a global immutable import");
       }
       if (expected.isReference()) {
-        if (!(env->gcTypesEnabled() && globals[i].type().isReference() &&
-              env->isRefSubtypeOf(globals[i].type(), expected))) {
+        bool fail = false;
+        if ((expected.isRef() || globals[i].type().isRef())
+            && !env->gcTypesEnabled()) {
+          fail = true;
+        } else if (!(globals[i].type().isReference() &&
+                     env->isRefSubtypeOf(globals[i].type(), expected))) {
+          fail = true;
+        }
+        if (fail) {
           return d.fail(
               "type mismatch: initializer type and expected type don't match");
         }
@@ -2423,7 +2421,7 @@ bool wasm::DecodeModuleEnvironment(Decoder& d, ModuleEnvironment* env) {
     return false;
   }
 
-#ifdef ENABLE_WASM_REFTYPES
+#ifdef ENABLE_WASM_GC
   if (!DecodeGCFeatureOptInSection(d, env)) {
     return false;
   }
@@ -2778,8 +2776,8 @@ bool wasm::Validate(JSContext* cx, const ShareableBytes& bytecode,
                     UniqueChars* error) {
   Decoder d(bytecode.bytes, 0, error);
 
-#ifdef ENABLE_WASM_REFTYPES
-  bool gcTypesConfigured = HasReftypesSupport(cx);
+#ifdef ENABLE_WASM_GC
+  bool gcTypesConfigured = HasGcSupport(cx);
 #else
   bool gcTypesConfigured = false;
 #endif

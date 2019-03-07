@@ -9,4 +9,8 @@ EXPORTS.mozilla.net += [
     'MozURL_ffi.h',
 ]
 
+SOURCES += [
+    'MozURL.cpp',
+]
+
 FINAL_LIBRARY = 'xul'

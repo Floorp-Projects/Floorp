@@ -140,8 +140,9 @@ class Frame extends Component {
     // to Scratchpad URIs.
     // Source mapped sources might not necessary linkable, but they
     // are still valid in the debugger.
+    // If we have a source ID then we can show the source in the debugger.
     const isLinkable = !!(isScratchpadScheme(source) || parseURL(source))
-      || isSourceMapped;
+      || isSourceMapped || sourceId;
     const elements = [];
     const sourceElements = [];
     let sourceEl;

@@ -48,7 +48,7 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
     protocol.Actor.prototype.initialize.call(this, null);
     this.walker = walker;
     this.rawNode = node;
-    this._eventCollector = new EventCollector();
+    this._eventCollector = new EventCollector(this.walker.targetActor);
 
     // Store the original display type and scrollable state and whether or not the node is
     // displayed to track changes when reflows occur.

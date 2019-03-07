@@ -201,9 +201,12 @@ bool ClientSourceParent::DeallocPClientSourceOpParent(
   return true;
 }
 
-ClientSourceParent::ClientSourceParent(const ClientSourceConstructorArgs& aArgs)
+ClientSourceParent::ClientSourceParent(
+    const ClientSourceConstructorArgs& aArgs,
+    const Maybe<ContentParentId>& aContentParentId)
     : mClientInfo(aArgs.id(), aArgs.type(), aArgs.principalInfo(),
                   aArgs.creationTime()),
+      mContentParentId(aContentParentId),
       mService(ClientManagerService::GetOrCreateInstance()),
       mExecutionReady(false),
       mFrozen(false) {}

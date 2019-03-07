@@ -272,6 +272,8 @@ const char kPrefFileHandleEnabled[] = "dom.fileHandle.enabled";
 // origin.
 #define IDB_DELETION_MARKER_FILE_PREFIX "idb-deleting-"
 
+const uint32_t kDeleteTimeoutMs = 1000;
+
 #ifdef DEBUG
 
 const int32_t kDEBUGThreadPriority = nsISupportsPriority::PRIORITY_NORMAL;
@@ -7665,17 +7667,6 @@ class GetFileReferencesHelper final : public Runnable {
   NS_DECL_NSIRUNNABLE
 };
 
-class FlushPendingFileDeletionsRunnable final : public Runnable {
- public:
-  FlushPendingFileDeletionsRunnable()
-      : Runnable("FlushPendingFileDeletionsRunnable") {}
-
- private:
-  ~FlushPendingFileDeletionsRunnable() override = default;
-
-  NS_DECL_NSIRUNNABLE
-};
-
 class PermissionRequestHelper final : public PermissionRequestBase,
                                       public PIndexedDBPermissionRequestParent {
   bool mActorDestroyed;
@@ -7776,9 +7767,12 @@ class QuotaClient final : public mozilla::dom::quota::Client {
   static QuotaClient* sInstance;
 
   nsCOMPtr<nsIEventTarget> mBackgroundThread;
+  nsCOMPtr<nsITimer> mDeleteTimer;
   nsTArray<RefPtr<Maintenance>> mMaintenanceQueue;
   RefPtr<Maintenance> mCurrentMaintenance;
   RefPtr<nsThreadPool> mMaintenanceThreadPool;
+  nsClassHashtable<nsRefPtrHashKey<FileManager>, nsTArray<int64_t>>
+      mPendingDeleteInfos;
   bool mShutdownRequested;
 
  public:
@@ -7816,6 +7810,10 @@ class QuotaClient final : public mozilla::dom::quota::Client {
 
     return mShutdownRequested;
   }
+
+  nsresult AsyncDeleteFile(FileManager* aFileManager, int64_t aFileId);
+
+  nsresult FlushPendingFileDeletions();
 
   already_AddRefed<Maintenance> GetCurrentMaintenance() const {
     RefPtr<Maintenance> result = mCurrentMaintenance;
@@ -7866,12 +7864,10 @@ class QuotaClient final : public mozilla::dom::quota::Client {
 
   void ShutdownWorkThreads() override;
 
-  void DidInitialize(QuotaManager* aQuotaManager) override;
-
-  void WillShutdown() override;
-
  private:
   ~QuotaClient() override;
+
+  static void DeleteTimerCallback(nsITimer* aTimer, void* aClosure);
 
   nsresult GetDirectory(PersistenceType aPersistenceType,
                         const nsACString& aOrigin, nsIFile** aDirectory);
@@ -7893,6 +7889,66 @@ class QuotaClient final : public mozilla::dom::quota::Client {
   // Runs on the PBackground thread. Checks to see if there's a queued
   // Maintenance to run.
   void ProcessMaintenanceQueue();
+};
+
+class DeleteFilesRunnable final : public Runnable,
+                                  public OpenDirectoryListener {
+  typedef mozilla::dom::quota::DirectoryLock DirectoryLock;
+
+  enum State {
+    // Just created on the PBackground thread. Next step is
+    // State_DirectoryOpenPending.
+    State_Initial,
+
+    // Waiting for directory open allowed on the main thread. The next step is
+    // State_DatabaseWorkOpen.
+    State_DirectoryOpenPending,
+
+    // Waiting to do/doing work on the QuotaManager IO thread. The next step is
+    // State_UnblockingOpen.
+    State_DatabaseWorkOpen,
+
+    // Notifying the QuotaManager that it can proceed to the next operation on
+    // the main thread. Next step is State_Completed.
+    State_UnblockingOpen,
+
+    // All done.
+    State_Completed
+  };
+
+  nsCOMPtr<nsIEventTarget> mOwningEventTarget;
+  RefPtr<FileManager> mFileManager;
+  RefPtr<DirectoryLock> mDirectoryLock;
+  nsCOMPtr<nsIFile> mDirectory;
+  nsCOMPtr<nsIFile> mJournalDirectory;
+  nsTArray<int64_t> mFileIds;
+  State mState;
+
+ public:
+  DeleteFilesRunnable(FileManager* aFileManager, nsTArray<int64_t>&& aFileIds);
+
+  void RunImmediately();
+
+ private:
+  ~DeleteFilesRunnable() = default;
+
+  nsresult Open();
+
+  nsresult DeleteFile(int64_t aFileId);
+
+  nsresult DoDatabaseWork();
+
+  void Finish();
+
+  void UnblockOpen();
+
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_NSIRUNNABLE
+
+  // OpenDirectoryListener overrides.
+  virtual void DirectoryLockAcquired(DirectoryLock* aLock) override;
+
+  virtual void DirectoryLockFailed() override;
 };
 
 class Maintenance final : public Runnable, public OpenDirectoryListener {
@@ -9145,10 +9201,12 @@ bool DeallocPBackgroundIndexedDBUtilsParent(
 bool RecvFlushPendingFileDeletions() {
   AssertIsOnBackgroundThread();
 
-  RefPtr<FlushPendingFileDeletionsRunnable> runnable =
-      new FlushPendingFileDeletionsRunnable();
-
-  MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(runnable.forget()));
+  QuotaClient* quotaClient = QuotaClient::GetInstance();
+  if (quotaClient) {
+    if (NS_FAILED(quotaClient->FlushPendingFileDeletions())) {
+      NS_WARNING("Failed to flush pending file deletions!");
+    }
+  }
 
   return true;
 }
@@ -9214,6 +9272,20 @@ FileHandleThreadPool* GetFileHandleThreadPool() {
   }
 
   return gFileHandleThreadPool;
+}
+
+nsresult AsyncDeleteFile(FileManager* aFileManager, int64_t aFileId) {
+  AssertIsOnBackgroundThread();
+
+  QuotaClient* quotaClient = QuotaClient::GetInstance();
+  if (quotaClient) {
+    nsresult rv = quotaClient->AsyncDeleteFile(aFileManager, aFileId);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  }
+
+  return NS_OK;
 }
 
 /*******************************************************************************
@@ -12173,6 +12245,11 @@ Factory::AllocPBackgroundIDBFactoryRequestParent(
 
   if (NS_WARN_IF(principalInfo.type() == PrincipalInfo::TSystemPrincipalInfo &&
                  metadata.persistenceType() != PERSISTENCE_TYPE_PERSISTENT)) {
+    ASSERT_UNLESS_FUZZING();
+    return nullptr;
+  }
+
+  if (NS_WARN_IF(!QuotaManager::IsPrincipalInfoValid(principalInfo))) {
     ASSERT_UNLESS_FUZZING();
     return nullptr;
   }
@@ -15653,7 +15730,8 @@ nsresult FileManager::GetUsage(nsIFile* aDirectory, uint64_t* aUsage) {
 
 QuotaClient* QuotaClient::sInstance = nullptr;
 
-QuotaClient::QuotaClient() : mShutdownRequested(false) {
+QuotaClient::QuotaClient()
+    : mDeleteTimer(NS_NewTimer()), mShutdownRequested(false) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(!sInstance, "We expect this to be a singleton!");
   MOZ_ASSERT(!gTelemetryIdMutex);
@@ -15677,6 +15755,44 @@ QuotaClient::~QuotaClient() {
   gTelemetryIdMutex = nullptr;
 
   sInstance = nullptr;
+}
+
+nsresult QuotaClient::AsyncDeleteFile(FileManager* aFileManager,
+                                      int64_t aFileId) {
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(mDeleteTimer);
+
+  MOZ_ALWAYS_SUCCEEDS(mDeleteTimer->Cancel());
+
+  nsresult rv = mDeleteTimer->InitWithNamedFuncCallback(
+      DeleteTimerCallback, this, kDeleteTimeoutMs, nsITimer::TYPE_ONE_SHOT,
+      "dom::indexeddb::QuotaClient::AsyncDeleteFile");
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  nsTArray<int64_t>* array;
+  if (!mPendingDeleteInfos.Get(aFileManager, &array)) {
+    array = new nsTArray<int64_t>();
+    mPendingDeleteInfos.Put(aFileManager, array);
+  }
+
+  array->AppendElement(aFileId);
+
+  return NS_OK;
+}
+
+nsresult QuotaClient::FlushPendingFileDeletions() {
+  AssertIsOnBackgroundThread();
+
+  nsresult rv = mDeleteTimer->Cancel();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  DeleteTimerCallback(mDeleteTimer, this);
+
+  return NS_OK;
 }
 
 nsThreadPool* QuotaClient::GetOrCreateThreadPool() {
@@ -16129,22 +16245,37 @@ void QuotaClient::ShutdownWorkThreads() {
     mMaintenanceThreadPool->Shutdown();
     mMaintenanceThreadPool = nullptr;
   }
-}
 
-void QuotaClient::DidInitialize(QuotaManager* aQuotaManager) {
-  MOZ_ASSERT(NS_IsMainThread());
-
-  if (IndexedDatabaseManager* mgr = IndexedDatabaseManager::Get()) {
-    mgr->NoteLiveQuotaManager(aQuotaManager);
+  if (mDeleteTimer) {
+    MOZ_ALWAYS_SUCCEEDS(mDeleteTimer->Cancel());
+    mDeleteTimer = nullptr;
   }
 }
 
-void QuotaClient::WillShutdown() {
-  MOZ_ASSERT(NS_IsMainThread());
+void QuotaClient::DeleteTimerCallback(nsITimer* aTimer, void* aClosure) {
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(aTimer);
 
-  if (IndexedDatabaseManager* mgr = IndexedDatabaseManager::Get()) {
-    mgr->NoteShuttingDownQuotaManager();
+  auto* self = static_cast<QuotaClient*>(aClosure);
+  MOZ_ASSERT(self);
+  MOZ_ASSERT(self->mDeleteTimer);
+  MOZ_ASSERT(SameCOMIdentity(self->mDeleteTimer, aTimer));
+
+  for (auto iter = self->mPendingDeleteInfos.ConstIter(); !iter.Done();
+       iter.Next()) {
+    auto key = iter.Key();
+    auto value = iter.Data();
+    MOZ_ASSERT(!value->IsEmpty());
+
+    RefPtr<DeleteFilesRunnable> runnable =
+        new DeleteFilesRunnable(key, std::move(*value));
+
+    MOZ_ASSERT(value->IsEmpty());
+
+    runnable->RunImmediately();
   }
+
+  self->mPendingDeleteInfos.Clear();
 }
 
 nsresult QuotaClient::GetDirectory(PersistenceType aPersistenceType,
@@ -16391,6 +16522,182 @@ void QuotaClient::ProcessMaintenanceQueue() {
   mMaintenanceQueue.RemoveElementAt(0);
 
   mCurrentMaintenance->RunImmediately();
+}
+
+/*******************************************************************************
+ * DeleteFilesRunnable
+ ******************************************************************************/
+
+DeleteFilesRunnable::DeleteFilesRunnable(FileManager* aFileManager,
+                                         nsTArray<int64_t>&& aFileIds)
+    : Runnable("dom::indexeddb::DeleteFilesRunnable"),
+      mOwningEventTarget(GetCurrentThreadEventTarget()),
+      mFileManager(aFileManager),
+      mFileIds(std::move(aFileIds)),
+      mState(State_Initial) {}
+
+void DeleteFilesRunnable::RunImmediately() {
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(mState == State_Initial);
+
+  Unused << this->Run();
+}
+
+nsresult DeleteFilesRunnable::Open() {
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(mState == State_Initial);
+
+  QuotaManager* quotaManager = QuotaManager::Get();
+  if (NS_WARN_IF(!quotaManager)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  mState = State_DirectoryOpenPending;
+
+  quotaManager->OpenDirectory(mFileManager->Type(), mFileManager->Group(),
+                              mFileManager->Origin(), quota::Client::IDB,
+                              /* aExclusive */ false, this);
+
+  return NS_OK;
+}
+
+nsresult DeleteFilesRunnable::DeleteFile(int64_t aFileId) {
+  MOZ_ASSERT(mDirectory);
+  MOZ_ASSERT(mJournalDirectory);
+
+  nsCOMPtr<nsIFile> file = mFileManager->GetFileForId(mDirectory, aFileId);
+  NS_ENSURE_TRUE(file, NS_ERROR_FAILURE);
+
+  nsresult rv;
+  int64_t fileSize;
+
+  if (mFileManager->EnforcingQuota()) {
+    rv = file->GetFileSize(&fileSize);
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
+  }
+
+  rv = file->Remove(false);
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
+
+  if (mFileManager->EnforcingQuota()) {
+    QuotaManager* quotaManager = QuotaManager::Get();
+    NS_ASSERTION(quotaManager, "Shouldn't be null!");
+
+    quotaManager->DecreaseUsageForOrigin(mFileManager->Type(),
+                                         mFileManager->Group(),
+                                         mFileManager->Origin(), fileSize);
+  }
+
+  file = mFileManager->GetFileForId(mJournalDirectory, aFileId);
+  NS_ENSURE_TRUE(file, NS_ERROR_FAILURE);
+
+  rv = file->Remove(false);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+nsresult DeleteFilesRunnable::DoDatabaseWork() {
+  AssertIsOnIOThread();
+  MOZ_ASSERT(mState == State_DatabaseWorkOpen);
+
+  if (!mFileManager->Invalidated()) {
+    mDirectory = mFileManager->GetDirectory();
+    if (NS_WARN_IF(!mDirectory)) {
+      return NS_ERROR_FAILURE;
+    }
+
+    mJournalDirectory = mFileManager->GetJournalDirectory();
+    if (NS_WARN_IF(!mJournalDirectory)) {
+      return NS_ERROR_FAILURE;
+    }
+
+    for (int64_t fileId : mFileIds) {
+      if (NS_FAILED(DeleteFile(fileId))) {
+        NS_WARNING("Failed to delete file!");
+      }
+    }
+  }
+
+  Finish();
+
+  return NS_OK;
+}
+
+void DeleteFilesRunnable::Finish() {
+  // Must set mState before dispatching otherwise we will race with the main
+  // thread.
+  mState = State_UnblockingOpen;
+
+  MOZ_ALWAYS_SUCCEEDS(mOwningEventTarget->Dispatch(this, NS_DISPATCH_NORMAL));
+}
+
+void DeleteFilesRunnable::UnblockOpen() {
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(mState == State_UnblockingOpen);
+
+  mDirectoryLock = nullptr;
+
+  mState = State_Completed;
+}
+
+NS_IMPL_ISUPPORTS_INHERITED0(DeleteFilesRunnable, Runnable)
+
+NS_IMETHODIMP
+DeleteFilesRunnable::Run() {
+  nsresult rv;
+
+  switch (mState) {
+    case State_Initial:
+      rv = Open();
+      break;
+
+    case State_DatabaseWorkOpen:
+      rv = DoDatabaseWork();
+      break;
+
+    case State_UnblockingOpen:
+      UnblockOpen();
+      return NS_OK;
+
+    case State_DirectoryOpenPending:
+    default:
+      MOZ_CRASH("Should never get here!");
+  }
+
+  if (NS_WARN_IF(NS_FAILED(rv)) && mState != State_UnblockingOpen) {
+    Finish();
+  }
+
+  return NS_OK;
+}
+
+void DeleteFilesRunnable::DirectoryLockAcquired(DirectoryLock* aLock) {
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(mState == State_DirectoryOpenPending);
+  MOZ_ASSERT(!mDirectoryLock);
+
+  mDirectoryLock = aLock;
+
+  QuotaManager* quotaManager = QuotaManager::Get();
+  MOZ_ASSERT(quotaManager);
+
+  // Must set this before dispatching otherwise we will race with the IO thread
+  mState = State_DatabaseWorkOpen;
+
+  nsresult rv = quotaManager->IOThread()->Dispatch(this, NS_DISPATCH_NORMAL);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    Finish();
+    return;
+  }
+}
+
+void DeleteFilesRunnable::DirectoryLockFailed() {
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(mState == State_DirectoryOpenPending);
+  MOZ_ASSERT(!mDirectoryLock);
+
+  Finish();
 }
 
 void Maintenance::RegisterDatabaseMaintenance(
@@ -26294,23 +26601,6 @@ GetFileReferencesHelper::Run() {
 
   mWaiting = false;
   mCondVar.Notify();
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-FlushPendingFileDeletionsRunnable::Run() {
-  MOZ_ASSERT(NS_IsMainThread());
-
-  RefPtr<IndexedDatabaseManager> mgr = IndexedDatabaseManager::Get();
-  if (NS_WARN_IF(!mgr)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  nsresult rv = mgr->FlushPendingFileDeletions();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
 
   return NS_OK;
 }

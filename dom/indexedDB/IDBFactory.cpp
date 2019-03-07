@@ -133,6 +133,11 @@ nsresult IDBFactory::CreateForWindow(nsPIDOMWindowInner* aWindow,
   MOZ_ASSERT(principalInfo->type() == PrincipalInfo::TContentPrincipalInfo ||
              principalInfo->type() == PrincipalInfo::TSystemPrincipalInfo);
 
+  if (NS_WARN_IF(!QuotaManager::IsPrincipalInfoValid(*principalInfo))) {
+    IDB_REPORT_INTERNAL_ERR();
+    return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+  }
+
   nsCOMPtr<nsIWebNavigation> webNav = do_GetInterface(aWindow);
   nsCOMPtr<nsILoadContext> loadContext = do_QueryInterface(webNav);
 
@@ -167,6 +172,10 @@ nsresult IDBFactory::CreateForMainThreadJS(JSContext* aCx,
   nsresult rv = PrincipalToPrincipalInfo(principal, principalInfo);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
+  }
+
+  if (NS_WARN_IF(!QuotaManager::IsPrincipalInfoValid(*principalInfo))) {
+    return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
   }
 
   rv = CreateForMainThreadJSInternal(aCx, aOwningObject, principalInfo,
@@ -580,6 +589,12 @@ already_AddRefed<IDBOpenDBRequest> IDBFactory::OpenInternal(
 
     if (principalInfo.type() != PrincipalInfo::TContentPrincipalInfo &&
         principalInfo.type() != PrincipalInfo::TSystemPrincipalInfo) {
+      IDB_REPORT_INTERNAL_ERR();
+      aRv.Throw(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+      return nullptr;
+    }
+
+    if (NS_WARN_IF(!QuotaManager::IsPrincipalInfoValid(principalInfo))) {
       IDB_REPORT_INTERNAL_ERR();
       aRv.Throw(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
       return nullptr;

@@ -218,10 +218,6 @@ JitCompileOptions::JitCompileOptions()
     : cloneSingletons_(false),
       profilerSlowAssertionsEnabled_(false),
       offThreadCompilationAvailable_(false)
-#ifdef ENABLE_WASM_REFTYPES
-      ,
-      wasmGcEnabled_(false)
-#endif
 {
 }
 
@@ -231,7 +227,4 @@ JitCompileOptions::JitCompileOptions(JSContext* cx) {
       cx->runtime()->geckoProfiler().enabled() &&
       cx->runtime()->geckoProfiler().slowAssertionsEnabled();
   offThreadCompilationAvailable_ = OffThreadCompilationAvailable(cx);
-#ifdef ENABLE_WASM_REFTYPES
-  wasmGcEnabled_ = wasm::HasReftypesSupport(cx);
-#endif
 }
