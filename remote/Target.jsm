@@ -6,8 +6,11 @@
 
 var EXPORTED_SYMBOLS = ["Target"];
 
+const {Connection} = ChromeUtils.import("chrome://remote/content/Connection.jsm");
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {TargetListener} = ChromeUtils.import("chrome://remote/content/TargetListener.jsm");
+const {Session} = ChromeUtils.import("chrome://remote/content/Session.jsm");
+const {WebSocketDebuggerTransport} = ChromeUtils.import("chrome://remote/content/server/WebSocketTransport.jsm");
+const {WebSocketServer} = ChromeUtils.import("chrome://remote/content/server/WebSocket.jsm");
 const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this, "Favicons",
@@ -22,18 +25,16 @@ XPCOMUtils.defineLazyServiceGetter(this, "Favicons",
 class Target {
   constructor(browser) {
     this.browser = browser;
-    this.debugger = new TargetListener(this);
+    this.sessions = new Map();
   }
 
   connect() {
     Services.obs.addObserver(this, "message-manager-disconnect");
-    this.debugger.listen();
   }
 
   disconnect() {
     Services.obs.removeObserver(this, "message-manager-disconnect");
     // TODO(ato): Disconnect existing client sockets
-    this.debugger.close();
   }
 
   get id() {
@@ -97,7 +98,10 @@ class Target {
   }
 
   get wsDebuggerURL() {
-    return this.debugger.url;
+    const RemoteAgent = Cc["@mozilla.org/remote/agent"]
+        .getService(Ci.nsISupports).wrappedJSObject;
+    const {host, port} = RemoteAgent;
+    return `ws://${host}:${port}/devtools/page/${this.id}`;
   }
 
   toString() {
@@ -118,6 +122,15 @@ class Target {
     };
   }
 
+  // nsIHttpRequestHandler
+
+  async handle(request, response) {
+    const so = await WebSocketServer.upgrade(request, response);
+    const transport = new WebSocketDebuggerTransport(so);
+    const conn = new Connection(transport);
+    this.sessions.set(conn, new Session(conn, this));
+  }
+
   // nsIObserver
 
   observe(subject, topic, data) {
@@ -128,5 +141,14 @@ class Target {
         this.disconnect();
       }
     }
+  }
+
+  // XPCOM
+
+  get QueryInterface() {
+    return ChromeUtils.generateQI([
+      Ci.nsIHttpRequestHandler,
+      Ci.nsIObserver,
+    ]);
   }
 }
