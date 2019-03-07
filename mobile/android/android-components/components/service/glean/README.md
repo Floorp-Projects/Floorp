@@ -86,12 +86,13 @@ Glean should be initialized as soon as possible, and importantly, before any
 other libraries in the application start using Glean. Library code should never
 call `Glean.initialize`, since it should be called exactly once per application.
 
-### Defining metrics
+### Adding new metrics
 
-The metrics that your application collects must be defined in a `metrics.yaml`
+All metrics that your application collects must be defined in a `metrics.yaml`
 file. This file should be at the root of the application module (the same
 directory as the `build.gradle` file you updated). The format of that file is
 documented [here](https://mozilla.github.io/glean_parser/metrics-yaml.html).
+To learn more, see [adding new metrics](docs/metrics/adding-new-metrics.md).
 
 **Important**: as stated [here](#before-using-the-library), any new data collection requires
 documentation and data-review. This is also required for any new metric automatically collected
