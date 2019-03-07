@@ -9,6 +9,7 @@ import android.view.View
 import androidx.test.core.app.ApplicationProvider
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.EngineSession
+import mozilla.components.concept.engine.EngineView
 import mozilla.components.feature.findinpage.FindInPageFeature
 import mozilla.components.feature.findinpage.view.FindInPageView
 import mozilla.components.support.test.any
@@ -28,7 +29,7 @@ class FindInPageInteractorTest {
     @Test
     fun `Start will register interactor as listener`() {
         val view: FindInPageView = mock()
-        val interactor = FindInPageInteractor(mock(), mock(), view)
+        val interactor = FindInPageInteractor(mock(), mock(), view, mock())
 
         verify(view, never()).listener = interactor
 
@@ -40,7 +41,7 @@ class FindInPageInteractorTest {
     @Test
     fun `Stop will unregister interactor from listening to the view`() {
         val view: FindInPageView = mock()
-        val interactor = FindInPageInteractor(mock(), mock(), view)
+        val interactor = FindInPageInteractor(mock(), mock(), view, mock())
 
         interactor.start()
         interactor.stop()
@@ -53,7 +54,7 @@ class FindInPageInteractorTest {
         val view: FindInPageView = mock()
         `when`(view.asView()).thenReturn(View(context))
 
-        val interactor = FindInPageInteractor(mock(), mock(), view)
+        val interactor = FindInPageInteractor(mock(), mock(), view, mock())
 
         // Nothing should throw here if we haven't bound the interactor to a session
         interactor.onPreviousResult()
@@ -73,7 +74,7 @@ class FindInPageInteractorTest {
         val sessionManager: SessionManager = mock()
         `when`(sessionManager.getEngineSession(any())).thenReturn(engineSession)
 
-        val interactor = FindInPageInteractor(mock(), sessionManager, view)
+        val interactor = FindInPageInteractor(mock(), sessionManager, view, mock())
 
         interactor.bind(mock())
         interactor.onPreviousResult()
@@ -91,7 +92,7 @@ class FindInPageInteractorTest {
         val sessionManager: SessionManager = mock()
         `when`(sessionManager.getEngineSession(any())).thenReturn(engineSession)
 
-        val interactor = FindInPageInteractor(mock(), sessionManager, view)
+        val interactor = FindInPageInteractor(mock(), sessionManager, view, mock())
 
         interactor.bind(mock())
         interactor.onNextResult()
@@ -100,10 +101,26 @@ class FindInPageInteractorTest {
     }
 
     @Test
+    fun `onNextResult blurs focused engine view`() {
+        val view: FindInPageView = mock()
+        `when`(view.asView()).thenReturn(View(context))
+
+        val actualEngineView: View = mock()
+        val engineView: EngineView = mock()
+        `when`(engineView.asView()).thenReturn(actualEngineView)
+
+        val interactor = FindInPageInteractor(mock(), mock(), view, engineView)
+
+        interactor.bind(mock())
+        interactor.onNextResult()
+        verify(actualEngineView).clearFocus()
+    }
+
+    @Test
     fun `onClose notifies feature`() {
         val feature: FindInPageFeature = mock()
 
-        val interactor = FindInPageInteractor(feature, mock(), mock())
+        val interactor = FindInPageInteractor(feature, mock(), mock(), mock())
         interactor.onClose()
 
         verify(feature).unbind()
@@ -116,7 +133,7 @@ class FindInPageInteractorTest {
         val sessionManager: SessionManager = mock()
         `when`(sessionManager.getEngineSession(any())).thenReturn(engineSession)
 
-        val interactor = FindInPageInteractor(mock(), sessionManager, mock())
+        val interactor = FindInPageInteractor(mock(), sessionManager, mock(), mock())
 
         interactor.bind(mock())
         interactor.unbind()
@@ -131,7 +148,7 @@ class FindInPageInteractorTest {
         val sessionManager: SessionManager = mock()
         `when`(sessionManager.getEngineSession(any())).thenReturn(engineSession)
 
-        val interactor = FindInPageInteractor(mock(), sessionManager, mock())
+        val interactor = FindInPageInteractor(mock(), sessionManager, mock(), mock())
 
         interactor.bind(mock())
         interactor.onFindAll("example")
@@ -146,7 +163,7 @@ class FindInPageInteractorTest {
         val sessionManager: SessionManager = mock()
         `when`(sessionManager.getEngineSession(any())).thenReturn(engineSession)
 
-        val interactor = FindInPageInteractor(mock(), sessionManager, mock())
+        val interactor = FindInPageInteractor(mock(), sessionManager, mock(), mock())
 
         interactor.bind(mock())
         interactor.onClearMatches()

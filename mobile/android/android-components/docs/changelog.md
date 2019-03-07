@@ -98,6 +98,10 @@ permalink: /changelog/
 * **concept-fetch**
   * Added common HTTP header constants in `Headers.Common`. This collection is incomplete: add your own!
 
+* **feature-findinpage**
+  * ⚠️ **This is a breaking API change!**: `FindInPageFeature` constructor now takes an `EngineView` instance.
+  * Blur controlled `EngineView` for better screen reader accessibility.
+
 # 0.46.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.45.0...v0.46.0)

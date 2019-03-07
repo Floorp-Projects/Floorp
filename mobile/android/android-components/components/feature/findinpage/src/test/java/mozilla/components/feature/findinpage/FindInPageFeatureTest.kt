@@ -21,7 +21,7 @@ class FindInPageFeatureTest {
         val presenter: FindInPagePresenter = mock()
         val interactor: FindInPageInteractor = mock()
 
-        val feature = FindInPageFeature(mock(), mock())
+        val feature = FindInPageFeature(mock(), mock(), mock())
         feature.presenter = presenter
         feature.interactor = interactor
 
@@ -36,7 +36,7 @@ class FindInPageFeatureTest {
         val presenter: FindInPagePresenter = mock()
         val interactor: FindInPageInteractor = mock()
 
-        val feature = FindInPageFeature(mock(), mock())
+        val feature = FindInPageFeature(mock(), mock(), mock())
         feature.presenter = presenter
         feature.interactor = interactor
 
@@ -51,7 +51,7 @@ class FindInPageFeatureTest {
         val presenter: FindInPagePresenter = mock()
         val interactor: FindInPageInteractor = mock()
 
-        val feature = FindInPageFeature(mock(), mock())
+        val feature = FindInPageFeature(mock(), mock(), mock())
         feature.presenter = presenter
         feature.interactor = interactor
 
@@ -67,7 +67,7 @@ class FindInPageFeatureTest {
         val presenter: FindInPagePresenter = mock()
         val interactor: FindInPageInteractor = mock()
 
-        val feature = spy(FindInPageFeature(mock(), mock()))
+        val feature = spy(FindInPageFeature(mock(), mock(), mock()))
         feature.presenter = presenter
         feature.interactor = interactor
 
@@ -84,7 +84,7 @@ class FindInPageFeatureTest {
         val presenter: FindInPagePresenter = mock()
         val interactor: FindInPageInteractor = mock()
 
-        val feature = spy(FindInPageFeature(mock(), mock()))
+        val feature = spy(FindInPageFeature(mock(), mock(), mock()))
         feature.presenter = presenter
         feature.interactor = interactor
 
@@ -98,7 +98,7 @@ class FindInPageFeatureTest {
         val presenter: FindInPagePresenter = mock()
         val interactor: FindInPageInteractor = mock()
 
-        val feature = FindInPageFeature(mock(), mock())
+        val feature = FindInPageFeature(mock(), mock(), mock())
         feature.presenter = presenter
         feature.interactor = interactor
 
@@ -115,7 +115,7 @@ class FindInPageFeatureTest {
 
         var lambdaInvoked = false
 
-        val feature = FindInPageFeature(mock(), mock()) {
+        val feature = FindInPageFeature(mock(), mock(), mock()) {
             lambdaInvoked = true
         }
 

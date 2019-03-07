@@ -7,6 +7,7 @@ package mozilla.components.feature.findinpage
 import android.support.annotation.VisibleForTesting
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
+import mozilla.components.concept.engine.EngineView
 import mozilla.components.feature.findinpage.internal.FindInPageInteractor
 import mozilla.components.feature.findinpage.internal.FindInPagePresenter
 import mozilla.components.feature.findinpage.view.FindInPageView
@@ -19,10 +20,11 @@ import mozilla.components.support.base.feature.LifecycleAwareFeature
 class FindInPageFeature(
     sessionManager: SessionManager,
     view: FindInPageView,
+    engineView: EngineView,
     private val onClose: (() -> Unit)? = null
 ) : LifecycleAwareFeature, BackHandler {
     @VisibleForTesting internal var presenter = FindInPagePresenter(view)
-    @VisibleForTesting internal var interactor = FindInPageInteractor(this, sessionManager, view)
+    @VisibleForTesting internal var interactor = FindInPageInteractor(this, sessionManager, view, engineView)
 
     private var session: Session? = null
 
