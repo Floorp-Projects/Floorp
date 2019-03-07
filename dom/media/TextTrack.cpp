@@ -269,5 +269,29 @@ void TextTrack::NotifyCueActiveStateChanged(TextTrackCue* aCue) {
   }
 }
 
+void TextTrack::GetCurrentCueList(RefPtr<TextTrackCueList>& aCueList) const {
+  if (!mTextTrackList) {
+    return;
+  }
+
+  const HTMLMediaElement* mediaElement = mTextTrackList->GetMediaElement();
+  if (!mediaElement) {
+    return;
+  }
+
+  // According to `time marches on` step1, current cue list contains the cues
+  // whose start times are less than or equal to the current playback position
+  // and whose end times are greater than the current playback position.
+  // https://html.spec.whatwg.org/multipage/media.html#time-marches-on
+  MOZ_ASSERT(aCueList);
+  const double playbackTime = mediaElement->CurrentTime();
+  for (uint32_t idx = 0; idx < mCueList->Length(); idx++) {
+    TextTrackCue* cue = (*mCueList)[idx];
+    if (cue->StartTime() <= playbackTime && cue->EndTime() > playbackTime) {
+      aCueList->AddCue(*cue);
+    }
+  }
+}
+
 }  // namespace dom
 }  // namespace mozilla
