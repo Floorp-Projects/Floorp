@@ -128,7 +128,6 @@ void TextTrack::AddCue(TextTrackCue& aCue) {
       mediaElement->NotifyCueAdded(aCue);
     }
   }
-  SetDirty();
 }
 
 void TextTrack::RemoveCue(TextTrackCue& aCue, ErrorResult& aRv) {
@@ -145,7 +144,6 @@ void TextTrack::RemoveCue(TextTrackCue& aCue, ErrorResult& aRv) {
       mediaElement->NotifyCueRemoved(aCue);
     }
   }
-  SetDirty();
 }
 
 void TextTrack::SetCuesDirty() {
@@ -212,7 +210,6 @@ void TextTrack::NotifyCueUpdated(TextTrackCue* aCue) {
       mediaElement->NotifyCueUpdated(aCue);
     }
   }
-  SetDirty();
 }
 
 void TextTrack::GetLabel(nsAString& aLabel) const {
