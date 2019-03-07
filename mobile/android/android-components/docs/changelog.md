@@ -23,6 +23,9 @@ permalink: /changelog/
 
 * **feature-downloads**
   * Fixing bug #2265. In some occasions, when trying to download a file, the download failed and the download notification shows "Unsuccessful download".
+  
+* **feature-search**
+  * Adds default search engine var to `SearchEngineManager`
 
 * **service-experiments**
   * A new client-side experiments SDK for running segmenting user populations to run multi-branch experiments on them. This component is going to replace `service-fretboard`. The SDK is currently in development and the component is not ready to be used yet.

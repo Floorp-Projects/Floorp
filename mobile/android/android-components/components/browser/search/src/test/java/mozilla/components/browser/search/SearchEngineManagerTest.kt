@@ -114,6 +114,45 @@ class SearchEngineManagerTest {
         }
     }
 
+    @Test
+    fun `manager returns set default engine as default when no identifier is specified`() {
+        runBlocking {
+            val provider = mockProvider(
+                listOf(
+                    mockSearchEngine("mozsearch"),
+                    mockSearchEngine("google"),
+                    mockSearchEngine("bing")
+                )
+            )
+
+            val manager = SearchEngineManager(listOf(provider))
+            manager.defaultSearchEngine = mockSearchEngine("bing")
+
+            val default = manager.getDefaultSearchEngine(RuntimeEnvironment.application)
+            assertEquals("bing", default.identifier)
+        }
+    }
+
+    @Test
+    fun `manager returns engine from identifier as default when identifier is specified`() {
+        runBlocking {
+            val provider = mockProvider(
+                listOf(
+                    mockSearchEngine("mozsearch", "Mozilla Search"),
+                    mockSearchEngine("google", "Google Search"),
+                    mockSearchEngine("bing", "Bing Search")
+                )
+            )
+
+            val manager = SearchEngineManager(listOf(provider))
+            manager.defaultSearchEngine = mockSearchEngine("bing")
+
+            val default =
+                manager.getDefaultSearchEngine(RuntimeEnvironment.application, "Google Search")
+            assertEquals("google", default.identifier)
+        }
+    }
+
     @Ignore
     @Test
     fun `locale update broadcast will trigger reload`() {

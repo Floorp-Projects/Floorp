@@ -8,10 +8,10 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import kotlinx.coroutines.async
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -28,6 +28,7 @@ class SearchEngineManager(
 ) {
     private var deferredSearchEngines: Deferred<List<SearchEngine>>? = null
     private val scope = CoroutineScope(Dispatchers.Default)
+    var defaultSearchEngine: SearchEngine? = null
 
     /**
      * Asynchronously load search engines from providers. Inherits caller's [CoroutineScope.coroutineContext].
@@ -55,8 +56,8 @@ class SearchEngineManager(
     /**
      * Returns the default search engine.
      *
-     * The default engine is the first engine loaded by the first provider passed to the
-     * constructor of SearchEngineManager.
+     * If defaultSearchEngine has not been set, the default engine is the first engine loaded by the
+     * first provider passed to the constructor of SearchEngineManager.
      *
      * Optionally a name can be passed to this method (e.g. from the user's preferences). If
      * a matching search engine was loaded then this search engine will be returned instead.
@@ -66,7 +67,7 @@ class SearchEngineManager(
         val searchEngines = getSearchEngines(context)
 
         return when (name) {
-            EMPTY -> searchEngines[0]
+            EMPTY -> defaultSearchEngine ?: searchEngines[0]
             else -> searchEngines.find { it.name == name } ?: searchEngines[0]
         }
     }
