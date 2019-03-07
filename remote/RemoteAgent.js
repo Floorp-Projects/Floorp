@@ -170,11 +170,10 @@ class ParentRemoteAgent {
 
     try {
       this.listen(addr);
-    } catch ({message}) {
+    } catch (e) {
       this.close();
-      log.fatal(`Unable to start remote agent on ${addr.spec}: ${message}`);
-      cmdLine.preventDefault = true;
-    }
+      throw new FatalError(`Unable to start remote agent on ${addr.spec}: ${e.message}`, e);
+     }
   }
 
   get helpInfo() {
