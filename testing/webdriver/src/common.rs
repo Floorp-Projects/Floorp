@@ -1,4 +1,5 @@
 use serde::ser::{Serialize, Serializer};
+use serde::{Deserialize, Deserializer};
 
 pub static ELEMENT_KEY: &'static str = "element-6066-11e4-a52e-4f735466cecf";
 pub static FRAME_KEY: &'static str = "frame-075b-4da1-b6ba-e579c2d3230a";
@@ -38,7 +39,7 @@ fn serialize_webelement_id<S>(element: &WebElement, serializer: S) -> Result<S::
 where
     S: Serializer,
 {
-    element.id.serialize(serializer)
+    element.serialize(serializer)
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -55,15 +56,37 @@ pub enum LocatorStrategy {
     XPath,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-pub struct WebElement {
+#[derive(Clone, Debug, PartialEq)]
+pub struct WebElement(pub String);
+
+// private
+#[derive(Serialize, Deserialize)]
+struct WebElementObject {
     #[serde(rename = "element-6066-11e4-a52e-4f735466cecf")]
-    pub id: String,
+    id: String,
+}
+
+impl Serialize for WebElement {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        WebElementObject { id: self.0.clone() }.serialize(serializer)
+    }
+}
+
+impl<'de> Deserialize<'de> for WebElement {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        Deserialize::deserialize(deserializer).map(|WebElementObject { id }| WebElement(id))
+    }
 }
 
 impl WebElement {
-    pub fn new(id: String) -> WebElement {
-        WebElement { id }
+    pub fn to_string(&self) -> String {
+        self.0.clone()
     }
 }
 
@@ -97,8 +120,8 @@ mod tests {
 
     #[test]
     fn test_json_frame_id_webelement() {
-        let json = r#""elem""#;
-        let data = FrameId::Element(WebElement::new("elem".into()));
+        let json = r#"{"element-6066-11e4-a52e-4f735466cecf":"elem"}"#;
+        let data = FrameId::Element(WebElement("elem".into()));
 
         check_serialize(&json, &data);
     }
@@ -158,7 +181,7 @@ mod tests {
     #[test]
     fn test_json_webelement() {
         let json = r#"{"element-6066-11e4-a52e-4f735466cecf":"elem"}"#;
-        let data = WebElement::new("elem".into());
+        let data = WebElement("elem".into());
 
         check_serialize_deserialize(&json, &data);
     }
