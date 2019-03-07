@@ -7375,6 +7375,22 @@ already_AddRefed<Promise> HTMLMediaElement::SetSinkId(const nsAString& aSinkId,
   return promise.forget();
 }
 
+void HTMLMediaElement::NotifyTextTrackModeChanged() {
+  if (mPendingTextTrackChanged) {
+    return;
+  }
+  mPendingTextTrackChanged = true;
+  mAbstractMainThread->Dispatch(
+      NS_NewRunnableFunction("HTMLMediaElement::NotifyTextTrackModeChanged",
+                             [this, self = RefPtr<HTMLMediaElement>(this)]() {
+                               mPendingTextTrackChanged = false;
+                               if (!mTextTrackManager) {
+                                 return;
+                               }
+                               GetTextTracks()->CreateAndDispatchChangeEvent();
+                             }));
+}
+
 }  // namespace dom
 }  // namespace mozilla
 

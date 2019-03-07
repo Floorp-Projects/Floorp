@@ -1674,6 +1674,16 @@ class HTMLMediaElement : public nsGenericHTMLElement,
   // bfcache.
   bool mHasEverBeenBlockedForAutoplay = false;
 
+  // True if we have dispatched a task for text track changed, will be unset
+  // when we starts processing text track changed.
+  // https://html.spec.whatwg.org/multipage/media.html#pending-text-track-change-notification-flag
+  bool mPendingTextTrackChanged = false;
+
+ public:
+  // This function will be called whenever a text track that is in a media
+  // element's list of text tracks has its text track mode change value
+  void NotifyTextTrackModeChanged();
+
  public:
   // Helper class to measure times for playback telemetry stats
   class TimeDurationAccumulator {
