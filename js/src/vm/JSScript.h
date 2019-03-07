@@ -1686,8 +1686,7 @@ class JSScript : public js::gc::TenuredCell {
     // Code is in strict mode.
     Strict = 1 << 1,
 
-    // Code has "use strict"; explicitly.
-    ExplicitUseStrict = 1 << 2,
+    // (1 << 2) is unused.
 
     // True if the script has a non-syntactic scope on its dynamic scope chain.
     // That is, there are objects about which we know nothing between the
@@ -2097,10 +2096,6 @@ class JSScript : public js::gc::TenuredCell {
   bool noScriptRval() const { return hasFlag(ImmutableFlags::NoScriptRval); }
 
   bool strict() const { return hasFlag(ImmutableFlags::Strict); }
-
-  bool explicitUseStrict() const {
-    return hasFlag(ImmutableFlags::ExplicitUseStrict);
-  }
 
   bool hasNonSyntacticScope() const {
     return hasFlag(ImmutableFlags::HasNonSyntacticScope);
