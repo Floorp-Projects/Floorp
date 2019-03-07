@@ -7330,7 +7330,6 @@ nsDisplayTransform::nsDisplayTransform(nsDisplayListBuilder* aBuilder,
   MOZ_COUNT_CTOR(nsDisplayTransform);
   MOZ_ASSERT(aFrame, "Must have a frame!");
   Init(aBuilder, aList);
-  UpdateBoundsFor3D(aBuilder);
 }
 
 nsDisplayTransform::nsDisplayTransform(nsDisplayListBuilder* aBuilder,
@@ -7350,7 +7349,6 @@ nsDisplayTransform::nsDisplayTransform(nsDisplayListBuilder* aBuilder,
   MOZ_ASSERT(aFrame, "Must have a frame!");
   SetReferenceFrameToAncestor(aBuilder);
   Init(aBuilder, aList);
-  UpdateBoundsFor3D(aBuilder);
 }
 
 nsDisplayTransform::nsDisplayTransform(
@@ -7409,9 +7407,8 @@ void nsDisplayTransform::SetReferenceFrameToAncestor(
 void nsDisplayTransform::Init(nsDisplayListBuilder* aBuilder,
                               nsDisplayList* aChildren) {
   mShouldFlatten = false;
-  mHasBounds = false;
   mChildren.AppendToTop(aChildren);
-  UpdateUntransformedBounds(aBuilder);
+  UpdateBounds(aBuilder);
 }
 
 bool nsDisplayTransform::ShouldFlattenAway(nsDisplayListBuilder* aBuilder) {
@@ -8173,6 +8170,59 @@ bool nsDisplayTransform::ComputeVisibility(nsDisplayListBuilder* aBuilder,
   return true;
 }
 
+nsRect nsDisplayTransform::TransformUntransformedBounds(
+    nsDisplayListBuilder* aBuilder, const Matrix4x4Flagged& aMatrix) const {
+  bool snap;
+  const nsRect untransformedBounds = GetUntransformedBounds(aBuilder, &snap);
+  // GetTransform always operates in dev pixels.
+  const float factor = mFrame->PresContext()->AppUnitsPerDevPixel();
+  return nsLayoutUtils::MatrixTransformRect(untransformedBounds, aMatrix,
+                                            factor);
+}
+
+/**
+ * Returns the bounds for this transform. The bounds are calculated during
+ * display list building and merging, see |nsDisplayTransform::UpdateBounds()|.
+ */
+nsRect nsDisplayTransform::GetBounds(nsDisplayListBuilder* aBuilder,
+                                     bool* aSnap) const {
+  *aSnap = false;
+  return mBounds;
+}
+
+void nsDisplayTransform::ComputeBounds(nsDisplayListBuilder* aBuilder) {
+  MOZ_ASSERT(mFrame->Extend3DContext() || IsLeafOf3DContext());
+
+  /* Some transforms can get empty bounds in 2D, but might get transformed again
+   * and get non-empty bounds. A simple example of this would be a 180 degree
+   * rotation getting applied twice.
+   * We should not depend on transforming bounds level by level.
+   *
+   * This function collects the bounds of this transform and stores it in
+   * nsDisplayListBuilder. If this is not a leaf of a 3D context, we recurse
+   * down and include the bounds of the child transforms.
+   * The bounds are transformed with the accumulated transformation matrix up to
+   * the 3D context root coordinate space.
+   */
+  nsDisplayListBuilder::AutoAccumulateTransform accTransform(aBuilder);
+  accTransform.Accumulate(GetTransform().GetMatrix());
+
+  // Do not dive into another 3D context.
+  if (!IsLeafOf3DContext()) {
+    for (nsDisplayItem* i = GetChildren()->GetBottom(); i; i = i->GetAbove()) {
+      i->DoUpdateBoundsPreserves3D(aBuilder);
+    }
+  }
+
+  /* The child transforms that extend 3D context further will have empty bounds,
+   * so the untransformed bounds here is the bounds of all the non-preserve-3d
+   * content under this transform.
+   */
+  const nsRect rect = TransformUntransformedBounds(
+      aBuilder, accTransform.GetCurrentTransform());
+  aBuilder->AccumulateRect(rect);
+}
+
 void nsDisplayTransform::DoUpdateBoundsPreserves3D(
     nsDisplayListBuilder* aBuilder) {
   MOZ_ASSERT(mFrame->Combines3DTransformWithAncestors() ||
@@ -8182,17 +8232,36 @@ void nsDisplayTransform::DoUpdateBoundsPreserves3D(
 }
 
 void nsDisplayTransform::UpdateBounds(nsDisplayListBuilder* aBuilder) {
-  mHasBounds = false;
-  UpdateUntransformedBounds(aBuilder, true);
-  UpdateBoundsFor3D(aBuilder);
+  UpdateUntransformedBounds(aBuilder);
+
+  if (IsTransformSeparator()) {
+    MOZ_ASSERT(GetTransform().IsIdentity());
+    mBounds = mChildBounds;
+    return;
+  }
+
+  if (!mFrame->Combines3DTransformWithAncestors()) {
+    if (mFrame->Extend3DContext()) {
+      // The transform establishes a 3D context. |UpdateBoundsFor3D()| will
+      // collect the bounds from the child transforms.
+      UpdateBoundsFor3D(aBuilder);
+    } else {
+      // A stand-alone transform.
+      mBounds = TransformUntransformedBounds(aBuilder, GetTransform());
+    }
+
+    return;
+  }
+
+  // With nested 3D transforms, the 2D bounds might not be useful.
+  MOZ_ASSERT(mFrame->Combines3DTransformWithAncestors());
+  mBounds = nsRect();
 }
 
 void nsDisplayTransform::UpdateBoundsFor3D(nsDisplayListBuilder* aBuilder) {
-  if (!mFrame->Extend3DContext() ||
-      mFrame->Combines3DTransformWithAncestors() || IsTransformSeparator()) {
-    // Not an establisher of a 3D rendering context.
-    return;
-  }
+  MOZ_ASSERT(mFrame->Extend3DContext() &&
+             !mFrame->Combines3DTransformWithAncestors() &&
+             !IsTransformSeparator());
 
   // Always start updating from an establisher of a 3D rendering context.
   nsDisplayListBuilder::AutoAccumulateRect accRect(aBuilder);
@@ -8200,7 +8269,12 @@ void nsDisplayTransform::UpdateBoundsFor3D(nsDisplayListBuilder* aBuilder) {
   accTransform.StartRoot();
   ComputeBounds(aBuilder);
   mBounds = aBuilder->GetAccumulatedRect();
-  mHasBounds = true;
+}
+
+void nsDisplayTransform::UpdateUntransformedBounds(
+    nsDisplayListBuilder* aBuilder) {
+  mChildBounds = GetChildren()->GetClippedBoundsWithRespectToASR(
+      aBuilder, mActiveScrolledRoot);
 }
 
 #ifdef DEBUG_HIT
@@ -8316,67 +8390,6 @@ float nsDisplayTransform::GetHitDepthAtPoint(nsDisplayListBuilder* aBuilder,
 
   Point3D transformed = matrix.TransformPoint(Point3D(point2d.x, point2d.y, 0));
   return transformed.z;
-}
-
-/* The bounding rectangle for the object is the overflow rectangle translated
- * by the reference point.
- */
-nsRect nsDisplayTransform::GetBounds(nsDisplayListBuilder* aBuilder,
-                                     bool* aSnap) const {
-  *aSnap = false;
-
-  if (mHasBounds) {
-    return mBounds;
-  }
-
-  if (mFrame->Extend3DContext() && !mIsTransformSeparator) {
-    return nsRect();
-  }
-
-  bool snap;
-  nsRect untransformedBounds = GetUntransformedBounds(aBuilder, &snap);
-  // GetTransform always operates in dev pixels.
-  float factor = mFrame->PresContext()->AppUnitsPerDevPixel();
-  mBounds = nsLayoutUtils::MatrixTransformRect(untransformedBounds,
-                                               GetTransform(), factor);
-  mHasBounds = true;
-  return mBounds;
-}
-
-void nsDisplayTransform::ComputeBounds(nsDisplayListBuilder* aBuilder) {
-  MOZ_ASSERT(mFrame->Extend3DContext() || IsLeafOf3DContext());
-
-  /* For some cases, the transform would make an empty bounds, but it
-   * may be turned back again to get a non-empty bounds.  We should
-   * not depend on transforming bounds level by level.
-   *
-   * Here, it applies accumulated transforms on the leaf frames of the
-   * 3d rendering context, and track and accmulate bounds at
-   * nsDisplayListBuilder.
-   */
-  nsDisplayListBuilder::AutoAccumulateTransform accTransform(aBuilder);
-
-  accTransform.Accumulate(GetTransform().GetMatrix());
-
-  if (!IsLeafOf3DContext()) {
-    // Do not dive into another 3D context.
-    for (nsDisplayItem* i = GetChildren()->GetBottom(); i; i = i->GetAbove()) {
-      i->DoUpdateBoundsPreserves3D(aBuilder);
-    }
-  }
-
-  /* For Preserves3D, it is bounds of only children as leaf frames.
-   * For non-leaf frames, their bounds are accumulated and kept at
-   * nsDisplayListBuilder.
-   */
-  bool snap;
-  nsRect untransformedBounds = GetUntransformedBounds(aBuilder, &snap);
-  // GetTransform always operates in dev pixels.
-  float factor = mFrame->PresContext()->AppUnitsPerDevPixel();
-  nsRect rect = nsLayoutUtils::MatrixTransformRect(
-      untransformedBounds, accTransform.GetCurrentTransform(), factor);
-
-  aBuilder->AccumulateRect(rect);
 }
 
 /* The transform is opaque iff the transform consists solely of scales and

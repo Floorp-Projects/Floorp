@@ -6513,20 +6513,11 @@ class nsDisplayTransform : public nsDisplayHitTestInfoItem {
   nsRect GetUntransformedBounds(nsDisplayListBuilder* aBuilder,
                                 bool* aSnap) const override {
     *aSnap = false;
-    return *mChildBounds;
+    return mChildBounds;
   }
 
   const nsRect& GetUntransformedPaintRect() const override {
     return mChildrenBuildingRect;
-  }
-
-  void UpdateUntransformedBounds(nsDisplayListBuilder* aBuilder,
-                                 bool aForce = false) {
-    if (!mChildBounds || aForce) {
-      mChildBounds =
-          mozilla::Some(GetChildren()->GetClippedBoundsWithRespectToASR(
-              aBuilder, mActiveScrolledRoot));
-    }
   }
 
   bool ShouldFlattenAway(nsDisplayListBuilder* aBuilder) override;
@@ -6768,7 +6759,7 @@ class nsDisplayTransform : public nsDisplayHitTestInfoItem {
    * and child 3D rendering context.
    * \see nsIFrame::BuildDisplayListForStackingContext().
    */
-  bool IsTransformSeparator() { return mIsTransformSeparator; }
+  bool IsTransformSeparator() const { return mIsTransformSeparator; }
   /**
    * This item is the boundary between parent and child 3D rendering
    * context.
@@ -6789,6 +6780,10 @@ class nsDisplayTransform : public nsDisplayHitTestInfoItem {
 
  private:
   void ComputeBounds(nsDisplayListBuilder* aBuilder);
+  nsRect TransformUntransformedBounds(nsDisplayListBuilder* aBuilder,
+                                      const Matrix4x4Flagged& aMatrix) const;
+  void UpdateUntransformedBounds(nsDisplayListBuilder* aBuilder);
+
   void SetReferenceFrameToAncestor(nsDisplayListBuilder* aBuilder);
   void Init(nsDisplayListBuilder* aBuilder, nsDisplayList* aChildren);
 
@@ -6805,16 +6800,11 @@ class nsDisplayTransform : public nsDisplayHitTestInfoItem {
   RefPtr<AnimatedGeometryRoot> mAnimatedGeometryRootForScrollMetadata;
   nsRect mChildrenBuildingRect;
   uint32_t mIndex;
-
-  // The transformed bounds of this display item.
-  mutable nsRect mBounds;
-  // True for mBounds is valid.
-  mutable bool mHasBounds;
-
   mutable RetainedDisplayList mChildren;
   // The untransformed bounds of |mChildren|.
-  mutable mozilla::Maybe<nsRect> mChildBounds;
-
+  nsRect mChildBounds;
+  // The transformed bounds of this display item.
+  nsRect mBounds;
   // This item is a separator between 3D rendering contexts, and
   // mTransform have been presetted by the constructor.
   // This also forces us not to extend the 3D context.  Since we don't create a
