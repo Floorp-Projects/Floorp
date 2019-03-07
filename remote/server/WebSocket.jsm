@@ -130,17 +130,13 @@ function writeHttpResponse(output, response) {
 }
 
 /**
- * Process the WebSocket handshake headers
- * and return the key to be sent in Sec-WebSocket-Accept response header.
+ * Process the WebSocket handshake headers and return the key to be sent in
+ * Sec-WebSocket-Accept response header.
  */
-function processRequest({ requestLine, headers }) {
-  const [method, path] = requestLine.split(" ");
+function processRequest({requestLine, headers}) {
+  const method = requestLine.split(" ")[0];
   if (method !== "GET") {
     throw new Error("The handshake request must use GET method");
-  }
-
-  if (path !== "/") {
-    throw new Error("The handshake request has unknown path");
   }
 
   const upgrade = headers.get("upgrade");
@@ -164,8 +160,7 @@ function processRequest({ requestLine, headers }) {
     throw new Error("The handshake request must have a Sec-WebSocket-Key header");
   }
 
-  const acceptKey = computeKey(key);
-  return {acceptKey};
+  return { acceptKey: computeKey(key) };
 }
 
 function computeKey(key) {
@@ -177,15 +172,13 @@ function computeKey(key) {
 }
 
 /**
- * Perform the server part of a WebSocket opening handshake on an incoming connection.
+ * Perform the server part of a WebSocket opening handshake
+ * on an incoming connection.
  */
-const serverHandshake = async function(input, output) {
-  // Read the request
-  const request = await readHttpRequest(input);
-
+async function serverHandshake(request, output) {
   try {
     // Check and extract info from the request
-    const { acceptKey } = processRequest(request);
+    const {acceptKey} = processRequest(request);
 
     // Send response headers
     await writeHttpResponse(output, [
@@ -199,7 +192,29 @@ const serverHandshake = async function(input, output) {
     await writeHttpResponse(output, [ "HTTP/1.1 400 Bad Request" ]);
     throw error;
   }
-};
+}
+
+async function createWebSocket(transport, input, output) {
+  const transportProvider = {
+    setListener(upgradeListener) {
+      // onTransportAvailable callback shouldn't be called synchronously
+      Services.tm.dispatchToMainThread(() => {
+        upgradeListener.onTransportAvailable(transport, input, output);
+      });
+    },
+  };
+
+  return new Promise((resolve, reject) => {
+    const socket = WebSocket.createServerWebSocket(null, [], transportProvider, "");
+    socket.addEventListener("close", () => {
+      input.close();
+      output.close();
+    });
+
+    socket.onopen = () => resolve(socket);
+    socket.onerror = err => reject(err);
+  });
+}
 
 /**
  * Accept an incoming WebSocket server connection.
@@ -207,32 +222,30 @@ const serverHandshake = async function(input, output) {
  * Performs the WebSocket handshake and waits for the WebSocket to open.
  * Returns Promise with a WebSocket ready to send and receive messages.
  */
-const accept = async function(transport, rx, tx) {
-  await serverHandshake(rx, tx);
+async function accept(transport, input, output) {
+  const request = await readHttpRequest(input);
+  await serverHandshake(request, output);
+  return createWebSocket(transport, input, output);
+}
 
-  const transportProvider = {
-    setListener(upgradeListener) {
-      // onTransportAvailable callback shouldn't be called synchronously
-      executeSoon(() => {
-        upgradeListener.onTransportAvailable(transport, rx, tx);
-      });
-    },
+/** Upgrade an existing HTTP request from httpd.js to WebSocket. */
+async function upgrade(request, response) {
+  // handle response manually, allowing us to send arbitrary data
+  response._powerSeized = true;
+
+  const {transport, input, output} = response._connection;
+
+  const headers = new Map();
+  for (let [key, values] of Object.entries(request._headers._headers)) {
+    headers.set(key, values.join("\n"));
+  }
+  const convertedRequest = {
+    requestLine: `${request.method} ${request.path}`,
+    headers,
   };
+  await serverHandshake(convertedRequest, output);
 
-  return new Promise((resolve, reject) => {
-    const so = WebSocket.createServerWebSocket(null, [], transportProvider, "");
-    so.addEventListener("close", () => {
-      rx.close();
-      tx.close();
-    });
+  return createWebSocket(transport, input, output);
+}
 
-    so.onopen = () => resolve(so);
-    so.onerror = err => reject(err);
-  });
-};
-
-const executeSoon = function(func) {
-  Services.tm.dispatchToMainThread(func);
-};
-
-const WebSocketServer = {accept};
+const WebSocketServer = {accept, upgrade};
