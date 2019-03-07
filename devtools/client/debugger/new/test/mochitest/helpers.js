@@ -755,17 +755,18 @@ function getFirstBreakpointColumn(dbg, {line, sourceId}) {
  * @return {Promise}
  * @static
  */
-async function addBreakpoint(dbg, source, line, column) {
+async function addBreakpoint(dbg, source, line, column, options) {
   source = findSource(dbg, source);
   const sourceId = source.id;
   column = column || getFirstBreakpointColumn(dbg, {line, sourceId: source.id});
   const bpCount = dbg.selectors.getBreakpointCount(dbg.getState());
-  dbg.actions.addBreakpoint({ sourceId, line, column });
+  dbg.actions.addBreakpoint({ sourceId, line, column }, options);
   await waitForDispatch(dbg, "ADD_BREAKPOINT");
   is(dbg.selectors.getBreakpointCount(dbg.getState()), bpCount + 1, "a new breakpoint was created");
 }
 
 function disableBreakpoint(dbg, source, line, column) {
+  column = column || getFirstBreakpointColumn(dbg, {line, sourceId: source.id});
   const location = { sourceId: source.id, sourceUrl: source.url, line, column };
   const bp = dbg.selectors.getBreakpointForLocation(dbg.getState(), location);
   dbg.actions.disableBreakpoint(bp);
@@ -775,6 +776,7 @@ function disableBreakpoint(dbg, source, line, column) {
 function setBreakpointOptions(dbg, source, line, column, options) {
   source = findSource(dbg, source);
   const sourceId = source.id;
+  column = column || getFirstBreakpointColumn(dbg, {line, sourceId});
   dbg.actions.setBreakpointOptions({ sourceId, line, column }, options);
   return waitForDispatch(dbg, "SET_BREAKPOINT_OPTIONS");
 }
