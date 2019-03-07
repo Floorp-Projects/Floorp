@@ -1657,8 +1657,7 @@ var gMainPane = {
     this.selectedHandlerListItem = null;
 
     // Clear the list of entries.
-    while (this._list.childNodes.length > 1)
-      this._list.removeChild(this._list.lastChild);
+    this._list.textContent = "";
 
     var visibleTypes = this._visibleTypes;
 
