@@ -1809,7 +1809,10 @@ pref("intl.multilingual.downloadEnabled", false);
 // development and testing of Fission.
 // The current simulated conditions are:
 // - Don't propagate events from subframes to JS child actors
-pref("browser.fission.simulate", false);
+pref("fission.frontend.simulate-events", false);
+// - Only deliver subframe messages that specifies
+//   their destination (using the BrowsingContext id).
+pref("fission.frontend.simulate-messages", false);
 
 // Prio preferences
 // Only enable by default on Nightly.
