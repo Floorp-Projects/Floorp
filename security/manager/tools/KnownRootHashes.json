@@ -1033,7 +1033,32 @@
       "label": "Certigna_Root_CA",
       "binNumber": 205,
       "sha256Fingerprint": "1I09I+7bUKRZ5VGXYBwnd0udexjJTVoFlRGhAlC5MWg="
+    },
+    {
+      "label": "emSign_Root_CA___G1",
+      "binNumber": 206,
+      "sha256Fingerprint": "QPavA0apmqHNHVVaTpzOYsf5Y0YD7kBmFYM9yMjQA2c="
+    },
+    {
+      "label": "emSign_ECC_Root_CA___G3",
+      "binNumber": 207,
+      "sha256Fingerprint": "hqHsugicSo07vic0xhK6NB2BPgQ8+eioYs1cV6Nrvms="
+    },
+    {
+      "label": "emSign_Root_CA___C1",
+      "binNumber": 208,
+      "sha256Fingerprint": "ElYJqjAdoKJJuXqCOctqNCFvRNysnzlUsUKS8ujIYI8="
+    },
+    {
+      "label": "emSign_ECC_Root_CA___C3",
+      "binNumber": 209,
+      "sha256Fingerprint": "vE2AmxUYnXjbPh2M9PlyanldoWQ8pfE1jh3bDtwNfrM="
+    },
+    {
+      "label": "Hongkong_Post_Root_CA_3",
+      "binNumber": 210,
+      "sha256Fingerprint": "Wi/APwyDsJC7+kBgSwmIRGx2Nhg9+YRuFxAaRH+479Y="
     }
   ],
-  "maxBin": 205
+  "maxBin": 210
 }

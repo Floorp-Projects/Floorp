@@ -87,7 +87,7 @@ gtest_cleanup()
 }
 
 ################## main #################################################
-GTESTS="${GTESTS:-prng_gtest certhigh_gtest certdb_gtest der_gtest pk11_gtest util_gtest freebl_gtest softoken_gtest sysinit_gtest blake2b_gtest}"
+GTESTS="${GTESTS:-prng_gtest certhigh_gtest certdb_gtest der_gtest pk11_gtest util_gtest freebl_gtest softoken_gtest sysinit_gtest blake2b_gtest smime_gtest}"
 gtest_init "$0"
 gtest_start
 gtest_cleanup
