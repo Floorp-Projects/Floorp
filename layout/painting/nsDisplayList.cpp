@@ -3148,12 +3148,14 @@ bool nsDisplayItem::ForceActiveLayers() {
 }
 
 static int32_t ZIndexForFrame(nsIFrame* aFrame) {
-  if (!aFrame->IsAbsPosContainingBlock() && !aFrame->IsFlexOrGridItem())
+  if (!aFrame->IsAbsPosContainingBlock() && !aFrame->IsFlexOrGridItem()) {
     return 0;
+  }
 
   const nsStylePosition* position = aFrame->StylePosition();
-  if (position->mZIndex.IsInteger())
+  if (position->mZIndex.IsInteger()) {
     return position->mZIndex.AsInteger();
+  }
   MOZ_ASSERT(position->mZIndex.IsAuto());
   // sort the auto and 0 elements together
   return 0;
@@ -7307,22 +7309,53 @@ already_AddRefed<Layer> nsDisplayAsyncZoom::BuildLayer(
 // nsDisplayTransform Implementation
 //
 
-// Write #define UNIFIED_CONTINUATIONS here and in
-// TransformReferenceBox::Initialize to have the transform property try
-// to transform content with continuations as one unified block instead of
-// several smaller ones.  This is currently disabled because it doesn't work
-// correctly, since when the frames are initially being reflowed, their
-// continuations all compute their bounding rects independently of each other
-// and consequently get the wrong value.  Write #define DEBUG_HIT here to have
-// the nsDisplayTransform class dump out a bunch of information about hit
-// detection.
-#undef UNIFIED_CONTINUATIONS
-#undef DEBUG_HIT
+nsDisplayTransform::nsDisplayTransform(nsDisplayListBuilder* aBuilder,
+                                       nsIFrame* aFrame, nsDisplayList* aList,
+                                       const nsRect& aChildrenBuildingRect,
+                                       uint32_t aIndex)
+    : nsDisplayHitTestInfoItem(aBuilder, aFrame),
+      mStoredList(aBuilder, aFrame, aList),
+      mTransform(Some(Matrix4x4())),
+      mTransformGetter(nullptr),
+      mAnimatedGeometryRootForChildren(mAnimatedGeometryRoot),
+      mAnimatedGeometryRootForScrollMetadata(mAnimatedGeometryRoot),
+      mChildrenBuildingRect(aChildrenBuildingRect),
+      mIndex(aIndex),
+      mIsTransformSeparator(true),
+      mTransformPreserves3DInited(false),
+      mAllowAsyncAnimation(false) {
+  MOZ_COUNT_CTOR(nsDisplayTransform);
+  MOZ_ASSERT(aFrame, "Must have a frame!");
+  Init(aBuilder);
+  UpdateBoundsFor3D(aBuilder);
+}
+
+nsDisplayTransform::nsDisplayTransform(nsDisplayListBuilder* aBuilder,
+                                       nsIFrame* aFrame, nsDisplayList* aList,
+                                       const nsRect& aChildrenBuildingRect,
+                                       uint32_t aIndex,
+                                       bool aAllowAsyncAnimation)
+    : nsDisplayHitTestInfoItem(aBuilder, aFrame),
+      mStoredList(aBuilder, aFrame, aList),
+      mTransformGetter(nullptr),
+      mAnimatedGeometryRootForChildren(mAnimatedGeometryRoot),
+      mAnimatedGeometryRootForScrollMetadata(mAnimatedGeometryRoot),
+      mChildrenBuildingRect(aChildrenBuildingRect),
+      mIndex(aIndex),
+      mIsTransformSeparator(false),
+      mTransformPreserves3DInited(false),
+      mAllowAsyncAnimation(aAllowAsyncAnimation) {
+  MOZ_COUNT_CTOR(nsDisplayTransform);
+  MOZ_ASSERT(aFrame, "Must have a frame!");
+  SetReferenceFrameToAncestor(aBuilder);
+  Init(aBuilder);
+  UpdateBoundsFor3D(aBuilder);
+}
 
 nsDisplayTransform::nsDisplayTransform(
     nsDisplayListBuilder* aBuilder, nsIFrame* aFrame, nsDisplayList* aList,
-    const nsRect& aChildrenBuildingRect,
-    ComputeTransformFunction aTransformGetter, uint32_t aIndex)
+    const nsRect& aChildrenBuildingRect, uint32_t aIndex,
+    ComputeTransformFunction aTransformGetter)
     : nsDisplayHitTestInfoItem(aBuilder, aFrame),
       mStoredList(aBuilder, aFrame, aList),
       mTransformGetter(aTransformGetter),
@@ -7379,50 +7412,6 @@ void nsDisplayTransform::Init(nsDisplayListBuilder* aBuilder) {
   mHasBounds = false;
   mStoredList.SetClipChain(nullptr, true);
   mStoredList.SetBuildingRect(mChildrenBuildingRect);
-}
-
-nsDisplayTransform::nsDisplayTransform(nsDisplayListBuilder* aBuilder,
-                                       nsIFrame* aFrame, nsDisplayList* aList,
-                                       const nsRect& aChildrenBuildingRect,
-                                       uint32_t aIndex,
-                                       bool aAllowAsyncAnimation)
-    : nsDisplayHitTestInfoItem(aBuilder, aFrame),
-      mStoredList(aBuilder, aFrame, aList),
-      mTransformGetter(nullptr),
-      mAnimatedGeometryRootForChildren(mAnimatedGeometryRoot),
-      mAnimatedGeometryRootForScrollMetadata(mAnimatedGeometryRoot),
-      mChildrenBuildingRect(aChildrenBuildingRect),
-      mIndex(aIndex),
-      mIsTransformSeparator(false),
-      mTransformPreserves3DInited(false),
-      mAllowAsyncAnimation(aAllowAsyncAnimation) {
-  MOZ_COUNT_CTOR(nsDisplayTransform);
-  MOZ_ASSERT(aFrame, "Must have a frame!");
-  SetReferenceFrameToAncestor(aBuilder);
-  Init(aBuilder);
-  UpdateBoundsFor3D(aBuilder);
-}
-
-nsDisplayTransform::nsDisplayTransform(nsDisplayListBuilder* aBuilder,
-                                       nsIFrame* aFrame, nsDisplayList* aList,
-                                       const nsRect& aChildrenBuildingRect,
-                                       const Matrix4x4& aTransform,
-                                       uint32_t aIndex)
-    : nsDisplayHitTestInfoItem(aBuilder, aFrame),
-      mStoredList(aBuilder, aFrame, aList),
-      mTransform(Some(aTransform)),
-      mTransformGetter(nullptr),
-      mAnimatedGeometryRootForChildren(mAnimatedGeometryRoot),
-      mAnimatedGeometryRootForScrollMetadata(mAnimatedGeometryRoot),
-      mChildrenBuildingRect(aChildrenBuildingRect),
-      mIndex(aIndex),
-      mIsTransformSeparator(true),
-      mTransformPreserves3DInited(false),
-      mAllowAsyncAnimation(false) {
-  MOZ_COUNT_CTOR(nsDisplayTransform);
-  MOZ_ASSERT(aFrame, "Must have a frame!");
-  Init(aBuilder);
-  UpdateBoundsFor3D(aBuilder);
 }
 
 bool nsDisplayTransform::ShouldFlattenAway(nsDisplayListBuilder* aBuilder) {
@@ -9415,8 +9404,7 @@ static float ClampStdDeviation(float aStdDeviation) {
   return std::min(std::max(0.0f, aStdDeviation), 100.0f);
 }
 
-bool nsDisplayFilters::CreateWebRenderCSSFilters(
-    WrFiltersHolder& wrFilters) {
+bool nsDisplayFilters::CreateWebRenderCSSFilters(WrFiltersHolder& wrFilters) {
   // All CSS filters are supported by WebRender. SVG filters are not fully
   // supported, those use NS_STYLE_FILTER_URL and are handled separately.
   const nsTArray<nsStyleFilter>& filters = mFrame->StyleEffects()->mFilters;
@@ -9469,9 +9457,10 @@ bool nsDisplayFilters::CreateWebRenderCSSFilters(
       case NS_STYLE_FILTER_BLUR: {
         float appUnitsPerDevPixel =
             mFrame->PresContext()->AppUnitsPerDevPixel();
-        wrFilters.filters.AppendElement(mozilla::wr::FilterOp::Blur(ClampStdDeviation(
-            NSAppUnitsToFloatPixels(filter.GetFilterParameter().GetCoordValue(),
-                                    appUnitsPerDevPixel))));
+        wrFilters.filters.AppendElement(mozilla::wr::FilterOp::Blur(
+            ClampStdDeviation(NSAppUnitsToFloatPixels(
+                filter.GetFilterParameter().GetCoordValue(),
+                appUnitsPerDevPixel))));
         break;
       }
       case NS_STYLE_FILTER_DROP_SHADOW: {
