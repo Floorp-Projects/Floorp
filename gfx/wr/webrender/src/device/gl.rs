@@ -520,6 +520,9 @@ pub struct Texture {
     /// configurations). But that would complicate a lot of logic in this module,
     /// and FBOs are cheap enough to create.
     fbos_with_depth: Vec<FBOId>,
+    /// If we are unable to blit directly to a texture array then we need
+    /// an intermediate renderbuffer.
+    blit_workaround_buffer: Option<(RBOId, FBOId)>,
     last_frame_used: GpuFrameId,
 }
 
@@ -876,6 +879,11 @@ pub struct Capabilities {
     pub supports_multisampling: bool,
     /// Whether the function glCopyImageSubData is available.
     pub supports_copy_image_sub_data: bool,
+    /// Whether we are able to use glBlitFramebuffers with the draw fbo
+    /// bound to a non-0th layer of a texture array. This is buggy on
+    /// Adreno devices.
+    pub supports_blit_to_texture_array: bool,
+
 }
 
 #[derive(Clone, Debug)]
@@ -1210,6 +1218,10 @@ impl Device {
         let supports_copy_image_sub_data = supports_extension(&extensions, "GL_EXT_copy_image") ||
             supports_extension(&extensions, "GL_ARB_copy_image");
 
+        // Due to a bug on Adreno devices, blitting to an fbo bound to
+        // a non-0th layer of a texture array is not supported.
+        let supports_blit_to_texture_array = !renderer_name.starts_with("Adreno");
+
         // On Adreno GPUs PBO texture upload is only performed asynchronously
         // if the stride of the data in the PBO is a multiple of 256 bytes.
         // Other platforms may have similar requirements and should be added
@@ -1230,6 +1242,7 @@ impl Device {
             capabilities: Capabilities {
                 supports_multisampling: false, //TODO
                 supports_copy_image_sub_data,
+                supports_blit_to_texture_array,
             },
 
             bgra_format_internal,
@@ -1697,6 +1710,7 @@ impl Device {
             filter,
             fbos: vec![],
             fbos_with_depth: vec![],
+            blit_workaround_buffer: None,
             last_frame_used: self.frame_id,
             flags: TextureFlags::default(),
         };
@@ -1781,6 +1795,28 @@ impl Device {
             if rt_info.has_depth {
                 self.init_fbos(&mut texture, true);
             }
+        }
+
+        // Set up intermediate buffer for blitting to texture, if required.
+        if texture.layer_count > 1 && !self.capabilities.supports_blit_to_texture_array {
+            let rbo = RBOId(self.gl.gen_renderbuffers(1)[0]);
+            let fbo = FBOId(self.gl.gen_framebuffers(1)[0]);
+            self.gl.bind_renderbuffer(gl::RENDERBUFFER, rbo.0);
+            self.gl.renderbuffer_storage(
+                gl::RENDERBUFFER,
+                self.matching_renderbuffer_format(texture.format),
+                texture.size.width as _,
+                texture.size.height as _
+            );
+
+            self.bind_draw_target_impl(fbo);
+            self.gl.framebuffer_renderbuffer(
+                gl::DRAW_FRAMEBUFFER,
+                gl::COLOR_ATTACHMENT0,
+                gl::RENDERBUFFER,
+                rbo.0
+            );
+            texture.blit_workaround_buffer = Some((rbo, fbo));
         }
 
         record_gpu_alloc(texture.size_in_bytes());
@@ -2036,9 +2072,56 @@ impl Device {
         debug_assert!(self.inside_frame);
 
         self.bind_read_target(src_target);
-        self.bind_draw_target(dest_target);
 
-        self.blit_render_target_impl(src_rect, dest_rect, filter);
+        match dest_target {
+            DrawTarget::Texture { texture, layer, .. } if layer != 0 &&
+                !self.capabilities.supports_blit_to_texture_array =>
+            {
+                // This should have been initialized in create_texture().
+                let (_rbo, fbo) = texture.blit_workaround_buffer.expect("Blit workaround buffer has not been initialized.");
+
+                // Blit from read target to intermediate buffer.
+                self.bind_draw_target_impl(fbo);
+                self.blit_render_target_impl(
+                    src_rect,
+                    dest_rect,
+                    filter
+                );
+
+                // dest_rect may be inverted, so min_x/y() might actually be the
+                // bottom-right, max_x/y() might actually be the top-left,
+                // and width/height might be negative. See servo/euclid#321.
+                // Calculate the non-inverted rect here.
+                let dest_bounds = DeviceIntRect::new(
+                    DeviceIntPoint::new(
+                        dest_rect.min_x().min(dest_rect.max_x()),
+                        dest_rect.min_y().min(dest_rect.max_y()),
+                    ),
+                    DeviceIntSize::new(
+                        dest_rect.size.width.abs(),
+                        dest_rect.size.height.abs(),
+                    ),
+                ).intersection(&texture.size.into()).unwrap_or(DeviceIntRect::zero());
+
+                self.bind_read_target_impl(fbo);
+                self.bind_texture(DEFAULT_TEXTURE, texture);
+
+                // Copy from intermediate buffer to the texture layer.
+                self.gl.copy_tex_sub_image_3d(
+                    texture.target, 0,
+                    dest_bounds.origin.x, dest_bounds.origin.y,
+                    layer as _,
+                    dest_bounds.origin.x, dest_bounds.origin.y,
+                    dest_bounds.size.width, dest_bounds.size.height,
+                );
+
+            }
+            _ => {
+                self.bind_draw_target(dest_target);
+
+                self.blit_render_target_impl(src_rect, dest_rect, filter);
+            }
+        }
     }
 
     /// Performs a blit while flipping vertically. Useful for blitting textures
@@ -2074,6 +2157,10 @@ impl Device {
         self.deinit_fbos(&mut texture.fbos_with_depth);
         if had_depth {
             self.release_depth_target(texture.get_dimensions());
+        }
+        if let Some((rbo, fbo)) = texture.blit_workaround_buffer {
+            self.gl.delete_framebuffers(&[fbo.0]);
+            self.gl.delete_renderbuffers(&[rbo.0]);
         }
 
         self.gl.delete_textures(&[texture.id]);
@@ -2905,6 +2992,20 @@ impl Device {
                 external: gl::RG,
                 pixel_type: gl::UNSIGNED_BYTE,
             },
+        }
+    }
+
+    /// Returns a GL format matching an ImageFormat suitable for a renderbuffer.
+    fn matching_renderbuffer_format(&self, format: ImageFormat) -> gl::GLenum {
+        match format {
+            ImageFormat::R8 => gl::R8,
+            ImageFormat::R16 => gl::R16UI,
+            // BGRA8 is not usable with renderbuffers so use RGBA8.
+            ImageFormat::BGRA8 => gl::RGBA8,
+            ImageFormat::RGBAF32 => gl::RGBA32F,
+            ImageFormat::RG8 => gl::RG8,
+            ImageFormat::RGBAI32 => gl::RGBA32I,
+            ImageFormat::RGBA8 => gl::RGBA8,
         }
     }
 
