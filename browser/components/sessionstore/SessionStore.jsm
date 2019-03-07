@@ -3601,36 +3601,6 @@ var SessionStoreInternal = {
   },
 
   /**
-   * Handles the pinning / unpinning of a selected tab restored with
-   * restoreWindow.
-   *
-   * @param aWindow
-   *        Window reference to the window used for restoration
-   * @param aWinData
-   *        The window data we're restoring
-   * @param aRestoreIndex
-   *        The index of the tab data we're currently restoring
-   * @returns the selected tab
-   */
-  _updateRestoredSelectedTabPinnedState(aWindow, aWinData, aRestoreIndex) {
-    let tabbrowser = aWindow.gBrowser;
-    let tabData = aWinData.tabs[aRestoreIndex];
-    let tab = tabbrowser.selectedTab;
-    let needsUnpin = tab.pinned && !tabData.pinned;
-    let needsPin = !tab.pinned && tabData.pinned;
-    if (needsUnpin) {
-      tabbrowser.unpinTab(tab);
-    } else if (needsPin && tab == tabbrowser.tabs[aRestoreIndex]) {
-      tabbrowser.pinTab(tab);
-    } else if (needsPin) {
-      tabbrowser.removeTab(tabbrowser.tabs[aRestoreIndex]);
-      tabbrowser.pinTab(tab);
-      tabbrowser.moveTabTo(tab, aRestoreIndex);
-    }
-    return tab;
-  },
-
-  /**
    * restore features to a single window
    * @param aWindow
    *        Window reference to the window to use for restoration
@@ -3715,7 +3685,14 @@ var SessionStoreInternal = {
       // selecting a new tab.
       if (select &&
           tabbrowser.selectedTab.userContextId == userContextId) {
-        tab = this._updateRestoredSelectedTabPinnedState(aWindow, winData, t);
+        tab = tabbrowser.selectedTab;
+        if (tab.pinned && !tabData.pinned) {
+          tabbrowser.unpinTab(tab);
+        } else if (!tab.pinned && tabData.pinned) {
+          tabbrowser.removeTab(tabbrowser.tabs[t]);
+          tabbrowser.pinTab(tab);
+          tabbrowser.moveTabTo(tab, t);
+        }
 
         tabbrowser.moveTabToEnd();
         if (aWindow.gMultiProcessBrowser && !tab.linkedBrowser.isRemoteBrowser) {
