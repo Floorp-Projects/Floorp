@@ -1173,6 +1173,14 @@ nsLocalFile::Create(uint32_t aType, uint32_t aAttributes) {
     return rv;
   }
 
+  auto* createFunc = (aType == NORMAL_FILE_TYPE ? do_create : do_mkdir);
+
+  rv = createFunc(this, mResolvedPath, aAttributes);
+
+  if (NS_SUCCEEDED(rv) || NS_ERROR_FILE_ALREADY_EXISTS == rv) {
+    return rv;
+  }
+
   // create directories to target
   //
   // A given local file can be either one of these forms:
@@ -1237,15 +1245,7 @@ nsLocalFile::Create(uint32_t aType, uint32_t aAttributes) {
     return directoryCreateError;
   }
 
-  if (aType == NORMAL_FILE_TYPE) {
-    return do_create(this, mResolvedPath, aAttributes);
-  }
-
-  if (aType == DIRECTORY_TYPE) {
-    return do_mkdir(this, mResolvedPath, aAttributes);
-  }
-
-  return NS_ERROR_FILE_UNKNOWN_TYPE;
+  return createFunc(this, mResolvedPath, aAttributes);
 }
 
 NS_IMETHODIMP
