@@ -1016,6 +1016,7 @@ nsresult nsCSPContext::SendReports(
                          mLoadingPrincipal,
                          nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
                          nsIContentPolicy::TYPE_CSP_REPORT,
+                         nullptr,  // nsICookieSettings
                          nullptr,  // PerformanceStorage
                          nullptr,  // aLoadGroup
                          nullptr,  // aCallbacks
