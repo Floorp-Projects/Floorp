@@ -226,11 +226,8 @@ var dataProviders = {
       data.policiesStatus = Services.policies.status;
     }
 
-    const keyGLSGoogle = Services.urlFormatter.formatURL("%GOOGLE_GEOLOCATION_API_KEY%").trim();
-    data.keyGLSGoogleFound = keyGLSGoogle != "no-google-geolocation-api-key" && keyGLSGoogle.length > 0;
-
-    const keySBGoogle = Services.urlFormatter.formatURL("%GOOGLE_SAFEBROWSING_API_KEY%").trim();
-    data.keySBGoogleFound = keySBGoogle != "no-google-safebrowsing-api-key" && keySBGoogle.length > 0;
+    const keyGoogle = Services.urlFormatter.formatURL("%GOOGLE_API_KEY%").trim();
+    data.keyGoogleFound = keyGoogle != "no-google-api-key" && keyGoogle.length > 0;
 
     const keyMozilla = Services.urlFormatter.formatURL("%MOZILLA_API_KEY%").trim();
     data.keyMozillaFound = keyMozilla != "no-mozilla-api-key" && keyMozilla.length > 0;
