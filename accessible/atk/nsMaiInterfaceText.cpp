@@ -287,7 +287,7 @@ static gint getCaretOffsetCB(AtkText* aText) {
   if (accWrap) {
     HyperTextAccessible* text = accWrap->AsHyperText();
     if (!text || !text->IsTextRole()) {
-      return 0;
+      return -1;
     }
 
     return static_cast<gint>(text->CaretOffset());
@@ -297,7 +297,7 @@ static gint getCaretOffsetCB(AtkText* aText) {
     return static_cast<gint>(proxy->CaretOffset());
   }
 
-  return 0;
+  return -1;
 }
 
 static AtkAttributeSet* getRunAttributesCB(AtkText* aText, gint aOffset,
