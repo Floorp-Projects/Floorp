@@ -27,8 +27,10 @@ class TestScriptPreloader(MarionetteTestCase):
         self.assertMuchGreaterThan(misses, child_hits)
 
         profile = self.marionette.profile_path
-        self.wait_for_file_change(start_time, "{}/startupCache/scriptCache.bin".format(profile))
-        self.wait_for_file_change(start_time, "{}/startupCache/scriptCache-child.bin".format(profile))
+        self.wait_for_file_change(start_time,
+                                  "{}/startupCache/scriptCache.bin".format(profile))
+        self.wait_for_file_change(start_time,
+                                  "{}/startupCache/scriptCache-child.bin".format(profile))
         self.marionette.restart(clean=False, in_app=True)
         histogram = self.get_histogram("SCRIPT_PRELOADER_REQUESTS")
         misses = histogram.get(LABELS_SCRIPT_PRELOADER_REQUESTS["Miss"], 0)
@@ -53,11 +55,10 @@ class TestScriptPreloader(MarionetteTestCase):
                 if os.stat(path).st_mtime > start_time:
                     return
                 if time.time() > expires:
-                    raise Error("Never observed file change for {}".format(path))
+                    raise Exception("Never observed file change for {}".format(path))
                 time.sleep(1)
             except OSError:
                 pass
-
 
     def wait_for_observer_notification(self, name):
         with self.marionette.using_context(self.marionette.CONTEXT_CHROME):
