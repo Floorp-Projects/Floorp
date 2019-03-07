@@ -3261,6 +3261,29 @@ class nsDisplayList {
       nsRect* aBuildingRect = nullptr) const;
 
   /**
+   * Returns the opaque region of this display list.
+   */
+  nsRegion GetOpaqueRegion(nsDisplayListBuilder* aBuilder) {
+    nsRegion result;
+    bool snap;
+    for (nsDisplayItem* item = GetBottom(); item; item = item->GetAbove()) {
+      result.OrWith(item->GetOpaqueRegion(aBuilder, &snap));
+    }
+    return result;
+  }
+
+  /**
+   * Returns the bounds of the area that needs component alpha.
+   */
+  nsRect GetComponentAlphaBounds(nsDisplayListBuilder* aBuilder) const {
+    nsRect bounds;
+    for (nsDisplayItem* item = GetBottom(); item; item = item->GetAbove()) {
+      bounds.UnionRect(bounds, item->GetComponentAlphaBounds(aBuilder));
+    }
+    return bounds;
+  }
+
+  /**
    * Find the topmost display item that returns a non-null frame, and return
    * the frame.
    */
