@@ -18,19 +18,20 @@ function findSources(dbg: any, url: string) {
   return sources.filter(s => (s.url || "").includes(url));
 }
 
-function sendPacket(dbg: any, packet: any) {
-  return dbg.client.sendPacket(packet);
+function sendPacket(dbg: any, packet: any, callback: () => void) {
+  dbg.client.sendPacket(packet, callback || console.log);
 }
 
-function sendPacketToThread(dbg: Object, packet: any) {
-  return sendPacket(
+function sendPacketToThread(dbg: Object, packet: any, callback: Function = () => {}) {
+  sendPacket(
     dbg,
-    { to: dbg.connection.tabConnection.threadClient.actor, ...packet }
+    { to: dbg.connection.tabConnection.threadClient.actor, ...packet },
+    callback
   );
 }
 
-function evaluate(dbg: Object, expression: any) {
-  return dbg.client.evaluate(expression)
+function evaluate(dbg: Object, expression: any, callback: () => void) {
+  dbg.client.evaluate(expression).then(callback || console.log);
 }
 
 function bindSelectors(obj: Object): Object {
