@@ -82,6 +82,18 @@ class ScrollFrameHelper : public nsIReflowCallback {
   void BuildDisplayList(nsDisplayListBuilder* aBuilder,
                         const nsDisplayListSet& aLists);
 
+  // Add display items for the top-layer (which includes things like
+  // the fullscreen element, its backdrop, and text selection carets)
+  // to |aLists|.
+  // This is a no-op for scroll frames other than the viewport's
+  // root scroll frame.
+  // This should be called with an nsDisplayListSet that will be
+  // wrapped in the async zoom container, if we're building one.
+  // It should not be called with an ASR setter on the stack, as the
+  // top-layer items handle setting up their own ASRs.
+  void MaybeAddTopLayerItems(nsDisplayListBuilder* aBuilder,
+                             const nsDisplayListSet& aLists);
+
   void AppendScrollPartsTo(nsDisplayListBuilder* aBuilder,
                            const nsDisplayListSet& aLists, bool aCreateLayer,
                            bool aPositioned);
@@ -434,8 +446,6 @@ class ScrollFrameHelper : public nsIReflowCallback {
                         const nsRect& aOldScrollArea);
 
   void MarkScrollbarsDirtyForReflow() const;
-
-  bool ShouldClampScrollPosition() const;
 
   bool IsAlwaysActive() const;
   void MarkEverScrolled();

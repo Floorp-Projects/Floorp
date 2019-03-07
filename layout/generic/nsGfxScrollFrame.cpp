@@ -68,6 +68,7 @@
 #include "UnitTransforms.h"
 #include "nsPluginFrame.h"
 #include "nsSliderFrame.h"
+#include "ViewportFrame.h"
 #include "mozilla/layers/APZCCallbackHelper.h"
 #include "mozilla/layers/AxisPhysicsModel.h"
 #include "mozilla/layers/AxisPhysicsMSDModel.h"
@@ -2410,14 +2411,6 @@ void ScrollFrameHelper::MarkScrollbarsDirtyForReflow() const {
   }
 }
 
-bool ScrollFrameHelper::ShouldClampScrollPosition() const {
-  if (!mIsRoot) return true;
-  nsSubDocumentFrame* subdocFrame =
-      static_cast<nsSubDocumentFrame*>(nsLayoutUtils::GetCrossDocParentFrame(
-          mOuter->PresShell()->GetRootFrame()));
-  return !subdocFrame || subdocFrame->ShouldClampScrollPosition();
-}
-
 bool ScrollFrameHelper::IsAlwaysActive() const {
   if (nsDisplayItem::ForceActiveLayers()) {
     return true;
@@ -3378,6 +3371,8 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
       mOuter->BuildDisplayListForChild(aBuilder, mScrolledFrame, aLists);
     }
 
+    MaybeAddTopLayerItems(aBuilder, aLists);
+
     if (addScrollBars) {
       // Add overlay scrollbars.
       AppendScrollPartsTo(aBuilder, aLists, createLayersForScrollbars, true);
@@ -3662,6 +3657,8 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
     }
   }
 
+  MaybeAddTopLayerItems(aBuilder, set);
+
   if (willBuildAsyncZoomContainer) {
     MOZ_ASSERT(mClipAllDescendants);
 
@@ -3733,6 +3730,25 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
                       true);
 
   scrolledContent.MoveTo(aLists);
+}
+
+void ScrollFrameHelper::MaybeAddTopLayerItems(nsDisplayListBuilder* aBuilder,
+                                              const nsDisplayListSet& aLists) {
+  if (mIsRoot) {
+    if (ViewportFrame* viewportFrame = do_QueryFrame(mOuter->GetParent())) {
+      nsDisplayList topLayerList;
+      viewportFrame->BuildDisplayListForTopLayer(aBuilder, &topLayerList);
+      if (!topLayerList.IsEmpty()) {
+        // Wrap the whole top layer in a single item with maximum z-index,
+        // and append it at the very end, so that it stays at the topmost.
+        nsDisplayWrapList* wrapList = MakeDisplayItem<nsDisplayWrapList>(
+            aBuilder, viewportFrame, &topLayerList);
+        wrapList->SetOverrideZIndex(
+            std::numeric_limits<decltype(wrapList->ZIndex())>::max());
+        aLists.PositionedDescendants()->AppendToTop(wrapList);
+      }
+    }
+  }
 }
 
 bool ScrollFrameHelper::DecideScrollableLayer(
@@ -4035,10 +4051,6 @@ nsRect ScrollFrameHelper::GetScrollRange(nscoord aWidth,
 }
 
 nsRect ScrollFrameHelper::GetScrollRangeForClamping() const {
-  if (!ShouldClampScrollPosition()) {
-    return nsRect(nscoord_MIN / 2, nscoord_MIN / 2,
-                  nscoord_MAX - nscoord_MIN / 2, nscoord_MAX - nscoord_MIN / 2);
-  }
   nsSize visualViewportSize = GetVisualViewportSize();
   return GetScrollRange(visualViewportSize.width, visualViewportSize.height);
 }

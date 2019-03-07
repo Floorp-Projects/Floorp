@@ -20,17 +20,14 @@ extern crate tokio_core;
 extern crate tokio_uds;
 
 use audioipc::core;
-use audioipc::fd_passing::framed_with_fds;
+use audioipc::platformhandle_passing::framed_with_platformhandles;
 use audioipc::rpc;
-use audioipc::PlatformHandleType;
+use audioipc::{MessageStream, PlatformHandle, PlatformHandleType};
 use futures::sync::oneshot;
 use futures::Future;
 use std::error::Error;
 use std::os::raw::c_void;
-use std::os::unix::io::IntoRawFd;
-use std::os::unix::net;
 use std::ptr;
-use tokio_uds::UnixStream;
 
 mod server;
 
@@ -102,18 +99,18 @@ pub extern "C" fn audioipc_server_new_client(p: *mut c_void) -> PlatformHandleTy
 
     let cb_remote = wrapper.callback_thread.remote();
 
-    // We create a pair of connected unix domain sockets. One socket is
-    // registered with the reactor core, the other is returned to the
-    // caller.
-    net::UnixStream::pair()
+    // We create a connected pair of anonymous IPC endpoints. One side
+    // is registered with the reactor core, the other side is returned
+    // to the caller.
+    MessageStream::anonymous_ipc_pair()
         .and_then(|(sock1, sock2)| {
             // Spawn closure to run on same thread as reactor::Core
             // via remote handle.
             wrapper.core_thread.remote().spawn(|handle| {
                 trace!("Incoming connection");
-                UnixStream::from_stream(sock2, handle)
+                sock2.into_tokio_ipc(handle)
                     .and_then(|sock| {
-                        let transport = framed_with_fds(sock, Default::default());
+                        let transport = framed_with_platformhandles(sock, Default::default());
                         rpc::bind_server(transport, server::CubebServer::new(cb_remote), handle);
                         Ok(())
                     }).map_err(|_| ())
@@ -123,8 +120,8 @@ pub extern "C" fn audioipc_server_new_client(p: *mut c_void) -> PlatformHandleTy
             // Wait for notification that sock2 has been registered
             // with reactor::Core.
             let _ = wait_rx.wait();
-            Ok(sock1.into_raw_fd())
-        }).unwrap_or(-1)
+            Ok(PlatformHandle::from(sock1).as_raw())
+        }).unwrap_or(-1isize as PlatformHandleType)
 }
 
 #[no_mangle]

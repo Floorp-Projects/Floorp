@@ -55,8 +55,8 @@ bool ScaledFontFreeType::GetWRFontInstanceOptions(
   wr::FontInstanceOptions options;
   options.render_mode = wr::FontRenderMode::Alpha;
   // FIXME: Cairo-FT metrics are not compatible with subpixel positioning.
-  // options.flags = wr::FontInstanceFlags::SUBPIXEL_POSITION;
-  options.flags = 0;
+  // options.flags = wr::FontInstanceFlags_SUBPIXEL_POSITION;
+  options.flags = wr::FontInstanceFlags{0};
   options.bg_color = wr::ToColorU(Color());
   options.synthetic_italics =
       wr::DegreesToSyntheticItalics(GetSyntheticObliqueAngle());

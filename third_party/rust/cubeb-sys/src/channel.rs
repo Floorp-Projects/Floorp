@@ -3,10 +3,13 @@
 // This program is made available under an ISC-style license.  See the
 // accompanying file LICENSE for details.
 
-use std::os::raw::c_uint;
+#[cfg(all(windows, not(target_env = "gnu")))]
+use std::os::raw::c_int as c_enum;
+#[cfg(any(not(windows), all(windows, target_env = "gnu")))]
+use std::os::raw::c_uint as c_enum;
 
 cubeb_enum! {
-    pub enum cubeb_channel : c_uint {
+    pub enum cubeb_channel : c_enum {
         CHANNEL_UNKNOWN = 0,
         CHANNEL_FRONT_LEFT = 1 << 0,
         CHANNEL_FRONT_RIGHT = 1 << 1,

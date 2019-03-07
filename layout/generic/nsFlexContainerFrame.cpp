@@ -1918,6 +1918,7 @@ FlexItem::FlexItem(ReflowInput& aFlexItemReflowInput, float aFlexGrow,
     // value and disregards their own "align-self" property.
     const nsStyleXUL* containerStyleXUL = containerRS->mFrame->StyleXUL();
     mAlignSelf = ConvertLegacyStyleToAlignItems(containerStyleXUL);
+    mAlignSelfFlags = 0;
   } else {
     mAlignSelf = aFlexItemReflowInput.mStylePosition->UsedAlignSelf(
         containerRS->mFrame->Style());
@@ -2000,7 +2001,8 @@ FlexItem::FlexItem(nsIFrame* aChildFrame, nscoord aCrossSize,
       mIsInlineAxisMainAxis(true),  // (doesn't matter, we're not doing layout)
       mNeedsMinSizeAutoResolution(false),
       mHasAnyAutoMargin(false),
-      mAlignSelf(NS_STYLE_ALIGN_FLEX_START) {
+      mAlignSelf(NS_STYLE_ALIGN_FLEX_START),
+      mAlignSelfFlags(0) {
   MOZ_ASSERT(mFrame, "expecting a non-null child frame");
   MOZ_ASSERT(
       NS_STYLE_VISIBILITY_COLLAPSE == mFrame->StyleVisibility()->mVisible,

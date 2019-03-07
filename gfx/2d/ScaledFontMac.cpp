@@ -420,12 +420,12 @@ bool ScaledFontMac::GetWRFontInstanceOptions(
 
   wr::FontInstanceOptions options;
   options.render_mode = wr::FontRenderMode::Subpixel;
-  options.flags = wr::FontInstanceFlags::SUBPIXEL_POSITION;
+  options.flags = wr::FontInstanceFlags_SUBPIXEL_POSITION;
   if (mUseFontSmoothing) {
-    options.flags |= wr::FontInstanceFlags::FONT_SMOOTHING;
+    options.flags |= wr::FontInstanceFlags_FONT_SMOOTHING;
   }
   if (mApplySyntheticBold) {
-    options.flags |= wr::FontInstanceFlags::SYNTHETIC_BOLD;
+    options.flags |= wr::FontInstanceFlags_SYNTHETIC_BOLD;
   }
   options.bg_color = wr::ToColorU(mFontSmoothingBackgroundColor);
   options.synthetic_italics =

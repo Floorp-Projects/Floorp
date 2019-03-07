@@ -3,10 +3,11 @@
 // This program is made available under an ISC-style license.  See the
 // accompanying file LICENSE for details
 
+use PlatformHandle;
+use PlatformHandleType;
 use cubeb::{self, ffi};
 use std::ffi::{CStr, CString};
 use std::os::raw::{c_char, c_int, c_uint};
-use std::os::unix::io::RawFd;
 use std::ptr;
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -169,7 +170,8 @@ fn opt_str(v: Option<Vec<u8>>) -> *mut c_char {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct StreamCreate {
     pub token: usize,
-    pub fds: [RawFd; 3],
+    pub platform_handles: [PlatformHandle; 3],
+    pub target_pid: u32,
 }
 
 // Client -> Server messages.
@@ -177,7 +179,7 @@ pub struct StreamCreate {
 // ServerConn::process_msg doesn't have a catch-all case.
 #[derive(Debug, Serialize, Deserialize)]
 pub enum ServerMessage {
-    ClientConnect,
+    ClientConnect(u32),
     ClientDisconnect,
 
     ContextGetBackendId,
@@ -241,32 +243,40 @@ pub enum CallbackResp {
     State,
 }
 
-pub trait AssocRawFd {
-    fn fd(&self) -> Option<[RawFd; 3]> {
+pub trait AssocRawPlatformHandle {
+    fn platform_handles(&self) -> Option<([PlatformHandleType; 3], u32)> {
         None
     }
-    fn take_fd<F>(&mut self, _: F)
+
+    fn take_platform_handles<F>(&mut self, f: F)
     where
-        F: FnOnce() -> Option<[RawFd; 3]>,
-    {
+        F: FnOnce() -> Option<[PlatformHandleType; 3]> {
+        assert!(f().is_none());
     }
 }
 
-impl AssocRawFd for ServerMessage {}
-impl AssocRawFd for ClientMessage {
-    fn fd(&self) -> Option<[RawFd; 3]> {
+impl AssocRawPlatformHandle for ServerMessage {}
+
+impl AssocRawPlatformHandle for ClientMessage {
+    fn platform_handles(&self) -> Option<([PlatformHandleType; 3], u32)> {
         match *self {
-            ClientMessage::StreamCreated(ref data) => Some(data.fds),
+            ClientMessage::StreamCreated(ref data) => Some(([data.platform_handles[0].as_raw(),
+                                                             data.platform_handles[1].as_raw(),
+                                                             data.platform_handles[2].as_raw()],
+                                                            data.target_pid)),
             _ => None,
         }
     }
 
-    fn take_fd<F>(&mut self, f: F)
+    fn take_platform_handles<F>(&mut self, f: F)
     where
-        F: FnOnce() -> Option<[RawFd; 3]>,
+        F: FnOnce() -> Option<[PlatformHandleType; 3]>,
     {
         if let ClientMessage::StreamCreated(ref mut data) = *self {
-            data.fds = f().unwrap();
+            let handles = f().expect("platform_handles must be available when processing StreamCreated");
+            data.platform_handles = [PlatformHandle::new(handles[0]),
+                                     PlatformHandle::new(handles[1]),
+                                     PlatformHandle::new(handles[2])]
         }
     }
 }
