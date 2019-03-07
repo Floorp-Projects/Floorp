@@ -9,7 +9,9 @@ const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm")
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   ActorManagerParent: "resource://gre/modules/ActorManagerParent.jsm",
+  FatalError: "chrome://remote/content/Error.jsm",
   HttpServer: "chrome://remote/content/server/HTTPD.jsm",
+  JSONHandler: "chrome://remote/content/JSONHandler.jsm",
   Log: "chrome://remote/content/Log.jsm",
   NetUtil: "resource://gre/modules/NetUtil.jsm",
   Observer: "chrome://remote/content/Observer.jsm",
@@ -18,7 +20,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   RecommendedPreferences: "chrome://remote/content/RecommendedPreferences.jsm",
   TabObserver: "chrome://remote/content/WindowManager.jsm",
   Targets: "chrome://remote/content/Targets.jsm",
-  TargetListHandler: "chrome://remote/content/Handler.jsm",
 });
 XPCOMUtils.defineLazyGetter(this, "log", Log.get);
 
@@ -31,8 +32,10 @@ const LOOPBACKS = ["localhost", "127.0.0.1", "[::1]"];
 
 class ParentRemoteAgent {
   constructor() {
-    this.server = null;
+    this.server = new HttpServer();
     this.targets = new Targets();
+
+    this.server.registerPrefixHandler("/json/", new JSONHandler(this));
 
     this.tabs = new TabObserver({registerExisting: true});
     this.tabs.on("open", (eventName, tab) => {
@@ -42,8 +45,15 @@ class ParentRemoteAgent {
       this.targets.disconnect(tab.linkedBrowser);
     });
 
+    this.targets.on("connect", (eventName, target) => {
+      this.server.registerPathHandler(`/devtools/page/${target.id}`, target);
+    });
+    this.targets.on("disconnect", (eventName, target) => {
+      // TODO(ato): removing a handler is currently not possible
+    });
+
     // This allows getting access to the underlying JS object
-    // of the '@mozilla.org/remote/agent' XPCOM components.
+    // of the @mozilla.org/remote/agent XPCOM components
     this.wrappedJSObject = this;
   }
 
@@ -69,12 +79,6 @@ class ParentRemoteAgent {
     if (this.listening) {
       return;
     }
-
-    this.server = new HttpServer();
-    const targetList = new TargetListHandler(this.targets);
-    const protocol = new ProtocolHandler();
-    targetList.register(this.server);
-    protocol.register(this.server);
 
     try {
       this.server._start(port, host);
