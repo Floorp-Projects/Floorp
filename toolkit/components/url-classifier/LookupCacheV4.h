@@ -25,6 +25,9 @@ class LookupCacheV4 final : public LookupCache {
   virtual nsresult Has(const Completion& aCompletion, bool* aHas,
                        uint32_t* aMatchLength, bool* aConfirmed) override;
 
+  virtual nsresult StoreToFile(nsCOMPtr<nsIFile>& aFile) override;
+  virtual nsresult LoadFromFile(nsCOMPtr<nsIFile>& aFile) override;
+
   virtual bool IsEmpty() const override;
 
   nsresult Build(PrefixStringMap& aPrefixMap);
@@ -47,8 +50,6 @@ class LookupCacheV4 final : public LookupCache {
 
  protected:
   virtual nsresult ClearPrefixes() override;
-  virtual nsresult StoreToFile(nsCOMPtr<nsIFile>& aFile) override;
-  virtual nsresult LoadFromFile(nsCOMPtr<nsIFile>& aFile) override;
   virtual size_t SizeOfPrefixSet() const override;
 
  private:

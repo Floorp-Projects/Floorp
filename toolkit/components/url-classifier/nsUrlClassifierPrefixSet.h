@@ -39,10 +39,11 @@ class nsUrlClassifierPrefixSet final : public nsIUrlClassifierPrefixSet,
   NS_IMETHOD GetPrefixes(uint32_t* aCount, uint32_t** aPrefixes) override;
   NS_IMETHOD Contains(uint32_t aPrefix, bool* aFound) override;
   NS_IMETHOD IsEmpty(bool* aEmpty) override;
-  NS_IMETHOD LoadFromFile(nsIFile* aFile) override;
-  NS_IMETHOD StoreToFile(nsIFile* aFile) override;
 
   nsresult GetPrefixesNative(FallibleTArray<uint32_t>& outArray);
+  nsresult WritePrefixes(nsCOMPtr<nsIOutputStream>& out) const;
+  nsresult LoadPrefixes(nsCOMPtr<nsIInputStream>& in);
+  uint32_t CalculatePreallocateSize() const;
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 
@@ -54,7 +55,6 @@ class nsUrlClassifierPrefixSet final : public nsIUrlClassifierPrefixSet,
  private:
   virtual ~nsUrlClassifierPrefixSet();
 
-  static const uint32_t MAX_BUFFER_SIZE = 64 * 1024;
   static const uint32_t DELTAS_LIMIT = 120;
   static const uint32_t MAX_INDEX_DIFF = (1 << 16);
   static const uint32_t PREFIXSET_VERSION_MAGIC = 1;
@@ -63,9 +63,6 @@ class nsUrlClassifierPrefixSet final : public nsIUrlClassifierPrefixSet,
   nsresult MakePrefixSet(const uint32_t* aArray, uint32_t aLength);
   uint32_t BinSearch(uint32_t start, uint32_t end, uint32_t target) const;
   bool IsEmptyInternal() const;
-  uint32_t CalculatePreallocateSize() const;
-  nsresult WritePrefixes(nsCOMPtr<nsIOutputStream>& out) const;
-  nsresult LoadPrefixes(nsCOMPtr<nsIInputStream>& in);
 
   // Lock to prevent races between the url-classifier thread (which does most
   // of the operations) and the main thread (which does memory reporting).
