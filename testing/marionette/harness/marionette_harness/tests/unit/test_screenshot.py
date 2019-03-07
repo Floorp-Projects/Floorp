@@ -320,7 +320,6 @@ class TestScreenCaptureContent(WindowManagerMixin, ScreenCaptureTestCase):
 
         self.assertNotEqual(screenshot_focus, screenshot_no_focus)
 
-    @skip_if_mobile("Bug 1330642 - Tuples differ: (1960, 11130) != (1960, 11129)")
     def test_capture_html_document_element(self):
         self.marionette.navigate(long)
         screenshot = self.marionette.screenshot()
