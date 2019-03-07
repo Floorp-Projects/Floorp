@@ -17,7 +17,7 @@ import android.view.inputmethod.InputMethodManager;
 final public class InputMethods {
     public static final String METHOD_ANDROID_LATINIME = "com.android.inputmethod.latin/.LatinIME";
     // ATOK has a lot of package names since they release custom versions.
-    public static final String METHOD_ATOK_PREFIX = "com.justsystems.atokmobile.";
+    public static final String METHOD_ATOK_PREFIX = "com.justsystems.atokmobile";
     public static final String METHOD_ATOK_OEM_PREFIX = "com.atok.mobile.";
     public static final String METHOD_GOOGLE_JAPANESE_INPUT = "com.google.android.inputmethod.japanese/.MozcService";
     public static final String METHOD_ATOK_OEM_SOFTBANK = "com.mobiroo.n.justsystems.atok/.AtokInputMethodService";
