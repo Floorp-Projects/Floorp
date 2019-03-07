@@ -28,6 +28,12 @@ interface TreeColumn {
   TreeColumn? getNext();
   TreeColumn? getPrevious();
 
+  /**
+   * Returns the previous displayed column, if any, accounting for
+   * the ordinals set on the columns.
+   */
+  readonly attribute TreeColumn? previousColumn;
+
   [Throws]
   void invalidate();
 };
