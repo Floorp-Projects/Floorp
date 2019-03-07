@@ -41,6 +41,10 @@ const contentScripts = {
       runAt: "document_start",
       allFrames: true,
     },
+    {
+      matches: ["*://*.sreedharscce.in/authenticate"],
+      css: [{file: "injections/css/bug1526977-sreedharscce.in-login-fix.css"}],
+    },
   ],
   android: [],
 };

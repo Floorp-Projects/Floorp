@@ -81,6 +81,28 @@ const UAOverrides = {
     },
 
     /*
+     * Bug 1518625 - rottentomatoes.com - Add UA override for videos on www.rottentomatoes.com
+     *
+     * The video framework loaded in via pdk.theplatform.com fails to
+     * acknowledge that Firefox does support HLS, so it fails to find a
+     * supported video format and shows the loading bar forever. Spoofing as
+     * Chrome works.
+     *
+     * Contrary to other PDK sites, rottentomatoes sometimes uses an iFrame to
+     * player.theplatform.com to show a video, so we need to override that domain
+     * as well.
+     */
+    {
+      matches: [
+        "*://*.rottentomatoes.com/*",
+        "*://player.theplatform.com/*",
+      ],
+      uaTransformer: (_) => {
+        return "Mozilla/5.0 (Linux; Android 6.0.1; SM-G920F Build/MMB29K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.91 Mobile Safari/537.36";
+      },
+    },
+
+    /*
      * Bug 1177298 - Write UA overrides for top Japanese Sites
      * (Imported from ua-update.json.in)
      *
