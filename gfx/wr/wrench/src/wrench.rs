@@ -93,9 +93,9 @@ impl Notifier {
             }
         }
 
-        if let Some(ref elp) = data.events_loop_proxy {
+        if let Some(ref _elp) = data.events_loop_proxy {
             #[cfg(not(target_os = "android"))]
-            let _ = elp.wakeup();
+            let _ = _elp.wakeup();
         }
     }
 }
@@ -227,9 +227,9 @@ impl Wrench {
         };
 
         // put an Awakened event into the queue to kick off the first frame
-        if let Some(ref elp) = proxy {
+        if let Some(ref _elp) = proxy {
             #[cfg(not(target_os = "android"))]
-            let _ = elp.wakeup();
+            let _ = _elp.wakeup();
         }
 
         let (timing_sender, timing_receiver) = chase_lev::deque();
@@ -450,7 +450,7 @@ impl Wrench {
     #[cfg(target_os = "android")]
     pub fn font_key_from_properties(
         &mut self,
-        family: &str,
+        _family: &str,
         _weight: u32,
         _style: u32,
         _stretch: u32,
@@ -468,7 +468,7 @@ impl Wrench {
     }
 
     #[cfg(target_os = "android")]
-    pub fn font_key_from_name(&mut self, font_name: &str) -> FontKey {
+    pub fn font_key_from_name(&mut self, _font_name: &str) -> FontKey {
         unimplemented!()
     }
 
