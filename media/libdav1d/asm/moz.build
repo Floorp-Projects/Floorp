@@ -25,24 +25,31 @@ CFLAGS += [
     '-I%s/dist/include/dav1d/' % TOPOBJDIR,
 ]
 
-# This is Linux only for now
+# This code is only built on Windows and Linux for now.
 
 # Attaching config.asm file
 if CONFIG['CPU_ARCH'] == 'x86':
-    ASFLAGS += ['-I%s/media/libdav1d/asm/x86_32/' % TOPSRCDIR]
+    if CONFIG['OS_TARGET'] == 'WINNT':
+        ASFLAGS += ['-I%s/media/libdav1d/asm/x86_32/win/' % TOPSRCDIR]
+    else:
+        ASFLAGS += ['-I%s/media/libdav1d/asm/x86_32/' % TOPSRCDIR]
 
 if CONFIG['CPU_ARCH'] == 'x86_64':
     if CONFIG['OS_TARGET'] == 'Linux':
         ASFLAGS += ['-I%s/media/libdav1d/asm/x86_64/linux/' % TOPSRCDIR]
     elif CONFIG['OS_TARGET'] == 'Darwin':
+        ASFLAGS += ['-I%s/media/libdav1d/asm/x86_64/osx/' % TOPSRCDIR]
+    elif CONFIG['OS_TARGET'] == 'WINNT':
+        ASFLAGS += ['-I%s/media/libdav1d/asm/x86_64/' % TOPSRCDIR]
+    else:
+        error('Platform %s is not expected' % CONFIG['OS_TARGET'])
+
+    if CONFIG['OS_TARGET'] in ('Darwin', 'WINNT'):
         # Change the default stack aligment (16) to 32
         if CONFIG['CC_TYPE'] == 'clang':
             CFLAGS += ['-mstack-alignment=32']
         elif CONFIG['CC_TYPE'] == 'gcc':
             CFLAGS += ['-mpreferred-stack-boundary=5']
-        ASFLAGS += ['-I%s/media/libdav1d/asm/x86_64/osx/' % TOPSRCDIR]
-    else:
-        ASFLAGS += ['-I%s/media/libdav1d/asm/x86_64/' % TOPSRCDIR]
 
 if CONFIG['CPU_ARCH'] in ('x86', 'x86_64'):
     SOURCES += [
@@ -54,16 +61,22 @@ if CONFIG['CPU_ARCH'] in ('x86', 'x86_64'):
     ]
 
     # ASM source files
+    if CONFIG['CPU_ARCH'] == 'x86_64':
+        # Empty file on all other archs. Nasm produces
+        # an error when it compiles empty files.
+        SOURCES += [
+            '../../../third_party/dav1d/src/x86/cdef.asm',
+            '../../../third_party/dav1d/src/x86/ipred.asm',
+            '../../../third_party/dav1d/src/x86/itx.asm',
+            '../../../third_party/dav1d/src/x86/loopfilter.asm',
+            '../../../third_party/dav1d/src/x86/looprestoration.asm',
+            '../../../third_party/dav1d/src/x86/mc.asm',
+        ]
+
     SOURCES += [
-        '../../../third_party/dav1d/src/x86/cdef.asm',
         '../../../third_party/dav1d/src/x86/cpuid.asm',
-        '../../../third_party/dav1d/src/x86/ipred.asm',
         '../../../third_party/dav1d/src/x86/ipred_ssse3.asm',
-        '../../../third_party/dav1d/src/x86/itx.asm',
         '../../../third_party/dav1d/src/x86/itx_ssse3.asm',
-        '../../../third_party/dav1d/src/x86/loopfilter.asm',
-        '../../../third_party/dav1d/src/x86/looprestoration.asm',
-        '../../../third_party/dav1d/src/x86/mc.asm',
         '../../../third_party/dav1d/src/x86/mc_ssse3.asm',
     ]
 
