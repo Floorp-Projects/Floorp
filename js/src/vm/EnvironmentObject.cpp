@@ -79,9 +79,11 @@ CallObject* CallObject::create(JSContext* cx, HandleShape shape,
   MOZ_ASSERT(CanBeFinalizedInBackground(kind, &CallObject::class_));
   kind = gc::GetBackgroundAllocKind(kind);
 
+  gc::InitialHeap heap = GetInitialHeap(GenericObject, group);
+
   JSObject* obj;
   JS_TRY_VAR_OR_RETURN_NULL(
-      cx, obj, NativeObject::create(cx, kind, gc::DefaultHeap, shape, group));
+      cx, obj, NativeObject::create(cx, kind, heap, shape, group));
 
   return &obj->as<CallObject>();
 }
@@ -107,6 +109,10 @@ CallObject* CallObject::createTemplateObject(JSContext* cx, HandleScript script,
   gc::AllocKind kind = gc::GetGCObjectKind(shape->numFixedSlots());
   MOZ_ASSERT(CanBeFinalizedInBackground(kind, &class_));
   kind = gc::GetBackgroundAllocKind(kind);
+
+  if (group->shouldPreTenureDontCheckGeneration()) {
+    heap = gc::TenuredHeap;
+  }
 
   JSObject* obj;
   JS_TRY_VAR_OR_RETURN_NULL(cx, obj,
@@ -885,6 +891,10 @@ LexicalEnvironmentObject* LexicalEnvironmentObject::createTemplateObject(
                                        TaggedProto(nullptr)));
   if (!group) {
     return nullptr;
+  }
+
+  if (group->shouldPreTenureDontCheckGeneration()) {
+    heap = gc::TenuredHeap;
   }
 
   gc::AllocKind allocKind = gc::GetGCObjectKind(shape->numFixedSlots());

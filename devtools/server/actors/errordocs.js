@@ -89,6 +89,7 @@ const ErrorDocs = {
   JSMSG_NOT_ITERABLE: "is_not_iterable",
   JSMSG_PROPERTY_FAIL: "cant_access_property",
   JSMSG_PROPERTY_FAIL_EXPR: "cant_access_property",
+  JSMSG_REDECLARED_VAR: "Redeclared_parameter",
 };
 
 const MIXED_CONTENT_LEARN_MORE = "https://developer.mozilla.org/docs/Web/Security/Mixed_content";

@@ -488,7 +488,7 @@ inline bool NativeObject::isInWholeCellBuffer() const {
   size_t nDynamicSlots =
       dynamicSlotsCount(shape->numFixedSlots(), shape->slotSpan(), clasp);
 
-  JSObject* obj = js::Allocate<JSObject>(cx, kind, nDynamicSlots, heap, clasp);
+  JSObject* obj = js::AllocateObject(cx, kind, nDynamicSlots, heap, clasp);
   if (!obj) {
     return cx->alreadyReportedOOM();
   }
@@ -522,9 +522,11 @@ inline bool NativeObject::isInWholeCellBuffer() const {
 }
 
 /* static */ inline JS::Result<NativeObject*, JS::OOM&>
-NativeObject::createWithTemplate(JSContext* cx, js::gc::InitialHeap heap,
-                                 HandleObject templateObject) {
+NativeObject::createWithTemplate(JSContext* cx, HandleObject templateObject) {
   RootedObjectGroup group(cx, templateObject->group());
+
+  gc::InitialHeap heap = GetInitialHeap(GenericObject, group);
+
   RootedShape shape(cx, templateObject->as<NativeObject>().lastProperty());
 
   gc::AllocKind kind = gc::GetGCObjectKind(shape->numFixedSlots());

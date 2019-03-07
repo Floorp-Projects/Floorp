@@ -575,10 +575,11 @@ VARCACHE_PREF(
   uint32_t, 1
 )
 
+// 0=solid, 1=dotted
 VARCACHE_PREF(
   "browser.display.focus_ring_style",
    browser_display_focus_ring_style,
-  bool, false
+  uint32_t, 1
 )
 
 VARCACHE_PREF(
@@ -2297,6 +2298,13 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   "medium_high_event_queue.enabled",
    medium_high_event_queue_enabled,
+  RelaxedAtomicBool, true
+)
+
+// Whether strict file origin policy is in effect.
+VARCACHE_PREF(
+  "security.fileuri.strict_origin_policy",
+   security_fileuri_strict_origin_policy,
   RelaxedAtomicBool, true
 )
 

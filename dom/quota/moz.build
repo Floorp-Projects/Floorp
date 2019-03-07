@@ -49,11 +49,16 @@ EXPORTS.mozilla.dom.quota += [
     'UsageInfo.h',
 ]
 
+XPCOM_MANIFESTS += [
+    'components.conf',
+]
+
 UNIFIED_SOURCES += [
     'ActorsChild.cpp',
     'ActorsParent.cpp',
     'FileStreams.cpp',
     'MemoryOutputStream.cpp',
+    'nsIndexedDBProtocolHandler.cpp',
     'QuotaCommon.cpp',
     'QuotaManagerService.cpp',
     'QuotaRequests.cpp',

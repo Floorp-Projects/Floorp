@@ -172,11 +172,6 @@ class Client {
 
   virtual void ShutdownWorkThreads() = 0;
 
-  // Methods which are called on the main thread.
-  virtual void DidInitialize(QuotaManager* aQuotaManager) {}
-
-  virtual void WillShutdown() {}
-
  protected:
   virtual ~Client() {}
 };
