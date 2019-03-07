@@ -7629,302 +7629,307 @@ nsresult PresShell::EventHandler::HandleEventWithTarget(
 nsresult PresShell::EventHandler::HandleEventInternal(
     WidgetEvent* aEvent, nsEventStatus* aEventStatus,
     bool aIsHandlingNativeEvent, nsIContent* aOverrideClickTarget) {
+  MOZ_ASSERT(aEvent);
+  MOZ_ASSERT(aEventStatus);
+
   RefPtr<EventStateManager> manager = GetPresContext()->EventStateManager();
-  nsresult rv = NS_OK;
 
-  if (!NS_EVENT_NEEDS_FRAME(aEvent) || mPresShell->GetCurrentEventFrame() ||
-      mPresShell->GetCurrentEventContent()) {
-    bool touchIsNew = false;
-    bool isHandlingUserInput = false;
+  // If we cannot handle the event with mPresShell because of no target,
+  // just record the response time.
+  // XXX Is this intentional?  In such case, the score is really good because
+  //     of nothing to do.  So, it may make average and median better.
+  if (NS_EVENT_NEEDS_FRAME(aEvent) && !mPresShell->GetCurrentEventFrame() &&
+      !mPresShell->GetCurrentEventContent()) {
+    RecordEventHandlingResponsePerformance(aEvent);
+    return NS_OK;
+  }
 
-    if (mPresShell->mCurrentEventContent &&
-        aEvent->IsTargetedAtFocusedWindow()) {
-      nsFocusManager* fm = nsFocusManager::GetFocusManager();
-      if (fm) {
-        fm->FlushBeforeEventHandlingIfNeeded(mPresShell->mCurrentEventContent);
-      }
+  bool touchIsNew = false;
+  bool isHandlingUserInput = false;
+
+  if (mPresShell->mCurrentEventContent && aEvent->IsTargetedAtFocusedWindow()) {
+    nsFocusManager* fm = nsFocusManager::GetFocusManager();
+    if (fm) {
+      fm->FlushBeforeEventHandlingIfNeeded(mPresShell->mCurrentEventContent);
     }
+  }
 
-    // XXX How about IME events and input events for plugins?
-    if (aEvent->IsTrusted()) {
-      if (aEvent->IsUserAction()) {
-        mPresShell->mHasHandledUserInput = true;
-      }
-
-      switch (aEvent->mMessage) {
-        case eKeyPress:
-        case eKeyDown:
-        case eKeyUp: {
-          Document* doc = mPresShell->GetCurrentEventContent()
-                              ? mPresShell->mCurrentEventContent->OwnerDoc()
-                              : nullptr;
-          auto keyCode = aEvent->AsKeyboardEvent()->mKeyCode;
-          if (keyCode == NS_VK_ESCAPE) {
-            Document* root = nsContentUtils::GetRootDocument(doc);
-            if (root && root->GetFullscreenElement()) {
-              // Prevent default action on ESC key press when exiting
-              // DOM fullscreen mode. This prevents the browser ESC key
-              // handler from stopping all loads in the document, which
-              // would cause <video> loads to stop.
-              // XXX We need to claim the Escape key event which will be
-              //     dispatched only into chrome is already consumed by
-              //     content because we need to prevent its default here
-              //     for some reasons (not sure) but we need to detect
-              //     if a chrome event handler will call PreventDefault()
-              //     again and check it later.
-              aEvent->PreventDefaultBeforeDispatch(
-                  CrossProcessForwarding::eStop);
-              aEvent->mFlags.mOnlyChromeDispatch = true;
-
-              // The event listeners in chrome can prevent this ESC behavior by
-              // calling prevent default on the preceding keydown/press events.
-              if (!mPresShell->mIsLastChromeOnlyEscapeKeyConsumed &&
-                  aEvent->mMessage == eKeyUp) {
-                // ESC key released while in DOM fullscreen mode.
-                // Fully exit all browser windows and documents from
-                // fullscreen mode.
-                Document::AsyncExitFullscreen(nullptr);
-              }
-            }
-            nsCOMPtr<Document> pointerLockedDoc =
-                do_QueryReferent(EventStateManager::sPointerLockedDoc);
-            if (!mPresShell->mIsLastChromeOnlyEscapeKeyConsumed &&
-                pointerLockedDoc) {
-              // XXX See above comment to understand the reason why this needs
-              //     to claim that the Escape key event is consumed by content
-              //     even though it will be dispatched only into chrome.
-              aEvent->PreventDefaultBeforeDispatch(
-                  CrossProcessForwarding::eStop);
-              aEvent->mFlags.mOnlyChromeDispatch = true;
-              if (aEvent->mMessage == eKeyUp) {
-                Document::UnlockPointer();
-              }
-            }
-          }
-          if (keyCode != NS_VK_ESCAPE && keyCode != NS_VK_SHIFT &&
-              keyCode != NS_VK_CONTROL && keyCode != NS_VK_ALT &&
-              keyCode != NS_VK_WIN && keyCode != NS_VK_META) {
-            // Allow keys other than ESC and modifiers be marked as a
-            // valid user input for triggering popup, fullscreen, and
-            // pointer lock.
-            isHandlingUserInput = true;
-            GetPresContext()->RecordInteractionTime(
-                nsPresContext::InteractionType::eKeyInteraction,
-                aEvent->mTimeStamp);
-          }
-
-          Telemetry::AccumulateTimeDelta(
-              Telemetry::INPUT_EVENT_QUEUED_KEYBOARD_MS, aEvent->mTimeStamp);
-          break;
-        }
-        case eMouseDown:
-        case eMouseUp:
-          Telemetry::AccumulateTimeDelta(Telemetry::INPUT_EVENT_QUEUED_CLICK_MS,
-                                         aEvent->mTimeStamp);
-          MOZ_FALLTHROUGH;
-        case ePointerDown:
-        case ePointerUp:
-          isHandlingUserInput = true;
-          GetPresContext()->RecordInteractionTime(
-              nsPresContext::InteractionType::eClickInteraction,
-              aEvent->mTimeStamp);
-          break;
-
-        case eMouseMove:
-          if (aEvent->mFlags.mHandledByAPZ) {
-            Telemetry::AccumulateTimeDelta(
-                Telemetry::INPUT_EVENT_QUEUED_APZ_MOUSE_MOVE_MS,
-                aEvent->mTimeStamp);
-          }
-          break;
-
-        case eDrop: {
-          nsCOMPtr<nsIDragSession> session = nsContentUtils::GetDragSession();
-          if (session) {
-            bool onlyChromeDrop = false;
-            session->GetOnlyChromeDrop(&onlyChromeDrop);
-            if (onlyChromeDrop) {
-              aEvent->mFlags.mOnlyChromeDispatch = true;
-            }
-          }
-          break;
-        }
-
-        case eWheel:
-          if (aEvent->mFlags.mHandledByAPZ) {
-            Telemetry::AccumulateTimeDelta(
-                Telemetry::INPUT_EVENT_QUEUED_APZ_WHEEL_MS, aEvent->mTimeStamp);
-          }
-          break;
-
-        case eTouchMove:
-          if (aEvent->mFlags.mHandledByAPZ) {
-            Telemetry::AccumulateTimeDelta(
-                Telemetry::INPUT_EVENT_QUEUED_APZ_TOUCH_MOVE_MS,
-                aEvent->mTimeStamp);
-          }
-          break;
-
-        default:
-          break;
-      }
-
-      if (!mPresShell->mTouchManager.PreHandleEvent(
-              aEvent, aEventStatus, touchIsNew, isHandlingUserInput,
-              mPresShell->mCurrentEventContent)) {
-        return NS_OK;
-      }
-    }
-
-    if (aEvent->mMessage == eContextMenu) {
-      WidgetMouseEvent* mouseEvent = aEvent->AsMouseEvent();
-      if (mouseEvent->IsContextMenuKeyEvent() &&
-          !AdjustContextMenuKeyEvent(mouseEvent)) {
-        return NS_OK;
-      }
-      if (mouseEvent->IsShift()) {
-        aEvent->mFlags.mOnlyChromeDispatch = true;
-        aEvent->mFlags.mRetargetToNonNativeAnonymous = true;
-      }
-    }
-
-    AutoHandlingUserInputStatePusher userInpStatePusher(isHandlingUserInput,
-                                                        aEvent, GetDocument());
-
-    if (aEvent->IsTrusted() && aEvent->mMessage == eMouseMove) {
-      nsIPresShell::AllowMouseCapture(
-          EventStateManager::GetActiveEventStateManager() == manager);
-
-      GetPresContext()->RecordInteractionTime(
-          nsPresContext::InteractionType::eMouseMoveInteraction,
-          aEvent->mTimeStamp);
-    }
-
-    nsAutoPopupStatePusher popupStatePusher(
-        PopupBlocker::GetEventPopupControlState(aEvent));
-
-    // FIXME. If the event was reused, we need to clear the old target,
-    // bug 329430
-    aEvent->mTarget = nullptr;
-
-    HandlingTimeAccumulator handlingTimeAccumulator(*this, aEvent);
-
-    // 1. Give event to event manager for pre event state changes and
-    //    generation of synthetic events.
-    rv = manager->PreHandleEvent(
-        GetPresContext(), aEvent, mPresShell->mCurrentEventFrame,
-        mPresShell->mCurrentEventContent, aEventStatus, aOverrideClickTarget);
-
-    // 2. Give event to the DOM for third party and JS use.
-    if (NS_SUCCEEDED(rv)) {
-      bool wasHandlingKeyBoardEvent = nsContentUtils::IsHandlingKeyBoardEvent();
-      if (aEvent->mClass == eKeyboardEventClass) {
-        nsContentUtils::SetIsHandlingKeyBoardEvent(true);
-      }
-      // If EventStateManager or something wants reply from remote process and
-      // needs to win any other event listeners in chrome, the event is both
-      // stopped its propagation and marked as "waiting reply from remote
-      // process".  In this case, PresShell shouldn't dispatch the event into
-      // the DOM tree because they don't have a chance to stop propagation in
-      // the system event group.  On the other hand, if its propagation is not
-      // stopped, that means that the event may be reserved by chrome.  If it's
-      // reserved by chrome, the event shouldn't be sent to any remote
-      // processes.  In this case, PresShell needs to dispatch the event to
-      // the DOM tree for checking if it's reserved.
-      if (aEvent->IsAllowedToDispatchDOMEvent() &&
-          !(aEvent->PropagationStopped() &&
-            aEvent->IsWaitingReplyFromRemoteProcess())) {
-        MOZ_ASSERT(nsContentUtils::IsSafeToRunScript(),
-                   "Somebody changed aEvent to cause a DOM event!");
-        nsPresShellEventCB eventCB(mPresShell);
-        if (nsIFrame* target = mPresShell->GetCurrentEventFrame()) {
-          if (target->OnlySystemGroupDispatch(aEvent->mMessage)) {
-            aEvent->StopPropagation();
-          }
-        }
-        if (aEvent->mClass == eTouchEventClass) {
-          DispatchTouchEventToDOM(aEvent, aEventStatus, &eventCB, touchIsNew);
-        } else {
-          DispatchEventToDOM(aEvent, aEventStatus, &eventCB);
-        }
-      }
-
-      nsContentUtils::SetIsHandlingKeyBoardEvent(wasHandlingKeyBoardEvent);
-
-      if (aEvent->mMessage == ePointerUp ||
-          aEvent->mMessage == ePointerCancel) {
-        // Implicitly releasing capture for given pointer.
-        // ePointerLostCapture should be send after ePointerUp or
-        // ePointerCancel.
-        WidgetPointerEvent* pointerEvent = aEvent->AsPointerEvent();
-        MOZ_ASSERT(pointerEvent);
-        PointerEventHandler::ReleasePointerCaptureById(pointerEvent->pointerId);
-        PointerEventHandler::CheckPointerCaptureState(pointerEvent);
-      }
-
-      // 3. Give event to event manager for post event state changes and
-      //    generation of synthetic events.
-      if (!mPresShell->IsDestroying() && NS_SUCCEEDED(rv)) {
-        rv = manager->PostHandleEvent(GetPresContext(), aEvent,
-                                      mPresShell->GetCurrentEventFrame(),
-                                      aEventStatus, aOverrideClickTarget);
-      }
-    }
-
-    if (!mPresShell->IsDestroying() && aIsHandlingNativeEvent) {
-      // Ensure that notifications to IME should be sent before getting next
-      // native event from the event queue.
-      // XXX Should we check the event message or event class instead of
-      //     using aIsHandlingNativeEvent?
-      manager->TryToFlushPendingNotificationsToIME();
+  // XXX How about IME events and input events for plugins?
+  if (aEvent->IsTrusted()) {
+    if (aEvent->IsUserAction()) {
+      mPresShell->mHasHandledUserInput = true;
     }
 
     switch (aEvent->mMessage) {
       case eKeyPress:
       case eKeyDown:
       case eKeyUp: {
-        if (aEvent->AsKeyboardEvent()->mKeyCode == NS_VK_ESCAPE) {
-          if (aEvent->mMessage == eKeyUp) {
-            // Reset this flag after key up is handled.
-            mPresShell->mIsLastChromeOnlyEscapeKeyConsumed = false;
-          } else {
-            if (aEvent->mFlags.mOnlyChromeDispatch &&
-                aEvent->mFlags.mDefaultPreventedByChrome) {
-              mPresShell->mIsLastChromeOnlyEscapeKeyConsumed = true;
+        Document* doc = mPresShell->GetCurrentEventContent()
+                            ? mPresShell->mCurrentEventContent->OwnerDoc()
+                            : nullptr;
+        auto keyCode = aEvent->AsKeyboardEvent()->mKeyCode;
+        if (keyCode == NS_VK_ESCAPE) {
+          Document* root = nsContentUtils::GetRootDocument(doc);
+          if (root && root->GetFullscreenElement()) {
+            // Prevent default action on ESC key press when exiting
+            // DOM fullscreen mode. This prevents the browser ESC key
+            // handler from stopping all loads in the document, which
+            // would cause <video> loads to stop.
+            // XXX We need to claim the Escape key event which will be
+            //     dispatched only into chrome is already consumed by
+            //     content because we need to prevent its default here
+            //     for some reasons (not sure) but we need to detect
+            //     if a chrome event handler will call PreventDefault()
+            //     again and check it later.
+            aEvent->PreventDefaultBeforeDispatch(CrossProcessForwarding::eStop);
+            aEvent->mFlags.mOnlyChromeDispatch = true;
+
+            // The event listeners in chrome can prevent this ESC behavior by
+            // calling prevent default on the preceding keydown/press events.
+            if (!mPresShell->mIsLastChromeOnlyEscapeKeyConsumed &&
+                aEvent->mMessage == eKeyUp) {
+              // ESC key released while in DOM fullscreen mode.
+              // Fully exit all browser windows and documents from
+              // fullscreen mode.
+              Document::AsyncExitFullscreen(nullptr);
+            }
+          }
+          nsCOMPtr<Document> pointerLockedDoc =
+              do_QueryReferent(EventStateManager::sPointerLockedDoc);
+          if (!mPresShell->mIsLastChromeOnlyEscapeKeyConsumed &&
+              pointerLockedDoc) {
+            // XXX See above comment to understand the reason why this needs
+            //     to claim that the Escape key event is consumed by content
+            //     even though it will be dispatched only into chrome.
+            aEvent->PreventDefaultBeforeDispatch(CrossProcessForwarding::eStop);
+            aEvent->mFlags.mOnlyChromeDispatch = true;
+            if (aEvent->mMessage == eKeyUp) {
+              Document::UnlockPointer();
             }
           }
         }
-        if (aEvent->mMessage == eKeyDown) {
-          mPresShell->mIsLastKeyDownCanceled = aEvent->mFlags.mDefaultPrevented;
+        if (keyCode != NS_VK_ESCAPE && keyCode != NS_VK_SHIFT &&
+            keyCode != NS_VK_CONTROL && keyCode != NS_VK_ALT &&
+            keyCode != NS_VK_WIN && keyCode != NS_VK_META) {
+          // Allow keys other than ESC and modifiers be marked as a
+          // valid user input for triggering popup, fullscreen, and
+          // pointer lock.
+          isHandlingUserInput = true;
+          GetPresContext()->RecordInteractionTime(
+              nsPresContext::InteractionType::eKeyInteraction,
+              aEvent->mTimeStamp);
         }
+
+        Telemetry::AccumulateTimeDelta(
+            Telemetry::INPUT_EVENT_QUEUED_KEYBOARD_MS, aEvent->mTimeStamp);
         break;
       }
+      case eMouseDown:
       case eMouseUp:
-        // reset the capturing content now that the mouse button is up
-        nsIPresShell::SetCapturingContent(nullptr, 0);
+        Telemetry::AccumulateTimeDelta(Telemetry::INPUT_EVENT_QUEUED_CLICK_MS,
+                                       aEvent->mTimeStamp);
+        MOZ_FALLTHROUGH;
+      case ePointerDown:
+      case ePointerUp:
+        isHandlingUserInput = true;
+        GetPresContext()->RecordInteractionTime(
+            nsPresContext::InteractionType::eClickInteraction,
+            aEvent->mTimeStamp);
         break;
+
       case eMouseMove:
-        nsIPresShell::AllowMouseCapture(false);
+        if (aEvent->mFlags.mHandledByAPZ) {
+          Telemetry::AccumulateTimeDelta(
+              Telemetry::INPUT_EVENT_QUEUED_APZ_MOUSE_MOVE_MS,
+              aEvent->mTimeStamp);
+        }
         break;
-      case eDrag:
-      case eDragEnd:
-      case eDragEnter:
-      case eDragExit:
-      case eDragLeave:
-      case eDragOver:
+
       case eDrop: {
-        // After any drag event other than dragstart (which is handled
-        // separately, as we need to collect the data first), the DataTransfer
-        // needs to be made protected, and then disconnected.
-        DataTransfer* dataTransfer = aEvent->AsDragEvent()->mDataTransfer;
-        if (dataTransfer) {
-          dataTransfer->Disconnect();
+        nsCOMPtr<nsIDragSession> session = nsContentUtils::GetDragSession();
+        if (session) {
+          bool onlyChromeDrop = false;
+          session->GetOnlyChromeDrop(&onlyChromeDrop);
+          if (onlyChromeDrop) {
+            aEvent->mFlags.mOnlyChromeDispatch = true;
+          }
         }
         break;
       }
+
+      case eWheel:
+        if (aEvent->mFlags.mHandledByAPZ) {
+          Telemetry::AccumulateTimeDelta(
+              Telemetry::INPUT_EVENT_QUEUED_APZ_WHEEL_MS, aEvent->mTimeStamp);
+        }
+        break;
+
+      case eTouchMove:
+        if (aEvent->mFlags.mHandledByAPZ) {
+          Telemetry::AccumulateTimeDelta(
+              Telemetry::INPUT_EVENT_QUEUED_APZ_TOUCH_MOVE_MS,
+              aEvent->mTimeStamp);
+        }
+        break;
+
       default:
         break;
     }
+
+    if (!mPresShell->mTouchManager.PreHandleEvent(
+            aEvent, aEventStatus, touchIsNew, isHandlingUserInput,
+            mPresShell->mCurrentEventContent)) {
+      return NS_OK;
+    }
+  }
+
+  if (aEvent->mMessage == eContextMenu) {
+    WidgetMouseEvent* mouseEvent = aEvent->AsMouseEvent();
+    if (mouseEvent->IsContextMenuKeyEvent() &&
+        !AdjustContextMenuKeyEvent(mouseEvent)) {
+      return NS_OK;
+    }
+    if (mouseEvent->IsShift()) {
+      aEvent->mFlags.mOnlyChromeDispatch = true;
+      aEvent->mFlags.mRetargetToNonNativeAnonymous = true;
+    }
+  }
+
+  AutoHandlingUserInputStatePusher userInpStatePusher(isHandlingUserInput,
+                                                      aEvent, GetDocument());
+
+  if (aEvent->IsTrusted() && aEvent->mMessage == eMouseMove) {
+    nsIPresShell::AllowMouseCapture(
+        EventStateManager::GetActiveEventStateManager() == manager);
+
+    GetPresContext()->RecordInteractionTime(
+        nsPresContext::InteractionType::eMouseMoveInteraction,
+        aEvent->mTimeStamp);
+  }
+
+  nsAutoPopupStatePusher popupStatePusher(
+      PopupBlocker::GetEventPopupControlState(aEvent));
+
+  // FIXME. If the event was reused, we need to clear the old target,
+  // bug 329430
+  aEvent->mTarget = nullptr;
+
+  HandlingTimeAccumulator handlingTimeAccumulator(*this, aEvent);
+
+  // 1. Give event to event manager for pre event state changes and
+  //    generation of synthetic events.
+  nsresult rv = manager->PreHandleEvent(
+      GetPresContext(), aEvent, mPresShell->mCurrentEventFrame,
+      mPresShell->mCurrentEventContent, aEventStatus, aOverrideClickTarget);
+
+  // 2. Give event to the DOM for third party and JS use.
+  if (NS_SUCCEEDED(rv)) {
+    bool wasHandlingKeyBoardEvent = nsContentUtils::IsHandlingKeyBoardEvent();
+    if (aEvent->mClass == eKeyboardEventClass) {
+      nsContentUtils::SetIsHandlingKeyBoardEvent(true);
+    }
+    // If EventStateManager or something wants reply from remote process and
+    // needs to win any other event listeners in chrome, the event is both
+    // stopped its propagation and marked as "waiting reply from remote
+    // process".  In this case, PresShell shouldn't dispatch the event into
+    // the DOM tree because they don't have a chance to stop propagation in
+    // the system event group.  On the other hand, if its propagation is not
+    // stopped, that means that the event may be reserved by chrome.  If it's
+    // reserved by chrome, the event shouldn't be sent to any remote
+    // processes.  In this case, PresShell needs to dispatch the event to
+    // the DOM tree for checking if it's reserved.
+    if (aEvent->IsAllowedToDispatchDOMEvent() &&
+        !(aEvent->PropagationStopped() &&
+          aEvent->IsWaitingReplyFromRemoteProcess())) {
+      MOZ_ASSERT(nsContentUtils::IsSafeToRunScript(),
+                 "Somebody changed aEvent to cause a DOM event!");
+      nsPresShellEventCB eventCB(mPresShell);
+      if (nsIFrame* target = mPresShell->GetCurrentEventFrame()) {
+        if (target->OnlySystemGroupDispatch(aEvent->mMessage)) {
+          aEvent->StopPropagation();
+        }
+      }
+      if (aEvent->mClass == eTouchEventClass) {
+        DispatchTouchEventToDOM(aEvent, aEventStatus, &eventCB, touchIsNew);
+      } else {
+        DispatchEventToDOM(aEvent, aEventStatus, &eventCB);
+      }
+    }
+
+    nsContentUtils::SetIsHandlingKeyBoardEvent(wasHandlingKeyBoardEvent);
+
+    if (aEvent->mMessage == ePointerUp || aEvent->mMessage == ePointerCancel) {
+      // Implicitly releasing capture for given pointer.
+      // ePointerLostCapture should be send after ePointerUp or
+      // ePointerCancel.
+      WidgetPointerEvent* pointerEvent = aEvent->AsPointerEvent();
+      MOZ_ASSERT(pointerEvent);
+      PointerEventHandler::ReleasePointerCaptureById(pointerEvent->pointerId);
+      PointerEventHandler::CheckPointerCaptureState(pointerEvent);
+    }
+
+    // 3. Give event to event manager for post event state changes and
+    //    generation of synthetic events.
+    if (!mPresShell->IsDestroying() && NS_SUCCEEDED(rv)) {
+      rv = manager->PostHandleEvent(GetPresContext(), aEvent,
+                                    mPresShell->GetCurrentEventFrame(),
+                                    aEventStatus, aOverrideClickTarget);
+    }
+  }
+
+  if (!mPresShell->IsDestroying() && aIsHandlingNativeEvent) {
+    // Ensure that notifications to IME should be sent before getting next
+    // native event from the event queue.
+    // XXX Should we check the event message or event class instead of
+    //     using aIsHandlingNativeEvent?
+    manager->TryToFlushPendingNotificationsToIME();
+  }
+
+  switch (aEvent->mMessage) {
+    case eKeyPress:
+    case eKeyDown:
+    case eKeyUp: {
+      if (aEvent->AsKeyboardEvent()->mKeyCode == NS_VK_ESCAPE) {
+        if (aEvent->mMessage == eKeyUp) {
+          // Reset this flag after key up is handled.
+          mPresShell->mIsLastChromeOnlyEscapeKeyConsumed = false;
+        } else {
+          if (aEvent->mFlags.mOnlyChromeDispatch &&
+              aEvent->mFlags.mDefaultPreventedByChrome) {
+            mPresShell->mIsLastChromeOnlyEscapeKeyConsumed = true;
+          }
+        }
+      }
+      if (aEvent->mMessage == eKeyDown) {
+        mPresShell->mIsLastKeyDownCanceled = aEvent->mFlags.mDefaultPrevented;
+      }
+      break;
+    }
+    case eMouseUp:
+      // reset the capturing content now that the mouse button is up
+      nsIPresShell::SetCapturingContent(nullptr, 0);
+      break;
+    case eMouseMove:
+      nsIPresShell::AllowMouseCapture(false);
+      break;
+    case eDrag:
+    case eDragEnd:
+    case eDragEnter:
+    case eDragExit:
+    case eDragLeave:
+    case eDragOver:
+    case eDrop: {
+      // After any drag event other than dragstart (which is handled
+      // separately, as we need to collect the data first), the DataTransfer
+      // needs to be made protected, and then disconnected.
+      DataTransfer* dataTransfer = aEvent->AsDragEvent()->mDataTransfer;
+      if (dataTransfer) {
+        dataTransfer->Disconnect();
+      }
+      break;
+    }
+    default:
+      break;
   }
   RecordEventHandlingResponsePerformance(aEvent);
   return rv;
