@@ -1829,6 +1829,10 @@ GeneralParser<ParseHandler, Unit>::functionBody(InHandling inHandling,
   uint32_t startYieldOffset = pc_->lastYieldOffset;
 #endif
 
+  // One might expect noteUsedName(".initializers") here when parsing a
+  // constructor. See GeneralParser<ParseHandler, Unit>::classDefinition on why
+  // it's not here.
+
   Node body;
   if (type == StatementListBody) {
     bool inheritedStrict = pc_->sc()->strict();
@@ -7044,6 +7048,37 @@ GeneralParser<ParseHandler, Unit>::classDefinition(
       }
     }
 
+    if (numFieldsWithInitializers > 0) {
+      // .initializers is always closed over by the constructor when there are
+      // fields with initializers. However, there's some strange circumstances
+      // which prevents us from using the normal noteUsedName() system. We
+      // cannot call noteUsedName(".initializers") when parsing the constructor,
+      // because .initializers should be marked as used *only if* there are
+      // fields with initializers. Even if we haven't seen any fields yet,
+      // there may be fields after the constructor.
+      // Consider the following class:
+      //
+      //  class C {
+      //    constructor() {
+      //      // do we noteUsedName(".initializers") here?
+      //    }
+      //    // ... because there might be some fields down here.
+      //  }
+      //
+      // So, instead, at the end of class parsing (where we are now), we do some
+      // tricks to pretend that noteUsedName(".initializers") was called in the
+      // constructor.
+      if (!usedNames_.markAsAlwaysClosedOver(cx_, cx_->names().dotInitializers,
+                                             pc_->scriptId(),
+                                             pc_->innermostScope()->id())) {
+        return null();
+      }
+      if (!noteDeclaredName(cx_->names().dotInitializers,
+                            DeclarationKind::Const, namePos)) {
+        return null();
+      }
+    }
+
     classEndOffset = pos().end;
     if (!finishClassConstructor(classStmt, className, classStartOffset,
                                 classEndOffset, numFieldsWithInitializers,
@@ -7160,6 +7195,9 @@ GeneralParser<ParseHandler, Unit>::synthesizeConstructor(
   if (!noteUsedName(cx_->names().dotThis)) {
     return null();
   }
+
+  // One might expect a noteUsedName(".initializers") here. See comment in
+  // GeneralParser<ParseHandler, Unit>::classDefinition on why it's not here.
 
   bool canSkipLazyClosedOverBindings = handler_.canSkipLazyClosedOverBindings();
   if (!pc_->declareFunctionThis(usedNames_, canSkipLazyClosedOverBindings)) {
