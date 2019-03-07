@@ -1,4 +1,4 @@
-const {UserAutoCompleteResult} = ChromeUtils.import("resource://gre/modules/LoginManagerContent.jsm");
+const {LoginAutoCompleteResult} = ChromeUtils.import("resource://gre/modules/LoginAutoCompleteResult.jsm");
 var nsLoginInfo = Components.Constructor("@mozilla.org/login-manager/loginInfo;1",
                                          Ci.nsILoginInfo, "init");
 
@@ -455,17 +455,16 @@ let expectedResults = [
 ];
 
 add_task(async function test_all_patterns() {
-  LoginHelper.createLogger("UserAutoCompleteResult");
+  LoginHelper.createLogger("LoginAutoCompleteResult");
   expectedResults.forEach(pattern => {
     Services.prefs.setBoolPref(PREF_INSECURE_FIELD_WARNING_ENABLED,
                                pattern.insecureFieldWarningEnabled);
     Services.prefs.setBoolPref(PREF_INSECURE_AUTOFILLFORMS_ENABLED,
                                pattern.insecureAutoFillFormsEnabled);
-    let actual = new UserAutoCompleteResult("", pattern.matchingLogins,
-                                            {
-                                              isSecure: pattern.isSecure,
-                                              isPasswordField: pattern.isPasswordField,
-                                            });
+    let actual = new LoginAutoCompleteResult("", pattern.matchingLogins, {
+      isSecure: pattern.isSecure,
+      isPasswordField: pattern.isPasswordField,
+    });
     pattern.items.forEach((item, index) => {
       equal(actual.getValueAt(index), item.value);
       equal(actual.getLabelAt(index), item.label);
