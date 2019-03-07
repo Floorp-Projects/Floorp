@@ -25,7 +25,6 @@ class Connection {
 
   send(message) {
     log.trace(`<-(connection ${this.id}) ${JSON.stringify(message)}`);
-    // TODO(ato): Check return types
     this.transport.send(message);
   }
 
@@ -40,11 +39,7 @@ class Connection {
   deserialize(data) {
     const id = data.id;
     const method = data.method;
-    // TODO(ato): what if params is falsy?
     const params = data.params || {};
-
-    // TODO(ato): Do protocol validation (Protocol.jsm)
-
     return {id, method, params};
   }
 
