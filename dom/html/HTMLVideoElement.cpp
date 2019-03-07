@@ -33,6 +33,7 @@
 #include "mozilla/dom/TimeRanges.h"
 #include "mozilla/dom/VideoPlaybackQuality.h"
 #include "mozilla/dom/VideoStreamTrack.h"
+#include "mozilla/Unused.h"
 
 #include <algorithm>
 #include <limits>
@@ -180,9 +181,7 @@ nsMapRuleToAttributesFunc HTMLVideoElement::GetAttributeMappingFunction()
 void HTMLVideoElement::UnbindFromTree(bool aDeep, bool aNullParent) {
   if (mVisualCloneSource) {
     mVisualCloneSource->EndCloningVisually();
-    SetVisualCloneSource(nullptr);
   } else if (mVisualCloneTarget) {
-    mVisualCloneTarget->SetVisualCloneSource(nullptr);
     EndCloningVisually();
   }
 
@@ -457,6 +456,11 @@ void HTMLVideoElement::CloneElementVisually(HTMLVideoElement& aTargetVideo,
     return;
   }
 
+  // Do we already have a visual clone target? If so, shut it down.
+  if (mVisualCloneTarget) {
+    EndCloningVisually();
+  }
+
   if (!SetVisualCloneTarget(&aTargetVideo)) {
     rv.Throw(NS_ERROR_FAILURE);
     return;
@@ -513,7 +517,8 @@ void HTMLVideoElement::EndCloningVisually() {
     }
   }
 
-  mVisualCloneTarget = nullptr;
+  Unused << mVisualCloneTarget->SetVisualCloneSource(nullptr);
+  Unused << SetVisualCloneTarget(nullptr);
 }
 
 }  // namespace dom
