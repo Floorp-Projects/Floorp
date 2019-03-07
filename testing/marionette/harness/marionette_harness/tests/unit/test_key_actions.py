@@ -10,7 +10,7 @@ from marionette_driver.by import By
 from marionette_driver.keys import Keys
 from marionette_driver.marionette import Actions
 
-from marionette_harness import MarionetteTestCase, skip_if_mobile, WindowManagerMixin
+from marionette_harness import MarionetteTestCase, WindowManagerMixin
 
 
 def inline(doc):
