@@ -69,6 +69,10 @@ class SettingsFragment : PreferenceFragmentCompat(), CoroutineScope, AccountObse
         super.onResume()
 
         (activity as AppCompatActivity).supportActionBar?.show()
+        val preference =
+            findPreference(getString(R.string.pref_key_make_default_browser)) as DefaultBrowserPreference
+
+        preference.updateSwitch()
         generateWordmark()
         setupPreferences()
         setupAccountUI()

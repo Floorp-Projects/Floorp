@@ -35,7 +35,7 @@ class DefaultBrowserPreference : Preference {
         updateSwitch()
     }
 
-    private fun updateSwitch() {
+    fun updateSwitch() {
         val browsers = Browsers.all(context)
         switchView?.isChecked = browsers.isDefaultBrowser
     }
