@@ -1220,9 +1220,6 @@ class nsPresContext : public nsISupports,
   unsigned mPendingInterruptFromTest : 1;
   unsigned mInterruptsEnabled : 1;
   unsigned mSendAfterPaintToContent : 1;
-  unsigned mUseFocusColors : 1;
-  unsigned mFocusRingOnAnything : 1;
-  unsigned mFocusRingStyle : 1;
   unsigned mDrawImageBackground : 1;
   unsigned mDrawColorBackground : 1;
   unsigned mNeverAnimate : 1;
