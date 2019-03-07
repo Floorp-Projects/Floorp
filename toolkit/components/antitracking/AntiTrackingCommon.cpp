@@ -894,23 +894,7 @@ bool AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
 
   MOZ_ASSERT(toplevelPrincipal);
 
-  nsCookieAccess access = CheckCookiePermissionForPrincipal(toplevelPrincipal);
-  if (access != nsICookiePermission::ACCESS_DEFAULT) {
-    LOG(
-        ("CheckCookiePermissionForPrincipal() returned a non-default access "
-         "code (%d) for top-level window's principal, returning %s",
-         int(access),
-         access != nsICookiePermission::ACCESS_DENY ? "success" : "failure"));
-    if (access != nsICookiePermission::ACCESS_DENY) {
-      return true;
-    }
-
-    *aRejectedReason =
-        nsIWebProgressListener::STATE_COOKIES_BLOCKED_BY_PERMISSION;
-    return false;
-  }
-
-  access = CheckCookiePermissionForPrincipal(windowPrincipal);
+  nsCookieAccess access = CheckCookiePermissionForPrincipal(windowPrincipal);
   if (access != nsICookiePermission::ACCESS_DEFAULT) {
     LOG(
         ("CheckCookiePermissionForPrincipal() returned a non-default access "
@@ -1140,28 +1124,12 @@ bool AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
     return false;
   }
 
-  nsCookieAccess access = CheckCookiePermissionForPrincipal(toplevelPrincipal);
-  if (access != nsICookiePermission::ACCESS_DEFAULT) {
-    LOG(
-        ("CheckCookiePermissionForPrincipal() returned a non-default access "
-         "code (%d) for top-level window's principal, returning %s",
-         int(access),
-         access != nsICookiePermission::ACCESS_DENY ? "success" : "failure"));
-    if (access != nsICookiePermission::ACCESS_DENY) {
-      return true;
-    }
-
-    *aRejectedReason =
-        nsIWebProgressListener::STATE_COOKIES_BLOCKED_BY_PERMISSION;
-    return false;
-  }
-
   if (NS_WARN_IF(NS_FAILED(rv) || !channelURI)) {
     LOG(("No channel principal, bail out early"));
     return false;
   }
 
-  access = CheckCookiePermissionForURI(channelURI);
+  nsCookieAccess access = CheckCookiePermissionForURI(channelURI);
   if (access != nsICookiePermission::ACCESS_DEFAULT) {
     LOG(
         ("CheckCookiePermissionForPrincipal() returned a non-default access "
