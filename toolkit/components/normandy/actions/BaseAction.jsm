@@ -113,7 +113,7 @@ class BaseAction {
     }
 
     if (this.state !== BaseAction.STATE_READY) {
-      Uptake.reportRecipe(recipe.id, Uptake.RECIPE_ACTION_DISABLED);
+      Uptake.reportRecipe(recipe, Uptake.RECIPE_ACTION_DISABLED);
       this.log.warn(`Skipping recipe ${recipe.name} because ${this.name} was disabled during preExecution.`);
       return;
     }
@@ -121,7 +121,7 @@ class BaseAction {
     let [valid, validatedArguments] = JsonSchemaValidator.validateAndParseParameters(recipe.arguments, this.schema);
     if (!valid) {
       Cu.reportError(new Error(`Arguments do not match schema. arguments: ${JSON.stringify(recipe.arguments)}. schema: ${JSON.stringify(this.schema)}`));
-      Uptake.reportRecipe(recipe.id, Uptake.RECIPE_EXECUTION_ERROR);
+      Uptake.reportRecipe(recipe, Uptake.RECIPE_EXECUTION_ERROR);
       return;
     }
 
@@ -134,7 +134,7 @@ class BaseAction {
       Cu.reportError(err);
       status = Uptake.RECIPE_EXECUTION_ERROR;
     }
-    Uptake.reportRecipe(recipe.id, status);
+    Uptake.reportRecipe(recipe, status);
   }
 
   /**

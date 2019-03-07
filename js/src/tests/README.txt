@@ -58,9 +58,12 @@ Adjusting when and how a test runs
     used). Only the following two forms are supported:
         <failure-type> include <relative_path>
         <failure-type> script <relative_path>
+        include <relative_path>
     The <type> "include" indicates that <failure-type> should apply to all test
     cases within a directory. A statement for a nested directory or script
-    overrides one for an enclosing directory.
+    overrides one for an enclosing directory. The <type> "include" without a
+    <failure-type> recursively loads another jstests.list file for further
+    processing.
 
 Running tests
 -------------

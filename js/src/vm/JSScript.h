@@ -1701,8 +1701,7 @@ class JSScript : public js::gc::TenuredCell {
     BindingsAccessedDynamically = 1 << 5,
     FunHasExtensibleScope = 1 << 6,
 
-    // True if any formalIsAliased(i).
-    FunHasAnyAliasedFormal = 1 << 7,
+    // (1 << 7) is unused.
 
     // Script has singleton objects.
     HasSingletons = 1 << 8,
@@ -2113,9 +2112,6 @@ class JSScript : public js::gc::TenuredCell {
   }
   bool funHasExtensibleScope() const {
     return hasFlag(ImmutableFlags::FunHasExtensibleScope);
-  }
-  bool funHasAnyAliasedFormal() const {
-    return hasFlag(ImmutableFlags::FunHasAnyAliasedFormal);
   }
 
   bool hasSingletons() const { return hasFlag(ImmutableFlags::HasSingletons); }

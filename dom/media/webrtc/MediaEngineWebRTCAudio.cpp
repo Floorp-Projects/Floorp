@@ -654,7 +654,7 @@ AudioInputProcessing::AudioInputProcessing(
 
 void AudioInputProcessing::Disconnect(MediaStreamGraphImpl* aGraph) {
   // This method is just for asserts.
-  MOZ_ASSERT(aGraph->CurrentDriver()->OnThread());
+  MOZ_ASSERT(aGraph->OnGraphThread());
 }
 
 void MediaEngineWebRTCMicrophoneSource::Shutdown() {
@@ -671,7 +671,7 @@ void MediaEngineWebRTCMicrophoneSource::Shutdown() {
 }
 
 bool AudioInputProcessing::PassThrough(MediaStreamGraphImpl* aGraph) const {
-  MOZ_ASSERT(aGraph->CurrentDriver()->OnThread());
+  MOZ_ASSERT(aGraph->OnGraphThread());
   return mSkipProcessing;
 }
 
@@ -851,7 +851,7 @@ void AudioInputProcessing::NotifyOutputData(MediaStreamGraphImpl* aGraph,
                                             AudioDataValue* aBuffer,
                                             size_t aFrames, TrackRate aRate,
                                             uint32_t aChannels) {
-  MOZ_ASSERT(aGraph->CurrentDriver()->OnThread());
+  MOZ_ASSERT(aGraph->OnGraphThread());
   MOZ_ASSERT(mEnabled);
 
   if (!mPacketizerOutput || mPacketizerOutput->PacketSize() != aRate / 100u ||
@@ -1096,7 +1096,7 @@ void AudioInputProcessing::NotifyInputData(MediaStreamGraphImpl* aGraph,
                                            const AudioDataValue* aBuffer,
                                            size_t aFrames, TrackRate aRate,
                                            uint32_t aChannels) {
-  MOZ_ASSERT(aGraph->CurrentDriver()->OnThread());
+  MOZ_ASSERT(aGraph->OnGraphThread());
   TRACE_AUDIO_CALLBACK();
 
   MOZ_ASSERT(mEnabled);
@@ -1132,7 +1132,7 @@ void AudioInputProcessing::NotifyInputData(MediaStreamGraphImpl* aGraph,
   } while (0)
 
 void AudioInputProcessing::DeviceChanged(MediaStreamGraphImpl* aGraph) {
-  MOZ_ASSERT(aGraph->CurrentDriver()->OnThread());
+  MOZ_ASSERT(aGraph->OnGraphThread());
   // Reset some processing
   ResetProcessingIfNeeded(gain_control);
   ResetProcessingIfNeeded(echo_cancellation);

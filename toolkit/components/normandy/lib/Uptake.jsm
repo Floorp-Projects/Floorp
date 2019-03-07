@@ -6,6 +6,8 @@
 
 ChromeUtils.defineModuleGetter(
   this, "UptakeTelemetry", "resource://services-common/uptake-telemetry.js");
+ChromeUtils.defineModuleGetter(
+  this, "Services", "resource://gre/modules/Services.jsm");
 
 var EXPORTED_SYMBOLS = ["Uptake"];
 
@@ -21,7 +23,9 @@ var Uptake = {
 
   // Per-recipe uptake
   RECIPE_ACTION_DISABLED: UptakeTelemetry.STATUS.CUSTOM_1_ERROR,
+  RECIPE_DIDNT_MATCH_FILTER: UptakeTelemetry.STATUS.CUSTOM_2_ERROR,
   RECIPE_EXECUTION_ERROR: UptakeTelemetry.STATUS.APPLY_ERROR,
+  RECIPE_FILTER_BROKEN: UptakeTelemetry.STATUS.CONTENT_ERROR,
   RECIPE_INVALID_ACTION: UptakeTelemetry.STATUS.DOWNLOAD_ERROR,
   RECIPE_SUCCESS: UptakeTelemetry.STATUS.SUCCESS,
 
@@ -35,8 +39,10 @@ var Uptake = {
     UptakeTelemetry.report(COMPONENT, status, { source: `${COMPONENT}/runner` });
   },
 
-  reportRecipe(recipeId, status) {
-    UptakeTelemetry.report(COMPONENT, status, { source: `${COMPONENT}/recipe/${recipeId}` });
+  reportRecipe(recipe, status) {
+    UptakeTelemetry.report(COMPONENT, status, { source: `${COMPONENT}/recipe/${recipe.id}` });
+    const revisionId = parseInt(recipe.revision_id, 10);
+    Services.telemetry.keyedScalarSet("normandy.recipe_freshness", recipe.id, revisionId);
   },
 
   reportAction(actionName, status) {

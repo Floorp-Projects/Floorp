@@ -36,8 +36,7 @@
 #define CONFIG_8BPC 1
 
 // Enable asm
-#if (ARCH_x86_32 == 1 || ARCH_X86_64 == 1) && defined(__linux__) && \
-    !defined(__ANDROID__)
+#if defined(MOZ_DAV1D_ASM)
 #  define HAVE_ASM 1
 #else
 #  define HAVE_ASM 0
@@ -49,7 +48,8 @@
 // HAVE_UNISTD_H
 
 // Important when asm is enabled
-#if defined(__APPLE__)
+#if defined(__APPLE__) || \
+    (ARCH_x86_32 == 1 && defined(_WIN32))
 #  define PREFIX 1
 #endif
 
@@ -58,4 +58,11 @@
 #  define STACK_ALIGNMENT 16
 #else
 #  define STACK_ALIGNMENT 32
+#endif
+
+#if defined(_WIN32) || defined(__CYGWIN__)
+// _WIN32_WINNT 0x0601 is set in global macros
+#define UNICODE 1
+#define _UNICODE 1
+#define __USE_MINGW_ANSI_STDIO 1
 #endif

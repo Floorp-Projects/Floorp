@@ -282,7 +282,7 @@ class RemoteSettingsClient extends EventEmitter {
    * @return {Promise}                 which rejects on sync or process failure.
    */
   async maybeSync(expectedTimestamp, options = { loadDump: true }) {
-    const { loadDump } = options;
+    const { loadDump, trigger } = options;
 
     let reportStatus = null;
     try {
@@ -399,7 +399,7 @@ class RemoteSettingsClient extends EventEmitter {
         reportStatus = UptakeTelemetry.STATUS.SUCCESS;
       }
       // Report success/error status to Telemetry.
-      UptakeTelemetry.report(TELEMETRY_COMPONENT, reportStatus, { source: this.identifier });
+      UptakeTelemetry.report(TELEMETRY_COMPONENT, reportStatus, { source: this.identifier, trigger });
     }
   }
 

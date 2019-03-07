@@ -15,10 +15,6 @@ BROWSER_CHROME_MANIFESTS += [
 
 XPCSHELL_TESTS_MANIFESTS += ['test/unit/xpcshell.ini']
 
-TESTING_JS_MODULES += [
-    'test/browser/SearchTestUtils.jsm',
-]
-
 JAR_MANIFESTS += ['jar.mn']
 
 with Files('**'):

@@ -331,7 +331,8 @@ def _parse_external_manifest(filename, relpath):
     entries = []
 
     with open(filename, 'r') as fp:
-        manifest_re = re.compile(r'^\s*(.*)\s+(include|script)\s+(\S+)$')
+        manifest_re = re.compile(r'^\s*(?P<terms>.*)\s+(?P<type>include|script)\s+(?P<path>\S+)$')
+        include_re = re.compile(r'^\s*include\s+(?P<path>\S+)$')
         for line in fp:
             line, _, comment = line.partition('#')
             line = line.strip()
@@ -339,12 +340,21 @@ def _parse_external_manifest(filename, relpath):
                 continue
             matches = manifest_re.match(line)
             if not matches:
-                print('warning: unrecognized line in jstests.list:'
-                      ' {0}'.format(line))
+                matches = include_re.match(line)
+                if not matches:
+                    print('warning: unrecognized line in jstests.list:'
+                          ' {0}'.format(line))
+                    continue
+
+                include_file = matches.group('path')
+                include_filename = os.path.join(os.path.dirname(filename), include_file)
+                include_relpath = os.path.join(relpath, os.path.dirname(include_file))
+                include_entries = _parse_external_manifest(include_filename, include_relpath)
+                entries.extend(include_entries)
                 continue
 
-            path = os.path.normpath(os.path.join(relpath, matches.group(3)))
-            if matches.group(2) == 'include':
+            path = os.path.normpath(os.path.join(relpath, matches.group('path')))
+            if matches.group('type') == 'include':
                 # The manifest spec wants a reference to another manifest here,
                 # but we need just the directory. We do need the trailing
                 # separator so we don't accidentally match other paths of which
@@ -352,7 +362,7 @@ def _parse_external_manifest(filename, relpath):
                 assert(path.endswith('jstests.list'))
                 path = path[:-len('jstests.list')]
 
-            entries.append({'path': path, 'terms': matches.group(1),
+            entries.append({'path': path, 'terms': matches.group('terms'),
                             'comment': comment.strip()})
 
     # if one directory name is a prefix of another, we want the shorter one

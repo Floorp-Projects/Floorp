@@ -1759,6 +1759,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
       pauseOnExceptions: this._options.pauseOnExceptions,
       ignoreCaughtExceptions: this._options.ignoreCaughtExceptions,
       skipBreakpoints: this.skipBreakpoints,
+      breakpoints: this.breakpointActorMap.listKeys(),
     };
   },
 });

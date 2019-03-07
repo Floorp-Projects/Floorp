@@ -87,7 +87,7 @@ impl WebDriverExtensionRoute for GeckoExtensionRoute {
                     ErrorStatus::InvalidArgument,
                     "Missing elementId parameter"
                 );
-                let element = WebElement::new(element_id.as_str().to_string());
+                let element = WebElement(element_id.as_str().to_string());
                 GeckoExtensionCommand::XblAnonymousChildren(element)
             }
             XblAnonymousByAttribute => {
@@ -97,7 +97,7 @@ impl WebDriverExtensionRoute for GeckoExtensionRoute {
                     "Missing elementId parameter"
                 );
                 GeckoExtensionCommand::XblAnonymousByAttribute(
-                    WebElement::new(element_id.as_str().into()),
+                    WebElement(element_id.as_str().into()),
                     serde_json::from_value(body_data.clone())?,
                 )
             }

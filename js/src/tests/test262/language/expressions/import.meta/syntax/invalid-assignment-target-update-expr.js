@@ -23,7 +23,7 @@ info: |
     It is an early Reference Error if AssignmentTargetType of LeftHandSideExpression is invalid.
 flags: [module]
 negative:
-  phase: early
+  phase: parse
   type: ReferenceError
 features: [import.meta]
 ---*/

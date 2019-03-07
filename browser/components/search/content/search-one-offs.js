@@ -679,6 +679,11 @@ class SearchOneOffs {
   }
 
   _buttonForEngine(engine) {
+    if (this.telemetryOrigin == "urlbar" && !UrlbarPrefs.get("quantumbar")) {
+      return this._popup &&
+             document.getAnonymousElementByAttribute(this._popup, "id", this._buttonIDForEngine(engine));
+    }
+
     let id = this._buttonIDForEngine(engine);
     return this._popup && document.getElementById(id);
   }

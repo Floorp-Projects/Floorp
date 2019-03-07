@@ -117,7 +117,7 @@ add_task(async function should_recheck_when_broken_hash() {
     await promiseSaveGlobalMetadata(metadata);
 
     let commitPromise = promiseAfterCache();
-    let unInitPromise = waitForSearchNotification("uninit-complete");
+    let unInitPromise = SearchTestUtils.promiseSearchNotification("uninit-complete");
     let reInitPromise = asyncReInit({ waitForRegionFetch: true });
     await unInitPromise;
 

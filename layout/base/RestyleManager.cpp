@@ -1885,14 +1885,14 @@ void RestyleManager::IncrementAnimationGeneration() {
 
 /* static */
 void RestyleManager::AddLayerChangesForAnimation(
-    nsIFrame* aFrame, nsIContent* aContent, nsChangeHint aHintForThisFrame,
+    nsIFrame* aStyleFrame, nsIContent* aContent, nsChangeHint aHintForThisFrame,
     nsStyleChangeList& aChangeListToProcess) {
-  if (!aFrame || !aContent) {
+  if (!aStyleFrame || !aContent) {
     return;
   }
 
   uint64_t frameGeneration =
-      RestyleManager::GetAnimationGenerationForFrame(aFrame);
+      RestyleManager::GetAnimationGenerationForFrame(aStyleFrame);
 
   Maybe<nsCSSPropertyIDSet> effectiveAnimationProperties;
 
@@ -1920,7 +1920,7 @@ void RestyleManager::AddLayerChangesForAnimation(
       // did, ApplyRenderingChangeToTree would complain that we're updating a
       // transform layer without a transform.
       if (aDisplayItemType == DisplayItemType::TYPE_TRANSFORM &&
-          !aFrame->StyleDisplay()->HasTransformStyle()) {
+          !aStyleFrame->StyleDisplay()->HasTransformStyle()) {
         // Add all the hints for a removing a transform if they are not already
         // set for this frame.
         if (!(NS_IsHintSubset(nsChangeHint_ComprehensiveAddOrRemoveTransform,
@@ -1956,7 +1956,7 @@ void RestyleManager::AddLayerChangesForAnimation(
 
       if (!effectiveAnimationProperties) {
         effectiveAnimationProperties.emplace(
-            nsLayoutUtils::GetAnimationPropertiesForCompositor(aFrame));
+            nsLayoutUtils::GetAnimationPropertiesForCompositor(aStyleFrame));
       }
       const nsCSSPropertyIDSet& propertiesForDisplayItem =
           LayerAnimationInfo::GetCSSPropertiesFor(aDisplayItemType);
@@ -1968,11 +1968,11 @@ void RestyleManager::AddLayerChangesForAnimation(
   };
 
   AnimationInfo::EnumerateGenerationOnFrame(
-      aFrame, aContent, LayerAnimationInfo::sDisplayItemTypes,
+      aStyleFrame, aContent, LayerAnimationInfo::sDisplayItemTypes,
       maybeApplyChangeHint);
 
   if (hint) {
-    aChangeListToProcess.AppendChange(aFrame, aContent, hint);
+    aChangeListToProcess.AppendChange(aStyleFrame, aContent, hint);
   }
 }
 
