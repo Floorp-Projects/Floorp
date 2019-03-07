@@ -6505,7 +6505,9 @@ var gPageStyleMenu = {
   init() {
     let mm = window.messageManager;
     mm.addMessageListener("PageStyle:StyleSheets", (msg) => {
-      this._pageStyleSheets.set(msg.target.permanentKey, msg.data);
+      if (msg.target.permanentKey) {
+        this._pageStyleSheets.set(msg.target.permanentKey, msg.data);
+      }
     });
   },
 
