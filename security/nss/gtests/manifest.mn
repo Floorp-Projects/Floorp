@@ -24,6 +24,7 @@ NSS_SRCDIRS = \
 	cryptohi_gtest \
 	der_gtest \
 	pk11_gtest \
+	smime_gtest \
 	softoken_gtest \
 	ssl_gtest \
 	$(SYSINIT_GTEST) \

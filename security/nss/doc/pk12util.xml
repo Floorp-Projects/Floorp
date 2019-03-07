@@ -108,7 +108,7 @@
       </varlistentry>
 
       <varlistentry>
-        <term>-n | --cert-key-len  certKeyLength</term>
+        <term>--cert-key-len  certKeyLength</term>
         <listitem><para>Specify the desired length of the symmetric key to be used to encrypt the certificates and other meta-data.</para></listitem>
       </varlistentry>
 
