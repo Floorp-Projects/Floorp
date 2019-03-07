@@ -147,6 +147,18 @@ nsCString GeneratePrefix(const nsCString& aFragment, uint8_t aLength) {
   return hash;
 }
 
+void CheckContent(LookupCacheV4* cache, PrefixStringMap& expected) {
+  PrefixStringMap vlPSetMap;
+  cache->GetPrefixes(vlPSetMap);
+
+  for (auto iter = vlPSetMap.Iter(); !iter.Done(); iter.Next()) {
+    nsCString* expectedPrefix = expected.Get(iter.Key());
+    nsCString* resultPrefix = iter.Data();
+
+    ASSERT_TRUE(resultPrefix->Equals(*expectedPrefix));
+  }
+}
+
 static nsresult BuildCache(LookupCacheV2* cache,
                            const _PrefixArray& prefixArray) {
   AddPrefixArray prefixes;
