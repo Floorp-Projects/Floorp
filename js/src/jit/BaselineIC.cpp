@@ -1236,8 +1236,7 @@ bool ICTypeMonitor_Fallback::addMonitorStubForValue(JSContext* cx,
       return true;
     }
     MOZ_ASSERT(!val.isMagic());
-    JSValueType type =
-        val.isDouble() ? JSVAL_TYPE_DOUBLE : val.extractNonDoubleType();
+    ValueType type = val.type();
 
     // Check for existing TypeMonitor stub.
     ICTypeMonitor_PrimitiveSet* existingStub = nullptr;
@@ -1282,8 +1281,9 @@ bool ICTypeMonitor_Fallback::addMonitorStubForValue(JSContext* cx,
     }
 
     JitSpew(JitSpew_BaselineIC,
-            "  %s TypeMonitor stub %p for primitive type %d",
-            existingStub ? "Modified existing" : "Created new", stub, type);
+            "  %s TypeMonitor stub %p for primitive type %u",
+            existingStub ? "Modified existing" : "Created new", stub,
+            static_cast<uint8_t>(type));
 
     if (!existingStub) {
       MOZ_ASSERT(!hasStub(TypeMonitor_PrimitiveSet));
@@ -1441,40 +1441,40 @@ bool ICTypeMonitor_Fallback::Compiler::generateStubCode(MacroAssembler& masm) {
 bool ICTypeMonitor_PrimitiveSet::Compiler::generateStubCode(
     MacroAssembler& masm) {
   Label success;
-  if ((flags_ & TypeToFlag(JSVAL_TYPE_INT32)) &&
-      !(flags_ & TypeToFlag(JSVAL_TYPE_DOUBLE))) {
+  if ((flags_ & TypeToFlag(ValueType::Int32)) &&
+      !(flags_ & TypeToFlag(ValueType::Double))) {
     masm.branchTestInt32(Assembler::Equal, R0, &success);
   }
 
-  if (flags_ & TypeToFlag(JSVAL_TYPE_DOUBLE)) {
+  if (flags_ & TypeToFlag(ValueType::Double)) {
     masm.branchTestNumber(Assembler::Equal, R0, &success);
   }
 
-  if (flags_ & TypeToFlag(JSVAL_TYPE_UNDEFINED)) {
+  if (flags_ & TypeToFlag(ValueType::Undefined)) {
     masm.branchTestUndefined(Assembler::Equal, R0, &success);
   }
 
-  if (flags_ & TypeToFlag(JSVAL_TYPE_BOOLEAN)) {
+  if (flags_ & TypeToFlag(ValueType::Boolean)) {
     masm.branchTestBoolean(Assembler::Equal, R0, &success);
   }
 
-  if (flags_ & TypeToFlag(JSVAL_TYPE_STRING)) {
+  if (flags_ & TypeToFlag(ValueType::String)) {
     masm.branchTestString(Assembler::Equal, R0, &success);
   }
 
-  if (flags_ & TypeToFlag(JSVAL_TYPE_SYMBOL)) {
+  if (flags_ & TypeToFlag(ValueType::Symbol)) {
     masm.branchTestSymbol(Assembler::Equal, R0, &success);
   }
 
-  if (flags_ & TypeToFlag(JSVAL_TYPE_BIGINT)) {
+  if (flags_ & TypeToFlag(ValueType::BigInt)) {
     masm.branchTestBigInt(Assembler::Equal, R0, &success);
   }
 
-  if (flags_ & TypeToFlag(JSVAL_TYPE_OBJECT)) {
+  if (flags_ & TypeToFlag(ValueType::Object)) {
     masm.branchTestObject(Assembler::Equal, R0, &success);
   }
 
-  if (flags_ & TypeToFlag(JSVAL_TYPE_NULL)) {
+  if (flags_ & TypeToFlag(ValueType::Null)) {
     masm.branchTestNull(Assembler::Equal, R0, &success);
   }
 
@@ -1605,8 +1605,7 @@ bool ICUpdatedStub::addUpdateStubForValue(JSContext* cx,
     addOptimizedUpdateStub(stub);
 
   } else if (val.isPrimitive() || unknownObject) {
-    JSValueType type =
-        val.isDouble() ? JSVAL_TYPE_DOUBLE : val.extractNonDoubleType();
+    ValueType type = val.type();
 
     // Check for existing TypeUpdate stub.
     ICTypeUpdate_PrimitiveSet* existingStub = nullptr;
@@ -1638,7 +1637,8 @@ bool ICUpdatedStub::addUpdateStubForValue(JSContext* cx,
     }
 
     JitSpew(JitSpew_BaselineIC, "  %s TypeUpdate stub %p for primitive type %d",
-            existingStub ? "Modified existing" : "Created new", stub, type);
+            existingStub ? "Modified existing" : "Created new", stub,
+            static_cast<uint8_t>(type));
 
   } else if (val.toObject().isSingleton()) {
     RootedObject obj(cx, &val.toObject());
@@ -1785,40 +1785,40 @@ bool ICTypeUpdate_Fallback::Compiler::generateStubCode(MacroAssembler& masm) {
 bool ICTypeUpdate_PrimitiveSet::Compiler::generateStubCode(
     MacroAssembler& masm) {
   Label success;
-  if ((flags_ & TypeToFlag(JSVAL_TYPE_INT32)) &&
-      !(flags_ & TypeToFlag(JSVAL_TYPE_DOUBLE))) {
+  if ((flags_ & TypeToFlag(ValueType::Int32)) &&
+      !(flags_ & TypeToFlag(ValueType::Double))) {
     masm.branchTestInt32(Assembler::Equal, R0, &success);
   }
 
-  if (flags_ & TypeToFlag(JSVAL_TYPE_DOUBLE)) {
+  if (flags_ & TypeToFlag(ValueType::Double)) {
     masm.branchTestNumber(Assembler::Equal, R0, &success);
   }
 
-  if (flags_ & TypeToFlag(JSVAL_TYPE_UNDEFINED)) {
+  if (flags_ & TypeToFlag(ValueType::Undefined)) {
     masm.branchTestUndefined(Assembler::Equal, R0, &success);
   }
 
-  if (flags_ & TypeToFlag(JSVAL_TYPE_BOOLEAN)) {
+  if (flags_ & TypeToFlag(ValueType::Boolean)) {
     masm.branchTestBoolean(Assembler::Equal, R0, &success);
   }
 
-  if (flags_ & TypeToFlag(JSVAL_TYPE_STRING)) {
+  if (flags_ & TypeToFlag(ValueType::String)) {
     masm.branchTestString(Assembler::Equal, R0, &success);
   }
 
-  if (flags_ & TypeToFlag(JSVAL_TYPE_SYMBOL)) {
+  if (flags_ & TypeToFlag(ValueType::Symbol)) {
     masm.branchTestSymbol(Assembler::Equal, R0, &success);
   }
 
-  if (flags_ & TypeToFlag(JSVAL_TYPE_BIGINT)) {
+  if (flags_ & TypeToFlag(ValueType::BigInt)) {
     masm.branchTestBigInt(Assembler::Equal, R0, &success);
   }
 
-  if (flags_ & TypeToFlag(JSVAL_TYPE_OBJECT)) {
+  if (flags_ & TypeToFlag(ValueType::Object)) {
     masm.branchTestObject(Assembler::Equal, R0, &success);
   }
 
-  if (flags_ & TypeToFlag(JSVAL_TYPE_NULL)) {
+  if (flags_ & TypeToFlag(ValueType::Null)) {
     masm.branchTestNull(Assembler::Equal, R0, &success);
   }
 
