@@ -20,11 +20,10 @@ mod send_recv;
 mod context;
 mod stream;
 
-use audioipc::PlatformHandleType;
+use audioipc::{PlatformHandleType, PlatformHandle};
 use context::ClientContext;
 use cubeb_backend::{capi, ffi};
 use std::os::raw::{c_char, c_int};
-use std::os::unix::io::RawFd;
 use stream::ClientStream;
 
 type InitParamsTls = std::cell::RefCell<Option<CpuPoolInitParams>>;
@@ -83,7 +82,7 @@ where
     });
 }
 
-static mut G_SERVER_FD: Option<RawFd> = None;
+static mut G_SERVER_FD: Option<PlatformHandle> = None;
 
 #[no_mangle]
 /// Entry point from C code.
@@ -98,13 +97,13 @@ pub unsafe extern "C" fn audioipc_client_init(
 
     let init_params = &*init_params;
 
-    // TODO: Windows portability (for fd).
     // TODO: Better way to pass extra parameters to Context impl.
     if G_SERVER_FD.is_some() {
-        panic!("audioipc client's server connection already initialized.");
+        return cubeb_backend::ffi::CUBEB_ERROR;
     }
-    if init_params.server_connection >= 0 {
-        G_SERVER_FD = Some(init_params.server_connection);
+    G_SERVER_FD = PlatformHandle::try_new(init_params.server_connection);
+    if G_SERVER_FD.is_none() {
+        return cubeb_backend::ffi::CUBEB_ERROR;
     }
 
     let cpupool_init_params = CpuPoolInitParams::init_with(&init_params);
