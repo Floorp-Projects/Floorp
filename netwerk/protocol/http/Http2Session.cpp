@@ -168,7 +168,7 @@ void Http2Session::Shutdown() {
       CloseStream(stream, NS_ERROR_NET_PARTIAL_TRANSFER);
     } else if (mGoAwayReason == INADEQUATE_SECURITY) {
       CloseStream(stream, NS_ERROR_NET_INADEQUATE_SECURITY);
-    } else if (!mCleanShutdown) {
+    } else if (!mCleanShutdown && (mGoAwayReason != NO_HTTP_ERROR)) {
       CloseStream(stream, NS_ERROR_NET_HTTP2_SENT_GOAWAY);
     } else {
       CloseStream(stream, NS_ERROR_ABORT);
@@ -3871,7 +3871,7 @@ void Http2Session::Close(nsresult aReason) {
     goAwayReason = mGoAwayReason;
   } else if (NS_SUCCEEDED(aReason)) {
     goAwayReason = NO_HTTP_ERROR;
-  } else if (aReason == NS_ERROR_ILLEGAL_VALUE) {
+  } else if (aReason == NS_ERROR_NET_HTTP2_SENT_GOAWAY) {
     goAwayReason = PROTOCOL_ERROR;
   } else if (mCleanShutdown) {
     goAwayReason = NO_HTTP_ERROR;
