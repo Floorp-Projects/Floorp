@@ -16,7 +16,8 @@ FINAL_TARGET_FILES.features['webcompat@mozilla.org'] += [
 ]
 
 FINAL_TARGET_FILES.features['webcompat@mozilla.org']['injections']['css'] += [
-  'injections/css/bug0000000-dummy-css-injection.css'
+  'injections/css/bug0000000-dummy-css-injection.css',
+  'injections/css/bug1526977-sreedharscce.in-login-fix.css'
 ]
 
 FINAL_TARGET_FILES.features['webcompat@mozilla.org']['injections']['js'] += [
@@ -25,8 +26,7 @@ FINAL_TARGET_FILES.features['webcompat@mozilla.org']['injections']['js'] += [
   'injections/js/bug1457335-histography.io-ua-change.js',
   'injections/js/bug1472075-bankofamerica.com-ua-change.js',
   'injections/js/bug1472081-election.gov.np-window.sidebar-shim.js',
-  'injections/js/bug1482066-portalminasnet.com-window.sidebar-shim.js',
-  'injections/js/bug1522755-ebay-scroll-anchoring.js'
+  'injections/js/bug1482066-portalminasnet.com-window.sidebar-shim.js'
 ]
 
 with Files('**'):
