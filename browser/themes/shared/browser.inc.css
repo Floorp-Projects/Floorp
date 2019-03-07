@@ -232,8 +232,7 @@
   margin-bottom: 0;
 }
 
-#cfr-notification-footer-text-and-addon-info {
-  display: block;
+#cfr-notification-footer {
   padding: 10px var(--arrowpanel-padding);
 }
 
@@ -293,60 +292,6 @@
 
 #cfr-notification-footer-spacer {
   flex-grow: 1;
-}
-
-#cfr-notification-footer-pintab-animation-container {
-  background-image: url("resource://activity-stream/data/content/assets/cfr_pinnedtab_animated.png");
-  background-position: top center;
-  background-repeat: no-repeat;
-  height: 173px;
-  width: 343px;
-}
-
-#contextual-feature-recommendation-notification[data-notification-category="cfrAddons"] #cfr-notification-footer-pintab-animation-container {
-  display: none;
-}
-
-#cfr-notification-footer-pintab-animation-container:not([animate]),
-#cfr-notification-footer-pintab-animation-container[paused],
-:root[lwt-popup-brighttext] #cfr-notification-footer-pintab-animation-container:not([animate]),
-:root[lwt-popup-brighttext] #cfr-notification-footer-pintab-animation-container[paused] {
-  background-image: url("resource://activity-stream/data/content/assets/cfr_pinnedtab_static.png");
-}
-
-:root[lwt-popup-brighttext] #cfr-notification-footer-pintab-animation-container {
-  background-image: url("resource://activity-stream/data/content/assets/cfr_pinnedtab_animated_darktheme.png");
-}
-
-#cfr-notification-footer-animation-controls {
-  background: linear-gradient(transparent 0%, rgba(255, 255, 255, 0.95) 35%);
-  padding: 20px var(--arrowpanel-padding) 10px;
-}
-
-:root[lwt-popup-brighttext] #cfr-notification-footer-animation-controls {
-  margin-left: 13px;
-}
-
-#cfr-notification-footer-pintab-animation-container:not([animate]) #cfr-notification-footer-animation-controls,
-#cfr-notification-footer-pintab-animation-container[paused] #cfr-notification-footer-animation-controls {
-  visibility: hidden;
-}
-
-#cfr-notification-footer-pause-button,
-#cfr-notification-footer-pause-label {
-  color: rgba(12, 12, 13, 0.8);
-  cursor: pointer;
-}
-
-#cfr-notification-footer-pause-icon {
-  background-image: url("resource://activity-stream/data/content/assets/glyph-pause-12.svg");
-  background-position: center center;
-  background-repeat: no-repeat;
-  background-size: 12px;
-  -moz-context-properties: fill;
-  fill: rgba(12, 12, 13, 0.8);
-  height: 12px;
-  width: 12px;
 }
 
 #content-mask {
