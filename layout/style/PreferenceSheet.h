@@ -37,7 +37,7 @@ struct PreferenceSheet {
     bool mUnderlineLinks = true;
     bool mUseFocusColors = false;
     uint8_t mFocusRingWidth = 1;
-    bool mFocusRingStyle = false;
+    uint8_t mFocusRingStyle = 1;
     bool mFocusRingOnAnything = false;
 
     void Load(bool aIsChrome);

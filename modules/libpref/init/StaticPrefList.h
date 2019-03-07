@@ -575,10 +575,11 @@ VARCACHE_PREF(
   uint32_t, 1
 )
 
+// 0=solid, 1=dotted
 VARCACHE_PREF(
   "browser.display.focus_ring_style",
    browser_display_focus_ring_style,
-  bool, false
+  uint32_t, 1
 )
 
 VARCACHE_PREF(
