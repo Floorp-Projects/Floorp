@@ -32,6 +32,7 @@ EXTRA_JS_MODULES += [
     'crypto-SDR.js',
     'InsecurePasswordUtils.jsm',
     'LoginAutoCompleteResult.jsm',
+    'LoginFormFactory.jsm',
     'LoginHelper.jsm',
     'LoginInfo.jsm',
     'LoginManager.jsm',
