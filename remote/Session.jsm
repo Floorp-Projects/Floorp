@@ -10,6 +10,14 @@ const {ParentProcessDomains} = ChromeUtils.import("chrome://remote/content/domai
 const {Domains} = ChromeUtils.import("chrome://remote/content/domains/Domains.jsm");
 const {formatError} = ChromeUtils.import("chrome://remote/content/Error.jsm");
 
+/**
+ * A session represents exactly one client WebSocket connection.
+ *
+ * Every new WebSocket connections is associated with one session that
+ * deals with despatching incoming command requests to the right
+ * target, sending back responses, and propagating events originating
+ * from domains.
+ */
 class Session {
   constructor(connection, target) {
     this.connection = connection;
