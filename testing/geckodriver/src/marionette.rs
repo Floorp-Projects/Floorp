@@ -407,7 +407,7 @@ impl MarionetteSession {
             ErrorStatus::UnknownError,
             "Failed to convert web element reference value to string"
         ).to_string();
-        Ok(WebElement::new(id))
+        Ok(WebElement(id))
     }
 
     pub fn next_command_id(&mut self) -> u64 {
@@ -828,7 +828,7 @@ impl MarionetteCommand {
             ElementClick(ref x) => (Some("WebDriver:ElementClick"), Some(x.to_marionette())),
             ElementSendKeys(ref e, ref x) => {
                 let mut data = Map::new();
-                data.insert("id".to_string(), Value::String(e.id.clone()));
+                data.insert("id".to_string(), Value::String(e.to_string()));
                 data.insert("text".to_string(), Value::String(x.text.clone()));
                 data.insert(
                     "value".to_string(),
@@ -849,13 +849,13 @@ impl MarionetteCommand {
             FindElement(ref x) => (Some("WebDriver:FindElement"), Some(x.to_marionette())),
             FindElementElement(ref e, ref x) => {
                 let mut data = x.to_marionette()?;
-                data.insert("element".to_string(), Value::String(e.id.clone()));
+                data.insert("element".to_string(), Value::String(e.to_string()));
                 (Some("WebDriver:FindElement"), Some(Ok(data)))
             }
             FindElements(ref x) => (Some("WebDriver:FindElements"), Some(x.to_marionette())),
             FindElementElements(ref e, ref x) => {
                 let mut data = x.to_marionette()?;
-                data.insert("element".to_string(), Value::String(e.id.clone()));
+                data.insert("element".to_string(), Value::String(e.to_string()));
                 (Some("WebDriver:FindElements"), Some(Ok(data)))
             }
             FullscreenWindow => (Some("WebDriver:FullscreenWindow"), None),
@@ -866,19 +866,19 @@ impl MarionetteCommand {
             GetCurrentUrl => (Some("WebDriver:GetCurrentURL"), None),
             GetCSSValue(ref e, ref x) => {
                 let mut data = Map::new();
-                data.insert("id".to_string(), Value::String(e.id.clone()));
+                data.insert("id".to_string(), Value::String(e.to_string()));
                 data.insert("propertyName".to_string(), Value::String(x.clone()));
                 (Some("WebDriver:GetElementCSSValue"), Some(Ok(data)))
             }
             GetElementAttribute(ref e, ref x) => {
                 let mut data = Map::new();
-                data.insert("id".to_string(), Value::String(e.id.clone()));
+                data.insert("id".to_string(), Value::String(e.to_string()));
                 data.insert("name".to_string(), Value::String(x.clone()));
                 (Some("WebDriver:GetElementAttribute"), Some(Ok(data)))
             }
             GetElementProperty(ref e, ref x) => {
                 let mut data = Map::new();
-                data.insert("id".to_string(), Value::String(e.id.clone()));
+                data.insert("id".to_string(), Value::String(e.to_string()));
                 data.insert("name".to_string(), Value::String(x.clone()));
                 (Some("WebDriver:GetElementProperty"), Some(Ok(data)))
             }
@@ -938,7 +938,7 @@ impl MarionetteCommand {
             SwitchToWindow(ref x) => (Some("WebDriver:SwitchToWindow"), Some(x.to_marionette())),
             TakeElementScreenshot(ref e) => {
                 let mut data = Map::new();
-                data.insert("id".to_string(), Value::String(e.id.clone()));
+                data.insert("id".to_string(), Value::String(e.to_string()));
                 data.insert("highlights".to_string(), Value::Array(vec![]));
                 data.insert("full".to_string(), Value::Bool(false));
                 (Some("WebDriver:TakeScreenshot"), Some(Ok(data)))
@@ -963,14 +963,14 @@ impl MarionetteCommand {
                 }
                 XblAnonymousByAttribute(e, x) => {
                     let mut data = x.to_marionette()?;
-                    data.insert("element".to_string(), Value::String(e.id.clone()));
+                    data.insert("element".to_string(), Value::String(e.to_string()));
                     (Some("WebDriver:FindElement"), Some(Ok(data)))
                 }
                 XblAnonymousChildren(e) => {
                     let mut data = Map::new();
                     data.insert("using".to_owned(), serde_json::to_value("anon")?);
                     data.insert("value".to_owned(), Value::Null);
-                    data.insert("element".to_string(), serde_json::to_value(e.id.clone())?);
+                    data.insert("element".to_string(), serde_json::to_value(e.to_string())?);
                     (Some("WebDriver:FindElements"), Some(Ok(data)))
                 }
                 TakeFullScreenshot => {
@@ -1458,14 +1458,13 @@ impl ToMarionette for NewWindowParameters {
 impl ToMarionette for SwitchToFrameParameters {
     fn to_marionette(&self) -> WebDriverResult<Map<String, Value>> {
         let mut data = Map::new();
-        let key = match self.id {
+        match self.id {
             None => None,
-            Some(FrameId::Short(_)) => Some("id"),
-            Some(FrameId::Element(_)) => Some("element"),
+            Some(FrameId::Short(_)) => data.insert("id".to_string(),
+                                            serde_json::to_value(&self.id)?),
+            Some(FrameId::Element(ref web_element)) => data.insert("element".to_string(),
+                                            serde_json::to_value(web_element.to_string())?),
         };
-        if let Some(x) = key {
-            data.insert(x.to_string(), serde_json::to_value(&self.id)?);
-        }
         Ok(data)
     }
 }
@@ -1494,7 +1493,7 @@ impl ToMarionette for TimeoutsParameters {
 impl ToMarionette for WebElement {
     fn to_marionette(&self) -> WebDriverResult<Map<String, Value>> {
         let mut data = Map::new();
-        data.insert("id".to_string(), serde_json::to_value(&self.id)?);
+        data.insert("id".to_string(), serde_json::to_value(self.to_string())?);
         Ok(data)
     }
 }
