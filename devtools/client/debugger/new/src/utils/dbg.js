@@ -18,20 +18,19 @@ function findSources(dbg: any, url: string) {
   return sources.filter(s => (s.url || "").includes(url));
 }
 
-function sendPacket(dbg: any, packet: any, callback: () => void) {
-  dbg.client.sendPacket(packet, callback || console.log);
+function sendPacket(dbg: any, packet: any) {
+  return dbg.client.sendPacket(packet);
 }
 
-function sendPacketToThread(dbg: Object, packet: any, callback: Function = () => {}) {
-  sendPacket(
-    dbg,
-    { to: dbg.connection.tabConnection.threadClient.actor, ...packet },
-    callback
-  );
+function sendPacketToThread(dbg: Object, packet: any) {
+  return sendPacket(dbg, {
+    to: dbg.connection.tabConnection.threadClient.actor,
+    ...packet
+  });
 }
 
-function evaluate(dbg: Object, expression: any, callback: () => void) {
-  dbg.client.evaluate(expression).then(callback || console.log);
+function evaluate(dbg: Object, expression: any) {
+  return dbg.client.evaluate(expression);
 }
 
 function bindSelectors(obj: Object): Object {
@@ -68,9 +67,9 @@ export function setupHelper(obj: Object) {
     helpers: {
       findSource: url => findSource(dbg, url),
       findSources: url => findSources(dbg, url),
-      evaluate: (expression, cbk) => evaluate(dbg, expression, cbk),
-      sendPacketToThread: (packet, cbk) => sendPacketToThread(dbg, packet, cbk),
-      sendPacket: (packet, cbk) => sendPacket(dbg, packet, cbk),
+      evaluate: expression => evaluate(dbg, expression),
+      sendPacketToThread: packet => sendPacketToThread(dbg, packet),
+      sendPacket: packet => sendPacket(dbg, packet),
       dumpThread: () => sendPacketToThread(dbg, { type: "dumpThread" })
     },
     formatters: {
