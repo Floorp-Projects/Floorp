@@ -83,10 +83,8 @@ function initial_font_family_is_sans_serif()
   // 'sans-serif'.
   const meta = document.createElement("meta");
   meta.setAttribute("style", "font: initial;");
-  ok(document.documentElement, "We should have a place to put ourselves into");
   document.documentElement.appendChild(meta);
   const family = getComputedStyle(meta).fontFamily;
-  ok(family == "serif" || family == "sans-serif", "Should be able to get the family");
   meta.remove();
   return family == "sans-serif";
 }
