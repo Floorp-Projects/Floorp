@@ -33,7 +33,7 @@ add_task(async function test_listJSONlocale() {
 
 // Check that switching locale switches search engines
 add_task(async function test_listJSONlocaleSwitch() {
-  let promise = waitForSearchNotification("reinit-complete");
+  let promise = SearchTestUtils.promiseSearchNotification("reinit-complete");
 
   Services.locale.availableLocales = ["fr"];
   Services.locale.requestedLocales = ["fr"];
