@@ -182,6 +182,7 @@ jobs:
     symbol: I(uv)
   diffoscope:
     symbol: I(diff)
+    parent: debian9-base
   partner-repack:
     symbol: I(PR)
     parent: debian9-base
