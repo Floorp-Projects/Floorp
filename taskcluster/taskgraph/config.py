@@ -58,6 +58,15 @@ graph_config_schema = Schema({
         # Mapping of scriptworker types to scopes they accept
         Required('worker-types'): {basestring: [basestring]}
     },
+    Required('task-priority'): optionally_keyed_by('project', Any(
+        'highest',
+        'very-high',
+        'high',
+        'medium',
+        'low',
+        'very-low',
+        'lowest',
+    )),
     Required('partner-urls'): {
         Required('release-partner-repack'):
             optionally_keyed_by('release-product', 'release-level', 'release-type',
@@ -69,7 +78,7 @@ graph_config_schema = Schema({
 })
 
 
-@attr.s(frozen=True)
+@attr.s(frozen=True, cmp=False)
 class GraphConfig(object):
     _config = attr.ib()
     root_dir = attr.ib()

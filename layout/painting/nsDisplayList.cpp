@@ -3153,7 +3153,7 @@ static int32_t ZIndexForFrame(nsIFrame* aFrame) {
 
   const nsStylePosition* position = aFrame->StylePosition();
   if (position->mZIndex.IsInteger())
-    return position->mZIndex.integer._0;
+    return position->mZIndex.AsInteger();
   MOZ_ASSERT(position->mZIndex.IsAuto());
   // sort the auto and 0 elements together
   return 0;

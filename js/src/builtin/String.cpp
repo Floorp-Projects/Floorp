@@ -3377,9 +3377,7 @@ static const JSFunctionSpec string_methods[] = {
 
     /* Perl-ish methods (search is actually Python-esque). */
     JS_SELF_HOSTED_FN("match", "String_match", 1, 0),
-#ifdef NIGHTLY_BUILD
     JS_SELF_HOSTED_FN("matchAll", "String_matchAll", 1, 0),
-#endif
     JS_SELF_HOSTED_FN("search", "String_search", 1, 0),
     JS_SELF_HOSTED_FN("replace", "String_replace", 2, 0),
     JS_SELF_HOSTED_FN("split", "String_split", 2, 0),
