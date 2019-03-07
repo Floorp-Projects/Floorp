@@ -1,11 +1,11 @@
 {
   "description": [
-    "Test states to be tested for css state machine in css-autocompelter.js file.",
+    "Test states to be tested for css state machine in css-autocompleter.js file.",
     "Test cases are of the following format:",
     "[",
     "  [",
     "    line, # The line location of the cursor",
-    "    ch    # The column locaiton of the cursor",
+    "    ch    # The column location of the cursor",
     "  ],",
     "  suggestions # Array of expected results",
     "]"
@@ -25,7 +25,7 @@
                 "background-clip", "background-color", "background-image",
                 "background-origin", "background-position", "background-position-x",
                 "background-position-y", "background-repeat", "background-size"]],
-    [[21,  9], ["auto", "inherit", "initial","unset"]],
+    [[21,  9], ["auto", "inherit", "initial", "revert", "unset" ]],
     [[25, 26], [".devtools-toolbarbutton > tab",
                 ".devtools-toolbarbutton > hbox",
                 ".devtools-toolbarbutton > .toolbarbutton-menubutton-button"]],
