@@ -3122,9 +3122,10 @@ impl Renderer {
                 .expect("BUG: invalid source texture");
             let read_target = DrawTarget::Texture { texture, layer, with_depth: false };
 
-            device.bind_read_target(read_target.into());
             device.blit_render_target(
+                read_target.into(),
                 read_target.to_framebuffer_rect(source_rect),
+                draw_target,
                 draw_target.to_framebuffer_rect(blit.target_rect.translate(&-content_origin.to_vector())),
                 TextureFilter::Linear,
             );
@@ -3223,7 +3224,7 @@ impl Renderer {
                     // on a mostly-unused last slice of a large texture array).
                     Some(draw_target.to_framebuffer_rect(target.used_rect()))
                 }
-                DrawTarget::Texture { .. } => {
+                DrawTarget::Texture { .. } | DrawTarget::External { .. } => {
                     None
                 }
             };
@@ -3472,8 +3473,6 @@ impl Renderer {
             if !alpha_batch_container.tile_blits.is_empty() {
                 let _timer = self.gpu_profile.start_timer(GPU_TAG_BLIT);
 
-                self.device.bind_read_target(draw_target.into());
-
                 for blit in &alpha_batch_container.tile_blits {
                     let texture = self.texture_resolver
                         .resolve(&blit.target.texture_id)
@@ -3484,7 +3483,6 @@ impl Renderer {
                         layer: blit.target.texture_layer as usize,
                         with_depth: false,
                     };
-                    self.device.bind_draw_target(blit_target);
 
                     let src_rect = draw_target.to_framebuffer_rect(DeviceIntRect::new(
                         blit.src_offset - content_origin.to_vector(),
@@ -3499,7 +3497,9 @@ impl Renderer {
                     ));
 
                     self.device.blit_render_target_invert_y(
+                        draw_target.into(),
                         src_rect,
+                        blit_target,
                         dest_rect,
                     );
                 }
@@ -3531,10 +3531,10 @@ impl Renderer {
                     }
                 };
                 let (src_rect, _) = render_tasks[output.task_id].get_target_rect();
-                self.device.bind_read_target(draw_target.into());
-                self.device.bind_external_draw_target(fbo_id);
                 self.device.blit_render_target_invert_y(
+                    draw_target.into(),
                     draw_target.to_framebuffer_rect(src_rect.translate(&-content_origin.to_vector())),
+                    DrawTarget::External { fbo: fbo_id, size: output_size.into() },
                     output_size.into(),
                 );
                 handler.unlock(output.pipeline_id);
@@ -4447,26 +4447,26 @@ impl Renderer {
 
         // Copy frame buffer into the zoom texture
         let read_target = DrawTarget::new_default(framebuffer_size);
-        self.device.bind_read_target(read_target.into());
-        self.device.bind_draw_target(DrawTarget::Texture {
-            texture: self.zoom_debug_texture.as_ref().unwrap(),
-            layer: 0,
-            with_depth: false,
-        });
         self.device.blit_render_target(
+            read_target.into(),
             read_target.to_framebuffer_rect(source_rect),
+            DrawTarget::Texture {
+                texture: self.zoom_debug_texture.as_ref().unwrap(),
+                layer: 0,
+                with_depth: false,
+            },
             texture_rect,
             TextureFilter::Nearest,
         );
 
         // Draw the zoom texture back to the framebuffer
-        self.device.bind_read_target(ReadTarget::Texture {
-            texture: self.zoom_debug_texture.as_ref().unwrap(),
-            layer: 0,
-        });
-        self.device.bind_draw_target(read_target);
         self.device.blit_render_target(
+            ReadTarget::Texture {
+                texture: self.zoom_debug_texture.as_ref().unwrap(),
+                layer: 0,
+            },
             texture_rect,
+            read_target,
             read_target.to_framebuffer_rect(target_rect),
             TextureFilter::Nearest,
         );
@@ -4544,8 +4544,6 @@ impl Renderer {
 
             let layer_count = texture.get_layer_count() as usize;
             for layer in 0 .. layer_count {
-                device.bind_read_target(ReadTarget::Texture { texture, layer});
-
                 let x = fb_width - (spacing + size) * (i as i32 + 1);
 
                 // If we have more targets than fit on one row in screen, just early exit.
@@ -4585,7 +4583,9 @@ impl Renderer {
                 // use different conventions.
                 let dest_rect = rect(x, y + tag_height, size, size);
                 device.blit_render_target_invert_y(
+                    ReadTarget::Texture { texture, layer },
                     src_rect,
+                    DrawTarget::new_default(framebuffer_size),
                     FramebufferIntRect::from_untyped(&dest_rect),
                 );
                 i += 1;
