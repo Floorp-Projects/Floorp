@@ -1095,7 +1095,7 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetTransformOrigin() {
   auto position = MaybeResolvePositionForTransform(
       origin.horizontal, origin.vertical, mInnerFrame);
   SetValueToPosition(position, valueList);
-  if (origin.depth._0 != 0.0f) {
+  if (!origin.depth.IsZero()) {
     RefPtr<nsROCSSPrimitiveValue> depth = new nsROCSSPrimitiveValue;
     depth->SetAppUnits(origin.depth.ToAppUnits());
     valueList->AppendCSSValue(depth.forget());
@@ -1964,9 +1964,9 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetLineHeight() {
 
   auto& lh = StyleText()->mLineHeight;
   if (lh.IsLength()) {
-    val->SetAppUnits(lh.length._0.ToAppUnits());
+    val->SetAppUnits(lh.AsLength().ToAppUnits());
   } else if (lh.IsNumber()) {
-    val->SetNumber(lh.number._0);
+    val->SetNumber(lh.AsNumber());
   } else if (lh.IsMozBlockHeight()) {
     val->SetIdent(eCSSKeyword__moz_block_height);
   } else {

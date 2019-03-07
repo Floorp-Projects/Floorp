@@ -951,7 +951,6 @@ AboutReader.prototype = {
       if (!aEvent.isTrusted)
         return;
 
-      aEvent.stopPropagation();
       let btn = aEvent.target;
       callback(btn);
     }, true);

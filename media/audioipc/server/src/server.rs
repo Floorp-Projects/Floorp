@@ -4,9 +4,10 @@
 // accompanying file LICENSE for details
 
 use audioipc;
+use audioipc::{MessageStream, PlatformHandle};
 use audioipc::codec::LengthDelimitedCodec;
 use audioipc::core;
-use audioipc::fd_passing::FramedWithFds;
+use audioipc::platformhandle_passing::FramedWithPlatformHandles;
 use audioipc::frame::{framed, Framed};
 use audioipc::messages::{
     CallbackReq, CallbackResp, ClientMessage, Device, DeviceInfo, ServerMessage, StreamCreate,
@@ -25,11 +26,8 @@ use std::convert::From;
 use std::ffi::{CStr, CString};
 use std::mem::{size_of, ManuallyDrop};
 use std::os::raw::{c_long, c_void};
-use std::os::unix::io::IntoRawFd;
-use std::os::unix::net;
 use std::{panic, slice};
 use tokio_core::reactor::Remote;
-use tokio_uds::UnixStream;
 
 use errors::*;
 
@@ -65,7 +63,7 @@ struct CallbackClient;
 impl rpc::Client for CallbackClient {
     type Request = CallbackReq;
     type Response = CallbackResp;
-    type Transport = Framed<UnixStream, LengthDelimitedCodec<Self::Request, Self::Response>>;
+    type Transport = Framed<audioipc::AsyncMessageStream, LengthDelimitedCodec<Self::Request, Self::Response>>;
 }
 
 struct ServerStreamCallbacks {
@@ -142,13 +140,14 @@ type StreamSlab = slab::Slab<ServerStream, usize>;
 pub struct CubebServer {
     cb_remote: Remote,
     streams: StreamSlab,
+    remote_pid: Option<u32>,
 }
 
 impl rpc::Server for CubebServer {
     type Request = ServerMessage;
     type Response = ClientMessage;
     type Future = FutureResult<Self::Response, ()>;
-    type Transport = FramedWithFds<UnixStream, LengthDelimitedCodec<Self::Response, Self::Request>>;
+    type Transport = FramedWithPlatformHandles<audioipc::AsyncMessageStream, LengthDelimitedCodec<Self::Response, Self::Request>>;
 
     fn process(&mut self, req: Self::Request) -> Self::Future {
         let resp = with_local_context(|context| match *context {
@@ -164,13 +163,17 @@ impl CubebServer {
         CubebServer {
             cb_remote: cb_remote,
             streams: StreamSlab::with_capacity(STREAM_CONN_CHUNK_SIZE),
+            remote_pid: None,
         }
     }
 
     // Process a request coming from the client.
     fn process_msg(&mut self, context: &cubeb::Context, msg: &ServerMessage) -> ClientMessage {
         let resp: ClientMessage = match *msg {
-            ServerMessage::ClientConnect => panic!("already connected"),
+            ServerMessage::ClientConnect(pid) => {
+                self.remote_pid = Some(pid);
+                ClientMessage::ClientConnected
+            }
 
             ServerMessage::ClientDisconnect => {
                 // TODO:
@@ -304,7 +307,7 @@ impl CubebServer {
         let input_frame_size = frame_size_in_bytes(params.input_stream_params.as_ref());
         let output_frame_size = frame_size_in_bytes(params.output_stream_params.as_ref());
 
-        let (stm1, stm2) = net::UnixStream::pair()?;
+        let (stm1, stm2) = MessageStream::anonymous_ipc_pair()?;
         debug!("Created callback pair: {:?}-{:?}", stm1, stm2);
         let (input_shm, input_file) =
             SharedMemWriter::new(&audioipc::get_shm_path("input"), SHM_AREA_SIZE)?;
@@ -323,7 +326,7 @@ impl CubebServer {
             // Ensure we're running on a loop different to the one
             // invoking spawn_fn.
             assert_ne!(id, handle.id());
-            let stream = UnixStream::from_stream(stm2, handle).unwrap();
+            let stream = stm2.into_tokio_ipc(handle).unwrap();
             let transport = framed(stream, Default::default());
             let rpc = rpc::bind_client::<CallbackClient>(transport, handle);
             drop(tx.send(rpc));
@@ -402,11 +405,12 @@ impl CubebServer {
 
                     Ok(ClientMessage::StreamCreated(StreamCreate {
                         token: stm_tok,
-                        fds: [
-                            stm1.into_raw_fd(),
-                            input_file.into_raw_fd(),
-                            output_file.into_raw_fd(),
+                        platform_handles: [
+                            PlatformHandle::from(stm1),
+                            PlatformHandle::from(input_file),
+                            PlatformHandle::from(output_file),
                         ],
+                        target_pid: self.remote_pid.unwrap()
                     }))
                 }).map_err(|e| e.into())
         }

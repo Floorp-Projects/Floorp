@@ -180,7 +180,6 @@ nsFrameLoader::nsFrameLoader(Element* aOwner, nsPIDOMWindowOuter* aOpener,
       mLoadingOriginalSrc(false),
       mRemoteBrowserShown(false),
       mRemoteFrame(false),
-      mClampScrollPosition(true),
       mObservingOwnerContent(false) {
   mRemoteFrame = ShouldUseRemoteProcess();
   MOZ_ASSERT(!mRemoteFrame || !aOpener,
@@ -2367,28 +2366,6 @@ uint32_t nsFrameLoader::LazyHeight() const {
   }
 
   return lazyHeight;
-}
-
-void nsFrameLoader::SetClampScrollPosition(bool aClamp) {
-  mClampScrollPosition = aClamp;
-
-  // When turning clamping on, make sure the current position is clamped.
-  if (aClamp) {
-    nsIFrame* frame = GetPrimaryFrameOfOwningContent();
-    nsSubDocumentFrame* subdocFrame = do_QueryFrame(frame);
-    if (subdocFrame) {
-      nsIFrame* subdocRootFrame = subdocFrame->GetSubdocumentRootFrame();
-      if (subdocRootFrame) {
-        nsIScrollableFrame* subdocRootScrollFrame =
-            subdocRootFrame->PresShell()->GetRootScrollFrameAsScrollable();
-        if (subdocRootScrollFrame) {
-          subdocRootScrollFrame->ScrollTo(
-              subdocRootScrollFrame->GetScrollPosition(),
-              nsIScrollableFrame::INSTANT);
-        }
-      }
-    }
-  }
 }
 
 static Tuple<ContentParent*, TabParent*> GetContentParent(Element* aBrowser) {

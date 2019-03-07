@@ -228,10 +228,10 @@ void FontFaceSet::ParseFontShorthandForMatching(
       aStyle = FontSlantStyle::Italic();
       break;
     case StyleComputedFontStyleDescriptor::Tag::Oblique:
-      MOZ_ASSERT(style.oblique._0 == style.oblique._1,
+      MOZ_ASSERT(style.AsOblique()._0 == style.AsOblique()._1,
                  "We use ComputedFontStyleDescriptor just for convenience, "
                  "the two values should always match");
-      aStyle = FontSlantStyle::Oblique(style.oblique._0);
+      aStyle = FontSlantStyle::Oblique(style.AsOblique()._0);
       break;
   }
 
@@ -961,8 +961,8 @@ static SlantStyleRange GetStyleRangeForDescriptor(
     case StyleComputedFontStyleDescriptor::Tag::Italic:
       return SlantStyleRange(FontSlantStyle::Italic());
     case StyleComputedFontStyleDescriptor::Tag::Oblique:
-      return SlantStyleRange(FontSlantStyle::Oblique(val.oblique._0),
-                             FontSlantStyle::Oblique(val.oblique._1));
+      return SlantStyleRange(FontSlantStyle::Oblique(val.AsOblique()._0),
+                             FontSlantStyle::Oblique(val.AsOblique()._1));
   }
   MOZ_ASSERT_UNREACHABLE("How?");
   return SlantStyleRange(FontSlantStyle::Normal());
@@ -1046,7 +1046,7 @@ FontFaceSet::FindOrCreateUserFontEntryFromFontFace(
       const auto& component = sourceListComponents[i];
       switch (component.tag) {
         case StyleFontFaceSourceListComponent::Tag::Local: {
-          nsAtom* atom = component.local._0;
+          nsAtom* atom = component.AsLocal();
           face->mLocalName.Append(nsAtomCString(atom));
           face->mSourceType = gfxFontFaceSrc::eSourceType_Local;
           face->mURI = nullptr;
@@ -1056,7 +1056,7 @@ FontFaceSet::FindOrCreateUserFontEntryFromFontFace(
         }
         case StyleFontFaceSourceListComponent::Tag::Url: {
           face->mSourceType = gfxFontFaceSrc::eSourceType_URL;
-          const URLValue* url = component.url._0;
+          const URLValue* url = component.AsUrl();
           nsIURI* uri = url->GetURI();
           face->mURI = uri ? new gfxFontSrcURI(uri) : nullptr;
           URLExtraData* extraData = url->ExtraData();

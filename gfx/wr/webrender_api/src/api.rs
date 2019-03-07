@@ -1008,6 +1008,7 @@ impl RenderApiSender {
 }
 
 bitflags! {
+    #[repr(C)]
     #[derive(Default, Deserialize, MallocSizeOf, Serialize)]
     pub struct DebugFlags: u32 {
         /// Display the frame profiler on screen.

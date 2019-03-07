@@ -43,8 +43,6 @@ FEATURE_CHECK_NEEDED = {
     "BigInt": "!this.hasOwnProperty('BigInt')",
     "SharedArrayBuffer": "!this.hasOwnProperty('SharedArrayBuffer')",
     "dynamic-import": "!xulRuntime.shell",
-    "String.prototype.matchAll": "!String.prototype.hasOwnProperty('matchAll')",
-    "Symbol.matchAll": "!Symbol.hasOwnProperty('matchAll')",
 }
 RELEASE_OR_BETA = set()
 
@@ -297,6 +295,11 @@ def convertTestFile(test262parser, testSource, testName, includeSet, strictTests
                                                  for f in featureCheckNeeded]),
                                       "%s is not enabled unconditionally" % ",".join(
                                           featureCheckNeeded)))
+
+            if "Atomics" in testRec["features"] and "SharedArrayBuffer" in testRec["features"]:
+                refTestSkipIf.append(("(this.hasOwnProperty('getBuildConfiguration')"
+                                      "&&getBuildConfiguration()['arm64-simulator'])",
+                                     "ARM64 Simulator cannot emulate atomics"))
 
     # Includes for every test file in a directory is collected in a single
     # shell.js file per directory level. This is done to avoid adding all

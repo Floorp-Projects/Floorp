@@ -8,8 +8,7 @@ use bytes::{Bytes, BytesMut, IntoBuf};
 use cmsg;
 use codec::Codec;
 use futures::{AsyncSink, Poll, Sink, StartSend, Stream};
-use libc;
-use messages::AssocRawFd;
+use messages::AssocRawPlatformHandle;
 use std::collections::VecDeque;
 use std::os::unix::io::RawFd;
 use std::{fmt, io, mem};
@@ -66,7 +65,7 @@ struct Frame {
 
 /// A unified `Stream` and `Sink` interface over an I/O object, using
 /// the `Codec` trait to encode and decode the payload.
-pub struct FramedWithFds<A, C> {
+pub struct FramedWithPlatformHandles<A, C> {
     io: A,
     codec: C,
     // Stream
@@ -80,7 +79,7 @@ pub struct FramedWithFds<A, C> {
     outgoing_fds: BytesMut,
 }
 
-impl<A, C> FramedWithFds<A, C>
+impl<A, C> FramedWithPlatformHandles<A, C>
 where
     A: AsyncSendMsg,
 {
@@ -162,11 +161,11 @@ where
     }
 }
 
-impl<A, C> Stream for FramedWithFds<A, C>
+impl<A, C> Stream for FramedWithPlatformHandles<A, C>
 where
     A: AsyncRecvMsg,
     C: Codec,
-    C::Out: AssocRawFd,
+    C::Out: AssocRawPlatformHandle,
 {
     type Item = C::Out;
     type Error = io::Error;
@@ -181,7 +180,7 @@ where
             if self.is_readable {
                 if self.eof {
                     let mut item = try!(self.codec.decode_eof(&mut self.read_buf));
-                    item.take_fd(|| self.incoming_fds.take_fds());
+                    item.take_platform_handles(|| self.incoming_fds.take_fds());
                     return Ok(Some(item).into());
                 }
 
@@ -189,7 +188,7 @@ where
 
                 if let Some(mut item) = try!(self.codec.decode(&mut self.read_buf)) {
                     trace!("frame decoded from buffer");
-                    item.take_fd(|| self.incoming_fds.take_fds());
+                    item.take_platform_handles(|| self.incoming_fds.take_fds());
                     return Ok(Some(item).into());
                 }
 
@@ -206,10 +205,6 @@ where
                     .recv_msg_buf(&mut self.read_buf, self.incoming_fds.cmsg())
             );
 
-            // if flags != 0 {
-            //     error!("recv_msg_buf: flags = {:x}", flags)
-            // }
-
             if n == 0 {
                 self.eof = true;
             }
@@ -219,11 +214,11 @@ where
     }
 }
 
-impl<A, C> Sink for FramedWithFds<A, C>
+impl<A, C> Sink for FramedWithPlatformHandles<A, C>
 where
     A: AsyncSendMsg,
     C: Codec,
-    C::In: AssocRawFd + fmt::Debug,
+    C::In: AssocRawPlatformHandle + fmt::Debug,
 {
     type SinkItem = C::In;
     type SinkError = io::Error;
@@ -241,11 +236,11 @@ where
             }
         }
 
-        let fds = item.fd();
+        let fds = item.platform_handles();
         try!(self.codec.encode(item, &mut self.write_buf));
         let fds = fds.and_then(|fds| {
             cmsg::builder(&mut self.outgoing_fds)
-                .rights(&fds[..])
+                .rights(&fds.0[..])
                 .finish()
                 .ok()
         });
@@ -278,8 +273,8 @@ where
     }
 }
 
-pub fn framed_with_fds<A, C>(io: A, codec: C) -> FramedWithFds<A, C> {
-    FramedWithFds {
+pub fn framed_with_platformhandles<A, C>(io: A, codec: C) -> FramedWithPlatformHandles<A, C> {
+    FramedWithPlatformHandles {
         io: io,
         codec: codec,
         read_buf: BytesMut::with_capacity(INITIAL_CAPACITY),
@@ -307,7 +302,7 @@ where
 fn close_fds(fds: &[RawFd]) {
     for fd in fds {
         unsafe {
-            libc::close(*fd);
+            super::close_platformhandle(*fd);
         }
     }
 }
@@ -315,15 +310,26 @@ fn close_fds(fds: &[RawFd]) {
 #[cfg(test)]
 mod tests {
     use bytes::BufMut;
+    use libc;
+    use std;
 
-    const CMSG_BYTES: &[u8] =
-        b"\x1c\0\0\0\0\0\0\0\x01\0\0\0\x01\0\0\02\0\0\0[\0\0\0\\\0\0\0\xe5\xe5\xe5\xe5";
+    extern {
+        fn cmsghdr_bytes(size: *mut libc::size_t) -> *const libc::uint8_t;
+    }
+
+    fn cmsg_bytes() -> &'static [u8] {
+        let mut size = 0;
+        unsafe {
+            let ptr = cmsghdr_bytes(&mut size);
+            std::slice::from_raw_parts(ptr, size)
+        }
+    }
 
     #[test]
     fn single_cmsg() {
         let mut incoming = super::IncomingFds::new(16);
 
-        incoming.cmsg().put_slice(CMSG_BYTES);
+        incoming.cmsg().put_slice(cmsg_bytes());
         assert!(incoming.take_fds().is_some());
         assert!(incoming.take_fds().is_none());
     }
@@ -332,9 +338,9 @@ mod tests {
     fn multiple_cmsg_1() {
         let mut incoming = super::IncomingFds::new(16);
 
-        incoming.cmsg().put_slice(CMSG_BYTES);
+        incoming.cmsg().put_slice(cmsg_bytes());
         assert!(incoming.take_fds().is_some());
-        incoming.cmsg().put_slice(CMSG_BYTES);
+        incoming.cmsg().put_slice(cmsg_bytes());
         assert!(incoming.take_fds().is_some());
         assert!(incoming.take_fds().is_none());
     }
@@ -342,11 +348,12 @@ mod tests {
     #[test]
     fn multiple_cmsg_2() {
         let mut incoming = super::IncomingFds::new(16);
+        println!("cmsg_bytes() {}", cmsg_bytes().len());
 
-        incoming.cmsg().put_slice(CMSG_BYTES);
-        incoming.cmsg().put_slice(CMSG_BYTES);
+        incoming.cmsg().put_slice(cmsg_bytes());
+        incoming.cmsg().put_slice(cmsg_bytes());
         assert!(incoming.take_fds().is_some());
-        incoming.cmsg().put_slice(CMSG_BYTES);
+        incoming.cmsg().put_slice(cmsg_bytes());
         assert!(incoming.take_fds().is_some());
         assert!(incoming.take_fds().is_some());
         assert!(incoming.take_fds().is_none());

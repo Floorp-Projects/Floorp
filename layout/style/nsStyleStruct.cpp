@@ -315,10 +315,10 @@ nsMargin nsStyleBorder::GetImageOutset() const {
     const auto& coord = mBorderImageOutset.Get(s);
     nscoord value;
     if (coord.IsLength()) {
-      value = coord.length._0.ToAppUnits();
+      value = coord.AsLength().ToAppUnits();
     } else {
       MOZ_ASSERT(coord.IsNumber());
-      value = coord.number._0 * mComputedBorder.Side(s);
+      value = coord.AsNumber() * mComputedBorder.Side(s);
     }
     outset.Side(s) = value;
   }

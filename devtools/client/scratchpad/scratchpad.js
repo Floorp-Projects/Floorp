@@ -1089,16 +1089,28 @@ var Scratchpad = {
    *
    * @param integer aIndex
    *        Optional integer: clicked menuitem in the 'Open Recent'-menu.
+   *        If omitted, prompt the user to pick a file to open.
+   *
+   * @return Promise
+   *        A Promise that resolves to undefined when the file is opened (or
+   *        can't be opened), or when the user cancels the file picker dialog.
+   *        This method effectively catches all errors and reports them to the
+   *        notificationBox, so the promise never becomes rejected.
    */
-  openFile: function SP_openFile(aIndex) {
-    const promptCallback = aFile => {
-      this.promptSave((aCloseFile, aSaved, aStatus) => {
-        let shouldOpen = aCloseFile;
-        if (aSaved && !Components.isSuccessCode(aStatus)) {
-          shouldOpen = false;
-        }
+  openFile(aIndex) {
+    return new Promise(resolve => {
+      const promptCallback = aFile => {
+        this.promptSave((aCloseFile, aSaved, aStatus) => {
+          let shouldOpen = aCloseFile;
+          if (aSaved && !Components.isSuccessCode(aStatus)) {
+            shouldOpen = false;
+          }
 
-        if (shouldOpen) {
+          if (!shouldOpen) {
+            resolve();
+            return;
+          }
+
           let file;
           if (aFile) {
             file = aFile;
@@ -1118,29 +1130,32 @@ var Scratchpad = {
               null);
 
             this.clearFiles(aIndex, 1);
+            resolve();
             return;
           }
 
-          this.importFromFile(file, false);
-        }
-      });
-    };
+          this.importFromFile(file, false).finally(_ => resolve());
+        });
+      };
 
-    if (aIndex > -1) {
-      promptCallback();
-    } else {
-      const fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
-      fp.init(window, this.strings.GetStringFromName("openFile.title"),
-              Ci.nsIFilePicker.modeOpen);
-      fp.defaultString = "";
-      fp.appendFilter("JavaScript Files", "*.js; *.jsm; *.json");
-      fp.appendFilter("All Files", "*.*");
-      fp.open(aResult => {
-        if (aResult != Ci.nsIFilePicker.returnCancel) {
-          promptCallback(fp.file);
-        }
-      });
-    }
+      if (aIndex > -1) {
+        promptCallback();
+      } else {
+        const fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
+        fp.init(window, this.strings.GetStringFromName("openFile.title"),
+                Ci.nsIFilePicker.modeOpen);
+        fp.defaultString = "";
+        fp.appendFilter("JavaScript Files", "*.js; *.jsm; *.json");
+        fp.appendFilter("All Files", "*.*");
+        fp.open(aResult => {
+          if (aResult == Ci.nsIFilePicker.returnCancel) {
+            resolve();
+          } else {
+            promptCallback(fp.file);
+          }
+        });
+      }
+    });
   },
 
   /**
