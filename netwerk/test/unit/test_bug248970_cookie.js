@@ -63,10 +63,8 @@ function setHandler(metadata, response) {
 
 function run_test() {
   // Allow all cookies if the pref service is available in this process.
-  if (!inChildProcess()) {
+  if (!inChildProcess())
     Services.prefs.setIntPref("network.cookie.cookieBehavior", 0);
-    Services.prefs.setBoolPref("network.cookieSettings.unblocked_for_testing", true);
-  }
 
   httpserver = new HttpServer();
   httpserver.registerPathHandler("/set", setHandler);
