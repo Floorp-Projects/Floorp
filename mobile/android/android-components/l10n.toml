@@ -14,6 +14,10 @@ locales = [
 [env]
 
 [[paths]]
+  reference = "components/browser/engine-system/src/main/res/values/strings.xml"
+  l10n = "components/browser/engine-system/src/main/res/values-{android_locale}/strings.xml"
+
+[[paths]]
   reference = "components/browser/errorpages/src/main/res/values/strings.xml"
   l10n = "components/browser/errorpages/src/main/res/values-{android_locale}/strings.xml"
 
@@ -26,6 +30,10 @@ locales = [
   l10n = "components/feature/contextmenu/src/main/res/values-{android_locale}/strings.xml"
 
 [[paths]]
+  reference = "components/feature/customtabs/src/main/res/values/strings.xml"
+  l10n = "components/feature/customtabs/src/main/res/values-{android_locale}/strings.xml"
+
+[[paths]]
   reference = "components/feature/downloads/src/main/res/values/strings.xml"
   l10n = "components/feature/downloads/src/main/res/values-{android_locale}/strings.xml"
 
@@ -34,12 +42,24 @@ locales = [
   l10n = "components/feature/findinpage/src/main/res/values-{android_locale}/strings.xml"
 
 [[paths]]
+  reference = "components/feature/prompts/src/main/res/values/strings.xml"
+  l10n = "components/feature/prompts/src/main/res/values-{android_locale}/strings.xml"
+
+[[paths]]
   reference = "components/feature/sitepermissions/src/main/res/values/strings.xml"
   l10n = "components/feature/sitepermissions/src/main/res/values-{android_locale}/strings.xml"
 
 [[paths]]
   reference = "components/feature/tabs/src/main/res/values/strings.xml"
   l10n = "components/feature/tabs/src/main/res/values-{android_locale}/strings.xml"
+
+[[paths]]
+  reference = "components/lib/crash/src/main/res/values/strings.xml"
+  l10n = "components/lib/crash/src/main/res/values-{android_locale}/strings.xml"
+
+[[paths]]
+  reference = "components/support/ktx/src/main/res/values/strings.xml"
+  l10n = "components/support/ktx/src/main/res/values-{android_locale}/strings.xml"
 
 [[paths]]
   reference = "components/ui/tabcounter/src/main/res/values/strings.xml"
