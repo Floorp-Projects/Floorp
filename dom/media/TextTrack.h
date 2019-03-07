@@ -102,6 +102,11 @@ class TextTrack final : public DOMEventTargetHelper {
   // would add or remove the cue to the active cue list.
   void NotifyCueActiveStateChanged(TextTrackCue* aCue);
 
+  // Use this function to request current cues which start time are less than or
+  // equal to the current playback position and whose end times are greater than
+  // the current playback position.
+  void GetCurrentCueList(RefPtr<TextTrackCueList>& aCueList) const;
+
  private:
   ~TextTrack();
 
