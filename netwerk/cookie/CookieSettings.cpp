@@ -40,10 +40,29 @@ class PermissionComparator {
   }
 };
 
+class ReleaseCookiePermissions final : public Runnable {
+ public:
+  explicit ReleaseCookiePermissions(nsTArray<RefPtr<nsIPermission>>& aArray)
+      : Runnable("ReleaseCookiePermissions") {
+    mArray.SwapElements(aArray);
+  }
+
+  NS_IMETHOD Run() override {
+    MOZ_ASSERT(NS_IsMainThread());
+    mArray.Clear();
+    return NS_OK;
+  }
+
+ private:
+  nsTArray<RefPtr<nsIPermission>> mArray;
+};
+
 }  // namespace
 
 // static
 already_AddRefed<nsICookieSettings> CookieSettings::CreateBlockingAll() {
+  MOZ_ASSERT(NS_IsMainThread());
+
   RefPtr<CookieSettings> cookieSettings =
       new CookieSettings(nsICookieService::BEHAVIOR_REJECT, eFixed);
   return cookieSettings.forget();
@@ -51,15 +70,30 @@ already_AddRefed<nsICookieSettings> CookieSettings::CreateBlockingAll() {
 
 // static
 already_AddRefed<nsICookieSettings> CookieSettings::Create() {
+  MOZ_ASSERT(NS_IsMainThread());
+
   RefPtr<CookieSettings> cookieSettings = new CookieSettings(
       StaticPrefs::network_cookie_cookieBehavior(), eProgressive);
   return cookieSettings.forget();
 }
 
 CookieSettings::CookieSettings(uint32_t aCookieBehavior, State aState)
-    : mCookieBehavior(aCookieBehavior), mState(aState) {}
+    : mCookieBehavior(aCookieBehavior), mState(aState) {
+  MOZ_ASSERT(NS_IsMainThread());
+}
 
-CookieSettings::~CookieSettings() = default;
+CookieSettings::~CookieSettings() {
+  if (!NS_IsMainThread() && !mCookiePermissions.IsEmpty()) {
+    nsCOMPtr<nsIEventTarget> systemGroupEventTarget =
+        mozilla::SystemGroup::EventTargetFor(mozilla::TaskCategory::Other);
+    MOZ_ASSERT(systemGroupEventTarget);
+
+    RefPtr<Runnable> r = new ReleaseCookiePermissions(mCookiePermissions);
+    MOZ_ASSERT(mCookiePermissions.IsEmpty());
+
+    systemGroupEventTarget->Dispatch(r.forget());
+  }
+}
 
 NS_IMETHODIMP
 CookieSettings::GetCookieBehavior(uint32_t* aCookieBehavior) {
@@ -70,6 +104,7 @@ CookieSettings::GetCookieBehavior(uint32_t* aCookieBehavior) {
 NS_IMETHODIMP
 CookieSettings::CookiePermission(nsIPrincipal* aPrincipal,
                                  uint32_t* aCookiePermission) {
+  MOZ_ASSERT(NS_IsMainThread());
   NS_ENSURE_ARG_POINTER(aPrincipal);
   NS_ENSURE_ARG_POINTER(aCookiePermission);
 
@@ -118,6 +153,8 @@ CookieSettings::CookiePermission(nsIPrincipal* aPrincipal,
 }
 
 void CookieSettings::Serialize(CookieSettingsArgs& aData) {
+  MOZ_ASSERT(NS_IsMainThread());
+
   aData.isFixed() = mState == eFixed;
   aData.cookieBehavior() = mCookieBehavior;
 
@@ -147,6 +184,8 @@ void CookieSettings::Serialize(CookieSettingsArgs& aData) {
 
 /* static */ void CookieSettings::Deserialize(
     const CookieSettingsArgs& aData, nsICookieSettings** aCookieSettings) {
+  MOZ_ASSERT(NS_IsMainThread());
+
   CookiePermissionList list;
   for (const CookiePermissionData& data : aData.cookiePermissions()) {
     nsCOMPtr<nsIPrincipal> principal =
@@ -173,6 +212,7 @@ void CookieSettings::Serialize(CookieSettingsArgs& aData) {
 }
 
 void CookieSettings::Merge(const CookieSettingsArgs& aData) {
+  MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mCookieBehavior == aData.cookieBehavior());
 
   if (mState == eFixed) {
