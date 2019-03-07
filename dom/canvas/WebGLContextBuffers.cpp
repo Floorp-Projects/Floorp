@@ -303,10 +303,13 @@ void WebGLContext::BufferData(GLenum target, WebGLsizeiptr size, GLenum usage) {
 
   ////
 
-  const UniqueBuffer zeroBuffer(calloc(size, 1));
+  const auto checkedSize = CheckedInt<size_t>(size);
+  if (!checkedSize.isValid()) return ErrorOutOfMemory("size too large for platform.");
+
+  const UniqueBuffer zeroBuffer(calloc(checkedSize.value(), 1u));
   if (!zeroBuffer) return ErrorOutOfMemory("Failed to allocate zeros.");
 
-  BufferDataImpl(target, size_t(size), (const uint8_t*)zeroBuffer.get(), usage);
+  BufferDataImpl(target, checkedSize.value(), (const uint8_t*)zeroBuffer.get(), usage);
 }
 
 void WebGLContext::BufferData(GLenum target,
