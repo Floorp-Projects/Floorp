@@ -185,7 +185,7 @@ add_task(async function() {
       case "xml": {
         checkVisibility("textarea");
 
-        const text = document.querySelector(".CodeMirror-line").textContent;
+        const text = getCodeMirrorValue(monitor);
 
         is(text, "<label value='greeting'>Hello XML!</label>",
           "The text shown in the source editor is incorrect for the xml request.");
@@ -194,7 +194,7 @@ add_task(async function() {
       case "css": {
         checkVisibility("textarea");
 
-        const text = document.querySelector(".CodeMirror-line").textContent;
+        const text = getCodeMirrorValue(monitor);
 
         is(text, "body:pre { content: 'Hello CSS!' }",
           "The text shown in the source editor is incorrect for the css request.");
@@ -203,7 +203,7 @@ add_task(async function() {
       case "js": {
         checkVisibility("textarea");
 
-        const text = document.querySelector(".CodeMirror-line").textContent;
+        const text = getCodeMirrorValue(monitor);
 
         is(text, "function() { return 'Hello JS!'; }",
           "The text shown in the source editor is incorrect for the js request.");
@@ -235,7 +235,7 @@ add_task(async function() {
       case "html": {
         checkVisibility("textarea");
 
-        const text = document.querySelector(".CodeMirror-line").textContent;
+        const text = getCodeMirrorValue(monitor);
 
         is(text, "<blink>Not Found</blink>",
           "The text shown in the source editor is incorrect for the html request.");
@@ -258,7 +258,7 @@ add_task(async function() {
       case "gzip": {
         checkVisibility("textarea");
 
-        const text = document.querySelector(".CodeMirror-line").textContent;
+        const text = getCodeMirrorValue(monitor);
 
         is(text, new Array(1000).join("Hello gzip!"),
           "The text shown in the source editor is incorrect for the gzip request.");

@@ -75,7 +75,7 @@ add_task(async function() {
   return teardown(monitor);
 
   function testEditorContent([ fmt, textRe ]) {
-    ok(document.querySelector(".CodeMirror-line").textContent.match(textRe),
+    ok(getCodeMirrorValue(monitor).match(textRe),
       "The text shown in the source editor for " + fmt + " is correct.");
   }
 });

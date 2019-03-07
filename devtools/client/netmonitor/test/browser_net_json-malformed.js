@@ -67,8 +67,7 @@ add_task(async function() {
   is(tabpanel.querySelector(".response-image-box") === null, true,
     "The response image box doesn't have the intended visibility.");
 
-  is(document.querySelector(".CodeMirror-line").textContent,
-    "{ \"greeting\": \"Hello malformed JSON!\" },",
+  is(getCodeMirrorValue(monitor), "{ \"greeting\": \"Hello malformed JSON!\" },",
     "The text shown in the source editor is incorrect.");
 
   await teardown(monitor);
