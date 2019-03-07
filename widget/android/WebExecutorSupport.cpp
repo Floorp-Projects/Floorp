@@ -22,7 +22,6 @@
 #include "nsIDNSRecord.h"
 
 #include "mozilla/net/DNS.h"  // for NetAddr
-#include "mozilla/net/CookieSettings.h"
 
 #include "nsNetUtil.h"  // for NS_NewURI, NS_NewChannel, NS_NewStreamLoader
 
@@ -443,12 +442,6 @@ nsresult WebExecutorSupport::CreateStreamLoader(
   if (aFlags & java::GeckoWebExecutor::FETCH_FLAGS_ANONYMOUS) {
     channel->SetLoadFlags(nsIRequest::LOAD_ANONYMOUS);
   }
-
-  nsCOMPtr<nsICookieSettings> cookieSettings = CookieSettings::Create();
-  MOZ_ASSERT(cookieSettings);
-
-  nsCOMPtr<nsILoadInfo> loadInfo = channel->LoadInfo();
-  loadInfo->SetCookieSettings(cookieSettings);
 
   nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(channel, &rv));
   NS_ENSURE_SUCCESS(rv, rv);
