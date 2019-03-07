@@ -5320,8 +5320,8 @@ nsresult ContentParent::AboutToLoadHttpFtpDocumentForChild(
 
     nsCOMPtr<nsISupports> dummy;
     rv = lsm->Preload(principal, nullptr, getter_AddRefs(dummy));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+    if (NS_FAILED(rv)) {
+      NS_WARNING("Failed to preload local storage!");
     }
   }
 

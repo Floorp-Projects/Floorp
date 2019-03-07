@@ -220,10 +220,9 @@ nsresult LSObject::CreateForWindow(nsPIDOMWindowInner* aWindow,
   // localStorage is not available on some pages on purpose, for example
   // about:home. Match the old implementation by using GenerateOriginKey
   // for the check.
-  nsCString dummyOriginAttrSuffix;
-  nsCString dummyOriginKey;
-  nsresult rv =
-      GenerateOriginKey(principal, dummyOriginAttrSuffix, dummyOriginKey);
+  nsCString originAttrSuffix;
+  nsCString originKey;
+  nsresult rv = GenerateOriginKey(principal, originAttrSuffix, originKey);
   if (NS_FAILED(rv)) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -236,17 +235,31 @@ nsresult LSObject::CreateForWindow(nsPIDOMWindowInner* aWindow,
 
   MOZ_ASSERT(principalInfo->type() == PrincipalInfo::TContentPrincipalInfo);
 
+  if (NS_WARN_IF(!QuotaManager::IsPrincipalInfoValid(*principalInfo))) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCString suffix;
   nsCString origin;
-  rv = QuotaManager::GetInfoFromPrincipal(principal, nullptr, nullptr, &origin);
+  rv = QuotaManager::GetInfoFromPrincipal(principal, &suffix, nullptr, &origin);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
+
+  MOZ_ASSERT(originAttrSuffix == suffix);
 
   uint32_t privateBrowsingId;
   rv = principal->GetPrivateBrowsingId(&privateBrowsingId);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
+
+  Maybe<ClientInfo> clientInfo = aWindow->GetClientInfo();
+  if (clientInfo.isNothing()) {
+    return NS_ERROR_FAILURE;
+  }
+
+  Maybe<nsID> clientId = Some(clientInfo.ref().Id());
 
   nsString documentURI;
   if (nsCOMPtr<Document> doc = aWindow->GetExtantDoc()) {
@@ -259,7 +272,9 @@ nsresult LSObject::CreateForWindow(nsPIDOMWindowInner* aWindow,
   RefPtr<LSObject> object = new LSObject(aWindow, principal);
   object->mPrincipalInfo = std::move(principalInfo);
   object->mPrivateBrowsingId = privateBrowsingId;
+  object->mClientId = clientId;
   object->mOrigin = origin;
+  object->mOriginKey = originKey;
   object->mDocumentURI = documentURI;
 
   object.forget(aStorage);
@@ -275,10 +290,9 @@ nsresult LSObject::CreateForPrincipal(nsPIDOMWindowInner* aWindow,
   MOZ_ASSERT(aPrincipal);
   MOZ_ASSERT(aObject);
 
-  nsCString dummyOriginAttrSuffix;
-  nsCString dummyOriginKey;
-  nsresult rv =
-      GenerateOriginKey(aPrincipal, dummyOriginAttrSuffix, dummyOriginKey);
+  nsCString originAttrSuffix;
+  nsCString originKey;
+  nsresult rv = GenerateOriginKey(aPrincipal, originAttrSuffix, originKey);
   if (NS_FAILED(rv)) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -292,22 +306,41 @@ nsresult LSObject::CreateForPrincipal(nsPIDOMWindowInner* aWindow,
   MOZ_ASSERT(principalInfo->type() == PrincipalInfo::TContentPrincipalInfo ||
              principalInfo->type() == PrincipalInfo::TSystemPrincipalInfo);
 
+  if (NS_WARN_IF(!QuotaManager::IsPrincipalInfoValid(*principalInfo))) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCString suffix;
   nsCString origin;
 
   if (principalInfo->type() == PrincipalInfo::TSystemPrincipalInfo) {
-    QuotaManager::GetInfoForChrome(nullptr, nullptr, &origin);
+    QuotaManager::GetInfoForChrome(&suffix, nullptr, &origin);
   } else {
-    rv = QuotaManager::GetInfoFromPrincipal(aPrincipal, nullptr, nullptr,
+    rv = QuotaManager::GetInfoFromPrincipal(aPrincipal, &suffix, nullptr,
                                             &origin);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
   }
 
+  MOZ_ASSERT(originAttrSuffix == suffix);
+
+  Maybe<nsID> clientId;
+  if (aWindow) {
+    Maybe<ClientInfo> clientInfo = aWindow->GetClientInfo();
+    if (clientInfo.isNothing()) {
+      return NS_ERROR_FAILURE;
+    }
+
+    clientId = Some(clientInfo.ref().Id());
+  }
+
   RefPtr<LSObject> object = new LSObject(aWindow, aPrincipal);
   object->mPrincipalInfo = std::move(principalInfo);
   object->mPrivateBrowsingId = aPrivate ? 1 : 0;
+  object->mClientId = clientId;
   object->mOrigin = origin;
+  object->mOriginKey = originKey;
   object->mDocumentURI = aDocumentURI;
 
   object.forget(aObject);
@@ -732,9 +765,13 @@ nsresult LSObject::EnsureDatabase() {
     return NS_ERROR_FAILURE;
   }
 
+  LSRequestCommonParams commonParams;
+  commonParams.principalInfo() = *mPrincipalInfo;
+  commonParams.originKey() = mOriginKey;
+
   LSRequestPrepareDatastoreParams params;
-  params.principalInfo() = *mPrincipalInfo;
-  params.createIfNotExists() = true;
+  params.commonParams() = commonParams;
+  params.clientId() = mClientId;
 
   LSRequestResponse response;
 
@@ -749,10 +786,7 @@ nsresult LSObject::EnsureDatabase() {
   const LSRequestPrepareDatastoreResponse& prepareDatastoreResponse =
       response.get_LSRequestPrepareDatastoreResponse();
 
-  const NullableDatastoreId& datastoreId =
-      prepareDatastoreResponse.datastoreId();
-
-  MOZ_ASSERT(datastoreId.type() == NullableDatastoreId::Tuint64_t);
+  uint64_t datastoreId = prepareDatastoreResponse.datastoreId();
 
   // The datastore is now ready on the parent side (prepared by the asynchronous
   // request on the DOM File thread).
@@ -801,6 +835,7 @@ nsresult LSObject::EnsureObserver() {
 
   LSRequestPrepareObserverParams params;
   params.principalInfo() = *mPrincipalInfo;
+  params.clientId() = mClientId;
 
   LSRequestResponse response;
 
@@ -1012,20 +1047,22 @@ nsresult RequestHelper::StartAndReturnResponse(LSRequestResponse& aResponse) {
         return rv;
       }
 
-      MOZ_ALWAYS_TRUE(SpinEventLoopUntil([&]() {
-        if (!mWaiting) {
-          return true;
-        }
+      MOZ_ALWAYS_TRUE(SpinEventLoopUntil(
+          [&]() {
+            if (!mWaiting) {
+              return true;
+            }
 
-        {
-          StaticMutexAutoLock lock(gRequestHelperMutex);
-          if (NS_WARN_IF(gPendingSyncMessage)) {
-            return true;
-          }
-        }
+            {
+              StaticMutexAutoLock lock(gRequestHelperMutex);
+              if (NS_WARN_IF(gPendingSyncMessage)) {
+                return true;
+              }
+            }
 
-        return false;
-      }, thread));
+            return false;
+          },
+          thread));
     }
 
     // If mWaiting is still set to true, it means that the event loop spinning

@@ -91,7 +91,7 @@ class WasmToken {
     Float,
     Func,
     FuncRef,
-#ifdef ENABLE_WASM_REFTYPES
+#ifdef ENABLE_WASM_GC
     GcFeatureOptIn,
 #endif
     GetGlobal,
@@ -375,7 +375,7 @@ class WasmToken {
       case Float:
       case Func:
       case FuncRef:
-#ifdef ENABLE_WASM_REFTYPES
+#ifdef ENABLE_WASM_GC
       case GcFeatureOptIn:
 #endif
       case Global:
@@ -1335,7 +1335,7 @@ WasmToken WasmTokenStream::next() {
       break;
 
     case 'g':
-#ifdef ENABLE_WASM_REFTYPES
+#ifdef ENABLE_WASM_GC
       if (consume(u"gc_feature_opt_in")) {
         return WasmToken(WasmToken::GcFeatureOptIn, begin, cur_);
       }
@@ -4588,7 +4588,7 @@ static bool ParseMemory(WasmParseContext& c, AstModule* module) {
   return module->addMemory(name, memory);
 }
 
-#ifdef ENABLE_WASM_REFTYPES
+#ifdef ENABLE_WASM_GC
 // Custom section for experimental work.  The size of this section should always
 // be 1 byte, and that byte is a nonzero varint7 carrying the version number
 // being opted into.
@@ -4662,9 +4662,9 @@ static bool ParseElemType(WasmParseContext& c, TableKind* tableKind) {
     *tableKind = TableKind::AnyRef;
     return true;
   }
-  c.ts.generateError(token, "'anyfunc' or 'anyref' required", c.error);
+  c.ts.generateError(token, "'funcref' or 'anyref' required", c.error);
 #else
-  c.ts.generateError(token, "'anyfunc' required", c.error);
+  c.ts.generateError(token, "'funcref' required", c.error);
 #endif
   return false;
 }
@@ -4906,7 +4906,7 @@ static bool ParseTable(WasmParseContext& c, WasmToken token,
     }
   }
 
-  // Either: min max? anyfunc
+  // Either: min max? funcref
   if (c.ts.peek().kind() == WasmToken::Index) {
     TableKind tableKind;
     Limits table;
@@ -4916,7 +4916,7 @@ static bool ParseTable(WasmParseContext& c, WasmToken token,
     return module->addTable(name, table, tableKind);
   }
 
-  // Or: anyfunc (elem 1 2 ...)
+  // Or: funcref (elem 1 2 ...)
   TableKind tableKind;
   if (!ParseElemType(c, &tableKind)) {
     return false;
@@ -5142,7 +5142,7 @@ static AstModule* ParseModule(const char16_t* text, uintptr_t stackLimit,
         }
         break;
       }
-#ifdef ENABLE_WASM_REFTYPES
+#ifdef ENABLE_WASM_GC
       case WasmToken::GcFeatureOptIn: {
         if (!ParseGcFeatureOptIn(c, module)) {
           return nullptr;
@@ -6631,7 +6631,7 @@ static bool EncodeExpr(Encoder& e, AstExpr& expr) {
 /*****************************************************************************/
 // wasm AST binary serialization
 
-#ifdef ENABLE_WASM_REFTYPES
+#ifdef ENABLE_WASM_GC
 static bool EncodeGcFeatureOptInSection(Encoder& e, AstModule& module) {
   uint32_t optInVersion = module.gcFeatureOptIn();
   if (!optInVersion) {
@@ -7274,7 +7274,7 @@ static bool EncodeModule(AstModule& module, Uint32Vector* offsets,
     return false;
   }
 
-#ifdef ENABLE_WASM_REFTYPES
+#ifdef ENABLE_WASM_GC
   if (!EncodeGcFeatureOptInSection(e, module)) {
     return false;
   }

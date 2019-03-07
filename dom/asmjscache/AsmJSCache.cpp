@@ -1148,6 +1148,11 @@ PAsmJSCacheEntryParent* AllocEntryParent(OpenMode aOpenMode,
     return nullptr;
   }
 
+  if (NS_WARN_IF(!QuotaManager::IsPrincipalInfoValid(aPrincipalInfo))) {
+    MOZ_ASSERT(false);
+    return nullptr;
+  }
+
   RefPtr<ParentRunnable> runnable =
       new ParentRunnable(aPrincipalInfo, aOpenMode, aWriteParams);
 
@@ -1404,6 +1409,11 @@ ChildRunnable::Run() {
       nsAutoPtr<PrincipalInfo> principalInfo(new PrincipalInfo());
       nsresult rv = PrincipalToPrincipalInfo(mPrincipal, principalInfo);
       if (NS_WARN_IF(NS_FAILED(rv))) {
+        Fail(JS::AsmJSCache_InternalError);
+        return NS_OK;
+      }
+
+      if (NS_WARN_IF(!QuotaManager::IsPrincipalInfoValid(*principalInfo))) {
         Fail(JS::AsmJSCache_InternalError);
         return NS_OK;
       }

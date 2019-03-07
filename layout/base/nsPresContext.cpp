@@ -171,7 +171,6 @@ nsPresContext::nsPresContext(dom::Document* aDocument, nsPresContextType aType)
       mPendingInterruptFromTest(false),
       mInterruptsEnabled(false),
       mSendAfterPaintToContent(false),
-      mUseFocusColors(false),
       mDrawImageBackground(true),  // always draw the background
       mDrawColorBackground(true),
       // mNeverAnimate is initialised below, in constructor body

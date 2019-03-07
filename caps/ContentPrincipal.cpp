@@ -152,8 +152,8 @@ nsresult ContentPrincipal::GenerateOriginNoSuffixFromURI(
        // about:blank is special since it can be generated from different
        // sources. We check for moz-safe-about:blank since origin is an
        // innermost URI.
-       !origin->GetSpecOrDefault().EqualsLiteral("moz-safe-about:blank")) ||
-      (NS_SUCCEEDED(origin->SchemeIs("indexeddb", &isBehaved)) && isBehaved)) {
+       !StringBeginsWith(origin->GetSpecOrDefault(),
+                         NS_LITERAL_CSTRING("moz-safe-about:blank")))) {
     rv = origin->GetAsciiSpec(aOriginNoSuffix);
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -406,6 +406,13 @@ static nsresult GetSpecialBaseDomain(const nsCOMPtr<nsIURI>& aCodebase,
   }
 
   if (hasNoRelativeFlag) {
+    *aHandled = true;
+    return aCodebase->GetSpec(aBaseDomain);
+  }
+
+  bool isBehaved;
+  if (NS_SUCCEEDED(aCodebase->SchemeIs("indexeddb", &isBehaved)) &&
+      isBehaved) {
     *aHandled = true;
     return aCodebase->GetSpec(aBaseDomain);
   }

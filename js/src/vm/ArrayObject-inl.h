@@ -42,13 +42,15 @@ inline void ArrayObject::setLength(JSContext* cx, uint32_t length) {
   MOZ_ASSERT_IF(clasp->hasFinalize(), heap == gc::TenuredHeap);
   MOZ_ASSERT_IF(group->hasUnanalyzedPreliminaryObjects(),
                 heap == js::gc::TenuredHeap);
+  MOZ_ASSERT_IF(group->shouldPreTenureDontCheckGeneration(),
+                heap == gc::TenuredHeap);
 
   // Arrays can use their fixed slots to store elements, so can't have shapes
   // which allow named properties to be stored in the fixed slots.
   MOZ_ASSERT(shape->numFixedSlots() == 0);
 
   size_t nDynamicSlots = dynamicSlotsCount(0, shape->slotSpan(), clasp);
-  JSObject* obj = js::Allocate<JSObject>(cx, kind, nDynamicSlots, heap, clasp);
+  JSObject* obj = js::AllocateObject(cx, kind, nDynamicSlots, heap, clasp);
   if (!obj) {
     return nullptr;
   }

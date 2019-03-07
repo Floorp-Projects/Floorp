@@ -497,6 +497,11 @@ PBackgroundSDBConnectionParent* AllocPBackgroundSDBConnectionParent(
     return nullptr;
   }
 
+  if (NS_WARN_IF(!QuotaManager::IsPrincipalInfoValid(aPrincipalInfo))) {
+    ASSERT_UNLESS_FUZZING();
+    return nullptr;
+  }
+
   RefPtr<Connection> actor = new Connection(aPrincipalInfo);
 
   return actor.forget().take();

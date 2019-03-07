@@ -159,7 +159,7 @@ MOZ_ALWAYS_INLINE JSRope* JSRope::new_(
   if (!validateLength(cx, length)) {
     return nullptr;
   }
-  JSRope* str = js::Allocate<JSRope, allowGC>(cx, heap);
+  JSRope* str = js::AllocateString<JSRope, allowGC>(cx, heap);
   if (!str) {
     return nullptr;
   }
@@ -220,7 +220,7 @@ MOZ_ALWAYS_INLINE JSLinearString* JSDependentString::new_(
   }
 
   JSDependentString* str =
-      js::Allocate<JSDependentString, js::NoGC>(cx, js::gc::DefaultHeap);
+      js::AllocateString<JSDependentString, js::NoGC>(cx, js::gc::DefaultHeap);
   if (str) {
     str->init(cx, baseArg, start, length);
     return str;
@@ -228,7 +228,7 @@ MOZ_ALWAYS_INLINE JSLinearString* JSDependentString::new_(
 
   js::RootedLinearString base(cx, baseArg);
 
-  str = js::Allocate<JSDependentString>(cx, js::gc::DefaultHeap);
+  str = js::AllocateString<JSDependentString>(cx, js::gc::DefaultHeap);
   if (!str) {
     return nullptr;
   }
@@ -262,7 +262,7 @@ MOZ_ALWAYS_INLINE JSFlatString* JSFlatString::new_(JSContext* cx,
   if (cx->zone()->isAtomsZone()) {
     str = js::Allocate<js::NormalAtom, allowGC>(cx);
   } else {
-    str = js::Allocate<JSFlatString, allowGC>(cx, js::gc::DefaultHeap);
+    str = js::AllocateString<JSFlatString, allowGC>(cx, js::gc::DefaultHeap);
   }
   if (!str) {
     return nullptr;
@@ -308,7 +308,7 @@ MOZ_ALWAYS_INLINE JSThinInlineString* JSThinInlineString::new_(JSContext* cx) {
     return (JSThinInlineString*)(js::Allocate<js::NormalAtom, allowGC>(cx));
   }
 
-  return js::Allocate<JSThinInlineString, allowGC>(cx, js::gc::DefaultHeap);
+  return js::AllocateString<JSThinInlineString, allowGC>(cx, js::gc::DefaultHeap);
 }
 
 template <js::AllowGC allowGC>
@@ -317,7 +317,7 @@ MOZ_ALWAYS_INLINE JSFatInlineString* JSFatInlineString::new_(JSContext* cx) {
     return (JSFatInlineString*)(js::Allocate<js::FatInlineAtom, allowGC>(cx));
   }
 
-  return js::Allocate<JSFatInlineString, allowGC>(cx, js::gc::DefaultHeap);
+  return js::AllocateString<JSFatInlineString, allowGC>(cx, js::gc::DefaultHeap);
 }
 
 template <>

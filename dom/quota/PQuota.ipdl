@@ -10,11 +10,17 @@ include PBackgroundSharedTypes;
 
 include "mozilla/dom/quota/SerializationHelpers.h";
 
+using mozilla::OriginAttributesPattern
+  from "mozilla/OriginAttributes.h";
+
 using mozilla::dom::quota::PersistenceType
   from "mozilla/dom/quota/PersistenceType.h";
 
 using mozilla::dom::quota::Client::Type
   from "mozilla/dom/quota/Client.h";
+
+using mozilla::dom::ContentParentId
+  from "mozilla/dom/ipc/IdType.h";
 
 namespace mozilla {
 namespace dom {
@@ -73,7 +79,7 @@ struct ResetOriginParams
 
 struct ClearDataParams
 {
-  nsString pattern;
+  OriginAttributesPattern pattern;
 };
 
 struct ClearAllParams
@@ -125,6 +131,8 @@ parent:
   async StartIdleMaintenance();
 
   async StopIdleMaintenance();
+
+  async AbortOperationsForProcess(ContentParentId contentParentId);
 };
 
 } // namespace quota
