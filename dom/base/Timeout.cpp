@@ -49,6 +49,13 @@ void Timeout::SetWhenOrTimeRemaining(const TimeStamp& aBaseTime,
   MOZ_DIAGNOSTIC_ASSERT(mWindow);
   mSubmitTime = aBaseTime;
 
+  mSubmitTime = aBaseTime;
+#ifdef MOZ_GECKO_PROFILER
+  if (profiler_is_active()) {
+    mCause = profiler_get_backtrace();
+  }
+#endif
+
   // If we are frozen simply set mTimeRemaining to be the "time remaining" in
   // the timeout (i.e., the interval itself).  This will be used to create a
   // new mWhen time when the window is thawed.  The end effect is that time does
