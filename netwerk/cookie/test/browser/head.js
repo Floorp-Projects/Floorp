@@ -24,6 +24,7 @@ this.CookiePolicyHelper = {
                      config.cookieJarAccessAllowed,
                      config.cookieJarAccessDenied,
                      config.cleanup,
+                     config.prefs,
                      {
                        fromBehavior: BEHAVIOR_ACCEPT,
                        toBehavior: BEHAVIOR_REJECT,
@@ -36,6 +37,7 @@ this.CookiePolicyHelper = {
                      config.cookieJarAccessDenied,
                      config.cookieJarAccessAllowed,
                      config.cleanup,
+                     config.prefs,
                      {
                        fromBehavior: BEHAVIOR_REJECT,
                        toBehavior: BEHAVIOR_ACCEPT,
@@ -48,6 +50,7 @@ this.CookiePolicyHelper = {
                      config.cookieJarAccessAllowed,
                      config.cookieJarAccessDenied,
                      config.cleanup,
+                     config.prefs,
                      {
                        fromBehavior: BEHAVIOR_REJECT,
                        toBehavior: BEHAVIOR_REJECT,
@@ -60,6 +63,7 @@ this.CookiePolicyHelper = {
                      config.cookieJarAccessDenied,
                      config.cookieJarAccessAllowed,
                      config.cleanup,
+                     config.prefs,
                      {
                        fromBehavior: BEHAVIOR_ACCEPT,
                        toBehavior: BEHAVIOR_ACCEPT,
@@ -68,11 +72,15 @@ this.CookiePolicyHelper = {
                      });
   },
 
-  _createTest(testName, goodCb, badCb, cleanupCb, config) {
+  _createTest(testName, goodCb, badCb, cleanupCb, prefs, config) {
     add_task(async _ => {
       info("Starting " + testName + ": " + config.toSource());
 
       await SpecialPowers.flushPrefEnv();
+
+      if (prefs) {
+        await SpecialPowers.pushPrefEnv({"set": prefs });
+      }
 
       let uri = Services.io.newURI(TEST_DOMAIN);
 
