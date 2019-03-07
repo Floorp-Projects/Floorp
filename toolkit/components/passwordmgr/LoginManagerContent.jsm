@@ -192,9 +192,6 @@ var LoginManagerContent = {
   // Number of outstanding requests to each manager.
   _managers: new Map(),
 
-  // Input element on which enter keydown event was fired.
-  _keyDownEnterForInput: null,
-
   _takeRequest(msg) {
     let data = msg.data;
     let request = this._requests.get(data.requestId);
@@ -239,27 +236,6 @@ var LoginManagerContent = {
     return deferred.promise;
   },
 
-  _onKeyDown(event) {
-    let focusedElement = LoginManagerContent._formFillService.focusedInput;
-    if (event.keyCode != event.DOM_VK_RETURN || focusedElement != event.target) {
-      this._keyDownEnterForInput = null;
-      return;
-    }
-    LoginManagerContent._keyDownEnterForInput = focusedElement;
-  },
-
-  _onPopupClosed(selectedRowStyle, mm) {
-    let focusedElement = LoginManagerContent._formFillService.focusedInput;
-    let eventTarget = LoginManagerContent._keyDownEnterForInput;
-    if (!eventTarget || eventTarget !== focusedElement ||
-        selectedRowStyle != "loginsFooter") {
-      this._keyDownEnterForInput = null;
-      return;
-    }
-    let hostname = eventTarget.ownerDocument.documentURIObject.host;
-    mm.sendAsyncMessage("PasswordManager:OpenPreferences", {hostname});
-  },
-
   receiveMessage(msg, topWindow) {
     if (msg.name == "PasswordManager:fillForm") {
       this.fillForm({
@@ -272,10 +248,10 @@ var LoginManagerContent = {
       return;
     }
 
+    let request = this._takeRequest(msg);
     switch (msg.name) {
       case "PasswordManager:loginsFound": {
         let loginsFound = LoginHelper.vanillaObjectsToLogins(msg.data.logins);
-        let request = this._takeRequest(msg);
         request.promise.resolve({
           form: request.form,
           loginsFound,
@@ -287,23 +263,7 @@ var LoginManagerContent = {
       case "PasswordManager:loginsAutoCompleted": {
         let loginsFound = LoginHelper.vanillaObjectsToLogins(msg.data.logins);
         let messageManager = msg.target;
-        let request = this._takeRequest(msg);
         request.promise.resolve({ logins: loginsFound, messageManager });
-        break;
-      }
-
-      case "FormAutoComplete:PopupOpened": {
-        let {chromeEventHandler} = msg.target.docShell;
-        chromeEventHandler.addEventListener("keydown", this._onKeyDown,
-                                            true);
-        break;
-      }
-
-      case "FormAutoComplete:PopupClosed": {
-        this._onPopupClosed(msg.data.selectedRowStyle, msg.target);
-        let {chromeEventHandler} = msg.target.docShell;
-        chromeEventHandler.removeEventListener("keydown", this._onKeyDown,
-                                               true);
         break;
       }
     }
@@ -364,11 +324,6 @@ var LoginManagerContent = {
                         isSecure: InsecurePasswordUtils.isFormSecure(form),
                         isPasswordField: aElement.type == "password",
     };
-
-    if (LoginHelper.showAutoCompleteFooter) {
-      messageManager.addMessageListener("FormAutoComplete:PopupOpened", this);
-      messageManager.addMessageListener("FormAutoComplete:PopupClosed", this);
-    }
 
     return this._sendRequest(messageManager, requestData,
                              "PasswordManager:autoCompleteLogins",
