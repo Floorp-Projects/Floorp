@@ -94,8 +94,7 @@ async function checkEventsForNode(test, inspector, testActor) {
   const cssSelector = nodeFront.nodeName + "#" + nodeFront.id;
 
   for (let i = 0; i < headers.length; i++) {
-    const label = `${cssSelector}.${expected[i].type} (index ${i})`;
-    info(`${label} START`);
+    info("Processing header[" + i + "] for " + cssSelector);
 
     const header = headers[i];
     const type = header.querySelector(".event-tooltip-event-type");
@@ -137,13 +136,9 @@ async function checkEventsForNode(test, inspector, testActor) {
     });
     testDiff(editor.getText(), tidiedHandler,
        "handler matches for " + cssSelector, ok);
-
-    info(`${label} END`);
   }
 
-  const tooltipHidden = tooltip.once("hidden");
   tooltip.hide();
-  await tooltipHidden;
 }
 
 /**
