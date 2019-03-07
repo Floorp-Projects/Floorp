@@ -36,5 +36,9 @@ XPCOM_MANIFESTS += [
     'components.conf',
 ]
 
+TESTING_JS_MODULES += [
+    'tests/SearchTestUtils.jsm',
+]
+
 with Files('**'):
     BUG_COMPONENT = ('Firefox', 'Search')
