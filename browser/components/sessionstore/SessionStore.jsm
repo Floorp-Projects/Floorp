@@ -731,7 +731,6 @@ var SessionStoreInternal = {
     this._prefBranch.addObserver("sessionstore.max_windows_undo", this, true);
 
     this._restore_on_demand = this._prefBranch.getBoolPref("sessionstore.restore_on_demand");
-    this._restore_pinned_tabs_on_demand = this._prefBranch.getBoolPref("sessionstore.restore_pinned_tabs_on_demand");
     this._prefBranch.addObserver("sessionstore.restore_on_demand", this, true);
 
     gResistFingerprintingEnabled = Services.prefs.getBoolPref("privacy.resistFingerprinting");
@@ -3204,7 +3203,6 @@ var SessionStoreInternal = {
     if (!uriObj || (uriObj && !window.gBrowser.isLocalAboutURI(uriObj))) {
       tab.setAttribute("busy", "true");
     }
-    tab.removeAttribute("preopened");
 
     // Hack to ensure that the about:home, about:newtab, and about:welcome
     // favicon is loaded instantaneously, to avoid flickering and improve
@@ -3652,7 +3650,7 @@ var SessionStoreInternal = {
 
     // We need to keep track of the initially open tabs so that they
     // can be moved to the end of the restored tabs.
-    let initialTabs = [];
+    let initialTabs;
     if (!overwriteTabs && firstWindow) {
       initialTabs = Array.slice(tabbrowser.tabs);
     }
@@ -3660,11 +3658,8 @@ var SessionStoreInternal = {
     // Get rid of tabs that aren't needed anymore.
     if (overwriteTabs) {
       for (let i = tabbrowser.browsers.length - 1; i >= 0; i--) {
-        if (!tabbrowser.tabs[i].selected &&
-            !tabbrowser.tabs[i].hasAttribute("preopened")) {
+        if (!tabbrowser.tabs[i].selected) {
           tabbrowser.removeTab(tabbrowser.tabs[i]);
-        } else if (tabbrowser.tabs[i].hasAttribute("preopened")) {
-          initialTabs.push(tabbrowser.tabs[i]);
         }
       }
     }
@@ -3683,24 +3678,13 @@ var SessionStoreInternal = {
       if (select &&
           tabbrowser.selectedTab.userContextId == userContextId) {
         tab = tabbrowser.selectedTab;
-        if (tab.pinned && !tabData.pinned) {
+        if (!tabData.pinned) {
           tabbrowser.unpinTab(tab);
-        } else if (!tab.pinned && tabData.pinned) {
-          tabbrowser.removeTab(tabbrowser.tabs[t]);
-          tabbrowser.pinTab(tab);
-          tabbrowser.moveTabTo(tab, t);
         }
-
         tabbrowser.moveTabToEnd();
         if (aWindow.gMultiProcessBrowser && !tab.linkedBrowser.isRemoteBrowser) {
           tabbrowser.updateBrowserRemoteness(tab.linkedBrowser, true);
         }
-      } else if (tabData.pinned &&
-          tabbrowser.tabs[t] &&
-          tabbrowser.tabs[t].pinned &&
-          !tabbrowser.tabs[t].linkedPanel) {
-        tab = tabbrowser.tabs[t];
-        tabbrowser.activatePreopenedPinnedTab(tab);
       }
 
       // Add a new tab if needed.
@@ -3749,14 +3733,11 @@ var SessionStoreInternal = {
     }
 
     // Move the originally open tabs to the end.
-    let endPosition = tabbrowser.tabs.length - 1;
-    for (let tab of initialTabs) {
-      if (tab.hasAttribute("preopened") &&
-          !tab.linkedPanel) {
-        tabbrowser.removeTab(tab);
-      } else if (!tab.hasAttribute("preopened")) {
-        tabbrowser.unpinTab(tab);
-        tabbrowser.moveTabTo(tab, endPosition);
+    if (initialTabs) {
+      let endPosition = tabbrowser.tabs.length - 1;
+      for (let i = 0; i < initialTabs.length; i++) {
+        tabbrowser.unpinTab(initialTabs[i]);
+        tabbrowser.moveTabTo(initialTabs[i], endPosition);
       }
     }
 
@@ -4017,9 +3998,6 @@ var SessionStoreInternal = {
     for (let t = 0; t < aTabs.length; t++) {
       if (t != selectedIndex) {
         this.restoreTab(aTabs[t], aTabData[t]);
-        if (this._restore_pinned_tabs_on_demand) {
-          aTabs[t].removeAttribute("preopened");
-        }
       }
     }
   },
