@@ -16,11 +16,6 @@ async function demo() {
       console.log(`${new Date(timestamp)}\t${level.toUpperCase()}\t${msg}`);
     });
 
-    // turn on network stack logging
-    Network.requestWillBeSent((params) => {
-      console.log(params.request.url);
-    });
-
     // turn on navigation related events, such as DOMContentLoaded et al.
     await Page.enable();
 
