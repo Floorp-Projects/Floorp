@@ -204,12 +204,6 @@ def mozharness_test_on_generic_worker(config, job, taskdesc):
     upstream_task = '<build-signing>' if mozharness['requires-signed-builds'] else '<build>'
     installer_url = get_artifact_url(upstream_task, mozharness['build-artifact-name'])
 
-    taskdesc['scopes'].extend(
-        ['generic-worker:os-group:{}/{}'.format(
-            job['worker-type'],
-            group
-        ) for group in test['os-groups']])
-
     worker['os-groups'] = test['os-groups']
 
     # run-as-administrator is a feature for workers with UAC enabled and as such should not be
@@ -220,8 +214,6 @@ def mozharness_test_on_generic_worker(config, job, taskdesc):
     # for more information about UAC.
     if test.get('run-as-administrator', False):
         if job['worker-type'].startswith('aws-provisioner-v1/gecko-t-win10-64'):
-            taskdesc['scopes'].extend(
-                ['generic-worker:run-as-administrator:{}'.format(job['worker-type'])])
             worker['run-as-administrator'] = True
         else:
             raise Exception('run-as-administrator not supported on {}'.format(job['worker-type']))
