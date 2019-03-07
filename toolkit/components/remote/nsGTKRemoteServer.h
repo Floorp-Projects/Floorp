@@ -5,31 +5,30 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef __nsGTKRemoteService_h__
-#define __nsGTKRemoteService_h__
+#ifndef __nsGTKRemoteServer_h__
+#define __nsGTKRemoteServer_h__
 
 #include <gdk/gdk.h>
 #include <gdk/gdkx.h>
 #include <gtk/gtk.h>
 
-#include "nsIRemoteService.h"
-#include "nsXRemoteService.h"
+#include "nsRemoteServer.h"
+#include "nsXRemoteServer.h"
 #include "mozilla/Attributes.h"
 
-class nsGTKRemoteService final : public nsIRemoteService,
-                                 public nsXRemoteService {
+class nsGTKRemoteServer final : public nsXRemoteServer {
  public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIREMOTESERVICE
+  nsGTKRemoteServer() : mServerWindow(nullptr) {}
+  ~nsGTKRemoteServer() override { Shutdown(); }
 
-  nsGTKRemoteService() : mServerWindow(nullptr) {}
+  nsresult Startup(const char* aAppName, const char* aProfileName) override;
+  void Shutdown() override;
 
   static gboolean HandlePropertyChange(GtkWidget* widget,
-                                       GdkEventProperty* event, void* aData);
+                                       GdkEventProperty* event,
+                                       nsGTKRemoteServer* aData);
 
  private:
-  ~nsGTKRemoteService() {}
-
   void HandleCommandsFor(GtkWidget* aWidget);
 
   GtkWidget* mServerWindow;

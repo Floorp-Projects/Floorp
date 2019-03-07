@@ -349,6 +349,7 @@ class gfxPrefs final {
   DECL_GFX_PREF(Live, "apz.pinch_lock.scroll_lock_threshold",  APZPinchLockScrollLockThreshold, float, 1.0f / 32.0f);
   DECL_GFX_PREF(Live, "apz.pinch_lock.span_breakout_threshold", APZPinchLockSpanBreakoutThreshold, float, 1.0f / 32.0f);
   DECL_GFX_PREF(Live, "apz.pinch_lock.span_lock_threshold",    APZPinchLockSpanLockThreshold, float, 1.0f / 32.0f);
+  DECL_GFX_PREF(Once, "apz.pinch_lock.buffer_max_age",         APZPinchLockBufferMaxAge, int32_t, 50);
   DECL_GFX_PREF(Live, "apz.popups.enabled",                    APZPopupsEnabled, bool, false);
   DECL_GFX_PREF(Live, "apz.printtree",                         APZPrintTree, bool, false);
   DECL_GFX_PREF(Live, "apz.record_checkerboarding",            APZRecordCheckerboarding, bool, false);

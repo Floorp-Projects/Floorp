@@ -400,7 +400,8 @@ void WorkerDebugger::PostMessageToDebugger(const nsAString& aMessage) {
 
   RefPtr<PostDebuggerMessageRunnable> runnable =
       new PostDebuggerMessageRunnable(this, aMessage);
-  if (NS_FAILED(mWorkerPrivate->DispatchToMainThread(runnable.forget()))) {
+  if (NS_FAILED(mWorkerPrivate->DispatchToMainThreadForMessaging(
+          runnable.forget()))) {
     NS_WARNING("Failed to post message to debugger on main thread!");
   }
 }
@@ -422,7 +423,8 @@ void WorkerDebugger::ReportErrorToDebugger(const nsAString& aFilename,
 
   RefPtr<ReportDebuggerErrorRunnable> runnable =
       new ReportDebuggerErrorRunnable(this, aFilename, aLineno, aMessage);
-  if (NS_FAILED(mWorkerPrivate->DispatchToMainThread(runnable.forget()))) {
+  if (NS_FAILED(mWorkerPrivate->DispatchToMainThreadForMessaging(
+          runnable.forget()))) {
     NS_WARNING("Failed to report error to debugger on main thread!");
   }
 }
