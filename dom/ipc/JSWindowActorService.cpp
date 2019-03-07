@@ -204,6 +204,7 @@ JSWindowActorProtocol::FromWebIDLOptions(const nsAString& aName,
 
   RefPtr<JSWindowActorProtocol> proto = new JSWindowActorProtocol(aName);
   proto->mAllFrames = aOptions.mAllFrames;
+  proto->mIncludeChrome = aOptions.mIncludeChrome;
 
   proto->mParent.mModuleURI = aOptions.mParent.mModuleURI;
   proto->mChild.mModuleURI = aOptions.mChild.mModuleURI;
