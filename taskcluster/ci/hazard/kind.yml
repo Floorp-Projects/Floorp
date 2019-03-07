@@ -69,4 +69,5 @@ jobs:
             - linux64-gcc-sixgill
             - linux64-rust
             - linux64-cbindgen
+            - linux64-nasm
             - linux64-node
