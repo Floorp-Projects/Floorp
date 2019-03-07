@@ -2,6 +2,21 @@
   "$schema": "http://json-schema.org/draft-04/schema#",
   "type": "object",
   "properties": {
+
+    "3rdparty": {
+      "type": "object",
+      "properties": {
+        "Extensions" : {
+          "type": "object",
+          "patternProperties": {
+            "^.*$": {
+              "type": "JSON"
+            }
+          }
+        }
+      }
+    },
+
     "AppUpdateURL": {
       "type": "URL"
     },
