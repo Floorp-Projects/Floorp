@@ -1009,12 +1009,20 @@ class UrlbarInput {
     if (!UrlbarPrefs.get("ui.popup.disable_autohide")) {
       this.view.close(UrlbarUtils.CANCEL_REASON.BLUR);
     }
+    // We may have hidden popup notifications, show them again if necessary.
+    if (this.getAttribute("pageproxystate") != "valid") {
+      this.window.UpdatePopupNotificationsVisibility();
+    }
   }
 
   _on_focus(event) {
     this._updateUrlTooltip();
-
     this.formatValue();
+
+    // Hide popup notifications, to reduce visual noise.
+    if (this.getAttribute("pageproxystate") != "valid") {
+      this.window.UpdatePopupNotificationsVisibility();
+    }
   }
 
   _on_mouseover(event) {
