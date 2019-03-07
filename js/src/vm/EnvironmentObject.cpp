@@ -943,7 +943,7 @@ LexicalEnvironmentObject* LexicalEnvironmentObject::create(
 }
 
 /* static */
-LexicalEnvironmentObject* LexicalEnvironmentObject::create(
+LexicalEnvironmentObject* LexicalEnvironmentObject::createForFrame(
     JSContext* cx, Handle<LexicalScope*> scope, AbstractFramePtr frame) {
   RootedObject enclosing(cx, frame.environmentChain());
   return create(cx, scope, enclosing, gc::DefaultHeap);

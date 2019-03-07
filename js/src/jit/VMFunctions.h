@@ -18,6 +18,7 @@
 
 namespace js {
 
+class ArgumentsObject;
 class NamedLambdaObject;
 class WithScope;
 class InlineTypedObject;
@@ -436,6 +437,10 @@ struct TypeToDataType<NamedLambdaObject*> {
 };
 template <>
 struct TypeToDataType<LexicalEnvironmentObject*> {
+  static const DataType result = Type_Object;
+};
+template <>
+struct TypeToDataType<ArgumentsObject*> {
   static const DataType result = Type_Object;
 };
 template <>

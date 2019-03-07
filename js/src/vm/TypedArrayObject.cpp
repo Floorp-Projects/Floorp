@@ -980,9 +980,8 @@ JS_FOR_EACH_TYPED_ARRAY(CREATE_TYPE_FOR_TYPED_ARRAY)
 
 } /* anonymous namespace */
 
-TypedArrayObject* js::TypedArrayCreateWithTemplate(JSContext* cx,
-                                                   HandleObject templateObj,
-                                                   int32_t len) {
+TypedArrayObject* js::NewTypedArrayWithTemplateAndLength(
+    JSContext* cx, HandleObject templateObj, int32_t len) {
   MOZ_ASSERT(templateObj->is<TypedArrayObject>());
   TypedArrayObject* tobj = &templateObj->as<TypedArrayObject>();
 
@@ -998,9 +997,8 @@ TypedArrayObject* js::TypedArrayCreateWithTemplate(JSContext* cx,
   }
 }
 
-TypedArrayObject* js::TypedArrayCreateWithTemplate(JSContext* cx,
-                                                   HandleObject templateObj,
-                                                   HandleObject array) {
+TypedArrayObject* js::NewTypedArrayWithTemplateAndArray(
+    JSContext* cx, HandleObject templateObj, HandleObject array) {
   MOZ_ASSERT(templateObj->is<TypedArrayObject>());
   TypedArrayObject* tobj = &templateObj->as<TypedArrayObject>();
 
@@ -1016,11 +1014,9 @@ TypedArrayObject* js::TypedArrayCreateWithTemplate(JSContext* cx,
   }
 }
 
-TypedArrayObject* js::TypedArrayCreateWithTemplate(JSContext* cx,
-                                                   HandleObject templateObj,
-                                                   HandleObject arrayBuffer,
-                                                   HandleValue byteOffset,
-                                                   HandleValue length) {
+TypedArrayObject* js::NewTypedArrayWithTemplateAndBuffer(
+    JSContext* cx, HandleObject templateObj, HandleObject arrayBuffer,
+    HandleValue byteOffset, HandleValue length) {
   MOZ_ASSERT(templateObj->is<TypedArrayObject>());
   TypedArrayObject* tobj = &templateObj->as<TypedArrayObject>();
 
