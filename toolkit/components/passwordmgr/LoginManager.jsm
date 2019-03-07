@@ -14,7 +14,7 @@ ChromeUtils.defineModuleGetter(this, "BrowserUtils",
 ChromeUtils.defineModuleGetter(this, "LoginHelper",
                                "resource://gre/modules/LoginHelper.jsm");
 ChromeUtils.defineModuleGetter(this, "LoginFormFactory",
-                               "resource://gre/modules/LoginManagerContent.jsm");
+                               "resource://gre/modules/LoginFormFactory.jsm");
 ChromeUtils.defineModuleGetter(this, "LoginManagerContent",
                                "resource://gre/modules/LoginManagerContent.jsm");
 ChromeUtils.defineModuleGetter(this, "LoginAutoCompleteResult",

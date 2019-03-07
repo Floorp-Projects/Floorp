@@ -10,8 +10,9 @@
 </head>
 <body>
 <script type="application/javascript">
+const {LoginFormFactory} = SpecialPowers.Cu.import("resource://gre/modules/LoginFormFactory.jsm");
 const LMCBackstagePass = SpecialPowers.Cu.import("resource://gre/modules/LoginManagerContent.jsm");
-const { LoginManagerContent, LoginFormFactory } = LMCBackstagePass;
+const { LoginManagerContent } = LMCBackstagePass;
 
 let loadPromise = new Promise(resolve => {
   document.addEventListener("DOMContentLoaded", () => {
