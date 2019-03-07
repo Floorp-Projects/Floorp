@@ -2,7 +2,7 @@
 
 # handleEvent
 
-`fun handleEvent(pingEvent: `[`PingEvent`](../-glean/-ping-event/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/Glean.kt#L239)
+`fun handleEvent(pingEvent: `[`PingEvent`](../-glean/-ping-event/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/Glean.kt#L258)
 
 Handle an event and send the appropriate pings.
 

@@ -144,7 +144,6 @@ mozilla.components.service.glean.debug
 mozilla.components.service.glean.error
 mozilla.components.service.glean.scheduler
 mozilla.components.service.glean.storages
-mozilla.components.service.pocket
 mozilla.components.service.sync.logins
 mozilla.components.support.android.test
 mozilla.components.support.base.android

@@ -7,3 +7,4 @@
 | Name | Summary |
 |---|---|
 | [RecordedEventData](-recorded-event-data/index.md) | `data class RecordedEventData` |
+| [RecordedExperimentData](-recorded-experiment-data/index.md) | `data class RecordedExperimentData` |

@@ -2,7 +2,7 @@
 
 # PingEvent
 
-`enum class PingEvent` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/Glean.kt#L322)
+`enum class PingEvent` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/Glean.kt#L332)
 
 Enumeration of different metric lifetimes.
 

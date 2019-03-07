@@ -265,7 +265,6 @@
 | [mozilla.components.concept.engine.permission.PermissionRequest](../mozilla.components.concept.engine.permission/-permission-request/index.md) | Represents a permission request, used when engines need access to protected resources. Every request must be handled by either calling [grant](../mozilla.components.concept.engine.permission/-permission-request/grant.md) or [reject](../mozilla.components.concept.engine.permission/-permission-request/reject.md). |
 | [mozilla.components.service.fxa.PersistCallback](../mozilla.components.service.fxa/-persist-callback.md) |  |
 | [mozilla.components.service.glean.scheduler.PingUploadWorker](../mozilla.components.service.glean.scheduler/-ping-upload-worker/index.md) | This class is the worker class used by [WorkManager](#) to handle uploading the ping to the server. |
-| [mozilla.components.service.pocket.Placeholder](../mozilla.components.service.pocket/-placeholder/index.md) |  |
 | [mozilla.components.browser.storage.sync.PlacesHistoryStorage](../mozilla.components.browser.storage.sync/-places-history-storage/index.md) | Implementation of the [HistoryStorage](../mozilla.components.concept.storage/-history-storage/index.md) which is backed by a Rust Places lib via [PlacesConnection](#). |
 | [org.mozilla.telemetry.measurement.PocketIdMeasurement](../org.mozilla.telemetry.measurement/-pocket-id-measurement/index.md) | A unique, randomly generated UUID for this pocket client for fire-tv instance. This is distinct from the telemetry clientId. The clientId should not be able to be tied to the pocketId in any way. |
 | [org.mozilla.telemetry.measurement.ProcessStartTimestampMeasurement](../org.mozilla.telemetry.measurement/-process-start-timestamp-measurement/index.md) |  |
@@ -274,6 +273,7 @@
 | [mozilla.components.concept.engine.prompt.PromptRequest](../mozilla.components.concept.engine.prompt/-prompt-request/index.md) | Value type that represents a request for showing a native dialog for prompt web content. |
 | [mozilla.components.lib.publicsuffixlist.PublicSuffixList](../mozilla.components.lib.publicsuffixlist/-public-suffix-list/index.md) | API for reading and accessing the public suffix list. |
 | [mozilla.components.service.glean.storages.RecordedEventData](../mozilla.components.service.glean.storages/-recorded-event-data/index.md) |  |
+| [mozilla.components.service.glean.storages.RecordedExperimentData](../mozilla.components.service.glean.storages/-recorded-experiment-data/index.md) |  |
 | [mozilla.components.concept.fetch.Request](../mozilla.components.concept.fetch/-request/index.md) | The [Request](../mozilla.components.concept.fetch/-request/index.md) data class represents a resource request to be send by a [Client](../mozilla.components.concept.fetch/-client/index.md). |
 | [mozilla.components.lib.fetch.okhttp.RequestBuilder](../mozilla.components.lib.fetch.okhttp/-request-builder.md) |  |
 | [mozilla.components.service.sync.logins.RequestFailedException](../mozilla.components.service.sync.logins/-request-failed-exception.md) | This error is emitted if a request to a sync server failed. |

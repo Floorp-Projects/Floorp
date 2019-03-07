@@ -96,7 +96,6 @@
 | [mozilla.components.service.glean.error](mozilla.components.service.glean.error/index.md) |  |
 | [mozilla.components.service.glean.scheduler](mozilla.components.service.glean.scheduler/index.md) |  |
 | [mozilla.components.service.glean.storages](mozilla.components.service.glean.storages/index.md) |  |
-| [mozilla.components.service.pocket](mozilla.components.service.pocket/index.md) |  |
 | [mozilla.components.service.sync.logins](mozilla.components.service.sync.logins/index.md) |  |
 | [mozilla.components.support.android.test](mozilla.components.support.android.test/index.md) |  |
 | [mozilla.components.support.base.android](mozilla.components.support.base.android/index.md) |  |
