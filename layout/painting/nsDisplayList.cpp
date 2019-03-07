@@ -7310,12 +7310,15 @@ already_AddRefed<Layer> nsDisplayAsyncZoom::BuildLayer(
 // nsDisplayTransform Implementation
 //
 
+#ifndef DEBUG
+static_assert(sizeof(nsDisplayTransform) < 512, "nsDisplayTransform has grown");
+#endif
+
 nsDisplayTransform::nsDisplayTransform(nsDisplayListBuilder* aBuilder,
                                        nsIFrame* aFrame, nsDisplayList* aList,
                                        const nsRect& aChildrenBuildingRect,
                                        uint32_t aIndex)
     : nsDisplayHitTestInfoItem(aBuilder, aFrame),
-      mStoredList(aBuilder, aFrame, aList),
       mTransform(Some(Matrix4x4())),
       mTransformGetter(nullptr),
       mAnimatedGeometryRootForChildren(mAnimatedGeometryRoot),
@@ -7326,7 +7329,7 @@ nsDisplayTransform::nsDisplayTransform(nsDisplayListBuilder* aBuilder,
       mAllowAsyncAnimation(false) {
   MOZ_COUNT_CTOR(nsDisplayTransform);
   MOZ_ASSERT(aFrame, "Must have a frame!");
-  Init(aBuilder);
+  Init(aBuilder, aList);
   UpdateBoundsFor3D(aBuilder);
 }
 
@@ -7336,7 +7339,6 @@ nsDisplayTransform::nsDisplayTransform(nsDisplayListBuilder* aBuilder,
                                        uint32_t aIndex,
                                        bool aAllowAsyncAnimation)
     : nsDisplayHitTestInfoItem(aBuilder, aFrame),
-      mStoredList(aBuilder, aFrame, aList),
       mTransformGetter(nullptr),
       mAnimatedGeometryRootForChildren(mAnimatedGeometryRoot),
       mAnimatedGeometryRootForScrollMetadata(mAnimatedGeometryRoot),
@@ -7347,7 +7349,7 @@ nsDisplayTransform::nsDisplayTransform(nsDisplayListBuilder* aBuilder,
   MOZ_COUNT_CTOR(nsDisplayTransform);
   MOZ_ASSERT(aFrame, "Must have a frame!");
   SetReferenceFrameToAncestor(aBuilder);
-  Init(aBuilder);
+  Init(aBuilder, aList);
   UpdateBoundsFor3D(aBuilder);
 }
 
@@ -7356,7 +7358,6 @@ nsDisplayTransform::nsDisplayTransform(
     const nsRect& aChildrenBuildingRect, uint32_t aIndex,
     ComputeTransformFunction aTransformGetter)
     : nsDisplayHitTestInfoItem(aBuilder, aFrame),
-      mStoredList(aBuilder, aFrame, aList),
       mTransformGetter(aTransformGetter),
       mAnimatedGeometryRootForChildren(mAnimatedGeometryRoot),
       mAnimatedGeometryRootForScrollMetadata(mAnimatedGeometryRoot),
@@ -7366,7 +7367,7 @@ nsDisplayTransform::nsDisplayTransform(
       mAllowAsyncAnimation(false) {
   MOZ_COUNT_CTOR(nsDisplayTransform);
   MOZ_ASSERT(aFrame, "Must have a frame!");
-  Init(aBuilder);
+  Init(aBuilder, aList);
 }
 
 void nsDisplayTransform::SetReferenceFrameToAncestor(
@@ -7405,11 +7406,12 @@ void nsDisplayTransform::SetReferenceFrameToAncestor(
   SetBuildingRect(aBuilder->GetVisibleRect() + mToReferenceFrame);
 }
 
-void nsDisplayTransform::Init(nsDisplayListBuilder* aBuilder) {
+void nsDisplayTransform::Init(nsDisplayListBuilder* aBuilder,
+                              nsDisplayList* aChildren) {
   mShouldFlatten = false;
   mHasBounds = false;
-  mStoredList.SetClipChain(nullptr, true);
-  mStoredList.SetBuildingRect(mChildrenBuildingRect);
+  mChildren.AppendToTop(aChildren);
+  UpdateUntransformedBounds(aBuilder);
 }
 
 bool nsDisplayTransform::ShouldFlattenAway(nsDisplayListBuilder* aBuilder) {
@@ -8015,8 +8017,7 @@ bool nsDisplayTransform::CreateWebRenderCommands(
                            LayoutDeviceRect(position, LayoutDeviceSize()));
 
   aManager->CommandBuilder().CreateWebRenderCommandsFromDisplayList(
-      mStoredList.GetChildren(), &mStoredList, aDisplayListBuilder, sc,
-      aBuilder, aResources, this);
+      GetChildren(), this, aDisplayListBuilder, sc, aBuilder, aResources);
   return true;
 }
 
@@ -8058,8 +8059,8 @@ already_AddRefed<Layer> nsDisplayTransform::BuildLayer(
   uint32_t flags = FrameLayerBuilder::CONTAINER_ALLOW_PULL_BACKGROUND_COLOR;
   RefPtr<ContainerLayer> container =
       aManager->GetLayerBuilder()->BuildContainerLayerFor(
-          aBuilder, aManager, mFrame, this, mStoredList.GetChildren(),
-          aContainerParameters, &newTransformMatrix, flags);
+          aBuilder, aManager, mFrame, this, GetChildren(), aContainerParameters,
+          &newTransformMatrix, flags);
 
   if (!container) {
     return nullptr;
@@ -8139,7 +8140,7 @@ nsDisplayItem::LayerState nsDisplayTransform::GetLayerState(
   // different animated geometry root, we'll make this an active layer so the
   // animation can be accelerated.
   return RequiredLayerStateForChildren(aBuilder, aManager, aParameters,
-                                       *mStoredList.GetChildren(),
+                                       *GetChildren(),
                                        mAnimatedGeometryRootForChildren);
 }
 
@@ -8161,12 +8162,45 @@ bool nsDisplayTransform::ComputeVisibility(nsDisplayListBuilder* aBuilder,
   if (!UntransformPaintRect(aBuilder, &untransformedVisibleRect)) {
     untransformedVisibleRect = mFrame->GetVisualOverflowRectRelativeToSelf();
   }
-  nsRegion untransformedVisible = untransformedVisibleRect;
-  // Call RecomputeVisiblity instead of ComputeVisibility since
-  // nsDisplayItem::ComputeVisibility should only be called from
-  // nsDisplayList::ComputeVisibility (which sets mVisibleRect on the item)
-  mStoredList.RecomputeVisibility(aBuilder, &untransformedVisible);
+
+  bool snap;
+  const nsRect bounds = GetUntransformedBounds(aBuilder, &snap);
+  nsRegion visibleRegion;
+  visibleRegion.And(bounds, untransformedVisibleRect);
+  GetChildren()->ComputeVisibilityForSublist(aBuilder, &visibleRegion,
+                                             visibleRegion.GetBounds());
+
   return true;
+}
+
+void nsDisplayTransform::DoUpdateBoundsPreserves3D(
+    nsDisplayListBuilder* aBuilder) {
+  MOZ_ASSERT(mFrame->Combines3DTransformWithAncestors() ||
+             IsTransformSeparator());
+  // Updating is not going through to child 3D context.
+  ComputeBounds(aBuilder);
+}
+
+void nsDisplayTransform::UpdateBounds(nsDisplayListBuilder* aBuilder) {
+  mHasBounds = false;
+  UpdateUntransformedBounds(aBuilder, true);
+  UpdateBoundsFor3D(aBuilder);
+}
+
+void nsDisplayTransform::UpdateBoundsFor3D(nsDisplayListBuilder* aBuilder) {
+  if (!mFrame->Extend3DContext() ||
+      mFrame->Combines3DTransformWithAncestors() || IsTransformSeparator()) {
+    // Not an establisher of a 3D rendering context.
+    return;
+  }
+
+  // Always start updating from an establisher of a 3D rendering context.
+  nsDisplayListBuilder::AutoAccumulateRect accRect(aBuilder);
+  nsDisplayListBuilder::AutoAccumulateTransform accTransform(aBuilder);
+  accTransform.StartRoot();
+  ComputeBounds(aBuilder);
+  mBounds = aBuilder->GetAccumulatedRect();
+  mHasBounds = true;
 }
 
 #ifdef DEBUG_HIT
@@ -8178,7 +8212,7 @@ void nsDisplayTransform::HitTest(nsDisplayListBuilder* aBuilder,
                                  const nsRect& aRect, HitTestState* aState,
                                  nsTArray<nsIFrame*>* aOutFrames) {
   if (aState->mInPreserves3D) {
-    mStoredList.HitTest(aBuilder, aRect, aState, aOutFrames);
+    GetChildren()->HitTest(aBuilder, aRect, aState, aOutFrames);
     return;
   }
 
@@ -8227,7 +8261,7 @@ void nsDisplayTransform::HitTest(nsDisplayListBuilder* aBuilder,
                       NSAppUnitsToFloatPixels(aRect.height, factor));
 
     bool snap;
-    nsRect childBounds = mStoredList.GetBounds(aBuilder, &snap);
+    nsRect childBounds = GetUntransformedBounds(aBuilder, &snap);
     Rect childGfxBounds(NSAppUnitsToFloatPixels(childBounds.x, factor),
                         NSAppUnitsToFloatPixels(childBounds.y, factor),
                         NSAppUnitsToFloatPixels(childBounds.width, factor),
@@ -8253,7 +8287,7 @@ void nsDisplayTransform::HitTest(nsDisplayListBuilder* aBuilder,
   uint32_t originalFrameCount = aOutFrames.Length();
 #endif
 
-  mStoredList.HitTest(aBuilder, resultingRect, aState, aOutFrames);
+  GetChildren()->HitTest(aBuilder, resultingRect, aState, aOutFrames);
 
 #ifdef DEBUG_HIT
   if (originalFrameCount != aOutFrames.Length())
@@ -8299,7 +8333,8 @@ nsRect nsDisplayTransform::GetBounds(nsDisplayListBuilder* aBuilder,
     return nsRect();
   }
 
-  nsRect untransformedBounds = mStoredList.GetBounds(aBuilder, aSnap);
+  bool snap;
+  nsRect untransformedBounds = GetUntransformedBounds(aBuilder, &snap);
   // GetTransform always operates in dev pixels.
   float factor = mFrame->PresContext()->AppUnitsPerDevPixel();
   mBounds = nsLayoutUtils::MatrixTransformRect(untransformedBounds,
@@ -8325,7 +8360,9 @@ void nsDisplayTransform::ComputeBounds(nsDisplayListBuilder* aBuilder) {
 
   if (!IsLeafOf3DContext()) {
     // Do not dive into another 3D context.
-    mStoredList.DoUpdateBoundsPreserves3D(aBuilder);
+    for (nsDisplayItem* i = GetChildren()->GetBottom(); i; i = i->GetAbove()) {
+      i->DoUpdateBoundsPreserves3D(aBuilder);
+    }
   }
 
   /* For Preserves3D, it is bounds of only children as leaf frames.
@@ -8333,7 +8370,7 @@ void nsDisplayTransform::ComputeBounds(nsDisplayListBuilder* aBuilder) {
    * nsDisplayListBuilder.
    */
   bool snap;
-  nsRect untransformedBounds = mStoredList.GetBounds(aBuilder, &snap);
+  nsRect untransformedBounds = GetUntransformedBounds(aBuilder, &snap);
   // GetTransform always operates in dev pixels.
   float factor = mFrame->PresContext()->AppUnitsPerDevPixel();
   nsRect rect = nsLayoutUtils::MatrixTransformRect(
@@ -8361,22 +8398,38 @@ void nsDisplayTransform::ComputeBounds(nsDisplayListBuilder* aBuilder) {
 nsRegion nsDisplayTransform::GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
                                              bool* aSnap) const {
   *aSnap = false;
+
   nsRect untransformedVisible;
   if (!UntransformBuildingRect(aBuilder, &untransformedVisible)) {
     return nsRegion();
   }
 
   const Matrix4x4Flagged& matrix = GetTransform();
+  Matrix matrix2d;
+  if (!matrix.Is2D(&matrix2d) || !matrix2d.PreservesAxisAlignedRectangles()) {
+    return nsRegion();
+  }
 
   nsRegion result;
-  Matrix matrix2d;
+
   bool tmpSnap;
-  if (matrix.Is2D(&matrix2d) && matrix2d.PreservesAxisAlignedRectangles() &&
-      mStoredList.GetOpaqueRegion(aBuilder, &tmpSnap)
-          .Contains(untransformedVisible)) {
+  const nsRect bounds = GetUntransformedBounds(aBuilder, &tmpSnap);
+  const nsRegion opaque = ::GetOpaqueRegion(aBuilder, GetChildren(), bounds);
+
+  if (opaque.Contains(untransformedVisible)) {
     result = GetBuildingRect().Intersect(GetBounds(aBuilder, &tmpSnap));
   }
   return result;
+}
+
+nsRect nsDisplayTransform::GetComponentAlphaBounds(
+    nsDisplayListBuilder* aBuilder) const {
+  if (GetChildren()->GetComponentAlphaBounds(aBuilder).IsEmpty()) {
+    return nsRect();
+  }
+
+  bool snap;
+  return GetBounds(aBuilder, &snap);
 }
 
 /* TransformRect takes in as parameters a rectangle (in app space) and returns
@@ -8457,7 +8510,7 @@ bool nsDisplayTransform::UntransformRect(nsDisplayListBuilder* aBuilder,
                     NSAppUnitsToFloatPixels(aRect.height, factor));
 
   bool snap;
-  nsRect childBounds = mStoredList.GetBounds(aBuilder, &snap);
+  nsRect childBounds = GetUntransformedBounds(aBuilder, &snap);
   RectDouble childGfxBounds(
       NSAppUnitsToFloatPixels(childBounds.x, factor),
       NSAppUnitsToFloatPixels(childBounds.y, factor),
