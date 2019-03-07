@@ -3491,17 +3491,6 @@ static void InitAtomMap(frontend::AtomIndexMap& indices, GCPtrAtom* atoms) {
   }
 }
 
-static bool HasAnyAliasedFormal(frontend::BytecodeEmitter* bce) {
-  PositionalFormalParameterIter fi(bce->bodyScope());
-  for (; fi; fi++) {
-    // Check if the formal parameter is closed over.
-    if (fi.closedOver()) {
-      return true;
-    }
-  }
-  return false;
-}
-
 static bool NeedsFunctionEnvironmentObjects(frontend::BytecodeEmitter* bce) {
   // See JSFunction::needsCallObject()
   js::Scope* bodyScope = bce->bodyScope();
@@ -3592,8 +3581,6 @@ bool JSScript::fullyInitFromEmitter(JSContext* cx, HandleScript script,
   script->setFlag(ImmutableFlags::IsModule, bce->sc->isModuleContext());
   script->setFlag(ImmutableFlags::HasNonSyntacticScope,
                   bce->outermostScope()->hasOnChain(ScopeKind::NonSyntactic));
-  script->setFlag(ImmutableFlags::FunHasAnyAliasedFormal,
-                  HasAnyAliasedFormal(bce));
   script->setFlag(ImmutableFlags::NeedsFunctionEnvironmentObjects,
                   NeedsFunctionEnvironmentObjects(bce));
 
