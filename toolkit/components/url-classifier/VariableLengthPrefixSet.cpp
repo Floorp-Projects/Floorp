@@ -28,9 +28,6 @@ namespace safebrowsing {
 
 NS_IMPL_ISUPPORTS(VariableLengthPrefixSet, nsIMemoryReporter)
 
-// Definition required due to std::max<>()
-const uint32_t VariableLengthPrefixSet::MAX_BUFFER_SIZE;
-
 // This class will process prefix size between 4~32. But for 4 bytes prefixes,
 // they will be passed to nsUrlClassifierPrefixSet because of better
 // optimization.
@@ -204,91 +201,18 @@ nsresult VariableLengthPrefixSet::IsEmpty(bool* aEmpty) const {
   return NS_OK;
 }
 
-nsresult VariableLengthPrefixSet::LoadFromFile(nsCOMPtr<nsIFile>& aFile) {
-  MutexAutoLock lock(mLock);
-
-  NS_ENSURE_ARG_POINTER(aFile);
-
-  Telemetry::AutoTimer<Telemetry::URLCLASSIFIER_VLPS_FILELOAD_TIME> timer;
-
-  nsCOMPtr<nsIInputStream> localInFile;
-  nsresult rv = NS_NewLocalFileInputStream(getter_AddRefs(localInFile), aFile,
-                                           PR_RDONLY | nsIFile::OS_READAHEAD);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Calculate how big the file is, make sure our read buffer isn't bigger
-  // than the file itself which is just wasting memory.
-  int64_t fileSize;
-  rv = aFile->GetFileSize(&fileSize);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (fileSize < 0 || fileSize > UINT32_MAX) {
-    return NS_ERROR_FAILURE;
-  }
-
-  uint32_t bufferSize =
-      std::min<uint32_t>(static_cast<uint32_t>(fileSize), MAX_BUFFER_SIZE);
-
-  // Convert to buffered stream
-  nsCOMPtr<nsIInputStream> in;
-  rv = NS_NewBufferedInputStream(getter_AddRefs(in), localInFile.forget(),
-                                 bufferSize);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = mFixedPrefixSet->LoadPrefixes(in);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = LoadPrefixes(in);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
-  ;
-}
-
-nsresult VariableLengthPrefixSet::StoreToFile(nsCOMPtr<nsIFile>& aFile) const {
-  NS_ENSURE_ARG_POINTER(aFile);
-
-  MutexAutoLock lock(mLock);
-
-  nsCOMPtr<nsIOutputStream> localOutFile;
-  nsresult rv =
-      NS_NewLocalFileOutputStream(getter_AddRefs(localOutFile), aFile,
-                                  PR_WRONLY | PR_TRUNCATE | PR_CREATE_FILE);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  uint32_t fileSize = 0;
-  // Preallocate the file storage
-  {
-    nsCOMPtr<nsIFileOutputStream> fos(do_QueryInterface(localOutFile));
-    Telemetry::AutoTimer<Telemetry::URLCLASSIFIER_VLPS_FALLOCATE_TIME> timer;
-
-    fileSize += mFixedPrefixSet->CalculatePreallocateSize();
-    fileSize += CalculatePreallocateSize();
-
-    Unused << fos->Preallocate(fileSize);
-  }
-
-  // Convert to buffered stream
-  nsCOMPtr<nsIOutputStream> out;
-  rv = NS_NewBufferedOutputStream(getter_AddRefs(out), localOutFile.forget(),
-                                  std::min(fileSize, MAX_BUFFER_SIZE));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = mFixedPrefixSet->WritePrefixes(out);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = WritePrefixes(out);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
-}
-
 nsresult VariableLengthPrefixSet::LoadPrefixes(nsCOMPtr<nsIInputStream>& in) {
+  MutexAutoLock lock(mLock);
+
+  // First read prefixes from fixed-length prefix set
+  nsresult rv = mFixedPrefixSet->LoadPrefixes(in);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Then read prefixes from variable-length prefix set
   uint32_t magic;
   uint32_t read;
 
-  nsresult rv =
-      in->Read(reinterpret_cast<char*>(&magic), sizeof(uint32_t), &read);
+  rv = in->Read(reinterpret_cast<char*>(&magic), sizeof(uint32_t), &read);
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(read == sizeof(uint32_t), NS_ERROR_FAILURE);
 
@@ -349,6 +273,10 @@ nsresult VariableLengthPrefixSet::LoadPrefixes(nsCOMPtr<nsIInputStream>& in) {
 uint32_t VariableLengthPrefixSet::CalculatePreallocateSize() const {
   uint32_t fileSize = 0;
 
+  // Size of fixed length prefix set.
+  fileSize += mFixedPrefixSet->CalculatePreallocateSize();
+
+  // Size of variable length prefix set.
   // Store how many prefix string.
   fileSize += sizeof(uint32_t);
 
@@ -363,10 +291,17 @@ uint32_t VariableLengthPrefixSet::CalculatePreallocateSize() const {
 
 nsresult VariableLengthPrefixSet::WritePrefixes(
     nsCOMPtr<nsIOutputStream>& out) const {
+  MutexAutoLock lock(mLock);
+
+  // First, write fixed length prefix set
+  nsresult rv = mFixedPrefixSet->WritePrefixes(out);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Then, write variable length prefix set
   uint32_t written;
   uint32_t writelen = sizeof(uint32_t);
   uint32_t magic = PREFIXSET_VERSION_MAGIC;
-  nsresult rv = out->Write(reinterpret_cast<char*>(&magic), writelen, &written);
+  rv = out->Write(reinterpret_cast<char*>(&magic), writelen, &written);
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(written == writelen, NS_ERROR_FAILURE);
 
