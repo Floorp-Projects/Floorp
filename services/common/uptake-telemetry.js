@@ -87,6 +87,7 @@ class UptakeTelemetry {
    * @param {string} status        the uptake status (eg. "network_error")
    * @param {Object} extra         extra values to report
    * @param {string} extra.source  the update source (eg. "recipe-42").
+   * @param {string} extra.trigger what triggered the polling/fetching (eg. "broadcast", "timer").
    */
   static report(component, status, extra = {}) {
     const { source } = extra;
