@@ -24,6 +24,7 @@ use internal_types::{CacheTextureId, FastHashMap, LayerIndex, SavedTargetIndex};
 use pathfinder_partitioner::mesh::Mesh;
 use prim_store::PictureIndex;
 use prim_store::image::ImageCacheKey;
+use prim_store::gradient::{GRADIENT_FP_STOPS, GradientCacheKey, GradientStopKey};
 use prim_store::line_dec::LineDecorationCacheKey;
 #[cfg(feature = "debugger")]
 use print_tree::{PrintTreePrinter};
@@ -382,6 +383,16 @@ pub struct BlitTask {
 #[derive(Debug)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
+pub struct GradientTask {
+    pub stops: [GradientStopKey; GRADIENT_FP_STOPS],
+    pub orientation: LineOrientation,
+    pub start_point: f32,
+    pub end_point: f32,
+}
+
+#[derive(Debug)]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct LineDecorationTask {
     pub wavy_line_thickness: f32,
     pub style: LineStyle,
@@ -411,6 +422,7 @@ pub enum RenderTaskKind {
     Blit(BlitTask),
     Border(BorderTask),
     LineDecoration(LineDecorationTask),
+    Gradient(GradientTask),
 }
 
 #[derive(Debug, Copy, Clone, PartialEq)]
@@ -493,6 +505,26 @@ impl RenderTask {
             clear_mode: ClearMode::Transparent,
             saved_index: None,
         }
+    }
+
+    pub fn new_gradient(
+        size: DeviceIntSize,
+        stops: [GradientStopKey; GRADIENT_FP_STOPS],
+        orientation: LineOrientation,
+        start_point: f32,
+        end_point: f32,
+    ) -> Self {
+        RenderTask::with_dynamic_location(
+            size,
+            Vec::new(),
+            RenderTaskKind::Gradient(GradientTask {
+                stops,
+                orientation,
+                start_point,
+                end_point,
+            }),
+            ClearMode::DontCare,
+        )
     }
 
     pub fn new_blit(
@@ -865,6 +897,7 @@ impl RenderTask {
             RenderTaskKind::ClipRegion(..) |
             RenderTaskKind::Glyph(_) |
             RenderTaskKind::Border(..) |
+            RenderTaskKind::Gradient(..) |
             RenderTaskKind::LineDecoration(..) |
             RenderTaskKind::Blit(..) => {
                 UvRectKind::Rect
@@ -921,6 +954,7 @@ impl RenderTask {
             RenderTaskKind::Scaling(..) |
             RenderTaskKind::Border(..) |
             RenderTaskKind::LineDecoration(..) |
+            RenderTaskKind::Gradient(..) |
             RenderTaskKind::Blit(..) => {
                 [0.0; 3]
             }
@@ -962,6 +996,7 @@ impl RenderTask {
             RenderTaskKind::Blit(..) |
             RenderTaskKind::Border(..) |
             RenderTaskKind::CacheMask(..) |
+            RenderTaskKind::Gradient(..) |
             RenderTaskKind::LineDecoration(..) |
             RenderTaskKind::Glyph(..) => {
                 panic!("texture handle not supported for this task kind");
@@ -1031,6 +1066,7 @@ impl RenderTask {
             }
 
             RenderTaskKind::Border(..) |
+            RenderTaskKind::Gradient(..) |
             RenderTaskKind::Picture(..) => {
                 RenderTargetKind::Color
             }
@@ -1067,6 +1103,7 @@ impl RenderTask {
             RenderTaskKind::ClipRegion(..) |
             RenderTaskKind::Border(..) |
             RenderTaskKind::CacheMask(..) |
+            RenderTaskKind::Gradient(..) |
             RenderTaskKind::LineDecoration(..) |
             RenderTaskKind::Glyph(..) => {
                 return;
@@ -1126,6 +1163,9 @@ impl RenderTask {
             RenderTaskKind::Glyph(..) => {
                 pt.new_level("Glyph".to_owned());
             }
+            RenderTaskKind::Gradient(..) => {
+                pt.new_level("Gradient".to_owned());
+            }
         }
 
         pt.add_item(format!("clear to: {:?}", self.clear_mode));
@@ -1164,6 +1204,7 @@ pub enum RenderTaskCacheKeyKind {
     Glyph(GpuGlyphCacheKey),
     BorderSegment(BorderSegmentCacheKey),
     LineDecoration(LineDecorationCacheKey),
+    Gradient(GradientCacheKey),
 }
 
 #[derive(Clone, Debug, Hash, PartialEq, Eq)]
