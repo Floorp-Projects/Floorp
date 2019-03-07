@@ -168,24 +168,7 @@ nsresult LookupCacheV4::StoreToFile(nsCOMPtr<nsIFile>& aFile) {
 }
 
 nsresult LookupCacheV4::LoadFromFile(nsCOMPtr<nsIFile>& aFile) {
-  nsresult rv = mVLPrefixSet->LoadFromFile(aFile);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  nsCString state, sha256;
-  rv = LoadMetadata(state, sha256);
-  Telemetry::Accumulate(Telemetry::URLCLASSIFIER_VLPS_METADATA_CORRUPT,
-                        rv == NS_ERROR_FILE_CORRUPTED);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  rv = VerifySHA256(sha256);
-  Telemetry::Accumulate(Telemetry::URLCLASSIFIER_VLPS_LOAD_CORRUPT,
-                        rv == NS_ERROR_FILE_CORRUPTED);
-  Unused << NS_WARN_IF(NS_FAILED(rv));
-  return rv;
+  return mVLPrefixSet->LoadFromFile(aFile);
 }
 
 size_t LookupCacheV4::SizeOfPrefixSet() const {
@@ -366,37 +349,6 @@ nsresult LookupCacheV4::ApplyUpdate(RefPtr<TableUpdateV4> aTableUpdate,
 nsresult LookupCacheV4::AddFullHashResponseToCache(
     const FullHashResponseMap& aResponseMap) {
   CopyClassHashTable<FullHashResponseMap>(aResponseMap, mFullHashCache);
-
-  return NS_OK;
-}
-
-nsresult LookupCacheV4::VerifySHA256(const nsACString& aSHA256) {
-  nsCOMPtr<nsICryptoHash> crypto;
-  nsresult rv = InitCrypto(crypto);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  PrefixStringMap map;
-  mVLPrefixSet->GetPrefixes(map);
-
-  VLPrefixSet loadPSet(map);
-  uint32_t index = loadPSet.Count() + 1;
-  for (; index > 0; index--) {
-    nsAutoCString prefix;
-    if (!loadPSet.GetSmallestPrefix(prefix)) {
-      break;
-    }
-    UpdateSHA256(crypto, prefix);
-  }
-
-  nsAutoCString sha256;
-  crypto->Finish(false, sha256);
-
-  if (sha256 != aSHA256) {
-    LOG(("Sha256 hash mismatch when loading prefixes from file."));
-    return NS_ERROR_FILE_CORRUPTED;
-  }
 
   return NS_OK;
 }
