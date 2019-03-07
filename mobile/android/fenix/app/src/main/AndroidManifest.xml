@@ -10,6 +10,9 @@
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
 
+    <!-- Needed to prompt the user to give permission to install a downloaded apk -->
+    <uses-permission-sdk-23 android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+
     <application
             android:allowBackup="true"
             android:icon="@mipmap/ic_launcher"
