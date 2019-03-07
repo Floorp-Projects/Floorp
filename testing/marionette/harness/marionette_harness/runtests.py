@@ -14,7 +14,6 @@ from marionette_harness import (
     __version__,
     BaseMarionetteTestRunner,
     BaseMarionetteArguments,
-    BrowserMobProxyArguments,
     MarionetteTestCase,
 )
 
@@ -26,9 +25,7 @@ class MarionetteTestRunner(BaseMarionetteTestRunner):
 
 
 class MarionetteArguments(BaseMarionetteArguments):
-    def __init__(self, **kwargs):
-        BaseMarionetteArguments.__init__(self, **kwargs)
-        self.register_argument_container(BrowserMobProxyArguments())
+    pass
 
 
 class MarionetteHarness(object):
