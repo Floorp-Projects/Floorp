@@ -10,10 +10,11 @@ const {Log} = ChromeUtils.import("chrome://remote/content/Log.jsm");
 const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "log", Log.get);
+XPCOMUtils.defineLazyServiceGetter(this, "UUIDGen", "@mozilla.org/uuid-generator;1", "nsIUUIDGenerator");
 
 class Connection {
-  constructor(connID, transport) {
-    this.id = connID;
+  constructor(transport) {
+    this.id = UUIDGen.generateUUID().toString();
     this.transport = transport;
 
     this.transport.hooks = this;
