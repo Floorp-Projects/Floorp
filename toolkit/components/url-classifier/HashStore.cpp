@@ -206,8 +206,8 @@ nsresult TableUpdateV4::NewRemovalIndices(const uint32_t* aIndices,
   return NS_OK;
 }
 
-void TableUpdateV4::NewChecksum(const std::string& aChecksum) {
-  mChecksum.Assign(aChecksum.data(), aChecksum.size());
+void TableUpdateV4::SetSHA256(const std::string& aSHA256) {
+  mSHA256.Assign(aSHA256.data(), aSHA256.size());
 }
 
 nsresult TableUpdateV4::NewFullHashResponse(
