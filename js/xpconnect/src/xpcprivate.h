@@ -886,8 +886,6 @@ class XPCWrappedNativeScope final {
 
   void AddSizeOfIncludingThis(JSContext* cx, ScopeSizeInfo* scopeSizeInfo);
 
-  static bool IsDyingScope(XPCWrappedNativeScope* scope);
-
   // Gets the appropriate scope object for XBL in this compartment. This method
   // relies on compartment-per-global still (and release-asserts this). The
   // context must be same-realm with this compartment's single global upon
