@@ -76,6 +76,7 @@ class Mitmproxy(Playback):
         self.mitmdump_path = None
         self.recordings = config.get("playback_recordings")
         self.browser_path = config.get("binary")
+        self.policies_dir = None
 
         # mozproxy_dir is where we will download all mitmproxy required files
         # when running locally it comes from obj_path via mozharness/mach
@@ -98,13 +99,15 @@ class Mitmproxy(Playback):
 
         # go ahead and download and setup mitmproxy
         self.download()
-
         # mitmproxy must be started before setup, so that the CA cert is available
         self.start()
 
-        # XXX if this fails, we fail to create an insatnce and mitdump has
-        # started and become a ghost
-        self.setup()
+        # In case the setup fails, we want to stop the process before raising.
+        try:
+            self.setup()
+        except Exception:
+            self.stop()
+            raise
 
     def download(self):
         """Download and unpack mitmproxy binary and pageset using tooltool"""
@@ -332,7 +335,7 @@ class MitmproxyDesktop(Mitmproxy):
         """Turn off the browser proxy that was used for mitmproxy playback. In Firefox
         we need to change the autoconfig files to revert the proxy; for Chromium the proxy
         was setup on the cmd line, so nothing is required here."""
-        if self.config["app"] == "firefox":
+        if self.config["app"] == "firefox" and self.policies_dir is not None:
             LOG.info("Turning off the browser proxy")
 
             self.write_policies_json(
