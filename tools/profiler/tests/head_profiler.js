@@ -4,6 +4,48 @@
 
 var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 var {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+var {setTimeout} = ChromeUtils.import("resource://gre/modules/Timer.jsm");
+
+/**
+ * Get the payloads of a type recursively, including from all subprocesses.
+ *
+ * @param {Object} profile The gecko profile.
+ * @param {string} type The marker payload type, e.g. "DiskIO".
+ * @param {Array} payloadTarget The recursive list of payloads.
+ * @return {Array} The final payloads.
+ */
+function getAllPayloadsOfType(profile, type, payloadTarget = []) {
+  for (const {markers} of profile.threads) {
+    for (const markerTuple of markers.data) {
+      const payload = markerTuple[markers.schema.data];
+      if (payload && payload.type === type) {
+        payloadTarget.push(payload);
+      }
+    }
+  }
+
+  for (const subProcess of profile.processes) {
+    getAllPayloadsOfType(subProcess, type, payloadTarget);
+  }
+
+  return payloadTarget;
+}
+
+
+/**
+ * This is a helper function be able to run `await wait(500)`. Unfortunately this
+ * is needed as the act of collecting functions relies on the periodic sampling of
+ * the threads. See: https://bugzilla.mozilla.org/show_bug.cgi?id=1529053
+ *
+ * @param {number} time
+ * @returns {Promise}
+ */
+function wait(time) {
+  return new Promise(resolve => {
+    // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
+    setTimeout(resolve, time);
+  });
+}
 
 function getInflatedStackLocations(thread, sample) {
   let stackTable = thread.stackTable;
