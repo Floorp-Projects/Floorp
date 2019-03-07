@@ -661,7 +661,7 @@ void ServiceWorkerGlobalScope::SetOnfetch(
   if (aCallback) {
     if (mWorkerPrivate->WorkerScriptExecutedSuccessfully()) {
       RefPtr<Runnable> r = new ReportFetchListenerWarningRunnable(mScope);
-      mWorkerPrivate->DispatchToMainThread(r.forget());
+      mWorkerPrivate->DispatchToMainThreadForMessaging(r.forget());
     }
     mWorkerPrivate->SetFetchHandlerWasAdded();
   }
@@ -678,7 +678,7 @@ void ServiceWorkerGlobalScope::EventListenerAdded(nsAtom* aType) {
 
   if (mWorkerPrivate->WorkerScriptExecutedSuccessfully()) {
     RefPtr<Runnable> r = new ReportFetchListenerWarningRunnable(mScope);
-    mWorkerPrivate->DispatchToMainThread(r.forget());
+    mWorkerPrivate->DispatchToMainThreadForMessaging(r.forget());
   }
 
   mWorkerPrivate->SetFetchHandlerWasAdded();

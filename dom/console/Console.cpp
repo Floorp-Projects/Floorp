@@ -712,6 +712,8 @@ class ConsoleWorkerRunnable : public WorkerProxyToMainThreadRunnable,
   // This method is called in the owning thread of the Console object.
   virtual void ReleaseData() = 0;
 
+  bool ForMessaging() const override { return true; }
+
   // This must be released on the worker thread.
   RefPtr<Console> mConsole;
 
