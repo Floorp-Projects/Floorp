@@ -49,6 +49,7 @@ class MozURL final {
   nsDependentCSubstring Host() const { return mozurl_host(this); }
   // Will return the port number, if specified, or -1
   int32_t Port() const { return mozurl_port(this); }
+  int32_t RealPort() const { return mozurl_real_port(this); }
   // If the URL's port number is equal to the default port, will only return the
   // hostname, otherwise it will return a string of the form `{host}:{port}`
   // See: https://url.spec.whatwg.org/#default-port
@@ -58,11 +59,19 @@ class MozURL final {
   nsDependentCSubstring Query() const { return mozurl_query(this); }
   nsDependentCSubstring Ref() const { return mozurl_fragment(this); }
   bool HasFragment() const { return mozurl_has_fragment(this); }
+  nsDependentCSubstring Directory() const { return mozurl_directory(this); }
 
-  // WARNING: This does not match the definition of origins in nsIPrincipal for
-  // all URIs.
-  // XXX: Consider bringing these implementations in sync with one-another?
+  // This matches the definition of origins and base domains in nsIPrincipal for
+  // almost all URIs (some rare file:// URIs don't match and it would be hard to
+  // fix them). It definitely matches nsIPrincipal for URIs used in quota
+  // manager and there are checks in quota manager and its clients that prevent
+  // different definitions (see QuotaManager::IsPrincipalInfoValid).
+  // See also TestMozURL.cpp which enumerates a huge pile of URIs and checks
+  // that origin and base domain definitions are in sync.
   void Origin(nsACString& aOrigin) const { mozurl_origin(this, &aOrigin); }
+  nsresult BaseDomain(nsACString& aBaseDomain) const {
+    return mozurl_base_domain(this, &aBaseDomain);
+  }
 
   nsresult GetCommonBase(const MozURL* aOther, MozURL** aCommon) const {
     return mozurl_common_base(this, aOther, aCommon);

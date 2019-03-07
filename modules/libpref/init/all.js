@@ -1312,6 +1312,7 @@ pref("dom.storage.shadow_writes", true);
 pref("dom.storage.snapshot_prefill", 16384);
 pref("dom.storage.snapshot_reusing", true);
 pref("dom.storage.testing", false);
+pref("dom.storage.client_validation", true);
 
 pref("dom.send_after_paint_to_content", false);
 
@@ -1602,11 +1603,7 @@ pref("javascript.options.streams", true);
 pref("javascript.options.bigint", false);
 
 // Dynamic module import.
-#ifdef NIGHTLY_BUILD
 pref("javascript.options.dynamicImport", true);
-#else
-pref("javascript.options.dynamicImport", false);
-#endif
 
 // advanced prefs
 pref("advanced.mailftp",                    false);

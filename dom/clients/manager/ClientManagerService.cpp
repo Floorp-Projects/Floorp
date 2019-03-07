@@ -611,5 +611,30 @@ RefPtr<ClientOpPromise> ClientManagerService::OpenWindow(
   return promise.forget();
 }
 
+bool ClientManagerService::HasWindow(
+    const Maybe<ContentParentId>& aContentParentId,
+    const PrincipalInfo& aPrincipalInfo, const nsID& aClientId) {
+  AssertIsOnBackgroundThread();
+
+  ClientSourceParent* source = FindSource(aClientId, aPrincipalInfo);
+  if (!source) {
+    return false;
+  }
+
+  if (!source->ExecutionReady()) {
+    return false;
+  }
+
+  if (source->Info().Type() != ClientType::Window) {
+    return false;
+  }
+
+  if (aContentParentId && !source->IsOwnedByProcess(aContentParentId.value())) {
+    return false;
+  }
+
+  return true;
+}
+
 }  // namespace dom
 }  // namespace mozilla

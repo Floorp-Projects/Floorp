@@ -191,6 +191,8 @@ parent:
 
   async PQuota();
 
+  async ShutdownQuotaManager();
+
   async PFileSystemRequest(FileSystemParams params);
 
   async PGamepadEventChannel();

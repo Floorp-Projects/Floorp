@@ -1553,7 +1553,7 @@ static MOZ_MUST_USE JSObject* ReadableStreamCreateReadResult(
   NativeObject* obj;
   JS_TRY_VAR_OR_RETURN_NULL(
       cx, obj,
-      NativeObject::createWithTemplate(cx, gc::DefaultHeap, templateObject));
+      NativeObject::createWithTemplate(cx, templateObject));
 
   // Step 5: Perform CreateDataProperty(obj, "value", value).
   obj->setSlot(Realm::IterResultObjectValueSlot, value);

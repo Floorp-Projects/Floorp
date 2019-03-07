@@ -184,11 +184,11 @@ void ProxyObject::nuke() {
     realm->newProxyCache.add(group, shape);
   }
 
-  gc::InitialHeap heap = GetInitialHeap(newKind, clasp);
+  gc::InitialHeap heap = GetInitialHeap(newKind, group);
   debugCheckNewObject(group, shape, allocKind, heap);
 
-  JSObject* obj = js::Allocate<JSObject>(cx, allocKind, /* nDynamicSlots = */ 0,
-                                         heap, clasp);
+  JSObject* obj = js::AllocateObject(cx, allocKind, /* nDynamicSlots = */ 0,
+                                     heap, clasp);
   if (!obj) {
     return cx->alreadyReportedOOM();
   }

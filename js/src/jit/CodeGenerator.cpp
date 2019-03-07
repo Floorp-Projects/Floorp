@@ -2402,12 +2402,12 @@ void CreateDependentString::generate(MacroAssembler& masm,
 
 static void* AllocateString(JSContext* cx) {
   AutoUnsafeCallWithABI unsafe;
-  return js::Allocate<JSString, NoGC>(cx, js::gc::TenuredHeap);
+  return js::AllocateString<JSString, NoGC>(cx, js::gc::TenuredHeap);
 }
 
 static void* AllocateFatInlineString(JSContext* cx) {
   AutoUnsafeCallWithABI unsafe;
-  return js::Allocate<JSFatInlineString, NoGC>(cx, js::gc::TenuredHeap);
+  return js::AllocateString<JSFatInlineString, NoGC>(cx, js::gc::TenuredHeap);
 }
 
 void CreateDependentString::generateFallback(MacroAssembler& masm) {
@@ -2443,8 +2443,8 @@ void CreateDependentString::generateFallback(MacroAssembler& masm) {
 static void* CreateMatchResultFallbackFunc(JSContext* cx, gc::AllocKind kind,
                                            size_t nDynamicSlots) {
   AutoUnsafeCallWithABI unsafe;
-  return js::Allocate<JSObject, NoGC>(cx, kind, nDynamicSlots, gc::DefaultHeap,
-                                      &ArrayObject::class_);
+  return js::AllocateObject<NoGC>(cx, kind, nDynamicSlots, gc::DefaultHeap,
+                                  &ArrayObject::class_);
 }
 
 static void CreateMatchResultFallback(MacroAssembler& masm, Register object,
@@ -6608,8 +6608,7 @@ void CodeGenerator::visitOutOfLineNewArray(OutOfLineNewArray* ool) {
   masm.jump(ool->rejoin());
 }
 
-typedef ArrayObject* (*NewArrayCopyOnWriteFn)(JSContext*, HandleArrayObject,
-                                              gc::InitialHeap);
+typedef ArrayObject* (*NewArrayCopyOnWriteFn)(JSContext*, HandleArrayObject);
 static const VMFunction NewArrayCopyOnWriteInfo =
     FunctionInfo<NewArrayCopyOnWriteFn>(js::NewDenseCopyOnWriteArray,
                                         "NewDenseCopyOnWriteArray");
@@ -6623,7 +6622,7 @@ void CodeGenerator::visitNewArrayCopyOnWrite(LNewArrayCopyOnWrite* lir) {
   // If we have a template object, we can inline call object creation.
   OutOfLineCode* ool =
       oolCallVM(NewArrayCopyOnWriteInfo, lir,
-                ArgList(ImmGCPtr(templateObject), Imm32(initialHeap)),
+                ArgList(ImmGCPtr(templateObject)),
                 StoreRegisterTo(objReg));
 
   TemplateObject templateObj(templateObject);

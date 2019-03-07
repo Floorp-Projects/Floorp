@@ -65,6 +65,10 @@ nsresult CheckedPrincipalToPrincipalInfo(nsIPrincipal* aPrincipal,
     return rv;
   }
 
+  if (NS_WARN_IF(!QuotaManager::IsPrincipalInfoValid(aPrincipalInfo))) {
+    return NS_ERROR_FAILURE;
+  }
+
   if (aPrincipalInfo.type() != PrincipalInfo::TContentPrincipalInfo &&
       aPrincipalInfo.type() != PrincipalInfo::TSystemPrincipalInfo) {
     return NS_ERROR_UNEXPECTED;
@@ -116,18 +120,6 @@ nsresult GetClearResetOriginParams(nsIPrincipal* aPrincipal,
 
   return NS_OK;
 }
-
-class AbortOperationsRunnable final : public Runnable {
-  ContentParentId mContentParentId;
-
- public:
-  explicit AbortOperationsRunnable(ContentParentId aContentParentId)
-      : Runnable("dom::quota::AbortOperationsRunnable"),
-        mContentParentId(aContentParentId) {}
-
- private:
-  NS_DECL_NSIRUNNABLE
-};
 
 }  // namespace
 
@@ -240,35 +232,20 @@ void QuotaManagerService::ClearBackgroundActor() {
   mBackgroundActor = nullptr;
 }
 
-void QuotaManagerService::NoteLiveManager(QuotaManager* aManager) {
-  MOZ_ASSERT(XRE_IsParentProcess());
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aManager);
-
-  mBackgroundThread = aManager->OwningThread();
-}
-
-void QuotaManagerService::NoteShuttingDownManager() {
-  MOZ_ASSERT(XRE_IsParentProcess());
-  MOZ_ASSERT(NS_IsMainThread());
-
-  mBackgroundThread = nullptr;
-}
-
 void QuotaManagerService::AbortOperationsForProcess(
     ContentParentId aContentParentId) {
   MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT(NS_IsMainThread());
 
-  if (!mBackgroundThread) {
+  nsresult rv = EnsureBackgroundActor();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
     return;
   }
 
-  RefPtr<AbortOperationsRunnable> runnable =
-      new AbortOperationsRunnable(aContentParentId);
-
-  MOZ_ALWAYS_SUCCEEDS(
-      mBackgroundThread->Dispatch(runnable, NS_DISPATCH_NORMAL));
+  if (NS_WARN_IF(
+          !mBackgroundActor->SendAbortOperationsForProcess(aContentParentId))) {
+    return;
+  }
 }
 
 nsresult QuotaManagerService::Init() {
@@ -306,8 +283,9 @@ void QuotaManagerService::Destroy() {
   delete this;
 }
 
-nsresult QuotaManagerService::InitiateRequest(
-    nsAutoPtr<PendingRequestInfo>& aInfo) {
+nsresult QuotaManagerService::EnsureBackgroundActor() {
+  MOZ_ASSERT(NS_IsMainThread());
+
   // Nothing can be done here if we have previously failed to create a
   // background actor.
   if (mBackgroundActorFailed) {
@@ -335,8 +313,17 @@ nsresult QuotaManagerService::InitiateRequest(
     return NS_ERROR_FAILURE;
   }
 
-  // If we already have a background actor then we can start this request now.
-  nsresult rv = aInfo->InitiateRequest(mBackgroundActor);
+  return NS_OK;
+}
+
+nsresult QuotaManagerService::InitiateRequest(
+    nsAutoPtr<PendingRequestInfo>& aInfo) {
+  nsresult rv = EnsureBackgroundActor();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = aInfo->InitiateRequest(mBackgroundActor);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -586,11 +573,14 @@ QuotaManagerService::ClearStoragesForOriginAttributesPattern(
     const nsAString& aPattern, nsIQuotaRequest** _retval) {
   MOZ_ASSERT(NS_IsMainThread());
 
+  OriginAttributesPattern pattern;
+  MOZ_ALWAYS_TRUE(pattern.Init(aPattern));
+
   RefPtr<Request> request = new Request();
 
   ClearDataParams params;
 
-  params.pattern() = aPattern;
+  params.pattern() = pattern;
 
   nsAutoPtr<PendingRequestInfo> info(new RequestInfo(request, params));
 
@@ -826,24 +816,6 @@ QuotaManagerService::Observe(nsISupports* aSubject, const char* aTopic,
 void QuotaManagerService::Notify(const hal::BatteryInformation& aBatteryInfo) {
   // This notification is received when battery data changes. We don't need to
   // deal with this notification.
-}
-
-NS_IMETHODIMP
-AbortOperationsRunnable::Run() {
-  AssertIsOnBackgroundThread();
-
-  if (QuotaManager::IsShuttingDown()) {
-    return NS_OK;
-  }
-
-  QuotaManager* quotaManager = QuotaManager::Get();
-  if (!quotaManager) {
-    return NS_OK;
-  }
-
-  quotaManager->AbortOperationsForProcess(mContentParentId);
-
-  return NS_OK;
 }
 
 nsresult QuotaManagerService::UsageRequestInfo::InitiateRequest(

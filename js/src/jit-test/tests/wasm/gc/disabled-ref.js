@@ -2,4 +2,4 @@
 
 wasmCompilationShouldFail(
     wasmTextToBinary(`(module (func (param (ref 0)) (unreachable)))`),
-    /reference types not enabled/);
+    /\(ref T\) types not enabled/);

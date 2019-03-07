@@ -846,7 +846,7 @@ NativeObject* UnboxedPlainObject::convertToNative(JSContext* cx,
   debugCheckNewObject(group, /* shape = */ nullptr, kind, heap);
 
   JSObject* obj =
-      js::Allocate<JSObject>(cx, kind, /* nDynamicSlots = */ 0, heap, clasp);
+      js::AllocateObject(cx, kind, /* nDynamicSlots = */ 0, heap, clasp);
   if (!obj) {
     return cx->alreadyReportedOOM();
   }
@@ -875,7 +875,7 @@ UnboxedPlainObject* UnboxedPlainObject::create(JSContext* cx,
     AutoSweepObjectGroup sweep(group);
     allocKind = group->unboxedLayout(sweep).getAllocKind();
   }
-  gc::InitialHeap heap = GetInitialHeap(newKind, &class_);
+  gc::InitialHeap heap = GetInitialHeap(newKind, group);
 
   MOZ_ASSERT(newKind != SingletonObject);
 

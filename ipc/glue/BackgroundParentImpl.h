@@ -275,6 +275,8 @@ class BackgroundParentImpl : public PBackgroundParent {
 
   virtual bool DeallocPQuotaParent(PQuotaParent* aActor) override;
 
+  virtual mozilla::ipc::IPCResult RecvShutdownQuotaManager() override;
+
   virtual PFileSystemRequestParent* AllocPFileSystemRequestParent(
       const FileSystemParams&) override;
 
