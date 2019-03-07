@@ -32,7 +32,6 @@ window._gBrowser = {
     window.addEventListener("occlusionstatechange", this);
 
     this._setupInitialBrowserAndTab();
-    this._preopenPinnedTabs();
 
     if (Services.prefs.getBoolPref("browser.display.use_system_colors")) {
       this.tabpanels.style.backgroundColor = "-moz-default-background-color";
@@ -384,31 +383,6 @@ window._gBrowser = {
     browser.webProgress.addProgressListener(filter, Ci.nsIWebProgress.NOTIFY_ALL);
   },
 
-  _preopenPinnedTabs() {
-    let numPinnedTabs = 0;
-    if (!PrivateBrowsingUtils.isWindowPrivate(window)) {
-      let windows = browserWindows();
-      windows.getNext();
-      let isOnlyWindow = !windows.hasMoreElements();
-      if (isOnlyWindow) {
-        numPinnedTabs = Services.prefs.getIntPref("browser.tabs.firstWindowRestore.numPinnedTabs", 0);
-      }
-    }
-
-    for (let i = 0; i < numPinnedTabs; i++) {
-      let tab = this.addTrustedTab("about:blank", {
-        skipAnimation: true,
-        noInitialLabel: true,
-        skipBackgroundNotify: true,
-        createLazyBrowser: true,
-        pinned: true,
-        isForFirstWindowRestore: true,
-      });
-
-      tab.setAttribute("preopened", "true");
-    }
-  },
-
   /**
    * BEGIN FORWARDED BROWSER PROPERTIES.  IF YOU ADD A PROPERTY TO THE BROWSER ELEMENT
    * MAKE SURE TO ADD IT HERE AS WELL.
@@ -619,31 +593,12 @@ window._gBrowser = {
     this.tabContainer._updateCloseButtons();
   },
 
-  _sendPinnedTabContentMessage(aTab) {
+  _notifyPinnedStatus(aTab) {
     this.getBrowserForTab(aTab).messageManager.sendAsyncMessage("Browser:AppTab", { isAppTab: aTab.pinned });
-  },
-
-  _notifyPinnedStatus(aTab, aDeferContentMessage = false) {
-    if (!aDeferContentMessage) {
-      this._sendPinnedTabContentMessage(aTab);
-    }
 
     let event = document.createEvent("Events");
     event.initEvent(aTab.pinned ? "TabPinned" : "TabUnpinned", true, false);
     aTab.dispatchEvent(event);
-  },
-
-  _maybeUpdateNumPinnedTabsPref() {
-    if (!PrivateBrowsingUtils.isWindowPrivate(window) &&
-        BrowserWindowTracker.getTopWindow() == window) {
-      Services.prefs.setIntPref("browser.tabs.firstWindowRestore.numPinnedTabs",
-                                this._numPinnedTabs);
-    }
-  },
-
-  activatePreopenedPinnedTab(aTab) {
-    this._insertBrowser(aTab);
-    this._sendPinnedTabContentMessage(aTab);
   },
 
   pinTab(aTab) {
@@ -657,7 +612,6 @@ window._gBrowser = {
     aTab.setAttribute("pinned", "true");
     this._updateTabBarForPinnedTabs();
     this._notifyPinnedStatus(aTab);
-    this._maybeUpdateNumPinnedTabsPref();
   },
 
   unpinTab(aTab) {
@@ -669,7 +623,6 @@ window._gBrowser = {
     aTab.style.marginInlineStart = "";
     this._updateTabBarForPinnedTabs();
     this._notifyPinnedStatus(aTab);
-    this._maybeUpdateNumPinnedTabsPref();
   },
 
   previewTab(aTab, aCallback) {
@@ -2353,7 +2306,6 @@ window._gBrowser = {
     forceNotRemote,
     fromExternal,
     index,
-    isForFirstWindowRestore,
     lazyTabTitle,
     name,
     nextTabParentId,
@@ -2537,9 +2489,6 @@ window._gBrowser = {
 
       if (pinned) {
         this._updateTabBarForPinnedTabs();
-        if (!isForFirstWindowRestore) {
-          this._maybeUpdateNumPinnedTabsPref();
-        }
       }
       this.tabContainer._setPositionalAttributes();
 
@@ -2619,15 +2568,13 @@ window._gBrowser = {
                                                       userContextId);
           b.registeredOpenURI = lazyBrowserURI;
         }
-        if (!isForFirstWindowRestore) {
-          SessionStore.setTabState(t, {
-            entries: [{
-              url: lazyBrowserURI ? lazyBrowserURI.spec : "about:blank",
-              title: lazyTabTitle,
-              triggeringPrincipal_base64: E10SUtils.serializePrincipal(triggeringPrincipal),
-            }],
-          });
-        }
+        SessionStore.setTabState(t, {
+          entries: [{
+            url: lazyBrowserURI ? lazyBrowserURI.spec : "about:blank",
+            title: lazyTabTitle,
+            triggeringPrincipal_base64: E10SUtils.serializePrincipal(triggeringPrincipal),
+          }],
+        });
       } else {
         this._insertBrowser(t, true);
       }
@@ -2665,9 +2612,7 @@ window._gBrowser = {
 
     // If we didn't swap docShells with a preloaded browser
     // then let's just continue loading the page normally.
-    if (!usingPreloadedContent &&
-        !createLazyBrowser &&
-        (!uriIsAboutBlank || !allowInheritPrincipal)) {
+    if (!usingPreloadedContent && (!uriIsAboutBlank || !allowInheritPrincipal)) {
       // pretend the user typed this so it'll be available till
       // the document successfully loads
       if (aURI && !gInitialPages.includes(aURI)) {
@@ -2720,7 +2665,7 @@ window._gBrowser = {
 
     // Additionally send pinned tab events
     if (pinned) {
-      this._notifyPinnedStatus(t, isForFirstWindowRestore);
+      this._notifyPinnedStatus(t);
     }
 
     return t;
@@ -3218,10 +3163,8 @@ window._gBrowser = {
       this.tabs[i]._tPos = i;
 
     if (!this._windowIsClosing) {
-      if (wasPinned) {
+      if (wasPinned)
         this.tabContainer._positionPinnedTabs();
-        this._maybeUpdateNumPinnedTabsPref();
-      }
 
       // update tab close buttons state
       this.tabContainer._updateCloseButtons();
@@ -3894,6 +3837,7 @@ window._gBrowser = {
       skipAnimation: true,
       index: aIndex,
       createLazyBrowser,
+      allowInheritPrincipal: createLazyBrowser,
     };
 
     let numPinned = this._numPinnedTabs;
@@ -5070,7 +5014,6 @@ class TabProgressListener {
         this.mTab.removeAttribute("crashed");
       }
 
-      this.mTab.removeAttribute("preopened");
       if (this._shouldShowProgress(aRequest)) {
         if (!(aStateFlags & Ci.nsIWebProgressListener.STATE_RESTORING) &&
             aWebProgress && aWebProgress.isTopLevel) {
