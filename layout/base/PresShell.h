@@ -1051,6 +1051,24 @@ class PresShell final : public nsIPresShell,
                                  nsIContent* aOverrideClickTarget);
 
     /**
+     * HandlingTimeAccumulator() may accumulate handling time of telemetry
+     * for each type of events.
+     */
+    class MOZ_STACK_CLASS HandlingTimeAccumulator final {
+     public:
+      HandlingTimeAccumulator() = delete;
+      HandlingTimeAccumulator(const HandlingTimeAccumulator& aOther) = delete;
+      HandlingTimeAccumulator(const EventHandler& aEventHandler,
+                              const WidgetEvent* aEvent);
+      ~HandlingTimeAccumulator();
+
+     private:
+      const EventHandler& mEventHandler;
+      const WidgetEvent* mEvent;
+      TimeStamp mHandlingStartTime;
+    };
+
+    /**
      * RecordEventHandlingResponsePerformance() records event handling response
      * performance with telemetry.
      *
