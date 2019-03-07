@@ -11425,15 +11425,9 @@ bool BaseCompiler::emitBody() {
 #endif
 #ifdef ENABLE_WASM_REFTYPES
       case uint16_t(Op::RefNull):
-        if (!env_.gcTypesEnabled()) {
-          return iter_.unrecognizedOpcode(&op);
-        }
         CHECK_NEXT(emitRefNull());
         break;
       case uint16_t(Op::RefIsNull):
-        if (!env_.gcTypesEnabled()) {
-          return iter_.unrecognizedOpcode(&op);
-        }
         CHECK_NEXT(
             emitConversion(emitRefIsNull, ValType::AnyRef, ValType::I32));
         break;

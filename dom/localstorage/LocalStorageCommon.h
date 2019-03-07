@@ -181,7 +181,17 @@
  * interface.
  */
 
+#include "mozilla/Attributes.h"
+#include "nsString.h"
+
 namespace mozilla {
+
+namespace ipc {
+
+class PrincipalInfo;
+
+}  // namespace ipc
+
 namespace dom {
 
 extern const char16_t* kLocalStorageType;
@@ -210,8 +220,12 @@ class MOZ_STACK_CLASS LSNotifyInfo {
 };
 
 /**
- * Main-thread-only check of LSNG being enabled, the value is latched once
- * initialized so changing the preference during runtime has no effect.
+ * A check of LSNG being enabled, the value is latched once initialized so
+ * changing the preference during runtime has no effect.
+ * May be called on any thread in the parent process, but you should call
+ * CachedNextGenLocalStorageEnabled if you know that NextGenLocalStorageEnabled
+ * was already called because it is faster.
+ * May be called on the main thread only in a content process.
  */
 bool NextGenLocalStorageEnabled();
 
@@ -219,6 +233,10 @@ bool NextGenLocalStorageEnabled();
  * Cached any-thread version of NextGenLocalStorageEnabled().
  */
 bool CachedNextGenLocalStorageEnabled();
+
+nsresult GenerateOriginKey2(const mozilla::ipc::PrincipalInfo& aPrincipalInfo,
+                            nsACString& aOriginAttrSuffix,
+                            nsACString& aOriginKey);
 
 }  // namespace dom
 }  // namespace mozilla

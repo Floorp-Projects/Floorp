@@ -1722,6 +1722,7 @@ dependencies = [
  "nserror 0.1.0",
  "nsstring 0.1.0",
  "url 1.7.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "uuid 0.6.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "xpcom 0.1.0",
 ]
 

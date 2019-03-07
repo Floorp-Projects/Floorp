@@ -86,6 +86,17 @@ class nsEditingSession final : public nsIEditingSession,
   void RemoveListenersAndControllers(nsPIDOMWindowOuter* aWindow,
                                      mozilla::HTMLEditor* aHTMLEditor);
 
+  /**
+   * Disable scripts and plugins in aDocShell.
+   */
+  nsresult DisableJSAndPlugins(nsIDocShell& aDocShell);
+
+  /**
+   * Restore JS and plugins (enable/disable them) according to the state they
+   * were before the last call to disableJSAndPlugins.
+   */
+  nsresult RestoreJSAndPlugins(nsPIDOMWindowOuter* aWindow);
+
  protected:
   bool mDoneSetup;  // have we prepared for editing yet?
 

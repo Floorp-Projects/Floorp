@@ -367,7 +367,7 @@ BackgroundParentImpl::AllocPBackgroundLSSimpleRequestParent(
   AssertIsInMainOrSocketProcess();
   AssertIsOnBackgroundThread();
 
-  return mozilla::dom::AllocPBackgroundLSSimpleRequestParent(aParams);
+  return mozilla::dom::AllocPBackgroundLSSimpleRequestParent(this, aParams);
 }
 
 mozilla::ipc::IPCResult
@@ -982,6 +982,20 @@ bool BackgroundParentImpl::DeallocPQuotaParent(PQuotaParent* aActor) {
   MOZ_ASSERT(aActor);
 
   return mozilla::dom::quota::DeallocPQuotaParent(aActor);
+}
+
+mozilla::ipc::IPCResult BackgroundParentImpl::RecvShutdownQuotaManager() {
+  AssertIsInMainOrSocketProcess();
+  AssertIsOnBackgroundThread();
+
+  if (BackgroundParent::IsOtherProcessActor(this)) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+
+  if (!mozilla::dom::quota::RecvShutdownQuotaManager()) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+  return IPC_OK();
 }
 
 dom::PFileSystemRequestParent*

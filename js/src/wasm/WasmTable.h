@@ -80,7 +80,7 @@ class Table : public ShareableBase<Table> {
   // Only for function values.  Raw pointer to the table.
   uint8_t* functionBase() const;
 
-  // get/setAnyFunc is allowed only on table-of-anyfunc.
+  // get/setAnyFunc is allowed only on table-of-funcref.
   // get/setAnyRef is allowed only on table-of-anyref.
   // setNull is allowed on either.
   const FunctionTableElem& getAnyFunc(uint32_t index) const;

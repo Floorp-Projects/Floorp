@@ -377,11 +377,12 @@ async function checkClickOnNode(hud, toolbox, frameLinkNode, expectUrl) {
     return !!dbg._selectors.getSelectedSource(dbg._getState());
   });
 
-  is(
-    dbg._selectors.getSelectedSource(dbg._getState()).url,
-    expectUrl ? url : null,
-    "expected source url"
-  );
+  if (expectUrl) {
+    is(
+      dbg._selectors.getSelectedSource(dbg._getState()).url, url,
+      "expected source url"
+    );
+  }
 }
 
 /**

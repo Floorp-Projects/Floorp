@@ -14,6 +14,8 @@ class LSDatabaseChild;
 class LSSnapshot;
 
 class LSDatabase final {
+  class Observer;
+
   LSDatabaseChild* mActor;
 
   LSSnapshot* mSnapshot;
@@ -22,6 +24,8 @@ class LSDatabase final {
 
   bool mAllowedToClose;
   bool mRequestedAllowToClose;
+
+  static StaticRefPtr<Observer> sObserver;
 
  public:
   explicit LSDatabase(const nsACString& aOrigin);

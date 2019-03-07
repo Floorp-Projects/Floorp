@@ -12,12 +12,7 @@
 #include "mozilla/dom/quota/PersistenceType.h"
 #include "mozilla/Mutex.h"
 #include "nsClassHashtable.h"
-#include "nsCOMPtr.h"
 #include "nsHashKeys.h"
-#include "nsINamed.h"
-#include "nsITimer.h"
-
-class nsIEventTarget;
 
 namespace mozilla {
 
@@ -27,12 +22,6 @@ namespace dom {
 
 class IDBFactory;
 
-namespace quota {
-
-class QuotaManager;
-
-}  // namespace quota
-
 namespace indexedDB {
 
 class BackgroundUtilsChild;
@@ -41,9 +30,8 @@ class FileManagerInfo;
 
 }  // namespace indexedDB
 
-class IndexedDatabaseManager final : public nsITimerCallback, public nsINamed {
+class IndexedDatabaseManager final {
   typedef mozilla::dom::quota::PersistenceType PersistenceType;
-  typedef mozilla::dom::quota::QuotaManager QuotaManager;
   typedef mozilla::dom::indexedDB::FileManager FileManager;
   typedef mozilla::dom::indexedDB::FileManagerInfo FileManagerInfo;
 
@@ -56,9 +44,7 @@ class IndexedDatabaseManager final : public nsITimerCallback, public nsINamed {
     Logging_DetailedProfilerMarks
   };
 
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSITIMERCALLBACK
-  NS_DECL_NSINAMED
+  NS_INLINE_DECL_REFCOUNTING_WITH_DESTROY(IndexedDatabaseManager, Destroy())
 
   // Returns a non-owning reference.
   static IndexedDatabaseManager* GetOrCreate();
@@ -111,10 +97,6 @@ class IndexedDatabaseManager final : public nsITimerCallback, public nsINamed {
 
   void ClearBackgroundActor();
 
-  void NoteLiveQuotaManager(QuotaManager* aQuotaManager);
-
-  void NoteShuttingDownQuotaManager();
-
   already_AddRefed<FileManager> GetFileManager(PersistenceType aPersistenceType,
                                                const nsACString& aOrigin,
                                                const nsAString& aDatabaseName);
@@ -129,8 +111,6 @@ class IndexedDatabaseManager final : public nsITimerCallback, public nsINamed {
   void InvalidateFileManager(PersistenceType aPersistenceType,
                              const nsACString& aOrigin,
                              const nsAString& aDatabaseName);
-
-  nsresult AsyncDeleteFile(FileManager* aFileManager, int64_t aFileId);
 
   // Don't call this method in real code, it blocks the main thread!
   // It is intended to be used by mochitests to test correctness of the special
@@ -170,10 +150,6 @@ class IndexedDatabaseManager final : public nsITimerCallback, public nsINamed {
 
   static void LoggingModePrefChangedCallback(const char* aPrefName,
                                              void* aClosure);
-
-  nsCOMPtr<nsIEventTarget> mBackgroundThread;
-
-  nsCOMPtr<nsITimer> mDeleteTimer;
 
   // Maintains a list of all file managers per origin. This list isn't
   // protected by any mutex but it is only ever touched on the IO thread.

@@ -9,13 +9,30 @@
 namespace mozilla {
 namespace dom {
 
+using namespace mozilla::services;
+
 namespace {
+
+#define XPCOM_SHUTDOWN_OBSERVER_TOPIC "xpcom-shutdown"
 
 typedef nsDataHashtable<nsCStringHashKey, LSDatabase*> LSDatabaseHashtable;
 
 StaticAutoPtr<LSDatabaseHashtable> gLSDatabases;
 
 }  // namespace
+
+StaticRefPtr<LSDatabase::Observer> LSDatabase::sObserver;
+
+class LSDatabase::Observer final : public nsIObserver {
+ public:
+  Observer() { MOZ_ASSERT(NS_IsMainThread()); }
+
+ private:
+  ~Observer() { MOZ_ASSERT(NS_IsMainThread()); }
+
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIOBSERVER
+};
 
 LSDatabase::LSDatabase(const nsACString& aOrigin)
     : mActor(nullptr),
@@ -27,6 +44,16 @@ LSDatabase::LSDatabase(const nsACString& aOrigin)
 
   if (!gLSDatabases) {
     gLSDatabases = new LSDatabaseHashtable();
+
+    MOZ_ASSERT(!sObserver);
+
+    sObserver = new Observer();
+
+    nsCOMPtr<nsIObserverService> obsSvc = GetObserverService();
+    MOZ_ASSERT(obsSvc);
+
+    MOZ_ALWAYS_SUCCEEDS(
+        obsSvc->AddObserver(sObserver, XPCOM_SHUTDOWN_OBSERVER_TOPIC, false));
   }
 
   MOZ_ASSERT(!gLSDatabases->Get(mOrigin));
@@ -62,7 +89,10 @@ void LSDatabase::SetActor(LSDatabaseChild* aActor) {
 
 void LSDatabase::RequestAllowToClose() {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(!mRequestedAllowToClose);
+
+  if (mRequestedAllowToClose) {
+    return;
+  }
 
   mRequestedAllowToClose = true;
 
@@ -315,7 +345,42 @@ void LSDatabase::AllowToClose() {
 
   if (!gLSDatabases->Count()) {
     gLSDatabases = nullptr;
+
+    MOZ_ASSERT(sObserver);
+
+    nsCOMPtr<nsIObserverService> obsSvc = GetObserverService();
+    MOZ_ASSERT(obsSvc);
+
+    MOZ_ALWAYS_SUCCEEDS(
+        obsSvc->RemoveObserver(sObserver, XPCOM_SHUTDOWN_OBSERVER_TOPIC));
+
+    sObserver = nullptr;
   }
+}
+
+NS_IMPL_ISUPPORTS(LSDatabase::Observer, nsIObserver)
+
+NS_IMETHODIMP
+LSDatabase::Observer::Observe(nsISupports* aSubject, const char* aTopic,
+                              const char16_t* aData) {
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(!strcmp(aTopic, XPCOM_SHUTDOWN_OBSERVER_TOPIC));
+  MOZ_ASSERT(gLSDatabases);
+
+  nsTArray<RefPtr<LSDatabase>> databases;
+
+  for (auto iter = gLSDatabases->ConstIter(); !iter.Done(); iter.Next()) {
+    LSDatabase* database = iter.Data();
+    MOZ_ASSERT(database);
+
+    databases.AppendElement(database);
+  }
+
+  for (RefPtr<LSDatabase>& database : databases) {
+    database->RequestAllowToClose();
+  }
+
+  return NS_OK;
 }
 
 }  // namespace dom

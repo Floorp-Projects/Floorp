@@ -1141,10 +1141,8 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
   },
 
   onSources: function(request) {
-    // FIXME bug 1530699 we should make sure that existing breakpoints are
-    // applied to any sources we find here.
     for (const source of this.dbg.findSources()) {
-      this.sources.createSourceActor(source);
+      this._addSource(source);
     }
 
     // No need to flush the new source packets here, as we are sending the
