@@ -18,6 +18,9 @@ loader.lazyRequireGetter(this, "TabboxPanel", "devtools/client/netmonitor/src/co
 const { getHTTPStatusCodeURL } = require("devtools/client/netmonitor/src/utils/mdn-utils");
 const LEARN_MORE = l10n.getStr("webConsoleMoreInfoLabel");
 
+const Services = require("Services");
+const isMacOS = Services.appinfo.OS === "Darwin";
+
 NetworkEventMessage.displayName = "NetworkEventMessage";
 
 NetworkEventMessage.propTypes = {
@@ -94,8 +97,12 @@ function NetworkEventMessage({
     );
   }
 
-  const toggle = () => {
-    if (open) {
+  const toggle = (e) => {
+    const shouldOpenLink = (isMacOS && e.metaKey) || (!isMacOS && e.ctrlKey);
+    if (shouldOpenLink) {
+      serviceContainer.openLink(request.url, e);
+      e.stopPropagation();
+    } else if (open) {
       dispatch(actions.messageClose(id));
     } else {
       dispatch(actions.messageOpen(id));
