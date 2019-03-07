@@ -125,7 +125,7 @@
   "log.js": ["Log"],
   "logger.jsm": ["Logger"],
   "logging.js": ["getTestLogger", "initTestLogging"],
-  "LoginManagerContent.jsm": ["LoginManagerContent", "LoginFormFactory", "UserAutoCompleteResult"],
+  "LoginManagerContent.jsm": ["LoginManagerContent", "LoginFormFactory"],
   "LoginRecipes.jsm": ["LoginRecipesContent", "LoginRecipesParent"],
   "logmanager.js": ["LogManager"],
   "lz4.js": ["Lz4"],
