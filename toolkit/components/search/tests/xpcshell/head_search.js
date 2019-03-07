@@ -1,19 +1,23 @@
 /* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
 /* vim:set ts=2 sw=2 sts=2 et: */
 
-var {FileUtils} = ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
+const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+
+XPCOMUtils.defineLazyModuleGetters(this, {
+  FileUtils: "resource://gre/modules/FileUtils.jsm",
+  NetUtil: "resource://gre/modules/NetUtil.jsm",
+  SearchTestUtils: "resource://testing-common/SearchTestUtils.jsm",
+  Services: "resource://gre/modules/Services.jsm",
+  setTimeout: "resource://gre/modules/Timer.jsm",
+  TestUtils: "resource://testing-common/TestUtils.jsm",
+});
+
 var {OS, require} = ChromeUtils.import("resource://gre/modules/osfile.jsm");
-var {NetUtil} = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
-var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-var {setTimeout} = ChromeUtils.import("resource://gre/modules/Timer.jsm");
-var {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 var {getAppInfo, newAppInfo, updateAppInfo} = ChromeUtils.import("resource://testing-common/AppInfo.jsm");
 var {HTTP_400, HTTP_401, HTTP_402, HTTP_403, HTTP_404, HTTP_405, HTTP_406, HTTP_407,
      HTTP_408, HTTP_409, HTTP_410, HTTP_411, HTTP_412, HTTP_413, HTTP_414, HTTP_415,
      HTTP_417, HTTP_500, HTTP_501, HTTP_502, HTTP_503, HTTP_504, HTTP_505, HttpError,
      HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js");
-ChromeUtils.defineModuleGetter(this, "TestUtils",
-                               "resource://testing-common/TestUtils.jsm");
 
 const BROWSER_SEARCH_PREF = "browser.search.";
 const PREF_SEARCH_URL = "geoSpecificDefaults.url";
@@ -274,7 +278,7 @@ function getDefaultEngineList(isUS) {
  * @return {Promise} Resolved when the cache file is saved.
  */
 function promiseAfterCache() {
-  return waitForSearchNotification("write-cache-to-disk-complete");
+  return SearchTestUtils.promiseSearchNotification("write-cache-to-disk-complete");
 }
 
 function parseJsonFromStream(aInputStream) {
@@ -490,37 +494,15 @@ function installTestEngine() {
   ]);
 }
 
-/**
- * Returns a promise that is resolved when an observer notification from the
- * search service fires with the specified data.
- *
- * @param expectedData
- *        The value the observer notification sends that causes us to resolve
- *        the promise.
- * @param expectedData
- *        The notification topic to observe. Defaults to 'browser-search-service'.
- */
-function waitForSearchNotification(expectedData, topic = "browser-search-service") {
-  return new Promise(resolve => {
-    Services.obs.addObserver(function observer(aSubject, aTopic, aData) {
-      if (aData != expectedData)
-        return;
-
-      Services.obs.removeObserver(observer, topic);
-      resolve(aSubject);
-    }, topic);
-  });
-}
-
 async function asyncInit() {
   await Services.search.init();
   Assert.ok(Services.search.isInitialized);
 }
 
 async function asyncReInit({ waitForRegionFetch = false } = {}) {
-  let promises = [waitForSearchNotification("reinit-complete")];
+  let promises = [SearchTestUtils.promiseSearchNotification("reinit-complete")];
   if (waitForRegionFetch) {
-    promises.push(waitForSearchNotification("ensure-known-region-done"));
+    promises.push(SearchTestUtils.promiseSearchNotification("ensure-known-region-done"));
   }
 
   Services.search.QueryInterface(Ci.nsIObserver)
