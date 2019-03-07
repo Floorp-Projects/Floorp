@@ -35,9 +35,13 @@ function runTest()
 }
 
 SimpleTest.waitForExplicitFinish();
-frame.onload = runTest;
-frame.src = "http://mochi.test:8888/tests/js/xpconnect/tests/mochitest/file_bug760131.html";
-
+SpecialPowers.pushPrefEnv(
+  {"set": [["dom.w3c_touch_events.legacy_apis.enabled", true]]},
+  function() {
+    frame.onload = runTest;
+    frame.src = "http://mochi.test:8888/tests/js/xpconnect/tests/mochitest/file_bug760131.html";
+  }
+);
 </script>
 </pre>
 </body>

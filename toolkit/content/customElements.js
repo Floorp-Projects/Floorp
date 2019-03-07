@@ -515,6 +515,7 @@ if (!isDummyDocument) {
     "chrome://global/content/elements/textbox.js",
     "chrome://global/content/elements/tabbox.js",
     "chrome://global/content/elements/tree.js",
+    "chrome://global/content/elements/wizard.js",
   ]) {
     Services.scriptloader.loadSubScript(script, window);
   }

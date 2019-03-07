@@ -96,6 +96,11 @@ else:
         'nsNativeAppSupportDefault.cpp',
     ]
 
+if CONFIG['MOZ_HAS_REMOTE']:
+    LOCAL_INCLUDES += [
+        '../components/remote',
+    ]
+
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk3':
     UNIFIED_SOURCES += [
         'nsGDKErrorHandler.cpp',
@@ -241,9 +246,6 @@ CXXFLAGS += CONFIG['MOZ_DBUS_GLIB_CFLAGS']
 
 if 'gtk' in CONFIG['MOZ_WIDGET_TOOLKIT']:
     CXXFLAGS += CONFIG['MOZ_PANGO_CFLAGS']
-    LOCAL_INCLUDES += [
-        '/widget/xremoteclient',
-    ]
 
 DEFINES['TOPOBJDIR'] = TOPOBJDIR
 FINAL_TARGET_PP_FILES += [
