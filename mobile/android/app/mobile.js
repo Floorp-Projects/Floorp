@@ -535,9 +535,13 @@ pref("layers.low-precision-opacity", "1.0");
 // work harder keep scrolling smooth and memory low.
 pref("layers.max-active", 20);
 
-// On Fennec we need containerful scrolling to support zooming. Bug 1459312
-// tracks zooming with containerless scrolling.
+// Use containerless scrolling in nightly builds on Fennec.
+// Bug 1137890 tracks letting containerless scrolling ride the trains.
+#ifdef NIGHTLY_BUILD
+pref("layout.scroll.root-frame-containers", 0);
+#else
 pref("layout.scroll.root-frame-containers", 1);
+#endif
 
 pref("notification.feature.enabled", true);
 pref("dom.webnotifications.enabled", true);
