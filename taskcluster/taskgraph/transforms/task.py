@@ -22,6 +22,7 @@ from taskgraph.util.hash import hash_path
 from taskgraph.util.treeherder import split_symbol
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.taskcluster import get_root_url
+from taskgraph.util.keyed_by import evaluate_keyed_by
 from taskgraph.util.schema import (
     validate_schema,
     Schema,
@@ -284,37 +285,15 @@ def get_branch_repo(config):
 COALESCE_KEY = '{project}.{job-identifier}'
 SUPERSEDER_URL = 'https://coalesce.mozilla-releng.net/v1/list/{age}/{size}/{key}'
 
-DEFAULT_BRANCH_PRIORITY = 'low'
-BRANCH_PRIORITIES = {
-    'mozilla-release': 'highest',
-    'comm-esr60': 'highest',
-    'mozilla-esr60': 'very-high',
-    'mozilla-beta': 'high',
-    'comm-beta': 'high',
-    'mozilla-central': 'medium',
-    'comm-central': 'medium',
-    'comm-aurora': 'medium',
-    'autoland': 'low',
-    'mozilla-inbound': 'low',
-    'try': 'very-low',
-    'try-comm-central': 'very-low',
-    'alder': 'very-low',
-    'ash': 'very-low',
-    'birch': 'very-low',
-    'cedar': 'very-low',
-    'cypress': 'very-low',
-    'elm': 'very-low',
-    'fig': 'very-low',
-    'gum': 'very-low',
-    'holly': 'very-low',
-    'jamun': 'very-low',
-    'larch': 'very-low',
-    'maple': 'very-low',
-    'oak': 'very-low',
-    'pine': 'very-low',
-    'graphics': 'very-low',
-    'ux': 'very-low',
-}
+
+@memoize
+def get_default_priority(graph_config, project):
+    return evaluate_keyed_by(
+        graph_config['task-priority'],
+        "Graph Config",
+        {'project': project}
+    )
+
 
 # define a collection of payload builders, depending on the worker implementation
 payload_builders = {}
@@ -1689,9 +1668,7 @@ def build_task(config, tasks):
             routes.append('coalesce.v1.' + key)
 
         if 'priority' not in task:
-            task['priority'] = BRANCH_PRIORITIES.get(
-                config.params['project'],
-                DEFAULT_BRANCH_PRIORITY)
+            task['priority'] = get_default_priority(config.graph_config, config.params['project'])
 
         tags = task.get('tags', {})
         tags.update({
