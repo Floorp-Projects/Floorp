@@ -1927,15 +1927,6 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     // and so we also need to be sure that there is still a source actor for the source.
     let sourceActor;
     if (this._debuggerSourcesSeen.has(source) && this.sources.hasSourceActor(source)) {
-      // When replaying, fall through and try to setup breakpoints, even for
-      // sources we have seen before. When replaying, we can have actors for
-      // sources that have not been created yet, and trying to set breakpoints
-      // in them will not produce any scripts. When execution proceeds to the
-      // point where the source is created (and we readd the source), we will
-      // be able to get its scripts.
-      if (!this.dbg.replaying) {
-        return false;
-      }
       sourceActor = this.sources.getSourceActor(source);
     } else {
       sourceActor = this.sources.createSourceActor(source);

@@ -945,7 +945,7 @@ function threadClientTest(test, options = {}) {
       await attachTestTabAndResume(client, scriptName);
 
     // Run the test function
-    await test({ threadClient, debuggee, client, targetFront });
+    await test({ threadClient, debuggee, client, server, targetFront });
 
     // Cleanup the client after the test ran
     await client.close();
