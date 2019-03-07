@@ -1134,6 +1134,34 @@ nsLocalFile::OpenANSIFileDesc(const char* aMode, FILE** aResult) {
   return NS_ERROR_FAILURE;
 }
 
+static nsresult
+do_create(nsIFile* aFile, const nsString& aPath, uint32_t aAttributes) {
+  PRFileDesc* file;
+  nsresult rv = OpenFile(aPath,
+                         PR_RDONLY | PR_CREATE_FILE | PR_APPEND | PR_EXCL, aAttributes,
+                         false, &file);
+  if (file) {
+    PR_Close(file);
+  }
+
+  if (rv == NS_ERROR_FILE_ACCESS_DENIED) {
+    // need to return already-exists for directories (bug 452217)
+    bool isdir;
+    if (NS_SUCCEEDED(aFile->IsDirectory(&isdir)) && isdir) {
+      rv = NS_ERROR_FILE_ALREADY_EXISTS;
+    }
+  }
+  return rv;
+}
+
+static nsresult
+do_mkdir(nsIFile*, const nsString& aPath, uint32_t) {
+  if (!::CreateDirectoryW(aPath.get(), nullptr)) {
+    return ConvertWinError(GetLastError());
+  }
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsLocalFile::Create(uint32_t aType, uint32_t aAttributes) {
   if (aType != NORMAL_FILE_TYPE && aType != DIRECTORY_TYPE) {
@@ -1210,29 +1238,11 @@ nsLocalFile::Create(uint32_t aType, uint32_t aAttributes) {
   }
 
   if (aType == NORMAL_FILE_TYPE) {
-    PRFileDesc* file;
-    rv = OpenFile(mResolvedPath,
-                  PR_RDONLY | PR_CREATE_FILE | PR_APPEND | PR_EXCL, aAttributes,
-                  false, &file);
-    if (file) {
-      PR_Close(file);
-    }
-
-    if (rv == NS_ERROR_FILE_ACCESS_DENIED) {
-      // need to return already-exists for directories (bug 452217)
-      bool isdir;
-      if (NS_SUCCEEDED(IsDirectory(&isdir)) && isdir) {
-        rv = NS_ERROR_FILE_ALREADY_EXISTS;
-      }
-    }
-    return rv;
+    return do_create(this, mResolvedPath, aAttributes);
   }
 
   if (aType == DIRECTORY_TYPE) {
-    if (!::CreateDirectoryW(mResolvedPath.get(), nullptr)) {
-      return ConvertWinError(GetLastError());
-    }
-    return NS_OK;
+    return do_mkdir(this, mResolvedPath, aAttributes);
   }
 
   return NS_ERROR_FILE_UNKNOWN_TYPE;
