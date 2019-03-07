@@ -413,6 +413,10 @@ class HttpChannelChild final : public PHttpChannelChild,
 
   uint8_t mKeptAlive : 1;  // IPC kept open, but only for security info
 
+  // Set when ActorDestroy(ActorDestroyReason::Deletion) is called
+  // The channel must ignore any following OnStart/Stop/DataAvailable messages
+  uint8_t mIPCActorDeleted : 1;
+
   // Set if SendSuspend is called. Determines if SendResume is needed when
   // diverting callbacks to parent.
   uint8_t mSuspendSent : 1;
