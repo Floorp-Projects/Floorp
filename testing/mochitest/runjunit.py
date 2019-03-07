@@ -15,7 +15,7 @@ import mozcrash
 import mozinfo
 import mozlog
 import moznetwork
-from mozdevice import ADBDevice, ADBError
+from mozdevice import ADBDevice, ADBError, ADBTimeoutError
 from mozprofile import Profile, DEFAULT_PORTS
 from mozprofile.permissions import ServerLocations
 from runtests import MochitestDesktop, update_mozinfo
@@ -441,17 +441,21 @@ def run_test_harness(parser, options):
     runner = JUnitTestRunner(log, options)
     result = -1
     try:
+        device_exception = False
         result = runner.run_tests(options.test_filters)
     except KeyboardInterrupt:
         log.info("runjunit.py | Received keyboard interrupt")
         result = -1
-    except Exception:
+    except Exception as e:
         traceback.print_exc()
         log.error(
             "runjunit.py | Received unexpected exception while running tests")
         result = 1
+        if isinstance(e, ADBTimeoutError):
+            device_exception = True
     finally:
-        runner.cleanup()
+        if not device_exception:
+            runner.cleanup()
     return result
 
 
