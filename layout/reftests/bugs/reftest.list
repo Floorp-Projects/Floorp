@@ -1925,6 +1925,7 @@ pref(apz.allow_zooming,true) skip-if(!Android) == 1133905-3-vh.html 1133905-ref-
 pref(apz.allow_zooming,true) skip-if(!Android) fuzzy-if(Android,0-45,0-4) == 1133905-4-vh.html 1133905-ref-vh.html
 pref(apz.allow_zooming,true) skip-if(!Android) fuzzy-if(Android,0-54,0-6) == 1133905-5-vh.html 1133905-ref-vh.html
 pref(apz.allow_zooming,true) skip-if(!Android) fuzzy-if(Android,0-54,0-8) == 1133905-6-vh.html 1133905-ref-vh.html
+pref(apz.allow_zooming,true) skip-if(!Android) != 1133905-ref-vh.html about:blank # make sure it doesn't render blank
 pref(apz.allow_zooming,true) skip-if(!Android) == 1133905-1-rtl.html 1133905-ref-rtl.html
 pref(apz.allow_zooming,true) skip-if(!Android) == 1133905-2-rtl.html 1133905-ref-rtl.html
 pref(apz.allow_zooming,true) skip-if(!Android) == 1133905-3-rtl.html 1133905-ref-rtl.html
@@ -1949,6 +1950,7 @@ pref(apz.allow_zooming,true) skip-if(!Android) == 1133905-3-vh-rtl.html 1133905-
 pref(apz.allow_zooming,true) skip-if(!Android) fails-if(Android) == 1133905-4-vh-rtl.html 1133905-ref-vh-rtl.html # bug 1527511
 pref(apz.allow_zooming,true) skip-if(!Android) fails-if(Android) == 1133905-5-vh-rtl.html 1133905-ref-vh-rtl.html # bug 1527511
 pref(apz.allow_zooming,true) skip-if(!Android) fails-if(Android) == 1133905-6-vh-rtl.html 1133905-ref-vh-rtl.html # bug 1527511
+pref(apz.allow_zooming,true) skip-if(!Android) != 1133905-ref-vh-rtl.html about:blank # make sure it doesn't render blank
 == 1149304-1-transform-change.html 1149304-1-transform-change-ref.html
 == 1150021-1.xul 1150021-1-ref.xul
 == 1151145-1.html 1151145-1-ref.html
