@@ -4,7 +4,14 @@
 
 // @flow
 
-import { getCurrentThread, getSource } from "../../selectors";
+import {
+  getCurrentThread,
+  getSource,
+  getMapScopes,
+  getSelectedFrame,
+  getSelectedGeneratedScope,
+  getSelectedOriginalScope
+} from "../../selectors";
 import { loadSourceText } from "../sources/loadSourceText";
 import { PROMISE } from "../utils/middleware/promise";
 
@@ -16,6 +23,28 @@ import type { Frame, Scope } from "../../types";
 import type { ThunkArgs } from "../types";
 
 import { buildMappedScopes } from "../../utils/pause/mapScopes";
+
+export function toggleMapScopes() {
+  return async function({ dispatch, getState, client, sourceMaps }: ThunkArgs) {
+    if (getMapScopes(getState())) {
+      return dispatch({ type: "TOGGLE_MAP_SCOPES", mapScopes: false });
+    }
+
+    dispatch({ type: "TOGGLE_MAP_SCOPES", mapScopes: true });
+
+    if (getSelectedOriginalScope(getState())) {
+      return;
+    }
+
+    const scopes = getSelectedGeneratedScope(getState());
+    const frame = getSelectedFrame(getState());
+    if (!scopes || !frame) {
+      return;
+    }
+
+    dispatch(mapScopes(Promise.resolve(scopes.scope), frame));
+  };
+}
 
 export function mapScopes(scopes: Promise<Scope>, frame: Frame) {
   return async function({ dispatch, getState, client, sourceMaps }: ThunkArgs) {
