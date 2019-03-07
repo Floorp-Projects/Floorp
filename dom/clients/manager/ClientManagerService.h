@@ -11,6 +11,12 @@
 
 namespace mozilla {
 
+namespace ipc {
+
+class PrincipalInfo;
+
+}  // namespace ipc
+
 namespace dom {
 
 class ClientManagerParent;
@@ -63,6 +69,10 @@ class ClientManagerService final {
   RefPtr<ClientOpPromise> OpenWindow(
       const ClientOpenWindowArgs& aArgs,
       already_AddRefed<ContentParent> aSourceProcess);
+
+  bool HasWindow(const Maybe<ContentParentId>& aContentParentId,
+                 const mozilla::ipc::PrincipalInfo& aPrincipalInfo,
+                 const nsID& aClientId);
 
   NS_INLINE_DECL_REFCOUNTING(mozilla::dom::ClientManagerService)
 };

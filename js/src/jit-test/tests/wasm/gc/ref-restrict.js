@@ -59,7 +59,6 @@ assertErrorMessage(() => wasmCompile(
 
 assertEq(typeof wasmCompile(
     `(module
-      (gc_feature_opt_in 3)
       (func (export "f") (param anyref) (unreachable)))`),
          "object");
 
@@ -75,7 +74,6 @@ assertErrorMessage(() => wasmCompile(
 
 assertEq(typeof wasmCompile(
     `(module
-      (gc_feature_opt_in 3)
       (func (export "f") (result anyref) (ref.null)))`),
          "object");
 
@@ -91,7 +89,6 @@ assertErrorMessage(() => wasmCompile(
 
 assertEq(typeof wasmCompile(
     `(module
-      (gc_feature_opt_in 3)
       (import "m" "f" (param anyref)))`),
          "object");
 
@@ -107,7 +104,6 @@ assertErrorMessage(() => wasmCompile(
 
 assertEq(typeof wasmCompile(
     `(module
-      (gc_feature_opt_in 3)
       (import "m" "f" (param i32) (result anyref)))`),
          "object");
 
@@ -131,13 +127,11 @@ assertErrorMessage(() => wasmCompile(
 
 assertEq(typeof wasmCompile(
     `(module
-      (gc_feature_opt_in 3)
       (import "m" "g" (global (mut anyref))))`),
          "object");
 
 assertEq(typeof wasmCompile(
     `(module
-      (gc_feature_opt_in 3)
       (import "m" "g" (global anyref)))`),
          "object");
 
@@ -161,13 +155,11 @@ assertErrorMessage(() => wasmCompile(
 
 assertEq(typeof wasmCompile(
     `(module
-      (gc_feature_opt_in 3)
       (global $boxg (export "box") (mut anyref) (ref.null)))`),
          "object");
 
 assertEq(typeof wasmCompile(
     `(module
-      (gc_feature_opt_in 3)
       (global $boxg (export "box") anyref (ref.null)))`),
          "object");
 
@@ -195,7 +187,6 @@ assertErrorMessage(() => wasmCompile(
 
 assertEq(typeof wasmCompile(
     `(module
-      (gc_feature_opt_in 3)
       (table (export "tbl") 1 funcref)
       (elem (i32.const 0) $f1)
       (func $f1 (param anyref) (unreachable)))`),
@@ -203,7 +194,6 @@ assertEq(typeof wasmCompile(
 
 assertEq(typeof wasmCompile(
     `(module
-      (gc_feature_opt_in 3)
       (table (export "tbl") 1 funcref)
       (elem (i32.const 0) $f1)
       (func $f1 (result anyref) (ref.null)))`),
@@ -233,7 +223,6 @@ assertErrorMessage(() => wasmCompile(
 
 assertEq(typeof wasmCompile(
     `(module
-      (gc_feature_opt_in 3)
       (import "m" "tbl" (table 1 funcref))
       (elem (i32.const 0) $f1)
       (func $f1 (param anyref) (unreachable)))`),
@@ -241,7 +230,6 @@ assertEq(typeof wasmCompile(
 
 assertEq(typeof wasmCompile(
     `(module
-      (gc_feature_opt_in 3)
       (import "m" "tbl" (table 1 funcref))
       (elem (i32.const 0) $f1)
       (func $f1 (result anyref) (ref.null)))`),
@@ -273,7 +261,6 @@ assertErrorMessage(() => wasmCompile(
 
 assertEq(typeof wasmCompile(
     `(module
-      (gc_feature_opt_in 3)
       (type $fn (func (param anyref)))
       (table (export "tbl") 1 funcref)
       (func (param i32)
@@ -282,7 +269,6 @@ assertEq(typeof wasmCompile(
 
 assertEq(typeof wasmCompile(
     `(module
-      (gc_feature_opt_in 3)
       (type $fn (func (result anyref)))
       (table (export "tbl") 1 funcref)
       (func (param i32) (result anyref)
@@ -315,7 +301,6 @@ assertErrorMessage(() => wasmCompile(
 
 assertEq(typeof wasmCompile(
     `(module
-      (gc_feature_opt_in 3)
       (type $fn (func (param anyref)))
       (import "m" "tbl" (table 1 funcref))
       (func (param i32)
@@ -324,7 +309,6 @@ assertEq(typeof wasmCompile(
 
 assertEq(typeof wasmCompile(
     `(module
-      (gc_feature_opt_in 3)
       (type $fn (func (result anyref)))
       (import "m" "tbl" (table 1 funcref))
       (func (param i32) (result anyref)

@@ -83,7 +83,7 @@ SharedCompileArgs CompileArgs::build(JSContext* cx,
   bool cranelift = false;
 #endif
 
-#ifdef ENABLE_WASM_REFTYPES
+#ifdef ENABLE_WASM_GC
   bool gc = cx->options().wasmGc();
 #else
   bool gc = false;
@@ -598,8 +598,6 @@ void wasm::CompileTier2(const CompileArgs& args, const Bytes& bytecode,
   if (!DecodeModuleEnvironment(d, &env)) {
     return;
   }
-
-  MOZ_ASSERT(!env.gcTypesEnabled(), "can't ion-compile with gc types yet");
 
   ModuleGenerator mg(args, &env, cancelled, &error);
   if (!mg.init()) {

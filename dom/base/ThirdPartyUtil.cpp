@@ -15,6 +15,7 @@
 #include "nsIPrincipal.h"
 #include "nsIScriptObjectPrincipal.h"
 #include "nsIURI.h"
+#include "nsReadableUtils.h"
 #include "nsThreadUtils.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Logging.h"
@@ -32,6 +33,14 @@ static mozilla::LazyLogModule gThirdPartyLog("thirdPartyUtil");
 #define LOG(args) MOZ_LOG(gThirdPartyLog, mozilla::LogLevel::Debug, args)
 
 static mozilla::StaticRefPtr<ThirdPartyUtil> gService;
+
+// static
+void ThirdPartyUtil::Startup() {
+  nsCOMPtr<mozIThirdPartyUtil> tpu;
+  if (NS_WARN_IF(!(tpu = do_GetService(THIRDPARTYUTIL_CONTRACTID)))) {
+    NS_WARNING("Failed to get third party util!");
+  }
+}
 
 nsresult ThirdPartyUtil::Init() {
   NS_ENSURE_TRUE(NS_IsMainThread(), NS_ERROR_NOT_AVAILABLE);
@@ -344,6 +353,40 @@ ThirdPartyUtil::GetBaseDomain(nsIURI* aHostURI, nsACString& aBaseDomain) {
     if (!isFileURI) {
       return NS_ERROR_INVALID_ARG;
     }
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+ThirdPartyUtil::GetBaseDomainFromSchemeHost(const nsACString& aScheme,
+                                            const nsACString& aAsciiHost,
+                                            nsACString& aBaseDomain) {
+  MOZ_DIAGNOSTIC_ASSERT(IsASCII(aAsciiHost));
+
+  // Get the base domain. this will fail if the host contains a leading dot,
+  // more than one trailing dot, or is otherwise malformed.
+  nsresult rv = mTLDService->GetBaseDomainFromHost(aAsciiHost, 0, aBaseDomain);
+  if (rv == NS_ERROR_HOST_IS_IP_ADDRESS ||
+      rv == NS_ERROR_INSUFFICIENT_DOMAIN_LEVELS) {
+    // aMozURL is either an IP address, an alias such as 'localhost', an eTLD
+    // such as 'co.uk', or the empty string. Uses the normalized host in such
+    // cases.
+    aBaseDomain = aAsciiHost;
+    rv = NS_OK;
+  }
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // aMozURL (and thus aBaseDomain) may be the string '.'. If so, fail.
+  if (aBaseDomain.Length() == 1 && aBaseDomain.Last() == '.')
+    return NS_ERROR_INVALID_ARG;
+
+  // Reject any URLs without a host that aren't file:// URLs. This makes it the
+  // only way we can get a base domain consisting of the empty string, which
+  // means we can safely perform foreign tests on such URLs where "not foreign"
+  // means "the involved URLs are all file://".
+  if (aBaseDomain.IsEmpty() && !aScheme.EqualsLiteral("file")) {
+    return NS_ERROR_INVALID_ARG;
   }
 
   return NS_OK;

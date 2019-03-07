@@ -18,6 +18,7 @@ add_task(async function() {
   const console = await getDebuggerSplitConsole(dbg);
   const hud = console.hud;
 
+  await selectSource(dbg, "doc_rr_basic.html");
   await addBreakpoint(dbg, "doc_rr_basic.html", 21, undefined,
                       { logValue: `"Logpoint Number " + number` });
   await addBreakpoint(dbg, "doc_rr_basic.html", 6, undefined,

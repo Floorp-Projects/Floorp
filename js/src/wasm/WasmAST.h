@@ -1317,7 +1317,7 @@ class AstModule : public AstNode {
   NameVector funcImportNames_;
   AstTableVector tables_;
   AstMemoryVector memories_;
-#ifdef ENABLE_WASM_REFTYPES
+#ifdef ENABLE_WASM_GC
   uint32_t gcFeatureOptIn_;
 #endif
   Maybe<uint32_t> dataCount_;
@@ -1339,7 +1339,7 @@ class AstModule : public AstNode {
         funcImportNames_(lifo),
         tables_(lifo),
         memories_(lifo),
-#ifdef ENABLE_WASM_REFTYPES
+#ifdef ENABLE_WASM_GC
         gcFeatureOptIn_(0),
 #endif
         exports_(lifo),
@@ -1354,7 +1354,7 @@ class AstModule : public AstNode {
   }
   bool hasMemory() const { return !!memories_.length(); }
   const AstMemoryVector& memories() const { return memories_; }
-#ifdef ENABLE_WASM_REFTYPES
+#ifdef ENABLE_WASM_GC
   bool addGcFeatureOptIn(uint32_t version) {
     gcFeatureOptIn_ = version;
     return true;

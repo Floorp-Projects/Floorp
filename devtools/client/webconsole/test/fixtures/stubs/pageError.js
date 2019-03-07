@@ -112,6 +112,7 @@ stubPreparedMessages.set(`SyntaxError: redeclaration of let a`, new ConsoleMessa
   },
   "groupId": null,
   "errorMessageName": "JSMSG_REDECLARED_VAR",
+  "exceptionDocURL": "https://developer.mozilla.org/docs/Web/JavaScript/Reference/Errors/Redeclared_parameter?utm_source=mozilla&utm_medium=firefox-console-errors&utm_campaign=default",
   "userProvidedStyles": null,
   "notes": [
     {
@@ -292,6 +293,7 @@ stubPackets.set(`SyntaxError: redeclaration of let a`, {
   "pageError": {
     "errorMessage": "SyntaxError: redeclaration of let a",
     "errorMessageName": "JSMSG_REDECLARED_VAR",
+    "exceptionDocURL": "https://developer.mozilla.org/docs/Web/JavaScript/Reference/Errors/Redeclared_parameter?utm_source=mozilla&utm_medium=firefox-console-errors&utm_campaign=default",
     "sourceName": "http://example.com/browser/devtools/client/webconsole/test/fixtures/stub-generators/test-console-api.html",
     "sourceId": null,
     "lineText": "  let a, a;",

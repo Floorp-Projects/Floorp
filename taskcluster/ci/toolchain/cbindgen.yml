@@ -39,7 +39,7 @@ macosx64-cbindgen:
         - linux64-cctools-port
         - linux64-clang-7
         - linux64-llvm-dsymutil
-        - linux64-rust-macos-1.31
+        - linux64-rust-macos-1.32
 
 win64-cbindgen:
     treeherder:

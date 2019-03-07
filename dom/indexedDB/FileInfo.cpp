@@ -6,12 +6,14 @@
 
 #include "FileInfo.h"
 
+#include "ActorsParent.h"
 #include "FileManager.h"
 #include "IndexedDatabaseManager.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/dom/quota/QuotaManager.h"
+#include "mozilla/ipc/BackgroundParent.h"
 #include "nsError.h"
 #include "nsThreadUtils.h"
 
@@ -20,6 +22,7 @@ namespace dom {
 namespace indexedDB {
 
 using namespace mozilla::dom::quota;
+using namespace mozilla::ipc;
 
 namespace {
 
@@ -38,29 +41,6 @@ class FileInfoImpl final : public FileInfo {
   ~FileInfoImpl() {}
 
   virtual int64_t Id() const override { return int64_t(mFileId); }
-};
-
-class CleanupFileRunnable final : public Runnable {
-  RefPtr<FileManager> mFileManager;
-  int64_t mFileId;
-
- public:
-  static void DoCleanup(FileManager* aFileManager, int64_t aFileId);
-
-  CleanupFileRunnable(FileManager* aFileManager, int64_t aFileId)
-      : Runnable("dom::indexedDB::CleanupFileRunnable"),
-        mFileManager(aFileManager),
-        mFileId(aFileId) {
-    MOZ_ASSERT(aFileManager);
-    MOZ_ASSERT(aFileId > 0);
-  }
-
-  NS_INLINE_DECL_REFCOUNTING_INHERITED(CleanupFileRunnable, Runnable);
-
- private:
-  ~CleanupFileRunnable() {}
-
-  NS_DECL_NSIRUNNABLE
 };
 
 }  // namespace
@@ -180,46 +160,13 @@ bool FileInfo::LockedClearDBRefs() {
 }
 
 void FileInfo::Cleanup() {
+  AssertIsOnBackgroundThread();
+
   int64_t id = Id();
 
-  // IndexedDatabaseManager is main-thread only.
-  if (!NS_IsMainThread()) {
-    RefPtr<CleanupFileRunnable> cleaner =
-        new CleanupFileRunnable(mFileManager, id);
-
-    MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(cleaner));
-    return;
-  }
-
-  CleanupFileRunnable::DoCleanup(mFileManager, id);
-}
-
-// static
-void CleanupFileRunnable::DoCleanup(FileManager* aFileManager,
-                                    int64_t aFileId) {
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aFileManager);
-  MOZ_ASSERT(aFileId > 0);
-
-  if (NS_WARN_IF(QuotaManager::IsShuttingDown())) {
-    return;
-  }
-
-  RefPtr<IndexedDatabaseManager> mgr = IndexedDatabaseManager::Get();
-  MOZ_ASSERT(mgr);
-
-  if (NS_FAILED(mgr->AsyncDeleteFile(aFileManager, aFileId))) {
+  if (NS_FAILED(AsyncDeleteFile(mFileManager, id))) {
     NS_WARNING("Failed to delete file asynchronously!");
   }
-}
-
-NS_IMETHODIMP
-CleanupFileRunnable::Run() {
-  MOZ_ASSERT(NS_IsMainThread());
-
-  DoCleanup(mFileManager, mFileId);
-
-  return NS_OK;
 }
 
 /* static */
