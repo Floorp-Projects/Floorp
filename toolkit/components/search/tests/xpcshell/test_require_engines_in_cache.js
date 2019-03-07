@@ -31,7 +31,7 @@ add_task(async function ignore_cache_files_without_engines() {
 
   // Check that after a sync re-initialization, we still have the same engine count.
   await promiseSaveCacheData(cache);
-  let unInitPromise = waitForSearchNotification("uninit-complete");
+  let unInitPromise = SearchTestUtils.promiseSearchNotification("uninit-complete");
   let reInitPromise = asyncReInit();
   await unInitPromise;
   Assert.ok(!Services.search.isInitialized);
@@ -42,7 +42,7 @@ add_task(async function ignore_cache_files_without_engines() {
 });
 
 add_task(async function skip_writing_cache_without_engines() {
-  let unInitPromise = waitForSearchNotification("uninit-complete");
+  let unInitPromise = SearchTestUtils.promiseSearchNotification("uninit-complete");
   let reInitPromise = asyncReInit();
   await unInitPromise;
 
@@ -58,7 +58,7 @@ add_task(async function skip_writing_cache_without_engines() {
   Assert.strictEqual(0, (await Services.search.getEngines()).length);
 
   // Trigger yet another re-init, to flush of any pending cache writing task.
-  unInitPromise = waitForSearchNotification("uninit-complete");
+  unInitPromise = SearchTestUtils.promiseSearchNotification("uninit-complete");
   reInitPromise = asyncReInit();
   await unInitPromise;
 

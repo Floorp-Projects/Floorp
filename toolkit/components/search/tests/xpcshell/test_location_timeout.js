@@ -50,7 +50,7 @@ function run_test() {
     // test server is still blocked on our promise.
     equal(getProbeSum("SEARCH_SERVICE_COUNTRY_FETCH_TIME_MS"), 0);
 
-    waitForSearchNotification("geoip-lookup-xhr-complete").then(() => {
+    SearchTestUtils.promiseSearchNotification("geoip-lookup-xhr-complete").then(() => {
       // now we *should* have a report of how long the response took even though
       // it timed out.
       // The telemetry "sum" will be the actual time in ms - just check it's non-zero.

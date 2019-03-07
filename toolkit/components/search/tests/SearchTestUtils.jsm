@@ -31,4 +31,29 @@ var SearchTestUtils = Object.freeze({
     gTestGlobals.registerCleanupFunction(async () => Services.search.removeEngine(engine));
     return engine;
   },
+
+  /**
+   * Returns a promise that is resolved when an observer notification from the
+   * search service fires with the specified data.
+   *
+   * @param {*} expectedData
+   *        The value the observer notification sends that causes us to resolve
+   *        the promise.
+   * @param {string} topic
+   *        The notification topic to observe. Defaults to 'browser-search-service'.
+   * @returns {Promise}
+   *        Returns a promise that is resolved with the subject of the
+   *        topic once the topic with the data has been observed.
+   */
+  promiseSearchNotification(expectedData, topic = "browser-search-service") {
+    return new Promise(resolve => {
+      Services.obs.addObserver(function observer(aSubject, aTopic, aData) {
+        if (aData != expectedData)
+          return;
+
+        Services.obs.removeObserver(observer, topic);
+        resolve(aSubject);
+      }, topic);
+    });
+  },
 });
