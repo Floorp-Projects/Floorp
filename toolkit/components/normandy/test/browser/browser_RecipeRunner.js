@@ -1,6 +1,7 @@
 "use strict";
 
 ChromeUtils.import("resource://testing-common/TestUtils.jsm", this);
+ChromeUtils.import("resource://gre/modules/components-utils/FilterExpressions.jsm", this);
 ChromeUtils.import("resource://normandy/lib/RecipeRunner.jsm", this);
 ChromeUtils.import("resource://normandy/lib/ClientEnvironment.jsm", this);
 ChromeUtils.import("resource://normandy/lib/CleanupManager.jsm", this);
@@ -79,6 +80,25 @@ add_task(async function checkFilter() {
 });
 
 decorate_task(
+  withStub(FilterExpressions, "eval"),
+  withStub(Uptake, "reportRecipe"),
+  async function checkFilterCanHandleExceptions(
+    evalStub,
+    reportRecipeStub,
+  ) {
+    evalStub.throws("this filter was broken somehow");
+    const someRecipe = {id: "1", action: "action", filter_expression: "broken"};
+    const result = await RecipeRunner.checkFilter(someRecipe);
+
+    Assert.deepEqual(result, false, "broken filters are treated as false");
+    Assert.deepEqual(
+      reportRecipeStub.args,
+      [[someRecipe, Uptake.RECIPE_FILTER_BROKEN]]
+    );
+  }
+);
+
+decorate_task(
   withMockNormandyApi,
   withStub(ClientEnvironment, "getClientClassification"),
   async function testClientClassificationCache(api, getStub) {
@@ -138,13 +158,15 @@ decorate_task(
   withStub(ActionsManager.prototype, "preExecution"),
   withStub(ActionsManager.prototype, "runRecipe"),
   withStub(ActionsManager.prototype, "finalize"),
+  withStub(Uptake, "reportRecipe"),
   async function testRun(
     reportRunnerStub,
     fetchRecipesStub,
     fetchRemoteActionsStub,
     preExecutionStub,
     runRecipeStub,
-    finalizeStub
+    finalizeStub,
+    reportRecipeStub,
   ) {
     const runRecipeReturn = Promise.resolve();
     const runRecipeReturnThen = sinon.spy(runRecipeReturn, "then");
@@ -172,6 +194,11 @@ decorate_task(
       [[Uptake.RUNNER_SUCCESS]],
       "RecipeRunner should report uptake telemetry",
     );
+    Assert.deepEqual(
+      reportRecipeStub.args,
+      [[noMatchRecipe, Uptake.RECIPE_DIDNT_MATCH_FILTER]],
+      "Filtered-out recipes should be reported",
+    );
   }
 );
 
@@ -184,16 +211,18 @@ decorate_task(
   withStub(ActionsManager.prototype, "runRecipe"),
   withStub(ActionsManager.prototype, "fetchRemoteActions"),
   withStub(ActionsManager.prototype, "finalize"),
+  withStub(Uptake, "reportRecipe"),
   async function testReadFromRemoteSettings(
     runRecipeStub,
     fetchRemoteActionsStub,
     finalizeStub,
+    reportRecipeStub,
   ) {
     const matchRecipe = { id: "match", action: "matchAction", filter_expression: "true", _status: "synced", enabled: true };
     const noMatchRecipe = { id: "noMatch", action: "noMatchAction", filter_expression: "false", _status: "synced", enabled: true };
     const missingRecipe = { id: "missing", action: "missingAction", filter_expression: "true", _status: "synced", enabled: true };
 
-    const rsCollection = await RemoteSettings("normandy-recipes").openCollection();
+    const rsCollection = await RecipeRunner._remoteSettingsClientForTesting.openCollection();
     await rsCollection.create(matchRecipe, { synced: true });
     await rsCollection.create(noMatchRecipe, { synced: true });
     await rsCollection.create(missingRecipe, { synced: true });
@@ -206,6 +235,11 @@ decorate_task(
       runRecipeStub.args,
       [[matchRecipe], [missingRecipe]],
       "recipe with matching filters should be executed",
+    );
+    Assert.deepEqual(
+      reportRecipeStub.args,
+      [[noMatchRecipe, Uptake.RECIPE_DIDNT_MATCH_FILTER]],
+      "Filtered-out recipes should be reported",
     );
   }
 );

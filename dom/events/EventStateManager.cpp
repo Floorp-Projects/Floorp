@@ -2870,6 +2870,21 @@ void EventStateManager::PostHandleKeyboardEvent(
       RefPtr<TabParent> remote =
           aTargetFrame ? TabParent::GetFrom(aTargetFrame->GetContent())
                        : nullptr;
+      if (remote && aKeyboardEvent->mLayersId.IsValid()) {
+        // remote is null-checked above in order to let pre-existing event
+        // targeting code's chrome vs. content decision override APZ if they
+        // disagree in order not to disrupt non-Fission e10s mode in case
+        // there are still bugs in the Fission-mode code. That is, if remote
+        // is nullptr, the pre-existing event targeting code has deemed this
+        // event to belong to chrome rather than content.
+        TabParent* preciseRemote =
+            TabParent::GetTabParentFromLayersId(aKeyboardEvent->mLayersId);
+        if (preciseRemote) {
+          remote = preciseRemote;
+        }
+        // else there was a race between APZ and the chrome-process LayersId
+        // to TabParent mapping.
+      }
       if (remote && !remote->IsReadyToHandleInputEvents()) {
         // We need to dispatch the event to the browser element again if we were
         // waiting for the key reply but the event wasn't sent to the content

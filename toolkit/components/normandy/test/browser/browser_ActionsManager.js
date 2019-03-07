@@ -85,7 +85,7 @@ decorate_task(
       ["test-remote-action-used", Uptake.ACTION_SUCCESS],
       ["test-remote-action-unused", Uptake.ACTION_SUCCESS],
     ]);
-    Assert.deepEqual(reportRecipeStub.args, [[recipe.id, Uptake.RECIPE_SUCCESS]]);
+    Assert.deepEqual(reportRecipeStub.args, [[recipe, Uptake.RECIPE_SUCCESS]]);
   },
 );
 
@@ -128,7 +128,7 @@ decorate_task(
     Assert.deepEqual(reportActionStub.args, [
       ["test-remote-action-broken", Uptake.ACTION_PRE_EXECUTION_ERROR],
     ]);
-    Assert.deepEqual(reportRecipeStub.args, [[recipe.id, Uptake.RECIPE_ACTION_DISABLED]]);
+    Assert.deepEqual(reportRecipeStub.args, [[recipe, Uptake.RECIPE_ACTION_DISABLED]]);
   },
 );
 
@@ -169,7 +169,7 @@ decorate_task(
     );
 
     Assert.deepEqual(reportActionStub.args, [["test-remote-action-broken", Uptake.ACTION_SUCCESS]]);
-    Assert.deepEqual(reportRecipeStub.args, [[recipe.id, Uptake.RECIPE_EXECUTION_ERROR]]);
+    Assert.deepEqual(reportRecipeStub.args, [[recipe, Uptake.RECIPE_EXECUTION_ERROR]]);
   },
 );
 
@@ -209,7 +209,7 @@ decorate_task(
       "sandbox holds should still be removed after a failure",
     );
 
-    Assert.deepEqual(reportRecipeStub.args, [[recipe.id, Uptake.RECIPE_SUCCESS]]);
+    Assert.deepEqual(reportRecipeStub.args, [[recipe, Uptake.RECIPE_SUCCESS]]);
     Assert.deepEqual(reportActionStub.args, [
       ["test-remote-action-broken", Uptake.ACTION_POST_EXECUTION_ERROR],
     ]);

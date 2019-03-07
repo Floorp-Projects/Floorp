@@ -1,4 +1,8 @@
  #!
+
+// Copyright (C) 2019 Leo Balter. All rights reserved.
+// This code is governed by the BSD license found in the LICENSE file.
+
 /*---
 esid: pending
 description: >
@@ -14,5 +18,3 @@ features: [hashbang]
 ---*/
 
 throw "Test262: This statement should not be evaluated.";
-
-reportCompare(0, 0);

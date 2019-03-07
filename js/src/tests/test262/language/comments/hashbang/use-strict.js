@@ -1,4 +1,8 @@
 #!"use strict"
+
+// Copyright (C) 2019 Leo Balter. All rights reserved.
+// This code is governed by the BSD license found in the LICENSE file.
+
 /*---
 esid: pending
 description: >
@@ -6,7 +10,7 @@ description: >
 info: |
     HashbangComment::
       #! SingleLineCommentChars[opt]
-flags: [raw, noStrict]
+flags: [raw]
 features: [hashbang]
 ---*/
 

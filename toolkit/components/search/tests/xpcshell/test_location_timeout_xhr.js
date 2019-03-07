@@ -40,7 +40,7 @@ function run_test() {
   Services.prefs.setCharPref("browser.search.geoip.url", url);
   // The timeout for the timer.
   Services.prefs.setIntPref("browser.search.geoip.timeout", 10);
-  let promiseXHRStarted = waitForSearchNotification("geoip-lookup-xhr-starting");
+  let promiseXHRStarted = SearchTestUtils.promiseSearchNotification("geoip-lookup-xhr-starting");
   Services.search.init().then(() => {
     ok(!Services.prefs.prefHasUserValue("browser.search.region"), "should be no region pref");
     // should be no result recorded at all.
@@ -60,7 +60,7 @@ function run_test() {
       // should timeout immediately.
       xhr.timeout = 10;
       // wait for the xhr timeout to fire.
-      waitForSearchNotification("geoip-lookup-xhr-complete").then(() => {
+      SearchTestUtils.promiseSearchNotification("geoip-lookup-xhr-complete").then(() => {
         // should have the XHR timeout recorded.
         checkCountryResultTelemetry(TELEMETRY_RESULT_ENUM.XHRTIMEOUT);
         // still should not have a report of how long the response took as we

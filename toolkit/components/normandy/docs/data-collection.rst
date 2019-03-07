@@ -83,6 +83,14 @@ reported under the key ``normandy/recipe/<recipe id>``:
    The recipe was executed successfully.
 
 
+Additionally, Normandy reports a `keyed scalar`_ to measure recipe
+freshness. This scalar is called ``normandy.recipe_freshness``, and it
+corresponds to the ``last_modified`` date of each recipe (using its ID
+as the key), reported as seconds since 1970 in UTC.
+
+.. _keyed scalar: https://firefox-source-docs.mozilla.org/toolkit/components/telemetry/telemetry/collection/scalars.html
+
+
 Enrollment
 -----------
 Normandy records enrollment and unenrollment of users into studies, and

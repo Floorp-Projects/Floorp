@@ -4068,6 +4068,11 @@ public class GeckoSession implements Parcelable {
          * Request content media permissions, including request for which video and/or
          * audio source to use.
          *
+         * Media permissions will still be requested if the associated device permissions have been
+         * denied if there are video or audio sources in that category that can still be accessed.
+         * It is the responsibility of consumers to ensure that media permission requests are not
+         * displayed in this case.
+         *
          * @param session GeckoSession instance requesting the permission.
          * @param uri The URI of the content requesting the permission.
          * @param video List of video sources, or null if not requesting video.

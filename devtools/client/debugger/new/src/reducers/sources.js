@@ -539,6 +539,11 @@ export const getSelectedSource: Selector<?Source> = createSelector(
   }
 );
 
+export function getSelectedSourceId(state: OuterState) {
+  const source = getSelectedSource((state: any));
+  return source && source.id;
+}
+
 export function getProjectDirectoryRoot(state: OuterState): string {
   return state.sources.projectDirectoryRoot;
 }

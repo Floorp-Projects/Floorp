@@ -131,7 +131,7 @@ decorate_task(
     sendEventStub.assertEvents([]);
     Assert.deepEqual(
       reportRecipeStub.args,
-      [[recipe.id, Uptake.RECIPE_SUCCESS]],
+      [[recipe, Uptake.RECIPE_SUCCESS]],
       "recipe should be reported as succesful",
     );
   },

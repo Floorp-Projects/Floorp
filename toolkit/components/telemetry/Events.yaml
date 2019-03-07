@@ -1009,6 +1009,9 @@ uptake.remotecontent.result:
       source: >
         A label to distinguish what is being pulled or updated in the component (eg. recipe id,
         settings collection name, ...).
+      trigger: >
+        A label to distinguish what triggered the polling/fetching of remote content (eg. "broadcast",
+        "timer")
     bug_numbers:
       - 1517469
     record_in_processes: ["main"]

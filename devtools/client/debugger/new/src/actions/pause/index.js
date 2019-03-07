@@ -30,3 +30,4 @@ export { setPopupObjectProperties } from "./setPopupObjectProperties";
 export { pauseOnExceptions } from "./pauseOnExceptions";
 export { selectFrame } from "./selectFrame";
 export { toggleSkipPausing } from "./skipPausing";
+export { toggleMapScopes } from "./mapScopes";

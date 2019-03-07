@@ -621,6 +621,7 @@ window._gBrowser = {
     this.moveTabTo(aTab, this._numPinnedTabs - 1);
     aTab.removeAttribute("pinned");
     aTab.style.marginInlineStart = "";
+    aTab._pinnedUnscrollable = false;
     this._updateTabBarForPinnedTabs();
     this._notifyPinnedStatus(aTab);
   },

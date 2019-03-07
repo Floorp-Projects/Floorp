@@ -31,7 +31,7 @@ decorate_task(
       await action.runRecipe(recipe);
       is(action.lastError, null, "lastError should be null");
       Assert.deepEqual(infoStub.args, [], "no message should be logged");
-      Assert.deepEqual(reportRecipeStub.args, [[recipe.id, Uptake.RECIPE_EXECUTION_ERROR]]);
+      Assert.deepEqual(reportRecipeStub.args, [[recipe, Uptake.RECIPE_EXECUTION_ERROR]]);
 
       reportRecipeStub.reset();
 
@@ -40,7 +40,7 @@ decorate_task(
       await action.runRecipe(recipe);
       is(action.lastError, null, "lastError should be null");
       Assert.deepEqual(infoStub.args, [], "no message should be logged");
-      Assert.deepEqual(reportRecipeStub.args, [[recipe.id, Uptake.RECIPE_EXECUTION_ERROR]]);
+      Assert.deepEqual(reportRecipeStub.args, [[recipe, Uptake.RECIPE_EXECUTION_ERROR]]);
     } finally {
       infoStub.restore();
     }
