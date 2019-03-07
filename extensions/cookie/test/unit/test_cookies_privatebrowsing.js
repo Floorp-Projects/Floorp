@@ -26,9 +26,6 @@ function* do_run_test() {
   // Set up a profile.
   let profile = do_get_profile();
 
-  // We don't want to have CookieSettings blocking this test.
-  Services.prefs.setBoolPref("network.cookieSettings.unblocked_for_testing", true);
-
   // Test with cookies enabled.
   Services.prefs.setIntPref("network.cookie.cookieBehavior", 0);
 

@@ -19,9 +19,6 @@ function checkValueAndTrigger(request, data, ctx)
 
 function run_test()
 {
-    // We don't want to have CookieSettings blocking this test.
-    Services.prefs.setBoolPref("network.cookieSettings.unblocked_for_testing", true);
-
     // Allow all cookies.
     Services.prefs.setIntPref("network.cookie.cookieBehavior", 0);
 

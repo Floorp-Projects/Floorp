@@ -166,7 +166,6 @@ nsresult nsManifestCheck::Begin() {
   rv = NS_NewChannel(getter_AddRefs(mChannel), mURI, mLoadingPrincipal,
                      nsILoadInfo::SEC_REQUIRE_SAME_ORIGIN_DATA_IS_BLOCKED,
                      nsIContentPolicy::TYPE_OTHER,
-                     nullptr,  // nsICookieSettings
                      nullptr,  // PerformanceStorage
                      nullptr,  // loadGroup
                      nullptr,  // aCallbacks
@@ -336,7 +335,6 @@ nsresult nsOfflineCacheUpdateItem::OpenChannel(nsOfflineCacheUpdate *aUpdate) {
   rv = NS_NewChannel(getter_AddRefs(mChannel), mURI, mLoadingPrincipal,
                      nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
                      nsIContentPolicy::TYPE_OTHER,
-                     nullptr,  // nsICookieSettings
                      nullptr,  // PerformanceStorage
                      nullptr,  // aLoadGroup
                      this,     // aCallbacks

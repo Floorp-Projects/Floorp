@@ -12,7 +12,6 @@
 #include "mozilla/NullPrincipal.h"
 #include "mozilla/ipc/PBackgroundSharedTypes.h"
 #include "mozilla/ipc/URIUtils.h"
-#include "mozilla/net/CookieSettings.h"
 #include "mozilla/net/NeckoChannelParams.h"
 #include "ExpandedPrincipal.h"
 #include "nsIScriptSecurityManager.h"
@@ -487,14 +486,6 @@ nsresult LoadInfoToLoadInfoArgs(nsILoadInfo* aLoadInfo,
   nsAutoString cspNonce;
   Unused << NS_WARN_IF(NS_FAILED(aLoadInfo->GetCspNonce(cspNonce)));
 
-  nsCOMPtr<nsICookieSettings> cookieSettings;
-  rv = aLoadInfo->GetCookieSettings(getter_AddRefs(cookieSettings));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  CookieSettingsArgs cookieSettingsArgs;
-  static_cast<CookieSettings*>(cookieSettings.get())
-      ->Serialize(cookieSettingsArgs);
-
   *aOptionalLoadInfoArgs = Some(LoadInfoArgs(
       loadingPrincipalInfo, triggeringPrincipalInfo, principalToInheritInfo,
       sandboxedLoadingPrincipalInfo, topLevelPrincipalInfo,
@@ -525,7 +516,7 @@ nsresult LoadInfoToLoadInfoArgs(nsILoadInfo* aLoadInfo,
       aLoadInfo->GetDocumentHasUserInteracted(),
       aLoadInfo->GetDocumentHasLoaded(), cspNonce,
       aLoadInfo->GetIsFromProcessingFrameAttributes(),
-      aLoadInfo->GetOpenerPolicy(), cookieSettingsArgs));
+      aLoadInfo->GetOpenerPolicy()));
 
   return NS_OK;
 }
@@ -646,15 +637,11 @@ nsresult LoadInfoArgsToLoadInfo(
         loadInfoArgs.controller().get_IPCServiceWorkerDescriptor()));
   }
 
-  nsCOMPtr<nsICookieSettings> cookieSettings;
-  CookieSettings::Deserialize(loadInfoArgs.cookieSettings(),
-                              getter_AddRefs(cookieSettings));
-
   RefPtr<mozilla::LoadInfo> loadInfo = new mozilla::LoadInfo(
       loadingPrincipal, triggeringPrincipal, principalToInherit,
       sandboxedLoadingPrincipal, topLevelPrincipal,
-      topLevelStorageAreaPrincipal, resultPrincipalURI, cookieSettings,
-      clientInfo, reservedClientInfo, initialClientInfo, controller,
+      topLevelStorageAreaPrincipal, resultPrincipalURI, clientInfo,
+      reservedClientInfo, initialClientInfo, controller,
       loadInfoArgs.securityFlags(), loadInfoArgs.contentPolicyType(),
       static_cast<LoadTainting>(loadInfoArgs.tainting()),
       loadInfoArgs.upgradeInsecureRequests(),
@@ -697,7 +684,7 @@ void LoadInfoToParentLoadInfoForwarder(
         false,  // serviceWorkerTaintingSynthesized
         false,  // documentHasUserInteracted
         false,  // documentHasLoaded
-        nsILoadInfo::OPENER_POLICY_NULL, Maybe<CookieSettingsArgs>());
+        nsILoadInfo::OPENER_POLICY_NULL);
     return;
   }
 
@@ -713,21 +700,11 @@ void LoadInfoToParentLoadInfoForwarder(
   nsILoadInfo::CrossOriginOpenerPolicy openerPolicy =
       aLoadInfo->GetOpenerPolicy();
 
-  Maybe<CookieSettingsArgs> cookieSettingsArgs;
-
-  nsCOMPtr<nsICookieSettings> cookieSettings;
-  nsresult rv = aLoadInfo->GetCookieSettings(getter_AddRefs(cookieSettings));
-  if (NS_SUCCEEDED(rv) && cookieSettings) {
-    CookieSettingsArgs args;
-    static_cast<CookieSettings*>(cookieSettings.get())->Serialize(args);
-    cookieSettingsArgs = Some(args);
-  }
-
   *aForwarderArgsOut = ParentLoadInfoForwarderArgs(
       aLoadInfo->GetAllowInsecureRedirectToDataURI(), ipcController, tainting,
       aLoadInfo->GetServiceWorkerTaintingSynthesized(),
       aLoadInfo->GetDocumentHasUserInteracted(),
-      aLoadInfo->GetDocumentHasLoaded(), openerPolicy, cookieSettingsArgs);
+      aLoadInfo->GetDocumentHasLoaded(), openerPolicy);
 }
 
 nsresult MergeParentLoadInfoForwarder(
@@ -763,17 +740,6 @@ nsresult MergeParentLoadInfoForwarder(
       aForwarderArgs.documentHasUserInteracted()));
   MOZ_ALWAYS_SUCCEEDS(
       aLoadInfo->SetDocumentHasLoaded(aForwarderArgs.documentHasLoaded()));
-
-  const Maybe<CookieSettingsArgs>& cookieSettingsArgs =
-      aForwarderArgs.cookieSettings();
-  if (cookieSettingsArgs.isSome()) {
-    nsCOMPtr<nsICookieSettings> cookieSettings;
-    nsresult rv = aLoadInfo->GetCookieSettings(getter_AddRefs(cookieSettings));
-    if (NS_SUCCEEDED(rv) && cookieSettings) {
-      static_cast<CookieSettings*>(cookieSettings.get())
-          ->Merge(cookieSettingsArgs.ref());
-    }
-  }
 
   return NS_OK;
 }
