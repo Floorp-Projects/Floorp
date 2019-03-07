@@ -80,7 +80,7 @@ class ParentRemoteAgent {
       this.server._start(port, host);
       log.info(`Remote debugging agent listening on ${this.scheme}://${this.host}:${this.port}/`);
     } catch (e) {
-      throw new Error(`Unable to start agent on ${port}: ${e.message}`, e);
+      throw new Error(`Unable to start remote agent: ${e.message}`, e);
     }
 
     Preferences.set(RecommendedPreferences);
