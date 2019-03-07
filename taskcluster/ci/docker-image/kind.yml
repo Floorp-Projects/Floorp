@@ -138,9 +138,9 @@ jobs:
     symbol: I(deb9-raw)
     definition: debian-raw
     args:
-      BASE_IMAGE: debian:stretch-20170620
+      BASE_IMAGE: debian:stretch-20190228
       DIST: stretch
-      SNAPSHOT: '20170830T000511Z'
+      SNAPSHOT: '20190306T040711Z'
   debian9-packages:
     symbol: I(deb9-pkg)
     definition: debian-packages
