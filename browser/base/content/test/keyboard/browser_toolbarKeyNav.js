@@ -52,6 +52,19 @@ async function waitUntilReloadEnabled() {
   await TestUtils.waitForCondition(() => !button.disabled);
 }
 
+// Opens a new, blank tab, executes a task and closes the tab.
+function withNewBlankTab(taskFn) {
+  return BrowserTestUtils.withNewTab("about:blank", async function() {
+    // For a blank tab, the Reload button should be disabled. However, when we
+    // open about:blank with BrowserTestUtils.withNewTab, this is unreliable.
+    // Therefore, explicitly disable the reload command.
+    // We disable the command (rather than disabling the button directly) so the
+    // button will be updated correctly for future page loads.
+    document.getElementById("Browser:Reload").setAttribute("disabled", "true");
+    await taskFn();
+  });
+}
+
 add_task(async function setPref() {
   await SpecialPowers.pushPrefEnv({
     set: [
@@ -63,7 +76,7 @@ add_task(async function setPref() {
 
 // Test tab stops with no page loaded.
 add_task(async function testTabStopsNoPage() {
-  await BrowserTestUtils.withNewTab("about:blank", async function() {
+  await withNewBlankTab(async function() {
     startFromUrlBar();
     await expectFocusAfterKey("Shift+Tab", "home-button");
     await expectFocusAfterKey("Shift+Tab", "tabbrowser-tabs", true);
@@ -125,7 +138,7 @@ add_task(async function testTabStopsWithBookmarksToolbar() {
 
 // Test a focusable toolbartabstop which has no navigable buttons.
 add_task(async function testTabStopNoButtons() {
-  await BrowserTestUtils.withNewTab("about:blank", async function() {
+  await withNewBlankTab(async function() {
     // The Back, Forward and Reload buttons are all currently disabled.
     // The Home button is the only other button at that tab stop.
     CustomizableUI.removeWidgetFromArea("home-button");
