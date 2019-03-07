@@ -31,10 +31,6 @@ BreakpointActorMap.prototype = {
     return Object.values(this._actors);
   },
 
-  listKeys() {
-    return Object.keys(this._actors);
-  },
-
   /**
    * Return the BreakpointActor at the given location in this
    * BreakpointActorMap.
