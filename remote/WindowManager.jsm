@@ -5,7 +5,6 @@
 "use strict";
 
 var EXPORTED_SYMBOLS = [
-  "BrowserObserver",
   "TabObserver",
   "WindowObserver",
   "WindowManager",
@@ -31,9 +30,6 @@ XPCOMUtils.defineLazyGetter(this, "log", Log.get);
 // This will have implication for the remote agent,
 // and as the platform gains support for product-independent events
 // we can likely get rid of this entire module.
-//
-// Seen below, BrowserObserver in particular tries to emulate content
-// browser tracking across host process changes.
 
 /**
  * Observes DOMWindows as they open and close.
@@ -149,79 +145,6 @@ class TabObserver {
 
   onWindowClose(window) {
     // TODO(ato): Is TabClose fired when the window closes?
-  }
-}
-
-/**
- * BrowserObserver is more powerful than TabObserver,
- * as it watches for any content browser appearing anywhere in Gecko.
- * TabObserver on the other hand is limited to browsers associated with a tab.
- *
- * This class is currently not used by the remote agent,
- * but leave it in here because we may have use for it later
- * if we decide to allow Marionette-style chrome automation.
- */
-class BrowserObserver {
-  constructor() {
-    EventEmitter.decorate(this);
-  }
-
-  start() {
-    // TODO(ato): Theoretically it would be better to use ChromeWindow#getGroupMessageManager("Browsers")
-    // TODO(ato): Browser:Init does not cover browsers living in the parent process
-    Services.mm.addMessageListener("Browser:Init", this);
-    Services.obs.addObserver(this, "message-manager-disconnect");
-  }
-
-  stop() {
-    Services.mm.removeMessageListener("Browser:Init", this);
-    Services.obs.removeObserver(this, "message-manager-disconnect");
-  }
-
-  onBrowserInit(browser) {
-    this.emit("connected", browser);
-  }
-
-  onMessageManagerDisconnect(browser) {
-    if (!browser.isConnected) {
-      this.emit("disconnected", browser);
-    }
-  }
-
-  // nsIMessageListener
-
-  receiveMessage({name, target}) {
-    switch (name) {
-      case "Browser:Init":
-        this.onBrowserInit(target);
-        break;
-
-      default:
-        log.warn("Unknown IPC message form browser: " + name);
-        break;
-    }
-  }
-
-  // nsIObserver
-
-  observe(subject, topic) {
-    switch (topic) {
-      case "message-manager-disconnect":
-        this.onMessageManagerDisconnect(subject);
-        break;
-
-      default:
-        log.warn("Unknown system observer notification: " + topic);
-    }
-  }
-
-  // XPCOM
-
-  get QueryInterface() {
-    return ChromeUtils.generateQI([
-      Ci.nsIMessageListener,
-      Ci.nsIObserver,
-    ]);
   }
 }
 
