@@ -1,5 +1,5 @@
 platform(linux,mac) == border-clamp-corner-radius.yaml border-clamp-corner-radius.png
-== border-gradient-simple.yaml border-gradient-simple-ref.yaml
+fuzzy(1,790) == border-gradient-simple.yaml border-gradient-simple-ref.yaml
 platform(linux,mac) == border-gradient-nine-patch.yaml border-gradient-nine-patch.png
 == border-radial-gradient-simple.yaml border-radial-gradient-simple-ref.yaml
 platform(linux,mac) == border-radial-gradient-nine-patch.yaml border-radial-gradient-nine-patch.png

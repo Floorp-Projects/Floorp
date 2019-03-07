@@ -23,7 +23,7 @@ use std::time::{Duration, SystemTime};
 use std::rc::Rc;
 
 /// The size of each region/layer in shared cache texture arrays.
-const TEXTURE_REGION_DIMENSIONS: i32 = 512;
+pub const TEXTURE_REGION_DIMENSIONS: i32 = 512;
 
 /// The number of slices for picture caching to allocate at start.
 const BASE_PICTURE_TEXTURE_SLICES: usize = 16;

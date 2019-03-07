@@ -18,7 +18,7 @@ platform(linux,mac) fuzzy(1,35000) == linear-stops.yaml linear-stops-ref.png
 fuzzy(1,20000) == linear.yaml linear-ref.yaml
 fuzzy(1,20000) == linear-reverse.yaml linear-ref.yaml
 
-== linear-aligned-clip.yaml linear-aligned-clip-ref.yaml
+fuzzy(1,15200) == linear-aligned-clip.yaml linear-aligned-clip-ref.yaml
 
 platform(linux,mac) fuzzy(1,80000) == radial-circle.yaml radial-circle-ref.png
 platform(linux,mac) fuzzy(1,80000) == radial-ellipse.yaml radial-ellipse-ref.png
@@ -44,9 +44,9 @@ fuzzy(255,2664) == repeat-radial.yaml repeat-radial-ref.yaml
 fuzzy(255,2664) == repeat-radial-negative.yaml repeat-radial-ref.yaml
 
 # fuzzy because of thin spaced out column of pixels that are 1 off
-fuzzy(1,50) == tiling-linear-1.yaml tiling-linear-1-ref.yaml
-fuzzy(1,38) == tiling-linear-2.yaml tiling-linear-2-ref.yaml
-== tiling-linear-3.yaml tiling-linear-3-ref.yaml
+fuzzy(1,83164) == tiling-linear-1.yaml tiling-linear-1-ref.yaml
+fuzzy(1,46279) == tiling-linear-2.yaml tiling-linear-2-ref.yaml
+fuzzy(1,62154) == tiling-linear-3.yaml tiling-linear-3-ref.yaml
 
 fuzzy(1,17) == tiling-radial-1.yaml tiling-radial-1-ref.yaml
 fuzzy(1,1) == tiling-radial-2.yaml tiling-radial-2-ref.yaml
