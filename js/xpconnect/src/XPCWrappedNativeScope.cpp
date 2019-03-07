@@ -90,16 +90,6 @@ XPCWrappedNativeScope::XPCWrappedNativeScope(JS::Compartment* aCompartment,
   mAllowContentXBLScope = !RemoteXULForbidsXBLScope(aFirstGlobal);
 }
 
-// static
-bool XPCWrappedNativeScope::IsDyingScope(XPCWrappedNativeScope* scope) {
-  for (XPCWrappedNativeScope* cur = gDyingScopes; cur; cur = cur->mNext) {
-    if (scope == cur) {
-      return true;
-    }
-  }
-  return false;
-}
-
 bool XPCWrappedNativeScope::GetComponentsJSObject(JS::MutableHandleObject obj) {
   AutoJSContext cx;
   if (!mComponents) {
