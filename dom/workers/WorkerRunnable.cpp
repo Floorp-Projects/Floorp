@@ -619,7 +619,10 @@ bool WorkerProxyToMainThreadRunnable::Dispatch(WorkerPrivate* aWorkerPrivate) {
   MOZ_ASSERT(!mWorkerRef);
   mWorkerRef = new ThreadSafeWorkerRef(workerRef);
 
-  if (NS_WARN_IF(NS_FAILED(aWorkerPrivate->DispatchToMainThread(this)))) {
+  if (ForMessaging()
+          ? NS_WARN_IF(NS_FAILED(
+                aWorkerPrivate->DispatchToMainThreadForMessaging(this)))
+          : NS_WARN_IF(NS_FAILED(aWorkerPrivate->DispatchToMainThread(this)))) {
     ReleaseWorker();
     RunBackOnWorkerThreadForCleanup(aWorkerPrivate);
     return false;

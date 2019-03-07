@@ -469,6 +469,12 @@ VARCACHE_PREF(
   RelaxedAtomicUint32, 30000 /* 30 seconds */
 )
 
+VARCACHE_PREF(
+  "dom.worker.use_medium_high_event_queue",
+   dom_worker_use_medium_high_event_queue,
+  RelaxedAtomicBool, true
+)
+
 // Enable content type normalization of XHR uploads via MIME Sniffing standard
 // Disabled for now in bz1499136
 VARCACHE_PREF(
@@ -2272,6 +2278,21 @@ VARCACHE_PREF(
    dom_reporting_delivering_maxReports,
   uint32_t, 100
 )
+
+// In case Touch API is enabled, this pref controls whether to support
+// ontouch* event handlers, document.createTouch, document.createTouchList and
+// document.createEvent("TouchEvent").
+#ifdef ANDROID
+# define PREF_VALUE true
+#else
+# define PREF_VALUE false
+#endif
+VARCACHE_PREF(
+  "dom.w3c_touch_events.legacy_apis.enabled",
+   dom_w3c_touch_events_legacy_apis_enabled,
+  bool, PREF_VALUE
+)
+#undef PREF_VALUE
 
 VARCACHE_PREF(
   "medium_high_event_queue.enabled",

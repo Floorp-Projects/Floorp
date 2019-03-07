@@ -82,13 +82,13 @@ partial interface HTMLElement {
 
 [NoInterfaceObject]
 interface TouchEventHandlers {
-  [Func="nsGenericHTMLElement::TouchEventsEnabled"]
+  [Func="nsGenericHTMLElement::LegacyTouchAPIEnabled"]
            attribute EventHandler ontouchstart;
-  [Func="nsGenericHTMLElement::TouchEventsEnabled"]
+  [Func="nsGenericHTMLElement::LegacyTouchAPIEnabled"]
            attribute EventHandler ontouchend;
-  [Func="nsGenericHTMLElement::TouchEventsEnabled"]
+  [Func="nsGenericHTMLElement::LegacyTouchAPIEnabled"]
            attribute EventHandler ontouchmove;
-  [Func="nsGenericHTMLElement::TouchEventsEnabled"]
+  [Func="nsGenericHTMLElement::LegacyTouchAPIEnabled"]
            attribute EventHandler ontouchcancel;
 };
 

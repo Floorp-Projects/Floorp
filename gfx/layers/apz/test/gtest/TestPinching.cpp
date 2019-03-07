@@ -154,8 +154,9 @@ class APZCPinchLockingTester : public APZCPinchTester {
 
     apzc->ReceiveInputEvent(
         CreatePinchGestureInput(PinchGestureInput::PINCHGESTURE_START, mFocus,
-                                mSpan, mSpan),
+                                mSpan, mSpan, mcc->Time()),
         nullptr);
+    mcc->AdvanceBy(TimeDuration::FromMilliseconds(51));
   }
 
   void twoFingerPan() {
@@ -166,8 +167,9 @@ class APZCPinchLockingTester : public APZCPinchTester {
 
     apzc->ReceiveInputEvent(
         CreatePinchGestureInput(PinchGestureInput::PINCHGESTURE_SCALE, mFocus,
-                                mSpan, mSpan),
+                                mSpan, mSpan, mcc->Time()),
         nullptr);
+    mcc->AdvanceBy(TimeDuration::FromMilliseconds(51));
   }
 
   void twoFingerZoom() {
@@ -178,8 +180,9 @@ class APZCPinchLockingTester : public APZCPinchTester {
 
     apzc->ReceiveInputEvent(
         CreatePinchGestureInput(PinchGestureInput::PINCHGESTURE_SCALE, mFocus,
-                                newSpan, mSpan),
+                                newSpan, mSpan, mcc->Time()),
         nullptr);
+    mcc->AdvanceBy(TimeDuration::FromMilliseconds(51));
     mSpan = newSpan;
   }
 
@@ -191,7 +194,7 @@ class APZCPinchLockingTester : public APZCPinchTester {
         gfxPrefs::APZPinchLockSpanBreakoutThreshold() * 0.8 * tm->GetDPI();
     apzc->ReceiveInputEvent(
         CreatePinchGestureInput(PinchGestureInput::PINCHGESTURE_SCALE, mFocus,
-                                mSpan + pinchDistance, mSpan),
+                                mSpan + pinchDistance, mSpan, mcc->Time()),
         nullptr);
 
     FrameMetrics result = apzc->GetFrameMetrics();
@@ -494,29 +497,35 @@ TEST_F(APZCPinchGestureDetectorTester, Pinch_NoSpan) {
 
   // Do a pinch holding a zero span and moving the focus by y=100
 
+  const TimeDuration TIME_BETWEEN_TOUCH_EVENT =
+      TimeDuration::FromMilliseconds(50);
+
   MultiTouchInput mtiStart =
-      MultiTouchInput(MultiTouchInput::MULTITOUCH_START, 0, TimeStamp(), 0);
+      MultiTouchInput(MultiTouchInput::MULTITOUCH_START, 0, mcc->Time(), 0);
   mtiStart.mTouches.AppendElement(CreateSingleTouchData(inputId, focus));
   mtiStart.mTouches.AppendElement(CreateSingleTouchData(inputId + 1, focus));
   apzc->ReceiveInputEvent(mtiStart, nullptr);
+  mcc->AdvanceBy(TIME_BETWEEN_TOUCH_EVENT);
 
   focus.y -= 35 + 1;  // this is to get over the PINCH_START_THRESHOLD in
                       // GestureEventListener.cpp
   MultiTouchInput mtiMove1 =
-      MultiTouchInput(MultiTouchInput::MULTITOUCH_MOVE, 0, TimeStamp(), 0);
+      MultiTouchInput(MultiTouchInput::MULTITOUCH_MOVE, 0, mcc->Time(), 0);
   mtiMove1.mTouches.AppendElement(CreateSingleTouchData(inputId, focus));
   mtiMove1.mTouches.AppendElement(CreateSingleTouchData(inputId + 1, focus));
   apzc->ReceiveInputEvent(mtiMove1, nullptr);
+  mcc->AdvanceBy(TIME_BETWEEN_TOUCH_EVENT);
 
   focus.y -= 100;  // do a two-finger scroll of 100 screen pixels
   MultiTouchInput mtiMove2 =
-      MultiTouchInput(MultiTouchInput::MULTITOUCH_MOVE, 0, TimeStamp(), 0);
+      MultiTouchInput(MultiTouchInput::MULTITOUCH_MOVE, 0, mcc->Time(), 0);
   mtiMove2.mTouches.AppendElement(CreateSingleTouchData(inputId, focus));
   mtiMove2.mTouches.AppendElement(CreateSingleTouchData(inputId + 1, focus));
   apzc->ReceiveInputEvent(mtiMove2, nullptr);
+  mcc->AdvanceBy(TIME_BETWEEN_TOUCH_EVENT);
 
   MultiTouchInput mtiEnd =
-      MultiTouchInput(MultiTouchInput::MULTITOUCH_END, 0, TimeStamp(), 0);
+      MultiTouchInput(MultiTouchInput::MULTITOUCH_END, 0, mcc->Time(), 0);
   mtiEnd.mTouches.AppendElement(CreateSingleTouchData(inputId, focus));
   mtiEnd.mTouches.AppendElement(CreateSingleTouchData(inputId + 1, focus));
   apzc->ReceiveInputEvent(mtiEnd, nullptr);
@@ -549,12 +558,12 @@ TEST_F(APZCPinchTester, Pinch_TwoFinger_APZZoom_Disabled_Bug1354185) {
   float aScale = 10;
   apzc->ReceiveInputEvent(
       CreatePinchGestureInput(PinchGestureInput::PINCHGESTURE_START, aFocus,
-                              10.0, 10.0),
+                              10.0, 10.0, mcc->Time()),
       nullptr);
 
   apzc->ReceiveInputEvent(
       CreatePinchGestureInput(PinchGestureInput::PINCHGESTURE_SCALE,
-                              aSecondFocus, 10.0 * aScale, 10.0),
+                              aSecondFocus, 10.0 * aScale, 10.0, mcc->Time()),
       nullptr);
 }
 

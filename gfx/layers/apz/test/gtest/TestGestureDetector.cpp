@@ -42,34 +42,39 @@ TEST_F(APZCGestureDetectorTester, Pan_After_Pinch) {
   int focusX = 250;
   int focusY = 300;
   int panDistance = 20;
+  const TimeDuration TIME_BETWEEN_TOUCH_EVENT =
+      TimeDuration::FromMilliseconds(50);
 
   int firstFingerId = 0;
   int secondFingerId = firstFingerId + 1;
 
   // Put fingers down
   MultiTouchInput mti =
-      MultiTouchInput(MultiTouchInput::MULTITOUCH_START, 0, TimeStamp(), 0);
+      MultiTouchInput(MultiTouchInput::MULTITOUCH_START, 0, mcc->Time(), 0);
   mti.mTouches.AppendElement(
       CreateSingleTouchData(firstFingerId, focusX, focusY));
   mti.mTouches.AppendElement(
       CreateSingleTouchData(secondFingerId, focusX, focusY));
   apzc->ReceiveInputEvent(mti, nullptr);
+  mcc->AdvanceBy(TIME_BETWEEN_TOUCH_EVENT);
 
   // Spread fingers out to enter the pinch state
-  mti = MultiTouchInput(MultiTouchInput::MULTITOUCH_MOVE, 0, TimeStamp(), 0);
+  mti = MultiTouchInput(MultiTouchInput::MULTITOUCH_MOVE, 0, mcc->Time(), 0);
   mti.mTouches.AppendElement(
       CreateSingleTouchData(firstFingerId, focusX - pinchLength, focusY));
   mti.mTouches.AppendElement(
       CreateSingleTouchData(secondFingerId, focusX + pinchLength, focusY));
   apzc->ReceiveInputEvent(mti, nullptr);
+  mcc->AdvanceBy(TIME_BETWEEN_TOUCH_EVENT);
 
   // Do the actual pinch of 1.25x
-  mti = MultiTouchInput(MultiTouchInput::MULTITOUCH_MOVE, 0, TimeStamp(), 0);
+  mti = MultiTouchInput(MultiTouchInput::MULTITOUCH_MOVE, 0, mcc->Time(), 0);
   mti.mTouches.AppendElement(
       CreateSingleTouchData(firstFingerId, focusX - pinchLengthScaled, focusY));
   mti.mTouches.AppendElement(CreateSingleTouchData(
       secondFingerId, focusX + pinchLengthScaled, focusY));
   apzc->ReceiveInputEvent(mti, nullptr);
+  mcc->AdvanceBy(TIME_BETWEEN_TOUCH_EVENT);
 
   // Verify that the zoom changed, just to make sure our code above did what it
   // was supposed to.
@@ -79,31 +84,35 @@ TEST_F(APZCGestureDetectorTester, Pan_After_Pinch) {
             newZoom);
 
   // Now we lift one finger...
-  mti = MultiTouchInput(MultiTouchInput::MULTITOUCH_END, 0, TimeStamp(), 0);
+  mti = MultiTouchInput(MultiTouchInput::MULTITOUCH_END, 0, mcc->Time(), 0);
   mti.mTouches.AppendElement(CreateSingleTouchData(
       secondFingerId, focusX + pinchLengthScaled, focusY));
   apzc->ReceiveInputEvent(mti, nullptr);
+  mcc->AdvanceBy(TIME_BETWEEN_TOUCH_EVENT);
 
   // ... and pan with the remaining finger. This pan just breaks through the
   // distance threshold.
   focusY += 40;
-  mti = MultiTouchInput(MultiTouchInput::MULTITOUCH_MOVE, 0, TimeStamp(), 0);
+  mti = MultiTouchInput(MultiTouchInput::MULTITOUCH_MOVE, 0, mcc->Time(), 0);
   mti.mTouches.AppendElement(
       CreateSingleTouchData(firstFingerId, focusX - pinchLengthScaled, focusY));
   apzc->ReceiveInputEvent(mti, nullptr);
+  mcc->AdvanceBy(TIME_BETWEEN_TOUCH_EVENT);
 
   // This one does an actual pan of 20 pixels
   focusY += panDistance;
-  mti = MultiTouchInput(MultiTouchInput::MULTITOUCH_MOVE, 0, TimeStamp(), 0);
+  mti = MultiTouchInput(MultiTouchInput::MULTITOUCH_MOVE, 0, mcc->Time(), 0);
   mti.mTouches.AppendElement(
       CreateSingleTouchData(firstFingerId, focusX - pinchLengthScaled, focusY));
   apzc->ReceiveInputEvent(mti, nullptr);
+  mcc->AdvanceBy(TIME_BETWEEN_TOUCH_EVENT);
 
   // Lift the remaining finger
-  mti = MultiTouchInput(MultiTouchInput::MULTITOUCH_END, 0, TimeStamp(), 0);
+  mti = MultiTouchInput(MultiTouchInput::MULTITOUCH_END, 0, mcc->Time(), 0);
   mti.mTouches.AppendElement(
       CreateSingleTouchData(firstFingerId, focusX - pinchLengthScaled, focusY));
   apzc->ReceiveInputEvent(mti, nullptr);
+  mcc->AdvanceBy(TIME_BETWEEN_TOUCH_EVENT);
 
   // Verify that we scrolled
   FrameMetrics finalMetrics = apzc->GetFrameMetrics();
