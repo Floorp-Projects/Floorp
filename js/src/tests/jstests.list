@@ -22,6 +22,13 @@ skip script non262/fields/quirks.js
 skip script non262/reflect-parse/class-fields.js
 
 
+###########################################################################
+# Generated jstests.list for test262 when inline |reftest| isn't possible #
+###########################################################################
+
+include test262/jstests.list
+
+
 #################################################################
 # Tests disabled due to intentional alternative implementations #
 #################################################################
