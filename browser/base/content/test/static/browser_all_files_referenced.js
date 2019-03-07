@@ -199,6 +199,9 @@ const ignorableWhitelist = new Set([
 
   // Bug 1351669 - obsolete test file
   "resource://gre/res/test.properties",
+
+  // Bug 1532703
+  "resource://app/localization/en-US/browser/aboutConfig.ftl",
 ]);
 for (let entry of ignorableWhitelist) {
   whitelist.add(entry);
