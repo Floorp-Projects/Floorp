@@ -226,9 +226,10 @@ SSLExp_HkdfExtract(PRUint16 version, PRUint16 cipherSuite,
 }
 
 SECStatus
-SSLExp_HkdfDeriveSecret(PRUint16 version, PRUint16 cipherSuite, PK11SymKey *prk,
-                        const char *label, unsigned int labelLen,
-                        PK11SymKey **keyp)
+SSLExp_HkdfExpandLabel(PRUint16 version, PRUint16 cipherSuite, PK11SymKey *prk,
+                       const PRUint8 *hsHash, unsigned int hsHashLen,
+                       const char *label, unsigned int labelLen,
+                       PK11SymKey **keyp)
 {
     if (prk == NULL || keyp == NULL ||
         label == NULL || labelLen == 0) {
@@ -243,7 +244,7 @@ SSLExp_HkdfDeriveSecret(PRUint16 version, PRUint16 cipherSuite, PK11SymKey *prk,
     if (rv != SECSuccess) {
         return SECFailure; /* Code already set. */
     }
-    return tls13_HkdfExpandLabel(prk, hash, NULL, 0, label, labelLen,
+    return tls13_HkdfExpandLabel(prk, hash, hsHash, hsHashLen, label, labelLen,
                                  tls13_GetHkdfMechanismForHash(hash),
                                  tls13_GetHashSizeForHash(hash), keyp);
 }
