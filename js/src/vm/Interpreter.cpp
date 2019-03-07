@@ -296,7 +296,7 @@ JSFunction* js::MakeDefaultConstructor(JSContext* cx, HandleScript script,
   ctor->setIsClassConstructor();
 
   // Create the script now, so we can fix up its source span below.
-  JSScript* ctorScript = JSFunction::getOrCreateScript(cx, ctor);
+  RootedScript ctorScript(cx, JSFunction::getOrCreateScript(cx, ctor));
   if (!ctorScript) {
     return nullptr;
   }
@@ -316,6 +316,8 @@ JSFunction* js::MakeDefaultConstructor(JSContext* cx, HandleScript script,
   unsigned line = PCToLineNumber(script, pc, &column);
   ctorScript->setDefaultClassConstructorSpan(
       script->sourceObject(), classStartOffset, classEndOffset, line, column);
+
+  Debugger::onNewScript(cx, ctorScript);
 
   return ctor;
 }
