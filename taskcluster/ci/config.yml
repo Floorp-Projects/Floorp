@@ -246,3 +246,14 @@ partner-urls:
                         by-release-level:
                             production: 'git@github.com:mozilla-partners/mozilla-EME-free-manifest.git'
                             staging: 'git@github.com:moz-releng-automation-stage/mozilla-EME-free-manifest.git'
+
+
+task-priority:
+    by-project:
+        'mozilla-release': 'highest'
+        'mozilla-esr60': 'very-high'
+        'mozilla-beta': 'high'
+        'mozilla-central': 'medium'
+        'autoland': 'low'
+        'mozilla-inbound': 'low'
+        'default': 'very-low'
