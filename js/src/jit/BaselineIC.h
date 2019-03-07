@@ -1135,13 +1135,14 @@ class TypeCheckPrimitiveSetStub : public ICStub {
   friend class ICStubSpace;
 
  protected:
-  inline static uint16_t TypeToFlag(JSValueType type) {
+  inline static uint16_t TypeToFlag(ValueType type) {
     return 1u << static_cast<unsigned>(type);
   }
 
   inline static uint16_t ValidFlags() {
-    return ((TypeToFlag(JSVAL_TYPE_OBJECT) << 1) - 1) &
-           ~TypeToFlag(JSVAL_TYPE_MAGIC);
+    return ((TypeToFlag(ValueType::Object) << 1) - 1) &
+           ~(TypeToFlag(ValueType::Magic) |
+             TypeToFlag(ValueType::PrivateGCThing));
   }
 
   TypeCheckPrimitiveSetStub(Kind kind, JitCode* stubCode, uint16_t flags)
@@ -1165,9 +1166,8 @@ class TypeCheckPrimitiveSetStub : public ICStub {
  public:
   uint16_t typeFlags() const { return extra_; }
 
-  bool containsType(JSValueType type) const {
-    MOZ_ASSERT(type <= JSVAL_TYPE_OBJECT);
-    MOZ_ASSERT(type != JSVAL_TYPE_MAGIC);
+  bool containsType(ValueType type) const {
+    MOZ_ASSERT(type != ValueType::Magic && type != ValueType::PrivateGCThing);
     return extra_ & TypeToFlag(type);
   }
 
@@ -1190,7 +1190,7 @@ class TypeCheckPrimitiveSetStub : public ICStub {
 
    public:
     Compiler(JSContext* cx, Kind kind, TypeCheckPrimitiveSetStub* existingStub,
-             JSValueType type)
+             ValueType type)
         : ICStubCompiler(cx, kind),
           existingStub_(existingStub),
           flags_((existingStub ? existingStub->typeFlags() : 0) |
@@ -1382,7 +1382,7 @@ class ICTypeMonitor_PrimitiveSet : public TypeCheckPrimitiveSetStub {
 
    public:
     Compiler(JSContext* cx, ICTypeMonitor_PrimitiveSet* existingStub,
-             JSValueType type)
+             ValueType type)
         : TypeCheckPrimitiveSetStub::Compiler(cx, TypeMonitor_PrimitiveSet,
                                               existingStub, type) {}
 
@@ -1522,7 +1522,7 @@ class ICTypeUpdate_PrimitiveSet : public TypeCheckPrimitiveSetStub {
 
    public:
     Compiler(JSContext* cx, ICTypeUpdate_PrimitiveSet* existingStub,
-             JSValueType type)
+             ValueType type)
         : TypeCheckPrimitiveSetStub::Compiler(cx, TypeUpdate_PrimitiveSet,
                                               existingStub, type) {}
 
