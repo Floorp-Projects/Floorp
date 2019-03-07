@@ -143,16 +143,17 @@ static void VerifyPrefixSet(PrefixStringMap& expected) {
   // Verify the prefix set is written to disk.
   nsCOMPtr<nsIFile> file;
   NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(file));
-
   file->AppendNative(GTEST_SAFEBROWSING_DIR);
-  file->AppendNative(GTEST_PREFIXFILE);
 
-  RefPtr<VariableLengthPrefixSet> load = new VariableLengthPrefixSet;
-  load->Init(GTEST_TABLE);
+  RefPtr<LookupCacheV4> lookup =
+      new LookupCacheV4(GTEST_TABLE, NS_LITERAL_CSTRING("test"), file);
+  lookup->Init();
+
+  file->AppendNative(GTEST_PREFIXFILE);
+  lookup->LoadFromFile(file);
 
   PrefixStringMap prefixesInFile;
-  load->LoadFromFile(file);
-  load->GetPrefixes(prefixesInFile);
+  lookup->GetPrefixes(prefixesInFile);
 
   for (auto iter = expected.ConstIter(); !iter.Done(); iter.Next()) {
     nsCString* expectedPrefix = iter.Data();
@@ -233,7 +234,7 @@ static void testOpenLookupCache() {
 }
 
 // Tests start from here.
-TEST(UrlClassifierTableUpdateV4, FixLenghtPSetFullUpdate) {
+TEST(UrlClassifierTableUpdateV4, FixLengthPSetFullUpdate) {
   srand(time(NULL));
 
   _PrefixArray array;
@@ -249,7 +250,7 @@ TEST(UrlClassifierTableUpdateV4, FixLenghtPSetFullUpdate) {
   Clear();
 }
 
-TEST(UrlClassifierTableUpdateV4, VariableLenghtPSetFullUpdate) {
+TEST(UrlClassifierTableUpdateV4, VariableLengthPSetFullUpdate) {
   _PrefixArray array;
   PrefixStringMap map;
   nsCString sha256;
