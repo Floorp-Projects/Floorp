@@ -230,8 +230,7 @@ class BrowserFragment : Fragment(), BackHandler {
         return when {
             findInPageIntegration.onBackPressed() -> true
             sessionFeature.onBackPressed() -> true
-            requireComponents.core.sessionManager.selectedSession?.isCustomTabSession()
-                    ?: false && customTabsToolbarFeature.onBackPressed() -> true
+            customTabsToolbarFeature.onBackPressed() -> true
             else -> false
         }
     }
