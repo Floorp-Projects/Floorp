@@ -4,6 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "builtin/Eval.h"
+#include "builtin/RegExp.h"
 #include "jit/BaselineIC.h"
 #include "jit/IonIC.h"
 #include "jit/JitRealm.h"
@@ -11,6 +13,7 @@
 #include "vm/AsyncFunction.h"
 #include "vm/AsyncIteration.h"
 #include "vm/Interpreter.h"
+#include "vm/TypedArrayObject.h"
 
 #include "jit/BaselineFrame-inl.h"
 #include "vm/Interpreter-inl.h"
@@ -22,6 +25,7 @@ namespace jit {
 // (must be unique, used for the VMFunctionId enum and profiling) and the C++
 // function to be called. This list must be sorted on the name field.
 #define VMFUNCTION_LIST(_)                                                     \
+  _(ArgumentsObjectCreateForIon, js::ArgumentsObject::createForIon)            \
   _(AsyncFunctionAwait, js::AsyncFunctionAwait)                                \
   _(AsyncFunctionResolve, js::AsyncFunctionResolve)                            \
   _(BaselineDebugPrologue, js::jit::DebugPrologue)                             \
@@ -34,10 +38,15 @@ namespace jit {
   _(CheckGlobalOrEvalDeclarationConflicts,                                     \
     js::CheckGlobalOrEvalDeclarationConflicts)                                 \
   _(CheckIsCallable, js::jit::CheckIsCallable)                                 \
+  _(CheckOverRecursed, js::jit::CheckOverRecursed)                             \
   _(CheckOverRecursedBaseline, js::jit::CheckOverRecursedBaseline)             \
   _(CloneRegExpObject, js::CloneRegExpObject)                                  \
+  _(CopyLexicalEnvironmentObject, js::jit::CopyLexicalEnvironmentObject)       \
   _(CreateAsyncFromSyncIterator, js::CreateAsyncFromSyncIterator)              \
+  _(CreateDerivedTypedObj, js::jit::CreateDerivedTypedObj)                     \
   _(CreateGenerator, js::jit::CreateGenerator)                                 \
+  _(CreateThis, js::jit::CreateThis)                                           \
+  _(CreateThisForFunctionWithProto, js::CreateThisForFunctionWithProto)        \
   _(DebugAfterYield, js::jit::DebugAfterYield)                                 \
   _(DebugEpilogueOnBaselineReturn, js::jit::DebugEpilogueOnBaselineReturn)     \
   _(DebugLeaveLexicalEnv, js::jit::DebugLeaveLexicalEnv)                       \
@@ -46,6 +55,7 @@ namespace jit {
   _(DebugLeaveThenRecreateLexicalEnv,                                          \
     js::jit::DebugLeaveThenRecreateLexicalEnv)                                 \
   _(Debug_CheckSelfHosted, js::Debug_CheckSelfHosted)                          \
+  _(DeepCloneObjectLiteral, js::DeepCloneObjectLiteral)                        \
   _(DefFunOperation, js::DefFunOperation)                                      \
   _(DefLexicalOperation, js::DefLexicalOperation)                              \
   _(DefVarOperation, js::DefVarOperation)                                      \
@@ -54,6 +64,7 @@ namespace jit {
   _(DeleteNameOperation, js::DeleteNameOperation)                              \
   _(DeletePropertyNonStrict, js::DeletePropertyJit<false>)                     \
   _(DeletePropertyStrict, js::DeletePropertyJit<true>)                         \
+  _(DirectEvalStringFromIon, js::DirectEvalStringFromIon)                      \
   _(DoToNumber, js::jit::DoToNumber)                                           \
   _(DoToNumeric, js::jit::DoToNumeric)                                         \
   _(EnterWith, js::jit::EnterWith)                                             \
@@ -62,16 +73,20 @@ namespace jit {
   _(FunWithProtoOperation, js::FunWithProtoOperation)                          \
   _(GetAndClearException, js::GetAndClearException)                            \
   _(GetImportOperation, js::GetImportOperation)                                \
+  _(GetIntrinsicValue, js::jit::GetIntrinsicValue)                             \
   _(GetNonSyntacticGlobalThis, js::GetNonSyntacticGlobalThis)                  \
   _(GetOrCreateModuleMetaObject, js::GetOrCreateModuleMetaObject)              \
   _(HomeObjectSuperBase, js::HomeObjectSuperBase)                              \
   _(ImplicitThisOperation, js::ImplicitThisOperation)                          \
   _(ImportMetaOperation, js::ImportMetaOperation)                              \
   _(InitElemGetterSetterOperation, js::InitElemGetterSetterOperation)          \
+  _(InitElemOperation, js::InitElemOperation)                                  \
   _(InitFunctionEnvironmentObjects, js::jit::InitFunctionEnvironmentObjects)   \
   _(InitPropGetterSetterOperation, js::InitPropGetterSetterOperation)          \
   _(InterpretResume, js::jit::InterpretResume)                                 \
   _(InterruptCheck, js::jit::InterruptCheck)                                   \
+  _(InvokeFunction, js::jit::InvokeFunction)                                   \
+  _(InvokeFunctionShuffleNewTarget, js::jit::InvokeFunctionShuffleNewTarget)   \
   _(IonBinaryArithICUpdate, js::jit::IonBinaryArithIC::update)                 \
   _(IonBindNameICUpdate, js::jit::IonBindNameIC::update)                       \
   _(IonCompareICUpdate, js::jit::IonCompareIC::update)                         \
@@ -88,27 +103,41 @@ namespace jit {
   _(Lambda, js::Lambda)                                                        \
   _(LambdaArrow, js::LambdaArrow)                                              \
   _(LeaveWith, js::jit::LeaveWith)                                             \
+  _(LexicalEnvironmentObjectCreate, js::LexicalEnvironmentObject::create)      \
   _(MakeDefaultConstructor, js::MakeDefaultConstructor)                        \
   _(MutatePrototype, js::jit::MutatePrototype)                                 \
   _(NewArgumentsObject, js::jit::NewArgumentsObject)                           \
   _(NewArrayCopyOnWriteOperation, js::NewArrayCopyOnWriteOperation)            \
+  _(NewArrayOperation, js::NewArrayOperation)                                  \
   _(NewDenseCopyOnWriteArray, js::NewDenseCopyOnWriteArray)                    \
+  _(NewObjectOperation, js::NewObjectOperation)                                \
+  _(NewObjectOperationWithTemplate, js::NewObjectOperationWithTemplate)        \
+  _(NewTypedArrayWithTemplateAndArray, js::NewTypedArrayWithTemplateAndArray)  \
+  _(NewTypedArrayWithTemplateAndBuffer,                                        \
+    js::NewTypedArrayWithTemplateAndBuffer)                                    \
   _(NormalSuspend, js::jit::NormalSuspend)                                     \
+  _(ObjectCreateWithTemplate, js::ObjectCreateWithTemplate)                    \
   _(ObjectWithProtoOperation, js::ObjectWithProtoOperation)                    \
   _(OnDebuggerStatement, js::jit::OnDebuggerStatement)                         \
   _(OptimizeSpreadCall, js::OptimizeSpreadCall)                                \
   _(PopLexicalEnv, js::jit::PopLexicalEnv)                                     \
   _(PopVarEnv, js::jit::PopVarEnv)                                             \
+  _(PowValues, js::PowValues)                                                  \
   _(ProcessCallSiteObjOperation, js::ProcessCallSiteObjOperation)              \
   _(PushLexicalEnv, js::jit::PushLexicalEnv)                                   \
   _(PushVarEnv, js::jit::PushVarEnv)                                           \
   _(RecreateLexicalEnv, js::jit::RecreateLexicalEnv)                           \
+  _(RegExpMatcherRaw, js::RegExpMatcherRaw)                                    \
+  _(RegExpSearcherRaw, js::RegExpSearcherRaw)                                  \
+  _(RegExpTesterRaw, js::RegExpTesterRaw)                                      \
   _(SetFunctionName, js::SetFunctionName)                                      \
   _(SetIntrinsicOperation, js::SetIntrinsicOperation)                          \
   _(SetObjectElementWithReceiver, js::SetObjectElementWithReceiver)            \
   _(SetPropertySuper, js::SetPropertySuper)                                    \
   _(SingletonObjectLiteralOperation, js::SingletonObjectLiteralOperation)      \
   _(StartDynamicModuleImport, js::StartDynamicModuleImport)                    \
+  _(StringFlatReplaceString, js::StringFlatReplaceString)                      \
+  _(StringReplace, js::jit::StringReplace)                                     \
   _(SuperFunOperation, js::SuperFunOperation)                                  \
   _(ThrowBadDerivedReturn, js::jit::ThrowBadDerivedReturn)                     \
   _(ThrowCheckIsObject, js::ThrowCheckIsObject)                                \

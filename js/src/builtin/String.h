@@ -141,7 +141,7 @@ ArrayObject* str_split_string(JSContext* cx, HandleObjectGroup group,
                               HandleString str, HandleString sep,
                               uint32_t limit);
 
-JSString* str_flat_replace_string(JSContext* cx, HandleString string,
+JSString* StringFlatReplaceString(JSContext* cx, HandleString string,
                                   HandleString pattern,
                                   HandleString replacement);
 
