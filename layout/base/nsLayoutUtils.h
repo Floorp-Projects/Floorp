@@ -398,6 +398,8 @@ class nsLayoutUtils {
    * table frame, in which case the table wrapper frame is returned.
    */
   static nsIFrame* GetPrimaryFrameFromStyleFrame(nsIFrame* aStyleFrame);
+  static const nsIFrame* GetPrimaryFrameFromStyleFrame(
+      const nsIFrame* aStyleFrame);
 
   /**
    * Similar to nsIFrame::IsPrimaryFrame except that this will return true
