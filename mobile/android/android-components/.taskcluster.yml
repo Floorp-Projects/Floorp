@@ -56,16 +56,8 @@ tasks:
         then: mobile-3-b-andrcmp
         else: mobile-1-b-andrcmp
 
-      tasks_priority:
-        $if: 'is_repo_trusted'
-        then:
-          $if: 'tasks_for == "github-release"'
-          then: highest
-          else:
-            $if: 'tasks_for == "cron"'
-            then: high
-            else: medium
-        else: lowest
+      # TODO: revisit once bug 1533314 is done to possibly infer better priorities
+      tasks_priority: highest
     in:
       $let:
         default_task_definition:
