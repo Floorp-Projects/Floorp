@@ -1214,7 +1214,7 @@ bool RNewTypedArray::recover(JSContext* cx, SnapshotIterator& iter) const {
 
   uint32_t length = templateObject.as<TypedArrayObject>()->length();
   JSObject* resultObject =
-      TypedArrayCreateWithTemplate(cx, templateObject, length);
+      NewTypedArrayWithTemplateAndLength(cx, templateObject, length);
   if (!resultObject) {
     return false;
   }
@@ -1610,7 +1610,7 @@ bool RStringReplace::recover(JSContext* cx, SnapshotIterator& iter) const {
 
   JSString* result =
       isFlatReplacement_
-          ? js::str_flat_replace_string(cx, string, pattern, replace)
+          ? js::StringFlatReplaceString(cx, string, pattern, replace)
           : js::str_replace_string_raw(cx, string, pattern, replace);
 
   if (!result) {

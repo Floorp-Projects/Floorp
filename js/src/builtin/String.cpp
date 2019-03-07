@@ -2910,7 +2910,7 @@ static bool StrFlatReplaceGlobal(JSContext* cx, JSLinearString* str,
 
 // This is identical to "str.split(pattern).join(replacement)" except that we
 // do some deforestation optimization in Ion.
-JSString* js::str_flat_replace_string(JSContext* cx, HandleString string,
+JSString* js::StringFlatReplaceString(JSContext* cx, HandleString string,
                                       HandleString pattern,
                                       HandleString replacement) {
   MOZ_ASSERT(string);
