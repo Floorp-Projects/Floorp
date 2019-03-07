@@ -58,7 +58,7 @@ use webdriver::response::{
 };
 use webdriver::server::{Session, WebDriverHandler};
 
-use crate::build::BuildInfo;
+use crate::build;
 use crate::capabilities::{FirefoxCapabilities, FirefoxOptions};
 use crate::logging;
 use crate::prefs;
@@ -752,7 +752,7 @@ impl MarionetteSession {
                 )
                 .clone();
 
-                capabilities.insert("moz:geckodriverVersion".into(), BuildInfo.into());
+                capabilities.insert("moz:geckodriverVersion".into(), build::build_info().into());
 
                 WebDriverResponse::NewSession(NewSessionResponse::new(
                     session_id.to_string(),
