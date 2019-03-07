@@ -11,7 +11,6 @@
 
 ../marionette/client
 ../marionette/harness
-../marionette/harness/marionette_harness/runner/mixins/browsermob-proxy-py
 
 # Allows to use the Puppeteer page object model for Firefox
 ../marionette/puppeteer/firefox/

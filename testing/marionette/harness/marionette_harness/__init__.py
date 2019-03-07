@@ -24,8 +24,6 @@ from .marionette_test import (
 from .runner import (
     BaseMarionetteArguments,
     BaseMarionetteTestRunner,
-    BrowserMobProxyArguments,
-    BrowserMobProxyTestCaseMixin,
     Marionette,
     MarionetteTest,
     MarionetteTestResult,
