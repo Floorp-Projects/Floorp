@@ -1204,6 +1204,11 @@ nsLocalFile::Create(uint32_t aType, uint32_t aAttributes) {
     }
   }
 
+  // If our last CreateDirectory failed due to access, return that.
+  if (NS_ERROR_FILE_ACCESS_DENIED == directoryCreateError) {
+    return directoryCreateError;
+  }
+
   if (aType == NORMAL_FILE_TYPE) {
     PRFileDesc* file;
     rv = OpenFile(mResolvedPath,
@@ -1219,23 +1224,13 @@ nsLocalFile::Create(uint32_t aType, uint32_t aAttributes) {
       if (NS_SUCCEEDED(IsDirectory(&isdir)) && isdir) {
         rv = NS_ERROR_FILE_ALREADY_EXISTS;
       }
-    } else if (NS_ERROR_FILE_NOT_FOUND == rv &&
-               NS_ERROR_FILE_ACCESS_DENIED == directoryCreateError) {
-      // If a previous CreateDirectory failed due to access, return that.
-      return NS_ERROR_FILE_ACCESS_DENIED;
     }
     return rv;
   }
 
   if (aType == DIRECTORY_TYPE) {
     if (!::CreateDirectoryW(mResolvedPath.get(), nullptr)) {
-      rv = ConvertWinError(GetLastError());
-      if (NS_ERROR_FILE_NOT_FOUND == rv &&
-          NS_ERROR_FILE_ACCESS_DENIED == directoryCreateError) {
-        // If a previous CreateDirectory failed due to access, return that.
-        return NS_ERROR_FILE_ACCESS_DENIED;
-      }
-      return rv;
+      return ConvertWinError(GetLastError());
     }
     return NS_OK;
   }
