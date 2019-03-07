@@ -987,6 +987,11 @@ pub enum DrawTarget<'a> {
         /// Whether to draw with the texture's associated depth target.
         with_depth: bool,
     },
+    /// Use an FBO attached to an external texture.
+    External {
+        fbo: FBOId,
+        size: FramebufferIntSize,
+    },
 }
 
 impl<'a> DrawTarget<'a> {
@@ -1010,6 +1015,7 @@ impl<'a> DrawTarget<'a> {
         match *self {
             DrawTarget::Default { total_size, .. } => DeviceIntSize::from_untyped(&total_size.to_untyped()),
             DrawTarget::Texture { texture, .. } => texture.get_dimensions(),
+            DrawTarget::External { size, .. } => DeviceIntSize::from_untyped(&size.to_untyped()),
         }
     }
 
@@ -1021,7 +1027,7 @@ impl<'a> DrawTarget<'a> {
                 fb_rect.origin.y = rect.origin.y + rect.size.height - fb_rect.origin.y - fb_rect.size.height;
                 fb_rect.origin.x += rect.origin.x;
             }
-            DrawTarget::Texture { .. } => (),
+            DrawTarget::Texture { .. } | DrawTarget::External { .. } => (),
         }
         fb_rect
     }
@@ -1043,7 +1049,7 @@ impl<'a> DrawTarget<'a> {
                         .intersection(rect)
                         .unwrap_or_else(FramebufferIntRect::zero)
                 }
-                DrawTarget::Texture { .. } => {
+                DrawTarget::Texture { .. } | DrawTarget::External { .. } => {
                     FramebufferIntRect::from_untyped(&scissor_rect.to_untyped())
                 }
             }
@@ -1068,7 +1074,11 @@ pub enum ReadTarget<'a> {
         texture: &'a Texture,
         /// The slice within the texture array to read from.
         layer: LayerIndex,
-    }
+    },
+    /// Use an FBO attached to an external texture.
+    External {
+        fbo: FBOId,
+    },
 }
 
 impl<'a> From<DrawTarget<'a>> for ReadTarget<'a> {
@@ -1077,6 +1087,8 @@ impl<'a> From<DrawTarget<'a>> for ReadTarget<'a> {
             DrawTarget::Default { .. } => ReadTarget::Default,
             DrawTarget::Texture { texture, layer, .. } =>
                 ReadTarget::Texture { texture, layer },
+            DrawTarget::External { fbo, .. } =>
+                ReadTarget::External { fbo },
         }
     }
 }
@@ -1418,6 +1430,7 @@ impl Device {
         let fbo_id = match target {
             ReadTarget::Default => self.default_read_fbo,
             ReadTarget::Texture { texture, layer } => texture.fbos[layer],
+            ReadTarget::External { fbo } => fbo,
         };
 
         self.bind_read_target_impl(fbo_id)
@@ -1460,7 +1473,8 @@ impl Device {
                 } else {
                     (texture.fbos[layer], rect, false)
                 }
-            }
+            },
+            DrawTarget::External { fbo, size } => (fbo, size.into(), false),
         };
 
         self.depth_available = depth_available;
@@ -1819,15 +1833,18 @@ impl Device {
                                             src.size.width as _, src.size.height as _, src.layer_count);
             }
         } else {
-            // Note that zip() truncates to the shorter of the two iterators.
             let rect = FramebufferIntRect::new(
                 FramebufferIntPoint::zero(),
                 FramebufferIntSize::from_untyped(&src.get_dimensions().to_untyped()),
             );
-            for (read_fbo, draw_fbo) in src.fbos.iter().zip(&dst.fbos) {
-                self.bind_read_target_impl(*read_fbo);
-                self.bind_draw_target_impl(*draw_fbo);
-                self.blit_render_target(rect, rect, TextureFilter::Linear);
+            for layer in 0..src.layer_count.min(dst.layer_count) as LayerIndex {
+                self.blit_render_target(
+                    ReadTarget::Texture { texture: src, layer },
+                    rect,
+                    DrawTarget::Texture { texture: dst, layer, with_depth: false },
+                    rect,
+                    TextureFilter::Linear
+                );
             }
             self.reset_draw_target();
             self.reset_read_target();
@@ -1978,7 +1995,8 @@ impl Device {
         }
     }
 
-    pub fn blit_render_target(
+    /// Perform a blit between self.bound_read_fbo and self.bound_draw_fbo.
+    fn blit_render_target_impl(
         &mut self,
         src_rect: FramebufferIntRect,
         dest_rect: FramebufferIntRect,
@@ -2005,26 +2023,46 @@ impl Device {
         );
     }
 
+    /// Perform a blit between src_target and dest_target.
+    /// This will overwrite self.bound_read_fbo and self.bound_draw_fbo.
+    pub fn blit_render_target(
+        &mut self,
+        src_target: ReadTarget,
+        src_rect: FramebufferIntRect,
+        dest_target: DrawTarget,
+        dest_rect: FramebufferIntRect,
+        filter: TextureFilter,
+    ) {
+        debug_assert!(self.inside_frame);
+
+        self.bind_read_target(src_target);
+        self.bind_draw_target(dest_target);
+
+        self.blit_render_target_impl(src_rect, dest_rect, filter);
+    }
+
     /// Performs a blit while flipping vertically. Useful for blitting textures
     /// (which use origin-bottom-left) to the main framebuffer (which uses
     /// origin-top-left).
     pub fn blit_render_target_invert_y(
         &mut self,
+        src_target: ReadTarget,
         src_rect: FramebufferIntRect,
+        dest_target: DrawTarget,
         dest_rect: FramebufferIntRect,
     ) {
         debug_assert!(self.inside_frame);
-        self.gl.blit_framebuffer(
-            src_rect.origin.x,
-            src_rect.origin.y,
-            src_rect.origin.x + src_rect.size.width,
-            src_rect.origin.y + src_rect.size.height,
-            dest_rect.origin.x,
-            dest_rect.origin.y + dest_rect.size.height,
-            dest_rect.origin.x + dest_rect.size.width,
-            dest_rect.origin.y,
-            gl::COLOR_BUFFER_BIT,
-            gl::LINEAR,
+
+        let mut inverted_dest_rect = dest_rect;
+        inverted_dest_rect.origin.y = dest_rect.max_y();
+        inverted_dest_rect.size.height *= -1;
+
+        self.blit_render_target(
+            src_target,
+            src_rect,
+            dest_target,
+            inverted_dest_rect,
+            TextureFilter::Linear,
         );
     }
 
