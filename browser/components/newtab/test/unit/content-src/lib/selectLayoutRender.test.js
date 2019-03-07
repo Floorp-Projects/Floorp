@@ -92,4 +92,26 @@ describe("selectLayoutRender", () => {
     assert.deepEqual(result[0].components[0].data.recommendations[0], "foo");
     assert.deepEqual(result[0].components[0].data.recommendations[1], "bar");
   });
+
+  it("should return a layout with feeds of items length with positions", () => {
+    const fakeLayout = [{width: 3, components: [{type: "foo", properties: {items: 3}, feed: {url: "foo.com"}}]}];
+    const fakeRecommendations = [
+      {name: "item1"},
+      {name: "item2"},
+      {name: "item3"},
+      {name: "item4"},
+    ];
+    const fakeFeeds = {"foo.com": {data: {recommendations: fakeRecommendations}}};
+    store.dispatch({type: at.DISCOVERY_STREAM_LAYOUT_UPDATE, data: {layout: fakeLayout}});
+    store.dispatch({type: at.DISCOVERY_STREAM_FEEDS_UPDATE, data: fakeFeeds});
+
+    const result = selectLayoutRender(store.getState());
+
+    const {recommendations} = result[0].components[0].data;
+    assert.equal(recommendations.length, 4);
+    assert.equal(recommendations[0].pos, 0);
+    assert.equal(recommendations[1].pos, 1);
+    assert.equal(recommendations[2].pos, 2);
+    assert.equal(recommendations[3].pos, undefined);
+  });
 });

@@ -1062,8 +1062,8 @@ describe("TelemetryFeed", () => {
       const spy = sandbox.spy(instance, "sendEvent");
       const session = {
         impressionSets: {
-          source_foo: [{id: 1}, {id: 2}],
-          source_bar: [{id: 3}, {id: 4}],
+          source_foo: [{id: 1, pos: 0}, {id: 2, pos: 1}],
+          source_bar: [{id: 3, pos: 0}, {id: 4, pos: 1}],
         },
       };
       instance.sendDiscoveryStreamImpressions("foo", session);
@@ -1079,22 +1079,26 @@ describe("TelemetryFeed", () => {
     });
     it("should store impression to impressionSets", () => {
       const session = instance.addSession("new_session", "about:newtab");
-      instance.handleDiscoveryStreamImpressionStats("new_session", {source: "foo", tiles: [{id: 1}]});
+      instance.handleDiscoveryStreamImpressionStats("new_session",
+        {source: "foo", tiles: [{id: 1, pos: 0}]});
 
       assert.equal(Object.keys(session.impressionSets).length, 1);
-      assert.deepEqual(session.impressionSets.foo, [{id: 1}]);
+      assert.deepEqual(session.impressionSets.foo, [{id: 1, pos: 0}]);
 
       // Add another ping with the same source
-      instance.handleDiscoveryStreamImpressionStats("new_session", {source: "foo", tiles: [{id: 2}]});
+      instance.handleDiscoveryStreamImpressionStats("new_session",
+        {source: "foo", tiles: [{id: 2, pos: 1}]});
 
-      assert.deepEqual(session.impressionSets.foo, [{id: 1}, {id: 2}]);
+      assert.deepEqual(session.impressionSets.foo,
+        [{id: 1, pos: 0}, {id: 2, pos: 1}]);
 
       // Add another ping with a different source
-      instance.handleDiscoveryStreamImpressionStats("new_session", {source: "bar", tiles: [{id: 3}]});
+      instance.handleDiscoveryStreamImpressionStats("new_session",
+        {source: "bar", tiles: [{id: 3, pos: 2}]});
 
       assert.equal(Object.keys(session.impressionSets).length, 2);
-      assert.deepEqual(session.impressionSets.foo, [{id: 1}, {id: 2}]);
-      assert.deepEqual(session.impressionSets.bar, [{id: 3}]);
+      assert.deepEqual(session.impressionSets.foo, [{id: 1, pos: 0}, {id: 2, pos: 1}]);
+      assert.deepEqual(session.impressionSets.bar, [{id: 3, pos: 2}]);
     });
   });
 });
