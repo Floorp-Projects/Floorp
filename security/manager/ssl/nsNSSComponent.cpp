@@ -695,14 +695,10 @@ LoadLoadableRootsTask::Run() {
 NS_IMETHODIMP
 nsNSSComponent::HasActiveSmartCards(bool* result) {
   NS_ENSURE_ARG_POINTER(result);
-  MOZ_ASSERT(NS_IsMainThread(), "Main thread only");
-  if (!NS_IsMainThread()) {
-    return NS_ERROR_NOT_SAME_THREAD;
-  }
+
+  BlockUntilLoadableRootsLoaded();
 
 #ifndef MOZ_NO_SMART_CARDS
-  MutexAutoLock nsNSSComponentLock(mMutex);
-
   AutoSECMODListReadLock secmodLock;
   SECMODModuleList* list = SECMOD_GetDefaultModuleList();
   while (list) {
@@ -720,10 +716,8 @@ nsNSSComponent::HasActiveSmartCards(bool* result) {
 NS_IMETHODIMP
 nsNSSComponent::HasUserCertsInstalled(bool* result) {
   NS_ENSURE_ARG_POINTER(result);
-  MOZ_ASSERT(NS_IsMainThread(), "Main thread only");
-  if (!NS_IsMainThread()) {
-    return NS_ERROR_NOT_SAME_THREAD;
-  }
+
+  BlockUntilLoadableRootsLoaded();
 
   *result = false;
   UniqueCERTCertList certList(CERT_FindUserCertsByUsage(

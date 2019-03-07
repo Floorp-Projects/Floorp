@@ -65,6 +65,7 @@
 #include "mozilla/Telemetry.h"
 #include "mozilla/Unused.h"
 #include "mozilla/BasePrincipal.h"
+#include "mozilla/LazyIdleThread.h"
 
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/Navigator.h"
@@ -277,7 +278,6 @@ nsHttpHandler::nsHttpHandler()
       mConnectTimeout(90000),
       mTLSHandshakeTimeout(30000),
       mParallelSpeculativeConnectLimit(6),
-      mSpeculativeConnectEnabled(true),
       mRequestTokenBucketEnabled(true),
       mRequestTokenBucketMinParallelism(6),
       mRequestTokenBucketHz(100),
@@ -292,6 +292,7 @@ nsHttpHandler::nsHttpHandler()
       mDefaultHpackBuffer(4096),
       mMaxHttpResponseHeaderSize(393216),
       mFocusedWindowTransactionRatio(0.9f),
+      mSpeculativeConnectEnabled(false),
       mUseFastOpen(true),
       mFastOpenConsecutiveFailureLimit(5),
       mFastOpenConsecutiveFailureCounter(0),
@@ -466,6 +467,9 @@ nsresult nsHttpHandler::Init() {
   mIOService = new nsMainThreadPtrHolder<nsIIOService>(
       "nsHttpHandler::mIOService", service);
 
+  mBackgroundThread = new mozilla::LazyIdleThread(
+      10000, NS_LITERAL_CSTRING("HTTP Handler Background"));
+
   if (IsNeckoChild()) NeckoChild::InitNeckoChild();
 
   InitUserAgentComponents();
@@ -559,6 +563,7 @@ nsresult nsHttpHandler::Init() {
     obsService->AddObserver(this, "psm:user-certificate-added", true);
     obsService->AddObserver(this, "psm:user-certificate-deleted", true);
     obsService->AddObserver(this, "intl:app-locales-changed", true);
+    obsService->AddObserver(this, "browser-delayed-startup-finished", true);
 
     if (!IsNeckoChild()) {
       obsService->AddObserver(
@@ -2175,8 +2180,6 @@ nsHttpHandler::GetMisc(nsACString &value) {
 // nsHttpHandler::nsIObserver
 //-----------------------------------------------------------------------------
 
-static bool CanEnableSpeculativeConnect();  // forward declaration
-
 NS_IMETHODIMP
 nsHttpHandler::Observe(nsISupports *subject, const char *topic,
                        const char16_t *data) {
@@ -2326,10 +2329,12 @@ nsHttpHandler::Observe(nsISupports *subject, const char *topic,
   } else if (!strcmp(topic, "psm:user-certificate-deleted")) {
     // If a user certificate has been removed, we need to check if there
     // are others installed
-    mSpeculativeConnectEnabled = CanEnableSpeculativeConnect();
+    MaybeEnableSpeculativeConnect();
   } else if (!strcmp(topic, "intl:app-locales-changed")) {
     // If the locale changed, there's a chance the accept language did too
     mAcceptLanguagesIsDirty = true;
+  } else if (!strcmp(topic, "browser-delayed-startup-finished")) {
+    MaybeEnableSpeculativeConnect();
   }
 
   return NS_OK;
@@ -2338,13 +2343,9 @@ nsHttpHandler::Observe(nsISupports *subject, const char *topic,
 // nsISpeculativeConnect
 
 static bool CanEnableSpeculativeConnect() {
-  MOZ_ASSERT(NS_IsMainThread(), "Main thread only");
-
   nsCOMPtr<nsINSSComponent> component(do_GetService(PSM_COMPONENT_CONTRACTID));
-  if (!component) {
-    return false;
-  }
 
+  MOZ_ASSERT(!NS_IsMainThread(), "Must run on the background thread");
   // Check if any 3rd party PKCS#11 module are installed, as they may produce
   // client certificates
   bool activeSmartCards = false;
@@ -2361,7 +2362,32 @@ static bool CanEnableSpeculativeConnect() {
     return false;
   }
 
+  // No smart cards and no client certificates means
+  // we can enable speculative connect.
   return true;
+}
+
+void nsHttpHandler::MaybeEnableSpeculativeConnect() {
+  MOZ_ASSERT(NS_IsMainThread(), "Main thread only");
+
+  // We don't need to and can't check this in the child process.
+  if (IsNeckoChild()) {
+    return;
+  }
+
+  if (!mBackgroundThread) {
+    NS_WARNING(
+        "nsHttpHandler::MaybeEnableSpeculativeConnect() no background thread");
+    return;
+  }
+
+  net_EnsurePSMInit();
+
+  mBackgroundThread->Dispatch(
+      NS_NewRunnableFunction("CanEnableSpeculativeConnect", [] {
+        gHttpHandler->mSpeculativeConnectEnabled =
+            CanEnableSpeculativeConnect();
+      }));
 }
 
 nsresult nsHttpHandler::SpeculativeConnectInternal(
@@ -2446,12 +2472,6 @@ nsresult nsHttpHandler::SpeculativeConnectInternal(
   bool usingSSL = false;
   rv = aURI->SchemeIs("https", &usingSSL);
   if (NS_FAILED(rv)) return rv;
-
-  static bool sCheckedIfSpeculativeEnabled = false;
-  if (!sCheckedIfSpeculativeEnabled) {
-    sCheckedIfSpeculativeEnabled = true;
-    mSpeculativeConnectEnabled = CanEnableSpeculativeConnect();
-  }
 
   if (usingSSL && !mSpeculativeConnectEnabled) {
     return NS_ERROR_UNEXPECTED;
