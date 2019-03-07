@@ -183,15 +183,12 @@ class TlsHkdfTest : public ::testing::Test,
     DumpData("Output", &output[0], output.size());
     EXPECT_EQ(0, memcmp(expected.data(), &output[0], expected.len()));
 
-    if (session_hash_len > 0) {
-      return;
-    }
-
     // Verify that the public API produces the same result.
     PRUint16 cs = GetSomeCipherSuiteForHash(base_hash);
     PK11SymKey* secret;
-    rv = SSL_HkdfDeriveSecret(SSL_LIBRARY_VERSION_TLS_1_3, cs, prk->get(),
-                              label, label_len, &secret);
+    rv = SSL_HkdfExpandLabel(SSL_LIBRARY_VERSION_TLS_1_3, cs, prk->get(),
+                             session_hash, session_hash_len, label, label_len,
+                             &secret);
     EXPECT_EQ(SECSuccess, rv);
     ASSERT_NE(nullptr, prk);
     VerifyKey(ScopedPK11SymKey(secret), expected);
@@ -347,51 +344,62 @@ TEST_P(TlsHkdfTest, BadExtractWrapperInput) {
   EXPECT_EQ(nullptr, key);
 }
 
-TEST_P(TlsHkdfTest, BadDeriveSecretWrapperInput) {
+TEST_P(TlsHkdfTest, BadExpandLabelWrapperInput) {
   PK11SymKey* key = nullptr;
   static const char* kLabel = "label";
 
   // Bad version.
-  EXPECT_EQ(SECFailure, SSL_HkdfDeriveSecret(SSL_LIBRARY_VERSION_TLS_1_2,
-                                             TLS_AES_128_GCM_SHA256, k1_.get(),
-                                             kLabel, strlen(kLabel), &key));
+  EXPECT_EQ(
+      SECFailure,
+      SSL_HkdfExpandLabel(SSL_LIBRARY_VERSION_TLS_1_2, TLS_AES_128_GCM_SHA256,
+                          k1_.get(), nullptr, 0, kLabel, strlen(kLabel), &key));
   EXPECT_EQ(SEC_ERROR_INVALID_ARGS, PORT_GetError());
 
   // Bad ciphersuite.
-  EXPECT_EQ(SECFailure, SSL_HkdfDeriveSecret(SSL_LIBRARY_VERSION_TLS_1_3,
-                                             TLS_RSA_WITH_NULL_MD5, k1_.get(),
-                                             kLabel, strlen(kLabel), &key));
+  EXPECT_EQ(
+      SECFailure,
+      SSL_HkdfExpandLabel(SSL_LIBRARY_VERSION_TLS_1_3, TLS_RSA_WITH_NULL_MD5,
+                          k1_.get(), nullptr, 0, kLabel, strlen(kLabel), &key));
   EXPECT_EQ(SEC_ERROR_INVALID_ARGS, PORT_GetError());
 
   // Old ciphersuite.
   EXPECT_EQ(SECFailure,
-            SSL_HkdfDeriveSecret(SSL_LIBRARY_VERSION_TLS_1_3,
-                                 TLS_RSA_WITH_AES_128_CBC_SHA, k1_.get(),
-                                 kLabel, strlen(kLabel), &key));
+            SSL_HkdfExpandLabel(SSL_LIBRARY_VERSION_TLS_1_3,
+                                TLS_RSA_WITH_AES_128_CBC_SHA, k1_.get(),
+                                nullptr, 0, kLabel, strlen(kLabel), &key));
   EXPECT_EQ(SEC_ERROR_INVALID_ARGS, PORT_GetError());
 
   // Null PRK.
-  EXPECT_EQ(SECFailure, SSL_HkdfDeriveSecret(SSL_LIBRARY_VERSION_TLS_1_2,
-                                             TLS_AES_128_GCM_SHA256, nullptr,
-                                             kLabel, strlen(kLabel), &key));
+  EXPECT_EQ(SECFailure, SSL_HkdfExpandLabel(
+                            SSL_LIBRARY_VERSION_TLS_1_2, TLS_AES_128_GCM_SHA256,
+                            nullptr, nullptr, 0, kLabel, strlen(kLabel), &key));
   EXPECT_EQ(SEC_ERROR_INVALID_ARGS, PORT_GetError());
 
+  // Null, non-zero-length handshake hash.
+  EXPECT_EQ(
+      SECFailure,
+      SSL_HkdfExpandLabel(SSL_LIBRARY_VERSION_TLS_1_2, TLS_AES_128_GCM_SHA256,
+                          k1_.get(), nullptr, 2, kLabel, strlen(kLabel), &key));
+
+  EXPECT_EQ(SEC_ERROR_INVALID_ARGS, PORT_GetError());
   // Null, non-zero-length label.
-  EXPECT_EQ(SECFailure, SSL_HkdfDeriveSecret(SSL_LIBRARY_VERSION_TLS_1_3,
-                                             TLS_AES_128_GCM_SHA256, k1_.get(),
-                                             nullptr, strlen(kLabel), &key));
+  EXPECT_EQ(SECFailure,
+            SSL_HkdfExpandLabel(SSL_LIBRARY_VERSION_TLS_1_3,
+                                TLS_AES_128_GCM_SHA256, k1_.get(), nullptr, 0,
+                                nullptr, strlen(kLabel), &key));
   EXPECT_EQ(SEC_ERROR_INVALID_ARGS, PORT_GetError());
 
   // Null, empty label.
-  EXPECT_EQ(SECFailure, SSL_HkdfDeriveSecret(SSL_LIBRARY_VERSION_TLS_1_3,
-                                             TLS_AES_128_GCM_SHA256, k1_.get(),
-                                             nullptr, 0, &key));
+  EXPECT_EQ(SECFailure, SSL_HkdfExpandLabel(SSL_LIBRARY_VERSION_TLS_1_3,
+                                            TLS_AES_128_GCM_SHA256, k1_.get(),
+                                            nullptr, 0, nullptr, 0, &key));
   EXPECT_EQ(SEC_ERROR_INVALID_ARGS, PORT_GetError());
 
   // Null key pointer..
-  EXPECT_EQ(SECFailure, SSL_HkdfDeriveSecret(SSL_LIBRARY_VERSION_TLS_1_3,
-                                             TLS_AES_128_GCM_SHA256, k1_.get(),
-                                             kLabel, strlen(kLabel), nullptr));
+  EXPECT_EQ(SECFailure,
+            SSL_HkdfExpandLabel(SSL_LIBRARY_VERSION_TLS_1_3,
+                                TLS_AES_128_GCM_SHA256, k1_.get(), nullptr, 0,
+                                kLabel, strlen(kLabel), nullptr));
   EXPECT_EQ(SEC_ERROR_INVALID_ARGS, PORT_GetError());
 
   EXPECT_EQ(nullptr, key);

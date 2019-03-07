@@ -690,15 +690,16 @@ typedef struct SSLAeadContextStr SSLAeadContext;
                           PK11SymKey * *_keyp),                     \
                          (version, cipherSuite, salt, ikm, keyp))
 
-#define SSL_HkdfDeriveSecret(version, cipherSuite, prk,               \
-                             label, labelLen, keyp)                   \
-    SSL_EXPERIMENTAL_API("SSL_HkdfDeriveSecret",                      \
-                         (PRUint16 _version, PRUint16 _cipherSuite,   \
-                          PK11SymKey * _prk,                          \
-                          const char *_label, unsigned int _labelLen, \
-                          PK11SymKey **_keyp),                        \
-                         (version, cipherSuite, prk,                  \
-                          label, labelLen, keyp))
+#define SSL_HkdfExpandLabel(version, cipherSuite, prk,                     \
+                            hsHash, hsHashLen, label, labelLen, keyp)      \
+    SSL_EXPERIMENTAL_API("SSL_HkdfExpandLabel",                            \
+                         (PRUint16 _version, PRUint16 _cipherSuite,        \
+                          PK11SymKey * _prk,                               \
+                          const PRUint8 *_hsHash, unsigned int _hsHashLen, \
+                          const char *_label, unsigned int _labelLen,      \
+                          PK11SymKey **_keyp),                             \
+                         (version, cipherSuite, prk,                       \
+                          hsHash, hsHashLen, label, labelLen, keyp))
 
 /* Deprecated experimental APIs */
 #define SSL_UseAltServerHelloType(fd, enable) SSL_DEPRECATED_EXPERIMENTAL_API

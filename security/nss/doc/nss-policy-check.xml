@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.2//EN"
+  "http://www.oasis-open.org/docbook/xml/4.2/docbookx.dtd" [
+<!ENTITY date SYSTEM "date.xml">
+<!ENTITY version SYSTEM "version.xml">
+]>
+
+<refentry id="nss-policy-check">
+
+  <refentryinfo>
+    <date>&date;</date>
+    <title>NSS Security Tools</title>
+    <productname>nss-tools</productname>
+    <productnumber>&version;</productnumber>
+  </refentryinfo>
+
+  <refmeta>
+    <refentrytitle>NSS-POLICY-CHECK</refentrytitle>
+    <manvolnum>1</manvolnum>
+  </refmeta>
+
+  <refnamediv>
+    <refname>nss-policy-check</refname>
+    <refpurpose>nss-policy-check policy-file</refpurpose>
+  </refnamediv>
+
+ <refsynopsisdiv>
+    <cmdsynopsis>
+      <command>nss-policy-check</command>
+    </cmdsynopsis>
+  </refsynopsisdiv>
+
+  <refsection id="description">
+    <title>Description</title>
+    <para><command>nss-policy-check</command> verifies crypto-policy configuration that controls certain crypto algorithms are allowed/disallowed to use in the NSS library.</para>
+
+    <para>The crypto-policy configuration can be stored in either a system-wide configuration file, specified with the POLICY_PATH and POLICY_FILE build options, or in the pkcs11.txt in NSS database.</para>
+  </refsection>
+
+  <refsection id="basic-usage">
+    <title>Usage and Examples</title>
+    <para>To check the global crypto-policy configuration in <filename>/etc/crypto-policies/back-ends/nss.config</filename>:
+    </para>
+    <programlisting>$ nss-policy-check /etc/crypto-policies/back-ends/nss.config
+NSS-POLICY-INFO: LOADED-SUCCESSFULLY
+NSS-POLICY-INFO: PRIME256V1 is enabled for KX
+NSS-POLICY-INFO: PRIME256V1 is enabled for CERT-SIGNATURE
+NSS-POLICY-INFO: SECP256R1 is enabled for KX
+NSS-POLICY-INFO: SECP256R1 is enabled for CERT-SIGNATURE
+NSS-POLICY-INFO: SECP384R1 is enabled for KX
+NSS-POLICY-INFO: SECP384R1 is enabled for CERT-SIGNATURE
+...
+NSS-POLICY-INFO: NUMBER-OF-SSL-ALG-KX: 13
+NSS-POLICY-INFO: NUMBER-OF-SSL-ALG: 9
+NSS-POLICY-INFO: NUMBER-OF-CERT-SIG: 9
+...
+NSS-POLICY-INFO: ciphersuite TLS_AES_128_GCM_SHA256 is enabled
+NSS-POLICY-INFO: ciphersuite TLS_CHACHA20_POLY1305_SHA256 is enabled
+NSS-POLICY-INFO: ciphersuite TLS_AES_256_GCM_SHA384 is enabled
+...
+NSS-POLICY-INFO: NUMBER-OF-CIPHERSUITES: 24
+NSS-POLICY-INFO: NUMBER-OF-TLS-VERSIONS: 3
+NSS-POLICY-INFO: NUMBER-OF-DTLS-VERSIONS: 2
+    </programlisting>
+    <para>If there is a failure or warning, it will be prefixed with
+    NSS-POLICY-FAIL or NSS-POLICY_WARN.
+    </para>
+    <para><command>nss-policy-check</command> exits with 2 if any
+    failure is found, 1 if any warning is found, or 0 if no errors are
+    found.</para>
+  </refsection>
+
+<!-- don't change -->
+  <refsection id="resources">
+    <title>Additional Resources</title>
+	<para>For information about NSS and other tools related to NSS (like JSS), check out the NSS project wiki at <ulink url="http://www.mozilla.org/projects/security/pki/nss/">http://www.mozilla.org/projects/security/pki/nss/</ulink>. The NSS site relates directly to NSS code changes and releases.</para>
+	<para>Mailing lists: https://lists.mozilla.org/listinfo/dev-tech-crypto</para>
+	<para>IRC: Freenode at #dogtag-pki</para>
+  </refsection>
+
+<!-- fill in your name first; keep the other names for reference -->
+  <refsection id="authors">
+    <title>Authors</title>
+    <para>The NSS tools were written and maintained by developers with Netscape, Red Hat,  Sun, Oracle, Mozilla, and Google.</para>
+    <para>
+	Authors: Elio Maldonado &lt;emaldona@redhat.com>, Deon Lackey &lt;dlackey@redhat.com>.
+    </para>
+  </refsection>
+
+<!-- don't change -->
+  <refsection id="license">
+    <title>LICENSE</title>
+    <para>Licensed under the Mozilla Public License, v. 2.0.  If a copy of the MPL was not distributed with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
+    </para>
+  </refsection>
+
+</refentry>
