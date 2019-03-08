@@ -247,7 +247,7 @@ a {
 .message-repeats {
   -moz-user-select: none;
   flex-shrink: 0;
-  margin: 2px 5px;
+  margin: 2px 5px 0 5px;
   padding: 0 6px;
   height: 1.25em;
   color: white;

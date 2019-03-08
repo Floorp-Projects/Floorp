@@ -103,6 +103,33 @@ add_task(async function() {
   info("Wait until the stacktrace is rendered");
   await waitFor(() => message.node.querySelector(".frame"));
   ok(isScrolledToBottom(outputContainer), "The console is scrolled to the bottom");
+
+  info("Check that repeated messages don't prevent scroll to bottom");
+  // We log a first message.
+  onMessage = waitForMessage(hud, "repeat");
+  ContentTask.spawn(gBrowser.selectedBrowser, {}, function() {
+    content.wrappedJSObject.console.log("repeat");
+  });
+  message = await onMessage;
+
+  // And a second one. We can't log them at the same time since we batch redux actions,
+  // and the message would already appear with the repeat badge, and the bug is
+  // only triggered when the badge is rendered after the initial message rendering.
+  ContentTask.spawn(gBrowser.selectedBrowser, {}, function() {
+    content.wrappedJSObject.console.log("repeat");
+  });
+  await waitFor(() => message.node.querySelector(".message-repeats"));
+  ok(isScrolledToBottom(outputContainer),
+    "The console is still scrolled to the bottom when the repeat badge is added");
+
+  info("Check that adding a message after a repeated message scrolls to bottom");
+  onMessage = waitForMessage(hud, "after repeat");
+  ContentTask.spawn(gBrowser.selectedBrowser, {}, function() {
+    content.wrappedJSObject.console.log("after repeat");
+  });
+  message = await onMessage;
+  ok(isScrolledToBottom(outputContainer),
+    "The console is scrolled to the bottom after a repeated message");
 });
 
 function hasVerticalOverflow(container) {
