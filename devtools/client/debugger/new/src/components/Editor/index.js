@@ -205,7 +205,6 @@ class Editor extends PureComponent<Props, State> {
 
     codeMirror.on("scroll", this.onEditorScroll);
     this.onEditorScroll();
-
     this.setState({ editor });
     return editor;
   }
@@ -270,6 +269,10 @@ class Editor extends PureComponent<Props, State> {
         this.setText(this.props);
         this.setSize(this.props);
       }
+    }
+
+    if (prevProps.selectedSource != selectedSource) {
+      this.props.updateViewport();
     }
   }
 
