@@ -199,7 +199,7 @@ void TextTrackManager::AddCues(TextTrack* aTextTrack) {
     for (uint32_t i = 0; i < cueList->Length(); ++i) {
       mNewCues->AddCue(*cueList->IndexedGetter(i, dummy));
     }
-    DispatchTimeMarchesOn();
+    TimeMarchesOn();
   }
 }
 
@@ -224,15 +224,12 @@ void TextTrackManager::RemoveTextTrack(TextTrack* aTextTrack,
     for (uint32_t i = 0; i < removeCueList->Length(); ++i) {
       mNewCues->RemoveCue(*((*removeCueList)[i]));
     }
-    DispatchTimeMarchesOn();
+    TimeMarchesOn();
   }
 }
 
 void TextTrackManager::DidSeek() {
   WEBVTT_LOG("%p DidSeek", this);
-  if (mTextTracks) {
-    mTextTracks->DidSeek();
-  }
   if (mMediaElement) {
     mLastTimeMarchesOnCalled = mMediaElement->CurrentTime();
     WEBVTT_LOGV("DidSeek set mLastTimeMarchesOnCalled %lf",
@@ -288,7 +285,7 @@ void TextTrackManager::NotifyCueAdded(TextTrackCue& aCue) {
   if (mNewCues) {
     mNewCues->AddCue(aCue);
   }
-  DispatchTimeMarchesOn();
+  TimeMarchesOn();
   ReportTelemetryForCue();
 }
 
@@ -297,11 +294,8 @@ void TextTrackManager::NotifyCueRemoved(TextTrackCue& aCue) {
   if (mNewCues) {
     mNewCues->RemoveCue(aCue);
   }
-  DispatchTimeMarchesOn();
-  if (aCue.GetActive()) {
-    // We remove an active cue, need to update the display.
-    DispatchUpdateCueDisplay();
-  }
+  TimeMarchesOn();
+  DispatchUpdateCueDisplay();
 }
 
 void TextTrackManager::PopulatePendingList() {
@@ -613,6 +607,8 @@ void TextTrackManager::DispatchTimeMarchesOn() {
 // https://html.spec.whatwg.org/multipage/embedded-content.html#time-marches-on
 void TextTrackManager::TimeMarchesOn() {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  mTimeMarchesOnDispatched = false;
+
   CycleCollectedJSContext* context = CycleCollectedJSContext::Get();
   if (context && context->IsInStableOrMetaStableState()) {
     // FireTimeUpdate can be called while at stable state following a
@@ -625,7 +621,6 @@ void TextTrackManager::TimeMarchesOn() {
     return;
   }
   WEBVTT_LOG("TimeMarchesOn");
-  mTimeMarchesOnDispatched = false;
 
   // Early return if we don't have any TextTracks or shutting down.
   if (!mTextTracks || mTextTracks->Length() == 0 || IsShutdown()) {
@@ -661,13 +656,7 @@ void TextTrackManager::TimeMarchesOn() {
     TextTrack* ttrack = mTextTracks->IndexedGetter(index, dummy);
     if (ttrack && dummy) {
       // TODO: call GetCueListByTimeInterval on mNewCues?
-      ttrack->UpdateActiveCueList();
-      TextTrackCueList* activeCueList = ttrack->GetActiveCues();
-      if (activeCueList) {
-        for (uint32_t i = 0; i < activeCueList->Length(); ++i) {
-          currentCues->AddCue(*((*activeCueList)[i]));
-        }
-      }
+      ttrack->GetCurrentCueList(currentCues);
     }
   }
   WEBVTT_LOGV("TimeMarchesOn currentCues %d", currentCues->Length());
@@ -831,7 +820,7 @@ void TextTrackManager::TimeMarchesOn() {
 void TextTrackManager::NotifyCueUpdated(TextTrackCue* aCue) {
   // TODO: Add/Reorder the cue to mNewCues if we have some optimization?
   WEBVTT_LOG("NotifyCueUpdated");
-  DispatchTimeMarchesOn();
+  TimeMarchesOn();
   // For the case "Texttrack.mode = hidden/showing", if the mode
   // changing between showing and hidden, TimeMarchesOn
   // doesn't render the cue. Call DispatchUpdateCueDisplay() explicitly.

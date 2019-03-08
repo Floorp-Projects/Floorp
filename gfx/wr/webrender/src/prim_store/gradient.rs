@@ -4,26 +4,49 @@
 
 use api::{
     ColorF, ColorU,ExtendMode, GradientStop, LayoutPoint, LayoutSize,
-    LayoutPrimitiveInfo, PremultipliedColorF, LayoutVector2D,
+    LayoutPrimitiveInfo, PremultipliedColorF, LayoutVector2D, LineOrientation,
 };
 use display_list_flattener::IsVisible;
+use euclid::approxeq::ApproxEq;
 use frame_builder::FrameBuildingState;
 use gpu_cache::{GpuCacheHandle, GpuDataRequest};
 use intern::{Internable, InternDebug, Handle as InternHandle};
-use prim_store::{BrushSegment, GradientTileRange};
+use prim_store::{BrushSegment, GradientTileRange, VectorKey};
 use prim_store::{PrimitiveInstanceKind, PrimitiveOpacity, PrimitiveSceneData};
 use prim_store::{PrimKeyCommonData, PrimTemplateCommonData, PrimitiveStore};
 use prim_store::{NinePatchDescriptor, PointKey, SizeKey, InternablePrimitive};
+use render_task::RenderTaskCacheEntryHandle;
 use std::{hash, ops::{Deref, DerefMut}, mem};
 use util::pack_as_float;
+
+/// The maximum number of stops a gradient may have to use the fast path.
+pub const GRADIENT_FP_STOPS: usize = 4;
 
 /// A hashable gradient stop that can be used in primitive keys.
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
-#[derive(Debug, Clone, MallocSizeOf, PartialEq)]
+#[derive(Debug, Copy, Clone, MallocSizeOf, PartialEq)]
 pub struct GradientStopKey {
     pub offset: f32,
     pub color: ColorU,
+}
+
+impl GradientStopKey {
+    pub fn empty() -> Self {
+        GradientStopKey {
+            offset: 0.0,
+            color: ColorU::new(0, 0, 0, 0),
+        }
+    }
+}
+
+impl Into<GradientStopKey> for GradientStop {
+    fn into(self) -> GradientStopKey {
+        GradientStopKey {
+            offset: self.offset,
+            color: self.color.into(),
+        }
+    }
 }
 
 impl Eq for GradientStopKey {}
@@ -76,6 +99,15 @@ impl LinearGradientKey {
 
 impl InternDebug for LinearGradientKey {}
 
+#[derive(Clone, Debug, Hash, MallocSizeOf, PartialEq, Eq)]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+pub struct GradientCacheKey {
+    pub orientation: LineOrientation,
+    pub start_stop_point: VectorKey,
+    pub stops: [GradientStopKey; GRADIENT_FP_STOPS],
+}
+
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 #[derive(MallocSizeOf)]
@@ -91,6 +123,9 @@ pub struct LinearGradientTemplate {
     pub brush_segments: Vec<BrushSegment>,
     pub reverse_stops: bool,
     pub stops_handle: GpuCacheHandle,
+    /// If true, this gradient can be drawn via the fast path
+    /// (cache gradient, and draw as image).
+    pub supports_caching: bool,
 }
 
 impl Deref for LinearGradientTemplate {
@@ -111,11 +146,43 @@ impl From<LinearGradientKey> for LinearGradientTemplate {
         let common = PrimTemplateCommonData::with_key_common(item.common);
         let mut min_alpha: f32 = 1.0;
 
+        // Check if we can draw this gradient via a fast path by caching the
+        // gradient in a smaller task, and drawing as an image.
+        // TODO(gw): Aim to reduce the constraints on fast path gradients in future,
+        //           although this catches the vast majority of gradients on real pages.
+        let mut supports_caching =
+            // No repeating support in fast path
+            item.extend_mode == ExtendMode::Clamp &&
+            // Gradient must cover entire primitive
+            item.tile_spacing.w + item.stretch_size.w >= common.prim_size.width &&
+            item.tile_spacing.h + item.stretch_size.h >= common.prim_size.height &&
+            // Must be a vertical or horizontal gradient
+            (item.start_point.x.approx_eq(&item.end_point.x) ||
+             item.start_point.y.approx_eq(&item.end_point.y)) &&
+            // Fast path supports a limited number of stops
+            item.stops.len() <= GRADIENT_FP_STOPS &&
+            // Fast path not supported on segmented (border-image) gradients.
+            item.nine_patch.is_none();
+
         // Convert the stops to more convenient representation
         // for the current gradient builder.
-        let stops = item.stops.iter().map(|stop| {
+        let mut prev_color = None;
+
+        let stops: Vec<GradientStop> = item.stops.iter().map(|stop| {
             let color: ColorF = stop.color.into();
             min_alpha = min_alpha.min(color.a);
+
+            if let Some(prev_color) = prev_color {
+                // The fast path doesn't support hard color stops, yet.
+                // Since the length of the gradient is a fixed size (512 device pixels), if there
+                // is a hard stop you will see bilinear interpolation with this method, instead
+                // of an abrupt color change.
+                if prev_color == color {
+                    supports_caching = false;
+                }
+            }
+
+            prev_color = Some(color);
 
             GradientStop {
                 offset: stop.offset,
@@ -146,6 +213,7 @@ impl From<LinearGradientKey> for LinearGradientTemplate {
             brush_segments,
             reverse_stops: item.reverse_stops,
             stops_handle: GpuCacheHandle::new(),
+            supports_caching,
         }
     }
 }
@@ -247,12 +315,17 @@ impl InternablePrimitive for LinearGradient {
     fn make_instance_kind(
         _key: LinearGradientKey,
         data_handle: LinearGradientDataHandle,
-        _prim_store: &mut PrimitiveStore,
+        prim_store: &mut PrimitiveStore,
         _reference_frame_relative_offset: LayoutVector2D,
     ) -> PrimitiveInstanceKind {
+        let gradient_index = prim_store.linear_gradients.push(LinearGradientPrimitive {
+            cache_handle: None,
+            visible_tiles_range: GradientTileRange::empty(),
+        });
+
         PrimitiveInstanceKind::LinearGradient {
             data_handle,
-            visible_tiles_range: GradientTileRange::empty(),
+            gradient_index,
         }
     }
 }
@@ -261,6 +334,13 @@ impl IsVisible for LinearGradient {
     fn is_visible(&self) -> bool {
         true
     }
+}
+
+#[derive(Debug)]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+pub struct LinearGradientPrimitive {
+    pub cache_handle: Option<RenderTaskCacheEntryHandle>,
+    pub visible_tiles_range: GradientTileRange,
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -87,13 +87,11 @@ interface nsINSSComponent : nsISupports {
 
   /**
    * Returns true if the user has a PKCS#11 module with removable slots.
-   * Main thread only.
    */
   [noscript] bool hasActiveSmartCards();
 
   /**
    * Returns true if the user has any client authentication certificates.
-   * Main thread only.
    */
   [noscript] bool hasUserCertsInstalled();
 

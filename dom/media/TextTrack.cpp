@@ -128,7 +128,6 @@ void TextTrack::AddCue(TextTrackCue& aCue) {
       mediaElement->NotifyCueAdded(aCue);
     }
   }
-  SetDirty();
 }
 
 void TextTrack::RemoveCue(TextTrackCue& aCue, ErrorResult& aRv) {
@@ -145,52 +144,11 @@ void TextTrack::RemoveCue(TextTrackCue& aCue, ErrorResult& aRv) {
       mediaElement->NotifyCueRemoved(aCue);
     }
   }
-  SetDirty();
 }
 
 void TextTrack::SetCuesDirty() {
   for (uint32_t i = 0; i < mCueList->Length(); i++) {
     ((*mCueList)[i])->Reset();
-  }
-}
-
-void TextTrack::UpdateActiveCueList() {
-  if (!mTextTrackList) {
-    return;
-  }
-
-  HTMLMediaElement* mediaElement = mTextTrackList->GetMediaElement();
-  if (!mediaElement) {
-    return;
-  }
-
-  // If we are dirty, i.e. an event happened that may cause the sorted mCueList
-  // to have changed like a seek or an insert for a cue, than we need to rebuild
-  // the active cue list from scratch.
-  if (mDirty) {
-    mCuePos = 0;
-    mDirty = false;
-    mActiveCueList->RemoveAll();
-  }
-
-  double playbackTime = mediaElement->CurrentTime();
-  // Remove all the cues from the active cue list whose end times now occur
-  // earlier then the current playback time.
-  for (uint32_t i = mActiveCueList->Length(); i > 0; i--) {
-    if ((*mActiveCueList)[i - 1]->EndTime() <= playbackTime) {
-      mActiveCueList->RemoveCueAt(i - 1);
-    }
-  }
-  // Add all the cues, starting from the position of the last cue that was
-  // added, that have valid start and end times for the current playback time.
-  // We can stop iterating safely once we encounter a cue that does not have
-  // a valid start time as the cue list is sorted.
-  for (; mCuePos < mCueList->Length() &&
-         (*mCueList)[mCuePos]->StartTime() <= playbackTime;
-       mCuePos++) {
-    if ((*mCueList)[mCuePos]->EndTime() > playbackTime) {
-      mActiveCueList->AddCue(*(*mCueList)[mCuePos]);
-    }
   }
 }
 
@@ -252,7 +210,6 @@ void TextTrack::NotifyCueUpdated(TextTrackCue* aCue) {
       mediaElement->NotifyCueUpdated(aCue);
     }
   }
-  SetDirty();
 }
 
 void TextTrack::GetLabel(nsAString& aLabel) const {
@@ -296,6 +253,41 @@ bool TextTrack::IsLoaded() {
     }
   }
   return (mReadyState >= Loaded);
+}
+
+void TextTrack::NotifyCueActiveStateChanged(TextTrackCue* aCue) {
+  MOZ_ASSERT(aCue);
+  if (aCue->GetActive()) {
+    MOZ_ASSERT(!mActiveCueList->IsCueExist(aCue));
+    mActiveCueList->AddCue(*aCue);
+  } else {
+    MOZ_ASSERT(mActiveCueList->IsCueExist(aCue));
+    mActiveCueList->RemoveCue(*aCue);
+  }
+}
+
+void TextTrack::GetCurrentCueList(RefPtr<TextTrackCueList>& aCueList) const {
+  if (!mTextTrackList) {
+    return;
+  }
+
+  const HTMLMediaElement* mediaElement = mTextTrackList->GetMediaElement();
+  if (!mediaElement) {
+    return;
+  }
+
+  // According to `time marches on` step1, current cue list contains the cues
+  // whose start times are less than or equal to the current playback position
+  // and whose end times are greater than the current playback position.
+  // https://html.spec.whatwg.org/multipage/media.html#time-marches-on
+  MOZ_ASSERT(aCueList);
+  const double playbackTime = mediaElement->CurrentTime();
+  for (uint32_t idx = 0; idx < mCueList->Length(); idx++) {
+    TextTrackCue* cue = (*mCueList)[idx];
+    if (cue->StartTime() <= playbackTime && cue->EndTime() > playbackTime) {
+      aCueList->AddCue(*cue);
+    }
+  }
 }
 
 }  // namespace dom

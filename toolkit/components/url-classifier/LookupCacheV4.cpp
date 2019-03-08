@@ -6,6 +6,8 @@
 #include "LookupCacheV4.h"
 #include "HashStore.h"
 #include "mozilla/Unused.h"
+#include "nsCheckSummedOutputStream.h"
+#include "crc32c.h"
 #include <string>
 
 // MOZ_LOG=UrlClassifierDbService:5
@@ -16,12 +18,103 @@ extern mozilla::LazyLogModule gUrlClassifierDbServiceLog;
   MOZ_LOG_TEST(gUrlClassifierDbServiceLog, mozilla::LogLevel::Debug)
 
 #define METADATA_SUFFIX NS_LITERAL_CSTRING(".metadata")
+namespace {
+
+static const uint64_t STREAM_BUFFER_SIZE = 4096;
+
+//////////////////////////////////////////////////////////////////////////
+// A set of lightweight functions for reading/writing value from/to file.
+template <typename T>
+struct ValueTraits {
+  static_assert(sizeof(T) <= LookupCacheV4::MAX_METADATA_VALUE_LENGTH,
+                "LookupCacheV4::MAX_METADATA_VALUE_LENGTH is too small.");
+  static uint32_t Length(const T& aValue) { return sizeof(T); }
+  static char* WritePtr(T& aValue, uint32_t aLength) { return (char*)&aValue; }
+  static const char* ReadPtr(const T& aValue) { return (char*)&aValue; }
+  static bool IsFixedLength() { return true; }
+};
+
+template <>
+struct ValueTraits<nsACString> {
+  static bool IsFixedLength() { return false; }
+
+  static uint32_t Length(const nsACString& aValue) { return aValue.Length(); }
+
+  static char* WritePtr(nsACString& aValue, uint32_t aLength) {
+    aValue.SetLength(aLength);
+    return aValue.BeginWriting();
+  }
+
+  static const char* ReadPtr(const nsACString& aValue) {
+    return aValue.BeginReading();
+  }
+};
+
+template <typename T>
+static nsresult WriteValue(nsIOutputStream* aOutputStream, const T& aValue) {
+  uint32_t writeLength = ValueTraits<T>::Length(aValue);
+  MOZ_ASSERT(writeLength <= LookupCacheV4::MAX_METADATA_VALUE_LENGTH,
+             "LookupCacheV4::MAX_METADATA_VALUE_LENGTH is too small.");
+  if (!ValueTraits<T>::IsFixedLength()) {
+    // We need to write out the variable value length.
+    nsresult rv = WriteValue(aOutputStream, writeLength);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  // Write out the value.
+  auto valueReadPtr = ValueTraits<T>::ReadPtr(aValue);
+  uint32_t written;
+  nsresult rv = aOutputStream->Write(valueReadPtr, writeLength, &written);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_WARN_IF(written != writeLength)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return rv;
+}
+
+template <typename T>
+static nsresult ReadValue(nsIInputStream* aInputStream, T& aValue) {
+  nsresult rv;
+
+  uint32_t readLength;
+  if (ValueTraits<T>::IsFixedLength()) {
+    readLength = ValueTraits<T>::Length(aValue);
+  } else {
+    // Read the variable value length from file.
+    nsresult rv = ReadValue(aInputStream, readLength);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  // Sanity-check the readLength in case of disk corruption
+  // (see bug 1433636).
+  if (readLength > LookupCacheV4::MAX_METADATA_VALUE_LENGTH) {
+    return NS_ERROR_FILE_CORRUPTED;
+  }
+
+  // Read the value.
+  uint32_t read;
+  auto valueWritePtr = ValueTraits<T>::WritePtr(aValue, readLength);
+  rv = aInputStream->Read(valueWritePtr, readLength, &read);
+  if (NS_FAILED(rv) || read != readLength) {
+    LOG(("Failed to read the value."));
+    return NS_FAILED(rv) ? rv : NS_ERROR_FAILURE;
+  }
+
+  return rv;
+}
+
+}  // end of unnamed namespace.
+////////////////////////////////////////////////////////////////////////
 
 namespace mozilla {
 namespace safebrowsing {
 
 const int LookupCacheV4::VER = 4;
 const uint32_t LookupCacheV4::MAX_METADATA_VALUE_LENGTH = 256;
+
+const uint32_t VLPSET_MAGIC = 0x36044a35;
+const uint32_t VLPSET_VERSION = 1;
 
 // Prefixes coming from updates and VLPrefixSet are both stored in the HashTable
 // where the (key, value) pair is a prefix size and a lexicographic-sorted
@@ -164,32 +257,238 @@ nsresult LookupCacheV4::ClearPrefixes() {
 }
 
 nsresult LookupCacheV4::StoreToFile(nsCOMPtr<nsIFile>& aFile) {
-  return mVLPrefixSet->StoreToFile(aFile);
+  NS_ENSURE_ARG_POINTER(aFile);
+
+  uint32_t fileSize = sizeof(Header) +
+                      mVLPrefixSet->CalculatePreallocateSize() +
+                      nsCrc32CheckSumedOutputStream::CHECKSUM_SIZE;
+
+  nsCOMPtr<nsIOutputStream> localOutFile;
+  nsresult rv =
+      NS_NewSafeLocalFileOutputStream(getter_AddRefs(localOutFile), aFile,
+                                      PR_WRONLY | PR_TRUNCATE | PR_CREATE_FILE);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  // Preallocate the file storage
+  {
+    nsCOMPtr<nsIFileOutputStream> fos(do_QueryInterface(localOutFile));
+    Telemetry::AutoTimer<Telemetry::URLCLASSIFIER_VLPS_FALLOCATE_TIME> timer;
+
+    Unused << fos->Preallocate(fileSize);
+  }
+
+  nsCOMPtr<nsIOutputStream> out;
+  rv = NS_NewCrc32OutputStream(getter_AddRefs(out), localOutFile.forget(),
+                               std::min(fileSize, MAX_BUFFER_SIZE));
+
+  // Write header
+  Header header = {.magic = VLPSET_MAGIC, .version = VLPSET_VERSION};
+  rv = WriteValue(out, header);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  // Write prefixes
+  rv = mVLPrefixSet->WritePrefixes(out);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  // Write checksum
+  nsCOMPtr<nsISafeOutputStream> safeOut = do_QueryInterface(out, &rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = safeOut->Finish();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  LOG(("[%s] Storing PrefixSet successful", mTableName.get()));
+
+  // This is to remove old ".pset" files if exist
+  Unused << CleanOldPrefixSet();
+  return NS_OK;
+}
+
+nsresult LookupCacheV4::CleanOldPrefixSet() {
+  nsCOMPtr<nsIFile> file;
+  nsresult rv = mStoreDirectory->Clone(getter_AddRefs(file));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = file->AppendNative(mTableName + NS_LITERAL_CSTRING(".pset"));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  bool exists;
+  rv = file->Exists(&exists);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  if (exists) {
+    rv = file->Remove(false);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    LOG(("[%s] Old PrefixSet is succuessfully removed!", mTableName.get()));
+  }
+
+  return NS_OK;
+}
+
+nsresult LookupCacheV4::LoadLegacyFile() {
+  nsCOMPtr<nsIFile> file;
+  nsresult rv = mStoreDirectory->Clone(getter_AddRefs(file));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = file->AppendNative(mTableName + NS_LITERAL_CSTRING(".pset"));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  bool exists;
+  rv = file->Exists(&exists);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!exists) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsIInputStream> localInFile;
+  rv = NS_NewLocalFileInputStream(getter_AddRefs(localInFile), file,
+                                  PR_RDONLY | nsIFile::OS_READAHEAD);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  // Calculate how big the file is, make sure our read buffer isn't bigger
+  // than the file itself which is just wasting memory.
+  int64_t fileSize;
+  rv = file->GetFileSize(&fileSize);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  if (fileSize < 0 || fileSize > UINT32_MAX) {
+    return NS_ERROR_FAILURE;
+  }
+
+  uint32_t bufferSize =
+      std::min<uint32_t>(static_cast<uint32_t>(fileSize), MAX_BUFFER_SIZE);
+
+  // Convert to buffered stream
+  nsCOMPtr<nsIInputStream> in;
+  rv = NS_NewBufferedInputStream(getter_AddRefs(in), localInFile.forget(),
+                                 bufferSize);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  // Load data
+  rv = mVLPrefixSet->LoadPrefixes(in);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  mPrimed = true;
+
+  LOG(("[%s] Loading Legacy PrefixSet successful", mTableName.get()));
+  return NS_OK;
 }
 
 nsresult LookupCacheV4::LoadFromFile(nsCOMPtr<nsIFile>& aFile) {
-  nsresult rv = mVLPrefixSet->LoadFromFile(aFile);
+  NS_ENSURE_ARG_POINTER(aFile);
+
+  Telemetry::AutoTimer<Telemetry::URLCLASSIFIER_VLPS_FILELOAD_TIME> timer;
+
+  nsCOMPtr<nsIInputStream> localInFile;
+  nsresult rv = NS_NewLocalFileInputStream(getter_AddRefs(localInFile), aFile,
+                                           PR_RDONLY | nsIFile::OS_READAHEAD);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  nsCString state, checksum;
-  rv = LoadMetadata(state, checksum);
-  Telemetry::Accumulate(Telemetry::URLCLASSIFIER_VLPS_METADATA_CORRUPT,
-                        rv == NS_ERROR_FILE_CORRUPTED);
+  // Calculate how big the file is, make sure our read buffer isn't bigger
+  // than the file itself which is just wasting memory.
+  int64_t fileSize;
+  rv = aFile->GetFileSize(&fileSize);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  rv = VerifyChecksum(checksum);
-  Telemetry::Accumulate(Telemetry::URLCLASSIFIER_VLPS_LOAD_CORRUPT,
-                        rv == NS_ERROR_FILE_CORRUPTED);
-  Unused << NS_WARN_IF(NS_FAILED(rv));
-  return rv;
+  if (fileSize < 0 || fileSize > UINT32_MAX) {
+    return NS_ERROR_FAILURE;
+  }
+
+  uint32_t bufferSize =
+      std::min<uint32_t>(static_cast<uint32_t>(fileSize), MAX_BUFFER_SIZE);
+
+  // Convert to buffered stream
+  nsCOMPtr<nsIInputStream> in;
+  rv = NS_NewBufferedInputStream(getter_AddRefs(in), localInFile.forget(),
+                                 bufferSize);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  // Load header
+  Header header;
+  rv = ReadValue(in, header);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = SanityCheck(header);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  // Load data
+  rv = mVLPrefixSet->LoadPrefixes(in);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  // Load crc32 checksum and verify
+  rv = VerifyCRC32(in);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  mPrimed = true;
+
+  LOG(("[%s] Loading PrefixSet successful", mTableName.get()));
+  return NS_OK;
+}
+
+nsresult LookupCacheV4::SanityCheck(const Header& aHeader) {
+  if (aHeader.magic != VLPSET_MAGIC) {
+    return NS_ERROR_FILE_CORRUPTED;
+  }
+
+  if (aHeader.version != VLPSET_VERSION) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return NS_OK;
 }
 
 size_t LookupCacheV4::SizeOfPrefixSet() const {
   return mVLPrefixSet->SizeOfIncludingThis(moz_malloc_size_of);
+}
+
+nsCString LookupCacheV4::GetPrefixSetSuffix() const {
+  return NS_LITERAL_CSTRING(".vlpset");
 }
 
 static nsresult AppendPrefixToMap(PrefixStringMap& prefixes,
@@ -222,8 +521,8 @@ static nsresult InitCrypto(nsCOMPtr<nsICryptoHash>& aCrypto) {
 }
 
 // Read prefix into a buffer and also update the hash which
-// keeps track of the checksum
-static void UpdateChecksum(nsICryptoHash* aCrypto, const nsACString& aPrefix) {
+// keeps track of the sha256 hash
+static void UpdateSHA256(nsICryptoHash* aCrypto, const nsACString& aPrefix) {
   MOZ_ASSERT(aCrypto);
   aCrypto->Update(
       reinterpret_cast<uint8_t*>(const_cast<char*>(aPrefix.BeginReading())),
@@ -315,7 +614,7 @@ nsresult LookupCacheV4::ApplyUpdate(RefPtr<TableUpdateV4> aTableUpdate,
           return rv;
         }
 
-        UpdateChecksum(crypto, smallestOldPrefix);
+        UpdateSHA256(crypto, smallestOldPrefix);
       }
       smallestOldPrefix.SetLength(0);
     } else {
@@ -324,7 +623,7 @@ nsresult LookupCacheV4::ApplyUpdate(RefPtr<TableUpdateV4> aTableUpdate,
         return rv;
       }
 
-      UpdateChecksum(crypto, smallestAddPrefix);
+      UpdateSHA256(crypto, smallestAddPrefix);
       smallestAddPrefix.SetLength(0);
     }
   }
@@ -343,20 +642,20 @@ nsresult LookupCacheV4::ApplyUpdate(RefPtr<TableUpdateV4> aTableUpdate,
     return NS_ERROR_UC_UPDATE_WRONG_REMOVAL_INDICES;
   }
 
-  nsAutoCString checksum;
-  crypto->Finish(false, checksum);
-  if (aTableUpdate->Checksum().IsEmpty()) {
-    LOG(("Update checksum missing."));
+  nsAutoCString sha256;
+  crypto->Finish(false, sha256);
+  if (aTableUpdate->SHA256().IsEmpty()) {
+    LOG(("Update sha256 hash missing."));
     Telemetry::Accumulate(
         Telemetry::URLCLASSIFIER_UPDATE_ERROR, mProvider,
         NS_ERROR_GET_CODE(NS_ERROR_UC_UPDATE_MISSING_CHECKSUM));
 
-    // Generate our own checksum to tableUpdate to ensure there is always
+    // Generate our own sha256 to tableUpdate to ensure there is always
     // checksum in .metadata
-    std::string stdChecksum(checksum.BeginReading(), checksum.Length());
-    aTableUpdate->NewChecksum(stdChecksum);
-  } else if (aTableUpdate->Checksum() != checksum) {
-    LOG(("Checksum mismatch after applying partial update"));
+    std::string stdSha256(sha256.BeginReading(), sha256.Length());
+    aTableUpdate->SetSHA256(stdSha256);
+  } else if (aTableUpdate->SHA256() != sha256) {
+    LOG(("SHA256 hash mismatch after applying partial update"));
     return NS_ERROR_UC_UPDATE_CHECKSUM_MISMATCH;
   }
 
@@ -370,124 +669,54 @@ nsresult LookupCacheV4::AddFullHashResponseToCache(
   return NS_OK;
 }
 
-nsresult LookupCacheV4::VerifyChecksum(const nsACString& aChecksum) {
-  nsCOMPtr<nsICryptoHash> crypto;
-  nsresult rv = InitCrypto(crypto);
-  if (NS_FAILED(rv)) {
+// This function assumes CRC32 checksum is in the end of the input stream
+nsresult LookupCacheV4::VerifyCRC32(nsCOMPtr<nsIInputStream>& aIn) {
+  nsCOMPtr<nsISeekableStream> seekIn = do_QueryInterface(aIn);
+  nsresult rv = seekIn->Seek(nsISeekableStream::NS_SEEK_SET, 0);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  PrefixStringMap map;
-  mVLPrefixSet->GetPrefixes(map);
-
-  VLPrefixSet loadPSet(map);
-  uint32_t index = loadPSet.Count() + 1;
-  for (; index > 0; index--) {
-    nsAutoCString prefix;
-    if (!loadPSet.GetSmallestPrefix(prefix)) {
-      break;
-    }
-    UpdateChecksum(crypto, prefix);
+  uint64_t len;
+  rv = aIn->Available(&len);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
   }
 
-  nsAutoCString checksum;
-  crypto->Finish(false, checksum);
+  uint32_t calculateCrc32 = ~0;
 
-  if (checksum != aChecksum) {
-    LOG(("Checksum mismatch when loading prefixes from file."));
+  // We don't want to include the checksum itself
+  len = len - nsCrc32CheckSumedOutputStream::CHECKSUM_SIZE;
+
+  char buffer[STREAM_BUFFER_SIZE];
+  while (len) {
+    uint32_t read;
+    uint64_t readLimit = std::min<uint64_t>(STREAM_BUFFER_SIZE, len);
+
+    rv = aIn->Read(buffer, readLimit, &read);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    calculateCrc32 = ComputeCrc32c(
+        calculateCrc32, reinterpret_cast<const uint8_t*>(buffer), read);
+
+    len -= read;
+  }
+
+  // Now read the CRC32
+  uint32_t crc32;
+  ReadValue(aIn, crc32);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  if (crc32 != calculateCrc32) {
     return NS_ERROR_FILE_CORRUPTED;
   }
 
   return NS_OK;
 }
-
-//////////////////////////////////////////////////////////////////////////
-// A set of lightweight functions for reading/writing value from/to file.
-
-namespace {
-
-template <typename T>
-struct ValueTraits {
-  static_assert(sizeof(T) <= LookupCacheV4::MAX_METADATA_VALUE_LENGTH,
-                "LookupCacheV4::MAX_METADATA_VALUE_LENGTH is too small.");
-  static uint32_t Length(const T& aValue) { return sizeof(T); }
-  static char* WritePtr(T& aValue, uint32_t aLength) { return (char*)&aValue; }
-  static const char* ReadPtr(const T& aValue) { return (char*)&aValue; }
-  static bool IsFixedLength() { return true; }
-};
-
-template <>
-struct ValueTraits<nsACString> {
-  static bool IsFixedLength() { return false; }
-
-  static uint32_t Length(const nsACString& aValue) { return aValue.Length(); }
-
-  static char* WritePtr(nsACString& aValue, uint32_t aLength) {
-    aValue.SetLength(aLength);
-    return aValue.BeginWriting();
-  }
-
-  static const char* ReadPtr(const nsACString& aValue) {
-    return aValue.BeginReading();
-  }
-};
-
-template <typename T>
-static nsresult WriteValue(nsIOutputStream* aOutputStream, const T& aValue) {
-  uint32_t writeLength = ValueTraits<T>::Length(aValue);
-  MOZ_ASSERT(writeLength <= LookupCacheV4::MAX_METADATA_VALUE_LENGTH,
-             "LookupCacheV4::MAX_METADATA_VALUE_LENGTH is too small.");
-  if (!ValueTraits<T>::IsFixedLength()) {
-    // We need to write out the variable value length.
-    nsresult rv = WriteValue(aOutputStream, writeLength);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  // Write out the value.
-  auto valueReadPtr = ValueTraits<T>::ReadPtr(aValue);
-  uint32_t written;
-  nsresult rv = aOutputStream->Write(valueReadPtr, writeLength, &written);
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (NS_WARN_IF(written != writeLength)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  return rv;
-}
-
-template <typename T>
-static nsresult ReadValue(nsIInputStream* aInputStream, T& aValue) {
-  nsresult rv;
-
-  uint32_t readLength;
-  if (ValueTraits<T>::IsFixedLength()) {
-    readLength = ValueTraits<T>::Length(aValue);
-  } else {
-    // Read the variable value length from file.
-    nsresult rv = ReadValue(aInputStream, readLength);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  // Sanity-check the readLength in case of disk corruption
-  // (see bug 1433636).
-  if (readLength > LookupCacheV4::MAX_METADATA_VALUE_LENGTH) {
-    return NS_ERROR_FILE_CORRUPTED;
-  }
-
-  // Read the value.
-  uint32_t read;
-  auto valueWritePtr = ValueTraits<T>::WritePtr(aValue, readLength);
-  rv = aInputStream->Read(valueWritePtr, readLength, &read);
-  if (NS_FAILED(rv) || read != readLength) {
-    LOG(("Failed to read the value."));
-    return NS_FAILED(rv) ? rv : NS_ERROR_FAILURE;
-  }
-
-  return rv;
-}
-
-}  // end of unnamed namespace.
-////////////////////////////////////////////////////////////////////////
 
 nsresult LookupCacheV4::WriteMetadata(
     RefPtr<const TableUpdateV4> aTableUpdate) {
@@ -512,15 +741,14 @@ nsresult LookupCacheV4::WriteMetadata(
   rv = WriteValue(outputStream, aTableUpdate->ClientState());
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Write the checksum.
-  rv = WriteValue(outputStream, aTableUpdate->Checksum());
+  // Write the SHA256 hash.
+  rv = WriteValue(outputStream, aTableUpdate->SHA256());
   NS_ENSURE_SUCCESS(rv, rv);
 
   return rv;
 }
 
-nsresult LookupCacheV4::LoadMetadata(nsACString& aState,
-                                     nsACString& aChecksum) {
+nsresult LookupCacheV4::LoadMetadata(nsACString& aState, nsACString& aSHA256) {
   nsCOMPtr<nsIFile> metaFile;
   nsresult rv = mStoreDirectory->Clone(getter_AddRefs(metaFile));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -543,10 +771,10 @@ nsresult LookupCacheV4::LoadMetadata(nsACString& aState,
     return rv;
   }
 
-  // Read the checksum.
-  rv = ReadValue(localInFile, aChecksum);
+  // Read the SHA256 hash.
+  rv = ReadValue(localInFile, aSHA256);
   if (NS_FAILED(rv)) {
-    LOG(("Failed to read checksum."));
+    LOG(("Failed to read SHA256 hash."));
     return rv;
   }
 

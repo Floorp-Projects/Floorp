@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{ColorF, BorderStyle, MixBlendMode, PipelineId};
-use api::{DocumentLayer, FilterData, FilterOp, ImageFormat};
+use api::{ColorF, BorderStyle, MixBlendMode, PipelineId, PremultipliedColorF};
+use api::{DocumentLayer, FilterData, FilterOp, ImageFormat, LineOrientation};
 use api::units::*;
 use batch::{AlphaBatchBuilder, AlphaBatchContainer, ClipBatcher, resolve_image};
 use clip::ClipStore;
@@ -20,6 +20,7 @@ use internal_types::{CacheTextureId, FastHashMap, SavedTargetIndex, TextureSourc
 #[cfg(feature = "pathfinder")]
 use pathfinder_partitioner::mesh::Mesh;
 use picture::{RecordedDirtyRegion, SurfaceInfo};
+use prim_store::gradient::GRADIENT_FP_STOPS;
 use prim_store::{PictureIndex, PrimitiveStore, DeferredResolve, PrimitiveScratchBuffer};
 use profiler::FrameProfileCounters;
 use render_backend::{DataStores, FrameId};
@@ -332,6 +333,17 @@ pub struct LineDecorationJob {
     pub orientation: i32,
 }
 
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+#[repr(C)]
+pub struct GradientJob {
+    pub task_rect: DeviceRect,
+    pub stops: [f32; GRADIENT_FP_STOPS],
+    pub colors: [PremultipliedColorF; GRADIENT_FP_STOPS],
+    pub axis_select: f32,
+    pub start_stop: [f32; 2],
+}
+
 #[cfg(feature = "pathfinder")]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
@@ -505,6 +517,7 @@ impl RenderTarget for ColorRenderTarget {
             RenderTaskKind::ClipRegion(..) |
             RenderTaskKind::Border(..) |
             RenderTaskKind::CacheMask(..) |
+            RenderTaskKind::Gradient(..) |
             RenderTaskKind::LineDecoration(..) => {
                 panic!("Should not be added to color target!");
             }
@@ -648,6 +661,7 @@ impl RenderTarget for AlphaRenderTarget {
             RenderTaskKind::Blit(..) |
             RenderTaskKind::Border(..) |
             RenderTaskKind::LineDecoration(..) |
+            RenderTaskKind::Gradient(..) |
             RenderTaskKind::Glyph(..) => {
                 panic!("BUG: should not be added to alpha target!");
             }
@@ -736,6 +750,7 @@ pub struct TextureCacheRenderTarget {
     pub border_segments_solid: Vec<BorderInstance>,
     pub clears: Vec<DeviceIntRect>,
     pub line_decorations: Vec<LineDecorationJob>,
+    pub gradients: Vec<GradientJob>,
 }
 
 impl TextureCacheRenderTarget {
@@ -749,6 +764,7 @@ impl TextureCacheRenderTarget {
             border_segments_solid: vec![],
             clears: vec![],
             line_decorations: vec![],
+            gradients: vec![],
         }
     }
 
@@ -820,6 +836,28 @@ impl TextureCacheRenderTarget {
             }
             RenderTaskKind::Glyph(ref mut task_info) => {
                 self.add_glyph_task(task_info, target_rect.0)
+            }
+            RenderTaskKind::Gradient(ref task_info) => {
+                let mut stops = [0.0; 4];
+                let mut colors = [PremultipliedColorF::BLACK; 4];
+
+                let axis_select = match task_info.orientation {
+                    LineOrientation::Horizontal => 0.0,
+                    LineOrientation::Vertical => 1.0,
+                };
+
+                for (stop, (offset, color)) in task_info.stops.iter().zip(stops.iter_mut().zip(colors.iter_mut())) {
+                    *offset = stop.offset;
+                    *color = ColorF::from(stop.color).premultiplied();
+                }
+
+                self.gradients.push(GradientJob {
+                    task_rect: target_rect.0.to_f32(),
+                    axis_select,
+                    stops,
+                    colors,
+                    start_stop: [task_info.start_point, task_info.end_point],
+                });
             }
             RenderTaskKind::VerticalBlur(..) |
             RenderTaskKind::Picture(..) |

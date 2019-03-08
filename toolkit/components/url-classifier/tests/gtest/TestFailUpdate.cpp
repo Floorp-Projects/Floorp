@@ -8,7 +8,7 @@ using namespace mozilla;
 using namespace mozilla::safebrowsing;
 
 static const char* kFilesInV2[] = {".pset", ".sbstore"};
-static const char* kFilesInV4[] = {".pset", ".metadata"};
+static const char* kFilesInV4[] = {".vlpset", ".metadata"};
 
 #define V2_TABLE "gtest-malware-simple"
 #define V4_TABLE1 "goog-malware-proto"
@@ -63,7 +63,7 @@ TEST(UrlClassifierFailUpdate, CheckTableReset) {
 
     ApplyUpdate(update);
 
-    // A successful V4 update should create .pset & .metadata files
+    // A successful V4 update should create .vlpset & .metadata files
     CheckFileExist(V4_TABLE1, kFilesInV4, true);
   }
 

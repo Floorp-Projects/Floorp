@@ -176,6 +176,10 @@ const GPU_TAG_CACHE_LINE_DECORATION: GpuProfileTag = GpuProfileTag {
     label: "C_LineDecoration",
     color: debug_colors::YELLOWGREEN,
 };
+const GPU_TAG_CACHE_GRADIENT: GpuProfileTag = GpuProfileTag {
+    label: "C_Gradient",
+    color: debug_colors::BROWN,
+};
 const GPU_TAG_SETUP_TARGET: GpuProfileTag = GpuProfileTag {
     label: "target init",
     color: debug_colors::SLATEGREY,
@@ -439,6 +443,62 @@ pub(crate) mod desc {
         ],
     };
 
+    pub const GRADIENT: VertexDescriptor = VertexDescriptor {
+        vertex_attributes: &[
+            VertexAttribute {
+                name: "aPosition",
+                count: 2,
+                kind: VertexAttributeKind::F32,
+            },
+        ],
+        instance_attributes: &[
+            VertexAttribute {
+                name: "aTaskRect",
+                count: 4,
+                kind: VertexAttributeKind::F32,
+            },
+            VertexAttribute {
+                name: "aStops",
+                count: 4,
+                kind: VertexAttributeKind::F32,
+            },
+            // TODO(gw): We should probably pack these as u32 colors instead
+            //           of passing as full float vec4 here. It won't make much
+            //           difference in real world, since these are only invoked
+            //           rarely, when creating the cache.
+            VertexAttribute {
+                name: "aColor0",
+                count: 4,
+                kind: VertexAttributeKind::F32,
+            },
+            VertexAttribute {
+                name: "aColor1",
+                count: 4,
+                kind: VertexAttributeKind::F32,
+            },
+            VertexAttribute {
+                name: "aColor2",
+                count: 4,
+                kind: VertexAttributeKind::F32,
+            },
+            VertexAttribute {
+                name: "aColor3",
+                count: 4,
+                kind: VertexAttributeKind::F32,
+            },
+            VertexAttribute {
+                name: "aAxisSelect",
+                count: 1,
+                kind: VertexAttributeKind::F32,
+            },
+            VertexAttribute {
+                name: "aStartStop",
+                count: 2,
+                kind: VertexAttributeKind::F32,
+            },
+        ],
+    };
+
     pub const BORDER: VertexDescriptor = VertexDescriptor {
         vertex_attributes: &[
             VertexAttribute {
@@ -681,6 +741,7 @@ pub(crate) enum VertexArrayKind {
     Border,
     Scale,
     LineDecoration,
+    Gradient,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -1506,6 +1567,7 @@ pub struct RendererVAOs {
     border_vao: VAO,
     line_vao: VAO,
     scale_vao: VAO,
+    gradient_vao: VAO,
 }
 
 /// The renderer is responsible for submitting to the GPU the work prepared by the
@@ -1822,6 +1884,7 @@ impl Renderer {
         let border_vao = device.create_vao_with_new_instances(&desc::BORDER, &prim_vao);
         let scale_vao = device.create_vao_with_new_instances(&desc::SCALE, &prim_vao);
         let line_vao = device.create_vao_with_new_instances(&desc::LINE, &prim_vao);
+        let gradient_vao = device.create_vao_with_new_instances(&desc::GRADIENT, &prim_vao);
         let texture_cache_upload_pbo = device.create_pbo();
 
         let texture_resolver = TextureResolver::new(&mut device);
@@ -2025,6 +2088,7 @@ impl Renderer {
                 clip_vao,
                 border_vao,
                 scale_vao,
+                gradient_vao,
                 line_vao,
             },
             transforms_texture,
@@ -3832,22 +3896,40 @@ impl Renderer {
             self.set_blend(true, FramebufferKind::Other);
             self.set_blend_mode_premultiplied_alpha(FramebufferKind::Other);
 
-            if !target.line_decorations.is_empty() {
-                self.shaders.borrow_mut().cs_line_decoration.bind(
-                    &mut self.device,
-                    &projection,
-                    &mut self.renderer_errors,
-                );
+            self.shaders.borrow_mut().cs_line_decoration.bind(
+                &mut self.device,
+                &projection,
+                &mut self.renderer_errors,
+            );
 
-                self.draw_instanced_batch(
-                    &target.line_decorations,
-                    VertexArrayKind::LineDecoration,
-                    &BatchTextures::no_texture(),
-                    stats,
-                );
-            }
+            self.draw_instanced_batch(
+                &target.line_decorations,
+                VertexArrayKind::LineDecoration,
+                &BatchTextures::no_texture(),
+                stats,
+            );
 
             self.set_blend(false, FramebufferKind::Other);
+        }
+
+        // Draw any gradients for this target.
+        if !target.gradients.is_empty() {
+            let _timer = self.gpu_profile.start_timer(GPU_TAG_CACHE_GRADIENT);
+
+            self.set_blend(false, FramebufferKind::Other);
+
+            self.shaders.borrow_mut().cs_gradient.bind(
+                &mut self.device,
+                &projection,
+                &mut self.renderer_errors,
+            );
+
+            self.draw_instanced_batch(
+                &target.gradients,
+                VertexArrayKind::Gradient,
+                &BatchTextures::no_texture(),
+                stats,
+            );
         }
 
         // Draw any blurs for this target.
@@ -4713,6 +4795,7 @@ impl Renderer {
         self.texture_resolver.deinit(&mut self.device);
         self.device.delete_vao(self.vaos.prim_vao);
         self.device.delete_vao(self.vaos.clip_vao);
+        self.device.delete_vao(self.vaos.gradient_vao);
         self.device.delete_vao(self.vaos.blur_vao);
         self.device.delete_vao(self.vaos.line_vao);
         self.device.delete_vao(self.vaos.border_vao);
@@ -5490,6 +5573,7 @@ fn get_vao<'a>(vertex_array_kind: VertexArrayKind,
         VertexArrayKind::Border => &vaos.border_vao,
         VertexArrayKind::Scale => &vaos.scale_vao,
         VertexArrayKind::LineDecoration => &vaos.line_vao,
+        VertexArrayKind::Gradient => &vaos.gradient_vao,
     }
 }
 
@@ -5506,6 +5590,7 @@ fn get_vao<'a>(vertex_array_kind: VertexArrayKind,
         VertexArrayKind::Border => &vaos.border_vao,
         VertexArrayKind::Scale => &vaos.scale_vao,
         VertexArrayKind::LineDecoration => &vaos.line_vao,
+        VertexArrayKind::Gradient => &vaos.gradient_vao,
     }
 }
 

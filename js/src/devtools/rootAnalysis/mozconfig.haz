@@ -44,3 +44,4 @@ CPPFLAGS="$CPPFLAGS -Wno-attributes -Wno-ignored-attributes"
 CXXFLAGS="$CXXFLAGS -Wno-attributes -Wno-ignored-attributes"
 
 NODEJS="$TOOLTOOL_DIR/node/bin/node"
+NASM="$TOOLTOOL_DIR/nasm/nasm"

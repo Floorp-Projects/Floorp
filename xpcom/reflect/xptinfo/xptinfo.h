@@ -559,7 +559,11 @@ class UntypedTArray : public nsTArray_base<nsTArrayFallibleAllocator,
     if (!EnsureCapacity<nsTArrayFallibleAllocator>(aTo, aEltTy.Stride())) {
       return false;
     }
-    mHdr->mLength = aTo;
+
+    if (mHdr != EmptyHdr()) {
+      mHdr->mLength = aTo;
+    }
+
     return true;
   }
 
