@@ -636,18 +636,21 @@ class JSFunction : public js::NativeObject {
   }
 
   js::FunctionAsyncKind asyncKind() const {
-    return isInterpretedLazy() ? lazyScript()->asyncKind()
-                               : nonLazyScript()->asyncKind();
+    if (!isInterpreted()) {
+      return js::FunctionAsyncKind::SyncFunction;
+    }
+    if (hasScript()) {
+      return nonLazyScript()->asyncKind();
+    }
+    if (js::LazyScript* lazy = lazyScriptOrNull()) {
+      return lazy->asyncKind();
+    }
+    MOZ_ASSERT(isSelfHostedBuiltin());
+    return js::FunctionAsyncKind::SyncFunction;
   }
 
   bool isAsync() const {
-    if (isInterpretedLazy()) {
-      return lazyScript()->isAsync();
-    }
-    if (hasScript()) {
-      return nonLazyScript()->isAsync();
-    }
-    return false;
+    return asyncKind() == js::FunctionAsyncKind::AsyncFunction;
   }
 
   void setScript(JSScript* script) {
