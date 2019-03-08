@@ -290,7 +290,7 @@ public class ToolbarEditLayout extends ThemedLinearLayout {
                 .getBoolean(GeckoPreferences.PREFS_VOICE_INPUT_ENABLED, true);
     }
 
-    private void launchVoiceRecognizer() {
+    void launchVoiceRecognizer() {
         Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.ACTIONBAR, "voice_input_launch");
         final Intent intent = InputOptionsUtils.createVoiceRecognizerIntent(getResources().getString(R.string.voicesearch_prompt));
 

@@ -291,6 +291,10 @@ public abstract class BrowserToolbar extends ThemedRelativeLayout
         });
     }
 
+    public void launchVoiceRecognizer() {
+        urlEditLayout.launchVoiceRecognizer();
+    }
+
     @Override
     public void onAttachedToWindow() {
         super.onAttachedToWindow();
