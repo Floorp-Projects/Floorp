@@ -6,6 +6,9 @@
 package org.mozilla.gecko;
 
 import android.app.Activity;
+import android.app.PendingIntent;
+import android.appwidget.AppWidgetManager;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
@@ -16,6 +19,8 @@ import android.util.Log;
 
 import org.mozilla.gecko.home.HomeConfig;
 import org.mozilla.gecko.mma.MmaDelegate;
+import org.mozilla.gecko.search.SearchWidgetConfigurationActivity;
+import org.mozilla.gecko.search.SearchWidgetProvider;
 import org.mozilla.gecko.webapps.WebAppActivity;
 import org.mozilla.gecko.webapps.WebAppIndexer;
 import org.mozilla.gecko.customtabs.CustomTabsActivity;
@@ -39,6 +44,7 @@ import static org.mozilla.gecko.deeplink.DeepLinkContract.LINK_PREFERENCES_NOTIF
 import static org.mozilla.gecko.deeplink.DeepLinkContract.LINK_PREFERENCES_PRIAVACY;
 import static org.mozilla.gecko.deeplink.DeepLinkContract.LINK_PREFERENCES_SEARCH;
 import static org.mozilla.gecko.deeplink.DeepLinkContract.LINK_SAVE_AS_PDF;
+import static org.mozilla.gecko.deeplink.DeepLinkContract.LINK_SEARCH_WIDGET;
 import static org.mozilla.gecko.deeplink.DeepLinkContract.LINK_SIGN_UP;
 import static org.mozilla.gecko.deeplink.DeepLinkContract.SUMO_DEFAULT_BROWSER;
 import static org.mozilla.gecko.deeplink.DeepLinkContract.LINK_FXA_SIGNIN;
@@ -221,6 +227,27 @@ public class LauncherActivity extends Activity {
                     startActivity(changeDefaultApps);
                 } else {
                     dispatchUrlIntent(SUMO_DEFAULT_BROWSER);
+                }
+                break;
+            case LINK_SEARCH_WIDGET:
+                if (AppConstants.Versions.feature26Plus) {
+                    AppWidgetManager appWidgetManager = getApplicationContext().getSystemService(AppWidgetManager.class);
+                    ComponentName componentName = new ComponentName(this, SearchWidgetProvider.class);
+
+                    if (appWidgetManager != null && appWidgetManager.isRequestPinAppWidgetSupported()) {
+                        // Create the PendingIntent object only if your app needs to be notified
+                        // that the user allowed the widget to be pinned. Note that, if the pinning
+                        // operation fails, your app isn't notified.
+                        Intent pinnedWidgetCallbackIntent = new Intent(getApplicationContext(), SearchWidgetConfigurationActivity.class);
+                        pinnedWidgetCallbackIntent.setAction(AppWidgetManager.ACTION_APPWIDGET_CONFIGURE);
+
+                        // Configure the intent so that your app's broadcast receiver gets
+                        // the callback successfully. This callback receives the ID of the
+                        // newly-pinned widget (EXTRA_APPWIDGET_ID).
+                        PendingIntent successCallback = PendingIntent.getBroadcast(this, 0,
+                                pinnedWidgetCallbackIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+                        appWidgetManager.requestPinAppWidget(componentName, null, successCallback);
+                    }
                 }
                 break;
             case LINK_SAVE_AS_PDF:

@@ -16,6 +16,7 @@ public class DeepLinkContract {
 
     public static final String LINK_OPEN = "open";
     public static final String LINK_DEFAULT_BROWSER = "default_browser";
+    public static final String LINK_SEARCH_WIDGET = "search_widget";
     public static final String LINK_SAVE_AS_PDF = "save_as_pdf";
     public static final String LINK_BOOKMARK_LIST = "bookmark_list";
     public static final String LINK_HISTORY_LIST = "history_list";

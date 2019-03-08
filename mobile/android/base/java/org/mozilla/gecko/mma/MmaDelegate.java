@@ -45,6 +45,8 @@ public class MmaDelegate {
     public static final String SAVED_BOOKMARK = "E_Saved_Bookmark";
     public static final String OPENED_BOOKMARK = "E_Opened_Bookmark";
     public static final String INTERACT_WITH_SEARCH_URL_AREA = "E_Interact_With_Search_URL_Area";
+    public static final String INTERACT_WITH_SEARCH_WIDGET_URL_AREA = "E_Interact_With_Search_Widget";
+    public static final String ADDED_SEARCH_WIDGET = "E_Search_Widget_Added";
     public static final String SCREENSHOT = "E_Screenshot";
     public static final String SAVED_LOGIN_AND_PASSWORD = "E_Saved_Login_And_Password";
     public static final String RESUMED_FROM_BACKGROUND = "E_Resumed_From_Background";
