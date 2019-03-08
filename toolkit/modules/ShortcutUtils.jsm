@@ -9,6 +9,10 @@ var EXPORTED_SYMBOLS = ["ShortcutUtils"];
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
+XPCOMUtils.defineLazyModuleGetters(this, {
+  AppConstants: "resource://gre/modules/AppConstants.jsm",
+});
+
 XPCOMUtils.defineLazyGetter(this, "PlatformKeys", function() {
   return Services.strings.createBundle(
     "chrome://global-platform/locale/platformKeys.properties");
@@ -26,6 +30,13 @@ var ShortcutUtils = {
   INVALID_COMBINATION: "invalid_combination",
   DUPLICATE_MODIFIER: "duplicate_modifier",
   MODIFIER_REQUIRED: "modifier_required",
+
+  MOVE_TAB_FORWARD: "MOVE_TAB_FORWARD",
+  MOVE_TAB_BACKWARD: "MOVE_TAB_BACKWARD",
+  CLOSE_TAB: "CLOSE_TAB",
+  CYCLE_TABS: "CYCLE_TABS",
+  PREVIOUS_TAB: "PREVIOUS_TAB",
+  NEXT_TAB: "NEXT_TAB",
 
   /**
     * Prettifies the modifier keys for an element.
@@ -270,6 +281,65 @@ var ShortcutUtils = {
       `${baseSelector}[keycode="${keycode}"]`,
     ].join(","));
     return keyEl && !keyEl.closest("keyset").id.startsWith("ext-keyset-id");
+  },
+
+  /**
+   * Determine what action a KeyboardEvent should perform, if any.
+   *
+   * @param {KeyboardEvent} event The event to check for a related system action.
+   * @returns {string} A string identifying the action, or null if no action is found.
+   */
+  getSystemActionForEvent(event, {rtl} = {}) {
+    switch (event.keyCode) {
+      case event.DOM_VK_TAB:
+        if (event.ctrlKey && !event.altKey && !event.metaKey)
+          return ShortcutUtils.CYCLE_TABS;
+        break;
+      case event.DOM_VK_PAGE_UP:
+        if (event.ctrlKey && !event.shiftKey && !event.altKey && !event.metaKey)
+          return ShortcutUtils.PREVIOUS_TAB;
+        if (event.ctrlKey && event.shiftKey && !event.altKey && !event.metaKey)
+          return ShortcutUtils.MOVE_TAB_BACKWARD;
+        break;
+      case event.DOM_VK_PAGE_DOWN:
+        if (event.ctrlKey && !event.shiftKey && !event.altKey && !event.metaKey)
+          return ShortcutUtils.NEXT_TAB;
+        if (event.ctrlKey && event.shiftKey && !event.altKey && !event.metaKey)
+          return ShortcutUtils.MOVE_TAB_FORWARD;
+        break;
+      case event.DOM_VK_LEFT:
+        if (event.metaKey && event.altKey && !event.shiftKey && !event.ctrlKey)
+          return ShortcutUtils.PREVIOUS_TAB;
+        break;
+      case event.DOM_VK_RIGHT:
+        if (event.metaKey && event.altKey && !event.shiftKey && !event.ctrlKey)
+          return ShortcutUtils.NEXT_TAB;
+        break;
+    }
+
+    if (AppConstants.platform == "macosx") {
+      if (!event.altKey && event.metaKey) {
+        switch (event.charCode) {
+          case "}".charCodeAt(0):
+            if (rtl)
+              return ShortcutUtils.PREVIOUS_TAB;
+            return ShortcutUtils.NEXT_TAB;
+          case "{".charCodeAt(0):
+            if (rtl)
+              return ShortcutUtils.NEXT_TAB;
+            return ShortcutUtils.PREVIOUS_TAB;
+        }
+      }
+    }
+    // Not on Mac from now on.
+    if (AppConstants.platform != "macosx") {
+      if (event.ctrlKey && !event.shiftKey && !event.metaKey &&
+          event.keyCode == KeyEvent.DOM_VK_F4) {
+        return ShortcutUtils.CLOSE_TAB;
+      }
+    }
+
+    return null;
   },
 };
 
