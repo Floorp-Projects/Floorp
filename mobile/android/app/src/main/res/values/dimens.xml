@@ -115,6 +115,22 @@
     <dimen name="search_suggestion_item_padding_horizontal">8dp</dimen>
     <dimen name="search_suggestion_item_padding_vertical">7dp</dimen>
 
+    <!-- Search Widget -->
+    <dimen name="search_widget_height">50dp</dimen>
+    <dimen name="search_widget_1_col_width">50dp</dimen>
+    <dimen name="search_widget_2_col_width">100dp</dimen>
+    <dimen name="search_widget_3_col_width">192dp</dimen>
+    <dimen name="search_widget_4_col_width">256dp</dimen>
+    <dimen name="search_widget_5_col_width">360dp</dimen>
+    <dimen name="search_widget_logo_width">32dp</dimen>
+    <dimen name="search_widget_logo_height">32dp</dimen>
+    <dimen name="search_widget_logo_margin">9dp</dimen>
+    <dimen name="search_widget_3_col_text_width">89dp</dimen>
+    <dimen name="search_widget_4_col_text_width">153dp</dimen>
+    <dimen name="search_widget_5_col_text_width">257dp</dimen>
+    <dimen name="search_widget_text_height">32dp</dimen>
+    <dimen name="search_widget_text_margin">9dp</dimen>
+
     <!-- Search Home Item Row height -->
     <dimen name="search_item_min_height">64dp</dimen>
 
