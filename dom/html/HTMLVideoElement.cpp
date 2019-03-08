@@ -481,6 +481,10 @@ void HTMLVideoElement::CloneElementVisually(HTMLVideoElement& aTargetVideo,
 
   aTargetVideo.SetMediaInfo(mMediaInfo);
 
+  if (IsInComposedDoc()) {
+    NotifyUAWidgetSetupOrChange();
+  }
+
   MaybeBeginCloningVisually();
 }
 
@@ -532,6 +536,10 @@ void HTMLVideoElement::EndCloningVisually() {
 
   Unused << mVisualCloneTarget->SetVisualCloneSource(nullptr);
   Unused << SetVisualCloneTarget(nullptr);
+
+  if (IsInComposedDoc()) {
+    NotifyUAWidgetSetupOrChange();
+  }
 }
 
 }  // namespace dom
