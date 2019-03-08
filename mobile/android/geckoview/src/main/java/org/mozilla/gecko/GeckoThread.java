@@ -271,9 +271,6 @@ public class GeckoThread extends Thread {
 
     private static void initGeckoEnvironment() {
         final Context context = GeckoAppShell.getApplicationContext();
-        GeckoLoader.loadMozGlue(context);
-        setState(State.MOZGLUE_READY);
-
         final Locale locale = Locale.getDefault();
         final Resources res = context.getResources();
         if (locale.toString().equalsIgnoreCase("zh_hk")) {
@@ -414,17 +411,39 @@ public class GeckoThread extends Thread {
         };
         Looper.myQueue().addIdleHandler(idleHandler);
 
-        initGeckoEnvironment();
-
-        // Wait until initialization before calling Gecko entry point.
+        // Wait until initialization before preparing environment.
         synchronized (this) {
-            while (!mInitialized || !isState(State.LIBS_READY)) {
+            while (!mInitialized) {
                 try {
                     wait();
                 } catch (final InterruptedException e) {
                 }
             }
         }
+
+        final Context context = GeckoAppShell.getApplicationContext();
+        final List<String> env = getEnvFromExtras(mInitInfo.extras);
+
+        // In Gecko, the native crash reporter is enabled by default in opt builds, and
+        // disabled by default in debug builds.
+        if ((mInitInfo.flags & FLAG_ENABLE_NATIVE_CRASHREPORTER) == 0 && !BuildConfig.DEBUG_BUILD) {
+            env.add(0, "MOZ_CRASHREPORTER_DISABLE=1");
+        } else if ((mInitInfo.flags & FLAG_ENABLE_NATIVE_CRASHREPORTER) != 0 && BuildConfig.DEBUG_BUILD) {
+            env.add(0, "MOZ_CRASHREPORTER=1");
+        }
+
+        if (!isChildProcess() && ((mInitInfo.flags & FLAG_ENABLE_MARIONETTE) != 0)) {
+            // The presence of this environment variable determines the initial
+            // value of `marionette.enabled`.
+            env.add(0, "MOZ_MARIONETTE=1");
+        }
+
+        GeckoLoader.loadMozGlue(context);
+        setState(State.MOZGLUE_READY);
+
+        GeckoLoader.setupGeckoEnvironment(context, context.getFilesDir().getPath(), env, mInitInfo.prefs);
+
+        initGeckoEnvironment();
 
         if ((mInitInfo.flags & FLAG_PRELOAD_CHILD) != 0) {
             ThreadUtils.postToBackgroundThread(new Runnable() {
@@ -445,30 +464,11 @@ public class GeckoThread extends Thread {
 
         Log.w(LOGTAG, "zerdatime " + SystemClock.elapsedRealtime() + " - runGecko");
 
-        final Context context = GeckoAppShell.getApplicationContext();
         final String[] args = isChildProcess() ? mInitInfo.args : getMainProcessArgs();
 
         if ((mInitInfo.flags & FLAG_DEBUGGING) != 0) {
             Log.i(LOGTAG, "RunGecko - args = " + TextUtils.join(" ", args));
         }
-
-        final List<String> env = getEnvFromExtras(mInitInfo.extras);
-
-        // In Gecko, the native crash reporter is enabled by default in opt builds, and
-        // disabled by default in debug builds.
-        if ((mInitInfo.flags & FLAG_ENABLE_NATIVE_CRASHREPORTER) == 0 && !BuildConfig.DEBUG_BUILD) {
-            env.add(0, "MOZ_CRASHREPORTER_DISABLE=1");
-        } else if ((mInitInfo.flags & FLAG_ENABLE_NATIVE_CRASHREPORTER) != 0 && BuildConfig.DEBUG_BUILD) {
-            env.add(0, "MOZ_CRASHREPORTER=1");
-        }
-
-        if (!isChildProcess() && ((mInitInfo.flags & FLAG_ENABLE_MARIONETTE) != 0)) {
-            // The presence of this environment variable determines the initial
-            // value of `marionette.enabled`.
-            env.add(0, "MOZ_MARIONETTE=1");
-        }
-
-        GeckoLoader.setupGeckoEnvironment(context, context.getFilesDir().getPath(), env, mInitInfo.prefs);
 
         // And go.
         GeckoLoader.nativeRun(args,
