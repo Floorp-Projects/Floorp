@@ -235,3 +235,37 @@ jobs:
                 - 'gfx/wr/**'
                 - 'taskcluster/scripts/misc/tooltool-download.sh'
                 - 'taskcluster/scripts/misc/wrench-windows-tests.sh'
+
+    wrench-android-build:
+        description: Build wrench for Android
+        worker-type: aws-provisioner-v1/gecko-{level}-b-android
+        worker:
+            max-run-time: 5400
+            docker-image: {in-tree: webrender}
+            artifacts:
+                - type: file
+                  name: public/build/wrench-debug.apk
+                  path: /builds/worker/checkouts/gecko/gfx/wr/target/android-artifacts/app/build/outputs/apk/app-debug.apk
+        run:
+            using: run-task
+            command: >-
+                cd $GECKO_PATH &&
+                ./mach artifact toolchain -v $MOZ_TOOLCHAINS &&
+                export PATH=$PATH:$PWD/rustc/bin:$PWD/android-gradle-dependencies/gradle-dist/bin &&
+                export ANDROID_HOME=$PWD/android-sdk-linux &&
+                export NDK_HOME=$PWD/android-ndk &&
+                mv wrench-deps/{vendor,.cargo,cargo-apk} gfx/wr &&
+                cd gfx/wr/wrench &&
+                ../cargo-apk/bin/cargo-apk build --frozen --verbose
+        toolchains:
+            - android-gradle-dependencies
+            - android-ndk-linux
+            - android-sdk-linux
+            - linux64-rust-android
+            - wrench-deps
+        treeherder:
+            platform: android-4-0-armv7-api16/debug
+            symbol: WR(B)
+        when:
+            files-changed:
+                - 'gfx/wr/**'
