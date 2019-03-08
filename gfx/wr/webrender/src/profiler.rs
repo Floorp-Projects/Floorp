@@ -11,7 +11,6 @@ use renderer::{MAX_VERTEX_TEXTURE_WIDTH, wr_has_been_initialized};
 use std::collections::vec_deque::VecDeque;
 use std::{f32, mem};
 use std::ffi::CStr;
-use std::time::Duration;
 use time::precise_time_ns;
 
 const GRAPH_WIDTH: f32 = 1024.0;
@@ -31,22 +30,10 @@ pub trait ProfilerHooks : Send + Sync {
     /// Called at the end of a profile scope. The label must
     /// be a C string (null terminated).
     fn end_marker(&self, label: &CStr);
-
-    /// Called with a duration to indicate a text marker that just ended. Text
-    /// markers allow different types of entries to be recorded on the same row
-    /// in the timeline, by adding labels to the entry.
-    ///
-    /// This variant is also useful when the caller only wants to record events
-    /// longer than a certain threshold, and thus they don't know in advance
-    /// whether the event will qualify.
-    fn add_text_marker(&self, label: &CStr, text: &str, duration: Duration);
-
-    /// Returns true if the current thread is being profiled.
-    fn thread_is_being_profiled(&self) -> bool;
 }
 
 /// The current global profiler callbacks, if set by embedder.
-pub static mut PROFILER_HOOKS: Option<&'static ProfilerHooks> = None;
+static mut PROFILER_HOOKS: Option<&'static ProfilerHooks> = None;
 
 /// Set the profiler callbacks, or None to disable the profiler.
 /// This function must only ever be called before any WR instances
@@ -62,22 +49,6 @@ pub fn set_profiler_hooks(hooks: Option<&'static ProfilerHooks>) {
 /// A simple RAII style struct to manage a profile scope.
 pub struct ProfileScope {
     name: &'static CStr,
-}
-
-/// Records a marker of the given duration that just ended.
-pub fn add_text_marker(label: &CStr, text: &str, duration: Duration) {
-    unsafe {
-        if let Some(ref hooks) = PROFILER_HOOKS {
-            hooks.add_text_marker(label, text, duration);
-        }
-    }
-}
-
-/// Returns true if the current thread is being profiled.
-pub fn thread_is_being_profiled() -> bool {
-    unsafe {
-        PROFILER_HOOKS.map_or(false, |h| h.thread_is_being_profiled())
-    }
 }
 
 impl ProfileScope {
