@@ -634,22 +634,14 @@ var LoginHelper = {
     let fieldType = (element.hasAttribute("type") ?
                      element.getAttribute("type").toLowerCase() :
                      element.type);
-    if (!(fieldType == "text" ||
-          fieldType == "email" ||
-          fieldType == "url" ||
-          fieldType == "tel" ||
-          fieldType == "number")) {
-      return false;
+    if (fieldType == "text" ||
+        fieldType == "email" ||
+        fieldType == "url" ||
+        fieldType == "tel" ||
+        fieldType == "number") {
+      return true;
     }
-
-    let acFieldName = element.getAutocompleteInfo().fieldName;
-    if (!(acFieldName == "username" ||
-          acFieldName == "off" ||
-          acFieldName == "on" ||
-          acFieldName == "")) {
-      return false;
-    }
-    return true;
+    return false;
   },
 
   /**
