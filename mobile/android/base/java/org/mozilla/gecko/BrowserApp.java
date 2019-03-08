@@ -89,6 +89,7 @@ import org.mozilla.gecko.dlc.DlcStudyService;
 import org.mozilla.gecko.dlc.DlcSyncService;
 import org.mozilla.gecko.extensions.ExtensionPermissionsHelper;
 import org.mozilla.gecko.firstrun.OnboardingHelper;
+import org.mozilla.gecko.search.SearchWidgetProvider;
 import org.mozilla.geckoview.DynamicToolbarAnimator.PinReason;
 import org.mozilla.gecko.home.BrowserSearch;
 import org.mozilla.gecko.home.HomeBanner;
@@ -182,7 +183,13 @@ import java.util.List;
 import java.util.Locale;
 import java.util.regex.Pattern;
 
+import static org.mozilla.gecko.Tabs.LOADURL_DELAY_LOAD;
+import static org.mozilla.gecko.Tabs.LOADURL_EXTERNAL;
+import static org.mozilla.gecko.Tabs.LOADURL_PINNED;
+import static org.mozilla.gecko.Tabs.LOADURL_START_EDITING;
+import static org.mozilla.gecko.Tabs.TabEvents.LOADED;
 import static org.mozilla.gecko.mma.MmaDelegate.NEW_TAB;
+import static org.mozilla.gecko.search.SearchWidgetProvider.INPUT_TYPE_KEY;
 import static org.mozilla.gecko.util.JavaUtil.getBundleSizeInBytes;
 
 public class BrowserApp extends GeckoApp
@@ -868,6 +875,62 @@ public class BrowserApp extends GeckoApp
         // We want to get an understanding of how our user base is spread (bug 1221646).
         final String installerPackageName = getPackageManager().getInstallerPackageName(getPackageName());
         Telemetry.sendUIEvent(TelemetryContract.Event.LAUNCH, TelemetryContract.Method.SYSTEM, "installer_" + installerPackageName);
+    }
+
+    /**
+     * This method is used in order to check if an intent came from {@link SearchWidgetProvider}
+     * and handle it accordingly.
+     * @param intent to be checked and handled
+     * @return True if the intent could be handled
+     */
+    private boolean handleSearchWidgetIntent(Intent intent) {
+        SearchWidgetProvider.InputType input = (SearchWidgetProvider.InputType) (intent == null ?
+                safeStartingIntent.getUnsafe().getSerializableExtra(INPUT_TYPE_KEY) :
+                intent.getSerializableExtra(INPUT_TYPE_KEY));
+
+        if (input == null) {
+            return false;
+        }
+
+        switch (input) {
+            case TEXT:
+                handleTabEditingMode(false);
+                return true;
+            case VOICE:
+                handleTabEditingMode(true);
+                return true;
+            default:
+                // Can't handle this input type, where did it came from though?
+                Log.e(LOGTAG, "can't handle search action :: input == " + input);
+                return false;
+        }
+    }
+
+    private synchronized void handleTabEditingMode(boolean isVoice) {
+        Tab tab = Tabs.getInstance().getLastTabForUrl("about:home");
+
+        if (tab == null) {
+            final Tabs.OnTabsChangedListener tabsChangedListener = new Tabs.OnTabsChangedListener() {
+                @Override
+                public void onTabChanged(Tab tab, TabEvents msg, String data) {
+                    if (tab != null && tab.getURL().equals("about:home") && LOADED.equals(msg)) {
+                        selectTabAndEnterEditingMode(tab.getId(), isVoice);
+                        Tabs.unregisterOnTabsChangedListener(this);
+                    }
+                }
+            };
+            Tabs.registerOnTabsChangedListener(tabsChangedListener);
+        } else {
+            selectTabAndEnterEditingMode(tab.getId(), isVoice);
+        }
+    }
+
+    private void selectTabAndEnterEditingMode(int tabId, boolean isVoice) {
+        Tabs.getInstance().selectTab(tabId);
+        enterEditingMode();
+        if (isVoice) {
+            mBrowserToolbar.launchVoiceRecognizer();
+        }
     }
 
     /**
@@ -1707,6 +1770,10 @@ public class BrowserApp extends GeckoApp
 
                 // Force tabs panel inflation once the initial pageload is finished.
                 ensureTabsPanelExists();
+
+                if (handleSearchWidgetIntent(safeStartingIntent.getUnsafe())) {
+                    return;
+                }
 
                 if (AppConstants.MOZ_MEDIA_PLAYER) {
                     // Check if the fragment is already added. This should never be true
@@ -3833,6 +3900,10 @@ public class BrowserApp extends GeckoApp
 
         for (final BrowserAppDelegate delegate : delegates) {
             delegate.onNewIntent(this, intent);
+        }
+
+        if (handleSearchWidgetIntent(externalIntent)) {
+            return;
         }
 
         if (!mInitialized || !Intent.ACTION_MAIN.equals(action)) {
