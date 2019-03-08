@@ -99,6 +99,9 @@ class MediaEngineDefaultVideoSource : public MediaEngineSource {
   MediaEnginePrefs mOpts;
   int mCb = 16;
   int mCr = 16;
+
+private:
+  const nsString mName;
 };
 
 class SineWaveGenerator;
