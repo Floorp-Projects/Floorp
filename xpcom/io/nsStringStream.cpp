@@ -24,6 +24,7 @@
 #include "mozilla/ipc/InputStreamUtils.h"
 #include "mozilla/ReentrantMonitor.h"
 #include "nsIIPCSerializableInputStream.h"
+#include "XPCOMModule.h"
 
 using namespace mozilla::ipc;
 using mozilla::Maybe;
