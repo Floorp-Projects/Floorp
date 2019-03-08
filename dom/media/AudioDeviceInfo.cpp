@@ -62,7 +62,6 @@ const nsString& AudioDeviceInfo::Name() const { return mName; }
 uint32_t AudioDeviceInfo::MaxChannels() const { return mMaxChannels; }
 uint32_t AudioDeviceInfo::Type() const { return mType; }
 uint32_t AudioDeviceInfo::State() const { return mState; }
-const nsString& AudioDeviceInfo::GroupID() const { return mGroupId; }
 
 bool AudioDeviceInfo::Preferred() const { return mPreferred; }
 

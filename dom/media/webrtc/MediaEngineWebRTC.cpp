@@ -144,7 +144,7 @@ void MediaEngineWebRTC::EnumerateVideoDevices(
     }
     aDevices->AppendElement(MakeRefPtr<MediaDevice>(
         vSource, vSource->GetName(), NS_ConvertUTF8toUTF16(vSource->GetUUID()),
-        vSource->GetGroupId(), NS_LITERAL_STRING("")));
+        NS_LITERAL_STRING("")));
   }
 
   if (mHasTabVideoSource || aCapEngine == camera::BrowserEngine) {
@@ -152,7 +152,7 @@ void MediaEngineWebRTC::EnumerateVideoDevices(
     aDevices->AppendElement(MakeRefPtr<MediaDevice>(
         tabVideoSource, tabVideoSource->GetName(),
         NS_ConvertUTF8toUTF16(tabVideoSource->GetUUID()),
-        tabVideoSource->GetGroupId(), NS_LITERAL_STRING("")));
+        NS_LITERAL_STRING("")));
   }
 }
 
@@ -181,11 +181,11 @@ void MediaEngineWebRTC::EnumerateMicrophoneDevices(
       RefPtr<MediaEngineSource> source = new MediaEngineWebRTCMicrophoneSource(
           devices[i], devices[i]->Name(),
           // Lie and provide the name as UUID
-          NS_ConvertUTF16toUTF8(devices[i]->Name()), devices[i]->GroupID(),
-          devices[i]->MaxChannels(), mDelayAgnostic, mExtendedFilter);
+          NS_ConvertUTF16toUTF8(devices[i]->Name()), devices[i]->MaxChannels(),
+          mDelayAgnostic, mExtendedFilter);
       RefPtr<MediaDevice> device = MakeRefPtr<MediaDevice>(
           source, source->GetName(), NS_ConvertUTF8toUTF16(source->GetUUID()),
-          source->GetGroupId(), NS_LITERAL_STRING(""));
+          NS_LITERAL_STRING(""));
       if (devices[i]->Preferred()) {
 #ifdef DEBUG
         if (!foundPreferredDevice) {
@@ -220,8 +220,7 @@ void MediaEngineWebRTC::EnumerateSpeakerDevices(
       // would be the same for both which ends up to create the same
       // deviceIDs (in JS).
       uuid.Append(NS_LITERAL_STRING("_Speaker"));
-      nsString groupId(device->GroupID());
-      aDevices->AppendElement(MakeRefPtr<MediaDevice>(device, uuid, groupId));
+      aDevices->AppendElement(MakeRefPtr<MediaDevice>(device, uuid));
     }
   }
 }
@@ -264,7 +263,7 @@ void MediaEngineWebRTC::EnumerateDevices(
     aDevices->AppendElement(MakeRefPtr<MediaDevice>(
         audioCaptureSource, audioCaptureSource->GetName(),
         NS_ConvertUTF8toUTF16(audioCaptureSource->GetUUID()),
-        audioCaptureSource->GetGroupId(), NS_LITERAL_STRING("")));
+        NS_LITERAL_STRING("")));
   } else if (aMediaSource == dom::MediaSourceEnum::Microphone) {
     MOZ_ASSERT(aMediaSource == dom::MediaSourceEnum::Microphone);
     EnumerateMicrophoneDevices(aWindowId, aDevices);

@@ -21,7 +21,6 @@ class MediaEngineTabVideoSource : public MediaEngineSource {
 
   nsString GetName() const override;
   nsCString GetUUID() const override;
-  nsString GetGroupId() const override;
 
   bool GetScary() const override { return true; }
 
