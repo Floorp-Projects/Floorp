@@ -335,15 +335,16 @@
     }
 
     get _previousVisibleColumn() {
-      var sib = this.boxObject.previousSibling;
+      var tree = this.parentNode.parentNode;
+      let sib = tree.columns.getColumnFor(this).previousColumn;
       while (sib) {
-        if (sib.localName == "treecol" &&
-            sib.getBoundingClientRect().width > 0 &&
-            sib.parentNode == this.parentNode) {
-          return sib;
+        if (sib.element && sib.element.getBoundingClientRect().width > 0) {
+          return sib.element;
         }
-        sib = sib.boxObject.previousSibling;
+
+        sib = sib.previousColumn;
       }
+
       return null;
     }
 

@@ -212,7 +212,7 @@ public final class GeckoLoader {
     }
 
     @SuppressWarnings("deprecation")
-    private static final String getCPUABI() {
+    private static String getCPUABI() {
         return android.os.Build.CPU_ABI;
     }
 
@@ -359,7 +359,7 @@ public final class GeckoLoader {
         return message.toString();
     }
 
-    private static final boolean attemptLoad(final String path) {
+    private static boolean attemptLoad(final String path) {
         try {
             System.load(path);
             return true;
@@ -376,7 +376,7 @@ public final class GeckoLoader {
      *
      * Returns null or the cause exception.
      */
-    private static final Throwable doLoadLibraryExpected(final Context context, final String lib) {
+    private static Throwable doLoadLibraryExpected(final Context context, final String lib) {
         try {
             // Attempt 1: the way that should work.
             System.loadLibrary(lib);

@@ -236,6 +236,22 @@ int32_t nsTreeColumn::GetWidth(mozilla::ErrorResult& aRv) {
   return nsPresContext::AppUnitsToIntCSSPixels(frame->GetRect().width);
 }
 
+already_AddRefed<nsTreeColumn> nsTreeColumn::GetPreviousColumn() {
+  nsIFrame* frame = GetFrame();
+  while (frame) {
+    frame = frame->GetPrevSibling();
+    if (frame && frame->GetContent()->IsElement()) {
+      RefPtr<nsTreeColumn> column =
+        mColumns->GetColumnFor(frame->GetContent()->AsElement());
+      if (column) {
+        return column.forget();
+      }
+    }
+  }
+
+  return nullptr;
+}
+
 nsTreeColumns::nsTreeColumns(nsTreeBodyFrame* aTree) : mTree(aTree) {}
 
 nsTreeColumns::~nsTreeColumns() { nsTreeColumns::InvalidateColumns(); }
