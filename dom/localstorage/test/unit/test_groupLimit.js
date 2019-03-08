@@ -48,6 +48,7 @@ async function testSteps() {
 
   for (let i = 0; i < data.urlCount; i++) {
     storages[i].setItem(data.key, data.value);
+    await returnToEventLoop();
   }
 
   info("Verifying no more data can be written");
