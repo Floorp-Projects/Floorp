@@ -78,6 +78,7 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/DefineEnum.h"
 #include "mozilla/GuardObjects.h"
+#include "mozilla/LinkedList.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Preferences.h"
@@ -305,6 +306,9 @@ MOZ_DEFINE_ENUM(WatchdogTimestampCategory, (
 // clang-format on
 
 class AsyncFreeSnowWhite;
+class XPCWrappedNativeScope;
+
+using XPCWrappedNativeScopeList = mozilla::LinkedList<XPCWrappedNativeScope>;
 
 class XPCJSContext final : public mozilla::CycleCollectedJSContext,
                            public mozilla::LinkedListElement<XPCJSContext> {
@@ -502,6 +506,10 @@ class XPCJSRuntime final : public mozilla::CycleCollectedJSRuntime {
     return mDyingWrappedNativeProtoMap;
   }
 
+  XPCWrappedNativeScopeList& GetWrappedNativeScopes() {
+    return mWrappedNativeScopes;
+  }
+
   bool InitializeStrings(JSContext* cx);
 
   virtual bool DescribeCustomObjects(JSObject* aObject, const js::Class* aClasp,
@@ -622,6 +630,7 @@ class XPCJSRuntime final : public mozilla::CycleCollectedJSRuntime {
   ClassInfo2NativeSetMap* mClassInfo2NativeSetMap;
   NativeSetMap* mNativeSetMap;
   Principal2JSObjectMap mUAWidgetScopeMap;
+  XPCWrappedNativeScopeList mWrappedNativeScopes;
   XPCWrappedNativeProtoMap* mDyingWrappedNativeProtoMap;
   bool mGCIsRunning;
   nsTArray<nsISupports*> mNativesToReleaseArray;
@@ -807,7 +816,8 @@ extern bool XPC_WN_GetterSetter(JSContext* cx, unsigned argc, JS::Value* vp);
 // XPCWrappedNativeScope is one-to-one with a JS compartment.
 
 class nsXPCComponentsBase;
-class XPCWrappedNativeScope final {
+class XPCWrappedNativeScope final
+    : public mozilla::LinkedListElement<XPCWrappedNativeScope> {
  public:
   XPCJSRuntime* GetRuntime() const { return XPCJSRuntime::Get(); }
 
@@ -839,7 +849,8 @@ class XPCWrappedNativeScope final {
 
   static void SystemIsBeingShutDown();
 
-  static void TraceWrappedNativesInAllScopes(JSTracer* trc);
+  static void TraceWrappedNativesInAllScopes(XPCJSRuntime* xpcrt,
+                                             JSTracer* trc);
 
   void TraceInside(JSTracer* trc) {
     if (mXrayExpandos.initialized()) {
@@ -860,11 +871,7 @@ class XPCWrappedNativeScope final {
 
   static void SweepAllWrappedNativeTearOffs();
 
-  static void UpdateWeakPointersInAllScopesAfterGC();
-
   void UpdateWeakPointersAfterGC();
-
-  static void KillDyingScopes();
 
   static void DebugDumpAllScopes(int16_t depth);
 
@@ -899,6 +906,7 @@ class XPCWrappedNativeScope final {
 
   XPCWrappedNativeScope(JS::Compartment* aCompartment,
                         JS::HandleObject aFirstGlobal);
+  virtual ~XPCWrappedNativeScope();
 
   nsAutoPtr<JSObject2JSObjectMap> mWaiverWrapperMap;
 
@@ -922,18 +930,12 @@ class XPCWrappedNativeScope final {
   JS::ObjectPtr mCIDProto;
 
  protected:
-  virtual ~XPCWrappedNativeScope();
-
   XPCWrappedNativeScope() = delete;
 
  private:
-  static XPCWrappedNativeScope* gScopes;
-  static XPCWrappedNativeScope* gDyingScopes;
-
   Native2WrappedNativeMap* mWrappedNativeMap;
   ClassInfo2WrappedNativeProtoMap* mWrappedNativeProtoMap;
   RefPtr<nsXPCComponentsBase> mComponents;
-  XPCWrappedNativeScope* mNext;
   JS::Compartment* mCompartment;
 
   JS::WeakMapPtr<JSObject*, JSObject*> mXrayExpandos;
