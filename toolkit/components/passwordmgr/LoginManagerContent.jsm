@@ -830,7 +830,6 @@ var LoginManagerContent = {
       // from the first password field, assume the first text field is the
       // username. We might not find a username field if the user is
       // already logged in to the site.
-
       for (var i = pwFields[0].index - 1; i >= 0; i--) {
         var element = form.elements[i];
         if (!LoginHelper.isUsernameFieldType(element)) {
@@ -850,10 +849,10 @@ var LoginManagerContent = {
     if (!usernameField) {
       log("(form -- no username field found)");
     } else {
-      let acFieldName = usernameField.getAutocompleteInfo().fieldName;
-      log("Username field ", usernameField, "has name/value/autocomplete:",
-          usernameField.name, "/", usernameField.value, "/", acFieldName);
+      log("Username field ", usernameField, "has name/value:",
+          usernameField.name, "/", usernameField.value);
     }
+
     // If we're not submitting a form (it's a page load), there are no
     // password field values for us to use for identifying fields. So,
     // just assume the first password field is the one to be filled in.
