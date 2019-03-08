@@ -94,10 +94,10 @@ jobs:
           target-tasks-method: searchfox_index
       run-on-projects:
           - mozilla-central
+          - mozilla-beta
+          - mozilla-release
       when:
-          by-project:
-              mozilla-central: [{hour: 10, minute: 0}]
-              # No default
+          - {hour: 10, minute: 0}
 
     - name: customv8-update
       job:
