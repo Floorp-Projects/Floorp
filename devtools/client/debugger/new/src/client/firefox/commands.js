@@ -73,7 +73,7 @@ function releaseActor(actor: String) {
 }
 
 function sendPacket(packet: Object) {
-  return debuggerClient.request(packet)
+  return debuggerClient.request(packet);
 }
 
 function lookupThreadClient(thread: string) {
