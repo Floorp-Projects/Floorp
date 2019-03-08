@@ -9,13 +9,6 @@ var EXPORTED_SYMBOLS = ["Browser"];
 const {Domain} = ChromeUtils.import("chrome://remote/content/domains/Domain.jsm");
 
 class Browser extends Domain {
-  constructor(session, target) {
-    super(session, target);
-  }
-
-  destructor() {
-  }
-
   getVersion() {
     return {
       protocolVersion: "1",
