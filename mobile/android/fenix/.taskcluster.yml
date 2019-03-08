@@ -56,6 +56,7 @@ tasks:
                 - project:mobile:fenix:releng:googleplay:product:fenix
                 - queue:route:index.project.mobile.fenix.signed-nightly.*
                 - secrets:get:project/mobile/fenix/sentry
+                - secrets:get:project/mobile/fenix/leanplum
               else:
                 - queue:create-task:highest:scriptworker-prov-v1/mobile-signing-dep-v1
                 - queue:create-task:highest:scriptworker-prov-v1/mobile-pushapk-dep-v1
@@ -63,6 +64,7 @@ tasks:
                 - project:mobile:fenix:releng:googleplay:product:fenix:dep
                 - queue:route:index.project.mobile.fenix.staging-signed-nightly.*
                 - secrets:get:garbage/staging/project/mobile/fenix/sentry
+                - secrets:get:garbage/staging/project/mobile/fenix/leanplum
         payload:
           maxRunTime: 600   # Decision should remain fast enough to schedule a handful of tasks
           image: mozillamobile/fenix:1.3
