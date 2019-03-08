@@ -301,7 +301,7 @@ void PeerConnectionMedia::UpdateTransport(const JsepTransceiver& aTransceiver,
       NS_DISPATCH_NORMAL);
 
   for (auto& candidate : candidates) {
-    AddIceCandidate("candidate:" + candidate, transport.mTransportId);
+    AddIceCandidate("candidate:" + candidate, transport.mTransportId, ufrag);
   }
 }
 
@@ -388,12 +388,13 @@ void PeerConnectionMedia::ConnectSignals() {
 }
 
 void PeerConnectionMedia::AddIceCandidate(const std::string& aCandidate,
-                                          const std::string& aTransportId) {
+                                          const std::string& aTransportId,
+                                          const std::string& aUfrag) {
   MOZ_ASSERT(!aTransportId.empty());
   RUN_ON_THREAD(
       GetSTSThread(),
       WrapRunnable(mTransportHandler, &MediaTransportHandler::AddIceCandidate,
-                   aTransportId, aCandidate),
+                   aTransportId, aCandidate, aUfrag),
       NS_DISPATCH_NORMAL);
 }
 
@@ -682,7 +683,8 @@ void PeerConnectionMedia::OnCandidateFound_m(
                                  aCandidateInfo.mDefaultHostRtcp,
                                  aCandidateInfo.mDefaultPortRtcp, aTransportId);
   }
-  SignalCandidate(aCandidateInfo.mCandidate, aTransportId);
+  SignalCandidate(aCandidateInfo.mCandidate, aTransportId,
+                  aCandidateInfo.mUfrag);
 }
 
 void PeerConnectionMedia::AlpnNegotiated_s(const std::string& aAlpn) {

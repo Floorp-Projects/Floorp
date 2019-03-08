@@ -46,7 +46,8 @@ class MediaTransportParent : public dom::PMediaTransportParent {
   mozilla::ipc::IPCResult RecvSendPacket(const string& transportId,
                                          const MediaPacket& packet);
   mozilla::ipc::IPCResult RecvAddIceCandidate(const string& transportId,
-                                              const string& candidate);
+                                              const string& candidate,
+                                              const string& ufrag);
   mozilla::ipc::IPCResult RecvUpdateNetworkState(const bool& online);
   mozilla::ipc::IPCResult RecvGetIceStats(
       const string& transportId, const double& now,

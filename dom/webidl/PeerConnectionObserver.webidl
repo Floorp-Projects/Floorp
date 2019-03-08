@@ -22,7 +22,7 @@ interface PeerConnectionObserver
   void onSetRemoteDescriptionError(unsigned long name, DOMString message);
   void onAddIceCandidateSuccess();
   void onAddIceCandidateError(unsigned long name, DOMString message);
-  void onIceCandidate(unsigned short level, DOMString mid, DOMString candidate);
+  void onIceCandidate(unsigned short level, DOMString mid, DOMString candidate, DOMString ufrag);
 
   /* Stats callbacks */
   void onGetStatsSuccess(optional RTCStatsReportInternal report);
