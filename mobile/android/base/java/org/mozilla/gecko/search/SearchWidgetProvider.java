@@ -17,6 +17,7 @@ import android.widget.RemoteViews;
 
 import org.mozilla.gecko.LauncherActivity;
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.mma.MmaDelegate;
 
 public final class SearchWidgetProvider extends AppWidgetProvider {
     private static final int VOICE_INTENT_RC = 1;
@@ -41,6 +42,11 @@ public final class SearchWidgetProvider extends AppWidgetProvider {
 
             appWidgetManager.updateAppWidget(widgetId, remoteViews);
         }
+    }
+
+    @Override
+    public void onEnabled(Context context) {
+        MmaDelegate.track(MmaDelegate.ADDED_SEARCH_WIDGET);
     }
 
     @Override

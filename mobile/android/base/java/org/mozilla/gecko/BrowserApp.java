@@ -188,6 +188,7 @@ import static org.mozilla.gecko.Tabs.LOADURL_EXTERNAL;
 import static org.mozilla.gecko.Tabs.LOADURL_PINNED;
 import static org.mozilla.gecko.Tabs.LOADURL_START_EDITING;
 import static org.mozilla.gecko.Tabs.TabEvents.LOADED;
+import static org.mozilla.gecko.mma.MmaDelegate.INTERACT_WITH_SEARCH_WIDGET_URL_AREA;
 import static org.mozilla.gecko.mma.MmaDelegate.NEW_TAB;
 import static org.mozilla.gecko.search.SearchWidgetProvider.INPUT_TYPE_KEY;
 import static org.mozilla.gecko.util.JavaUtil.getBundleSizeInBytes;
@@ -891,6 +892,8 @@ public class BrowserApp extends GeckoApp
         if (input == null) {
             return false;
         }
+
+        MmaDelegate.track(INTERACT_WITH_SEARCH_WIDGET_URL_AREA);
 
         switch (input) {
             case TEXT:
