@@ -136,13 +136,7 @@ add_task(async function() {
 
       is(labels.length, 3, "There should be 3 param values displayed in this tabpanel.");
 
-      // Collect code lines and combine into one text for checking
-      let text = "";
-      const lines = [...document.querySelectorAll(".CodeMirror-line")];
-
-      lines.forEach((line) => {
-        text += line.textContent + "\n";
-      });
+      const text = getCodeMirrorValue(monitor);
 
       ok(text.includes("Content-Disposition: form-data; name=\"text\""),
         "The text shown in the source editor is incorrect (1.1).");

@@ -768,6 +768,14 @@ async function performRequests(monitor, tab, count) {
 }
 
 /**
+ * Helper function for retrieving `.CodeMirror` content
+ */
+function getCodeMirrorValue(monitor) {
+  const document = monitor.panelWin.document;
+  return document.querySelector(".CodeMirror").CodeMirror.getValue();
+}
+
+/**
  * Wait for lazy fields to be loaded in a request.
  *
  * @param Object Store redux store containing request list.

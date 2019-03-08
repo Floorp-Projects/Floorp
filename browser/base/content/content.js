@@ -16,7 +16,7 @@ var global = this;
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   ContentMetaHandler: "resource:///modules/ContentMetaHandler.jsm",
-  LoginFormFactory: "resource://gre/modules/LoginManagerContent.jsm",
+  LoginFormFactory: "resource://gre/modules/LoginFormFactory.jsm",
   InsecurePasswordUtils: "resource://gre/modules/InsecurePasswordUtils.jsm",
   ContextMenuChild: "resource:///actors/ContextMenuChild.jsm",
 });

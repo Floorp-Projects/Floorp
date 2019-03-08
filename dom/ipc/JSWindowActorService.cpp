@@ -162,8 +162,8 @@ JSWindowActorProtocol::FromIPC(const JSWindowActorInfo& aInfo) {
     event->mFlags.mCapture = ipc.capture();
     event->mFlags.mInSystemGroup = ipc.systemGroup();
     event->mFlags.mAllowUntrustedEvents = ipc.allowUntrusted();
-    if (ipc.hasPassive()) {
-      event->mPassive.Construct(ipc.passive());
+    if (ipc.passive()) {
+      event->mPassive.Construct(ipc.passive().value());
     }
   }
 
@@ -186,9 +186,8 @@ JSWindowActorInfo JSWindowActorProtocol::ToIPC() {
     ipc->capture() = event.mFlags.mCapture;
     ipc->systemGroup() = event.mFlags.mInSystemGroup;
     ipc->allowUntrusted() = event.mFlags.mAllowUntrustedEvents;
-    ipc->hasPassive() = event.mPassive.WasPassed();
     if (event.mPassive.WasPassed()) {
-      ipc->passive() = event.mPassive.Value();
+      ipc->passive() = Some(event.mPassive.Value());
     }
   }
 
@@ -204,6 +203,7 @@ JSWindowActorProtocol::FromWebIDLOptions(const nsAString& aName,
 
   RefPtr<JSWindowActorProtocol> proto = new JSWindowActorProtocol(aName);
   proto->mAllFrames = aOptions.mAllFrames;
+  proto->mIncludeChrome = aOptions.mIncludeChrome;
 
   proto->mParent.mModuleURI = aOptions.mParent.mModuleURI;
   proto->mChild.mModuleURI = aOptions.mChild.mModuleURI;
