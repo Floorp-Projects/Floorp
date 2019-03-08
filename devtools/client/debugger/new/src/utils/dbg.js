@@ -46,12 +46,24 @@ function getCM() {
   return cm && cm.CodeMirror;
 }
 
-function _formatColumnBreapoints(dbg: Object) {
-  console.log(
-    dbg.selectors.formatColumnBreakpoints(
-      dbg.selectors.visibleColumnBreakpoints()
-    )
+function formatMappedLocation(mappedLocation) {
+  const { location, generatedLocation } = mappedLocation;
+  return {
+    original: `(${location.line}, ${location.column})`,
+    generated: `(${generatedLocation.line}, ${generatedLocation.column})`
+  };
+}
+
+function formatMappedLocations(locations) {
+  return console.table(locations.map(loc => formatMappedLocation(loc)));
+}
+
+function formatSelectedColumnBreakpoints(dbg) {
+  const positions = dbg.selectors.getBreakpointPositionsForSource(
+    dbg.selectors.getSelectedSource().id
   );
+
+  return formatMappedLocations(positions);
 }
 
 export function setupHelper(obj: Object) {
@@ -73,7 +85,9 @@ export function setupHelper(obj: Object) {
       dumpThread: () => sendPacketToThread(dbg, { type: "dumpThread" })
     },
     formatters: {
-      visibleColumnBreakpoints: () => _formatColumnBreapoints(dbg)
+      mappedLocations: locations => formatMappedLocations(locations),
+      mappedLocation: location => formatMappedLocation(location),
+      selectedColumnBreakpoints: () => formatSelectedColumnBreakpoints(dbg)
     },
     _telemetry: {
       events: {}
