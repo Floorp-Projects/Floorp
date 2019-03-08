@@ -60,7 +60,7 @@ add_task(async function() {
   function testResponse(type) {
     switch (type) {
       case "br": {
-        is(document.querySelector(".CodeMirror-line").textContent, "X".repeat(64),
+        is(getCodeMirrorValue(monitor), "X".repeat(64),
           "The text shown in the source editor is incorrect for the brotli request.");
         break;
       }

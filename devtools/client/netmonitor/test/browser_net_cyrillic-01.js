@@ -49,9 +49,8 @@ add_task(async function() {
   EventUtils.sendMouseEvent({ type: "click" },
     document.querySelector("#response-tab"));
   await wait;
-  const text = document.querySelector(".CodeMirror-line").textContent;
 
-  ok(text.includes("\u0411\u0440\u0430\u0442\u0430\u043d"),
+  ok(getCodeMirrorValue(monitor).includes("\u0411\u0440\u0430\u0442\u0430\u043d"),
     "The text shown in the source editor is correct.");
 
   return teardown(monitor);

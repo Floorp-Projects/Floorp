@@ -55,9 +55,8 @@ add_task(async function() {
     document.querySelector("#response-tab"));
   await wait;
 
-  const text = document.querySelector(".CodeMirror-line").textContent;
-
-  ok(text.match(/^<p>/), "The text shown in the source editor is incorrect.");
+  ok(getCodeMirrorValue(monitor).match(/^<p>/),
+    "The text shown in the source editor is incorrect.");
 
   await teardown(monitor);
 

@@ -200,8 +200,7 @@
       </rows>
     </grid>
     <separator class="thin"/>
-    <hbox flex="1">
-      <spacer flex="1"/>
+    <hbox pack="end">
       <hbox align="center" pack="end">
         <label data-l10n-id="fonts-minsize" control="minSize"/>
         <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
