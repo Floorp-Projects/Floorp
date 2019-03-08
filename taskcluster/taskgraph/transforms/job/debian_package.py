@@ -159,14 +159,14 @@ def docker_worker_debian_package(config, job, taskdesc):
         'apt-get dist-upgrade && '
         'cd /tmp && '
         # Get, validate and extract the package source.
-        'dget -d -u {src_url} && '
+        '(dget -d -u {src_url} || exit 100) && '
         'echo "{src_sha256}  {src_file}" | sha256sum -c && '
         '{unpack} && '
         'cd {package} && '
         # Optionally apply patch and/or pre-build command.
         '{adjust}'
         # Install the necessary build dependencies.
-        'mk-build-deps -i -r debian/control -t \'{resolver}\' && '
+        '(mk-build-deps -i -r debian/control -t \'{resolver}\' || exit 100) && '
         # Build the package
         'DEB_BUILD_OPTIONS="parallel=$(nproc) nocheck" dpkg-buildpackage && '
         # Copy the artifacts

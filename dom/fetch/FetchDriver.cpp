@@ -323,12 +323,14 @@ NS_IMPL_ISUPPORTS(FetchDriver, nsIStreamListener, nsIChannelEventSink,
 FetchDriver::FetchDriver(InternalRequest* aRequest, nsIPrincipal* aPrincipal,
                          nsILoadGroup* aLoadGroup,
                          nsIEventTarget* aMainThreadEventTarget,
+                         nsICookieSettings* aCookieSettings,
                          PerformanceStorage* aPerformanceStorage,
                          bool aIsTrackingFetch)
     : mPrincipal(aPrincipal),
       mLoadGroup(aLoadGroup),
       mRequest(aRequest),
       mMainThreadEventTarget(aMainThreadEventTarget),
+      mCookieSettings(aCookieSettings),
       mPerformanceStorage(aPerformanceStorage),
       mNeedToObserveOnDataAvailable(false),
       mIsTrackingFetch(aIsTrackingFetch),
@@ -509,22 +511,24 @@ nsresult FetchDriver::HttpFetch(
       nsIRequest::LOAD_BACKGROUND | bypassFlag | nsIChannel::LOAD_CLASSIFY_URI;
   if (mDocument) {
     MOZ_ASSERT(mDocument->NodePrincipal() == mPrincipal);
+    MOZ_ASSERT(mDocument->CookieSettings() == mCookieSettings);
     rv = NS_NewChannel(getter_AddRefs(chan), uri, mDocument, secFlags,
                        mRequest->ContentPolicyType(),
                        nullptr,             /* aPerformanceStorage */
                        mLoadGroup, nullptr, /* aCallbacks */
                        loadFlags, ios);
   } else if (mClientInfo.isSome()) {
+    rv = NS_NewChannel(getter_AddRefs(chan), uri, mPrincipal, mClientInfo.ref(),
+                       mController, secFlags, mRequest->ContentPolicyType(),
+                       mCookieSettings, mPerformanceStorage, mLoadGroup,
+                       nullptr, /* aCallbacks */
+                       loadFlags, ios);
+  } else {
     rv =
-        NS_NewChannel(getter_AddRefs(chan), uri, mPrincipal, mClientInfo.ref(),
-                      mController, secFlags, mRequest->ContentPolicyType(),
+        NS_NewChannel(getter_AddRefs(chan), uri, mPrincipal, secFlags,
+                      mRequest->ContentPolicyType(), mCookieSettings,
                       mPerformanceStorage, mLoadGroup, nullptr, /* aCallbacks */
                       loadFlags, ios);
-  } else {
-    rv = NS_NewChannel(getter_AddRefs(chan), uri, mPrincipal, secFlags,
-                       mRequest->ContentPolicyType(), mPerformanceStorage,
-                       mLoadGroup, nullptr, /* aCallbacks */
-                       loadFlags, ios);
   }
   NS_ENSURE_SUCCESS(rv, rv);
 

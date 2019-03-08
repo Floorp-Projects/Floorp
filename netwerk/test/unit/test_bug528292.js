@@ -55,6 +55,8 @@ function run_test()
     // Disable third-party cookies in general.
     Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch).
       setIntPref("network.cookie.cookieBehavior", 1);
+    Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch).
+      setBoolPref("network.cookieSettings.unblocked_for_testing", true);
   }
 
   var ioService = Cc["@mozilla.org/network/io-service;1"].

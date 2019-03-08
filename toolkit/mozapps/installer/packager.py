@@ -318,7 +318,14 @@ def main():
                     copier.add(os.path.basename(pdbname), File(pdbname))
 
     # Setup preloading
-    if args.jarlog and os.path.exists(args.jarlog):
+    if args.jarlog:
+        if not os.path.exists(args.jarlog):
+            raise Exception('Cannot find jar log: %s' % args.jarlog)
+        omnijars = []
+        if isinstance(formatter, OmniJarFormatter):
+            omnijars = [mozpath.join(base, buildconfig.substs['OMNIJAR_NAME'])
+                        for base in sink.packager.get_bases(addons=False)]
+
         from mozpack.mozjar import JarLog
         log = JarLog(args.jarlog)
         for p, f in copier:
@@ -326,6 +333,8 @@ def main():
                 continue
             if p in log:
                 f.preload(log[p])
+            elif p in omnijars:
+                raise Exception('No jar log data for %s' % p)
 
     copier.copy(args.destination)
     generate_precomplete(os.path.normpath(os.path.join(args.destination,
