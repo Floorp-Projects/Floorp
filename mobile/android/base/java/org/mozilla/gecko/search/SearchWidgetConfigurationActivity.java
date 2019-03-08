@@ -22,7 +22,7 @@ public final class SearchWidgetConfigurationActivity extends AppCompatActivity {
             final int widgetId = getIntent().getExtras().getInt(AppWidgetManager.EXTRA_APPWIDGET_ID);
             final AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(this);
 
-            RemoteViews views = new RemoteViews(getPackageName(), R.layout.widget_search_5_col_layout);
+            RemoteViews views = new RemoteViews(getPackageName(), R.layout.widget_search_default_col_layout);
             appWidgetManager.updateAppWidget(widgetId, views);
 
             final Intent resultValue = new Intent();

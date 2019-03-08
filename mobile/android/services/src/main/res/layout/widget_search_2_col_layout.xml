@@ -6,9 +6,9 @@
 
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/layout"
-    android:layout_width="@dimen/search_widget_2_col_width"
+    android:layout_width="match_parent"
     android:layout_height="@dimen/search_widget_height"
-    android:background="@color/cardview_light_background"
+    android:background="@drawable/search_widget_bg"
     android:baselineAligned="false">
 
     <ImageView
@@ -27,11 +27,11 @@
         android:id="@+id/iv_search_voice"
         android:layout_width="@dimen/search_widget_logo_width"
         android:layout_height="@dimen/search_widget_logo_height"
+        android:layout_alignParentRight="true"
         android:layout_marginLeft="@dimen/search_widget_logo_margin"
         android:layout_marginTop="@dimen/search_widget_logo_margin"
         android:layout_marginRight="@dimen/search_widget_logo_margin"
         android:layout_marginBottom="@dimen/search_widget_logo_margin"
-        android:layout_toRightOf="@+id/iv_logo"
         android:contentDescription="@string/url_bar_mic_text"
         android:src="@drawable/ic_mic" />
 

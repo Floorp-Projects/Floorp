@@ -35,7 +35,7 @@ public final class SearchWidgetProvider extends AppWidgetProvider {
         int[] allWidgetIds = appWidgetManager.getAppWidgetIds(searchWidgetName);
 
         for (int widgetId : allWidgetIds) {
-            final RemoteViews remoteViews = new RemoteViews(context.getPackageName(), R.layout.widget_search_5_col_layout);
+            final RemoteViews remoteViews = new RemoteViews(context.getPackageName(), R.layout.widget_search_default_col_layout);
 
             setVoicePendingIntent(context, remoteViews);
             setTextPendingIntent(context, remoteViews);
@@ -72,11 +72,8 @@ public final class SearchWidgetProvider extends AppWidgetProvider {
             case 3:
                 remoteViews = new RemoteViews(context.getPackageName(), R.layout.widget_search_3_col_layout);
                 break;
-            case 4:
-                remoteViews = new RemoteViews(context.getPackageName(), R.layout.widget_search_4_col_layout);
-                break;
             default:
-                remoteViews = new RemoteViews(context.getPackageName(), R.layout.widget_search_5_col_layout);
+                remoteViews = new RemoteViews(context.getPackageName(), R.layout.widget_search_default_col_layout);
                 break;
         }
 
@@ -93,13 +90,18 @@ public final class SearchWidgetProvider extends AppWidgetProvider {
      * @return Size in number of cells.
      */
     private static int getCellsForSize(int size) {
-        int n = 0;
-
-        while (70 * n - 30 < size) {
-            n++;
+        // Android offers us confidence in selecting the apropriate layout depending on the widget
+        // size by guaranteeing that the minimum size of a widget is `70 * numCells - 30`
+        // https://developer.android.com/guide/practices/ui_guidelines/widget_design#anatomy_determining_size
+        if (size < 110) {
+            return 1;
+        } else if (size < 180) {
+            return 2;
+        } else if (size < 250) {
+            return 3;
+        } else {
+            return 5;
         }
-
-        return n - 1;
     }
 
     private static Intent makeSearchIntent(Context context, InputType inputType) {

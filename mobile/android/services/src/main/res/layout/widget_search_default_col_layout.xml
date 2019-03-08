@@ -6,9 +6,10 @@
 
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/layout"
-    android:layout_width="@dimen/search_widget_5_col_width"
+    android:layout_width="match_parent"
     android:layout_height="@dimen/search_widget_height"
-    android:background="@color/cardview_light_background"
+    android:layout_margin="8dp"
+    android:background="@drawable/search_widget_bg"
     android:baselineAligned="false">
 
     <ImageView
@@ -26,27 +27,31 @@
     <TextView
         android:id="@+id/tv_search_text"
         style="@style/TextAppearance.SearchSuggestion"
-        android:layout_width="@dimen/search_widget_5_col_text_width"
+        android:layout_width="0dp"
         android:layout_height="@dimen/search_widget_text_height"
         android:layout_gravity="center"
         android:layout_marginTop="@dimen/search_widget_text_margin"
         android:layout_marginBottom="@dimen/search_widget_text_margin"
+        android:layout_toLeftOf="@id/iv_search_voice"
         android:layout_toRightOf="@+id/iv_logo"
         android:contentDescription="@string/search_widget_default_text"
+        android:ellipsize="end"
         android:gravity="left|center_vertical"
-        android:text="@string/search_widget_default_text" />
+        android:maxLines="1"
+        android:text="@string/search_widget_default_text"
+        android:textColor="@color/url_bar_urltext" />
 
     <ImageView
         android:id="@+id/iv_search_voice"
         android:layout_width="@dimen/search_widget_logo_width"
         android:layout_height="@dimen/search_widget_logo_height"
+        android:layout_alignParentRight="true"
         android:layout_marginLeft="@dimen/search_widget_logo_margin"
         android:layout_marginTop="@dimen/search_widget_logo_margin"
         android:layout_marginRight="@dimen/search_widget_logo_margin"
         android:layout_marginBottom="@dimen/search_widget_logo_margin"
-        android:layout_toRightOf="@+id/tv_search_text"
         android:contentDescription="@string/url_bar_mic_text"
-        android:src="@drawable/ic_mic" />
+        android:src="@drawable/ic_mic_nm" />
 
 </RelativeLayout>
 
