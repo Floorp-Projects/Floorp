@@ -605,6 +605,9 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   MOZ_MUST_USE bool emitPropertyList(ListNode* obj, PropertyEmitter& pe,
                                      PropListType type);
 
+  FieldInitializers setupFieldInitializers(ListNode* classMembers);
+  MOZ_MUST_USE bool emitCreateFieldInitializers(ListNode* obj);
+
   // To catch accidental misuse, emitUint16Operand/emit3 assert that they are
   // not used to unconditionally emit JSOP_GETLOCAL. Variable access should
   // instead be emitted using EmitVarOp. In special cases, when the caller

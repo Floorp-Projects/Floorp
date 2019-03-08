@@ -527,9 +527,9 @@ class LexicalEnvironmentObject : public EnvironmentObject {
                                           Handle<LexicalScope*> scope,
                                           HandleObject enclosing,
                                           gc::InitialHeap heap);
-  static LexicalEnvironmentObject* create(JSContext* cx,
-                                          Handle<LexicalScope*> scope,
-                                          AbstractFramePtr frame);
+  static LexicalEnvironmentObject* createForFrame(JSContext* cx,
+                                                  Handle<LexicalScope*> scope,
+                                                  AbstractFramePtr frame);
   static LexicalEnvironmentObject* createGlobal(JSContext* cx,
                                                 Handle<GlobalObject*> global);
   static LexicalEnvironmentObject* createNonSyntactic(JSContext* cx,

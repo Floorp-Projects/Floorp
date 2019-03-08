@@ -4,14 +4,21 @@
 "use strict";
 
 /**
- * Tests that last visible column can't be hidden
+ * Tests that last visible column can't be hidden. Note that the column
+ * header is visible only if there are requests in the list.
  */
 
 add_task(async function() {
-  const { monitor } = await initNetMonitor(SIMPLE_URL);
+  const { monitor, tab } = await initNetMonitor(SIMPLE_URL);
   info("Starting test... ");
 
-  const { document, store, parent } = monitor.panelWin;
+  const { document, store, parent, windowRequire } = monitor.panelWin;
+  const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
+  store.dispatch(Actions.batchEnable(false));
+
+  const wait = waitForNetworkEvents(monitor, 1);
+  tab.linkedBrowser.reload();
+  await wait;
 
   const initialColumns = store.getState().ui.columns;
   for (const column in initialColumns) {

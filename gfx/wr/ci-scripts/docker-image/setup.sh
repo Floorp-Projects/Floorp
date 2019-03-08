@@ -23,6 +23,7 @@ apt-get install -y \
     libfontconfig1-dev \
     libgl1-mesa-dev \
     libx11-dev \
+    openjdk-8-jdk \
     pkg-config \
     python \
     python-mako \

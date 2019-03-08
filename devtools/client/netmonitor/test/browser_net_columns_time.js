@@ -4,7 +4,8 @@
 "use strict";
 
 /**
- * Tests for timings columns.
+ * Tests for timings columns. Note that the column
+ * header is visible only if there are requests in the list.
  */
 add_task(async function() {
   const { tab, monitor } = await initNetMonitor(SIMPLE_URL);
@@ -15,6 +16,10 @@ add_task(async function() {
   store.dispatch(Actions.batchEnable(false));
 
   const visibleColumns = store.getState().ui.columns;
+
+  const wait = waitForNetworkEvents(monitor, 1);
+  tab.linkedBrowser.reload();
+  await wait;
 
   // Hide the waterfall column to make sure timing data are fetched
   // by the other timing columns ("endTime", "responseTime", "duration",

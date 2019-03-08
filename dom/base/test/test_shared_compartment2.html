@@ -30,7 +30,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1530608
     ok(!isSameCompartment(window, frame.contentWindow),
        "Cross-origin iframe must be cross-compartment");
 
-    todo(isSameCompartment(window, innerWin),
+    ok(isSameCompartment(window, innerWin),
        "Same-origin inner iframe must be same-compartment");
 
     SimpleTest.finish();

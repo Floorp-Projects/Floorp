@@ -15,6 +15,7 @@ const {
   SELECT_DETAILS_PANEL_TAB,
   TOGGLE_COLUMN,
   WATERFALL_RESIZE,
+  SET_COLUMNS_WIDTH,
 } = require("../constants");
 
 const { getDisplayedRequests } = require("../selectors/index");
@@ -138,6 +139,18 @@ function toggleColumn(column) {
 }
 
 /**
+ * Set width of multiple columns
+ *
+ * @param {array} widths - array of pairs {name, width}
+ */
+function setColumnsWidth(widths) {
+  return {
+    type: SET_COLUMNS_WIDTH,
+    widths,
+  };
+}
+
+/**
  * Toggle network details panel.
  */
 function toggleNetworkDetails() {
@@ -179,6 +192,7 @@ module.exports = {
   resizeWaterfall,
   selectDetailsPanelTab,
   toggleColumn,
+  setColumnsWidth,
   toggleNetworkDetails,
   togglePersistentLogs,
   toggleBrowserCache,
