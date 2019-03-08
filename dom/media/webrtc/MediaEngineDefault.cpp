@@ -552,7 +552,8 @@ void MediaEngineDefault::EnumerateDevices(
       devicesForThisWindow->AppendElement(newSource);
       aDevices->AppendElement(MakeRefPtr<MediaDevice>(
           newSource, newSource->GetName(),
-          NS_ConvertUTF8toUTF16(newSource->GetUUID()), NS_LITERAL_STRING("")));
+          NS_ConvertUTF8toUTF16(newSource->GetUUID()),
+          NS_LITERAL_STRING("GroupID"), NS_LITERAL_STRING("")));
       return;
     }
     case dom::MediaSourceEnum::Microphone: {
@@ -563,7 +564,8 @@ void MediaEngineDefault::EnumerateDevices(
         if (source->IsAvailable()) {
           aDevices->AppendElement(MakeRefPtr<MediaDevice>(
               source, source->GetName(),
-              NS_ConvertUTF8toUTF16(source->GetUUID()), NS_LITERAL_STRING("")));
+              NS_ConvertUTF8toUTF16(source->GetUUID()),
+              NS_LITERAL_STRING("GroupID"), NS_LITERAL_STRING("")));
         }
       }
 
@@ -571,10 +573,10 @@ void MediaEngineDefault::EnumerateDevices(
         // All streams are currently busy, just make a new one.
         auto newSource = MakeRefPtr<MediaEngineDefaultAudioSource>();
         devicesForThisWindow->AppendElement(newSource);
-        aDevices->AppendElement(
-            MakeRefPtr<MediaDevice>(newSource, newSource->GetName(),
-                                    NS_ConvertUTF8toUTF16(newSource->GetUUID()),
-                                    NS_LITERAL_STRING("")));
+        aDevices->AppendElement(MakeRefPtr<MediaDevice>(
+            newSource, newSource->GetName(),
+            NS_ConvertUTF8toUTF16(newSource->GetUUID()),
+            NS_LITERAL_STRING("GroupID"), NS_LITERAL_STRING("")));
       }
       return;
     }
