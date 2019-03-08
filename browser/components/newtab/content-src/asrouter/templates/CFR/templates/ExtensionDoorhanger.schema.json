@@ -15,6 +15,10 @@
     }
   },
   "properties": {
+    "category": {
+      "type": "string",
+      "description": "Attribute used for different groups of messages from the same provider"
+    },
     "bucket_id": {
       "type": "string",
       "description": "A bucket identifier for the addon. This is used in order to anonymize telemetry for history-sensitive targeting."
@@ -166,6 +170,27 @@
         }
       ]
     },
+    "descriptionDetails": {
+      "description": "Additional information and steps on how to use",
+      "type": "object",
+      "properties": {
+        "steps": {
+          "description": "Array of messages or string_ids",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "string_id": {
+                "type": "string",
+                "description": "Id of string to localized addon description"
+              }
+            },
+            "required": ["string_id"]
+          }
+        }
+      },
+      "required": ["steps"]
+    },
     "buttons": {
       "description": "The label and functionality for the buttons in the pop-over.",
       "type": "object",
@@ -299,5 +324,5 @@
     }
   },
   "additionalProperties": false,
-  "required": ["bucket_id", "notification_text", "heading_text", "text", "buttons"]
+  "required": ["category", "bucket_id", "notification_text", "heading_text", "text", "buttons"]
 }

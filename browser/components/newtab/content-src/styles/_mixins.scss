@@ -15,3 +15,29 @@
   max-height: 1em * $line-count * $line-height / $font-size;
   overflow: hidden;
 }
+
+@mixin dark-theme-only {
+  [lwt-newtab-brighttext]:not(.force-light-theme) & {
+    @content;
+  }
+}
+
+@mixin ds-border-top {
+  @content;
+
+  @include dark-theme-only {
+    border-top: 1px solid $grey-60;
+  }
+
+  border-top: 1px solid $grey-30;
+}
+
+@mixin ds-border-bottom {
+  @content;
+
+  @include dark-theme-only {
+    border-bottom: 1px solid $grey-60;
+  }
+
+  border-bottom: 1px solid $grey-30;
+}

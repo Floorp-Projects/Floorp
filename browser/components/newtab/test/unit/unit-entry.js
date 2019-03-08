@@ -34,6 +34,7 @@ const TEST_GLOBAL = {
   },
   AppConstants: {MOZILLA_OFFICIAL: true},
   UpdateUtils: {getUpdateChannel() {}},
+  BrowserWindowTracker: {getTopWindow() {}},
   ChromeUtils: {
     defineModuleGetter() {},
     generateQI() { return {}; },

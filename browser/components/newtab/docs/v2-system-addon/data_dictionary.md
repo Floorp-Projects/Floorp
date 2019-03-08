@@ -267,5 +267,7 @@ This encoding mapping was defined in `system-addon/lib/TelemetryFeed.jsm`
 | `showHighlights` | 8 |
 | `showSnippets`   | 16 |
 | `showSponsored`  | 32 |
+| `showCFRAddons`  | 64 |
+| `showCFRFeatures` | 128 |
 
 Each item above could be combined with other items through bitwise OR operation

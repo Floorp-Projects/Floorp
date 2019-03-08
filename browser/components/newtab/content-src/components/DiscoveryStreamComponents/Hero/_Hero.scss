@@ -54,14 +54,23 @@ $card-header-in-hero-line-height: 20;
     margin: 0 0 12px;
   }
 
+  .ds-hero-item {
+    position: relative;
+  }
+
   // "1/3 width layout" (aka "Mobile First")
   .wrapper {
+    @include ds-border-top;
+    @include ds-border-bottom;
+    @include dark-theme-only {
+      color: $grey-30;
+    }
+
     color: $grey-50;
     display: block;
     margin: 12px 0 16px;
     padding: 16px 0;
-    border-top: $border-secondary;
-    border-bottom: $border-secondary;
+    height: 100%;
 
     @at-root .ds-hero-no-border .wrapper {
       border-top: 0;
@@ -70,10 +79,18 @@ $card-header-in-hero-line-height: 20;
     }
 
     &:hover .meta header {
+      @include dark-theme-only {
+        color: $blue-40;
+      }
+
       color: $blue-60;
     }
 
     &:active .meta header {
+      @include dark-theme-only {
+        color: $blue-40;
+      }
+
       color: $blue-70;
     }
 
@@ -92,16 +109,28 @@ $card-header-in-hero-line-height: 20;
       justify-content: space-between;
 
       header {
+        @include dark-theme-only {
+          color: $white;
+        }
+
         @include limit-visibile-lines(4, 28, 22);
         color: $grey-90;
         margin-bottom: 8px;
       }
 
       .context {
+        @include dark-theme-only {
+          color: $teal-10;
+        }
+
         color: $teal-70;
       }
 
       .source {
+        @include dark-theme-only {
+          color: $teal-10;
+        }
+
         font-size: 13px;
         color: $teal-80;
         margin-bottom: 0;
@@ -156,11 +185,11 @@ $card-header-in-hero-line-height: 20;
     grid-column-gap: 24px;
 
     &.ds-hero-border {
-      border-top: $border-secondary;
+      @include ds-border-top;
       padding: 20px 0;
 
       .ds-card:nth-child(-n+2) {
-        border-bottom: $border-secondary;
+        @include ds-border-bottom;
         margin-bottom: 20px;
       }
     }
@@ -203,8 +232,30 @@ $card-header-in-hero-line-height: 20;
       grid-template-columns: repeat(2, 1fr);
       grid-column-gap: 24px;
 
-      .title {
-        @include limit-visibile-lines(3, 20, 14);
+      .ds-card {
+        &:hover {
+          @include dark-theme-only {
+            background: none;
+
+            .title {
+              color: $blue-40;
+            }
+          }
+        }
+
+        &:active .title {
+          @include dark-theme-only {
+            color: $blue-50;
+          }
+        }
+
+        .title {
+          @include dark-theme-only {
+            color: $white;
+          }
+
+          @include limit-visibile-lines(3, 20, 14);
+        }
       }
     }
   }

@@ -48,6 +48,7 @@ export class _LinkMenu extends React.PureComponent {
   render() {
     return (<ContextMenu
       onUpdate={this.props.onUpdate}
+      onShow={this.props.onShow}
       options={this.getOptions()} />);
   }
 }
