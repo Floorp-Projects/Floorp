@@ -7128,11 +7128,11 @@ bool BytecodeEmitter::emitSelfHostedResumeGenerator(BinaryNode* callNode) {
 
   ParseNode* kindNode = valNode->pn_next;
   MOZ_ASSERT(kindNode->isKind(ParseNodeKind::StringExpr));
-  uint16_t operand = AbstractGeneratorObject::getResumeKind(
+  uint8_t operand = AbstractGeneratorObject::getResumeKind(
       cx, kindNode->as<NameNode>().atom());
   MOZ_ASSERT(!kindNode->pn_next);
 
-  if (!emitCall(JSOP_RESUME, operand)) {
+  if (!emit2(JSOP_RESUME, operand)) {
     return false;
   }
 
