@@ -1237,8 +1237,13 @@ static bool intrinsic_MoveTypedArrayElements(JSContext* cx, unsigned argc,
 #endif
 
   SharedMem<uint8_t*> data = tarray->dataPointerEither().cast<uint8_t*>();
-  jit::AtomicOperations::memmoveSafeWhenRacy(data + byteDest, data + byteSrc,
-                                             byteSize);
+  if (tarray->isSharedMemory()) {
+    jit::AtomicOperations::memmoveSafeWhenRacy(data + byteDest, data + byteSrc,
+                                               byteSize);
+  } else {
+    memmove(data.unwrapUnshared() + byteDest, data.unwrapUnshared() + byteSrc,
+            byteSize);
+  }
 
   args.rval().setUndefined();
   return true;
@@ -1703,8 +1708,14 @@ static bool intrinsic_TypedArrayBitwiseSlice(JSContext* cx, unsigned argc,
   // crafted typed array. It won't happen in normal code and hence doesn't
   // need to be optimized.
   if (!TypedArrayObject::sameBuffer(source, unsafeTypedArrayCrossCompartment)) {
-    jit::AtomicOperations::memcpySafeWhenRacy(unsafeTargetDataCrossCompartment,
-                                              sourceData, byteLength);
+    if (source->isSharedMemory() ||
+        unsafeTypedArrayCrossCompartment->isSharedMemory()) {
+      jit::AtomicOperations::memcpySafeWhenRacy(
+          unsafeTargetDataCrossCompartment, sourceData, byteLength);
+    } else {
+      memcpy(unsafeTargetDataCrossCompartment.unwrapUnshared(),
+             sourceData.unwrapUnshared(), byteLength);
+    }
   } else {
     using namespace jit;
 
