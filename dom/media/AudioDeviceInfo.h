@@ -32,6 +32,7 @@ class AudioDeviceInfo final : public nsIAudioDeviceInfo {
   uint32_t MaxChannels() const;
   uint32_t Type() const;
   uint32_t State() const;
+  const nsString& GroupID() const;
   bool Preferred() const;
 
  private:
