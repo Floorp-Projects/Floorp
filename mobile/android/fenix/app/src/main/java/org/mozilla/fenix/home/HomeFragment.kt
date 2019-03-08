@@ -85,6 +85,7 @@ class HomeFragment : Fragment() {
         return view
     }
 
+    @SuppressWarnings("LongMethod")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -160,7 +161,10 @@ class HomeFragment : Fragment() {
             override fun onTransitionCompleted(p0: MotionLayout?, p1: Int) { }
         })
 
-        view.toolbar_wrapper.isPrivateModeEnabled = (activity as HomeActivity).browsingModeManager.isPrivate
+        val isPrivate = (activity as HomeActivity).browsingModeManager.isPrivate
+
+        view.toolbar_wrapper.isPrivateModeEnabled = isPrivate
+        privateBrowsingButton.contentDescription = contentDescriptionForPrivateBrowsingButton(isPrivate)
 
         privateBrowsingButton.setOnClickListener {
             val browsingModeManager = (activity as HomeActivity).browsingModeManager
@@ -251,6 +255,14 @@ class HomeFragment : Fragment() {
 
             Navigation.findNavController(homeLayout).navigate(directions)
         }
+    }
+
+    private fun contentDescriptionForPrivateBrowsingButton(isPrivate: Boolean): String {
+        val resourceId =
+            if (isPrivate) R.string.content_description_disable_private_browsing_button else
+                R.string.content_description_private_browsing_button
+
+        return getString(resourceId)
     }
 
     private fun setupPrivateBrowsingDescription() {

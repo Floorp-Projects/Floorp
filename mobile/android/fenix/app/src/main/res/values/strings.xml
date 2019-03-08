@@ -10,6 +10,8 @@
     <string name="content_description_menu">More options</string>
     <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
     <string name="content_description_private_browsing_button">Enable private browsing</string>
+    <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
+    <string name="content_description_disable_private_browsing_button">Disable private browsing</string>
     <!-- Explanation for how sessions work -->
     <string name="sessions_intro_description">Sessions help you return to the sites you visit often and those you\'ve just discovered. Start browsing and they\'ll begin to appear here. </string>
     <!-- Placeholder text shown in the search bar before a user enters text -->
