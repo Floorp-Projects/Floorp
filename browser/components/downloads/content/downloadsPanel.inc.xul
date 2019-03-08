@@ -115,8 +115,7 @@
                      mousethrough="always"
                      value="&downloadsPanelEmpty.label;"/>
       </vbox>
-      <vbox id="downloadsFooter"
-            class="downloadsPanelFooter">
+      <vbox id="downloadsFooter">
         <stack>
           <hbox id="downloadsSummary"
                 align="center"
@@ -159,7 +158,7 @@
         <description id="downloadsPanel-blockedSubview-details2"/>
       </vbox>
       <hbox id="downloadsPanel-blockedSubview-buttons"
-            class="panel-footer downloadsPanelFooter"
+            class="panel-footer"
             align="stretch">
         <button id="downloadsPanel-blockedSubview-openButton"
                 class="downloadsPanelFooterButton"
