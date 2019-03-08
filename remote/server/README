@@ -1,0 +1,8 @@
+These files provide functionality for serving and responding to HTTP
+requests, and handling WebSocket connections.  For this we rely on
+httpd.js and the chrome-only WebSocket.createServerWebSocket function.
+
+Generally speaking, this is all held together with a piece of string.
+It is a known problem that we do not have a high-quality HTTPD
+implementation in central, and we’d like to move away from using
+any of this code.
