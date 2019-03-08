@@ -6,7 +6,6 @@
 const { ViewHelpers, setNamedTimeout } = require("devtools/client/shared/widgets/view-helpers");
 const { ELLIPSIS } = require("devtools/shared/l10n");
 
-loader.lazyRequireGetter(this, "defer", "devtools/shared/defer");
 loader.lazyRequireGetter(this, "EventEmitter",
   "devtools/shared/event-emitter");
 
@@ -134,80 +133,81 @@ function FlameGraph(parent, sharpness) {
   EventEmitter.decorate(this);
 
   this._parent = parent;
-  this._ready = defer();
 
   this.setTheme();
 
-  AbstractCanvasGraph.createIframe(GRAPH_SRC, parent, iframe => {
-    this._iframe = iframe;
-    this._window = iframe.contentWindow;
-    this._document = iframe.contentDocument;
-    this._pixelRatio = sharpness || this._window.devicePixelRatio;
+  this._ready = new Promise(resolve => {
+    AbstractCanvasGraph.createIframe(GRAPH_SRC, parent, iframe => {
+      this._iframe = iframe;
+      this._window = iframe.contentWindow;
+      this._document = iframe.contentDocument;
+      this._pixelRatio = sharpness || this._window.devicePixelRatio;
 
-    const container =
-      this._container = this._document.getElementById("graph-container");
-    container.className = "flame-graph-widget-container graph-widget-container";
+      const container =
+        this._container = this._document.getElementById("graph-container");
+      container.className = "flame-graph-widget-container graph-widget-container";
 
-    const canvas = this._canvas = this._document.getElementById("graph-canvas");
-    canvas.className = "flame-graph-widget-canvas graph-widget-canvas";
+      const canvas = this._canvas = this._document.getElementById("graph-canvas");
+      canvas.className = "flame-graph-widget-canvas graph-widget-canvas";
 
-    const bounds = parent.getBoundingClientRect();
-    bounds.width = this.fixedWidth || bounds.width;
-    bounds.height = this.fixedHeight || bounds.height;
-    iframe.setAttribute("width", bounds.width);
-    iframe.setAttribute("height", bounds.height);
+      const bounds = parent.getBoundingClientRect();
+      bounds.width = this.fixedWidth || bounds.width;
+      bounds.height = this.fixedHeight || bounds.height;
+      iframe.setAttribute("width", bounds.width);
+      iframe.setAttribute("height", bounds.height);
 
-    this._width = canvas.width = bounds.width * this._pixelRatio;
-    this._height = canvas.height = bounds.height * this._pixelRatio;
-    this._ctx = canvas.getContext("2d");
+      this._width = canvas.width = bounds.width * this._pixelRatio;
+      this._height = canvas.height = bounds.height * this._pixelRatio;
+      this._ctx = canvas.getContext("2d");
 
-    this._bounds = new GraphArea();
-    this._selection = new GraphArea();
-    this._selectionDragger = new GraphAreaDragger();
-    this._verticalOffset = 0;
-    this._verticalOffsetDragger = new GraphAreaDragger(0);
-    this._keyboardZoomAccelerationFactor = 1;
-    this._keyboardPanAccelerationFactor = 1;
+      this._bounds = new GraphArea();
+      this._selection = new GraphArea();
+      this._selectionDragger = new GraphAreaDragger();
+      this._verticalOffset = 0;
+      this._verticalOffsetDragger = new GraphAreaDragger(0);
+      this._keyboardZoomAccelerationFactor = 1;
+      this._keyboardPanAccelerationFactor = 1;
 
-    this._userInputStack = 0;
-    this._keysPressed = [];
+      this._userInputStack = 0;
+      this._keysPressed = [];
 
-    // Calculating text widths is necessary to trim the text inside the blocks
-    // while the scaling changes (e.g. via scrolling). This is very expensive,
-    // so maintain a cache of string contents to text widths.
-    this._textWidthsCache = {};
+      // Calculating text widths is necessary to trim the text inside the blocks
+      // while the scaling changes (e.g. via scrolling). This is very expensive,
+      // so maintain a cache of string contents to text widths.
+      this._textWidthsCache = {};
 
-    const fontSize = FLAME_GRAPH_BLOCK_TEXT_FONT_SIZE * this._pixelRatio;
-    const fontFamily = FLAME_GRAPH_BLOCK_TEXT_FONT_FAMILY;
-    this._ctx.font = fontSize + "px " + fontFamily;
-    this._averageCharWidth = this._calcAverageCharWidth();
-    this._overflowCharWidth = this._getTextWidth(this.overflowChar);
+      const fontSize = FLAME_GRAPH_BLOCK_TEXT_FONT_SIZE * this._pixelRatio;
+      const fontFamily = FLAME_GRAPH_BLOCK_TEXT_FONT_FAMILY;
+      this._ctx.font = fontSize + "px " + fontFamily;
+      this._averageCharWidth = this._calcAverageCharWidth();
+      this._overflowCharWidth = this._getTextWidth(this.overflowChar);
 
-    this._onAnimationFrame = this._onAnimationFrame.bind(this);
-    this._onKeyDown = this._onKeyDown.bind(this);
-    this._onKeyUp = this._onKeyUp.bind(this);
-    this._onMouseMove = this._onMouseMove.bind(this);
-    this._onMouseDown = this._onMouseDown.bind(this);
-    this._onMouseUp = this._onMouseUp.bind(this);
-    this._onMouseWheel = this._onMouseWheel.bind(this);
-    this._onResize = this._onResize.bind(this);
-    this.refresh = this.refresh.bind(this);
+      this._onAnimationFrame = this._onAnimationFrame.bind(this);
+      this._onKeyDown = this._onKeyDown.bind(this);
+      this._onKeyUp = this._onKeyUp.bind(this);
+      this._onMouseMove = this._onMouseMove.bind(this);
+      this._onMouseDown = this._onMouseDown.bind(this);
+      this._onMouseUp = this._onMouseUp.bind(this);
+      this._onMouseWheel = this._onMouseWheel.bind(this);
+      this._onResize = this._onResize.bind(this);
+      this.refresh = this.refresh.bind(this);
 
-    this._window.addEventListener("keydown", this._onKeyDown);
-    this._window.addEventListener("keyup", this._onKeyUp);
-    this._window.addEventListener("mousemove", this._onMouseMove);
-    this._window.addEventListener("mousedown", this._onMouseDown);
-    this._window.addEventListener("mouseup", this._onMouseUp);
-    this._window.addEventListener("MozMousePixelScroll", this._onMouseWheel);
+      this._window.addEventListener("keydown", this._onKeyDown);
+      this._window.addEventListener("keyup", this._onKeyUp);
+      this._window.addEventListener("mousemove", this._onMouseMove);
+      this._window.addEventListener("mousedown", this._onMouseDown);
+      this._window.addEventListener("mouseup", this._onMouseUp);
+      this._window.addEventListener("MozMousePixelScroll", this._onMouseWheel);
 
-    const ownerWindow = this._parent.ownerDocument.defaultView;
-    ownerWindow.addEventListener("resize", this._onResize);
+      const ownerWindow = this._parent.ownerDocument.defaultView;
+      ownerWindow.addEventListener("resize", this._onResize);
 
-    this._animationId =
-      this._window.requestAnimationFrame(this._onAnimationFrame);
+      this._animationId =
+        this._window.requestAnimationFrame(this._onAnimationFrame);
 
-    this._ready.resolve(this);
-    this.emit("ready", this);
+      resolve(this);
+      this.emit("ready", this);
+    });
   });
 }
 
@@ -227,7 +227,7 @@ FlameGraph.prototype = {
    * Returns a promise resolved once this graph is ready to receive data.
    */
   ready: function() {
-    return this._ready.promise;
+    return this._ready;
   },
 
   /**
