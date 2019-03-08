@@ -112,6 +112,10 @@ extern ArrayObject* NewCopiedArrayForCallingAllocationSite(
     JSContext* cx, const Value* vp, size_t length,
     HandleObject proto = nullptr);
 
+extern ArrayObject* NewArrayWithGroup(JSContext* cx, uint32_t length,
+                                      HandleObjectGroup group,
+                                      bool convertDoubleElements);
+
 extern bool GetLengthProperty(JSContext* cx, HandleObject obj,
                               uint32_t* lengthp);
 
