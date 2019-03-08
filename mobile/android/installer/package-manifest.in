@@ -139,10 +139,6 @@
 @BINPATH@/modules/*
 @BINPATH@/actors/*
 
-; Safe Browsing
-@BINPATH@/components/UrlClassifierSkipListService.js
-@BINPATH@/components/UrlClassifierSkipListService.manifest
-
 ; [Browser Chrome Files]
 @BINPATH@/chrome/toolkit@JAREXT@
 @BINPATH@/chrome/toolkit.manifest
