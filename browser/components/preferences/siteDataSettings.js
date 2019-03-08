@@ -221,7 +221,7 @@ let gSiteDataSettings = {
     this._updateButtonsState();
   },
 
-  saveChanges() {
+  async saveChanges() {
     // Tracks whether the user confirmed their decision.
     let allowed = false;
 
@@ -233,12 +233,20 @@ let gSiteDataSettings = {
       if (this._sites.length == removals.length) {
         allowed = SiteDataManager.promptSiteDataRemoval(window);
         if (allowed) {
-          SiteDataManager.removeAll();
+          try {
+            await SiteDataManager.removeAll();
+          } catch (e) {
+            Cu.reportError(e);
+          }
         }
       } else {
         allowed = SiteDataManager.promptSiteDataRemoval(window, removals);
         if (allowed) {
-          SiteDataManager.remove(removals).catch(Cu.reportError);
+          try {
+            await SiteDataManager.remove(removals);
+          } catch (e) {
+            Cu.reportError(e);
+          }
         }
       }
     }
