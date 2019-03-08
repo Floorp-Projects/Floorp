@@ -1047,6 +1047,7 @@ nsresult nsXBLService::FetchBindingDocument(
                        nsContentUtils::GetSystemPrincipal(),
                        nsILoadInfo::SEC_REQUIRE_SAME_ORIGIN_DATA_INHERITS,
                        nsIContentPolicy::TYPE_XBL,
+                       nullptr,  // nsICookieSettings
                        nullptr,  // PerformanceStorage
                        loadGroup);
   }
