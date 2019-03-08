@@ -19,6 +19,8 @@ import org.mozilla.gecko.LauncherActivity;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.mma.MmaDelegate;
 
+import static org.mozilla.gecko.db.BrowserContract.SKIP_TAB_QUEUE_FLAG;
+
 public final class SearchWidgetProvider extends AppWidgetProvider {
     private static final int VOICE_INTENT_RC = 1;
     private static final int TEXT_INTENT_RC = 0;
@@ -108,6 +110,7 @@ public final class SearchWidgetProvider extends AppWidgetProvider {
         final Intent intent = new Intent(context, LauncherActivity.class);
 
         intent.putExtra(INPUT_TYPE_KEY, inputType);
+        intent.putExtra(SKIP_TAB_QUEUE_FLAG, true);
         intent.setAction(Intent.ACTION_VIEW);
         intent.setData(Uri.parse("about:home"));
 
