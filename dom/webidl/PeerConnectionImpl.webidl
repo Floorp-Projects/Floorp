@@ -91,7 +91,10 @@ interface PeerConnectionImpl  {
    * into the SDP.
    */
   [Throws]
-  void addIceCandidate(DOMString candidate, DOMString mid, unsigned short? level);
+  void addIceCandidate(DOMString candidate,
+                       DOMString mid,
+                       DOMString ufrag,
+                       unsigned short? level);
 
   /* Shuts down threads, deletes state */
   [Throws]

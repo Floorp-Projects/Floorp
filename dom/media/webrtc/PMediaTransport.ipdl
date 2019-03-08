@@ -76,7 +76,8 @@ parent:
   async SendPacket(string transportId, MediaPacket packet);
 
   async AddIceCandidate(string transportId,
-                        string candidate);
+                        string candidate,
+                        string ufrag);
 
   async UpdateNetworkState(bool online);
 
