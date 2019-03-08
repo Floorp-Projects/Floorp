@@ -12,6 +12,7 @@
 #include "jit/VMFunctions.h"
 #include "vm/AsyncFunction.h"
 #include "vm/AsyncIteration.h"
+#include "vm/EqualityOperations.h"
 #include "vm/Interpreter.h"
 #include "vm/TypedArrayObject.h"
 
@@ -25,7 +26,10 @@ namespace jit {
 // (must be unique, used for the VMFunctionId enum and profiling) and the C++
 // function to be called. This list must be sorted on the name field.
 #define VMFUNCTION_LIST(_)                                                     \
+  _(AddValues, js::AddValues)                                                  \
   _(ArgumentsObjectCreateForIon, js::ArgumentsObject::createForIon)            \
+  _(ArrayJoin, js::jit::ArrayJoin)                                             \
+  _(ArraySliceDense, js::ArraySliceDense)                                      \
   _(AsyncFunctionAwait, js::AsyncFunctionAwait)                                \
   _(AsyncFunctionResolve, js::AsyncFunctionResolve)                            \
   _(BaselineDebugPrologue, js::jit::DebugPrologue)                             \
@@ -33,6 +37,12 @@ namespace jit {
   _(BaselineThrowInitializedThis, js::jit::BaselineThrowInitializedThis)       \
   _(BaselineThrowUninitializedThis, js::jit::BaselineThrowUninitializedThis)   \
   _(BindVarOperation, js::BindVarOperation)                                    \
+  _(BitAnd, js::BitAnd)                                                        \
+  _(BitLsh, js::BitLsh)                                                        \
+  _(BitNot, js::BitNot)                                                        \
+  _(BitOr, js::BitOr)                                                          \
+  _(BitRsh, js::BitRsh)                                                        \
+  _(BitXor, js::BitXor)                                                        \
   _(BuiltinProtoOperation, js::BuiltinProtoOperation)                          \
   _(CheckClassHeritageOperation, js::CheckClassHeritageOperation)              \
   _(CheckGlobalOrEvalDeclarationConflicts,                                     \
@@ -65,6 +75,7 @@ namespace jit {
   _(DeletePropertyNonStrict, js::DeletePropertyJit<false>)                     \
   _(DeletePropertyStrict, js::DeletePropertyJit<true>)                         \
   _(DirectEvalStringFromIon, js::DirectEvalStringFromIon)                      \
+  _(DivValues, js::DivValues)                                                  \
   _(DoToNumber, js::jit::DoToNumber)                                           \
   _(DoToNumeric, js::jit::DoToNumeric)                                         \
   _(EnterWith, js::jit::EnterWith)                                             \
@@ -76,13 +87,18 @@ namespace jit {
   _(GetIntrinsicValue, js::jit::GetIntrinsicValue)                             \
   _(GetNonSyntacticGlobalThis, js::GetNonSyntacticGlobalThis)                  \
   _(GetOrCreateModuleMetaObject, js::GetOrCreateModuleMetaObject)              \
+  _(GlobalNameConflictsCheckFromIon, js::jit::GlobalNameConflictsCheckFromIon) \
+  _(GreaterThan, js::jit::GreaterThan)                                         \
+  _(GreaterThanOrEqual, js::jit::GreaterThanOrEqual)                           \
   _(HomeObjectSuperBase, js::HomeObjectSuperBase)                              \
   _(ImplicitThisOperation, js::ImplicitThisOperation)                          \
   _(ImportMetaOperation, js::ImportMetaOperation)                              \
   _(InitElemGetterSetterOperation, js::InitElemGetterSetterOperation)          \
   _(InitElemOperation, js::InitElemOperation)                                  \
+  _(InitElementArray, js::InitElementArray)                                    \
   _(InitFunctionEnvironmentObjects, js::jit::InitFunctionEnvironmentObjects)   \
   _(InitPropGetterSetterOperation, js::InitPropGetterSetterOperation)          \
+  _(InitRestParameter, js::jit::InitRestParameter)                             \
   _(InterpretResume, js::jit::InterpretResume)                                 \
   _(InterruptCheck, js::jit::InterruptCheck)                                   \
   _(InvokeFunction, js::jit::InvokeFunction)                                   \
@@ -103,8 +119,14 @@ namespace jit {
   _(Lambda, js::Lambda)                                                        \
   _(LambdaArrow, js::LambdaArrow)                                              \
   _(LeaveWith, js::jit::LeaveWith)                                             \
+  _(LessThan, js::jit::LessThan)                                               \
+  _(LessThanOrEqual, js::jit::LessThanOrEqual)                                 \
   _(LexicalEnvironmentObjectCreate, js::LexicalEnvironmentObject::create)      \
+  _(LooselyEqual, js::jit::LooselyEqual<true>)                                 \
+  _(LooselyNotEqual, js::jit::LooselyEqual<false>)                             \
   _(MakeDefaultConstructor, js::MakeDefaultConstructor)                        \
+  _(ModValues, js::ModValues)                                                  \
+  _(MulValues, js::MulValues)                                                  \
   _(MutatePrototype, js::jit::MutatePrototype)                                 \
   _(NewArgumentsObject, js::jit::NewArgumentsObject)                           \
   _(NewArrayCopyOnWriteOperation, js::NewArrayCopyOnWriteOperation)            \
@@ -116,6 +138,7 @@ namespace jit {
   _(NewTypedArrayWithTemplateAndBuffer,                                        \
     js::NewTypedArrayWithTemplateAndBuffer)                                    \
   _(NormalSuspend, js::jit::NormalSuspend)                                     \
+  _(ObjectClassToString, js::ObjectClassToString)                              \
   _(ObjectCreateWithTemplate, js::ObjectCreateWithTemplate)                    \
   _(ObjectWithProtoOperation, js::ObjectWithProtoOperation)                    \
   _(OnDebuggerStatement, js::jit::OnDebuggerStatement)                         \
@@ -130,14 +153,22 @@ namespace jit {
   _(RegExpMatcherRaw, js::RegExpMatcherRaw)                                    \
   _(RegExpSearcherRaw, js::RegExpSearcherRaw)                                  \
   _(RegExpTesterRaw, js::RegExpTesterRaw)                                      \
+  _(SameValue, js::SameValue)                                                  \
+  _(SetDenseElement, js::jit::SetDenseElement)                                 \
   _(SetFunctionName, js::SetFunctionName)                                      \
   _(SetIntrinsicOperation, js::SetIntrinsicOperation)                          \
   _(SetObjectElementWithReceiver, js::SetObjectElementWithReceiver)            \
   _(SetPropertySuper, js::SetPropertySuper)                                    \
   _(SingletonObjectLiteralOperation, js::SingletonObjectLiteralOperation)      \
   _(StartDynamicModuleImport, js::StartDynamicModuleImport)                    \
+  _(StrictlyEqual, js::jit::StrictlyEqual<true>)                               \
+  _(StrictlyNotEqual, js::jit::StrictlyEqual<false>)                           \
   _(StringFlatReplaceString, js::StringFlatReplaceString)                      \
   _(StringReplace, js::jit::StringReplace)                                     \
+  _(StringSplitString, js::StringSplitString)                                  \
+  _(StringToLowerCase, js::StringToLowerCase)                                  \
+  _(StringToUpperCase, js::StringToUpperCase)                                  \
+  _(SubValues, js::SubValues)                                                  \
   _(SuperFunOperation, js::SuperFunOperation)                                  \
   _(ThrowBadDerivedReturn, js::jit::ThrowBadDerivedReturn)                     \
   _(ThrowCheckIsObject, js::ThrowCheckIsObject)                                \
@@ -147,7 +178,8 @@ namespace jit {
   _(ThrowRuntimeLexicalError, js::jit::ThrowRuntimeLexicalError)               \
   _(ToIdOperation, js::ToIdOperation)                                          \
   _(ToStringSlow, js::ToStringSlow<CanGC>)                                     \
-  _(TrySkipAwait, js::jit::TrySkipAwait)
+  _(TrySkipAwait, js::jit::TrySkipAwait)                                       \
+  _(UrshValues, js::UrshValues)
 
 enum class VMFunctionId {
 #define DEF_ID(name, fp) name,
