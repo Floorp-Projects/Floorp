@@ -230,11 +230,7 @@ struct JSWindowActorEventDecl
   bool capture;
   bool systemGroup;
   bool allowUntrusted;
-
-  // FIXME(gross): Optional<bool> is a bit gross to encode here, so instead it's
-  // encoded as two booleans.
-  bool hasPassive;
-  bool passive;
+  bool? passive;
 };
 
 struct JSWindowActorInfo

@@ -183,7 +183,7 @@ add_task(async function() {
     is(values[0].textContent, queryStringParamValue,
       "The first query string param value was incorrect.");
 
-    ok(tabpanel.querySelector(".CodeMirror-code").textContent.includes(requestPayload),
+    ok(getCodeMirrorValue(monitor).includes(requestPayload),
       "The text shown in the source editor is incorrect.");
 
     if (isJSON) {

@@ -3572,8 +3572,6 @@ bool JSScript::fullyInitFromEmitter(JSContext* cx, HandleScript script,
 
   // Initialize script flags from BytecodeEmitter
   script->setFlag(ImmutableFlags::Strict, bce->sc->strict());
-  script->setFlag(ImmutableFlags::ExplicitUseStrict,
-                  bce->sc->hasExplicitUseStrict());
   script->setFlag(ImmutableFlags::BindingsAccessedDynamically,
                   bce->sc->bindingsAccessedDynamically());
   script->setFlag(ImmutableFlags::HasSingletons, bce->hasSingletons);
