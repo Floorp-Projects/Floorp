@@ -49,6 +49,7 @@ exports.ConsoleMessage = function(props) {
     indent: 0,
     prefix: "",
     private: false,
+    logpointId: undefined,
   }, props);
 };
 
