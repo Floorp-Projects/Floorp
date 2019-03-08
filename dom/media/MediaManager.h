@@ -67,16 +67,16 @@ class MediaDevice : public nsIMediaDevice {
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIMEDIADEVICE
 
-  explicit MediaDevice(const RefPtr<MediaEngineSource>& aSource,
-                       const nsString& aName, const nsString& aID,
-                       const nsString& aRawID);
+  MediaDevice(const RefPtr<MediaEngineSource>& aSource, const nsString& aName,
+              const nsString& aID, const nsString& aGroupID,
+              const nsString& aRawID);
 
-  explicit MediaDevice(const RefPtr<AudioDeviceInfo>& aAudioDeviceInfo,
-                       const nsString& aID,
-                       const nsString& aRawID = NS_LITERAL_STRING(""));
+  MediaDevice(const RefPtr<AudioDeviceInfo>& aAudioDeviceInfo,
+              const nsString& aID, const nsString& aGroupID,
+              const nsString& aRawID = NS_LITERAL_STRING(""));
 
-  explicit MediaDevice(const RefPtr<MediaDevice>& aOther, const nsString& aID,
-                       const nsString& aRawID);
+  MediaDevice(const RefPtr<MediaDevice>& aOther, const nsString& aID,
+              const nsString& aGroupID, const nsString& aRawID);
 
   uint32_t GetBestFitnessDistance(
       const nsTArray<const NormalizedConstraintSet*>& aConstraintSets,
@@ -130,6 +130,7 @@ class MediaDevice : public nsIMediaDevice {
   const nsString mType;
   const nsString mName;
   const nsString mID;
+  const nsString mGroupID;
   const nsString mRawID;
 };
 
