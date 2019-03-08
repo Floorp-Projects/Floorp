@@ -517,7 +517,7 @@ this.VideoControlsImplWidget = class {
           case "loadstart":
             this.maxCurrentTimeSeen = 0;
             this.controlsSpacer.removeAttribute("aria-label");
-            this.statusOverlay.removeAttribute("error");
+            this.statusOverlay.removeAttribute("status");
             this.statusIcon.setAttribute("type", "throbber");
             this.isAudioOnly = this.video.localName == "audio";
             this.setPlayButtonState(true);
@@ -774,32 +774,32 @@ this.VideoControlsImplWidget = class {
         if (v.error) {
           switch (v.error.code) {
             case v.error.MEDIA_ERR_ABORTED:
-              error = "errorAborted";
+              error = "statusErrorAborted";
               break;
             case v.error.MEDIA_ERR_NETWORK:
-              error = "errorNetwork";
+              error = "statusErrorNetwork";
               break;
             case v.error.MEDIA_ERR_DECODE:
-              error = "errorDecode";
+              error = "statusErrorDecode";
               break;
             case v.error.MEDIA_ERR_SRC_NOT_SUPPORTED:
               error = v.networkState == v.NETWORK_NO_SOURCE ?
-                "errorNoSource" :
-                "errorSrcNotSupported";
+                "statusErrorNoSource" :
+                "statusErrorSrcNotSupported";
               break;
             default:
-              error = "errorGeneric";
+              error = "statusErrorGeneric";
               break;
           }
         } else if (v.networkState == v.NETWORK_NO_SOURCE) {
-          error = "errorNoSource";
+          error = "statusErrorNoSource";
         } else {
           return; // No error found.
         }
 
         let label = this.shadowRoot.getElementById(error);
         this.controlsSpacer.setAttribute("aria-label", label.textContent);
-        this.statusOverlay.setAttribute("error", error);
+        this.statusOverlay.setAttribute("status", error);
       },
 
       formatTime(aTime, showHours = false) {
@@ -2206,12 +2206,12 @@ this.VideoControlsImplWidget = class {
         <div id="controlsContainer" class="controlsContainer" role="none">
           <div id="statusOverlay" class="statusOverlay stackItem" hidden="true">
             <div id="statusIcon" class="statusIcon"></div>
-            <span class="errorLabel" id="errorAborted">&error.aborted;</span>
-            <span class="errorLabel" id="errorNetwork">&error.network;</span>
-            <span class="errorLabel" id="errorDecode">&error.decode;</span>
-            <span class="errorLabel" id="errorSrcNotSupported">&error.srcNotSupported;</span>
-            <span class="errorLabel" id="errorNoSource">&error.noSource2;</span>
-            <span class="errorLabel" id="errorGeneric">&error.generic;</span>
+            <span class="statusLabel" id="statusErrorAborted">&error.aborted;</span>
+            <span class="statusLabel" id="statusErrorNetwork">&error.network;</span>
+            <span class="statusLabel" id="statusErrorDecode">&error.decode;</span>
+            <span class="statusLabel" id="statusErrorSrcNotSupported">&error.srcNotSupported;</span>
+            <span class="statusLabel" id="statusErrorNoSource">&error.noSource2;</span>
+            <span class="statusLabel" id="statusErrorGeneric">&error.generic;</span>
           </div>
 
           <div id="controlsOverlay" class="controlsOverlay stackItem" role="none">
