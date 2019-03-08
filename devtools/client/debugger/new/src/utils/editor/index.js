@@ -162,6 +162,12 @@ function isVisible(codeMirror: any, top: number, left: number) {
 
 export function getLocationsInViewport({ codeMirror }: Object) {
   // Get scroll position
+  if (!codeMirror) {
+    return {
+      start: { line: 0, column: 0 },
+      end: { line: 0, column: 0 },
+    };
+  }
   const charWidth = codeMirror.defaultCharWidth();
   const scrollArea = codeMirror.getScrollInfo();
   const { scrollLeft } = codeMirror.doc;

@@ -44,10 +44,6 @@ function contains(location: PartialPosition, range: Range) {
   );
 }
 
-function inViewport(viewport, location) {
-  return viewport && contains(location, viewport);
-}
-
 function groupBreakpoints(breakpoints, selectedSource) {
   if (!breakpoints) {
     return {};
@@ -97,7 +93,7 @@ function filterByLineCount(positions, selectedSource) {
 function filterVisible(positions, selectedSource, viewport) {
   return positions.filter(columnBreakpoint => {
     const location = getSelectedLocation(columnBreakpoint, selectedSource);
-    return inViewport(viewport, location);
+    return viewport && contains(location, viewport);
   });
 }
 
