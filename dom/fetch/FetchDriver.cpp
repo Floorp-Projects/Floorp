@@ -424,6 +424,24 @@ nsresult FetchDriver::HttpFetch(
   rv = NS_NewURI(getter_AddRefs(uri), url, nullptr, nullptr, ios);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  if (StaticPrefs::browser_tabs_remote_useCrossOriginPolicy()) {
+    // Cross-Origin policy - bug 1525036
+    nsILoadInfo::CrossOriginPolicy corsCredentials =
+        nsILoadInfo::CROSS_ORIGIN_POLICY_NULL;
+    if (mDocument && mDocument->GetBrowsingContext()) {
+      corsCredentials = mDocument->GetBrowsingContext()->CrossOriginPolicy();
+    }  // TODO Bug 1532287: else use mClientInfo
+
+    if (mRequest->Mode() == RequestMode::No_cors &&
+        corsCredentials != nsILoadInfo::CROSS_ORIGIN_POLICY_NULL) {
+      mRequest->SetMode(RequestMode::Cors);
+      mRequest->SetCredentialsMode(RequestCredentials::Same_origin);
+      if (corsCredentials == nsILoadInfo::CROSS_ORIGIN_POLICY_USE_CREDENTIALS) {
+        mRequest->SetCredentialsMode(RequestCredentials::Include);
+      }
+    }
+  }
+
   // Unsafe requests aren't allowed with when using no-core mode.
   if (mRequest->Mode() == RequestMode::No_cors && mRequest->UnsafeRequest() &&
       (!mRequest->HasSimpleMethod() ||
