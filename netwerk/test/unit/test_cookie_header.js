@@ -64,8 +64,10 @@ var httpserv = null;
 
 function run_test() {
   // Allow all cookies if the pref service is available in this process.
-  if (!inChildProcess())
+  if (!inChildProcess()) {
     Services.prefs.setIntPref("network.cookie.cookieBehavior", 0);
+    Services.prefs.setBoolPref("network.cookieSettings.unblocked_for_testing", true);
+  }
 
   httpserv = new HttpServer();
   httpserv.start(-1);
