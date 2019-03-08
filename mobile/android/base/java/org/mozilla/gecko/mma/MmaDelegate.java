@@ -53,6 +53,9 @@ public class MmaDelegate {
     public static final String ONBOARDING_DEFAULT_VALUES = "E_Onboarding_With_Default_Values";
     public static final String ONBOARDING_REMOTE_VALUES = "E_Onboarding_With_Remote_Values";
 
+    public static final String USER_SIGNED_IN_TO_FXA = "E_User_Signed_In_To_FxA";
+    public static final String USER_FINISHED_SYNC = "E_User_Finished_Sync";
+
     private static final String LAUNCH_BUT_NOT_DEFAULT_BROWSER = "E_Launch_But_Not_Default_Browser";
     private static final String LAUNCH_BROWSER = "E_Launch_Browser";
     private static final String CHANGED_DEFAULT_TO_FENNEC = "E_Changed_Default_To_Fennec";
