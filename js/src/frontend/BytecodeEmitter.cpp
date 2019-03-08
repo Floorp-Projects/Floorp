@@ -2460,19 +2460,7 @@ bool BytecodeEmitter::emitInitializeInstanceFields() {
     return true;
   }
 
-  PropOpEmitter poe(this, PropOpEmitter::Kind::Get,
-                    PropOpEmitter::ObjKind::Other);
-  if (!poe.prepareForObj()) {
-    return false;
-  }
-
-  // This is guaranteed to run after super(), so we don't need TDZ checks.
-  if (!emitGetName(cx->names().dotThis)) {
-    //              [stack] THIS
-    return false;
-  }
-
-  if (!poe.emitGet(cx->names().dotInitializers)) {
+  if (!emitGetName(cx->names().dotInitializers)) {
     //              [stack] ARRAY
     return false;
   }
@@ -8020,23 +8008,14 @@ bool BytecodeEmitter::emitPropertyList(ListNode* obj, PropertyEmitter& pe,
     // code (the initializer) for each field. Upon an object's construction,
     // these lambdas will be called, defining the values.
 
-    PropOpEmitter poe(this, PropOpEmitter::Kind::SimpleAssignment,
-                      PropOpEmitter::ObjKind::Other);
-    if (!poe.prepareForObj()) {
-      return false;
-    }
-
-    if (!emit1(JSOP_DUP)) {
-      //            [stack] CTOR? OBJ OBJ
-      return false;
-    }
-
-    if (!poe.prepareForRhs()) {
+    NameOpEmitter noe(this, cx->names().dotInitializers,
+                      NameOpEmitter::Kind::Initialize);
+    if (!noe.prepareForRhs()) {
       return false;
     }
 
     if (!emitUint32Operand(JSOP_NEWARRAY, numFields)) {
-      //            [stack] CTOR? OBJ OBJ ARRAY
+      //            [stack] CTOR? OBJ ARRAY
       return false;
     }
 
@@ -8049,12 +8028,12 @@ bool BytecodeEmitter::emitPropertyList(ListNode* obj, PropertyEmitter& pe,
         }
 
         if (!emitTree(initializer)) {
-          //        [stack] CTOR? OBJ OBJ ARRAY LAMBDA
+          //        [stack] CTOR? OBJ ARRAY LAMBDA
           return false;
         }
 
         if (!emitUint32Operand(JSOP_INITELEM_ARRAY, curFieldIndex)) {
-          //        [stack] CTOR? OBJ OBJ ARRAY
+          //        [stack] CTOR? OBJ ARRAY
           return false;
         }
 
@@ -8062,7 +8041,7 @@ bool BytecodeEmitter::emitPropertyList(ListNode* obj, PropertyEmitter& pe,
       }
     }
 
-    if (!poe.emitAssignment(cx->names().dotInitializers)) {
+    if (!noe.emitAssignment()) {
       //            [stack] CTOR? OBJ ARRAY
       return false;
     }

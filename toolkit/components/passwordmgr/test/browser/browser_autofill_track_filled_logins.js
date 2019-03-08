@@ -36,7 +36,8 @@ add_task(async function test() {
     // Convert the login object to a plain JS object for passing across process boundaries.
     login = LoginHelper.loginToVanillaObject(login);
     ContentTask.spawn(tab.linkedBrowser, {login, usernameRequested}, async ({login: addedLogin, usernameRequested: aUsernameRequested}) => {
-      const { LoginManagerContent, LoginFormFactory } = ChromeUtils.import("resource://gre/modules/LoginManagerContent.jsm");
+      const { LoginFormFactory } = ChromeUtils.import("resource://gre/modules/LoginFormFactory.jsm");
+      const { LoginManagerContent } = ChromeUtils.import("resource://gre/modules/LoginManagerContent.jsm");
       const { LoginHelper } = ChromeUtils.import("resource://gre/modules/LoginHelper.jsm");
 
       let password = content.document.querySelector("#form-basic-password");

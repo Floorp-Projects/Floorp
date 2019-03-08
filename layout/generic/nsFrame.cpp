@@ -2604,8 +2604,7 @@ static void WrapSeparatorTransform(nsDisplayListBuilder* aBuilder,
   }
 
   nsDisplayTransform* item = MakeDisplayItem<nsDisplayTransform>(
-      aBuilder, aFrame, aNonParticipants, aBuilder->GetVisibleRect(),
-      Matrix4x4(), aIndex);
+      aBuilder, aFrame, aNonParticipants, aBuilder->GetVisibleRect(), aIndex);
 
   if (*aSeparator == nullptr) {
     *aSeparator = item;
@@ -8213,10 +8212,10 @@ nsresult nsIFrame::PeekOffset(nsPeekOffsetStruct* aPos) {
         bool movingInFrameDirection =
             IsMovingInFrameDirection(current, aPos->mDirection, aPos->mVisual);
 
-        done = current->PeekOffsetWord(
-                   movingInFrameDirection, wordSelectEatSpace,
-                   aPos->mIsKeyboardSelect, &offset, &state,
-                   aPos->mTrimSpaces) == FOUND;
+        done =
+            current->PeekOffsetWord(movingInFrameDirection, wordSelectEatSpace,
+                                    aPos->mIsKeyboardSelect, &offset, &state,
+                                    aPos->mTrimSpaces) == FOUND;
 
         if (!done) {
           nsIFrame* nextFrame;
@@ -8463,12 +8462,9 @@ nsIFrame::FrameSearchResult nsFrame::PeekOffsetCharacter(
   return CONTINUE;
 }
 
-nsIFrame::FrameSearchResult nsFrame::PeekOffsetWord(bool aForward,
-                                                    bool aWordSelectEatSpace,
-                                                    bool aIsKeyboardSelect,
-                                                    int32_t* aOffset,
-                                                    PeekWordState* aState,
-                                                    bool aTrimSpaces) {
+nsIFrame::FrameSearchResult nsFrame::PeekOffsetWord(
+    bool aForward, bool aWordSelectEatSpace, bool aIsKeyboardSelect,
+    int32_t* aOffset, PeekWordState* aState, bool aTrimSpaces) {
   NS_ASSERTION(aOffset && *aOffset <= 1, "aOffset out of range");
   int32_t startOffset = *aOffset;
   // This isn't text, so truncate the context
@@ -10522,9 +10518,8 @@ bool nsIFrame::IsStackingContext(const nsStyleDisplay* aStyleDisplay,
          ChildrenHavePerspective(aStyleDisplay) ||
          aStyleEffects->mMixBlendMode != NS_STYLE_BLEND_NORMAL ||
          nsSVGIntegrationUtils::UsingEffectsForFrame(this) ||
-         (aIsPositioned &&
-          (aStyleDisplay->IsPositionForcingStackingContext() ||
-           aStylePosition->mZIndex.IsInteger())) ||
+         (aIsPositioned && (aStyleDisplay->IsPositionForcingStackingContext() ||
+                            aStylePosition->mZIndex.IsInteger())) ||
          (aStyleDisplay->mWillChangeBitField &
           NS_STYLE_WILL_CHANGE_STACKING_CONTEXT) ||
          aStyleDisplay->mIsolation != NS_STYLE_ISOLATION_AUTO;

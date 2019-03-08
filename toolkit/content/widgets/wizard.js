@@ -8,7 +8,8 @@
 // a block to prevent accidentally leaking globals onto `window`.
 {
 class MozWizardPage extends MozXULElement {
-  connectedCallback() {
+  constructor() {
+    super();
     this.pageIndex = -1;
   }
   get pageid() {
