@@ -6,6 +6,7 @@ package mozilla.components.browser.session
 
 import android.graphics.Bitmap
 import mozilla.components.browser.session.engine.EngineSessionHolder
+import mozilla.components.browser.session.manifest.WebAppManifest
 import mozilla.components.browser.session.tab.CustomTabConfig
 import mozilla.components.concept.engine.HitResult
 import mozilla.components.concept.engine.permission.PermissionRequest
@@ -52,6 +53,7 @@ class Session(
         fun onSearch(session: Session, searchTerms: String) = Unit
         fun onSecurityChanged(session: Session, securityInfo: SecurityInfo) = Unit
         fun onCustomTabConfigChanged(session: Session, customTabConfig: CustomTabConfig?) = Unit
+        fun onWebAppManifestChanged(session: Session, manifest: WebAppManifest?) = Unit
         fun onDownload(session: Session, download: Download): Boolean = false
         fun onTrackerBlockingEnabledChanged(session: Session, blockingEnabled: Boolean) = Unit
         fun onTrackerBlocked(session: Session, blocked: String, all: List<String>) = Unit
@@ -198,6 +200,13 @@ class Session(
      */
     var customTabConfig: CustomTabConfig? by Delegates.observable<CustomTabConfig?>(null) {
         _, _, new -> notifyObservers { onCustomTabConfigChanged(this@Session, new) }
+    }
+
+    /**
+     * The Web App Manifest for the currently visited page (or null).
+     */
+    var webAppManifest: WebAppManifest? by Delegates.observable<WebAppManifest?>(null) {
+        _, _, new -> notifyObservers { onWebAppManifestChanged(this@Session, new) }
     }
 
     /**

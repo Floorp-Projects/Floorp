@@ -10,6 +10,7 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.session.Session.Source
+import mozilla.components.browser.session.manifest.WebAppManifest
 import mozilla.components.browser.session.tab.CustomTabConfig
 import mozilla.components.concept.engine.HitResult
 import mozilla.components.concept.engine.permission.PermissionRequest
@@ -17,6 +18,7 @@ import mozilla.components.concept.engine.prompt.PromptRequest
 import mozilla.components.concept.engine.window.WindowRequest
 import mozilla.components.support.base.observer.Consumable
 import mozilla.components.support.test.any
+import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
@@ -204,6 +206,37 @@ class SessionTest {
 
         assertNotNull(config)
         assertEquals("id", config!!.id)
+    }
+
+    @Test
+    fun `observer is notified when web app manifest is set`() {
+        val manifest = WebAppManifest(
+            name = "HackerWeb",
+            description = "A simply readable Hacker News app.",
+            startUrl = ".",
+            display = WebAppManifest.DisplayMode.STANDALONE,
+            icons = listOf(
+                WebAppManifest.Icon(
+                    src = "images/touch/homescreen192.png",
+                    sizes = listOf(WebAppManifest.Icon.Size(192, 192)),
+                    type = "image/png"
+                )
+            )
+        )
+
+        val observer: Session.Observer = mock()
+
+        val session = Session("https://www.mozilla.org")
+        session.register(observer)
+
+        assertNull(session.webAppManifest)
+
+        session.webAppManifest = manifest
+        assertEquals(manifest, session.webAppManifest)
+
+        val captor = argumentCaptor<WebAppManifest>()
+        verify(observer).onWebAppManifestChanged(eq(session), captor.capture())
+        assertEquals(manifest, captor.value)
     }
 
     @Test
@@ -571,6 +604,7 @@ class SessionTest {
         defaultObserver.onPromptRequested(session, promptRequest)
         defaultObserver.onOpenWindowRequested(session, windowRequest)
         defaultObserver.onCloseWindowRequested(session, windowRequest)
+        defaultObserver.onWebAppManifestChanged(session, mock())
     }
 
     @Test
@@ -745,5 +779,11 @@ class SessionTest {
                 def2.await()
             }
         }
+    }
+
+    @Test
+    fun `toString returns string containing id and url`() {
+        val session = Session(id = "my-session-id", initialUrl = "https://www.mozilla.org")
+        assertEquals("Session(my-session-id, https://www.mozilla.org)", session.toString())
     }
 }

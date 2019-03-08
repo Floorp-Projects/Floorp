@@ -12,6 +12,9 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Config.kt)
 
+* **browser-session**
+  * Added `Session.webAppManifest` to expose the [Web App Manifest](https://developer.mozilla.org/en-US/docs/Web/Manifest) of the currently visible page. This functionality will only be available in [GeckoView](https://mozilla.github.io/geckoview/)-flavored [concept-engine](https://github.com/mozilla-mobile/android-components/tree/master/components/concept/engine) implementations.
+
 # 0.46.0-SNAPSHOT
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.45.0...v0.46.0)
