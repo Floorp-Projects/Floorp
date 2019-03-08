@@ -461,6 +461,13 @@ void HTMLVideoElement::CloneElementVisually(HTMLVideoElement& aTargetVideo,
     EndCloningVisually();
   }
 
+  // If there's a poster set on the target video, clear it, otherwise
+  // it'll display over top of the cloned frames.
+  aTargetVideo.UnsetHTMLAttr(nsGkAtoms::poster, rv);
+  if (rv.Failed()) {
+    return;
+  }
+
   if (!SetVisualCloneTarget(&aTargetVideo)) {
     rv.Throw(NS_ERROR_FAILURE);
     return;
