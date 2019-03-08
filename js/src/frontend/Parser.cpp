@@ -1949,10 +1949,7 @@ JSFunction* AllocNewFunction(JSContext* cx, HandleAtom atom,
       allocKind = gc::AllocKind::FUNCTION_EXTENDED;
       break;
     case FunctionSyntaxKind::Method:
-      flags = (generatorKind == GeneratorKind::NotGenerator &&
-                       asyncKind == FunctionAsyncKind::SyncFunction
-                   ? JSFunction::INTERPRETED_METHOD
-                   : JSFunction::INTERPRETED_METHOD_GENERATOR_OR_ASYNC);
+      flags = JSFunction::INTERPRETED_METHOD;
       allocKind = gc::AllocKind::FUNCTION_EXTENDED;
       break;
     case FunctionSyntaxKind::ClassConstructor:
