@@ -41,9 +41,9 @@ add_task(async function hitEnterLoadInRightTab() {
                                                         "TabOpen");
   BrowserOpenTab();
   let oldTab = (await oldTabOpenPromise).target;
-  let oldTabLoadedPromise = BrowserTestUtils.browserLoaded(oldTab.linkedBrowser,
-                                                           false, TEST_URL);
-  oldTabLoadedPromise.then(() => info("Old tab loaded"));
+  let oldTabLoadedPromise =
+    BrowserTestUtils.browserLoaded(oldTab.linkedBrowser, false, TEST_URL)
+                    .then(() => info("Old tab loaded"));
 
   info("Filling URL bar, sending <return> and opening a tab");
   let tabOpenPromise = BrowserTestUtils.waitForEvent(gBrowser.tabContainer,
@@ -57,13 +57,16 @@ add_task(async function hitEnterLoadInRightTab() {
   BrowserOpenTab();
   let newTab = (await tabOpenPromise).target;
 
-  info("Created new tab; waiting for either tab to load");
-  let newTabLoadedPromise = BrowserTestUtils.browserLoaded(newTab.linkedBrowser,
-                                                           false, TEST_URL);
-  newTabLoadedPromise.then(() => info("New tab loaded"));
-  await Promise.race([newTabLoadedPromise, oldTabLoadedPromise]);
+  info("Created new tab; waiting for tabs to load");
+  let newTabLoadedPromise =
+    BrowserTestUtils.browserLoaded(newTab.linkedBrowser, false, "about:newtab")
+                    .then(() => info("New tab loaded"));
+  // If one of the tabs loads the wrong page, this will timeout, and that
+  // indicates we regressed this bug fix.
+  await Promise.all([newTabLoadedPromise, oldTabLoadedPromise]);
+  // These are not particularly useful, but the test must contain some checks.
   is(newTab.linkedBrowser.currentURI.spec, "about:newtab",
-                                           "New tab still has about:newtab");
+     "New tab loaded about:newtab");
   is(oldTab.linkedBrowser.currentURI.spec, TEST_URL, "Old tab loaded URL");
 
   info("Closing tabs");
