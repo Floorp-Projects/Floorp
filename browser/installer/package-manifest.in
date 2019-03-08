@@ -220,6 +220,10 @@
 @RESPATH@/browser/actors/*
 @RESPATH@/actors/*
 
+; Safe Browsing
+@RESPATH@/components/UrlClassifierSkipListService.js
+@RESPATH@/components/UrlClassifierSkipListService.manifest
+
 ; ANGLE GLES-on-D3D rendering library
 #ifdef MOZ_ANGLE_RENDERER
 @BINPATH@/libEGL.dll

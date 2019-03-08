@@ -49,7 +49,7 @@ interface nsIUrlClassifierFeature : nsISupports
                                           out ACString aPrefTableName);
 
   /**
-   * Returns true if this host has to be ignored also if blacklisted.
+   * Returns a comma-separated list of hosts to be ignored.
    */
   readonly attribute ACString skipHostList;
 
