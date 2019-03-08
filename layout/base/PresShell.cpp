@@ -7743,6 +7743,13 @@ nsresult PresShell::EventHandler::HandleEventInternal(
               Telemetry::INPUT_EVENT_QUEUED_APZ_MOUSE_MOVE_MS,
               aEvent->mTimeStamp);
         }
+
+        nsIPresShell::AllowMouseCapture(
+            EventStateManager::GetActiveEventStateManager() == manager);
+
+        GetPresContext()->RecordInteractionTime(
+            nsPresContext::InteractionType::eMouseMoveInteraction,
+            aEvent->mTimeStamp);
         break;
 
       case eDrop: {
@@ -7794,15 +7801,6 @@ nsresult PresShell::EventHandler::HandleEventInternal(
 
   AutoHandlingUserInputStatePusher userInpStatePusher(isHandlingUserInput,
                                                       aEvent, GetDocument());
-
-  if (aEvent->IsTrusted() && aEvent->mMessage == eMouseMove) {
-    nsIPresShell::AllowMouseCapture(
-        EventStateManager::GetActiveEventStateManager() == manager);
-
-    GetPresContext()->RecordInteractionTime(
-        nsPresContext::InteractionType::eMouseMoveInteraction,
-        aEvent->mTimeStamp);
-  }
 
   nsAutoPopupStatePusher popupStatePusher(
       PopupBlocker::GetEventPopupControlState(aEvent));
