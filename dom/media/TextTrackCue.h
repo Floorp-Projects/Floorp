@@ -280,14 +280,7 @@ class TextTrackCue final : public DOMEventTargetHelper {
 
   void SetTrackElement(HTMLTrackElement* aTrackElement);
 
-  void SetActive(bool aActive) {
-    if (mActive == aActive) {
-      return;
-    }
-
-    mActive = aActive;
-    mDisplayState = mActive ? mDisplayState : nullptr;
-  }
+  void SetActive(bool aActive);
 
   bool GetActive() { return mActive; }
 
