@@ -4,17 +4,24 @@
 "use strict";
 
 /**
- * Tests if visible columns are properly saved
+ * Tests if visible columns are properly saved. Note that the column
+ * header is visible only if there are requests in the list.
  */
 
 add_task(async function() {
   Services.prefs.setCharPref("devtools.netmonitor.visibleColumns",
     '["status", "contentSize", "waterfall"]');
 
-  const { monitor } = await initNetMonitor(SIMPLE_URL);
+  const { monitor, tab } = await initNetMonitor(SIMPLE_URL);
   info("Starting test... ");
 
-  const { document } = monitor.panelWin;
+  const { document, store, windowRequire } = monitor.panelWin;
+  const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
+  store.dispatch(Actions.batchEnable(false));
+
+  const wait = waitForNetworkEvents(monitor, 1);
+  tab.linkedBrowser.reload();
+  await wait;
 
   ok(document.querySelector("#requests-list-status-button"),
      "Status column should be shown");

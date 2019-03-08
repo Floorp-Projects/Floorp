@@ -7,7 +7,7 @@
 .request-list-empty-notice {
   margin: 0;
   flex: 1;
-  overflow: auto;
+  overflow-x: hidden;
 }
 
 .empty-notice-element {
@@ -59,16 +59,18 @@
 .requests-list-table {
   /* Reset default browser style of <table> */
   border-spacing: 0;
+  width: 100%;
+  /* The layout must be fixed for resizing of columns to work.
+  The layout is based on the first row.
+  Set the width of those cells, and the rest of the table follows. */
+  table-layout: fixed;
 }
 
 .requests-list-column {
-  cursor: default;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   vertical-align: middle;
-  max-width: 50px;
-  min-width: 50px;
 
   /* Reset default browser style of <td> */
   padding: 0;
@@ -108,11 +110,11 @@
                                 transparent 85%) 1 1;
   border-width: 0;
   border-inline-start-width: 1px;
-  padding-inline-start: 16px;
   width: 100%;
   min-height: 23px;
   text-align: center;
   color: inherit;
+  padding: 1px 4px;
 }
 
 .requests-list-header-button::-moz-focus-inner {
@@ -129,7 +131,7 @@
   text-align: center;
   vertical-align: middle;
   /* Align button text to center */
-  width: calc(100% - 8px);
+  width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
 }
@@ -162,13 +164,32 @@
   border-image: linear-gradient(var(--theme-splitter-color), var(--theme-splitter-color)) 1 1;
 }
 
+/* Requests list headers column-resizer */
+
+.requests-list-headers .column-resizer {
+  z-index: 1000;
+  cursor: ew-resize;
+  margin-left: -3px;
+  width: 7px;
+  min-height: 23px;
+  position: absolute;
+  background-color: transparent;
+}
+
+/**
+ * Make sure headers are not processing any mouse
+ * events. This is good for performance during dragging.
+ */
+.requests-list-headers.dragging {
+  pointer-events: none;
+}
+
 /* Requests list column */
 
 /* Status column */
 
 .requests-list-status {
-  min-width: 70px;
-   /* Don't ellipsize status codes */
+  /* Don't ellipsize status codes */
   text-overflow: initial;
 }
 
@@ -226,91 +247,12 @@
   transform: rotate(45deg);
 }
 
-/* Method column */
-
-.requests-list-method {
-  min-width: 85px;
-}
-
-/* File column */
-
-.requests-list-file {
-  width: 40%;
-}
-
 .requests-list-file.requests-list-column {
   text-align: start;
 }
 
 .request-list-item.selected {
   filter: brightness(1.3);
-}
-
-/* Protocol column */
-
-.requests-list-protocol {
-  width: 8%;
-}
-
-/* Cookies column */
-
-.requests-list-cookies {
-  width: 6%;
-}
-
-/* Set Cookies column */
-
-.requests-list-set-cookies {
-  width: 8%;
-}
-
-/* Scheme column */
-
-.requests-list-scheme {
-  width: 8%;
-}
-
-/* Start Time column */
-
-.requests-list-start-time {
-  width: 8%;
-}
-
-/* End Time column */
-
-.requests-list-end-time {
-  width: 8%;
-}
-
-/* Response Time column */
-
-.requests-list-response-time {
-  width: 10%;
-}
-
-/* Duration column */
-
-.requests-list-duration-time {
-  width: 8%;
-}
-
-/* Latency column */
-
-.requests-list-latency-time {
-  width: 8%;
-}
-
-/* Response header columns */
-
-.requests-list-response-header {
-  width: 10%;
-}
-
-/* Domain column */
-
-.requests-list-domain {
-  min-width: 100px;
-  width: 30%;
 }
 
 .requests-list-domain.requests-list-column {
@@ -367,18 +309,6 @@
   filter: brightness(500%);
 }
 
-/* RemoteIP column */
-
-.requests-list-remoteip {
-  width: 9%;
-}
-
-/* Cause column */
-
-.requests-list-cause {
-  min-width: 75px;
-}
-
 .request-list-item .requests-list-cause.requests-list-column {
   padding-left: 5px;
 }
@@ -396,30 +326,9 @@
   margin-inline-end: 3px;
 }
 
-/* Type column */
-
-.requests-list-type {
-  min-width: 65px;
-}
-
-/* Transferred column */
-
-.requests-list-transferred {
-  min-width: 110px;
-}
-
-/* Size column */
-
-.requests-list-size {
-  min-width: 80px;
-}
-
 /* Waterfall column */
 
 .requests-list-waterfall {
-  width: 25vw;
-  max-width: 25vw;
-  min-width: 25vw;
   background-repeat: repeat-y;
   background-position: left center;
   /* Background created on a <canvas> in js. */
@@ -572,10 +481,6 @@
 /* Responsive web design support */
 
 @media (max-width: 700px) {
-  .requests-list-header-button {
-    padding-inline-start: 8px;
-  }
-
   .requests-list-status-code {
     width: auto;
   }
