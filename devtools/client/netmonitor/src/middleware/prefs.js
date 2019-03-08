@@ -12,6 +12,7 @@ const {
   TOGGLE_REQUEST_FILTER_TYPE,
   ENABLE_PERSISTENT_LOGS,
   DISABLE_BROWSER_CACHE,
+  SET_COLUMNS_WIDTH,
 } = require("../constants");
 
 /**
@@ -40,20 +41,45 @@ function prefsMiddleware(store) {
           "devtools.cache.disabled", store.getState().ui.browserCacheDisabled);
         break;
       case TOGGLE_COLUMN:
+        persistVisibleColumns(store.getState());
+        break;
       case RESET_COLUMNS:
-        const visibleColumns = [];
-        const columns = store.getState().ui.columns;
-        for (const column in columns) {
-          if (columns[column]) {
-            visibleColumns.push(column);
-          }
-        }
-        Services.prefs.setCharPref(
-          "devtools.netmonitor.visibleColumns", JSON.stringify(visibleColumns));
+        persistVisibleColumns(store.getState());
+        persistColumnsData(store.getState());
+        break;
+      case SET_COLUMNS_WIDTH:
+        persistColumnsData(store.getState());
         break;
     }
     return res;
   };
+}
+
+/**
+ * Store list of visible columns into preferences.
+ */
+function persistVisibleColumns(state) {
+  const visibleColumns = [];
+  const columns = state.ui.columns;
+  for (const column in columns) {
+    if (columns[column]) {
+      visibleColumns.push(column);
+    }
+  }
+
+  Services.prefs.setCharPref(
+    "devtools.netmonitor.visibleColumns",
+    JSON.stringify(visibleColumns));
+}
+
+/**
+ * Store columns data (width, min-width, etc.) into preferences.
+ */
+function persistColumnsData(state) {
+  const columnsData = [...state.ui.columnsData.values()];
+  Services.prefs.setCharPref(
+    "devtools.netmonitor.columnsData",
+    JSON.stringify(columnsData));
 }
 
 module.exports = prefsMiddleware;

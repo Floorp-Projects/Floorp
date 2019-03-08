@@ -11,6 +11,7 @@
 <Url type="text/html" method="GET" template="https://www.google.com/search" rel="searchform">
   <MozParam name="client" condition="purpose" purpose="keyword" value="firefox-b-1-ab"/>
   <MozParam name="client" condition="purpose" purpose="searchbar" value="firefox-b-1"/>
+  <MozParam name="channel" condition="pref" pref="google_channel_us"/>
   <Param name="q" value="{searchTerms}"/>
 </Url>
 </SearchPlugin>

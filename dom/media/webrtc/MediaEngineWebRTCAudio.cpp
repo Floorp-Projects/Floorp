@@ -46,8 +46,8 @@ extern LazyLogModule gMediaManagerLog;
 
 MediaEngineWebRTCMicrophoneSource::MediaEngineWebRTCMicrophoneSource(
     RefPtr<AudioDeviceInfo> aInfo, const nsString& aDeviceName,
-    const nsCString& aDeviceUUID, uint32_t aMaxChannelCount,
-    bool aDelayAgnostic, bool aExtendedFilter)
+    const nsCString& aDeviceUUID, const nsString& aDeviceGroup,
+    uint32_t aMaxChannelCount, bool aDelayAgnostic, bool aExtendedFilter)
     : mTrackID(TRACK_NONE),
       mPrincipal(PRINCIPAL_HANDLE_NONE),
       mDeviceInfo(std::move(aInfo)),
@@ -55,6 +55,7 @@ MediaEngineWebRTCMicrophoneSource::MediaEngineWebRTCMicrophoneSource(
       mExtendedFilter(aExtendedFilter),
       mDeviceName(aDeviceName),
       mDeviceUUID(aDeviceUUID),
+      mDeviceGroup(aDeviceGroup),
       mDeviceMaxChannelCount(aMaxChannelCount),
       mSettings(new nsMainThreadPtrHolder<
                 media::Refcountable<dom::MediaTrackSettings>>(
@@ -82,6 +83,10 @@ nsString MediaEngineWebRTCMicrophoneSource::GetName() const {
 
 nsCString MediaEngineWebRTCMicrophoneSource::GetUUID() const {
   return mDeviceUUID;
+}
+
+nsString MediaEngineWebRTCMicrophoneSource::GetGroupId() const {
+  return mDeviceGroup;
 }
 
 // GetBestFitnessDistance returns the best distance the capture device can offer
@@ -1161,6 +1166,10 @@ nsCString MediaEngineWebRTCAudioCaptureSource::GetUUID() const {
 
   // Remove {} and the null terminator
   return nsCString(Substring(asciiString, 1, NSID_LENGTH - 3));
+}
+
+nsString MediaEngineWebRTCAudioCaptureSource::GetGroupId() const {
+  return NS_LITERAL_STRING(u"AudioCaptureGroup");
 }
 
 void MediaEngineWebRTCAudioCaptureSource::SetTrack(

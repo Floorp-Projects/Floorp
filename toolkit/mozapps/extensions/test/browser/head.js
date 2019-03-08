@@ -1399,7 +1399,7 @@ function promisePopupNotificationShown(name = "addon-webext-permissions") {
   });
 }
 
-function acceptAppMenuNotificationWhenShown(id) {
+function acceptAppMenuNotificationWhenShown(id, type) {
   const {AppMenuNotifications} = ChromeUtils.import("resource://gre/modules/AppMenuNotifications.jsm");
   return new Promise(resolve => {
     function popupshown() {
@@ -1411,6 +1411,12 @@ function acceptAppMenuNotificationWhenShown(id) {
 
       PanelUI.notificationPanel.removeEventListener("popupshown", popupshown);
 
+      if (id == "addon-installed" && type) {
+        let hidden = type !== "extension" ||
+                     Services.prefs.getBoolPref("extensions.allowPrivateBrowsingByDefault", true);
+        let checkbox = document.getElementById("addon-incognito-checkbox");
+        is(checkbox.hidden, hidden, "checkbox visibility is correct");
+      }
       let popupnotificationID = PanelUI._getPopupId(notification);
       let popupnotification = document.getElementById(popupnotificationID);
       popupnotification.button.click();

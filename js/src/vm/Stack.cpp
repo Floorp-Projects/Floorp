@@ -289,7 +289,7 @@ bool InterpreterFrame::pushVarEnvironment(JSContext* cx, HandleScope scope) {
 bool InterpreterFrame::pushLexicalEnvironment(JSContext* cx,
                                               Handle<LexicalScope*> scope) {
   LexicalEnvironmentObject* env =
-      LexicalEnvironmentObject::create(cx, scope, this);
+      LexicalEnvironmentObject::createForFrame(cx, scope, this);
   if (!env) {
     return false;
   }

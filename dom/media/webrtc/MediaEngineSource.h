@@ -105,6 +105,11 @@ class MediaEngineSourceInterface {
   virtual nsCString GetUUID() const = 0;
 
   /**
+   * Gets the Group id of this device.
+   */
+  virtual nsString GetGroupId() const = 0;
+
+  /**
    * Get the enum describing the underlying type of MediaSource.
    */
   virtual dom::MediaSourceEnum GetMediaSource() const = 0;

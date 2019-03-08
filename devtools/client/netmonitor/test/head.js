@@ -118,8 +118,23 @@ Services.prefs.setCharPref(
   "\"startTime\",\"status\",\"transferred\",\"type\",\"waterfall\"]"
 );
 
+Services.prefs.setCharPref("devtools.netmonitor.columnsData",
+'[{"name":"status","minWidth":30,"width":5},' +
+  '{"name":"method","minWidth":30,"width":5},' +
+  '{"name":"domain","minWidth":30,"width":10},' +
+  '{"name":"file","minWidth":30,"width":25},' +
+  '{"name":"cause","minWidth":30,"width":10},' +
+  '{"name":"type","minWidth":30,"width":5},' +
+  '{"name":"transferred","minWidth":30,"width":10},' +
+  '{"name":"contentSize","minWidth":30,"width":5},' +
+  '{"name":"waterfall","minWidth":150,"width":25}]');
+
 // Increase UI limit for responses rendered using CodeMirror in tests.
 Services.prefs.setIntPref("devtools.netmonitor.response.ui.limit", 1024 * 105);
+
+// Support for columns resizing is currently hidden behind this pref,
+// but testing is on
+Services.prefs.setBoolPref("devtools.netmonitor.features.resizeColumns", true);
 
 registerCleanupFunction(() => {
   info("finish() was called, cleaning up...");
@@ -127,7 +142,10 @@ registerCleanupFunction(() => {
   Services.prefs.setBoolPref("devtools.debugger.log", gEnableLogging);
   Services.prefs.setCharPref("devtools.netmonitor.filters", gDefaultFilters);
   Services.prefs.clearUserPref("devtools.cache.disabled");
+  Services.prefs.clearUserPref("devtools.netmonitor.columnsData");
   Services.prefs.clearUserPref("devtools.netmonitor.response.ui.limit");
+  Services.prefs.clearUserPref("devtools.netmonitor.visibleColumns");
+  Services.prefs.clearUserPref("devtools.netmonitor.features.resizeColumns");
   Services.cookies.removeAll();
 });
 

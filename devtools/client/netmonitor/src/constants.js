@@ -30,6 +30,7 @@ const actionTypes = {
   TOGGLE_REQUEST_FILTER_TYPE: "TOGGLE_REQUEST_FILTER_TYPE",
   UPDATE_REQUEST: "UPDATE_REQUEST",
   WATERFALL_RESIZE: "WATERFALL_RESIZE",
+  SET_COLUMNS_WIDTH: "SET_COLUMNS_WIDTH",
 };
 
 // Descriptions for what this frontend is currently doing.
@@ -332,6 +333,11 @@ const TIMING_KEYS = [
   "receive",
 ];
 
+// Minimal width of Network Monitor column is 30px, for Waterfall 150px
+// Default width of columns (which are not defined in DEFAULT_COLUMNS_DATA) is 8%
+const MIN_COLUMN_WIDTH = 30; // in px
+const DEFAULT_COLUMN_WIDTH = 8; // in %
+
 const general = {
   ACTIVITY_TYPE,
   EVENTS,
@@ -344,6 +350,8 @@ const general = {
   REQUESTS_WATERFALL,
   PANELS,
   TIMING_KEYS,
+  MIN_COLUMN_WIDTH,
+  DEFAULT_COLUMN_WIDTH,
 };
 
 // flatten constants

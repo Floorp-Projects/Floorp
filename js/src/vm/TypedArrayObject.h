@@ -193,19 +193,15 @@ class TypedArrayObject : public ArrayBufferViewObject {
 MOZ_MUST_USE bool TypedArray_bufferGetter(JSContext* cx, unsigned argc,
                                           Value* vp);
 
-extern TypedArrayObject* TypedArrayCreateWithTemplate(JSContext* cx,
-                                                      HandleObject templateObj,
-                                                      int32_t len);
+extern TypedArrayObject* NewTypedArrayWithTemplateAndLength(
+    JSContext* cx, HandleObject templateObj, int32_t len);
 
-extern TypedArrayObject* TypedArrayCreateWithTemplate(JSContext* cx,
-                                                      HandleObject templateObj,
-                                                      HandleObject array);
+extern TypedArrayObject* NewTypedArrayWithTemplateAndArray(
+    JSContext* cx, HandleObject templateObj, HandleObject array);
 
-extern TypedArrayObject* TypedArrayCreateWithTemplate(JSContext* cx,
-                                                      HandleObject templateObj,
-                                                      HandleObject arrayBuffer,
-                                                      HandleValue byteOffset,
-                                                      HandleValue length);
+extern TypedArrayObject* NewTypedArrayWithTemplateAndBuffer(
+    JSContext* cx, HandleObject templateObj, HandleObject arrayBuffer,
+    HandleValue byteOffset, HandleValue length);
 
 inline bool IsTypedArrayClass(const Class* clasp) {
   return &TypedArrayObject::classes[0] <= clasp &&

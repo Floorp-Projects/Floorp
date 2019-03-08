@@ -112,6 +112,10 @@ extern ArrayObject* NewCopiedArrayForCallingAllocationSite(
     JSContext* cx, const Value* vp, size_t length,
     HandleObject proto = nullptr);
 
+extern ArrayObject* NewArrayWithGroup(JSContext* cx, uint32_t length,
+                                      HandleObjectGroup group,
+                                      bool convertDoubleElements);
+
 extern bool GetLengthProperty(JSContext* cx, HandleObject obj,
                               uint32_t* lengthp);
 
@@ -145,9 +149,8 @@ extern bool array_unshift(JSContext* cx, unsigned argc, js::Value* vp);
 
 extern bool array_slice(JSContext* cx, unsigned argc, js::Value* vp);
 
-extern JSObject* array_slice_dense(JSContext* cx, HandleObject obj,
-                                   int32_t begin, int32_t end,
-                                   HandleObject result);
+extern JSObject* ArraySliceDense(JSContext* cx, HandleObject obj, int32_t begin,
+                                 int32_t end, HandleObject result);
 
 extern bool array_reverse(JSContext* cx, unsigned argc, js::Value* vp);
 

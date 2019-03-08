@@ -3627,8 +3627,8 @@ static bool ArraySliceDenseKernel(JSContext* cx, ArrayObject* arr,
   return true;
 }
 
-JSObject* js::array_slice_dense(JSContext* cx, HandleObject obj, int32_t begin,
-                                int32_t end, HandleObject result) {
+JSObject* js::ArraySliceDense(JSContext* cx, HandleObject obj, int32_t begin,
+                              int32_t end, HandleObject result) {
   if (result && IsArraySpecies(cx, obj)) {
     if (!ArraySliceDenseKernel(cx, &obj->as<ArrayObject>(), begin, end,
                                &result->as<ArrayObject>())) {
@@ -4323,6 +4323,19 @@ ArrayObject* js::NewCopiedArrayForCallingAllocationSite(
     return nullptr;
   }
   return NewCopiedArrayTryUseGroup(cx, group, vp, length);
+}
+
+ArrayObject* js::NewArrayWithGroup(JSContext* cx, uint32_t length,
+                                   HandleObjectGroup group,
+                                   bool convertDoubleElements) {
+  ArrayObject* res = NewFullyAllocatedArrayTryUseGroup(cx, group, length);
+  if (!res) {
+    return nullptr;
+  }
+  if (convertDoubleElements) {
+    res->setShouldConvertDoubleElements();
+  }
+  return res;
 }
 
 #ifdef DEBUG

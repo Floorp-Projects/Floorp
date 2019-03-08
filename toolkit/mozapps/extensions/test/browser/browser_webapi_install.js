@@ -26,7 +26,8 @@ function waitForClear() {
 add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
     set: [["extensions.webapi.testing", true],
-          ["extensions.install.requireBuiltInCerts", false]],
+          ["extensions.install.requireBuiltInCerts", false],
+          ["extensions.allowPrivateBrowsingByDefault", false]],
   });
   info("added preferences");
 });
@@ -203,7 +204,7 @@ function makeRegularTest(options, what) {
         panel.button.click();
       });
 
-    let promptPromise = acceptAppMenuNotificationWhenShown("addon-installed");
+    let promptPromise = acceptAppMenuNotificationWhenShown("addon-installed", "extension");
 
     await testInstall(browser, options, steps, what);
 

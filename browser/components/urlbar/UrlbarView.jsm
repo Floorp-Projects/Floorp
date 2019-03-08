@@ -34,7 +34,7 @@ class UrlbarView {
     this.window = this.document.defaultView;
 
     this._mainContainer = this.panel.querySelector(".urlbarView-body-inner");
-    this._rows = this.panel.querySelector(".urlbarView-results");
+    this._rows = this.panel.querySelector("#urlbarView-results");
 
     this._rows.addEventListener("mouseup", this);
     this._rows.addEventListener("mousedown", this);
@@ -386,8 +386,10 @@ class UrlbarView {
   _createRow(resultIndex) {
     let result = this._queryContext.results[resultIndex];
     let item = this._createElement("div");
+    item.id = "urlbarView-row-" + resultIndex;
     item.className = "urlbarView-row";
     item.setAttribute("resultIndex", resultIndex);
+    item.setAttribute("role", "option");
 
     if (result.type == UrlbarUtils.RESULT_TYPE.SEARCH &&
         !result.payload.isKeywordOffer) {
@@ -493,14 +495,18 @@ class UrlbarView {
   _selectItem(item, updateInput = true) {
     if (this._selected) {
       this._selected.toggleAttribute("selected", false);
+      this._selected.toggleAttribute("aria-selected", false);
       this._selected = null;
     }
 
     if (!item) {
+      this._rows.removeAttribute("aria-activedescendant");
       return;
     }
     this._selected = item;
     item.toggleAttribute("selected", true);
+    item.toggleAttribute("aria-selected", true);
+    this._rows.setAttribute("aria-activedescendant", item.id);
 
     if (!updateInput) {
       return;
