@@ -38,9 +38,7 @@ var validateDevice = ({kind, label, deviceId, groupId}) => {
   ok(kind == "videoinput" || kind == "audioinput", "Known device kind");
   is(deviceId.length, 44, "deviceId length id as expected for Firefox");
   ok(label.length !== undefined, "Device label: " + label);
-
-  // TODO: s/todo_// once Bug 1213453 is fixed.
-  todo_isnot(groupId, "", "groupId must be present.");
+  isnot(groupId, "", "groupId must be present.");
 }
 
 runTest(async () => {
