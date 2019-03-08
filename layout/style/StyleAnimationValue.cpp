@@ -33,6 +33,7 @@
 
 using namespace mozilla;
 using namespace mozilla::css;
+using namespace mozilla::dom;
 using namespace mozilla::gfx;
 using nsStyleTransformMatrix::Decompose2DMatrix;
 using nsStyleTransformMatrix::Decompose3DMatrix;

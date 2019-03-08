@@ -22,6 +22,8 @@
 #include "GeckoProfiler.h"
 #include "mozilla/layers/WebRenderUserData.h"
 
+using namespace mozilla::dom;
+
 namespace mozilla {
 namespace css {
 
