@@ -345,19 +345,16 @@ class Encoder {
     return writeFixedU8(uint8_t(op));
   }
   MOZ_MUST_USE bool writeOp(MiscOp op) {
-    static_assert(size_t(MiscOp::Limit) <= 256, "fits");
     MOZ_ASSERT(size_t(op) < size_t(MiscOp::Limit));
-    return writeFixedU8(uint8_t(Op::MiscPrefix)) && writeFixedU8(uint8_t(op));
+    return writeFixedU8(uint8_t(Op::MiscPrefix)) && writeVarU32(uint32_t(op));
   }
   MOZ_MUST_USE bool writeOp(ThreadOp op) {
-    static_assert(size_t(ThreadOp::Limit) <= 256, "fits");
     MOZ_ASSERT(size_t(op) < size_t(ThreadOp::Limit));
-    return writeFixedU8(uint8_t(Op::ThreadPrefix)) && writeFixedU8(uint8_t(op));
+    return writeFixedU8(uint8_t(Op::ThreadPrefix)) && writeVarU32(uint32_t(op));
   }
   MOZ_MUST_USE bool writeOp(MozOp op) {
-    static_assert(size_t(MozOp::Limit) <= 256, "fits");
     MOZ_ASSERT(size_t(op) < size_t(MozOp::Limit));
-    return writeFixedU8(uint8_t(Op::MozPrefix)) && writeFixedU8(uint8_t(op));
+    return writeFixedU8(uint8_t(Op::MozPrefix)) && writeVarU32(uint32_t(op));
   }
 
   // Fixed-length encodings that allow back-patching.
