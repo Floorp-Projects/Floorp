@@ -1683,8 +1683,8 @@ SECKEY_SetPublicValue(SECKEYPrivateKey *privKey, SECItem *publicValue)
     SECStatus rv;
     SECKEYPublicKey pubKey;
     PLArenaPool *arena;
-    PK11SlotInfo *slot = privKey->pkcs11Slot;
-    CK_OBJECT_HANDLE privKeyID = privKey->pkcs11ID;
+    PK11SlotInfo *slot;
+    CK_OBJECT_HANDLE privKeyID;
 
     if (privKey == NULL || publicValue == NULL ||
         publicValue->data == NULL || publicValue->len == 0) {
@@ -1704,6 +1704,9 @@ SECKEY_SetPublicValue(SECKEYPrivateKey *privKey, SECItem *publicValue)
     if (arena == NULL) {
         return SECFailure;
     }
+
+    slot = privKey->pkcs11Slot;
+    privKeyID = privKey->pkcs11ID;
     rv = SECFailure;
     switch (privKey->keyType) {
         default:
