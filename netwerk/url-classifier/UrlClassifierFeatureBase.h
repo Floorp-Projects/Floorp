@@ -8,6 +8,7 @@
 #define mozilla_net_UrlClassifierFeatureBase_h
 
 #include "nsIUrlClassifierFeature.h"
+#include "nsIUrlClassifierSkipListService.h"
 #include "nsTArray.h"
 #include "nsString.h"
 #include "mozilla/AntiTrackingCommon.h"
@@ -15,7 +16,8 @@
 namespace mozilla {
 namespace net {
 
-class UrlClassifierFeatureBase : public nsIUrlClassifierFeature {
+class UrlClassifierFeatureBase : public nsIUrlClassifierFeature,
+                                 public nsIUrlClassifierSkipListObserver {
  public:
   NS_DECL_ISUPPORTS
 
@@ -37,6 +39,9 @@ class UrlClassifierFeatureBase : public nsIUrlClassifierFeature {
 
   NS_IMETHOD
   GetSkipHostList(nsACString& aList) override;
+
+  NS_IMETHOD
+  OnSkipListUpdate(const nsACString& aList) override;
 
  protected:
   UrlClassifierFeatureBase(const nsACString& aName,

@@ -10,9 +10,15 @@ with Files('**'):
 XPIDL_SOURCES += [
     'nsIURIClassifier.idl',
     'nsIUrlClassifierFeature.idl',
+    'nsIUrlClassifierSkipListService.idl',
 ]
 
 XPIDL_MODULE = 'url-classifier'
+
+EXTRA_COMPONENTS += [
+    'UrlClassifierSkipListService.js',
+    'UrlClassifierSkipListService.manifest',
+]
 
 DEFINES['GOOGLE_PROTOBUF_NO_RTTI'] = True
 DEFINES['GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER'] = True
