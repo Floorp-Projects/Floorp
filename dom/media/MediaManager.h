@@ -280,6 +280,7 @@ class MediaManager final : public nsIMediaManagerService,
                                const uint64_t aWindowId);
   static already_AddRefed<nsIWritableVariant> ToJSArray(
       MediaDeviceSet& aDevices);
+  static void GuessVideoDeviceGroupIDs(MediaManager::MediaDeviceSet& aDevices);
 
  private:
   enum class DeviceEnumerationType : uint8_t {

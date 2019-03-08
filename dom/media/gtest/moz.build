@@ -28,6 +28,7 @@ UNIFIED_SOURCES += [
     'TestGMPCrossOrigin.cpp',
     'TestGMPRemoveAndDelete.cpp',
     'TestGMPUtils.cpp',
+    'TestGroupId.cpp',
     'TestIntervalSet.cpp',
     'TestMediaDataDecoder.cpp',
     'TestMediaDataEncoder.cpp',
