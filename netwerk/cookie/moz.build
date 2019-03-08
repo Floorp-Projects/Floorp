@@ -37,6 +37,7 @@ if CONFIG['NECKO_COOKIES']:
         'nsCookieService.cpp',
     ]
     LOCAL_INCLUDES += [
+        '/dom/base',
         '/extensions/cookie',
         '/intl/uconv',
     ]
