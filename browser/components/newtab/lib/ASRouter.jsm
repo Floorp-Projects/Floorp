@@ -419,7 +419,7 @@ class _ASRouter {
       for (const provider of this.state.providers) {
         if (needsUpdate.includes(provider)) {
           let {messages, lastUpdated} = await MessageLoaderUtils.loadMessagesForProvider(provider, this._storage);
-          messages = messages.filter(({category}) => !category || ASRouterPreferences.getUserPreference(category));
+          messages = messages.filter(({content}) => !content || !content.category || ASRouterPreferences.getUserPreference(content.category));
           newState.providers.push({...provider, lastUpdated});
           newState.messages = [...newState.messages, ...messages];
         } else {

@@ -11,8 +11,8 @@ const REGULAR_IDS = [
 ];
 
 describe("CFRMessageProvider", () => {
-  it("should have a total of 3 messages", () => {
-    assert.lengthOf(messages, 3);
+  it("should have a total of 4 messages", () => {
+    assert.lengthOf(messages, 4);
   });
   it("should have one message each for the three regular addons", () => {
     for (const id of REGULAR_IDS) {
@@ -30,6 +30,11 @@ describe("CFRMessageProvider", () => {
       if (message.id !== "PIN_TAB") {
         assert.include(message.targeting, `(xpinstallEnabled == true)`);
       }
+    }
+  });
+  it("should restrict all messages to `en` locale for now", () => {
+    for (const message of messages) {
+      assert.include(message.targeting, `localeLanguageCode == "en"`);
     }
   });
 });

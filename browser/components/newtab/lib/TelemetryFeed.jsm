@@ -49,6 +49,8 @@ const USER_PREFS_ENCODING = {
   "feeds.section.highlights": 1 << 3,
   "feeds.snippets": 1 << 4,
   "showSponsored": 1 << 5,
+  "asrouter.userprefs.cfr.addons": 1 << 6,
+  "asrouter.userprefs.cfr.features": 1 << 7,
 };
 
 const PREF_IMPRESSION_ID = "impressionId";

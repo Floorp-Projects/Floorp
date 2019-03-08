@@ -1,4 +1,3 @@
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
 
@@ -42,7 +41,7 @@ this.DownloadsManager = class DownloadsManager {
 
   init(store) {
     this._store = store;
-    this._downloadData = DownloadsCommon.getData(null /* null for non-private downloads */, 
+    this._downloadData = DownloadsCommon.getData(null /* null for non-private downloads */,
                                                  true, false, true);
     this._downloadData.addView(this);
   }

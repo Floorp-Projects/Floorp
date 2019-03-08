@@ -1,5 +1,6 @@
 import {actionCreators as ac} from "common/Actions.jsm";
 import {connect} from "react-redux";
+import {DSLinkMenu} from "../DSLinkMenu/DSLinkMenu";
 import {ImpressionStats} from "../../DiscoveryStreamImpressionStats/ImpressionStats";
 import React from "react";
 import {SafeAnchor} from "../SafeAnchor/SafeAnchor";
@@ -61,6 +62,14 @@ export class ListItem extends React.PureComponent {
             dispatch={this.props.dispatch}
             source={this.props.type} />
         </SafeAnchor>
+        <DSLinkMenu
+          index={this.props.index}
+          dispatch={this.props.dispatch}
+          intl={this.props.intl}
+          url={this.props.url}
+          title={this.props.title}
+          source={this.props.source}
+          type={this.props.type} />
       </li>
     );
   }

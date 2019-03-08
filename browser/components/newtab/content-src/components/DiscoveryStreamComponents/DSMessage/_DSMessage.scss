@@ -6,17 +6,25 @@
     align-items: center;
 
     .glyph {
+      @include dark-theme-only {
+        fill: $grey-30;
+      }
+
       width: 16px;
       height: 16px;
       margin: 0 6px 0 0;
       -moz-context-properties: fill;
-      fill: var(--newtab-icon-secondary-color);
+      fill: $grey-50;
       background-position: center center;
       background-size: 16px;
       background-repeat: no-repeat;
     }
 
     .title-text {
+      @include dark-theme-only {
+        color: $grey-30;
+      }
+
       line-height: 20px;
       font-size: 13px;
       color: $grey-50;

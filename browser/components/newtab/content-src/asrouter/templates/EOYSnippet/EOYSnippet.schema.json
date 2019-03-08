@@ -76,6 +76,12 @@
       "type": "string",
       "description": "Snippet icon. 64x64px. SVG or PNG preferred."
     },
+    "title": {
+      "allOf": [
+        {"$ref": "#/definitions/plainText"},
+        {"description": "Snippet title displayed before snippet text"}
+      ]
+    },
     "title_icon": {
       "type": "string",
       "description": "Small icon that shows up before the title / text. 16x16px. SVG or PNG preferred. Grayscale."

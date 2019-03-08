@@ -10,7 +10,7 @@ $item-line-height: 20;
 // set up, which means that some refactoring will be required to do this.
 @mixin bottom-border-except-last-grid-row($columns) {
   .ds-list-item:not(:nth-last-child(-n+#{$columns})) {
-    border-bottom: $border-secondary;
+    @include ds-border-bottom;
     margin-bottom: -1px;  // cancel out the pixel we used for the border
     padding-bottom: $bordered-spacing;
   }
@@ -74,7 +74,10 @@ $item-line-height: 20;
   }
 
   a {
-    // XXX note that this only looks right in the light theme
+    @include dark-theme-only {
+      color: $grey-10;
+    }
+
     color: $grey-90;
   }
 }
@@ -92,7 +95,11 @@ $item-line-height: 20;
     padding-inline-start: $counter-padded-size;
 
     &::before {
-      background-color: var(--newtab-link-secondary-color);
+      @include dark-theme-only {
+        background-color: $teal-70;
+      }
+
+      background-color: $pocket-teal;
       border-radius: $counter-size;
       color: $white;
       content: counter(list);
@@ -107,17 +114,25 @@ $item-line-height: 20;
     }
 
     &:hover::before {
-      background-color: var(--newtab-link-primary-color);
+      @include dark-theme-only {
+        background-color: $blue-40;
+      }
+
+      background-color: $blue-40;
     }
 
     &:active::before {
+      @include dark-theme-only {
+        background-color: $blue-60;
+      }
+
       background-color: $blue-70;
     }
   }
 }
 
 .ds-list-borders {
-  border-top: $border-secondary;
+  @include ds-border-top;
   grid-row-gap: $bordered-spacing;
   padding-top: $bordered-spacing;
 
@@ -168,7 +183,7 @@ $item-line-height: 20;
 
   .ds-list-item-excerpt {
     @include limit-visibile-lines(2, $item-line-height, $item-font-size);
-    color: var(--newtab-text-secondary-color);
+    color: $grey-10-80;
     margin: 4px 0 8px;
   }
 
@@ -181,6 +196,10 @@ $item-line-height: 20;
   .ds-list-item-info,
   .ds-list-item-context {
     @include limit-visibile-lines(1, $item-line-height, $item-font-size);
+    @include dark-theme-only {
+      color: $teal-10;
+    }
+
     color: $teal-80;
     font-size: 13px;
     text-overflow: ellipsis;
@@ -206,7 +225,7 @@ $item-line-height: 20;
 
   &:hover {
     .ds-list-item-title {
-      color: var(--newtab-link-primary-color);
+      color: $blue-40;
     }
   }
 

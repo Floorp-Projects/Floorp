@@ -4,6 +4,7 @@ export class ContextMenu extends React.PureComponent {
   constructor(props) {
     super(props);
     this.hideContext = this.hideContext.bind(this);
+    this.onShow = this.onShow.bind(this);
     this.onClick = this.onClick.bind(this);
   }
 
@@ -11,7 +12,14 @@ export class ContextMenu extends React.PureComponent {
     this.props.onUpdate(false);
   }
 
+  onShow() {
+    if (this.props.onShow) {
+      this.props.onShow();
+    }
+  }
+
   componentDidMount() {
+    this.onShow();
     setTimeout(() => {
       global.addEventListener("click", this.hideContext);
     }, 0);
