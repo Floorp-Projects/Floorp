@@ -24,7 +24,6 @@ import org.mozilla.gecko.mozglue.SafeIntent;
 import org.mozilla.gecko.notifications.WhatsNewReceiver;
 import org.mozilla.gecko.preferences.GeckoPreferences;
 import org.mozilla.gecko.reader.ReaderModeUtils;
-import org.mozilla.gecko.tabs.TabHistoryController;
 import org.mozilla.gecko.util.BundleEventListener;
 import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.GeckoBundle;
@@ -903,6 +902,27 @@ public class Tabs implements BundleEventListener {
         }
 
         return null;
+    }
+
+    /**
+     * Looks for the last open tab with the given URL and private state.
+     * @param url       the URL of the tab we're looking for
+     *
+     * @return last Tab with the given URL, or null if there is no such tab.
+     */
+    public Tab getLastTabForUrl(String url) {
+        if (url == null) {
+            return null;
+        }
+
+        Tab lastTab = null;
+        for (Tab tab : mOrder) {
+            if (url.equals(tab.getURL())) {
+                lastTab = tab;
+            }
+        }
+
+        return lastTab;
     }
 
     /**
