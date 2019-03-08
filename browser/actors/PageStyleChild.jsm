@@ -15,12 +15,14 @@ class PageStyleChild extends ActorChild {
 
   sendStyleSheetInfo(mm) {
     let content = mm.content;
-    let filteredStyleSheets = this._filterStyleSheets(this.getAllStyleSheets(content), content);
+    content.requestIdleCallback(() => {
+      let filteredStyleSheets = this._filterStyleSheets(this.getAllStyleSheets(content), content);
 
-    mm.sendAsyncMessage("PageStyle:StyleSheets", {
-      filteredStyleSheets,
-      authorStyleDisabled: this.getViewer(content).authorStyleDisabled,
-      preferredStyleSheetSet: content.document.preferredStyleSheetSet,
+      mm.sendAsyncMessage("PageStyle:StyleSheets", {
+        filteredStyleSheets,
+        authorStyleDisabled: this.getViewer(content).authorStyleDisabled,
+        preferredStyleSheetSet: content.document.preferredStyleSheetSet,
+      });
     });
   }
 
