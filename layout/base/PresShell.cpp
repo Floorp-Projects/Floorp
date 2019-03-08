@@ -7664,57 +7664,12 @@ nsresult PresShell::EventHandler::HandleEventInternal(
       case eKeyPress:
       case eKeyDown:
       case eKeyUp: {
-        Document* doc = mPresShell->GetCurrentEventContent()
-                            ? mPresShell->mCurrentEventContent->OwnerDoc()
-                            : nullptr;
-        auto keyCode = aEvent->AsKeyboardEvent()->mKeyCode;
-        if (keyCode == NS_VK_ESCAPE) {
-          Document* root = nsContentUtils::GetRootDocument(doc);
-          if (root && root->GetFullscreenElement()) {
-            // Prevent default action on ESC key press when exiting
-            // DOM fullscreen mode. This prevents the browser ESC key
-            // handler from stopping all loads in the document, which
-            // would cause <video> loads to stop.
-            // XXX We need to claim the Escape key event which will be
-            //     dispatched only into chrome is already consumed by
-            //     content because we need to prevent its default here
-            //     for some reasons (not sure) but we need to detect
-            //     if a chrome event handler will call PreventDefault()
-            //     again and check it later.
-            aEvent->PreventDefaultBeforeDispatch(CrossProcessForwarding::eStop);
-            aEvent->mFlags.mOnlyChromeDispatch = true;
-
-            // The event listeners in chrome can prevent this ESC behavior by
-            // calling prevent default on the preceding keydown/press events.
-            if (!mPresShell->mIsLastChromeOnlyEscapeKeyConsumed &&
-                aEvent->mMessage == eKeyUp) {
-              // ESC key released while in DOM fullscreen mode.
-              // Fully exit all browser windows and documents from
-              // fullscreen mode.
-              Document::AsyncExitFullscreen(nullptr);
-            }
-          }
-          nsCOMPtr<Document> pointerLockedDoc =
-              do_QueryReferent(EventStateManager::sPointerLockedDoc);
-          if (!mPresShell->mIsLastChromeOnlyEscapeKeyConsumed &&
-              pointerLockedDoc) {
-            // XXX See above comment to understand the reason why this needs
-            //     to claim that the Escape key event is consumed by content
-            //     even though it will be dispatched only into chrome.
-            aEvent->PreventDefaultBeforeDispatch(CrossProcessForwarding::eStop);
-            aEvent->mFlags.mOnlyChromeDispatch = true;
-            if (aEvent->mMessage == eKeyUp) {
-              Document::UnlockPointer();
-            }
-          }
-        }
-        // Allow keys other than ESC and modifiers be marked as a
-        // valid user input for triggering popup, fullscreen, and
-        // pointer lock.
-        isHandlingUserInput =
-            keyCode != NS_VK_ESCAPE && keyCode != NS_VK_SHIFT &&
-            keyCode != NS_VK_CONTROL && keyCode != NS_VK_ALT &&
-            keyCode != NS_VK_WIN && keyCode != NS_VK_META;
+        WidgetKeyboardEvent* keyboardEvent = aEvent->AsKeyboardEvent();
+        MaybeHandleKeyboardEventBeforeDispatch(keyboardEvent);
+        // Not all keyboard events are treated as user input, so that popups
+        // can't be opened, fullscreen mode can't be started, etc at unexpected
+        // time.
+        isHandlingUserInput = keyboardEvent->CanTreatAsUserInput();
         break;
       }
       case eMouseDown:
@@ -7916,6 +7871,59 @@ bool PresShell::EventHandler::PrepareToDispatchContextMenuEvent(
   return true;
 }
 
+void PresShell::EventHandler::MaybeHandleKeyboardEventBeforeDispatch(
+    WidgetKeyboardEvent* aKeyboardEvent) {
+  MOZ_ASSERT(aKeyboardEvent);
+
+  if (aKeyboardEvent->mKeyCode != NS_VK_ESCAPE) {
+    return;
+  }
+
+  // If we're in fullscreen mode, exit from it forcibly when Escape key is
+  // pressed.
+  Document* doc = mPresShell->GetCurrentEventContent()
+                      ? mPresShell->mCurrentEventContent->OwnerDoc()
+                      : nullptr;
+  Document* root = nsContentUtils::GetRootDocument(doc);
+  if (root && root->GetFullscreenElement()) {
+    // Prevent default action on ESC key press when exiting
+    // DOM fullscreen mode. This prevents the browser ESC key
+    // handler from stopping all loads in the document, which
+    // would cause <video> loads to stop.
+    // XXX We need to claim the Escape key event which will be
+    //     dispatched only into chrome is already consumed by
+    //     content because we need to prevent its default here
+    //     for some reasons (not sure) but we need to detect
+    //     if a chrome event handler will call PreventDefault()
+    //     again and check it later.
+    aKeyboardEvent->PreventDefaultBeforeDispatch(CrossProcessForwarding::eStop);
+    aKeyboardEvent->mFlags.mOnlyChromeDispatch = true;
+
+    // The event listeners in chrome can prevent this ESC behavior by
+    // calling prevent default on the preceding keydown/press events.
+    if (!mPresShell->mIsLastChromeOnlyEscapeKeyConsumed &&
+        aKeyboardEvent->mMessage == eKeyUp) {
+      // ESC key released while in DOM fullscreen mode.
+      // Fully exit all browser windows and documents from
+      // fullscreen mode.
+      Document::AsyncExitFullscreen(nullptr);
+    }
+  }
+
+  nsCOMPtr<Document> pointerLockedDoc =
+      do_QueryReferent(EventStateManager::sPointerLockedDoc);
+  if (!mPresShell->mIsLastChromeOnlyEscapeKeyConsumed && pointerLockedDoc) {
+    // XXX See above comment to understand the reason why this needs
+    //     to claim that the Escape key event is consumed by content
+    //     even though it will be dispatched only into chrome.
+    aKeyboardEvent->PreventDefaultBeforeDispatch(CrossProcessForwarding::eStop);
+    aKeyboardEvent->mFlags.mOnlyChromeDispatch = true;
+    if (aKeyboardEvent->mMessage == eKeyUp) {
+      Document::UnlockPointer();
+    }
+  }
+}
+
 void PresShell::EventHandler::RecordEventPreparationPerformance(
     const WidgetEvent* aEvent) {
   MOZ_ASSERT(aEvent);
@@ -7924,19 +7932,10 @@ void PresShell::EventHandler::RecordEventPreparationPerformance(
     case eKeyPress:
     case eKeyDown:
     case eKeyUp:
-      switch (aEvent->AsKeyboardEvent()->mKeyCode) {
-        case NS_VK_ESCAPE:
-        case NS_VK_SHIFT:
-        case NS_VK_CONTROL:
-        case NS_VK_ALT:
-        case NS_VK_WIN:
-        case NS_VK_META:
-          break;
-        default:
-          GetPresContext()->RecordInteractionTime(
-              nsPresContext::InteractionType::eKeyInteraction,
-              aEvent->mTimeStamp);
-          break;
+      if (aEvent->AsKeyboardEvent()->ShouldInteractionTimeRecorded()) {
+        GetPresContext()->RecordInteractionTime(
+            nsPresContext::InteractionType::eKeyInteraction,
+            aEvent->mTimeStamp);
       }
       Telemetry::AccumulateTimeDelta(Telemetry::INPUT_EVENT_QUEUED_KEYBOARD_MS,
                                      aEvent->mTimeStamp);
