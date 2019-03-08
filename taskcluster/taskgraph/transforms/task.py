@@ -808,13 +808,8 @@ def build_generic_worker_payload(config, task, task_def):
     if mounts:
         task_def['payload']['mounts'] = mounts
 
-    if worker.get('os-groups'):
+    if worker.get('os-groups', []):
         task_def['payload']['osGroups'] = worker['os-groups']
-        task_def['scopes'].extend(
-            ['generic-worker:os-group:{}/{}'.format(
-                task['worker-type'],
-                group
-            ) for group in worker['os-groups']])
 
     features = {}
 
@@ -829,9 +824,6 @@ def build_generic_worker_payload(config, task, task_def):
 
     if worker.get('run-as-administrator', False):
         features['runAsAdministrator'] = True
-        task_def['scopes'].append(
-            'generic-worker:run-as-adminstrator:{}'.format(task['worker-type']),
-        )
 
     if features:
         task_def['payload']['features'] = features
