@@ -6,7 +6,7 @@ http://creativecommons.org/publicdomain/zero/1.0/ */
 // Test that the Page Style browser menu actions make it to the viewport, instead of
 // applying to the RDM UI.
 
-const TEST_URL = "data:text/html;charset=utf-8,<style>body{color:red}</style>Hello RDM";
+const TEST_URL = `${URL_ROOT}page_style.html`;
 
 addRDMTask(TEST_URL, async function({ ui, manager }) {
   // Store the RDM body text color for later.
