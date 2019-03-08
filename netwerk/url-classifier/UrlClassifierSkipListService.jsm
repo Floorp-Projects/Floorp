@@ -23,19 +23,19 @@ class Feature {
       this.prefValue = Services.prefs.getStringPref(this.prefName, null);
       Services.prefs.addObserver(prefName, this);
     }
-
-    RemoteSettings(COLLECTION_NAME).on("sync", event => {
-      let { data: { current } } = event;
-      this.remoteEntries = current;
-      this.notifyObservers();
-    });
   }
 
   async addObserver(observer) {
     // If the remote settings list hasn't been populated yet we have to make sure
     // to do it before firing the first notification.
     if (!this.remoteEntries) {
-      this.remoteEntries = await RemoteSettings(COLLECTION_NAME).get({ syncIfEmpty: false });
+      let remoteEntries;
+      try {
+        remoteEntries = await RemoteSettings(COLLECTION_NAME).get({ syncIfEmpty: false });
+      } catch (e) {
+        remoteEntries = [];
+      }
+      this.onRemoteSettingsUpdate(remoteEntries);
     }
 
     this.observers.add(observer);
@@ -56,6 +56,15 @@ class Feature {
     this.notifyObservers();
   }
 
+  onRemoteSettingsUpdate(entries) {
+    this.remoteEntries = [];
+    for (let entry of entries) {
+      if (entry.feature == this.name) {
+        this.remoteEntries.push(entry.pattern.toLowerCase());
+      }
+    }
+  }
+
   notifyObservers(observer = null) {
     let entries = [];
     if (this.prefValue) {
@@ -63,9 +72,7 @@ class Feature {
     }
 
     for (let entry of this.remoteEntries) {
-      if (entry.feature == this.name) {
-        entries.push(entry.pattern.toLowerCase());
-      }
+      entries.push(entry);
     }
 
     let entriesAsString = entries.join(",");
@@ -79,13 +86,33 @@ class Feature {
   }
 }
 
-UrlClassifierSkipListService.prototype = Object.freeze({
+UrlClassifierSkipListService.prototype = {
   classID: Components.ID("{b9f4fd03-9d87-4bfd-9958-85a821750ddc}"),
   QueryInterface: ChromeUtils.generateQI([Ci.nsIUrlClassifierSkipListService]),
 
   features: {},
+  _initialized: false,
+
+  lazyInit() {
+    if (this._initialized) {
+      return;
+    }
+
+    RemoteSettings(COLLECTION_NAME).on("sync", event => {
+      let { data: { current } } = event;
+      for (let key of Object.keys(this.features)) {
+        let feature = this.features[key];
+        feature.onRemoteSettingsUpdate(current);
+        feature.notifyObservers();
+      }
+    });
+
+    this._initialized = true;
+  },
 
   registerAndRunSkipListObserver(feature, prefName, observer) {
+    this.lazyInit();
+
     if (!this.features[feature]) {
       this.features[feature] = new Feature(feature, prefName);
     }
@@ -98,6 +125,6 @@ UrlClassifierSkipListService.prototype = Object.freeze({
     }
     this.features[feature].removeObserver(observer);
   },
-});
+};
 
 var EXPORTED_SYMBOLS = ["UrlClassifierSkipListService"];
