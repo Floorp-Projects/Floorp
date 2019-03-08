@@ -77,7 +77,6 @@ LocalStorageCache::LocalStorageCache(const nsACString* aOriginNoSuffix)
       mLoadResult(NS_OK),
       mInitialized(false),
       mPersistent(false),
-      mSessionOnlyDataSetActive(false),
       mPreloadTelemetryRecorded(false) {
   MOZ_COUNT_CTOR(LocalStorageCache);
 }
@@ -183,29 +182,7 @@ const nsCString LocalStorageCache::Origin() const {
 
 LocalStorageCache::Data& LocalStorageCache::DataSet(
     const LocalStorage* aStorage) {
-  uint32_t index = GetDataSetIndex(aStorage);
-
-  if (index == kSessionSet && !mSessionOnlyDataSetActive) {
-    // Session only data set is demanded but not filled with
-    // current data set, copy to session only set now.
-
-    WaitForPreload(Telemetry::LOCALDOMSTORAGE_SESSIONONLY_PRELOAD_BLOCKING_MS);
-
-    Data& defaultSet = mData[kDefaultSet];
-    Data& sessionSet = mData[kSessionSet];
-
-    for (auto iter = defaultSet.mKeys.Iter(); !iter.Done(); iter.Next()) {
-      sessionSet.mKeys.Put(iter.Key(), iter.UserData());
-    }
-
-    mSessionOnlyDataSetActive = true;
-
-    // This updates sessionSet.mOriginQuotaUsage and also updates global usage
-    // for all session only data
-    ProcessUsageDelta(kSessionSet, defaultSet.mOriginQuotaUsage);
-  }
-
-  return mData[index];
+  return mData[GetDataSetIndex(aStorage)];
 }
 
 bool LocalStorageCache::ProcessUsageDelta(const LocalStorage* aStorage,
@@ -541,7 +518,6 @@ void LocalStorageCache::UnloadItems(uint32_t aUnloadFlags) {
   if (aUnloadFlags & kUnloadSession) {
     mData[kSessionSet].mKeys.Clear();
     ProcessUsageDelta(kSessionSet, -mData[kSessionSet].mOriginQuotaUsage);
-    mSessionOnlyDataSetActive = false;
   }
 
 #ifdef DOM_STORAGE_TESTS
