@@ -16,7 +16,8 @@ debugger-tests:
             cd /builds/worker/checkouts/gecko/devtools/client/debugger/new/ &&
             yarn &&
             yarn flow &&
-            yarn test
+            yarn test &&
+            yarn lint
     when:
         files-changed:
             - 'devtools/client/debugger/new/**'
