@@ -29,11 +29,15 @@ pref("geckoview.logging", "Debug");
 // Disable Web Push until we get it working
 pref("dom.push.enabled", false);
 
-// Unlike Fennec, GeckoView may have WebRender enabled, and with WebRender we're
-// going with containerless scrolling (because there are no layers at all with
-// WR, so why not go containerless). So we set this pref to pick up the value
-// in gfxPrefs.h from whether or not WR is enabled.
+// Use containerless scrolling on the Nightly channel.
+// Bug 1137890 tracks letting it ride the trains.
+// For now, on non-Nightly channels we use containerless scrolling with
+// WebRender only (that's what the "2" means).
+#ifdef NIGHTLY_BUILD
+pref("layout.scroll.root-frame-containers", 0);
+#else
 pref("layout.scroll.root-frame-containers", 2);
+#endif
 
 // Inherit locale from the OS, used for multi-locale builds
 pref("intl.locale.requested", "");
