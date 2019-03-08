@@ -216,5 +216,17 @@ void TextTrackCue::NotifyDisplayStatesChanged() {
       ->NotifyCueDisplayStatesChanged();
 }
 
+void TextTrackCue::SetActive(bool aActive) {
+  if (mActive == aActive) {
+    return;
+  }
+
+  mActive = aActive;
+  mDisplayState = mActive ? mDisplayState : nullptr;
+  if (mTrack) {
+    mTrack->NotifyCueActiveStateChanged(this);
+  }
+}
+
 }  // namespace dom
 }  // namespace mozilla

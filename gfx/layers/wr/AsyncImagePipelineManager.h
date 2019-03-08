@@ -54,7 +54,7 @@ class AsyncImagePipelineManager final {
 
   void HoldExternalImage(const wr::PipelineId& aPipelineId,
                          const wr::Epoch& aEpoch,
-                         WebRenderTextureHost* aTexture);
+                         TextureHost* aTexture);
   void HoldExternalImage(const wr::PipelineId& aPipelineId,
                          const wr::Epoch& aEpoch,
                          WebRenderTextureHostWrapper* aWrTextureWrapper);

@@ -57,9 +57,6 @@ function testInheritedProperty(property, info) {
   // is different (normal vs. 19px).
   if (property == "line-height")
     return;
-  // Ongoing debugging in bug 1533392.
-  if (property == "font-family")
-    return;
 
   const div = kInheritedDiv;
   const initial = getInitialValue(div, property);

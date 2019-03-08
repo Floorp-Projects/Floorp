@@ -105,12 +105,6 @@ void TextTrackList::RemoveTextTrack(TextTrack* aTrack) {
   }
 }
 
-void TextTrackList::DidSeek() {
-  for (uint32_t i = 0; i < mTextTracks.Length(); i++) {
-    mTextTracks[i]->SetDirty();
-  }
-}
-
 class TrackEventRunner : public Runnable {
  public:
   TrackEventRunner(TextTrackList* aList, Event* aEvent)

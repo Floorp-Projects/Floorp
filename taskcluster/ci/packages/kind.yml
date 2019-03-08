@@ -277,30 +277,6 @@ jobs:
         url: https://github.com/indygreg/python-zstandard/releases/download/0.9.1/python-zstandard-0.9.1.tar.gz
         sha256: 59c7d6f1f85cebb5124abb50d8ec281c5311e0812e18785e28b197cf1515dd3b
 
-  deb7-nasm:
-    description: "nasm for Debian wheezy"
-    treeherder:
-      symbol: Deb7(nasm)
-    run:
-      using: debian-package
-      dsc:
-        url: http://snapshot.debian.org/archive/debian/20170704T094954Z/pool/main/n/nasm/nasm_2.13.01-1.dsc
-        sha256: 76528365eddc646f3f53c9f501ae9c2ba1678a163303d297e9014e3da36643c8
-      patch: nasm-wheezy.diff
-
-  deb9-nasm:
-    description: "nasm for Debian stretch"
-    treeherder:
-      symbol: Deb9(nasm)
-    run:
-      using: debian-package
-      dist: stretch
-      dsc:
-        url: http://snapshot.debian.org/archive/debian/20170704T094954Z/pool/main/n/nasm/nasm_2.13.01-1.dsc
-        sha256: 76528365eddc646f3f53c9f501ae9c2ba1678a163303d297e9014e3da36643c8
-      # The package source is missing a build dependency on fontconfig.
-      pre-build-command: apt-get install -y fontconfig
-
   deb7-pcre3:
     description: "pcre3 8.31 for Debian Wheezy"
     treeherder:

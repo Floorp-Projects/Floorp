@@ -167,6 +167,7 @@ impl LazilyCompiledShader {
             let vertex_descriptor = match vertex_format {
                 VertexArrayKind::Primitive => &desc::PRIM_INSTANCES,
                 VertexArrayKind::LineDecoration => &desc::LINE,
+                VertexArrayKind::Gradient => &desc::GRADIENT,
                 VertexArrayKind::Blur => &desc::BLUR,
                 VertexArrayKind::Clip => &desc::CLIP,
                 VertexArrayKind::VectorStencil => &desc::VECTOR_STENCIL,
@@ -447,6 +448,7 @@ pub struct Shaders {
     pub cs_scale_a8: LazilyCompiledShader,
     pub cs_scale_rgba8: LazilyCompiledShader,
     pub cs_line_decoration: LazilyCompiledShader,
+    pub cs_gradient: LazilyCompiledShader,
 
     // Brush shaders
     brush_solid: BrushShader,
@@ -667,6 +669,14 @@ impl Shaders {
             options.precache_flags,
         )?;
 
+        let cs_gradient = LazilyCompiledShader::new(
+            ShaderKind::Cache(VertexArrayKind::Gradient),
+            "cs_gradient",
+            &[],
+            device,
+            options.precache_flags,
+        )?;
+
         let cs_border_segment = LazilyCompiledShader::new(
             ShaderKind::Cache(VertexArrayKind::Border),
             "cs_border_segment",
@@ -696,6 +706,7 @@ impl Shaders {
             cs_blur_rgba8,
             cs_border_segment,
             cs_line_decoration,
+            cs_gradient,
             cs_border_solid,
             cs_scale_a8,
             cs_scale_rgba8,
@@ -792,6 +803,7 @@ impl Shaders {
             }
         }
         self.cs_border_solid.deinit(device);
+        self.cs_gradient.deinit(device);
         self.cs_line_decoration.deinit(device);
         self.cs_border_segment.deinit(device);
         self.ps_split_composite.deinit(device);

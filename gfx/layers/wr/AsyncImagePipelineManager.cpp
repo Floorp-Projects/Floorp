@@ -227,6 +227,10 @@ Maybe<TextureHost::ResourceUpdateOp> AsyncImagePipelineManager::UpdateImageKeys(
   aPipeline->mCurrentTexture = texture;
 
   WebRenderTextureHost* wrTexture = texture->AsWebRenderTextureHost();
+  MOZ_ASSERT(wrTexture);
+  if (!wrTexture) {
+    gfxCriticalNote << "WebRenderTextureHost is not used";
+  }
 
   bool useExternalImage = !gfxEnv::EnableWebRenderRecording() && wrTexture;
   aPipeline->mUseExternalImage = useExternalImage;
@@ -386,7 +390,7 @@ void AsyncImagePipelineManager::ApplyAsyncImageForPipeline(
     aSceneBuilderTxn.UpdateEpoch(aPipelineId, aEpoch);
     if (aPipeline->mCurrentTexture) {
       HoldExternalImage(aPipelineId, aEpoch,
-                        aPipeline->mCurrentTexture->AsWebRenderTextureHost());
+                        aPipeline->mCurrentTexture);
     }
     return;
   }
@@ -429,7 +433,7 @@ void AsyncImagePipelineManager::ApplyAsyncImageForPipeline(
           builder, wr::ToRoundedLayoutRect(rect), wr::ToRoundedLayoutRect(rect),
           aPipeline->mFilter, range_keys);
       HoldExternalImage(aPipelineId, aEpoch,
-                        aPipeline->mCurrentTexture->AsWebRenderTextureHost());
+                        aPipeline->mCurrentTexture);
     } else {
       MOZ_ASSERT(keys.Length() == 1);
       builder.PushImage(wr::ToRoundedLayoutRect(rect),
@@ -510,7 +514,7 @@ void AsyncImagePipelineManager::SetEmptyDisplayList(
 
 void AsyncImagePipelineManager::HoldExternalImage(
     const wr::PipelineId& aPipelineId, const wr::Epoch& aEpoch,
-    WebRenderTextureHost* aTexture) {
+    TextureHost* aTexture) {
   if (mDestroyed) {
     return;
   }

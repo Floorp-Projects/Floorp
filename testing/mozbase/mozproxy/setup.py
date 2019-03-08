@@ -15,7 +15,7 @@ deps = []
 setup(
     name=PACKAGE_NAME,
     version=PACKAGE_VERSION,
-    description="Proxy for playback" "left behind by crashed processes",
+    description="Proxy for playback",
     long_description="see https://firefox-source-docs.mozilla.org/mozbase/index.html",
     classifiers=[
         "Programming Language :: Python :: 2.7",

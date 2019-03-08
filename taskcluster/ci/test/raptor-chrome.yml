@@ -1,0 +1,333 @@
+job-defaults:
+    max-run-time:
+        by-test-platform:
+            .*-qr/.*: 2400
+            .*-ux/.*: 2400
+            default: 1800
+    suite: raptor
+    workdir:
+        by-test-platform:
+            android-hw.*: /builds/worker
+            default: /home/cltbld
+    run-on-projects:
+        by-test-platform:
+            windows10-64-ux: ['try', 'mozilla-central']
+            default: ['try', 'trunk', 'mozilla-beta']
+    tier:
+        by-test-platform:
+            windows10-64-ccov/.*: 3
+            linux64-ccov/.*: 3
+            android-hw-g5.*: 2
+            default: 1
+    virtualization:
+        by-test-platform:
+            windows10-64-ccov/.*: virtual
+            default: hardware
+    mozharness:
+        script: raptor_script.py
+        config:
+            by-test-platform:
+                macosx.*:
+                    - raptor/mac_config.py
+                windows.*:
+                    - raptor/windows_config.py
+                windows10-64-ccov/debug:
+                    - raptor/windows_vm_config.py
+                linux64-ccov/opt:
+                    - raptor/linux64_config_taskcluster.py
+                android-hw.*:
+                    - raptor/android_hw_config.py
+                default:
+                    - raptor/linux_config.py
+    fetches:
+        by-test-platform:
+            win.*64.*:
+                fetch:
+                    - win64-chromium
+            win.*32.*:
+                fetch:
+                    - win32-chromium
+            macosx.*:
+                fetch:
+                    - mac-chromium
+            default:
+                fetch:
+                    - linux64-chromium
+
+raptor-tp6-1-chrome:
+    description: "Raptor tp6-1 on Chrome"
+    try-name: raptor-tp6-1-chrome
+    treeherder-symbol: Rap-C(tp6-1)
+    run-on-projects: ['try', 'mozilla-central']
+    tier: 2
+    max-run-time: 1200
+    mozharness:
+        extra-options:
+            - --test=raptor-tp6-1
+            - --app=chrome
+
+raptor-tp6-2-chrome:
+    description: "Raptor tp6-2 on Chrome"
+    try-name: raptor-tp6-2-chrome
+    treeherder-symbol: Rap-C(tp6-2)
+    run-on-projects: ['try', 'mozilla-central']
+    tier: 2
+    mozharness:
+        extra-options:
+            - --test=raptor-tp6-2
+            - --app=chrome
+
+raptor-tp6-3-chrome:
+    description: "Raptor tp6-3 on Chrome"
+    try-name: raptor-tp6-3-chrome
+    treeherder-symbol: Rap-C(tp6-3)
+    run-on-projects: ['try', 'mozilla-central']
+    tier: 2
+    max-run-time: 2400
+    mozharness:
+        extra-options:
+            - --test=raptor-tp6-3
+            - --app=chrome
+
+raptor-tp6-4-chrome:
+    description: "Raptor tp6-4 on Chrome"
+    try-name: raptor-tp6-4-chrome
+    treeherder-symbol: Rap-C(tp6-4)
+    run-on-projects: ['try', 'mozilla-central']
+    tier: 2
+    mozharness:
+        extra-options:
+            - --test=raptor-tp6-4
+            - --app=chrome
+
+raptor-tp6-5-chrome:
+    description: "Raptor tp6-5 on Chrome"
+    try-name: raptor-tp6-5-chrome
+    treeherder-symbol: Rap-C(tp6-5)
+    run-on-projects: ['try', 'mozilla-central']
+    tier: 2
+    mozharness:
+        extra-options:
+            - --test=raptor-tp6-5
+            - --app=chrome
+
+raptor-tp6-6-chrome:
+    description: "Raptor tp6-6 on Chrome"
+    try-name: raptor-tp6-6-chrome
+    treeherder-symbol: Rap-C(tp6-6)
+    run-on-projects: ['try', 'mozilla-central']
+    tier: 2
+    mozharness:
+        extra-options:
+            - --test=raptor-tp6-6
+            - --app=chrome
+
+raptor-tp6-7-chrome:
+    description: "Raptor tp6-7 on Chrome"
+    try-name: raptor-tp6-7-chrome
+    treeherder-symbol: Rap-C(tp6-7)
+    run-on-projects: ['try', 'mozilla-central']
+    tier: 2
+    mozharness:
+        extra-options:
+            - --test=raptor-tp6-7
+            - --app=chrome
+
+raptor-tp6-8-chrome:
+    description: "Raptor tp6-8 on Chrome"
+    try-name: raptor-tp6-8-chrome
+    treeherder-symbol: Rap-C(tp6-8)
+    run-on-projects: ['try', 'mozilla-central']
+    tier: 2
+    mozharness:
+        extra-options:
+            - --test=raptor-tp6-8
+            - --app=chrome
+
+raptor-tp6-9-chrome:
+    description: "Raptor tp6-9 on Chrome"
+    try-name: raptor-tp6-9-chrome
+    treeherder-symbol: Rap-C(tp6-9)
+    run-on-projects: ['try', 'mozilla-central']
+    tier: 2
+    mozharness:
+        extra-options:
+            - --test=raptor-tp6-9
+            - --app=chrome
+
+raptor-tp6-10-chrome:
+    description: "Raptor tp6-10 on Chrome"
+    try-name: raptor-tp6-10-chrome
+    treeherder-symbol: Rap-C(tp6-10)
+    run-on-projects: ['try', 'mozilla-central']
+    tier: 2
+    mozharness:
+        extra-options:
+            - --test=raptor-tp6-10
+            - --app=chrome
+
+raptor-speedometer-chrome:
+    description: "Raptor Speedometer on Chrome"
+    try-name: raptor-speedometer-chrome
+    treeherder-symbol: Rap-C(sp)
+    run-on-projects: ['try', 'mozilla-central']
+    tier: 2
+    max-run-time: 1500
+    mozharness:
+        extra-options:
+            - --test=raptor-speedometer
+            - --app=chrome
+
+raptor-stylebench-chrome:
+    description: "Raptor StyleBench on Chrome"
+    try-name: raptor-stylebench-chrome
+    treeherder-symbol: Rap-C(sb)
+    run-on-projects: ['try', 'mozilla-central']
+    tier: 2
+    mozharness:
+        extra-options:
+            - --test=raptor-stylebench
+            - --app=chrome
+
+raptor-motionmark-htmlsuite-chrome:
+    description: "Raptor MotionMark HtmlSuite on Chrome"
+    try-name: raptor-motionmark-htmlsuite-chrome
+    treeherder-symbol: Rap-C(mm-h)
+    run-on-projects: ['try', 'mozilla-central']
+    tier: 2
+    mozharness:
+        extra-options:
+            - --test=raptor-motionmark-htmlsuite
+            - --app=chrome
+
+raptor-motionmark-animometer-chrome:
+    description: "Raptor MotionMark Animometer on Chrome"
+    try-name: raptor-motionmark-animometer-chrome
+    treeherder-symbol: Rap-C(mm-a)
+    run-on-projects: ['try', 'mozilla-central']
+    tier: 2
+    mozharness:
+        extra-options:
+            - --test=raptor-motionmark-animometer
+            - --app=chrome
+
+raptor-webaudio-chrome:
+    description: "Raptor WebAudio on Chrome"
+    try-name: raptor-webaudio-chrome
+    treeherder-symbol: Rap-C(wa)
+    tier: 2
+    mozharness:
+        extra-options:
+            - --test=raptor-webaudio
+            - --app=chrome
+
+raptor-sunspider-chrome:
+    description: "Raptor SunSpider on Chrome"
+    try-name: raptor-sunspider-chrome
+    treeherder-symbol: Rap-C(ss)
+    run-on-projects: ['try', 'mozilla-central']
+    tier: 2
+    mozharness:
+        extra-options:
+            - --test=raptor-sunspider
+            - --app=chrome
+
+raptor-unity-webgl-chrome:
+    description: "Raptor Unity WebGL on Chrome"
+    try-name: raptor-unity-webgl-chrome
+    treeherder-symbol: Rap-C(ugl)
+    run-on-projects: ['try', 'mozilla-central']
+    tier: 2
+    mozharness:
+        extra-options:
+            - --test=raptor-unity-webgl
+            - --app=chrome
+    fetches:
+        by-test-platform:
+            win.*64.*:
+                fetch:
+                    - win64-chromium
+                    - unity-webgl
+            win.*32.*:
+                fetch:
+                    - win32-chromium
+                    - unity-webgl
+            macosx.*:
+                fetch:
+                    - mac-chromium
+                    - unity-webgl
+            default:
+                fetch:
+                    - linux64-chromium
+                    - unity-webgl
+
+raptor-wasm-misc-chrome:
+    description: "Raptor WASM Misc on Chrome"
+    try-name: raptor-wasm-misc-chrome
+    treeherder-symbol: Rap-C(wm)
+    run-on-projects: ['try', 'mozilla-central']
+    tier: 2
+    mozharness:
+        extra-options:
+            - --test=raptor-wasm-misc
+            - --app=chrome
+    fetches:
+        by-test-platform:
+            win.*64.*:
+                fetch:
+                    - win64-chromium
+                    - wasm-misc
+            win.*32.*:
+                fetch:
+                    - win32-chromium
+                    - wasm-misc
+            macosx.*:
+                fetch:
+                    - mac-chromium
+                    - wasm-misc
+            default:
+                fetch:
+                    - linux64-chromium
+                    - wasm-misc
+
+raptor-assorted-dom-chrome:
+    description: "Raptor Assorted-Dom on Chrome"
+    try-name: raptor-assorted-dom-chrome
+    treeherder-symbol: Rap-C(dom)
+    run-on-projects: ['try', 'mozilla-central']
+    tier: 2
+    max-run-time: 1500
+    mozharness:
+        extra-options:
+            - --test=raptor-assorted-dom
+            - --app=chrome
+    fetches:
+        by-test-platform:
+            win.*64.*:
+                fetch:
+                    - win64-chromium
+                    - assorted-dom
+            win.*32.*:
+                fetch:
+                    - win32-chromium
+                    - assorted-dom
+            macosx.*:
+                fetch:
+                    - mac-chromium
+                    - assorted-dom
+            default:
+                fetch:
+                    - linux64-chromium
+                    - assorted-dom
+
+raptor-wasm-godot-chrome:
+    description: "Raptor Wasm Godot on Chrome"
+    try-name: raptor-wasm-godot-chrome
+    treeherder-symbol: Rap-C(godot)
+    run-on-projects: ['try', 'mozilla-central']
+    tier: 2
+    max-run-time: 1500
+    mozharness:
+        extra-options:
+            - --test=raptor-wasm-godot
+            - --app=chrome

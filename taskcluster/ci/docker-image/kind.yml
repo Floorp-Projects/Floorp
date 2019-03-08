@@ -75,7 +75,6 @@ jobs:
     parent: debian7-base
     definition: debian-build
     packages:
-      - deb7-nasm
       - deb7-valgrind
     args:
       ARCH: amd64
@@ -90,7 +89,6 @@ jobs:
       - deb7-gtk3
       - deb7-harfbuzz
       - deb7-libxkbcommon
-      - deb7-nasm
       - deb7-pango
       - deb7-pcre3
       - deb7-valgrind
@@ -116,7 +114,6 @@ jobs:
       - deb7-glib
       - deb7-gtk3
       - deb7-harfbuzz
-      - deb7-nasm
       - deb7-python-defaults
       - deb7-pcre3
       - deb7-valgrind
@@ -138,9 +135,9 @@ jobs:
     symbol: I(deb9-raw)
     definition: debian-raw
     args:
-      BASE_IMAGE: debian:stretch-20170620
+      BASE_IMAGE: debian:stretch-20190228
       DIST: stretch
-      SNAPSHOT: '20170830T000511Z'
+      SNAPSHOT: '20190306T040711Z'
   debian9-packages:
     symbol: I(deb9-pkg)
     definition: debian-packages
@@ -167,8 +164,6 @@ jobs:
   static-analysis-build:
     symbol: I(static-analysis-build)
     parent: android-build
-    packages:
-      - deb9-nasm
   mingw32-build:
     symbol: I(mingw)
     parent: debian9-base
@@ -182,6 +177,7 @@ jobs:
     symbol: I(uv)
   diffoscope:
     symbol: I(diff)
+    parent: debian9-base
   partner-repack:
     symbol: I(PR)
     parent: debian9-base

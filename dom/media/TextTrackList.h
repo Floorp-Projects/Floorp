@@ -50,7 +50,6 @@ class TextTrackList final : public DOMEventTargetHelper {
   void AddTextTrack(TextTrack* aTextTrack, const CompareTextTracks& aCompareTT);
 
   void RemoveTextTrack(TextTrack* aTrack);
-  void DidSeek();
 
   HTMLMediaElement* GetMediaElement();
   void SetTextTrackManager(TextTrackManager* aTextTrackManager);

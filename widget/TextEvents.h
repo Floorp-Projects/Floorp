@@ -1037,7 +1037,8 @@ class WidgetQueryContentEvent : public WidgetGUIEvent {
         return true;
       }
       // Otherwise, we don't allow too large offset.
-      CheckedInt<uint32_t> absOffset = mOffset + aInsertionPointOffset;
+      CheckedInt<uint32_t> absOffset =
+          CheckedInt<uint32_t>(mOffset) + aInsertionPointOffset;
       if (NS_WARN_IF(!absOffset.isValid())) {
         mOffset = UINT32_MAX;
         return false;

@@ -52,6 +52,10 @@ const SHADERS: &[Shader] = &[
         features: CACHE_FEATURES,
     },
     Shader {
+        name: "cs_gradient",
+        features: CACHE_FEATURES,
+    },
+    Shader {
         name: "cs_border_solid",
         features: CACHE_FEATURES,
     },

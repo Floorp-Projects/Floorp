@@ -286,10 +286,23 @@ EnterprisePoliciesManager.prototype = {
   getSupportMenu() {
     return SupportMenu;
   },
+
+  setExtensionPolicies(extensionPolicies) {
+    ExtensionPolicies = extensionPolicies;
+  },
+
+  getExtensionPolicy(extensionID) {
+    if (ExtensionPolicies &&
+        extensionID in ExtensionPolicies) {
+      return ExtensionPolicies[extensionID];
+    }
+    return null;
+  },
 };
 
 let DisallowedFeatures = {};
 let SupportMenu = null;
+let ExtensionPolicies = null;
 
 /**
  * areEnterpriseOnlyPoliciesAllowed

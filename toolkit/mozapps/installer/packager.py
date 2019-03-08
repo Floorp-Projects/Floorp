@@ -324,9 +324,8 @@ def main():
         for p, f in copier:
             if not isinstance(f, Jarrer):
                 continue
-            key = JarLog.canonicalize(os.path.join(args.destination, p))
-            if key in log:
-                f.preload(log[key])
+            if p in log:
+                f.preload(log[p])
 
     copier.copy(args.destination)
     generate_precomplete(os.path.normpath(os.path.join(args.destination,

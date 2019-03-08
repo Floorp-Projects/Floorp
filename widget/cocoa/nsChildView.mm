@@ -3292,6 +3292,9 @@ NSEvent* gLastDragMouseDownEvent = nil;
   CGContextRef cgContext = (CGContextRef)[[NSGraphicsContext currentContext] graphicsPort];
 
   if ([self isUsingOpenGL]) {
+    // Make sure the window's "drawRect" buffer does not interfere with our
+    // OpenGL drawing's rounded corners.
+    [self clearCorners];
     // Force a sync OMTC composite into the OpenGL context and return.
     LayoutDeviceIntRect geckoBounds = mGeckoChild->GetBounds();
     LayoutDeviceIntRegion region(geckoBounds);
@@ -3358,6 +3361,38 @@ NSEvent* gLastDragMouseDownEvent = nil;
   GLint opaque = aOpaque || gfxPrefs::CompositorGLContextOpaque();
   [mGLContext setValues:&opaque forParameter:NSOpenGLCPSurfaceOpacity];
   CGLUnlockContext((CGLContextObj)[mGLContext CGLContextObj]);
+}
+
+// Our "accelerated" windows are NSWindows which are not CoreAnimation-backed
+// but contain an NSView with an attached NSOpenGLContext.
+// This means such windows have two WindowServer-level "surfaces" (NSSurface):
+//  (1) The window's "drawRect" contents (a main-memory backed buffer) in the
+//      back and
+//  (2) the OpenGL drawing in the front.
+// These two surfaces are composited by the window manager against our window's
+// backdrop, i.e. everything on the screen behind our window.
+// When our window has rounded corners, our OpenGL drawing respects those
+// rounded corners and will leave transparent pixels in the corners. In these
+// places the contents of the window's "drawRect" buffer can show through. So
+// we need to make sure that this buffer is transparent in the corners so that
+// the rounded corner anti-aliasing in the OpenGL context will blend directly
+// against the backdrop of the window.
+// We don't bother clearing parts of the window that are covered by opaque
+// pixels from the OpenGL context.
+- (void)clearCorners {
+  CGFloat radius = [self cornerRadius];
+  CGFloat w = [self bounds].size.width, h = [self bounds].size.height;
+  [[NSColor clearColor] set];
+
+  if ([self isCoveringTitlebar]) {
+    NSRectFill(NSMakeRect(0, 0, radius, radius));
+    NSRectFill(NSMakeRect(w - radius, 0, radius, radius));
+  }
+
+  if ([self hasRoundedBottomCorners]) {
+    NSRectFill(NSMakeRect(0, h - radius, radius, radius));
+    NSRectFill(NSMakeRect(w - radius, h - radius, radius, radius));
+  }
 }
 
 // This is the analog of nsChildView::MaybeDrawRoundedCorners for CGContexts.
