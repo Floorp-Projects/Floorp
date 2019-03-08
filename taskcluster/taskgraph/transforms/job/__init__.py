@@ -130,6 +130,23 @@ def rewrite_when_to_optimization(config, jobs):
         yield job
 
 
+@transforms.add
+def set_implementation(config, jobs):
+    for job in jobs:
+        impl, os = worker_type_implementation(job['worker-type'])
+        if os:
+            job.setdefault('tags', {})['os'] = os
+        if impl:
+            job.setdefault('tags', {})['worker-implementation'] = impl
+        worker = job.setdefault('worker', {})
+        assert 'implementation' not in worker
+        worker['implementation'] = impl
+        if os:
+            worker['os'] = os
+
+        yield job
+
+
 def get_attribute(dict, key, attributes, attribute_name):
     '''Get `attribute_name` from the given `attributes` dict, and if there
     is a corresponding value, set `key` in `dict` to that value.'''
@@ -206,8 +223,7 @@ def use_fetches(config, jobs):
         env = job.setdefault('worker', {}).setdefault('env', {})
         env['MOZ_FETCHES'] = {'task-reference': json.dumps(job_fetches, sort_keys=True)}
 
-        impl, os = worker_type_implementation(job['worker-type'])
-        if os in ('windows', 'macosx'):
+        if job['worker']['os'] in ('windows', 'macosx'):
             env.setdefault('MOZ_FETCHES_DIR', 'fetches')
         else:
             workdir = job['run'].get('workdir', '/builds/worker')
@@ -229,17 +245,6 @@ def make_task_description(config, jobs):
         if job.get('name'):
             del job['name']
 
-        impl, os = worker_type_implementation(job['worker-type'])
-        if os:
-            job.setdefault('tags', {})['os'] = os
-        if impl:
-            job.setdefault('tags', {})['worker-implementation'] = impl
-        worker = job.setdefault('worker', {})
-        assert 'implementation' not in worker
-        worker['implementation'] = impl
-        if os:
-            worker['os'] = os
-
         # always-optimized tasks never execute, so have no workdir
         if job['run']['using'] != 'always-optimized':
             job['run'].setdefault('workdir', '/builds/worker')
@@ -256,7 +261,7 @@ def make_task_description(config, jobs):
 
         # give the function for job.run.using on this worker implementation a
         # chance to set up the task description.
-        configure_taskdesc_for_run(config, job, taskdesc, impl)
+        configure_taskdesc_for_run(config, job, taskdesc, job['worker']['implementation'])
         del taskdesc['run']
 
         # yield only the task description, discarding the job description

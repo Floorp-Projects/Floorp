@@ -164,11 +164,5 @@ bool SessionStorage::IsForkOf(const Storage* aOther) const {
   return mCache == static_cast<const SessionStorage*>(aOther)->mCache;
 }
 
-bool SessionStorage::ShouldThrowWhenStorageAccessDenied(
-    uint32_t aRejectedReason) {
-  return aRejectedReason !=
-         nsIWebProgressListener::STATE_COOKIES_BLOCKED_FOREIGN;
-}
-
 }  // namespace dom
 }  // namespace mozilla
