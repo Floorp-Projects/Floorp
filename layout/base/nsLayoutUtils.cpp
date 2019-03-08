@@ -2787,7 +2787,7 @@ bool nsLayoutUtils::GetLayerTransformForFrame(nsIFrame* aFrame,
   builder.BeginFrame();
   nsDisplayList list;
   nsDisplayTransform* item =
-      MakeDisplayItem<nsDisplayTransform>(&builder, aFrame, &list, nsRect());
+      MakeDisplayItem<nsDisplayTransform>(&builder, aFrame, &list, nsRect(), 0);
 
   *aTransform = item->GetTransform();
   item->Destroy(&builder);

@@ -6,6 +6,7 @@
   --table-text-color: var(--grey-40);
   --table-splitter-color: rgba(255,255,255,0.15);
   --table-zebra-background: rgba(255,255,255,0.05);
+  --table-selection-background-hover: rgba(53, 59, 72, 1);
 
   --timing-blocked-color: rgba(235, 83, 104, 0.8);
   --timing-dns-color: rgba(223, 128, 255, 0.8); /* pink */
@@ -21,7 +22,8 @@
 
   --table-text-color: var(--grey-70);
   --table-splitter-color: rgba(0,0,0,0.15);
-  --table-zebra-background: rgba(0,0,0,0.05);
+  --table-zebra-background: rgba(247, 247, 247, 0.8);
+  --table-selection-background-hover: rgba(209, 232, 255, 0.8);
 
   --timing-blocked-color: rgba(235, 83, 104, 0.8);
   --timing-dns-color: rgba(223, 128, 255, 0.8); /* pink */

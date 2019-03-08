@@ -4,8 +4,9 @@
 
 "use strict";
 
+const {LoginFormFactory} = ChromeUtils.import("resource://gre/modules/LoginFormFactory.jsm");
 const LMCBackstagePass = ChromeUtils.import("resource://gre/modules/LoginManagerContent.jsm", null);
-const { LoginManagerContent, LoginFormFactory } = LMCBackstagePass;
+const { LoginManagerContent } = LMCBackstagePass;
 const TESTCASES = [
   {
     description: "Empty document",

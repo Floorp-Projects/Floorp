@@ -1310,7 +1310,8 @@ void WebRenderCommandBuilder::DoGroupingForDisplayList(
       CreateOrRecycleWebRenderUserData<WebRenderGroupData>(aWrappingItem);
 
   bool snapped;
-  nsRect groupBounds = aWrappingItem->GetBounds(aDisplayListBuilder, &snapped);
+  nsRect groupBounds =
+      aWrappingItem->GetUntransformedBounds(aDisplayListBuilder, &snapped);
   // We don't want to restrict the size of the blob to the building rect of the
   // display item, since that will change when we scroll and trigger a resize
   // invalidation of the blob (will be fixed by blob recoordination).
@@ -1382,12 +1383,15 @@ void WebRenderCommandBuilder::DoGroupingForDisplayList(
   group.mImageBounds =
       IntRect(0, 0, group.mLayerBounds.width, group.mLayerBounds.height);
   group.mClippedImageBounds = group.mImageBounds;
-  group.mPaintRect =
-      LayerIntRect::FromUnknownRect(
-          ScaleToOutsidePixelsOffset(aWrappingItem->GetPaintRect(), scale.width,
-                                     scale.height, group.mAppUnitsPerDevPixel,
-                                     residualOffset))
-          .Intersect(group.mLayerBounds);
+
+  const nsRect& untransformedPaintRect =
+      aWrappingItem->GetUntransformedPaintRect();
+
+  group.mPaintRect = LayerIntRect::FromUnknownRect(
+                         ScaleToOutsidePixelsOffset(
+                             untransformedPaintRect, scale.width, scale.height,
+                             group.mAppUnitsPerDevPixel, residualOffset))
+                         .Intersect(group.mLayerBounds);
   // XXX: Make the paint rect relative to the layer bounds. After we include
   // mLayerBounds.TopLeft() in the blob image we want to stop doing this
   // adjustment.
@@ -1500,8 +1504,7 @@ bool WebRenderCommandBuilder::ShouldDumpDisplayList(
 void WebRenderCommandBuilder::CreateWebRenderCommandsFromDisplayList(
     nsDisplayList* aDisplayList, nsDisplayItem* aWrappingItem,
     nsDisplayListBuilder* aDisplayListBuilder, const StackingContextHelper& aSc,
-    wr::DisplayListBuilder& aBuilder, wr::IpcResourceUpdateQueue& aResources,
-    nsDisplayItem* aOuterItem) {
+    wr::DisplayListBuilder& aBuilder, wr::IpcResourceUpdateQueue& aResources) {
   if (mDoGrouping) {
     MOZ_RELEASE_ASSERT(
         aWrappingItem,
@@ -1611,15 +1614,15 @@ void WebRenderCommandBuilder::CreateWebRenderCommandsFromDisplayList(
         // animated geometry root, so we can combine subsequent items of that
         // type into the same image.
         mContainsSVGGroup = mDoGrouping = true;
-        if (aOuterItem &&
-            aOuterItem->GetType() == DisplayItemType::TYPE_TRANSFORM) {
+        if (aWrappingItem &&
+            aWrappingItem->GetType() == DisplayItemType::TYPE_TRANSFORM) {
           // Inline <svg> should always have an overflow clip, but it gets put
           // outside the nsDisplayTransform we create for scaling the svg
           // viewport. Converting the clip into inner coordinates lets us
           // restrict the size of the blob images and prevents unnecessary
           // resizes.
           nsDisplayTransform* transform =
-              static_cast<nsDisplayTransform*>(aOuterItem);
+              static_cast<nsDisplayTransform*>(aWrappingItem);
 
           nsRect clippedBounds =
               transform->GetClippedBounds(aDisplayListBuilder);

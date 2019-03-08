@@ -6,15 +6,12 @@
  * Module doing most of the content process work for the password manager.
  */
 
-// Disable use-ownerGlobal since FormLike don't have it.
+// Disable use-ownerGlobal since LoginForm doesn't have it.
 /* eslint-disable mozilla/use-ownerGlobal */
 
 "use strict";
 
-var EXPORTED_SYMBOLS = [
-  "LoginManagerContent",
-  "LoginFormFactory",
-];
+var EXPORTED_SYMBOLS = ["LoginManagerContent"];
 
 const PASSWORD_INPUT_ADDED_COALESCING_THRESHOLD_MS = 1;
 const AUTOCOMPLETE_AFTER_RIGHT_CLICK_THRESHOLD_MS = 400;
@@ -28,6 +25,8 @@ const {PromiseUtils} = ChromeUtils.import("resource://gre/modules/PromiseUtils.j
 ChromeUtils.defineModuleGetter(this, "DeferredTask", "resource://gre/modules/DeferredTask.jsm");
 ChromeUtils.defineModuleGetter(this, "FormLikeFactory",
                                "resource://gre/modules/FormLikeFactory.jsm");
+ChromeUtils.defineModuleGetter(this, "LoginFormFactory",
+                               "resource://gre/modules/LoginFormFactory.jsm");
 ChromeUtils.defineModuleGetter(this, "LoginRecipesContent",
                                "resource://gre/modules/LoginRecipes.jsm");
 ChromeUtils.defineModuleGetter(this, "LoginHelper",
@@ -152,24 +151,11 @@ var LoginManagerContent = {
   ],
 
   /**
-   * WeakMap of the root element of a FormLike to the FormLike representing its fields.
+   * WeakMap of the root element of a LoginForm to the DeferredTask to fill its fields.
    *
-   * This is used to be able to lookup an existing FormLike for a given root element since multiple
-   * calls to LoginFormFactory won't give the exact same object. When batching fills we don't always
-   * want to use the most recent list of elements for a FormLike since we may end up doing multiple
-   * fills for the same set of elements when a field gets added between arming and running the
-   * DeferredTask.
-   *
-   * @type {WeakMap}
-   */
-  _formLikeByRootElement: new WeakMap(),
-
-  /**
-   * WeakMap of the root element of a FormLike to the DeferredTask to fill its fields.
-   *
-   * This is used to be able to throttle fills for a FormLike since onDOMInputPasswordAdded gets
+   * This is used to be able to throttle fills for a LoginForm since onDOMInputPasswordAdded gets
    * dispatched for each password field added to a document but we only want to fill once per
-   * FormLike when multiple fields are added at once.
+   * LoginForm when multiple fields are added at once.
    *
    * @type {WeakMap}
    */
@@ -212,8 +198,7 @@ var LoginManagerContent = {
     return request;
   },
 
-  _sendRequest(messageManager, requestData,
-               name, messageData) {
+  _sendRequest(messageManager, requestData, name, messageData) {
     let count;
     if (!(count = this._managers.get(messageManager))) {
       this._managers.set(messageManager, 1);
@@ -451,12 +436,12 @@ var LoginManagerContent = {
     let deferredTask = this._deferredPasswordAddedTasksByRootElement.get(formLike.rootElement);
     if (!deferredTask) {
       log("Creating a DeferredTask to call _fetchLoginsFromParentAndFillForm soon");
-      this._formLikeByRootElement.set(formLike.rootElement, formLike);
+      LoginFormFactory.setForRootElement(formLike.rootElement, formLike);
 
       deferredTask = new DeferredTask(() => {
-        // Get the updated formLike instead of the one at the time of creating the DeferredTask via
-        // a closure since it could be stale since FormLike.elements isn't live.
-        let formLike2 = this._formLikeByRootElement.get(formLike.rootElement);
+        // Get the updated LoginForm instead of the one at the time of creating the DeferredTask via
+        // a closure since it could be stale since LoginForm.elements isn't live.
+        let formLike2 = LoginFormFactory.getForRootElement(formLike.rootElement);
         log("Running deferred processing of onDOMInputPasswordAdded", formLike2);
         this._deferredPasswordAddedTasksByRootElement.delete(formLike2.rootElement);
         this._fetchLoginsFromParentAndFillForm(formLike2);
@@ -467,10 +452,10 @@ var LoginManagerContent = {
 
     let window = pwField.ownerGlobal;
     if (deferredTask.isArmed) {
-      log("DeferredTask is already armed so just updating the FormLike");
-      // We update the FormLike so it (most important .elements) is fresh when the task eventually
+      log("DeferredTask is already armed so just updating the LoginForm");
+      // We update the LoginForm so it (most important .elements) is fresh when the task eventually
       // runs since changes to the elements could affect our field heuristics.
-      this._formLikeByRootElement.set(formLike.rootElement, formLike);
+      LoginFormFactory.setForRootElement(formLike.rootElement, formLike);
     } else if (window.document.readyState == "complete") {
       log("Arming the DeferredTask we just created since document.readyState == 'complete'");
       deferredTask.arm();
@@ -485,7 +470,7 @@ var LoginManagerContent = {
   /**
    * Fetch logins from the parent for a given form and then attempt to fill it.
    *
-   * @param {FormLike} form to fetch the logins for then try autofill.
+   * @param {LoginForm} form to fetch the logins for then try autofill.
    */
   _fetchLoginsFromParentAndFillForm(form) {
     let window = form.ownerDocument.defaultView;
@@ -526,7 +511,6 @@ var LoginManagerContent = {
          * Keeps track of filled fields and values.
          */
         fillsByRootElement: new WeakMap(),
-        loginFormRootElements: new WeakSet(),
       };
       this.loginFormStateByDocument.set(document, loginFormState);
     }
@@ -543,7 +527,7 @@ var LoginManagerContent = {
     // Returns true if this window or any subframes have insecure login forms.
     let hasInsecureLoginForms = (thisWindow) => {
       let doc = thisWindow.document;
-      let rootElsWeakSet = this.stateForDocument(doc).loginFormRootElements;
+      let rootElsWeakSet = LoginFormFactory.getRootElementsWeakSetForDocument(doc);
       let hasLoginForm = ChromeUtils.nondeterministicGetWeakSetKeys(rootElsWeakSet)
                                     .filter(el => el.isConnected).length > 0;
       return (hasLoginForm && !thisWindow.isSecureContext) ||
@@ -726,7 +710,7 @@ var LoginManagerContent = {
   },
 
   /**
-   * @param {FormLike} form - the FormLike to look for password fields in.
+   * @param {LoginForm} form - the LoginForm to look for password fields in.
    * @param {Object} options
    * @param {bool} [options.skipEmptyFields=false] - Whether to ignore password fields with no value.
    *                                                 Used at capture time since saving empty values isn't
@@ -785,7 +769,7 @@ var LoginManagerContent = {
    * Can handle complex forms by trying to figure out what the
    * relevant fields are.
    *
-   * @param {FormLike} form
+   * @param {LoginForm} form
    * @param {bool} isSubmission
    * @param {Set} recipes
    * @return {Array} [usernameField, newPasswordField, oldPasswordField]
@@ -797,9 +781,9 @@ var LoginManagerContent = {
    * change-password field, with oldPasswordField containing the password
    * that is being changed.
    *
-   * Note that even though we can create a FormLike from a text field,
+   * Note that even though we can create a LoginForm from a text field,
    * this method will only return a non-null usernameField if the
-   * FormLike has a password field.
+   * LoginForm has a password field.
    */
   _getFormFields(form, isSubmission, recipes) {
     var usernameField = null;
@@ -811,7 +795,7 @@ var LoginManagerContent = {
         fieldOverrideRecipe.passwordSelector
       );
       if (pwOverrideField) {
-        // The field from the password override may be in a different FormLike.
+        // The field from the password override may be in a different LoginForm.
         let formLike = LoginFormFactory.createFromField(pwOverrideField);
         pwFields = [{
           index: [...formLike.elements].indexOf(pwOverrideField),
@@ -937,22 +921,21 @@ var LoginManagerContent = {
   },
 
   /**
-   * Trigger capture on any relevant FormLikes due to a navigation alone (not
+   * Trigger capture on any relevant LoginForms due to a navigation alone (not
    * necessarily due to an actual form submission). This method is used to
    * capture logins for cases where form submit events are not used.
    *
-   * To avoid multiple notifications for the same FormLike, this currently
+   * To avoid multiple notifications for the same LoginForm, this currently
    * avoids capturing when dealing with a real <form> which are ideally already
    * using a submit event.
    *
    * @param {Document} document being navigated
    */
   _onNavigation(aDocument) {
-    let state = this.stateForDocument(aDocument);
-    let rootElsWeakSet = state.loginFormRootElements;
+    let rootElsWeakSet = LoginFormFactory.getRootElementsWeakSetForDocument(aDocument);
     let weakLoginFormRootElements = ChromeUtils.nondeterministicGetWeakSetKeys(rootElsWeakSet);
 
-    log("_onNavigation: state:", state, "loginFormRootElements approx size:", weakLoginFormRootElements.length,
+    log("_onNavigation: root elements approx size:", weakLoginFormRootElements.length,
         "document:", aDocument);
 
     for (let formRoot of weakLoginFormRootElements) {
@@ -961,14 +944,14 @@ var LoginManagerContent = {
       }
 
       if (ChromeUtils.getClassName(formRoot) === "HTMLFormElement") {
-        // For now only perform capture upon navigation for FormLike's without
+        // For now only perform capture upon navigation for LoginForm's without
         // a <form> to avoid capture from both a DOMFormBeforeSubmit event and
         // navigation for the same "form".
         log("Ignoring navigation for the form root to avoid multiple prompts " +
             "since it was for a real <form>");
         continue;
       }
-      let formLike = this._formLikeByRootElement.get(formRoot);
+      let formLike = LoginFormFactory.getForRootElement(formRoot);
       this._onFormSubmit(formLike);
     }
   },
@@ -979,7 +962,7 @@ var LoginManagerContent = {
    * Looks for a password change in the submitted form, so we can update
    * our stored password.
    *
-   * @param {FormLike} form
+   * @param {LoginForm} form
    */
   _onFormSubmit(form) {
     log("_onFormSubmit", form);
@@ -1118,11 +1101,10 @@ var LoginManagerContent = {
     userTriggered = false,
   } = {}) {
     if (ChromeUtils.getClassName(form) === "HTMLFormElement") {
-      throw new Error("_fillForm should only be called with FormLike objects");
+      throw new Error("_fillForm should only be called with LoginForm objects");
     }
 
     log("_fillForm", form.elements);
-    let ignoreAutocomplete = true;
     // Will be set to one of AUTOFILL_RESULT in the `try` block.
     let autofillResult = -1;
     const AUTOFILL_RESULT = {
@@ -1214,13 +1196,6 @@ var LoginManagerContent = {
         return;
       }
 
-      var isAutocompleteOff = false;
-      if (this._isAutocompleteDisabled(form) ||
-          this._isAutocompleteDisabled(usernameField) ||
-          this._isAutocompleteDisabled(passwordField)) {
-        isAutocompleteOff = true;
-      }
-
       // Discard logins which have username/password values that don't
       // fit into the fields (as specified by the maxlength attribute).
       // The user couldn't enter these values anyway, and it helps
@@ -1252,9 +1227,11 @@ var LoginManagerContent = {
         return;
       }
 
+      const passwordACFieldName = passwordField.getAutocompleteInfo().fieldName;
+
       // If the password field has the autocomplete value of "new-password"
       // and we're autofilling without user interaction, there's nothing to do.
-      if (!userTriggered && passwordField.getAutocompleteInfo().fieldName == "new-password") {
+      if (!userTriggered && passwordACFieldName == "new-password") {
         log("not filling form, password field has the autocomplete new-password value");
         autofillResult = AUTOFILL_RESULT.PASSWORD_AUTOCOMPLETE_NEW_PASSWORD;
         return;
@@ -1325,8 +1302,8 @@ var LoginManagerContent = {
         return;
       }
 
-      if (isAutocompleteOff && !ignoreAutocomplete) {
-        log("Not filling the login because we're respecting autocomplete=off");
+      if (!userTriggered && passwordACFieldName == "off" && !LoginHelper.autofillAutocompleteOff) {
+        log("Not autofilling the login because we're respecting autocomplete=off");
         autofillResult = AUTOFILL_RESULT.AUTOCOMPLETE_OFF;
         return;
       }
@@ -1334,7 +1311,7 @@ var LoginManagerContent = {
       // Fill the form
 
       if (usernameField) {
-      // Don't modify the username field if it's disabled or readOnly so we preserve its case.
+        // Don't modify the username field if it's disabled or readOnly so we preserve its case.
         let disabledOrReadOnly = usernameField.disabled || usernameField.readOnly;
 
         let userNameDiffers = selectedLogin.username != usernameField.value;
@@ -1415,21 +1392,21 @@ var LoginManagerContent = {
    * method doesn't need to since it's only returning a boolean based upon the
    * recipes used for the last fill (in _fillForm).
    *
-   * @param {HTMLInputElement} aUsernameField element contained in a FormLike
-   *                                          cached in _formLikeByRootElement.
+   * @param {HTMLInputElement} aUsernameField element contained in a LoginForm
+   *                                          cached in LoginFormFactory.
    * @returns {Boolean} whether the username and password fields still have the
    *                    last-filled values, if previously filled.
    */
   _isLoginAlreadyFilled(aUsernameField) {
     let formLikeRoot = FormLikeFactory.findRootForField(aUsernameField);
-    // Look for the existing FormLike.
-    let existingFormLike = this._formLikeByRootElement.get(formLikeRoot);
-    if (!existingFormLike) {
+    // Look for the existing LoginForm.
+    let existingLoginForm = LoginFormFactory.getForRootElement(formLikeRoot);
+    if (!existingLoginForm) {
       throw new Error("_isLoginAlreadyFilled called with a username field with " +
-                      "no rootElement FormLike");
+                      "no rootElement LoginForm");
     }
 
-    log("_isLoginAlreadyFilled: existingFormLike", existingFormLike);
+    log("_isLoginAlreadyFilled: existingLoginForm", existingLoginForm);
     let filledLogin = this.stateForDocument(aUsernameField.ownerDocument).fillsByRootElement.get(formLikeRoot);
     if (!filledLogin) {
       return false;
@@ -1480,13 +1457,13 @@ var LoginManagerContent = {
 
   /**
    * Verify if a field is a valid login form field and
-   * returns some information about it's FormLike.
+   * returns some information about it's LoginForm.
    *
    * @param {Element} aField
    *                  A form field we want to verify.
    *
    * @returns {Object} an object with information about the
-   *                   FormLike username and password field
+   *                   LoginForm username and password field
    *                   or null if the passed field is invalid.
    */
   getFieldContext(aField) {
@@ -1498,8 +1475,7 @@ var LoginManagerContent = {
       return null;
     }
 
-    let [usernameField, newPasswordField] =
-          this.getUserNameAndPasswordFields(aField);
+    let [usernameField, newPasswordField] = this.getUserNameAndPasswordFields(aField);
 
     // If we are not verifying a password field, we want
     // to use aField as the username field.
@@ -1517,72 +1493,5 @@ var LoginManagerContent = {
         disabled: newPasswordField && (newPasswordField.disabled || newPasswordField.readOnly),
       },
     };
-  },
-};
-
-
-/**
- * A factory to generate FormLike objects that represent a set of login fields
- * which aren't necessarily marked up with a <form> element.
- */
-var LoginFormFactory = {
-  /**
-   * Create a LoginForm object from a <form>.
-   *
-   * @param {HTMLFormElement} aForm
-   * @return {LoginForm}
-   * @throws Error if aForm isn't an HTMLFormElement
-   */
-  createFromForm(aForm) {
-    let formLike = FormLikeFactory.createFromForm(aForm);
-    formLike.action = LoginHelper.getFormActionOrigin(aForm);
-
-    let state = LoginManagerContent.stateForDocument(formLike.ownerDocument);
-    state.loginFormRootElements.add(formLike.rootElement);
-    log("adding", formLike.rootElement, "to loginFormRootElements for", formLike.ownerDocument);
-
-    LoginManagerContent._formLikeByRootElement.set(formLike.rootElement, formLike);
-    return formLike;
-  },
-
-  /**
-   * Create a LoginForm object from a password or username field.
-   *
-   * If the field is in a <form>, construct the LoginForm from the form.
-   * Otherwise, create a LoginForm with a rootElement (wrapper) according to
-   * heuristics. Currently all <input> not in a <form> are one LoginForm but this
-   * shouldn't be relied upon as the heuristics may change to detect multiple
-   * "forms" (e.g. registration and login) on one page with a <form>.
-   *
-   * Note that two LoginForms created from the same field won't return the same LoginForm object.
-   * Use the `rootElement` property on the LoginForm as a key instead.
-   *
-   * @param {HTMLInputElement} aField - a password or username field in a document
-   * @return {LoginForm}
-   * @throws Error if aField isn't a password or username field in a document
-   */
-  createFromField(aField) {
-    if (ChromeUtils.getClassName(aField) !== "HTMLInputElement" ||
-        (aField.type != "password" && !LoginHelper.isUsernameFieldType(aField)) ||
-        !aField.ownerDocument) {
-      throw new Error("createFromField requires a password or username field in a document");
-    }
-
-    if (aField.form) {
-      return this.createFromForm(aField.form);
-    }
-
-    let formLike = FormLikeFactory.createFromField(aField);
-    formLike.action = LoginHelper.getLoginOrigin(aField.ownerDocument.baseURI);
-    log("Created non-form FormLike for rootElement:", aField.ownerDocument.documentElement);
-
-    let state = LoginManagerContent.stateForDocument(formLike.ownerDocument);
-    state.loginFormRootElements.add(formLike.rootElement);
-    log("adding", formLike.rootElement, "to loginFormRootElements for", formLike.ownerDocument);
-
-
-    LoginManagerContent._formLikeByRootElement.set(formLike.rootElement, formLike);
-
-    return formLike;
   },
 };

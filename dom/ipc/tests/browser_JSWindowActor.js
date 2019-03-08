@@ -52,6 +52,63 @@ add_task(async function test_getActor() {
     });
 });
 
+add_task(async function test_getActor_without_allFrames() {
+  windowActorOptions.allFrames = false;
+  await BrowserTestUtils.withNewTab({gBrowser, url: URL},
+    async function(browser) {
+      ChromeUtils.registerWindowActor("Test", windowActorOptions);
+      await ContentTask.spawn(
+        browser, {}, async function() {
+          // Create and append an iframe into the window's document.
+          let frame = content.document.createElement("iframe");
+          content.document.body.appendChild(frame);
+          is(content.window.frames.length, 1, "There should be an iframe.");
+          let child = frame.contentWindow.window.getWindowGlobalChild();
+          Assert.throws(() => child.getActor("Test"),
+            /NS_ERROR_NOT_AVAILABLE/, "Should throw if allFrames is false.");
+        });
+      ChromeUtils.unregisterWindowActor("Test");
+    });
+});
+
+add_task(async function test_getActor_with_allFrames() {
+  windowActorOptions.allFrames = true;
+  ChromeUtils.registerWindowActor("Test", windowActorOptions);
+  await BrowserTestUtils.withNewTab({gBrowser, url: URL},
+    async function(browser) {
+      await ContentTask.spawn(
+        browser, {}, async function() {
+          // Create and append an iframe into the window's document.
+          let frame = content.document.createElement("iframe");
+          content.document.body.appendChild(frame);
+          is(content.window.frames.length, 1, "There should be an iframe.");
+          let child = frame.contentWindow.window.getWindowGlobalChild();
+          let actorChild = child.getActor("Test");
+          ok(actorChild, "JSWindowActorChild should have value.");
+        });
+    });
+    ChromeUtils.unregisterWindowActor("Test");
+});
+
+add_task(async function test_getActor_without_includeChrome() {
+  windowActorOptions.includeChrome = false;
+  let parent = window.docShell.browsingContext.currentWindowGlobal;
+  ChromeUtils.registerWindowActor("Test", windowActorOptions);
+  SimpleTest.doesThrow(() =>
+    parent.getActor("Test"),
+    "Should throw if includeChrome is false.");
+  ChromeUtils.unregisterWindowActor("Test");
+});
+
+add_task(async function test_getActor_with_includeChrome() {
+  windowActorOptions.includeChrome = true;
+  ChromeUtils.registerWindowActor("Test", windowActorOptions);
+  let parent = window.docShell.browsingContext.currentWindowGlobal;
+  let actorParent = parent.getActor("Test");
+  ok(actorParent, "JSWindowActorParent should have value.");
+  ChromeUtils.unregisterWindowActor("Test");
+});
+
 add_task(async function test_asyncMessage() {
   await BrowserTestUtils.withNewTab({gBrowser, url: URL},
     async function(browser) {
