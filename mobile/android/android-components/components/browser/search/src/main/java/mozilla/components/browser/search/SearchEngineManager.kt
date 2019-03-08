@@ -73,6 +73,16 @@ class SearchEngineManager(
     }
 
     /**
+     * Returns search engine corresponding to name passed to this method, or null if not found.
+     */
+    @Synchronized
+    fun getSearchEngineByName(context: Context, name: String): SearchEngine? {
+        val searchEngines = getSearchEngines(context)
+
+        return searchEngines.find { it.name == name }
+    }
+
+    /**
      * Registers for ACTION_LOCALE_CHANGED broadcasts and automatically reloads the search engines
      * whenever the locale changes.
      */

@@ -115,6 +115,29 @@ class SearchEngineManagerTest {
     }
 
     @Test
+    fun `manager returns engine by name if it exists`() {
+        runBlocking {
+            val mozSearch = mockSearchEngine("mozsearch", "Mozilla Search")
+            val googleSearch = mockSearchEngine("google", "Google Search")
+            val provider = mockProvider(
+                listOf(
+                    googleSearch, mozSearch
+                )
+            )
+
+            val manager = SearchEngineManager(listOf(provider))
+
+            val searchEngine =
+                manager.getSearchEngineByName(RuntimeEnvironment.application, mozSearch.name)
+            assertEquals(mozSearch, searchEngine)
+
+            val noSuchSearchEngine =
+                manager.getSearchEngineByName(RuntimeEnvironment.application, "Fake Search")
+            assertEquals(null, noSuchSearchEngine)
+        }
+    }
+
+    @Test
     fun `manager returns set default engine as default when no identifier is specified`() {
         runBlocking {
             val provider = mockProvider(

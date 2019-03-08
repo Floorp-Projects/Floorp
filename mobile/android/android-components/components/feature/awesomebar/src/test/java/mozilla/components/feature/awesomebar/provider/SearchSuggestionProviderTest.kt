@@ -22,7 +22,6 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.anyString
-import org.mockito.Mockito.`when`
 import org.mockito.Mockito.doNothing
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.never
@@ -56,9 +55,10 @@ class SearchSuggestionProviderTest {
                 searchEngineManager,
                 SessionManager(mock()).apply { add(Session("https://www.mozilla.org")) }
             ).defaultSearch)
-            doNothing().`when`(useCase).invoke(anyString(), any<Session>())
+            doNothing().`when`(useCase).invoke(anyString(), any<Session>(), any<SearchEngine>())
 
-            val provider = SearchSuggestionProvider(searchEngine, useCase, HttpURLConnectionClient())
+            val provider =
+                SearchSuggestionProvider(searchEngine, useCase, HttpURLConnectionClient())
 
             try {
                 val suggestions = provider.onInputChanged("fire")
@@ -79,11 +79,11 @@ class SearchSuggestionProviderTest {
                 assertEquals("firefox nightly", suggestion.chips[9].title)
                 assertEquals("firefox clear cache", suggestion.chips[10].title)
 
-                verify(useCase, never()).invoke(anyString(), any<Session>())
+                verify(useCase, never()).invoke(anyString(), any<Session>(), any<SearchEngine>())
 
                 suggestion.onChipClicked!!.invoke(suggestion.chips[6])
 
-                verify(useCase).invoke(eq("firefox focus"), any<Session>())
+                verify(useCase).invoke(eq("firefox focus"), any<Session>(), any<SearchEngine>())
             } finally {
                 server.shutdown()
             }
@@ -111,7 +111,7 @@ class SearchSuggestionProviderTest {
                 searchEngineManager,
                 SessionManager(mock()).apply { add(Session("https://www.mozilla.org")) }
             ).defaultSearch)
-            doNothing().`when`(useCase).invoke(anyString(), any<Session>())
+            doNothing().`when`(useCase).invoke(anyString(), any<Session>(), any<SearchEngine>())
 
             val provider = SearchSuggestionProvider(
                 searchEngine,
@@ -139,11 +139,11 @@ class SearchSuggestionProviderTest {
                 assertEquals("firefox nightly", suggestions[9].title)
                 assertEquals("firefox clear cache", suggestions[10].title)
 
-                verify(useCase, never()).invoke(anyString(), any<Session>())
+                verify(useCase, never()).invoke(anyString(), any<Session>(), any<SearchEngine>())
 
                 suggestions[6].onSuggestionClicked!!.invoke()
 
-                verify(useCase).invoke(eq("firefox focus"), any<Session>())
+                verify(useCase).invoke(eq("firefox focus"), any<Session>(), any<SearchEngine>())
             } finally {
                 server.shutdown()
             }
@@ -165,20 +165,21 @@ class SearchSuggestionProviderTest {
     }
 
     @Test
-    fun `Provider should return default suggestion for search engine that cannot provide suggestion`() = runBlocking {
-        val searchEngine: SearchEngine = mock()
-        doReturn(false).`when`(searchEngine).canProvideSearchSuggestions
+    fun `Provider should return default suggestion for search engine that cannot provide suggestion`() =
+        runBlocking {
+            val searchEngine: SearchEngine = mock()
+            doReturn(false).`when`(searchEngine).canProvideSearchSuggestions
 
-        val provider = SearchSuggestionProvider(searchEngine, mock(), mock())
+            val provider = SearchSuggestionProvider(searchEngine, mock(), mock())
 
-        val suggestions = provider.onInputChanged("fire")
-        assertEquals(1, suggestions.size)
+            val suggestions = provider.onInputChanged("fire")
+            assertEquals(1, suggestions.size)
 
-        val suggestion = suggestions[0]
-        assertEquals(1, suggestion.chips.size)
+            val suggestion = suggestions[0]
+            assertEquals(1, suggestion.chips.size)
 
-        assertEquals("fire", suggestion.chips[0].title)
-    }
+            assertEquals("fire", suggestion.chips[0].title)
+        }
 
     @Test
     fun `Provider doesn't fail if fetch returns HTTP error`() {
@@ -189,7 +190,7 @@ class SearchSuggestionProviderTest {
 
             val searchEngine: SearchEngine = mock()
             doReturn(server.url("/").toString())
-                    .`when`(searchEngine).buildSuggestionsURL("fire")
+                .`when`(searchEngine).buildSuggestionsURL("fire")
             doReturn(true).`when`(searchEngine).canProvideSearchSuggestions
             doReturn("google").`when`(searchEngine).name
 
@@ -197,13 +198,14 @@ class SearchSuggestionProviderTest {
             doReturn(searchEngine).`when`(searchEngineManager).getDefaultSearchEngine(any(), any())
 
             val useCase = spy(SearchUseCases(
-                    RuntimeEnvironment.application,
-                    searchEngineManager,
-                    SessionManager(mock()).apply { add(Session("https://www.mozilla.org")) }
+                RuntimeEnvironment.application,
+                searchEngineManager,
+                SessionManager(mock()).apply { add(Session("https://www.mozilla.org")) }
             ).defaultSearch)
-            doNothing().`when`(useCase).invoke(anyString(), any<Session>())
+            doNothing().`when`(useCase).invoke(anyString(), any<Session>(), any<SearchEngine>())
 
-            val provider = SearchSuggestionProvider(searchEngine, useCase, HttpURLConnectionClient())
+            val provider =
+                SearchSuggestionProvider(searchEngine, useCase, HttpURLConnectionClient())
 
             try {
                 val suggestions = provider.onInputChanged("fire")
@@ -234,9 +236,10 @@ class SearchSuggestionProviderTest {
                 searchEngineManager,
                 SessionManager(mock()).apply { add(Session("https://www.mozilla.org")) }
             ).defaultSearch)
-            doNothing().`when`(useCase).invoke(anyString(), any<Session>())
+            doNothing().`when`(useCase).invoke(anyString(), any<Session>(), any<SearchEngine>())
 
-            val provider = SearchSuggestionProvider(searchEngine, useCase, HttpURLConnectionClient())
+            val provider =
+                SearchSuggestionProvider(searchEngine, useCase, HttpURLConnectionClient())
             val suggestions = provider.onInputChanged("fire")
             assertEquals(1, suggestions.size)
 

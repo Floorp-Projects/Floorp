@@ -26,6 +26,7 @@ permalink: /changelog/
   
 * **feature-search**
   * Adds default search engine var to `SearchEngineManager`
+  * Adds optional `SearchEngine` to `invoke()` in `SearchUseCases`
 
 * **service-experiments**
   * A new client-side experiments SDK for running segmenting user populations to run multi-branch experiments on them. This component is going to replace `service-fretboard`. The SDK is currently in development and the component is not ready to be used yet.

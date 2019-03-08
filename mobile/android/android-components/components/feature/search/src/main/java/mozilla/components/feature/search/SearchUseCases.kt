@@ -5,6 +5,7 @@
 package mozilla.components.feature.search
 
 import android.content.Context
+import mozilla.components.browser.search.SearchEngine
 import mozilla.components.browser.search.SearchEngineManager
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
@@ -25,7 +26,7 @@ class SearchUseCases(
     }
 ) {
     interface SearchUseCase {
-        fun invoke(searchTerms: String)
+        fun invoke(searchTerms: String, searchEngine: SearchEngine? = null)
     }
 
     class DefaultSearchUseCase(
@@ -37,8 +38,8 @@ class SearchUseCases(
         /**
          * Triggers a search in the currently selected session.
          */
-        override fun invoke(searchTerms: String) {
-            invoke(searchTerms, sessionManager.selectedSession)
+        override fun invoke(searchTerms: String, searchEngine: SearchEngine?) {
+            invoke(searchTerms, sessionManager.selectedSession, searchEngine)
         }
 
         /**
@@ -47,9 +48,16 @@ class SearchUseCases(
          * @param searchTerms the search terms.
          * @param session the session to use, or the currently selected session if none
          * is provided.
+         * @param searchEngine Search Engine to use, or the default search engine if none is provided
          */
-        fun invoke(searchTerms: String, session: Session? = sessionManager.selectedSession) {
-            val searchUrl = searchEngineManager.getDefaultSearchEngine(context).buildSearchUrl(searchTerms)
+        fun invoke(
+            searchTerms: String,
+            session: Session? = sessionManager.selectedSession,
+            searchEngine: SearchEngine? = null
+        ) {
+            val searchUrl = searchEngine?.let {
+                searchEngine.buildSearchUrl(searchTerms)
+            } ?: searchEngineManager.getDefaultSearchEngine(context).buildSearchUrl(searchTerms)
 
             val searchSession = session ?: onNoSession.invoke(searchUrl)
 
@@ -65,8 +73,14 @@ class SearchUseCases(
         private val sessionManager: SessionManager,
         private val isPrivate: Boolean
     ) : SearchUseCase {
-        override fun invoke(searchTerms: String) {
-            invoke(searchTerms, source = Session.Source.NONE, selected = true, private = isPrivate)
+        override fun invoke(searchTerms: String, searchEngine: SearchEngine?) {
+            invoke(
+                searchTerms,
+                source = Session.Source.NONE,
+                selected = true,
+                private = isPrivate,
+                searchEngine = searchEngine
+            )
         }
 
         /**
@@ -76,14 +90,18 @@ class SearchUseCases(
          * @param selected whether or not the new session should be selected, defaults to true.
          * @param private whether or not the new session should be private, defaults to false.
          * @param source the source of the new session.
+         * @param searchEngine Search Engine to use, or the default search engine if none is provided
          */
         fun invoke(
             searchTerms: String,
             source: Session.Source,
             selected: Boolean = true,
-            private: Boolean = false
+            private: Boolean = false,
+            searchEngine: SearchEngine? = null
         ) {
-            val searchUrl = searchEngineManager.getDefaultSearchEngine(context).buildSearchUrl(searchTerms)
+            val searchUrl = searchEngine?.let {
+                searchEngine.buildSearchUrl(searchTerms)
+            } ?: searchEngineManager.getDefaultSearchEngine(context).buildSearchUrl(searchTerms)
 
             val session = Session(searchUrl, private, source)
             session.searchTerms = searchTerms
