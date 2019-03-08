@@ -6,8 +6,8 @@
 
 var EXPORTED_SYMBOLS = ["ContentProcessSession"];
 
-const {Domains} = ChromeUtils.import("chrome://remote/content/domains/Domains.jsm");
 const {ContentProcessDomains} = ChromeUtils.import("chrome://remote/content/domains/ContentProcessDomains.jsm");
+const {Domains} = ChromeUtils.import("chrome://remote/content/domains/Domains.jsm");
 
 class ContentProcessSession {
   constructor(messageManager, browsingContext, content, docShell) {

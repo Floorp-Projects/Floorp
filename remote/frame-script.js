@@ -4,8 +4,7 @@
 
 "use strict";
 
-const {ContentProcessSession} =
-  ChromeUtils.import("chrome://remote/content/ContentProcessSession.jsm");
+const {ContentProcessSession} = ChromeUtils.import("chrome://remote/content/ContentProcessSession.jsm");
 
 /* global content, docShell */
 new ContentProcessSession(this, docShell.browsingContext, content, docShell);
