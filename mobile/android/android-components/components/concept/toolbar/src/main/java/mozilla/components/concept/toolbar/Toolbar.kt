@@ -127,6 +127,11 @@ interface Toolbar {
         fun onStartEditing() = Unit
 
         /**
+         * Fired when the user presses the back button while in edit mode.
+         */
+        fun onCancelEditing(): Boolean
+
+        /**
          * Fired when the toolbar switches back to display mode.
          */
         fun onStopEditing() = Unit

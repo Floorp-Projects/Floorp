@@ -18,6 +18,11 @@ permalink: /changelog/
 * **browser-menu**
    * Added `TwoStateButton` in `BrowserMenuItemToolbar` that will change resources based on the `isInPrimaryState` lambda and added ability to disable the button with optional `disableInSecondaryState` argument.
 
+* **browser-toolbar**
+  * Adds `onCancelEditing` to `onEditListener` in `BrowserToolbar` which is fired when a back button press occurs while the keyboard is displayed.
+    This is especially useful if you want to call `activity.onBackPressed()` to navigate away rather than just dismiss the keyboard.
+    Its return value is used to determine if `displayMode` will switch from edit to view.
+
 # 0.46.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.45.0...v0.46.0)

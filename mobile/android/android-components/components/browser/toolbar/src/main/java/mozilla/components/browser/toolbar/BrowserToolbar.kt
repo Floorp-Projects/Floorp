@@ -468,6 +468,12 @@ class BrowserToolbar @JvmOverloads constructor(
         }
     }
 
+    internal fun onEditCancelled() {
+        if (editToolbar.editListener?.onCancelEditing() != false) {
+            displayMode()
+        }
+    }
+
     private fun updateState(state: State) {
         this.state = state
 

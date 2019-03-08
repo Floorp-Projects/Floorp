@@ -46,6 +46,10 @@ class AwesomeBarFeature(
                 onEditComplete?.invoke() ?: hideAwesomeBar()
                 awesomeBar.onInputCancelled()
             }
+
+            override fun onCancelEditing(): Boolean {
+                return true
+            }
         })
 
         awesomeBar.setOnStopListener { toolbar.displayMode() }

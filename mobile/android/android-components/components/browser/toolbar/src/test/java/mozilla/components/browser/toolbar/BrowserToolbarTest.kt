@@ -37,6 +37,7 @@ import org.mockito.Mockito.`when`
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
+import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoMoreInteractions
 import org.robolectric.RobolectricTestRunner
@@ -174,6 +175,17 @@ class BrowserToolbarTest {
 
         assertTrue(mockedListener.called)
         assertEquals("https://www.mozilla.org", mockedListener.url)
+    }
+
+    @Test
+    fun `internal onEditCancelled callback will be forwarded to editListener`() {
+        val toolbar = BrowserToolbar(context)
+        val listener: Toolbar.OnEditListener = mock()
+        toolbar.setOnEditListener(listener)
+        assertEquals(toolbar.editToolbar.editListener, listener)
+
+        toolbar.onEditCancelled()
+        verify(listener, times(1)).onCancelEditing()
     }
 
     @Test

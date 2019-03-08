@@ -35,6 +35,7 @@ typealias OnCommitListener = () -> Unit
 typealias OnFilterListener = (String) -> Unit
 typealias OnSearchStateChangeListener = (Boolean) -> Unit
 typealias OnTextChangeListener = (String, String) -> Unit
+typealias OnDispatchKeyEventPreImeListener = (KeyEvent?) -> Boolean
 typealias OnKeyPreImeListener = (View, Int, KeyEvent) -> Boolean
 typealias OnSelectionChangedListener = (Int, Int) -> Unit
 typealias OnWindowsFocusChangeListener = (Boolean) -> Unit
@@ -109,6 +110,9 @@ open class InlineAutocompleteEditText @JvmOverloads constructor(
 
     private var textChangeListener: OnTextChangeListener? = null
     fun setOnTextChangeListener(l: OnTextChangeListener) { textChangeListener = l }
+
+    private var dispatchKeyEventPreImeListener: OnDispatchKeyEventPreImeListener? = null
+    fun setOnDispatchKeyEventPreImeListener(l: OnDispatchKeyEventPreImeListener?) { dispatchKeyEventPreImeListener = l }
 
     private var keyPreImeListener: OnKeyPreImeListener? = null
     fun setOnKeyPreImeListener(l: OnKeyPreImeListener) { keyPreImeListener = l }
@@ -226,8 +230,8 @@ open class InlineAutocompleteEditText @JvmOverloads constructor(
     public override fun onAttachedToWindow() {
         super.onAttachedToWindow()
 
-        this.keyPreImeListener = onKeyPreIme
-        this.selectionChangedListener = onSelectionChanged
+        if (this.keyPreImeListener == null) { this.keyPreImeListener = onKeyPreIme }
+        if (this.selectionChangedListener == null) { this.selectionChangedListener = onSelectionChanged }
 
         setOnKeyListener(onKey)
         addTextChangedListener(TextChangeListener())
@@ -626,6 +630,12 @@ open class InlineAutocompleteEditText @JvmOverloads constructor(
         override fun onTextChanged(s: CharSequence, start: Int, before: Int, count: Int) {
             // do nothing
         }
+    }
+
+    override fun dispatchKeyEventPreIme(event: KeyEvent?): Boolean {
+        return event?.let {
+            dispatchKeyEventPreImeListener?.invoke(it) ?: onKeyPreIme(it.keyCode, it)
+        } ?: super.dispatchKeyEventPreIme(event)
     }
 
     override fun onKeyPreIme(keyCode: Int, event: KeyEvent): Boolean {

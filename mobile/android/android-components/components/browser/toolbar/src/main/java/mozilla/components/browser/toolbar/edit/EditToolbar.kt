@@ -9,6 +9,7 @@ import android.content.Context
 import android.support.v4.content.ContextCompat
 import android.text.InputType
 import android.view.Gravity
+import android.view.KeyEvent
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
@@ -60,6 +61,13 @@ class EditToolbar(
         setOnTextChangeListener { text, _ ->
             updateClearViewVisibility(text)
             editListener?.onTextChanged(text)
+        }
+
+        setOnDispatchKeyEventPreImeListener { event ->
+            if (event?.keyCode == KeyEvent.KEYCODE_BACK) {
+                toolbar.onEditCancelled()
+            }
+            false
         }
     }
 
