@@ -1965,9 +1965,9 @@ class ClassField : public BinaryNode {
 
   ParseNode& name() const { return *left(); }
 
-  bool hasInitializer() const { return right() != nullptr; }
-
-  FunctionNode& initializer() const { return right()->as<FunctionNode>(); }
+  FunctionNode* initializer() const {
+    return right() ? &right()->as<FunctionNode>() : nullptr;
+  }
 };
 
 class SwitchStatement : public BinaryNode {
