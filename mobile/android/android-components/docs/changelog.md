@@ -18,6 +18,9 @@ permalink: /changelog/
 * **feature-downloads**
   * Fixing bug #2265. In some occasions, when trying to download a file, the download failed and the download notification shows "Unsuccessful download".
 
+* **service-experiments**
+  * A new client-side experiments SDK for running segmenting user populations to run multi-branch experiments on them. This component is going to replace `service-fretboard`. The SDK is currently in development and the component is not ready to be used yet.
+
 # 0.45.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.44.0...v0.45.0)
