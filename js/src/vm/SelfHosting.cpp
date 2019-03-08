@@ -1824,7 +1824,7 @@ bool js::intrinsic_StringSplitString(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  JSObject* aobj = str_split_string(cx, group, string, sep, INT32_MAX);
+  JSObject* aobj = StringSplitString(cx, group, string, sep, INT32_MAX);
   if (!aobj) {
     return false;
   }
@@ -1852,7 +1852,7 @@ static bool intrinsic_StringSplitStringLimit(JSContext* cx, unsigned argc,
     return false;
   }
 
-  JSObject* aobj = str_split_string(cx, group, string, sep, limit);
+  JSObject* aobj = StringSplitString(cx, group, string, sep, limit);
   if (!aobj) {
     return false;
   }
