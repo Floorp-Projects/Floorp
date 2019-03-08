@@ -188,6 +188,7 @@ import static org.mozilla.gecko.Tabs.LOADURL_EXTERNAL;
 import static org.mozilla.gecko.Tabs.LOADURL_PINNED;
 import static org.mozilla.gecko.Tabs.LOADURL_START_EDITING;
 import static org.mozilla.gecko.Tabs.TabEvents.LOADED;
+import static org.mozilla.gecko.Tabs.TabEvents.THUMBNAIL;
 import static org.mozilla.gecko.mma.MmaDelegate.INTERACT_WITH_SEARCH_WIDGET_URL_AREA;
 import static org.mozilla.gecko.mma.MmaDelegate.NEW_TAB;
 import static org.mozilla.gecko.search.SearchWidgetProvider.INPUT_TYPE_KEY;
@@ -910,22 +911,19 @@ public class BrowserApp extends GeckoApp
     }
 
     private synchronized void handleTabEditingMode(boolean isVoice) {
-        Tab tab = Tabs.getInstance().getLastTabForUrl("about:home");
-
-        if (tab == null) {
-            final Tabs.OnTabsChangedListener tabsChangedListener = new Tabs.OnTabsChangedListener() {
-                @Override
-                public void onTabChanged(Tab tab, TabEvents msg, String data) {
-                    if (tab != null && tab.getURL().equals("about:home") && LOADED.equals(msg)) {
-                        selectTabAndEnterEditingMode(tab.getId(), isVoice);
-                        Tabs.unregisterOnTabsChangedListener(this);
-                    }
+        final Tabs.OnTabsChangedListener tabsChangedListener = new Tabs.OnTabsChangedListener() {
+            @Override
+            public void onTabChanged(Tab tab, TabEvents msg, String data) {
+                // Listening for THUMBNAIL, while entailing a small delay
+                // allows for fully loading the "about:home" screen and finishing all related operations
+                // so that we can safely enter editing mode.
+                if (tab != null && tab.getURL().equals("about:home") && (THUMBNAIL.equals(msg))) {
+                    selectTabAndEnterEditingMode(tab.getId(), isVoice);
+                    Tabs.unregisterOnTabsChangedListener(this);
                 }
-            };
-            Tabs.registerOnTabsChangedListener(tabsChangedListener);
-        } else {
-            selectTabAndEnterEditingMode(tab.getId(), isVoice);
-        }
+            }
+        };
+        Tabs.registerOnTabsChangedListener(tabsChangedListener);
     }
 
     private void selectTabAndEnterEditingMode(int tabId, boolean isVoice) {
