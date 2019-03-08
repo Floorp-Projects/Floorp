@@ -2461,8 +2461,9 @@ bool PeerConnectionImpl::HasMedia() const { return mMedia; }
 
 PeerConnectionWrapper::PeerConnectionWrapper(const std::string& handle)
     : impl_(nullptr) {
-  if (PeerConnectionCtx::GetInstance()->mPeerConnections.find(handle) ==
-      PeerConnectionCtx::GetInstance()->mPeerConnections.end()) {
+  if (!PeerConnectionCtx::isActive() ||
+      (PeerConnectionCtx::GetInstance()->mPeerConnections.find(handle) ==
+       PeerConnectionCtx::GetInstance()->mPeerConnections.end())) {
     return;
   }
 
