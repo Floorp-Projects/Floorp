@@ -80,6 +80,7 @@ const ITEM_NAME_MAX_LENGTH = 32;
 class StorageUI {
   constructor(front, target, panelWin, toolbox) {
     EventEmitter.decorate(this);
+
     this._target = target;
     this._window = panelWin;
     this._panelDoc = panelWin.document;
@@ -629,8 +630,6 @@ class StorageUI {
       const {data} = await storageType.getStoreObjects(host, names, fetchOpts);
       if (data.length) {
         await this.populateTable(data, reason);
-      } else {
-        await this.clearHeaders();
       }
       this.updateToolbar();
       this.emit("store-objects-updated");
@@ -654,8 +653,7 @@ class StorageUI {
       this._addButton.hidden = false;
       this._addButton.setAttribute("tooltiptext",
         L10N.getFormatStr("storage.popupMenu.addItemLabel"));
-    }
-    if (!canAdd || this.table.columns.size < 1) {
+    } else {
       this._addButton.hidden = true;
       this._addButton.removeAttribute("tooltiptext");
     }
@@ -987,8 +985,6 @@ class StorageUI {
 
     let names = null;
     if (!host) {
-      // If selected item has no host then reset table headers :Bug 1291427
-      await this.clearHeaders();
       return;
     }
     if (item.length > 2) {
@@ -996,13 +992,6 @@ class StorageUI {
     }
     await this.fetchStorageObjects(type, host, names, REASON.POPULATE);
     this.itemOffset = 0;
-  }
-
-  /**
-   * Clear the column headers in the storage table
-   */
-  async clearHeaders() {
-    this.table.setColumns({}, null, {}, {});
   }
 
   /**
