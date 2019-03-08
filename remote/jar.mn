@@ -1,0 +1,40 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+remote.jar:
+% content remote %content/
+  content/Connection.jsm (Connection.jsm)
+  content/ContentProcessSession.jsm (ContentProcessSession.jsm)
+  content/Error.jsm (Error.jsm)
+  content/JSONHandler.jsm (JSONHandler.jsm)
+  content/Log.jsm (Log.jsm)
+  content/Observer.jsm (Observer.jsm)
+  content/Protocol.jsm (Protocol.jsm)
+  content/RecommendedPreferences.jsm (RecommendedPreferences.jsm)
+  content/Session.jsm (Session.jsm)
+  content/Sync.jsm (Sync.jsm)
+  content/Target.jsm (Target.jsm)
+  content/Targets.jsm (Targets.jsm)
+  content/WindowManager.jsm (WindowManager.jsm)
+
+  # Frame scripts
+  content/frame-script.js (frame-script.js)
+
+  # domains
+  content/domains/Domain.jsm (domains/Domain.jsm)
+  content/domains/Domains.jsm (domains/Domains.jsm)
+  content/domains/ContentProcessDomains.jsm (domains/ContentProcessDomains.jsm)
+  content/domains/ParentProcessDomains.jsm (domains/ParentProcessDomains.jsm)
+  content/domains/content/Log.jsm (domains/content/Log.jsm)
+  content/domains/content/Page.jsm (domains/content/Page.jsm)
+  content/domains/parent/Browser.jsm (domains/parent/Browser.jsm)
+
+  # transport layer
+  content/server/HTTPD.jsm (../netwerk/test/httpserver/httpd.js)
+  content/server/Packet.jsm (server/Packet.jsm)
+  content/server/Socket.jsm (server/Socket.jsm)
+  content/server/Stream.jsm (server/Stream.jsm)
+  content/server/Transport.jsm (server/Transport.jsm)
+  content/server/WebSocket.jsm (server/WebSocket.jsm)
+  content/server/WebSocketTransport.jsm (server/WebSocketTransport.jsm)
