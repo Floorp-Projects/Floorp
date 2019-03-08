@@ -1779,6 +1779,70 @@ class GetUserMediaRunnableWrapper : public Runnable {
 };
 #endif
 
+// This function tries to guess the group id for a video device
+// based on the device name. If only one audio device's name contains
+// the name of the video device, then, this video device will take
+// the group id of the audio device. Since this is a guess we try
+// to minimize the probability of false positive. If we fail to find
+// a correlation we leave the video group id untouched. In that case the
+// group id will be the video device name.
+/* static */
+void MediaManager::GuessVideoDeviceGroupIDs(MediaDeviceSet& aDevices) {
+  // Run the logic in a lambda to avoid duplication.
+  auto updateGroupIdIfNeeded = [&](RefPtr<MediaDevice>& aVideo,
+                                   const dom::MediaDeviceKind aKind) -> bool {
+    MOZ_ASSERT(aVideo->mKind == dom::MediaDeviceKind::Videoinput);
+    MOZ_ASSERT(aKind == dom::MediaDeviceKind::Audioinput ||
+               aKind == dom::MediaDeviceKind::Audiooutput);
+    // This will store the new group id if a match is found.
+    nsString newVideoGroupID;
+    // If the group id needs to be updated this will become true. It is
+    // necessary when the new group id is an empty string. Without this extra
+    // variable to signal the update, we would resort to test if
+    // `newVideoGroupId` is empty. However,
+    // that check does not work when the new group id is an empty string.
+    bool updateGroupId = false;
+    for (const RefPtr<MediaDevice>& dev : aDevices) {
+      if (dev->mKind != aKind) {
+        continue;
+      }
+      if (!FindInReadable(aVideo->mName, dev->mName)) {
+        continue;
+      }
+      if (newVideoGroupID.IsEmpty()) {
+        // This is only expected on first match. If that's the only match group
+        // id will be updated to this one at the end of the loop.
+        updateGroupId = true;
+        newVideoGroupID = dev->mGroupID;
+      } else {
+        // More than one device found, it is impossible to know which group id
+        // is the correct one.
+        updateGroupId = false;
+        newVideoGroupID = NS_LITERAL_STRING("");
+        break;
+      }
+    }
+    if (updateGroupId) {
+      aVideo =
+          new MediaDevice(aVideo, aVideo->mID, newVideoGroupID, aVideo->mRawID);
+      return true;
+    }
+    return false;
+  };
+
+  for (RefPtr<MediaDevice>& video : aDevices) {
+    if (video->mKind != dom::MediaDeviceKind::Videoinput) {
+      continue;
+    }
+    if (updateGroupIdIfNeeded(video, dom::MediaDeviceKind::Audioinput)) {
+      // GroupId has been updated, continue to the next video device
+      continue;
+    }
+    // GroupId has not been updated, check among the outputs
+    updateGroupIdIfNeeded(video, dom::MediaDeviceKind::Audiooutput);
+  }
+}
+
 /**
  * EnumerateRawDevices - Enumerate a list of audio & video devices that
  * satisfy passed-in constraints. List contains raw id's.
@@ -1890,6 +1954,9 @@ RefPtr<MediaManager::MgrPromise> MediaManager::EnumerateRawDevices(
       realBackend->EnumerateDevices(aWindowId, MediaSourceEnum::Other,
                                     MediaSinkEnum::Speaker, &outputs);
       aOutDevices->AppendElements(outputs);
+    }
+    if (hasVideo) {
+      GuessVideoDeviceGroupIDs(*aOutDevices);
     }
 
     holder->Resolve(false, __func__);
