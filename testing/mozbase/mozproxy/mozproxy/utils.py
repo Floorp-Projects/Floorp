@@ -5,10 +5,23 @@
 
 from __future__ import absolute_import
 
+import subprocess
+import time
+import bz2
+import gzip
 import os
 import signal
 import sys
-import urllib
+from six.moves.urllib.request import urlretrieve
+
+try:
+    import zstandard
+except ImportError:
+    zstandard = None
+try:
+    import lzma
+except ImportError:
+    lzma = None
 
 from mozlog import get_proxy_logger
 from mozprocess import ProcessHandler
@@ -56,6 +69,7 @@ def transform_platform(str_to_transform, config_platform, config_processor=None)
 
 def tooltool_download(manifest, run_local, raptor_dir):
     """Download a file from tooltool using the provided tooltool manifest"""
+
     def outputHandler(line):
         LOG.info(line)
 
@@ -95,14 +109,93 @@ def tooltool_download(manifest, run_local, raptor_dir):
             proc.kill(signal.SIGTERM)
 
 
-def download_file_from_url(url, local_dest):
+def archive_type(path):
+    filename, extension = os.path.splitext(path)
+    filename, extension2 = os.path.splitext(filename)
+    if extension2 != "":
+        extension = extension2
+    if extension == ".tar":
+        return "tar"
+    elif extension == ".zip":
+        return "zip"
+    return None
+
+
+def extract_archive(path, dest_dir, typ):
+    """Extract an archive to a destination directory."""
+
+    # Resolve paths to absolute variants.
+    path = os.path.abspath(path)
+    dest_dir = os.path.abspath(dest_dir)
+    suffix = os.path.splitext(path)[-1]
+
+    # We pipe input to the decompressor program so that we can apply
+    # custom decompressors that the program may not know about.
+    if typ == "tar":
+        if suffix == ".bz2":
+            ifh = bz2.open(str(path), "rb")
+        elif suffix == ".gz":
+            ifh = gzip.open(str(path), "rb")
+        elif suffix == ".xz":
+            if not lzma:
+                raise ValueError("lzma Python package not available")
+            ifh = lzma.open(str(path), "rb")
+        elif suffix == ".zst":
+            if not zstandard:
+                raise ValueError("zstandard Python package not available")
+            dctx = zstandard.ZstdDecompressor()
+            ifh = dctx.stream_reader(path.open("rb"))
+        elif suffix == ".tar":
+            ifh = path.open("rb")
+        else:
+            raise ValueError("unknown archive format for tar file: %s" % path)
+        args = ["tar", "xf", "-"]
+        pipe_stdin = True
+    elif typ == "zip":
+        # unzip from stdin has wonky behavior. We don't use a pipe for it.
+        ifh = open(os.devnull, "rb")
+        args = ["unzip", "-o", str(path)]
+        pipe_stdin = False
+    else:
+        raise ValueError("unknown archive format: %s" % path)
+
+    LOG.info("Extracting %s to %s using %r" % (path, dest_dir, args))
+    t0 = time.time()
+    with ifh:
+        p = subprocess.Popen(args, cwd=str(dest_dir), bufsize=0, stdin=subprocess.PIPE)
+        while True:
+            if not pipe_stdin:
+                break
+            chunk = ifh.read(131072)
+            if not chunk:
+                break
+            p.stdin.write(chunk)
+        # make sure we wait for the command to finish
+        p.communicate()
+
+    if p.returncode:
+        raise Exception("%r exited %d" % (args, p.returncode))
+    LOG.info("%s extracted in %.3fs" % (path, time.time() - t0))
+
+
+def download_file_from_url(url, local_dest, extract=False):
     """Receive a file in a URL and download it, i.e. for the hostutils tooltool manifest
     the url received would be formatted like this:
-    https://hg.mozilla.org/try/raw-file/acb5abf52c04da7d4548fa13bd6c6848a90c32b8/testing/
       config/tooltool-manifests/linux64/hostutils.manifest"""
     if os.path.exists(local_dest):
         LOG.info("file already exists at: %s" % local_dest)
-        return True
-    LOG.info("downloading: %s to %s" % (url, local_dest))
-    _file, _headers = urllib.urlretrieve(url, local_dest)
-    return os.path.exists(local_dest)
+        if not extract:
+            return True
+    else:
+        LOG.info("downloading: %s to %s" % (url, local_dest))
+        _file, _headers = urlretrieve(url, local_dest)
+
+    if not extract:
+        return os.path.exists(local_dest)
+
+    typ = archive_type(local_dest)
+    if typ is None:
+        return False
+
+    extract_archive(local_dest, os.path.dirname(local_dest), typ)
+    return True
