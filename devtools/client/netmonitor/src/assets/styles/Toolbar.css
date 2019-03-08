@@ -13,6 +13,8 @@
   height: auto;
   flex-wrap: wrap;
   justify-content: space-between;
+  border: none;
+  padding: 0;
 }
 
 .devtools-toolbar-group {
@@ -28,6 +30,7 @@
   flex-grow: 1;
   min-height: var(--primary-toolbar-height);
   background-color: var(--theme-body-background);
+  border-bottom: 1px solid var(--theme-splitter-color);
 }
 
 .devtools-toolbar-two-rows-1 {
@@ -36,7 +39,6 @@
 
 .devtools-toolbar-two-rows-2 {
   justify-content: space-between;
-  border-top: 1px solid var(--theme-splitter-color);
 }
 
 .requests-list-filter-buttons {
@@ -102,7 +104,7 @@
 }
 
 .devtools-toolbar-group .devtools-searchbox {
-  height: 29px;
+  height: 28px;
   border: 1px solid transparent;
 }
 
