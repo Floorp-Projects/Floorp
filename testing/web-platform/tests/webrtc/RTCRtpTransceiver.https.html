@@ -990,6 +990,9 @@
       ]);
 
     hasProps(pc2.getTransceivers(), [{currentDirection: "sendrecv"}]);
+
+    pc2.close();
+    hasProps(pc2.getTransceivers(), [{currentDirection: null}]);
   };
 
   const checkSendrecvWithNoSendTrack = async t => {
@@ -1277,8 +1280,10 @@
     pc1.close();
     pc2.close();
 
-    // Still shouldn't throw
-    stoppedTransceiver.stop();
+    // Spec says the closed check comes before the stopped check, so this
+    // should throw now.
+    checkThrows(() => stoppedTransceiver.stop(),
+                "InvalidStateError", "RTCRtpTransceiver.stop() with closed PC");
   };
 
   const checkStopAfterCreateOffer = async t => {
