@@ -2477,8 +2477,9 @@ bool PeerConnectionImpl::HasMedia() const { return mMedia; }
 
 PeerConnectionWrapper::PeerConnectionWrapper(const std::string& handle)
     : impl_(nullptr) {
-  if (PeerConnectionCtx::GetInstance()->mPeerConnections.find(handle) ==
-      PeerConnectionCtx::GetInstance()->mPeerConnections.end()) {
+  if (!PeerConnectionCtx::isActive() ||
+      (PeerConnectionCtx::GetInstance()->mPeerConnections.find(handle) ==
+       PeerConnectionCtx::GetInstance()->mPeerConnections.end())) {
     return;
   }
 
@@ -2802,7 +2803,7 @@ RefPtr<RTCStatsQueryPromise> PeerConnectionImpl::ExecuteStatsQuery_s(
       // continue if we don't have a valid conduit
       continue;
     }
-    const MediaPipeline &mp = *aPipelines[p];
+    const MediaPipeline& mp = *aPipelines[p];
     auto asVideo = mp.Conduit()->AsVideoSessionConduit();
     nsString kind = asVideo.isNothing() ? NS_LITERAL_STRING("audio")
                                         : NS_LITERAL_STRING("video");
@@ -2874,7 +2875,7 @@ RefPtr<RTCStatsQueryPromise> PeerConnectionImpl::ExecuteStatsQuery_s(
           if (mp.Conduit()->GetSendPacketTypeStats(&counters)) {
             s.mNackCount.Construct(counters.nack_packets);
             // Fill in video only packet type stats
-            if(asVideo) {
+            if (asVideo) {
               s.mFirCount.Construct(counters.fir_packets);
               s.mPliCount.Construct(counters.pli_packets);
             }
