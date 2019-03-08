@@ -4325,6 +4325,19 @@ ArrayObject* js::NewCopiedArrayForCallingAllocationSite(
   return NewCopiedArrayTryUseGroup(cx, group, vp, length);
 }
 
+ArrayObject* js::NewArrayWithGroup(JSContext* cx, uint32_t length,
+                                   HandleObjectGroup group,
+                                   bool convertDoubleElements) {
+  ArrayObject* res = NewFullyAllocatedArrayTryUseGroup(cx, group, length);
+  if (!res) {
+    return nullptr;
+  }
+  if (convertDoubleElements) {
+    res->setShouldConvertDoubleElements();
+  }
+  return res;
+}
+
 #ifdef DEBUG
 bool js::ArrayInfo(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);

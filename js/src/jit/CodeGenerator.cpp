@@ -6427,24 +6427,6 @@ class OutOfLineNewArray : public OutOfLineCodeBase<CodeGenerator> {
   LNewArray* lir() const { return lir_; }
 };
 
-static JSObject* NewArrayWithGroup(JSContext* cx, uint32_t length,
-                                   HandleObjectGroup group,
-                                   bool convertDoubleElements) {
-  ArrayObject* res = NewFullyAllocatedArrayTryUseGroup(cx, group, length);
-  if (!res) {
-    return nullptr;
-  }
-  if (convertDoubleElements) {
-    res->setShouldConvertDoubleElements();
-  }
-  return res;
-}
-
-typedef JSObject* (*NewArrayWithGroupFn)(JSContext*, uint32_t,
-                                         HandleObjectGroup, bool);
-static const VMFunction NewArrayWithGroupInfo =
-    FunctionInfo<NewArrayWithGroupFn>(NewArrayWithGroup, "NewArrayWithGroup");
-
 void CodeGenerator::visitNewArrayCallVM(LNewArray* lir) {
   Register objReg = ToRegister(lir->output());
 
@@ -6458,7 +6440,8 @@ void CodeGenerator::visitNewArrayCallVM(LNewArray* lir) {
     pushArg(ImmGCPtr(templateObject->group()));
     pushArg(Imm32(lir->mir()->length()));
 
-    callVM(NewArrayWithGroupInfo, lir);
+    using Fn = ArrayObject* (*)(JSContext*, uint32_t, HandleObjectGroup, bool);
+    callVM<Fn, NewArrayWithGroup>(lir);
   } else {
     pushArg(Imm32(GenericObject));
     pushArg(Imm32(lir->mir()->length()));
@@ -11311,37 +11294,25 @@ void CodeGenerator::visitCallBindVar(LCallBindVar* lir) {
   callVM<Fn, BindVarOperation>(lir);
 }
 
-typedef bool (*GetPropertyFn)(JSContext*, HandleValue, HandlePropertyName,
-                              MutableHandleValue);
-static const VMFunction GetPropertyInfo =
-    FunctionInfo<GetPropertyFn>(GetProperty, "GetProperty");
-
 void CodeGenerator::visitCallGetProperty(LCallGetProperty* lir) {
   pushArg(ImmGCPtr(lir->mir()->name()));
   pushArg(ToValue(lir, LCallGetProperty::Value));
 
-  callVM(GetPropertyInfo, lir);
+  using Fn =
+      bool (*)(JSContext*, HandleValue, HandlePropertyName, MutableHandleValue);
+  callVM<Fn, GetValueProperty>(lir);
 }
-
-typedef bool (*GetOrCallElementFn)(JSContext*, MutableHandleValue, HandleValue,
-                                   MutableHandleValue);
-static const VMFunction GetElementInfo =
-    FunctionInfo<GetOrCallElementFn>(js::GetElement, "GetElement");
-static const VMFunction CallElementInfo =
-    FunctionInfo<GetOrCallElementFn>(js::CallElement, "CallElement");
 
 void CodeGenerator::visitCallGetElement(LCallGetElement* lir) {
   pushArg(ToValue(lir, LCallGetElement::RhsInput));
   pushArg(ToValue(lir, LCallGetElement::LhsInput));
 
   JSOp op = JSOp(*lir->mir()->resumePoint()->pc());
+  pushArg(Imm32(op));
 
-  if (op == JSOP_GETELEM) {
-    callVM(GetElementInfo, lir);
-  } else {
-    MOZ_ASSERT(op == JSOP_CALLELEM);
-    callVM(CallElementInfo, lir);
-  }
+  using Fn =
+      bool (*)(JSContext*, JSOp, HandleValue, HandleValue, MutableHandleValue);
+  callVM<Fn, GetElementOperation>(lir);
 }
 
 void CodeGenerator::visitCallSetElement(LCallSetElement* lir) {
@@ -11635,11 +11606,6 @@ void CodeGenerator::visitHasOwnCache(LHasOwnCache* ins) {
   addIC(ins, allocateIC(cache));
 }
 
-typedef bool (*SetPropertyFn)(JSContext*, HandleObject, HandlePropertyName,
-                              const HandleValue, bool, jsbytecode*);
-static const VMFunction SetPropertyInfo =
-    FunctionInfo<SetPropertyFn>(SetProperty, "SetProperty");
-
 void CodeGenerator::visitCallSetProperty(LCallSetProperty* ins) {
   ConstantOrRegister value =
       TypedOrValueRegister(ToValue(ins, LCallSetProperty::Value));
@@ -11653,7 +11619,9 @@ void CodeGenerator::visitCallSetProperty(LCallSetProperty* ins) {
   pushArg(ImmGCPtr(ins->mir()->name()));
   pushArg(objReg);
 
-  callVM(SetPropertyInfo, ins);
+  using Fn = bool (*)(JSContext*, HandleObject, HandlePropertyName,
+                      const HandleValue, bool, jsbytecode*);
+  callVM<Fn, jit::SetProperty>(ins);
 }
 
 void CodeGenerator::visitCallDeleteProperty(LCallDeleteProperty* lir) {
