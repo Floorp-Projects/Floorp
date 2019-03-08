@@ -813,7 +813,7 @@ NS_IMPL_ISUPPORTS(MediaDevice, nsIMediaDevice)
 
 MediaDevice::MediaDevice(const RefPtr<MediaEngineSource>& aSource,
                          const nsString& aName, const nsString& aID,
-                         const nsString& aGroupID, const nsString& aRawID)
+                         const nsString& aRawID)
     : mSource(aSource),
       mSinkInfo(nullptr),
       mKind((mSource && MediaEngineSource::IsVideo(mSource->GetMediaSource()))
@@ -824,14 +824,12 @@ MediaDevice::MediaDevice(const RefPtr<MediaEngineSource>& aSource,
           dom::MediaDeviceKindValues::strings[uint32_t(mKind)].value)),
       mName(aName),
       mID(aID),
-      mGroupID(aGroupID),
       mRawID(aRawID) {
   MOZ_ASSERT(mSource);
 }
 
 MediaDevice::MediaDevice(const RefPtr<AudioDeviceInfo>& aAudioDeviceInfo,
-                         const nsString& aID, const nsString& aGroupID,
-                         const nsString& aRawID)
+                         const nsString& aID, const nsString& aRawID)
     : mSource(nullptr),
       mSinkInfo(aAudioDeviceInfo),
       mKind(mSinkInfo->Type() == AudioDeviceInfo::TYPE_INPUT
@@ -842,7 +840,6 @@ MediaDevice::MediaDevice(const RefPtr<AudioDeviceInfo>& aAudioDeviceInfo,
           dom::MediaDeviceKindValues::strings[uint32_t(mKind)].value)),
       mName(mSinkInfo->Name()),
       mID(aID),
-      mGroupID(aGroupID),
       mRawID(aRawID) {
   // For now this ctor is used only for Audiooutput.
   // It could be used for Audioinput and Videoinput
@@ -853,7 +850,7 @@ MediaDevice::MediaDevice(const RefPtr<AudioDeviceInfo>& aAudioDeviceInfo,
 }
 
 MediaDevice::MediaDevice(const RefPtr<MediaDevice>& aOther, const nsString& aID,
-                         const nsString& aGroupID, const nsString& aRawID)
+                         const nsString& aRawID)
     : mSource(aOther->mSource),
       mSinkInfo(aOther->mSinkInfo),
       mKind(aOther->mKind),
@@ -861,7 +858,6 @@ MediaDevice::MediaDevice(const RefPtr<MediaDevice>& aOther, const nsString& aID,
       mType(aOther->mType),
       mName(aOther->mName),
       mID(aID),
-      mGroupID(aGroupID),
       mRawID(aRawID) {
   MOZ_ASSERT(aOther);
 }
@@ -952,13 +948,6 @@ NS_IMETHODIMP
 MediaDevice::GetRawId(nsAString& aID) {
   MOZ_ASSERT(NS_IsMainThread());
   aID.Assign(mRawID);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-MediaDevice::GetGroupId(nsAString& aGroupID) {
-  MOZ_ASSERT(NS_IsMainThread());
-  aGroupID.Assign(mGroupID);
   return NS_OK;
 }
 
@@ -1779,70 +1768,6 @@ class GetUserMediaRunnableWrapper : public Runnable {
 };
 #endif
 
-// This function tries to guess the group id for a video device
-// based on the device name. If only one audio device's name contains
-// the name of the video device, then, this video device will take
-// the group id of the audio device. Since this is a guess we try
-// to minimize the probability of false positive. If we fail to find
-// a correlation we leave the video group id untouched. In that case the
-// group id will be the video device name.
-/* static */
-void MediaManager::GuessVideoDeviceGroupIDs(MediaDeviceSet& aDevices) {
-  // Run the logic in a lambda to avoid duplication.
-  auto updateGroupIdIfNeeded = [&](RefPtr<MediaDevice>& aVideo,
-                                   const dom::MediaDeviceKind aKind) -> bool {
-    MOZ_ASSERT(aVideo->mKind == dom::MediaDeviceKind::Videoinput);
-    MOZ_ASSERT(aKind == dom::MediaDeviceKind::Audioinput ||
-               aKind == dom::MediaDeviceKind::Audiooutput);
-    // This will store the new group id if a match is found.
-    nsString newVideoGroupID;
-    // If the group id needs to be updated this will become true. It is
-    // necessary when the new group id is an empty string. Without this extra
-    // variable to signal the update, we would resort to test if
-    // `newVideoGroupId` is empty. However,
-    // that check does not work when the new group id is an empty string.
-    bool updateGroupId = false;
-    for (const RefPtr<MediaDevice>& dev : aDevices) {
-      if (dev->mKind != aKind) {
-        continue;
-      }
-      if (!FindInReadable(aVideo->mName, dev->mName)) {
-        continue;
-      }
-      if (newVideoGroupID.IsEmpty()) {
-        // This is only expected on first match. If that's the only match group
-        // id will be updated to this one at the end of the loop.
-        updateGroupId = true;
-        newVideoGroupID = dev->mGroupID;
-      } else {
-        // More than one device found, it is impossible to know which group id
-        // is the correct one.
-        updateGroupId = false;
-        newVideoGroupID = NS_LITERAL_STRING("");
-        break;
-      }
-    }
-    if (updateGroupId) {
-      aVideo =
-          new MediaDevice(aVideo, aVideo->mID, newVideoGroupID, aVideo->mRawID);
-      return true;
-    }
-    return false;
-  };
-
-  for (RefPtr<MediaDevice>& video : aDevices) {
-    if (video->mKind != dom::MediaDeviceKind::Videoinput) {
-      continue;
-    }
-    if (updateGroupIdIfNeeded(video, dom::MediaDeviceKind::Audioinput)) {
-      // GroupId has been updated, continue to the next video device
-      continue;
-    }
-    // GroupId has not been updated, check among the outputs
-    updateGroupIdIfNeeded(video, dom::MediaDeviceKind::Audiooutput);
-  }
-}
-
 /**
  * EnumerateRawDevices - Enumerate a list of audio & video devices that
  * satisfy passed-in constraints. List contains raw id's.
@@ -1954,9 +1879,6 @@ RefPtr<MediaManager::MgrPromise> MediaManager::EnumerateRawDevices(
       realBackend->EnumerateDevices(aWindowId, MediaSourceEnum::Other,
                                     MediaSinkEnum::Speaker, &outputs);
       aOutDevices->AppendElements(outputs);
-    }
-    if (hasVideo) {
-      GuessVideoDeviceGroupIDs(*aOutDevices);
     }
 
     holder->Resolve(false, __func__);
@@ -3082,27 +3004,14 @@ RefPtr<MediaManager::StreamPromise> MediaManager::GetDisplayMedia(
 
 /* static */
 void MediaManager::AnonymizeDevices(MediaDeviceSet& aDevices,
-                                    const nsACString& aOriginKey,
-                                    const uint64_t aWindowId) {
-
+                                    const nsACString& aOriginKey) {
   if (!aOriginKey.IsEmpty()) {
     for (RefPtr<MediaDevice>& device : aDevices) {
       nsString id;
       device->GetId(id);
       nsString rawId(id);
       AnonymizeId(id, aOriginKey);
-
-      nsString groupId;
-      device->GetGroupId(groupId);
-      // Use window id to salt group id in order to make it session based as
-      // required by the spec. This does not provide unique group ids through
-      // out a browser restart. However, this is not agaist the spec.
-      // Furtermore, since device ids are the same after a browser restart the
-      // fingerprint is not bigger.
-      groupId.AppendInt(aWindowId);
-      AnonymizeId(groupId, aOriginKey);
-
-      device = new MediaDevice(device, id, groupId, rawId);
+      device = new MediaDevice(device, id, rawId);
     }
   }
 }
@@ -3281,8 +3190,7 @@ RefPtr<MediaManager::MgrPromise> MediaManager::EnumerateDevicesImpl(
                      MakeRefPtr<MediaMgrError>(MediaMgrError::Name::AbortError),
                      __func__);
                }
-               MediaManager::AnonymizeDevices(*aOutDevices, *originKey,
-                                              aWindowId);
+               MediaManager::AnonymizeDevices(*aOutDevices, *originKey);
                return MgrPromise::CreateAndResolve(false, __func__);
              },
              [](RefPtr<MediaMgrError>&& aError) {
