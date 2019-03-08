@@ -1,0 +1,1 @@
+JS_PREFERENCE_FILES += ["remote.js"]

@@ -903,6 +903,22 @@ add_old_configure_assignment('FT2_LIBS',
 add_old_configure_assignment('FT2_CFLAGS',
                              ft2_info.cflags)
 
+
+# CDP remote agent
+# ==============================================================
+#
+# The source code lives under ../remote.
+
+option('--enable-cdp', help='Enable CDP-based remote agent')
+
+@depends('--enable-cdp')
+def remote(value):
+    if value:
+        return True
+
+set_config('ENABLE_REMOTE_AGENT', remote)
+
+
 # Marionette remote protocol
 # ==============================================================
 #
@@ -938,6 +954,7 @@ def marionette(value):
 
 set_config('ENABLE_MARIONETTE', marionette)
 
+
 # geckodriver WebDriver implementation
 # ==============================================================
 #
@@ -966,6 +983,7 @@ def geckodriver(enabled):
         return True
 
 set_config('ENABLE_GECKODRIVER', geckodriver)
+
 
 # WebRTC
 # ========================================================
