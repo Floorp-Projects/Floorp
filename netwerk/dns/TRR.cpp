@@ -236,6 +236,7 @@ nsresult TRR::SendHTTPRequest() {
       getter_AddRefs(mChannel), dnsURI, nsContentUtils::GetSystemPrincipal(),
       nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
       nsIContentPolicy::TYPE_OTHER,
+      nullptr,  // nsICookieSettings
       nullptr,  // PerformanceStorage
       nullptr,  // aLoadGroup
       this,

@@ -786,18 +786,43 @@ LoadInfo::GetCookiePolicy(uint32_t* aResult) {
   return NS_OK;
 }
 
+namespace {
+
+already_AddRefed<nsICookieSettings> CreateCookieSettings(
+    nsContentPolicyType aContentPolicyType) {
+  if (StaticPrefs::network_cookieSettings_unblocked_for_testing()) {
+    return CookieSettings::Create();
+  }
+
+  // These contentPolictTypes require a real CookieSettings because favicon and
+  // save-as requests must send cookies. Anything else should not send/receive
+  // cookies.
+  if (aContentPolicyType == nsIContentPolicy::TYPE_INTERNAL_IMAGE_FAVICON ||
+      aContentPolicyType == nsIContentPolicy::TYPE_SAVEAS_DOWNLOAD) {
+    return CookieSettings::Create();
+  }
+
+  return CookieSettings::CreateBlockingAll();
+}
+
+}  // namespace
+
 NS_IMETHODIMP
 LoadInfo::GetCookieSettings(nsICookieSettings** aCookieSettings) {
   if (!mCookieSettings) {
-    if (StaticPrefs::network_cookieSettings_unblocked_for_testing()) {
-      mCookieSettings = CookieSettings::Create();
-    } else {
-      mCookieSettings = CookieSettings::CreateBlockingAll();
-    }
+    mCookieSettings = CreateCookieSettings(mInternalContentPolicyType);
   }
 
   nsCOMPtr<nsICookieSettings> cookieSettings = mCookieSettings;
   cookieSettings.forget(aCookieSettings);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+LoadInfo::SetCookieSettings(nsICookieSettings* aCookieSettings) {
+  MOZ_ASSERT(aCookieSettings);
+  // We allow the overwrite of CookieSettings.
+  mCookieSettings = aCookieSettings;
   return NS_OK;
 }
 
