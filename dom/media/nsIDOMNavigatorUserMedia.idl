@@ -13,7 +13,6 @@ interface nsIMediaDevice : nsISupports
   readonly attribute AString id;
   readonly attribute AString mediaSource;
   readonly attribute AString rawId;
-  readonly attribute AString groupId;
   readonly attribute boolean scary;
 };
 

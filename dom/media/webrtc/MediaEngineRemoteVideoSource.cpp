@@ -86,7 +86,6 @@ void MediaEngineRemoteVideoSource::Init() {
 
   SetName(NS_ConvertUTF8toUTF16(deviceName));
   SetUUID(uniqueId);
-  SetGroupId(NS_ConvertUTF8toUTF16(deviceName));
 
   mInitDone = true;
 }
@@ -179,18 +178,6 @@ nsCString MediaEngineRemoteVideoSource::GetUUID() const {
   AssertIsOnOwningThread();
 
   return mUniqueId;
-}
-
-void MediaEngineRemoteVideoSource::SetGroupId(nsString aGroupId) {
-  AssertIsOnOwningThread();
-
-  mGroupId = std::move(aGroupId);
-}
-
-nsString MediaEngineRemoteVideoSource::GetGroupId() const {
-  AssertIsOnOwningThread();
-
-  return mGroupId;
 }
 
 nsresult MediaEngineRemoteVideoSource::Allocate(
@@ -1005,7 +992,6 @@ void MediaEngineRemoteVideoSource::Refresh(int aIndex) {
 
   SetName(NS_ConvertUTF8toUTF16(deviceName));
   MOZ_ASSERT(mUniqueId.Equals(uniqueId));
-  SetGroupId(NS_ConvertUTF8toUTF16(deviceName));
 }
 
 }  // namespace mozilla
