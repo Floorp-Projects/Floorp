@@ -2910,7 +2910,7 @@ static bool StrFlatReplaceGlobal(JSContext* cx, JSLinearString* str,
 
 // This is identical to "str.split(pattern).join(replacement)" except that we
 // do some deforestation optimization in Ion.
-JSString* js::str_flat_replace_string(JSContext* cx, HandleString string,
+JSString* js::StringFlatReplaceString(JSContext* cx, HandleString string,
                                       HandleString pattern,
                                       HandleString replacement) {
   MOZ_ASSERT(string);
@@ -3277,9 +3277,9 @@ static ArrayObject* SplitSingleCharHelper(JSContext* cx, HandleLinearString str,
 }
 
 // ES 2016 draft Mar 25, 2016 21.1.3.17 steps 4, 8, 12-18.
-ArrayObject* js::str_split_string(JSContext* cx, HandleObjectGroup group,
-                                  HandleString str, HandleString sep,
-                                  uint32_t limit) {
+ArrayObject* js::StringSplitString(JSContext* cx, HandleObjectGroup group,
+                                   HandleString str, HandleString sep,
+                                   uint32_t limit) {
   MOZ_ASSERT(limit > 0, "Only called for strictly positive limit.");
 
   RootedLinearString linearStr(cx, str->ensureLinear(cx));

@@ -22,6 +22,7 @@ import org.mozilla.gecko.fxa.FxAccountConstants;
 import org.mozilla.gecko.fxa.authenticator.AndroidFxAccount;
 import org.mozilla.gecko.fxa.login.Engaged;
 import org.mozilla.gecko.fxa.login.State;
+import org.mozilla.gecko.mma.MmaDelegate;
 import org.mozilla.gecko.restrictions.Restrictable;
 import org.mozilla.gecko.restrictions.Restrictions;
 import org.mozilla.gecko.sync.SyncConfiguration;
@@ -145,6 +146,9 @@ public class AccountsHelper implements BundleEventListener {
                     return;
                 }
             }
+
+            MmaDelegate.track(MmaDelegate.USER_SIGNED_IN_TO_FXA);
+
             if (callback != null) {
                 callback.sendSuccess(fxAccount != null);
             }
@@ -199,6 +203,8 @@ public class AccountsHelper implements BundleEventListener {
             // Trigger a sync to try to update the device registration and
             // upload a fresh client record.
             fxAccount.requestImmediateSync(null, null, false);
+
+            MmaDelegate.track(MmaDelegate.USER_SIGNED_IN_TO_FXA);
 
             if (callback != null) {
                 callback.sendSuccess(true);

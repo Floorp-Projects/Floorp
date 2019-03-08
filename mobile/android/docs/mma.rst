@@ -156,6 +156,14 @@ List of current Events related data that is sent:
 {
   "event" : "E_Dismiss_Onboarding"
 }
+* Sign in Firefox Account
+{
+  "event" : "E_User_Signed_In_To_FxA"
+}
+* Firefox Sync finished event
+{
+  "event" : "E_User_Finished_Sync"
+}
 * The user just resumed the app from background
 {
   "event" : "E_Resumed_From_Background"

@@ -57,16 +57,17 @@ class UrlbarInput {
     this.document.getElementById("mainPopupSet").appendChild(
       MozXULElement.parseXULToFragment(`
         <panel id="urlbar-results"
-                role="group"
-                noautofocus="true"
-                hidden="true"
-                flip="none"
-                consumeoutsideclicks="never"
-                norolluponanchor="true"
-                level="parent">
+               role="group"
+               noautofocus="true"
+               hidden="true"
+               flip="none"
+               consumeoutsideclicks="never"
+               norolluponanchor="true"
+               level="parent">
           <html:div class="urlbarView-body-outer">
             <html:div class="urlbarView-body-inner">
-              <html:div class="urlbarView-results"/>
+              <html:div id="urlbarView-results"
+                        role="listbox"/>
             </html:div>
           </html:div>
           <hbox class="search-one-offs"

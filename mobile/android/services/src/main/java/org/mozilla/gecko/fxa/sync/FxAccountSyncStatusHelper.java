@@ -10,6 +10,7 @@ import java.util.WeakHashMap;
 
 import org.mozilla.gecko.fxa.SyncStatusListener;
 import org.mozilla.gecko.fxa.authenticator.AndroidFxAccount;
+import org.mozilla.gecko.mma.MmaDelegate;
 import org.mozilla.gecko.util.ThreadUtils;
 
 import android.content.ContentResolver;
@@ -67,6 +68,7 @@ public class FxAccountSyncStatusHelper implements SyncStatusObserver {
           @Override
           public void run() {
             delegate.onSyncFinished();
+            MmaDelegate.track(MmaDelegate.USER_FINISHED_SYNC);
           }
         });
       }

@@ -41,6 +41,7 @@ class MediaEngineDefaultVideoSource : public MediaEngineSource {
 
   nsString GetName() const override;
   nsCString GetUUID() const override;
+  nsString GetGroupId() const override;
 
   nsresult Allocate(const dom::MediaTrackConstraints& aConstraints,
                     const MediaEnginePrefs& aPrefs, const nsString& aDeviceId,
@@ -98,6 +99,9 @@ class MediaEngineDefaultVideoSource : public MediaEngineSource {
   MediaEnginePrefs mOpts;
   int mCb = 16;
   int mCr = 16;
+
+private:
+  const nsString mName;
 };
 
 class SineWaveGenerator;
@@ -108,6 +112,7 @@ class MediaEngineDefaultAudioSource : public MediaEngineSource {
 
   nsString GetName() const override;
   nsCString GetUUID() const override;
+  nsString GetGroupId() const override;
 
   nsresult Allocate(const dom::MediaTrackConstraints& aConstraints,
                     const MediaEnginePrefs& aPrefs, const nsString& aDeviceId,

@@ -14,6 +14,7 @@ import android.support.annotation.NonNull;
 import android.text.TextUtils;
 
 import org.mozilla.gecko.AppConstants;
+import org.mozilla.gecko.BrowserApp;
 import org.mozilla.gecko.Experiments;
 import org.mozilla.gecko.MmaConstants;
 import org.mozilla.gecko.PrefsHelper;
@@ -33,6 +34,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
+import static android.content.Context.MODE_PRIVATE;
+
 
 public class MmaDelegate {
 
@@ -49,6 +52,9 @@ public class MmaDelegate {
     public static final String DISMISS_ONBOARDING = "E_Dismiss_Onboarding";
     public static final String ONBOARDING_DEFAULT_VALUES = "E_Onboarding_With_Default_Values";
     public static final String ONBOARDING_REMOTE_VALUES = "E_Onboarding_With_Remote_Values";
+
+    public static final String USER_SIGNED_IN_TO_FXA = "E_User_Signed_In_To_FxA";
+    public static final String USER_FINISHED_SYNC = "E_User_Finished_Sync";
 
     private static final String LAUNCH_BUT_NOT_DEFAULT_BROWSER = "E_Launch_But_Not_Default_Browser";
     private static final String LAUNCH_BROWSER = "E_Launch_Browser";
@@ -281,13 +287,22 @@ public class MmaDelegate {
         return mmaHelper.getPanelConfig(context, panelConfigType, useLocalValues);
     }
 
-    public static String getDeviceId(Activity activity) {
+    private static String getDeviceId(Activity activity) {
         if (SwitchBoard.isInExperiment(activity, Experiments.LEANPLUM_DEBUG)) {
             return DEBUG_LEANPLUM_DEVICE_ID;
         }
 
         final SharedPreferences prefs = activity.getPreferences(Context.MODE_PRIVATE);
         return prefs.getString(KEY_ANDROID_PREF_STRING_LEANPLUM_DEVICE_ID, null);
+    }
+
+    public static String getDeviceId(Context context) {
+        if (SwitchBoard.isInExperiment(context, Experiments.LEANPLUM_DEBUG)) {
+            return DEBUG_LEANPLUM_DEVICE_ID;
+        }
+
+        //MMA preferences are stored in the initialising activity's preferences, which in our case is BrowserApp.
+        return context.getSharedPreferences(BrowserApp.class.getName(), MODE_PRIVATE).getString(MmaDelegate.KEY_ANDROID_PREF_STRING_LEANPLUM_DEVICE_ID, null);
     }
 
     private static void setDeviceId(Activity activity, String deviceId) {

@@ -6,7 +6,6 @@
 
 import { isOriginalId } from "devtools-source-map";
 import { getSource } from "../selectors";
-import { isGenerated } from "../utils/source";
 
 import type { SourceLocation, MappedLocation, Source } from "../types";
 import typeof SourceMaps from "../../packages/devtools-source-map/src";
@@ -104,9 +103,15 @@ export function isOriginalSource(source: ?Source) {
 
 export function getSelectedLocation(
   mappedLocation: MappedLocation,
-  selectedSource: ?Source
+  context: ?(Source | SourceLocation)
 ): SourceLocation {
-  return selectedSource && isGenerated(selectedSource)
-    ? mappedLocation.generatedLocation
-    : mappedLocation.location;
+  if (!context) {
+    return mappedLocation.location;
+  }
+
+  // $FlowIgnore
+  const sourceId = context.sourceId || context.id;
+  return isOriginalId(sourceId)
+    ? mappedLocation.location
+    : mappedLocation.generatedLocation;
 }

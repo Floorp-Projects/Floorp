@@ -7,6 +7,11 @@
 const Services = require("Services");
 const { applyMiddleware, createStore } = require("devtools/client/shared/vendor/redux");
 
+const {
+  MIN_COLUMN_WIDTH,
+  DEFAULT_COLUMN_WIDTH,
+} = require("./constants");
+
 // Middleware
 const batching = require("./middleware/batching");
 const prefs = require("./middleware/prefs");
@@ -21,7 +26,7 @@ const { FilterTypes, Filters } = require("./reducers/filters");
 const { Requests } = require("./reducers/requests");
 const { Sort } = require("./reducers/sort");
 const { TimingMarkers } = require("./reducers/timing-markers");
-const { UI, Columns } = require("./reducers/ui");
+const { UI, Columns, ColumnsData } = require("./reducers/ui");
 
 /**
  * Configure state and middleware for the Network monitor tool.
@@ -37,6 +42,7 @@ function configureStore(connector, telemetry) {
     timingMarkers: new TimingMarkers(),
     ui: UI({
       columns: getColumnState(),
+      columnsData: getColumnsData(),
     }),
   };
 
@@ -68,6 +74,27 @@ function getColumnState() {
   }
 
   return state;
+}
+
+/**
+ * Get columns data (width, min-width)
+ */
+function getColumnsData() {
+  const columnsData = getPref("devtools.netmonitor.columnsData");
+  if (!columnsData.length) {
+    return ColumnsData();
+  }
+
+  const newMap = new Map();
+  columnsData.forEach(col => {
+    if (col.name) {
+      col.minWidth = col.minWidth ? col.minWidth : MIN_COLUMN_WIDTH;
+      col.width = col.width ? col.width : DEFAULT_COLUMN_WIDTH;
+      newMap.set(col.name, col);
+    }
+  });
+
+  return newMap;
 }
 
 /**
