@@ -1884,18 +1884,13 @@ static ReturnAbortOnError ShowProfileManager(
       rv = ioParamBlock->GetInt(1, &startOffline);
       offline = NS_SUCCEEDED(rv) && startOffline == 1;
 
-      nsCOMPtr<nsIProfileLock> lock;
-      rv = dlgArray->QueryElementAt(0, NS_GET_IID(nsIProfileLock),
-                                    getter_AddRefs(lock));
+      rv = dlgArray->QueryElementAt(0, NS_GET_IID(nsIFile),
+                                    getter_AddRefs(profD));
       NS_ENSURE_SUCCESS_LOG(rv, rv);
 
-      rv = lock->GetDirectory(getter_AddRefs(profD));
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      rv = lock->GetLocalDirectory(getter_AddRefs(profLD));
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      lock->Unlock();
+      rv = dlgArray->QueryElementAt(1, NS_GET_IID(nsIFile),
+                                    getter_AddRefs(profLD));
+      NS_ENSURE_SUCCESS_LOG(rv, rv);
     }
   }
 
