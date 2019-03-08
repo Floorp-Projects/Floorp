@@ -813,7 +813,7 @@ NS_IMPL_ISUPPORTS(MediaDevice, nsIMediaDevice)
 
 MediaDevice::MediaDevice(const RefPtr<MediaEngineSource>& aSource,
                          const nsString& aName, const nsString& aID,
-                         const nsString& aRawID)
+                         const nsString& aGroupID, const nsString& aRawID)
     : mSource(aSource),
       mSinkInfo(nullptr),
       mKind((mSource && MediaEngineSource::IsVideo(mSource->GetMediaSource()))
@@ -824,12 +824,14 @@ MediaDevice::MediaDevice(const RefPtr<MediaEngineSource>& aSource,
           dom::MediaDeviceKindValues::strings[uint32_t(mKind)].value)),
       mName(aName),
       mID(aID),
+      mGroupID(aGroupID),
       mRawID(aRawID) {
   MOZ_ASSERT(mSource);
 }
 
 MediaDevice::MediaDevice(const RefPtr<AudioDeviceInfo>& aAudioDeviceInfo,
-                         const nsString& aID, const nsString& aRawID)
+                         const nsString& aID, const nsString& aGroupID,
+                         const nsString& aRawID)
     : mSource(nullptr),
       mSinkInfo(aAudioDeviceInfo),
       mKind(mSinkInfo->Type() == AudioDeviceInfo::TYPE_INPUT
@@ -840,6 +842,7 @@ MediaDevice::MediaDevice(const RefPtr<AudioDeviceInfo>& aAudioDeviceInfo,
           dom::MediaDeviceKindValues::strings[uint32_t(mKind)].value)),
       mName(mSinkInfo->Name()),
       mID(aID),
+      mGroupID(aGroupID),
       mRawID(aRawID) {
   // For now this ctor is used only for Audiooutput.
   // It could be used for Audioinput and Videoinput
@@ -850,7 +853,7 @@ MediaDevice::MediaDevice(const RefPtr<AudioDeviceInfo>& aAudioDeviceInfo,
 }
 
 MediaDevice::MediaDevice(const RefPtr<MediaDevice>& aOther, const nsString& aID,
-                         const nsString& aRawID)
+                         const nsString& aGroupID, const nsString& aRawID)
     : mSource(aOther->mSource),
       mSinkInfo(aOther->mSinkInfo),
       mKind(aOther->mKind),
@@ -858,6 +861,7 @@ MediaDevice::MediaDevice(const RefPtr<MediaDevice>& aOther, const nsString& aID,
       mType(aOther->mType),
       mName(aOther->mName),
       mID(aID),
+      mGroupID(aGroupID),
       mRawID(aRawID) {
   MOZ_ASSERT(aOther);
 }
@@ -948,6 +952,13 @@ NS_IMETHODIMP
 MediaDevice::GetRawId(nsAString& aID) {
   MOZ_ASSERT(NS_IsMainThread());
   aID.Assign(mRawID);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+MediaDevice::GetGroupId(nsAString& aGroupID) {
+  MOZ_ASSERT(NS_IsMainThread());
+  aGroupID.Assign(mGroupID);
   return NS_OK;
 }
 
@@ -3011,7 +3022,12 @@ void MediaManager::AnonymizeDevices(MediaDeviceSet& aDevices,
       device->GetId(id);
       nsString rawId(id);
       AnonymizeId(id, aOriginKey);
-      device = new MediaDevice(device, id, rawId);
+
+      nsString groupId;
+      device->GetGroupId(groupId);
+      AnonymizeId(groupId, aOriginKey);
+
+      device = new MediaDevice(device, id, groupId, rawId);
     }
   }
 }
