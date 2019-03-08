@@ -282,7 +282,8 @@ describe("ConsoleAPICall component:", () => {
       const wrapper = render(ConsoleApiCall({ message, serviceContainer }));
 
       expect(wrapper.find(".message-body").text()).toBe(message.messageText);
-      expect(wrapper.find(".message-body").text()).toMatch(/^bar: \d+(\.\d+)?ms$/);
+      expect(wrapper.find(".message-body").text())
+        .toMatch(/^bar: \d+(\.\d+)?ms - timer ended$/);
     });
     it("shows an error if the timer doesn't exist", () => {
       const message = stubPreparedMessages.get("timeEnd.timerDoesntExist");

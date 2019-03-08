@@ -19,8 +19,10 @@ const WebConsoleWrapper = require("devtools/client/webconsole/webconsole-wrapper
 const { messagesAdd } = require("devtools/client/webconsole/actions/messages");
 
 async function getWebConsoleWrapper() {
+  const hud = { target: {client: {} } };
   const webConsoleUi = {
     emit: () => {},
+    hud,
     proxy: {
       releaseActor: () => {},
       target: {
@@ -29,13 +31,12 @@ async function getWebConsoleWrapper() {
     },
   };
 
-  const hud = { target: {client: {} } };
-  const wcow = new WebConsoleWrapper(null, webConsoleUi, null, hud);
+  const wcow = new WebConsoleWrapper(null, webConsoleUi, null, null);
   await wcow.init();
   return wcow;
 }
 
-describe("WebConsoleOutputWrapper", () => {
+describe("WebConsoleWrapper", () => {
   it("clears queues when dispatchMessagesClear is called", async () => {
     const ncow = await getWebConsoleWrapper();
     ncow.queuedMessageAdds.push({fakePacket: "message"});
