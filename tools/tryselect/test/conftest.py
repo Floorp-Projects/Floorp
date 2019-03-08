@@ -33,6 +33,21 @@ def patch_vcs(monkeypatch):
     monkeypatch.setattr(push, 'vcs', mock)
 
 
+@pytest.fixture(scope='session')
+def run_mach():
+    import mach_bootstrap
+    from mach.config import ConfigSettings
+    from tryselect.tasks import build
+
+    mach = mach_bootstrap.bootstrap(build.topsrcdir)
+
+    def inner(args):
+        mach.settings = ConfigSettings()
+        return mach.run(args)
+
+    return inner
+
+
 def pytest_generate_tests(metafunc):
     if all(fixture in metafunc.fixturenames for fixture in ('template', 'args', 'expected')):
         def load_tests():

@@ -5,22 +5,6 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import mozunit
-import pytest
-
-
-@pytest.fixture(scope='session')
-def run_mach():
-    import mach_bootstrap
-    from mach.config import ConfigSettings
-    from tryselect.tasks import build
-
-    mach = mach_bootstrap.bootstrap(build.topsrcdir)
-
-    def inner(args):
-        mach.settings = ConfigSettings()
-        return mach.run(args)
-
-    return inner
 
 
 def test_shared_presets(run_mach, shared_name, shared_preset):
