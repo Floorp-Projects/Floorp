@@ -88,27 +88,8 @@ function acceptDialog() {
     return false;
   }
 
-  var profileLock;
-
-  try {
-    profileLock = selectedProfile.profile.lock({ value: null });
-  } catch (e) {
-    if (!selectedProfile.profile.rootDir.exists()) {
-      var missingTitle = gProfileManagerBundle.getString("profileMissingTitle");
-      var missing =
-        gProfileManagerBundle.getFormattedString("profileMissing", [appName]);
-      Services.prompt.alert(window, missingTitle, missing);
-      return false;
-    }
-
-    var lockedTitle = gProfileManagerBundle.getString("profileLockedTitle");
-    var locked =
-      gProfileManagerBundle.getFormattedString("profileLocked2", [appName, selectedProfile.profile.name, appName]);
-    Services.prompt.alert(window, lockedTitle, locked);
-
-    return false;
-  }
-  gDialogParams.objects.insertElementAt(profileLock.nsIProfileLock, 0);
+  gDialogParams.objects.insertElementAt(selectedProfile.profile.rootDir, 0);
+  gDialogParams.objects.insertElementAt(selectedProfile.profile.localDir, 1);
 
   try {
     gProfileService.defaultProfile = selectedProfile.profile;
