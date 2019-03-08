@@ -24,8 +24,7 @@ namespace dom {
 class MediaDeviceInfo final : public nsISupports, public nsWrapperCache {
  public:
   explicit MediaDeviceInfo(const nsAString& aDeviceId, MediaDeviceKind aKind,
-                           const nsAString& aLabel,
-                           const nsAString& aGroupId = nsString());
+                           const nsAString& aLabel, const nsAString& aGroupId);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(MediaDeviceInfo)

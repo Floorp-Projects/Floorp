@@ -115,7 +115,7 @@ already_AddRefed<Promise> MediaDevices::EnumerateDevices(CallerType aCallerType,
                    label = device->mName;
                  }
                  infos.AppendElement(MakeRefPtr<MediaDeviceInfo>(
-                     device->mID, device->mKind, label));
+                     device->mID, device->mKind, label, device->mGroupID));
                }
                p->MaybeResolve(std::move(infos));
              },

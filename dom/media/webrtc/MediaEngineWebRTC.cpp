@@ -144,7 +144,7 @@ void MediaEngineWebRTC::EnumerateVideoDevices(
     }
     aDevices->AppendElement(MakeRefPtr<MediaDevice>(
         vSource, vSource->GetName(), NS_ConvertUTF8toUTF16(vSource->GetUUID()),
-        NS_LITERAL_STRING("")));
+        NS_LITERAL_STRING("GroupID"), NS_LITERAL_STRING("")));
   }
 
   if (mHasTabVideoSource || aCapEngine == camera::BrowserEngine) {
@@ -152,7 +152,7 @@ void MediaEngineWebRTC::EnumerateVideoDevices(
     aDevices->AppendElement(MakeRefPtr<MediaDevice>(
         tabVideoSource, tabVideoSource->GetName(),
         NS_ConvertUTF8toUTF16(tabVideoSource->GetUUID()),
-        NS_LITERAL_STRING("")));
+        NS_LITERAL_STRING("GroupID"), NS_LITERAL_STRING("")));
   }
 }
 
@@ -185,7 +185,7 @@ void MediaEngineWebRTC::EnumerateMicrophoneDevices(
           mDelayAgnostic, mExtendedFilter);
       RefPtr<MediaDevice> device = MakeRefPtr<MediaDevice>(
           source, source->GetName(), NS_ConvertUTF8toUTF16(source->GetUUID()),
-          NS_LITERAL_STRING(""));
+          NS_LITERAL_STRING("GroupID"), NS_LITERAL_STRING(""));
       if (devices[i]->Preferred()) {
 #ifdef DEBUG
         if (!foundPreferredDevice) {
@@ -220,7 +220,8 @@ void MediaEngineWebRTC::EnumerateSpeakerDevices(
       // would be the same for both which ends up to create the same
       // deviceIDs (in JS).
       uuid.Append(NS_LITERAL_STRING("_Speaker"));
-      aDevices->AppendElement(MakeRefPtr<MediaDevice>(device, uuid));
+      nsString groupId(device->GroupID());
+      aDevices->AppendElement(MakeRefPtr<MediaDevice>(device, uuid, groupId));
     }
   }
 }
@@ -263,7 +264,7 @@ void MediaEngineWebRTC::EnumerateDevices(
     aDevices->AppendElement(MakeRefPtr<MediaDevice>(
         audioCaptureSource, audioCaptureSource->GetName(),
         NS_ConvertUTF8toUTF16(audioCaptureSource->GetUUID()),
-        NS_LITERAL_STRING("")));
+        NS_LITERAL_STRING("GroupID"), NS_LITERAL_STRING("")));
   } else if (aMediaSource == dom::MediaSourceEnum::Microphone) {
     MOZ_ASSERT(aMediaSource == dom::MediaSourceEnum::Microphone);
     EnumerateMicrophoneDevices(aWindowId, aDevices);
