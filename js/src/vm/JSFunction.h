@@ -23,8 +23,6 @@ class FunctionExtended;
 typedef JSNative Native;
 }  // namespace js
 
-struct JSAtomState;
-
 static const uint32_t JSSLOT_BOUND_FUNCTION_TARGET = 2;
 static const uint32_t JSSLOT_BOUND_FUNCTION_THIS = 3;
 static const uint32_t JSSLOT_BOUND_FUNCTION_ARGS = 4;
@@ -915,8 +913,6 @@ struct WellKnownSymbols;
 extern bool FunctionHasDefaultHasInstance(JSFunction* fun,
                                           const WellKnownSymbols& symbols);
 
-extern bool fun_symbolHasInstance(JSContext* cx, unsigned argc, Value* vp);
-
 extern void ThrowTypeErrorBehavior(JSContext* cx);
 
 /*
@@ -1042,9 +1038,6 @@ extern void ReportIncompatibleMethod(JSContext* cx, const CallArgs& args,
  * function.
  */
 extern void ReportIncompatible(JSContext* cx, const CallArgs& args);
-
-extern const JSFunctionSpec function_methods[];
-extern const JSFunctionSpec function_selfhosted_methods[];
 
 extern bool fun_apply(JSContext* cx, unsigned argc, Value* vp);
 
