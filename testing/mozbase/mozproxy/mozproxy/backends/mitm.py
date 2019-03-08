@@ -96,7 +96,9 @@ class Mitmproxy(Playback):
             "mozproxy_dir used for mitmproxy downloads and exe files: %s"
             % self.mozproxy_dir
         )
-
+        # setting up the MOZPROXY_DIR env variable so custom scripts know
+        # where to get the data
+        os.environ["MOZPROXY_DIR"] = self.mozproxy_dir
         # go ahead and download and setup mitmproxy
         self.download()
         # mitmproxy must be started before setup, so that the CA cert is available
@@ -121,13 +123,24 @@ class Mitmproxy(Playback):
             transformed_manifest, self.config["run_local"], self.mozproxy_dir
         )
 
-        # we use one pageset for all platforms
-        LOG.info("downloading mitmproxy pageset")
-        _manifest = self.config["playback_pageset_manifest"]
-        transformed_manifest = transform_platform(_manifest, self.config["platform"])
-        tooltool_download(
-            transformed_manifest, self.config["run_local"], self.mozproxy_dir
-        )
+        if "playback_pageset_manifest" in self.config:
+            # we use one pageset for all platforms
+            LOG.info("downloading mitmproxy pageset")
+            _manifest = self.config["playback_pageset_manifest"]
+            transformed_manifest = transform_platform(_manifest, self.config["platform"])
+            tooltool_download(
+                transformed_manifest, self.config["run_local"], self.mozproxy_dir
+            )
+
+        if "playback_artifacts" in self.config:
+            artifacts = self.config["playback_artifacts"].split(",")
+            for artifact in artifacts:
+                artifact = artifact.strip()
+                if not artifact:
+                    continue
+                artifact_name = artifact.split("/")[-1]
+                dest = os.path.join(self.mozproxy_dir, artifact_name)
+                download_file_from_url(artifact, dest, extract=True)
 
     def start(self):
         """Start playing back the mitmproxy recording."""

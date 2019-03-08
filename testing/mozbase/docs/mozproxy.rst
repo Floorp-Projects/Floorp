@@ -29,6 +29,7 @@ Mozproxy provide a function that returns a playback class. The usage pattern is
 - **playback_recordings**: list of recording files
 - **playback_binary_manifest**: tooltool manifests for the proxy backend binary
 - **playback_pageset_manifest**: tooltool manifest for the pagesets archive
+- **playback_artifacts**: links to downloadable artifacts
 - **binary**: path of the browser binary
 - **obj_path**: build dir
 - **platform**: platform name (provided by mozinfo.os)
@@ -41,6 +42,7 @@ Mozproxy provide a function that returns a playback class. The usage pattern is
 
 Supported environment variables:
 
+- **MOZPROXY_DIR**: directory used by mozproxy for all data files, set by mozproxy
 - **MOZ_UPLOAD_DIR**: upload directory path
 - **GECKO_HEAD_REPOSITORY**: used to find the certutils binary path from the CI
 - **GECKO_HEAD_REV**: used to find the certutils binary path frmo the CI
