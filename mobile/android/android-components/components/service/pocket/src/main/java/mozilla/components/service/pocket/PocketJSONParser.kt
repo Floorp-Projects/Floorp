@@ -7,7 +7,8 @@ package mozilla.components.service.pocket
 import android.support.annotation.VisibleForTesting
 import android.support.annotation.VisibleForTesting.PRIVATE
 import mozilla.components.service.pocket.data.PocketGlobalVideoRecommendation
-import mozilla.components.service.pocket.ext.mapObjNotNull
+import mozilla.components.support.ktx.android.org.json.mapNotNull
+import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
 
@@ -22,7 +23,7 @@ internal class PocketJSONParser {
     fun jsonToGlobalVideoRecommendations(jsonStr: String?): List<PocketGlobalVideoRecommendation>? = try {
         val rawJSON = JSONObject(jsonStr)
         val videosJSON = rawJSON.getJSONArray(KEY_VIDEO_RECOMMENDATIONS_INNER)
-        val videos = videosJSON.mapObjNotNull { jsonToGlobalVideoRecommendation(it) }
+        val videos = videosJSON.mapNotNull(JSONArray::getJSONObject) { jsonToGlobalVideoRecommendation(it) }
 
         // We return null, rather than the empty list, because devs might forget to check an empty list.
         if (videos.isNotEmpty()) videos else null

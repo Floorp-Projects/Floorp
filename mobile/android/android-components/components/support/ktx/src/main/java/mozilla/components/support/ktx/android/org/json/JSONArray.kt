@@ -5,6 +5,7 @@
 package mozilla.components.support.ktx.android.org.json
 
 import org.json.JSONArray
+import org.json.JSONException
 
 /*
  * Convenience method to convert a JSONArray into a sequence.
@@ -36,4 +37,26 @@ fun <T> JSONArray?.toList(): List<T> {
         return asSequence().map { it as T }.toList()
     }
     return listOf()
+}
+
+/**
+ * Returns a list containing only the non-null results of applying the given [transform] function
+ * to each element in the original collection as returned by [getFromArray]. If [getFromArray]
+ * or [transform] throws a [JSONException], these elements will also be omitted.
+ *
+ * Here's an example call:
+ * ```kotlin
+ * jsonArray.mapNotNull(JSONArray::getJSONObject) { jsonObj -> jsonObj.getString("author") }
+ * ```
+ */
+inline fun <T, R : Any> JSONArray.mapNotNull(getFromArray: JSONArray.(index: Int) -> T, transform: (T) -> R?): List<R> {
+    val transformedResults = mutableListOf<R>()
+    for (i in 0 until this.length()) {
+        try {
+            val transformed = transform(getFromArray(i))
+            if (transformed != null) { transformedResults.add(transformed) }
+        } catch (e: JSONException) { /* Do nothing: we skip bad data. */ }
+    }
+
+    return transformedResults
 }
