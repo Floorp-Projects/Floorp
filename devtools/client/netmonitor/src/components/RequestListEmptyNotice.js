@@ -15,7 +15,6 @@ const { getPerformanceAnalysisURL } = require("../utils/mdn-utils");
 
 // Components
 const MDNLink = createFactory(require("devtools/client/shared/components/MdnLink"));
-const RequestListHeader = createFactory(require("./RequestListHeader"));
 
 const { button, div, span } = dom;
 
@@ -45,7 +44,6 @@ class RequestListEmptyNotice extends Component {
       {
         className: "request-list-empty-notice",
       },
-      RequestListHeader(),
       div({ className: "notice-reload-message empty-notice-element" },
         span(null, RELOAD_NOTICE_1),
         button(

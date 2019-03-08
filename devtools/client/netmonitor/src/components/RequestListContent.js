@@ -123,6 +123,10 @@ class RequestListContent extends Component {
     window.removeEventListener("resize", this.onResize);
   }
 
+  /*
+   * Removing onResize() method causes perf regression - too many repaints of the panel.
+   * So it is needed in ComponentDidMount and ComponentDidUpdate. See Bug 1532914.
+   */
   onResize() {
     const parent = this.refs.scrollEl.parentNode;
     this.refs.scrollEl.style.width = parent.offsetWidth + "px";
