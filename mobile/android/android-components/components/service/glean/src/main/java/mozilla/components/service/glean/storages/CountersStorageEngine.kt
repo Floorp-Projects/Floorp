@@ -49,7 +49,6 @@ internal open class CountersStorageEngineImplementation(
      * @param amount the integer amount to add to the currently stored value.  If there is
      * no current value, then the amount will be stored as the current value.
      */
-    @Synchronized
     fun record(
         metricData: CommonMetricData,
         amount: Int

@@ -49,7 +49,6 @@ internal open class UuidsStorageEngineImplementation(
      * @param metricData object with metric settings
      * @param value the uuid value to record
      */
-    @Synchronized
     fun record(
         metricData: CommonMetricData,
         value: UUID

@@ -44,7 +44,6 @@ internal open class BooleansStorageEngineImplementation(
      * @param metricData object with metric settings
      * @param value the boolean value to record
      */
-    @Synchronized
     fun record(
         metricData: CommonMetricData,
         value: Boolean

@@ -50,7 +50,6 @@ internal open class StringsStorageEngineImplementation(
      * @param metricData object with metric settings
      * @param value the string value to record
      */
-    @Synchronized
     fun record(
         metricData: CommonMetricData,
         value: String

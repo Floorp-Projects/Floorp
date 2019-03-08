@@ -75,7 +75,6 @@ internal open class StringListsStorageEngineImplementation(
      * @param metricData object with metric settings
      * @param value the string list value to add
      */
-    @Synchronized
     fun add(
         metricData: CommonMetricData,
         value: String
@@ -118,7 +117,6 @@ internal open class StringListsStorageEngineImplementation(
      * @param metricData object with metric settings
      * @param value the string list value to record
      */
-    @Synchronized
     fun set(
         metricData: CommonMetricData,
         value: List<String>

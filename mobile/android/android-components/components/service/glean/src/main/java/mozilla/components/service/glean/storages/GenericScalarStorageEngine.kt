@@ -254,6 +254,7 @@ internal abstract class GenericScalarStorageEngine<ScalarType> : StorageEngine {
      * @param combine a lambda function to combine the currently stored value and
      *        the new one; this allows to implement new behaviours such as adding.
      */
+    @Synchronized
     protected fun recordScalar(
         metricData: CommonMetricData,
         value: ScalarType,
