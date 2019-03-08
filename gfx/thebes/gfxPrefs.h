@@ -533,7 +533,7 @@ class gfxPrefs final {
   DECL_GFX_PREF(Once, "gfx.vsync.compositor.unobserve-count",  CompositorUnobserveCount, int32_t, 10);
 
   DECL_GFX_PREF(Once, "gfx.webrender.all",                     WebRenderAll, bool, false);
-  DECL_GFX_PREF(Once, "gfx.webrender.all.qualified",           WebRenderAllQualified, bool, true);
+  DECL_GFX_PREF(Once, "gfx.webrender.all.qualified",           WebRenderAllQualified, bool, false);
   DECL_GFX_PREF(Once,
                 "gfx.webrender.all.qualified.default",
                 WebRenderAllQualifiedDefault,
