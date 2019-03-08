@@ -163,7 +163,7 @@ public final class GeckoRuntime implements Parcelable {
         }
     };
 
-    private static final String getProcessName(Context context) {
+    private static String getProcessName(Context context) {
         final ActivityManager manager = (ActivityManager)context.getSystemService(Context.ACTIVITY_SERVICE);
         for (final ActivityManager.RunningAppProcessInfo info : manager.getRunningAppProcesses()) {
             if (info.pid == Process.myPid()) {

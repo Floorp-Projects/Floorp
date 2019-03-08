@@ -71,6 +71,8 @@ class nsTreeColumn final : public nsISupports, public nsWrapperCache {
   nsTreeColumn* GetNext() const { return mNext; }
   nsTreeColumn* GetPrevious() const { return mPrevious; }
 
+  already_AddRefed<nsTreeColumn> GetPreviousColumn();
+
   void Invalidate(mozilla::ErrorResult& aRv);
 
   friend class nsTreeBodyFrame;
