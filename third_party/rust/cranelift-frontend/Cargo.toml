@@ -13,7 +13,7 @@
 [package]
 edition = "2018"
 name = "cranelift-frontend"
-version = "0.28.0"
+version = "0.29.0"
 authors = ["The Cranelift Project Developers"]
 description = "Cranelift IR builder helper"
 documentation = "https://cranelift.readthedocs.io/"
@@ -22,7 +22,7 @@ categories = ["no-std"]
 license = "Apache-2.0 WITH LLVM-exception"
 repository = "https://github.com/CraneStation/cranelift"
 [dependencies.cranelift-codegen]
-version = "0.28.0"
+version = "0.29.0"
 default-features = false
 
 [dependencies.hashmap_core]
