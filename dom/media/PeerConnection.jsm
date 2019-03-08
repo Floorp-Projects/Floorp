@@ -1362,6 +1362,7 @@ class RTCPeerConnection {
     if (this._remoteIdp) {
         this._remoteIdp.close();
     }
+    this._transceivers.forEach(t => t.setStopped());
     this._impl.close();
     this._suppressEvents = true;
     delete this._pc;
@@ -2266,11 +2267,11 @@ class RTCRtpTransceiver {
   }
 
   stop() {
+    this._pc._checkClosed();
+
     if (this.stopped) {
       return;
     }
-
-    this._pc._checkClosed();
 
     this.setStopped();
     this.sync();
