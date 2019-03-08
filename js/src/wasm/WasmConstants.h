@@ -480,16 +480,6 @@ enum class ThreadOp {
   Limit
 };
 
-// Opcodes from Bulk Memory Operations proposal as at 2 Feb 2018.  Note,
-// the opcodes are not actually assigned in that proposal.  This is just
-// an interim assignment.
-enum class CopyOrFillOp {
-  Copy = 0x01,
-  Fill = 0x02,
-
-  Limit
-};
-
 enum class MozOp {
   // ------------------------------------------------------------------------
   // These operators are emitted internally when compiling asm.js and are
@@ -534,10 +524,11 @@ enum class MozOp {
 };
 
 struct OpBytes {
-  // The bytes of the opcode have 16-bit representations to allow for a full
+  // b0 is a byte value but has a 16-bit representation to allow for a full
   // 256-value range plus a sentinel Limit value.
   uint16_t b0;
-  uint16_t b1;
+  // b1 is a LEB128 value but 32 bits is enough for now.
+  uint32_t b1;
 
   explicit OpBytes(Op x) {
     b0 = uint16_t(x);

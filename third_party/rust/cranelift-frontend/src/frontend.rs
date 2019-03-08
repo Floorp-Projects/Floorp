@@ -638,7 +638,7 @@ impl<'a> FunctionBuilder<'a> {
 
     /// Calls libc.memset
     ///
-    /// Writes `size` bytes of value `ch` to memory starting at `buffer`.
+    /// Writes `size` bytes of i8 value `ch` to memory starting at `buffer`.
     pub fn call_memset(
         &mut self,
         config: TargetFrontendConfig,
@@ -672,7 +672,7 @@ impl<'a> FunctionBuilder<'a> {
         &mut self,
         config: TargetFrontendConfig,
         buffer: Value,
-        ch: u32,
+        ch: u8,
         size: u64,
         buffer_align: u8,
     ) {
@@ -702,7 +702,7 @@ impl<'a> FunctionBuilder<'a> {
         let load_and_store_amount = size / access_size;
 
         if load_and_store_amount > THRESHOLD {
-            let ch = self.ins().iconst(types::I32, i64::from(ch));
+            let ch = self.ins().iconst(types::I8, i64::from(ch));
             let size = self.ins().iconst(config.pointer_type(), size as i64);
             self.call_memset(config, buffer, ch, size);
         } else {
@@ -1073,6 +1073,175 @@ ebb0:
     v2 = load.i64 aligned v0
     store aligned v2, v1
     return v1
+}
+"
+        );
+    }
+
+    #[test]
+    fn not_so_small_memcpy() {
+        use core::str::FromStr;
+        use cranelift_codegen::{isa, settings};
+
+        let shared_builder = settings::builder();
+        let shared_flags = settings::Flags::new(shared_builder);
+
+        let triple = ::target_lexicon::Triple::from_str("arm").expect("Couldn't create arm triple");
+
+        let target = isa::lookup(triple)
+            .ok()
+            .map(|b| b.finish(shared_flags))
+            .expect("This test requires arm support.");
+
+        let mut sig = Signature::new(target.default_call_conv());
+        sig.returns.push(AbiParam::new(I32));
+
+        let mut fn_ctx = FunctionBuilderContext::new();
+        let mut func = Function::with_name_signature(ExternalName::testcase("sample"), sig);
+        {
+            let mut builder = FunctionBuilder::new(&mut func, &mut fn_ctx);
+
+            let block0 = builder.create_ebb();
+            let x = Variable::new(0);
+            let y = Variable::new(16);
+            builder.declare_var(x, target.pointer_type());
+            builder.declare_var(y, target.pointer_type());
+            builder.append_ebb_params_for_function_params(block0);
+            builder.switch_to_block(block0);
+
+            let src = builder.use_var(x);
+            let dest = builder.use_var(y);
+            let size = 8192;
+            builder.emit_small_memcpy(target.frontend_config(), dest, src, size, 8, 8);
+            builder.ins().return_(&[dest]);
+
+            builder.seal_all_blocks();
+            builder.finalize();
+        }
+
+        assert_eq!(
+            func.display(None).to_string(),
+            "function %sample() -> i32 system_v {
+    sig0 = (i32, i32, i32) system_v
+    fn0 = %Memcpy sig0
+
+ebb0:
+    v4 = iconst.i32 0
+    v1 -> v4
+    v3 = iconst.i32 0
+    v0 -> v3
+    v2 = iconst.i32 8192
+    call fn0(v1, v0, v2)
+    return v1
+}
+"
+        );
+    }
+
+    #[test]
+    fn small_memset() {
+        use core::str::FromStr;
+        use cranelift_codegen::{isa, settings};
+
+        let shared_builder = settings::builder();
+        let shared_flags = settings::Flags::new(shared_builder);
+
+        let triple = ::target_lexicon::Triple::from_str("arm").expect("Couldn't create arm triple");
+
+        let target = isa::lookup(triple)
+            .ok()
+            .map(|b| b.finish(shared_flags))
+            .expect("This test requires arm support.");
+
+        let mut sig = Signature::new(target.default_call_conv());
+        sig.returns.push(AbiParam::new(I32));
+
+        let mut fn_ctx = FunctionBuilderContext::new();
+        let mut func = Function::with_name_signature(ExternalName::testcase("sample"), sig);
+        {
+            let mut builder = FunctionBuilder::new(&mut func, &mut fn_ctx);
+
+            let block0 = builder.create_ebb();
+            let y = Variable::new(16);
+            builder.declare_var(y, target.pointer_type());
+            builder.append_ebb_params_for_function_params(block0);
+            builder.switch_to_block(block0);
+
+            let dest = builder.use_var(y);
+            let size = 8;
+            builder.emit_small_memset(target.frontend_config(), dest, 1, size, 8);
+            builder.ins().return_(&[dest]);
+
+            builder.seal_all_blocks();
+            builder.finalize();
+        }
+
+        assert_eq!(
+            func.display(None).to_string(),
+            "function %sample() -> i32 system_v {
+ebb0:
+    v2 = iconst.i32 0
+    v0 -> v2
+    v1 = iconst.i64 0x0001_0001_0101
+    store aligned v1, v0
+    return v0
+}
+"
+        );
+    }
+
+    #[test]
+    fn not_so_small_memset() {
+        use core::str::FromStr;
+        use cranelift_codegen::{isa, settings};
+
+        let shared_builder = settings::builder();
+        let shared_flags = settings::Flags::new(shared_builder);
+
+        let triple = ::target_lexicon::Triple::from_str("arm").expect("Couldn't create arm triple");
+
+        let target = isa::lookup(triple)
+            .ok()
+            .map(|b| b.finish(shared_flags))
+            .expect("This test requires arm support.");
+
+        let mut sig = Signature::new(target.default_call_conv());
+        sig.returns.push(AbiParam::new(I32));
+
+        let mut fn_ctx = FunctionBuilderContext::new();
+        let mut func = Function::with_name_signature(ExternalName::testcase("sample"), sig);
+        {
+            let mut builder = FunctionBuilder::new(&mut func, &mut fn_ctx);
+
+            let block0 = builder.create_ebb();
+            let y = Variable::new(16);
+            builder.declare_var(y, target.pointer_type());
+            builder.append_ebb_params_for_function_params(block0);
+            builder.switch_to_block(block0);
+
+            let dest = builder.use_var(y);
+            let size = 8192;
+            builder.emit_small_memset(target.frontend_config(), dest, 1, size, 8);
+            builder.ins().return_(&[dest]);
+
+            builder.seal_all_blocks();
+            builder.finalize();
+        }
+
+        assert_eq!(
+            func.display(None).to_string(),
+            "function %sample() -> i32 system_v {
+    sig0 = (i32, i32, i32) system_v
+    fn0 = %Memset sig0
+
+ebb0:
+    v4 = iconst.i32 0
+    v0 -> v4
+    v1 = iconst.i8 1
+    v2 = iconst.i32 8192
+    v3 = uextend.i32 v1
+    call fn0(v0, v3, v2)
+    return v0
 }
 "
         );

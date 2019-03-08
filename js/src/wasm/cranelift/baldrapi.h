@@ -83,7 +83,8 @@ struct CraneliftStaticEnvironment {
 // contains.
 
 struct CraneliftModuleEnvironment {
-  const js::wasm::ModuleEnvironment& env;
+  // This is a pointer and not a reference to work-around a bug in bindgen.
+  const js::wasm::ModuleEnvironment* env;
   uint32_t min_memory_length;
 
   // Not bindgen'd because it's inlined.
@@ -99,6 +100,7 @@ struct CraneliftFuncCompileInput {
   const uint8_t* bytecode;
   size_t bytecodeSize;
   uint32_t index;
+  uint32_t offset_in_module;
 
   // Not bindgen'd because it's inlined.
   explicit inline CraneliftFuncCompileInput(const js::wasm::FuncCompileInput&);
@@ -119,8 +121,8 @@ struct CraneliftMetadataEntry {
     MemoryAccess,
     SymbolicAccess
   } which;
-  uint32_t offset;
-  uint32_t srcLoc;
+  uint32_t offset; // relative to the beginning of the function generated code
+  uint32_t srcLoc; // relative to the beginning of the module bytecode
   size_t extra;
 };
 
