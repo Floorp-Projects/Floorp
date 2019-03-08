@@ -7,7 +7,7 @@ package mozilla.components.service.experiments.source.kinto
 import mozilla.components.concept.fetch.Client
 import mozilla.components.concept.fetch.MutableHeaders
 import mozilla.components.concept.fetch.Request
-import mozilla.components.concept.fetch.success
+import mozilla.components.concept.fetch.isSuccess
 import mozilla.components.service.experiments.ExperimentDownloadException
 import java.io.IOException
 
@@ -65,7 +65,7 @@ internal class KintoClient(
 
             val request = Request(url, headers = headers, useCaches = false)
             val response = httpClient.fetch(request)
-            if (!response.success) {
+            if (!response.isSuccess) {
                 throw ExperimentDownloadException("Status code: ${response.status}")
             }
             return response.body.string()
