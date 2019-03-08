@@ -8,7 +8,6 @@ const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  ActorManagerParent: "resource://gre/modules/ActorManagerParent.jsm",
   FatalError: "chrome://remote/content/Error.jsm",
   HttpServer: "chrome://remote/content/server/HTTPD.jsm",
   JSONHandler: "chrome://remote/content/JSONHandler.jsm",
@@ -16,7 +15,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   NetUtil: "resource://gre/modules/NetUtil.jsm",
   Observer: "chrome://remote/content/Observer.jsm",
   Preferences: "resource://gre/modules/Preferences.jsm",
-  ProtocolHandler: "chrome://remote/content/Handler.jsm",
   RecommendedPreferences: "chrome://remote/content/RecommendedPreferences.jsm",
   TabObserver: "chrome://remote/content/WindowManager.jsm",
   Targets: "chrome://remote/content/Targets.jsm",
