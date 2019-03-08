@@ -2557,23 +2557,8 @@ GeneralParser<ParseHandler, Unit>::functionDefinition(
   }
 
   RootedObject proto(cx_);
-  if (asyncKind == FunctionAsyncKind::AsyncFunction &&
-      generatorKind == GeneratorKind::Generator) {
-    proto = GlobalObject::getOrCreateAsyncGenerator(cx_, cx_->global());
-    if (!proto) {
-      return null();
-    }
-  } else if (asyncKind == FunctionAsyncKind::AsyncFunction) {
-    proto = GlobalObject::getOrCreateAsyncFunctionPrototype(cx_, cx_->global());
-    if (!proto) {
-      return null();
-    }
-  } else if (generatorKind == GeneratorKind::Generator) {
-    proto =
-        GlobalObject::getOrCreateGeneratorFunctionPrototype(cx_, cx_->global());
-    if (!proto) {
-      return null();
-    }
+  if (!GetFunctionPrototype(cx_, generatorKind, asyncKind, &proto)) {
+    return null();
   }
   RootedFunction fun(
       cx_, newFunction(funName, kind, generatorKind, asyncKind, proto));

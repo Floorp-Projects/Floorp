@@ -605,23 +605,17 @@ XDRResult js::XDRInterpretedFunction(XDRState<mode>* xdr,
   MOZ_TRY(xdr->codeUint32(&flagsword));
 
   if (mode == XDR_DECODE) {
+    GeneratorKind generatorKind = (firstword & IsGenerator)
+                                      ? GeneratorKind::Generator
+                                      : GeneratorKind::NotGenerator;
+
+    FunctionAsyncKind asyncKind = (firstword & IsAsync)
+                                      ? FunctionAsyncKind::AsyncFunction
+                                      : FunctionAsyncKind::SyncFunction;
+
     RootedObject proto(cx);
-    if ((firstword & IsAsync) && (firstword & IsGenerator)) {
-      proto = GlobalObject::getOrCreateAsyncGenerator(cx, cx->global());
-      if (!proto) {
-        return xdr->fail(JS::TranscodeResult_Throw);
-      }
-    } else if (firstword & IsAsync) {
-      proto = GlobalObject::getOrCreateAsyncFunctionPrototype(cx, cx->global());
-      if (!proto) {
-        return xdr->fail(JS::TranscodeResult_Throw);
-      }
-    } else if (firstword & IsGenerator) {
-      proto =
-          GlobalObject::getOrCreateGeneratorFunctionPrototype(cx, cx->global());
-      if (!proto) {
-        return xdr->fail(JS::TranscodeResult_Throw);
-      }
+    if (!GetFunctionPrototype(cx, generatorKind, asyncKind, &proto)) {
+      return xdr->fail(JS::TranscodeResult_Throw);
     }
 
     gc::AllocKind allocKind = gc::AllocKind::FUNCTION;
@@ -1910,22 +1904,8 @@ static bool CreateDynamicFunction(JSContext* cx, const CallArgs& args,
   // Initialize the function with the default prototype:
   // Leave as nullptr to get the default from clasp for normal functions.
   RootedObject defaultProto(cx);
-  if (isAsync && isGenerator) {
-    defaultProto = GlobalObject::getOrCreateAsyncGenerator(cx, cx->global());
-    if (!defaultProto) {
-      return false;
-    }
-  } else if (isAsync) {
-    defaultProto = GlobalObject::getOrCreateAsyncFunctionPrototype(cx, global);
-    if (!defaultProto) {
-      return false;
-    }
-  } else if (isGenerator) {
-    defaultProto =
-        GlobalObject::getOrCreateGeneratorFunctionPrototype(cx, global);
-    if (!defaultProto) {
-      return false;
-    }
+  if (!GetFunctionPrototype(cx, generatorKind, asyncKind, &defaultProto)) {
+    return false;
   }
 
   // Step 30-37 (reordered).
@@ -2149,6 +2129,28 @@ JSFunction* js::NewFunctionWithProto(
   return fun;
 }
 
+bool js::GetFunctionPrototype(JSContext* cx, js::GeneratorKind generatorKind,
+                              js::FunctionAsyncKind asyncKind,
+                              js::MutableHandleObject proto) {
+  if (generatorKind == js::GeneratorKind::NotGenerator) {
+    if (asyncKind == js::FunctionAsyncKind::SyncFunction) {
+      proto.set(nullptr);
+      return true;
+    }
+
+    proto.set(
+        GlobalObject::getOrCreateAsyncFunctionPrototype(cx, cx->global()));
+  } else {
+    if (asyncKind == js::FunctionAsyncKind::SyncFunction) {
+      proto.set(GlobalObject::getOrCreateGeneratorFunctionPrototype(
+          cx, cx->global()));
+    } else {
+      proto.set(GlobalObject::getOrCreateAsyncGenerator(cx, cx->global()));
+    }
+  }
+  return !!proto;
+}
+
 bool js::CanReuseScriptForClone(JS::Realm* realm, HandleFunction fun,
                                 HandleObject newParent) {
   MOZ_ASSERT(fun->isInterpreted());
@@ -2183,23 +2185,9 @@ static inline JSFunction* NewFunctionClone(JSContext* cx, HandleFunction fun,
                                            HandleObject proto) {
   RootedObject cloneProto(cx, proto);
   if (!proto) {
-    if (fun->isAsync() && fun->isGenerator()) {
-      cloneProto = GlobalObject::getOrCreateAsyncGenerator(cx, cx->global());
-      if (!cloneProto) {
-        return nullptr;
-      }
-    } else if (fun->isAsync()) {
-      cloneProto =
-          GlobalObject::getOrCreateAsyncFunctionPrototype(cx, cx->global());
-      if (!cloneProto) {
-        return nullptr;
-      }
-    } else if (fun->isGenerator()) {
-      cloneProto =
-          GlobalObject::getOrCreateGeneratorFunctionPrototype(cx, cx->global());
-      if (!cloneProto) {
-        return nullptr;
-      }
+    if (!GetFunctionPrototype(cx, fun->generatorKind(), fun->asyncKind(),
+                              &cloneProto)) {
+      return nullptr;
     }
   }
 

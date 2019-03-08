@@ -894,6 +894,19 @@ extern JSFunction* NewScriptedFunction(
     HandleObject proto = nullptr,
     gc::AllocKind allocKind = gc::AllocKind::FUNCTION,
     NewObjectKind newKind = GenericObject, HandleObject enclosingEnv = nullptr);
+
+// Determine which [[Prototype]] to use when creating a new function using the
+// requested generator and async kind.
+//
+// This sets `proto` to `nullptr` for non-generator, synchronous functions to
+// mean "the builtin %FunctionPrototype% in the current realm", the common case.
+//
+// We could set it to `cx->global()->getOrCreateFunctionPrototype()`, but
+// nullptr gets a fast path in e.g. js::NewObjectWithClassProtoCommon.
+extern bool GetFunctionPrototype(JSContext* cx, js::GeneratorKind generatorKind,
+                                 js::FunctionAsyncKind asyncKind,
+                                 js::MutableHandleObject proto);
+
 extern JSAtom* IdToFunctionName(
     JSContext* cx, HandleId id,
     FunctionPrefixKind prefixKind = FunctionPrefixKind::None);
