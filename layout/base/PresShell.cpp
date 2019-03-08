@@ -7708,48 +7708,25 @@ nsresult PresShell::EventHandler::HandleEventInternal(
             }
           }
         }
-        if (keyCode != NS_VK_ESCAPE && keyCode != NS_VK_SHIFT &&
+        // Allow keys other than ESC and modifiers be marked as a
+        // valid user input for triggering popup, fullscreen, and
+        // pointer lock.
+        isHandlingUserInput =
+            keyCode != NS_VK_ESCAPE && keyCode != NS_VK_SHIFT &&
             keyCode != NS_VK_CONTROL && keyCode != NS_VK_ALT &&
-            keyCode != NS_VK_WIN && keyCode != NS_VK_META) {
-          // Allow keys other than ESC and modifiers be marked as a
-          // valid user input for triggering popup, fullscreen, and
-          // pointer lock.
-          isHandlingUserInput = true;
-          GetPresContext()->RecordInteractionTime(
-              nsPresContext::InteractionType::eKeyInteraction,
-              aEvent->mTimeStamp);
-        }
-
-        Telemetry::AccumulateTimeDelta(
-            Telemetry::INPUT_EVENT_QUEUED_KEYBOARD_MS, aEvent->mTimeStamp);
+            keyCode != NS_VK_WIN && keyCode != NS_VK_META;
         break;
       }
       case eMouseDown:
       case eMouseUp:
-        Telemetry::AccumulateTimeDelta(Telemetry::INPUT_EVENT_QUEUED_CLICK_MS,
-                                       aEvent->mTimeStamp);
-        MOZ_FALLTHROUGH;
       case ePointerDown:
       case ePointerUp:
         isHandlingUserInput = true;
-        GetPresContext()->RecordInteractionTime(
-            nsPresContext::InteractionType::eClickInteraction,
-            aEvent->mTimeStamp);
         break;
 
       case eMouseMove:
-        if (aEvent->mFlags.mHandledByAPZ) {
-          Telemetry::AccumulateTimeDelta(
-              Telemetry::INPUT_EVENT_QUEUED_APZ_MOUSE_MOVE_MS,
-              aEvent->mTimeStamp);
-        }
-
         nsIPresShell::AllowMouseCapture(
             EventStateManager::GetActiveEventStateManager() == manager);
-
-        GetPresContext()->RecordInteractionTime(
-            nsPresContext::InteractionType::eMouseMoveInteraction,
-            aEvent->mTimeStamp);
         break;
 
       case eDrop: {
@@ -7764,24 +7741,11 @@ nsresult PresShell::EventHandler::HandleEventInternal(
         break;
       }
 
-      case eWheel:
-        if (aEvent->mFlags.mHandledByAPZ) {
-          Telemetry::AccumulateTimeDelta(
-              Telemetry::INPUT_EVENT_QUEUED_APZ_WHEEL_MS, aEvent->mTimeStamp);
-        }
-        break;
-
-      case eTouchMove:
-        if (aEvent->mFlags.mHandledByAPZ) {
-          Telemetry::AccumulateTimeDelta(
-              Telemetry::INPUT_EVENT_QUEUED_APZ_TOUCH_MOVE_MS,
-              aEvent->mTimeStamp);
-        }
-        break;
-
       default:
         break;
     }
+
+    RecordEventPreparationPerformance(aEvent);
 
     if (!mPresShell->mTouchManager.PreHandleEvent(
             aEvent, aEventStatus, touchIsNew, isHandlingUserInput,
@@ -7950,6 +7914,75 @@ bool PresShell::EventHandler::PrepareToDispatchContextMenuEvent(
     aEvent->mFlags.mRetargetToNonNativeAnonymous = true;
   }
   return true;
+}
+
+void PresShell::EventHandler::RecordEventPreparationPerformance(
+    const WidgetEvent* aEvent) {
+  MOZ_ASSERT(aEvent);
+
+  switch (aEvent->mMessage) {
+    case eKeyPress:
+    case eKeyDown:
+    case eKeyUp:
+      switch (aEvent->AsKeyboardEvent()->mKeyCode) {
+        case NS_VK_ESCAPE:
+        case NS_VK_SHIFT:
+        case NS_VK_CONTROL:
+        case NS_VK_ALT:
+        case NS_VK_WIN:
+        case NS_VK_META:
+          break;
+        default:
+          GetPresContext()->RecordInteractionTime(
+              nsPresContext::InteractionType::eKeyInteraction,
+              aEvent->mTimeStamp);
+          break;
+      }
+      Telemetry::AccumulateTimeDelta(Telemetry::INPUT_EVENT_QUEUED_KEYBOARD_MS,
+                                     aEvent->mTimeStamp);
+      return;
+
+    case eMouseDown:
+    case eMouseUp:
+      Telemetry::AccumulateTimeDelta(Telemetry::INPUT_EVENT_QUEUED_CLICK_MS,
+                                     aEvent->mTimeStamp);
+      MOZ_FALLTHROUGH;
+    case ePointerDown:
+    case ePointerUp:
+      GetPresContext()->RecordInteractionTime(
+          nsPresContext::InteractionType::eClickInteraction,
+          aEvent->mTimeStamp);
+      return;
+
+    case eMouseMove:
+      if (aEvent->mFlags.mHandledByAPZ) {
+        Telemetry::AccumulateTimeDelta(
+            Telemetry::INPUT_EVENT_QUEUED_APZ_MOUSE_MOVE_MS,
+            aEvent->mTimeStamp);
+      }
+      GetPresContext()->RecordInteractionTime(
+          nsPresContext::InteractionType::eMouseMoveInteraction,
+          aEvent->mTimeStamp);
+      return;
+
+    case eWheel:
+      if (aEvent->mFlags.mHandledByAPZ) {
+        Telemetry::AccumulateTimeDelta(
+            Telemetry::INPUT_EVENT_QUEUED_APZ_WHEEL_MS, aEvent->mTimeStamp);
+      }
+      return;
+
+    case eTouchMove:
+      if (aEvent->mFlags.mHandledByAPZ) {
+        Telemetry::AccumulateTimeDelta(
+            Telemetry::INPUT_EVENT_QUEUED_APZ_TOUCH_MOVE_MS,
+            aEvent->mTimeStamp);
+      }
+      return;
+
+    default:
+      return;
+  }
 }
 
 void PresShell::EventHandler::RecordEventHandlingResponsePerformance(

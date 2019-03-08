@@ -1069,6 +1069,15 @@ class PresShell final : public nsIPresShell,
     };
 
     /**
+     * RecordEventPreparationPerformance() records event preparation performance
+     * with telemetry.
+     *
+     * @param aEvent            The handling event which we've finished
+     *                          preparing something to dispatch.
+     */
+    void RecordEventPreparationPerformance(const WidgetEvent* aEvent);
+
+    /**
      * RecordEventHandlingResponsePerformance() records event handling response
      * performance with telemetry.
      *
