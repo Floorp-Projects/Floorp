@@ -19,8 +19,41 @@ const ONEOFF_URLBAR_PREF = "browser.urlbar.oneOffSearches";
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   PlacesTestUtils: "resource://testing-common/PlacesTestUtils.jsm",
-  UrlbarTestUtils: "resource://testing-common/UrlbarTestUtils.jsm",
 });
+
+function promisePopupShown(popup) {
+  return new Promise(resolve => {
+    if (popup.state == "open") {
+      resolve();
+    } else {
+      popup.addEventListener("popupshown", function(event) {
+        resolve();
+      }, {once: true});
+    }
+  });
+}
+
+async function promiseAutocompleteResultPopup(inputText) {
+  gURLBar.focus();
+  gURLBar.value = inputText;
+  gURLBar.controller.startSearch(inputText);
+  await promisePopupShown(gURLBar.popup);
+  await BrowserTestUtils.waitForCondition(() => {
+    return gURLBar.controller.searchStatus >=
+      Ci.nsIAutoCompleteController.STATUS_COMPLETE_NO_MATCH;
+  });
+}
+
+async function waitForAutocompleteResultAt(index) {
+  let searchString = gURLBar.controller.searchString;
+  await BrowserTestUtils.waitForCondition(
+    () => gURLBar.popup.richlistbox.itemChildren.length > index &&
+          gURLBar.popup.richlistbox.itemChildren[index].getAttribute("ac-text") == searchString,
+    `Waiting for the autocomplete result for "${searchString}" at [${index}] to appear`);
+  // Ensure the addition is complete, for proper mouse events on the entries.
+  await new Promise(resolve => window.requestIdleCallback(resolve, {timeout: 1000}));
+  return gURLBar.popup.richlistbox.itemChildren[index];
+}
 
 add_task(async function setup() {
   await PlacesUtils.history.clear();
@@ -42,8 +75,6 @@ add_task(async function setup() {
 });
 
 add_task(async function test_popup_url() {
-  const quantumbar = UrlbarPrefs.get("quantumbar");
-
   // Load extension with brighttext not set
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
@@ -85,15 +116,14 @@ add_task(async function test_popup_url() {
   }
 
   await PlacesTestUtils.addVisits(visits);
-  await UrlbarTestUtils.promiseAutocompleteResultPopup(window,
-                                                       "example.com/autocomplete",
-                                                       waitForFocus);
-  await UrlbarTestUtils.waitForAutocompleteResultAt(window, maxResults - 1);
+  await promiseAutocompleteResultPopup("example.com/autocomplete");
+  await waitForAutocompleteResultAt(maxResults - 1);
 
-  Assert.equal(UrlbarTestUtils.getResultCount(window), maxResults,
-               "Should get maxResults=" + maxResults + " results");
+  let popup = gURLBar.popup;
+  let results = popup.richlistbox.itemChildren;
+  is(results.length, maxResults,
+     "Should get maxResults=" + maxResults + " results");
 
-  let popup = UrlbarTestUtils.getPanel(window);
   let popupCS = window.getComputedStyle(popup);
 
   Assert.equal(popupCS.backgroundColor,
@@ -107,10 +137,8 @@ add_task(async function test_popup_url() {
                `Popup color should be set to ${POPUP_TEXT_COLOR_DARK}`);
 
   // Set the selected attribute to true to test the highlight popup properties
-  UrlbarTestUtils.setSelectedIndex(window, 1);
-  let actionResult = await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
-  let urlResult = await UrlbarTestUtils.getDetailsOfResultAt(window, 1);
-  let resultCS = window.getComputedStyle(urlResult.element.row);
+  results[1].setAttribute("selected", "true");
+  let resultCS = window.getComputedStyle(results[1]);
 
   Assert.equal(resultCS.backgroundColor,
                `rgb(${hexToRGB(POPUP_SELECTED_COLOR).join(", ")})`,
@@ -120,15 +148,15 @@ add_task(async function test_popup_url() {
                `rgb(${hexToRGB(POPUP_SELECTED_TEXT_COLOR).join(", ")})`,
                `Popup highlight color should be set to ${POPUP_SELECTED_TEXT_COLOR}`);
 
-  // Now set the index to somewhere not on the first two, so that we can test both
-  // url and action text colors.
-  UrlbarTestUtils.setSelectedIndex(window, 2);
+  results[1].removeAttribute("selected");
 
-  Assert.equal(window.getComputedStyle(urlResult.element.url).color,
+  let urlText = results[1]._urlText;
+  Assert.equal(window.getComputedStyle(urlText).color,
                `rgb(${hexToRGB(POPUP_URL_COLOR_DARK).join(", ")})`,
                `Urlbar popup url color should be set to ${POPUP_URL_COLOR_DARK}`);
 
-  Assert.equal(window.getComputedStyle(actionResult.element.action).color,
+  let actionText = results[1]._actionText;
+  Assert.equal(window.getComputedStyle(actionText).color,
                `rgb(${hexToRGB(POPUP_ACTION_COLOR_DARK).join(", ")})`,
                `Urlbar popup action color should be set to ${POPUP_ACTION_COLOR_DARK}`);
 
@@ -175,17 +203,20 @@ add_task(async function test_popup_url() {
                `rgb(${hexToRGB(POPUP_TEXT_COLOR_BRIGHT).join(", ")})`,
                `Popup color should be set to ${POPUP_TEXT_COLOR_BRIGHT}`);
 
-  Assert.equal(window.getComputedStyle(urlResult.element.url).color,
+  urlText = results[1]._urlText;
+  Assert.equal(window.getComputedStyle(urlText).color,
                `rgb(${hexToRGB(POPUP_URL_COLOR_BRIGHT).join(", ")})`,
                `Urlbar popup url color should be set to ${POPUP_URL_COLOR_BRIGHT}`);
 
-  Assert.equal(window.getComputedStyle(actionResult.element.action).color,
+  actionText = results[1]._actionText;
+  Assert.equal(window.getComputedStyle(actionText).color,
                `rgb(${hexToRGB(POPUP_ACTION_COLOR_BRIGHT).join(", ")})`,
                `Urlbar popup action color should be set to ${POPUP_ACTION_COLOR_BRIGHT}`);
 
   // Since brighttext is enabled, the seperator color should be
   // POPUP_TEXT_COLOR_BRIGHT with added alpha.
-  Assert.equal(window.getComputedStyle(urlResult.element.separator, quantumbar ? ":before" : null).color,
+  let separator = results[1]._separator;
+  Assert.equal(window.getComputedStyle(separator).color,
                `rgba(${hexToRGB(POPUP_TEXT_COLOR_BRIGHT).join(", ")}, 0.5)`,
                `Urlbar popup separator color should be set to ${POPUP_TEXT_COLOR_BRIGHT} with alpha`);
 
@@ -214,7 +245,8 @@ add_task(async function test_popup_url() {
   let GRAY_TEXT = window.getComputedStyle(span).color;
   span.remove();
 
-  Assert.equal(window.getComputedStyle(urlResult.element.separator, quantumbar ? ":before" : null).color,
+  separator = results[1]._separator;
+  Assert.equal(window.getComputedStyle(separator).color,
                GRAY_TEXT,
                `Urlbar popup separator color should be set to ${GRAY_TEXT}`);
 });
