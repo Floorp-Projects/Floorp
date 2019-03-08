@@ -417,11 +417,10 @@ void xpc::TraceXPCGlobal(JSTracer* trc, JSObject* obj) {
   }
 
   // We might be called from a GC during the creation of a global, before we've
-  // been able to set up the compartment private or the XPCWrappedNativeScope,
-  // so we need to null-check those.
-  xpc::CompartmentPrivate* compPrivate = xpc::CompartmentPrivate::Get(obj);
-  if (compPrivate && compPrivate->scope) {
-    compPrivate->scope->TraceInside(trc);
+  // been able to set up the compartment private.
+  if (xpc::CompartmentPrivate* priv = xpc::CompartmentPrivate::Get(obj)) {
+    MOZ_ASSERT(priv->scope);
+    priv->scope->TraceInside(trc);
   }
 }
 
