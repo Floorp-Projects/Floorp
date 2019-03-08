@@ -319,6 +319,11 @@ bool AbstractGeneratorObject::isAfterYieldOrAwait(JSOp op) {
     return false;
   }
 
+  static_assert(JSOP_YIELD_LENGTH == JSOP_INITIALYIELD_LENGTH,
+                "JSOP_YIELD and JSOP_INITIALYIELD must have the same length");
+  static_assert(JSOP_YIELD_LENGTH == JSOP_AWAIT_LENGTH,
+                "JSOP_YIELD and JSOP_AWAIT must have the same length");
+
   uint32_t offset = nextOffset - JSOP_YIELD_LENGTH;
   MOZ_ASSERT(code[offset] == JSOP_INITIALYIELD || code[offset] == JSOP_YIELD ||
              code[offset] == JSOP_AWAIT);
