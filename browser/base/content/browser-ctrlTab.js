@@ -429,10 +429,8 @@ var ctrlTab = {
   },
 
   onKeyDown(event) {
-    if (event.keyCode != event.DOM_VK_TAB ||
-        !event.ctrlKey ||
-        event.altKey ||
-        event.metaKey) {
+    let action = ShortcutUtils.getSystemActionForEvent(event);
+    if (action != ShortcutUtils.CYCLE_TABS) {
       return;
     }
 
