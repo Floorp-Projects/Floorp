@@ -4,7 +4,6 @@
 
 this.UrlClassifierSkipListService = function() {};
 
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 ChromeUtils.defineModuleGetter(this, "RemoteSettings",
@@ -83,7 +82,6 @@ class Feature {
 UrlClassifierSkipListService.prototype = Object.freeze({
   classID: Components.ID("{b9f4fd03-9d87-4bfd-9958-85a821750ddc}"),
   QueryInterface: ChromeUtils.generateQI([Ci.nsIUrlClassifierSkipListService]),
-  _xpcom_factory: XPCOMUtils.generateSingletonFactory(UrlClassifierSkipListService),
 
   features: {},
 
@@ -102,4 +100,4 @@ UrlClassifierSkipListService.prototype = Object.freeze({
   },
 });
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([UrlClassifierSkipListService]);
+var EXPORTED_SYMBOLS = ["UrlClassifierSkipListService"];

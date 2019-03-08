@@ -15,9 +15,12 @@ XPIDL_SOURCES += [
 
 XPIDL_MODULE = 'url-classifier'
 
-EXTRA_COMPONENTS += [
-    'UrlClassifierSkipListService.js',
-    'UrlClassifierSkipListService.manifest',
+EXTRA_JS_MODULES += [
+    'UrlClassifierSkipListService.jsm',
+]
+
+XPCOM_MANIFESTS += [
+    'components.conf',
 ]
 
 DEFINES['GOOGLE_PROTOBUF_NO_RTTI'] = True
