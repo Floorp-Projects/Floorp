@@ -23,6 +23,9 @@
 /components/service/glean/ @mozilla-mobile/telemetry
 /samples/glean/ @mozilla-mobile/telemetry
 
+# Experiments library
+/components/service/experiments/ @mozilla-mobile/telemetry
+
 # Release Engineering pipeline
 /automation/ @mozilla-mobile/releng @mozilla-mobile/act
 /CODEOWNERS @mozilla-mobile/releng @mozilla-mobile/act
