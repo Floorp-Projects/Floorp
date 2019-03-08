@@ -11,6 +11,7 @@
 #include "mozilla/ErrorResult.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/dom/BindingDeclarations.h"
+#include "nsDOMNavigationTiming.h"
 #include "nsIGlobalObject.h"
 #include "nsWrapperCache.h"
 

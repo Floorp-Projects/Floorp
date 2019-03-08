@@ -22,6 +22,11 @@
 
 class nsMappedAttributes;
 struct RawServoDeclarationBlock;
+namespace mozilla {
+namespace dom {
+class Document;
+}  // namespace dom
+}  // namespace mozilla
 
 class nsHTMLStyleSheet final {
  public:
