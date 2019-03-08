@@ -1,6 +1,6 @@
-# [Android Components](../../../README.md) > Service > Fretboard
+# [Android Components](../../../README.md) > Service > Experiments
 
-An Android framework for segmenting users in order to run A/B tests and rollout features gradually.
+An Android SDK for running experiments on user segments in multiple branches.
 
 ## Usage
 
@@ -9,20 +9,20 @@ An Android framework for segmenting users in order to run A/B tests and rollout 
 Use Gradle to download the library from [maven.mozilla.org](https://maven.mozilla.org/) ([Setup repository](../../../README.md#maven-repository)):
 
 ```Groovy
-implementation "org.mozilla.components:service-fretboard:{latest-version}"
+implementation "org.mozilla.components:service-experiments:{latest-version}"
 ```
 
-### Creating Fretboard instance
-In order to use the library, first you have to create a new `Fretboard` instance. You do this once per app launch 
-(typically in your `Application` class `onCreate` method). You simply have to instantiate the `Fretboard` class and
+### Creating an Experiments instance
+In order to use the library, first you have to create a new `Experiments` instance. You do this once per app launch 
+(typically in your `Application` class `onCreate` method). You simply have to instantiate the `Experiments` class and
 provide the `ExperimentStorage` and `ExperimentSource` implementations, like this:
 
 ```Kotlin
 class SampleApp : Application() {
-    lateinit var fretboard: Fretboard
+    lateinit var experiments: Experiments
 
     override fun onCreate() {
-        fretboard = Fretboard(
+        experiments = Experiments(
             experimentSource,
             experimentStorage
         )
@@ -31,46 +31,46 @@ class SampleApp : Application() {
 ```
 
 #### Using Kinto as experiment source
-Fretboard includes a default source implementation for a Kinto backend, which you can use like this:
+Experiments includes a default source implementation for a Kinto backend, which you can use like this:
 
 ```Kotlin
 // Specify which HTTP (Fetch) client to use
 val httpClient = GeckoViewFetchClient(context)
 
-val fretboard = Fretboard(
+val experiments = Experiments(
     KintoExperimentSource(baseUrl, bucketName, collectionName, httpClient),
     experimentStorage
 )
 ```
 
 #### Using a JSON file as experiment storage
-Fretboard includes support for flat JSON files as storage mechanism out of the box:
+Experiments includes support for flat JSON files as storage mechanism out of the box:
 
 ```Kotlin
-val fretboard = Fretboard(
+val experiments = Experiments(
     experimentSource,
     FlatFileExperimentStorage(File(context.filesDir, "experiments.json"))
 )
 ```
 
 ### Fetching experiments from disk
-After instantiating `Fretboard`, in order to load the list of already downloaded
+After instantiating `Experiments`, in order to load the list of already downloaded
 experiments from disk, you need to call the `loadExperiments` method (don't call it
 on the UI thread, this example uses a coroutine):
 
 ```Kotlin
 launch(CommonPool) {
-    fretboard.loadExperiments()
+    experiments.loadExperiments()
 }
 ```
 
 ### Updating experiment list
-Fretboard provides two ways of updating the downloaded experiment list from the server: the first one is to directly
-call `updateExperiments` on a `Fretboard` instance, which forces experiments to be updated immediately and synchronously
+Experiments provides two ways of updating the downloaded experiment list from the server: the first one is to directly
+call `updateExperiments` on a `Experiments` instance, which forces experiments to be updated immediately and synchronously
 (do not call this on the main thread), like this:
 
 ```Kotlin
-fretboard.updateExperiments()
+experiments.updateExperiments()
 ```
 
 The second one is to use the provided `JobScheduler`-based scheduler, like this:
@@ -79,13 +79,13 @@ val scheduler = JobSchedulerSyncScheduler(context)
 scheduler.schedule(EXPERIMENTS_JOB_ID, ComponentName(this, ExperimentsSyncService::class.java))
 ```
 
-Where `ExperimentsSyncService` is a subclass of `SyncJob` you create like this, providing the `Fretboard` instance via the
-`getFretboard` method:
+Where `ExperimentsSyncService` is a subclass of `SyncJob` you create like this, providing the `Experiments` instance via the
+`getExperiments` method:
 
 ```Kotlin
 class ExperimentsSyncService : SyncJob() {
-    override fun getFretboard(): Fretboard {
-        return fretboard
+    override fun getExperiments(): Experiments {
+        return experiments
     }
 }
 ```
@@ -99,50 +99,50 @@ And then you have to register it on the manifest, just like any other `JobServic
 ```
 
 ### Checking if a user is part of an experiment
-In order to check if a user is part of a specific experiment, Fretboard provides two APIs: a Kotlin-friendly
+In order to check if a user is part of a specific experiment, Experiments provides two APIs: a Kotlin-friendly
 `withExperiment` API and a more Java-like `isInExperiment`. In both cases you pass an instance of `ExperimentDescriptor`
 with the name of the experiment you want to check:
 
 ```Kotlin
 val descriptor = ExperimentDescriptor("first-experiment-name")
-fretboard.withExperiment(descriptor) {
+experiments.withExperiment(descriptor) {
     someButton.setBackgroundColor(Color.RED)
 }
 
-otherButton.isEnabled = fretboard.isInExperiment(descriptor)
+otherButton.isEnabled = experiments.isInExperiment(descriptor)
 ```
 
 ### Getting experiment metadata
-Fretboard allows experiments to carry associated metadata, which can be retrieved using the Kotlin-friendly 
+Experiments allows experiments to carry associated metadata, which can be retrieved using the Kotlin-friendly 
 `withExperiment` API or the more Java-like `getExperiment` API, like this:
 
 ```Kotlin
 val descriptor = ExperimentDescriptor("first-experiment-name")
-fretboard.withExperiment(descriptor) {
+experiments.withExperiment(descriptor) {
     toolbar.setColor(Color.parseColor(it.payload?.get("color") as String))
 }
-textView.setText(fretboard.getExperiment(descriptor)?.payload?.get("message"))
+textView.setText(experiments.getExperiment(descriptor)?.payload?.get("message"))
 ```
 
 ### Setting override values
-Fretboard allows you to force activate / deactivate a specific experiment via `setOverride`, you
+Experiments allows you to force activate / deactivate a specific experiment via `setOverride`, you
 simply have to pass true to activate it, false to deactivate:
 
 ```Kotlin
 val descriptor = ExperimentDescriptor("first-experiment-name")
-fretboard.setOverride(context, descriptor, true)
+experiments.setOverride(context, descriptor, true)
 ```
 
 You can also clear an override for an experiment or all overrides:
 
 ```Kotlin
 val descriptor = ExperimentDescriptor("first-experiment-name")
-fretboard.clearOverride(context, descriptor)
-fretboard.clearAllOverrides(context)
+experiments.clearOverride(context, descriptor)
+experiments.clearAllOverrides(context)
 ```
 
 ### Filters
-Fretboard allows you to specify the following filters:
+Experiments allows you to specify the following filters:
 - Buckets: Every user is in one of 100 buckets (0-99). For every experiment you can set up a min and max value (0 <= min <= max <= 100). The bounds are [min, max).
     - Both max and min are optional. For example, specifying only min = 0 or only max = 100 includes all users
     - 0-100 includes all users (as opposed to 0-99)
@@ -158,16 +158,16 @@ Fretboard allows you to specify the following filters:
 - region: custom region, different from the one from the default locale (like a GeoIP, or something similar).
 - release channel: release channel of the app (alpha, beta, etc)
 
-For region and release channel to work you must provide a `ValuesProvider` implementation when creating the `Fretboard` instance, as detailed below
+For region and release channel to work you must provide a `ValuesProvider` implementation when creating the `Experiments` instance, as detailed below
 
 ### Specifying custom values for filters
-Additionally, Fretboard allows you to specify a custom `ValuesProvider` object in order to return a custom region,
+Additionally, Experiments allows you to specify a custom `ValuesProvider` object in order to return a custom region,
 different from the one of the current locale (perhaps doing a GeoIP or something like that), or the app
 relase channel (alpha, beta, etc). It also allows you to override the values for other experiment properties
 (such as the appId, country, etc):
 
 ```Kotlin
-val fretboard = Fretboard(
+val experiments = Experiments(
     experimentSource,
     experimentStorage,
     object : ValuesProvider {
