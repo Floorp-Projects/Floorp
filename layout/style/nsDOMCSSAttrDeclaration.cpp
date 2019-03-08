@@ -22,9 +22,10 @@
 #include "ActiveLayerTracker.h"
 
 using namespace mozilla;
+using namespace mozilla::dom;
 
-nsDOMCSSAttributeDeclaration::nsDOMCSSAttributeDeclaration(
-    dom::Element* aElement, bool aIsSMILOverride)
+nsDOMCSSAttributeDeclaration::nsDOMCSSAttributeDeclaration(Element* aElement,
+                                                           bool aIsSMILOverride)
     : mElement(aElement), mIsSMILOverride(aIsSMILOverride) {
   NS_ASSERTION(aElement, "Inline style for a NULL element?");
 }
