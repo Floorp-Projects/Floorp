@@ -13,7 +13,7 @@
 [package]
 edition = "2018"
 name = "cranelift-entity"
-version = "0.28.0"
+version = "0.29.0"
 authors = ["The Cranelift Project Developers"]
 description = "Data structures using entity references as mapping keys"
 documentation = "https://cranelift.readthedocs.io/"

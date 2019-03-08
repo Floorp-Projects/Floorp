@@ -1,6 +1,6 @@
 //! Runtime support for precomputed constant hash tables.
 //!
-//! The `lib/codegen/meta-python/constant_hash.py` Python module can generate constant hash tables
+//! The `cranelift-codegen/meta-python/constant_hash.py` Python module can generate constant hash tables
 //! using open addressing and quadratic probing. The hash tables are arrays that are guaranteed to:
 //!
 //! - Have a power-of-two size.
@@ -56,7 +56,7 @@ pub fn probe<K: Copy + Eq, T: Table<K> + ?Sized>(
 }
 
 /// A primitive hash function for matching opcodes.
-/// Must match `lib/codegen/meta-python/constant_hash.py` and `lib/codegen/meta/constant_hash.rs`.
+/// Must match `cranelift-codegen/meta-python/constant_hash.py` and `cranelift-codegen/meta/constant_hash.rs`.
 pub fn simple_hash(s: &str) -> usize {
     let mut h: u32 = 5381;
     for c in s.chars() {
