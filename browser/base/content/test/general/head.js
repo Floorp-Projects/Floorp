@@ -510,3 +510,18 @@ function getCertExceptionDialog(aLocation) {
   }
   return undefined;
 }
+
+/**
+ * Waits for the message from content to update the Page Style menu.
+ *
+ * @param browser
+ *        The <xul:browser> to wait for.
+ * @return Promise
+ */
+async function promiseStylesheetsUpdated(browser) {
+  await BrowserTestUtils.waitForMessage(browser.messageManager,
+                                        "PageStyle:StyleSheets");
+  // Resolve on the next tick of the event loop to give the Page Style
+  // menu code an opportunity to update.
+  await new Promise(resolve => Services.tm.dispatchToMainThread(resolve));
+}
