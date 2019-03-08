@@ -249,6 +249,9 @@ class TrySelect(MachCommandBase):
             kwargs_copy['save'] = None
             kwargs['query'] = self.run(save_query=True, **kwargs_copy)
 
+        if kwargs.get('paths'):
+            kwargs['test_paths'] = kwargs['paths']
+
         return self.run(**kwargs)
 
     @SubCommand('try',
