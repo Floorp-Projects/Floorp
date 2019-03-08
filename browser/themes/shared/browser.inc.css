@@ -191,7 +191,7 @@
 
 #cfr-notification-header-label {
   margin: 9px;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
 }
 
@@ -230,11 +230,13 @@
 
 #contextual-feature-recommendation-notification description {
   margin-bottom: 0;
+  font-size: 13px;
 }
 
 #cfr-notification-footer-text-and-addon-info {
   display: block;
   padding: 10px var(--arrowpanel-padding);
+  font-size: 13px;
 }
 
 #contextual-feature-recommendation-notification[data-notification-category="cfrFeatures"] .popup-notification-body-container,
@@ -250,8 +252,12 @@
 }
 
 #cfr-notification-feature-steps li {
-  padding-inline-start: 8px;
+  padding-inline-start: 9px;
   position: relative;
+}
+
+#cfr-notification-feature-steps li:not(:last-child) {
+  margin-bottom: 5px;
 }
 
 #cfr-notification-feature-steps li:before {
@@ -260,10 +266,20 @@
   inset-inline-start: 0;
 }
 
+#contextual-feature-recommendation-notification[data-notification-category="cfrFeatures"] #cfr-notification-footer-text {
+  font-size: 14px;
+  font-weight: 600;
+}
+
 #cfr-notification-footer-text,
 #cfr-notification-footer-users,
 #cfr-notification-footer-learn-more-link {
   margin: 0;
+}
+
+#cfr-notification-footer-users,
+#cfr-notification-footer-learn-more-link {
+  font-size: 12px;
 }
 
 #cfr-notification-footer-addon-info {
@@ -343,6 +359,11 @@
   visibility: hidden;
 }
 
+#cfr-notification-footer-pause-label {
+  font-weight: 600;
+  line-height: 11px;
+}
+
 #cfr-notification-footer-pause-button,
 #cfr-notification-footer-pause-label {
   color: rgba(12, 12, 13, 0.8);
@@ -353,11 +374,11 @@
   background-image: url("resource://activity-stream/data/content/assets/glyph-pause-12.svg");
   background-position: center center;
   background-repeat: no-repeat;
-  background-size: 12px;
+  background-size: 12px 10px;
   -moz-context-properties: fill;
   fill: rgba(12, 12, 13, 0.8);
   height: 12px;
-  width: 12px;
+  width: 10px;
 }
 
 #content-mask {
