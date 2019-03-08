@@ -8186,49 +8186,35 @@ void CodeGenerator::visitModD(LModD* ins) {
   }
 }
 
-typedef bool (*BinaryFn)(JSContext*, MutableHandleValue, MutableHandleValue,
-                         MutableHandleValue);
-
-static const VMFunction AddInfo =
-    FunctionInfo<BinaryFn>(js::AddValues, "AddValues");
-static const VMFunction SubInfo =
-    FunctionInfo<BinaryFn>(js::SubValues, "SubValues");
-static const VMFunction MulInfo =
-    FunctionInfo<BinaryFn>(js::MulValues, "MulValues");
-static const VMFunction DivInfo =
-    FunctionInfo<BinaryFn>(js::DivValues, "DivValues");
-static const VMFunction ModInfo =
-    FunctionInfo<BinaryFn>(js::ModValues, "ModValues");
-static const VMFunction UrshInfo =
-    FunctionInfo<BinaryFn>(js::UrshValues, "UrshValues");
-
 void CodeGenerator::visitBinaryV(LBinaryV* lir) {
   pushArg(ToValue(lir, LBinaryV::RhsInput));
   pushArg(ToValue(lir, LBinaryV::LhsInput));
 
+  using Fn = bool (*)(JSContext*, MutableHandleValue, MutableHandleValue,
+                      MutableHandleValue);
   switch (lir->jsop()) {
     case JSOP_ADD:
-      callVM(AddInfo, lir);
+      callVM<Fn, js::AddValues>(lir);
       break;
 
     case JSOP_SUB:
-      callVM(SubInfo, lir);
+      callVM<Fn, js::SubValues>(lir);
       break;
 
     case JSOP_MUL:
-      callVM(MulInfo, lir);
+      callVM<Fn, js::MulValues>(lir);
       break;
 
     case JSOP_DIV:
-      callVM(DivInfo, lir);
+      callVM<Fn, js::DivValues>(lir);
       break;
 
     case JSOP_MOD:
-      callVM(ModInfo, lir);
+      callVM<Fn, js::ModValues>(lir);
       break;
 
     case JSOP_URSH:
-      callVM(UrshInfo, lir);
+      callVM<Fn, js::UrshValues>(lir);
       break;
 
     default:
@@ -8291,60 +8277,43 @@ void CodeGenerator::visitCompareS(LCompareS* lir) {
   emitCompareS(lir, op, left, right, output);
 }
 
-typedef bool (*CompareFn)(JSContext*, MutableHandleValue, MutableHandleValue,
-                          bool*);
-static const VMFunction EqInfo =
-    FunctionInfo<CompareFn>(jit::LooselyEqual<true>, "LooselyEqual");
-static const VMFunction NeInfo =
-    FunctionInfo<CompareFn>(jit::LooselyEqual<false>, "LooselyEqual");
-static const VMFunction StrictEqInfo =
-    FunctionInfo<CompareFn>(jit::StrictlyEqual<true>, "StrictlyEqual");
-static const VMFunction StrictNeInfo =
-    FunctionInfo<CompareFn>(jit::StrictlyEqual<false>, "StrictlyEqual");
-static const VMFunction LtInfo =
-    FunctionInfo<CompareFn>(jit::LessThan, "LessThan");
-static const VMFunction LeInfo =
-    FunctionInfo<CompareFn>(jit::LessThanOrEqual, "LessThanOrEqual");
-static const VMFunction GtInfo =
-    FunctionInfo<CompareFn>(jit::GreaterThan, "GreaterThan");
-static const VMFunction GeInfo =
-    FunctionInfo<CompareFn>(jit::GreaterThanOrEqual, "GreaterThanOrEqual");
-
 void CodeGenerator::visitCompareVM(LCompareVM* lir) {
   pushArg(ToValue(lir, LBinaryV::RhsInput));
   pushArg(ToValue(lir, LBinaryV::LhsInput));
 
+  using Fn =
+      bool (*)(JSContext*, MutableHandleValue, MutableHandleValue, bool*);
   switch (lir->mir()->jsop()) {
     case JSOP_EQ:
-      callVM(EqInfo, lir);
+      callVM<Fn, jit::LooselyEqual<true>>(lir);
       break;
 
     case JSOP_NE:
-      callVM(NeInfo, lir);
+      callVM<Fn, jit::LooselyEqual<false>>(lir);
       break;
 
     case JSOP_STRICTEQ:
-      callVM(StrictEqInfo, lir);
+      callVM<Fn, jit::StrictlyEqual<true>>(lir);
       break;
 
     case JSOP_STRICTNE:
-      callVM(StrictNeInfo, lir);
+      callVM<Fn, jit::StrictlyEqual<false>>(lir);
       break;
 
     case JSOP_LT:
-      callVM(LtInfo, lir);
+      callVM<Fn, jit::LessThan>(lir);
       break;
 
     case JSOP_LE:
-      callVM(LeInfo, lir);
+      callVM<Fn, jit::LessThanOrEqual>(lir);
       break;
 
     case JSOP_GT:
-      callVM(GtInfo, lir);
+      callVM<Fn, jit::GreaterThan>(lir);
       break;
 
     case JSOP_GE:
-      callVM(GeInfo, lir);
+      callVM<Fn, jit::GreaterThanOrEqual>(lir);
       break;
 
     default:
@@ -8699,14 +8668,12 @@ void CodeGenerator::visitSameValueV(LSameValueV* lir) {
   masm.bind(&nonDouble);
 }
 
-typedef bool (*SameValueFn)(JSContext*, HandleValue, HandleValue, bool*);
-static const VMFunction SameValueInfo =
-    FunctionInfo<SameValueFn>(js::SameValue, "SameValue");
-
 void CodeGenerator::visitSameValueVM(LSameValueVM* lir) {
   pushArg(ToValue(lir, LSameValueVM::RhsInput));
   pushArg(ToValue(lir, LSameValueVM::LhsInput));
-  callVM(SameValueInfo, lir);
+
+  using Fn = bool (*)(JSContext*, HandleValue, HandleValue, bool*);
+  callVM<Fn, js::SameValue>(lir);
 }
 
 void CodeGenerator::emitConcat(LInstruction* lir, Register lhs, Register rhs,
@@ -9403,23 +9370,14 @@ void CodeGenerator::visitFromCodePoint(LFromCodePoint* lir) {
   masm.bind(done);
 }
 
-typedef JSString* (*StringToLowerCaseFn)(JSContext*, HandleString);
-static const VMFunction StringToLowerCaseInfo =
-    FunctionInfo<StringToLowerCaseFn>(js::StringToLowerCase,
-                                      "StringToLowerCase");
-
-typedef JSString* (*StringToUpperCaseFn)(JSContext*, HandleString);
-static const VMFunction StringToUpperCaseInfo =
-    FunctionInfo<StringToUpperCaseFn>(js::StringToUpperCase,
-                                      "StringToUpperCase");
-
 void CodeGenerator::visitStringConvertCase(LStringConvertCase* lir) {
   pushArg(ToRegister(lir->string()));
 
+  using Fn = JSString* (*)(JSContext*, HandleString);
   if (lir->mir()->mode() == MStringConvertCase::LowerCase) {
-    callVM(StringToLowerCaseInfo, lir);
+    callVM<Fn, js::StringToLowerCase>(lir);
   } else {
-    callVM(StringToUpperCaseInfo, lir);
+    callVM<Fn, js::StringToUpperCase>(lir);
   }
 }
 
@@ -9449,18 +9407,15 @@ void CodeGenerator::visitSinCos(LSinCos* lir) {
   masm.freeStack(sizeof(double) * 2);
 }
 
-typedef ArrayObject* (*StringSplitFn)(JSContext*, HandleObjectGroup,
-                                      HandleString, HandleString, uint32_t);
-static const VMFunction StringSplitInfo =
-    FunctionInfo<StringSplitFn>(js::str_split_string, "str_split_string");
-
 void CodeGenerator::visitStringSplit(LStringSplit* lir) {
   pushArg(Imm32(INT32_MAX));
   pushArg(ToRegister(lir->separator()));
   pushArg(ToRegister(lir->string()));
   pushArg(ImmGCPtr(lir->mir()->group()));
 
-  callVM(StringSplitInfo, lir);
+  using Fn = ArrayObject* (*)(JSContext*, HandleObjectGroup, HandleString,
+                              HandleString, uint32_t);
+  callVM<Fn, js::StringSplitString>(lir);
 }
 
 void CodeGenerator::visitInitializedLength(LInitializedLength* lir) {
@@ -9880,11 +9835,6 @@ void CodeGenerator::visitFallibleStoreElementV(LFallibleStoreElementV* lir) {
   emitStoreElementHoleV(lir);
 }
 
-typedef bool (*SetDenseElementFn)(JSContext*, HandleNativeObject, int32_t,
-                                  HandleValue, bool strict);
-static const VMFunction SetDenseElementInfo =
-    FunctionInfo<SetDenseElementFn>(jit::SetDenseElement, "SetDenseElement");
-
 void CodeGenerator::visitOutOfLineStoreElementHole(
     OutOfLineStoreElementHole* ool) {
   Register object, elements;
@@ -10009,7 +9959,10 @@ void CodeGenerator::visitOutOfLineStoreElementHole(
     pushArg(ToRegister(index));
   }
   pushArg(object);
-  callVM(SetDenseElementInfo, ins);
+
+  using Fn = bool (*)(JSContext*, HandleNativeObject, int32_t, HandleValue,
+                      bool strict);
+  callVM<Fn, jit::SetDenseElement>(ins);
 
   restoreLive(ins);
   masm.jump(ool->rejoin());
@@ -10267,11 +10220,6 @@ void CodeGenerator::visitArrayPushT(LArrayPushT* lir) {
   emitArrayPush(lir, obj, value.ref(), elementsTemp, length, spectreTemp);
 }
 
-typedef JSObject* (*ArraySliceDenseFn)(JSContext*, HandleObject, int32_t,
-                                       int32_t, HandleObject);
-static const VMFunction ArraySliceDenseInfo =
-    FunctionInfo<ArraySliceDenseFn>(array_slice_dense, "array_slice_dense");
-
 void CodeGenerator::visitArraySlice(LArraySlice* lir) {
   Register object = ToRegister(lir->object());
   Register begin = ToRegister(lir->begin());
@@ -10300,12 +10248,11 @@ void CodeGenerator::visitArraySlice(LArraySlice* lir) {
   pushArg(end);
   pushArg(begin);
   pushArg(object);
-  callVM(ArraySliceDenseInfo, lir);
-}
 
-typedef JSString* (*ArrayJoinFn)(JSContext*, HandleObject, HandleString);
-static const VMFunction ArrayJoinInfo =
-    FunctionInfo<ArrayJoinFn>(jit::ArrayJoin, "ArrayJoin");
+  using Fn =
+      JSObject* (*)(JSContext*, HandleObject, int32_t, int32_t, HandleObject);
+  callVM<Fn, ArraySliceDense>(lir);
+}
 
 void CodeGenerator::visitArrayJoin(LArrayJoin* lir) {
   Label skipCall;
@@ -10345,7 +10292,9 @@ void CodeGenerator::visitArrayJoin(LArrayJoin* lir) {
 
   pushArg(sep);
   pushArg(array);
-  callVM(ArrayJoinInfo, lir);
+
+  using Fn = JSString* (*)(JSContext*, HandleObject, HandleString);
+  callVM<Fn, jit::ArrayJoin>(lir);
   masm.bind(&skipCall);
 }
 
@@ -10447,11 +10396,6 @@ void CodeGenerator::visitSetFrameArgumentV(LSetFrameArgumentV* lir) {
   masm.storeValue(val, Address(masm.getStackPointer(), argOffset));
 }
 
-typedef JSObject* (*InitRestParameterFn)(JSContext*, uint32_t, Value*,
-                                         HandleObject, HandleObject);
-static const VMFunction InitRestParameterInfo =
-    FunctionInfo<InitRestParameterFn>(InitRestParameter, "InitRestParameter");
-
 void CodeGenerator::emitRest(LInstruction* lir, Register array,
                              Register numActuals, Register temp0,
                              Register temp1, unsigned numFormals,
@@ -10484,7 +10428,9 @@ void CodeGenerator::emitRest(LInstruction* lir, Register array,
   pushArg(temp1);
   pushArg(temp0);
 
-  callVM(InitRestParameterInfo, lir);
+  using Fn =
+      JSObject* (*)(JSContext*, uint32_t, Value*, HandleObject, HandleObject);
+  callVM<Fn, InitRestParameter>(lir);
 
   if (saveAndRestore) {
     storePointerResultTo(resultreg);
@@ -11405,13 +11351,11 @@ void CodeGenerator::visitCallSetElement(LCallSetElement* lir) {
   pushArg(ToValue(lir, LCallSetElement::Value));
   pushArg(ToValue(lir, LCallSetElement::Index));
   pushArg(obj);
-  callVM(SetObjectElementInfo, lir);
-}
 
-typedef bool (*InitElementArrayFn)(JSContext*, jsbytecode*, HandleObject,
-                                   uint32_t, HandleValue);
-static const VMFunction InitElementArrayInfo =
-    FunctionInfo<InitElementArrayFn>(js::InitElementArray, "InitElementArray");
+  using Fn = bool (*)(JSContext*, HandleObject, HandleValue, HandleValue,
+                      HandleValue, bool);
+  callVM<Fn, js::SetObjectElementWithReceiver>(lir);
+}
 
 void CodeGenerator::visitCallInitElementArray(LCallInitElementArray* lir) {
   pushArg(ToValue(lir, LCallInitElementArray::Value));
@@ -11422,7 +11366,10 @@ void CodeGenerator::visitCallInitElementArray(LCallInitElementArray* lir) {
   }
   pushArg(ToRegister(lir->object()));
   pushArg(ImmPtr(lir->mir()->resumePoint()->pc()));
-  callVM(InitElementArrayInfo, lir);
+
+  using Fn =
+      bool (*)(JSContext*, jsbytecode*, HandleObject, uint32_t, HandleValue);
+  callVM<Fn, js::InitElementArray>(lir);
 }
 
 void CodeGenerator::visitLoadFixedSlotV(LLoadFixedSlotV* ins) {
@@ -11709,41 +11656,27 @@ void CodeGenerator::visitCallSetProperty(LCallSetProperty* ins) {
   callVM(SetPropertyInfo, ins);
 }
 
-typedef bool (*DeletePropertyFn)(JSContext*, HandleValue, HandlePropertyName,
-                                 bool*);
-static const VMFunction DeletePropertyStrictInfo =
-    FunctionInfo<DeletePropertyFn>(DeletePropertyJit<true>,
-                                   "DeletePropertyStrict");
-static const VMFunction DeletePropertyNonStrictInfo =
-    FunctionInfo<DeletePropertyFn>(DeletePropertyJit<false>,
-                                   "DeletePropertyNonStrict");
-
 void CodeGenerator::visitCallDeleteProperty(LCallDeleteProperty* lir) {
   pushArg(ImmGCPtr(lir->mir()->name()));
   pushArg(ToValue(lir, LCallDeleteProperty::Value));
 
+  using Fn = bool (*)(JSContext*, HandleValue, HandlePropertyName, bool*);
   if (lir->mir()->strict()) {
-    callVM(DeletePropertyStrictInfo, lir);
+    callVM<Fn, DeletePropertyJit<true>>(lir);
   } else {
-    callVM(DeletePropertyNonStrictInfo, lir);
+    callVM<Fn, DeletePropertyJit<false>>(lir);
   }
 }
-
-typedef bool (*DeleteElementFn)(JSContext*, HandleValue, HandleValue, bool*);
-static const VMFunction DeleteElementStrictInfo = FunctionInfo<DeleteElementFn>(
-    DeleteElementJit<true>, "DeleteElementStrict");
-static const VMFunction DeleteElementNonStrictInfo =
-    FunctionInfo<DeleteElementFn>(DeleteElementJit<false>,
-                                  "DeleteElementNonStrict");
 
 void CodeGenerator::visitCallDeleteElement(LCallDeleteElement* lir) {
   pushArg(ToValue(lir, LCallDeleteElement::Index));
   pushArg(ToValue(lir, LCallDeleteElement::Value));
 
+  using Fn = bool (*)(JSContext*, HandleValue, HandleValue, bool*);
   if (lir->mir()->strict()) {
-    callVM(DeleteElementStrictInfo, lir);
+    callVM<Fn, DeleteElementJit<true>>(lir);
   } else {
-    callVM(DeleteElementNonStrictInfo, lir);
+    callVM<Fn, DeleteElementJit<false>>(lir);
   }
 }
 
@@ -11772,41 +11705,34 @@ void CodeGenerator::visitThrow(LThrow* lir) {
   callVM<Fn, js::ThrowOperation>(lir);
 }
 
-typedef bool (*BitNotFn)(JSContext*, MutableHandleValue, MutableHandleValue);
-static const VMFunction BitNotInfo = FunctionInfo<BitNotFn>(BitNot, "BitNot");
-
 void CodeGenerator::visitBitNotV(LBitNotV* lir) {
   pushArg(ToValue(lir, LBitNotV::Input));
-  callVM(BitNotInfo, lir);
-}
 
-typedef bool (*BitopFn)(JSContext*, MutableHandleValue, MutableHandleValue,
-                        MutableHandleValue);
-static const VMFunction BitAndInfo = FunctionInfo<BitopFn>(BitAnd, "BitAnd");
-static const VMFunction BitOrInfo = FunctionInfo<BitopFn>(BitOr, "BitOr");
-static const VMFunction BitXorInfo = FunctionInfo<BitopFn>(BitXor, "BitXor");
-static const VMFunction BitLhsInfo = FunctionInfo<BitopFn>(BitLsh, "BitLsh");
-static const VMFunction BitRhsInfo = FunctionInfo<BitopFn>(BitRsh, "BitRsh");
+  using Fn = bool (*)(JSContext*, MutableHandleValue, MutableHandleValue);
+  callVM<Fn, BitNot>(lir);
+}
 
 void CodeGenerator::visitBitOpV(LBitOpV* lir) {
   pushArg(ToValue(lir, LBitOpV::RhsInput));
   pushArg(ToValue(lir, LBitOpV::LhsInput));
 
+  using Fn = bool (*)(JSContext*, MutableHandleValue, MutableHandleValue,
+                      MutableHandleValue);
   switch (lir->jsop()) {
     case JSOP_BITAND:
-      callVM(BitAndInfo, lir);
+      callVM<Fn, BitAnd>(lir);
       break;
     case JSOP_BITOR:
-      callVM(BitOrInfo, lir);
+      callVM<Fn, BitOr>(lir);
       break;
     case JSOP_BITXOR:
-      callVM(BitXorInfo, lir);
+      callVM<Fn, BitXor>(lir);
       break;
     case JSOP_LSH:
-      callVM(BitLhsInfo, lir);
+      callVM<Fn, BitLsh>(lir);
       break;
     case JSOP_RSH:
-      callVM(BitRhsInfo, lir);
+      callVM<Fn, BitRsh>(lir);
       break;
     default:
       MOZ_CRASH("unexpected bitop");
@@ -13382,14 +13308,11 @@ void CodeGenerator::visitGuardToClass(LGuardToClass* ins) {
   bailoutFrom(&notEqual, ins->snapshot());
 }
 
-typedef JSString* (*ObjectClassToStringFn)(JSContext*, HandleObject);
-static const VMFunction ObjectClassToStringInfo =
-    FunctionInfo<ObjectClassToStringFn>(js::ObjectClassToString,
-                                        "ObjectClassToString");
-
 void CodeGenerator::visitObjectClassToString(LObjectClassToString* lir) {
   pushArg(ToRegister(lir->object()));
-  callVM(ObjectClassToStringInfo, lir);
+
+  using Fn = JSString* (*)(JSContext*, HandleObject);
+  callVM<Fn, js::ObjectClassToString>(lir);
 }
 
 void CodeGenerator::visitWasmParameter(LWasmParameter* lir) {}
@@ -13755,15 +13678,12 @@ void CodeGenerator::visitThrowRuntimeLexicalError(
   callVM<Fn, jit::ThrowRuntimeLexicalError>(ins);
 }
 
-typedef bool (*GlobalNameConflictsCheckFromIonFn)(JSContext*, HandleScript);
-static const VMFunction GlobalNameConflictsCheckFromIonInfo =
-    FunctionInfo<GlobalNameConflictsCheckFromIonFn>(
-        GlobalNameConflictsCheckFromIon, "GlobalNameConflictsCheckFromIon");
-
 void CodeGenerator::visitGlobalNameConflictsCheck(
     LGlobalNameConflictsCheck* ins) {
   pushArg(ImmGCPtr(ins->mirRaw()->block()->info().script()));
-  callVM(GlobalNameConflictsCheckFromIonInfo, ins);
+
+  using Fn = bool (*)(JSContext*, HandleScript);
+  callVM<Fn, GlobalNameConflictsCheckFromIon>(ins);
 }
 
 void CodeGenerator::visitDebugger(LDebugger* ins) {

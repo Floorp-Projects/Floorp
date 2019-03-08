@@ -396,7 +396,7 @@ const VMFunction StringsNotEqualInfo =
 bool StringSplitHelper(JSContext* cx, HandleString str, HandleString sep,
                        HandleObjectGroup group, uint32_t limit,
                        MutableHandleValue result) {
-  JSObject* resultObj = str_split_string(cx, group, str, sep, limit);
+  JSObject* resultObj = StringSplitString(cx, group, str, sep, limit);
   if (!resultObj) {
     return false;
   }

@@ -137,9 +137,9 @@ extern bool str_localeCompare(JSContext* cx, unsigned argc, Value* vp);
 
 extern bool str_concat(JSContext* cx, unsigned argc, Value* vp);
 
-ArrayObject* str_split_string(JSContext* cx, HandleObjectGroup group,
-                              HandleString str, HandleString sep,
-                              uint32_t limit);
+ArrayObject* StringSplitString(JSContext* cx, HandleObjectGroup group,
+                               HandleString str, HandleString sep,
+                               uint32_t limit);
 
 JSString* StringFlatReplaceString(JSContext* cx, HandleString string,
                                   HandleString pattern,

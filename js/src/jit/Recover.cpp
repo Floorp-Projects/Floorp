@@ -975,7 +975,7 @@ bool RStringSplit::recover(JSContext* cx, SnapshotIterator& iter) const {
   }
   RootedValue result(cx);
 
-  JSObject* res = str_split_string(cx, group, str, sep, INT32_MAX);
+  JSObject* res = StringSplitString(cx, group, str, sep, INT32_MAX);
   if (!res) {
     return false;
   }

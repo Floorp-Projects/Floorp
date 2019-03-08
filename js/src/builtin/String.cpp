@@ -3277,9 +3277,9 @@ static ArrayObject* SplitSingleCharHelper(JSContext* cx, HandleLinearString str,
 }
 
 // ES 2016 draft Mar 25, 2016 21.1.3.17 steps 4, 8, 12-18.
-ArrayObject* js::str_split_string(JSContext* cx, HandleObjectGroup group,
-                                  HandleString str, HandleString sep,
-                                  uint32_t limit) {
+ArrayObject* js::StringSplitString(JSContext* cx, HandleObjectGroup group,
+                                   HandleString str, HandleString sep,
+                                   uint32_t limit) {
   MOZ_ASSERT(limit > 0, "Only called for strictly positive limit.");
 
   RootedLinearString linearStr(cx, str->ensureLinear(cx));
