@@ -41,7 +41,7 @@ class AbstractGeneratorObject : public NativeObject {
  public:
   static inline ResumeKind getResumeKind(jsbytecode* pc) {
     MOZ_ASSERT(*pc == JSOP_RESUME);
-    unsigned arg = GET_UINT16(pc);
+    unsigned arg = GET_UINT8(pc);
     MOZ_ASSERT(arg <= RETURN);
     return static_cast<ResumeKind>(arg);
   }

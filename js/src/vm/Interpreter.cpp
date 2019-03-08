@@ -2111,6 +2111,10 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
         if (MOZ_LIKELY(interpReturnOK)) {
           TypeScript::Monitor(cx, script, REGS.pc, REGS.sp[-1]);
 
+          if (JSOp(*REGS.pc) == JSOP_RESUME) {
+            ADVANCE_AND_DISPATCH(JSOP_RESUME_LENGTH);
+          }
+          MOZ_ASSERT(CodeSpec[*REGS.pc].length == JSOP_CALL_LENGTH);
           ADVANCE_AND_DISPATCH(JSOP_CALL_LENGTH);
         }
 
@@ -3024,6 +3028,19 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
     CASE(JSOP_CALLITER)
     CASE(JSOP_SUPERCALL)
     CASE(JSOP_FUNCALL) {
+      static_assert(JSOP_CALL_LENGTH == JSOP_NEW_LENGTH,
+                    "call and new must be the same size");
+      static_assert(JSOP_CALL_LENGTH == JSOP_CALL_IGNORES_RV_LENGTH,
+                    "call and call-ignores-rv must be the same size");
+      static_assert(JSOP_CALL_LENGTH == JSOP_CALLITER_LENGTH,
+                    "call and calliter must be the same size");
+      static_assert(JSOP_CALL_LENGTH == JSOP_SUPERCALL_LENGTH,
+                    "call and supercall must be the same size");
+      static_assert(JSOP_CALL_LENGTH == JSOP_FUNCALL_LENGTH,
+                    "call and funcall must be the same size");
+      static_assert(JSOP_CALL_LENGTH == JSOP_FUNAPPLY_LENGTH,
+                    "call and funapply must be the same size");
+
       if (REGS.fp()->hasPushedGeckoProfilerFrame()) {
         cx->geckoProfiler().updatePC(cx, script, REGS.pc);
       }
