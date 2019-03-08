@@ -11,11 +11,7 @@ var EXPORTED_SYMBOLS = [
 
 const {DOMContentLoadedPromise} = ChromeUtils.import("chrome://remote/content/Sync.jsm");
 const {EventEmitter} = ChromeUtils.import("resource://gre/modules/EventEmitter.jsm");
-const {Log} = ChromeUtils.import("chrome://remote/content/Log.jsm");
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-
-XPCOMUtils.defineLazyGetter(this, "log", Log.get);
 
 /**
  * The WindowManager provides tooling for application-agnostic observation
