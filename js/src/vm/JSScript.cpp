@@ -3988,23 +3988,9 @@ static JSObject* CloneInnerInterpretedFunction(
     Handle<ScriptSourceObject*> sourceObject) {
   /* NB: Keep this in sync with XDRInterpretedFunction. */
   RootedObject cloneProto(cx);
-  if (srcFun->isAsync() && srcFun->isGenerator()) {
-    cloneProto = GlobalObject::getOrCreateAsyncGenerator(cx, cx->global());
-    if (!cloneProto) {
-      return nullptr;
-    }
-  } else if (srcFun->isAsync()) {
-    cloneProto =
-        GlobalObject::getOrCreateAsyncFunctionPrototype(cx, cx->global());
-    if (!cloneProto) {
-      return nullptr;
-    }
-  } else if (srcFun->isGenerator()) {
-    cloneProto =
-        GlobalObject::getOrCreateGeneratorFunctionPrototype(cx, cx->global());
-    if (!cloneProto) {
-      return nullptr;
-    }
+  if (!GetFunctionPrototype(cx, srcFun->generatorKind(), srcFun->asyncKind(),
+                            &cloneProto)) {
+    return nullptr;
   }
 
   gc::AllocKind allocKind = srcFun->getAllocKind();
