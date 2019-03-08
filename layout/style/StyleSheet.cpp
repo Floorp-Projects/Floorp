@@ -967,6 +967,13 @@ nsresult StyleSheet::ReparseSheet(const nsAString& aInput) {
     return NS_ERROR_DOM_INVALID_ACCESS_ERR;
   }
 
+  // Allowing to modify UA sheets is dangerous (in the sense that C++ code
+  // relies on rules in those sheets), plus they're probably going to be shared
+  // across processes in which case this is directly a no-go.
+  if (GetOrigin() == OriginFlags::UserAgent) {
+    return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
+  }
+
   // Hold strong ref to the CSSLoader in case the document update
   // kills the document
   RefPtr<css::Loader> loader;
