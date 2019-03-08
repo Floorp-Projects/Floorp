@@ -2,7 +2,7 @@
 
 # provider
 
-`val provider: `[`SuggestionProvider`](../-suggestion-provider/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/awesomebar/src/main/java/mozilla/components/concept/awesomebar/AwesomeBar.kt#L74)
+`val provider: `[`SuggestionProvider`](../-suggestion-provider/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/awesomebar/src/main/java/mozilla/components/concept/awesomebar/AwesomeBar.kt#L84)
 
 The provider this suggestion came from.
 

@@ -124,14 +124,22 @@
 | [mozilla.components.service.glean.EventMetricType](../mozilla.components.service.glean/-event-metric-type/index.md) | This implements the developer facing API for recording events. |
 | [org.mozilla.telemetry.measurement.EventsMeasurement](../org.mozilla.telemetry.measurement/-events-measurement/index.md) |  |
 | [mozilla.components.lib.crash.handler.ExceptionHandler](../mozilla.components.lib.crash.handler/-exception-handler/index.md) | [Thread.UncaughtExceptionHandler](https://developer.android.com/reference/java/lang/Thread/UncaughtExceptionHandler.html) implementation that forwards crashes to the [CrashReporter](../mozilla.components.lib.crash/-crash-reporter/index.md) instance. |
+| [mozilla.components.service.experiments.Experiment](../mozilla.components.service.experiments/-experiment/index.md) | Represents an A/B test experiment, independent of the underlying storage mechanism |
 | [mozilla.components.service.fretboard.Experiment](../mozilla.components.service.fretboard/-experiment/index.md) | Represents an A/B test experiment, independent of the underlying storage mechanism |
+| [mozilla.components.service.experiments.ExperimentDescriptor](../mozilla.components.service.experiments/-experiment-descriptor/index.md) | Class used to identify an experiment |
 | [mozilla.components.service.fretboard.ExperimentDescriptor](../mozilla.components.service.fretboard/-experiment-descriptor/index.md) | Class used to identify an experiment |
+| [mozilla.components.service.experiments.ExperimentDownloadException](../mozilla.components.service.experiments/-experiment-download-exception/index.md) | Exception while downloading experiments from the server |
 | [mozilla.components.service.fretboard.ExperimentDownloadException](../mozilla.components.service.fretboard/-experiment-download-exception/index.md) | Exception while downloading experiments from the server |
+| [mozilla.components.service.experiments.ExperimentPayload](../mozilla.components.service.experiments/-experiment-payload/index.md) | Class which represents an experiment associated data |
 | [mozilla.components.service.fretboard.ExperimentPayload](../mozilla.components.service.fretboard/-experiment-payload/index.md) | Class which represents an experiment associated data |
+| [mozilla.components.service.experiments.ExperimentSource](../mozilla.components.service.experiments/-experiment-source/index.md) | Represents a location where experiments are stored (Kinto, a JSON file on a server, etc) |
 | [mozilla.components.service.fretboard.ExperimentSource](../mozilla.components.service.fretboard/-experiment-source/index.md) | Represents a location where experiments are stored (Kinto, a JSON file on a server, etc) |
+| [mozilla.components.service.experiments.ExperimentStorage](../mozilla.components.service.experiments/-experiment-storage/index.md) | Represents a location where experiments are stored locally on the device |
 | [mozilla.components.service.fretboard.ExperimentStorage](../mozilla.components.service.fretboard/-experiment-storage/index.md) | Represents a location where experiments are stored locally on the device |
+| [mozilla.components.service.experiments.Experiments](../mozilla.components.service.experiments/-experiments/index.md) | Entry point of the library |
 | [org.mozilla.telemetry.measurement.ExperimentsMapMeasurement](../org.mozilla.telemetry.measurement/-experiments-map-measurement/index.md) |  |
 | [org.mozilla.telemetry.measurement.ExperimentsMeasurement](../org.mozilla.telemetry.measurement/-experiments-measurement/index.md) |  |
+| [mozilla.components.service.experiments.ExperimentsSnapshot](../mozilla.components.service.experiments/-experiments-snapshot/index.md) | Represents an experiment sync result |
 | [mozilla.components.service.fretboard.ExperimentsSnapshot](../mozilla.components.service.fretboard/-experiments-snapshot/index.md) | Represents an experiment sync result |
 | [mozilla.components.support.base.facts.Fact](../mozilla.components.support.base.facts/-fact/index.md) | A fact describing a generic event that has occurred in a component. |
 | [mozilla.components.support.base.facts.FactProcessor](../mozilla.components.support.base.facts/-fact-processor/index.md) | A [FactProcessor](../mozilla.components.support.base.facts/-fact-processor/index.md) receives [Fact](../mozilla.components.support.base.facts/-fact/index.md) instances to process them further. |
@@ -148,6 +156,7 @@
 | [mozilla.components.feature.accounts.FirefoxAccountsAuthFeature](../mozilla.components.feature.accounts/-firefox-accounts-auth-feature/index.md) | Ties together an account manager with a session manager/tabs implementation, facilitating an authentication flow. |
 | [mozilla.components.feature.sync.FirefoxSyncFeature](../mozilla.components.feature.sync/-firefox-sync-feature/index.md) | A feature implementation which orchestrates data synchronization of a set of [SyncableStore](../mozilla.components.concept.storage/-syncable-store/index.md) which all share a common [AuthType](../mozilla.components.feature.sync/-firefox-sync-feature/index.md#AuthType). |
 | [org.mozilla.telemetry.measurement.FirstRunProfileDateMeasurement](../org.mozilla.telemetry.measurement/-first-run-profile-date-measurement/index.md) | This measurement will save the timestamp of the first time it was instantiated and report this as profile creation date. |
+| [mozilla.components.service.experiments.storage.flatfile.FlatFileExperimentStorage](../mozilla.components.service.experiments.storage.flatfile/-flat-file-experiment-storage/index.md) | Class which uses a flat JSON file as an experiment storage mechanism |
 | [mozilla.components.service.fretboard.storage.flatfile.FlatFileExperimentStorage](../mozilla.components.service.fretboard.storage.flatfile/-flat-file-experiment-storage/index.md) | Class which uses a flat JSON file as an experiment storage mechanism |
 | [kotlin.Float](../mozilla.components.lib.jexl.ext/kotlin.-float/index.md) (extensions in package mozilla.components.lib.jexl.ext) |  |
 | [mozilla.components.service.fretboard.Fretboard](../mozilla.components.service.fretboard/-fretboard/index.md) | Entry point of the library |
@@ -194,6 +203,7 @@
 | [mozilla.components.service.sync.logins.InvalidKeyException](../mozilla.components.service.sync.logins/-invalid-key-exception.md) | This error is emitted in two cases: |
 | [mozilla.components.service.sync.logins.InvalidRecordException](../mozilla.components.service.sync.logins/-invalid-record-exception.md) | This is thrown on attempts to insert or update a record so that it is no longer valid, where "invalid" is defined as such: |
 | [org.json.JSONArray](../mozilla.components.support.ktx.android.org.json/org.json.-j-s-o-n-array/index.md) (extensions in package mozilla.components.support.ktx.android.org.json) |  |
+| [mozilla.components.service.experiments.JSONExperimentParser](../mozilla.components.service.experiments/-j-s-o-n-experiment-parser/index.md) | Default JSON parsing implementation |
 | [mozilla.components.service.fretboard.JSONExperimentParser](../mozilla.components.service.fretboard/-j-s-o-n-experiment-parser/index.md) | Default JSON parsing implementation |
 | [org.json.JSONObject](../mozilla.components.support.ktx.android.org.json/org.json.-j-s-o-n-object/index.md) (extensions in package mozilla.components.support.ktx.android.org.json) |  |
 | [org.mozilla.telemetry.serialize.JSONPingSerializer](../org.mozilla.telemetry.serialize/-j-s-o-n-ping-serializer/index.md) | TelemetryPingSerializer that uses the org.json library provided by the Android system. |
@@ -209,12 +219,14 @@
 | [mozilla.components.lib.jexl.value.JexlString](../mozilla.components.lib.jexl.value/-jexl-string/index.md) | JEXL String type. |
 | [mozilla.components.lib.jexl.value.JexlUndefined](../mozilla.components.lib.jexl.value/-jexl-undefined/index.md) | JEXL undefined type. |
 | [mozilla.components.lib.jexl.value.JexlValue](../mozilla.components.lib.jexl.value/-jexl-value/index.md) | A JEXL value type. |
+| [mozilla.components.service.experiments.scheduler.jobscheduler.JobSchedulerSyncScheduler](../mozilla.components.service.experiments.scheduler.jobscheduler/-job-scheduler-sync-scheduler/index.md) | Class used to schedule sync of experiment configuration from the server |
 | [mozilla.components.service.fretboard.scheduler.jobscheduler.JobSchedulerSyncScheduler](../mozilla.components.service.fretboard.scheduler.jobscheduler/-job-scheduler-sync-scheduler/index.md) | Class used to schedule sync of experiment configuration from the server |
 | [org.mozilla.telemetry.schedule.jobscheduler.JobSchedulerTelemetryScheduler](../org.mozilla.telemetry.schedule.jobscheduler/-job-scheduler-telemetry-scheduler/index.md) | TelemetryScheduler implementation that uses Android's JobScheduler API to schedule ping uploads. |
 | [mozilla.components.support.test.KArgumentCaptor](../mozilla.components.support.test/-k-argument-captor/index.md) |  |
 | [mozilla.components.lib.dataprotect.KeyStoreWrapper](../mozilla.components.lib.dataprotect/-key-store-wrapper/index.md) | Wraps the critical functions around a Java KeyStore to better facilitate testing and instrumenting. |
 | [mozilla.components.lib.dataprotect.Keystore](../mozilla.components.lib.dataprotect/-keystore/index.md) | Manages data protection using a system-isolated cryptographic key. |
 | [mozilla.components.lib.dataprotect.KeystoreException](../mozilla.components.lib.dataprotect/-keystore-exception/index.md) | Exception type thrown by {@link Keystore} when an error is encountered that is not otherwise covered by an existing sub-class to `GeneralSecurityException`. |
+| [mozilla.components.service.experiments.source.kinto.KintoExperimentSource](../mozilla.components.service.experiments.source.kinto/-kinto-experiment-source/index.md) | Class responsible for fetching and parsing experiments from a Kinto server |
 | [mozilla.components.service.fretboard.source.kinto.KintoExperimentSource](../mozilla.components.service.fretboard.source.kinto/-kinto-experiment-source/index.md) | Class responsible for fetching and parsing experiments from a Kinto server |
 | [mozilla.components.service.glean.LabeledMetricType](../mozilla.components.service.glean/-labeled-metric-type/index.md) | This implements the developer facing API for labeled metrics. |
 | [android.arch.lifecycle.Lifecycle](../mozilla.components.support.ktx.android.arch.lifecycle/android.arch.lifecycle.-lifecycle/index.md) (extensions in package mozilla.components.support.ktx.android.arch.lifecycle) |  |
@@ -341,12 +353,14 @@
 | [mozilla.components.browser.storage.sync.SyncAuthInfo](../mozilla.components.browser.storage.sync/-sync-auth-info.md) |  |
 | [mozilla.components.service.sync.logins.SyncAuthInvalidException](../mozilla.components.service.sync.logins/-sync-auth-invalid-exception.md) | This indicates that the authentication information (e.g. the [SyncUnlockInfo](../mozilla.components.service.sync.logins/-sync-unlock-info.md)) provided to [AsyncLoginsStorage.sync](../mozilla.components.service.sync.logins/-async-logins-storage/sync.md) is invalid. This often indicates that it's stale and should be refreshed with FxA (however, care should be taken not to get into a loop refreshing this information). |
 | [mozilla.components.concept.storage.SyncError](../mozilla.components.concept.storage/-sync-error/index.md) |  |
+| [mozilla.components.service.experiments.scheduler.jobscheduler.SyncJob](../mozilla.components.service.experiments.scheduler.jobscheduler/-sync-job/index.md) | JobScheduler job used to updating the list of experiments |
 | [mozilla.components.service.fretboard.scheduler.jobscheduler.SyncJob](../mozilla.components.service.fretboard.scheduler.jobscheduler/-sync-job/index.md) | JobScheduler job used to updating the list of experiments |
 | [mozilla.components.concept.storage.SyncOk](../mozilla.components.concept.storage/-sync-ok.md) |  |
 | [mozilla.components.feature.sync.SyncResult](../mozilla.components.feature.sync/-sync-result.md) | A set of results of running a sync operation for all configured stores. |
 | [mozilla.components.concept.storage.SyncStatus](../mozilla.components.concept.storage/-sync-status.md) |  |
 | [mozilla.components.feature.sync.SyncStatusObserver](../mozilla.components.feature.sync/-sync-status-observer/index.md) | An interface for consumers that wish to observer "sync lifecycle" events. |
 | [mozilla.components.service.sync.logins.SyncUnlockInfo](../mozilla.components.service.sync.logins/-sync-unlock-info.md) | This type contains the set of information required to successfully connect to the server and sync. |
+| [mozilla.components.service.experiments.scheduler.workmanager.SyncWorker](../mozilla.components.service.experiments.scheduler.workmanager/-sync-worker/index.md) |  |
 | [mozilla.components.service.fretboard.scheduler.workmanager.SyncWorker](../mozilla.components.service.fretboard.scheduler.workmanager/-sync-worker/index.md) |  |
 | [mozilla.components.service.sync.logins.SyncableLoginsStore](../mozilla.components.service.sync.logins/-syncable-logins-store/index.md) | Wraps [AsyncLoginsStorage](../mozilla.components.service.sync.logins/-async-logins-storage/index.md) instance along with a lazy encryption key. |
 | [mozilla.components.concept.storage.SyncableStore](../mozilla.components.concept.storage/-syncable-store/index.md) | Describes a "sync" entry point for store which operates over [AuthInfo](../mozilla.components.concept.storage/-syncable-store/index.md#AuthInfo). |
@@ -402,6 +416,7 @@
 | [android.net.Uri](../mozilla.components.support.ktx.android.net/android.net.-uri/index.md) (extensions in package mozilla.components.support.ktx.android.net) |  |
 | [mozilla.components.browser.engine.system.matcher.UrlMatcher](../mozilla.components.browser.engine.system.matcher/-url-matcher/index.md) | Provides functionality to process categorized URL black/white lists and match URLs against these lists. |
 | [mozilla.components.service.glean.UuidMetricType](../mozilla.components.service.glean/-uuid-metric-type/index.md) | This implements the developer facing API for recording uuids. |
+| [mozilla.components.service.experiments.ValuesProvider](../mozilla.components.service.experiments/-values-provider/index.md) | Class used to provide custom filter values |
 | [mozilla.components.service.fretboard.ValuesProvider](../mozilla.components.service.fretboard/-values-provider/index.md) | Class used to provide custom filter values |
 | [org.mozilla.telemetry.measurement.VersionMeasurement](../org.mozilla.telemetry.measurement/-version-measurement/index.md) |  |
 | [android.view.View](../mozilla.components.support.ktx.android.view/android.view.-view/index.md) (extensions in package mozilla.components.support.ktx.android.view) |  |
@@ -413,4 +428,5 @@
 | [mozilla.components.support.utils.WebURLFinder](../mozilla.components.support.utils/-web-u-r-l-finder/index.md) | Regular expressions used in this class are taken from Android's Patterns.java. We brought them in to standardize URL matching across Android versions, instead of relying on Android version-dependent built-ins that can vary across Android versions. The original code can be found here: http://androidxref.com/8.0.0_r4/xref/frameworks/base/core/java/android/util/Patterns.java |
 | [mozilla.components.feature.session.WindowFeature](../mozilla.components.feature.session/-window-feature/index.md) | Feature implementation for handling window requests. |
 | [mozilla.components.concept.engine.window.WindowRequest](../mozilla.components.concept.engine.window/-window-request/index.md) | Represents a request to open or close a browser window. |
+| [mozilla.components.service.experiments.scheduler.workmanager.WorkManagerSyncScheduler](../mozilla.components.service.experiments.scheduler.workmanager/-work-manager-sync-scheduler/index.md) | Class used to schedule sync of experiment configuration from the server using WorkManager |
 | [mozilla.components.service.fretboard.scheduler.workmanager.WorkManagerSyncScheduler](../mozilla.components.service.fretboard.scheduler.workmanager/-work-manager-sync-scheduler/index.md) | Class used to schedule sync of experiment configuration from the server using WorkManager |
