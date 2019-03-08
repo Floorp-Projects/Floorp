@@ -2545,8 +2545,15 @@ bool BytecodeEmitter::emitFunctionScript(FunctionNode* funNode,
   if (!updateSourceCoordNotes(body->pn_pos.end)) {
     return false;
   }
-  if (!markSimpleBreakpoint()) {
-    return false;
+
+  // We only want to mark the end of a function as a breakable position if
+  // there is token there that the user can easily associate with the function
+  // as a whole. Since arrow function single-expression bodies have no closing
+  // curly bracket, we do not place a breakpoint at their end position.
+  if (!funbox->hasExprBody()) {
+    if (!markSimpleBreakpoint()) {
+      return false;
+    }
   }
 
   // Always end the script with a JSOP_RETRVAL. Some other parts of the

@@ -284,6 +284,12 @@ assertBreakpoints(`
   /*B*/};
 `);
 assertBreakpoints(`
+  var fn = /*S*/(arg) => /*S*/console./*B*/log("fn");
+  var fn = /*S*/async (arg) => /*S*/console./*B*/log("fn");
+  var fn = /*S*/arg => /*S*/console./*B*/log("fn");
+  var fn = /*S*/async arg => /*S*/console./*B*/log("fn");
+`);
+assertBreakpoints(`
   if ((/*S*/delete /*B*/fn().prop) + /*B*/b()) {
     /*S*/console./*B*/log("foo");
   }
