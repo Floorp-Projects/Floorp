@@ -1086,6 +1086,16 @@ class PresShell final : public nsIPresShell,
     void RecordEventHandlingResponsePerformance(const WidgetEvent* aEvent);
 
     /**
+     * MaybeHandleKeyboardEventBeforeDispatch() may handle aKeyboardEvent
+     * if it should do something before dispatched into the DOM.
+     *
+     * @param aKeyboardEvent    The handling keyboard event.
+     */
+    MOZ_CAN_RUN_SCRIPT
+    void MaybeHandleKeyboardEventBeforeDispatch(
+        WidgetKeyboardEvent* aKeyboardEvent);
+
+    /**
      * PrepareToDispatchContextMenuEvent() prepares to dispatch aEvent into
      * the DOM.
      *
