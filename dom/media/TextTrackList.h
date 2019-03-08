@@ -66,6 +66,8 @@ class TextTrackList final : public DOMEventTargetHelper {
   IMPL_EVENT_HANDLER(addtrack)
   IMPL_EVENT_HANDLER(removetrack)
 
+  bool mPendingTextTrackChange = false;
+
  private:
   ~TextTrackList();
 

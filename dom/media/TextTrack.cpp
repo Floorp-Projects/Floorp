@@ -73,28 +73,37 @@ JSObject* TextTrack::WrapObject(JSContext* aCx,
 }
 
 void TextTrack::SetMode(TextTrackMode aValue) {
-  if (mMode == aValue) {
-    return;
-  }
-  mMode = aValue;
-
-  HTMLMediaElement* mediaElement = GetMediaElement();
-  if (aValue == TextTrackMode::Disabled) {
-    for (size_t i = 0; i < mCueList->Length() && mediaElement; ++i) {
-      mediaElement->NotifyCueRemoved(*(*mCueList)[i]);
+  if (mMode != aValue) {
+    mMode = aValue;
+    if (aValue == TextTrackMode::Disabled) {
+      // Remove all the cues in MediaElement.
+      if (mTextTrackList) {
+        HTMLMediaElement* mediaElement = mTextTrackList->GetMediaElement();
+        if (mediaElement) {
+          for (size_t i = 0; i < mCueList->Length(); ++i) {
+            mediaElement->NotifyCueRemoved(*(*mCueList)[i]);
+          }
+        }
+      }
+      SetCuesInactive();
+    } else {
+      // Add all the cues into MediaElement.
+      if (mTextTrackList) {
+        HTMLMediaElement* mediaElement = mTextTrackList->GetMediaElement();
+        if (mediaElement) {
+          for (size_t i = 0; i < mCueList->Length(); ++i) {
+            mediaElement->NotifyCueAdded(*(*mCueList)[i]);
+          }
+        }
+      }
     }
-    SetCuesInactive();
-  } else {
-    for (size_t i = 0; i < mCueList->Length() && mediaElement; ++i) {
-      mediaElement->NotifyCueAdded(*(*mCueList)[i]);
+    if (mTextTrackList) {
+      mTextTrackList->CreateAndDispatchChangeEvent();
     }
+    // Ensure the TimeMarchesOn is called in case that the mCueList
+    // is empty.
+    NotifyCueUpdated(nullptr);
   }
-  if (mediaElement) {
-    mediaElement->NotifyTextTrackModeChanged();
-  }
-  // Ensure the TimeMarchesOn is called in case that the mCueList
-  // is empty.
-  NotifyCueUpdated(nullptr);
 }
 
 void TextTrack::GetId(nsAString& aId) const {
@@ -113,9 +122,11 @@ void TextTrack::AddCue(TextTrackCue& aCue) {
   }
   mCueList->AddCue(aCue);
   aCue.SetTrack(this);
-  HTMLMediaElement* mediaElement = GetMediaElement();
-  if (mediaElement && (mMode != TextTrackMode::Disabled)) {
-    mediaElement->NotifyCueAdded(aCue);
+  if (mTextTrackList) {
+    HTMLMediaElement* mediaElement = mTextTrackList->GetMediaElement();
+    if (mediaElement && (mMode != TextTrackMode::Disabled)) {
+      mediaElement->NotifyCueAdded(aCue);
+    }
   }
   SetDirty();
 }
@@ -128,9 +139,11 @@ void TextTrack::RemoveCue(TextTrackCue& aCue, ErrorResult& aRv) {
   }
   aCue.SetActive(false);
   aCue.SetTrack(nullptr);
-  HTMLMediaElement* mediaElement = GetMediaElement();
-  if (mediaElement) {
-    mediaElement->NotifyCueRemoved(aCue);
+  if (mTextTrackList) {
+    HTMLMediaElement* mediaElement = mTextTrackList->GetMediaElement();
+    if (mediaElement) {
+      mediaElement->NotifyCueRemoved(aCue);
+    }
   }
   SetDirty();
 }
@@ -142,7 +155,11 @@ void TextTrack::SetCuesDirty() {
 }
 
 void TextTrack::UpdateActiveCueList() {
-  HTMLMediaElement* mediaElement = GetMediaElement();
+  if (!mTextTrackList) {
+    return;
+  }
+
+  HTMLMediaElement* mediaElement = mTextTrackList->GetMediaElement();
   if (!mediaElement) {
     return;
   }
@@ -200,7 +217,12 @@ void TextTrack::SetReadyState(uint32_t aReadyState) {
 
 void TextTrack::SetReadyState(TextTrackReadyState aState) {
   mReadyState = aState;
-  HTMLMediaElement* mediaElement = GetMediaElement();
+
+  if (!mTextTrackList) {
+    return;
+  }
+
+  HTMLMediaElement* mediaElement = mTextTrackList->GetMediaElement();
   if (mediaElement && (mReadyState == TextTrackReadyState::Loaded ||
                        mReadyState == TextTrackReadyState::FailedToLoad)) {
     mediaElement->RemoveTextTrack(this, true);
@@ -224,9 +246,11 @@ void TextTrack::SetCuesInactive() { mCueList->SetCuesInactive(); }
 
 void TextTrack::NotifyCueUpdated(TextTrackCue* aCue) {
   mCueList->NotifyCueUpdated(aCue);
-  HTMLMediaElement* mediaElement = GetMediaElement();
-  if (mediaElement) {
-    mediaElement->NotifyCueUpdated(aCue);
+  if (mTextTrackList) {
+    HTMLMediaElement* mediaElement = mTextTrackList->GetMediaElement();
+    if (mediaElement) {
+      mediaElement->NotifyCueUpdated(aCue);
+    }
   }
   SetDirty();
 }
@@ -272,10 +296,6 @@ bool TextTrack::IsLoaded() {
     }
   }
   return (mReadyState >= Loaded);
-}
-
-HTMLMediaElement* TextTrack::GetMediaElement() {
-  return mTextTrackList ? mTextTrackList->GetMediaElement() : nullptr;
 }
 
 }  // namespace dom
