@@ -1011,7 +1011,10 @@ nsCertTree::ToggleOpenState(int32_t index) {
   if (el) {
     el->open = !el->open;
     int32_t newChildren = (el->open) ? el->numChildren : -el->numChildren;
-    if (mTree) mTree->RowCountChanged(index + 1, newChildren);
+    if (mTree) {
+      mTree->RowCountChanged(index + 1, newChildren);
+      mTree->InvalidateRow(index);
+    }
   }
   return NS_OK;
 }
