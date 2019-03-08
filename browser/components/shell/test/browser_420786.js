@@ -59,7 +59,7 @@ add_task(async function() {
       checkWallpaper = function(position, expectedGSettingsPosition) {
         shell.setDesktopBackground(image, position, "");
         ok(wpFile.exists(), "Wallpaper was written to disk");
-        is(gsettings.getString(GS_IMAGE_KEY), "file://" + wpFile.path,
+        is(gsettings.getString(GS_IMAGE_KEY), encodeURI("file://" + wpFile.path),
           "Wallpaper file GSettings key is correct");
         is(gsettings.getString(GS_OPTION_KEY), expectedGSettingsPosition,
           "Wallpaper position GSettings key is correct");
