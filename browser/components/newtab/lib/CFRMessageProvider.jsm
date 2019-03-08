@@ -37,14 +37,21 @@ const REDDIT_ENHANCEMENT_PARAMS = {
   sumo_path: "extensionrecommendations",
   min_frecency: 10000,
 };
-const PINNED_TABS_TARGET_SITES = ["trello.com", "www.trello.com", "wunderlist.com", "www.wunderlist.com", "docs.google.com", "www.docs.google.com", "calendar.google.com", "www.calendar.google.com", "simplenote.com", "www.simplenote.com", "airtable.com", "www.airtable.com", "todoist.com", "www.todoist.com", "slack.com", "www.slack.com", "irccloud.com", "www.irccloud.com", "products.office.com", "www.products.office.com", "messenger.com", "www.messenger.com", "discordapp.com", "www.discordapp.com", "web.wechat.com", "www.web.wechat.com", "web.whatsapp.com", "www.web.whatsapp.com", "gmail.com", "www.gmail.com", "mail.yahoo.com", "www.mail.yahoo.com", "outlook.com", "www.outlook.com", "polymail.io", "www.polymail.io", "icloud.com", "www.icloud.com", "mail.aol.com", "www.mail.aol.com", "lightroom.adobe.com", "www.lightroom.adobe.com", "facebook.com", "www.facebook.com", "twitter.com", "www.twitter.com", "instagram.com", "www.instagram.com", "pinterest.com", "www.pinterest.com", "reddit.com", "www.reddit.com", "coursera.org", "www.coursera.org", "edx.org", "www.edx.org", "udemy.com", "www.udemy.com", "skillshare.com", "www.skillshare.com", "pluralsight.com", "www.pluralsight.com", "udacity.com", "www.udacity.com", "tumblr.com", "www.tumblr.com", "quora.com", "www.quora.com", "deviantart.com", "www.deviantart.com", "github.com", "www.github.com", "kaggle.com", "www.kaggle.com", "dropbox.com", "www.dropbox.com", "drive.google.com", "www.drive.google.com", "box.com", "www.box.com", "netflix.com", "www.netflix.com", "primevideo.com", "www.primevideo.com", "hulu.com", "www.hulu.com", "crave.ca", "www.crave.ca", "twitch.tv", "www.twitch.tv", "youtube.com", "www.youtube.com", "craigslist.org", "www.craigslist.org", "kijiji.ca", "www.kijiji.ca"];
+const PINNED_TABS_TARGET_SITES = [
+  "docs.google.com", "www.docs.google.com", "calendar.google.com",
+  "messenger.com", "www.messenger.com", "web.whatsapp.com", "mail.google.com",
+  "outlook.live.com", "facebook.com", "www.facebook.com", "twitter.com", "www.twitter.com",
+  "reddit.com", "www.reddit.com", "github.com", "www.github.com", "youtube.com", "www.youtube.com",
+  "feedly.com", "www.feedly.com", "drive.google.com", "amazon.com", "www.amazon.com",
+  "messages.android.com",
+];
 
 const CFR_MESSAGES = [
   {
     id: "FACEBOOK_CONTAINER_3",
     template: "cfr_doorhanger",
-    category: "cfrAddons",
     content: {
+      category: "cfrAddons",
       bucket_id: "CFR_M1",
       notification_text: {string_id: "cfr-doorhanger-extension-notification"},
       heading_text: {string_id: "cfr-doorhanger-extension-heading"},
@@ -95,8 +102,8 @@ const CFR_MESSAGES = [
   {
     id: "GOOGLE_TRANSLATE_3",
     template: "cfr_doorhanger",
-    category: "cfrAddons",
     content: {
+      category: "cfrAddons",
       bucket_id: "CFR_M1",
       notification_text: {string_id: "cfr-doorhanger-extension-notification"},
       heading_text: {string_id: "cfr-doorhanger-extension-heading"},
@@ -147,8 +154,8 @@ const CFR_MESSAGES = [
   {
     id: "YOUTUBE_ENHANCE_3",
     template: "cfr_doorhanger",
-    category: "cfrAddons",
     content: {
+      category: "cfrAddons",
       bucket_id: "CFR_M1",
       notification_text: {string_id: "cfr-doorhanger-extension-notification"},
       heading_text: {string_id: "cfr-doorhanger-extension-heading"},
@@ -199,9 +206,9 @@ const CFR_MESSAGES = [
   {
     id: "WIKIPEDIA_CONTEXT_MENU_SEARCH_3",
     template: "cfr_doorhanger",
-    category: "cfrAddons",
     exclude: true,
     content: {
+      category: "cfrAddons",
       bucket_id: "CFR_M1",
       notification_text: {string_id: "cfr-doorhanger-extension-notification"},
       heading_text: {string_id: "cfr-doorhanger-extension-heading"},
@@ -252,9 +259,9 @@ const CFR_MESSAGES = [
   {
     id: "REDDIT_ENHANCEMENT_3",
     template: "cfr_doorhanger",
-    category: "cfrAddons",
     exclude: true,
     content: {
+      category: "cfrAddons",
       bucket_id: "CFR_M1",
       notification_text: {string_id: "cfr-doorhanger-extension-notification"},
       heading_text: {string_id: "cfr-doorhanger-extension-heading"},
@@ -305,9 +312,8 @@ const CFR_MESSAGES = [
   {
     id: "PIN_TAB",
     template: "cfr_doorhanger",
-    category: "cfrFeatures",
-    exclude: true,
     content: {
+      category: "cfrFeatures",
       bucket_id: "CFR_PIN_TAB",
       notification_text: {string_id: "cfr-doorhanger-extension-notification"},
       heading_text: {string_id: "cfr-doorhanger-pintab-heading"},
@@ -315,7 +321,14 @@ const CFR_MESSAGES = [
         label: {string_id: "cfr-doorhanger-extension-sumo-link"},
         sumo_path: REDDIT_ENHANCEMENT_PARAMS.sumo_path,
       },
-      text: "Get easy access to your most-used sites. Keep sites open in a tab (even when you restart).",
+      text: {string_id: "cfr-doorhanger-pintab-description"},
+      descriptionDetails: {
+        steps: [
+          {"string_id": "cfr-doorhanger-pintab-step1"},
+          {"string_id": "cfr-doorhanger-pintab-step2"},
+          {"string_id": "cfr-doorhanger-pintab-step3"},
+        ],
+      },
       buttons: {
         primary: {
           label: {string_id: "cfr-doorhanger-pintab-ok-button"},
@@ -337,7 +350,8 @@ const CFR_MESSAGES = [
         }],
       },
     },
-    targeting: `!hasPinnedTabs && recentVisits[.timestamp > (currentDate|date - 3600 * 1000 * 1)]|length >= 1`,
+    targeting: `localeLanguageCode == "en" && !hasPinnedTabs && recentVisits[.timestamp > (currentDate|date - 3600 * 1000 * 1)]|length >= 3`,
+    frequency: {lifetime: 3},
     trigger: {id: "frequentVisits", params: PINNED_TABS_TARGET_SITES},
   },
 ];

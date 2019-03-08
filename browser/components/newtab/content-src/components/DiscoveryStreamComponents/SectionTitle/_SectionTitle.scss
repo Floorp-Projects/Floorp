@@ -3,6 +3,10 @@
   margin-top: 24px;
 
   .title {
+    @include dark-theme-only {
+      color: $white;
+    }
+
     line-height: 48px;
     font-size: 36px;
     font-weight: 300;
@@ -10,6 +14,10 @@
   }
 
   .subtitle {
+    @include dark-theme-only {
+      color: $grey-30;
+    }
+
     line-height: 24px;
     font-size: 14px;
     color: $grey-50;

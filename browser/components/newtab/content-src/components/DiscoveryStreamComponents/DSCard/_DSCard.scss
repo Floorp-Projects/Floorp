@@ -11,6 +11,10 @@ $excerpt-line-height: 20;
 
   &:hover {
     header {
+      @include dark-theme-only {
+        color: $blue-40;
+      }
+
       color: $blue-60;
     }
   }
@@ -29,6 +33,13 @@ $excerpt-line-height: 20;
     @include image-as-background;
     height: 0;
     padding-top: 50%; // 2:1 aspect ratio
+  }
+
+  .ds-card-link {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 100%;
   }
 
   .meta {
@@ -54,19 +65,30 @@ $excerpt-line-height: 20;
 
     .context,
     .source {
+      @include dark-theme-only {
+        color: $teal-10;
+      }
+
       font-size: 13px;
       color: $teal-80;
     }
   }
 
   header {
+    @include dark-theme-only {
+      color: $grey-10;
+    }
+
     line-height: $header-line-height * 1px;
     font-size: $header-font-size * 1px;
     color: $grey-90;
-
   }
 
   p {
+    @include dark-theme-only {
+      color: $grey-30;
+    }
+
     font-size: $excerpt-font-size * 1px;
     line-height: $excerpt-line-height * 1px;
     color: $grey-50;

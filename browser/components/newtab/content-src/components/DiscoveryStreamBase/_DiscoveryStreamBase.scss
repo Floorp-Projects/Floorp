@@ -25,6 +25,10 @@
 }
 
 .ds-header {
+  @include dark-theme-only {
+    color: $grey-30;
+  }
+
   color: $grey-50;
   font-size: 13px;
   font-weight: 600;

@@ -36,6 +36,9 @@ export class FakeRemotePageManager {
           pinTab: sinon.stub(),
           selectedTab: {},
         },
+        ConfirmationHint: {
+          show: sinon.stub(),
+        },
       },
     };
     this.portID = "6000:2";

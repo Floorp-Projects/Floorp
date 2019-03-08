@@ -7,16 +7,29 @@ $col4-header-font-size: 14;
   margin: 16px 0;
 
   .ds-card {
+    @include dark-theme-only {
+      background: none;
+    }
+
     background: $white;
     border-radius: 4px;
   }
 
   &.ds-card-grid-border {
     .ds-card {
-      box-shadow: var(--newtab-card-shadow);
+      @include dark-theme-only {
+        box-shadow: 0 1px 4px $shadow-10;
+        background: $grey-70;
+      }
+
+      box-shadow: 0 1px 4px 0 $grey-90-10;
 
       &:hover {
-        box-shadow: 0 0 0 5px var(--newtab-card-active-outline-color);
+        @include dark-theme-only {
+          box-shadow: 0 0 0 5px $grey-60;
+        }
+
+        box-shadow: 0 0 0 5px $grey-30;
         transition: box-shadow 150ms;
         outline: none;
       }
