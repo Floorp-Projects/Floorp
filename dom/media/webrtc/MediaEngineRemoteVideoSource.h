@@ -153,6 +153,9 @@ class MediaEngineRemoteVideoSource : public MediaEngineSource,
   nsCString GetUUID() const override;
   void SetUUID(const char* aUUID);
 
+  nsString GetGroupId() const override;
+  void SetGroupId(nsString aGroupId);
+
   bool GetScary() const override { return mScary; }
 
   RefPtr<GenericNonExclusivePromise> GetFirstFramePromise() const override {
@@ -250,6 +253,7 @@ class MediaEngineRemoteVideoSource : public MediaEngineSource,
 
   nsString mDeviceName;
   nsCString mUniqueId;
+  nsString mGroupId;
   nsString mFacingMode;
 
   // Whether init has successfully completed.
