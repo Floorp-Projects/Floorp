@@ -367,7 +367,7 @@ notification[value="translation"] menulist > .menulist-dropmarker {
 }
 
 .ac-title,
-.urlbarView-results {
+#urlbarView-results {
   font-size: 1.05em;
 }
 

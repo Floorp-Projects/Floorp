@@ -639,7 +639,7 @@ html|*.urlbar-input:-moz-lwtheme::placeholder,
 %include ../shared/autocomplete.inc.css
 %include ../shared/urlbar-autocomplete.inc.css
 
-.urlbarView-results {
+#urlbarView-results {
   font-size: 1.15em;
 }
 
