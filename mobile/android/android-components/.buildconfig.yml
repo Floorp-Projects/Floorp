@@ -188,6 +188,10 @@ projects:
     path: components/service/fretboard
     description: 'An Android framework for segmenting users in order to run A/B tests and rollout features gradually.'
     publish: true
+  service-experiments:
+    path: components/service/experiments
+    description: 'An Android SDK for running experiments on user segments in multiple branches.'
+    publish: true
   service-glean:
     path: components/service/glean
     description: 'A client-side telemetry SDK for collecting metrics and sending them to the Mozilla telemetry service'
