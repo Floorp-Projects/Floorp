@@ -38,7 +38,7 @@
   box-sizing: border-box;
 }
 
-.urlbarView-results {
+#urlbarView-results {
   box-sizing: border-box;
   padding: @urlbarViewPadding@;
   white-space: nowrap;

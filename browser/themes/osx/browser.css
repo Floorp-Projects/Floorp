@@ -350,7 +350,7 @@ html|input.urlbar-input {
 }
 
 .ac-title,
-.urlbarView-results {
+#urlbarView-results {
   font-size: 14px;
 }
 
