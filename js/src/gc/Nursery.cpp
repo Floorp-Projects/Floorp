@@ -194,7 +194,7 @@ void js::Nursery::enable() {
     if (!allocateNextChunk(0, lock)) {
       return;
     }
-    capacity_ = NurseryChunkUsableSize;
+    capacity_ = SubChunkLimit;
   }
 
   setCurrentChunk(0, true);

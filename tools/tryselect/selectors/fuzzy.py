@@ -212,7 +212,7 @@ def filter_target_task(task):
 
 
 def run(update=False, query=None, templates=None, full=False, parameters=None, save_query=False,
-        push=True, message='{msg}', paths=None, exact=False, closed_tree=False,
+        push=True, message='{msg}', test_paths=None, exact=False, closed_tree=False,
         intersection=False):
     fzf = fzf_bootstrap(update)
 
@@ -227,8 +227,8 @@ def run(update=False, query=None, templates=None, full=False, parameters=None, s
     if not full:
         all_tasks = filter(filter_target_task, all_tasks)
 
-    if paths:
-        all_tasks = filter_tasks_by_paths(all_tasks, paths)
+    if test_paths:
+        all_tasks = filter_tasks_by_paths(all_tasks, test_paths)
         if not all_tasks:
             return 1
 
@@ -281,8 +281,8 @@ def run(update=False, query=None, templates=None, full=False, parameters=None, s
     # build commit message
     msg = "Fuzzy"
     args = []
-    if paths:
-        args.append("paths={}".format(':'.join(paths)))
+    if test_paths:
+        args.append("paths={}".format(':'.join(test_paths)))
     if query:
         args.extend(["query={}".format(q) for q in queries])
     if args:

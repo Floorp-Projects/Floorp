@@ -8,6 +8,7 @@ RUSTFMT="${TOOLTOOL_DIR}/rustc/bin/rustfmt"
 CBINDGEN="${TOOLTOOL_DIR}/cbindgen/cbindgen"
 
 export NODEJS="${TOOLTOOL_DIR}/node/bin/node"
+NASM="${TOOLTOOL_DIR}/nasm/nasm"
 
 CC="${TOOLTOOL_DIR}/clang/bin/clang"
 CXX="${TOOLTOOL_DIR}/clang/bin/clang++"

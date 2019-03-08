@@ -23,8 +23,11 @@ const {DefaultMap} = ExtensionUtils;
 
 const {sharedData} = Services.cpmm;
 
-XPCOMUtils.defineLazyPreferenceGetter(this, "simulateFission",
-                                      "browser.fission.simulate", false);
+XPCOMUtils.defineLazyPreferenceGetter(this, "simulateEvents",
+                                      "fission.frontend.simulate-events", false);
+XPCOMUtils.defineLazyPreferenceGetter(this, "simulateMessages",
+                                      "fission.frontend.simulate-messages", false);
+
 
 function getMessageManager(window) {
   return window.docShell.messageManager;
@@ -125,7 +128,7 @@ class Dispatcher {
   handleActorEvent(actor, event) {
     let targetWindow = null;
 
-    if (simulateFission) {
+    if (simulateEvents) {
       targetWindow = event.target.ownerGlobal;
       if (targetWindow != this.window) {
         // events can't propagate across frame boundaries because the
@@ -139,7 +142,7 @@ class Dispatcher {
   receiveMessage(message) {
     let actors = this.messages.get(message.name);
 
-    if (simulateFission) {
+    if (simulateMessages) {
       let match = false;
       let data = message.data || {};
       if (data.hasOwnProperty("frameId")) {

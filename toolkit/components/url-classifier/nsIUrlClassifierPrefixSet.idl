@@ -24,6 +24,4 @@ interface nsIUrlClassifierPrefixSet : nsISupports
   // Do a lookup in the PrefixSet, return whether the value is present.
   boolean contains(in unsigned long aPrefix);
   boolean isEmpty();
-  void loadFromFile(in nsIFile aFile);
-  void storeToFile(in nsIFile aFile);
 };

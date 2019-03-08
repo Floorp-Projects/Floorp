@@ -1577,9 +1577,10 @@ nsresult Classifier::LoadMetadata(nsIFile* aDirectory, nsACString& aResult) {
       continue;
     }
 
-    nsCString state;
-    nsCString checksum;
-    rv = lookupCacheV4->LoadMetadata(state, checksum);
+    nsCString state, sha256;
+    rv = lookupCacheV4->LoadMetadata(state, sha256);
+    Telemetry::Accumulate(Telemetry::URLCLASSIFIER_VLPS_METADATA_CORRUPT,
+                          rv == NS_ERROR_FILE_CORRUPTED);
     if (NS_FAILED(rv)) {
       LOG(("Failed to get metadata for table %s", tableName.get()));
       continue;
@@ -1591,7 +1592,7 @@ nsresult Classifier::LoadMetadata(nsIFile* aDirectory, nsACString& aResult) {
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsAutoCString checksumBase64;
-    rv = Base64Encode(checksum, checksumBase64);
+    rv = Base64Encode(sha256, checksumBase64);
     NS_ENSURE_SUCCESS(rv, rv);
 
     LOG(("Appending state '%s' and checksum '%s' for table %s",

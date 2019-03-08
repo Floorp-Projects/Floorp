@@ -30,4 +30,11 @@ interface nsIEnterprisePolicies : nsISupports
    * @returns A JS object that contains the url and label or null.
    */
   jsval getSupportMenu();
+
+  /**
+   * Get the policy for a given extensionID (if available)
+   *
+   * @returns A JS object that contains the storage or null if unavailable.
+   */
+  jsval getExtensionPolicy(in ACString extensionID);
 };

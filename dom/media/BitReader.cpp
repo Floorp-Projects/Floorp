@@ -67,7 +67,8 @@ uint32_t BitReader::ReadUE() {
     return 0;
   }
   uint32_t r = ReadBits(i);
-  r += (1 << i) - 1;
+  r += (uint32_t(1) << i) - 1;
+
   return r;
 }
 

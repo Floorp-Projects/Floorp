@@ -829,7 +829,7 @@ nsresult ProtocolParserProtobuf::ProcessOneResponse(
   tuV4->SetNewClientState(state);
 
   if (aResponse.has_checksum()) {
-    tuV4->NewChecksum(aResponse.checksum().sha256());
+    tuV4->SetSHA256(aResponse.checksum().sha256());
   }
 
   PARSER_LOG(
