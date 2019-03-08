@@ -316,6 +316,52 @@ class WidgetKeyboardEvent : public WidgetInputEvent {
            !isCombiningWithOperationKeys;
   }
 
+  /**
+   * CanTreatAsUserInput() returns true if the key is pressed for perhaps
+   * doing something on the web app or our UI.  This means that when this
+   * returns false, e.g., when user presses a modifier key, user is probably
+   * displeased by opening popup, entering fullscreen mode, etc.  Therefore,
+   * only when this returns true, such reactions should be allowed.
+   */
+  bool CanTreatAsUserInput() const {
+    if (!IsTrusted()) {
+      return false;
+    }
+    switch (mKeyNameIndex) {
+      case KEY_NAME_INDEX_Escape:
+      // modifier keys:
+      case KEY_NAME_INDEX_Alt:
+      case KEY_NAME_INDEX_AltGraph:
+      case KEY_NAME_INDEX_CapsLock:
+      case KEY_NAME_INDEX_Control:
+      case KEY_NAME_INDEX_Fn:
+      case KEY_NAME_INDEX_FnLock:
+      case KEY_NAME_INDEX_Meta:
+      case KEY_NAME_INDEX_NumLock:
+      case KEY_NAME_INDEX_ScrollLock:
+      case KEY_NAME_INDEX_Shift:
+      case KEY_NAME_INDEX_Symbol:
+      case KEY_NAME_INDEX_SymbolLock:
+      // legacy modifier keys:
+      case KEY_NAME_INDEX_Hyper:
+      case KEY_NAME_INDEX_Super:
+      // obsolete modifier key:
+      case KEY_NAME_INDEX_OS:
+        return false;
+      default:
+        return true;
+    }
+  }
+
+  /**
+   * ShouldInteractionTimeRecorded() returns true if the handling time of
+   * the event should be recorded with the telemetry.
+   */
+  bool ShouldInteractionTimeRecorded() const {
+    // Let's record only when we can treat the instance is a user input.
+    return CanTreatAsUserInput();
+  }
+
   // OS translated Unicode chars which are used for accesskey and accelkey
   // handling. The handlers will try from first character to last character.
   nsTArray<AlternativeCharCode> mAlternativeCharCodes;
