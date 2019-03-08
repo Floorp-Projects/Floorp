@@ -31,8 +31,8 @@ const DB_NAME = "remote-settings";
 
 const TELEMETRY_COMPONENT = "remotesettings";
 
-const INVALID_SIGNATURE = "Invalid content signature";
-const MISSING_SIGNATURE = "Missing signature";
+const INVALID_SIGNATURE_MSG = "Invalid content signature";
+const MISSING_SIGNATURE_MSG = "Missing signature";
 
 XPCOMUtils.defineLazyPreferenceGetter(this, "gServerURL",
                                       "services.settings.server");
@@ -85,7 +85,7 @@ async function fetchCollectionSignature(bucket, collection, expectedTimestamp) {
     .collection(collection)
     .getData({ query: { _expected: expectedTimestamp } });
   if (!signaturePayload) {
-    throw new Error(MISSING_SIGNATURE);
+    throw new Error(MISSING_SIGNATURE_MSG);
   }
   const { x5u, signature } = signaturePayload;
   const certChainResponse = await fetch(x5u);
@@ -268,7 +268,7 @@ class RemoteSettingsClient extends EventEmitter {
     // According to API, there will be one only (fail if not).
     const [{ last_modified: expectedTimestamp }] = changes;
 
-    return this.maybeSync(expectedTimestamp, options);
+    return this.maybeSync(expectedTimestamp, { ...options, trigger: "forced" });
   }
 
   /**
@@ -279,16 +279,17 @@ class RemoteSettingsClient extends EventEmitter {
    *                                   cache busting if local data is out of date.
    * @param {Object} options           additional advanced options.
    * @param {bool}   options.loadDump  load initial dump from disk on first sync (default: true)
+   * @param {string} options.trigger   label to identify what triggered this sync (eg. ``"timer"``, default: `"manual"`)
    * @return {Promise}                 which rejects on sync or process failure.
    */
-  async maybeSync(expectedTimestamp, options = { loadDump: true }) {
+  async maybeSync(expectedTimestamp, options = { loadDump: true, trigger: "manual" }) {
     const { loadDump, trigger } = options;
 
     let reportStatus = null;
     try {
-      const collection = await this.openCollection();
-      // Synchronize remote data into a local Sqlite DB.
-      let collectionLastModified = await collection.db.getLastModified();
+      // Synchronize remote data into a local DB using Kinto.
+      const kintoCollection = await this.openCollection();
+      let collectionLastModified = await kintoCollection.db.getLastModified();
 
       // If there is no data currently in the collection, attempt to import
       // initial data from the application defaults.
@@ -297,7 +298,7 @@ class RemoteSettingsClient extends EventEmitter {
       if (!collectionLastModified && loadDump) {
         try {
           await RemoteSettingsWorker.importJSONDump(this.bucketName, this.collectionName);
-          collectionLastModified = await collection.db.getLastModified();
+          collectionLastModified = await kintoCollection.db.getLastModified();
         } catch (e) {
           // Report but go-on.
           Cu.reportError(e);
@@ -311,10 +312,10 @@ class RemoteSettingsClient extends EventEmitter {
         return;
       }
 
-      // If there is a `signerName` and collection signing is enforced, add a
-      // hook for incoming changes that validates the signature.
+      // If signature verification is enabled, then add a synchronization hook
+      // for incoming changes that validates the signature.
       if (this.signerName && gVerifySignature) {
-        collection.hooks["incoming-changes"] = [async (payload, collection) => {
+        kintoCollection.hooks["incoming-changes"] = [async (payload, collection) => {
           await this._validateCollectionSignature(payload.changes,
                                                   payload.lastModified,
                                                   collection,
@@ -324,19 +325,17 @@ class RemoteSettingsClient extends EventEmitter {
         }];
       }
 
-      // Fetch changes from server.
       let syncResult;
       try {
-        // Server changes have priority during synchronization.
+        // Fetch changes from server, and make sure we overwrite local data.
         const strategy = Kinto.syncStrategy.SERVER_WINS;
-        syncResult = await collection.sync({ remote: gServerURL, strategy, expectedTimestamp });
-        const { ok } = syncResult;
-        if (!ok) {
+        syncResult = await kintoCollection.sync({ remote: gServerURL, strategy, expectedTimestamp });
+        if (!syncResult.ok) {
           // With SERVER_WINS, there cannot be any conflicts, but don't silent it anyway.
           throw new Error("Synced failed");
         }
       } catch (e) {
-        if (e.message.includes(INVALID_SIGNATURE)) {
+        if (e.message.includes(INVALID_SIGNATURE_MSG)) {
           // Signature verification failed during synchronization.
           reportStatus = UptakeTelemetry.STATUS.SIGNATURE_ERROR;
           // If sync fails with a signature error, it's likely that our
@@ -344,7 +343,7 @@ class RemoteSettingsClient extends EventEmitter {
           // We will attempt to fix this by retrieving the whole
           // remote collection.
           try {
-            syncResult = await this._retrySyncFromScratch(collection, expectedTimestamp);
+            syncResult = await this._retrySyncFromScratch(kintoCollection, expectedTimestamp);
           } catch (e) {
             // If the signature fails again, or if an error occured during wiping out the
             // local data, then we report it as a *signature retry* error.
@@ -353,7 +352,7 @@ class RemoteSettingsClient extends EventEmitter {
           }
         } else {
           // The sync has thrown, it can be related to metadata, network or a general error.
-          if (e.message == MISSING_SIGNATURE) {
+          if (e.message == MISSING_SIGNATURE_MSG) {
             // Collection metadata has no signature info, no need to retry.
             reportStatus = UptakeTelemetry.STATUS.SIGNATURE_ERROR;
           } else if (/unparseable/.test(e.message)) {
@@ -372,8 +371,8 @@ class RemoteSettingsClient extends EventEmitter {
           throw e;
         }
       }
-
-      const filteredSyncResult = await this._filterSyncResult(collection, syncResult);
+      // Filter the synchronization results using `filterFunc` (ie. JEXL).
+      const filteredSyncResult = await this._filterSyncResult(kintoCollection, syncResult);
       // If every changed entry is filtered, we don't even fire the event.
       if (filteredSyncResult) {
         try {
@@ -439,7 +438,7 @@ class RemoteSettingsClient extends EventEmitter {
                                          "p384ecdsa=" + signature,
                                          certChain,
                                          this.signerName)) {
-      throw new Error(INVALID_SIGNATURE + ` (${bucket}/${collection})`);
+      throw new Error(`${INVALID_SIGNATURE_MSG} (${bucket}/${collection})`);
     }
   }
 
