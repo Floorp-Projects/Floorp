@@ -13,7 +13,7 @@
 [package]
 edition = "2018"
 name = "cranelift-wasm"
-version = "0.28.0"
+version = "0.29.0"
 authors = ["The Cranelift Project Developers"]
 description = "Translator from WebAssembly to Cranelift IR"
 readme = "README.md"
@@ -26,15 +26,15 @@ version = "0.2.2"
 default-features = false
 
 [dependencies.cranelift-codegen]
-version = "0.28.0"
+version = "0.29.0"
 default-features = false
 
 [dependencies.cranelift-entity]
-version = "0.28.0"
+version = "0.29.0"
 default-features = false
 
 [dependencies.cranelift-frontend]
-version = "0.28.0"
+version = "0.29.0"
 default-features = false
 
 [dependencies.failure]
