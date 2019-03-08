@@ -57,7 +57,7 @@ add_task(async function() {
   is(labels[0].textContent, "a", "The JSON var name was incorrect.");
   is(values[0].textContent, "1", "The JSON var value was incorrect.");
 
-  ok(tabpanel.querySelector(".CodeMirror-code").textContent.includes('{"a":1}'),
+  ok(getCodeMirrorValue(monitor).includes('{"a":1}'),
     "The text shown in the source editor is incorrect.");
 
   return teardown(monitor);

@@ -249,6 +249,17 @@
   margin-top: 10px;
 }
 
+#cfr-notification-feature-steps li {
+  padding-inline-start: 8px;
+  position: relative;
+}
+
+#cfr-notification-feature-steps li:before {
+  content: "\2022";
+  position: absolute;
+  inset-inline-start: 0;
+}
+
 #cfr-notification-footer-text,
 #cfr-notification-footer-users,
 #cfr-notification-footer-learn-more-link {
