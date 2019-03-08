@@ -1174,6 +1174,8 @@ class StoragePressureRunnable final : public Runnable {
  * Helper classes
  ******************************************************************************/
 
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+
 class PrincipalVerifier final : public Runnable {
   nsTArray<PrincipalInfo> mPrincipalInfos;
 
@@ -1194,6 +1196,8 @@ class PrincipalVerifier final : public Runnable {
 
   NS_DECL_NSIRUNNABLE
 };
+
+#endif
 
 /*******************************************************************************
  * Helper Functions
@@ -7745,6 +7749,8 @@ void PersistOp::GetResponse(RequestResponse& aResponse) {
   aResponse = PersistResponse();
 }
 
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+
 // static
 already_AddRefed<PrincipalVerifier> PrincipalVerifier::CreateAndDispatch(
     nsTArray<PrincipalInfo>&& aPrincipalInfos) {
@@ -7828,6 +7834,8 @@ PrincipalVerifier::Run() {
 
   return NS_OK;
 }
+
+#endif
 
 nsresult StorageOperationBase::GetDirectoryMetadata(nsIFile* aDirectory,
                                                     int64_t& aTimestamp,
@@ -7970,7 +7978,9 @@ nsresult StorageOperationBase::ProcessOriginDirectories() {
 
   nsresult rv;
 
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
   nsTArray<PrincipalInfo> principalInfos;
+#endif
 
   for (auto& originProps : mOriginProps) {
     switch (originProps.mType) {
@@ -8008,7 +8018,9 @@ nsresult StorageOperationBase::ProcessOriginDirectories() {
             principalInfo, &originProps.mSuffix, &originProps.mGroup,
             &originProps.mOrigin);
 
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
         principalInfos.AppendElement(principalInfo);
+#endif
 
         break;
       }
@@ -8023,10 +8035,12 @@ nsresult StorageOperationBase::ProcessOriginDirectories() {
     }
   }
 
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
   if (!principalInfos.IsEmpty()) {
     RefPtr<PrincipalVerifier> principalVerifier =
         PrincipalVerifier::CreateAndDispatch(std::move(principalInfos));
   }
+#endif
 
   // Don't try to upgrade obsolete origins, remove them right after we detect
   // them.
