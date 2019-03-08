@@ -205,19 +205,32 @@ float SVGViewportElement::GetLength(uint8_t aCtxType) {
                                       ? &GetViewBoxInternal().GetAnimValue()
                                       : nullptr;
 
-  float h, w;
+  float h = 0.0f, w = 0.0f;
+  bool shouldComputeWidth =
+           (aCtxType == SVGContentUtils::X || aCtxType == SVGContentUtils::XY),
+       shouldComputeHeight =
+           (aCtxType == SVGContentUtils::Y || aCtxType == SVGContentUtils::XY);
+
   if (viewbox) {
     w = viewbox->width;
     h = viewbox->height;
   } else if (IsInner()) {
     SVGViewportElement* ctx = GetCtx();
-    w = mLengthAttributes[ATTR_WIDTH].GetAnimValue(ctx);
-    h = mLengthAttributes[ATTR_HEIGHT].GetAnimValue(ctx);
+    if (shouldComputeWidth) {
+      w = mLengthAttributes[ATTR_WIDTH].GetAnimValue(ctx);
+    }
+    if (shouldComputeHeight) {
+      h = mLengthAttributes[ATTR_HEIGHT].GetAnimValue(ctx);
+    }
   } else if (ShouldSynthesizeViewBox()) {
-    w = ComputeSynthesizedViewBoxDimension(mLengthAttributes[ATTR_WIDTH],
-                                           mViewportWidth, this);
-    h = ComputeSynthesizedViewBoxDimension(mLengthAttributes[ATTR_HEIGHT],
-                                           mViewportHeight, this);
+    if (shouldComputeWidth) {
+      w = ComputeSynthesizedViewBoxDimension(mLengthAttributes[ATTR_WIDTH],
+                                             mViewportWidth, this);
+    }
+    if (shouldComputeHeight) {
+      h = ComputeSynthesizedViewBoxDimension(mLengthAttributes[ATTR_HEIGHT],
+                                             mViewportHeight, this);
+    }
   } else {
     w = mViewportWidth;
     h = mViewportHeight;
