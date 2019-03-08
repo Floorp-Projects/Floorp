@@ -282,6 +282,16 @@ modules/libpref/test/unit/*data/**
 # Only contains non-standard test files.
 python/**
 
+# Remote agent
+remote/pref/remote.js
+remote/Protocol.jsm
+remote/server/HTTPD.jsm
+remote/server/Packet.jsm
+remote/server/Socket.jsm
+remote/server/Stream.jsm
+remote/test/browser/chrome-remote-interface.js
+remote/test/demo.js
+
 # security/ exclusions (pref files).
 security/manager/ssl/security-prefs.js
 
