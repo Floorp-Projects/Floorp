@@ -115,6 +115,10 @@ nsCString MediaEngineTabVideoSource::GetUUID() const {
   return NS_LITERAL_CSTRING("tab");
 }
 
+nsString MediaEngineTabVideoSource::GetGroupId() const {
+  return NS_LITERAL_STRING(u"&getUserMedia.videoSource.tabShareGroup;");
+}
+
 #define DEFAULT_TABSHARE_VIDEO_MAX_WIDTH 4096
 #define DEFAULT_TABSHARE_VIDEO_MAX_HEIGHT 4096
 #define DEFAULT_TABSHARE_VIDEO_FRAMERATE 30

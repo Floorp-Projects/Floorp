@@ -49,6 +49,10 @@ nsCString MediaEngineDefaultVideoSource::GetUUID() const {
   return NS_LITERAL_CSTRING("1041FCBD-3F12-4F7B-9E9B-1EC556DD5676");
 }
 
+nsString MediaEngineDefaultVideoSource::GetGroupId() const {
+  return NS_LITERAL_STRING(u"Default Video Group");
+}
+
 uint32_t MediaEngineDefaultVideoSource::GetBestFitnessDistance(
     const nsTArray<const NormalizedConstraintSet*>& aConstraintSets,
     const nsString& aDeviceId) const {
@@ -362,6 +366,10 @@ nsCString MediaEngineDefaultAudioSource::GetUUID() const {
   return NS_LITERAL_CSTRING("B7CBD7C1-53EF-42F9-8353-73F61C70C092");
 }
 
+nsString MediaEngineDefaultAudioSource::GetGroupId() const {
+  return NS_LITERAL_STRING(u"Default Audio Group");
+}
+
 uint32_t MediaEngineDefaultAudioSource::GetBestFitnessDistance(
     const nsTArray<const NormalizedConstraintSet*>& aConstraintSets,
     const nsString& aDeviceId) const {
@@ -553,7 +561,7 @@ void MediaEngineDefault::EnumerateDevices(
       aDevices->AppendElement(MakeRefPtr<MediaDevice>(
           newSource, newSource->GetName(),
           NS_ConvertUTF8toUTF16(newSource->GetUUID()),
-          NS_LITERAL_STRING("GroupID"), NS_LITERAL_STRING("")));
+          newSource->GetGroupId(), NS_LITERAL_STRING("")));
       return;
     }
     case dom::MediaSourceEnum::Microphone: {
@@ -565,7 +573,7 @@ void MediaEngineDefault::EnumerateDevices(
           aDevices->AppendElement(MakeRefPtr<MediaDevice>(
               source, source->GetName(),
               NS_ConvertUTF8toUTF16(source->GetUUID()),
-              NS_LITERAL_STRING("GroupID"), NS_LITERAL_STRING("")));
+              source->GetGroupId(), NS_LITERAL_STRING("")));
         }
       }
 
@@ -576,7 +584,7 @@ void MediaEngineDefault::EnumerateDevices(
         aDevices->AppendElement(MakeRefPtr<MediaDevice>(
             newSource, newSource->GetName(),
             NS_ConvertUTF8toUTF16(newSource->GetUUID()),
-            NS_LITERAL_STRING("GroupID"), NS_LITERAL_STRING("")));
+            newSource->GetGroupId(), NS_LITERAL_STRING("")));
       }
       return;
     }
