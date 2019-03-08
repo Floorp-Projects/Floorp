@@ -9,8 +9,8 @@ import android.support.annotation.VisibleForTesting.PRIVATE
 import mozilla.components.concept.fetch.Client
 import mozilla.components.concept.fetch.MutableHeaders
 import mozilla.components.concept.fetch.Request
-import mozilla.components.concept.fetch.clientError
-import mozilla.components.concept.fetch.success
+import mozilla.components.concept.fetch.isClientError
+import mozilla.components.concept.fetch.isSuccess
 import mozilla.components.service.glean.BuildConfig
 import mozilla.components.service.glean.config.Configuration
 import mozilla.components.support.base.log.logger.Logger
@@ -102,7 +102,7 @@ internal class HttpPingUploader : PingUploader {
             logger.debug("Ping upload: ${response.status}")
 
             when {
-                response.success -> {
+                response.isSuccess -> {
                     // Known success errors (2xx):
                     // 200 - OK. Request accepted into the pipeline.
 
@@ -111,7 +111,7 @@ internal class HttpPingUploader : PingUploader {
                     return true
                 }
 
-                response.clientError -> {
+                response.isClientError -> {
                     // Known client (4xx) errors:
                     // 404 - not found - POST/PUT to an unknown namespace
                     // 405 - wrong request type (anything other than POST/PUT)
