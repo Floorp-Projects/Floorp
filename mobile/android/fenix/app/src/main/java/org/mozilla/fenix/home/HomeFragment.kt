@@ -224,6 +224,7 @@ class HomeFragment : Fragment() {
                             requireComponents.core.sessionStorage.archive(requireComponents.core.sessionManager)
                             it.archivedSession.bundle.restoreSnapshot(requireComponents.core.engine)?.apply {
                                 requireComponents.core.sessionManager.restore(this)
+                                homeScrollView.smoothScrollTo(0, 0)
                             }
                         }
                         is SessionsAction.Delete -> {
