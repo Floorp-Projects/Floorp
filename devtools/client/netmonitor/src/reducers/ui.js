@@ -21,6 +21,8 @@ const {
   TOGGLE_COLUMN,
   WATERFALL_RESIZE,
   PANELS,
+  MIN_COLUMN_WIDTH,
+  SET_COLUMNS_WIDTH,
 } = require("../constants");
 
 const cols = {
@@ -44,6 +46,7 @@ const cols = {
   latency: false,
   waterfall: true,
 };
+
 function Columns() {
   return Object.assign(
     cols,
@@ -51,9 +54,17 @@ function Columns() {
   );
 }
 
+function ColumnsData() {
+  const defaultColumnsData = JSON.parse(
+    Services.prefs.getDefaultBranch(null).getCharPref("devtools.netmonitor.columnsData")
+  );
+  return new Map(defaultColumnsData.map(i => [i.name, i]));
+}
+
 function UI(initialState = {}) {
   return {
     columns: Columns(),
+    columnsData: ColumnsData(),
     detailsPanelSelectedTab: PANELS.HEADERS,
     networkDetailsOpen: false,
     networkDetailsWidth: null,
@@ -70,6 +81,7 @@ function resetColumns(state) {
   return {
     ...state,
     columns: Columns(),
+    columnsData: ColumnsData(),
   };
 }
 
@@ -139,6 +151,30 @@ function toggleColumn(state, action) {
   };
 }
 
+function setColumnsWidth(state, action) {
+  const { widths } = action;
+  const columnsData = new Map(state.columnsData);
+
+  widths.forEach(col => {
+    let data = columnsData.get(col.name);
+    if (!data) {
+      data = {
+        name: col.name,
+        minWidth: MIN_COLUMN_WIDTH,
+      };
+    }
+    columnsData.set(col.name, {
+      ...data,
+      width: col.width,
+    });
+  });
+
+  return {
+    ...state,
+    columnsData: columnsData,
+  };
+}
+
 function ui(state = UI(), action) {
   switch (action.type) {
     case CLEAR_REQUESTS:
@@ -167,6 +203,8 @@ function ui(state = UI(), action) {
       return toggleColumn(state, action);
     case WATERFALL_RESIZE:
       return resizeWaterfall(state, action);
+    case SET_COLUMNS_WIDTH:
+      return setColumnsWidth(state, action);
     default:
       return state;
   }
@@ -174,6 +212,7 @@ function ui(state = UI(), action) {
 
 module.exports = {
   Columns,
+  ColumnsData,
   UI,
   ui,
 };
