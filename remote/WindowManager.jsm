@@ -14,8 +14,9 @@ const {EventEmitter} = ChromeUtils.import("resource://gre/modules/EventEmitter.j
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 /**
- * The WindowManager provides tooling for application-agnostic observation
- * of windows, tabs, and content browsers as they are created and destroyed.
+ * The WindowManager provides tooling for application-agnostic
+ * observation of windows, tabs, and content browsers as they are
+ * created and destroyed.
  */
 
 // TODO(ato):
@@ -29,8 +30,8 @@ const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 /**
  * Observes DOMWindows as they open and close.
  *
- * The WindowObserver.Event.Open event fires when a window opens.
- * The WindowObserver.Event.Close event fires when a window closes.
+ * "open" fires when a window opens.
+ * "close" fires when a window closes.
  */
 class WindowObserver {
   /**
@@ -126,8 +127,8 @@ class TabObserver {
     }
 
     for (const tab of window.gBrowser.tabs) {
-      // If `linkedBrowser` isn't set, it means that the tab is still initializing
-      // and a `TabOpen` event will be fired once it is all set.
+      // a missing linkedBrowser means the tab is still initialising,
+      // and a TabOpen event will fire once it is ready
       if (!tab.linkedBrowser) {
         continue;
       }
