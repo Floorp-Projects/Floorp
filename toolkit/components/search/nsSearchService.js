@@ -3180,10 +3180,12 @@ SearchService.prototype = {
   _submissionURLIgnoreList: [
     "ignore=true",
     "hspart=lvs",
-    "form=CONBDF",
+    "pc=COSP",
     "clid=2308146",
-    "fr=mcafee",
+    "fr=mca",
     "PC=MC0",
+    "lavasoft.gosearchresults",
+    "securedsearch.lavasoft",
   ],
 
   _loadPathIgnoreList: [
