@@ -8,7 +8,7 @@ var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const gIsWindows = mozinfo.os == "win";
 const gIsOSX = mozinfo.os == "mac";
 const gIsLinux = mozinfo.os == "linux";
-const gDirSvc = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
+const gDirSvc = Services.dirsvc;
 
 function allow_all_plugins() {
   Services.prefs.setBoolPref("plugin.load_flash_only", false);
@@ -52,8 +52,7 @@ function do_get_profile_startup() {
                .createInstance(Ci.nsIFile);
   file.initWithPath(profd);
 
-  let dirSvc = Cc["@mozilla.org/file/directory_service;1"]
-                 .getService(Ci.nsIProperties);
+  let dirSvc = Services.dirsvc;
   let provider = {
     getFile(prop, persistent) {
       persistent.value = true;
@@ -90,8 +89,7 @@ function get_platform_specific_plugin_suffix() {
 }
 
 function get_test_plugin_no_symlink() {
-  let dirSvc = Cc["@mozilla.org/file/directory_service;1"]
-                .getService(Ci.nsIProperties);
+  let dirSvc = Services.dirsvc;
   for (let dir of dirSvc.get("APluginsDL", Ci.nsISimpleEnumerator)) {
     let plugin = dir.clone();
     plugin.append(get_platform_specific_plugin_name());
