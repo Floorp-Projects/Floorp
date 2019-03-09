@@ -25,6 +25,7 @@ class SVGElement;
 
 class SVGIntegerPair {
  public:
+  friend class AutoChangeIntegerPairNotifier;
   typedef mozilla::dom::SVGElement SVGElement;
 
   enum PairIndex { eFirst, eSecond };
