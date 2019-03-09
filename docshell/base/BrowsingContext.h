@@ -18,7 +18,6 @@
 #include "nsString.h"
 #include "nsTArray.h"
 #include "nsWrapperCache.h"
-#include "nsILoadInfo.h"
 
 class nsGlobalWindowOuter;
 class nsIPrincipal;
@@ -70,7 +69,6 @@ class WindowProxyHolder;
 #define MOZ_FOR_EACH_SYNCED_BC_FIELD(declare, ...)        \
   declare(Name, nsString, nsAString)                   \
   declare(Closed, bool, bool)                          \
-  declare(CrossOriginPolicy, nsILoadInfo::CrossOriginPolicy, nsILoadInfo::CrossOriginPolicy) \
   __VA_ARGS__
 // clang-format on
 
@@ -289,10 +287,6 @@ class BrowsingContext : public nsWrapperCache,
                       nsIPrincipal& aSubjectPrincipal, ErrorResult& aError);
 
   JSObject* WrapObject(JSContext* aCx);
-
-  nsILoadInfo::CrossOriginPolicy CrossOriginPolicy() {
-    return mCrossOriginPolicy;
-  }
 
  protected:
   virtual ~BrowsingContext();
