@@ -23,7 +23,7 @@ function run_test() {
   function get_status_for_type(type) {
     try {
       return pluginHost.getStateForType(type);
-    } catch(ex) {
+    } catch (ex) {
       // If the type is not allowed, then nsIPluginHost.getStateForType throws
       // NS_ERROR_NOT_AVAILABLE, for which we return undefined to make it easier
       // to write assertions about the API.
