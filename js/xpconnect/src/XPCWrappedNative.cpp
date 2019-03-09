@@ -183,7 +183,7 @@ nsresult XPCWrappedNative::WrapNewGlobal(xpcObjectHelper& nativeHelper,
   if (!global) {
     return NS_ERROR_FAILURE;
   }
-  XPCWrappedNativeScope* scope = CompartmentPrivate::Get(global)->scope;
+  XPCWrappedNativeScope* scope = ObjectScope(global);
 
   // Immediately enter the global's realm, so that everything else we
   // create ends up there.

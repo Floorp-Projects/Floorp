@@ -2668,7 +2668,8 @@ class CompartmentPrivate {
   CompartmentPrivate(const CompartmentPrivate&) = delete;
 
  public:
-  CompartmentPrivate(JS::Compartment* c, XPCWrappedNativeScope* scope,
+  CompartmentPrivate(JS::Compartment* c,
+                     mozilla::UniquePtr<XPCWrappedNativeScope> scope,
                      mozilla::BasePrincipal* origin,
                      const mozilla::SiteIdentifier& site);
 
@@ -2700,13 +2701,11 @@ class CompartmentPrivate {
     // Don't share if we have any weird state set.
     return !wantXrays && !isWebExtensionContentScript &&
            !isContentXBLCompartment && !isUAWidgetCompartment &&
-           !universalXPConnectEnabled && scope->XBLScopeStateMatches(principal);
+           !universalXPConnectEnabled &&
+           mScope->XBLScopeStateMatches(principal);
   }
 
   CompartmentOriginInfo originInfo;
-
-  // Our XPCWrappedNativeScope.
-  XPCWrappedNativeScope* scope;
 
   // Controls whether this compartment gets Xrays to same-origin. This behavior
   // is deprecated, but is still the default for sandboxes for compatibity
@@ -2771,12 +2770,17 @@ class CompartmentPrivate {
       RemoteProxyMap;
   RemoteProxyMap& GetRemoteProxyMap() { return mRemoteProxies; }
 
+  XPCWrappedNativeScope* GetScope() { return mScope.get(); }
+
  private:
   JSObject2WrappedJSMap* mWrappedJSMap;
 
   // Cache holding proxy objects for Window objects (and their Location oject)
   // that are loaded in a different process.
   RemoteProxyMap mRemoteProxies;
+
+  // Our XPCWrappedNativeScope.
+  mozilla::UniquePtr<XPCWrappedNativeScope> mScope;
 };
 
 bool IsUniversalXPConnectEnabled(JS::Compartment* compartment);
@@ -2896,7 +2900,7 @@ class RealmPrivate {
 };
 
 inline XPCWrappedNativeScope* ObjectScope(JSObject* obj) {
-  return CompartmentPrivate::Get(obj)->scope;
+  return CompartmentPrivate::Get(obj)->GetScope();
 }
 
 JSObject* NewOutObject(JSContext* cx);
