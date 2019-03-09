@@ -32,7 +32,7 @@ exports[`Breakpoint disabled 1`] = `
     <div
       className="breakpoint-line devtools-monospace"
     >
-      53
+      53:73
     </div>
     <CloseButton
       handleClick={[Function]}
@@ -74,7 +74,7 @@ exports[`Breakpoint paused at a different 1`] = `
     <div
       className="breakpoint-line devtools-monospace"
     >
-      53
+      53:73
     </div>
     <CloseButton
       handleClick={[Function]}
@@ -116,7 +116,7 @@ exports[`Breakpoint paused at a generatedLocation 1`] = `
     <div
       className="breakpoint-line devtools-monospace"
     >
-      53
+      53:73
     </div>
     <CloseButton
       handleClick={[Function]}
@@ -158,7 +158,7 @@ exports[`Breakpoint paused at an original location 1`] = `
     <div
       className="breakpoint-line devtools-monospace"
     >
-      5
+      5:7
     </div>
     <CloseButton
       handleClick={[Function]}
@@ -200,7 +200,7 @@ exports[`Breakpoint simple 1`] = `
     <div
       className="breakpoint-line devtools-monospace"
     >
-      53
+      53:73
     </div>
     <CloseButton
       handleClick={[Function]}
