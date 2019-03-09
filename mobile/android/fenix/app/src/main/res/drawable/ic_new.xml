@@ -1,4 +1,5 @@
-<?xml version="1.0" encoding="utf-8"?><!-- This Source Code Form is subject to the terms of the Mozilla Public
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
@@ -8,6 +9,5 @@
     android:viewportHeight="24">
     <path
         android:fillColor="#0C0C0D"
-        android:fillType="evenOdd"
         android:pathData="M13,4a1,1 0,1 0,-2 0v7H4a1,1 0,1 0,0 2h7v7a1,1 0,1 0,2 0v-7h7a1,1 0,1 0,0 -2h-7V4z" />
 </vector>
