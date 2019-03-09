@@ -184,12 +184,10 @@ class AsyncFreeSnowWhite : public Runnable {
 
 namespace xpc {
 
-CompartmentPrivate::CompartmentPrivate(JS::Compartment* c,
-                                       XPCWrappedNativeScope* scope,
-                                       mozilla::BasePrincipal* origin,
-                                       const SiteIdentifier& site)
+CompartmentPrivate::CompartmentPrivate(
+    JS::Compartment* c, mozilla::UniquePtr<XPCWrappedNativeScope> scope,
+    mozilla::BasePrincipal* origin, const SiteIdentifier& site)
     : originInfo(origin, site),
-      scope(scope),
       wantXrays(false),
       allowWaivers(true),
       isWebExtensionContentScript(false),
@@ -199,14 +197,14 @@ CompartmentPrivate::CompartmentPrivate(JS::Compartment* c,
       hasExclusiveExpandos(false),
       universalXPConnectEnabled(false),
       wasShutdown(false),
-      mWrappedJSMap(JSObject2WrappedJSMap::newMap(XPC_JS_MAP_LENGTH)) {
+      mWrappedJSMap(JSObject2WrappedJSMap::newMap(XPC_JS_MAP_LENGTH)),
+      mScope(std::move(scope)) {
   MOZ_COUNT_CTOR(xpc::CompartmentPrivate);
 }
 
 CompartmentPrivate::~CompartmentPrivate() {
   MOZ_COUNT_DTOR(xpc::CompartmentPrivate);
   delete mWrappedJSMap;
-  delete scope;
 }
 
 void CompartmentPrivate::SystemIsBeingShutDown() {
@@ -244,9 +242,9 @@ void RealmPrivate::Init(HandleObject aGlobal, const SiteIdentifier& aSite) {
   if (CompartmentPrivate* priv = CompartmentPrivate::Get(c)) {
     MOZ_ASSERT(priv->originInfo.IsSameOrigin(principal));
   } else {
-    auto* scope = new XPCWrappedNativeScope(c, aGlobal);
-    priv =
-        new CompartmentPrivate(c, scope, BasePrincipal::Cast(principal), aSite);
+    auto scope = mozilla::MakeUnique<XPCWrappedNativeScope>(c, aGlobal);
+    priv = new CompartmentPrivate(c, std::move(scope),
+                                  BasePrincipal::Cast(principal), aSite);
     JS_SetCompartmentPrivate(c, priv);
   }
 }
@@ -593,10 +591,8 @@ bool EnableUniversalXPConnect(JSContext* cx) {
   // but we define it when UniversalXPConnect is enabled to support legacy
   // tests.
   Compartment* comp = js::GetContextCompartment(cx);
-  XPCWrappedNativeScope* scope = CompartmentPrivate::Get(comp)->scope;
-  if (!scope) {
-    return true;
-  }
+  XPCWrappedNativeScope* scope = CompartmentPrivate::Get(comp)->GetScope();
+  MOZ_ASSERT(scope);
   scope->ForcePrivilegedComponents();
   return scope->AttachComponentsObject(cx);
 }
@@ -986,7 +982,7 @@ void XPCJSRuntime::WeakPointerCompartmentCallback(JSContext* cx,
 void CompartmentPrivate::UpdateWeakPointersAfterGC() {
   mRemoteProxies.sweep();
   mWrappedJSMap->UpdateWeakPointersAfterGC();
-  scope->UpdateWeakPointersAfterGC();
+  mScope->UpdateWeakPointersAfterGC();
 }
 
 void XPCJSRuntime::CustomOutOfMemoryCallback() {
