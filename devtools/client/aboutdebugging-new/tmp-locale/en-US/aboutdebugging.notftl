@@ -141,6 +141,14 @@ about-debugging-runtime-service-workers-not-compatible = Your browser configurat
 # { $minVersion } is the minimum version that is compatible with the current Firefox instance (same format)
 about-debugging-runtime-version-too-old = The connected runtime has an old version ({ $runtimeVersion }). The minimum supported version is ({ $minVersion }). This is an unsupported setup and may cause DevTools to fail. Please update the connected runtime. <a>Troubleshooting</a>
 
+# Dedicated message for a backward compatibility issue that occurs when connecting:
+# - from Fx 67 to 66 or to 65
+# - from Fx 68 to 66
+# Those are normally in range for DevTools compatibility policy, but specific non
+# backward compatible changes broke the debugger in those scenarios (Bug 1528219).
+# { $runtimeVersion } is the version of the remote runtime (for instance "67.0a1")
+about-debugging-runtime-version-too-old-67-debugger = The Debugger panel may not work with the connected runtime. Please use Firefox { $runtimeVersion } if you need to use the Debugger with this runtime.
+
 # This string is displayed in the runtime page if the remote runtime version is too recent.
 # "Troubleshooting" link points to https://developer.mozilla.org/en-US/docs/Tools/WebIDE/Troubleshooting
 # { $runtimeID } is the build ID of the remote runtime (for instance "20181231", format is yyyyMMdd)

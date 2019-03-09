@@ -46,7 +46,6 @@ class AccessibilityStartup {
     // See targe.js@getActorDescription for more information.
     try {
       this._walker = await this._accessibility.getWalker();
-
       this._supports = {};
       // Only works with FF61+ targets
       this._supports.enableDisable =
