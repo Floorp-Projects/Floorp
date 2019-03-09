@@ -970,7 +970,8 @@ class JSFlatString : public JSLinearString {
 
  public:
   template <js::AllowGC allowGC, typename CharT>
-  static inline JSFlatString* new_(JSContext* cx, const CharT* chars,
+  static inline JSFlatString* new_(JSContext* cx,
+                                   js::UniquePtr<CharT[], JS::FreePolicy> chars,
                                    size_t length);
 
   inline bool isIndexSlow(uint32_t* indexp) const {
@@ -1533,16 +1534,23 @@ static inline UniqueChars StringToNewUTF8CharsZ(JSContext* maybecx,
                 .c_str());
 }
 
-/* GC-allocate a string descriptor for the given malloc-allocated chars. */
+/**
+ * Allocate a string with the given contents, potentially GCing in the process.
+ */
 template <typename CharT>
-extern JSFlatString* NewString(JSContext* cx, CharT* chars, size_t length);
+extern JSFlatString* NewString(JSContext* cx,
+                               UniquePtr<CharT[], JS::FreePolicy> chars,
+                               size_t length);
 
-/* Like NewString, but doesn't try to deflate to Latin1. */
+/* Like NewString, but doesn't attempt to deflate to Latin1. */
 template <typename CharT>
-extern JSFlatString* NewStringDontDeflate(JSContext* cx, CharT* chars,
-                                          size_t length);
+extern JSFlatString* NewStringDontDeflate(
+    JSContext* cx, UniquePtr<CharT[], JS::FreePolicy> chars, size_t length);
 
-/* GC-allocate a string descriptor for the given malloc-allocated chars. */
+/**
+ * Allocate a string with the given contents.  If |allowGC == CanGC|, this may
+ * trigger a GC.
+ */
 template <js::AllowGC allowGC, typename CharT>
 extern JSFlatString* NewString(JSContext* cx,
                                UniquePtr<CharT[], JS::FreePolicy> chars,

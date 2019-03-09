@@ -1584,13 +1584,7 @@ static JSFlatString* NewStringDeflated(JSContext* cx, const char16_t* s,
   MOZ_ASSERT(CanStoreCharsAsLatin1(s, n));
   FillFromCompatibleAndTerminate(news.get(), s, n);
 
-  JSFlatString* str = JSFlatString::new_<allowGC>(cx, news.get(), n);
-  if (!str) {
-    return nullptr;
-  }
-
-  mozilla::Unused << news.release();
-  return str;
+  return JSFlatString::new_<allowGC>(cx, std::move(news), n);
 }
 
 template <AllowGC allowGC>
@@ -1622,66 +1616,52 @@ static JSFlatString* NewStringDeflatedFromLittleEndianNoGC(
 
   FillFromCompatibleAndTerminate(news.get(), chars, length);
 
-  JSFlatString* str = JSFlatString::new_<NoGC>(cx, news.get(), length);
-  if (!str) {
-    return nullptr;
-  }
-
-  mozilla::Unused << news.release();
-  return str;
+  return JSFlatString::new_<NoGC>(cx, std::move(news), length);
 }
 
 template <typename CharT>
-JSFlatString* js::NewStringDontDeflate(JSContext* cx, CharT* chars,
+JSFlatString* js::NewStringDontDeflate(JSContext* cx,
+                                       UniquePtr<CharT[], JS::FreePolicy> chars,
                                        size_t length) {
-  if (JSFlatString* str = TryEmptyOrStaticString(cx, chars, length)) {
-    // Free |chars| because we're taking possession of it, but it's no
-    // longer needed because we use the static string instead.
-    js_free(chars);
+  if (JSFlatString* str = TryEmptyOrStaticString(cx, chars.get(), length)) {
     return str;
   }
 
   if (JSInlineString::lengthFits<CharT>(length)) {
-    JSInlineString* str =
-        NewInlineString<CanGC>(cx, mozilla::Range<const CharT>(chars, length));
-    if (!str) {
-      return nullptr;
-    }
-
-    js_free(chars);
-    return str;
+    // |chars.get()| is safe because 1) |NewInlineString| necessarily *copies*,
+    // and 2) |chars| frees its contents only when this function returns.
+    return NewInlineString<CanGC>(
+        cx, mozilla::Range<const CharT>(chars.get(), length));
   }
 
-  return JSFlatString::new_<CanGC>(cx, chars, length);
+  return JSFlatString::new_<CanGC>(cx, std::move(chars), length);
 }
 
-template JSFlatString* js::NewStringDontDeflate(JSContext* cx, char16_t* chars,
+template JSFlatString* js::NewStringDontDeflate(JSContext* cx,
+                                                UniqueTwoByteChars chars,
                                                 size_t length);
 
 template JSFlatString* js::NewStringDontDeflate(JSContext* cx,
-                                                Latin1Char* chars,
+                                                UniqueLatin1Chars chars,
                                                 size_t length);
 
 template <typename CharT>
-JSFlatString* js::NewString(JSContext* cx, CharT* chars, size_t length) {
-  if (IsSame<CharT, char16_t>::value && CanStoreCharsAsLatin1(chars, length)) {
-    JSFlatString* s = NewStringDeflated<CanGC>(cx, chars, length);
-    if (!s) {
-      return nullptr;
-    }
-
-    // Free |chars| because we're taking possession of it but not using it.
-    js_free(chars);
-    return s;
+JSFlatString* js::NewString(JSContext* cx,
+                            UniquePtr<CharT[], JS::FreePolicy> chars,
+                            size_t length) {
+  if (IsSame<CharT, char16_t>::value &&
+      CanStoreCharsAsLatin1(chars.get(), length)) {
+    // Deflating copies from |chars.get()| and lets |chars| be freed on return.
+    return NewStringDeflated<CanGC>(cx, chars.get(), length);
   }
 
-  return NewStringDontDeflate(cx, chars, length);
+  return NewStringDontDeflate(cx, std::move(chars), length);
 }
 
-template JSFlatString* js::NewString(JSContext* cx, char16_t* chars,
+template JSFlatString* js::NewString(JSContext* cx, UniqueTwoByteChars chars,
                                      size_t length);
 
-template JSFlatString* js::NewString(JSContext* cx, Latin1Char* chars,
+template JSFlatString* js::NewString(JSContext* cx, UniqueLatin1Chars chars,
                                      size_t length);
 
 template <AllowGC allowGC, typename CharT>
@@ -1697,13 +1677,7 @@ JSFlatString* js::NewStringDontDeflate(JSContext* cx,
         cx, mozilla::Range<const CharT>(chars.get(), length));
   }
 
-  JSFlatString* str = JSFlatString::new_<allowGC>(cx, chars.get(), length);
-  if (!str) {
-    return nullptr;
-  }
-
-  mozilla::Unused << chars.release();
-  return str;
+  return JSFlatString::new_<allowGC>(cx, std::move(chars), length);
 }
 
 template JSFlatString* js::NewStringDontDeflate<CanGC>(JSContext* cx,
@@ -1773,13 +1747,7 @@ JSFlatString* NewStringCopyNDontDeflate(JSContext* cx, const CharT* s,
 
   FillAndTerminate(news.get(), s, n);
 
-  JSFlatString* str = JSFlatString::new_<allowGC>(cx, news.get(), n);
-  if (!str) {
-    return nullptr;
-  }
-
-  mozilla::Unused << news.release();
-  return str;
+  return JSFlatString::new_<allowGC>(cx, std::move(news), n);
 }
 
 template JSFlatString* NewStringCopyNDontDeflate<CanGC>(JSContext* cx,
@@ -1819,13 +1787,7 @@ static JSFlatString* NewUndeflatedStringFromLittleEndianNoGC(
 
   FillAndTerminate(news.get(), chars, length);
 
-  if (JSFlatString* str = JSFlatString::new_<NoGC>(cx, news.get(), length)) {
-    // Successful JSFlatString::new_ took ownership of |news.release()|.
-    mozilla::Unused << news.release();
-    return str;
-  }
-
-  return nullptr;
+  return JSFlatString::new_<NoGC>(cx, std::move(news), length);
 }
 
 JSFlatString* NewLatin1StringZ(JSContext* cx, UniqueChars chars) {
