@@ -59,7 +59,7 @@ class ProcessMessageManager;
 class Promise;
 class TabParent;
 class MutableTabContext;
-class RemoteFrameChild;
+class BrowserBridgeChild;
 
 namespace ipc {
 class StructuredCloneData;
@@ -283,10 +283,10 @@ class nsFrameLoader final : public nsStubMutationObserver,
   PBrowserParent* GetRemoteBrowser() const;
 
   /**
-   * Returns the RemoteFrameChild if this is an out-of-process iframe, or null
+   * Returns the BrowserBridgeChild if this is an out-of-process iframe, or null
    * otherwise.
    */
-  mozilla::dom::RemoteFrameChild* GetRemoteFrameChild() const;
+  mozilla::dom::BrowserBridgeChild* GetBrowserBridgeChild() const;
 
   /**
    * Returns the layers ID that this remote frame is using to render.
@@ -455,7 +455,7 @@ class nsFrameLoader final : public nsStubMutationObserver,
   uint64_t mChildID;
 
   // This is used when this refers to a remote sub frame
-  RefPtr<mozilla::dom::RemoteFrameChild> mRemoteFrameChild;
+  RefPtr<mozilla::dom::BrowserBridgeChild> mBrowserBridgeChild;
 
   // Holds the last known size of the frame.
   mozilla::ScreenIntSize mLazySize;

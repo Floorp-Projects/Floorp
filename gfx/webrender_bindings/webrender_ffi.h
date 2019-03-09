@@ -33,6 +33,9 @@ void gecko_profiler_unregister_thread();
 
 void gecko_profiler_start_marker(const char* name);
 void gecko_profiler_end_marker(const char* name);
+void gecko_profiler_add_text_marker(
+    const char* name, const char* text_ptr, size_t text_len, uint64_t microseconds);
+bool gecko_profiler_thread_is_being_profiled();
 
 // IMPORTANT: Keep this synchronized with enumerate_interners in
 // gfx/wr/webrender_api
