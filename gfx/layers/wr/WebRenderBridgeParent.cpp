@@ -15,6 +15,7 @@
 #include "GLContextProvider.h"
 #include "nsExceptionHandler.h"
 #include "mozilla/Range.h"
+#include "mozilla/UniquePtr.h"
 #include "mozilla/layers/AnimationHelper.h"
 #include "mozilla/layers/APZSampler.h"
 #include "mozilla/layers/APZUpdater.h"
@@ -61,6 +62,25 @@ void gecko_profiler_end_marker(const char* name) {
 #ifdef MOZ_GECKO_PROFILER
   profiler_tracing("WebRender", name, JS::ProfilingCategoryPair::GRAPHICS,
                    TRACING_INTERVAL_END);
+#endif
+}
+
+void gecko_profiler_add_text_marker(const char* name, const char* text_bytes, size_t text_len, uint64_t microseconds) {
+#ifdef MOZ_GECKO_PROFILER
+  if (profiler_thread_is_being_profiled()) {
+    auto now = mozilla::TimeStamp::Now();
+    auto start = now - mozilla::TimeDuration::FromMicroseconds(microseconds);
+    profiler_add_text_marker(
+        name, nsDependentCString(text_bytes, text_len), JS::ProfilingCategoryPair::GRAPHICS, start, now);
+  }
+#endif
+}
+
+bool gecko_profiler_thread_is_being_profiled() {
+#ifdef MOZ_GECKO_PROFILER
+  return profiler_thread_is_being_profiled();
+#else
+  return false;
 #endif
 }
 

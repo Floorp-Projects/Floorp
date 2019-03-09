@@ -21,7 +21,7 @@
 #include "mozilla/dom/indexedDB/ActorsParent.h"
 #include "mozilla/dom/IPCBlobUtils.h"
 #include "mozilla/dom/PaymentRequestParent.h"
-#include "mozilla/dom/RemoteFrameParent.h"
+#include "mozilla/dom/BrowserBridgeParent.h"
 #include "mozilla/EventStateManager.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/DataSurfaceHelpers.h"
@@ -998,22 +998,22 @@ bool TabParent::DeallocPWindowGlobalParent(PWindowGlobalParent* aActor) {
   return true;
 }
 
-IPCResult TabParent::RecvPRemoteFrameConstructor(PRemoteFrameParent* aActor,
-                                                 const nsString& aName,
-                                                 const nsString& aRemoteType) {
-  static_cast<RemoteFrameParent*>(aActor)->Init(aName, aRemoteType);
+IPCResult TabParent::RecvPBrowserBridgeConstructor(
+    PBrowserBridgeParent* aActor, const nsString& aName,
+    const nsString& aRemoteType) {
+  static_cast<BrowserBridgeParent*>(aActor)->Init(aName, aRemoteType);
   return IPC_OK();
 }
 
-PRemoteFrameParent* TabParent::AllocPRemoteFrameParent(
+PBrowserBridgeParent* TabParent::AllocPBrowserBridgeParent(
     const nsString& aName, const nsString& aRemoteType) {
-  // Reference freed in DeallocPRemoteFrameParent.
-  return do_AddRef(new RemoteFrameParent()).take();
+  // Reference freed in DeallocPBrowserBridgeParent.
+  return do_AddRef(new BrowserBridgeParent()).take();
 }
 
-bool TabParent::DeallocPRemoteFrameParent(PRemoteFrameParent* aActor) {
-  // Free reference from AllocPRemoteFrameParent.
-  static_cast<RemoteFrameParent*>(aActor)->Release();
+bool TabParent::DeallocPBrowserBridgeParent(PBrowserBridgeParent* aActor) {
+  // Free reference from AllocPBrowserBridgeParent.
+  static_cast<BrowserBridgeParent*>(aActor)->Release();
   return true;
 }
 
