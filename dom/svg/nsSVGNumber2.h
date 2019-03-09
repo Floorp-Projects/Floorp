@@ -28,6 +28,7 @@ class SVGAnimationElement;
 
 class nsSVGNumber2 {
  public:
+  friend class AutoChangeNumberNotifier;
   typedef mozilla::SMILAttr SMILAttr;
   typedef mozilla::SMILValue SMILValue;
   typedef mozilla::dom::SVGElement SVGElement;

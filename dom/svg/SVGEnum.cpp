@@ -17,6 +17,32 @@ using namespace mozilla::dom;
 
 namespace mozilla {
 
+//----------------------------------------------------------------------
+// Helper class: AutoChangeEnumNotifier
+// Stack-based helper class to ensure DidChangeEnum is called.
+class MOZ_RAII AutoChangeEnumNotifier {
+ public:
+  AutoChangeEnumNotifier(
+      SVGEnum* aEnum, SVGElement* aSVGElement MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+      : mEnum(aEnum), mSVGElement(aSVGElement) {
+    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+    MOZ_ASSERT(mEnum, "Expecting non-null enum");
+    MOZ_ASSERT(mSVGElement, "Expecting non-null element");
+  }
+
+  ~AutoChangeEnumNotifier() {
+    mSVGElement->DidChangeEnum(mEnum->mAttrEnum);
+    if (mEnum->mIsAnimated) {
+      mSVGElement->AnimationNeedsResample();
+    }
+  }
+
+ private:
+  SVGEnum* const mEnum;
+  SVGElement* const mSVGElement;
+  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
+};
+
 static SVGAttrTearoffTable<SVGEnum, SVGEnum::DOMAnimatedEnum>
     sSVGAnimatedEnumTearoffTable;
 
@@ -75,13 +101,12 @@ nsresult SVGEnum::SetBaseValue(uint16_t aValue, SVGElement* aSVGElement) {
     if (mapping->mVal == aValue) {
       mIsBaseSet = true;
       if (mBaseVal != uint8_t(aValue)) {
+        AutoChangeEnumNotifier notifier(this, aSVGElement);
+
         mBaseVal = uint8_t(aValue);
         if (!mIsAnimated) {
           mAnimVal = mBaseVal;
-        } else {
-          aSVGElement->AnimationNeedsResample();
         }
-        aSVGElement->DidChangeEnum(mAttrEnum);
       }
       return NS_OK;
     }

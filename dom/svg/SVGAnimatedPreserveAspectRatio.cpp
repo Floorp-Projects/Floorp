@@ -13,8 +13,9 @@
 #include "SMILEnumType.h"
 #include "SVGAttrTearoffTable.h"
 
-using namespace mozilla;
 using namespace mozilla::dom;
+
+namespace mozilla {
 
 ////////////////////////////////////////////////////////////////////////
 // SVGAnimatedPreserveAspectRatio class
@@ -35,6 +36,44 @@ JSObject* DOMSVGAnimatedPreserveAspectRatio::WrapObject(
 }
 
 /* Implementation */
+
+//----------------------------------------------------------------------
+// Helper class: AutoChangePreserveAspectRatioNotifier
+// Stack-based helper class to pair calls to WillChangePreserveAspectRatio and
+// DidChangePreserveAspectRatio.
+class MOZ_RAII AutoChangePreserveAspectRatioNotifier {
+ public:
+  AutoChangePreserveAspectRatioNotifier(
+      SVGAnimatedPreserveAspectRatio* aPreserveAspectRatio,
+      SVGElement* aSVGElement,
+      bool aDoSetAttr = true MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+      : mPreserveAspectRatio(aPreserveAspectRatio),
+        mSVGElement(aSVGElement),
+        mDoSetAttr(aDoSetAttr) {
+    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+    MOZ_ASSERT(mPreserveAspectRatio, "Expecting non-null preserveAspectRatio");
+    MOZ_ASSERT(mSVGElement, "Expecting non-null element");
+    if (mDoSetAttr) {
+      mEmptyOrOldValue = mSVGElement->WillChangePreserveAspectRatio();
+    }
+  }
+
+  ~AutoChangePreserveAspectRatioNotifier() {
+    if (mDoSetAttr) {
+      mSVGElement->DidChangePreserveAspectRatio(mEmptyOrOldValue);
+    }
+    if (mPreserveAspectRatio->mIsAnimated) {
+      mSVGElement->AnimationNeedsResample();
+    }
+  }
+
+ private:
+  SVGAnimatedPreserveAspectRatio* const mPreserveAspectRatio;
+  SVGElement* const mSVGElement;
+  nsAttrValue mEmptyOrOldValue;
+  bool mDoSetAttr;
+  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
+};
 
 static SVGAttrTearoffTable<SVGAnimatedPreserveAspectRatio,
                            DOMSVGAnimatedPreserveAspectRatio>
@@ -86,22 +125,12 @@ nsresult SVGAnimatedPreserveAspectRatio::SetBaseValueString(
     return res;
   }
 
-  nsAttrValue emptyOrOldValue;
-  if (aDoSetAttr) {
-    emptyOrOldValue = aSVGElement->WillChangePreserveAspectRatio();
-  }
+  AutoChangePreserveAspectRatioNotifier notifier(this, aSVGElement, aDoSetAttr);
 
   mBaseVal = val;
   mIsBaseSet = true;
-
   if (!mIsAnimated) {
     mAnimVal = mBaseVal;
-  }
-  if (aDoSetAttr) {
-    aSVGElement->DidChangePreserveAspectRatio(emptyOrOldValue);
-  }
-  if (mIsAnimated) {
-    aSVGElement->AnimationNeedsResample();
   }
   return NS_OK;
 }
@@ -117,16 +146,13 @@ void SVGAnimatedPreserveAspectRatio::SetBaseValue(
     return;
   }
 
-  nsAttrValue emptyOrOldValue = aSVGElement->WillChangePreserveAspectRatio();
+  AutoChangePreserveAspectRatioNotifier notifier(this, aSVGElement);
+
   mBaseVal = aValue;
   mIsBaseSet = true;
 
   if (!mIsAnimated) {
     mAnimVal = mBaseVal;
-  }
-  aSVGElement->DidChangePreserveAspectRatio(emptyOrOldValue);
-  if (mIsAnimated) {
-    aSVGElement->AnimationNeedsResample();
   }
 }
 
@@ -213,3 +239,5 @@ nsresult SMILPreserveAspectRatio::SetAnimValue(const SMILValue& aValue) {
   }
   return NS_OK;
 }
+
+}  // namespace mozilla

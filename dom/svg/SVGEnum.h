@@ -34,6 +34,7 @@ struct SVGEnumMapping {
 
 class SVGEnum {
  public:
+  friend class AutoChangeEnumNotifier;
   typedef mozilla::dom::SVGElement SVGElement;
 
   void Init(uint8_t aAttrEnum, uint16_t aValue) {

@@ -18,6 +18,33 @@ namespace mozilla {
 
 /* Implementation */
 
+//----------------------------------------------------------------------
+// Helper class: AutoChangeBooleanNotifier
+// Stack-based helper class to ensure DidChangeBoolean is called.
+class MOZ_RAII AutoChangeBooleanNotifier {
+ public:
+  AutoChangeBooleanNotifier(SVGBoolean* aBoolean,
+                            SVGElement* aSVGElement
+                                MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+      : mBoolean(aBoolean), mSVGElement(aSVGElement) {
+    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+    MOZ_ASSERT(mBoolean, "Expecting non-null boolean");
+    MOZ_ASSERT(mSVGElement, "Expecting non-null element");
+  }
+
+  ~AutoChangeBooleanNotifier() {
+    mSVGElement->DidChangeBoolean(mBoolean->mAttrEnum);
+    if (mBoolean->mIsAnimated) {
+      mSVGElement->AnimationNeedsResample();
+    }
+  }
+
+ private:
+  SVGBoolean* const mBoolean;
+  SVGElement* const mSVGElement;
+  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
+};
+
 static inline SVGAttrTearoffTable<SVGBoolean, SVGAnimatedBoolean>&
 SVGAnimatedBooleanTearoffTable() {
   static SVGAttrTearoffTable<SVGBoolean, SVGAnimatedBoolean>
@@ -80,13 +107,12 @@ void SVGBoolean::SetBaseValue(bool aValue, SVGElement* aSVGElement) {
     return;
   }
 
+  AutoChangeBooleanNotifier notifier(this, aSVGElement);
+
   mBaseVal = aValue;
   if (!mIsAnimated) {
     mAnimVal = mBaseVal;
-  } else {
-    aSVGElement->AnimationNeedsResample();
   }
-  aSVGElement->DidChangeBoolean(mAttrEnum);
 }
 
 void SVGBoolean::SetAnimValue(bool aValue, SVGElement* aSVGElement) {
