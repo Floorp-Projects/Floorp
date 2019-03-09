@@ -194,7 +194,7 @@ NS_IMETHODIMP
 XULContentSinkImpl::DidBuildModel(bool aTerminated) {
   nsCOMPtr<Document> doc = do_QueryReferent(mDocument);
   if (doc) {
-    doc->EndLoad();
+    mPrototype->NotifyLoadDone();
     mDocument = nullptr;
   }
 

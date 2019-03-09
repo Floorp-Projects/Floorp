@@ -55,6 +55,8 @@
 #include "nsIConsoleService.h"
 #include "nsIComponentManager.h"
 #include "nsParserCIID.h"
+#include "mozilla/parser/PrototypeDocumentParser.h"
+#include "mozilla/dom/PrototypeDocumentContentSink.h"
 #include "nsNameSpaceManager.h"
 #include "nsGenericHTMLElement.h"
 #include "mozilla/css/Loader.h"
@@ -439,6 +441,22 @@ void nsHTMLDocument::TryFallback(int32_t& aCharsetSource,
   aEncoding = FallbackEncoding::FromLocale();
 }
 
+// Using a prototype document is currently only allowed with browser.xhtml.
+bool ShouldUsePrototypeDocument(nsIChannel* aChannel, nsIDocShell* aDocShell) {
+  if (!aChannel || !aDocShell ||
+      !StaticPrefs::dom_prototype_document_cache_enabled()) {
+    return false;
+  }
+  if (aDocShell->ItemType() != nsIDocShellTreeItem::typeChrome) {
+    return false;
+  }
+  nsCOMPtr<nsIURI> originalURI;
+  aChannel->GetOriginalURI(getter_AddRefs(originalURI));
+  return IsChromeURI(originalURI) &&
+         originalURI->GetSpecOrDefault().EqualsLiteral(
+             BROWSER_CHROME_URL_QUOTED);
+}
+
 nsresult nsHTMLDocument::StartDocumentLoad(const char* aCommand,
                                            nsIChannel* aChannel,
                                            nsILoadGroup* aLoadGroup,
@@ -526,7 +544,9 @@ nsresult nsHTMLDocument::StartDocumentLoad(const char* aCommand,
   }
 
   nsCOMPtr<nsICachingChannel> cachingChan = do_QueryInterface(aChannel);
+  nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(aContainer));
 
+  bool loadWithPrototype = false;
   if (loadAsHtml5) {
     mParser = nsHtml5Module::NewHtml5Parser();
     if (plainText) {
@@ -540,6 +560,11 @@ nsresult nsHTMLDocument::StartDocumentLoad(const char* aCommand,
     } else {
       mParser->MarkAsNotScriptCreated(aCommand);
     }
+  } else if (ShouldUsePrototypeDocument(aChannel, docShell)) {
+    loadWithPrototype = true;
+    nsCOMPtr<nsIURI> originalURI;
+    aChannel->GetOriginalURI(getter_AddRefs(originalURI));
+    mParser = new mozilla::parser::PrototypeDocumentParser(originalURI, this);
   } else {
     mParser = do_CreateInstance(kCParserCID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -552,7 +577,6 @@ nsresult nsHTMLDocument::StartDocumentLoad(const char* aCommand,
   // in this block of code, if we get an error result, we return it
   // but if we get a null pointer, that's perfectly legal for parent
   // and parentContentViewer
-  nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(aContainer));
   nsCOMPtr<nsIDocShellTreeItem> parentAsItem;
   if (docShell) {
     docShell->GetSameTypeParent(getter_AddRefs(parentAsItem));
@@ -659,10 +683,17 @@ nsresult nsHTMLDocument::StartDocumentLoad(const char* aCommand,
 
   if (!IsHTMLDocument()) {
     MOZ_ASSERT(!loadAsHtml5);
-    nsCOMPtr<nsIXMLContentSink> xmlsink;
-    NS_NewXMLContentSink(getter_AddRefs(xmlsink), this, uri, docShell,
-                         aChannel);
-    mParser->SetContentSink(xmlsink);
+    if (loadWithPrototype) {
+      nsCOMPtr<nsIContentSink> sink;
+      NS_NewPrototypeDocumentContentSink(getter_AddRefs(sink), this, uri,
+                                         docShell, aChannel);
+      mParser->SetContentSink(sink);
+    } else {
+      nsCOMPtr<nsIXMLContentSink> xmlsink;
+      NS_NewXMLContentSink(getter_AddRefs(xmlsink), this, uri, docShell,
+                           aChannel);
+      mParser->SetContentSink(xmlsink);
+    }
   } else {
     if (loadAsHtml5) {
       nsHtml5Module::Initialize(mParser, this, uri, docShell, aChannel);

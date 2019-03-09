@@ -124,6 +124,7 @@ class nsDOMCaretPosition;
 class nsViewportInfo;
 class nsIGlobalObject;
 class nsIXULWindow;
+class nsXULPrototypeDocument;
 struct nsFont;
 
 namespace mozilla {
@@ -3728,6 +3729,14 @@ class Document : public nsINode,
 
   mozilla::dom::XPathEvaluator* XPathEvaluator();
 
+  void MaybeInitializeFinalizeFrameLoaders();
+
+  void SetDelayFrameLoaderInitialization(bool aDelayFrameLoaderInitialization) {
+    mDelayFrameLoaderInitialization = aDelayFrameLoaderInitialization;
+  }
+
+  void SetPrototypeDocument(nsXULPrototypeDocument* aPrototype);
+
  protected:
   void DoUpdateSVGUseElementShadowTrees();
 
@@ -3743,8 +3752,6 @@ class Document : public nsINode,
 
   bool ContainsEMEContent();
   bool ContainsMSEContent();
-
-  void MaybeInitializeFinalizeFrameLoaders();
 
   /**
    * Returns the title element of the document as defined by the HTML
@@ -4489,6 +4496,10 @@ class Document : public nsINode,
   // parsed into.
   nsCOMPtr<nsIParser> mParser;
 
+  // If the document was created from the the prototype cache there will be a
+  // reference to the prototype document to allow tracing.
+  RefPtr<nsXULPrototypeDocument> mPrototypeDocument;
+
   nsrefcnt mStackRefCnt;
 
   // Weak reference to our sink for in case we no longer have a parser.  This
@@ -4708,6 +4719,8 @@ class Document : public nsINode,
   js::ExpandoAndGeneration mExpandoAndGeneration;
 
   bool HasPendingInitialTranslation() { return mPendingInitialTranslation; }
+
+  void TraceProtos(JSTracer* aTrc);
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(Document, NS_IDOCUMENT_IID)
