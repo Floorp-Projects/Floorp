@@ -17,9 +17,9 @@ namespace mozilla {
 namespace dom {
 
 /**
- * PRemoteFrame corresponds to a remote iframe.
+ * PBrowserBridge corresponds to a remote iframe.
  */
-async protocol PRemoteFrame {
+async protocol PBrowserBridge {
   manager PBrowser;
 
 child:
