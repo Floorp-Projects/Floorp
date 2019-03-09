@@ -47,7 +47,6 @@ struct SVGViewBoxRect {
 
 class SVGViewBox {
  public:
-  friend class AutoChangeViewBoxNotifier;
   typedef mozilla::dom::SVGElement SVGElement;
 
   void Init();

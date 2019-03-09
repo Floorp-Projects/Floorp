@@ -18,33 +18,6 @@ using namespace mozilla::dom;
 
 /* Implementation */
 
-//----------------------------------------------------------------------
-// Helper class: AutoChangeNumberNotifier
-// Stack-based helper class to ensure DidChangeNumber is called.
-class MOZ_RAII AutoChangeNumberNotifier {
- public:
-  AutoChangeNumberNotifier(nsSVGNumber2* aNumber,
-                           SVGElement* aSVGElement
-                               MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-      : mNumber(aNumber), mSVGElement(aSVGElement) {
-    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-    MOZ_ASSERT(mNumber, "Expecting non-null number");
-    MOZ_ASSERT(mSVGElement, "Expecting non-null element");
-  }
-
-  ~AutoChangeNumberNotifier() {
-    mSVGElement->DidChangeNumber(mNumber->mAttrEnum);
-    if (mNumber->mIsAnimated) {
-      mSVGElement->AnimationNeedsResample();
-    }
-  }
-
- private:
-  nsSVGNumber2* const mNumber;
-  SVGElement* const mSVGElement;
-  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
-};
-
 static SVGAttrTearoffTable<nsSVGNumber2, nsSVGNumber2::DOMAnimatedNumber>
     sSVGAnimatedNumberTearoffTable;
 
@@ -103,13 +76,14 @@ void nsSVGNumber2::SetBaseValue(float aValue, SVGElement* aSVGElement) {
     return;
   }
 
-  AutoChangeNumberNotifier notifier(this, aSVGElement);
-
   mBaseVal = aValue;
   mIsBaseSet = true;
   if (!mIsAnimated) {
     mAnimVal = mBaseVal;
+  } else {
+    aSVGElement->AnimationNeedsResample();
   }
+  aSVGElement->DidChangeNumber(mAttrEnum);
 }
 
 void nsSVGNumber2::SetAnimValue(float aValue, SVGElement* aSVGElement) {

@@ -86,7 +86,6 @@ class NonSVGFrameUserSpaceMetrics : public UserSpaceMetricsWithSize {
 }  // namespace mozilla
 
 class nsSVGLength2 {
-  friend class AutoChangeLengthNotifier;
   friend class mozilla::dom::SVGAnimatedLength;
   friend class mozilla::dom::DOMSVGLength;
   typedef mozilla::dom::DOMSVGLength DOMSVGLength;

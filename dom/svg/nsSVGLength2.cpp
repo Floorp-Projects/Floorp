@@ -22,42 +22,6 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
-//----------------------------------------------------------------------
-// Helper class: AutoChangeLengthNotifier
-// Stack-based helper class to pair calls to WillChangeLength and
-// DidChangeLength.
-class MOZ_RAII AutoChangeLengthNotifier {
- public:
-  AutoChangeLengthNotifier(
-      nsSVGLength2* aLength, SVGElement* aSVGElement,
-      bool aDoSetAttr = true MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-      : mLength(aLength), mSVGElement(aSVGElement), mDoSetAttr(aDoSetAttr) {
-    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-    MOZ_ASSERT(mLength, "Expecting non-null length");
-    MOZ_ASSERT(mSVGElement, "Expecting non-null element");
-
-    if (mDoSetAttr) {
-      mEmptyOrOldValue = mSVGElement->WillChangeLength(mLength->mAttrEnum);
-    }
-  }
-
-  ~AutoChangeLengthNotifier() {
-    if (mDoSetAttr) {
-      mSVGElement->DidChangeLength(mLength->mAttrEnum, mEmptyOrOldValue);
-    }
-    if (mLength->mIsAnimated) {
-      mSVGElement->AnimationNeedsResample();
-    }
-  }
-
- private:
-  nsSVGLength2* const mLength;
-  SVGElement* const mSVGElement;
-  nsAttrValue mEmptyOrOldValue;
-  bool mDoSetAttr;
-  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
-};
-
 static const nsStaticAtom* const unitMap[] = {
     nullptr, /* SVG_LENGTHTYPE_UNKNOWN */
     nullptr, /* SVG_LENGTHTYPE_NUMBER */
@@ -267,12 +231,19 @@ void nsSVGLength2::SetBaseValueInSpecifiedUnits(float aValue,
     return;
   }
 
-  AutoChangeLengthNotifier notifier(this, aSVGElement, aDoSetAttr);
-
+  nsAttrValue emptyOrOldValue;
+  if (aDoSetAttr) {
+    emptyOrOldValue = aSVGElement->WillChangeLength(mAttrEnum);
+  }
   mBaseVal = aValue;
   mIsBaseSet = true;
   if (!mIsAnimated) {
     mAnimVal = mBaseVal;
+  } else {
+    aSVGElement->AnimationNeedsResample();
+  }
+  if (aDoSetAttr) {
+    aSVGElement->DidChangeLength(mAttrEnum, emptyOrOldValue);
   }
 }
 
@@ -299,12 +270,14 @@ nsresult nsSVGLength2::ConvertToSpecifiedUnits(uint16_t unitType,
   // on the document, we still need to send out notifications in case we have
   // mutation listeners, since the actual string value of the attribute will
   // change.
-  AutoChangeLengthNotifier notifier(this, aSVGElement);
+  nsAttrValue emptyOrOldValue = aSVGElement->WillChangeLength(mAttrEnum);
 
   mSpecifiedUnitType = uint8_t(unitType);
   // Setting aDoSetAttr to false here will ensure we don't call
   // Will/DidChangeAngle a second time (and dispatch duplicate notifications).
   SetBaseValueInSpecifiedUnits(valueInSpecifiedUnits, aSVGElement, false);
+
+  aSVGElement->DidChangeLength(mAttrEnum, emptyOrOldValue);
 
   return NS_OK;
 }
@@ -321,14 +294,16 @@ nsresult nsSVGLength2::NewValueSpecifiedUnits(uint16_t unitType,
     return NS_OK;
   }
 
-  AutoChangeLengthNotifier notifier(this, aSVGElement);
-
+  nsAttrValue emptyOrOldValue = aSVGElement->WillChangeLength(mAttrEnum);
   mBaseVal = valueInSpecifiedUnits;
   mIsBaseSet = true;
   mSpecifiedUnitType = uint8_t(unitType);
   if (!mIsAnimated) {
     mAnimVal = mBaseVal;
+  } else {
+    aSVGElement->AnimationNeedsResample();
   }
+  aSVGElement->DidChangeLength(mAttrEnum, emptyOrOldValue);
   return NS_OK;
 }
 
@@ -359,15 +334,22 @@ nsresult nsSVGLength2::SetBaseValueString(const nsAString& aValueAsString,
     return NS_OK;
   }
 
-  AutoChangeLengthNotifier notifier(this, aSVGElement, aDoSetAttr);
-
+  nsAttrValue emptyOrOldValue;
+  if (aDoSetAttr) {
+    emptyOrOldValue = aSVGElement->WillChangeLength(mAttrEnum);
+  }
   mBaseVal = value;
   mIsBaseSet = true;
   mSpecifiedUnitType = uint8_t(unitType);
   if (!mIsAnimated) {
     mAnimVal = mBaseVal;
+  } else {
+    aSVGElement->AnimationNeedsResample();
   }
 
+  if (aDoSetAttr) {
+    aSVGElement->DidChangeLength(mAttrEnum, emptyOrOldValue);
+  }
   return NS_OK;
 }
 
