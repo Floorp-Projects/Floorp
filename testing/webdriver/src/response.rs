@@ -178,7 +178,7 @@ mod tests {
             domain: Some("foo.bar".into()),
             expiry: Some(Date(123)),
             secure: true,
-            httpOnly: false,
+            http_only: false,
         }));
 
         check_serialize(&json, &data);
@@ -201,7 +201,7 @@ mod tests {
             domain: None,
             expiry: None,
             secure: true,
-            httpOnly: false,
+            http_only: false,
         }));
 
         check_serialize(&json, &data);
@@ -224,7 +224,7 @@ mod tests {
             domain: None,
             expiry: None,
             secure: true,
-            httpOnly: false,
+            http_only: false,
         }]));
 
         check_serialize(&json, &data);
