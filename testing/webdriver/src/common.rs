@@ -15,8 +15,8 @@ pub struct Cookie {
     pub domain: Option<String>,
     #[serde(default)]
     pub secure: bool,
-    #[serde(default)]
-    pub httpOnly: bool,
+    #[serde(rename = "httpOnly")]
+    pub http_only: bool,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub expiry: Option<Date>,
 }
