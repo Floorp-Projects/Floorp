@@ -217,8 +217,7 @@ namespace xpc {
 JSObject* GetXBLScope(JSContext* cx, JSObject* contentScopeArg) {
   JS::RootedObject contentScope(cx, contentScopeArg);
   JSAutoRealm ar(cx, contentScope);
-  XPCWrappedNativeScope* nativeScope =
-      CompartmentPrivate::Get(contentScope)->scope;
+  XPCWrappedNativeScope* nativeScope = ObjectScope(contentScope);
 
   RootedObject scope(cx, nativeScope->EnsureContentXBLScope(cx));
   NS_ENSURE_TRUE(scope, nullptr);  // See bug 858642.
@@ -251,7 +250,7 @@ JSObject* GetUAWidgetScope(JSContext* cx, nsIPrincipal* principal) {
 
 bool AllowContentXBLScope(JS::Realm* realm) {
   JS::Compartment* comp = GetCompartmentForRealm(realm);
-  XPCWrappedNativeScope* scope = CompartmentPrivate::Get(comp)->scope;
+  XPCWrappedNativeScope* scope = CompartmentPrivate::Get(comp)->GetScope();
   MOZ_ASSERT(scope);
   return scope->AllowContentXBLScope(realm);
 }
