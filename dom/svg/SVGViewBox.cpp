@@ -13,8 +13,6 @@
 #include "SVGViewBoxSMILType.h"
 #include "nsTextFormatter.h"
 
-using namespace mozilla::dom;
-
 namespace mozilla {
 
 #define NUM_VIEWBOX_COMPONENTS 4
@@ -89,44 +87,8 @@ static SVGAttrTearoffTable<SVGViewBox, SVGViewBox::DOMBaseVal>
     sBaseSVGViewBoxTearoffTable;
 static SVGAttrTearoffTable<SVGViewBox, SVGViewBox::DOMAnimVal>
     sAnimSVGViewBoxTearoffTable;
-SVGAttrTearoffTable<SVGViewBox, SVGAnimatedRect>
+SVGAttrTearoffTable<SVGViewBox, dom::SVGAnimatedRect>
     SVGViewBox::sSVGAnimatedRectTearoffTable;
-
-//----------------------------------------------------------------------
-// Helper class: AutoChangeViewBoxNotifier
-// Stack-based helper class to pair calls to WillChangeViewBox and
-// DidChangeViewBox.
-class MOZ_RAII AutoChangeViewBoxNotifier {
- public:
-  AutoChangeViewBoxNotifier(
-      SVGViewBox* aViewBox, SVGElement* aSVGElement,
-      bool aDoSetAttr = true MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-      : mViewBox(aViewBox), mSVGElement(aSVGElement), mDoSetAttr(aDoSetAttr) {
-    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-    MOZ_ASSERT(mViewBox, "Expecting non-null viewBox");
-    MOZ_ASSERT(mSVGElement, "Expecting non-null element");
-
-    if (mDoSetAttr) {
-      mEmptyOrOldValue = mSVGElement->WillChangeViewBox();
-    }
-  }
-
-  ~AutoChangeViewBoxNotifier() {
-    if (mDoSetAttr) {
-      mSVGElement->DidChangeViewBox(mEmptyOrOldValue);
-    }
-    if (mViewBox->mAnimVal) {
-      mSVGElement->AnimationNeedsResample();
-    }
-  }
-
- private:
-  SVGViewBox* const mViewBox;
-  SVGElement* const mSVGElement;
-  nsAttrValue mEmptyOrOldValue;
-  bool mDoSetAttr;
-  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
-};
 
 /* Implementation of SVGViewBox methods */
 
@@ -180,10 +142,15 @@ void SVGViewBox::SetBaseValue(const SVGViewBoxRect& aRect,
     return;
   }
 
-  AutoChangeViewBoxNotifier notifier(this, aSVGElement);
+  nsAttrValue emptyOrOldValue = aSVGElement->WillChangeViewBox();
 
   mBaseVal = aRect;
   mHasBaseVal = true;
+
+  aSVGElement->DidChangeViewBox(emptyOrOldValue);
+  if (mAnimVal) {
+    aSVGElement->AnimationNeedsResample();
+  }
 }
 
 nsresult SVGViewBox::SetBaseValueString(const nsAString& aValue,
@@ -200,11 +167,19 @@ nsresult SVGViewBox::SetBaseValueString(const nsAString& aValue,
     return NS_OK;
   }
 
-  AutoChangeViewBoxNotifier notifier(this, aSVGElement, aDoSetAttr);
-
+  nsAttrValue emptyOrOldValue;
+  if (aDoSetAttr) {
+    emptyOrOldValue = aSVGElement->WillChangeViewBox();
+  }
   mHasBaseVal = true;
   mBaseVal = viewBox;
 
+  if (aDoSetAttr) {
+    aSVGElement->DidChangeViewBox(emptyOrOldValue);
+  }
+  if (mAnimVal) {
+    aSVGElement->AnimationNeedsResample();
+  }
   return NS_OK;
 }
 
@@ -218,19 +193,20 @@ void SVGViewBox::GetBaseValueString(nsAString& aValue) const {
                             (double)mBaseVal.height);
 }
 
-already_AddRefed<SVGAnimatedRect> SVGViewBox::ToSVGAnimatedRect(
+already_AddRefed<dom::SVGAnimatedRect> SVGViewBox::ToSVGAnimatedRect(
     SVGElement* aSVGElement) {
-  RefPtr<SVGAnimatedRect> domAnimatedRect =
+  RefPtr<dom::SVGAnimatedRect> domAnimatedRect =
       sSVGAnimatedRectTearoffTable.GetTearoff(this);
   if (!domAnimatedRect) {
-    domAnimatedRect = new SVGAnimatedRect(this, aSVGElement);
+    domAnimatedRect = new dom::SVGAnimatedRect(this, aSVGElement);
     sSVGAnimatedRectTearoffTable.AddTearoff(this, domAnimatedRect);
   }
 
   return domAnimatedRect.forget();
 }
 
-already_AddRefed<SVGIRect> SVGViewBox::ToDOMBaseVal(SVGElement* aSVGElement) {
+already_AddRefed<dom::SVGIRect> SVGViewBox::ToDOMBaseVal(
+    SVGElement* aSVGElement) {
   if (!mHasBaseVal || mBaseVal.none) {
     return nullptr;
   }
@@ -248,7 +224,8 @@ SVGViewBox::DOMBaseVal::~DOMBaseVal() {
   sBaseSVGViewBoxTearoffTable.RemoveTearoff(mVal);
 }
 
-already_AddRefed<SVGIRect> SVGViewBox::ToDOMAnimVal(SVGElement* aSVGElement) {
+already_AddRefed<dom::SVGIRect> SVGViewBox::ToDOMAnimVal(
+    SVGElement* aSVGElement) {
   if ((mAnimVal && mAnimVal->none) ||
       (!mAnimVal && (!mHasBaseVal || mBaseVal.none))) {
     return nullptr;
@@ -296,7 +273,7 @@ UniquePtr<SMILAttr> SVGViewBox::ToSMILAttr(SVGElement* aSVGElement) {
 }
 
 nsresult SVGViewBox::SMILViewBox ::ValueFromString(
-    const nsAString& aStr, const SVGAnimationElement* /*aSrcElement*/,
+    const nsAString& aStr, const dom::SVGAnimationElement* /*aSrcElement*/,
     SMILValue& aValue, bool& aPreventCachingOfSandwich) const {
   SVGViewBoxRect viewBox;
   nsresult res = SVGViewBoxRect::FromString(aStr, &viewBox);
