@@ -751,6 +751,10 @@ var UI = {
         this.reportError("error_runtimeVersionTooOld", report.runtimeVersion,
           report.minVersion);
       }
+      if (report.status == COMPATIBILITY_STATUS.TOO_OLD_67_DEBUGGER) {
+        this.reportError("error_runtimeVersionTooOld67Debugger",
+          report.runtimeVersion);
+      }
     }
   },
 
