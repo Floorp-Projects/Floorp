@@ -16,6 +16,38 @@ using namespace mozilla::dom;
 
 namespace mozilla {
 
+//----------------------------------------------------------------------
+// Helper class: AutoChangeNumberPairNotifier
+// Stack-based helper class to pair calls to WillChangeNumberPair and
+// DidChangeNumberPair.
+class MOZ_RAII AutoChangeNumberPairNotifier {
+ public:
+  AutoChangeNumberPairNotifier(SVGNumberPair* aNumberPair,
+                               SVGElement* aSVGElement
+                                   MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+      : mNumberPair(aNumberPair), mSVGElement(aSVGElement) {
+    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+    MOZ_ASSERT(mNumberPair, "Expecting non-null numberPair");
+    MOZ_ASSERT(mSVGElement, "Expecting non-null element");
+
+    mEmptyOrOldValue =
+        mSVGElement->WillChangeNumberPair(mNumberPair->mAttrEnum);
+  }
+
+  ~AutoChangeNumberPairNotifier() {
+    mSVGElement->DidChangeNumberPair(mNumberPair->mAttrEnum, mEmptyOrOldValue);
+    if (mNumberPair->mIsAnimated) {
+      mSVGElement->AnimationNeedsResample();
+    }
+  }
+
+ private:
+  SVGNumberPair* const mNumberPair;
+  SVGElement* const mSVGElement;
+  nsAttrValue mEmptyOrOldValue;
+  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
+};
+
 static SVGAttrTearoffTable<SVGNumberPair, SVGNumberPair::DOMAnimatedNumber>
     sSVGFirstAnimatedNumberTearoffTable;
 static SVGAttrTearoffTable<SVGNumberPair, SVGNumberPair::DOMAnimatedNumber>
@@ -89,15 +121,14 @@ void SVGNumberPair::SetBaseValue(float aValue, PairIndex aPairIndex,
   if (mIsBaseSet && mBaseVal[index] == aValue) {
     return;
   }
-  nsAttrValue emptyOrOldValue = aSVGElement->WillChangeNumberPair(mAttrEnum);
+
+  AutoChangeNumberPairNotifier notifier(this, aSVGElement);
+
   mBaseVal[index] = aValue;
   mIsBaseSet = true;
   if (!mIsAnimated) {
     mAnimVal[index] = aValue;
-  } else {
-    aSVGElement->AnimationNeedsResample();
   }
-  aSVGElement->DidChangeNumberPair(mAttrEnum, emptyOrOldValue);
 }
 
 void SVGNumberPair::SetBaseValues(float aValue1, float aValue2,
@@ -105,17 +136,16 @@ void SVGNumberPair::SetBaseValues(float aValue1, float aValue2,
   if (mIsBaseSet && mBaseVal[0] == aValue1 && mBaseVal[1] == aValue2) {
     return;
   }
-  nsAttrValue emptyOrOldValue = aSVGElement->WillChangeNumberPair(mAttrEnum);
+
+  AutoChangeNumberPairNotifier notifier(this, aSVGElement);
+
   mBaseVal[0] = aValue1;
   mBaseVal[1] = aValue2;
   mIsBaseSet = true;
   if (!mIsAnimated) {
     mAnimVal[0] = aValue1;
     mAnimVal[1] = aValue2;
-  } else {
-    aSVGElement->AnimationNeedsResample();
   }
-  aSVGElement->DidChangeNumberPair(mAttrEnum, emptyOrOldValue);
 }
 
 void SVGNumberPair::SetAnimValue(const float aValue[2],
