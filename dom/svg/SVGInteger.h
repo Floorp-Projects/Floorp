@@ -25,7 +25,6 @@ class SVGAnimationElement;
 
 class SVGInteger {
  public:
-  friend class AutoChangeIntegerNotifier;
   typedef mozilla::dom::SVGElement SVGElement;
 
   void Init(uint8_t aAttrEnum = 0xff, int32_t aValue = 0) {

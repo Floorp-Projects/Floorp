@@ -18,39 +18,6 @@ using namespace mozilla::dom;
 
 namespace mozilla {
 
-//----------------------------------------------------------------------
-// Helper class: AutoChangeIntegerPairNotifier
-// Stack-based helper class to pair calls to WillChangeIntegerPair and
-// DidChangeIntegerPair.
-class MOZ_RAII AutoChangeIntegerPairNotifier {
- public:
-  AutoChangeIntegerPairNotifier(SVGIntegerPair* aIntegerPair,
-                                SVGElement* aSVGElement
-                                    MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-      : mIntegerPair(aIntegerPair), mSVGElement(aSVGElement) {
-    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-    MOZ_ASSERT(mIntegerPair, "Expecting non-null integerPair");
-    MOZ_ASSERT(mSVGElement, "Expecting non-null element");
-
-    mEmptyOrOldValue =
-        mSVGElement->WillChangeIntegerPair(mIntegerPair->mAttrEnum);
-  }
-
-  ~AutoChangeIntegerPairNotifier() {
-    mSVGElement->DidChangeIntegerPair(mIntegerPair->mAttrEnum,
-                                      mEmptyOrOldValue);
-    if (mIntegerPair->mIsAnimated) {
-      mSVGElement->AnimationNeedsResample();
-    }
-  }
-
- private:
-  SVGIntegerPair* const mIntegerPair;
-  SVGElement* const mSVGElement;
-  nsAttrValue mEmptyOrOldValue;
-  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
-};
-
 static SVGAttrTearoffTable<SVGIntegerPair, SVGIntegerPair::DOMAnimatedInteger>
     sSVGFirstAnimatedIntegerTearoffTable;
 static SVGAttrTearoffTable<SVGIntegerPair, SVGIntegerPair::DOMAnimatedInteger>
@@ -128,13 +95,15 @@ void SVGIntegerPair::SetBaseValue(int32_t aValue, PairIndex aPairIndex,
     return;
   }
 
-  AutoChangeIntegerPairNotifier notifier(this, aSVGElement);
-
+  nsAttrValue emptyOrOldValue = aSVGElement->WillChangeIntegerPair(mAttrEnum);
   mBaseVal[index] = aValue;
   mIsBaseSet = true;
   if (!mIsAnimated) {
     mAnimVal[index] = aValue;
+  } else {
+    aSVGElement->AnimationNeedsResample();
   }
+  aSVGElement->DidChangeIntegerPair(mAttrEnum, emptyOrOldValue);
 }
 
 void SVGIntegerPair::SetBaseValues(int32_t aValue1, int32_t aValue2,
@@ -143,15 +112,17 @@ void SVGIntegerPair::SetBaseValues(int32_t aValue1, int32_t aValue2,
     return;
   }
 
-  AutoChangeIntegerPairNotifier notifier(this, aSVGElement);
-
+  nsAttrValue emptyOrOldValue = aSVGElement->WillChangeIntegerPair(mAttrEnum);
   mBaseVal[0] = aValue1;
   mBaseVal[1] = aValue2;
   mIsBaseSet = true;
   if (!mIsAnimated) {
     mAnimVal[0] = aValue1;
     mAnimVal[1] = aValue2;
+  } else {
+    aSVGElement->AnimationNeedsResample();
   }
+  aSVGElement->DidChangeIntegerPair(mAttrEnum, emptyOrOldValue);
 }
 
 void SVGIntegerPair::SetAnimValue(const int32_t aValue[2],

@@ -27,7 +27,6 @@ class SVGElement;
 
 class SVGBoolean {
  public:
-  friend class AutoChangeBooleanNotifier;
   typedef mozilla::dom::SVGElement SVGElement;
 
   void Init(uint8_t aAttrEnum = 0xff, bool aValue = false) {
