@@ -10,6 +10,7 @@
 #include "mozilla/layers/GeckoContentController.h"
 #include "nsCOMPtr.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/layers/MatrixMessage.h"
 
 class nsIDOMWindowUtils;
 
@@ -49,6 +50,8 @@ class ChromeProcessController : public mozilla::layers::GeckoContentController {
   virtual void Destroy() override;
 
   // GeckoContentController interface
+  virtual void NotifyLayerTransforms(
+      const nsTArray<MatrixMessage>& aTransforms) override;
   virtual void RequestContentRepaint(const RepaintRequest& aRequest) override;
   virtual void PostDelayedTask(already_AddRefed<Runnable> aTask,
                                int aDelayMs) override;

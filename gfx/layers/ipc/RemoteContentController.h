@@ -38,6 +38,9 @@ class RemoteContentController : public GeckoContentController,
 
   virtual ~RemoteContentController();
 
+  virtual void NotifyLayerTransforms(
+      const nsTArray<MatrixMessage>& aTransforms) override;
+
   virtual void RequestContentRepaint(const RepaintRequest& aRequest) override;
 
   virtual void HandleTap(TapType aTapType, const LayoutDevicePoint& aPoint,
@@ -86,6 +89,8 @@ class RemoteContentController : public GeckoContentController,
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
   virtual void Destroy() override;
+
+  virtual bool IsRemote() override;
 
  private:
   MessageLoop* mCompositorThread;

@@ -13,6 +13,7 @@
 #include "mozilla/layers/APZCCallbackHelper.h"
 #include "mozilla/layers/APZCTreeManagerParent.h"  // for APZCTreeManagerParent
 #include "mozilla/layers/APZThreadUtils.h"
+#include "mozilla/layers/MatrixMessage.h"
 #include "mozilla/gfx/GPUProcessManager.h"
 #include "mozilla/Unused.h"
 #include "Units.h"
@@ -26,6 +27,21 @@ RemoteContentController::RemoteContentController()
     : mCompositorThread(MessageLoop::current()), mCanSend(true) {}
 
 RemoteContentController::~RemoteContentController() {}
+
+void RemoteContentController::NotifyLayerTransforms(
+    const nsTArray<MatrixMessage>& aTransforms) {
+  if (MessageLoop::current() != mCompositorThread) {
+    // We have to send messages from the compositor thread
+    mCompositorThread->PostTask(NewRunnableMethod<nsTArray<MatrixMessage>>(
+        "layers::RemoteContentController::NotifyLayerTransforms", this,
+        &RemoteContentController::NotifyLayerTransforms, aTransforms));
+    return;
+  }
+
+  if (mCanSend) {
+    Unused << SendLayerTransforms(aTransforms);
+  }
+}
 
 void RemoteContentController::RequestContentRepaint(
     const RepaintRequest& aRequest) {
@@ -353,6 +369,8 @@ void RemoteContentController::Destroy() {
     Unused << SendDestroy();
   }
 }
+
+bool RemoteContentController::IsRemote() { return true; }
 
 }  // namespace layers
 }  // namespace mozilla

@@ -27,6 +27,12 @@ APZChild::~APZChild() {
   }
 }
 
+mozilla::ipc::IPCResult APZChild::RecvLayerTransforms(
+    const nsTArray<MatrixMessage>& aTransforms) {
+  mController->NotifyLayerTransforms(aTransforms);
+  return IPC_OK();
+}
+
 mozilla::ipc::IPCResult APZChild::RecvRequestContentRepaint(
     const RepaintRequest& aRequest) {
   MOZ_ASSERT(mController->IsRepaintThread());

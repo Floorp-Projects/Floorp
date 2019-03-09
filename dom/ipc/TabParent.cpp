@@ -2004,10 +2004,16 @@ LayoutDeviceIntRect TabParent::TransformChildToParent(
 
 LayoutDeviceToLayoutDeviceMatrix4x4
 TabParent::GetChildToParentConversionMatrix() {
-  // Placeholder: Replace this implementation with one that obtains the
-  // matrix from APZ/WebRender.
+  if (mChildToParentConversionMatrix) {
+    return *mChildToParentConversionMatrix;
+  }
   LayoutDevicePoint offset(-GetChildProcessOffset());
   return LayoutDeviceToLayoutDeviceMatrix4x4::Translation(offset);
+}
+
+void TabParent::SetChildToParentConversionMatrix(
+    const LayoutDeviceToLayoutDeviceMatrix4x4& aMatrix) {
+  mChildToParentConversionMatrix = Some(aMatrix);
 }
 
 LayoutDeviceIntPoint TabParent::GetChildProcessOffset() {
