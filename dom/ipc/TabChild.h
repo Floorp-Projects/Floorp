@@ -311,7 +311,7 @@ class TabChild final : public TabChildBase,
 
   mozilla::ipc::IPCResult RecvDeactivate();
 
-  MOZ_CAN_RUN_SCRIPT
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   virtual mozilla::ipc::IPCResult RecvMouseEvent(
       const nsString& aType, const float& aX, const float& aY,
       const int32_t& aButton, const int32_t& aClickCount,
@@ -576,13 +576,13 @@ class TabChild final : public TabChildBase,
                                  bool aPreventDefault) const;
   void SetTargetAPZC(uint64_t aInputBlockId,
                      const nsTArray<ScrollableLayerGuid>& aTargets) const;
-  MOZ_CAN_RUN_SCRIPT
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   mozilla::ipc::IPCResult RecvHandleTap(
       const layers::GeckoContentController::TapType& aType,
       const LayoutDevicePoint& aPoint, const Modifiers& aModifiers,
       const ScrollableLayerGuid& aGuid, const uint64_t& aInputBlockId) override;
 
-  MOZ_CAN_RUN_SCRIPT
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   mozilla::ipc::IPCResult RecvNormalPriorityHandleTap(
       const layers::GeckoContentController::TapType& aType,
       const LayoutDevicePoint& aPoint, const Modifiers& aModifiers,
@@ -670,10 +670,10 @@ class TabChild final : public TabChildBase,
 
   virtual bool DeallocPWindowGlobalChild(PWindowGlobalChild* aActor) override;
 
-  virtual PRemoteFrameChild* AllocPRemoteFrameChild(
+  virtual PBrowserBridgeChild* AllocPBrowserBridgeChild(
       const nsString& aName, const nsString& aRemoteType) override;
 
-  virtual bool DeallocPRemoteFrameChild(PRemoteFrameChild* aActor) override;
+  virtual bool DeallocPBrowserBridgeChild(PBrowserBridgeChild* aActor) override;
 
   virtual mozilla::ipc::IPCResult RecvDestroy() override;
 

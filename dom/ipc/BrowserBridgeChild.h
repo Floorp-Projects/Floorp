@@ -4,10 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_RemoteFrameChild_h
-#define mozilla_dom_RemoteFrameChild_h
+#ifndef mozilla_dom_BrowserBridgeChild_h
+#define mozilla_dom_BrowserBridgeChild_h
 
-#include "mozilla/dom/PRemoteFrameChild.h"
+#include "mozilla/dom/PBrowserBridgeChild.h"
 #include "mozilla/dom/TabChild.h"
 
 namespace mozilla {
@@ -16,20 +16,20 @@ namespace dom {
 /**
  * Child side for a remote frame.
  */
-class RemoteFrameChild : public PRemoteFrameChild {
+class BrowserBridgeChild : public PBrowserBridgeChild {
  public:
-  NS_INLINE_DECL_REFCOUNTING(RemoteFrameChild);
+  NS_INLINE_DECL_REFCOUNTING(BrowserBridgeChild);
 
   TabChild* Manager() {
     MOZ_ASSERT(mIPCOpen);
-    return static_cast<TabChild*>(PRemoteFrameChild::Manager());
+    return static_cast<TabChild*>(PBrowserBridgeChild::Manager());
   }
 
   mozilla::layers::LayersId GetLayersId() { return mLayersId; }
 
-  static already_AddRefed<RemoteFrameChild> Create(nsFrameLoader* aFrameLoader,
-                                                   const TabContext& aContext,
-                                                   const nsString& aRemoteType);
+  static already_AddRefed<BrowserBridgeChild> Create(
+      nsFrameLoader* aFrameLoader, const TabContext& aContext,
+      const nsString& aRemoteType);
 
   void UpdateDimensions(const nsIntRect& aRect,
                         const mozilla::ScreenIntSize& aSize);
@@ -38,12 +38,12 @@ class RemoteFrameChild : public PRemoteFrameChild {
 
   void Activate();
 
-  static RemoteFrameChild* GetFrom(nsFrameLoader* aFrameLoader);
+  static BrowserBridgeChild* GetFrom(nsFrameLoader* aFrameLoader);
 
-  static RemoteFrameChild* GetFrom(nsIContent* aContent);
+  static BrowserBridgeChild* GetFrom(nsIContent* aContent);
 
  protected:
-  friend class PRemoteFrameChild;
+  friend class PBrowserBridgeChild;
 
   mozilla::ipc::IPCResult RecvSetLayersId(
       const mozilla::layers::LayersId& aLayersId);
@@ -51,8 +51,8 @@ class RemoteFrameChild : public PRemoteFrameChild {
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
  private:
-  explicit RemoteFrameChild(nsFrameLoader* aFrameLoader);
-  ~RemoteFrameChild();
+  explicit BrowserBridgeChild(nsFrameLoader* aFrameLoader);
+  ~BrowserBridgeChild();
 
   mozilla::layers::LayersId mLayersId;
   bool mIPCOpen;
@@ -62,4 +62,4 @@ class RemoteFrameChild : public PRemoteFrameChild {
 }  // namespace dom
 }  // namespace mozilla
 
-#endif  // !defined(mozilla_dom_RemoteFrameParent_h)
+#endif  // !defined(mozilla_dom_BrowserBridgeParent_h)
