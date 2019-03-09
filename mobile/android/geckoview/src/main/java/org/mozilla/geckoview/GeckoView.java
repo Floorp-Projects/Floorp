@@ -465,7 +465,7 @@ public class GeckoView extends FrameLayout {
             // onConfigurationChanged is not called for 180 degree orientation changes,
             // we will miss such rotations and the screen orientation will not be
             // updated.
-            mRuntime.configurationChanged(newConfig);
+            mRuntime.orientationChanged(newConfig.orientation);
         }
     }
 
