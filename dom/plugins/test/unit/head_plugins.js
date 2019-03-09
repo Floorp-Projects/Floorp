@@ -15,7 +15,7 @@ function allow_all_plugins() {
 }
 
 // Finds the test plugin library
-function get_test_plugin(secondplugin=false) {
+function get_test_plugin(secondplugin = false) {
   for (let dir of gDirSvc.get("APluginsDL", Ci.nsISimpleEnumerator)) {
     let name = get_platform_specific_plugin_name(secondplugin);
     let plugin = dir.clone();
@@ -29,7 +29,7 @@ function get_test_plugin(secondplugin=false) {
 }
 
 // Finds the test nsIPluginTag
-function get_test_plugintag(aName="Test Plug-in") {
+function get_test_plugintag(aName = "Test Plug-in") {
   var name = aName || "Test Plug-in";
   var host = Cc["@mozilla.org/plugin/host;1"].
              getService(Ci.nsIPluginHost);
@@ -55,27 +55,21 @@ function do_get_profile_startup() {
   let dirSvc = Cc["@mozilla.org/file/directory_service;1"]
                  .getService(Ci.nsIProperties);
   let provider = {
-    getFile: function(prop, persistent) {
+    getFile(prop, persistent) {
       persistent.value = true;
       if (prop == "ProfDS") {
         return file.clone();
       }
       throw Cr.NS_ERROR_FAILURE;
     },
-    QueryInterface: function(iid) {
-      if (iid.equals(Ci.nsIDirectoryServiceProvider) ||
-          iid.equals(Ci.nsISupports)) {
-        return this;
-      }
-      throw Cr.NS_ERROR_NO_INTERFACE;
-    }
+    QueryInterface: ChromeUtils.generateQI(["nsIDirectoryServiceProvider"]),
   };
   dirSvc.QueryInterface(Ci.nsIDirectoryService)
         .registerProvider(provider);
   return file.clone();
 }
 
-function get_platform_specific_plugin_name(secondplugin=false) {
+function get_platform_specific_plugin_name(secondplugin = false) {
   if (secondplugin) {
     if (gIsWindows) return "npsecondtest.dll";
     if (gIsOSX) return "SecondTest.plugin";
@@ -92,7 +86,7 @@ function get_platform_specific_plugin_suffix() {
   if (gIsWindows) return ".dll";
   else if (gIsOSX) return ".plugin";
   else if (gIsLinux) return ".so";
-  else return null;
+  return null;
 }
 
 function get_test_plugin_no_symlink() {

@@ -43,7 +43,7 @@ function run_test() {
   let testNames = [
     pluginName + "2",
     pluginName.toUpperCase() + "_11_5_42_2323",
-    pluginName + "-5.2.7"
+    pluginName + "-5.2.7",
   ];
   testNames.forEach(function(leafName) {
     dump("Checking " + leafName + ".\n");

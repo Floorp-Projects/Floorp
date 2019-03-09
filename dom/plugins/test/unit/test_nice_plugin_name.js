@@ -8,12 +8,12 @@ const XULAPPINFO_CID = Components.ID("{c763b610-9d49-455a-bbd2-ede71682a1ac}");
 
 var gAppInfo = null;
 
-function createAppInfo(ID, name, version, platformVersion="1.0") {
+function createAppInfo(ID, name, version, platformVersion = "1.0") {
   let tmp = {};
   ChromeUtils.import("resource://testing-common/AppInfo.jsm", tmp);
   tmp.updateAppInfo({
     ID, name, version, platformVersion,
-    crashReporter: true
+    crashReporter: true,
   });
   gAppInfo = tmp.getAppInfo();
 }
