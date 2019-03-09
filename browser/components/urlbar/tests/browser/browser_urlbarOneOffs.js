@@ -281,10 +281,6 @@ function assertState(result, oneOff, textValue = undefined) {
     "Expected result should be selected");
   Assert.equal(oneOffSearchButtons.selectedButtonIndex,
     oneOff, "Expected one-off should be selected");
-  // TODO Bug 1527946: Fix textValue differences for QuantumBar
-  if (UrlbarPrefs.get("quantumbar")) {
-    return;
-  }
   if (textValue !== undefined) {
     Assert.equal(gURLBar.textValue, textValue, "Expected textValue");
   }
