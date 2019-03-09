@@ -15,6 +15,17 @@ typedef int64_t WebGLsizeiptr;
 typedef int64_t WebGLintptr;
 typedef bool WebGLboolean;
 
+// -
+// Prevent implicit conversions into calloc and malloc.
+
+template<typename RequireSizeT1, typename RequireSizeT2>
+void* calloc(RequireSizeT1 n, RequireSizeT2 size) = delete;
+
+template<typename RequireSizeT>
+void* malloc(RequireSizeT size) = delete;
+
+// -
+
 namespace mozilla {
 namespace gl {
 class GLContext;  // This is going to be needed a lot.
