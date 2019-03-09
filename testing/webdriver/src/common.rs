@@ -90,6 +90,62 @@ impl WebElement {
     }
 }
 
+#[derive(Clone, Debug, PartialEq)]
+pub struct WebFrame(pub String);
+
+// private
+#[derive(Serialize, Deserialize)]
+struct WebFrameObject {
+    #[serde(rename = "frame-075b-4da1-b6ba-e579c2d3230a")]
+    id: String,
+}
+
+impl Serialize for WebFrame {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        WebFrameObject { id: self.0.clone() }.serialize(serializer)
+    }
+}
+
+impl<'de> Deserialize<'de> for WebFrame {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        Deserialize::deserialize(deserializer).map(|WebFrameObject { id }| WebFrame(id))
+    }
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct WebWindow(pub String);
+
+// private
+#[derive(Serialize, Deserialize)]
+struct WebWindowObject {
+    #[serde(rename = "window-fcc6-11e5-b4f8-330a88ab9d7f")]
+    id: String,
+}
+
+impl Serialize for WebWindow {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        WebWindowObject { id: self.0.clone() }.serialize(serializer)
+    }
+}
+
+impl<'de> Deserialize<'de> for WebWindow {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        Deserialize::deserialize(deserializer).map(|WebWindowObject { id }| WebWindow(id))
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -190,5 +246,33 @@ mod tests {
     fn test_json_webelement_invalid() {
         let data = r#"{"elem-6066-11e4-a52e-4f735466cecf":"elem"}"#;
         assert!(serde_json::from_str::<WebElement>(&data).is_err());
+    }
+
+    #[test]
+    fn test_json_webframe() {
+        let json = r#"{"frame-075b-4da1-b6ba-e579c2d3230a":"frm"}"#;
+        let data = WebFrame("frm".into());
+
+        check_serialize_deserialize(&json, &data);
+    }
+
+    #[test]
+    fn test_json_webframe_invalid() {
+        let data = r#"{"frm-075b-4da1-b6ba-e579c2d3230a":"frm"}"#;
+        assert!(serde_json::from_str::<WebFrame>(&data).is_err());
+    }
+
+    #[test]
+    fn test_json_webwindow() {
+        let json = r#"{"window-fcc6-11e5-b4f8-330a88ab9d7f":"window"}"#;
+        let data = WebWindow("window".into());
+
+        check_serialize_deserialize(&json, &data);
+    }
+
+    #[test]
+    fn test_json_webwindow_invalid() {
+        let data = r#"{""wind-fcc6-11e5-b4f8-330a88ab9d7f":"window"}"#;
+        assert!(serde_json::from_str::<WebWindow>(&data).is_err());
     }
 }
