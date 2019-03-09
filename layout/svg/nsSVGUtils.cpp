@@ -1295,6 +1295,8 @@ gfxRect nsSVGUtils::PathExtentsToMaxStrokeExtents(const gfxRect& aPathExtents,
 
   // The stroke can extend even further for paths that can be affected by
   // stroke-miterlimit.
+  // We only need to do this if the limit is greater than 1, but it's probably
+  // not worth optimizing for that.
   bool affectedByMiterlimit = aFrame->GetContent()->IsAnyOfSVGElements(
       nsGkAtoms::path, nsGkAtoms::polyline, nsGkAtoms::polygon);
 
