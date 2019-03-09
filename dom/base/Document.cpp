@@ -271,6 +271,7 @@
 #  include "mozilla/dom/XULBroadcastManager.h"
 #  include "mozilla/dom/XULPersist.h"
 #  include "nsIXULWindow.h"
+#  include "nsXULPrototypeDocument.h"
 #  include "nsXULCommandDispatcher.h"
 #  include "nsXULPopupManager.h"
 #  include "nsIDocShellTreeOwner.h"
@@ -1745,6 +1746,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(Document)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCommandDispatcher)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFeaturePolicy)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSuppressedEventListener)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPrototypeDocument)
 
   // Traverse all our nsCOMArrays.
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mStyleSheets)
@@ -1837,6 +1839,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(Document)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocumentL10n);
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mFeaturePolicy)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mSuppressedEventListener)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mPrototypeDocument)
 
   tmp->mParentDocument = nullptr;
 
@@ -4879,7 +4882,8 @@ static void AssertAboutPageHasCSP(nsIURI* aDocumentURI,
 void Document::EndLoad() {
 #if defined(DEBUG) && !defined(ANDROID)
   // only assert if nothing stopped the load on purpose
-  if (!mParserAborted) {
+  // TODO: we probably also want to check XUL documents here too
+  if (!mParserAborted && !IsXULDocument()) {
     AssertAboutPageHasCSP(mDocumentURI, NodePrincipal());
   }
 #endif
@@ -6062,6 +6066,10 @@ void Document::TryCancelFrameLoaderInitialization(nsIDocShell* aShell) {
       return;
     }
   }
+}
+
+void Document::SetPrototypeDocument(nsXULPrototypeDocument* aPrototype) {
+  mPrototypeDocument = aPrototype;
 }
 
 Document* Document::RequestExternalResource(
@@ -8204,7 +8212,8 @@ void Document::SetReadyStateInternal(ReadyState rs,
   if (READYSTATE_INTERACTIVE == rs) {
     if (nsContentUtils::IsSystemPrincipal(NodePrincipal())) {
       Element* root = GetRootElement();
-      if (root && root->HasAttr(kNameSpaceID_None, nsGkAtoms::mozpersist)) {
+      if ((root && root->HasAttr(kNameSpaceID_None, nsGkAtoms::mozpersist)) ||
+          IsXULDocument()) {
         mXULPersist = new XULPersist(this);
         mXULPersist->Init();
       }
@@ -12049,6 +12058,12 @@ Document* Document::GetSameTypeParentDocument() {
   }
 
   return parent->GetDocument();
+}
+
+void Document::TraceProtos(JSTracer* aTrc) {
+  if (mPrototypeDocument) {
+    mPrototypeDocument->TraceProtos(aTrc);
+  }
 }
 
 /**

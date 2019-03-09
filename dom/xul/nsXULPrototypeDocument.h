@@ -13,6 +13,7 @@
 #include "nsTArray.h"
 #include "nsISerializable.h"
 #include "nsCycleCollectionParticipant.h"
+#include <functional>
 
 class nsAtom;
 class nsIPrincipal;
@@ -20,12 +21,6 @@ class nsIURI;
 class nsNodeInfoManager;
 class nsXULPrototypeElement;
 class nsXULPrototypePI;
-
-namespace mozilla {
-namespace dom {
-class XULDocument;
-}  // namespace dom
-}  // namespace mozilla
 
 /**
  * A "prototype" document that stores shared document information
@@ -37,6 +32,8 @@ class XULDocument;
 class nsXULPrototypeDocument final : public nsISerializable {
  public:
   static nsresult Create(nsIURI* aURI, nsXULPrototypeDocument** aResult);
+
+  typedef std::function<void()> Callback;
 
   // nsISupports interface
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -78,7 +75,7 @@ class nsXULPrototypeDocument final : public nsISerializable {
    * XULDocument::OnPrototypeLoadDone()) and sets aLoaded to false.
    * Otherwise sets aLoaded to true.
    */
-  nsresult AwaitLoadDone(mozilla::dom::XULDocument* aDocument, bool* aResult);
+  nsresult AwaitLoadDone(Callback&& aCallback, bool* aResult);
 
   /**
    * Notifies each document registered via AwaitLoadDone on this
@@ -102,7 +99,7 @@ class nsXULPrototypeDocument final : public nsISerializable {
   nsTArray<RefPtr<nsXULPrototypePI> > mProcessingInstructions;
 
   bool mLoaded;
-  nsTArray<RefPtr<mozilla::dom::XULDocument> > mPrototypeWaiters;
+  nsTArray<Callback> mPrototypeWaiters;
 
   RefPtr<nsNodeInfoManager> mNodeInfoManager;
 

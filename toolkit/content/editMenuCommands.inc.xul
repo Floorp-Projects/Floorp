@@ -1,8 +1,4 @@
-<script type="application/javascript" src="chrome://global/content/editMenuOverlay.js"
-#ifdef BROWSER_XHTML
-xmlns="http://www.w3.org/1999/xhtml"
-#endif
-/>
+<script type="application/javascript" src="chrome://global/content/editMenuOverlay.js"/>
 <commandset id="editMenuCommands">
   <commandset id="editMenuCommandSetAll" commandupdater="true" events="focus,select"
               oncommandupdate="goUpdateGlobalEditMenuItems()"/>

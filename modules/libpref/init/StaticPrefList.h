@@ -526,6 +526,13 @@ VARCACHE_PREF(
   bool, false
 )
 
+// This currently only affects XHTML. For XUL the cache is always allowed.
+VARCACHE_PREF(
+  "dom.prototype_document_cache.enabled",
+   dom_prototype_document_cache_enabled,
+  bool, true
+)
+
 VARCACHE_PREF(
   "dom.storage_access.auto_grants.delayed",
    dom_storage_access_auto_grants_delayed,

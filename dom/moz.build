@@ -73,6 +73,7 @@ DIRS += [
     'permission',
     'plugins/base',
     'plugins/ipc',
+    'prototype',
     'indexedDB',
     'system',
     'ipc',
