@@ -263,8 +263,9 @@ var supported_properties = {
     "stroke-dasharray": [ test_dasharray_transition ],
     "stroke-dashoffset": [ test_length_transition, test_percent_transition,
                            test_length_unclamped, test_percent_unclamped, ],
-    "stroke-miterlimit": [ test_float_aboveOne_transition,
-                           test_float_aboveOne_clamped ],
+    "stroke-miterlimit": [ test_float_zeroToOne_transition,
+                           test_float_aboveOne_transition,
+                           test_float_aboveZero_clamped ],
     "stroke-opacity" : [ test_float_zeroToOne_transition,
                          // opacity is clamped in computed style
                          // (not parsing/interpolation)
@@ -1350,7 +1351,7 @@ function test_float_zeroToOne_clamped_or_unclamped(prop, is_clamped) {
   div.style.setProperty("transition-timing-function", "linear", "");
 }
 
-// Test using float values in the range [1, infinity) (e.g. stroke-miterlimit)
+// Test using float values in the range [1, infinity)
 function test_float_aboveOne_transition(prop) {
   div.style.setProperty("transition-property", "none", "");
   div.style.setProperty(prop, "1", "");
@@ -1363,15 +1364,15 @@ function test_float_aboveOne_transition(prop) {
   check_distance(prop, "1", "1.275", "2.1");
 }
 
-function test_float_aboveOne_clamped(prop) {
+function test_float_aboveZero_clamped(prop) {
   div.style.setProperty("transition-timing-function", FUNC_NEGATIVE, "");
   div.style.setProperty("transition-property", "none", "");
-  div.style.setProperty(prop, "1", "");
-  is(cs.getPropertyValue(prop), "1",
+  div.style.setProperty(prop, "0", "");
+  is(cs.getPropertyValue(prop), "0",
      "float-valued property " + prop + ": flush before clamping test");
   div.style.setProperty("transition-property", prop, "");
   div.style.setProperty(prop, "5", "");
-  is(cs.getPropertyValue(prop), "1",
+  is(cs.getPropertyValue(prop), "0",
      "float-valued property " + prop + ": clamping of negatives");
   div.style.setProperty("transition-timing-function", "linear", "");
 }

@@ -1357,7 +1357,10 @@ JSObject* js::CloneObject(JSContext* cx, HandleObject obj,
 
   RootedObject clone(cx);
   if (obj->isNative()) {
-    clone = NewObjectWithGivenTaggedProto(cx, obj->getClass(), proto);
+    // CloneObject is used to create the target object for JSObject::swap() and
+    // swap() requires its arguments are tenured, so ensure tenure allocation.
+    clone = NewObjectWithGivenTaggedProto(cx, obj->getClass(), proto,
+                                          NewObjectKind::TenuredObject);
     if (!clone) {
       return nullptr;
     }
@@ -1377,8 +1380,17 @@ JSObject* js::CloneObject(JSContext* cx, HandleObject obj,
     ProxyOptions options;
     options.setClass(obj->getClass());
 
-    clone = ProxyObject::New(cx, GetProxyHandler(obj), JS::NullHandleValue,
-                             proto, options);
+    auto* handler = GetProxyHandler(obj);
+
+    // Same as above, require tenure allocation of the clone. This means for
+    // proxy objects we need to reject nursery allocatable proxies.
+    if (handler->canNurseryAllocate()) {
+      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                JSMSG_CANT_CLONE_OBJECT);
+      return nullptr;
+    }
+
+    clone = ProxyObject::New(cx, handler, JS::NullHandleValue, proto, options);
     if (!clone) {
       return nullptr;
     }
