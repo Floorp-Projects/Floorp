@@ -22,6 +22,7 @@
 #include "mozilla/layers/CompositorBridgeParent.h"
 #include "mozilla/layers/LayerMetricsWrapper.h"
 #include "mozilla/layers/APZThreadUtils.h"
+#include "mozilla/layers/MatrixMessage.h"
 #include "mozilla/TypedEnumBits.h"
 #include "mozilla/UniquePtr.h"
 #include "apz/src/APZCTreeManager.h"
@@ -103,6 +104,7 @@ static TimeStamp GetStartupTime() {
 
 class MockContentController : public GeckoContentController {
  public:
+  MOCK_METHOD1(NotifyLayerTransforms, void(const nsTArray<MatrixMessage>&));
   MOCK_METHOD1(RequestContentRepaint, void(const RepaintRequest&));
   MOCK_METHOD2(RequestFlingSnap,
                void(const ScrollableLayerGuid::ViewID& aScrollId,

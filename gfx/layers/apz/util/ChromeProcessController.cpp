@@ -48,6 +48,18 @@ void ChromeProcessController::InitializeRoot() {
   APZCCallbackHelper::InitializeRootDisplayport(GetPresShell());
 }
 
+void ChromeProcessController::NotifyLayerTransforms(
+    const nsTArray<MatrixMessage>& aTransforms) {
+  if (MessageLoop::current() != mUILoop) {
+    mUILoop->PostTask(NewRunnableMethod<nsTArray<MatrixMessage>>(
+        "layers::ChromeProcessController::NotifyLayerTransforms", this,
+        &ChromeProcessController::NotifyLayerTransforms, aTransforms));
+    return;
+  }
+
+  APZCCallbackHelper::NotifyLayerTransforms(aTransforms);
+}
+
 void ChromeProcessController::RequestContentRepaint(
     const RepaintRequest& aRequest) {
   MOZ_ASSERT(IsRepaintThread());

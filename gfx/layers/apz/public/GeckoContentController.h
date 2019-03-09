@@ -13,6 +13,7 @@
 #include "mozilla/Assertions.h"                  // for MOZ_ASSERT_HELPER2
 #include "mozilla/DefineEnum.h"                  // for MOZ_DEFINE_ENUM
 #include "mozilla/EventForwards.h"               // for Modifiers
+#include "mozilla/layers/MatrixMessage.h"        // for MatrixMessage
 #include "mozilla/layers/RepaintRequest.h"       // for RepaintRequest
 #include "mozilla/layers/ScrollableLayerGuid.h"  // for ScrollableLayerGuid, etc
 #include "nsISupportsImpl.h"
@@ -26,6 +27,15 @@ namespace layers {
 class GeckoContentController {
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(GeckoContentController)
+
+  /**
+   * Notifies the content side of the most recently computed transforms for
+   * each layers subtree to the root. The nsTArray will contain one
+   *  MatrixMessage for each layers id in the current APZ tree, along with the
+   * corresponding transform.
+   */
+  virtual void NotifyLayerTransforms(
+      const nsTArray<MatrixMessage>& aTransforms) = 0;
 
   /**
    * Requests a paint of the given RepaintRequest |aRequest| from Gecko.
@@ -189,6 +199,11 @@ class GeckoContentController {
    * Needs to be called on the main thread.
    */
   virtual void Destroy() {}
+
+  /**
+   * Whether this is RemoteContentController.
+   */
+  virtual bool IsRemote() { return false; }
 
  protected:
   // Protected destructor, to discourage deletion outside of Release():

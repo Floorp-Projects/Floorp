@@ -32,6 +32,7 @@
 #include "mozilla/layers/AsyncDragMetrics.h"         // for AsyncDragMetrics
 #include "mozilla/layers/CompositorBridgeParent.h"  // for CompositorBridgeParent, etc
 #include "mozilla/layers/LayerMetricsWrapper.h"
+#include "mozilla/layers/MatrixMessage.h"
 #include "mozilla/layers/WebRenderScrollDataWrapper.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/mozalloc.h"  // for operator new
@@ -552,6 +553,7 @@ APZCTreeManager::UpdateHitTestingTreeImpl(LayersId aRootLayerTreeId,
     mRootNode->Dump("  ");
   }
 #endif
+  CollectTransformsForChromeMainThread(aRootLayerTreeId);
 }
 
 void APZCTreeManager::UpdateFocusState(LayersId aRootLayerTreeId,
@@ -3169,6 +3171,38 @@ bool APZCTreeManager::GetAPZTestData(LayersId aLayersId,
   }
   *aOutData = *(it->second);
   return true;
+}
+
+void APZCTreeManager::CollectTransformsForChromeMainThread(
+    LayersId aRootLayerTreeId) {
+  RefPtr<GeckoContentController> controller =
+      GetContentController(aRootLayerTreeId);
+  if (!controller) {
+    return;
+  }
+  if (controller->IsRemote() && !gfxPrefs::FissionApzMatricesWithGpuProcess()) {
+    // Avoid IPC errors in the GPU process case until
+    // https://bugzilla.mozilla.org/show_bug.cgi?id=1533673
+    // is resolved.
+    return;
+  }
+  nsTArray<MatrixMessage> messages;
+  {
+    RecursiveMutexAutoLock lock(mTreeLock);
+    // This formulation duplicates matrix multiplications closer
+    // to the root of the tree. For now, aiming for separation
+    // of concerns rather than minimum number of multiplications.
+    ForEachNode<ReverseIterator>(
+        mRootNode.get(), [&messages](HitTestingTreeNode* aNode) {
+          LayersId layersId = aNode->GetLayersId();
+          HitTestingTreeNode* parent = aNode->GetParent();
+          if (!parent || layersId != parent->GetLayersId()) {
+            messages.AppendElement(
+                MatrixMessage(aNode->GetCSSTransformToRoot(), layersId));
+          }
+        });
+  }
+  controller->NotifyLayerTransforms(messages);
 }
 
 /*static*/

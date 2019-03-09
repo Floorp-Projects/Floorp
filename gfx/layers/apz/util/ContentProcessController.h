@@ -39,6 +39,9 @@ class ContentProcessController final : public GeckoContentController {
 
   // GeckoContentController
 
+  void NotifyLayerTransforms(
+      const nsTArray<MatrixMessage>& aTransforms) override;
+
   void RequestContentRepaint(const RepaintRequest& aRequest) override;
 
   void HandleTap(TapType aType, const LayoutDevicePoint& aPoint,

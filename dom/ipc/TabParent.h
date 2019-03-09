@@ -518,6 +518,9 @@ class TabParent final : public PBrowserParent,
   // space of the child process to the coordinate space of the parent process.
   LayoutDeviceToLayoutDeviceMatrix4x4 GetChildToParentConversionMatrix();
 
+  void SetChildToParentConversionMatrix(
+      const LayoutDeviceToLayoutDeviceMatrix4x4& aMatrix);
+
   // Returns the offset from the origin of our frameloader's nearest widget to
   // the origin of its layout frame. This offset is used to translate event
   // coordinates relative to the PuppetWidget origin in the child process.
@@ -766,6 +769,8 @@ class TabParent final : public PBrowserParent,
 
   layout::RenderFrame mRenderFrame;
   LayersObserverEpoch mLayerTreeEpoch;
+
+  Maybe<LayoutDeviceToLayoutDeviceMatrix4x4> mChildToParentConversionMatrix;
 
   // If this flag is set, then the tab's layers will be preserved even when
   // the tab's docshell is inactive.

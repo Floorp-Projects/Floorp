@@ -61,6 +61,11 @@ enum class PixelCastJustification : uint8_t {
   LayerIsImage,
   // External pixels are the same scale as screen pixels
   ExternalIsScreen,
+  // LayerToScreenMatrix is used as LayoutDeviceToLayoutDevice, because
+  // out-of-process iframes uses LayoutDevicePixels as the type system-visible
+  // type of their top-level event coordinate space even if technically
+  // inaccurate.
+  ContentProcessIsLayerInUiProcess,
 };
 
 template <class TargetUnits, class SourceUnits>
