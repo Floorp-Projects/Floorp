@@ -34,14 +34,21 @@ class CompatibilityWarning extends PureComponent {
       return null;
     }
 
-    const isTooOld = status === COMPATIBILITY_STATUS.TOO_OLD;
-    const localizationId = isTooOld ?
-      "about-debugging-runtime-version-too-old" :
-      "about-debugging-runtime-version-too-recent";
-
-    const statusClassName = isTooOld ?
-      "js-compatibility-warning-too-old" :
-      "js-compatibility-warning-too-recent";
+    let localizationId, statusClassName;
+    switch (status) {
+      case COMPATIBILITY_STATUS.TOO_OLD:
+        statusClassName = "js-compatibility-warning-too-old";
+        localizationId = "about-debugging-runtime-version-too-old";
+        break;
+      case COMPATIBILITY_STATUS.TOO_RECENT:
+        statusClassName = "js-compatibility-warning-too-recent";
+        localizationId = "about-debugging-runtime-version-too-recent";
+        break;
+      case COMPATIBILITY_STATUS.TOO_OLD_67_DEBUGGER:
+        statusClassName = "js-compatibility-warning-too-old-67-debugger";
+        localizationId = "about-debugging-runtime-version-too-old-67-debugger";
+        break;
+    }
 
     return Message(
       {
