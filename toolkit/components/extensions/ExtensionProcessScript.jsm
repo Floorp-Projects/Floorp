@@ -48,8 +48,6 @@ var extensions = new DefaultWeakMap(policy => {
   return new ExtensionChild.BrowserExtensionContent(policy);
 });
 
-var pendingExtensions = new Map();
-
 var ExtensionManager;
 
 class ExtensionGlobal {
@@ -125,47 +123,14 @@ ExtensionManager = {
       global => this.globals.set(global, new ExtensionGlobal(global)),
       "tab-content-frameloader-created");
 
-    this.updateStubExtensions();
-
     for (let id of sharedData.get("extensions/activeIDs") || []) {
       this.initExtension(getData({id}));
     }
   },
 
-  initStubPolicy(id, data) {
-    let resolveReadyPromise;
-    let readyPromise = new Promise(resolve => {
-      resolveReadyPromise = resolve;
-    });
-
-    let policy = new WebExtensionPolicy({
-      id,
-      localizeCallback() {},
-      readyPromise,
-      allowedOrigins: new MatchPatternSet([]),
-      ...data,
-    });
-
-    try {
-      policy.active = true;
-
-      pendingExtensions.set(id, {policy, resolveReadyPromise});
-    } catch (e) {
-      Cu.reportError(e);
-    }
-  },
-
-  updateStubExtensions() {
-    for (let [id, data] of sharedData.get("extensions/pending") || []) {
-      if (!pendingExtensions.has(id)) {
-        this.initStubPolicy(id, data);
-      }
-    }
-  },
-
   initExtensionPolicy(extension) {
     let policy = WebExtensionPolicy.getByID(extension.id);
-    if (!policy || pendingExtensions.has(extension.id)) {
+    if (!policy) {
       let localizeCallback;
       if (extension.localize) {
         // We have a real Extension object.
@@ -221,13 +186,6 @@ ExtensionManager = {
         registeredContentScripts.set(scriptId, script);
       }
 
-      let stub = pendingExtensions.get(extension.id);
-      if (stub) {
-        pendingExtensions.delete(extension.id);
-        stub.policy.active = false;
-        stub.resolveReadyPromise(policy);
-      }
-
       policy.active = true;
       policy.instanceId = extension.instanceId;
       policy.optionalPermissions = extension.optionalPermissions;
@@ -242,12 +200,6 @@ ExtensionManager = {
     let policy = this.initExtensionPolicy(data);
 
     policy.injectContentScripts();
-  },
-
-  handleEvent(event) {
-    if (event.type === "change" && event.changedKeys.includes("extensions/pending")) {
-      this.updateStubExtensions();
-    }
   },
 
   receiveMessage({name, data}) {

@@ -174,10 +174,6 @@ WebExtensionPolicy::WebExtensionPolicy(GlobalObject& aGlobal,
     mContentScripts.AppendElement(std::move(contentScript));
   }
 
-  if (aInit.mReadyPromise.WasPassed()) {
-    mReadyPromise = &aInit.mReadyPromise.Value();
-  }
-
   nsresult rv = NS_NewURI(getter_AddRefs(mBaseURI), aInit.mBaseURL);
   if (NS_FAILED(rv)) {
     aRv.Throw(rv);
@@ -458,14 +454,6 @@ bool WebExtensionPolicy::CanAccessWindow(
   nsIDocShell* docShell = aWindow.get()->GetDocShell();
   nsCOMPtr<nsILoadContext> loadContext = do_QueryInterface(docShell);
   return !(loadContext && loadContext->UsePrivateBrowsing());
-}
-
-void WebExtensionPolicy::GetReadyPromise(JSContext* aCx, JS::MutableHandleObject aResult) const {
-  if (mReadyPromise) {
-    aResult.set(mReadyPromise->PromiseObj());
-  } else {
-    aResult.set(nullptr);
-  }
 }
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(WebExtensionPolicy, mParent,
