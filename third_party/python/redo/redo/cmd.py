@@ -17,16 +17,26 @@ def main(argv):
 
     parser = ArgumentParser()
     parser.add_argument(
-        "-a", "--attempts", type=int, default=5,
-        help="How many times to retry.")
+        "-a", "--attempts", type=int, default=5, help="How many times to retry."
+    )
     parser.add_argument(
-        "-s", "--sleeptime", type=int, default=60,
-        help="How long to sleep between attempts. Sleeptime doubles after each attempt.")
+        "-s",
+        "--sleeptime",
+        type=int,
+        default=60,
+        help="How long to sleep between attempts. Sleeptime doubles after each attempt.",
+    )
     parser.add_argument(
-        "-m", "--max-sleeptime", type=int, default=5*60,
-        help="Maximum length of time to sleep between attempts (limits backoff length).")
+        "-m",
+        "--max-sleeptime",
+        type=int,
+        default=5 * 60,
+        help="Maximum length of time to sleep between attempts (limits backoff length).",
+    )
     parser.add_argument("-v", "--verbose", action="store_true", default=False)
-    parser.add_argument("cmd", nargs=REMAINDER, help="Command to run. Eg: wget http://blah")
+    parser.add_argument(
+        "cmd", nargs=REMAINDER, help="Command to run. Eg: wget http://blah"
+    )
 
     args = parser.parse_args(argv[1:])
 
@@ -38,14 +48,20 @@ def main(argv):
         logging.getLogger("retry").setLevel(logging.ERROR)
 
     try:
-        with retrying(check_call, attempts=args.attempts, sleeptime=args.sleeptime,
-                      max_sleeptime=args.max_sleeptime,
-                      retry_exceptions=(CalledProcessError,)) as r_check_call:
+        with retrying(
+            check_call,
+            attempts=args.attempts,
+            sleeptime=args.sleeptime,
+            max_sleeptime=args.max_sleeptime,
+            retry_exceptions=(CalledProcessError,),
+        ) as r_check_call:
             r_check_call(args.cmd)
     except KeyboardInterrupt:
         sys.exit(-1)
     except Exception as e:
-        log.error("Unable to run command after %d attempts" % args.attempts, exc_info=True)
+        log.error(
+            "Unable to run command after %d attempts" % args.attempts, exc_info=True
+        )
         rc = getattr(e, "returncode", -2)
         sys.exit(rc)
 
