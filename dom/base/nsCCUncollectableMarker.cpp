@@ -506,9 +506,8 @@ void mozilla::dom::TraceBlackJS(JSTracer* aTrc, bool aIsShutdownGC) {
 
 #ifdef MOZ_XUL
         Document* doc = window->GetExtantDoc();
-        if (doc && doc->IsXULDocument()) {
-          XULDocument* xulDoc = static_cast<XULDocument*>(doc);
-          xulDoc->TraceProtos(aTrc);
+        if (doc) {
+          doc->TraceProtos(aTrc);
         }
 #endif
       }

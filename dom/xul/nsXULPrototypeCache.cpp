@@ -396,8 +396,10 @@ nsresult nsXULPrototypeCache::BeginCaching(nsIURI* aURI) {
 
   nsAutoCString path;
   aURI->GetPathQueryRef(path);
-  if (!StringEndsWith(path, NS_LITERAL_CSTRING(".xul")))
+  if (!(StringEndsWith(path, NS_LITERAL_CSTRING(".xul")) ||
+        StringEndsWith(path, NS_LITERAL_CSTRING(".xhtml")))) {
     return NS_ERROR_NOT_AVAILABLE;
+  }
 
   StartupCache* startupCache = StartupCache::GetSingleton();
   if (!startupCache) return NS_ERROR_FAILURE;

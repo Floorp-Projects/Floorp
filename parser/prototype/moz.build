@@ -5,11 +5,20 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 with Files('**'):
-    BUG_COMPONENT = ('Core', 'HTML: Parser')
+    BUG_COMPONENT = ('Core', 'XML')
 
-DIRS += ['expat', 'prototype', 'xml', 'htmlparser', 'html']
-
-EXPORTS += [
-    'nsCharsetSource.h',
+EXPORTS.mozilla.parser += [
+    'PrototypeDocumentParser.h',
 ]
 
+
+UNIFIED_SOURCES += [
+    'PrototypeDocumentParser.cpp',
+]
+
+FINAL_LIBRARY = 'xul'
+
+LOCAL_INCLUDES += [
+    '/dom/xbl',
+    '/dom/xul',
+]

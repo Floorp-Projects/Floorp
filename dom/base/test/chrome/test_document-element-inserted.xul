@@ -27,7 +27,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1411707
       return new Promise(resolve => {
         SpecialPowers.addObserver(function inserted(document) {
           is(document.documentURI, url, "Correct URL");
-          is(document.readyState, "uninitialized", "Correct readyState");
+          is(document.readyState, "loading", "Correct readyState");
           SpecialPowers.removeObserver(inserted, "document-element-inserted");
           resolve();
         }, "document-element-inserted");

@@ -72,7 +72,6 @@
         retargetdocumentfocus="urlbar"
         persist="screenX screenY width height sizemode"
 #ifdef BROWSER_XHTML
-        hidden="true"
         mozpersist=""
 #endif
         >
@@ -82,11 +81,7 @@
 # that they can be shared with macWindow.inc.xul.
 #include global-scripts.inc
 
-<script type="application/javascript"
-#ifdef BROWSER_XHTML
-xmlns="http://www.w3.org/1999/xhtml"
-#endif
->
+<script type="application/javascript">
   Services.scriptloader.loadSubScript("chrome://global/content/contentAreaUtils.js", this);
   Services.scriptloader.loadSubScript("chrome://browser/content/browser-captivePortal.js", this);
   Services.scriptloader.loadSubScript("chrome://browser/content/browser-compacttheme.js", this);
@@ -110,17 +105,9 @@ xmlns="http://www.w3.org/1999/xhtml"
   window.onunload = gBrowserInit.onUnload.bind(gBrowserInit);
   window.onclose = WindowIsClosing;
 
-#ifdef BROWSER_XHTML
-  window.addEventListener("readystatechange", () => {
-    // We initially hide the window to prevent layouts during parse. This lets us
-    // avoid accidental XBL construction and better match browser.xul (see Bug 1497975).
-    gBrowserInit.onBeforeInitialXULLayout();
-    document.documentElement.removeAttribute("hidden");
-  }, { once: true, capture: true });
-#else
   window.addEventListener("MozBeforeInitialXULLayout",
     gBrowserInit.onBeforeInitialXULLayout.bind(gBrowserInit), { once: true });
-#endif
+
   // The listener of DOMContentLoaded must be set on window, rather than
   // document, because the window can go away before the event is fired.
   // In that case, we don't want to initialize anything, otherwise we
