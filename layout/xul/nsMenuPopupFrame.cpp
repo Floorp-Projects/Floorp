@@ -411,8 +411,7 @@ bool nsMenuPopupFrame::IsLeafDynamic() const {
   // behave like a leaf frame. However, generate child frames normally if the
   // following is true:
   //
-  // - If the parent menu is a <menulist> unless its sizetopopup is set to
-  // "none".
+  // - If the parent menu is a <menulist>
   // - For other elements, if the parent menu has a sizetopopup attribute.
   //
   // In these cases the size of the parent menu is dependent on the size of
@@ -423,17 +422,7 @@ bool nsMenuPopupFrame::IsLeafDynamic() const {
   }
 
   if (parentContent->IsXULElement(nsGkAtoms::menulist)) {
-    Element* parent = parentContent->AsElement();
-    if (!parent->HasAttr(kNameSpaceID_None, nsGkAtoms::sizetopopup)) {
-      // No prop set, generate child frames normally for the
-      // default value ("pref").
-      return false;
-    }
-
-    nsAutoString sizedToPopup;
-    parent->GetAttr(kNameSpaceID_None, nsGkAtoms::sizetopopup, sizedToPopup);
-    // Don't generate child frame only if the property is set to none.
-    return sizedToPopup.EqualsLiteral("none");
+    return false;
   }
 
   return (!parentContent->IsElement() ||
