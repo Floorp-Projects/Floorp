@@ -1618,7 +1618,8 @@ void RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList) {
         hint &=
             ~(nsChangeHint_UpdateOverflow | nsChangeHint_ChildrenOnlyTransform |
               nsChangeHint_UpdatePostTransformOverflow |
-              nsChangeHint_UpdateParentOverflow);
+              nsChangeHint_UpdateParentOverflow |
+              nsChangeHint_UpdateSubtreeOverflow);
       }
 
       if (primaryFrame &&
