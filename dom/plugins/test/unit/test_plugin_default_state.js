@@ -6,7 +6,6 @@ function run_test() {
   let nonDefaultState = (pluginDefaultState != Ci.nsIPluginTag.STATE_ENABLED ?
                          Ci.nsIPluginTag.STATE_ENABLED :
                          Ci.nsIPluginTag.STATE_CLICKTOPLAY);
-  let ph = Cc["@mozilla.org/plugin/host;1"].getService(Ci.nsIPluginHost);
   let testPlugin = get_test_plugintag();
   // the test plugin should have the default enabledState
   Assert.equal(testPlugin.enabledState, pluginDefaultState);
