@@ -16,6 +16,7 @@
 #include "gc/FreeOp.h"
 #include "gc/Marking.h"
 #include "gc/StoreBuffer.h"
+#include "js/UniquePtr.h"
 #include "vm/JSContext.h"
 #include "vm/Realm.h"
 
@@ -258,9 +259,9 @@ MOZ_ALWAYS_INLINE void JSFlatString::init(const JS::Latin1Char* chars,
 }
 
 template <js::AllowGC allowGC, typename CharT>
-MOZ_ALWAYS_INLINE JSFlatString* JSFlatString::new_(JSContext* cx,
-                                                   const CharT* chars,
-                                                   size_t length) {
+MOZ_ALWAYS_INLINE JSFlatString* JSFlatString::new_(
+    JSContext* cx, js::UniquePtr<CharT[], JS::FreePolicy> chars,
+    size_t length) {
   MOZ_ASSERT(chars[length] == CharT(0));
 
   if (!validateLength(cx, length)) {
@@ -278,13 +279,11 @@ MOZ_ALWAYS_INLINE JSFlatString* JSFlatString::new_(JSContext* cx,
   }
 
   if (!str->isTenured()) {
-    // The chars pointer is only considered to be handed over to this
-    // function on a successful return. If the following registration
-    // fails, the string is partially initialized and must be made valid,
-    // or its finalizer may attempt to free uninitialized memory.
-    void* ptr = const_cast<void*>(static_cast<const void*>(chars));
-    if (!cx->runtime()->gc.nursery().registerMallocedBuffer(ptr)) {
-      str->init((JS::Latin1Char*)nullptr, 0);
+    // If the following registration fails, the string is partially initialized
+    // and must be made valid, or its finalizer may attempt to free
+    // uninitialized memory.
+    if (!cx->runtime()->gc.nursery().registerMallocedBuffer(chars.get())) {
+      str->init(static_cast<JS::Latin1Char*>(nullptr), 0);
       if (allowGC) {
         ReportOutOfMemory(cx);
       }
@@ -292,7 +291,7 @@ MOZ_ALWAYS_INLINE JSFlatString* JSFlatString::new_(JSContext* cx,
     }
   }
 
-  str->init(chars, length);
+  str->init(chars.release(), length);
   return str;
 }
 

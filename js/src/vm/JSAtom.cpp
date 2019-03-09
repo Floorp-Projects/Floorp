@@ -902,13 +902,7 @@ static MOZ_ALWAYS_INLINE JSFlatString* MakeUTF8AtomHelper(JSContext* cx,
   InflateUTF8CharsToBufferAndTerminate(chars->utf8, newStr.get(), length,
                                        chars->encoding);
 
-  JSFlatString* str = JSFlatString::new_<NoGC>(cx, newStr.get(), length);
-  if (!str) {
-    return nullptr;
-  }
-
-  mozilla::Unused << newStr.release();
-  return str;
+  return JSFlatString::new_<NoGC>(cx, std::move(newStr), length);
 }
 
 // Another 2 variants of MakeFlatStringForAtomization.
