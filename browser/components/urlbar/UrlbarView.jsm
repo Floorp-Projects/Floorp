@@ -496,24 +496,22 @@ class UrlbarView {
     if (this._selected) {
       this._selected.toggleAttribute("selected", false);
       this._selected.toggleAttribute("aria-selected", false);
-      this._selected = null;
-    }
-
-    if (!item) {
-      this._rows.removeAttribute("aria-activedescendant");
-      return;
     }
     this._selected = item;
-    item.toggleAttribute("selected", true);
-    item.toggleAttribute("aria-selected", true);
-    this._rows.setAttribute("aria-activedescendant", item.id);
-
-    if (!updateInput) {
-      return;
+    if (item) {
+      item.toggleAttribute("selected", true);
+      item.toggleAttribute("aria-selected", true);
+      this._rows.setAttribute("aria-activedescendant", item.id);
+    } else {
+      this._rows.removeAttribute("aria-activedescendant");
     }
-    let resultIndex = item.getAttribute("resultIndex");
-    let result = this._queryContext.results[resultIndex];
-    if (result) {
+
+    if (updateInput) {
+      let result = null;
+      if (item) {
+        let resultIndex = item.getAttribute("resultIndex");
+        result = this._queryContext.results[resultIndex];
+      }
       this.input.setValueFromResult(result);
     }
   }
