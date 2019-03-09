@@ -22,6 +22,7 @@
 #include "mozilla/layers/KeyboardMap.h"
 #include "mozilla/layers/LayerAttributes.h"
 #include "mozilla/layers/LayersTypes.h"
+#include "mozilla/layers/MatrixMessage.h"
 #include "mozilla/layers/RefCountedShmem.h"
 #include "mozilla/layers/RepaintRequest.h"
 #include "VsyncSource.h"
@@ -61,6 +62,10 @@ struct ParamTraits<mozilla::VsyncEvent> {
            ReadParam(msg, iter, &result->mTime);
   }
 };
+
+template <>
+struct ParamTraits<mozilla::layers::MatrixMessage>
+    : public PlainOldDataSerializer<mozilla::layers::MatrixMessage> {};
 
 template <>
 struct ParamTraits<mozilla::layers::LayersObserverEpoch>

@@ -24,6 +24,9 @@ class APZChild final : public PAPZChild {
   explicit APZChild(RefPtr<GeckoContentController> aController);
   ~APZChild();
 
+  mozilla::ipc::IPCResult RecvLayerTransforms(
+      const nsTArray<MatrixMessage>& aTransforms);
+
   mozilla::ipc::IPCResult RecvRequestContentRepaint(
       const RepaintRequest& aRequest);
 

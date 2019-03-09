@@ -310,6 +310,22 @@ const CSSTransformMatrix& HitTestingTreeNode::GetTransform() const {
   return mTransform;
 }
 
+LayerToScreenMatrix4x4 HitTestingTreeNode::GetCSSTransformToRoot() const {
+  if (mParent) {
+    LayerToParentLayerMatrix4x4 thisToParent =
+        mTransform * AsyncTransformMatrix();
+    ParentLayerToScreenMatrix4x4 parentToRoot =
+        ViewAs<ParentLayerToScreenMatrix4x4>(
+            mParent->GetCSSTransformToRoot(),
+            PixelCastJustification::MovingDownToChildren);
+    return thisToParent * parentToRoot;
+  }
+
+  return ViewAs<LayerToScreenMatrix4x4>(
+      mTransform * AsyncTransformMatrix(),
+      PixelCastJustification::ScreenIsParentLayerForRoot);
+}
+
 const LayerIntRegion& HitTestingTreeNode::GetVisibleRegion() const {
   return mVisibleRegion;
 }

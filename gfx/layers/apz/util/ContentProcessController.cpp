@@ -22,6 +22,12 @@ ContentProcessController::ContentProcessController(
   MOZ_ASSERT(mBrowser);
 }
 
+void ContentProcessController::NotifyLayerTransforms(
+    const nsTArray<MatrixMessage>& aTransforms) {
+  // This should never get called
+  MOZ_ASSERT(false);
+}
+
 void ContentProcessController::RequestContentRepaint(
     const RepaintRequest& aRequest) {
   if (mBrowser) {
