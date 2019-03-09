@@ -51,7 +51,7 @@
 #include "mozilla/dom/HTMLImageElement.h"
 #include "mozilla/dom/HTMLInputElement.h"
 #include "mozilla/dom/HTMLSlotElement.h"
-#include "mozilla/dom/RemoteFrameChild.h"
+#include "mozilla/dom/BrowserBridgeChild.h"
 #include "mozilla/dom/Text.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventStateManager.h"
@@ -1854,8 +1854,8 @@ void nsFocusManager::Focus(nsPIDOMWindowOuter* aWindow, Element* aElement,
         }
 
         // Same as above but for out-of-process iframes
-        if (RemoteFrameChild* rfc = RemoteFrameChild::GetFrom(aElement)) {
-          rfc->Activate();
+        if (BrowserBridgeChild* bbc = BrowserBridgeChild::GetFrom(aElement)) {
+          bbc->Activate();
           LOGFOCUS(("Out-of-process iframe activated"));
         }
       }
@@ -3475,9 +3475,9 @@ nsresult nsFocusManager::GetNextTabbableContent(
           }
 
           // Same as above but for out-of-process iframes
-          RemoteFrameChild* rfc = RemoteFrameChild::GetFrom(currentContent);
-          if (rfc) {
-            rfc->NavigateByKey(aForward, aForDocumentNavigation);
+          BrowserBridgeChild* bbc = BrowserBridgeChild::GetFrom(currentContent);
+          if (bbc) {
+            bbc->NavigateByKey(aForward, aForDocumentNavigation);
             return NS_SUCCESS_DOM_NO_OPERATION;
           }
 

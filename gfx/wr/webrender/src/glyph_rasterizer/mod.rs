@@ -485,6 +485,89 @@ pub struct RasterizedGlyph {
     pub bytes: Vec<u8>,
 }
 
+impl RasterizedGlyph {
+    #[allow(dead_code)]
+    pub fn downscale_bitmap_if_required(&mut self, font: &FontInstance) {
+        // Check if the glyph is going to be downscaled in the shader. If the scaling is
+        // less than 0.5, that means bilinear filtering can't effectively filter the glyph
+        // without aliasing artifacts.
+        //
+        // Instead of fixing this by mipmapping the glyph cache texture, rather manually
+        // produce the appropriate mip level for individual glyphs where bilinear filtering
+        // will still produce acceptable results.
+        match self.format {
+            GlyphFormat::Bitmap | GlyphFormat::ColorBitmap => {},
+            _ => return,
+        }
+        let (x_scale, y_scale) = font.transform.compute_scale().unwrap_or((1.0, 1.0));
+        let upscaled = x_scale.max(y_scale) as f32;
+        let mut new_scale = self.scale;
+        if new_scale * upscaled <= 0.0 {
+            return;
+        }
+        let mut steps = 0;
+        while new_scale * upscaled <= 0.5 {
+            new_scale *= 2.0;
+            steps += 1;
+        }
+        // If no mipping is necessary, just bail.
+        if steps == 0 {
+            return;
+        }
+
+        // Calculate the actual size of the mip level.
+        let new_width = (self.width as usize + (1 << steps) - 1) >> steps;
+        let new_height = (self.height as usize + (1 << steps) - 1) >> steps;
+        let mut new_bytes: Vec<u8> = Vec::with_capacity(new_width * new_height * 4);
+
+        // Produce destination pixels by applying a box filter to the source pixels.
+        // The box filter corresponds to how graphics drivers may generate mipmaps.
+        for y in 0 .. new_height {
+            for x in 0 .. new_width {
+                // Calculate the number of source samples that contribute to the destination pixel.
+                let src_y = y << steps;
+                let src_x = x << steps;
+                let y_samples = (1 << steps).min(self.height as usize - src_y);
+                let x_samples = (1 << steps).min(self.width as usize - src_x);
+                let num_samples = (x_samples * y_samples) as u32;
+
+                let mut src_idx = (src_y * self.width as usize + src_x) * 4;
+                // Initialize the accumulator with half an increment so that when later divided
+                // by the sample count, it will effectively round the accumulator to the nearest
+                // increment.
+                let mut accum = [num_samples / 2; 4];
+                // Accumulate all the contributing source sampless.
+                for _ in 0 .. y_samples {
+                    for _ in 0 .. x_samples {
+                        accum[0] += self.bytes[src_idx + 0] as u32;
+                        accum[1] += self.bytes[src_idx + 1] as u32;
+                        accum[2] += self.bytes[src_idx + 2] as u32;
+                        accum[3] += self.bytes[src_idx + 3] as u32;
+                        src_idx += 4;
+                    }
+                    src_idx += (self.width as usize - x_samples) * 4;
+                }
+
+                // Finally, divide by the sample count to get the mean value for the new pixel.
+                new_bytes.extend_from_slice(&[
+                    (accum[0] / num_samples) as u8,
+                    (accum[1] / num_samples) as u8,
+                    (accum[2] / num_samples) as u8,
+                    (accum[3] / num_samples) as u8,
+                ]);
+            }
+        }
+
+        // Fix the bounds for the new glyph data.
+        self.top /= (1 << steps) as f32;
+        self.left /= (1 << steps) as f32;
+        self.width = new_width as i32;
+        self.height = new_height as i32;
+        self.scale = new_scale;
+        self.bytes = new_bytes;
+    }
+}
+
 pub struct FontContexts {
     // These worker are mostly accessed from their corresponding worker threads.
     // The goal is that there should be no noticeable contention on the mutexes.

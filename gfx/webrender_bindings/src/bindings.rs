@@ -16,6 +16,7 @@ use std::ops::Range;
 use std::os::raw::{c_void, c_char, c_float};
 #[cfg(target_os = "android")]
 use std::os::raw::{c_int};
+use std::time::Duration;
 use gleam::gl;
 
 use webrender::api::*;
@@ -757,6 +758,9 @@ pub unsafe extern "C" fn wr_pipeline_info_delete(_info: WrPipelineInfo) {
 extern "C" {
     pub fn gecko_profiler_start_marker(name: *const c_char);
     pub fn gecko_profiler_end_marker(name: *const c_char);
+    pub fn gecko_profiler_add_text_marker(
+        name: *const c_char, text_bytes: *const c_char, text_len: usize, microseconds: u64);
+    pub fn gecko_profiler_thread_is_being_profiled() -> bool;
 }
 
 /// Simple implementation of the WR ProfilerHooks trait to allow profile
@@ -774,6 +778,19 @@ impl ProfilerHooks for GeckoProfilerHooks {
         unsafe {
             gecko_profiler_end_marker(label.as_ptr());
         }
+    }
+
+    fn add_text_marker(&self, label: &CStr, text: &str, duration: Duration) {
+        unsafe {
+            // NB: This can be as_micros() once we require Rust 1.33.
+            let micros = duration.subsec_micros() as u64 + duration.as_secs() * 1000 * 1000;
+            let text_bytes = text.as_bytes();
+            gecko_profiler_add_text_marker(label.as_ptr(), text_bytes.as_ptr() as *const c_char, text_bytes.len(), micros);
+        }
+    }
+
+    fn thread_is_being_profiled(&self) -> bool {
+        unsafe { gecko_profiler_thread_is_being_profiled() }
     }
 }
 
