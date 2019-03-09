@@ -13,7 +13,7 @@ function run_test() {
   // Initialises a profile folder
   do_get_profile();
 
-  var plugin = get_test_plugintag();
+  plugin = get_test_plugintag();
   Assert.equal(false, plugin == null);
 
   // Clean up

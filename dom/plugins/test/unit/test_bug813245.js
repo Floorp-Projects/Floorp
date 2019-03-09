@@ -8,9 +8,11 @@ var DELIM = mozinfo.os == "win" ? "|" : ":";
 
 var gProfD = do_get_profile_startup();
 
+var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+
 // Writes out some plugin registry to the profile
 function write_registry(version, info) {
-  let runtime = Cc["@mozilla.org/xre/runtime;1"].getService(Ci.nsIXULRuntime);
+  let runtime = Services.appinfo;
 
   var header = "Generated File. Do not edit.\n\n";
   header += "[HEADER]\n";
@@ -72,7 +74,7 @@ function run_test() {
   // Initialise profile folder
   do_get_profile();
 
-  var plugin = get_test_plugintag();
+  plugin = get_test_plugintag();
   if (!plugin)
     do_throw("Plugin tag not found");
 
