@@ -362,11 +362,17 @@ class InterpreterFrameInfo : public FrameInfo {
                    masm.framePushed() + size_t(-(depth + 1)) * sizeof(Value));
   }
 
+  BaseIndex addressOfStackValue(Register index, int32_t offset = 0) const {
+    return BaseIndex(masm.getStackPointer(), index, ValueScale, offset);
+  }
+
   void popRegsAndSync(uint32_t uses);
 
   void pop() { popn(1); }
 
   void popn(uint32_t n) { masm.addToStackPtr(Imm32(n * sizeof(Value))); }
+
+  void popn(Register reg) { masm.addToStackPtr(reg); }
 
   void popValue(ValueOperand dest) { masm.popValue(dest); }
 
@@ -384,6 +390,19 @@ class InterpreterFrameInfo : public FrameInfo {
                        const ValueOperand& scratch) {
     masm.loadValue(addressOfStackValue(depth), scratch);
     masm.storeValue(scratch, dest);
+  }
+
+  Address addressOfInterpreterScript() const {
+    return Address(BaselineFrameReg,
+                   BaselineFrame::reverseOffsetOfInterpreterScript());
+  }
+  Address addressOfInterpreterPC() const {
+    return Address(BaselineFrameReg,
+                   BaselineFrame::reverseOffsetOfInterpreterPC());
+  }
+  Address addressOfInterpreterICEntry() const {
+    return Address(BaselineFrameReg,
+                   BaselineFrame::reverseOffsetOfInterpreterICEntry());
   }
 };
 
