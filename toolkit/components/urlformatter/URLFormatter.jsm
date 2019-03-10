@@ -85,7 +85,8 @@ nsURLFormatterService.prototype = {
     OS_VERSION() { return this.OSVersion; },
     CHANNEL:          () => UpdateUtils.UpdateChannel,
     MOZILLA_API_KEY:  () => AppConstants.MOZ_MOZILLA_API_KEY,
-    GOOGLE_API_KEY:   () => AppConstants.MOZ_GOOGLE_API_KEY,
+    GOOGLE_LOCATION_SERVICE_API_KEY:   () => AppConstants.MOZ_GOOGLE_LOCATION_SERVICE_API_KEY,
+    GOOGLE_SAFEBROWSING_API_KEY:   () => AppConstants.MOZ_GOOGLE_SAFEBROWSING_API_KEY,
     BING_API_CLIENTID: () => AppConstants.MOZ_BING_API_CLIENTID,
     BING_API_KEY:     () => AppConstants.MOZ_BING_API_KEY,
     DISTRIBUTION() { return this.distribution.id; },
@@ -126,8 +127,11 @@ nsURLFormatterService.prototype = {
   },
 
   trimSensitiveURLs: function uf_trimSensitiveURLs(aMsg) {
-    // Only the google API key is sensitive for now.
-    return AppConstants.MOZ_GOOGLE_API_KEY ? aMsg.replace(RegExp(AppConstants.MOZ_GOOGLE_API_KEY, "g"),
+    // Only the google API keys is sensitive for now.
+    aMsg = AppConstants.MOZ_GOOGLE_LOCATION_SERVICE_API_KEY ? aMsg.replace(RegExp(AppConstants.MOZ_GOOGLE_LOCATION_SERVICE_API_KEY, "g"),
+                                                 "[trimmed-google-api-key]")
+                                  : aMsg;
+    return AppConstants.MOZ_GOOGLE_SAFEBROWSING_API_KEY ? aMsg.replace(RegExp(AppConstants.MOZ_GOOGLE_SAFEBROWSING_API_KEY, "g"),
                                                  "[trimmed-google-api-key]")
                                   : aMsg;
   },
