@@ -3,7 +3,7 @@
    - http://creativecommons.org/publicdomain/zero/1.0/ -->
 
 <SearchPlugin xmlns="http://www.mozilla.org/2006/browser/search/">
-<ShortName>browser_searchSuggestionEngine searchSuggestionEngine.xml</ShortName>
+<ShortName>browser_searchSuggestionEngine2 searchSuggestionEngine2.xml</ShortName>
 <!-- Redirect the actual search request to the test-server because of proxy restriction -->
 <Url type="application/x-suggestions+json" method="GET" template="http://mochi.test:8888/browser/browser/components/urlbar/tests/browser/searchSuggestionEngine.sjs?{searchTerms}"/>
 <!-- Redirect speculative connect to a local http server we run for this test -->
