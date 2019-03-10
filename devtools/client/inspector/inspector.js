@@ -147,6 +147,18 @@ Inspector.prototype = {
     // Localize all the nodes containing a data-localization attribute.
     localizeMarkup(this.panelDoc);
 
+    // When replaying, we need to listen to changes in the target's pause state.
+    if (this._target.isReplayEnabled()) {
+      let dbg = this._toolbox.getPanel("jsdebugger");
+      if (!dbg) {
+        dbg = await this._toolbox.loadTool("jsdebugger");
+      }
+      this._replayResumed = !dbg.isPaused();
+
+      this._onReplayPauseChange = this._onReplayPauseChange.bind(this);
+      this._target.on("pause-change", this._onReplayPauseChange);
+    }
+
     await Promise.all([
       this._getCssProperties(),
       this._getPageStyle(),
@@ -349,7 +361,11 @@ Inspector.prototype = {
 
     // A helper to tell if the target has or is about to navigate.
     // this._pendingSelection changes on "will-navigate" and "new-root" events.
-    const hasNavigated = () => pendingSelection !== this._pendingSelection;
+    // When replaying, if the target is unpaused then we consider it to be
+    // navigating so that its tree will not be constructed.
+    const hasNavigated = () => {
+      return pendingSelection !== this._pendingSelection || this._replayResumed;
+    };
 
     // If available, set either the previously selected node or the body
     // as default selected, else set documentElement
@@ -1103,6 +1119,15 @@ Inspector.prototype = {
     this._pendingSelection = onNodeSelected;
     this._getDefaultNodeForSelection()
         .then(onNodeSelected, this._handleRejectionIfNotDestroyed);
+  },
+
+  /**
+   * When replaying, reset the inspector whenever the target paused or unpauses.
+   */
+  _onReplayPauseChange({ paused }) {
+    this._replayResumed = !paused;
+
+    this.onNewRoot();
   },
 
   /**
