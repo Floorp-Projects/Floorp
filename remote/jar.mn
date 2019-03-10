@@ -5,19 +5,19 @@
 remote.jar:
 % content remote %content/
   content/Connection.jsm (Connection.jsm)
-  content/ContentProcessSession.jsm (ContentProcessSession.jsm)
   content/Error.jsm (Error.jsm)
   content/JSONHandler.jsm (JSONHandler.jsm)
   content/Log.jsm (Log.jsm)
   content/Observer.jsm (Observer.jsm)
   content/Protocol.jsm (Protocol.jsm)
   content/RecommendedPreferences.jsm (RecommendedPreferences.jsm)
-  content/Session.jsm (Session.jsm)
   content/Sync.jsm (Sync.jsm)
   content/WindowManager.jsm (WindowManager.jsm)
 
-  # Frame scripts
-  content/frame-script.js (frame-script.js)
+  # sessions
+  content/sessions/frame-script.js (sessions/frame-script.js)
+  content/sessions/ContentProcessSession.jsm (sessions/ContentProcessSession.jsm)
+  content/sessions/Session.jsm (sessions/Session.jsm)
 
   # targets
   content/targets/Target.jsm (targets/Target.jsm)

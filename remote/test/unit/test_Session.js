@@ -3,7 +3,7 @@
 
 "use strict";
 
-const {Session} = ChromeUtils.import("chrome://remote/content/Session.jsm");
+const {Session} = ChromeUtils.import("chrome://remote/content/sessions/Session.jsm");
 
 const connection = {onmessage: () => {}};
 
