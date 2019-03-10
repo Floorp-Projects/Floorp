@@ -11,8 +11,8 @@ const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const {UnsupportedError} = ChromeUtils.import("chrome://remote/content/Error.jsm");
 
 class Page extends Domain {
-  constructor(session, target) {
-    super(session, target);
+  constructor(session) {
+    super(session);
     this.enabled = false;
   }
 

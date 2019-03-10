@@ -7,9 +7,8 @@
 var EXPORTED_SYMBOLS = ["Domain"];
 
 class Domain {
-  constructor(session, target) {
+  constructor(session) {
     this.session = session;
-    this.target = target;
     this.name = this.constructor.name;
 
     this.eventListeners_ = new Set();
