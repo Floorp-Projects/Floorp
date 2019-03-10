@@ -6,6 +6,7 @@
 
 const { Cu } = require("chrome");
 const EventEmitter = require("devtools/shared/event-emitter");
+const ReplayInspector = require("devtools/server/actors/replay/inspector");
 const { isNodeValid } = require("./utils/markup");
 const { getAdjustedQuads, getWindowDimensions } = require("devtools/shared/layout/utils");
 
@@ -81,13 +82,20 @@ AutoRefreshHighlighter.prototype = {
   _ignoreZoom: false,
 
   /**
-   * Window corresponding to the current highlighterEnv
+   * Window corresponding to the current highlighterEnv. When replaying, this
+   * will be the window against which the server is running, which is different
+   * from the window containing the target content.
    */
   get win() {
     if (!this.highlighterEnv) {
       return null;
     }
     return this.highlighterEnv.window;
+  },
+
+  /* Window containing the target content. */
+  get contentWindow() {
+    return isReplaying ? ReplayInspector.window : this.win;
   },
 
   /**
@@ -178,7 +186,7 @@ AutoRefreshHighlighter.prototype = {
 
     for (const region of BOX_MODEL_REGIONS) {
       this.currentQuads[region] = getAdjustedQuads(
-        this.win,
+        this.contentWindow,
         this.currentNode, region, {ignoreZoom: this._ignoreZoom});
     }
   },
@@ -276,7 +284,7 @@ AutoRefreshHighlighter.prototype = {
   },
 
   _startRefreshLoop: function() {
-    const win = this.currentNode.ownerGlobal;
+    const win = isReplaying ? this.win : this.currentNode.ownerGlobal;
     this.rafID = win.requestAnimationFrame(this._startRefreshLoop.bind(this));
     this.rafWin = win;
     this.update();
