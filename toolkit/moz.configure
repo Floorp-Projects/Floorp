@@ -645,7 +645,9 @@ include('../build/moz.configure/keyfiles.configure')
 
 simple_keyfile('Mozilla API')
 
-simple_keyfile('Google API')
+simple_keyfile('Google Location Service API')
+
+simple_keyfile('Google Safebrowsing API')
 
 id_and_secret_keyfile('Bing API')
 
