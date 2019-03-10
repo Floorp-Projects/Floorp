@@ -64,7 +64,8 @@ def find_version(args):
     candidates = [x for x in p.stdout if 'libstdc++.so' in x]
     candidates = [x for x in candidates if 'skipping incompatible' not in x]
     if not candidates:
-        return ''
+        raise Exception('''Couldn't find libstdc++ candidates!
+command line: %s''' % args)
     if len(candidates) != 1:
         raise Exception('''Too many libstdc++ candidates!
 command line: %s
@@ -77,13 +78,13 @@ candidates:
     versions = [parse_readelf_line(x)
                 for x in p.stdout.readlines() if 'Name: GLIBCXX' in x]
     last_version = sorted(versions, cmp = cmp_ver)[-1]
-    return encode_ver(last_version)
+    return (last_version, encode_ver(last_version))
 
 if __name__ == '__main__':
     """Given the value of environment variable CXX or HOST_CXX, find the
     version of the libstdc++ it uses.
     """
     cxx_env = os.environ['CXX']
-    print('MOZ_LIBSTDCXX_TARGET_VERSION=%s' % find_version(cxx_env.split()))
+    print('MOZ_LIBSTDCXX_TARGET_VERSION=%s' % find_version(cxx_env.split())[1])
     host_cxx_env = os.environ.get('HOST_CXX', cxx_env)
-    print('MOZ_LIBSTDCXX_HOST_VERSION=%s' % find_version(host_cxx_env.split()))
+    print('MOZ_LIBSTDCXX_HOST_VERSION=%s' % find_version(host_cxx_env.split())[1])
