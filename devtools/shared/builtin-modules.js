@@ -371,3 +371,6 @@ lazyGlobal("WebSocket", () => {
 lazyGlobal("indexedDB", () => {
   return require("devtools/shared/indexed-db").createDevToolsIndexedDB(indexedDB);
 });
+lazyGlobal("isReplaying", () => {
+  return exports.modules.Debugger.recordReplayProcessKind() == "Middleman";
+});
