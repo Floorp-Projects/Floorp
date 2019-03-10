@@ -4138,6 +4138,7 @@ class nsIFrame : public nsQueryFrame {
   bool HasDisplayItems();
   bool HasDisplayItem(nsDisplayItem* aItem);
   bool HasDisplayItem(uint32_t aKey);
+  void DiscardItems();
 
   bool ForceDescendIntoIfVisible() const { return mForceDescendIntoIfVisible; }
   void SetForceDescendIntoIfVisible(bool aForce) {
