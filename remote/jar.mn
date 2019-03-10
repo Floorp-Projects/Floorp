@@ -34,6 +34,7 @@ remote.jar:
   content/domains/content/Log.jsm (domains/content/Log.jsm)
   content/domains/content/Page.jsm (domains/content/Page.jsm)
   content/domains/parent/Browser.jsm (domains/parent/Browser.jsm)
+  content/domains/parent/Target.jsm (domains/parent/Target.jsm)
 
   # transport layer
   content/server/HTTPD.jsm (../netwerk/test/httpserver/httpd.js)
