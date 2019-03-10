@@ -6,6 +6,7 @@
 
 var EXPORTED_SYMBOLS = ["Browser"];
 
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const {Domain} = ChromeUtils.import("chrome://remote/content/domains/Domain.jsm");
 
 class Browser extends Domain {
@@ -17,5 +18,9 @@ class Browser extends Domain {
       userAgent: "Firefox",
       jsVersion: "1.8.5",
     };
+  }
+
+  close() {
+    Services.startup.quit(Ci.nsIAppStartup.eAttemptQuit);
   }
 }
