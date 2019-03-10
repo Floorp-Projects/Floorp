@@ -27,7 +27,10 @@ add_task(async function test_empty() {
   // are the same.
   let results = [{}]; // Add a fake first result, to account for heuristic.
   for (let i = 0; i < await UrlbarTestUtils.getResultCount(window); ++i) {
-    results.push(await UrlbarTestUtils.getDetailsOfResultAt(window, i));
+    let result = await UrlbarTestUtils.getDetailsOfResultAt(window, i);
+    // Don't compare the element part of the results.
+    delete result.element;
+    results.push(result);
   }
 
   for (let str of [" ", "  "]) {
@@ -39,8 +42,10 @@ add_task(async function test_empty() {
     let length = await UrlbarTestUtils.getResultCount(window);
     Assert.equal(length, results.length, "Comparing results count");
     for (let i = 1; i < length; ++i) {
-      Assert.deepEqual(await UrlbarTestUtils.getDetailsOfResultAt(window, i),
-                        results[i],
+      let result = await UrlbarTestUtils.getDetailsOfResultAt(window, i);
+      // Don't compare the element part of the results.
+      delete result.element;
+      Assert.deepEqual(result, results[i],
                        `Comparing result at index ${i}`);
     }
   }
