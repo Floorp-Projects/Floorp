@@ -79,7 +79,8 @@ extern ArrayObject* NewDenseFullyAllocatedArrayWithTemplate(
 
 // Create a dense array with the same copy-on-write elements as another object.
 extern ArrayObject* NewDenseCopyOnWriteArray(JSContext* cx,
-                                             HandleArrayObject templateObject);
+                                             HandleArrayObject templateObject,
+                                             gc::InitialHeap heap);
 
 extern ArrayObject* NewFullyAllocatedArrayTryUseGroup(
     JSContext* cx, HandleObjectGroup group, size_t length,
