@@ -37,20 +37,6 @@ class Domain {
     this.eventListeners_.add(listener);
   }
 
-  // helpers
-
-  get content() {
-    return this.session.content;
-  }
-
-  get docShell() {
-    return this.session.docShell;
-  }
-
-  get chromeEventHandler() {
-    return this.docShell.chromeEventHandler;
-  }
-
   // static
 
   static implements(methodName) {
