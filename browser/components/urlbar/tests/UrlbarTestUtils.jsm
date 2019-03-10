@@ -146,6 +146,18 @@ var UrlbarTestUtils = {
   },
 
   /**
+   * Returns the results panel object associated with the window.
+   * @note generally tests should use getDetailsOfResultAt rather than
+   * accessing panel elements directly.
+   * @param {object} win The window containing the urlbar
+   * @returns {object} the results panel object.
+   */
+  getPanel(win) {
+    let urlbar = getUrlbarAbstraction(win);
+    return urlbar.panel;
+  },
+
+  /**
    * Ensures at least one search suggestion is present.
    * @param {object} win The window containing the urlbar
    * @returns {boolean} whether at least one search suggestion is present.
@@ -401,6 +413,14 @@ class UrlbarAbstraction {
         action: actions.length > 0 ? actions[0].textContent : null,
         typeIcon: typeIconStyle["background-image"],
       };
+      let actionElement = element.getElementsByClassName("urlbarView-action")[0];
+      let urlElement = element.getElementsByClassName("urlbarView-url")[0];
+      details.element = {
+        action: actionElement,
+        row: element,
+        separator: urlElement || actionElement,
+        url: urlElement,
+      };
       if (details.type == UrlbarUtils.RESULT_TYPE.SEARCH) {
         details.searchParams = {
           engine: context.results[index].payload.engine,
@@ -426,6 +446,12 @@ class UrlbarAbstraction {
         title: element._titleText.textContent,
         action: action ? element._actionText.textContent : "",
         typeIcon: typeIconStyle.listStyleImage,
+      };
+      details.element = {
+        action: element._actionText,
+        row: element,
+        separator: element._separator,
+        url: element._urlText,
       };
       if (details.type == UrlbarUtils.RESULT_TYPE.SEARCH) {
         details.searchParams = {

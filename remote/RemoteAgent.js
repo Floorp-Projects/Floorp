@@ -17,7 +17,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   Preferences: "resource://gre/modules/Preferences.jsm",
   RecommendedPreferences: "chrome://remote/content/RecommendedPreferences.jsm",
   TabObserver: "chrome://remote/content/WindowManager.jsm",
-  Targets: "chrome://remote/content/Targets.jsm",
+  Targets: "chrome://remote/content/targets/Targets.jsm",
 });
 XPCOMUtils.defineLazyGetter(this, "log", Log.get);
 
@@ -179,7 +179,8 @@ class ParentRemoteAgent {
   }
 
   get helpInfo() {
-    return "  --remote-debugger [<host>][:<port>] Start the Firefox remote agent, which is \n" +
+    return "  --remote-debugger [<host>][:<port>]\n" +
+           "  --remote-debugging-port <port> Start the Firefox remote agent, which is \n" +
            "                     a low-level debugging interface based on the CDP protocol.\n" +
            "                     Defaults to listen on localhost:9222.\n";
   }

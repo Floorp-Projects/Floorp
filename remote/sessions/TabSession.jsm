@@ -4,38 +4,24 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = ["Session"];
+var EXPORTED_SYMBOLS = ["TabSession"];
 
-const {ParentProcessDomains} = ChromeUtils.import("chrome://remote/content/domains/ParentProcessDomains.jsm");
 const {Domains} = ChromeUtils.import("chrome://remote/content/domains/Domains.jsm");
-const {formatError} = ChromeUtils.import("chrome://remote/content/Error.jsm");
+const {Session} = ChromeUtils.import("chrome://remote/content/sessions/Session.jsm");
 
-/**
- * A session represents exactly one client WebSocket connection.
- *
- * Every new WebSocket connections is associated with one session that
- * deals with despatching incoming command requests to the right
- * target, sending back responses, and propagating events originating
- * from domains.
- */
-class Session {
-  constructor(connection, target) {
-    this.connection = connection;
-    this.target = target;
+class TabSession extends Session {
+  constructor(connection, target, id) {
+    super(connection, target, id);
 
-    this.connection.onmessage = this.dispatch.bind(this);
-
-    this.domains = new Domains(this, ParentProcessDomains);
     this.mm.addMessageListener("remote:event", this);
     this.mm.addMessageListener("remote:result", this);
     this.mm.addMessageListener("remote:error", this);
 
-    this.mm.loadFrameScript("chrome://remote/content/frame-script.js", false);
+    this.mm.loadFrameScript("chrome://remote/content/sessions/frame-script.js", false);
   }
 
   destructor() {
-    this.domains.clear();
-    this.connection.onmessage = null;
+    super.destructor();
 
     this.mm.sendAsyncMessage("remote:destroy", {
       browsingContextId: this.browsingContext.id,
@@ -46,7 +32,7 @@ class Session {
     this.mm.removeMessageListener("remote:error", this);
   }
 
-  async dispatch({id, method, params}) {
+  async onMessage({id, method, params}) {
     try {
       if (typeof id == "undefined") {
         throw new TypeError("Message missing 'id' field");
@@ -56,21 +42,18 @@ class Session {
       }
 
       const [domainName, methodName] = Domains.splitMethod(method);
-      if (this.domains.domainSupportsMethod(domainName, methodName)) {
-        await this.executeInParent(id, domainName, methodName, params);
+      if (typeof domainName == "undefined" || typeof methodName == "undefined") {
+        throw new TypeError("'method' field is incorrect and doesn't define a domain " +
+                            "name and method separated by a dot.");
+      }
+      if (this.domains.has(domainName)) {
+        await this.execute(id, domainName, methodName, params);
       } else {
         this.executeInChild(id, domainName, methodName, params);
       }
     } catch (e) {
-      const error = formatError(e, {stack: true});
-      this.connection.send({id, error: { message: error }});
+      this.onError(id, e);
     }
-  }
-
-  async executeInParent(id, domain, method, params) {
-    const inst = this.domains.get(domain);
-    const result = await inst[method](params);
-    this.connection.send({id, result});
   }
 
   executeInChild(id, domain, method, params) {
@@ -88,15 +71,6 @@ class Session {
     return this.target.browsingContext;
   }
 
-  // Domain event listener
-
-  onEvent(eventName, params) {
-    this.connection.send({
-      method: eventName,
-      params,
-    });
-  }
-
   // nsIMessageListener
 
   receiveMessage({name, data}) {
@@ -104,20 +78,16 @@ class Session {
 
     switch (name) {
     case "remote:result":
-      this.connection.send({id, result});
+      this.onResult(id, result);
       break;
 
     case "remote:event":
-      this.connection.send(event);
+      this.onEvent(event.eventName, event.params);
       break;
 
     case "remote:error":
-      this.connection.send({id, error: { message: formatError(error, {stack: true}) }});
+      this.onError(id, error);
       break;
     }
-  }
-
-  toString() {
-    return `[object Session ${this.connection.id}]`;
   }
 }
