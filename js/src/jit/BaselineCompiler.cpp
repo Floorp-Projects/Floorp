@@ -378,27 +378,7 @@ void BaselineCompilerCodeGen::loadScript(Register dest) {
 
 template <>
 void BaselineInterpreterCodeGen::loadScript(Register dest) {
-  // TODO(bug 1522394): consider adding interpreterScript to BaselineFrame once
-  // we are able to run benchmarks.
-
-  masm.loadPtr(frame.addressOfCalleeToken(), dest);
-
-  Label notFunction, done;
-  masm.branchTestPtr(Assembler::NonZero, dest, Imm32(CalleeTokenScriptBit),
-                     &notFunction);
-  {
-    // CalleeToken_Function or CalleeToken_FunctionConstructing.
-    masm.andPtr(Imm32(uint32_t(CalleeTokenMask)), dest);
-    masm.loadPtr(Address(dest, JSFunction::offsetOfScript()), dest);
-    masm.jump(&done);
-  }
-  masm.bind(&notFunction);
-  {
-    // CalleeToken_Script.
-    masm.andPtr(Imm32(uint32_t(CalleeTokenMask)), dest);
-  }
-
-  masm.bind(&done);
+  masm.loadPtr(frame.addressOfInterpreterScript(), dest);
 }
 
 template <>
@@ -533,7 +513,10 @@ bool BaselineCompilerCodeGen::emitNextIC() {
 
 template <>
 bool BaselineInterpreterCodeGen::emitNextIC() {
-  MOZ_CRASH("NYI: interpreter emitNextIC");
+  masm.loadPtr(frame.addressOfInterpreterICEntry(), ICStubReg);
+  masm.loadPtr(Address(ICStubReg, ICEntry::offsetOfFirstStub()), ICStubReg);
+  masm.call(Address(ICStubReg, ICStub::offsetOfStubCode()));
+  return true;
 }
 
 template <typename Handler>
@@ -800,14 +783,13 @@ void BaselineInterpreterCodeGen::loadGlobalThisValue(ValueOperand dest) {
 }
 
 template <>
-void BaselineCompilerCodeGen::pushScriptArg(Register scratch) {
+void BaselineCompilerCodeGen::pushScriptArg() {
   pushArg(ImmGCPtr(handler.script()));
 }
 
 template <>
-void BaselineInterpreterCodeGen::pushScriptArg(Register scratch) {
-  loadScript(scratch);
-  pushArg(scratch);
+void BaselineInterpreterCodeGen::pushScriptArg() {
+  pushArg(frame.addressOfInterpreterScript());
 }
 
 template <>
@@ -817,8 +799,7 @@ void BaselineCompilerCodeGen::pushBytecodePCArg() {
 
 template <>
 void BaselineInterpreterCodeGen::pushBytecodePCArg() {
-  // This will be something like pushArg(Address(...));
-  MOZ_CRASH("NYI: interpreter pushBytecodePCArg");
+  pushArg(frame.addressOfInterpreterPC());
 }
 
 template <>
@@ -983,7 +964,7 @@ bool BaselineCompilerCodeGen::initEnvironmentChain() {
 
     prepareVMCall();
 
-    pushScriptArg(R2.scratchReg());
+    pushScriptArg();
     masm.loadPtr(frame.addressOfEnvironmentChain(), R0.scratchReg());
     pushArg(R0.scratchReg());
 
@@ -2088,7 +2069,7 @@ bool BaselineCodeGen<Handler>::emit_JSOP_OBJECT() {
   prepareVMCall();
 
   pushBytecodePCArg();
-  pushScriptArg(R2.scratchReg());
+  pushScriptArg();
 
   using Fn = JSObject* (*)(JSContext*, HandleScript, jsbytecode*);
   if (!callVM<Fn, SingletonObjectLiteralOperation>()) {
@@ -2118,7 +2099,7 @@ bool BaselineInterpreterCodeGen::emit_JSOP_CALLSITEOBJ() {
   prepareVMCall();
 
   pushBytecodePCArg();
-  pushScriptArg(R2.scratchReg());
+  pushScriptArg();
 
   using Fn = ArrayObject* (*)(JSContext*, HandleScript, jsbytecode*);
   if (!callVM<Fn, ProcessCallSiteObjOperation>()) {
@@ -2465,7 +2446,7 @@ bool BaselineInterpreterCodeGen::emit_JSOP_NEWARRAY_COPYONWRITE() {
   prepareVMCall();
 
   pushBytecodePCArg();
-  pushScriptArg(R2.scratchReg());
+  pushScriptArg();
 
   using Fn = ArrayObject* (*)(JSContext*, HandleScript, jsbytecode*);
   if (!callVM<Fn, NewArrayCopyOnWriteOperation>()) {
@@ -3293,7 +3274,7 @@ bool BaselineInterpreterCodeGen::emit_JSOP_GETIMPORT() {
   prepareVMCall();
 
   pushBytecodePCArg();
-  pushScriptArg(R2.scratchReg());
+  pushScriptArg();
   pushArg(R0.scratchReg());
 
   using Fn = bool (*)(JSContext*, HandleObject, HandleScript, jsbytecode*,
@@ -3332,7 +3313,7 @@ bool BaselineCodeGen<Handler>::emit_JSOP_SETINTRINSIC() {
 
   pushArg(R0);
   pushBytecodePCArg();
-  pushScriptArg(R2.scratchReg());
+  pushScriptArg();
 
   using Fn = bool (*)(JSContext*, JSScript*, jsbytecode*, HandleValue);
   return callVM<Fn, SetIntrinsicOperation>();
@@ -3347,7 +3328,7 @@ bool BaselineCodeGen<Handler>::emit_JSOP_DEFVAR() {
   prepareVMCall();
 
   pushBytecodePCArg();
-  pushScriptArg(R2.scratchReg());
+  pushScriptArg();
   pushArg(R0.scratchReg());
 
   using Fn = bool (*)(JSContext*, HandleObject, HandleScript, jsbytecode*);
@@ -3365,7 +3346,7 @@ bool BaselineCodeGen<Handler>::emitDefLexical(JSOp op) {
   prepareVMCall();
 
   pushBytecodePCArg();
-  pushScriptArg(R2.scratchReg());
+  pushScriptArg();
   pushArg(R0.scratchReg());
 
   using Fn = bool (*)(JSContext*, HandleObject, HandleScript, jsbytecode*);
@@ -3392,7 +3373,7 @@ bool BaselineCodeGen<Handler>::emit_JSOP_DEFFUN() {
 
   pushArg(R0.scratchReg());
   pushArg(R1.scratchReg());
-  pushScriptArg(R2.scratchReg());
+  pushScriptArg();
 
   using Fn = bool (*)(JSContext*, HandleScript, HandleObject, HandleFunction);
   return callVM<Fn, DefFunOperation>();
@@ -5533,7 +5514,7 @@ bool BaselineCodeGen<Handler>::emit_JSOP_CLASSCONSTRUCTOR() {
   prepareVMCall();
   pushArg(ImmPtr(nullptr));
   pushBytecodePCArg();
-  pushScriptArg(R2.scratchReg());
+  pushScriptArg();
 
   using Fn =
       JSFunction* (*)(JSContext*, HandleScript, jsbytecode*, HandleObject);
@@ -5555,7 +5536,7 @@ bool BaselineCodeGen<Handler>::emit_JSOP_DERIVEDCONSTRUCTOR() {
   prepareVMCall();
   pushArg(R0.scratchReg());
   pushBytecodePCArg();
-  pushScriptArg(R2.scratchReg());
+  pushScriptArg();
 
   using Fn =
       JSFunction* (*)(JSContext*, HandleScript, jsbytecode*, HandleObject);
@@ -5595,7 +5576,7 @@ template <>
 bool BaselineInterpreterCodeGen::emit_JSOP_IMPORTMETA() {
   prepareVMCall();
 
-  pushScriptArg(R2.scratchReg());
+  pushScriptArg();
 
   using Fn = JSObject* (*)(JSContext*, HandleScript);
   if (!callVM<Fn, ImportMetaOperation>()) {
@@ -5614,7 +5595,7 @@ bool BaselineCodeGen<Handler>::emit_JSOP_DYNAMIC_IMPORT() {
 
   prepareVMCall();
   pushArg(R0);
-  pushScriptArg(R2.scratchReg());
+  pushScriptArg();
 
   using Fn = JSObject* (*)(JSContext*, HandleScript, HandleValue);
   if (!callVM<Fn, js::StartDynamicModuleImport>()) {

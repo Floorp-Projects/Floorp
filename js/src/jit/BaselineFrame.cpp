@@ -55,6 +55,10 @@ void BaselineFrame::trace(JSTracer* trc, const JSJitFrameIter& frameIterator) {
     TraceRoot(trc, &argsObj_, "baseline-args-obj");
   }
 
+  if (runningInInterpreter()) {
+    TraceRoot(trc, &interpreterScript_, "baseline-interpreterScript");
+  }
+
   // Trace locals and stack values.
   JSScript* script = this->script();
   size_t nfixed = script->nfixed();
