@@ -909,6 +909,39 @@ void BaselineInterpreterCodeGen::loadResumeIndexBytecodeOperand(Register dest) {
   MOZ_CRASH("NYI: interpreter loadResumeIndexBytecodeOperand");
 }
 
+template <>
+void BaselineCompilerCodeGen::loadInt32LengthBytecodeOperand(Register dest) {
+  uint32_t length = GET_UINT32(handler.pc());
+  MOZ_ASSERT(length <= INT32_MAX,
+             "the bytecode emitter must fail to compile code that would "
+             "produce a length exceeding int32_t range");
+  masm.move32(Imm32(AssertedCast<int32_t>(length)), dest);
+}
+
+template <>
+void BaselineInterpreterCodeGen::loadInt32LengthBytecodeOperand(Register dest) {
+  masm.loadPtr(frame.addressOfInterpreterPC(), dest);
+  LoadInt32Operand(masm, dest, dest);
+}
+
+template <>
+void BaselineCompilerCodeGen::loadInt32IndexBytecodeOperand(ValueOperand dest) {
+  uint32_t index = GET_UINT32(handler.pc());
+  MOZ_ASSERT(index <= INT32_MAX,
+             "the bytecode emitter must fail to compile code that would "
+             "produce an index exceeding int32_t range");
+  masm.moveValue(Int32Value(AssertedCast<int32_t>(index)), dest);
+}
+
+template <>
+void BaselineInterpreterCodeGen::loadInt32IndexBytecodeOperand(
+    ValueOperand dest) {
+  Register scratch = dest.scratchReg();
+  masm.loadPtr(frame.addressOfInterpreterPC(), scratch);
+  LoadInt32Operand(masm, scratch, scratch);
+  masm.tagValue(JSVAL_TYPE_INT32, scratch, dest);
+}
+
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emitDebugPrologue() {
   auto ifDebuggee = [this]() {
@@ -2513,17 +2546,12 @@ bool BaselineCodeGen<Handler>::emit_JSOP_LINENO() {
   return true;
 }
 
-template <>
-bool BaselineCompilerCodeGen::emit_JSOP_NEWARRAY() {
+template <typename Handler>
+bool BaselineCodeGen<Handler>::emit_JSOP_NEWARRAY() {
   frame.syncStack(0);
 
-  uint32_t length = GET_UINT32(handler.pc());
-  MOZ_ASSERT(length <= INT32_MAX,
-             "the bytecode emitter must fail to compile code that would "
-             "produce JSOP_NEWARRAY with a length exceeding int32_t range");
-
   // Pass length in R0.
-  masm.move32(Imm32(AssertedCast<int32_t>(length)), R0.scratchReg());
+  loadInt32LengthBytecodeOperand(R0.scratchReg());
 
   if (!emitNextIC()) {
     return false;
@@ -2531,11 +2559,6 @@ bool BaselineCompilerCodeGen::emit_JSOP_NEWARRAY() {
 
   frame.push(R0);
   return true;
-}
-
-template <>
-bool BaselineInterpreterCodeGen::emit_JSOP_NEWARRAY() {
-  MOZ_CRASH("NYI: interpreter JSOP_NEWARRAY");
 }
 
 template <>
@@ -2583,19 +2606,14 @@ bool BaselineInterpreterCodeGen::emit_JSOP_NEWARRAY_COPYONWRITE() {
   return true;
 }
 
-template <>
-bool BaselineCompilerCodeGen::emit_JSOP_INITELEM_ARRAY() {
+template <typename Handler>
+bool BaselineCodeGen<Handler>::emit_JSOP_INITELEM_ARRAY() {
   // Keep the object and rhs on the stack.
   frame.syncStack(0);
 
   // Load object in R0, index in R1.
   masm.loadValue(frame.addressOfStackValue(-2), R0);
-  uint32_t index = GET_UINT32(handler.pc());
-  MOZ_ASSERT(index <= INT32_MAX,
-             "the bytecode emitter must fail to compile code that would "
-             "produce JSOP_INITELEM_ARRAY with a length exceeding "
-             "int32_t range");
-  masm.moveValue(Int32Value(AssertedCast<int32_t>(index)), R1);
+  loadInt32IndexBytecodeOperand(R1);
 
   // Call IC.
   if (!emitNextIC()) {
@@ -2605,11 +2623,6 @@ bool BaselineCompilerCodeGen::emit_JSOP_INITELEM_ARRAY() {
   // Pop the rhs, so that the object is on the top of the stack.
   frame.pop();
   return true;
-}
-
-template <>
-bool BaselineInterpreterCodeGen::emit_JSOP_INITELEM_ARRAY() {
-  MOZ_CRASH("NYI: interpreter JSOP_INITELEM_ARRAY");
 }
 
 template <typename Handler>
