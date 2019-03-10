@@ -4,11 +4,11 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = ["Target"];
+var EXPORTED_SYMBOLS = ["TabTarget"];
 
 const {Connection} = ChromeUtils.import("chrome://remote/content/Connection.jsm");
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {Session} = ChromeUtils.import("chrome://remote/content/sessions/Session.jsm");
+const {TabSession} = ChromeUtils.import("chrome://remote/content/sessions/TabSession.jsm");
 const {WebSocketDebuggerTransport} = ChromeUtils.import("chrome://remote/content/server/WebSocketTransport.jsm");
 const {WebSocketServer} = ChromeUtils.import("chrome://remote/content/server/WebSocket.jsm");
 const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -17,13 +17,15 @@ XPCOMUtils.defineLazyServiceGetter(this, "Favicons",
     "@mozilla.org/browser/favicon-service;1", "nsIFaviconService");
 
 /**
- * A debugging target.
- *
- * Targets can be a document (page), an OOP frame, a background
- * document, or a worker.  They can all run in dedicated process or frame.
+ * Target for a local tab or a remoted frame.
  */
-class Target {
-  constructor(browser) {
+class TabTarget {
+  /**
+   * @param Targets targets
+   * @param BrowserElement browser
+   */
+  constructor(targets, browser) {
+    this.targets = targets;
     this.browser = browser;
     this.sessions = new Map();
   }
@@ -128,7 +130,7 @@ class Target {
     const so = await WebSocketServer.upgrade(request, response);
     const transport = new WebSocketDebuggerTransport(so);
     const conn = new Connection(transport);
-    this.sessions.set(conn, new Session(conn, this));
+    this.sessions.set(conn, new TabSession(conn, this));
   }
 
   // nsIObserver

@@ -19,34 +19,24 @@ const {formatError} = ChromeUtils.import("chrome://remote/content/Error.jsm");
  * from domains.
  */
 class Session {
-  constructor(connection, target) {
+  constructor(connection, target, id) {
     this.connection = connection;
     this.target = target;
+    this.id = id;
 
-    this.connection.onmessage = this.dispatch.bind(this);
+    this.destructor = this.destructor.bind(this);
+
+    this.connection.onmessage = this.onMessage.bind(this);
+    this.connection.transport.on("close", this.destructor);
 
     this.domains = new Domains(this, ParentProcessDomains);
-    this.mm.addMessageListener("remote:event", this);
-    this.mm.addMessageListener("remote:result", this);
-    this.mm.addMessageListener("remote:error", this);
-
-    this.mm.loadFrameScript("chrome://remote/content/sessions/frame-script.js", false);
   }
 
   destructor() {
     this.domains.clear();
-    this.connection.onmessage = null;
-
-    this.mm.sendAsyncMessage("remote:destroy", {
-      browsingContextId: this.browsingContext.id,
-    });
-
-    this.mm.removeMessageListener("remote:event", this);
-    this.mm.removeMessageListener("remote:result", this);
-    this.mm.removeMessageListener("remote:error", this);
   }
 
-  async dispatch({id, method, params}) {
+  async onMessage({id, method, params}) {
     try {
       if (typeof id == "undefined") {
         throw new TypeError("Message missing 'id' field");
@@ -56,68 +46,47 @@ class Session {
       }
 
       const [domainName, methodName] = Domains.splitMethod(method);
-      if (this.domains.domainSupportsMethod(domainName, methodName)) {
-        await this.executeInParent(id, domainName, methodName, params);
-      } else {
-        this.executeInChild(id, domainName, methodName, params);
-      }
+      await this.execute(id, domainName, methodName, params);
     } catch (e) {
-      const error = formatError(e, {stack: true});
-      this.connection.send({id, error: { message: error }});
+      this.onError(id, e);
     }
   }
 
-  async executeInParent(id, domain, method, params) {
+  async execute(id, domain, method, params) {
     const inst = this.domains.get(domain);
     const result = await inst[method](params);
-    this.connection.send({id, result});
+    this.onResult(id, result);
   }
 
-  executeInChild(id, domain, method, params) {
-    this.mm.sendAsyncMessage("remote:request", {
-      browsingContextId: this.browsingContext.id,
-      request: {id, domain, method, params},
+  onResult(id, result) {
+    this.connection.send({
+      id,
+      sessionId: this.id,
+      result,
     });
   }
 
-  get mm() {
-    return this.target.mm;
-  }
-
-  get browsingContext() {
-    return this.target.browsingContext;
+  onError(id, error) {
+    this.connection.send({
+      id,
+      sessionId: this.id,
+      error: {
+        message: formatError(error, {stack: true}),
+      },
+    });
   }
 
   // Domain event listener
 
   onEvent(eventName, params) {
     this.connection.send({
+      sessionId: this.id,
       method: eventName,
       params,
     });
   }
 
-  // nsIMessageListener
-
-  receiveMessage({name, data}) {
-    const {id, result, event, error} = data;
-
-    switch (name) {
-    case "remote:result":
-      this.connection.send({id, result});
-      break;
-
-    case "remote:event":
-      this.connection.send(event);
-      break;
-
-    case "remote:error":
-      this.connection.send({id, error: { message: formatError(error, {stack: true}) }});
-      break;
-    }
-  }
-
   toString() {
-    return `[object Session ${this.connection.id}]`;
+    return `[object ${this.constructor.name} ${this.connection.id}]`;
   }
 }
