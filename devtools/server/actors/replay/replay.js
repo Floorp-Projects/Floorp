@@ -677,7 +677,6 @@ const gRequestHandlers = {
         parameterNames: object.parameterNames,
         script: gScripts.getId(object.script),
         environment: getObjectId(object.environment),
-        global: getObjectId(object.global),
         isProxy: object.isProxy,
         isExtensible: object.isExtensible(),
         isSealed: object.isSealed(),
