@@ -9,6 +9,7 @@ var EXPORTED_SYMBOLS = ["Targets"];
 const {EventEmitter} = ChromeUtils.import("resource://gre/modules/EventEmitter.jsm");
 const {MessagePromise} = ChromeUtils.import("chrome://remote/content/Sync.jsm");
 const {Target} = ChromeUtils.import("chrome://remote/content/targets/Target.jsm");
+const {MainProcessTarget} = ChromeUtils.import("chrome://remote/content/targets/MainProcessTarget.jsm");
 
 class Targets {
   constructor() {
@@ -53,10 +54,26 @@ class Targets {
     for (const target of this) {
       this.disconnect(target.browser);
     }
+    if (this.mainProcessTarget) {
+      this.mainProcessTarget.disconnect();
+      this.mainProcessTarget = null;
+    }
   }
 
   get size() {
     return this._targets.size;
+  }
+
+  /**
+   * Get the Target instance for the main process.
+   * This target is a singleton and only exposes a subset of domains.
+   */
+  getMainProcessTarget() {
+    if (!this.mainProcessTarget) {
+      this.mainProcessTarget = new MainProcessTarget(this);
+      this.emit("connect", this.mainProcessTarget);
+    }
+    return this.mainProcessTarget;
   }
 
   * [Symbol.iterator]() {
