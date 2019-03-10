@@ -201,6 +201,7 @@ export type Actions = {
  */
 export type TabTarget = {
   on: (string, Function) => void,
+  emit: (string, any) => void,
   activeConsole: {
     evaluateJS: (
       script: Script,
