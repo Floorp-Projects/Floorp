@@ -22,7 +22,15 @@ class JSONHandler {
   }
 
   getVersion() {
-    return {};
+    const mainProcessTarget = this.agent.targets.getMainProcessTarget();
+    return {
+      "Browser": "Firefox",
+      "Protocol-Version": "1.0",
+      "User-Agent": "Mozilla",
+      "V8-Version": "1.0",
+      "WebKit-Version": "1.0",
+      "webSocketDebuggerUrl": mainProcessTarget.toJSON().webSocketDebuggerUrl,
+    };
   }
 
   getProtocol() {
