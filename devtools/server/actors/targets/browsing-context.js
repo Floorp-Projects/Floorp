@@ -28,7 +28,6 @@ var DevToolsUtils = require("devtools/shared/DevToolsUtils");
 var { assert } = DevToolsUtils;
 var { TabSources } = require("devtools/server/actors/utils/TabSources");
 var makeDebugger = require("devtools/server/actors/utils/make-debugger");
-const Debugger = require("Debugger");
 const ReplayDebugger = require("devtools/server/actors/replay/debugger");
 const InspectorUtils = require("InspectorUtils");
 
@@ -236,7 +235,7 @@ const browsingContextTargetPrototype = {
     this.listenForNewDocShells = false;
 
     let canRewind = false;
-    if (Debugger.recordReplayProcessKind() == "Middleman") {
+    if (isReplaying) {
       const replayDebugger = new ReplayDebugger();
       canRewind = replayDebugger.canRewind();
     }
