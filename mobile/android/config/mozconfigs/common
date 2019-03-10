@@ -32,7 +32,8 @@ fi
 
 ac_add_options --enable-update-channel=${MOZ_UPDATE_CHANNEL}
 
-ac_add_options --with-google-api-keyfile=/builds/gapi.data
+ac_add_options --with-google-safebrowsing-api-keyfile=/builds/sb-gapi.data
+ac_add_options --with-google-location-service-api-keyfile=/builds/gls-gapi.data
 ac_add_options --with-mozilla-api-keyfile=/builds/mozilla-fennec-geoloc-api.key
 
 ac_add_options --enable-marionette
