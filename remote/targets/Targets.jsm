@@ -8,7 +8,7 @@ var EXPORTED_SYMBOLS = ["Targets"];
 
 const {EventEmitter} = ChromeUtils.import("resource://gre/modules/EventEmitter.jsm");
 const {MessagePromise} = ChromeUtils.import("chrome://remote/content/Sync.jsm");
-const {Target} = ChromeUtils.import("chrome://remote/content/targets/Target.jsm");
+const {TabTarget} = ChromeUtils.import("chrome://remote/content/targets/TabTarget.jsm");
 const {MainProcessTarget} = ChromeUtils.import("chrome://remote/content/targets/MainProcessTarget.jsm");
 
 class Targets {
@@ -29,7 +29,7 @@ class Targets {
       await new MessagePromise(browser.messageManager, "Browser:Init");
     }
 
-    const target = new Target(browser);
+    const target = new TabTarget(this, browser);
     target.connect();
     this._targets.set(target.id, target);
     this.emit("connect", target);

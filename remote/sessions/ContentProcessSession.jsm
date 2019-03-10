@@ -36,7 +36,7 @@ class ContentProcessSession {
     this.messageManager.sendAsyncMessage("remote:event", {
       browsingContextId: this.browsingContext.id,
       event: {
-        method: eventName,
+        eventName,
         params,
       },
     });
