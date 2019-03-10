@@ -3724,8 +3724,7 @@ bool BaselineCompilerCodeGen::emitFormalArgAccess(JSOp op) {
 
   // Load the arguments object data vector.
   Register reg = R2.scratchReg();
-  masm.loadPtr(
-      Address(BaselineFrameReg, BaselineFrame::reverseOffsetOfArgsObj()), reg);
+  masm.loadPtr(frame.addressOfArgsObj(), reg);
   masm.loadPrivate(Address(reg, ArgumentsObject::getDataSlotOffset()), reg);
 
   // Load/store the argument.
@@ -3741,11 +3740,9 @@ bool BaselineCompilerCodeGen::emitFormalArgAccess(JSOp op) {
 
     MOZ_ASSERT(frame.numUnsyncedSlots() == 0);
 
-    // Reload the arguments object
+    // Reload the arguments object.
     Register reg = R2.scratchReg();
-    masm.loadPtr(
-        Address(BaselineFrameReg, BaselineFrame::reverseOffsetOfArgsObj()),
-        reg);
+    masm.loadPtr(frame.addressOfArgsObj(), reg);
 
     Label skipBarrier;
 
@@ -3763,7 +3760,67 @@ bool BaselineCompilerCodeGen::emitFormalArgAccess(JSOp op) {
 
 template <>
 bool BaselineInterpreterCodeGen::emitFormalArgAccess(JSOp op) {
-  MOZ_CRASH("NYI: interpreter emitFormalArgAccess");
+  MOZ_ASSERT(op == JSOP_GETARG || op == JSOP_SETARG);
+
+  // Load the index.
+  Register argReg = R1.scratchReg();
+  LoadUint16Operand(masm, PCRegAtStart, argReg);
+
+  // If the frame has no arguments object, this must be an unaliased access.
+  Label isUnaliased, done;
+  masm.branchTest32(Assembler::Zero, frame.addressOfFlags(),
+                    Imm32(BaselineFrame::HAS_ARGS_OBJ), &isUnaliased);
+  {
+    Register reg = R2.scratchReg();
+
+    // If it's an unmapped arguments object, this is an unaliased access.
+    loadScript(reg);
+    masm.branchTest32(
+        Assembler::Zero, Address(reg, JSScript::offsetOfImmutableFlags()),
+        Imm32(uint32_t(JSScript::ImmutableFlags::HasMappedArgsObj)),
+        &isUnaliased);
+
+    // Load the arguments object data vector.
+    masm.loadPtr(frame.addressOfArgsObj(), reg);
+    masm.loadPrivate(Address(reg, ArgumentsObject::getDataSlotOffset()), reg);
+
+    // Load/store the argument.
+    BaseValueIndex argAddr(reg, argReg, ArgumentsData::offsetOfArgs());
+    if (op == JSOP_GETARG) {
+      masm.loadValue(argAddr, R0);
+      frame.push(R0);
+    } else {
+      masm.guardedCallPreBarrierAnyZone(argAddr, MIRType::Value,
+                                        R0.scratchReg());
+      masm.loadValue(frame.addressOfStackValue(-1), R0);
+      masm.storeValue(R0, argAddr);
+
+      // Reload the arguments object.
+      masm.loadPtr(frame.addressOfArgsObj(), reg);
+
+      Register temp = R1.scratchReg();
+      masm.branchPtrInNurseryChunk(Assembler::Equal, reg, temp, &done);
+      masm.branchValueIsNurseryCell(Assembler::NotEqual, R0, temp, &done);
+
+      masm.call(&postBarrierSlot_);
+    }
+    masm.jump(&done);
+  }
+  masm.bind(&isUnaliased);
+  {
+    BaseValueIndex addr(BaselineFrameReg, argReg,
+                        BaselineFrame::offsetOfArg(0));
+    if (op == JSOP_GETARG) {
+      masm.loadValue(addr, R0);
+      frame.push(R0);
+    } else {
+      masm.loadValue(frame.addressOfStackValue(-1), R0);
+      masm.storeValue(R0, addr);
+    }
+  }
+
+  masm.bind(&done);
+  return true;
 }
 
 template <typename Handler>
