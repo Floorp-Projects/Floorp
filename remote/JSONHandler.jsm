@@ -6,9 +6,10 @@
 
 var EXPORTED_SYMBOLS = ["JSONHandler"];
 
-const {HTTP_404} = ChromeUtils.import("chrome://remote/content/server/HTTPD.jsm");
+const {HTTP_404, HTTP_505} = ChromeUtils.import("chrome://remote/content/server/HTTPD.jsm");
 const {Log} = ChromeUtils.import("chrome://remote/content/Log.jsm");
 const {Protocol} = ChromeUtils.import("chrome://remote/content/Protocol.jsm");
+const {RemoteAgentError} = ChromeUtils.import("chrome://remote/content/Error.jsm");
 
 class JSONHandler {
   constructor(agent) {
@@ -43,12 +44,17 @@ class JSONHandler {
       throw HTTP_404;
     }
 
-    const body = this.routes[request.path]();
-    const payload = JSON.stringify(body, sanitise, Log.verbose ? "\t" : undefined);
+    try {
+      const body = this.routes[request.path]();
+      const payload = JSON.stringify(body, sanitise, Log.verbose ? "\t" : undefined);
 
-    response.setStatusLine(request.httpVersion, 200, "OK");
-    response.setHeader("Content-Type", "application/json");
-    response.write(payload);
+      response.setStatusLine(request.httpVersion, 200, "OK");
+      response.setHeader("Content-Type", "application/json");
+      response.write(payload);
+    } catch (e) {
+      new RemoteAgentError(e).notify();
+      throw HTTP_505;
+    }
   }
 
   // XPCOM
