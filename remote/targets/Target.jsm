@@ -8,7 +8,7 @@ var EXPORTED_SYMBOLS = ["Target"];
 
 const {Connection} = ChromeUtils.import("chrome://remote/content/Connection.jsm");
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const {Session} = ChromeUtils.import("chrome://remote/content/Session.jsm");
+const {Session} = ChromeUtils.import("chrome://remote/content/sessions/Session.jsm");
 const {WebSocketDebuggerTransport} = ChromeUtils.import("chrome://remote/content/server/WebSocketTransport.jsm");
 const {WebSocketServer} = ChromeUtils.import("chrome://remote/content/server/WebSocket.jsm");
 const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
