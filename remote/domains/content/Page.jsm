@@ -6,11 +6,11 @@
 
 var EXPORTED_SYMBOLS = ["Page"];
 
-const {Domain} = ChromeUtils.import("chrome://remote/content/domains/Domain.jsm");
+const {ContentProcessDomain} = ChromeUtils.import("chrome://remote/content/domains/ContentProcessDomain.jsm");
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const {UnsupportedError} = ChromeUtils.import("chrome://remote/content/Error.jsm");
 
-class Page extends Domain {
+class Page extends ContentProcessDomain {
   constructor(session) {
     super(session);
     this.enabled = false;
