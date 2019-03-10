@@ -8,7 +8,7 @@ var EXPORTED_SYMBOLS = ["Targets"];
 
 const {EventEmitter} = ChromeUtils.import("resource://gre/modules/EventEmitter.jsm");
 const {MessagePromise} = ChromeUtils.import("chrome://remote/content/Sync.jsm");
-const {Target} = ChromeUtils.import("chrome://remote/content/Target.jsm");
+const {Target} = ChromeUtils.import("chrome://remote/content/targets/Target.jsm");
 
 class Targets {
   constructor() {
