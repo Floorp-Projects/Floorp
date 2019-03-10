@@ -30,7 +30,7 @@ class Session {
     this.mm.addMessageListener("remote:result", this);
     this.mm.addMessageListener("remote:error", this);
 
-    this.mm.loadFrameScript("chrome://remote/content/frame-script.js", false);
+    this.mm.loadFrameScript("chrome://remote/content/sessions/frame-script.js", false);
   }
 
   destructor() {
