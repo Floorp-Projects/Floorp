@@ -230,7 +230,6 @@ function lazyRequireGetter(obj, property, module, destructure) {
 exports.modules = {
   ChromeUtils,
   HeapSnapshot,
-  InspectorUtils,
   promise,
   // Expose "chrome" Promise, which aren't related to any document
   // and so are never frozen, even if the browser loader module which
@@ -267,6 +266,14 @@ defineLazyGetter(exports.modules, "RecordReplayControl", () => {
   const { addDebuggerToGlobal } = ChromeUtils.import("resource://gre/modules/jsdebugger.jsm");
   addDebuggerToGlobal(global);
   return global.RecordReplayControl;
+});
+
+defineLazyGetter(exports.modules, "InspectorUtils", () => {
+  if (exports.modules.Debugger.recordReplayProcessKind() == "Middleman") {
+    const ReplayInspector = require("devtools/server/actors/replay/inspector");
+    return ReplayInspector.createInspectorUtils(InspectorUtils);
+  }
+  return InspectorUtils;
 });
 
 defineLazyGetter(exports.modules, "Timer", () => {
