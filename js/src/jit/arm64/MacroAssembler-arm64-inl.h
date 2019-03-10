@@ -483,6 +483,10 @@ void MacroAssembler::neg32(Register reg) {
   Negs(ARMRegister(reg, 32), Operand(ARMRegister(reg, 32)));
 }
 
+void MacroAssembler::negPtr(Register reg) {
+  Negs(ARMRegister(reg, 64), Operand(ARMRegister(reg, 64)));
+}
+
 void MacroAssembler::negateFloat(FloatRegister reg) {
   fneg(ARMFPRegister(reg, 32), ARMFPRegister(reg, 32));
 }

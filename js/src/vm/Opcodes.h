@@ -1979,6 +1979,7 @@
     MACRO(JSOP_SETFUNNAME, 182, "setfunname", NULL, 2, 2, 1, JOF_UINT8) \
     /*
      * Moves the top of the stack value under the nth element of the stack.
+     * Note: n must NOT be 0.
      *
      *   Category: Operators
      *   Type: Stack Operations
