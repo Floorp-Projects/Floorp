@@ -498,6 +498,8 @@ void MacroAssembler::neg64(Register64 reg) {
   as_rsc(reg.high, reg.high, Imm8(0));
 }
 
+void MacroAssembler::negPtr(Register reg) { neg32(reg); }
+
 void MacroAssembler::negateDouble(FloatRegister reg) { ma_vneg(reg, reg); }
 
 void MacroAssembler::negateFloat(FloatRegister reg) { ma_vneg_f32(reg, reg); }

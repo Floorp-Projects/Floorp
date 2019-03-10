@@ -264,6 +264,8 @@ void MacroAssembler::inc64(AbsoluteAddress dest) {
 
 void MacroAssembler::neg64(Register64 reg) { negq(reg.reg); }
 
+void MacroAssembler::negPtr(Register reg) { negq(reg); }
+
 // ===============================================================
 // Shift functions
 

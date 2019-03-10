@@ -961,6 +961,7 @@ class MacroAssembler : public MacroAssemblerSpecific {
 
   inline void neg32(Register reg) PER_SHARED_ARCH;
   inline void neg64(Register64 reg) DEFINED_ON(x86, x64, arm, mips32, mips64);
+  inline void negPtr(Register reg) PER_ARCH;
 
   inline void negateFloat(FloatRegister reg) PER_SHARED_ARCH;
 
