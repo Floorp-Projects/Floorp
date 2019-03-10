@@ -14,12 +14,14 @@ remote.jar:
   content/RecommendedPreferences.jsm (RecommendedPreferences.jsm)
   content/Session.jsm (Session.jsm)
   content/Sync.jsm (Sync.jsm)
-  content/Target.jsm (Target.jsm)
-  content/Targets.jsm (Targets.jsm)
   content/WindowManager.jsm (WindowManager.jsm)
 
   # Frame scripts
   content/frame-script.js (frame-script.js)
+
+  # targets
+  content/targets/Target.jsm (targets/Target.jsm)
+  content/targets/Targets.jsm (targets/Targets.jsm)
 
   # domains
   content/domains/Domain.jsm (domains/Domain.jsm)
