@@ -7644,77 +7644,33 @@ nsresult PresShell::EventHandler::HandleEventInternal(
     return NS_OK;
   }
 
-  bool touchIsNew = false;
-  bool isHandlingUserInput = false;
-
   if (mPresShell->mCurrentEventContent && aEvent->IsTargetedAtFocusedWindow()) {
     nsFocusManager* fm = nsFocusManager::GetFocusManager();
     if (fm) {
+      // This may run script now.  So, mPresShell might be destroyed after here.
       fm->FlushBeforeEventHandlingIfNeeded(mPresShell->mCurrentEventContent);
     }
   }
 
-  // XXX How about IME events and input events for plugins?
-  if (aEvent->IsTrusted()) {
-    if (aEvent->IsUserAction()) {
-      mPresShell->mHasHandledUserInput = true;
-    }
-
-    switch (aEvent->mMessage) {
-      case eKeyPress:
-      case eKeyDown:
-      case eKeyUp: {
-        WidgetKeyboardEvent* keyboardEvent = aEvent->AsKeyboardEvent();
-        MaybeHandleKeyboardEventBeforeDispatch(keyboardEvent);
-        // Not all keyboard events are treated as user input, so that popups
-        // can't be opened, fullscreen mode can't be started, etc at unexpected
-        // time.
-        isHandlingUserInput = keyboardEvent->CanTreatAsUserInput();
-        break;
-      }
-      case eMouseDown:
-      case eMouseUp:
-      case ePointerDown:
-      case ePointerUp:
-        isHandlingUserInput = true;
-        break;
-
-      case eMouseMove:
-        nsIPresShell::AllowMouseCapture(
-            EventStateManager::GetActiveEventStateManager() == manager);
-        break;
-
-      case eDrop: {
-        nsCOMPtr<nsIDragSession> session = nsContentUtils::GetDragSession();
-        if (session) {
-          bool onlyChromeDrop = false;
-          session->GetOnlyChromeDrop(&onlyChromeDrop);
-          if (onlyChromeDrop) {
-            aEvent->mFlags.mOnlyChromeDispatch = true;
-          }
-        }
-        break;
-      }
-
-      default:
-        break;
-    }
-
-    RecordEventPreparationPerformance(aEvent);
-
-    if (!mPresShell->mTouchManager.PreHandleEvent(
-            aEvent, aEventStatus, touchIsNew, isHandlingUserInput,
-            mPresShell->mCurrentEventContent)) {
-      return NS_OK;
-    }
-  }
+  bool isHandlingUserInput = PrepareToDispatchEvent(aEvent);
 
   // If we cannot open context menu even though eContextMenu is fired, we
   // should stop dispatching it into the DOM.
-  // XXX Can it be untrusted eContextMenu event here?  If not, we can do
-  //     this in the above block's switch statement.
   if (aEvent->mMessage == eContextMenu &&
       !PrepareToDispatchContextMenuEvent(aEvent)) {
+    return NS_OK;
+  }
+
+  // We finished preparing to dispatch the event.  So, let's record the
+  // performance.
+  RecordEventPreparationPerformance(aEvent);
+
+  // XXX Why don't we measure the performance of TouchManager::PreHandleEvent()
+  //     with RecordEventPreparationPerformance()?
+  bool touchIsNew = false;
+  if (!mPresShell->mTouchManager.PreHandleEvent(
+          aEvent, aEventStatus, touchIsNew, isHandlingUserInput,
+          mPresShell->mCurrentEventContent)) {
     return NS_OK;
   }
 
@@ -7849,10 +7805,63 @@ nsresult PresShell::EventHandler::HandleEventInternal(
   return rv;
 }
 
+bool PresShell::EventHandler::PrepareToDispatchEvent(WidgetEvent* aEvent) {
+  if (!aEvent->IsTrusted()) {
+    return false;
+  }
+
+  if (aEvent->IsUserAction()) {
+    mPresShell->mHasHandledUserInput = true;
+  }
+
+  switch (aEvent->mMessage) {
+    case eKeyPress:
+    case eKeyDown:
+    case eKeyUp: {
+      WidgetKeyboardEvent* keyboardEvent = aEvent->AsKeyboardEvent();
+      MaybeHandleKeyboardEventBeforeDispatch(keyboardEvent);
+      // Not all keyboard events are treated as user input, so that popups
+      // can't be opened, fullscreen mode can't be started, etc at unexpected
+      // time.
+      return keyboardEvent->CanTreatAsUserInput();
+    }
+    case eMouseDown:
+    case eMouseUp:
+    case ePointerDown:
+    case ePointerUp:
+      return true;
+
+    case eMouseMove: {
+      bool allowCapture = EventStateManager::GetActiveEventStateManager() &&
+                          GetPresContext() &&
+                          GetPresContext()->EventStateManager() ==
+                              EventStateManager::GetActiveEventStateManager();
+      nsIPresShell::AllowMouseCapture(allowCapture);
+      return false;
+    }
+    case eDrop: {
+      nsCOMPtr<nsIDragSession> session = nsContentUtils::GetDragSession();
+      if (session) {
+        bool onlyChromeDrop = false;
+        session->GetOnlyChromeDrop(&onlyChromeDrop);
+        if (onlyChromeDrop) {
+          aEvent->mFlags.mOnlyChromeDispatch = true;
+        }
+      }
+      return false;
+    }
+
+    default:
+      return false;
+  }
+}
+
 bool PresShell::EventHandler::PrepareToDispatchContextMenuEvent(
     WidgetEvent* aEvent) {
   MOZ_ASSERT(aEvent);
   MOZ_ASSERT(aEvent->mMessage == eContextMenu);
+
+  // XXX Why do we treat untrusted eContextMenu here?
 
   WidgetMouseEvent* mouseEvent = aEvent->AsMouseEvent();
   if (mouseEvent->IsContextMenuKeyEvent() &&
@@ -7928,6 +7937,10 @@ void PresShell::EventHandler::RecordEventPreparationPerformance(
     const WidgetEvent* aEvent) {
   MOZ_ASSERT(aEvent);
 
+  if (!aEvent->IsTrusted()) {
+    return;
+  }
+
   switch (aEvent->mMessage) {
     case eKeyPress:
     case eKeyDown:
@@ -7986,6 +7999,9 @@ void PresShell::EventHandler::RecordEventPreparationPerformance(
 
 void PresShell::EventHandler::RecordEventHandlingResponsePerformance(
     const WidgetEvent* aEvent) {
+  // XXX Why we include the peformance of untrusted events only here?
+  //     We don't include it at recoding the preparation performance.
+
   if (!Telemetry::CanRecordBase() || aEvent->mTimeStamp.IsNull() ||
       aEvent->mTimeStamp <= mPresShell->mLastOSWake ||
       !aEvent->AsInputEvent()) {

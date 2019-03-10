@@ -7,9 +7,8 @@
 var EXPORTED_SYMBOLS = ["Domain"];
 
 class Domain {
-  constructor(session, target) {
+  constructor(session) {
     this.session = session;
-    this.target = target;
     this.name = this.constructor.name;
 
     this.eventListeners_ = new Set();
@@ -36,20 +35,6 @@ class Domain {
       throw new TypeError();
     }
     this.eventListeners_.add(listener);
-  }
-
-  // helpers
-
-  get content() {
-    return this.session.content;
-  }
-
-  get docShell() {
-    return this.session.docShell;
-  }
-
-  get chromeEventHandler() {
-    return this.docShell.chromeEventHandler;
   }
 
   // static
