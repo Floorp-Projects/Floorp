@@ -18,10 +18,11 @@ remote.jar:
   content/sessions/frame-script.js (sessions/frame-script.js)
   content/sessions/ContentProcessSession.jsm (sessions/ContentProcessSession.jsm)
   content/sessions/Session.jsm (sessions/Session.jsm)
+  content/sessions/TabSession.jsm (sessions/TabSession.jsm)
 
   # targets
-  content/targets/Target.jsm (targets/Target.jsm)
   content/targets/MainProcessTarget.jsm (targets/MainProcessTarget.jsm)
+  content/targets/TabTarget.jsm (targets/TabTarget.jsm)
   content/targets/Targets.jsm (targets/Targets.jsm)
 
   # domains

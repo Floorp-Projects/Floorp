@@ -71,6 +71,13 @@ class Domains {
     return inst;
   }
 
+  /**
+   * Tells if a Domain of the given name is available
+   */
+  has(name) {
+    return name in this.modules;
+  }
+
   get size() {
     return this.instances.size;
   }
