@@ -1,0 +1,6 @@
+[android-components](../../index.md) / [mozilla.components.support.ktx.kotlin](../index.md) / [kotlin.ByteArray](index.md) / [toBitmap](./to-bitmap.md)
+
+# toBitmap
+
+`fun `[`ByteArray`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-byte-array/index.html)`.toBitmap(opts: `[`Options`](https://developer.android.com/reference/android/graphics/BitmapFactory/Options.html)`? = null): `[`Bitmap`](https://developer.android.com/reference/android/graphics/Bitmap.html)`?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/ktx/src/main/java/mozilla/components/support/ktx/kotlin/ByteArray.kt#L28)
+`fun `[`ByteArray`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-byte-array/index.html)`.toBitmap(offset: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`, length: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`, opts: `[`Options`](https://developer.android.com/reference/android/graphics/BitmapFactory/Options.html)`? = null): `[`Bitmap`](https://developer.android.com/reference/android/graphics/Bitmap.html)`?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/ktx/src/main/java/mozilla/components/support/ktx/kotlin/ByteArray.kt#L32)

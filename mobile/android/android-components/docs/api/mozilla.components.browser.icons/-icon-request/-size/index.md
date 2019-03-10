@@ -13,6 +13,7 @@ We are trying to limit the supported sizes in order to optimize our caching stra
 | Name | Summary |
 |---|---|
 | [DEFAULT](-d-e-f-a-u-l-t.md) |  |
+| [LAUNCHER](-l-a-u-n-c-h-e-r.md) |  |
 
 ### Properties
 

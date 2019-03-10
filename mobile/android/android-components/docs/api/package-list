@@ -44,10 +44,13 @@ $dokka.location:mozilla.components.support.ktx.android.view$isVisible(android.vi
 $dokka.location:mozilla.components.support.ktx.android.view$setPadding(android.view.View, mozilla.components.support.base.android.Padding)mozilla.components.support.ktx.android.view/android.view.-view/set-padding.md
 $dokka.location:mozilla.components.support.ktx.android.view$showKeyboard(android.view.View, kotlin.Int)mozilla.components.support.ktx.android.view/android.view.-view/show-keyboard.md
 $dokka.location:mozilla.components.support.ktx.kotlin$ELLIPSIS#kotlin.Char.Companionmozilla.components.support.ktx.kotlin/kotlin.-char/-e-l-l-i-p-s-i-s.md
+$dokka.location:mozilla.components.support.ktx.kotlin$containsAtOffset(kotlin.ByteArray, kotlin.Int, kotlin.ByteArray)mozilla.components.support.ktx.kotlin/kotlin.-byte-array/contains-at-offset.md
 $dokka.location:mozilla.components.support.ktx.kotlin$isEmail(kotlin.String)mozilla.components.support.ktx.kotlin/kotlin.-string/is-email.md
 $dokka.location:mozilla.components.support.ktx.kotlin$isGeoLocation(kotlin.String)mozilla.components.support.ktx.kotlin/kotlin.-string/is-geo-location.md
 $dokka.location:mozilla.components.support.ktx.kotlin$isPhone(kotlin.String)mozilla.components.support.ktx.kotlin/kotlin.-string/is-phone.md
 $dokka.location:mozilla.components.support.ktx.kotlin$isUrl(kotlin.String)mozilla.components.support.ktx.kotlin/kotlin.-string/is-url.md
+$dokka.location:mozilla.components.support.ktx.kotlin$toBitmap(kotlin.ByteArray, android.graphics.BitmapFactory.Options)mozilla.components.support.ktx.kotlin/kotlin.-byte-array/to-bitmap.md
+$dokka.location:mozilla.components.support.ktx.kotlin$toBitmap(kotlin.ByteArray, kotlin.Int, kotlin.Int, android.graphics.BitmapFactory.Options)mozilla.components.support.ktx.kotlin/kotlin.-byte-array/to-bitmap.md
 $dokka.location:mozilla.components.support.ktx.kotlin$toBundle(kotlin.collections.Map((mozilla.components.support.ktx.kotlin.toBundle.K, mozilla.components.support.ktx.kotlin.toBundle.V)))mozilla.components.support.ktx.kotlin/kotlin.collections.-map/to-bundle.md
 $dokka.location:mozilla.components.support.ktx.kotlin$toDate(kotlin.String, kotlin.String, java.util.Locale)mozilla.components.support.ktx.kotlin/kotlin.-string/to-date.md
 $dokka.location:mozilla.components.support.ktx.kotlin$toNormalizedUrl(kotlin.String)mozilla.components.support.ktx.kotlin/kotlin.-string/to-normalized-url.md
@@ -68,6 +71,8 @@ mozilla.components.browser.engine.system.permission
 mozilla.components.browser.engine.system.window
 mozilla.components.browser.errorpages
 mozilla.components.browser.icons
+mozilla.components.browser.icons.decoder
+mozilla.components.browser.icons.decoder.ico
 mozilla.components.browser.icons.generator
 mozilla.components.browser.menu
 mozilla.components.browser.menu.item
