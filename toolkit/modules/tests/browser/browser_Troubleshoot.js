@@ -150,7 +150,10 @@ const SNAPSHOT_SCHEMA = {
         policiesStatus: {
           type: "number",
         },
-        keyGoogleFound: {
+        keyLocationServiceGoogleFound: {
+          type: "boolean",
+        },
+        keySafebrowsingGoogleFound: {
           type: "boolean",
         },
         keyMozillaFound: {
