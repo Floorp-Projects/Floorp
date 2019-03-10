@@ -2173,16 +2173,24 @@ js_option('--enable-stdcxx-compat', env='MOZ_STDCXX_COMPAT',
 @template
 def libstdcxx_version(var, compiler, host_or_target):
     @depends(compiler, host_or_target, when='--enable-stdcxx-compat')
+    @checking(var, lambda v: v and "GLIBCXX_%s" % v.dotted)
     @imports(_from='mozbuild.configure.libstdcxx', _import='find_version')
+    @imports(_from='__builtin__', _import='Exception')
     def version(compiler, host_or_target):
-        if host_or_target.os == 'Android':
+        if host_or_target.os == 'Android' or host_or_target.kernel == 'Darwin':
             return None
-        result = find_version(
-            compiler.wrapper + [compiler.compiler] + compiler.flags)
+        try:
+            result = find_version(
+                compiler.wrapper + [compiler.compiler] + compiler.flags)
+        except Exception:
+            die("Couldn't determine libstdc++ version")
         if result:
-            return str(result)
+            return namespace(
+                dotted=result[0],
+                encoded=str(result[1]),
+            )
 
-    set_config(var, version)
+    set_config(var, version.encoded)
     return version
 
 
