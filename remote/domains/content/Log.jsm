@@ -10,8 +10,8 @@ const {Domain} = ChromeUtils.import("chrome://remote/content/domains/Domain.jsm"
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 class Log extends Domain {
-  constructor(session, target) {
-    super(session, target);
+  constructor(session) {
+    super(session);
     this.enabled = false;
   }
 

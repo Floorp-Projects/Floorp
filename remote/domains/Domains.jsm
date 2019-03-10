@@ -58,7 +58,7 @@ class Domains {
         throw new TypeError("Domain cannot be constructed");
       }
 
-      inst = new Cls(this.session, this.session.target);
+      inst = new Cls(this.session);
       if (!(inst instanceof Domain)) {
         throw new TypeError("Instance not a domain");
       }
