@@ -6,12 +6,12 @@
 
 var EXPORTED_SYMBOLS = ["Log"];
 
-const {Domain} = ChromeUtils.import("chrome://remote/content/domains/Domain.jsm");
+const {ContentProcessDomain} = ChromeUtils.import("chrome://remote/content/domains/ContentProcessDomain.jsm");
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-class Log extends Domain {
-  constructor(session, target) {
-    super(session, target);
+class Log extends ContentProcessDomain {
+  constructor(session) {
+    super(session);
     this.enabled = false;
   }
 

@@ -1070,7 +1070,7 @@ class PresShell final : public nsIPresShell,
 
     /**
      * RecordEventPreparationPerformance() records event preparation performance
-     * with telemetry.
+     * with telemetry only when aEvent is a trusted event.
      *
      * @param aEvent            The handling event which we've finished
      *                          preparing something to dispatch.
@@ -1084,6 +1084,17 @@ class PresShell final : public nsIPresShell,
      * @param aEvent            The handled event.
      */
     void RecordEventHandlingResponsePerformance(const WidgetEvent* aEvent);
+
+    /**
+     * PrepareToDispatchEvent() prepares to dispatch aEvent.
+     *
+     * @param aEvent            The handling event.
+     * @return                  true if the event is user interaction.  I.e.,
+     *                          enough obvious input to allow to open popup,
+     *                          etc.  false, otherwise.
+     */
+    MOZ_CAN_RUN_SCRIPT
+    bool PrepareToDispatchEvent(WidgetEvent* aEvent);
 
     /**
      * MaybeHandleKeyboardEventBeforeDispatch() may handle aKeyboardEvent
