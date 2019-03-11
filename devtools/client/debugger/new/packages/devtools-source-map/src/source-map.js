@@ -46,10 +46,6 @@ type Range = {
   }
 };
 
-export type locationOptions = {
-  search?: "LEAST_UPPER_BOUND" | "GREATEST_LOWER_BOUND"
-};
-
 async function getOriginalURLs(
   generatedSource: Source
 ): Promise<SourceMapConsumer> {
@@ -261,15 +257,9 @@ async function getAllGeneratedLocations(
   }));
 }
 
-function getOriginalLocations(
-  locations: SourceLocation[],
-  options: locationOptions = {}
-) {
-  return Promise.all(
-    locations.map(location => getOriginalLocation(location, options))
-  );
-}
-
+export type locationOptions = {
+  search?: "LEAST_UPPER_BOUND" | "GREATEST_LOWER_BOUND"
+};
 async function getOriginalLocation(
   location: SourceLocation,
   { search }: locationOptions = {}
@@ -556,7 +546,6 @@ module.exports = {
   getGeneratedLocation,
   getAllGeneratedLocations,
   getOriginalLocation,
-  getOriginalLocations,
   getOriginalSourceText,
   getGeneratedRangesForOriginal,
   getFileGeneratedRange,
