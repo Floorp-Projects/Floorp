@@ -94,6 +94,10 @@ bool JS::IsArray(JSContext* cx, HandleObject obj, bool* isArray) {
   return true;
 }
 
+bool js::IsArrayFromJit(JSContext* cx, HandleObject obj, bool* isArray) {
+  return JS::IsArray(cx, obj, isArray);
+}
+
 // ES2017 7.1.15 ToLength, but clamped to the [0,2^32-2] range.
 static bool ToLengthClamped(JSContext* cx, HandleValue v, uint32_t* out) {
   if (v.isInt32()) {

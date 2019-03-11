@@ -1274,11 +1274,13 @@ bool RecompileImpl(JSContext* cx, bool force) {
   return true;
 }
 
-bool ForcedRecompile(JSContext* cx) {
+bool IonForcedRecompile(JSContext* cx) {
   return RecompileImpl(cx, /* force = */ true);
 }
 
-bool Recompile(JSContext* cx) { return RecompileImpl(cx, /* force = */ false); }
+bool IonRecompile(JSContext* cx) {
+  return RecompileImpl(cx, /* force = */ false);
+}
 
 bool SetDenseElement(JSContext* cx, HandleNativeObject obj, int32_t index,
                      HandleValue value, bool strict) {
@@ -1996,12 +1998,6 @@ bool DoToNumeric(JSContext* cx, HandleValue arg, MutableHandleValue ret) {
   ret.set(arg);
   return ToNumeric(cx, ret);
 }
-
-typedef bool (*ToNumericFn)(JSContext*, HandleValue, MutableHandleValue);
-const VMFunction ToNumberInfo =
-    FunctionInfo<ToNumericFn>(DoToNumber, "ToNumber");
-const VMFunction ToNumericInfo =
-    FunctionInfo<ToNumericFn>(DoToNumeric, "ToNumeric");
 
 }  // namespace jit
 }  // namespace js
