@@ -55,7 +55,7 @@ def generate_build_task(apks, is_staging):
             ' && python automation/taskcluster/helper/get-secret.py'
             ' -s {} -k dsn -f .sentry_token'.format(sentry_secret) +
             ' && python automation/taskcluster/helper/get-secret.py'
-            ' -s {} -k production -f .leanplum_token'.format(leanplum_token) +
+            ' -s {} -k production -f .leanplum_token'.format(leanplum_secret) +
             ' && ./gradlew --no-daemon -PcrashReports=true clean test assembleRelease'),
         features={
             "chainOfTrust": True,
@@ -63,7 +63,7 @@ def generate_build_task(apks, is_staging):
         },
         artifacts=artifacts,
         scopes=[
-            "secrets:get:{}".format(sentry_secret)
+            "secrets:get:{}".format(sentry_secret),
             "secrets:get:{}".format(leanplum_secret)
         ]
     )
