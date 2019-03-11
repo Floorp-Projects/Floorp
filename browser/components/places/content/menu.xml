@@ -438,7 +438,7 @@
         }
 
         // We should display the drop indicator relative to the arrowscrollbox.
-        let scrollRect = this._scrollBox.scrollbox.getBoundingClientRect();
+        let scrollRect = this._scrollBox.getBoundingClientRect();
         let newMarginTop = 0;
         if (scrollDir == 0) {
           let elt = this.firstElementChild;
