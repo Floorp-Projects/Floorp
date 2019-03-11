@@ -1,0 +1,10 @@
+[
+  {
+    "size": 6086637,
+    "visibility": "public",
+    "digest": "cebc9d79b1fb4023fa0a16c1cf133d11775aefa87c6fe5c6b630b56bd0715cd50414a3a948051ef2838b4c3bd5d7396b50408da572bf5c1a2fc69673131bb356",
+    "algorithm": "sha512",
+    "filename": "android-jianshu.zip",
+    "unpack": true
+  }
+]
