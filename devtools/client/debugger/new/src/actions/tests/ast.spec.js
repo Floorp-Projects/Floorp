@@ -45,7 +45,8 @@ const sourceMaps = {
     text: sourceTexts[id],
     contentType: "text/javascript"
   }),
-  getGeneratedRangesForOriginal: async () => []
+  getGeneratedRangesForOriginal: async () => [],
+  getOriginalLocations: async items => items
 };
 
 const sourceTexts = {
