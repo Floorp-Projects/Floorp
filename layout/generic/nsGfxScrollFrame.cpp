@@ -3742,7 +3742,8 @@ void ScrollFrameHelper::MaybeAddTopLayerItems(nsDisplayListBuilder* aBuilder,
         // Wrap the whole top layer in a single item with maximum z-index,
         // and append it at the very end, so that it stays at the topmost.
         nsDisplayWrapList* wrapList = MakeDisplayItem<nsDisplayWrapList>(
-            aBuilder, viewportFrame, &topLayerList);
+            aBuilder, viewportFrame, &topLayerList,
+            aBuilder->CurrentActiveScrolledRoot(), false, 2);
         wrapList->SetOverrideZIndex(
             std::numeric_limits<decltype(wrapList->ZIndex())>::max());
         aLists.PositionedDescendants()->AppendToTop(wrapList);
