@@ -488,7 +488,7 @@ inline bool NativeObject::isInWholeCellBuffer() const {
   size_t nDynamicSlots =
       dynamicSlotsCount(shape->numFixedSlots(), shape->slotSpan(), clasp);
 
-  JSObject* obj = js::Allocate<JSObject>(cx, kind, nDynamicSlots, heap, clasp);
+  JSObject* obj = js::AllocateObject(cx, kind, nDynamicSlots, heap, clasp);
   if (!obj) {
     return cx->alreadyReportedOOM();
   }
