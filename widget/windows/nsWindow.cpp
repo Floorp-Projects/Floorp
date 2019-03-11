@@ -6541,16 +6541,6 @@ void nsWindow::OnWindowPosChanging(LPWINDOWPOS& info) {
   }
   // prevent rude external programs from making hidden window visible
   if (mWindowType == eWindowType_invisible) info->flags &= ~SWP_SHOWWINDOW;
-
-  // When waking from sleep or switching out of tablet mode, Windows 10
-  // Version 1809 will reopen popup windows that should be hidden. Detect
-  // this case and refuse to show the window.
-  static bool sDWMUnhidesPopups = IsWin10Sep2018UpdateOrLater();
-  if (sDWMUnhidesPopups && (info->flags & SWP_SHOWWINDOW) &&
-      mWindowType == eWindowType_popup && mWidgetListener &&
-      mWidgetListener->ShouldNotBeVisible()) {
-    info->flags &= ~SWP_SHOWWINDOW;
-  }
 }
 
 void nsWindow::UserActivity() {

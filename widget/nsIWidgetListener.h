@@ -163,13 +163,6 @@ class nsIWidgetListener {
   virtual void RequestRepaint();
 
   /**
-   * Returns true if this is a popup that should not be visible. If this
-   * is a popup that is visible, not a popup or this state is unknown,
-   * returns false.
-   */
-  virtual bool ShouldNotBeVisible();
-
-  /**
    * Handle an event.
    */
   virtual nsEventStatus HandleEvent(mozilla::WidgetGUIEvent* aEvent,
