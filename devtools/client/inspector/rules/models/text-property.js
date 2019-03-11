@@ -248,12 +248,7 @@ class TextProperty {
       return true;
     }
 
-    // Starting with FF61, StyleRuleActor provides an accessor to signal if the property
-    // name is valid. If we don't have this, assume the name is valid. In use, rely on
-    // isValid() as a guard against false positives.
-    return (this.rule.domRule.declarations[selfIndex].isNameValid !== undefined)
-      ? this.rule.domRule.declarations[selfIndex].isNameValid
-      : true;
+    return this.rule.domRule.declarations[selfIndex].isNameValid;
   }
 }
 
