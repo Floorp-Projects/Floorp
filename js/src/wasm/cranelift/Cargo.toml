@@ -8,7 +8,7 @@ crate-type = ["rlib"]
 name = "baldrdash"
 
 [dependencies]
-cranelift-codegen = "0.29.0"
+cranelift-codegen = { version = "0.29.0", default-features = false }
 cranelift-wasm = "0.29.0"
 target-lexicon = "0.2.0"
 log = { version = "0.4.6", default-features = false, features = ["release_max_level_info"] }
@@ -16,6 +16,16 @@ env_logger = "0.5.6"
 
 [build-dependencies]
 bindgen = {version = "0.43", default-features = false} # disable `logging` to reduce code size
+
+[features]
+default = ['cranelift-codegen/std']
+cranelift_x86 = ['cranelift-codegen/x86']
+cranelift_arm32 = ['cranelift-codegen/arm32']
+cranelift_arm64 = ['cranelift-codegen/arm64']
+
+# The "none" support is a lie (so far): Cranelift has to include support for
+# one ISA at the moment, so request to include support for a small one: riscv.
+cranelift_none = ['cranelift-codegen/riscv']
 
 # Uncomment this to enable perf support in release mode.
 #[profile.release]
