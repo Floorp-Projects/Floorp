@@ -40,8 +40,22 @@ views:
 
 Now you can use the event from the applications code:
 ```Kotlin
-import org.mozilla.samples.glean.GleanMetrics.Views
+import org.mozilla.yourApplication.GleanMetrics.Views
 
 // ...
 Views.loginOpened.record(mapOf("source" to "toolbar"))
+```
+
+There are test APIs available too, for example:
+```Kotlin
+import org.mozilla.yourApplication.GleanMetrics.Views
+
+// Was any event recorded?
+assertTrue(Views.loginOpened.testHasValue())
+// Get a List of the recorded events.
+val snapshot = Views.loginOpened.testGetValue()
+// Check that two events were recorded.
+assertEquals(2, snapshot.size)
+val first = snapshot.single()
+assertEquals("login_opened", first.name)
 ```
