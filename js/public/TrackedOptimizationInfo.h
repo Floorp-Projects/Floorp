@@ -203,6 +203,7 @@ namespace JS {
   _(CantInlineBigCaller)                          \
   _(CantInlineBigCallee)                          \
   _(CantInlineBigCalleeInlinedBytecodeLength)     \
+  _(CantInlineCrossRealm)                         \
   _(CantInlineNotHot)                             \
   _(CantInlineNotInDispatch)                      \
   _(CantInlineUnreachable)                        \
