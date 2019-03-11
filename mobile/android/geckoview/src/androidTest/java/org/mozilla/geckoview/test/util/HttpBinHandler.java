@@ -16,6 +16,8 @@
 
 package org.mozilla.geckoview.test.util;
 
+import android.content.Context;
+import android.content.res.AssetManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
@@ -45,6 +47,14 @@ import org.json.JSONObject;
 class HttpBinHandler extends AbstractHandler {
     private static final String LOGTAG = "HttpBinHandler";
     private static final int BUFSIZE = 4096;
+
+    private AssetManager mAssets;
+
+    public HttpBinHandler(@NonNull Context context) {
+        super();
+
+        mAssets = context.getResources().getAssets();
+    }
 
     private static void pipe(final @NonNull InputStream is) throws IOException {
         pipe(is, null);
@@ -188,6 +198,11 @@ class HttpBinHandler extends AbstractHandler {
                 os.flush();
 
                 baseRequest.setHandled(true);
+            } else if (uri.startsWith("/assets")) {
+                pipe(is);
+                pipe(mAssets.open(uri.substring("/assets/".length())), os);
+                os.flush();
+                baseRequest.setHandled(true);
             }
 
             if (!baseRequest.isHandled()) {
@@ -200,6 +215,10 @@ class HttpBinHandler extends AbstractHandler {
             baseRequest.setHandled(true);
         } catch (NoSuchAlgorithmException e) {
             Log.e(LOGTAG, "Failed to generate digest", e);
+            servletResponse.setStatus(500);
+            baseRequest.setHandled(true);
+        } catch (IOException e) {
+            Log.e(LOGTAG, "Failed to respond", e);
             servletResponse.setStatus(500);
             baseRequest.setHandled(true);
         }
