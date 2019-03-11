@@ -4572,9 +4572,7 @@ bool nsDisplayBackgroundColor::CanApplyOpacity() const {
 LayerState nsDisplayBackgroundColor::GetLayerState(
     nsDisplayListBuilder* aBuilder, LayerManager* aManager,
     const ContainerLayerParameters& aParameters) {
-  StyleGeometryBox clip =
-      mBackgroundStyle->StyleBackground()->mImage.mLayers[0].mClip;
-  if (ForceActiveLayers() && clip != StyleGeometryBox::Text) {
+  if (ForceActiveLayers() && !HasBackgroundClipText()) {
     return LAYER_ACTIVE;
   }
 
@@ -4622,9 +4620,7 @@ bool nsDisplayBackgroundColor::CreateWebRenderCommands(
     return true;
   }
 
-  StyleGeometryBox clip =
-      mBackgroundStyle->StyleBackground()->mImage.mLayers[0].mClip;
-  if (clip == StyleGeometryBox::Text) {
+  if (HasBackgroundClipText()) {
     return false;
   }
 
@@ -4641,8 +4637,8 @@ bool nsDisplayBackgroundColor::CreateWebRenderCommands(
 void nsDisplayBackgroundColor::PaintWithClip(nsDisplayListBuilder* aBuilder,
                                              gfxContext* aCtx,
                                              const DisplayItemClip& aClip) {
-  MOZ_ASSERT(mBackgroundStyle->StyleBackground()->mImage.mLayers[0].mClip !=
-             StyleGeometryBox::Text);
+  MOZ_ASSERT(!HasBackgroundClipText());
+
   if (mColor == Color()) {
     return;
   }
@@ -4713,9 +4709,7 @@ void nsDisplayBackgroundColor::Paint(nsDisplayListBuilder* aBuilder,
   gfxRect bounds = nsLayoutUtils::RectToGfxRect(
       mBackgroundRect, mFrame->PresContext()->AppUnitsPerDevPixel());
 
-  StyleGeometryBox clip =
-      mBackgroundStyle->StyleBackground()->mImage.mLayers[0].mClip;
-  if (clip == StyleGeometryBox::Text) {
+  if (HasBackgroundClipText()) {
     if (!GenerateAndPushTextMask(mFrame, aCtx, mBackgroundRect, aBuilder)) {
       return;
     }
@@ -4743,17 +4737,13 @@ nsRegion nsDisplayBackgroundColor::GetOpaqueRegion(
     return nsRegion();
   }
 
-  if (!mBackgroundStyle) return nsRegion();
-
-  const nsStyleImageLayers::Layer& bottomLayer =
-      mBackgroundStyle->StyleBackground()->BottomLayer();
-  if (bottomLayer.mClip == StyleGeometryBox::Text) {
+  if (!mHasStyle || HasBackgroundClipText()) {
     return nsRegion();
   }
 
   *aSnap = true;
   return nsDisplayBackgroundImage::GetInsideClipRegion(
-      this, bottomLayer.mClip, mBackgroundRect, mBackgroundRect);
+      this, mBottomLayerClip, mBackgroundRect, mBackgroundRect);
 }
 
 Maybe<nscolor> nsDisplayBackgroundColor::IsUniform(
