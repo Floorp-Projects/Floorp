@@ -30,6 +30,168 @@ WEB_ELEMENT_KEY = "element-6066-11e4-a52e-4f735466cecf"
 WINDOW_KEY = "window-fcc6-11e5-b4f8-330a88ab9d7f"
 
 
+class MouseButton(object):
+    """Enum-like class for mouse button constants."""
+    LEFT = 0
+    MIDDLE = 1
+    RIGHT = 2
+
+
+class ActionSequence(object):
+    r"""API for creating and performing action sequences.
+
+    Each action method adds one or more actions to a queue. When perform()
+    is called, the queued actions fire in order.
+
+    May be chained together as in::
+
+         ActionSequence(self.marionette, "key", id) \
+            .key_down("a") \
+            .key_up("a") \
+            .perform()
+    """
+
+    def __init__(self, marionette, action_type, input_id, pointer_params=None):
+        self.marionette = marionette
+        self._actions = []
+        self._id = input_id
+        self._pointer_params = pointer_params
+        self._type = action_type
+
+    @property
+    def dict(self):
+        d = {
+            "type": self._type,
+            "id": self._id,
+            "actions": self._actions,
+        }
+        if self._pointer_params is not None:
+            d["parameters"] = self._pointer_params
+        return d
+
+    def perform(self):
+        """Perform all queued actions."""
+        self.marionette.actions.perform([self.dict])
+
+    def _key_action(self, subtype, value):
+        self._actions.append({"type": subtype, "value": value})
+
+    def _pointer_action(self, subtype, button):
+        self._actions.append({"type": subtype, "button": button})
+
+    def pause(self, duration):
+        self._actions.append({"type": "pause", "duration": duration})
+        return self
+
+    def pointer_move(self, x, y, duration=None, origin=None):
+        """Queue a pointerMove action.
+
+        :param x: Destination x-axis coordinate of pointer in CSS pixels.
+        :param y: Destination y-axis coordinate of pointer in CSS pixels.
+        :param duration: Number of milliseconds over which to distribute the
+                         move. If None, remote end defaults to 0.
+        :param origin: Origin of coordinates, either "viewport", "pointer" or
+                       an Element. If None, remote end defaults to "viewport".
+        """
+        action = {
+            "type": "pointerMove",
+            "x": x,
+            "y": y
+        }
+        if duration is not None:
+            action["duration"] = duration
+        if origin is not None:
+            if isinstance(origin, HTMLElement):
+                action["origin"] = {WEB_ELEMENT_KEY: origin.id}
+            else:
+                action["origin"] = origin
+        self._actions.append(action)
+        return self
+
+    def pointer_up(self, button=MouseButton.LEFT):
+        """Queue a pointerUp action for `button`.
+
+        :param button: Pointer button to perform action with.
+                       Default: 0, which represents main device button.
+        """
+        self._pointer_action("pointerUp", button)
+        return self
+
+    def pointer_down(self, button=MouseButton.LEFT):
+        """Queue a pointerDown action for `button`.
+
+        :param button: Pointer button to perform action with.
+                       Default: 0, which represents main device button.
+        """
+        self._pointer_action("pointerDown", button)
+        return self
+
+    def click(self, element=None, button=MouseButton.LEFT):
+        """Queue a click with the specified button.
+
+        If an element is given, move the pointer to that element first,
+        otherwise click current pointer coordinates.
+
+        :param element: Optional element to click.
+        :param button: Integer representing pointer button to perform action
+                       with. Default: 0, which represents main device button.
+        """
+        if element:
+            self.pointer_move(0, 0, origin=element)
+        return self.pointer_down(button).pointer_up(button)
+
+    def key_down(self, value):
+        """Queue a keyDown action for `value`.
+
+        :param value: Single character to perform key action with.
+        """
+        self._key_action("keyDown", value)
+        return self
+
+    def key_up(self, value):
+        """Queue a keyUp action for `value`.
+
+        :param value: Single character to perform key action with.
+        """
+        self._key_action("keyUp", value)
+        return self
+
+    def send_keys(self, keys):
+        """Queue a keyDown and keyUp action for each character in `keys`.
+
+        :param keys: String of keys to perform key actions with.
+        """
+        for c in keys:
+            self.key_down(c)
+            self.key_up(c)
+        return self
+
+
+class Actions(object):
+    def __init__(self, marionette):
+        self.marionette = marionette
+
+    def perform(self, actions=None):
+        """Perform actions by tick from each action sequence in `actions`.
+
+        :param actions: List of input source action sequences. A single action
+                        sequence may be created with the help of
+                        ``ActionSequence.dict``.
+        """
+        body = {"actions": [] if actions is None else actions}
+        return self.marionette._send_message("WebDriver:PerformActions", body)
+
+    def release(self):
+        return self.marionette._send_message("WebDriver:ReleaseActions")
+
+    def sequence(self, *args, **kwargs):
+        """Return an empty ActionSequence of the designated type.
+
+        See ActionSequence for parameter list.
+        """
+        return ActionSequence(self.marionette, *args, **kwargs)
+
+
 class HTMLElement(object):
     """Represents a DOM Element."""
 
@@ -194,340 +356,6 @@ class HTMLElement(object):
         raise ValueError("Unrecognised web element")
 
 
-class MouseButton(object):
-    """Enum-like class for mouse button constants."""
-    LEFT = 0
-    MIDDLE = 1
-    RIGHT = 2
-
-
-class Actions(object):
-    '''
-    An Action object represents a set of actions that are executed in a particular order.
-
-    All action methods (press, etc.) return the Actions object itself, to make
-    it easy to create a chain of events.
-
-    Example usage:
-
-    ::
-
-        # get html file
-        testAction = marionette.absolute_url("testFool.html")
-        # navigate to the file
-        marionette.navigate(testAction)
-        # find element1 and element2
-        element1 = marionette.find_element(By.ID, "element1")
-        element2 = marionette.find_element(By.ID, "element2")
-        # create action object
-        action = Actions(marionette)
-        # add actions (press, wait, move, release) into the object
-        action.press(element1).wait(5). move(element2).release()
-        # fire all the added events
-        action.perform()
-    '''
-
-    def __init__(self, marionette):
-        self.action_chain = []
-        self.marionette = marionette
-        self.current_id = None
-
-    def press(self, element, x=None, y=None):
-        '''
-        Sends a 'touchstart' event to this element.
-
-        If no coordinates are given, it will be targeted at the center of the
-        element. If given, it will be targeted at the (x,y) coordinates
-        relative to the top-left corner of the element.
-
-        :param element: The element to press on.
-        :param x: Optional, x-coordinate to tap, relative to the top-left
-         corner of the element.
-        :param y: Optional, y-coordinate to tap, relative to the top-left
-         corner of the element.
-        '''
-        element = element.id
-        self.action_chain.append(['press', element, x, y])
-        return self
-
-    def release(self):
-        '''
-        Sends a 'touchend' event to this element.
-
-        May only be called if :func:`press` has already be called on this element.
-
-        If press and release are chained without a move action between them,
-        then it will be processed as a 'tap' event, and will dispatch the
-        expected mouse events ('mousemove' (if necessary), 'mousedown',
-        'mouseup', 'mouseclick') after the touch events. If there is a wait
-        period between press and release that will trigger a contextmenu,
-        then the 'contextmenu' menu event will be fired instead of the
-        touch/mouse events.
-        '''
-        self.action_chain.append(['release'])
-        return self
-
-    def move(self, element):
-        '''
-        Sends a 'touchmove' event at the center of the target element.
-
-        :param element: Element to move towards.
-
-        May only be called if :func:`press` has already be called.
-        '''
-        element = element.id
-        self.action_chain.append(['move', element])
-        return self
-
-    def move_by_offset(self, x, y):
-        '''
-        Sends 'touchmove' event to the given x, y coordinates relative to the
-        top-left of the currently touched element.
-
-        May only be called if :func:`press` has already be called.
-
-        :param x: Specifies x-coordinate of move event, relative to the
-         top-left corner of the element.
-        :param y: Specifies y-coordinate of move event, relative to the
-         top-left corner of the element.
-        '''
-        self.action_chain.append(['moveByOffset', x, y])
-        return self
-
-    def wait(self, time=None):
-        '''
-        Waits for specified time period.
-
-        :param time: Time in seconds to wait. If time is None then this has no effect
-                     for a single action chain. If used inside a multi-action chain,
-                     then time being None indicates that we should wait for all other
-                     currently executing actions that are part of the chain to complete.
-        '''
-        self.action_chain.append(['wait', time])
-        return self
-
-    def cancel(self):
-        '''
-        Sends 'touchcancel' event to the target of the original 'touchstart' event.
-
-        May only be called if :func:`press` has already be called.
-        '''
-        self.action_chain.append(['cancel'])
-        return self
-
-    def tap(self, element, x=None, y=None):
-        '''
-        Performs a quick tap on the target element.
-
-        :param element: The element to tap.
-        :param x: Optional, x-coordinate of tap, relative to the top-left
-         corner of the element. If not specified, default to center of
-         element.
-        :param y: Optional, y-coordinate of tap, relative to the top-left
-         corner of the element. If not specified, default to center of
-         element.
-
-        This is equivalent to calling:
-
-        ::
-
-          action.press(element, x, y).release()
-        '''
-        element = element.id
-        self.action_chain.append(['press', element, x, y])
-        self.action_chain.append(['release'])
-        return self
-
-    def double_tap(self, element, x=None, y=None):
-        '''
-        Performs a double tap on the target element.
-
-        :param element: The element to double tap.
-        :param x: Optional, x-coordinate of double tap, relative to the
-         top-left corner of the element.
-        :param y: Optional, y-coordinate of double tap, relative to the
-         top-left corner of the element.
-        '''
-        element = element.id
-        self.action_chain.append(['press', element, x, y])
-        self.action_chain.append(['release'])
-        self.action_chain.append(['press', element, x, y])
-        self.action_chain.append(['release'])
-        return self
-
-    def click(self, element, button=MouseButton.LEFT, count=1):
-        '''
-        Performs a click with additional parameters to allow for double clicking,
-        right click, middle click, etc.
-
-        :param element: The element to click.
-        :param button: The mouse button to click (indexed from 0, left to right).
-        :param count: Optional, the count of clicks to synthesize (for double
-                      click events).
-        '''
-        el = element.id
-        self.action_chain.append(['click', el, button, count])
-        return self
-
-    def context_click(self, element):
-        '''
-        Performs a context click on the specified element.
-
-        :param element: The element to context click.
-        '''
-        return self.click(element, button=MouseButton.RIGHT)
-
-    def middle_click(self, element):
-        '''
-        Performs a middle click on the specified element.
-
-        :param element: The element to middle click.
-        '''
-        return self.click(element, button=MouseButton.MIDDLE)
-
-    def double_click(self, element):
-        '''
-        Performs a double click on the specified element.
-
-        :param element: The element to double click.
-        '''
-        return self.click(element, count=2)
-
-    def flick(self, element, x1, y1, x2, y2, duration=200):
-        '''
-        Performs a flick gesture on the target element.
-
-        :param element: The element to perform the flick gesture on.
-        :param x1: Starting x-coordinate of flick, relative to the top left
-         corner of the element.
-        :param y1: Starting y-coordinate of flick, relative to the top left
-         corner of the element.
-        :param x2: Ending x-coordinate of flick, relative to the top left
-         corner of the element.
-        :param y2: Ending y-coordinate of flick, relative to the top left
-         corner of the element.
-        :param duration: Time needed for the flick gesture for complete (in
-         milliseconds).
-        '''
-        element = element.id
-        elapsed = 0
-        time_increment = 10
-        if time_increment >= duration:
-            time_increment = duration
-        move_x = time_increment*1.0/duration * (x2 - x1)
-        move_y = time_increment*1.0/duration * (y2 - y1)
-        self.action_chain.append(['press', element, x1, y1])
-        while elapsed < duration:
-            elapsed += time_increment
-            self.action_chain.append(['moveByOffset', move_x, move_y])
-            self.action_chain.append(['wait', time_increment/1000])
-        self.action_chain.append(['release'])
-        return self
-
-    def long_press(self, element, time_in_seconds, x=None, y=None):
-        '''
-        Performs a long press gesture on the target element.
-
-        :param element: The element to press.
-        :param time_in_seconds: Time in seconds to wait before releasing the press.
-        :param x: Optional, x-coordinate to tap, relative to the top-left
-         corner of the element.
-        :param y: Optional, y-coordinate to tap, relative to the top-left
-         corner of the element.
-
-        This is equivalent to calling:
-
-        ::
-
-          action.press(element, x, y).wait(time_in_seconds).release()
-
-        '''
-        element = element.id
-        self.action_chain.append(['press', element, x, y])
-        self.action_chain.append(['wait', time_in_seconds])
-        self.action_chain.append(['release'])
-        return self
-
-    def key_down(self, key_code):
-        """
-        Perform a "keyDown" action for the given key code. Modifier keys are
-        respected by the server for the course of an action chain.
-
-        :param key_code: The key to press as a result of this action.
-        """
-        self.action_chain.append(['keyDown', key_code])
-        return self
-
-    def key_up(self, key_code):
-        """
-        Perform a "keyUp" action for the given key code. Modifier keys are
-        respected by the server for the course of an action chain.
-
-        :param key_up: The key to release as a result of this action.
-        """
-        self.action_chain.append(['keyUp', key_code])
-        return self
-
-    def perform(self):
-        """Sends the action chain built so far to the server side for
-        execution and clears the current chain of actions."""
-        body = {"chain": self.action_chain, "nextId": self.current_id}
-        try:
-            self.current_id = self.marionette._send_message("Marionette:ActionChain",
-                                                            body, key="value")
-        except errors.UnknownCommandException:
-            self.current_id = self.marionette._send_message("actionChain",
-                                                            body, key="value")
-        self.action_chain = []
-        return self
-
-
-class MultiActions(object):
-    '''
-    A MultiActions object represents a sequence of actions that may be
-    performed at the same time. Its intent is to allow the simulation
-    of multi-touch gestures.
-    Usage example:
-
-    ::
-
-      # create multiaction object
-      multitouch = MultiActions(marionette)
-      # create several action objects
-      action_1 = Actions(marionette)
-      action_2 = Actions(marionette)
-      # add actions to each action object/finger
-      action_1.press(element1).move_to(element2).release()
-      action_2.press(element3).wait().release(element3)
-      # fire all the added events
-      multitouch.add(action_1).add(action_2).perform()
-    '''
-
-    def __init__(self, marionette):
-        self.multi_actions = []
-        self.max_length = 0
-        self.marionette = marionette
-
-    def add(self, action):
-        '''
-        Adds a set of actions to perform.
-
-        :param action: An Actions object.
-        '''
-        self.multi_actions.append(action.action_chain)
-        if len(action.action_chain) > self.max_length:
-            self.max_length = len(action.action_chain)
-        return self
-
-    def perform(self):
-        """Perform all the actions added to this object."""
-        body = {"value": self.multi_actions, "max_length": self.max_length}
-        try:
-            self.marionette._send_message("Marionette:MultiAction", body)
-        except errors.UnknownCommandException:
-            self.marionette._send_message("multiAction", body)
-
-
 class Alert(object):
     """A class for interacting with alerts.
 
@@ -633,6 +461,7 @@ class Marionette(object):
                 app, host=self.host, port=self.port, bin=self.bin, **instance_args)
             self.start_binary(self.startup_timeout)
 
+        self.actions = Actions(self)
         self.timeout = Timeouts(self)
 
     @property
