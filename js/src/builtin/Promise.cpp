@@ -3559,16 +3559,21 @@ static MOZ_MUST_USE bool InternalAwait(JSContext* cx, HandleValue value,
   MOZ_ASSERT(onFulfilled.isInt32());
   MOZ_ASSERT(onRejected.isInt32());
 
-  // Step 2: Let promiseCapability be ! NewPromiseCapability(%Promise%).
-  Rooted<PromiseObject*> promise(
-      cx, CreatePromiseObjectWithoutResolutionFunctions(cx));
+  // The proposal <https://github.com/tc39/ecma262/pull/1250>
+  // replaces steps 2-3 with the following updated step:
+  // Step 2: Let promise be ? PromiseResolve(« value »).
+  // Step 3 is deleted.
+  RootedObject promise(cx, PromiseObject::unforgeableResolve(cx, value));
   if (!promise) {
     return false;
   }
 
-  // Step 3: Perform ! Call(promiseCapability.[[Resolve]], undefined,
-  //                        « promise »).
-  if (!ResolvePromiseInternal(cx, promise, value)) {
+  // This downcast is safe because unforgeableResolve either returns `value`
+  // (only if it is already a possibly-wrapped promise) or creates a new
+  // promise using the Promise constructor.
+  Rooted<PromiseObject*> unwrappedPromise(
+      cx, UnwrapAndDowncastObject<PromiseObject>(cx, promise));
+  if (!unwrappedPromise) {
     return false;
   }
 
@@ -3584,7 +3589,7 @@ static MOZ_MUST_USE bool InternalAwait(JSContext* cx, HandleValue value,
   extraStep(reaction);
 
   // Step 10: Perform ! PerformPromiseThen(promise, onFulfilled, onRejected).
-  return PerformPromiseThenWithReaction(cx, promise, reaction);
+  return PerformPromiseThenWithReaction(cx, unwrappedPromise, reaction);
 }
 
 // https://tc39.github.io/ecma262/#await
@@ -3807,15 +3812,13 @@ bool js::AsyncFromSyncIteratorMethod(JSContext* cx, CallArgs& args,
                       : PromiseHandlerAsyncFromSyncIteratorValueUnwrapNotDone));
   RootedValue onRejected(cx, Int32Value(PromiseHandlerThrower));
 
-  // These three steps are identical to some steps in Await; we have a utility
+  // These steps are identical to some steps in Await; we have a utility
   // function InternalAwait() that implements the idiom.
   //
-  // Step 5: Let valueWrapperCapability be ! NewPromiseCapability(%Promise%).
-  // Step 6: Perform ! Call(valueWrapperCapability.[[Resolve]], undefined,
-  //                        « value »).
-  // Step 10: Perform ! PerformPromiseThen(valueWrapperCapability.[[Promise]],
-  //                                       onFulfilled, undefined,
-  //                                       promiseCapability).
+  // Steps 5-6, as amended by <https://github.com/tc39/ecma262/pull/1250>:
+  //      Let valueWrapper be ? PromiseResolve(« value »).
+  // Step 10: Perform ! PerformPromiseThen(valueWrapper, onFulfilled,
+  //                                       undefined, promiseCapability).
   auto extra = [](Handle<PromiseReactionRecord*> reaction) {};
   if (!InternalAwait(cx, value, resultPromise, onFulfilled, onRejected,
                      extra)) {
@@ -4013,13 +4016,11 @@ static MOZ_MUST_USE bool AsyncGeneratorResumeNext(
           // These steps are nearly identical to some steps in Await;
           // InternalAwait() implements the idiom.
           //
-          // Step 10.b.i.2:  Let promiseCapability be
-          //                 ! NewPromiseCapability(%Promise%).
-          // Step 10.b.i.3:  Perform ! Call(promiseCapability.[[Resolve]],
-          //                 undefined, « completion.[[Value]] »).
-          // Step 10.b.i.10: Perform ! PerformPromiseThen(
-          //                 promiseCapability.[[Promise]], onFulfilled,
-          //                 onRejected).
+          // Steps 10.b.i.2-3, as amended by
+          // <https://github.com/tc39/ecma262/pull/1250>:
+          //      Let promise be ? PromiseResolve(« _completion_.[[Value]] »).
+          // Step 10.b.i.10: Perform ! PerformPromiseThen(promise, onFulfilled,
+          //                                              onRejected).
           // Step 10.b.i.11: Return undefined.
           auto extra = [&](Handle<PromiseReactionRecord*> reaction) {
             reaction->setIsAsyncGenerator(unwrappedGenerator);
