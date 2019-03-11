@@ -187,6 +187,9 @@ extern bool IsCrossRealmArrayConstructor(JSContext* cx, const Value& v,
 
 extern bool ObjectMayHaveExtraIndexedProperties(JSObject* obj);
 
+// JS::IsArray has multiple overloads, use js::IsArrayFromJit to disambiguate.
+extern bool IsArrayFromJit(JSContext* cx, HandleObject obj, bool* isArray);
+
 class MOZ_NON_TEMPORARY_CLASS ArraySpeciesLookup final {
   /*
    * An ArraySpeciesLookup holds the following:
