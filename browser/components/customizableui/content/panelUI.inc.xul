@@ -161,8 +161,8 @@
     <popupnotificationcontent class="addon-installed-notification-content" orient="vertical">
       <description>&addonPostInstallMessage.label;</description>
       <checkbox id="addon-incognito-checkbox"
-                label="&addonPostInstall.incognito.label;"
-                accesskey="&addonPostInstall.incognito.accesskey;"/>
+                label="&addonPostInstall.incognito.checkbox.label;"
+                accesskey="&addonPostInstall.incognito.checkbox.accesskey;"/>
     </popupnotificationcontent>
   </popupnotification>
 
