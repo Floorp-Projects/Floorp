@@ -4,7 +4,18 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-RustLibrary('jsrust')
+features = []
+
+if CONFIG['JS_CODEGEN_X64'] or CONFIG['JS_CODEGEN_X86']:
+    features += ['cranelift_x86']
+elif CONFIG['JS_CODEGEN_ARM']:
+    features += ['cranelift_arm32']
+elif CONFIG['JS_CODEGEN_ARM64']:
+    features += ['cranelift_arm64']
+else:
+    features += ['cranelift_none']
+
+RustLibrary('jsrust', features)
 
 CONFIGURE_SUBST_FILES += ['extra-bindgen-flags']
 
