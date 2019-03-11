@@ -231,6 +231,7 @@
           {
             "type": "string",
             "name": "url",
+            "optional": true,
             "maxLength": 255,
             "description": "URL to be opened after the extension is uninstalled. This URL must have an http: or https: scheme. Set an empty string to not open a new tab upon uninstallation."
           },
