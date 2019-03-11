@@ -1582,8 +1582,6 @@ static void SetupLauncherProcessPref() {
 // it was initially started with.
 static nsresult LaunchChild(nsINativeAppSupport* aNative,
                             bool aBlankCommandLine = false) {
-  aNative->Quit();  // destroy message window
-
   // Restart this process by exec'ing it into the current process
   // if supported by the platform.  Otherwise, use NSPR.
 
@@ -4693,14 +4691,14 @@ int XREMain::XRE_main(int argc, char* argv[], const BootstrapConfig& aConfig) {
     gShutdownChecks = SCM_NOTHING;
   }
 
-  if (!mShuttingDown) {
 #if defined(MOZ_HAS_REMOTE)
-    // shut down the x remote proxy window
-    if (mRemoteService) {
-      mRemoteService->ShutdownServer();
-    }
-#endif /* MOZ_WIDGET_GTK */
+  // Shut down the remote service. We must do this before calling LaunchChild
+  // if we're restarting because otherwise the new instance will attempt to
+  // remote to this instance.
+  if (mRemoteService) {
+    mRemoteService->ShutdownServer();
   }
+#endif /* MOZ_WIDGET_GTK */
 
   mScopedXPCOM = nullptr;
 
