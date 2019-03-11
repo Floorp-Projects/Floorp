@@ -28,7 +28,6 @@ class BrowserWindow(BaseWindow):
 
     dtds = [
         'chrome://branding/locale/brand.dtd',
-        'chrome://browser/locale/aboutPrivateBrowsing.dtd',
         'chrome://browser/locale/browser.dtd',
         'chrome://browser/locale/netError.dtd',
     ]
