@@ -11407,9 +11407,15 @@ function getUniqueIdentifiers(identifiers) {
 }
 
 /* eslint-disable complexity */
-function extractSymbol(path, symbols) {
+function extractSymbol(path, symbols, state) {
   if ((0, _helpers.isFunction)(path)) {
     const name = (0, _getFunctionName2.default)(path.node, path.parent);
+
+    if (!state.fnCounts[name]) {
+      state.fnCounts[name] = 0;
+    }
+    const index = state.fnCounts[name]++;
+
     symbols.functions.push({
       name,
       klass: (0, _inferClassName.inferClassName)(path),
@@ -11419,7 +11425,7 @@ function extractSymbol(path, symbols) {
       // indicates the occurence of the function in a file
       // e.g { name: foo, ... index: 4 } is the 4th foo function
       // in the file
-      index: symbols.functions.filter(f => f.name === name).length
+      index
     });
   }
 
@@ -11551,8 +11557,7 @@ function extractSymbol(path, symbols) {
   if (t.isVariableDeclarator(path)) {
     const nodeId = path.node.id;
 
-    const ids = (0, _helpers.getPatternIdentifiers)(nodeId);
-    symbols.identifiers = [...symbols.identifiers, ...ids];
+    symbols.identifiers.push(...(0, _helpers.getPatternIdentifiers)(nodeId));
   }
 }
 
@@ -11574,12 +11579,16 @@ function extractSymbols(sourceId) {
     loading: false
   };
 
+  const state = {
+    fnCounts: Object.create(null)
+  };
+
   const ast = (0, _ast.traverseAst)(sourceId, {
     enter(node, ancestors) {
       try {
         const path = (0, _simplePath2.default)(ancestors);
         if (path) {
-          extractSymbol(path, symbols);
+          extractSymbol(path, symbols, state);
         }
       } catch (e) {
         console.error(e);

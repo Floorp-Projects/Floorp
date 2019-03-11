@@ -84,7 +84,7 @@ export function loadSourceText(source: ?Source) {
     }
 
     if (!newSource.isWasm && isLoaded(newSource)) {
-      await parser.setSource(newSource);
+      parser.setSource(newSource);
       await dispatch(setBreakpointPositions(newSource.id));
     }
 
