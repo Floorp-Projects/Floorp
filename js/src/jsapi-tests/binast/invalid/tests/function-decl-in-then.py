@@ -2,20 +2,20 @@ def filter_ast(ast):
     # Move function inside then-block, without fixing scope.
     import filter_utils as utils
 
-    utils.assert_interface(ast, 'Script')
-    global_stmts = utils.get_field(ast, 'statements')
+    global_stmts = utils.wrap(ast) \
+        .assert_interface('Script') \
+        .field('statements')
 
-    fun_stmt = utils.get_element(global_stmts, 0)
-    utils.assert_interface(fun_stmt, 'EagerFunctionDeclaration')
+    fun_decl = global_stmts \
+        .elem(0) \
+        .assert_interface('EagerFunctionDeclaration')
 
-    if_stmt = utils.get_element(global_stmts, 1)
-    utils.assert_interface(if_stmt, 'IfStatement')
-
-    block_stmt = utils.get_field(if_stmt, 'consequent')
-    utils.assert_interface(block_stmt, 'Block')
-
-    block_stmts = utils.get_field(block_stmt, 'statements')
-
-    utils.append_element(block_stmts, utils.copy_tagged_tuple(fun_stmt))
+    global_stmts \
+        .elem(1) \
+        .assert_interface('IfStatement') \
+        .field('consequent') \
+        .assert_interface('Block') \
+        .field('statements') \
+        .append_elem(fun_decl.copy())
 
     return ast
