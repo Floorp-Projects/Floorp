@@ -91,75 +91,6 @@ def yasm_asflags(yasm, target):
 set_config('YASM_ASFLAGS', yasm_asflags)
 
 
-# nasm detection
-# ==============================================================
-nasm = check_prog('NASM', ['nasm'], allow_missing=True)
-
-
-@depends_if(nasm)
-@checking('nasm version')
-def nasm_version(nasm):
-    (retcode, stdout, _) = get_cmd_output(nasm, '-v')
-    if retcode:
-        # mac stub binary
-        return None
-
-    version = stdout.splitlines()[0].split()[2]
-    return Version(version)
-
-
-@depends_if(nasm_version)
-def nasm_major_version(nasm_version):
-    return str(nasm_version.major)
-
-
-@depends_if(nasm_version)
-def nasm_minor_version(nasm_version):
-    return str(nasm_version.minor)
-
-
-set_config('NASM_MAJOR_VERSION', nasm_major_version)
-set_config('NASM_MINOR_VERSION', nasm_minor_version)
-
-
-@depends(nasm, target)
-def nasm_asflags(nasm, target):
-    if nasm:
-        asflags = {
-            ('OSX', 'x86'): ['-f', 'macho32'],
-            ('OSX', 'x86_64'): ['-f', 'macho64'],
-            ('WINNT', 'x86'): ['-f', 'win32'],
-            ('WINNT', 'x86_64'): ['-f', 'win64'],
-        }.get((target.os, target.cpu), None)
-        if asflags is None:
-            # We're assuming every x86 platform we support that's
-            # not Windows or Mac is ELF.
-            if target.cpu == 'x86':
-                asflags = ['-f', 'elf32']
-            elif target.cpu == 'x86_64':
-                asflags = ['-f', 'elf64']
-        return asflags
-
-
-set_config('NASM_ASFLAGS', nasm_asflags)
-
-@depends(nasm_asflags)
-def have_nasm(value):
-    if value:
-        return True
-
-
-@depends(yasm_asflags)
-def have_yasm(yasm_asflags):
-    if yasm_asflags:
-        return True
-
-set_config('HAVE_NASM', have_nasm)
-
-set_config('HAVE_YASM', have_yasm)
-# Until the YASM variable is not necessary in old-configure.
-add_old_configure_assignment('YASM', have_yasm)
-
 # Android NDK
 # ==============================================================
 
@@ -792,6 +723,9 @@ def toolchain_search_path_for(host_or_target):
 
         bootstrap_cbindgen_path = os.path.join(mozbuild_state_dir, 'cbindgen')
         result.append(bootstrap_cbindgen_path)
+
+        bootstrap_nasm_path = os.path.join(mozbuild_state_dir, 'nasm')
+        result.append(bootstrap_nasm_path)
 
         # Also add the rustup install directory for cargo/rustc.
         rustup_path = os.path.expanduser(os.path.join('~', '.cargo', 'bin'))
@@ -1728,6 +1662,75 @@ add_old_configure_assignment('MOZ_HARDENING_CFLAGS', security_hardening_cflags.f
 add_old_configure_assignment('MOZ_HARDENING_LDFLAGS', security_hardening_cflags.ldflags)
 add_old_configure_assignment('MOZ_HARDENING_CFLAGS_JS', security_hardening_cflags.js_flags)
 add_old_configure_assignment('MOZ_HARDENING_LDFLAGS_JS', security_hardening_cflags.js_ldflags)
+
+# nasm detection
+# ==============================================================
+nasm = check_prog('NASM', ['nasm'], allow_missing=True, paths=toolchain_search_path)
+
+
+@depends_if(nasm)
+@checking('nasm version')
+def nasm_version(nasm):
+    (retcode, stdout, _) = get_cmd_output(nasm, '-v')
+    if retcode:
+        # mac stub binary
+        return None
+
+    version = stdout.splitlines()[0].split()[2]
+    return Version(version)
+
+
+@depends_if(nasm_version)
+def nasm_major_version(nasm_version):
+    return str(nasm_version.major)
+
+
+@depends_if(nasm_version)
+def nasm_minor_version(nasm_version):
+    return str(nasm_version.minor)
+
+
+set_config('NASM_MAJOR_VERSION', nasm_major_version)
+set_config('NASM_MINOR_VERSION', nasm_minor_version)
+
+
+@depends(nasm, target)
+def nasm_asflags(nasm, target):
+    if nasm:
+        asflags = {
+            ('OSX', 'x86'): ['-f', 'macho32'],
+            ('OSX', 'x86_64'): ['-f', 'macho64'],
+            ('WINNT', 'x86'): ['-f', 'win32'],
+            ('WINNT', 'x86_64'): ['-f', 'win64'],
+        }.get((target.os, target.cpu), None)
+        if asflags is None:
+            # We're assuming every x86 platform we support that's
+            # not Windows or Mac is ELF.
+            if target.cpu == 'x86':
+                asflags = ['-f', 'elf32']
+            elif target.cpu == 'x86_64':
+                asflags = ['-f', 'elf64']
+        return asflags
+
+
+set_config('NASM_ASFLAGS', nasm_asflags)
+
+@depends(nasm_asflags)
+def have_nasm(value):
+    if value:
+        return True
+
+
+@depends(yasm_asflags)
+def have_yasm(yasm_asflags):
+    if yasm_asflags:
+        return True
+
+set_config('HAVE_NASM', have_nasm)
+
+set_config('HAVE_YASM', have_yasm)
+# Until the YASM variable is not necessary in old-configure.
+add_old_configure_assignment('YASM', have_yasm)
 
 # Code Coverage
 # ==============================================================
