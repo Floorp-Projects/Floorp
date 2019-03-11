@@ -26,7 +26,7 @@
 #define kMinUnwrittenChanges 300
 #define kMinDumpInterval 20000  // in milliseconds
 #define kMaxBufSize 16384
-#define kIndexVersion 0x00000005
+#define kIndexVersion 0x00000006
 #define kUpdateIndexStartDelay 50000  // in milliseconds
 
 #define INDEX_NAME "index"
@@ -922,17 +922,14 @@ nsresult CacheIndex::RemoveEntry(const SHA1Sum::Hash *aHash) {
 // static
 nsresult CacheIndex::UpdateEntry(const SHA1Sum::Hash *aHash,
                                  const uint32_t *aFrecency,
-                                 const uint32_t *aExpirationTime,
                                  const bool *aHasAltData,
                                  const uint16_t *aOnStartTime,
                                  const uint16_t *aOnStopTime,
                                  const uint32_t *aSize) {
   LOG(
       ("CacheIndex::UpdateEntry() [hash=%08x%08x%08x%08x%08x, "
-       "frecency=%s, expirationTime=%s, hasAltData=%s, onStartTime=%s, "
-       "onStopTime=%s, size=%s]",
+       "frecency=%s, hasAltData=%s, onStartTime=%s, onStopTime=%s, size=%s]",
        LOGSHA1(aHash), aFrecency ? nsPrintfCString("%u", *aFrecency).get() : "",
-       aExpirationTime ? nsPrintfCString("%u", *aExpirationTime).get() : "",
        aHasAltData ? (*aHasAltData ? "true" : "false") : "",
        aOnStartTime ? nsPrintfCString("%u", *aOnStartTime).get() : "",
        aOnStopTime ? nsPrintfCString("%u", *aOnStopTime).get() : "",
@@ -973,8 +970,8 @@ nsresult CacheIndex::UpdateEntry(const SHA1Sum::Hash *aHash,
         return NS_ERROR_UNEXPECTED;
       }
 
-      if (!HasEntryChanged(entry, aFrecency, aExpirationTime, aHasAltData,
-                           aOnStartTime, aOnStopTime, aSize)) {
+      if (!HasEntryChanged(entry, aFrecency, aHasAltData, aOnStartTime,
+                           aOnStopTime, aSize)) {
         return NS_OK;
       }
 
@@ -984,10 +981,6 @@ nsresult CacheIndex::UpdateEntry(const SHA1Sum::Hash *aHash,
 
       if (aFrecency) {
         entry->SetFrecency(*aFrecency);
-      }
-
-      if (aExpirationTime) {
-        entry->SetExpirationTime(*aExpirationTime);
       }
 
       if (aHasAltData) {
@@ -1034,10 +1027,6 @@ nsresult CacheIndex::UpdateEntry(const SHA1Sum::Hash *aHash,
 
       if (aFrecency) {
         updated->SetFrecency(*aFrecency);
-      }
-
-      if (aExpirationTime) {
-        updated->SetExpirationTime(*aExpirationTime);
       }
 
       if (aHasAltData) {
@@ -1536,16 +1525,11 @@ bool CacheIndex::IsCollision(CacheIndexEntry *aEntry,
 // static
 bool CacheIndex::HasEntryChanged(CacheIndexEntry *aEntry,
                                  const uint32_t *aFrecency,
-                                 const uint32_t *aExpirationTime,
                                  const bool *aHasAltData,
                                  const uint16_t *aOnStartTime,
                                  const uint16_t *aOnStopTime,
                                  const uint32_t *aSize) {
   if (aFrecency && *aFrecency != aEntry->GetFrecency()) {
-    return true;
-  }
-
-  if (aExpirationTime && *aExpirationTime != aEntry->GetExpirationTime()) {
     return true;
   }
 
@@ -2635,10 +2619,6 @@ nsresult CacheIndex::InitEntryFromDiskData(CacheIndexEntry *aEntry,
 
   aEntry->Init(GetOriginAttrsHash(aMetaData->OriginAttributes()),
                aMetaData->IsAnonymous(), aMetaData->Pinned());
-
-  uint32_t expirationTime;
-  aMetaData->GetExpirationTime(&expirationTime);
-  aEntry->SetExpirationTime(expirationTime);
 
   uint32_t frecency;
   aMetaData->GetFrecency(&frecency);
