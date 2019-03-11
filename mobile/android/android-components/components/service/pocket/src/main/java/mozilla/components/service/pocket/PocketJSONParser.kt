@@ -20,7 +20,7 @@ internal class PocketJSONParser {
     /**
      * @return The videos or null on error; the list will never be empty.
      */
-    fun jsonToGlobalVideoRecommendations(jsonStr: String?): List<PocketGlobalVideoRecommendation>? = try {
+    fun jsonToGlobalVideoRecommendations(jsonStr: String): List<PocketGlobalVideoRecommendation>? = try {
         val rawJSON = JSONObject(jsonStr)
         val videosJSON = rawJSON.getJSONArray(KEY_VIDEO_RECOMMENDATIONS_INNER)
         val videos = videosJSON.mapNotNull(JSONArray::getJSONObject) { jsonToGlobalVideoRecommendation(it) }
