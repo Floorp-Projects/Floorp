@@ -92,6 +92,7 @@ class nsDOMWindowUtils final : public nsIDOMWindowUtils,
       bool aToWindow, bool* aPreventDefault, bool aIsDOMEventSynthesized,
       bool aIsWidgetEventSynthesized, int32_t aButtons);
 
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   NS_IMETHOD SendTouchEventCommon(const nsAString& aType,
                                   uint32_t* aIdentifiers, int32_t* aXs,
                                   int32_t* aYs, uint32_t* aRxs, uint32_t* aRys,

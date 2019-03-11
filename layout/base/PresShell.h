@@ -475,6 +475,7 @@ class PresShell final : public nsIPresShell,
         mPresShell = nullptr;
       }
     }
+    MOZ_CAN_RUN_SCRIPT
     void WillRefresh(TimeStamp aTime) override {
       if (mPresShell) {
         RefPtr<PresShell> shell = mPresShell;
@@ -486,7 +487,7 @@ class PresShell final : public nsIPresShell,
     PresShell* mPresShell;
     bool mFromScroll;
   };
-  void ProcessSynthMouseMoveEvent(bool aFromScroll);
+  MOZ_CAN_RUN_SCRIPT void ProcessSynthMouseMoveEvent(bool aFromScroll);
 
   void QueryIsActive();
   nsresult UpdateImageLockingState();
