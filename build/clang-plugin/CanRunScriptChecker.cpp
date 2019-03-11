@@ -88,22 +88,25 @@ void CanRunScriptChecker::onStartOfTranslationUnit() {
 }
 
 namespace {
-/// This class is a callback used internally to match function declarations
-/// with the MOZ_CAN_RUN_SCRIPT annotation, adding these functions and all
-/// the methods they override to the can-run-script function set.
+/// This class is a callback used internally to match function declarations with
+/// the MOZ_CAN_RUN_SCRIPT annotation, adding these functions to the
+/// can-run-script function set and making sure the functions they override (if
+/// any) also have the annotation.
 class FuncSetCallback : public MatchFinder::MatchCallback {
 public:
-  FuncSetCallback(std::unordered_set<const FunctionDecl *> &FuncSet)
-      : CanRunScriptFuncs(FuncSet) {}
+  FuncSetCallback(CanRunScriptChecker& Checker,
+                  std::unordered_set<const FunctionDecl *> &FuncSet)
+      : CanRunScriptFuncs(FuncSet),
+        Checker(Checker) {}
 
   void run(const MatchFinder::MatchResult &Result) override;
 
 private:
-  /// This method recursively adds all the methods overriden by the given
-  /// paremeter.
-  void addAllOverriddenMethodsRecursively(const CXXMethodDecl *Method);
+  /// This method checks the methods overriden by the given parameter.
+  void checkOverriddenMethods(const CXXMethodDecl *Method);
 
   std::unordered_set<const FunctionDecl *> &CanRunScriptFuncs;
+  CanRunScriptChecker &Checker;
 };
 
 void FuncSetCallback::run(const MatchFinder::MatchResult &Result) {
@@ -120,24 +123,25 @@ void FuncSetCallback::run(const MatchFinder::MatchResult &Result) {
 
   // If this is a method, we check the methods it overrides.
   if (auto *Method = dyn_cast<CXXMethodDecl>(Func)) {
-    addAllOverriddenMethodsRecursively(Method);
+    checkOverriddenMethods(Method);
   }
 }
 
-void FuncSetCallback::addAllOverriddenMethodsRecursively(
-    const CXXMethodDecl *Method) {
+void FuncSetCallback::checkOverriddenMethods(const CXXMethodDecl *Method) {
   for (auto OverriddenMethod : Method->overridden_methods()) {
-    CanRunScriptFuncs.insert(OverriddenMethod);
+    if (!hasCustomAttribute<moz_can_run_script>(OverriddenMethod)) {
+      const char *ErrorNonCanRunScriptOverridden =
+          "functions marked as MOZ_CAN_RUN_SCRIPT cannot override functions "
+          "that are not marked MOZ_CAN_RUN_SCRIPT";
+      const char* NoteNonCanRunScriptOverridden =
+          "overridden function declared here";
 
-    // If this is not the definition, we also add the definition (if it
-    // exists) to the set.
-    if (!OverriddenMethod->isThisDeclarationADefinition()) {
-      if (auto Def = OverriddenMethod->getDefinition()) {
-        CanRunScriptFuncs.insert(Def);
-      }
+      Checker.diag(Method->getLocation(), ErrorNonCanRunScriptOverridden,
+                   DiagnosticIDs::Error);
+      Checker.diag(OverriddenMethod->getLocation(),
+                   NoteNonCanRunScriptOverridden,
+                   DiagnosticIDs::Note);
     }
-
-    addAllOverriddenMethodsRecursively(OverriddenMethod);
   }
 }
 } // namespace
@@ -147,7 +151,7 @@ void CanRunScriptChecker::buildFuncSet(ASTContext *Context) {
   MatchFinder Finder;
   // We create the callback which will be called when we find a function with
   // a MOZ_CAN_RUN_SCRIPT annotation.
-  FuncSetCallback Callback(CanRunScriptFuncs);
+  FuncSetCallback Callback(*this, CanRunScriptFuncs);
   // We add the matcher to the finder, linking it to our callback.
   Finder.addMatcher(
       functionDecl(hasCanRunScriptAnnotation()).bind("canRunScriptFunction"),
