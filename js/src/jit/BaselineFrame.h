@@ -14,6 +14,7 @@ namespace js {
 namespace jit {
 
 struct BaselineDebugModeOSRInfo;
+class ICEntry;
 
 // The stack looks like this, fp is the frame pointer:
 //
@@ -29,6 +30,9 @@ class BaselineFrame {
   enum Flags : uint32_t {
     // The frame has a valid return value. See also InterpreterFrame::HAS_RVAL.
     HAS_RVAL = 1 << 0,
+
+    // The frame is running in the Baseline interpreter instead of JIT.
+    RUNNING_IN_INTERPRETER = 1 << 1,
 
     // An initial environment has been pushed on the environment chain for
     // function frames that need a CallObject or eval frames that need a
@@ -77,9 +81,16 @@ class BaselineFrame {
   };
 
  protected:  // Silence Clang warning about unused private fields.
+  // The fields below are only valid if RUNNING_IN_INTERPRETER.
+  JSScript* interpreterScript_;
+  jsbytecode* interpreterPC_;
+  ICEntry* interpreterICEntry_;
+
+  JSObject* envChain_;        // Environment chain (always initialized).
+  ArgumentsObject* argsObj_;  // If HAS_ARGS_OBJ, the arguments object.
+
   // We need to split the Value into 2 fields of 32 bits, otherwise the C++
   // compiler may add some padding between the fields.
-
   union {
     struct {
       uint32_t loScratchValue_;
@@ -87,13 +98,16 @@ class BaselineFrame {
     };
     BaselineDebugModeOSRInfo* debugModeOSRInfo_;
   };
+
+  uint32_t flags_;
+  uint32_t frameSize_;
   uint32_t loReturnValue_;  // If HAS_RVAL, the frame's return value.
   uint32_t hiReturnValue_;
-  uint32_t frameSize_;
-  JSObject* envChain_;        // Environment chain (always initialized).
-  ArgumentsObject* argsObj_;  // If HAS_ARGS_OBJ, the arguments object.
   uint32_t overrideOffset_;   // If HAS_OVERRIDE_PC, the bytecode offset.
-  uint32_t flags_;
+#if JS_BITS_PER_WORD == 32
+  // Ensure frame is 8-byte aligned, see static_assert below.
+  uint32_t padding_;
+#endif
 
  public:
   // Distance between the frame pointer and the frame header (return address).
@@ -210,6 +224,18 @@ class BaselineFrame {
                        offsetOfArg(Max(numFormalArgs(), numActualArgs())));
     }
     return UndefinedValue();
+  }
+
+  bool runningInInterpreter() const { return flags_ & RUNNING_IN_INTERPRETER; }
+
+  JSScript* interpreterScript() const {
+    MOZ_ASSERT(runningInInterpreter());
+    return interpreterScript_;
+  }
+
+  jsbytecode* interpreterPC() const {
+    MOZ_ASSERT(runningInInterpreter());
+    return interpreterPC_;
   }
 
   bool hasReturnValue() const { return flags_ & HAS_RVAL; }
@@ -377,14 +403,24 @@ class BaselineFrame {
   static int reverseOffsetOfReturnValue() {
     return -int(Size()) + offsetof(BaselineFrame, loReturnValue_);
   }
+  static int reverseOffsetOfInterpreterScript() {
+    return -int(Size()) + offsetof(BaselineFrame, interpreterScript_);
+  }
+  static int reverseOffsetOfInterpreterPC() {
+    return -int(Size()) + offsetof(BaselineFrame, interpreterPC_);
+  }
+  static int reverseOffsetOfInterpreterICEntry() {
+    return -int(Size()) + offsetof(BaselineFrame, interpreterICEntry_);
+  }
   static int reverseOffsetOfLocal(size_t index) {
     return -int(Size()) - (index + 1) * sizeof(Value);
   }
 };
 
 // Ensure the frame is 8-byte aligned (required on ARM).
-JS_STATIC_ASSERT(((sizeof(BaselineFrame) + BaselineFrame::FramePointerOffset) %
-                  8) == 0);
+static_assert(((sizeof(BaselineFrame) + BaselineFrame::FramePointerOffset) %
+               8) == 0,
+              "frame (including frame pointer) must be 8-byte aligned");
 
 }  // namespace jit
 }  // namespace js

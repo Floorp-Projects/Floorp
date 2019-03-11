@@ -7686,66 +7686,8 @@ nsresult PresShell::EventHandler::HandleEventInternal(
 
   HandlingTimeAccumulator handlingTimeAccumulator(*this, aEvent);
 
-  // 1. Give event to event manager for pre event state changes and
-  //    generation of synthetic events.
-  nsresult rv = manager->PreHandleEvent(
-      GetPresContext(), aEvent, mPresShell->mCurrentEventFrame,
-      mPresShell->mCurrentEventContent, aEventStatus, aOverrideClickTarget);
-
-  // 2. Give event to the DOM for third party and JS use.
-  if (NS_SUCCEEDED(rv)) {
-    bool wasHandlingKeyBoardEvent = nsContentUtils::IsHandlingKeyBoardEvent();
-    if (aEvent->mClass == eKeyboardEventClass) {
-      nsContentUtils::SetIsHandlingKeyBoardEvent(true);
-    }
-    // If EventStateManager or something wants reply from remote process and
-    // needs to win any other event listeners in chrome, the event is both
-    // stopped its propagation and marked as "waiting reply from remote
-    // process".  In this case, PresShell shouldn't dispatch the event into
-    // the DOM tree because they don't have a chance to stop propagation in
-    // the system event group.  On the other hand, if its propagation is not
-    // stopped, that means that the event may be reserved by chrome.  If it's
-    // reserved by chrome, the event shouldn't be sent to any remote
-    // processes.  In this case, PresShell needs to dispatch the event to
-    // the DOM tree for checking if it's reserved.
-    if (aEvent->IsAllowedToDispatchDOMEvent() &&
-        !(aEvent->PropagationStopped() &&
-          aEvent->IsWaitingReplyFromRemoteProcess())) {
-      MOZ_ASSERT(nsContentUtils::IsSafeToRunScript(),
-                 "Somebody changed aEvent to cause a DOM event!");
-      nsPresShellEventCB eventCB(mPresShell);
-      if (nsIFrame* target = mPresShell->GetCurrentEventFrame()) {
-        if (target->OnlySystemGroupDispatch(aEvent->mMessage)) {
-          aEvent->StopPropagation();
-        }
-      }
-      if (aEvent->mClass == eTouchEventClass) {
-        DispatchTouchEventToDOM(aEvent, aEventStatus, &eventCB, touchIsNew);
-      } else {
-        DispatchEventToDOM(aEvent, aEventStatus, &eventCB);
-      }
-    }
-
-    nsContentUtils::SetIsHandlingKeyBoardEvent(wasHandlingKeyBoardEvent);
-
-    if (aEvent->mMessage == ePointerUp || aEvent->mMessage == ePointerCancel) {
-      // Implicitly releasing capture for given pointer.
-      // ePointerLostCapture should be send after ePointerUp or
-      // ePointerCancel.
-      WidgetPointerEvent* pointerEvent = aEvent->AsPointerEvent();
-      MOZ_ASSERT(pointerEvent);
-      PointerEventHandler::ReleasePointerCaptureById(pointerEvent->pointerId);
-      PointerEventHandler::CheckPointerCaptureState(pointerEvent);
-    }
-
-    // 3. Give event to event manager for post event state changes and
-    //    generation of synthetic events.
-    if (!mPresShell->IsDestroying() && NS_SUCCEEDED(rv)) {
-      rv = manager->PostHandleEvent(GetPresContext(), aEvent,
-                                    mPresShell->GetCurrentEventFrame(),
-                                    aEventStatus, aOverrideClickTarget);
-    }
-  }
+  nsresult rv = DispatchEvent(manager, aEvent, touchIsNew, aEventStatus,
+                              aOverrideClickTarget);
 
   if (!mPresShell->IsDestroying() && aIsHandlingNativeEvent) {
     // Ensure that notifications to IME should be sent before getting next
@@ -7802,6 +7744,77 @@ nsresult PresShell::EventHandler::HandleEventInternal(
       break;
   }
   RecordEventHandlingResponsePerformance(aEvent);
+  return rv;
+}
+
+nsresult PresShell::EventHandler::DispatchEvent(
+    EventStateManager* aEventStateManager, WidgetEvent* aEvent,
+    bool aTouchIsNew, nsEventStatus* aEventStatus,
+    nsIContent* aOverrideClickTarget) {
+  MOZ_ASSERT(aEventStateManager);
+  MOZ_ASSERT(aEvent);
+  MOZ_ASSERT(aEventStatus);
+
+  // 1. Give event to event manager for pre event state changes and
+  //    generation of synthetic events.
+  nsresult rv = aEventStateManager->PreHandleEvent(
+      GetPresContext(), aEvent, mPresShell->mCurrentEventFrame,
+      mPresShell->mCurrentEventContent, aEventStatus, aOverrideClickTarget);
+
+  // 2. Give event to the DOM for third party and JS use.
+  if (NS_SUCCEEDED(rv)) {
+    bool wasHandlingKeyBoardEvent = nsContentUtils::IsHandlingKeyBoardEvent();
+    if (aEvent->mClass == eKeyboardEventClass) {
+      nsContentUtils::SetIsHandlingKeyBoardEvent(true);
+    }
+    // If EventStateManager or something wants reply from remote process and
+    // needs to win any other event listeners in chrome, the event is both
+    // stopped its propagation and marked as "waiting reply from remote
+    // process".  In this case, PresShell shouldn't dispatch the event into
+    // the DOM tree because they don't have a chance to stop propagation in
+    // the system event group.  On the other hand, if its propagation is not
+    // stopped, that means that the event may be reserved by chrome.  If it's
+    // reserved by chrome, the event shouldn't be sent to any remote
+    // processes.  In this case, PresShell needs to dispatch the event to
+    // the DOM tree for checking if it's reserved.
+    if (aEvent->IsAllowedToDispatchDOMEvent() &&
+        !(aEvent->PropagationStopped() &&
+          aEvent->IsWaitingReplyFromRemoteProcess())) {
+      MOZ_ASSERT(nsContentUtils::IsSafeToRunScript(),
+                 "Somebody changed aEvent to cause a DOM event!");
+      nsPresShellEventCB eventCB(mPresShell);
+      if (nsIFrame* target = mPresShell->GetCurrentEventFrame()) {
+        if (target->OnlySystemGroupDispatch(aEvent->mMessage)) {
+          aEvent->StopPropagation();
+        }
+      }
+      if (aEvent->mClass == eTouchEventClass) {
+        DispatchTouchEventToDOM(aEvent, aEventStatus, &eventCB, aTouchIsNew);
+      } else {
+        DispatchEventToDOM(aEvent, aEventStatus, &eventCB);
+      }
+    }
+
+    nsContentUtils::SetIsHandlingKeyBoardEvent(wasHandlingKeyBoardEvent);
+
+    if (aEvent->mMessage == ePointerUp || aEvent->mMessage == ePointerCancel) {
+      // Implicitly releasing capture for given pointer.
+      // ePointerLostCapture should be send after ePointerUp or
+      // ePointerCancel.
+      WidgetPointerEvent* pointerEvent = aEvent->AsPointerEvent();
+      MOZ_ASSERT(pointerEvent);
+      PointerEventHandler::ReleasePointerCaptureById(pointerEvent->pointerId);
+      PointerEventHandler::CheckPointerCaptureState(pointerEvent);
+    }
+
+    // 3. Give event to event manager for post event state changes and
+    //    generation of synthetic events.
+    if (!mPresShell->IsDestroying() && NS_SUCCEEDED(rv)) {
+      rv = aEventStateManager->PostHandleEvent(
+          GetPresContext(), aEvent, mPresShell->GetCurrentEventFrame(),
+          aEventStatus, aOverrideClickTarget);
+    }
+  }
   return rv;
 }
 
