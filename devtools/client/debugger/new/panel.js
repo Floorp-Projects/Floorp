@@ -129,11 +129,11 @@ DebuggerPanel.prototype = {
   },
 
   selectSourceURL(url, line) {
-    this._actions.selectSourceURL(url, { line });
+    return this._actions.selectSourceURL(url, { line });
   },
 
   selectSource(sourceId, line) {
-    this._actions.selectSource(sourceId, { line });
+    return this._actions.selectSource(sourceId, { line });
   },
 
   getSourceByActorId(sourceId) {
