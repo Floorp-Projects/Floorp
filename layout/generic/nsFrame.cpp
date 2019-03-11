@@ -919,17 +919,6 @@ bool nsIFrame::HasDisplayItem(uint32_t aKey) {
   return false;
 }
 
-void nsIFrame::DiscardItems() {
-  DisplayItemArray* items = GetProperty(DisplayItems());
-  if (!items) {
-    return;
-  }
-
-  for (nsDisplayItem* i : *items) {
-    i->SetDontReuse();
-  }
-}
-
 void nsIFrame::RemoveDisplayItemDataForDeletion() {
   // Destroying a WebRenderUserDataTable can cause destruction of other objects
   // which can remove frame properties in their destructor. If we delete a frame
@@ -3435,16 +3424,13 @@ static nsDisplayItem* WrapInWrapList(nsDisplayListBuilder* aBuilder,
   }
 
   // We need a wrap list if there are multiple items, or if the single
-  // item has a different frame. This can change in a partial build depending
-  // on which items we build, so we need to ensure that we don't transition
-  // to/from a wrap list without invalidating correctly.
-  bool needsWrapList =
-      item->GetAbove() || item->Frame() != aFrame || item->GetChildren();
+  // item has a different frame.
+  bool needsWrapList = item->GetAbove() || item->Frame() != aFrame;
 
-  // If we have an explicit container item (that can't change without an
-  // invalidation) or we're doing a full build and don't need a wrap list, then
-  // we can skip adding one.
-  if (aBuiltContainerItem || (!aBuilder->IsPartialUpdate() && !needsWrapList)) {
+  // If we don't need a wrap list, and we're doing a full build, or if
+  // we have an explicit container item that guarantees to wrap all other
+  // items then we can skip.
+  if (!needsWrapList && (!aBuilder->IsPartialUpdate() || aBuiltContainerItem)) {
     aList->RemoveBottom();
     return item;
   }
@@ -3453,24 +3439,22 @@ static nsDisplayItem* WrapInWrapList(nsDisplayListBuilder* aBuilder,
   // previously then we can try to work from there.
   if (aBuilder->IsPartialUpdate() &&
       !aFrame->HasDisplayItem(uint32_t(DisplayItemType::TYPE_WRAP_LIST))) {
-    // If we now need a wrap list, we must previously have had no display items
-    // or a single one belonging to this frame. Mark the item itself as
-    // discarded so that RetainedDisplayListBuilder uses the ones we just built.
-    // We don't want to mark the frame as modified as that would invalidate
-    // positioned descendants that might be outside of this list, and might not
-    // have been rebuilt this time.
+    // If we now need a wrap list, mark this frame as modified so that merging
+    // removes the unwrapped item. We don't need to add to the dirty rect since
+    // not needing a wrap list means that we must have only had a display item
+    // from this frame, which we're already building items for. All new items
+    // will have already been included in the dirty area.
     if (needsWrapList) {
-      aFrame->DiscardItems();
+      aBuilder->MarkFrameModifiedDuringBuilding(aFrame);
     } else {
       aList->RemoveBottom();
       return item;
     }
   }
 
-  // The last case we could try to handle is when we previously had a wrap list,
-  // but no longer need it. Unfortunately we can't differentiate this case from
-  // a partial build where other children exist but we just didn't build them
-  // this time.
+  // The last case is when we previously had a wrap list, but no longer
+  // need it. Unfortunately we can't differentiate this case from a partial
+  // build where other children exist but we just didn't build them.
   // TODO:RetainedDisplayListBuilder's merge phase has the full list and
   // could strip them out.
 
