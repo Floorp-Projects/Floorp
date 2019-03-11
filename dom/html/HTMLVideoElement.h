@@ -139,6 +139,10 @@ class HTMLVideoElement final : public HTMLMediaElement {
 
   void CloneElementVisually(HTMLVideoElement& aTarget, ErrorResult& rv);
 
+  void StopCloningElementVisually();
+
+  bool IsCloningElementVisually() const { return !!mVisualCloneTarget; }
+
  protected:
   virtual ~HTMLVideoElement();
 
