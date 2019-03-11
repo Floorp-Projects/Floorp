@@ -6538,7 +6538,8 @@ void CodeGenerator::visitOutOfLineNewArray(OutOfLineNewArray* ool) {
   masm.jump(ool->rejoin());
 }
 
-typedef ArrayObject* (*NewArrayCopyOnWriteFn)(JSContext*, HandleArrayObject);
+typedef ArrayObject* (*NewArrayCopyOnWriteFn)(JSContext*, HandleArrayObject,
+                                              gc::InitialHeap);
 static const VMFunction NewArrayCopyOnWriteInfo =
     FunctionInfo<NewArrayCopyOnWriteFn>(js::NewDenseCopyOnWriteArray,
                                         "NewDenseCopyOnWriteArray");
@@ -6552,7 +6553,7 @@ void CodeGenerator::visitNewArrayCopyOnWrite(LNewArrayCopyOnWrite* lir) {
   // If we have a template object, we can inline call object creation.
   OutOfLineCode* ool =
       oolCallVM(NewArrayCopyOnWriteInfo, lir,
-                ArgList(ImmGCPtr(templateObject)),
+                ArgList(ImmGCPtr(templateObject), Imm32(initialHeap)),
                 StoreRegisterTo(objReg));
 
   TemplateObject templateObj(templateObject);
