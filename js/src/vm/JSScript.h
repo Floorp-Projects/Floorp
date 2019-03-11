@@ -14,6 +14,7 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/MaybeOneOf.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/RefPtr.h"
 #include "mozilla/Span.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Utf8.h"
@@ -1478,8 +1479,8 @@ class SharedScriptData {
                                 uint32_t srcnotesLength, uint32_t natoms);
 
   uint32_t refCount() const { return refCount_; }
-  void incRefCount() { refCount_++; }
-  void decRefCount() {
+  void AddRef() { refCount_++; }
+  void Release() {
     MOZ_ASSERT(refCount_ != 0);
     uint32_t remain = --refCount_;
     if (remain == 0) {
@@ -1543,12 +1544,11 @@ struct ScriptBytecodeHasher {
   class Lookup {
     friend struct ScriptBytecodeHasher;
 
-    SharedScriptData* scriptData;
+    RefPtr<SharedScriptData> scriptData;
     HashNumber hash;
 
    public:
     explicit Lookup(SharedScriptData* data);
-    ~Lookup();
   };
 
   static HashNumber hash(const Lookup& l) { return l.hash; }
@@ -1598,7 +1598,7 @@ class JSScript : public js::gc::TenuredCell {
   uint8_t* jitCodeSkipArgCheck_ = nullptr;
 
   // Shareable script data
-  js::SharedScriptData* scriptData_ = nullptr;
+  RefPtr<js::SharedScriptData> scriptData_ = {};
 
   // Unshared variable-length data
   js::PrivateScriptData* data_ = nullptr;
@@ -2537,7 +2537,6 @@ class JSScript : public js::gc::TenuredCell {
                               uint32_t noteLength, uint32_t natoms);
   bool shareScriptData(JSContext* cx);
   void freeScriptData();
-  void setScriptData(js::SharedScriptData* data);
 
  public:
   uint32_t getWarmUpCount() const { return warmUpCount; }
