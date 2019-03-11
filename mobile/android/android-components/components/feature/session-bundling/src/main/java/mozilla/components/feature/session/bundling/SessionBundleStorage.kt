@@ -11,6 +11,7 @@ import android.arch.paging.DataSource
 import android.content.Context
 import android.support.annotation.CheckResult
 import android.support.annotation.VisibleForTesting
+import android.support.annotation.WorkerThread
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.session.storage.AutoSave
@@ -44,6 +45,7 @@ class SessionBundleStorage(
      * Restores the last [SessionBundle] if there is one without expired lifetime.
      */
     @Synchronized
+    @WorkerThread
     fun restore(): SessionBundle? {
         val since = now() - bundleLifetime.second.toMillis(bundleLifetime.first)
 
@@ -60,6 +62,7 @@ class SessionBundleStorage(
      * updated with the data from the snapshot. If no bundle was restored a new bundle will be created.
      */
     @Synchronized
+    @WorkerThread
     override fun save(snapshot: SessionManager.Snapshot): Boolean {
         val bundle = lastBundle
 
@@ -77,6 +80,7 @@ class SessionBundleStorage(
      * next time a [SessionManager.Snapshot] is saved.
      */
     @Synchronized
+    @WorkerThread
     fun remove(bundle: SessionBundle) {
         if (bundle !is SessionBundleAdapter) {
             throw IllegalArgumentException("Unexpected bundle type")
@@ -93,6 +97,7 @@ class SessionBundleStorage(
      * Removes all saved [SessionBundle] instances permanently.
      */
     @Synchronized
+    @WorkerThread
     fun removeAll() {
         lastBundle = null
         database.clearAllTables()

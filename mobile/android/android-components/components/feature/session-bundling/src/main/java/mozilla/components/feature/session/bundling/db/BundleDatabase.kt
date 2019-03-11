@@ -30,7 +30,7 @@ internal abstract class BundleDatabase : RoomDatabase() {
                 context,
                 BundleDatabase::class.java,
                 "bundle_database"
-            ).allowMainThreadQueries().build().also { instance = it }
+            ).build().also { instance = it }
         }
     }
 }
