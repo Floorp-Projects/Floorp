@@ -12,6 +12,7 @@ use capture::CaptureConfig;
 use frame_builder::{FrameBuilderConfig, FrameBuilder};
 use clip_scroll_tree::ClipScrollTree;
 use display_list_flattener::DisplayListFlattener;
+use hit_test::HitTestingSceneStats;
 use intern::{Internable, Interner, UpdateList};
 use internal_types::{FastHashMap, FastHashSet};
 use malloc_size_of::{MallocSizeOf, MallocSizeOfOps};
@@ -224,6 +225,24 @@ macro_rules! declare_interners {
 
 enumerate_interners!(declare_interners);
 
+/// Stores the allocation sizes of various arrays in the frame
+/// builder. This is retrieved from the current frame builder
+/// and used to reserve an approximately correct capacity of
+/// the arrays for the next scene that is getting built.
+pub struct DocumentStats {
+    pub prim_store_stats: PrimitiveStoreStats,
+    pub hit_test_stats: HitTestingSceneStats,
+}
+
+impl DocumentStats {
+    pub fn empty() -> DocumentStats {
+        DocumentStats {
+            prim_store_stats: PrimitiveStoreStats::empty(),
+            hit_test_stats: HitTestingSceneStats::empty(),
+        }
+    }
+}
+
 // A document in the scene builder contains the current scene,
 // as well as a persistent clip interner. This allows clips
 // to be de-duplicated, and persisted in the GPU cache between
@@ -231,7 +250,7 @@ enumerate_interners!(declare_interners);
 struct Document {
     scene: Scene,
     interners: Interners,
-    prim_store_stats: PrimitiveStoreStats,
+    doc_stats: DocumentStats,
 }
 
 impl Document {
@@ -239,7 +258,7 @@ impl Document {
         Document {
             scene,
             interners: Interners::default(),
-            prim_store_stats: PrimitiveStoreStats::empty(),
+            doc_stats: DocumentStats::empty(),
         }
     }
 }
@@ -386,7 +405,7 @@ impl SceneBuilder {
                     &self.config,
                     &mut new_scene,
                     &mut item.interners,
-                    &PrimitiveStoreStats::empty(),
+                    &DocumentStats::empty(),
                 );
 
                 interner_updates = Some(
@@ -405,7 +424,7 @@ impl SceneBuilder {
                 Document {
                     scene: item.scene,
                     interners: item.interners,
-                    prim_store_stats: PrimitiveStoreStats::empty(),
+                    doc_stats: DocumentStats::empty(),
                 },
             );
 
@@ -481,11 +500,11 @@ impl SceneBuilder {
                     &self.config,
                     &mut new_scene,
                     &mut doc.interners,
-                    &doc.prim_store_stats,
+                    &doc.doc_stats,
                 );
 
                 // Update the allocation stats for next scene
-                doc.prim_store_stats = frame_builder.prim_store.get_stats();
+                doc.doc_stats = frame_builder.get_stats();
 
                 // Retrieve the list of updates from the clip interner.
                 interner_updates = Some(
