@@ -121,6 +121,12 @@ void JSJitFrameIter::baselineScriptAndPc(JSScript** scriptRes,
 
   MOZ_ASSERT(pcRes);
 
+  if (baselineFrame()->runningInInterpreter()) {
+    MOZ_ASSERT(baselineFrame()->interpreterScript() == script);
+    *pcRes = baselineFrame()->interpreterPC();
+    return;
+  }
+
   // Use the frame's override pc, if we have one. This should only happen
   // when we're in FinishBailoutToBaseline, handling an exception or toggling
   // debug mode.

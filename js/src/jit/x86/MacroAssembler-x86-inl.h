@@ -343,6 +343,8 @@ void MacroAssembler::neg64(Register64 reg) {
   negl(reg.high);
 }
 
+void MacroAssembler::negPtr(Register reg) { negl(reg); }
+
 // ===============================================================
 // Shift functions
 
