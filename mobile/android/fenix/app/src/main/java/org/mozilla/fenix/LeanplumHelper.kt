@@ -7,9 +7,12 @@ package org.mozilla.fenix
 import com.leanplum.Leanplum
 import com.leanplum.LeanplumActivityHelper
 import com.leanplum.annotations.Parser
+import org.mozilla.fenix.utils.Settings
 
 object LeanplumHelper {
     fun setupLeanplumIfNeeded(application: FenixApplication) {
+        if (!Settings.getInstance(application).isTelemetryEnabled) { return }
+
         Leanplum.setApplicationContext(application)
         Parser.parseVariables(application)
         LeanplumActivityHelper.enableLifecycleCallbacks(application)

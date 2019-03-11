@@ -34,10 +34,10 @@ class Settings private constructor(context: Context) {
         PreferenceManager.getDefaultSharedPreferences(context)
 
     val defaultSearchEngineName: String
-        get() = preferences.getString(
-            appContext.getPreferenceKey(R.string.pref_key_search_engine),
-            ""
-        ) ?: ""
+        get() = preferences.getString(appContext.getPreferenceKey(R.string.pref_key_search_engine), "") ?: ""
+
+    val isTelemetryEnabled: Boolean
+        get() = preferences.getBoolean(appContext.getPreferenceKey(R.string.pref_key_telemetry), true)
 
     fun setDefaultSearchEngineByName(name: String) {
         preferences.edit()

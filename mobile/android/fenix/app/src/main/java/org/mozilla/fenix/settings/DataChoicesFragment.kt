@@ -7,7 +7,9 @@ package org.mozilla.fenix.settings
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.preference.PreferenceFragmentCompat
+import androidx.preference.SwitchPreference
 import org.mozilla.fenix.R
+import org.mozilla.fenix.utils.Settings
 
 class DataChoicesFragment : PreferenceFragmentCompat() {
 
@@ -19,5 +21,9 @@ class DataChoicesFragment : PreferenceFragmentCompat() {
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         setPreferencesFromResource(R.xml.data_choices_preferences, rootKey)
+
+        findPreference<SwitchPreference>(getString(R.string.pref_key_telemetry)).apply {
+            isChecked = Settings.getInstance(context).isTelemetryEnabled
+        }
     }
 }

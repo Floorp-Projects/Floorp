@@ -5,15 +5,15 @@
 
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
     <androidx.preference.SwitchPreference
-            android:key="@string/pref_key_make_default_browser"
+            android:key="@string/pref_key_telemetry"
             android:title="@string/preferences_telemetry" />
     <androidx.preference.SwitchPreference
-            android:key="@string/pref_key_make_default_browser"
+            android:key="@string/pref_key_crash_reporter"
             android:title="@string/preferences_crash_reporter" />
     <androidx.preference.SwitchPreference
-            android:key="@string/pref_key_make_default_browser"
+            android:key="@string/pref_key_mozilla_location_service"
             android:title="@string/preferences_mozilla_location_service" />
     <androidx.preference.SwitchPreference
-            android:key="@string/pref_key_make_default_browser"
+            android:key="@string/pref_key_fenix_health_report"
             android:title="@string/preferences_fenix_health_report" />
 </PreferenceScreen>
