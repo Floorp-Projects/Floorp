@@ -19,7 +19,7 @@ def main():
 
     buildconfig.substs['USE_ELF_HACK'] = False
     buildconfig.substs['PKG_SKIP_STRIP'] = True
-    unpack(sys.argv[1], options.omnijar)
+    unpack(options.directory, options.omnijar)
 
 if __name__ == "__main__":
     main()
