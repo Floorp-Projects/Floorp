@@ -3668,8 +3668,9 @@ static bool TryAttachCallStub(JSContext* cx, ICCall_Fallback* stub,
     bool isCrossRealm = cx->realm() != fun->realm();
 
     RootedObject templateObject(cx);
-    if (MOZ_LIKELY(!isSpread && !isSuper && !isCrossRealm)) {
+    if (MOZ_LIKELY(!isSpread && !isSuper)) {
       CallArgs args = CallArgsFromVp(argc, vp);
+      AutoRealm ar(cx, fun);
       if (!GetTemplateObjectForNative(cx, fun, args, &templateObject)) {
         return false;
       }
