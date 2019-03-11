@@ -24,23 +24,6 @@ function startup() {
 
     gProfileService = C[ToolkitProfileService].getService(I.nsIToolkitProfileService);
 
-    // Check if any profiles are missing on the disk and if so remove them.
-    // We cannot remove profiles while iterating the list returned from the
-    // profile service, so convert it to a new array first.
-    try {
-      for (let profile of [...gProfileService.profiles]) {
-        if (!profile.rootDir.exists() || !profile.rootDir.isDirectory()) {
-          profile.remove(false);
-        }
-      }
-
-      // The profile service is always flushed after this dialog completes.
-    } catch (e) {
-      // There shouldn't be any failures to catch here, but just in case let the
-      // UI build itself properly.
-      Cu.reportError(e);
-    }
-
     gProfileManagerBundle = document.getElementById("bundle_profileManager");
     gBrandBundle = document.getElementById("bundle_brand");
 
