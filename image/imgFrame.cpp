@@ -207,8 +207,7 @@ imgFrame::imgFrame()
       mPalettedImageData(nullptr),
       mPaletteDepth(0),
       mNonPremult(false),
-      mIsFullFrame(false),
-      mCompositingFailed(false) {}
+      mIsFullFrame(false) {}
 
 imgFrame::~imgFrame() {
 #ifdef DEBUG
@@ -1039,16 +1038,6 @@ void imgFrame::WaitUntilFinished() const {
 bool imgFrame::AreAllPixelsWritten() const {
   mMonitor.AssertCurrentThreadOwns();
   return mDecoded.IsEqualInterior(mFrameRect);
-}
-
-bool imgFrame::GetCompositingFailed() const {
-  MOZ_ASSERT(NS_IsMainThread());
-  return mCompositingFailed;
-}
-
-void imgFrame::SetCompositingFailed(bool val) {
-  MOZ_ASSERT(NS_IsMainThread());
-  mCompositingFailed = val;
 }
 
 void imgFrame::AddSizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
