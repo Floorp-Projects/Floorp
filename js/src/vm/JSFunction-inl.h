@@ -113,7 +113,8 @@ inline JSFunction* CloneFunctionObjectIfNotSingleton(
   MOZ_ASSERT(dynamicSlotsCount(shape->numFixedSlots(), shape->slotSpan(),
                                clasp) == NumDynamicSlots);
 
-  JSObject* obj = js::AllocateObject(cx, kind, NumDynamicSlots, heap, clasp);
+  JSObject* obj =
+      js::Allocate<JSObject>(cx, kind, NumDynamicSlots, heap, clasp);
   if (!obj) {
     return cx->alreadyReportedOOM();
   }
