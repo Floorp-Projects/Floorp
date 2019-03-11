@@ -1355,7 +1355,7 @@ class alignas(JS::Value) PrivateScriptData final {
 
   // Concrete Fields
   PackedOffsets packedOffsets = {};  // zeroes
-  uint32_t nscopes;
+  uint32_t nscopes = 0;
 
   // Translate an offset into a concrete pointer.
   template <typename T>
@@ -1396,6 +1396,10 @@ class alignas(JS::Value) PrivateScriptData final {
   PrivateScriptData(uint32_t nscopes_, uint32_t nconsts, uint32_t nobjects,
                     uint32_t ntrynotes, uint32_t nscopenotes,
                     uint32_t nresumeoffsets);
+
+  // PrivateScriptData has trailing data so isn't copyable or movable.
+  PrivateScriptData(const PrivateScriptData&) = delete;
+  PrivateScriptData& operator=(const PrivateScriptData&) = delete;
 
  public:
   // Accessors for typed array spans.
@@ -1450,7 +1454,7 @@ class alignas(JS::Value) PrivateScriptData final {
   static bool InitFromEmitter(JSContext* cx, js::HandleScript script,
                               js::frontend::BytecodeEmitter* bce);
 
-  void traceChildren(JSTracer* trc);
+  void trace(JSTracer* trc);
 };
 
 /*
@@ -1574,6 +1578,16 @@ extern void SweepScriptData(JSRuntime* rt);
 extern void FreeScriptData(JSRuntime* rt);
 
 } /* namespace js */
+
+namespace JS {
+
+// Define a GCManagedDeletePolicy to allow deleting type outside of normal
+// sweeping.
+template <>
+struct JS::DeletePolicy<js::PrivateScriptData>
+    : public js::GCManagedDeletePolicy<js::PrivateScriptData> {};
+
+} /* namespace JS */
 
 class JSScript : public js::gc::TenuredCell {
  private:
