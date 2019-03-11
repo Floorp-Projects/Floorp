@@ -22,7 +22,7 @@ android {
 }
 
 dependencies {
-    implementation project(':browser-search')
+    api project(':browser-search')
     implementation project(':browser-session')
     implementation project(':concept-engine')
 
