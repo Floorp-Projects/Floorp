@@ -2101,8 +2101,7 @@ class nsDisplayItem : public nsDisplayItemLink {
         mDisableSubpixelAA(false),
         mReusedItem(false),
         mBackfaceHidden(mFrame->In3DContextAndBackfaceIsHidden()),
-        mPaintRectValid(false),
-        mCanBeReused(true)
+        mPaintRectValid(false)
 #ifdef MOZ_DUMP_PAINTING
         ,
         mPainted(false)
@@ -2176,8 +2175,7 @@ class nsDisplayItem : public nsDisplayItemLink {
         mDisableSubpixelAA(aOther.mDisableSubpixelAA),
         mReusedItem(false),
         mBackfaceHidden(mFrame->In3DContextAndBackfaceIsHidden()),
-        mPaintRectValid(false),
-        mCanBeReused(true)
+        mPaintRectValid(false)
 #ifdef MOZ_DUMP_PAINTING
         ,
         mPainted(false)
@@ -2846,8 +2844,7 @@ class nsDisplayItem : public nsDisplayItemLink {
 
   void SetReused(bool aReused) { mReusedItem = aReused; }
 
-  bool CanBeReused() const { return mCanBeReused; }
-  void SetDontReuse() { mCanBeReused = false; }
+  virtual bool CanBeReused() const { return true; }
 
   virtual nsIFrame* GetDependentFrame() { return nullptr; }
 
@@ -2961,7 +2958,6 @@ class nsDisplayItem : public nsDisplayItemLink {
   bool mReusedItem;
   bool mBackfaceHidden;
   bool mPaintRectValid;
-  bool mCanBeReused;
 #ifdef MOZ_DUMP_PAINTING
   // True if this frame has been painted.
   bool mPainted;
@@ -4059,11 +4055,12 @@ class nsDisplaySolidColor : public nsDisplaySolidColorBase {
   nsDisplaySolidColor(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                       const nsRect& aBounds, nscolor aColor,
                       bool aCanBeReused = true)
-      : nsDisplaySolidColorBase(aBuilder, aFrame, aColor), mBounds(aBounds) {
+      : nsDisplaySolidColorBase(aBuilder, aFrame, aColor),
+        mBounds(aBounds),
+        mCanBeReused(aCanBeReused) {
     NS_ASSERTION(NS_GET_A(aColor) > 0,
                  "Don't create invisible nsDisplaySolidColors!");
     MOZ_COUNT_CTOR(nsDisplaySolidColor);
-    mCanBeReused = aCanBeReused;
   }
 
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -4087,6 +4084,7 @@ class nsDisplaySolidColor : public nsDisplaySolidColorBase {
       const StackingContextHelper& aSc,
       mozilla::layers::RenderRootStateManager* aManager,
       nsDisplayListBuilder* aDisplayListBuilder) override;
+  bool CanBeReused() const override { return mCanBeReused; }
 
   int32_t ZIndex() const override {
     if (mOverrideZIndex) {
@@ -4101,6 +4099,7 @@ class nsDisplaySolidColor : public nsDisplaySolidColorBase {
 
  private:
   nsRect mBounds;
+  bool mCanBeReused;
   mozilla::Maybe<int32_t> mOverrideZIndex;
 };
 

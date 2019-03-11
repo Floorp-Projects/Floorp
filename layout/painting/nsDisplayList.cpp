@@ -3103,8 +3103,7 @@ nsDisplayItem::nsDisplayItem(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
       mDisableSubpixelAA(false),
       mReusedItem(false),
       mBackfaceHidden(mFrame->In3DContextAndBackfaceIsHidden()),
-      mPaintRectValid(false),
-      mCanBeReused(true)
+      mPaintRectValid(false)
 #ifdef MOZ_DUMP_PAINTING
       ,
       mPainted(false)
