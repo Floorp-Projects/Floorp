@@ -6,6 +6,9 @@ const {FileUtils} = ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
 
 /**
  * Test that the IOInterposer is working correctly to capture main thread IO.
+ *
+ * This test should not run on release or beta, as the IOInterposer is wrapped in
+ * an ifdef.
  */
 add_task(async () => {
   if (!AppConstants.MOZ_GECKO_PROFILER) {
