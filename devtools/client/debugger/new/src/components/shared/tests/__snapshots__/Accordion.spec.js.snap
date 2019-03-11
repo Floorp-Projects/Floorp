@@ -17,7 +17,11 @@ exports[`Accordion basic render 1`] = `
       <AccessibleImage
         className="arrow expanded"
       />
-      Test Accordion Item 1
+      <span
+        className="header-label"
+      >
+        Test Accordion Item 1
+      </span>
     </h2>
     <div
       className="_content"
@@ -38,7 +42,11 @@ exports[`Accordion basic render 1`] = `
       <AccessibleImage
         className="arrow "
       />
-      Test Accordion Item 2
+      <span
+        className="header-label"
+      >
+        Test Accordion Item 2
+      </span>
       <div
         className="header-buttons"
         tabIndex="-1"
@@ -60,7 +68,11 @@ exports[`Accordion basic render 1`] = `
       <AccessibleImage
         className="arrow expanded"
       />
-      Test Accordion Item 3
+      <span
+        className="header-label"
+      >
+        Test Accordion Item 3
+      </span>
     </h2>
     <div
       className="_content"

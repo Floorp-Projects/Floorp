@@ -1058,6 +1058,12 @@ html[dir="rtl"] .managed-tree .tree .node > div {
   mask-size: contain;
   mask-repeat: no-repeat;
   mask-position: center;
+  /* multicolor icons use background-image */
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+  /* do not let images shrink when used as flex children */
+  flex-shrink: 0;
 }
 
 /* Expand arrow icon */
@@ -1398,7 +1404,7 @@ html[dir="ltr"] .toggle-button.end:not(.vertical) .img {
   align-self: stretch;
   flex-grow: 1;
   height: 24px;
-  min-width: 40px;
+  width: 40px;
   border: none;
   padding: 4px;
   padding-inline-start: 28px;
@@ -1879,10 +1885,6 @@ menuseparator {
 
 .source-icon {
   margin-inline-end: 4px;
-  /* multicolor icons use background-image */
-  background-position: center;
-  background-repeat: no-repeat;
-  background-size: contain;
 }
 
 /* Icons for frameworks and libs */
@@ -2011,7 +2013,9 @@ menuseparator {
   mask-image: url("resource://devtools/client/debugger/new/images/sources/underscore.svg");
 }
 
-.img.vue {
+/* We use both 'Vue' and 'VueJS' when identifying frameworks */
+.img.vue,
+.img.vuejs {
   background-image: url("resource://devtools/client/debugger/new/images/sources/vuejs.svg");
   background-color: transparent !important;
 }
@@ -2320,7 +2324,6 @@ menuseparator {
   background-color: var(--theme-icon-checked-color);
 }
 
-.source-footer .blackbox-summary,
 .source-footer .mapped-source,
 .source-footer .cursor-position {
   color: var(--theme-body-color);
@@ -3097,6 +3100,7 @@ debug-expression-error {
 
 .breakpoints-list .breakpoint {
   min-height: var(--breakpoint-expression-height);
+  overflow: hidden;
 }
 
 .breakpoints-exceptions-caught {
@@ -3223,20 +3227,12 @@ html .breakpoints-list .breakpoint.paused {
   inset-inline-end: 15px;
   inset-inline-start: auto;
   position: absolute;
-  top: 8px;
-  display: none;
+  top: -100px; /*For hiding button outside of row until hovered or focused*/
 }
 
-.breakpoint:hover .close-btn {
-  display: flex;
-}
-
-.breakpoint .close {
-  visibility: hidden;
-}
-
-.breakpoint:hover .close {
-  visibility: visible;
+.breakpoint:hover .close-btn,
+.breakpoint .close-btn:focus {
+  top: calc(50% - 8px);
 }
 
 .CodeMirror.cm-s-mozilla-breakpoint {
@@ -3398,8 +3394,8 @@ html .breakpoints-list .breakpoint.paused {
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-.frames [role="list"] .frames-group .group,
-.frames [role="list"] .frames-group .group .location {
+.frames-group .group,
+.frames-group .group .location {
   font-weight: 500;
   cursor: default;
   /*
@@ -3410,26 +3406,27 @@ html .breakpoints-list .breakpoint.paused {
   direction: ltr;
 }
 
-.frames [role="list"] .frames-group.expanded .group,
-.frames [role="list"] .frames-group.expanded .group .location {
+.frames-group.expanded .group,
+.frames-group.expanded .group .location {
   color: var(--theme-highlight-blue);
 }
 
-.frames [role="list"] .frames-group .frames-list [role="listitem"] {
-  padding-left: 30px;
+.frames-group .frames-list [role="listitem"] {
+  padding-inline-start: 30px;
 }
 
-.frames [role="list"] .frames-group .frames-list {
+.frames-group .frames-list {
   border-top: 1px solid var(--theme-splitter-color);
   border-bottom: 1px solid var(--theme-splitter-color);
 }
 
-.frames [role="list"] .frames-group.expanded .badge {
+.frames-group.expanded .badge {
   color: var(--theme-highlight-blue);
 }
 
-.group-description-name {
-  padding-left: 5px;
+.frames-group .img.arrow {
+  margin-inline-start: -1px;
+  margin-inline-end: 4px;
 }
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -3567,13 +3564,13 @@ html .breakpoints-list .breakpoint.paused {
   color: white;
 }
 
-.show-more-container {
+.frames .show-more-container {
   display: flex;
   min-height: 24px;
   padding: 4px 0;
 }
 
-.show-more {
+.frames .show-more {
   text-align: center;
   padding: 8px 0px;
   margin: 7px 10px 7px 7px;
@@ -3584,25 +3581,27 @@ html .breakpoints-list .breakpoint.paused {
   color: inherit;
 }
 
-.show-more:hover {
+.frames .show-more:hover {
   background-color: var(--theme-toolbar-background-hover);
 }
 
-.annotation-logo {
-  mask-size: 100%;
-  display: inline-block;
-  width: 12px;
+.frames .img.annotation-logo {
+  margin-inline-end: 4px;
+  background-color: currentColor;
 }
 
-:root.theme-dark .annotation-logo:not(.angular) svg path {
-  fill: var(--theme-highlight-blue);
+/*
+ * We also show the library icon in locations, which are forced to RTL.
+ */
+.frames .location .img.annotation-logo {
+  margin-inline-start: 4px;
 }
 
 /* Some elements are added to the DOM only to be printed into the clipboard
    when the user copy some elements. We don't want those elements to mess with
    the layout so we put them outside of the screen
 */
-.clipboard-only {
+.frames .clipboard-only {
   position: absolute;
   left: -9999px;
 }
@@ -3662,12 +3661,10 @@ html .breakpoints-list .breakpoint.paused {
 
 :root {
   --accordion-header-background: var(--theme-toolbar-background);
-  --disclosure-arrow: #b2b2b2;
 }
 
 :root.theme-dark {
   --accordion-header-background: #222225;
-  --disclosure-arrow: #7f7f81;
 }
 
 .accordion {
@@ -3683,30 +3680,53 @@ html .breakpoints-list .breakpoint.paused {
   border-bottom: 1px solid var(--theme-splitter-color);
   display: flex;
   font-size: 12px;
-  padding: 4px;
-  transition: all 0.25s ease;
+  line-height: calc(16 / 12);
+  padding: 4px 6px;
   width: 100%;
-  height: 24px;
   align-items: center;
   margin: 0px;
   font-weight: normal;
-
+  cursor: default;
   -webkit-user-select: none;
   -moz-user-select: none;
-  -ms-user-select: none;
-  -o-user-select: none;
   user-select: none;
-  cursor: default;
 }
 
 .accordion ._header:hover {
   background-color: var(--theme-toolbar-background-hover);
 }
 
-.accordion ._header button svg,
-.accordion ._header:hover button svg {
-  fill: currentColor;
+.accordion ._header .arrow {
+  margin-inline-end: 4px;
+}
+
+.accordion ._header .header-label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.accordion ._header .header-buttons {
+  display: flex;
+  margin-inline-start: auto;
+}
+
+.accordion ._header .header-buttons button {
+  color: var(--theme-body-color);
+  border: none;
+  background: none;
+  padding: 0;
+  margin: 0 2px;
+  width: 16px;
   height: 16px;
+}
+
+.accordion ._header .header-buttons button::-moz-focus-inner {
+  border: none;
+}
+
+.accordion ._header .header-buttons button .img {
+  display: block;
 }
 
 .accordion ._content {
@@ -3716,35 +3736,6 @@ html .breakpoints-list .breakpoint.paused {
 
 .accordion div:last-child ._content {
   border-bottom: none;
-}
-
-.accordion ._header .header-buttons {
-  display: flex;
-  margin-left: auto;
-  padding-right: 5px;
-}
-
-.accordion .header-buttons .add-button {
-  font-size: 180%;
-  text-align: center;
-  line-height: 16px;
-}
-
-.accordion .header-buttons button {
-  color: var(--theme-body-color);
-  border: none;
-  background: none;
-  padding: 0;
-  width: 16px;
-  height: 16px;
-}
-
-.accordion .header-buttons button::-moz-focus-inner {
-  border: none;
-}
-
-.accordion .arrow svg {
-  fill: var(--disclosure-arrow);
 }
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -4390,11 +4381,18 @@ html .welcomebox .toggle-button-end.collapsed {
   box-shadow: 0 4px 4px 0 var(--search-overlays-semitransparent);
   max-height: 300px;
   position: absolute;
-  inset-inline-end: 2px;
   top: 24px;
   width: 150px;
   z-index: 1000;
   overflow: auto;
+}
+
+[dir="ltr"] .dropdown {
+  right: 2px;
+}
+
+[dir="rtl"] .dropdown {
+  left: 2px;
 }
 
 .dropdown-block {
@@ -4424,31 +4422,18 @@ html .welcomebox .toggle-button-end.collapsed {
 }
 
 .dropdown ul {
-  list-style: none;
-  line-height: 2em;
-  font-size: 1em;
   margin: 0;
-  padding: 0;
+  padding: 4px 0;
+  list-style: none;
 }
 
 .dropdown li {
   display: flex;
   align-items: center;
-  padding: 5px 8px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  padding: 6px 8px;
   font-size: 12px;
   line-height: calc(16 / 12);
   transition: all 0.25s ease;
-}
-
-.dropdown li:first-child {
-  margin-top: 4px;
-}
-
-.dropdown li:last-child {
-  margin-bottom: 4px;
 }
 
 .dropdown li:hover {
@@ -4458,6 +4443,13 @@ html .welcomebox .toggle-button-end.collapsed {
 .dropdown-icon {
   margin-inline-end: 4px;
   mask-size: 13px 13px;
+}
+
+.dropdown-label {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .dropdown-icon.prettyPrint,
