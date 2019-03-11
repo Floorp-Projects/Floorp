@@ -1149,6 +1149,27 @@ class PresShell final : public nsIPresShell,
                                        nsIFrame* aFrame);
 
     /**
+     * DispatchEvent() tries to dispatch aEvent and notifies aEventStateManager
+     * of doing it.
+     *
+     * @param aEventStateManager        EventStateManager which should handle
+     *                                  the event before/after dispatching
+     *                                  aEvent into the DOM.
+     * @param aEvent                    The handling event.
+     * @param aTouchIsNew               Set this to true when the message is
+     *                                  eTouchMove and it's newly touched.
+     *                                  Then, the "touchmove" event becomes
+     *                                  cancelable.
+     * @param aEventStatus              [in/out] The status of aEvent.
+     * @param aOverrideClickTarget      Override click event target.
+     */
+    MOZ_CAN_RUN_SCRIPT
+    nsresult DispatchEvent(EventStateManager* aEventStateManager,
+                           WidgetEvent* aEvent, bool aTouchIsNew,
+                           nsEventStatus* aEventStatus,
+                           nsIContent* aOverrideClickTarget);
+
+    /**
      * DispatchEventToDOM() actually dispatches aEvent into the DOM tree.
      *
      * @param aEvent            Event to be dispatched into the DOM tree.

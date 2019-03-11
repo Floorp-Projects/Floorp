@@ -592,10 +592,12 @@ inline bool IsStrictEvalPC(jsbytecode* pc) {
   return op == JSOP_STRICTEVAL || op == JSOP_STRICTSPREADEVAL;
 }
 
-inline bool IsConstructorCallPC(jsbytecode* pc) {
-  JSOp op = JSOp(*pc);
+inline bool IsConstructorCallOp(JSOp op) {
   return op == JSOP_NEW || op == JSOP_SUPERCALL || op == JSOP_SPREADNEW ||
          op == JSOP_SPREADSUPERCALL;
+}
+inline bool IsConstructorCallPC(const jsbytecode* pc) {
+  return IsConstructorCallOp(JSOp(*pc));
 }
 
 inline bool IsSpreadCallPC(jsbytecode* pc) {

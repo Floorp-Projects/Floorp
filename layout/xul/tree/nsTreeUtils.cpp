@@ -55,6 +55,13 @@ nsIContent* nsTreeUtils::GetImmediateChild(nsIContent* aContainer,
     if (child->IsXULElement(aTag)) {
       return child;
     }
+    // <slot> is in the flattened tree, but <tree> code is used to work with
+    // <xbl:children> which is not, so recurse in <slot> here.
+    if (child->IsHTMLElement(nsGkAtoms::slot)) {
+      if (nsIContent* c = GetImmediateChild(child, aTag)) {
+        return c;
+      }
+    }
   }
 
   return nullptr;

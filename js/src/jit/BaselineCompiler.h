@@ -304,7 +304,7 @@ class BaselineCodeGen {
   }
 
   // Pushes the current script as argument for a VM function.
-  void pushScriptArg(Register scratch);
+  void pushScriptArg();
 
   // Pushes the bytecode pc as argument for a VM function.
   void pushBytecodePCArg();
@@ -321,6 +321,8 @@ class BaselineCodeGen {
   void pushUint16BytecodeOperandArg();
 
   void loadResumeIndexBytecodeOperand(Register dest);
+  void loadInt32LengthBytecodeOperand(Register dest);
+  void loadInt32IndexBytecodeOperand(ValueOperand dest);
 
   // Loads the current JSScript* in dest.
   void loadScript(Register dest);
@@ -628,6 +630,7 @@ class BaselineCompiler final : private BaselineCompilerCodeGen {
 // Interface used by BaselineCodeGen for BaselineInterpreterGenerator.
 class BaselineInterpreterHandler {
   InterpreterFrameInfo frame_;
+  Label interpretOp_;
 
  public:
   using FrameInfoT = InterpreterFrameInfo;
@@ -635,6 +638,8 @@ class BaselineInterpreterHandler {
   explicit BaselineInterpreterHandler(JSContext* cx, MacroAssembler& masm);
 
   InterpreterFrameInfo& frame() { return frame_; }
+
+  Label* interpretOpLabel() { return &interpretOp_; }
 
   // Interpreter doesn't know the script and pc statically.
   jsbytecode* maybePC() const { return nullptr; }
