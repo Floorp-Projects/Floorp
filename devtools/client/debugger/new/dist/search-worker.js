@@ -7,7 +7,7 @@
 		var a = typeof exports === 'object' ? factory(require("devtools/shared/flags")) : factory(root["devtools/shared/flags"]);
 		for(var i in a) (typeof exports === 'object' ? exports : root)[i] = a[i];
 	}
-})(typeof self !== 'undefined' ? self : this, function(__WEBPACK_EXTERNAL_MODULE_71__) {
+})(typeof self !== 'undefined' ? self : this, function(__WEBPACK_EXTERNAL_MODULE_72__) {
 return /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
 /******/ 	var installedModules = {};
@@ -70,7 +70,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	__webpack_require__.p = "/assets/build";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 735);
+/******/ 	return __webpack_require__(__webpack_require__.s = 736);
 /******/ })
 /************************************************************************/
 /******/ ({
@@ -92,7 +92,7 @@ module.exports = {
 
 /***/ }),
 
-/***/ 165:
+/***/ 164:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -103,7 +103,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.default = buildQuery;
 
-var _escapeRegExp = __webpack_require__(166);
+var _escapeRegExp = __webpack_require__(165);
 
 var _escapeRegExp2 = _interopRequireDefault(_escapeRegExp);
 
@@ -172,10 +172,10 @@ function buildQuery(originalQuery, modifiers, { isGlobal = false, ignoreSpaces =
 
 /***/ }),
 
-/***/ 166:
+/***/ 165:
 /***/ (function(module, exports, __webpack_require__) {
 
-var toString = __webpack_require__(69);
+var toString = __webpack_require__(70);
 
 /**
  * Used to match `RegExp`
@@ -214,7 +214,7 @@ module.exports = escapeRegExp;
 /***/ 21:
 /***/ (function(module, exports, __webpack_require__) {
 
-var freeGlobal = __webpack_require__(70);
+var freeGlobal = __webpack_require__(71);
 
 /** Detect free variable `self`. */
 var freeSelf = typeof self == 'object' && self && self.Object === Object && self;
@@ -553,7 +553,7 @@ module.exports = isObjectLike;
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-const flag = __webpack_require__(71);
+const flag = __webpack_require__(72);
 
 function isBrowser() {
   return typeof window == "object";
@@ -630,7 +630,7 @@ module.exports = baseGetTag;
 
 /***/ }),
 
-/***/ 358:
+/***/ 360:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -645,7 +645,7 @@ var _assert = __webpack_require__(57);
 
 var _assert2 = _interopRequireDefault(_assert);
 
-var _buildQuery = __webpack_require__(165);
+var _buildQuery = __webpack_require__(164);
 
 var _buildQuery2 = _interopRequireDefault(_buildQuery);
 
@@ -939,7 +939,7 @@ function assert(condition, message) {
 
 /***/ }),
 
-/***/ 69:
+/***/ 70:
 /***/ (function(module, exports, __webpack_require__) {
 
 var baseToString = __webpack_require__(83);
@@ -974,7 +974,7 @@ module.exports = toString;
 
 /***/ }),
 
-/***/ 70:
+/***/ 71:
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(global) {/** Detect free variable `global` from Node.js. */
@@ -986,32 +986,32 @@ module.exports = freeGlobal;
 
 /***/ }),
 
-/***/ 71:
+/***/ 72:
 /***/ (function(module, exports) {
 
-module.exports = __WEBPACK_EXTERNAL_MODULE_71__;
-
-/***/ }),
-
-/***/ 735:
-/***/ (function(module, exports, __webpack_require__) {
-
-module.exports = __webpack_require__(736);
-
+module.exports = __WEBPACK_EXTERNAL_MODULE_72__;
 
 /***/ }),
 
 /***/ 736:
 /***/ (function(module, exports, __webpack_require__) {
 
+module.exports = __webpack_require__(737);
+
+
+/***/ }),
+
+/***/ 737:
+/***/ (function(module, exports, __webpack_require__) {
+
 "use strict";
 
 
-var _getMatches = __webpack_require__(358);
+var _getMatches = __webpack_require__(360);
 
 var _getMatches2 = _interopRequireDefault(_getMatches);
 
-var _projectSearch = __webpack_require__(737);
+var _projectSearch = __webpack_require__(738);
 
 var _devtoolsUtils = __webpack_require__(16);
 
@@ -1025,7 +1025,7 @@ self.onmessage = workerHandler({ getMatches: _getMatches2.default, findSourceMat
 
 /***/ }),
 
-/***/ 737:
+/***/ 738:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1036,7 +1036,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.findSourceMatches = findSourceMatches;
 
-var _getMatches = __webpack_require__(358);
+var _getMatches = __webpack_require__(360);
 
 var _getMatches2 = _interopRequireDefault(_getMatches);
 

@@ -133,20 +133,6 @@ class SourceFooter extends PureComponent<Props, State> {
     );
   }
 
-  blackBoxSummary() {
-    const { selectedSource } = this.props;
-
-    if (!selectedSource || !selectedSource.isBlackBoxed) {
-      return;
-    }
-
-    return (
-      <span className="blackbox-summary" key="blackbox-summary">
-        {L10N.getStr("sourceFooter.blackboxed")}
-      </span>
-    );
-  }
-
   renderToggleButton() {
     if (this.props.horizontal) {
       return;
@@ -164,11 +150,9 @@ class SourceFooter extends PureComponent<Props, State> {
   }
 
   renderCommands() {
-    const commands = [
-      this.prettyPrintButton(),
-      this.blackBoxButton(),
-      this.blackBoxSummary()
-    ].filter(Boolean);
+    const commands = [this.prettyPrintButton(), this.blackBoxButton()].filter(
+      Boolean
+    );
 
     return commands.length ? <div className="commands">{commands}</div> : null;
   }
