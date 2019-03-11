@@ -3674,7 +3674,8 @@ void nsIPresShell::DispatchSynthMouseMove(WidgetGUIEvent* aEvent) {
   nsEventStatus status = nsEventStatus_eIgnore;
   nsView* targetView = nsView::GetViewFor(aEvent->mWidget);
   if (!targetView) return;
-  targetView->GetViewManager()->DispatchEvent(aEvent, targetView, &status);
+  RefPtr<nsViewManager> viewManager = targetView->GetViewManager();
+  viewManager->DispatchEvent(aEvent, targetView, &status);
 }
 
 void PresShell::ClearMouseCaptureOnView(nsView* aView) {
