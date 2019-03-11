@@ -134,11 +134,8 @@ var snapshotFormatters = {
       $("policies-status-row").hidden = true;
     }
 
-    let keyLocationServiceGoogleFound = data.keyLocationServiceGoogleFound ? "found" : "missing";
-    document.l10n.setAttributes($("key-location-service-google-box"), keyLocationServiceGoogleFound);
-
-    let keySafebrowsingGoogleFound = data.keySafebrowsingGoogleFound ? "found" : "missing";
-    document.l10n.setAttributes($("key-safebrowsing-google-box"), keySafebrowsingGoogleFound);
+    let keyGoogleFound = data.keyGoogleFound ? "found" : "missing";
+    document.l10n.setAttributes($("key-google-box"), keyGoogleFound);
 
     let keyMozillaFound = data.keyMozillaFound ? "found" : "missing";
     document.l10n.setAttributes($("key-mozilla-box"), keyMozillaFound);
