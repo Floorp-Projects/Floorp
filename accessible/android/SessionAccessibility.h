@@ -94,7 +94,7 @@ class SessionAccessibility final
                             bool aFromUser);
   void SendSelectedEvent(AccessibleWrap* aAccessible, bool aSelected);
   void SendClickedEvent(AccessibleWrap* aAccessible, bool aChecked);
-  void SendWindowContentChangedEvent();
+  void SendWindowContentChangedEvent(AccessibleWrap* aAccessible);
   void SendWindowStateChangedEvent(AccessibleWrap* aAccessible);
 
   // Cache methods
