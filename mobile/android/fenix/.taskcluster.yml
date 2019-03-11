@@ -65,6 +65,8 @@ tasks:
                 - queue:route:index.project.mobile.fenix.staging-signed-nightly.*
                 - secrets:get:garbage/staging/project/mobile/fenix/sentry
                 - secrets:get:garbage/staging/project/mobile/fenix/leanplum
+        routes:
+          - notify.email.fenix-eng-notifications@mozilla.com.on-failed
         payload:
           maxRunTime: 600   # Decision should remain fast enough to schedule a handful of tasks
           image: mozillamobile/fenix:1.3
