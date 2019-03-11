@@ -7,7 +7,6 @@ package mozilla.components.browser.session.storage
 import android.arch.lifecycle.Lifecycle
 import android.arch.lifecycle.LifecycleOwner
 import android.arch.lifecycle.LifecycleRegistry
-import android.util.AtomicFile
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.session.Session
@@ -30,7 +29,6 @@ import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.doReturn
-import org.mockito.Mockito.doThrow
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
@@ -38,8 +36,6 @@ import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoMoreInteractions
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
-import java.io.FileNotFoundException
-import java.io.IOException
 import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.ScheduledFuture
 import java.util.concurrent.TimeUnit
@@ -439,44 +435,6 @@ class SessionStorageTest {
 
         val saveJob = autoSave.triggerSave()
         assertNotSame(completed, saveJob)
-    }
-
-    @Test
-    fun `saveSnapshotToDisk - Fails write on IOException`() {
-        val file: AtomicFile = mock()
-        doThrow(IOException::class.java).`when`(file).startWrite()
-
-        val snapshot = SessionManager.Snapshot(
-            sessions = listOf(
-                SessionManager.Snapshot.Item(Session("http://mozilla.org"))
-            ),
-            selectedSessionIndex = 0
-        )
-
-        saveSnapshotToDisk(file, SnapshotSerializer(), snapshot)
-
-        verify(file).failWrite(any())
-    }
-
-    @Test
-    fun `readSnapshotFromDisk - Returns null on FileNotFoundException`() {
-        val file: AtomicFile = mock()
-        doThrow(FileNotFoundException::class.java).`when`(file).openRead()
-
-        val snapshot = readSnapshotFromDisk(file, engine = mock(), serializer = SnapshotSerializer())
-        assertNull(snapshot)
-    }
-
-    @Test
-    fun `readSnapshotFromDisk - Returns null on corrupt JSON`() {
-        val file = getFileForEngine(RuntimeEnvironment.application, engine = mock())
-
-        val stream = file.startWrite()
-        stream.bufferedWriter().write("{ name: 'Foo")
-        file.finishWrite(stream)
-
-        val snapshot = readSnapshotFromDisk(file, engine = mock(), serializer = SnapshotSerializer())
-        assertNull(snapshot)
     }
 
     @Test

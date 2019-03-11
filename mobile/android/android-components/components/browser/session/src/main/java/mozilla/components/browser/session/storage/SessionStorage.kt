@@ -10,11 +10,10 @@ import android.support.annotation.VisibleForTesting
 import android.support.annotation.WorkerThread
 import android.util.AtomicFile
 import mozilla.components.browser.session.SessionManager
+import mozilla.components.browser.session.ext.readSnapshot
+import mozilla.components.browser.session.ext.writeSnapshot
 import mozilla.components.concept.engine.Engine
-import org.json.JSONException
 import java.io.File
-import java.io.FileOutputStream
-import java.io.IOException
 import java.util.concurrent.TimeUnit
 
 private const val STORE_FILE_NAME_FORMAT = "mozilla_components_session_storage_%s.json"
@@ -33,13 +32,18 @@ class SessionStorage(
     /**
      * Reads the saved state from disk. Returns null if no state was found on disk or if reading the file failed.
      */
+    @WorkerThread
     fun restore(): SessionManager.Snapshot? {
-        return readSnapshotFromDisk(getFileForEngine(context, engine), serializer, engine)
+        synchronized(sessionFileLock) {
+            return getFileForEngine(context, engine)
+                .readSnapshot(engine, serializer)
+        }
     }
 
     /**
      * Clears the state saved on disk.
      */
+    @WorkerThread
     fun clear() {
         removeSnapshotFromDisk(context, engine)
     }
@@ -54,7 +58,14 @@ class SessionStorage(
             return true
         }
 
-        return saveSnapshotToDisk(getFileForEngine(context, engine), serializer, snapshot)
+        requireNotNull(snapshot.sessions.getOrNull(snapshot.selectedSessionIndex)) {
+            "SessionSnapshot's selected index must be in bounds"
+        }
+
+        synchronized(sessionFileLock) {
+            return getFileForEngine(context, engine)
+                .writeSnapshot(snapshot, serializer)
+        }
     }
 
     /**
@@ -70,71 +81,10 @@ class SessionStorage(
     }
 }
 
-@VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-@Suppress("ReturnCount")
-internal fun readSnapshotFromDisk(
-    file: AtomicFile,
-    serializer: SnapshotSerializer,
-    engine: Engine
-): SessionManager.Snapshot? {
-    synchronized(sessionFileLock) {
-
-        try {
-            file.openRead().use {
-                val json = it.bufferedReader().use { reader -> reader.readText() }
-
-                val snapshot = serializer.fromJSON(engine, json)
-
-                if (snapshot.isEmpty()) {
-                    return null
-                }
-
-                return snapshot
-            }
-        } catch (_: IOException) {
-            return null
-        } catch (_: JSONException) {
-            return null
-        }
-    }
-}
-
-@VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-internal fun saveSnapshotToDisk(
-    file: AtomicFile,
-    serializer: SnapshotSerializer,
-    snapshot: SessionManager.Snapshot
-): Boolean {
-    require(snapshot.sessions.isNotEmpty()) {
-        "SessionsSnapshot must not be empty"
-    }
-    requireNotNull(snapshot.sessions.getOrNull(snapshot.selectedSessionIndex)) {
-        "SessionSnapshot's selected index must be in bounds"
-    }
-
-    synchronized(sessionFileLock) {
-        var outputStream: FileOutputStream? = null
-
-        return try {
-            val json = serializer.toJSON(snapshot)
-
-            outputStream = file.startWrite()
-            outputStream.write(json.toByteArray())
-            file.finishWrite(outputStream)
-            true
-        } catch (_: IOException) {
-            file.failWrite(outputStream)
-            false
-        } catch (_: JSONException) {
-            file.failWrite(outputStream)
-            false
-        }
-    }
-}
-
 private fun removeSnapshotFromDisk(context: Context, engine: Engine) {
     synchronized(sessionFileLock) {
-        getFileForEngine(context, engine).delete()
+        getFileForEngine(context, engine)
+            .delete()
     }
 }
 
