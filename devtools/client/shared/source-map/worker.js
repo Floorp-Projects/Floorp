@@ -6911,7 +6911,6 @@ const {
   getGeneratedLocation,
   getAllGeneratedLocations,
   getOriginalLocation,
-  getOriginalLocations,
   getOriginalSourceText,
   getGeneratedRangesForOriginal,
   getFileGeneratedRange,
@@ -6938,7 +6937,6 @@ self.onmessage = workerHandler({
   getGeneratedLocation,
   getAllGeneratedLocations,
   getOriginalLocation,
-  getOriginalLocations,
   getOriginalSourceText,
   getOriginalStackFrames,
   getGeneratedRangesForOriginal,
@@ -7164,10 +7162,6 @@ async function getAllGeneratedLocations(location, originalSource) {
     line,
     column
   }));
-}
-
-function getOriginalLocations(locations, options = {}) {
-  return Promise.all(locations.map(location => getOriginalLocation(location, options)));
 }
 
 async function getOriginalLocation(location, { search } = {}) {
@@ -7416,7 +7410,6 @@ module.exports = {
   getGeneratedLocation,
   getAllGeneratedLocations,
   getOriginalLocation,
-  getOriginalLocations,
   getOriginalSourceText,
   getGeneratedRangesForOriginal,
   getFileGeneratedRange,
