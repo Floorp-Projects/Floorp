@@ -17,7 +17,7 @@ import {
   getComments,
   getSpecifiers,
   getCode,
-  nodeHasSameLocation,
+  nodeLocationKey,
   getFunctionParameterNames
 } from "./utils/helpers";
 
@@ -87,8 +87,11 @@ let symbolDeclarations: Map<string, SymbolDeclarations> = new Map();
 
 function getUniqueIdentifiers(identifiers) {
   const newIdentifiers = [];
+  const locationKeys = new Set();
   for (const newId of identifiers) {
-    if (!newIdentifiers.find(id => nodeHasSameLocation(id, newId))) {
+    const key = nodeLocationKey(newId);
+    if (!locationKeys.has(key)) {
+      locationKeys.add(key);
       newIdentifiers.push(newId);
     }
   }

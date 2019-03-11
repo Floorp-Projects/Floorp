@@ -57,7 +57,7 @@
   align-self: stretch;
   flex-grow: 1;
   height: 24px;
-  min-width: 40px;
+  width: 40px;
   border: none;
   padding: 4px;
   padding-inline-start: 28px;
