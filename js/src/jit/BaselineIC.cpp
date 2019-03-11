@@ -2029,6 +2029,14 @@ static bool DoGetElemFallback(JSContext* cx, BaselineFrame* frame,
     stub->noteNegativeIndex();
   }
 
+  // GetElem operations which could access non-integer indexes generally can't
+  // be optimized without the potential for bailouts.
+  int32_t representable;
+  if (rhs.isNumber() && rhs.isDouble() &&
+      !mozilla::NumberEqualsInt32(rhs.toDouble(), &representable)) {
+    stub->setSawNonIntegerIndex();
+  }
+
   return true;
 }
 
@@ -2097,6 +2105,14 @@ static bool DoGetElemSuperFallback(JSContext* cx, BaselineFrame* frame,
   // determine that an object has no properties on such indexes.
   if (rhs.isNumber() && rhs.toNumber() < 0) {
     stub->noteNegativeIndex();
+  }
+
+  // GetElem operations which could access non-integer indexes generally can't
+  // be optimized without the potential for bailouts.
+  int32_t representable;
+  if (rhs.isNumber() && rhs.isDouble() &&
+      !mozilla::NumberEqualsInt32(rhs.toDouble(), &representable)) {
+    stub->setSawNonIntegerIndex();
   }
 
   return true;
