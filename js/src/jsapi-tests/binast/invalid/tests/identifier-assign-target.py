@@ -2,20 +2,16 @@ def filter_ast(ast):
     # AssignmentTargetIdentifier with non-identifier string.
     import filter_utils as utils
 
-    utils.assert_interface(ast, 'Script')
-    global_stmts = utils.get_field(ast, 'statements')
-
-    expr_stmt = utils.get_element(global_stmts, 0)
-    utils.assert_interface(expr_stmt, 'ExpressionStatement')
-
-    assign_expr = utils.get_field(expr_stmt, 'expression')
-    utils.assert_interface(assign_expr, 'AssignmentExpression')
-
-    binding = utils.get_field(assign_expr, 'binding')
-    utils.assert_interface(binding, 'AssignmentTargetIdentifier')
-
-    name = utils.get_field(binding, 'name')
-
-    utils.set_identifier_name(name, '1')
+    utils.wrap(ast) \
+        .assert_interface('Script') \
+        .field('statements') \
+        .elem(0) \
+        .assert_interface('ExpressionStatement') \
+        .field('expression') \
+        .assert_interface('AssignmentExpression') \
+        .field('binding') \
+        .assert_interface('AssignmentTargetIdentifier') \
+        .field('name') \
+        .set_identifier_name('1')
 
     return ast

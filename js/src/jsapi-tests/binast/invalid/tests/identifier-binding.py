@@ -2,25 +2,22 @@ def filter_ast(ast):
     # BindingIdentifier with non-identifier string.
     import filter_utils as utils
 
-    utils.assert_interface(ast, 'Script')
-    global_stmts = utils.get_field(ast, 'statements')
+    decls = utils.wrap(ast) \
+        .assert_interface('Script') \
+        .field('statements') \
+        .elem(0) \
+        .assert_interface('VariableDeclaration') \
+        .field('declarators')
 
-    var_decl = utils.get_element(global_stmts, 0)
-    utils.assert_interface(var_decl, 'VariableDeclaration')
+    copied_decl = decls.elem(0) \
+        .assert_interface('VariableDeclarator') \
+        .copy()
 
-    decls = utils.get_field(var_decl, 'declarators')
+    decls.append_elem(copied_decl)
 
-    decl = utils.get_element(decls, 0)
-    utils.assert_interface(decl, 'VariableDeclarator')
-
-    copied_decl = utils.copy_tagged_tuple(decl)
-    utils.append_element(decls, copied_decl)
-
-    binding = utils.get_field(copied_decl, 'binding')
-    utils.assert_interface(binding, 'BindingIdentifier')
-
-    name = utils.get_field(binding, 'name')
-
-    utils.set_identifier_name(name, '1')
+    copied_decl.field('binding') \
+        .assert_interface('BindingIdentifier') \
+        .field('name') \
+        .set_identifier_name('1')
 
     return ast
