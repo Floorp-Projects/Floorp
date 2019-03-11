@@ -792,7 +792,7 @@ static inline JSObject* NewObject(JSContext* cx, HandleObjectGroup group,
     return nullptr;
   }
 
-  gc::InitialHeap heap = GetInitialHeap(newKind, group);
+  gc::InitialHeap heap = GetInitialHeap(newKind, clasp);
 
   JSObject* obj;
   if (clasp->isJSFunction()) {
@@ -975,7 +975,7 @@ JSObject* js::NewObjectWithGroupCommon(JSContext* cx, HandleObjectGroup group,
     NewObjectCache::EntryIndex entry = -1;
     if (cache.lookupGroup(group, allocKind, &entry)) {
       JSObject* obj = cache.newObjectFromHit(
-          cx, entry, GetInitialHeap(newKind, group));
+          cx, entry, GetInitialHeap(newKind, group->clasp()));
       if (obj) {
         return obj;
       }
@@ -4295,8 +4295,6 @@ void JSObject::debugCheckNewObject(ObjectGroup* group, Shape* shape,
                     CanNurseryAllocateFinalizedClass(clasp) ||
                     clasp->isProxy());
   MOZ_ASSERT_IF(group->hasUnanalyzedPreliminaryObjects(),
-                heap == gc::TenuredHeap);
-  MOZ_ASSERT_IF(group->shouldPreTenureDontCheckGeneration(),
                 heap == gc::TenuredHeap);
 
   MOZ_ASSERT(!group->realm()->hasObjectPendingMetadata());
