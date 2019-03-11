@@ -18,7 +18,7 @@ import org.json.JSONObject
 internal class PocketJSONParser {
 
     /**
-     * @return The videos or null on error; the list will never be empty.
+     * @return The videos, removing entries that are invalid, or null on error; the list will never be empty.
      */
     fun jsonToGlobalVideoRecommendations(jsonStr: String): List<PocketGlobalVideoRecommendation>? = try {
         val rawJSON = JSONObject(jsonStr)
