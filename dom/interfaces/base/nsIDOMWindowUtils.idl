@@ -313,7 +313,7 @@ interface nsIDOMWindowUtils : nsISupports {
    *
    * returns true if the page called prevent default on this event
    */
-  [optional_argc]
+  [optional_argc, can_run_script]
   boolean sendMouseEvent(in AString aType,
                          in float aX,
                          in float aY,
@@ -354,6 +354,7 @@ interface nsIDOMWindowUtils : nsISupports {
    *
    * returns true if the page called prevent default on this touch event
    */
+  [can_run_script]
   boolean sendTouchEvent(in AString aType,
                          [array, size_is(count)] in uint32_t aIdentifiers,
                          [array, size_is(count)] in int32_t aXs,
@@ -369,7 +370,7 @@ interface nsIDOMWindowUtils : nsISupports {
   /** The same as sendMouseEvent but ensures that the event is dispatched to
    *  this DOM window or one of its children.
    */
-  [optional_argc]
+  [optional_argc, can_run_script]
   void sendMouseEventToWindow(in AString aType,
                               in float aX,
                               in float aY,
@@ -387,6 +388,7 @@ interface nsIDOMWindowUtils : nsISupports {
   /** The same as sendTouchEvent but ensures that the event is dispatched to
    *  this DOM window or one of its children.
    */
+  [can_run_script]
   boolean sendTouchEventToWindow(in AString aType,
                                  [array, size_is(count)] in uint32_t aIdentifiers,
                                  [array, size_is(count)] in int32_t aXs,
