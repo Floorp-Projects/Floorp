@@ -484,6 +484,12 @@ void HTMLVideoElement::CloneElementVisually(HTMLVideoElement& aTargetVideo,
   MaybeBeginCloningVisually();
 }
 
+void HTMLVideoElement::StopCloningElementVisually() {
+  if (mVisualCloneTarget) {
+    EndCloningVisually();
+  }
+}
+
 void HTMLVideoElement::MaybeBeginCloningVisually() {
   if (!mVisualCloneTarget) {
     return;
