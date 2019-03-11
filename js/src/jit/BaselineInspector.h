@@ -95,6 +95,7 @@ class BaselineInspector {
   MIRType expectedPropertyAccessInputType(jsbytecode* pc);
 
   bool hasSeenNegativeIndexGetElement(jsbytecode* pc);
+  bool hasSeenNonIntegerIndex(jsbytecode* pc);
   bool hasSeenAccessedGetter(jsbytecode* pc);
   bool hasSeenDoubleResult(jsbytecode* pc);
 

@@ -721,6 +721,19 @@ MIRType BaselineInspector::expectedBinaryArithSpecialization(jsbytecode* pc) {
   return MIRType::None;
 }
 
+bool BaselineInspector::hasSeenNonIntegerIndex(jsbytecode* pc) {
+  if (!hasICScript()) {
+    return false;
+  }
+
+  const ICEntry& entry = icEntryFromPC(pc);
+  ICStub* stub = entry.fallbackStub();
+
+  MOZ_ASSERT(stub->isGetElem_Fallback());
+
+  return stub->toGetElem_Fallback()->sawNonIntegerIndex();
+}
+
 bool BaselineInspector::hasSeenNegativeIndexGetElement(jsbytecode* pc) {
   if (!hasICScript()) {
     return false;
@@ -762,7 +775,6 @@ bool BaselineInspector::hasSeenDoubleResult(jsbytecode* pc) {
   if (stub->isUnaryArith_Fallback()) {
     return stub->toUnaryArith_Fallback()->sawDoubleResult();
   }
-
   return stub->toBinaryArith_Fallback()->sawDoubleResult();
 }
 

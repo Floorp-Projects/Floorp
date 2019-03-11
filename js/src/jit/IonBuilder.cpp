@@ -8889,8 +8889,13 @@ AbortReasonOr<Ok> IonBuilder::getElemTryDense(bool* emitted, MDefinition* obj,
     return Ok();
   }
 
-  // Don't generate a fast path if this pc has seen negative indexes accessed,
-  // which will not appear to be extra indexed properties.
+  // Don't generate a fast path if this pc has seen negative
+  // or floating-point indexes accessed which will not appear
+  // to be extra indexed properties.
+  if (inspector->hasSeenNonIntegerIndex(pc)) {
+    trackOptimizationOutcome(TrackedOutcome::ArraySeenNonIntegerIndex);
+    return Ok();
+  }
   if (inspector->hasSeenNegativeIndexGetElement(pc)) {
     trackOptimizationOutcome(TrackedOutcome::ArraySeenNegativeIndex);
     return Ok();
@@ -8911,6 +8916,18 @@ AbortReasonOr<Ok> IonBuilder::getElemTryTypedArray(bool* emitted,
   Scalar::Type arrayType;
   if (!ElementAccessIsTypedArray(constraints(), obj, index, &arrayType)) {
     trackOptimizationOutcome(TrackedOutcome::AccessNotTypedArray);
+    return Ok();
+  }
+
+  // Don't generate a fast path if this pc has seen negative
+  // or floating-point indexes accessed which will not appear
+  // to be extra indexed properties.
+  if (inspector->hasSeenNonIntegerIndex(pc)) {
+    trackOptimizationOutcome(TrackedOutcome::ArraySeenNonIntegerIndex);
+    return Ok();
+  }
+  if (inspector->hasSeenNegativeIndexGetElement(pc)) {
+    trackOptimizationOutcome(TrackedOutcome::ArraySeenNegativeIndex);
     return Ok();
   }
 
