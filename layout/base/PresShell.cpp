@@ -7698,54 +7698,11 @@ nsresult PresShell::EventHandler::HandleEventInternal(
     manager->TryToFlushPendingNotificationsToIME();
   }
 
-  switch (aEvent->mMessage) {
-    case eKeyPress:
-    case eKeyDown:
-    case eKeyUp: {
-      if (aEvent->AsKeyboardEvent()->mKeyCode == NS_VK_ESCAPE) {
-        if (aEvent->mMessage == eKeyUp) {
-          // Reset this flag after key up is handled.
-          mPresShell->mIsLastChromeOnlyEscapeKeyConsumed = false;
-        } else {
-          if (aEvent->mFlags.mOnlyChromeDispatch &&
-              aEvent->mFlags.mDefaultPreventedByChrome) {
-            mPresShell->mIsLastChromeOnlyEscapeKeyConsumed = true;
-          }
-        }
-      }
-      if (aEvent->mMessage == eKeyDown) {
-        mPresShell->mIsLastKeyDownCanceled = aEvent->mFlags.mDefaultPrevented;
-      }
-      break;
-    }
-    case eMouseUp:
-      // reset the capturing content now that the mouse button is up
-      nsIPresShell::SetCapturingContent(nullptr, 0);
-      break;
-    case eMouseMove:
-      nsIPresShell::AllowMouseCapture(false);
-      break;
-    case eDrag:
-    case eDragEnd:
-    case eDragEnter:
-    case eDragExit:
-    case eDragLeave:
-    case eDragOver:
-    case eDrop: {
-      // After any drag event other than dragstart (which is handled
-      // separately, as we need to collect the data first), the DataTransfer
-      // needs to be made protected, and then disconnected.
-      DataTransfer* dataTransfer = aEvent->AsDragEvent()->mDataTransfer;
-      if (dataTransfer) {
-        dataTransfer->Disconnect();
-      }
-      break;
-    }
-    default:
-      break;
-  }
+  FinalizeHandlingEvent(aEvent);
+
   RecordEventHandlingResponsePerformance(aEvent);
-  return rv;
+
+  return rv;  // Result of DispatchEvent()
 }
 
 nsresult PresShell::EventHandler::DispatchEvent(
@@ -7869,6 +7826,55 @@ bool PresShell::EventHandler::PrepareToDispatchEvent(WidgetEvent* aEvent) {
 
     default:
       return false;
+  }
+}
+
+void PresShell::EventHandler::FinalizeHandlingEvent(WidgetEvent* aEvent) {
+  switch (aEvent->mMessage) {
+    case eKeyPress:
+    case eKeyDown:
+    case eKeyUp: {
+      if (aEvent->AsKeyboardEvent()->mKeyCode == NS_VK_ESCAPE) {
+        if (aEvent->mMessage == eKeyUp) {
+          // Reset this flag after key up is handled.
+          mPresShell->mIsLastChromeOnlyEscapeKeyConsumed = false;
+        } else {
+          if (aEvent->mFlags.mOnlyChromeDispatch &&
+              aEvent->mFlags.mDefaultPreventedByChrome) {
+            mPresShell->mIsLastChromeOnlyEscapeKeyConsumed = true;
+          }
+        }
+      }
+      if (aEvent->mMessage == eKeyDown) {
+        mPresShell->mIsLastKeyDownCanceled = aEvent->mFlags.mDefaultPrevented;
+      }
+      return;
+    }
+    case eMouseUp:
+      // reset the capturing content now that the mouse button is up
+      nsIPresShell::SetCapturingContent(nullptr, 0);
+      return;
+    case eMouseMove:
+      nsIPresShell::AllowMouseCapture(false);
+      return;
+    case eDrag:
+    case eDragEnd:
+    case eDragEnter:
+    case eDragExit:
+    case eDragLeave:
+    case eDragOver:
+    case eDrop: {
+      // After any drag event other than dragstart (which is handled
+      // separately, as we need to collect the data first), the DataTransfer
+      // needs to be made protected, and then disconnected.
+      DataTransfer* dataTransfer = aEvent->AsDragEvent()->mDataTransfer;
+      if (dataTransfer) {
+        dataTransfer->Disconnect();
+      }
+      return;
+    }
+    default:
+      return;
   }
 }
 

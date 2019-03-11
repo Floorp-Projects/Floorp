@@ -1200,6 +1200,14 @@ class PresShell final : public nsIPresShell,
                                  bool aTouchIsNew);
 
     /**
+     * FinalizeHandlingEvent() should be called after calling DispatchEvent()
+     * and then, this cleans up the state of mPresShell and aEvent.
+     *
+     * @param aEvent            The handled event.
+     */
+    void FinalizeHandlingEvent(WidgetEvent* aEvent);
+
+    /**
      * AutoCurrentEventInfoSetter() pushes and pops current event info of
      * aEventHandler.mPresShell.
      */
