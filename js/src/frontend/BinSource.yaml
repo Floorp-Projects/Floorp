@@ -688,6 +688,12 @@ CatchClause:
     ParseContext::Statement stmt(pc_, StatementKind::Catch);
     ParseContext::Scope currentScope(cx_, pc_, usedNames_);
     BINJS_TRY(currentScope.init(pc_));
+  fields:
+    binding:
+      after: |
+        if (!currentScope.lookupDeclaredName(binding->template as<NameNode>().atom())) {
+          return raiseError("Missing catch variable in scope");
+        }
   build: |
     MOZ_TRY(checkClosedVars(currentScope));
     BINJS_TRY_DECL(bindings,

@@ -2135,7 +2135,10 @@ JS::Result<LexicalScopeNode*> BinASTParser<Tok>::parseInterfaceCatchClause(
   MOZ_TRY(parseAssertedBoundNamesScope());
 
   BINJS_MOZ_TRY_DECL(binding, parseBinding());
-
+  if (!currentScope.lookupDeclaredName(
+          binding->template as<NameNode>().atom())) {
+    return raiseError("Missing catch variable in scope");
+  }
   BINJS_MOZ_TRY_DECL(body, parseBlock());
 
   MOZ_TRY(checkClosedVars(currentScope));
