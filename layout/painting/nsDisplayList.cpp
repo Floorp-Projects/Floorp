@@ -2701,21 +2701,17 @@ already_AddRefed<LayerManager> nsDisplayList::PaintRoot(
 
   MaybeSetupTransactionIdAllocator(layerManager, presContext);
 
-  // Store the existing layer builder to reinstate it on return.
-  FrameLayerBuilder* oldBuilder = layerManager->GetLayerBuilder();
-  FrameLayerBuilder* layerBuilder = nullptr;
-
   bool sent = false;
   if (aFlags & PAINT_IDENTICAL_DISPLAY_LIST) {
     sent = layerManager->EndEmptyTransaction(flags);
   }
 
   if (!sent) {
-    layerBuilder =
+    FrameLayerBuilder* layerBuilder =
         BuildLayers(aBuilder, layerManager, aFlags, widgetTransaction);
 
     if (!layerBuilder) {
-      layerManager->SetUserData(&gLayerManagerLayerBuilder, oldBuilder);
+      layerManager->SetUserData(&gLayerManagerLayerBuilder, nullptr);
       return nullptr;
     }
 
@@ -2783,7 +2779,7 @@ already_AddRefed<LayerManager> nsDisplayList::PaintRoot(
     }
   }
 
-  layerManager->SetUserData(&gLayerManagerLayerBuilder, oldBuilder);
+  layerManager->SetUserData(&gLayerManagerLayerBuilder, nullptr);
   return layerManager.forget();
 }
 
