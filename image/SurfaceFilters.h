@@ -74,15 +74,6 @@ class DeinterlacingFilter final : public SurfaceFilter {
       return rv;
     }
 
-    if (sizeof(PixelType) == 1 && !mNext.IsValidPalettedPipe()) {
-      NS_WARNING("Paletted DeinterlacingFilter used with non-paletted pipe?");
-      return NS_ERROR_INVALID_ARG;
-    }
-    if (sizeof(PixelType) == 4 && mNext.IsValidPalettedPipe()) {
-      NS_WARNING("Non-paletted DeinterlacingFilter used with paletted pipe?");
-      return NS_ERROR_INVALID_ARG;
-    }
-
     gfx::IntSize outputSize = mNext.InputSize();
     mProgressiveDisplay = aConfig.mProgressiveDisplay;
 
@@ -113,10 +104,6 @@ class DeinterlacingFilter final : public SurfaceFilter {
 
     ConfigureFilter(outputSize, sizeof(PixelType));
     return NS_OK;
-  }
-
-  bool IsValidPalettedPipe() const override {
-    return sizeof(PixelType) == 1 && mNext.IsValidPalettedPipe();
   }
 
   Maybe<SurfaceInvalidRect> TakeInvalidRect() override {
@@ -781,11 +768,6 @@ class RemoveFrameRectFilter final : public SurfaceFilter {
       return rv;
     }
 
-    if (mNext.IsValidPalettedPipe()) {
-      NS_WARNING("RemoveFrameRectFilter used with paletted pipe?");
-      return NS_ERROR_INVALID_ARG;
-    }
-
     mFrameRect = mUnclampedFrameRect = aConfig.mFrameRect;
     gfx::IntSize outputSize = mNext.InputSize();
 
@@ -1009,11 +991,6 @@ class ADAM7InterpolatingFilter final : public SurfaceFilter {
     nsresult rv = mNext.Configure(aRest...);
     if (NS_FAILED(rv)) {
       return rv;
-    }
-
-    if (mNext.IsValidPalettedPipe()) {
-      NS_WARNING("ADAM7InterpolatingFilter used with paletted pipe?");
-      return NS_ERROR_INVALID_ARG;
     }
 
     // We have two intermediate buffers, one for the previous row with final

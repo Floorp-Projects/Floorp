@@ -195,56 +195,6 @@ class SurfacePipeFactory {
     return pipe;
   }
 
-  /**
-   * Creates and initializes a paletted SurfacePipe.
-   *
-   * XXX(seth): We'll remove all support for paletted surfaces in bug 1247520,
-   * which means we can remove CreatePalettedSurfacePipe() entirely.
-   *
-   * @param aDecoder The decoder whose current frame the SurfacePipe will write
-   *                 to.
-   * @param aInputSize The original size of the image.
-   * @param aFrameRect The portion of the image that actually contains data.
-   * @param aFormat The surface format of the image; generally B8G8R8A8 or
-   *                B8G8R8X8.
-   * @param aPaletteDepth The palette depth of the image.
-   * @param aAnimParams Extra parameters used by animated images.
-   * @param aFlags Flags enabling or disabling various functionality for the
-   *               SurfacePipe; see the SurfacePipeFlags documentation for more
-   *               information.
-   *
-   * @return A SurfacePipe if the parameters allowed one to be created
-   *         successfully, or Nothing() if the SurfacePipe could not be
-   *         initialized.
-   */
-  static Maybe<SurfacePipe> CreatePalettedSurfacePipe(
-      Decoder* aDecoder, const nsIntSize& aInputSize,
-      const nsIntRect& aFrameRect, gfx::SurfaceFormat aFormat,
-      uint8_t aPaletteDepth, const Maybe<AnimationParams>& aAnimParams,
-      SurfacePipeFlags aFlags) {
-    const bool deinterlace = bool(aFlags & SurfacePipeFlags::DEINTERLACE);
-    const bool flipVertically =
-        bool(aFlags & SurfacePipeFlags::FLIP_VERTICALLY);
-    const bool progressiveDisplay =
-        bool(aFlags & SurfacePipeFlags::PROGRESSIVE_DISPLAY);
-
-    // Construct configurations for the SurfaceFilters.
-    DeinterlacingConfig<uint8_t> deinterlacingConfig{progressiveDisplay};
-    PalettedSurfaceConfig palettedSurfaceConfig{
-        aDecoder,      aInputSize,     aFrameRect, aFormat,
-        aPaletteDepth, flipVertically, aAnimParams};
-
-    Maybe<SurfacePipe> pipe;
-
-    if (deinterlace) {
-      pipe = MakePipe(deinterlacingConfig, palettedSurfaceConfig);
-    } else {
-      pipe = MakePipe(palettedSurfaceConfig);
-    }
-
-    return pipe;
-  }
-
  private:
   template <typename... Configs>
   static Maybe<SurfacePipe> MakePipe(const Configs&... aConfigs) {
