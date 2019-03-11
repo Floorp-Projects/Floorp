@@ -6342,7 +6342,7 @@ bool CodeGenerator::generateBody() {
       }
 
 #ifdef CHECK_OSIPOINT_REGISTERS
-      if (iter->safepoint()) {
+      if (iter->safepoint() && !gen->compilingWasm()) {
         resetOsiPointRegs(iter->safepoint());
       }
 #endif
