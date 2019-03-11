@@ -10,7 +10,7 @@ use internal_types::{FastHashMap, FastHashSet};
 use print_tree::{PrintableTree, PrintTree, PrintTreePrinter};
 use scene::SceneProperties;
 use spatial_node::{ScrollFrameInfo, SpatialNode, SpatialNodeType, StickyFrameInfo, ScrollFrameKind};
-use std::ops;
+use std::{ops, u32};
 use util::{project_rect, LayoutToWorldFastTransform, MatrixHelpers, ScaleOffset};
 
 pub type ScrollStates = FastHashMap<ExternalScrollId, ScrollFrameInfo>;
@@ -49,6 +49,10 @@ impl CoordinateSystem {
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct SpatialNodeIndex(pub u32);
+
+impl SpatialNodeIndex {
+    pub const INVALID: SpatialNodeIndex = SpatialNodeIndex(u32::MAX);
+}
 
 //Note: these have to match ROOT_REFERENCE_FRAME_SPATIAL_ID and ROOT_SCROLL_NODE_SPATIAL_ID
 pub const ROOT_SPATIAL_NODE_INDEX: SpatialNodeIndex = SpatialNodeIndex(0);
