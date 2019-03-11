@@ -64,6 +64,7 @@
 #include "gtest/gtest_prod.h"
 #include "gtest/gtest-test-part.h"
 #include "gtest/gtest-typed-test.h"
+#include "mozilla/Attributes.h"
 
 // Depending on the platform, different string classes are available.
 // On Linux, in addition to ::std::string, Google also makes use of
@@ -443,7 +444,7 @@ class GTEST_API_ Test {
   //
   // DO NOT OVERRIDE THIS FUNCTION DIRECTLY IN A USER PROGRAM.
   // Instead, use the TEST or TEST_F macro.
-  virtual void TestBody() = 0;
+  MOZ_CAN_RUN_SCRIPT virtual void TestBody() = 0;
 
   // Sets up, executes, and tears down the test.
   void Run();
