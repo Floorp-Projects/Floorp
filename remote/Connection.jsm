@@ -18,9 +18,29 @@ class Connection {
     this.transport = transport;
 
     this.transport.hooks = this;
-    this.onmessage = () => {};
-
     this.transport.ready();
+
+    this.defaultSession = null;
+    this.sessions = new Map();
+  }
+
+  /**
+   * Register a new Session to forward the messages to.
+   * Session without any `id` attribute will be considered to be the
+   * default one, to which messages without `sessionId` attribute are
+   * forwarded to. Only one such session can be registered.
+   *
+   * @param Session session
+   */
+  registerSession(session) {
+    if (!session.id) {
+      if (this.defaultSession) {
+        throw new Error("Default session is already set on Connection," +
+                        "can't register another one.");
+      }
+      this.defaultSession = session;
+    }
+    this.sessions.set(session.id, session);
   }
 
   send(message) {
@@ -51,7 +71,19 @@ class Connection {
     let message = {id: null};
     try {
       message = this.deserialize(packet);
-      this.onmessage.call(null, message);
+      const { sessionId } = packet;
+      if (!sessionId) {
+        if (!this.defaultSession) {
+          throw new Error(`Connection is missing a default Session.`);
+        }
+        this.defaultSession.onMessage(message);
+      } else {
+        const session = this.sessions.get(sessionId);
+        if (!session) {
+          throw new Error(`Session '${sessionId}' doesn't exists.`);
+        }
+        session.onMessage(message);
+      }
     } catch (e) {
       log.warn(e);
       this.error(message.id, e);
@@ -60,6 +92,7 @@ class Connection {
 
   close() {
     this.transport.close();
+    this.sessions.clear();
   }
 
   onClosed(status) {}
