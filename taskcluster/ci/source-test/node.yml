@@ -13,10 +13,13 @@ debugger-tests:
         using: run-task
         cache-dotcache: true
         command: >
+            cd /builds/worker/checkouts/gecko/ &&
+            npm install &&
             cd /builds/worker/checkouts/gecko/devtools/client/debugger/new/ &&
             yarn &&
             yarn flow &&
-            yarn test
+            yarn test &&
+            yarn lint
     when:
         files-changed:
             - 'devtools/client/debugger/new/**'
