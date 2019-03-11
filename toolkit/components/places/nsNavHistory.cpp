@@ -1619,7 +1619,7 @@ nsresult PlacesSQLQueryBuilder::SelectAsRoots() {
           "null, null, 0, 0, null, null, null, null, 'menu_______v', null), "
           "(null, 'place:parent=" UNFILED_ROOT_GUID
           "', :OtherBookmarksFolderTitle, null, null, null, "
-          "null, null, 0, 0, null, null, null, null, 'unfiled___v', null) ") +
+          "null, null, 0, 0, null, null, null, null, 'unfiled____v', null) ") +
       mobileString + NS_LITERAL_CSTRING(")");
 
   return NS_OK;
