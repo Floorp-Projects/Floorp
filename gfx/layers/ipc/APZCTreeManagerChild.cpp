@@ -127,7 +127,9 @@ mozilla::ipc::IPCResult APZCTreeManagerChild::RecvHandleTap(
   if (mCompositorSession &&
       mCompositorSession->RootLayerTreeId() == aGuid.mLayersId &&
       mCompositorSession->GetContentController()) {
-    mCompositorSession->GetContentController()->HandleTap(
+    RefPtr<GeckoContentController> controller =
+      mCompositorSession->GetContentController();
+    controller->HandleTap(
         aType, aPoint, aModifiers, aGuid, aInputBlockId);
     return IPC_OK();
   }
