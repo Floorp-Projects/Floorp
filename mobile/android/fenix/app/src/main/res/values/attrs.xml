@@ -8,36 +8,41 @@
         <attr name="listItemIcon" format="reference" />
     </declare-styleable>
 
-    <attr name="searchBarColor" format="reference"/>
-    <attr name="fenixPrimary" format="reference"/>
-    <attr name="iconColor" format="reference"/>
-    <attr name="toolbarColor" format="reference"/>
+    <attr name="searchBarColor" format="reference" />
+    <attr name="fenixPrimary" format="reference" />
+    <attr name="iconColor" format="reference" />
+    <attr name="toolbarColor" format="reference" />
 
     <!-- Home fragment -->
-    <attr name="homeBackgroundTopGradient" format="reference"/>
-    <attr name="homeBackgroundBottomGradient" format="reference"/>
-    <attr name="homeBackgroundGradient" format="reference"/>
-    <attr name="privateBrowsingButtonBackground" format="reference"/>
-    <attr name="privateBrowsingButtonTint" format="reference"/>
-    <attr name="fenixLogo" format="reference"/>
-    <attr name="menuButtonTint" format="reference"/>
-    <attr name="toolbarWrapperBackground" format="reference"/>
-    <attr name="toolbarTextColor" format="reference"/>
-    <attr name="navigationBarColorHome" format="reference"/>
+    <attr name="homeBackgroundTopGradient" format="reference" />
+    <attr name="homeBackgroundBottomGradient" format="reference" />
+    <attr name="homeBackgroundGradient" format="reference" />
+    <attr name="privateBrowsingButtonBackground" format="reference" />
+    <attr name="privateBrowsingButtonTint" format="reference" />
+    <attr name="fenixLogo" format="reference" />
+    <attr name="menuButtonTint" format="reference" />
+    <attr name="toolbarWrapperBackground" format="reference" />
+    <attr name="toolbarTextColor" format="reference" />
+    <attr name="navigationBarColorHome" format="reference" />
     <attr name="homeDividerColor" format="reference" />
-    <attr name="sessionBackgroundColor" format="reference"/>
-    <attr name="sessionBorderColor" format="reference"/>
+    <attr name="sessionBackgroundColor" format="reference" />
+    <attr name="sessionBorderColor" format="reference" />
 
     <!-- Search fragment -->
-    <attr name="searchBackground" format="reference"/>
-    <attr name="searchShortcutsTextColor" format="reference"/>
-    <attr name="pillWrapperBackground" format="reference"/>
-    <attr name="suggestionBackground" format="reference"/>
+    <attr name="searchBackground" format="reference" />
+    <attr name="searchShortcutsTextColor" format="reference" />
+    <attr name="pillWrapperBackground" format="reference" />
+    <attr name="suggestionBackground" format="reference" />
 
     <!-- Browser fragment -->
-    <attr name="browserUrlBarBackground" format="reference"/>
-    <attr name="browserToolbarBackground" format="reference"/>
-    <attr name="browserToolbarIcons" format="reference"/>
-    <attr name="browserToolbarMenuIcons" format="reference"/>
-    <attr name="navigationBarColorBrowser" format="reference"/>
+    <attr name="browserUrlBarBackground" format="reference" />
+    <attr name="browserToolbarBackground" format="reference" />
+    <attr name="browserToolbarIcons" format="reference" />
+    <attr name="browserToolbarMenuIcons" format="reference" />
+    <attr name="navigationBarColorBrowser" format="reference" />
+
+    <!-- History Fragment -->
+    <attr name="historyURLColor" format="reference" />
+    <attr name="historyTitleColor" format="reference" />
+    <attr name="historyHeader" format="reference" />
 </resources>

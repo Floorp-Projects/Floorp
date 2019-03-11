@@ -1,13 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="56dp"
+    android:background="?android:attr/selectableItemBackground"
     android:clickable="true"
     android:focusable="true"
     android:padding="4dp"
-    android:paddingStart="20dp"
-    android:background="?android:attr/selectableItemBackground"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
+    android:paddingStart="20dp">
 
     <CheckBox
         android:id="@+id/should_remove_checkbox"
@@ -15,7 +18,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="2dp"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@id/history_title"  />
+        app:layout_constraintTop_toTopOf="@id/history_title" />
 
     <ImageView
         android:id="@+id/history_favicon"
@@ -29,14 +32,14 @@
         android:id="@+id/history_title"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
         android:layout_marginStart="16dp"
+        android:layout_marginTop="8dp"
         android:layout_marginEnd="20dp"
-        android:textColor="@color/history_title"
-        android:textAlignment="viewStart"
-        android:textSize="18sp"
-        android:singleLine="true"
         android:ellipsize="end"
+        android:singleLine="true"
+        android:textAlignment="viewStart"
+        android:textColor="?attr/historyTitleColor"
+        android:textSize="18sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@id/history_favicon"
         app:layout_constraintTop_toTopOf="parent" />
@@ -45,28 +48,28 @@
         android:id="@+id/history_url"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:textColor="@color/history_url"
-        android:textSize="12sp"
-        android:layout_marginTop="4dp"
-        android:layout_marginBottom="8dp"
         android:layout_marginStart="16dp"
-        android:singleLine="true"
+        android:layout_marginTop="4dp"
         android:layout_marginEnd="20dp"
-        android:textAlignment="viewStart"
+        android:layout_marginBottom="8dp"
         android:ellipsize="end"
-        app:layout_constraintStart_toEndOf="@id/history_favicon"
-        app:layout_constraintTop_toBottomOf="@id/history_title"
+        android:singleLine="true"
+        android:textAlignment="viewStart"
+        android:textColor="?attr/historyURLColor"
+        android:textSize="12sp"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@id/history_item_overflow"
-        app:layout_constraintBottom_toBottomOf="parent" />
+        app:layout_constraintStart_toEndOf="@id/history_favicon"
+        app:layout_constraintTop_toBottomOf="@id/history_title" />
 
     <ImageButton
         android:id="@+id/history_item_overflow"
         android:layout_width="@dimen/glyph_button_height"
         android:layout_height="@dimen/glyph_button_height"
         android:background="?android:attr/selectableItemBackgroundBorderless"
+        android:contentDescription="@string/content_description_history_menu"
         android:src="@drawable/ic_menu"
         android:tint="?attr/menuButtonTint"
-        android:contentDescription="@string/content_description_history_menu"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 </androidx.constraintlayout.widget.ConstraintLayout>

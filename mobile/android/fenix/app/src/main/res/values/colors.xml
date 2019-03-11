@@ -61,7 +61,11 @@
     <color name="library_key_icon_background">#FFF4C3</color>
     <color name="library_key_icon">#C13905</color>
 
-    <color name="history_header">#696A6A</color>
-    <color name="history_title">#000000</color>
-    <color name="history_url">#696A6A</color>
+    <color name="history_header_light_theme">#696A6A</color>
+    <color name="history_title_light_theme">#000000</color>
+    <color name="history_url_light_theme">#696A6A</color>
+
+    <color name="history_header_private_theme">@color/photonGrey40</color>
+    <color name="history_title_private_theme">@color/off_white</color>
+    <color name="history_url_private_theme">@color/photonGrey40</color>
 </resources>

@@ -45,6 +45,11 @@
         <item name="browserToolbarBackground">@color/off_white</item>
         <item name="browserToolbarIcons">@color/icons_light_mode</item>
         <item name="browserToolbarMenuIcons">@color/icons_light_mode</item>
+
+        <!-- History fragment colors -->
+        <item name="historyTitleColor">@color/history_title_light_theme</item>
+        <item name="historyURLColor">@color/history_url_light_theme</item>
+        <item name="historyHeader">@color/history_header_light_theme</item>
     </style>
 
     <style name="LightTheme" parent="LightThemeBase">
@@ -93,6 +98,11 @@
         <item name="browserToolbarBackground">@color/private_browsing_top_gradient</item>
         <item name="browserToolbarIcons">@color/icons_dark_mode</item>
         <item name="browserToolbarMenuIcons">@color/icons_dark_mode</item>
+
+        <!-- History fragment colors -->
+        <item name="historyTitleColor">@color/history_title_private_theme</item>
+        <item name="historyURLColor">@color/history_url_private_theme</item>
+        <item name="historyHeader">@color/history_header_private_theme</item>
     </style>
 
     <style name="PrivateTheme" parent="PrivateThemeBase">
