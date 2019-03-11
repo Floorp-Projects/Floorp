@@ -56,19 +56,6 @@ class imgFrame {
                           const Maybe<AnimationParams>& aAnimParams,
                           bool aIsFullFrame, bool aShouldRecycle);
 
-  nsresult InitForAnimator(const nsIntSize& aSize, SurfaceFormat aFormat) {
-    nsIntRect frameRect(0, 0, aSize.width, aSize.height);
-    AnimationParams animParams{frameRect, FrameTimeout::Forever(),
-                               /* aFrameNum */ 1, BlendMethod::OVER,
-                               DisposalMethod::NOT_SPECIFIED};
-    // We set aIsFullFrame to false because we don't want the compositing frame
-    // to be allocated into shared memory for WebRender. mIsFullFrame is only
-    // otherwise used for frames produced by Decoder, so it isn't relevant.
-    return InitForDecoder(aSize, frameRect, aFormat, /* aPaletteDepth */ 0,
-                          /* aNonPremult */ false, Some(animParams),
-                          /* aIsFullFrame */ false, /* aShouldRecycle */ false);
-  }
-
   /**
    * Reinitialize this imgFrame with the new parameters, but otherwise retain
    * the underlying buffer.
@@ -199,9 +186,6 @@ class imgFrame {
   void SetDirtyRect(const IntRect& aDirtyRect) { mDirtyRect = aDirtyRect; }
 
   bool IsFullFrame() const { return mIsFullFrame; }
-
-  bool GetCompositingFailed() const;
-  void SetCompositingFailed(bool val);
 
   void SetOptimizable();
 
@@ -378,12 +362,6 @@ class imgFrame {
   //! True if the frame has all of the data stored in it, false if it needs to
   //! be combined with another frame (e.g. the previous frame) to be complete.
   bool mIsFullFrame;
-
-  //////////////////////////////////////////////////////////////////////////////
-  // Main-thread-only mutable data.
-  //////////////////////////////////////////////////////////////////////////////
-
-  bool mCompositingFailed;
 };
 
 /**
