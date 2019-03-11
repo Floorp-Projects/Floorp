@@ -42,7 +42,6 @@
 #include "nsILoadInfo.h"
 #include "nsIObjectInputStream.h"
 #include "nsIObjectOutputStream.h"
-#include "nsITextToSubURI.h"
 #include "nsIWritablePropertyBag2.h"
 #include "nsIContentSecurityPolicy.h"
 #include "nsSandboxFlags.h"
@@ -1045,19 +1044,20 @@ nsresult nsJSProtocolHandler::Create(nsISupports* aOuter, REFNSIID aIID,
   return rv;
 }
 
-/* static */ nsresult nsJSProtocolHandler::EnsureUTF8Spec(
-    const nsCString& aSpec, const char* aCharset, nsACString& aUTF8Spec) {
+nsresult nsJSProtocolHandler::EnsureUTF8Spec(const nsCString& aSpec,
+                                             const char* aCharset,
+                                             nsACString& aUTF8Spec) {
   aUTF8Spec.Truncate();
 
   nsresult rv;
 
-  nsCOMPtr<nsITextToSubURI> txtToSubURI =
-      do_GetService(NS_ITEXTTOSUBURI_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
+  if (!mTextToSubURI) {
+    mTextToSubURI = do_GetService(NS_ITEXTTOSUBURI_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
   nsAutoString uStr;
-  rv = txtToSubURI->UnEscapeNonAsciiURI(nsDependentCString(aCharset), aSpec,
-                                        uStr);
+  rv = mTextToSubURI->UnEscapeNonAsciiURI(nsDependentCString(aCharset), aSpec,
+                                          uStr);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (!IsASCII(uStr)) {
@@ -1092,16 +1092,10 @@ nsJSProtocolHandler::GetProtocolFlags(uint32_t* result) {
             URI_OPENING_EXECUTES_SCRIPT;
   return NS_OK;
 }
+
 NS_IMETHODIMP
 nsJSProtocolHandler::NewURI(const nsACString& aSpec, const char* aCharset,
                             nsIURI* aBaseURI, nsIURI** result) {
-  return nsJSProtocolHandler::CreateNewURI(aSpec, aCharset, aBaseURI, result);
-}
-
-/* static */ nsresult nsJSProtocolHandler::CreateNewURI(const nsACString& aSpec,
-                                                        const char* aCharset,
-                                                        nsIURI* aBaseURI,
-                                                        nsIURI** result) {
   nsresult rv = NS_OK;
 
   // javascript: URLs (currently) have no additional structure beyond that
