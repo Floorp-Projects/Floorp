@@ -612,7 +612,7 @@ AHostResolver::LookupStatus TRRService::CompleteLookup(
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!rec);
 
-  nsAutoPtr<AddrInfo> newRRSet(aNewRRSet);
+  RefPtr<AddrInfo> newRRSet(aNewRRSet);
   MOZ_ASSERT(newRRSet && newRRSet->IsTRR() == TRRTYPE_NS);
 
 #ifdef DEBUG
