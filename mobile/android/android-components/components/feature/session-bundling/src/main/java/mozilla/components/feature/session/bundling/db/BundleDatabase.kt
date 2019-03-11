@@ -4,17 +4,19 @@
 
 package mozilla.components.feature.session.bundling.db
 
+import android.arch.persistence.db.SupportSQLiteDatabase
 import android.arch.persistence.room.Database
 import android.arch.persistence.room.Room
 import android.arch.persistence.room.RoomDatabase
 import android.arch.persistence.room.TypeConverter
 import android.arch.persistence.room.TypeConverters
+import android.arch.persistence.room.migration.Migration
 import android.content.Context
 
 /**
  * Internal database for saving bundles.
  */
-@Database(entities = [BundleEntity::class], version = 1)
+@Database(entities = [BundleEntity::class], version = 2)
 @TypeConverters(UrlListConverter::class)
 internal abstract class BundleDatabase : RoomDatabase() {
     abstract fun bundleDao(): BundleDao
@@ -30,7 +32,11 @@ internal abstract class BundleDatabase : RoomDatabase() {
                 context,
                 BundleDatabase::class.java,
                 "bundle_database"
-            ).build().also { instance = it }
+            ).addMigrations(
+                Migrations.migration_1_2
+            ).build().also {
+                instance = it
+            }
         }
     }
 }
@@ -45,5 +51,22 @@ internal class UrlListConverter {
     @TypeConverter
     fun toUrlList(value: String): UrlList {
         return UrlList(value.split('\n'))
+    }
+}
+
+internal object Migrations {
+    val migration_1_2 = object : Migration(1, 2) {
+        override fun migrate(database: SupportSQLiteDatabase) {
+            // Version 1 is used in Nightly builds of Fenix, but not in production. Let's just skip actually migrating
+            // anything and let's re-create the "bundles" table.
+
+            database.execSQL("DROP TABLE bundles")
+            database.execSQL("CREATE TABLE IF NOT EXISTS `bundles` (" +
+                "`id` INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                "`saved_at` INTEGER NOT NULL, " +
+                "`urls` TEXT NOT NULL, " +
+                "`file` TEXT NOT NULL)"
+            )
+        }
     }
 }

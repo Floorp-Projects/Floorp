@@ -17,7 +17,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
-class SessionBundleStorageTest {
+class BundleDaoTest {
     private val context: Context
         get() = ApplicationProvider.getApplicationContext()
 
@@ -39,19 +39,16 @@ class SessionBundleStorageTest {
     fun testInsertingAndReadingBundles() {
         bundleDao.insertBundle(BundleEntity(
                 id = null,
-                state = "",
                 savedAt = 100,
                 urls = UrlList(listOf("https://www.mozilla.org"))))
 
         bundleDao.insertBundle(BundleEntity(
                 id = null,
-                state = "",
                 savedAt = 200,
                 urls = UrlList(listOf("https://www.firefox.com"))))
 
         bundleDao.insertBundle(BundleEntity(
                 id = null,
-                state = "",
                 savedAt = 50,
                 urls = UrlList(listOf("https://getpocket.com"))))
 

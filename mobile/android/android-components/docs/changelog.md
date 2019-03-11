@@ -38,6 +38,13 @@ permalink: /changelog/
 * **browser-engine-system** and **browser-engine-gecko-nightly**
   * ⚠️ **This is a breaking API change**: The [`captureThumbnail`](https://github.com/mozilla-mobile/android-components/blob/1b1600a7e8aa83a7e7d09b30cecd49762f7781f5/components/concept/engine/src/main/java/mozilla/components/concept/engine/EngineSession.kt#L245) function has been moved to [`EngineView`](https://github.com/mozilla-mobile/android-components/blob/1b1600a7e8aa83a7e7d09b30cecd49762f7781f5/components/concept/engine/src/main/java/mozilla/components/concept/engine/EngineView.kt#L15). From now on for taking screenshots automatically you will have to opt-in by using `ThumbnailsFeature`. The decision was made to reduce overhead memory consumption for apps that are not using screenshots. Find more info in [feature-session](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/session/README.md) and a practical example can be found in the [sample-browser project](https://github.com/mozilla-mobile/android-components/blob/master/samples/browser).
 
+* **feature-session-bundling**
+  * Saving, restoring and removing `SessionBundle` instances need to happen on a worker thread now (off the main thread).
+  * The actual session state is now saved on the file system outside of the internally used SQLite database.
+
+* **support-ktx**
+  * Added `File.truncateDirectory()` to remove all files (and sub directories) in a directory.
+
 # 0.46.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.45.0...v0.46.0)

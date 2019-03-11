@@ -4,8 +4,8 @@
 
 package mozilla.components.feature.session.bundling
 
+import android.support.annotation.WorkerThread
 import mozilla.components.browser.session.SessionManager
-import mozilla.components.concept.engine.Engine
 
 /**
  * A bundle of sessions and their state.
@@ -30,5 +30,6 @@ interface SessionBundle {
      * Restore a [SessionManager.Snapshot] from this bundle. The returned snapshot can be used with [SessionManager] to
      * restore the sessions and their state.
      */
-    fun restoreSnapshot(engine: Engine): SessionManager.Snapshot?
+    @WorkerThread
+    fun restoreSnapshot(): SessionManager.Snapshot?
 }

@@ -9,36 +9,61 @@ import android.arch.paging.DataSource
 import android.arch.persistence.db.SupportSQLiteOpenHelper
 import android.arch.persistence.room.DatabaseConfiguration
 import android.arch.persistence.room.InvalidationTracker
+import android.content.Context
+import android.util.AtomicFile
+import android.util.AttributeSet
+import androidx.test.core.app.ApplicationProvider
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
+import mozilla.components.concept.engine.Engine
+import mozilla.components.concept.engine.EngineSession
+import mozilla.components.concept.engine.EngineSessionState
+import mozilla.components.concept.engine.EngineView
+import mozilla.components.concept.engine.Settings
 import mozilla.components.feature.session.bundling.adapter.SessionBundleAdapter
 import mozilla.components.feature.session.bundling.db.BundleDao
 import mozilla.components.feature.session.bundling.db.BundleDatabase
 import mozilla.components.feature.session.bundling.db.BundleEntity
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
+import org.json.JSONObject
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
+import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers
+import org.mockito.Mockito.`when`
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoMoreInteractions
 import org.robolectric.RobolectricTestRunner
+import java.io.File
+import java.util.UUID
 import java.util.concurrent.TimeUnit
 
 @RunWith(RobolectricTestRunner::class)
 class SessionBundleStorageTest {
+    private val context: Context
+        get() = ApplicationProvider.getApplicationContext()
+
+    private lateinit var engine: Engine
+
+    @Before
+    fun setUp() {
+        engine = FakeEngine()
+    }
+
     @Test
     fun `restore loads last bundle using lifetime`() {
         val dao: BundleDao = mock()
 
-        val storage = spy(SessionBundleStorage(mock(), Pair(2, TimeUnit.HOURS)).apply {
+        val storage = spy(SessionBundleStorage(context, engine, Pair(2, TimeUnit.HOURS)).apply {
             databaseInitializer = { mockDatabase(dao) }
         })
         doReturn(1234567890L).`when`(storage).now()
@@ -65,7 +90,7 @@ class SessionBundleStorageTest {
 
         val database = mockDatabase(dao)
 
-        val storage = spy(SessionBundleStorage(mock(), Pair(2, TimeUnit.HOURS)).apply {
+        val storage = spy(SessionBundleStorage(context, engine, Pair(2, TimeUnit.HOURS)).apply {
             databaseInitializer = { database }
         })
 
@@ -79,7 +104,7 @@ class SessionBundleStorageTest {
     fun `save will create new bundle`() {
         val dao: BundleDao = mock()
 
-        val storage = spy(SessionBundleStorage(mock(), Pair(2, TimeUnit.HOURS)).apply {
+        val storage = spy(SessionBundleStorage(context, engine, Pair(2, TimeUnit.HOURS)).apply {
             databaseInitializer = { mockDatabase(dao) }
         })
 
@@ -99,13 +124,14 @@ class SessionBundleStorageTest {
     @Test
     fun `save will update existing bundle`() {
         val bundle: BundleEntity = mock()
+        `when`(bundle.stateFile(any(), any())).thenReturn(mockAtomicFile())
 
         val dao: BundleDao = mock()
         doReturn(bundle).`when`(dao).getLastBundle(ArgumentMatchers.anyLong())
 
         val database = mockDatabase(dao)
 
-        val storage = spy(SessionBundleStorage(mock(), Pair(2, TimeUnit.HOURS)).apply {
+        val storage = spy(SessionBundleStorage(context, engine, Pair(2, TimeUnit.HOURS)).apply {
             databaseInitializer = { database }
         })
 
@@ -123,14 +149,17 @@ class SessionBundleStorageTest {
 
     @Test
     fun `remove will remove existing bundle`() {
+        val atomicFile = mockAtomicFile()
+
         val bundle: BundleEntity = mock()
+        `when`(bundle.stateFile(any(), any())).thenReturn(atomicFile)
 
         val dao: BundleDao = mock()
         doReturn(bundle).`when`(dao).getLastBundle(ArgumentMatchers.anyLong())
 
         val database = mockDatabase(dao)
 
-        val storage = spy(SessionBundleStorage(mock(), Pair(2, TimeUnit.HOURS)).apply {
+        val storage = spy(SessionBundleStorage(context, engine, Pair(2, TimeUnit.HOURS)).apply {
             databaseInitializer = { database }
         })
 
@@ -138,11 +167,12 @@ class SessionBundleStorageTest {
 
         assertNotNull(storage.current())
 
-        storage.remove(SessionBundleAdapter(bundle))
+        storage.remove(SessionBundleAdapter(context, engine, bundle))
 
         assertNull(storage.current())
 
         verify(dao).deleteBundle(bundle)
+        verify(atomicFile).delete()
     }
 
     @Test
@@ -154,7 +184,7 @@ class SessionBundleStorageTest {
 
         val database = mockDatabase(dao)
 
-        val storage = spy(SessionBundleStorage(mock(), Pair(2, TimeUnit.HOURS)).apply {
+        val storage = spy(SessionBundleStorage(context, engine, Pair(2, TimeUnit.HOURS)).apply {
             databaseInitializer = { database }
         })
 
@@ -177,7 +207,7 @@ class SessionBundleStorageTest {
 
         val database = mockDatabase(dao)
 
-        val storage = spy(SessionBundleStorage(mock(), Pair(2, TimeUnit.HOURS)).apply {
+        val storage = spy(SessionBundleStorage(context, engine, Pair(2, TimeUnit.HOURS)).apply {
             databaseInitializer = { database }
         })
 
@@ -188,8 +218,9 @@ class SessionBundleStorageTest {
         assertEquals(bundle, (current as SessionBundleAdapter).actual)
 
         val newBundle: BundleEntity = mock()
+        `when`(newBundle.stateFile(any(), any())).thenReturn(mockAtomicFile())
 
-        storage.use(SessionBundleAdapter(newBundle))
+        storage.use(SessionBundleAdapter(context, engine, newBundle))
 
         val updated = storage.current()
         assertTrue(updated is SessionBundleAdapter)
@@ -214,7 +245,7 @@ class SessionBundleStorageTest {
 
         val database = mockDatabase(dao)
 
-        val storage = SessionBundleStorage(mock(), Pair(2, TimeUnit.HOURS)).apply {
+        val storage = SessionBundleStorage(context, engine, Pair(2, TimeUnit.HOURS)).apply {
             databaseInitializer = { database }
         }
 
@@ -226,14 +257,17 @@ class SessionBundleStorageTest {
 
     @Test
     fun `An existing bundle will be removed instead of updated with an empty snapshot`() {
+        val file = mockAtomicFile()
+
         val bundle: BundleEntity = mock()
+        `when`(bundle.stateFile(any(), any())).thenReturn(file)
 
         val dao: BundleDao = mock()
         doReturn(bundle).`when`(dao).getLastBundle(ArgumentMatchers.anyLong())
 
         val database = mockDatabase(dao)
 
-        val storage = SessionBundleStorage(mock(), Pair(2, TimeUnit.HOURS)).apply {
+        val storage = SessionBundleStorage(context, engine, Pair(2, TimeUnit.HOURS)).apply {
             databaseInitializer = { database }
         }
 
@@ -249,6 +283,39 @@ class SessionBundleStorageTest {
         verify(bundle, never()).updateFrom(snapshot)
         verify(dao).deleteBundle(bundle)
         verifyNoMoreInteractions(dao)
+        verify(file).delete()
+    }
+
+    @Test
+    fun `State is saved as file and removed with bundle`() {
+        val dao: BundleDao = mock()
+        val database = mockDatabase(dao)
+
+        val storage = SessionBundleStorage(context, engine, Pair(2, TimeUnit.HOURS)).apply {
+            databaseInitializer = { database }
+        }
+
+        val snapshot = SessionManager.Snapshot(listOf(
+            SessionManager.Snapshot.Item(Session("https://www.mozilla.org")),
+            SessionManager.Snapshot.Item(Session("https://www.firefox.com"))),
+            selectedSessionIndex = 1
+        )
+
+        storage.save(snapshot)
+
+        val current = storage.current()
+        assertNotNull(current!!)
+
+        assertTrue(current is SessionBundleAdapter)
+        val adapter = current as SessionBundleAdapter
+
+        val path = adapter.actual.statePath(context, engine)
+        assertTrue(path.exists())
+        assertTrue(path.length() > 0)
+
+        storage.remove(current)
+
+        assertFalse(path.exists())
     }
 
     private fun mockDatabase(bundleDao: BundleDao) = object : BundleDatabase() {
@@ -257,5 +324,41 @@ class SessionBundleStorageTest {
         override fun createOpenHelper(config: DatabaseConfiguration?): SupportSQLiteOpenHelper = mock()
         override fun createInvalidationTracker(): InvalidationTracker = mock()
         override fun clearAllTables() = Unit
+    }
+
+    private fun mockAtomicFile(): AtomicFile {
+        return spy(AtomicFile(File.createTempFile(
+            UUID.randomUUID().toString(),
+            UUID.randomUUID().toString()
+        )))
+    }
+
+    private class FakeEngine : Engine {
+        override fun createView(context: Context, attrs: AttributeSet?): EngineView {
+            throw NotImplementedError()
+        }
+
+        override fun createSession(private: Boolean): EngineSession {
+            throw NotImplementedError()
+        }
+
+        override fun createSessionState(json: JSONObject): EngineSessionState {
+            return object : EngineSessionState {
+                override fun toJSON(): JSONObject {
+                    throw NotImplementedError()
+                }
+            }
+        }
+
+        override fun name(): String {
+            return "fake"
+        }
+
+        override fun speculativeConnect(url: String) {
+            throw NotImplementedError()
+        }
+
+        override val settings: Settings
+            get() = throw NotImplementedError()
     }
 }

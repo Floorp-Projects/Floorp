@@ -31,6 +31,10 @@ android {
     packagingOptions {
         exclude 'META-INF/proguard/androidx-annotations.pro'
     }
+
+    sourceSets {
+        androidTest.assets.srcDirs += files("$projectDir/schemas".toString())
+    }
 }
 
 dependencies {
@@ -38,6 +42,7 @@ dependencies {
 
     implementation project(':browser-session')
 
+    implementation project(':support-ktx')
     implementation project(':support-base')
 
     implementation Dependencies.kotlin_stdlib
