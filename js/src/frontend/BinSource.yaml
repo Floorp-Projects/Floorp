@@ -498,9 +498,6 @@ AssignmentExpression:
 
 AssignmentTargetIdentifier:
   build: |
-    if (!IsIdentifier(name)) {
-      return raiseError("Invalid identifier");
-    }
     BINJS_TRY(usedNames_.noteUse(cx_, name, pc_->scriptId(),
                                  pc_->innermostScope()->id()));
     BINJS_TRY_DECL(result,
@@ -509,9 +506,6 @@ AssignmentTargetIdentifier:
 
 BindingIdentifier:
   build: |
-    if (!IsIdentifier(name)) {
-      return raiseError("Invalid identifier");
-    }
     BINJS_TRY_DECL(result,
                    handler_.newName(name->asPropertyName(),
                                     tokenizer_->pos(start), cx_));
@@ -1117,9 +1111,6 @@ FunctionBody:
 
 IdentifierExpression:
   build: |
-    if (!IsIdentifier(name)) {
-      return raiseError("Invalid identifier");
-    }
     BINJS_TRY(usedNames_.noteUse(cx_, name, pc_->scriptId(),
                                  pc_->innermostScope()->id()));
     BINJS_TRY_DECL(result,

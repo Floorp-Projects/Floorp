@@ -1784,9 +1784,6 @@ BinASTParser<Tok>::parseInterfaceAssignmentTargetIdentifier(
   RootedAtom name(cx_);
   MOZ_TRY_VAR(name, tokenizer_->readIdentifierName());
 
-  if (!IsIdentifier(name)) {
-    return raiseError("Invalid identifier");
-  }
   BINJS_TRY(usedNames_.noteUse(cx_, name, pc_->scriptId(),
                                pc_->innermostScope()->id()));
   BINJS_TRY_DECL(result, handler_.newName(name->asPropertyName(),
@@ -1951,9 +1948,6 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceBindingIdentifier(
   RootedAtom name(cx_);
   MOZ_TRY_VAR(name, tokenizer_->readIdentifierName());
 
-  if (!IsIdentifier(name)) {
-    return raiseError("Invalid identifier");
-  }
   BINJS_TRY_DECL(result, handler_.newName(name->asPropertyName(),
                                           tokenizer_->pos(start), cx_));
   return result;
@@ -3190,9 +3184,6 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceIdentifierExpression(
   RootedAtom name(cx_);
   MOZ_TRY_VAR(name, tokenizer_->readIdentifierName());
 
-  if (!IsIdentifier(name)) {
-    return raiseError("Invalid identifier");
-  }
   BINJS_TRY(usedNames_.noteUse(cx_, name, pc_->scriptId(),
                                pc_->innermostScope()->id()));
   BINJS_TRY_DECL(result, handler_.newName(name->asPropertyName(),
