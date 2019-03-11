@@ -20,20 +20,20 @@ internal class PocketURLs(
     private val apiKey: String
 ) {
 
-    val globalVideoRecs: Uri = "$CDN_BASE/global-video-recs".toUri().appendPocketQueryParams()
-
-    private fun Uri.appendPocketQueryParams(): Uri = buildUpon()
-        .appendQueryParameter(PARAM_API_KEY, apiKey)
-        .appendQueryParameter(PARAM_VERSION, VALUE_VERSION)
-        .appendQueryParameter(PARAM_AUTHORS, VALUE_AUTHORS)
+    val globalVideoRecs: Uri = "$CDN_BASE/global-video-recs".toUri().buildUpon()
+        .appendApiKey()
+        .appendQueryParameter(PARAM_VERSION, VALUE_VIDEO_RECS_VERSION)
+        .appendQueryParameter(PARAM_AUTHORS, VALUE_VIDEO_RECS_AUTHORS)
         .build()
+
+    private fun Uri.Builder.appendApiKey() = appendQueryParameter(PARAM_API_KEY, apiKey)
 
     companion object {
         @VisibleForTesting(otherwise = PRIVATE) internal const val PARAM_API_KEY = "consumer_key"
         @VisibleForTesting(otherwise = PRIVATE) internal const val PARAM_VERSION = "version"
         @VisibleForTesting(otherwise = PRIVATE) internal const val PARAM_AUTHORS = "authors"
 
-        @VisibleForTesting(otherwise = PRIVATE) internal const val VALUE_VERSION = "2"
-        @VisibleForTesting(otherwise = PRIVATE) internal const val VALUE_AUTHORS = "1"
+        @VisibleForTesting(otherwise = PRIVATE) internal const val VALUE_VIDEO_RECS_VERSION = "2"
+        @VisibleForTesting(otherwise = PRIVATE) internal const val VALUE_VIDEO_RECS_AUTHORS = "1"
     }
 }

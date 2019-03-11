@@ -29,13 +29,14 @@ class PocketURLsTest {
     }
 
     @Test
-    fun `WHEN getting the global video recs url THEN it contains the Pocket query parameters`() {
-        assertUriContainsPocketQueryParams(urls.globalVideoRecs)
+    fun `WHEN getting the global video recs url THEN it contains the appropriate query parameters`() {
+        val uri = urls.globalVideoRecs
+        assertUriContainsAPIKeyQueryParams(uri)
+        assertEquals(PocketURLs.VALUE_VIDEO_RECS_VERSION, uri.getQueryParameter(PocketURLs.PARAM_VERSION))
+        assertEquals(PocketURLs.VALUE_VIDEO_RECS_AUTHORS, uri.getQueryParameter(PocketURLs.PARAM_AUTHORS))
     }
 
-    private fun assertUriContainsPocketQueryParams(uri: Uri) {
+    private fun assertUriContainsAPIKeyQueryParams(uri: Uri) {
         assertEquals(TEST_KEY, uri.getQueryParameter(PocketURLs.PARAM_API_KEY))
-        assertEquals(PocketURLs.VALUE_VERSION, uri.getQueryParameter(PocketURLs.PARAM_VERSION))
-        assertEquals(PocketURLs.VALUE_AUTHORS, uri.getQueryParameter(PocketURLs.PARAM_AUTHORS))
     }
 }
