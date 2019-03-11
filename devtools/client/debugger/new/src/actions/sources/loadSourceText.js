@@ -83,11 +83,6 @@ export function loadSourceText(source: ?Source) {
       return;
     }
 
-    if (isOriginal(newSource) && !newSource.isWasm) {
-      const generatedSource = getGeneratedSource(getState(), source);
-      await dispatch(loadSourceText(generatedSource));
-    }
-
     if (!newSource.isWasm && isLoaded(newSource)) {
       await parser.setSource(newSource);
       await dispatch(setBreakpointPositions(newSource.id));
