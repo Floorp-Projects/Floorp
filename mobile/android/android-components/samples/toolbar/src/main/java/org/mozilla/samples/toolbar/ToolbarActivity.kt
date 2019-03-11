@@ -135,12 +135,13 @@ class ToolbarActivity : AppCompatActivity() {
         // Create a menu that looks like the one in Firefox Focus
         // //////////////////////////////////////////////////////////////////////////////////////////
 
+        val fenix = SimpleBrowserMenuItem("POWERED BY MOZILLA")
         val share = SimpleBrowserMenuItem("Share…") { /* Do nothing */ }
         val homeScreen = SimpleBrowserMenuItem("Add to Home screen") { /* Do nothing */ }
         val open = SimpleBrowserMenuItem("Open in…") { /* Do nothing */ }
         val settings = SimpleBrowserMenuItem("Settings") { /* Do nothing */ }
 
-        val builder = BrowserMenuBuilder(listOf(share, homeScreen, open, settings))
+        val builder = BrowserMenuBuilder(listOf(fenix, share, homeScreen, open, settings))
         toolbar.setMenuBuilder(builder)
 
         // //////////////////////////////////////////////////////////////////////////////////////////

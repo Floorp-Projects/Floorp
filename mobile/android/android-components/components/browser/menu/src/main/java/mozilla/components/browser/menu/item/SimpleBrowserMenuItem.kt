@@ -18,13 +18,16 @@ private const val NO_ID = -1
  * A simple browser menu item displaying text.
  *
  * @param label The visible label of this menu item.
+ * @param textSize: The size of the label.
+ * @param textColorResource: The color resource to apply to the text.
  * @param listener Callback to be invoked when this menu item is clicked.
  */
 class SimpleBrowserMenuItem(
     private val label: String,
+    private val textSize: Float = NO_ID.toFloat(),
     @ColorRes
     private val textColorResource: Int = NO_ID,
-    private val listener: () -> Unit
+    private val listener: (() -> Unit)? = null
 ) : BrowserMenuItem {
     override var visible: () -> Boolean = { true }
 
@@ -32,12 +35,23 @@ class SimpleBrowserMenuItem(
 
     override fun bind(menu: BrowserMenu, view: View) {
         (view as TextView).text = label
+
+        if (textSize != NO_ID.toFloat()) {
+            view.textSize = textSize
+        }
+
         if (textColorResource != NO_ID) {
             view.setTextColor(ContextCompat.getColor(view.context, textColorResource))
         }
-        view.setOnClickListener {
-            listener.invoke()
-            menu.dismiss()
+
+        if (listener != null) {
+            view.setOnClickListener {
+                listener.invoke()
+                menu.dismiss()
+            }
+        } else {
+            // Remove the ripple effect
+            view.background = null
         }
     }
 }

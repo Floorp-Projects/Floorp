@@ -17,6 +17,7 @@ permalink: /changelog/
 
 * **browser-menu**
   * ⚠️ **This is a breaking API change!**: Removed redundant `BrowserMenuImageText` `contentDescription`
+  * Adds `textSize` parameter to `SimpleBrowserMenuItem`
   
 * **concept-fetch**
   * ⚠️ **This is a breaking API change**: the [`Response`](https://mozac.org/api/mozilla.components.concept.fetch/-response/) properties `.success` and `.clientError` were renamed to `.isSuccess` and `isClientError` respectively to match Java conventions.
