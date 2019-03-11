@@ -10,6 +10,7 @@
 #include "mozilla/CheckedInt.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/MathAlgorithms.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/TextUtils.h"
 
 #include <algorithm>
@@ -57,6 +58,7 @@ using mozilla::CeilingLog2;
 using mozilla::CheckedInt;
 using mozilla::DebugOnly;
 using mozilla::IsAsciiDigit;
+using mozilla::Maybe;
 
 using JS::AutoCheckCannotGC;
 using JS::IsArrayAnswer;
@@ -3869,6 +3871,14 @@ bool js::array_construct(JSContext* cx, unsigned argc, Value* vp) {
 
 ArrayObject* js::ArrayConstructorOneArg(JSContext* cx, HandleObjectGroup group,
                                         int32_t lengthInt) {
+  // Ion can call this with a group from a different realm when calling
+  // another realm's Array constructor.
+  Maybe<AutoRealm> ar;
+  if (cx->realm() != group->realm()) {
+    MOZ_ASSERT(cx->compartment() == group->compartment());
+    ar.emplace(cx, group);
+  }
+
   if (lengthInt < 0) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                               JSMSG_BAD_ARRAY_LENGTH);
@@ -3876,7 +3886,9 @@ ArrayObject* js::ArrayConstructorOneArg(JSContext* cx, HandleObjectGroup group,
   }
 
   uint32_t length = uint32_t(lengthInt);
-  return NewPartlyAllocatedArrayTryUseGroup(cx, group, length);
+  ArrayObject* res = NewPartlyAllocatedArrayTryUseGroup(cx, group, length);
+  MOZ_ASSERT_IF(res, res->realm() == group->realm());
+  return res;
 }
 
 static JSObject* CreateArrayPrototype(JSContext* cx, JSProtoKey key) {
@@ -4328,13 +4340,23 @@ ArrayObject* js::NewCopiedArrayForCallingAllocationSite(
 ArrayObject* js::NewArrayWithGroup(JSContext* cx, uint32_t length,
                                    HandleObjectGroup group,
                                    bool convertDoubleElements) {
+  // Ion can call this with a group from a different realm when calling
+  // another realm's Array constructor.
+  Maybe<AutoRealm> ar;
+  if (cx->realm() != group->realm()) {
+    MOZ_ASSERT(cx->compartment() == group->compartment());
+    ar.emplace(cx, group);
+  }
+
   ArrayObject* res = NewFullyAllocatedArrayTryUseGroup(cx, group, length);
   if (!res) {
     return nullptr;
   }
+
   if (convertDoubleElements) {
     res->setShouldConvertDoubleElements();
   }
+
   return res;
 }
 
