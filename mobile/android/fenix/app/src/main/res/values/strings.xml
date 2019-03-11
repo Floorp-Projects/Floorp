@@ -159,6 +159,8 @@
     <!-- Sessions -->
     <!-- Title for the list of tabs in the current session -->
     <string name="tabs_header_title">Current Session</string>
+    <!-- Title for the list of tabs in the current private session -->
+    <string name="tabs_header_private_title">Private Session</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
     <string name="add_tab">Add Tab</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->

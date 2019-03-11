@@ -46,6 +46,9 @@ class TabsUIView(
                 val directions = HomeFragmentDirections.actionHomeFragmentToSearchFragment(null)
                 Navigation.findNavController(it).navigate(directions)
             }
+
+            val headerTextResourceId = if (isPrivate) R.string.tabs_header_private_title else R.string.tabs_header_title
+            header_text.text = context.getString(headerTextResourceId)
             tabs_overflow_button.increaseTapArea(HomeFragment.overflowButtonIncreaseDps)
             tabs_overflow_button.setOnClickListener {
                 actionEmitter.onNext(TabsAction.MenuTapped)
