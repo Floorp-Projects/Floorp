@@ -4800,10 +4800,6 @@ pref("image.animated.decode-on-demand.batch-size", 6);
 // contents as well. Only applies if generating full frames.
 pref("image.animated.decode-on-demand.recycle", true);
 
-// Whether we should generate full frames at decode time or partial frames which
-// are combined at display time (historical behavior and default).
-pref("image.animated.generate-full-frames", true);
-
 // Resume an animated image from the last displayed frame rather than
 // advancing when out of view.
 pref("image.animated.resume-from-last-displayed", true);
