@@ -3844,8 +3844,15 @@ void nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder* aBuilder,
     // z-index:non-auto
     nsDisplayListCollection pseudoStack(aBuilder);
 
+    // If this frame has z-index != 0, then the display item might get sorted
+    // into a different place in the list, and we can't rely on the previous
+    // hit test info to still be behind us. Force a new hit test info for this
+    // item, and for the item after it, so that we always have the right hit
+    // test info.
+    bool mayBeSorted = isPositioned && (ZIndex() != 0);
+
     aBuilder->BuildCompositorHitTestInfoIfNeeded(
-        child, pseudoStack.BorderBackground(), differentAGR || isPositioned);
+        child, pseudoStack.BorderBackground(), differentAGR || mayBeSorted);
 
     aBuilder->AdjustWindowDraggingRegion(child);
     nsDisplayListBuilder::AutoContainerASRTracker contASRTracker(aBuilder);
@@ -3855,6 +3862,16 @@ void nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder* aBuilder,
     if (aBuilder->DisplayCaret(child, pseudoStack.Content())) {
       builtContainerItem = false;
     }
+
+    // If we forced a new hit-test info because this frame is going to be
+    // sorted, then clear the 'previous' data on the builder so that the next
+    // item also gets a new hit test info. That way we're guaranteeing hit-test
+    // info before and after each item that might get moved to a different spot.
+    if (mayBeSorted) {
+      aBuilder->SetCompositorHitTestInfo(
+          nsRect(), CompositorHitTestFlags::eVisibleToHitTest);
+    }
+
     wrapListASR = contASRTracker.GetContainerASR();
 
     list.AppendToTop(pseudoStack.BorderBackground());
@@ -9298,6 +9315,20 @@ void nsIFrame::ComputePreserve3DChildrenOverflow(
       }
     }
   }
+}
+
+int32_t nsIFrame::ZIndex() const {
+  if (!IsAbsPosContainingBlock() && !IsFlexOrGridItem()) {
+    return 0;
+  }
+
+  const nsStylePosition* position = StylePosition();
+  if (position->mZIndex.IsInteger()) {
+    return position->mZIndex.AsInteger();
+  }
+  MOZ_ASSERT(position->mZIndex.IsAuto());
+  // sort the auto and 0 elements together
+  return 0;
 }
 
 bool nsIFrame::IsScrollAnchor(ScrollAnchorContainer** aOutContainer) {
