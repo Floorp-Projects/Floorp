@@ -5237,6 +5237,7 @@ JSObject* js::CreateThisWithTemplate(JSContext* cx,
 JSObject* js::NewArrayOperation(JSContext* cx, HandleScript script,
                                 jsbytecode* pc, uint32_t length,
                                 NewObjectKind newKind /* = GenericObject */) {
+  MOZ_ASSERT(*pc == JSOP_NEWARRAY);
   MOZ_ASSERT(newKind != SingletonObject);
 
   RootedObjectGroup group(cx);
@@ -5302,7 +5303,7 @@ ArrayObject* js::NewArrayCopyOnWriteOperation(JSContext* cx,
     return nullptr;
   }
 
-  return NewDenseCopyOnWriteArray(cx, baseobj);
+  return NewDenseCopyOnWriteArray(cx, baseobj, gc::DefaultHeap);
 }
 
 void js::ReportRuntimeLexicalError(JSContext* cx, unsigned errorNumber,

@@ -489,11 +489,11 @@ pref("browser.tabs.remote.separatePrivilegedContentProcess", true);
 // Turn on HTTP response process selection.
 pref("browser.tabs.remote.useHTTPResponseProcessSelection", true);
 
-// Unload tabs on low-memory on nightly.
-#ifdef RELEASE_OR_BETA
-pref("browser.tabs.unloadOnLowMemory", false);
-#else
+// Unload tabs on low-memory on nightly and beta.
+#ifdef EARLY_BETA_OR_EARLIER
 pref("browser.tabs.unloadOnLowMemory", true);
+#else
+pref("browser.tabs.unloadOnLowMemory", false);
 #endif
 
 pref("browser.ctrlTab.recentlyUsedOrder", true);

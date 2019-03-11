@@ -1011,7 +1011,7 @@ uptake.remotecontent.result:
         settings collection name, ...).
       trigger: >
         A label to distinguish what triggered the polling/fetching of remote content (eg. "broadcast",
-        "timer")
+        "timer", "forced", "manual")
     bug_numbers:
       - 1517469
     record_in_processes: ["main"]
