@@ -5,6 +5,7 @@
 "use strict";
 
 var EXPORTED_SYMBOLS = [
+  "TabManager",
   "TabObserver",
   "WindowObserver",
 ];
@@ -143,3 +144,15 @@ class TabObserver {
     // TODO(ato): Is TabClose fired when the window closes?
   }
 }
+
+var TabManager = {
+  addTab() {
+    const window = Services.wm.getMostRecentWindow("navigator:browser");
+    const { gBrowser } = window;
+    const tab = gBrowser.addTab("about:blank", {
+      triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+    });
+    gBrowser.selectedTab = tab;
+    return tab;
+  },
+};
