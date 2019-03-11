@@ -10,7 +10,9 @@ use clip_scroll_tree::{ClipScrollTree, ROOT_SPATIAL_NODE_INDEX, SpatialNodeIndex
 use display_list_flattener::{DisplayListFlattener};
 use gpu_cache::{GpuCache, GpuCacheHandle};
 use gpu_types::{PrimitiveHeaders, TransformPalette, UvRectKind, ZBufferIdGenerator};
-use hit_test::{HitTester, HitTestingRun};
+use hit_test::{HitTester, HitTestingScene};
+#[cfg(feature = "replay")]
+use hit_test::HitTestingSceneStats;
 use internal_types::{FastHashMap, PlaneSplitter};
 use picture::{PictureSurface, PictureUpdateState, SurfaceInfo, ROOT_SURFACE_INDEX, SurfaceIndex};
 use picture::{RetainedTiles, TileCache, DirtyRegion};
@@ -22,6 +24,7 @@ use render_backend::{DataStores, FrameStamp};
 use render_task::{RenderTask, RenderTaskId, RenderTaskLocation, RenderTaskTree, RenderTaskTreeCounters};
 use resource_cache::{ResourceCache};
 use scene::{ScenePipeline, SceneProperties};
+use scene_builder::DocumentStats;
 use segment::SegmentBuilder;
 use spatial_node::SpatialNode;
 use std::{f32, mem};
@@ -104,7 +107,7 @@ pub struct FrameBuilder {
     pub prim_store: PrimitiveStore,
     pub clip_store: ClipStore,
     #[cfg_attr(feature = "capture", serde(skip))] //TODO
-    pub hit_testing_runs: Vec<HitTestingRun>,
+    pub hit_testing_scene: Arc<HitTestingScene>,
     pub config: FrameBuilderConfig,
     pub globals: FrameGlobalResources,
 }
@@ -219,7 +222,7 @@ impl FrameBuilder {
     #[cfg(feature = "replay")]
     pub fn empty() -> Self {
         FrameBuilder {
-            hit_testing_runs: Vec::new(),
+            hit_testing_scene: Arc::new(HitTestingScene::new(&HitTestingSceneStats::empty())),
             prim_store: PrimitiveStore::new(&PrimitiveStoreStats::empty()),
             clip_store: ClipStore::new(),
             output_rect: DeviceIntRect::zero(),
@@ -258,7 +261,7 @@ impl FrameBuilder {
         flattener: DisplayListFlattener,
     ) -> Self {
         FrameBuilder {
-            hit_testing_runs: flattener.hit_testing_runs,
+            hit_testing_scene: Arc::new(flattener.hit_testing_scene),
             prim_store: flattener.prim_store,
             clip_store: flattener.clip_store,
             root_pic_index: flattener.root_pic_index,
@@ -267,6 +270,14 @@ impl FrameBuilder {
             pending_retained_tiles: RetainedTiles::new(),
             config: flattener.config,
             globals: FrameGlobalResources::empty(),
+        }
+    }
+
+    /// Get the memory usage statistics to pre-allocate for the next scene.
+    pub fn get_stats(&self) -> DocumentStats {
+        DocumentStats {
+            prim_store_stats: self.prim_store.get_stats(),
+            hit_test_stats: self.hit_testing_scene.get_stats(),
         }
     }
 
@@ -676,7 +687,7 @@ impl FrameBuilder {
         clip_data_store: &ClipDataStore,
     ) -> HitTester {
         HitTester::new(
-            &self.hit_testing_runs,
+            Arc::clone(&self.hit_testing_scene),
             clip_scroll_tree,
             &self.clip_store,
             clip_data_store,
