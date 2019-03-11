@@ -114,6 +114,7 @@ namespace JS {
   _(ArrayDoubleConversion)                        \
   _(ArrayRange)                                   \
   _(ArraySeenNegativeIndex)                       \
+  _(ArraySeenNonIntegerIndex)                     \
   _(TypedObjectHasDetachedBuffer)                 \
   _(TypedObjectArrayRange)                        \
   _(AccessNotDense)                               \
