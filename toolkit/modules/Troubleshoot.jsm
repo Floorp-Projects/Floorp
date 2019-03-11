@@ -224,11 +224,8 @@ var dataProviders = {
       data.policiesStatus = Services.policies.status;
     }
 
-    const keyLocationServiceGoogle = Services.urlFormatter.formatURL("%GOOGLE_LOCATION_SERVICE_API_KEY%").trim();
-    data.keyLocationServiceGoogleFound = keyLocationServiceGoogle != "no-google-location-service-api-key" && keyLocationServiceGoogle.length > 0;
-
-    const keySafebrowsingGoogle = Services.urlFormatter.formatURL("%GOOGLE_SAFEBROWSING_API_KEY%").trim();
-    data.keySafebrowsingGoogleFound = keySafebrowsingGoogle != "no-google-safebrowsing-api-key" && keySafebrowsingGoogle.length > 0;
+    const keyGoogle = Services.urlFormatter.formatURL("%GOOGLE_API_KEY%").trim();
+    data.keyGoogleFound = keyGoogle != "no-google-api-key" && keyGoogle.length > 0;
 
     const keyMozilla = Services.urlFormatter.formatURL("%MOZILLA_API_KEY%").trim();
     data.keyMozillaFound = keyMozilla != "no-mozilla-api-key" && keyMozilla.length > 0;

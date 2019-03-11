@@ -319,10 +319,10 @@ var SafeBrowsing = {
       gethashURL = gethashURL.replace("SAFEBROWSING_ID", clientID);
 
       // Disable updates and gethash if the Google API key is missing.
-      let googleSafebrowsingKey = Services.urlFormatter.formatURL("%GOOGLE_SAFEBROWSING_API_KEY%").trim();
+      let googleKey = Services.urlFormatter.formatURL("%GOOGLE_API_KEY%").trim();
       if ((provider == "google" || provider == "google4") &&
-          (!googleSafebrowsingKey || googleSafebrowsingKey == "no-google-safebrowsing-api-key")) {
-        log("Missing Google SafeBrowsing API key, clearing updateURL and gethashURL.");
+          (!googleKey || googleKey == "no-google-api-key")) {
+        log("Missing Google API key, clearing updateURL and gethashURL.");
         updateURL = "";
         gethashURL = "";
       }
