@@ -5,7 +5,7 @@
 // @flow
 
 import { PROMISE } from "../utils/middleware/promise";
-import { getGeneratedSource, getSource } from "../../selectors";
+import { getSource } from "../../selectors";
 import { setBreakpointPositions } from "../breakpoints";
 
 import * as parser from "../../workers/parser";
