@@ -19,7 +19,11 @@ package mozilla.components.service.pocket.data
  * @property popularitySortId the index of this recommendation in the list if the list was sorted by popularity.
  * @property authors the authors or publishers of this recommendation; unclear if this can be empty.
  */
-data class PocketGlobalVideoRecommendation(
+// If we change the properties, e.g. adding a field, any consumers that rely on persisting and constructing new
+// instances of this data type, will be required to implement code to migrate the persisted data. To prevent this,
+// we mark the constructors internal. If a consumer is required to persist this data, we should consider providing a
+// persistence solution.
+data class PocketGlobalVideoRecommendation internal constructor(
     val id: Int,
     val url: String,
     val tvURL: String,
@@ -40,7 +44,7 @@ data class PocketGlobalVideoRecommendation(
      * @property name the name of this author.
      * @property url a url to the author's video content channel (e.g. a YouTube channel).
      */
-    data class Author(
+    data class Author internal constructor(
         val id: String,
         val name: String,
         val url: String
