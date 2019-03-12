@@ -245,10 +245,10 @@ decorate_task(
       { value: "branch0", ratio: 1 },
       { value: "branch1", ratio: 2 },
     ];
-    const sandbox = sinon.sandbox.create();
+    const sandbox = sinon.createSandbox();
     let result;
     try {
-      sandbox.stub(ClientEnvironment, "userId", { get: () => "fake-id" });
+      sandbox.stub(ClientEnvironment, "userId").get(() => "fake-id");
       result = await action.chooseBranch("exp-slug", branches);
     } finally {
       sandbox.restore();

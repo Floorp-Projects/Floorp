@@ -3,8 +3,7 @@
 
 "use strict";
 
-/* global sinon */
-Services.scriptloader.loadSubScript("resource://testing-common/sinon-2.3.2.js");
+const {sinon} = ChromeUtils.import("resource://testing-common/Sinon.jsm");
 
 const TEST_URL = getRootDirectory(gTestPath) + "browser_page_action_menu_share_win.html";
 
@@ -22,7 +21,6 @@ let stub = sinon.stub(BrowserPageActions.shareURL, "_windowsUIUtils").get(() => 
 
 registerCleanupFunction(async function() {
   stub.restore();
-  delete window.sinon;
 });
 
 add_task(async function shareURL() {
