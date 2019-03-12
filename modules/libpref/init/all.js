@@ -1603,8 +1603,6 @@ pref("javascript.options.streams", true);
 // BigInt API
 pref("javascript.options.bigint", false);
 
-pref("javascript.options.experimental.fields", false);
-
 // Dynamic module import.
 pref("javascript.options.dynamicImport", true);
 
