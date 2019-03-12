@@ -346,19 +346,6 @@ ThreadClient.prototype = {
   }),
 
   /**
-   * Release multiple thread-lifetime object actors. If any pause-lifetime
-   * actors are included in the request, a |notReleasable| error will return,
-   * but all the thread-lifetime ones will have been released.
-   *
-   * @param array actors
-   *        An array with actor IDs to release.
-   */
-  releaseMany: DebuggerClient.requester({
-    type: "releaseMany",
-    actors: arg(0),
-  }),
-
-  /**
    * Promote multiple pause-lifetime object actors to thread-lifetime ones.
    *
    * @param array actors
