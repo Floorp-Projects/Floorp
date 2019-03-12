@@ -35,6 +35,7 @@ core-graphics = "0.17.1"
 core-foundation = "0.6"
 
 [features]
+default = [ "env_logger" ]
 headless = [ "osmesa-sys", "osmesa-src" ]
 pathfinder = [ "webrender/pathfinder" ]
 

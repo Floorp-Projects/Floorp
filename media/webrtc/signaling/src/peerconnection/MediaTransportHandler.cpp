@@ -97,7 +97,8 @@ class MediaTransportHandlerSTS : public MediaTransportHandler,
                       const std::vector<std::string>& aIceOptions) override;
 
   void AddIceCandidate(const std::string& aTransportId,
-                       const std::string& aCandidate) override;
+                       const std::string& aCandidate,
+                       const std::string& aUfrag) override;
 
   void UpdateNetworkState(bool aOnline) override;
 
@@ -135,7 +136,8 @@ class MediaTransportHandlerSTS : public MediaTransportHandler,
   void OnConnectionStateChange(NrIceCtx* aIceCtx,
                                NrIceCtx::ConnectionState aState);
   void OnCandidateFound(NrIceMediaStream* aStream,
-                        const std::string& aCandidate);
+                        const std::string& aCandidate,
+                        const std::string& aUfrag);
   void OnStateChange(TransportLayer* aLayer, TransportLayer::State);
   void OnRtcpStateChange(TransportLayer* aLayer, TransportLayer::State);
   void PacketReceived(TransportLayer* aLayer, MediaPacket& aPacket);
@@ -619,12 +621,13 @@ void MediaTransportHandlerSTS::StartIceChecks(
 }
 
 void MediaTransportHandlerSTS::AddIceCandidate(const std::string& aTransportId,
-                                               const std::string& aCandidate) {
+                                               const std::string& aCandidate,
+                                               const std::string& aUfrag) {
   if (!mStsThread->IsOnCurrentThread()) {
     mStsThread->Dispatch(
         WrapRunnable(RefPtr<MediaTransportHandlerSTS>(this),
                      &MediaTransportHandlerSTS::AddIceCandidate, aTransportId,
-                     aCandidate),
+                     aCandidate, aUfrag),
         NS_DISPATCH_NORMAL);
     return;
   }
@@ -636,7 +639,7 @@ void MediaTransportHandlerSTS::AddIceCandidate(const std::string& aTransportId,
     return;
   }
 
-  nsresult rv = stream->ParseTrickleCandidate(aCandidate);
+  nsresult rv = stream->ParseTrickleCandidate(aCandidate, aUfrag);
   if (NS_FAILED(rv)) {
     CSFLogError(LOGTAG,
                 "Couldn't process ICE candidate with transport id %s: "
@@ -1151,7 +1154,9 @@ void MediaTransportHandlerSTS::OnGatheringStateChange(
     NrIceCtx* aIceCtx, NrIceCtx::GatheringState aState) {
   if (aState == NrIceCtx::ICE_CTX_GATHER_COMPLETE) {
     for (const auto& stream : mIceCtx->GetStreams()) {
-      OnCandidateFound(stream, "");
+      // TODO: Do we need to set the ufrag here? Do we need to fire more than
+      // once if we have an ICE restart in progress?
+      OnCandidateFound(stream, "", "");
     }
   }
   OnGatheringStateChange(toDomIceGatheringState(aState));
@@ -1185,9 +1190,11 @@ void MediaTransportHandlerSTS::OnConnectionStateChange(
 
 // The stuff below here will eventually go into the MediaTransportChild class
 void MediaTransportHandlerSTS::OnCandidateFound(NrIceMediaStream* aStream,
-                                                const std::string& aCandidate) {
+                                                const std::string& aCandidate,
+                                                const std::string& aUfrag) {
   CandidateInfo info;
   info.mCandidate = aCandidate;
+  info.mUfrag = aUfrag;
   NrIceCandidate defaultRtpCandidate;
   NrIceCandidate defaultRtcpCandidate;
   nsresult rv = aStream->GetDefaultCandidate(1, &defaultRtpCandidate);

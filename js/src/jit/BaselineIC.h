@@ -1661,10 +1661,14 @@ class ICGetElem_Fallback : public ICMonitoredFallbackStub {
       : ICMonitoredFallbackStub(ICStub::GetElem_Fallback, stubCode) {}
 
   static const uint16_t EXTRA_NEGATIVE_INDEX = 0x1;
+  static const uint16_t SAW_NON_INTEGER_INDEX_BIT = 0x2;
 
  public:
   void noteNegativeIndex() { extra_ |= EXTRA_NEGATIVE_INDEX; }
   bool hasNegativeIndex() const { return extra_ & EXTRA_NEGATIVE_INDEX; }
+
+  void setSawNonIntegerIndex() { extra_ |= SAW_NON_INTEGER_INDEX_BIT; }
+  bool sawNonIntegerIndex() const { return extra_ & SAW_NON_INTEGER_INDEX_BIT; }
 
   // Compiler for this stub kind.
   class Compiler : public ICStubCompiler {

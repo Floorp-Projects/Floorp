@@ -61,7 +61,6 @@
   background-color: var(--theme-icon-checked-color);
 }
 
-.source-footer .blackbox-summary,
 .source-footer .mapped-source,
 .source-footer .cursor-position {
   color: var(--theme-body-color);

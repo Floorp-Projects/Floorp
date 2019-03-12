@@ -345,39 +345,41 @@ void MediaEngineTabVideoSource::Draw() {
     return;
   }
 
-  layers::TextureClientAutoLock autoLock(texture,
-                                         layers::OpenMode::OPEN_WRITE_ONLY);
-  if (!autoLock.Succeeded()) {
-    NS_WARNING("Failed to lock TextureClient");
-    return;
-  }
+  {
+    layers::TextureClientAutoLock autoLock(texture,
+                                           layers::OpenMode::OPEN_WRITE_ONLY);
+    if (!autoLock.Succeeded()) {
+      NS_WARNING("Failed to lock TextureClient");
+      return;
+    }
 
-  RefPtr<gfx::DrawTarget> dt = texture->BorrowDrawTarget();
-  if (!dt || !dt->IsValid()) {
-    NS_WARNING("Failed to borrow DrawTarget");
-    return;
-  }
+    RefPtr<gfx::DrawTarget> dt = texture->BorrowDrawTarget();
+    if (!dt || !dt->IsValid()) {
+      NS_WARNING("Failed to borrow DrawTarget");
+      return;
+    }
 
-  if (mWindow) {
-    RefPtr<gfxContext> context = gfxContext::CreateOrNull(dt);
-    MOZ_ASSERT(context);  // already checked the draw target above
-    context->SetMatrix(context->CurrentMatrix().PreScale(
-        (((float)size.width) / mViewportWidth),
-        (((float)size.height) / mViewportHeight)));
+    if (mWindow) {
+      RefPtr<gfxContext> context = gfxContext::CreateOrNull(dt);
+      MOZ_ASSERT(context);  // already checked the draw target above
+      context->SetMatrix(context->CurrentMatrix().PreScale(
+          (((float)size.width) / mViewportWidth),
+          (((float)size.height) / mViewportHeight)));
 
-    nscolor bgColor = NS_RGB(255, 255, 255);
-    uint32_t renderDocFlags =
-        mScrollWithPage ? 0
-                        : (nsIPresShell::RENDER_IGNORE_VIEWPORT_SCROLLING |
-                           nsIPresShell::RENDER_DOCUMENT_RELATIVE);
-    nsRect r(nsPresContext::CSSPixelsToAppUnits((float)mViewportOffsetX),
-             nsPresContext::CSSPixelsToAppUnits((float)mViewportOffsetY),
-             nsPresContext::CSSPixelsToAppUnits((float)mViewportWidth),
-             nsPresContext::CSSPixelsToAppUnits((float)mViewportHeight));
-    NS_ENSURE_SUCCESS_VOID(
-        presShell->RenderDocument(r, renderDocFlags, bgColor, context));
-  } else {
-    dt->ClearRect(Rect(0, 0, size.width, size.height));
+      nscolor bgColor = NS_RGB(255, 255, 255);
+      uint32_t renderDocFlags =
+          mScrollWithPage ? 0
+                          : (nsIPresShell::RENDER_IGNORE_VIEWPORT_SCROLLING |
+                             nsIPresShell::RENDER_DOCUMENT_RELATIVE);
+      nsRect r(nsPresContext::CSSPixelsToAppUnits((float)mViewportOffsetX),
+               nsPresContext::CSSPixelsToAppUnits((float)mViewportOffsetY),
+               nsPresContext::CSSPixelsToAppUnits((float)mViewportWidth),
+               nsPresContext::CSSPixelsToAppUnits((float)mViewportHeight));
+      NS_ENSURE_SUCCESS_VOID(
+          presShell->RenderDocument(r, renderDocFlags, bgColor, context));
+    } else {
+      dt->ClearRect(Rect(0, 0, size.width, size.height));
+    }
   }
 
   MutexAutoLock lock(mMutex);

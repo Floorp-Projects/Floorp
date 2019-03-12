@@ -18,7 +18,7 @@ pref("app.update.url.manual", "https://www.mozilla.org/firefox/aurora/");
 // supplied in the "An update is available" page of the update wizard.
 pref("app.update.url.details", "https://www.mozilla.org/firefox/aurora/");
 
-pref("app.releaseNotesURL", "https://www.mozilla.org/%LOCALE%/firefox/%VERSION%/releasenotes/?utm_source=firefox-browser&utm_medium=firefox-browser&utm_campaign=whatsnew");
+pref("app.releaseNotesURL", "https://www.mozilla.org/%LOCALE%/firefox/%VERSION%beta/releasenotes/?utm_source=firefox-browser&utm_medium=firefox-browser&utm_campaign=whatsnew");
 
 // The number of days a binary is permitted to be old
 // without checking for an update.  This assumes that

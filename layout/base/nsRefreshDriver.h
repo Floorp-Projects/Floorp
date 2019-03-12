@@ -66,7 +66,7 @@ class nsARefreshObserver {
   // except while it is notifying them.
   NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
 
-  virtual void WillRefresh(mozilla::TimeStamp aTime) = 0;
+  MOZ_CAN_RUN_SCRIPT virtual void WillRefresh(mozilla::TimeStamp aTime) = 0;
 };
 
 /**
@@ -447,6 +447,7 @@ class nsRefreshDriver final : public mozilla::layers::TransactionIdAllocator,
   void DispatchAnimationEvents();
   void RunFrameRequestCallbacks(mozilla::TimeStamp aNowTime);
   void UpdateIntersectionObservations();
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   void Tick(mozilla::VsyncId aId, mozilla::TimeStamp aNowTime);
 
   enum EnsureTimerStartedFlags {

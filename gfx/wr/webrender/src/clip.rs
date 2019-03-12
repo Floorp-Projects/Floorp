@@ -10,7 +10,7 @@ use api::{ClipIntern, ImageKey};
 use app_units::Au;
 use border::{ensure_no_corner_overlap, BorderRadiusAu};
 use box_shadow::{BLUR_SAMPLE_SCALE, BoxShadowClipSource, BoxShadowCacheKey};
-use clip_scroll_tree::{ClipScrollTree, ROOT_SPATIAL_NODE_INDEX, SpatialNodeIndex};
+use clip_scroll_tree::{ClipScrollTree, SpatialNodeIndex};
 use ellipse::Ellipse;
 use gpu_cache::{GpuCache, GpuCacheHandle, ToGpuBlocks};
 use gpu_types::{BoxShadowStretchMode};
@@ -1310,15 +1310,11 @@ fn add_clip_node_to_current_chain(
             .accumulate(&clip_spatial_node.coordinate_system_relative_scale_offset);
         ClipSpaceConversion::ScaleOffset(scale_offset)
     } else {
-        match clip_scroll_tree.get_relative_transform(
-            node.spatial_node_index,
-            ROOT_SPATIAL_NODE_INDEX,
-        ) {
-            None => return true,
-            Some(relative) => ClipSpaceConversion::Transform(
-                relative.flattened.with_destination::<WorldPixel>(),
-            ),
-        }
+        ClipSpaceConversion::Transform(
+            clip_scroll_tree
+                .get_world_transform(node.spatial_node_index)
+                .flattened
+        )
     };
 
     // If we can convert spaces, try to reduce the size of the region

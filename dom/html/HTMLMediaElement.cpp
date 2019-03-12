@@ -2710,6 +2710,10 @@ already_AddRefed<Promise> HTMLMediaElement::Seek(double aTime,
   // aTime should be non-NaN.
   MOZ_ASSERT(!mozilla::IsNaN(aTime));
 
+  // Seeking step1, Set the media element's show poster flag to false.
+  // https://html.spec.whatwg.org/multipage/media.html#dom-media-seek
+  mShowPoster = false;
+
   RefPtr<Promise> promise = CreateDOMPromise(aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
@@ -3503,7 +3507,8 @@ HTMLMediaElement::HTMLMediaElement(
       mPaused(true, "HTMLMediaElement::mPaused"),
       mErrorSink(new ErrorSink(this)),
       mAudioChannelWrapper(new AudioChannelAgentCallback(this)),
-      mSink(MakePair(nsString(), RefPtr<AudioDeviceInfo>())) {
+      mSink(MakePair(nsString(), RefPtr<AudioDeviceInfo>())),
+      mShowPoster(IsVideo()) {
   MOZ_ASSERT(mMainThreadEventTarget);
   MOZ_ASSERT(mAbstractMainThread);
   // Please don't add anything to this constructor or the initialization
@@ -3808,6 +3813,12 @@ void HTMLMediaElement::PlayInternal(bool aHandlingUserInput) {
 
     // 6.2. If the show poster flag is true, set the element's show poster flag
     //      to false and run the time marches on steps.
+    if (mShowPoster) {
+      mShowPoster = false;
+      if (mTextTrackManager) {
+        mTextTrackManager->TimeMarchesOn();
+      }
+    }
 
     // 6.3. Queue a task to fire a simple event named play at the element.
     DispatchAsyncEvent(NS_LITERAL_STRING("play"));
@@ -5583,6 +5594,13 @@ void HTMLMediaElement::ChangeNetworkState(nsMediaNetworkState aState) {
     DispatchAsyncEvent(NS_LITERAL_STRING("suspend"));
   }
 
+  // According to the resource selection (step2, step9-18), dedicated media
+  // source failure step (step4) and aborting existing load (step4), set show
+  // poster flag to true. https://html.spec.whatwg.org/multipage/media.html
+  if (mNetworkState == NETWORK_NO_SOURCE || mNetworkState == NETWORK_EMPTY) {
+    mShowPoster = true;
+  }
+
   // Changing mNetworkState affects AddRemoveSelfReference().
   AddRemoveSelfReference();
 }
@@ -5666,6 +5684,14 @@ void HTMLMediaElement::CheckAutoplayDataReady() {
     mDecoder->Play();
   } else if (mSrcStream) {
     SetPlayedOrSeeked(true);
+  }
+
+  // https://html.spec.whatwg.org/multipage/media.html#ready-states:show-poster-flag
+  if (mShowPoster) {
+    mShowPoster = false;
+    if (mTextTrackManager) {
+      mTextTrackManager->TimeMarchesOn();
+    }
   }
 
   // For blocked media, the event would be pending until it is resumed.
@@ -7373,6 +7399,26 @@ already_AddRefed<Promise> HTMLMediaElement::SetSinkId(const nsAString& aSinkId,
 
   aRv = NS_OK;
   return promise.forget();
+}
+
+void HTMLMediaElement::NotifyTextTrackModeChanged() {
+  if (mPendingTextTrackChanged) {
+    return;
+  }
+  mPendingTextTrackChanged = true;
+  mAbstractMainThread->Dispatch(
+      NS_NewRunnableFunction("HTMLMediaElement::NotifyTextTrackModeChanged",
+                             [this, self = RefPtr<HTMLMediaElement>(this)]() {
+                               mPendingTextTrackChanged = false;
+                               if (!mTextTrackManager) {
+                                 return;
+                               }
+                               GetTextTracks()->CreateAndDispatchChangeEvent();
+                               // https://html.spec.whatwg.org/multipage/media.html#text-track-model:show-poster-flag
+                               if (!mShowPoster) {
+                                 mTextTrackManager->TimeMarchesOn();
+                               }
+                             }));
 }
 
 }  // namespace dom

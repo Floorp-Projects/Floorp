@@ -56,6 +56,7 @@
 
 .breakpoints-list .breakpoint {
   min-height: var(--breakpoint-expression-height);
+  overflow: hidden;
 }
 
 .breakpoints-exceptions-caught {
@@ -182,20 +183,12 @@ html .breakpoints-list .breakpoint.paused {
   inset-inline-end: 15px;
   inset-inline-start: auto;
   position: absolute;
-  top: 8px;
-  display: none;
+  top: -100px; /*For hiding button outside of row until hovered or focused*/
 }
 
-.breakpoint:hover .close-btn {
-  display: flex;
-}
-
-.breakpoint .close {
-  visibility: hidden;
-}
-
-.breakpoint:hover .close {
-  visibility: visible;
+.breakpoint:hover .close-btn,
+.breakpoint .close-btn:focus {
+  top: calc(50% - 8px);
 }
 
 .CodeMirror.cm-s-mozilla-breakpoint {

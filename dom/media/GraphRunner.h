@@ -60,18 +60,18 @@ class GraphRunner {
   // The MediaStreamGraph we're running. Weakptr beecause this graph owns us and
   // guarantees that our lifetime will not go beyond that of itself.
   MediaStreamGraphImpl* const mGraph;
-  // The thread running mGraph.
-  PRThread* const mThread;
   // GraphTime being handed over to the graph through OneIteration. Protected by
   // mMonitor.
-  GraphTime mStateEnd = 0;
+  GraphTime mStateEnd;
   // Reply from mGraph's OneIteration. Protected by mMonitor.
-  bool mStillProcessing = true;
+  bool mStillProcessing;
   // True after Shutdown(). Protected by mMonitor.
-  bool mShutdown = false;
+  bool mShutdown;
   // True after mThread has started running and has entered its main loop.
   // Protected by mMonitor.
-  bool mStarted = false;
+  bool mStarted;
+  // The thread running mGraph.
+  PRThread* const mThread;
 
 #ifdef DEBUG
   // Set to mGraph's audio callback driver's thread id, if run by an

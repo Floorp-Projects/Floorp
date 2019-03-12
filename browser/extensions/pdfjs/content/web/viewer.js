@@ -432,7 +432,9 @@ let PDFViewerApplication = {
       for (const name in prefs) {
         _app_options.AppOptions.set(name, prefs[name]);
       }
-    } catch (reason) {}
+    } catch (reason) {
+      console.error(`_readPreferences: "${reason.message}".`);
+    }
   },
 
   async _parseHashParameters() {
@@ -3301,9 +3303,16 @@ class AppOptions {
           continue;
         }
 
-        if ((kind & OptionKind.PREFERENCE) !== 0) {
-          options[name] = defaultOption.value;
-          continue;
+        if (kind === OptionKind.PREFERENCE) {
+          const value = defaultOption.value,
+                valueType = typeof value;
+
+          if (valueType === 'boolean' || valueType === 'string' || valueType === 'number' && Number.isInteger(value)) {
+            options[name] = value;
+            continue;
+          }
+
+          throw new Error(`Invalid type for preference: ${name}`);
         }
       }
 

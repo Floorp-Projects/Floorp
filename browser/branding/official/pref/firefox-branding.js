@@ -17,12 +17,12 @@ pref("app.update.promptWaitTime", 691200);
 #if MOZ_UPDATE_CHANNEL == beta
 pref("app.update.url.manual", "https://www.mozilla.org/firefox/beta");
 pref("app.update.url.details", "https://www.mozilla.org/%LOCALE%/firefox/beta/notes");
+pref("app.releaseNotesURL", "https://www.mozilla.org/%LOCALE%/firefox/%VERSION%beta/releasenotes/?utm_source=firefox-browser&utm_medium=firefox-browser&utm_campaign=whatsnew");
 #else
 pref("app.update.url.manual", "https://www.mozilla.org/firefox/");
 pref("app.update.url.details", "https://www.mozilla.org/%LOCALE%/firefox/notes");
-#endif
-
 pref("app.releaseNotesURL", "https://www.mozilla.org/%LOCALE%/firefox/%VERSION%/releasenotes/?utm_source=firefox-browser&utm_medium=firefox-browser&utm_campaign=whatsnew");
+#endif
 
 // The number of days a binary is permitted to be old
 // without checking for an update.  This assumes that

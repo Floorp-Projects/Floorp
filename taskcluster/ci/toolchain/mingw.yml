@@ -27,6 +27,9 @@ linux64-wine:
     run:
         script: build-wine.sh
         toolchain-artifact: public/build/wine.tar.xz
+    fetches:
+        fetch:
+            - wine-3.0.3
 
 linux64-mingw32-gcc:
     description: "GCC toolchain build for MinGW32 Cross Compile"
@@ -60,6 +63,10 @@ linux64-mingw32-nsis:
         toolchain-artifact: public/build/nsis.tar.xz
     toolchains:
         - linux64-mingw32-gcc
+    fetches:
+        fetch:
+            - nsis-3.01
+            - zlib-1.2.11
 
 linux64-mingw-fxc2-x86:
     description: "fxc2.exe x86 build for MinGW Cross Compile"

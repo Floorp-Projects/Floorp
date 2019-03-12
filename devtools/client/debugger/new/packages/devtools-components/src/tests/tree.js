@@ -203,6 +203,30 @@ describe("Tree", () => {
     expect(formatTree(wrapper)).toMatchSnapshot();
   });
 
+  it("calls shouldItemUpdate when provided", () => {
+    const shouldItemUpdate = jest.fn((prev, next) => true);
+    const wrapper = mountTree({
+      shouldItemUpdate
+    });
+    expect(formatTree(wrapper)).toMatchSnapshot();
+    expect(shouldItemUpdate.mock.calls).toHaveLength(0);
+
+    wrapper
+      .find("Tree")
+      .first()
+      .instance()
+      .forceUpdate();
+    expect(formatTree(wrapper)).toMatchSnapshot();
+    expect(shouldItemUpdate.mock.calls).toHaveLength(2);
+
+    expect(shouldItemUpdate.mock.calls[0][0]).toBe("A");
+    expect(shouldItemUpdate.mock.calls[0][1]).toBe("A");
+    expect(shouldItemUpdate.mock.results[0].value).toBe(true);
+    expect(shouldItemUpdate.mock.calls[1][0]).toBe("M");
+    expect(shouldItemUpdate.mock.calls[1][1]).toBe("M");
+    expect(shouldItemUpdate.mock.results[1].value).toBe(true);
+  });
+
   it("active item - renders as expected when clicking away", () => {
     const wrapper = mountTree({
       expanded: new Set("ABCDEFGHIJKLMNO".split("")),

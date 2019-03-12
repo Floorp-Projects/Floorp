@@ -17,7 +17,7 @@ import { PROMISE } from "../utils/middleware/promise";
 
 import { features } from "../../utils/prefs";
 import { log } from "../../utils/log";
-import { isGenerated } from "../../utils/source";
+import { isGenerated, isOriginal } from "../../utils/source";
 import type { Frame, Scope } from "../../types";
 
 import type { ThunkArgs } from "../types";
@@ -72,6 +72,9 @@ export function mapScopes(scopes: Promise<Scope>, frame: Frame) {
         }
 
         await dispatch(loadSourceText(source));
+        if (isOriginal(source)) {
+          await dispatch(loadSourceText(generatedSource));
+        }
 
         try {
           return await buildMappedScopes(

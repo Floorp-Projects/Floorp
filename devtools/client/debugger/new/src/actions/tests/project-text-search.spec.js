@@ -77,7 +77,8 @@ describe("project text search", () => {
         contentType: "text/javascript"
       }),
       getOriginalURLs: async () => [source2.url],
-      getGeneratedRangesForOriginal: async () => []
+      getGeneratedRangesForOriginal: async () => [],
+      getOriginalLocations: async items => items
     };
 
     const { dispatch, getState } = createStore(threadClient, {}, mockMaps);

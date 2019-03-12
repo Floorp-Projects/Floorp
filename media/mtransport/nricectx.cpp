@@ -437,7 +437,7 @@ void NrIceCtx::trickle_cb(void *arg, nr_ice_ctx *ice_ctx,
   MOZ_MTLOG(ML_INFO, "NrIceCtx(" << ctx->name_ << "): trickling candidate "
                                  << candidate_str);
 
-  s->SignalCandidate(s, candidate_str);
+  s->SignalCandidate(s, candidate_str, stream->ufrag);
 }
 
 void NrIceCtx::InitializeGlobals(bool allow_loopback, bool tcp_enabled,

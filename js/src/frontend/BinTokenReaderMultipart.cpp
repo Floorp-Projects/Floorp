@@ -16,6 +16,7 @@
 
 #include "frontend/BinSource-macros.h"
 #include "frontend/BinSourceRuntimeSupport.h"
+#include "frontend/BytecodeCompiler.h" // IsIdentifier
 
 #include "js/Result.h"
 
@@ -282,11 +283,21 @@ JS::Result<JSAtom*> BinTokenReaderMultipart::readAtom() {
 }
 
 JS::Result<JSAtom*> BinTokenReaderMultipart::readMaybeIdentifierName() {
-  return readMaybeAtom();
+  BINJS_MOZ_TRY_DECL(result, readMaybeAtom());
+  if (result) {
+    if (!IsIdentifier(result)) {
+      return raiseError("Invalid identifier");
+    }
+  }
+  return result;
 }
 
 JS::Result<JSAtom*> BinTokenReaderMultipart::readIdentifierName() {
-  return readAtom();
+  BINJS_MOZ_TRY_DECL(result, readMaybeAtom());
+  if (!IsIdentifier(result)) {
+    return raiseError("Invalid identifier");
+  }
+  return result;
 }
 
 JS::Result<JSAtom*> BinTokenReaderMultipart::readMaybePropertyKey() {

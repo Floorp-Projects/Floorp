@@ -242,6 +242,7 @@ interface nsISelectionController : nsISelectionDisplay
    *  @param aForward forward or backward if PR_FALSE
    *  @param aExtend  should it collapse the selection of extend it?
    */
+    [can_run_script]
     void pageMove(in boolean forward, in boolean extend);
 
   /** CompleteScroll will move page view to the top or bottom of the document

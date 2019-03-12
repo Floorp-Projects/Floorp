@@ -15,7 +15,7 @@ import shutil
 import tempfile
 
 from marionette_harness import MarionetteTestCase
-from marionette_driver import Actions
+from marionette_driver.legacy_actions import Actions
 from marionette_driver.errors import JavascriptException, ScriptTimeoutException
 import mozlog.structured
 from marionette_driver.keys import Keys

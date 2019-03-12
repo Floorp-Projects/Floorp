@@ -31,6 +31,7 @@ var LoginHelper = {
   schemeUpgrades: null,
   insecureAutofill: null,
   privateBrowsingCaptureEnabled: null,
+  showAutoCompleteFooter: null,
 
   init() {
     // Watch for pref changes to update cached pref values.
@@ -49,8 +50,8 @@ var LoginHelper = {
       Services.prefs.getBoolPref("signon.privateBrowsingCapture.enabled");
 
     this.schemeUpgrades = Services.prefs.getBoolPref("signon.schemeUpgrades");
-    this.storeWhenAutocompleteOff = Services.prefs.getBoolPref("signon.storeWhenAutocompleteOff");
     this.showAutoCompleteFooter = Services.prefs.getBoolPref("signon.showAutoCompleteFooter");
+    this.storeWhenAutocompleteOff = Services.prefs.getBoolPref("signon.storeWhenAutocompleteOff");
   },
 
   createLogger(aLogPrefix) {

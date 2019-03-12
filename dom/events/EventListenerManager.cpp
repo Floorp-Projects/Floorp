@@ -1039,7 +1039,8 @@ nsresult EventListenerManager::HandleEventSubType(Listener* aListener,
                                                       *aDOMEvent, rv);
       result = rv.StealNSResult();
     } else {
-      result = listenerHolder.GetXPCOMCallback()->HandleEvent(aDOMEvent);
+      // listenerHolder is holding a stack ref here.
+      result = MOZ_KnownLive(listenerHolder.GetXPCOMCallback())->HandleEvent(aDOMEvent);
     }
   }
 
@@ -1233,8 +1234,10 @@ void EventListenerManager::HandleEventInternal(nsPresContext* aPresContext,
               oldWindowEvent = innerWindow->SetEvent(*aDOMEvent);
             }
 
+            // MOZ_KnownLive should not be needed here, but bug 1534421 requires
+            // it for the moment.
             nsresult rv =
-                HandleEventSubType(listener, *aDOMEvent, aCurrentTarget);
+                HandleEventSubType(listener, MOZ_KnownLive(*aDOMEvent), aCurrentTarget);
 
             if (innerWindow) {
               Unused << innerWindow->SetEvent(oldWindowEvent);

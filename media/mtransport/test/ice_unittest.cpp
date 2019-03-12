@@ -302,10 +302,12 @@ class SchedulableTrickleCandidate {
  public:
   SchedulableTrickleCandidate(IceTestPeer* peer, size_t stream,
                               const std::string& candidate,
+                              const std::string& ufrag,
                               MtransportTestUtils* utils)
       : peer_(peer),
         stream_(stream),
         candidate_(candidate),
+        ufrag_(ufrag),
         timer_handle_(nullptr),
         test_utils_(utils) {}
 
@@ -350,6 +352,7 @@ class SchedulableTrickleCandidate {
   IceTestPeer* peer_;
   size_t stream_;
   std::string candidate_;
+  std::string ufrag_;
   void* timer_handle_;
   MtransportTestUtils* test_utils_;
 
@@ -791,7 +794,7 @@ class IceTestPeer : public sigslot::has_slots<> {
     for (const auto& attribute : attributes) {
       if (attribute.find("candidate:") != std::string::npos) {
         controlled_trickle_candidates_[stream].push_back(
-            new SchedulableTrickleCandidate(this, stream, attribute,
+            new SchedulableTrickleCandidate(this, stream, attribute, "",
                                             test_utils_));
       }
     }
@@ -799,13 +802,14 @@ class IceTestPeer : public sigslot::has_slots<> {
     return controlled_trickle_candidates_[stream];
   }
 
-  nsresult TrickleCandidate_s(const std::string& candidate, size_t index) {
+  nsresult TrickleCandidate_s(const std::string& candidate,
+                              const std::string& ufrag, size_t index) {
     auto stream = GetStream_s(index);
     if (!stream) {
       // stream might have gone away before the trickle timer popped
       return NS_OK;
     }
-    return stream->ParseTrickleCandidate(candidate);
+    return stream->ParseTrickleCandidate(candidate, ufrag);
   }
 
   void DumpCandidate(std::string which, const NrIceCandidate& cand) {
@@ -979,7 +983,8 @@ class IceTestPeer : public sigslot::has_slots<> {
   }
 
   void CandidateInitialized(NrIceMediaStream* stream,
-                            const std::string& raw_candidate) {
+                            const std::string& raw_candidate,
+                            const std::string& ufrag) {
     std::string candidate(FilterCandidate(raw_candidate));
     if (candidate.empty()) {
       return;
@@ -996,7 +1001,7 @@ class IceTestPeer : public sigslot::has_slots<> {
         if (GetStream_s(i) == stream) {
           ASSERT_GT(remote_->stream_counter_, i);
           nsresult res =
-              remote_->GetStream_s(i)->ParseTrickleCandidate(candidate);
+              remote_->GetStream_s(i)->ParseTrickleCandidate(candidate, ufrag);
           ASSERT_TRUE(NS_SUCCEEDED(res));
           return;
         }
@@ -1216,7 +1221,7 @@ class IceTestPeer : public sigslot::has_slots<> {
   void ParseCandidate_s(size_t i, const std::string& candidate) {
     auto media_stream = GetStream_s(i);
     ASSERT_TRUE(media_stream.get()) << "No such stream " << i;
-    media_stream->ParseTrickleCandidate(candidate);
+    media_stream->ParseTrickleCandidate(candidate, "");
   }
 
   void ParseCandidate(size_t i, const std::string& candidate) {
@@ -1367,7 +1372,7 @@ class IceTestPeer : public sigslot::has_slots<> {
 
 void SchedulableTrickleCandidate::Trickle() {
   timer_handle_ = nullptr;
-  nsresult res = peer_->TrickleCandidate_s(candidate_, stream_);
+  nsresult res = peer_->TrickleCandidate_s(candidate_, ufrag_, stream_);
   ASSERT_TRUE(NS_SUCCEEDED(res));
 }
 
@@ -2938,25 +2943,25 @@ void AddNonPairableCandidates(
       case 1:
         candidates.push_back(new SchedulableTrickleCandidate(
             peer, stream,
-            "candidate:0 1 UDP 2113601790 10.0.0.1 12345 typ host",
+            "candidate:0 1 UDP 2113601790 10.0.0.1 12345 typ host", "",
             test_utils_));
         break;
       case 2:
         candidates.push_back(new SchedulableTrickleCandidate(
             peer, stream,
-            "candidate:0 1 UDP 2113601791 172.16.1.1 12345 typ host",
+            "candidate:0 1 UDP 2113601791 172.16.1.1 12345 typ host", "",
             test_utils_));
         break;
       case 3:
         candidates.push_back(new SchedulableTrickleCandidate(
             peer, stream,
-            "candidate:0 1 UDP 2113601792 192.168.0.1 12345 typ host",
+            "candidate:0 1 UDP 2113601792 192.168.0.1 12345 typ host", "",
             test_utils_));
         break;
       case 4:
         candidates.push_back(new SchedulableTrickleCandidate(
             peer, stream,
-            "candidate:0 1 UDP 2113601793 100.64.1.1 12345 typ host",
+            "candidate:0 1 UDP 2113601793 100.64.1.1 12345 typ host", "",
             test_utils_));
         break;
       default:

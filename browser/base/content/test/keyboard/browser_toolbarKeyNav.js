@@ -11,6 +11,10 @@
 
 const PERMISSIONS_PAGE = "https://example.com/browser/browser/base/content/test/permissions/permissions.html";
 
+// The DevEdition has the DevTools button in the toolbar by default. Remove it
+// to prevent branch-specific rules what button should be focused.
+CustomizableUI.removeWidgetFromArea("developer-button");
+
 async function expectFocusAfterKey(aKey, aFocus, aAncestorOk = false) {
   let res = aKey.match(/^(Shift\+)?(?:(.)|(.+))$/);
   let shift = Boolean(res[1]);
@@ -229,4 +233,8 @@ add_task(async function testArrowsOverflowButton() {
     document.getElementById("nav-bar-overflow-button").clientWidth;
     await expectFocusAfterKey("ArrowLeft", "sidebar-button");
   });
+});
+
+registerCleanupFunction(async function resetToolbar() {
+  await CustomizableUI.reset();
 });

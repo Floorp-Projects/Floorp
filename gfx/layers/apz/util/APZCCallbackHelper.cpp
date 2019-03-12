@@ -869,6 +869,9 @@ void APZCCallbackHelper::SendSetAllowedTouchBehaviorNotification(
     nsIWidget* aWidget, dom::Document* aDocument,
     const WidgetTouchEvent& aEvent, uint64_t aInputBlockId,
     const SetAllowedTouchBehaviorCallback& aCallback) {
+  if (!aWidget || !aDocument) {
+    return;
+  }
   if (nsIPresShell* shell = aDocument->GetShell()) {
     if (nsIFrame* rootFrame = shell->GetRootFrame()) {
       rootFrame = UpdateRootFrameForTouchTargetDocument(rootFrame);

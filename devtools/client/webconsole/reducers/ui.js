@@ -31,6 +31,7 @@ const UiState = (overrides) => Object.freeze(Object.assign({
   closeButtonVisible: false,
   reverseSearchInputVisible: false,
   reverseSearchInitialValue: "",
+  editor: false,
 }, overrides));
 
 function ui(state = UiState(), action) {

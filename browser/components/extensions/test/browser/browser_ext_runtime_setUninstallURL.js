@@ -72,6 +72,27 @@ add_task(async function test_setuninstall_empty_url() {
   // BrowserTestUtils will eventually complain if one is opened.
 });
 
+// Test the documented behavior of setUninstallURL() that passing an
+// empty string is equivalent to not setting an uninstall URL
+// (i.e., no new tab is opened upon uninstall)
+// here we pass a null value to string and test
+add_task(async function test_setuninstall_null_url() {
+  async function backgroundScript() {
+    await browser.runtime.setUninstallURL(null);
+    browser.tabs.create({url: "http://example.com/addon_loaded"});
+  }
+
+  let addon = await makeAndInstallXPI("test_uinstallurl2@tests.mozilla.org",
+                                      backgroundScript,
+                                      "http://example.com/addon_loaded");
+
+  addon.uninstall(true);
+  info("uninstalled");
+
+  // no need to explicitly check for the absence of a new tab,
+  // BrowserTestUtils will eventually complain if one is opened.
+});
+
 add_task(async function test_setuninstallurl() {
   async function backgroundScript() {
     await browser.runtime.setUninstallURL("http://example.com/addon_uninstalled");

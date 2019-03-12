@@ -6,12 +6,10 @@
 
 :root {
   --accordion-header-background: var(--theme-toolbar-background);
-  --disclosure-arrow: #b2b2b2;
 }
 
 :root.theme-dark {
   --accordion-header-background: #222225;
-  --disclosure-arrow: #7f7f81;
 }
 
 .accordion {

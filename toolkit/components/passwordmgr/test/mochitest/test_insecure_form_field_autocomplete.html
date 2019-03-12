@@ -238,7 +238,7 @@ add_task(async function test_form1_warning_entry() {
                            "testuser2",
                            "testuser3",
                            "zzzuser4"];
-  checkArrayValues(results, expectedMenuItems, "Check all menuitems are displayed correctly.");
+  checkAutoCompleteResults(results, expectedMenuItems, "mochi.test", "Check all menuitems are displayed correctly.");
 
   synthesizeKey("KEY_ArrowDown"); // select insecure warning
   checkACForm("", ""); // value shouldn't update just by selecting
@@ -327,6 +327,7 @@ add_task(async function test_form1_wraparound_first_entry() {
   synthesizeKey("KEY_ArrowDown"); // second
   synthesizeKey("KEY_ArrowDown"); // third
   synthesizeKey("KEY_ArrowDown"); // fourth
+  synthesizeKey("KEY_ArrowDown"); // footer
   synthesizeKey("KEY_ArrowDown"); // deselects
   synthesizeKey("KEY_ArrowDown"); // skip insecure warning
   synthesizeKey("KEY_ArrowDown"); // first
@@ -342,6 +343,7 @@ add_task(async function test_form1_wraparound_up_last_entry() {
   synthesizeKey("KEY_ArrowDown"); // open
   await shownPromise;
 
+  synthesizeKey("KEY_ArrowUp"); // footer
   synthesizeKey("KEY_ArrowUp"); // last (fourth)
   synthesizeKey("KEY_Enter");
   await promiseFormsProcessed();
@@ -357,6 +359,7 @@ add_task(async function test_form1_wraparound_down_up_up() {
 
   synthesizeKey("KEY_ArrowDown"); // select first entry
   synthesizeKey("KEY_ArrowUp"); // selects nothing!
+  synthesizeKey("KEY_ArrowUp"); // selects footer
   synthesizeKey("KEY_ArrowUp"); // select last entry
   synthesizeKey("KEY_Enter");
   await promiseFormsProcessed();
@@ -371,12 +374,14 @@ add_task(async function test_form1_wraparound_up_last() {
 
   synthesizeKey("KEY_ArrowDown");
   synthesizeKey("KEY_ArrowUp"); // deselects
+  synthesizeKey("KEY_ArrowUp"); // footer
   synthesizeKey("KEY_ArrowUp"); // last entry
   synthesizeKey("KEY_ArrowUp");
   synthesizeKey("KEY_ArrowUp");
   synthesizeKey("KEY_ArrowUp"); // skip insecure warning
   synthesizeKey("KEY_ArrowUp"); // first entry
   synthesizeKey("KEY_ArrowUp"); // deselects
+  synthesizeKey("KEY_ArrowUp"); // footer
   synthesizeKey("KEY_ArrowUp"); // last entry
   synthesizeKey("KEY_Enter");
   await promiseFormsProcessed();
@@ -436,6 +441,7 @@ add_task(async function test_form1_pagedown_last() {
   // Check last entry (page down)
   synthesizeKey("KEY_ArrowDown"); // first
   synthesizeKey("KEY_PageDown"); // last
+  synthesizeKey("KEY_ArrowUp"); // skip footer
   synthesizeKey("KEY_Enter");
   await promiseFormsProcessed();
   checkACForm("zzzuser4", "zzzpass4");
@@ -471,7 +477,7 @@ add_task(async function test_form1_delete() {
   numLogins = LoginManager.countLogins("http://mochi.test:8888", "http://autocomplete:8888", null);
   is(numLogins, 5, "Correct number of logins before deleting one");
 
-  let countChangedPromise = notifyMenuChanged(4);
+  let countChangedPromise = notifyMenuChanged(5);
   var deletionPromise = promiseStorageChanged(["removeLogin"]);
   // On OS X, shift-backspace and shift-delete work, just delete does not.
   // On Win/Linux, shift-backspace does not work, delete and shift-delete do.
@@ -549,6 +555,8 @@ add_task(async function test_form1_delete_last() {
   checkACForm("", "");
   let numLogins = LoginManager.countLogins("http://mochi.test:8888", "http://autocomplete:8888", null);
   is(numLogins, 2, "Correct number of logins after deleting one");
+  synthesizeKey("KEY_ArrowDown"); // skip insecure warning
+  synthesizeKey("KEY_ArrowDown");
   synthesizeKey("KEY_Enter");
   await promiseFormsProcessed();
   checkACForm("testuser2", "testpass2");
@@ -765,8 +773,10 @@ add_task(async function test_form9_filtering() {
   let results = await shownPromise;
 
   checkACForm("form9userAAB", "");
-  checkArrayValues(results, ["This connection is not secure. Logins entered here could be compromised. Learn More", "form9userAAB"],
-                   "Check dropdown is updated after inserting 'A'");
+  checkAutoCompleteResults(results,
+                           ["This connection is not secure. Logins entered here could be compromised. Learn More", "form9userAAB"],
+                           "mochi.test",
+                           "Check dropdown is updated after inserting 'A'");
   synthesizeKey("KEY_ArrowDown"); // skip insecure warning
   synthesizeKey("KEY_ArrowDown");
   synthesizeKey("KEY_Enter");
@@ -780,20 +790,23 @@ add_task(async function test_form9_autocomplete_cache() {
   // autocomplete results.
   setupScript.sendSyncMessage("addLogin", "login8C");
   uname.focus();
-  let promise0 = notifyMenuChanged(1);
+  let promise2 = notifyMenuChanged(2);
   let shownPromise = promiseACShown();
   sendString("z");
-  await promise0;
+  let results = await promise2;
   await shownPromise;
-  let popupState = await getPopupState();
-  is(popupState.open, true, "Check popup should open");
-
+  checkAutoCompleteResults(results,
+                           ["This connection is not secure. Logins entered here could be compromised. Learn More"],
+                           "mochi.test",
+                           "Check popup only has the footer and insecure warning");
   // check that empty results are cached - bug 496466
-  promise0 = notifyMenuChanged(1);
+  promise2 = notifyMenuChanged(2);
   sendString("z");
-  await promise0;
-  popupState = await getPopupState();
-  is(popupState.open, true, "Check popup stays opened due to cached empty result");
+  results = await promise2;
+  checkAutoCompleteResults(results,
+                           ["This connection is not secure. Logins entered here could be compromised. Learn More"],
+                           "mochi.test",
+                           "Check popup only has the footer and insecure warning");
 });
 
 add_task(async function test_form11_recipes() {

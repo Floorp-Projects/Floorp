@@ -1193,12 +1193,6 @@ skip script test262/annexB/language/function-code/block-decl-func-skip-arguments
 skip script test262/language/expressions/assignment/destructuring/keyed-destructuring-property-reference-target-evaluation-order.js
 skip script test262/language/expressions/assignment/destructuring/iterator-destructuring-property-reference-target-evaluation-order.js
 
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1495072
-skip script test262/language/expressions/await/await-monkey-patched-promise.js
-skip script test262/language/expressions/await/async-await-interleaved.js
-skip script test262/language/expressions/await/for-await-of-interleaved.js
-skip script test262/language/expressions/await/async-generator-interleaved.js
-
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1321616
 skip script test262/annexB/built-ins/Function/createdynfn-html-close-comment-params.js
 

@@ -56,10 +56,12 @@ class ElementStyle {
       this.store.disabled = new WeakMap();
     }
 
-    this.onStyleSheetUpdated = this.onStyleSheetUpdated.bind(this);
+    this.onRefresh = this.onRefresh.bind(this);
 
     if (this.ruleView.isNewRulesView) {
-      this.pageStyle.on("stylesheet-updated", this.onStyleSheetUpdated);
+      this.pageStyle.on("stylesheet-updated", this.onRefresh);
+      this.ruleView.inspector.styleChangeTracker.on("style-changed", this.onRefresh);
+      this.ruleView.selection.on("pseudoclass", this.onRefresh);
     }
   }
 
@@ -79,7 +81,9 @@ class ElementStyle {
     }
 
     if (this.ruleView.isNewRulesView) {
-      this.pageStyle.off("stylesheet-updated", this.onStyleSheetUpdated);
+      this.pageStyle.off("stylesheet-updated", this.onRefresh);
+      this.ruleView.inspector.styleChangeTracker.off("style-changed", this.onRefresh);
+      this.ruleView.selection.off("pseudoclass", this.onRefresh);
     }
   }
 
@@ -134,6 +138,8 @@ class ElementStyle {
         if (r && r.editor) {
           r.editor.destroy();
         }
+
+        r.destroy();
       }
 
       return undefined;
@@ -668,10 +674,10 @@ class ElementStyle {
   }
 
   /**
-   * Handler for page style events "stylesheet-updated". Refreshes the list of rules on
-   * the page.
+   * Handler for "stylesheet-updated", "style-changed" and "pseudoclass" events.
+   * Refreshes the list of rules on the page.
    */
-  async onStyleSheetUpdated() {
+  async onRefresh() {
     // Repopulate the element style once the current modifications are done.
     const promises = [];
     for (const rule of this.rules) {

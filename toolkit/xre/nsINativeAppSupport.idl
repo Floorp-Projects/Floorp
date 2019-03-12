@@ -51,7 +51,6 @@ interface nsINativeAppSupport : nsISupports {
     // Startup/shutdown.
     boolean start();
     void    enable();
-    void    quit();
 
     void onLastWindowClosing();
     void ReOpen();

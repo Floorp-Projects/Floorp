@@ -35,7 +35,7 @@
 namespace js {
 namespace jit {
 
-template <class ArgSeq, class StoreOutputTo>
+template <typename Fn, Fn fn, class ArgSeq, class StoreOutputTo>
 class OutOfLineCallVM;
 
 enum class SwitchTableType { Inline, OutOfLine };
@@ -76,20 +76,15 @@ class CodeGenerator final : public CodeGeneratorSpecific {
   void verifyOsiPointRegs(LSafepoint* safepoint);
 #endif
 
-  void callVMInternal(const VMFunctionData& fun, TrampolinePtr code,
-                      LInstruction* ins, const Register* dynStack);
   void callVMInternal(VMFunctionId id, LInstruction* ins,
                       const Register* dynStack);
-
-  void callVM(const VMFunction& fun, LInstruction* ins,
-              const Register* dynStack = nullptr);
 
   template <typename Fn, Fn fn>
   void callVM(LInstruction* ins, const Register* dynStack = nullptr);
 
-  template <class ArgSeq, class StoreOutputTo>
-  inline OutOfLineCode* oolCallVM(const VMFunction& fun, LInstruction* ins,
-                                  const ArgSeq& args, const StoreOutputTo& out);
+  template <typename Fn, Fn fn, class ArgSeq, class StoreOutputTo>
+  inline OutOfLineCode* oolCallVM(LInstruction* ins, const ArgSeq& args,
+                                  const StoreOutputTo& out);
 
  public:
   CodeGenerator(MIRGenerator* gen, LIRGraph* graph,
@@ -111,8 +106,9 @@ class CodeGenerator final : public CodeGeneratorSpecific {
                          Register scratch);
   void emitIntToString(Register input, Register output, Label* ool);
 
-  template <class ArgSeq, class StoreOutputTo>
-  void visitOutOfLineCallVM(OutOfLineCallVM<ArgSeq, StoreOutputTo>* ool);
+  template <typename Fn, Fn fn, class ArgSeq, class StoreOutputTo>
+  void visitOutOfLineCallVM(
+      OutOfLineCallVM<Fn, fn, ArgSeq, StoreOutputTo>* ool);
 
   void visitOutOfLineRegExpMatcher(OutOfLineRegExpMatcher* ool);
   void visitOutOfLineRegExpSearcher(OutOfLineRegExpSearcher* ool);

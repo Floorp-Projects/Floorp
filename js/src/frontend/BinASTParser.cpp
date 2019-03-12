@@ -1784,9 +1784,6 @@ BinASTParser<Tok>::parseInterfaceAssignmentTargetIdentifier(
   RootedAtom name(cx_);
   MOZ_TRY_VAR(name, tokenizer_->readIdentifierName());
 
-  if (!IsIdentifier(name)) {
-    return raiseError("Invalid identifier");
-  }
   BINJS_TRY(usedNames_.noteUse(cx_, name, pc_->scriptId(),
                                pc_->innermostScope()->id()));
   BINJS_TRY_DECL(result, handler_.newName(name->asPropertyName(),
@@ -1951,9 +1948,6 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceBindingIdentifier(
   RootedAtom name(cx_);
   MOZ_TRY_VAR(name, tokenizer_->readIdentifierName());
 
-  if (!IsIdentifier(name)) {
-    return raiseError("Invalid identifier");
-  }
   BINJS_TRY_DECL(result, handler_.newName(name->asPropertyName(),
                                           tokenizer_->pos(start), cx_));
   return result;
@@ -2141,7 +2135,10 @@ JS::Result<LexicalScopeNode*> BinASTParser<Tok>::parseInterfaceCatchClause(
   MOZ_TRY(parseAssertedBoundNamesScope());
 
   BINJS_MOZ_TRY_DECL(binding, parseBinding());
-
+  if (!currentScope.lookupDeclaredName(
+          binding->template as<NameNode>().atom())) {
+    return raiseError("Missing catch variable in scope");
+  }
   BINJS_MOZ_TRY_DECL(body, parseBlock());
 
   MOZ_TRY(checkClosedVars(currentScope));
@@ -3190,9 +3187,6 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceIdentifierExpression(
   RootedAtom name(cx_);
   MOZ_TRY_VAR(name, tokenizer_->readIdentifierName());
 
-  if (!IsIdentifier(name)) {
-    return raiseError("Invalid identifier");
-  }
   BINJS_TRY(usedNames_.noteUse(cx_, name, pc_->scriptId(),
                                pc_->innermostScope()->id()));
   BINJS_TRY_DECL(result, handler_.newName(name->asPropertyName(),

@@ -141,27 +141,27 @@ impl<F, T> CoordinateSpaceMapping<F, T> {
         ref_spatial_node_index: SpatialNodeIndex,
         target_node_index: SpatialNodeIndex,
         clip_scroll_tree: &ClipScrollTree,
-    ) -> Option<(Self, VisibleFace)> {
+    ) -> (Self, VisibleFace) {
         let spatial_nodes = &clip_scroll_tree.spatial_nodes;
         let ref_spatial_node = &spatial_nodes[ref_spatial_node_index.0 as usize];
         let target_spatial_node = &spatial_nodes[target_node_index.0 as usize];
 
         if ref_spatial_node_index == target_node_index {
-            Some((CoordinateSpaceMapping::Local, VisibleFace::Front))
+            (CoordinateSpaceMapping::Local, VisibleFace::Front)
         } else if ref_spatial_node.coordinate_system_id == target_spatial_node.coordinate_system_id {
             let scale_offset = ref_spatial_node.coordinate_system_relative_scale_offset
                 .inverse()
                 .accumulate(&target_spatial_node.coordinate_system_relative_scale_offset);
-            Some((CoordinateSpaceMapping::ScaleOffset(scale_offset), VisibleFace::Front))
+            (CoordinateSpaceMapping::ScaleOffset(scale_offset), VisibleFace::Front)
         } else {
-            clip_scroll_tree
-                .get_relative_transform(target_node_index, ref_spatial_node_index)
-                .map(|relative| (
-                    CoordinateSpaceMapping::Transform(
-                        relative.flattened.with_source::<F>().with_destination::<T>()
-                    ),
-                    relative.visible_face,
-                ))
+            let relative = clip_scroll_tree
+                .get_relative_transform(target_node_index, ref_spatial_node_index);
+            (
+                CoordinateSpaceMapping::Transform(
+                    relative.flattened.with_source::<F>().with_destination::<T>()
+                ),
+                relative.visible_face,
+            )
         }
     }
 }
@@ -212,7 +212,7 @@ impl<F, T> SpaceMapper<F, T> where F: fmt::Debug {
                 self.ref_spatial_node_index,
                 target_node_index,
                 clip_scroll_tree,
-            ).expect("bug: should have been culled by invalid node");
+            );
 
             self.kind = kind;
             self.visible_face = visible_face;

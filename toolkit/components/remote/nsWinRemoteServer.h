@@ -15,7 +15,7 @@
 class nsWinRemoteServer final : public nsRemoteServer {
  public:
   nsWinRemoteServer() = default;
-  ~nsWinRemoteServer() override = default;
+  ~nsWinRemoteServer() override { Shutdown(); }
 
   nsresult Startup(const char* aAppName, const char* aProfileName) override;
   void Shutdown() override;

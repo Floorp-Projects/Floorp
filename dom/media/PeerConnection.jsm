@@ -1108,13 +1108,14 @@ class RTCPeerConnection {
     return this._auto(onSucc, onErr, () => cand && this._addIceCandidate(cand));
   }
 
-  async _addIceCandidate({ candidate, sdpMid, sdpMLineIndex }) {
+  async _addIceCandidate({ candidate, sdpMid, sdpMLineIndex, usernameFragment }) {
     this._checkClosed();
     return this._chain(() => {
       return new Promise((resolve, reject) => {
         this._onAddIceCandidateSuccess = resolve;
         this._onAddIceCandidateError = reject;
-        this._impl.addIceCandidate(candidate, sdpMid || "", sdpMLineIndex);
+        this._impl.addIceCandidate(
+          candidate, sdpMid || "", usernameFragment || "", sdpMLineIndex);
       });
     });
   }
@@ -1680,13 +1681,13 @@ class PeerConnectionObserver {
     this._dompc._onAddIceCandidateError(this.newError(message, code));
   }
 
-  onIceCandidate(sdpMLineIndex, sdpMid, candidate) {
+  onIceCandidate(sdpMLineIndex, sdpMid, candidate, ufrag) {
     let win = this._dompc._win;
     if (candidate) {
       if (candidate.includes(" typ relay ")) {
         this._dompc._iceGatheredRelayCandidates = true;
       }
-      candidate = new win.RTCIceCandidate({ candidate, sdpMid, sdpMLineIndex });
+      candidate = new win.RTCIceCandidate({ candidate, sdpMid, sdpMLineIndex, ufrag });
     } else {
       candidate = null;
     }

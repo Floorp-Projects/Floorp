@@ -12,6 +12,12 @@ path = "lib.rs"
 baldrdash = { path = "../../wasm/cranelift" }
 mozilla-central-workspace-hack = { path = "../../../../build/workspace-hack" }
 
+[features]
+cranelift_x86 = ['baldrdash/cranelift_x86']
+cranelift_arm32 = ['baldrdash/cranelift_arm32']
+cranelift_arm64 = ['baldrdash/cranelift_arm64']
+cranelift_none = ['baldrdash/cranelift_none']
+
 # Uncomment this to enable perf support in release mode.
 #[profile.release]
 #debug = true

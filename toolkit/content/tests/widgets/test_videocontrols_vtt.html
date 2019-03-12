@@ -84,6 +84,7 @@
     ok(!tt.hasAttribute("on"), "Item should be off before click");
     synthesizeMouseAtCenter(tt, {});
 
+    await once(video.textTracks, "change");
     await new Promise(SimpleTest.executeSoon);
     ok(tt.hasAttribute("on"), "Selected item should be enabled");
     ok(ttList.hidden, "Should hide texttrack menu once clicked on an item");
@@ -93,11 +94,13 @@
     const tts = [...video.textTracks];
 
     tts.forEach(tt => tt.mode = "hidden");
+    await once(video.textTracks, "change");
     await new Promise(SimpleTest.executeSoon);
     ok(!ccBtn.hasAttribute("enabled"), "CC button should be disabled");
 
     // enable the last text track.
     tts[tts.length - 1].mode = "showing";
+    await once(video.textTracks, "change");
     await new Promise(SimpleTest.executeSoon);
     ok(ccBtn.hasAttribute("enabled"), "CC button should be enabled");
     ok(ttList.lastChild.hasAttribute("on"), "The last item should be highlighted");

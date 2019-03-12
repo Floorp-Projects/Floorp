@@ -36,3 +36,15 @@ function executeTests() {
     .map(fn => () => new Promise(fn))
     .reduce((promise, task) => promise.then(task), Promise.resolve());
 }
+
+function once(target, name, cb) {
+  let p = new Promise(function(resolve, reject) {
+    target.addEventListener(name, function() {
+      resolve();
+    }, {once: true});
+  });
+  if (cb) {
+    p.then(cb);
+  }
+  return p;
+}

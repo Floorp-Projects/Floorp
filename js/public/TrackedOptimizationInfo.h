@@ -114,6 +114,7 @@ namespace JS {
   _(ArrayDoubleConversion)                        \
   _(ArrayRange)                                   \
   _(ArraySeenNegativeIndex)                       \
+  _(ArraySeenNonIntegerIndex)                     \
   _(TypedObjectHasDetachedBuffer)                 \
   _(TypedObjectArrayRange)                        \
   _(AccessNotDense)                               \
@@ -203,6 +204,7 @@ namespace JS {
   _(CantInlineBigCaller)                          \
   _(CantInlineBigCallee)                          \
   _(CantInlineBigCalleeInlinedBytecodeLength)     \
+  _(CantInlineCrossRealm)                         \
   _(CantInlineNotHot)                             \
   _(CantInlineNotInDispatch)                      \
   _(CantInlineUnreachable)                        \

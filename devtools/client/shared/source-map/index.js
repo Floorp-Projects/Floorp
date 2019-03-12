@@ -70,7 +70,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	__webpack_require__.p = "/assets/build";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 761);
+/******/ 	return __webpack_require__(__webpack_require__.s = 762);
 /******/ })
 /************************************************************************/
 /******/ ({
@@ -86,7 +86,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.stopSourceMapWorker = exports.startSourceMapWorker = exports.isOriginalId = exports.isGeneratedId = exports.generatedToOriginalId = exports.originalToGeneratedId = exports.getOriginalStackFrames = exports.hasMappedSource = exports.clearSourceMaps = exports.applySourceMap = exports.getOriginalSourceText = exports.getLocationScopes = exports.getFileGeneratedRange = exports.getGeneratedRangesForOriginal = exports.getOriginalLocation = exports.getAllGeneratedLocations = exports.getGeneratedLocation = exports.getGeneratedRanges = exports.getOriginalRanges = exports.hasOriginalURL = exports.getOriginalURLs = exports.setAssetRootURL = exports.dispatcher = undefined;
 
-var _utils = __webpack_require__(67);
+var _utils = __webpack_require__(68);
 
 Object.defineProperty(exports, "originalToGeneratedId", {
   enumerable: true,
@@ -158,6 +158,8 @@ const getGeneratedLocation = exports.getGeneratedLocation = async (location, ori
 const getAllGeneratedLocations = exports.getAllGeneratedLocations = async (location, originalSource) => _getAllGeneratedLocations(location, originalSource);
 
 const getOriginalLocation = exports.getOriginalLocation = async (location, options = {}) => _getOriginalLocation(location, options);
+
+const getOriginalLocations = exports.getOriginalLocations = async (locations, options = {}) => dispatcher.invoke("getOriginalLocations", locations, options);
 
 const getGeneratedRangesForOriginal = exports.getGeneratedRangesForOriginal = async (sourceId, url, mergeUnmappedRegions) => dispatcher.invoke("getGeneratedRangesForOriginal", sourceId, url, mergeUnmappedRegions);
 
@@ -448,7 +450,7 @@ module.exports = charenc;
 
 /***/ }),
 
-/***/ 67:
+/***/ 68:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -536,7 +538,7 @@ module.exports = {
 
 /***/ }),
 
-/***/ 761:
+/***/ 762:
 /***/ (function(module, exports, __webpack_require__) {
 
 module.exports = __webpack_require__(14);

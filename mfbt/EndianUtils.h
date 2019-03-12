@@ -404,7 +404,9 @@ class Endian : private EndianUtils {
 
   /*
    * Copies |aCount| values of type T starting at |aSrc| to |aDest|, converting
-   * them to little-endian format if ThisEndian is Big.
+   * them to little-endian format if ThisEndian is Big.  |aSrc| as a typed
+   * pointer must be aligned; |aDest| need not be.
+   *
    * As with memcpy, |aDest| and |aSrc| must not overlap.
    */
   template <typename T>
@@ -431,7 +433,9 @@ class Endian : private EndianUtils {
 
   /*
    * Copies |aCount| values of type T starting at |aSrc| to |aDest|, converting
-   * them to big-endian format if ThisEndian is Little.
+   * them to big-endian format if ThisEndian is Little.  |aSrc| as a typed
+   * pointer must be aligned; |aDest| need not be.
+   *
    * As with memcpy, |aDest| and |aSrc| must not overlap.
    */
   template <typename T>
@@ -479,7 +483,9 @@ class Endian : private EndianUtils {
 
   /*
    * Copies |aCount| values of type T starting at |aSrc| to |aDest|, converting
-   * them to little-endian format if ThisEndian is Big.
+   * them to little-endian format if ThisEndian is Big.  |aDest| as a typed
+   * pointer must be aligned; |aSrc| need not be.
+   *
    * As with memcpy, |aDest| and |aSrc| must not overlap.
    */
   template <typename T>
@@ -506,7 +512,9 @@ class Endian : private EndianUtils {
 
   /*
    * Copies |aCount| values of type T starting at |aSrc| to |aDest|, converting
-   * them to big-endian format if ThisEndian is Little.
+   * them to big-endian format if ThisEndian is Little.  |aDest| as a typed
+   * pointer must be aligned; |aSrc| need not be.
+   *
    * As with memcpy, |aDest| and |aSrc| must not overlap.
    */
   template <typename T>
