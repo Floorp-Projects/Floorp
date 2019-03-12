@@ -328,13 +328,10 @@ AboutReader.prototype = {
   },
 
   _setFontSize(newFontSize) {
-    let containerClasses = this._containerElement.classList;
-
-    if (this._fontSize > 0)
-      containerClasses.remove("font-size" + this._fontSize);
-
     this._fontSize = newFontSize;
-    containerClasses.add("font-size" + this._fontSize);
+    let size = (10 + 2 * this._fontSize) + "px";
+
+    this._containerElement.style.setProperty("--font-size", size);
     return AsyncPrefs.set("reader.font_size", this._fontSize);
   },
 

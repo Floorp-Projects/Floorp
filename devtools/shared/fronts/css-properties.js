@@ -105,7 +105,8 @@ CssProperties.prototype = {
    * @return {Boolean}
    */
   isKnown(property) {
-    property = property.toLowerCase();
+    // Custom Property Names (aka CSS Variables) are case-sensitive; do not lowercase.
+    property = property.startsWith("--") ? property : property.toLowerCase();
     return !!this.properties[property] || isCssVariable(property);
   },
 
@@ -200,7 +201,8 @@ CssProperties.prototype = {
    * @return {Array} An array of subproperty names.
    */
   getSubproperties(name) {
-    name = name.toLowerCase();
+    // Custom Property Names (aka CSS Variables) are case-sensitive; do not lowercase.
+    name = name.startsWith("--") ? name : name.toLowerCase();
     if (this.isKnown(name)) {
       if (this.properties[name] && this.properties[name].subproperties) {
         return this.properties[name].subproperties;

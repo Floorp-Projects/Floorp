@@ -616,6 +616,7 @@ var gPrivacyPane = {
     let carat = e.target;
     carat.classList.toggle("up");
     carat.closest(".content-blocking-category").classList.toggle("expanded");
+    carat.setAttribute("aria-expanded", carat.getAttribute("aria-expanded") === "false");
   },
 
   // HISTORY MODE

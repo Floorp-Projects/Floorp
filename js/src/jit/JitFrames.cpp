@@ -1033,12 +1033,12 @@ static void TraceJitExitFrameCopiedArguments(JSTracer* trc,
   doubleArgs -= f->doubleByRefArgs() * sizeof(double);
 
   for (uint32_t explicitArg = 0; explicitArg < f->explicitArgs; explicitArg++) {
-    if (f->argProperties(explicitArg) == VMFunction::DoubleByRef) {
+    if (f->argProperties(explicitArg) == VMFunctionData::DoubleByRef) {
       // Arguments with double size can only have RootValue type.
-      if (f->argRootType(explicitArg) == VMFunction::RootValue) {
+      if (f->argRootType(explicitArg) == VMFunctionData::RootValue) {
         TraceRoot(trc, reinterpret_cast<Value*>(doubleArgs), "ion-vm-args");
       } else {
-        MOZ_ASSERT(f->argRootType(explicitArg) == VMFunction::RootNone);
+        MOZ_ASSERT(f->argRootType(explicitArg) == VMFunctionData::RootNone);
       }
       doubleArgs += sizeof(double);
     }
@@ -1136,9 +1136,9 @@ static void TraceJitExitFrame(JSTracer* trc, const JSJitFrameIter& frame) {
   uint8_t* argBase = frame.exitFrame()->argBase();
   for (uint32_t explicitArg = 0; explicitArg < f->explicitArgs; explicitArg++) {
     switch (f->argRootType(explicitArg)) {
-      case VMFunction::RootNone:
+      case VMFunctionData::RootNone:
         break;
-      case VMFunction::RootObject: {
+      case VMFunctionData::RootObject: {
         // Sometimes we can bake in HandleObjects to nullptr.
         JSObject** pobj = reinterpret_cast<JSObject**>(argBase);
         if (*pobj) {
@@ -1146,31 +1146,31 @@ static void TraceJitExitFrame(JSTracer* trc, const JSJitFrameIter& frame) {
         }
         break;
       }
-      case VMFunction::RootString:
+      case VMFunctionData::RootString:
         TraceRoot(trc, reinterpret_cast<JSString**>(argBase), "ion-vm-args");
         break;
-      case VMFunction::RootFunction:
+      case VMFunctionData::RootFunction:
         TraceRoot(trc, reinterpret_cast<JSFunction**>(argBase), "ion-vm-args");
         break;
-      case VMFunction::RootValue:
+      case VMFunctionData::RootValue:
         TraceRoot(trc, reinterpret_cast<Value*>(argBase), "ion-vm-args");
         break;
-      case VMFunction::RootId:
+      case VMFunctionData::RootId:
         TraceRoot(trc, reinterpret_cast<jsid*>(argBase), "ion-vm-args");
         break;
-      case VMFunction::RootCell:
+      case VMFunctionData::RootCell:
         TraceGenericPointerRoot(trc, reinterpret_cast<gc::Cell**>(argBase),
                                 "ion-vm-args");
         break;
     }
 
     switch (f->argProperties(explicitArg)) {
-      case VMFunction::WordByValue:
-      case VMFunction::WordByRef:
+      case VMFunctionData::WordByValue:
+      case VMFunctionData::WordByRef:
         argBase += sizeof(void*);
         break;
-      case VMFunction::DoubleByValue:
-      case VMFunction::DoubleByRef:
+      case VMFunctionData::DoubleByValue:
+      case VMFunctionData::DoubleByRef:
         argBase += 2 * sizeof(void*);
         break;
     }
@@ -1178,24 +1178,24 @@ static void TraceJitExitFrame(JSTracer* trc, const JSJitFrameIter& frame) {
 
   if (f->outParam == Type_Handle) {
     switch (f->outParamRootType) {
-      case VMFunction::RootNone:
+      case VMFunctionData::RootNone:
         MOZ_CRASH("Handle outparam must have root type");
-      case VMFunction::RootObject:
+      case VMFunctionData::RootObject:
         TraceRoot(trc, footer->outParam<JSObject*>(), "ion-vm-out");
         break;
-      case VMFunction::RootString:
+      case VMFunctionData::RootString:
         TraceRoot(trc, footer->outParam<JSString*>(), "ion-vm-out");
         break;
-      case VMFunction::RootFunction:
+      case VMFunctionData::RootFunction:
         TraceRoot(trc, footer->outParam<JSFunction*>(), "ion-vm-out");
         break;
-      case VMFunction::RootValue:
+      case VMFunctionData::RootValue:
         TraceRoot(trc, footer->outParam<Value>(), "ion-vm-outvp");
         break;
-      case VMFunction::RootId:
+      case VMFunctionData::RootId:
         TraceRoot(trc, footer->outParam<jsid>(), "ion-vm-outvp");
         break;
-      case VMFunction::RootCell:
+      case VMFunctionData::RootCell:
         TraceGenericPointerRoot(trc, footer->outParam<gc::Cell*>(),
                                 "ion-vm-out");
         break;

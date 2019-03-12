@@ -56,8 +56,6 @@ enum MaybeTailCall : bool { TailCall, NonTailCall };
 
 // [SMDOC] JIT-to-C++ Function Calls. (callVM)
 //
-// TODO(bug 1530937): update this comment after converting all VM functions.
-//
 // Sometimes it is easier to reuse C++ code by calling VM's functions. Calling a
 // function from the VM can be achieved with the use of callWithABI but this is
 // discouraged when the called functions might trigger exceptions and/or
@@ -65,15 +63,15 @@ enum MaybeTailCall : bool { TailCall, NonTailCall };
 // callVM are interfaces provided to handle the exception handling and register
 // the stack end (JITActivation) such that walking the stack is made possible.
 //
-// A VMFunction is a structure which contains the necessary information needed
+// VMFunctionData is a structure which contains the necessary information needed
 // for generating a trampoline function to make a call (with generateVMWrapper)
-// and to root the arguments of the function (in TraceJitExitFrame). VMFunctions
-// are created with the FunctionInfo template, which infers the fields of the
-// VMFunction from the function signature. The rooting and trampoline code is
-// therefore determined by the arguments of a function and their locations in
-// the signature of a function.
+// and to root the arguments of the function (in TraceJitExitFrame).
+// VMFunctionData is created with the VMFunctionDataHelper template, which
+// infers the VMFunctionData fields from the function signature. The rooting and
+// trampoline code is therefore determined by the arguments of a function and
+// their locations in the signature of a function.
 //
-// VMFunction all expect a JSContext* as first argument. This argument is
+// VM functions all expect a JSContext* as first argument. This argument is
 // implicitly provided by the trampoline code (in generateVMWrapper) and used
 // for creating new objects or reporting errors. If your function does not make
 // use of a JSContext* argument, then you might probably use a callWithABI
@@ -90,9 +88,9 @@ enum MaybeTailCall : bool { TailCall, NonTailCall };
 // JIT Code usage:
 //
 // Different JIT compilers in SpiderMonkey have their own implementations of
-// callVM to consume VMFunctions. However, the general shape of them is that
-// arguments that don't include the JIT Context or trailing out-param are pushed
-// on to the stack from right to left (rightmost argument is pushed first).
+// callVM to call VM functions. However, the general shape of them is that
+// arguments (excluding the JSContext or trailing out-param) are pushed on to
+// the stack from right to left (rightmost argument is pushed first).
 //
 // Regardless of return value protocol being used (final outParam, or return
 // value) the generated trampolines ensure the return value ends up in
@@ -110,18 +108,19 @@ enum MaybeTailCall : bool { TailCall, NonTailCall };
 //
 // This function returns true on success, and z is the outparam return value.
 //
-// A VMFunction for this can be created using FunctionInfo. The typical pattern
-// used is:
+// A VM function wrapper for this can be created by adding an entry to
+// VM_FUNCTION_LIST in VMFunctionList-inl.h:
 //
-//      typedef bool (*FooFn)(JSContext*, HandleObject, HandleId,
-//                            MutableHandleValue);
-//      const VMFunction FooInfo = FunctionInfo<FooFn>(Foo, "Foo");
+//    _(Foo, js::Foo)
 //
 // In the compiler code the call would then be issued like this:
 //
 //      masm.Push(id);
 //      masm.Push(obj);
-//      if (!callVM(FooInfo)) {
+//
+//      using Fn = bool (*)(JSContext*, HandleObject, HandleId,
+//                          MutableHandleValue);
+//      if (!callVM<Fn, js::Foo>()) {
 //          return false;
 //      }
 //
@@ -318,86 +317,7 @@ struct VMFunctionData {
                returnType == Type_Object);
   }
 
-  // Note: clang-tidy suggests using |= auto| here but that generates extra
-  // static initializers for old-style VMFunction definitions with Clang. We can
-  // do this after bug 1530937 converts all of them.
-  constexpr VMFunctionData(const VMFunctionData& o)
-      :
-#if defined(JS_JITSPEW) || defined(JS_TRACE_LOGGING)
-        name_(o.name_),
-#endif
-        argumentRootTypes(o.argumentRootTypes),
-        argumentProperties(o.argumentProperties),
-        argumentPassedInFloatRegs(o.argumentPassedInFloatRegs),
-        explicitArgs(o.explicitArgs),
-        outParamRootType(o.outParamRootType),
-        outParam(o.outParam),
-        returnType(o.returnType),
-        extraValuesToPop(o.extraValuesToPop),
-        expectTailCall(o.expectTailCall) {
-  }
-};
-
-// TODO(bug 1530937): remove VMFunction and FunctionInfo after converting all VM
-// functions to the new design.
-struct VMFunction : public VMFunctionData {
-  // Address of the C function.
-  void* wrapped;
-
-  // Global linked list of all VMFunctions.
-  static VMFunction* functions;
-  VMFunction* next;
-
-  constexpr VMFunction(void* wrapped, const char* name, uint32_t explicitArgs,
-                       uint32_t argumentProperties,
-                       uint32_t argumentPassedInFloatRegs,
-                       uint64_t argRootTypes, DataType outParam,
-                       RootType outParamRootType, DataType returnType,
-                       uint8_t extraValuesToPop = 0,
-                       MaybeTailCall expectTailCall = NonTailCall)
-      : VMFunctionData(name, explicitArgs, argumentProperties,
-                       argumentPassedInFloatRegs, argRootTypes, outParam,
-                       outParamRootType, returnType, extraValuesToPop,
-                       expectTailCall),
-        wrapped(wrapped),
-        next(nullptr) {}
-
-  VMFunction(const VMFunction& o)
-      : VMFunctionData(o), wrapped(o.wrapped), next(functions) {
-    // Add this to the global list of VMFunctions.
-    functions = this;
-  }
-
-  typedef const VMFunction* Lookup;
-
-  static HashNumber hash(const VMFunction* f) {
-    // The hash is based on the wrapped function, not the VMFunction*, to
-    // avoid generating duplicate wrapper code.
-    HashNumber hash = 0;
-    hash = mozilla::AddToHash(hash, f->wrapped);
-    hash = mozilla::AddToHash(hash, f->expectTailCall);
-    return hash;
-  }
-  static bool match(const VMFunction* f1, const VMFunction* f2) {
-    if (f1->wrapped != f2->wrapped ||
-        f1->expectTailCall != f2->expectTailCall) {
-      return false;
-    }
-
-    // If this starts failing, add extraValuesToPop to the if-statement and
-    // hash() method above.
-    MOZ_ASSERT(f1->extraValuesToPop == f2->extraValuesToPop);
-
-    MOZ_ASSERT(strcmp(f1->name_, f2->name_) == 0);
-    MOZ_ASSERT(f1->explicitArgs == f2->explicitArgs);
-    MOZ_ASSERT(f1->argumentProperties == f2->argumentProperties);
-    MOZ_ASSERT(f1->argumentPassedInFloatRegs == f2->argumentPassedInFloatRegs);
-    MOZ_ASSERT(f1->outParam == f2->outParam);
-    MOZ_ASSERT(f1->returnType == f2->returnType);
-    MOZ_ASSERT(f1->argumentRootTypes == f2->argumentRootTypes);
-    MOZ_ASSERT(f1->outParamRootType == f2->outParamRootType);
-    return true;
-  }
+  constexpr VMFunctionData(const VMFunctionData& o) = default;
 };
 
 template <class>
@@ -544,113 +464,115 @@ struct TypeToDataType<HandleId> {
 template <class T>
 struct TypeToArgProperties {
   static const uint32_t result =
-      (sizeof(T) <= sizeof(void*) ? VMFunction::Word : VMFunction::Double);
+      (sizeof(T) <= sizeof(void*) ? VMFunctionData::Word
+                                  : VMFunctionData::Double);
 };
 template <>
 struct TypeToArgProperties<const Value&> {
   static const uint32_t result =
-      TypeToArgProperties<Value>::result | VMFunction::ByRef;
+      TypeToArgProperties<Value>::result | VMFunctionData::ByRef;
 };
 template <>
 struct TypeToArgProperties<HandleObject> {
   static const uint32_t result =
-      TypeToArgProperties<JSObject*>::result | VMFunction::ByRef;
+      TypeToArgProperties<JSObject*>::result | VMFunctionData::ByRef;
 };
 template <>
 struct TypeToArgProperties<HandleString> {
   static const uint32_t result =
-      TypeToArgProperties<JSString*>::result | VMFunction::ByRef;
+      TypeToArgProperties<JSString*>::result | VMFunctionData::ByRef;
 };
 template <>
 struct TypeToArgProperties<HandlePropertyName> {
   static const uint32_t result =
-      TypeToArgProperties<PropertyName*>::result | VMFunction::ByRef;
+      TypeToArgProperties<PropertyName*>::result | VMFunctionData::ByRef;
 };
 template <>
 struct TypeToArgProperties<HandleFunction> {
   static const uint32_t result =
-      TypeToArgProperties<JSFunction*>::result | VMFunction::ByRef;
+      TypeToArgProperties<JSFunction*>::result | VMFunctionData::ByRef;
 };
 template <>
 struct TypeToArgProperties<Handle<NativeObject*> > {
   static const uint32_t result =
-      TypeToArgProperties<NativeObject*>::result | VMFunction::ByRef;
+      TypeToArgProperties<NativeObject*>::result | VMFunctionData::ByRef;
 };
 template <>
 struct TypeToArgProperties<Handle<InlineTypedObject*> > {
   static const uint32_t result =
-      TypeToArgProperties<InlineTypedObject*>::result | VMFunction::ByRef;
+      TypeToArgProperties<InlineTypedObject*>::result | VMFunctionData::ByRef;
 };
 template <>
 struct TypeToArgProperties<Handle<ArrayObject*> > {
   static const uint32_t result =
-      TypeToArgProperties<ArrayObject*>::result | VMFunction::ByRef;
+      TypeToArgProperties<ArrayObject*>::result | VMFunctionData::ByRef;
 };
 template <>
 struct TypeToArgProperties<Handle<AbstractGeneratorObject*> > {
   static const uint32_t result =
-      TypeToArgProperties<AbstractGeneratorObject*>::result | VMFunction::ByRef;
+      TypeToArgProperties<AbstractGeneratorObject*>::result |
+      VMFunctionData::ByRef;
 };
 template <>
 struct TypeToArgProperties<Handle<AsyncFunctionGeneratorObject*> > {
   static const uint32_t result =
       TypeToArgProperties<AsyncFunctionGeneratorObject*>::result |
-      VMFunction::ByRef;
+      VMFunctionData::ByRef;
 };
 template <>
 struct TypeToArgProperties<Handle<PlainObject*> > {
   static const uint32_t result =
-      TypeToArgProperties<PlainObject*>::result | VMFunction::ByRef;
+      TypeToArgProperties<PlainObject*>::result | VMFunctionData::ByRef;
 };
 template <>
 struct TypeToArgProperties<Handle<RegExpObject*> > {
   static const uint32_t result =
-      TypeToArgProperties<RegExpObject*>::result | VMFunction::ByRef;
+      TypeToArgProperties<RegExpObject*>::result | VMFunctionData::ByRef;
 };
 template <>
 struct TypeToArgProperties<Handle<WithScope*> > {
   static const uint32_t result =
-      TypeToArgProperties<WithScope*>::result | VMFunction::ByRef;
+      TypeToArgProperties<WithScope*>::result | VMFunctionData::ByRef;
 };
 template <>
 struct TypeToArgProperties<Handle<LexicalScope*> > {
   static const uint32_t result =
-      TypeToArgProperties<LexicalScope*>::result | VMFunction::ByRef;
+      TypeToArgProperties<LexicalScope*>::result | VMFunctionData::ByRef;
 };
 template <>
 struct TypeToArgProperties<Handle<Scope*> > {
   static const uint32_t result =
-      TypeToArgProperties<Scope*>::result | VMFunction::ByRef;
+      TypeToArgProperties<Scope*>::result | VMFunctionData::ByRef;
 };
 template <>
 struct TypeToArgProperties<HandleScript> {
   static const uint32_t result =
-      TypeToArgProperties<JSScript*>::result | VMFunction::ByRef;
+      TypeToArgProperties<JSScript*>::result | VMFunctionData::ByRef;
 };
 template <>
 struct TypeToArgProperties<HandleValue> {
   static const uint32_t result =
-      TypeToArgProperties<Value>::result | VMFunction::ByRef;
+      TypeToArgProperties<Value>::result | VMFunctionData::ByRef;
 };
 template <>
 struct TypeToArgProperties<MutableHandleValue> {
   static const uint32_t result =
-      TypeToArgProperties<Value>::result | VMFunction::ByRef;
+      TypeToArgProperties<Value>::result | VMFunctionData::ByRef;
 };
 template <>
 struct TypeToArgProperties<HandleId> {
   static const uint32_t result =
-      TypeToArgProperties<jsid>::result | VMFunction::ByRef;
+      TypeToArgProperties<jsid>::result | VMFunctionData::ByRef;
 };
 template <>
 struct TypeToArgProperties<HandleShape> {
   static const uint32_t result =
-      TypeToArgProperties<Shape*>::result | VMFunction::ByRef;
+      TypeToArgProperties<Shape*>::result | VMFunctionData::ByRef;
 };
 template <>
 struct TypeToArgProperties<HandleObjectGroup> {
   static const uint32_t result =
-      TypeToArgProperties<ObjectGroup*>::result | VMFunction::ByRef;
+      TypeToArgProperties<ObjectGroup*>::result | VMFunctionData::ByRef;
 };
 
 // Convert argument type to whether or not it should be passed in a float
@@ -667,87 +589,87 @@ struct TypeToPassInFloatReg<double> {
 // Convert argument types to root types used by the gc, see MarkJitExitFrame.
 template <class T>
 struct TypeToRootType {
-  static const uint32_t result = VMFunction::RootNone;
+  static const uint32_t result = VMFunctionData::RootNone;
 };
 template <>
 struct TypeToRootType<HandleObject> {
-  static const uint32_t result = VMFunction::RootObject;
+  static const uint32_t result = VMFunctionData::RootObject;
 };
 template <>
 struct TypeToRootType<HandleString> {
-  static const uint32_t result = VMFunction::RootString;
+  static const uint32_t result = VMFunctionData::RootString;
 };
 template <>
 struct TypeToRootType<HandlePropertyName> {
-  static const uint32_t result = VMFunction::RootString;
+  static const uint32_t result = VMFunctionData::RootString;
 };
 template <>
 struct TypeToRootType<HandleFunction> {
-  static const uint32_t result = VMFunction::RootFunction;
+  static const uint32_t result = VMFunctionData::RootFunction;
 };
 template <>
 struct TypeToRootType<HandleValue> {
-  static const uint32_t result = VMFunction::RootValue;
+  static const uint32_t result = VMFunctionData::RootValue;
 };
 template <>
 struct TypeToRootType<MutableHandleValue> {
-  static const uint32_t result = VMFunction::RootValue;
+  static const uint32_t result = VMFunctionData::RootValue;
 };
 template <>
 struct TypeToRootType<HandleId> {
-  static const uint32_t result = VMFunction::RootId;
+  static const uint32_t result = VMFunctionData::RootId;
 };
 template <>
 struct TypeToRootType<HandleShape> {
-  static const uint32_t result = VMFunction::RootCell;
+  static const uint32_t result = VMFunctionData::RootCell;
 };
 template <>
 struct TypeToRootType<HandleObjectGroup> {
-  static const uint32_t result = VMFunction::RootCell;
+  static const uint32_t result = VMFunctionData::RootCell;
 };
 template <>
 struct TypeToRootType<HandleScript> {
-  static const uint32_t result = VMFunction::RootCell;
+  static const uint32_t result = VMFunctionData::RootCell;
 };
 template <>
 struct TypeToRootType<Handle<NativeObject*> > {
-  static const uint32_t result = VMFunction::RootObject;
+  static const uint32_t result = VMFunctionData::RootObject;
 };
 template <>
 struct TypeToRootType<Handle<InlineTypedObject*> > {
-  static const uint32_t result = VMFunction::RootObject;
+  static const uint32_t result = VMFunctionData::RootObject;
 };
 template <>
 struct TypeToRootType<Handle<ArrayObject*> > {
-  static const uint32_t result = VMFunction::RootObject;
+  static const uint32_t result = VMFunctionData::RootObject;
 };
 template <>
 struct TypeToRootType<Handle<AbstractGeneratorObject*> > {
-  static const uint32_t result = VMFunction::RootObject;
+  static const uint32_t result = VMFunctionData::RootObject;
 };
 template <>
 struct TypeToRootType<Handle<AsyncFunctionGeneratorObject*> > {
-  static const uint32_t result = VMFunction::RootObject;
+  static const uint32_t result = VMFunctionData::RootObject;
 };
 template <>
 struct TypeToRootType<Handle<PlainObject*> > {
-  static const uint32_t result = VMFunction::RootObject;
+  static const uint32_t result = VMFunctionData::RootObject;
 };
 template <>
 struct TypeToRootType<Handle<RegExpObject*> > {
-  static const uint32_t result = VMFunction::RootObject;
+  static const uint32_t result = VMFunctionData::RootObject;
 };
 template <>
 struct TypeToRootType<Handle<LexicalScope*> > {
-  static const uint32_t result = VMFunction::RootCell;
+  static const uint32_t result = VMFunctionData::RootCell;
 };
 template <>
 struct TypeToRootType<Handle<WithScope*> > {
-  static const uint32_t result = VMFunction::RootCell;
+  static const uint32_t result = VMFunctionData::RootCell;
 };
 template <>
 struct TypeToRootType<Handle<Scope*> > {
-  static const uint32_t result = VMFunction::RootCell;
+  static const uint32_t result = VMFunctionData::RootCell;
 };
 template <class T>
 struct TypeToRootType<Handle<T> > {
@@ -797,19 +719,19 @@ struct OutParamToDataType<MutableHandleString> {
 
 template <class>
 struct OutParamToRootType {
-  static const VMFunction::RootType result = VMFunction::RootNone;
+  static const VMFunctionData::RootType result = VMFunctionData::RootNone;
 };
 template <>
 struct OutParamToRootType<MutableHandleValue> {
-  static const VMFunction::RootType result = VMFunction::RootValue;
+  static const VMFunctionData::RootType result = VMFunctionData::RootValue;
 };
 template <>
 struct OutParamToRootType<MutableHandleObject> {
-  static const VMFunction::RootType result = VMFunction::RootObject;
+  static const VMFunctionData::RootType result = VMFunctionData::RootObject;
 };
 template <>
 struct OutParamToRootType<MutableHandleString> {
-  static const VMFunction::RootType result = VMFunction::RootString;
+  static const VMFunctionData::RootType result = VMFunctionData::RootString;
 };
 
 // Extract the last element of a list of types.
@@ -860,52 +782,6 @@ struct BitMask<Each, ResultType, Shift, HeadType, TailTypes...> {
   static constexpr ResultType result =
       ResultType(Each<HeadType>::result) |
       (BitMask<Each, ResultType, Shift, TailTypes...>::result << Shift);
-};
-
-// Extract VMFunction properties based on the signature of the function. The
-// properties are used to generate the logic for calling the VM function, and
-// also for marking the stack during GCs.
-template <typename... Args>
-struct FunctionInfo;
-
-template <class R, typename... Args>
-struct FunctionInfo<R (*)(JSContext*, Args...)> : public VMFunction {
-  using pf = R (*)(JSContext*, Args...);
-
-  static DataType returnType() { return TypeToDataType<R>::result; }
-  static DataType outParam() {
-    return OutParamToDataType<typename LastArg<Args...>::Type>::result;
-  }
-  static RootType outParamRootType() {
-    return OutParamToRootType<typename LastArg<Args...>::Type>::result;
-  }
-  static size_t NbArgs() { return LastArg<Args...>::nbArgs; }
-  static size_t explicitArgs() {
-    return NbArgs() - (outParam() != Type_Void ? 1 : 0);
-  }
-  static uint32_t argumentProperties() {
-    return BitMask<TypeToArgProperties, uint32_t, 2, Args...>::result;
-  }
-  static uint32_t argumentPassedInFloatRegs() {
-    return BitMask<TypeToPassInFloatReg, uint32_t, 2, Args...>::result;
-  }
-  static uint64_t argumentRootTypes() {
-    return BitMask<TypeToRootType, uint64_t, 3, Args...>::result;
-  }
-  explicit FunctionInfo(pf fun, const char* name,
-                        PopValues extraValuesToPop = PopValues(0))
-      : VMFunction(JS_FUNC_TO_DATA_PTR(void*, fun), name, explicitArgs(),
-                   argumentProperties(), argumentPassedInFloatRegs(),
-                   argumentRootTypes(), outParam(), outParamRootType(),
-                   returnType(), extraValuesToPop.numValues, NonTailCall) {
-  }
-  explicit FunctionInfo(pf fun, const char* name, MaybeTailCall expectTailCall,
-                        PopValues extraValuesToPop = PopValues(0))
-      : VMFunction(JS_FUNC_TO_DATA_PTR(void*, fun), name, explicitArgs(),
-                   argumentProperties(), argumentPassedInFloatRegs(),
-                   argumentRootTypes(), outParam(), outParamRootType(),
-                   returnType(), extraValuesToPop.numValues, expectTailCall) {
-  }
 };
 
 class AutoDetectInvalidation {
@@ -1222,33 +1098,14 @@ bool IsPossiblyWrappedTypedArray(JSContext* cx, JSObject* obj, bool* result);
 bool DoToNumber(JSContext* cx, HandleValue arg, MutableHandleValue ret);
 bool DoToNumeric(JSContext* cx, HandleValue arg, MutableHandleValue ret);
 
-// VMFunctions shared by JITs
-extern const VMFunction SetArrayLengthInfo;
-extern const VMFunction SetObjectElementInfo;
+bool CopyStringSplitArray(JSContext* cx, HandleArrayObject arr,
+                          MutableHandleValue result);
 
-extern const VMFunction StringsEqualInfo;
-extern const VMFunction StringsNotEqualInfo;
-extern const VMFunction ConcatStringsInfo;
-extern const VMFunction StringSplitHelperInfo;
-
-extern const VMFunction ProxyGetPropertyInfo;
-extern const VMFunction ProxyGetPropertyByValueInfo;
-extern const VMFunction ProxySetPropertyInfo;
-extern const VMFunction ProxySetPropertyByValueInfo;
-extern const VMFunction ProxyHasInfo;
-extern const VMFunction ProxyHasOwnInfo;
-
-extern const VMFunction NativeGetElementInfo;
-
-extern const VMFunction AddOrUpdateSparseElementHelperInfo;
-extern const VMFunction GetSparseElementHelperInfo;
-
-// TailCall VMFunctions
-extern const VMFunction DoConcatStringObjectInfo;
-
+enum class TailCallVMFunctionId;
 enum class VMFunctionId;
 
 extern const VMFunctionData& GetVMFunction(VMFunctionId id);
+extern const VMFunctionData& GetVMFunction(TailCallVMFunctionId id);
 
 }  // namespace jit
 }  // namespace js
