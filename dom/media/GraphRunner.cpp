@@ -23,6 +23,12 @@ static void Start(void* aArg) {
 GraphRunner::GraphRunner(MediaStreamGraphImpl* aGraph)
     : mMonitor("GraphRunner::mMonitor"),
       mGraph(aGraph),
+      mStateEnd(0),
+      mStillProcessing(true),
+      mShutdown(false),
+      mStarted(false),
+      // Note that mThread needs to be initialized last, as it may pre-empt the
+      // thread running this ctor and enter Run() with uninitialized members.
       mThread(PR_CreateThread(PR_SYSTEM_THREAD, &Start, this,
                               PR_PRIORITY_URGENT, PR_GLOBAL_THREAD,
                               PR_JOINABLE_THREAD, 0)) {

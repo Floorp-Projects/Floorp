@@ -49,21 +49,21 @@ class nsPermissionManager final : public nsIPermissionManager,
                     uint32_t aExpireType, int64_t aExpireTime,
                     int64_t aModificationTime)
         : mID(aID),
+          mExpireTime(aExpireTime),
+          mModificationTime(aModificationTime),
           mType(aType),
           mPermission(aPermission),
           mExpireType(aExpireType),
-          mExpireTime(aExpireTime),
-          mModificationTime(aModificationTime),
           mNonSessionPermission(aPermission),
           mNonSessionExpireType(aExpireType),
           mNonSessionExpireTime(aExpireTime) {}
 
     int64_t mID;
+    int64_t mExpireTime;
+    int64_t mModificationTime;
     uint32_t mType;
     uint32_t mPermission;
     uint32_t mExpireType;
-    int64_t mExpireTime;
-    int64_t mModificationTime;
     uint32_t mNonSessionPermission;
     uint32_t mNonSessionExpireType;
     uint32_t mNonSessionExpireTime;

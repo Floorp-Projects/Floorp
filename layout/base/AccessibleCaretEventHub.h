@@ -187,34 +187,44 @@ class AccessibleCaretEventHub::State {
  public:
   virtual const char* Name() const { return ""; }
 
+  MOZ_CAN_RUN_SCRIPT
   virtual nsEventStatus OnPress(AccessibleCaretEventHub* aContext,
                                 const nsPoint& aPoint, int32_t aTouchId,
                                 EventClassID aEventClass) {
     return nsEventStatus_eIgnore;
   }
 
+  MOZ_CAN_RUN_SCRIPT
   virtual nsEventStatus OnMove(AccessibleCaretEventHub* aContext,
                                const nsPoint& aPoint) {
     return nsEventStatus_eIgnore;
   }
 
+  MOZ_CAN_RUN_SCRIPT
   virtual nsEventStatus OnRelease(AccessibleCaretEventHub* aContext) {
     return nsEventStatus_eIgnore;
   }
 
+  MOZ_CAN_RUN_SCRIPT
   virtual nsEventStatus OnLongTap(AccessibleCaretEventHub* aContext,
                                   const nsPoint& aPoint) {
     return nsEventStatus_eIgnore;
   }
 
+  MOZ_CAN_RUN_SCRIPT
   virtual void OnScrollStart(AccessibleCaretEventHub* aContext) {}
+  MOZ_CAN_RUN_SCRIPT
   virtual void OnScrollEnd(AccessibleCaretEventHub* aContext) {}
+  MOZ_CAN_RUN_SCRIPT
   virtual void OnScrollPositionChanged(AccessibleCaretEventHub* aContext) {}
+  MOZ_CAN_RUN_SCRIPT
   virtual void OnBlur(AccessibleCaretEventHub* aContext,
                       bool aIsLeavingDocument) {}
+  MOZ_CAN_RUN_SCRIPT
   virtual void OnSelectionChanged(AccessibleCaretEventHub* aContext,
                                   dom::Document* aDoc, dom::Selection* aSel,
                                   int16_t aReason) {}
+  MOZ_CAN_RUN_SCRIPT
   virtual void OnReflow(AccessibleCaretEventHub* aContext) {}
   virtual void Enter(AccessibleCaretEventHub* aContext) {}
   virtual void Leave(AccessibleCaretEventHub* aContext) {}

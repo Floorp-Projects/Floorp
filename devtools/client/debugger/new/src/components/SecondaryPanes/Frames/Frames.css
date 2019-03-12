@@ -81,13 +81,13 @@
   color: white;
 }
 
-.show-more-container {
+.frames .show-more-container {
   display: flex;
   min-height: 24px;
   padding: 4px 0;
 }
 
-.show-more {
+.frames .show-more {
   text-align: center;
   padding: 8px 0px;
   margin: 7px 10px 7px 7px;
@@ -98,25 +98,27 @@
   color: inherit;
 }
 
-.show-more:hover {
+.frames .show-more:hover {
   background-color: var(--theme-toolbar-background-hover);
 }
 
-.annotation-logo {
-  mask-size: 100%;
-  display: inline-block;
-  width: 12px;
+.frames .img.annotation-logo {
+  margin-inline-end: 4px;
+  background-color: currentColor;
 }
 
-:root.theme-dark .annotation-logo:not(.angular) svg path {
-  fill: var(--theme-highlight-blue);
+/*
+ * We also show the library icon in locations, which are forced to RTL.
+ */
+.frames .location .img.annotation-logo {
+  margin-inline-start: 4px;
 }
 
 /* Some elements are added to the DOM only to be printed into the clipboard
    when the user copy some elements. We don't want those elements to mess with
    the layout so we put them outside of the screen
 */
-.clipboard-only {
+.frames .clipboard-only {
   position: absolute;
   left: -9999px;
 }

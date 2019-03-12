@@ -7,7 +7,6 @@
 import * as t from "@babel/types";
 import type { Node } from "@babel/types";
 import type { SimplePath } from "./simple-path";
-import type { AstLocation } from "../types";
 import generate from "@babel/generator";
 
 export function isFunction(node: Node) {
@@ -178,17 +177,9 @@ export function isTopLevel(ancestors: Node[]) {
   return ancestors.filter(ancestor => ancestor.key == "body").length == 1;
 }
 
-export function nodeHasSameLocation(a: Node, b: Node) {
-  return sameLocation(a.location, b.location);
-}
-
-export function sameLocation(a: AstLocation, b: AstLocation) {
-  return (
-    a.start.line == b.start.line &&
-    a.start.column == b.start.column &&
-    a.end.line == b.end.line &&
-    a.end.column == b.end.column
-  );
+export function nodeLocationKey(a: Node) {
+  const { start, end } = a.location;
+  return `${start.line}:${start.column}:${end.line}:${end.column}`;
 }
 
 export function getFunctionParameterNames(path: SimplePath): string[] {

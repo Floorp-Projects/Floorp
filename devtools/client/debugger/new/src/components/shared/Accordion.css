@@ -4,12 +4,10 @@
 
 :root {
   --accordion-header-background: var(--theme-toolbar-background);
-  --disclosure-arrow: #b2b2b2;
 }
 
 :root.theme-dark {
   --accordion-header-background: #222225;
-  --disclosure-arrow: #7f7f81;
 }
 
 .accordion {
@@ -25,30 +23,53 @@
   border-bottom: 1px solid var(--theme-splitter-color);
   display: flex;
   font-size: 12px;
-  padding: 4px;
-  transition: all 0.25s ease;
+  line-height: calc(16 / 12);
+  padding: 4px 6px;
   width: 100%;
-  height: 24px;
   align-items: center;
   margin: 0px;
   font-weight: normal;
-
+  cursor: default;
   -webkit-user-select: none;
   -moz-user-select: none;
-  -ms-user-select: none;
-  -o-user-select: none;
   user-select: none;
-  cursor: default;
 }
 
 .accordion ._header:hover {
   background-color: var(--theme-toolbar-background-hover);
 }
 
-.accordion ._header button svg,
-.accordion ._header:hover button svg {
-  fill: currentColor;
+.accordion ._header .arrow {
+  margin-inline-end: 4px;
+}
+
+.accordion ._header .header-label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.accordion ._header .header-buttons {
+  display: flex;
+  margin-inline-start: auto;
+}
+
+.accordion ._header .header-buttons button {
+  color: var(--theme-body-color);
+  border: none;
+  background: none;
+  padding: 0;
+  margin: 0 2px;
+  width: 16px;
   height: 16px;
+}
+
+.accordion ._header .header-buttons button::-moz-focus-inner {
+  border: none;
+}
+
+.accordion ._header .header-buttons button .img {
+  display: block;
 }
 
 .accordion ._content {
@@ -58,33 +79,4 @@
 
 .accordion div:last-child ._content {
   border-bottom: none;
-}
-
-.accordion ._header .header-buttons {
-  display: flex;
-  margin-left: auto;
-  padding-right: 5px;
-}
-
-.accordion .header-buttons .add-button {
-  font-size: 180%;
-  text-align: center;
-  line-height: 16px;
-}
-
-.accordion .header-buttons button {
-  color: var(--theme-body-color);
-  border: none;
-  background: none;
-  padding: 0;
-  width: 16px;
-  height: 16px;
-}
-
-.accordion .header-buttons button::-moz-focus-inner {
-  border: none;
-}
-
-.accordion .arrow svg {
-  fill: var(--disclosure-arrow);
 }

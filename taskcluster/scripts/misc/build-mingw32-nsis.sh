@@ -19,11 +19,6 @@ UPLOAD_DIR=$HOME/artifacts
 
 mkdir -p $INSTALL_DIR
 
-root_dir=$HOME_DIR
-data_dir=$HOME_DIR/src/build/unix/build-gcc
-
-. $data_dir/download-tools.sh
-
 cd $TOOLTOOL_DIR
 . taskcluster/scripts/misc/tooltool-download.sh
 # After tooltool runs, we move the stuff we just downloaded.
@@ -36,23 +31,14 @@ cd $TOOLTOOL_DIR
 mv mingw32 mingw32-gcc
 export PATH="$TOOLTOOL_DIR/mingw32-gcc/bin:$PATH"
 
-cd $WORKSPACE
-
-$GPG --import $data_dir/5ED46A6721D365587791E2AA783FCD8E58BCAFBA.key
+cd $HOME_DIR
 
 # --------------
 
-download_and_check http://zlib.net/ zlib-1.2.11.tar.gz.asc
-tar xaf $TMPDIR/zlib-1.2.11.tar.gz
 cd zlib-1.2.11
 make -f win32/Makefile.gcc PREFIX=i686-w64-mingw32-
 
-cd ..
-wget --progress=dot:mega https://downloads.sourceforge.net/project/nsis/NSIS%203/3.01/nsis-3.01-src.tar.bz2
-echo "559703cc25f78697be1784a38d1d9a19c97d27a200dc9257d1483c028c6be9242cbcd10391ba618f88561c2ba57fdbd8b3607bea47ed8c3ad7509a6ae4075138  nsis-3.01-src.tar.bz2" | sha512sum -c -
-bunzip2 nsis-3.01-src.tar.bz2
-tar xaf nsis-3.01-src.tar
-cd nsis-3.01-src
+cd ../nsis-3.01-src
 # I don't know how to make the version work with the environment variables/config flags the way the author appears to
 sed -i "s/'VERSION', 'Version of NSIS', cvs_version/'VERSION', 'Version of NSIS', '3.01'/" SConstruct
 scons XGCC_W32_PREFIX=i686-w64-mingw32- ZLIB_W32=../zlib-1.2.11 SKIPUTILS="NSIS Menu" PREFIX=$INSTALL_DIR/ install

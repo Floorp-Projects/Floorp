@@ -67,7 +67,8 @@ function makeBreakpoint(overrides = {}) {
     generatedLocation,
     disabled: false,
     options: {},
-    ...overrides
+    ...overrides,
+    id: 1
   };
 }
 

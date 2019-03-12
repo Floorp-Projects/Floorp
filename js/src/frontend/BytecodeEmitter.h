@@ -14,6 +14,7 @@
 
 #include "ds/InlineTable.h"
 #include "frontend/BCEParserHandle.h"
+#include "frontend/DestructuringFlavor.h"
 #include "frontend/EitherParser.h"
 #include "frontend/JumpList.h"
 #include "frontend/NameFunctions.h"
@@ -429,13 +430,13 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
     return lastOpcodeIsJumpTarget() ? lastTarget.offset : offset();
   }
 
-  void setFunctionBodyEndPos(TokenPos pos) {
-    functionBodyEndPos = mozilla::Some(pos.end);
+  void setFunctionBodyEndPos(uint32_t pos) {
+    functionBodyEndPos = mozilla::Some(pos);
   }
 
-  void setScriptStartOffsetIfUnset(TokenPos pos) {
+  void setScriptStartOffsetIfUnset(uint32_t pos) {
     if (scriptStartOffset.isNothing()) {
-      scriptStartOffset = mozilla::Some(pos.begin);
+      scriptStartOffset = mozilla::Some(pos);
     }
   }
 
@@ -491,8 +492,6 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   // Emit global, eval, or module code for tree rooted at body. Always
   // encompasses the entire source.
   MOZ_MUST_USE bool emitScript(ParseNode* body);
-
-  MOZ_MUST_USE bool emitInitializeInstanceFields();
 
   // Emit function code for the tree rooted at body.
   enum class TopLevelFunction { No, Yes };
@@ -693,21 +692,6 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
 
   MOZ_MUST_USE bool emitGoSub(JumpList* jump);
 
-  enum DestructuringFlavor {
-    // Destructuring into a declaration.
-    DestructuringDeclaration,
-
-    // Destructuring into a formal parameter, when the formal parameters
-    // contain an expression that might be evaluated, and thus require
-    // this destructuring to assign not into the innermost scope that
-    // contains the function body's vars, but into its enclosing scope for
-    // parameter expressions.
-    DestructuringFormalParameterInVarScope,
-
-    // Destructuring as part of an AssignmentExpression.
-    DestructuringAssignment
-  };
-
   // emitDestructuringLHSRef emits the lhs expression's reference.
   // If the lhs expression is object property |OBJ.prop|, it emits |OBJ|.
   // If it's object element |OBJ[ELEM]|, it emits |OBJ| and |ELEM|.
@@ -849,18 +833,10 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   MOZ_MUST_USE bool emitBreak(PropertyName* label);
   MOZ_MUST_USE bool emitContinue(PropertyName* label);
 
-  MOZ_MUST_USE bool emitFunctionFormalParametersAndBody(ListNode* paramsBody);
   MOZ_MUST_USE bool emitFunctionFormalParameters(ListNode* paramsBody);
   MOZ_MUST_USE bool emitInitializeFunctionSpecialNames();
-  MOZ_MUST_USE bool emitFunctionBody(ParseNode* funBody);
   MOZ_MUST_USE bool emitLexicalInitialization(NameNode* name);
   MOZ_MUST_USE bool emitLexicalInitialization(JSAtom* name);
-
-  // Async functions have implicit try-catch blocks to convert exceptions
-  // into promise rejections.
-  MOZ_MUST_USE bool emitAsyncFunctionRejectPrologue(
-      mozilla::Maybe<TryEmitter>& tryCatch);
-  MOZ_MUST_USE bool emitAsyncFunctionRejectEpilogue(TryEmitter& tryCatch);
 
   // Emit bytecode for the spread operator.
   //

@@ -156,7 +156,7 @@ static bool ReadParams(const Message* aMsg, PickleIterator* aIter, T0& aArg,
 DEFINE_IPC_SERIALIZER_WITH_FIELDS(mozilla::dom::RTCIceServer, mCredential,
                                   mCredentialType, mUrl, mUrls, mUsername)
 
-DEFINE_IPC_SERIALIZER_WITH_FIELDS(mozilla::CandidateInfo, mCandidate,
+DEFINE_IPC_SERIALIZER_WITH_FIELDS(mozilla::CandidateInfo, mCandidate, mUfrag,
                                   mDefaultHostRtp, mDefaultPortRtp,
                                   mDefaultHostRtcp, mDefaultPortRtcp)
 

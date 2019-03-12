@@ -43,6 +43,14 @@ if CONFIG['MOZ_DAV1D_ASM']:
              for ep in entrypoint_source_files:
                  SOURCES[ep].flags += ['-mincoming-stack-boundary=4']
 
+if CONFIG['OS_TARGET'] == 'Linux':
+    # For fuzzing, We only support building on Linux currently.
+    include('/tools/fuzzing/libfuzzer-config.mozbuild')
+    if CONFIG['FUZZING_INTERFACES']:
+        TEST_DIRS += [
+            'test/fuzztest'
+        ]
+
 # common sources
 SOURCES += [
     '../../third_party/dav1d/src/cdf.c',

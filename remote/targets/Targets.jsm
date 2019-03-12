@@ -65,6 +65,15 @@ class Targets {
   }
 
   /**
+   * Get Target instance by target id
+   *
+   * @param int id Target id
+   */
+  getById(id) {
+    return this._targets.get(id);
+  }
+
+  /**
    * Get the Target instance for the main process.
    * This target is a singleton and only exposes a subset of domains.
    */

@@ -17,7 +17,7 @@ import {
   getComments,
   getSpecifiers,
   getCode,
-  nodeHasSameLocation,
+  nodeLocationKey,
   getFunctionParameterNames
 } from "./utils/helpers";
 
@@ -87,8 +87,11 @@ let symbolDeclarations: Map<string, SymbolDeclarations> = new Map();
 
 function getUniqueIdentifiers(identifiers) {
   const newIdentifiers = [];
+  const locationKeys = new Set();
   for (const newId of identifiers) {
-    if (!newIdentifiers.find(id => nodeHasSameLocation(id, newId))) {
+    const key = nodeLocationKey(newId);
+    if (!locationKeys.has(key)) {
+      locationKeys.add(key);
       newIdentifiers.push(newId);
     }
   }
@@ -97,9 +100,15 @@ function getUniqueIdentifiers(identifiers) {
 }
 
 /* eslint-disable complexity */
-function extractSymbol(path: SimplePath, symbols) {
+function extractSymbol(path: SimplePath, symbols, state) {
   if (isFunction(path)) {
     const name = getFunctionName(path.node, path.parent);
+
+    if (!state.fnCounts[name]) {
+      state.fnCounts[name] = 0;
+    }
+    const index = state.fnCounts[name]++;
+
     symbols.functions.push({
       name,
       klass: inferClassName(path),
@@ -109,7 +118,7 @@ function extractSymbol(path: SimplePath, symbols) {
       // indicates the occurence of the function in a file
       // e.g { name: foo, ... index: 4 } is the 4th foo function
       // in the file
-      index: symbols.functions.filter(f => f.name === name).length
+      index
     });
   }
 
@@ -248,8 +257,7 @@ function extractSymbol(path: SimplePath, symbols) {
   if (t.isVariableDeclarator(path)) {
     const nodeId = path.node.id;
 
-    const ids = getPatternIdentifiers(nodeId);
-    symbols.identifiers = [...symbols.identifiers, ...ids];
+    symbols.identifiers.push(...getPatternIdentifiers(nodeId));
   }
 }
 
@@ -271,12 +279,16 @@ function extractSymbols(sourceId): SymbolDeclarations {
     loading: false
   };
 
+  const state = {
+    fnCounts: Object.create(null)
+  };
+
   const ast = traverseAst(sourceId, {
     enter(node: Node, ancestors: TraversalAncestors) {
       try {
         const path = createSimplePath(ancestors);
         if (path) {
-          extractSymbol(path, symbols);
+          extractSymbol(path, symbols, state);
         }
       } catch (e) {
         console.error(e);

@@ -104,7 +104,11 @@ export function setPreview(
           thread: selectedFrame.thread
         });
 
-        if (!result) {
+        // Error case occurs for a token that follows an errored evaluation
+        // https://github.com/firefox-devtools/debugger/pull/8056
+        // Accommodating for null allows us to show preview for falsy values
+        // line "", false, null, Nan, and more
+        if (result === null) {
           return;
         }
 

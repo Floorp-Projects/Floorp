@@ -46,9 +46,7 @@ using NonNegativeLengthPercentageOrAuto =
     StyleNonNegativeLengthPercentageOrAuto;
 using BorderRadius = StyleBorderRadius;
 
-bool StyleCSSPixelLength::IsZero() const {
-  return _0 == 0.0f;
-}
+bool StyleCSSPixelLength::IsZero() const { return _0 == 0.0f; }
 
 nscoord StyleCSSPixelLength::ToAppUnits() const {
   // We want to resolve the length part of the calc() expression rounding 0.5

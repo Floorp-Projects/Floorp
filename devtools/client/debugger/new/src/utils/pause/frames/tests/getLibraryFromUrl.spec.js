@@ -45,7 +45,8 @@ describe("getLibraryFromUrl", () => {
         "https://react.js.com/test.js",
         "https://debugger-example.com/test.js",
         "https://debugger-react-example.com/test.js",
-        "https://debugger-react-example.com/react/test.js"
+        "https://debugger-react-example.com/react/test.js",
+        "https://debugger-example.com/react-contextmenu.js"
       ];
       notReactUrlList.forEach(notReactUrl => {
         const frame = makeMockFrameWithURL(notReactUrl);

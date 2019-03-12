@@ -1,0 +1,30 @@
+{
+  "manifest_version": 2,
+  "name": "twinopen",
+  "version": "0.1",
+
+  "applications": {
+    "gecko": {
+      "id": "bug1388159@mozilla.org"
+    }
+  },
+
+  "protocol_handlers": [
+    {
+      "protocol": "ext+twinopen",
+      "name": "twinopen protocol",
+      "uriTemplate": "/twinopen.html"
+    }
+  ],
+
+  "experiment_apis": {
+    "twinopen": {
+      "schema": "schema.json",
+      "parent": {
+        "scopes": ["addon_parent"],
+        "script": "api.js",
+        "paths": [["twinopen"]]
+      }
+    }
+  }
+}

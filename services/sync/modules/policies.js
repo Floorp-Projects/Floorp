@@ -550,7 +550,7 @@ SyncScheduler.prototype = {
       // Only fetch missed messages in a "scheduled" sync so we don't race against
       // the Push service reconnecting on a network link change for example.
       if (why == "schedule" && now >= this.missedFxACommandsLastFetch + this.missedFxACommandsFetchInterval) {
-        fxAccounts.commands.fetchMissedRemoteCommands().then(() => {
+        fxAccounts.commands.pollDeviceCommands().then(() => {
           this.missedFxACommandsLastFetch = now;
         }).catch(e => {
           this._log.error("Fetching missed remote commands failed.", e);

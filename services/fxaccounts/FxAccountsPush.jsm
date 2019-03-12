@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {Async} = ChromeUtils.import("resource://services-common/async.js");
 const {FXA_PUSH_SCOPE_ACCOUNT_UPDATE, ONLOGOUT_NOTIFICATION, ON_ACCOUNT_DESTROYED_NOTIFICATION, ON_ACCOUNT_STATE_CHANGE_NOTIFICATION, ON_COLLECTION_CHANGED_NOTIFICATION, ON_COMMAND_RECEIVED_NOTIFICATION, ON_DEVICE_CONNECTED_NOTIFICATION, ON_DEVICE_DISCONNECTED_NOTIFICATION, ON_PASSWORD_CHANGED_NOTIFICATION, ON_PASSWORD_RESET_NOTIFICATION, ON_PROFILE_CHANGE_NOTIFICATION, ON_PROFILE_UPDATED_NOTIFICATION, ON_VERIFY_LOGIN_NOTIFICATION, log} = ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
 
 /**
@@ -71,10 +72,17 @@ FxAccountsPushService.prototype = {
         "resource://gre/modules/FxAccounts.jsm");
     }
 
-    // listen to new push messages, push changes and logout events
-    Services.obs.addObserver(this, this.pushService.pushTopic);
-    Services.obs.addObserver(this, this.pushService.subscriptionChangeTopic);
-    Services.obs.addObserver(this, ONLOGOUT_NOTIFICATION);
+    this.asyncObserver = Async.asyncObserver(this, this.log);
+    // We use an async observer because a device waking up can
+    // observe multiple "Send Tab received" push notifications at the same time.
+    // The way these notifications are handled is as follows:
+    // Read index from storage, make network request, update the index.
+    // You can imagine what happens when multiple calls race: we load
+    // the same index multiple times and receive the same exact tabs, multiple times.
+    // The async observer will ensure we make these network requests serially.
+    Services.obs.addObserver(this.asyncObserver, this.pushService.pushTopic);
+    Services.obs.addObserver(this.asyncObserver, this.pushService.subscriptionChangeTopic);
+    Services.obs.addObserver(this.asyncObserver, ONLOGOUT_NOTIFICATION);
 
     this.log.debug("FxAccountsPush initialized");
     return true;
@@ -103,51 +111,50 @@ FxAccountsPushService.prototype = {
     });
   },
   /**
-   * Standard observer interface to listen to push messages, changes and logout.
+   * Async observer interface to listen to push messages, changes and logout.
    *
    * @param subject
    * @param topic
    * @param data
    * @returns {Promise}
    */
-  _observe(subject, topic, data) {
-    this.log.trace(`observed topic=${topic}, data=${data}, subject=${subject}`);
-    switch (topic) {
-      case this.pushService.pushTopic:
-        if (data === FXA_PUSH_SCOPE_ACCOUNT_UPDATE) {
-          let message = subject.QueryInterface(Ci.nsIPushMessage);
-          this._onPushMessage(message);
-        }
-        break;
-      case this.pushService.subscriptionChangeTopic:
-        if (data === FXA_PUSH_SCOPE_ACCOUNT_UPDATE) {
-          this._onPushSubscriptionChange();
-        }
-        break;
-      case ONLOGOUT_NOTIFICATION:
-        // user signed out, we need to stop polling the Push Server
-        this.unsubscribe().catch(err => {
-          this.log.error("Error during unsubscribe", err);
-        });
-      default:
-        break;
+  async observe(subject, topic, data) {
+    try {
+      this.log.trace(`observed topic=${topic}, data=${data}, subject=${subject}`);
+      switch (topic) {
+        case this.pushService.pushTopic:
+          if (data === FXA_PUSH_SCOPE_ACCOUNT_UPDATE) {
+            let message = subject.QueryInterface(Ci.nsIPushMessage);
+            await this._onPushMessage(message);
+          }
+          break;
+        case this.pushService.subscriptionChangeTopic:
+          if (data === FXA_PUSH_SCOPE_ACCOUNT_UPDATE) {
+            await this._onPushSubscriptionChange();
+          }
+          break;
+        case ONLOGOUT_NOTIFICATION:
+          // user signed out, we need to stop polling the Push Server
+          try {
+            await this.unsubscribe();
+          } catch (err) {
+            this.log.error("Error during unsubscribe", err);
+          }
+        default:
+          break;
+      }
+    } catch (err) {
+      this.log.error(err);
     }
   },
-  /**
-   * Wrapper around _observe that catches errors
-   */
-  observe(subject, topic, data) {
-    Promise.resolve()
-      .then(() => this._observe(subject, topic, data))
-      .catch(err => this.log.error(err));
-  },
+
   /**
    * Fired when the Push server sends a notification.
    *
    * @private
    * @returns {Promise}
    */
-  _onPushMessage(message) {
+  async _onPushMessage(message) {
     this.log.trace("FxAccountsPushService _onPushMessage");
     if (!message.data) {
       // Use the empty signal to check the verification state of the account right away
@@ -159,7 +166,7 @@ FxAccountsPushService.prototype = {
     this.log.debug(`push command: ${payload.command}`);
     switch (payload.command) {
       case ON_COMMAND_RECEIVED_NOTIFICATION:
-        this.fxAccounts.commands.consumeRemoteCommand(payload.data.index);
+        await this.fxAccounts.commands.pollDeviceCommands(payload.data.index);
         break;
       case ON_DEVICE_CONNECTED_NOTIFICATION:
         Services.obs.notifyObservers(null, ON_DEVICE_CONNECTED_NOTIFICATION, payload.data.deviceName);

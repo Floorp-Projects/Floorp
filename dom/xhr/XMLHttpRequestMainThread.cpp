@@ -2068,6 +2068,7 @@ XMLHttpRequestMainThread::OnStopRequest(nsIRequest* request,
     mFlagParseBody = false;
     IgnoredErrorResult rv;
     RequestErrorSteps(ProgressEventType::abort, NS_OK, rv);
+    ChangeState(XMLHttpRequest_Binding::UNSENT, false);
     return NS_OK;
   }
 

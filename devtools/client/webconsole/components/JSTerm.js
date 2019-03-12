@@ -79,6 +79,8 @@ class JSTerm extends Component {
       autocompleteUpdate: PropTypes.func.isRequired,
       // Data to be displayed in the autocomplete popup.
       autocompleteData: PropTypes.object.isRequired,
+      // Is the input in editor mode.
+      editorMode: PropTypes.bool,
     };
   }
 
@@ -592,7 +594,11 @@ class JSTerm extends Component {
     this.props.appendToHistory(executeString);
 
     WebConsoleUtils.usageCount++;
-    this._setValue("");
+
+    if (!this.props.editorMode) {
+      this._setValue("");
+    }
+
     this.clearCompletion();
 
     let selectedNodeActor = null;

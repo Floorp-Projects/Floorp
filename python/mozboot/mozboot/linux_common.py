@@ -31,6 +31,20 @@ class StyloInstall(object):
         self.install_toolchain_artifact(state_dir, checkout_root, stylo.LINUX_CBINDGEN)
 
 
+class NasmInstall(object):
+    def __init__(self, **kwargs):
+        pass
+
+    def ensure_nasm_packages(self, state_dir, checkout_root):
+        if is_non_x86_64():
+            print('Cannot install nasm from taskcluster.\n'
+                  'Please install this package manually.')
+            return
+
+        from mozboot import nasm
+        self.install_toolchain_artifact(state_dir, checkout_root, nasm.LINUX_NASM)
+
+
 class NodeInstall(object):
     def __init__(self, **kwargs):
         pass

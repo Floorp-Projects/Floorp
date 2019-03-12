@@ -43,7 +43,8 @@ const HTML_NS = "http://www.w3.org/1999/xhtml";
 const PREF_UA_STYLES = "devtools.inspector.showUserAgentStyles";
 const PREF_DEFAULT_COLOR_UNIT = "devtools.defaultColorUnit";
 const FILTER_CHANGED_TIMEOUT = 150;
-const REMOVE_FLASH_ELEMENT_DURATION = 500;
+// Removes the flash-out class from an element after 1 second.
+const REMOVE_FLASH_OUT_CLASS_TIMER = 1000;
 
 // This is used to parse user input when filtering.
 const FILTER_PROP_RE = /\s*([^:\s]*)\s*:\s*(.*?)\s*;?$/;
@@ -1524,8 +1525,10 @@ CssRuleView.prototype = {
    *         The element.
    */
   _flashElement(element) {
-    flashElementOn(element);
-    flashElementOff(element);
+    flashElementOn(element, {
+      backgroundClass: "ruleview-property-highlight-background-color" });
+    flashElementOff(element, {
+      backgroundClass: "ruleview-property-highlight-background-color" });
 
     if (this._removeFlashOutTimer) {
       clearTimeout(this._removeFlashOutTimer);
@@ -1538,7 +1541,7 @@ CssRuleView.prototype = {
       element.classList.remove("flash-out");
       // Emit "scrolled-to-property" for use by tests.
       this.emit("scrolled-to-element");
-    }, REMOVE_FLASH_ELEMENT_DURATION);
+    }, REMOVE_FLASH_OUT_CLASS_TIMER);
   },
 
   /**

@@ -49,7 +49,7 @@ runInParent(function addLogins() {
 <script class="testbody" type="text/javascript">
 
 let iframe = SpecialPowers.wrap(document.getElementsByTagName("iframe")[0]);
-let iframeDoc;
+let iframeDoc, hostname;
 
 add_task(async function setup() {
   iframe.src = "https://example.org/tests/toolkit/components/passwordmgr/test/mochitest/form_autofocus_js.html";
@@ -60,13 +60,14 @@ add_task(async function setup() {
   });
 
   iframeDoc = iframe.contentDocument;
+  hostname = iframeDoc.documentURIObject.host;
 
   SimpleTest.requestFlakyTimeout("Giving a chance for the unexpected popupshown to occur");
 });
 
 add_task(async function test_initial_focus() {
-  let results = await notifyMenuChanged(2, "name");
-  checkArrayValues(results, ["name", "name1"], "Two results");
+  let results = await notifyMenuChanged(3, "name");
+  checkAutoCompleteResults(results, ["name", "name1"], hostname, "Two login results");
   synthesizeKey("KEY_ArrowDown");
   synthesizeKey("KEY_Enter");
   await promiseFormsProcessed();

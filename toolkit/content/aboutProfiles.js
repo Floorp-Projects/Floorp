@@ -331,26 +331,5 @@ function restart(safeMode) {
 }
 
 window.addEventListener("DOMContentLoaded", function() {
-  // Check if any profiles are missing on the disk and if so remove them.
-  // We cannot remove profiles while iterating the list returned from the
-  // profile service, so convert it to a new array first.
-  try {
-    let changed = false;
-    for (let profile of [...ProfileService.profiles]) {
-      if (!profile.rootDir.exists() || !profile.rootDir.isDirectory()) {
-        profile.remove(false);
-        changed = true;
-      }
-    }
-
-    if (changed) {
-      ProfileService.flush();
-    }
-  } catch (e) {
-    // There shouldn't be any failures to catch here, but just in case let the
-    // UI build itself properly.
-    Cu.reportError(e);
-  }
-
   refreshUI();
 }, {once: true});

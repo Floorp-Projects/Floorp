@@ -1188,6 +1188,8 @@ void ContentChild::InitXPCOM(
     return;
   }
 
+  LSObject::Initialize();
+
   ClientManager::Startup();
 
   RemoteWorkerService::Initialize();

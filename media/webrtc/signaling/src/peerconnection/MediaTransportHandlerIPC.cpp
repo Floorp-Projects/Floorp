@@ -255,12 +255,13 @@ void MediaTransportHandlerIPC::SendPacket(const std::string& aTransportId,
 }
 
 void MediaTransportHandlerIPC::AddIceCandidate(const std::string& aTransportId,
-                                               const std::string& aCandidate) {
+                                               const std::string& aCandidate,
+                                               const std::string& aUfrag) {
   mInitPromise->Then(
       GetMainThreadSerialEventTarget(), __func__,
       [=, self = RefPtr<MediaTransportHandlerIPC>(this)](bool /*dummy*/) {
         if (mChild) {
-          mChild->SendAddIceCandidate(aTransportId, aCandidate);
+          mChild->SendAddIceCandidate(aTransportId, aCandidate, aUfrag);
         }
       },
       [](const nsCString& aError) {});

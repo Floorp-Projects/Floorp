@@ -144,7 +144,7 @@ class Tabs extends PureComponent<Props, State> {
         <AccessibleImage
           className={`dropdown-icon ${this.getIconClass(source)}`}
         />
-        {filename}
+        <span className="dropdown-label">{filename}</span>
       </li>
     );
   };

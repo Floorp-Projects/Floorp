@@ -116,6 +116,10 @@ class WindowsBootstrapper(BaseBootstrapper):
         self.install_toolchain_artifact(state_dir, checkout_root, stylo.WINDOWS_CLANG)
         self.install_toolchain_artifact(state_dir, checkout_root, stylo.WINDOWS_CBINDGEN)
 
+    def ensure_nasm_packages(self, state_dir, checkout_root):
+        from mozboot import nasm
+        self.install_toolchain_artifact(state_dir, checkout_root, nasm.WINDOWS_NASM)
+
     def ensure_node_packages(self, state_dir, checkout_root):
         from mozboot import node
         # We don't have native aarch64 node available, but aarch64 windows

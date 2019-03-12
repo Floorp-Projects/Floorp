@@ -26,7 +26,7 @@ class Session {
 
     this.destructor = this.destructor.bind(this);
 
-    this.connection.onmessage = this.onMessage.bind(this);
+    this.connection.registerSession(this);
     this.connection.transport.on("close", this.destructor);
 
     this.domains = new Domains(this, ParentProcessDomains);

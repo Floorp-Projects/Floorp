@@ -3674,7 +3674,8 @@ void nsIPresShell::DispatchSynthMouseMove(WidgetGUIEvent* aEvent) {
   nsEventStatus status = nsEventStatus_eIgnore;
   nsView* targetView = nsView::GetViewFor(aEvent->mWidget);
   if (!targetView) return;
-  targetView->GetViewManager()->DispatchEvent(aEvent, targetView, &status);
+  RefPtr<nsViewManager> viewManager = targetView->GetViewManager();
+  viewManager->DispatchEvent(aEvent, targetView, &status);
 }
 
 void PresShell::ClearMouseCaptureOnView(nsView* aView) {
@@ -4660,11 +4661,15 @@ UniquePtr<RangePaintInfo> PresShell::CreateRangePaintInfo(
         nsContentUtils::GetCommonAncestor(startContainer, endContainer);
     NS_ASSERTION(!ancestor || ancestor->IsContent(),
                  "common ancestor is not content");
-    if (!ancestor || !ancestor->IsContent()) return nullptr;
 
-    ancestorFrame = ancestor->AsContent()->GetPrimaryFrame();
+    while (ancestor && ancestor->IsContent()) {
+      ancestorFrame = ancestor->AsContent()->GetPrimaryFrame();
+      if (ancestorFrame) {
+        break;
+      }
 
-    // XXX deal with ancestorFrame being null due to display:contents
+      ancestor = ancestor->GetParentOrHostNode();
+    }
 
     // use the nearest ancestor frame that includes all continuations as the
     // root for building the display list
@@ -7697,54 +7702,11 @@ nsresult PresShell::EventHandler::HandleEventInternal(
     manager->TryToFlushPendingNotificationsToIME();
   }
 
-  switch (aEvent->mMessage) {
-    case eKeyPress:
-    case eKeyDown:
-    case eKeyUp: {
-      if (aEvent->AsKeyboardEvent()->mKeyCode == NS_VK_ESCAPE) {
-        if (aEvent->mMessage == eKeyUp) {
-          // Reset this flag after key up is handled.
-          mPresShell->mIsLastChromeOnlyEscapeKeyConsumed = false;
-        } else {
-          if (aEvent->mFlags.mOnlyChromeDispatch &&
-              aEvent->mFlags.mDefaultPreventedByChrome) {
-            mPresShell->mIsLastChromeOnlyEscapeKeyConsumed = true;
-          }
-        }
-      }
-      if (aEvent->mMessage == eKeyDown) {
-        mPresShell->mIsLastKeyDownCanceled = aEvent->mFlags.mDefaultPrevented;
-      }
-      break;
-    }
-    case eMouseUp:
-      // reset the capturing content now that the mouse button is up
-      nsIPresShell::SetCapturingContent(nullptr, 0);
-      break;
-    case eMouseMove:
-      nsIPresShell::AllowMouseCapture(false);
-      break;
-    case eDrag:
-    case eDragEnd:
-    case eDragEnter:
-    case eDragExit:
-    case eDragLeave:
-    case eDragOver:
-    case eDrop: {
-      // After any drag event other than dragstart (which is handled
-      // separately, as we need to collect the data first), the DataTransfer
-      // needs to be made protected, and then disconnected.
-      DataTransfer* dataTransfer = aEvent->AsDragEvent()->mDataTransfer;
-      if (dataTransfer) {
-        dataTransfer->Disconnect();
-      }
-      break;
-    }
-    default:
-      break;
-  }
+  FinalizeHandlingEvent(aEvent);
+
   RecordEventHandlingResponsePerformance(aEvent);
-  return rv;
+
+  return rv;  // Result of DispatchEvent()
 }
 
 nsresult PresShell::EventHandler::DispatchEvent(
@@ -7760,62 +7722,64 @@ nsresult PresShell::EventHandler::DispatchEvent(
   nsresult rv = aEventStateManager->PreHandleEvent(
       GetPresContext(), aEvent, mPresShell->mCurrentEventFrame,
       mPresShell->mCurrentEventContent, aEventStatus, aOverrideClickTarget);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
   // 2. Give event to the DOM for third party and JS use.
-  if (NS_SUCCEEDED(rv)) {
-    bool wasHandlingKeyBoardEvent = nsContentUtils::IsHandlingKeyBoardEvent();
-    if (aEvent->mClass == eKeyboardEventClass) {
-      nsContentUtils::SetIsHandlingKeyBoardEvent(true);
-    }
-    // If EventStateManager or something wants reply from remote process and
-    // needs to win any other event listeners in chrome, the event is both
-    // stopped its propagation and marked as "waiting reply from remote
-    // process".  In this case, PresShell shouldn't dispatch the event into
-    // the DOM tree because they don't have a chance to stop propagation in
-    // the system event group.  On the other hand, if its propagation is not
-    // stopped, that means that the event may be reserved by chrome.  If it's
-    // reserved by chrome, the event shouldn't be sent to any remote
-    // processes.  In this case, PresShell needs to dispatch the event to
-    // the DOM tree for checking if it's reserved.
-    if (aEvent->IsAllowedToDispatchDOMEvent() &&
-        !(aEvent->PropagationStopped() &&
-          aEvent->IsWaitingReplyFromRemoteProcess())) {
-      MOZ_ASSERT(nsContentUtils::IsSafeToRunScript(),
-                 "Somebody changed aEvent to cause a DOM event!");
-      nsPresShellEventCB eventCB(mPresShell);
-      if (nsIFrame* target = mPresShell->GetCurrentEventFrame()) {
-        if (target->OnlySystemGroupDispatch(aEvent->mMessage)) {
-          aEvent->StopPropagation();
-        }
-      }
-      if (aEvent->mClass == eTouchEventClass) {
-        DispatchTouchEventToDOM(aEvent, aEventStatus, &eventCB, aTouchIsNew);
-      } else {
-        DispatchEventToDOM(aEvent, aEventStatus, &eventCB);
+  bool wasHandlingKeyBoardEvent = nsContentUtils::IsHandlingKeyBoardEvent();
+  if (aEvent->mClass == eKeyboardEventClass) {
+    nsContentUtils::SetIsHandlingKeyBoardEvent(true);
+  }
+  // If EventStateManager or something wants reply from remote process and
+  // needs to win any other event listeners in chrome, the event is both
+  // stopped its propagation and marked as "waiting reply from remote
+  // process".  In this case, PresShell shouldn't dispatch the event into
+  // the DOM tree because they don't have a chance to stop propagation in
+  // the system event group.  On the other hand, if its propagation is not
+  // stopped, that means that the event may be reserved by chrome.  If it's
+  // reserved by chrome, the event shouldn't be sent to any remote
+  // processes.  In this case, PresShell needs to dispatch the event to
+  // the DOM tree for checking if it's reserved.
+  if (aEvent->IsAllowedToDispatchDOMEvent() &&
+      !(aEvent->PropagationStopped() &&
+        aEvent->IsWaitingReplyFromRemoteProcess())) {
+    MOZ_ASSERT(nsContentUtils::IsSafeToRunScript(),
+               "Somebody changed aEvent to cause a DOM event!");
+    nsPresShellEventCB eventCB(mPresShell);
+    if (nsIFrame* target = mPresShell->GetCurrentEventFrame()) {
+      if (target->OnlySystemGroupDispatch(aEvent->mMessage)) {
+        aEvent->StopPropagation();
       }
     }
-
-    nsContentUtils::SetIsHandlingKeyBoardEvent(wasHandlingKeyBoardEvent);
-
-    if (aEvent->mMessage == ePointerUp || aEvent->mMessage == ePointerCancel) {
-      // Implicitly releasing capture for given pointer.
-      // ePointerLostCapture should be send after ePointerUp or
-      // ePointerCancel.
-      WidgetPointerEvent* pointerEvent = aEvent->AsPointerEvent();
-      MOZ_ASSERT(pointerEvent);
-      PointerEventHandler::ReleasePointerCaptureById(pointerEvent->pointerId);
-      PointerEventHandler::CheckPointerCaptureState(pointerEvent);
-    }
-
-    // 3. Give event to event manager for post event state changes and
-    //    generation of synthetic events.
-    if (!mPresShell->IsDestroying() && NS_SUCCEEDED(rv)) {
-      rv = aEventStateManager->PostHandleEvent(
-          GetPresContext(), aEvent, mPresShell->GetCurrentEventFrame(),
-          aEventStatus, aOverrideClickTarget);
+    if (aEvent->mClass == eTouchEventClass) {
+      DispatchTouchEventToDOM(aEvent, aEventStatus, &eventCB, aTouchIsNew);
+    } else {
+      DispatchEventToDOM(aEvent, aEventStatus, &eventCB);
     }
   }
-  return rv;
+
+  nsContentUtils::SetIsHandlingKeyBoardEvent(wasHandlingKeyBoardEvent);
+
+  if (aEvent->mMessage == ePointerUp || aEvent->mMessage == ePointerCancel) {
+    // Implicitly releasing capture for given pointer.
+    // ePointerLostCapture should be send after ePointerUp or
+    // ePointerCancel.
+    WidgetPointerEvent* pointerEvent = aEvent->AsPointerEvent();
+    MOZ_ASSERT(pointerEvent);
+    PointerEventHandler::ReleasePointerCaptureById(pointerEvent->pointerId);
+    PointerEventHandler::CheckPointerCaptureState(pointerEvent);
+  }
+
+  if (mPresShell->IsDestroying()) {
+    return NS_OK;
+  }
+
+  // 3. Give event to event manager for post event state changes and
+  //    generation of synthetic events.
+  return aEventStateManager->PostHandleEvent(
+      GetPresContext(), aEvent, mPresShell->GetCurrentEventFrame(),
+      aEventStatus, aOverrideClickTarget);
 }
 
 bool PresShell::EventHandler::PrepareToDispatchEvent(WidgetEvent* aEvent) {
@@ -7866,6 +7830,55 @@ bool PresShell::EventHandler::PrepareToDispatchEvent(WidgetEvent* aEvent) {
 
     default:
       return false;
+  }
+}
+
+void PresShell::EventHandler::FinalizeHandlingEvent(WidgetEvent* aEvent) {
+  switch (aEvent->mMessage) {
+    case eKeyPress:
+    case eKeyDown:
+    case eKeyUp: {
+      if (aEvent->AsKeyboardEvent()->mKeyCode == NS_VK_ESCAPE) {
+        if (aEvent->mMessage == eKeyUp) {
+          // Reset this flag after key up is handled.
+          mPresShell->mIsLastChromeOnlyEscapeKeyConsumed = false;
+        } else {
+          if (aEvent->mFlags.mOnlyChromeDispatch &&
+              aEvent->mFlags.mDefaultPreventedByChrome) {
+            mPresShell->mIsLastChromeOnlyEscapeKeyConsumed = true;
+          }
+        }
+      }
+      if (aEvent->mMessage == eKeyDown) {
+        mPresShell->mIsLastKeyDownCanceled = aEvent->mFlags.mDefaultPrevented;
+      }
+      return;
+    }
+    case eMouseUp:
+      // reset the capturing content now that the mouse button is up
+      nsIPresShell::SetCapturingContent(nullptr, 0);
+      return;
+    case eMouseMove:
+      nsIPresShell::AllowMouseCapture(false);
+      return;
+    case eDrag:
+    case eDragEnd:
+    case eDragEnter:
+    case eDragExit:
+    case eDragLeave:
+    case eDragOver:
+    case eDrop: {
+      // After any drag event other than dragstart (which is handled
+      // separately, as we need to collect the data first), the DataTransfer
+      // needs to be made protected, and then disconnected.
+      DataTransfer* dataTransfer = aEvent->AsDragEvent()->mDataTransfer;
+      if (dataTransfer) {
+        dataTransfer->Disconnect();
+      }
+      return;
+    }
+    default:
+      return;
   }
 }
 

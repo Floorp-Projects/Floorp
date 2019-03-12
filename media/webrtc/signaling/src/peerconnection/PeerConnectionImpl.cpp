@@ -1595,7 +1595,7 @@ PeerConnectionImpl::GetStats(MediaStreamTrack* aSelector) {
 
 NS_IMETHODIMP
 PeerConnectionImpl::AddIceCandidate(
-    const char* aCandidate, const char* aMid,
+    const char* aCandidate, const char* aMid, const char* aUfrag,
     const dom::Nullable<unsigned short>& aLevel) {
   PC_AUTO_ENTER_API_CALL(true);
 
@@ -1642,7 +1642,7 @@ PeerConnectionImpl::AddIceCandidate(
     // Once offer/answer concludes, PCMedia will extract these candidates from
     // the remote SDP.
     if (mSignalingState == PCImplSignalingState::SignalingStable) {
-      mMedia->AddIceCandidate(aCandidate, transportId);
+      mMedia->AddIceCandidate(aCandidate, transportId, aUfrag);
       mRawTrickledCandidates.push_back(aCandidate);
     }
     pco->OnAddIceCandidateSuccess(rv);
@@ -2507,7 +2507,8 @@ const std::string& PeerConnectionImpl::GetName() {
 }
 
 void PeerConnectionImpl::CandidateReady(const std::string& candidate,
-                                        const std::string& transportId) {
+                                        const std::string& transportId,
+                                        const std::string& ufrag) {
   PC_AUTO_ENTER_API_CALL_VOID_RETURN(false);
 
   if (candidate.empty()) {
@@ -2551,13 +2552,14 @@ void PeerConnectionImpl::CandidateReady(const std::string& candidate,
 
   CSFLogDebug(LOGTAG, "Passing local candidate to content: %s",
               candidate.c_str());
-  SendLocalIceCandidateToContent(level, mid, candidate);
+  SendLocalIceCandidateToContent(level, mid, candidate, ufrag);
 }
 
 static void SendLocalIceCandidateToContentImpl(const nsWeakPtr& weakPCObserver,
                                                uint16_t level,
                                                const std::string& mid,
-                                               const std::string& candidate) {
+                                               const std::string& candidate,
+                                               const std::string& ufrag) {
   RefPtr<PeerConnectionObserver> pco = do_QueryObjectReferent(weakPCObserver);
   if (!pco) {
     return;
@@ -2565,17 +2567,19 @@ static void SendLocalIceCandidateToContentImpl(const nsWeakPtr& weakPCObserver,
 
   JSErrorResult rv;
   pco->OnIceCandidate(level, ObString(mid.c_str()), ObString(candidate.c_str()),
-                      rv);
+                      ObString(ufrag.c_str()), rv);
 }
 
 void PeerConnectionImpl::SendLocalIceCandidateToContent(
-    uint16_t level, const std::string& mid, const std::string& candidate) {
+    uint16_t level, const std::string& mid, const std::string& candidate,
+    const std::string& ufrag) {
   // We dispatch this because OnSetLocalDescriptionSuccess does a setTimeout(0)
   // to unwind the stack, but the event handlers don't. We need to ensure that
   // the candidates do not skip ahead of the callback.
-  NS_DispatchToMainThread(WrapRunnableNM(&SendLocalIceCandidateToContentImpl,
-                                         mPCObserver, level, mid, candidate),
-                          NS_DISPATCH_NORMAL);
+  NS_DispatchToMainThread(
+      WrapRunnableNM(&SendLocalIceCandidateToContentImpl, mPCObserver, level,
+                     mid, candidate, ufrag),
+      NS_DISPATCH_NORMAL);
 }
 
 static bool isDone(PCImplIceConnectionState state) {
@@ -2699,7 +2703,7 @@ void PeerConnectionImpl::IceGatheringStateChange(
                     NS_DISPATCH_NORMAL);
 
   if (mIceGatheringState == PCImplIceGatheringState::Complete) {
-    SendLocalIceCandidateToContent(0, "", "");
+    SendLocalIceCandidateToContent(0, "", "", "");
   }
 }
 

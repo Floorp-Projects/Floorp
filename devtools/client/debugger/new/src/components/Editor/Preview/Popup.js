@@ -318,22 +318,23 @@ export class Popup extends Component<Props, State> {
 }
 
 const mapStateToProps = state => ({
-  popupObjectProperties: getAllPopupObjectProperties(state),
-  openElementInInspector: actions.openElementInInspectorCommand
+  popupObjectProperties: getAllPopupObjectProperties(state)
 });
 
 const {
   addExpression,
   selectSourceURL,
   setPopupObjectProperties,
-  openLink
+  openLink,
+  openElementInInspectorCommand
 } = actions;
 
 const mapDispatchToProps = {
   addExpression,
   selectSourceURL,
   setPopupObjectProperties,
-  openLink
+  openLink,
+  openElementInInspector: openElementInInspectorCommand
 };
 
 export default connect(

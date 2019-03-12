@@ -28,6 +28,14 @@ if CONFIG['MOZ_MEMORY']:
 
 if CONFIG['ENABLE_WASM_CRANELIFT']:
     gkrust_features += ['spidermonkey_rust']
+    if CONFIG['JS_CODEGEN_X86'] or CONFIG['JS_CODEGEN_X64']:
+        gkrust_features += ['cranelift_x86']
+    elif CONFIG['JS_CODEGEN_ARM']:
+        gkrust_features += ['cranelift_arm32']
+    elif CONFIG['JS_CODEGEN_ARM64']:
+        gkrust_features += ['cranelift_arm64']
+    else:
+        gkrust_features += ['cranelift_none']
 
 if CONFIG['MOZ_GECKO_PROFILER']:
     gkrust_features += ['gecko_profiler']

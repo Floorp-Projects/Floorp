@@ -61,7 +61,8 @@ describe("sources - new sources", () => {
       threadClient,
       {},
       {
-        getOriginalURLs: async () => ["magic.js"]
+        getOriginalURLs: async () => ["magic.js"],
+        getOriginalLocations: async items => items
       }
     );
 
@@ -74,16 +75,17 @@ describe("sources - new sources", () => {
   // eslint-disable-next-line
   it("should not attempt to fetch original sources if it's missing a source map url", async () => {
     const getOriginalURLs = jest.fn();
-    const { dispatch } = createStore(threadClient, {}, { getOriginalURLs });
+    const { dispatch } = createStore(
+      threadClient,
+      {},
+      {
+        getOriginalURLs,
+        getOriginalLocations: async items => items
+      }
+    );
 
     await dispatch(actions.newSource(makeSource("base.js")));
     expect(getOriginalURLs).not.toHaveBeenCalled();
-  });
-
-  it("should not fail if there isn't a source map service", async () => {
-    const store = createStore(threadClient, {}, null);
-    await store.dispatch(actions.newSource(makeSource("base.js")));
-    expect(getSourceCount(store.getState())).toEqual(1);
   });
 
   // eslint-disable-next-line
@@ -92,7 +94,8 @@ describe("sources - new sources", () => {
       threadClient,
       {},
       {
-        getOriginalURLs: async () => new Promise(_ => {})
+        getOriginalURLs: async () => new Promise(_ => {}),
+        getOriginalLocations: async items => items
       }
     );
     const baseSource = makeSource("base.js", { sourceMapURL: "base.js.map" });
@@ -116,6 +119,7 @@ describe("sources - new sources", () => {
 
           return [source.id.replace(".js", ".cljs")];
         },
+        getOriginalLocations: async items => items,
         getGeneratedLocation: location => location
       }
     );

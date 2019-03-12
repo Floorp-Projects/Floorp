@@ -871,18 +871,23 @@ nsXULAppInfo::GetRestartedByOS(bool* aResult) {
   return NS_OK;
 }
 
+#if defined(XP_WIN) && defined(MOZ_LAUNCHER_PROCESS)
+// Forward declaration
+void SetupLauncherProcessPref();
+
+static Maybe<LauncherRegistryInfo::EnabledState> gLauncherProcessState;
+#endif  // defined(XP_WIN) && defined(MOZ_LAUNCHER_PROCESS)
+
 NS_IMETHODIMP
 nsXULAppInfo::GetLauncherProcessState(uint32_t* aResult) {
 #if defined(XP_WIN) && defined(MOZ_LAUNCHER_PROCESS)
-  LauncherRegistryInfo launcherInfo;
+  SetupLauncherProcessPref();
 
-  LauncherResult<LauncherRegistryInfo::EnabledState> state =
-      launcherInfo.IsEnabled();
-  if (state.isErr()) {
+  if (!gLauncherProcessState) {
     return NS_ERROR_UNEXPECTED;
   }
 
-  *aResult = static_cast<uint32_t>(state.unwrap());
+  *aResult = static_cast<uint32_t>(gLauncherProcessState.value());
   return NS_OK;
 #else
   return NS_ERROR_NOT_AVAILABLE;
@@ -1528,8 +1533,16 @@ static void RegisterApplicationRestartChanged(const char* aPref, void* aData) {
 static const char kShieldPrefName[] = "app.shield.optoutstudies.enabled";
 
 static void OnLauncherPrefChanged(const char* aPref, void* aData) {
+  const bool kLauncherPrefDefaultValue =
+#    if defined(NIGHTLY_BUILD) || (MOZ_UPDATE_CHANNEL == beta)
+    true
+#    else
+    false
+#    endif  // defined(NIGHTLY_BUILD) || (MOZ_UPDATE_CHANNEL == beta)
+    ;
   bool prefVal = Preferences::GetBool(kShieldPrefName, false) &&
-                 Preferences::GetBool(PREF_WIN_LAUNCHER_PROCESS_ENABLED, false);
+                 Preferences::GetBool(PREF_WIN_LAUNCHER_PROCESS_ENABLED,
+                                      kLauncherPrefDefaultValue);
 
   mozilla::LauncherRegistryInfo launcherRegInfo;
   mozilla::LauncherVoidResult reflectResult =
@@ -1541,12 +1554,10 @@ static void SetupLauncherProcessPref() {
   // In addition to the launcher pref itself, we also tie the launcher process
   // state to the SHIELD opt-out pref.
 
-#    if defined(NIGHTLY_BUILD)
-  // On Nightly, fire the callback immediately to ensure the pref is reflected
-  // to the registry and we get immediate enablement of the launcher process
-  // for all users.
-  Preferences::RegisterCallbackAndCall(&OnLauncherPrefChanged, kShieldPrefName);
-#    endif  // defined(NIGHTLY_BUILD)
+  if (gLauncherProcessState) {
+    // We've already successfully run
+    return;
+  }
 
   mozilla::LauncherRegistryInfo launcherRegInfo;
 
@@ -1554,23 +1565,34 @@ static void SetupLauncherProcessPref() {
       enabledState = launcherRegInfo.IsEnabled();
 
   if (enabledState.isOk()) {
-    Preferences::SetBool(
-        PREF_WIN_LAUNCHER_PROCESS_ENABLED,
-        enabledState.unwrap() !=
-            mozilla::LauncherRegistryInfo::EnabledState::ForceDisabled);
+    gLauncherProcessState = Some(enabledState.unwrap());
 
     CrashReporter::AnnotateCrashReport(
         CrashReporter::Annotation::LauncherProcessState,
         static_cast<uint32_t>(enabledState.unwrap()));
+
+#    if defined(NIGHTLY_BUILD) || (MOZ_UPDATE_CHANNEL == beta)
+    // Reflect the pref states into the registry by calling
+    // OnLauncherPrefChanged.
+    OnLauncherPrefChanged(PREF_WIN_LAUNCHER_PROCESS_ENABLED, nullptr);
+
+    // Now obtain the revised state of the launcher process for reflection
+    // into prefs
+    enabledState = launcherRegInfo.IsEnabled();
+#    endif  // defined(NIGHTLY_BUILD) || (MOZ_UPDATE_CHANNEL == beta)
   }
 
+  if (enabledState.isOk()) {
+    // Reflect the launcher process registry state into user prefs
+    Preferences::SetBool(
+        PREF_WIN_LAUNCHER_PROCESS_ENABLED,
+        enabledState.unwrap() !=
+            mozilla::LauncherRegistryInfo::EnabledState::ForceDisabled);
+  }
+
+  Preferences::RegisterCallback(&OnLauncherPrefChanged, kShieldPrefName);
   Preferences::RegisterCallback(&OnLauncherPrefChanged,
                                 PREF_WIN_LAUNCHER_PROCESS_ENABLED);
-#    if !defined(NIGHTLY_BUILD)
-  // We register for SHIELD notifications, but we don't fire the callback
-  // immediately in the non-Nightly case.
-  Preferences::RegisterCallback(&OnLauncherPrefChanged, kShieldPrefName);
-#    endif  // !defined(NIGHTLY_BUILD)
 }
 
 #  endif  // defined(MOZ_LAUNCHER_PROCESS)
@@ -1582,8 +1604,6 @@ static void SetupLauncherProcessPref() {
 // it was initially started with.
 static nsresult LaunchChild(nsINativeAppSupport* aNative,
                             bool aBlankCommandLine = false) {
-  aNative->Quit();  // destroy message window
-
   // Restart this process by exec'ing it into the current process
   // if supported by the platform.  Otherwise, use NSPR.
 
@@ -4693,14 +4713,14 @@ int XREMain::XRE_main(int argc, char* argv[], const BootstrapConfig& aConfig) {
     gShutdownChecks = SCM_NOTHING;
   }
 
-  if (!mShuttingDown) {
 #if defined(MOZ_HAS_REMOTE)
-    // shut down the x remote proxy window
-    if (mRemoteService) {
-      mRemoteService->ShutdownServer();
-    }
-#endif /* MOZ_WIDGET_GTK */
+  // Shut down the remote service. We must do this before calling LaunchChild
+  // if we're restarting because otherwise the new instance will attempt to
+  // remote to this instance.
+  if (mRemoteService) {
+    mRemoteService->ShutdownServer();
   }
+#endif /* MOZ_WIDGET_GTK */
 
   mScopedXPCOM = nullptr;
 

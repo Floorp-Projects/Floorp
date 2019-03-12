@@ -74,6 +74,10 @@ class FreeBSDBootstrapper(BaseBootstrapper):
         # Clang / llvm already installed as browser package
         self.pkg_install('rust-cbindgen')
 
+    def ensure_nasm_packages(self, state_dir, checkout_root):
+        # installed via ensure_browser_packages
+        pass
+
     def ensure_node_packages(self, state_dir, checkout_root):
         self.pkg_install('npm')
 

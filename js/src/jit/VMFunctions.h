@@ -1115,8 +1115,8 @@ MOZ_MUST_USE bool InitBaselineFrameForOsr(BaselineFrame* frame,
 JSObject* CreateDerivedTypedObj(JSContext* cx, HandleObject descr,
                                 HandleObject owner, int32_t offset);
 
-MOZ_MUST_USE bool Recompile(JSContext* cx);
-MOZ_MUST_USE bool ForcedRecompile(JSContext* cx);
+MOZ_MUST_USE bool IonRecompile(JSContext* cx);
+MOZ_MUST_USE bool IonForcedRecompile(JSContext* cx);
 JSString* StringReplace(JSContext* cx, HandleString string,
                         HandleString pattern, HandleString repl);
 
@@ -1242,9 +1242,6 @@ extern const VMFunction NativeGetElementInfo;
 
 extern const VMFunction AddOrUpdateSparseElementHelperInfo;
 extern const VMFunction GetSparseElementHelperInfo;
-
-extern const VMFunction ToNumberInfo;
-extern const VMFunction ToNumericInfo;
 
 // TailCall VMFunctions
 extern const VMFunction DoConcatStringObjectInfo;

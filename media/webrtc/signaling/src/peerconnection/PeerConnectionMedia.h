@@ -65,7 +65,8 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
 
   // Process a trickle ICE candidate.
   void AddIceCandidate(const std::string& candidate,
-                       const std::string& aTransportId);
+                       const std::string& aTransportId,
+                       const std::string& aUFrag);
 
   // Handle notifications of network online/offline events.
   void UpdateNetworkState(bool online);
@@ -134,9 +135,10 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
       SignalIceGatheringStateChange;
   sigslot::signal1<mozilla::dom::PCImplIceConnectionState>
       SignalIceConnectionStateChange;
-  // This passes a candidate:... attribute and transport id
+  // This passes a candidate:... attribute, transport id, and ufrag
   // end-of-candidates is signaled with the empty string
-  sigslot::signal2<const std::string&, const std::string&> SignalCandidate;
+  sigslot::signal3<const std::string&, const std::string&, const std::string&>
+      SignalCandidate;
   // This passes address, port, transport id of the default candidate.
   sigslot::signal5<const std::string&, uint16_t, const std::string&, uint16_t,
                    const std::string&>

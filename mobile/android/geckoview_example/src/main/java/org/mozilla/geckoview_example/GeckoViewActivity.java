@@ -68,6 +68,8 @@ public class GeckoViewActivity extends AppCompatActivity {
     private boolean mEnableRemoteDebugging;
     private boolean mKillProcessOnDestroy;
 
+    private boolean mShowNotificationsRejected;
+
     private LocationView mLocationView;
     private String mCurrentUri;
     private boolean mCanGoBack;
@@ -580,6 +582,25 @@ public class GeckoViewActivity extends AppCompatActivity {
         public int androidPermissionRequestCode = 1;
         private Callback mCallback;
 
+        class ExampleNotificationCallback implements GeckoSession.PermissionDelegate.Callback {
+            private final GeckoSession.PermissionDelegate.Callback mCallback;
+            ExampleNotificationCallback(final GeckoSession.PermissionDelegate.Callback callback) {
+                mCallback = callback;
+            }
+
+            @Override
+            public void reject() {
+                mShowNotificationsRejected = true;
+                mCallback.reject();
+            }
+
+            @Override
+            public void grant() {
+                mShowNotificationsRejected = false;
+                mCallback.grant();
+            }
+        }
+
         public void onRequestPermissionsResult(final String[] permissions,
                                                final int[] grantResults) {
             if (mCallback == null) {
@@ -614,10 +635,17 @@ public class GeckoViewActivity extends AppCompatActivity {
         public void onContentPermissionRequest(final GeckoSession session, final String uri,
                                              final int type, final Callback callback) {
             final int resId;
+            Callback contentPermissionCallback = callback;
             if (PERMISSION_GEOLOCATION == type) {
                 resId = R.string.request_geolocation;
             } else if (PERMISSION_DESKTOP_NOTIFICATION == type) {
+                if (mShowNotificationsRejected) {
+                    Log.w(LOGTAG, "Desktop notifications already denied by user.");
+                    callback.reject();
+                    return;
+                }
                 resId = R.string.request_notification;
+                contentPermissionCallback = new ExampleNotificationCallback(callback);
             } else {
                 Log.w(LOGTAG, "Unknown permission: " + type);
                 callback.reject();
@@ -627,7 +655,7 @@ public class GeckoViewActivity extends AppCompatActivity {
             final String title = getString(resId, Uri.parse(uri).getAuthority());
             final BasicGeckoViewPrompt prompt = (BasicGeckoViewPrompt)
                     mGeckoSession.getPromptDelegate();
-            prompt.onPermissionPrompt(session, title, callback);
+            prompt.onPermissionPrompt(session, title, contentPermissionCallback);
         }
 
         private String[] normalizeMediaName(final MediaSource[] sources) {

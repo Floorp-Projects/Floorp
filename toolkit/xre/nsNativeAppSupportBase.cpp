@@ -22,9 +22,6 @@ NS_IMETHODIMP
 nsNativeAppSupportBase::Enable() { return NS_OK; }
 
 NS_IMETHODIMP
-nsNativeAppSupportBase::Quit() { return NS_OK; }
-
-NS_IMETHODIMP
 nsNativeAppSupportBase::ReOpen() { return NS_OK; }
 
 NS_IMETHODIMP

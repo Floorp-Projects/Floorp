@@ -134,7 +134,8 @@ this.runtime = class extends ExtensionAPI {
         },
 
         setUninstallURL: function(url) {
-          if (url.length == 0) {
+          if (url === null || url.length === 0) {
+            extension.uninstallURL = null;
             return Promise.resolve();
           }
 

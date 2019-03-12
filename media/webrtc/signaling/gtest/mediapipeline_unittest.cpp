@@ -198,7 +198,8 @@ class LoopbackTransport : public MediaTransportHandler {
                       const std::vector<std::string>& aIceOptions) override {}
 
   void AddIceCandidate(const std::string& aTransportId,
-                       const std::string& aCandidate) override {}
+                       const std::string& aCandidate,
+                       const std::string& aUfrag) override {}
 
   void UpdateNetworkState(bool aOnline) override {}
 

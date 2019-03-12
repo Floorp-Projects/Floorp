@@ -1885,6 +1885,12 @@ class nsIFrame : public nsQueryFrame {
   void RecomputePerspectiveChildrenOverflow(const nsIFrame* aStartFrame);
 
   /**
+   * Returns the computed z-index for this frame, returning 0 for z-index:auto
+   * and frames that don't support z-index.
+   */
+  int32_t ZIndex() const;
+
+  /**
    * Returns whether this frame is the anchor of some ancestor scroll frame. As
    * this frame is moved, the scroll frame will apply adjustments to keep this
    * scroll frame in the same relative position.

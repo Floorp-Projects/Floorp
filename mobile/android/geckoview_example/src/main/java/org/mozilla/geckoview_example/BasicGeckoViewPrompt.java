@@ -809,7 +809,12 @@ final class BasicGeckoViewPrompt implements GeckoSession.PromptDelegate {
         }
         final AlertDialog.Builder builder = new AlertDialog.Builder(activity);
         builder.setTitle(title)
-               .setNegativeButton(android.R.string.cancel, /* onClickListener */ null)
+               .setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
+                   @Override
+                   public void onClick(final DialogInterface dialog, final int which) {
+                       callback.reject();
+                   }
+               })
                .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
                    @Override
                    public void onClick(final DialogInterface dialog, final int which) {
@@ -818,12 +823,6 @@ final class BasicGeckoViewPrompt implements GeckoSession.PromptDelegate {
                });
 
         final AlertDialog dialog = builder.create();
-        dialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
-                   @Override
-                   public void onDismiss(final DialogInterface dialog) {
-                       callback.reject();
-                   }
-               });
         dialog.show();
     }
 

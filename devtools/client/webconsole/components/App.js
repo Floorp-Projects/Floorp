@@ -50,6 +50,7 @@ class App extends Component {
       currentReverseSearchEntry: PropTypes.string,
       reverseSearchInputVisible: PropTypes.bool,
       reverseSearchInitialValue: PropTypes.string,
+      editorMode: PropTypes.bool,
     };
   }
 
@@ -200,11 +201,15 @@ class App extends Component {
       closeSplitConsole,
       jstermCodeMirror,
       reverseSearchInitialValue,
+      editorMode,
     } = this.props;
 
     const classNames = ["webconsole-app"];
     if (jstermCodeMirror) {
       classNames.push("jsterm-cm");
+    }
+    if (editorMode) {
+      classNames.push("jsterm-editor");
     }
 
     // Render the entire Console panel. The panel consists
@@ -242,6 +247,7 @@ class App extends Component {
             serviceContainer,
             onPaste: this.onPaste,
             codeMirrorEnabled: jstermCodeMirror,
+            editorMode,
           }),
           ReverseSearchInput({
             setInputValue: serviceContainer.setInputValue,
@@ -267,6 +273,7 @@ const mapStateToProps = state => ({
   notifications: getAllNotifications(state),
   reverseSearchInputVisible: state.ui.reverseSearchInputVisible,
   reverseSearchInitialValue: state.ui.reverseSearchInitialValue,
+  editorMode: state.ui.editor,
 });
 
 const mapDispatchToProps = dispatch => ({

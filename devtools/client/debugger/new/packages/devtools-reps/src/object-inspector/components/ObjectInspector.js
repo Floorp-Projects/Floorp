@@ -24,6 +24,7 @@ const {
   getChildrenWithEvaluations,
   getActor,
   getParent,
+  getValue,
   nodeIsPrimitive,
   nodeHasGetter,
   nodeHasSetter
@@ -78,6 +79,7 @@ class ObjectInspector extends Component<Props> {
     self.activateItem = this.activateItem.bind(this);
     self.getRoots = this.getRoots.bind(this);
     self.getNodeKey = this.getNodeKey.bind(this);
+    self.shouldItemUpdate = this.shouldItemUpdate.bind(this);
   }
 
   componentWillMount() {
@@ -236,6 +238,13 @@ class ObjectInspector extends Component<Props> {
     }
   }
 
+  shouldItemUpdate(prevItem: Node, nextItem: Node) {
+    const value = getValue(nextItem);
+    // Long string should always update because fullText loading will not
+    // trigger item re-render.
+    return value && value.type === "longString";
+  }
+
   render() {
     const {
       autoExpandAll = true,
@@ -271,6 +280,7 @@ class ObjectInspector extends Component<Props> {
       onFocus: focusable ? this.focusItem : null,
       onActivate: focusable ? this.activateItem : null,
 
+      shouldItemUpdate: this.shouldItemUpdate,
       renderItem: (item, depth, focused, arrow, expanded) =>
         ObjectInspectorItem({
           ...this.props,

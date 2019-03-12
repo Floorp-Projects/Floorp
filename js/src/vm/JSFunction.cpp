@@ -594,7 +594,6 @@ XDRResult js::XDRInterpretedFunction(XDRState<mode>* xdr,
 
   // Everything added below can substituted by the non-lazy-script version of
   // this function later.
-  MOZ_TRY(xdr->codeAlign(sizeof(js::XDRAlignment)));
   js::AutoXDRTree funTree(xdr, xdr->getTreeKey(fun));
 
   MOZ_TRY(xdr->codeUint32(&firstword));
@@ -657,10 +656,6 @@ XDRResult js::XDRInterpretedFunction(XDRState<mode>* xdr,
 
   // Verify marker at end of function to detect buffer trunction.
   MOZ_TRY(xdr->codeMarker(0x9E35CA1F));
-
-  // Required by AutoXDRTree to copy & paste snipet of sub-trees while keeping
-  // the alignment.
-  MOZ_TRY(xdr->codeAlign(sizeof(js::XDRAlignment)));
 
   return Ok();
 }

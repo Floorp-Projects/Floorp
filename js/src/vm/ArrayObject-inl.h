@@ -48,7 +48,7 @@ inline void ArrayObject::setLength(JSContext* cx, uint32_t length) {
   MOZ_ASSERT(shape->numFixedSlots() == 0);
 
   size_t nDynamicSlots = dynamicSlotsCount(0, shape->slotSpan(), clasp);
-  JSObject* obj = js::Allocate<JSObject>(cx, kind, nDynamicSlots, heap, clasp);
+  JSObject* obj = js::AllocateObject(cx, kind, nDynamicSlots, heap, clasp);
   if (!obj) {
     return nullptr;
   }

@@ -2604,16 +2604,16 @@ extern JS_PUBLIC_API JSString* JS_AtomizeAndPinStringN(JSContext* cx,
 extern JS_PUBLIC_API JSString* JS_AtomizeAndPinString(JSContext* cx,
                                                       const char* s);
 
-extern JS_PUBLIC_API JSString* JS_NewLatin1String(JSContext* cx,
-                                                  JS::Latin1Char* chars,
-                                                  size_t length);
+extern JS_PUBLIC_API JSString* JS_NewLatin1String(
+    JSContext* cx, js::UniquePtr<JS::Latin1Char[], JS::FreePolicy> chars,
+    size_t length);
 
-extern JS_PUBLIC_API JSString* JS_NewUCString(JSContext* cx, char16_t* chars,
+extern JS_PUBLIC_API JSString* JS_NewUCString(JSContext* cx,
+                                              JS::UniqueTwoByteChars chars,
                                               size_t length);
 
-extern JS_PUBLIC_API JSString* JS_NewUCStringDontDeflate(JSContext* cx,
-                                                         char16_t* chars,
-                                                         size_t length);
+extern JS_PUBLIC_API JSString* JS_NewUCStringDontDeflate(
+    JSContext* cx, JS::UniqueTwoByteChars chars, size_t length);
 
 extern JS_PUBLIC_API JSString* JS_NewUCStringCopyN(JSContext* cx,
                                                    const char16_t* s, size_t n);

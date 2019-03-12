@@ -611,7 +611,8 @@ def llvm_objdump(host_c_compiler, c_compiler, bindgen_config_paths):
 
 
 llvm_objdump = check_prog('LLVM_OBJDUMP', llvm_objdump, what='llvm-objdump',
-                          when='--enable-compile-environment')
+                          when='--enable-compile-environment',
+                          paths=toolchain_search_path)
 
 add_old_configure_assignment('LLVM_OBJDUMP', llvm_objdump)
 

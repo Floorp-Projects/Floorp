@@ -7753,12 +7753,11 @@ static bool ReadStringCommon(JSContext* cx, InflateUTF8Method inflateUTF8,
         return false;
       }
 
-      result = JS_NewUCString(cx, dst.get(), length);
+      result = JS_NewUCString(cx, std::move(dst), length);
       if (!result) {
         return false;
       }
 
-      mozilla::Unused << dst.release();
       break;
     }
     case TYPE_int16_t:

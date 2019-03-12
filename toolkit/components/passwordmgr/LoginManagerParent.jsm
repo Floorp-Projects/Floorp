@@ -115,6 +115,11 @@ var LoginManagerParent = {
         AutoCompletePopup.removeLogin(login);
         break;
       }
+
+      case "PasswordManager:OpenPreferences": {
+        LoginHelper.openPasswordManager(msg.target.ownerGlobal, msg.data.hostname);
+        break;
+      }
     }
 
     return undefined;

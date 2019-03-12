@@ -49,6 +49,172 @@ using JS::TrackedOutcome;
 namespace js {
 namespace jit {
 
+// Returns true if |native| can be inlined cross-realm. Especially inlined
+// natives that can allocate objects or throw exceptions shouldn't be inlined
+// cross-realm without a careful analysis because we might use the wrong realm!
+//
+// Note that self-hosting intrinsics are never called cross-realm. See the
+// MOZ_CRASH below.
+//
+// If you are adding a new inlinable native, the safe thing is to |return false|
+// here.
+static bool CanInlineCrossRealm(InlinableNative native) {
+  switch (native) {
+    case InlinableNative::MathAbs:
+    case InlinableNative::MathFloor:
+    case InlinableNative::MathCeil:
+    case InlinableNative::MathRound:
+    case InlinableNative::MathClz32:
+    case InlinableNative::MathSqrt:
+    case InlinableNative::MathATan2:
+    case InlinableNative::MathHypot:
+    case InlinableNative::MathMax:
+    case InlinableNative::MathMin:
+    case InlinableNative::MathPow:
+    case InlinableNative::MathImul:
+    case InlinableNative::MathFRound:
+    case InlinableNative::MathTrunc:
+    case InlinableNative::MathSign:
+    case InlinableNative::MathSin:
+    case InlinableNative::MathTan:
+    case InlinableNative::MathCos:
+    case InlinableNative::MathExp:
+    case InlinableNative::MathLog:
+    case InlinableNative::MathASin:
+    case InlinableNative::MathATan:
+    case InlinableNative::MathACos:
+    case InlinableNative::MathLog10:
+    case InlinableNative::MathLog2:
+    case InlinableNative::MathLog1P:
+    case InlinableNative::MathExpM1:
+    case InlinableNative::MathCosH:
+    case InlinableNative::MathSinH:
+    case InlinableNative::MathTanH:
+    case InlinableNative::MathACosH:
+    case InlinableNative::MathASinH:
+    case InlinableNative::MathATanH:
+    case InlinableNative::MathCbrt:
+    case InlinableNative::Boolean:
+      return true;
+
+    case InlinableNative::Array:
+      // Cross-realm case handled by inlineArray.
+      return true;
+
+    case InlinableNative::MathRandom:
+      // RNG state is per-realm.
+      return false;
+
+    case InlinableNative::IntlGuardToCollator:
+    case InlinableNative::IntlGuardToDateTimeFormat:
+    case InlinableNative::IntlGuardToNumberFormat:
+    case InlinableNative::IntlGuardToPluralRules:
+    case InlinableNative::IntlGuardToRelativeTimeFormat:
+    case InlinableNative::IsRegExpObject:
+    case InlinableNative::RegExpMatcher:
+    case InlinableNative::RegExpSearcher:
+    case InlinableNative::RegExpTester:
+    case InlinableNative::RegExpPrototypeOptimizable:
+    case InlinableNative::RegExpInstanceOptimizable:
+    case InlinableNative::GetFirstDollarIndex:
+    case InlinableNative::IntrinsicNewArrayIterator:
+    case InlinableNative::IntrinsicNewStringIterator:
+    case InlinableNative::IntrinsicNewRegExpStringIterator:
+    case InlinableNative::IntrinsicStringReplaceString:
+    case InlinableNative::IntrinsicStringSplitString:
+    case InlinableNative::IntrinsicUnsafeSetReservedSlot:
+    case InlinableNative::IntrinsicUnsafeGetReservedSlot:
+    case InlinableNative::IntrinsicUnsafeGetObjectFromReservedSlot:
+    case InlinableNative::IntrinsicUnsafeGetInt32FromReservedSlot:
+    case InlinableNative::IntrinsicUnsafeGetStringFromReservedSlot:
+    case InlinableNative::IntrinsicUnsafeGetBooleanFromReservedSlot:
+    case InlinableNative::IntrinsicIsCallable:
+    case InlinableNative::IntrinsicIsConstructor:
+    case InlinableNative::IntrinsicToObject:
+    case InlinableNative::IntrinsicIsObject:
+    case InlinableNative::IntrinsicIsCrossRealmArrayConstructor:
+    case InlinableNative::IntrinsicToInteger:
+    case InlinableNative::IntrinsicToString:
+    case InlinableNative::IntrinsicIsConstructing:
+    case InlinableNative::IntrinsicSubstringKernel:
+    case InlinableNative::IntrinsicGuardToArrayIterator:
+    case InlinableNative::IntrinsicGuardToMapIterator:
+    case InlinableNative::IntrinsicGuardToSetIterator:
+    case InlinableNative::IntrinsicGuardToStringIterator:
+    case InlinableNative::IntrinsicGuardToRegExpStringIterator:
+    case InlinableNative::IntrinsicObjectHasPrototype:
+    case InlinableNative::IntrinsicFinishBoundFunctionInit:
+    case InlinableNative::IntrinsicIsPackedArray:
+    case InlinableNative::IntrinsicGuardToMapObject:
+    case InlinableNative::IntrinsicGetNextMapEntryForIterator:
+    case InlinableNative::IntrinsicGuardToSetObject:
+    case InlinableNative::IntrinsicGetNextSetEntryForIterator:
+    case InlinableNative::IntrinsicGuardToArrayBuffer:
+    case InlinableNative::IntrinsicArrayBufferByteLength:
+    case InlinableNative::IntrinsicPossiblyWrappedArrayBufferByteLength:
+    case InlinableNative::IntrinsicGuardToSharedArrayBuffer:
+    case InlinableNative::IntrinsicIsTypedArrayConstructor:
+    case InlinableNative::IntrinsicIsTypedArray:
+    case InlinableNative::IntrinsicIsPossiblyWrappedTypedArray:
+    case InlinableNative::IntrinsicPossiblyWrappedTypedArrayLength:
+    case InlinableNative::IntrinsicTypedArrayLength:
+    case InlinableNative::IntrinsicTypedArrayByteOffset:
+    case InlinableNative::IntrinsicTypedArrayElementShift:
+    case InlinableNative::IntrinsicSetDisjointTypedElements:
+    case InlinableNative::IntrinsicObjectIsTypedObject:
+    case InlinableNative::IntrinsicObjectIsTransparentTypedObject:
+    case InlinableNative::IntrinsicObjectIsOpaqueTypedObject:
+    case InlinableNative::IntrinsicObjectIsTypeDescr:
+    case InlinableNative::IntrinsicTypeDescrIsSimpleType:
+    case InlinableNative::IntrinsicTypeDescrIsArrayType:
+    case InlinableNative::IntrinsicSetTypedObjectOffset:
+    case InlinableNative::IntrinsicArrayIteratorPrototypeOptimizable:
+      MOZ_CRASH("Unexpected cross-realm intrinsic call");
+
+    case InlinableNative::TestBailout:
+    case InlinableNative::TestAssertFloat32:
+    case InlinableNative::TestAssertRecoveredOnBailout:
+      // Testing functions, not worth inlining cross-realm.
+      return false;
+
+    case InlinableNative::ArrayIsArray:
+    case InlinableNative::ArrayJoin:
+    case InlinableNative::ArrayPop:
+    case InlinableNative::ArrayShift:
+    case InlinableNative::ArrayPush:
+    case InlinableNative::ArraySlice:
+    case InlinableNative::AtomicsCompareExchange:
+    case InlinableNative::AtomicsExchange:
+    case InlinableNative::AtomicsLoad:
+    case InlinableNative::AtomicsStore:
+    case InlinableNative::AtomicsAdd:
+    case InlinableNative::AtomicsSub:
+    case InlinableNative::AtomicsAnd:
+    case InlinableNative::AtomicsOr:
+    case InlinableNative::AtomicsXor:
+    case InlinableNative::AtomicsIsLockFree:
+    case InlinableNative::ReflectGetPrototypeOf:
+    case InlinableNative::String:
+    case InlinableNative::StringCharCodeAt:
+    case InlinableNative::StringFromCharCode:
+    case InlinableNative::StringFromCodePoint:
+    case InlinableNative::StringCharAt:
+    case InlinableNative::StringToLowerCase:
+    case InlinableNative::StringToUpperCase:
+    case InlinableNative::Object:
+    case InlinableNative::ObjectCreate:
+    case InlinableNative::ObjectIs:
+    case InlinableNative::ObjectToString:
+    case InlinableNative::TypedArrayConstructor:
+      // Default to false for most natives.
+      return false;
+
+    case InlinableNative::Limit:
+      break;
+  }
+  MOZ_CRASH("Unknown native");
+}
+
 IonBuilder::InliningResult IonBuilder::inlineNativeCall(CallInfo& callInfo,
                                                         JSFunction* target) {
   MOZ_ASSERT(target->isNative());
@@ -91,10 +257,17 @@ IonBuilder::InliningResult IonBuilder::inlineNativeCall(CallInfo& callInfo,
     return inlineWasmCall(callInfo, target);
   }
 
-  switch (InlinableNative inlNative = target->jitInfo()->inlinableNative) {
+  InlinableNative inlNative = target->jitInfo()->inlinableNative;
+
+  if (target->realm() != script()->realm() && !CanInlineCrossRealm(inlNative)) {
+    trackOptimizationOutcome(TrackedOutcome::CantInlineCrossRealm);
+    return InliningStatus_NotInlined;
+  }
+
+  switch (inlNative) {
     // Array natives.
     case InlinableNative::Array:
-      return inlineArray(callInfo);
+      return inlineArray(callInfo, target->realm());
     case InlinableNative::ArrayIsArray:
       return inlineArrayIsArray(callInfo);
     case InlinableNative::ArrayJoin:
@@ -425,6 +598,8 @@ IonBuilder::InliningResult IonBuilder::inlineNativeGetter(CallInfo& callInfo,
     return InliningStatus_NotInlined;
   }
 
+  // Note: target might be a cross-realm native!
+
   // Try to optimize typed array lengths.
   if (TypedArrayObject::isOriginalLengthGetter(native)) {
     if (thisTypes->forAllClasses(constraints(), IsTypedArrayClass) !=
@@ -480,12 +655,16 @@ IonBuilder::InliningResult IonBuilder::inlineNonFunctionCall(CallInfo& callInfo,
   // Inline a call to a non-function object, invoking the object's call or
   // construct hook.
 
-  MOZ_ASSERT(target->nonCCWRealm() == script()->realm());
-
   // Don't inline if we're constructing and new.target != callee. This can
   // happen with Reflect.construct or derived class constructors.
   if (callInfo.constructing() && callInfo.getNewTarget() != callInfo.fun()) {
     trackOptimizationOutcome(TrackedOutcome::CantInlineUnexpectedNewTarget);
+    return InliningStatus_NotInlined;
+  }
+
+  Realm* targetRealm = JS::GetObjectRealmOrNull(target);
+  if (!targetRealm || targetRealm != script()->realm()) {
+    trackOptimizationOutcome(TrackedOutcome::CantInlineCrossRealm);
     return InliningStatus_NotInlined;
   }
 
@@ -533,7 +712,8 @@ IonBuilder::InliningResult IonBuilder::inlineMathFunction(
   return InliningStatus_Inlined;
 }
 
-IonBuilder::InliningResult IonBuilder::inlineArray(CallInfo& callInfo) {
+IonBuilder::InliningResult IonBuilder::inlineArray(CallInfo& callInfo,
+                                                   Realm* targetRealm) {
   uint32_t initLength = 0;
 
   JSObject* templateObject =
@@ -545,6 +725,11 @@ IonBuilder::InliningResult IonBuilder::inlineArray(CallInfo& callInfo) {
 
   if (!templateObject) {
     trackOptimizationOutcome(TrackedOutcome::CantInlineNativeNoTemplateObj);
+    return InliningStatus_NotInlined;
+  }
+
+  if (templateObject->nonCCWRealm() != targetRealm) {
+    trackOptimizationOutcome(TrackedOutcome::CantInlineCrossRealm);
     return InliningStatus_NotInlined;
   }
 
@@ -4140,11 +4325,15 @@ IonBuilder::InliningResult IonBuilder::inlineConstructTypedObject(
 IonBuilder::InliningResult IonBuilder::inlineWasmCall(CallInfo& callInfo,
                                                       JSFunction* target) {
   MOZ_ASSERT(target->isWasmOptimized());
-  MOZ_ASSERT(target->realm() == script()->realm());
 
   // Don't inline wasm constructors.
   if (callInfo.constructing()) {
     trackOptimizationOutcome(TrackedOutcome::CantInlineNativeBadForm);
+    return InliningStatus_NotInlined;
+  }
+
+  if (target->realm() != script()->realm()) {
+    trackOptimizationOutcome(TrackedOutcome::CantInlineCrossRealm);
     return InliningStatus_NotInlined;
   }
 

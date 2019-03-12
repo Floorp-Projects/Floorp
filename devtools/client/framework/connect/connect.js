@@ -205,7 +205,7 @@ function handleConnectionTimeout() {
  */
 async function openToolbox(target, chrome = false) {
   const hostType = Toolbox.HostType.WINDOW;
-  const toolbox = gDevTools.showToolbox(target, "webconsole", hostType);
+  const toolbox = await gDevTools.showToolbox(target, "webconsole", hostType);
   toolbox.once("destroyed", function() {
     gClient.close();
   });

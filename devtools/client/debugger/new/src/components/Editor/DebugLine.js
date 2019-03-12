@@ -55,6 +55,11 @@ export class DebugLine extends Component<Props> {
     this.setDebugLine(why, frame, source);
   }
 
+  componentWillUnmount() {
+    const { why, frame, source } = this.props;
+    this.clearDebugLine(why, frame, source);
+  }
+
   setDebugLine(why: Why, frame: Frame, source: Source) {
     if (!isDocumentReady(source, frame)) {
       return;

@@ -71,6 +71,7 @@ function configureStore(webConsoleUI, options = {}) {
     ui: UiState({
       networkMessageActiveTabId: "headers",
       persistLogs: getBoolPref(PREFS.UI.PERSIST),
+      editor: getBoolPref(PREFS.UI.EDITOR),
     }),
   };
 

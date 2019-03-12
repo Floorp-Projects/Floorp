@@ -291,6 +291,28 @@ class tpaint(PageloaderTest):
 
 
 @register_test()
+class twinopen(PageloaderTest):
+    """
+    Tests the amount of time it takes an open browser to open a new browser
+    window and paint the browser chrome. This test does not include startup
+    time. Multiple test windows are opened in succession.
+    (Measures ctrl-n performance.)
+    """
+    extensions = ['${talos}/pageloader', '${talos}/tests/twinopen']
+    tpmanifest = '${talos}/tests/twinopen/twinopen.manifest'
+    tppagecycles = 20
+    timeout = 300
+    gecko_profile_interval = 1
+    gecko_profile_entries = 2000000
+    tpmozafterpaint = True
+    filters = filter.ignore_first.prepare(5) + filter.median.prepare()
+    unit = 'ms'
+    preferences = {
+        'browser.startup.homepage': 'about:blank'
+    }
+
+
+@register_test()
 class cpstartup(PageloaderTest):
     """
     Tests the amount of time it takes to start up a new content process and

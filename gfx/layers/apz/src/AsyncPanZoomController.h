@@ -664,6 +664,7 @@ class AsyncPanZoomController {
   /**
    * Helper methods for long press gestures.
    */
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   nsEventStatus OnLongPress(const TapGestureInput& aEvent);
   nsEventStatus OnLongPressUp(const TapGestureInput& aEvent);
 
@@ -680,6 +681,7 @@ class AsyncPanZoomController {
   /**
    * Helper method for double taps.
    */
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   nsEventStatus OnDoubleTap(const TapGestureInput& aEvent);
 
   /**

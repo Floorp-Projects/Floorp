@@ -16,5 +16,9 @@ console.log("Calling puppeteer.connect");
 puppeteer.connect({ browserURL: "http://localhost:9000"}).then(async browser => {
   console.log("Connect success!");
 
+  const page = await browser.newPage();
+  console.log("page", !!page);
+  await page.goto("https://www.mozilla.org/");
+
   return browser.close();
 });

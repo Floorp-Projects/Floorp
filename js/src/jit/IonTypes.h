@@ -109,6 +109,9 @@ enum BailoutKind {
   // Array access with negative index
   Bailout_NegativeIndex,
 
+  // Array access with non integer index
+  Bailout_NonIntegerIndex,
+
   // Pretty specific case:
   //  - need a type barrier on a property write
   //  - all but one of the observed types have property types that reflect
@@ -210,6 +213,8 @@ inline const char* BailoutKindString(BailoutKind kind) {
       return "Bailout_Hole";
     case Bailout_NegativeIndex:
       return "Bailout_NegativeIndex";
+    case Bailout_NonIntegerIndex:
+      return "Bailout_NonIntegerIndex";
     case Bailout_ObjectIdentityOrTypeGuard:
       return "Bailout_ObjectIdentityOrTypeGuard";
     case Bailout_NonInt32Input:

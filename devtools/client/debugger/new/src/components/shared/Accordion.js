@@ -70,7 +70,7 @@ class Accordion extends Component<Props, State> {
           onClick={() => this.handleHeaderClick(i)}
         >
           <AccessibleImage className={`arrow ${opened ? "expanded" : ""}`} />
-          {item.header}
+          <span className="header-label">{item.header}</span>
           {item.buttons ? (
             <div className="header-buttons" tabIndex="-1">
               {item.buttons}

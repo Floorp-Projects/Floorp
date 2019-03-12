@@ -222,9 +222,9 @@ mozilla::ipc::IPCResult MediaTransportParent::RecvSendPacket(
 }
 
 mozilla::ipc::IPCResult MediaTransportParent::RecvAddIceCandidate(
-    const string& transportId, const string& candidate) {
+    const string& transportId, const string& candidate, const string& ufrag) {
   MOZ_ASSERT(GetMainThreadEventTarget()->IsOnCurrentThread());
-  mImpl->mHandler->AddIceCandidate(transportId, candidate);
+  mImpl->mHandler->AddIceCandidate(transportId, candidate, ufrag);
   return ipc::IPCResult::Ok();
 }
 

@@ -17,7 +17,7 @@ use clip::{ClipChainId, ClipRegion, ClipItemKey, ClipStore};
 use clip_scroll_tree::{ROOT_SPATIAL_NODE_INDEX, ClipScrollTree, SpatialNodeIndex};
 use frame_builder::{ChasePrimitive, FrameBuilder, FrameBuilderConfig};
 use glyph_rasterizer::FontInstance;
-use hit_test::{HitTestingItem, HitTestingRun};
+use hit_test::{HitTestingItem, HitTestingScene};
 use image::simplify_repeated_primitive;
 use intern::Interner;
 use internal_types::{FastHashMap, FastHashSet};
@@ -25,7 +25,7 @@ use picture::{Picture3DContext, PictureCompositeMode, PicturePrimitive, PictureO
 use picture::{BlitReason, OrderedPictureChild, PrimitiveList, TileCache};
 use prim_store::{PrimitiveInstance, PrimitiveSceneData};
 use prim_store::{PrimitiveInstanceKind, NinePatchDescriptor, PrimitiveStore};
-use prim_store::{PrimitiveStoreStats, ScrollNodeAndClipChain, PictureIndex};
+use prim_store::{ScrollNodeAndClipChain, PictureIndex};
 use prim_store::InternablePrimitive;
 use prim_store::{register_prim_chase_id, get_line_decoration_sizes};
 use prim_store::borders::{ImageBorder, NormalBorderPrim};
@@ -37,9 +37,9 @@ use prim_store::text_run::TextRun;
 use render_backend::{DocumentView};
 use resource_cache::{FontInstanceMap, ImageRequest};
 use scene::{Scene, StackingContextHelpers};
-use scene_builder::Interners;
+use scene_builder::{DocumentStats, Interners};
 use spatial_node::{StickyFrameInfo, ScrollFrameKind, SpatialNodeType};
-use std::{f32, mem, usize};
+use std::{f32, mem, usize, ops};
 use std::collections::vec_deque::VecDeque;
 use std::sync::Arc;
 use tiling::{CompositeOps};
@@ -205,7 +205,7 @@ pub struct DisplayListFlattener<'a> {
     pub prim_store: PrimitiveStore,
 
     /// Information about all primitives involved in hit testing.
-    pub hit_testing_runs: Vec<HitTestingRun>,
+    pub hit_testing_scene: HitTestingScene,
 
     /// The store which holds all complex clipping information.
     pub clip_store: ClipStore,
@@ -235,7 +235,7 @@ impl<'a> DisplayListFlattener<'a> {
         frame_builder_config: &FrameBuilderConfig,
         new_scene: &mut Scene,
         interners: &mut Interners,
-        prim_store_stats: &PrimitiveStoreStats,
+        doc_stats: &DocumentStats,
     ) -> FrameBuilder {
         // We checked that the root pipeline is available on the render backend.
         let root_pipeline_id = scene.root_pipeline_id.unwrap();
@@ -252,11 +252,11 @@ impl<'a> DisplayListFlattener<'a> {
             config: *frame_builder_config,
             output_pipelines,
             id_to_index_mapper: NodeIdToIndexMapper::default(),
-            hit_testing_runs: Vec::new(),
+            hit_testing_scene: HitTestingScene::new(&doc_stats.hit_test_stats),
             pending_shadow_items: VecDeque::new(),
             sc_stack: Vec::new(),
             pipeline_clip_chain_stack: vec![ClipChainId::NONE],
-            prim_store: PrimitiveStore::new(&prim_store_stats),
+            prim_store: PrimitiveStore::new(&doc_stats.prim_store_stats),
             clip_store: ClipStore::new(),
             interners,
             root_pic_index: PictureIndex(0),
@@ -1192,17 +1192,34 @@ impl<'a> DisplayListFlattener<'a> {
             None => return,
         };
 
-        let new_item = HitTestingItem::new(tag, info);
-        match self.hit_testing_runs.last_mut() {
-            Some(&mut HitTestingRun(ref mut items, prev_clip_and_scroll))
-                if prev_clip_and_scroll == clip_and_scroll => {
-                items.push(new_item);
-                return;
-            }
-            _ => {}
+        // We want to get a range of clip chain roots that apply to this
+        // hit testing primitive.
+
+        // Get the start index for the clip chain root range for this primitive.
+        let start = self.hit_testing_scene.next_clip_chain_index();
+
+        // Add the clip chain root for the primitive itself.
+        self.hit_testing_scene.add_clip_chain(clip_and_scroll.clip_chain_id);
+
+        // Append any clip chain roots from enclosing stacking contexts.
+        for sc in &self.sc_stack {
+            self.hit_testing_scene.add_clip_chain(sc.clip_chain_id);
         }
 
-        self.hit_testing_runs.push(HitTestingRun(vec![new_item], clip_and_scroll));
+        // Construct a clip chain roots range to be stored with the item.
+        let clip_chain_range = ops::Range {
+            start,
+            end: self.hit_testing_scene.next_clip_chain_index(),
+        };
+
+        // Create and store the hit testing primitive itself.
+        let new_item = HitTestingItem::new(
+            tag,
+            info,
+            clip_and_scroll.spatial_node_index,
+            clip_chain_range,
+        );
+        self.hit_testing_scene.add_item(new_item);
     }
 
     /// Add an already created primitive to the draw lists.

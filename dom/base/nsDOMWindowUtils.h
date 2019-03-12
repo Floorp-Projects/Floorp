@@ -84,7 +84,7 @@ class nsDOMWindowUtils final : public nsIDOMWindowUtils,
   mozilla::layers::WebRenderBridgeChild* GetWebRenderBridge();
 
   // Until callers are annotated.
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY
+  MOZ_CAN_RUN_SCRIPT
   NS_IMETHOD SendMouseEventCommon(
       const nsAString& aType, float aX, float aY, int32_t aButton,
       int32_t aClickCount, int32_t aModifiers, bool aIgnoreRootScrollFrame,
@@ -92,6 +92,7 @@ class nsDOMWindowUtils final : public nsIDOMWindowUtils,
       bool aToWindow, bool* aPreventDefault, bool aIsDOMEventSynthesized,
       bool aIsWidgetEventSynthesized, int32_t aButtons);
 
+  MOZ_CAN_RUN_SCRIPT
   NS_IMETHOD SendTouchEventCommon(const nsAString& aType,
                                   uint32_t* aIdentifiers, int32_t* aXs,
                                   int32_t* aYs, uint32_t* aRxs, uint32_t* aRys,

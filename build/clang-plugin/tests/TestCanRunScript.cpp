@@ -33,8 +33,8 @@ struct RefCountedBase {
     test2(this);
   }
 
-  virtual void method_test3() {
-    test();
+  virtual void method_test3() { // expected-note {{parent function declared here}}
+    test(); // expected-error {{functions marked as MOZ_CAN_RUN_SCRIPT can only be called from functions also marked as MOZ_CAN_RUN_SCRIPT}}
   }
 };
 
@@ -92,18 +92,18 @@ MOZ_CAN_RUN_SCRIPT void test3_parent() {
 }
 
 struct RefCountedChild : public RefCountedBase {
-  virtual void method_test3() override;
+  virtual void method_test3() override; // expected-note {{overridden function declared here}} expected-note {{overridden function declared here}}
 };
 
-void RefCountedChild::method_test3() {
-  test();
+void RefCountedChild::method_test3() { // expected-note {{parent function declared here}}
+  test(); // expected-error {{functions marked as MOZ_CAN_RUN_SCRIPT can only be called from functions also marked as MOZ_CAN_RUN_SCRIPT}}
 }
 
 struct RefCountedSubChild : public RefCountedChild {
-  MOZ_CAN_RUN_SCRIPT void method_test3() override;
+  MOZ_CAN_RUN_SCRIPT void method_test3() override; // expected-error {{functions marked as MOZ_CAN_RUN_SCRIPT cannot override functions that are not marked MOZ_CAN_RUN_SCRIPT}}
 };
 
-void RefCountedSubChild::method_test3() {
+void RefCountedSubChild::method_test3() { // expected-error {{functions marked as MOZ_CAN_RUN_SCRIPT cannot override functions that are not marked MOZ_CAN_RUN_SCRIPT}}
   test();
 }
 

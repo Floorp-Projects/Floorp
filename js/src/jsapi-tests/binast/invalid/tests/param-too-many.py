@@ -2,30 +2,29 @@ def filter_ast(ast):
     # Duplicate parameter up to 65536 entries.
     import filter_utils as utils
 
-    utils.assert_interface(ast, 'Script')
-    global_stmts = utils.get_field(ast, 'statements')
+    param_names = utils.wrap(ast) \
+        .assert_interface('Script') \
+        .field('statements') \
+        .elem(0) \
+        .assert_interface('EagerFunctionDeclaration') \
+        .field('contents') \
+        .assert_interface('FunctionOrMethodContents') \
+        .field('parameterScope') \
+        .assert_interface('AssertedParameterScope') \
+        .field('paramNames')
 
-    func_stmt = utils.get_element(global_stmts, 0)
-    utils.assert_interface(func_stmt, 'EagerFunctionDeclaration')
-
-    func_contents = utils.get_field(func_stmt, 'contents')
-    utils.assert_interface(func_contents, 'FunctionOrMethodContents')
-
-    param_scope = utils.get_field(func_contents, 'parameterScope')
-    utils.assert_interface(param_scope, 'AssertedParameterScope')
-    param_names = utils.get_field(param_scope, 'paramNames')
-
-    param_name = utils.get_element(param_names, 0)
-    utils.assert_interface(param_name, 'AssertedPositionalParameterName')
+    param_name = param_names.elem(0) \
+        .assert_interface('AssertedPositionalParameterName')
 
     for i in range(1, 65536 + 1):
-        copied_param_name = utils.copy_tagged_tuple(param_name)
-        index = utils.get_field(copied_param_name, "index")
-        name = utils.get_field(copied_param_name, "name")
+        copied_param_name = param_name.copy()
 
-        utils.set_unsigned_long(index, i)
-        utils.set_identifier_name(name, "a{}".format(i))
+        copied_param_name.field('index') \
+            .set_unsigned_long(i)
 
-        utils.append_element(param_names, copied_param_name)
+        copied_param_name.field('name') \
+            .set_identifier_name('a{}'.format(i))
+
+        param_names.append_elem(copied_param_name)
 
     return ast

@@ -56,13 +56,23 @@ exports.viewSourceInDebugger = async function(toolbox, sourceURL, sourceLine, so
     sourceId ? dbg.getSourceByActorId(sourceId) : dbg.getSourceByURL(sourceURL);
   if (source) {
     await toolbox.selectTool("jsdebugger", reason);
-    dbg.selectSource(source.id, sourceLine);
+    try {
+      await dbg.selectSource(source.id, sourceLine);
+    } catch (err) {
+      console.error("Failed to view source in debugger", err);
+      return false;
+    }
     return true;
   } else if (await toolbox.sourceMapService.hasOriginalURL(sourceURL)) {
     // We have seen a source map for the URL but no source. The debugger will
     // still be able to load the source.
     await toolbox.selectTool("jsdebugger", reason);
-    dbg.selectSourceURL(sourceURL, sourceLine);
+    try {
+      await dbg.selectSourceURL(sourceURL, sourceLine);
+    } catch (err) {
+      console.error("Failed to view source in debugger", err);
+      return false;
+    }
     return true;
   }
 

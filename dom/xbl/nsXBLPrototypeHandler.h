@@ -136,6 +136,7 @@ class nsXBLPrototypeHandler {
     mNextHandler = aHandler;
   }
 
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   nsresult ExecuteHandler(mozilla::dom::EventTarget* aTarget,
                           mozilla::dom::Event* aEvent);
 

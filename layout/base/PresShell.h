@@ -475,6 +475,7 @@ class PresShell final : public nsIPresShell,
         mPresShell = nullptr;
       }
     }
+    MOZ_CAN_RUN_SCRIPT
     void WillRefresh(TimeStamp aTime) override {
       if (mPresShell) {
         RefPtr<PresShell> shell = mPresShell;
@@ -486,7 +487,7 @@ class PresShell final : public nsIPresShell,
     PresShell* mPresShell;
     bool mFromScroll;
   };
-  void ProcessSynthMouseMoveEvent(bool aFromScroll);
+  MOZ_CAN_RUN_SCRIPT void ProcessSynthMouseMoveEvent(bool aFromScroll);
 
   void QueryIsActive();
   nsresult UpdateImageLockingState();
@@ -1197,6 +1198,14 @@ class PresShell final : public nsIPresShell,
                                  nsEventStatus* aEventStatus,
                                  nsPresShellEventCB* aEventCB,
                                  bool aTouchIsNew);
+
+    /**
+     * FinalizeHandlingEvent() should be called after calling DispatchEvent()
+     * and then, this cleans up the state of mPresShell and aEvent.
+     *
+     * @param aEvent            The handled event.
+     */
+    void FinalizeHandlingEvent(WidgetEvent* aEvent);
 
     /**
      * AutoCurrentEventInfoSetter() pushes and pops current event info of
