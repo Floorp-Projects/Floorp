@@ -4,6 +4,7 @@
 package org.mozilla.fenix.components.metrics
 
 import android.app.Application
+import android.util.Log
 import com.leanplum.Leanplum
 import com.leanplum.LeanplumActivityHelper
 import com.leanplum.annotations.Parser
@@ -46,11 +47,39 @@ private val Event.name: String
 }
 
 class LeanplumMetricsService(private val application: Application) : MetricsService {
+    data class Token(val id: String, val token: String) {
+        enum class Type { Development, Production, Invalid }
+
+        val type by lazy {
+            when {
+                token.take(ProdPrefix.length) == ProdPrefix -> Type.Production
+                token.take(DevPrefix.length) == DevPrefix -> Type.Development
+                else -> Type.Invalid
+            }
+        }
+
+        companion object {
+            private const val ProdPrefix = "prod"
+            private const val DevPrefix = "dev"
+        }
+    }
+
+    private val token = Token(LeanplumId, LeanplumToken)
+
     override fun start() {
+        when (token.type) {
+            Token.Type.Production -> Leanplum.setAppIdForProductionMode(token.id, token.token)
+            Token.Type.Development -> Leanplum.setAppIdForDevelopmentMode(token.id, token.token)
+            Token.Type.Invalid -> {
+                Log.i(LOGTAG, "Invalid or missing Leanplum token")
+                return
+            }
+        }
+
         Leanplum.setApplicationContext(application)
         Parser.parseVariables(application)
+
         LeanplumActivityHelper.enableLifecycleCallbacks(application)
-        Leanplum.setAppIdForProductionMode(LeanplumId, LeanplumToken)
         Leanplum.start(application)
     }
 
@@ -58,9 +87,14 @@ class LeanplumMetricsService(private val application: Application) : MetricsServ
         Leanplum.track(event.name, event.extras)
     }
 
-    override fun shouldTrack(event: Event): Boolean = Settings.getInstance(application).isTelemetryEnabled
+    override fun shouldTrack(event: Event): Boolean {
+        return Settings.getInstance(application).isTelemetryEnabled &&
+                token.type != Token.Type.Invalid
+    }
 
     companion object {
+        private const val LOGTAG = "LeanplumMetricsService"
+
         private val LeanplumId: String
             get() = BuildConfig.LEANPLUM_ID ?: ""
         private val LeanplumToken: String
