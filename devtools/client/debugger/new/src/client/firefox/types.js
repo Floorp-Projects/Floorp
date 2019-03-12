@@ -157,8 +157,6 @@ export type FramesResponse = {
 export type TabPayload = {
   actor: ActorId,
   animationsActor: ActorId,
-  callWatcherActor: ActorId,
-  canvasActor: ActorId,
   consoleActor: ActorId,
   cssPropertiesActor: ActorId,
   cssUsageActor: ActorId,
@@ -166,7 +164,6 @@ export type TabPayload = {
   emulationActor: ActorId,
   eventLoopLagActor: ActorId,
   framerateActor: ActorId,
-  gcliActor: ActorId,
   inspectorActor: ActorId,
   memoryActor: ActorId,
   monitorActor: ActorId,
@@ -183,7 +180,6 @@ export type TabPayload = {
   title: string,
   url: URL,
   webExtensionInspectedWindowActor: ActorId,
-  webglActor: ActorId
 };
 
 /**

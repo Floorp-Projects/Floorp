@@ -9,7 +9,6 @@ DevToolsModules(
     'actor-registry-utils.js',
     'actor-registry.js',
     'breakpoint-actor-map.js',
-    'call-watcher.js',
     'closest-scripts.js',
     'css-grid-utils.js',
     'dbg-source.js',
