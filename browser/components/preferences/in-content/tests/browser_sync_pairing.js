@@ -1,6 +1,5 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
-/* global sinon */
 
 "use strict";
 
@@ -8,10 +7,7 @@ const {UIState} = ChromeUtils.import("resource://services-sync/UIState.jsm", {})
 const {FxAccountsPairingFlow} = ChromeUtils.import("resource://gre/modules/FxAccountsPairing.jsm", {});
 
 // Use sinon for mocking.
-Services.scriptloader.loadSubScript("resource://testing-common/sinon-2.3.2.js");
-registerCleanupFunction(() => {
-  delete window.sinon; // test fails with this reference left behind.
-});
+const {sinon} = ChromeUtils.import("resource://testing-common/Sinon.jsm");
 
 let flowCounter = 0;
 
@@ -37,7 +33,7 @@ add_task(async function setup() {
 });
 
 add_task(async function testShowsQRCode() {
-  await runWithPairingDialog(async (win, sinon) => {
+  await runWithPairingDialog(async (win) => {
     let doc = win.document;
     let qrContainer = doc.getElementById("qrContainer");
     let qrWrapper = doc.getElementById("qrWrapper");
@@ -59,7 +55,7 @@ add_task(async function testShowsQRCode() {
 add_task(async function testCantShowQrCode() {
   const origStart = FxAccountsPairingFlow.start;
   FxAccountsPairingFlow.start = async () => { throw new Error("boom"); };
-  await runWithPairingDialog(async (win, sinon) => {
+  await runWithPairingDialog(async (win) => {
     let doc = win.document;
     let qrWrapper = doc.getElementById("qrWrapper");
 
@@ -76,7 +72,7 @@ add_task(async function testCantShowQrCode() {
 });
 
 add_task(async function testSwitchToWebContent() {
-  await runWithPairingDialog(async (win, sinon) => {
+  await runWithPairingDialog(async (win) => {
     let doc = win.document;
     let qrWrapper = doc.getElementById("qrWrapper");
 
@@ -91,7 +87,7 @@ add_task(async function testSwitchToWebContent() {
 });
 
 add_task(async function testError() {
-  await runWithPairingDialog(async (win, sinon) => {
+  await runWithPairingDialog(async (win) => {
     let doc = win.document;
     let qrWrapper = doc.getElementById("qrWrapper");
 
@@ -120,11 +116,9 @@ async function runWithPairingDialog(test) {
 
   let win = await promiseSubDialogLoaded;
 
-  let ss = sinon.sandbox.create();
+  await test(win);
 
-  await test(win, ss);
-
-  ss.restore();
+  sinon.restore();
 
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
 }
