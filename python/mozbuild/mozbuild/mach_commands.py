@@ -1389,7 +1389,7 @@ class PackageFrontend(MachCommandBase):
             def __init__(self, task_id, artifact_name):
                 for _ in redo.retrier(attempts=retry+1, sleeptime=60):
                     cot = cache._download_manager.session.get(
-                        get_artifact_url(task_id, 'public/chainOfTrust.json.asc'))
+                        get_artifact_url(task_id, 'public/chain-of-trust.json'))
                     if cot.status_code >= 500:
                         continue
                     cot.raise_for_status()
@@ -1398,22 +1398,7 @@ class PackageFrontend(MachCommandBase):
                     cot.raise_for_status()
 
                 digest = algorithm = None
-                data = {}
-                # The file is GPG-signed, but we don't care about validating that.
-                # The data looks like:
-                #     -----BEGIN PGP SIGNED MESSAGE-----
-                #     Hash: SHA256
-                #
-                #     {
-                #       ...
-                #     }
-                #     -----BEGIN PGP SIGNATURE-----
-                #     <signature data>
-                #     -----END PGP SIGNATURE-----
-                # The following code extracts the json from there.
-                data = json.loads(
-                    cot.content.partition("-----BEGIN PGP SIGNATURE-----")[0]
-                               .partition("Hash: SHA256")[2])
+                data = json.loads(cot.content)
                 for algorithm, digest in (data.get('artifacts', {})
                                               .get(artifact_name, {}).items()):
                     pass
