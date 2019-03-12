@@ -44,6 +44,9 @@ diff_description_schema = Schema({
 
     # Extra arguments to pass to diffoscope, that can be set per job.
     Optional('extra-args'): basestring,
+
+    # Fail the task when differences are detected.
+    Optional('fail-on-diff'): bool,
 })
 
 transforms = TransformSequence()
@@ -137,8 +140,9 @@ def fill_template(config, tasks):
             'run': {
                 'using': 'run-task',
                 'checkout': False,
-                'command': '/builds/worker/bin/get_and_diffoscope '
-                           '"$ORIG_URL" "$NEW_URL"',
+                'command': '/builds/worker/bin/get_and_diffoscope{}'.format(
+                    ' --fail' if task.get('fail-on-diff') else '',
+                ),
             },
             'dependencies': deps,
         }
