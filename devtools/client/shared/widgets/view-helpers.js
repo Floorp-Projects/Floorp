@@ -48,45 +48,6 @@ const clearNamedTimeout = function clearNamedTimeout(id) {
 exports.clearNamedTimeout = clearNamedTimeout;
 
 /**
- * Same as `setNamedTimeout`, but invokes the callback only if the provided
- * predicate function returns true. Otherwise, the timeout is re-triggered.
- *
- * @param string id
- *        A string identifier for the conditional timeout.
- * @param number wait
- *        The amount of milliseconds to wait after no more events are fired.
- * @param function predicate
- *        The predicate function used to determine whether the timeout restarts.
- * @param function callback
- *        Invoked when no more events are fired after the specified time, and
- *        the provided predicate function returns true.
- */
-const setConditionalTimeout = function setConditionalTimeout(id, wait,
-                                                             predicate,
-                                                             callback) {
-  setNamedTimeout(id, wait, function maybeCallback() {
-    if (predicate()) {
-      callback();
-      return;
-    }
-    setConditionalTimeout(id, wait, predicate, callback);
-  });
-};
-exports.setConditionalTimeout = setConditionalTimeout;
-
-/**
- * Clears a conditional timeout.
- * @see setConditionalTimeout
- *
- * @param string id
- *        A string identifier for the conditional timeout.
- */
-const clearConditionalTimeout = function clearConditionalTimeout(id) {
-  clearNamedTimeout(id);
-};
-exports.clearConditionalTimeout = clearConditionalTimeout;
-
-/**
  * Helpers for creating and messaging between UI components.
  */
 exports.ViewHelpers = {
