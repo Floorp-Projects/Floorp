@@ -11,15 +11,15 @@ add_task(async function newtabPreloaded() {
   const menuHome = doc.querySelector(`#newTabMode menuitem[value="0"]`);
   const menuBlank = doc.querySelector(`#newTabMode menuitem[value="1"]`);
   ok(menuHome.selected, "The first item, Home (default), is selected.");
-  ok(gBrowser._isPreloadingEnabled(), "Default Home allows preloading.");
+  ok(NewTabPagePreloading.enabled, "Default Home allows preloading.");
 
   dispatchMenuItemCommand(menuBlank);
   ok(menuBlank.selected, "The second item, Blank, is selected.");
-  ok(!gBrowser._isPreloadingEnabled(), "Non-Home prevents preloading.");
+  ok(!NewTabPagePreloading.enabled, "Non-Home prevents preloading.");
 
   dispatchMenuItemCommand(menuHome);
   ok(menuHome.selected, "The first item, Home, is selected again.");
-  ok(gBrowser._isPreloadingEnabled(), "Default Home allows preloading again.");
+  ok(NewTabPagePreloading.enabled, "Default Home allows preloading again.");
 
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });

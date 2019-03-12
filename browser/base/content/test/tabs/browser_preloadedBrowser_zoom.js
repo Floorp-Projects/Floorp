@@ -7,11 +7,11 @@ const ZOOM_CHANGE_TOPIC = "browser-fullZoom:location-change";
  */
 async function checkPreloadedZoom(level, message) {
   // Clear up any previous preloaded to test a fresh version
-  gBrowser.removePreloadedBrowser();
-  gBrowser._createPreloadBrowser();
+  NewTabPagePreloading.removePreloadedBrowser(window);
+  NewTabPagePreloading.maybeCreatePreloadedBrowser(window);
 
   // Wait for zoom handling of preloaded
-  const browser = gBrowser._preloadedBrowser;
+  const browser = gBrowser.preloadedBrowser;
   await new Promise(resolve => Services.obs.addObserver(function obs(subject) {
     if (subject === browser) {
       Services.obs.removeObserver(obs, ZOOM_CHANGE_TOPIC);
@@ -22,7 +22,7 @@ async function checkPreloadedZoom(level, message) {
   is(browser.fullZoom, level, message);
 
   // Clean up for other tests
-  gBrowser.removePreloadedBrowser();
+  NewTabPagePreloading.removePreloadedBrowser(window);
 }
 
 add_task(async function test_default_zoom() {
