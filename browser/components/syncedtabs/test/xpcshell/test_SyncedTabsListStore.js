@@ -43,7 +43,7 @@ add_task(async function testGetDataEmpty() {
   let store = new SyncedTabsListStore(SyncedTabs);
   let spy = sinon.spy();
 
-  sinon.stub(SyncedTabs, "getTabClients", () => {
+  sinon.stub(SyncedTabs, "getTabClients").callsFake(() => {
     return Promise.resolve([]);
   });
   store.on("change", spy);
@@ -77,7 +77,7 @@ add_task(async function testRowSelectionWithoutFilter() {
   let store = new SyncedTabsListStore(SyncedTabs);
   let spy = sinon.spy();
 
-  sinon.stub(SyncedTabs, "getTabClients", () => {
+  sinon.stub(SyncedTabs, "getTabClients").callsFake(() => {
     return Promise.resolve(FIXTURE);
   });
 
@@ -128,7 +128,7 @@ add_task(async function testToggleBranches() {
   let store = new SyncedTabsListStore(SyncedTabs);
   let spy = sinon.spy();
 
-  sinon.stub(SyncedTabs, "getTabClients", () => {
+  sinon.stub(SyncedTabs, "getTabClients").callsFake(() => {
     return Promise.resolve(FIXTURE);
   });
 
@@ -162,7 +162,7 @@ add_task(async function testRowSelectionWithFilter() {
   let store = new SyncedTabsListStore(SyncedTabs);
   let spy = sinon.spy();
 
-  sinon.stub(SyncedTabs, "getTabClients", () => {
+  sinon.stub(SyncedTabs, "getTabClients").callsFake(() => {
     return Promise.resolve(FIXTURE);
   });
 
@@ -196,7 +196,7 @@ add_task(async function testFilterAndClearFilter() {
   let store = new SyncedTabsListStore(SyncedTabs);
   let spy = sinon.spy();
 
-  sinon.stub(SyncedTabs, "getTabClients", () => {
+  sinon.stub(SyncedTabs, "getTabClients").callsFake(() => {
     return Promise.resolve(FIXTURE);
   });
   store.on("change", spy);
@@ -230,7 +230,7 @@ add_task(async function testFocusBlurInput() {
   let store = new SyncedTabsListStore(SyncedTabs);
   let spy = sinon.spy();
 
-  sinon.stub(SyncedTabs, "getTabClients", () => {
+  sinon.stub(SyncedTabs, "getTabClients").callsFake(() => {
     return Promise.resolve(FIXTURE);
   });
   store.on("change", spy);

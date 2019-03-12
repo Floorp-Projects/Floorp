@@ -47,7 +47,7 @@ add_task(async function test_activeStatus_observe() {
 
   // _active != _computeStatus() => Need to trigger _onStatusChanged
   formAutofillParent._computeStatus.returns(false);
-  formAutofillParent._onStatusChanged.reset();
+  formAutofillParent._onStatusChanged.resetHistory();
   formAutofillParent.observe(null, "nsPref:changed", "extensions.formautofill.addresses.enabled");
   formAutofillParent.observe(null, "nsPref:changed", "extensions.formautofill.creditCards.enabled");
   Assert.equal(formAutofillParent._onStatusChanged.called, true);
@@ -55,14 +55,14 @@ add_task(async function test_activeStatus_observe() {
   // profile changed => Need to trigger _onStatusChanged
   await Promise.all(["add", "update", "remove", "reconcile"].map(async event => {
     formAutofillParent._computeStatus.returns(!formAutofillParent._active);
-    formAutofillParent._onStatusChanged.reset();
+    formAutofillParent._onStatusChanged.resetHistory();
     await formAutofillParent.observe(null, "formautofill-storage-changed", event);
     Assert.equal(formAutofillParent._onStatusChanged.called, true);
   }));
 
   // profile metadata updated => No need to trigger _onStatusChanged
   formAutofillParent._computeStatus.returns(!formAutofillParent._active);
-  formAutofillParent._onStatusChanged.reset();
+  formAutofillParent._onStatusChanged.resetHistory();
   await formAutofillParent.observe(null, "formautofill-storage-changed", "notifyUsed");
   Assert.equal(formAutofillParent._onStatusChanged.called, false);
 });

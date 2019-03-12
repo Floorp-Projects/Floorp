@@ -14,20 +14,12 @@ const CryptoHash = Components.Constructor("@mozilla.org/security/hash;1",
 const FileInputStream = Components.Constructor("@mozilla.org/network/file-input-stream;1",
                                                "nsIFileInputStream", "init");
 
-// Load mocking/stubbing library, sinon
-// docs: http://sinonjs.org/docs/
-/* global sinon */
-Services.scriptloader.loadSubScript("resource://testing-common/sinon-2.3.2.js");
+const {sinon} = ChromeUtils.import("resource://testing-common/Sinon.jsm");
 
 // Make sinon assertions fail in a way that mochitest understands
 sinon.assert.fail = function(message) {
   ok(false, message);
 };
-
-registerCleanupFunction(async function() {
-  // Cleanup window or the test runner will throw an error
-  delete window.sinon;
-});
 
 // Prep Telemetry to receive events from tests
 TelemetryEvents.init();
