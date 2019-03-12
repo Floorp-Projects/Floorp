@@ -117,6 +117,7 @@ class JS_PUBLIC_API TransitiveCompileOptions {
   bool isProbablySystemCode = false;
   bool hideScriptFromDebugger = false;
   bool bigIntEnabledOption = false;
+  bool fieldsEnabledOption = false;
 
   /**
    * |introductionType| is a statically allocated C string: one of "eval",
