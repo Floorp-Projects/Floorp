@@ -8,6 +8,7 @@ import type {
   Breakpoint,
   SourceLocation,
   XHRBreakpoint,
+  Source,
   BreakpointPositions
 } from "../../types";
 
@@ -95,5 +96,5 @@ export type BreakpointAction =
   | {|
       type: "ADD_BREAKPOINT_POSITIONS",
       positions: BreakpointPositions,
-      sourceId: string
+      source: Source
     |};
