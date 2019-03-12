@@ -52,5 +52,6 @@ interface nsIAccessibleEditableText : nsISupports
    * @param position - index at which to insert the text from the system
    *                   clipboard into the text represented by this object.
    */
+  [can_run_script]
   void pasteText(in long position);
 };
