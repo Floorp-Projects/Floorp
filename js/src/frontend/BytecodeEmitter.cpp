@@ -2718,11 +2718,11 @@ bool BytecodeEmitter::emitSetOrInitializeDestructuring(
         NameLocation loc;
         NameOpEmitter::Kind kind;
         switch (flav) {
-          case DestructuringDeclaration:
+          case DestructuringFlavor::Declaration:
             loc = lookupName(name);
             kind = NameOpEmitter::Kind::Initialize;
             break;
-          case DestructuringFormalParameterInVarScope: {
+          case DestructuringFlavor::FormalParameterInVarScope: {
             // If there's an parameter expression var scope, the
             // destructuring declaration needs to initialize the name in
             // the function scope. The innermost scope is the var scope,
@@ -2734,7 +2734,7 @@ bool BytecodeEmitter::emitSetOrInitializeDestructuring(
             break;
           }
 
-          case DestructuringAssignment:
+          case DestructuringFlavor::Assignment:
             loc = lookupName(name);
             kind = NameOpEmitter::Kind::SimpleAssignment;
             break;
@@ -4047,7 +4047,7 @@ bool BytecodeEmitter::emitDeclarationList(ListNode* declList) {
       }
 
       if (!emitDestructuringOps(&pattern->as<ListNode>(),
-                                DestructuringDeclaration)) {
+                                DestructuringFlavor::Declaration)) {
         return false;
       }
 
@@ -4400,7 +4400,7 @@ bool BytecodeEmitter::emitAssignment(ParseNode* lhs, JSOp compoundOp,
     case ParseNodeKind::ArrayExpr:
     case ParseNodeKind::ObjectExpr:
       if (!emitDestructuringOps(&lhs->as<ListNode>(),
-                                DestructuringAssignment)) {
+                                DestructuringFlavor::Assignment)) {
         return false;
       }
       break;
@@ -4624,7 +4624,7 @@ bool BytecodeEmitter::emitCatch(BinaryNode* catchClause) {
       case ParseNodeKind::ArrayExpr:
       case ParseNodeKind::ObjectExpr:
         if (!emitDestructuringOps(&param->as<ListNode>(),
-                                  DestructuringDeclaration)) {
+                                  DestructuringFlavor::Declaration)) {
           return false;
         }
         if (!emit1(JSOP_POP)) {
@@ -5349,7 +5349,7 @@ bool BytecodeEmitter::emitInitializeForInOrOfTarget(TernaryNode* forHead) {
   MOZ_ASSERT(target->isKind(ParseNodeKind::ArrayExpr) ||
              target->isKind(ParseNodeKind::ObjectExpr));
   return emitDestructuringOps(&target->as<ListNode>(),
-                              DestructuringDeclaration);
+                              DestructuringFlavor::Declaration);
 }
 
 bool BytecodeEmitter::emitForOf(ForNode* forOfLoop,
@@ -8522,10 +8522,10 @@ bool BytecodeEmitter::emitFunctionFormalParameters(ListNode* paramsBody) {
       // If there's an parameter expression var scope, the destructuring
       // declaration needs to initialize the name in the function scope,
       // which is not the innermost scope.
-      if (!emitDestructuringOps(&bindingElement->as<ListNode>(),
-                                paramExprVarScope
-                                    ? DestructuringFormalParameterInVarScope
-                                    : DestructuringDeclaration)) {
+      if (!emitDestructuringOps(
+              &bindingElement->as<ListNode>(),
+              paramExprVarScope ? DestructuringFlavor::FormalParameterInVarScope
+                                : DestructuringFlavor::Declaration)) {
         return false;
       }
 
