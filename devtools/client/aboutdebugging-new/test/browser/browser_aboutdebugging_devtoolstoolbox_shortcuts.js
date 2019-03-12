@@ -26,7 +26,7 @@ add_task(async function() {
   info("Check whether the shortcut keys which opens devtools is enabled");
   await assertShortcutKeys(tab.linkedBrowser, true);
 
-  await closeAboutDevtoolsToolbox(devtoolsTab, window);
+  await closeAboutDevtoolsToolbox(document, devtoolsTab, window);
   await removeTab(tab);
 });
 

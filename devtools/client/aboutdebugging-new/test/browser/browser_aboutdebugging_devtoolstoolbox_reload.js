@@ -31,6 +31,6 @@ add_task(async function() {
   ok(devtoolsBrowser.contentDocument.querySelector(".debug-target-info"),
      "about:devtools-toolbox page displays correctly");
 
-  await closeAboutDevtoolsToolbox(devtoolsTab, window);
+  await closeAboutDevtoolsToolbox(document, devtoolsTab, window);
   await removeTab(tab);
 });
