@@ -1,9 +1,8 @@
 add_task(async function setup() {
-  Services.prefs.setBoolPref("privacy.firstparty.isolate", true);
-
-  registerCleanupFunction(function() {
-    Services.prefs.clearUserPref("privacy.firstparty.isolate");
-  });
+  await SpecialPowers.pushPrefEnv({set: [
+    ["browser.newtab.preload", false],
+    ["privacy.firstparty.isolate", true],
+  ]});
 });
 
 /**
