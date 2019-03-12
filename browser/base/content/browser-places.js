@@ -683,6 +683,7 @@ HistoryMenu.prototype = {
   },
 
   _onCommand: function HM__onCommand(aEvent) {
+    aEvent = getRootEvent(aEvent);
     let placesNode = aEvent.target._placesNode;
     if (placesNode) {
       if (!PrivateBrowsingUtils.isWindowPrivate(window))

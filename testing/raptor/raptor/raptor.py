@@ -15,7 +15,6 @@ import time
 
 import mozcrash
 import mozinfo
-
 from mozdevice import ADBDevice
 from mozlog import commandline, get_default_logger
 from mozprofile import create_profile
@@ -41,6 +40,7 @@ for path in paths:
 
 try:
     from mozbuild.base import MozbuildObject
+
     build = MozbuildObject.from_environment(cwd=here)
 except ImportError:
     build = None
@@ -715,8 +715,11 @@ def main(args=sys.argv[1:]):
     pages_that_timed_out = raptor.get_page_timeout_list()
     if len(pages_that_timed_out) > 0:
         for _page in pages_that_timed_out:
-            LOG.critical("TEST-UNEXPECTED-FAIL: test '%s' timed out loading test page: %s"
-                         % (_page['test_name'], _page['url']))
+            LOG.critical("TEST-UNEXPECTED-FAIL: test '%s' timed out loading test page: %s "
+                         "pending metrics: %s"
+                         % (_page['test_name'],
+                            _page['url'],
+                            _page['pending_metrics']))
         os.sys.exit(1)
 
     # when running raptor locally with gecko profiling on, use the view-gecko-profile

@@ -44,6 +44,7 @@ class RequestListHeader extends Component {
     return {
       columns: PropTypes.object.isRequired,
       resetColumns: PropTypes.func.isRequired,
+      resetSorting: PropTypes.func.isRequired,
       resizeWaterfall: PropTypes.func.isRequired,
       scale: PropTypes.number,
       sort: PropTypes.object,
@@ -64,12 +65,14 @@ class RequestListHeader extends Component {
     this.resizeWaterfall = this.resizeWaterfall.bind(this);
     this.waterfallDivisionLabels = this.waterfallDivisionLabels.bind(this);
     this.waterfallLabel = this.waterfallLabel.bind(this);
+    this.onHeaderClick = this.onHeaderClick.bind(this);
   }
 
   componentWillMount() {
-    const { resetColumns, toggleColumn } = this.props;
+    const { resetColumns, resetSorting, toggleColumn } = this.props;
     this.contextMenu = new RequestListHeaderContextMenu({
       resetColumns,
+      resetSorting,
       toggleColumn,
     });
   }
@@ -107,6 +110,16 @@ class RequestListHeader extends Component {
   onContextMenu(evt) {
     evt.preventDefault();
     this.contextMenu.open(evt, this.props.columns);
+  }
+
+  onHeaderClick(evt, headerName) {
+    const { sortBy, resetSorting } = this.props;
+    if (evt.button == 1) {
+      // reset sort state on middle click
+      resetSorting();
+    } else {
+      sortBy(headerName);
+    }
   }
 
   drawBackground() {
@@ -485,7 +498,7 @@ class RequestListHeader extends Component {
     const label = header.noLocalization
       ? name : L10N.getStr(`netmonitor.toolbar.${header.label || name}`);
 
-    const { scale, sort, sortBy, waterfallWidth } = this.props;
+    const { scale, sort, waterfallWidth } = this.props;
     let sorted, sortedTitle;
     const active = sort.type == name ? true : undefined;
 
@@ -530,7 +543,7 @@ class RequestListHeader extends Component {
           className: `requests-list-header-button`,
           "data-sorted": sorted,
           title: sortedTitle ? `${label} (${sortedTitle})` : label,
-          onClick: () => sortBy(name),
+          onClick: (evt) => this.onHeaderClick(evt, name),
         },
           name === "waterfall"
             ? this.waterfallLabel(waterfallWidth, scale, label)
@@ -579,6 +592,7 @@ module.exports = connect(
   }),
   (dispatch) => ({
     resetColumns: () => dispatch(Actions.resetColumns()),
+    resetSorting: () => dispatch(Actions.sortBy(null)),
     resizeWaterfall: (width) => dispatch(Actions.resizeWaterfall(width)),
     sortBy: (type) => dispatch(Actions.sortBy(type)),
     toggleColumn: (column) => dispatch(Actions.toggleColumn(column)),

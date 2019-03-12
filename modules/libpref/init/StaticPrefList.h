@@ -2096,6 +2096,13 @@ VARCACHE_PREF(
   bool, true
 )
 
+// When this pref is enabled document loads with a mismatched
+// Cross-Origin header will fail to load
+VARCACHE_PREF("browser.tabs.remote.useCrossOriginPolicy",
+              browser_tabs_remote_useCrossOriginPolicy,
+              bool, false
+)
+
 // Prevent system colors from being exposed to CSS or canvas.
 VARCACHE_PREF(
   "ui.use_standins_for_native_colors",
