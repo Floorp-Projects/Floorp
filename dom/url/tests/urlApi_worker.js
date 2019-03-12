@@ -1,3 +1,6 @@
+/* eslint-env worker */
+
+
 function ok(a, msg) {
   dump("OK: " + !!a + "  =>  " + a + " " + msg + "\n");
   postMessage({type: "status", status: !!a, msg: a + ": " + msg });
@@ -8,14 +11,17 @@ function is(a, b, msg) {
   postMessage({type: "status", status: a === b, msg: a + " === " + b + ": " + msg });
 }
 
+// eslint-disable-next-line complexity
 onmessage = function() {
-  status = false;
+  let status = false;
   try {
     if ((URL instanceof Object)) {
       status = true;
     }
   } catch (e) {
   }
+
+  ok(status, "URL in workers \\o/");
 
   var tests = [
     { url: "http://www.abc.com",

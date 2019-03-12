@@ -204,7 +204,6 @@ dom/svg/**
 dom/tests/html/**
 dom/tests/mochitest/**
 dom/u2f/**
-dom/url/**
 dom/vr/**
 dom/webauthn/**
 dom/webgpu/**
