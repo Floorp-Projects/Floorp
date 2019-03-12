@@ -4,13 +4,11 @@
 
 // @flow
 
-import { getSelectedLocation } from "../reducers/sources";
-import { getSelectedFrame } from "../reducers/pause";
+import { getSelectedLocation, getSelectedFrame, getCurrentThread } from ".";
 import { isOriginalId } from "devtools-source-map";
-import { createSelector } from "reselect";
 
 import type { Frame, SourceLocation } from "../types";
-import type { Selector } from "../reducers/types";
+import type { State } from "../reducers/types";
 
 function getLocation(frame: Frame, location: ?SourceLocation) {
   if (!location) {
@@ -22,22 +20,19 @@ function getLocation(frame: Frame, location: ?SourceLocation) {
     : frame.location;
 }
 
-export const getVisibleSelectedFrame: Selector<?{
-  id: string,
-  location: SourceLocation
-}> = createSelector(
-  getSelectedLocation,
-  getSelectedFrame,
-  (selectedLocation, selectedFrame) => {
-    if (!selectedFrame) {
-      return null;
-    }
+export function getVisibleSelectedFrame(state: State) {
+  const thread = getCurrentThread(state);
+  const selectedLocation = getSelectedLocation(state);
+  const selectedFrame = getSelectedFrame(state, thread);
 
-    const { id } = selectedFrame;
-
-    return {
-      id,
-      location: getLocation(selectedFrame, selectedLocation)
-    };
+  if (!selectedFrame) {
+    return null;
   }
-);
+
+  const { id } = selectedFrame;
+
+  return {
+    id,
+    location: getLocation(selectedFrame, selectedLocation)
+  };
+}
