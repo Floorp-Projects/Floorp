@@ -1461,22 +1461,31 @@ class alignas(JS::Value) PrivateScriptData final {
 /*
  * Common data that can be shared between many scripts in a single runtime.
  */
-class SharedScriptData {
+class alignas(uintptr_t) SharedScriptData final {
   // This class is reference counted as follows: each pointer from a JSScript
   // counts as one reference plus there may be one reference from the shared
   // script data table.
   mozilla::Atomic<uint32_t, mozilla::SequentiallyConsistent,
                   mozilla::recordreplay::Behavior::DontPreserve>
-      refCount_;
+      refCount_ = {};
 
-  uint32_t natoms_;
-  uint32_t codeLength_;
-  uint32_t noteLength_;
-  uintptr_t data_[1];
+  uint32_t codeLength_ = 0;
+  uint32_t noteLength_ = 0;
+  uint32_t natoms_ = 0;
+
+  // Size to allocate
+  static size_t AllocationSize(uint32_t codeLength, uint32_t noteLength,
+                               uint32_t natoms);
+
+  template <typename T>
+  void initElements(size_t offset, size_t length);
+
+  // Initialize to GC-safe state
+  SharedScriptData(uint32_t codeLength, uint32_t noteLength, uint32_t natoms);
 
  public:
   static SharedScriptData* new_(JSContext* cx, uint32_t codeLength,
-                                uint32_t srcnotesLength, uint32_t natoms);
+                                uint32_t noteLength, uint32_t natoms);
 
   uint32_t refCount() const { return refCount_; }
   void AddRef() { refCount_++; }
@@ -1492,9 +1501,9 @@ class SharedScriptData {
     return (natoms_ * sizeof(GCPtrAtom)) + codeLength_ + noteLength_;
   }
   const uint8_t* data() const {
-    return reinterpret_cast<const uint8_t*>(data_);
+    return reinterpret_cast<const uint8_t*>(this + 1);
   }
-  uint8_t* data() { return reinterpret_cast<uint8_t*>(data_); }
+  uint8_t* data() { return reinterpret_cast<uint8_t*>(this + 1); }
 
   uint32_t natoms() const { return natoms_; }
   GCPtrAtom* atoms() {
@@ -1517,9 +1526,6 @@ class SharedScriptData {
 
   void traceChildren(JSTracer* trc);
 
-  static constexpr size_t offsetOfData() {
-    return offsetof(SharedScriptData, data_);
-  }
   static constexpr size_t offsetOfNatoms() {
     return offsetof(SharedScriptData, natoms_);
   }
@@ -1534,8 +1540,7 @@ class SharedScriptData {
   // Mark this SharedScriptData for use in a new zone
   void markForCrossZone(JSContext* cx);
 
- private:
-  SharedScriptData() = delete;
+  // SharedScriptData has trailing data so isn't copyable or movable.
   SharedScriptData(const SharedScriptData&) = delete;
   SharedScriptData& operator=(const SharedScriptData&) = delete;
 };
