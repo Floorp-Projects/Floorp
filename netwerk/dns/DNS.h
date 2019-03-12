@@ -12,7 +12,6 @@
 #include "prio.h"
 #include "prnetdb.h"
 #include "plstr.h"
-#include "nsISupportsImpl.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/MemoryReporting.h"
 
@@ -124,8 +123,6 @@ class NetAddrElement : public LinkedListElement<NetAddrElement> {
 };
 
 class AddrInfo {
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(AddrInfo)
-
  public:
   // Creates an AddrInfo object.
   explicit AddrInfo(const nsACString &host, const PRAddrInfo *prAddrInfo,
@@ -139,6 +136,7 @@ class AddrInfo {
 
   // Creates a basic AddrInfo object (initialize only the host and TRR status).
   explicit AddrInfo(const nsACString &host, unsigned int TRRType);
+  ~AddrInfo();
 
   explicit AddrInfo(const AddrInfo *src);  // copy
 
@@ -151,11 +149,10 @@ class AddrInfo {
   uint32_t ttl;
   static const uint32_t NO_TTL_DATA = (uint32_t)-1;
 
-  AutoCleanLinkedList<NetAddrElement> mAddresses;
+  LinkedList<NetAddrElement> mAddresses;
   unsigned int IsTRR() { return mFromTRR; }
 
  private:
-  ~AddrInfo();
   unsigned int mFromTRR;
 };
 
