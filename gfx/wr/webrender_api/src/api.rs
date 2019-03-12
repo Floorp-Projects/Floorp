@@ -65,7 +65,7 @@ pub struct Transaction {
 
     generate_frame: bool,
 
-    pub invalidate_rendered_frame: bool,
+    invalidate_rendered_frame: bool,
 
     low_priority: bool,
 }
