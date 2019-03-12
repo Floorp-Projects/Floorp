@@ -1466,10 +1466,6 @@ struct ScopeDataGCPolicy : public NonGCPointerPolicy<T> {};
 
 #define DEFINE_SCOPE_DATA_GCPOLICY(Data)              \
   template <>                                         \
-  struct MapTypeToRootKind<Data*> {                   \
-    static const RootKind kind = RootKind::Traceable; \
-  };                                                  \
-  template <>                                         \
   struct GCPolicy<Data*> : public ScopeDataGCPolicy<Data*> {}
 
 DEFINE_SCOPE_DATA_GCPOLICY(js::LexicalScope::Data);

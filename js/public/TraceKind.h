@@ -156,19 +156,21 @@ JS_FOR_EACH_TRACEKIND(JS_EXPAND_DEF)
 // Specify the RootKind for all types. Value and jsid map to special cases;
 // Cell pointer types we can derive directly from the TraceKind; everything else
 // should go in the Traceable list and use GCPolicy<T>::trace for tracing.
-template <typename T>
+//
+// The second, defaulted template parameter here is purely so a specialization
+// can get a soft (SFINAE) failure to fall back on this default of Traceable.
+template <typename T, typename = void>
 struct MapTypeToRootKind {
   static const JS::RootKind kind = JS::RootKind::Traceable;
 };
+// For any type for which MapTypeToTraceKind<T> exists, map that trace kind to
+// the appropriate root kind and use it for pointers to that type. For anything
+// else, the second template parameter will cause a failure and thus fall back
+// to the generic RootKind::Traceable version above.
 template <typename T>
-struct MapTypeToRootKind<T*> {
+struct MapTypeToRootKind<T*, JS::MapTypeToTraceKind<T>> {
   static const JS::RootKind kind =
       JS::MapTraceKindToRootKind<JS::MapTypeToTraceKind<T>::kind>::kind;
-};
-template <>
-struct MapTypeToRootKind<JS::Realm*> {
-  // Not a pointer to a GC cell. Use GCPolicy.
-  static const JS::RootKind kind = JS::RootKind::Traceable;
 };
 template <typename T>
 struct MapTypeToRootKind<mozilla::UniquePtr<T>> {
