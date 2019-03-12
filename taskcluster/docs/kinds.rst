@@ -566,3 +566,8 @@ generate-profile
 Tasks that take a build configured for PGO and run the binary against a sample
 set to generate profile data. This is the 2nd stage of the full 3-step PGO
 process.
+
+geckodriver-repack
+------------------
+Tasks to repackage the geckodriver binary from a build tasks's common
+test archive into it's own archive.
