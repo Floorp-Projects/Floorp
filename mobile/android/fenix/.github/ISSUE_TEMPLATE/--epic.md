@@ -1,6 +1,6 @@
 ---
-name: "🔵 Epic"
-about: Create Epic
+name: "🔵 Meta Feature (Epic)"
+about: Create Epic (Meta Feature)
 
 ---
 Owner: Product Manager
