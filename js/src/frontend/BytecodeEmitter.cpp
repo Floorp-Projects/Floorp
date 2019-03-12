@@ -29,6 +29,7 @@
 #include "frontend/BytecodeControlStructures.h"
 #include "frontend/CallOrNewEmitter.h"
 #include "frontend/CForEmitter.h"
+#include "frontend/DefaultEmitter.h"  // DefaultEmitter
 #include "frontend/DoWhileEmitter.h"
 #include "frontend/ElemOpEmitter.h"
 #include "frontend/EmitterScope.h"
@@ -3141,30 +3142,10 @@ bool BytecodeEmitter::wrapWithDestructuringTryNote(int32_t iterDepth,
 }
 
 bool BytecodeEmitter::emitDefault(ParseNode* defaultExpr, ParseNode* pattern) {
-  IfEmitter ifUndefined(this);
-  if (!ifUndefined.emitIf(Nothing())) {
-    return false;
-  }
+  //                [stack] VALUE
 
-  if (!emit1(JSOP_DUP)) {
-    //              [stack] VALUE VALUE
-    return false;
-  }
-  if (!emit1(JSOP_UNDEFINED)) {
-    //              [stack] VALUE VALUE UNDEFINED
-    return false;
-  }
-  if (!emit1(JSOP_STRICTEQ)) {
-    //              [stack] VALUE EQ?
-    return false;
-  }
-
-  if (!ifUndefined.emitThen()) {
-    //              [stack] VALUE
-    return false;
-  }
-
-  if (!emit1(JSOP_POP)) {
+  DefaultEmitter de(this);
+  if (!de.prepareForDefault()) {
     //              [stack]
     return false;
   }
@@ -3172,8 +3153,7 @@ bool BytecodeEmitter::emitDefault(ParseNode* defaultExpr, ParseNode* pattern) {
     //              [stack] DEFAULTVALUE
     return false;
   }
-
-  if (!ifUndefined.emitEnd()) {
+  if (!de.emitEnd()) {
     //              [stack] VALUE/DEFAULTVALUE
     return false;
   }
