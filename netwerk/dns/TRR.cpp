@@ -876,7 +876,7 @@ nsresult TRR::DohDecode(nsCString &aHost) {
 nsresult TRR::ReturnData() {
   if (mType != TRRTYPE_TXT) {
     // create and populate an AddrInfo instance to pass on
-    RefPtr<AddrInfo> ai(new AddrInfo(mHost, mType));
+    nsAutoPtr<AddrInfo> ai(new AddrInfo(mHost, mType));
     DOHaddr *item;
     uint32_t ttl = AddrInfo::NO_TTL_DATA;
     while ((item = static_cast<DOHaddr *>(mDNS.mAddresses.popFirst()))) {
@@ -895,7 +895,7 @@ nsresult TRR::ReturnData() {
     if (!mHostResolver) {
       return NS_ERROR_FAILURE;
     }
-    (void)mHostResolver->CompleteLookup(mRec, NS_OK, ai, mPB,
+    (void)mHostResolver->CompleteLookup(mRec, NS_OK, ai.forget(), mPB,
                                         mOriginSuffix);
     mHostResolver = nullptr;
     mRec = nullptr;
@@ -915,7 +915,7 @@ nsresult TRR::FailData(nsresult error) {
   } else {
     // create and populate an TRR AddrInfo instance to pass on to signal that
     // this comes from TRR
-    RefPtr<AddrInfo> ai = new AddrInfo(mHost, mType);
+    AddrInfo *ai = new AddrInfo(mHost, mType);
 
     (void)mHostResolver->CompleteLookup(mRec, error, ai, mPB, mOriginSuffix);
   }
