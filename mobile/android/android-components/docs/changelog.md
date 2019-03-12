@@ -4,13 +4,21 @@ title: Changelog
 permalink: /changelog/
 ---
 
-# 0.46.0-SNAPSHOT  (In Development)
+# 0.47.0-SNAPSHOT  (In Development)
 
-* [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.45.0...master)
-* [Milestone](https://github.com/mozilla-mobile/android-components/milestone/49?closed=1)
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.46.0...master)
+* [Milestone](https://github.com/mozilla-mobile/android-components/milestone/50?closed=1)
 * [Dependencies](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Dependencies.kt)
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Config.kt)
+
+# 0.46.0-SNAPSHOT
+
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.45.0...v0.46.0)
+* [Milestone](https://github.com/mozilla-mobile/android-components/milestone/49?closed=1)
+* [Dependencies](https://github.com/mozilla-mobile/android-components/blob/v0.46.0/buildSrc/src/main/java/Dependencies.kt)
+* [Gecko](https://github.com/mozilla-mobile/android-components/blob/v0.46.0/buildSrc/src/main/java/Gecko.kt)
+* [Configuration](https://github.com/mozilla-mobile/android-components/blob/v0.46.0/buildSrc/src/main/java/Config.kt)
 
 * **browser-awesomebar**
   * Adds ability to remove `SuggestionProvider`s with `removeProviders` and `removeAllProviders`
@@ -31,6 +39,12 @@ permalink: /changelog/
 
 * **service-experiments**
   * A new client-side experiments SDK for running segmenting user populations to run multi-branch experiments on them. This component is going to replace `service-fretboard`. The SDK is currently in development and the component is not ready to be used yet.
+
+* * **browser-icons**
+  * Adding a decoder for decoding ICO files see #2040.
+
+* **service-pocket**
+  * 🆕 New component to interact with the Pocket APIs.
 
 # 0.45.0
 
