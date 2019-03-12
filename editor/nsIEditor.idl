@@ -286,11 +286,13 @@ interface nsIEditor  : nsISupports
   /** paste the text in the OS clipboard at the cursor position, replacing
     * the selected text (if any)
     */
+  [can_run_script]
   void paste(in long aSelectionType);
 
   /** Paste the text in |aTransferable| at the cursor position, replacing the
     * selected text (if any).
     */
+  [can_run_script]
   void pasteTransferable(in nsITransferable aTransferable);
 
   /** Can we paste? True if the doc is modifiable, and we have

@@ -582,7 +582,7 @@ mozilla::ipc::IPCResult DocAccessibleChild::RecvDeleteText(
 
 mozilla::ipc::IPCResult DocAccessibleChild::RecvPasteText(
     const uint64_t& aID, const int32_t& aPosition, bool* aValid) {
-  HyperTextAccessible* acc = IdToHyperTextAccessible(aID);
+  RefPtr<HyperTextAccessible> acc = IdToHyperTextAccessible(aID);
   if (acc && acc->IsTextRole()) {
     *aValid = acc->IsValidOffset(aPosition);
     acc->PasteText(aPosition);
