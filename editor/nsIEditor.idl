@@ -168,6 +168,7 @@ interface nsIEditor  : nsISupports
     * error NS_ERROR_NOT_AVAILABLE is returned.
     *
     */
+  [can_run_script]
   void undo(in unsigned long count);
 
   /** returns state information about the undo system.
@@ -187,6 +188,7 @@ interface nsIEditor  : nsISupports
     * error NS_ERROR_NOT_AVAILABLE is returned.
     *
     */
+  [can_run_script]
   void redo(in unsigned long count);
 
   /** returns state information about the redo system.
