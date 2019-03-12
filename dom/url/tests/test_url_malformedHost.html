@@ -24,23 +24,23 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1020041
   <script type="application/javascript">
 
   var tests = [
-    { host: '?', expected: 'www.example.com' },
-    { host: 'what?' , expected: 'what' },
-    { host: 'so what' , expected: 'www.example.com' },
-    { host: 'aa#bb' , expected: 'aa' },
-    { host: 'a/b' , expected: 'a' },
-    { host: 'a\\b', expected: 'a' },
-    { host: '[2001::1]#bla:10', expected: '[2001::1]'}
+    { host: "?", expected: "www.example.com" },
+    { host: "what?", expected: "what" },
+    { host: "so what", expected: "www.example.com" },
+    { host: "aa#bb", expected: "aa" },
+    { host: "a/b", expected: "a" },
+    { host: "a\\b", expected: "a" },
+    { host: "[2001::1]#bla:10", expected: "[2001::1]"},
   ];
 
   for (var i = 0; i < tests.length; ++i) {
-    var url = new URL('http://www.example.com');
+    var url = new URL("http://www.example.com");
     url.host = tests[i].host;
-    is (url.host, tests[i].expected, "URL.host is: " + url.host);
+    is(url.host, tests[i].expected, "URL.host is: " + url.host);
 
-    url = new URL('http://www.example.com');
+    url = new URL("http://www.example.com");
     url.hostname = tests[i].host;
-    is (url.hostname, tests[i].expected, "URL.hostname is: " + url.host);
+    is(url.hostname, tests[i].expected, "URL.hostname is: " + url.host);
   }
 
   </script>
