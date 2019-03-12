@@ -79,8 +79,7 @@ def get_flavors(graph_config, param):
     title='Release Promotion',
     symbol='${input.release_promotion_flavor}',
     description="Promote a release.",
-    # Bug 1485680
-    kind='task',
+    generic=False,
     order=500,
     context=[],
     available=is_release_promotion_available,
