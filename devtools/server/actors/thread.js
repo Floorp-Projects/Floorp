@@ -205,7 +205,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
   /**
    * Clean up listeners, debuggees and clear actor pools associated with
    * the lifetime of this actor. This does not destroy the thread actor,
-   * it resets it. This is used in methods `onReleaseMany` `onDetatch` and
+   * it resets it. This is used in methods `onDetatch` and
    * `exit`. The actor is truely destroyed in the `exit method`.
    */
   destroy: function() {
@@ -1112,34 +1112,6 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     return { frames: frames.filter(x => !!x) };
   },
 
-  onReleaseMany: function(request) {
-    if (!request.actors) {
-      return { error: "missingParameter",
-               message: "no actors were specified" };
-    }
-
-    let res;
-    for (const actorID of request.actors) {
-      const actor = this.threadLifetimePool.get(actorID);
-      if (!actor) {
-        if (!res) {
-          res = { error: "notReleasable",
-                  message: "Only thread-lifetime actors can be released." };
-        }
-        continue;
-      }
-
-      // We can still have old-style actors (e.g. object/long-string) in the pool, so we
-      // need to check onRelease existence.
-      if (actor.onRelease) {
-        actor.onRelease();
-      } else if (actor.destroy) {
-        actor.destroy();
-      }
-    }
-    return res ? res : {};
-  },
-
   onSources: function(request) {
     for (const source of this.dbg.findSources()) {
       this._addSource(source);
@@ -1772,7 +1744,6 @@ Object.assign(ThreadActor.prototype.requestTypes, {
   "clientEvaluate": ThreadActor.prototype.onClientEvaluate,
   "frames": ThreadActor.prototype.onFrames,
   "interrupt": ThreadActor.prototype.onInterrupt,
-  "releaseMany": ThreadActor.prototype.onReleaseMany,
   "sources": ThreadActor.prototype.onSources,
   "threadGrips": ThreadActor.prototype.onThreadGrips,
   "skipBreakpoints": ThreadActor.prototype.onSkipBreakpoints,
