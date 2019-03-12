@@ -643,7 +643,8 @@ xpcAccessibleHyperText::PasteText(int32_t aOffset) {
   if (mIntl.IsNull()) return NS_ERROR_FAILURE;
 
   if (mIntl.IsAccessible()) {
-    Intl()->PasteText(aOffset);
+    RefPtr<HyperTextAccessible> acc = Intl();
+    acc->PasteText(aOffset);
   } else {
 #if defined(XP_WIN)
     return NS_ERROR_NOT_IMPLEMENTED;

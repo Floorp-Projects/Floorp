@@ -73,6 +73,7 @@ class TextEditor : public EditorBase, public nsIPlaintextEditor {
   NS_IMETHOD CanCopy(bool* aCanCopy) override;
   NS_IMETHOD CanDelete(bool* aCanDelete) override;
   NS_IMETHOD CanPaste(int32_t aSelectionType, bool* aCanPaste) override;
+  MOZ_CAN_RUN_SCRIPT
   NS_IMETHOD PasteTransferable(nsITransferable* aTransferable) override;
 
   NS_IMETHOD OutputToString(const nsAString& aFormatType, uint32_t aFlags,
@@ -119,6 +120,7 @@ class TextEditor : public EditorBase, public nsIPlaintextEditor {
    * @param aDispatchPasteEvent true if this should dispatch ePaste event
    *                            before pasting.  Otherwise, false.
    */
+  MOZ_CAN_RUN_SCRIPT
   nsresult PasteAsAction(int32_t aClipboardType, bool aDispatchPasteEvent);
 
   /**
@@ -141,6 +143,7 @@ class TextEditor : public EditorBase, public nsIPlaintextEditor {
    * @param aDispatchPasteEvent true if this should dispatch ePaste event
    *                            before pasting.  Otherwise, false.
    */
+  MOZ_CAN_RUN_SCRIPT
   virtual nsresult PasteAsQuotationAsAction(int32_t aClipboardType,
                                             bool aDispatchPasteEvent);
 
