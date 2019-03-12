@@ -71,6 +71,12 @@ assertEquals("login_opened", first.name)
 NOTE: Using the testing API requires calling `Glean.enableTestingMode()` first,
 such as from a `@Before` method.
 
+Event timestamps use a system timer that is guaranteed to be monotonic only
+within a particular boot of the device. Therefore, if there are any unsent
+recorded events on disk when the application starts, any pings containing those
+events are sent immediately, so that glean can start over using a new timer and
+events based on different timers are never sent within the same ping.
+
 ## Counters
 
 Used to count how often something happens, say how often a certain button was pressed.
