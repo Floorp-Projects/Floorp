@@ -6,7 +6,6 @@
 
 const Services = require("Services");
 const osString = Services.appinfo.OS;
-const { Cu } = require("chrome");
 
 // Panels
 loader.lazyGetter(this, "OptionsPanel", () => require("devtools/client/framework/toolbox-options").OptionsPanel);
@@ -173,33 +172,6 @@ Tools.styleEditor = {
 
   build: function(iframeWindow, toolbox) {
     return new StyleEditorPanel(iframeWindow, toolbox);
-  },
-};
-
-Tools.shaderEditor = {
-  id: "shadereditor",
-  deprecated: true,
-  deprecationURL: DEPRECATION_URL,
-  ordinal: 5,
-  visibilityswitch: "devtools.shadereditor.enabled",
-  icon: "chrome://devtools/skin/images/tool-shadereditor.svg",
-  url: "chrome://devtools/content/shadereditor/index.xul",
-  label: l10n("ToolboxShaderEditor.label"),
-  panelLabel: l10n("ToolboxShaderEditor.panelLabel"),
-  tooltip: l10n("ToolboxShaderEditor.tooltip"),
-
-  isTargetSupported: function(target) {
-    return target.hasActor("webgl") && !target.chrome;
-  },
-
-  build: function(iframeWindow, toolbox) {
-    const { BrowserLoader } = Cu.import("resource://devtools/client/shared/browser-loader.js", {});
-    const browserRequire = BrowserLoader({
-      baseURI: "resource://devtools/client/shadereditor/",
-      window: iframeWindow,
-    }).require;
-    const { ShaderEditorPanel } = browserRequire("devtools/client/shadereditor/panel");
-    return new ShaderEditorPanel(toolbox);
   },
 };
 
@@ -442,7 +414,6 @@ var defaultTools = [
   Tools.inspector,
   Tools.jsdebugger,
   Tools.styleEditor,
-  Tools.shaderEditor,
   Tools.webAudioEditor,
   Tools.performance,
   Tools.netMonitor,
