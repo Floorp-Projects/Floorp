@@ -27,6 +27,7 @@
                   "*://*.imdb.com/*",
                   "*://*.imgur.com/*",
                   "*://*.instagram.com/*",
+                  "*://*.jianshu.com/*",
                   "*://*.microsoft.com/*",
                   "*://*.paypal.com/*",
                   "*://*.pinterest.com/*",

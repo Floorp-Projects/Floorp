@@ -633,8 +633,10 @@ class TransportTestPeer : public sigslot::has_slots<> {
   }
 
   // New candidate
-  void GotCandidate(NrIceMediaStream* stream, const std::string& candidate) {
-    std::cerr << "Got candidate " << candidate << std::endl;
+  void GotCandidate(NrIceMediaStream* stream, const std::string& candidate,
+                    const std::string& ufrag) {
+    std::cerr << "Got candidate " << candidate << " (ufrag=" << ufrag << ")"
+              << std::endl;
   }
 
   void GatheringStateChange(NrIceCtx* ctx, NrIceCtx::GatheringState state) {

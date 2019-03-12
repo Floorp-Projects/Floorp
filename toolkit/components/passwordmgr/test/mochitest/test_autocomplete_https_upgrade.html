@@ -56,7 +56,7 @@ runInParent(function addLogins() {
 <pre id="test">
 <script class="testbody" type="text/javascript">
 let iframe = SpecialPowers.wrap(document.getElementsByTagName("iframe")[0]);
-let iframeDoc;
+let iframeDoc, hostname;
 let uname;
 let pword;
 
@@ -86,6 +86,7 @@ add_task(async function setup() {
   });
 
   iframeDoc = iframe.contentDocument;
+  hostname = iframeDoc.documentURIObject.host;
   uname = iframeDoc.getElementById("form-basic-username");
   pword = iframeDoc.getElementById("form-basic-password");
 });
@@ -102,7 +103,7 @@ add_task(async function test_empty_first_entry() {
   let results = await shownPromise;
   popupState = await getPopupState();
   is(popupState.selectedIndex, -1, "Check no entries are selected");
-  checkArrayValues(results, ["name", "name1", "name2"], "initial");
+  checkAutoCompleteResults(results, ["name", "name1", "name2"], hostname, "initial");
 
   // Check first entry
   let index0Promise = notifySelectedIndex(0);
@@ -136,7 +137,7 @@ add_task(async function test_search() {
   sendChar("1");
   synthesizeKey("KEY_ArrowDown"); // open
   let results = await shownPromise;
-  checkArrayValues(results, ["name1"], "check result deduping for 'name1'");
+  checkAutoCompleteResults(results, ["name1"], hostname, "check result deduping for 'name1'");
   synthesizeKey("KEY_ArrowDown"); // first
   synthesizeKey("KEY_Enter");
   await promiseFormsProcessed();
@@ -164,9 +165,9 @@ add_task(async function test_delete_first_entry() {
   await deletionPromise;
   checkACForm("", "");
 
-  let results = await notifyMenuChanged(2, "name1");
+  let results = await notifyMenuChanged(3, "name1");
 
-  checkArrayValues(results, ["name1", "name2"], "two should remain after deleting the first");
+  checkAutoCompleteResults(results, ["name1", "name2"], hostname, "two logins should remain after deleting the first");
   let popupState = await getPopupState();
   is(popupState.open, true, "Check popup stays open after deleting");
   synthesizeKey("KEY_Escape");
@@ -199,9 +200,9 @@ add_task(async function test_delete_duplicate_entry() {
 
   // Two menu items should remain as the HTTPS login should have been deleted but
   // the HTTP would remain.
-  let results = await notifyMenuChanged(1, "name2");
+  let results = await notifyMenuChanged(2, "name2");
 
-  checkArrayValues(results, ["name2"], "one should remain after deleting the HTTPS name1");
+  checkAutoCompleteResults(results, ["name2"], hostname, "one login should remain after deleting the HTTPS name1");
   let popupState = await getPopupState();
   is(popupState.open, true, "Check popup stays open after deleting");
   synthesizeKey("KEY_Escape");

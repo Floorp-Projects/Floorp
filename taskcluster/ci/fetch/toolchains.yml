@@ -206,3 +206,33 @@ grcov-osx-x86_64:
     url: https://github.com/mozilla/grcov/releases/download/v0.3.2/grcov-osx-x86_64.tar.bz2
     sha256: 6a810f782efb207234ef418ab136edd1c0ffa61aa84d8c4545042a6fa3b9dd13
     size: 915948
+
+zlib-1.2.11:
+  description: zlib 1.2.11 source code
+  fetch:
+    type: static-url
+    url: http://zlib.net/zlib-1.2.11.tar.gz
+    sha256: c3e5e9fdd5004dcb542feda5ee4f0ff0744628baf8ed2dd5d66f8ca1197cb1a1
+    size: 607698
+    gpg-signature:
+      sig-url: "{url}.asc"
+      key-path: build/unix/build-gcc/5ED46A6721D365587791E2AA783FCD8E58BCAFBA.key
+
+nsis-3.01:
+  description: nsis 3.01 source code
+  fetch:
+    type: static-url
+    url: https://downloads.sourceforge.net/project/nsis/NSIS%203/3.01/nsis-3.01-src.tar.bz2
+    sha256: 604c011593be484e65b2141c50a018f1b28ab28c994268e4ecd377773f3ffba1
+    size: 1649428
+
+wine-3.0.3:
+  description: wine-3.0.3.tar.xz
+  fetch:
+    type: static-url
+    url: http://dl.winehq.org/wine/source/3.0/wine-3.0.3.tar.xz
+    sha256: eb645999ea6f6455a5275bf267e19a32497c8f5aac818ea40afe7c8c396a4da1
+    size: 19735412
+    gpg-signature:
+      sig-url: "{url}.sign"
+      key-path: build/unix/build-gcc/DA23579A74D4AD9AF9D3F945CEFAC8EAAF17519D.key

@@ -26,12 +26,6 @@ Actions
 .. autoclass:: marionette_driver.marionette.Actions
    :members:
 
-MultiActions
-------------
-.. py:currentmodule:: marionette_driver.marionette.MultiActions
-.. autoclass:: marionette_driver.marionette.MultiActions
-   :members:
-
 Alert
 -----
 .. py:currentmodule:: marionette_driver.marionette.Alert

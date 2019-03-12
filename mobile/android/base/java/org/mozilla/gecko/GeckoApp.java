@@ -19,6 +19,7 @@ import org.mozilla.gecko.menu.GeckoMenuInflater;
 import org.mozilla.gecko.menu.MenuPanel;
 import org.mozilla.gecko.mma.MmaDelegate;
 import org.mozilla.gecko.notifications.NotificationHelper;
+import org.mozilla.gecko.search.SearchWidgetProvider;
 import org.mozilla.gecko.util.IntentUtils;
 import org.mozilla.gecko.mozglue.SafeIntent;
 import org.mozilla.gecko.mozglue.GeckoLoader;
@@ -1456,6 +1457,8 @@ public abstract class GeckoApp extends GeckoActivity
     /**
      * Loads the initial tab at Fennec startup. If we don't restore tabs, this
      * tab will be about:home, or the homepage if the user has set one.
+     * If the app was started from the search widget we need to always load about:home
+     * and not the homepage which the user may have set to be another address.
      * If we've temporarily disabled restoring to break out of a crash loop, we'll show
      * the Recent Tabs folder of the Combined History panel, so the user can manually
      * restore tabs as needed.
@@ -1463,6 +1466,12 @@ public abstract class GeckoApp extends GeckoActivity
      * to be #android.Intent.ACTION_VIEW, which is launched from widget to create a new tab.
      */
     protected void loadStartupTab(final int flags, String action) {
+        final SearchWidgetProvider.InputType input = getWidgetInputType(getIntent());
+        if (input != null) {
+            Tabs.getInstance().loadUrl("about:home", flags);
+            return;
+        }
+
         if (!mShouldRestore || Intent.ACTION_VIEW.equals(action)) {
             if (mLastSessionCrashed) {
                 // The Recent Tabs panel no longer exists, but BrowserApp will redirect us
@@ -1490,6 +1499,14 @@ public abstract class GeckoApp extends GeckoActivity
         }
 
         Tabs.getInstance().loadUrlWithIntentExtras(url, intent, flags);
+    }
+
+    protected SearchWidgetProvider.InputType getWidgetInputType(final Intent intent) {
+        final Intent searchIntent = intent != null ? intent : getIntent();
+        if (searchIntent == null) {
+            return null;
+        }
+        return (SearchWidgetProvider.InputType) searchIntent.getSerializableExtra(SearchWidgetProvider.INPUT_TYPE_KEY);
     }
 
     protected String getIntentURI(SafeIntent intent) {

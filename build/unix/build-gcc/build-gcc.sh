@@ -5,8 +5,6 @@ set -x
 
 make_flags="-j$(nproc)"
 
-. $data_dir/download-tools.sh
-
 prepare_mingw() {
   export prefix=/tools/mingw32
   export install_dir=$root_dir$prefix

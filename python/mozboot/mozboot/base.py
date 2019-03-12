@@ -272,6 +272,14 @@ class BaseBootstrapper(object):
             '%s does not yet implement ensure_stylo_packages()'
             % __name__)
 
+    def ensure_nasm_packages(self, state_dir, checkout_root):
+        '''
+        Install nasm.
+        '''
+        raise NotImplementedError(
+            '%s does not yet implement ensure_nasm_packages()'
+            % __name__)
+
     def ensure_node_packages(self, state_dir, checkout_root):
         '''
         Install any necessary packages needed to supply NodeJS'''

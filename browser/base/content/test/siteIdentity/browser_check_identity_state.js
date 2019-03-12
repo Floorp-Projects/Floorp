@@ -24,6 +24,13 @@ function getConnectionState() {
   return document.getElementById("identity-popup").getAttribute("connection");
 }
 
+function getReaderModeURL() {
+  // Gets the reader mode URL from "identity-popup mainView panel header span"
+  document.getElementById("identity-box").click();
+  gIdentityHandler.refreshIdentityPopup();
+  return document.getElementById("identity-popup-mainView-panel-header-span").innerHTML;
+}
+
 // This test is slow on Linux debug e10s
 requestLongerTimeout(2);
 
@@ -347,6 +354,24 @@ async function aboutUriTest(secureCheck) {
 add_task(async function test_about_uri() {
   await aboutUriTest(true);
   await aboutUriTest(false);
+});
+
+async function readerUriTest(secureCheck) {
+  await SpecialPowers.pushPrefEnv({set: [[INSECURE_ICON_PREF, secureCheck]]});
+
+  let newTab = await loadNewTab("about:reader?url=http://example.com");
+  gBrowser.selectedTab = newTab;
+  let readerURL = getReaderModeURL();
+  is(readerURL, "Site Information for example.com", "should be the correct URI in reader mode");
+
+  gBrowser.removeTab(newTab);
+
+  await SpecialPowers.popPrefEnv();
+}
+
+add_task(async function test_reader_uri() {
+  await readerUriTest(true);
+  await readerUriTest(false);
 });
 
 async function dataUriTest(secureCheck) {

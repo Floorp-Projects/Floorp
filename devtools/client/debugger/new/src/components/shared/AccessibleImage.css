@@ -12,6 +12,12 @@
   mask-size: contain;
   mask-repeat: no-repeat;
   mask-position: center;
+  /* multicolor icons use background-image */
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+  /* do not let images shrink when used as flex children */
+  flex-shrink: 0;
 }
 
 /* Expand arrow icon */

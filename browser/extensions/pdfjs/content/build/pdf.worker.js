@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-const pdfjsVersion = '2.2.51';
-const pdfjsBuild = 'c43396c2';
+const pdfjsVersion = '2.2.67';
+const pdfjsBuild = 'd587abbc';
 
 const pdfjsCoreWorker = __w_pdfjs_require__(1);
 
@@ -146,9 +146,9 @@ var _util = __w_pdfjs_require__(2);
 
 var _pdf_manager = __w_pdfjs_require__(7);
 
-var _is_node = _interopRequireDefault(__w_pdfjs_require__(46));
+var _is_node = _interopRequireDefault(__w_pdfjs_require__(47));
 
-var _message_handler = __w_pdfjs_require__(47);
+var _message_handler = __w_pdfjs_require__(48);
 
 var _primitives = __w_pdfjs_require__(12);
 
@@ -376,8 +376,9 @@ var WorkerMessageHandler = {
     var terminated = false;
     var cancelXHRs = null;
     var WorkerTasks = [];
+    const verbosity = (0, _util.getVerbosityLevel)();
     let apiVersion = docParams.apiVersion;
-    let workerVersion = '2.2.51';
+    let workerVersion = '2.2.67';
 
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
@@ -686,8 +687,7 @@ var WorkerMessageHandler = {
       pdfManager.getPage(pageIndex).then(function (page) {
         var task = new WorkerTask('RenderPageRequest: page ' + pageIndex);
         startWorkerTask(task);
-        var pageNum = pageIndex + 1;
-        var start = Date.now();
+        const start = verbosity >= _util.VerbosityLevel.INFOS ? Date.now() : 0;
         page.getOperatorList({
           handler,
           task,
@@ -695,7 +695,10 @@ var WorkerMessageHandler = {
           renderInteractiveForms: data.renderInteractiveForms
         }).then(function (operatorList) {
           finishWorkerTask(task);
-          (0, _util.info)('page=' + pageNum + ' - getOperatorList: time=' + (Date.now() - start) + 'ms, len=' + operatorList.totalLength);
+
+          if (start) {
+            (0, _util.info)(`page=${pageIndex + 1} - getOperatorList: time=` + `${Date.now() - start}ms, len=${operatorList.totalLength}`);
+          }
         }, function (e) {
           finishWorkerTask(task);
 
@@ -727,7 +730,7 @@ var WorkerMessageHandler = {
           }
 
           handler.send('PageError', {
-            pageNum,
+            pageIndex,
             error: wrappedException,
             intent: data.intent
           });
@@ -744,8 +747,7 @@ var WorkerMessageHandler = {
       pdfManager.getPage(pageIndex).then(function (page) {
         var task = new WorkerTask('GetTextContent: page ' + pageIndex);
         startWorkerTask(task);
-        var pageNum = pageIndex + 1;
-        var start = Date.now();
+        const start = verbosity >= _util.VerbosityLevel.INFOS ? Date.now() : 0;
         page.extractTextContent({
           handler,
           task,
@@ -754,7 +756,11 @@ var WorkerMessageHandler = {
           combineTextItems: data.combineTextItems
         }).then(function () {
           finishWorkerTask(task);
-          (0, _util.info)('text indexing: page=' + pageNum + ' - time=' + (Date.now() - start) + 'ms');
+
+          if (start) {
+            (0, _util.info)(`page=${pageIndex + 1} - getTextContent: time=` + `${Date.now() - start}ms`);
+          }
+
           sink.close();
         }, function (reason) {
           finishWorkerTask(task);
@@ -835,7 +841,6 @@ exports.arraysToBytes = arraysToBytes;
 exports.assert = assert;
 exports.bytesToString = bytesToString;
 exports.createPromiseCapability = createPromiseCapability;
-exports.deprecated = deprecated;
 exports.getVerbosityLevel = getVerbosityLevel;
 exports.info = info;
 exports.isArrayBuffer = isArrayBuffer;
@@ -1163,10 +1168,6 @@ function warn(msg) {
   if (verbosity >= VerbosityLevel.WARNINGS) {
     console.log('Warning: ' + msg);
   }
-}
-
-function deprecated(details) {
-  console.log('Deprecated API usage: ' + details);
 }
 
 function unreachable(msg) {
@@ -5993,7 +5994,8 @@ var Parser = function ParserClosure() {
       this.inlineStreamSkipEI(stream);
       return length;
     },
-    findASCII85DecodeInlineStreamEnd: function Parser_findASCII85DecodeInlineStreamEnd(stream) {
+
+    findASCII85DecodeInlineStreamEnd(stream) {
       var TILDE = 0x7E,
           GT = 0x3E;
       var startPos = stream.pos,
@@ -6001,9 +6003,18 @@ var Parser = function ParserClosure() {
           length;
 
       while ((ch = stream.getByte()) !== -1) {
-        if (ch === TILDE && stream.peekByte() === GT) {
-          stream.skip();
-          break;
+        if (ch === TILDE) {
+          ch = stream.peekByte();
+
+          while ((0, _util.isSpace)(ch)) {
+            stream.skip();
+            ch = stream.peekByte();
+          }
+
+          if (ch === GT) {
+            stream.skip();
+            break;
+          }
         }
       }
 
@@ -6018,6 +6029,7 @@ var Parser = function ParserClosure() {
       this.inlineStreamSkipEI(stream);
       return length;
     },
+
     findASCIIHexDecodeInlineStreamEnd: function Parser_findASCIIHexDecodeInlineStreamEnd(stream) {
       var GT = 0x3E;
       var startPos = stream.pos,
@@ -19539,8 +19551,6 @@ var _util = __w_pdfjs_require__(2);
 
 var _cmap = __w_pdfjs_require__(29);
 
-var _stream = __w_pdfjs_require__(14);
-
 var _primitives = __w_pdfjs_require__(12);
 
 var _fonts = __w_pdfjs_require__(30);
@@ -19559,6 +19569,8 @@ var _bidi = __w_pdfjs_require__(40);
 
 var _colorspace = __w_pdfjs_require__(25);
 
+var _stream = __w_pdfjs_require__(14);
+
 var _glyphlist = __w_pdfjs_require__(34);
 
 var _core_utils = __w_pdfjs_require__(9);
@@ -19571,9 +19583,11 @@ var _jpeg_stream = __w_pdfjs_require__(20);
 
 var _murmurhash = __w_pdfjs_require__(44);
 
+var _image_utils = __w_pdfjs_require__(45);
+
 var _operator_list = __w_pdfjs_require__(27);
 
-var _image = __w_pdfjs_require__(45);
+var _image = __w_pdfjs_require__(46);
 
 var PartialEvaluator = function PartialEvaluatorClosure() {
   const DefaultPartialEvaluatorOptions = {
@@ -19583,65 +19597,6 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
     nativeImageDecoderSupport: _util.NativeImageDecoding.DECODE,
     ignoreErrors: false,
     isEvalSupported: true
-  };
-
-  function NativeImageDecoder({
-    xref,
-    resources,
-    handler,
-    forceDataSchema = false,
-    pdfFunctionFactory
-  }) {
-    this.xref = xref;
-    this.resources = resources;
-    this.handler = handler;
-    this.forceDataSchema = forceDataSchema;
-    this.pdfFunctionFactory = pdfFunctionFactory;
-  }
-
-  NativeImageDecoder.prototype = {
-    canDecode(image) {
-      return image instanceof _jpeg_stream.JpegStream && NativeImageDecoder.isDecodable(image, this.xref, this.resources, this.pdfFunctionFactory);
-    },
-
-    decode(image) {
-      var dict = image.dict;
-      var colorSpace = dict.get('ColorSpace', 'CS');
-      colorSpace = _colorspace.ColorSpace.parse(colorSpace, this.xref, this.resources, this.pdfFunctionFactory);
-      return this.handler.sendWithPromise('JpegDecode', [image.getIR(this.forceDataSchema), colorSpace.numComps]).then(function ({
-        data,
-        width,
-        height
-      }) {
-        return new _stream.Stream(data, 0, data.length, image.dict);
-      });
-    }
-
-  };
-
-  NativeImageDecoder.isSupported = function (image, xref, res, pdfFunctionFactory) {
-    var dict = image.dict;
-
-    if (dict.has('DecodeParms') || dict.has('DP')) {
-      return false;
-    }
-
-    var cs = _colorspace.ColorSpace.parse(dict.get('ColorSpace', 'CS'), xref, res, pdfFunctionFactory);
-
-    return (cs.name === 'DeviceGray' || cs.name === 'DeviceRGB') && cs.isDefaultDecode(dict.getArray('Decode', 'D'));
-  };
-
-  NativeImageDecoder.isDecodable = function (image, xref, res, pdfFunctionFactory) {
-    var dict = image.dict;
-
-    if (dict.has('DecodeParms') || dict.has('DP')) {
-      return false;
-    }
-
-    var cs = _colorspace.ColorSpace.parse(dict.get('ColorSpace', 'CS'), xref, res, pdfFunctionFactory);
-
-    const bpc = dict.get('BitsPerComponent', 'BPC') || 1;
-    return (cs.numComps === 1 || cs.numComps === 3) && cs.isDefaultDecode(dict.getArray('Decode', 'D'), bpc);
   };
 
   function PartialEvaluator({
@@ -19985,7 +19940,7 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
       const nativeImageDecoderSupport = forceDisableNativeImageDecoder ? _util.NativeImageDecoding.NONE : this.options.nativeImageDecoderSupport;
       var objId = 'img_' + this.idFactory.createObjId();
 
-      if (nativeImageDecoderSupport !== _util.NativeImageDecoding.NONE && !softMask && !mask && image instanceof _jpeg_stream.JpegStream && NativeImageDecoder.isSupported(image, this.xref, resources, this.pdfFunctionFactory)) {
+      if (nativeImageDecoderSupport !== _util.NativeImageDecoding.NONE && !softMask && !mask && image instanceof _jpeg_stream.JpegStream && _image_utils.NativeImageDecoder.isSupported(image, this.xref, resources, this.pdfFunctionFactory)) {
         return this.handler.sendWithPromise('obj', [objId, this.pageIndex, 'JpegStream', image.getIR(this.options.forceDataSchema)]).then(function () {
           operatorList.addDependency(objId);
           args = [objId, w, h];
@@ -20014,7 +19969,7 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
       var nativeImageDecoder = null;
 
       if (nativeImageDecoderSupport === _util.NativeImageDecoding.DECODE && (image instanceof _jpeg_stream.JpegStream || mask instanceof _jpeg_stream.JpegStream || softMask instanceof _jpeg_stream.JpegStream)) {
-        nativeImageDecoder = new NativeImageDecoder({
+        nativeImageDecoder = new _image_utils.NativeImageDecoder({
           xref: this.xref,
           resources,
           handler: this.handler,
@@ -43460,131 +43415,199 @@ exports.MurmurHash3_64 = void 0;
 
 var _util = __w_pdfjs_require__(2);
 
-var MurmurHash3_64 = function MurmurHash3_64Closure(seed) {
-  var MASK_HIGH = 0xffff0000;
-  var MASK_LOW = 0xffff;
+const SEED = 0xc3d2e1f0;
+const MASK_HIGH = 0xffff0000;
+const MASK_LOW = 0xffff;
 
-  function MurmurHash3_64(seed) {
-    var SEED = 0xc3d2e1f0;
+class MurmurHash3_64 {
+  constructor(seed) {
     this.h1 = seed ? seed & 0xffffffff : SEED;
     this.h2 = seed ? seed & 0xffffffff : SEED;
   }
 
-  MurmurHash3_64.prototype = {
-    update: function MurmurHash3_64_update(input) {
-      let data, length;
+  update(input) {
+    let data, length;
 
-      if ((0, _util.isString)(input)) {
-        data = new Uint8Array(input.length * 2);
-        length = 0;
+    if ((0, _util.isString)(input)) {
+      data = new Uint8Array(input.length * 2);
+      length = 0;
 
-        for (let i = 0, ii = input.length; i < ii; i++) {
-          var code = input.charCodeAt(i);
+      for (let i = 0, ii = input.length; i < ii; i++) {
+        const code = input.charCodeAt(i);
 
-          if (code <= 0xff) {
-            data[length++] = code;
-          } else {
-            data[length++] = code >>> 8;
-            data[length++] = code & 0xff;
-          }
-        }
-      } else if ((0, _util.isArrayBuffer)(input)) {
-        data = input;
-        length = data.byteLength;
-      } else {
-        throw new Error('Wrong data format in MurmurHash3_64_update. ' + 'Input must be a string or array.');
-      }
-
-      var blockCounts = length >> 2;
-      var tailLength = length - blockCounts * 4;
-      var dataUint32 = new Uint32Array(data.buffer, 0, blockCounts);
-      var k1 = 0;
-      var k2 = 0;
-      var h1 = this.h1;
-      var h2 = this.h2;
-      var C1 = 0xcc9e2d51;
-      var C2 = 0x1b873593;
-      var C1_LOW = C1 & MASK_LOW;
-      var C2_LOW = C2 & MASK_LOW;
-
-      for (let i = 0; i < blockCounts; i++) {
-        if (i & 1) {
-          k1 = dataUint32[i];
-          k1 = k1 * C1 & MASK_HIGH | k1 * C1_LOW & MASK_LOW;
-          k1 = k1 << 15 | k1 >>> 17;
-          k1 = k1 * C2 & MASK_HIGH | k1 * C2_LOW & MASK_LOW;
-          h1 ^= k1;
-          h1 = h1 << 13 | h1 >>> 19;
-          h1 = h1 * 5 + 0xe6546b64;
+        if (code <= 0xff) {
+          data[length++] = code;
         } else {
-          k2 = dataUint32[i];
-          k2 = k2 * C1 & MASK_HIGH | k2 * C1_LOW & MASK_LOW;
-          k2 = k2 << 15 | k2 >>> 17;
-          k2 = k2 * C2 & MASK_HIGH | k2 * C2_LOW & MASK_LOW;
-          h2 ^= k2;
-          h2 = h2 << 13 | h2 >>> 19;
-          h2 = h2 * 5 + 0xe6546b64;
+          data[length++] = code >>> 8;
+          data[length++] = code & 0xff;
         }
       }
-
-      k1 = 0;
-
-      switch (tailLength) {
-        case 3:
-          k1 ^= data[blockCounts * 4 + 2] << 16;
-
-        case 2:
-          k1 ^= data[blockCounts * 4 + 1] << 8;
-
-        case 1:
-          k1 ^= data[blockCounts * 4];
-          k1 = k1 * C1 & MASK_HIGH | k1 * C1_LOW & MASK_LOW;
-          k1 = k1 << 15 | k1 >>> 17;
-          k1 = k1 * C2 & MASK_HIGH | k1 * C2_LOW & MASK_LOW;
-
-          if (blockCounts & 1) {
-            h1 ^= k1;
-          } else {
-            h2 ^= k1;
-          }
-
-      }
-
-      this.h1 = h1;
-      this.h2 = h2;
-      return this;
-    },
-    hexdigest: function MurmurHash3_64_hexdigest() {
-      var h1 = this.h1;
-      var h2 = this.h2;
-      h1 ^= h2 >>> 1;
-      h1 = h1 * 0xed558ccd & MASK_HIGH | h1 * 0x8ccd & MASK_LOW;
-      h2 = h2 * 0xff51afd7 & MASK_HIGH | ((h2 << 16 | h1 >>> 16) * 0xafd7ed55 & MASK_HIGH) >>> 16;
-      h1 ^= h2 >>> 1;
-      h1 = h1 * 0x1a85ec53 & MASK_HIGH | h1 * 0xec53 & MASK_LOW;
-      h2 = h2 * 0xc4ceb9fe & MASK_HIGH | ((h2 << 16 | h1 >>> 16) * 0xb9fe1a85 & MASK_HIGH) >>> 16;
-      h1 ^= h2 >>> 1;
-
-      for (var i = 0, arr = [h1, h2], str = ''; i < arr.length; i++) {
-        var hex = (arr[i] >>> 0).toString(16);
-
-        while (hex.length < 8) {
-          hex = '0' + hex;
-        }
-
-        str += hex;
-      }
-
-      return str;
+    } else if ((0, _util.isArrayBuffer)(input)) {
+      data = input;
+      length = data.byteLength;
+    } else {
+      throw new Error('Wrong data format in MurmurHash3_64_update. ' + 'Input must be a string or array.');
     }
-  };
-  return MurmurHash3_64;
-}();
+
+    const blockCounts = length >> 2;
+    const tailLength = length - blockCounts * 4;
+    const dataUint32 = new Uint32Array(data.buffer, 0, blockCounts);
+    let k1 = 0,
+        k2 = 0;
+    let h1 = this.h1,
+        h2 = this.h2;
+    const C1 = 0xcc9e2d51,
+          C2 = 0x1b873593;
+    const C1_LOW = C1 & MASK_LOW,
+          C2_LOW = C2 & MASK_LOW;
+
+    for (let i = 0; i < blockCounts; i++) {
+      if (i & 1) {
+        k1 = dataUint32[i];
+        k1 = k1 * C1 & MASK_HIGH | k1 * C1_LOW & MASK_LOW;
+        k1 = k1 << 15 | k1 >>> 17;
+        k1 = k1 * C2 & MASK_HIGH | k1 * C2_LOW & MASK_LOW;
+        h1 ^= k1;
+        h1 = h1 << 13 | h1 >>> 19;
+        h1 = h1 * 5 + 0xe6546b64;
+      } else {
+        k2 = dataUint32[i];
+        k2 = k2 * C1 & MASK_HIGH | k2 * C1_LOW & MASK_LOW;
+        k2 = k2 << 15 | k2 >>> 17;
+        k2 = k2 * C2 & MASK_HIGH | k2 * C2_LOW & MASK_LOW;
+        h2 ^= k2;
+        h2 = h2 << 13 | h2 >>> 19;
+        h2 = h2 * 5 + 0xe6546b64;
+      }
+    }
+
+    k1 = 0;
+
+    switch (tailLength) {
+      case 3:
+        k1 ^= data[blockCounts * 4 + 2] << 16;
+
+      case 2:
+        k1 ^= data[blockCounts * 4 + 1] << 8;
+
+      case 1:
+        k1 ^= data[blockCounts * 4];
+        k1 = k1 * C1 & MASK_HIGH | k1 * C1_LOW & MASK_LOW;
+        k1 = k1 << 15 | k1 >>> 17;
+        k1 = k1 * C2 & MASK_HIGH | k1 * C2_LOW & MASK_LOW;
+
+        if (blockCounts & 1) {
+          h1 ^= k1;
+        } else {
+          h2 ^= k1;
+        }
+
+    }
+
+    this.h1 = h1;
+    this.h2 = h2;
+  }
+
+  hexdigest() {
+    let h1 = this.h1,
+        h2 = this.h2;
+    h1 ^= h2 >>> 1;
+    h1 = h1 * 0xed558ccd & MASK_HIGH | h1 * 0x8ccd & MASK_LOW;
+    h2 = h2 * 0xff51afd7 & MASK_HIGH | ((h2 << 16 | h1 >>> 16) * 0xafd7ed55 & MASK_HIGH) >>> 16;
+    h1 ^= h2 >>> 1;
+    h1 = h1 * 0x1a85ec53 & MASK_HIGH | h1 * 0xec53 & MASK_LOW;
+    h2 = h2 * 0xc4ceb9fe & MASK_HIGH | ((h2 << 16 | h1 >>> 16) * 0xb9fe1a85 & MASK_HIGH) >>> 16;
+    h1 ^= h2 >>> 1;
+    const hex1 = (h1 >>> 0).toString(16),
+          hex2 = (h2 >>> 0).toString(16);
+    return hex1.padStart(8, '0') + hex2.padStart(8, '0');
+  }
+
+}
 
 exports.MurmurHash3_64 = MurmurHash3_64;
 
 /***/ }),
 /* 45 */
+/***/ (function(module, exports, __w_pdfjs_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.NativeImageDecoder = void 0;
+
+var _colorspace = __w_pdfjs_require__(25);
+
+var _jpeg_stream = __w_pdfjs_require__(20);
+
+var _stream = __w_pdfjs_require__(14);
+
+class NativeImageDecoder {
+  constructor({
+    xref,
+    resources,
+    handler,
+    forceDataSchema = false,
+    pdfFunctionFactory
+  }) {
+    this.xref = xref;
+    this.resources = resources;
+    this.handler = handler;
+    this.forceDataSchema = forceDataSchema;
+    this.pdfFunctionFactory = pdfFunctionFactory;
+  }
+
+  canDecode(image) {
+    return image instanceof _jpeg_stream.JpegStream && NativeImageDecoder.isDecodable(image, this.xref, this.resources, this.pdfFunctionFactory);
+  }
+
+  decode(image) {
+    const dict = image.dict;
+    let colorSpace = dict.get('ColorSpace', 'CS');
+    colorSpace = _colorspace.ColorSpace.parse(colorSpace, this.xref, this.resources, this.pdfFunctionFactory);
+    return this.handler.sendWithPromise('JpegDecode', [image.getIR(this.forceDataSchema), colorSpace.numComps]).then(function ({
+      data,
+      width,
+      height
+    }) {
+      return new _stream.Stream(data, 0, data.length, dict);
+    });
+  }
+
+  static isSupported(image, xref, res, pdfFunctionFactory) {
+    const dict = image.dict;
+
+    if (dict.has('DecodeParms') || dict.has('DP')) {
+      return false;
+    }
+
+    const cs = _colorspace.ColorSpace.parse(dict.get('ColorSpace', 'CS'), xref, res, pdfFunctionFactory);
+
+    return (cs.name === 'DeviceGray' || cs.name === 'DeviceRGB') && cs.isDefaultDecode(dict.getArray('Decode', 'D'));
+  }
+
+  static isDecodable(image, xref, res, pdfFunctionFactory) {
+    const dict = image.dict;
+
+    if (dict.has('DecodeParms') || dict.has('DP')) {
+      return false;
+    }
+
+    const cs = _colorspace.ColorSpace.parse(dict.get('ColorSpace', 'CS'), xref, res, pdfFunctionFactory);
+
+    const bpc = dict.get('BitsPerComponent', 'BPC') || 1;
+    return (cs.numComps === 1 || cs.numComps === 3) && cs.isDefaultDecode(dict.getArray('Decode', 'D'), bpc);
+  }
+
+}
+
+exports.NativeImageDecoder = NativeImageDecoder;
+
+/***/ }),
+/* 46 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -44244,7 +44267,7 @@ var PDFImage = function PDFImageClosure() {
 exports.PDFImage = PDFImage;
 
 /***/ }),
-/* 46 */
+/* 47 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";
@@ -44255,7 +44278,7 @@ module.exports = function isNodeJS() {
 };
 
 /***/ }),
-/* 47 */
+/* 48 */
 /***/ (function(module, exports, __w_pdfjs_require__) {
 
 "use strict";

@@ -27,5 +27,6 @@ interface nsIDOMEventListener : nsISupports
    *              preventDefault methods which are used in determining the 
    *              event's flow and default action.
    */
+  [can_run_script]
   void                      handleEvent(in Event event);
 };

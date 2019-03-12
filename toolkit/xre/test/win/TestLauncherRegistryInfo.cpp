@@ -562,14 +562,14 @@ static VoidResult TestPrefReflection() {
     return vr;
   }
 
-  // First, test to see what happens when the pref is set to ON.
+  // Let's see what happens when we flip the pref to OFF.
   mozilla::LauncherRegistryInfo info;
-  mozilla::LauncherVoidResult reflectOk = info.ReflectPrefToRegistry(true);
+  mozilla::LauncherVoidResult reflectOk = info.ReflectPrefToRegistry(false);
   if (reflectOk.isErr()) {
     return mozilla::Err(reflectOk.unwrapErr().mError);
   }
 
-  // Launcher and browser timestamps should be non-existent.
+  // Launcher timestamp should be non-existent.
   QWordResult launcherTs = GetLauncherTimestamp();
   if (launcherTs.isOk()) {
     return mozilla::Err(mozilla::WindowsError::FromHResult(E_UNEXPECTED));
@@ -580,17 +580,17 @@ static VoidResult TestPrefReflection() {
     return mozilla::Err(launcherTs.unwrapErr());
   }
 
+  // Browser timestamp should be zero
   QWordResult browserTs = GetBrowserTimestamp();
-  if (browserTs.isOk()) {
-    return mozilla::Err(mozilla::WindowsError::FromHResult(E_UNEXPECTED));
-  }
-
-  if (browserTs.unwrapErr() !=
-      mozilla::WindowsError::FromWin32Error(ERROR_FILE_NOT_FOUND)) {
+  if (browserTs.isErr()) {
     return mozilla::Err(browserTs.unwrapErr());
   }
 
-  // IsEnabled should give us Enabled.
+  if (browserTs.unwrap() != 0ULL) {
+    return mozilla::Err(mozilla::WindowsError::FromHResult(E_FAIL));
+  }
+
+  // IsEnabled should give us ForceDisabled
   mozilla::LauncherResult<mozilla::LauncherRegistryInfo::EnabledState> enabled =
       info.IsEnabled();
   if (enabled.isErr()) {
@@ -598,23 +598,17 @@ static VoidResult TestPrefReflection() {
   }
 
   if (enabled.unwrap() !=
-      mozilla::LauncherRegistryInfo::EnabledState::Enabled) {
+      mozilla::LauncherRegistryInfo::EnabledState::ForceDisabled) {
     return mozilla::Err(mozilla::WindowsError::FromHResult(E_FAIL));
   }
 
-  // Okay, so far so good. Let's reset the board and see what happens when we
-  // flip the pref to OFF.
-  vr = SetupEnabledScenario();
-  if (vr.isErr()) {
-    return vr;
-  }
-
-  reflectOk = info.ReflectPrefToRegistry(false);
+  // Now test to see what happens when the pref is set to ON.
+  reflectOk = info.ReflectPrefToRegistry(true);
   if (reflectOk.isErr()) {
     return mozilla::Err(reflectOk.unwrapErr().mError);
   }
 
-  // Launcher timestamp should be non-existent.
+  // Launcher and browser timestamps should be non-existent.
   launcherTs = GetLauncherTimestamp();
   if (launcherTs.isOk()) {
     return mozilla::Err(mozilla::WindowsError::FromHResult(E_UNEXPECTED));
@@ -625,24 +619,24 @@ static VoidResult TestPrefReflection() {
     return mozilla::Err(launcherTs.unwrapErr());
   }
 
-  // Browser timestamp should be zero
   browserTs = GetBrowserTimestamp();
-  if (browserTs.isErr()) {
+  if (browserTs.isOk()) {
+    return mozilla::Err(mozilla::WindowsError::FromHResult(E_UNEXPECTED));
+  }
+
+  if (browserTs.unwrapErr() !=
+      mozilla::WindowsError::FromWin32Error(ERROR_FILE_NOT_FOUND)) {
     return mozilla::Err(browserTs.unwrapErr());
   }
 
-  if (browserTs.unwrap() != 0ULL) {
-    return mozilla::Err(mozilla::WindowsError::FromHResult(E_FAIL));
-  }
-
-  // IsEnabled should give us ForceDisabled
+  // IsEnabled should give us Enabled.
   enabled = info.IsEnabled();
   if (enabled.isErr()) {
     return mozilla::Err(enabled.unwrapErr().mError);
   }
 
   if (enabled.unwrap() !=
-      mozilla::LauncherRegistryInfo::EnabledState::ForceDisabled) {
+      mozilla::LauncherRegistryInfo::EnabledState::Enabled) {
     return mozilla::Err(mozilla::WindowsError::FromHResult(E_FAIL));
   }
 

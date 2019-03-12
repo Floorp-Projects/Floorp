@@ -645,7 +645,7 @@ var gSync = {
         // We are pretty confident that push helps us pick up all FxA commands,
         // but some users might have issues with push, so let's unblock them
         // by fetching the missed FxA commands on manual sync.
-        fxAccounts.commands.fetchMissedRemoteCommands().catch(e => {
+        fxAccounts.commands.pollDeviceCommands().catch(e => {
           console.error("Fetching missed remote commands failed.", e);
         });
         Weave.Service.sync();

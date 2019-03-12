@@ -1,0 +1,10 @@
+[
+  {
+    "size": 6751756,
+    "visibility": "public",
+    "digest": "6f7d0bf3a13d2b082ba900b10781d0c434dc651001f73a78bc1aa18091fc2f9b6d7f0b114b46a845ee1832bf0b39703fa796f96992732066755aceddd2eda746",
+    "algorithm": "sha512",
+    "filename": "android-imdb.zip",
+    "unpack": true
+  }
+]

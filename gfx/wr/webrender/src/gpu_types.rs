@@ -18,6 +18,8 @@ use util::{TransformedRectKind, MatrixHelpers};
 
 // Contains type that must exactly match the same structures declared in GLSL.
 
+pub const VECS_PER_TRANSFORM: usize = 8;
+
 #[derive(Copy, Clone, Debug, PartialEq)]
 #[repr(C)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
@@ -391,7 +393,7 @@ impl TransformPaletteId {
     }
 }
 
-// The GPU data payload for a transform palette entry.
+/// The GPU data payload for a transform palette entry.
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
@@ -445,6 +447,7 @@ pub struct TransformPalette {
 
 impl TransformPalette {
     pub fn new() -> Self {
+        let _ = VECS_PER_TRANSFORM;
         TransformPalette {
             transforms: Vec::new(),
             metadata: Vec::new(),
@@ -498,7 +501,6 @@ impl TransformPalette {
                         child_index,
                         parent_index,
                     )
-                    .unwrap_or_default()
                     .flattened
                     .with_destination::<PicturePixel>();
 

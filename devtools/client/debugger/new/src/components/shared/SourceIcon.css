@@ -9,10 +9,6 @@
 
 .source-icon {
   margin-inline-end: 4px;
-  /* multicolor icons use background-image */
-  background-position: center;
-  background-repeat: no-repeat;
-  background-size: contain;
 }
 
 /* Icons for frameworks and libs */
@@ -141,7 +137,9 @@
   mask-image: url(/images/sources/underscore.svg);
 }
 
-.img.vue {
+/* We use both 'Vue' and 'VueJS' when identifying frameworks */
+.img.vue,
+.img.vuejs {
   background-image: url(/images/sources/vuejs.svg);
   background-color: transparent !important;
 }

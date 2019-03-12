@@ -2,6 +2,8 @@
  * Helpers for password manager mochitest-plain tests.
  */
 
+/* import-globals-from ../../../../../toolkit/components/satchel/test/satchel_common.js */
+
 // Copied from LoginTestUtils.masterPassword.masterPassword to use from the content process.
 const MASTER_PASSWORD = "omgsecret!";
 const TESTS_DIR = "/tests/toolkit/components/passwordmgr/test/";
@@ -34,6 +36,25 @@ function $_(formNum, name) {
   }
 
   return element;
+}
+
+/**
+ * Check autocomplete popup results to ensure that expected
+ * values are being shown correctly as items in the popup.
+ */
+function checkAutoCompleteResults(actualValues, expectedValues, hostname, msg) {
+  // Check the footer first.
+  let footerResult = actualValues[actualValues.length - 1];
+  ok(footerResult.includes("View Saved Logins"), "the footer text is shown correctly");
+  ok(footerResult.includes(hostname), "the footer has the correct hostname attribute");
+
+  if (actualValues.length == 0) {
+    info("Only the footer is present in the popup");
+    return;
+  }
+
+  // Check the rest of the autocomplete item values.
+  checkArrayValues(actualValues.slice(0, -1), expectedValues, msg);
 }
 
 /**

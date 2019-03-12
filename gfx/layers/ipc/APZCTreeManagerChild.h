@@ -66,6 +66,7 @@ class APZCTreeManagerChild : public IAPZCTreeManager,
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
  protected:
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   mozilla::ipc::IPCResult RecvHandleTap(const TapType& aType,
                                         const LayoutDevicePoint& aPoint,
                                         const Modifiers& aModifiers,

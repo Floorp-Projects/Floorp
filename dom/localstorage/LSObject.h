@@ -74,6 +74,8 @@ class LSObject final : public Storage {
   bool mInExplicitSnapshot;
 
  public:
+  static void Initialize();
+
   /**
    * The normal creation path invoked by nsGlobalWindowInner.
    */

@@ -47,7 +47,6 @@ enum class PseudoStyleType : uint8_t {
   // WrapperAnonBoxesStart.
   __reset_2 = WrapperAnonBoxesStart - 1,
 
-
 #define CSS_ANON_BOX(_name, _str)
 #define CSS_NON_INHERITING_ANON_BOX(_name, _str)
 #define CSS_WRAPPER_ANON_BOX(_name, _str) _name,
@@ -79,7 +78,7 @@ enum class PseudoStyleType : uint8_t {
 std::ostream& operator<<(std::ostream&, PseudoStyleType);
 
 class PseudoStyle final {
-public:
+ public:
   using Type = PseudoStyleType;
 
   // This must match EAGER_PSEUDO_COUNT in Rust code.
@@ -94,18 +93,21 @@ public:
   }
 
   static bool IsInheritingAnonBox(Type aType) {
-    return aType >= Type::InheritingAnonBoxesStart && aType < Type::InheritingAnonBoxesEnd;
+    return aType >= Type::InheritingAnonBoxesStart &&
+           aType < Type::InheritingAnonBoxesEnd;
   }
 
   static bool IsNonInheritingAnonBox(Type aType) {
-    return aType >= Type::NonInheritingAnonBoxesStart && aType < Type::NonInheritingAnonBoxesEnd;
+    return aType >= Type::NonInheritingAnonBoxesStart &&
+           aType < Type::NonInheritingAnonBoxesEnd;
   }
 
   static bool IsWrapperAnonBox(Type aType) {
-    return aType >= Type::WrapperAnonBoxesStart && aType < Type::WrapperAnonBoxesEnd;
+    return aType >= Type::WrapperAnonBoxesStart &&
+           aType < Type::WrapperAnonBoxesEnd;
   }
 };
 
-}
+}  // namespace mozilla
 
 #endif

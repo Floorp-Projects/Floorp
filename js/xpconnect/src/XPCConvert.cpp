@@ -281,24 +281,25 @@ bool XPCConvert::NativeData2JS(MutableHandleValue d, const void* s,
       // should be fine.
 
       if (IsUTF8Latin1(*utf8String)) {
-        char* buffer = static_cast<char*>(JS_malloc(cx, allocLen.value()));
+        using UniqueLatin1Chars =
+            js::UniquePtr<JS::Latin1Char[], JS::FreePolicy>;
+
+        UniqueLatin1Chars buffer(
+            static_cast<JS::Latin1Char*>(JS_malloc(cx, allocLen.value())));
         if (!buffer) {
           return false;
         }
-        size_t written =
-            LossyConvertUTF8toLatin1(*utf8String, MakeSpan(buffer, len));
+
+        size_t written = LossyConvertUTF8toLatin1(
+            *utf8String, MakeSpan(reinterpret_cast<char*>(buffer.get()), len));
         buffer[written] = 0;
 
-        // JS_NewLatin1String takes ownership on success, i.e. a
-        // successful call will make it the responsiblity of the JS VM
-        // to free the buffer.
         // written can never exceed len, so the truncation is OK.
-        JSString* str = JS_NewLatin1String(
-            cx, reinterpret_cast<JS::Latin1Char*>(buffer), written);
+        JSString* str = JS_NewLatin1String(cx, std::move(buffer), written);
         if (!str) {
-          JS_free(cx, buffer);
           return false;
         }
+
         d.setString(str);
         return true;
       }
@@ -316,8 +317,8 @@ bool XPCConvert::NativeData2JS(MutableHandleValue d, const void* s,
         return false;
       }
 
-      char16_t* buffer =
-          static_cast<char16_t*>(JS_malloc(cx, allocLen.value()));
+      JS::UniqueTwoByteChars buffer(
+          static_cast<char16_t*>(JS_malloc(cx, allocLen.value())));
       if (!buffer) {
         return false;
       }
@@ -328,19 +329,16 @@ bool XPCConvert::NativeData2JS(MutableHandleValue d, const void* s,
       // code units in the source. That's why it's OK to claim the
       // output buffer has len + 1 space but then still expect to
       // have space for the zero terminator.
-      size_t written =
-          ConvertUTF8toUTF16(*utf8String, MakeSpan(buffer, allocLen.value()));
+      size_t written = ConvertUTF8toUTF16(
+          *utf8String, MakeSpan(buffer.get(), allocLen.value()));
       MOZ_RELEASE_ASSERT(written <= len);
       buffer[written] = 0;
 
-      // JS_NewUCStringDontDeflate takes ownership on success, i.e. a
-      // successful call will make it the responsiblity of the JS VM
-      // to free the buffer.
-      JSString* str = JS_NewUCStringDontDeflate(cx, buffer, written);
+      JSString* str = JS_NewUCStringDontDeflate(cx, std::move(buffer), written);
       if (!str) {
-        JS_free(cx, buffer);
         return false;
       }
+
       d.setString(str);
       return true;
     }

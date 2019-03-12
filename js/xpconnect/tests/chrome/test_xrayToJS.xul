@@ -242,11 +242,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
 
   gPrototypeProperties['RegExp'] =
     ["constructor", "toSource", "toString", "compile", "exec", "test",
-     Symbol.match, Symbol.replace, Symbol.search, Symbol.split,
+     Symbol.match, Symbol.matchAll, Symbol.replace, Symbol.search, Symbol.split,
      "flags", "global", "ignoreCase", "multiline", "source", "sticky", "unicode"];
-  if (isNightlyBuild) {
-    gPrototypeProperties['RegExp'].push(Symbol.matchAll);
-  }
   gConstructorProperties['RegExp'] =
     constructorProps(["input", "lastMatch", "lastParen",
                       "leftContext", "rightContext", "$1", "$2", "$3", "$4",

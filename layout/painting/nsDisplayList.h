@@ -4559,14 +4559,21 @@ class nsDisplayBackgroundColor : public nsDisplayItem {
  public:
   nsDisplayBackgroundColor(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                            const nsRect& aBackgroundRect,
-                           mozilla::ComputedStyle* aBackgroundStyle,
-                           nscolor aColor)
+                           const mozilla::ComputedStyle* aBackgroundStyle,
+                           const nscolor& aColor)
       : nsDisplayItem(aBuilder, aFrame),
         mBackgroundRect(aBackgroundRect),
-        mBackgroundStyle(aBackgroundStyle),
+        mHasStyle(aBackgroundStyle),
         mDependentFrame(nullptr),
         mColor(Color::FromABGR(aColor)) {
     mState.mColor = mColor;
+
+    if (mHasStyle) {
+      mBottomLayerClip =
+          aBackgroundStyle->StyleBackground()->BottomLayer().mClip;
+    } else {
+      MOZ_ASSERT(aBuilder->IsForEventDelivery());
+    }
   }
 
   ~nsDisplayBackgroundColor() override {
@@ -4580,6 +4587,11 @@ class nsDisplayBackgroundColor : public nsDisplayItem {
   void RestoreState() override {
     nsDisplayItem::RestoreState();
     mColor = mState.mColor;
+  }
+
+  bool HasBackgroundClipText() const {
+    MOZ_ASSERT(mHasStyle);
+    return mBottomLayerClip == mozilla::StyleGeometryBox::Text;
   }
 
   LayerState GetLayerState(
@@ -4614,15 +4626,14 @@ class nsDisplayBackgroundColor : public nsDisplayItem {
   }
 
   bool CanPaintWithClip(const DisplayItemClip& aClip) override {
-    mozilla::StyleGeometryBox clip =
-        mBackgroundStyle->StyleBackground()->mImage.mLayers[0].mClip;
-
-    if (clip == mozilla::StyleGeometryBox::Text) {
+    if (HasBackgroundClipText()) {
       return false;
     }
+
     if (aClip.GetRoundedRectCount() > 1) {
       return false;
     }
+
     return true;
   }
 
@@ -4670,7 +4681,8 @@ class nsDisplayBackgroundColor : public nsDisplayItem {
 
  protected:
   const nsRect mBackgroundRect;
-  RefPtr<mozilla::ComputedStyle> mBackgroundStyle;
+  const bool mHasStyle;
+  mozilla::StyleGeometryBox mBottomLayerClip;
   nsIFrame* mDependentFrame;
   mozilla::gfx::Color mColor;
 
@@ -4683,8 +4695,8 @@ class nsDisplayTableBackgroundColor : public nsDisplayBackgroundColor {
  public:
   nsDisplayTableBackgroundColor(nsDisplayListBuilder* aBuilder,
                                 nsIFrame* aFrame, const nsRect& aBackgroundRect,
-                                mozilla::ComputedStyle* aBackgroundStyle,
-                                nscolor aColor, nsIFrame* aAncestorFrame)
+                                const mozilla::ComputedStyle* aBackgroundStyle,
+                                const nscolor& aColor, nsIFrame* aAncestorFrame)
       : nsDisplayBackgroundColor(aBuilder, aFrame, aBackgroundRect,
                                  aBackgroundStyle, aColor),
         mAncestorFrame(aAncestorFrame),

@@ -2,6 +2,11 @@
 Scalars
 =======
 
+A *scalar* metric can be used to track a single value. Unlike
+histograms, which collect every measurement taken, a scalar only
+tracks a single value, with later values completely replacing earlier
+ones.
+
 Historically we started to overload our histogram mechanism to also collect scalar data,
 such as flag values, counts, labels and others.
 The scalar measurement types are the suggested way to collect that kind of scalar data.

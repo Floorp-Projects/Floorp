@@ -116,8 +116,13 @@ class WebConsoleUI {
    * @param boolean clearStorage
    *        True if you want to clear the console messages storage associated to
    *        this Web Console.
+   * @param object event
+   *        If the event exists, calls preventDefault on it.
    */
-  clearOutput(clearStorage) {
+  clearOutput(clearStorage, event) {
+    if (event) {
+      event.preventDefault();
+    }
     if (this.wrapper) {
       this.wrapper.dispatchMessagesClear();
     }
@@ -262,12 +267,14 @@ class WebConsoleUI {
 
     let clearShortcut;
     if (AppConstants.platform === "macosx") {
+      const alternativaClearShortcut = l10n.getStr("webconsole.clear.alternativeKeyOSX");
+      shortcuts.on(alternativaClearShortcut, event => this.clearOutput(true, event));
       clearShortcut = l10n.getStr("webconsole.clear.keyOSX");
     } else {
       clearShortcut = l10n.getStr("webconsole.clear.key");
     }
 
-    shortcuts.on(clearShortcut, () => this.clearOutput(true));
+    shortcuts.on(clearShortcut, event => this.clearOutput(true, event));
 
     if (this.isBrowserConsole) {
       // Make sure keyboard shortcuts work immediately after opening

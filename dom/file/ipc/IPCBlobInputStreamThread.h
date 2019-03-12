@@ -27,6 +27,8 @@ class IPCBlobInputStreamThread final : public nsIObserver,
 
   static bool IsOnFileEventTarget(nsIEventTarget* aEventTarget);
 
+  static IPCBlobInputStreamThread* Get();
+
   static IPCBlobInputStreamThread* GetOrCreate();
 
   void MigrateActor(IPCBlobInputStreamChild* aActor);

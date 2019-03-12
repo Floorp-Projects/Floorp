@@ -4,6 +4,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 from __future__ import absolute_import
 
+import glob
 import os
 import subprocess
 import sys
@@ -427,7 +428,7 @@ class MitmproxyAndroid(Mitmproxy):
             tooltool_download(_dest, self.config['run_local'], self.mozproxy_dir)
 
             # the production bitbar container host is always linux
-            self.certutil = os.path.join(self.mozproxy_dir, 'host-utils-67.0a1.en-US.linux-x86_64')
+            self.certutil = glob.glob(os.path.join(self.mozproxy_dir, 'host-utils*[!z]'))[0]
 
             # must add hostutils/certutil to the path
             os.environ['LD_LIBRARY_PATH'] = self.certutil

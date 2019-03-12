@@ -26,7 +26,6 @@ import {
   isPretty,
   shouldBlackbox
 } from "../../utils/source";
-import { shouldShowPrettyPrint } from "../../utils/editor";
 import { copyToTheClipboard } from "../../utils/clipboard";
 import { getTabMenuItems } from "../../utils/tabs";
 
@@ -135,10 +134,7 @@ class Tab extends PureComponent<Props> {
           disabled: !selectedSource.url,
           click: () => showSource(tab)
         }
-      }
-    ];
-
-    items.push(
+      },
       {
         item: {
           ...tabMenuItems.toggleBlackBox,
@@ -153,10 +149,10 @@ class Tab extends PureComponent<Props> {
         item: {
           ...tabMenuItems.prettyPrint,
           click: () => togglePrettyPrint(tab),
-          disabled: !shouldShowPrettyPrint(source)
+          disabled: isPretty(sourceTab)
         }
       }
-    );
+    ];
 
     showMenu(e, buildMenu(items));
   }

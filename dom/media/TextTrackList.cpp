@@ -118,39 +118,25 @@ class TrackEventRunner : public Runnable {
   RefPtr<Event> mEvent;
 };
 
-class ChangeEventRunner final : public TrackEventRunner {
- public:
-  ChangeEventRunner(TextTrackList* aList, Event* aEvent)
-      : TrackEventRunner(aList, aEvent) {}
-
-  NS_IMETHOD Run() override {
-    mList->mPendingTextTrackChange = false;
-    return TrackEventRunner::Run();
-  }
-};
-
 nsresult TextTrackList::DispatchTrackEvent(Event* aEvent) {
   return DispatchTrustedEvent(aEvent);
 }
 
 void TextTrackList::CreateAndDispatchChangeEvent() {
   MOZ_ASSERT(NS_IsMainThread());
-  if (!mPendingTextTrackChange) {
-    nsPIDOMWindowInner* win = GetOwner();
-    if (!win) {
-      return;
-    }
-
-    mPendingTextTrackChange = true;
-    RefPtr<Event> event = NS_NewDOMEvent(this, nullptr, nullptr);
-
-    event->InitEvent(NS_LITERAL_STRING("change"), false, false);
-    event->SetTrusted(true);
-
-    nsCOMPtr<nsIRunnable> eventRunner = new ChangeEventRunner(this, event);
-    nsGlobalWindowInner::Cast(win)->Dispatch(TaskCategory::Other,
-                                             eventRunner.forget());
+  nsPIDOMWindowInner* win = GetOwner();
+  if (!win) {
+    return;
   }
+
+  RefPtr<Event> event = NS_NewDOMEvent(this, nullptr, nullptr);
+
+  event->InitEvent(NS_LITERAL_STRING("change"), false, false);
+  event->SetTrusted(true);
+
+  nsCOMPtr<nsIRunnable> eventRunner = new TrackEventRunner(this, event);
+  nsGlobalWindowInner::Cast(win)->Dispatch(TaskCategory::Other,
+                                           eventRunner.forget());
 }
 
 void TextTrackList::CreateAndDispatchTrackEventRunner(

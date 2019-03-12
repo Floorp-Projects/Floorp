@@ -161,8 +161,8 @@
     <popupnotificationcontent class="addon-installed-notification-content" orient="vertical">
       <description>&addonPostInstallMessage.label;</description>
       <checkbox id="addon-incognito-checkbox"
-                label="&addonPostInstall.incognito.label;"
-                accesskey="&addonPostInstall.incognito.accesskey;"/>
+                label="&addonPostInstall.incognito.checkbox.label;"
+                accesskey="&addonPostInstall.incognito.checkbox.accesskey;"/>
     </popupnotificationcontent>
   </popupnotification>
 
@@ -416,7 +416,9 @@
                        type="checkbox"
                        class="subviewbutton subviewbutton-iconic"
                        key="key_gotoHistory"
-                       oncommand="SidebarUI.toggle('viewHistorySidebar');"/>
+                       oncommand="SidebarUI.toggle('viewHistorySidebar');">
+                       <observes element="sidebar-box" attribute="positionend"/>
+        </toolbarbutton>
         <toolbarbutton id="appMenuClearRecentHistory"
                        label="&appMenuHistory.clearRecent.label;"
                        class="subviewbutton subviewbutton-iconic"
@@ -466,7 +468,9 @@
             <toolbarbutton id="PanelUI-remotetabs-view-managedevices"
                            class="subviewbutton subviewbutton-iconic"
                            label="&appMenuRemoteTabs.managedevices.label;"
-                           oncommand="gSync.openDevicesManagementPage('syncedtabs-menupanel');"/>
+                           oncommand="gSync.openDevicesManagementPage('syncedtabs-menupanel');">
+                           <observes element="sidebar-box" attribute="positionend"/>
+            </toolbarbutton>
             <toolbarbutton id="PanelUI-remotetabs-syncnow"
                            onmouseover="gSync.refreshSyncButtonsTooltip();"
                            class="subviewbutton subviewbutton-iconic"
@@ -725,7 +729,9 @@
                        label-show="&viewBookmarksSidebar2.label;"
                        label-hide="&hideBookmarksSidebar.label;"
                        key="viewBookmarksSidebarKb"
-                       oncommand="SidebarUI.toggle('viewBookmarksSidebar', this);"/>
+                       oncommand="SidebarUI.toggle('viewBookmarksSidebar', this);">
+                       <observes element="sidebar-box" attribute="positionend"/>
+        </toolbarbutton>
         <toolbarbutton id="panelMenu_viewBookmarksToolbar"
                        class="subviewbutton subviewbutton-iconic"
                        label-show="&viewBookmarksToolbar.label;"

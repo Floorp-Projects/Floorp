@@ -12,8 +12,7 @@
     android:minResizeWidth="64dp"
     android:minResizeHeight="40dp"
     android:previewImage="@drawable/search_widget_preview"
-    android:resizeMode="horizontal"
-    android:updatePeriodMillis="300000">
+    android:resizeMode="horizontal">
 
 </appwidget-provider>
 

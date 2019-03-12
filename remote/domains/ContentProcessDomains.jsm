@@ -11,6 +11,11 @@ const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm")
 const ContentProcessDomains = {};
 
 XPCOMUtils.defineLazyModuleGetters(ContentProcessDomains, {
+  Emulation: "chrome://remote/content/domains/content/Emulation.jsm",
   Log: "chrome://remote/content/domains/content/Log.jsm",
+  Network: "chrome://remote/content/domains/content/Network.jsm",
   Page: "chrome://remote/content/domains/content/Page.jsm",
+  Performance: "chrome://remote/content/domains/content/Performance.jsm",
+  Runtime: "chrome://remote/content/domains/content/Runtime.jsm",
+  Security: "chrome://remote/content/domains/content/Security.jsm",
 });

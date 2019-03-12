@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-var pdfjsVersion = '2.2.51';
-var pdfjsBuild = 'c43396c2';
+var pdfjsVersion = '2.2.67';
+var pdfjsBuild = 'd587abbc';
 
 var pdfjsSharedUtil = __w_pdfjs_require__(1);
 
@@ -193,7 +193,6 @@ exports.arraysToBytes = arraysToBytes;
 exports.assert = assert;
 exports.bytesToString = bytesToString;
 exports.createPromiseCapability = createPromiseCapability;
-exports.deprecated = deprecated;
 exports.getVerbosityLevel = getVerbosityLevel;
 exports.info = info;
 exports.isArrayBuffer = isArrayBuffer;
@@ -521,10 +520,6 @@ function warn(msg) {
   if (verbosity >= VerbosityLevel.WARNINGS) {
     console.log('Warning: ' + msg);
   }
-}
-
-function deprecated(details) {
-  console.log('Deprecated API usage: ' + details);
 }
 
 function unreachable(msg) {
@@ -1295,7 +1290,7 @@ function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
 
   return worker.messageHandler.sendWithPromise('GetDocRequest', {
     docId,
-    apiVersion: '2.2.51',
+    apiVersion: '2.2.67',
     source: {
       data: source.data,
       url: source.url,
@@ -1355,7 +1350,7 @@ const PDFDocumentLoadingTask = function PDFDocumentLoadingTaskClosure() {
     }
 
     then(onFulfilled, onRejected) {
-      (0, _util.deprecated)('PDFDocumentLoadingTask.then method, ' + 'use the `promise` getter instead.');
+      (0, _display_utils.deprecated)('PDFDocumentLoadingTask.then method, ' + 'use the `promise` getter instead.');
       return this.promise.then.apply(this.promise, arguments);
     }
 
@@ -2567,11 +2562,11 @@ class WorkerTransport {
         return;
       }
 
-      const page = this.pageCache[data.pageNum - 1];
+      const page = this.pageCache[data.pageIndex];
       const intentState = page.intentStates[data.intent];
 
       if (intentState.displayReadyCapability) {
-        intentState.displayReadyCapability.reject(data.error);
+        intentState.displayReadyCapability.reject(new Error(data.error));
       } else {
         throw new Error(data.error);
       }
@@ -2866,7 +2861,7 @@ class RenderTask {
   }
 
   then(onFulfilled, onRejected) {
-    (0, _util.deprecated)('RenderTask.then method, use the `promise` getter instead.');
+    (0, _display_utils.deprecated)('RenderTask.then method, use the `promise` getter instead.');
     return this.promise.then.apply(this.promise, arguments);
   }
 
@@ -3038,9 +3033,9 @@ const InternalRenderTask = function InternalRenderTaskClosure() {
   return InternalRenderTask;
 }();
 
-const version = '2.2.51';
+const version = '2.2.67';
 exports.version = version;
-const build = 'c43396c2';
+const build = 'd587abbc';
 exports.build = build;
 
 /***/ }),
@@ -3058,6 +3053,7 @@ exports.getFilenameFromUrl = getFilenameFromUrl;
 exports.isFetchSupported = isFetchSupported;
 exports.isValidFetchUrl = isValidFetchUrl;
 exports.loadScript = loadScript;
+exports.deprecated = deprecated;
 exports.DummyStatTimer = exports.StatTimer = exports.DOMSVGFactory = exports.DOMCMapReaderFactory = exports.DOMCanvasFactory = exports.DEFAULT_LINK_REL = exports.LinkTarget = exports.RenderingCancelledException = exports.PageViewport = void 0;
 
 var _util = __w_pdfjs_require__(1);
@@ -3069,11 +3065,11 @@ const SVG_NS = 'http://www.w3.org/2000/svg';
 class DOMCanvasFactory {
   create(width, height) {
     if (width <= 0 || height <= 0) {
-      throw new Error('invalid canvas size');
+      throw new Error('Invalid canvas size');
     }
 
-    let canvas = document.createElement('canvas');
-    let context = canvas.getContext('2d');
+    const canvas = document.createElement('canvas');
+    const context = canvas.getContext('2d');
     canvas.width = width;
     canvas.height = height;
     return {
@@ -3084,11 +3080,11 @@ class DOMCanvasFactory {
 
   reset(canvasAndContext, width, height) {
     if (!canvasAndContext.canvas) {
-      throw new Error('canvas is not specified');
+      throw new Error('Canvas is not specified');
     }
 
     if (width <= 0 || height <= 0) {
-      throw new Error('invalid canvas size');
+      throw new Error('Invalid canvas size');
     }
 
     canvasAndContext.canvas.width = width;
@@ -3097,7 +3093,7 @@ class DOMCanvasFactory {
 
   destroy(canvasAndContext) {
     if (!canvasAndContext.canvas) {
-      throw new Error('canvas is not specified');
+      throw new Error('Canvas is not specified');
     }
 
     canvasAndContext.canvas.width = 0;
@@ -3161,7 +3157,7 @@ exports.DOMCMapReaderFactory = DOMCMapReaderFactory;
 class DOMSVGFactory {
   create(width, height) {
     (0, _util.assert)(width > 0 && height > 0, 'Invalid SVG dimensions');
-    let svg = document.createElementNS(SVG_NS, 'svg:svg');
+    const svg = document.createElementNS(SVG_NS, 'svg:svg');
     svg.setAttribute('version', '1.1');
     svg.setAttribute('width', width + 'px');
     svg.setAttribute('height', height + 'px');
@@ -3193,8 +3189,8 @@ class PageViewport {
     this.rotation = rotation;
     this.offsetX = offsetX;
     this.offsetY = offsetY;
-    let centerX = (viewBox[2] + viewBox[0]) / 2;
-    let centerY = (viewBox[3] + viewBox[1]) / 2;
+    const centerX = (viewBox[2] + viewBox[0]) / 2;
+    const centerY = (viewBox[3] + viewBox[1]) / 2;
     let rotateA, rotateB, rotateC, rotateD;
     rotation = rotation % 360;
     rotation = rotation < 0 ? rotation + 360 : rotation;
@@ -3274,11 +3270,11 @@ class PageViewport {
   }
 
   convertToViewportRectangle(rect) {
-    let tl = _util.Util.applyTransform([rect[0], rect[1]], this.transform);
+    const topLeft = _util.Util.applyTransform([rect[0], rect[1]], this.transform);
 
-    let br = _util.Util.applyTransform([rect[2], rect[3]], this.transform);
+    const bottomRight = _util.Util.applyTransform([rect[2], rect[3]], this.transform);
 
-    return [tl[0], tl[1], br[0], br[1]];
+    return [topLeft[0], topLeft[1], bottomRight[0], bottomRight[1]];
   }
 
   convertToPdfPoint(x, y) {
@@ -3289,7 +3285,7 @@ class PageViewport {
 
 exports.PageViewport = PageViewport;
 
-var RenderingCancelledException = function RenderingCancelledException() {
+const RenderingCancelledException = function RenderingCancelledException() {
   function RenderingCancelledException(msg, type) {
     this.message = msg;
     this.type = type;
@@ -3321,16 +3317,16 @@ function addLinkAttributes(link, {
 
   if (url) {
     const LinkTargetValues = Object.values(LinkTarget);
-    let targetIndex = LinkTargetValues.includes(target) ? target : LinkTarget.NONE;
+    const targetIndex = LinkTargetValues.includes(target) ? target : LinkTarget.NONE;
     link.target = LinkTargetStringMap[targetIndex];
     link.rel = typeof rel === 'string' ? rel : DEFAULT_LINK_REL;
   }
 }
 
 function getFilenameFromUrl(url) {
-  var anchor = url.indexOf('#');
-  var query = url.indexOf('?');
-  var end = Math.min(anchor > 0 ? anchor : url.length, query > 0 ? query : url.length);
+  const anchor = url.indexOf('#');
+  const query = url.indexOf('?');
+  const end = Math.min(anchor > 0 ? anchor : url.length, query > 0 ? query : url.length);
   return url.substring(url.lastIndexOf('/', end) + 1, end);
 }
 
@@ -3371,22 +3367,20 @@ class StatTimer {
   }
 
   toString() {
-    let times = this.times;
     let out = '',
         longest = 0;
 
-    for (let i = 0, ii = times.length; i < ii; ++i) {
-      let name = times[i]['name'];
+    for (const time of this.times) {
+      const name = time.name;
 
       if (name.length > longest) {
         longest = name.length;
       }
     }
 
-    for (let i = 0, ii = times.length; i < ii; ++i) {
-      let span = times[i];
-      let duration = span.end - span.start;
-      out += `${span['name'].padEnd(longest)} ${duration}ms\n`;
+    for (const time of this.times) {
+      const duration = time.end - time.start;
+      out += `${time.name.padEnd(longest)} ${duration}ms\n`;
     }
 
     return out;
@@ -3430,7 +3424,7 @@ function isValidFetchUrl(url, baseUrl) {
 
 function loadScript(src) {
   return new Promise((resolve, reject) => {
-    let script = document.createElement('script');
+    const script = document.createElement('script');
     script.src = src;
     script.onload = resolve;
 
@@ -3440,6 +3434,10 @@ function loadScript(src) {
 
     (document.head || document.documentElement).appendChild(script);
   });
+}
+
+function deprecated(details) {
+  console.log('Deprecated API usage: ' + details);
 }
 
 /***/ }),

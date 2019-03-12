@@ -6,309 +6,348 @@
 import copy
 
 
-def assert_tagged_tuple(obj):
-    """
-    Assert that the object is a tagged tuple
+# Class to provide utility methods on JSON-encoded BinAST tree
+#
+# TODO: support enum, property key, float, bool, offset
+class wrap:
+    def __init__(self, obj):
+        self.obj = obj
 
-    :param obj (dict)
-           The tagged tuple
-    """
-    type_ = obj['@TYPE']
-    if type_ != 'tagged tuple':
-        raise Exception('expected a tagged tuple, got {}'.format(type_))
+    # ==== tagged tuple ====
 
+    def assert_tagged_tuple(self):
+        """
+        Assert that this object is a tagged tuple
 
-def assert_list(obj):
-    """
-    Assert that the object is a list
+        :return (wrap)
+                self
+        :raises Exception
+                If this is not a tagged tuple
+        """
+        type_ = self.obj['@TYPE']
+        if type_ != 'tagged tuple':
+            raise Exception('expected a tagged tuple, got {}'.format(type_))
+        return self
 
-    :param obj (dict)
-           The list
-    """
-    type_ = obj['@TYPE']
-    if type_ != 'list':
-        raise Exception('expected a list, got {}'.format(type_))
+    def copy(self):
+        """
+        Deep copy a tagged tuple
 
+        :return (wrap)
+                The wrapped copied tagged tuple
+        """
+        self.assert_tagged_tuple()
+        return wrap(copy.deepcopy(self.obj))
 
-def assert_unsigned_long(obj):
-    """
-    Assert that the object is a unsigned long
+    # ==== interface ====
 
-    :param obj (dict)
-           The unsigned long object
-    """
-    type_ = obj['@TYPE']
-    if type_ != 'unsigned long':
-        raise Exception('expected a unsigned long, got {}'.format(type_))
+    def assert_interface(self, expected_name):
+        """
+        Assert that this object is a tagged tuple for given interface
 
+        :param expected_name (string)
+               The name of the interface
+        :return (wrap)
+                self
+        :raises Exception
+                If this is not an interface
+        """
+        self.assert_tagged_tuple()
+        actual_name = self.obj['@INTERFACE']
+        if actual_name != expected_name:
+            raise Exception('expected interface {}, got {}'.format(
+                expected_name, actual_name))
+        return self
 
-def assert_string(obj):
-    """
-    Assert that the object is a string
+    def field(self, name):
+        """
+        Returns the field of the tagged tuple.
 
-    :param obj (dict)
-           The string object
-    """
-    type_ = obj['@TYPE']
-    if type_ != 'string':
-        raise Exception('expected a string, got {}'.format(type_))
+        :param name (string)
+               The name of the field to get
+        :return (wrap)
+                The wrapped field value
+        :raises Exception
+                If there's no such field
+        """
+        self.assert_tagged_tuple()
+        fields = self.obj['@FIELDS']
+        for field in fields:
+            if field['@FIELD_NAME'] == name:
+                return wrap(field['@FIELD_VALUE'])
+        raise Exception('No such field: {}'.format(name))
 
+    def append_field(self, name, value):
+        """
+        Append a field to the tagged tuple
 
-def assert_identifier_name(obj):
-    """
-    Assert that the object is a identifier name
+        :param name (string)
+               the name of the field to add
+        :param value (wrap)
+               the wrapped value of the field to add
+        :return (wrap)
+               the wrapped value
+        :raises Exception
+                If name or value are not correct type
+        """
+        self.assert_tagged_tuple()
+        if type(name) is not str and type(name) is not unicode:
+            raise Exception('passed name is not string: {}'.format(name))
+        if not isinstance(value, wrap):
+            raise Exception('passed value is not wrap: {}'.format(value))
+        fields = self.obj['@FIELDS']
+        fields.append({
+            '@FIELD_NAME': name,
+            '@FIELD_VALUE': value.obj,
+        })
+        return value
 
-    :param obj (dict)
-           The identifier name object
-    """
-    type_ = obj['@TYPE']
-    if type_ != 'identifier name':
-        raise Exception('expected a identifier name, got {}'.format(type_))
+    def replace_field(self, name, value):
+        """
+        Replaces the field of the tagged tuple.
 
+        :param name (string)
+               the name of the field to replace
+        :param value (wrap)
+               the wrapped value of the field
+        :return (wrap)
+                the wrapped value
+        :raises Exception
+                If there's no such field
+        """
+        self.assert_tagged_tuple()
+        if not isinstance(value, wrap):
+            raise Exception('passed value is not wrap: {}'.format(value))
+        fields = self.obj['@FIELDS']
+        for field in fields:
+            if field['@FIELD_NAME'] == name:
+                field['@FIELD_VALUE'] = value.obj
+                return self
+        raise Exception('No such field: {}'.format(name))
 
-def assert_interface(obj, expected_name):
-    """
-    Assert that the object is a tagged tuple for given interface
+    def remove_field(self, name):
+        """
+        Removes the field from the tagged tuple
 
-    :param obj (dict)
-           The tagged tuple
-    :param expected_name (string)
-           The name of the interface
-    """
-    assert_tagged_tuple(obj)
-    actual_name = obj['@INTERFACE']
-    if actual_name != expected_name:
-        raise Exception('expected {}, got {}'.format(expected_name, actual_name))
+        :param name (string)
+               the name of the field to remove
+        :return (wrap)
+                the wrapped removed field value
+        :raises Exception
+                If there's no such field
+        """
+        self.assert_tagged_tuple()
+        i = 0
+        fields = self.obj['@FIELDS']
+        for field in fields:
+            if field['@FIELD_NAME'] == name:
+                del fields[i]
+                return wrap(field['@FIELD_VALUE'])
+            i += 1
+        raise Exception('No such field: {}'.format(name))
 
+    def set_interface_name(self, name):
+        """
+        Set the tagged tuple's interface name
 
-def set_interface_name(obj, name):
-    """
-    Set the tagged tuple's interface name
+        :param name (string)
+               The name of the interface
+        :return (wrap)
+                self
+        :raises Exception
+                If name is not correct type
+        """
+        self.assert_tagged_tuple()
+        self.obj['@INTERFACE'] = name
+        if type(name) is not str and type(name) is not unicode:
+            raise Exception('passed value is not string: {}'.format(name))
+        return self
 
-    :param obj (dict)
-           The tagged tuple
-    :param name (string)
-           The name of the interface
-    """
-    assert_tagged_tuple(obj)
-    obj['@INTERFACE'] = name
-    if type(name) is not str and type(name) is not unicode:
-        raise Exception('passed value is not string: {}'.format(name))
+    # ==== list ====
 
+    def assert_list(self):
+        """
+        Assert that this object is a list
 
-def get_field(obj, name):
-    """
-    Returns the field of the tagged tuple.
+        :return (wrap)
+                self
+        :raises Exception
+                If this is not a list
+        """
+        type_ = self.obj['@TYPE']
+        if type_ != 'list':
+            raise Exception('expected a list, got {}'.format(type_))
+        return self
 
-    :param obj (dict)
-           The tagged tuple
-    :param name (string)
-           The name of the field to get
-    :return (dict)
-            The field value
-    :raises Exception
-            If there's no such field
-    """
-    assert_tagged_tuple(obj)
-    fields = obj['@FIELDS']
-    for field in fields:
-        if field['@FIELD_NAME'] == name:
-            return field['@FIELD_VALUE']
-    raise Exception('No such field: {}'.format(name))
+    def elem(self, index):
+        """
+        Returns the element of the list.
 
+        :param index (int)
+               The index of the element to get
+        :return (wrap)
+                The wrapped element value
+        :raises Exception
+                On out of bound access
+        """
+        self.assert_list()
+        elems = self.obj['@VALUE']
+        if index >= len(elems):
+            raise Exception('Out of bound: {} >= {}'.format(index, len(elems)))
+        return wrap(elems[index])
 
-def replace_field(obj, name, value):
-    """
-    Replaces the field of the tagged tuple.
+    def append_elem(self, elem):
+        """
+        Appends the element to the list.
 
-    :param obj (dict)
-           the tagged tuple
-    :param name (string)
-           the name of the field to replace
-    :param value (dict)
-           the value of the field
-    :raises Exception
-            If there's no such field
-    """
-    assert_tagged_tuple(obj)
-    fields = obj['@FIELDS']
-    for field in fields:
-        if field['@FIELD_NAME'] == name:
-            field['@FIELD_VALUE'] = value
-            return
-    raise Exception('No such field: {}'.format(name))
+        :param elem (wrap)
+               the wrapped value to be added to the list
+        :return (wrap)
+                The wrapped appended element
+        """
+        self.assert_list()
+        if not isinstance(elem, wrap):
+            raise Exception('passed value is not wrap: {}'.format(elem))
+        elems = self.obj['@VALUE']
+        elems.append(elem.obj)
+        return elem
 
+    def replace_elem(self, index, elem):
+        """
+        Replaces the element of the list.
 
-def remove_field(obj, name):
-    """
-    Removes the field from the tagged tuple
+        :param index (int)
+               The index of the element to replace
+        :param elem (wrap)
+               the wrapped value of the element
+        :return (wrap)
+                The wrapped replaced element
+        :raises Exception
+                On out of bound access
+        """
+        self.assert_list()
+        if not isinstance(elem, wrap):
+            raise Exception('passed value is not wrap: {}'.format(elem))
+        elems = self.obj['@VALUE']
+        if index >= len(elems):
+            raise Exception('Out of bound: {} >= {}'.format(index, len(elems)))
+        elems[index] = elem.obj
+        return elem
 
-    :param obj (dict)
-           the tagged tuple
-    :param name (string)
-           the name of the field to remove
-    :raises Exception
-            If there's no such field
-    """
-    assert_tagged_tuple(obj)
-    i = 0
-    fields = obj['@FIELDS']
-    for field in fields:
-        if field['@FIELD_NAME'] == name:
-            del fields[i]
-            return
-        i += 1
-    raise Exception('No such field: {}'.format(name))
+    def remove_elem(self, index):
+        """
+        Removes the element from the list
 
+        :param index (int)
+               The index of the element to remove
+        :return (wrap)
+                The wrapped removed element
+        :raises Exception
+                On out of bound access
+        """
+        self.assert_list()
+        elems = self.obj['@VALUE']
+        if index >= len(elems):
+            raise Exception('Out of bound: {} >= {}'.format(index, len(elems)))
+        elem = elems[index]
+        del elems[index]
+        return wrap(elem)
 
-def append_field(obj, name, value):
-    """
-    Append a field to the tagged tuple
+    # ==== string ====
 
-    :param obj (dict)
-           the tagged tuple
-    :param name (string)
-           the name of the field to add
-    :param value (dict)
-           the value of the field to add
-    """
-    assert_tagged_tuple(obj)
-    fields = obj['@FIELDS']
-    if type(name) is not str and type(name) is not unicode:
-        raise Exception('passed name is not string: {}'.format(name))
-    if type(value) is not dict:
-        raise Exception('passed value is not dict: {}'.format(value))
-    fields.append({
-        '@FIELD_NAME': name,
-        '@FIELD_VALUE': value,
-    })
+    def assert_string(self):
+        """
+        Assert that this object is a string
 
+        :return (wrap)
+                self
+        :raises Exception
+                If this is not a string
+        """
+        type_ = self.obj['@TYPE']
+        if type_ != 'string':
+            raise Exception('expected a string, got {}'.format(type_))
+        return self
 
-def get_element(obj, i):
-    """
-    Returns the element of the list.
+    def set_string(self, value):
+        """
+        Set string value
 
-    :param obj (dict)
-           The list
-    :param i (int)
-           The indef of the element to get
-    :return (dict)
-            The element value
-    :raises Exception
-            On out of bound access
-    """
-    assert_list(obj)
-    elements = obj['@VALUE']
-    if i >= len(elements):
-        raise Exception('Out of bound: {} >= {}'.format(i, len(elements)))
-    return elements[i]
+        :param value (int)
+               the value to set
+        :return (wrap)
+                self
+        :raises Exception
+                If value is not correct type
+        """
+        self.assert_string()
+        if type(value) is not str and type(value) is not unicode:
+            raise Exception('passed value is not string: {}'.format(value))
+        self.obj['@VALUE'] = value
+        return self
 
+    # ==== identifier name ====
 
-def replace_element(obj, i, value):
-    """
-    Replaces the element of the list.
+    def assert_identifier_name(self):
+        """
+        Assert that this object is a identifier name
 
-    :param obj (dict)
-           the list
-    :param i (int)
-           The indef of the element to replace
-    :param value (dict)
-           the value of the element
-    :raises Exception
-            On out of bound access
-    """
-    assert_list(obj)
-    elements = obj['@VALUE']
-    if i >= len(elements):
-        raise Exception('Out of bound: {} >= {}'.format(i, len(elements)))
-    elements[i] = value
+        :return (wrap)
+                self
+        :raises Exception
+                If this is not an identifier name
+        """
+        type_ = self.obj['@TYPE']
+        if type_ != 'identifier name':
+            raise Exception('expected a identifier name, got {}'.format(type_))
+        return self
 
+    def set_identifier_name(self, value):
+        """
+        Set identifier name value
 
-def append_element(obj, value):
-    """
-    Appends the element to the list.
+        :param value (int)
+               the value to set
+        :return (wrap)
+                self
+        :raises Exception
+                If value is not correct type
+        """
+        self.assert_identifier_name()
+        if type(value) is not str and type(value) is not unicode:
+            raise Exception('passed value is not string: {}'.format(value))
+        self.obj['@VALUE'] = value
+        return self
 
-    :param obj (dict)
-           the list
-    :param value (dict)
-           the value to be added to the list
-    """
-    assert_list(obj)
-    elements = obj['@VALUE']
-    elements.append(value)
+    # ==== unsigned long ====
 
+    def assert_unsigned_long(self):
+        """
+        Assert that this object is a unsigned long
 
-def remove_element(obj, i):
-    """
-    Removes the element from the list
+        :return (wrap)
+                self
+        :raises Exception
+                If this is not an unsigned long
+        """
+        type_ = self.obj['@TYPE']
+        if type_ != 'unsigned long':
+            raise Exception('expected a unsigned long, got {}'.format(type_))
+        return self
 
-    :param obj (dict)
-           the list
-    :param i (int)
-           The indef of the element to remove
-    :raises Exception
-            On out of bound access
-    """
-    assert_list(obj)
-    elements = obj['@VALUE']
-    if i >= len(elements):
-        raise Exception('Out of bound: {} >= {}'.format(i, len(elements)))
-    del elements[i]
+    def set_unsigned_long(self, value):
+        """
+        Set unsigned long value
 
-
-def copy_tagged_tuple(obj):
-    """
-    Deep copy a tagged tuple
-
-    :param obj (dict)
-           the tagged tuple
-    :return (dict)
-            The copied tagged tuple
-    """
-    assert_tagged_tuple(obj)
-    return copy.deepcopy(obj)
-
-
-def set_unsigned_long(obj, value):
-    """
-    Set unsigned long value
-
-    :param obj (dict)
-           the unsigned long object
-    :param value (int)
-           the value to set
-    """
-    assert_unsigned_long(obj)
-    if type(value) is not int:
-        raise Exception('passed value is not int: {}'.format(value))
-    obj['@VALUE'] = value
-
-
-def set_string(obj, value):
-    """
-    Set string value
-
-    :param obj (dict)
-           the string object
-    :param value (int)
-           the value to set
-    """
-    assert_string(obj)
-    if type(value) is not str and type(value) is not unicode:
-        raise Exception('passed value is not string: {}'.format(value))
-    obj['@VALUE'] = value
-
-
-def set_identifier_name(obj, value):
-    """
-    Set identifier name value
-
-    :param obj (dict)
-           the identifier name object
-    :param value (int)
-           the value to set
-    """
-    assert_identifier_name(obj)
-    if type(value) is not str and type(value) is not unicode:
-        raise Exception('passed value is not string: {}'.format(value))
-    obj['@VALUE'] = value
+        :param value (int)
+               the value to set
+        :return (wrap)
+                self
+        :raises Exception
+                If value is not correct type
+        """
+        self.assert_unsigned_long()
+        if type(value) is not int:
+            raise Exception('passed value is not int: {}'.format(value))
+        self.obj['@VALUE'] = value
+        return self

@@ -2,15 +2,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{ExternalScrollId, LayoutPoint, LayoutRect, LayoutVector2D, ReferenceFrameKind};
+use api::{ExternalScrollId, PropertyBinding, ReferenceFrameKind, TransformStyle};
 use api::{PipelineId, ScrollClamping, ScrollNodeState, ScrollLocation, ScrollSensitivity};
-use api::{LayoutSize, LayoutTransform, PropertyBinding, TransformStyle, WorldPoint};
+use api::units::*;
+use euclid::TypedTransform3D;
 use gpu_types::TransformPalette;
 use internal_types::{FastHashMap, FastHashSet};
 use print_tree::{PrintableTree, PrintTree, PrintTreePrinter};
 use scene::SceneProperties;
 use spatial_node::{ScrollFrameInfo, SpatialNode, SpatialNodeType, StickyFrameInfo, ScrollFrameKind};
-use std::ops;
+use std::{ops, u32};
 use util::{project_rect, LayoutToWorldFastTransform, MatrixHelpers, ScaleOffset};
 
 pub type ScrollStates = FastHashMap<ExternalScrollId, ScrollFrameInfo>;
@@ -49,6 +50,10 @@ impl CoordinateSystem {
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct SpatialNodeIndex(pub u32);
+
+impl SpatialNodeIndex {
+    pub const INVALID: SpatialNodeIndex = SpatialNodeIndex(u32::MAX);
+}
 
 //Note: these have to match ROOT_REFERENCE_FRAME_SPATIAL_ID and ROOT_SCROLL_NODE_SPATIAL_ID
 pub const ROOT_SPATIAL_NODE_INDEX: SpatialNodeIndex = SpatialNodeIndex(0);
@@ -136,9 +141,9 @@ pub struct TransformUpdateState {
 
 /// A processed relative transform between two nodes in the clip-scroll tree.
 #[derive(Debug, Default)]
-pub struct RelativeTransform {
+pub struct RelativeTransform<U> {
     /// The flattened transform, produces Z = 0 at all times.
-    pub flattened: LayoutTransform,
+    pub flattened: TypedTransform3D<f32, LayoutPixel, U>,
     /// Visible face of the original transform.
     pub visible_face: VisibleFace,
     /// True if the original transform had perspective.
@@ -162,7 +167,7 @@ impl ClipScrollTree {
         &self,
         child_index: SpatialNodeIndex,
         parent_index: SpatialNodeIndex,
-    ) -> Option<RelativeTransform> {
+    ) -> RelativeTransform<LayoutPixel> {
         assert!(child_index.0 >= parent_index.0);
         let child = &self.spatial_nodes[child_index.0 as usize];
         let parent = &self.spatial_nodes[parent_index.0 as usize];
@@ -204,11 +209,24 @@ impl ClipScrollTree {
                 .to_transform()
         );
 
-        Some(RelativeTransform {
+        RelativeTransform {
             flattened: transform,
             visible_face,
             is_perspective,
-        })
+        }
+    }
+
+    /// Calculate the relative transform from `child_index` to the scene root.
+    pub fn get_world_transform(
+        &self,
+        index: SpatialNodeIndex,
+    ) -> RelativeTransform<WorldPixel> {
+        let relative = self.get_relative_transform(index, ROOT_SPATIAL_NODE_INDEX);
+        RelativeTransform {
+            flattened: relative.flattened.with_destination::<WorldPixel>(),
+            visible_face: relative.visible_face,
+            is_perspective: relative.is_perspective,
+        }
     }
 
     /// Map a rectangle in some child space to a parent.
@@ -625,7 +643,7 @@ fn test_pt(
     const EPSILON: f32 = 0.0001;
 
     let p = LayoutPoint::new(px, py);
-    let m = cst.get_relative_transform(child, parent).unwrap().flattened;
+    let m = cst.get_relative_transform(child, parent).flattened;
     let pt = m.transform_point2d(&p).unwrap();
     assert!(pt.x.approx_eq_eps(&expected_x, &EPSILON) &&
             pt.y.approx_eq_eps(&expected_y, &EPSILON),

@@ -3812,6 +3812,11 @@ public class GeckoSession implements Parcelable {
      * and another request for the content permission (e.g. through
      * requestContentPermission), which is typically handled by an app-specific
      * permission dialog.
+     *
+     *
+     * When denying an Android app permission, the response is not stored by GeckoView.
+     * It is the responsibility of the consumer to store the response state and therefore prevent
+     * further requests from being presented to the user.
      **/
     public interface PermissionDelegate {
         @Retention(RetentionPolicy.SOURCE)
@@ -3822,13 +3827,13 @@ public class GeckoSession implements Parcelable {
          * Permission for using the geolocation API.
          * See: https://developer.mozilla.org/en-US/docs/Web/API/Geolocation
          */
-        public static final int PERMISSION_GEOLOCATION = 0;
+        int PERMISSION_GEOLOCATION = 0;
 
         /**
          * Permission for using the notifications API.
          * See: https://developer.mozilla.org/en-US/docs/Web/API/notification
          */
-        public static final int PERMISSION_DESKTOP_NOTIFICATION = 1;
+        int PERMISSION_DESKTOP_NOTIFICATION = 1;
 
         /**
          * Callback interface for notifying the result of a permission request.

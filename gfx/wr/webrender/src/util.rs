@@ -809,6 +809,7 @@ impl<Src, Dst> From<TypedVector2D<f32, Src>> for FastTransform<Src, Dst> {
 
 pub type LayoutFastTransform = FastTransform<LayoutPixel, LayoutPixel>;
 pub type LayoutToWorldFastTransform = FastTransform<LayoutPixel, WorldPixel>;
+pub type WorldToLayoutFastTransform = FastTransform<WorldPixel, LayoutPixel>;
 
 pub fn project_rect<F, T>(
     transform: &TypedTransform3D<f32, F, T>,

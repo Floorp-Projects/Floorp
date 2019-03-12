@@ -53,6 +53,7 @@ var setupScript = runInParent(function setup() {
 let sandboxed = document.getElementById("sandboxed");
 let uname;
 let pword;
+let hostname;
 
 // Check for expected username/password in form.
 function checkACForm(expectedUsername, expectedPassword) {
@@ -74,6 +75,7 @@ add_task(async function setup() {
   let frameDoc = SpecialPowers.wrap(sandboxed).contentDocument;
   uname = frameDoc.getElementById("form-basic-username");
   pword = frameDoc.getElementById("form-basic-password");
+  hostname = frameDoc.documentURIObject.host;
 });
 
 add_task(async function test_no_autofill() {
@@ -95,7 +97,7 @@ add_task(async function test_autocomplete_warning_no_logins() {
   let expectedMenuItems = [
     "This connection is not secure. Logins entered here could be compromised. Learn More",
   ];
-  checkArrayValues(results, expectedMenuItems, "Check all menuitems are displayed correctly.");
+  checkAutoCompleteResults(results, expectedMenuItems, hostname, "Check all menuitems are displayed correctly.");
 
   checkACForm("", "");
 });

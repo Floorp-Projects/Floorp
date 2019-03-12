@@ -498,9 +498,6 @@ AssignmentExpression:
 
 AssignmentTargetIdentifier:
   build: |
-    if (!IsIdentifier(name)) {
-      return raiseError("Invalid identifier");
-    }
     BINJS_TRY(usedNames_.noteUse(cx_, name, pc_->scriptId(),
                                  pc_->innermostScope()->id()));
     BINJS_TRY_DECL(result,
@@ -509,9 +506,6 @@ AssignmentTargetIdentifier:
 
 BindingIdentifier:
   build: |
-    if (!IsIdentifier(name)) {
-      return raiseError("Invalid identifier");
-    }
     BINJS_TRY_DECL(result,
                    handler_.newName(name->asPropertyName(),
                                     tokenizer_->pos(start), cx_));
@@ -694,6 +688,12 @@ CatchClause:
     ParseContext::Statement stmt(pc_, StatementKind::Catch);
     ParseContext::Scope currentScope(cx_, pc_, usedNames_);
     BINJS_TRY(currentScope.init(pc_));
+  fields:
+    binding:
+      after: |
+        if (!currentScope.lookupDeclaredName(binding->template as<NameNode>().atom())) {
+          return raiseError("Missing catch variable in scope");
+        }
   build: |
     MOZ_TRY(checkClosedVars(currentScope));
     BINJS_TRY_DECL(bindings,
@@ -1117,9 +1117,6 @@ FunctionBody:
 
 IdentifierExpression:
   build: |
-    if (!IsIdentifier(name)) {
-      return raiseError("Invalid identifier");
-    }
     BINJS_TRY(usedNames_.noteUse(cx_, name, pc_->scriptId(),
                                  pc_->innermostScope()->id()));
     BINJS_TRY_DECL(result,

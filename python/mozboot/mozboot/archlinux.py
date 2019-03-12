@@ -99,6 +99,10 @@ class ArchlinuxBootstrapper(NodeInstall, StyloInstall,
         self.aur_install(*self.BROWSER_AUR_PACKAGES)
         self.pacman_install(*self.BROWSER_PACKAGES)
 
+    def ensure_nasm_packages(self, state_dir, checkout_root):
+        # installed via ensure_browser_packages
+        pass
+
     def ensure_mobile_android_packages(self, artifact_mode=False):
         # Multi-part process:
         # 1. System packages.

@@ -90,7 +90,7 @@ add_task(async function test_empty_first_entry() {
   let results = await shownPromise;
   popupState = await getPopupState();
   is(popupState.selectedIndex, -1, "Check no entries are selected");
-  checkArrayValues(results, ["name", "Name", "USER"], "initial");
+  checkAutoCompleteResults(results, ["name", "Name", "USER"], "mochi.test", "initial");
 
   // Check first entry
   let index0Promise = notifySelectedIndex(0);

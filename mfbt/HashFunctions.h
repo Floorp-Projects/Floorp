@@ -55,6 +55,7 @@
 #include "mozilla/WrappingOperations.h"
 
 #include <stdint.h>
+#include <type_traits>
 
 namespace mozilla {
 
@@ -226,73 +227,92 @@ MOZ_MUST_USE inline HashNumber HashGeneric(Args... aArgs) {
   return AddToHash(0, aArgs...);
 }
 
-namespace detail {
-
-template <typename T>
-constexpr HashNumber HashUntilZero(const T* aStr) {
+/**
+ * Hash successive |*aIter| until |!*aIter|, i.e. til null-termination.
+ *
+ * This function is *not* named HashString like the non-template overloads
+ * below.  Some users define HashString overloads and pass inexactly-matching
+ * values to them -- but an inexactly-matching value would match this overload
+ * instead!  We follow the general rule and don't mix and match template and
+ * regular overloads to avoid this.
+ *
+ * If you have the string's length, call HashStringKnownLength: it may be
+ * marginally faster.
+ */
+template <typename Iterator>
+MOZ_MUST_USE constexpr HashNumber HashStringUntilZero(Iterator aIter) {
   HashNumber hash = 0;
-  for (; T c = *aStr; aStr++) {
+  for (; auto c = *aIter; ++aIter) {
     hash = AddToHash(hash, c);
   }
   return hash;
 }
 
-template <typename T>
-HashNumber HashKnownLength(const T* aStr, size_t aLength) {
+/**
+ * Hash successive |aIter[i]| up to |i == aLength|.
+ */
+template <typename Iterator>
+MOZ_MUST_USE constexpr HashNumber HashStringKnownLength(Iterator aIter,
+                                                        size_t aLength) {
   HashNumber hash = 0;
   for (size_t i = 0; i < aLength; i++) {
-    hash = AddToHash(hash, aStr[i]);
+    hash = AddToHash(hash, aIter[i]);
   }
   return hash;
 }
 
-} /* namespace detail */
-
 /**
  * The HashString overloads below do just what you'd expect.
  *
- * If you have the string's length, you might as well call the overload which
- * includes the length.  It may be marginally faster.
+ * These functions are non-template functions so that users can 1) overload them
+ * with their own types 2) in a way that allows implicit conversions to happen.
  */
 MOZ_MUST_USE inline HashNumber HashString(const char* aStr) {
-  return detail::HashUntilZero(reinterpret_cast<const unsigned char*>(aStr));
+  // Use the |const unsigned char*| version of the above so that all ordinary
+  // character data hashes identically.
+  return HashStringUntilZero(reinterpret_cast<const unsigned char*>(aStr));
 }
 
 MOZ_MUST_USE inline HashNumber HashString(const char* aStr, size_t aLength) {
-  return detail::HashKnownLength(reinterpret_cast<const unsigned char*>(aStr),
-                                 aLength);
+  // Delegate to the |const unsigned char*| version of the above to share
+  // template instantiations.
+  return HashStringKnownLength(reinterpret_cast<const unsigned char*>(aStr),
+                               aLength);
 }
 
 MOZ_MUST_USE
 inline HashNumber HashString(const unsigned char* aStr, size_t aLength) {
-  return detail::HashKnownLength(aStr, aLength);
+  return HashStringKnownLength(aStr, aLength);
 }
 
 // You may need to use the
 // MOZ_{PUSH,POP}_DISABLE_INTEGRAL_CONSTANT_OVERFLOW_WARNING macros if you use
 // this function. See the comment on those macros' definitions for more detail.
 MOZ_MUST_USE constexpr HashNumber HashString(const char16_t* aStr) {
-  return detail::HashUntilZero(aStr);
+  return HashStringUntilZero(aStr);
 }
 
 MOZ_MUST_USE inline HashNumber HashString(const char16_t* aStr,
                                           size_t aLength) {
-  return detail::HashKnownLength(aStr, aLength);
+  return HashStringKnownLength(aStr, aLength);
 }
 
-/*
- * On Windows, wchar_t is not the same as char16_t, even though it's
- * the same width!
+/**
+ * HashString overloads for |wchar_t| on platforms where it isn't |char16_t|.
  */
-#ifdef WIN32
-MOZ_MUST_USE inline HashNumber HashString(const wchar_t* aStr) {
-  return detail::HashUntilZero(aStr);
+template <typename WCharT, typename = typename std::enable_if<
+                               std::is_same<WCharT, wchar_t>::value &&
+                               !std::is_same<wchar_t, char16_t>::value>::type>
+MOZ_MUST_USE inline HashNumber HashString(const WCharT* aStr) {
+  return HashStringUntilZero(aStr);
 }
 
-MOZ_MUST_USE inline HashNumber HashString(const wchar_t* aStr, size_t aLength) {
-  return detail::HashKnownLength(aStr, aLength);
+template <typename WCharT, typename = typename std::enable_if<
+                               std::is_same<WCharT, wchar_t>::value &&
+                               !std::is_same<wchar_t, char16_t>::value>::type>
+MOZ_MUST_USE inline HashNumber HashString(const WCharT* aStr, size_t aLength) {
+  return HashStringKnownLength(aStr, aLength);
 }
-#endif
 
 /**
  * Hash some number of bytes.

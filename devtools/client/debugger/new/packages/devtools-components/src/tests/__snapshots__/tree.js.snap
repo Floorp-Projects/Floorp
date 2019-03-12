@@ -266,6 +266,20 @@ exports[`Tree active item - renders as expected when using keyboard and Space 1`
 "
 `;
 
+exports[`Tree calls shouldItemUpdate when provided 1`] = `
+"
+▶︎ A
+▶︎ M
+"
+`;
+
+exports[`Tree calls shouldItemUpdate when provided 2`] = `
+"
+▶︎ A
+▶︎ M
+"
+`;
+
 exports[`Tree ignores key strokes when pressing modifiers 1`] = `
 "
 ▼ A

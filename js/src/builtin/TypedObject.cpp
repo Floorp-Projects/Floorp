@@ -2317,7 +2317,7 @@ bool TypedObject::construct(JSContext* cx, unsigned int argc, Value* vp) {
   MOZ_ASSERT(::IsTypedObjectClass(clasp));
 
   JSObject* obj =
-      js::Allocate<JSObject>(cx, kind, /* nDynamicSlots = */ 0, heap, clasp);
+      js::AllocateObject(cx, kind, /* nDynamicSlots = */ 0, heap, clasp);
   if (!obj) {
     return cx->alreadyReportedOOM();
   }

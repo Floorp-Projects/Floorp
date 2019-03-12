@@ -122,6 +122,25 @@ var AboutReader = function(mm, win, articlePromise) {
   }
 
   this._loadArticle();
+
+  let dropdown = this._toolbarElement;
+
+  let elemL10nMap = {
+    ".minus-button": "minus",
+    ".plus-button": "plus",
+    ".content-width-minus-button": "contentwidthminus",
+    ".content-width-plus-button": "contentwidthplus",
+    ".line-height-minus-button": "lineheightminus",
+    ".line-height-plus-button": "lineheightplus",
+    ".light-button": "colorschemelight",
+    ".dark-button": "colorschemedark",
+    ".sepia-button": "colorschemesepia",
+  };
+
+  for (let [selector, stringID] of Object.entries(elemL10nMap)) {
+    dropdown.querySelector(selector).setAttribute("title",
+      gStrings.GetStringFromName("aboutReader.toolbar." + stringID));
+  }
 };
 
 AboutReader.prototype = {

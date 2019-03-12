@@ -64,7 +64,7 @@ use gpu_cache::{GpuBlockData, GpuCacheUpdate, GpuCacheUpdateList};
 use gpu_cache::{GpuCacheDebugChunk, GpuCacheDebugCmd};
 #[cfg(feature = "pathfinder")]
 use gpu_glyph_renderer::GpuGlyphRenderer;
-use gpu_types::ScalingInstance;
+use gpu_types::{PrimitiveHeaderI, PrimitiveHeaderF, ScalingInstance, TransformData};
 use internal_types::{TextureSource, ORTHO_FAR_PLANE, ORTHO_NEAR_PLANE, ResourceCacheError};
 use internal_types::{CacheTextureId, DebugOutput, FastHashMap, LayerIndex, RenderedDocument, ResultMsg};
 use internal_types::{TextureCacheAllocationKind, TextureCacheUpdate, TextureUpdateList, TextureUpdateSource};
@@ -82,7 +82,7 @@ use render_backend::{FrameId, RenderBackend};
 use scene_builder::{SceneBuilder, LowPrioritySceneBuilder};
 use shade::{Shaders, WrShaders};
 use smallvec::SmallVec;
-use render_task::RenderTaskTree;
+use render_task::{RenderTaskData, RenderTaskTree};
 use resource_cache::ResourceCache;
 use util::drain_filter;
 
@@ -91,6 +91,7 @@ use std::cmp;
 use std::collections::VecDeque;
 use std::collections::hash_map::Entry;
 use std::f32;
+use std::marker::PhantomData;
 use std::mem;
 use std::os::raw::c_void;
 use std::path::PathBuf;
@@ -1406,19 +1407,24 @@ impl GpuCacheTexture {
     }
 }
 
-struct VertexDataTexture {
+struct VertexDataTexture<T> {
     texture: Option<Texture>,
     format: ImageFormat,
     pbo: PBO,
+    _marker: PhantomData<T>,
 }
 
-impl VertexDataTexture {
+impl<T> VertexDataTexture<T> {
     fn new(
         device: &mut Device,
         format: ImageFormat,
-    ) -> VertexDataTexture {
-        let pbo = device.create_pbo();
-        VertexDataTexture { texture: None, format, pbo }
+    ) -> Self {
+        VertexDataTexture {
+            texture: None,
+            format,
+            pbo: device.create_pbo(),
+            _marker: PhantomData,
+        }
     }
 
     /// Returns a borrow of the GPU texture. Panics if it hasn't been initialized.
@@ -1431,7 +1437,7 @@ impl VertexDataTexture {
         self.texture.as_ref().map_or(0, |t| t.size_in_bytes())
     }
 
-    fn update<T>(&mut self, device: &mut Device, data: &mut Vec<T>) {
+    fn update(&mut self, device: &mut Device, data: &mut Vec<T>) {
         debug_assert!(mem::size_of::<T>() % 16 == 0);
         let texels_per_item = mem::size_of::<T>() / 16;
         let items_per_row = MAX_VERTEX_TEXTURE_WIDTH / texels_per_item;
@@ -1609,10 +1615,10 @@ pub struct Renderer {
     pub gpu_profile: GpuProfiler<GpuProfileTag>,
     vaos: RendererVAOs,
 
-    prim_header_f_texture: VertexDataTexture,
-    prim_header_i_texture: VertexDataTexture,
-    transforms_texture: VertexDataTexture,
-    render_task_texture: VertexDataTexture,
+    prim_header_f_texture: VertexDataTexture<PrimitiveHeaderF>,
+    prim_header_i_texture: VertexDataTexture<PrimitiveHeaderI>,
+    transforms_texture: VertexDataTexture<TransformData>,
+    render_task_texture: VertexDataTexture<RenderTaskData>,
     gpu_cache_texture: GpuCacheTexture,
 
     /// When the GPU cache debugger is enabled, we keep track of the live blocks

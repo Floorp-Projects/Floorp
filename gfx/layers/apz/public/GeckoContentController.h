@@ -11,6 +11,7 @@
 #include "LayersTypes.h"                         // for ScrollDirection
 #include "Units.h"                               // for CSSPoint, CSSRect, etc
 #include "mozilla/Assertions.h"                  // for MOZ_ASSERT_HELPER2
+#include "mozilla/Attributes.h"                  // for MOZ_CAN_RUN_SCRIPT
 #include "mozilla/DefineEnum.h"                  // for MOZ_DEFINE_ENUM
 #include "mozilla/EventForwards.h"               // for Modifiers
 #include "mozilla/layers/MatrixMessage.h"        // for MatrixMessage
@@ -76,6 +77,7 @@ class GeckoContentController {
    * Requests handling of a tap event. |aPoint| is in LD pixels, relative to the
    * current scroll offset.
    */
+  MOZ_CAN_RUN_SCRIPT
   virtual void HandleTap(TapType aType, const LayoutDevicePoint& aPoint,
                          Modifiers aModifiers, const ScrollableLayerGuid& aGuid,
                          uint64_t aInputBlockId) = 0;

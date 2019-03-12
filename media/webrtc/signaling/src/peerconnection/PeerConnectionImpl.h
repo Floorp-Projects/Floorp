@@ -293,13 +293,16 @@ class PeerConnectionImpl final
   }
 
   NS_IMETHODIMP AddIceCandidate(const char* aCandidate, const char* aMid,
+                                const char* aUfrag,
                                 const dom::Nullable<unsigned short>& aLevel);
 
   void AddIceCandidate(const nsAString& aCandidate, const nsAString& aMid,
+                       const nsAString& aUfrag,
                        const dom::Nullable<unsigned short>& aLevel,
                        ErrorResult& rv) {
     rv = AddIceCandidate(NS_ConvertUTF16toUTF8(aCandidate).get(),
-                         NS_ConvertUTF16toUTF8(aMid).get(), aLevel);
+                         NS_ConvertUTF16toUTF8(aMid).get(),
+                         NS_ConvertUTF16toUTF8(aUfrag).get(), aLevel);
   }
 
   void UpdateNetworkState(bool online);
@@ -551,9 +554,10 @@ class PeerConnectionImpl final
   void ShutdownMedia();
 
   void CandidateReady(const std::string& candidate,
-                      const std::string& transportId);
+                      const std::string& transportId, const std::string& ufrag);
   void SendLocalIceCandidateToContent(uint16_t level, const std::string& mid,
-                                      const std::string& candidate);
+                                      const std::string& candidate,
+                                      const std::string& ufrag);
 
   nsresult GetDatachannelParameters(uint32_t* channels, uint16_t* localport,
                                     uint16_t* remoteport,

@@ -65,6 +65,8 @@ const prefs = {
       PERSIST: "devtools.webconsole.persistlog",
       // Max number of entries in history list.
       INPUT_HISTORY_COUNT: "devtools.webconsole.inputHistoryCount",
+      // Is editor mode enabled.
+      EDITOR: "devtools.webconsole.input.editor",
     },
     FEATURES: {
       // We use the same pref to enable the sidebar on webconsole and browser console.

@@ -84,7 +84,7 @@ Additional Event Info
 
 The Event API allows to report additional information. We support the following optional fields:
 
-- ``trigger``: A label to distinguish what triggered the polling/fetching of remote content (eg. ``"broadcast"``, ``"timer"``)
+- ``trigger``: A label to distinguish what triggered the polling/fetching of remote content (eg. ``"broadcast"``, ``"timer"``, ``"forced"``, ``"manual"``)
 
 .. code-block:: js
 

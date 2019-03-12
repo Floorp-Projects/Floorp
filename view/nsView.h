@@ -15,6 +15,7 @@
 #include "nsWidgetInitData.h"  // for nsWindowType
 #include "nsIWidgetListener.h"
 #include "Units.h"
+#include "mozilla/Attributes.h"
 #include "mozilla/EventForwards.h"
 
 class nsViewManager;
@@ -394,6 +395,7 @@ class nsView final : public nsIWidgetListener {
       const mozilla::TimeStamp& aCompositeEnd) override;
   virtual void RequestRepaint() override;
   virtual bool ShouldNotBeVisible() override;
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   virtual nsEventStatus HandleEvent(mozilla::WidgetGUIEvent* aEvent,
                                     bool aUseAttachedEvents) override;
 

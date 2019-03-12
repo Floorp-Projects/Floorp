@@ -36,7 +36,7 @@ static void GetColor(const char* aPrefName, nscolor& aColor) {
 
 bool PreferenceSheet::ShouldUseChromePrefs(const Document& aDoc) {
   return aDoc.IsInChromeDocShell() ||
-    (aDoc.IsBeingUsedAsImage() && aDoc.IsDocumentURISchemeChrome());
+         (aDoc.IsBeingUsedAsImage() && aDoc.IsDocumentURISchemeChrome());
 }
 
 static bool UseAccessibilityTheme(bool aIsChrome) {

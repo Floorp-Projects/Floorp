@@ -1010,6 +1010,9 @@ class Attribute(object):
     must_use = False
     binaryname = None
     infallible = False
+    # explicit_can_run_script is true if the attribute is explicitly annotated
+    # as being able to cause script to run.
+    explicit_can_run_script = False
 
     def __init__(self, type, name, attlist, readonly, location, doccomments):
         self.type = type
@@ -1045,6 +1048,8 @@ class Attribute(object):
                 self.must_use = True
             elif name == 'infallible':
                 self.infallible = True
+            elif name == 'can_run_script':
+                self.explicit_can_run_script = True
             else:
                 raise IDLError("Unexpected attribute '%s'" % name, aloc)
 
@@ -1092,6 +1097,9 @@ class Method(object):
     nostdcall = False
     must_use = False
     optional_argc = False
+    # explicit_can_run_script is true if the method is explicitly annotated
+    # as being able to cause script to run.
+    explicit_can_run_script = False
 
     def __init__(self, type, name, attlist, paramlist, location, doccomments, raises):
         self.type = type
@@ -1128,6 +1136,8 @@ class Method(object):
                 self.nostdcall = True
             elif name == 'must_use':
                 self.must_use = True
+            elif name == 'can_run_script':
+                self.explicit_can_run_script = True
             else:
                 raise IDLError("Unexpected attribute '%s'" % name, aloc)
 

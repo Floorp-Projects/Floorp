@@ -55,5 +55,9 @@ class OpenBSDBootstrapper(BaseBootstrapper):
         # Clang / llvm already installed as browser package
         self.run_as_root(['pkg_add', 'cbindgen'])
 
+    def ensure_nasm_packages(self, state_dir, checkout_root):
+        # installed via ensure_browser_packages
+        pass
+
     def ensure_node_packages(self, state_dir, checkout_root):
         self.run_as_root(['pkg_add', 'node'])
