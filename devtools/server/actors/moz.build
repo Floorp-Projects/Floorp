@@ -59,7 +59,6 @@ DevToolsModules(
     'styles.js',
     'stylesheets.js',
     'thread.js',
-    'webaudio.js',
     'webbrowser.js',
     'webconsole.js',
 )
@@ -90,9 +89,6 @@ with Files('storage.js'):
 
 with Files('stylesheets.js'):
     BUG_COMPONENT = ('DevTools', 'Style Editor')
-
-with Files('webaudio.js'):
-    BUG_COMPONENT = ('DevTools', 'Web Audio Editor')
 
 with Files('webconsole.js'):
     BUG_COMPONENT = ('DevTools', 'Console')
