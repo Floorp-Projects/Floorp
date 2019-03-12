@@ -29,6 +29,7 @@ UNIFIED_SOURCES += [
     'BytecodeEmitter.cpp',
     'CallOrNewEmitter.cpp',
     'CForEmitter.cpp',
+    'DefaultEmitter.cpp',
     'DoWhileEmitter.cpp',
     'ElemOpEmitter.cpp',
     'EmitterScope.cpp',
