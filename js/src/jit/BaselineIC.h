@@ -2719,6 +2719,10 @@ void StoreToTypedArray(JSContext* cx, MacroAssembler& masm, Scalar::Type type,
                        const ValueOperand& value, const T& dest,
                        Register scratch, Label* failure);
 
+extern bool DoTypeUpdateFallback(JSContext* cx, BaselineFrame* frame,
+                                 ICUpdatedStub* stub, HandleValue objval,
+                                 HandleValue value);
+
 }  // namespace jit
 }  // namespace js
 

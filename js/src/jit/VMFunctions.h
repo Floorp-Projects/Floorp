@@ -1222,27 +1222,6 @@ bool IsPossiblyWrappedTypedArray(JSContext* cx, JSObject* obj, bool* result);
 bool DoToNumber(JSContext* cx, HandleValue arg, MutableHandleValue ret);
 bool DoToNumeric(JSContext* cx, HandleValue arg, MutableHandleValue ret);
 
-// VMFunctions shared by JITs
-extern const VMFunction SetArrayLengthInfo;
-extern const VMFunction SetObjectElementInfo;
-
-extern const VMFunction StringsEqualInfo;
-extern const VMFunction StringsNotEqualInfo;
-extern const VMFunction ConcatStringsInfo;
-extern const VMFunction StringSplitHelperInfo;
-
-extern const VMFunction ProxyGetPropertyInfo;
-extern const VMFunction ProxyGetPropertyByValueInfo;
-extern const VMFunction ProxySetPropertyInfo;
-extern const VMFunction ProxySetPropertyByValueInfo;
-extern const VMFunction ProxyHasInfo;
-extern const VMFunction ProxyHasOwnInfo;
-
-extern const VMFunction NativeGetElementInfo;
-
-extern const VMFunction AddOrUpdateSparseElementHelperInfo;
-extern const VMFunction GetSparseElementHelperInfo;
-
 // TailCall VMFunctions
 extern const VMFunction DoConcatStringObjectInfo;
 
