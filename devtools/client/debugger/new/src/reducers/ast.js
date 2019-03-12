@@ -166,15 +166,6 @@ export function getPreview(state: OuterState) {
   return state.ast.preview;
 }
 
-export function isEmptyLineInSource(
-  state: OuterState,
-  line: number,
-  selectedSourceId: string
-) {
-  const emptyLines = getEmptyLines(state, selectedSourceId);
-  return emptyLines && emptyLines.includes(line);
-}
-
 const emptySourceMetaData = {};
 export function getSourceMetaData(state: OuterState, sourceId: string) {
   return state.ast.sourceMetaData[sourceId] || emptySourceMetaData;
@@ -191,14 +182,6 @@ export function getInScopeLines(state: OuterState) {
 export function isLineInScope(state: OuterState, line: number) {
   const linesInScope = state.ast.inScopeLines;
   return linesInScope && linesInScope.includes(line);
-}
-
-export function getEmptyLines(state: OuterState, sourceId: string) {
-  if (!sourceId) {
-    return null;
-  }
-
-  return state.ast.emptyLines[sourceId];
 }
 
 export default update;
