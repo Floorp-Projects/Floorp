@@ -97,8 +97,8 @@ add_task(async function testSyncedTabsSidebarList() {
     syncTabs() { return Promise.resolve(); },
   };
 
-  sinon.stub(syncedTabsDeckComponent, "_getSignedInUser").resolves({verified: true});
-  sinon.stub(SyncedTabs._internal, "getTabClients").resolves(Cu.cloneInto(FIXTURE, {}));
+  sinon.stub(syncedTabsDeckComponent, "_getSignedInUser", () => Promise.resolve({verified: true}));
+  sinon.stub(SyncedTabs._internal, "getTabClients", () => Promise.resolve(Cu.cloneInto(FIXTURE, {})));
 
   await syncedTabsDeckComponent.updatePanel();
   // This is a hacky way of waiting for the view to render. The view renders
@@ -148,18 +148,19 @@ add_task(async function testSyncedTabsSidebarFilteredList() {
     syncTabs() { return Promise.resolve(); },
   };
 
-  sinon.stub(syncedTabsDeckComponent, "_getSignedInUser").resolves({verified: true});
-  sinon.stub(SyncedTabs._internal, "getTabClients").resolves(Cu.cloneInto(FIXTURE, {}));
+  sinon.stub(syncedTabsDeckComponent, "_getSignedInUser", () => Promise.resolve({verified: true}));
+  sinon.stub(SyncedTabs._internal, "getTabClients", () => Promise.resolve(Cu.cloneInto(FIXTURE, {})));
 
   await syncedTabsDeckComponent.updatePanel();
+  // This is a hacky way of waiting for the view to render. The view renders
+  // after the following promise (a different instance of which is triggered
+  // in updatePanel) resolves, so we wait for it here as well
+  await syncedTabsDeckComponent.tabListComponent._store.getData();
 
   let filterInput = syncedTabsDeckComponent._window.document.querySelector(".tabsFilter");
   filterInput.value = "filter text";
   filterInput.blur();
 
-  // This is a hacky way of waiting for the view to render. The view renders
-  // after the following promise (a different instance of which is triggered
-  // in updatePanel) resolves, so we wait for it here as well
   await syncedTabsDeckComponent.tabListComponent._store.getData("filter text");
 
   let selectedPanel = syncedTabsDeckComponent.container.querySelector(".sync-state.selected");
@@ -192,6 +193,8 @@ add_task(async function testSyncedTabsSidebarFilteredList() {
 add_task(testClean);
 
 add_task(async function testSyncedTabsSidebarStatus() {
+  let account = null;
+
   await SidebarUI.show("viewTabsSidebar");
   let syncedTabsDeckComponent = window.SidebarUI.browser.contentWindow.syncedTabsDeckComponent;
 
@@ -209,7 +212,7 @@ add_task(async function testSyncedTabsSidebarStatus() {
   sinon.spy(syncedTabsDeckComponent, "updatePanel");
   sinon.spy(syncedTabsDeckComponent, "observe");
 
-  sinon.stub(syncedTabsDeckComponent, "_getSignedInUser").rejects("Test error");
+  sinon.stub(syncedTabsDeckComponent, "_getSignedInUser", () => Promise.reject("Test error"));
   await syncedTabsDeckComponent.updatePanel();
 
   let selectedPanel = syncedTabsDeckComponent.container.querySelector(".sync-state.selected");
@@ -217,30 +220,27 @@ add_task(async function testSyncedTabsSidebarStatus() {
     "not-authed panel is selected on auth error");
 
   syncedTabsDeckComponent._getSignedInUser.restore();
-  sinon.stub(syncedTabsDeckComponent, "_getSignedInUser").resolves(null);
+  sinon.stub(syncedTabsDeckComponent, "_getSignedInUser", () => Promise.resolve(account));
   await syncedTabsDeckComponent.updatePanel();
   selectedPanel = syncedTabsDeckComponent.container.querySelector(".sync-state.selected");
   Assert.ok(selectedPanel.classList.contains("notAuthedInfo"),
     "not-authed panel is selected");
 
-  syncedTabsDeckComponent._getSignedInUser.restore();
-  sinon.stub(syncedTabsDeckComponent, "_getSignedInUser").resolves({verified: false});
+  account = {verified: false};
   await syncedTabsDeckComponent.updatePanel();
   selectedPanel = syncedTabsDeckComponent.container.querySelector(".sync-state.selected");
   Assert.ok(selectedPanel.classList.contains("unverified"),
     "unverified panel is selected");
 
   SyncedTabs._internal.loginFailed = true;
-  syncedTabsDeckComponent._getSignedInUser.restore();
-  sinon.stub(syncedTabsDeckComponent, "_getSignedInUser").resolves({verified: true});
+  account = {verified: true};
   await syncedTabsDeckComponent.updatePanel();
   selectedPanel = syncedTabsDeckComponent.container.querySelector(".sync-state.selected");
   Assert.ok(selectedPanel.classList.contains("reauth"),
     "reauth panel is selected");
   SyncedTabs._internal.loginFailed = false;
 
-  syncedTabsDeckComponent._getSignedInUser.restore();
-  sinon.stub(syncedTabsDeckComponent, "_getSignedInUser").resolves({verified: true});
+  account = {verified: true};
   await syncedTabsDeckComponent.updatePanel();
   selectedPanel = syncedTabsDeckComponent.container.querySelector(".sync-state.selected");
   Assert.ok(selectedPanel.classList.contains("tabs-disabled"),
@@ -253,14 +253,14 @@ add_task(async function testSyncedTabsSidebarStatus() {
     "tabs fetch panel is selected");
 
   SyncedTabs._internal.hasSyncedThisSession = true;
-  sinon.stub(SyncedTabs._internal, "getTabClients").resolves([]);
+  sinon.stub(SyncedTabs._internal, "getTabClients", () => Promise.resolve([]));
   await syncedTabsDeckComponent.updatePanel();
   selectedPanel = syncedTabsDeckComponent.container.querySelector(".sync-state.selected");
   Assert.ok(selectedPanel.classList.contains("singleDeviceInfo"),
     "tabs fetch panel is selected");
 
   SyncedTabs._internal.getTabClients.restore();
-  sinon.stub(SyncedTabs._internal, "getTabClients").resolves([{id: "mock"}]);
+  sinon.stub(SyncedTabs._internal, "getTabClients", () => Promise.resolve([{id: "mock"}]));
   await syncedTabsDeckComponent.updatePanel();
   selectedPanel = syncedTabsDeckComponent.container.querySelector(".sync-state.selected");
   Assert.ok(selectedPanel.classList.contains("tabs-container"),
@@ -283,8 +283,8 @@ add_task(async function testSyncedTabsSidebarContextMenu() {
     syncTabs() { return Promise.resolve(); },
   };
 
-  sinon.stub(syncedTabsDeckComponent, "_getSignedInUser").resolves({verified: true});
-  sinon.stub(SyncedTabs._internal, "getTabClients").resolves(Cu.cloneInto(FIXTURE, {}));
+  sinon.stub(syncedTabsDeckComponent, "_getSignedInUser", () => Promise.resolve({verified: true}));
+  sinon.stub(SyncedTabs._internal, "getTabClients", () => Promise.resolve(Cu.cloneInto(FIXTURE, {})));
 
   await syncedTabsDeckComponent.updatePanel();
   // This is a hacky way of waiting for the view to render. The view renders

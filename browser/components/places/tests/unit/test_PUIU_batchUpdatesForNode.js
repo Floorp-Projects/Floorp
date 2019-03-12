@@ -1,4 +1,10 @@
-const {sinon} = ChromeUtils.import("resource://testing-common/Sinon.jsm");
+// ================================================
+// Load mocking/stubbing library, sinon
+// docs: http://sinonjs.org/releases/v2.3.2/
+const {setTimeout, clearTimeout, setInterval, clearInterval} = ChromeUtils.import("resource://gre/modules/Timer.jsm");
+Services.scriptloader.loadSubScript("resource://testing-common/sinon-2.3.2.js", this);
+/* globals sinon */
+// ================================================
 
 /* eslint-disable mozilla/use-chromeutils-generateqi */
 
