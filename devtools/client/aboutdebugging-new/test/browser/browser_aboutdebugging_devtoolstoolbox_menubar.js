@@ -26,7 +26,7 @@ add_task(async function() {
   info("Check whether the menu items are enabled");
   await assertMenusItems(rootDocument, true);
 
-  await closeAboutDevtoolsToolbox(devtoolsTab, window);
+  await closeAboutDevtoolsToolbox(document, devtoolsTab, window);
   await removeTab(tab);
 });
 
