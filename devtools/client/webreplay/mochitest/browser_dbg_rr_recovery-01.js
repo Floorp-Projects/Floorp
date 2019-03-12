@@ -13,7 +13,7 @@ add_task(async function() {
   openTrustedLinkIn(EXAMPLE_URL + "doc_rr_recovery.html", "current");
   await once(Services.ppmm, "RecordingFinished");
 
-  const toolbox = await attachDebugger(tab), client = toolbox.threadClient;
+  const { target, toolbox } = await attachDebugger(tab), client = toolbox.threadClient;
   await client.interrupt();
   await setBreakpoint(client, "doc_rr_recovery.html", 21);
   await rewindToLine(client, 21);
@@ -22,7 +22,7 @@ add_task(async function() {
     undefined);
   await stepOverToLine(client, 22);
   await stepOverToLine(client, 23);
-  await checkEvaluateInTopFrame(client,
+  await checkEvaluateInTopFrame(target,
     "SpecialPowers.Cu.recordReplayDirective(/* CrashSoon */ 1); " +
     "SpecialPowers.Cu.recordReplayDirective(/* MaybeCrash */ 2)",
     undefined);
