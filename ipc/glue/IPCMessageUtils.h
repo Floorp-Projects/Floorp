@@ -1089,6 +1089,19 @@ struct ParamTraits<nsILoadInfo::CrossOriginOpenerPolicy>
     : EnumSerializer<nsILoadInfo::CrossOriginOpenerPolicy,
                      CrossOriginOpenerPolicyValidator> {};
 
+struct CrossOriginPolicyValidator {
+  static bool IsLegalValue(nsILoadInfo::CrossOriginPolicy e) {
+    return e == nsILoadInfo::CROSS_ORIGIN_POLICY_NULL ||
+           e == nsILoadInfo::CROSS_ORIGIN_POLICY_ANONYMOUS ||
+           e == nsILoadInfo::CROSS_ORIGIN_POLICY_USE_CREDENTIALS;
+  }
+};
+
+template <>
+struct ParamTraits<nsILoadInfo::CrossOriginPolicy>
+    : EnumSerializer<nsILoadInfo::CrossOriginPolicy,
+                     CrossOriginPolicyValidator> {};
+
 } /* namespace IPC */
 
 #endif /* __IPC_GLUE_IPCMESSAGEUTILS_H__ */
