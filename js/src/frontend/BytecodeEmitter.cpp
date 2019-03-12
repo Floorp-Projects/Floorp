@@ -142,8 +142,8 @@ BytecodeEmitter::BytecodeEmitter(BytecodeEmitter* parent,
 }
 
 void BytecodeEmitter::initFromBodyPosition(TokenPos bodyPosition) {
-  setScriptStartOffsetIfUnset(bodyPosition);
-  setFunctionBodyEndPos(bodyPosition);
+  setScriptStartOffsetIfUnset(bodyPosition.begin);
+  setFunctionBodyEndPos(bodyPosition.end);
 }
 
 bool BytecodeEmitter::init() { return atomIndices.acquire(cx); }
@@ -2354,7 +2354,7 @@ bool BytecodeEmitter::emitScript(ParseNode* body) {
   AutoFrontendTraceLog traceLog(cx, TraceLogger_BytecodeEmission,
                                 parser->errorReporter(), body);
 
-  setScriptStartOffsetIfUnset(body->pn_pos);
+  setScriptStartOffsetIfUnset(body->pn_pos.begin);
 
   MOZ_ASSERT(inPrologue());
 
@@ -2375,7 +2375,7 @@ bool BytecodeEmitter::emitScript(ParseNode* body) {
     }
   }
 
-  setFunctionBodyEndPos(body->pn_pos);
+  setFunctionBodyEndPos(body->pn_pos.end);
 
   bool isSloppyEval = sc->isEvalContext() && !sc->strict();
   if (isSloppyEval && body->is<LexicalScopeNode>() &&
@@ -2515,7 +2515,7 @@ bool BytecodeEmitter::emitFunctionScript(FunctionNode* funNode,
   AutoFrontendTraceLog traceLog(cx, TraceLogger_BytecodeEmission,
                                 parser->errorReporter(), funbox);
 
-  setScriptStartOffsetIfUnset(body->pn_pos);
+  setScriptStartOffsetIfUnset(body->pn_pos.begin);
 
   // The ordering of these EmitterScopes is important. The named lambda
   // scope needs to enclose the function scope needs to enclose the extra
@@ -2538,7 +2538,7 @@ bool BytecodeEmitter::emitFunctionScript(FunctionNode* funNode,
     MOZ_ASSERT(!script->hasRunOnce());
   }
 
-  setFunctionBodyEndPos(body->pn_pos);
+  setFunctionBodyEndPos(body->pn_pos.end);
   if (!emitTree(body)) {
     return false;
   }
