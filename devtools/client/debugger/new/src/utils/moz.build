@@ -21,6 +21,7 @@ CompiledModules(
     'dbg.js',
     'defer.js',
     'DevToolsUtils.js',
+    'empty-lines.js',
     'expressions.js',
     'fromJS.js',
     'function.js',
