@@ -51,7 +51,7 @@ function LoginAutoCompleteResult(aSearchString, matchingLogins, {isSecure, messa
   }
 
   this._showInsecureFieldWarning = (!isSecure && LoginHelper.showInsecureFieldWarning) ? 1 : 0;
-  this._showAutoCompleteFooter = LoginHelper.showAutoCompleteFooter ? 1 : 0;
+  this._showAutoCompleteFooter = (LoginHelper.showAutoCompleteFooter && LoginHelper.enabled) ? 1 : 0;
   this.searchString = aSearchString;
   this.logins = matchingLogins.sort(loginSort);
   this.matchCount = matchingLogins.length + this._showInsecureFieldWarning + this._showAutoCompleteFooter;
