@@ -429,13 +429,13 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
     return lastOpcodeIsJumpTarget() ? lastTarget.offset : offset();
   }
 
-  void setFunctionBodyEndPos(TokenPos pos) {
-    functionBodyEndPos = mozilla::Some(pos.end);
+  void setFunctionBodyEndPos(uint32_t pos) {
+    functionBodyEndPos = mozilla::Some(pos);
   }
 
-  void setScriptStartOffsetIfUnset(TokenPos pos) {
+  void setScriptStartOffsetIfUnset(uint32_t pos) {
     if (scriptStartOffset.isNothing()) {
-      scriptStartOffset = mozilla::Some(pos.begin);
+      scriptStartOffset = mozilla::Some(pos);
     }
   }
 
