@@ -92,6 +92,8 @@ class Mitmproxy(Playback):
             )
 
         self.mozproxy_dir = os.path.join(self.mozproxy_dir, "testing", "mozproxy")
+        self.upload_dir = os.environ.get("MOZ_UPLOAD_DIR", self.mozproxy_dir)
+
         self.recordings_path = self.mozproxy_dir
         LOG.info(
             "mozproxy_dir used for mitmproxy downloads and exe files: %s"
@@ -191,7 +193,7 @@ class Mitmproxy(Playback):
         # mitmproxy needs some DLL's that are a part of Firefox itself, so add to path
         env = os.environ.copy()
         env["PATH"] = os.path.dirname(browser_path) + ";" + env["PATH"]
-        command = [mitmdump_path, "-k", "-q"]
+        command = [mitmdump_path, "-k"]
 
         if "custom_script" in self.config:
             # cmd line to start mitmproxy playback using custom playback script is as follows:
@@ -210,7 +212,10 @@ class Mitmproxy(Playback):
         LOG.info("Starting mitmproxy playback using command: %s" % " ".join(command))
         # to turn off mitmproxy log output, use these params for Popen:
         # Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env)
-        mitmproxy_proc = ProcessHandler(command, env=env)
+        mitmproxy_proc = ProcessHandler(command,
+                                        logfile=os.path.join(self.upload_dir,
+                                                             "mitmproxy.log"),
+                                        env=env)
         mitmproxy_proc.run()
 
         # XXX replace the code below with a loop with a connection attempt
