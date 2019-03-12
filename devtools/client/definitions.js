@@ -14,7 +14,6 @@ loader.lazyGetter(this, "InspectorPanel", () => require("devtools/client/inspect
 loader.lazyGetter(this, "WebConsolePanel", () => require("devtools/client/webconsole/panel").WebConsolePanel);
 loader.lazyGetter(this, "NewDebuggerPanel", () => require("devtools/client/debugger/new/panel").DebuggerPanel);
 loader.lazyGetter(this, "StyleEditorPanel", () => require("devtools/client/styleeditor/panel").StyleEditorPanel);
-loader.lazyGetter(this, "CanvasDebuggerPanel", () => require("devtools/client/canvasdebugger/panel").CanvasDebuggerPanel);
 loader.lazyGetter(this, "WebAudioEditorPanel", () => require("devtools/client/webaudioeditor/panel").WebAudioEditorPanel);
 loader.lazyGetter(this, "MemoryPanel", () => require("devtools/client/memory/panel").MemoryPanel);
 loader.lazyGetter(this, "PerformancePanel", () => require("devtools/client/performance/panel").PerformancePanel);
@@ -201,29 +200,6 @@ Tools.shaderEditor = {
     }).require;
     const { ShaderEditorPanel } = browserRequire("devtools/client/shadereditor/panel");
     return new ShaderEditorPanel(toolbox);
-  },
-};
-
-Tools.canvasDebugger = {
-  id: "canvasdebugger",
-  deprecated: true,
-  deprecationURL: DEPRECATION_URL,
-  ordinal: 6,
-  visibilityswitch: "devtools.canvasdebugger.enabled",
-  icon: "chrome://devtools/skin/images/tool-canvas.svg",
-  url: "chrome://devtools/content/canvasdebugger/index.xul",
-  label: l10n("ToolboxCanvasDebugger.label"),
-  panelLabel: l10n("ToolboxCanvasDebugger.panelLabel"),
-  tooltip: l10n("ToolboxCanvasDebugger.tooltip"),
-
-  // Hide the Canvas Debugger in the Add-on Debugger and Browser Toolbox
-  // (bug 1047520).
-  isTargetSupported: function(target) {
-    return target.hasActor("canvas") && !target.chrome;
-  },
-
-  build: function(iframeWindow, toolbox) {
-    return new CanvasDebuggerPanel(iframeWindow, toolbox);
   },
 };
 
@@ -467,7 +443,6 @@ var defaultTools = [
   Tools.jsdebugger,
   Tools.styleEditor,
   Tools.shaderEditor,
-  Tools.canvasDebugger,
   Tools.webAudioEditor,
   Tools.performance,
   Tools.netMonitor,
