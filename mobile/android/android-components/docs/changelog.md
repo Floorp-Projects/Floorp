@@ -14,6 +14,7 @@ permalink: /changelog/
 
 * **browser-session**
   * Added `Session.webAppManifest` to expose the [Web App Manifest](https://developer.mozilla.org/en-US/docs/Web/Manifest) of the currently visible page. This functionality will only be available in [GeckoView](https://mozilla.github.io/geckoview/)-flavored [concept-engine](https://github.com/mozilla-mobile/android-components/tree/master/components/concept/engine) implementations.
+  * Added `WebAppManifestParser` to create [WebAppManifest](https://mozac.org/api/mozilla.components.browser.session.manifest/-web-app-manifest/) from JSON.
 
 * **browser-menu**
    * Added `TwoStateButton` in `BrowserMenuItemToolbar` that will change resources based on the `isInPrimaryState` lambda and added ability to disable the button with optional `disableInSecondaryState` argument.

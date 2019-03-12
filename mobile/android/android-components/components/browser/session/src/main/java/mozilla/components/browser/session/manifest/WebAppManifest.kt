@@ -96,8 +96,8 @@ data class WebAppManifest(
      */
     data class Icon(
         val src: String,
-        val sizes: List<Size>,
-        val type: String,
+        val sizes: List<Size> = emptyList(),
+        val type: String? = null,
         val purpose: Purpose = Purpose.ANY
     ) {
         enum class Purpose {
