@@ -41,7 +41,7 @@ function test_pause_frame() {
       gThreadClient.resume(() => finishClient(gClient));
     });
 
-    gThreadClient.pauseOnExceptions(true);
+    gThreadClient.pauseOnExceptions(true, false);
     gThreadClient.resume();
   });
 
