@@ -172,7 +172,8 @@ function enumObjectProperties(objectActor, options) {
 
     // It appears that getOwnPropertyNames always returns indexed properties
     // first, so we can safely slice `names` for/against indexed properties.
-    // We do such clever operation to optimize very large array inspection.
+    // We do such clever operation to optimize very large array inspection,
+    // like webaudio buffers.
     if (options.ignoreIndexedProperties) {
       // Keep items after `sliceIndex` index
       names = names.slice(sliceIndex);

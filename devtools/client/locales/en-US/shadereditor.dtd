@@ -1,0 +1,32 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<!-- LOCALIZATION NOTE : FILE This file contains the Debugger strings -->
+<!-- LOCALIZATION NOTE : FILE Do not translate commandkey -->
+
+<!-- LOCALIZATION NOTE : FILE The correct localization of this file might be to
+  - keep it in English, or another language commonly spoken among web developers.
+  - You want to make that choice consistent across the developer tools.
+  - A good criteria is the language in which you'd find the best
+  - documentation on web development on the web. -->
+
+<!-- LOCALIZATION NOTE (shaderEditorUI.vertexShader): This is the label for
+  -  the pane that displays a vertex shader's source. -->
+<!ENTITY shaderEditorUI.vertexShader    "Vertex Shader">
+
+<!-- LOCALIZATION NOTE (shaderEditorUI.fragmentShader): This is the label for
+  -  the pane that displays a fragment shader's source. -->
+<!ENTITY shaderEditorUI.fragmentShader  "Fragment Shader">
+
+<!-- LOCALIZATION NOTE (shaderEditorUI.reloadNotice1): This is the label shown
+  -  on the button that triggers a page refresh. -->
+<!ENTITY shaderEditorUI.reloadNotice1   "Reload">
+
+<!-- LOCALIZATION NOTE (shaderEditorUI.reloadNotice2): This is the label shown
+  -  along with the button that triggers a page refresh. -->
+<!ENTITY shaderEditorUI.reloadNotice2   "the page to be able to edit GLSL code.">
+
+<!-- LOCALIZATION NOTE (shaderEditorUI.emptyNotice): This is the label shown
+  -  while the page is refreshing and the tool waits for a WebGL context. -->
+<!ENTITY shaderEditorUI.emptyNotice     "Waiting for a WebGL context to be created…">

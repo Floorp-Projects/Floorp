@@ -1,0 +1,45 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<!-- LOCALIZATION NOTE : FILE This file contains the Debugger strings -->
+<!-- LOCALIZATION NOTE : FILE Do not translate commandkey -->
+
+<!-- LOCALIZATION NOTE : FILE The correct localization of this file might be to
+  - keep it in English, or another language commonly spoken among web developers.
+  - You want to make that choice consistent across the developer tools.
+  - A good criteria is the language in which you'd find the best
+  - documentation on web development on the web. -->
+
+<!-- LOCALIZATION NOTE (canvasDebuggerUI.reloadNotice1): This is the label shown
+  -  on the button that triggers a page refresh. -->
+<!ENTITY canvasDebuggerUI.reloadNotice1   "Reload">
+
+<!-- LOCALIZATION NOTE (canvasDebuggerUI.reloadNotice2): This is the label shown
+  -  along with the button that triggers a page refresh. -->
+<!ENTITY canvasDebuggerUI.reloadNotice2   "the page to be able to debug &lt;canvas&gt; contexts.">
+
+<!-- LOCALIZATION NOTE (canvasDebuggerUI.emptyNotice1/2): This is the label shown
+  -  in the call list view when empty. -->
+<!ENTITY canvasDebuggerUI.emptyNotice1    "Click on the">
+<!ENTITY canvasDebuggerUI.emptyNotice2    "button to record an animation frame’s call stack.">
+
+<!-- LOCALIZATION NOTE (canvasDebuggerUI.waitingNotice): This is the label shown
+  -  in the call list view while recording a snapshot. -->
+<!ENTITY canvasDebuggerUI.waitingNotice   "Recording an animation cycle…">
+
+<!-- LOCALIZATION NOTE (canvasDebuggerUI.recordSnapshot): This string is displayed
+  -  on a button that starts a new snapshot. -->
+<!ENTITY canvasDebuggerUI.recordSnapshot.tooltip "Record the next frame in the animation loop.">
+
+<!-- LOCALIZATION NOTE (canvasDebuggerUI.importSnapshot): This string is displayed
+  -  on a button that opens a dialog to import a saved snapshot data file. -->
+<!ENTITY canvasDebuggerUI.importSnapshot "Import…">
+
+<!-- LOCALIZATION NOTE (canvasDebuggerUI.clearSnapshots): This string is displayed
+  -  on a button that remvoes all the snapshots. -->
+<!ENTITY canvasDebuggerUI.clearSnapshots "Clear">
+
+<!-- LOCALIZATION NOTE (canvasDebuggerUI.searchboxPlaceholder): This string is displayed
+  -  as a placeholder of the search box that filters the calls list. -->
+<!ENTITY canvasDebuggerUI.searchboxPlaceholder "Filter calls">
