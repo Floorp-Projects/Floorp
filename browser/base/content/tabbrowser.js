@@ -2463,11 +2463,8 @@ window._gBrowser = {
 
       // If we open a new tab with the newtab URL in the default
       // userContext, check if there is a preloaded browser ready.
-      // Private windows are not included because both the label and the
-      // icon for the tab would be set incorrectly (see bug 1195981).
       if (aURI == BROWSER_NEW_TAB_URL &&
           !userContextId &&
-          !PrivateBrowsingUtils.isWindowPrivate(window) &&
           !recordExecution &&
           !replayExecution) {
         b = NewTabPagePreloading.getPreloadedBrowser(window);
