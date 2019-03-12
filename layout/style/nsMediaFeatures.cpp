@@ -212,7 +212,8 @@ bool Gecko_MediaFeatures_HasSystemMetric(const Document* aDocument,
   return sSystemMetrics->IndexOf(aMetric) != sSystemMetrics->NoIndex;
 }
 
-nsAtom* Gecko_MediaFeatures_GetOperatingSystemVersion(const Document* aDocument) {
+nsAtom* Gecko_MediaFeatures_GetOperatingSystemVersion(
+    const Document* aDocument) {
   if (nsContentUtils::ShouldResistFingerprinting(aDocument)) {
     return nullptr;
   }
