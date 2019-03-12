@@ -163,11 +163,6 @@ const ActorRegistry = {
       constructor: "InspectorActor",
       type: { target: true },
     });
-    this.registerModule("devtools/server/actors/webgl", {
-      prefix: "webgl",
-      constructor: "WebGLActor",
-      type: { target: true },
-    });
     this.registerModule("devtools/server/actors/webaudio", {
       prefix: "webaudio",
       constructor: "WebAudioActor",
