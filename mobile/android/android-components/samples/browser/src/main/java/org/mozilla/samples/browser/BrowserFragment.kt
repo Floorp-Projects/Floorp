@@ -19,6 +19,7 @@ import mozilla.components.feature.downloads.DownloadsFeature
 import mozilla.components.feature.prompts.PromptFeature
 import mozilla.components.feature.session.CoordinateScrollingFeature
 import mozilla.components.feature.session.SessionFeature
+import mozilla.components.feature.session.ThumbnailsFeature
 import mozilla.components.feature.session.WindowFeature
 import mozilla.components.feature.sitepermissions.SitePermissionsFeature
 import mozilla.components.feature.tabs.toolbar.TabsToolbarFeature
@@ -39,6 +40,7 @@ class BrowserFragment : Fragment(), BackHandler {
     private val promptFeature = ViewBoundFeatureWrapper<PromptFeature>()
     private val findInPageIntegration = ViewBoundFeatureWrapper<FindInPageIntegration>()
     private val sitePermissionsFeature = ViewBoundFeatureWrapper<SitePermissionsFeature>()
+    private val thumbnailsFeature = ViewBoundFeatureWrapper<ThumbnailsFeature>()
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val layout = inflater.inflate(R.layout.fragment_browser, container, false)
@@ -150,6 +152,12 @@ class BrowserFragment : Fragment(), BackHandler {
             scrollFeature,
             contextMenuFeature,
             windowFeature
+        )
+
+        thumbnailsFeature.set(
+            feature = ThumbnailsFeature(requireContext(), layout.engineView, components.sessionManager),
+            owner = this,
+            view = layout
         )
 
         return layout

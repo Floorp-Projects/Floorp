@@ -583,7 +583,7 @@ class SystemEngineView @JvmOverloads constructor(
     override fun captureThumbnail(onFinish: (Bitmap?) -> Unit) {
         val webView = session?.webView
 
-        val thumbnails = if (webView == null) {
+        val thumbnail = if (webView == null) {
             null
         } else {
             webView.buildDrawingCache()
@@ -591,7 +591,7 @@ class SystemEngineView @JvmOverloads constructor(
             webView.destroyDrawingCache()
             outBitmap
         }
-        onFinish(thumbnails)
+        onFinish(thumbnail)
     }
 
     private fun resetJSAlertAbuseState() {

@@ -68,7 +68,7 @@ interface EngineView {
     fun canScrollVerticallyDown(): Boolean = true
 
     /**
-     * Take a screenshot of the actual session.
+     * Request a screenshot of the visible portion of the web page currently being rendered.
      * @param onFinish A callback to inform that process of capturing a thumbnail has finished.
      */
     fun captureThumbnail(onFinish: (Bitmap?) -> Unit)

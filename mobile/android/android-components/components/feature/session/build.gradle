@@ -35,6 +35,7 @@ dependencies {
     testImplementation Dependencies.testing_junit
     testImplementation Dependencies.testing_robolectric
     testImplementation Dependencies.testing_mockito
+    testImplementation Dependencies.androidx_test_core
 
     testImplementation Dependencies.support_customtabs
 }
