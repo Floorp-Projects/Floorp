@@ -14,6 +14,7 @@
 
 #include "ds/InlineTable.h"
 #include "frontend/BCEParserHandle.h"
+#include "frontend/DestructuringFlavor.h"
 #include "frontend/EitherParser.h"
 #include "frontend/JumpList.h"
 #include "frontend/NameFunctions.h"
@@ -692,21 +693,6 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   MOZ_NEVER_INLINE MOZ_MUST_USE bool emitTry(TryNode* tryNode);
 
   MOZ_MUST_USE bool emitGoSub(JumpList* jump);
-
-  enum DestructuringFlavor {
-    // Destructuring into a declaration.
-    DestructuringDeclaration,
-
-    // Destructuring into a formal parameter, when the formal parameters
-    // contain an expression that might be evaluated, and thus require
-    // this destructuring to assign not into the innermost scope that
-    // contains the function body's vars, but into its enclosing scope for
-    // parameter expressions.
-    DestructuringFormalParameterInVarScope,
-
-    // Destructuring as part of an AssignmentExpression.
-    DestructuringAssignment
-  };
 
   // emitDestructuringLHSRef emits the lhs expression's reference.
   // If the lhs expression is object property |OBJ.prop|, it emits |OBJ|.
