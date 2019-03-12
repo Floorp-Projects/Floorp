@@ -29,6 +29,11 @@ struct DeletePolicy<js::GCManagedObjectWeakMap>
     : public js::GCManagedDeletePolicy<js::GCManagedObjectWeakMap> {};
 
 template <>
+struct MapTypeToRootKind<js::GCManagedObjectWeakMap*> {
+  static const JS::RootKind kind = JS::RootKind::Traceable;
+};
+
+template <>
 struct GCPolicy<js::GCManagedObjectWeakMap*>
     : public NonGCPointerPolicy<js::GCManagedObjectWeakMap*> {};
 
