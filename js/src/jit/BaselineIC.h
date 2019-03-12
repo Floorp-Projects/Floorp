@@ -999,7 +999,10 @@ class ICStubCompiler {
   MOZ_MUST_USE bool tailCallVM(const VMFunction& fun, MacroAssembler& masm);
 
   // Emits a normal (non-tail) call to a VMFunction wrapper.
-  MOZ_MUST_USE bool callVM(const VMFunction& fun, MacroAssembler& masm);
+  MOZ_MUST_USE bool callVMInternal(MacroAssembler& masm, VMFunctionId id);
+
+  template <typename Fn, Fn fn>
+  MOZ_MUST_USE bool callVM(MacroAssembler& masm);
 
   // A stub frame is used when a stub wants to call into the VM without
   // performing a tail call. This is required for the return address
@@ -2722,6 +2725,18 @@ void StoreToTypedArray(JSContext* cx, MacroAssembler& masm, Scalar::Type type,
 extern bool DoTypeUpdateFallback(JSContext* cx, BaselineFrame* frame,
                                  ICUpdatedStub* stub, HandleValue objval,
                                  HandleValue value);
+
+extern bool DoWarmUpCounterFallbackOSR(JSContext* cx, BaselineFrame* frame,
+                                       ICWarmUpCounter_Fallback* stub,
+                                       IonOsrTempData** infoPtr);
+
+extern bool DoCallFallback(JSContext* cx, BaselineFrame* frame,
+                           ICCall_Fallback* stub, uint32_t argc, Value* vp,
+                           MutableHandleValue res);
+
+extern bool DoSpreadCallFallback(JSContext* cx, BaselineFrame* frame,
+                                 ICCall_Fallback* stub, Value* vp,
+                                 MutableHandleValue res);
 
 }  // namespace jit
 }  // namespace js

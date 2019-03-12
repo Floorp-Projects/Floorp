@@ -1222,6 +1222,9 @@ bool IsPossiblyWrappedTypedArray(JSContext* cx, JSObject* obj, bool* result);
 bool DoToNumber(JSContext* cx, HandleValue arg, MutableHandleValue ret);
 bool DoToNumeric(JSContext* cx, HandleValue arg, MutableHandleValue ret);
 
+bool CopyStringSplitArray(JSContext* cx, HandleArrayObject arr,
+                          MutableHandleValue result);
+
 // TailCall VMFunctions
 extern const VMFunction DoConcatStringObjectInfo;
 

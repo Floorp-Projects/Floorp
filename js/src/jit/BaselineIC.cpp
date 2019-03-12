@@ -43,6 +43,7 @@
 #include "jit/MacroAssembler-inl.h"
 #include "jit/shared/Lowering-shared-inl.h"
 #include "jit/SharedICHelpers-inl.h"
+#include "jit/VMFunctionList-inl.h"
 #include "vm/EnvironmentObject-inl.h"
 #include "vm/Interpreter-inl.h"
 #include "vm/JSScript-inl.h"
@@ -740,9 +741,9 @@ static IonOsrTempData* PrepareOsrTempData(JSContext* cx, BaselineFrame* frame,
   return info;
 }
 
-static bool DoWarmUpCounterFallbackOSR(JSContext* cx, BaselineFrame* frame,
-                                       ICWarmUpCounter_Fallback* stub,
-                                       IonOsrTempData** infoPtr) {
+bool DoWarmUpCounterFallbackOSR(JSContext* cx, BaselineFrame* frame,
+                                ICWarmUpCounter_Fallback* stub,
+                                IonOsrTempData** infoPtr) {
   MOZ_ASSERT(infoPtr);
   *infoPtr = nullptr;
 
@@ -781,13 +782,6 @@ static bool DoWarmUpCounterFallbackOSR(JSContext* cx, BaselineFrame* frame,
   return true;
 }
 
-typedef bool (*DoWarmUpCounterFallbackOSRFn)(JSContext*, BaselineFrame*,
-                                             ICWarmUpCounter_Fallback*,
-                                             IonOsrTempData** infoPtr);
-static const VMFunction DoWarmUpCounterFallbackOSRInfo =
-    FunctionInfo<DoWarmUpCounterFallbackOSRFn>(DoWarmUpCounterFallbackOSR,
-                                               "DoWarmUpCounterFallbackOSR");
-
 bool ICWarmUpCounter_Fallback::Compiler::generateStubCode(
     MacroAssembler& masm) {
   // Push a stub frame so that we can perform a non-tail call.
@@ -805,7 +799,9 @@ bool ICWarmUpCounter_Fallback::Compiler::generateStubCode(
 
     pushStubPayload(masm, R0.scratchReg());
 
-    if (!callVM(DoWarmUpCounterFallbackOSRInfo, masm)) {
+    using Fn = bool (*)(JSContext*, BaselineFrame*, ICWarmUpCounter_Fallback*,
+                        IonOsrTempData * *infoPtr);
+    if (!callVM<Fn, DoWarmUpCounterFallbackOSR>(masm)) {
       return false;
     }
 
@@ -1112,14 +1108,20 @@ bool ICStubCompiler::tailCallVM(const VMFunction& fun, MacroAssembler& masm) {
   return true;
 }
 
-bool ICStubCompiler::callVM(const VMFunction& fun, MacroAssembler& masm) {
+bool ICStubCompiler::callVMInternal(MacroAssembler& masm, VMFunctionId id) {
   MOZ_ASSERT(inStubFrame_);
 
-  TrampolinePtr code = cx->runtime()->jitRuntime()->getVMWrapper(fun);
-  MOZ_ASSERT(fun.expectTailCall == NonTailCall);
+  TrampolinePtr code = cx->runtime()->jitRuntime()->getVMWrapper(id);
+  MOZ_ASSERT(GetVMFunction(id).expectTailCall == NonTailCall);
 
   EmitBaselineCallVM(code, masm);
   return true;
+}
+
+template <typename Fn, Fn fn>
+bool ICStubCompiler::callVM(MacroAssembler& masm) {
+  VMFunctionId id = VMFunctionToId<Fn, fn>::id;
+  return callVMInternal(masm, id);
 }
 
 void ICStubCompiler::enterStubFrame(MacroAssembler& masm, Register scratch) {
@@ -3719,25 +3721,6 @@ static bool TryAttachCallStub(JSContext* cx, ICCall_Fallback* stub,
   return true;
 }
 
-static bool CopyStringSplitArray(JSContext* cx, HandleArrayObject arr,
-                                 MutableHandleValue result) {
-  MOZ_ASSERT(arr->isTenured(),
-             "ConstStringSplit needs a tenured template object");
-
-  uint32_t length = arr->getDenseInitializedLength();
-  MOZ_ASSERT(length == arr->length(),
-             "template object is a fully initialized array");
-
-  ArrayObject* nobj = NewFullyAllocatedArrayTryReuseGroup(cx, arr, length);
-  if (!nobj) {
-    return false;
-  }
-  nobj->initDenseElements(arr, 0, length);
-
-  result.setObject(*nobj);
-  return true;
-}
-
 static bool TryAttachConstStringSplit(JSContext* cx, ICCall_Fallback* stub,
                                       HandleScript script, uint32_t argc,
                                       HandleValue callee, Value* vp,
@@ -3804,9 +3787,8 @@ static bool TryAttachConstStringSplit(JSContext* cx, ICCall_Fallback* stub,
   return true;
 }
 
-static bool DoCallFallback(JSContext* cx, BaselineFrame* frame,
-                           ICCall_Fallback* stub, uint32_t argc, Value* vp,
-                           MutableHandleValue res) {
+bool DoCallFallback(JSContext* cx, BaselineFrame* frame, ICCall_Fallback* stub,
+                    uint32_t argc, Value* vp, MutableHandleValue res) {
   stub->incrementEnteredCount();
 
   RootedScript script(cx, frame->script());
@@ -3934,9 +3916,9 @@ static bool DoCallFallback(JSContext* cx, BaselineFrame* frame,
   return true;
 }
 
-static bool DoSpreadCallFallback(JSContext* cx, BaselineFrame* frame,
-                                 ICCall_Fallback* stub, Value* vp,
-                                 MutableHandleValue res) {
+bool DoSpreadCallFallback(JSContext* cx, BaselineFrame* frame,
+                          ICCall_Fallback* stub, Value* vp,
+                          MutableHandleValue res) {
   stub->incrementEnteredCount();
 
   RootedScript script(cx, frame->script());
@@ -4284,18 +4266,6 @@ void ICCallStubCompiler::pushArrayArguments(
   masm.bind(&copyDone);
 }
 
-typedef bool (*DoCallFallbackFn)(JSContext*, BaselineFrame*, ICCall_Fallback*,
-                                 uint32_t, Value*, MutableHandleValue);
-static const VMFunction DoCallFallbackInfo =
-    FunctionInfo<DoCallFallbackFn>(DoCallFallback, "DoCallFallback");
-
-typedef bool (*DoSpreadCallFallbackFn)(JSContext*, BaselineFrame*,
-                                       ICCall_Fallback*, Value*,
-                                       MutableHandleValue);
-static const VMFunction DoSpreadCallFallbackInfo =
-    FunctionInfo<DoSpreadCallFallbackFn>(DoSpreadCallFallback,
-                                         "DoSpreadCallFallback");
-
 bool ICCall_Fallback::Compiler::generateStubCode(MacroAssembler& masm) {
   MOZ_ASSERT(R0 == JSReturnOperand);
 
@@ -4336,7 +4306,9 @@ bool ICCall_Fallback::Compiler::generateStubCode(MacroAssembler& masm) {
 
     PushStubPayload(masm, R0.scratchReg());
 
-    if (!callVM(DoSpreadCallFallbackInfo, masm)) {
+    using Fn = bool (*)(JSContext*, BaselineFrame*, ICCall_Fallback*, Value*,
+                        MutableHandleValue);
+    if (!callVM<Fn, DoSpreadCallFallback>(masm)) {
       return false;
     }
 
@@ -4362,7 +4334,9 @@ bool ICCall_Fallback::Compiler::generateStubCode(MacroAssembler& masm) {
 
   PushStubPayload(masm, R0.scratchReg());
 
-  if (!callVM(DoCallFallbackInfo, masm)) {
+  using Fn = bool (*)(JSContext*, BaselineFrame*, ICCall_Fallback*, uint32_t,
+                      Value*, MutableHandleValue);
+  if (!callVM<Fn, DoCallFallback>(masm)) {
     return false;
   }
 
@@ -4423,11 +4397,6 @@ void ICCall_Fallback::Compiler::postGenerateStubCode(MacroAssembler& masm,
       isConstructing_ ? BailoutReturnStub::New : BailoutReturnStub::Call;
   cx->realm()->jitRealm()->initBailoutReturnAddr(address, getKey(), kind);
 }
-
-typedef bool (*CreateThisFn)(JSContext* cx, HandleObject callee,
-                             HandleObject newTarget, MutableHandleValue rval);
-static const VMFunction CreateThisInfoBaseline =
-    FunctionInfo<CreateThisFn>(CreateThis, "CreateThis");
 
 bool ICCallScriptedCompiler::generateStubCode(MacroAssembler& masm) {
   Label failure;
@@ -4534,7 +4503,10 @@ bool ICCallScriptedCompiler::generateStubCode(MacroAssembler& masm) {
       masm.loadValue(calleeSlot2, R1);
     }
     masm.push(masm.extractObject(R1, ExtractTemp0));
-    if (!callVM(CreateThisInfoBaseline, masm)) {
+
+    using Fn = bool (*)(JSContext * cx, HandleObject callee,
+                        HandleObject newTarget, MutableHandleValue rval);
+    if (!callVM<Fn, CreateThis>(masm)) {
       return false;
     }
 
@@ -4723,12 +4695,6 @@ bool ICCallScriptedCompiler::generateStubCode(MacroAssembler& masm) {
   return true;
 }
 
-typedef bool (*CopyStringSplitArrayFn)(JSContext*, HandleArrayObject,
-                                       MutableHandleValue);
-static const VMFunction CopyStringSplitArrayInfo =
-    FunctionInfo<CopyStringSplitArrayFn>(CopyStringSplitArray,
-                                         "CopyStringSplitArray");
-
 bool ICCall_ConstStringSplit::Compiler::generateStubCode(MacroAssembler& masm) {
   // Stack Layout:
   //      [ ..., CalleeVal, ThisVal, strVal, sepVal, +ICStackValueOffset+ ]
@@ -4816,7 +4782,8 @@ bool ICCall_ConstStringSplit::Compiler::generateStubCode(MacroAssembler& masm) {
     masm.loadPtr(Address(ICStubReg, offsetOfTemplateObject()), paramReg);
     masm.push(paramReg);
 
-    if (!callVM(CopyStringSplitArrayInfo, masm)) {
+    using Fn = bool (*)(JSContext*, HandleArrayObject, MutableHandleValue);
+    if (!callVM<Fn, CopyStringSplitArray>(masm)) {
       return false;
     }
     leaveStubFrame(masm);
