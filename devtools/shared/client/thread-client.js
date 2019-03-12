@@ -30,7 +30,6 @@ const noop = () => {};
 function ThreadClient(client, actor) {
   this.client = client;
   this._actor = actor;
-  this._scriptCache = {};
   this._pauseGrips = {};
   this._threadGrips = {};
   this.request = this.client.request;
@@ -365,17 +364,6 @@ ThreadClient.prototype = {
   getSources: DebuggerClient.requester({
     type: "sources",
   }),
-
-  /**
-   * Clear the thread's source script cache. A scriptscleared event
-   * will be sent.
-   */
-  _clearScripts: function() {
-    if (Object.keys(this._scriptCache).length > 0) {
-      this._scriptCache = {};
-      this.emit("scriptscleared");
-    }
-  },
 
   /**
    * Request frames from the callstack for the current thread.
