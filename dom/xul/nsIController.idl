@@ -10,6 +10,7 @@ interface nsIController : nsISupports {
   boolean isCommandEnabled(in string command);
   boolean supportsCommand(in string command);
 
+  [can_run_script]
   void doCommand(in string command);
 
   void onEvent(in string eventName);

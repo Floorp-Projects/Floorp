@@ -65,6 +65,7 @@ class EditorEventListener : public nsIDOMEventListener {
   MOZ_CAN_RUN_SCRIPT
   nsresult KeyUp(const WidgetKeyboardEvent* aKeyboardEvent);
 #endif
+  MOZ_CAN_RUN_SCRIPT
   nsresult KeyPress(WidgetKeyboardEvent* aKeyboardEvent);
   MOZ_CAN_RUN_SCRIPT
   nsresult HandleChangeComposition(WidgetCompositionEvent* aCompositionEvent);
