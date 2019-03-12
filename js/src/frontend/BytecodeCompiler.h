@@ -198,7 +198,7 @@ void TraceParser(JSTracer* trc, JS::AutoGCRooter* parser);
 
 /* Trace all GC things reachable from binjs parser. Defined in
  * BinASTParserPerTokenizer.cpp. */
-void TraceBinParser(JSTracer* trc, JS::AutoGCRooter* parser);
+void TraceBinASTParser(JSTracer* trc, JS::AutoGCRooter* parser);
 
 #endif  // defined(JS_BUILD_BINAST)
 
