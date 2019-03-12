@@ -1691,9 +1691,9 @@ bool ICUpdatedStub::addUpdateStubForValue(JSContext* cx,
 //
 // TypeUpdate_Fallback
 //
-static bool DoTypeUpdateFallback(JSContext* cx, BaselineFrame* frame,
-                                 ICUpdatedStub* stub, HandleValue objval,
-                                 HandleValue value) {
+bool DoTypeUpdateFallback(JSContext* cx, BaselineFrame* frame,
+                          ICUpdatedStub* stub, HandleValue objval,
+                          HandleValue value) {
   // This can get called from optimized stubs. Therefore it is not allowed to
   // gc.
   JS::AutoCheckCannotGC nogc;

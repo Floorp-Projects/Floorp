@@ -26,6 +26,7 @@ namespace jit {
 // (must be unique, used for the VMFunctionId enum and profiling) and the C++
 // function to be called. This list must be sorted on the name field.
 #define VMFUNCTION_LIST(_)                                                     \
+  _(AddOrUpdateSparseElementHelper, js::AddOrUpdateSparseElementHelper)        \
   _(AddValues, js::AddValues)                                                  \
   _(ArgumentsObjectCreateForIon, js::ArgumentsObject::createForIon)            \
   _(ArrayConstructorOneArg, js::ArrayConstructorOneArg)                        \
@@ -49,6 +50,8 @@ namespace jit {
   _(BitXor, js::BitXor)                                                        \
   _(BoxNonStrictThis, js::BoxNonStrictThis)                                    \
   _(BuiltinProtoOperation, js::BuiltinProtoOperation)                          \
+  _(CallNativeGetter, js::jit::CallNativeGetter)                               \
+  _(CallNativeSetter, js::jit::CallNativeSetter)                               \
   _(CharCodeAt, js::jit::CharCodeAt)                                           \
   _(CheckClassHeritageOperation, js::CheckClassHeritageOperation)              \
   _(CheckGlobalOrEvalDeclarationConflicts,                                     \
@@ -86,8 +89,10 @@ namespace jit {
   _(DeletePropertyStrict, js::DeletePropertyJit<true>)                         \
   _(DirectEvalStringFromIon, js::DirectEvalStringFromIon)                      \
   _(DivValues, js::DivValues)                                                  \
+  _(DoConcatStringObject, js::jit::DoConcatStringObject)                       \
   _(DoToNumber, js::jit::DoToNumber)                                           \
   _(DoToNumeric, js::jit::DoToNumeric)                                         \
+  _(DoTypeUpdateFallback, js::jit::DoTypeUpdateFallback)                       \
   _(EnterWith, js::jit::EnterWith)                                             \
   _(FinalSuspend, js::jit::FinalSuspend)                                       \
   _(FinishBoundFunctionInit, JSFunction::finishBoundFunctionInit)              \
@@ -101,6 +106,7 @@ namespace jit {
   _(GetNonSyntacticGlobalThis, js::GetNonSyntacticGlobalThis)                  \
   _(GetOrCreateModuleMetaObject, js::GetOrCreateModuleMetaObject)              \
   _(GetPrototypeOf, js::jit::GetPrototypeOf)                                   \
+  _(GetSparseElementHelper, js::GetSparseElementHelper)                        \
   _(GetValueProperty, js::GetValueProperty)                                    \
   _(GlobalNameConflictsCheckFromIon, js::jit::GlobalNameConflictsCheckFromIon) \
   _(GreaterThan, js::jit::GreaterThan)                                         \
@@ -152,6 +158,7 @@ namespace jit {
   _(MutatePrototype, js::jit::MutatePrototype)                                 \
   _(NamedLambdaObjectCreateTemplateObject,                                     \
     js::NamedLambdaObject::createTemplateObject)                               \
+  _(NativeGetElement, js::NativeGetElement)                                    \
   _(NewArgumentsObject, js::jit::NewArgumentsObject)                           \
   _(NewArrayCopyOnWriteOperation, js::NewArrayCopyOnWriteOperation)            \
   _(NewArrayIteratorObject, js::NewArrayIteratorObject)                        \
@@ -181,6 +188,12 @@ namespace jit {
   _(PopVarEnv, js::jit::PopVarEnv)                                             \
   _(PowValues, js::PowValues)                                                  \
   _(ProcessCallSiteObjOperation, js::ProcessCallSiteObjOperation)              \
+  _(ProxyGetProperty, js::ProxyGetProperty)                                    \
+  _(ProxyGetPropertyByValue, js::ProxyGetPropertyByValue)                      \
+  _(ProxyHas, js::ProxyHas)                                                    \
+  _(ProxyHasOwn, js::ProxyHasOwn)                                              \
+  _(ProxySetProperty, js::ProxySetProperty)                                    \
+  _(ProxySetPropertyByValue, js::ProxySetPropertyByValue)                      \
   _(PushLexicalEnv, js::jit::PushLexicalEnv)                                   \
   _(PushVarEnv, js::jit::PushVarEnv)                                           \
   _(RecreateLexicalEnv, js::jit::RecreateLexicalEnv)                           \
@@ -188,6 +201,7 @@ namespace jit {
   _(RegExpSearcherRaw, js::RegExpSearcherRaw)                                  \
   _(RegExpTesterRaw, js::RegExpTesterRaw)                                      \
   _(SameValue, js::SameValue)                                                  \
+  _(SetArrayLength, js::jit::SetArrayLength)                                   \
   _(SetDenseElement, js::jit::SetDenseElement)                                 \
   _(SetFunctionName, js::SetFunctionName)                                      \
   _(SetIntrinsicOperation, js::SetIntrinsicOperation)                          \
@@ -202,6 +216,7 @@ namespace jit {
   _(StringFromCharCode, js::jit::StringFromCharCode)                           \
   _(StringFromCodePoint, js::jit::StringFromCodePoint)                         \
   _(StringReplace, js::jit::StringReplace)                                     \
+  _(StringSplitHelper, js::jit::StringSplitHelper)                             \
   _(StringSplitString, js::StringSplitString)                                  \
   _(StringToLowerCase, js::StringToLowerCase)                                  \
   _(StringToNumber, js::StringToNumber)                                        \

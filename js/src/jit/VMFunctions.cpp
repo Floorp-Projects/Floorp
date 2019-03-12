@@ -387,12 +387,6 @@ template bool StringsEqual<true>(JSContext* cx, HandleString lhs,
 template bool StringsEqual<false>(JSContext* cx, HandleString lhs,
                                   HandleString rhs, bool* res);
 
-typedef bool (*StringCompareFn)(JSContext*, HandleString, HandleString, bool*);
-const VMFunction StringsEqualInfo =
-    FunctionInfo<StringCompareFn>(jit::StringsEqual<true>, "StringsEqual");
-const VMFunction StringsNotEqualInfo =
-    FunctionInfo<StringCompareFn>(jit::StringsEqual<false>, "StringsEqual");
-
 bool StringSplitHelper(JSContext* cx, HandleString str, HandleString sep,
                        HandleObjectGroup group, uint32_t limit,
                        MutableHandleValue result) {
@@ -404,12 +398,6 @@ bool StringSplitHelper(JSContext* cx, HandleString str, HandleString sep,
   result.setObject(*resultObj);
   return true;
 }
-
-typedef bool (*StringSplitHelperFn)(JSContext*, HandleString, HandleString,
-                                    HandleObjectGroup, uint32_t limit,
-                                    MutableHandleValue);
-const VMFunction StringSplitHelperInfo =
-    FunctionInfo<StringSplitHelperFn>(StringSplitHelper, "StringSplitHelper");
 
 bool ArrayPopDense(JSContext* cx, HandleObject obj, MutableHandleValue rval) {
   MOZ_ASSERT(obj->is<ArrayObject>());
@@ -534,10 +522,6 @@ bool SetArrayLength(JSContext* cx, HandleObject obj, HandleValue value,
 
   return result.checkStrictErrorOrWarning(cx, obj, id, strict);
 }
-
-typedef bool (*SetArrayLengthFn)(JSContext*, HandleObject, HandleValue, bool);
-const VMFunction SetArrayLengthInfo =
-    FunctionInfo<SetArrayLengthFn>(SetArrayLength, "SetArrayLength");
 
 bool CharCodeAt(JSContext* cx, HandleString str, int32_t index,
                 uint32_t* code) {
@@ -1845,15 +1829,6 @@ bool GetPrototypeOf(JSContext* cx, HandleObject target,
   return true;
 }
 
-typedef bool (*SetObjectElementFn)(JSContext*, HandleObject, HandleValue,
-                                   HandleValue, HandleValue, bool);
-const VMFunction SetObjectElementInfo = FunctionInfo<SetObjectElementFn>(
-    js::SetObjectElementWithReceiver, "SetObjectElementWithReceiver");
-
-typedef JSString* (*ConcatStringsFn)(JSContext*, HandleString, HandleString);
-const VMFunction ConcatStringsInfo =
-    FunctionInfo<ConcatStringsFn>(ConcatStrings<CanGC>, "ConcatStrings");
-
 static JSString* ConvertObjectToStringForConcat(JSContext* cx,
                                                 HandleValue obj) {
   MOZ_ASSERT(obj.isObject());
@@ -1937,57 +1912,6 @@ bool IsPossiblyWrappedTypedArray(JSContext* cx, JSObject* obj, bool* result) {
   *result = unwrapped->is<TypedArrayObject>();
   return true;
 }
-
-typedef bool (*ProxyGetPropertyFn)(JSContext*, HandleObject, HandleId,
-                                   MutableHandleValue);
-const VMFunction ProxyGetPropertyInfo =
-    FunctionInfo<ProxyGetPropertyFn>(ProxyGetProperty, "ProxyGetProperty");
-
-typedef bool (*ProxyGetPropertyByValueFn)(JSContext*, HandleObject, HandleValue,
-                                          MutableHandleValue);
-const VMFunction ProxyGetPropertyByValueInfo =
-    FunctionInfo<ProxyGetPropertyByValueFn>(ProxyGetPropertyByValue,
-                                            "ProxyGetPropertyByValue");
-
-typedef bool (*ProxySetPropertyFn)(JSContext*, HandleObject, HandleId,
-                                   HandleValue, bool);
-const VMFunction ProxySetPropertyInfo =
-    FunctionInfo<ProxySetPropertyFn>(ProxySetProperty, "ProxySetProperty");
-
-typedef bool (*ProxySetPropertyByValueFn)(JSContext*, HandleObject, HandleValue,
-                                          HandleValue, bool);
-const VMFunction ProxySetPropertyByValueInfo =
-    FunctionInfo<ProxySetPropertyByValueFn>(ProxySetPropertyByValue,
-                                            "ProxySetPropertyByValue");
-
-typedef bool (*ProxyHasFn)(JSContext*, HandleObject, HandleValue,
-                           MutableHandleValue);
-const VMFunction ProxyHasInfo = FunctionInfo<ProxyHasFn>(ProxyHas, "ProxyHas");
-
-typedef bool (*ProxyHasOwnFn)(JSContext*, HandleObject, HandleValue,
-                              MutableHandleValue);
-const VMFunction ProxyHasOwnInfo =
-    FunctionInfo<ProxyHasOwnFn>(ProxyHasOwn, "ProxyHasOwn");
-
-typedef bool (*NativeGetElementFn)(JSContext*, HandleNativeObject, HandleValue,
-                                   int32_t, MutableHandleValue);
-const VMFunction NativeGetElementInfo =
-    FunctionInfo<NativeGetElementFn>(NativeGetElement, "NativeGetProperty");
-
-typedef bool (*AddOrUpdateSparseElementHelperFn)(JSContext* cx,
-                                                 HandleArrayObject obj,
-                                                 int32_t int_id, HandleValue v,
-                                                 bool strict);
-const VMFunction AddOrUpdateSparseElementHelperInfo =
-    FunctionInfo<AddOrUpdateSparseElementHelperFn>(
-        AddOrUpdateSparseElementHelper, "AddOrUpdateSparseElementHelper");
-
-typedef bool (*GetSparseElementHelperFn)(JSContext* cx, HandleArrayObject obj,
-                                         int32_t int_id,
-                                         MutableHandleValue result);
-const VMFunction GetSparseElementHelperInfo =
-    FunctionInfo<GetSparseElementHelperFn>(GetSparseElementHelper,
-                                           "getSparseElementHelper");
 
 bool DoToNumber(JSContext* cx, HandleValue arg, MutableHandleValue ret) {
   ret.set(arg);
