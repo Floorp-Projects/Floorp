@@ -229,9 +229,6 @@ pref("devtools.styleeditor.transitions", true);
 pref("devtools.screenshot.clipboard.enabled", false);
 pref("devtools.screenshot.audio.enabled", true);
 
-// Enable the Web Audio Editor
-pref("devtools.webaudioeditor.enabled", false);
-
 // Enable Scratchpad
 pref("devtools.scratchpad.enabled", false);
 
@@ -240,9 +237,6 @@ pref("devtools.dom.enabled", false);
 
 // Enable the Accessibility panel.
 pref("devtools.accessibility.enabled", true);
-
-// Web Audio Editor Inspector Width should be a preference
-pref("devtools.webaudioeditor.inspectorWidth", 300);
 
 // Web console filters
 pref("devtools.webconsole.filter.error", true);

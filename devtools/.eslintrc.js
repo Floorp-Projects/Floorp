@@ -107,9 +107,6 @@ module.exports = {
     }
   }, {
     "files": [
-      // Note: Bug 1403944 may be removing webaudioeditor, check before
-      // doing more work on enabling these rules.
-      "client/webaudioeditor/**",
     ],
     "rules": {
       "consistent-return": "off",
