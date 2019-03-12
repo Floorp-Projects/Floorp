@@ -40,12 +40,19 @@ class MOZ_RAII BaselineCacheIRCompiler : public CacheIRCompiler {
   BaselineCacheIRStubKind kind_;
 
   void callVMInternal(MacroAssembler& masm, VMFunctionId id);
-  void tailCallVM(MacroAssembler& masm, const VMFunction& fun);
 
   template <typename Fn, Fn fn>
   void callVM(MacroAssembler& masm) {
     VMFunctionId id = VMFunctionToId<Fn, fn>::id;
     callVMInternal(masm, id);
+  }
+
+  void tailCallVMInternal(MacroAssembler& masm, TailCallVMFunctionId id);
+
+  template <typename Fn, Fn fn>
+  void tailCallVM(MacroAssembler& masm) {
+    TailCallVMFunctionId id = TailCallVMFunctionToId<Fn, fn>::id;
+    tailCallVMInternal(masm, id);
   }
 
   MOZ_MUST_USE bool callTypeUpdateIC(Register obj, ValueOperand val,
@@ -158,11 +165,12 @@ void BaselineCacheIRCompiler::callVMInternal(MacroAssembler& masm,
   EmitBaselineCallVM(code, masm);
 }
 
-void BaselineCacheIRCompiler::tailCallVM(MacroAssembler& masm,
-                                         const VMFunction& fun) {
+void BaselineCacheIRCompiler::tailCallVMInternal(MacroAssembler& masm,
+                                                 TailCallVMFunctionId id) {
   MOZ_ASSERT(!inStubFrame_);
 
-  TrampolinePtr code = cx_->runtime()->jitRuntime()->getVMWrapper(fun);
+  TrampolinePtr code = cx_->runtime()->jitRuntime()->getVMWrapper(id);
+  const VMFunctionData& fun = GetVMFunction(id);
   MOZ_ASSERT(fun.expectTailCall == TailCall);
   size_t argSize = fun.explicitStackSlots() * sizeof(void*);
 
@@ -2414,7 +2422,8 @@ bool BaselineCacheIRCompiler::emitCallStringObjectConcatResult() {
   masm.pushValue(rhs);
   masm.pushValue(lhs);
 
-  tailCallVM(masm, DoConcatStringObjectInfo);
+  using Fn = bool (*)(JSContext*, HandleValue, HandleValue, MutableHandleValue);
+  tailCallVM<Fn, DoConcatStringObject>(masm);
 
   return true;
 }
