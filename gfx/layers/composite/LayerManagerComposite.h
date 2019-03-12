@@ -53,6 +53,7 @@ namespace layers {
 class CanvasLayerComposite;
 class ColorLayerComposite;
 class Compositor;
+class CompositionRecorder;
 class ContainerLayerComposite;
 class Diagnostics;
 struct EffectChain;
@@ -200,6 +201,10 @@ class HostLayerManager : public LayerManager {
     mCompositorBridgeID = aID;
   }
 
+  void SetCompositionRecorder(CompositionRecorder* aRecorder) {
+    mCompositionRecorder = aRecorder;
+  }
+
  protected:
   bool mDebugOverlayWantsNextFrame;
   nsTArray<ImageCompositeNotificationInfo> mImageCompositeNotifications;
@@ -213,6 +218,7 @@ class HostLayerManager : public LayerManager {
   bool mWindowOverlayChanged;
   TimeDuration mLastPaintTime;
   TimeStamp mRenderStartTime;
+  CompositionRecorder* mCompositionRecorder = nullptr;
 
   // Render time for the current composition.
   TimeStamp mCompositionTime;
