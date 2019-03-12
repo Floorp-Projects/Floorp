@@ -47,6 +47,11 @@ diff_description_schema = Schema({
 
     # Fail the task when differences are detected.
     Optional('fail-on-diff'): bool,
+
+    # Whether to unpack first. Diffoscope can normally work without unpacking,
+    # but when one needs to --exclude some contents, that doesn't work out well
+    # if said content is packed (e.g. in omni.ja).
+    Optional('unpack'): bool,
 })
 
 transforms = TransformSequence()
@@ -139,8 +144,9 @@ def fill_template(config, tasks):
             },
             'run': {
                 'using': 'run-task',
-                'checkout': False,
-                'command': '/builds/worker/bin/get_and_diffoscope{}'.format(
+                'checkout': task.get('unpack', False),
+                'command': '/builds/worker/bin/get_and_diffoscope{}{}'.format(
+                    ' --unpack' if task.get('unpack') else '',
                     ' --fail' if task.get('fail-on-diff') else '',
                 ),
             },
