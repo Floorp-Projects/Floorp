@@ -104,7 +104,7 @@ async function withNewWindow(callback) {
 }
 
 add_task(async function setup() {
-  sandbox = sinon.createSandbox();
+  sandbox = sinon.sandbox.create();
 
   fakeController = new UrlbarController({
     browserWindow: window,

@@ -25,4 +25,9 @@ Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/browser/components/urlbar/tests/browser/head-common.js",
   this);
 
-const {sinon} = ChromeUtils.import("resource://testing-common/Sinon.jsm");
+/* global sinon */
+Services.scriptloader.loadSubScript("resource://testing-common/sinon-2.3.2.js");
+
+registerCleanupFunction(function() {
+  delete window.sinon;
+});

@@ -1,5 +1,11 @@
+/* global sinon */
+Services.scriptloader.loadSubScript("resource://testing-common/sinon-2.3.2.js");
+
 ChromeUtils.import("resource://services-sync/UIState.jsm", this);
-const {sinon} = ChromeUtils.import("resource://testing-common/Sinon.jsm");
+
+registerCleanupFunction(function() {
+  delete window.sinon;
+});
 
 function promiseSyncReady() {
   let service = Cc["@mozilla.org/weave/service;1"]
@@ -10,7 +16,7 @@ function promiseSyncReady() {
 
 function setupSendTabMocks({ syncReady = true, fxaDevices = null,
                              state = UIState.STATUS_SIGNED_IN, isSendableURI = true }) {
-  const sandbox = sinon.createSandbox();
+  const sandbox = sinon.sandbox.create();
   sandbox.stub(gSync, "syncReady").get(() => syncReady);
   if (fxaDevices) {
     // Clone fxaDevices because it gets sorted in-place.
