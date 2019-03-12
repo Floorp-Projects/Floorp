@@ -147,6 +147,12 @@ nsAboutRedirector::NewChannel(nsIURI* aURI, nsILoadInfo* aLoadInfo,
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (path.EqualsASCII("crashparent") || path.EqualsASCII("crashcontent")) {
+    bool isExternal;
+    aLoadInfo->GetLoadTriggeredFromExternal(&isExternal);
+    if (isExternal) {
+      return NS_ERROR_NOT_AVAILABLE;
+    }
+
     nsCOMPtr<nsIChannel> channel = new CrashChannel(aURI);
     channel->SetLoadInfo(aLoadInfo);
     channel.forget(aResult);
