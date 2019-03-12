@@ -426,7 +426,7 @@ add_task(async function commandReceived() {
   let fxAccountsMock = {};
   const promiseConsumeRemoteMessagesCalled = new Promise(res => {
     fxAccountsMock.commands = {
-      consumeRemoteCommand() {
+      pollDeviceCommands() {
         res();
       },
     };
