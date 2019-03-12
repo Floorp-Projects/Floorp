@@ -20,17 +20,6 @@ binutils-2.27:
       sig-url: "{url}.sig"
       key-path: build/unix/build-gcc/EAF1C276A747E9ED86210CBAC3126D3B4AE55E93.key
 
-binutils-2.28.1:
-  description: binutils 2.28.1 source code
-  fetch:
-    type: static-url
-    url: ftp://ftp.gnu.org/gnu/binutils/binutils-2.28.1.tar.xz
-    sha256: 16328a906e55a3c633854beec8e9e255a639b366436470b4f6245eb0d2fde942
-    size: 19440112
-    gpg-signature:
-      sig-url: "{url}.sig"
-      key-path: build/unix/build-gcc/EAF1C276A747E9ED86210CBAC3126D3B4AE55E93.key
-
 binutils-2.31.1:
   description: binutils 2.31.1 source code
   fetch:
