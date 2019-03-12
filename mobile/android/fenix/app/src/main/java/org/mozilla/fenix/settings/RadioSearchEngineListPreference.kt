@@ -10,6 +10,7 @@ import android.widget.CompoundButton
 import android.widget.RadioGroup
 import androidx.preference.PreferenceViewHolder
 import org.mozilla.fenix.R
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.utils.Settings
 
 class RadioSearchEngineListPreference : SearchEngineListPreference,
@@ -45,6 +46,7 @@ class RadioSearchEngineListPreference : SearchEngineListPreference,
         }
 
         val newDefaultEngine = searchEngines[checkedId]
+        context.components.search.searchEngineManager.defaultSearchEngine = newDefaultEngine
         Settings.getInstance(group.context).setDefaultSearchEngineByName(newDefaultEngine.name)
     }
 }

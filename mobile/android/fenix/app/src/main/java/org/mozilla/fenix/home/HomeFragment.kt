@@ -112,8 +112,7 @@ class HomeFragment : Fragment() {
         })
 
         val searchIcon = requireComponents.search.searchEngineManager.getDefaultSearchEngine(
-            requireContext(),
-            Settings.getInstance(requireContext()).defaultSearchEngineName
+            requireContext()
         ).let {
             BitmapDrawable(resources, it.icon)
         }

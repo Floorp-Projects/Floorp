@@ -8,6 +8,7 @@ import android.content.Context
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import mozilla.components.browser.search.SearchEngineManager
+import org.mozilla.fenix.utils.Settings
 
 /**
  * Component group for all search engine integration related functionality.
@@ -23,6 +24,10 @@ class Search(private val context: Context) {
             GlobalScope.launch {
                 load(context).await()
             }
+            defaultSearchEngine = getDefaultSearchEngine(
+                context,
+                Settings.getInstance(context).defaultSearchEngineName
+            )
         }
     }
 }
