@@ -52,6 +52,9 @@ permalink: /changelog/
 * **browser-storage-sync**
   * Changed how Rust Places database connections are maintained, based on [new reader/writer APIs](https://github.com/mozilla/application-services/pull/718).
 
+* **service-pocket**
+  * Access the list of global video recommendations via `PocketEndpoint.getGlobalVideoRecommendations`.
+
 # 0.46.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.45.0...v0.46.0)
