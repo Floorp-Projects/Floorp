@@ -46,18 +46,6 @@ class XDRBufferBase {
 
   size_t cursor() const { return cursor_; }
 
-#ifdef DEBUG
-  // This function records if the cursor got changed by codeAlign or by any
-  // other read/write of data. This is used for AutoXDRTree assertions, as a
-  // way to ensure that the last thing done is properly setting the alignment
-  // with codeAlign function.
-  void setAligned(bool aligned) { aligned_ = aligned; }
-  bool isAligned() const { return aligned_; }
-#else
-  void setAligned(bool) const {}
-  bool isAligned() const { return true; }
-#endif
-
  protected:
   JSContext* const context_;
   size_t cursor_;
@@ -77,7 +65,6 @@ class XDRBuffer<XDR_ENCODE> : public XDRBufferBase {
 
   uint8_t* write(size_t n) {
     MOZ_ASSERT(n != 0);
-    setAligned(false);
     if (!buffer_.growByUninitialized(n)) {
       ReportOutOfMemory(cx());
       return nullptr;
@@ -112,7 +99,6 @@ class XDRBuffer<XDR_DECODE> : public XDRBufferBase {
 
   const uint8_t* read(size_t n) {
     MOZ_ASSERT(cursor_ < buffer_.length());
-    setAligned(false);
     uint8_t* ptr = &buffer_[cursor_];
     cursor_ += n;
 
@@ -140,8 +126,6 @@ class XDRBuffer<XDR_DECODE> : public XDRBufferBase {
 
 class XDRCoderBase;
 class XDRIncrementalEncoder;
-using XDRAlignment = char16_t;
-static const uint8_t AlignPadding[sizeof(XDRAlignment)] = {0, 0};
 
 // An AutoXDRTree is used to identify section encoded by an
 // XDRIncrementalEncoder.
@@ -207,7 +191,6 @@ class XDRCoderBase {
   }
   virtual void createOrReplaceSubTree(AutoXDRTree* child){};
   virtual void endSubTree(){};
-  virtual bool isAligned(size_t n) = 0;
 
 #ifdef DEBUG
   // Record logical failures of XDR.
@@ -263,46 +246,6 @@ class XDRState : public XDRCoderBase {
       return fail(JS::TranscodeResult_Failure_BadDecode);
     }
     *pptr = ptr;
-    return Ok();
-  }
-
-  // Alignment is required when doing memcpy of data which contains element
-  // largers than 1 byte.
-  bool isAligned(size_t n) override {
-    MOZ_ASSERT(mozilla::IsPowerOfTwo(n));
-    size_t mask = n - 1;
-    size_t offset = buf.uptr() & mask;
-    // In debug build, we not only check if the cursor is aligned, but also
-    // if the last cursor manipulation was made by the codeAlign function.
-    return offset == 0 && buf.isAligned();
-  }
-  XDRResult codeAlign(size_t n) {
-    MOZ_ASSERT(mozilla::IsPowerOfTwo(n));
-    size_t mask = n - 1;
-    MOZ_ASSERT_IF(mode == XDR_ENCODE,
-                  (buf.uptr() & mask) == (buf.cursor() & mask));
-    size_t offset = buf.uptr() & mask;
-    if (offset) {
-      size_t padding = n - offset;
-      MOZ_ASSERT(padding < sizeof(AlignPadding));
-      if (mode == XDR_ENCODE) {
-        uint8_t* ptr = buf.write(padding);
-        if (!ptr) {
-          return fail(JS::TranscodeResult_Throw);
-        }
-        memcpy(ptr, AlignPadding, padding);
-      } else {
-        const uint8_t* ptr = buf.read(padding);
-        if (!ptr) {
-          return fail(JS::TranscodeResult_Failure_BadDecode);
-        }
-        if (memcmp(ptr, AlignPadding, padding) != 0) {
-          return fail(JS::TranscodeResult_Failure_BadDecode);
-        }
-      }
-    }
-    buf.setAligned(true);
-    MOZ_ASSERT(isAligned(n));
     return Ok();
   }
 
@@ -478,8 +421,6 @@ class XDRState : public XDRCoderBase {
   XDRResult codeChars(JS::Latin1Char* chars, size_t nchars);
   XDRResult codeChars(mozilla::Utf8Unit* units, size_t nchars);
 
-  // If |nchars > 0|, this calls |codeAlign(sizeof(char16_t))| so callers
-  // don't have to.
   XDRResult codeChars(char16_t* chars, size_t nchars);
 
   XDRResult codeFunction(JS::MutableHandleFunction objp,
