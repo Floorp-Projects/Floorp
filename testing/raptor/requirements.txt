@@ -3,5 +3,5 @@ mozrunner ~= 7.0
 mozprofile ~= 2.1
 manifestparser >= 1.1
 wptserve ~= 1.4.0
-mozdevice >= 1.1.6
+mozdevice >= 3.0.1
 mozproxy >= 1.0
