@@ -64,7 +64,22 @@ async function performTests() {
   }
   synthesizeKeyShortcut(clearShortcut);
   await waitFor(() => findMessages(hud, "").length == 0);
-  ok(isInputFocused(hud), "input is focused");
+  ok(isInputFocused(hud), "console was cleared and input is focused");
+
+  if (Services.appinfo.OS === "Darwin") {
+    info("Log a new message from the content page");
+    const onMessage = waitForMessage(hud, "another simple text message");
+    ContentTask.spawn(gBrowser.selectedBrowser, {}, async function() {
+      content.console.log("another simple text message");
+    });
+    await onMessage;
+
+    info("Send Cmd-K to clear console");
+    synthesizeKeyShortcut(WCUL10n.getStr("webconsole.clear.alternativeKeyOSX"));
+
+    await waitFor(() => findMessages(hud, "").length == 0);
+    ok(isInputFocused(hud), "console was cleared as expected with alternative shortcut");
+  }
 
   // Focus filter
   info("try ctrl-f to focus filter");
