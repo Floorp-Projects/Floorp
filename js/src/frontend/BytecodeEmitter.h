@@ -493,8 +493,6 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   // encompasses the entire source.
   MOZ_MUST_USE bool emitScript(ParseNode* body);
 
-  MOZ_MUST_USE bool emitInitializeInstanceFields();
-
   // Emit function code for the tree rooted at body.
   enum class TopLevelFunction { No, Yes };
   MOZ_MUST_USE bool emitFunctionScript(FunctionNode* funNode,
@@ -835,18 +833,10 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   MOZ_MUST_USE bool emitBreak(PropertyName* label);
   MOZ_MUST_USE bool emitContinue(PropertyName* label);
 
-  MOZ_MUST_USE bool emitFunctionFormalParametersAndBody(ListNode* paramsBody);
   MOZ_MUST_USE bool emitFunctionFormalParameters(ListNode* paramsBody);
   MOZ_MUST_USE bool emitInitializeFunctionSpecialNames();
-  MOZ_MUST_USE bool emitFunctionBody(ParseNode* funBody);
   MOZ_MUST_USE bool emitLexicalInitialization(NameNode* name);
   MOZ_MUST_USE bool emitLexicalInitialization(JSAtom* name);
-
-  // Async functions have implicit try-catch blocks to convert exceptions
-  // into promise rejections.
-  MOZ_MUST_USE bool emitAsyncFunctionRejectPrologue(
-      mozilla::Maybe<TryEmitter>& tryCatch);
-  MOZ_MUST_USE bool emitAsyncFunctionRejectEpilogue(TryEmitter& tryCatch);
 
   // Emit bytecode for the spread operator.
   //
