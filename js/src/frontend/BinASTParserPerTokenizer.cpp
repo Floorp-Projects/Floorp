@@ -769,7 +769,7 @@ bool BinASTParserPerTokenizer<Tok>::computeErrorMetadata(
   return true;
 }
 
-void TraceBinParser(JSTracer* trc, JS::AutoGCRooter* parser) {
+void TraceBinASTParser(JSTracer* trc, JS::AutoGCRooter* parser) {
   static_cast<BinASTParserBase*>(parser)->trace(trc);
 }
 

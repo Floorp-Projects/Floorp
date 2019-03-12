@@ -137,8 +137,10 @@ bool GeneralParser<ParseHandler, Unit>::mustMatchTokenInternal(
 
 ParserSharedBase::ParserSharedBase(JSContext* cx, LifoAlloc& alloc,
                                    UsedNameTracker& usedNames,
-                                   ScriptSourceObject* sourceObject)
-    : JS::AutoGCRooter(cx, AutoGCRooter::Tag::Parser),
+                                   ScriptSourceObject* sourceObject, Kind kind)
+    : JS::AutoGCRooter(cx, kind == Kind::Parser
+                               ? JS::AutoGCRooter::Tag::Parser
+                               : JS::AutoGCRooter::Tag::BinASTParser),
       cx_(cx),
       alloc_(alloc),
       traceListHead_(nullptr),
@@ -167,7 +169,8 @@ ParserBase::ParserBase(JSContext* cx, LifoAlloc& alloc,
                        const ReadOnlyCompileOptions& options,
                        bool foldConstants, UsedNameTracker& usedNames,
                        ScriptSourceObject* sourceObject, ParseGoal parseGoal)
-    : ParserSharedBase(cx, alloc, usedNames, sourceObject),
+    : ParserSharedBase(cx, alloc, usedNames, sourceObject,
+                       ParserSharedBase::Kind::Parser),
       anyChars(cx, options, thisForCtor()),
       ss(nullptr),
       foldConstants_(foldConstants),

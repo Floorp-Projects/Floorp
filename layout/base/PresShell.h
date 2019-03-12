@@ -509,7 +509,9 @@ class PresShell final : public nsIPresShell,
     /**
      * HandleEvent() may dispatch aGUIEvent.  This may redirect the event to
      * another PresShell, or the event may be handled by other classes like
-     * AccessibleCaretEventHub, or discarded.
+     * AccessibleCaretEventHub, or discarded.  Otherwise, this sets current
+     * event info of mPresShell and calls HandleEventWithCurrentEventInfo()
+     * to dispatch the event into the DOM tree.
      *
      * @param aFrame                    aFrame of nsIPresShell::HandleEvent().
      *                                  (Perhaps, should be root frame of
@@ -1015,8 +1017,8 @@ class PresShell final : public nsIPresShell,
         return NS_OK;
       }
       nsCOMPtr<nsIContent> overrideClickTarget;
-      return HandleEventInternal(aGUIEvent, aEventStatus, true,
-                                 overrideClickTarget);
+      return HandleEventWithCurrentEventInfo(aGUIEvent, aEventStatus, true,
+                                             overrideClickTarget);
     }
 
     /**
@@ -1035,9 +1037,9 @@ class PresShell final : public nsIPresShell,
                                               nsEventStatus* aEventStatus);
 
     /**
-     * XXX Needs better name.
-     * HandleEventInternal() dispatches aEvent into the DOM tree and
-     * notify EventStateManager of that.
+     * HandleEventWithCurrentEventInfo() prepares to dispatch aEvent into the
+     * DOM, dispatches aEvent into the DOM with using current event info of
+     * mPresShell and notifies EventStateManager of that.
      *
      * @param aEvent                    Event to be dispatched.
      * @param aEventStatus              [in/out] EventStatus of aEvent.
@@ -1046,10 +1048,10 @@ class PresShell final : public nsIPresShell,
      * @param aOverrideClickTarget      Override click event target.
      */
     MOZ_CAN_RUN_SCRIPT
-    nsresult HandleEventInternal(WidgetEvent* aEvent,
-                                 nsEventStatus* aEventStatus,
-                                 bool aIsHandlingNativeEvent,
-                                 nsIContent* aOverrideClickTarget);
+    nsresult HandleEventWithCurrentEventInfo(WidgetEvent* aEvent,
+                                             nsEventStatus* aEventStatus,
+                                             bool aIsHandlingNativeEvent,
+                                             nsIContent* aOverrideClickTarget);
 
     /**
      * HandlingTimeAccumulator() may accumulate handling time of telemetry

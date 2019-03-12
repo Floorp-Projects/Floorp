@@ -161,8 +161,8 @@ var Bookmarks = Object.freeze({
    */
   virtualMenuGuid: "menu_______v",
   virtualToolbarGuid: "toolbar____v",
-  virtualUnfiledGuid: "unfiled___v",
-  virtualMobileGuid: "mobile____v",
+  virtualUnfiledGuid: "unfiled____v",
+  virtualMobileGuid: "mobile_____v",
 
   /**
    * Checks if a guid is a virtual root.
