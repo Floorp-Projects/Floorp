@@ -36,6 +36,7 @@ dependencies {
     testImplementation Dependencies.testing_mockito
 
     testImplementation project(':support-test')
+    testImplementation project(':lib-fetch-httpurlconnection')
 }
 
 apply from: '../../../publish.gradle'
