@@ -1923,5 +1923,24 @@ bool DoToNumeric(JSContext* cx, HandleValue arg, MutableHandleValue ret) {
   return ToNumeric(cx, ret);
 }
 
+bool CopyStringSplitArray(JSContext* cx, HandleArrayObject arr,
+                          MutableHandleValue result) {
+  MOZ_ASSERT(arr->isTenured(),
+             "ConstStringSplit needs a tenured template object");
+
+  uint32_t length = arr->getDenseInitializedLength();
+  MOZ_ASSERT(length == arr->length(),
+             "template object is a fully initialized array");
+
+  ArrayObject* nobj = NewFullyAllocatedArrayTryReuseGroup(cx, arr, length);
+  if (!nobj) {
+    return false;
+  }
+  nobj->initDenseElements(arr, 0, length);
+
+  result.setObject(*nobj);
+  return true;
+}
+
 }  // namespace jit
 }  // namespace js
