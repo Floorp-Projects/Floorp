@@ -12,15 +12,17 @@ import {
 
 import {
   getShouldPauseOnExceptions,
-  getShouldPauseOnCaughtExceptions
+  getShouldPauseOnCaughtExceptions,
+  getCurrentThread
 } from "../../../reducers/pause";
 
 describe("pauseOnExceptions", () => {
   it("should track telemetry for pauseOnException changes", async () => {
     const { dispatch, getState } = createStore({ pauseOnExceptions: () => {} });
+    const thread = getCurrentThread(getState());
     dispatch(actions.pauseOnExceptions(true, false));
     expect(getTelemetryEvents("pause_on_exceptions")).toMatchSnapshot();
-    expect(getShouldPauseOnExceptions(getState())).toBe(true);
-    expect(getShouldPauseOnCaughtExceptions(getState())).toBe(false);
+    expect(getShouldPauseOnExceptions(getState(), thread)).toBe(true);
+    expect(getShouldPauseOnCaughtExceptions(getState(), thread)).toBe(false);
   });
 });
