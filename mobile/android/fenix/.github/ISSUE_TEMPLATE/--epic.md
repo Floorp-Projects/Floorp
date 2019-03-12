@@ -3,20 +3,24 @@ name: "🔵 Epic"
 about: Create Epic
 
 ---
+Owner: Product Manager
+Purpose: PM to describe a feature and track overall activities, dependencies, progress
 
-- Description of Epic and Feature.
+### Why/User Benefit/User Problem
+- Description of Feature (Added by PM)
 - Add any additional links or research related to this feature.
-- Once Epic is created, convert Epic via Zenhub extension, and move it to appropriate milestone.
+- Immediate task: Convert to epic and move to appropriate milestone
 
-## UX Designs
-- Assign UX issue to this epic
+### Acceptance Criteria (Added by PM. For EPM to track when a Meta feature is done)
+-UX completed
+-User stories completed
+-Strings written and approved
+-QA completed
+-Localization done
 
-## Dependencies
-- List dependencies on other issues/teams etc.
+### What / Requirements (Added by PM and Eng Manager)
+-UX Designs (Immediate task: Assign UX issue to this epic)
+-User stories (to be created by PM)
+-List dependencies on other issues/teams etc.
 
-## User Stories
-- Don't have to be listed here, but rather assign this epic to the user story issues
-- Estimate/size user story issues with points (during backlog grooming)
-- User stories should converted into Epics as well (for now) and all engineering tasks will be linked to this user story
-- User stories need to be assigned to a milestone, e.g backlog, or move into sprint
 
