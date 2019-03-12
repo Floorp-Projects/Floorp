@@ -67,12 +67,11 @@ struct VMFunctionDataHelper<R (*)(JSContext*, Args...)>
   static constexpr uint64_t argumentRootTypes() {
     return BitMask<TypeToRootType, uint64_t, 3, Args...>::result;
   }
-  constexpr explicit VMFunctionDataHelper(
-      const char* name, PopValues extraValuesToPop = PopValues(0))
+  constexpr explicit VMFunctionDataHelper(const char* name)
       : VMFunctionData(name, explicitArgs(), argumentProperties(),
                        argumentPassedInFloatRegs(), argumentRootTypes(),
                        outParam(), outParamRootType(), returnType(),
-                       extraValuesToPop.numValues, NonTailCall) {}
+                       /* extraValuesToPop = */ 0, NonTailCall) {}
   constexpr explicit VMFunctionDataHelper(const char* name,
                                           MaybeTailCall expectTailCall,
                                           PopValues extraValuesToPop)
@@ -186,10 +185,6 @@ bool JitRuntime::generateVMWrappers(JSContext* cx, MacroAssembler& masm) {
 
   return true;
 }
-
-// Statics are initialized to null.
-/* static */
-VMFunction* VMFunction::functions;
 
 AutoDetectInvalidation::AutoDetectInvalidation(JSContext* cx,
                                                MutableHandleValue rval)

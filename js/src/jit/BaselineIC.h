@@ -1490,8 +1490,6 @@ class ICTypeMonitor_AnyValue : public ICStub {
 
 // TypeUpdate
 
-extern const VMFunction DoTypeUpdateFallbackInfo;
-
 // The TypeUpdate fallback is not a regular fallback, since it just
 // forwards to a different entry point in the main fallback stub.
 class ICTypeUpdate_Fallback : public ICStub {
