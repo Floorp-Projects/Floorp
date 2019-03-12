@@ -618,8 +618,7 @@ XDRResult js::PrivateScriptData::XDR(XDRState<mode>* xdr, HandleScript script,
       if (mode == XDR_ENCODE) {
         scope = vector[i];
       }
-      MOZ_TRY(
-          XDRScope(xdr, script->data_, scriptEnclosingScope, fun, i, &scope));
+      MOZ_TRY(XDRScope(xdr, data, scriptEnclosingScope, fun, i, &scope));
       if (mode == XDR_DECODE) {
         vector[i].init(scope);
       }
@@ -641,7 +640,7 @@ XDRResult js::PrivateScriptData::XDR(XDRState<mode>* xdr, HandleScript script,
       if (mode == XDR_ENCODE) {
         inner = elem;
       }
-      MOZ_TRY(XDRInnerObject(xdr, script->data_, sourceObject, &inner));
+      MOZ_TRY(XDRInnerObject(xdr, data, sourceObject, &inner));
       if (mode == XDR_DECODE) {
         elem.init(inner);
       }
@@ -3262,7 +3261,7 @@ PrivateScriptData* PrivateScriptData::new_(JSContext* cx, uint32_t nscopes,
   return true;
 }
 
-void PrivateScriptData::traceChildren(JSTracer* trc) {
+void PrivateScriptData::trace(JSTracer* trc) {
   auto scopearray = scopes();
   TraceRange(trc, scopearray.size(), scopearray.data(), "scopes");
 
@@ -4557,7 +4556,7 @@ void JSScript::traceChildren(JSTracer* trc) {
                 zone()->isCollecting());
 
   if (data_) {
-    data_->traceChildren(trc);
+    data_->trace(trc);
   }
 
   if (scriptData()) {
