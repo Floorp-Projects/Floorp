@@ -1773,13 +1773,6 @@ bool DoTypeUpdateFallback(JSContext* cx, BaselineFrame* frame,
   return true;
 }
 
-typedef bool (*DoTypeUpdateFallbackFn)(JSContext*, BaselineFrame*,
-                                       ICUpdatedStub*, HandleValue,
-                                       HandleValue);
-const VMFunction DoTypeUpdateFallbackInfo =
-    FunctionInfo<DoTypeUpdateFallbackFn>(DoTypeUpdateFallback,
-                                         "DoTypeUpdateFallback", NonTailCall);
-
 bool ICTypeUpdate_Fallback::Compiler::generateStubCode(MacroAssembler& masm) {
   // Just store false into R1.scratchReg() and return.
   masm.move32(Imm32(0), R1.scratchReg());
