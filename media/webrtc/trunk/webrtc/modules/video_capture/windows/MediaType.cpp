@@ -82,7 +82,10 @@ MediaType::Assign(const AM_MEDIA_TYPE* aMediaType)
   Clear();
 
   // Shallow copy.
-  memcpy(this, aMediaType, sizeof(AM_MEDIA_TYPE));
+  memcpy(static_cast<AM_MEDIA_TYPE*>(this), aMediaType, sizeof(AM_MEDIA_TYPE));
+
+  if (pUnk)
+    pUnk->AddRef();
 
   // Create deep copy of incoming data...
   if (cbFormat) {
@@ -91,9 +94,6 @@ MediaType::Assign(const AM_MEDIA_TYPE* aMediaType)
       return E_OUTOFMEMORY;
     memcpy(pbFormat, aMediaType->pbFormat, cbFormat);
   }
-
-  if (pUnk)
-    pUnk->AddRef();
 
   return S_OK;
 }
