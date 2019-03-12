@@ -11,6 +11,8 @@
 #include "mozilla/Range.h"
 #include "mozilla/TextUtils.h"
 
+#include <type_traits>  // std::is_same
+
 #include "jsapi.h"
 #include "jsfriendapi.h"
 
@@ -968,7 +970,8 @@ class JSFlatString : public JSLinearString {
 
  public:
   template <js::AllowGC allowGC, typename CharT>
-  static inline JSFlatString* new_(JSContext* cx, const CharT* chars,
+  static inline JSFlatString* new_(JSContext* cx,
+                                   js::UniquePtr<CharT[], JS::FreePolicy> chars,
                                    size_t length);
 
   inline bool isIndexSlow(uint32_t* indexp) const {
@@ -1331,6 +1334,24 @@ MOZ_ALWAYS_INLINE JSAtom* JSFlatString::morphAtomizedStringIntoPermanentAtom(
 
 namespace js {
 
+/**
+ * An indexable characters class exposing unaligned, little-endian encoded
+ * char16_t data.
+ */
+class LittleEndianChars {
+ public:
+  explicit constexpr LittleEndianChars(const uint8_t* leTwoByte)
+      : current(leTwoByte) {}
+
+  constexpr char16_t operator[](size_t index) const {
+    size_t offset = index * sizeof(char16_t);
+    return (current[offset + 1] << 8) | current[offset];
+  }
+
+ private:
+  const uint8_t* current;
+};
+
 class StaticStrings {
  private:
   /* Bigger chars cannot be in a length-2 string. */
@@ -1382,8 +1403,14 @@ class StaticStrings {
   static bool isStatic(JSAtom* atom);
 
   /* Return null if no static atom exists for the given (chars, length). */
-  template <typename CharT>
-  MOZ_ALWAYS_INLINE JSAtom* lookup(const CharT* chars, size_t length) {
+  template <typename Chars>
+  MOZ_ALWAYS_INLINE JSAtom* lookup(Chars chars, size_t length) {
+    static_assert(std::is_same<Chars, const Latin1Char*>::value ||
+                      std::is_same<Chars, const char16_t*>::value ||
+                      std::is_same<Chars, LittleEndianChars>::value,
+                  "for understandability, |chars| must be one of a few "
+                  "identified types");
+
     switch (length) {
       case 1: {
         char16_t c = chars[0];
@@ -1421,6 +1448,19 @@ class StaticStrings {
     }
 
     return nullptr;
+  }
+
+  template <typename CharT, typename = typename std::enable_if<
+                                std::is_same<CharT, char>::value ||
+                                std::is_same<CharT, const char>::value ||
+                                !std::is_const<CharT>::value>::type>
+  MOZ_ALWAYS_INLINE JSAtom* lookup(CharT* chars, size_t length) {
+    // Collapse calls for |char*| or |const char*| into |const unsigned char*|
+    // to avoid excess instantiations.  Collapse the remaining |CharT*| to
+    // |const CharT*| for the same reason.
+    using UnsignedCharT = typename std::make_unsigned<CharT>::type;
+    UnsignedCharT* unsignedChars = reinterpret_cast<UnsignedCharT*>(chars);
+    return lookup(const_cast<const UnsignedCharT*>(unsignedChars), length);
   }
 
  private:
@@ -1494,16 +1534,23 @@ static inline UniqueChars StringToNewUTF8CharsZ(JSContext* maybecx,
                 .c_str());
 }
 
-/* GC-allocate a string descriptor for the given malloc-allocated chars. */
+/**
+ * Allocate a string with the given contents, potentially GCing in the process.
+ */
 template <typename CharT>
-extern JSFlatString* NewString(JSContext* cx, CharT* chars, size_t length);
+extern JSFlatString* NewString(JSContext* cx,
+                               UniquePtr<CharT[], JS::FreePolicy> chars,
+                               size_t length);
 
-/* Like NewString, but doesn't try to deflate to Latin1. */
+/* Like NewString, but doesn't attempt to deflate to Latin1. */
 template <typename CharT>
-extern JSFlatString* NewStringDontDeflate(JSContext* cx, CharT* chars,
-                                          size_t length);
+extern JSFlatString* NewStringDontDeflate(
+    JSContext* cx, UniquePtr<CharT[], JS::FreePolicy> chars, size_t length);
 
-/* GC-allocate a string descriptor for the given malloc-allocated chars. */
+/**
+ * Allocate a string with the given contents.  If |allowGC == CanGC|, this may
+ * trigger a GC.
+ */
 template <js::AllowGC allowGC, typename CharT>
 extern JSFlatString* NewString(JSContext* cx,
                                UniquePtr<CharT[], JS::FreePolicy> chars,
@@ -1559,6 +1606,13 @@ inline JSFlatString* NewStringCopyUTF8Z(JSContext* cx,
 JSString* NewMaybeExternalString(JSContext* cx, const char16_t* s, size_t n,
                                  const JSStringFinalizer* fin,
                                  bool* allocatedExternal);
+
+/**
+ * Allocate a new string consisting of |chars[0..length]| characters.
+ */
+extern JSFlatString* NewStringFromLittleEndianNoGC(JSContext* cx,
+                                                   LittleEndianChars chars,
+                                                   size_t length);
 
 JS_STATIC_ASSERT(sizeof(HashNumber) == 4);
 
