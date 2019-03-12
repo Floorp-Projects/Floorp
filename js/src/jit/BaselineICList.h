@@ -28,7 +28,6 @@ namespace jit {
                                       \
   _(NewArray_Fallback)                \
   _(NewObject_Fallback)               \
-  _(NewObject_WithTemplate)           \
                                       \
   _(ToBool_Fallback)                  \
                                       \
