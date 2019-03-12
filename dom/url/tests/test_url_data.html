@@ -14,12 +14,12 @@
 var base = new URL("data:text/plain,");
 
 base.protocol = "chrome:";
-is(base.protocol, 'data:', "The protocol should not change from data to chrome.");
+is(base.protocol, "data:", "The protocol should not change from data to chrome.");
 
 try {
   var relative = new URL("a", base);
   ok(false, "Relative URL from a data:text/plain should not work.");
-} catch(e) {
+} catch (e) {
   ok(true, "Relative URL from a data:text/plain should not work.");
 }
 
