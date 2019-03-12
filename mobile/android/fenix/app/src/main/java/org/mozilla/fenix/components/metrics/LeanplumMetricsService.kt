@@ -62,8 +62,8 @@ class LeanplumMetricsService(private val application: Application) : MetricsServ
 
     companion object {
         private val LeanplumId: String
-            get() = BuildConfig.LEANPLUM_ID
+            get() = BuildConfig.LEANPLUM_ID ?: ""
         private val LeanplumToken: String
-            get() = BuildConfig.LEANPLUM_TOKEN
+            get() = BuildConfig.LEANPLUM_TOKEN ?: ""
     }
 }
