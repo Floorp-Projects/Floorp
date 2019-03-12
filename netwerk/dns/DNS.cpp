@@ -330,6 +330,10 @@ AddrInfo::AddrInfo(const AddrInfo *src) {
 }
 
 AddrInfo::~AddrInfo() {
+  NetAddrElement *addrElement;
+  while ((addrElement = mAddresses.popLast())) {
+    delete addrElement;
+  }
 }
 
 void AddrInfo::AddAddress(NetAddrElement *address) {
