@@ -77,6 +77,7 @@ interface nsIControllerCommandTable : nsISupports
    * @param aCommandName    the name of the command to execute
    * @param aCommandRefCon  the command context data
    */
+  [can_run_script]
 	void    doCommand(in string aCommandName, in nsISupports aCommandRefCon);
 
   [can_run_script]

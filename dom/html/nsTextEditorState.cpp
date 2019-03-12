@@ -826,6 +826,7 @@ void TextInputListener::OnSelectionChange(Selection& aSelection,
   UpdateTextInputCommands(NS_LITERAL_STRING("select"), &aSelection, aReason);
 }
 
+MOZ_CAN_RUN_SCRIPT
 static void DoCommandCallback(Command aCommand, void* aData) {
   nsTextControlFrame* frame = static_cast<nsTextControlFrame*>(aData);
   nsIContent* content = frame->GetContent();
