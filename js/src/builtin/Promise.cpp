@@ -3549,8 +3549,8 @@ MOZ_MUST_USE bool js::AsyncFunctionReturned(
 
 // https://tc39.github.io/ecma262/#await
 //
-// Helper function that performs 6.2.3.1 Await(promise) steps 2 and 9.
-// The same steps are also used in a few other places in the spec.
+// Helper function that performs 6.2.3.1 Await(promise) steps 2-3 and 10, or
+// similar.
 template <typename T>
 static MOZ_MUST_USE bool InternalAwait(JSContext* cx, HandleValue value,
                                        HandleObject resultPromise,
@@ -3559,7 +3559,10 @@ static MOZ_MUST_USE bool InternalAwait(JSContext* cx, HandleValue value,
   MOZ_ASSERT(onFulfilled.isInt32());
   MOZ_ASSERT(onRejected.isInt32());
 
-  // Step 2: Let promise be ? PromiseResolve(%Promise%, « value »).
+  // The proposal <https://github.com/tc39/ecma262/pull/1250>
+  // replaces steps 2-3 with the following updated step:
+  // Step 2: Let promise be ? PromiseResolve(« value »).
+  // Step 3 is deleted.
   RootedObject promise(cx, PromiseObject::unforgeableResolve(cx, value));
   if (!promise) {
     return false;
@@ -3574,9 +3577,7 @@ static MOZ_MUST_USE bool InternalAwait(JSContext* cx, HandleValue value,
     return false;
   }
 
-  // Steps 3-8 of the spec create onFulfilled and onRejected functions.
-
-  // Step 9: Perform ! PerformPromiseThen(promise, onFulfilled, onRejected).
+  // Steps 4-9 of the spec create onFulfilled and onRejected functions.
   Rooted<PromiseCapability> resultCapability(cx);
   resultCapability.promise().set(resultPromise);
   Rooted<PromiseReactionRecord*> reaction(
@@ -3586,6 +3587,8 @@ static MOZ_MUST_USE bool InternalAwait(JSContext* cx, HandleValue value,
     return false;
   }
   extraStep(reaction);
+
+  // Step 10: Perform ! PerformPromiseThen(promise, onFulfilled, onRejected).
   return PerformPromiseThenWithReaction(cx, unwrappedPromise, reaction);
 }
 
@@ -3798,9 +3801,6 @@ bool js::AsyncFromSyncIteratorMethod(JSContext* cx, CallArgs& args,
     return AbruptRejectPromise(cx, args, resultPromise, nullptr);
   }
 
-  // Step numbers below include the changes in
-  // <https://github.com/tc39/ecma262/pull/1470>, which inserted a new step 6.
-  //
   // Steps 7-9 (reordered).
   // Step 7: Let steps be the algorithm steps defined in Async-from-Sync
   //         Iterator Value Unwrap Functions.
@@ -3812,17 +3812,17 @@ bool js::AsyncFromSyncIteratorMethod(JSContext* cx, CallArgs& args,
                       : PromiseHandlerAsyncFromSyncIteratorValueUnwrapNotDone));
   RootedValue onRejected(cx, Int32Value(PromiseHandlerThrower));
 
-  // Steps 5 and 10 are identical to some steps in Await; we have a utility
+  // These steps are identical to some steps in Await; we have a utility
   // function InternalAwait() that implements the idiom.
   //
-  // Step 5: Let valueWrapper be PromiseResolve(%Promise%, « value »).
-  // Step 6: IfAbruptRejectPromise(valueWrapper, promiseCapability).
+  // Steps 5-6, as amended by <https://github.com/tc39/ecma262/pull/1250>:
+  //      Let valueWrapper be ? PromiseResolve(« value »).
   // Step 10: Perform ! PerformPromiseThen(valueWrapper, onFulfilled,
-  //                                      undefined, promiseCapability).
+  //                                       undefined, promiseCapability).
   auto extra = [](Handle<PromiseReactionRecord*> reaction) {};
   if (!InternalAwait(cx, value, resultPromise, onFulfilled, onRejected,
                      extra)) {
-    return AbruptRejectPromise(cx, args, resultPromise, nullptr);
+    return false;
   }
 
   // Step 11: Return promiseCapability.[[Promise]].
@@ -3994,18 +3994,18 @@ static MOZ_MUST_USE bool AsyncGeneratorResumeNext(
           unwrappedGenerator->setAwaitingReturn();
 
           // (reordered)
-          // Step 10.b.i.3: Let stepsFulfilled be the algorithm steps defined in
+          // Step 10.b.i.4: Let stepsFulfilled be the algorithm steps defined in
           //                AsyncGeneratorResumeNext Return Processor Fulfilled
           //                Functions.
-          // Step 10.b.i.4: Let onFulfilled be CreateBuiltinFunction(
+          // Step 10.b.i.5: Let onFulfilled be CreateBuiltinFunction(
           //                stepsFulfilled, « [[Generator]] »).
-          // Step 10.b.i.5: Set onFulfilled.[[Generator]] to generator.
-          // Step 10.b.i.6: Let stepsRejected be the algorithm steps defined in
+          // Step 10.b.i.6: Set onFulfilled.[[Generator]] to generator.
+          // Step 10.b.i.7: Let stepsRejected be the algorithm steps defined in
           //                AsyncGeneratorResumeNext Return Processor Rejected
           //                Functions.
-          // Step 10.b.i.7: Let onRejected be CreateBuiltinFunction(
+          // Step 10.b.i.8: Let onRejected be CreateBuiltinFunction(
           //                stepsRejected, « [[Generator]] »).
-          // Step 10.b.i.8: Set onRejected.[[Generator]] to generator.
+          // Step 10.b.i.9: Set onRejected.[[Generator]] to generator.
           static constexpr int32_t ResumeNextReturnFulfilled =
               PromiseHandlerAsyncGeneratorResumeNextReturnFulfilled;
           static constexpr int32_t ResumeNextReturnRejected =
@@ -4016,11 +4016,12 @@ static MOZ_MUST_USE bool AsyncGeneratorResumeNext(
           // These steps are nearly identical to some steps in Await;
           // InternalAwait() implements the idiom.
           //
-          // Step 10.b.i.2: Let promise be ? PromiseResolve(%Promise%,
-          //                « _completion_.[[Value]] »).
-          // Step 10.b.i.9: Perform ! PerformPromiseThen(promise, onFulfilled,
-          //                                             onRejected).
-          // Step 10.b.i.10: Return undefined.
+          // Steps 10.b.i.2-3, as amended by
+          // <https://github.com/tc39/ecma262/pull/1250>:
+          //      Let promise be ? PromiseResolve(« _completion_.[[Value]] »).
+          // Step 10.b.i.10: Perform ! PerformPromiseThen(promise, onFulfilled,
+          //                                              onRejected).
+          // Step 10.b.i.11: Return undefined.
           auto extra = [&](Handle<PromiseReactionRecord*> reaction) {
             reaction->setIsAsyncGenerator(unwrappedGenerator);
           };
