@@ -14,6 +14,7 @@ import {
 import { PROMISE } from "../utils/middleware/promise";
 import { getNextStep } from "../../workers/parser";
 import { addHiddenBreakpoint } from "../breakpoints";
+import { evaluateExpressions } from "../expressions";
 import { features } from "../../utils/prefs";
 import { recordEvent } from "../../utils/telemetry";
 
@@ -22,7 +23,10 @@ import type { ThunkArgs } from "../types";
 import type { Command } from "../../reducers/types";
 
 export function selectThread(thread: ThreadId) {
-  return { type: "SELECT_THREAD", thread };
+  return async ({ dispatch, getState, client }: ThunkArgs) => {
+    await dispatch({ type: "SELECT_THREAD", thread });
+    dispatch(evaluateExpressions());
+  };
 }
 
 /**
