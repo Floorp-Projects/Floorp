@@ -46,6 +46,9 @@ permalink: /changelog/
 * **support-ktx**
   * Added `File.truncateDirectory()` to remove all files (and sub directories) in a directory.
 
+* **feature-session**
+  * Adds support for the picture-in-picture mode in `PictureInPictureFeature`.
+
 # 0.46.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.45.0...v0.46.0)
