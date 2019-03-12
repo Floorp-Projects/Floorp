@@ -22,6 +22,7 @@
 #include "FrameBuilder.h"
 #include "LayersLogging.h"
 #include "UtilityMLGPU.h"
+#include "CompositionRecorder.h"
 #include "mozilla/layers/Diagnostics.h"
 #include "mozilla/layers/TextRenderer.h"
 
@@ -41,6 +42,49 @@ static const int kDebugOverlayX = 2;
 static const int kDebugOverlayY = 5;
 static const int kDebugOverlayMaxWidth = 600;
 static const int kDebugOverlayMaxHeight = 96;
+
+class RecordedFrameMLGPU : public RecordedFrame {
+ public:
+  RecordedFrameMLGPU(MLGDevice* aDevice, MLGTexture* aTexture,
+                     const TimeStamp& aTimestamp)
+      : RecordedFrame(aTimestamp), mDevice(aDevice) {
+    mSoftTexture =
+        aDevice->CreateTexture(aTexture->GetSize(), SurfaceFormat::B8G8R8A8,
+                               MLGUsage::Staging, MLGTextureFlags::None);
+
+    aDevice->CopyTexture(mSoftTexture, IntPoint(), aTexture,
+                         IntRect(IntPoint(), aTexture->GetSize()));
+  }
+
+  ~RecordedFrameMLGPU() {
+    if (mIsMapped) {
+      mDevice->Unmap(mSoftTexture);
+    }
+  }
+
+  virtual already_AddRefed<gfx::DataSourceSurface> GetSourceSurface() override {
+    if (mDataSurf) {
+      return RefPtr<DataSourceSurface>(mDataSurf).forget();
+    }
+    MLGMappedResource map;
+    if (!mDevice->Map(mSoftTexture, MLGMapType::READ, &map)) {
+      return nullptr;
+    }
+
+    mIsMapped = true;
+    mDataSurf = Factory::CreateWrappingDataSourceSurface(
+        map.mData, map.mStride, mSoftTexture->GetSize(),
+        SurfaceFormat::B8G8R8A8);
+    return RefPtr<DataSourceSurface>(mDataSurf).forget();
+  }
+
+ private:
+  RefPtr<MLGDevice> mDevice;
+  // Software texture in VRAM.
+  RefPtr<MLGTexture> mSoftTexture;
+  RefPtr<DataSourceSurface> mDataSurf;
+  bool mIsMapped = false;
+};
 
 LayerManagerMLGPU::LayerManagerMLGPU(widget::CompositorWidget* aWidget)
     : mWidget(aWidget),
@@ -356,6 +400,22 @@ void LayerManagerMLGPU::RenderLayers() {
 
   mProfilerScreenshotGrabber.MaybeGrabScreenshot(
       mDevice, builder.GetWidgetRT()->GetTexture());
+
+  if (mCompositionRecorder) {
+    bool hasContentPaint = false;
+    for (CompositionPayload& payload : mPayload) {
+      if (payload.mType == CompositionPayloadType::eContentPaint) {
+        hasContentPaint = true;
+        break;
+      }
+    }
+
+    if (hasContentPaint) {
+      RefPtr<RecordedFrame> frame = new RecordedFrameMLGPU(
+          mDevice, builder.GetWidgetRT()->GetTexture(), TimeStamp::Now());
+      mCompositionRecorder->RecordFrame(frame);
+    }
+  }
   mCurrentFrame = nullptr;
 
   if (mDrawDiagnostics) {
