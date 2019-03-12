@@ -15,8 +15,7 @@ import org.json.JSONObject
 /**
  * This singleton handles the in-memory storage logic for keeping track of
  * the active experiments. It is meant to be used by through the methods in
- * the Glean class (General API). No validation on the stored data is
- * performed at this point: validation must be performed by the General API.
+ * the Glean class (General API).
  */
 @SuppressLint("StaticFieldLeak")
 internal object ExperimentsStorageEngine : StorageEngine {

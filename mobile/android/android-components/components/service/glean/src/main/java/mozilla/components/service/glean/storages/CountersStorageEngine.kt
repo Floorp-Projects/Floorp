@@ -13,8 +13,7 @@ import mozilla.components.support.base.log.logger.Logger
 
 /**
  * This singleton handles the in-memory storage logic for counters. It is meant to be used by
- * the Specific Counters API and the ping assembling objects. No validation on the stored data
- * is performed at this point: validation must be performed by the Specific Counters API.
+ * the Specific Counters API and the ping assembling objects.
  *
  * This class contains a reference to the Android application Context. While the IDE warns
  * us that this could leak, the application context lives as long as the application and this

@@ -17,7 +17,7 @@ import java.util.Date
 /**
  * This singleton handles the in-memory storage logic for datetimes. It is meant to be used by
  * the Specific Datetime API and the ping assembling objects.
-
+ *
  * This stores dates both in-memory and on-disk as Strings, not Date objects. We do
  * this because we need to preserve the timezone offset value at the time the value
  * was set.  The [Date]/[Calendar] API in pre-Java 8 unfortunately does not allow
