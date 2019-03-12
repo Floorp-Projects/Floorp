@@ -1113,6 +1113,12 @@ VARCACHE_PREF(
   RelaxedAtomicBool, false
 )
 
+VARCACHE_PREF(
+  "javascript.options.experimental.fields",
+   javascript_options_experimental_fields,
+  RelaxedAtomicBool, false
+)
+
 
 //---------------------------------------------------------------------------
 // Media prefs

@@ -503,6 +503,7 @@ static bool enableTestWasmAwaitTier2 = false;
 static bool enableAsyncStacks = false;
 static bool enableStreams = false;
 static bool enableBigInt = false;
+static bool enableFields = false;
 #ifdef JS_GC_ZEAL
 static uint32_t gZealBits = 0;
 static uint32_t gZealFrequency = 0;
@@ -3763,7 +3764,8 @@ static void SetStandardRealmOptions(JS::RealmOptions& options) {
   options.creationOptions()
       .setSharedMemoryAndAtomicsEnabled(enableSharedMemory)
       .setBigIntEnabled(enableBigInt)
-      .setStreamsEnabled(enableStreams);
+      .setStreamsEnabled(enableStreams)
+      .setFieldsEnabled(enableFields);
 }
 
 static MOZ_MUST_USE bool CheckRealmOptions(JSContext* cx,
@@ -10186,6 +10188,7 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
   enableAsyncStacks = !op.getBoolOption("no-async-stacks");
   enableStreams = !op.getBoolOption("no-streams");
   enableBigInt = !op.getBoolOption("no-bigint");
+  enableFields = op.getBoolOption("enable-experimental-fields");
 
   JS::ContextOptionsRef(cx)
       .setBaseline(enableBaseline)
@@ -10897,8 +10900,8 @@ int main(int argc, char** argv, char** envp) {
       !op.addBoolOption('\0', "enable-streams",
                         "Enable WHATWG Streams (default)") ||
       !op.addBoolOption('\0', "no-streams", "Disable WHATWG Streams") ||
-      !op.addBoolOption('\0', "no-bigint",
-                        "Disable experimental BigInt support") ||
+      !op.addBoolOption('\0', "no-bigint", "Disable BigInt support") ||
+      !op.addBoolOption('\0', "enable-experimental-fields", "Enable fields in classes") ||
       !op.addStringOption('\0', "shared-memory", "on/off",
                           "SharedArrayBuffer and Atomics "
 #if SHARED_MEMORY_DEFAULT
