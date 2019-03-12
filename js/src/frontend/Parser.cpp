@@ -6779,11 +6779,10 @@ bool GeneralParser<ParseHandler, Unit>::classMember(
   }
 
   if (propType == PropertyType::Field) {
-    // TODO(khyperia): Delete the two lines below once fields are fully
-    // supported in the backend. We can't fail in BytecodeCompiler because of
-    // lazy parsing.
-    errorAt(propNameOffset, JSMSG_FIELDS_NOT_SUPPORTED);
-    return false;
+    if (!options().fieldsEnabledOption) {
+      errorAt(propNameOffset, JSMSG_FIELDS_NOT_SUPPORTED);
+      return null();
+    }
 
     if (isStatic) {
       errorAt(propNameOffset, JSMSG_BAD_METHOD_DEF);
