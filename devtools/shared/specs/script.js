@@ -62,12 +62,6 @@ const threadSpec = generateActorSpec({
         ids: Arg(0, "array:string"),
       },
     },
-    pauseOnExceptions: {
-      request: {
-        pauseOnExceptions: Arg(0, "string"),
-        ignoreCaughtExceptions: Arg(1, "string"),
-      },
-    },
   },
 });
 
