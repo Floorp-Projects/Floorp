@@ -232,9 +232,6 @@ pref("devtools.screenshot.audio.enabled", true);
 // Enable the Shader Editor.
 pref("devtools.shadereditor.enabled", false);
 
-// Enable the Canvas Debugger.
-pref("devtools.canvasdebugger.enabled", false);
-
 // Enable the Web Audio Editor
 pref("devtools.webaudioeditor.enabled", false);
 

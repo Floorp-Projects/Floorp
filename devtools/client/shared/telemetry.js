@@ -692,7 +692,6 @@ function getChartsFromToolId(id) {
   switch (id) {
     case "ABOUTDEBUGGING":
     case "BROWSERCONSOLE":
-    case "CANVASDEBUGGER":
     case "DOM":
     case "INSPECTOR":
     case "JSBROWSERDEBUGGER":
