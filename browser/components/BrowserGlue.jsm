@@ -539,6 +539,7 @@ const listeners = {
     "PasswordManager:autoCompleteLogins": ["LoginManagerParent"],
     "PasswordManager:removeLogin": ["LoginManagerParent"],
     "PasswordManager:insecureLoginFormPresent": ["LoginManagerParent"],
+    "PasswordManager:OpenPreferences": ["LoginManagerParent"],
     // PLEASE KEEP THIS LIST IN SYNC WITH THE MOBILE LISTENERS IN BrowserCLH.js
     "rtcpeer:CancelRequest": ["webrtcUI"],
     "rtcpeer:Request": ["webrtcUI"],
