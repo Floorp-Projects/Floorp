@@ -309,22 +309,16 @@ async function getFrameScopes(frame: Frame): Promise<*> {
   return sourceThreadClient.getEnvironment(frame.id);
 }
 
-async function pauseOnExceptions(
+function pauseOnExceptions(
+  thread: string,
   shouldPauseOnExceptions: boolean,
   shouldPauseOnCaughtExceptions: boolean
 ): Promise<*> {
-  await threadClient.pauseOnExceptions(
+  return lookupThreadClient(thread).pauseOnExceptions(
     shouldPauseOnExceptions,
     // Providing opposite value because server
     // uses "shouldIgnoreCaughtExceptions"
     !shouldPauseOnCaughtExceptions
-  );
-
-  await forEachWorkerThread(thread =>
-    thread.pauseOnExceptions(
-      shouldPauseOnExceptions,
-      !shouldPauseOnCaughtExceptions
-    )
   );
 }
 
