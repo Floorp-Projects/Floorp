@@ -1138,7 +1138,7 @@ you can use these alternative items. Otherwise, their values should be empty.  -
 
 <!ENTITY addonPrivateBrowsing.header2.label "Change to extensions in Private Windows">
 <!ENTITY addonPrivateBrowsing.body2.label "Any new extensions you add to &brandShorterName; won’t work in Private Windows unless you allow this in the settings.">
-<!ENTITY addonPrivateBrowsing.learnMore.label "Learn how to manage extension settings.">
+<!ENTITY addonPrivateBrowsing.learnMore.label "Learn how to manage extension settings">
 <!ENTITY addonPrivateBrowsing.okButton.label "Okay, Got It">
 <!ENTITY addonPrivateBrowsing.okButton.accesskey "O">
 <!ENTITY addonPrivateBrowsing.manageButton.label "Manage Extensions">
