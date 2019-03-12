@@ -91,6 +91,10 @@ bool ImageBridgeParent::CreateForGPUProcess(
   MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_GPU);
 
   MessageLoop* loop = CompositorThreadHolder::Loop();
+  if (!loop) {
+    return false;
+  }
+
   RefPtr<ImageBridgeParent> parent =
       new ImageBridgeParent(loop, aEndpoint.OtherPid());
 
@@ -211,6 +215,9 @@ mozilla::ipc::IPCResult ImageBridgeParent::RecvUpdate(
 bool ImageBridgeParent::CreateForContent(
     Endpoint<PImageBridgeParent>&& aEndpoint) {
   MessageLoop* loop = CompositorThreadHolder::Loop();
+  if (!loop) {
+    return false;
+  }
 
   RefPtr<ImageBridgeParent> bridge =
       new ImageBridgeParent(loop, aEndpoint.OtherPid());

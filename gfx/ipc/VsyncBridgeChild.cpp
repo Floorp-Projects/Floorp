@@ -12,7 +12,7 @@ namespace gfx {
 
 VsyncBridgeChild::VsyncBridgeChild(RefPtr<VsyncIOThreadHolder> aThread,
                                    const uint64_t& aProcessToken)
-    : mThread(aThread), mLoop(nullptr), mProcessToken(aProcessToken) {}
+    : mThread(aThread), mProcessToken(aProcessToken) {}
 
 VsyncBridgeChild::~VsyncBridgeChild() {}
 
@@ -39,8 +39,6 @@ void VsyncBridgeChild::Open(Endpoint<PVsyncBridgeChild>&& aEndpoint) {
     return;
   }
 
-  mLoop = MessageLoop::current();
-
   // Last reference is freed in DeallocPVsyncBridgeChild.
   AddRef();
 }
@@ -66,7 +64,7 @@ class NotifyVsyncTask : public Runnable {
 };
 
 bool VsyncBridgeChild::IsOnVsyncIOThread() const {
-  return MessageLoop::current() == mLoop;
+  return mThread->IsOnCurrentThread();
 }
 
 void VsyncBridgeChild::NotifyVsync(const VsyncEvent& aVsync,
@@ -75,7 +73,7 @@ void VsyncBridgeChild::NotifyVsync(const VsyncEvent& aVsync,
   MOZ_ASSERT(!IsOnVsyncIOThread());
 
   RefPtr<NotifyVsyncTask> task = new NotifyVsyncTask(this, aVsync, aLayersId);
-  mLoop->PostTask(task.forget());
+  mThread->Dispatch(task.forget());
 }
 
 void VsyncBridgeChild::NotifyVsyncImpl(const VsyncEvent& aVsync,
@@ -91,8 +89,8 @@ void VsyncBridgeChild::NotifyVsyncImpl(const VsyncEvent& aVsync,
 
 void VsyncBridgeChild::Close() {
   if (!IsOnVsyncIOThread()) {
-    mLoop->PostTask(NewRunnableMethod("gfx::VsyncBridgeChild::Close", this,
-                                      &VsyncBridgeChild::Close));
+    mThread->Dispatch(NewRunnableMethod("gfx::VsyncBridgeChild::Close", this,
+                                        &VsyncBridgeChild::Close));
     return;
   }
 
