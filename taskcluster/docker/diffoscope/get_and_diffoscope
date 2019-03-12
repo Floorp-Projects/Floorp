@@ -48,6 +48,15 @@ case "$ORIG_URL" in
 	;;
 esac
 
+case "$ORIG_URL" in
+*/target.apk)
+	OMNIJAR=assets/omni.ja
+	;;
+*)
+	OMNIJAR=omni.ja
+	;;
+esac
+
 # Builds are 99% of the time differing in some small ways, so it's not
 # really useful to report a failure (at least not until we actually
 # care about the builds being 100% identical).
@@ -55,6 +64,14 @@ POST=true
 
 for option; do
 	case "$option" in
+	--unpack)
+		CURDIR=$PWD
+		for dir in a b; do
+			# Need to run mach python from inside the gecko source.
+			# See bug #1533642.
+			(cd $GECKO_PATH && ./mach python toolkit/mozapps/installer/unpack.py --omnijar $OMNIJAR $CURDIR/$dir)
+		done
+		;;
 	--fail)
 		POST="exit 1"
 		;;
