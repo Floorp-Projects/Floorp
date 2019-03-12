@@ -264,6 +264,9 @@ parent:
   sync CheckContentOnlyTDR(uint32_t sequenceNum)
     returns (bool isContentOnlyTDR);
 
+  async BeginRecording(TimeStamp aRecordingStart);
+  async EndRecording();
+
 child:
   // Send back Compositor Frame Metrics from APZCs so tiled layers can
   // update progressively.
