@@ -183,7 +183,6 @@ export type TabPayload = {
   title: string,
   url: URL,
   webExtensionInspectedWindowActor: ActorId,
-  webaudioActor: ActorId,
   webglActor: ActorId
 };
 
