@@ -204,11 +204,6 @@ class RematerializedFrame {
 namespace JS {
 
 template <>
-struct MapTypeToRootKind<js::jit::RematerializedFrame*> {
-  static const RootKind kind = RootKind::Traceable;
-};
-
-template <>
 struct GCPolicy<js::jit::RematerializedFrame*>
     : public NonGCPointerPolicy<js::jit::RematerializedFrame*> {};
 
