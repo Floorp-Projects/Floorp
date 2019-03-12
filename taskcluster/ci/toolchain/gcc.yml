@@ -11,22 +11,6 @@ job-defaults:
             - 'build/unix/build-gcc/build-gcc.sh'
         toolchain-artifact: public/build/gcc.tar.xz
 
-linux64-gcc-4.9:
-    description: "GCC 4.9 toolchain build"
-    treeherder:
-        symbol: TL(gcc4.9)
-    run:
-        script: build-gcc-4.9-linux.sh
-    fetches:
-        fetch:
-            - binutils-2.25.1
-            - cloog-0.18.1
-            - gcc-4.9.4
-            - gmp-5.1.3
-            - isl-0.12.2
-            - mpc-0.8.2
-            - mpfr-3.1.5
-
 linux64-gcc-6:
     description: "GCC 6 toolchain build"
     treeherder:
