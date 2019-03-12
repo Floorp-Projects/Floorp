@@ -501,7 +501,6 @@ impl TransformPalette {
                         child_index,
                         parent_index,
                     )
-                    .unwrap_or_default()
                     .flattened
                     .with_destination::<PicturePixel>();
 
