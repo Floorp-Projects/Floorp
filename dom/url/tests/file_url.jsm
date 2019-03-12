@@ -10,7 +10,7 @@ function checkFromJSM(ok, is) {
   is(url2.href, "http://www.example.com/foobar", "JSM should have URL - based on another URL");
 
   var blob = new Blob(["a"]);
-  var url = URL.createObjectURL(blob);
+  url = URL.createObjectURL(blob);
   ok(url, "URL is created!");
 
   var u = new URL(url);

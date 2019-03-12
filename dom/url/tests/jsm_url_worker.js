@@ -1,15 +1,17 @@
+/* eslint-env worker */
+
 onmessage = function(event) {
   if (event.data != 0) {
     var worker = new Worker("jsm_url_worker.js");
-    worker.onmessage = function(event) {
-      postMessage(event.data);
+    worker.onmessage = function(ev) {
+      postMessage(ev.data);
     };
 
     worker.postMessage(event.data - 1);
     return;
   }
 
-  status = false;
+  let status = false;
   try {
     if ((URL instanceof Object)) {
       status = true;
@@ -49,7 +51,7 @@ onmessage = function(event) {
   postMessage({type: "status", status, msg: "Blob Revoke URL"});
 
   status = false;
-  var url = null;
+  url = null;
   try {
     url = URL.createObjectURL(true);
   } catch (e) {
@@ -59,7 +61,7 @@ onmessage = function(event) {
   postMessage({type: "status", status, msg: "CreateObjectURL should fail if the arg is not a blob"});
 
   status = false;
-  var url = null;
+  url = null;
   try {
     url = URL.createObjectURL(blob);
     status = true;
@@ -70,7 +72,7 @@ onmessage = function(event) {
 
   status = false;
   try {
-    URL.createObjectURL(new Object());
+    URL.createObjectURL({});
   } catch (e) {
     status = true;
   }

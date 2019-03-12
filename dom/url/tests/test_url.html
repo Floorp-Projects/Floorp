@@ -292,7 +292,7 @@
     if ("search" in test) is(url.search, test.search, "search");
     if ("hash" in test) is(url.hash, test.hash, "hash");
 
-    if ("skip_setters" in test && test.skip_setters == false) {
+    if ("skip_setters" in test && test.skip_setters === false) {
       info("Skip setter methods for URL: " + test);
       continue;
     }
@@ -431,8 +431,8 @@
 
   <script>
     /** Test for Bug 1275746 **/
-    SimpleTest.doesThrow(() => { var url = new URL("http:"); }, "http: is not a valid URL");
-    SimpleTest.doesThrow(() => { var url = new URL("http:///"); }, "http: is not a valid URL");
+    SimpleTest.doesThrow(() => { new URL("http:"); }, "http: is not a valid URL");
+    SimpleTest.doesThrow(() => { new URL("http:///"); }, "http: is not a valid URL");
 
     var url = new URL("file:");
     is(url.href, "file:///", "Parsing file: should work.");
