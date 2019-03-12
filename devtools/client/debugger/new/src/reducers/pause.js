@@ -65,6 +65,8 @@ type ThreadPauseState = {
   },
   selectedFrameId: ?string,
   loadedObjects: Object,
+  shouldPauseOnExceptions: boolean,
+  shouldPauseOnCaughtExceptions: boolean,
   command: Command,
   lastCommand: Command,
   wasStepping: boolean,
@@ -77,9 +79,7 @@ export type PauseState = {
   canRewind: boolean,
   threads: { [string]: ThreadPauseState },
   skipPausing: boolean,
-  mapScopes: boolean,
-  shouldPauseOnExceptions: boolean,
-  shouldPauseOnCaughtExceptions: boolean
+  mapScopes: boolean
 };
 
 export const createPauseState = (): PauseState => ({
@@ -87,9 +87,7 @@ export const createPauseState = (): PauseState => ({
   threads: {},
   canRewind: false,
   skipPausing: prefs.skipPausing,
-  mapScopes: prefs.mapScopes,
-  shouldPauseOnExceptions: prefs.pauseOnExceptions,
-  shouldPauseOnCaughtExceptions: prefs.pauseOnCaughtExceptions
+  mapScopes: prefs.mapScopes
 });
 
 const resumedPauseState = {
@@ -107,6 +105,8 @@ const resumedPauseState = {
 const createInitialPauseState = () => ({
   ...resumedPauseState,
   isWaitingOnBreak: false,
+  shouldPauseOnExceptions: prefs.pauseOnExceptions,
+  shouldPauseOnCaughtExceptions: prefs.pauseOnCaughtExceptions,
   canRewind: false,
   command: null,
   lastCommand: null,
@@ -258,11 +258,10 @@ function update(
       // Preserving for the old debugger
       prefs.ignoreCaughtExceptions = !shouldPauseOnCaughtExceptions;
 
-      return {
-        ...state,
+      return updateThreadState({
         shouldPauseOnExceptions,
         shouldPauseOnCaughtExceptions
-      };
+      });
     }
 
     case "COMMAND":
@@ -409,11 +408,11 @@ export function getIsWaitingOnBreak(state: OuterState) {
 }
 
 export function getShouldPauseOnExceptions(state: OuterState) {
-  return state.pause.shouldPauseOnExceptions;
+  return getCurrentPauseState(state).shouldPauseOnExceptions;
 }
 
 export function getShouldPauseOnCaughtExceptions(state: OuterState) {
-  return state.pause.shouldPauseOnCaughtExceptions;
+  return getCurrentPauseState(state).shouldPauseOnCaughtExceptions;
 }
 
 export function getCanRewind(state: OuterState) {
