@@ -73,7 +73,8 @@ UndoCommand::DoCommand(const char* aCommandName, nsISupports* aCommandRefCon) {
   }
   TextEditor* textEditor = editor->AsTextEditor();
   MOZ_ASSERT(textEditor);
-  return textEditor->Undo(1);
+  // MOZ_KnownLive because we are holding a stack ref in "editor".
+  return MOZ_KnownLive(textEditor)->Undo(1);
 }
 
 NS_IMETHODIMP
@@ -126,7 +127,8 @@ RedoCommand::DoCommand(const char* aCommandName, nsISupports* aCommandRefCon) {
   }
   TextEditor* textEditor = editor->AsTextEditor();
   MOZ_ASSERT(textEditor);
-  return textEditor->Redo(1);
+  // MOZ_KnownLive because we are holding a stack ref in "editor".
+  return MOZ_KnownLive(textEditor)->Redo(1);
 }
 
 NS_IMETHODIMP
@@ -539,7 +541,8 @@ SwitchTextDirectionCommand::DoCommand(const char* aCommandName,
   }
   TextEditor* textEditor = editor->AsTextEditor();
   MOZ_ASSERT(textEditor);
-  return textEditor->ToggleTextDirection();
+  // MOZ_KnownLive because we are holding a stack ref in "editor".
+  return MOZ_KnownLive(textEditor)->ToggleTextDirection();
 }
 
 NS_IMETHODIMP

@@ -24,7 +24,7 @@ class HTMLEditorEventListener final : public EditorEventListener {
   virtual ~HTMLEditorEventListener() {}
 
   // nsIDOMEventListener
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY
+  MOZ_CAN_RUN_SCRIPT
   NS_IMETHOD HandleEvent(dom::Event* aEvent) override;
 
   /**
