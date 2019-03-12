@@ -84,11 +84,6 @@ const Types = exports.__TypesForTests = [
     spec: "devtools/shared/specs/framerate",
     front: "devtools/shared/fronts/framerate",
   },
-  {
-    types: ["function-call"],
-    spec: "devtools/shared/specs/function-call",
-    front: "devtools/shared/fronts/function-call",
-  },
   /* heap snapshot has old fashion client and no front */
   {
     types: ["heapSnapshotFile"],

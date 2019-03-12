@@ -14,7 +14,6 @@ DevToolsModules(
     'dbg-source.js',
     'event-breakpoints.js',
     'event-loop.js',
-    'function-call.js',
     'make-debugger.js',
     'shapes-utils.js',
     'stack.js',
