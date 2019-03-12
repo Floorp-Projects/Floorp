@@ -869,6 +869,9 @@ content-blocking-cookies-label =
   .label = Cookies
   .accesskey = C
 
+content-blocking-expand-section = 
+  .tooltiptext = More information
+
 # Cryptomining refers to using scripts on websites that can use a computer’s resources to mine cryptocurrency without a user’s knowledge.
 content-blocking-cryptominers-label =
   .label = Cryptominers
