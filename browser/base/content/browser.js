@@ -1759,6 +1759,7 @@ var gBrowserInit = {
             triggeringPrincipal: window.arguments[8] || Services.scriptSecurityManager.getSystemPrincipal(),
             allowInheritPrincipal: window.arguments[9],
             csp: window.arguments[10],
+            fromExternal: true,
           });
         } catch (e) {}
       } else if (window.arguments.length >= 3) {
