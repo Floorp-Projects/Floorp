@@ -939,11 +939,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     }
 
     return resumeLimitHandled.then(() => {
-      if (request) {
-        this._options.pauseOnExceptions = request.pauseOnExceptions;
-        this._options.ignoreCaughtExceptions = request.ignoreCaughtExceptions;
-        this.maybePauseOnExceptions();
-      }
+      this.maybePauseOnExceptions();
 
       // When replaying execution in a separate process we need to explicitly
       // notify that process when to resume execution.
@@ -1543,6 +1539,12 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     return { skip };
   },
 
+  onPauseOnExceptions: function({pauseOnExceptions, ignoreCaughtExceptions}) {
+    Object.assign(this._options, { pauseOnExceptions, ignoreCaughtExceptions });
+    this.maybePauseOnExceptions();
+    return {};
+  },
+
   /*
    * A function that the engine calls when a recording/replaying process has
    * changed its position: a checkpoint was reached or a switch between a
@@ -1747,6 +1749,7 @@ Object.assign(ThreadActor.prototype.requestTypes, {
   "sources": ThreadActor.prototype.onSources,
   "threadGrips": ThreadActor.prototype.onThreadGrips,
   "skipBreakpoints": ThreadActor.prototype.onSkipBreakpoints,
+  "pauseOnExceptions": ThreadActor.prototype.onPauseOnExceptions,
   "dumpThread": ThreadActor.prototype.onDump,
 });
 

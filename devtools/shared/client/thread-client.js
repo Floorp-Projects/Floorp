@@ -5,8 +5,6 @@
 
 "use strict";
 
-const promise = require("devtools/shared/deprecated-sync-thenables");
-
 const {arg, DebuggerClient} = require("devtools/shared/client/debugger-client");
 const eventSource = require("devtools/shared/client/event-source");
 const {ThreadStateTypes} = require("devtools/shared/client/constants");
@@ -15,8 +13,6 @@ loader.lazyRequireGetter(this, "ArrayBufferClient", "devtools/shared/client/arra
 loader.lazyRequireGetter(this, "LongStringClient", "devtools/shared/client/long-string-client");
 loader.lazyRequireGetter(this, "ObjectClient", "devtools/shared/client/object-client");
 loader.lazyRequireGetter(this, "SourceClient", "devtools/shared/client/source-client");
-
-const noop = () => {};
 
 /**
  * Creates a thread client for the remote debugging protocol server. This client
@@ -44,10 +40,8 @@ ThreadClient.prototype = {
     return this._state === "paused";
   },
 
-  _pauseOnExceptions: false,
-  _ignoreCaughtExceptions: false,
-
   _actor: null,
+
   get actor() {
     return this._actor;
   },
@@ -90,12 +84,6 @@ ThreadClient.prototype = {
       this._previousState = this._state;
       this._state = "resuming";
 
-      if (this._pauseOnExceptions) {
-        packet.pauseOnExceptions = this._pauseOnExceptions;
-      }
-      if (this._ignoreCaughtExceptions) {
-        packet.ignoreCaughtExceptions = this._ignoreCaughtExceptions;
-      }
       return packet;
     },
     after: function(response) {
@@ -274,27 +262,11 @@ ThreadClient.prototype = {
    * @param function onResponse
    *        Called with the response packet.
    */
-  pauseOnExceptions: function(pauseOnExceptions,
-                               ignoreCaughtExceptions,
-                               onResponse = noop) {
-    this._pauseOnExceptions = pauseOnExceptions;
-    this._ignoreCaughtExceptions = ignoreCaughtExceptions;
-
-    // Otherwise send the flag using a standard resume request.
-    if (!this.paused) {
-      return this.interrupt(response => {
-        if (response.error) {
-          // Can't continue if pausing failed.
-          onResponse(response);
-          return response;
-        }
-        return this.resume(onResponse);
-      });
-    }
-
-    onResponse();
-    return promise.resolve();
-  },
+  pauseOnExceptions: DebuggerClient.requester({
+    type: "pauseOnExceptions",
+    pauseOnExceptions: arg(0),
+    ignoreCaughtExceptions: arg(1),
+  }),
 
   /**
    * Send a clientEvaluate packet to the debuggee. Response
