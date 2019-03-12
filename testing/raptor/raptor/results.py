@@ -6,9 +6,8 @@
 # received from the raptor control server
 from __future__ import absolute_import
 
-from output import Output
-
 from mozlog import get_proxy_logger
+from output import Output
 
 LOG = get_proxy_logger(component='results-handler')
 
@@ -35,8 +34,13 @@ class RaptorResultsHandler():
                             'test_name': test_name,
                             'page_cycle': page_cycle})
 
-    def add_page_timeout(self, test_name, page_url):
-        self.page_timeout_list.append({'test_name': test_name, 'url': page_url})
+    def add_page_timeout(self, test_name, page_url, pending_metrics):
+
+        pending_metrics = [key for key, value in pending_metrics.items() if value]
+
+        self.page_timeout_list.append({'test_name': test_name,
+                                       'url': page_url,
+                                       'pending_metrics': ", ".join(pending_metrics)})
 
     def add_supporting_data(self, supporting_data):
         ''' Supporting data is additional data gathered outside of the regular
