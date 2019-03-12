@@ -22,7 +22,7 @@ struct TestStruct {
   W wrapper;
 };
 
-// A specialized version for GCPtr that adds a trace() method.
+// A specialized version for GCPtr that adds a zone() method.
 template <typename T>
 struct TestStruct<js::GCPtr<T>> {
   js::GCPtr<T> wrapper;
