@@ -228,7 +228,7 @@ this.chrome_settings_overrides = class extends ExtensionAPI {
                 icon: this.extension.iconURL,
                 currentEngine: Services.search.defaultEngine.name,
                 newEngine: engineName,
-                resolve(allow) {
+                respond(allow) {
                   if (allow) {
                     ExtensionSettingsStore.addSetting(
                       extension.id, DEFAULT_SEARCH_STORE_TYPE, DEFAULT_SEARCH_SETTING_NAME, engineName, () => Services.search.defaultEngine.name);
