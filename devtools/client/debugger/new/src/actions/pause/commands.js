@@ -9,12 +9,14 @@ import {
   getIsPaused,
   getCurrentThread,
   getSource,
-  getTopFrame
+  getTopFrame,
+  getSelectedFrame
 } from "../../selectors";
 import { PROMISE } from "../utils/middleware/promise";
 import { getNextStep } from "../../workers/parser";
 import { addHiddenBreakpoint } from "../breakpoints";
 import { evaluateExpressions } from "../expressions";
+import { selectLocation } from "../sources";
 import { features } from "../../utils/prefs";
 import { recordEvent } from "../../utils/telemetry";
 
@@ -26,6 +28,11 @@ export function selectThread(thread: ThreadId) {
   return async ({ dispatch, getState, client }: ThunkArgs) => {
     await dispatch({ type: "SELECT_THREAD", thread });
     dispatch(evaluateExpressions());
+
+    const frame = getSelectedFrame(getState(), thread);
+    if (frame) {
+      dispatch(selectLocation(frame.location));
+    }
   };
 }
 
