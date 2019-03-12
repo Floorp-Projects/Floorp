@@ -177,12 +177,15 @@ BrowsingContext::BrowsingContext(BrowsingContext* aParent,
       mParent(aParent),
       mOpener(aOpener),
       mIsActivatedByUserGesture(false) {
+  mCrossOriginPolicy = nsILoadInfo::CROSS_ORIGIN_POLICY_NULL;
   // Specify our group in our constructor. We will explicitly join the group
   // when we are registered, as doing so will take a reference.
   if (mParent) {
     mGroup = mParent->Group();
+    mCrossOriginPolicy = mParent->CrossOriginPolicy();
   } else if (mOpener) {
     mGroup = mOpener->Group();
+    mCrossOriginPolicy = mOpener->CrossOriginPolicy();
   } else {
     // To ensure the group has a unique ID, we will use our ID, as the founder
     // of this BrowsingContextGroup.

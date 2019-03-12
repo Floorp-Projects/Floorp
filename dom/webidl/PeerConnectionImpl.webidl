@@ -111,10 +111,8 @@ interface PeerConnectionImpl  {
   attribute RTCCertificate certificate;
   [Constant]
   readonly attribute DOMString fingerprint;
-  readonly attribute DOMString localDescription;
   readonly attribute DOMString currentLocalDescription;
   readonly attribute DOMString pendingLocalDescription;
-  readonly attribute DOMString remoteDescription;
   readonly attribute DOMString currentRemoteDescription;
   readonly attribute DOMString pendingRemoteDescription;
 

@@ -6,7 +6,6 @@
 const { setNamedTimeout } = require("devtools/client/shared/widgets/view-helpers");
 const { getCurrentZoom } = require("devtools/shared/layout/utils");
 
-loader.lazyRequireGetter(this, "defer", "devtools/shared/defer");
 loader.lazyRequireGetter(this, "EventEmitter",
   "devtools/shared/event-emitter");
 
@@ -94,64 +93,64 @@ this.AbstractCanvasGraph = function(parent, name, sharpness) {
   EventEmitter.decorate(this);
 
   this._parent = parent;
-  this._ready = defer();
-
   this._uid = "canvas-graph-" + Date.now();
   this._renderTargets = new Map();
 
-  AbstractCanvasGraph.createIframe(GRAPH_SRC, parent, iframe => {
-    this._iframe = iframe;
-    this._window = iframe.contentWindow;
-    this._topWindow = this._window.top;
-    this._document = iframe.contentDocument;
-    this._pixelRatio = sharpness || this._window.devicePixelRatio;
+  this._ready = new Promise(resolve => {
+    AbstractCanvasGraph.createIframe(GRAPH_SRC, parent, iframe => {
+      this._iframe = iframe;
+      this._window = iframe.contentWindow;
+      this._topWindow = this._window.top;
+      this._document = iframe.contentDocument;
+      this._pixelRatio = sharpness || this._window.devicePixelRatio;
 
-    const container =
-      this._container = this._document.getElementById("graph-container");
-    container.className = name + "-widget-container graph-widget-container";
+      const container =
+        this._container = this._document.getElementById("graph-container");
+      container.className = name + "-widget-container graph-widget-container";
 
-    const canvas = this._canvas = this._document.getElementById("graph-canvas");
-    canvas.className = name + "-widget-canvas graph-widget-canvas";
+      const canvas = this._canvas = this._document.getElementById("graph-canvas");
+      canvas.className = name + "-widget-canvas graph-widget-canvas";
 
-    const bounds = parent.getBoundingClientRect();
-    bounds.width = this.fixedWidth || bounds.width;
-    bounds.height = this.fixedHeight || bounds.height;
-    iframe.setAttribute("width", bounds.width);
-    iframe.setAttribute("height", bounds.height);
+      const bounds = parent.getBoundingClientRect();
+      bounds.width = this.fixedWidth || bounds.width;
+      bounds.height = this.fixedHeight || bounds.height;
+      iframe.setAttribute("width", bounds.width);
+      iframe.setAttribute("height", bounds.height);
 
-    this._width = canvas.width = bounds.width * this._pixelRatio;
-    this._height = canvas.height = bounds.height * this._pixelRatio;
-    this._ctx = canvas.getContext("2d");
-    this._ctx.imageSmoothingEnabled = false;
+      this._width = canvas.width = bounds.width * this._pixelRatio;
+      this._height = canvas.height = bounds.height * this._pixelRatio;
+      this._ctx = canvas.getContext("2d");
+      this._ctx.imageSmoothingEnabled = false;
 
-    this._cursor = new GraphCursor();
-    this._selection = new GraphArea();
-    this._selectionDragger = new GraphAreaDragger();
-    this._selectionResizer = new GraphAreaResizer();
-    this._isMouseActive = false;
+      this._cursor = new GraphCursor();
+      this._selection = new GraphArea();
+      this._selectionDragger = new GraphAreaDragger();
+      this._selectionResizer = new GraphAreaResizer();
+      this._isMouseActive = false;
 
-    this._onAnimationFrame = this._onAnimationFrame.bind(this);
-    this._onMouseMove = this._onMouseMove.bind(this);
-    this._onMouseDown = this._onMouseDown.bind(this);
-    this._onMouseUp = this._onMouseUp.bind(this);
-    this._onMouseWheel = this._onMouseWheel.bind(this);
-    this._onMouseOut = this._onMouseOut.bind(this);
-    this._onResize = this._onResize.bind(this);
-    this.refresh = this.refresh.bind(this);
+      this._onAnimationFrame = this._onAnimationFrame.bind(this);
+      this._onMouseMove = this._onMouseMove.bind(this);
+      this._onMouseDown = this._onMouseDown.bind(this);
+      this._onMouseUp = this._onMouseUp.bind(this);
+      this._onMouseWheel = this._onMouseWheel.bind(this);
+      this._onMouseOut = this._onMouseOut.bind(this);
+      this._onResize = this._onResize.bind(this);
+      this.refresh = this.refresh.bind(this);
 
-    this._window.addEventListener("mousemove", this._onMouseMove);
-    this._window.addEventListener("mousedown", this._onMouseDown);
-    this._window.addEventListener("MozMousePixelScroll", this._onMouseWheel);
-    this._window.addEventListener("mouseout", this._onMouseOut);
+      this._window.addEventListener("mousemove", this._onMouseMove);
+      this._window.addEventListener("mousedown", this._onMouseDown);
+      this._window.addEventListener("MozMousePixelScroll", this._onMouseWheel);
+      this._window.addEventListener("mouseout", this._onMouseOut);
 
-    const ownerWindow = this._parent.ownerDocument.defaultView;
-    ownerWindow.addEventListener("resize", this._onResize);
+      const ownerWindow = this._parent.ownerDocument.defaultView;
+      ownerWindow.addEventListener("resize", this._onResize);
 
-    this._animationId =
-      this._window.requestAnimationFrame(this._onAnimationFrame);
+      this._animationId =
+        this._window.requestAnimationFrame(this._onAnimationFrame);
 
-    this._ready.resolve(this);
-    this.emit("ready", this);
+      resolve(this);
+      this.emit("ready", this);
+    });
   });
 };
 
@@ -179,7 +178,7 @@ AbstractCanvasGraph.prototype = {
    * Returns a promise resolved once this graph is ready to receive data.
    */
   ready: function() {
-    return this._ready.promise;
+    return this._ready;
   },
 
   /**

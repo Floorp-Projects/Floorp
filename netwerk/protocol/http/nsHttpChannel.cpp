@@ -2451,6 +2451,13 @@ nsresult nsHttpChannel::ContinueProcessResponse1() {
     LOG(("  continuation state has been reset"));
   }
 
+  rv = ProcessCrossOriginHeader();
+  if (NS_FAILED(rv)) {
+    mStatus = NS_ERROR_BLOCKED_BY_POLICY;
+    HandleAsyncAbort();
+    return NS_OK;
+  }
+
   rv = NS_OK;
   if (!mCanceled) {
     // notify "http-on-may-change-process" observers
@@ -7311,6 +7318,73 @@ nsHttpChannel::HasCrossOriginOpenerPolicyMismatch(bool *aMismatch) {
   return NS_OK;
 }
 
+nsresult nsHttpChannel::GetResponseCrossOriginPolicy(
+    nsILoadInfo::CrossOriginPolicy *aResponseCrossOriginPolicy) {
+  if (!mResponseHead) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  nsILoadInfo::CrossOriginPolicy policy = nsILoadInfo::CROSS_ORIGIN_POLICY_NULL;
+
+  nsAutoCString content;
+  Unused << mResponseHead->GetHeader(nsHttp::Cross_Origin, content);
+
+  // Cross-Origin = %s"anonymous" / %s"use-credentials" ; case-sensitive
+
+  if (content.EqualsLiteral("anonymous")) {
+    policy = nsILoadInfo::CROSS_ORIGIN_POLICY_ANONYMOUS;
+  } else if (content.EqualsLiteral("use-credentials")) {
+    policy = nsILoadInfo::CROSS_ORIGIN_POLICY_USE_CREDENTIALS;
+  }
+
+  *aResponseCrossOriginPolicy = policy;
+  return NS_OK;
+}
+
+nsresult nsHttpChannel::ProcessCrossOriginHeader() {
+  nsresult rv;
+  if (!StaticPrefs::browser_tabs_remote_useCrossOriginPolicy()) {
+    return NS_OK;
+  }
+
+  // Only consider Cross-Origin for document loads.
+  if (mLoadInfo->GetExternalContentPolicyType() !=
+          nsIContentPolicy::TYPE_DOCUMENT &&
+      mLoadInfo->GetExternalContentPolicyType() !=
+          nsIContentPolicy::TYPE_SUBDOCUMENT) {
+    return NS_OK;
+  }
+
+  RefPtr<mozilla::dom::BrowsingContext> ctx;
+  if (mLoadInfo->GetExternalContentPolicyType() ==
+      nsIContentPolicy::TYPE_DOCUMENT) {
+    mLoadInfo->GetBrowsingContext(getter_AddRefs(ctx));
+  } else {
+    mLoadInfo->GetFrameBrowsingContext(getter_AddRefs(ctx));
+  }
+
+  if (!ctx) {
+    return NS_OK;
+  }
+
+  nsILoadInfo::CrossOriginPolicy documentPolicy = ctx->CrossOriginPolicy();
+  nsILoadInfo::CrossOriginPolicy resultPolicy =
+      nsILoadInfo::CROSS_ORIGIN_POLICY_NULL;
+  rv = GetResponseCrossOriginPolicy(&resultPolicy);
+  if (NS_FAILED(rv)) {
+    return NS_OK;
+  }
+
+  ctx->SetCrossOriginPolicy(resultPolicy);
+
+  if (documentPolicy != nsILoadInfo::CROSS_ORIGIN_POLICY_NULL &&
+      resultPolicy == nsILoadInfo::CROSS_ORIGIN_POLICY_NULL) {
+    return NS_ERROR_BLOCKED_BY_POLICY;
+  }
+
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsHttpChannel::OnStartRequest(nsIRequest *request) {
   nsresult rv;
@@ -7423,6 +7497,13 @@ nsHttpChannel::OnStartRequest(nsIRequest *request) {
   // avoid crashing if mListener happens to be null...
   if (!mListener) {
     MOZ_ASSERT_UNREACHABLE("mListener is null");
+    return NS_OK;
+  }
+
+  rv = ProcessCrossOriginHeader();
+  if (NS_FAILED(rv)) {
+    mStatus = NS_ERROR_BLOCKED_BY_POLICY;
+    HandleAsyncAbort();
     return NS_OK;
   }
 
