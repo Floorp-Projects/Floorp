@@ -21,6 +21,7 @@ DevToolsModules(
     'LineGraphWidget.js',
     'MountainGraphWidget.js',
     'ShapesInContextEditor.js',
+    'SideMenuWidget.jsm',
     'Spectrum.js',
     'TableWidget.js',
     'TreeWidget.js',

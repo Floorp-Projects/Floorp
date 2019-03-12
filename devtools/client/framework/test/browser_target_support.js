@@ -10,15 +10,15 @@ async function testTarget(client, target) {
   await target.attach();
 
   is(target.hasActor("inspector"), true, "target.hasActor() true when actor exists.");
-  is(target.hasActor("storage"), true, "target.hasActor() true when actor exists.");
+  is(target.hasActor("webaudio"), true, "target.hasActor() true when actor exists.");
   is(target.hasActor("notreal"), false, "target.hasActor() false when actor does not exist.");
   // Create a front to ensure the actor is loaded
-  await target.getFront("storage");
+  await target.getFront("webaudio");
 
-  let desc = await target.getActorDescription("storage");
-  is(desc.typeName, "storage",
+  let desc = await target.getActorDescription("webaudio");
+  is(desc.typeName, "webaudio",
     "target.getActorDescription() returns definition data for corresponding actor");
-  is(desc.events["stores-update"].type, "storesUpdate",
+  is(desc.events["start-context"].type, "startContext",
     "target.getActorDescription() returns event data for corresponding actor");
 
   desc = await target.getActorDescription("nope");
@@ -26,10 +26,10 @@ async function testTarget(client, target) {
   desc = await target.getActorDescription();
   is(desc, undefined, "target.getActorDescription() returns undefined for undefined actor");
 
-  let hasMethod = await target.actorHasMethod("storage", "listStores");
+  let hasMethod = await target.actorHasMethod("audionode", "getType");
   is(hasMethod, true,
     "target.actorHasMethod() returns true for existing actor with method");
-  hasMethod = await target.actorHasMethod("localStorage", "nope");
+  hasMethod = await target.actorHasMethod("audionode", "nope");
   is(hasMethod, false,
     "target.actorHasMethod() returns false for existing actor with no method");
   hasMethod = await target.actorHasMethod("nope", "nope");
