@@ -88,6 +88,7 @@ class UptakeTelemetry {
    * @param {Object} extra         extra values to report
    * @param {string} extra.source  the update source (eg. "recipe-42").
    * @param {string} extra.trigger what triggered the polling/fetching (eg. "broadcast", "timer").
+   * @param {int}    extra.age     age of pulled data in seconds
    */
   static report(component, status, extra = {}) {
     const { source } = extra;
