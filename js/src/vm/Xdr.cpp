@@ -7,7 +7,6 @@
 #include "vm/Xdr.h"
 
 #include "mozilla/ArrayUtils.h"
-#include "mozilla/PodOperations.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/Utf8.h"
 
@@ -87,21 +86,22 @@ XDRResult XDRState<mode>::codeChars(char16_t* chars, size_t nchars) {
     return Ok();
   }
 
-  // Align the buffer to avoid unaligned loads.
-  MOZ_TRY(codeAlign(sizeof(char16_t)));
-
   size_t nbytes = nchars * sizeof(char16_t);
   if (mode == XDR_ENCODE) {
     uint8_t* ptr = buf.write(nbytes);
     if (!ptr) {
       return fail(JS::TranscodeResult_Throw);
     }
+
+    // |mozilla::NativeEndian| correctly handles writing into unaligned |ptr|.
     mozilla::NativeEndian::copyAndSwapToLittleEndian(ptr, chars, nchars);
   } else {
     const uint8_t* ptr = buf.read(nbytes);
     if (!ptr) {
       return fail(JS::TranscodeResult_Failure_BadDecode);
     }
+
+    // |mozilla::NativeEndian| correctly handles reading from unaligned |ptr|.
     mozilla::NativeEndian::copyAndSwapFromLittleEndian(chars, ptr, nchars);
   }
   return Ok();
@@ -196,11 +196,6 @@ XDRResult XDRState<mode>::codeScript(MutableHandleScript scriptp) {
 #endif
   auto guard = mozilla::MakeScopeExit([&] { scriptp.set(nullptr); });
 
-  // This should be a no-op when encoding, but when decoding it would eat any
-  // miss-aligned bytes if when encoding the XDR buffer is appended at the end
-  // of an existing buffer, such as in XDRIncrementalEncoder::linearize
-  // function.
-  MOZ_TRY(codeAlign(sizeof(js::XDRAlignment)));
   AutoXDRTree scriptTree(this, getTopLevelTreeKey());
 
   if (mode == XDR_DECODE) {
@@ -211,7 +206,6 @@ XDRResult XDRState<mode>::codeScript(MutableHandleScript scriptp) {
 
   MOZ_TRY(VersionCheck(this));
   MOZ_TRY(XDRScript(this, nullptr, nullptr, nullptr, scriptp));
-  MOZ_TRY(codeAlign(sizeof(js::XDRAlignment)));
 
   guard.release();
   return Ok();
@@ -222,17 +216,12 @@ template class js::XDRState<XDR_DECODE>;
 
 AutoXDRTree::AutoXDRTree(XDRCoderBase* xdr, AutoXDRTree::Key key)
     : key_(key), parent_(this), xdr_(xdr) {
-  // Expect sub-tree to start with the maximum alignment required.
-  MOZ_ASSERT(xdr->isAligned(sizeof(js::XDRAlignment)));
   if (key_ != AutoXDRTree::noKey) {
     xdr->createOrReplaceSubTree(this);
   }
 }
 
 AutoXDRTree::~AutoXDRTree() {
-  // Expect sub-tree to end with the maximum alignment required.
-  MOZ_ASSERT_IF(xdr_->resultCode() == JS::TranscodeResult_Ok,
-                xdr_->isAligned(sizeof(js::XDRAlignment)));
   if (key_ != AutoXDRTree::noKey) {
     xdr_->endSubTree();
   }
@@ -407,18 +396,6 @@ XDRResult XDRIncrementalEncoder::linearize(JS::TranscodeBuffer& buffer) {
   // Do not linearize while we are currently adding bytes.
   MOZ_ASSERT(scope_ == nullptr);
 
-  // Ensure the content of the buffer is properly aligned within the buffer.
-  // This alignment difference should be consumed by the codeAlign function
-  // call of codeScript when decoded.
-  size_t alignLen = sizeof(js::XDRAlignment);
-  if (buffer.length() % alignLen) {
-    alignLen = ComputeByteAlignment(buffer.length(), alignLen);
-    if (!buffer.appendN(0, alignLen)) {
-      ReportOutOfMemory(cx());
-      return fail(JS::TranscodeResult_Throw);
-    }
-  }
-
   // Visit the tree parts in a depth first order to linearize the bits.
   // Calculate the total length first so we don't incur repeated copying
   // and zeroing of memory for large trees.
@@ -445,8 +422,6 @@ XDRResult XDRIncrementalEncoder::linearize(JS::TranscodeBuffer& buffer) {
     // buffer which would be serialized.
     MOZ_ASSERT(slice.sliceBegin <= slices_.length());
     MOZ_ASSERT(slice.sliceBegin + slice.sliceLength <= slices_.length());
-    MOZ_ASSERT(buffer.length() % sizeof(XDRAlignment) == 0);
-    MOZ_ASSERT(slice.sliceLength % sizeof(XDRAlignment) == 0);
 
     buffer.infallibleAppend(slices_.begin() + slice.sliceBegin,
                             slice.sliceLength);

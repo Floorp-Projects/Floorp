@@ -16,6 +16,7 @@
 #include "gc/FreeOp.h"
 #include "gc/Marking.h"
 #include "gc/StoreBuffer.h"
+#include "js/UniquePtr.h"
 #include "vm/JSContext.h"
 #include "vm/Realm.h"
 
@@ -86,9 +87,10 @@ static MOZ_ALWAYS_INLINE JSInlineString* NewInlineString(
   return s;
 }
 
-template <typename CharT>
-static MOZ_ALWAYS_INLINE JSFlatString* TryEmptyOrStaticString(
-    JSContext* cx, const CharT* chars, size_t n) {
+template <typename Chars>
+static MOZ_ALWAYS_INLINE JSFlatString* TryEmptyOrStaticString(JSContext* cx,
+                                                              Chars chars,
+                                                              size_t n) {
   // Measurements on popular websites indicate empty strings are pretty common
   // and most strings with length 1 or 2 are in the StaticStrings table. For
   // length 3 strings that's only about 1%, so we check n <= 2.
@@ -103,6 +105,14 @@ static MOZ_ALWAYS_INLINE JSFlatString* TryEmptyOrStaticString(
   }
 
   return nullptr;
+}
+
+template <typename CharT, typename = typename std::enable_if<
+                              !std::is_const<CharT>::value>::type>
+static MOZ_ALWAYS_INLINE JSFlatString* TryEmptyOrStaticString(JSContext* cx,
+                                                              CharT* chars,
+                                                              size_t n) {
+  return TryEmptyOrStaticString(cx, const_cast<const CharT*>(chars), n);
 }
 
 } /* namespace js */
@@ -249,9 +259,9 @@ MOZ_ALWAYS_INLINE void JSFlatString::init(const JS::Latin1Char* chars,
 }
 
 template <js::AllowGC allowGC, typename CharT>
-MOZ_ALWAYS_INLINE JSFlatString* JSFlatString::new_(JSContext* cx,
-                                                   const CharT* chars,
-                                                   size_t length) {
+MOZ_ALWAYS_INLINE JSFlatString* JSFlatString::new_(
+    JSContext* cx, js::UniquePtr<CharT[], JS::FreePolicy> chars,
+    size_t length) {
   MOZ_ASSERT(chars[length] == CharT(0));
 
   if (!validateLength(cx, length)) {
@@ -269,13 +279,11 @@ MOZ_ALWAYS_INLINE JSFlatString* JSFlatString::new_(JSContext* cx,
   }
 
   if (!str->isTenured()) {
-    // The chars pointer is only considered to be handed over to this
-    // function on a successful return. If the following registration
-    // fails, the string is partially initialized and must be made valid,
-    // or its finalizer may attempt to free uninitialized memory.
-    void* ptr = const_cast<void*>(static_cast<const void*>(chars));
-    if (!cx->runtime()->gc.nursery().registerMallocedBuffer(ptr)) {
-      str->init((JS::Latin1Char*)nullptr, 0);
+    // If the following registration fails, the string is partially initialized
+    // and must be made valid, or its finalizer may attempt to free
+    // uninitialized memory.
+    if (!cx->runtime()->gc.nursery().registerMallocedBuffer(chars.get())) {
+      str->init(static_cast<JS::Latin1Char*>(nullptr), 0);
       if (allowGC) {
         ReportOutOfMemory(cx);
       }
@@ -283,7 +291,7 @@ MOZ_ALWAYS_INLINE JSFlatString* JSFlatString::new_(JSContext* cx,
     }
   }
 
-  str->init(chars, length);
+  str->init(chars.release(), length);
   return str;
 }
 

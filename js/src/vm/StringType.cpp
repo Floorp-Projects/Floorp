@@ -7,6 +7,7 @@
 #include "vm/StringType-inl.h"
 
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/Casting.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/HashFunctions.h"
 #include "mozilla/MathAlgorithms.h"
@@ -17,7 +18,8 @@
 #include "mozilla/TypeTraits.h"
 #include "mozilla/Unused.h"
 
-#include <algorithm>
+#include <algorithm>  // std::{all_of,copy_n,enable_if,is_const,move}
+#include <type_traits>  // std::is_unsigned
 
 #include "jsfriendapi.h"
 
@@ -40,6 +42,7 @@
 using namespace js;
 
 using mozilla::ArrayEqual;
+using mozilla::AssertedCast;
 using mozilla::IsAsciiDigit;
 using mozilla::IsNegativeZero;
 using mozilla::IsSame;
@@ -796,6 +799,61 @@ template JSString* js::ConcatStrings<CanGC>(JSContext* cx, HandleString left,
 template JSString* js::ConcatStrings<NoGC>(JSContext* cx, JSString* const& left,
                                            JSString* const& right);
 
+/**
+ * Copy |src[0..length]| to |dest[0..length]| when copying doesn't narrow and
+ * therefore can't lose information.
+ */
+template <typename Dest, typename Source>
+static void FillAndTerminate(Dest* dest, Source src, size_t length) {
+  static_assert(sizeof(src[length]) <= sizeof(dest[length]),
+                "source → destination conversion must not narrow");
+
+  for (size_t i = 0; i < length; i++) {
+    auto srcChar = src[i];
+    static_assert(std::is_unsigned<decltype(srcChar)>::value &&
+                  std::is_unsigned<Dest>::value,
+                  "source/destination characters are unsigned for simplicity");
+    *dest++ = srcChar;
+  }
+
+  *dest = '\0';
+}
+
+template <typename Dest, typename Src,
+          typename = typename std::enable_if<!std::is_const<Src>::value>::type>
+static void FillAndTerminate(Dest* dest, Src* src, size_t length) {
+  FillAndTerminate(dest, const_cast<const Src*>(src), length);
+}
+
+/**
+ * Copy |src[0..length]| to |dest[0..length]| when copying *does* narrow, but
+ * the user guarantees every runtime |src[i]| value can be stored without change
+ * of value in |dest[i]|.
+ */
+template <typename Dest, typename Source>
+static void FillFromCompatibleAndTerminate(Dest* dest, Source src,
+                                           size_t length) {
+  static_assert(sizeof(src[length]) > sizeof(dest[length]),
+                "source → destination conversion must be narrowing");
+
+  for (size_t i = 0; i < length; i++) {
+    auto srcChar = src[i];
+    static_assert(std::is_unsigned<decltype(srcChar)>::value &&
+                  std::is_unsigned<Dest>::value,
+                  "source/destination characters are unsigned for simplicity");
+    *dest++ = AssertedCast<Dest>(src[i]);
+  }
+
+  *dest = '\0';
+}
+
+template <typename Dest, typename Src,
+          typename = typename std::enable_if<!std::is_const<Src>::value>::type>
+static void FillFromCompatibleAndTerminate(Dest* dest, Src* src,
+                                           size_t length) {
+  FillFromCompatibleAndTerminate(dest, const_cast<const Src*>(src), length);
+}
+
 template <typename CharT>
 JSFlatString* JSDependentString::undependInternal(JSContext* cx) {
   size_t n = length();
@@ -812,8 +870,7 @@ JSFlatString* JSDependentString::undependInternal(JSContext* cx) {
   }
 
   AutoCheckCannotGC nogc;
-  PodCopy(s.get(), nonInlineChars<CharT>(nogc), n);
-  s[n] = '\0';
+  FillAndTerminate(s.get(), nonInlineChars<CharT>(nogc), n);
   setNonInlineChars<CharT>(s.release());
 
   /*
@@ -1326,9 +1383,8 @@ bool AutoStableStringChars::copyAndInflateLatin1Chars(
     return false;
   }
 
-  CopyAndInflateChars(chars, linearString->rawLatin1Chars(),
-                      linearString->length());
-  chars[linearString->length()] = 0;
+  FillAndTerminate(chars, linearString->rawLatin1Chars(),
+                   linearString->length());
 
   state_ = TwoByte;
   twoByteChars_ = chars;
@@ -1344,8 +1400,7 @@ bool AutoStableStringChars::copyLatin1Chars(JSContext* cx,
     return false;
   }
 
-  PodCopy(chars, linearString->rawLatin1Chars(), length);
-  chars[length] = 0;
+  FillAndTerminate(chars, linearString->rawLatin1Chars(), length);
 
   state_ = Latin1;
   latin1Chars_ = chars;
@@ -1361,8 +1416,7 @@ bool AutoStableStringChars::copyTwoByteChars(JSContext* cx,
     return false;
   }
 
-  PodCopy(chars, linearString->rawTwoByteChars(), length);
-  chars[length] = 0;
+  FillAndTerminate(chars, linearString->rawTwoByteChars(), length);
 
   state_ = TwoByte;
   twoByteChars_ = chars;
@@ -1402,8 +1456,7 @@ JSFlatString* JSExternalString::ensureFlat(JSContext* cx) {
   // Copy the chars before finalizing the string.
   {
     AutoCheckCannotGC nogc;
-    PodCopy(s.get(), nonInlineChars<char16_t>(nogc), n);
-    s[n] = '\0';
+    FillAndTerminate(s.get(), nonInlineChars<char16_t>(nogc), n);
   }
 
   // Release the external chars.
@@ -1486,6 +1539,16 @@ static bool CanStoreCharsAsLatin1(const Latin1Char* s, size_t length) {
   MOZ_CRASH("Shouldn't be called for Latin1 chars");
 }
 
+static bool CanStoreCharsAsLatin1(LittleEndianChars chars, size_t length) {
+  for (size_t i = 0; i < length; i++) {
+    if (chars[i] > JSString::MAX_LATIN1_CHAR) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 template <AllowGC allowGC>
 static MOZ_ALWAYS_INLINE JSInlineString* NewInlineStringDeflated(
     JSContext* cx, mozilla::Range<const char16_t> chars) {
@@ -1496,11 +1559,8 @@ static MOZ_ALWAYS_INLINE JSInlineString* NewInlineStringDeflated(
     return nullptr;
   }
 
-  for (size_t i = 0; i < len; i++) {
-    MOZ_ASSERT(chars[i] <= JSString::MAX_LATIN1_CHAR);
-    storage[i] = Latin1Char(chars[i]);
-  }
-  storage[len] = '\0';
+  MOZ_ASSERT(CanStoreCharsAsLatin1(chars.begin().get(), len));
+  FillFromCompatibleAndTerminate(storage, chars, len);
   return str;
 }
 
@@ -1521,19 +1581,10 @@ static JSFlatString* NewStringDeflated(JSContext* cx, const char16_t* s,
     return nullptr;
   }
 
-  for (size_t i = 0; i < n; i++) {
-    MOZ_ASSERT(s[i] <= JSString::MAX_LATIN1_CHAR);
-    news[i] = Latin1Char(s[i]);
-  }
-  news[n] = '\0';
+  MOZ_ASSERT(CanStoreCharsAsLatin1(s, n));
+  FillFromCompatibleAndTerminate(news.get(), s, n);
 
-  JSFlatString* str = JSFlatString::new_<allowGC>(cx, news.get(), n);
-  if (!str) {
-    return nullptr;
-  }
-
-  mozilla::Unused << news.release();
-  return str;
+  return JSFlatString::new_<allowGC>(cx, std::move(news), n);
 }
 
 template <AllowGC allowGC>
@@ -1542,57 +1593,75 @@ static JSFlatString* NewStringDeflated(JSContext* cx, const Latin1Char* s,
   MOZ_CRASH("Shouldn't be called for Latin1 chars");
 }
 
-template <typename CharT>
-JSFlatString* js::NewStringDontDeflate(JSContext* cx, CharT* chars,
-                                       size_t length) {
-  if (JSFlatString* str = TryEmptyOrStaticString(cx, chars, length)) {
-    // Free |chars| because we're taking possession of it, but it's no
-    // longer needed because we use the static string instead.
-    js_free(chars);
-    return str;
-  }
+static JSFlatString* NewStringDeflatedFromLittleEndianNoGC(
+    JSContext* cx, LittleEndianChars chars, size_t length) {
+  MOZ_ASSERT(CanStoreCharsAsLatin1(chars, length));
 
-  if (JSInlineString::lengthFits<CharT>(length)) {
-    JSInlineString* str =
-        NewInlineString<CanGC>(cx, mozilla::Range<const CharT>(chars, length));
+  if (JSInlineString::lengthFits<Latin1Char>(length)) {
+    Latin1Char* storage;
+    JSInlineString* str = AllocateInlineString<NoGC>(cx, length, &storage);
     if (!str) {
       return nullptr;
     }
 
-    js_free(chars);
+    FillFromCompatibleAndTerminate(storage, chars, length);
     return str;
   }
 
-  return JSFlatString::new_<CanGC>(cx, chars, length);
+  auto news = cx->make_pod_array<Latin1Char>(length + 1);
+  if (!news) {
+    cx->recoverFromOutOfMemory();
+    return nullptr;
+  }
+
+  FillFromCompatibleAndTerminate(news.get(), chars, length);
+
+  return JSFlatString::new_<NoGC>(cx, std::move(news), length);
 }
 
-template JSFlatString* js::NewStringDontDeflate(JSContext* cx, char16_t* chars,
+template <typename CharT>
+JSFlatString* js::NewStringDontDeflate(JSContext* cx,
+                                       UniquePtr<CharT[], JS::FreePolicy> chars,
+                                       size_t length) {
+  if (JSFlatString* str = TryEmptyOrStaticString(cx, chars.get(), length)) {
+    return str;
+  }
+
+  if (JSInlineString::lengthFits<CharT>(length)) {
+    // |chars.get()| is safe because 1) |NewInlineString| necessarily *copies*,
+    // and 2) |chars| frees its contents only when this function returns.
+    return NewInlineString<CanGC>(
+        cx, mozilla::Range<const CharT>(chars.get(), length));
+  }
+
+  return JSFlatString::new_<CanGC>(cx, std::move(chars), length);
+}
+
+template JSFlatString* js::NewStringDontDeflate(JSContext* cx,
+                                                UniqueTwoByteChars chars,
                                                 size_t length);
 
 template JSFlatString* js::NewStringDontDeflate(JSContext* cx,
-                                                Latin1Char* chars,
+                                                UniqueLatin1Chars chars,
                                                 size_t length);
 
 template <typename CharT>
-JSFlatString* js::NewString(JSContext* cx, CharT* chars, size_t length) {
-  if (IsSame<CharT, char16_t>::value && CanStoreCharsAsLatin1(chars, length)) {
-    JSFlatString* s = NewStringDeflated<CanGC>(cx, chars, length);
-    if (!s) {
-      return nullptr;
-    }
-
-    // Free |chars| because we're taking possession of it but not using it.
-    js_free(chars);
-    return s;
+JSFlatString* js::NewString(JSContext* cx,
+                            UniquePtr<CharT[], JS::FreePolicy> chars,
+                            size_t length) {
+  if (IsSame<CharT, char16_t>::value &&
+      CanStoreCharsAsLatin1(chars.get(), length)) {
+    // Deflating copies from |chars.get()| and lets |chars| be freed on return.
+    return NewStringDeflated<CanGC>(cx, chars.get(), length);
   }
 
-  return NewStringDontDeflate(cx, chars, length);
+  return NewStringDontDeflate(cx, std::move(chars), length);
 }
 
-template JSFlatString* js::NewString(JSContext* cx, char16_t* chars,
+template JSFlatString* js::NewString(JSContext* cx, UniqueTwoByteChars chars,
                                      size_t length);
 
-template JSFlatString* js::NewString(JSContext* cx, Latin1Char* chars,
+template JSFlatString* js::NewString(JSContext* cx, UniqueLatin1Chars chars,
                                      size_t length);
 
 template <AllowGC allowGC, typename CharT>
@@ -1608,13 +1677,7 @@ JSFlatString* js::NewStringDontDeflate(JSContext* cx,
         cx, mozilla::Range<const CharT>(chars.get(), length));
   }
 
-  JSFlatString* str = JSFlatString::new_<allowGC>(cx, chars.get(), length);
-  if (!str) {
-    return nullptr;
-  }
-
-  mozilla::Unused << chars.release();
-  return str;
+  return JSFlatString::new_<allowGC>(cx, std::move(chars), length);
 }
 
 template JSFlatString* js::NewStringDontDeflate<CanGC>(JSContext* cx,
@@ -1682,16 +1745,9 @@ JSFlatString* NewStringCopyNDontDeflate(JSContext* cx, const CharT* s,
     return nullptr;
   }
 
-  PodCopy(news.get(), s, n);
-  news[n] = 0;
+  FillAndTerminate(news.get(), s, n);
 
-  JSFlatString* str = JSFlatString::new_<allowGC>(cx, news.get(), n);
-  if (!str) {
-    return nullptr;
-  }
-
-  mozilla::Unused << news.release();
-  return str;
+  return JSFlatString::new_<allowGC>(cx, std::move(news), n);
 }
 
 template JSFlatString* NewStringCopyNDontDeflate<CanGC>(JSContext* cx,
@@ -1709,6 +1765,30 @@ template JSFlatString* NewStringCopyNDontDeflate<CanGC>(JSContext* cx,
 template JSFlatString* NewStringCopyNDontDeflate<NoGC>(JSContext* cx,
                                                        const Latin1Char* s,
                                                        size_t n);
+
+static JSFlatString* NewUndeflatedStringFromLittleEndianNoGC(
+    JSContext* cx, LittleEndianChars chars, size_t length) {
+  if (JSInlineString::lengthFits<char16_t>(length)) {
+    char16_t* storage;
+    JSInlineString* str = AllocateInlineString<NoGC>(cx, length, &storage);
+    if (!str) {
+      return nullptr;
+    }
+
+    FillAndTerminate(storage, chars, length);
+    return str;
+  }
+
+  auto news = cx->make_pod_array<char16_t>(length + 1);
+  if (!news) {
+    cx->recoverFromOutOfMemory();
+    return nullptr;
+  }
+
+  FillAndTerminate(news.get(), chars, length);
+
+  return JSFlatString::new_<NoGC>(cx, std::move(news), length);
+}
 
 JSFlatString* NewLatin1StringZ(JSContext* cx, UniqueChars chars) {
   size_t length = strlen(chars.get());
@@ -1736,6 +1816,20 @@ template JSFlatString* NewStringCopyN<CanGC>(JSContext* cx, const Latin1Char* s,
 
 template JSFlatString* NewStringCopyN<NoGC>(JSContext* cx, const Latin1Char* s,
                                             size_t n);
+
+JSFlatString* NewStringFromLittleEndianNoGC(JSContext* cx,
+                                            LittleEndianChars chars,
+                                            size_t length) {
+  if (JSFlatString* str = TryEmptyOrStaticString(cx, chars, length)) {
+    return str;
+  }
+
+  if (CanStoreCharsAsLatin1(chars, length)) {
+    return NewStringDeflatedFromLittleEndianNoGC(cx, chars, length);
+  }
+
+  return NewUndeflatedStringFromLittleEndianNoGC(cx, chars, length);
+}
 
 template <js::AllowGC allowGC>
 JSFlatString* NewStringCopyUTF8N(JSContext* cx, const JS::UTF8Chars utf8) {
@@ -2093,8 +2187,7 @@ UniqueChars js::EncodeLatin1(JSContext* cx, JSString* str) {
     return nullptr;
   }
 
-  mozilla::PodCopy(buf, linear->latin1Chars(nogc), len);
-  buf[len] = '\0';
+  FillAndTerminate(buf, linear->latin1Chars(nogc), len);
   return UniqueChars(reinterpret_cast<char*>(buf));
 }
 
