@@ -23,6 +23,7 @@ import mozilla.components.support.base.feature.BackHandler
 import mozilla.components.support.ktx.kotlin.isUrl
 import mozilla.components.support.ktx.kotlin.toNormalizedUrl
 import mozilla.components.support.utils.SafeIntent
+import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.home.HomeFragmentDirections
 import org.mozilla.fenix.search.SearchFragmentDirections
@@ -57,6 +58,11 @@ open class HomeActivity : AppCompatActivity() {
         NavigationUI.setupWithNavController(navigationToolbar, hostNavController, appBarConfiguration)
 
         handleOpenedFromExternalSourceIfNecessary(intent)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        components.analytics.metrics.track(Event.OpenedApp)
     }
 
     override fun onNewIntent(intent: Intent?) {
