@@ -4,7 +4,7 @@
 "use strict";
 
 /**
- * Tests if focus modifiers work for the Side Menu.
+ * Tests if focus modifiers work for the SideMenuWidget.
  */
 
 add_task(async function() {

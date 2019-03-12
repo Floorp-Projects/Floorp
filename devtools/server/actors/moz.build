@@ -7,6 +7,7 @@
 DIRS += [
     'accessibility',
     'addon',
+    'canvas',
     'emulation',
     'highlighters',
     'inspector',
@@ -25,6 +26,7 @@ DevToolsModules(
     'animation.js',
     'array-buffer.js',
     'breakpoint.js',
+    'canvas.js',
     'changes.js',
     'common.js',
     'css-properties.js',
@@ -59,8 +61,10 @@ DevToolsModules(
     'styles.js',
     'stylesheets.js',
     'thread.js',
+    'webaudio.js',
     'webbrowser.js',
     'webconsole.js',
+    'webgl.js',
 )
 
 with Files('animation.js'):
@@ -90,5 +94,11 @@ with Files('storage.js'):
 with Files('stylesheets.js'):
     BUG_COMPONENT = ('DevTools', 'Style Editor')
 
+with Files('webaudio.js'):
+    BUG_COMPONENT = ('DevTools', 'Web Audio Editor')
+
 with Files('webconsole.js'):
     BUG_COMPONENT = ('DevTools', 'Console')
+
+with Files('webgl.js'):
+    BUG_COMPONENT = ('DevTools', 'WebGL Shader Editor')
