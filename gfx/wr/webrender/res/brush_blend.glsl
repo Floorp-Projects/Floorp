@@ -172,6 +172,60 @@ vec3 LinearToSrgb(vec3 color) {
     return if_then_else(lessThanEqual(color, vec3(0.0031308)), c1, c2);
 }
 
+// This function has to be factored out due to the following issue:
+// https://github.com/servo/webrender/wiki/Driver-issues#bug-1532245---switch-statement-inside-control-flow-inside-switch-statement-fails-to-compile-on-some-android-phones
+// (and now the words "default: default:" so angle_shader_validation.rs passes)
+vec4 ComponentTransfer(vec4 colora) {
+    // We push a different amount of data to the gpu cache depending on the
+    // function type.
+    // Identity => 0 blocks
+    // Table/Discrete => 64 blocks (256 values)
+    // Linear => 1 block (2 values)
+    // Gamma => 1 block (3 values)
+    // We loop through the color components and increment the offset (for the
+    // next color component) into the gpu cache based on how many blocks that
+    // function type put into the gpu cache.
+    // Table/Discrete use a 256 entry look up table.
+    // Linear/Gamma are a simple calculation.
+    int offset = 0;
+    vec4 texel;
+    int k;
+
+    for (int i = 0; i < 4; i++) {
+        switch (vFuncs[i]) {
+            case COMPONENT_TRANSFER_IDENTITY:
+                break;
+            case COMPONENT_TRANSFER_TABLE:
+            case COMPONENT_TRANSFER_DISCRETE:
+                // fetch value from lookup table
+                k = int(floor(colora[i]*255.0));
+                texel = fetch_from_gpu_cache_1(vTableAddress + offset + k/4);
+                colora[i] = clamp(texel[k % 4], 0.0, 1.0);
+                // offset plus 256/4 blocks
+                offset = offset + 64;
+                break;
+            case COMPONENT_TRANSFER_LINEAR:
+                // fetch the two values for use in the linear equation
+                texel = fetch_from_gpu_cache_1(vTableAddress + offset);
+                colora[i] = clamp(texel[0] * colora[i] + texel[1], 0.0, 1.0);
+                // offset plus 1 block
+                offset = offset + 1;
+                break;
+            case COMPONENT_TRANSFER_GAMMA:
+                // fetch the three values for use in the gamma equation
+                texel = fetch_from_gpu_cache_1(vTableAddress + offset);
+                colora[i] = clamp(texel[0] * pow(colora[i], texel[1]) + texel[2], 0.0, 1.0);
+                // offset plus 1 block
+                offset = offset + 1;
+                break;
+            default:
+                // shouldn't happen
+                break;
+        }
+    }
+    return colora;
+}
+
 Fragment brush_fs() {
     float perspective_divisor = mix(gl_FragCoord.w, 1.0, vLayerAndPerspective.y);
     vec2 uv = vUv * perspective_divisor;
@@ -203,54 +257,8 @@ Fragment brush_fs() {
             color = LinearToSrgb(color);
             break;
         case 13: // Component Transfer
-            int offset = 0;
-            vec4 texel;
-            int k;
-
-            // We push a different amount of data to the gpu cache depending
-            // on the function type.
-            // Identity => 0 blocks
-            // Table/Discrete => 64 blocks (256 values)
-            // Linear => 1 block (2 values)
-            // Gamma => 1 block (3 values)
-            // We loop through the color components and increment the offset
-            // (for the next color component) into the gpu cache based on how
-            // many blocks that function type put into the gpu cache.
-            // Table/Discrete use a 256 entry look up table.
-            // Linear/Gamma are a simple calculation.
             vec4 colora = alpha != 0.0 ? Cs / alpha : Cs;
-            for (int i = 0; i < 4; i++) {
-                switch (vFuncs[i]) {
-                    case COMPONENT_TRANSFER_IDENTITY:
-                        break;
-                    case COMPONENT_TRANSFER_TABLE:
-                    case COMPONENT_TRANSFER_DISCRETE:
-                        // fetch value from lookup table
-                        k = int(floor(colora[i]*255.0));
-                        texel = fetch_from_gpu_cache_1(vTableAddress + offset + k/4);
-                        colora[i] = clamp(texel[k % 4], 0.0, 1.0);
-                        // offset plus 256/4 blocks
-                        offset = offset + 64;
-                        break;
-                    case COMPONENT_TRANSFER_LINEAR:
-                        // fetch the two values for use in the linear equation
-                        texel = fetch_from_gpu_cache_1(vTableAddress + offset);
-                        colora[i] = clamp(texel[0] * colora[i] + texel[1], 0.0, 1.0);
-                        // offset plus 1 block
-                        offset = offset + 1;
-                        break;
-                    case COMPONENT_TRANSFER_GAMMA:
-                        // fetch the three values for use in the gamma equation
-                        texel = fetch_from_gpu_cache_1(vTableAddress + offset);
-                        colora[i] = clamp(texel[0] * pow(colora[i], texel[1]) + texel[2], 0.0, 1.0);
-                        // offset plus 1 block
-                        offset = offset + 1;
-                        break;
-                    default:
-                        // shouldn't happen
-                        break;
-                }
-            }
+            colora = ComponentTransfer(colora);
             color = colora.rgb;
             alpha = colora.a;
             break;
