@@ -3798,27 +3798,31 @@ bool js::AsyncFromSyncIteratorMethod(JSContext* cx, CallArgs& args,
     return AbruptRejectPromise(cx, args, resultPromise, nullptr);
   }
 
-  // Steps 6-8 (reordered).
-  // Step 6: Let steps be the algorithm steps defined in Async-from-Sync
+  // Step numbers below include the changes in
+  // <https://github.com/tc39/ecma262/pull/1470>, which inserted a new step 6.
+  //
+  // Steps 7-9 (reordered).
+  // Step 7: Let steps be the algorithm steps defined in Async-from-Sync
   //         Iterator Value Unwrap Functions.
-  // Step 7: Let onFulfilled be CreateBuiltinFunction(steps, « [[Done]] »).
-  // Step 8: Set onFulfilled.[[Done]] to done.
+  // Step 8: Let onFulfilled be CreateBuiltinFunction(steps, « [[Done]] »).
+  // Step 9: Set onFulfilled.[[Done]] to done.
   RootedValue onFulfilled(
       cx,
       Int32Value(done ? PromiseHandlerAsyncFromSyncIteratorValueUnwrapDone
                       : PromiseHandlerAsyncFromSyncIteratorValueUnwrapNotDone));
   RootedValue onRejected(cx, Int32Value(PromiseHandlerThrower));
 
-  // These steps are identical to some steps in Await; we have a utility
+  // Steps 5 and 10 are identical to some steps in Await; we have a utility
   // function InternalAwait() that implements the idiom.
   //
-  // Step 5: Let valueWrapper be ? PromiseResolve(%Promise%, « value »).
-  // Step 9: Perform ! PerformPromiseThen(valueWrapper, onFulfilled,
+  // Step 5: Let valueWrapper be PromiseResolve(%Promise%, « value »).
+  // Step 6: IfAbruptRejectPromise(valueWrapper, promiseCapability).
+  // Step 10: Perform ! PerformPromiseThen(valueWrapper, onFulfilled,
   //                                      undefined, promiseCapability).
   auto extra = [](Handle<PromiseReactionRecord*> reaction) {};
   if (!InternalAwait(cx, value, resultPromise, onFulfilled, onRejected,
                      extra)) {
-    return false;
+    return AbruptRejectPromise(cx, args, resultPromise, nullptr);
   }
 
   // Step 11: Return promiseCapability.[[Promise]].
