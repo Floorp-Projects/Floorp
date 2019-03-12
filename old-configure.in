@@ -1282,7 +1282,9 @@ AC_CACHE_CHECK(for clock_gettime(CLOCK_MONOTONIC),
                ac_cv_clock_monotonic,
                [for libs in "" -lrt; do
                     _SAVE_LIBS="$LIBS"
+                    _SAVE_CFLAGS="$CFLAGS"
                     LIBS="$LIBS $libs"
+                    CFLAGS="$CFLAGS $DSO_PIC_CFLAGS"
 dnl clock_gettime is available on OSX since 10.12, so depending on MACOSX_DEPLOYMENT_TARGET,
 dnl we should or not be able to use it. To detect if we can, we need to make the
 dnl availability attribute strict, so that compilation fails when the target is < 10.12.
@@ -1295,6 +1297,7 @@ dnl availability attribute strict, so that compilation fails when the target is 
                                  break,
                                  ac_cv_clock_monotonic=no)
                     LIBS="$_SAVE_LIBS"
+                    CFLAGS="$_SAVE_CFLAGS"
                 done])
 if test "$ac_cv_clock_monotonic" != "no"; then
     HAVE_CLOCK_MONOTONIC=1
