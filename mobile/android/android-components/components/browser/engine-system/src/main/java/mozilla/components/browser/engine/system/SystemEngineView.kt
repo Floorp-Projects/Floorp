@@ -48,7 +48,6 @@ import mozilla.components.concept.engine.EngineView
 import mozilla.components.concept.engine.HitResult
 import mozilla.components.concept.engine.prompt.PromptRequest
 import mozilla.components.concept.engine.request.RequestInterceptor.InterceptionResponse
-import mozilla.components.support.ktx.android.content.isOSOnLowMemory
 import mozilla.components.support.utils.DownloadUtils
 import java.util.Date
 
@@ -157,13 +156,6 @@ class SystemEngineView @JvmOverloads constructor(
                             secure = cert != null,
                             host = cert?.let { Uri.parse(url).host },
                             issuer = cert?.issuedBy?.oName)
-
-                    if (!isLowOnMemory()) {
-                        val thumbnail = session?.captureThumbnail()
-                        if (thumbnail != null) {
-                            onThumbnailChange(thumbnail)
-                        }
-                    }
                 }
             }
         }
@@ -265,11 +257,6 @@ class SystemEngineView @JvmOverloads constructor(
             }
         }
     }
-
-    @VisibleForTesting
-    internal var testLowMemory = false
-
-    private fun isLowOnMemory() = testLowMemory || (context?.isOSOnLowMemory() == true)
 
     @Suppress("ComplexMethod")
     private fun createWebChromeClient() = object : WebChromeClient() {
@@ -592,6 +579,20 @@ class SystemEngineView @JvmOverloads constructor(
     }
 
     override fun canScrollVerticallyDown() = session?.webView?.canScrollVertically(1) ?: false
+
+    override fun captureThumbnail(onFinish: (Bitmap?) -> Unit) {
+        val webView = session?.webView
+
+        val thumbnails = if (webView == null) {
+            null
+        } else {
+            webView.buildDrawingCache()
+            val outBitmap = webView.drawingCache?.let { cache -> Bitmap.createBitmap(cache) }
+            webView.destroyDrawingCache()
+            outBitmap
+        }
+        onFinish(thumbnails)
+    }
 
     private fun resetJSAlertAbuseState() {
         jsAlertCount = 0

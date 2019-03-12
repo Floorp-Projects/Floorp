@@ -7,6 +7,7 @@ package mozilla.components.concept.engine
 import android.arch.lifecycle.Lifecycle
 import android.arch.lifecycle.LifecycleObserver
 import android.arch.lifecycle.OnLifecycleEvent
+import android.graphics.Bitmap
 import android.view.View
 
 /**
@@ -65,6 +66,12 @@ interface EngineView {
     * true if can and false otherwise.
     */
     fun canScrollVerticallyDown(): Boolean = true
+
+    /**
+     * Take a screenshot of the actual session.
+     * @param onFinish A callback to inform that process of capturing a thumbnail has finished.
+     */
+    fun captureThumbnail(onFinish: (Bitmap?) -> Unit)
 }
 
 /**

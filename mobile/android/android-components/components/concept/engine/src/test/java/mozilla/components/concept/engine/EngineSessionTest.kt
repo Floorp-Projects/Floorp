@@ -625,6 +625,4 @@ open class DummyEngineSession : EngineSession() {
     fun notifyInternalObservers(block: Observer.() -> Unit) {
         notifyObservers(block)
     }
-
-    override fun captureThumbnail(): Bitmap? = null
 }

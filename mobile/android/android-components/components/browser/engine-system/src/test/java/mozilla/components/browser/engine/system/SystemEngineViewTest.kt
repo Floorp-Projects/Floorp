@@ -54,7 +54,6 @@ import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.never
 import org.mockito.Mockito.reset
-import org.mockito.Mockito.spy
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyZeroInteractions
@@ -830,46 +829,6 @@ class SystemEngineViewTest {
     }
 
     @Test
-    fun `when a page is loaded a thumbnail should be captured`() {
-        val engineSession = spy(SystemEngineSession(getApplicationContext()))
-        doReturn(
-            Bitmap.createBitmap(100, 100, Bitmap.Config.ARGB_8888)
-        ).`when`(engineSession).captureThumbnail()
-
-        val engineView = SystemEngineView(getApplicationContext())
-        engineView.render(engineSession)
-        var thumbnailChanged = false
-        engineSession.register(object : EngineSession.Observer {
-
-            override fun onThumbnailChange(bitmap: Bitmap?) {
-                thumbnailChanged = bitmap != null
-            }
-        })
-
-        engineSession.webView.webViewClient.onPageFinished(null, "http://mozilla.org")
-        assertTrue(thumbnailChanged)
-    }
-
-    @Test
-    fun `when a page is loaded and the os is in low memory condition none thumbnail should be captured`() {
-        val engineSession = SystemEngineSession(getApplicationContext())
-        val engineView = SystemEngineView(getApplicationContext())
-        engineView.render(engineSession)
-
-        engineView.testLowMemory = true
-
-        var thumbnailChanged = false
-        engineSession.register(object : EngineSession.Observer {
-
-            override fun onThumbnailChange(bitmap: Bitmap?) {
-                thumbnailChanged = bitmap != null
-            }
-        })
-        engineSession.webView.webViewClient.onPageFinished(null, "http://mozilla.org")
-        assertFalse(thumbnailChanged)
-    }
-
-    @Test
     fun `onPageFinished handles invalid URL`() {
         val engineSession = SystemEngineSession(getApplicationContext())
         val engineView = SystemEngineView(getApplicationContext())
@@ -1394,6 +1353,32 @@ class SystemEngineViewTest {
             mockJSPromptResult
         )
         assertTrue((request as PromptRequest.Confirm).title.contains("mozilla.org"))
+    }
+
+    @Test
+    fun captureThumbnail() {
+        val engineView = SystemEngineView(getApplicationContext())
+
+        engineView.session = mock()
+
+        `when`(engineView.session!!.webView).thenReturn(mock())
+
+        `when`(engineView.session!!.webView.drawingCache)
+            .thenReturn(Bitmap.createBitmap(10, 10, Bitmap.Config.RGB_565))
+
+        var thumbnail: Bitmap? = null
+
+        engineView.captureThumbnail {
+            thumbnail = it
+        }
+        assertNotNull(thumbnail)
+
+        engineView.session = null
+        engineView.captureThumbnail {
+            thumbnail = it
+        }
+
+        assertNull(thumbnail)
     }
 
     private fun Date.add(timeUnit: Int, amountOfTime: Int): Date {

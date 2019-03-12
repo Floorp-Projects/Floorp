@@ -5,7 +5,6 @@
 package mozilla.components.browser.engine.gecko
 
 import android.annotation.SuppressLint
-import android.graphics.Bitmap
 import kotlin.coroutines.CoroutineContext
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
@@ -557,12 +556,6 @@ class GeckoEngineSession(
             }
             else -> HitResult.UNKNOWN("")
         }
-    }
-
-    override fun captureThumbnail(): Bitmap? {
-        // TODO Waiting for the Gecko team to create an API for this
-        // See https://bugzilla.mozilla.org/show_bug.cgi?id=1462018
-        return null
     }
 
     private fun createGeckoSession() {

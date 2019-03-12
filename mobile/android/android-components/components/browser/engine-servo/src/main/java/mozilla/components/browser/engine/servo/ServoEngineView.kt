@@ -5,6 +5,7 @@
 package mozilla.components.browser.engine.servo
 
 import android.content.Context
+import android.graphics.Bitmap
 import android.util.AttributeSet
 import android.widget.FrameLayout
 import mozilla.components.concept.engine.EngineSession
@@ -43,4 +44,6 @@ class ServoEngineView @JvmOverloads constructor(
 
         servoView.onPause()
     }
+
+    override fun captureThumbnail(onFinish: (Bitmap?) -> Unit) = Unit
 }

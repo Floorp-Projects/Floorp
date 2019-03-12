@@ -240,11 +240,6 @@ abstract class EngineSession(
     abstract fun exitFullScreenMode()
 
     /**
-     * Takes a screenshot of the actual tab
-     */
-    abstract fun captureThumbnail(): Bitmap?
-
-    /**
      * Close the session. This may free underlying objects. Call this when you are finished using
      * this session.
      */

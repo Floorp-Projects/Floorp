@@ -51,7 +51,6 @@ class EngineObserverTest {
             override fun findNext(forward: Boolean) {}
             override fun clearFindMatches() {}
             override fun exitFullScreenMode() {}
-            override fun captureThumbnail(): Bitmap? = null
             override fun saveState(): EngineSessionState = mock()
 
             override fun loadData(data: String, mimeType: String, encoding: String) {
@@ -100,7 +99,6 @@ class EngineObserverTest {
             override fun findNext(forward: Boolean) {}
             override fun clearFindMatches() {}
             override fun exitFullScreenMode() {}
-            override fun captureThumbnail(): Bitmap? = null
             override fun saveState(): EngineSessionState = mock()
             override fun loadData(data: String, mimeType: String, encoding: String) {}
             override fun loadUrl(url: String) {
@@ -140,7 +138,6 @@ class EngineObserverTest {
             }
 
             override fun toggleDesktopMode(enable: Boolean, reload: Boolean) {}
-            override fun captureThumbnail(): Bitmap? = null
             override fun saveState(): EngineSessionState = mock()
             override fun loadUrl(url: String) {}
             override fun loadData(data: String, mimeType: String, encoding: String) {}

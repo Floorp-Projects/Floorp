@@ -1,7 +1,6 @@
 package mozilla.components.browser.engine.system
 
 import android.content.Context
-import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Bundle
 import android.os.Looper
@@ -669,17 +668,6 @@ class SystemEngineSessionTest {
         verify(webView).clearCache(true)
         verify(webStorage).deleteAllData()
         verify(webViewDatabase).clearHttpAuthUsernamePassword()
-    }
-
-    @Test
-    fun captureThumbnail() {
-        val engineSession = spy(SystemEngineSession(getApplicationContext()))
-        val webView = mock(WebView::class.java)
-        engineSession.webView = webView
-        assertNull(engineSession.captureThumbnail())
-
-        `when`(webView.drawingCache).thenReturn(Bitmap.createBitmap(10, 10, Bitmap.Config.RGB_565))
-        assertNotNull(engineSession.captureThumbnail())
     }
 
     @Test

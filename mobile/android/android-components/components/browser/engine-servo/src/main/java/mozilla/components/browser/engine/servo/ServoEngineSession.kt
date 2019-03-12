@@ -4,7 +4,6 @@
 
 package mozilla.components.browser.engine.servo
 
-import android.graphics.Bitmap
 import android.net.Uri
 import mozilla.components.concept.engine.DefaultSettings
 import mozilla.components.concept.engine.EngineSession
@@ -142,10 +141,5 @@ class ServoEngineSession(
 
     override fun exitFullScreenMode() {
         // not implemented yet
-    }
-
-    override fun captureThumbnail(): Bitmap? {
-        // not implemented yet
-        return null
     }
 }

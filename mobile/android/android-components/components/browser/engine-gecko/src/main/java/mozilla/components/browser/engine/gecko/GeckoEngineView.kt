@@ -5,6 +5,7 @@
 package mozilla.components.browser.engine.gecko
 
 import android.content.Context
+import android.graphics.Bitmap
 import android.support.v4.view.ViewCompat
 import android.util.AttributeSet
 import android.widget.FrameLayout
@@ -58,4 +59,6 @@ class GeckoEngineView @JvmOverloads constructor(
     }
 
     override fun canScrollVerticallyDown() = true // waiting for this issue https://bugzilla.mozilla.org/show_bug.cgi?id=1507569
+
+    override fun captureThumbnail(onFinish: (Bitmap?) -> Unit) = Unit
 }
