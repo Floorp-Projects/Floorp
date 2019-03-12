@@ -266,8 +266,8 @@ namespace jit {
   _(DoHasOwnFallback, js::jit::DoHasOwnFallback, 2)             \
   _(DoInFallback, js::jit::DoInFallback, 2)                     \
   _(DoInstanceOfFallback, js::jit::DoInstanceOfFallback, 2)     \
-  _(DoNewArray, js::jit::DoNewArray, 0)                         \
-  _(DoNewObject, js::jit::DoNewObject, 0)                       \
+  _(DoNewArrayFallback, js::jit::DoNewArrayFallback, 0)         \
+  _(DoNewObjectFallback, js::jit::DoNewObjectFallback, 0)       \
   _(DoRestFallback, js::jit::DoRestFallback, 0)                 \
   _(DoSetElemFallback, js::jit::DoSetElemFallback, 2)           \
   _(DoSetPropFallback, js::jit::DoSetPropFallback, 1)           \

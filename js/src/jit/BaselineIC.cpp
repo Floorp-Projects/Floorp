@@ -5784,8 +5784,9 @@ bool ICCompare_Fallback::Compiler::generateStubCode(MacroAssembler& masm) {
 // NewArray_Fallback
 //
 
-bool DoNewArray(JSContext* cx, BaselineFrame* frame, ICNewArray_Fallback* stub,
-                uint32_t length, MutableHandleValue res) {
+bool DoNewArrayFallback(JSContext* cx, BaselineFrame* frame,
+                        ICNewArray_Fallback* stub, uint32_t length,
+                        MutableHandleValue res) {
   stub->incrementEnteredCount();
   FallbackICSpew(cx, stub, "NewArray");
 
@@ -5828,14 +5829,14 @@ bool ICNewArray_Fallback::Compiler::generateStubCode(MacroAssembler& masm) {
 
   using Fn = bool (*)(JSContext*, BaselineFrame*, ICNewArray_Fallback*,
                       uint32_t, MutableHandleValue);
-  return tailCallVM<Fn, DoNewArray>(masm);
+  return tailCallVM<Fn, DoNewArrayFallback>(masm);
 }
 
 //
 // NewObject_Fallback
 //
-bool DoNewObject(JSContext* cx, BaselineFrame* frame,
-                 ICNewObject_Fallback* stub, MutableHandleValue res) {
+bool DoNewObjectFallback(JSContext* cx, BaselineFrame* frame,
+                         ICNewObject_Fallback* stub, MutableHandleValue res) {
   stub->incrementEnteredCount();
   FallbackICSpew(cx, stub, "NewObject");
 
@@ -5882,7 +5883,7 @@ bool ICNewObject_Fallback::Compiler::generateStubCode(MacroAssembler& masm) {
 
   using Fn = bool (*)(JSContext*, BaselineFrame*, ICNewObject_Fallback*,
                       MutableHandleValue);
-  return tailCallVM<Fn, DoNewObject>(masm);
+  return tailCallVM<Fn, DoNewObjectFallback>(masm);
 }
 
 }  // namespace jit
