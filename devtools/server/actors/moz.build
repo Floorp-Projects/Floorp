@@ -7,7 +7,6 @@
 DIRS += [
     'accessibility',
     'addon',
-    'canvas',
     'emulation',
     'highlighters',
     'inspector',
@@ -26,7 +25,6 @@ DevToolsModules(
     'animation.js',
     'array-buffer.js',
     'breakpoint.js',
-    'canvas.js',
     'changes.js',
     'common.js',
     'css-properties.js',

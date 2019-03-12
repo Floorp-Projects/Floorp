@@ -15,7 +15,6 @@ DevToolsModules(
     'accessibility.js',
     'actor-registry.js',
     'animation.js',
-    'canvas.js',
     'changes.js',
     'css-properties.js',
     'csscoverage.js',

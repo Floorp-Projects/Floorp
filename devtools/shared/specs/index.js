@@ -43,11 +43,6 @@ const Types = exports.__TypesForTests = [
     front: "devtools/shared/fronts/animation",
   },
   {
-    types: ["frame-snapshot", "canvas"],
-    spec: "devtools/shared/specs/canvas",
-    front: "devtools/shared/fronts/canvas",
-  },
-  {
     types: ["changes"],
     spec: "devtools/shared/specs/changes",
     front: "devtools/shared/fronts/changes",
