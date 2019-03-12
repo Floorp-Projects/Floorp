@@ -46,7 +46,7 @@ open class MainActivity : AppCompatActivity() {
 
         // Generate pings on click by simulating Glean handling a background event.
         buttonSendPing.setOnClickListener {
-            Glean.handleEvent(Glean.PingEvent.Background)
+            Glean.handleBackgroundEvent()
         }
 
         Test.testTimespan.stopAndSum()

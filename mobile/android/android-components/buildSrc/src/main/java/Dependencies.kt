@@ -18,7 +18,7 @@ object Versions {
 
     const val support_libraries = "28.0.0"
     const val constraint_layout = "1.1.2"
-    const val workmanager = "1.0.0-rc02"
+    const val workmanager = "1.0.0"
     const val lifecycle = "1.1.1"
 
     const val dokka = "0.9.17"

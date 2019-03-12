@@ -23,11 +23,7 @@ internal class GleanLifecycleObserver : LifecycleObserver {
         // We're going to background, so store how much time we spent
         // on foreground.
         GleanBaseline.duration.stopAndSum()
-        Glean.handleEvent(Glean.PingEvent.Background)
-
-        // This will check the metrics ping schedule to determine whether it's time to send a new
-        // metrics ping or not
-        Glean.handleEvent(Glean.PingEvent.Default)
+        Glean.handleBackgroundEvent()
     }
 
     /**

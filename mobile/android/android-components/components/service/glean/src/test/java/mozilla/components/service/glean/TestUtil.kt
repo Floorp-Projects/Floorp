@@ -10,6 +10,7 @@ import android.content.pm.PackageManager
 import androidx.test.core.app.ApplicationProvider
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
+import androidx.work.testing.WorkManagerTestInitHelper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -112,6 +113,10 @@ internal fun resetGlean(
     context: Context = ApplicationProvider.getApplicationContext(),
     config: Configuration = Configuration()
 ) {
+    // We're using the WorkManager in a bunch of places, and glean will crash
+    // in tests without this line. Let's simply put it here.
+    WorkManagerTestInitHelper.initializeTestWorkManager(context)
+
     // Clear all the stored data.
     val storageManager = StorageEngineManager(applicationContext = context)
     storageManager.clearAllStores()
@@ -143,13 +148,14 @@ internal fun getContextWithMockedInfo(): Context {
 }
 
 /**
- * Helper function to check to see if a [PingUploadWorker] has been scheduled
+ * Helper function to check to see if a worker has been scheduled with the [WorkManager]
  *
- * @return True if [PingUploadWorker] task found in [WorkManager], false otherwise
+ * @param tag a string representing the worker tag
+ * @return True if the task found in [WorkManager], false otherwise
  */
-internal fun isWorkScheduled(): Boolean {
+internal fun isWorkScheduled(tag: String): Boolean {
     val instance = WorkManager.getInstance()
-    val statuses = instance.getWorkInfosByTag(PingUploadWorker.PING_WORKER_TAG)
+    val statuses = instance.getWorkInfosByTag(tag)
     try {
         val workInfoList = statuses.get()
         for (workInfo in workInfoList) {
@@ -174,7 +180,7 @@ internal fun isWorkScheduled(): Boolean {
  */
 internal fun triggerWorkManager() {
     // Check that the work is scheduled
-    Assert.assertTrue(isWorkScheduled())
+    Assert.assertTrue(isWorkScheduled(PingUploadWorker.PING_WORKER_TAG))
 
     // Since WorkManager does not properly run in tests, simulate the work being done
     GlobalScope.launch(Dispatchers.IO) {

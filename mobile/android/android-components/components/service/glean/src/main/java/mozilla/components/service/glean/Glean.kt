@@ -82,12 +82,23 @@ open class GleanInternalAPI internal constructor () {
         storageEngineManager = StorageEngineManager(applicationContext = applicationContext)
         pingMaker = PingMaker(storageEngineManager, applicationContext)
         this.configuration = configuration
-        initialized = true
         applicationId = sanitizeApplicationId(applicationContext.packageName)
-
         pingStorageEngine = PingStorageEngine(applicationContext)
 
+        // Core metrics are initialized using the engines, without calling the async
+        // API. For this reason we're safe to set `initialized = true` right after it.
         initializeCoreMetrics(applicationContext)
+
+        // Set up information and scheduling for glean owned pings. Ideally, the "metrics"
+        // ping startup check should be performed before any other ping, since it relies
+        // on being dispatched to the API context before any other metric.
+        metricsPingScheduler = MetricsPingScheduler(applicationContext)
+        metricsPingScheduler.startupCheck()
+        initialized = true
+
+        // Other pings might set some other metrics (i.e. the baseline metrics),
+        // so we need to be initialized by now.
+        baselinePing = BaselinePing()
 
         ProcessLifecycleOwner.get().lifecycle.addObserver(gleanLifecycleObserver)
     }
@@ -226,10 +237,6 @@ open class GleanInternalAPI internal constructor () {
             logger.error("Could not get own package info, unable to report build id and display version")
             throw AssertionError("Could not get own package info, aborting init")
         }
-
-        // Set up information and scheduling for glean owned pings
-        metricsPingScheduler = MetricsPingScheduler(applicationContext)
-        baselinePing = BaselinePing()
     }
 
     /**
@@ -245,31 +252,11 @@ open class GleanInternalAPI internal constructor () {
     }
 
     /**
-     * Handle an event and send the appropriate pings.
-     *
-     * Valid events are:
-     *
-     *   - Background: When the application goes to the background.
-     *       This triggers sending of the baseline ping.
-     *   - Default: Event that triggers the default pings.
-     *
-     * @param pingEvent The type of the event.
+     * Handle the background event and send the appropriate pings.
      */
-    fun handleEvent(pingEvent: Glean.PingEvent) {
-        when (pingEvent) {
-            Glean.PingEvent.Background -> {
-                // Schedule the baseline and event pings
-                sendPings(listOf(BaselinePing.STORE_NAME, "events"))
-            }
-            Glean.PingEvent.Default -> {
-                // Check the metrics ping schedule to determine whether it's time to schedule a new
-                // metrics ping or not
-                if (metricsPingScheduler.canSendPing() &&
-                    sendPings(listOf(MetricsPingScheduler.STORE_NAME))) {
-                    metricsPingScheduler.updateSentTimestamp()
-                }
-            }
-        }
+    fun handleBackgroundEvent() {
+        // Schedule the baseline and event pings
+        sendPings(listOf(BaselinePing.STORE_NAME, "events"))
     }
 
     /**
@@ -326,25 +313,11 @@ open class GleanInternalAPI internal constructor () {
 }
 
 object Glean : GleanInternalAPI() {
-    /**
-    * Enumeration of different metric lifetimes.
-    */
-    enum class PingEvent {
-        /**
-        * When the application goes into the background
-        */
-        Background,
-        /**
-        * A periodic event to send the default ping
-        */
-        Default
-    }
-
     internal const val SCHEMA_VERSION = 1
 
     /**
-    * The name of the directory, inside the application's directory,
-    * in which Glean files are stored.
-    */
+     * The name of the directory, inside the application's directory,
+     * in which Glean files are stored.
+     */
     internal const val GLEAN_DATA_DIR = "glean_data"
 }

@@ -14,7 +14,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.ObsoleteCoroutinesApi
 import mozilla.components.service.glean.storages.StringsStorageEngine
 import mozilla.components.service.glean.scheduler.GleanLifecycleObserver
-import mozilla.components.service.glean.scheduler.MetricsPingScheduler
+import mozilla.components.service.glean.scheduler.PingUploadWorker
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import org.json.JSONObject
@@ -48,10 +48,10 @@ class GleanTest {
 
     @Before
     fun setup() {
-        resetGlean()
-
         WorkManagerTestInitHelper.initializeTestWorkManager(
             ApplicationProvider.getApplicationContext())
+
+        resetGlean()
     }
 
     @After
@@ -111,68 +111,6 @@ class GleanTest {
     }
 
     @Test
-    fun `test sending of default pings`() {
-        val server = MockWebServer()
-        server.enqueue(MockResponse().setBody("OK"))
-
-        val stringMetric = StringMetricType(
-            disabled = false,
-            category = "telemetry",
-            lifetime = Lifetime.Application,
-            name = "string_metric",
-            sendInPings = listOf("default")
-        )
-
-        resetGlean(getContextWithMockedInfo(), Glean.configuration.copy(
-            serverEndpoint = "http://" + server.hostName + ":" + server.port,
-            logPings = true
-        ))
-
-        try {
-            stringMetric.set("foo")
-
-            Glean.setExperimentActive(
-                "experiment1", "branch_a"
-            )
-            Glean.setExperimentActive(
-                "experiment2", "branch_b",
-                mapOf("key" to "value")
-            )
-            Glean.setExperimentInactive("experiment1")
-
-            assertTrue(Glean.testIsExperimentActive("experiment2"))
-            assertFalse(Glean.testIsExperimentActive("experiment1"))
-
-            Glean.metricsPingScheduler.clearSchedulerData()
-            Glean.handleEvent(Glean.PingEvent.Default)
-
-            // Trigger worker task to upload the pings in the background
-            triggerWorkManager()
-
-            val request = server.takeRequest(20L, TimeUnit.SECONDS)
-            assertEquals("POST", request.method)
-            val metricsJsonData = request.body.readUtf8()
-            val metricsJson = JSONObject(metricsJsonData)
-            checkPingSchema(metricsJson)
-            assertEquals(
-                "foo",
-                metricsJson.getJSONObject("metrics")
-                    .getJSONObject("string")
-                    .getString("telemetry.string_metric")
-            )
-            assertNull(metricsJson.opt("events"))
-            assertNotNull(metricsJson.opt("ping_info"))
-            assertNotNull(metricsJson.getJSONObject("ping_info").opt("experiments"))
-            val applicationId = "mozilla-components-service-glean"
-            assert(
-                request.path.startsWith("/submit/$applicationId/metrics/${Glean.SCHEMA_VERSION}/")
-            )
-        } finally {
-            server.shutdown()
-        }
-    }
-
-    @Test
     fun `test sending of background pings`() {
         val server = MockWebServer()
         server.enqueue(MockResponse().setBody("OK"))
@@ -215,9 +153,11 @@ class GleanTest {
 
             val eventsJson = JSONObject(requests["events"])
             checkPingSchema(eventsJson)
+            assertEquals("events", eventsJson.getJSONObject("ping_info")["ping_type"])
             assertEquals(1, eventsJson.getJSONArray("events")!!.length())
 
             val baselineJson = JSONObject(requests["baseline"])
+            assertEquals("baseline", baselineJson.getJSONObject("ping_info")["ping_type"])
             checkPingSchema(baselineJson)
 
             val expectedBaselineStringMetrics = arrayOf(
@@ -238,74 +178,6 @@ class GleanTest {
             val baselineTimespanMetrics = baselineMetricsObject.getJSONObject("timespan")!!
             assertEquals(1, baselineTimespanMetrics.length())
             assertNotNull(baselineTimespanMetrics.get("glean.baseline.duration"))
-        } finally {
-            server.shutdown()
-            lifecycleRegistry.removeObserver(gleanLifecycleObserver)
-        }
-    }
-
-    @Test
-    fun `test sending of metrics ping`() {
-        val server = MockWebServer()
-        server.enqueue(MockResponse().setBody("OK"))
-
-        val metricToSend = StringMetricType(
-            disabled = false,
-            category = "telemetry",
-            lifetime = Lifetime.Ping,
-            name = "metrics_ping",
-            sendInPings = listOf("default")
-        )
-
-        val metricsPingScheduler = MetricsPingScheduler(getContextWithMockedInfo())
-        metricsPingScheduler.clearSchedulerData()
-
-        // Store a ping timestamp from 25 hours ago to compare to so that the ping will get sent
-        metricsPingScheduler.updateSentTimestamp(
-            System.currentTimeMillis() - TimeUnit.HOURS.toMillis(25))
-
-        resetGlean(getContextWithMockedInfo(), Glean.configuration.copy(
-            serverEndpoint = "http://" + server.hostName + ":" + server.port,
-            logPings = true
-        ))
-
-        // Fake calling the lifecycle observer.
-        val lifecycleRegistry = LifecycleRegistry(mock(LifecycleOwner::class.java))
-        val gleanLifecycleObserver = GleanLifecycleObserver()
-        lifecycleRegistry.addObserver(gleanLifecycleObserver)
-
-        try {
-            // Simulate the first foreground event after the application starts.
-            lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_RESUME)
-
-            // Write a value to the metric to check later
-            metricToSend.set("Test metrics ping")
-
-            // Simulate going to background so that the metrics ping schedule will be checked
-            lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_STOP)
-
-            // Trigger worker task to upload the pings in the background
-            triggerWorkManager()
-
-            val requests: MutableMap<String, String> = mutableMapOf()
-            for (i in 0..1) {
-                val request = server.takeRequest(20L, TimeUnit.SECONDS)
-                val docType = request.path.split("/")[3]
-                requests[docType] = request.body.readUtf8()
-            }
-
-            val metricsJson = JSONObject(requests["metrics"])
-            checkPingSchema(metricsJson)
-
-            // Check ping type
-            val pingInfo = metricsJson.getJSONObject("ping_info")!!
-            assertEquals(pingInfo["ping_type"], "metrics")
-
-            // Retrieve the string metric that was stored
-            val metricsObject = metricsJson.getJSONObject("metrics")!!
-            val stringMetrics = metricsObject.getJSONObject("string")!!
-
-            assertEquals(stringMetrics["telemetry.metrics_ping"], "Test metrics ping")
         } finally {
             server.shutdown()
             lifecycleRegistry.removeObserver(gleanLifecycleObserver)
@@ -365,24 +237,24 @@ class GleanTest {
         val gleanSpy = spy<GleanInternalAPI>(GleanInternalAPI::class.java)
 
         gleanSpy.initialized = false
-        gleanSpy.handleEvent(Glean.PingEvent.Background)
-        assertFalse(isWorkScheduled())
+        gleanSpy.handleBackgroundEvent()
+        assertFalse(isWorkScheduled(PingUploadWorker.PING_WORKER_TAG))
     }
 
     @Test
     fun `Don't schedule pings if metrics disabled`() {
         Glean.setUploadEnabled(false)
 
-        Glean.handleEvent(Glean.PingEvent.Background)
+        Glean.handleBackgroundEvent()
 
-        assertFalse(isWorkScheduled())
+        assertFalse(isWorkScheduled(PingUploadWorker.PING_WORKER_TAG))
     }
 
     @Test
     fun `Don't schedule pings if there is no ping content`() {
         resetGlean(getContextWithMockedInfo())
 
-        Glean.handleEvent(Glean.PingEvent.Background)
+        Glean.handleBackgroundEvent()
 
         // We should only have a baseline ping and no events or metrics pings since nothing was
         // recorded
@@ -414,7 +286,7 @@ class GleanTest {
             Glean.sanitizeApplicationId("org-mozilla-test-app")
         )
     }
-
+/*
     @Test
     fun `metricsPingScheduler is properly initialized`() {
         Glean.metricsPingScheduler.clearSchedulerData()
@@ -422,5 +294,5 @@ class GleanTest {
 
         // Should return false since we just updated the last time the ping was sent above
         assertFalse(Glean.metricsPingScheduler.canSendPing())
-    }
+    }*/
 }

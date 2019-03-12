@@ -5,79 +5,493 @@
 package mozilla.components.service.glean.scheduler
 
 import android.content.Context
+import android.os.SystemClock
 import androidx.test.core.app.ApplicationProvider
+import androidx.work.testing.WorkManagerTestInitHelper
+import kotlinx.coroutines.async
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import mozilla.components.service.glean.checkPingSchema
+import mozilla.components.service.glean.getContextWithMockedInfo
+import mozilla.components.service.glean.Glean
+import mozilla.components.service.glean.Dispatchers
+import mozilla.components.service.glean.isWorkScheduled
+import mozilla.components.service.glean.Lifetime
+import mozilla.components.service.glean.resetGlean
+import mozilla.components.service.glean.StringMetricType
+import mozilla.components.service.glean.TimeUnit
+import mozilla.components.service.glean.triggerWorkManager
+import mozilla.components.service.glean.config.Configuration
+import mozilla.components.service.glean.utils.getISOTimeString
+import mozilla.components.service.glean.utils.parseISOTimeString
+import okhttp3.mockwebserver.MockResponse
+import okhttp3.mockwebserver.MockWebServer
+import org.json.JSONObject
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNotNull
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.ArgumentMatchers
+import org.mockito.ArgumentMatchers.anyString
+import org.mockito.Mockito.anyBoolean
+import org.mockito.Mockito.doReturn
+import org.mockito.Mockito.never
+import org.mockito.Mockito.spy
+import org.mockito.Mockito.times
+import org.mockito.Mockito.verify
 import org.robolectric.RobolectricTestRunner
-import java.util.concurrent.TimeUnit
+import java.util.Calendar
+import java.util.Date
+import java.util.concurrent.TimeUnit as AndroidTimeUnit
 
 @RunWith(RobolectricTestRunner::class)
 class MetricsPingSchedulerTest {
-    // NOTE: Using a "real" ApplicationContext here so that it will have
-    // a working SharedPreferences implementation
-    private val metricsPingScheduler = MetricsPingScheduler(
-        ApplicationProvider.getApplicationContext<Context>()
-    )
+    private fun <T> kotlinFriendlyAny(): T {
+        // This is required to work around the Kotlin/ArgumentMatchers problem with using
+        // `verify` on non-nullable arguments (since `any` may return null). See
+        // https://github.com/nhaarman/mockito-kotlin/issues/241
+        ArgumentMatchers.any<T>()
+        // This weird cast was suggested as part of https://youtrack.jetbrains.com/issue/KT-8135 .
+        // See the related issue for why this is needed in mocks.
+        @Suppress("UNCHECKED_CAST")
+        return null as T
+    }
+
+    /**
+     * Run a function that uses [Dispatchers.API] in the Unconfined
+     * dispatcher. This can be used instead of FakeDispatchersInTest if we want the dispatchers
+     * to be faked in a single test.
+     *
+     * @param func the function to call with the Unconfined dispatcher
+     */
+    @Suppress("EXPERIMENTAL_API_USAGE")
+    private fun blockDispatchersAPI(func: () -> Unit) {
+        val originalDispatcher = Dispatchers.API
+        try {
+            Dispatchers.API = CoroutineScope(kotlinx.coroutines.Dispatchers.Unconfined)
+            func()
+        } finally {
+            Dispatchers.API = originalDispatcher
+        }
+    }
 
     @Before
     fun setup() {
-        metricsPingScheduler.clearSchedulerData()
+        WorkManagerTestInitHelper.initializeTestWorkManager(
+            ApplicationProvider.getApplicationContext())
     }
 
     @Test
-    fun `metrics ping canSendPing() returns true if no timestamp was recorded in shared prefs`() {
-        assertTrue(metricsPingScheduler.canSendPing())
+    fun `milliseconds until the due time must be correctly computed`() {
+        val metricsPingScheduler = MetricsPingScheduler(
+            ApplicationProvider.getApplicationContext<Context>())
+
+        val fakeNow = Calendar.getInstance()
+        fakeNow.clear()
+        fakeNow.set(2015, 6, 11, 3, 0, 0)
+
+        // We expect the function to return 1 hour, in milliseconds.
+        assertEquals(60 * 60 * 1000,
+            metricsPingScheduler.getMillisecondsUntilDueTime(
+                sendTheNextCalendarDay = false, now = fakeNow, dueHourOfTheDay = 4)
+        )
+
+        // If we're exactly at 4am, there must be no delay.
+        fakeNow.set(2015, 6, 11, 4, 0, 0)
+        assertEquals(0,
+            metricsPingScheduler.getMillisecondsUntilDueTime(
+                sendTheNextCalendarDay = false, now = fakeNow, dueHourOfTheDay = 4)
+        )
+
+        // Set the clock to after 4 of some minutes.
+        fakeNow.set(2015, 6, 11, 4, 5, 0)
+
+        // Since `sendTheNextCalendarDay` is false, this will be overdue, returning 0.
+        assertEquals(0,
+            metricsPingScheduler.getMillisecondsUntilDueTime(
+                sendTheNextCalendarDay = false, now = fakeNow, dueHourOfTheDay = 4)
+        )
+
+        // With `sendTheNextCalendarDay` true, we expect the function to return 23 hours
+        // and 55 minutes, in milliseconds.
+        assertEquals(23 * 60 * 60 * 1000 + 55 * 60 * 1000,
+            metricsPingScheduler.getMillisecondsUntilDueTime(
+                sendTheNextCalendarDay = true, now = fakeNow, dueHourOfTheDay = 4)
+        )
     }
 
     @Test
-    fun `metrics ping canSendPing() returns true if invalid data type stored in key`() {
-        metricsPingScheduler.sharedPreferences.edit()
-                .putString(MetricsPingScheduler.LAST_METRICS_PING_TIMESTAMP_KEY, "Not a Long value!")
-                .apply()
+    fun `getDueTimeForToday must correctly return the due time for the current day`() {
+        val mps = MetricsPingScheduler(ApplicationProvider.getApplicationContext<Context>())
 
-        // This should still assert as true since the scheduler will catch an exception when
-        // retrieving the value for the LAST_METRICS_PING_TIMESTAMP_KEY that it expects to be a
-        // Long type.  Since it finds a string, the exception is thrown and the scheduler should
-        // treat it just like if no value had been stored at all.
-        assertTrue(metricsPingScheduler.canSendPing())
+        val fakeNow = Calendar.getInstance()
+        fakeNow.clear()
+        fakeNow.set(2015, 6, 11, 3, 0, 0)
+
+        val expected = Calendar.getInstance()
+        expected.time = fakeNow.time
+        expected.set(Calendar.HOUR_OF_DAY, 4)
+
+        assertEquals(expected, mps.getDueTimeForToday(fakeNow, 4))
+
+        // Let's check what happens at "midnight".
+        fakeNow.set(2015, 6, 11, 0, 0, 0)
+        assertEquals(expected, mps.getDueTimeForToday(fakeNow, 4))
     }
 
     @Test
-    fun `MetricsPingScheduler updatePingTimestamp() correctly stores values`() {
-        // Try storing an arbitrary timestamp to see that it is stored correctly
-        metricsPingScheduler.updateSentTimestamp(1234L)
-        val ts = metricsPingScheduler.sharedPreferences
-                .getLong(MetricsPingScheduler.LAST_METRICS_PING_TIMESTAMP_KEY, 0)
-        assertEquals(ts, 1234L)
+    fun `isAfterDueTime must report false before the due time on the same calendar day`() {
+        val mps = MetricsPingScheduler(ApplicationProvider.getApplicationContext<Context>())
+
+        val fakeNow = Calendar.getInstance()
+        fakeNow.clear()
+
+        // Shortly before.
+        fakeNow.set(2015, 6, 11, 3, 0, 0)
+        assertFalse(mps.isAfterDueTime(fakeNow, 4))
+
+        // The same hour.
+        fakeNow.set(2015, 6, 11, 4, 0, 0)
+        assertFalse(mps.isAfterDueTime(fakeNow, 4))
+
+        // Midnight.
+        fakeNow.set(2015, 6, 11, 0, 0, 0)
+        assertFalse(mps.isAfterDueTime(fakeNow, 4))
     }
 
     @Test
-    fun `MetricsPingScheduler correctly initializes it's SharedPreferences`() {
-        // This will be null if the lazy initialization failed for some reason
-        assertNotNull(metricsPingScheduler.sharedPreferences)
+    fun `isAfterDueTime must report true after the due time on the same calendar day`() {
+        val mps = MetricsPingScheduler(ApplicationProvider.getApplicationContext<Context>())
+
+        val fakeNow = Calendar.getInstance()
+        fakeNow.clear()
+
+        // Shortly after.
+        fakeNow.set(2015, 6, 11, 4, 1, 0)
+        assertTrue(mps.isAfterDueTime(fakeNow, 4))
     }
 
     @Test
-    fun `metrics ping canSendPing() returns false if interval hasn't elapsed`() {
-        // Store the current system time as the ping timestamp to compare to
-        metricsPingScheduler.updateSentTimestamp()
+    fun `getLastCollectedDate must report the default when no stored date is available`() {
+        val mps = MetricsPingScheduler(ApplicationProvider.getApplicationContext<Context>())
+        mps.sharedPreferences.edit().clear().apply()
 
-        assertFalse(metricsPingScheduler.canSendPing())
+        val expectedDate = Date()
+        assertEquals(expectedDate, mps.getLastCollectedDate(expectedDate))
     }
 
     @Test
-    fun `metrics ping canSendPing() returns true if interval has elapsed`() {
-        // Store a ping timestamp 1 hour greater than the interval so that the canSendPing()
-        // function should return true
-        metricsPingScheduler.updateSentTimestamp(
-                System.currentTimeMillis() -
-                        TimeUnit.HOURS.toMillis(MetricsPingScheduler.PING_INTERVAL_HOURS + 1))
+    fun `getLastCollectedDate must report a valid Date when the stored date is corrupted`() {
+        val mps = MetricsPingScheduler(ApplicationProvider.getApplicationContext<Context>())
+        mps.sharedPreferences
+            .edit()
+            .putLong(MetricsPingScheduler.LAST_METRICS_PING_SENT_DATETIME, 123L)
+            .apply()
 
-        assertTrue(metricsPingScheduler.canSendPing())
+        // Wrong key type should trigger the default date.
+        val expectedDate = Date()
+        assertEquals(expectedDate, mps.getLastCollectedDate(expectedDate))
+
+        // Wrong date format string should trigger the default date.
+        mps.sharedPreferences
+            .edit()
+            .putString(MetricsPingScheduler.LAST_METRICS_PING_SENT_DATETIME, "not-an-ISO-date")
+            .apply()
+
+        assertEquals(expectedDate, mps.getLastCollectedDate(expectedDate))
+    }
+
+    @Test
+    fun `getLastCollectedDate must report the stored last collected date, if available`() {
+        val testDate = "2018-12-19T12:36:00-06:00"
+        val mps = MetricsPingScheduler(ApplicationProvider.getApplicationContext<Context>())
+        mps.updateSentDate(testDate)
+
+        // Wrong key type should trigger the default date.
+        val expectedDate = parseISOTimeString(testDate)!!
+        assertEquals(expectedDate, mps.getLastCollectedDate(expectedDate))
+    }
+
+    @Test
+    fun `collectMetricsPing must update the last sent date and reschedule the collection`() {
+        val mpsSpy = spy<MetricsPingScheduler>(
+            MetricsPingScheduler(ApplicationProvider.getApplicationContext<Context>()))
+
+        // Ensure we have the right assumptions in place: the methods were not called
+        // prior to |collectPingAndReschedule|.
+        verify(mpsSpy, times(0)).updateSentDate(anyString())
+        verify(mpsSpy, times(0)).schedulePingCollection(
+            kotlinFriendlyAny<Calendar>(),
+            anyBoolean()
+        )
+
+        mpsSpy.collectPingAndReschedule(Calendar.getInstance())
+
+        // Verify that we correctly called in the methods.
+        verify(mpsSpy, times(1)).updateSentDate(anyString())
+        verify(mpsSpy, times(1)).schedulePingCollection(
+            kotlinFriendlyAny<Calendar>(),
+            anyBoolean()
+        )
+    }
+
+    @Test
+    fun `collectMetricsPing must correctly trigger the collection of the metrics ping`() {
+        // Setup a test server and make glean point to it.
+        val server = MockWebServer()
+        server.enqueue(MockResponse().setBody("OK"))
+
+        resetGlean(getContextWithMockedInfo(), Configuration(
+            serverEndpoint = "http://" + server.hostName + ":" + server.port,
+            logPings = true
+        ))
+
+        try {
+            // Setup a testing metric and set it to some value.
+            val testMetric = StringMetricType(
+                disabled = false,
+                category = "telemetry",
+                lifetime = Lifetime.Application,
+                name = "string_metric",
+                sendInPings = listOf("default")
+            )
+
+            val expectedValue = "test-only metric"
+            testMetric.set(expectedValue)
+            assertTrue(testMetric.testHasValue())
+
+            // Manually call the function to trigger the collection.
+            Glean.metricsPingScheduler.collectPingAndReschedule(Calendar.getInstance())
+
+            // Trigger worker task to upload the pings in the background
+            triggerWorkManager()
+
+            // Fetch the ping from the server and decode its JSON body.
+            val request = server.takeRequest(20L, AndroidTimeUnit.SECONDS)
+            assertEquals("POST", request.method)
+            val metricsJsonData = request.body.readUtf8()
+            val metricsJson = JSONObject(metricsJsonData)
+
+            // Validate the received data.
+            checkPingSchema(metricsJson)
+            assertEquals("metrics", metricsJson.getJSONObject("ping_info")["ping_type"])
+            assertEquals(
+                expectedValue,
+                metricsJson.getJSONObject("metrics")
+                    .getJSONObject("string")
+                    .getString("telemetry.string_metric")
+            )
+        } finally {
+            server.shutdown()
+        }
+    }
+
+    @Test
+    fun `startupCheck must immediately collect if the ping is overdue for today`() {
+        // Set the current system time to a known datetime.
+        val fakeNow = Calendar.getInstance()
+        fakeNow.clear()
+        fakeNow.set(2015, 6, 11, 7, 0, 0)
+
+        // Set the last sent date to a previous day, so that today's ping is overdue.
+        val mpsSpy =
+            spy<MetricsPingScheduler>(MetricsPingScheduler(ApplicationProvider.getApplicationContext<Context>()))
+        val overdueTestDate = "2015-07-05T12:36:00-06:00"
+        mpsSpy.updateSentDate(overdueTestDate)
+
+        verify(mpsSpy, never()).collectPingAndReschedule(kotlinFriendlyAny<Calendar>())
+
+        // Make sure to return the fake date when requested.
+        doReturn(fakeNow).`when`(mpsSpy).getCalendarInstance()
+
+        // Trigger the startup check. We need to wrap this in `blockDispatchersAPI` since
+        // the immediate startup collection happens in the Dispatchers.API context. If we
+        // don't, test will fail due to async weirdness.
+        blockDispatchersAPI {
+            mpsSpy.startupCheck()
+        }
+
+        // And that we're storing the current date (this only reports the date, not the time).
+        fakeNow.set(Calendar.HOUR_OF_DAY, 0)
+        assertEquals(fakeNow.time, mpsSpy.getLastCollectedDate())
+
+        // Verify that we're immediately collecting.
+        verify(mpsSpy, times(1)).collectPingAndReschedule(fakeNow)
+    }
+
+    @Test
+    fun `startupCheck must schedule collection for the next calendar day if collection already happened`() {
+        // Set the current system time to a known datetime.
+        val fakeNow = Calendar.getInstance()
+        fakeNow.clear()
+        fakeNow.set(2015, 6, 11, 7, 0, 0)
+        SystemClock.setCurrentTimeMillis(fakeNow.timeInMillis)
+
+        // Set the last sent date to now.
+        val mpsSpy =
+            spy<MetricsPingScheduler>(MetricsPingScheduler(ApplicationProvider.getApplicationContext<Context>()))
+        mpsSpy.updateSentDate(getISOTimeString(fakeNow, truncateTo = TimeUnit.Day))
+
+        verify(mpsSpy, never()).schedulePingCollection(kotlinFriendlyAny<Calendar>(), anyBoolean())
+
+        // Make sure to return the fake date when requested.
+        doReturn(fakeNow).`when`(mpsSpy).getCalendarInstance()
+
+        // Trigger the startup check.
+        mpsSpy.startupCheck()
+
+        // Verify that we're scheduling for the next day and not collecting immediately.
+        verify(mpsSpy, times(1)).schedulePingCollection(fakeNow, sendTheNextCalendarDay = true)
+        verify(mpsSpy, never()).schedulePingCollection(fakeNow, sendTheNextCalendarDay = false)
+        verify(mpsSpy, never()).collectPingAndReschedule(kotlinFriendlyAny<Calendar>())
+    }
+
+    @Test
+    fun `startupCheck must schedule collection for later today if it's before the due time`() {
+        // Set the current system time to a known datetime.
+        val fakeNow = Calendar.getInstance()
+        fakeNow.clear()
+        fakeNow.set(2015, 6, 11, 2, 0, 0)
+        SystemClock.setCurrentTimeMillis(fakeNow.timeInMillis)
+
+        // Set the last sent date to yesterday.
+        val mpsSpy =
+            spy<MetricsPingScheduler>(MetricsPingScheduler(ApplicationProvider.getApplicationContext<Context>()))
+
+        val fakeYesterday = Calendar.getInstance()
+        fakeYesterday.time = fakeNow.time
+        fakeYesterday.add(Calendar.DAY_OF_MONTH, -1)
+        mpsSpy.updateSentDate(getISOTimeString(fakeYesterday, truncateTo = TimeUnit.Day))
+
+        // Make sure to return the fake date when requested.
+        doReturn(fakeNow).`when`(mpsSpy).getCalendarInstance()
+
+        verify(mpsSpy, never()).schedulePingCollection(kotlinFriendlyAny<Calendar>(), anyBoolean())
+
+        // Trigger the startup check.
+        mpsSpy.startupCheck()
+
+        // Verify that we're scheduling for today, but not collecting immediately.
+        verify(mpsSpy, times(1)).schedulePingCollection(fakeNow, sendTheNextCalendarDay = false)
+        verify(mpsSpy, never()).schedulePingCollection(fakeNow, sendTheNextCalendarDay = true)
+        verify(mpsSpy, never()).collectPingAndReschedule(kotlinFriendlyAny<Calendar>())
+    }
+
+    @Test
+    fun `schedulePingCollection must correctly append a work request to the WorkManager`() {
+        val mps = MetricsPingScheduler(ApplicationProvider.getApplicationContext<Context>())
+
+        // No work should be enqueued at the beginning of the test.
+        assertFalse(isWorkScheduled(MetricsPingScheduler.METRICS_PING_WORKER_TAG))
+
+        // Manually schedule a collection task for today.
+        mps.schedulePingCollection(Calendar.getInstance(), sendTheNextCalendarDay = false)
+
+        // We expect the worker to be scheduled.
+        assertTrue(isWorkScheduled(MetricsPingScheduler.METRICS_PING_WORKER_TAG))
+    }
+
+    @Test
+    fun `glean should close the measurement window for overdue pings before recording new data`() {
+        // This test is a bit tricky: we want to make sure that, when our metrics ping is overdue
+        // and collected at startup (if there's pending data), we don't mistakenly add new collected
+        // data to it. In order to test for this specific edge case, we resort to the following:
+        // record some data, then "pretend glean is disabled" to simulate a crash, start using the
+        // recording API off the main thread, init glean in a separate thread and trigger a metrics
+        // ping at startup. We expect the initially written data to be there ("expected_data!"), but
+        // not the "should_not_be_recorded", which will be reported in a separate ping.
+
+        // Create a string metric with a Ping lifetime.
+        val stringMetric = StringMetricType(
+            disabled = false,
+            category = "telemetry",
+            lifetime = Lifetime.Ping,
+            name = "string_metric",
+            sendInPings = listOf("default")
+        )
+
+        // Start glean in the current thread, clean the local storage.
+        resetGlean()
+
+        // Record the data we expect to be in the final metrics ping.
+        val expectedValue = "expected_data!"
+        stringMetric.set(expectedValue)
+        assertTrue(stringMetric.testHasValue())
+
+        // Pretend glean is disabled. This is used so that any API call will be discarded and
+        // glean will init again.
+        Glean.initialized = false
+
+        // Start the web-server that will receive the metrics ping.
+        val server = MockWebServer()
+        server.enqueue(MockResponse().setBody("OK"))
+
+        // Set the current system time to a known datetime: this should make the metrics ping
+        // overdue and trigger it at startup.
+        val fakeNow = Calendar.getInstance()
+        fakeNow.clear()
+        fakeNow.set(2015, 6, 11, 7, 0, 0)
+        SystemClock.setCurrentTimeMillis(fakeNow.timeInMillis)
+
+        // Start recording to the metric asynchronously, from a separate thread. If something
+        // goes wrong with our init, we should see the value set in the loop below in the triggered
+        // "metrics" ping.
+        var stopWrites = false
+        val stringWriter = GlobalScope.async {
+            do {
+                stringMetric.set("should_not_be_recorded")
+            } while (!stopWrites)
+        }
+
+        try {
+            // Restart glean in a separate thread to simulate a crash/restart without
+            // clearing the local storage.
+            val asyncInit = GlobalScope.async {
+                Glean.initialize(getContextWithMockedInfo(), Configuration(
+                    serverEndpoint = "http://" + server.hostName + ":" + server.port,
+                    logPings = true
+                ))
+
+                Dispatchers.API.launch {
+                    // Intentionally does nothing. This is just used to wait until the
+                    // "metrics" ping collection is dispatched.
+                }.join()
+
+                // Trigger worker task to upload the pings in the background.
+                triggerWorkManager()
+            }
+
+            // Wait for the metrics ping to be received.
+            val request = server.takeRequest(20L, AndroidTimeUnit.SECONDS)
+
+            // Stop recording to the test metric and wait for the async stuff
+            // to complete.
+            runBlocking {
+                stopWrites = true
+                stringWriter.await()
+                asyncInit.await()
+            }
+
+            // Parse the received ping payload to a JSON object.
+            assertEquals("POST", request.method)
+            val metricsJsonData = request.body.readUtf8()
+            val metricsJson = JSONObject(metricsJsonData)
+
+            // Validate the received data.
+            checkPingSchema(metricsJson)
+            assertEquals("metrics", metricsJson.getJSONObject("ping_info")["ping_type"])
+            assertEquals(
+                expectedValue,
+                metricsJson.getJSONObject("metrics")
+                    .getJSONObject("string")
+                    .getString("telemetry.string_metric")
+            )
+        } finally {
+            server.shutdown()
+        }
     }
 }

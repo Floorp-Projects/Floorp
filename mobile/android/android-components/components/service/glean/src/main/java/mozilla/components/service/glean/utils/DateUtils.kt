@@ -44,7 +44,7 @@ internal fun getISOTimeString(
 /**
  * Generate an ISO8601 compliant time string for the given time.
  *
- * @param date the [Date] object to convert to string
+ * @param calendar the [Calendar] object to convert to string
  * @param truncateTo The TimeUnit to truncate the value to
  * @return a string containing the date, time and timezone offset
  */
@@ -83,7 +83,7 @@ internal fun parseISOTimeString(date: String): Date? {
     // 2018-12-19T12:36:00-06:00  -- This is what we store
     // 2018-12-19T12:36:00-0600   -- This is what SimpleDateFormat will expect
 
-    var correctedDate = if (date.get(date.length - 3) == ':') {
+    val correctedDate = if (date.get(date.length - 3) == ':') {
         date.substring(0, date.length - 3) + date.substring(date.length - 2)
     } else {
         date
