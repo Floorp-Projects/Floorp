@@ -51,9 +51,22 @@ esac
 # Builds are 99% of the time differing in some small ways, so it's not
 # really useful to report a failure (at least not until we actually
 # care about the builds being 100% identical).
+POST=true
+
+for option; do
+	case "$option" in
+	--fail)
+		POST="exit 1"
+		;;
+	*)
+		echo "Unsupported option: $option" >&2
+		exit 1
+	esac
+done
+
 diffoscope \
 	--html diff.html \
 	--text diff.txt \
 	--progress \
 	$DIFFOSCOPE_ARGS \
-	a b || true
+	a b || $POST
