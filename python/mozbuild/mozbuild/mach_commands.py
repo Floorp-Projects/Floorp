@@ -2909,11 +2909,23 @@ class StaticAnalysis(MachCommandBase):
         import math
 
         max_workers = multiprocessing.cpu_count()
-        batchsize = int(math.ceil(float(len(path_list)) / max_workers))
+
+        # To maximize CPU usage when there are few items to handle,
+        # underestimate the number of items per batch, then dispatch
+        # outstanding items across workers. Per definition, each worker will
+        # handle at most one outstanding item.
+        batch_size = int(math.floor(float(len(path_list)) / max_workers))
+        outstanding_items = len(path_list) - batch_size * max_workers
 
         batches = []
-        for i in range(0, len(path_list), batchsize):
-            batches.append(args + path_list[i: (i + batchsize)])
+
+        i = 0
+        while i < len(path_list):
+            num_items = batch_size + (1 if outstanding_items > 0 else 0)
+            batches.append(args + path_list[i: (i + num_items)])
+
+            outstanding_items -= 1
+            i += num_items
 
         error_code = None
 
