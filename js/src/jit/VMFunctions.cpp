@@ -73,9 +73,9 @@ struct VMFunctionDataHelper<R (*)(JSContext*, Args...)>
                        argumentPassedInFloatRegs(), argumentRootTypes(),
                        outParam(), outParamRootType(), returnType(),
                        extraValuesToPop.numValues, NonTailCall) {}
-  constexpr explicit VMFunctionDataHelper(
-      const char* name, MaybeTailCall expectTailCall,
-      PopValues extraValuesToPop = PopValues(0))
+  constexpr explicit VMFunctionDataHelper(const char* name,
+                                          MaybeTailCall expectTailCall,
+                                          PopValues extraValuesToPop)
       : VMFunctionData(name, explicitArgs(), argumentProperties(),
                        argumentPassedInFloatRegs(), argumentRootTypes(),
                        outParam(), outParamRootType(), returnType(),
@@ -95,31 +95,51 @@ static constexpr VMFunctionData vmFunctions[] = {
     VMFUNCTION_LIST(DEF_VMFUNCTION)
 #undef DEF_VMFUNCTION
 };
+static constexpr VMFunctionData tailCallVMFunctions[] = {
+#define DEF_VMFUNCTION(name, fp, valuesToPop)              \
+  VMFunctionDataHelper<decltype(&(::fp))>(#name, TailCall, \
+                                          PopValues(valuesToPop)),
+    TAIL_CALL_VMFUNCTION_LIST(DEF_VMFUNCTION)
+#undef DEF_VMFUNCTION
+};
 
 #if MOZ_IS_GCC
 #  pragma GCC diagnostic pop
 #endif
 
-// Generate array storing C++ function pointers. These pointers are not stored
+// Generate arrays storing C++ function pointers. These pointers are not stored
 // in VMFunctionData because there's no good way to cast them to void* in
 // constexpr code. Compilers are smart enough to treat the const array below as
 // constexpr.
-static void* const vmFunctionTargets[] = {
-#define DEF_VMFUNCTION(name, fp) (void*)(::fp),
-    VMFUNCTION_LIST(DEF_VMFUNCTION)
+#define DEF_VMFUNCTION(name, fp, ...) (void*)(::fp),
+static void* const vmFunctionTargets[] = {VMFUNCTION_LIST(DEF_VMFUNCTION)};
+static void* const tailCallVMFunctionTargets[] = {
+    TAIL_CALL_VMFUNCTION_LIST(DEF_VMFUNCTION)};
 #undef DEF_VMFUNCTION
-};
 
 const VMFunctionData& GetVMFunction(VMFunctionId id) {
   return vmFunctions[size_t(id)];
 }
+const VMFunctionData& GetVMFunction(TailCallVMFunctionId id) {
+  return tailCallVMFunctions[size_t(id)];
+}
 
-bool JitRuntime::generateVMWrappers(JSContext* cx, MacroAssembler& masm) {
+static void* GetVMFunctionTarget(VMFunctionId id) {
+  return vmFunctionTargets[size_t(id)];
+}
+
+static void* GetVMFunctionTarget(TailCallVMFunctionId id) {
+  return tailCallVMFunctionTargets[size_t(id)];
+}
+
+template <typename IdT>
+bool JitRuntime::generateVMWrappers(JSContext* cx, MacroAssembler& masm,
+                                    VMWrapperOffsets& offsets) {
   // Generate all VM function wrappers.
 
-  static constexpr size_t NumVMFunctions = size_t(VMFunctionId::Count);
+  static constexpr size_t NumVMFunctions = size_t(IdT::Count);
 
-  if (!functionWrapperOffsets_.reserve(NumVMFunctions)) {
+  if (!offsets.reserve(NumVMFunctions)) {
     return false;
   }
 
@@ -128,7 +148,7 @@ bool JitRuntime::generateVMWrappers(JSContext* cx, MacroAssembler& masm) {
 #endif
 
   for (size_t i = 0; i < NumVMFunctions; i++) {
-    VMFunctionId id = VMFunctionId(i);
+    IdT id = IdT(i);
     const VMFunctionData& fun = GetVMFunction(id);
 
 #ifdef DEBUG
@@ -143,12 +163,25 @@ bool JitRuntime::generateVMWrappers(JSContext* cx, MacroAssembler& masm) {
     JitSpew(JitSpew_Codegen, "# VM function wrapper (%s)", fun.name());
 
     uint32_t offset;
-    if (!generateVMWrapper(cx, masm, fun, vmFunctionTargets[i], &offset)) {
+    if (!generateVMWrapper(cx, masm, fun, GetVMFunctionTarget(id), &offset)) {
       return false;
     }
 
-    MOZ_ASSERT(functionWrapperOffsets_.length() == size_t(id));
-    functionWrapperOffsets_.infallibleAppend(offset);
+    MOZ_ASSERT(offsets.length() == size_t(id));
+    offsets.infallibleAppend(offset);
+  }
+
+  return true;
+};
+
+bool JitRuntime::generateVMWrappers(JSContext* cx, MacroAssembler& masm) {
+  if (!generateVMWrappers<VMFunctionId>(cx, masm, functionWrapperOffsets_)) {
+    return false;
+  }
+
+  if (!generateVMWrappers<TailCallVMFunctionId>(
+          cx, masm, tailCallFunctionWrapperOffsets_)) {
+    return false;
   }
 
   return true;
@@ -1881,12 +1914,6 @@ bool DoConcatStringObject(JSContext* cx, HandleValue lhs, HandleValue rhs,
   res.setString(str);
   return true;
 }
-
-typedef bool (*DoConcatStringObjectFn)(JSContext*, HandleValue, HandleValue,
-                                       MutableHandleValue);
-const VMFunction DoConcatStringObjectInfo =
-    FunctionInfo<DoConcatStringObjectFn>(
-        DoConcatStringObject, "DoConcatStringObject", TailCall, PopValues(2));
 
 MOZ_MUST_USE bool TrySkipAwait(JSContext* cx, HandleValue val,
                                MutableHandleValue resolved) {

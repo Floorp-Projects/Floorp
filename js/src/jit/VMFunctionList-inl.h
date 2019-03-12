@@ -247,18 +247,51 @@ namespace jit {
     js::UnboxedPlainObject::convertToNative)                                   \
   _(UrshValues, js::UrshValues)
 
+// The list below is for tail calls. The third argument specifies the number of
+// non-argument Values the VM wrapper should pop from the stack. This is used
+// for Baseline ICs.
+#define TAIL_CALL_VMFUNCTION_LIST(_)                            \
+  _(DoBinaryArithFallback, js::jit::DoBinaryArithFallback, 2)   \
+  _(DoBindNameFallback, js::jit::DoBindNameFallback, 0)         \
+  _(DoCompareFallback, js::jit::DoCompareFallback, 2)           \
+  _(DoConcatStringObject, js::jit::DoConcatStringObject, 2)     \
+  _(DoGetElemFallback, js::jit::DoGetElemFallback, 2)           \
+  _(DoGetElemSuperFallback, js::jit::DoGetElemSuperFallback, 3) \
+  _(DoGetIntrinsicFallback, js::jit::DoGetIntrinsicFallback, 0) \
+  _(DoGetIteratorFallback, js::jit::DoGetIteratorFallback, 1)   \
+  _(DoGetNameFallback, js::jit::DoGetNameFallback, 0)           \
+  _(DoGetPropFallback, js::jit::DoGetPropFallback, 1)           \
+  _(DoGetPropSuperFallback, js::jit::DoGetPropSuperFallback, 0) \
+  _(DoHasOwnFallback, js::jit::DoHasOwnFallback, 2)             \
+  _(DoInFallback, js::jit::DoInFallback, 2)                     \
+  _(DoInstanceOfFallback, js::jit::DoInstanceOfFallback, 2)     \
+  _(DoNewArray, js::jit::DoNewArray, 0)                         \
+  _(DoNewObject, js::jit::DoNewObject, 0)                       \
+  _(DoRestFallback, js::jit::DoRestFallback, 0)                 \
+  _(DoSetElemFallback, js::jit::DoSetElemFallback, 2)           \
+  _(DoSetPropFallback, js::jit::DoSetPropFallback, 1)           \
+  _(DoToBoolFallback, js::jit::DoToBoolFallback, 0)             \
+  _(DoTypeMonitorFallback, js::jit::DoTypeMonitorFallback, 0)   \
+  _(DoTypeOfFallback, js::jit::DoTypeOfFallback, 0)             \
+  _(DoUnaryArithFallback, js::jit::DoUnaryArithFallback, 1)     \
+  _(GeneratorThrowOrReturn, js::jit::GeneratorThrowOrReturn, 0)
+
+#define DEF_ID(name, ...) name,
 enum class VMFunctionId {
-#define DEF_ID(name, fp) name,
   VMFUNCTION_LIST(DEF_ID)
-#undef DEF_ID
       Count
 };
+enum class TailCallVMFunctionId { TAIL_CALL_VMFUNCTION_LIST(DEF_ID) Count };
+#undef DEF_ID
 
 // Define the VMFunctionToId template to map from signature + function to
 // the VMFunctionId. This lets us verify the consumer/codegen code matches
 // the C++ signature.
 template <typename Function, Function fun>
-struct VMFunctionToId;  // Error on this line? Forgot to update VMFUNCTION_LIST?
+struct VMFunctionToId;  // Error here? Update VMFUNCTION_LIST?
+
+template <typename Function, Function fun>
+struct TailCallVMFunctionToId;  // Error here? Update TAIL_CALL_VMFUNCTION_LIST?
 
 // GCC warns when the signature does not have matching attributes (for example
 // MOZ_MUST_USE). Squelch this warning to avoid a GCC-only footgun.
@@ -275,6 +308,14 @@ struct VMFunctionToId;  // Error on this line? Forgot to update VMFUNCTION_LIST?
     static constexpr VMFunctionId id = VMFunctionId::name; \
   };
 VMFUNCTION_LIST(DEF_TEMPLATE)
+#undef DEF_TEMPLATE
+
+#define DEF_TEMPLATE(name, fp, valuesToPop)                                \
+  template <>                                                              \
+  struct TailCallVMFunctionToId<decltype(&(::fp)), ::fp> {                 \
+    static constexpr TailCallVMFunctionId id = TailCallVMFunctionId::name; \
+  };
+TAIL_CALL_VMFUNCTION_LIST(DEF_TEMPLATE)
 #undef DEF_TEMPLATE
 
 #if MOZ_IS_GCC
