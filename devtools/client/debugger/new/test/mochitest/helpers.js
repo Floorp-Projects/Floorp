@@ -931,16 +931,10 @@ async function togglePauseOnExceptions(
   pauseOnExceptions,
   pauseOnCaughtExceptions
 ) {
-  const command = dbg.actions.pauseOnExceptions(
+  return dbg.actions.pauseOnExceptions(
     pauseOnExceptions,
     pauseOnCaughtExceptions
   );
-
-  if (!isPaused(dbg)) {
-    await waitForThreadEvents(dbg, "resumed");
-  }
-
-  return command;
 }
 
 function waitForActive(dbg) {
