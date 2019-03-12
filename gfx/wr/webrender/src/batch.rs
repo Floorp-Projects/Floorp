@@ -18,7 +18,7 @@ use internal_types::{FastHashMap, SavedTargetIndex, TextureSource};
 use picture::{Picture3DContext, PictureCompositeMode, PicturePrimitive, PictureSurface};
 use prim_store::{DeferredResolve, EdgeAaSegmentMask, PrimitiveInstanceKind, PrimitiveVisibilityIndex};
 use prim_store::{VisibleGradientTile, PrimitiveInstance, PrimitiveOpacity, SegmentInstanceIndex};
-use prim_store::{BrushSegment, ClipMaskKind, ClipTaskIndex};
+use prim_store::{BrushSegment, ClipMaskKind, ClipTaskIndex, VECS_PER_SEGMENT};
 use prim_store::image::ImageSource;
 use render_backend::DataStores;
 use render_task::{RenderTaskAddress, RenderTaskId, RenderTaskTree, TileBlit};
@@ -2018,7 +2018,6 @@ impl AlphaBatchBuilder {
                     );
                 } else {
                     const VECS_PER_SPECIFIC_BRUSH: usize = 3;
-                    const VECS_PER_SEGMENT: usize = 2;
                     let max_tiles_per_header = (MAX_VERTEX_TEXTURE_WIDTH - VECS_PER_SPECIFIC_BRUSH) / VECS_PER_SEGMENT;
 
                     // use temporary block storage since we don't know the number of visible tiles beforehand
