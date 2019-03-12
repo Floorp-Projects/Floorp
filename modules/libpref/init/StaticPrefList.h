@@ -709,7 +709,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   "layout.cursor.block.max-size",
    layout_cursor_block_max_size,
-  uint32_t, 64
+  uint32_t, 32
 )
 
 // Debug-only pref to force enable the AccessibleCaret. If you want to
