@@ -15,13 +15,11 @@ import kotlinx.coroutines.launch
 import mozilla.components.service.fretboard.Fretboard
 import mozilla.components.service.fretboard.source.kinto.KintoExperimentSource
 import mozilla.components.service.fretboard.storage.flatfile.FlatFileExperimentStorage
-import mozilla.components.service.glean.Glean
 import mozilla.components.support.base.log.Log
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.base.log.sink.AndroidLogSink
 import mozilla.components.support.rustlog.RustLog
 import org.mozilla.fenix.AdjustHelper.setupAdjustIfNeeded
-import org.mozilla.fenix.LeanplumHelper.setupLeanplumIfNeeded
 import org.mozilla.fenix.components.Components
 import java.io.File
 
@@ -33,7 +31,6 @@ open class FenixApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
-
         val megazordEnabled = setupMegazord()
         setupLogging(megazordEnabled)
         setupCrashReporting()
@@ -47,10 +44,10 @@ open class FenixApplication : Application() {
         }
 
         setupLeakCanary()
-        setupGlean(this)
+
         loadExperiments()
         setupAdjustIfNeeded(this)
-        setupLeanplumIfNeeded(this)
+        components.analytics.metrics.start()
     }
 
     protected open fun setupLeakCanary() {
@@ -71,11 +68,6 @@ open class FenixApplication : Application() {
             // it's only worth doing in the case that we are a megazord.
             RustLog.enable()
         }
-    }
-
-    private fun setupGlean(context: Context) {
-        Glean.initialize(context)
-        Glean.setUploadEnabled(BuildConfig.TELEMETRY)
     }
 
     private fun loadExperiments() {

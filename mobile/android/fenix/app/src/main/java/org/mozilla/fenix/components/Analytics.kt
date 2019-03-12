@@ -4,12 +4,16 @@
 
 package org.mozilla.fenix.components
 
+import android.app.Application
 import android.content.Context
 import mozilla.components.lib.crash.CrashReporter
 import mozilla.components.lib.crash.service.MozillaSocorroService
 import mozilla.components.lib.crash.service.SentryService
 import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.metrics.GleanMetricsService
+import org.mozilla.fenix.components.metrics.LeanplumMetricsService
+import org.mozilla.fenix.components.metrics.Metrics
 import org.mozilla.geckoview.BuildConfig.MOZ_APP_BUILDID
 import org.mozilla.geckoview.BuildConfig.MOZ_APP_VERSION
 
@@ -37,6 +41,15 @@ class Analytics(
                 organizationName = "Mozilla"
             ),
             enabled = true
+        )
+    }
+
+    val metrics: Metrics by lazy {
+        Metrics(
+            listOf(
+                GleanMetricsService(context),
+                LeanplumMetricsService(context as Application)
+            )
         )
     }
 }
