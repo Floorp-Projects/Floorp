@@ -22,8 +22,10 @@ class GithubEvents(BaseClient):
     """
 
     classOptions = {
-        "exchangePrefix": "exchange/taskcluster-github/v1/"
+        "exchangePrefix": "exchange/taskcluster-github/v1/",
     }
+    serviceName = 'github'
+    apiVersion = 'v1'
 
     def pullRequest(self, *args, **kwargs):
         """
@@ -145,6 +147,43 @@ class GithubEvents(BaseClient):
                 },
             ],
             'schema': 'v1/github-release-message.json#',
+        }
+        return self._makeTopicExchange(ref, *args, **kwargs)
+
+    def taskGroupDefined(self, *args, **kwargs):
+        """
+        GitHub release Event
+
+        used for creating status indicators in GitHub UI using Statuses API
+
+        This exchange outputs: ``v1/task-group-defined-message.json#``This exchange takes the following keys:
+
+         * routingKeyKind: Identifier for the routing-key kind. This is always `"primary"` for the formalized routing key. (required)
+
+         * organization: The GitHub `organization` which had an event. All periods have been replaced by % - such that foo.bar becomes foo%bar - and all other special characters aside from - and _ have been stripped. (required)
+
+         * repository: The GitHub `repository` which had an event.All periods have been replaced by % - such that foo.bar becomes foo%bar - and all other special characters aside from - and _ have been stripped. (required)
+        """
+
+        ref = {
+            'exchange': 'task-group-defined',
+            'name': 'taskGroupDefined',
+            'routingKey': [
+                {
+                    'constant': 'primary',
+                    'multipleWords': False,
+                    'name': 'routingKeyKind',
+                },
+                {
+                    'multipleWords': False,
+                    'name': 'organization',
+                },
+                {
+                    'multipleWords': False,
+                    'name': 'repository',
+                },
+            ],
+            'schema': 'v1/task-group-defined-message.json#',
         }
         return self._makeTopicExchange(ref, *args, **kwargs)
 
