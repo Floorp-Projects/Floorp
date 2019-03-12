@@ -1,4 +1,4 @@
-function test () {
+function test() {
   waitForExplicitFinish();
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
 
@@ -6,7 +6,7 @@ function test () {
     info("Page loaded.");
 
     var listener = {
-      onOpenWindow: function(aXULWindow) {
+      onOpenWindow(aXULWindow) {
         info("Download window shown...");
         Services.wm.removeListener(listener);
 
@@ -23,19 +23,19 @@ function test () {
         var domwindow = aXULWindow.docShell.domWindow;
         domwindow.addEventListener("load", downloadOnLoad, true);
       },
-      onCloseWindow: function(aXULWindow) {},
-    }
+      onCloseWindow(aXULWindow) {},
+    };
 
     Services.wm.addListener(listener);
 
     info("Creating BlobURL and clicking on a HTMLAnchorElement...");
     ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
-      let blob = new content.Blob(['test'], { type: 'text/plain' });
+      let blob = new content.Blob(["test"], { type: "text/plain" });
       let url = content.URL.createObjectURL(blob);
 
-      let link = content.document.createElement('a');
+      let link = content.document.createElement("a");
       link.href = url;
-      link.download = 'example.txt';
+      link.download = "example.txt";
       content.document.body.appendChild(link);
       link.click();
 
