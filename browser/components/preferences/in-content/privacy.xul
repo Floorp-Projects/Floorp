@@ -57,7 +57,10 @@
                      value="standard"
                      data-l10n-id="content-blocking-setting-standard"
                      flex="1"/>
-              <button id="standardArrow" class="arrowhead default-content-blocking-ui"/>
+              <button id="standardArrow"
+                      class="arrowhead default-content-blocking-ui"
+                      data-l10n-id="content-blocking-expand-section"
+                      aria-expanded="false"/>
             </hbox>
             <vbox class="indent default-content-blocking-ui">
               <description data-l10n-id="content-blocking-standard-desc"></description>
@@ -84,7 +87,10 @@
                      value="strict"
                      data-l10n-id="content-blocking-setting-strict"
                      flex="1"/>
-              <button id="strictArrow" class="arrowhead"/>
+              <button id="strictArrow"
+                      class="arrowhead"
+                      data-l10n-id="content-blocking-expand-section"
+                      aria-expanded="false"/>
             </hbox>
             <vbox class="indent">
               <label data-l10n-id="content-blocking-strict-desc"></label>
@@ -120,7 +126,10 @@
                    value="custom"
                    data-l10n-id="content-blocking-setting-custom"
                    flex="1"/>
-            <button id="customArrow" class="arrowhead"/>
+            <button id="customArrow"
+                    class="arrowhead"
+                    data-l10n-id="content-blocking-expand-section"
+                    aria-expanded="false"/>
           </hbox>
           <vbox class="indent">
             <description id="contentBlockingCustomDesc" data-l10n-id="content-blocking-custom-desc"></description>
