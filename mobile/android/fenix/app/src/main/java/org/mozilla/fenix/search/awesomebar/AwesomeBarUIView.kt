@@ -21,6 +21,7 @@ import mozilla.components.support.ktx.android.graphics.drawable.toBitmap
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.mvi.UIView
+import org.mozilla.fenix.utils.Settings
 
 class AwesomeBarUIView(
     container: ViewGroup,
@@ -58,6 +59,17 @@ class AwesomeBarUIView(
                 )
             )
 
+            if (Settings.getInstance(container.context).showSearchSuggestions()) {
+                view.addProviders(
+                    SearchSuggestionProvider(
+                        components.search.searchEngineManager.getDefaultSearchEngine(this),
+                        searchUseCase,
+                        components.core.client,
+                        SearchSuggestionProvider.Mode.MULTIPLE_SUGGESTIONS
+                    )
+                )
+            }
+
             view.addProviders(
                 SessionSuggestionProvider(
                     components.core.sessionManager,
@@ -66,12 +78,6 @@ class AwesomeBarUIView(
                 HistoryStorageSuggestionProvider(
                     components.core.historyStorage,
                     loadUrlUseCase
-                ),
-                SearchSuggestionProvider(
-                    components.search.searchEngineManager.getDefaultSearchEngine(this),
-                    searchUseCase,
-                    components.core.client,
-                    SearchSuggestionProvider.Mode.MULTIPLE_SUGGESTIONS
                 )
             )
         }
