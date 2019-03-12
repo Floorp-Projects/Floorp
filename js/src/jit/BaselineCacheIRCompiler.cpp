@@ -15,6 +15,7 @@
 
 #include "jit/MacroAssembler-inl.h"
 #include "jit/SharedICHelpers-inl.h"
+#include "jit/VMFunctionList-inl.h"
 #include "vm/JSContext-inl.h"
 #include "vm/Realm-inl.h"
 
@@ -38,8 +39,21 @@ class MOZ_RAII BaselineCacheIRCompiler : public CacheIRCompiler {
   bool makesGCCalls_;
   BaselineCacheIRStubKind kind_;
 
-  void callVM(MacroAssembler& masm, const VMFunction& fun);
-  void tailCallVM(MacroAssembler& masm, const VMFunction& fun);
+  void callVMInternal(MacroAssembler& masm, VMFunctionId id);
+
+  template <typename Fn, Fn fn>
+  void callVM(MacroAssembler& masm) {
+    VMFunctionId id = VMFunctionToId<Fn, fn>::id;
+    callVMInternal(masm, id);
+  }
+
+  void tailCallVMInternal(MacroAssembler& masm, TailCallVMFunctionId id);
+
+  template <typename Fn, Fn fn>
+  void tailCallVM(MacroAssembler& masm) {
+    TailCallVMFunctionId id = TailCallVMFunctionToId<Fn, fn>::id;
+    tailCallVMInternal(masm, id);
+  }
 
   MOZ_MUST_USE bool callTypeUpdateIC(Register obj, ValueOperand val,
                                      Register scratch,
@@ -141,21 +155,22 @@ class MOZ_RAII AutoStubFrame {
 #endif
 };
 
-void BaselineCacheIRCompiler::callVM(MacroAssembler& masm,
-                                     const VMFunction& fun) {
+void BaselineCacheIRCompiler::callVMInternal(MacroAssembler& masm,
+                                             VMFunctionId id) {
   MOZ_ASSERT(inStubFrame_);
 
-  TrampolinePtr code = cx_->runtime()->jitRuntime()->getVMWrapper(fun);
-  MOZ_ASSERT(fun.expectTailCall == NonTailCall);
+  TrampolinePtr code = cx_->runtime()->jitRuntime()->getVMWrapper(id);
+  MOZ_ASSERT(GetVMFunction(id).expectTailCall == NonTailCall);
 
   EmitBaselineCallVM(code, masm);
 }
 
-void BaselineCacheIRCompiler::tailCallVM(MacroAssembler& masm,
-                                         const VMFunction& fun) {
+void BaselineCacheIRCompiler::tailCallVMInternal(MacroAssembler& masm,
+                                                 TailCallVMFunctionId id) {
   MOZ_ASSERT(!inStubFrame_);
 
-  TrampolinePtr code = cx_->runtime()->jitRuntime()->getVMWrapper(fun);
+  TrampolinePtr code = cx_->runtime()->jitRuntime()->getVMWrapper(id);
+  const VMFunctionData& fun = GetVMFunction(id);
   MOZ_ASSERT(fun.expectTailCall == TailCall);
   size_t argSize = fun.explicitStackSlots() * sizeof(void*);
 
@@ -579,11 +594,6 @@ bool BaselineCacheIRCompiler::emitCallScriptedGetterResult() {
   return true;
 }
 
-typedef bool (*CallNativeGetterFn)(JSContext*, HandleFunction, HandleObject,
-                                   MutableHandleValue);
-static const VMFunction CallNativeGetterInfo =
-    FunctionInfo<CallNativeGetterFn>(CallNativeGetter, "CallNativeGetter");
-
 bool BaselineCacheIRCompiler::emitCallNativeGetterResult() {
   JitSpew(JitSpew_Codegen, __FUNCTION__);
   Register obj = allocator.useRegister(masm, reader.objOperandId());
@@ -602,7 +612,9 @@ bool BaselineCacheIRCompiler::emitCallNativeGetterResult() {
   masm.Push(obj);
   masm.Push(scratch);
 
-  callVM(masm, CallNativeGetterInfo);
+  using Fn =
+      bool (*)(JSContext*, HandleFunction, HandleObject, MutableHandleValue);
+  callVM<Fn, CallNativeGetter>(masm);
 
   stubFrame.leave(masm);
   return true;
@@ -626,7 +638,8 @@ bool BaselineCacheIRCompiler::emitCallProxyGetResult() {
   masm.Push(scratch);
   masm.Push(obj);
 
-  callVM(masm, ProxyGetPropertyInfo);
+  using Fn = bool (*)(JSContext*, HandleObject, HandleId, MutableHandleValue);
+  callVM<Fn, ProxyGetProperty>(masm);
 
   stubFrame.leave(masm);
   return true;
@@ -647,7 +660,9 @@ bool BaselineCacheIRCompiler::emitCallProxyGetByValueResult() {
   masm.Push(idVal);
   masm.Push(obj);
 
-  callVM(masm, ProxyGetPropertyByValueInfo);
+  using Fn =
+      bool (*)(JSContext*, HandleObject, HandleValue, MutableHandleValue);
+  callVM<Fn, ProxyGetPropertyByValue>(masm);
 
   stubFrame.leave(masm);
   return true;
@@ -669,10 +684,12 @@ bool BaselineCacheIRCompiler::emitCallProxyHasPropResult() {
   masm.Push(idVal);
   masm.Push(obj);
 
+  using Fn =
+      bool (*)(JSContext*, HandleObject, HandleValue, MutableHandleValue);
   if (hasOwn) {
-    callVM(masm, ProxyHasOwnInfo);
+    callVM<Fn, ProxyHasOwn>(masm);
   } else {
-    callVM(masm, ProxyHasInfo);
+    callVM<Fn, ProxyHas>(masm);
   }
 
   stubFrame.leave(masm);
@@ -695,7 +712,9 @@ bool BaselineCacheIRCompiler::emitCallNativeGetElementResult() {
   masm.Push(TypedOrValueRegister(MIRType::Object, AnyRegister(obj)));
   masm.Push(obj);
 
-  callVM(masm, NativeGetElementInfo);
+  using Fn = bool (*)(JSContext*, HandleNativeObject, HandleValue, int32_t,
+                      MutableHandleValue);
+  callVM<Fn, NativeGetElement>(masm);
 
   stubFrame.leave(masm);
   return true;
@@ -875,7 +894,9 @@ bool BaselineCacheIRCompiler::emitCallStringSplitResult() {
   masm.Push(sep);
   masm.Push(str);
 
-  callVM(masm, StringSplitHelperInfo);
+  using Fn = bool (*)(JSContext*, HandleString, HandleString, HandleObjectGroup,
+                      uint32_t limit, MutableHandleValue);
+  callVM<Fn, StringSplitHelper>(masm);
 
   stubFrame.leave(masm);
   return true;
@@ -909,8 +930,13 @@ bool BaselineCacheIRCompiler::emitCompareStringResult() {
     masm.Push(right);
     masm.Push(left);
 
-    callVM(masm, (op == JSOP_EQ || op == JSOP_STRICTEQ) ? StringsEqualInfo
-                                                        : StringsNotEqualInfo);
+    using Fn = bool (*)(JSContext*, HandleString, HandleString, bool*);
+    if (op == JSOP_EQ || op == JSOP_STRICTEQ) {
+      callVM<Fn, jit::StringsEqual<true>>(masm);
+    } else {
+      callVM<Fn, jit::StringsEqual<false>>(masm);
+    }
+
     stubFrame.leave(masm);
     masm.mov(ReturnReg, scratch);
   }
@@ -966,7 +992,9 @@ bool BaselineCacheIRCompiler::callTypeUpdateIC(
   masm.loadPtr(Address(BaselineFrameReg, 0), scratch);
   masm.pushBaselineFramePtr(scratch, scratch);
 
-  callVM(masm, DoTypeUpdateFallbackInfo);
+  using Fn = bool (*)(JSContext*, BaselineFrame*, ICUpdatedStub*, HandleValue,
+                      HandleValue);
+  callVM<Fn, DoTypeUpdateFallback>(masm);
 
   masm.PopRegsInMask(saveRegs);
 
@@ -1634,11 +1662,6 @@ bool BaselineCacheIRCompiler::emitStoreTypedElement() {
   return true;
 }
 
-typedef bool (*CallNativeSetterFn)(JSContext*, HandleFunction, HandleObject,
-                                   HandleValue);
-static const VMFunction CallNativeSetterInfo =
-    FunctionInfo<CallNativeSetterFn>(CallNativeSetter, "CallNativeSetter");
-
 bool BaselineCacheIRCompiler::emitCallNativeSetter() {
   JitSpew(JitSpew_Codegen, __FUNCTION__);
   Register obj = allocator.useRegister(masm, reader.objOperandId());
@@ -1659,7 +1682,8 @@ bool BaselineCacheIRCompiler::emitCallNativeSetter() {
   masm.Push(obj);
   masm.Push(scratch);
 
-  callVM(masm, CallNativeSetterInfo);
+  using Fn = bool (*)(JSContext*, HandleFunction, HandleObject, HandleValue);
+  callVM<Fn, CallNativeSetter>(masm);
 
   stubFrame.leave(masm);
   return true;
@@ -1761,7 +1785,8 @@ bool BaselineCacheIRCompiler::emitCallSetArrayLength() {
   masm.Push(val);
   masm.Push(obj);
 
-  callVM(masm, SetArrayLengthInfo);
+  using Fn = bool (*)(JSContext*, HandleObject, HandleValue, bool);
+  callVM<Fn, jit::SetArrayLength>(masm);
 
   stubFrame.leave(masm);
   return true;
@@ -1789,7 +1814,8 @@ bool BaselineCacheIRCompiler::emitCallProxySet() {
   masm.Push(scratch);
   masm.Push(obj);
 
-  callVM(masm, ProxySetPropertyInfo);
+  using Fn = bool (*)(JSContext*, HandleObject, HandleId, HandleValue, bool);
+  callVM<Fn, ProxySetProperty>(masm);
 
   stubFrame.leave(masm);
   return true;
@@ -1822,7 +1848,8 @@ bool BaselineCacheIRCompiler::emitCallProxySetByValue() {
   masm.Push(idVal);
   masm.Push(obj);
 
-  callVM(masm, ProxySetPropertyByValueInfo);
+  using Fn = bool (*)(JSContext*, HandleObject, HandleValue, HandleValue, bool);
+  callVM<Fn, ProxySetPropertyByValue>(masm);
 
   stubFrame.leave(masm);
   return true;
@@ -1846,7 +1873,9 @@ bool BaselineCacheIRCompiler::emitCallAddOrUpdateSparseElementHelper() {
   masm.Push(id);
   masm.Push(obj);
 
-  callVM(masm, AddOrUpdateSparseElementHelperInfo);
+  using Fn = bool (*)(JSContext * cx, HandleArrayObject obj, int32_t int_id,
+                      HandleValue v, bool strict);
+  callVM<Fn, AddOrUpdateSparseElementHelper>(masm);
 
   stubFrame.leave(masm);
   return true;
@@ -1866,7 +1895,9 @@ bool BaselineCacheIRCompiler::emitCallGetSparseElementResult() {
   masm.Push(id);
   masm.Push(obj);
 
-  callVM(masm, GetSparseElementHelperInfo);
+  using Fn = bool (*)(JSContext * cx, HandleArrayObject obj, int32_t int_id,
+                      MutableHandleValue result);
+  callVM<Fn, GetSparseElementHelper>(masm);
 
   stubFrame.leave(masm);
   return true;
@@ -1900,7 +1931,9 @@ bool BaselineCacheIRCompiler::emitMegamorphicSetElement() {
   masm.Push(idVal);
   masm.Push(obj);
 
-  callVM(masm, SetObjectElementInfo);
+  using Fn = bool (*)(JSContext*, HandleObject, HandleValue, HandleValue,
+                      HandleValue, bool);
+  callVM<Fn, SetObjectElementWithReceiver>(masm);
 
   stubFrame.leave(masm);
   return true;
@@ -2365,7 +2398,8 @@ bool BaselineCacheIRCompiler::emitCallStringConcatResult() {
   masm.push(rhs);
   masm.push(lhs);
 
-  callVM(masm, ConcatStringsInfo);
+  using Fn = JSString* (*)(JSContext*, HandleString, HandleString);
+  callVM<Fn, ConcatStrings<CanGC>>(masm);
 
   masm.tagValue(JSVAL_TYPE_STRING, ReturnReg, output.valueReg());
 
@@ -2388,7 +2422,8 @@ bool BaselineCacheIRCompiler::emitCallStringObjectConcatResult() {
   masm.pushValue(rhs);
   masm.pushValue(lhs);
 
-  tailCallVM(masm, DoConcatStringObjectInfo);
+  using Fn = bool (*)(JSContext*, HandleValue, HandleValue, MutableHandleValue);
+  tailCallVM<Fn, DoConcatStringObject>(masm);
 
   return true;
 }

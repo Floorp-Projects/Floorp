@@ -13,6 +13,7 @@ import {
 } from "../selectors";
 import { getFilename } from "../utils/source";
 import { getSelectedLocation } from "../utils/source-maps";
+import { sortSelectedBreakpoints } from "../utils/breakpoint";
 
 import type { Source, Breakpoint } from "../types";
 import type { Selector, SourcesMap } from "../reducers/types";
@@ -27,12 +28,7 @@ function getBreakpointsForSource(
   selectedSource: ?Source,
   breakpoints: Breakpoint[]
 ) {
-  return breakpoints
-    .sort(
-      (a, b) =>
-        getSelectedLocation(a, selectedSource).line -
-        getSelectedLocation(b, selectedSource).line
-    )
+  return sortSelectedBreakpoints(breakpoints, selectedSource)
     .filter(
       bp =>
         !bp.options.hidden &&

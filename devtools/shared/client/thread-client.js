@@ -30,7 +30,6 @@ const noop = () => {};
 function ThreadClient(client, actor) {
   this.client = client;
   this._actor = actor;
-  this._scriptCache = {};
   this._pauseGrips = {};
   this._threadGrips = {};
   this.request = this.client.request;
@@ -346,19 +345,6 @@ ThreadClient.prototype = {
   }),
 
   /**
-   * Release multiple thread-lifetime object actors. If any pause-lifetime
-   * actors are included in the request, a |notReleasable| error will return,
-   * but all the thread-lifetime ones will have been released.
-   *
-   * @param array actors
-   *        An array with actor IDs to release.
-   */
-  releaseMany: DebuggerClient.requester({
-    type: "releaseMany",
-    actors: arg(0),
-  }),
-
-  /**
    * Promote multiple pause-lifetime object actors to thread-lifetime ones.
    *
    * @param array actors
@@ -378,17 +364,6 @@ ThreadClient.prototype = {
   getSources: DebuggerClient.requester({
     type: "sources",
   }),
-
-  /**
-   * Clear the thread's source script cache. A scriptscleared event
-   * will be sent.
-   */
-  _clearScripts: function() {
-    if (Object.keys(this._scriptCache).length > 0) {
-      this._scriptCache = {};
-      this.emit("scriptscleared");
-    }
-  },
 
   /**
    * Request frames from the callstack for the current thread.

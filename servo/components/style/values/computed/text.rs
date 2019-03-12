@@ -18,9 +18,9 @@ use crate::Zero;
 use std::fmt::{self, Write};
 use style_traits::{CssWriter, ToCss};
 
-pub use crate::values::specified::{OverflowWrap, WordBreak};
 pub use crate::values::specified::TextAlignKeyword as TextAlign;
 pub use crate::values::specified::TextEmphasisPosition;
+pub use crate::values::specified::{OverflowWrap, WordBreak};
 
 /// A computed value for the `initial-letter` property.
 pub type InitialLetter = GenericInitialLetter<CSSFloat, CSSInteger>;
@@ -38,7 +38,7 @@ pub type InitialLetter = GenericInitialLetter<CSSFloat, CSSInteger>;
     ToAnimatedValue,
     ToAnimatedZero,
 )]
-pub struct LetterSpacing(Length);
+pub struct LetterSpacing(pub Length);
 
 impl LetterSpacing {
     /// Return the `normal` computed value, which is just zero.

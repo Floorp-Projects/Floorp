@@ -34,7 +34,11 @@ describe("CFRMessageProvider", () => {
   });
   it("should restrict all messages to `en` locale for now", () => {
     for (const message of messages) {
-      assert.include(message.targeting, `localeLanguageCode == "en"`);
+      if (message.id !== "PIN_TAB") {
+        assert.include(message.targeting, `localeLanguageCode == "en"`);
+      } else {
+        assert.include(message.targeting, `locale == "en-US"`);
+      }
     }
   });
 });
