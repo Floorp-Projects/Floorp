@@ -46,8 +46,11 @@ with Files("AsanReporter.jsm"):
 with Files('AsyncTabSwitcher.jsm'):
     BUG_COMPONENT = ('Firefox', 'Tabbed Browser')
 
+with Files('NewTabPagePreloading.jsm'):
+    BUG_COMPONENT = ('Firefox', 'Tabbed Browser')
+
 with Files("BrowserWindowTracker.jsm"):
-    BUG_COMPONENT = ("Core", "Networking")
+    BUG_COMPONENT = ("Firefox", "General")
 
 with Files("*Telemetry.jsm"):
     BUG_COMPONENT = ("Toolkit", "Telemetry")
@@ -139,6 +142,7 @@ EXTRA_JS_MODULES += [
     'HomePage.jsm',
     'LaterRun.jsm',
     'LiveBookmarkMigrator.jsm',
+    'NewTabPagePreloading.jsm',
     'OpenInTabsUtils.jsm',
     'PageActions.jsm',
     'PermissionUI.jsm',
