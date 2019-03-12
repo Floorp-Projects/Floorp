@@ -10,6 +10,7 @@ import io.reactivex.Observable
 import io.reactivex.Observer
 import io.reactivex.functions.Consumer
 import mozilla.components.browser.awesomebar.BrowserAwesomeBar
+import mozilla.components.browser.search.SearchEngine
 import mozilla.components.feature.awesomebar.provider.ClipboardSuggestionProvider
 import mozilla.components.feature.awesomebar.provider.HistoryStorageSuggestionProvider
 import mozilla.components.feature.awesomebar.provider.SearchSuggestionProvider
@@ -43,8 +44,8 @@ class AwesomeBarUIView(
         }
 
         val searchUseCase = object : SearchUseCases.SearchUseCase {
-            override fun invoke(searchTerms: String) {
-                actionEmitter.onNext(AwesomeBarAction.SearchTermsTapped(searchTerms))
+            override fun invoke(searchTerms: String, searchEngine: SearchEngine?) {
+                actionEmitter.onNext(AwesomeBarAction.SearchTermsTapped(searchTerms, searchEngine))
             }
         }
 

@@ -4,6 +4,7 @@ package org.mozilla.fenix.search.awesomebar
    file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import android.view.ViewGroup
+import mozilla.components.browser.search.SearchEngine
 import org.mozilla.fenix.mvi.Action
 import org.mozilla.fenix.mvi.ActionBusFactory
 import org.mozilla.fenix.mvi.Change
@@ -15,7 +16,7 @@ data class AwesomeBarState(val query: String) : ViewState
 
 sealed class AwesomeBarAction : Action {
     data class URLTapped(val url: String) : AwesomeBarAction()
-    data class SearchTermsTapped(val searchTerms: String) : AwesomeBarAction()
+    data class SearchTermsTapped(val searchTerms: String, val engine: SearchEngine?) : AwesomeBarAction()
 }
 
 sealed class AwesomeBarChange : Change {

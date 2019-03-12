@@ -23,7 +23,7 @@ class HistoryItemMenu(
         listOf(
             SimpleBrowserMenuItem(
                 context.getString(R.string.history_delete_item),
-                R.color.photonRed60
+                textColorResource = R.color.photonRed60
             ) {
                 onItemTapped.invoke(Item.Delete)
             }

@@ -102,7 +102,8 @@ class SearchFragment : Fragment() {
                         (activity as HomeActivity).openToBrowser(sessionId, BrowserDirection.FromSearch)
                     }
                     is AwesomeBarAction.SearchTermsTapped -> {
-                        getSearchUseCase(requireContext(), sessionId == null).invoke(it.searchTerms)
+                        getSearchUseCase(requireContext(), sessionId == null)
+                            .invoke(it.searchTerms, it.engine)
                         (activity as HomeActivity).openToBrowser(sessionId, BrowserDirection.FromSearch)
                     }
                 }
