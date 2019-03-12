@@ -1,3 +1,5 @@
+/* import-globals-from urlSearchParams_worker.js */
+
 function testSimpleURLSearchParams() {
   var u = new URLSearchParams();
   ok(u, "URLSearchParams created");
@@ -92,7 +94,7 @@ function testParserURLSearchParams() {
 
     var count = 0;
     for (var key in checks[i].data) {
-      ++count;
+      count = count + 1;
       ok(u.has(key), "key " + key + " found");
 
       var all = u.getAll(key);

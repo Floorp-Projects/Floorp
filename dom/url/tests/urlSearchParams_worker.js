@@ -1,3 +1,5 @@
+/* eslint-env worker */
+
 importScripts("urlSearchParams_commons.js");
 
 function ok(a, msg) {
@@ -30,7 +32,7 @@ function runTest() {
 }
 
 onmessage = function() {
-  status = false;
+  let status = false;
   try {
     if ((URLSearchParams instanceof Object)) {
       status = true;
