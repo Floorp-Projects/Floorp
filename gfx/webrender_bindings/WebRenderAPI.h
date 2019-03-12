@@ -114,8 +114,6 @@ class TransactionBuilder {
 
   bool IsResourceUpdatesEmpty() const;
 
-  bool IsRenderedFrameInvalidated() const;
-
   void AddImage(wr::ImageKey aKey, const ImageDescriptor& aDescriptor,
                 wr::Vec<uint8_t>& aBytes);
 

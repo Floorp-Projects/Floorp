@@ -1072,10 +1072,7 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvEmptyTransaction(
             mCompositorBridge, GetLayersId(), mChildLayersObserverEpoch, true));
   }
 
-  // Even when txn.IsResourceUpdatesEmpty() is true, there could be resource
-  // updates. It is handled by WebRenderTextureHostWrapper. In this case
-  // txn.IsRenderedFrameInvalidated() becomes true.
-  if (txn.IsResourceUpdatesEmpty() && !txn.IsRenderedFrameInvalidated()) {
+  if (txn.IsResourceUpdatesEmpty()) {
     // If TransactionBuilder does not have resource updates nor display list,
     // ScheduleGenerateFrame is not triggered via SceneBuilder and there is no
     // need to update WrEpoch.
