@@ -199,6 +199,10 @@ bool TransactionBuilder::IsResourceUpdatesEmpty() const {
   return wr_transaction_resource_updates_is_empty(mTxn);
 }
 
+bool TransactionBuilder::IsRenderedFrameInvalidated() const {
+  return wr_transaction_is_rendered_frame_invalidated(mTxn);
+}
+
 void TransactionBuilder::SetDocumentView(
     const LayoutDeviceIntRect& aDocumentRect) {
   wr::FramebufferIntRect wrDocRect;
