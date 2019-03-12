@@ -8,7 +8,7 @@
 // original search query.
 
 add_task(async function setup() {
-  sandbox = sinon.createSandbox();
+  sandbox = sinon.sandbox.create();
 
   registerCleanupFunction(async () => {
     sandbox.restore();
