@@ -49,13 +49,17 @@ CompositorManagerParent::CreateSameProcess() {
 }
 
 /* static */
-void CompositorManagerParent::Create(
+bool CompositorManagerParent::Create(
     Endpoint<PCompositorManagerParent>&& aEndpoint) {
   MOZ_ASSERT(NS_IsMainThread());
 
   // We are creating a manager for the another process, inside the GPU process
   // (or UI process if it subsumbed the GPU process).
   MOZ_ASSERT(aEndpoint.OtherPid() != base::GetCurrentProcId());
+
+  if (!CompositorThreadHolder::IsActive()) {
+    return false;
+  }
 
   RefPtr<CompositorManagerParent> bridge = new CompositorManagerParent();
 
@@ -64,6 +68,7 @@ void CompositorManagerParent::Create(
           "CompositorManagerParent::Bind", bridge,
           &CompositorManagerParent::Bind, std::move(aEndpoint));
   CompositorThreadHolder::Loop()->PostTask(runnable.forget());
+  return true;
 }
 
 /* static */

@@ -47,7 +47,6 @@ class VsyncBridgeChild final : public PVsyncBridgeChild {
 
  private:
   RefPtr<VsyncIOThreadHolder> mThread;
-  MessageLoop* mLoop;
   uint64_t mProcessToken;
 };
 

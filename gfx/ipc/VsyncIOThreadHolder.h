@@ -23,6 +23,14 @@ class VsyncIOThreadHolder final {
 
   RefPtr<nsIThread> GetThread() const;
 
+  bool IsOnCurrentThread() const {
+    return mThread->IsOnCurrentThread();
+  }
+
+  void Dispatch(already_AddRefed<nsIRunnable> task) {
+    mThread->Dispatch(std::move(task), NS_DISPATCH_NORMAL);
+  }
+
  private:
   ~VsyncIOThreadHolder();
 

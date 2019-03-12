@@ -30,7 +30,7 @@ class CompositorManagerParent final : public PCompositorManagerParent {
 
  public:
   static already_AddRefed<CompositorManagerParent> CreateSameProcess();
-  static void Create(Endpoint<PCompositorManagerParent>&& aEndpoint);
+  static bool Create(Endpoint<PCompositorManagerParent>&& aEndpoint);
   static void Shutdown();
 
   static already_AddRefed<CompositorBridgeParent>
