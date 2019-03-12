@@ -12,7 +12,10 @@ private const val POCKET_DIR = "pocket"
  * Accessors to resources used in testing. These files are available in `app/src/test/resources`.
  */
 enum class PocketTestResource(private val path: String) {
-    POCKET_VIDEO_RECOMMENDATION("$POCKET_DIR/video_recommendations.json");
+    POCKET_VIDEO_RECOMMENDATION("$POCKET_DIR/video_recommendations.json"),
+
+    // NEVER COMMIT THE API KEY FILE. Add this file with a valid API key to use this resource.
+    API_KEY("$POCKET_DIR/apiKey.txt");
 
     fun get(): String = this::class.java.classLoader!!.getResource(path)!!.readText()
 
