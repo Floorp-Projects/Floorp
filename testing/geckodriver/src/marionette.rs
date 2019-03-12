@@ -1476,6 +1476,10 @@ impl ToMarionette for SwitchToWindowParameters {
             "name".to_string(),
             serde_json::to_value(self.handle.clone())?,
         );
+        data.insert(
+            "handle".to_string(),
+            serde_json::to_value(self.handle.clone())?,
+        );
         Ok(data)
     }
 }
