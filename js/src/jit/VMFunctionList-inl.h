@@ -4,6 +4,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#ifndef jit_VMFunctionList_inl_h
+#define jit_VMFunctionList_inl_h
+
 #include "builtin/Eval.h"
 #include "builtin/RegExp.h"
 #include "jit/BaselineIC.h"
@@ -64,6 +67,7 @@ namespace jit {
   _(ConvertElementsToDoubles, js::ObjectElements::ConvertElementsToDoubles)    \
   _(CopyElementsForWrite, js::NativeObject::CopyElementsForWrite)              \
   _(CopyLexicalEnvironmentObject, js::jit::CopyLexicalEnvironmentObject)       \
+  _(CopyStringSplitArray, js::jit::CopyStringSplitArray)                       \
   _(CreateAsyncFromSyncIterator, js::CreateAsyncFromSyncIterator)              \
   _(CreateDerivedTypedObj, js::jit::CreateDerivedTypedObj)                     \
   _(CreateGenerator, js::jit::CreateGenerator)                                 \
@@ -89,10 +93,13 @@ namespace jit {
   _(DeletePropertyStrict, js::DeletePropertyJit<true>)                         \
   _(DirectEvalStringFromIon, js::DirectEvalStringFromIon)                      \
   _(DivValues, js::DivValues)                                                  \
+  _(DoCallFallback, js::jit::DoCallFallback)                                   \
   _(DoConcatStringObject, js::jit::DoConcatStringObject)                       \
+  _(DoSpreadCallFallback, js::jit::DoSpreadCallFallback)                       \
   _(DoToNumber, js::jit::DoToNumber)                                           \
   _(DoToNumeric, js::jit::DoToNumeric)                                         \
   _(DoTypeUpdateFallback, js::jit::DoTypeUpdateFallback)                       \
+  _(DoWarmUpCounterFallbackOSR, js::jit::DoWarmUpCounterFallbackOSR)           \
   _(EnterWith, js::jit::EnterWith)                                             \
   _(FinalSuspend, js::jit::FinalSuspend)                                       \
   _(FinishBoundFunctionInit, JSFunction::finishBoundFunctionInit)              \
@@ -276,3 +283,5 @@ VMFUNCTION_LIST(DEF_TEMPLATE)
 
 }  // namespace jit
 }  // namespace js
+
+#endif // jit_VMFunctionList_inl_h
