@@ -526,7 +526,7 @@ nsresult FeatureTask::Create(nsIChannel* aChannel,
   UrlClassifierFeatureFactory::GetFeaturesFromChannel(aChannel, features);
   if (features.IsEmpty()) {
     UC_LOG(("FeatureTask::Create: Nothing to do for channel %p", aChannel));
-    return NS_ERROR_FAILURE;
+    return NS_OK;
   }
 
   RefPtr<FeatureTask> task = new FeatureTask(aChannel, std::move(aCallback));
@@ -757,6 +757,12 @@ nsresult AsyncUrlChannelClassifier::CheckChannel(
       FeatureTask::Create(aChannel, std::move(aCallback), getter_AddRefs(task));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
+  }
+
+  if (!task) {
+    // No task is needed for this channel, return an error so the caller won't
+    // wait for a callback.
+    return NS_ERROR_FAILURE;
   }
 
   RefPtr<nsUrlClassifierDBServiceWorker> workerClassifier =

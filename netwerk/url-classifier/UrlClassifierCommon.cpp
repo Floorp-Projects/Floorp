@@ -114,7 +114,8 @@ bool UrlClassifierCommon::ShouldEnableClassifier(nsIChannel* aChannel) {
   }
 
   rv = channel->GetTopWindowURI(getter_AddRefs(topWinURI));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
+  if (NS_FAILED(rv)) {
+    // Skipping top-level load.
     return false;
   }
 
