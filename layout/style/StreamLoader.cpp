@@ -47,8 +47,7 @@ StreamLoader::OnStartRequest(nsIRequest* aRequest) {
 }
 
 NS_IMETHODIMP
-StreamLoader::OnStopRequest(nsIRequest* aRequest,
-                            nsresult aStatus) {
+StreamLoader::OnStopRequest(nsIRequest* aRequest, nsresult aStatus) {
   // Decoded data
   nsCString utf8String;
   {
@@ -114,9 +113,8 @@ StreamLoader::OnStopRequest(nsIRequest* aRequest,
 
 /* nsIStreamListener implementation */
 NS_IMETHODIMP
-StreamLoader::OnDataAvailable(nsIRequest*,
-                              nsIInputStream* aInputStream, uint64_t,
-                              uint32_t aCount) {
+StreamLoader::OnDataAvailable(nsIRequest*, nsIInputStream* aInputStream,
+                              uint64_t, uint32_t aCount) {
   if (NS_FAILED(mStatus)) {
     return mStatus;
   }
