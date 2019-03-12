@@ -39,17 +39,6 @@ cloog-0.18.1:
     sha256: 02500a4edd14875f94fe84cbeda4290425cb0c1c2474c6f75d75a303d64b4196
     size: 3857324
 
-gcc-4.9.4:
-  description: GCC 4.9.4 source code
-  fetch:
-    type: static-url
-    url: ftp://ftp.gnu.org/gnu/gcc/gcc-4.9.4/gcc-4.9.4.tar.bz2
-    sha256: 6c11d292cd01b294f9f84c9a59c230d80e9e4a47e5c6355f046bb36d4f358092
-    size: 90097606
-    gpg-signature:
-      sig-url: "{url}.sig"
-      key-path: build/unix/build-gcc/13975A70E63C361C73AE69EF6EEB81F8981C74C7.key
-
 gcc-6.4.0:
   description: GCC 6.4.0 source code
   fetch:
