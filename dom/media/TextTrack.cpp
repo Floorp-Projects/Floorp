@@ -73,33 +73,28 @@ JSObject* TextTrack::WrapObject(JSContext* aCx,
 }
 
 void TextTrack::SetMode(TextTrackMode aValue) {
-  if (mMode != aValue) {
-    mMode = aValue;
-    if (aValue == TextTrackMode::Disabled) {
-      // Remove all the cues in MediaElement.
-      HTMLMediaElement* mediaElement = GetMediaElement();
-      if (mediaElement) {
-        for (size_t i = 0; i < mCueList->Length(); ++i) {
-          mediaElement->NotifyCueRemoved(*(*mCueList)[i]);
-        }
-      }
-      SetCuesInactive();
-    } else {
-      // Add all the cues into MediaElement.
-      HTMLMediaElement* mediaElement = GetMediaElement();
-      if (mediaElement) {
-        for (size_t i = 0; i < mCueList->Length(); ++i) {
-          mediaElement->NotifyCueAdded(*(*mCueList)[i]);
-        }
-      }
-    }
-    if (mTextTrackList) {
-      mTextTrackList->CreateAndDispatchChangeEvent();
-    }
-    // Ensure the TimeMarchesOn is called in case that the mCueList
-    // is empty.
-    NotifyCueUpdated(nullptr);
+  if (mMode == aValue) {
+    return;
   }
+  mMode = aValue;
+
+  HTMLMediaElement* mediaElement = GetMediaElement();
+  if (aValue == TextTrackMode::Disabled) {
+    for (size_t i = 0; i < mCueList->Length() && mediaElement; ++i) {
+      mediaElement->NotifyCueRemoved(*(*mCueList)[i]);
+    }
+    SetCuesInactive();
+  } else {
+    for (size_t i = 0; i < mCueList->Length() && mediaElement; ++i) {
+      mediaElement->NotifyCueAdded(*(*mCueList)[i]);
+    }
+  }
+  if (mediaElement) {
+    mediaElement->NotifyTextTrackModeChanged();
+  }
+  // Ensure the TimeMarchesOn is called in case that the mCueList
+  // is empty.
+  NotifyCueUpdated(nullptr);
 }
 
 void TextTrack::GetId(nsAString& aId) const {
