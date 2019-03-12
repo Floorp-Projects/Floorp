@@ -1279,6 +1279,11 @@ pub extern "C" fn wr_transaction_resource_updates_is_empty(txn: &Transaction) ->
 }
 
 #[no_mangle]
+pub extern "C" fn wr_transaction_is_rendered_frame_invalidated(txn: &Transaction) -> bool {
+    txn.invalidate_rendered_frame
+}
+
+#[no_mangle]
 pub extern "C" fn wr_transaction_notify(txn: &mut Transaction, when: Checkpoint, event: usize) {
     struct GeckoNotification(usize);
     impl NotificationHandler for GeckoNotification {
