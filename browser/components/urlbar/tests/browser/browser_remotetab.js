@@ -31,7 +31,7 @@ const REMOTE_TAB = {
 };
 
 add_task(async function setup() {
-  sandbox = sinon.sandbox.create();
+  sandbox = sinon.createSandbox();
 
   let originalSyncedTabsInternal = SyncedTabs._internal;
   SyncedTabs._internal = {
@@ -54,7 +54,7 @@ add_task(async function setup() {
     ["services.sync.syncedTabs.showRemoteTabs", true],
   ]});
 
-  sandbox.stub(SyncedTabs._internal, "getTabClients", () => Promise.resolve(Cu.cloneInto([REMOTE_TAB], {})));
+  sandbox.stub(SyncedTabs._internal, "getTabClients").callsFake(() => Promise.resolve(Cu.cloneInto([REMOTE_TAB], {})));
 
   registerCleanupFunction(async () => {
     sandbox.restore();
