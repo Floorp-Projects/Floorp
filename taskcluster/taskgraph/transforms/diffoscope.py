@@ -52,6 +52,9 @@ diff_description_schema = Schema({
     # but when one needs to --exclude some contents, that doesn't work out well
     # if said content is packed (e.g. in omni.ja).
     Optional('unpack'): bool,
+
+    # Commands to run before performing the diff.
+    Optional('pre-diff-commands'): [basestring],
 })
 
 transforms = TransformSequence()
@@ -138,7 +141,8 @@ def fill_template(config, tasks):
                     'ORIG_URL': urls['original'],
                     'NEW_URL': urls['new'],
                     'DIFFOSCOPE_ARGS': ' '.join(
-                        task[k] for k in ('args', 'extra-args') if k in task)
+                        task[k] for k in ('args', 'extra-args') if k in task),
+                    'PRE_DIFF': '; '.join(task.get('pre-diff-commands', [])),
                 },
                 'max-run-time': 1800,
             },
