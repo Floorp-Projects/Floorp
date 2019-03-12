@@ -2,7 +2,7 @@
 
 # ACTION_VIEW
 
-`ACTION_VIEW` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/Session.kt#L92)
+`ACTION_VIEW` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/Session.kt#L94)
 
 Created to handle an ACTION_VIEW intent
 

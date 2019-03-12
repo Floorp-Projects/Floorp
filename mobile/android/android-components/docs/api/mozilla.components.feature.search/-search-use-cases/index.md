@@ -2,7 +2,7 @@
 
 # SearchUseCases
 
-`class SearchUseCases` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/search/src/main/java/mozilla/components/feature/search/SearchUseCases.kt#L19)
+`class SearchUseCases` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/search/src/main/java/mozilla/components/feature/search/SearchUseCases.kt#L20)
 
 Contains use cases related to the search feature.
 

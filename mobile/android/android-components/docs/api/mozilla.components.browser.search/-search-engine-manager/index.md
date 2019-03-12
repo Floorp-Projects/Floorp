@@ -13,6 +13,12 @@ This class provides access to a centralized registry of search engines.
 | [&lt;init&gt;](-init-.md) | `SearchEngineManager(providers: `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`SearchEngineProvider`](../../mozilla.components.browser.search.provider/-search-engine-provider/index.md)`> = listOf(
             AssetsSearchEngineProvider(LocaleSearchLocalizationProvider())))`<br>This class provides access to a centralized registry of search engines. |
 
+### Properties
+
+| Name | Summary |
+|---|---|
+| [defaultSearchEngine](default-search-engine.md) | `var defaultSearchEngine: `[`SearchEngine`](../-search-engine/index.md)`?` |
+
 ### Functions
 
 | Name | Summary |

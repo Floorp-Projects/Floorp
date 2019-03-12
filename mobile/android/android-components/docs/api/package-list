@@ -23,6 +23,7 @@ $dokka.location:mozilla.components.support.ktx.android.graphics.drawable$toBitma
 $dokka.location:mozilla.components.support.ktx.android.net$hostWithoutCommonPrefixes#android.net.Urimozilla.components.support.ktx.android.net/android.net.-uri/host-without-common-prefixes.md
 $dokka.location:mozilla.components.support.ktx.android.org.json$asSequence(org.json.JSONArray)mozilla.components.support.ktx.android.org.json/org.json.-j-s-o-n-array/as-sequence.md
 $dokka.location:mozilla.components.support.ktx.android.org.json$getOrPutJSONObject(org.json.JSONObject, kotlin.String, kotlin.Function0((org.json.JSONObject)))mozilla.components.support.ktx.android.org.json/org.json.-j-s-o-n-object/get-or-put-j-s-o-n-object.md
+$dokka.location:mozilla.components.support.ktx.android.org.json$mapNotNull(org.json.JSONArray, kotlin.Function2((org.json.JSONArray, kotlin.Int, mozilla.components.support.ktx.android.org.json.mapNotNull.T)), kotlin.Function1((mozilla.components.support.ktx.android.org.json.mapNotNull.T, mozilla.components.support.ktx.android.org.json.mapNotNull.R)))mozilla.components.support.ktx.android.org.json/org.json.-j-s-o-n-array/map-not-null.md
 $dokka.location:mozilla.components.support.ktx.android.org.json$mergeWith(org.json.JSONObject, org.json.JSONObject)mozilla.components.support.ktx.android.org.json/org.json.-j-s-o-n-object/merge-with.md
 $dokka.location:mozilla.components.support.ktx.android.org.json$putIfNotNull(org.json.JSONObject, kotlin.String, kotlin.Any)mozilla.components.support.ktx.android.org.json/org.json.-j-s-o-n-object/put-if-not-null.md
 $dokka.location:mozilla.components.support.ktx.android.org.json$sortKeys(org.json.JSONObject)mozilla.components.support.ktx.android.org.json/org.json.-j-s-o-n-object/sort-keys.md
@@ -82,6 +83,7 @@ mozilla.components.browser.search.provider.filter
 mozilla.components.browser.search.provider.localization
 mozilla.components.browser.search.suggestions
 mozilla.components.browser.session
+mozilla.components.browser.session.manifest
 mozilla.components.browser.session.storage
 mozilla.components.browser.session.tab
 mozilla.components.browser.storage.memory
@@ -154,6 +156,7 @@ mozilla.components.service.glean.debug
 mozilla.components.service.glean.error
 mozilla.components.service.glean.scheduler
 mozilla.components.service.glean.storages
+mozilla.components.service.pocket.data
 mozilla.components.service.sync.logins
 mozilla.components.support.android.test
 mozilla.components.support.base.android

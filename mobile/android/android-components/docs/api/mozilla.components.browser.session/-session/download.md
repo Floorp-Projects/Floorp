@@ -2,7 +2,7 @@
 
 # download
 
-`var download: `[`Consumable`](../../mozilla.components.support.base.observer/-consumable/index.md)`<`[`Download`](../-download/index.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/Session.kt#L206)
+`var download: `[`Consumable`](../../mozilla.components.support.base.observer/-consumable/index.md)`<`[`Download`](../-download/index.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/Session.kt#L215)
 
 Last download request if it wasn't consumed by at least one observer.
 

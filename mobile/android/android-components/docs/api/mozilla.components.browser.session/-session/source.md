@@ -2,4 +2,4 @@
 
 # source
 
-`val source: `[`Source`](-source/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/Session.kt#L27)
+`val source: `[`Source`](-source/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/Session.kt#L28)

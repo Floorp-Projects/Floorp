@@ -2,7 +2,7 @@
 
 # ACTION_SEND
 
-`ACTION_SEND` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/Session.kt#L87)
+`ACTION_SEND` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/Session.kt#L89)
 
 Created to handle an ACTION_SEND (share) intent
 
