@@ -24,10 +24,7 @@ namespace gfx {
 
 static const size_t NUM_CRASH_GUARD_TYPES = size_t(CrashGuardType::NUM_TYPES);
 static const char* sCrashGuardNames[] = {
-    "d3d11layers",
-    "d3d9video",
-    "glcontext",
-    "d3d11video",
+    "d3d11layers", "d3d9video", "glcontext", "d3d11video", "wmfvpxvideo",
 };
 static_assert(MOZ_ARRAY_LENGTH(sCrashGuardNames) == NUM_CRASH_GUARD_TYPES,
               "CrashGuardType updated without a name string");
@@ -538,6 +535,24 @@ void GLContextCrashGuard::LogCrashRecovery() {
 
 void GLContextCrashGuard::LogFeatureDisabled() {
   gfxCriticalNote << "GLContext remains enabled despite a previous crash.";
+}
+
+WMFVPXVideoCrashGuard::WMFVPXVideoCrashGuard(dom::ContentParent* aContentParent)
+    : DriverCrashGuard(CrashGuardType::WMFVPXVideo, aContentParent) {}
+
+bool WMFVPXVideoCrashGuard::UpdateEnvironment() {
+  // We don't care about any extra preferences here.
+  return false;
+}
+
+void WMFVPXVideoCrashGuard::LogCrashRecovery() {
+  gfxCriticalNote
+      << "WMF VPX decoder just crashed; hardware video will be disabled.";
+}
+
+void WMFVPXVideoCrashGuard::LogFeatureDisabled() {
+  gfxCriticalNote
+      << "WMF VPX video decoding is disabled due to a previous crash.";
 }
 
 }  // namespace gfx
