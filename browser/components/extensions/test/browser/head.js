@@ -8,7 +8,7 @@
  *          getBrowserActionPopup getPageActionPopup getPageActionButton
  *          openBrowserActionPanel
  *          closeBrowserAction closePageAction
- *          promisePopupShown promisePopupHidden
+ *          promisePopupShown promisePopupHidden promisePopupNotificationShown
  *          toggleBookmarksToolbar
  *          openContextMenu closeContextMenu
  *          openContextMenuInSidebar openContextMenuInPopup
@@ -156,6 +156,34 @@ function promisePopupHidden(popup) {
       resolve();
     };
     popup.addEventListener("popuphidden", onPopupHidden);
+  });
+}
+
+/**
+ * Wait for the given PopupNotification to display
+ *
+ * @param {string} name
+ *        The name of the notification to wait for.
+ * @param {Window} [win]
+ *        The chrome window in which to wait for the notification.
+ *
+ * @returns {Promise}
+ *          Resolves with the notification window.
+ */
+function promisePopupNotificationShown(name, win = window) {
+  return new Promise(resolve => {
+    function popupshown() {
+      let notification = win.PopupNotifications.getNotification(name);
+      if (!notification) { return; }
+
+      ok(notification, `${name} notification shown`);
+      ok(win.PopupNotifications.isPanelOpen, "notification panel open");
+
+      win.PopupNotifications.panel.removeEventListener("popupshown", popupshown);
+      resolve(win.PopupNotifications.panel.firstElementChild);
+    }
+
+    win.PopupNotifications.panel.addEventListener("popupshown", popupshown);
   });
 }
 
