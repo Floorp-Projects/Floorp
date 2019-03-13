@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef frontend_BinSourceSupport_h
-#define frontend_BinSourceSupport_h
+#ifndef frontend_BinASTSupport_h
+#define frontend_BinASTSupport_h
 
 #include "mozilla/HashFunctions.h"
 
@@ -155,4 +155,4 @@ typedef UniquePtr<frontend::BinASTSourceMetadata,
 
 }  // namespace js
 
-#endif  // frontend_BinSourceSupport_h
+#endif  // frontend_BinASTSupport_h

@@ -7,7 +7,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // To generate this file, see the documentation in
-// js/src/frontend/binsource/README.md.
+// js/src/frontend/binast/README.md.
 
 #include "frontend/BinASTParser.h"
 
@@ -18,7 +18,7 @@
 #include "mozilla/PodOperations.h"
 #include "mozilla/Vector.h"
 
-#include "frontend/BinSource-macros.h"
+#include "frontend/BinAST-macros.h"
 #include "frontend/BinTokenReaderMultipart.h"
 #include "frontend/FullParseHandler.h"
 #include "frontend/ParseNode.h"
@@ -2497,7 +2497,7 @@ BinASTParser<Tok>::parseInterfaceEagerFunctionDeclaration(
 
   // Push a new ParseContext. It will be used to parse `scope`, the arguments,
   // the function.
-  BinParseContext funpc(cx_, this, funbox, /* newDirectives = */ nullptr);
+  BinASTParseContext funpc(cx_, this, funbox, /* newDirectives = */ nullptr);
   BINJS_TRY(funpc.init());
   pc_->functionScope().useAsVarScope(pc_);
   MOZ_ASSERT(pc_->isFunctionBox());
@@ -2560,7 +2560,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceEagerFunctionExpression(
 
   // Push a new ParseContext. It will be used to parse `scope`, the arguments,
   // the function.
-  BinParseContext funpc(cx_, this, funbox, /* newDirectives = */ nullptr);
+  BinASTParseContext funpc(cx_, this, funbox, /* newDirectives = */ nullptr);
   BINJS_TRY(funpc.init());
   pc_->functionScope().useAsVarScope(pc_);
   MOZ_ASSERT(pc_->isFunctionBox());
@@ -2615,7 +2615,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceEagerGetter(
 
   // Push a new ParseContext. It will be used to parse `scope`, the arguments,
   // the function.
-  BinParseContext funpc(cx_, this, funbox, /* newDirectives = */ nullptr);
+  BinASTParseContext funpc(cx_, this, funbox, /* newDirectives = */ nullptr);
   BINJS_TRY(funpc.init());
   pc_->functionScope().useAsVarScope(pc_);
   MOZ_ASSERT(pc_->isFunctionBox());
@@ -2681,7 +2681,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceEagerMethod(
 
   // Push a new ParseContext. It will be used to parse `scope`, the arguments,
   // the function.
-  BinParseContext funpc(cx_, this, funbox, /* newDirectives = */ nullptr);
+  BinASTParseContext funpc(cx_, this, funbox, /* newDirectives = */ nullptr);
   BINJS_TRY(funpc.init());
   pc_->functionScope().useAsVarScope(pc_);
   MOZ_ASSERT(pc_->isFunctionBox());
@@ -2740,7 +2740,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceEagerSetter(
 
   // Push a new ParseContext. It will be used to parse `scope`, the arguments,
   // the function.
-  BinParseContext funpc(cx_, this, funbox, /* newDirectives = */ nullptr);
+  BinASTParseContext funpc(cx_, this, funbox, /* newDirectives = */ nullptr);
   BINJS_TRY(funpc.init());
   pc_->functionScope().useAsVarScope(pc_);
   MOZ_ASSERT(pc_->isFunctionBox());
