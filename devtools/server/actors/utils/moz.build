@@ -8,8 +8,6 @@ DevToolsModules(
     'accessibility.js',
     'actor-registry-utils.js',
     'actor-registry.js',
-    'audionodes.json',
-    'automation-timeline.js',
     'breakpoint-actor-map.js',
     'call-watcher.js',
     'closest-scripts.js',
