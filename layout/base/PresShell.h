@@ -178,7 +178,7 @@ class PresShell final : public nsIPresShell,
 
   void Paint(nsView* aViewToPaint, const nsRegion& aDirtyRegion,
              uint32_t aFlags) override;
-  MOZ_CAN_RUN_SCRIPT nsresult HandleEvent(nsIFrame* aFrame,
+  MOZ_CAN_RUN_SCRIPT nsresult HandleEvent(nsIFrame* aFrameForPresShell,
                                           WidgetGUIEvent* aEvent,
                                           bool aDontRetargetEvents,
                                           nsEventStatus* aEventStatus) override;
@@ -513,9 +513,12 @@ class PresShell final : public nsIPresShell,
      * event info of mPresShell and calls HandleEventWithCurrentEventInfo()
      * to dispatch the event into the DOM tree.
      *
-     * @param aFrame                    aFrame of nsIPresShell::HandleEvent().
-     *                                  (Perhaps, should be root frame of
-     *                                  PresShell.)
+     * @param aFrameForPresShell        The frame for PresShell.  If PresShell
+     *                                  has root frame, it should be set.
+     *                                  Otherwise, a frame which contains the
+     *                                  PresShell should be set instead.  I.e.,
+     *                                  in the latter case, the frame is in
+     *                                  a parent document.
      * @param aGUIEvent                 Event to be handled.
      * @param aDontRetargetEvents       true if this shouldn't redirect the
      *                                  event to different PresShell.
@@ -524,8 +527,9 @@ class PresShell final : public nsIPresShell,
      * @param aEventStatus              [in/out] EventStatus of aGUIEvent.
      */
     MOZ_CAN_RUN_SCRIPT
-    nsresult HandleEvent(nsIFrame* aFrame, WidgetGUIEvent* aGUIEvent,
-                         bool aDontRetargetEvents, nsEventStatus* aEventStatus);
+    nsresult HandleEvent(nsIFrame* aFrameForPresShell,
+                         WidgetGUIEvent* aGUIEvent, bool aDontRetargetEvents,
+                         nsEventStatus* aEventStatus);
 
     /**
      * HandleEventWithTarget() tries to dispatch aEvent on aContent after
@@ -578,7 +582,9 @@ class PresShell final : public nsIPresShell,
      * HandleEventUsingCoordinates() handles aGUIEvent whose
      * IsUsingCoordinates() returns true with the following helper methods.
      *
-     * @param aFrameForPresShell        The frame for mPresShell.
+     * @param aFrameForPresShell        The frame for PresShell.  See
+     *                                  explanation of HandleEvent() for the
+     *                                  details.
      * @param aGUIEvent                 The handling event.  Make sure that
      *                                  its IsUsingCoordinates() returns true.
      * @param aEventStatus              The status of aGUIEvent.
@@ -709,8 +715,9 @@ class PresShell final : public nsIPresShell,
      * DispatchPrecedingPointerEvent() dispatches preceding pointer event for
      * aGUIEvent if Pointer Events is enabled.
      *
-     * @param aFrameForPresShell        Set aFrame of HandleEvent() which
-     *                                  called this method.
+     * @param aFrameForPresShell        The frame for PresShell.  See
+     *                                  explanation of HandleEvent() for the
+     *                                  details.
      * @param aGUIEvent                 The handled event.
      * @param aPointerCapturingContent  The content which is capturing pointer
      *                                  events if there is.  Otherwise, nullptr.
@@ -762,16 +769,15 @@ class PresShell final : public nsIPresShell,
 
     /**
      * GetFrameForHandlingEventWith() returns a frame which should be used as
-     * aFrame of HandleEvent().  See @return for the detail.
+     * aFrameForPresShell of HandleEvent().  See @return for the details.
      *
      * @param aGUIEvent                 Handling event.
      * @param aRetargetDocument         Document which aGUIEvent should be
      *                                  fired on.  Typically, should be result
      *                                  of GetRetargetEventDocument().
-     * @param aFrameForPresShell        The frame if we need to handle the
-     *                                  event with current instance.  I.e.,
-     *                                  typically, caller sets aFrame of
-     *                                  HandleEvent().
+     * @param aFrameForPresShell        The frame for PresShell.  See
+     *                                  explanation of HandleEvent() for the
+     *                                  details.
      * @return                          nullptr if caller should stop handling
      *                                  the event.
      *                                  aFrameForPresShell if caller should
@@ -788,8 +794,9 @@ class PresShell final : public nsIPresShell,
      * MaybeHandleEventWithAnotherPresShell() may handle aGUIEvent with another
      * PresShell.
      *
-     * @param aFrameForPresShell        Set aFrame of HandleEvent() which called
-     *                                  this method.
+     * @param aFrameForPresShell        The frame for PresShell.  See
+     *                                  explanation of HandleEvent() for the
+     *                                  details.
      * @param aGUIEvent                 Handling event.
      * @param aEventStatus              [in/out] EventStatus of aGUIEvent.
      * @param aRv                       [out] Returns error if this gets an
@@ -855,8 +862,9 @@ class PresShell final : public nsIPresShell,
      * flushed and then aFrameForPresShell is destroyed, returns new frame
      * which contains mPresShell.
      *
-     * @param aFrameForPresShell        The frame for mPresShell.  This can be
-     *                                  nullptr.
+     * @param aFrameForPresShell        The frame for PresShell.  See
+     *                                  explanation of HandleEvent() for the
+     *                                  details.  This can be nullptr.
      * @return                          Maybe new frame for mPresShell.
      *                                  If aFrameForPresShell is not nullptr
      *                                  and hasn't been destroyed, returns
@@ -871,7 +879,9 @@ class PresShell final : public nsIPresShell,
      * If there is capturing content and it's in a scrolled frame, returns
      * the scrolled frame.
      *
-     * @param aFrameForPresShell                The frame for mPresShell.
+     * @param aFrameForPresShell                The frame for PresShell.  See
+     *                                          explanation of HandleEvent() for
+     *                                          the details.
      * @param aGUIEvent                         The handling event.
      * @param aCapturingContent                 Capturing content if there is.
      *                                          nullptr, otherwise.
@@ -942,8 +952,9 @@ class PresShell final : public nsIPresShell,
      * aGUIEvent with aPointerCapturingContent when it does not have primary
      * frame.
      *
-     * @param aFrameForPresShell        The frame for mPresShell.  Typically,
-     *                                  aFrame of HandleEvent().
+     * @param aFrameForPresShell        The frame for PresShell.  See
+     *                                  explanation of HandleEvent() for the
+     *                                  details.
      * @param aGUIEvent                 The handling event.
      * @param aPointerCapturingContent  Current pointer capturing content.
      *                                  Must not be nullptr.
