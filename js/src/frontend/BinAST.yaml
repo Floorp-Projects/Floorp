@@ -111,7 +111,7 @@ hpp:
 
         using Tokenizer = Tok;
 
-        using BinFields = typename Tokenizer::BinFields;
+        using BinASTFields = typename Tokenizer::BinASTFields;
         using AutoList = typename Tokenizer::AutoList;
         using AutoTaggedTuple = typename Tokenizer::AutoTaggedTuple;
         using Chars = typename Tokenizer::Chars;
@@ -299,9 +299,9 @@ hpp:
        *
        * In the Binary AST world, an AST is composed of nodes, where a node is
        * defined by:
-       * - a Kind (see `BinKind`);
+       * - a Kind (see `BinASTKind`);
        * - a list of fields, where each field is:
-       *    - a Name (see `BinField`);
+       *    - a Name (see `BinASTField`);
        *    - a Value, which may be either a node or a primitive value.
        *
        * The mapping between Kind and list of fields is determined entirely by
@@ -325,19 +325,19 @@ hpp:
     footer: |
 
       /**
-       * Return a string describing a `BinKind`.
+       * Return a string describing a `BinASTKind`.
        */
-      const char* describeBinKind(const BinKind& kind);
+      const char* describeBinASTKind(const BinASTKind& kind);
 
       /**
-       * Return a string describing a `BinField`.
+       * Return a string describing a `BinASTField`.
        */
-      const char* describeBinField(const BinField& kind);
+      const char* describeBinASTField(const BinASTField& kind);
 
       /**
-       * Return a string describing a `BinVariant`.
+       * Return a string describing a `BinASTVariant`.
        */
-      const char* describeBinVariant(const BinVariant& kind);
+      const char* describeBinASTVariant(const BinASTVariant& kind);
 
       } // namespace frontend
       } // namespace js
@@ -1615,7 +1615,7 @@ VariableDeclarator:
       if (!init) {
         // Here, `init` is required.
         return raiseMissingField("VariableDeclarator (with non-trivial pattern)",
-                                 BinField::Init);
+                                 BinASTField::Init);
       }
 
       MOZ_CRASH("Unimplemented: AssertedScope check for BindingPattern variable declaration");
