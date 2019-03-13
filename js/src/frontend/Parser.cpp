@@ -138,9 +138,15 @@ bool GeneralParser<ParseHandler, Unit>::mustMatchTokenInternal(
 ParserSharedBase::ParserSharedBase(JSContext* cx, LifoAlloc& alloc,
                                    UsedNameTracker& usedNames,
                                    ScriptSourceObject* sourceObject, Kind kind)
-    : JS::AutoGCRooter(cx, kind == Kind::Parser
-                               ? JS::AutoGCRooter::Tag::Parser
-                               : JS::AutoGCRooter::Tag::BinASTParser),
+    : JS::AutoGCRooter(
+          cx,
+#ifdef JS_BUILD_BINAST
+          kind == Kind::Parser ? JS::AutoGCRooter::Tag::Parser
+                               : JS::AutoGCRooter::Tag::BinASTParser
+#else
+          JS::AutoGCRooter::Tag::Parser
+#endif
+          ),
       cx_(cx),
       alloc_(alloc),
       traceListHead_(nullptr),
