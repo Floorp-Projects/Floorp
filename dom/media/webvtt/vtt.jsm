@@ -898,6 +898,108 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
     }
   }
 
+  function adjustBoxPosition(styleBox, containerBox, controlBarBox) {
+    const cue = styleBox.cue;
+    const isWritingDirectionHorizontal = cue.vertical == "";
+    let box = new BoxPosition(styleBox);
+
+    // Spec 7.2.10, adjust the positions of boxes according to the appropriate
+    // steps from the following list. Also, we use offsetHeight/offsetWidth here
+    // in order to prevent the incorrect positioning caused by CSS transform
+    // scale.
+    const fullDimension = isWritingDirectionHorizontal ?
+      containerBox.height : containerBox.width;
+    if (cue.snapToLines) {
+      // The step is the height or width of the line box. We should use font
+      // size directly, instead of using text box's width or height, because the
+      // width or height of the box would be changed when the text is wrapped to
+      // different line. Ex. if text is wrapped to two line, the height or width
+      // of the box would become 2 times of font size.
+      let step = parseFloat(styleBox.fontSize.replace("px", ""));
+      if (step == 0) {
+        return;
+      }
+
+      let line = Math.floor(cue.computedLine + 0.5);
+      if (cue.vertical == "rl") {
+        line = -1 * (line + 1);
+      }
+
+      let position = step * line;
+      if (cue.vertical == "rl") {
+        position = position - box.width + step;
+      }
+
+      if (line < 0) {
+        position += fullDimension;
+        step = -1 * step;
+      }
+
+      if (isWritingDirectionHorizontal) {
+        box.top += position;
+      } else {
+        box.left += position;
+      }
+
+      function isBoxOutsideTheRenderingArea() {
+        if (isWritingDirectionHorizontal) {
+          // the top side of the box is above the rendering area, or the bottom
+          // side of the box is below the rendering area.
+          return step < 0 && box.top < 0 ||
+                 step > 0 && box.bottom > fullDimension;
+        }
+        // the left side of the box is outside the left side of the rendering
+        // area, or the right side of the box is outside the right side of the
+        // rendering area.
+        return step < 0 && box.left < 0 ||
+               step > 0 && box.right > fullDimension;
+      }
+
+      // TODO : implement checking if current box is overlapping with any other
+      // boxes in output. 7.2.10.13
+
+      // 7.2.10.14 ~ 7.2.10.21, if the box is outside the rendering area, we
+      // should switch the direction.
+      if (isBoxOutsideTheRenderingArea()) {
+        step = -1 * step;
+        if (isWritingDirectionHorizontal) {
+          box.top += step;
+        } else {
+          box.left += step;
+        }
+      }
+    } else {
+      if (cue.lineAlign != "start") {
+        const isCenterAlign = cue.lineAlign == "center";
+        if (isWritingDirectionHorizontal) {
+          box.top += isCenterAlign ? box.height : box.height / 2;
+        } else {
+          box.left += isCenterAlign ? box.width : box.width / 2;
+        }
+      }
+      // TODO : implement finding the best position, 7.2.10.4
+    }
+
+    // In order to not be affected by CSS scale, so we use '%' to make sure the
+    // cue can stick in the right position.
+    function getPercentagePosition(position, fullDimension) {
+      return (position / fullDimension) * 100 + "%";
+    }
+    if (isWritingDirectionHorizontal) {
+      // Avoid to overlap the cue with the video control.
+      const controlOffset = controlBarBox ? controlBarBox.height : 0;
+      styleBox.applyStyles({
+        top: getPercentagePosition(box.top - controlOffset, fullDimension),
+      });
+    } else {
+      styleBox.applyStyles({
+        left: getPercentagePosition(box.left, fullDimension),
+      });
+    }
+
+    return box;
+  }
+
   // Move a StyleBox to its specified, or next best, position. The containerBox
   // is the box that contains the StyleBox, such as a div. boxPositions are
   // a list of other boxes that the styleBox can't overlap with.
@@ -1168,14 +1270,14 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
           styleBox = new CueStyleBox(window, cue, containerBox);
           rootOfCues.appendChild(styleBox.div);
 
-          // Move the cue div to it's correct line position.
-          moveBoxToLinePosition(window, styleBox, containerBox, boxPositions);
+          // Move the cue to correct position.
+          let cueBox = adjustBoxPosition(styleBox, containerBox, controlBarBox);
 
           // Remember the computed div so that we don't have to recompute it later
           // if we don't have too.
           cue.displayState = styleBox.div;
 
-          boxPositions.push(new BoxPosition(styleBox));
+          boxPositions.push(cueBox);
         }
       }
     })();
