@@ -453,8 +453,8 @@
   opacity: 0;
 }
 
-/* Error description formatting */
-.errorLabel {
+/* Status description formatting */
+.statusLabel {
   padding: 0 10px;
   text-align: center;
   font: message-box;
@@ -462,16 +462,16 @@
   color: #ffffff;
 }
 
-.errorLabel {
+.statusLabel {
   display: none;
 }
 
-[error="errorAborted"]         > [id="errorAborted"],
-[error="errorNetwork"]         > [id="errorNetwork"],
-[error="errorDecode"]          > [id="errorDecode"],
-[error="errorSrcNotSupported"] > [id="errorSrcNotSupported"],
-[error="errorNoSource"]        > [id="errorNoSource"],
-[error="errorGeneric"]         > [id="errorGeneric"] {
+[status="errorAborted"]         > [id="errorAborted"],
+[status="errorNetwork"]         > [id="errorNetwork"],
+[status="errorDecode"]          > [id="errorDecode"],
+[status="errorSrcNotSupported"] > [id="errorSrcNotSupported"],
+[status="errorNoSource"]        > [id="errorNoSource"],
+[status="errorGeneric"]         > [id="errorGeneric"] {
   display: inline;
 }
 
