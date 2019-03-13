@@ -18,7 +18,7 @@ async function testTarget(client, target) {
   let desc = await target.getActorDescription("storage");
   is(desc.typeName, "storage",
     "target.getActorDescription() returns definition data for corresponding actor");
-  is(desc.events["start-context"].type, "startContext",
+  is(desc.events["stores-update"].type, "storesUpdate",
     "target.getActorDescription() returns event data for corresponding actor");
 
   desc = await target.getActorDescription("nope");
@@ -26,7 +26,7 @@ async function testTarget(client, target) {
   desc = await target.getActorDescription();
   is(desc, undefined, "target.getActorDescription() returns undefined for undefined actor");
 
-  let hasMethod = await target.actorHasMethod("localStorage", "getType");
+  let hasMethod = await target.actorHasMethod("storage", "listStores");
   is(hasMethod, true,
     "target.actorHasMethod() returns true for existing actor with method");
   hasMethod = await target.actorHasMethod("localStorage", "nope");
