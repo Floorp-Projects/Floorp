@@ -2906,7 +2906,7 @@ bool StyleAnimation::operator==(const StyleAnimation& aOther) const {
 nsStyleDisplay::nsStyleDisplay(const Document& aDocument)
     : mDisplay(StyleDisplay::Inline),
       mOriginalDisplay(StyleDisplay::Inline),
-      mContain(NS_STYLE_CONTAIN_NONE),
+      mContain(StyleContain_NONE),
       mAppearance(StyleAppearance::None),
       mPosition(NS_STYLE_POSITION_STATIC),
       mFloat(StyleFloat::None),
