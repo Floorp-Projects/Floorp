@@ -517,7 +517,7 @@ this.VideoControlsImplWidget = class {
           case "loadstart":
             this.maxCurrentTimeSeen = 0;
             this.controlsSpacer.removeAttribute("aria-label");
-            this.statusOverlay.removeAttribute("error");
+            this.statusOverlay.removeAttribute("status");
             this.statusIcon.setAttribute("type", "throbber");
             this.isAudioOnly = this.video.localName == "audio";
             this.setPlayButtonState(true);
@@ -799,7 +799,7 @@ this.VideoControlsImplWidget = class {
 
         let label = this.shadowRoot.getElementById(error);
         this.controlsSpacer.setAttribute("aria-label", label.textContent);
-        this.statusOverlay.setAttribute("error", error);
+        this.statusOverlay.setAttribute("status", error);
       },
 
       formatTime(aTime, showHours = false) {
@@ -2206,12 +2206,12 @@ this.VideoControlsImplWidget = class {
         <div id="controlsContainer" class="controlsContainer" role="none">
           <div id="statusOverlay" class="statusOverlay stackItem" hidden="true">
             <div id="statusIcon" class="statusIcon"></div>
-            <span class="errorLabel" id="errorAborted">&error.aborted;</span>
-            <span class="errorLabel" id="errorNetwork">&error.network;</span>
-            <span class="errorLabel" id="errorDecode">&error.decode;</span>
-            <span class="errorLabel" id="errorSrcNotSupported">&error.srcNotSupported;</span>
-            <span class="errorLabel" id="errorNoSource">&error.noSource2;</span>
-            <span class="errorLabel" id="errorGeneric">&error.generic;</span>
+            <span class="statusLabel" id="errorAborted">&error.aborted;</span>
+            <span class="statusLabel" id="errorNetwork">&error.network;</span>
+            <span class="statusLabel" id="errorDecode">&error.decode;</span>
+            <span class="statusLabel" id="errorSrcNotSupported">&error.srcNotSupported;</span>
+            <span class="statusLabel" id="errorNoSource">&error.noSource2;</span>
+            <span class="statusLabel" id="errorGeneric">&error.generic;</span>
           </div>
 
           <div id="controlsOverlay" class="controlsOverlay stackItem" role="none">
