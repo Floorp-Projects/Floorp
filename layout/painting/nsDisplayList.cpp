@@ -5900,41 +5900,54 @@ bool nsDisplayOpacity::CanApplyOpacity() const {
       mFrame, DisplayItemType::TYPE_OPACITY);
 }
 
+// Only try folding our opacity down if we have at most |kOpacityMaxChildCount|
+// children that don't overlap and can all apply the opacity to themselves.
+static const size_t kOpacityMaxChildCount = 3;
+
+// |kOpacityMaxListSize| defines an early exit condition for opacity items that
+// are likely have more child items than |kOpacityMaxChildCount|.
+static const size_t kOpacityMaxListSize = kOpacityMaxChildCount * 2;
+
 /**
- * Recursively iterates through |aList| and collects at most |aMaxChildCount|
- * display item pointers to items that return true for CanApplyOpacity().
- * The item pointers are added to |aArray|.
+ * Recursively iterates through |aList| and collects at most
+ * |kOpacityMaxChildCount| display item pointers to items that return true for
+ * CanApplyOpacity(). The item pointers are added to |aArray|.
  *
  * LayerEventRegions and WrapList items are ignored.
  *
  * We need to do this recursively, because the child display items might contain
  * nested nsDisplayWrapLists.
  *
- * Returns false if there are more than |aMaxChildCount| items, or if an item
- * that returns false for CanApplyOpacity() is encountered.
+ * Returns false if there are more than |kOpacityMaxChildCount| items, or if an
+ * item that returns false for CanApplyOpacity() is encountered.
  * Otherwise returns true.
  */
 static bool CollectItemsWithOpacity(nsDisplayList* aList,
-                                    nsTArray<nsDisplayItem*>& aArray,
-                                    const size_t aMaxChildCount) {
+                                    nsTArray<nsDisplayItem*>& aArray) {
+  if (aList->Count() > kOpacityMaxListSize) {
+    // Exit early, since |aList| will likely contain more than
+    // |kOpacityMaxChildCount| items.
+    return false;
+  }
+
   for (nsDisplayItem* i = aList->GetBottom(); i; i = i->GetAbove()) {
-    DisplayItemType type = i->GetType();
-    nsDisplayList* children = i->GetChildren();
+    const DisplayItemType type = i->GetType();
 
     // Descend only into wraplists.
-    if (type == DisplayItemType::TYPE_WRAP_LIST && children) {
+    if (type == DisplayItemType::TYPE_WRAP_LIST) {
       // The current display item has children, process them first.
-      if (!CollectItemsWithOpacity(children, aArray, aMaxChildCount)) {
+      if (!CollectItemsWithOpacity(i->GetChildren(), aArray)) {
         return false;
       }
-    }
 
-    if (type == DisplayItemType::TYPE_COMPOSITOR_HITTEST_INFO ||
-        type == DisplayItemType::TYPE_WRAP_LIST) {
       continue;
     }
 
-    if (!i->CanApplyOpacity() || aArray.Length() == aMaxChildCount) {
+    if (type == DisplayItemType::TYPE_COMPOSITOR_HITTEST_INFO) {
+      continue;
+    }
+
+    if (!i->CanApplyOpacity() || aArray.Length() == kOpacityMaxChildCount) {
       return false;
     }
 
@@ -5949,14 +5962,10 @@ bool nsDisplayOpacity::ApplyOpacityToChildren(nsDisplayListBuilder* aBuilder) {
     return false;
   }
 
-  // Only try folding our opacity down if we have at most kMaxChildCount
-  // children that don't overlap and can all apply the opacity to themselves.
-  static const size_t kMaxChildCount = 3;
-
-  // Iterate through the child display list and copy at most kMaxChildCount
-  // child display item pointers to a temporary list.
-  AutoTArray<nsDisplayItem*, kMaxChildCount> items;
-  if (!CollectItemsWithOpacity(&mList, items, kMaxChildCount)) {
+  // Iterate through the child display list and copy at most
+  // |kOpacityMaxChildCount| child display item pointers to a temporary list.
+  AutoTArray<nsDisplayItem*, kOpacityMaxChildCount> items;
+  if (!CollectItemsWithOpacity(&mList, items)) {
     mChildOpacityState = ChildOpacityState::Deferred;
     return false;
   }
@@ -5964,7 +5973,7 @@ bool nsDisplayOpacity::ApplyOpacityToChildren(nsDisplayListBuilder* aBuilder) {
   struct {
     nsDisplayItem* item;
     nsRect bounds;
-  } children[kMaxChildCount];
+  } children[kOpacityMaxChildCount];
 
   bool snap;
   size_t childCount = 0;
