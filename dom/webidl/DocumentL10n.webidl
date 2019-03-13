@@ -142,6 +142,18 @@ interface DocumentL10n {
   [NewObject] Promise<void> translateElements(sequence<Element> aElements);
 
   /**
+   * Pauses the MutationObserver set to observe
+   * localization related DOM mutations.
+   */
+  [Throws] void pauseObserving();
+
+  /**
+   * Resumes the MutationObserver set to observe
+   * localization related DOM mutations.
+   */
+  [Throws] void resumeObserving();
+
+  /**
    * A promise which gets resolved when the initial DOM localization resources
    * fetching is complete and the initial translation of the DOM is finished.
    */
