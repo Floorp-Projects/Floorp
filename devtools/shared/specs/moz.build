@@ -22,7 +22,6 @@ DevToolsModules(
     'environment.js',
     'frame.js',
     'framerate.js',
-    'function-call.js',
     'heap-snapshot-file.js',
     'highlighters.js',
     'index.js',
