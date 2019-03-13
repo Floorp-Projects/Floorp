@@ -129,7 +129,7 @@ interface Toolbar {
         /**
          * Fired when the user presses the back button while in edit mode.
          */
-        fun onCancelEditing(): Boolean
+        fun onCancelEditing(): Boolean = true
 
         /**
          * Fired when the toolbar switches back to display mode.
