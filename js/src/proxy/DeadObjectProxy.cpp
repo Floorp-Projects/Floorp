@@ -36,7 +36,7 @@ bool DeadObjectProxy::defineProperty(JSContext* cx, HandleObject wrapper,
 }
 
 bool DeadObjectProxy::ownPropertyKeys(JSContext* cx, HandleObject wrapper,
-                                      AutoIdVector& props) const {
+                                      MutableHandleIdVector props) const {
   ReportDead(cx);
   return false;
 }

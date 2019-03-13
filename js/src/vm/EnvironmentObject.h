@@ -439,7 +439,7 @@ class ModuleEnvironmentObject : public EnvironmentObject {
   static bool deleteProperty(JSContext* cx, HandleObject obj, HandleId id,
                              ObjectOpResult& result);
   static bool newEnumerate(JSContext* cx, HandleObject obj,
-                           AutoIdVector& properties, bool enumerableOnly);
+                           MutableHandleIdVector properties, bool enumerableOnly);
 };
 
 typedef Rooted<ModuleEnvironmentObject*> RootedModuleEnvironmentObject;

@@ -33,7 +33,7 @@ namespace shell {
 // strings, if they have them, else with just their names.
 //
 bool GenerateInterfaceHelp(JSContext* cx, HandleObject obj, const char* name) {
-  AutoIdVector idv(cx);
+  RootedIdVector idv(cx);
   if (!GetPropertyKeys(cx, obj, JSITER_OWNONLY | JSITER_HIDDEN, &idv)) {
     return false;
   }

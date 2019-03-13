@@ -861,7 +861,7 @@ static bool FormatFrame(JSContext* cx, const FrameIter& iter, Sprinter& sp,
   if (showThisProps && thisVal.isObject()) {
     RootedObject obj(cx, &thisVal.toObject());
 
-    AutoIdVector keys(cx);
+    RootedIdVector keys(cx);
     if (!GetPropertyKeys(cx, obj, JSITER_OWNONLY, &keys)) {
       if (cx->isThrowingOutOfMemory()) {
         return false;

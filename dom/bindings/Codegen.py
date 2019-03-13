@@ -5009,7 +5009,7 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
             auto& recordEntries = ${recordRef}.Entries();
 
             JS::Rooted<JSObject*> recordObj(cx, &$${val}.toObject());
-            JS::AutoIdVector ids(cx);
+            JS::RootedVector<jsid> ids(cx);
             if (!js::GetPropertyKeys(cx, recordObj,
                                      JSITER_OWNONLY | JSITER_HIDDEN | JSITER_SYMBOLS, &ids)) {
               $*{exceptionCode}
@@ -9010,7 +9010,7 @@ class CGEnumerateHook(CGAbstractBindingMethod):
 
         args = [Argument('JSContext*', 'cx'),
                 Argument('JS::Handle<JSObject*>', 'obj'),
-                Argument('JS::AutoIdVector&', 'properties'),
+                Argument('JS::MutableHandleVector<jsid>', 'properties'),
                 Argument('bool', 'enumerableOnly')]
         # Our "self" is actually the "obj" argument in this case, not the thisval.
         CGAbstractBindingMethod.__init__(
@@ -11225,7 +11225,7 @@ class CGEnumerateOwnProperties(CGAbstractStaticMethod):
         args = [Argument('JSContext*', 'cx'),
                 Argument('JS::Handle<JSObject*>', 'wrapper'),
                 Argument('JS::Handle<JSObject*>', 'obj'),
-                Argument('JS::AutoIdVector&', 'props')]
+                Argument('JS::MutableHandleVector<jsid>', 'props')]
         CGAbstractStaticMethod.__init__(self, descriptor,
                                         "EnumerateOwnProperties", "bool", args)
 
@@ -11242,7 +11242,7 @@ class CGEnumerateOwnPropertiesViaGetOwnPropertyNames(CGAbstractBindingMethod):
         args = [Argument('JSContext*', 'cx'),
                 Argument('JS::Handle<JSObject*>', 'wrapper'),
                 Argument('JS::Handle<JSObject*>', 'obj'),
-                Argument('JS::AutoIdVector&', 'props')]
+                Argument('JS::MutableHandleVector<jsid>', 'props')]
         CGAbstractBindingMethod.__init__(self, descriptor,
                                          "EnumerateOwnPropertiesViaGetOwnPropertyNames",
                                          args, getThisObj="",
@@ -12048,7 +12048,7 @@ class CGDOMJSProxyHandler_ownPropNames(ClassMethod):
         args = [Argument('JSContext*', 'cx'),
                 Argument('JS::Handle<JSObject*>', 'proxy'),
                 Argument('unsigned', 'flags'),
-                Argument('JS::AutoIdVector&', 'props')]
+                Argument('JS::MutableHandleVector<jsid>', 'props')]
         ClassMethod.__init__(self, "ownPropNames", "bool", args,
                              virtual=True, override=True, const=True)
         self.descriptor = descriptor
@@ -12069,7 +12069,7 @@ class CGDOMJSProxyHandler_ownPropNames(ClassMethod):
                     return false;
                   }
 
-                  if (!js::GetPropertyKeys(cx, holder, flags, &props)) {
+                  if (!js::GetPropertyKeys(cx, holder, flags, props)) {
                     return false;
                   }
 
@@ -12135,7 +12135,7 @@ class CGDOMJSProxyHandler_ownPropNames(ClassMethod):
             """
             JS::Rooted<JSObject*> expando(cx);
             if (${xrayCheck}(expando = DOMProxyHandler::GetExpandoObject(proxy)) &&
-                !js::GetPropertyKeys(cx, expando, flags, &props)) {
+                !js::GetPropertyKeys(cx, expando, flags, props)) {
               return false;
             }
             """,

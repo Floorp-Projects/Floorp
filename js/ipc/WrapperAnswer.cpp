@@ -799,7 +799,7 @@ bool WrapperAnswer::RecvGetPropertyKeys(const ObjectId& objId,
 
   LOG("%s.getPropertyKeys()", ReceiverObj(objId));
 
-  AutoIdVector props(cx);
+  RootedIdVector props(cx);
   if (!js::GetPropertyKeys(cx, obj, flags, &props)) {
     return fail(jsapi, rs);
   }

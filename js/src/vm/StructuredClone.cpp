@@ -532,7 +532,7 @@ struct JSStructuredCloneWriter {
   Vector<size_t> counts;
 
   // For JSObject: Property IDs as value
-  AutoIdVector objectEntries;
+  RootedIdVector objectEntries;
 
   // For Map: Key followed by value
   // For Set: Key
@@ -1329,7 +1329,7 @@ bool JSStructuredCloneWriter::startObject(HandleObject obj, bool* backref) {
 }
 
 static bool TryAppendNativeProperties(JSContext* cx, HandleObject obj,
-                                      AutoIdVector& entries, size_t* properties,
+                                      MutableHandleIdVector entries, size_t* properties,
                                       bool* optimized) {
   *optimized = false;
 
@@ -1385,7 +1385,7 @@ static bool TryAppendNativeProperties(JSContext* cx, HandleObject obj,
 bool JSStructuredCloneWriter::traverseObject(HandleObject obj, ESClass cls) {
   size_t count;
   bool optimized = false;
-  if (!TryAppendNativeProperties(context(), obj, objectEntries, &count,
+  if (!TryAppendNativeProperties(context(), obj, &objectEntries, &count,
                                  &optimized)) {
     return false;
   }
@@ -1393,7 +1393,7 @@ bool JSStructuredCloneWriter::traverseObject(HandleObject obj, ESClass cls) {
   if (!optimized) {
     // Get enumerable property ids and put them in reverse order so that they
     // will come off the stack in forward order.
-    AutoIdVector properties(context());
+    RootedIdVector properties(context());
     if (!GetPropertyKeys(context(), obj, JSITER_OWNONLY, &properties)) {
       return false;
     }

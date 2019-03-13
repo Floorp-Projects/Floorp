@@ -88,11 +88,11 @@ class CPOWProxyHandler : public BaseProxyHandler {
                               Handle<PropertyDescriptor> desc,
                               ObjectOpResult& result) const override;
   virtual bool ownPropertyKeys(JSContext* cx, HandleObject proxy,
-                               AutoIdVector& props) const override;
+                               MutableHandleIdVector props) const override;
   virtual bool delete_(JSContext* cx, HandleObject proxy, HandleId id,
                        ObjectOpResult& result) const override;
   virtual bool enumerate(JSContext* cx, HandleObject proxy,
-                         AutoIdVector& props) const override;
+                         MutableHandleIdVector props) const override;
   virtual bool preventExtensions(JSContext* cx, HandleObject proxy,
                                  ObjectOpResult& result) const override;
   virtual bool isExtensible(JSContext* cx, HandleObject proxy,
@@ -112,7 +112,7 @@ class CPOWProxyHandler : public BaseProxyHandler {
   virtual bool hasOwn(JSContext* cx, HandleObject proxy, HandleId id,
                       bool* bp) const override;
   virtual bool getOwnEnumerablePropertyKeys(JSContext* cx, HandleObject proxy,
-                                            AutoIdVector& props) const override;
+                                            MutableHandleIdVector props) const override;
   virtual bool hasInstance(JSContext* cx, HandleObject proxy,
                            MutableHandleValue v, bool* bp) const override;
   virtual bool getBuiltinClass(JSContext* cx, HandleObject obj,
@@ -216,12 +216,12 @@ bool WrapperOwner::defineProperty(JSContext* cx, HandleObject proxy,
 }
 
 bool CPOWProxyHandler::ownPropertyKeys(JSContext* cx, HandleObject proxy,
-                                       AutoIdVector& props) const {
+                                       MutableHandleIdVector props) const {
   FORWARD(ownPropertyKeys, (cx, proxy, props), false);
 }
 
 bool WrapperOwner::ownPropertyKeys(JSContext* cx, HandleObject proxy,
-                                   AutoIdVector& props) {
+                                   MutableHandleIdVector props) {
   return getPropertyKeys(
       cx, proxy, JSITER_OWNONLY | JSITER_HIDDEN | JSITER_SYMBOLS, props);
 }
@@ -251,7 +251,7 @@ bool WrapperOwner::delete_(JSContext* cx, HandleObject proxy, HandleId id,
 }
 
 bool CPOWProxyHandler::enumerate(JSContext* cx, HandleObject proxy,
-                                 AutoIdVector& props) const {
+                                 MutableHandleIdVector props) const {
   // Call the base hook. That will use our implementation of
   // getOwnEnumerablePropertyKeys and follow the proto chain.
   return BaseProxyHandler::enumerate(cx, proxy, props);
@@ -518,13 +518,13 @@ bool WrapperOwner::set(JSContext* cx, JS::HandleObject proxy, JS::HandleId id,
 
 bool CPOWProxyHandler::getOwnEnumerablePropertyKeys(JSContext* cx,
                                                     HandleObject proxy,
-                                                    AutoIdVector& props) const {
+                                                    MutableHandleIdVector props) const {
   FORWARD(getOwnEnumerablePropertyKeys, (cx, proxy, props), false);
 }
 
 bool WrapperOwner::getOwnEnumerablePropertyKeys(JSContext* cx,
                                                 HandleObject proxy,
-                                                AutoIdVector& props) {
+                                                MutableHandleIdVector props) {
   return getPropertyKeys(cx, proxy, JSITER_OWNONLY, props);
 }
 
@@ -889,7 +889,7 @@ void WrapperOwner::updatePointer(JSObject* obj, const JSObject* old) {
 }
 
 bool WrapperOwner::getPropertyKeys(JSContext* cx, HandleObject proxy,
-                                   uint32_t flags, AutoIdVector& props) {
+                                   uint32_t flags, MutableHandleIdVector props) {
   ObjectId objId = idOf(proxy);
 
   ReturnStatus status;

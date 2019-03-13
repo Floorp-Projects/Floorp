@@ -652,7 +652,7 @@ extern JS_PUBLIC_API bool JS_EnumerateStandardClasses(JSContext* cx,
  * already-defined properties anyway.
  */
 extern JS_PUBLIC_API bool JS_NewEnumerateStandardClasses(
-    JSContext* cx, JS::HandleObject obj, JS::AutoIdVector& properties,
+    JSContext* cx, JS::HandleObject obj, JS::MutableHandleIdVector properties,
     bool enumerableOnly);
 
 /**
@@ -661,7 +661,7 @@ extern JS_PUBLIC_API bool JS_NewEnumerateStandardClasses(
  * without touching the global itself.
  */
 extern JS_PUBLIC_API bool JS_NewEnumerateStandardClassesIncludingResolved(
-    JSContext* cx, JS::HandleObject obj, JS::AutoIdVector& properties,
+    JSContext* cx, JS::HandleObject obj, JS::MutableHandleIdVector properties,
     bool enumerableOnly);
 
 extern JS_PUBLIC_API bool JS_GetClassObject(JSContext* cx, JSProtoKey key,

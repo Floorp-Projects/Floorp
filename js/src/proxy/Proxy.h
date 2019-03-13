@@ -33,10 +33,10 @@ class Proxy {
                              Handle<JS::PropertyDescriptor> desc,
                              ObjectOpResult& result);
   static bool ownPropertyKeys(JSContext* cx, HandleObject proxy,
-                              AutoIdVector& props);
+                              MutableHandleIdVector props);
   static bool delete_(JSContext* cx, HandleObject proxy, HandleId id,
                       ObjectOpResult& result);
-  static bool enumerate(JSContext* cx, HandleObject proxy, AutoIdVector& props);
+  static bool enumerate(JSContext* cx, HandleObject proxy, MutableHandleIdVector props);
   static bool isExtensible(JSContext* cx, HandleObject proxy, bool* extensible);
   static bool preventExtensions(JSContext* cx, HandleObject proxy,
                                 ObjectOpResult& result);
@@ -67,7 +67,7 @@ class Proxy {
   /* SpiderMonkey extensions. */
   static bool hasOwn(JSContext* cx, HandleObject proxy, HandleId id, bool* bp);
   static bool getOwnEnumerablePropertyKeys(JSContext* cx, HandleObject proxy,
-                                           AutoIdVector& props);
+                                           MutableHandleIdVector props);
   static bool nativeCall(JSContext* cx, IsAcceptableThis test, NativeImpl impl,
                          const CallArgs& args);
   static bool hasInstance(JSContext* cx, HandleObject proxy,

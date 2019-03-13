@@ -87,10 +87,13 @@ using JS::Result;
 
 using JS::AutoIdVector;
 
+using JS::HandleIdVector;
 using JS::HandleObjectVector;
 using JS::HandleValueVector;
+using JS::MutableHandleIdVector;
 using JS::MutableHandleObjectVector;
 using JS::MutableHandleValueVector;
+using JS::RootedIdVector;
 using JS::RootedObjectVector;
 using JS::RootedValueVector;
 
