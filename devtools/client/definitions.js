@@ -36,9 +36,6 @@ const L10N = new MultiLocalizationHelper(
   "devtools/startup/locales/key-shortcuts.properties"
 );
 
-// URL to direct people to the deprecated tools panel
-const DEPRECATION_URL = "https://developer.mozilla.org/en-US/docs/Tools/Deprecated_tools";
-
 var Tools = {};
 exports.Tools = Tools;
 
