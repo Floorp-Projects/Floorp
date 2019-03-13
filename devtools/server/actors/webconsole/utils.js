@@ -362,11 +362,7 @@ WebConsoleCommands._registerOriginal("$_", {
  *        Context to run the xPath query on. Uses window.document if not set.
  * @return array of Node
  */
-WebConsoleCommands._registerOriginal("$x", function(
-  owner,
-  xPath,
-  context,
-  resultType = owner.window.XPathResult.ANY_TYPE) {
+WebConsoleCommands._registerOriginal("$x", function(owner, xPath, context) {
   const nodes = new owner.window.Array();
 
   // Not waiving Xrays, since we want the original Document.evaluate function,
@@ -375,31 +371,7 @@ WebConsoleCommands._registerOriginal("$x", function(
   context = context || doc;
 
   const results = doc.evaluate(xPath, context, null,
-                             resultType, null);
-  if (results.resultType === owner.window.XPathResult.NUMBER_TYPE) {
-    return results.numberValue;
-  }
-  if (results.resultType === owner.window.XPathResult.STRING_TYPE) {
-    return results.stringValue;
-  }
-  if (results.resultType === owner.window.XPathResult.BOOLEAN_TYPE) {
-    return results.booleanValue;
-  }
-  if
-  (results.resultType === owner.window.XPathResult.ANY_UNORDERED_NODE_TYPE ||
-    results.resultType === owner.window.XPathResult.FIRST_ORDERED_NODE_TYPE) {
-    return results.singleNodeValue;
-  }
-  if
-  (results.resultType === owner.window.XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE ||
-    results.resultType === owner.window.XPathResult.ORDERED_NODE_SNAPSHOT_TYPE
-) {
-    for (let i = 0; i < results.snapshotLength; i++) {
-      nodes.push(results.snapshotItem(i));
-    }
-    return nodes;
-  }
-
+                             owner.window.XPathResult.ANY_TYPE, null);
   let node;
   while ((node = results.iterateNext())) {
     nodes.push(node);
