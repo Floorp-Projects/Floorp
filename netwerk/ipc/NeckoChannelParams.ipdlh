@@ -213,12 +213,6 @@ struct CorsPreflightArgs
   nsCString[]   unsafeHeaders;
 };
 
-union OptionalCorsPreflightArgs
-{
-  void_t;
-  CorsPreflightArgs;
-};
-
 struct HttpChannelOpenArgs
 {
   URIParams                   uri;
@@ -256,7 +250,7 @@ struct HttpChannelOpenArgs
   nsCString                   synthesizedSecurityInfoSerialization;
   uint32_t                    cacheKey;
   uint64_t                    requestContextID;
-  OptionalCorsPreflightArgs   preflightArgs;
+  CorsPreflightArgs?          preflightArgs;
   uint32_t                    initialRwin;
   bool                        blockAuthPrompt;
   bool                        suspendAfterSynthesizeResponse;
