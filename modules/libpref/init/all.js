@@ -3135,9 +3135,6 @@ pref("layout.css.osx-font-smoothing.enabled", false);
 // Is support for CSS overflow-clip-box enabled for non-UA sheets?
 pref("layout.css.overflow-clip-box.enabled", false);
 
-// Is support for CSS contain enabled?
-pref("layout.css.contain.enabled", false);
-
 // Is layout of CSS outline-style:auto enabled?
 pref("layout.css.outline-style-auto.enabled", false);
 
