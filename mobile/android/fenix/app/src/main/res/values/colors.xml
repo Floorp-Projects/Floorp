@@ -25,7 +25,10 @@
     <color name="session_border_color">@color/photonInk70</color>
 
     <color name="icons_light_mode">#20233E</color>
+    <color name="disabled_icons_light_mode">#8020233E</color>
+
     <color name="icons_dark_mode">@color/off_white</color>
+    <color name="disabled_icons_dark_mode">#80F9F9FA</color>
 
     <color name="toolbar_light_mode">@color/off_white</color>
     <color name="toolbar_dark_mode">@color/private_browsing_top_gradient</color>

@@ -10,6 +10,7 @@
         <item name="android:colorPrimary">@color/off_white</item>
         <item name="android:windowBackground">@color/off_white</item>
         <item name="iconColor">@color/icons_light_mode</item>
+        <item name="disabledIconColor">@color/disabled_icons_light_mode</item>
         <item name="toolbarColor">@color/toolbar_light_mode</item>
         <item name="colorPrimary">@color/off_white</item>
         <item name="colorAccent">@color/session_border_color</item>
@@ -63,6 +64,7 @@
         <item name="android:colorPrimary">@color/private_browsing_primary</item>
         <item name="android:windowBackground">@color/private_browsing_top_gradient</item>
         <item name="iconColor">@color/icons_dark_mode</item>
+        <item name="disabledIconColor">@color/disabled_icons_dark_mode</item>
         <item name="toolbarColor">@color/toolbar_dark_mode</item>
         <item name="colorPrimary">@color/private_browsing_primary</item>
         <item name="colorAccent">@color/private_browsing_primary</item>

@@ -35,6 +35,8 @@
     <string name="browser_menu_forward">Forward</string>
     <!-- Content description (not visible, for screen readers etc.): Refresh current website -->
     <string name="browser_menu_refresh">Refresh</string>
+    <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
+    <string name="browser_menu_stop">Stop</string>
     <!-- Browser menu button that sends a user to help articles -->
     <string name="browser_menu_help">Help</string>
     <!-- Browser menu button that opens the settings menu -->

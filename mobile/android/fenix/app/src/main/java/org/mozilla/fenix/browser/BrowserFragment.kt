@@ -277,6 +277,7 @@ class BrowserFragment : Fragment(), BackHandler, ComponentCallbacks2 {
             ToolbarMenu.Item.Back -> sessionUseCases.goBack.invoke()
             ToolbarMenu.Item.Forward -> sessionUseCases.goForward.invoke()
             ToolbarMenu.Item.Reload -> sessionUseCases.reload.invoke()
+            ToolbarMenu.Item.Stop -> sessionUseCases.stopLoading.invoke()
             ToolbarMenu.Item.Settings -> Navigation.findNavController(toolbarComponent.getView())
                 .navigate(BrowserFragmentDirections.actionBrowserFragmentToSettingsFragment())
             ToolbarMenu.Item.Library -> Navigation.findNavController(toolbarComponent.getView())

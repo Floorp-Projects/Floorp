@@ -11,6 +11,7 @@
     <attr name="searchBarColor" format="reference" />
     <attr name="fenixPrimary" format="reference" />
     <attr name="iconColor" format="reference" />
+    <attr name="disabledIconColor" format="reference" />
     <attr name="toolbarColor" format="reference" />
 
     <!-- Home fragment -->

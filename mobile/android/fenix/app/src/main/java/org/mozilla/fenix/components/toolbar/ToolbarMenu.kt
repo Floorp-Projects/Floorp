@@ -34,6 +34,7 @@ class ToolbarMenu(
         object Back : Item()
         object Forward : Item()
         object Reload : Item()
+        object Stop : Item()
         object ReportIssue : Item()
         object OpenInFenix : Item()
     }
@@ -41,28 +42,68 @@ class ToolbarMenu(
     val menuBuilder by lazy { BrowserMenuBuilder(menuItems) }
 
     val menuToolbar by lazy {
-        val back = BrowserMenuItemToolbar.Button(
-            mozilla.components.ui.icons.R.drawable.mozac_ic_back,
-            iconTintColorResource = DefaultThemeManager.resolveAttribute(R.attr.browserToolbarMenuIcons, context),
-            contentDescription = context.getString(R.string.browser_menu_back)
+        val back = BrowserMenuItemToolbar.TwoStateButton(
+            primaryImageResource = mozilla.components.ui.icons.R.drawable.mozac_ic_back,
+            primaryContentDescription = context.getString(R.string.browser_menu_back),
+            primaryImageTintResource = DefaultThemeManager.resolveAttribute(
+                R.attr.browserToolbarMenuIcons,
+                context
+            ),
+            isInPrimaryState = {
+                context.components.core.sessionManager.selectedSession?.canGoBack ?: true
+            },
+            secondaryImageTintResource = DefaultThemeManager.resolveAttribute(
+                R.attr.disabledIconColor,
+                context
+            ),
+            disableInSecondaryState = true
         ) {
             onItemTapped.invoke(Item.Back)
         }
 
-        val forward = BrowserMenuItemToolbar.Button(
-            mozilla.components.ui.icons.R.drawable.mozac_ic_forward,
-            iconTintColorResource = DefaultThemeManager.resolveAttribute(R.attr.browserToolbarMenuIcons, context),
-            contentDescription = context.getString(R.string.browser_menu_forward)
+        val forward = BrowserMenuItemToolbar.TwoStateButton(
+            primaryImageResource = mozilla.components.ui.icons.R.drawable.mozac_ic_forward,
+            primaryContentDescription = context.getString(R.string.browser_menu_forward),
+            primaryImageTintResource = DefaultThemeManager.resolveAttribute(
+                R.attr.browserToolbarMenuIcons,
+                context
+            ),
+            isInPrimaryState = {
+                context.components.core.sessionManager.selectedSession?.canGoForward ?: true
+            },
+            secondaryImageTintResource = DefaultThemeManager.resolveAttribute(
+                R.attr.disabledIconColor,
+                context
+            ),
+            disableInSecondaryState = true
         ) {
             onItemTapped.invoke(Item.Forward)
         }
 
-        val refresh = BrowserMenuItemToolbar.Button(
-            mozilla.components.ui.icons.R.drawable.mozac_ic_refresh,
-            iconTintColorResource = DefaultThemeManager.resolveAttribute(R.attr.browserToolbarMenuIcons, context),
-            contentDescription = context.getString(R.string.browser_menu_refresh)
+        val refresh = BrowserMenuItemToolbar.TwoStateButton(
+            primaryImageResource = mozilla.components.ui.icons.R.drawable.mozac_ic_refresh,
+            primaryContentDescription = context.getString(R.string.browser_menu_refresh),
+            primaryImageTintResource = DefaultThemeManager.resolveAttribute(
+                R.attr.browserToolbarMenuIcons,
+                context
+            ),
+            isInPrimaryState = {
+                val loading = context.components.core.sessionManager.selectedSession?.loading
+                loading == false
+            },
+            secondaryImageResource = mozilla.components.ui.icons.R.drawable.mozac_ic_stop,
+            secondaryContentDescription = context.getString(R.string.browser_menu_stop),
+            secondaryImageTintResource = DefaultThemeManager.resolveAttribute(
+                R.attr.browserToolbarMenuIcons,
+                context
+            ),
+            disableInSecondaryState = false
         ) {
-            onItemTapped.invoke(Item.Reload)
+            if (context.components.core.sessionManager.selectedSession?.loading == true) {
+                onItemTapped.invoke(Item.Stop)
+            } else {
+                onItemTapped.invoke(Item.Reload)
+            }
         }
 
         BrowserMenuItemToolbar(listOf(back, forward, refresh))
@@ -77,12 +118,19 @@ class ToolbarMenu(
     private val menuItems by lazy {
         if (isCustomTab) {
             listOf(
-                SimpleBrowserMenuItem(context.getString(R.string.browser_menu_powered_by),
+                SimpleBrowserMenuItem(
+                    context.getString(R.string.browser_menu_powered_by),
                     CAPTION_TEXT_SIZE,
-                    DefaultThemeManager.resolveAttribute(R.attr.browserToolbarMenuIcons, context)),
+                    DefaultThemeManager.resolveAttribute(R.attr.browserToolbarMenuIcons, context)
+                ),
                 BrowserMenuDivider(),
-                SimpleBrowserMenuItem(context.getString(R.string.browser_menu_open_in_fenix),
-                    textColorResource = DefaultThemeManager.resolveAttribute(R.attr.browserToolbarMenuIcons, context)) {
+                SimpleBrowserMenuItem(
+                    context.getString(R.string.browser_menu_open_in_fenix),
+                    textColorResource = DefaultThemeManager.resolveAttribute(
+                        R.attr.browserToolbarMenuIcons,
+                        context
+                    )
+                ) {
                     onItemTapped.invoke(Item.OpenInFenix)
                 },
                 BrowserMenuImageText(
