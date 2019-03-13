@@ -4,15 +4,14 @@
 
 // @flow
 
-import { getSymbols, getSource, getSelectedFrame, getCurrentThread } from ".";
+import { getSymbols, getSource, getSelectedFrame } from ".";
 import { findClosestClass } from "../utils/ast";
 import { getSourceMetaData } from "../reducers/ast";
 
 import type { State } from "../reducers/types";
 
 export function inComponent(state: State) {
-  const thread = getCurrentThread(state);
-  const selectedFrame = getSelectedFrame(state, thread);
+  const selectedFrame = getSelectedFrame(state);
   if (!selectedFrame) {
     return;
   }

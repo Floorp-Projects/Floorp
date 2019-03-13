@@ -18,8 +18,7 @@ import {
   getIsWaitingOnBreak,
   getShouldPauseOnExceptions,
   getShouldPauseOnCaughtExceptions,
-  getWorkers,
-  getCurrentThread
+  getWorkers
 } from "../../selectors";
 
 import AccessibleImage from "../shared/AccessibleImage";
@@ -413,23 +412,17 @@ class SecondaryPanes extends Component<Props, State> {
   }
 }
 
-const mapStateToProps = state => {
-  const thread = getCurrentThread(state);
-  return {
-    expressions: getExpressions(state),
-    hasFrames: !!getTopFrame(state, thread),
-    breakpoints: getBreakpointsList(state),
-    breakpointsDisabled: getBreakpointsDisabled(state),
-    breakpointsLoading: getBreakpointsLoading(state),
-    isWaitingOnBreak: getIsWaitingOnBreak(state, thread),
-    shouldPauseOnExceptions: getShouldPauseOnExceptions(state, thread),
-    shouldPauseOnCaughtExceptions: getShouldPauseOnCaughtExceptions(
-      state,
-      thread
-    ),
-    workers: getWorkers(state)
-  };
-};
+const mapStateToProps = state => ({
+  expressions: getExpressions(state),
+  hasFrames: !!getTopFrame(state),
+  breakpoints: getBreakpointsList(state),
+  breakpointsDisabled: getBreakpointsDisabled(state),
+  breakpointsLoading: getBreakpointsLoading(state),
+  isWaitingOnBreak: getIsWaitingOnBreak(state),
+  shouldPauseOnExceptions: getShouldPauseOnExceptions(state),
+  shouldPauseOnCaughtExceptions: getShouldPauseOnCaughtExceptions(state),
+  workers: getWorkers(state)
+});
 
 export default connect(
   mapStateToProps,

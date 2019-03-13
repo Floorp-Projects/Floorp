@@ -12,11 +12,10 @@ import { connect } from "../../utils/connect";
 import classnames from "classnames";
 import { features } from "../../utils/prefs";
 import {
-  getIsPaused,
+  isPaused as getIsPaused,
   getIsWaitingOnBreak,
   getCanRewind,
-  getSkipPausing,
-  getCurrentThread
+  getSkipPausing
 } from "../../selectors";
 import { formatKeyShortcut } from "../../utils/text";
 import actions from "../../actions";
@@ -303,8 +302,8 @@ CommandBar.contextTypes = {
 };
 
 const mapStateToProps = state => ({
-  isPaused: getIsPaused(state, getCurrentThread(state)),
-  isWaitingOnBreak: getIsWaitingOnBreak(state, getCurrentThread(state)),
+  isPaused: getIsPaused(state),
+  isWaitingOnBreak: getIsWaitingOnBreak(state),
   canRewind: getCanRewind(state),
   skipPausing: getSkipPausing(state)
 });

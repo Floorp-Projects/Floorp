@@ -9,12 +9,7 @@ import { connect } from "../../../utils/connect";
 
 import Popup from "./Popup";
 
-import {
-  getPreview,
-  getSelectedSource,
-  getIsPaused,
-  getCurrentThread
-} from "../../../selectors";
+import { getPreview, getSelectedSource, getIsPaused } from "../../../selectors";
 import actions from "../../../actions";
 import { toEditorRange } from "../../../utils/editor";
 
@@ -184,7 +179,7 @@ class Preview extends PureComponent<Props, State> {
 
 const mapStateToProps = state => ({
   preview: getPreview(state),
-  isPaused: getIsPaused(state, getCurrentThread(state)),
+  isPaused: getIsPaused(state),
   selectedSource: getSelectedSource(state)
 });
 
