@@ -179,15 +179,6 @@ function update(
  */
 function updateSource(state: SourcesState, source: Object) {
   const existingSource = state.sources[source.id];
-
-  // If there is no existing version of the source, it means that we probably
-  // ended up here as a result of an async action, and the sources were cleared
-  // between the action starting and the source being updated.
-  if (!existingSource) {
-    // TODO: We may want to consider throwing here once we have a better
-    // handle on async action flow control.
-    return state;
-  }
   return {
     ...state,
     sources: {

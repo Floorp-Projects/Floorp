@@ -7,7 +7,6 @@
 import {
   actions,
   selectors,
-  watchForState,
   createStore,
   makeSource
 } from "../../../utils/test-head";
@@ -118,20 +117,13 @@ describe("loadSourceText", () => {
   });
 
   it("should indicate a loading source", async () => {
-    const store = createStore(sourceThreadClient);
-    const { dispatch } = store;
+    const { dispatch, getState } = createStore(sourceThreadClient);
 
-    const source = makeSource("foo2");
-    await dispatch(actions.newSource(source));
-
-    const wasLoading = watchForState(
-      store,
-      state => selectors.getSource(state, "foo2").loadedState === "loading"
-    );
-
-    await dispatch(actions.loadSourceText(source));
-
-    expect(wasLoading()).toBe(true);
+    // Don't block on this so we can check the loading state.
+    const source = makeSource("foo1");
+    dispatch(actions.loadSourceText(source));
+    const fooSource = selectors.getSource(getState(), "foo1");
+    expect(fooSource && fooSource.loadedState).toEqual("loading");
   });
 
   it("should indicate an errored source text", async () => {
