@@ -69,7 +69,7 @@ function register_module(categoryName, categoryObject) {
 
 document.addEventListener("DOMContentLoaded", init_all, {once: true});
 
-async function init_all() {
+function init_all() {
   Preferences.forceEnableInstantApply();
 
   gSubDialog.init();
@@ -101,26 +101,27 @@ async function init_all() {
   maybeDisplayPoliciesNotice();
 
   window.addEventListener("hashchange", onHashChange);
-  await gotoPref();
 
-  let helpButton = document.getElementById("helpButton");
-  let helpUrl = Services.urlFormatter.formatURLPref("app.support.baseURL") + "preferences";
-  helpButton.setAttribute("href", helpUrl);
+  gotoPref().then(() => {
+    let helpButton = document.getElementById("helpButton");
+    let helpUrl = Services.urlFormatter.formatURLPref("app.support.baseURL") + "preferences";
+    helpButton.setAttribute("href", helpUrl);
 
-  document.getElementById("addonsButton")
-    .addEventListener("click", () => {
-      let mainWindow = window.docShell.rootTreeItem.domWindow;
-      mainWindow.BrowserOpenAddonsMgr();
-      AMTelemetry.recordLinkEvent({
-        object: "aboutPreferences",
-        value: "about:addons",
+    document.getElementById("addonsButton")
+      .addEventListener("click", () => {
+        let mainWindow = window.docShell.rootTreeItem.domWindow;
+        mainWindow.BrowserOpenAddonsMgr();
+        AMTelemetry.recordLinkEvent({
+          object: "aboutPreferences",
+          value: "about:addons",
+        });
       });
-    });
 
-  document.dispatchEvent(new CustomEvent("Initialized", {
-    "bubbles": true,
-    "cancelable": true,
-  }));
+    document.dispatchEvent(new CustomEvent("Initialized", {
+      "bubbles": true,
+      "cancelable": true,
+    }));
+  });
 }
 
 function telemetryBucketForCategory(category) {

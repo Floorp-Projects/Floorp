@@ -45,7 +45,7 @@ async function check_homepage({expectedURL, expectedPageVal = -1, locked = false
       // If only StartPage was changed, no need to check these
       return;
     }
-    content.document.getElementById("category-home").click();
+    await content.gotoPref("paneHome");
 
     let homepageTextbox = content.document.getElementById("homePageUrl");
     // Unfortunately this test does not work because the new UI does not fill

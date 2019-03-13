@@ -510,6 +510,13 @@ class DOMLocalization extends Localization {
    * @param {Element}      newRoot - Root to observe.
    */
   connectRoot(newRoot) {
+    // Sometimes we connect the root while the document is already in the
+    // process of being closed. Bail out gracefully.
+    // See bug 1532712 for details.
+    if (!newRoot.ownerGlobal) {
+      return;
+    }
+
     for (const root of this.roots) {
       if (root === newRoot ||
           root.contains(newRoot) ||
