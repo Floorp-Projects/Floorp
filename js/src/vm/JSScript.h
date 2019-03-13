@@ -25,7 +25,7 @@
 
 #include "jstypes.h"
 
-#include "frontend/BinASTRuntimeSupport.h"
+#include "frontend/BinSourceRuntimeSupport.h"
 #include "frontend/NameAnalysisTypes.h"
 #include "gc/Barrier.h"
 #include "gc/Rooting.h"

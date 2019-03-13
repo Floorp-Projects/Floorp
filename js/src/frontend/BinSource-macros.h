@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef frontend_BinAST_macros_h
-#define frontend_BinAST_macros_h
+#ifndef frontend_BinSource_macros_h
+#define frontend_BinSource_macros_h
 
 #include "vm/JSContext.h"
 
@@ -59,4 +59,4 @@
   if (_##VAR.isErr()) return ::mozilla::Err(_##VAR.unwrapErr()); \
   auto VAR = _##VAR.unwrap();
 
-#endif  // frontend_BinAST_macros_h
+#endif  // frontend_BinSource_macros_h

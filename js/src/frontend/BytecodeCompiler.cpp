@@ -766,8 +766,8 @@ JSScript* frontend::CompileGlobalBinASTScript(
   GlobalSharedContext globalsc(cx, ScopeKind::Global, directives,
                                options.extraWarningsOption);
 
-  frontend::BinASTParser<BinASTTokenReaderMultipart> parser(
-      cx, alloc, usedNames, options, sourceObj);
+  frontend::BinASTParser<BinTokenReaderMultipart> parser(cx, alloc, usedNames,
+                                                         options, sourceObj);
 
   // Metadata stores internal pointers, so we must use the same buffer every
   // time, including for lazy parses
@@ -1057,7 +1057,7 @@ bool frontend::CompileLazyBinASTFunction(JSContext* cx,
     script->setHasBeenCloned();
   }
 
-  frontend::BinASTParser<BinASTTokenReaderMultipart> parser(
+  frontend::BinASTParser<BinTokenReaderMultipart> parser(
       cx, cx->tempLifoAlloc(), usedNames, options, sourceObj, lazy);
 
   auto parsed =

@@ -14,9 +14,9 @@
 #include "mozilla/ScopeExit.h"
 #include "mozilla/Vector.h"
 
-#include "frontend/BinAST-macros.h"
 #include "frontend/BinASTParser.h"
-#include "frontend/BinASTTokenReaderMultipart.h"
+#include "frontend/BinSource-macros.h"
+#include "frontend/BinTokenReaderMultipart.h"
 #include "frontend/FullParseHandler.h"
 #include "frontend/ParseNode.h"
 #include "frontend/Parser.h"
@@ -118,8 +118,7 @@ JS::Result<ParseNode*> BinASTParserPerTokenizer<Tok>::parseAux(
 
   tokenizer_.emplace(cx_, this, start, length);
 
-  BinASTParseContext globalpc(cx_, this, globalsc,
-                              /* newDirectives = */ nullptr);
+  BinParseContext globalpc(cx_, this, globalsc, /* newDirectives = */ nullptr);
   if (!globalpc.init()) {
     return cx_->alreadyReportedError();
   }
@@ -180,7 +179,7 @@ JS::Result<FunctionNode*> BinASTParserPerTokenizer<Tok>::parseLazyFunction(
 
   // Push a new ParseContext. It will be used to parse `scope`, the arguments,
   // the function.
-  BinASTParseContext funpc(cx_, this, funbox, /* newDirectives = */ nullptr);
+  BinParseContext funpc(cx_, this, funbox, /* newDirectives = */ nullptr);
   BINJS_TRY(funpc.init());
   pc_->functionScope().useAsVarScope(pc_);
   MOZ_ASSERT(pc_->isFunctionBox());
@@ -197,9 +196,9 @@ JS::Result<FunctionNode*> BinASTParserPerTokenizer<Tok>::parseLazyFunction(
                  NewLexicalScopeData(cx_, lexicalScope, alloc_, pc_));
   BINJS_TRY_DECL(body, handler_.newLexicalScope(*lexicalScopeData, tmpBody));
 
-  auto binASTKind = isExpr ? BinASTKind::LazyFunctionExpression
-                           : BinASTKind::LazyFunctionDeclaration;
-  return buildFunction(firstOffset, binASTKind, nullptr, params, body);
+  auto binKind = isExpr ? BinKind::LazyFunctionExpression
+                        : BinKind::LazyFunctionDeclaration;
+  return buildFunction(firstOffset, binKind, nullptr, params, body);
 }
 
 template <typename Tok>
@@ -275,29 +274,29 @@ JS::Result<FunctionBox*> BinASTParserPerTokenizer<Tok>::buildFunctionBox(
   return funbox;
 }
 
-FunctionSyntaxKind BinASTKindToFunctionSyntaxKind(const BinASTKind kind) {
+FunctionSyntaxKind BinKindToFunctionSyntaxKind(const BinKind kind) {
   // FIXME: this doesn't cover FunctionSyntaxKind::ClassConstructor and
   // FunctionSyntaxKind::DerivedClassConstructor.
   switch (kind) {
-    case BinASTKind::EagerFunctionDeclaration:
-    case BinASTKind::LazyFunctionDeclaration:
+    case BinKind::EagerFunctionDeclaration:
+    case BinKind::LazyFunctionDeclaration:
       return FunctionSyntaxKind::Statement;
-    case BinASTKind::EagerFunctionExpression:
-    case BinASTKind::LazyFunctionExpression:
+    case BinKind::EagerFunctionExpression:
+    case BinKind::LazyFunctionExpression:
       return FunctionSyntaxKind::Expression;
-    case BinASTKind::EagerArrowExpressionWithFunctionBody:
-    case BinASTKind::LazyArrowExpressionWithFunctionBody:
-    case BinASTKind::EagerArrowExpressionWithExpression:
-    case BinASTKind::LazyArrowExpressionWithExpression:
+    case BinKind::EagerArrowExpressionWithFunctionBody:
+    case BinKind::LazyArrowExpressionWithFunctionBody:
+    case BinKind::EagerArrowExpressionWithExpression:
+    case BinKind::LazyArrowExpressionWithExpression:
       return FunctionSyntaxKind::Arrow;
-    case BinASTKind::EagerMethod:
-    case BinASTKind::LazyMethod:
+    case BinKind::EagerMethod:
+    case BinKind::LazyMethod:
       return FunctionSyntaxKind::Method;
-    case BinASTKind::EagerGetter:
-    case BinASTKind::LazyGetter:
+    case BinKind::EagerGetter:
+    case BinKind::LazyGetter:
       return FunctionSyntaxKind::Getter;
-    case BinASTKind::EagerSetter:
-    case BinASTKind::LazySetter:
+    case BinKind::EagerSetter:
+    case BinKind::LazySetter:
       return FunctionSyntaxKind::Setter;
     default:
       MOZ_CRASH("Invalid/ kind");
@@ -306,10 +305,10 @@ FunctionSyntaxKind BinASTKindToFunctionSyntaxKind(const BinASTKind kind) {
 
 template <typename Tok>
 JS::Result<FunctionNode*> BinASTParserPerTokenizer<Tok>::makeEmptyFunctionNode(
-    const size_t start, const BinASTKind kind, FunctionBox* funbox) {
+    const size_t start, const BinKind kind, FunctionBox* funbox) {
   // LazyScript compilation requires basically none of the fields filled out.
   TokenPos pos = tokenizer_->pos(start);
-  FunctionSyntaxKind syntaxKind = BinASTKindToFunctionSyntaxKind(kind);
+  FunctionSyntaxKind syntaxKind = BinKindToFunctionSyntaxKind(kind);
 
   BINJS_TRY_DECL(result, handler_.newFunction(syntaxKind, pos));
 
@@ -320,8 +319,8 @@ JS::Result<FunctionNode*> BinASTParserPerTokenizer<Tok>::makeEmptyFunctionNode(
 
 template <typename Tok>
 JS::Result<FunctionNode*> BinASTParserPerTokenizer<Tok>::buildFunction(
-    const size_t start, const BinASTKind kind, ParseNode* name,
-    ListNode* params, ParseNode* body) {
+    const size_t start, const BinKind kind, ParseNode* name, ListNode* params,
+    ParseNode* body) {
   FunctionBox* funbox = pc_->functionBox();
 
   // Set the argument count for building argument packets. Function.length is
@@ -683,22 +682,22 @@ BinASTParserPerTokenizer<Tok>::raiseMissingDirectEvalInAssertedScope() {
 template <typename Tok>
 mozilla::GenericErrorResult<JS::Error&>
 BinASTParserPerTokenizer<Tok>::raiseInvalidKind(const char* superKind,
-                                                const BinASTKind kind) {
+                                                const BinKind kind) {
   Sprinter out(cx_);
   BINJS_TRY(out.init());
-  BINJS_TRY(out.printf("In %s, invalid kind %s", superKind,
-                       describeBinASTKind(kind)));
+  BINJS_TRY(
+      out.printf("In %s, invalid kind %s", superKind, describeBinKind(kind)));
   return raiseError(out.string());
 }
 
 template <typename Tok>
 mozilla::GenericErrorResult<JS::Error&>
 BinASTParserPerTokenizer<Tok>::raiseInvalidVariant(const char* kind,
-                                                   const BinASTVariant value) {
+                                                   const BinVariant value) {
   Sprinter out(cx_);
   BINJS_TRY(out.init());
   BINJS_TRY(out.printf("In %s, invalid variant '%s'", kind,
-                       describeBinASTVariant(value)));
+                       describeBinVariant(value)));
 
   return raiseError(out.string());
 }
@@ -706,11 +705,11 @@ BinASTParserPerTokenizer<Tok>::raiseInvalidVariant(const char* kind,
 template <typename Tok>
 mozilla::GenericErrorResult<JS::Error&>
 BinASTParserPerTokenizer<Tok>::raiseMissingField(const char* kind,
-                                                 const BinASTField field) {
+                                                 const BinField field) {
   Sprinter out(cx_);
   BINJS_TRY(out.init());
-  BINJS_TRY(out.printf("In %s, missing field '%s'", kind,
-                       describeBinASTField(field)));
+  BINJS_TRY(
+      out.printf("In %s, missing field '%s'", kind, describeBinField(field)));
 
   return raiseError(out.string());
 }
@@ -733,11 +732,11 @@ BinASTParserPerTokenizer<Tok>::raiseOOM() {
 
 template <typename Tok>
 mozilla::GenericErrorResult<JS::Error&>
-BinASTParserPerTokenizer<Tok>::raiseError(BinASTKind kind,
+BinASTParserPerTokenizer<Tok>::raiseError(BinKind kind,
                                           const char* description) {
   Sprinter out(cx_);
   BINJS_TRY(out.init());
-  BINJS_TRY(out.printf("In %s, %s", describeBinASTKind(kind), description));
+  BINJS_TRY(out.printf("In %s, %s", describeBinKind(kind), description));
   return tokenizer_->raiseError(out.string());
 }
 
@@ -806,7 +805,7 @@ BinASTParserPerTokenizer<Tok>::asFinalParser() const {
 // Force class instantiation.
 // This ensures that the symbols are built, without having to export all our
 // code (and its baggage of #include and macros) in the header.
-template class BinASTParserPerTokenizer<BinASTTokenReaderMultipart>;
+template class BinASTParserPerTokenizer<BinTokenReaderMultipart>;
 
 }  // namespace frontend
 }  // namespace js

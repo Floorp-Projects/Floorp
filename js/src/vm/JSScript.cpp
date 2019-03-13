@@ -2631,32 +2631,31 @@ XDRResult ScriptSource::XDR(XDRState<mode>* xdr,
 #if defined(JS_BUILD_BINAST)
       UniquePtr<frontend::BinASTSourceMetadata>& binASTMetadata =
           ss->binASTMetadata_;
-      uint32_t numBinASTKinds;
+      uint32_t numBinKinds;
       uint32_t numStrings;
       if (mode == XDR_ENCODE) {
-        numBinASTKinds = binASTMetadata->numBinASTKinds();
+        numBinKinds = binASTMetadata->numBinKinds();
         numStrings = binASTMetadata->numStrings();
       }
-      MOZ_TRY(xdr->codeUint32(&numBinASTKinds));
+      MOZ_TRY(xdr->codeUint32(&numBinKinds));
       MOZ_TRY(xdr->codeUint32(&numStrings));
 
       if (mode == XDR_DECODE) {
         // Use calloc, since we're storing this immediately, and filling it
         // might GC, to avoid marking bogus atoms.
         auto metadata = static_cast<frontend::BinASTSourceMetadata*>(
-            js_calloc(frontend::BinASTSourceMetadata::totalSize(numBinASTKinds,
+            js_calloc(frontend::BinASTSourceMetadata::totalSize(numBinKinds,
                                                                 numStrings)));
         if (!metadata) {
           return xdr->fail(JS::TranscodeResult_Throw);
         }
-        new (metadata)
-            frontend::BinASTSourceMetadata(numBinASTKinds, numStrings);
+        new (metadata) frontend::BinASTSourceMetadata(numBinKinds, numStrings);
         ss->setBinASTSourceMetadata(metadata);
       }
 
-      for (uint32_t i = 0; i < numBinASTKinds; i++) {
-        frontend::BinASTKind* binASTKindBase = binASTMetadata->binASTKindBase();
-        MOZ_TRY(xdr->codeEnum32(&binASTKindBase[i]));
+      for (uint32_t i = 0; i < numBinKinds; i++) {
+        frontend::BinKind* binKindBase = binASTMetadata->binKindBase();
+        MOZ_TRY(xdr->codeEnum32(&binKindBase[i]));
       }
 
       RootedAtom atom(xdr->cx());
