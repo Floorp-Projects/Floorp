@@ -714,8 +714,7 @@ NS_IMETHODIMP nsIconChannel::OnStartRequest(nsIRequest* aRequest) {
 }
 
 NS_IMETHODIMP
-nsIconChannel::OnStopRequest(nsIRequest* aRequest,
-                             nsresult aStatus) {
+nsIconChannel::OnStopRequest(nsIRequest* aRequest, nsresult aStatus) {
   if (mListener) {
     mListener->OnStopRequest(this, aStatus);
     mListener = nullptr;
@@ -734,9 +733,8 @@ nsIconChannel::OnStopRequest(nsIRequest* aRequest,
 
 // nsIStreamListener methods
 NS_IMETHODIMP
-nsIconChannel::OnDataAvailable(nsIRequest* aRequest,
-                               nsIInputStream* aStream, uint64_t aOffset,
-                               uint32_t aCount) {
+nsIconChannel::OnDataAvailable(nsIRequest* aRequest, nsIInputStream* aStream,
+                               uint64_t aOffset, uint32_t aCount) {
   if (mListener) {
     return mListener->OnDataAvailable(this, aStream, aOffset, aCount);
   }

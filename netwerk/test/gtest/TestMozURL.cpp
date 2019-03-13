@@ -243,8 +243,9 @@ bool IsUUID(const nsACString& aString) {
     return false;
   }
 
-  std::regex pattern("^\\{[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-4[0-9A-Fa-f]{3}-[89ABab"
-                     "][0-9A-Fa-f]{3}-[0-9A-Fa-f]{12}\\}$");
+  std::regex pattern(
+      "^\\{[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-4[0-9A-Fa-f]{3}-[89ABab"
+      "][0-9A-Fa-f]{3}-[0-9A-Fa-f]{12}\\}$");
   return regex_match(nsCString(aString).get(), pattern);
 }
 

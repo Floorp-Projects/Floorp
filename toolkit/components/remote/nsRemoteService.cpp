@@ -46,9 +46,7 @@ nsRemoteService::nsRemoteService(const char* aProgram) : mProgram(aProgram) {
   ToLowerCase(mProgram);
 }
 
-void nsRemoteService::SetProfile(nsACString& aProfile) {
-  mProfile = aProfile;
-}
+void nsRemoteService::SetProfile(nsACString& aProfile) { mProfile = aProfile; }
 
 void nsRemoteService::LockStartup() {
   nsCOMPtr<nsIFile> mutexDir;

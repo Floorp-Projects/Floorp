@@ -357,8 +357,8 @@ void xpc::ErrorReport::LogToConsoleWithStack(
     ErrorNote& note = mNotes[i];
 
     nsScriptErrorNote* noteObject = new nsScriptErrorNote();
-    noteObject->Init(note.mErrorMsg, note.mFileName,
-                     note.mSourceId, note.mLineNumber, note.mColumn);
+    noteObject->Init(note.mErrorMsg, note.mFileName, note.mSourceId,
+                     note.mLineNumber, note.mColumn);
     errorObject->AddNote(noteObject);
   }
 

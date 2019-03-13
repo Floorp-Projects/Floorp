@@ -951,8 +951,8 @@ ChannelWrapper::RequestListener::OnDataAvailable(nsIRequest* request,
                                                  uint64_t sourceOffset,
                                                  uint32_t count) {
   MOZ_ASSERT(mOrigStreamListener, "Should have mOrigStreamListener");
-  return mOrigStreamListener->OnDataAvailable(request, inStr,
-                                              sourceOffset, count);
+  return mOrigStreamListener->OnDataAvailable(request, inStr, sourceOffset,
+                                              count);
 }
 
 NS_IMETHODIMP

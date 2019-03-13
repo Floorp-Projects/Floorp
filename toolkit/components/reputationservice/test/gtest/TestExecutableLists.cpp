@@ -6,7 +6,8 @@
 #include "nsLocalFileCommon.h"
 #include "ApplicationReputation.h"
 
-// PLEASE read the comment in ApplicationReputation.cpp before modifying this list.
+// PLEASE read the comment in ApplicationReputation.cpp before modifying this
+// list.
 static const char* const kTestFileExtensions[] = {
     ".ad",   // Windows (ignored for app rep)
     ".ade",  // MS Access
@@ -24,65 +25,65 @@ static const char* const kTestFileExtensions[] = {
     ".bash",         // Linux shell
     ".bat",          // Windows shell
     ".bin",
-    ".btapp",        // uTorrent and Transmission
-    ".btinstall",    // uTorrent and Transmission
-    ".btkey",        // uTorrent and Transmission
-    ".btsearch",     // uTorrent and Transmission
-    ".btskin",       // uTorrent and Transmission
-    ".bz",           // Linux archive (bzip)
-    ".bz2",          // Linux archive (bzip2)
-    ".bzip2",        // Linux archive (bzip2)
-    ".cab",          // Windows archive
-    ".cdr",          // Mac disk image
-    ".cfg",          // Windows
-    ".chi",          // Windows Help
-    ".chm",          // Windows Help
-    ".class",        // Java
-    ".cmd",          // Windows executable
-    ".com",          // Windows executable
-    ".command",      // Mac script
-    ".cpgz",         // Mac archive
-    ".cpi",          // Control Panel Item. Executable used for adding icons
-                     // to Control Panel
-    ".cpl",          // Windows executable
-    ".crt",          // Windows signed certificate
-    ".crx",          // Chrome extensions
-    ".csh",          // Linux shell
-    ".dart",         // Mac disk image
-    ".dc42",         // Apple DiskCopy Image
-    ".deb",          // Linux package
-    ".desktop",      // A shortcut that runs other files
-    ".dex",          // Android
-    ".dht",          // HTML
-    ".dhtm",         // HTML
-    ".dhtml",        // HTML
-    ".diskcopy42",   // Apple DiskCopy Image
-    ".dll",          // Windows executable
-    ".dmg",          // Mac disk image
-    ".dmgpart",      // Mac disk image
-    ".doc",          // MS Office
-    ".docb",         // MS Office
-    ".docm",         // MS Word
-    ".docx",         // MS Word
-    ".dot",          // MS Word
-    ".dotm",         // MS Word
-    ".dott",         // MS Office
-    ".dotx",         // MS Word
-    ".drv",          // Windows driver
-    ".dvdr",         // Mac Disk image
-    ".efi",          // Firmware
-    ".eml",          // MS Outlook
-    ".exe",          // Windows executable
-    ".fon",          // Windows font
-    ".fxp",          // MS FoxPro
-    ".gadget",       // Windows
-    ".grp",          // Windows
-    ".gz",           // Linux archive (gzip)
-    ".gzip",         // Linux archive (gzip)
-    ".hfs",          // Mac disk image
-    ".hlp",          // Windows Help
-    ".hqx",          // Mac archive
-    ".hta",          // HTML trusted application
+    ".btapp",       // uTorrent and Transmission
+    ".btinstall",   // uTorrent and Transmission
+    ".btkey",       // uTorrent and Transmission
+    ".btsearch",    // uTorrent and Transmission
+    ".btskin",      // uTorrent and Transmission
+    ".bz",          // Linux archive (bzip)
+    ".bz2",         // Linux archive (bzip2)
+    ".bzip2",       // Linux archive (bzip2)
+    ".cab",         // Windows archive
+    ".cdr",         // Mac disk image
+    ".cfg",         // Windows
+    ".chi",         // Windows Help
+    ".chm",         // Windows Help
+    ".class",       // Java
+    ".cmd",         // Windows executable
+    ".com",         // Windows executable
+    ".command",     // Mac script
+    ".cpgz",        // Mac archive
+    ".cpi",         // Control Panel Item. Executable used for adding icons
+                    // to Control Panel
+    ".cpl",         // Windows executable
+    ".crt",         // Windows signed certificate
+    ".crx",         // Chrome extensions
+    ".csh",         // Linux shell
+    ".dart",        // Mac disk image
+    ".dc42",        // Apple DiskCopy Image
+    ".deb",         // Linux package
+    ".desktop",     // A shortcut that runs other files
+    ".dex",         // Android
+    ".dht",         // HTML
+    ".dhtm",        // HTML
+    ".dhtml",       // HTML
+    ".diskcopy42",  // Apple DiskCopy Image
+    ".dll",         // Windows executable
+    ".dmg",         // Mac disk image
+    ".dmgpart",     // Mac disk image
+    ".doc",         // MS Office
+    ".docb",        // MS Office
+    ".docm",        // MS Word
+    ".docx",        // MS Word
+    ".dot",         // MS Word
+    ".dotm",        // MS Word
+    ".dott",        // MS Office
+    ".dotx",        // MS Word
+    ".drv",         // Windows driver
+    ".dvdr",        // Mac Disk image
+    ".efi",         // Firmware
+    ".eml",         // MS Outlook
+    ".exe",         // Windows executable
+    ".fon",         // Windows font
+    ".fxp",         // MS FoxPro
+    ".gadget",      // Windows
+    ".grp",         // Windows
+    ".gz",          // Linux archive (gzip)
+    ".gzip",        // Linux archive (gzip)
+    ".hfs",         // Mac disk image
+    ".hlp",         // Windows Help
+    ".hqx",         // Mac archive
+    ".hta",         // HTML trusted application
     ".htm", ".html",
     ".htt",                // MS HTML template
     ".img",                // Mac disk image
