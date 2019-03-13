@@ -4594,21 +4594,17 @@ NS_IMPL_FRAMEARENA_HELPERS(nsContinuingTextFrame)
 
 nsTextFrame::~nsTextFrame() {}
 
-nsresult nsTextFrame::GetCursor(const nsPoint& aPoint,
-                                nsIFrame::Cursor& aCursor) {
-  FillCursorInformationFromStyle(StyleUI(), aCursor);
-  if (StyleCursorKind::Auto == aCursor.mCursor) {
+Maybe<nsIFrame::Cursor> nsTextFrame::GetCursor(const nsPoint& aPoint) {
+  StyleCursorKind kind = StyleUI()->mCursor;
+  if (kind == StyleCursorKind::Auto) {
     if (!IsSelectable(nullptr)) {
-      aCursor.mCursor = StyleCursorKind::Default;
+      kind = StyleCursorKind::Default;
     } else {
-      aCursor.mCursor = GetWritingMode().IsVertical()
-                            ? StyleCursorKind::VerticalText
-                            : StyleCursorKind::Text;
+      kind = GetWritingMode().IsVertical() ? StyleCursorKind::VerticalText
+                                           : StyleCursorKind::Text;
     }
-    return NS_OK;
-  } else {
-    return nsFrame::GetCursor(aPoint, aCursor);
   }
+  return Some(Cursor{kind, AllowCustomCursorImage::Yes});
 }
 
 nsTextFrame* nsTextFrame::LastInFlow() const {
