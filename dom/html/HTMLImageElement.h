@@ -90,15 +90,11 @@ class HTMLImageElement final : public nsGenericHTMLElement,
   void SetIsMap(bool aIsMap, ErrorResult& aError) {
     SetHTMLBoolAttr(nsGkAtoms::ismap, aIsMap, aError);
   }
-  MOZ_CAN_RUN_SCRIPT uint32_t Width() {
-    return GetWidthHeightForImage(mCurrentRequest).width;
-  }
+  MOZ_CAN_RUN_SCRIPT uint32_t Width();
   void SetWidth(uint32_t aWidth, ErrorResult& aError) {
     SetUnsignedIntAttr(nsGkAtoms::width, aWidth, 0, aError);
   }
-  MOZ_CAN_RUN_SCRIPT uint32_t Height() {
-    return GetWidthHeightForImage(mCurrentRequest).height;
-  }
+  MOZ_CAN_RUN_SCRIPT uint32_t Height();
   void SetHeight(uint32_t aHeight, ErrorResult& aError) {
     SetUnsignedIntAttr(nsGkAtoms::height, aHeight, 0, aError);
   }
