@@ -26,6 +26,9 @@ class AbstractSandboxBroker {
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(AbstractSandboxBroker)
 
+  static AbstractSandboxBroker *Create(GeckoProcessType aProcessType);
+
+  virtual void Shutdown() = 0;
   virtual bool LaunchApp(const wchar_t *aPath, const wchar_t *aArguments,
                          base::EnvironmentMap &aEnvironment,
                          GeckoProcessType aProcessType,
@@ -48,12 +51,6 @@ class AbstractSandboxBroker {
   virtual bool AllowReadFile(wchar_t const *file) = 0;
 
   /**
-   * Exposes AddTargetPeer from broker services, so that non-sandboxed
-   * processes can be added as handle duplication targets.
-   */
-  virtual bool AddTargetPeer(HANDLE aPeerProcess) = 0;
-
-  /**
    * Share a HANDLE with the child process. The HANDLE will be made available
    * in the child process at the memory address
    * |reinterpret_cast<uintptr_t>(aHandle)|. It is the caller's responsibility
@@ -70,6 +67,8 @@ class SandboxBroker : public AbstractSandboxBroker {
   SandboxBroker();
 
   static void Initialize(sandbox::BrokerServices *aBrokerServices);
+
+  void Shutdown() override {}
 
   /**
    * Do initialization that depends on parts of the Gecko machinery having been
@@ -102,7 +101,7 @@ class SandboxBroker : public AbstractSandboxBroker {
    * Exposes AddTargetPeer from broker services, so that non-sandboxed
    * processes can be added as handle duplication targets.
    */
-  bool AddTargetPeer(HANDLE aPeerProcess) override;
+  static bool AddTargetPeer(HANDLE aPeerProcess);
 
   /**
    * Share a HANDLE with the child process. The HANDLE will be made available

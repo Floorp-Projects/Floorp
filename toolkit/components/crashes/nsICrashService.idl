@@ -4,7 +4,7 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(f60d76e5-62c3-4f58-89f6-b726c2b7bc20)]
+[scriptable, uuid(70bd93ff-88fa-4600-8af8-57c8d002dbac)]
 interface nsICrashService : nsISupports
 {
   /**
@@ -30,6 +30,7 @@ interface nsICrashService : nsISupports
   const long PROCESS_TYPE_VR = 6;
   const long PROCESS_TYPE_RDD = 7;
   const long PROCESS_TYPE_SOCKET = 8;
+  const long PROCESS_TYPE_SANDBOX_BROKER = 9;
   // New process types should be added at the end of the above list.
 
   const long CRASH_TYPE_CRASH = 0;
