@@ -289,6 +289,13 @@ AST_MATCHER(FunctionDecl, isMozMustReturnFromCaller) {
   return Decl && hasCustomAttribute<moz_must_return_from_caller>(Decl);
 }
 
+/// This matcher will select default args which have nullptr as the value.
+AST_MATCHER(CXXDefaultArgExpr, isNullDefaultArg) {
+  const Expr *Expr = Node.getExpr();
+  return Expr && Expr->isNullPointerConstant(Finder->getASTContext(),
+                                             Expr::NPC_NeverValueDependent);
+}
+
 #if CLANG_VERSION_FULL < 309
 /// DISCLAIMER: This is a copy/paste from the Clang source code starting from
 /// Clang 3.9, so that this matcher is supported in lower versions.
