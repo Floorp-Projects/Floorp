@@ -53,6 +53,9 @@ Preferences.addAll([
   { id: "privacy.trackingprotection.fingerprinting.enabled", type: "bool" },
   { id: "privacy.trackingprotection.cryptomining.enabled", type: "bool" },
 
+  // Tracker list
+  { id: "urlclassifier.trackingTable", type: "string"},
+
   // Button prefs
   { id: "pref.privacy.disable_button.cookie_exceptions", type: "bool" },
   { id: "pref.privacy.disable_button.view_cookies", type: "bool" },
@@ -463,6 +466,15 @@ var gPrivacyPane = {
       gPrivacyPane.readBlockCookies.bind(gPrivacyPane));
     Preferences.get("browser.contentblocking.category").on("change",
       gPrivacyPane.highlightCBCategory);
+
+    // If any relevant content blocking pref changes, show a warning that the changes will
+    // not be implemented until they refresh their tabs.
+    for (let pref of CONTENT_BLOCKING_PREFS) {
+      Preferences.get(pref).on("change", gPrivacyPane.notifyUserToReload);
+    }
+    for (let button of document.querySelectorAll(".reload-tabs-button")) {
+      button.addEventListener("command", gPrivacyPane.reloadAllTabs);
+    }
 
     let cryptoMinersOption = document.getElementById("contentBlockingCryptominersOption");
     let fingerprintersOption = document.getElementById("contentBlockingFingerprintersOption");
@@ -1009,6 +1021,25 @@ var gPrivacyPane = {
         return Ci.nsICookieService.BEHAVIOR_REJECT_FOREIGN;
       default:
         return undefined;
+    }
+  },
+
+  /**
+   * Reload all tabs in all windows.
+   */
+  reloadAllTabs() {
+    for (let win of window.BrowserWindowTracker.orderedWindows) {
+      let tabbrowser = win.getBrowser();
+      tabbrowser.reloadTabs(tabbrowser.tabs);
+    }
+  },
+
+  /**
+   * Show a warning to the user that they need to reload their tabs to apply the setting.
+   */
+  notifyUserToReload() {
+    for (let notification of document.querySelectorAll(".reload-tabs")) {
+      notification.hidden = false;
     }
   },
 
