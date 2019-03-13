@@ -75,6 +75,7 @@ typedef Handle<JS::BigInt*> HandleBigInt;
 typedef Handle<Value> HandleValue;
 typedef Handle<StackGCVector<Value>> HandleValueVector;
 typedef Handle<StackGCVector<JSObject*>> HandleObjectVector;
+typedef Handle<StackGCVector<JS::PropertyKey>> HandleIdVector;
 
 typedef MutableHandle<JSFunction*> MutableHandleFunction;
 typedef MutableHandle<PropertyKey> MutableHandleId;
@@ -86,6 +87,7 @@ typedef MutableHandle<JS::BigInt*> MutableHandleBigInt;
 typedef MutableHandle<Value> MutableHandleValue;
 typedef MutableHandle<StackGCVector<Value>> MutableHandleValueVector;
 typedef MutableHandle<StackGCVector<JSObject*>> MutableHandleObjectVector;
+typedef MutableHandle<StackGCVector<JS::PropertyKey>> MutableHandleIdVector;
 
 typedef Rooted<JSObject*> RootedObject;
 typedef Rooted<JSFunction*> RootedFunction;
@@ -98,6 +100,7 @@ typedef Rooted<JS::Value> RootedValue;
 
 typedef RootedVector<JS::Value> RootedValueVector;
 typedef RootedVector<JSObject*> RootedObjectVector;
+typedef RootedVector<JS::PropertyKey> RootedIdVector;
 
 typedef PersistentRooted<JSFunction*> PersistentRootedFunction;
 typedef PersistentRooted<PropertyKey> PersistentRootedId;

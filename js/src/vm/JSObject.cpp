@@ -469,15 +469,15 @@ void js::CompletePropertyDescriptor(MutableHandle<PropertyDescriptor> desc) {
 }
 
 bool js::ReadPropertyDescriptors(
-    JSContext* cx, HandleObject props, bool checkAccessors, AutoIdVector* ids,
-    MutableHandle<PropertyDescriptorVector> descs) {
+    JSContext* cx, HandleObject props, bool checkAccessors,
+    MutableHandleIdVector ids, MutableHandle<PropertyDescriptorVector> descs) {
   if (!GetPropertyKeys(cx, props, JSITER_OWNONLY | JSITER_SYMBOLS, ids)) {
     return false;
   }
 
   RootedId id(cx);
-  for (size_t i = 0, len = ids->length(); i < len; i++) {
-    id = (*ids)[i];
+  for (size_t i = 0, len = ids.length(); i < len; i++) {
+    id = ids[i];
     Rooted<PropertyDescriptor> desc(cx);
     RootedValue v(cx);
     if (!GetProperty(cx, props, props, id, &v) ||
@@ -567,7 +567,7 @@ bool js::SetIntegrityLevel(JSContext* cx, HandleObject obj,
     }
   } else {
     // Steps 6-7.
-    AutoIdVector keys(cx);
+    RootedIdVector keys(cx);
     if (!GetPropertyKeys(
             cx, obj, JSITER_HIDDEN | JSITER_OWNONLY | JSITER_SYMBOLS, &keys)) {
       return false;
@@ -632,8 +632,8 @@ static bool ResolveLazyProperties(JSContext* cx, HandleNativeObject obj) {
     }
   }
   if (clasp->getNewEnumerate() && clasp->getResolve()) {
-    AutoIdVector properties(cx);
-    if (!clasp->getNewEnumerate()(cx, obj, properties,
+    RootedIdVector properties(cx);
+    if (!clasp->getNewEnumerate()(cx, obj, &properties,
                                   /* enumerableOnly = */ false)) {
       return false;
     }
@@ -717,7 +717,7 @@ bool js::TestIntegrityLevel(JSContext* cx, HandleObject obj,
     }
   } else {
     // Steps 7-8.
-    AutoIdVector props(cx);
+    RootedIdVector props(cx);
     if (!GetPropertyKeys(
             cx, obj, JSITER_HIDDEN | JSITER_OWNONLY | JSITER_SYMBOLS, &props)) {
       return false;
@@ -1297,7 +1297,7 @@ JS_FRIEND_API bool JS_CopyPropertiesFrom(JSContext* cx, HandleObject target,
 
   JSAutoRealm ar(cx, obj);
 
-  AutoIdVector props(cx);
+  RootedIdVector props(cx);
   if (!GetPropertyKeys(cx, obj, JSITER_OWNONLY | JSITER_HIDDEN | JSITER_SYMBOLS,
                        &props)) {
     return false;
