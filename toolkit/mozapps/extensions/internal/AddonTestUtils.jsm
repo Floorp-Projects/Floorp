@@ -1475,6 +1475,41 @@ var AddonTestUtils = {
   },
 
   /**
+   * Wait until an extension with a search provider has been loaded.
+   * This should be called after the extension has started, but before shutdown.
+   *
+   * @param {object} extension
+   *        The return value of ExtensionTestUtils.loadExtension.
+   *        For browser tests, see mochitest/tests/SimpleTest/ExtensionTestUtils.js
+   *        For xpcshell tests, see toolkit/components/extensions/ExtensionXPCShellUtils.jsm
+   * @param {object} [options]
+   *        Optional options.
+   * @param {boolean} [options.expectPending = false]
+   *        Whether to expect the search provider to still be starting up.
+   */
+  async waitForSearchProviderStartup(extension, {expectPending = false} = {}) {
+    // In xpcshell tests, equal/ok are defined in the global scope.
+    let {equal, ok} = this.testScope;
+    if (!equal || !ok) {
+      // In mochitests, these are available via Assert.jsm.
+      let {Assert} = this.testScope;
+      equal = Assert.equal.bind(Assert);
+      ok = Assert.ok.bind(Assert);
+    }
+
+    equal(extension.state, "running", "Search provider extension should be running");
+    ok(extension.id, "Extension ID of search provider should be set");
+
+    // The map of promises from browser/components/extensions/parent/ext-chrome-settings-overrides.js
+    let {pendingSearchSetupTasks} = Management.global;
+    let searchStartupPromise = pendingSearchSetupTasks.get(extension.id);
+    if (expectPending) {
+      ok(searchStartupPromise, "Search provider registration should be in progress");
+    }
+    return searchStartupPromise;
+  },
+
+  /**
    * Initializes the URLPreloader, which is required in order to load
    * built_in_addons.json. This has the side-effect of setting
    * preferences which flip Cu.isInAutomation to true.

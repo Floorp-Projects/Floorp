@@ -65,6 +65,7 @@ add_task(async function test_overrides_update_removal() {
 
   let prefPromise = promisePrefChanged(HOMEPAGE_URI);
   await extension.startup();
+  await AddonTestUtils.waitForSearchProviderStartup(extension);
   await prefPromise;
 
   equal(extension.version, "1.0", "The installed addon has the expected version.");
