@@ -2,7 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use app_units::Au;
 use clap;
 use euclid::SideOffsets2D;
 use image;
@@ -15,6 +14,7 @@ use std::io::Read;
 use std::path::{Path, PathBuf};
 use std::usize;
 use webrender::api::*;
+use webrender::api::units::*;
 use wrench::{FontDescriptor, Wrench, WrenchThing};
 use yaml_helper::{StringEnum, YamlHelper, make_perspective};
 use yaml_rust::{Yaml, YamlLoader};
