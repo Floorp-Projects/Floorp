@@ -34,6 +34,13 @@
   padding: 0 3px;
 }
 
+.devtools-toolbar td {
+  border-bottom-width: 1px;
+  border-bottom-style: solid;
+  border-bottom-color: var(--theme-splitter-color);
+}
+
+/* <thead> nor <tr> support border, we have to style the <td> */
 .devtools-toolbar-bottom {
   border-top-width: 1px;
   border-bottom: none;
