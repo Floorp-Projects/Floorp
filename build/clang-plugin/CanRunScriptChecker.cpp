@@ -202,7 +202,7 @@ void CanRunScriptChecker::check(const MatchFinder::MatchResult &Result) {
   const char *ErrorNonCanRunScriptParent =
       "functions marked as MOZ_CAN_RUN_SCRIPT can only be called from "
       "functions also marked as MOZ_CAN_RUN_SCRIPT";
-  const char *NoteNonCanRunScriptParent = "parent function declared here";
+  const char *NoteNonCanRunScriptParent = "caller function declared here";
 
   const Expr *InvalidArg = Result.Nodes.getNodeAs<Expr>("invalidArg");
 
@@ -268,7 +268,7 @@ void CanRunScriptChecker::check(const MatchFinder::MatchResult &Result) {
     diag(CallRange.getBegin(), ErrorNonCanRunScriptParent, DiagnosticIDs::Error)
         << CallRange;
 
-    diag(ParentFunction->getLocation(), NoteNonCanRunScriptParent,
-         DiagnosticIDs::Note);
+    diag(ParentFunction->getCanonicalDecl()->getLocation(),
+	 NoteNonCanRunScriptParent, DiagnosticIDs::Note);
   }
 }
