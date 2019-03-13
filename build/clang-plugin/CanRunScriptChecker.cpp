@@ -7,6 +7,13 @@
 
 void CanRunScriptChecker::registerMatchers(MatchFinder *AstMatcher) {
   auto Refcounted = qualType(hasDeclaration(cxxRecordDecl(isRefCounted())));
+  auto StackSmartPtr =
+    ignoreTrivials(
+      declRefExpr(to(varDecl(hasAutomaticStorageDuration())),
+                  hasType(isSmartPtrToRefCounted())));
+  auto MozKnownLiveCall =
+    callExpr(callee(functionDecl(hasName("MOZ_KnownLive"))));
+
   auto InvalidArg =
       // We want to find any expression,
       ignoreTrivials(expr(
@@ -14,18 +21,21 @@ void CanRunScriptChecker::registerMatchers(MatchFinder *AstMatcher) {
           anyOf(
             hasType(Refcounted),
             hasType(pointsTo(Refcounted)),
-            hasType(references(Refcounted))
+            hasType(references(Refcounted)),
+            hasType(isSmartPtrToRefCounted())
           ),
           // and which is not this,
           unless(cxxThisExpr()),
-          // and which is not a method call on a smart ptr,
-          unless(cxxMemberCallExpr(on(hasType(isSmartPtrToRefCounted())))),
-          // and which is not calling operator* on a smart ptr.
+          // and which is not a stack smart ptr
+          unless(StackSmartPtr),
+          // and which is not a method call on a stack smart ptr,
+          unless(cxxMemberCallExpr(on(StackSmartPtr))),
+          // and which is not calling operator* on a stack smart ptr.
           unless(
             allOf(
               cxxOperatorCallExpr(hasOverloadedOperatorName("*")),
               callExpr(allOf(
-                hasAnyArgument(hasType(isSmartPtrToRefCounted())),
+                hasAnyArgument(StackSmartPtr),
                 argumentCountIs(1)
               ))
             )
@@ -33,7 +43,16 @@ void CanRunScriptChecker::registerMatchers(MatchFinder *AstMatcher) {
           // and which is not a parameter of the parent function,
           unless(declRefExpr(to(parmVarDecl()))),
           // and which is not a MOZ_KnownLive wrapped value.
-          unless(callExpr(callee(functionDecl(hasName("MOZ_KnownLive"))))),
+          unless(
+            anyOf(
+              MozKnownLiveCall,
+              // MOZ_KnownLive applied to a RefPtr or nsCOMPtr just returns that
+              // same RefPtr/nsCOMPtr type which causes us to have a conversion
+              // operator applied after the MOZ_KnownLive.
+              cxxMemberCallExpr(on(allOf(hasType(isSmartPtrToRefCounted()),
+                                         MozKnownLiveCall)))
+            )
+          ),
           expr().bind("invalidArg")));
 
   auto OptionalInvalidExplicitArg = anyOf(

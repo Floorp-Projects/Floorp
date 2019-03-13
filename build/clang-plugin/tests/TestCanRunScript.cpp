@@ -196,7 +196,38 @@ MOZ_CAN_RUN_SCRIPT void test_maybe() {
 }
 
 MOZ_CAN_RUN_SCRIPT void test_maybe_2() {
+  // FIXME(bz): This should not generate an error!
   mozilla::Maybe<RefPtr<RefCountedBase>> safe;
   safe.emplace(new RefCountedBase);
-  (*safe)->method_test();
+  (*safe)->method_test(); // expected-error {{arguments must all be strong refs or parent parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument)}}
 }
+
+struct DisallowMemberArgs {
+  RefPtr<RefCountedBase> mRefCounted;
+  MOZ_CAN_RUN_SCRIPT void foo() {
+    mRefCounted->method_test(); // expected-error {{arguments must all be strong refs or parent parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument)}}
+  }
+  MOZ_CAN_RUN_SCRIPT void bar() {
+    test2(mRefCounted); // expected-error {{arguments must all be strong refs or parent parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument)}}
+  }
+};
+
+struct DisallowMemberArgsWithGet {
+  RefPtr<RefCountedBase> mRefCounted;
+  MOZ_CAN_RUN_SCRIPT void foo() {
+    mRefCounted.get()->method_test(); // expected-error {{arguments must all be strong refs or parent parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument)}}
+  }
+  MOZ_CAN_RUN_SCRIPT void bar() {
+    test2(mRefCounted.get()); // expected-error {{arguments must all be strong refs or parent parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument)}}
+  }
+};
+
+struct AllowKnownLiveMemberArgs {
+  RefPtr<RefCountedBase> mRefCounted;
+  MOZ_CAN_RUN_SCRIPT void foo() {
+    MOZ_KnownLive(mRefCounted)->method_test();
+  }
+  MOZ_CAN_RUN_SCRIPT void bar() {
+    test2(MOZ_KnownLive(mRefCounted));
+  }
+};
