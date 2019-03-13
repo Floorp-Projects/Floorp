@@ -68,9 +68,7 @@ function run_test() {
   }
 
   // set up the uri to test with
-  var ioService =
-    Cc["@mozilla.org/network/io-service;1"]
-      .getService(Ci.nsIIOService);
+  var ioService = Services.io;
 
   // set up the local handler object
   var localHandler =
