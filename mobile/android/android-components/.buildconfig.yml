@@ -80,6 +80,10 @@ projects:
     path: components/feature/prompts
     description: 'Feature that will subscribe to the selected session and will handle all the common prompt dialogs from web content.'
     publish: true
+  feature-pwa:
+    path: components/feature/pwa
+    description: 'Feature implementation for Progressive Web Apps (PWA).'
+    publish: true
   feature-findinpage:
       path: components/feature/findinpage
       description: 'Feature that will subscribe to the selected session and show an UI for results of find in page.'
