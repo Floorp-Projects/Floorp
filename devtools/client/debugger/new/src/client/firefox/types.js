@@ -179,7 +179,7 @@ export type TabPayload = {
   timelineActor: ActorId,
   title: string,
   url: URL,
-  webExtensionInspectedWindowActor: ActorId,
+  webExtensionInspectedWindowActor: ActorId
 };
 
 /**
