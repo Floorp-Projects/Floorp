@@ -35,40 +35,6 @@ MFTDecoder::Create(const GUID& aMFTClsID) {
   return S_OK;
 }
 
-// Helper function to create a COM object instance from a DLL.
-static HRESULT CreateCOMObjectFromDll(HMODULE aDLL, const CLSID& aCLSId,
-                                      const IID& aIID, void** aObject) {
-  if (!aDLL || !aObject) {
-    return E_INVALIDARG;
-  }
-  using GetClassObject =
-      HRESULT(WINAPI*)(const CLSID& clsid, const IID& iid, void** object);
-
-  GetClassObject getClassObject = reinterpret_cast<GetClassObject>(
-      GetProcAddress(aDLL, "DllGetClassObject"));
-  NS_ENSURE_TRUE(getClassObject, E_FAIL);
-
-  RefPtr<IClassFactory> factory;
-  HRESULT hr = getClassObject(
-      aCLSId,
-      IID_PPV_ARGS(static_cast<IClassFactory**>(getter_AddRefs(factory))));
-  NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
-
-  hr = factory->CreateInstance(NULL, aIID, aObject);
-  return hr;
-}
-
-HRESULT
-MFTDecoder::Create(HMODULE aDecoderDLL, const GUID& aMFTClsID) {
-  // Create the IMFTransform to do the decoding.
-  HRESULT hr = CreateCOMObjectFromDll(
-      aDecoderDLL, aMFTClsID,
-      IID_PPV_ARGS(static_cast<IMFTransform**>(getter_AddRefs(mDecoder))));
-  NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
-
-  return S_OK;
-}
-
 HRESULT
 MFTDecoder::SetMediaTypes(IMFMediaType* aInputType, IMFMediaType* aOutputType,
                           std::function<HRESULT(IMFMediaType*)>&& aCallback) {
