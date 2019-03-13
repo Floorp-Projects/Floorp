@@ -654,7 +654,7 @@ void TextTrackManager::TimeMarchesOn() {
   bool dummy;
   for (uint32_t index = 0; index < mTextTracks->Length(); ++index) {
     TextTrack* ttrack = mTextTracks->IndexedGetter(index, dummy);
-    if (ttrack && dummy) {
+    if (ttrack && ttrack->Mode() != TextTrackMode::Disabled) {
       // TODO: call GetCueListByTimeInterval on mNewCues?
       ttrack->GetCurrentCueList(currentCues);
     }
