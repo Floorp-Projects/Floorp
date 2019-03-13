@@ -2935,9 +2935,6 @@ function PageProxyClickHandler(aEvent) {
 const TLS_ERROR_REPORT_TELEMETRY_AUTO_CHECKED   = 2;
 const TLS_ERROR_REPORT_TELEMETRY_AUTO_UNCHECKED = 3;
 
-const SEC_ERROR_BASE = Ci.nsINSSErrorsService.NSS_SEC_ERROR_BASE;
-const SEC_ERROR_UNKNOWN_ISSUER = SEC_ERROR_BASE + 13;
-
 const PREF_SSL_IMPACT_ROOTS = ["security.tls.version.", "security.ssl3."];
 
 /**
@@ -2956,8 +2953,6 @@ var BrowserOnClick = {
     mm.addMessageListener("Browser:ResetSSLPreferences", this);
     mm.addMessageListener("Browser:SSLErrorReportTelemetry", this);
     mm.addMessageListener("Browser:SSLErrorGoBack", this);
-    mm.addMessageListener("Browser:PrimeMitm", this);
-    mm.addMessageListener("Browser:ResetEnterpriseRootsPref", this);
 
     Services.obs.addObserver(this, "captive-portal-login-abort");
     Services.obs.addObserver(this, "captive-portal-login-success");
@@ -2972,8 +2967,6 @@ var BrowserOnClick = {
     mm.removeMessageListener("Browser:ResetSSLPreferences", this);
     mm.removeMessageListener("Browser:SSLErrorReportTelemetry", this);
     mm.removeMessageListener("Browser:SSLErrorGoBack", this);
-    mm.removeMessageListener("Browser:PrimeMitm", this);
-    mm.removeMessageListener("Browser:ResetEnterpriseRootsPref", this);
 
     Services.obs.removeObserver(this, "captive-portal-login-abort");
     Services.obs.removeObserver(this, "captive-portal-login-success");
@@ -3038,74 +3031,7 @@ var BrowserOnClick = {
       case "Browser:SSLErrorGoBack":
         goBackFromErrorPage();
       break;
-      case "Browser:PrimeMitm":
-        this.primeMitm(msg.target);
-      break;
-      case "Browser:ResetEnterpriseRootsPref":
-        Services.prefs.clearUserPref("security.enterprise_roots.enabled");
-        Services.prefs.clearUserPref("security.enterprise_roots.auto-enabled");
-      break;
     }
-  },
-
-  /**
-   * This function does a canary request to a reliable, maintained endpoint, in
-   * order to help network code detect a system-wide man-in-the-middle.
-   */
-  primeMitm(browser) {
-    // If we already have a mitm canary issuer stored, then don't bother with the
-    // extra request. This will be cleared on every update ping.
-    if (Services.prefs.getStringPref("security.pki.mitm_canary_issuer", null)) {
-      return;
-    }
-
-    let url = Services.prefs.getStringPref("security.certerrors.mitm.priming.endpoint");
-    let request = new XMLHttpRequest({mozAnon: true});
-    request.open("HEAD", url);
-    request.channel.loadFlags |= Ci.nsIRequest.LOAD_BYPASS_CACHE;
-    request.channel.loadFlags |= Ci.nsIRequest.INHIBIT_CACHING;
-
-    request.addEventListener("error", event => {
-      // Make sure the user is still on the cert error page.
-      if (!browser.documentURI.spec.startsWith("about:certerror")) {
-        return;
-      }
-
-      let secInfo = request.channel.securityInfo.QueryInterface(Ci.nsITransportSecurityInfo);
-      if (secInfo.errorCode != SEC_ERROR_UNKNOWN_ISSUER) {
-        return;
-      }
-
-      // When we get to this point there's already something deeply wrong, it's very likely
-      // that there is indeed a system-wide MitM.
-      if (secInfo.serverCert && secInfo.serverCert.issuerName) {
-        // Grab the issuer of the certificate used in the exchange and store it so that our
-        // network-level MitM detection code has a comparison baseline.
-        Services.prefs.setStringPref("security.pki.mitm_canary_issuer", secInfo.serverCert.issuerName);
-
-        // MitM issues are sometimes caused by software not registering their root certs in the
-        // Firefox root store. We might opt for using third party roots from the system root store.
-        if (Services.prefs.getBoolPref("security.certerrors.mitm.auto_enable_enterprise_roots")) {
-          if (!Services.prefs.getBoolPref("security.enterprise_roots.enabled")) {
-            // Loading enterprise roots happens on a background thread, so wait for import to finish.
-            BrowserUtils.promiseObserved("psm:enterprise-certs-imported").then(() => {
-              if (browser.documentURI.spec.startsWith("about:certerror")) {
-                browser.reload();
-              }
-            });
-
-            Services.prefs.setBoolPref("security.enterprise_roots.enabled", true);
-            // Record that this pref was automatically set.
-            Services.prefs.setBoolPref("security.enterprise_roots.auto-enabled", true);
-          }
-        } else {
-          // Need to reload the page to make sure network code picks up the canary issuer pref.
-          browser.reload();
-        }
-      }
-    });
-
-    request.send(null);
   },
 
   onCertError(browser, elementId, isTopFrame, location, securityInfoAsString, frameId) {
