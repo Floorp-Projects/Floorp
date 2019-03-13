@@ -2675,11 +2675,10 @@ nsresult HttpChannelChild::ContinueAsyncOpen() {
   }
 
   if (mResponseHead) {
-    openArgs.synthesizedResponseHead() = *mResponseHead;
+    openArgs.synthesizedResponseHead() = Some(*mResponseHead);
     openArgs.suspendAfterSynthesizeResponse() =
         mSuspendParentAfterSynthesizeResponse;
   } else {
-    openArgs.synthesizedResponseHead() = mozilla::void_t();
     openArgs.suspendAfterSynthesizeResponse() = false;
   }
 

@@ -396,7 +396,7 @@ bool HttpChannelParent::DoAsyncOpen(
     const bool& chooseApplicationCache, const nsCString& appCacheClientID,
     const bool& allowSpdy, const bool& allowAltSvc, const bool& beConservative,
     const uint32_t& tlsFlags, const Maybe<LoadInfoArgs>& aLoadInfoArgs,
-    const OptionalHttpResponseHead& aSynthesizedResponseHead,
+    const Maybe<nsHttpResponseHead>& aSynthesizedResponseHead,
     const nsCString& aSecurityInfoSerialization, const uint32_t& aCacheKey,
     const uint64_t& aRequestContextID,
     const OptionalCorsPreflightArgs& aCorsPreflightArgs,
@@ -546,10 +546,8 @@ bool HttpChannelParent::DoAsyncOpen(
     httpChannel->SetUploadStreamHasHeaders(uploadStreamHasHeaders);
   }
 
-  if (aSynthesizedResponseHead.type() ==
-      OptionalHttpResponseHead::TnsHttpResponseHead) {
-    parentListener->SetupInterception(
-        aSynthesizedResponseHead.get_nsHttpResponseHead());
+  if (aSynthesizedResponseHead.isSome()) {
+    parentListener->SetupInterception(aSynthesizedResponseHead.ref());
     mWillSynthesizeResponse = true;
     httpChannelImpl->SetCouldBeSynthesized();
 
