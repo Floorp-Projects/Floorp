@@ -240,6 +240,19 @@ MOZ_CAN_RUN_SCRIPT void test_defaults_6() {
   test_defaults_helper_2(t);
 }
 
+MOZ_CAN_RUN_SCRIPT void test_arg_deref_helper(RefCountedBase&) {
+}
+
+MOZ_CAN_RUN_SCRIPT void test_arg_deref(RefCountedBase* arg) {
+  test_arg_deref_helper(*arg);
+}
+
+struct RefCountedDerefTester : public RefCountedBase {
+  MOZ_CAN_RUN_SCRIPT void foo() {
+    test_arg_deref_helper(*this);
+  }
+};
+
 struct DisallowMemberArgs {
   RefPtr<RefCountedBase> mRefCounted;
   MOZ_CAN_RUN_SCRIPT void foo() {
