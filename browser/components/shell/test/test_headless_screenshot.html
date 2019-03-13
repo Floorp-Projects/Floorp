@@ -137,6 +137,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1378010
     await testFileCreationNegative(["-url", "http://mochi.test:8888/chrome/browser/components/shell/test/headless.html", "-screenshot", "-window-size", "hello"], "screenshot.png");
     await testFileCreationNegative(["-url", "http://mochi.test:8888/chrome/browser/components/shell/test/headless.html", "-screenshot", "-window-size", "800,"], "screenshot.png");
 
+    // Test when the requested URL redirects
+    await testFileCreationPositive(["-url", "http://mochi.test:8888/chrome/browser/components/shell/test/headless_redirect.html", "-screenshot", screenshotPath], screenshotPath);
+
     SimpleTest.finish();
   })();
   </script>
