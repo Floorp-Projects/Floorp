@@ -62,7 +62,6 @@ DevToolsModules(
     'webaudio.js',
     'webbrowser.js',
     'webconsole.js',
-    'webgl.js',
 )
 
 with Files('animation.js'):
@@ -97,6 +96,3 @@ with Files('webaudio.js'):
 
 with Files('webconsole.js'):
     BUG_COMPONENT = ('DevTools', 'Console')
-
-with Files('webgl.js'):
-    BUG_COMPONENT = ('DevTools', 'WebGL Shader Editor')
