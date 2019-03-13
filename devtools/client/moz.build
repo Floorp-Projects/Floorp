@@ -24,7 +24,6 @@ DIRS += [
     'preferences',
     'responsive.html',
     'scratchpad',
-    'shadereditor',
     'shared',
     'storage',
     'styleeditor',
