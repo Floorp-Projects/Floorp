@@ -11,6 +11,7 @@
 #include "mozilla/layers/VideoBridgeChild.h"
 #include "mozilla/layers/ImageClient.h"
 #include "MediaInfo.h"
+#include "PDMFactory.h"
 #include "VideoDecoderManagerParent.h"
 #ifdef XP_WIN
 #  include "WMFDecoderModule.h"
@@ -64,9 +65,11 @@ VideoDecoderParent::VideoDecoderParent(
   using Option = CreateDecoderParams::Option;
   using OptionSet = CreateDecoderParams::OptionSet;
 
+  // Ensure everything is properly initialized on the right thread.
+  PDMFactory::EnsureInit();
+
   // TODO: Ideally we wouldn't hardcode the WMF PDM, and we'd use the normal PDM
   // factory logic for picking a decoder.
-  WMFDecoderModule::Init();
   RefPtr<WMFDecoderModule> pdm(new WMFDecoderModule());
   pdm->Startup();
 
