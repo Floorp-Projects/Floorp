@@ -14,17 +14,18 @@ three different programs/components running simultaneously:
 
   * and the __target__, which is the web document being debugging.
 
-As the remote agent is not compiled into Firefox by default, you
-will first have to get a build that has it.  You can read more
-about self-servicing such a build in the developer documentation,
-under [_Building_].
+The remote agent is not currently part of the default Firefox build.
+To self-service a build with it built in, you should follow the
+[_Building_] steps in the developer documentation.
 
-To check if your Firefox build has support for the new CDP-based
-remote debugger, you can check if its help message includes this:
+To check if your Firefox binary comes with the remote agent built
+in, you can look in its help message for this:
+
 
 	% ./firefox -h
 	…
-	  --remote-debugger [<host>][:<port>] Start the Firefox remote agent, which is 
+	  --remote-debugging-port <port>
+	  --remote-debugger [<host>][:<port>] Start the Firefox remote agent, which is
 	                     a low-level debugging interface based on the CDP protocol.
 	                     Defaults to listen on localhost:9222.
 	…
@@ -52,20 +53,16 @@ accept incoming connections from either IPv4 or IPv6.  The second
 (`127.0.0.1`) and third (`[::1]`) examples will, respecitvely,
 force the HTTP to listen on IPv4 or IPv6.
 
-The fourth example will use the default hostname, which is `localhost`
-to listen on all available IP layers, but override the default port
-with the special-purpose port 0.  When you ask the remote agent to
-listen on port 0, the system will atomatically allocate an arbitrary
+The fourth example will use the default hostname, `localhost`, to
+listen on all available IP layers, but override the default port
+with the special purpose port 0.  When you ask the remote agent to
+listen on port 0, the system will atomically allocate an arbitrary
 free port.
 
-Allocating an atomic port can be useful if you want to be cautious
-race conditions.  The atomically allocated port will be somewhere
-in the ephemeral port range, which varies depending on your system
-and system configuration.
-
-As the atomic port is bound arbitrarily, there is intrisincly no
-way to detect upfront what it is.  However, Firefox will write the
-port it bound to, both to stdout and to the `remote.httpd.port`
-preference in the current profile’s _user.js_ file.
+Allocating an atomic port can be useful if you want to avoid race
+conditions.  The atomically allocated port will be somewhere in the
+ephemeral port range, which varies depending on your system and
+system configuration, but is always guaranteed to be free thus
+eliminating the risk of binding to a port that is already in use.
 
 [_Building_]: ./Building.html

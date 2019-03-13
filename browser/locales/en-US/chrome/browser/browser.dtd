@@ -214,6 +214,27 @@ These should match what Safari and other Apple applications use on OS X Lion. --
 <!ENTITY fullScreenExit.label "Exit Full Screen Mode">
 <!ENTITY fullScreenExit.accesskey "F">
 
+ <!-- LOCALIZATION NOTE (fxa.signin) Used to define the different labels
+     for the Firefox Account toolbar signin menu screen. -->
+<!ENTITY fxa.signin.callout.label "Take Firefox with You">
+<!ENTITY fxa.signin.description.label "Get your bookmarks, history, passwords and other settings on all your devices.">
+<!ENTITY fxa.signin.button.label "Turn on &syncBrand.shortName.label;…">
+
+<!-- LOCALIZATION NOTE (fxa.unverified) Used to define the different labels
+     for the Firefox Account toolbar unverified menu screen. -->
+<!ENTITY fxa.unverified.callout.label "Check Your Email">
+<!ENTITY fxa.unverified.description.label "You’ll need to verify your account before you can sync.">
+<!ENTITY fxa.unverified.button.label "Open &syncBrand.shortName.label; Settings…">
+
+<!-- LOCALIZATION NOTE (fxa.menu) Used to define the different labels
+     for the Firefox Account toolbart menu screen. The `Signed in as` text is
+     followed by the user's email. -->
+<!ENTITY fxa.menu.signedInAs.label "Signed in as">
+<!ENTITY fxa.menu.manageAccount.label "Manage Account…">
+<!ENTITY fxa.menu.syncSettings.label "&syncBrand.shortName.label; Settings…">
+<!ENTITY fxa.menu.connectAnotherDevice.label "&syncedTabs.sidebar.connectAnotherDevice;">
+<!ENTITY fxa.menu.firefoxAccount "&syncBrand.fxAccount.label;">
+
 <!-- LOCALIZATION NOTE (fullscreenWarning.beforeDomain.label,
      fullscreenWarning.afterDomain.label): these two strings are used
      respectively before and after the domain requiring fullscreen.
