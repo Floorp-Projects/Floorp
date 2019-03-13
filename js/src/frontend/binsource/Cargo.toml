@@ -14,5 +14,5 @@ yaml-rust = "^0.4.2"
 webidl = "^0.8"
 
 [[bin]]
-name = "binast"
+name = "binsource"
 path = "src/main.rs"

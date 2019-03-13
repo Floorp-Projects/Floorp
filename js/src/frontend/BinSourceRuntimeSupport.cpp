@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "frontend/BinASTRuntimeSupport.h"
+#include "frontend/BinSourceRuntimeSupport.h"
 
 #include "gc/Tracer.h"
 #include "js/Vector.h"
@@ -15,18 +15,18 @@ namespace frontend {
 
 /* static */
 BinASTSourceMetadata* BinASTSourceMetadata::Create(
-    const Vector<BinASTKind>& binASTKinds, uint32_t numStrings) {
-  uint32_t numBinASTKinds = binASTKinds.length();
+    const Vector<BinKind>& binKinds, uint32_t numStrings) {
+  uint32_t numBinKinds = binKinds.length();
 
   BinASTSourceMetadata* data = static_cast<BinASTSourceMetadata*>(
-      js_malloc(BinASTSourceMetadata::totalSize(numBinASTKinds, numStrings)));
+      js_malloc(BinASTSourceMetadata::totalSize(numBinKinds, numStrings)));
   if (!data) {
     return nullptr;
   }
 
-  new (data) BinASTSourceMetadata(numBinASTKinds, numStrings);
-  memcpy(data->binASTKindBase(), binASTKinds.begin(),
-         binASTKinds.length() * sizeof(BinASTKind));
+  new (data) BinASTSourceMetadata(numBinKinds, numStrings);
+  memcpy(data->binKindBase(), binKinds.begin(),
+         binKinds.length() * sizeof(BinKind));
 
   return data;
 }
