@@ -280,7 +280,7 @@ pub struct CacheMaskTask {
 pub struct ClipRegionTask {
     pub clip_data_address: GpuCacheAddress,
     pub local_pos: LayoutPoint,
-    device_pixel_scale: DevicePixelScale,
+    pub device_pixel_scale: DevicePixelScale,
 }
 
 #[derive(Debug)]

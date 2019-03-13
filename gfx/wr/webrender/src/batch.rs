@@ -2706,13 +2706,14 @@ impl ClipBatcher {
 
     pub fn add_clip_region(
         &mut self,
-        task_address: RenderTaskAddress,
         clip_data_address: GpuCacheAddress,
         local_pos: LayoutPoint,
         sub_rect: DeviceRect,
+        task_origin: DevicePoint,
+        screen_origin: DevicePoint,
+        device_pixel_scale: f32,
     ) {
         let instance = ClipMaskInstance {
-            render_task_address: task_address,
             clip_transform_id: TransformPaletteId::IDENTITY,
             prim_transform_id: TransformPaletteId::IDENTITY,
             clip_data_address,
@@ -2721,6 +2722,9 @@ impl ClipBatcher {
             tile_rect: LayoutRect::zero(),
             sub_rect,
             snap_offsets: SnapOffsets::empty(),
+            task_origin,
+            screen_origin,
+            device_pixel_scale,
         };
 
         self.primary_clips.rectangles.push(instance);
@@ -2832,7 +2836,6 @@ impl ClipBatcher {
 
     pub fn add(
         &mut self,
-        task_address: RenderTaskAddress,
         clip_node_range: ClipNodeRange,
         root_spatial_node_index: SpatialNodeIndex,
         resource_cache: &ResourceCache,
@@ -2845,6 +2848,8 @@ impl ClipBatcher {
         world_rect: &WorldRect,
         device_pixel_scale: DevicePixelScale,
         snap_offsets: SnapOffsets,
+        task_origin: DevicePoint,
+        screen_origin: DevicePoint,
     ) {
         let mut is_first_clip = true;
 
@@ -2865,7 +2870,6 @@ impl ClipBatcher {
             );
 
             let instance = ClipMaskInstance {
-                render_task_address: task_address,
                 clip_transform_id,
                 prim_transform_id,
                 clip_data_address: GpuCacheAddress::invalid(),
@@ -2877,6 +2881,9 @@ impl ClipBatcher {
                     actual_rect.size.to_f32(),
                 ),
                 snap_offsets,
+                task_origin,
+                screen_origin,
+                device_pixel_scale: device_pixel_scale.0,
             };
 
             let added_clip = match clip_node.item {
