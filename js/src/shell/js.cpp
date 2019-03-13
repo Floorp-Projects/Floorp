@@ -85,7 +85,7 @@
 #include "jit/JitRealm.h"
 #include "jit/shared/CodeGenerator-shared.h"
 #include "js/ArrayBuffer.h"  // JS::{CreateMappedArrayBufferContents,NewMappedArrayBufferWithContents,IsArrayBufferObject,GetArrayBufferLengthAndData}
-#include "js/BuildId.h"  // JS::BuildIdCharVector, JS::SetProcessBuildIdOp
+#include "js/BuildId.h"      // JS::BuildIdCharVector, JS::SetProcessBuildIdOp
 #include "js/CharacterEncoding.h"
 #include "js/CompilationAndEvaluation.h"
 #include "js/CompileOptions.h"
@@ -5109,7 +5109,7 @@ static bool BinParse(JSContext* cx, unsigned argc, Value* vp) {
   Directives directives(false);
   GlobalSharedContext globalsc(cx, ScopeKind::Global, directives, false);
 
-  auto parseFunc = ParseBinASTData<frontend::BinTokenReaderMultipart>;
+  auto parseFunc = ParseBinASTData<frontend::BinASTTokenReaderMultipart>;
   if (!parseFunc(cx, buf_data, buf_length, &globalsc, usedNames, options,
                  sourceObj)) {
     return false;
@@ -10889,7 +10889,8 @@ int main(int argc, char** argv, char** envp) {
                         "Forcibly activate tiering and block "
                         "instantiation on completion of tier2")
 #ifdef ENABLE_WASM_GC
-      || !op.addBoolOption('\0', "wasm-gc", "Enable experimental wasm GC features")
+      ||
+      !op.addBoolOption('\0', "wasm-gc", "Enable experimental wasm GC features")
 #else
       || !op.addBoolOption('\0', "wasm-gc", "No-op")
 #endif
