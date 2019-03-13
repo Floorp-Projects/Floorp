@@ -15,9 +15,10 @@ import {
   getSelectedFrame,
   getGeneratedFrameScope,
   getOriginalFrameScope,
-  isPaused as getIsPaused,
+  getIsPaused,
   getPauseReason,
-  getMapScopes
+  getMapScopes,
+  getCurrentThread
 } from "../../selectors";
 import { getScopes } from "../../utils/pause/scopes";
 
@@ -210,7 +211,8 @@ class Scopes extends PureComponent<Props, State> {
 }
 
 const mapStateToProps = state => {
-  const selectedFrame = getSelectedFrame(state);
+  const thread = getCurrentThread(state);
+  const selectedFrame = getSelectedFrame(state, thread);
   const selectedSource = getSelectedSource(state);
 
   const {
@@ -218,6 +220,7 @@ const mapStateToProps = state => {
     pending: originalPending
   } = getOriginalFrameScope(
     state,
+    thread,
     selectedSource && selectedSource.id,
     selectedFrame && selectedFrame.id
   ) || { scope: null, pending: false };
@@ -225,7 +228,11 @@ const mapStateToProps = state => {
   const {
     scope: generatedFrameScopes,
     pending: generatedPending
-  } = getGeneratedFrameScope(state, selectedFrame && selectedFrame.id) || {
+  } = getGeneratedFrameScope(
+    state,
+    thread,
+    selectedFrame && selectedFrame.id
+  ) || {
     scope: null,
     pending: false
   };
@@ -233,9 +240,9 @@ const mapStateToProps = state => {
   return {
     selectedFrame,
     shouldMapScopes: getMapScopes(state),
-    isPaused: getIsPaused(state),
+    isPaused: getIsPaused(state, thread),
     isLoading: generatedPending || originalPending,
-    why: getPauseReason(state),
+    why: getPauseReason(state, thread),
     originalFrameScopes,
     generatedFrameScopes
   };
