@@ -6,8 +6,7 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
     <androidx.preference.Preference
             android:key="@string/pref_key_sync_now"
-            android:title="@string/preferences_sync_now"
-            android:enabled = "false" />
+            android:title="@string/preferences_sync_now" />
 
     <PreferenceCategory
             android:title="@string/preferences_sync_category">

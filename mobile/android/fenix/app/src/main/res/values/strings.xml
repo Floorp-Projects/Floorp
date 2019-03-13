@@ -129,6 +129,16 @@
     <string name="preferences_sync_history">History</string>
     <!-- Preference for signing out -->
     <string name="preferences_sign_out">Sign out</string>
+    <!-- Label indicating that sync is in progress -->
+    <string name="sync_syncing">Syncing</string>
+    <!-- Label summary indicating that sync failed along with last time it succeeded -->
+    <string name="sync_failed_summary">Sync failed. Last success: %s</string>
+    <!-- Label summary showing never synced -->
+    <string name="sync_failed_never_synced_summary">Sync failed. Last synced: never</string>
+    <!-- Label summary showing last time synced -->
+    <string name="sync_last_synced_summary">Last synced: %s</string>
+    <!-- Label summary showing never synced -->
+    <string name="sync_never_synced_summary">Last synced: never</string>
 
     <!-- Advanced Preferences -->
     <!-- Preference switch for Telemetry -->
