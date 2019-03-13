@@ -96,6 +96,12 @@ AST_MATCHER(UnaryOperator, unaryArithmeticOperator) {
          OpCode == UO_Not;
 }
 
+/// This matcher will match the unary dereference operator
+AST_MATCHER(UnaryOperator, unaryDereferenceOperator) {
+  UnaryOperatorKind OpCode = Node.getOpcode();
+  return OpCode == UO_Deref;
+}
+
 /// This matcher will match == and != binary operators.
 AST_MATCHER(BinaryOperator, binaryEqualityOperator) {
   BinaryOperatorKind OpCode = Node.getOpcode();
