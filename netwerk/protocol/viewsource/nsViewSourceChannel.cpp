@@ -635,8 +635,7 @@ nsViewSourceChannel::OnStartRequest(nsIRequest *aRequest) {
 }
 
 NS_IMETHODIMP
-nsViewSourceChannel::OnStopRequest(nsIRequest *aRequest,
-                                   nsresult aStatus) {
+nsViewSourceChannel::OnStopRequest(nsIRequest *aRequest, nsresult aStatus) {
   NS_ENSURE_TRUE(mListener, NS_ERROR_FAILURE);
   if (mChannel) {
     nsCOMPtr<nsILoadGroup> loadGroup;
@@ -657,8 +656,7 @@ nsViewSourceChannel::OnDataAvailable(nsIRequest *aRequest,
                                      uint64_t aSourceOffset, uint32_t aLength) {
   NS_ENSURE_TRUE(mListener, NS_ERROR_FAILURE);
   return mListener->OnDataAvailable(static_cast<nsIViewSourceChannel *>(this),
-                                    aInputStream, aSourceOffset,
-                                    aLength);
+                                    aInputStream, aSourceOffset, aLength);
 }
 
 // nsIHttpChannel methods

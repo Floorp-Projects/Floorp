@@ -42,8 +42,7 @@ nsHtml5StreamListener::OnStartRequest(nsIRequest* aRequest) {
 }
 
 NS_IMETHODIMP
-nsHtml5StreamListener::OnStopRequest(nsIRequest* aRequest,
-                                     nsresult aStatus) {
+nsHtml5StreamListener::OnStopRequest(nsIRequest* aRequest, nsresult aStatus) {
   if (MOZ_UNLIKELY(!mDelegate)) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -58,6 +57,6 @@ nsHtml5StreamListener::OnDataAvailable(nsIRequest* aRequest,
   if (MOZ_UNLIKELY(!mDelegate)) {
     return NS_ERROR_NOT_AVAILABLE;
   }
-  return mDelegate->OnDataAvailable(aRequest, aInStream,
-                                    aSourceOffset, aLength);
+  return mDelegate->OnDataAvailable(aRequest, aInStream, aSourceOffset,
+                                    aLength);
 }

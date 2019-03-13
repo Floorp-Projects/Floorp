@@ -3205,9 +3205,8 @@ bool VerifyRequestParams(const Maybe<ContentParentId>& aContentParentId,
       const LSRequestPrepareObserverParams& params =
           aParams.get_LSRequestPrepareObserverParams();
 
-      if (NS_WARN_IF(!VerifyPrincipalInfo(aContentParentId,
-                                          params.principalInfo(),
-                                          params.clientId()))) {
+      if (NS_WARN_IF(!VerifyPrincipalInfo(
+              aContentParentId, params.principalInfo(), params.clientId()))) {
         ASSERT_UNLESS_FUZZING();
         return false;
       }
@@ -3329,8 +3328,7 @@ bool VerifyRequestParams(const Maybe<ContentParentId>& aContentParentId,
           aParams.get_LSSimpleRequestPreloadedParams();
 
       if (NS_WARN_IF(!VerifyPrincipalInfo(aContentParentId,
-                                          params.principalInfo(),
-                                          Nothing()))) {
+                                          params.principalInfo(), Nothing()))) {
         ASSERT_UNLESS_FUZZING();
         return false;
       }

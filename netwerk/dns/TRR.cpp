@@ -967,8 +967,7 @@ nsresult TRR::On200Response() {
 }
 
 NS_IMETHODIMP
-TRR::OnStopRequest(nsIRequest *aRequest,
-                   nsresult aStatusCode) {
+TRR::OnStopRequest(nsIRequest *aRequest, nsresult aStatusCode) {
   // The dtor will be run after the function returns
   LOG(("TRR:OnStopRequest %p %s %d failed=%d code=%X\n", this, mHost.get(),
        mType, mFailed, (unsigned int)aStatusCode));
@@ -1016,9 +1015,8 @@ TRR::OnStopRequest(nsIRequest *aRequest,
 }
 
 NS_IMETHODIMP
-TRR::OnDataAvailable(nsIRequest *aRequest,
-                     nsIInputStream *aInputStream, uint64_t aOffset,
-                     const uint32_t aCount) {
+TRR::OnDataAvailable(nsIRequest *aRequest, nsIInputStream *aInputStream,
+                     uint64_t aOffset, const uint32_t aCount) {
   LOG(("TRR:OnDataAvailable %p %s %d failed=%d aCount=%u\n", this, mHost.get(),
        mType, mFailed, (unsigned int)aCount));
   // receive DNS response into the local buffer

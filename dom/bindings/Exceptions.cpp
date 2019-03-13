@@ -462,8 +462,8 @@ int32_t JSStackFrame::GetSourceId(JSContext* aCx) {
 
   uint32_t id;
   bool canCache = false, useCachedValue = false;
-  GetValueIfNotCached(aCx, mStack, JS::GetSavedFrameSourceId, mSourceIdInitialized,
-                      &canCache, &useCachedValue, &id);
+  GetValueIfNotCached(aCx, mStack, JS::GetSavedFrameSourceId,
+                      mSourceIdInitialized, &canCache, &useCachedValue, &id);
 
   if (useCachedValue) {
     return mSourceId;

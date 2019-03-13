@@ -217,9 +217,7 @@ void CompileRealm::setSingletonsAsValues() {
 JitCompileOptions::JitCompileOptions()
     : cloneSingletons_(false),
       profilerSlowAssertionsEnabled_(false),
-      offThreadCompilationAvailable_(false)
-{
-}
+      offThreadCompilationAvailable_(false) {}
 
 JitCompileOptions::JitCompileOptions(JSContext* cx) {
   cloneSingletons_ = cx->realm()->creationOptions().cloneSingletons();

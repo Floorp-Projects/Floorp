@@ -759,10 +759,9 @@ MOZ_COLD void TokenStreamChars<Utf8Unit, AnyCharsAccess>::internalEncodingError(
     uint32_t line, column;
     computeLineAndColumn(offset, &line, &column);
 
-    if (!notes->addNoteASCII(anyChars.cx, anyChars.getFilename(),
-                             0, line, column,
-                             GetErrorMessage, nullptr, JSMSG_BAD_CODE_UNITS,
-                             badUnitsStr)) {
+    if (!notes->addNoteASCII(anyChars.cx, anyChars.getFilename(), 0, line,
+                             column, GetErrorMessage, nullptr,
+                             JSMSG_BAD_CODE_UNITS, badUnitsStr)) {
       break;
     }
 

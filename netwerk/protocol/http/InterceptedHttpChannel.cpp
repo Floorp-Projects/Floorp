@@ -1026,8 +1026,7 @@ InterceptedHttpChannel::OnStartRequest(nsIRequest* aRequest) {
 }
 
 NS_IMETHODIMP
-InterceptedHttpChannel::OnStopRequest(nsIRequest* aRequest,
-                                      nsresult aStatus) {
+InterceptedHttpChannel::OnStopRequest(nsIRequest* aRequest, nsresult aStatus) {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (NS_SUCCEEDED(mStatus)) {
@@ -1078,8 +1077,7 @@ InterceptedHttpChannel::OnDataAvailable(nsIRequest* aRequest,
     }
   }
 
-  return mListener->OnDataAvailable(this, aInputStream, aOffset,
-                                    aCount);
+  return mListener->OnDataAvailable(this, aInputStream, aOffset, aCount);
 }
 
 NS_IMETHODIMP

@@ -468,7 +468,8 @@ bool WebExtensionPolicy::CanAccessWindow(
   return !(loadContext && loadContext->UsePrivateBrowsing());
 }
 
-void WebExtensionPolicy::GetReadyPromise(JSContext* aCx, JS::MutableHandleObject aResult) const {
+void WebExtensionPolicy::GetReadyPromise(
+    JSContext* aCx, JS::MutableHandleObject aResult) const {
   if (mReadyPromise) {
     aResult.set(mReadyPromise->PromiseObj());
   } else {

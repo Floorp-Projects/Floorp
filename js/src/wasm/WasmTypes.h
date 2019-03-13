@@ -398,11 +398,20 @@ class ValType {
 
   explicit ValType(jit::MIRType mty) {
     switch (mty) {
-      case jit::MIRType::Int32: tc_ = PackTypeCode(TypeCode::I32); break;
-      case jit::MIRType::Int64: tc_ = PackTypeCode(TypeCode::I64); break;
-      case jit::MIRType::Float32: tc_ = PackTypeCode(TypeCode::F32); break;
-      case jit::MIRType::Double: tc_ = PackTypeCode(TypeCode::F64); break;
-      default: MOZ_CRASH("ValType(MIRType): unexpected type");
+      case jit::MIRType::Int32:
+        tc_ = PackTypeCode(TypeCode::I32);
+        break;
+      case jit::MIRType::Int64:
+        tc_ = PackTypeCode(TypeCode::I64);
+        break;
+      case jit::MIRType::Float32:
+        tc_ = PackTypeCode(TypeCode::F32);
+        break;
+      case jit::MIRType::Double:
+        tc_ = PackTypeCode(TypeCode::F64);
+        break;
+      default:
+        MOZ_CRASH("ValType(MIRType): unexpected type");
     }
   }
 
@@ -1158,7 +1167,7 @@ typedef Vector<GlobalDesc, 0, SystemAllocPolicy> GlobalDescVector;
 struct ElemSegment : AtomicRefCounted<ElemSegment> {
   uint32_t tableIndex;
   Maybe<InitExpr> offsetIfActive;
-  Uint32Vector elemFuncIndices; // Element may be NullFuncIndex
+  Uint32Vector elemFuncIndices;  // Element may be NullFuncIndex
 
   bool active() const { return !!offsetIfActive; }
 
