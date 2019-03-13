@@ -1867,10 +1867,12 @@ bitflags! {
     /// A set of flags describing why a picture may need a backing surface.
     #[cfg_attr(feature = "capture", derive(Serialize))]
     pub struct BlitReason: u32 {
+        /// Mix-blend-mode on a child that requires isolation.
+        const ISOLATE = 1;
         /// Clip node that _might_ require a surface.
-        const CLIP = 1;
+        const CLIP = 2;
         /// Preserve-3D requires a surface for plane-splitting.
-        const PRESERVE3D = 2;
+        const PRESERVE3D = 4;
     }
 }
 
@@ -1880,20 +1882,8 @@ bitflags! {
 #[derive(Debug, Copy, Clone)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 pub enum PictureCompositeMode {
-    /// Don't composite this picture in a standard way,
-    /// can be used for pictures that need to be isolated but used
-    /// manually, e.g. for the backdrop of mix-blend pictures.
-    Puppet {
-        /// The master picture that actually handles compositing
-        /// of this one. If that picture turns out to be invisible,
-        /// the puppet mode becomes a regular blit.
-        master: Option<PictureIndex>,
-    },
     /// Apply CSS mix-blend-mode effect.
-    MixBlend {
-        mode: MixBlendMode,
-        backdrop: PictureIndex,
-    },
+    MixBlend(MixBlendMode),
     /// Apply a CSS filter (except component transfer).
     Filter(FilterOp),
     /// Apply a component transfer filter.
@@ -3074,6 +3064,37 @@ impl PicturePrimitive {
 
                 PictureSurface::RenderTask(render_task_id)
             }
+            PictureCompositeMode::MixBlend(..) => {
+                let uv_rect_kind = calculate_uv_rect_kind(
+                    &pic_rect,
+                    &transform,
+                    &clipped,
+                    device_pixel_scale,
+                    true,
+                );
+
+                let picture_task = RenderTask::new_picture(
+                    RenderTaskLocation::Dynamic(None, clipped.size),
+                    unclipped.size,
+                    pic_index,
+                    clipped.origin,
+                    child_tasks,
+                    uv_rect_kind,
+                    pic_context.raster_spatial_node_index,
+                    device_pixel_scale,
+                );
+
+                let readback_task_id = frame_state.render_tasks.add(
+                    RenderTask::new_readback(clipped)
+                );
+
+                self.secondary_render_task_id = Some(readback_task_id);
+                frame_state.surfaces[surface_index.0].tasks.push(readback_task_id);
+
+                let render_task_id = frame_state.render_tasks.add(picture_task);
+                frame_state.surfaces[surface_index.0].tasks.push(render_task_id);
+                PictureSurface::RenderTask(render_task_id)
+            }
             PictureCompositeMode::Filter(filter) => {
                 if let FilterOp::ColorMatrix(m) = filter {
                     if let Some(mut request) = frame_state.gpu_cache.request(&mut self.extra_gpu_data_handle) {
@@ -3133,13 +3154,11 @@ impl PicturePrimitive {
                 frame_state.surfaces[surface_index.0].tasks.push(render_task_id);
                 PictureSurface::RenderTask(render_task_id)
             }
-            PictureCompositeMode::Puppet { .. } |
-            PictureCompositeMode::MixBlend { .. } |
             PictureCompositeMode::Blit(_) => {
                 // The SplitComposite shader used for 3d contexts doesn't snap
                 // to pixels, so we shouldn't snap our uv coordinates either.
                 let supports_snapping = match self.context_3d {
-                    Picture3DContext::In { .. } => false,
+                    Picture3DContext::In{ .. } => false,
                     _ => true,
                 };
 

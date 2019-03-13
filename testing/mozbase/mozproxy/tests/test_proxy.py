@@ -49,7 +49,10 @@ def test_mitm(*args):
 
     playback = get_playback(config)
     assert playback is not None
-    playback.stop()
+    try:
+        playback.start()
+    finally:
+        playback.stop()
 
 
 @mock.patch("mozprocess.processhandler.ProcessHandlerMixin.Process", new=Process)
@@ -85,7 +88,8 @@ def test_playback_setup_failed(*args):
     with mock.patch(prefix + "setup", new_callable=setup):
         with mock.patch(prefix + "stop_mitmproxy_playback") as p:
             try:
-                get_playback(config)
+                pb = get_playback(config)
+                pb.start()
             except SetupFailed:
                 assert p.call_count == 1
             except Exception:

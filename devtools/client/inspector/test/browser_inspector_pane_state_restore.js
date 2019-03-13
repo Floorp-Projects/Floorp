@@ -36,7 +36,7 @@ add_task(async function() {
     width: EXPECTED_NEW_WIDTH,
     height: EXPECTED_NEW_HEIGHT,
   });
-  inspector.sidebarSplitBox.setState({
+  inspector.sidebarSplitBoxRef.current.setState({
     width: EXPECTED_NEW_SIDEBAR_WIDTH,
   });
 

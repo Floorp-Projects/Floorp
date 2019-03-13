@@ -45,6 +45,26 @@ void CanRunScriptChecker::registerMatchers(MatchFinder *AstMatcher) {
           // and which is not a default arg with value nullptr, since those are
           // always safe.
           unless(cxxDefaultArgExpr(isNullDefaultArg())),
+          // and which is not a dereference of a parameter of the parent
+          // function (including "this"),
+          unless(
+            unaryOperator(
+              unaryDereferenceOperator(),
+              hasUnaryOperand(
+                anyOf(
+                  // If we're doing *someArg, the argument of the dereference is
+                  // an ImplicitCastExpr LValueToRValue which has the
+                  // DeclRefExpr as an argument.  We could try to match that
+                  // explicitly with a custom matcher (none of the built-in
+                  // matchers seem to match on the thing being cast for an
+                  // implicitCastExpr), but it's simpler to just use
+                  // ignoreTrivials to strip off the cast.
+                  ignoreTrivials(declRefExpr(to(parmVarDecl()))),
+                  cxxThisExpr()
+                )
+              )
+            )
+          ),
           // and which is not a MOZ_KnownLive wrapped value.
           unless(
             anyOf(
@@ -202,7 +222,7 @@ void CanRunScriptChecker::check(const MatchFinder::MatchResult &Result) {
   const char *ErrorNonCanRunScriptParent =
       "functions marked as MOZ_CAN_RUN_SCRIPT can only be called from "
       "functions also marked as MOZ_CAN_RUN_SCRIPT";
-  const char *NoteNonCanRunScriptParent = "parent function declared here";
+  const char *NoteNonCanRunScriptParent = "caller function declared here";
 
   const Expr *InvalidArg = Result.Nodes.getNodeAs<Expr>("invalidArg");
 
@@ -268,7 +288,7 @@ void CanRunScriptChecker::check(const MatchFinder::MatchResult &Result) {
     diag(CallRange.getBegin(), ErrorNonCanRunScriptParent, DiagnosticIDs::Error)
         << CallRange;
 
-    diag(ParentFunction->getLocation(), NoteNonCanRunScriptParent,
-         DiagnosticIDs::Note);
+    diag(ParentFunction->getCanonicalDecl()->getLocation(),
+	 NoteNonCanRunScriptParent, DiagnosticIDs::Note);
   }
 }

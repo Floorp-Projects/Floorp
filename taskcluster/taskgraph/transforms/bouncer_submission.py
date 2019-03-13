@@ -75,6 +75,7 @@ CONFIG_PER_BOUNCER_PRODUCT = {
             'osx': '{pretty_product}%20{version}.dmg',
             'win': '{pretty_product}%20Setup%20{version}.exe',
             'win64': '{pretty_product}%20Setup%20{version}.exe',
+            'win64-aarch64': '{pretty_product}%20Setup%20{version}.exe',
         },
     },
     'partial-mar': {
@@ -97,6 +98,7 @@ CONFIG_PER_BOUNCER_PRODUCT = {
         'file_names': {
             'win': '{pretty_product}%20Installer.exe',
             'win64': '{pretty_product}%20Installer.exe',
+            'win64-aarch64': '{pretty_product}%20Installer.exe',
         },
     },
     'msi': {

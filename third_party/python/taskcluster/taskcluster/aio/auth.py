@@ -55,8 +55,9 @@ class Auth(AsyncBaseClient):
     """
 
     classOptions = {
-        "baseUrl": "https://auth.taskcluster.net/v1/"
     }
+    serviceName = 'auth'
+    apiVersion = 'v1'
 
     async def ping(self, *args, **kwargs):
         """
