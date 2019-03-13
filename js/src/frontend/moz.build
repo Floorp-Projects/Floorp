@@ -73,9 +73,9 @@ if CONFIG['JS_BUILD_BINAST']:
         'BinASTParserBase.cpp',
         'BinASTParserPerTokenizer.cpp',
         'BinASTRuntimeSupport.cpp',
-        'BinToken.cpp',
-        'BinTokenReaderBase.cpp',
-        'BinTokenReaderMultipart.cpp',
+        'BinASTToken.cpp',
+        'BinASTTokenReaderBase.cpp',
+        'BinASTTokenReaderMultipart.cpp',
     ]
 
     DIRS += [
@@ -89,6 +89,6 @@ if CONFIG['JS_BUILD_BINAST']:
         SOURCES['BinASTParser.cpp'].flags += libfuzzer_flags
         SOURCES['BinASTParserBase.cpp'].flags += libfuzzer_flags
         SOURCES['BinASTParserPerTokenizer.cpp'].flags += libfuzzer_flags
-        SOURCES['BinToken.cpp'].flags += libfuzzer_flags
-        SOURCES['BinTokenReaderBase.cpp'].flags += libfuzzer_flags
-        SOURCES['BinTokenReaderMultipart.cpp'].flags += libfuzzer_flags
+        SOURCES['BinASTToken.cpp'].flags += libfuzzer_flags
+        SOURCES['BinASTTokenReaderBase.cpp'].flags += libfuzzer_flags
+        SOURCES['BinASTTokenReaderMultipart.cpp'].flags += libfuzzer_flags

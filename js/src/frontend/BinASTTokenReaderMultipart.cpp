@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "frontend/BinTokenReaderMultipart.h"
+#include "frontend/BinASTTokenReaderMultipart.h"
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Casting.h"
@@ -40,34 +40,34 @@ const char COMPRESSION_IDENTITY[] = "identity;";
 // single file.
 const uint32_t MAX_NUMBER_OF_STRINGS = 32768;
 
-using AutoList = BinTokenReaderMultipart::AutoList;
-using AutoTaggedTuple = BinTokenReaderMultipart::AutoTaggedTuple;
+using AutoList = BinASTTokenReaderMultipart::AutoList;
+using AutoTaggedTuple = BinASTTokenReaderMultipart::AutoTaggedTuple;
 using CharSlice = BinaryASTSupport::CharSlice;
-using Chars = BinTokenReaderMultipart::Chars;
+using Chars = BinASTTokenReaderMultipart::Chars;
 
-BinTokenReaderMultipart::BinTokenReaderMultipart(JSContext* cx,
-                                                 ErrorReporter* er,
-                                                 const uint8_t* start,
-                                                 const size_t length)
-    : BinTokenReaderBase(cx, er, start, length),
+BinASTTokenReaderMultipart::BinASTTokenReaderMultipart(JSContext* cx,
+                                                       ErrorReporter* er,
+                                                       const uint8_t* start,
+                                                       const size_t length)
+    : BinASTTokenReaderBase(cx, er, start, length),
       metadata_(nullptr),
       posBeforeTree_(nullptr) {
   MOZ_ASSERT(er);
 }
 
-BinTokenReaderMultipart::~BinTokenReaderMultipart() {
+BinASTTokenReaderMultipart::~BinASTTokenReaderMultipart() {
   if (metadata_ && metadataOwned_ == MetadataOwnership::Owned) {
     UniqueBinASTSourceMetadataPtr ptr(metadata_);
   }
 }
 
-BinASTSourceMetadata* BinTokenReaderMultipart::takeMetadata() {
+BinASTSourceMetadata* BinASTTokenReaderMultipart::takeMetadata() {
   MOZ_ASSERT(metadataOwned_ == MetadataOwnership::Owned);
   metadataOwned_ = MetadataOwnership::Unowned;
   return metadata_;
 }
 
-JS::Result<Ok> BinTokenReaderMultipart::initFromScriptSource(
+JS::Result<Ok> BinASTTokenReaderMultipart::initFromScriptSource(
     ScriptSource* scriptSource) {
   metadata_ = scriptSource->binASTSourceMetadata();
   metadataOwned_ = MetadataOwnership::Unowned;
@@ -75,7 +75,7 @@ JS::Result<Ok> BinTokenReaderMultipart::initFromScriptSource(
   return Ok();
 }
 
-JS::Result<Ok> BinTokenReaderMultipart::readHeader() {
+JS::Result<Ok> BinASTTokenReaderMultipart::readHeader() {
   // Check that we don't call this function twice.
   MOZ_ASSERT(!posBeforeTree_);
 
@@ -215,13 +215,13 @@ JS::Result<Ok> BinTokenReaderMultipart::readHeader() {
   return Ok();
 }
 
-void BinTokenReaderMultipart::traceMetadata(JSTracer* trc) {
+void BinASTTokenReaderMultipart::traceMetadata(JSTracer* trc) {
   if (metadata_) {
     metadata_->trace(trc);
   }
 }
 
-JS::Result<bool> BinTokenReaderMultipart::readBool() {
+JS::Result<bool> BinASTTokenReaderMultipart::readBool() {
   updateLatestKnownGood();
   BINJS_MOZ_TRY_DECL(byte, readByte());
 
@@ -241,7 +241,7 @@ JS::Result<bool> BinTokenReaderMultipart::readBool() {
 //
 // NULL_FLOAT_REPRESENTATION (signaling NaN) => null
 // anything other 64 bit sequence => IEEE-764 64-bit floating point number
-JS::Result<double> BinTokenReaderMultipart::readDouble() {
+JS::Result<double> BinASTTokenReaderMultipart::readDouble() {
   updateLatestKnownGood();
 
   uint8_t bytes[8];
@@ -262,7 +262,7 @@ JS::Result<double> BinTokenReaderMultipart::readDouble() {
 }
 
 // A single atom is represented as an index into the table of strings.
-JS::Result<JSAtom*> BinTokenReaderMultipart::readMaybeAtom() {
+JS::Result<JSAtom*> BinASTTokenReaderMultipart::readMaybeAtom() {
   updateLatestKnownGood();
   BINJS_MOZ_TRY_DECL(index, readInternalUint32());
 
@@ -272,7 +272,7 @@ JS::Result<JSAtom*> BinTokenReaderMultipart::readMaybeAtom() {
   return metadata_->getAtom(index);
 }
 
-JS::Result<JSAtom*> BinTokenReaderMultipart::readAtom() {
+JS::Result<JSAtom*> BinASTTokenReaderMultipart::readAtom() {
   BINJS_MOZ_TRY_DECL(maybe, readMaybeAtom());
 
   if (!maybe) {
@@ -282,7 +282,7 @@ JS::Result<JSAtom*> BinTokenReaderMultipart::readAtom() {
   return maybe;
 }
 
-JS::Result<JSAtom*> BinTokenReaderMultipart::readMaybeIdentifierName() {
+JS::Result<JSAtom*> BinASTTokenReaderMultipart::readMaybeIdentifierName() {
   BINJS_MOZ_TRY_DECL(result, readMaybeAtom());
   if (result) {
     if (!IsIdentifier(result)) {
@@ -292,7 +292,7 @@ JS::Result<JSAtom*> BinTokenReaderMultipart::readMaybeIdentifierName() {
   return result;
 }
 
-JS::Result<JSAtom*> BinTokenReaderMultipart::readIdentifierName() {
+JS::Result<JSAtom*> BinASTTokenReaderMultipart::readIdentifierName() {
   BINJS_MOZ_TRY_DECL(result, readMaybeAtom());
   if (!IsIdentifier(result)) {
     return raiseError("Invalid identifier");
@@ -300,15 +300,15 @@ JS::Result<JSAtom*> BinTokenReaderMultipart::readIdentifierName() {
   return result;
 }
 
-JS::Result<JSAtom*> BinTokenReaderMultipart::readMaybePropertyKey() {
+JS::Result<JSAtom*> BinASTTokenReaderMultipart::readMaybePropertyKey() {
   return readMaybeAtom();
 }
 
-JS::Result<JSAtom*> BinTokenReaderMultipart::readPropertyKey() {
+JS::Result<JSAtom*> BinASTTokenReaderMultipart::readPropertyKey() {
   return readAtom();
 }
 
-JS::Result<Ok> BinTokenReaderMultipart::readChars(Chars& out) {
+JS::Result<Ok> BinASTTokenReaderMultipart::readChars(Chars& out) {
   updateLatestKnownGood();
   BINJS_MOZ_TRY_DECL(index, readInternalUint32());
 
@@ -320,7 +320,7 @@ JS::Result<Ok> BinTokenReaderMultipart::readChars(Chars& out) {
   return Ok();
 }
 
-JS::Result<BinVariant> BinTokenReaderMultipart::readVariant() {
+JS::Result<BinVariant> BinASTTokenReaderMultipart::readVariant() {
   updateLatestKnownGood();
   BINJS_MOZ_TRY_DECL(index, readInternalUint32());
 
@@ -353,8 +353,8 @@ JS::Result<BinVariant> BinTokenReaderMultipart::readVariant() {
   return *variant;
 }
 
-JS::Result<BinTokenReaderBase::SkippableSubTree>
-BinTokenReaderMultipart::readSkippableSubTree() {
+JS::Result<BinASTTokenReaderBase::SkippableSubTree>
+BinASTTokenReaderMultipart::readSkippableSubTree() {
   updateLatestKnownGood();
   BINJS_MOZ_TRY_DECL(byteLen, readInternalUint32());
 
@@ -366,14 +366,15 @@ BinTokenReaderMultipart::readSkippableSubTree() {
 
   current_ += byteLen;
 
-  return BinTokenReaderBase::SkippableSubTree(start, byteLen);
+  return BinASTTokenReaderBase::SkippableSubTree(start, byteLen);
 }
 
 // Tagged tuples:
 // - uint32_t index in table [grammar];
 // - content (specified by the higher-level grammar);
-JS::Result<Ok> BinTokenReaderMultipart::enterTaggedTuple(
-    BinKind& tag, BinTokenReaderMultipart::BinFields&, AutoTaggedTuple& guard) {
+JS::Result<Ok> BinASTTokenReaderMultipart::enterTaggedTuple(
+    BinKind& tag, BinASTTokenReaderMultipart::BinFields&,
+    AutoTaggedTuple& guard) {
   BINJS_MOZ_TRY_DECL(index, readInternalUint32());
   if (index >= metadata_->numBinKinds()) {
     return raiseError("Invalid index to grammar table");
@@ -393,8 +394,8 @@ JS::Result<Ok> BinTokenReaderMultipart::enterTaggedTuple(
 //
 // The total byte length of `number of items` + `contents` must be `byte
 // length`.
-JS::Result<Ok> BinTokenReaderMultipart::enterList(uint32_t& items,
-                                                  AutoList& guard) {
+JS::Result<Ok> BinASTTokenReaderMultipart::enterList(uint32_t& items,
+                                                     AutoList& guard) {
   guard.init();
 
   MOZ_TRY_VAR(items, readInternalUint32());
@@ -402,19 +403,20 @@ JS::Result<Ok> BinTokenReaderMultipart::enterList(uint32_t& items,
   return Ok();
 }
 
-void BinTokenReaderMultipart::AutoBase::init() { initialized_ = true; }
+void BinASTTokenReaderMultipart::AutoBase::init() { initialized_ = true; }
 
-BinTokenReaderMultipart::AutoBase::AutoBase(BinTokenReaderMultipart& reader)
+BinASTTokenReaderMultipart::AutoBase::AutoBase(
+    BinASTTokenReaderMultipart& reader)
     : initialized_(false), reader_(reader) {}
 
-BinTokenReaderMultipart::AutoBase::~AutoBase() {
+BinASTTokenReaderMultipart::AutoBase::~AutoBase() {
   // By now, the `AutoBase` must have been deinitialized by calling `done()`.
   // The only case in which we can accept not calling `done()` is if we have
   // bailed out because of an error.
   MOZ_ASSERT_IF(initialized_, reader_.hasRaisedError());
 }
 
-JS::Result<Ok> BinTokenReaderMultipart::AutoBase::checkPosition(
+JS::Result<Ok> BinASTTokenReaderMultipart::AutoBase::checkPosition(
     const uint8_t* expectedEnd) {
   if (reader_.current_ != expectedEnd) {
     return reader_.raiseError(
@@ -424,12 +426,13 @@ JS::Result<Ok> BinTokenReaderMultipart::AutoBase::checkPosition(
   return Ok();
 }
 
-BinTokenReaderMultipart::AutoList::AutoList(BinTokenReaderMultipart& reader)
+BinASTTokenReaderMultipart::AutoList::AutoList(
+    BinASTTokenReaderMultipart& reader)
     : AutoBase(reader) {}
 
-void BinTokenReaderMultipart::AutoList::init() { AutoBase::init(); }
+void BinASTTokenReaderMultipart::AutoList::init() { AutoBase::init(); }
 
-JS::Result<Ok> BinTokenReaderMultipart::AutoList::done() {
+JS::Result<Ok> BinASTTokenReaderMultipart::AutoList::done() {
   MOZ_ASSERT(initialized_);
   initialized_ = false;
   if (reader_.hasRaisedError()) {
@@ -445,7 +448,7 @@ JS::Result<Ok> BinTokenReaderMultipart::AutoList::done() {
 // Encoded as variable length number.
 
 MOZ_MUST_USE JS::Result<uint32_t>
-BinTokenReaderMultipart::readInternalUint32() {
+BinASTTokenReaderMultipart::readInternalUint32() {
   uint32_t result = 0;
   uint32_t shift = 0;
   while (true) {
@@ -471,11 +474,11 @@ BinTokenReaderMultipart::readInternalUint32() {
   }
 }
 
-BinTokenReaderMultipart::AutoTaggedTuple::AutoTaggedTuple(
-    BinTokenReaderMultipart& reader)
+BinASTTokenReaderMultipart::AutoTaggedTuple::AutoTaggedTuple(
+    BinASTTokenReaderMultipart& reader)
     : AutoBase(reader) {}
 
-JS::Result<Ok> BinTokenReaderMultipart::AutoTaggedTuple::done() {
+JS::Result<Ok> BinASTTokenReaderMultipart::AutoTaggedTuple::done() {
   MOZ_ASSERT(initialized_);
   initialized_ = false;
   if (reader_.hasRaisedError()) {

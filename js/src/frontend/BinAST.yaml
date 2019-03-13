@@ -39,7 +39,7 @@ cpp:
     #include "mozilla/Vector.h"
 
     #include "frontend/BinAST-macros.h"
-    #include "frontend/BinTokenReaderMultipart.h"
+    #include "frontend/BinASTTokenReaderMultipart.h"
     #include "frontend/FullParseHandler.h"
     #include "frontend/ParseNode.h"
     #include "frontend/Parser.h"
@@ -64,7 +64,7 @@ cpp:
     // Force class instantiation.
     // This ensures that the symbols are built, without having to export all our
     // code (and its baggage of #include and macros) in the header.
-    template class BinASTParser<BinTokenReaderMultipart>;
+    template class BinASTParser<BinASTTokenReaderMultipart>;
 
     } // namespace frontend
     } // namespace js
@@ -89,8 +89,8 @@ hpp:
 
       #include "frontend/BCEParserHandle.h"
       #include "frontend/BinASTParserPerTokenizer.h"
-      #include "frontend/BinToken.h"
-      #include "frontend/BinTokenReaderMultipart.h"
+      #include "frontend/BinASTToken.h"
+      #include "frontend/BinASTTokenReaderMultipart.h"
       #include "frontend/FullParseHandler.h"
       #include "frontend/ParseContext.h"
       #include "frontend/ParseNode.h"
@@ -193,7 +193,7 @@ hpp:
     footer: |
       };
 
-      extern template class BinASTParser<BinTokenReaderMultipart>;
+      extern template class BinASTParser<BinASTTokenReaderMultipart>;
 
       } // namespace frontend
       } // namespace js
@@ -224,7 +224,7 @@ hpp:
 
       #endif // frontend_BinASTEnum_h
 
-  # Rules for generating BinToken.h
+  # Rules for generating BinASTToken.h
   tokens:
     kind:
       doc: |
@@ -289,8 +289,8 @@ hpp:
       // To generate this file, see the documentation in
       // js/src/frontend/binast/README.md.
 
-      #ifndef frontend_BinToken_h
-      #define frontend_BinToken_h
+      #ifndef frontend_BinASTToken_h
+      #define frontend_BinASTToken_h
 
       #include <stddef.h>
 
@@ -342,7 +342,7 @@ hpp:
       } // namespace frontend
       } // namespace js
 
-      #endif // frontend_BinToken_h
+      #endif // frontend_BinASTToken_h
 
 Arguments:
   init: |
