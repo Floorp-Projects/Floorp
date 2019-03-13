@@ -6,18 +6,16 @@
 
 #ifdef WR_VERTEX_SHADER
 
-in int aClipRenderTaskAddress;
-in int aClipTransformId;
-in int aPrimTransformId;
-in int aClipSegment;
+in ivec2 aTransformIds;
 in ivec4 aClipDataResourceAddress;
 in vec2 aClipLocalPos;
 in vec4 aClipTileRect;
 in vec4 aClipDeviceArea;
 in vec4 aClipSnapOffsets;
+in vec4 aClipOrigins;
+in float aDevicePixelScale;
 
 struct ClipMaskInstance {
-    int render_task_address;
     int clip_transform_id;
     int prim_transform_id;
     ivec2 clip_data_address;
@@ -26,20 +24,25 @@ struct ClipMaskInstance {
     RectWithSize tile_rect;
     RectWithSize sub_rect;
     vec4 snap_offsets;
+    vec2 task_origin;
+    vec2 screen_origin;
+    float device_pixel_scale;
 };
 
 ClipMaskInstance fetch_clip_item() {
     ClipMaskInstance cmi;
 
-    cmi.render_task_address = aClipRenderTaskAddress;
-    cmi.clip_transform_id = aClipTransformId;
-    cmi.prim_transform_id = aPrimTransformId;
+    cmi.clip_transform_id = aTransformIds.x;
+    cmi.prim_transform_id = aTransformIds.y;
     cmi.clip_data_address = aClipDataResourceAddress.xy;
     cmi.resource_address = aClipDataResourceAddress.zw;
     cmi.local_pos = aClipLocalPos;
     cmi.tile_rect = RectWithSize(aClipTileRect.xy, aClipTileRect.zw);
     cmi.sub_rect = RectWithSize(aClipDeviceArea.xy, aClipDeviceArea.zw);
     cmi.snap_offsets = aClipSnapOffsets;
+    cmi.task_origin = aClipOrigins.xy;
+    cmi.screen_origin = aClipOrigins.zw;
+    cmi.device_pixel_scale = aDevicePixelScale;
 
     return cmi;
 }
@@ -59,11 +62,12 @@ RectWithSize intersect_rect(RectWithSize a, RectWithSize b) {
 ClipVertexInfo write_clip_tile_vertex(RectWithSize local_clip_rect,
                                       Transform prim_transform,
                                       Transform clip_transform,
-                                      ClipArea area,
                                       RectWithSize sub_rect,
-                                      vec4 snap_offsets) {
-    vec2 device_pos = area.screen_origin + sub_rect.p0 +
-                      aPosition.xy * sub_rect.size;
+                                      vec4 snap_offsets,
+                                      vec2 task_origin,
+                                      vec2 screen_origin,
+                                      float device_pixel_scale) {
+    vec2 device_pos = screen_origin + sub_rect.p0 + aPosition.xy * sub_rect.size;
 
     // If the primitive we are drawing a clip mask for was snapped, then
     // remove the effect of that snapping, so that the local position
@@ -76,7 +80,7 @@ ClipVertexInfo write_clip_tile_vertex(RectWithSize local_clip_rect,
 
     device_pos -= snap_offset;
 
-    vec2 world_pos = device_pos / area.device_pixel_scale;
+    vec2 world_pos = device_pos / device_pixel_scale;
 
     vec4 pos = prim_transform.m * vec4(world_pos, 0.0, 1.0);
     pos.xyz /= pos.w;
@@ -85,7 +89,7 @@ ClipVertexInfo write_clip_tile_vertex(RectWithSize local_clip_rect,
     vec3 local_pos = p.xyw * pos.w;
 
     vec4 vertex_pos = vec4(
-        area.common_data.task_rect.p0 + sub_rect.p0 + aPosition.xy * sub_rect.size,
+        task_origin + sub_rect.p0 + aPosition.xy * sub_rect.size,
         0.0,
         1.0
     );
