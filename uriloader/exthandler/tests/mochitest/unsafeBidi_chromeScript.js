@@ -6,7 +6,7 @@ const HELPERAPP_DIALOG_CID =
 
 const FAKE_CID = Cc["@mozilla.org/uuid-generator;1"].
                    getService(Ci.nsIUUIDGenerator).generateUUID();
-
+/* eslint-env mozilla/frame-script */
 function HelperAppLauncherDialog() {}
 HelperAppLauncherDialog.prototype = {
   show(aLauncher, aWindowContext, aReason) {

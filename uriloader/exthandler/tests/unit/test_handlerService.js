@@ -15,11 +15,7 @@ function run_test() {
   const protoSvc = Cc["@mozilla.org/uriloader/external-protocol-service;1"].
                    getService(Ci.nsIExternalProtocolService);
 
-  const prefSvc = Cc["@mozilla.org/preferences-service;1"].
-                  getService(Ci.nsIPrefService);
-
-  const ioService = Cc["@mozilla.org/network/io-service;1"].
-                    getService(Ci.nsIIOService);
+  const prefSvc = Services.prefs;
 
   const env = Cc["@mozilla.org/process/environment;1"].
               getService(Ci.nsIEnvironment);
@@ -243,10 +239,9 @@ function run_test() {
     handlerTypes.splice(handlerTypes.indexOf(handler.type), 1);
   }
   Assert.equal(handlerTypes.length, 0);
-
   // Make sure the handler service's remove method removes a handler record.
   handlerSvc.remove(handlerInfo2);
-  handlers = handlerSvc.enumerate();
+  let handlers = handlerSvc.enumerate();
   while (handlers.hasMoreElements())
     Assert.notEqual(handlers.getNext().QueryInterface(Ci.nsIHandlerInfo).type,
                     handlerInfo2.type);

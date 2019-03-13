@@ -121,14 +121,14 @@ function run_test() {
 
   const kMockCID = Components.ID("{9b23dfe9-296b-4740-ba1c-d39c9a16e55e}");
   const kWindowsRegKeyContractID = "@mozilla.org/windows-registry-key;1";
-  const kWindowsRegKeyClassName = "nsWindowsRegKey";
 
   function registerMockWindowsRegKeyFactory() {
     mockWindowsRegKeyFactory = {
       createInstance(aOuter, aIid) {
         if (aOuter != null)
           throw Cr.NS_ERROR_NO_AGGREGATION;
-
+        // XXX Bug 1533719 - originalWindowsRegKeyFactory is undefined.
+        // eslint-disable-next-line no-undef
         var innerKey = originalWindowsRegKeyFactory.createInstance(null, aIid);
         var key = new MockWindowsRegKey(innerKey);
 
@@ -171,9 +171,9 @@ function run_test() {
   try {
     // Try and get the MIME type associated with the extension. If this
     // operation does not throw an unexpected exception, the test succeeds.
-    var type = Cc["@mozilla.org/mime;1"].
-               getService(Ci.nsIMIMEService).
-               getTypeFromExtension(".txt");
+    Cc["@mozilla.org/mime;1"].
+      getService(Ci.nsIMIMEService).
+      getTypeFromExtension(".txt");
   } catch (e) {
     if (!(e instanceof Ci.nsIException) ||
         e.result != Cr.NS_ERROR_NOT_AVAILABLE) {
