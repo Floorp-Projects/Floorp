@@ -5,6 +5,17 @@
     <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
     <script>
 
+      class TestNode extends HTMLElement {
+      constructor() {
+        super();
+        const styles = "<style>:focus{background-color:yellow;}</style>";
+        this.attachShadow({ mode: 'open' });
+        this.shadowRoot.innerHTML =
+          `${styles}<div tabindex='-1'>test node</div> <slot></slot>`;
+      }}
+
+      window.customElements.define('test-node', TestNode);
+
       var lastFocusTarget;
       function focusLogger(event) {
         lastFocusTarget = event.target;
@@ -774,6 +785,52 @@
         input1.remove();
       }
 
+      function testDeeplyNestedShadowTree() {
+        opener.is(document.activeElement, document.body.firstChild, "body's first child should have focus.");
+        var host1 = document.createElement("test-node");
+        var lastHost = host1;
+        for (var i = 0; i < 20; ++i) {
+          lastHost.appendChild(document.createElement("test-node"));
+          lastHost = lastHost.firstChild;
+        }
+
+        var input = document.createElement("input");
+        document.body.appendChild(host1);
+        document.body.appendChild(input);
+        document.body.offsetLeft;
+
+        // Test shadow tree which doesn't have anything tab-focusable.
+        host1.shadowRoot.getElementsByTagName("div")[0].focus();
+        synthesizeKey("KEY_Tab");
+        is(document.activeElement, input, "Should have focused input element.");
+        synthesizeKey("KEY_Tab", {shiftKey: true});
+        opener.is(document.activeElement, document.body.firstChild, "body's first child should have focus.");
+
+        // Same test but with focusable elements in the tree...
+        var input2 = document.createElement("input");
+        var host2 = host1.firstChild;
+        var host3 = host2.firstChild;
+        host2.insertBefore(input2, host3);
+        var input3 = document.createElement("input");
+        lastHost.appendChild(input3);
+        document.body.offsetLeft;
+        host3.shadowRoot.getElementsByTagName("div")[0].focus();
+        synthesizeKey("KEY_Tab");
+        is(document.activeElement, input3, "Should have focused input3 element.");
+
+        // ...and backwards
+        host3.shadowRoot.getElementsByTagName("div")[0].focus();
+        synthesizeKey("KEY_Tab", {shiftKey: true});
+        is(document.activeElement, input2, "Should have focused input2 element.");
+
+        // Remove elements added to body element.
+        host1.remove();
+        input.remove();
+
+        // Tests expect body.firstChild to have focus.
+        document.body.firstChild.focus();
+      }
+
       function runTest() {
 
         testTabbingThroughShadowDOMWithTabIndexes();
@@ -787,6 +844,7 @@
         testTabbingThroughSlotInLightDOM();
         testTabbingThroughFocusableSlotInLightDOM();
         testTabbingThroughScrollableShadowDOM();
+        testDeeplyNestedShadowTree();
 
         opener.didRunTests();
         window.close();

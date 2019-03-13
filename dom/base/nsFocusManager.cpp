@@ -3122,6 +3122,12 @@ nsIContent* nsFocusManager::GetNextTabbableContentInScope(
       break;
     }
 
+    // We've been just trying to find some focusable element, and haven't, so
+    // bail out.
+    if (aIgnoreTabIndex) {
+      break;
+    }
+
     // Continue looking for next highest priority tabindex
     aCurrentTabIndex = GetNextTabIndex(aOwner, aCurrentTabIndex, aForward);
     contentTraversal.Reset();
