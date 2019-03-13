@@ -408,6 +408,7 @@ These should match what Safari and other Apple applications use on OS X Lion. --
 <!ENTITY preferencesCmd2.accesskey     "O">
 <!ENTITY preferencesCmdUnix.label       "Preferences">
 <!ENTITY preferencesCmdUnix.accesskey     "n">
+<!ENTITY logins.label                           "Logins and Passwords">
 
 <!ENTITY clearRecentHistory.label               "Clear Recent History…">
 
