@@ -180,6 +180,7 @@
   list-style-image: url("chrome://browser/skin/mail.svg");
 }
 
+#PanelUI-fxa-menu-sendtab-button,
 #pageAction-panel-sendToDevice,
 #pageAction-urlbar-sendToDevice {
   list-style-image: url("chrome://browser/skin/send-to-device.svg");

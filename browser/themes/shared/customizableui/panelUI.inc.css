@@ -761,6 +761,10 @@ panelmultiview[mainViewId="PanelUI-fxa"] #PanelUI-remotetabs-syncnow {
   display: none;
 }
 
+#PanelUI-sendTabToDevice > .panel-subview-body:not([state]) > #PanelUI-sendTabToDevice-syncingDevices {
+  display: none;
+}
+
 .fxaChooseWhatToSyncDevices {
   height: 102px;
   width: 201px;
