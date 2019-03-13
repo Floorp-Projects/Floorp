@@ -61,7 +61,7 @@ static int testBinASTReaderFuzz(const uint8_t* buf, size_t size) {
     ReportOutOfMemory(gCx);
     return 0;
   }
-  BinASTParser<js::frontend::BinTokenReaderMultipart> reader(
+  BinASTParser<js::frontend::BinASTTokenReaderMultipart> reader(
       gCx, gCx->tempLifoAlloc(), binUsedNames, options, sourceObj);
 
   // Will be deallocated once `reader` goes out of scope.

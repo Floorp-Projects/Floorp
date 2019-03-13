@@ -13,6 +13,7 @@ async function setup() {
       [ "media.suspend-bkgnd-video.enabled", true ],
       [ "media.suspend-bkgnd-video.delay-ms", 500 ],
       [ "media.dormant-on-pause-timeout-ms", 0 ],
+      [ "media.cloneElementVisually.testing", true ],
     ],
   });
 

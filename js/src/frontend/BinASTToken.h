@@ -7,10 +7,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // To generate this file, see the documentation in
-// js/src/frontend/binsource/README.md.
+// js/src/frontend/binast/README.md.
 
-#ifndef frontend_BinToken_h
-#define frontend_BinToken_h
+#ifndef frontend_BinASTToken_h
+#define frontend_BinASTToken_h
 
 #include <stddef.h>
 
@@ -19,9 +19,9 @@
  *
  * In the Binary AST world, an AST is composed of nodes, where a node is
  * defined by:
- * - a Kind (see `BinKind`);
+ * - a Kind (see `BinASTKind`);
  * - a list of fields, where each field is:
- *    - a Name (see `BinField`);
+ *    - a Name (see `BinASTField`);
  *    - a Value, which may be either a node or a primitive value.
  *
  * The mapping between Kind and list of fields is determined entirely by
@@ -185,14 +185,14 @@ namespace frontend {
   F(YieldExpression, "YieldExpression")                                       \
   F(YieldStarExpression, "YieldStarExpression")
 
-enum class BinKind {
+enum class BinASTKind {
 #define EMIT_ENUM(name, _) name,
   FOR_EACH_BIN_KIND(EMIT_ENUM)
 #undef EMIT_ENUM
 };
 
-// The number of distinct values of BinKind.
-const size_t BINKIND_LIMIT = 120;
+// The number of distinct values of BinASTKind.
+const size_t BINASTKIND_LIMIT = 120;
 
 /**
  * The different fields of Binary AST nodes, as per the specifications of
@@ -278,14 +278,14 @@ const size_t BINKIND_LIMIT = 120;
   F(Update, "update")                                 \
   F(Value, "value")
 
-enum class BinField {
+enum class BinASTField {
 #define EMIT_ENUM(name, _) name,
   FOR_EACH_BIN_FIELD(EMIT_ENUM)
 #undef EMIT_ENUM
 };
 
-// The number of distinct values of BinField.
-const size_t BINFIELD_LIMIT = 69;
+// The number of distinct values of BinASTField.
+const size_t BINASTFIELD_LIMIT = 69;
 
 /**
  * The different variants of Binary AST string enums, as per
@@ -354,31 +354,31 @@ const size_t BINFIELD_LIMIT = 69;
   F(VariableDeclarationKindConst, "const")                    \
   F(VariableDeclarationKindLet, "let")
 
-enum class BinVariant {
+enum class BinASTVariant {
 #define EMIT_ENUM(name, _) name,
   FOR_EACH_BIN_VARIANT(EMIT_ENUM)
 #undef EMIT_ENUM
 };
 
-// The number of distinct values of BinVariant.
-const size_t BINVARIANT_LIMIT = 49;
+// The number of distinct values of BinASTVariant.
+const size_t BINASTVARIANT_LIMIT = 49;
 
 /**
- * Return a string describing a `BinKind`.
+ * Return a string describing a `BinASTKind`.
  */
-const char* describeBinKind(const BinKind& kind);
+const char* describeBinASTKind(const BinASTKind& kind);
 
 /**
- * Return a string describing a `BinField`.
+ * Return a string describing a `BinASTField`.
  */
-const char* describeBinField(const BinField& kind);
+const char* describeBinASTField(const BinASTField& field);
 
 /**
- * Return a string describing a `BinVariant`.
+ * Return a string describing a `BinASTVariant`.
  */
-const char* describeBinVariant(const BinVariant& kind);
+const char* describeBinASTVariant(const BinASTVariant& variant);
 
 }  // namespace frontend
 }  // namespace js
 
-#endif  // frontend_BinToken_h
+#endif  // frontend_BinASTToken_h
