@@ -284,7 +284,7 @@ class BinASTParserPerTokenizer : public BinASTParserBase,
   mozilla::Maybe<Tokenizer> tokenizer_;
   VariableDeclarationKind variableDeclarationKind_;
 
-  friend class BinParseContext;
+  friend class BinASTParseContext;
   friend class AutoVariableDeclarationKind;
 
   // Helper class: Restore field `variableDeclarationKind` upon leaving a scope.
@@ -314,11 +314,11 @@ class BinASTParserPerTokenizer : public BinASTParserBase,
   inline const FinalParser* asFinalParser() const;
 };
 
-class BinParseContext : public ParseContext {
+class BinASTParseContext : public ParseContext {
  public:
   template <typename Tok>
-  BinParseContext(JSContext* cx, BinASTParserPerTokenizer<Tok>* parser,
-                  SharedContext* sc, Directives* newDirectives)
+  BinASTParseContext(JSContext* cx, BinASTParserPerTokenizer<Tok>* parser,
+                     SharedContext* sc, Directives* newDirectives)
       : ParseContext(cx, parser->pc_, sc, *parser, parser->usedNames_,
                      newDirectives, /* isFull = */ true) {}
 };

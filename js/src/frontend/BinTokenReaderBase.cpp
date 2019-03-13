@@ -6,7 +6,7 @@
 
 #include "frontend/BinTokenReaderBase.h"
 
-#include "frontend/BinSource-macros.h"
+#include "frontend/BinAST-macros.h"
 #include "js/Result.h"
 
 namespace js {
