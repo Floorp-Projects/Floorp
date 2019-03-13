@@ -16,8 +16,8 @@
 
 #include "frontend/BCEParserHandle.h"
 #include "frontend/BinASTParserPerTokenizer.h"
-#include "frontend/BinToken.h"
-#include "frontend/BinTokenReaderMultipart.h"
+#include "frontend/BinASTToken.h"
+#include "frontend/BinASTTokenReaderMultipart.h"
 #include "frontend/FullParseHandler.h"
 #include "frontend/ParseContext.h"
 #include "frontend/ParseNode.h"
@@ -487,7 +487,7 @@ class BinASTParser : public BinASTParserPerTokenizer<Tok> {
   JS::Result<ParseNode*> parseOptionalVariableDeclarationOrExpression();
 };
 
-extern template class BinASTParser<BinTokenReaderMultipart>;
+extern template class BinASTParser<BinASTTokenReaderMultipart>;
 
 }  // namespace frontend
 }  // namespace js
