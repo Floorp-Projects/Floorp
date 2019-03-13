@@ -2,7 +2,7 @@ A parser generator used to generate the following files:
 
 - js/src/frontend/BinASTParser.h
 - js/src/frontend/BinASTParser.cpp
-- js/src/frontent/BinToken.h
+- js/src/frontent/BinASTToken.h
 
 from the following files:
 

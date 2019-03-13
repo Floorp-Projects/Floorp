@@ -9,7 +9,7 @@
 
 #include "mozilla/HashFunctions.h"
 
-#include "frontend/BinToken.h"
+#include "frontend/BinASTToken.h"
 #include "gc/DeletePolicy.h"
 
 #include "js/AllocPolicy.h"

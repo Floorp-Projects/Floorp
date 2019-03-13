@@ -6,7 +6,7 @@ cargo run -- \
       --out-class ../BinASTParser-tmp.h    \
       --out-impl ../BinASTParser-tmp.cpp   \
       --out-enum ../BinASTEnum-tmp.h    \
-      --out-token ../BinToken-tmp.h
+      --out-token ../BinASTToken-tmp.h
 
 MACH=../../../../mach
 
@@ -14,7 +14,7 @@ ${MACH} clang-format --path \
         ../BinASTParser-tmp.h \
         ../BinASTParser-tmp.cpp \
         ../BinASTEnum-tmp.h \
-        ../BinToken-tmp.h
+        ../BinASTToken-tmp.h
 
 # Usage: update SRC DST
 #
@@ -36,4 +36,4 @@ update() {
 update ../BinASTParser-tmp.h ../BinASTParser.h
 update ../BinASTParser-tmp.cpp ../BinASTParser.cpp
 update ../BinASTEnum-tmp.h ../BinASTEnum.h
-update ../BinToken-tmp.h ../BinToken.h
+update ../BinASTToken-tmp.h ../BinASTToken.h

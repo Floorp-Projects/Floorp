@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "frontend/BinTokenReaderBase.h"
+#include "frontend/BinASTTokenReaderBase.h"
 
 #include "frontend/BinAST-macros.h"
 #include "js/Result.h"
@@ -19,26 +19,26 @@ using ErrorResult = mozilla::GenericErrorResult<T>;
 // to represent a `null` number.
 const uint64_t NULL_FLOAT_REPRESENTATION = 0x7FF0000000000001;
 
-void BinTokenReaderBase::updateLatestKnownGood() {
+void BinASTTokenReaderBase::updateLatestKnownGood() {
   MOZ_ASSERT(current_ >= start_);
   const size_t update = current_ - start_;
   MOZ_ASSERT(update >= latestKnownGoodPos_);
   latestKnownGoodPos_ = update;
 }
 
-ErrorResult<JS::Error&> BinTokenReaderBase::raiseError(
+ErrorResult<JS::Error&> BinASTTokenReaderBase::raiseError(
     const char* description) {
   MOZ_ASSERT(!hasRaisedError());
   errorReporter_->errorNoOffset(JSMSG_BINAST, description);
   return cx_->alreadyReportedError();
 }
 
-ErrorResult<JS::Error&> BinTokenReaderBase::raiseOOM() {
+ErrorResult<JS::Error&> BinASTTokenReaderBase::raiseOOM() {
   ReportOutOfMemory(cx_);
   return cx_->alreadyReportedError();
 }
 
-ErrorResult<JS::Error&> BinTokenReaderBase::raiseInvalidNumberOfFields(
+ErrorResult<JS::Error&> BinASTTokenReaderBase::raiseInvalidNumberOfFields(
     const BinKind kind, const uint32_t expected, const uint32_t got) {
   Sprinter out(cx_);
   BINJS_TRY(out.init());
@@ -47,7 +47,7 @@ ErrorResult<JS::Error&> BinTokenReaderBase::raiseInvalidNumberOfFields(
   return raiseError(out.string());
 }
 
-ErrorResult<JS::Error&> BinTokenReaderBase::raiseInvalidField(
+ErrorResult<JS::Error&> BinASTTokenReaderBase::raiseInvalidField(
     const char* kind, const BinField field) {
   Sprinter out(cx_);
   BINJS_TRY(out.init());
@@ -56,7 +56,7 @@ ErrorResult<JS::Error&> BinTokenReaderBase::raiseInvalidField(
   return raiseError(out.string());
 }
 
-bool BinTokenReaderBase::hasRaisedError() const {
+bool BinASTTokenReaderBase::hasRaisedError() const {
   if (cx_->helperThread()) {
     // When performing off-main-thread parsing, we don't set a pending
     // exception but instead add a pending compile error.
@@ -66,11 +66,11 @@ bool BinTokenReaderBase::hasRaisedError() const {
   return cx_->isExceptionPending();
 }
 
-size_t BinTokenReaderBase::offset() const { return current_ - start_; }
+size_t BinASTTokenReaderBase::offset() const { return current_ - start_; }
 
-TokenPos BinTokenReaderBase::pos() { return pos(offset()); }
+TokenPos BinASTTokenReaderBase::pos() { return pos(offset()); }
 
-TokenPos BinTokenReaderBase::pos(size_t start) {
+TokenPos BinASTTokenReaderBase::pos(size_t start) {
   TokenPos pos;
   pos.begin = start;
   pos.end = current_ - start_;
@@ -78,12 +78,12 @@ TokenPos BinTokenReaderBase::pos(size_t start) {
   return pos;
 }
 
-void BinTokenReaderBase::seek(size_t offset) {
+void BinASTTokenReaderBase::seek(size_t offset) {
   MOZ_ASSERT(start_ + offset >= start_ && start_ + offset < stop_);
   current_ = start_ + offset;
 }
 
-JS::Result<Ok> BinTokenReaderBase::readBuf(uint8_t* bytes, uint32_t len) {
+JS::Result<Ok> BinASTTokenReaderBase::readBuf(uint8_t* bytes, uint32_t len) {
   MOZ_ASSERT(!hasRaisedError());
   MOZ_ASSERT(len > 0);
 
@@ -98,7 +98,7 @@ JS::Result<Ok> BinTokenReaderBase::readBuf(uint8_t* bytes, uint32_t len) {
   return Ok();
 }
 
-JS::Result<uint8_t> BinTokenReaderBase::readByte() {
+JS::Result<uint8_t> BinASTTokenReaderBase::readByte() {
   uint8_t byte;
   MOZ_TRY(readBuf(&byte, 1));
   return byte;
