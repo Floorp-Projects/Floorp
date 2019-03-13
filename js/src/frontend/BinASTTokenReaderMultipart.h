@@ -4,14 +4,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef frontend_BinTokenReaderMultipart_h
-#define frontend_BinTokenReaderMultipart_h
+#ifndef frontend_BinASTTokenReaderMultipart_h
+#define frontend_BinASTTokenReaderMultipart_h
 
 #include "mozilla/Maybe.h"
 
 #include "frontend/BinASTRuntimeSupport.h"
-#include "frontend/BinToken.h"
-#include "frontend/BinTokenReaderBase.h"
+#include "frontend/BinASTToken.h"
+#include "frontend/BinASTTokenReaderBase.h"
 
 #include "js/Result.h"
 
@@ -30,7 +30,8 @@ namespace frontend {
  * - the reader does not support error recovery;
  * - the reader does not support lookahead or pushback.
  */
-class MOZ_STACK_CLASS BinTokenReaderMultipart : public BinTokenReaderBase {
+class MOZ_STACK_CLASS BinASTTokenReaderMultipart
+    : public BinASTTokenReaderBase {
  public:
   class AutoList;
   class AutoTaggedTuple;
@@ -51,18 +52,18 @@ class MOZ_STACK_CLASS BinTokenReaderMultipart : public BinTokenReaderBase {
    *
    * Does NOT copy the buffer.
    */
-  BinTokenReaderMultipart(JSContext* cx, ErrorReporter* er,
-                          const uint8_t* start, const size_t length);
+  BinASTTokenReaderMultipart(JSContext* cx, ErrorReporter* er,
+                             const uint8_t* start, const size_t length);
 
   /**
    * Construct a token reader.
    *
    * Does NOT copy the buffer.
    */
-  BinTokenReaderMultipart(JSContext* cx, ErrorReporter* er,
-                          const Vector<uint8_t>& chars);
+  BinASTTokenReaderMultipart(JSContext* cx, ErrorReporter* er,
+                             const Vector<uint8_t>& chars);
 
-  ~BinTokenReaderMultipart();
+  ~BinASTTokenReaderMultipart();
 
   /**
    * Read the header of the file.
@@ -170,7 +171,7 @@ class MOZ_STACK_CLASS BinTokenReaderMultipart : public BinTokenReaderBase {
    * @return out If the header of the tuple is invalid.
    */
   MOZ_MUST_USE JS::Result<Ok> enterTaggedTuple(
-      BinKind& tag, BinTokenReaderMultipart::BinFields& fields,
+      BinKind& tag, BinASTTokenReaderMultipart::BinFields& fields,
       AutoTaggedTuple& guard);
 
   /**
@@ -198,9 +199,9 @@ class MOZ_STACK_CLASS BinTokenReaderMultipart : public BinTokenReaderBase {
 
   const uint8_t* posBeforeTree_;
 
-  BinTokenReaderMultipart(const BinTokenReaderMultipart&) = delete;
-  BinTokenReaderMultipart(BinTokenReaderMultipart&&) = delete;
-  BinTokenReaderMultipart& operator=(BinTokenReaderMultipart&) = delete;
+  BinASTTokenReaderMultipart(const BinASTTokenReaderMultipart&) = delete;
+  BinASTTokenReaderMultipart(BinASTTokenReaderMultipart&&) = delete;
+  BinASTTokenReaderMultipart& operator=(BinASTTokenReaderMultipart&) = delete;
 
  public:
   void traceMetadata(JSTracer* trc);
@@ -224,38 +225,38 @@ class MOZ_STACK_CLASS BinTokenReaderMultipart : public BinTokenReaderBase {
   // Base class used by other Auto* classes.
   class MOZ_STACK_CLASS AutoBase {
    protected:
-    explicit AutoBase(BinTokenReaderMultipart& reader);
+    explicit AutoBase(BinASTTokenReaderMultipart& reader);
     ~AutoBase();
 
     // Raise an error if we are not in the expected position.
     MOZ_MUST_USE JS::Result<Ok> checkPosition(const uint8_t* expectedPosition);
 
-    friend BinTokenReaderMultipart;
+    friend BinASTTokenReaderMultipart;
     void init();
 
     // Set to `true` if `init()` has been called. Reset to `false` once
     // all conditions have been checked.
     bool initialized_;
-    BinTokenReaderMultipart& reader_;
+    BinASTTokenReaderMultipart& reader_;
   };
 
   // Guard class used to ensure that `enterList` is used properly.
   class MOZ_STACK_CLASS AutoList : public AutoBase {
    public:
-    explicit AutoList(BinTokenReaderMultipart& reader);
+    explicit AutoList(BinASTTokenReaderMultipart& reader);
 
     // Check that we have properly read to the end of the list.
     MOZ_MUST_USE JS::Result<Ok> done();
 
    protected:
-    friend BinTokenReaderMultipart;
+    friend BinASTTokenReaderMultipart;
     void init();
   };
 
   // Guard class used to ensure that `enterTaggedTuple` is used properly.
   class MOZ_STACK_CLASS AutoTaggedTuple : public AutoBase {
    public:
-    explicit AutoTaggedTuple(BinTokenReaderMultipart& reader);
+    explicit AutoTaggedTuple(BinASTTokenReaderMultipart& reader);
 
     // Check that we have properly read to the end of the tuple.
     MOZ_MUST_USE JS::Result<Ok> done();
@@ -295,4 +296,4 @@ class MOZ_STACK_CLASS BinTokenReaderMultipart : public BinTokenReaderBase {
 }  // namespace frontend
 }  // namespace js
 
-#endif  // frontend_BinTokenReaderMultipart_h
+#endif  // frontend_BinASTTokenReaderMultipart_h
