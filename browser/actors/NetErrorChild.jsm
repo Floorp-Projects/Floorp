@@ -28,6 +28,8 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "newErrorPagesEnabled",
   "browser.security.newcerterrorpage.enabled");
 XPCOMUtils.defineLazyPreferenceGetter(this, "mitmErrorPageEnabled",
   "browser.security.newcerterrorpage.mitm.enabled");
+XPCOMUtils.defineLazyPreferenceGetter(this, "mitmPrimingEnabled",
+  "security.certerrors.mitm.priming.enabled");
 XPCOMUtils.defineLazyGetter(this, "gNSSErrorsBundle", function() {
   return Services.strings.createBundle("chrome://pipnss/locale/nsserrors.properties");
 });
@@ -356,6 +358,7 @@ class NetErrorChild extends ActorChild {
     }
   }
 
+  // eslint-disable-next-line complexity
   onCertErrorDetails(msg, docShell) {
     let doc = docShell.document;
 
@@ -376,6 +379,16 @@ class NetErrorChild extends ActorChild {
           textContainer.style.marginTop = `${offset}px`;
         }
       }
+    }
+
+    // Check if the connection is being man-in-the-middled. When the parent
+    // detects an intercepted connection, the page may be reloaded with a new
+    // error code (MOZILLA_PKIX_ERROR_MITM_DETECTED).
+    if (newErrorPagesEnabled && mitmPrimingEnabled &&
+        msg.data.code == SEC_ERROR_UNKNOWN_ISSUER &&
+        // Only do this check for top-level failures.
+        doc.ownerGlobal.top === doc.ownerGlobal) {
+      this.mm.sendAsyncMessage("Browser:PrimeMitm");
     }
 
     let div = doc.getElementById("certificateErrorText");
@@ -453,6 +466,14 @@ class NetErrorChild extends ActorChild {
         break;
       case MOZILLA_PKIX_ERROR_MITM_DETECTED:
         if (newErrorPagesEnabled && mitmErrorPageEnabled) {
+          let autoEnabledEnterpriseRoots =
+            Services.prefs.getBoolPref("security.enterprise_roots.auto-enabled", false);
+          if (mitmPrimingEnabled && autoEnabledEnterpriseRoots) {
+            // If we automatically tried to import enterprise root certs but it didn't
+            // fix the MITM, reset the pref.
+            this.mm.sendAsyncMessage("Browser:ResetEnterpriseRootsPref");
+          }
+
           // We don't actually know what the MitM is called (since we don't
           // maintain a list), so we'll try and display the common name of the
           // root issuer to the user. In the worst case they are as clueless as
