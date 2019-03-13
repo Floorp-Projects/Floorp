@@ -1,0 +1,10 @@
+[
+  {
+    "size": 6730092,
+    "visibility": "public",
+    "digest": "9d03e9f059307453cc350717b11f1245ce15f790f4cef3821202019682ecbc9574dcebfe840992f341e9773f329b78ead85fb49412a582f0ebc155691508d29a",
+    "algorithm": "sha512",
+    "filename": "google_maps_mobile.zip",
+    "unpack": true
+  }
+]
