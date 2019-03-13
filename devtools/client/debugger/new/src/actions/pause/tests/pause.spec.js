@@ -110,13 +110,13 @@ describe("pause", () => {
       await dispatch(actions.newSource(makeSource("foo1")));
       await dispatch(actions.paused(mockPauseInfo));
       const stepped = dispatch(actions.stepIn());
-      expect(isStepping(getState(), "FakeThread")).toBeTruthy();
+      expect(isStepping(getState())).toBeTruthy();
       if (!stepInResolve) {
         throw new Error("no stepInResolve");
       }
       await stepInResolve();
       await stepped;
-      expect(isStepping(getState(), "FakeThread")).toBeFalsy();
+      expect(isStepping(getState())).toBeFalsy();
     });
 
     it("should only step when paused", async () => {
@@ -134,7 +134,7 @@ describe("pause", () => {
       await dispatch(actions.newSource(makeSource("foo1")));
       await dispatch(actions.paused(mockPauseInfo));
       dispatch(actions.stepIn());
-      expect(isStepping(getState(), "FakeThread")).toBeTruthy();
+      expect(isStepping(getState())).toBeTruthy();
     });
 
     it("should step over when paused", async () => {
@@ -147,7 +147,7 @@ describe("pause", () => {
       const getNextStepSpy = jest.spyOn(parser, "getNextStep");
       dispatch(actions.stepOver());
       expect(getNextStepSpy).not.toBeCalled();
-      expect(isStepping(getState(), "FakeThread")).toBeTruthy();
+      expect(isStepping(getState())).toBeTruthy();
     });
 
     it("should step over when paused before an await", async () => {
@@ -211,19 +211,18 @@ describe("pause", () => {
       await dispatch(actions.loadSourceText(source));
 
       await dispatch(actions.paused(mockPauseInfo));
-      expect(selectors.getFrames(getState(), "FakeThread")).toEqual([
+      expect(selectors.getFrames(getState())).toEqual([
         {
           generatedLocation: { column: 0, line: 1, sourceId: "foo" },
           id: mockFrameId,
           location: { column: 0, line: 1, sourceId: "foo" },
           scope: {
             bindings: { arguments: [{ a: {} }], variables: { b: {} } }
-          },
-          thread: "FakeThread"
+          }
         }
       ]);
 
-      expect(selectors.getFrameScopes(getState(), "FakeThread")).toEqual({
+      expect(selectors.getFrameScopes(getState())).toEqual({
         generated: {
           "1": {
             pending: false,
@@ -236,9 +235,10 @@ describe("pause", () => {
         original: { "1": { pending: false, scope: null } }
       });
 
-      expect(
-        selectors.getSelectedFrameBindings(getState(), "FakeThread")
-      ).toEqual(["b", "a"]);
+      expect(selectors.getSelectedFrameBindings(getState())).toEqual([
+        "b",
+        "a"
+      ]);
     });
 
     it("maps frame locations and names to original source", async () => {
@@ -277,14 +277,13 @@ describe("pause", () => {
       await dispatch(actions.setSymbols("foo-original"));
 
       await dispatch(actions.paused(mockPauseInfo));
-      expect(selectors.getFrames(getState(), "FakeThread")).toEqual([
+      expect(selectors.getFrames(getState())).toEqual([
         {
           generatedLocation: { column: 0, line: 1, sourceId: "foo" },
           id: mockFrameId,
           location: { column: 0, line: 3, sourceId: "foo-original" },
           originalDisplayName: "fooOriginal",
-          scope: { bindings: { arguments: [], variables: {} } },
-          thread: "FakeThread"
+          scope: { bindings: { arguments: [], variables: {} } }
         }
       ]);
     });
@@ -309,13 +308,11 @@ describe("pause", () => {
 
       const originStackFrames = [
         {
-          displayName: "fooBar",
-          thread: "FakeThread"
+          displayName: "fooBar"
         },
         {
           displayName: "barZoo",
-          location: originalLocation2,
-          thread: "FakeThread"
+          location: originalLocation2
         }
       ];
 
@@ -343,7 +340,7 @@ describe("pause", () => {
       await dispatch(actions.loadSourceText(originalSource));
 
       await dispatch(actions.paused(mockPauseInfo));
-      expect(selectors.getFrames(getState(), "FakeThread")).toEqual([
+      expect(selectors.getFrames(getState())).toEqual([
         {
           displayName: "fooBar",
           generatedLocation: { column: 0, line: 1, sourceId: "foo-wasm" },
@@ -354,7 +351,7 @@ describe("pause", () => {
           scope: { bindings: { arguments: [], variables: {} } },
           source: null,
           this: undefined,
-          thread: "FakeThread"
+          thread: undefined
         },
         {
           displayName: "barZoo",
@@ -366,7 +363,7 @@ describe("pause", () => {
           scope: { bindings: { arguments: [], variables: {} } },
           source: null,
           this: undefined,
-          thread: "FakeThread"
+          thread: undefined
         }
       ]);
     });

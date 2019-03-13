@@ -10,8 +10,7 @@ import { connect } from "../../utils/connect";
 import {
   getSelectedSource,
   getSourcesForTabs,
-  getIsPaused,
-  getCurrentThread
+  getIsPaused
 } from "../../selectors";
 import { isVisible } from "../../utils/ui";
 
@@ -228,7 +227,7 @@ class Tabs extends PureComponent<Props, State> {
 const mapStateToProps = state => ({
   selectedSource: getSelectedSource(state),
   tabSources: getSourcesForTabs(state),
-  isPaused: getIsPaused(state, getCurrentThread(state))
+  isPaused: getIsPaused(state)
 });
 
 export default connect(

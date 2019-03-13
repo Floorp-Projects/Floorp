@@ -18,12 +18,8 @@ async function testCase(dbg, { name, steps }) {
   invokeInTab(name);
   let locations = [];
 
-  const {
-    selectors: { getTopFrame, getCurrentThread }
-  } = dbg;
-
   await stepOvers(dbg, steps.length, state => {
-    const {line, column} = getTopFrame(state, getCurrentThread(state)).location
+    const {line, column} = dbg.selectors.getTopFrame(state).location
     locations.push([line, column]);
   });
 

@@ -5,6 +5,7 @@
 // @flow
 
 import {
+  getCurrentThread,
   getFrames,
   getSymbols,
   getSource,
@@ -14,7 +15,7 @@ import {
 import assert from "../../utils/assert";
 import { findClosestFunction } from "../../utils/ast";
 
-import type { Frame, ThreadId } from "../../types";
+import type { Frame } from "../../types";
 import type { State } from "../../reducers/types";
 import type { ThunkArgs } from "../types";
 
@@ -25,8 +26,8 @@ function isFrameBlackboxed(state, frame) {
   return source && source.isBlackBoxed;
 }
 
-function getSelectedFrameId(state, thread, frames) {
-  let selectedFrame = getSelectedFrame(state, thread);
+function getSelectedFrameId(state, frames) {
+  let selectedFrame = getSelectedFrame(state);
   if (selectedFrame && !isFrameBlackboxed(state, selectedFrame)) {
     return selectedFrame.id;
   }
@@ -161,9 +162,9 @@ async function expandFrames(
  * @memberof actions/pause
  * @static
  */
-export function mapFrames(thread: ThreadId) {
+export function mapFrames() {
   return async function({ dispatch, getState, sourceMaps }: ThunkArgs) {
-    const frames = getFrames(getState(), thread);
+    const frames = getFrames(getState());
     if (!frames) {
       return;
     }
@@ -172,11 +173,8 @@ export function mapFrames(thread: ThreadId) {
     mappedFrames = await expandFrames(mappedFrames, sourceMaps, getState);
     mappedFrames = mapDisplayNames(mappedFrames, getState);
 
-    const selectedFrameId = getSelectedFrameId(
-      getState(),
-      thread,
-      mappedFrames
-    );
+    const thread = getCurrentThread(getState());
+    const selectedFrameId = getSelectedFrameId(getState(), mappedFrames);
     dispatch({
       type: "MAP_FRAMES",
       thread,

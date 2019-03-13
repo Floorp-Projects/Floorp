@@ -9,11 +9,7 @@ import { connect } from "../../utils/connect";
 import { showMenu } from "devtools-contextmenu";
 
 import { getSourceLocationFromMouseEvent } from "../../utils/editor";
-import {
-  getPrettySource,
-  getIsPaused,
-  getCurrentThread
-} from "../../selectors";
+import { getPrettySource, getIsPaused } from "../../selectors";
 
 import { editorMenuItems, editorItemActions } from "./menus/editor";
 
@@ -78,7 +74,7 @@ class EditorMenu extends Component<Props> {
 }
 
 const mapStateToProps = (state, props) => ({
-  isPaused: getIsPaused(state, getCurrentThread(state)),
+  isPaused: getIsPaused(state),
   hasPrettySource: !!getPrettySource(state, props.selectedSource.id)
 });
 
