@@ -16,18 +16,21 @@ pub struct Profile {
 }
 
 impl Profile {
-    pub fn new(opt_path: Option<&Path>) -> IoResult<Profile> {
-        let mut temp_dir = None;
-        let path = match opt_path {
-            Some(p) => p.to_path_buf(),
-            None => {
-                let dir = TempDir::new("rust_mozprofile")?;
-                let temp_path = dir.path().to_path_buf();
-                temp_dir = Some(dir);
-                temp_path
-            }
-        };
+    pub fn new() -> IoResult<Profile> {
+        let dir = TempDir::new("rust_mozprofile")?;
+        let path = dir.path().to_path_buf();
+        let temp_dir = Some(dir);
+        Ok(Profile {
+            path,
+            temp_dir,
+            prefs: None,
+            user_prefs: None,
+        })
+    }
 
+     pub fn new_from_path(p: &Path) -> IoResult<Profile> {
+        let path = p.to_path_buf();
+        let temp_dir = None;
         Ok(Profile {
             path,
             temp_dir,

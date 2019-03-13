@@ -348,7 +348,7 @@ impl FirefoxOptions {
             let profile_zip = &*base64::decode(profile_base64)?;
 
             // Create an emtpy profile directory
-            let profile = Profile::new(None)?;
+            let profile = Profile::new()?;
             unzip_buffer(
                 profile_zip,
                 profile
