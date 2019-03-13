@@ -893,6 +893,7 @@ public class BrowserApp extends GeckoApp
         }
 
         MmaDelegate.track(INTERACT_WITH_SEARCH_WIDGET_URL_AREA);
+        Telemetry.sendUIEvent(TelemetryContract.Event.SEARCH, TelemetryContract.Method.WIDGET);
 
         switch (input) {
             case TEXT:

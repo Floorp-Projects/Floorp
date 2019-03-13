@@ -198,6 +198,9 @@ Events
 ``search.setdefault.1``
   Sent when the user sets a search engine to be the default.
 
+``search.widget.1``
+  Sent when the user initiates a search through the widget.
+
 ``share.1``
   Sharing content.
 
