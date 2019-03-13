@@ -9,7 +9,6 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicIsize, Ordering};
 use std::sync::mpsc::Receiver;
 use webrender::api::*;
-use webrender::api::units::*;
 use wrench::Wrench;
 
 pub struct RawtestHarness<'a> {

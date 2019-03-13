@@ -2,10 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{FilterOp, MixBlendMode, PipelineId, PremultipliedColorF};
-use api::{PropertyBinding, PropertyBindingId};
-use api::{DebugFlags, RasterSpace, ColorF, ImageKey, ClipMode};
-use api::units::*;
+use api::{FilterOp, MixBlendMode, PipelineId, PremultipliedColorF, PictureRect, PicturePoint, WorldPoint};
+use api::{DeviceIntRect, DeviceIntSize, DevicePoint, DeviceRect, DeviceSize};
+use api::{LayoutRect, PictureToRasterTransform, LayoutPixel, PropertyBinding, PropertyBindingId};
+use api::{DevicePixelScale, RasterRect, RasterSpace, ColorF, ImageKey, WorldSize, ClipMode, LayoutSize};
+use api::{PicturePixel, RasterPixel, WorldPixel, WorldRect, WorldVector2D, LayoutPoint};
+use api::{DebugFlags, DeviceHomogeneousVector, DeviceVector2D};
 use box_shadow::{BLUR_SAMPLE_SCALE};
 use clip::{ClipChainId, ClipChainNode, ClipItem, ClipStore, ClipDataStore, ClipChainStack};
 use clip_scroll_tree::{ROOT_SPATIAL_NODE_INDEX, ClipScrollTree, SpatialNodeIndex, CoordinateSystemId, VisibleFace};

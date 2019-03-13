@@ -20,7 +20,6 @@ use std::time::Duration;
 use gleam::gl;
 
 use webrender::api::*;
-use webrender::api::units::*;
 use webrender::{ReadPixelsFormat, Renderer, RendererOptions, RendererStats, ThreadListener};
 use webrender::{ExternalImage, ExternalImageHandler, ExternalImageSource};
 use webrender::DebugFlags;
@@ -31,6 +30,7 @@ use webrender::{Device, Shaders, WrShaders, ShaderPrecacheFlags};
 use thread_profiler::register_thread_with_profiler;
 use moz2d_renderer::Moz2dBlobImageHandler;
 use program_cache::{WrProgramCache, remove_disk_cache};
+use app_units::Au;
 use rayon;
 use euclid::SideOffsets2D;
 use nsstring::nsAString;

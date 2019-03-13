@@ -4,13 +4,15 @@
 
 use api::{AddFont, BlobImageResources, AsyncBlobImageRasterizer, ResourceUpdate};
 use api::{BlobImageDescriptor, BlobImageHandler, BlobImageRequest, RasterizedBlobImage};
-use api::{ClearCache, DebugFlags, FontInstanceKey, FontKey, FontTemplate, GlyphIndex};
+use api::{ClearCache, DeviceIntPoint, DeviceIntRect, DeviceIntSize};
+use api::{DebugFlags, FontInstanceKey, FontKey, FontTemplate, GlyphIndex};
 use api::{ExternalImageData, ExternalImageType, BlobImageResult, BlobImageParams};
 use api::{FontInstanceData, FontInstanceOptions, FontInstancePlatformOptions, FontVariation};
-use api::{DirtyRect, GlyphDimensions, IdNamespace};
-use api::{ImageData, ImageDescriptor, ImageKey, ImageRendering, TileSize};
-use api::{BlobImageData, BlobImageKey, MemoryReport, VoidPtrToSizeFn};
-use api::units::*;
+use api::{GlyphDimensions, IdNamespace};
+use api::{ImageData, ImageDescriptor, ImageKey, ImageRendering, ImageDirtyRect, DirtyRect};
+use api::{BlobImageKey, BlobDirtyRect, MemoryReport, VoidPtrToSizeFn};
+use api::{TileOffset, TileSize, TileRange, BlobImageData, LayoutIntRect, LayoutIntSize};
+use app_units::Au;
 #[cfg(feature = "capture")]
 use capture::ExternalCaptureImage;
 #[cfg(feature = "replay")]

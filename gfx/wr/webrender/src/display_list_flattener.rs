@@ -12,6 +12,7 @@ use api::{PropertyBinding, ReferenceFrame, ReferenceFrameKind, ScrollFrameDispla
 use api::{Shadow, SpaceAndClipInfo, SpatialId, SpecificDisplayItem, StackingContext, StickyFrameDisplayItem};
 use api::{ClipMode, PrimitiveKeyKind, TransformStyle, YuvColorSpace, YuvData, TempFilterData};
 use api::units::*;
+use app_units::Au;
 use clip::{ClipChainId, ClipRegion, ClipItemKey, ClipStore};
 use clip_scroll_tree::{ROOT_SPATIAL_NODE_INDEX, ClipScrollTree, SpatialNodeIndex};
 use frame_builder::{ChasePrimitive, FrameBuilder, FrameBuilderConfig};

@@ -2,9 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{AlphaType, ClipMode, ExternalImageType, FilterOp, ImageRendering};
-use api::{YuvColorSpace, YuvFormat, ColorDepth, PremultipliedColorF, RasterSpace};
-use api::units::*;
+use api::{AlphaType, ClipMode, DeviceIntRect, DeviceIntPoint, DeviceIntSize, WorldRect};
+use api::{ExternalImageType, FilterOp, ImageRendering, LayoutRect, DeviceRect, DevicePixelScale};
+use api::{YuvColorSpace, YuvFormat, PictureRect, ColorDepth, LayoutPoint, DevicePoint, LayoutSize};
+use api::{PremultipliedColorF, RasterSpace};
 use clip::{ClipDataStore, ClipNodeFlags, ClipNodeRange, ClipItem, ClipStore, ClipNodeInstance};
 use clip_scroll_tree::{ClipScrollTree, ROOT_SPATIAL_NODE_INDEX, SpatialNodeIndex, CoordinateSystemId};
 use glyph_rasterizer::GlyphFormat;

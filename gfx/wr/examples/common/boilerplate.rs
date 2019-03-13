@@ -11,10 +11,9 @@ use std::env;
 use std::path::PathBuf;
 use webrender;
 use winit;
-use webrender::{DebugFlags, ShaderPrecacheFlags};
+use webrender::DebugFlags;
+use webrender::ShaderPrecacheFlags;
 use webrender::api::*;
-use webrender::api::units::*;
-
 
 struct Notifier {
     events_proxy: winit::EventsLoopProxy,
