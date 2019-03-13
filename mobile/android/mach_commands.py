@@ -55,7 +55,7 @@ class MachCommands(MachCommandBase):
             import taskcluster_urls
             from taskgraph.util.taskcluster import get_root_url
             return taskcluster_urls.api(
-                get_root_url(), 'queue', 'v1', 'task/{}/runs/{}/artifacts/{}'.format(
+                get_root_url(False), 'queue', 'v1', 'task/{}/runs/{}/artifacts/{}'.format(
                     os.environ['TASK_ID'], os.environ['RUN_ID'], artifactdir))
         else:
             return os.path.join(self.topobjdir, objdir)
