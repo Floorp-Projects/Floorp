@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.home.tabs
 
+import android.graphics.Bitmap
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.component_tabs.view.*
@@ -41,10 +42,10 @@ class TabsComponent(
 }
 
 data class TabsState(val sessions: List<SessionViewState>) : ViewState
-data class SessionViewState(val id: String, val url: String, val selected: Boolean)
+data class SessionViewState(val id: String, val url: String, val selected: Boolean, val thumbnail: Bitmap? = null)
 
 fun Session.toSessionViewState(selected: Boolean): SessionViewState {
-    return SessionViewState(this.id, this.url, selected)
+    return SessionViewState(this.id, this.url, selected, this.thumbnail)
 }
 
 sealed class TabsAction : Action {

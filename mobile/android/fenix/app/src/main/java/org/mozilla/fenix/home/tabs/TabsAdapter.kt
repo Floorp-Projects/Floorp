@@ -124,8 +124,12 @@ class TabsAdapter(private val actionEmitter: Observer<TabsAction>) :
         }
 
         fun updateTabBackground(id: Int) {
-            val background = availableBackgrounds[id % availableBackgrounds.size]
-            tab_background.image = ContextCompat.getDrawable(view.context, background)
+            if (session?.thumbnail != null) {
+                tab_background.setImageBitmap(session?.thumbnail)
+            } else {
+                val background = availableBackgrounds[id % availableBackgrounds.size]
+                tab_background.image = ContextCompat.getDrawable(view.context, background)
+            }
         }
 
         companion object {

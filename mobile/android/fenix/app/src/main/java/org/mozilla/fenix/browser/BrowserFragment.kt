@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.browser
 
+import android.content.ComponentCallbacks2
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -30,6 +31,7 @@ import mozilla.components.feature.prompts.PromptFeature
 import mozilla.components.feature.session.FullScreenFeature
 import mozilla.components.feature.session.SessionFeature
 import mozilla.components.feature.session.SessionUseCases
+import mozilla.components.feature.session.ThumbnailsFeature
 import mozilla.components.feature.sitepermissions.SitePermissionsFeature
 import mozilla.components.support.base.feature.BackHandler
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
@@ -53,7 +55,7 @@ import org.mozilla.fenix.ext.share
 import org.mozilla.fenix.mvi.ActionBusFactory
 import org.mozilla.fenix.mvi.getAutoDisposeObservable
 
-class BrowserFragment : Fragment(), BackHandler {
+class BrowserFragment : Fragment(), BackHandler, ComponentCallbacks2 {
     private lateinit var toolbarComponent: ToolbarComponent
 
     private val sessionFeature = ViewBoundFeatureWrapper<SessionFeature>()
@@ -65,6 +67,7 @@ class BrowserFragment : Fragment(), BackHandler {
     private val toolbarIntegration = ViewBoundFeatureWrapper<ToolbarIntegration>()
     private val sitePermissionsFeature = ViewBoundFeatureWrapper<SitePermissionsFeature>()
     private val fullScreenFeature = ViewBoundFeatureWrapper<FullScreenFeature>()
+    private val thumbnailsFeature = ViewBoundFeatureWrapper<ThumbnailsFeature>()
     var sessionId: String? = null
 
     override fun onCreateView(
@@ -207,6 +210,12 @@ class BrowserFragment : Fragment(), BackHandler {
             owner = this,
             view = view
         )
+
+        thumbnailsFeature.set(
+            feature = ThumbnailsFeature(requireContext(), view.engineView, requireComponents.core.sessionManager),
+            owner = this,
+            view = view
+        )
     }
 
     override fun onResume() {
@@ -254,6 +263,10 @@ class BrowserFragment : Fragment(), BackHandler {
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         promptsFeature.withFeature { it.onActivityResult(requestCode, resultCode, data) }
+    }
+
+    override fun onTrimMemory(level: Int) {
+        requireComponents.core.sessionManager.onLowMemory()
     }
 
     // This method triggers the complexity warning. However it's actually not that hard to understand.
