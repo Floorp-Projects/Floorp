@@ -4,10 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef frontend_BinTokenReaderBase_h
-#define frontend_BinTokenReaderBase_h
+#ifndef frontend_BinASTTokenReaderBase_h
+#define frontend_BinASTTokenReaderBase_h
 
-#include "frontend/BinToken.h"
+#include "frontend/BinASTToken.h"
 #include "frontend/ErrorReporter.h"
 #include "frontend/TokenStream.h"
 
@@ -20,7 +20,7 @@ namespace frontend {
 // A constant used by tokenizers to represent a null float.
 extern const uint64_t NULL_FLOAT_REPRESENTATION;
 
-class MOZ_STACK_CLASS BinTokenReaderBase {
+class MOZ_STACK_CLASS BinASTTokenReaderBase {
  public:
   template <typename T>
   using ErrorResult = mozilla::GenericErrorResult<T>;
@@ -67,13 +67,13 @@ class MOZ_STACK_CLASS BinTokenReaderBase {
   MOZ_MUST_USE ErrorResult<JS::Error&> raiseError(const char* description);
   MOZ_MUST_USE ErrorResult<JS::Error&> raiseOOM();
   MOZ_MUST_USE ErrorResult<JS::Error&> raiseInvalidNumberOfFields(
-      const BinKind kind, const uint32_t expected, const uint32_t got);
-  MOZ_MUST_USE ErrorResult<JS::Error&> raiseInvalidField(const char* kind,
-                                                         const BinField field);
+      const BinASTKind kind, const uint32_t expected, const uint32_t got);
+  MOZ_MUST_USE ErrorResult<JS::Error&> raiseInvalidField(
+      const char* kind, const BinASTField field);
 
  protected:
-  BinTokenReaderBase(JSContext* cx, ErrorReporter* er, const uint8_t* start,
-                     const size_t length)
+  BinASTTokenReaderBase(JSContext* cx, ErrorReporter* er, const uint8_t* start,
+                        const size_t length)
       : cx_(cx),
         errorReporter_(er),
         poisoned_(false),
@@ -172,12 +172,12 @@ class MOZ_STACK_CLASS BinTokenReaderBase {
   size_t latestKnownGoodPos_;
 
  private:
-  BinTokenReaderBase(const BinTokenReaderBase&) = delete;
-  BinTokenReaderBase(BinTokenReaderBase&&) = delete;
-  BinTokenReaderBase& operator=(BinTokenReaderBase&) = delete;
+  BinASTTokenReaderBase(const BinASTTokenReaderBase&) = delete;
+  BinASTTokenReaderBase(BinASTTokenReaderBase&&) = delete;
+  BinASTTokenReaderBase& operator=(BinASTTokenReaderBase&) = delete;
 };
 
 }  // namespace frontend
 }  // namespace js
 
-#endif  // frontend_BinTokenReaderBase_h
+#endif  // frontend_BinASTTokenReaderBase_h

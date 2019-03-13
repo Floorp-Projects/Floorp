@@ -288,8 +288,7 @@ nsresult TextEditor::OnDrop(DragEvent* aDropEvent) {
 
     // Let's fire "input" event for the deletion now.
     if (mDispatchInputEvent) {
-      RefPtr<DataTransfer> dataTransfer;  // Required due to bug 1506439
-      FireInputEvent(EditAction::eDeleteByDrag, VoidString(), dataTransfer);
+      FireInputEvent(EditAction::eDeleteByDrag, VoidString(), nullptr);
       if (NS_WARN_IF(Destroyed())) {
         return NS_OK;
       }

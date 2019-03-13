@@ -40,7 +40,7 @@ class GL_CONTEXT_PROVIDER_NAME {
    * @return Context to use for the window
    */
   static already_AddRefed<GLContext> CreateForCompositorWidget(
-      mozilla::widget::CompositorWidget* aCompositorWidget,
+      mozilla::widget::CompositorWidget* aCompositorWidget, bool aWebRender,
       bool aForceAccelerated);
 
   /**

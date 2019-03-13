@@ -27,7 +27,7 @@ cpp:
      * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
     // To generate this file, see the documentation in
-    // js/src/frontend/binsource/README.md.
+    // js/src/frontend/binast/README.md.
 
     #include "frontend/BinASTParser.h"
 
@@ -38,8 +38,8 @@ cpp:
     #include "mozilla/PodOperations.h"
     #include "mozilla/Vector.h"
 
-    #include "frontend/BinSource-macros.h"
-    #include "frontend/BinTokenReaderMultipart.h"
+    #include "frontend/BinAST-macros.h"
+    #include "frontend/BinASTTokenReaderMultipart.h"
     #include "frontend/FullParseHandler.h"
     #include "frontend/ParseNode.h"
     #include "frontend/Parser.h"
@@ -64,7 +64,7 @@ cpp:
     // Force class instantiation.
     // This ensures that the symbols are built, without having to export all our
     // code (and its baggage of #include and macros) in the header.
-    template class BinASTParser<BinTokenReaderMultipart>;
+    template class BinASTParser<BinASTTokenReaderMultipart>;
 
     } // namespace frontend
     } // namespace js
@@ -80,7 +80,7 @@ hpp:
        * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
       // To generate this file, see the documentation in
-      // js/src/frontend/binsource/README.md.
+      // js/src/frontend/binast/README.md.
 
       #ifndef frontend_BinASTParser_h
       #define frontend_BinASTParser_h
@@ -89,8 +89,8 @@ hpp:
 
       #include "frontend/BCEParserHandle.h"
       #include "frontend/BinASTParserPerTokenizer.h"
-      #include "frontend/BinToken.h"
-      #include "frontend/BinTokenReaderMultipart.h"
+      #include "frontend/BinASTToken.h"
+      #include "frontend/BinASTTokenReaderMultipart.h"
       #include "frontend/FullParseHandler.h"
       #include "frontend/ParseContext.h"
       #include "frontend/ParseNode.h"
@@ -111,7 +111,7 @@ hpp:
 
         using Tokenizer = Tok;
 
-        using BinFields = typename Tokenizer::BinFields;
+        using BinASTFields = typename Tokenizer::BinASTFields;
         using AutoList = typename Tokenizer::AutoList;
         using AutoTaggedTuple = typename Tokenizer::AutoTaggedTuple;
         using Chars = typename Tokenizer::Chars;
@@ -193,7 +193,7 @@ hpp:
     footer: |
       };
 
-      extern template class BinASTParser<BinTokenReaderMultipart>;
+      extern template class BinASTParser<BinASTTokenReaderMultipart>;
 
       } // namespace frontend
       } // namespace js
@@ -209,7 +209,7 @@ hpp:
        * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
       // To generate this file, see the documentation in
-      // js/src/frontend/binsource/README.md.
+      // js/src/frontend/binast/README.md.
 
       #ifndef frontend_BinASTEnum_h
       #define frontend_BinASTEnum_h
@@ -224,7 +224,7 @@ hpp:
 
       #endif // frontend_BinASTEnum_h
 
-  # Rules for generating BinToken.h
+  # Rules for generating BinASTToken.h
   tokens:
     kind:
       doc: |
@@ -287,10 +287,10 @@ hpp:
 
 
       // To generate this file, see the documentation in
-      // js/src/frontend/binsource/README.md.
+      // js/src/frontend/binast/README.md.
 
-      #ifndef frontend_BinToken_h
-      #define frontend_BinToken_h
+      #ifndef frontend_BinASTToken_h
+      #define frontend_BinASTToken_h
 
       #include <stddef.h>
 
@@ -299,9 +299,9 @@ hpp:
        *
        * In the Binary AST world, an AST is composed of nodes, where a node is
        * defined by:
-       * - a Kind (see `BinKind`);
+       * - a Kind (see `BinASTKind`);
        * - a list of fields, where each field is:
-       *    - a Name (see `BinField`);
+       *    - a Name (see `BinASTField`);
        *    - a Value, which may be either a node or a primitive value.
        *
        * The mapping between Kind and list of fields is determined entirely by
@@ -325,24 +325,24 @@ hpp:
     footer: |
 
       /**
-       * Return a string describing a `BinKind`.
+       * Return a string describing a `BinASTKind`.
        */
-      const char* describeBinKind(const BinKind& kind);
+      const char* describeBinASTKind(const BinASTKind& kind);
 
       /**
-       * Return a string describing a `BinField`.
+       * Return a string describing a `BinASTField`.
        */
-      const char* describeBinField(const BinField& kind);
+      const char* describeBinASTField(const BinASTField& kind);
 
       /**
-       * Return a string describing a `BinVariant`.
+       * Return a string describing a `BinASTVariant`.
        */
-      const char* describeBinVariant(const BinVariant& kind);
+      const char* describeBinASTVariant(const BinASTVariant& kind);
 
       } // namespace frontend
       } // namespace js
 
-      #endif // frontend_BinToken_h
+      #endif // frontend_BinASTToken_h
 
 Arguments:
   init: |
@@ -921,7 +921,7 @@ EagerFunctionExpression:
 
         // Push a new ParseContext. It will be used to parse `scope`, the arguments,
         // the function.
-        BinParseContext funpc(cx_, this, funbox, /* newDirectives = */ nullptr);
+        BinASTParseContext funpc(cx_, this, funbox, /* newDirectives = */ nullptr);
         BINJS_TRY(funpc.init());
         pc_->functionScope().useAsVarScope(pc_);
         MOZ_ASSERT(pc_->isFunctionBox());
@@ -1615,7 +1615,7 @@ VariableDeclarator:
       if (!init) {
         // Here, `init` is required.
         return raiseMissingField("VariableDeclarator (with non-trivial pattern)",
-                                 BinField::Init);
+                                 BinASTField::Init);
       }
 
       MOZ_CRASH("Unimplemented: AssertedScope check for BindingPattern variable declaration");

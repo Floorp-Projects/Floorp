@@ -459,10 +459,10 @@ void runTestFromPath(JSContext* cx, const char* path) {
 
 BEGIN_TEST(testBinASTReaderMultipartECMAScript2) {
 #if defined(XP_WIN)
-  runTestFromPath<js::frontend::BinTokenReaderMultipart>(
+  runTestFromPath<js::frontend::BinASTTokenReaderMultipart>(
       cx, "jsapi-tests\\binast\\parser\\multipart\\");
 #else
-  runTestFromPath<js::frontend::BinTokenReaderMultipart>(
+  runTestFromPath<js::frontend::BinASTTokenReaderMultipart>(
       cx, "jsapi-tests/binast/parser/multipart/");
 #endif  // defined(XP_XIN)
   return true;

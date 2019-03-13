@@ -7,7 +7,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // To generate this file, see the documentation in
-// js/src/frontend/binsource/README.md.
+// js/src/frontend/binast/README.md.
 
 #include "frontend/BinASTParser.h"
 
@@ -18,8 +18,8 @@
 #include "mozilla/PodOperations.h"
 #include "mozilla/Vector.h"
 
-#include "frontend/BinSource-macros.h"
-#include "frontend/BinTokenReaderMultipart.h"
+#include "frontend/BinAST-macros.h"
+#include "frontend/BinASTTokenReaderMultipart.h"
 #include "frontend/FullParseHandler.h"
 #include "frontend/ParseNode.h"
 #include "frontend/Parser.h"
@@ -50,8 +50,8 @@ template <typename Tok>
 JS::Result<Ok> BinASTParser<Tok>::parseAssertedMaybePositionalParameterName(
     AssertedScopeKind scopeKind,
     MutableHandle<GCVector<JSAtom*>> positionalParams) {
-  BinKind kind;
-  BinFields fields(cx_);
+  BinASTKind kind;
+  BinASTFields fields(cx_);
   AutoTaggedTuple guard(*tokenizer_);
   const auto start = tokenizer_->offset();
 
@@ -67,21 +67,21 @@ JS::Result<Ok> BinASTParser<Tok>::parseAssertedMaybePositionalParameterName(
 
 template <typename Tok>
 JS::Result<Ok> BinASTParser<Tok>::parseSumAssertedMaybePositionalParameterName(
-    const size_t start, const BinKind kind, const BinFields& fields,
+    const size_t start, const BinASTKind kind, const BinASTFields& fields,
     AssertedScopeKind scopeKind,
     MutableHandle<GCVector<JSAtom*>> positionalParams) {
   Ok result;
   switch (kind) {
-    case BinKind::AssertedParameterName:
+    case BinASTKind::AssertedParameterName:
       return raiseError(
           "FIXME: Not implemented yet in this preview release "
           "(AssertedParameterName)");
-    case BinKind::AssertedPositionalParameterName:
+    case BinASTKind::AssertedPositionalParameterName:
       MOZ_TRY_VAR(result,
                   parseInterfaceAssertedPositionalParameterName(
                       start, kind, fields, scopeKind, positionalParams));
       break;
-    case BinKind::AssertedRestParameterName:
+    case BinASTKind::AssertedRestParameterName:
       return raiseError(
           "FIXME: Not implemented yet in this preview release "
           "(AssertedRestParameterName)");
@@ -100,8 +100,8 @@ AssignmentTarget ::= ArrayAssignmentTarget
 */
 template <typename Tok>
 JS::Result<ParseNode*> BinASTParser<Tok>::parseAssignmentTarget() {
-  BinKind kind;
-  BinFields fields(cx_);
+  BinASTKind kind;
+  BinASTFields fields(cx_);
   AutoTaggedTuple guard(*tokenizer_);
   const auto start = tokenizer_->offset();
 
@@ -115,26 +115,26 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseAssignmentTarget() {
 
 template <typename Tok>
 JS::Result<ParseNode*> BinASTParser<Tok>::parseSumAssignmentTarget(
-    const size_t start, const BinKind kind, const BinFields& fields) {
+    const size_t start, const BinASTKind kind, const BinASTFields& fields) {
   ParseNode* result;
   switch (kind) {
-    case BinKind::ArrayAssignmentTarget:
+    case BinASTKind::ArrayAssignmentTarget:
       MOZ_TRY_VAR(result,
                   parseInterfaceArrayAssignmentTarget(start, kind, fields));
       break;
-    case BinKind::AssignmentTargetIdentifier:
+    case BinASTKind::AssignmentTargetIdentifier:
       MOZ_TRY_VAR(result, parseInterfaceAssignmentTargetIdentifier(start, kind,
                                                                    fields));
       break;
-    case BinKind::ComputedMemberAssignmentTarget:
+    case BinASTKind::ComputedMemberAssignmentTarget:
       MOZ_TRY_VAR(result, parseInterfaceComputedMemberAssignmentTarget(
                               start, kind, fields));
       break;
-    case BinKind::ObjectAssignmentTarget:
+    case BinASTKind::ObjectAssignmentTarget:
       MOZ_TRY_VAR(result,
                   parseInterfaceObjectAssignmentTarget(start, kind, fields));
       break;
-    case BinKind::StaticMemberAssignmentTarget:
+    case BinASTKind::StaticMemberAssignmentTarget:
       MOZ_TRY_VAR(result, parseInterfaceStaticMemberAssignmentTarget(
                               start, kind, fields));
       break;
@@ -151,8 +151,8 @@ Binding ::= ArrayBinding
 */
 template <typename Tok>
 JS::Result<ParseNode*> BinASTParser<Tok>::parseBinding() {
-  BinKind kind;
-  BinFields fields(cx_);
+  BinASTKind kind;
+  BinASTFields fields(cx_);
   AutoTaggedTuple guard(*tokenizer_);
   const auto start = tokenizer_->offset();
 
@@ -166,16 +166,16 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseBinding() {
 
 template <typename Tok>
 JS::Result<ParseNode*> BinASTParser<Tok>::parseSumBinding(
-    const size_t start, const BinKind kind, const BinFields& fields) {
+    const size_t start, const BinASTKind kind, const BinASTFields& fields) {
   ParseNode* result;
   switch (kind) {
-    case BinKind::ArrayBinding:
+    case BinASTKind::ArrayBinding:
       MOZ_TRY_VAR(result, parseInterfaceArrayBinding(start, kind, fields));
       break;
-    case BinKind::BindingIdentifier:
+    case BinASTKind::BindingIdentifier:
       MOZ_TRY_VAR(result, parseInterfaceBindingIdentifier(start, kind, fields));
       break;
-    case BinKind::ObjectBinding:
+    case BinASTKind::ObjectBinding:
       MOZ_TRY_VAR(result, parseInterfaceObjectBinding(start, kind, fields));
       break;
     default:
@@ -220,8 +220,8 @@ Expression ::= ArrayExpression
 */
 template <typename Tok>
 JS::Result<ParseNode*> BinASTParser<Tok>::parseExpression() {
-  BinKind kind;
-  BinFields fields(cx_);
+  BinASTKind kind;
+  BinASTFields fields(cx_);
   AutoTaggedTuple guard(*tokenizer_);
   const auto start = tokenizer_->offset();
 
@@ -235,123 +235,123 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseExpression() {
 
 template <typename Tok>
 JS::Result<ParseNode*> BinASTParser<Tok>::parseSumExpression(
-    const size_t start, const BinKind kind, const BinFields& fields) {
+    const size_t start, const BinASTKind kind, const BinASTFields& fields) {
   ParseNode* result;
   switch (kind) {
-    case BinKind::ArrayExpression:
+    case BinASTKind::ArrayExpression:
       MOZ_TRY_VAR(result, parseInterfaceArrayExpression(start, kind, fields));
       break;
-    case BinKind::AssignmentExpression:
+    case BinASTKind::AssignmentExpression:
       MOZ_TRY_VAR(result,
                   parseInterfaceAssignmentExpression(start, kind, fields));
       break;
-    case BinKind::AwaitExpression:
+    case BinASTKind::AwaitExpression:
       MOZ_TRY_VAR(result, parseInterfaceAwaitExpression(start, kind, fields));
       break;
-    case BinKind::BinaryExpression:
+    case BinASTKind::BinaryExpression:
       MOZ_TRY_VAR(result, parseInterfaceBinaryExpression(start, kind, fields));
       break;
-    case BinKind::CallExpression:
+    case BinASTKind::CallExpression:
       MOZ_TRY_VAR(result, parseInterfaceCallExpression(start, kind, fields));
       break;
-    case BinKind::ClassExpression:
+    case BinASTKind::ClassExpression:
       MOZ_TRY_VAR(result, parseInterfaceClassExpression(start, kind, fields));
       break;
-    case BinKind::CompoundAssignmentExpression:
+    case BinASTKind::CompoundAssignmentExpression:
       MOZ_TRY_VAR(result, parseInterfaceCompoundAssignmentExpression(
                               start, kind, fields));
       break;
-    case BinKind::ComputedMemberExpression:
+    case BinASTKind::ComputedMemberExpression:
       MOZ_TRY_VAR(result,
                   parseInterfaceComputedMemberExpression(start, kind, fields));
       break;
-    case BinKind::ConditionalExpression:
+    case BinASTKind::ConditionalExpression:
       MOZ_TRY_VAR(result,
                   parseInterfaceConditionalExpression(start, kind, fields));
       break;
-    case BinKind::EagerArrowExpressionWithExpression:
+    case BinASTKind::EagerArrowExpressionWithExpression:
       MOZ_TRY_VAR(result, parseInterfaceEagerArrowExpressionWithExpression(
                               start, kind, fields));
       break;
-    case BinKind::EagerArrowExpressionWithFunctionBody:
+    case BinASTKind::EagerArrowExpressionWithFunctionBody:
       MOZ_TRY_VAR(result, parseInterfaceEagerArrowExpressionWithFunctionBody(
                               start, kind, fields));
       break;
-    case BinKind::EagerFunctionExpression:
+    case BinASTKind::EagerFunctionExpression:
       MOZ_TRY_VAR(result,
                   parseInterfaceEagerFunctionExpression(start, kind, fields));
       break;
-    case BinKind::IdentifierExpression:
+    case BinASTKind::IdentifierExpression:
       MOZ_TRY_VAR(result,
                   parseInterfaceIdentifierExpression(start, kind, fields));
       break;
-    case BinKind::LazyArrowExpressionWithExpression:
+    case BinASTKind::LazyArrowExpressionWithExpression:
       MOZ_TRY_VAR(result, parseInterfaceLazyArrowExpressionWithExpression(
                               start, kind, fields));
       break;
-    case BinKind::LazyArrowExpressionWithFunctionBody:
+    case BinASTKind::LazyArrowExpressionWithFunctionBody:
       MOZ_TRY_VAR(result, parseInterfaceLazyArrowExpressionWithFunctionBody(
                               start, kind, fields));
       break;
-    case BinKind::LazyFunctionExpression:
+    case BinASTKind::LazyFunctionExpression:
       MOZ_TRY_VAR(result,
                   parseInterfaceLazyFunctionExpression(start, kind, fields));
       break;
-    case BinKind::LiteralBooleanExpression:
+    case BinASTKind::LiteralBooleanExpression:
       MOZ_TRY_VAR(result,
                   parseInterfaceLiteralBooleanExpression(start, kind, fields));
       break;
-    case BinKind::LiteralInfinityExpression:
+    case BinASTKind::LiteralInfinityExpression:
       MOZ_TRY_VAR(result,
                   parseInterfaceLiteralInfinityExpression(start, kind, fields));
       break;
-    case BinKind::LiteralNullExpression:
+    case BinASTKind::LiteralNullExpression:
       MOZ_TRY_VAR(result,
                   parseInterfaceLiteralNullExpression(start, kind, fields));
       break;
-    case BinKind::LiteralNumericExpression:
+    case BinASTKind::LiteralNumericExpression:
       MOZ_TRY_VAR(result,
                   parseInterfaceLiteralNumericExpression(start, kind, fields));
       break;
-    case BinKind::LiteralRegExpExpression:
+    case BinASTKind::LiteralRegExpExpression:
       MOZ_TRY_VAR(result,
                   parseInterfaceLiteralRegExpExpression(start, kind, fields));
       break;
-    case BinKind::LiteralStringExpression:
+    case BinASTKind::LiteralStringExpression:
       MOZ_TRY_VAR(result,
                   parseInterfaceLiteralStringExpression(start, kind, fields));
       break;
-    case BinKind::NewExpression:
+    case BinASTKind::NewExpression:
       MOZ_TRY_VAR(result, parseInterfaceNewExpression(start, kind, fields));
       break;
-    case BinKind::NewTargetExpression:
+    case BinASTKind::NewTargetExpression:
       MOZ_TRY_VAR(result,
                   parseInterfaceNewTargetExpression(start, kind, fields));
       break;
-    case BinKind::ObjectExpression:
+    case BinASTKind::ObjectExpression:
       MOZ_TRY_VAR(result, parseInterfaceObjectExpression(start, kind, fields));
       break;
-    case BinKind::StaticMemberExpression:
+    case BinASTKind::StaticMemberExpression:
       MOZ_TRY_VAR(result,
                   parseInterfaceStaticMemberExpression(start, kind, fields));
       break;
-    case BinKind::TemplateExpression:
+    case BinASTKind::TemplateExpression:
       MOZ_TRY_VAR(result,
                   parseInterfaceTemplateExpression(start, kind, fields));
       break;
-    case BinKind::ThisExpression:
+    case BinASTKind::ThisExpression:
       MOZ_TRY_VAR(result, parseInterfaceThisExpression(start, kind, fields));
       break;
-    case BinKind::UnaryExpression:
+    case BinASTKind::UnaryExpression:
       MOZ_TRY_VAR(result, parseInterfaceUnaryExpression(start, kind, fields));
       break;
-    case BinKind::UpdateExpression:
+    case BinASTKind::UpdateExpression:
       MOZ_TRY_VAR(result, parseInterfaceUpdateExpression(start, kind, fields));
       break;
-    case BinKind::YieldExpression:
+    case BinASTKind::YieldExpression:
       MOZ_TRY_VAR(result, parseInterfaceYieldExpression(start, kind, fields));
       break;
-    case BinKind::YieldStarExpression:
+    case BinASTKind::YieldStarExpression:
       MOZ_TRY_VAR(result,
                   parseInterfaceYieldStarExpression(start, kind, fields));
       break;
@@ -398,8 +398,8 @@ ExpressionOrSuper ::= ArrayExpression
 */
 template <typename Tok>
 JS::Result<ParseNode*> BinASTParser<Tok>::parseExpressionOrSuper() {
-  BinKind kind;
-  BinFields fields(cx_);
+  BinASTKind kind;
+  BinASTFields fields(cx_);
   AutoTaggedTuple guard(*tokenizer_);
   const auto start = tokenizer_->offset();
 
@@ -413,126 +413,126 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseExpressionOrSuper() {
 
 template <typename Tok>
 JS::Result<ParseNode*> BinASTParser<Tok>::parseSumExpressionOrSuper(
-    const size_t start, const BinKind kind, const BinFields& fields) {
+    const size_t start, const BinASTKind kind, const BinASTFields& fields) {
   ParseNode* result;
   switch (kind) {
-    case BinKind::ArrayExpression:
+    case BinASTKind::ArrayExpression:
       MOZ_TRY_VAR(result, parseInterfaceArrayExpression(start, kind, fields));
       break;
-    case BinKind::AssignmentExpression:
+    case BinASTKind::AssignmentExpression:
       MOZ_TRY_VAR(result,
                   parseInterfaceAssignmentExpression(start, kind, fields));
       break;
-    case BinKind::AwaitExpression:
+    case BinASTKind::AwaitExpression:
       MOZ_TRY_VAR(result, parseInterfaceAwaitExpression(start, kind, fields));
       break;
-    case BinKind::BinaryExpression:
+    case BinASTKind::BinaryExpression:
       MOZ_TRY_VAR(result, parseInterfaceBinaryExpression(start, kind, fields));
       break;
-    case BinKind::CallExpression:
+    case BinASTKind::CallExpression:
       MOZ_TRY_VAR(result, parseInterfaceCallExpression(start, kind, fields));
       break;
-    case BinKind::ClassExpression:
+    case BinASTKind::ClassExpression:
       MOZ_TRY_VAR(result, parseInterfaceClassExpression(start, kind, fields));
       break;
-    case BinKind::CompoundAssignmentExpression:
+    case BinASTKind::CompoundAssignmentExpression:
       MOZ_TRY_VAR(result, parseInterfaceCompoundAssignmentExpression(
                               start, kind, fields));
       break;
-    case BinKind::ComputedMemberExpression:
+    case BinASTKind::ComputedMemberExpression:
       MOZ_TRY_VAR(result,
                   parseInterfaceComputedMemberExpression(start, kind, fields));
       break;
-    case BinKind::ConditionalExpression:
+    case BinASTKind::ConditionalExpression:
       MOZ_TRY_VAR(result,
                   parseInterfaceConditionalExpression(start, kind, fields));
       break;
-    case BinKind::EagerArrowExpressionWithExpression:
+    case BinASTKind::EagerArrowExpressionWithExpression:
       MOZ_TRY_VAR(result, parseInterfaceEagerArrowExpressionWithExpression(
                               start, kind, fields));
       break;
-    case BinKind::EagerArrowExpressionWithFunctionBody:
+    case BinASTKind::EagerArrowExpressionWithFunctionBody:
       MOZ_TRY_VAR(result, parseInterfaceEagerArrowExpressionWithFunctionBody(
                               start, kind, fields));
       break;
-    case BinKind::EagerFunctionExpression:
+    case BinASTKind::EagerFunctionExpression:
       MOZ_TRY_VAR(result,
                   parseInterfaceEagerFunctionExpression(start, kind, fields));
       break;
-    case BinKind::IdentifierExpression:
+    case BinASTKind::IdentifierExpression:
       MOZ_TRY_VAR(result,
                   parseInterfaceIdentifierExpression(start, kind, fields));
       break;
-    case BinKind::LazyArrowExpressionWithExpression:
+    case BinASTKind::LazyArrowExpressionWithExpression:
       MOZ_TRY_VAR(result, parseInterfaceLazyArrowExpressionWithExpression(
                               start, kind, fields));
       break;
-    case BinKind::LazyArrowExpressionWithFunctionBody:
+    case BinASTKind::LazyArrowExpressionWithFunctionBody:
       MOZ_TRY_VAR(result, parseInterfaceLazyArrowExpressionWithFunctionBody(
                               start, kind, fields));
       break;
-    case BinKind::LazyFunctionExpression:
+    case BinASTKind::LazyFunctionExpression:
       MOZ_TRY_VAR(result,
                   parseInterfaceLazyFunctionExpression(start, kind, fields));
       break;
-    case BinKind::LiteralBooleanExpression:
+    case BinASTKind::LiteralBooleanExpression:
       MOZ_TRY_VAR(result,
                   parseInterfaceLiteralBooleanExpression(start, kind, fields));
       break;
-    case BinKind::LiteralInfinityExpression:
+    case BinASTKind::LiteralInfinityExpression:
       MOZ_TRY_VAR(result,
                   parseInterfaceLiteralInfinityExpression(start, kind, fields));
       break;
-    case BinKind::LiteralNullExpression:
+    case BinASTKind::LiteralNullExpression:
       MOZ_TRY_VAR(result,
                   parseInterfaceLiteralNullExpression(start, kind, fields));
       break;
-    case BinKind::LiteralNumericExpression:
+    case BinASTKind::LiteralNumericExpression:
       MOZ_TRY_VAR(result,
                   parseInterfaceLiteralNumericExpression(start, kind, fields));
       break;
-    case BinKind::LiteralRegExpExpression:
+    case BinASTKind::LiteralRegExpExpression:
       MOZ_TRY_VAR(result,
                   parseInterfaceLiteralRegExpExpression(start, kind, fields));
       break;
-    case BinKind::LiteralStringExpression:
+    case BinASTKind::LiteralStringExpression:
       MOZ_TRY_VAR(result,
                   parseInterfaceLiteralStringExpression(start, kind, fields));
       break;
-    case BinKind::NewExpression:
+    case BinASTKind::NewExpression:
       MOZ_TRY_VAR(result, parseInterfaceNewExpression(start, kind, fields));
       break;
-    case BinKind::NewTargetExpression:
+    case BinASTKind::NewTargetExpression:
       MOZ_TRY_VAR(result,
                   parseInterfaceNewTargetExpression(start, kind, fields));
       break;
-    case BinKind::ObjectExpression:
+    case BinASTKind::ObjectExpression:
       MOZ_TRY_VAR(result, parseInterfaceObjectExpression(start, kind, fields));
       break;
-    case BinKind::StaticMemberExpression:
+    case BinASTKind::StaticMemberExpression:
       MOZ_TRY_VAR(result,
                   parseInterfaceStaticMemberExpression(start, kind, fields));
       break;
-    case BinKind::Super:
+    case BinASTKind::Super:
       MOZ_TRY_VAR(result, parseInterfaceSuper(start, kind, fields));
       break;
-    case BinKind::TemplateExpression:
+    case BinASTKind::TemplateExpression:
       MOZ_TRY_VAR(result,
                   parseInterfaceTemplateExpression(start, kind, fields));
       break;
-    case BinKind::ThisExpression:
+    case BinASTKind::ThisExpression:
       MOZ_TRY_VAR(result, parseInterfaceThisExpression(start, kind, fields));
       break;
-    case BinKind::UnaryExpression:
+    case BinASTKind::UnaryExpression:
       MOZ_TRY_VAR(result, parseInterfaceUnaryExpression(start, kind, fields));
       break;
-    case BinKind::UpdateExpression:
+    case BinASTKind::UpdateExpression:
       MOZ_TRY_VAR(result, parseInterfaceUpdateExpression(start, kind, fields));
       break;
-    case BinKind::YieldExpression:
+    case BinASTKind::YieldExpression:
       MOZ_TRY_VAR(result, parseInterfaceYieldExpression(start, kind, fields));
       break;
-    case BinKind::YieldStarExpression:
+    case BinASTKind::YieldStarExpression:
       MOZ_TRY_VAR(result,
                   parseInterfaceYieldStarExpression(start, kind, fields));
       break;
@@ -553,8 +553,8 @@ ForInOfBindingOrAssignmentTarget ::= ArrayAssignmentTarget
 template <typename Tok>
 JS::Result<ParseNode*>
 BinASTParser<Tok>::parseForInOfBindingOrAssignmentTarget() {
-  BinKind kind;
-  BinFields fields(cx_);
+  BinASTKind kind;
+  BinASTFields fields(cx_);
   AutoTaggedTuple guard(*tokenizer_);
   const auto start = tokenizer_->offset();
 
@@ -570,29 +570,29 @@ BinASTParser<Tok>::parseForInOfBindingOrAssignmentTarget() {
 template <typename Tok>
 JS::Result<ParseNode*>
 BinASTParser<Tok>::parseSumForInOfBindingOrAssignmentTarget(
-    const size_t start, const BinKind kind, const BinFields& fields) {
+    const size_t start, const BinASTKind kind, const BinASTFields& fields) {
   ParseNode* result;
   switch (kind) {
-    case BinKind::ArrayAssignmentTarget:
+    case BinASTKind::ArrayAssignmentTarget:
       MOZ_TRY_VAR(result,
                   parseInterfaceArrayAssignmentTarget(start, kind, fields));
       break;
-    case BinKind::AssignmentTargetIdentifier:
+    case BinASTKind::AssignmentTargetIdentifier:
       MOZ_TRY_VAR(result, parseInterfaceAssignmentTargetIdentifier(start, kind,
                                                                    fields));
       break;
-    case BinKind::ComputedMemberAssignmentTarget:
+    case BinASTKind::ComputedMemberAssignmentTarget:
       MOZ_TRY_VAR(result, parseInterfaceComputedMemberAssignmentTarget(
                               start, kind, fields));
       break;
-    case BinKind::ForInOfBinding:
+    case BinASTKind::ForInOfBinding:
       MOZ_TRY_VAR(result, parseInterfaceForInOfBinding(start, kind, fields));
       break;
-    case BinKind::ObjectAssignmentTarget:
+    case BinASTKind::ObjectAssignmentTarget:
       MOZ_TRY_VAR(result,
                   parseInterfaceObjectAssignmentTarget(start, kind, fields));
       break;
-    case BinKind::StaticMemberAssignmentTarget:
+    case BinASTKind::StaticMemberAssignmentTarget:
       MOZ_TRY_VAR(result, parseInterfaceStaticMemberAssignmentTarget(
                               start, kind, fields));
       break;
@@ -614,8 +614,8 @@ ObjectProperty ::= DataProperty
 */
 template <typename Tok>
 JS::Result<ParseNode*> BinASTParser<Tok>::parseObjectProperty() {
-  BinKind kind;
-  BinFields fields(cx_);
+  BinASTKind kind;
+  BinASTFields fields(cx_);
   AutoTaggedTuple guard(*tokenizer_);
   const auto start = tokenizer_->offset();
 
@@ -629,31 +629,31 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseObjectProperty() {
 
 template <typename Tok>
 JS::Result<ParseNode*> BinASTParser<Tok>::parseSumObjectProperty(
-    const size_t start, const BinKind kind, const BinFields& fields) {
+    const size_t start, const BinASTKind kind, const BinASTFields& fields) {
   ParseNode* result;
   switch (kind) {
-    case BinKind::DataProperty:
+    case BinASTKind::DataProperty:
       MOZ_TRY_VAR(result, parseInterfaceDataProperty(start, kind, fields));
       break;
-    case BinKind::EagerGetter:
+    case BinASTKind::EagerGetter:
       MOZ_TRY_VAR(result, parseInterfaceEagerGetter(start, kind, fields));
       break;
-    case BinKind::EagerMethod:
+    case BinASTKind::EagerMethod:
       MOZ_TRY_VAR(result, parseInterfaceEagerMethod(start, kind, fields));
       break;
-    case BinKind::EagerSetter:
+    case BinASTKind::EagerSetter:
       MOZ_TRY_VAR(result, parseInterfaceEagerSetter(start, kind, fields));
       break;
-    case BinKind::LazyGetter:
+    case BinASTKind::LazyGetter:
       MOZ_TRY_VAR(result, parseInterfaceLazyGetter(start, kind, fields));
       break;
-    case BinKind::LazyMethod:
+    case BinASTKind::LazyMethod:
       MOZ_TRY_VAR(result, parseInterfaceLazyMethod(start, kind, fields));
       break;
-    case BinKind::LazySetter:
+    case BinASTKind::LazySetter:
       MOZ_TRY_VAR(result, parseInterfaceLazySetter(start, kind, fields));
       break;
-    case BinKind::ShorthandProperty:
+    case BinASTKind::ShorthandProperty:
       MOZ_TRY_VAR(result, parseInterfaceShorthandProperty(start, kind, fields));
       break;
     default:
@@ -670,8 +670,8 @@ Parameter ::= ArrayBinding
 */
 template <typename Tok>
 JS::Result<ParseNode*> BinASTParser<Tok>::parseParameter() {
-  BinKind kind;
-  BinFields fields(cx_);
+  BinASTKind kind;
+  BinASTFields fields(cx_);
   AutoTaggedTuple guard(*tokenizer_);
   const auto start = tokenizer_->offset();
 
@@ -685,13 +685,13 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseParameter() {
 
 template <typename Tok>
 JS::Result<ParseNode*> BinASTParser<Tok>::parseSumParameter(
-    const size_t start, const BinKind kind, const BinFields& fields) {
+    const size_t start, const BinASTKind kind, const BinASTFields& fields) {
   ParseNode* result;
   switch (kind) {
-    case BinKind::ArrayBinding:
+    case BinASTKind::ArrayBinding:
       MOZ_TRY_VAR(result, parseInterfaceArrayBinding(start, kind, fields));
       break;
-    case BinKind::BindingIdentifier:
+    case BinASTKind::BindingIdentifier:
       MOZ_TRY_VAR(result, parseInterfaceBindingIdentifier(start, kind, fields));
       if (!pc_->positionalFormalParameterNames().append(
               result->template as<NameNode>().atom())) {
@@ -701,11 +701,11 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseSumParameter(
         pc_->functionBox()->length++;
       }
       break;
-    case BinKind::BindingWithInitializer:
+    case BinASTKind::BindingWithInitializer:
       MOZ_TRY_VAR(result,
                   parseInterfaceBindingWithInitializer(start, kind, fields));
       break;
-    case BinKind::ObjectBinding:
+    case BinASTKind::ObjectBinding:
       MOZ_TRY_VAR(result, parseInterfaceObjectBinding(start, kind, fields));
       break;
     default:
@@ -720,8 +720,8 @@ Program ::= Module
 */
 template <typename Tok>
 JS::Result<ParseNode*> BinASTParser<Tok>::parseProgram() {
-  BinKind kind;
-  BinFields fields(cx_);
+  BinASTKind kind;
+  BinASTFields fields(cx_);
   AutoTaggedTuple guard(*tokenizer_);
   const auto start = tokenizer_->offset();
 
@@ -735,13 +735,13 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseProgram() {
 
 template <typename Tok>
 JS::Result<ParseNode*> BinASTParser<Tok>::parseSumProgram(
-    const size_t start, const BinKind kind, const BinFields& fields) {
+    const size_t start, const BinASTKind kind, const BinASTFields& fields) {
   ParseNode* result;
   switch (kind) {
-    case BinKind::Module:
+    case BinASTKind::Module:
       MOZ_TRY_VAR(result, parseInterfaceModule(start, kind, fields));
       break;
-    case BinKind::Script:
+    case BinASTKind::Script:
       MOZ_TRY_VAR(result, parseInterfaceScript(start, kind, fields));
       break;
     default:
@@ -756,8 +756,8 @@ PropertyName ::= ComputedPropertyName
 */
 template <typename Tok>
 JS::Result<ParseNode*> BinASTParser<Tok>::parsePropertyName() {
-  BinKind kind;
-  BinFields fields(cx_);
+  BinASTKind kind;
+  BinASTFields fields(cx_);
   AutoTaggedTuple guard(*tokenizer_);
   const auto start = tokenizer_->offset();
 
@@ -771,14 +771,14 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parsePropertyName() {
 
 template <typename Tok>
 JS::Result<ParseNode*> BinASTParser<Tok>::parseSumPropertyName(
-    const size_t start, const BinKind kind, const BinFields& fields) {
+    const size_t start, const BinASTKind kind, const BinASTFields& fields) {
   ParseNode* result;
   switch (kind) {
-    case BinKind::ComputedPropertyName:
+    case BinASTKind::ComputedPropertyName:
       MOZ_TRY_VAR(result,
                   parseInterfaceComputedPropertyName(start, kind, fields));
       break;
-    case BinKind::LiteralPropertyName:
+    case BinASTKind::LiteralPropertyName:
       MOZ_TRY_VAR(result,
                   parseInterfaceLiteralPropertyName(start, kind, fields));
       break;
@@ -795,8 +795,8 @@ SimpleAssignmentTarget ::= AssignmentTargetIdentifier
 */
 template <typename Tok>
 JS::Result<ParseNode*> BinASTParser<Tok>::parseSimpleAssignmentTarget() {
-  BinKind kind;
-  BinFields fields(cx_);
+  BinASTKind kind;
+  BinASTFields fields(cx_);
   AutoTaggedTuple guard(*tokenizer_);
   const auto start = tokenizer_->offset();
 
@@ -811,18 +811,18 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseSimpleAssignmentTarget() {
 
 template <typename Tok>
 JS::Result<ParseNode*> BinASTParser<Tok>::parseSumSimpleAssignmentTarget(
-    const size_t start, const BinKind kind, const BinFields& fields) {
+    const size_t start, const BinASTKind kind, const BinASTFields& fields) {
   ParseNode* result;
   switch (kind) {
-    case BinKind::AssignmentTargetIdentifier:
+    case BinASTKind::AssignmentTargetIdentifier:
       MOZ_TRY_VAR(result, parseInterfaceAssignmentTargetIdentifier(start, kind,
                                                                    fields));
       break;
-    case BinKind::ComputedMemberAssignmentTarget:
+    case BinASTKind::ComputedMemberAssignmentTarget:
       MOZ_TRY_VAR(result, parseInterfaceComputedMemberAssignmentTarget(
                               start, kind, fields));
       break;
-    case BinKind::StaticMemberAssignmentTarget:
+    case BinASTKind::StaticMemberAssignmentTarget:
       MOZ_TRY_VAR(result, parseInterfaceStaticMemberAssignmentTarget(
                               start, kind, fields));
       break;
@@ -869,8 +869,8 @@ SpreadElementOrExpression ::= ArrayExpression
 */
 template <typename Tok>
 JS::Result<ParseNode*> BinASTParser<Tok>::parseSpreadElementOrExpression() {
-  BinKind kind;
-  BinFields fields(cx_);
+  BinASTKind kind;
+  BinASTFields fields(cx_);
   AutoTaggedTuple guard(*tokenizer_);
   const auto start = tokenizer_->offset();
 
@@ -885,126 +885,126 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseSpreadElementOrExpression() {
 
 template <typename Tok>
 JS::Result<ParseNode*> BinASTParser<Tok>::parseSumSpreadElementOrExpression(
-    const size_t start, const BinKind kind, const BinFields& fields) {
+    const size_t start, const BinASTKind kind, const BinASTFields& fields) {
   ParseNode* result;
   switch (kind) {
-    case BinKind::ArrayExpression:
+    case BinASTKind::ArrayExpression:
       MOZ_TRY_VAR(result, parseInterfaceArrayExpression(start, kind, fields));
       break;
-    case BinKind::AssignmentExpression:
+    case BinASTKind::AssignmentExpression:
       MOZ_TRY_VAR(result,
                   parseInterfaceAssignmentExpression(start, kind, fields));
       break;
-    case BinKind::AwaitExpression:
+    case BinASTKind::AwaitExpression:
       MOZ_TRY_VAR(result, parseInterfaceAwaitExpression(start, kind, fields));
       break;
-    case BinKind::BinaryExpression:
+    case BinASTKind::BinaryExpression:
       MOZ_TRY_VAR(result, parseInterfaceBinaryExpression(start, kind, fields));
       break;
-    case BinKind::CallExpression:
+    case BinASTKind::CallExpression:
       MOZ_TRY_VAR(result, parseInterfaceCallExpression(start, kind, fields));
       break;
-    case BinKind::ClassExpression:
+    case BinASTKind::ClassExpression:
       MOZ_TRY_VAR(result, parseInterfaceClassExpression(start, kind, fields));
       break;
-    case BinKind::CompoundAssignmentExpression:
+    case BinASTKind::CompoundAssignmentExpression:
       MOZ_TRY_VAR(result, parseInterfaceCompoundAssignmentExpression(
                               start, kind, fields));
       break;
-    case BinKind::ComputedMemberExpression:
+    case BinASTKind::ComputedMemberExpression:
       MOZ_TRY_VAR(result,
                   parseInterfaceComputedMemberExpression(start, kind, fields));
       break;
-    case BinKind::ConditionalExpression:
+    case BinASTKind::ConditionalExpression:
       MOZ_TRY_VAR(result,
                   parseInterfaceConditionalExpression(start, kind, fields));
       break;
-    case BinKind::EagerArrowExpressionWithExpression:
+    case BinASTKind::EagerArrowExpressionWithExpression:
       MOZ_TRY_VAR(result, parseInterfaceEagerArrowExpressionWithExpression(
                               start, kind, fields));
       break;
-    case BinKind::EagerArrowExpressionWithFunctionBody:
+    case BinASTKind::EagerArrowExpressionWithFunctionBody:
       MOZ_TRY_VAR(result, parseInterfaceEagerArrowExpressionWithFunctionBody(
                               start, kind, fields));
       break;
-    case BinKind::EagerFunctionExpression:
+    case BinASTKind::EagerFunctionExpression:
       MOZ_TRY_VAR(result,
                   parseInterfaceEagerFunctionExpression(start, kind, fields));
       break;
-    case BinKind::IdentifierExpression:
+    case BinASTKind::IdentifierExpression:
       MOZ_TRY_VAR(result,
                   parseInterfaceIdentifierExpression(start, kind, fields));
       break;
-    case BinKind::LazyArrowExpressionWithExpression:
+    case BinASTKind::LazyArrowExpressionWithExpression:
       MOZ_TRY_VAR(result, parseInterfaceLazyArrowExpressionWithExpression(
                               start, kind, fields));
       break;
-    case BinKind::LazyArrowExpressionWithFunctionBody:
+    case BinASTKind::LazyArrowExpressionWithFunctionBody:
       MOZ_TRY_VAR(result, parseInterfaceLazyArrowExpressionWithFunctionBody(
                               start, kind, fields));
       break;
-    case BinKind::LazyFunctionExpression:
+    case BinASTKind::LazyFunctionExpression:
       MOZ_TRY_VAR(result,
                   parseInterfaceLazyFunctionExpression(start, kind, fields));
       break;
-    case BinKind::LiteralBooleanExpression:
+    case BinASTKind::LiteralBooleanExpression:
       MOZ_TRY_VAR(result,
                   parseInterfaceLiteralBooleanExpression(start, kind, fields));
       break;
-    case BinKind::LiteralInfinityExpression:
+    case BinASTKind::LiteralInfinityExpression:
       MOZ_TRY_VAR(result,
                   parseInterfaceLiteralInfinityExpression(start, kind, fields));
       break;
-    case BinKind::LiteralNullExpression:
+    case BinASTKind::LiteralNullExpression:
       MOZ_TRY_VAR(result,
                   parseInterfaceLiteralNullExpression(start, kind, fields));
       break;
-    case BinKind::LiteralNumericExpression:
+    case BinASTKind::LiteralNumericExpression:
       MOZ_TRY_VAR(result,
                   parseInterfaceLiteralNumericExpression(start, kind, fields));
       break;
-    case BinKind::LiteralRegExpExpression:
+    case BinASTKind::LiteralRegExpExpression:
       MOZ_TRY_VAR(result,
                   parseInterfaceLiteralRegExpExpression(start, kind, fields));
       break;
-    case BinKind::LiteralStringExpression:
+    case BinASTKind::LiteralStringExpression:
       MOZ_TRY_VAR(result,
                   parseInterfaceLiteralStringExpression(start, kind, fields));
       break;
-    case BinKind::NewExpression:
+    case BinASTKind::NewExpression:
       MOZ_TRY_VAR(result, parseInterfaceNewExpression(start, kind, fields));
       break;
-    case BinKind::NewTargetExpression:
+    case BinASTKind::NewTargetExpression:
       MOZ_TRY_VAR(result,
                   parseInterfaceNewTargetExpression(start, kind, fields));
       break;
-    case BinKind::ObjectExpression:
+    case BinASTKind::ObjectExpression:
       MOZ_TRY_VAR(result, parseInterfaceObjectExpression(start, kind, fields));
       break;
-    case BinKind::SpreadElement:
+    case BinASTKind::SpreadElement:
       MOZ_TRY_VAR(result, parseInterfaceSpreadElement(start, kind, fields));
       break;
-    case BinKind::StaticMemberExpression:
+    case BinASTKind::StaticMemberExpression:
       MOZ_TRY_VAR(result,
                   parseInterfaceStaticMemberExpression(start, kind, fields));
       break;
-    case BinKind::TemplateExpression:
+    case BinASTKind::TemplateExpression:
       MOZ_TRY_VAR(result,
                   parseInterfaceTemplateExpression(start, kind, fields));
       break;
-    case BinKind::ThisExpression:
+    case BinASTKind::ThisExpression:
       MOZ_TRY_VAR(result, parseInterfaceThisExpression(start, kind, fields));
       break;
-    case BinKind::UnaryExpression:
+    case BinASTKind::UnaryExpression:
       MOZ_TRY_VAR(result, parseInterfaceUnaryExpression(start, kind, fields));
       break;
-    case BinKind::UpdateExpression:
+    case BinASTKind::UpdateExpression:
       MOZ_TRY_VAR(result, parseInterfaceUpdateExpression(start, kind, fields));
       break;
-    case BinKind::YieldExpression:
+    case BinASTKind::YieldExpression:
       MOZ_TRY_VAR(result, parseInterfaceYieldExpression(start, kind, fields));
       break;
-    case BinKind::YieldStarExpression:
+    case BinASTKind::YieldStarExpression:
       MOZ_TRY_VAR(result,
                   parseInterfaceYieldStarExpression(start, kind, fields));
       break;
@@ -1042,8 +1042,8 @@ Statement ::= Block
 */
 template <typename Tok>
 JS::Result<ParseNode*> BinASTParser<Tok>::parseStatement() {
-  BinKind kind;
-  BinFields fields(cx_);
+  BinASTKind kind;
+  BinASTFields fields(cx_);
   AutoTaggedTuple guard(*tokenizer_);
   const auto start = tokenizer_->offset();
 
@@ -1057,85 +1057,85 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseStatement() {
 
 template <typename Tok>
 JS::Result<ParseNode*> BinASTParser<Tok>::parseSumStatement(
-    const size_t start, const BinKind kind, const BinFields& fields) {
+    const size_t start, const BinASTKind kind, const BinASTFields& fields) {
   ParseNode* result;
   switch (kind) {
-    case BinKind::Block:
+    case BinASTKind::Block:
       MOZ_TRY_VAR(result, parseInterfaceBlock(start, kind, fields));
       break;
-    case BinKind::BreakStatement:
+    case BinASTKind::BreakStatement:
       MOZ_TRY_VAR(result, parseInterfaceBreakStatement(start, kind, fields));
       break;
-    case BinKind::ClassDeclaration:
+    case BinASTKind::ClassDeclaration:
       MOZ_TRY_VAR(result, parseInterfaceClassDeclaration(start, kind, fields));
       break;
-    case BinKind::ContinueStatement:
+    case BinASTKind::ContinueStatement:
       MOZ_TRY_VAR(result, parseInterfaceContinueStatement(start, kind, fields));
       break;
-    case BinKind::DebuggerStatement:
+    case BinASTKind::DebuggerStatement:
       MOZ_TRY_VAR(result, parseInterfaceDebuggerStatement(start, kind, fields));
       break;
-    case BinKind::DoWhileStatement:
+    case BinASTKind::DoWhileStatement:
       MOZ_TRY_VAR(result, parseInterfaceDoWhileStatement(start, kind, fields));
       break;
-    case BinKind::EagerFunctionDeclaration:
+    case BinASTKind::EagerFunctionDeclaration:
       MOZ_TRY_VAR(result,
                   parseInterfaceEagerFunctionDeclaration(start, kind, fields));
       break;
-    case BinKind::EmptyStatement:
+    case BinASTKind::EmptyStatement:
       MOZ_TRY_VAR(result, parseInterfaceEmptyStatement(start, kind, fields));
       break;
-    case BinKind::ExpressionStatement:
+    case BinASTKind::ExpressionStatement:
       MOZ_TRY_VAR(result,
                   parseInterfaceExpressionStatement(start, kind, fields));
       break;
-    case BinKind::ForInStatement:
+    case BinASTKind::ForInStatement:
       MOZ_TRY_VAR(result, parseInterfaceForInStatement(start, kind, fields));
       break;
-    case BinKind::ForOfStatement:
+    case BinASTKind::ForOfStatement:
       MOZ_TRY_VAR(result, parseInterfaceForOfStatement(start, kind, fields));
       break;
-    case BinKind::ForStatement:
+    case BinASTKind::ForStatement:
       MOZ_TRY_VAR(result, parseInterfaceForStatement(start, kind, fields));
       break;
-    case BinKind::IfStatement:
+    case BinASTKind::IfStatement:
       MOZ_TRY_VAR(result, parseInterfaceIfStatement(start, kind, fields));
       break;
-    case BinKind::LabelledStatement:
+    case BinASTKind::LabelledStatement:
       MOZ_TRY_VAR(result, parseInterfaceLabelledStatement(start, kind, fields));
       break;
-    case BinKind::LazyFunctionDeclaration:
+    case BinASTKind::LazyFunctionDeclaration:
       MOZ_TRY_VAR(result,
                   parseInterfaceLazyFunctionDeclaration(start, kind, fields));
       break;
-    case BinKind::ReturnStatement:
+    case BinASTKind::ReturnStatement:
       MOZ_TRY_VAR(result, parseInterfaceReturnStatement(start, kind, fields));
       break;
-    case BinKind::SwitchStatement:
+    case BinASTKind::SwitchStatement:
       MOZ_TRY_VAR(result, parseInterfaceSwitchStatement(start, kind, fields));
       break;
-    case BinKind::SwitchStatementWithDefault:
+    case BinASTKind::SwitchStatementWithDefault:
       MOZ_TRY_VAR(result, parseInterfaceSwitchStatementWithDefault(start, kind,
                                                                    fields));
       break;
-    case BinKind::ThrowStatement:
+    case BinASTKind::ThrowStatement:
       MOZ_TRY_VAR(result, parseInterfaceThrowStatement(start, kind, fields));
       break;
-    case BinKind::TryCatchStatement:
+    case BinASTKind::TryCatchStatement:
       MOZ_TRY_VAR(result, parseInterfaceTryCatchStatement(start, kind, fields));
       break;
-    case BinKind::TryFinallyStatement:
+    case BinASTKind::TryFinallyStatement:
       MOZ_TRY_VAR(result,
                   parseInterfaceTryFinallyStatement(start, kind, fields));
       break;
-    case BinKind::VariableDeclaration:
+    case BinASTKind::VariableDeclaration:
       MOZ_TRY_VAR(result,
                   parseInterfaceVariableDeclaration(start, kind, fields));
       break;
-    case BinKind::WhileStatement:
+    case BinASTKind::WhileStatement:
       MOZ_TRY_VAR(result, parseInterfaceWhileStatement(start, kind, fields));
       break;
-    case BinKind::WithStatement:
+    case BinASTKind::WithStatement:
       MOZ_TRY_VAR(result, parseInterfaceWithStatement(start, kind, fields));
       break;
     default:
@@ -1147,127 +1147,127 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseSumStatement(
 template <typename Tok>
 JS::Result<ParseNode*>
 BinASTParser<Tok>::parseSumVariableDeclarationOrExpression(
-    const size_t start, const BinKind kind, const BinFields& fields) {
+    const size_t start, const BinASTKind kind, const BinASTFields& fields) {
   ParseNode* result;
   switch (kind) {
-    case BinKind::ArrayExpression:
+    case BinASTKind::ArrayExpression:
       MOZ_TRY_VAR(result, parseInterfaceArrayExpression(start, kind, fields));
       break;
-    case BinKind::AssignmentExpression:
+    case BinASTKind::AssignmentExpression:
       MOZ_TRY_VAR(result,
                   parseInterfaceAssignmentExpression(start, kind, fields));
       break;
-    case BinKind::AwaitExpression:
+    case BinASTKind::AwaitExpression:
       MOZ_TRY_VAR(result, parseInterfaceAwaitExpression(start, kind, fields));
       break;
-    case BinKind::BinaryExpression:
+    case BinASTKind::BinaryExpression:
       MOZ_TRY_VAR(result, parseInterfaceBinaryExpression(start, kind, fields));
       break;
-    case BinKind::CallExpression:
+    case BinASTKind::CallExpression:
       MOZ_TRY_VAR(result, parseInterfaceCallExpression(start, kind, fields));
       break;
-    case BinKind::ClassExpression:
+    case BinASTKind::ClassExpression:
       MOZ_TRY_VAR(result, parseInterfaceClassExpression(start, kind, fields));
       break;
-    case BinKind::CompoundAssignmentExpression:
+    case BinASTKind::CompoundAssignmentExpression:
       MOZ_TRY_VAR(result, parseInterfaceCompoundAssignmentExpression(
                               start, kind, fields));
       break;
-    case BinKind::ComputedMemberExpression:
+    case BinASTKind::ComputedMemberExpression:
       MOZ_TRY_VAR(result,
                   parseInterfaceComputedMemberExpression(start, kind, fields));
       break;
-    case BinKind::ConditionalExpression:
+    case BinASTKind::ConditionalExpression:
       MOZ_TRY_VAR(result,
                   parseInterfaceConditionalExpression(start, kind, fields));
       break;
-    case BinKind::EagerArrowExpressionWithExpression:
+    case BinASTKind::EagerArrowExpressionWithExpression:
       MOZ_TRY_VAR(result, parseInterfaceEagerArrowExpressionWithExpression(
                               start, kind, fields));
       break;
-    case BinKind::EagerArrowExpressionWithFunctionBody:
+    case BinASTKind::EagerArrowExpressionWithFunctionBody:
       MOZ_TRY_VAR(result, parseInterfaceEagerArrowExpressionWithFunctionBody(
                               start, kind, fields));
       break;
-    case BinKind::EagerFunctionExpression:
+    case BinASTKind::EagerFunctionExpression:
       MOZ_TRY_VAR(result,
                   parseInterfaceEagerFunctionExpression(start, kind, fields));
       break;
-    case BinKind::IdentifierExpression:
+    case BinASTKind::IdentifierExpression:
       MOZ_TRY_VAR(result,
                   parseInterfaceIdentifierExpression(start, kind, fields));
       break;
-    case BinKind::LazyArrowExpressionWithExpression:
+    case BinASTKind::LazyArrowExpressionWithExpression:
       MOZ_TRY_VAR(result, parseInterfaceLazyArrowExpressionWithExpression(
                               start, kind, fields));
       break;
-    case BinKind::LazyArrowExpressionWithFunctionBody:
+    case BinASTKind::LazyArrowExpressionWithFunctionBody:
       MOZ_TRY_VAR(result, parseInterfaceLazyArrowExpressionWithFunctionBody(
                               start, kind, fields));
       break;
-    case BinKind::LazyFunctionExpression:
+    case BinASTKind::LazyFunctionExpression:
       MOZ_TRY_VAR(result,
                   parseInterfaceLazyFunctionExpression(start, kind, fields));
       break;
-    case BinKind::LiteralBooleanExpression:
+    case BinASTKind::LiteralBooleanExpression:
       MOZ_TRY_VAR(result,
                   parseInterfaceLiteralBooleanExpression(start, kind, fields));
       break;
-    case BinKind::LiteralInfinityExpression:
+    case BinASTKind::LiteralInfinityExpression:
       MOZ_TRY_VAR(result,
                   parseInterfaceLiteralInfinityExpression(start, kind, fields));
       break;
-    case BinKind::LiteralNullExpression:
+    case BinASTKind::LiteralNullExpression:
       MOZ_TRY_VAR(result,
                   parseInterfaceLiteralNullExpression(start, kind, fields));
       break;
-    case BinKind::LiteralNumericExpression:
+    case BinASTKind::LiteralNumericExpression:
       MOZ_TRY_VAR(result,
                   parseInterfaceLiteralNumericExpression(start, kind, fields));
       break;
-    case BinKind::LiteralRegExpExpression:
+    case BinASTKind::LiteralRegExpExpression:
       MOZ_TRY_VAR(result,
                   parseInterfaceLiteralRegExpExpression(start, kind, fields));
       break;
-    case BinKind::LiteralStringExpression:
+    case BinASTKind::LiteralStringExpression:
       MOZ_TRY_VAR(result,
                   parseInterfaceLiteralStringExpression(start, kind, fields));
       break;
-    case BinKind::NewExpression:
+    case BinASTKind::NewExpression:
       MOZ_TRY_VAR(result, parseInterfaceNewExpression(start, kind, fields));
       break;
-    case BinKind::NewTargetExpression:
+    case BinASTKind::NewTargetExpression:
       MOZ_TRY_VAR(result,
                   parseInterfaceNewTargetExpression(start, kind, fields));
       break;
-    case BinKind::ObjectExpression:
+    case BinASTKind::ObjectExpression:
       MOZ_TRY_VAR(result, parseInterfaceObjectExpression(start, kind, fields));
       break;
-    case BinKind::StaticMemberExpression:
+    case BinASTKind::StaticMemberExpression:
       MOZ_TRY_VAR(result,
                   parseInterfaceStaticMemberExpression(start, kind, fields));
       break;
-    case BinKind::TemplateExpression:
+    case BinASTKind::TemplateExpression:
       MOZ_TRY_VAR(result,
                   parseInterfaceTemplateExpression(start, kind, fields));
       break;
-    case BinKind::ThisExpression:
+    case BinASTKind::ThisExpression:
       MOZ_TRY_VAR(result, parseInterfaceThisExpression(start, kind, fields));
       break;
-    case BinKind::UnaryExpression:
+    case BinASTKind::UnaryExpression:
       MOZ_TRY_VAR(result, parseInterfaceUnaryExpression(start, kind, fields));
       break;
-    case BinKind::UpdateExpression:
+    case BinASTKind::UpdateExpression:
       MOZ_TRY_VAR(result, parseInterfaceUpdateExpression(start, kind, fields));
       break;
-    case BinKind::VariableDeclaration:
+    case BinASTKind::VariableDeclaration:
       MOZ_TRY_VAR(result,
                   parseInterfaceVariableDeclaration(start, kind, fields));
       break;
-    case BinKind::YieldExpression:
+    case BinASTKind::YieldExpression:
       MOZ_TRY_VAR(result, parseInterfaceYieldExpression(start, kind, fields));
       break;
-    case BinKind::YieldStarExpression:
+    case BinASTKind::YieldStarExpression:
       MOZ_TRY_VAR(result,
                   parseInterfaceYieldStarExpression(start, kind, fields));
       break;
@@ -1282,7 +1282,7 @@ BinASTParser<Tok>::parseSumVariableDeclarationOrExpression(
 // delegated to another parser.
 template <typename Tok>
 JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceArrayAssignmentTarget(
-    const size_t start, const BinKind kind, const BinFields& fields) {
+    const size_t start, const BinASTKind kind, const BinASTFields& fields) {
   return raiseError(
       "FIXME: Not implemented yet in this preview release "
       "(ArrayAssignmentTarget)");
@@ -1290,19 +1290,19 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceArrayAssignmentTarget(
 
 template <typename Tok>
 JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceArrayBinding(
-    const size_t start, const BinKind kind, const BinFields& fields) {
+    const size_t start, const BinASTKind kind, const BinASTFields& fields) {
   return raiseError(
       "FIXME: Not implemented yet in this preview release (ArrayBinding)");
 }
 
 template <typename Tok>
 JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceArrayExpression(
-    const size_t start, const BinKind kind, const BinFields& fields) {
-  MOZ_ASSERT(kind == BinKind::ArrayExpression);
+    const size_t start, const BinASTKind kind, const BinASTFields& fields) {
+  MOZ_ASSERT(kind == BinASTKind::ArrayExpression);
   BINJS_TRY(CheckRecursionLimit(cx_));
 
 #if defined(DEBUG)
-  const BinField expected_fields[1] = {BinField::Elements};
+  const BinASTField expected_fields[1] = {BinASTField::Elements};
   MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif  // defined(DEBUG)
 
@@ -1323,12 +1323,12 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceArrayExpression(
 */
 template <typename Tok>
 JS::Result<Ok> BinASTParser<Tok>::parseAssertedBlockScope() {
-  BinKind kind;
-  BinFields fields(cx_);
+  BinASTKind kind;
+  BinASTFields fields(cx_);
   AutoTaggedTuple guard(*tokenizer_);
 
   MOZ_TRY(tokenizer_->enterTaggedTuple(kind, fields, guard));
-  if (kind != BinKind::AssertedBlockScope) {
+  if (kind != BinASTKind::AssertedBlockScope) {
     return raiseInvalidKind("AssertedBlockScope", kind);
   }
   const auto start = tokenizer_->offset();
@@ -1341,13 +1341,13 @@ JS::Result<Ok> BinASTParser<Tok>::parseAssertedBlockScope() {
 
 template <typename Tok>
 JS::Result<Ok> BinASTParser<Tok>::parseInterfaceAssertedBlockScope(
-    const size_t start, const BinKind kind, const BinFields& fields) {
-  MOZ_ASSERT(kind == BinKind::AssertedBlockScope);
+    const size_t start, const BinASTKind kind, const BinASTFields& fields) {
+  MOZ_ASSERT(kind == BinASTKind::AssertedBlockScope);
   BINJS_TRY(CheckRecursionLimit(cx_));
 
 #if defined(DEBUG)
-  const BinField expected_fields[2] = {BinField::DeclaredNames,
-                                       BinField::HasDirectEval};
+  const BinASTField expected_fields[2] = {BinASTField::DeclaredNames,
+                                          BinASTField::HasDirectEval};
   MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif  // defined(DEBUG)
   const auto scopeKind = AssertedScopeKind::Block;
@@ -1377,12 +1377,12 @@ JS::Result<Ok> BinASTParser<Tok>::parseInterfaceAssertedBlockScope(
 template <typename Tok>
 JS::Result<Ok> BinASTParser<Tok>::parseAssertedBoundName(
     AssertedScopeKind scopeKind) {
-  BinKind kind;
-  BinFields fields(cx_);
+  BinASTKind kind;
+  BinASTFields fields(cx_);
   AutoTaggedTuple guard(*tokenizer_);
 
   MOZ_TRY(tokenizer_->enterTaggedTuple(kind, fields, guard));
-  if (kind != BinKind::AssertedBoundName) {
+  if (kind != BinASTKind::AssertedBoundName) {
     return raiseInvalidKind("AssertedBoundName", kind);
   }
   const auto start = tokenizer_->offset();
@@ -1395,13 +1395,14 @@ JS::Result<Ok> BinASTParser<Tok>::parseAssertedBoundName(
 
 template <typename Tok>
 JS::Result<Ok> BinASTParser<Tok>::parseInterfaceAssertedBoundName(
-    const size_t start, const BinKind kind, const BinFields& fields,
+    const size_t start, const BinASTKind kind, const BinASTFields& fields,
     AssertedScopeKind scopeKind) {
-  MOZ_ASSERT(kind == BinKind::AssertedBoundName);
+  MOZ_ASSERT(kind == BinASTKind::AssertedBoundName);
   BINJS_TRY(CheckRecursionLimit(cx_));
 
 #if defined(DEBUG)
-  const BinField expected_fields[2] = {BinField::Name, BinField::IsCaptured};
+  const BinASTField expected_fields[2] = {BinASTField::Name,
+                                          BinASTField::IsCaptured};
   MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif  // defined(DEBUG)
   const bool allowDuplicateName = false;
@@ -1427,12 +1428,12 @@ JS::Result<Ok> BinASTParser<Tok>::parseInterfaceAssertedBoundName(
 */
 template <typename Tok>
 JS::Result<Ok> BinASTParser<Tok>::parseAssertedBoundNamesScope() {
-  BinKind kind;
-  BinFields fields(cx_);
+  BinASTKind kind;
+  BinASTFields fields(cx_);
   AutoTaggedTuple guard(*tokenizer_);
 
   MOZ_TRY(tokenizer_->enterTaggedTuple(kind, fields, guard));
-  if (kind != BinKind::AssertedBoundNamesScope) {
+  if (kind != BinASTKind::AssertedBoundNamesScope) {
     return raiseInvalidKind("AssertedBoundNamesScope", kind);
   }
   const auto start = tokenizer_->offset();
@@ -1445,13 +1446,13 @@ JS::Result<Ok> BinASTParser<Tok>::parseAssertedBoundNamesScope() {
 
 template <typename Tok>
 JS::Result<Ok> BinASTParser<Tok>::parseInterfaceAssertedBoundNamesScope(
-    const size_t start, const BinKind kind, const BinFields& fields) {
-  MOZ_ASSERT(kind == BinKind::AssertedBoundNamesScope);
+    const size_t start, const BinASTKind kind, const BinASTFields& fields) {
+  MOZ_ASSERT(kind == BinASTKind::AssertedBoundNamesScope);
   BINJS_TRY(CheckRecursionLimit(cx_));
 
 #if defined(DEBUG)
-  const BinField expected_fields[2] = {BinField::BoundNames,
-                                       BinField::HasDirectEval};
+  const BinASTField expected_fields[2] = {BinASTField::BoundNames,
+                                          BinASTField::HasDirectEval};
   MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif  // defined(DEBUG)
   const auto scopeKind = AssertedScopeKind::Catch;
@@ -1482,12 +1483,12 @@ JS::Result<Ok> BinASTParser<Tok>::parseInterfaceAssertedBoundNamesScope(
 template <typename Tok>
 JS::Result<Ok> BinASTParser<Tok>::parseAssertedDeclaredName(
     AssertedScopeKind scopeKind) {
-  BinKind kind;
-  BinFields fields(cx_);
+  BinASTKind kind;
+  BinASTFields fields(cx_);
   AutoTaggedTuple guard(*tokenizer_);
 
   MOZ_TRY(tokenizer_->enterTaggedTuple(kind, fields, guard));
-  if (kind != BinKind::AssertedDeclaredName) {
+  if (kind != BinASTKind::AssertedDeclaredName) {
     return raiseInvalidKind("AssertedDeclaredName", kind);
   }
   const auto start = tokenizer_->offset();
@@ -1500,14 +1501,14 @@ JS::Result<Ok> BinASTParser<Tok>::parseAssertedDeclaredName(
 
 template <typename Tok>
 JS::Result<Ok> BinASTParser<Tok>::parseInterfaceAssertedDeclaredName(
-    const size_t start, const BinKind kind, const BinFields& fields,
+    const size_t start, const BinASTKind kind, const BinASTFields& fields,
     AssertedScopeKind scopeKind) {
-  MOZ_ASSERT(kind == BinKind::AssertedDeclaredName);
+  MOZ_ASSERT(kind == BinASTKind::AssertedDeclaredName);
   BINJS_TRY(CheckRecursionLimit(cx_));
 
 #if defined(DEBUG)
-  const BinField expected_fields[3] = {BinField::Name, BinField::Kind,
-                                       BinField::IsCaptured};
+  const BinASTField expected_fields[3] = {BinASTField::Name, BinASTField::Kind,
+                                          BinASTField::IsCaptured};
   MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif  // defined(DEBUG)
   const bool allowDuplicateName = false;
@@ -1542,12 +1543,12 @@ JS::Result<Ok> BinASTParser<Tok>::parseInterfaceAssertedDeclaredName(
 template <typename Tok>
 JS::Result<Ok> BinASTParser<Tok>::parseAssertedParameterScope(
     MutableHandle<GCVector<JSAtom*>> positionalParams) {
-  BinKind kind;
-  BinFields fields(cx_);
+  BinASTKind kind;
+  BinASTFields fields(cx_);
   AutoTaggedTuple guard(*tokenizer_);
 
   MOZ_TRY(tokenizer_->enterTaggedTuple(kind, fields, guard));
-  if (kind != BinKind::AssertedParameterScope) {
+  if (kind != BinASTKind::AssertedParameterScope) {
     return raiseInvalidKind("AssertedParameterScope", kind);
   }
   const auto start = tokenizer_->offset();
@@ -1560,15 +1561,15 @@ JS::Result<Ok> BinASTParser<Tok>::parseAssertedParameterScope(
 
 template <typename Tok>
 JS::Result<Ok> BinASTParser<Tok>::parseInterfaceAssertedParameterScope(
-    const size_t start, const BinKind kind, const BinFields& fields,
+    const size_t start, const BinASTKind kind, const BinASTFields& fields,
     MutableHandle<GCVector<JSAtom*>> positionalParams) {
-  MOZ_ASSERT(kind == BinKind::AssertedParameterScope);
+  MOZ_ASSERT(kind == BinASTKind::AssertedParameterScope);
   BINJS_TRY(CheckRecursionLimit(cx_));
 
 #if defined(DEBUG)
-  const BinField expected_fields[3] = {BinField::ParamNames,
-                                       BinField::HasDirectEval,
-                                       BinField::IsSimpleParameterList};
+  const BinASTField expected_fields[3] = {BinASTField::ParamNames,
+                                          BinASTField::HasDirectEval,
+                                          BinASTField::IsSimpleParameterList};
   MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif  // defined(DEBUG)
   const auto scopeKind = AssertedScopeKind::Parameter;
@@ -1594,15 +1595,15 @@ JS::Result<Ok> BinASTParser<Tok>::parseInterfaceAssertedParameterScope(
 
 template <typename Tok>
 JS::Result<Ok> BinASTParser<Tok>::parseInterfaceAssertedPositionalParameterName(
-    const size_t start, const BinKind kind, const BinFields& fields,
+    const size_t start, const BinASTKind kind, const BinASTFields& fields,
     AssertedScopeKind scopeKind,
     MutableHandle<GCVector<JSAtom*>> positionalParams) {
-  MOZ_ASSERT(kind == BinKind::AssertedPositionalParameterName);
+  MOZ_ASSERT(kind == BinASTKind::AssertedPositionalParameterName);
   BINJS_TRY(CheckRecursionLimit(cx_));
 
 #if defined(DEBUG)
-  const BinField expected_fields[3] = {BinField::Index, BinField::Name,
-                                       BinField::IsCaptured};
+  const BinASTField expected_fields[3] = {BinASTField::Index, BinASTField::Name,
+                                          BinASTField::IsCaptured};
   MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif  // defined(DEBUG)
   bool allowDuplicateName = !pc_->sc()->strict();
@@ -1651,12 +1652,12 @@ JS::Result<Ok> BinASTParser<Tok>::parseInterfaceAssertedPositionalParameterName(
 */
 template <typename Tok>
 JS::Result<Ok> BinASTParser<Tok>::parseAssertedScriptGlobalScope() {
-  BinKind kind;
-  BinFields fields(cx_);
+  BinASTKind kind;
+  BinASTFields fields(cx_);
   AutoTaggedTuple guard(*tokenizer_);
 
   MOZ_TRY(tokenizer_->enterTaggedTuple(kind, fields, guard));
-  if (kind != BinKind::AssertedScriptGlobalScope) {
+  if (kind != BinASTKind::AssertedScriptGlobalScope) {
     return raiseInvalidKind("AssertedScriptGlobalScope", kind);
   }
   const auto start = tokenizer_->offset();
@@ -1669,13 +1670,13 @@ JS::Result<Ok> BinASTParser<Tok>::parseAssertedScriptGlobalScope() {
 
 template <typename Tok>
 JS::Result<Ok> BinASTParser<Tok>::parseInterfaceAssertedScriptGlobalScope(
-    const size_t start, const BinKind kind, const BinFields& fields) {
-  MOZ_ASSERT(kind == BinKind::AssertedScriptGlobalScope);
+    const size_t start, const BinASTKind kind, const BinASTFields& fields) {
+  MOZ_ASSERT(kind == BinASTKind::AssertedScriptGlobalScope);
   BINJS_TRY(CheckRecursionLimit(cx_));
 
 #if defined(DEBUG)
-  const BinField expected_fields[2] = {BinField::DeclaredNames,
-                                       BinField::HasDirectEval};
+  const BinASTField expected_fields[2] = {BinASTField::DeclaredNames,
+                                          BinASTField::HasDirectEval};
   MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif  // defined(DEBUG)
   const auto scopeKind = AssertedScopeKind::Global;
@@ -1704,12 +1705,12 @@ JS::Result<Ok> BinASTParser<Tok>::parseInterfaceAssertedScriptGlobalScope(
 */
 template <typename Tok>
 JS::Result<Ok> BinASTParser<Tok>::parseAssertedVarScope() {
-  BinKind kind;
-  BinFields fields(cx_);
+  BinASTKind kind;
+  BinASTFields fields(cx_);
   AutoTaggedTuple guard(*tokenizer_);
 
   MOZ_TRY(tokenizer_->enterTaggedTuple(kind, fields, guard));
-  if (kind != BinKind::AssertedVarScope) {
+  if (kind != BinASTKind::AssertedVarScope) {
     return raiseInvalidKind("AssertedVarScope", kind);
   }
   const auto start = tokenizer_->offset();
@@ -1722,13 +1723,13 @@ JS::Result<Ok> BinASTParser<Tok>::parseAssertedVarScope() {
 
 template <typename Tok>
 JS::Result<Ok> BinASTParser<Tok>::parseInterfaceAssertedVarScope(
-    const size_t start, const BinKind kind, const BinFields& fields) {
-  MOZ_ASSERT(kind == BinKind::AssertedVarScope);
+    const size_t start, const BinASTKind kind, const BinASTFields& fields) {
+  MOZ_ASSERT(kind == BinASTKind::AssertedVarScope);
   BINJS_TRY(CheckRecursionLimit(cx_));
 
 #if defined(DEBUG)
-  const BinField expected_fields[2] = {BinField::DeclaredNames,
-                                       BinField::HasDirectEval};
+  const BinASTField expected_fields[2] = {BinASTField::DeclaredNames,
+                                          BinASTField::HasDirectEval};
   MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif  // defined(DEBUG)
   const auto scopeKind = AssertedScopeKind::Var;
@@ -1751,12 +1752,13 @@ JS::Result<Ok> BinASTParser<Tok>::parseInterfaceAssertedVarScope(
 
 template <typename Tok>
 JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceAssignmentExpression(
-    const size_t start, const BinKind kind, const BinFields& fields) {
-  MOZ_ASSERT(kind == BinKind::AssignmentExpression);
+    const size_t start, const BinASTKind kind, const BinASTFields& fields) {
+  MOZ_ASSERT(kind == BinASTKind::AssignmentExpression);
   BINJS_TRY(CheckRecursionLimit(cx_));
 
 #if defined(DEBUG)
-  const BinField expected_fields[2] = {BinField::Binding, BinField::Expression};
+  const BinASTField expected_fields[2] = {BinASTField::Binding,
+                                          BinASTField::Expression};
   MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif  // defined(DEBUG)
 
@@ -1772,12 +1774,12 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceAssignmentExpression(
 template <typename Tok>
 JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceAssignmentTargetIdentifier(
-    const size_t start, const BinKind kind, const BinFields& fields) {
-  MOZ_ASSERT(kind == BinKind::AssignmentTargetIdentifier);
+    const size_t start, const BinASTKind kind, const BinASTFields& fields) {
+  MOZ_ASSERT(kind == BinASTKind::AssignmentTargetIdentifier);
   BINJS_TRY(CheckRecursionLimit(cx_));
 
 #if defined(DEBUG)
-  const BinField expected_fields[1] = {BinField::Name};
+  const BinASTField expected_fields[1] = {BinASTField::Name};
   MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif  // defined(DEBUG)
 
@@ -1793,20 +1795,20 @@ BinASTParser<Tok>::parseInterfaceAssignmentTargetIdentifier(
 
 template <typename Tok>
 JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceAwaitExpression(
-    const size_t start, const BinKind kind, const BinFields& fields) {
+    const size_t start, const BinASTKind kind, const BinASTFields& fields) {
   return raiseError(
       "FIXME: Not implemented yet in this preview release (AwaitExpression)");
 }
 
 template <typename Tok>
 JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceBinaryExpression(
-    const size_t start, const BinKind kind, const BinFields& fields) {
-  MOZ_ASSERT(kind == BinKind::BinaryExpression);
+    const size_t start, const BinASTKind kind, const BinASTFields& fields) {
+  MOZ_ASSERT(kind == BinASTKind::BinaryExpression);
   BINJS_TRY(CheckRecursionLimit(cx_));
 
 #if defined(DEBUG)
-  const BinField expected_fields[3] = {BinField::Operator, BinField::Left,
-                                       BinField::Right};
+  const BinASTField expected_fields[3] = {
+      BinASTField::Operator, BinASTField::Left, BinASTField::Right};
   MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif  // defined(DEBUG)
 
@@ -1918,12 +1920,12 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceBinaryExpression(
 */
 template <typename Tok>
 JS::Result<ParseNode*> BinASTParser<Tok>::parseBindingIdentifier() {
-  BinKind kind;
-  BinFields fields(cx_);
+  BinASTKind kind;
+  BinASTFields fields(cx_);
   AutoTaggedTuple guard(*tokenizer_);
 
   MOZ_TRY(tokenizer_->enterTaggedTuple(kind, fields, guard));
-  if (kind != BinKind::BindingIdentifier) {
+  if (kind != BinASTKind::BindingIdentifier) {
     return raiseInvalidKind("BindingIdentifier", kind);
   }
   const auto start = tokenizer_->offset();
@@ -1936,12 +1938,12 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseBindingIdentifier() {
 
 template <typename Tok>
 JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceBindingIdentifier(
-    const size_t start, const BinKind kind, const BinFields& fields) {
-  MOZ_ASSERT(kind == BinKind::BindingIdentifier);
+    const size_t start, const BinASTKind kind, const BinASTFields& fields) {
+  MOZ_ASSERT(kind == BinASTKind::BindingIdentifier);
   BINJS_TRY(CheckRecursionLimit(cx_));
 
 #if defined(DEBUG)
-  const BinField expected_fields[1] = {BinField::Name};
+  const BinASTField expected_fields[1] = {BinASTField::Name};
   MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif  // defined(DEBUG)
 
@@ -1955,7 +1957,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceBindingIdentifier(
 
 template <typename Tok>
 JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceBindingWithInitializer(
-    const size_t start, const BinKind kind, const BinFields& fields) {
+    const size_t start, const BinASTKind kind, const BinASTFields& fields) {
   return raiseError(
       "FIXME: Not implemented yet in this preview release "
       "(BindingWithInitializer)");
@@ -1969,12 +1971,12 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceBindingWithInitializer(
 */
 template <typename Tok>
 JS::Result<ParseNode*> BinASTParser<Tok>::parseBlock() {
-  BinKind kind;
-  BinFields fields(cx_);
+  BinASTKind kind;
+  BinASTFields fields(cx_);
   AutoTaggedTuple guard(*tokenizer_);
 
   MOZ_TRY(tokenizer_->enterTaggedTuple(kind, fields, guard));
-  if (kind != BinKind::Block) {
+  if (kind != BinASTKind::Block) {
     return raiseInvalidKind("Block", kind);
   }
   const auto start = tokenizer_->offset();
@@ -1986,12 +1988,13 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseBlock() {
 
 template <typename Tok>
 JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceBlock(
-    const size_t start, const BinKind kind, const BinFields& fields) {
-  MOZ_ASSERT(kind == BinKind::Block);
+    const size_t start, const BinASTKind kind, const BinASTFields& fields) {
+  MOZ_ASSERT(kind == BinASTKind::Block);
   BINJS_TRY(CheckRecursionLimit(cx_));
 
 #if defined(DEBUG)
-  const BinField expected_fields[2] = {BinField::Scope, BinField::Statements};
+  const BinASTField expected_fields[2] = {BinASTField::Scope,
+                                          BinASTField::Statements};
   MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif  // defined(DEBUG)
   ParseContext::Statement stmt(pc_, StatementKind::Block);
@@ -2010,12 +2013,12 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceBlock(
 
 template <typename Tok>
 JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceBreakStatement(
-    const size_t start, const BinKind kind, const BinFields& fields) {
-  MOZ_ASSERT(kind == BinKind::BreakStatement);
+    const size_t start, const BinASTKind kind, const BinASTFields& fields) {
+  MOZ_ASSERT(kind == BinASTKind::BreakStatement);
   BINJS_TRY(CheckRecursionLimit(cx_));
 
 #if defined(DEBUG)
-  const BinField expected_fields[1] = {BinField::Label};
+  const BinASTField expected_fields[1] = {BinASTField::Label};
   MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif  // defined(DEBUG)
   RootedAtom label(cx_);
@@ -2048,12 +2051,13 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceBreakStatement(
 
 template <typename Tok>
 JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceCallExpression(
-    const size_t start, const BinKind kind, const BinFields& fields) {
-  MOZ_ASSERT(kind == BinKind::CallExpression);
+    const size_t start, const BinASTKind kind, const BinASTFields& fields) {
+  MOZ_ASSERT(kind == BinASTKind::CallExpression);
   BINJS_TRY(CheckRecursionLimit(cx_));
 
 #if defined(DEBUG)
-  const BinField expected_fields[2] = {BinField::Callee, BinField::Arguments};
+  const BinASTField expected_fields[2] = {BinASTField::Callee,
+                                          BinASTField::Arguments};
   MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif  // defined(DEBUG)
 
@@ -2102,12 +2106,12 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceCallExpression(
 */
 template <typename Tok>
 JS::Result<LexicalScopeNode*> BinASTParser<Tok>::parseCatchClause() {
-  BinKind kind;
-  BinFields fields(cx_);
+  BinASTKind kind;
+  BinASTFields fields(cx_);
   AutoTaggedTuple guard(*tokenizer_);
 
   MOZ_TRY(tokenizer_->enterTaggedTuple(kind, fields, guard));
-  if (kind != BinKind::CatchClause) {
+  if (kind != BinASTKind::CatchClause) {
     return raiseInvalidKind("CatchClause", kind);
   }
   const auto start = tokenizer_->offset();
@@ -2119,13 +2123,13 @@ JS::Result<LexicalScopeNode*> BinASTParser<Tok>::parseCatchClause() {
 
 template <typename Tok>
 JS::Result<LexicalScopeNode*> BinASTParser<Tok>::parseInterfaceCatchClause(
-    const size_t start, const BinKind kind, const BinFields& fields) {
-  MOZ_ASSERT(kind == BinKind::CatchClause);
+    const size_t start, const BinASTKind kind, const BinASTFields& fields) {
+  MOZ_ASSERT(kind == BinASTKind::CatchClause);
   BINJS_TRY(CheckRecursionLimit(cx_));
 
 #if defined(DEBUG)
-  const BinField expected_fields[3] = {BinField::BindingScope,
-                                       BinField::Binding, BinField::Body};
+  const BinASTField expected_fields[3] = {
+      BinASTField::BindingScope, BinASTField::Binding, BinASTField::Body};
   MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif  // defined(DEBUG)
   ParseContext::Statement stmt(pc_, StatementKind::Catch);
@@ -2150,14 +2154,14 @@ JS::Result<LexicalScopeNode*> BinASTParser<Tok>::parseInterfaceCatchClause(
 
 template <typename Tok>
 JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceClassDeclaration(
-    const size_t start, const BinKind kind, const BinFields& fields) {
+    const size_t start, const BinASTKind kind, const BinASTFields& fields) {
   return raiseError(
       "FIXME: Not implemented yet in this preview release (ClassDeclaration)");
 }
 
 template <typename Tok>
 JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceClassExpression(
-    const size_t start, const BinKind kind, const BinFields& fields) {
+    const size_t start, const BinASTKind kind, const BinASTFields& fields) {
   return raiseError(
       "FIXME: Not implemented yet in this preview release (ClassExpression)");
 }
@@ -2165,13 +2169,13 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceClassExpression(
 template <typename Tok>
 JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceCompoundAssignmentExpression(
-    const size_t start, const BinKind kind, const BinFields& fields) {
-  MOZ_ASSERT(kind == BinKind::CompoundAssignmentExpression);
+    const size_t start, const BinASTKind kind, const BinASTFields& fields) {
+  MOZ_ASSERT(kind == BinASTKind::CompoundAssignmentExpression);
   BINJS_TRY(CheckRecursionLimit(cx_));
 
 #if defined(DEBUG)
-  const BinField expected_fields[3] = {BinField::Operator, BinField::Binding,
-                                       BinField::Expression};
+  const BinASTField expected_fields[3] = {
+      BinASTField::Operator, BinASTField::Binding, BinASTField::Expression};
   MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif  // defined(DEBUG)
 
@@ -2227,12 +2231,13 @@ BinASTParser<Tok>::parseInterfaceCompoundAssignmentExpression(
 template <typename Tok>
 JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceComputedMemberAssignmentTarget(
-    const size_t start, const BinKind kind, const BinFields& fields) {
-  MOZ_ASSERT(kind == BinKind::ComputedMemberAssignmentTarget);
+    const size_t start, const BinASTKind kind, const BinASTFields& fields) {
+  MOZ_ASSERT(kind == BinASTKind::ComputedMemberAssignmentTarget);
   BINJS_TRY(CheckRecursionLimit(cx_));
 
 #if defined(DEBUG)
-  const BinField expected_fields[2] = {BinField::Object, BinField::Expression};
+  const BinASTField expected_fields[2] = {BinASTField::Object,
+                                          BinASTField::Expression};
   MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif  // defined(DEBUG)
 
@@ -2248,12 +2253,13 @@ BinASTParser<Tok>::parseInterfaceComputedMemberAssignmentTarget(
 template <typename Tok>
 JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceComputedMemberExpression(
-    const size_t start, const BinKind kind, const BinFields& fields) {
-  MOZ_ASSERT(kind == BinKind::ComputedMemberExpression);
+    const size_t start, const BinASTKind kind, const BinASTFields& fields) {
+  MOZ_ASSERT(kind == BinASTKind::ComputedMemberExpression);
   BINJS_TRY(CheckRecursionLimit(cx_));
 
 #if defined(DEBUG)
-  const BinField expected_fields[2] = {BinField::Object, BinField::Expression};
+  const BinASTField expected_fields[2] = {BinASTField::Object,
+                                          BinASTField::Expression};
   MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif  // defined(DEBUG)
 
@@ -2268,7 +2274,7 @@ BinASTParser<Tok>::parseInterfaceComputedMemberExpression(
 
 template <typename Tok>
 JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceComputedPropertyName(
-    const size_t start, const BinKind kind, const BinFields& fields) {
+    const size_t start, const BinASTKind kind, const BinASTFields& fields) {
   return raiseError(
       "FIXME: Not implemented yet in this preview release "
       "(ComputedPropertyName)");
@@ -2276,13 +2282,13 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceComputedPropertyName(
 
 template <typename Tok>
 JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceConditionalExpression(
-    const size_t start, const BinKind kind, const BinFields& fields) {
-  MOZ_ASSERT(kind == BinKind::ConditionalExpression);
+    const size_t start, const BinASTKind kind, const BinASTFields& fields) {
+  MOZ_ASSERT(kind == BinASTKind::ConditionalExpression);
   BINJS_TRY(CheckRecursionLimit(cx_));
 
 #if defined(DEBUG)
-  const BinField expected_fields[3] = {BinField::Test, BinField::Consequent,
-                                       BinField::Alternate};
+  const BinASTField expected_fields[3] = {
+      BinASTField::Test, BinASTField::Consequent, BinASTField::Alternate};
   MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif  // defined(DEBUG)
 
@@ -2298,12 +2304,12 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceConditionalExpression(
 
 template <typename Tok>
 JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceContinueStatement(
-    const size_t start, const BinKind kind, const BinFields& fields) {
-  MOZ_ASSERT(kind == BinKind::ContinueStatement);
+    const size_t start, const BinASTKind kind, const BinASTFields& fields) {
+  MOZ_ASSERT(kind == BinASTKind::ContinueStatement);
   BINJS_TRY(CheckRecursionLimit(cx_));
 
 #if defined(DEBUG)
-  const BinField expected_fields[1] = {BinField::Label};
+  const BinASTField expected_fields[1] = {BinASTField::Label};
   MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif  // defined(DEBUG)
   RootedAtom label(cx_);
@@ -2336,12 +2342,13 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceContinueStatement(
 
 template <typename Tok>
 JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceDataProperty(
-    const size_t start, const BinKind kind, const BinFields& fields) {
-  MOZ_ASSERT(kind == BinKind::DataProperty);
+    const size_t start, const BinASTKind kind, const BinASTFields& fields) {
+  MOZ_ASSERT(kind == BinASTKind::DataProperty);
   BINJS_TRY(CheckRecursionLimit(cx_));
 
 #if defined(DEBUG)
-  const BinField expected_fields[2] = {BinField::Name, BinField::Expression};
+  const BinASTField expected_fields[2] = {BinASTField::Name,
+                                          BinASTField::Expression};
   MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif  // defined(DEBUG)
 
@@ -2367,7 +2374,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceDataProperty(
 
 template <typename Tok>
 JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceDebuggerStatement(
-    const size_t start, const BinKind kind, const BinFields& fields) {
+    const size_t start, const BinASTKind kind, const BinASTFields& fields) {
   return raiseError(
       "FIXME: Not implemented yet in this preview release (DebuggerStatement)");
 }
@@ -2379,12 +2386,12 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceDebuggerStatement(
 */
 template <typename Tok>
 JS::Result<ParseNode*> BinASTParser<Tok>::parseDirective() {
-  BinKind kind;
-  BinFields fields(cx_);
+  BinASTKind kind;
+  BinASTFields fields(cx_);
   AutoTaggedTuple guard(*tokenizer_);
 
   MOZ_TRY(tokenizer_->enterTaggedTuple(kind, fields, guard));
-  if (kind != BinKind::Directive) {
+  if (kind != BinASTKind::Directive) {
     return raiseInvalidKind("Directive", kind);
   }
   const auto start = tokenizer_->offset();
@@ -2396,12 +2403,12 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseDirective() {
 
 template <typename Tok>
 JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceDirective(
-    const size_t start, const BinKind kind, const BinFields& fields) {
-  MOZ_ASSERT(kind == BinKind::Directive);
+    const size_t start, const BinASTKind kind, const BinASTFields& fields) {
+  MOZ_ASSERT(kind == BinASTKind::Directive);
   BINJS_TRY(CheckRecursionLimit(cx_));
 
 #if defined(DEBUG)
-  const BinField expected_fields[1] = {BinField::RawValue};
+  const BinASTField expected_fields[1] = {BinASTField::RawValue};
   MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif  // defined(DEBUG)
 
@@ -2415,12 +2422,12 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceDirective(
 
 template <typename Tok>
 JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceDoWhileStatement(
-    const size_t start, const BinKind kind, const BinFields& fields) {
-  MOZ_ASSERT(kind == BinKind::DoWhileStatement);
+    const size_t start, const BinASTKind kind, const BinASTFields& fields) {
+  MOZ_ASSERT(kind == BinASTKind::DoWhileStatement);
   BINJS_TRY(CheckRecursionLimit(cx_));
 
 #if defined(DEBUG)
-  const BinField expected_fields[2] = {BinField::Test, BinField::Body};
+  const BinASTField expected_fields[2] = {BinASTField::Test, BinASTField::Body};
   MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif  // defined(DEBUG)
   ParseContext::Statement stmt(pc_, StatementKind::DoLoop);
@@ -2437,7 +2444,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceDoWhileStatement(
 template <typename Tok>
 JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceEagerArrowExpressionWithExpression(
-    const size_t start, const BinKind kind, const BinFields& fields) {
+    const size_t start, const BinASTKind kind, const BinASTFields& fields) {
   return raiseError(
       "FIXME: Not implemented yet in this preview release "
       "(EagerArrowExpressionWithExpression)");
@@ -2446,7 +2453,7 @@ BinASTParser<Tok>::parseInterfaceEagerArrowExpressionWithExpression(
 template <typename Tok>
 JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceEagerArrowExpressionWithFunctionBody(
-    const size_t start, const BinKind kind, const BinFields& fields) {
+    const size_t start, const BinASTKind kind, const BinASTFields& fields) {
   return raiseError(
       "FIXME: Not implemented yet in this preview release "
       "(EagerArrowExpressionWithFunctionBody)");
@@ -2455,14 +2462,14 @@ BinASTParser<Tok>::parseInterfaceEagerArrowExpressionWithFunctionBody(
 template <typename Tok>
 JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceEagerFunctionDeclaration(
-    const size_t start, const BinKind kind, const BinFields& fields) {
-  MOZ_ASSERT(kind == BinKind::EagerFunctionDeclaration);
+    const size_t start, const BinASTKind kind, const BinASTFields& fields) {
+  MOZ_ASSERT(kind == BinASTKind::EagerFunctionDeclaration);
   BINJS_TRY(CheckRecursionLimit(cx_));
 
 #if defined(DEBUG)
-  const BinField expected_fields[6] = {
-      BinField::IsAsync, BinField::IsGenerator, BinField::Name,
-      BinField::Length,  BinField::Directives,  BinField::Contents};
+  const BinASTField expected_fields[6] = {
+      BinASTField::IsAsync, BinASTField::IsGenerator, BinASTField::Name,
+      BinASTField::Length,  BinASTField::Directives,  BinASTField::Contents};
   MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif  // defined(DEBUG)
   const auto syntax = FunctionSyntaxKind::Statement;
@@ -2497,7 +2504,7 @@ BinASTParser<Tok>::parseInterfaceEagerFunctionDeclaration(
 
   // Push a new ParseContext. It will be used to parse `scope`, the arguments,
   // the function.
-  BinParseContext funpc(cx_, this, funbox, /* newDirectives = */ nullptr);
+  BinASTParseContext funpc(cx_, this, funbox, /* newDirectives = */ nullptr);
   BINJS_TRY(funpc.init());
   pc_->functionScope().useAsVarScope(pc_);
   MOZ_ASSERT(pc_->isFunctionBox());
@@ -2518,14 +2525,14 @@ BinASTParser<Tok>::parseInterfaceEagerFunctionDeclaration(
 
 template <typename Tok>
 JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceEagerFunctionExpression(
-    const size_t start, const BinKind kind, const BinFields& fields) {
-  MOZ_ASSERT(kind == BinKind::EagerFunctionExpression);
+    const size_t start, const BinASTKind kind, const BinASTFields& fields) {
+  MOZ_ASSERT(kind == BinASTKind::EagerFunctionExpression);
   BINJS_TRY(CheckRecursionLimit(cx_));
 
 #if defined(DEBUG)
-  const BinField expected_fields[6] = {
-      BinField::IsAsync, BinField::IsGenerator, BinField::Name,
-      BinField::Length,  BinField::Directives,  BinField::Contents};
+  const BinASTField expected_fields[6] = {
+      BinASTField::IsAsync, BinASTField::IsGenerator, BinASTField::Name,
+      BinASTField::Length,  BinASTField::Directives,  BinASTField::Contents};
   MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif  // defined(DEBUG)
   const auto syntax = FunctionSyntaxKind::Expression;
@@ -2560,7 +2567,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceEagerFunctionExpression(
 
   // Push a new ParseContext. It will be used to parse `scope`, the arguments,
   // the function.
-  BinParseContext funpc(cx_, this, funbox, /* newDirectives = */ nullptr);
+  BinASTParseContext funpc(cx_, this, funbox, /* newDirectives = */ nullptr);
   BINJS_TRY(funpc.init());
   pc_->functionScope().useAsVarScope(pc_);
   MOZ_ASSERT(pc_->isFunctionBox());
@@ -2581,13 +2588,13 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceEagerFunctionExpression(
 
 template <typename Tok>
 JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceEagerGetter(
-    const size_t start, const BinKind kind, const BinFields& fields) {
-  MOZ_ASSERT(kind == BinKind::EagerGetter);
+    const size_t start, const BinASTKind kind, const BinASTFields& fields) {
+  MOZ_ASSERT(kind == BinASTKind::EagerGetter);
   BINJS_TRY(CheckRecursionLimit(cx_));
 
 #if defined(DEBUG)
-  const BinField expected_fields[3] = {BinField::Name, BinField::Directives,
-                                       BinField::Contents};
+  const BinASTField expected_fields[3] = {
+      BinASTField::Name, BinASTField::Directives, BinASTField::Contents};
   MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif  // defined(DEBUG)
   const auto syntax = FunctionSyntaxKind::Setter;
@@ -2615,7 +2622,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceEagerGetter(
 
   // Push a new ParseContext. It will be used to parse `scope`, the arguments,
   // the function.
-  BinParseContext funpc(cx_, this, funbox, /* newDirectives = */ nullptr);
+  BinASTParseContext funpc(cx_, this, funbox, /* newDirectives = */ nullptr);
   BINJS_TRY(funpc.init());
   pc_->functionScope().useAsVarScope(pc_);
   MOZ_ASSERT(pc_->isFunctionBox());
@@ -2638,14 +2645,14 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceEagerGetter(
 
 template <typename Tok>
 JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceEagerMethod(
-    const size_t start, const BinKind kind, const BinFields& fields) {
-  MOZ_ASSERT(kind == BinKind::EagerMethod);
+    const size_t start, const BinASTKind kind, const BinASTFields& fields) {
+  MOZ_ASSERT(kind == BinASTKind::EagerMethod);
   BINJS_TRY(CheckRecursionLimit(cx_));
 
 #if defined(DEBUG)
-  const BinField expected_fields[6] = {
-      BinField::IsAsync, BinField::IsGenerator, BinField::Name,
-      BinField::Length,  BinField::Directives,  BinField::Contents};
+  const BinASTField expected_fields[6] = {
+      BinASTField::IsAsync, BinASTField::IsGenerator, BinASTField::Name,
+      BinASTField::Length,  BinASTField::Directives,  BinASTField::Contents};
   MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif  // defined(DEBUG)
   const auto syntax = FunctionSyntaxKind::Method;
@@ -2681,7 +2688,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceEagerMethod(
 
   // Push a new ParseContext. It will be used to parse `scope`, the arguments,
   // the function.
-  BinParseContext funpc(cx_, this, funbox, /* newDirectives = */ nullptr);
+  BinASTParseContext funpc(cx_, this, funbox, /* newDirectives = */ nullptr);
   BINJS_TRY(funpc.init());
   pc_->functionScope().useAsVarScope(pc_);
   MOZ_ASSERT(pc_->isFunctionBox());
@@ -2704,14 +2711,14 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceEagerMethod(
 
 template <typename Tok>
 JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceEagerSetter(
-    const size_t start, const BinKind kind, const BinFields& fields) {
-  MOZ_ASSERT(kind == BinKind::EagerSetter);
+    const size_t start, const BinASTKind kind, const BinASTFields& fields) {
+  MOZ_ASSERT(kind == BinASTKind::EagerSetter);
   BINJS_TRY(CheckRecursionLimit(cx_));
 
 #if defined(DEBUG)
-  const BinField expected_fields[4] = {BinField::Name, BinField::Length,
-                                       BinField::Directives,
-                                       BinField::Contents};
+  const BinASTField expected_fields[4] = {
+      BinASTField::Name, BinASTField::Length, BinASTField::Directives,
+      BinASTField::Contents};
   MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif  // defined(DEBUG)
   const auto syntax = FunctionSyntaxKind::Setter;
@@ -2740,7 +2747,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceEagerSetter(
 
   // Push a new ParseContext. It will be used to parse `scope`, the arguments,
   // the function.
-  BinParseContext funpc(cx_, this, funbox, /* newDirectives = */ nullptr);
+  BinASTParseContext funpc(cx_, this, funbox, /* newDirectives = */ nullptr);
   BINJS_TRY(funpc.init());
   pc_->functionScope().useAsVarScope(pc_);
   MOZ_ASSERT(pc_->isFunctionBox());
@@ -2763,8 +2770,8 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceEagerSetter(
 
 template <typename Tok>
 JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceEmptyStatement(
-    const size_t start, const BinKind kind, const BinFields& fields) {
-  MOZ_ASSERT(kind == BinKind::EmptyStatement);
+    const size_t start, const BinASTKind kind, const BinASTFields& fields) {
+  MOZ_ASSERT(kind == BinASTKind::EmptyStatement);
   BINJS_TRY(CheckRecursionLimit(cx_));
   MOZ_TRY(tokenizer_->checkFields0(kind, fields));
 
@@ -2774,12 +2781,12 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceEmptyStatement(
 
 template <typename Tok>
 JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceExpressionStatement(
-    const size_t start, const BinKind kind, const BinFields& fields) {
-  MOZ_ASSERT(kind == BinKind::ExpressionStatement);
+    const size_t start, const BinASTKind kind, const BinASTFields& fields) {
+  MOZ_ASSERT(kind == BinASTKind::ExpressionStatement);
   BINJS_TRY(CheckRecursionLimit(cx_));
 
 #if defined(DEBUG)
-  const BinField expected_fields[1] = {BinField::Expression};
+  const BinASTField expected_fields[1] = {BinASTField::Expression};
   MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif  // defined(DEBUG)
 
@@ -2792,12 +2799,13 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceExpressionStatement(
 
 template <typename Tok>
 JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceForInOfBinding(
-    const size_t start, const BinKind kind, const BinFields& fields) {
-  MOZ_ASSERT(kind == BinKind::ForInOfBinding);
+    const size_t start, const BinASTKind kind, const BinASTFields& fields) {
+  MOZ_ASSERT(kind == BinASTKind::ForInOfBinding);
   BINJS_TRY(CheckRecursionLimit(cx_));
 
 #if defined(DEBUG)
-  const BinField expected_fields[2] = {BinField::Kind, BinField::Binding};
+  const BinASTField expected_fields[2] = {BinASTField::Kind,
+                                          BinASTField::Binding};
   MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif  // defined(DEBUG)
   AutoVariableDeclarationKind kindGuard(this);
@@ -2828,13 +2836,13 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceForInOfBinding(
 
 template <typename Tok>
 JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceForInStatement(
-    const size_t start, const BinKind kind, const BinFields& fields) {
-  MOZ_ASSERT(kind == BinKind::ForInStatement);
+    const size_t start, const BinASTKind kind, const BinASTFields& fields) {
+  MOZ_ASSERT(kind == BinASTKind::ForInStatement);
   BINJS_TRY(CheckRecursionLimit(cx_));
 
 #if defined(DEBUG)
-  const BinField expected_fields[3] = {BinField::Left, BinField::Right,
-                                       BinField::Body};
+  const BinASTField expected_fields[3] = {BinASTField::Left, BinASTField::Right,
+                                          BinASTField::Body};
   MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif  // defined(DEBUG)
   ParseContext::Statement stmt(pc_, StatementKind::ForInLoop);
@@ -2867,20 +2875,21 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceForInStatement(
 
 template <typename Tok>
 JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceForOfStatement(
-    const size_t start, const BinKind kind, const BinFields& fields) {
+    const size_t start, const BinASTKind kind, const BinASTFields& fields) {
   return raiseError(
       "FIXME: Not implemented yet in this preview release (ForOfStatement)");
 }
 
 template <typename Tok>
 JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceForStatement(
-    const size_t start, const BinKind kind, const BinFields& fields) {
-  MOZ_ASSERT(kind == BinKind::ForStatement);
+    const size_t start, const BinASTKind kind, const BinASTFields& fields) {
+  MOZ_ASSERT(kind == BinASTKind::ForStatement);
   BINJS_TRY(CheckRecursionLimit(cx_));
 
 #if defined(DEBUG)
-  const BinField expected_fields[4] = {BinField::Init, BinField::Test,
-                                       BinField::Update, BinField::Body};
+  const BinASTField expected_fields[4] = {BinASTField::Init, BinASTField::Test,
+                                          BinASTField::Update,
+                                          BinASTField::Body};
   MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif  // defined(DEBUG)
   ParseContext::Statement stmt(pc_, StatementKind::ForLoop);
@@ -2920,12 +2929,12 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceForStatement(
 */
 template <typename Tok>
 JS::Result<ListNode*> BinASTParser<Tok>::parseFormalParameters() {
-  BinKind kind;
-  BinFields fields(cx_);
+  BinASTKind kind;
+  BinASTFields fields(cx_);
   AutoTaggedTuple guard(*tokenizer_);
 
   MOZ_TRY(tokenizer_->enterTaggedTuple(kind, fields, guard));
-  if (kind != BinKind::FormalParameters) {
+  if (kind != BinASTKind::FormalParameters) {
     return raiseInvalidKind("FormalParameters", kind);
   }
   const auto start = tokenizer_->offset();
@@ -2938,12 +2947,13 @@ JS::Result<ListNode*> BinASTParser<Tok>::parseFormalParameters() {
 
 template <typename Tok>
 JS::Result<ListNode*> BinASTParser<Tok>::parseInterfaceFormalParameters(
-    const size_t start, const BinKind kind, const BinFields& fields) {
-  MOZ_ASSERT(kind == BinKind::FormalParameters);
+    const size_t start, const BinASTKind kind, const BinASTFields& fields) {
+  MOZ_ASSERT(kind == BinASTKind::FormalParameters);
   BINJS_TRY(CheckRecursionLimit(cx_));
 
 #if defined(DEBUG)
-  const BinField expected_fields[2] = {BinField::Items, BinField::Rest};
+  const BinASTField expected_fields[2] = {BinASTField::Items,
+                                          BinASTField::Rest};
   MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif  // defined(DEBUG)
 
@@ -2972,12 +2982,12 @@ JS::Result<ListNode*> BinASTParser<Tok>::parseInterfaceFormalParameters(
 template <typename Tok>
 JS::Result<Ok> BinASTParser<Tok>::parseFunctionExpressionContents(
     uint32_t funLength, ListNode** paramsOut, ListNode** bodyOut) {
-  BinKind kind;
-  BinFields fields(cx_);
+  BinASTKind kind;
+  BinASTFields fields(cx_);
   AutoTaggedTuple guard(*tokenizer_);
 
   MOZ_TRY(tokenizer_->enterTaggedTuple(kind, fields, guard));
-  if (kind != BinKind::FunctionExpressionContents) {
+  if (kind != BinASTKind::FunctionExpressionContents) {
     return raiseInvalidKind("FunctionExpressionContents", kind);
   }
   const auto start = tokenizer_->offset();
@@ -2991,18 +3001,18 @@ JS::Result<Ok> BinASTParser<Tok>::parseFunctionExpressionContents(
 
 template <typename Tok>
 JS::Result<Ok> BinASTParser<Tok>::parseInterfaceFunctionExpressionContents(
-    const size_t start, const BinKind kind, const BinFields& fields,
+    const size_t start, const BinASTKind kind, const BinASTFields& fields,
     uint32_t funLength, ListNode** paramsOut, ListNode** bodyOut) {
-  MOZ_ASSERT(kind == BinKind::FunctionExpressionContents);
+  MOZ_ASSERT(kind == BinASTKind::FunctionExpressionContents);
   BINJS_TRY(CheckRecursionLimit(cx_));
 
 #if defined(DEBUG)
-  const BinField expected_fields[6] = {BinField::IsFunctionNameCaptured,
-                                       BinField::IsThisCaptured,
-                                       BinField::ParameterScope,
-                                       BinField::Params,
-                                       BinField::BodyScope,
-                                       BinField::Body};
+  const BinASTField expected_fields[6] = {BinASTField::IsFunctionNameCaptured,
+                                          BinASTField::IsThisCaptured,
+                                          BinASTField::ParameterScope,
+                                          BinASTField::Params,
+                                          BinASTField::BodyScope,
+                                          BinASTField::Body};
   MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif  // defined(DEBUG)
 
@@ -3045,12 +3055,12 @@ JS::Result<Ok> BinASTParser<Tok>::parseInterfaceFunctionExpressionContents(
 template <typename Tok>
 JS::Result<Ok> BinASTParser<Tok>::parseFunctionOrMethodContents(
     uint32_t funLength, ListNode** paramsOut, ListNode** bodyOut) {
-  BinKind kind;
-  BinFields fields(cx_);
+  BinASTKind kind;
+  BinASTFields fields(cx_);
   AutoTaggedTuple guard(*tokenizer_);
 
   MOZ_TRY(tokenizer_->enterTaggedTuple(kind, fields, guard));
-  if (kind != BinKind::FunctionOrMethodContents) {
+  if (kind != BinASTKind::FunctionOrMethodContents) {
     return raiseInvalidKind("FunctionOrMethodContents", kind);
   }
   const auto start = tokenizer_->offset();
@@ -3064,15 +3074,15 @@ JS::Result<Ok> BinASTParser<Tok>::parseFunctionOrMethodContents(
 
 template <typename Tok>
 JS::Result<Ok> BinASTParser<Tok>::parseInterfaceFunctionOrMethodContents(
-    const size_t start, const BinKind kind, const BinFields& fields,
+    const size_t start, const BinASTKind kind, const BinASTFields& fields,
     uint32_t funLength, ListNode** paramsOut, ListNode** bodyOut) {
-  MOZ_ASSERT(kind == BinKind::FunctionOrMethodContents);
+  MOZ_ASSERT(kind == BinASTKind::FunctionOrMethodContents);
   BINJS_TRY(CheckRecursionLimit(cx_));
 
 #if defined(DEBUG)
-  const BinField expected_fields[5] = {
-      BinField::IsThisCaptured, BinField::ParameterScope, BinField::Params,
-      BinField::BodyScope, BinField::Body};
+  const BinASTField expected_fields[5] = {
+      BinASTField::IsThisCaptured, BinASTField::ParameterScope,
+      BinASTField::Params, BinASTField::BodyScope, BinASTField::Body};
   MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif  // defined(DEBUG)
 
@@ -3106,12 +3116,12 @@ template <typename Tok>
 JS::Result<Ok> BinASTParser<Tok>::parseGetterContents(uint32_t funLength,
                                                       ListNode** paramsOut,
                                                       ListNode** bodyOut) {
-  BinKind kind;
-  BinFields fields(cx_);
+  BinASTKind kind;
+  BinASTFields fields(cx_);
   AutoTaggedTuple guard(*tokenizer_);
 
   MOZ_TRY(tokenizer_->enterTaggedTuple(kind, fields, guard));
-  if (kind != BinKind::GetterContents) {
+  if (kind != BinASTKind::GetterContents) {
     return raiseInvalidKind("GetterContents", kind);
   }
   const auto start = tokenizer_->offset();
@@ -3125,14 +3135,14 @@ JS::Result<Ok> BinASTParser<Tok>::parseGetterContents(uint32_t funLength,
 
 template <typename Tok>
 JS::Result<Ok> BinASTParser<Tok>::parseInterfaceGetterContents(
-    const size_t start, const BinKind kind, const BinFields& fields,
+    const size_t start, const BinASTKind kind, const BinASTFields& fields,
     uint32_t funLength, ListNode** paramsOut, ListNode** bodyOut) {
-  MOZ_ASSERT(kind == BinKind::GetterContents);
+  MOZ_ASSERT(kind == BinASTKind::GetterContents);
   BINJS_TRY(CheckRecursionLimit(cx_));
 
 #if defined(DEBUG)
-  const BinField expected_fields[3] = {BinField::IsThisCaptured,
-                                       BinField::BodyScope, BinField::Body};
+  const BinASTField expected_fields[3] = {
+      BinASTField::IsThisCaptured, BinASTField::BodyScope, BinASTField::Body};
   MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif  // defined(DEBUG)
 
@@ -3157,12 +3167,12 @@ JS::Result<Ok> BinASTParser<Tok>::parseInterfaceGetterContents(
 */
 template <typename Tok>
 JS::Result<ParseNode*> BinASTParser<Tok>::parseIdentifierExpression() {
-  BinKind kind;
-  BinFields fields(cx_);
+  BinASTKind kind;
+  BinASTFields fields(cx_);
   AutoTaggedTuple guard(*tokenizer_);
 
   MOZ_TRY(tokenizer_->enterTaggedTuple(kind, fields, guard));
-  if (kind != BinKind::IdentifierExpression) {
+  if (kind != BinASTKind::IdentifierExpression) {
     return raiseInvalidKind("IdentifierExpression", kind);
   }
   const auto start = tokenizer_->offset();
@@ -3175,12 +3185,12 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseIdentifierExpression() {
 
 template <typename Tok>
 JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceIdentifierExpression(
-    const size_t start, const BinKind kind, const BinFields& fields) {
-  MOZ_ASSERT(kind == BinKind::IdentifierExpression);
+    const size_t start, const BinASTKind kind, const BinASTFields& fields) {
+  MOZ_ASSERT(kind == BinASTKind::IdentifierExpression);
   BINJS_TRY(CheckRecursionLimit(cx_));
 
 #if defined(DEBUG)
-  const BinField expected_fields[1] = {BinField::Name};
+  const BinASTField expected_fields[1] = {BinASTField::Name};
   MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif  // defined(DEBUG)
 
@@ -3196,13 +3206,13 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceIdentifierExpression(
 
 template <typename Tok>
 JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceIfStatement(
-    const size_t start, const BinKind kind, const BinFields& fields) {
-  MOZ_ASSERT(kind == BinKind::IfStatement);
+    const size_t start, const BinASTKind kind, const BinASTFields& fields) {
+  MOZ_ASSERT(kind == BinASTKind::IfStatement);
   BINJS_TRY(CheckRecursionLimit(cx_));
 
 #if defined(DEBUG)
-  const BinField expected_fields[3] = {BinField::Test, BinField::Consequent,
-                                       BinField::Alternate};
+  const BinASTField expected_fields[3] = {
+      BinASTField::Test, BinASTField::Consequent, BinASTField::Alternate};
   MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif  // defined(DEBUG)
 
@@ -3219,12 +3229,13 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceIfStatement(
 
 template <typename Tok>
 JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceLabelledStatement(
-    const size_t start, const BinKind kind, const BinFields& fields) {
-  MOZ_ASSERT(kind == BinKind::LabelledStatement);
+    const size_t start, const BinASTKind kind, const BinASTFields& fields) {
+  MOZ_ASSERT(kind == BinASTKind::LabelledStatement);
   BINJS_TRY(CheckRecursionLimit(cx_));
 
 #if defined(DEBUG)
-  const BinField expected_fields[2] = {BinField::Label, BinField::Body};
+  const BinASTField expected_fields[2] = {BinASTField::Label,
+                                          BinASTField::Body};
   MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif  // defined(DEBUG)
 
@@ -3244,7 +3255,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceLabelledStatement(
 template <typename Tok>
 JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceLazyArrowExpressionWithExpression(
-    const size_t start, const BinKind kind, const BinFields& fields) {
+    const size_t start, const BinASTKind kind, const BinASTFields& fields) {
   return raiseError(
       "FIXME: Not implemented yet in this preview release "
       "(LazyArrowExpressionWithExpression)");
@@ -3253,7 +3264,7 @@ BinASTParser<Tok>::parseInterfaceLazyArrowExpressionWithExpression(
 template <typename Tok>
 JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceLazyArrowExpressionWithFunctionBody(
-    const size_t start, const BinKind kind, const BinFields& fields) {
+    const size_t start, const BinASTKind kind, const BinASTFields& fields) {
   return raiseError(
       "FIXME: Not implemented yet in this preview release "
       "(LazyArrowExpressionWithFunctionBody)");
@@ -3261,15 +3272,15 @@ BinASTParser<Tok>::parseInterfaceLazyArrowExpressionWithFunctionBody(
 
 template <typename Tok>
 JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceLazyFunctionDeclaration(
-    const size_t start, const BinKind kind, const BinFields& fields) {
-  MOZ_ASSERT(kind == BinKind::LazyFunctionDeclaration);
+    const size_t start, const BinASTKind kind, const BinASTFields& fields) {
+  MOZ_ASSERT(kind == BinASTKind::LazyFunctionDeclaration);
   BINJS_TRY(CheckRecursionLimit(cx_));
 
 #if defined(DEBUG)
-  const BinField expected_fields[7] = {
-      BinField::IsAsync, BinField::IsGenerator, BinField::Name,
-      BinField::Length,  BinField::Directives,  BinField::ContentsSkip,
-      BinField::Contents};
+  const BinASTField expected_fields[7] = {
+      BinASTField::IsAsync, BinASTField::IsGenerator, BinASTField::Name,
+      BinASTField::Length,  BinASTField::Directives,  BinASTField::ContentsSkip,
+      BinASTField::Contents};
   MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif  // defined(DEBUG)
   const auto syntax = FunctionSyntaxKind::Statement;
@@ -3326,15 +3337,15 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceLazyFunctionDeclaration(
 
 template <typename Tok>
 JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceLazyFunctionExpression(
-    const size_t start, const BinKind kind, const BinFields& fields) {
-  MOZ_ASSERT(kind == BinKind::LazyFunctionExpression);
+    const size_t start, const BinASTKind kind, const BinASTFields& fields) {
+  MOZ_ASSERT(kind == BinASTKind::LazyFunctionExpression);
   BINJS_TRY(CheckRecursionLimit(cx_));
 
 #if defined(DEBUG)
-  const BinField expected_fields[7] = {
-      BinField::IsAsync, BinField::IsGenerator, BinField::Name,
-      BinField::Length,  BinField::Directives,  BinField::ContentsSkip,
-      BinField::Contents};
+  const BinASTField expected_fields[7] = {
+      BinASTField::IsAsync, BinASTField::IsGenerator, BinASTField::Name,
+      BinASTField::Length,  BinASTField::Directives,  BinASTField::ContentsSkip,
+      BinASTField::Contents};
   MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif  // defined(DEBUG)
   const auto syntax = FunctionSyntaxKind::Expression;
@@ -3391,21 +3402,21 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceLazyFunctionExpression(
 
 template <typename Tok>
 JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceLazyGetter(
-    const size_t start, const BinKind kind, const BinFields& fields) {
+    const size_t start, const BinASTKind kind, const BinASTFields& fields) {
   return raiseError(
       "FIXME: Not implemented yet in this preview release (LazyGetter)");
 }
 
 template <typename Tok>
 JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceLazyMethod(
-    const size_t start, const BinKind kind, const BinFields& fields) {
+    const size_t start, const BinASTKind kind, const BinASTFields& fields) {
   return raiseError(
       "FIXME: Not implemented yet in this preview release (LazyMethod)");
 }
 
 template <typename Tok>
 JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceLazySetter(
-    const size_t start, const BinKind kind, const BinFields& fields) {
+    const size_t start, const BinASTKind kind, const BinASTFields& fields) {
   return raiseError(
       "FIXME: Not implemented yet in this preview release (LazySetter)");
 }
@@ -3413,12 +3424,12 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceLazySetter(
 template <typename Tok>
 JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceLiteralBooleanExpression(
-    const size_t start, const BinKind kind, const BinFields& fields) {
-  MOZ_ASSERT(kind == BinKind::LiteralBooleanExpression);
+    const size_t start, const BinASTKind kind, const BinASTFields& fields) {
+  MOZ_ASSERT(kind == BinASTKind::LiteralBooleanExpression);
   BINJS_TRY(CheckRecursionLimit(cx_));
 
 #if defined(DEBUG)
-  const BinField expected_fields[1] = {BinField::Value};
+  const BinASTField expected_fields[1] = {BinASTField::Value};
   MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif  // defined(DEBUG)
 
@@ -3432,7 +3443,7 @@ BinASTParser<Tok>::parseInterfaceLiteralBooleanExpression(
 template <typename Tok>
 JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceLiteralInfinityExpression(
-    const size_t start, const BinKind kind, const BinFields& fields) {
+    const size_t start, const BinASTKind kind, const BinASTFields& fields) {
   return raiseError(
       "FIXME: Not implemented yet in this preview release "
       "(LiteralInfinityExpression)");
@@ -3440,8 +3451,8 @@ BinASTParser<Tok>::parseInterfaceLiteralInfinityExpression(
 
 template <typename Tok>
 JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceLiteralNullExpression(
-    const size_t start, const BinKind kind, const BinFields& fields) {
-  MOZ_ASSERT(kind == BinKind::LiteralNullExpression);
+    const size_t start, const BinASTKind kind, const BinASTFields& fields) {
+  MOZ_ASSERT(kind == BinASTKind::LiteralNullExpression);
   BINJS_TRY(CheckRecursionLimit(cx_));
   MOZ_TRY(tokenizer_->checkFields0(kind, fields));
 
@@ -3452,12 +3463,12 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceLiteralNullExpression(
 template <typename Tok>
 JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceLiteralNumericExpression(
-    const size_t start, const BinKind kind, const BinFields& fields) {
-  MOZ_ASSERT(kind == BinKind::LiteralNumericExpression);
+    const size_t start, const BinASTKind kind, const BinASTFields& fields) {
+  MOZ_ASSERT(kind == BinASTKind::LiteralNumericExpression);
   BINJS_TRY(CheckRecursionLimit(cx_));
 
 #if defined(DEBUG)
-  const BinField expected_fields[1] = {BinField::Value};
+  const BinASTField expected_fields[1] = {BinASTField::Value};
   MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif  // defined(DEBUG)
 
@@ -3470,12 +3481,12 @@ BinASTParser<Tok>::parseInterfaceLiteralNumericExpression(
 
 template <typename Tok>
 JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceLiteralPropertyName(
-    const size_t start, const BinKind kind, const BinFields& fields) {
-  MOZ_ASSERT(kind == BinKind::LiteralPropertyName);
+    const size_t start, const BinASTKind kind, const BinASTFields& fields) {
+  MOZ_ASSERT(kind == BinASTKind::LiteralPropertyName);
   BINJS_TRY(CheckRecursionLimit(cx_));
 
 #if defined(DEBUG)
-  const BinField expected_fields[1] = {BinField::Value};
+  const BinASTField expected_fields[1] = {BinASTField::Value};
   MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif  // defined(DEBUG)
 
@@ -3497,12 +3508,13 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceLiteralPropertyName(
 
 template <typename Tok>
 JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceLiteralRegExpExpression(
-    const size_t start, const BinKind kind, const BinFields& fields) {
-  MOZ_ASSERT(kind == BinKind::LiteralRegExpExpression);
+    const size_t start, const BinASTKind kind, const BinASTFields& fields) {
+  MOZ_ASSERT(kind == BinASTKind::LiteralRegExpExpression);
   BINJS_TRY(CheckRecursionLimit(cx_));
 
 #if defined(DEBUG)
-  const BinField expected_fields[2] = {BinField::Pattern, BinField::Flags};
+  const BinASTField expected_fields[2] = {BinASTField::Pattern,
+                                          BinASTField::Flags};
   MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif  // defined(DEBUG)
 
@@ -3539,12 +3551,12 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceLiteralRegExpExpression(
 
 template <typename Tok>
 JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceLiteralStringExpression(
-    const size_t start, const BinKind kind, const BinFields& fields) {
-  MOZ_ASSERT(kind == BinKind::LiteralStringExpression);
+    const size_t start, const BinASTKind kind, const BinASTFields& fields) {
+  MOZ_ASSERT(kind == BinASTKind::LiteralStringExpression);
   BINJS_TRY(CheckRecursionLimit(cx_));
 
 #if defined(DEBUG)
-  const BinField expected_fields[1] = {BinField::Value};
+  const BinASTField expected_fields[1] = {BinASTField::Value};
   MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif  // defined(DEBUG)
 
@@ -3558,19 +3570,20 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceLiteralStringExpression(
 
 template <typename Tok>
 JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceModule(
-    const size_t start, const BinKind kind, const BinFields& fields) {
+    const size_t start, const BinASTKind kind, const BinASTFields& fields) {
   return raiseError(
       "FIXME: Not implemented yet in this preview release (Module)");
 }
 
 template <typename Tok>
 JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceNewExpression(
-    const size_t start, const BinKind kind, const BinFields& fields) {
-  MOZ_ASSERT(kind == BinKind::NewExpression);
+    const size_t start, const BinASTKind kind, const BinASTFields& fields) {
+  MOZ_ASSERT(kind == BinASTKind::NewExpression);
   BINJS_TRY(CheckRecursionLimit(cx_));
 
 #if defined(DEBUG)
-  const BinField expected_fields[2] = {BinField::Callee, BinField::Arguments};
+  const BinASTField expected_fields[2] = {BinASTField::Callee,
+                                          BinASTField::Arguments};
   MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif  // defined(DEBUG)
 
@@ -3585,7 +3598,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceNewExpression(
 
 template <typename Tok>
 JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceNewTargetExpression(
-    const size_t start, const BinKind kind, const BinFields& fields) {
+    const size_t start, const BinASTKind kind, const BinASTFields& fields) {
   return raiseError(
       "FIXME: Not implemented yet in this preview release "
       "(NewTargetExpression)");
@@ -3593,7 +3606,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceNewTargetExpression(
 
 template <typename Tok>
 JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceObjectAssignmentTarget(
-    const size_t start, const BinKind kind, const BinFields& fields) {
+    const size_t start, const BinASTKind kind, const BinASTFields& fields) {
   return raiseError(
       "FIXME: Not implemented yet in this preview release "
       "(ObjectAssignmentTarget)");
@@ -3601,19 +3614,19 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceObjectAssignmentTarget(
 
 template <typename Tok>
 JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceObjectBinding(
-    const size_t start, const BinKind kind, const BinFields& fields) {
+    const size_t start, const BinASTKind kind, const BinASTFields& fields) {
   return raiseError(
       "FIXME: Not implemented yet in this preview release (ObjectBinding)");
 }
 
 template <typename Tok>
 JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceObjectExpression(
-    const size_t start, const BinKind kind, const BinFields& fields) {
-  MOZ_ASSERT(kind == BinKind::ObjectExpression);
+    const size_t start, const BinASTKind kind, const BinASTFields& fields) {
+  MOZ_ASSERT(kind == BinASTKind::ObjectExpression);
   BINJS_TRY(CheckRecursionLimit(cx_));
 
 #if defined(DEBUG)
-  const BinField expected_fields[1] = {BinField::Properties};
+  const BinASTField expected_fields[1] = {BinASTField::Properties};
   MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif  // defined(DEBUG)
 
@@ -3625,12 +3638,12 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceObjectExpression(
 
 template <typename Tok>
 JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceReturnStatement(
-    const size_t start, const BinKind kind, const BinFields& fields) {
-  MOZ_ASSERT(kind == BinKind::ReturnStatement);
+    const size_t start, const BinASTKind kind, const BinASTFields& fields) {
+  MOZ_ASSERT(kind == BinASTKind::ReturnStatement);
   BINJS_TRY(CheckRecursionLimit(cx_));
 
 #if defined(DEBUG)
-  const BinField expected_fields[1] = {BinField::Expression};
+  const BinASTField expected_fields[1] = {BinASTField::Expression};
   MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif  // defined(DEBUG)
   if (!pc_->isFunctionBox()) {
@@ -3649,13 +3662,13 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceReturnStatement(
 
 template <typename Tok>
 JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceScript(
-    const size_t start, const BinKind kind, const BinFields& fields) {
-  MOZ_ASSERT(kind == BinKind::Script);
+    const size_t start, const BinASTKind kind, const BinASTFields& fields) {
+  MOZ_ASSERT(kind == BinASTKind::Script);
   BINJS_TRY(CheckRecursionLimit(cx_));
 
 #if defined(DEBUG)
-  const BinField expected_fields[3] = {BinField::Scope, BinField::Directives,
-                                       BinField::Statements};
+  const BinASTField expected_fields[3] = {
+      BinASTField::Scope, BinASTField::Directives, BinASTField::Statements};
   MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif  // defined(DEBUG)
 
@@ -3684,12 +3697,12 @@ template <typename Tok>
 JS::Result<Ok> BinASTParser<Tok>::parseSetterContents(uint32_t funLength,
                                                       ListNode** paramsOut,
                                                       ListNode** bodyOut) {
-  BinKind kind;
-  BinFields fields(cx_);
+  BinASTKind kind;
+  BinASTFields fields(cx_);
   AutoTaggedTuple guard(*tokenizer_);
 
   MOZ_TRY(tokenizer_->enterTaggedTuple(kind, fields, guard));
-  if (kind != BinKind::SetterContents) {
+  if (kind != BinASTKind::SetterContents) {
     return raiseInvalidKind("SetterContents", kind);
   }
   const auto start = tokenizer_->offset();
@@ -3703,15 +3716,15 @@ JS::Result<Ok> BinASTParser<Tok>::parseSetterContents(uint32_t funLength,
 
 template <typename Tok>
 JS::Result<Ok> BinASTParser<Tok>::parseInterfaceSetterContents(
-    const size_t start, const BinKind kind, const BinFields& fields,
+    const size_t start, const BinASTKind kind, const BinASTFields& fields,
     uint32_t funLength, ListNode** paramsOut, ListNode** bodyOut) {
-  MOZ_ASSERT(kind == BinKind::SetterContents);
+  MOZ_ASSERT(kind == BinASTKind::SetterContents);
   BINJS_TRY(CheckRecursionLimit(cx_));
 
 #if defined(DEBUG)
-  const BinField expected_fields[5] = {
-      BinField::IsThisCaptured, BinField::ParameterScope, BinField::Param,
-      BinField::BodyScope, BinField::Body};
+  const BinASTField expected_fields[5] = {
+      BinASTField::IsThisCaptured, BinASTField::ParameterScope,
+      BinASTField::Param, BinASTField::BodyScope, BinASTField::Body};
   MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif  // defined(DEBUG)
 
@@ -3737,12 +3750,12 @@ JS::Result<Ok> BinASTParser<Tok>::parseInterfaceSetterContents(
 
 template <typename Tok>
 JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceShorthandProperty(
-    const size_t start, const BinKind kind, const BinFields& fields) {
-  MOZ_ASSERT(kind == BinKind::ShorthandProperty);
+    const size_t start, const BinASTKind kind, const BinASTFields& fields) {
+  MOZ_ASSERT(kind == BinASTKind::ShorthandProperty);
   BINJS_TRY(CheckRecursionLimit(cx_));
 
 #if defined(DEBUG)
-  const BinField expected_fields[1] = {BinField::Name};
+  const BinASTField expected_fields[1] = {BinASTField::Name};
   MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif  // defined(DEBUG)
 
@@ -3761,7 +3774,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceShorthandProperty(
 
 template <typename Tok>
 JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceSpreadElement(
-    const size_t start, const BinKind kind, const BinFields& fields) {
+    const size_t start, const BinASTKind kind, const BinASTFields& fields) {
   return raiseError(
       "FIXME: Not implemented yet in this preview release (SpreadElement)");
 }
@@ -3769,12 +3782,13 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceSpreadElement(
 template <typename Tok>
 JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceStaticMemberAssignmentTarget(
-    const size_t start, const BinKind kind, const BinFields& fields) {
-  MOZ_ASSERT(kind == BinKind::StaticMemberAssignmentTarget);
+    const size_t start, const BinASTKind kind, const BinASTFields& fields) {
+  MOZ_ASSERT(kind == BinASTKind::StaticMemberAssignmentTarget);
   BINJS_TRY(CheckRecursionLimit(cx_));
 
 #if defined(DEBUG)
-  const BinField expected_fields[2] = {BinField::Object, BinField::Property};
+  const BinASTField expected_fields[2] = {BinASTField::Object,
+                                          BinASTField::Property};
   MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif  // defined(DEBUG)
   size_t nameStart;
@@ -3794,12 +3808,13 @@ BinASTParser<Tok>::parseInterfaceStaticMemberAssignmentTarget(
 
 template <typename Tok>
 JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceStaticMemberExpression(
-    const size_t start, const BinKind kind, const BinFields& fields) {
-  MOZ_ASSERT(kind == BinKind::StaticMemberExpression);
+    const size_t start, const BinASTKind kind, const BinASTFields& fields) {
+  MOZ_ASSERT(kind == BinASTKind::StaticMemberExpression);
   BINJS_TRY(CheckRecursionLimit(cx_));
 
 #if defined(DEBUG)
-  const BinField expected_fields[2] = {BinField::Object, BinField::Property};
+  const BinASTField expected_fields[2] = {BinASTField::Object,
+                                          BinASTField::Property};
   MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif  // defined(DEBUG)
   size_t nameStart;
@@ -3819,7 +3834,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceStaticMemberExpression(
 
 template <typename Tok>
 JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceSuper(
-    const size_t start, const BinKind kind, const BinFields& fields) {
+    const size_t start, const BinASTKind kind, const BinASTFields& fields) {
   return raiseError(
       "FIXME: Not implemented yet in this preview release (Super)");
 }
@@ -3832,12 +3847,12 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceSuper(
 */
 template <typename Tok>
 JS::Result<CaseClause*> BinASTParser<Tok>::parseSwitchCase() {
-  BinKind kind;
-  BinFields fields(cx_);
+  BinASTKind kind;
+  BinASTFields fields(cx_);
   AutoTaggedTuple guard(*tokenizer_);
 
   MOZ_TRY(tokenizer_->enterTaggedTuple(kind, fields, guard));
-  if (kind != BinKind::SwitchCase) {
+  if (kind != BinASTKind::SwitchCase) {
     return raiseInvalidKind("SwitchCase", kind);
   }
   const auto start = tokenizer_->offset();
@@ -3849,12 +3864,13 @@ JS::Result<CaseClause*> BinASTParser<Tok>::parseSwitchCase() {
 
 template <typename Tok>
 JS::Result<CaseClause*> BinASTParser<Tok>::parseInterfaceSwitchCase(
-    const size_t start, const BinKind kind, const BinFields& fields) {
-  MOZ_ASSERT(kind == BinKind::SwitchCase);
+    const size_t start, const BinASTKind kind, const BinASTFields& fields) {
+  MOZ_ASSERT(kind == BinASTKind::SwitchCase);
   BINJS_TRY(CheckRecursionLimit(cx_));
 
 #if defined(DEBUG)
-  const BinField expected_fields[2] = {BinField::Test, BinField::Consequent};
+  const BinASTField expected_fields[2] = {BinASTField::Test,
+                                          BinASTField::Consequent};
   MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif  // defined(DEBUG)
 
@@ -3873,12 +3889,12 @@ JS::Result<CaseClause*> BinASTParser<Tok>::parseInterfaceSwitchCase(
 */
 template <typename Tok>
 JS::Result<ParseNode*> BinASTParser<Tok>::parseSwitchDefault() {
-  BinKind kind;
-  BinFields fields(cx_);
+  BinASTKind kind;
+  BinASTFields fields(cx_);
   AutoTaggedTuple guard(*tokenizer_);
 
   MOZ_TRY(tokenizer_->enterTaggedTuple(kind, fields, guard));
-  if (kind != BinKind::SwitchDefault) {
+  if (kind != BinASTKind::SwitchDefault) {
     return raiseInvalidKind("SwitchDefault", kind);
   }
   const auto start = tokenizer_->offset();
@@ -3890,12 +3906,12 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseSwitchDefault() {
 
 template <typename Tok>
 JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceSwitchDefault(
-    const size_t start, const BinKind kind, const BinFields& fields) {
-  MOZ_ASSERT(kind == BinKind::SwitchDefault);
+    const size_t start, const BinASTKind kind, const BinASTFields& fields) {
+  MOZ_ASSERT(kind == BinASTKind::SwitchDefault);
   BINJS_TRY(CheckRecursionLimit(cx_));
 
 #if defined(DEBUG)
-  const BinField expected_fields[1] = {BinField::Consequent};
+  const BinASTField expected_fields[1] = {BinASTField::Consequent};
   MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif  // defined(DEBUG)
 
@@ -3907,12 +3923,13 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceSwitchDefault(
 
 template <typename Tok>
 JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceSwitchStatement(
-    const size_t start, const BinKind kind, const BinFields& fields) {
-  MOZ_ASSERT(kind == BinKind::SwitchStatement);
+    const size_t start, const BinASTKind kind, const BinASTFields& fields) {
+  MOZ_ASSERT(kind == BinASTKind::SwitchStatement);
   BINJS_TRY(CheckRecursionLimit(cx_));
 
 #if defined(DEBUG)
-  const BinField expected_fields[2] = {BinField::Discriminant, BinField::Cases};
+  const BinASTField expected_fields[2] = {BinASTField::Discriminant,
+                                          BinASTField::Cases};
   MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif  // defined(DEBUG)
 
@@ -3929,14 +3946,14 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceSwitchStatement(
 template <typename Tok>
 JS::Result<ParseNode*>
 BinASTParser<Tok>::parseInterfaceSwitchStatementWithDefault(
-    const size_t start, const BinKind kind, const BinFields& fields) {
-  MOZ_ASSERT(kind == BinKind::SwitchStatementWithDefault);
+    const size_t start, const BinASTKind kind, const BinASTFields& fields) {
+  MOZ_ASSERT(kind == BinASTKind::SwitchStatementWithDefault);
   BINJS_TRY(CheckRecursionLimit(cx_));
 
 #if defined(DEBUG)
-  const BinField expected_fields[4] = {
-      BinField::Discriminant, BinField::PreDefaultCases, BinField::DefaultCase,
-      BinField::PostDefaultCases};
+  const BinASTField expected_fields[4] = {
+      BinASTField::Discriminant, BinASTField::PreDefaultCases,
+      BinASTField::DefaultCase, BinASTField::PostDefaultCases};
   MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif  // defined(DEBUG)
 
@@ -3965,7 +3982,7 @@ BinASTParser<Tok>::parseInterfaceSwitchStatementWithDefault(
 
 template <typename Tok>
 JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceTemplateExpression(
-    const size_t start, const BinKind kind, const BinFields& fields) {
+    const size_t start, const BinASTKind kind, const BinASTFields& fields) {
   return raiseError(
       "FIXME: Not implemented yet in this preview release "
       "(TemplateExpression)");
@@ -3973,8 +3990,8 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceTemplateExpression(
 
 template <typename Tok>
 JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceThisExpression(
-    const size_t start, const BinKind kind, const BinFields& fields) {
-  MOZ_ASSERT(kind == BinKind::ThisExpression);
+    const size_t start, const BinASTKind kind, const BinASTFields& fields) {
+  MOZ_ASSERT(kind == BinASTKind::ThisExpression);
   BINJS_TRY(CheckRecursionLimit(cx_));
   MOZ_TRY(tokenizer_->checkFields0(kind, fields));
 
@@ -3997,12 +4014,12 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceThisExpression(
 
 template <typename Tok>
 JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceThrowStatement(
-    const size_t start, const BinKind kind, const BinFields& fields) {
-  MOZ_ASSERT(kind == BinKind::ThrowStatement);
+    const size_t start, const BinASTKind kind, const BinASTFields& fields) {
+  MOZ_ASSERT(kind == BinASTKind::ThrowStatement);
   BINJS_TRY(CheckRecursionLimit(cx_));
 
 #if defined(DEBUG)
-  const BinField expected_fields[1] = {BinField::Expression};
+  const BinASTField expected_fields[1] = {BinASTField::Expression};
   MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif  // defined(DEBUG)
 
@@ -4015,12 +4032,13 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceThrowStatement(
 
 template <typename Tok>
 JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceTryCatchStatement(
-    const size_t start, const BinKind kind, const BinFields& fields) {
-  MOZ_ASSERT(kind == BinKind::TryCatchStatement);
+    const size_t start, const BinASTKind kind, const BinASTFields& fields) {
+  MOZ_ASSERT(kind == BinASTKind::TryCatchStatement);
   BINJS_TRY(CheckRecursionLimit(cx_));
 
 #if defined(DEBUG)
-  const BinField expected_fields[2] = {BinField::Body, BinField::CatchClause};
+  const BinASTField expected_fields[2] = {BinASTField::Body,
+                                          BinASTField::CatchClause};
   MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif  // defined(DEBUG)
   ParseNode* body;
@@ -4041,13 +4059,13 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceTryCatchStatement(
 
 template <typename Tok>
 JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceTryFinallyStatement(
-    const size_t start, const BinKind kind, const BinFields& fields) {
-  MOZ_ASSERT(kind == BinKind::TryFinallyStatement);
+    const size_t start, const BinASTKind kind, const BinASTFields& fields) {
+  MOZ_ASSERT(kind == BinASTKind::TryFinallyStatement);
   BINJS_TRY(CheckRecursionLimit(cx_));
 
 #if defined(DEBUG)
-  const BinField expected_fields[3] = {BinField::Body, BinField::CatchClause,
-                                       BinField::Finalizer};
+  const BinASTField expected_fields[3] = {
+      BinASTField::Body, BinASTField::CatchClause, BinASTField::Finalizer};
   MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif  // defined(DEBUG)
   ParseNode* body;
@@ -4074,12 +4092,13 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceTryFinallyStatement(
 
 template <typename Tok>
 JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceUnaryExpression(
-    const size_t start, const BinKind kind, const BinFields& fields) {
-  MOZ_ASSERT(kind == BinKind::UnaryExpression);
+    const size_t start, const BinASTKind kind, const BinASTFields& fields) {
+  MOZ_ASSERT(kind == BinASTKind::UnaryExpression);
   BINJS_TRY(CheckRecursionLimit(cx_));
 
 #if defined(DEBUG)
-  const BinField expected_fields[2] = {BinField::Operator, BinField::Operand};
+  const BinASTField expected_fields[2] = {BinASTField::Operator,
+                                          BinASTField::Operand};
   MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif  // defined(DEBUG)
 
@@ -4138,13 +4157,13 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceUnaryExpression(
 
 template <typename Tok>
 JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceUpdateExpression(
-    const size_t start, const BinKind kind, const BinFields& fields) {
-  MOZ_ASSERT(kind == BinKind::UpdateExpression);
+    const size_t start, const BinASTKind kind, const BinASTFields& fields) {
+  MOZ_ASSERT(kind == BinASTKind::UpdateExpression);
   BINJS_TRY(CheckRecursionLimit(cx_));
 
 #if defined(DEBUG)
-  const BinField expected_fields[3] = {BinField::IsPrefix, BinField::Operator,
-                                       BinField::Operand};
+  const BinASTField expected_fields[3] = {
+      BinASTField::IsPrefix, BinASTField::Operator, BinASTField::Operand};
   MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif  // defined(DEBUG)
 
@@ -4171,12 +4190,13 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceUpdateExpression(
 
 template <typename Tok>
 JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceVariableDeclaration(
-    const size_t start, const BinKind kind, const BinFields& fields) {
-  MOZ_ASSERT(kind == BinKind::VariableDeclaration);
+    const size_t start, const BinASTKind kind, const BinASTFields& fields) {
+  MOZ_ASSERT(kind == BinASTKind::VariableDeclaration);
   BINJS_TRY(CheckRecursionLimit(cx_));
 
 #if defined(DEBUG)
-  const BinField expected_fields[2] = {BinField::Kind, BinField::Declarators};
+  const BinASTField expected_fields[2] = {BinASTField::Kind,
+                                          BinASTField::Declarators};
   MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif  // defined(DEBUG)
   AutoVariableDeclarationKind kindGuard(this);
@@ -4214,12 +4234,12 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceVariableDeclaration(
 */
 template <typename Tok>
 JS::Result<ParseNode*> BinASTParser<Tok>::parseVariableDeclarator() {
-  BinKind kind;
-  BinFields fields(cx_);
+  BinASTKind kind;
+  BinASTFields fields(cx_);
   AutoTaggedTuple guard(*tokenizer_);
 
   MOZ_TRY(tokenizer_->enterTaggedTuple(kind, fields, guard));
-  if (kind != BinKind::VariableDeclarator) {
+  if (kind != BinASTKind::VariableDeclarator) {
     return raiseInvalidKind("VariableDeclarator", kind);
   }
   const auto start = tokenizer_->offset();
@@ -4232,12 +4252,13 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseVariableDeclarator() {
 
 template <typename Tok>
 JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceVariableDeclarator(
-    const size_t start, const BinKind kind, const BinFields& fields) {
-  MOZ_ASSERT(kind == BinKind::VariableDeclarator);
+    const size_t start, const BinASTKind kind, const BinASTFields& fields) {
+  MOZ_ASSERT(kind == BinASTKind::VariableDeclarator);
   BINJS_TRY(CheckRecursionLimit(cx_));
 
 #if defined(DEBUG)
-  const BinField expected_fields[2] = {BinField::Binding, BinField::Init};
+  const BinASTField expected_fields[2] = {BinASTField::Binding,
+                                          BinASTField::Init};
   MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif  // defined(DEBUG)
 
@@ -4261,7 +4282,7 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceVariableDeclarator(
     if (!init) {
       // Here, `init` is required.
       return raiseMissingField("VariableDeclarator (with non-trivial pattern)",
-                               BinField::Init);
+                               BinASTField::Init);
     }
 
     MOZ_CRASH(
@@ -4275,12 +4296,12 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceVariableDeclarator(
 
 template <typename Tok>
 JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceWhileStatement(
-    const size_t start, const BinKind kind, const BinFields& fields) {
-  MOZ_ASSERT(kind == BinKind::WhileStatement);
+    const size_t start, const BinASTKind kind, const BinASTFields& fields) {
+  MOZ_ASSERT(kind == BinASTKind::WhileStatement);
   BINJS_TRY(CheckRecursionLimit(cx_));
 
 #if defined(DEBUG)
-  const BinField expected_fields[2] = {BinField::Test, BinField::Body};
+  const BinASTField expected_fields[2] = {BinASTField::Test, BinASTField::Body};
   MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif  // defined(DEBUG)
   ParseContext::Statement stmt(pc_, StatementKind::WhileLoop);
@@ -4295,12 +4316,13 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceWhileStatement(
 
 template <typename Tok>
 JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceWithStatement(
-    const size_t start, const BinKind kind, const BinFields& fields) {
-  MOZ_ASSERT(kind == BinKind::WithStatement);
+    const size_t start, const BinASTKind kind, const BinASTFields& fields) {
+  MOZ_ASSERT(kind == BinASTKind::WithStatement);
   BINJS_TRY(CheckRecursionLimit(cx_));
 
 #if defined(DEBUG)
-  const BinField expected_fields[2] = {BinField::Object, BinField::Body};
+  const BinASTField expected_fields[2] = {BinASTField::Object,
+                                          BinASTField::Body};
   MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif  // defined(DEBUG)
 
@@ -4316,14 +4338,14 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceWithStatement(
 
 template <typename Tok>
 JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceYieldExpression(
-    const size_t start, const BinKind kind, const BinFields& fields) {
+    const size_t start, const BinASTKind kind, const BinASTFields& fields) {
   return raiseError(
       "FIXME: Not implemented yet in this preview release (YieldExpression)");
 }
 
 template <typename Tok>
 JS::Result<ParseNode*> BinASTParser<Tok>::parseInterfaceYieldStarExpression(
-    const size_t start, const BinKind kind, const BinFields& fields) {
+    const size_t start, const BinASTKind kind, const BinASTFields& fields) {
   return raiseError(
       "FIXME: Not implemented yet in this preview release "
       "(YieldStarExpression)");
@@ -4343,11 +4365,11 @@ BinASTParser<Tok>::parseAssertedDeclaredKind() {
   BINJS_MOZ_TRY_DECL(variant, tokenizer_->readVariant());
 
   switch (variant) {
-    case BinVariant::AssertedDeclaredKindOrVariableDeclarationKindVar:
+    case BinASTVariant::AssertedDeclaredKindOrVariableDeclarationKindVar:
       return AssertedDeclaredKind::Var;
-    case BinVariant::AssertedDeclaredKindNonConstLexical:
+    case BinASTVariant::AssertedDeclaredKindNonConstLexical:
       return AssertedDeclaredKind::NonConstLexical;
-    case BinVariant::AssertedDeclaredKindConstLexical:
+    case BinASTVariant::AssertedDeclaredKindConstLexical:
       return AssertedDeclaredKind::ConstLexical;
     default:
       return raiseInvalidVariant("AssertedDeclaredKind", variant);
@@ -4389,55 +4411,55 @@ BinASTParser<Tok>::parseBinaryOperator() {
   BINJS_MOZ_TRY_DECL(variant, tokenizer_->readVariant());
 
   switch (variant) {
-    case BinVariant::BinaryOperatorComma:
+    case BinASTVariant::BinaryOperatorComma:
       return BinaryOperator::Comma;
-    case BinVariant::BinaryOperatorLogicalOr:
+    case BinASTVariant::BinaryOperatorLogicalOr:
       return BinaryOperator::LogicalOr;
-    case BinVariant::BinaryOperatorLogicalAnd:
+    case BinASTVariant::BinaryOperatorLogicalAnd:
       return BinaryOperator::LogicalAnd;
-    case BinVariant::BinaryOperatorBitOr:
+    case BinASTVariant::BinaryOperatorBitOr:
       return BinaryOperator::BitOr;
-    case BinVariant::BinaryOperatorBitXor:
+    case BinASTVariant::BinaryOperatorBitXor:
       return BinaryOperator::BitXor;
-    case BinVariant::BinaryOperatorBitAnd:
+    case BinASTVariant::BinaryOperatorBitAnd:
       return BinaryOperator::BitAnd;
-    case BinVariant::BinaryOperatorEq:
+    case BinASTVariant::BinaryOperatorEq:
       return BinaryOperator::Eq;
-    case BinVariant::BinaryOperatorNeq:
+    case BinASTVariant::BinaryOperatorNeq:
       return BinaryOperator::Neq;
-    case BinVariant::BinaryOperatorStrictEq:
+    case BinASTVariant::BinaryOperatorStrictEq:
       return BinaryOperator::StrictEq;
-    case BinVariant::BinaryOperatorStrictNeq:
+    case BinASTVariant::BinaryOperatorStrictNeq:
       return BinaryOperator::StrictNeq;
-    case BinVariant::BinaryOperatorLessThan:
+    case BinASTVariant::BinaryOperatorLessThan:
       return BinaryOperator::LessThan;
-    case BinVariant::BinaryOperatorLeqThan:
+    case BinASTVariant::BinaryOperatorLeqThan:
       return BinaryOperator::LeqThan;
-    case BinVariant::BinaryOperatorGreaterThan:
+    case BinASTVariant::BinaryOperatorGreaterThan:
       return BinaryOperator::GreaterThan;
-    case BinVariant::BinaryOperatorGeqThan:
+    case BinASTVariant::BinaryOperatorGeqThan:
       return BinaryOperator::GeqThan;
-    case BinVariant::BinaryOperatorIn:
+    case BinASTVariant::BinaryOperatorIn:
       return BinaryOperator::In;
-    case BinVariant::BinaryOperatorInstanceof:
+    case BinASTVariant::BinaryOperatorInstanceof:
       return BinaryOperator::Instanceof;
-    case BinVariant::BinaryOperatorLsh:
+    case BinASTVariant::BinaryOperatorLsh:
       return BinaryOperator::Lsh;
-    case BinVariant::BinaryOperatorRsh:
+    case BinASTVariant::BinaryOperatorRsh:
       return BinaryOperator::Rsh;
-    case BinVariant::BinaryOperatorUrsh:
+    case BinASTVariant::BinaryOperatorUrsh:
       return BinaryOperator::Ursh;
-    case BinVariant::BinaryOperatorOrUnaryOperatorPlus:
+    case BinASTVariant::BinaryOperatorOrUnaryOperatorPlus:
       return BinaryOperator::Plus;
-    case BinVariant::BinaryOperatorOrUnaryOperatorMinus:
+    case BinASTVariant::BinaryOperatorOrUnaryOperatorMinus:
       return BinaryOperator::Minus;
-    case BinVariant::BinaryOperatorMul:
+    case BinASTVariant::BinaryOperatorMul:
       return BinaryOperator::Mul;
-    case BinVariant::BinaryOperatorDiv:
+    case BinASTVariant::BinaryOperatorDiv:
       return BinaryOperator::Div;
-    case BinVariant::BinaryOperatorMod:
+    case BinASTVariant::BinaryOperatorMod:
       return BinaryOperator::Mod;
-    case BinVariant::BinaryOperatorPow:
+    case BinASTVariant::BinaryOperatorPow:
       return BinaryOperator::Pow;
     default:
       return raiseInvalidVariant("BinaryOperator", variant);
@@ -4466,29 +4488,29 @@ BinASTParser<Tok>::parseCompoundAssignmentOperator() {
   BINJS_MOZ_TRY_DECL(variant, tokenizer_->readVariant());
 
   switch (variant) {
-    case BinVariant::CompoundAssignmentOperatorPlusAssign:
+    case BinASTVariant::CompoundAssignmentOperatorPlusAssign:
       return CompoundAssignmentOperator::PlusAssign;
-    case BinVariant::CompoundAssignmentOperatorMinusAssign:
+    case BinASTVariant::CompoundAssignmentOperatorMinusAssign:
       return CompoundAssignmentOperator::MinusAssign;
-    case BinVariant::CompoundAssignmentOperatorMulAssign:
+    case BinASTVariant::CompoundAssignmentOperatorMulAssign:
       return CompoundAssignmentOperator::MulAssign;
-    case BinVariant::CompoundAssignmentOperatorDivAssign:
+    case BinASTVariant::CompoundAssignmentOperatorDivAssign:
       return CompoundAssignmentOperator::DivAssign;
-    case BinVariant::CompoundAssignmentOperatorModAssign:
+    case BinASTVariant::CompoundAssignmentOperatorModAssign:
       return CompoundAssignmentOperator::ModAssign;
-    case BinVariant::CompoundAssignmentOperatorPowAssign:
+    case BinASTVariant::CompoundAssignmentOperatorPowAssign:
       return CompoundAssignmentOperator::PowAssign;
-    case BinVariant::CompoundAssignmentOperatorLshAssign:
+    case BinASTVariant::CompoundAssignmentOperatorLshAssign:
       return CompoundAssignmentOperator::LshAssign;
-    case BinVariant::CompoundAssignmentOperatorRshAssign:
+    case BinASTVariant::CompoundAssignmentOperatorRshAssign:
       return CompoundAssignmentOperator::RshAssign;
-    case BinVariant::CompoundAssignmentOperatorUrshAssign:
+    case BinASTVariant::CompoundAssignmentOperatorUrshAssign:
       return CompoundAssignmentOperator::UrshAssign;
-    case BinVariant::CompoundAssignmentOperatorBitOrAssign:
+    case BinASTVariant::CompoundAssignmentOperatorBitOrAssign:
       return CompoundAssignmentOperator::BitOrAssign;
-    case BinVariant::CompoundAssignmentOperatorBitXorAssign:
+    case BinASTVariant::CompoundAssignmentOperatorBitXorAssign:
       return CompoundAssignmentOperator::BitXorAssign;
-    case BinVariant::CompoundAssignmentOperatorBitAndAssign:
+    case BinASTVariant::CompoundAssignmentOperatorBitAndAssign:
       return CompoundAssignmentOperator::BitAndAssign;
     default:
       return raiseInvalidVariant("CompoundAssignmentOperator", variant);
@@ -4512,19 +4534,19 @@ BinASTParser<Tok>::parseUnaryOperator() {
   BINJS_MOZ_TRY_DECL(variant, tokenizer_->readVariant());
 
   switch (variant) {
-    case BinVariant::BinaryOperatorOrUnaryOperatorPlus:
+    case BinASTVariant::BinaryOperatorOrUnaryOperatorPlus:
       return UnaryOperator::Plus;
-    case BinVariant::BinaryOperatorOrUnaryOperatorMinus:
+    case BinASTVariant::BinaryOperatorOrUnaryOperatorMinus:
       return UnaryOperator::Minus;
-    case BinVariant::UnaryOperatorNot:
+    case BinASTVariant::UnaryOperatorNot:
       return UnaryOperator::Not;
-    case BinVariant::UnaryOperatorBitNot:
+    case BinASTVariant::UnaryOperatorBitNot:
       return UnaryOperator::BitNot;
-    case BinVariant::UnaryOperatorTypeof:
+    case BinASTVariant::UnaryOperatorTypeof:
       return UnaryOperator::Typeof;
-    case BinVariant::UnaryOperatorVoid:
+    case BinASTVariant::UnaryOperatorVoid:
       return UnaryOperator::Void;
-    case BinVariant::UnaryOperatorDelete:
+    case BinASTVariant::UnaryOperatorDelete:
       return UnaryOperator::Delete;
     default:
       return raiseInvalidVariant("UnaryOperator", variant);
@@ -4543,9 +4565,9 @@ BinASTParser<Tok>::parseUpdateOperator() {
   BINJS_MOZ_TRY_DECL(variant, tokenizer_->readVariant());
 
   switch (variant) {
-    case BinVariant::UpdateOperatorIncr:
+    case BinASTVariant::UpdateOperatorIncr:
       return UpdateOperator::Incr;
-    case BinVariant::UpdateOperatorDecr:
+    case BinASTVariant::UpdateOperatorDecr:
       return UpdateOperator::Decr;
     default:
       return raiseInvalidVariant("UpdateOperator", variant);
@@ -4565,11 +4587,11 @@ BinASTParser<Tok>::parseVariableDeclarationKind() {
   BINJS_MOZ_TRY_DECL(variant, tokenizer_->readVariant());
 
   switch (variant) {
-    case BinVariant::AssertedDeclaredKindOrVariableDeclarationKindVar:
+    case BinASTVariant::AssertedDeclaredKindOrVariableDeclarationKindVar:
       return VariableDeclarationKind::Var;
-    case BinVariant::VariableDeclarationKindLet:
+    case BinASTVariant::VariableDeclarationKindLet:
       return VariableDeclarationKind::Let;
-    case BinVariant::VariableDeclarationKindConst:
+    case BinASTVariant::VariableDeclarationKindConst:
       return VariableDeclarationKind::Const;
     default:
       return raiseInvalidVariant("VariableDeclarationKind", variant);
@@ -4823,13 +4845,13 @@ JS::Result<ListNode*> BinASTParser<Tok>::parseListOfVariableDeclarator(
 // ----- Default values (by lexicographical order)
 template <typename Tok>
 JS::Result<ParseNode*> BinASTParser<Tok>::parseOptionalBinding() {
-  BinKind kind;
-  BinFields fields(cx_);
+  BinASTKind kind;
+  BinASTFields fields(cx_);
   AutoTaggedTuple guard(*tokenizer_);
 
   MOZ_TRY(tokenizer_->enterTaggedTuple(kind, fields, guard));
   ParseNode* result;
-  if (kind == BinKind::_Null) {
+  if (kind == BinASTKind::_Null) {
     result = nullptr;
   } else {
     const auto start = tokenizer_->offset();
@@ -4842,15 +4864,15 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseOptionalBinding() {
 
 template <typename Tok>
 JS::Result<ParseNode*> BinASTParser<Tok>::parseOptionalBindingIdentifier() {
-  BinKind kind;
-  BinFields fields(cx_);
+  BinASTKind kind;
+  BinASTFields fields(cx_);
   AutoTaggedTuple guard(*tokenizer_);
 
   MOZ_TRY(tokenizer_->enterTaggedTuple(kind, fields, guard));
   ParseNode* result;
-  if (kind == BinKind::_Null) {
+  if (kind == BinASTKind::_Null) {
     result = nullptr;
-  } else if (kind == BinKind::BindingIdentifier) {
+  } else if (kind == BinASTKind::BindingIdentifier) {
     const auto start = tokenizer_->offset();
     MOZ_TRY_VAR(result, parseInterfaceBindingIdentifier(start, kind, fields));
   } else {
@@ -4863,15 +4885,15 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseOptionalBindingIdentifier() {
 
 template <typename Tok>
 JS::Result<LexicalScopeNode*> BinASTParser<Tok>::parseOptionalCatchClause() {
-  BinKind kind;
-  BinFields fields(cx_);
+  BinASTKind kind;
+  BinASTFields fields(cx_);
   AutoTaggedTuple guard(*tokenizer_);
 
   MOZ_TRY(tokenizer_->enterTaggedTuple(kind, fields, guard));
   LexicalScopeNode* result;
-  if (kind == BinKind::_Null) {
+  if (kind == BinASTKind::_Null) {
     result = nullptr;
-  } else if (kind == BinKind::CatchClause) {
+  } else if (kind == BinASTKind::CatchClause) {
     const auto start = tokenizer_->offset();
     MOZ_TRY_VAR(result, parseInterfaceCatchClause(start, kind, fields));
   } else {
@@ -4884,13 +4906,13 @@ JS::Result<LexicalScopeNode*> BinASTParser<Tok>::parseOptionalCatchClause() {
 
 template <typename Tok>
 JS::Result<ParseNode*> BinASTParser<Tok>::parseOptionalExpression() {
-  BinKind kind;
-  BinFields fields(cx_);
+  BinASTKind kind;
+  BinASTFields fields(cx_);
   AutoTaggedTuple guard(*tokenizer_);
 
   MOZ_TRY(tokenizer_->enterTaggedTuple(kind, fields, guard));
   ParseNode* result;
-  if (kind == BinKind::_Null) {
+  if (kind == BinASTKind::_Null) {
     result = nullptr;
   } else {
     const auto start = tokenizer_->offset();
@@ -4904,13 +4926,13 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseOptionalExpression() {
 template <typename Tok>
 JS::Result<ParseNode*>
 BinASTParser<Tok>::parseOptionalSpreadElementOrExpression() {
-  BinKind kind;
-  BinFields fields(cx_);
+  BinASTKind kind;
+  BinASTFields fields(cx_);
   AutoTaggedTuple guard(*tokenizer_);
 
   MOZ_TRY(tokenizer_->enterTaggedTuple(kind, fields, guard));
   ParseNode* result;
-  if (kind == BinKind::_Null) {
+  if (kind == BinASTKind::_Null) {
     result = nullptr;
   } else {
     const auto start = tokenizer_->offset();
@@ -4923,13 +4945,13 @@ BinASTParser<Tok>::parseOptionalSpreadElementOrExpression() {
 
 template <typename Tok>
 JS::Result<ParseNode*> BinASTParser<Tok>::parseOptionalStatement() {
-  BinKind kind;
-  BinFields fields(cx_);
+  BinASTKind kind;
+  BinASTFields fields(cx_);
   AutoTaggedTuple guard(*tokenizer_);
 
   MOZ_TRY(tokenizer_->enterTaggedTuple(kind, fields, guard));
   ParseNode* result;
-  if (kind == BinKind::_Null) {
+  if (kind == BinASTKind::_Null) {
     result = nullptr;
   } else {
     const auto start = tokenizer_->offset();
@@ -4943,13 +4965,13 @@ JS::Result<ParseNode*> BinASTParser<Tok>::parseOptionalStatement() {
 template <typename Tok>
 JS::Result<ParseNode*>
 BinASTParser<Tok>::parseOptionalVariableDeclarationOrExpression() {
-  BinKind kind;
-  BinFields fields(cx_);
+  BinASTKind kind;
+  BinASTFields fields(cx_);
   AutoTaggedTuple guard(*tokenizer_);
 
   MOZ_TRY(tokenizer_->enterTaggedTuple(kind, fields, guard));
   ParseNode* result;
-  if (kind == BinKind::_Null) {
+  if (kind == BinASTKind::_Null) {
     result = nullptr;
   } else {
     const auto start = tokenizer_->offset();
@@ -4964,7 +4986,7 @@ BinASTParser<Tok>::parseOptionalVariableDeclarationOrExpression() {
 // Force class instantiation.
 // This ensures that the symbols are built, without having to export all our
 // code (and its baggage of #include and macros) in the header.
-template class BinASTParser<BinTokenReaderMultipart>;
+template class BinASTParser<BinASTTokenReaderMultipart>;
 
 }  // namespace frontend
 }  // namespace js
