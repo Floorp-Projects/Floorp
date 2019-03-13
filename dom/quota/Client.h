@@ -18,10 +18,12 @@ class nsIFile;
 class nsIRunnable;
 
 #define IDB_DIRECTORY_NAME "idb"
-#define ASMJSCACHE_DIRECTORY_NAME "asmjs"
 #define DOMCACHE_DIRECTORY_NAME "cache"
 #define SDB_DIRECTORY_NAME "sdb"
 #define LS_DIRECTORY_NAME "ls"
+
+// Deprecated
+#define ASMJSCACHE_DIRECTORY_NAME "asmjs"
 
 BEGIN_QUOTA_NAMESPACE
 
@@ -63,10 +65,6 @@ class Client {
         aText.AssignLiteral(IDB_DIRECTORY_NAME);
         break;
 
-      case ASMJS:
-        aText.AssignLiteral(ASMJSCACHE_DIRECTORY_NAME);
-        break;
-
       case DOMCACHE:
         aText.AssignLiteral(DOMCACHE_DIRECTORY_NAME);
         break;
@@ -94,8 +92,6 @@ class Client {
   static nsresult TypeFromText(const nsAString& aText, Type& aType) {
     if (aText.EqualsLiteral(IDB_DIRECTORY_NAME)) {
       aType = IDB;
-    } else if (aText.EqualsLiteral(ASMJSCACHE_DIRECTORY_NAME)) {
-      aType = ASMJS;
     } else if (aText.EqualsLiteral(DOMCACHE_DIRECTORY_NAME)) {
       aType = DOMCACHE;
     } else if (aText.EqualsLiteral(SDB_DIRECTORY_NAME)) {
@@ -104,6 +100,7 @@ class Client {
                aText.EqualsLiteral(LS_DIRECTORY_NAME)) {
       aType = LS;
     } else {
+      MOZ_RELEASE_ASSERT(!IsDeprecatedClient(aText));
       return NS_ERROR_FAILURE;
     }
 
@@ -127,12 +124,20 @@ class Client {
     return NS_OK;
   }
 
+  static bool IsDeprecatedClient(const nsAString& aText) {
+    return aText.EqualsLiteral(ASMJSCACHE_DIRECTORY_NAME);
+  }
+
   // Methods which are called on the IO thread.
   virtual nsresult UpgradeStorageFrom1_0To2_0(nsIFile* aDirectory) {
     return NS_OK;
   }
 
   virtual nsresult UpgradeStorageFrom2_0To2_1(nsIFile* aDirectory) {
+    return NS_OK;
+  }
+
+  virtual nsresult UpgradeStorageFrom2_1To2_2(nsIFile* aDirectory) {
     return NS_OK;
   }
 
