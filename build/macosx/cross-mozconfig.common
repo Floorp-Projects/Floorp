@@ -7,7 +7,7 @@ MOZ_AUTOMATION_L10N_CHECK=0
 . "$topsrcdir/build/mozconfig.common"
 
 # cctools for ld, ar, and other related tools ; dsymutil for rust.
-mk_add_options "export PATH=$topsrcdir/cctools/bin:$topsrcdir/llvm-dsymutil/bin:$PATH"
+mk_add_options "export PATH=$topsrcdir/cctools/bin:$topsrcdir/binutils/bin:$topsrcdir/llvm-dsymutil/bin:$PATH"
 
 # ld needs libLTO.so from llvm
 mk_add_options "export LD_LIBRARY_PATH=$topsrcdir/clang/lib"
