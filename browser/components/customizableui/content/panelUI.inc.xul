@@ -747,6 +747,10 @@
             </vbox>
           </hbox>
           <toolbarseparator/>
+          <toolbarbutton id="PanelUI-fxa-menu-sendtab-button"
+                         class="subviewbutton subviewbutton-iconic subviewbutton-nav"
+                         closemenu="none"
+                         oncommand="gSync.showSendToDeviceView(this);"/>
           <toolbarbutton id="PanelUI-fxa-menu-remotetabs-button"
                          class="subviewbutton subviewbutton-iconic subviewbutton-nav"
                          label="&appMenuRemoteTabs.label;"
@@ -767,6 +771,14 @@
                          oncommand="gSync.doSync();"
                          closemenu="none"/>
         </vbox>
+      </vbox>
+    </panelview>
+    <!-- This panelview is used to contain the dynamically created buttons for send tab to devices -->
+    <panelview id="PanelUI-sendTabToDevice" flex="1" class="PanelUI-subView">
+      <vbox class="panel-subview-body">
+        <toolbarbutton id="PanelUI-sendTabToDevice-syncingDevices" class="subviewbutton subviewbutton-iconic pageAction-sendToDevice-notReady"
+                       label="&sendToDevice.syncNotReady.label;"
+                       disabled="true"/>
       </vbox>
     </panelview>
 
