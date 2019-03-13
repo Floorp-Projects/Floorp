@@ -39,6 +39,5 @@ DevToolsModules(
     'string.js',
     'styles.js',
     'stylesheets.js',
-    'webaudio.js',
     'webconsole.js',
 )

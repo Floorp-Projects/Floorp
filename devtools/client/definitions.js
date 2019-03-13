@@ -13,7 +13,6 @@ loader.lazyGetter(this, "InspectorPanel", () => require("devtools/client/inspect
 loader.lazyGetter(this, "WebConsolePanel", () => require("devtools/client/webconsole/panel").WebConsolePanel);
 loader.lazyGetter(this, "NewDebuggerPanel", () => require("devtools/client/debugger/new/panel").DebuggerPanel);
 loader.lazyGetter(this, "StyleEditorPanel", () => require("devtools/client/styleeditor/panel").StyleEditorPanel);
-loader.lazyGetter(this, "WebAudioEditorPanel", () => require("devtools/client/webaudioeditor/panel").WebAudioEditorPanel);
 loader.lazyGetter(this, "MemoryPanel", () => require("devtools/client/memory/panel").MemoryPanel);
 loader.lazyGetter(this, "PerformancePanel", () => require("devtools/client/performance/panel").PerformancePanel);
 loader.lazyGetter(this, "NewPerformancePanel", () => require("devtools/client/performance-new/panel").PerformancePanel);
@@ -293,27 +292,6 @@ Tools.storage = {
   },
 };
 
-Tools.webAudioEditor = {
-  id: "webaudioeditor",
-  deprecated: true,
-  deprecationURL: DEPRECATION_URL,
-  ordinal: 11,
-  visibilityswitch: "devtools.webaudioeditor.enabled",
-  icon: "chrome://devtools/skin/images/tool-webaudio.svg",
-  url: "chrome://devtools/content/webaudioeditor/index.xul",
-  label: l10n("ToolboxWebAudioEditor1.label"),
-  panelLabel: l10n("ToolboxWebAudioEditor1.panelLabel"),
-  tooltip: l10n("ToolboxWebAudioEditor1.tooltip"),
-
-  isTargetSupported: function(target) {
-    return !target.chrome && target.hasActor("webaudio");
-  },
-
-  build: function(iframeWindow, toolbox) {
-    return new WebAudioEditorPanel(iframeWindow, toolbox);
-  },
-};
-
 Tools.scratchpad = {
   id: "scratchpad",
   ordinal: 12,
@@ -414,7 +392,6 @@ var defaultTools = [
   Tools.inspector,
   Tools.jsdebugger,
   Tools.styleEditor,
-  Tools.webAudioEditor,
   Tools.performance,
   Tools.netMonitor,
   Tools.storage,
