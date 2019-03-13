@@ -3137,7 +3137,7 @@ static bool GetUnclonedValue(JSContext* cx, HandleNativeObject selfHostedObject,
 
 static bool CloneProperties(JSContext* cx, HandleNativeObject selfHostedObject,
                             HandleObject clone) {
-  AutoIdVector ids(cx);
+  RootedIdVector ids(cx);
   Vector<uint8_t, 16> attrs(cx);
 
   for (size_t i = 0; i < selfHostedObject->getDenseInitializedLength(); i++) {

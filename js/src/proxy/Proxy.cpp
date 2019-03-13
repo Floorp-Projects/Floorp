@@ -109,7 +109,7 @@ bool Proxy::defineProperty(JSContext* cx, HandleObject proxy, HandleId id,
 }
 
 bool Proxy::ownPropertyKeys(JSContext* cx, HandleObject proxy,
-                            AutoIdVector& props) {
+                            MutableHandleIdVector props) {
   if (!CheckRecursionLimit(cx)) {
     return false;
   }
@@ -139,9 +139,9 @@ bool Proxy::delete_(JSContext* cx, HandleObject proxy, HandleId id,
   return proxy->as<ProxyObject>().handler()->delete_(cx, proxy, id, result);
 }
 
-JS_FRIEND_API bool js::AppendUnique(JSContext* cx, AutoIdVector& base,
-                                    AutoIdVector& others) {
-  AutoIdVector uniqueOthers(cx);
+JS_FRIEND_API bool js::AppendUnique(JSContext* cx, MutableHandleIdVector base,
+                                    HandleIdVector others) {
+  RootedIdVector uniqueOthers(cx);
   if (!uniqueOthers.reserve(others.length())) {
     return false;
   }
@@ -430,7 +430,7 @@ bool js::ProxySetPropertyByValue(JSContext* cx, HandleObject proxy,
 }
 
 bool Proxy::getOwnEnumerablePropertyKeys(JSContext* cx, HandleObject proxy,
-                                         AutoIdVector& props) {
+                                         MutableHandleIdVector props) {
   if (!CheckRecursionLimit(cx)) {
     return false;
   }
@@ -443,7 +443,7 @@ bool Proxy::getOwnEnumerablePropertyKeys(JSContext* cx, HandleObject proxy,
   return handler->getOwnEnumerablePropertyKeys(cx, proxy, props);
 }
 
-bool Proxy::enumerate(JSContext* cx, HandleObject proxy, AutoIdVector& props) {
+bool Proxy::enumerate(JSContext* cx, HandleObject proxy, MutableHandleIdVector props) {
   if (!CheckRecursionLimit(cx)) {
     return false;
   }
@@ -464,7 +464,7 @@ bool Proxy::enumerate(JSContext* cx, HandleObject proxy, AutoIdVector& props) {
 
     cx->check(proxy, proto);
 
-    AutoIdVector protoProps(cx);
+    RootedIdVector protoProps(cx);
     if (!GetPropertyKeys(cx, proto, 0, &protoProps)) {
       return false;
     }

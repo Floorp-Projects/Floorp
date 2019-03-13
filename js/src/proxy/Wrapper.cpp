@@ -60,11 +60,11 @@ bool ForwardingProxyHandler::defineProperty(JSContext* cx, HandleObject proxy,
 }
 
 bool ForwardingProxyHandler::ownPropertyKeys(JSContext* cx, HandleObject proxy,
-                                             AutoIdVector& props) const {
+                                             MutableHandleIdVector props) const {
   assertEnteredPolicy(cx, proxy, JSID_VOID, ENUMERATE);
   RootedObject target(cx, proxy->as<ProxyObject>().target());
   return GetPropertyKeys(
-      cx, target, JSITER_OWNONLY | JSITER_HIDDEN | JSITER_SYMBOLS, &props);
+      cx, target, JSITER_OWNONLY | JSITER_HIDDEN | JSITER_SYMBOLS, props);
 }
 
 bool ForwardingProxyHandler::delete_(JSContext* cx, HandleObject proxy,
@@ -76,7 +76,7 @@ bool ForwardingProxyHandler::delete_(JSContext* cx, HandleObject proxy,
 }
 
 bool ForwardingProxyHandler::enumerate(JSContext* cx, HandleObject proxy,
-                                       AutoIdVector& props) const {
+                                       MutableHandleIdVector props) const {
   assertEnteredPolicy(cx, proxy, JSID_VOID, ENUMERATE);
   MOZ_ASSERT(
       !hasPrototype());  // Should never be called if there's a prototype.
@@ -195,10 +195,10 @@ bool ForwardingProxyHandler::hasOwn(JSContext* cx, HandleObject proxy,
 }
 
 bool ForwardingProxyHandler::getOwnEnumerablePropertyKeys(
-    JSContext* cx, HandleObject proxy, AutoIdVector& props) const {
+    JSContext* cx, HandleObject proxy, MutableHandleIdVector props) const {
   assertEnteredPolicy(cx, proxy, JSID_VOID, ENUMERATE);
   RootedObject target(cx, proxy->as<ProxyObject>().target());
-  return GetPropertyKeys(cx, target, JSITER_OWNONLY, &props);
+  return GetPropertyKeys(cx, target, JSITER_OWNONLY, props);
 }
 
 bool ForwardingProxyHandler::nativeCall(JSContext* cx, IsAcceptableThis test,
