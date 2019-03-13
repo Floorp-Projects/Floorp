@@ -64,6 +64,25 @@ type UpdateTabAction = {|
   +sourceId?: string
 |};
 
+type ReplayAction =
+  | {|
+      +type: "TRAVEL_TO",
+      +data: {
+        paused: {
+          why: Why,
+          scopes: Scope[],
+          frames: Frame[],
+          selectedFrameId: string,
+          loadedObjects: Object
+        },
+        expressions?: Object[]
+      },
+      +position: number
+    |}
+  | {|
+      +type: "CLEAR_HISTORY"
+    |};
+
 type NavigateAction =
   | {| +type: "CONNECT", +mainThread: MainThread, +canRewind: boolean |}
   | {| +type: "NAVIGATE", +mainThread: MainThread |};
@@ -157,4 +176,5 @@ export type Action =
   | FileTextSearchAction
   | ProjectTextSearchAction
   | DebugeeAction
+  | ReplayAction
   | SourceTreeAction;

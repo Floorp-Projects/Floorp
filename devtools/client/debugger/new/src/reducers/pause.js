@@ -194,6 +194,9 @@ function update(
       });
     }
 
+    case "TRAVEL_TO":
+      return updateThreadState({ ...action.data.paused });
+
     case "MAP_SCOPES": {
       const { frame, status, value } = action;
       const selectedFrameId = frame.id;
