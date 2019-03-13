@@ -6709,8 +6709,11 @@ nsresult PresShell::EventHandler::HandleEventUsingCoordinates(
   // now ask the subshell to dispatch it normally.
   EventHandler eventHandler(*eventTargetData.mPresShell);
   AutoCurrentEventInfoSetter eventInfoSetter(eventHandler, eventTargetData);
+  // eventTargetData is on the stack and is guaranteed to keep its
+  // mOverrideClickTarget alive, so we can just use MOZ_KnownLive here.
   nsresult rv = eventHandler.HandleEventWithCurrentEventInfo(
-      aGUIEvent, aEventStatus, true, eventTargetData.mOverrideClickTarget);
+      aGUIEvent, aEventStatus, true,
+      MOZ_KnownLive(eventTargetData.mOverrideClickTarget));
 #ifdef DEBUG
   eventTargetData.mPresShell->ShowEventTargetDebug();
 #endif
@@ -6859,11 +6862,12 @@ bool PresShell::EventHandler::DispatchPrecedingPointerEvent(
 
   AutoWeakFrame weakTargetFrame(targetFrame);
   AutoWeakFrame weakFrame(aEventTargetData->mFrame);
+  nsCOMPtr<nsIContent> content(aEventTargetData->mContent);
+  RefPtr<PresShell> presShell(aEventTargetData->mPresShell);
   nsCOMPtr<nsIContent> targetContent;
   PointerEventHandler::DispatchPointerFromMouseOrTouch(
-      aEventTargetData->mPresShell, aEventTargetData->mFrame,
-      aEventTargetData->mContent, aGUIEvent, aDontRetargetEvents, aEventStatus,
-      getter_AddRefs(targetContent));
+      presShell, aEventTargetData->mFrame, content, aGUIEvent,
+      aDontRetargetEvents, aEventStatus, getter_AddRefs(targetContent));
 
   // If the target frame is alive, the caller should keep handling the event
   // unless event target frame is destroyed.
