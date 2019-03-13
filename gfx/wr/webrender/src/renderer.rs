@@ -39,7 +39,7 @@ use api::{DocumentId, Epoch, ExternalImageId};
 use api::{ExternalImageType, FontRenderMode, FrameMsg, ImageFormat, PipelineId};
 use api::{ImageRendering, Checkpoint, NotificationRequest};
 use api::{DebugCommand, MemoryReport, VoidPtrToSizeFn};
-use api::{RenderApiSender, RenderNotifier, TextureTarget};
+use api::{RenderApiSender, RenderNotifier, TexelRect, TextureTarget};
 use api::channel;
 use api::units::*;
 pub use api::DebugFlags;

@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 
+use app_units::Au;
 use blob;
 use crossbeam::sync::chase_lev;
 #[cfg(windows)]
@@ -19,7 +20,6 @@ use std::sync::mpsc::Receiver;
 use time;
 use webrender;
 use webrender::api::*;
-use webrender::api::units::*;
 use webrender::{DebugFlags, RenderResults, ShaderPrecacheFlags};
 use yaml_frame_writer::YamlFrameWriterReceiver;
 use {WindowWrapper, NotifierEvent};

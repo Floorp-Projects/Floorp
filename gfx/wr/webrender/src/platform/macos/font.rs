@@ -4,7 +4,7 @@
 
 use api::{ColorU, FontKey, FontRenderMode, GlyphDimensions};
 use api::{FontInstanceFlags, FontVariation, NativeFontHandle};
-use api::units::Au;
+use app_units::Au;
 use core_foundation::array::{CFArray, CFArrayRef};
 use core_foundation::base::TCFType;
 use core_foundation::dictionary::CFDictionary;
