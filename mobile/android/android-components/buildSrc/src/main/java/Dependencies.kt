@@ -24,7 +24,7 @@ object Versions {
     const val dokka = "0.9.17"
     const val android_gradle_plugin = "3.2.1"
     const val maven_gradle_plugin = "2.1"
-    const val lint = "26.2.1"
+    const val lint = "26.3.2"
 
     const val sentry = "1.7.21"
     const val okhttp = "3.13.1"
