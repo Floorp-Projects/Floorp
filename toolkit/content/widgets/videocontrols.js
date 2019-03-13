@@ -38,19 +38,28 @@ this.VideoControlsWidget = class {
   /*
    * Actually switch the implementation.
    * - With "controls" set, the VideoControlsImplWidget controls should load.
-   * - Without it, on mobile, the NoControlsImplWidget should load, so
+   * - Without it, on mobile, the NoControlsMobileImplWidget should load, so
    *   the user could see the click-to-play button when the video/audio is blocked.
+   * - Without it, on desktop, the NoControlsPictureInPictureImpleWidget should load
+   *   if the video is being viewed in Picture-in-Picture.
    */
   switchImpl() {
     let newImpl;
     if (this.element.controls) {
       newImpl = VideoControlsImplWidget;
     } else if (this.isMobile) {
-      newImpl = NoControlsImplWidget;
+      newImpl = NoControlsMobileImplWidget;
+    } else if (VideoControlsWidget.isPictureInPictureVideo(this.element)) {
+      newImpl = NoControlsPictureInPictureImplWidget;
     }
-    // Skip if we are asked to load the same implementation.
-    // This can happen if the property is set again w/o value change.
-    if (this.impl && this.impl.constructor == newImpl) {
+
+    // Skip if we are asked to load the same implementation, and
+    // the underlying element state hasn't changed in ways that we
+    // care about. This can happen if the property is set again
+    // without a value change.
+    if (this.impl &&
+        this.impl.constructor == newImpl &&
+        this.impl.elementStateMatches(this.element)) {
       return;
     }
     if (this.impl) {
@@ -72,6 +81,10 @@ this.VideoControlsWidget = class {
     this.impl.destructor();
     this.shadowRoot.firstChild.remove();
     delete this.impl;
+  }
+
+  static isPictureInPictureVideo(someVideo) {
+    return someVideo.isCloningElementVisually;
   }
 };
 
@@ -105,6 +118,7 @@ this.VideoControlsImplWidget = class {
       controlsOverlay: null,
       fullscreenButton: null,
       layoutControls: null,
+      isShowingPictureInPictureMessage: false,
 
       textTracksCount: 0,
       videoEvents: ["play", "pause", "ended", "volumechange", "loadeddata",
@@ -247,6 +261,8 @@ this.VideoControlsImplWidget = class {
           this.statusIcon.setAttribute("type", "error");
           this.updateErrorText();
           this.setupStatusFader(true);
+        } else if (VideoControlsWidget.isPictureInPictureVideo(this.video)) {
+          this.setShowPictureInPictureMessage(true);
         }
 
         let adjustableControls = [
@@ -365,7 +381,8 @@ this.VideoControlsImplWidget = class {
                          !this.video.autoplay);
         // Hide the overlay if the video time is non-zero or if an error occurred to workaround bug 718107.
         let shouldClickToPlayShow = shouldShow && !this.isAudioOnly &&
-                                    this.video.currentTime == 0 && !this.hasError();
+                                    this.video.currentTime == 0 && !this.hasError() &&
+                                    !this.isShowingPictureInPictureMessage;
         this.startFade(this.clickToPlay, shouldClickToPlayShow, true);
         this.startFade(this.controlBar, shouldShow, true);
       },
@@ -748,6 +765,16 @@ this.VideoControlsImplWidget = class {
         return this.video.error != null ||
                (this.video.networkState == this.video.NETWORK_NO_SOURCE &&
                this.hasSources());
+      },
+
+      setShowPictureInPictureMessage(showMessage) {
+        if (showMessage) {
+          this.pictureInPictureOverlay.removeAttribute("hidden");
+        } else {
+          this.pictureInPictureOverlay.setAttribute("hidden", true);
+        }
+
+        this.isShowingPictureInPictureMessage = showMessage;
       },
 
       hasSources() {
@@ -1941,6 +1968,7 @@ this.VideoControlsImplWidget = class {
         this.positionDurationBox = this.shadowRoot.getElementById("positionDurationBox");
         this.statusOverlay = this.shadowRoot.getElementById("statusOverlay");
         this.controlsOverlay = this.shadowRoot.getElementById("controlsOverlay");
+        this.pictureInPictureOverlay = this.shadowRoot.getElementById("pictureInPictureOverlay");
         this.controlsSpacer = this.shadowRoot.getElementById("controlsSpacer");
         this.clickToPlay = this.shadowRoot.getElementById("clickToPlay");
         this.fullscreenButton = this.shadowRoot.getElementById("fullscreenButton");
@@ -2214,6 +2242,11 @@ this.VideoControlsImplWidget = class {
             <span class="statusLabel" id="errorGeneric">&error.generic;</span>
           </div>
 
+          <div id="pictureInPictureOverlay" class="pictureInPictureOverlay stackItem" status="pictureInPicture" hidden="true">
+            <div class="statusIcon" type="pictureInPicture"></div>
+            <span class="statusLabel" id="pictureInPicture">&status.pictureInPicture;</span>
+          </div>
+
           <div id="controlsOverlay" class="controlsOverlay stackItem" role="none">
             <div class="controlsSpacerStack">
               <div id="controlsSpacer" class="controlsSpacer stackItem" role="none"></div>
@@ -2265,6 +2298,11 @@ this.VideoControlsImplWidget = class {
     this.shadowRoot.importNodeAndAppendChildAt(this.shadowRoot, parserDoc.documentElement, true);
   }
 
+  elementStateMatches(element) {
+    let elementInPiP = VideoControlsWidget.isPictureInPictureVideo(element);
+    return this.isShowingPictureInPictureMessage == elementInPiP;
+  }
+
   destructor() {
     this.Utils.terminate();
     this.TouchUtils.terminate();
@@ -2292,7 +2330,7 @@ this.VideoControlsImplWidget = class {
   }
 };
 
-this.NoControlsImplWidget = class {
+this.NoControlsMobileImplWidget = class {
   constructor(shadowRoot) {
     this.shadowRoot = shadowRoot;
     this.element = shadowRoot.host;
@@ -2397,6 +2435,10 @@ this.NoControlsImplWidget = class {
     this.Utils.video.dispatchEvent(new this.window.CustomEvent("MozNoControlsVideoBindingAttached"));
   }
 
+  elementStateMatches(element) {
+    return true;
+  }
+
   destructor() {
     this.Utils.terminate();
   }
@@ -2419,6 +2461,49 @@ this.NoControlsImplWidget = class {
               <div id="clickToPlay" class="clickToPlay"></div>
             </div>
           </div>
+        </div>
+      </div>`, "application/xml");
+    this.shadowRoot.importNodeAndAppendChildAt(this.shadowRoot, parserDoc.documentElement, true);
+  }
+};
+
+this.NoControlsPictureInPictureImplWidget = class {
+  constructor(shadowRoot) {
+    this.shadowRoot = shadowRoot;
+    this.element = shadowRoot.host;
+    this.document = this.element.ownerDocument;
+    this.window = this.document.defaultView;
+  }
+
+  onsetup() {
+    this.generateContent();
+  }
+
+  elementStateMatches(element) {
+    return true;
+  }
+
+  destructor() {
+  }
+
+  generateContent() {
+    /*
+     * Pass the markup through XML parser purely for the reason of loading the localization DTD.
+     * Remove it when migrate to Fluent.
+     */
+    const parser = new this.window.DOMParser();
+    let parserDoc = parser.parseFromString(`<!DOCTYPE bindings [
+      <!ENTITY % videocontrolsDTD SYSTEM "chrome://global/locale/videocontrols.dtd">
+      %videocontrolsDTD;
+      ]>
+      <div class="videocontrols" xmlns="http://www.w3.org/1999/xhtml" role="none">
+        <link rel="stylesheet" type="text/css" href="chrome://global/skin/media/videocontrols.css" />
+        <div id="controlsContainer" class="controlsContainer" role="none">
+          <div class="pictureInPictureOverlay stackItem" status="pictureInPicture">
+            <div id="statusIcon" class="statusIcon" type="pictureInPicture"></div>
+            <span class="statusLabel" id="pictureInPicture">&status.pictureInPicture;</span>
+          </div>
+          <div class="controlsOverlay stackItem"></div>
         </div>
       </div>`, "application/xml");
     this.shadowRoot.importNodeAndAppendChildAt(this.shadowRoot, parserDoc.documentElement, true);
