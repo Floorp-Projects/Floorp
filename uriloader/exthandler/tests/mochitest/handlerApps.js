@@ -17,8 +17,7 @@ function test() {
       "handlerApp.xhtml?uri=%s";
 
   // set up the uri to test with
-  var ioService = Cc["@mozilla.org/network/io-service;1"].
-    getService(SpecialPowers.Ci.nsIIOService);
+  var ioService = Services.io;
   var uri = ioService.newURI(testURI);
 
   // create a window, and launch the handler in it
@@ -43,8 +42,7 @@ function test() {
   localHandler.name = "Test Local Handler App";
 
   // get a local app that we know will be there and do something sane
-  var osString = Cc["@mozilla.org/xre/app-info;1"].
-                 getService(SpecialPowers.Ci.nsIXULRuntime).OS;
+  var osString = Services.appinfo.OS;
 
   var dirSvc = Cc["@mozilla.org/file/directory_service;1"].
                getService(SpecialPowers.Ci.nsIDirectoryServiceProvider);
