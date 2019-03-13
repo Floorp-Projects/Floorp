@@ -1083,58 +1083,7 @@ BrowserPageActions.sendToDevice = {
   },
 
   onShowingSubview(panelViewNode) {
-    let bodyNode = panelViewNode.querySelector(".panel-subview-body");
-    let panelNode = panelViewNode.closest("panel");
-    let browser = gBrowser.selectedBrowser;
-    let url = browser.currentURI.spec;
-    let title = browser.contentTitle;
-    let multiselected = gBrowser.selectedTab.multiselected;
-
-    // This is on top because it also clears the device list between state
-    // changes.
-    gSync.populateSendTabToDevicesMenu(bodyNode, url, title, multiselected, (clientId, name, clientType, lastModified) => {
-      if (!name) {
-        return document.createXULElement("toolbarseparator");
-      }
-      let item = document.createXULElement("toolbarbutton");
-      item.classList.add("pageAction-sendToDevice-device", "subviewbutton");
-      if (clientId) {
-        item.classList.add("subviewbutton-iconic");
-        if (lastModified) {
-          item.setAttribute("tooltiptext", gSync.formatLastSyncDate(lastModified));
-        }
-      }
-
-      item.addEventListener("command", event => {
-        if (panelNode) {
-          PanelMultiView.hidePopup(panelNode);
-        }
-        // There are items in the subview that don't represent devices: "Sign
-        // in", "Learn about Sync", etc.  Device items will be .sendtab-target.
-        if (event.target.classList.contains("sendtab-target")) {
-          let action = PageActions.actionForID("sendToDevice");
-          let messageId = gSync.offline && "sendToDeviceOffline";
-          showBrowserPageActionFeedback(action, event, messageId);
-        }
-      });
-      return item;
-    });
-
-    bodyNode.removeAttribute("state");
-    // In the first ~10 sec after startup, Sync may not be loaded and the list
-    // of devices will be empty.
-    if (gSync.sendTabConfiguredAndLoading) {
-      bodyNode.setAttribute("state", "notready");
-      // Force a background Sync
-      Services.tm.dispatchToMainThread(async () => {
-        await Weave.Service.sync({why: "pageactions", engines: []}); // [] = clients engine only
-        // There's no way Sync is still syncing at this point, but we check
-        // anyway to avoid infinite looping.
-        if (!window.closed && !gSync.sendTabConfiguredAndLoading) {
-          this.onShowingSubview(panelViewNode);
-        }
-      });
-    }
+    gSync.populateSendTabToDevicesView(panelViewNode, this.onShowingSubview.bind(this));
   },
 };
 
