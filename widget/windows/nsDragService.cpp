@@ -281,9 +281,9 @@ nsDragService::StartInvokingDragSession(IDataObject* aDataObj,
   StartDragSession();
   OpenDragPopup();
 
-  RefPtr<IAsyncOperation> pAsyncOp;
+  RefPtr<IDataObjectAsyncCapability> pAsyncOp;
   // Offer to do an async drag
-  if (SUCCEEDED(aDataObj->QueryInterface(IID_IAsyncOperation,
+  if (SUCCEEDED(aDataObj->QueryInterface(IID_IDataObjectAsyncCapability,
                                          getter_AddRefs(pAsyncOp)))) {
     pAsyncOp->SetAsyncMode(VARIANT_TRUE);
   } else {
