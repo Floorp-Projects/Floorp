@@ -756,6 +756,7 @@ bitflags! {
     #[repr(C)]
     /// Constants for contain: https://drafts.csswg.org/css-contain/#contain-property
     pub struct Contain: u8 {
+        /// `none` variant, just for convenience.
         const NONE = 0;
         /// 'size' variant, turns on size containment
         const SIZE = 1 << 0;
