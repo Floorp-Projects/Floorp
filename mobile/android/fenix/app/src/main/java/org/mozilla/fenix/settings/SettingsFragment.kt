@@ -21,12 +21,12 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import mozilla.components.concept.sync.AccountObserver
+import mozilla.components.concept.sync.OAuthAccount
+import mozilla.components.concept.sync.Profile
 import kotlin.coroutines.CoroutineContext
 import java.io.File
-import mozilla.components.service.fxa.AccountObserver
-import mozilla.components.service.fxa.FirefoxAccountShaped
 import mozilla.components.service.fxa.FxaUnauthorizedException
-import mozilla.components.service.fxa.Profile
 import mozilla.components.support.ktx.android.graphics.toDataUri
 import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.FenixApplication
@@ -246,8 +246,7 @@ class SettingsFragment : PreferenceFragmentCompat(), CoroutineScope, AccountObse
         Navigation.findNavController(view!!).navigate(directions)
     }
 
-    // --- AccountObserver interfaces ---
-    override fun onAuthenticated(account: FirefoxAccountShaped) {
+    override fun onAuthenticated(account: OAuthAccount) {
         updateAuthState(account)
     }
 
@@ -267,7 +266,7 @@ class SettingsFragment : PreferenceFragmentCompat(), CoroutineScope, AccountObse
     }
 
     // --- Account UI helpers ---
-    private fun updateAuthState(account: FirefoxAccountShaped? = null) {
+    private fun updateAuthState(account: OAuthAccount? = null) {
         val preferenceSignIn = findPreference<Preference>(context?.getPreferenceKey(pref_key_sign_in))
         val preferenceFirefoxAccount = findPreference<Preference>(context?.getPreferenceKey(pref_key_account))
         val accountPreferenceCategory =

@@ -54,6 +54,9 @@ class ToolbarUIView(
             hintColor = ContextCompat.getColor(context, R.color.search_text)
 
             setOnEditListener(object : mozilla.components.concept.toolbar.Toolbar.OnEditListener {
+                override fun onCancelEditing(): Boolean {
+                    return true
+                }
                 override fun onTextChanged(text: String) {
                     url = text
                     actionEmitter.onNext(SearchAction.TextChanged(text))

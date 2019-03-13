@@ -46,7 +46,7 @@ class AccountSettingsFragment : PreferenceFragmentCompat(), CoroutineScope {
     private fun getClickListenerForSignOut(): Preference.OnPreferenceClickListener {
         return Preference.OnPreferenceClickListener {
             launch {
-                requireComponents.backgroundServices.accountManager.logout().await()
+                requireComponents.backgroundServices.accountManager.logoutAsync().await()
                 Navigation.findNavController(view!!).popBackStack()
             }
             true

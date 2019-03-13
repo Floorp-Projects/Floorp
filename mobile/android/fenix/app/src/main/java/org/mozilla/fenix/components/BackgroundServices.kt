@@ -28,5 +28,5 @@ class BackgroundServices(
     private val scopes: Array<String> = arrayOf("profile", "https://identity.mozilla.com/apps/oldsync")
     private val config = Config.release(CLIENT_ID, REDIRECT_URL)
 
-    val accountManager = FxaAccountManager(context, config, scopes).also { it.init() }
+    val accountManager = FxaAccountManager(context, config, scopes).also { it.initAsync() }
 }
