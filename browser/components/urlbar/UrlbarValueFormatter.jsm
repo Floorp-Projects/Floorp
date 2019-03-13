@@ -90,7 +90,7 @@ class UrlbarValueFormatter {
     });
   }
 
-  _getUrlMetaData() {
+  _getUrlMetaData(allowReplacement = true) {
     if (this.urlbarInput.focused) {
       return null;
     }
@@ -124,12 +124,33 @@ class UrlbarValueFormatter {
       trimmedLength = "http://".length;
     }
 
+    // This RegExp is not a perfect match, and for specially crafted URLs it may
+    // get the host wrong; for safety reasons we will later compare the found
+    // host with the one that will actually be loaded.
     let matchedURL = url.match(/^(([a-z]+:\/\/)(?:[^\/#?]+@)?)(\S+?)(?::\d+)?\s*(?:[\/#?]|$)/);
     if (!matchedURL) {
       return null;
     }
-
     let [, preDomain, schemeWSlashes, domain] = matchedURL;
+
+    // If the found host differs from the fixed URI one, we can't properly
+    // highlight it. To stay on the safe side, we clobber user's input with
+    // the fixed URI and apply highlight to that one instead.
+    let replaceUrl = false;
+    try {
+      replaceUrl = Services.io.newURI("http://" + domain).displayHost != uriInfo.fixedURI.displayHost;
+    } catch (ex) {
+      return null;
+    }
+    if (replaceUrl) {
+      if (!allowReplacement) {
+        // Protect from infinite recursion.
+        return null;
+      }
+      this.window.URLBarSetURI(uriInfo.fixedURI);
+      return this._getUrlMetaData(false);
+    }
+
     return { preDomain, schemeWSlashes, domain, url, uriInfo, trimmedLength };
   }
 
