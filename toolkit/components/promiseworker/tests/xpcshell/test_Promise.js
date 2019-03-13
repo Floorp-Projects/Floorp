@@ -122,8 +122,7 @@ add_task(async function test_terminate() {
   let message = ["test_simple_args", Math.random()];
   let promise1 = worker.post("bounce", message);
   let promise2 = worker.post("throwError", ["error message"]);
-  // Skip a few beats so we can be sure that the two messages are in the queue.
-  await Promise.resolve();
+  // Skip a beat so we can be sure that the two messages are in the queue.
   await Promise.resolve();
 
   worker.terminate();
