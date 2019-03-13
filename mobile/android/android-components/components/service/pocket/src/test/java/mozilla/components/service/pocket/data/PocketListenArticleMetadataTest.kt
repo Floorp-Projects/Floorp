@@ -8,15 +8,10 @@ import mozilla.components.service.pocket.helpers.assertConstructorsVisibility
 import org.junit.Test
 import kotlin.reflect.KVisibility
 
-class PocketGlobalVideoRecommendationTest {
+class PocketListenArticleMetadataTest {
 
     @Test // See constructor comment for details.
     fun `GIVEN a PocketGlobalVideoRecommendation THEN its constructors are internal`() {
-        assertConstructorsVisibility(PocketGlobalVideoRecommendation::class, KVisibility.INTERNAL)
-    }
-
-    @Test // See PocketGlobalVideoRecommendation constructor for details.
-    fun `GIVEN an Author THEN its constructors are internal`() {
-        assertConstructorsVisibility(PocketGlobalVideoRecommendation.Author::class, KVisibility.INTERNAL)
+        assertConstructorsVisibility(PocketListenArticleMetadata::class, KVisibility.INTERNAL)
     }
 }
