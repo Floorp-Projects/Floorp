@@ -9,10 +9,10 @@ const FAKE_CID = Cc["@mozilla.org/uuid-generator;1"].
 
 function HelperAppLauncherDialog() {}
 HelperAppLauncherDialog.prototype = {
-  show: function(aLauncher, aWindowContext, aReason) {
+  show(aLauncher, aWindowContext, aReason) {
     sendAsyncMessage("suggestedFileName", aLauncher.suggestedFileName);
   },
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIHelperAppLauncherDialog])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIHelperAppLauncherDialog]),
 };
 
 var registrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
