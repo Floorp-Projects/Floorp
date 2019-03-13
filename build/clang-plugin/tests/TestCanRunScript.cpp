@@ -8,7 +8,7 @@ MOZ_CAN_RUN_SCRIPT void test() {
 
 }
 
-void test_parent() { // expected-note {{parent function declared here}}
+void test_parent() { // expected-note {{caller function declared here}}
   test(); // expected-error {{functions marked as MOZ_CAN_RUN_SCRIPT can only be called from functions also marked as MOZ_CAN_RUN_SCRIPT}}
 }
 
@@ -33,7 +33,7 @@ struct RefCountedBase {
     test2(this);
   }
 
-  virtual void method_test3() { // expected-note {{parent function declared here}}
+  virtual void method_test3() { // expected-note {{caller function declared here}}
     test(); // expected-error {{functions marked as MOZ_CAN_RUN_SCRIPT can only be called from functions also marked as MOZ_CAN_RUN_SCRIPT}}
   }
 };
@@ -43,7 +43,7 @@ MOZ_CAN_RUN_SCRIPT void testLambda() {
     test();
   };
 
-  auto doItWrong = []() { // expected-note {{parent function declared here}}
+  auto doItWrong = []() { // expected-note {{caller function declared here}}
     test(); // expected-error {{functions marked as MOZ_CAN_RUN_SCRIPT can only be called from functions also marked as MOZ_CAN_RUN_SCRIPT}}
   };
 
@@ -51,7 +51,7 @@ MOZ_CAN_RUN_SCRIPT void testLambda() {
   doItWrong();
 }
 
-void test2_parent() { // expected-note {{parent function declared here}}
+void test2_parent() { // expected-note {{caller function declared here}}
   test2(new RefCountedBase); // expected-error {{arguments must all be strong refs or parent parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument)}} \
                              // expected-error {{functions marked as MOZ_CAN_RUN_SCRIPT can only be called from functions also marked as MOZ_CAN_RUN_SCRIPT}}
 }
@@ -96,10 +96,10 @@ MOZ_CAN_RUN_SCRIPT void test3_parent() {
 }
 
 struct RefCountedChild : public RefCountedBase {
-  virtual void method_test3() override; // expected-note {{overridden function declared here}} expected-note {{overridden function declared here}}
+  virtual void method_test3() override; // expected-note {{overridden function declared here}} expected-note {{overridden function declared here}} expected-note {{caller function declared here}}
 };
 
-void RefCountedChild::method_test3() { // expected-note {{parent function declared here}}
+void RefCountedChild::method_test3() {
   test(); // expected-error {{functions marked as MOZ_CAN_RUN_SCRIPT can only be called from functions also marked as MOZ_CAN_RUN_SCRIPT}}
 }
 
@@ -239,6 +239,19 @@ MOZ_CAN_RUN_SCRIPT void test_defaults_6() {
   RefPtr<RefCountedBase> t = new RefCountedBase;
   test_defaults_helper_2(t);
 }
+
+MOZ_CAN_RUN_SCRIPT void test_arg_deref_helper(RefCountedBase&) {
+}
+
+MOZ_CAN_RUN_SCRIPT void test_arg_deref(RefCountedBase* arg) {
+  test_arg_deref_helper(*arg);
+}
+
+struct RefCountedDerefTester : public RefCountedBase {
+  MOZ_CAN_RUN_SCRIPT void foo() {
+    test_arg_deref_helper(*this);
+  }
+};
 
 struct DisallowMemberArgs {
   RefPtr<RefCountedBase> mRefCounted;

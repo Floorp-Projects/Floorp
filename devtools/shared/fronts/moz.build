@@ -15,14 +15,12 @@ DevToolsModules(
     'accessibility.js',
     'actor-registry.js',
     'animation.js',
-    'canvas.js',
     'changes.js',
     'css-properties.js',
     'csscoverage.js',
     'device.js',
     'emulation.js',
     'framerate.js',
-    'function-call.js',
     'highlighters.js',
     'inspector.js',
     'layout.js',
@@ -40,7 +38,5 @@ DevToolsModules(
     'string.js',
     'styles.js',
     'stylesheets.js',
-    'webaudio.js',
     'webconsole.js',
-    'webgl.js'
 )
