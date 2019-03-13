@@ -4,14 +4,14 @@
 
 package mozilla.components.browser.storage.sync
 
-import junit.framework.Assert.assertEquals
-import junit.framework.Assert.assertNull
 import kotlinx.coroutines.runBlocking
 import mozilla.components.concept.storage.PageObservation
 import mozilla.components.concept.storage.VisitType
 import mozilla.components.support.test.eq
 import org.junit.Test
 import mozilla.components.support.test.mock
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers
@@ -19,9 +19,10 @@ import org.mockito.Mockito.`when`
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.times
 import org.mockito.Mockito.never
-import org.mozilla.places.PlacesAPI
+import org.mozilla.places.ReadablePlacesConnectionInterface
 import org.mozilla.places.SearchResult
 import org.mozilla.places.VisitObservation
+import org.mozilla.places.WritablePlacesConnectionInterface
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
 import java.lang.IllegalArgumentException
@@ -29,36 +30,40 @@ import java.lang.IllegalArgumentException
 @RunWith(RobolectricTestRunner::class)
 class PlacesHistoryStorageTest {
     private var conn: Connection? = null
-    private var places: PlacesAPI? = null
+    private var reader: ReadablePlacesConnectionInterface? = null
+    private var writer: WritablePlacesConnectionInterface? = null
+
     private var storage: PlacesHistoryStorage? = null
 
     class TestablePlacesHistoryStorage(override val places: Connection) : PlacesHistoryStorage(RuntimeEnvironment.application)
 
     @Before
     fun setup() {
-        places = mock()
         conn = mock()
-        `when`(conn!!.api()).thenReturn(places)
+        reader = mock()
+        writer = mock()
+        `when`(conn!!.reader()).thenReturn(reader)
+        `when`(conn!!.writer()).thenReturn(writer)
         storage = TestablePlacesHistoryStorage(conn!!)
     }
 
     @Test
     fun `storage passes through recordVisit calls`() = runBlocking {
         val storage = storage!!
-        val places = places!!
+        val writer = writer!!
 
         storage.recordVisit("http://www.mozilla.org", VisitType.LINK)
-        verify(places, times(1)).noteObservation(
+        verify(writer, times(1)).noteObservation(
                 VisitObservation("http://www.mozilla.org", visitType = org.mozilla.places.VisitType.LINK)
         )
 
         storage.recordVisit("http://www.mozilla.org", VisitType.RELOAD)
-        verify(places, times(1)).noteObservation(
+        verify(writer, times(1)).noteObservation(
                 VisitObservation("http://www.mozilla.org", visitType = org.mozilla.places.VisitType.RELOAD)
         )
 
         storage.recordVisit("http://www.firefox.com", VisitType.TYPED)
-        verify(places, times(1)).noteObservation(
+        verify(writer, times(1)).noteObservation(
                 VisitObservation("http://www.firefox.com", visitType = org.mozilla.places.VisitType.TYPED)
         )
     }
@@ -66,15 +71,15 @@ class PlacesHistoryStorageTest {
     @Test
     fun `storage passes through recordObservation calls`() = runBlocking {
         val storage = storage!!
-        val places = places!!
+        val writer = writer!!
 
         storage.recordObservation("http://www.mozilla.org", PageObservation(title = "Mozilla"))
-        verify(places, times(1)).noteObservation(
+        verify(writer, times(1)).noteObservation(
                 VisitObservation("http://www.mozilla.org", visitType = org.mozilla.places.VisitType.UPDATE_PLACE, title = "Mozilla")
         )
 
         storage.recordObservation("http://www.firefox.com", PageObservation(title = null))
-        verify(places, times(1)).noteObservation(
+        verify(writer, times(1)).noteObservation(
                 VisitObservation("http://www.firefox.com", visitType = org.mozilla.places.VisitType.UPDATE_PLACE, title = null)
         )
     }
@@ -82,13 +87,13 @@ class PlacesHistoryStorageTest {
     @Test
     fun `storage passes through getVisited(uris) calls`() = runBlocking {
         val storage = storage!!
-        val places = places!!
+        val reader = reader!!
 
         storage.getVisited(listOf("http://www.mozilla.org", "http://www.firefox.com"))
-        verify(places, times(1)).getVisited(listOf("http://www.mozilla.org", "http://www.firefox.com"))
+        verify(reader, times(1)).getVisited(listOf("http://www.mozilla.org", "http://www.firefox.com"))
 
         storage.getVisited(listOf())
-        verify(places, times(1)).getVisited(listOf())
+        verify(reader, times(1)).getVisited(listOf())
 
         Unit
     }
@@ -96,25 +101,25 @@ class PlacesHistoryStorageTest {
     @Test
     fun `storage passes through getVisited() calls`() = runBlocking {
         val storage = storage!!
-        val places = places!!
+        val reader = reader!!
 
         storage.getVisited()
-        verify(places, times(1)).getVisitedUrlsInRange(eq(0), ArgumentMatchers.anyLong(), eq(true))
+        verify(reader, times(1)).getVisitedUrlsInRange(eq(0), ArgumentMatchers.anyLong(), eq(true))
         Unit
     }
 
     @Test
     fun `storage passes through getSuggestions calls`() {
         val storage = storage!!
-        val places = places!!
+        val reader = reader!!
 
         storage.getSuggestions("Hello!", 10)
-        verify(places, times(1)).queryAutocomplete("Hello!", 10)
+        verify(reader, times(1)).queryAutocomplete("Hello!", 10)
 
         storage.getSuggestions("World!", 0)
-        verify(places, times(1)).queryAutocomplete("World!", 0)
+        verify(reader, times(1)).queryAutocomplete("World!", 0)
 
-        `when`(places.queryAutocomplete("mozilla", 10)).thenReturn(listOf(
+        `when`(reader.queryAutocomplete("mozilla", 10)).thenReturn(listOf(
                 SearchResult("mozilla", "http://www.mozilla.org", "Mozilla", 10),
                 SearchResult("mozilla", "http://www.firefox.com", "Mozilla Firefox", 5),
                 SearchResult("mozilla", "https://en.wikipedia.org/wiki/Mozilla", "", 8))
@@ -155,8 +160,8 @@ class PlacesHistoryStorageTest {
     @Test
     fun `storage passes through getAutocompleteSuggestion calls`() {
         val storage = storage!!
-        val places = places!!
-        `when`(places.matchUrl("mozilla")).thenReturn("http://www.mozilla.org")
+        val reader = reader!!
+        `when`(reader.matchUrl("mozilla")).thenReturn("http://www.mozilla.org")
         val res = storage.getAutocompleteSuggestion("mozilla")!!
         assertEquals(1, res.totalItems)
         assertEquals("http://www.mozilla.org", res.url)
@@ -166,7 +171,7 @@ class PlacesHistoryStorageTest {
         assertNull(storage.getAutocompleteSuggestion("hello"))
     }
 
-    @Test()
+    @Test
     fun `storage passes through calls to cleanup`() {
         val storage = storage!!
         val conn = conn!!

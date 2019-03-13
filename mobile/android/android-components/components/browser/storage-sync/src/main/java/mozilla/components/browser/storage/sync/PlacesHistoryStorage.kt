@@ -37,20 +37,20 @@ open class PlacesHistoryStorage(context: Context) : HistoryStorage, SyncableStor
 
     @VisibleForTesting
     internal open val places: Connection by lazy {
-        RustPlacesConnection.createLongLivedConnection(storageDir)
+        RustPlacesConnection.init(storageDir)
         RustPlacesConnection
     }
 
     override suspend fun recordVisit(uri: String, visitType: VisitType) {
         scope.launch {
-            places.api().noteObservation(VisitObservation(uri, visitType = visitType.into()))
+            places.writer().noteObservation(VisitObservation(uri, visitType = visitType.into()))
         }.join()
     }
 
     override suspend fun recordObservation(uri: String, observation: PageObservation) {
         // NB: visitType of null means "record meta information about this URL".
         scope.launch {
-            places.api().noteObservation(
+            places.writer().noteObservation(
                 VisitObservation(
                     url = uri,
                     visitType = org.mozilla.places.VisitType.UPDATE_PLACE,
@@ -61,12 +61,12 @@ open class PlacesHistoryStorage(context: Context) : HistoryStorage, SyncableStor
     }
 
     override suspend fun getVisited(uris: List<String>): List<Boolean> {
-        return scope.async { places.api().getVisited(uris) }.await()
+        return scope.async { places.reader().getVisited(uris) }.await()
     }
 
     override suspend fun getVisited(): List<String> {
         return scope.async {
-            places.api().getVisitedUrlsInRange(
+            places.reader().getVisitedUrlsInRange(
                 start = 0,
                 end = System.currentTimeMillis(),
                 includeRemote = true
@@ -81,13 +81,13 @@ open class PlacesHistoryStorage(context: Context) : HistoryStorage, SyncableStor
 
     override fun getSuggestions(query: String, limit: Int): List<SearchResult> {
         require(limit >= 0) { "Limit must be a positive integer" }
-        return places.api().queryAutocomplete(query, limit = limit).map {
+        return places.reader().queryAutocomplete(query, limit = limit).map {
             SearchResult(it.url, it.url, it.frecency.toInt(), it.title)
         }
     }
 
     override fun getAutocompleteSuggestion(query: String): HistoryAutocompleteResult? {
-        val url = places.api().matchUrl(query) ?: return null
+        val url = places.reader().matchUrl(query) ?: return null
 
         val resultText = segmentAwareDomainMatch(query, arrayListOf(url))
         return resultText?.let {
@@ -102,13 +102,11 @@ open class PlacesHistoryStorage(context: Context) : HistoryStorage, SyncableStor
     }
 
     override suspend fun sync(authInfo: AuthInfo): SyncStatus {
-        return RustPlacesConnection.newConnection(storageDir).use {
-            try {
-                it.sync(authInfo.into())
-                SyncStatus.Ok
-            } catch (e: PlacesException) {
-                SyncStatus.Error(e)
-            }
+        return try {
+            places.sync(authInfo.into())
+            SyncStatus.Ok
+        } catch (e: PlacesException) {
+            SyncStatus.Error(e)
         }
     }
 }
