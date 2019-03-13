@@ -383,10 +383,26 @@ class NetErrorChild extends ActorChild {
     this._setTechDetails(msg, doc);
     let learnMoreLink = doc.getElementById("learnMoreLink");
     let baseURL = Services.urlFormatter.formatURLPref("app.support.baseURL");
+    learnMoreLink.setAttribute("href", baseURL + "connection-not-secure");
     let errWhatToDo = doc.getElementById("es_nssBadCert_" + msg.data.codeString);
     let es = doc.getElementById("errorWhatToDoText");
     let errWhatToDoTitle = doc.getElementById("edd_nssBadCert");
     let est = doc.getElementById("errorWhatToDoTitleText");
+    let searchParams = new URLSearchParams(doc.documentURI.split("?")[1]);
+    let error = searchParams.get("e");
+
+    if (error == "sslv3Used") {
+      learnMoreLink.setAttribute("href", baseURL + "sslv3-error-messages");
+    }
+
+    if (error == "nssFailure2") {
+      let shortDesc = doc.getElementById("errorShortDescText").textContent;
+      // nssFailure2 also gets us other non-overrideable errors. Choose
+      // a "learn more" link based on description:
+      if (shortDesc.includes("MOZILLA_PKIX_ERROR_KEY_PINNING_FAILURE")) {
+        learnMoreLink.setAttribute("href", baseURL + "certificate-pinning-reports");
+      }
+    }
 
     // This is set to true later if the user's system clock is at fault for this error.
     let clockSkew = false;
