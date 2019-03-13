@@ -6,6 +6,7 @@
 #ifndef widget_gtk_GtkCompositorWidget_h
 #define widget_gtk_GtkCompositorWidget_h
 
+#include "GLDefs.h"
 #include "mozilla/widget/CompositorWidget.h"
 #include "WindowSurfaceProvider.h"
 
@@ -61,6 +62,8 @@ class GtkCompositorWidget : public CompositorWidget,
 
   Display* XDisplay() const { return mXDisplay; }
   Window XWindow() const { return mXWindow; }
+
+  EGLNativeWindowType GetEGLNativeWindow();
 
   // PlatformCompositorWidgetDelegate Overrides
 
