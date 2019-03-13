@@ -106,46 +106,6 @@ nsresult WriteMetadataFile(nsIFile* aMetadataFile, const Metadata& aMetadata) {
   return NS_OK;
 }
 
-nsresult ReadMetadataFile(nsIFile* aMetadataFile, Metadata& aMetadata) {
-  int32_t openFlags = PR_RDONLY;
-
-  ScopedPRFileDesc fd;
-  nsresult rv = aMetadataFile->OpenNSPRFileDesc(openFlags, 0644, &fd.rwget());
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Read the buildid and check that it matches the current buildid
-
-  JS::BuildIdCharVector currentBuildId;
-  bool ok = GetBuildId(&currentBuildId);
-  NS_ENSURE_TRUE(ok, NS_ERROR_OUT_OF_MEMORY);
-
-  uint32_t length;
-  int32_t bytesRead = PR_Read(fd, &length, sizeof(length));
-  NS_ENSURE_TRUE(bytesRead == sizeof(length), NS_ERROR_UNEXPECTED);
-
-  NS_ENSURE_TRUE(currentBuildId.length() == length, NS_ERROR_UNEXPECTED);
-
-  JS::BuildIdCharVector fileBuildId;
-  ok = fileBuildId.resize(length);
-  NS_ENSURE_TRUE(ok, NS_ERROR_OUT_OF_MEMORY);
-
-  bytesRead = PR_Read(fd, fileBuildId.begin(), length);
-  NS_ENSURE_TRUE(bytesRead == int32_t(length), NS_ERROR_UNEXPECTED);
-
-  for (uint32_t i = 0; i < length; i++) {
-    if (currentBuildId[i] != fileBuildId[i]) {
-      return NS_ERROR_FAILURE;
-    }
-  }
-
-  // Read the Metadata struct
-
-  bytesRead = PR_Read(fd, &aMetadata, sizeof(aMetadata));
-  NS_ENSURE_TRUE(bytesRead == sizeof(aMetadata), NS_ERROR_UNEXPECTED);
-
-  return NS_OK;
-}
-
 nsresult GetCacheFile(nsIFile* aDirectory, unsigned aModuleIndex,
                       nsIFile** aCacheFile) {
   nsCOMPtr<nsIFile> cacheFile;
@@ -715,50 +675,9 @@ nsresult ParentRunnable::ReadMetadata() {
     return rv;
   }
 
-  rv = mDirectory->Append(NS_LITERAL_STRING(ASMJSCACHE_DIRECTORY_NAME));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  bool exists;
-  rv = mDirectory->Exists(&exists);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (!exists) {
-    rv = mDirectory->Create(nsIFile::DIRECTORY_TYPE, 0755);
-    NS_ENSURE_SUCCESS(rv, rv);
-  } else {
-    DebugOnly<bool> isDirectory;
-    MOZ_ASSERT(NS_SUCCEEDED(mDirectory->IsDirectory(&isDirectory)));
-    MOZ_ASSERT(isDirectory, "Should have caught this earlier!");
-  }
-
-  rv = mDirectory->Clone(getter_AddRefs(mMetadataFile));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = mMetadataFile->Append(NS_LITERAL_STRING(ASMJSCACHE_METADATA_FILE_NAME));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = mMetadataFile->Exists(&exists);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (exists && NS_FAILED(ReadMetadataFile(mMetadataFile, mMetadata))) {
-    exists = false;
-  }
-
-  if (!exists) {
-    // If we are reading, we can't possibly have a cache hit.
-    if (mOpenMode == eOpenForRead) {
-      return NS_ERROR_FILE_NOT_FOUND;
-    }
-
-    // Initialize Metadata with a valid empty state for the LRU cache.
-    for (unsigned i = 0; i < Metadata::kNumEntries; i++) {
-      Metadata::Entry& entry = mMetadata.mEntries[i];
-      entry.mModuleIndex = i;
-      entry.clear();
-    }
-  }
-
-  return NS_OK;
+  // XXX Bug 1520931 will fully remove asmjs. Just stop creating any new storage
+  // here.
+  return NS_ERROR_FAILURE;
 }
 
 nsresult ParentRunnable::OpenCacheFileForWrite() {
