@@ -85,6 +85,10 @@ MOZ_CAN_RUN_SCRIPT void test2_parent7() {
   t->method_test2(); // expected-error {{arguments must all be strong refs or parent parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument)}}
 }
 
+MOZ_CAN_RUN_SCRIPT void test2_parent8() {
+  test2(nullptr);
+}
+
 MOZ_CAN_RUN_SCRIPT void test3(int* param) {}
 
 MOZ_CAN_RUN_SCRIPT void test3_parent() {
@@ -200,6 +204,40 @@ MOZ_CAN_RUN_SCRIPT void test_maybe_2() {
   mozilla::Maybe<RefPtr<RefCountedBase>> safe;
   safe.emplace(new RefCountedBase);
   (*safe)->method_test(); // expected-error {{arguments must all be strong refs or parent parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument)}}
+}
+
+MOZ_CAN_RUN_SCRIPT void test_defaults_helper_1(RefCountedBase* arg = nullptr) {
+}
+
+MOZ_CAN_RUN_SCRIPT void test_defaults_1() {
+  test_defaults_helper_1();
+}
+
+MOZ_CAN_RUN_SCRIPT void test_defaults_2() {
+  RefCountedBase* t = new RefCountedBase;
+  test_defaults_helper_1(t); // expected-error {{arguments must all be strong refs or parent parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument)}}
+}
+
+MOZ_CAN_RUN_SCRIPT void test_defaults_3() {
+  RefPtr<RefCountedBase> t = new RefCountedBase;
+  test_defaults_helper_1(t);
+}
+
+MOZ_CAN_RUN_SCRIPT void test_defaults_helper_2(RefCountedBase* arg = new RefCountedBase()) {
+}
+
+MOZ_CAN_RUN_SCRIPT void test_defaults_4() {
+  test_defaults_helper_2(); // expected-error {{arguments must all be strong refs or parent parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument)}}
+}
+
+MOZ_CAN_RUN_SCRIPT void test_defaults_5() {
+  RefCountedBase* t = new RefCountedBase;
+  test_defaults_helper_2(t); // expected-error {{arguments must all be strong refs or parent parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument)}}
+}
+
+MOZ_CAN_RUN_SCRIPT void test_defaults_6() {
+  RefPtr<RefCountedBase> t = new RefCountedBase;
+  test_defaults_helper_2(t);
 }
 
 struct DisallowMemberArgs {

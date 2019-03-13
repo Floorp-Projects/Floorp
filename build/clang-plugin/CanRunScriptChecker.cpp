@@ -42,6 +42,9 @@ void CanRunScriptChecker::registerMatchers(MatchFinder *AstMatcher) {
           ),
           // and which is not a parameter of the parent function,
           unless(declRefExpr(to(parmVarDecl()))),
+          // and which is not a default arg with value nullptr, since those are
+          // always safe.
+          unless(cxxDefaultArgExpr(isNullDefaultArg())),
           // and which is not a MOZ_KnownLive wrapped value.
           unless(
             anyOf(
