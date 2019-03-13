@@ -1,8 +1,8 @@
 #!/bin/sh
 
 cargo run -- \
-      ../BinSource.webidl_ \
-      ../BinSource.yaml \
+      ../BinAST.webidl_ \
+      ../BinAST.yaml \
       --out-class ../BinASTParser-tmp.h    \
       --out-impl ../BinASTParser-tmp.cpp   \
       --out-enum ../BinASTEnum-tmp.h    \
