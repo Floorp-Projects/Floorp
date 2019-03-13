@@ -162,13 +162,13 @@ struct GlobalRules {
     /// defining the tokens.
     hpp_tokens_footer: Option<String>,
 
-    /// Documentation for the `BinKind` class enum.
+    /// Documentation for the `BinASTKind` class enum.
     hpp_tokens_kind_doc: Option<String>,
 
-    /// Documentation for the `BinField` class enum.
+    /// Documentation for the `BinASTField` class enum.
     hpp_tokens_field_doc: Option<String>,
 
-    /// Documentation for the `BinVariant` class enum.
+    /// Documentation for the `BinASTVariant` class enum.
     hpp_tokens_variants_doc: Option<String>,
 
     /// Per-node rules.
@@ -532,7 +532,7 @@ enum MethodCallKind {
 
 /// Fixed parameter of interface method.
 const INTERFACE_PARAMS: &str =
-    "const size_t start, const BinKind kind, const BinFields& fields";
+    "const size_t start, const BinASTKind kind, const BinASTFields& fields";
 
 /// Fixed arguments of interface method.
 const INTERFACE_ARGS: &str =
@@ -560,7 +560,7 @@ struct CPPExporter {
     option_parsers_to_generate: Vec<OptionParserData>,
 
     /// A mapping from symbol (e.g. `+`, `-`, `instanceof`, ...) to the
-    /// name of the symbol as part of `enum class BinVariant`
+    /// name of the symbol as part of `enum class BinASTVariant`
     /// (e.g. `UnaryOperatorDelete`).
     variants_by_symbol: HashMap<String, String>,
 
@@ -601,7 +601,7 @@ impl CPPExporter {
         list_parsers_to_generate.sort_by(|a, b| str::cmp(a.name.to_str(), b.name.to_str()));
         option_parsers_to_generate.sort_by(|a, b| str::cmp(a.name.to_str(), b.name.to_str()));
 
-        // Prepare variant_by_symbol, which will let us lookup the BinVariant name of
+        // Prepare variant_by_symbol, which will let us lookup the BinASTVariant name of
         // a symbol. Since some symbols can appear in several enums (e.g. "+"
         // is both a unary and a binary operator), we need to collect all the
         // string enums that contain each symbol and come up with a unique name
@@ -944,14 +944,14 @@ impl CPPExporter {
                     spec_name = name))
                 .format(" \\\n")));
         buffer.push_str("
-enum class BinKind {
+enum class BinASTKind {
 #define EMIT_ENUM(name, _) name,
     FOR_EACH_BIN_KIND(EMIT_ENUM)
 #undef EMIT_ENUM
 };
 ");
 
-        buffer.push_str(&format!("\n// The number of distinct values of BinKind.\nconst size_t BINKIND_LIMIT = {};\n\n\n", kind_limit));
+        buffer.push_str(&format!("\n// The number of distinct values of BinASTKind.\nconst size_t BINASTKIND_LIMIT = {};\n\n\n", kind_limit));
         buffer.push_str("\n\n");
         if self.rules.hpp_tokens_field_doc.is_some() {
             buffer.push_str(&self.rules.hpp_tokens_field_doc.reindent(""));
@@ -968,13 +968,13 @@ enum class BinKind {
                     enum_name = name.to_cpp_enum_case()))
                 .format(" \\\n")));
         buffer.push_str("
-enum class BinField {
+enum class BinASTField {
 #define EMIT_ENUM(name, _) name,
     FOR_EACH_BIN_FIELD(EMIT_ENUM)
 #undef EMIT_ENUM
 };
 ");
-        buffer.push_str(&format!("\n// The number of distinct values of BinField.\nconst size_t BINFIELD_LIMIT = {};\n\n\n", field_limit));
+        buffer.push_str(&format!("\n// The number of distinct values of BinASTField.\nconst size_t BINASTFIELD_LIMIT = {};\n\n\n", field_limit));
 
         if self.rules.hpp_tokens_variants_doc.is_some() {
             buffer.push_str(&self.rules.hpp_tokens_variants_doc.reindent(""));
@@ -995,13 +995,13 @@ enum class BinField {
                 .format(" \\\n")));
 
         buffer.push_str("
-enum class BinVariant {
+enum class BinASTVariant {
 #define EMIT_ENUM(name, _) name,
     FOR_EACH_BIN_VARIANT(EMIT_ENUM)
 #undef EMIT_ENUM
 };
 ");
-        buffer.push_str(&format!("\n// The number of distinct values of BinVariant.\nconst size_t BINVARIANT_LIMIT = {};\n\n\n",
+        buffer.push_str(&format!("\n// The number of distinct values of BinASTVariant.\nconst size_t BINASTVARIANT_LIMIT = {};\n\n\n",
             variants_limit));
 
         buffer.push_str(&self.rules.hpp_tokens_footer.reindent(""));
@@ -1243,8 +1243,8 @@ impl CPPExporter {
             buffer.push_str(&format!("{bnf}
 {first_line}
 {{
-    BinKind kind;
-    BinFields fields(cx_);
+    BinASTKind kind;
+    BinASTFields fields(cx_);
     AutoTaggedTuple guard(*tokenizer_);
     const auto start = tokenizer_->offset();
 
@@ -1280,14 +1280,14 @@ impl CPPExporter {
 
             if rule_for_this_arm.disabled {
                 buffer_cases.push_str(&format!("
-      case BinKind::{variant_name}:
+      case BinASTKind::{variant_name}:
         return raiseError(\"FIXME: Not implemented yet in this preview release ({variant_name})\");",
                     variant_name = node.to_cpp_enum_case()));
                 continue;
             }
 
             buffer_cases.push_str(&format!("
-      case BinKind::{variant_name}:
+      case BinASTKind::{variant_name}:
 {call}
 {arm_after}        break;",
                 call = self.get_method_call("result", node,
@@ -1458,15 +1458,15 @@ impl CPPExporter {
             NamedType::Interface(_) => {
                 buffer.push_str(&format!("{first_line}
 {{
-    BinKind kind;
-    BinFields fields(cx_);
+    BinASTKind kind;
+    BinASTFields fields(cx_);
     AutoTaggedTuple guard(*tokenizer_);
 
     MOZ_TRY(tokenizer_->enterTaggedTuple(kind, fields, guard));
     {type_ok} result;
-    if (kind == BinKind::{null}) {{
+    if (kind == BinASTKind::{null}) {{
 {none_block}
-    }} else if (kind == BinKind::{kind}) {{
+    }} else if (kind == BinASTKind::{kind}) {{
         const auto start = tokenizer_->offset();
 {before}{call}{after}
     }} else {{
@@ -1511,13 +1511,13 @@ impl CPPExporter {
                     &TypeSpec::TypeSum(_) => {
                 buffer.push_str(&format!("{first_line}
 {{
-    BinKind kind;
-    BinFields fields(cx_);
+    BinASTKind kind;
+    BinASTFields fields(cx_);
     AutoTaggedTuple guard(*tokenizer_);
 
     MOZ_TRY(tokenizer_->enterTaggedTuple(kind, fields, guard));
     {type_ok} result;
-    if (kind == BinKind::{null}) {{
+    if (kind == BinASTKind::{null}) {{
 {none_block}
     }} else {{
         const auto start = tokenizer_->offset();
@@ -1673,12 +1673,12 @@ impl CPPExporter {
             // Generate public method
             buffer.push_str(&format!("{first_line}
 {{
-    BinKind kind;
-    BinFields fields(cx_);
+    BinASTKind kind;
+    BinASTFields fields(cx_);
     AutoTaggedTuple guard(*tokenizer_);
 
     MOZ_TRY(tokenizer_->enterTaggedTuple(kind, fields, guard));
-    if (kind != BinKind::{kind}) {{
+    if (kind != BinASTKind::{kind}) {{
         return raiseInvalidKind(\"{kind}\", kind);
     }}
     const auto start = tokenizer_->offset();
@@ -1714,7 +1714,7 @@ impl CPPExporter {
         let fields_type_list = format!("{{ {} }}", interface.contents()
             .fields()
             .iter()
-            .map(|field| format!("BinField::{}", field.name().to_cpp_enum_case()))
+            .map(|field| format!("BinASTField::{}", field.name().to_cpp_enum_case()))
             .format(", "));
 
         let mut fields_implem = String::new();
@@ -1881,7 +1881,7 @@ impl CPPExporter {
                 // The following strategy is designed for old versions of clang.
                 format!("
 #if defined(DEBUG)
-    const BinField expected_fields[{number_of_fields}] = {fields_type_list};
+    const BinASTField expected_fields[{number_of_fields}] = {fields_type_list};
     MOZ_TRY(tokenizer_->checkFields(kind, fields, expected_fields));
 #endif // defined(DEBUG)",
                     fields_type_list = fields_type_list,
@@ -1889,7 +1889,7 @@ impl CPPExporter {
             };
             buffer.push_str(&format!("{first_line}
 {{
-    MOZ_ASSERT(kind == BinKind::{kind});
+    MOZ_ASSERT(kind == BinASTKind::{kind});
     BINJS_TRY(CheckRecursionLimit(cx_));
 {check_fields}
 {pre}{fields_implem}
@@ -1960,11 +1960,11 @@ impl CPPExporter {
                     cases = enum_.strings()
                         .iter()
                         .map(|symbol| {
-                            format!("    case BinVariant::{binvariant_variant}:
+                            format!("    case BinASTVariant::{binastvariant_variant}:
         return {kind}::{specialized_variant};",
                                 kind = kind,
                                 specialized_variant = symbol.to_cpp_enum_case(),
-                                binvariant_variant  = self.variants_by_symbol.get(symbol)
+                                binastvariant_variant  = self.variants_by_symbol.get(symbol)
                                     .unwrap()
                             )
                         })

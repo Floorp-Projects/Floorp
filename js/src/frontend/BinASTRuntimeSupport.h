@@ -24,9 +24,9 @@ class ScriptSource;
 
 // Support for parsing JS Binary ASTs.
 struct BinaryASTSupport {
-  using BinVariant = js::frontend::BinVariant;
-  using BinField = js::frontend::BinField;
-  using BinKind = js::frontend::BinKind;
+  using BinASTVariant = js::frontend::BinASTVariant;
+  using BinASTField = js::frontend::BinASTField;
+  using BinASTKind = js::frontend::BinASTKind;
 
   // A structure designed to perform fast char* + length lookup
   // without copies.
@@ -64,29 +64,29 @@ struct BinaryASTSupport {
 
   BinaryASTSupport();
 
-  JS::Result<const BinVariant*> binVariant(JSContext*, const CharSlice);
-  JS::Result<const BinKind*> binKind(JSContext*, const CharSlice);
+  JS::Result<const BinASTVariant*> binASTVariant(JSContext*, const CharSlice);
+  JS::Result<const BinASTKind*> binASTKind(JSContext*, const CharSlice);
 
   bool ensureBinTablesInitialized(JSContext*);
 
  private:
-  bool ensureBinKindsInitialized(JSContext*);
-  bool ensureBinVariantsInitialized(JSContext*);
+  bool ensureBinASTKindsInitialized(JSContext*);
+  bool ensureBinASTVariantsInitialized(JSContext*);
 
  private:
   // A HashMap that can be queried without copies from a CharSlice key.
   // Initialized on first call. Keys are CharSlices into static strings.
-  using BinKindMap =
-      js::HashMap<const CharSlice, BinKind, CharSlice, js::SystemAllocPolicy>;
-  BinKindMap binKindMap_;
-
-  using BinFieldMap =
-      js::HashMap<const CharSlice, BinField, CharSlice, js::SystemAllocPolicy>;
-  BinFieldMap binFieldMap_;
-
-  using BinVariantMap = js::HashMap<const CharSlice, BinVariant, CharSlice,
+  using BinASTKindMap = js::HashMap<const CharSlice, BinASTKind, CharSlice,
                                     js::SystemAllocPolicy>;
-  BinVariantMap binVariantMap_;
+  BinASTKindMap binASTKindMap_;
+
+  using BinASTFieldMap = js::HashMap<const CharSlice, BinASTField, CharSlice,
+                                     js::SystemAllocPolicy>;
+  BinASTFieldMap binASTFieldMap_;
+
+  using BinASTVariantMap = js::HashMap<const CharSlice, BinASTVariant,
+                                       CharSlice, js::SystemAllocPolicy>;
+  BinASTVariantMap binASTVariantMap_;
 };
 
 namespace frontend {
@@ -95,7 +95,7 @@ class BinASTSourceMetadata {
   using CharSlice = BinaryASTSupport::CharSlice;
 
   const uint32_t numStrings_;
-  const uint32_t numBinKinds_;
+  const uint32_t numBinASTKinds_;
 
   // The data lives inline in the allocation, after this class.
   inline JSAtom** atomsBase() {
@@ -106,32 +106,33 @@ class BinASTSourceMetadata {
         reinterpret_cast<uintptr_t>(atomsBase()) +
         numStrings_ * sizeof(JSAtom*));
   }
-  inline BinKind* binKindBase() {
-    return reinterpret_cast<BinKind*>(reinterpret_cast<uintptr_t>(sliceBase()) +
-                                      numStrings_ * sizeof(CharSlice));
+  inline BinASTKind* binASTKindBase() {
+    return reinterpret_cast<BinASTKind*>(
+        reinterpret_cast<uintptr_t>(sliceBase()) +
+        numStrings_ * sizeof(CharSlice));
   }
 
-  static inline size_t totalSize(uint32_t numBinKinds, uint32_t numStrings) {
+  static inline size_t totalSize(uint32_t numBinASTKinds, uint32_t numStrings) {
     return sizeof(BinASTSourceMetadata) + numStrings * sizeof(JSAtom*) +
-           numStrings * sizeof(CharSlice) + numBinKinds * sizeof(BinKind);
+           numStrings * sizeof(CharSlice) + numBinASTKinds * sizeof(BinASTKind);
   }
 
-  BinASTSourceMetadata(uint32_t numBinKinds, uint32_t numStrings)
-      : numStrings_(numStrings), numBinKinds_(numBinKinds) {}
+  BinASTSourceMetadata(uint32_t numBinASTKinds, uint32_t numStrings)
+      : numStrings_(numStrings), numBinASTKinds_(numBinASTKinds) {}
 
   friend class js::ScriptSource;
 
  public:
-  static BinASTSourceMetadata* Create(const Vector<BinKind>& binKinds,
+  static BinASTSourceMetadata* Create(const Vector<BinASTKind>& binASTKinds,
                                       uint32_t numStrings);
 
-  inline uint32_t numBinKinds() { return numBinKinds_; }
+  inline uint32_t numBinASTKinds() { return numBinASTKinds_; }
 
   inline uint32_t numStrings() { return numStrings_; }
 
-  inline BinKind& getBinKind(uint32_t index) {
-    MOZ_ASSERT(index < numBinKinds_);
-    return binKindBase()[index];
+  inline BinASTKind& getBinASTKind(uint32_t index) {
+    MOZ_ASSERT(index < numBinASTKinds_);
+    return binASTKindBase()[index];
   }
 
   inline CharSlice& getSlice(uint32_t index) {

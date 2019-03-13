@@ -54,7 +54,7 @@ class BinASTParserPerTokenizer : public BinASTParserBase,
 
   using AutoList = typename Tokenizer::AutoList;
   using AutoTaggedTuple = typename Tokenizer::AutoTaggedTuple;
-  using BinFields = typename Tokenizer::BinFields;
+  using BinASTFields = typename Tokenizer::BinASTFields;
   using Chars = typename Tokenizer::Chars;
 
  public:
@@ -106,18 +106,18 @@ class BinASTParserPerTokenizer : public BinASTParserBase,
   MOZ_MUST_USE mozilla::GenericErrorResult<JS::Error&>
   raiseMissingDirectEvalInAssertedScope();
   MOZ_MUST_USE mozilla::GenericErrorResult<JS::Error&> raiseInvalidKind(
-      const char* superKind, const BinKind kind);
+      const char* superKind, const BinASTKind kind);
   MOZ_MUST_USE mozilla::GenericErrorResult<JS::Error&> raiseInvalidVariant(
-      const char* kind, const BinVariant value);
+      const char* kind, const BinASTVariant value);
   MOZ_MUST_USE mozilla::GenericErrorResult<JS::Error&> raiseMissingField(
-      const char* kind, const BinField field);
+      const char* kind, const BinASTField field);
   MOZ_MUST_USE mozilla::GenericErrorResult<JS::Error&> raiseEmpty(
       const char* description);
   MOZ_MUST_USE mozilla::GenericErrorResult<JS::Error&> raiseOOM();
   MOZ_MUST_USE mozilla::GenericErrorResult<JS::Error&> raiseError(
       const char* description);
   MOZ_MUST_USE mozilla::GenericErrorResult<JS::Error&> raiseError(
-      BinKind kind, const char* description);
+      BinASTKind kind, const char* description);
 
   // Ensure that this parser will never be used again.
   void poison();
@@ -136,12 +136,13 @@ class BinASTParserPerTokenizer : public BinASTParserBase,
   // Build a function object for a function-producing production. Called AFTER
   // creating the scope.
   JS::Result<FunctionNode*> makeEmptyFunctionNode(const size_t start,
-                                                  const BinKind kind,
+                                                  const BinASTKind kind,
                                                   FunctionBox* funbox);
 
   JS::Result<FunctionNode*> buildFunction(const size_t start,
-                                          const BinKind kind, ParseNode* name,
-                                          ListNode* params, ParseNode* body);
+                                          const BinASTKind kind,
+                                          ParseNode* name, ListNode* params,
+                                          ParseNode* body);
   JS::Result<FunctionBox*> buildFunctionBox(GeneratorKind generatorKind,
                                             FunctionAsyncKind functionAsyncKind,
                                             FunctionSyntaxKind syntax,

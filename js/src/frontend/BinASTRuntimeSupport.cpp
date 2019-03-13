@@ -15,18 +15,18 @@ namespace frontend {
 
 /* static */
 BinASTSourceMetadata* BinASTSourceMetadata::Create(
-    const Vector<BinKind>& binKinds, uint32_t numStrings) {
-  uint32_t numBinKinds = binKinds.length();
+    const Vector<BinASTKind>& binASTKinds, uint32_t numStrings) {
+  uint32_t numBinASTKinds = binASTKinds.length();
 
   BinASTSourceMetadata* data = static_cast<BinASTSourceMetadata*>(
-      js_malloc(BinASTSourceMetadata::totalSize(numBinKinds, numStrings)));
+      js_malloc(BinASTSourceMetadata::totalSize(numBinASTKinds, numStrings)));
   if (!data) {
     return nullptr;
   }
 
-  new (data) BinASTSourceMetadata(numBinKinds, numStrings);
-  memcpy(data->binKindBase(), binKinds.begin(),
-         binKinds.length() * sizeof(BinKind));
+  new (data) BinASTSourceMetadata(numBinASTKinds, numStrings);
+  memcpy(data->binASTKindBase(), binASTKinds.begin(),
+         binASTKinds.length() * sizeof(BinASTKind));
 
   return data;
 }
