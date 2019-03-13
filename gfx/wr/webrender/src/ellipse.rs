@@ -2,11 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{LayoutPoint, LayoutVector2D};
+use api::units::*;
 use euclid::TypedSize2D;
 use std::f32::consts::FRAC_PI_2;
-#[cfg(test)]
-use api::LayoutSize;
+
 
 /// Number of steps to integrate arc length over.
 const STEP_COUNT: usize = 20;

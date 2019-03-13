@@ -3,11 +3,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::{
-    ColorU, FilterOp, LayoutSize, LayoutPrimitiveInfo, MixBlendMode,
-    PropertyBinding, PropertyBindingId, LayoutVector2D,
+    ColorU, FilterOp, LayoutPrimitiveInfo, MixBlendMode,
+    PropertyBinding, PropertyBindingId,
 };
+use api::units::{Au, LayoutSize, LayoutVector2D};
 use intern::ItemUid;
-use app_units::Au;
 use display_list_flattener::IsVisible;
 use intern::{Internable, InternDebug, Handle as InternHandle};
 use picture::PictureCompositeMode;
