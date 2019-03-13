@@ -14,13 +14,18 @@ class SearchView(context: Context, attrs: AttributeSet) : FrameLayout(context, a
 
     var isPrivateModeEnabled = false
 
-    private val lightDrawable = resources.getDrawable(R.drawable.home_search_background_light)
-    private val privateLightDrawable = resources.getDrawable(R.drawable.home_search_background_private)
-    private val darkDrawable = resources.getDrawable(R.drawable.home_search_background_dark)
-    private val privateDarkDrawable = resources.getDrawable(R.drawable.home_search_background_private_dark)
-    private val darkNoBorderDrawable = resources.getDrawable(R.drawable.home_search_background_dark_no_border)
+    private val lightDrawable =
+        resources.getDrawable(R.drawable.home_search_background_light, context.theme)
+    private val privateLightDrawable =
+        resources.getDrawable(R.drawable.home_search_background_private, context.theme)
+    private val darkDrawable =
+        resources.getDrawable(R.drawable.home_search_background_dark, context.theme)
+    private val privateDarkDrawable =
+        resources.getDrawable(R.drawable.home_search_background_private_dark, context.theme)
+    private val darkNoBorderDrawable =
+        resources.getDrawable(R.drawable.home_search_background_dark_no_border, context.theme)
     private val privateDarkNoBorderDrawable =
-        resources.getDrawable(R.drawable.home_search_background_private_dark_no_border)
+        resources.getDrawable(R.drawable.home_search_background_private_dark_no_border, context.theme)
 
     private val lightToDark = TransitionDrawable(arrayOf(lightDrawable, darkDrawable))
     private val darkToNoBorder = TransitionDrawable(arrayOf(darkDrawable, darkNoBorderDrawable))
