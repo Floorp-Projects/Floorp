@@ -23,6 +23,18 @@ permalink: /changelog/
     This is especially useful if you want to call `activity.onBackPressed()` to navigate away rather than just dismiss the keyboard.
     Its return value is used to determine if `displayMode` will switch from edit to view.
 
+* **concept-sync**
+  * 🆕 New component which describes sync-related interfaces, such as SyncManager, SyncableStore, SyncStatusObserver and others.
+
+* **concept-storage**
+  * ⚠️ **This is a breaking API change!**: Removed sync-related interfaces. See **concept-sync**.
+
+* **feature-sync**
+  * ⚠️ **This is a breaking API change!** Complete overhaul of this component.
+  * Added `BackgroundSyncManager`, a WorkManager-based implementation of the SyncManager defined in `concept-sync`.
+  * An instance of a SyncManager is an entry point for interacting with background data synchronization.
+  * See component's README for usage details.
+
 # 0.46.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.45.0...v0.46.0)
