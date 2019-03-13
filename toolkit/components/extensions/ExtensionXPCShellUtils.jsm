@@ -255,7 +255,6 @@ class ExtensionWrapper {
 
     if (extension) {
       this.id = extension.id;
-      this.uuid = extension.uuid;
       this.attachExtension(extension);
     }
   }
@@ -278,6 +277,7 @@ class ExtensionWrapper {
       this.extension.off("test-message", this.handleMessage);
       this.clearMessageQueues();
     }
+    this.uuid = extension.uuid;
     this.extension = extension;
 
     extension.on("test-eq", this.handleResult);
