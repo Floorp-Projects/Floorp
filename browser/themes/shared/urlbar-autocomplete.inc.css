@@ -68,6 +68,10 @@
   mask-image: linear-gradient(to left, transparent, black 2em);
 }
 
+.urlbarView-row-inner[overflow]:-moz-locale-dir(rtl) {
+  mask-image: linear-gradient(to right, transparent, black 2em);
+}
+
 .urlbarView-row:hover {
   background: var(--arrowpanel-dimmed);
 }
