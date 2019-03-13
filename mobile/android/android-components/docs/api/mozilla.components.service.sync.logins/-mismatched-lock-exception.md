@@ -2,7 +2,7 @@
 
 # MismatchedLockException
 
-`typealias MismatchedLockException = MismatchedLockException` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/sync-logins/src/main/java/mozilla/components/service/sync/logins/AsyncLoginsStorage.kt#L55)
+`typealias MismatchedLockException = MismatchedLockException` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/sync-logins/src/main/java/mozilla/components/service/sync/logins/AsyncLoginsStorage.kt#L54)
 
 This is thrown if `lock()`/`unlock()` pairs don't match up.
 

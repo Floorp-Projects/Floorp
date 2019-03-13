@@ -11,6 +11,7 @@ A toolbar of buttons to show inside the browser menu.
 | Name | Summary |
 |---|---|
 | [Button](-button/index.md) | `class Button`<br>A button to be shown in a toolbar inside the browser menu. |
+| [TwoStateButton](-two-state-button/index.md) | `class TwoStateButton : `[`Button`](-button/index.md)<br>A button that either shows an primary state or an secondary state based on the provided isInPrimaryState lambda. |
 
 ### Constructors
 

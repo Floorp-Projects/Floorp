@@ -2,7 +2,7 @@
 
 # AutocompleteView
 
-`interface AutocompleteView` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/ui/autocomplete/src/main/java/mozilla/components/ui/autocomplete/InlineAutocompleteEditText.kt#L47)
+`interface AutocompleteView` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/ui/autocomplete/src/main/java/mozilla/components/ui/autocomplete/InlineAutocompleteEditText.kt#L48)
 
 Aids in testing functionality which relies on some aspects of InlineAutocompleteEditText.
 

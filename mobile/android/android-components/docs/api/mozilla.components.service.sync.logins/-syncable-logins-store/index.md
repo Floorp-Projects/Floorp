@@ -2,7 +2,7 @@
 
 # SyncableLoginsStore
 
-`data class SyncableLoginsStore : `[`SyncableStore`](../../mozilla.components.concept.storage/-syncable-store/index.md)`<`[`SyncUnlockInfo`](../-sync-unlock-info.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/sync-logins/src/main/java/mozilla/components/service/sync/logins/AsyncLoginsStorage.kt#L369)
+`data class SyncableLoginsStore : `[`SyncableStore`](../../mozilla.components.concept.sync/-syncable-store/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/sync-logins/src/main/java/mozilla/components/service/sync/logins/AsyncLoginsStorage.kt#L368)
 
 Wraps [AsyncLoginsStorage](../-async-logins-storage/index.md) instance along with a lazy encryption key.
 
@@ -27,5 +27,5 @@ consumers of [FirefoxSyncFeature](#).
 
 | Name | Summary |
 |---|---|
-| [sync](sync.md) | `suspend fun sync(authInfo: `[`SyncUnlockInfo`](../-sync-unlock-info.md)`): `[`SyncStatus`](../../mozilla.components.concept.storage/-sync-status.md)<br>Performs a sync. |
+| [sync](sync.md) | `suspend fun sync(authInfo: `[`AuthInfo`](../../mozilla.components.concept.sync/-auth-info/index.md)`): `[`SyncStatus`](../../mozilla.components.concept.sync/-sync-status/index.md)<br>Performs a sync. |
 | [withUnlocked](with-unlocked.md) | `suspend fun <T> withUnlocked(block: suspend (`[`AsyncLoginsStorage`](../-async-logins-storage/index.md)`) -> `[`T`](with-unlocked.md#T)`): `[`T`](with-unlocked.md#T)<br>Run some [block](with-unlocked.md#mozilla.components.service.sync.logins.SyncableLoginsStore$withUnlocked(kotlin.SuspendFunction1((mozilla.components.service.sync.logins.AsyncLoginsStorage, mozilla.components.service.sync.logins.SyncableLoginsStore.withUnlocked.T)))/block) which operates over an unlocked instance of [AsyncLoginsStorage](../-async-logins-storage/index.md). Database is locked once [block](with-unlocked.md#mozilla.components.service.sync.logins.SyncableLoginsStore$withUnlocked(kotlin.SuspendFunction1((mozilla.components.service.sync.logins.AsyncLoginsStorage, mozilla.components.service.sync.logins.SyncableLoginsStore.withUnlocked.T)))/block) is done. |

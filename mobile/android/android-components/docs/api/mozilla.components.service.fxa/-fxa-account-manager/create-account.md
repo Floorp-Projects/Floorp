@@ -2,4 +2,4 @@
 
 # createAccount
 
-`open fun createAccount(config: `[`Config`](../-config.md)`): `[`FirefoxAccountShaped`](../-firefox-account-shaped/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/FxaAccountManager.kt#L423)
+`open fun createAccount(config: `[`Config`](../-config.md)`): `[`OAuthAccount`](../../mozilla.components.concept.sync/-o-auth-account/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/FxaAccountManager.kt#L401)

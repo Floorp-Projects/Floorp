@@ -2,7 +2,7 @@
 
 # IdCollisionException
 
-`typealias IdCollisionException = IdCollisionException` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/sync-logins/src/main/java/mozilla/components/service/sync/logins/AsyncLoginsStorage.kt#L70)
+`typealias IdCollisionException = IdCollisionException` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/sync-logins/src/main/java/mozilla/components/service/sync/logins/AsyncLoginsStorage.kt#L69)
 
 This is thrown if `add()` is given a record whose `id` is not blank, and
 collides with a record already known to the storage instance.

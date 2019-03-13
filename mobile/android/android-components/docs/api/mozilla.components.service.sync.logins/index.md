@@ -8,7 +8,7 @@
 |---|---|
 | [AsyncLoginsStorage](-async-logins-storage/index.md) | `interface AsyncLoginsStorage : `[`AutoCloseable`](https://developer.android.com/reference/java/lang/AutoCloseable.html)<br>An interface equivalent to the LoginsStorage interface, but where operations are asynchronous. |
 | [AsyncLoginsStorageAdapter](-async-logins-storage-adapter/index.md) | `open class AsyncLoginsStorageAdapter<T : LoginsStorage> : `[`AsyncLoginsStorage`](-async-logins-storage/index.md)`, `[`AutoCloseable`](https://developer.android.com/reference/java/lang/AutoCloseable.html)<br>A helper class to wrap a synchronous [LoginsStorage](#) implementation and make it asynchronous. |
-| [SyncableLoginsStore](-syncable-logins-store/index.md) | `data class SyncableLoginsStore : `[`SyncableStore`](../mozilla.components.concept.storage/-syncable-store/index.md)`<`[`SyncUnlockInfo`](-sync-unlock-info.md)`>`<br>Wraps [AsyncLoginsStorage](-async-logins-storage/index.md) instance along with a lazy encryption key. |
+| [SyncableLoginsStore](-syncable-logins-store/index.md) | `data class SyncableLoginsStore : `[`SyncableStore`](../mozilla.components.concept.sync/-syncable-store/index.md)<br>Wraps [AsyncLoginsStorage](-async-logins-storage/index.md) instance along with a lazy encryption key. |
 
 ### Type Aliases
 
@@ -24,3 +24,9 @@
 | [ServerPassword](-server-password.md) | `typealias ServerPassword = ServerPassword`<br>Raw password data that is stored by the storage implementation. |
 | [SyncAuthInvalidException](-sync-auth-invalid-exception.md) | `typealias SyncAuthInvalidException = SyncAuthInvalidException`<br>This indicates that the authentication information (e.g. the [SyncUnlockInfo](-sync-unlock-info.md)) provided to [AsyncLoginsStorage.sync](-async-logins-storage/sync.md) is invalid. This often indicates that it's stale and should be refreshed with FxA (however, care should be taken not to get into a loop refreshing this information). |
 | [SyncUnlockInfo](-sync-unlock-info.md) | `typealias SyncUnlockInfo = SyncUnlockInfo`<br>This type contains the set of information required to successfully connect to the server and sync. |
+
+### Functions
+
+| Name | Summary |
+|---|---|
+| [into](into.md) | `fun `[`AuthInfo`](../mozilla.components.concept.sync/-auth-info/index.md)`.into(): `[`SyncUnlockInfo`](-sync-unlock-info.md)<br>Conversion from a generic AuthInfo type into a type 'logins' lib uses at the interface boundary. |

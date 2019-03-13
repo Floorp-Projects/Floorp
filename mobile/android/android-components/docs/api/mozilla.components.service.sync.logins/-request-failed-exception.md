@@ -2,7 +2,7 @@
 
 # RequestFailedException
 
-`typealias RequestFailedException = RequestFailedException` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/sync-logins/src/main/java/mozilla/components/service/sync/logins/AsyncLoginsStorage.kt#L96)
+`typealias RequestFailedException = RequestFailedException` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/sync-logins/src/main/java/mozilla/components/service/sync/logins/AsyncLoginsStorage.kt#L95)
 
 This error is emitted if a request to a sync server failed.
 

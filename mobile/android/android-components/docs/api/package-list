@@ -8,6 +8,9 @@ $dokka.location:mozilla.components.lib.jexl.ext$toJexl(kotlin.Float)mozilla.com
 $dokka.location:mozilla.components.lib.jexl.ext$toJexl(kotlin.Int)mozilla.components.lib.jexl.ext/kotlin.-int/to-jexl.md
 $dokka.location:mozilla.components.lib.jexl.ext$toJexl(kotlin.String)mozilla.components.lib.jexl.ext/kotlin.-string/to-jexl.md
 $dokka.location:mozilla.components.lib.jexl.ext$toJexlArray(kotlin.collections.List((mozilla.components.lib.jexl.ext.toJexlArray.T)))mozilla.components.lib.jexl.ext/kotlin.collections.-list/to-jexl-array.md
+$dokka.location:mozilla.components.service.fxa$into(mozilla.appservices.fxaclient.AccessTokenInfo)mozilla.components.service.fxa/mozilla.appservices.fxaclient.-access-token-info/into.md
+$dokka.location:mozilla.components.service.fxa$into(mozilla.appservices.fxaclient.Profile)mozilla.components.service.fxa/mozilla.appservices.fxaclient.-profile/into.md
+$dokka.location:mozilla.components.service.fxa$into(mozilla.appservices.fxaclient.ScopedKey)mozilla.components.service.fxa/mozilla.appservices.fxaclient.-scoped-key/into.md
 $dokka.location:mozilla.components.support.android.test$awaitValue(android.arch.lifecycle.LiveData((mozilla.components.support.android.test.awaitValue.T)), kotlin.Long, java.util.concurrent.TimeUnit)mozilla.components.support.android.test/android.arch.lifecycle.-live-data/await-value.md
 $dokka.location:mozilla.components.support.ktx.android.arch.lifecycle$addObservers(android.arch.lifecycle.Lifecycle, kotlin.Array((android.arch.lifecycle.LifecycleObserver)))mozilla.components.support.ktx.android.arch.lifecycle/android.arch.lifecycle.-lifecycle/add-observers.md
 $dokka.location:mozilla.components.support.ktx.android.content$appVersionName#android.content.Contextmozilla.components.support.ktx.android.content/android.content.-context/app-version-name.md
@@ -102,6 +105,7 @@ mozilla.components.concept.engine.webextension
 mozilla.components.concept.engine.window
 mozilla.components.concept.fetch
 mozilla.components.concept.storage
+mozilla.components.concept.sync
 mozilla.components.concept.tabstray
 mozilla.components.concept.toolbar
 mozilla.components.feature.accounts

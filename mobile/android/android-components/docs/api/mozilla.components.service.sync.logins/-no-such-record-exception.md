@@ -2,7 +2,7 @@
 
 # NoSuchRecordException
 
-`typealias NoSuchRecordException = NoSuchRecordException` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/sync-logins/src/main/java/mozilla/components/service/sync/logins/AsyncLoginsStorage.kt#L61)
+`typealias NoSuchRecordException = NoSuchRecordException` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/sync-logins/src/main/java/mozilla/components/service/sync/logins/AsyncLoginsStorage.kt#L60)
 
 This is thrown if `update()` is performed with a record whose ID
 does not exist.

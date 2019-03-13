@@ -50,6 +50,7 @@
 | [mozilla.components.concept.engine.window](mozilla.components.concept.engine.window/index.md) |  |
 | [mozilla.components.concept.fetch](mozilla.components.concept.fetch/index.md) |  |
 | [mozilla.components.concept.storage](mozilla.components.concept.storage/index.md) |  |
+| [mozilla.components.concept.sync](mozilla.components.concept.sync/index.md) |  |
 | [mozilla.components.concept.tabstray](mozilla.components.concept.tabstray/index.md) |  |
 | [mozilla.components.concept.toolbar](mozilla.components.concept.toolbar/index.md) |  |
 | [mozilla.components.feature.accounts](mozilla.components.feature.accounts/index.md) |  |

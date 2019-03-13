@@ -2,7 +2,7 @@
 
 # RecordedExperimentData
 
-`data class RecordedExperimentData` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/storages/ExperimentsStorageEngine.kt#L141)
+`data class RecordedExperimentData` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/storages/ExperimentsStorageEngine.kt#L140)
 
 ### Constructors
 

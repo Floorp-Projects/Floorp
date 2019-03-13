@@ -2,7 +2,7 @@
 
 # SyncUnlockInfo
 
-`typealias SyncUnlockInfo = SyncUnlockInfo` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/sync-logins/src/main/java/mozilla/components/service/sync/logins/AsyncLoginsStorage.kt#L25)
+`typealias SyncUnlockInfo = SyncUnlockInfo` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/sync-logins/src/main/java/mozilla/components/service/sync/logins/AsyncLoginsStorage.kt#L24)
 
 This type contains the set of information required to successfully
 connect to the server and sync.

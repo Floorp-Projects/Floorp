@@ -2,4 +2,4 @@
 
 # SyncAuthInfo
 
-`typealias SyncAuthInfo = SyncAuthInfo` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/storage-sync/src/main/java/mozilla/components/browser/storage/sync/PlacesHistoryStorage.kt#L31)
+`typealias SyncAuthInfo = SyncAuthInfo` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/storage-sync/src/main/java/mozilla/components/browser/storage/sync/PlacesHistoryStorage.kt#L29)

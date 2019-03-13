@@ -6,26 +6,18 @@
 
 | Name | Summary |
 |---|---|
-| [AuthExceptionType](-auth-exception-type/index.md) | `enum class AuthExceptionType`<br>An auth-related exception type, for use with [AuthException](-auth-exception/index.md). |
-| [FirefoxSyncFeature](-firefox-sync-feature/index.md) | `class FirefoxSyncFeature<AuthType> : `[`Observable`](../mozilla.components.support.base.observer/-observable/index.md)`<`[`SyncStatusObserver`](-sync-status-observer/index.md)`>`<br>A feature implementation which orchestrates data synchronization of a set of [SyncableStore](../mozilla.components.concept.storage/-syncable-store/index.md) which all share a common [AuthType](-firefox-sync-feature/index.md#AuthType). |
-| [FxaAuthInfo](-fxa-auth-info/index.md) | `data class FxaAuthInfo`<br>A Firefox Sync friendly auth object which can be obtained from [FirefoxAccount](../mozilla.components.service.fxa/-firefox-account/index.md). |
-| [StoreSyncStatus](-store-sync-status/index.md) | `data class StoreSyncStatus` |
-| [SyncStatusObserver](-sync-status-observer/index.md) | `interface SyncStatusObserver`<br>An interface for consumers that wish to observer "sync lifecycle" events. |
+| [BackgroundSyncManager](-background-sync-manager/index.md) | `class BackgroundSyncManager : `[`GeneralSyncManager`](-general-sync-manager/index.md)<br>A SyncManager implementation which uses WorkManager APIs to schedule sync tasks. |
+| [GeneralSyncManager](-general-sync-manager/index.md) | `abstract class GeneralSyncManager : `[`SyncManager`](../mozilla.components.concept.sync/-sync-manager/index.md)`, `[`Observable`](../mozilla.components.support.base.observer/-observable/index.md)`<`[`SyncStatusObserver`](../mozilla.components.concept.sync/-sync-status-observer/index.md)`>, `[`SyncStatusObserver`](../mozilla.components.concept.sync/-sync-status-observer/index.md)<br>A base SyncManager implementation which manages a dispatcher, handles authentication and requests synchronization in the following manner: On authentication AND on store set changes (add or remove)... |
+| [GlobalSyncableStoreProvider](-global-syncable-store-provider/index.md) | `object GlobalSyncableStoreProvider`<br>A singleton registry of [SyncableStore](../mozilla.components.concept.sync/-syncable-store/index.md) objects. [WorkManagerSyncDispatcher](-work-manager-sync-dispatcher/index.md) will use this to access configured [SyncableStore](../mozilla.components.concept.sync/-syncable-store/index.md) instances. |
+| [StorageSync](-storage-sync/index.md) | `class StorageSync : `[`Observable`](../mozilla.components.support.base.observer/-observable/index.md)`<`[`SyncStatusObserver`](../mozilla.components.concept.sync/-sync-status-observer/index.md)`>`<br>A feature implementation which orchestrates data synchronization of a set of [SyncableStore](../mozilla.components.concept.sync/-syncable-store/index.md)-s. |
+| [SyncDispatcher](-sync-dispatcher/index.md) | `interface SyncDispatcher : `[`Closeable`](https://developer.android.com/reference/java/io/Closeable.html)`, `[`Observable`](../mozilla.components.support.base.observer/-observable/index.md)`<`[`SyncStatusObserver`](../mozilla.components.concept.sync/-sync-status-observer/index.md)`>`<br>Internal interface to enable testing SyncManager implementations independently from SyncDispatcher. |
+| [WorkManagerSyncDispatcher](-work-manager-sync-dispatcher/index.md) | `class WorkManagerSyncDispatcher : `[`SyncDispatcher`](-sync-dispatcher/index.md)`, `[`Observable`](../mozilla.components.support.base.observer/-observable/index.md)`<`[`SyncStatusObserver`](../mozilla.components.concept.sync/-sync-status-observer/index.md)`>, `[`Closeable`](https://developer.android.com/reference/java/io/Closeable.html) |
+| [WorkManagerSyncWorker](-work-manager-sync-worker/index.md) | `class WorkManagerSyncWorker : CoroutineWorker` |
+| [WorkersLiveDataObserver](-workers-live-data-observer/index.md) | `object WorkersLiveDataObserver`<br>A singleton wrapper around the the LiveData "forever" observer - i.e. an observer not bound to a lifecycle owner. This observer is always active. We will have different dispatcher instances throughout the lifetime of the app, but always a single LiveData instance. |
 
-### Exceptions
-
-| Name | Summary |
-|---|---|
-| [AuthException](-auth-exception/index.md) | `class AuthException : `[`Exception`](https://developer.android.com/reference/java/lang/Exception.html)<br>An exception which may happen while obtaining auth information using [FirefoxAccount](../mozilla.components.service.fxa/-firefox-account/index.md). |
-
-### Type Aliases
+### Functions
 
 | Name | Summary |
 |---|---|
-| [SyncResult](-sync-result.md) | `typealias SyncResult = `[`Map`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-map/index.html)`<`[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, `[`StoreSyncStatus`](-store-sync-status/index.md)`>`<br>A set of results of running a sync operation for all configured stores. |
-
-### Properties
-
-| Name | Summary |
-|---|---|
-| [registry](registry.md) | `val registry: `[`ObserverRegistry`](../mozilla.components.support.base.observer/-observer-registry/index.md)`<`[`SyncStatusObserver`](-sync-status-observer/index.md)`>` |
+| [getLastSynced](get-last-synced.md) | `fun getLastSynced(context: `[`Context`](https://developer.android.com/reference/android/content/Context.html)`): `[`Long`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html) |
+| [setLastSynced](set-last-synced.md) | `fun setLastSynced(context: `[`Context`](https://developer.android.com/reference/android/content/Context.html)`, ts: `[`Long`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |

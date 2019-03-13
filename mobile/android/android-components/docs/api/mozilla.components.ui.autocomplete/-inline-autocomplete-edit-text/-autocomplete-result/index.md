@@ -2,7 +2,7 @@
 
 # AutocompleteResult
 
-`data class AutocompleteResult` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/ui/autocomplete/src/main/java/mozilla/components/ui/autocomplete/InlineAutocompleteEditText.kt#L92)
+`data class AutocompleteResult` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/ui/autocomplete/src/main/java/mozilla/components/ui/autocomplete/InlineAutocompleteEditText.kt#L93)
 
 ### Constructors
 

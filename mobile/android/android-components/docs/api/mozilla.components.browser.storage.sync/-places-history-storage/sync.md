@@ -2,16 +2,16 @@
 
 # sync
 
-`open suspend fun sync(authInfo: SyncAuthInfo): `[`SyncStatus`](../../mozilla.components.concept.storage/-sync-status.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/storage-sync/src/main/java/mozilla/components/browser/storage/sync/PlacesHistoryStorage.kt#L106)
+`open suspend fun sync(authInfo: `[`AuthInfo`](../../mozilla.components.concept.sync/-auth-info/index.md)`): `[`SyncStatus`](../../mozilla.components.concept.sync/-sync-status/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/storage-sync/src/main/java/mozilla/components/browser/storage/sync/PlacesHistoryStorage.kt#L104)
 
-Overrides [SyncableStore.sync](../../mozilla.components.concept.storage/-syncable-store/sync.md)
+Overrides [SyncableStore.sync](../../mozilla.components.concept.sync/-syncable-store/sync.md)
 
 Performs a sync.
 
 ### Parameters
 
-`authInfo` - Auth information of type [AuthInfo](../../mozilla.components.concept.storage/-syncable-store/index.md#AuthInfo) necessary for syncing this store.
+`authInfo` - Auth information necessary for syncing this store.
 
 **Return**
-[SyncStatus](../../mozilla.components.concept.storage/-sync-status.md) A status object describing how sync went.
+[SyncStatus](../../mozilla.components.concept.sync/-sync-status/index.md) A status object describing how sync went.
 

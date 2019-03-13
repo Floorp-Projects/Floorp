@@ -2,7 +2,7 @@
 
 # EditToolbar
 
-`class EditToolbar : `[`ViewGroup`](https://developer.android.com/reference/android/view/ViewGroup.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/toolbar/src/main/java/mozilla/components/browser/toolbar/edit/EditToolbar.kt#L38)
+`class EditToolbar : `[`ViewGroup`](https://developer.android.com/reference/android/view/ViewGroup.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/toolbar/src/main/java/mozilla/components/browser/toolbar/edit/EditToolbar.kt#L39)
 
 Sub-component of the browser toolbar responsible for allowing the user to edit the URL.
 

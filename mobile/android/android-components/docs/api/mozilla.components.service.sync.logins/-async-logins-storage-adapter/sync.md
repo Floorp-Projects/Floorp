@@ -2,7 +2,7 @@
 
 # sync
 
-`open fun sync(syncInfo: `[`SyncUnlockInfo`](../-sync-unlock-info.md)`): Deferred<`[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/sync-logins/src/main/java/mozilla/components/service/sync/logins/AsyncLoginsStorage.kt#L306)
+`open fun sync(syncInfo: `[`SyncUnlockInfo`](../-sync-unlock-info.md)`): Deferred<`[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/sync-logins/src/main/java/mozilla/components/service/sync/logins/AsyncLoginsStorage.kt#L305)
 
 Overrides [AsyncLoginsStorage.sync](../-async-logins-storage/sync.md)
 

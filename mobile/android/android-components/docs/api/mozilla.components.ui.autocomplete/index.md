@@ -14,6 +14,7 @@
 | Name | Summary |
 |---|---|
 | [OnCommitListener](-on-commit-listener.md) | `typealias OnCommitListener = () -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
+| [OnDispatchKeyEventPreImeListener](-on-dispatch-key-event-pre-ime-listener.md) | `typealias OnDispatchKeyEventPreImeListener = (`[`KeyEvent`](https://developer.android.com/reference/android/view/KeyEvent.html)`?) -> `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) |
 | [OnFilterListener](-on-filter-listener.md) | `typealias OnFilterListener = (`[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`) -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
 | [OnKeyPreImeListener](-on-key-pre-ime-listener.md) | `typealias OnKeyPreImeListener = (`[`View`](https://developer.android.com/reference/android/view/View.html)`, `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`, `[`KeyEvent`](https://developer.android.com/reference/android/view/KeyEvent.html)`) -> `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) |
 | [OnSearchStateChangeListener](-on-search-state-change-listener.md) | `typealias OnSearchStateChangeListener = (`[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`) -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |

@@ -7,7 +7,7 @@
 | Name | Summary |
 |---|---|
 | [Connection](-connection/index.md) | `interface Connection : `[`Closeable`](https://developer.android.com/reference/java/io/Closeable.html)<br>An interface which describes a [Closeable](https://developer.android.com/reference/java/io/Closeable.html) connection that provides access to a [PlacesAPI](#). |
-| [PlacesHistoryStorage](-places-history-storage/index.md) | `open class PlacesHistoryStorage : `[`HistoryStorage`](../mozilla.components.concept.storage/-history-storage/index.md)`, `[`SyncableStore`](../mozilla.components.concept.storage/-syncable-store/index.md)`<SyncAuthInfo>`<br>Implementation of the [HistoryStorage](../mozilla.components.concept.storage/-history-storage/index.md) which is backed by a Rust Places lib via [PlacesConnection](#). |
+| [PlacesHistoryStorage](-places-history-storage/index.md) | `open class PlacesHistoryStorage : `[`HistoryStorage`](../mozilla.components.concept.storage/-history-storage/index.md)`, `[`SyncableStore`](../mozilla.components.concept.sync/-syncable-store/index.md)<br>Implementation of the [HistoryStorage](../mozilla.components.concept.storage/-history-storage/index.md) which is backed by a Rust Places lib via [PlacesConnection](#). |
 
 ### Type Aliases
 

@@ -2,15 +2,15 @@
 
 # AccountStorage
 
-`interface AccountStorage` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/AccountStorage.kt#L13)
+`interface AccountStorage` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/AccountStorage.kt#L14)
 
 ### Functions
 
 | Name | Summary |
 |---|---|
 | [clear](clear.md) | `abstract fun clear(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
-| [read](read.md) | `abstract fun read(): `[`FirefoxAccountShaped`](../-firefox-account-shaped/index.md)`?` |
-| [write](write.md) | `abstract fun write(account: `[`FirefoxAccountShaped`](../-firefox-account-shaped/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
+| [read](read.md) | `abstract fun read(): `[`OAuthAccount`](../../mozilla.components.concept.sync/-o-auth-account/index.md)`?` |
+| [write](write.md) | `abstract fun write(account: `[`OAuthAccount`](../../mozilla.components.concept.sync/-o-auth-account/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
 
 ### Inheritors
 

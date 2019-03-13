@@ -2,7 +2,7 @@
 
 # InlineAutocompleteEditText
 
-`open class InlineAutocompleteEditText : AppCompatEditText, `[`AutocompleteView`](../-autocomplete-view/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/ui/autocomplete/src/main/java/mozilla/components/ui/autocomplete/InlineAutocompleteEditText.kt#L86)
+`open class InlineAutocompleteEditText : AppCompatEditText, `[`AutocompleteView`](../-autocomplete-view/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/ui/autocomplete/src/main/java/mozilla/components/ui/autocomplete/InlineAutocompleteEditText.kt#L87)
 
 A UI edit text component which supports inline autocompletion.
 
@@ -51,6 +51,7 @@ respectively (see also [setOnTextChangeListener](set-on-text-change-listener.md)
 | Name | Summary |
 |---|---|
 | [applyAutocompleteResult](apply-autocomplete-result.md) | `open fun applyAutocompleteResult(result: `[`AutocompleteResult`](-autocomplete-result/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Applies the provided result by updating the current autocomplete text and selection, if any. |
+| [dispatchKeyEventPreIme](dispatch-key-event-pre-ime.md) | `open fun dispatchKeyEventPreIme(event: `[`KeyEvent`](https://developer.android.com/reference/android/view/KeyEvent.html)`?): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) |
 | [getText](get-text.md) | `open fun getText(): `[`Editable`](https://developer.android.com/reference/android/text/Editable.html) |
 | [noAutocompleteResult](no-autocomplete-result.md) | `open fun noAutocompleteResult(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Notify that there is no autocomplete result available. |
 | [onAttachedToWindow](on-attached-to-window.md) | `open fun onAttachedToWindow(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
@@ -62,6 +63,7 @@ respectively (see also [setOnTextChangeListener](set-on-text-change-listener.md)
 | [onWindowFocusChanged](on-window-focus-changed.md) | `open fun onWindowFocusChanged(hasFocus: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
 | [sendAccessibilityEventUnchecked](send-accessibility-event-unchecked.md) | `open fun sendAccessibilityEventUnchecked(event: `[`AccessibilityEvent`](https://developer.android.com/reference/android/view/accessibility/AccessibilityEvent.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
 | [setOnCommitListener](set-on-commit-listener.md) | `fun setOnCommitListener(l: `[`OnCommitListener`](../-on-commit-listener.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
+| [setOnDispatchKeyEventPreImeListener](set-on-dispatch-key-event-pre-ime-listener.md) | `fun setOnDispatchKeyEventPreImeListener(l: `[`OnDispatchKeyEventPreImeListener`](../-on-dispatch-key-event-pre-ime-listener.md)`?): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
 | [setOnFilterListener](set-on-filter-listener.md) | `fun setOnFilterListener(l: `[`OnFilterListener`](../-on-filter-listener.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
 | [setOnKeyPreImeListener](set-on-key-pre-ime-listener.md) | `fun setOnKeyPreImeListener(l: `[`OnKeyPreImeListener`](../-on-key-pre-ime-listener.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
 | [setOnSearchStateChangeListener](set-on-search-state-change-listener.md) | `fun setOnSearchStateChangeListener(l: `[`OnSearchStateChangeListener`](../-on-search-state-change-listener.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |

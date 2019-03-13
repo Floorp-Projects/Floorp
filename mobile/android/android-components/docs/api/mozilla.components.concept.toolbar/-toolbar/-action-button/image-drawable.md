@@ -2,7 +2,7 @@
 
 # imageDrawable
 
-`val imageDrawable: `[`Drawable`](https://developer.android.com/reference/android/graphics/drawable/Drawable.html)`?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/toolbar/src/main/java/mozilla/components/concept/toolbar/Toolbar.kt#L162)
+`val imageDrawable: `[`Drawable`](https://developer.android.com/reference/android/graphics/drawable/Drawable.html)`?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/toolbar/src/main/java/mozilla/components/concept/toolbar/Toolbar.kt#L167)
 
 The drawable to be shown.
 

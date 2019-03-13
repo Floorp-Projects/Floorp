@@ -2,7 +2,7 @@
 
 # AsyncLoginsStorage
 
-`interface AsyncLoginsStorage : `[`AutoCloseable`](https://developer.android.com/reference/java/lang/AutoCloseable.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/sync-logins/src/main/java/mozilla/components/service/sync/logins/AsyncLoginsStorage.kt#L103)
+`interface AsyncLoginsStorage : `[`AutoCloseable`](https://developer.android.com/reference/java/lang/AutoCloseable.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/sync-logins/src/main/java/mozilla/components/service/sync/logins/AsyncLoginsStorage.kt#L102)
 
 An interface equivalent to the LoginsStorage interface, but where operations are
 asynchronous.

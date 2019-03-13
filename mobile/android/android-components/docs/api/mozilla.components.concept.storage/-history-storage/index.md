@@ -22,4 +22,4 @@ An interface which defines read/write methods for history data.
 | Name | Summary |
 |---|---|
 | [InMemoryHistoryStorage](../../mozilla.components.browser.storage.memory/-in-memory-history-storage/index.md) | `class InMemoryHistoryStorage : `[`HistoryStorage`](./index.md)<br>An in-memory implementation of [mozilla.components.concept.storage.HistoryStorage](./index.md). |
-| [PlacesHistoryStorage](../../mozilla.components.browser.storage.sync/-places-history-storage/index.md) | `open class PlacesHistoryStorage : `[`HistoryStorage`](./index.md)`, `[`SyncableStore`](../-syncable-store/index.md)`<SyncAuthInfo>`<br>Implementation of the [HistoryStorage](./index.md) which is backed by a Rust Places lib via [PlacesConnection](#). |
+| [PlacesHistoryStorage](../../mozilla.components.browser.storage.sync/-places-history-storage/index.md) | `open class PlacesHistoryStorage : `[`HistoryStorage`](./index.md)`, `[`SyncableStore`](../../mozilla.components.concept.sync/-syncable-store/index.md)<br>Implementation of the [HistoryStorage](./index.md) which is backed by a Rust Places lib via [PlacesConnection](#). |

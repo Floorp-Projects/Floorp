@@ -2,7 +2,7 @@
 
 # registerPersistCallback
 
-`fun registerPersistCallback(persistCallback: `[`PersistCallback`](../-persist-callback.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/FirefoxAccount.kt#L72)
+`fun registerPersistCallback(persistCallback: `[`PersistCallback`](../-persist-callback.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/FirefoxAccount.kt#L62)
 
 Registers a [PersistCallback](../-persist-callback.md) that will be called every time the
 [FirefoxAccount](index.md) internal state has mutated.

@@ -2,4 +2,4 @@
 
 # accountProfile
 
-`fun accountProfile(): `[`Profile`](../-profile/index.md)`?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/FxaAccountManager.kt#L215)
+`fun accountProfile(): `[`Profile`](../../mozilla.components.concept.sync/-profile/index.md)`?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/FxaAccountManager.kt#L195)

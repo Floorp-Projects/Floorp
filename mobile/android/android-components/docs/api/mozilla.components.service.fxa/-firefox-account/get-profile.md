@@ -2,9 +2,9 @@
 
 # getProfile
 
-`fun getProfile(ignoreCache: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`): Deferred<`[`Profile`](../-profile/index.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/FirefoxAccount.kt#L107)
+`fun getProfile(ignoreCache: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`): Deferred<`[`Profile`](../../mozilla.components.concept.sync/-profile/index.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/FirefoxAccount.kt#L97)
 
-Overrides [FirefoxAccountShaped.getProfile](../-firefox-account-shaped/get-profile.md)
+Overrides [OAuthAccount.getProfile](../../mozilla.components.concept.sync/-o-auth-account/get-profile.md)
 
 Fetches the profile object for the current client either from the existing cached account,
 or from the server (requires the client to have access to the profile scope).
@@ -19,11 +19,11 @@ or from the server (requires the client to have access to the profile scope).
 The caller should then start the OAuth Flow again with the "profile" scope.
 
 **Return**
-Deferred&lt;[Profile](../-profile/index.md)&gt; representing the user's basic profile info
+Deferred&lt;[Profile](../../mozilla.components.concept.sync/-profile/index.md)&gt; representing the user's basic profile info
 
-`fun getProfile(): Deferred<`[`Profile`](../-profile/index.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/FirefoxAccount.kt#L121)
+`fun getProfile(): Deferred<`[`Profile`](../../mozilla.components.concept.sync/-profile/index.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/FirefoxAccount.kt#L111)
 
-Overrides [FirefoxAccountShaped.getProfile](../-firefox-account-shaped/get-profile.md)
+Overrides [OAuthAccount.getProfile](../../mozilla.components.concept.sync/-o-auth-account/get-profile.md)
 
 Convenience method to fetch the profile from a cached account by default, but fall back
 to retrieval from the server.
@@ -34,5 +34,5 @@ to retrieval from the server.
 The caller should then start the OAuth Flow again with the "profile" scope.
 
 **Return**
-Deferred&lt;[Profile](../-profile/index.md)&gt; representing the user's basic profile info
+Deferred&lt;[Profile](../../mozilla.components.concept.sync/-profile/index.md)&gt; representing the user's basic profile info
 

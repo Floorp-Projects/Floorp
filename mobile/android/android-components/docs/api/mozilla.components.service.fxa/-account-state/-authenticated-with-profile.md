@@ -2,4 +2,4 @@
 
 # AuthenticatedWithProfile
 
-`AuthenticatedWithProfile` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/FxaAccountManager.kt#L28)
+`AuthenticatedWithProfile` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/FxaAccountManager.kt#L32)
