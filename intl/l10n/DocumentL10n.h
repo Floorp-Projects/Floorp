@@ -125,9 +125,6 @@ class DocumentL10n final : public nsIObserver,
   already_AddRefed<Promise> TranslateElements(
       const Sequence<OwningNonNull<Element>>& aElements, ErrorResult& aRv);
 
-  void PauseObserving(ErrorResult& aRv);
-  void ResumeObserving(ErrorResult& aRv);
-
   Promise* Ready();
 
   void TriggerInitialDocumentTranslation();
