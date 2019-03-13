@@ -14,7 +14,6 @@ mod boilerplate;
 use boilerplate::Example;
 use euclid::TypedScale;
 use webrender::api::*;
-use webrender::api::units::*;
 
 // This example creates multiple documents overlapping each other with
 // specified layer indices.

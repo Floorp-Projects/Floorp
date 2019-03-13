@@ -14,8 +14,6 @@ mod boilerplate;
 use boilerplate::{Example, HandyDandyRectBuilder};
 use std::cmp;
 use webrender::api::*;
-use webrender::api::units::FramebufferIntSize;
-
 
 struct App {
     rect_count: usize,

@@ -24,10 +24,9 @@
 //! address in the GPU cache of a given resource slot
 //! for this frame.
 
-use api::{DebugFlags, DocumentId, PremultipliedColorF};
+use api::{DebugFlags, DocumentId, PremultipliedColorF, TexelRect};
 #[cfg(test)]
 use api::IdNamespace;
-use api::units::TexelRect;
 use euclid::{HomogeneousVector, TypedRect};
 use internal_types::{FastHashMap};
 use profiler::GpuCacheProfileCounters;

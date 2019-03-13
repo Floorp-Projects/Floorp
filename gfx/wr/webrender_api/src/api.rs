@@ -4,6 +4,7 @@
 
 extern crate serde_bytes;
 
+use app_units::Au;
 use channel::{self, MsgSender, Payload, PayloadSender, PayloadSenderHelperMethods};
 use std::cell::Cell;
 use std::fmt;
@@ -121,8 +122,7 @@ impl Transaction {
     /// # Examples
     ///
     /// ```
-    /// # use webrender_api::{PipelineId, RenderApiSender, Transaction};
-    /// # use webrender_api::units::{DeviceIntSize};
+    /// # use webrender_api::{DeviceIntSize, PipelineId, RenderApiSender, Transaction};
     /// # fn example() {
     /// let pipeline_id = PipelineId(0, 0);
     /// let mut txn = Transaction::new();

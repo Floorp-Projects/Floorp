@@ -8,7 +8,7 @@ use image::{self, ColorType, GenericImageView};
 use std::fs::File;
 use std::path::Path;
 use std::sync::mpsc::Receiver;
-use webrender::api::units::*;
+use webrender::api::*;
 use wrench::{Wrench, WrenchThing};
 use yaml_frame_reader::YamlFrameReader;
 
