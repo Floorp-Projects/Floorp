@@ -51,6 +51,5 @@ DevToolsModules(
     'symbol-iterator.js',
     'symbol.js',
     'timeline.js',
-    'webaudio.js',
     'webconsole.js',
 )
