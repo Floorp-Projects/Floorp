@@ -197,9 +197,9 @@ JS::Result<FunctionNode*> BinASTParserPerTokenizer<Tok>::parseLazyFunction(
                  NewLexicalScopeData(cx_, lexicalScope, alloc_, pc_));
   BINJS_TRY_DECL(body, handler_.newLexicalScope(*lexicalScopeData, tmpBody));
 
-  auto binKind = isExpr ? BinKind::LazyFunctionExpression
-                        : BinKind::LazyFunctionDeclaration;
-  return buildFunction(firstOffset, binKind, nullptr, params, body);
+  auto binASTKind = isExpr ? BinASTKind::LazyFunctionExpression
+                           : BinASTKind::LazyFunctionDeclaration;
+  return buildFunction(firstOffset, binASTKind, nullptr, params, body);
 }
 
 template <typename Tok>
@@ -275,29 +275,29 @@ JS::Result<FunctionBox*> BinASTParserPerTokenizer<Tok>::buildFunctionBox(
   return funbox;
 }
 
-FunctionSyntaxKind BinKindToFunctionSyntaxKind(const BinKind kind) {
+FunctionSyntaxKind BinASTKindToFunctionSyntaxKind(const BinASTKind kind) {
   // FIXME: this doesn't cover FunctionSyntaxKind::ClassConstructor and
   // FunctionSyntaxKind::DerivedClassConstructor.
   switch (kind) {
-    case BinKind::EagerFunctionDeclaration:
-    case BinKind::LazyFunctionDeclaration:
+    case BinASTKind::EagerFunctionDeclaration:
+    case BinASTKind::LazyFunctionDeclaration:
       return FunctionSyntaxKind::Statement;
-    case BinKind::EagerFunctionExpression:
-    case BinKind::LazyFunctionExpression:
+    case BinASTKind::EagerFunctionExpression:
+    case BinASTKind::LazyFunctionExpression:
       return FunctionSyntaxKind::Expression;
-    case BinKind::EagerArrowExpressionWithFunctionBody:
-    case BinKind::LazyArrowExpressionWithFunctionBody:
-    case BinKind::EagerArrowExpressionWithExpression:
-    case BinKind::LazyArrowExpressionWithExpression:
+    case BinASTKind::EagerArrowExpressionWithFunctionBody:
+    case BinASTKind::LazyArrowExpressionWithFunctionBody:
+    case BinASTKind::EagerArrowExpressionWithExpression:
+    case BinASTKind::LazyArrowExpressionWithExpression:
       return FunctionSyntaxKind::Arrow;
-    case BinKind::EagerMethod:
-    case BinKind::LazyMethod:
+    case BinASTKind::EagerMethod:
+    case BinASTKind::LazyMethod:
       return FunctionSyntaxKind::Method;
-    case BinKind::EagerGetter:
-    case BinKind::LazyGetter:
+    case BinASTKind::EagerGetter:
+    case BinASTKind::LazyGetter:
       return FunctionSyntaxKind::Getter;
-    case BinKind::EagerSetter:
-    case BinKind::LazySetter:
+    case BinASTKind::EagerSetter:
+    case BinASTKind::LazySetter:
       return FunctionSyntaxKind::Setter;
     default:
       MOZ_CRASH("Invalid/ kind");
@@ -306,10 +306,10 @@ FunctionSyntaxKind BinKindToFunctionSyntaxKind(const BinKind kind) {
 
 template <typename Tok>
 JS::Result<FunctionNode*> BinASTParserPerTokenizer<Tok>::makeEmptyFunctionNode(
-    const size_t start, const BinKind kind, FunctionBox* funbox) {
+    const size_t start, const BinASTKind kind, FunctionBox* funbox) {
   // LazyScript compilation requires basically none of the fields filled out.
   TokenPos pos = tokenizer_->pos(start);
-  FunctionSyntaxKind syntaxKind = BinKindToFunctionSyntaxKind(kind);
+  FunctionSyntaxKind syntaxKind = BinASTKindToFunctionSyntaxKind(kind);
 
   BINJS_TRY_DECL(result, handler_.newFunction(syntaxKind, pos));
 
@@ -320,8 +320,8 @@ JS::Result<FunctionNode*> BinASTParserPerTokenizer<Tok>::makeEmptyFunctionNode(
 
 template <typename Tok>
 JS::Result<FunctionNode*> BinASTParserPerTokenizer<Tok>::buildFunction(
-    const size_t start, const BinKind kind, ParseNode* name, ListNode* params,
-    ParseNode* body) {
+    const size_t start, const BinASTKind kind, ParseNode* name,
+    ListNode* params, ParseNode* body) {
   FunctionBox* funbox = pc_->functionBox();
 
   // Set the argument count for building argument packets. Function.length is
@@ -683,22 +683,22 @@ BinASTParserPerTokenizer<Tok>::raiseMissingDirectEvalInAssertedScope() {
 template <typename Tok>
 mozilla::GenericErrorResult<JS::Error&>
 BinASTParserPerTokenizer<Tok>::raiseInvalidKind(const char* superKind,
-                                                const BinKind kind) {
+                                                const BinASTKind kind) {
   Sprinter out(cx_);
   BINJS_TRY(out.init());
-  BINJS_TRY(
-      out.printf("In %s, invalid kind %s", superKind, describeBinKind(kind)));
+  BINJS_TRY(out.printf("In %s, invalid kind %s", superKind,
+                       describeBinASTKind(kind)));
   return raiseError(out.string());
 }
 
 template <typename Tok>
 mozilla::GenericErrorResult<JS::Error&>
 BinASTParserPerTokenizer<Tok>::raiseInvalidVariant(const char* kind,
-                                                   const BinVariant value) {
+                                                   const BinASTVariant value) {
   Sprinter out(cx_);
   BINJS_TRY(out.init());
   BINJS_TRY(out.printf("In %s, invalid variant '%s'", kind,
-                       describeBinVariant(value)));
+                       describeBinASTVariant(value)));
 
   return raiseError(out.string());
 }
@@ -706,11 +706,11 @@ BinASTParserPerTokenizer<Tok>::raiseInvalidVariant(const char* kind,
 template <typename Tok>
 mozilla::GenericErrorResult<JS::Error&>
 BinASTParserPerTokenizer<Tok>::raiseMissingField(const char* kind,
-                                                 const BinField field) {
+                                                 const BinASTField field) {
   Sprinter out(cx_);
   BINJS_TRY(out.init());
-  BINJS_TRY(
-      out.printf("In %s, missing field '%s'", kind, describeBinField(field)));
+  BINJS_TRY(out.printf("In %s, missing field '%s'", kind,
+                       describeBinASTField(field)));
 
   return raiseError(out.string());
 }
@@ -733,11 +733,11 @@ BinASTParserPerTokenizer<Tok>::raiseOOM() {
 
 template <typename Tok>
 mozilla::GenericErrorResult<JS::Error&>
-BinASTParserPerTokenizer<Tok>::raiseError(BinKind kind,
+BinASTParserPerTokenizer<Tok>::raiseError(BinASTKind kind,
                                           const char* description) {
   Sprinter out(cx_);
   BINJS_TRY(out.init());
-  BINJS_TRY(out.printf("In %s, %s", describeBinKind(kind), description));
+  BINJS_TRY(out.printf("In %s, %s", describeBinASTKind(kind), description));
   return tokenizer_->raiseError(out.string());
 }
 

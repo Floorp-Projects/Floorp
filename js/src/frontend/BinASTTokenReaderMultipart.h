@@ -38,11 +38,11 @@ class MOZ_STACK_CLASS BinASTTokenReaderMultipart
 
   using CharSlice = BinaryASTSupport::CharSlice;
 
-  // This implementation of `BinFields` is effectively `void`, as the format
+  // This implementation of `BinASTFields` is effectively `void`, as the format
   // does not embed field information.
-  class BinFields {
+  class BinASTFields {
    public:
-    explicit BinFields(JSContext*) {}
+    explicit BinASTFields(JSContext*) {}
   };
   using Chars = CharSlice;
 
@@ -118,10 +118,10 @@ class MOZ_STACK_CLASS BinASTTokenReaderMultipart
   MOZ_MUST_USE JS::Result<Ok> readChars(Chars&);
 
   /**
-   * Read a single `BinVariant | null` value.
+   * Read a single `BinASTVariant | null` value.
    */
-  MOZ_MUST_USE JS::Result<mozilla::Maybe<BinVariant>> readMaybeVariant();
-  MOZ_MUST_USE JS::Result<BinVariant> readVariant();
+  MOZ_MUST_USE JS::Result<mozilla::Maybe<BinASTVariant>> readMaybeVariant();
+  MOZ_MUST_USE JS::Result<BinASTVariant> readVariant();
 
   /**
    * Read over a single `[Skippable]` subtree value.
@@ -171,7 +171,7 @@ class MOZ_STACK_CLASS BinASTTokenReaderMultipart
    * @return out If the header of the tuple is invalid.
    */
   MOZ_MUST_USE JS::Result<Ok> enterTaggedTuple(
-      BinKind& tag, BinASTTokenReaderMultipart::BinFields& fields,
+      BinASTKind& tag, BinASTTokenReaderMultipart::BinASTFields& fields,
       AutoTaggedTuple& guard);
 
   /**
@@ -188,9 +188,10 @@ class MOZ_STACK_CLASS BinASTTokenReaderMultipart
   MOZ_MUST_USE JS::Result<uint32_t> readInternalUint32();
 
  private:
-  // A mapping string index => BinVariant as extracted from the [STRINGS]
+  // A mapping string index => BinASTVariant as extracted from the [STRINGS]
   // section of the file. Populated lazily.
-  js::HashMap<uint32_t, BinVariant, DefaultHasher<uint32_t>, SystemAllocPolicy>
+  js::HashMap<uint32_t, BinASTVariant, DefaultHasher<uint32_t>,
+              SystemAllocPolicy>
       variantsTable_;
 
   enum class MetadataOwnership { Owned, Unowned };
@@ -279,15 +280,15 @@ class MOZ_STACK_CLASS BinASTTokenReaderMultipart
   }
 
   template <size_t N>
-  static JS::Result<Ok, JS::Error&> checkFields(const BinKind kind,
-                                                const BinFields& actual,
-                                                const BinField (&expected)[N]) {
+  static JS::Result<Ok, JS::Error&> checkFields(
+      const BinASTKind kind, const BinASTFields& actual,
+      const BinASTField (&expected)[N]) {
     // Not implemented in this tokenizer.
     return Ok();
   }
 
-  static JS::Result<Ok, JS::Error&> checkFields0(const BinKind kind,
-                                                 const BinFields& actual) {
+  static JS::Result<Ok, JS::Error&> checkFields0(const BinASTKind kind,
+                                                 const BinASTFields& actual) {
     // Not implemented in this tokenizer.
     return Ok();
   }
