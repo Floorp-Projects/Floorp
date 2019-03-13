@@ -67,9 +67,9 @@ class MOZ_STACK_CLASS BinASTTokenReaderBase {
   MOZ_MUST_USE ErrorResult<JS::Error&> raiseError(const char* description);
   MOZ_MUST_USE ErrorResult<JS::Error&> raiseOOM();
   MOZ_MUST_USE ErrorResult<JS::Error&> raiseInvalidNumberOfFields(
-      const BinKind kind, const uint32_t expected, const uint32_t got);
-  MOZ_MUST_USE ErrorResult<JS::Error&> raiseInvalidField(const char* kind,
-                                                         const BinField field);
+      const BinASTKind kind, const uint32_t expected, const uint32_t got);
+  MOZ_MUST_USE ErrorResult<JS::Error&> raiseInvalidField(
+      const char* kind, const BinASTField field);
 
  protected:
   BinASTTokenReaderBase(JSContext* cx, ErrorReporter* er, const uint8_t* start,
