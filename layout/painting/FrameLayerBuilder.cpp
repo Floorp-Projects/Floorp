@@ -4683,10 +4683,9 @@ void ContainerState::ProcessDisplayItems(nsDisplayList* aList) {
 
       // 3D-transformed layers don't necessarily draw in the order in which
       // they're added to their parent container layer.
-      bool mayDrawOutOfOrder =
-          itemType == DisplayItemType::TYPE_TRANSFORM &&
-          (item->Frame()->Combines3DTransformWithAncestors() ||
-           item->Frame()->Extend3DContext());
+      bool mayDrawOutOfOrder = itemType == DisplayItemType::TYPE_TRANSFORM &&
+                               (item->Combines3DTransformWithAncestors() ||
+                                item->Frame()->Extend3DContext());
 
       // Let mPaintedLayerDataTree know about this item, so that
       // FindPaintedLayerFor and FindOpaqueBackgroundColor are aware of this
@@ -4969,8 +4968,8 @@ void ContainerState::ProcessDisplayItems(nsDisplayList* aList) {
         newLayerEntry->mLayerContentsVisibleRect = layerContentsVisibleRect;
         if (itemType == DisplayItemType::TYPE_PERSPECTIVE ||
             (itemType == DisplayItemType::TYPE_TRANSFORM &&
-             (item->Frame()->Extend3DContext() ||
-              item->Frame()->Combines3DTransformWithAncestors() ||
+             (item->Combines3DTransformWithAncestors() ||
+              item->Frame()->Extend3DContext() ||
               item->Frame()->HasPerspective()))) {
           // Give untransformed visible region as outer visible region
           // to avoid failure caused by singular transforms.
