@@ -9,8 +9,8 @@
 // To generate this file, see the documentation in
 // js/src/frontend/binast/README.md.
 
-#ifndef frontend_BinToken_h
-#define frontend_BinToken_h
+#ifndef frontend_BinASTToken_h
+#define frontend_BinASTToken_h
 
 #include <stddef.h>
 
@@ -381,4 +381,4 @@ const char* describeBinVariant(const BinVariant& kind);
 }  // namespace frontend
 }  // namespace js
 
-#endif  // frontend_BinToken_h
+#endif  // frontend_BinASTToken_h
