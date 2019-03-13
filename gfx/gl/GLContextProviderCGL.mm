@@ -166,10 +166,12 @@ static NSOpenGLContext* CreateWithFormat(const NSOpenGLPixelFormatAttribute* att
 }
 
 already_AddRefed<GLContext> GLContextProviderCGL::CreateForCompositorWidget(
-    CompositorWidget* aCompositorWidget, bool aForceAccelerated) {
-  return CreateForWindow(aCompositorWidget->RealWidget(),
-                         aCompositorWidget->GetCompositorOptions().UseWebRender(),
-                         aForceAccelerated);
+    CompositorWidget* aCompositorWidget, bool aWebRender, bool aForceAccelerated) {
+  if (!aCompositorWidget) {
+    MOZ_ASSERT(false);
+    return nullptr;
+  }
+  return CreateForWindow(aCompositorWidget->RealWidget(), aWebRender, aForceAccelerated);
 }
 
 already_AddRefed<GLContext> GLContextProviderCGL::CreateForWindow(nsIWidget* aWidget,

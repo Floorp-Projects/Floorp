@@ -11,7 +11,8 @@ namespace gl {
 using namespace mozilla::widget;
 
 already_AddRefed<GLContext> GLContextProviderNull::CreateForCompositorWidget(
-    CompositorWidget* aCompositorWidget, bool aForceAccelerated) {
+    CompositorWidget* aCompositorWidget, bool aWebRender,
+    bool aForceAccelerated) {
   return nullptr;
 }
 
