@@ -55,7 +55,8 @@ class ToolbarUIView(
 
             setOnEditListener(object : mozilla.components.concept.toolbar.Toolbar.OnEditListener {
                 override fun onCancelEditing(): Boolean {
-                    return true
+                    actionEmitter.onNext(SearchAction.EditingCanceled)
+                    return false
                 }
                 override fun onTextChanged(text: String) {
                     url = text

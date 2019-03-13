@@ -79,6 +79,7 @@ class SearchFragment : Fragment() {
 
     override fun onStart() {
         super.onStart()
+
         getAutoDisposeObservable<SearchAction>()
             .subscribe {
                 when (it) {
@@ -90,6 +91,9 @@ class SearchFragment : Fragment() {
                     }
                     is SearchAction.TextChanged -> {
                         getManagedEmitter<AwesomeBarChange>().onNext(AwesomeBarChange.UpdateQuery(it.query))
+                    }
+                    is SearchAction.EditingCanceled -> {
+                        activity?.onBackPressed()
                     }
                 }
             }

@@ -67,6 +67,7 @@ sealed class SearchAction : Action {
     data class TextChanged(val query: String) : SearchAction()
     object ToolbarTapped : SearchAction()
     data class ToolbarMenuItemTapped(val item: ToolbarMenu.Item) : SearchAction()
+    object EditingCanceled : SearchAction()
 }
 
 sealed class SearchChange : Change {
