@@ -13,13 +13,13 @@ private object Versions {
     const val leakcanary = "1.6.3"
     const val leanplum = "4.3.1"
 
-    const val androidx_appcompat = "1.1.0-alpha02"
+    const val androidx_appcompat = "1.1.0-alpha03"
     const val androidx_constraint_layout = "2.0.0-alpha2"
-    const val androidx_preference = "1.1.0-alpha03"
+    const val androidx_preference = "1.1.0-alpha04"
     const val androidx_legacy = "1.0.0"
-    const val androidx_annotation = "1.0.1"
-    const val androidx_lifecycle = "2.0.0"
-    const val androidx_fragment = "1.1.0-alpha04"
+    const val androidx_annotation = "1.1.0-alpha02"
+    const val androidx_lifecycle = "2.1.0-alpha03"
+    const val androidx_fragment = "1.1.0-alpha05"
     const val androidx_safeargs = "1.0.0-beta01"
     const val androidx_navigation = "2.0.0-rc02"
 

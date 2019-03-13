@@ -44,22 +44,24 @@ class AccountSettingsFragment : PreferenceFragmentCompat(), CoroutineScope {
         setPreferencesFromResource(R.xml.account_settings_preferences, rootKey)
 
         // Sign out
-        val signOut = context?.getPreferenceKey(R.string.pref_key_sign_out)
+        val signOut = context!!.getPreferenceKey(R.string.pref_key_sign_out)
         val preferenceSignOut = findPreference<Preference>(signOut)
-        preferenceSignOut.onPreferenceClickListener = getClickListenerForSignOut()
+        preferenceSignOut?.onPreferenceClickListener = getClickListenerForSignOut()
 
         // Sync now
-        val syncNow = context?.getPreferenceKey(R.string.pref_key_sync_now)
+        val syncNow = context!!.getPreferenceKey(R.string.pref_key_sync_now)
         val preferenceSyncNow = findPreference<Preference>(syncNow)
-        preferenceSyncNow.onPreferenceClickListener = getClickListenerForSyncNow()
+        preferenceSyncNow?.let {
+            preferenceSyncNow.onPreferenceClickListener = getClickListenerForSyncNow()
 
-        // Current sync state
-        updateLastSyncedTimePref(context!!, preferenceSyncNow)
-        if (requireComponents.backgroundServices.syncManager.isSyncRunning()) {
-            preferenceSyncNow.title = getString(R.string.sync_syncing)
-            preferenceSyncNow.isEnabled = false
-        } else {
-            preferenceSyncNow.isEnabled = true
+            // Current sync state
+            updateLastSyncedTimePref(context!!, preferenceSyncNow)
+            if (requireComponents.backgroundServices.syncManager.isSyncRunning()) {
+                preferenceSyncNow.title = getString(R.string.sync_syncing)
+                preferenceSyncNow.isEnabled = false
+            } else {
+                preferenceSyncNow.isEnabled = true
+            }
         }
 
         // NB: ObserverRegistry will take care of cleaning up internal references to 'observer' and
@@ -87,30 +89,34 @@ class AccountSettingsFragment : PreferenceFragmentCompat(), CoroutineScope {
     private val syncStatusObserver = object : SyncStatusObserver {
         override fun onStarted() {
             CoroutineScope(Dispatchers.Main).launch {
-                val pref = findPreference<Preference>(context?.getPreferenceKey(R.string.pref_key_sync_now))
+                val pref = findPreference<Preference>(context!!.getPreferenceKey(R.string.pref_key_sync_now))
 
-                pref.title = getString(R.string.sync_syncing)
-                pref.isEnabled = false
+                pref?.title = getString(R.string.sync_syncing)
+                pref?.isEnabled = false
             }
         }
 
         // Sync stopped successfully.
         override fun onIdle() {
             CoroutineScope(Dispatchers.Main).launch {
-                val pref = findPreference<Preference>(context?.getPreferenceKey(R.string.pref_key_sync_now))
-                pref.title = getString(R.string.preferences_sync_now)
-                pref.isEnabled = true
-                updateLastSyncedTimePref(context!!, pref, failed = false)
+                val pref = findPreference<Preference>(context!!.getPreferenceKey(R.string.pref_key_sync_now))
+                pref?.let {
+                    pref.title = getString(R.string.preferences_sync_now)
+                    pref.isEnabled = true
+                    updateLastSyncedTimePref(context!!, pref, failed = false)
+                }
             }
         }
 
         // Sync stopped after encountering a problem.
         override fun onError(error: Exception?) {
             CoroutineScope(Dispatchers.Main).launch {
-                val pref = findPreference<Preference>(context?.getPreferenceKey(R.string.pref_key_sync_now))
-                pref.title = getString(R.string.preferences_sync_now)
-                pref.isEnabled = true
-                updateLastSyncedTimePref(context!!, pref, failed = true)
+                val pref = findPreference<Preference>(context!!.getPreferenceKey(R.string.pref_key_sync_now))
+                pref?.let {
+                    pref.title = getString(R.string.preferences_sync_now)
+                    pref.isEnabled = true
+                    updateLastSyncedTimePref(context!!, pref, failed = true)
+                }
             }
         }
     }

@@ -22,7 +22,7 @@ class DataChoicesFragment : PreferenceFragmentCompat() {
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         setPreferencesFromResource(R.xml.data_choices_preferences, rootKey)
 
-        findPreference<SwitchPreference>(getString(R.string.pref_key_telemetry)).apply {
+        findPreference<SwitchPreference>(getString(R.string.pref_key_telemetry))?.apply {
             isChecked = Settings.getInstance(context).isTelemetryEnabled
         }
     }

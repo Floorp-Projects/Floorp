@@ -70,9 +70,9 @@ class SettingsFragment : PreferenceFragmentCompat(), CoroutineScope, AccountObse
 
         (activity as AppCompatActivity).supportActionBar?.show()
         val preference =
-            findPreference(getString(R.string.pref_key_make_default_browser)) as DefaultBrowserPreference
+            findPreference<DefaultBrowserPreference>(getString(R.string.pref_key_make_default_browser))
 
-        preference.updateSwitch()
+        preference?.updateSwitch()
         generateWordmark()
         setupPreferences()
         setupAccountUI()
@@ -176,18 +176,18 @@ class SettingsFragment : PreferenceFragmentCompat(), CoroutineScope, AccountObse
     }
 
     private fun setupPreferences() {
-        val makeDefaultBrowserKey = context?.getPreferenceKey(pref_key_make_default_browser)
-        val leakKey = context?.getPreferenceKey(pref_key_leakcanary)
+        val makeDefaultBrowserKey = context!!.getPreferenceKey(pref_key_make_default_browser)
+        val leakKey = context!!.getPreferenceKey(pref_key_leakcanary)
 
         val preferenceMakeDefaultBrowser = findPreference<Preference>(makeDefaultBrowserKey)
         val preferenceLeakCanary = findPreference<Preference>(leakKey)
 
-        preferenceMakeDefaultBrowser.onPreferenceClickListener =
+        preferenceMakeDefaultBrowser?.onPreferenceClickListener =
             getClickListenerForMakeDefaultBrowser()
 
-        preferenceLeakCanary.isVisible = BuildConfig.DEBUG
+        preferenceLeakCanary?.isVisible = BuildConfig.DEBUG
         if (BuildConfig.DEBUG) {
-            preferenceLeakCanary.onPreferenceChangeListener =
+            preferenceLeakCanary?.onPreferenceChangeListener =
                 Preference.OnPreferenceChangeListener { _, newValue ->
                     (context?.applicationContext as FenixApplication).toggleLeakCanary(newValue as Boolean)
                     true
@@ -220,7 +220,8 @@ class SettingsFragment : PreferenceFragmentCompat(), CoroutineScope, AccountObse
     }
 
     private fun navigateToSitePermissions() {
-        val directions = SettingsFragmentDirections.actionSettingsFragmentToSitePermissionsFragment()
+        val directions =
+            SettingsFragmentDirections.actionSettingsFragmentToSitePermissionsFragment()
         Navigation.findNavController(view!!).navigate(directions)
     }
 
@@ -242,7 +243,8 @@ class SettingsFragment : PreferenceFragmentCompat(), CoroutineScope, AccountObse
     }
 
     private fun navigateToAccountSettings() {
-        val directions = SettingsFragmentDirections.actionSettingsFragmentToAccountSettingsFragment()
+        val directions =
+            SettingsFragmentDirections.actionSettingsFragmentToAccountSettingsFragment()
         Navigation.findNavController(view!!).navigate(directions)
     }
 
@@ -267,29 +269,32 @@ class SettingsFragment : PreferenceFragmentCompat(), CoroutineScope, AccountObse
 
     // --- Account UI helpers ---
     private fun updateAuthState(account: OAuthAccount? = null) {
-        val preferenceSignIn = findPreference<Preference>(context?.getPreferenceKey(pref_key_sign_in))
-        val preferenceFirefoxAccount = findPreference<Preference>(context?.getPreferenceKey(pref_key_account))
+        val preferenceSignIn =
+            findPreference<Preference>(context!!.getPreferenceKey(pref_key_sign_in))
+        val preferenceFirefoxAccount =
+            findPreference<Preference>(context!!.getPreferenceKey(pref_key_account))
         val accountPreferenceCategory =
-            findPreference<PreferenceCategory>(context?.getPreferenceKey(pref_key_account_category))
+            findPreference<PreferenceCategory>(context!!.getPreferenceKey(pref_key_account_category))
 
         if (account != null) {
-            preferenceSignIn.isVisible = false
-            preferenceSignIn.onPreferenceClickListener = null
-            preferenceFirefoxAccount.isVisible = true
-            accountPreferenceCategory.isVisible = true
+            preferenceSignIn?.isVisible = false
+            preferenceSignIn?.onPreferenceClickListener = null
+            preferenceFirefoxAccount?.isVisible = true
+            accountPreferenceCategory?.isVisible = true
         } else {
-            preferenceSignIn.isVisible = true
-            preferenceSignIn.onPreferenceClickListener = getClickListenerForSignIn()
-            preferenceFirefoxAccount.isVisible = false
-            accountPreferenceCategory.isVisible = false
+            preferenceSignIn?.isVisible = true
+            preferenceSignIn?.onPreferenceClickListener = getClickListenerForSignIn()
+            preferenceFirefoxAccount?.isVisible = false
+            accountPreferenceCategory?.isVisible = false
         }
     }
 
     private fun updateAccountProfile(profile: Profile) {
         launch {
-            val preferenceFirefoxAccount = findPreference<Preference>(context?.getPreferenceKey(pref_key_account))
-            preferenceFirefoxAccount.title = profile.displayName.orEmpty()
-            preferenceFirefoxAccount.summary = profile.email.orEmpty()
+            val preferenceFirefoxAccount =
+                findPreference<Preference>(context!!.getPreferenceKey(pref_key_account))
+            preferenceFirefoxAccount?.title = profile.displayName.orEmpty()
+            preferenceFirefoxAccount?.summary = profile.email.orEmpty()
         }
     }
 
