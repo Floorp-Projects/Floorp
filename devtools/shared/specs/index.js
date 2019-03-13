@@ -274,11 +274,6 @@ const Types = exports.__TypesForTests = [
     front: "devtools/shared/fronts/webconsole",
   },
   {
-    types: ["gl-shader", "gl-program", "webgl"],
-    spec: "devtools/shared/specs/webgl",
-    front: "devtools/shared/fronts/webgl",
-  },
-  {
     types: ["pushSubscription"],
     spec: "devtools/shared/specs/worker/push-subscription",
     front: "devtools/shared/fronts/worker/push-subscription",

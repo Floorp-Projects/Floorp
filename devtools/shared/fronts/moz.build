@@ -41,5 +41,4 @@ DevToolsModules(
     'stylesheets.js',
     'webaudio.js',
     'webconsole.js',
-    'webgl.js'
 )
