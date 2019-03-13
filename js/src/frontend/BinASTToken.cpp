@@ -18,57 +18,58 @@
 namespace js {
 namespace frontend {
 
-const BinaryASTSupport::CharSlice BINKIND_DESCRIPTIONS[] = {
+const BinaryASTSupport::CharSlice BINASTKIND_DESCRIPTIONS[] = {
 #define WITH_VARIANT(_, SPEC_NAME) \
   BinaryASTSupport::CharSlice(SPEC_NAME, sizeof(SPEC_NAME) - 1),
     FOR_EACH_BIN_KIND(WITH_VARIANT)
 #undef WITH_VARIANT
 };
 
-const BinaryASTSupport::CharSlice BINFIELD_DESCRIPTIONS[] = {
+const BinaryASTSupport::CharSlice BINASTFIELD_DESCRIPTIONS[] = {
 #define WITH_VARIANT(_, SPEC_NAME) \
   BinaryASTSupport::CharSlice(SPEC_NAME, sizeof(SPEC_NAME) - 1),
     FOR_EACH_BIN_FIELD(WITH_VARIANT)
 #undef WITH_VARIANT
 };
 
-const BinaryASTSupport::CharSlice BINVARIANT_DESCRIPTIONS[] = {
+const BinaryASTSupport::CharSlice BINASTVARIANT_DESCRIPTIONS[] = {
 #define WITH_VARIANT(_, SPEC_NAME) \
   BinaryASTSupport::CharSlice(SPEC_NAME, sizeof(SPEC_NAME) - 1),
     FOR_EACH_BIN_VARIANT(WITH_VARIANT)
 #undef WITH_VARIANT
 };
 
-const BinaryASTSupport::CharSlice& getBinKind(const BinKind& variant) {
-  return BINKIND_DESCRIPTIONS[static_cast<size_t>(variant)];
+const BinaryASTSupport::CharSlice& getBinASTKind(const BinASTKind& variant) {
+  return BINASTKIND_DESCRIPTIONS[static_cast<size_t>(variant)];
 }
 
-const BinaryASTSupport::CharSlice& getBinVariant(const BinVariant& variant) {
-  return BINVARIANT_DESCRIPTIONS[static_cast<size_t>(variant)];
+const BinaryASTSupport::CharSlice& getBinASTVariant(
+    const BinASTVariant& variant) {
+  return BINASTVARIANT_DESCRIPTIONS[static_cast<size_t>(variant)];
 }
 
-const BinaryASTSupport::CharSlice& getBinField(const BinField& variant) {
-  return BINFIELD_DESCRIPTIONS[static_cast<size_t>(variant)];
+const BinaryASTSupport::CharSlice& getBinASTField(const BinASTField& variant) {
+  return BINASTFIELD_DESCRIPTIONS[static_cast<size_t>(variant)];
 }
 
-const char* describeBinKind(const BinKind& variant) {
-  return getBinKind(variant).begin();
+const char* describeBinASTKind(const BinASTKind& variant) {
+  return getBinASTKind(variant).begin();
 }
 
-const char* describeBinField(const BinField& variant) {
-  return getBinField(variant).begin();
+const char* describeBinASTField(const BinASTField& variant) {
+  return getBinASTField(variant).begin();
 }
 
-const char* describeBinVariant(const BinVariant& variant) {
-  return getBinVariant(variant).begin();
+const char* describeBinASTVariant(const BinASTVariant& variant) {
+  return getBinASTVariant(variant).begin();
 }
 
 }  // namespace frontend
 
 BinaryASTSupport::BinaryASTSupport()
-    : binKindMap_(frontend::BINKIND_LIMIT),
-      binFieldMap_(frontend::BINFIELD_LIMIT),
-      binVariantMap_(frontend::BINVARIANT_LIMIT) {}
+    : binASTKindMap_(frontend::BINASTKIND_LIMIT),
+      binASTFieldMap_(frontend::BINASTFIELD_LIMIT),
+      binASTVariantMap_(frontend::BINASTVARIANT_LIMIT) {}
 
 /**
  * It is expected that all bin tables are initialized on the main thread, and
@@ -76,18 +77,19 @@ BinaryASTSupport::BinaryASTSupport()
  * so that they can do their accesses safely without taking any locks.
  */
 bool BinaryASTSupport::ensureBinTablesInitialized(JSContext* cx) {
-  return ensureBinKindsInitialized(cx) && ensureBinVariantsInitialized(cx);
+  return ensureBinASTKindsInitialized(cx) &&
+         ensureBinASTVariantsInitialized(cx);
 }
 
-bool BinaryASTSupport::ensureBinKindsInitialized(JSContext* cx) {
+bool BinaryASTSupport::ensureBinASTKindsInitialized(JSContext* cx) {
   MOZ_ASSERT(!cx->helperThread());
-  if (binKindMap_.empty()) {
-    for (size_t i = 0; i < frontend::BINKIND_LIMIT; ++i) {
-      const BinKind variant = static_cast<BinKind>(i);
-      const CharSlice& key = getBinKind(variant);
-      auto ptr = binKindMap_.lookupForAdd(key);
+  if (binASTKindMap_.empty()) {
+    for (size_t i = 0; i < frontend::BINASTKIND_LIMIT; ++i) {
+      const BinASTKind variant = static_cast<BinASTKind>(i);
+      const CharSlice& key = getBinASTKind(variant);
+      auto ptr = binASTKindMap_.lookupForAdd(key);
       MOZ_ASSERT(!ptr);
-      if (!binKindMap_.add(ptr, key, variant)) {
+      if (!binASTKindMap_.add(ptr, key, variant)) {
         ReportOutOfMemory(cx);
         return false;
       }
@@ -97,15 +99,15 @@ bool BinaryASTSupport::ensureBinKindsInitialized(JSContext* cx) {
   return true;
 }
 
-bool BinaryASTSupport::ensureBinVariantsInitialized(JSContext* cx) {
+bool BinaryASTSupport::ensureBinASTVariantsInitialized(JSContext* cx) {
   MOZ_ASSERT(!cx->helperThread());
-  if (binVariantMap_.empty()) {
-    for (size_t i = 0; i < frontend::BINVARIANT_LIMIT; ++i) {
-      const BinVariant variant = static_cast<BinVariant>(i);
-      const CharSlice& key = getBinVariant(variant);
-      auto ptr = binVariantMap_.lookupForAdd(key);
+  if (binASTVariantMap_.empty()) {
+    for (size_t i = 0; i < frontend::BINASTVARIANT_LIMIT; ++i) {
+      const BinASTVariant variant = static_cast<BinASTVariant>(i);
+      const CharSlice& key = getBinASTVariant(variant);
+      auto ptr = binASTVariantMap_.lookupForAdd(key);
       MOZ_ASSERT(!ptr);
-      if (!binVariantMap_.add(ptr, key, variant)) {
+      if (!binASTVariantMap_.add(ptr, key, variant)) {
         ReportOutOfMemory(cx);
         return false;
       }
@@ -114,17 +116,17 @@ bool BinaryASTSupport::ensureBinVariantsInitialized(JSContext* cx) {
   return true;
 }
 
-JS::Result<const js::frontend::BinKind*> BinaryASTSupport::binKind(
+JS::Result<const js::frontend::BinASTKind*> BinaryASTSupport::binASTKind(
     JSContext* cx, const CharSlice key) {
-  MOZ_ASSERT_IF(cx->helperThread(), !binKindMap_.empty());
+  MOZ_ASSERT_IF(cx->helperThread(), !binASTKindMap_.empty());
   if (!cx->helperThread()) {
     // Initialize Lazily if on main thread.
-    if (!ensureBinKindsInitialized(cx)) {
+    if (!ensureBinASTKindsInitialized(cx)) {
       return cx->alreadyReportedError();
     }
   }
 
-  auto ptr = binKindMap_.readonlyThreadsafeLookup(key);
+  auto ptr = binASTKindMap_.readonlyThreadsafeLookup(key);
   if (!ptr) {
     return nullptr;
   }
@@ -132,17 +134,17 @@ JS::Result<const js::frontend::BinKind*> BinaryASTSupport::binKind(
   return &ptr->value();
 }
 
-JS::Result<const js::frontend::BinVariant*> BinaryASTSupport::binVariant(
+JS::Result<const js::frontend::BinASTVariant*> BinaryASTSupport::binASTVariant(
     JSContext* cx, const CharSlice key) {
-  MOZ_ASSERT_IF(cx->helperThread(), !binVariantMap_.empty());
+  MOZ_ASSERT_IF(cx->helperThread(), !binASTVariantMap_.empty());
   if (!cx->helperThread()) {
     // Initialize lazily if on main thread.
-    if (!ensureBinVariantsInitialized(cx)) {
+    if (!ensureBinASTVariantsInitialized(cx)) {
       return cx->alreadyReportedError();
     }
   }
 
-  auto ptr = binVariantMap_.readonlyThreadsafeLookup(key);
+  auto ptr = binASTVariantMap_.readonlyThreadsafeLookup(key);
   if (!ptr) {
     return nullptr;
   }
