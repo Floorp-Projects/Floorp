@@ -8302,14 +8302,14 @@ var ConfirmationHint = {
 
     // The timeout value used here allows the panel to stay open for
     // 1.5s second after the text transition (duration=120ms) has finished.
-    // If there is a description, we show for 4s and there is no text transition.
-    const DURATION = options.showDescription ? 4000 : 1500 + 120;
+    // If there is a description, we show for 4s after the text transition.
+    const DURATION = options.showDescription ? 4000 : 1500;
     this._panel.addEventListener("popupshown", () => {
       this._animationBox.setAttribute("animate", "true");
 
       setTimeout(() => {
         this._panel.hidePopup(true);
-      }, DURATION);
+      }, DURATION + 120);
     }, {once: true});
 
     this._panel.addEventListener("popuphidden", () => {
