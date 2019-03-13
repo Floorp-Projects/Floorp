@@ -28,7 +28,6 @@ DIRS += [
     'storage',
     'styleeditor',
     'themes',
-    'webaudioeditor',
     'webconsole',
     'webide',
     'webreplay',
