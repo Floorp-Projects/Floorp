@@ -14,8 +14,8 @@
 #include "mozilla/ScopeExit.h"
 #include "mozilla/Vector.h"
 
+#include "frontend/BinAST-macros.h"
 #include "frontend/BinASTParser.h"
-#include "frontend/BinSource-macros.h"
 #include "frontend/BinTokenReaderMultipart.h"
 #include "frontend/FullParseHandler.h"
 #include "frontend/ParseNode.h"
@@ -118,7 +118,8 @@ JS::Result<ParseNode*> BinASTParserPerTokenizer<Tok>::parseAux(
 
   tokenizer_.emplace(cx_, this, start, length);
 
-  BinParseContext globalpc(cx_, this, globalsc, /* newDirectives = */ nullptr);
+  BinASTParseContext globalpc(cx_, this, globalsc,
+                              /* newDirectives = */ nullptr);
   if (!globalpc.init()) {
     return cx_->alreadyReportedError();
   }
@@ -179,7 +180,7 @@ JS::Result<FunctionNode*> BinASTParserPerTokenizer<Tok>::parseLazyFunction(
 
   // Push a new ParseContext. It will be used to parse `scope`, the arguments,
   // the function.
-  BinParseContext funpc(cx_, this, funbox, /* newDirectives = */ nullptr);
+  BinASTParseContext funpc(cx_, this, funbox, /* newDirectives = */ nullptr);
   BINJS_TRY(funpc.init());
   pc_->functionScope().useAsVarScope(pc_);
   MOZ_ASSERT(pc_->isFunctionBox());

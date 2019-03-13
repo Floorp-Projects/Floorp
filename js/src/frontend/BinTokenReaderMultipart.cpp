@@ -14,8 +14,8 @@
 
 #include <utility>
 
-#include "frontend/BinSource-macros.h"
-#include "frontend/BinSourceRuntimeSupport.h"
+#include "frontend/BinAST-macros.h"
+#include "frontend/BinASTRuntimeSupport.h"
 #include "frontend/BytecodeCompiler.h" // IsIdentifier
 
 #include "js/Result.h"
