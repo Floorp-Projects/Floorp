@@ -601,9 +601,18 @@ SpecialPowersObserverAPI.prototype = {
 
       case "SPStartupExtension": {
         let id = aMessage.data.id;
+        // This is either an Extension, or (if useAddonManager is set) a MockExtension.
         let extension = this._extensions.get(id);
-        extension.on("startup", () => {
-          this._sendReply(aMessage, "SPExtensionMessage", {id, type: "extensionSetId", args: [extension.id, extension.uuid]});
+        extension.on("startup", (eventName, ext) => {
+          if (!ext) {
+            // ext is only set by the "startup" event from Extension.jsm.
+            // Unfortunately ext-backgroundPage.js emits an event with the same
+            // name, but without the extension object as parameter.
+            return;
+          }
+          // ext is always the "real" Extension object, even when "extension"
+          // is a MockExtension.
+          this._sendReply(aMessage, "SPExtensionMessage", {id, type: "extensionSetId", args: [ext.id, ext.uuid]});
         });
 
         // Make sure the extension passes the packaging checks when
