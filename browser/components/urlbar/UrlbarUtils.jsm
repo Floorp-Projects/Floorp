@@ -102,7 +102,7 @@ var UrlbarUtils = {
 
   // This defines icon locations that are common used in the UI.
   ICON: {
-    DEFAULT: Ci.nsIFaviconService.FAVICON_DEFAULT_URL,
+    DEFAULT: PlacesUtils.favicons.defaultFavicon.spec,
     SEARCH_GLASS: "chrome://browser/skin/search-glass.svg",
   },
 
