@@ -79,6 +79,7 @@ interface nsIControllerCommandTable : nsISupports
    */
 	void    doCommand(in string aCommandName, in nsISupports aCommandRefCon);
 
+  [can_run_script]
 	void    doCommandParams(in string aCommandName, in nsICommandParams aParam, in nsISupports aCommandRefCon);
 
 	void    getCommandState(in string aCommandName, in nsICommandParams aParam, in nsISupports aCommandRefCon);
