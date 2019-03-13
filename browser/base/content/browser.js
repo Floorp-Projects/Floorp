@@ -475,7 +475,10 @@ function showFxaToolbarMenu(enable) {
   // if sync is enabled.
   const syncEnabled = Services.prefs.getBoolPref("identity.fxaccounts.enabled", false);
   const mainWindowEl = document.documentElement;
+  const fxaPanelEl = document.getElementById("PanelUI-fxa");
   if (enable && syncEnabled) {
+    fxaPanelEl.addEventListener("ViewShowing", gSync.updateSendToDeviceTitle);
+
     mainWindowEl.setAttribute("fxastatus", "not_configured");
     // We have to manually update the sync state UI when toggling the FxA toolbar
     // because it could show an invalid icon if the user is logged in and no sync
@@ -491,6 +494,7 @@ function showFxaToolbarMenu(enable) {
     }
   } else {
     mainWindowEl.removeAttribute("fxastatus");
+    fxaPanelEl.removeEventListener("ViewShowing", gSync.updateSendToDeviceTitle);
   }
 }
 
