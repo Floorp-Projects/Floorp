@@ -572,7 +572,7 @@
       <hbox id="confirmation-hint-checkmark-animation-container">
        <image id="confirmation-hint-checkmark-image"/>
       </hbox>
-      <vbox>
+      <vbox id="confirmation-hint-message-container">
        <label id="confirmation-hint-message"/>
        <label id="confirmation-hint-description"/>
       </vbox>
