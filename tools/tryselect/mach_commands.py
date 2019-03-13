@@ -272,7 +272,8 @@ class TrySelect(MachCommandBase):
         selection to try.
         """
         self._activate_virtualenv()
-        self.virtualenv_manager.install_pip_package('flask')
+        path = os.path.join('tools', 'tryselect', 'selectors', 'chooser', 'requirements.txt')
+        self.virtualenv_manager.install_pip_requirements(path, quiet=True)
 
         return self.run(**kwargs)
 
