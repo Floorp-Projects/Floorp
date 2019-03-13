@@ -13,8 +13,7 @@ _defaultConfig = config
 
 class PurgeCache(BaseClient):
     """
-    The purge-cache service, typically available at
-    `purge-cache.taskcluster.net`, is responsible for publishing a pulse
+    The purge-cache service is responsible for publishing a pulse
     message for workers, so they can purge cache upon request.
 
     This document describes the API end-point for publishing the pulse
@@ -22,8 +21,9 @@ class PurgeCache(BaseClient):
     """
 
     classOptions = {
-        "baseUrl": "https://purge-cache.taskcluster.net/v1/"
     }
+    serviceName = 'purge-cache'
+    apiVersion = 'v1'
 
     def ping(self, *args, **kwargs):
         """

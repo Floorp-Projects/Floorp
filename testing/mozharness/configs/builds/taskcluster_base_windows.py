@@ -28,9 +28,6 @@ config = {
         'UPLOAD_PATH': os.path.join(os.getcwd(), 'public', 'build'),
     },
     'secret_files': [
-        {'filename': 'gapi.data',
-         'secret_name': 'project/releng/gecko/build/level-%(scm-level)s/gapi.data',
-         'min_scm_level': 1},
         {'filename': 'gls-gapi.data',
          'secret_name': 'project/releng/gecko/build/level-%(scm-level)s/gls-gapi.data',
          'min_scm_level': 1},

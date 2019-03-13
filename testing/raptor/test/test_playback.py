@@ -37,6 +37,7 @@ def test_get_playback(get_binary):
 
     playback = get_playback(config)
     assert isinstance(playback, MitmproxyDesktop)
+    playback.start()
     playback.stop()
 
 
