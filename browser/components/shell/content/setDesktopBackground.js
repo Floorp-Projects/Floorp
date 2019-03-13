@@ -25,8 +25,10 @@ var gSetBackground = {
     if (AppConstants.platform == "macosx") {
       document.documentElement.getButton("accept").hidden = true;
     }
-    if (this._screenWidth / this._screenHeight >= 1.6)
-      document.getElementById("monitor").setAttribute("aspectratio", "16:10");
+    // Cap ratio to 4 so the dialog width doesn't get ridiculous. Highest
+    // regular screens seem to be 32:9 (3.56) according to Wikipedia.
+    let screenRatio = Math.min(this._screenWidth / this._screenHeight, 4);
+    this._canvas.width = this._canvas.height * screenRatio;
 
     if (AppConstants.platform == "win") {
       // Hide fill + fit options if < Win7 since they don't work.
