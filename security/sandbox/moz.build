@@ -20,6 +20,7 @@ elif CONFIG['OS_ARCH'] == 'WINNT':
     FORCE_STATIC_LIB = True
 
     DIRS += [
+        'win/src/remotesandboxbroker',
         'win/src/sandboxbroker',
         'win/src/sandboxpermissions',
         'win/src/sandboxtarget',
