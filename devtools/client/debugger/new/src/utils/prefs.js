@@ -9,7 +9,7 @@ import { isDevelopment, isTesting } from "devtools-environment";
 import Services from "devtools-services";
 import { asyncStoreHelper } from "./asyncStoreHelper";
 
-const prefsSchemaVersion = "1.0.9";
+const prefsSchemaVersion = "1.0.8";
 const pref = Services.pref;
 
 if (isDevelopment()) {
@@ -132,7 +132,7 @@ export const asyncStore = asyncStoreHelper("debugger", {
   eventListenerBreakpoints: ["event-listener-breakpoints", []]
 });
 
-if (!isTesting() && prefs.debuggerPrefsSchemaVersion !== prefsSchemaVersion) {
+if (!isTesting && prefs.debuggerPrefsSchemaVersion !== prefsSchemaVersion) {
   // clear pending Breakpoints
   asyncStore.pendingBreakpoints = {};
   asyncStore.tabs = [];
