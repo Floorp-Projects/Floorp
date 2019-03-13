@@ -220,7 +220,6 @@ void DriverCrashGuard::ActivateGuard() {
 }
 
 void DriverCrashGuard::NotifyCrashed() {
-  CheckOrRefreshEnvironment();
   SetStatus(DriverInitStatus::Crashed);
   FlushPreferences();
   LogCrashRecovery();
@@ -250,18 +249,24 @@ bool DriverCrashGuard::RecoverFromCrash() {
 // session are activated rather than just the first.
 bool DriverCrashGuard::CheckOrRefreshEnvironment() {
   // Our result can be cached statically since we don't check live prefs.
-  static bool sBaseInfoChanged = false;
-  static bool sBaseInfoChecked = false;
+  // We need to cache once per crash guard type.
+  // The first call to CheckOrRefrechEnvironment will always return true should
+  // the configuration had changed, following calls will return false.
+  static bool sBaseInfoChanged[NUM_CRASH_GUARD_TYPES];
+  static bool sBaseInfoChecked[NUM_CRASH_GUARD_TYPES];
 
-  if (!sBaseInfoChecked) {
+  const uint32_t type = uint32_t(mType);
+  if (!sBaseInfoChecked[type]) {
     // None of the prefs we care about, so we cache the result statically.
-    sBaseInfoChecked = true;
-    sBaseInfoChanged = UpdateBaseEnvironment();
+    sBaseInfoChecked[type] = true;
+    sBaseInfoChanged[type] = UpdateBaseEnvironment();
   }
 
   // Always update the full environment, even if the base info didn't change.
-  return UpdateEnvironment() || sBaseInfoChanged ||
-         GetStatus() == DriverInitStatus::Unknown;
+  bool result = UpdateEnvironment() || sBaseInfoChanged[type] ||
+                GetStatus() == DriverInitStatus::Unknown;
+  sBaseInfoChanged[type] = false;
+  return result;
 }
 
 bool DriverCrashGuard::UpdateBaseEnvironment() {
@@ -390,14 +395,15 @@ void D3D11LayersCrashGuard::Initialize() {
 bool D3D11LayersCrashGuard::UpdateEnvironment() {
   // Our result can be cached statically since we don't check live prefs.
   static bool checked = false;
-  static bool changed = false;
 
   if (checked) {
-    return changed;
+    // We no longer need to bypass the crash guard.
+    return false;
   }
 
   checked = true;
 
+  bool changed = false;
   // Feature status.
 #if defined(XP_WIN)
   bool d2dEnabled = gfxPrefs::Direct2DForceEnabled() ||
@@ -407,14 +413,12 @@ bool D3D11LayersCrashGuard::UpdateEnvironment() {
 
   bool d3d11Enabled = gfxConfig::IsEnabled(Feature::D3D11_COMPOSITING);
   changed |= CheckAndUpdateBoolPref("feature-d3d11", d3d11Enabled);
+  if (changed) {
+    RecordTelemetry(TelemetryState::EnvironmentChanged);
+  }
 #endif
 
-  if (!changed) {
-    return false;
-  }
-
-  RecordTelemetry(TelemetryState::EnvironmentChanged);
-  return true;
+  return changed;
 }
 
 void D3D11LayersCrashGuard::LogCrashRecovery() {
@@ -448,11 +452,6 @@ void D3D11LayersCrashGuard::RecordTelemetry(TelemetryState aState) {
 D3D9VideoCrashGuard::D3D9VideoCrashGuard(dom::ContentParent* aContentParent)
     : DriverCrashGuard(CrashGuardType::D3D9Video, aContentParent) {}
 
-bool D3D9VideoCrashGuard::UpdateEnvironment() {
-  // We don't care about any extra preferences here.
-  return false;
-}
-
 void D3D9VideoCrashGuard::LogCrashRecovery() {
   gfxCriticalNote << "DXVA2D3D9 just crashed; hardware video will be disabled.";
 }
@@ -464,11 +463,6 @@ void D3D9VideoCrashGuard::LogFeatureDisabled() {
 
 D3D11VideoCrashGuard::D3D11VideoCrashGuard(dom::ContentParent* aContentParent)
     : DriverCrashGuard(CrashGuardType::D3D11Video, aContentParent) {}
-
-bool D3D11VideoCrashGuard::UpdateEnvironment() {
-  // We don't care about any extra preferences here.
-  return false;
-}
 
 void D3D11VideoCrashGuard::LogCrashRecovery() {
   gfxCriticalNote
@@ -503,13 +497,15 @@ void GLContextCrashGuard::Initialize() {
 
 bool GLContextCrashGuard::UpdateEnvironment() {
   static bool checked = false;
-  static bool changed = false;
 
   if (checked) {
-    return changed;
+    // We no longer need to bypass the crash guard.
+    return false;
   }
 
   checked = true;
+
+  bool changed = false;
 
 #if defined(XP_WIN)
   changed |= CheckAndUpdateBoolPref("gfx.driver-init.webgl-angle-force-d3d11",
@@ -539,11 +535,6 @@ void GLContextCrashGuard::LogFeatureDisabled() {
 
 WMFVPXVideoCrashGuard::WMFVPXVideoCrashGuard(dom::ContentParent* aContentParent)
     : DriverCrashGuard(CrashGuardType::WMFVPXVideo, aContentParent) {}
-
-bool WMFVPXVideoCrashGuard::UpdateEnvironment() {
-  // We don't care about any extra preferences here.
-  return false;
-}
 
 void WMFVPXVideoCrashGuard::LogCrashRecovery() {
   gfxCriticalNote
