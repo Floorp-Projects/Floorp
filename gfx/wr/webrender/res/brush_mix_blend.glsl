@@ -6,20 +6,15 @@
 
 #include shared,prim_shared,brush
 
-varying vec4 vSourceAndBackdropUv;
-flat varying ivec4 vSourceUvBounds;
-flat varying ivec4 vBackdropUvBounds;
-flat varying ivec3 vOpAndLayers;
+varying vec3 vSrcUv;
+varying vec3 vBackdropUv;
+flat varying int vOp;
 
 #ifdef WR_VERTEX_SHADER
 
 //Note: this function is unsafe for `vi.world_pos.w <= 0.0`
 vec2 snap_device_pos(VertexInfo vi, float device_pixel_scale) {
     return vi.world_pos.xy * device_pixel_scale / max(0.0, vi.world_pos.w) + vi.snap_offset;
-}
-
-ivec4 rect_to_ivec(RectWithSize rect) {
-    return ivec4(rect.p0, rect.p0 + rect.size - 1.0);
 }
 
 void brush_vs(
@@ -34,25 +29,20 @@ void brush_vs(
     vec4 unused
 ) {
     vec2 snapped_device_pos = snap_device_pos(vi, pic_task.device_pixel_scale);
+    vec2 texture_size = vec2(textureSize(sPrevPassColor, 0));
+    vOp = user_data.x;
 
     PictureTask src_task = fetch_picture_task(user_data.z);
-    PictureTask backdrop_task = fetch_picture_task(user_data.y);
-
     vec2 src_uv = snapped_device_pos +
                   src_task.common_data.task_rect.p0 -
                   src_task.content_origin;
-    vec2 backdrop_uv = snapped_device_pos +
-                       backdrop_task.common_data.task_rect.p0 -
-                       backdrop_task.content_origin;
+    vSrcUv = vec3(src_uv / texture_size, src_task.common_data.texture_layer_index);
 
-    vSourceAndBackdropUv = vec4(src_uv, backdrop_uv);
-    vSourceUvBounds = rect_to_ivec(src_task.common_data.task_rect);
-    vBackdropUvBounds = rect_to_ivec(backdrop_task.common_data.task_rect);
-    vOpAndLayers = ivec3(
-        user_data.x,
-        int(src_task.common_data.texture_layer_index),
-        int(backdrop_task.common_data.texture_layer_index)
-    );
+    RenderTaskCommonData backdrop_task = fetch_render_task_common_data(user_data.y);
+    vec2 backdrop_uv = snapped_device_pos +
+                       backdrop_task.task_rect.p0 -
+                       src_task.content_origin;
+    vBackdropUv = vec3(backdrop_uv / texture_size, backdrop_task.texture_layer_index);
 }
 #endif
 
@@ -215,88 +205,81 @@ const int MixBlendMode_Color       = 14;
 const int MixBlendMode_Luminosity  = 15;
 
 Fragment brush_fs() {
+    vec4 Cb = textureLod(sPrevPassColor, vBackdropUv, 0.0);
+    vec4 Cs = textureLod(sPrevPassColor, vSrcUv, 0.0);
+
+    // The mix-blend-mode functions assume no premultiplied alpha
+    if (Cb.a != 0.0) {
+        Cb.rgb /= Cb.a;
+    }
+
+    if (Cs.a != 0.0) {
+        Cs.rgb /= Cs.a;
+    }
+
     // Return yellow if none of the branches match (shouldn't happen).
     vec4 result = vec4(1.0, 1.0, 0.0, 1.0);
 
-    ivec2 source_uv = ivec2(floor(vSourceAndBackdropUv.xy));
-    vec4 Cs = source_uv == clamp(source_uv, vSourceUvBounds.xy, vSourceUvBounds.zw) ?
-        texelFetch(sPrevPassColor, ivec3(source_uv, vOpAndLayers.y), 0) :
-        vec4(0.0);
-    ivec2 backdrop_uv = ivec2(floor(vSourceAndBackdropUv.zw));
-    vec4 Cb = backdrop_uv == clamp(backdrop_uv, vBackdropUvBounds.xy, vBackdropUvBounds.zw) ?
-        texelFetch(sPrevPassColor, ivec3(backdrop_uv, vOpAndLayers.z), 0) :
-        vec4(0.0);
-
-    if (Cs.a == 0.0) {
-        result = Cb;
-    } else if (Cb.a == 0.0) {
-        result = Cs;
-    } else {
-        vec3 original_backdrop = Cb.rgb;
-        // The mix-blend-mode functions assume no premultiplied alpha
-        Cs.rgb /= Cs.a;
-        Cb.rgb /= Cb.a;
-
-        switch (vOpAndLayers.x) {
-            case MixBlendMode_Multiply:
-                result.rgb = Multiply(Cb.rgb, Cs.rgb);
-                break;
-            case MixBlendMode_Screen:
-                result.rgb = Screen(Cb.rgb, Cs.rgb);
-                break;
-            case MixBlendMode_Overlay:
-                // Overlay is inverse of Hardlight
-                result.rgb = HardLight(Cs.rgb, Cb.rgb);
-                break;
-            case MixBlendMode_Darken:
-                result.rgb = min(Cs.rgb, Cb.rgb);
-                break;
-            case MixBlendMode_Lighten:
-                result.rgb = max(Cs.rgb, Cb.rgb);
-                break;
-            case MixBlendMode_ColorDodge:
-                result.r = ColorDodge(Cb.r, Cs.r);
-                result.g = ColorDodge(Cb.g, Cs.g);
-                result.b = ColorDodge(Cb.b, Cs.b);
-                break;
-            case MixBlendMode_ColorBurn:
-                result.r = ColorBurn(Cb.r, Cs.r);
-                result.g = ColorBurn(Cb.g, Cs.g);
-                result.b = ColorBurn(Cb.b, Cs.b);
-                break;
-            case MixBlendMode_HardLight:
-                result.rgb = HardLight(Cb.rgb, Cs.rgb);
-                break;
-            case MixBlendMode_SoftLight:
-                result.r = SoftLight(Cb.r, Cs.r);
-                result.g = SoftLight(Cb.g, Cs.g);
-                result.b = SoftLight(Cb.b, Cs.b);
-                break;
-            case MixBlendMode_Difference:
-                result.rgb = Difference(Cb.rgb, Cs.rgb);
-                break;
-            case MixBlendMode_Exclusion:
-                result.rgb = Exclusion(Cb.rgb, Cs.rgb);
-                break;
-            case MixBlendMode_Hue:
-                result.rgb = Hue(Cb.rgb, Cs.rgb);
-                break;
-            case MixBlendMode_Saturation:
-                result.rgb = Saturation(Cb.rgb, Cs.rgb);
-                break;
-            case MixBlendMode_Color:
-                result.rgb = Color(Cb.rgb, Cs.rgb);
-                break;
-            case MixBlendMode_Luminosity:
-                result.rgb = Luminosity(Cb.rgb, Cs.rgb);
-                break;
-            default: break;
-        }
-
-        vec3 rgb = (1.0 - Cb.a) * Cs.rgb + Cb.a * result.rgb;
-        // simulate alpha-blending with the backdrop
-        result = mix(vec4(original_backdrop, Cb.a), vec4(rgb, 1.0), Cs.a);
+    switch (vOp) {
+        case MixBlendMode_Multiply:
+            result.rgb = Multiply(Cb.rgb, Cs.rgb);
+            break;
+        case MixBlendMode_Screen:
+            result.rgb = Screen(Cb.rgb, Cs.rgb);
+            break;
+        case MixBlendMode_Overlay:
+            // Overlay is inverse of Hardlight
+            result.rgb = HardLight(Cs.rgb, Cb.rgb);
+            break;
+        case MixBlendMode_Darken:
+            result.rgb = min(Cs.rgb, Cb.rgb);
+            break;
+        case MixBlendMode_Lighten:
+            result.rgb = max(Cs.rgb, Cb.rgb);
+            break;
+        case MixBlendMode_ColorDodge:
+            result.r = ColorDodge(Cb.r, Cs.r);
+            result.g = ColorDodge(Cb.g, Cs.g);
+            result.b = ColorDodge(Cb.b, Cs.b);
+            break;
+        case MixBlendMode_ColorBurn:
+            result.r = ColorBurn(Cb.r, Cs.r);
+            result.g = ColorBurn(Cb.g, Cs.g);
+            result.b = ColorBurn(Cb.b, Cs.b);
+            break;
+        case MixBlendMode_HardLight:
+            result.rgb = HardLight(Cb.rgb, Cs.rgb);
+            break;
+        case MixBlendMode_SoftLight:
+            result.r = SoftLight(Cb.r, Cs.r);
+            result.g = SoftLight(Cb.g, Cs.g);
+            result.b = SoftLight(Cb.b, Cs.b);
+            break;
+        case MixBlendMode_Difference:
+            result.rgb = Difference(Cb.rgb, Cs.rgb);
+            break;
+        case MixBlendMode_Exclusion:
+            result.rgb = Exclusion(Cb.rgb, Cs.rgb);
+            break;
+        case MixBlendMode_Hue:
+            result.rgb = Hue(Cb.rgb, Cs.rgb);
+            break;
+        case MixBlendMode_Saturation:
+            result.rgb = Saturation(Cb.rgb, Cs.rgb);
+            break;
+        case MixBlendMode_Color:
+            result.rgb = Color(Cb.rgb, Cs.rgb);
+            break;
+        case MixBlendMode_Luminosity:
+            result.rgb = Luminosity(Cb.rgb, Cs.rgb);
+            break;
+        default: break;
     }
+
+    result.rgb = (1.0 - Cb.a) * Cs.rgb + Cb.a * result.rgb;
+    result.a = Cs.a;
+
+    result.rgb *= result.a;
 
     return Fragment(result);
 }
