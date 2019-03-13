@@ -22,12 +22,6 @@ using struct mozilla::void_t from "ipc/IPCMessageUtils.h";
 namespace mozilla {
 namespace net {
 
-union OptionalTransportProvider
-{
-  PTransportProvider;
-  void_t;
-};
-
 async protocol PWebSocket
 {
   manager PNecko;
@@ -45,7 +39,7 @@ parent:
                   uint32_t aPingTimeout,
                   bool aClientSetPingTimeout,
                   LoadInfoArgs? aLoadInfoArgs,
-                  OptionalTransportProvider aProvider,
+                  PTransportProvider? aProvider,
                   nsCString aNegotiatedExtensions);
   async Close(uint16_t code, nsCString reason);
   async SendMsg(nsCString aMsg);
