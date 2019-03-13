@@ -3086,6 +3086,10 @@ void nsDisplayList::SortByContentOrder(nsIContent* aCommonAncestor) {
   Sort<nsDisplayItem*>(ContentComparator(aCommonAncestor));
 }
 
+#ifndef DEBUG
+static_assert(sizeof(nsDisplayItem) <= 176, "nsDisplayItem has grown");
+#endif
+
 nsDisplayItem::nsDisplayItem(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame)
     : nsDisplayItem(aBuilder, aFrame, aBuilder->CurrentActiveScrolledRoot()) {}
 
@@ -3098,7 +3102,6 @@ nsDisplayItem::nsDisplayItem(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
       mForceNotVisible(aBuilder->IsBuildingInvisibleItems()),
       mDisableSubpixelAA(false),
       mReusedItem(false),
-      mBackfaceHidden(mFrame->In3DContextAndBackfaceIsHidden()),
       mPaintRectValid(false),
       mCanBeReused(true)
 #ifdef MOZ_DUMP_PAINTING
@@ -3129,6 +3132,11 @@ nsDisplayItem::nsDisplayItem(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
   nsRect visible = aBuilder->GetVisibleRect() +
                    aBuilder->GetCurrentFrameOffsetToReferenceFrame();
   SetBuildingRect(visible);
+
+  const nsStyleDisplay* disp = mFrame->StyleDisplay();
+  mBackfaceIsHidden = mFrame->BackfaceIsHidden(disp);
+  mCombines3DTransformWithAncestors =
+      mFrame->Combines3DTransformWithAncestors(disp);
 }
 
 /* static */
@@ -7924,7 +7932,7 @@ bool nsDisplayTransform::ShouldBuildLayerEvenIfInvisible(
   // The visible rect of a Preserves-3D frame is just an intermediate
   // result.  It should always build a layer to make sure it is
   // rendering correctly.
-  return MayBeAnimated(aBuilder) || mFrame->Combines3DTransformWithAncestors();
+  return MayBeAnimated(aBuilder) || Combines3DTransformWithAncestors();
 }
 
 bool nsDisplayTransform::CreateWebRenderCommands(
@@ -8103,7 +8111,7 @@ nsDisplayItem::LayerState nsDisplayTransform::GetLayerState(
   // to be an active layer.
   // Checking HasPerspective() is needed to handle perspective value 0 when
   // the transform is 2D.
-  if (!GetTransform().Is2D() || mFrame->Combines3DTransformWithAncestors() ||
+  if (!GetTransform().Is2D() || Combines3DTransformWithAncestors() ||
       mIsTransformSeparator || mFrame->HasPerspective()) {
     return LAYER_ACTIVE_FORCE;
   }
@@ -8129,7 +8137,7 @@ bool nsDisplayTransform::ComputeVisibility(nsDisplayListBuilder* aBuilder,
   // Calling mStoredList.RecomputeVisibility below for such transform causes the
   // child display items to end up with empty visible rect.
   // We avoid this by bailing out always if we are dealing with a 3d context.
-  if (mFrame->Extend3DContext() || mFrame->Combines3DTransformWithAncestors()) {
+  if (mFrame->Extend3DContext() || Combines3DTransformWithAncestors()) {
     return true;
   }
 
@@ -8222,7 +8230,7 @@ void nsDisplayTransform::UpdateBounds(nsDisplayListBuilder* aBuilder) {
     return;
   }
 
-  if (!mFrame->Combines3DTransformWithAncestors()) {
+  if (!Combines3DTransformWithAncestors()) {
     if (mFrame->Extend3DContext()) {
       // The transform establishes a 3D context. |UpdateBoundsFor3D()| will
       // collect the bounds from the child transforms.
