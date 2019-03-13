@@ -55,8 +55,8 @@
 }
 
 :root[uidensity=touch] .urlbarView-row {
-  padding-top: 15px;
-  padding-bottom: 15px;
+  padding-top: 10px;
+  padding-bottom: 10px;
 }
 
 .urlbarView-row-inner {
