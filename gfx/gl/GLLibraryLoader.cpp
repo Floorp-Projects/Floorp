@@ -69,5 +69,5 @@ PRFuncPtr SymbolLoader::GetProcAddress(const char* const name) const {
   return ret;
 }
 
-} // namespace gl
-} // namespace mozilla
+}  // namespace gl
+}  // namespace mozilla

@@ -1640,7 +1640,8 @@ bool nsPresContext::HasAuthorSpecifiedRules(const nsIFrame* aFrame,
   }
 
   auto* set = PresShell()->StyleSet()->RawSet();
-  return Servo_HasAuthorSpecifiedRules(set, aFrame->Style(), elem, aRuleTypeMask);
+  return Servo_HasAuthorSpecifiedRules(set, aFrame->Style(), elem,
+                                       aRuleTypeMask);
 }
 
 gfxUserFontSet* nsPresContext::GetUserFontSet() {

@@ -3397,8 +3397,7 @@ nsCSSFrameConstructor::FindHTMLData(const Element& aElement,
       COMPLEX_TAG_CREATE(details,
                          &nsCSSFrameConstructor::ConstructDetailsFrame)};
 
-  return FindDataByTag(aElement, aStyle, sHTMLData,
-                       ArrayLength(sHTMLData));
+  return FindDataByTag(aElement, aStyle, sHTMLData, ArrayLength(sHTMLData));
 }
 
 /* static */
@@ -4026,8 +4025,8 @@ nsCSSFrameConstructor::FindXULButtonData(const Element& aElement,
                                          ComputedStyle&) {
   static const FrameConstructionData sXULMenuData =
       SIMPLE_XUL_FCDATA(NS_NewMenuFrame);
-  if (aElement.AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
-                           nsGkAtoms::menu, eCaseMatters)) {
+  if (aElement.AttrValueIs(kNameSpaceID_None, nsGkAtoms::type, nsGkAtoms::menu,
+                           eCaseMatters)) {
     return &sXULMenuData;
   }
 
@@ -5297,15 +5296,13 @@ nsCSSFrameConstructor::FindElementTagData(const Element& aElement,
 nsCSSFrameConstructor::XBLBindingLoadInfo::XBLBindingLoadInfo(
     already_AddRefed<ComputedStyle>&& aStyle,
     UniquePtr<PendingBinding> aPendingBinding)
-    : mStyle(std::move(aStyle)),
-      mPendingBinding(std::move(aPendingBinding)) {
+    : mStyle(std::move(aStyle)), mPendingBinding(std::move(aPendingBinding)) {
   MOZ_ASSERT(mStyle);
 }
 
 nsCSSFrameConstructor::XBLBindingLoadInfo::XBLBindingLoadInfo(
     nsIContent& aContent, ComputedStyle& aStyle)
-    : mStyle(&aStyle),
-      mPendingBinding(nullptr) {}
+    : mStyle(&aStyle), mPendingBinding(nullptr) {}
 
 nsCSSFrameConstructor::XBLBindingLoadInfo::XBLBindingLoadInfo() = default;
 

@@ -7617,8 +7617,7 @@ nsresult nsHttpChannel::ContinueOnStartRequest4(nsresult result) {
 }
 
 NS_IMETHODIMP
-nsHttpChannel::OnStopRequest(nsIRequest *request,
-                             nsresult status) {
+nsHttpChannel::OnStopRequest(nsIRequest *request, nsresult status) {
   AUTO_PROFILER_LABEL("nsHttpChannel::OnStopRequest", NETWORK);
 
   LOG(("nsHttpChannel::OnStopRequest [this=%p request=%p status=%" PRIx32 "]\n",
@@ -8092,9 +8091,8 @@ class OnTransportStatusAsyncEvent : public Runnable {
 };
 
 NS_IMETHODIMP
-nsHttpChannel::OnDataAvailable(nsIRequest *request,
-                               nsIInputStream *input, uint64_t offset,
-                               uint32_t count) {
+nsHttpChannel::OnDataAvailable(nsIRequest *request, nsIInputStream *input,
+                               uint64_t offset, uint32_t count) {
   nsresult rv;
   AUTO_PROFILER_LABEL("nsHttpChannel::OnDataAvailable", NETWORK);
 

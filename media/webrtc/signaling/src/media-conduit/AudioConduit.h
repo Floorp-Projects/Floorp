@@ -225,7 +225,7 @@ class WebrtcAudioConduit : public AudioSessionConduit,
       webrtc::RtcpPacketTypeCounter* aPacketCounts) override;
 
   bool GetRTPReceiverStats(unsigned int* jitterMs,
-                   unsigned int* cumulativeLost) override;
+                           unsigned int* cumulativeLost) override;
   bool GetRTCPReceiverReport(uint32_t* jitterMs, uint32_t* packetsReceived,
                              uint64_t* bytesReceived, uint32_t* cumulativeLost,
                              int32_t* rttMs) override;

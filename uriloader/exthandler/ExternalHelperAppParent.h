@@ -61,7 +61,6 @@ class ExternalHelperAppParent
       public nsIStreamListener,
       public net::PrivateBrowsingChannel<ExternalHelperAppParent>,
       public nsIExternalHelperAppParent {
-
  public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIREQUEST

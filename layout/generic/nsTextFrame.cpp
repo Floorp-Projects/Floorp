@@ -1770,9 +1770,8 @@ static nscoord WordSpacing(nsIFrame* aFrame, const gfxTextRun* aTextRun,
     aStyleText = aFrame->StyleText();
   }
 
-  return aStyleText->mWordSpacing.Resolve([&] {
-    return GetSpaceWidthAppUnits(aTextRun);
-  });
+  return aStyleText->mWordSpacing.Resolve(
+      [&] { return GetSpaceWidthAppUnits(aTextRun); });
 }
 
 // Returns gfxTextRunFactory::TEXT_ENABLE_SPACING if non-standard
@@ -3703,19 +3702,17 @@ void PropertyProvider::GetHyphenationBreaks(Range aRange,
 }
 
 void PropertyProvider::InitializeForDisplay(bool aTrimAfter) {
-  nsTextFrame::TrimmedOffsets trimmed =
-      mFrame->GetTrimmedOffsets(mFrag,
-          (aTrimAfter ? nsTextFrame::TrimmedOffsetFlags::kDefaultTrimFlags :
-                        nsTextFrame::TrimmedOffsetFlags::kNoTrimAfter));
+  nsTextFrame::TrimmedOffsets trimmed = mFrame->GetTrimmedOffsets(
+      mFrag, (aTrimAfter ? nsTextFrame::TrimmedOffsetFlags::kDefaultTrimFlags
+                         : nsTextFrame::TrimmedOffsetFlags::kNoTrimAfter));
   mStart.SetOriginalOffset(trimmed.mStart);
   mLength = trimmed.mLength;
   SetupJustificationSpacing(true);
 }
 
 void PropertyProvider::InitializeForMeasure() {
-  nsTextFrame::TrimmedOffsets trimmed =
-      mFrame->GetTrimmedOffsets(mFrag,
-          nsTextFrame::TrimmedOffsetFlags::kNotPostReflow);
+  nsTextFrame::TrimmedOffsets trimmed = mFrame->GetTrimmedOffsets(
+      mFrag, nsTextFrame::TrimmedOffsetFlags::kNotPostReflow);
   mStart.SetOriginalOffset(trimmed.mStart);
   mLength = trimmed.mLength;
   SetupJustificationSpacing(false);
@@ -3732,10 +3729,9 @@ void PropertyProvider::SetupJustificationSpacing(bool aPostReflow) {
   // We can't just use our mLength here; when InitializeForDisplay is
   // called with false for aTrimAfter, we still shouldn't be assigning
   // justification space to any trailing whitespace.
-  nsTextFrame::TrimmedOffsets trimmed =
-      mFrame->GetTrimmedOffsets(mFrag,
-          (aPostReflow ? nsTextFrame::TrimmedOffsetFlags::kDefaultTrimFlags :
-                         nsTextFrame::TrimmedOffsetFlags::kNotPostReflow));
+  nsTextFrame::TrimmedOffsets trimmed = mFrame->GetTrimmedOffsets(
+      mFrag, (aPostReflow ? nsTextFrame::TrimmedOffsetFlags::kDefaultTrimFlags
+                          : nsTextFrame::TrimmedOffsetFlags::kNotPostReflow));
   end.AdvanceOriginal(trimmed.mLength);
   gfxSkipCharsIterator realEnd(end);
 
@@ -7828,8 +7824,8 @@ nsIFrame::FrameSearchResult nsTextFrame::PeekOffsetCharacter(
   gfxSkipCharsIterator iter = EnsureTextRun(nsTextFrame::eInflated);
   if (!mTextRun) return CONTINUE_EMPTY;
 
-  TrimmedOffsets trimmed = GetTrimmedOffsets(mContent->GetText(),
-                                             TrimmedOffsetFlags::kNoTrimAfter);
+  TrimmedOffsets trimmed =
+      GetTrimmedOffsets(mContent->GetText(), TrimmedOffsetFlags::kNoTrimAfter);
 
   // A negative offset means "end of frame".
   int32_t startOffset =
@@ -7963,10 +7959,10 @@ ClusterIterator::ClusterIterator(nsTextFrame* aTextFrame, int32_t aPosition,
   mIterator.SetOriginalOffset(aPosition);
 
   mFrag = aTextFrame->GetContent()->GetText();
-  mTrimmed = aTextFrame->GetTrimmedOffsets(mFrag,
-      aTrimSpaces ? nsTextFrame::TrimmedOffsetFlags::kDefaultTrimFlags :
-                    nsTextFrame::TrimmedOffsetFlags::kNoTrimAfter |
-                        nsTextFrame::TrimmedOffsetFlags::kNoTrimBefore);
+  mTrimmed = aTextFrame->GetTrimmedOffsets(
+      mFrag, aTrimSpaces ? nsTextFrame::TrimmedOffsetFlags::kDefaultTrimFlags
+                         : nsTextFrame::TrimmedOffsetFlags::kNoTrimAfter |
+                               nsTextFrame::TrimmedOffsetFlags::kNoTrimBefore);
 
   int32_t textOffset = aTextFrame->GetContentOffset();
   int32_t textLen = aTextFrame->GetContentLength();
@@ -9778,10 +9774,9 @@ nsIFrame::RenderedText nsTextFrame::GetRenderedText(
     }
 
     // Skip to the start of the text run, past ignored chars at start of line
-    TrimmedOffsets trimmedOffsets =
-        textFrame->GetTrimmedOffsets(textFrag,
-            (trimAfter ? TrimmedOffsetFlags::kDefaultTrimFlags :
-                         TrimmedOffsetFlags::kNoTrimAfter));
+    TrimmedOffsets trimmedOffsets = textFrame->GetTrimmedOffsets(
+        textFrag, (trimAfter ? TrimmedOffsetFlags::kDefaultTrimFlags
+                             : TrimmedOffsetFlags::kNoTrimAfter));
     bool trimmedSignificantNewline =
         trimmedOffsets.GetEnd() < GetContentEnd() &&
         HasSignificantTerminalNewline();
@@ -10121,7 +10116,7 @@ bool nsTextFrame::HasNonSuppressedText() {
     return false;
   }
 
-  TrimmedOffsets offsets = GetTrimmedOffsets(mContent->GetText(),
-                                             TrimmedOffsetFlags::kNoTrimAfter);
+  TrimmedOffsets offsets =
+      GetTrimmedOffsets(mContent->GetText(), TrimmedOffsetFlags::kNoTrimAfter);
   return offsets.mLength != 0;
 }
