@@ -4470,6 +4470,10 @@ void ScrollFrameHelper::ScrollToRestoredPosition() {
       if (!weakFrame.IsAlive()) {
         return;
       }
+      if (mIsRoot && mOuter->PresContext()->IsRootContentDocument()) {
+        mOuter->PresShell()->SetPendingVisualScrollUpdate(
+            scrollToPos, FrameMetrics::eRestore);
+      }
       if (state == LoadingState::Loading || NS_SUBTREE_DIRTY(mOuter)) {
         // If we're trying to do a history scroll restore, then we want to
         // keep trying this until we succeed, because the page can be loading
