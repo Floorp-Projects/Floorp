@@ -57,7 +57,7 @@ void DriverCrashGuard::InitializeIfNeeded() {
   Initialize();
 }
 
-static inline bool AreCrashGuardsEnabled() {
+static inline bool AreCrashGuardsEnabled(CrashGuardType aType) {
   // Crash guard isn't supported in the GPU process since the entire
   // process is basically a crash guard.
   if (XRE_IsGPUProcess()) {
@@ -68,18 +68,18 @@ static inline bool AreCrashGuardsEnabled() {
   // channel is for development and having graphics features perma-disabled
   // is rather annoying.  Unless the user forces is with an environment
   // variable, which comes in handy for testing.
-  return gfxEnv::ForceCrashGuardNightly();
-#else
-  // Check to see if all guards have been disabled through the environment.
-  if (gfxEnv::DisableCrashGuard()) {
-    return false;
+  // We handle the WMFVPXVideo crash guard differently to the other and always
+  // enable it as it completely breaks playback and there's no way around it.
+  if (aType != CrashGuardType::WMFVPXVideo) {
+    return gfxEnv::ForceCrashGuardNightly();
   }
-  return true;
 #endif
+  // Check to see if all guards have been disabled through the environment.
+  return !gfxEnv::DisableCrashGuard();
 }
 
 void DriverCrashGuard::Initialize() {
-  if (!AreCrashGuardsEnabled()) {
+  if (!AreCrashGuardsEnabled(mType)) {
     return;
   }
 
@@ -353,14 +353,14 @@ void DriverCrashGuard::FlushPreferences() {
 
 void DriverCrashGuard::ForEachActiveCrashGuard(
     const CrashGuardCallback& aCallback) {
-  if (!AreCrashGuardsEnabled()) {
-    // Even if guards look active (via prefs), they can be ignored if globally
-    // disabled.
-    return;
-  }
-
   for (size_t i = 0; i < NUM_CRASH_GUARD_TYPES; i++) {
     CrashGuardType type = static_cast<CrashGuardType>(i);
+
+    if (!AreCrashGuardsEnabled(type)) {
+      // Even if guards look active (via prefs), they can be ignored if globally
+      // disabled.
+      continue;
+    }
 
     nsCString prefName;
     BuildCrashGuardPrefName(type, prefName);
