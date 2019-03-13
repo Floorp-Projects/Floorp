@@ -2,9 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{DeviceIntPoint, DeviceIntRect, DeviceIntSize, DeviceSize, DeviceIntSideOffsets};
-use api::{DevicePixelScale, ImageDescriptor, ImageFormat, LayoutPoint};
-use api::{LineStyle, LineOrientation, LayoutSize, DirtyRect, ClipMode};
+use api::{ImageDescriptor, ImageFormat};
+use api::{LineStyle, LineOrientation, ClipMode, DirtyRect};
+use api::units::*;
 #[cfg(feature = "pathfinder")]
 use api::FontRenderMode;
 use border::BorderSegmentCacheKey;
@@ -34,8 +34,7 @@ use std::{ops, mem, usize, f32, i32, u32};
 use texture_cache::{TextureCache, TextureCacheHandle, Eviction};
 use tiling::{RenderPass, RenderTargetIndex};
 use tiling::{RenderTargetKind};
-#[cfg(feature = "pathfinder")]
-use webrender_api::DevicePixel;
+
 
 const RENDER_TASK_SIZE_SANITY_CHECK: i32 = 16000;
 const FLOATS_PER_RENDER_TASK_INFO: usize = 8;

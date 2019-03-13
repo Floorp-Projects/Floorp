@@ -22,7 +22,6 @@ no_static_freetype = []
 webrender_build = { version = "0.0.1", path = "../webrender_build" }
 
 [dependencies]
-app_units = "0.7"
 base64 = { optional = true, version = "0.10" }
 bincode = "1.0"
 bitflags = "1.0"

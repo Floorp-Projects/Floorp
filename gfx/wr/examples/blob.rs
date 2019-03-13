@@ -18,6 +18,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use webrender::api::{self, DisplayListBuilder, DocumentId, PipelineId, RenderApi, Transaction};
 use webrender::api::{ColorF, SpaceAndClipInfo};
+use webrender::api::units::*;
 use webrender::euclid::size2;
 
 // This example shows how to implement a very basic BlobImageHandler that can only render
@@ -47,7 +48,7 @@ fn deserialize_blob(blob: &[u8]) -> Result<ImageRenderingCommands, ()> {
 fn render_blob(
     commands: Arc<ImageRenderingCommands>,
     descriptor: &api::BlobImageDescriptor,
-    tile: Option<api::TileOffset>,
+    tile: Option<TileOffset>,
 ) -> api::BlobImageResult {
     let color = *commands;
 
@@ -140,7 +141,7 @@ impl api::BlobImageHandler for CheckerboardRenderer {
             .insert(key, Arc::new(deserialize_blob(&cmds[..]).unwrap()));
     }
 
-    fn update(&mut self, key: api::BlobImageKey, cmds: Arc<api::BlobImageData>, _dirty_rect: &api::BlobDirtyRect) {
+    fn update(&mut self, key: api::BlobImageKey, cmds: Arc<api::BlobImageData>, _dirty_rect: &BlobDirtyRect) {
         // Here, updating is just replacing the current version of the commands with
         // the new one (no incremental updates).
         self.image_cmds
@@ -199,7 +200,7 @@ impl Example for App {
         api: &RenderApi,
         builder: &mut DisplayListBuilder,
         txn: &mut Transaction,
-        _framebuffer_size: api::FramebufferIntSize,
+        _framebuffer_size: FramebufferIntSize,
         pipeline_id: PipelineId,
         _document_id: DocumentId,
     ) {
@@ -219,7 +220,7 @@ impl Example for App {
             None,
         );
 
-        let bounds = api::LayoutRect::new(api::LayoutPoint::zero(), builder.content_size());
+        let bounds = LayoutRect::new(LayoutPoint::zero(), builder.content_size());
         let space_and_clip = SpaceAndClipInfo::root_scroll(pipeline_id);
 
         builder.push_simple_stacking_context(
@@ -230,8 +231,8 @@ impl Example for App {
         builder.push_image(
             &api::LayoutPrimitiveInfo::new((30, 30).by(500, 500)),
             &space_and_clip,
-            api::LayoutSize::new(500.0, 500.0),
-            api::LayoutSize::new(0.0, 0.0),
+            LayoutSize::new(500.0, 500.0),
+            LayoutSize::new(0.0, 0.0),
             api::ImageRendering::Auto,
             api::AlphaType::PremultipliedAlpha,
             blob_img1.as_image(),
@@ -241,8 +242,8 @@ impl Example for App {
         builder.push_image(
             &api::LayoutPrimitiveInfo::new((600, 600).by(200, 200)),
             &space_and_clip,
-            api::LayoutSize::new(200.0, 200.0),
-            api::LayoutSize::new(0.0, 0.0),
+            LayoutSize::new(200.0, 200.0),
+            LayoutSize::new(0.0, 0.0),
             api::ImageRendering::Auto,
             api::AlphaType::PremultipliedAlpha,
             blob_img2.as_image(),
