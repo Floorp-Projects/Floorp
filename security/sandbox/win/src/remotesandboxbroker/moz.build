@@ -1,0 +1,35 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+SOURCES += [
+    'remoteSandboxBroker.cpp',
+    'RemoteSandboxBrokerChild.cpp',
+    'RemoteSandboxBrokerParent.cpp',
+    'RemoteSandboxBrokerProcessChild.cpp',
+    'RemoteSandboxBrokerProcessParent.cpp',
+]
+
+EXPORTS.mozilla += [
+    'remoteSandboxBroker.h',
+    'RemoteSandboxBrokerChild.h',
+    'RemoteSandboxBrokerParent.h',
+    'RemoteSandboxBrokerProcessChild.h',
+    'RemoteSandboxBrokerProcessParent.h',
+]
+
+for var in ('UNICODE', '_UNICODE'):
+    DEFINES[var] = True
+
+FINAL_LIBRARY = 'xul'
+
+if CONFIG['CC_TYPE'] == 'clang-cl':
+    AllowCompilerWarnings()  # workaround for bug 1090497
+
+IPDL_SOURCES += [
+  'PRemoteSandboxBroker.ipdl'
+]
+
+include('/ipc/chromium/chromium-config.mozbuild')

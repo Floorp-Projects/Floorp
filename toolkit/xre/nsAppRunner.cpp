@@ -631,9 +631,10 @@ SYNC_ENUMS(GPU, GPU)
 SYNC_ENUMS(VR, VR)
 SYNC_ENUMS(RDD, RDD)
 SYNC_ENUMS(SOCKET, Socket)
+SYNC_ENUMS(SANDBOX_BROKER, RemoteSandboxBroker)
 
 // .. and ensure that that is all of them:
-static_assert(GeckoProcessType_Socket + 1 == GeckoProcessType_End,
+static_assert(GeckoProcessType_RemoteSandboxBroker + 1 == GeckoProcessType_End,
               "Did not find the final GeckoProcessType");
 
 NS_IMETHODIMP
@@ -1535,11 +1536,11 @@ static const char kShieldPrefName[] = "app.shield.optoutstudies.enabled";
 static void OnLauncherPrefChanged(const char* aPref, void* aData) {
   const bool kLauncherPrefDefaultValue =
 #    if defined(NIGHTLY_BUILD) || (MOZ_UPDATE_CHANNEL == beta)
-    true
+      true
 #    else
-    false
+      false
 #    endif  // defined(NIGHTLY_BUILD) || (MOZ_UPDATE_CHANNEL == beta)
-    ;
+      ;
   bool prefVal = Preferences::GetBool(kShieldPrefName, false) &&
                  Preferences::GetBool(PREF_WIN_LAUNCHER_PROCESS_ENABLED,
                                       kLauncherPrefDefaultValue);

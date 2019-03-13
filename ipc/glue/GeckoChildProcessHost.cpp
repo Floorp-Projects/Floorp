@@ -56,6 +56,9 @@
 #    include "mozilla/Preferences.h"
 #    include "mozilla/sandboxing/sandboxLogging.h"
 #    include "WinUtils.h"
+#    if defined(_ARM64_)
+#      include "mozilla/remoteSandboxBroker.h"
+#    endif
 #  endif
 #endif
 
@@ -103,7 +106,6 @@ GeckoChildProcessHost::GeckoChildProcessHost(GeckoProcessType aProcessType,
       mGroupId(u"-"),
 #endif
 #if defined(MOZ_SANDBOX) && defined(XP_WIN)
-      mSandboxBroker(new SandboxBroker()),
       mEnableSandboxLogging(false),
       mSandboxLevel(0),
 #endif
@@ -151,6 +153,12 @@ GeckoChildProcessHost::~GeckoChildProcessHost()
         mChildProcessHandle);
 #endif
   }
+#if defined(MOZ_SANDBOX) && defined(XP_WIN)
+  if (mSandboxBroker) {
+    mSandboxBroker->Shutdown();
+    mSandboxBroker = nullptr;
+  }
+#endif
 }
 
 void GeckoChildProcessHost::Destroy() {
@@ -1020,19 +1028,22 @@ bool GeckoChildProcessHost::PerformAsyncLaunch(
   FilePath exePath;
   BinaryPathType pathType = GetPathToBinary(exePath, mProcessType);
 
-#  if defined(MOZ_SANDBOX) || (defined(_ARM64_) && defined(XP_WIN))
+#  if defined(MOZ_SANDBOX) || defined(_ARM64_)
   const bool isGMP = mProcessType == GeckoProcessType_GMPlugin;
   const bool isWidevine = isGMP && Contains(aExtraOpts, "gmp-widevinecdm");
-#    if defined(_ARM64_) && defined(XP_WIN)
+#    if defined(_ARM64_)
   const bool isClearKey = isGMP && Contains(aExtraOpts, "gmp-clearkey");
-  if (isGMP && (isClearKey || isWidevine)) {
-    // On Windows on ARM64 for ClearKey and Widevine, we want to run the
-    // x86 plugin-container.exe in the "i686" subdirectory, instead of the
-    // aarch64 plugin-container.exe. So insert "i686" into the exePath.
+  const bool isSandboxBroker =
+      mProcessType == GeckoProcessType_RemoteSandboxBroker;
+  if (isClearKey || isWidevine || isSandboxBroker) {
+    // On Windows on ARM64 for ClearKey and Widevine, and for the sandbox
+    // launcher process, we want to run the x86 plugin-container.exe in
+    // the "i686" subdirectory, instead of the aarch64 plugin-container.exe.
+    // So insert "i686" into the exePath.
     exePath = exePath.DirName().AppendASCII("i686").Append(exePath.BaseName());
   }
-#    endif
-#  endif  // defined(MOZ_SANDBOX) || (defined(_ARM64_) && defined(XP_WIN))
+#    endif  // if defined(_ARM64_)
+#  endif    // defined(MOZ_SANDBOX) || defined(_ARM64_)
 
   CommandLine cmdLine(exePath.ToWStringHack());
 
@@ -1064,6 +1075,13 @@ bool GeckoChildProcessHost::PerformAsyncLaunch(
   }
 
 #  if defined(MOZ_SANDBOX)
+#    if defined(_ARM64_)
+  if (isClearKey || isWidevine)
+    mSandboxBroker = new RemoteSandboxBroker();
+  else
+#    endif  // if defined(_ARM64_)
+    mSandboxBroker = new SandboxBroker();
+
   bool shouldSandboxCurrentProcess = false;
 
   // XXX: Bug 1124167: We should get rid of the process specific logic for
@@ -1135,6 +1153,9 @@ bool GeckoChildProcessHost::PerformAsyncLaunch(
       break;
     case GeckoProcessType_Socket:
       // TODO - setup sandboxing for the socket process.
+      break;
+    case GeckoProcessType_RemoteSandboxBroker:
+      // We don't sandbox the sandbox launcher...
       break;
     case GeckoProcessType_Default:
     default:
@@ -1208,7 +1229,7 @@ bool GeckoChildProcessHost::PerformAsyncLaunch(
         // No handle duplication necessary.
         break;
       default:
-        if (!mSandboxBroker->AddTargetPeer(process)) {
+        if (!SandboxBroker::AddTargetPeer(process)) {
           NS_WARNING("Failed to add child process as target peer.");
         }
         break;
