@@ -54,7 +54,7 @@ class AwesomeBarUIView(
             view.addProviders(ClipboardSuggestionProvider(
                 this,
                 loadUrlUseCase,
-                getDrawable(R.drawable.ic_link).toBitmap(),
+                getDrawable(R.drawable.ic_link)!!.toBitmap(),
                 getString(R.string.awesomebar_clipboard_title)
                 )
             )
