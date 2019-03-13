@@ -2438,9 +2438,8 @@ bool nsTextEditorState::SetValue(const nsAString& aValue,
         nsCOMPtr<Element> element = do_QueryInterface(textControlElement);
         MOZ_ASSERT(element);
         MOZ_ASSERT(!newValue.IsVoid());
-        RefPtr<TextEditor> textEditor;  // See bug 1506439
         DebugOnly<nsresult> rvIgnored = nsContentUtils::DispatchInputEvent(
-            element, EditorInputType::eInsertReplacementText, textEditor,
+            element, EditorInputType::eInsertReplacementText, nullptr,
             nsContentUtils::InputEventOptions(newValue));
         NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
                              "Failed to dispatch input event");

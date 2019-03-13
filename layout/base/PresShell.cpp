@@ -6525,11 +6525,9 @@ nsresult PresShell::EventHandler::HandleEvent(nsIFrame* aFrame,
   if (!aFrame) {
     if (!NS_EVENT_NEEDS_FRAME(aGUIEvent)) {
       mPresShell->mCurrentEventFrame = nullptr;
-      nsCOMPtr<nsIContent> overrideClickTarget;  // Required due to bug  1506439
       // XXX Shouldn't we create AutoCurrentEventInfoSetter instance for this
       //     call even if we set the target to nullptr.
-      return HandleEventWithCurrentEventInfo(aGUIEvent, aEventStatus, true,
-                                             overrideClickTarget);
+      return HandleEventWithCurrentEventInfo(aGUIEvent, aEventStatus, true, nullptr);
     }
 
     if (aGUIEvent->HasKeyEventMessage()) {
@@ -7452,9 +7450,7 @@ nsresult PresShell::EventHandler::HandleEventAtFocusedContent(
     return RetargetEventToParent(aGUIEvent, aEventStatus);
   }
 
-  nsCOMPtr<nsIContent> overrideClickTarget;  // Required due to bug  1506439
-  nsresult rv = HandleEventWithCurrentEventInfo(aGUIEvent, aEventStatus, true,
-                                                overrideClickTarget);
+  nsresult rv = HandleEventWithCurrentEventInfo(aGUIEvent, aEventStatus, true, nullptr);
 
 #ifdef DEBUG
   mPresShell->ShowEventTargetDebug();
@@ -7558,9 +7554,7 @@ nsresult PresShell::EventHandler::HandleEventWithFrameForPresShell(
 
   nsresult rv = NS_OK;
   if (mPresShell->GetCurrentEventFrame()) {
-    nsCOMPtr<nsIContent> overrideClickTarget;  // Required due to bug  1506439
-    rv = HandleEventWithCurrentEventInfo(aGUIEvent, aEventStatus, true,
-                                         overrideClickTarget);
+    rv = HandleEventWithCurrentEventInfo(aGUIEvent, aEventStatus, true, nullptr);
   }
 
 #ifdef DEBUG
