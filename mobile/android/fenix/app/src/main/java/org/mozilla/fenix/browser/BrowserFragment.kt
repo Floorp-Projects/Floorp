@@ -6,6 +6,7 @@ package org.mozilla.fenix.browser
 
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.view.Gravity
 import android.view.LayoutInflater
@@ -37,6 +38,7 @@ import mozilla.components.support.ktx.android.view.exitImmersiveModeIfNeeded
 import org.mozilla.fenix.BrowsingModeManager
 import org.mozilla.fenix.DefaultThemeManager
 import org.mozilla.fenix.HomeActivity
+import org.mozilla.fenix.IntentReceiverActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FindInPageIntegration
 import org.mozilla.fenix.components.toolbar.SearchAction
@@ -45,6 +47,7 @@ import org.mozilla.fenix.components.toolbar.ToolbarComponent
 import org.mozilla.fenix.components.toolbar.ToolbarIntegration
 import org.mozilla.fenix.components.toolbar.ToolbarMenu
 import org.mozilla.fenix.components.toolbar.ToolbarUIView
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.share
 import org.mozilla.fenix.mvi.ActionBusFactory
@@ -288,6 +291,13 @@ class BrowserFragment : Fragment(), BackHandler {
                     .actionBrowserFragmentToSearchFragment(null)
                 Navigation.findNavController(view!!).navigate(directions)
                 (activity as HomeActivity).browsingModeManager.mode = BrowsingModeManager.Mode.Normal
+            }
+            ToolbarMenu.Item.OpenInFenix -> {
+                val intent = Intent(context, IntentReceiverActivity::class.java)
+                val session = context!!.components.core.sessionManager.findSessionById(sessionId!!)
+                intent.action = Intent.ACTION_VIEW
+                intent.data = Uri.parse(session?.url)
+                startActivity(intent)
             }
         }
     }

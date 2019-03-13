@@ -10,11 +10,15 @@ import mozilla.components.browser.menu.item.BrowserMenuDivider
 import mozilla.components.browser.menu.item.BrowserMenuImageText
 import mozilla.components.browser.menu.item.BrowserMenuItemToolbar
 import mozilla.components.browser.menu.item.BrowserMenuSwitch
+import mozilla.components.browser.menu.item.SimpleBrowserMenuItem
+import mozilla.components.browser.session.runWithSession
 import org.mozilla.fenix.DefaultThemeManager
 import org.mozilla.fenix.R
+import org.mozilla.fenix.ext.components
 
 class ToolbarMenu(
     private val context: Context,
+    private val sessionId: String?,
     private val requestDesktopStateProvider: () -> Boolean = { false },
     private val onItemTapped: (Item) -> Unit = {}
 ) {
@@ -31,6 +35,7 @@ class ToolbarMenu(
         object Forward : Item()
         object Reload : Item()
         object ReportIssue : Item()
+        object OpenInFenix : Item()
     }
 
     val menuBuilder by lazy { BrowserMenuBuilder(menuItems) }
@@ -63,82 +68,124 @@ class ToolbarMenu(
         BrowserMenuItemToolbar(listOf(back, forward, refresh))
     }
 
+    private val isCustomTab by lazy {
+        context.components.core.sessionManager.runWithSession(sessionId) {
+            it.isCustomTabSession()
+        }
+    }
+
     private val menuItems by lazy {
-        listOf(
-            BrowserMenuImageText(
-                context.getString(R.string.browser_menu_help),
-                R.drawable.ic_help,
-                DefaultThemeManager.resolveAttribute(R.attr.browserToolbarMenuIcons, context)
-            ) {
-                onItemTapped.invoke(Item.Help)
-            },
+        if (isCustomTab) {
+            listOf(
+                SimpleBrowserMenuItem(context.getString(R.string.browser_menu_powered_by),
+                    CAPTION_TEXT_SIZE,
+                    DefaultThemeManager.resolveAttribute(R.attr.browserToolbarMenuIcons, context)),
+                BrowserMenuDivider(),
+                SimpleBrowserMenuItem(context.getString(R.string.browser_menu_open_in_fenix),
+                    textColorResource = DefaultThemeManager.resolveAttribute(R.attr.browserToolbarMenuIcons, context)) {
+                    onItemTapped.invoke(Item.OpenInFenix)
+                },
+                BrowserMenuImageText(
+                    context.getString(R.string.browser_menu_find_in_page),
+                    R.drawable.mozac_ic_search,
+                    DefaultThemeManager.resolveAttribute(R.attr.browserToolbarMenuIcons, context)
+                ) {
+                    onItemTapped.invoke(Item.FindInPage)
+                },
+                BrowserMenuSwitch(context.getString(R.string.browser_menu_desktop_site),
+                    requestDesktopStateProvider, { checked ->
+                        onItemTapped.invoke(Item.RequestDesktop(checked))
+                    }),
+                BrowserMenuImageText(
+                    context.getString(R.string.browser_menu_share),
+                    R.drawable.mozac_ic_share,
+                    DefaultThemeManager.resolveAttribute(R.attr.browserToolbarMenuIcons, context)
+                ) {
+                    onItemTapped.invoke(Item.Share)
+                },
+                menuToolbar
+            )
+        } else {
+            listOf(
+                BrowserMenuImageText(
+                    context.getString(R.string.browser_menu_help),
+                    R.drawable.ic_help,
+                    DefaultThemeManager.resolveAttribute(R.attr.browserToolbarMenuIcons, context)
+                ) {
+                    onItemTapped.invoke(Item.Help)
+                },
 
-            BrowserMenuImageText(
-                context.getString(R.string.browser_menu_settings),
-                R.drawable.ic_settings,
-                DefaultThemeManager.resolveAttribute(R.attr.browserToolbarMenuIcons, context)
-            ) {
-                onItemTapped.invoke(Item.Settings)
-            },
+                BrowserMenuImageText(
+                    context.getString(R.string.browser_menu_settings),
+                    R.drawable.ic_settings,
+                    DefaultThemeManager.resolveAttribute(R.attr.browserToolbarMenuIcons, context)
+                ) {
+                    onItemTapped.invoke(Item.Settings)
+                },
 
-            BrowserMenuImageText(
-                context.getString(R.string.browser_menu_library),
-                R.drawable.ic_library,
-                DefaultThemeManager.resolveAttribute(R.attr.browserToolbarMenuIcons, context)
-            ) {
-                onItemTapped.invoke(Item.Library)
-            },
+                BrowserMenuImageText(
+                    context.getString(R.string.browser_menu_library),
+                    R.drawable.ic_library,
+                    DefaultThemeManager.resolveAttribute(R.attr.browserToolbarMenuIcons, context)
+                ) {
+                    onItemTapped.invoke(Item.Library)
+                },
 
-            BrowserMenuDivider(),
+                BrowserMenuDivider(),
 
-            BrowserMenuSwitch(context.getString(R.string.browser_menu_desktop_site),
-                requestDesktopStateProvider, { checked ->
-                    onItemTapped.invoke(Item.RequestDesktop(checked))
-            }),
+                BrowserMenuSwitch(context.getString(R.string.browser_menu_desktop_site),
+                    requestDesktopStateProvider, { checked ->
+                        onItemTapped.invoke(Item.RequestDesktop(checked))
+                    }),
 
-            BrowserMenuImageText(
-                context.getString(R.string.browser_menu_find_in_page),
-                R.drawable.mozac_ic_search,
-                DefaultThemeManager.resolveAttribute(R.attr.browserToolbarMenuIcons, context)
-            ) {
-                onItemTapped.invoke(Item.FindInPage)
-            },
+                BrowserMenuImageText(
+                    context.getString(R.string.browser_menu_find_in_page),
+                    R.drawable.mozac_ic_search,
+                    DefaultThemeManager.resolveAttribute(R.attr.browserToolbarMenuIcons, context)
+                ) {
+                    onItemTapped.invoke(Item.FindInPage)
+                },
 
-            BrowserMenuImageText(
-                context.getString(R.string.browser_menu_private_tab),
-                R.drawable.ic_private_browsing,
-                DefaultThemeManager.resolveAttribute(R.attr.browserToolbarMenuIcons, context)
-            ) {
-                onItemTapped.invoke(Item.NewPrivateTab)
-            },
+                BrowserMenuImageText(
+                    context.getString(R.string.browser_menu_private_tab),
+                    R.drawable.ic_private_browsing,
+                    DefaultThemeManager.resolveAttribute(R.attr.browserToolbarMenuIcons, context)
+                ) {
+                    onItemTapped.invoke(Item.NewPrivateTab)
+                },
 
-            BrowserMenuImageText(
-                context.getString(R.string.browser_menu_new_tab),
-                R.drawable.ic_new,
-                DefaultThemeManager.resolveAttribute(R.attr.browserToolbarMenuIcons, context)
-            ) {
-                onItemTapped.invoke(Item.NewTab)
-            },
+                BrowserMenuImageText(
+                    context.getString(R.string.browser_menu_new_tab),
+                    R.drawable.ic_new,
+                    DefaultThemeManager.resolveAttribute(R.attr.browserToolbarMenuIcons, context)
+                ) {
+                    onItemTapped.invoke(Item.NewTab)
+                },
 
-            BrowserMenuImageText(
-                context.getString(R.string.browser_menu_share),
-                R.drawable.mozac_ic_share,
-                DefaultThemeManager.resolveAttribute(R.attr.browserToolbarMenuIcons, context)
-            ) {
-                onItemTapped.invoke(Item.Share)
-            },
+                BrowserMenuImageText(
+                    context.getString(R.string.browser_menu_share),
+                    R.drawable.mozac_ic_share,
+                    DefaultThemeManager.resolveAttribute(R.attr.browserToolbarMenuIcons, context)
+                ) {
+                    onItemTapped.invoke(Item.Share)
+                },
 
-            BrowserMenuImageText(
-                context.getString(R.string.browser_menu_report_issue),
-                R.drawable.ic_report_issues,
-                DefaultThemeManager.resolveAttribute(R.attr.browserToolbarMenuIcons, context)
-            ) {
-                onItemTapped.invoke(Item.ReportIssue)
-            },
+                BrowserMenuImageText(
+                    context.getString(R.string.browser_menu_report_issue),
+                    R.drawable.ic_report_issues,
+                    DefaultThemeManager.resolveAttribute(R.attr.browserToolbarMenuIcons, context)
+                ) {
+                    onItemTapped.invoke(Item.ReportIssue)
+                },
 
-            BrowserMenuDivider(),
+                BrowserMenuDivider(),
 
-            menuToolbar
-        )
+                menuToolbar
+            )
+        }
+    }
+
+    companion object {
+        const val CAPTION_TEXT_SIZE = 12f
     }
 }
