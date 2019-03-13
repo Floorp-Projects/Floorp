@@ -81,6 +81,7 @@ permalink: /changelog/
 
 * **service-pocket**
   * Access the list of global video recommendations via `PocketEndpoint.getGlobalVideoRecommendations`.
+  * ⚠️ **This is a breaking API change!**: `PocketGlobalVideoRecommendation.id` is now a Long instead of an Int
 
 * **concept-fetch**
   * Added common HTTP header constants in `Headers.Common`. This collection is incomplete: add your own!

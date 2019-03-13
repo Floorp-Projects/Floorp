@@ -24,7 +24,7 @@ package mozilla.components.service.pocket.data
 // we mark the constructors internal. If a consumer is required to persist this data, we should consider providing a
 // persistence solution.
 data class PocketGlobalVideoRecommendation internal constructor(
-    val id: Int,
+    val id: Long,
     val url: String,
     val tvURL: String,
     val title: String,

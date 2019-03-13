@@ -51,7 +51,7 @@ internal class PocketJSONParser {
         }
 
         PocketGlobalVideoRecommendation(
-            id = jsonObj.getInt("id"),
+            id = jsonObj.getLong("id"),
             url = jsonObj.getString("url"),
             tvURL = jsonObj.getString("tv_url"),
             title = jsonObj.getString("title"),
