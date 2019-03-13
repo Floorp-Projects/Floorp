@@ -1,0 +1,17 @@
+<script>
+function eh1() {
+  d.track.addCue(new VTTCue(0.01, 0.69, "Y"))
+}
+function eh2() {
+  a.currentTime = 0.43
+  c.addEventListener("DOMNodeRemoved", eh1)
+  a.append(b)
+  a.appendChild(c)
+}
+</script>
+<canvas id="c">
+<q id="b">
+</canvas>
+<audio id="a" src="data:audio/mpeg;base64,/+M4wAAAAAAAAAAAAEluZm8AAAAPAAAAAwAAAbAAqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV////////////////////////////////////////////AAAAAExhdmM1Ny4zOAAAAAAAAAAAAAAAACQAAAAAAAAAAAGwU/hwzwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA/+MYxAAMkI7huAhMDGQAndv+H5jfIAPmPzGBGeTAZNN7yjsnqd6Fny79M+o4UifnMu/TlDiIP5Q5l9Z/Kdv6VY0gE3JIAAwE/+MYxAgMYJr6WBhGIivjMy/CEK+zM39VVXjMArKgq6DQdrBV0THlqBp0ShrBp8qGsTPw7lXZFVZZY6GytZZYGChgYIGZaiJI/+MYxBEMUJnAABmMYUigMQLIE1yVpphA1UQMRVVVV000iVu000VVVX///6aaVUxBTUUzLjk5LjVVVVVVVVVVVVVVVVVVVVVV">
+<track id="d"></track>
+<iframe onload="eh2()">
