@@ -22,9 +22,9 @@ object CustomDomains {
      * @return list of custom domains
      */
     fun load(context: Context): List<String> =
-            preferences(context).getString(KEY_DOMAINS, "")
-                .split(SEPARATOR)
-                .filter { !it.isEmpty() }
+        (preferences(context).getString(KEY_DOMAINS, null) ?: "")
+            .split(SEPARATOR)
+            .filter { !it.isEmpty() }
 
     /**
      * Saves the provided domains to preferences.
