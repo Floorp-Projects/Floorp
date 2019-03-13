@@ -267,7 +267,9 @@ html|input.urlbar-input {
 %include ../shared/identity-block/identity-block.inc.css
 
 #identity-box:not(:active):-moz-focusring {
+  box-shadow: var(--focus-ring-box-shadow);
   border-inline-end-style: none;
+  padding-inline-end: 5px;
 }
 
 /* ::::: URL Bar Zoom Reset Button ::::: */
