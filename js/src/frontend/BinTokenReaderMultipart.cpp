@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "frontend/BinASTTokenReaderMultipart.h"
+#include "frontend/BinTokenReaderMultipart.h"
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Casting.h"
@@ -14,8 +14,8 @@
 
 #include <utility>
 
-#include "frontend/BinAST-macros.h"
-#include "frontend/BinASTRuntimeSupport.h"
+#include "frontend/BinSource-macros.h"
+#include "frontend/BinSourceRuntimeSupport.h"
 #include "frontend/BytecodeCompiler.h" // IsIdentifier
 
 #include "js/Result.h"
@@ -40,34 +40,34 @@ const char COMPRESSION_IDENTITY[] = "identity;";
 // single file.
 const uint32_t MAX_NUMBER_OF_STRINGS = 32768;
 
-using AutoList = BinASTTokenReaderMultipart::AutoList;
-using AutoTaggedTuple = BinASTTokenReaderMultipart::AutoTaggedTuple;
+using AutoList = BinTokenReaderMultipart::AutoList;
+using AutoTaggedTuple = BinTokenReaderMultipart::AutoTaggedTuple;
 using CharSlice = BinaryASTSupport::CharSlice;
-using Chars = BinASTTokenReaderMultipart::Chars;
+using Chars = BinTokenReaderMultipart::Chars;
 
-BinASTTokenReaderMultipart::BinASTTokenReaderMultipart(JSContext* cx,
-                                                       ErrorReporter* er,
-                                                       const uint8_t* start,
-                                                       const size_t length)
-    : BinASTTokenReaderBase(cx, er, start, length),
+BinTokenReaderMultipart::BinTokenReaderMultipart(JSContext* cx,
+                                                 ErrorReporter* er,
+                                                 const uint8_t* start,
+                                                 const size_t length)
+    : BinTokenReaderBase(cx, er, start, length),
       metadata_(nullptr),
       posBeforeTree_(nullptr) {
   MOZ_ASSERT(er);
 }
 
-BinASTTokenReaderMultipart::~BinASTTokenReaderMultipart() {
+BinTokenReaderMultipart::~BinTokenReaderMultipart() {
   if (metadata_ && metadataOwned_ == MetadataOwnership::Owned) {
     UniqueBinASTSourceMetadataPtr ptr(metadata_);
   }
 }
 
-BinASTSourceMetadata* BinASTTokenReaderMultipart::takeMetadata() {
+BinASTSourceMetadata* BinTokenReaderMultipart::takeMetadata() {
   MOZ_ASSERT(metadataOwned_ == MetadataOwnership::Owned);
   metadataOwned_ = MetadataOwnership::Unowned;
   return metadata_;
 }
 
-JS::Result<Ok> BinASTTokenReaderMultipart::initFromScriptSource(
+JS::Result<Ok> BinTokenReaderMultipart::initFromScriptSource(
     ScriptSource* scriptSource) {
   metadata_ = scriptSource->binASTSourceMetadata();
   metadataOwned_ = MetadataOwnership::Unowned;
@@ -75,7 +75,7 @@ JS::Result<Ok> BinASTTokenReaderMultipart::initFromScriptSource(
   return Ok();
 }
 
-JS::Result<Ok> BinASTTokenReaderMultipart::readHeader() {
+JS::Result<Ok> BinTokenReaderMultipart::readHeader() {
   // Check that we don't call this function twice.
   MOZ_ASSERT(!posBeforeTree_);
 
@@ -103,13 +103,13 @@ JS::Result<Ok> BinASTTokenReaderMultipart::readHeader() {
   }
 
   BINJS_MOZ_TRY_DECL(grammarNumberOfEntries, readInternalUint32());
-  if (grammarNumberOfEntries > BINASTKIND_LIMIT) {  // Sanity check.
+  if (grammarNumberOfEntries > BINKIND_LIMIT) {  // Sanity check.
     return raiseError("Invalid number of entries in grammar table");
   }
 
-  // This table maps BinASTKind index -> BinASTKind.
+  // This table maps BinKind index -> BinKind.
   // Initialize and populate.
-  Vector<BinASTKind> grammarTable_(cx_);
+  Vector<BinKind> grammarTable_(cx_);
   if (!grammarTable_.reserve(grammarNumberOfEntries)) {
     return raiseOOM();
   }
@@ -125,7 +125,7 @@ JS::Result<Ok> BinASTTokenReaderMultipart::readHeader() {
     CharSlice name((const char*)current_, byteLen);
     current_ += byteLen;
 
-    BINJS_MOZ_TRY_DECL(kind, cx_->runtime()->binast().binASTKind(cx_, name));
+    BINJS_MOZ_TRY_DECL(kind, cx_->runtime()->binast().binKind(cx_, name));
     if (!kind) {
       return raiseError("Invalid entry in grammar table");
     }
@@ -215,13 +215,13 @@ JS::Result<Ok> BinASTTokenReaderMultipart::readHeader() {
   return Ok();
 }
 
-void BinASTTokenReaderMultipart::traceMetadata(JSTracer* trc) {
+void BinTokenReaderMultipart::traceMetadata(JSTracer* trc) {
   if (metadata_) {
     metadata_->trace(trc);
   }
 }
 
-JS::Result<bool> BinASTTokenReaderMultipart::readBool() {
+JS::Result<bool> BinTokenReaderMultipart::readBool() {
   updateLatestKnownGood();
   BINJS_MOZ_TRY_DECL(byte, readByte());
 
@@ -241,7 +241,7 @@ JS::Result<bool> BinASTTokenReaderMultipart::readBool() {
 //
 // NULL_FLOAT_REPRESENTATION (signaling NaN) => null
 // anything other 64 bit sequence => IEEE-764 64-bit floating point number
-JS::Result<double> BinASTTokenReaderMultipart::readDouble() {
+JS::Result<double> BinTokenReaderMultipart::readDouble() {
   updateLatestKnownGood();
 
   uint8_t bytes[8];
@@ -262,7 +262,7 @@ JS::Result<double> BinASTTokenReaderMultipart::readDouble() {
 }
 
 // A single atom is represented as an index into the table of strings.
-JS::Result<JSAtom*> BinASTTokenReaderMultipart::readMaybeAtom() {
+JS::Result<JSAtom*> BinTokenReaderMultipart::readMaybeAtom() {
   updateLatestKnownGood();
   BINJS_MOZ_TRY_DECL(index, readInternalUint32());
 
@@ -272,7 +272,7 @@ JS::Result<JSAtom*> BinASTTokenReaderMultipart::readMaybeAtom() {
   return metadata_->getAtom(index);
 }
 
-JS::Result<JSAtom*> BinASTTokenReaderMultipart::readAtom() {
+JS::Result<JSAtom*> BinTokenReaderMultipart::readAtom() {
   BINJS_MOZ_TRY_DECL(maybe, readMaybeAtom());
 
   if (!maybe) {
@@ -282,7 +282,7 @@ JS::Result<JSAtom*> BinASTTokenReaderMultipart::readAtom() {
   return maybe;
 }
 
-JS::Result<JSAtom*> BinASTTokenReaderMultipart::readMaybeIdentifierName() {
+JS::Result<JSAtom*> BinTokenReaderMultipart::readMaybeIdentifierName() {
   BINJS_MOZ_TRY_DECL(result, readMaybeAtom());
   if (result) {
     if (!IsIdentifier(result)) {
@@ -292,7 +292,7 @@ JS::Result<JSAtom*> BinASTTokenReaderMultipart::readMaybeIdentifierName() {
   return result;
 }
 
-JS::Result<JSAtom*> BinASTTokenReaderMultipart::readIdentifierName() {
+JS::Result<JSAtom*> BinTokenReaderMultipart::readIdentifierName() {
   BINJS_MOZ_TRY_DECL(result, readMaybeAtom());
   if (!IsIdentifier(result)) {
     return raiseError("Invalid identifier");
@@ -300,15 +300,15 @@ JS::Result<JSAtom*> BinASTTokenReaderMultipart::readIdentifierName() {
   return result;
 }
 
-JS::Result<JSAtom*> BinASTTokenReaderMultipart::readMaybePropertyKey() {
+JS::Result<JSAtom*> BinTokenReaderMultipart::readMaybePropertyKey() {
   return readMaybeAtom();
 }
 
-JS::Result<JSAtom*> BinASTTokenReaderMultipart::readPropertyKey() {
+JS::Result<JSAtom*> BinTokenReaderMultipart::readPropertyKey() {
   return readAtom();
 }
 
-JS::Result<Ok> BinASTTokenReaderMultipart::readChars(Chars& out) {
+JS::Result<Ok> BinTokenReaderMultipart::readChars(Chars& out) {
   updateLatestKnownGood();
   BINJS_MOZ_TRY_DECL(index, readInternalUint32());
 
@@ -320,7 +320,7 @@ JS::Result<Ok> BinASTTokenReaderMultipart::readChars(Chars& out) {
   return Ok();
 }
 
-JS::Result<BinASTVariant> BinASTTokenReaderMultipart::readVariant() {
+JS::Result<BinVariant> BinTokenReaderMultipart::readVariant() {
   updateLatestKnownGood();
   BINJS_MOZ_TRY_DECL(index, readInternalUint32());
 
@@ -340,8 +340,7 @@ JS::Result<BinASTVariant> BinASTTokenReaderMultipart::readVariant() {
   // ill-formed variant, so we don't run the risk of feching an ill-variant
   // more than once.
   Chars slice = metadata_->getSlice(index);  // We have checked `index` above.
-  BINJS_MOZ_TRY_DECL(variant,
-                     cx_->runtime()->binast().binASTVariant(cx_, slice));
+  BINJS_MOZ_TRY_DECL(variant, cx_->runtime()->binast().binVariant(cx_, slice));
 
   if (!variant) {
     return raiseError("Invalid string enum variant");
@@ -354,8 +353,8 @@ JS::Result<BinASTVariant> BinASTTokenReaderMultipart::readVariant() {
   return *variant;
 }
 
-JS::Result<BinASTTokenReaderBase::SkippableSubTree>
-BinASTTokenReaderMultipart::readSkippableSubTree() {
+JS::Result<BinTokenReaderBase::SkippableSubTree>
+BinTokenReaderMultipart::readSkippableSubTree() {
   updateLatestKnownGood();
   BINJS_MOZ_TRY_DECL(byteLen, readInternalUint32());
 
@@ -367,21 +366,20 @@ BinASTTokenReaderMultipart::readSkippableSubTree() {
 
   current_ += byteLen;
 
-  return BinASTTokenReaderBase::SkippableSubTree(start, byteLen);
+  return BinTokenReaderBase::SkippableSubTree(start, byteLen);
 }
 
 // Tagged tuples:
 // - uint32_t index in table [grammar];
 // - content (specified by the higher-level grammar);
-JS::Result<Ok> BinASTTokenReaderMultipart::enterTaggedTuple(
-    BinASTKind& tag, BinASTTokenReaderMultipart::BinASTFields&,
-    AutoTaggedTuple& guard) {
+JS::Result<Ok> BinTokenReaderMultipart::enterTaggedTuple(
+    BinKind& tag, BinTokenReaderMultipart::BinFields&, AutoTaggedTuple& guard) {
   BINJS_MOZ_TRY_DECL(index, readInternalUint32());
-  if (index >= metadata_->numBinASTKinds()) {
+  if (index >= metadata_->numBinKinds()) {
     return raiseError("Invalid index to grammar table");
   }
 
-  tag = metadata_->getBinASTKind(index);
+  tag = metadata_->getBinKind(index);
 
   // Enter the body.
   guard.init();
@@ -395,8 +393,8 @@ JS::Result<Ok> BinASTTokenReaderMultipart::enterTaggedTuple(
 //
 // The total byte length of `number of items` + `contents` must be `byte
 // length`.
-JS::Result<Ok> BinASTTokenReaderMultipart::enterList(uint32_t& items,
-                                                     AutoList& guard) {
+JS::Result<Ok> BinTokenReaderMultipart::enterList(uint32_t& items,
+                                                  AutoList& guard) {
   guard.init();
 
   MOZ_TRY_VAR(items, readInternalUint32());
@@ -404,20 +402,19 @@ JS::Result<Ok> BinASTTokenReaderMultipart::enterList(uint32_t& items,
   return Ok();
 }
 
-void BinASTTokenReaderMultipart::AutoBase::init() { initialized_ = true; }
+void BinTokenReaderMultipart::AutoBase::init() { initialized_ = true; }
 
-BinASTTokenReaderMultipart::AutoBase::AutoBase(
-    BinASTTokenReaderMultipart& reader)
+BinTokenReaderMultipart::AutoBase::AutoBase(BinTokenReaderMultipart& reader)
     : initialized_(false), reader_(reader) {}
 
-BinASTTokenReaderMultipart::AutoBase::~AutoBase() {
+BinTokenReaderMultipart::AutoBase::~AutoBase() {
   // By now, the `AutoBase` must have been deinitialized by calling `done()`.
   // The only case in which we can accept not calling `done()` is if we have
   // bailed out because of an error.
   MOZ_ASSERT_IF(initialized_, reader_.hasRaisedError());
 }
 
-JS::Result<Ok> BinASTTokenReaderMultipart::AutoBase::checkPosition(
+JS::Result<Ok> BinTokenReaderMultipart::AutoBase::checkPosition(
     const uint8_t* expectedEnd) {
   if (reader_.current_ != expectedEnd) {
     return reader_.raiseError(
@@ -427,13 +424,12 @@ JS::Result<Ok> BinASTTokenReaderMultipart::AutoBase::checkPosition(
   return Ok();
 }
 
-BinASTTokenReaderMultipart::AutoList::AutoList(
-    BinASTTokenReaderMultipart& reader)
+BinTokenReaderMultipart::AutoList::AutoList(BinTokenReaderMultipart& reader)
     : AutoBase(reader) {}
 
-void BinASTTokenReaderMultipart::AutoList::init() { AutoBase::init(); }
+void BinTokenReaderMultipart::AutoList::init() { AutoBase::init(); }
 
-JS::Result<Ok> BinASTTokenReaderMultipart::AutoList::done() {
+JS::Result<Ok> BinTokenReaderMultipart::AutoList::done() {
   MOZ_ASSERT(initialized_);
   initialized_ = false;
   if (reader_.hasRaisedError()) {
@@ -449,7 +445,7 @@ JS::Result<Ok> BinASTTokenReaderMultipart::AutoList::done() {
 // Encoded as variable length number.
 
 MOZ_MUST_USE JS::Result<uint32_t>
-BinASTTokenReaderMultipart::readInternalUint32() {
+BinTokenReaderMultipart::readInternalUint32() {
   uint32_t result = 0;
   uint32_t shift = 0;
   while (true) {
@@ -475,11 +471,11 @@ BinASTTokenReaderMultipart::readInternalUint32() {
   }
 }
 
-BinASTTokenReaderMultipart::AutoTaggedTuple::AutoTaggedTuple(
-    BinASTTokenReaderMultipart& reader)
+BinTokenReaderMultipart::AutoTaggedTuple::AutoTaggedTuple(
+    BinTokenReaderMultipart& reader)
     : AutoBase(reader) {}
 
-JS::Result<Ok> BinASTTokenReaderMultipart::AutoTaggedTuple::done() {
+JS::Result<Ok> BinTokenReaderMultipart::AutoTaggedTuple::done() {
   MOZ_ASSERT(initialized_);
   initialized_ = false;
   if (reader_.hasRaisedError()) {

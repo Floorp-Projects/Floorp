@@ -4,12 +4,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef frontend_BinASTSupport_h
-#define frontend_BinASTSupport_h
+#ifndef frontend_BinSourceSupport_h
+#define frontend_BinSourceSupport_h
 
 #include "mozilla/HashFunctions.h"
 
-#include "frontend/BinASTToken.h"
+#include "frontend/BinToken.h"
 #include "gc/DeletePolicy.h"
 
 #include "js/AllocPolicy.h"
@@ -24,9 +24,9 @@ class ScriptSource;
 
 // Support for parsing JS Binary ASTs.
 struct BinaryASTSupport {
-  using BinASTVariant = js::frontend::BinASTVariant;
-  using BinASTField = js::frontend::BinASTField;
-  using BinASTKind = js::frontend::BinASTKind;
+  using BinVariant = js::frontend::BinVariant;
+  using BinField = js::frontend::BinField;
+  using BinKind = js::frontend::BinKind;
 
   // A structure designed to perform fast char* + length lookup
   // without copies.
@@ -64,29 +64,29 @@ struct BinaryASTSupport {
 
   BinaryASTSupport();
 
-  JS::Result<const BinASTVariant*> binASTVariant(JSContext*, const CharSlice);
-  JS::Result<const BinASTKind*> binASTKind(JSContext*, const CharSlice);
+  JS::Result<const BinVariant*> binVariant(JSContext*, const CharSlice);
+  JS::Result<const BinKind*> binKind(JSContext*, const CharSlice);
 
   bool ensureBinTablesInitialized(JSContext*);
 
  private:
-  bool ensureBinASTKindsInitialized(JSContext*);
-  bool ensureBinASTVariantsInitialized(JSContext*);
+  bool ensureBinKindsInitialized(JSContext*);
+  bool ensureBinVariantsInitialized(JSContext*);
 
  private:
   // A HashMap that can be queried without copies from a CharSlice key.
   // Initialized on first call. Keys are CharSlices into static strings.
-  using BinASTKindMap = js::HashMap<const CharSlice, BinASTKind, CharSlice,
+  using BinKindMap =
+      js::HashMap<const CharSlice, BinKind, CharSlice, js::SystemAllocPolicy>;
+  BinKindMap binKindMap_;
+
+  using BinFieldMap =
+      js::HashMap<const CharSlice, BinField, CharSlice, js::SystemAllocPolicy>;
+  BinFieldMap binFieldMap_;
+
+  using BinVariantMap = js::HashMap<const CharSlice, BinVariant, CharSlice,
                                     js::SystemAllocPolicy>;
-  BinASTKindMap binASTKindMap_;
-
-  using BinASTFieldMap = js::HashMap<const CharSlice, BinASTField, CharSlice,
-                                     js::SystemAllocPolicy>;
-  BinASTFieldMap binASTFieldMap_;
-
-  using BinASTVariantMap = js::HashMap<const CharSlice, BinASTVariant,
-                                       CharSlice, js::SystemAllocPolicy>;
-  BinASTVariantMap binASTVariantMap_;
+  BinVariantMap binVariantMap_;
 };
 
 namespace frontend {
@@ -95,7 +95,7 @@ class BinASTSourceMetadata {
   using CharSlice = BinaryASTSupport::CharSlice;
 
   const uint32_t numStrings_;
-  const uint32_t numBinASTKinds_;
+  const uint32_t numBinKinds_;
 
   // The data lives inline in the allocation, after this class.
   inline JSAtom** atomsBase() {
@@ -106,33 +106,32 @@ class BinASTSourceMetadata {
         reinterpret_cast<uintptr_t>(atomsBase()) +
         numStrings_ * sizeof(JSAtom*));
   }
-  inline BinASTKind* binASTKindBase() {
-    return reinterpret_cast<BinASTKind*>(
-        reinterpret_cast<uintptr_t>(sliceBase()) +
-        numStrings_ * sizeof(CharSlice));
+  inline BinKind* binKindBase() {
+    return reinterpret_cast<BinKind*>(reinterpret_cast<uintptr_t>(sliceBase()) +
+                                      numStrings_ * sizeof(CharSlice));
   }
 
-  static inline size_t totalSize(uint32_t numBinASTKinds, uint32_t numStrings) {
+  static inline size_t totalSize(uint32_t numBinKinds, uint32_t numStrings) {
     return sizeof(BinASTSourceMetadata) + numStrings * sizeof(JSAtom*) +
-           numStrings * sizeof(CharSlice) + numBinASTKinds * sizeof(BinASTKind);
+           numStrings * sizeof(CharSlice) + numBinKinds * sizeof(BinKind);
   }
 
-  BinASTSourceMetadata(uint32_t numBinASTKinds, uint32_t numStrings)
-      : numStrings_(numStrings), numBinASTKinds_(numBinASTKinds) {}
+  BinASTSourceMetadata(uint32_t numBinKinds, uint32_t numStrings)
+      : numStrings_(numStrings), numBinKinds_(numBinKinds) {}
 
   friend class js::ScriptSource;
 
  public:
-  static BinASTSourceMetadata* Create(const Vector<BinASTKind>& binASTKinds,
+  static BinASTSourceMetadata* Create(const Vector<BinKind>& binKinds,
                                       uint32_t numStrings);
 
-  inline uint32_t numBinASTKinds() { return numBinASTKinds_; }
+  inline uint32_t numBinKinds() { return numBinKinds_; }
 
   inline uint32_t numStrings() { return numStrings_; }
 
-  inline BinASTKind& getBinASTKind(uint32_t index) {
-    MOZ_ASSERT(index < numBinASTKinds_);
-    return binASTKindBase()[index];
+  inline BinKind& getBinKind(uint32_t index) {
+    MOZ_ASSERT(index < numBinKinds_);
+    return binKindBase()[index];
   }
 
   inline CharSlice& getSlice(uint32_t index) {
@@ -156,4 +155,4 @@ typedef UniquePtr<frontend::BinASTSourceMetadata,
 
 }  // namespace js
 
-#endif  // frontend_BinASTSupport_h
+#endif  // frontend_BinSourceSupport_h

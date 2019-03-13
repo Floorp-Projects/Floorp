@@ -4,14 +4,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef frontend_BinASTTokenReaderMultipart_h
-#define frontend_BinASTTokenReaderMultipart_h
+#ifndef frontend_BinTokenReaderMultipart_h
+#define frontend_BinTokenReaderMultipart_h
 
 #include "mozilla/Maybe.h"
 
-#include "frontend/BinASTRuntimeSupport.h"
-#include "frontend/BinASTToken.h"
-#include "frontend/BinASTTokenReaderBase.h"
+#include "frontend/BinSourceRuntimeSupport.h"
+#include "frontend/BinToken.h"
+#include "frontend/BinTokenReaderBase.h"
 
 #include "js/Result.h"
 
@@ -30,19 +30,18 @@ namespace frontend {
  * - the reader does not support error recovery;
  * - the reader does not support lookahead or pushback.
  */
-class MOZ_STACK_CLASS BinASTTokenReaderMultipart
-    : public BinASTTokenReaderBase {
+class MOZ_STACK_CLASS BinTokenReaderMultipart : public BinTokenReaderBase {
  public:
   class AutoList;
   class AutoTaggedTuple;
 
   using CharSlice = BinaryASTSupport::CharSlice;
 
-  // This implementation of `BinASTFields` is effectively `void`, as the format
+  // This implementation of `BinFields` is effectively `void`, as the format
   // does not embed field information.
-  class BinASTFields {
+  class BinFields {
    public:
-    explicit BinASTFields(JSContext*) {}
+    explicit BinFields(JSContext*) {}
   };
   using Chars = CharSlice;
 
@@ -52,18 +51,18 @@ class MOZ_STACK_CLASS BinASTTokenReaderMultipart
    *
    * Does NOT copy the buffer.
    */
-  BinASTTokenReaderMultipart(JSContext* cx, ErrorReporter* er,
-                             const uint8_t* start, const size_t length);
+  BinTokenReaderMultipart(JSContext* cx, ErrorReporter* er,
+                          const uint8_t* start, const size_t length);
 
   /**
    * Construct a token reader.
    *
    * Does NOT copy the buffer.
    */
-  BinASTTokenReaderMultipart(JSContext* cx, ErrorReporter* er,
-                             const Vector<uint8_t>& chars);
+  BinTokenReaderMultipart(JSContext* cx, ErrorReporter* er,
+                          const Vector<uint8_t>& chars);
 
-  ~BinASTTokenReaderMultipart();
+  ~BinTokenReaderMultipart();
 
   /**
    * Read the header of the file.
@@ -118,10 +117,10 @@ class MOZ_STACK_CLASS BinASTTokenReaderMultipart
   MOZ_MUST_USE JS::Result<Ok> readChars(Chars&);
 
   /**
-   * Read a single `BinASTVariant | null` value.
+   * Read a single `BinVariant | null` value.
    */
-  MOZ_MUST_USE JS::Result<mozilla::Maybe<BinASTVariant>> readMaybeVariant();
-  MOZ_MUST_USE JS::Result<BinASTVariant> readVariant();
+  MOZ_MUST_USE JS::Result<mozilla::Maybe<BinVariant>> readMaybeVariant();
+  MOZ_MUST_USE JS::Result<BinVariant> readVariant();
 
   /**
    * Read over a single `[Skippable]` subtree value.
@@ -171,7 +170,7 @@ class MOZ_STACK_CLASS BinASTTokenReaderMultipart
    * @return out If the header of the tuple is invalid.
    */
   MOZ_MUST_USE JS::Result<Ok> enterTaggedTuple(
-      BinASTKind& tag, BinASTTokenReaderMultipart::BinASTFields& fields,
+      BinKind& tag, BinTokenReaderMultipart::BinFields& fields,
       AutoTaggedTuple& guard);
 
   /**
@@ -188,10 +187,9 @@ class MOZ_STACK_CLASS BinASTTokenReaderMultipart
   MOZ_MUST_USE JS::Result<uint32_t> readInternalUint32();
 
  private:
-  // A mapping string index => BinASTVariant as extracted from the [STRINGS]
+  // A mapping string index => BinVariant as extracted from the [STRINGS]
   // section of the file. Populated lazily.
-  js::HashMap<uint32_t, BinASTVariant, DefaultHasher<uint32_t>,
-              SystemAllocPolicy>
+  js::HashMap<uint32_t, BinVariant, DefaultHasher<uint32_t>, SystemAllocPolicy>
       variantsTable_;
 
   enum class MetadataOwnership { Owned, Unowned };
@@ -200,9 +198,9 @@ class MOZ_STACK_CLASS BinASTTokenReaderMultipart
 
   const uint8_t* posBeforeTree_;
 
-  BinASTTokenReaderMultipart(const BinASTTokenReaderMultipart&) = delete;
-  BinASTTokenReaderMultipart(BinASTTokenReaderMultipart&&) = delete;
-  BinASTTokenReaderMultipart& operator=(BinASTTokenReaderMultipart&) = delete;
+  BinTokenReaderMultipart(const BinTokenReaderMultipart&) = delete;
+  BinTokenReaderMultipart(BinTokenReaderMultipart&&) = delete;
+  BinTokenReaderMultipart& operator=(BinTokenReaderMultipart&) = delete;
 
  public:
   void traceMetadata(JSTracer* trc);
@@ -226,38 +224,38 @@ class MOZ_STACK_CLASS BinASTTokenReaderMultipart
   // Base class used by other Auto* classes.
   class MOZ_STACK_CLASS AutoBase {
    protected:
-    explicit AutoBase(BinASTTokenReaderMultipart& reader);
+    explicit AutoBase(BinTokenReaderMultipart& reader);
     ~AutoBase();
 
     // Raise an error if we are not in the expected position.
     MOZ_MUST_USE JS::Result<Ok> checkPosition(const uint8_t* expectedPosition);
 
-    friend BinASTTokenReaderMultipart;
+    friend BinTokenReaderMultipart;
     void init();
 
     // Set to `true` if `init()` has been called. Reset to `false` once
     // all conditions have been checked.
     bool initialized_;
-    BinASTTokenReaderMultipart& reader_;
+    BinTokenReaderMultipart& reader_;
   };
 
   // Guard class used to ensure that `enterList` is used properly.
   class MOZ_STACK_CLASS AutoList : public AutoBase {
    public:
-    explicit AutoList(BinASTTokenReaderMultipart& reader);
+    explicit AutoList(BinTokenReaderMultipart& reader);
 
     // Check that we have properly read to the end of the list.
     MOZ_MUST_USE JS::Result<Ok> done();
 
    protected:
-    friend BinASTTokenReaderMultipart;
+    friend BinTokenReaderMultipart;
     void init();
   };
 
   // Guard class used to ensure that `enterTaggedTuple` is used properly.
   class MOZ_STACK_CLASS AutoTaggedTuple : public AutoBase {
    public:
-    explicit AutoTaggedTuple(BinASTTokenReaderMultipart& reader);
+    explicit AutoTaggedTuple(BinTokenReaderMultipart& reader);
 
     // Check that we have properly read to the end of the tuple.
     MOZ_MUST_USE JS::Result<Ok> done();
@@ -280,15 +278,15 @@ class MOZ_STACK_CLASS BinASTTokenReaderMultipart
   }
 
   template <size_t N>
-  static JS::Result<Ok, JS::Error&> checkFields(
-      const BinASTKind kind, const BinASTFields& actual,
-      const BinASTField (&expected)[N]) {
+  static JS::Result<Ok, JS::Error&> checkFields(const BinKind kind,
+                                                const BinFields& actual,
+                                                const BinField (&expected)[N]) {
     // Not implemented in this tokenizer.
     return Ok();
   }
 
-  static JS::Result<Ok, JS::Error&> checkFields0(const BinASTKind kind,
-                                                 const BinASTFields& actual) {
+  static JS::Result<Ok, JS::Error&> checkFields0(const BinKind kind,
+                                                 const BinFields& actual) {
     // Not implemented in this tokenizer.
     return Ok();
   }
@@ -297,4 +295,4 @@ class MOZ_STACK_CLASS BinASTTokenReaderMultipart
 }  // namespace frontend
 }  // namespace js
 
-#endif  // frontend_BinASTTokenReaderMultipart_h
+#endif  // frontend_BinTokenReaderMultipart_h
