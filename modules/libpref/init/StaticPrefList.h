@@ -427,6 +427,13 @@ VARCACHE_PREF(
   RelaxedAtomicBool, true
 )
 
+// Render animations and videos as a solid color
+VARCACHE_PREF(
+  "browser.measurement.render_anims_and_video_solid",
+  browser_measurement_render_anims_and_video_solid,
+  RelaxedAtomicBool, false
+)
+
 // Enable passing the "storage" option to indexedDB.open.
 VARCACHE_PREF(
   "dom.indexedDB.storageOption.enabled",
