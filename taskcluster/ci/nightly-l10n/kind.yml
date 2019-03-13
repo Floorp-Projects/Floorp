@@ -34,6 +34,7 @@ only-for-build-platforms:
     - macosx64-devedition-nightly/opt
     - win32-devedition-nightly/opt
     - win64-devedition-nightly/opt
+    - win64-aarch64-devedition-nightly/opt
 
 job-template:
     description:
@@ -83,6 +84,7 @@ job-template:
             win64-nightly: internal
             win64-devedition-nightly: internal
             win64-aarch64-nightly: internal
+            win64-aarch64-devedition-nightly: internal
     index:
         type: nightly-l10n
         product:
@@ -103,6 +105,7 @@ job-template:
                 macosx64-devedition-nightly: macosx64-devedition-opt
                 win32-devedition-nightly: win32-devedition-opt
                 win64-devedition-nightly: win64-devedition-opt
+                win64-aarch64-devedition-nightly: win64-aarch64-devedition-opt
                 android-api-16-nightly: android-api-16-opt
     worker-type:
         by-build-platform:
@@ -128,6 +131,7 @@ job-template:
                 macosx64-devedition-nightly: osx-cross-devedition/opt
                 win32-devedition-nightly: windows2012-32-devedition/opt
                 win64-devedition-nightly: windows2012-64-devedition/opt
+                win64-aarch64-devedition-nightly: windows2012-aarch64-devedition/opt
                 android-api-16-nightly: android-4-0-armv7-api16/opt
     env:
         by-build-platform:
@@ -215,6 +219,12 @@ job-template:
                 win64-devedition-nightly:
                     - single_locale/devedition.py
                     - single_locale/win64.py
+                    - single_locale/tc_common.py
+                    - single_locale/tc_win64.py
+                    - taskcluster_nightly.py
+                win64-aarch64-devedition-nightly:
+                    - single_locale/devedition.py
+                    - single_locale/win64-aarch64.py
                     - single_locale/tc_common.py
                     - single_locale/tc_win64.py
                     - taskcluster_nightly.py

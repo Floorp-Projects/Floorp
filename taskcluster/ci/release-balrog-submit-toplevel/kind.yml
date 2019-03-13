@@ -101,7 +101,7 @@ jobs:
          channel-names: ["aurora", "aurora-localtest", "aurora-cdntest"]
          publish-rules: [10]
          rules-to-update: ["devedition-cdntest", "devedition-localtest"]
-         platforms: ["linux", "linux64", "macosx64", "win32", "win64"]
+         platforms: ["linux", "linux64", "macosx64", "win32", "win64", "win64-aarch64"]
       treeherder:
          platform: devedition-release/opt
          symbol: Rel(BPDev)
