@@ -14,7 +14,7 @@ add_task(async function() {
   const { inspector } = await openInspectorForURL("about:blank");
   const { panelDoc: doc } = inspector;
   const button = doc.querySelector(".sidebar-toggle");
-  const ruleViewSidebar = inspector.sidebarSplitBox.startPanelContainer;
+  const ruleViewSidebar = inspector.sidebarSplitBoxRef.current.startPanelContainer;
   const toolboxWidth = doc.getElementById("inspector-splitter-box").clientWidth;
 
   ok(button.classList.contains("pane-collapsed"), "The button is in collapsed state");
@@ -26,7 +26,7 @@ add_task(async function() {
 
   info("Checking the state of the 3 pane inspector");
   let sidebarWidth = inspector.splitBox.state.width;
-  const sidebarSplitBoxWidth = inspector.sidebarSplitBox.state.width;
+  const sidebarSplitBoxWidth = inspector.sidebarSplitBoxRef.current.state.width;
   ok(!button.classList.contains("pane-collapsed"), "The button is in expanded state");
   ok(doc.getElementById("ruleview-panel"), "The rule view panel exist");
   is(inspector.sidebar.getCurrentTabID(), "layoutview",
