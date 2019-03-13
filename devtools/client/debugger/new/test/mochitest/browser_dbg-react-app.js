@@ -7,14 +7,9 @@ add_task(async function() {
   info('Test previewing an immutable Map inside of a react component')
   invokeInTab("clickButton");
   await waitForPaused(dbg);
-
-  const {
-    selectors: { getSelectedScopeMappings, getCurrentThread }
-  } = dbg;
-
   await waitForState(
     dbg,
-    state => getSelectedScopeMappings(state, getCurrentThread(state))
+    state => dbg.selectors.getSelectedScopeMappings(state)
   );
 
   await assertPreviewTextValue(dbg, 10, 22, {

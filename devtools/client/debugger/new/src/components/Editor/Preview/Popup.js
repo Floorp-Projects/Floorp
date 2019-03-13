@@ -22,10 +22,7 @@ const {
 } = utils;
 
 import actions from "../../../actions";
-import {
-  getAllPopupObjectProperties,
-  getCurrentThread
-} from "../../../selectors";
+import { getAllPopupObjectProperties } from "../../../selectors";
 import Popover from "../../shared/Popover";
 import PreviewFunction from "../../shared/PreviewFunction";
 
@@ -321,10 +318,7 @@ export class Popup extends Component<Props, State> {
 }
 
 const mapStateToProps = state => ({
-  popupObjectProperties: getAllPopupObjectProperties(
-    state,
-    getCurrentThread(state)
-  )
+  popupObjectProperties: getAllPopupObjectProperties(state)
 });
 
 const {

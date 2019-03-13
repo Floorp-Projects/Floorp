@@ -5,12 +5,12 @@
 // @flow
 
 import {
+  getCurrentThread,
   getSource,
   getMapScopes,
   getSelectedFrame,
   getSelectedGeneratedScope,
-  getSelectedOriginalScope,
-  getCurrentThread
+  getSelectedOriginalScope
 } from "../../selectors";
 import { loadSourceText } from "../sources/loadSourceText";
 import { PROMISE } from "../utils/middleware/promise";
@@ -32,13 +32,12 @@ export function toggleMapScopes() {
 
     dispatch({ type: "TOGGLE_MAP_SCOPES", mapScopes: true });
 
-    const thread = getCurrentThread(getState());
-    if (getSelectedOriginalScope(getState(), thread)) {
+    if (getSelectedOriginalScope(getState())) {
       return;
     }
 
-    const scopes = getSelectedGeneratedScope(getState(), thread);
-    const frame = getSelectedFrame(getState(), thread);
+    const scopes = getSelectedGeneratedScope(getState());
+    const frame = getSelectedFrame(getState());
     if (!scopes || !frame) {
       return;
     }
@@ -58,7 +57,7 @@ export function mapScopes(scopes: Promise<Scope>, frame: Frame) {
 
     await dispatch({
       type: "MAP_SCOPES",
-      thread: frame.thread,
+      thread: getCurrentThread(getState()),
       frame,
       [PROMISE]: (async function() {
         if (

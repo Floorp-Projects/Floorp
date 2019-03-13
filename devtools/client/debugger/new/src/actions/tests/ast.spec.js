@@ -177,13 +177,10 @@ describe("ast", () => {
       await dispatch(actions.selectSource("base.js"));
 
       const locations = getOutOfScopeLocations(getState());
-      // const lines = getInScopeLines(getState());
+      const lines = getInScopeLines(getState());
 
       expect(locations).toEqual(null);
-
-      // This check is disabled as locations that are in/out of scope may not
-      // have completed yet when the selectSource promise finishes.
-      // expect(lines).toEqual([1]);
+      expect(lines).toEqual([1]);
     });
   });
 });
