@@ -39,20 +39,20 @@ ErrorResult<JS::Error&> BinASTTokenReaderBase::raiseOOM() {
 }
 
 ErrorResult<JS::Error&> BinASTTokenReaderBase::raiseInvalidNumberOfFields(
-    const BinKind kind, const uint32_t expected, const uint32_t got) {
+    const BinASTKind kind, const uint32_t expected, const uint32_t got) {
   Sprinter out(cx_);
   BINJS_TRY(out.init());
   BINJS_TRY(out.printf("In %s, invalid number of fields: expected %u, got %u",
-                       describeBinKind(kind), expected, got));
+                       describeBinASTKind(kind), expected, got));
   return raiseError(out.string());
 }
 
 ErrorResult<JS::Error&> BinASTTokenReaderBase::raiseInvalidField(
-    const char* kind, const BinField field) {
+    const char* kind, const BinASTField field) {
   Sprinter out(cx_);
   BINJS_TRY(out.init());
-  BINJS_TRY(
-      out.printf("In %s, invalid field '%s'", kind, describeBinField(field)));
+  BINJS_TRY(out.printf("In %s, invalid field '%s'", kind,
+                       describeBinASTField(field)));
   return raiseError(out.string());
 }
 
