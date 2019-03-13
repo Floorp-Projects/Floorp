@@ -227,8 +227,8 @@ already_AddRefed<mozilla::gl::GLContext> CompositorOGL::CreateContext() {
 #ifdef XP_WIN
   if (gfxEnv::LayersPreferEGL()) {
     printf_stderr("Trying GL layers...\n");
-    context =
-        gl::GLContextProviderEGL::CreateForCompositorWidget(mWidget, false);
+    context = gl::GLContextProviderEGL::CreateForCompositorWidget(
+        mWidget, /* aWebRender */ false, /* aForceAccelerated */ false);
   }
 #endif
 
@@ -246,7 +246,9 @@ already_AddRefed<mozilla::gl::GLContext> CompositorOGL::CreateContext() {
 
   if (!context) {
     context = gl::GLContextProvider::CreateForCompositorWidget(
-        mWidget, gfxVars::RequiresAcceleratedGLContextForCompositorOGL());
+        mWidget,
+        /* aWebRender */ false,
+        gfxVars::RequiresAcceleratedGLContextForCompositorOGL());
   }
 
   if (!context) {
