@@ -97,6 +97,7 @@ class EventStateManager : public nsSupportsWeakReference, public nsIObserver {
    * used as the *up target when deciding whether to send click event.
    * This is used when releasing pointer capture. Otherwise null.
    */
+  MOZ_CAN_RUN_SCRIPT
   nsresult PreHandleEvent(nsPresContext* aPresContext, WidgetEvent* aEvent,
                           nsIFrame* aTargetFrame, nsIContent* aTargetContent,
                           nsEventStatus* aStatus,
@@ -107,7 +108,7 @@ class EventStateManager : public nsSupportsWeakReference, public nsIObserver {
    * also contain any centralized event processing which must occur after
    * DOM and frame processing.
    */
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY
+  MOZ_CAN_RUN_SCRIPT
   nsresult PostHandleEvent(nsPresContext* aPresContext, WidgetEvent* aEvent,
                            nsIFrame* aTargetFrame, nsEventStatus* aStatus,
                            nsIContent* aOverrideClickTarget);
@@ -1099,6 +1100,7 @@ class EventStateManager : public nsSupportsWeakReference, public nsIObserver {
    */
   void FillInEventFromGestureDown(WidgetMouseEvent* aEvent);
 
+  MOZ_CAN_RUN_SCRIPT
   nsresult DoContentCommandEvent(WidgetContentCommandEvent* aEvent);
   nsresult DoContentCommandScrollEvent(WidgetContentCommandEvent* aEvent);
 
