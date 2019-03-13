@@ -1011,6 +1011,13 @@ VARCACHE_PREF(
   bool, false
 )
 
+// Is support for CSS contain enabled?
+VARCACHE_PREF(
+  "layout.css.contain.enabled",
+   layout_css_contain_enabled,
+  bool, false
+)
+
 // Is steps(jump-*) supported in easing functions?
 VARCACHE_PREF(
   "layout.css.step-position-jump.enabled",
