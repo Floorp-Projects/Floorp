@@ -41,7 +41,7 @@ def paths(root):
     return _inner
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture
 def config(request):
     """Finds, loads and returns the config for the linter name specified by the
     LINTER global variable in the calling module.
@@ -60,7 +60,7 @@ def config(request):
     return parser.parse(config_path)[0]
 
 
-@pytest.fixture(scope='module', autouse=True)
+@pytest.fixture(autouse=True)
 def run_setup(config):
     """Make sure that if the linter named in the LINTER global variable has a
     setup function, it gets called before running the tests.
@@ -72,7 +72,7 @@ def run_setup(config):
     func(build.topsrcdir)
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture
 def lint(config, root):
     """Find and return the 'lint' function for the external linter named in the
     LINTER global variable.

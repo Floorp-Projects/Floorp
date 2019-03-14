@@ -165,7 +165,6 @@ JitRuntime::JitRuntime()
       debugTrapHandler_(nullptr),
       baselineDebugModeOSRHandler_(nullptr),
       trampolineCode_(nullptr),
-      functionWrappers_(nullptr),
       jitcodeGlobalTable_(nullptr),
 #ifdef DEBUG
       ionBailAfter_(0),
@@ -178,8 +177,6 @@ JitRuntime::~JitRuntime() {
   MOZ_ASSERT(numFinishedBuilders_ == 0);
   MOZ_ASSERT(ionLazyLinkListSize_ == 0);
   MOZ_ASSERT(ionLazyLinkList_.ref().isEmpty());
-
-  js_delete(functionWrappers_.ref());
 
   // By this point, the jitcode global table should be empty.
   MOZ_ASSERT_IF(jitcodeGlobalTable_, jitcodeGlobalTable_->empty());
@@ -200,11 +197,6 @@ bool JitRuntime::initialize(JSContext* cx) {
   AutoAllocInAtomsZone az(cx);
 
   JitContext jctx(cx, nullptr);
-
-  functionWrappers_ = cx->new_<VMWrapperMap>(cx);
-  if (!functionWrappers_) {
-    return false;
-  }
 
   StackMacroAssembler masm;
 
@@ -288,22 +280,6 @@ bool JitRuntime::initialize(JSContext* cx) {
   JitSpew(JitSpew_Codegen, "# Emitting VM function wrappers");
   if (!generateVMWrappers(cx, masm)) {
     return false;
-  }
-
-  // TODO(bug 1530937): remove this after converting all VM functions.
-  for (VMFunction* fun = VMFunction::functions; fun; fun = fun->next) {
-    if (functionWrappers_->has(fun)) {
-      // Duplicate VMFunction definition. See VMFunction::hash.
-      continue;
-    }
-    JitSpew(JitSpew_Codegen, "# VM function wrapper (%s)", fun->name());
-    uint32_t offset;
-    if (!generateVMWrapper(cx, masm, *fun, fun->wrapped, &offset)) {
-      return false;
-    }
-    if (!functionWrappers_->putNew(fun, offset)) {
-      return false;
-    }
   }
 
   JitSpew(JitSpew_Codegen, "# Emitting profiler exit frame tail stub");
@@ -632,16 +608,6 @@ uint32_t JitRuntime::getBailoutTableSize(
     const FrameSizeClass& frameClass) const {
   MOZ_ASSERT(frameClass != FrameSizeClass::None());
   return bailoutTables_.ref()[frameClass.classId()].size;
-}
-
-TrampolinePtr JitRuntime::getVMWrapper(const VMFunction& f) const {
-  MOZ_ASSERT(functionWrappers_);
-  MOZ_ASSERT(trampolineCode_);
-
-  JitRuntime::VMWrapperMap::Ptr p =
-      functionWrappers_->readonlyThreadsafeLookup(&f);
-  MOZ_ASSERT(p);
-  return trampolineCode(p->value());
 }
 
 void JitCodeHeader::init(JitCode* jitCode) {

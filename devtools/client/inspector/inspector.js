@@ -522,6 +522,8 @@ Inspector.prototype = {
   setupSplitter: function() {
     const { width, height, splitSidebarWidth } = this.getSidebarSize();
 
+    this.sidebarSplitBoxRef = this.React.createRef();
+
     const splitter = this.InspectorSplitBox({
       className: "inspector-sidebar-splitter",
       initialWidth: width,
@@ -545,9 +547,7 @@ Inspector.prototype = {
         endPanel: this.InspectorTabPanel({
           id: "inspector-sidebar-container",
         }),
-        ref: splitbox => {
-          this.sidebarSplitBox = splitbox;
-        },
+        ref: this.sidebarSplitBoxRef,
       }),
       vert: this.useLandscapeMode(),
       onControlledPanelResized: this.onSidebarResized,
@@ -616,7 +616,7 @@ Inspector.prototype = {
     Services.prefs.setIntPref("devtools.toolsidebar-width.inspector", state.width);
     Services.prefs.setIntPref("devtools.toolsidebar-height.inspector", state.height);
     Services.prefs.setIntPref("devtools.toolsidebar-width.inspector.splitsidebar",
-      this.sidebarSplitBox.state.width);
+      this.sidebarSplitBoxRef.current.state.width);
   },
 
   onSidebarResized: function(width, height) {
@@ -637,7 +637,7 @@ Inspector.prototype = {
   onSidebarShown: function() {
     const { width, height, splitSidebarWidth } = this.getSidebarSize();
     this.splitBox.setState({ width, height });
-    this.sidebarSplitBox.setState({ width: splitSidebarWidth });
+    this.sidebarSplitBoxRef.current.setState({ width: splitSidebarWidth });
   },
 
   async onSidebarToggle() {
@@ -692,7 +692,7 @@ Inspector.prototype = {
     // Show the splitter inside the sidebar split box. Sets the width of the inspector
     // sidebar and specify that the end (right in horizontal or bottom-right in
     // vertical) panel of the sidebar split box should be controlled when resizing.
-    this.sidebarSplitBox.setState({
+    this.sidebarSplitBoxRef.current.setState({
       endPanelControl: true,
       splitterSize: 1,
       width: sidebarSplitboxWidth,
@@ -711,7 +711,7 @@ Inspector.prototype = {
    *         Thie id of the default tab for the sidebar.
    */
   async addRuleView({ defaultTab = "ruleview", skipQueue = false } = {}) {
-    const ruleViewSidebar = this.sidebarSplitBox.startPanelContainer;
+    const ruleViewSidebar = this.sidebarSplitBoxRef.current.startPanelContainer;
 
     if (this.is3PaneModeEnabled) {
       // Convert to 3 pane mode by removing the rule view from the inspector sidebar
@@ -742,13 +742,13 @@ Inspector.prototype = {
       const splitterBox = this.panelDoc.getElementById("inspector-splitter-box");
       this.splitBox.setState({
         width: this.useLandscapeMode() ?
-          this.sidebarSplitBox.state.width : splitterBox.clientWidth,
+          this.sidebarSplitBoxRef.current.state.width : splitterBox.clientWidth,
       });
 
       // Hide the splitter to prevent any drag events in the sidebar split box and
       // specify that the end (right panel in horziontal mode or bottom panel in vertical
       // mode) panel should be uncontrolled when resizing.
-      this.sidebarSplitBox.setState({
+      this.sidebarSplitBoxRef.current.setState({
         endPanelControl: false,
         splitterSize: 0,
       });

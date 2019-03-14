@@ -205,7 +205,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
   /**
    * Clean up listeners, debuggees and clear actor pools associated with
    * the lifetime of this actor. This does not destroy the thread actor,
-   * it resets it. This is used in methods `onReleaseMany` `onDetatch` and
+   * it resets it. This is used in methods `onDetatch` and
    * `exit`. The actor is truely destroyed in the `exit method`.
    */
   destroy: function() {
@@ -939,11 +939,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     }
 
     return resumeLimitHandled.then(() => {
-      if (request) {
-        this._options.pauseOnExceptions = request.pauseOnExceptions;
-        this._options.ignoreCaughtExceptions = request.ignoreCaughtExceptions;
-        this.maybePauseOnExceptions();
-      }
+      this.maybePauseOnExceptions();
 
       // When replaying execution in a separate process we need to explicitly
       // notify that process when to resume execution.
@@ -1110,34 +1106,6 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
 
     // Filter null values because createSourceActor can be falsey
     return { frames: frames.filter(x => !!x) };
-  },
-
-  onReleaseMany: function(request) {
-    if (!request.actors) {
-      return { error: "missingParameter",
-               message: "no actors were specified" };
-    }
-
-    let res;
-    for (const actorID of request.actors) {
-      const actor = this.threadLifetimePool.get(actorID);
-      if (!actor) {
-        if (!res) {
-          res = { error: "notReleasable",
-                  message: "Only thread-lifetime actors can be released." };
-        }
-        continue;
-      }
-
-      // We can still have old-style actors (e.g. object/long-string) in the pool, so we
-      // need to check onRelease existence.
-      if (actor.onRelease) {
-        actor.onRelease();
-      } else if (actor.destroy) {
-        actor.destroy();
-      }
-    }
-    return res ? res : {};
   },
 
   onSources: function(request) {
@@ -1571,6 +1539,12 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     return { skip };
   },
 
+  onPauseOnExceptions: function({pauseOnExceptions, ignoreCaughtExceptions}) {
+    Object.assign(this._options, { pauseOnExceptions, ignoreCaughtExceptions });
+    this.maybePauseOnExceptions();
+    return {};
+  },
+
   /*
    * A function that the engine calls when a recording/replaying process has
    * changed its position: a checkpoint was reached or a switch between a
@@ -1772,10 +1746,10 @@ Object.assign(ThreadActor.prototype.requestTypes, {
   "clientEvaluate": ThreadActor.prototype.onClientEvaluate,
   "frames": ThreadActor.prototype.onFrames,
   "interrupt": ThreadActor.prototype.onInterrupt,
-  "releaseMany": ThreadActor.prototype.onReleaseMany,
   "sources": ThreadActor.prototype.onSources,
   "threadGrips": ThreadActor.prototype.onThreadGrips,
   "skipBreakpoints": ThreadActor.prototype.onSkipBreakpoints,
+  "pauseOnExceptions": ThreadActor.prototype.onPauseOnExceptions,
   "dumpThread": ThreadActor.prototype.onDump,
 });
 

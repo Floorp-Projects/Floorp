@@ -91,10 +91,11 @@ static void deleteTextCB(AtkEditableText* aText, gint aStartPos, gint aEndPos) {
   }
 }
 
+MOZ_CAN_RUN_SCRIPT_BOUNDARY
 static void pasteTextCB(AtkEditableText* aText, gint aPosition) {
   AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aText));
   if (accWrap) {
-    HyperTextAccessible* text = accWrap->AsHyperText();
+    RefPtr<HyperTextAccessible> text = accWrap->AsHyperText();
     if (!text || !text->IsTextRole()) {
       return;
     }

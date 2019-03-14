@@ -134,6 +134,7 @@ class HTMLEditor final : public TextEditor,
 
   NS_IMETHOD CanPaste(int32_t aSelectionType, bool* aCanPaste) override;
 
+  MOZ_CAN_RUN_SCRIPT
   NS_IMETHOD PasteTransferable(nsITransferable* aTransferable) override;
 
   NS_IMETHOD DeleteNode(nsINode* aNode) override;
@@ -160,6 +161,7 @@ class HTMLEditor final : public TextEditor,
    * @param aDispatchPasteEvent true if this should dispatch ePaste event
    *                            before pasting.  Otherwise, false.
    */
+  MOZ_CAN_RUN_SCRIPT
   virtual nsresult PasteAsQuotationAsAction(int32_t aClipboardType,
                                             bool aDispatchPasteEvent) override;
 
@@ -1410,6 +1412,7 @@ class HTMLEditor final : public TextEditor,
    * @param aDispatchPasteEvent true if this should dispatch ePaste event
    *                            before pasting.  Otherwise, false.
    */
+  MOZ_CAN_RUN_SCRIPT
   nsresult PasteInternal(int32_t aClipboardType, bool aDispatchPasteEvent);
 
   /**
@@ -1940,7 +1943,7 @@ class HTMLEditor final : public TextEditor,
   /**
    * InsertObject() inserts given object at aPointToInsert.
    */
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY
+  MOZ_CAN_RUN_SCRIPT
   nsresult InsertObject(const nsACString& aType, nsISupports* aObject,
                         bool aIsSafe, Document* aSourceDoc,
                         const EditorDOMPoint& aPointToInsert,
@@ -1950,7 +1953,7 @@ class HTMLEditor final : public TextEditor,
   // (drag&drop or clipboard)
   virtual nsresult PrepareTransferable(nsITransferable** transferable) override;
   nsresult PrepareHTMLTransferable(nsITransferable** transferable);
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY
+  MOZ_CAN_RUN_SCRIPT
   nsresult InsertFromTransferable(nsITransferable* transferable,
                                   Document* aSourceDoc,
                                   const nsAString& aContextStr,

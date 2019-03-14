@@ -177,7 +177,6 @@ class nsFrame : public nsBox {
                        nsEventStatus* aEventStatus) override;
   nsresult GetContentForEvent(mozilla::WidgetEvent* aEvent,
                               nsIContent** aContent) override;
-  nsresult GetCursor(const nsPoint& aPoint, nsIFrame::Cursor& aCursor) override;
 
   nsresult GetPointFromOffset(int32_t inOffset, nsPoint* outPoint) override;
   nsresult GetCharacterRectsInRange(int32_t aInOffset, int32_t aLength,
@@ -655,9 +654,6 @@ class nsFrame : public nsBox {
                                     int32_t* aContentOffset,
                                     mozilla::TableSelection* aTarget);
 
-  // Fills aCursor with the appropriate information from ui
-  static void FillCursorInformationFromStyle(const nsStyleUI* ui,
-                                             nsIFrame::Cursor& aCursor);
   NS_IMETHOD DoXULLayout(nsBoxLayoutState& aBoxLayoutState) override;
 
   nsBoxLayoutMetrics* BoxMetrics() const;

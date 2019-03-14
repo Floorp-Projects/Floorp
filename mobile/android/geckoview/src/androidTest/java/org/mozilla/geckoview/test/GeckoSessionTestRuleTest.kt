@@ -385,7 +385,7 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
         sessionRule.session.loadTestPath(HELLO_HTML_PATH)
         sessionRule.waitForPageStop()
 
-        sessionRule.forCallbacksDuringWait(GeckoSession.ScrollDelegate { _, _, _ -> })
+        sessionRule.forCallbacksDuringWait(object : GeckoSession.ScrollDelegate {})
     }
 
     @Test fun forCallbacksDuringWait_specificMethod() {
@@ -436,8 +436,11 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
         sessionRule.session.loadTestPath(HELLO_HTML_PATH)
         sessionRule.waitForPageStop()
 
-        sessionRule.forCallbacksDuringWait(
-                GeckoSession.ScrollDelegate @AssertCalled { _, _, _ -> })
+        sessionRule.forCallbacksDuringWait(object : GeckoSession.ScrollDelegate {
+            @AssertCalled
+            override fun onScrollChanged(session: GeckoSession, scrollX: Int, scrollY: Int) {
+            }
+        })
     }
 
     @Test fun forCallbacksDuringWait_specificCount() {
@@ -547,8 +550,11 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
         sessionRule.session.loadTestPath(HELLO_HTML_PATH)
         sessionRule.waitForPageStop()
 
-        sessionRule.forCallbacksDuringWait(
-                GeckoSession.ScrollDelegate @AssertCalled(false) { _, _, _ -> })
+        sessionRule.forCallbacksDuringWait(object : GeckoSession.ScrollDelegate {
+            @AssertCalled(false)
+            override fun onScrollChanged(session: GeckoSession, scrollX: Int, scrollY: Int) {
+            }
+        })
     }
 
     @Test(expected = AssertionError::class)
@@ -567,8 +573,11 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
         sessionRule.session.loadTestPath(HELLO_HTML_PATH)
         sessionRule.waitForPageStop()
 
-        sessionRule.forCallbacksDuringWait(
-                GeckoSession.ScrollDelegate @AssertCalled(count = 0) { _, _, _ -> })
+        sessionRule.forCallbacksDuringWait(object : GeckoSession.ScrollDelegate {
+            @AssertCalled(count = 0)
+            override fun onScrollChanged(session: GeckoSession, scrollX: Int, scrollY: Int) {
+            }
+        })
     }
 
     @Test(expected = AssertionError::class)
@@ -704,14 +713,20 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
     }
 
     @Test fun delegateUntilTestEnd_notCalled() {
-        sessionRule.delegateUntilTestEnd(
-                GeckoSession.ScrollDelegate @AssertCalled(false) { _, _, _ -> })
+        sessionRule.delegateUntilTestEnd(object : GeckoSession.ScrollDelegate {
+            @AssertCalled(false)
+            override fun onScrollChanged(session: GeckoSession, scrollX: Int, scrollY: Int) {
+            }
+        })
     }
 
     @Test(expected = AssertionError::class)
     fun delegateUntilTestEnd_throwOnNotCalled() {
-        sessionRule.delegateUntilTestEnd(
-                GeckoSession.ScrollDelegate @AssertCalled(count = 1) { _, _, _ -> })
+        sessionRule.delegateUntilTestEnd(object : GeckoSession.ScrollDelegate {
+            @AssertCalled(count = 1)
+            override fun onScrollChanged(session: GeckoSession, scrollX: Int, scrollY: Int) {
+            }
+        })
         sessionRule.performTestEndCheck()
     }
 
@@ -788,16 +803,22 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
 
     @Test(expected = AssertionError::class)
     fun delegateDuringNextWait_throwOnNotCalled() {
-        sessionRule.delegateDuringNextWait(
-                GeckoSession.ScrollDelegate @AssertCalled(count = 1) { _, _, _ -> })
+        sessionRule.delegateDuringNextWait(object : GeckoSession.ScrollDelegate {
+            @AssertCalled(count = 1)
+            override fun onScrollChanged(session: GeckoSession, scrollX: Int, scrollY: Int) {
+            }
+        })
         sessionRule.session.loadTestPath(HELLO_HTML_PATH)
         sessionRule.waitForPageStop()
     }
 
     @Test(expected = AssertionError::class)
     fun delegateDuringNextWait_throwOnNotCalledAtTestEnd() {
-        sessionRule.delegateDuringNextWait(
-                GeckoSession.ScrollDelegate @AssertCalled(count = 1) { _, _, _ -> })
+        sessionRule.delegateDuringNextWait(object : GeckoSession.ScrollDelegate {
+            @AssertCalled(count = 1)
+            override fun onScrollChanged(session: GeckoSession, scrollX: Int, scrollY: Int) {
+            }
+        })
         sessionRule.performTestEndCheck()
     }
 

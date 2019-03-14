@@ -7,6 +7,13 @@
 
 void CanRunScriptChecker::registerMatchers(MatchFinder *AstMatcher) {
   auto Refcounted = qualType(hasDeclaration(cxxRecordDecl(isRefCounted())));
+  auto StackSmartPtr =
+    ignoreTrivials(
+      declRefExpr(to(varDecl(hasAutomaticStorageDuration())),
+                  hasType(isSmartPtrToRefCounted())));
+  auto MozKnownLiveCall =
+    callExpr(callee(functionDecl(hasName("MOZ_KnownLive"))));
+
   auto InvalidArg =
       // We want to find any expression,
       ignoreTrivials(expr(
@@ -14,26 +21,61 @@ void CanRunScriptChecker::registerMatchers(MatchFinder *AstMatcher) {
           anyOf(
             hasType(Refcounted),
             hasType(pointsTo(Refcounted)),
-            hasType(references(Refcounted))
+            hasType(references(Refcounted)),
+            hasType(isSmartPtrToRefCounted())
           ),
           // and which is not this,
           unless(cxxThisExpr()),
-          // and which is not a method call on a smart ptr,
-          unless(cxxMemberCallExpr(on(hasType(isSmartPtrToRefCounted())))),
-          // and which is not calling operator* on a smart ptr.
+          // and which is not a stack smart ptr
+          unless(StackSmartPtr),
+          // and which is not a method call on a stack smart ptr,
+          unless(cxxMemberCallExpr(on(StackSmartPtr))),
+          // and which is not calling operator* on a stack smart ptr.
           unless(
             allOf(
               cxxOperatorCallExpr(hasOverloadedOperatorName("*")),
               callExpr(allOf(
-                hasAnyArgument(hasType(isSmartPtrToRefCounted())),
+                hasAnyArgument(StackSmartPtr),
                 argumentCountIs(1)
               ))
             )
           ),
           // and which is not a parameter of the parent function,
           unless(declRefExpr(to(parmVarDecl()))),
+          // and which is not a default arg with value nullptr, since those are
+          // always safe.
+          unless(cxxDefaultArgExpr(isNullDefaultArg())),
+          // and which is not a dereference of a parameter of the parent
+          // function (including "this"),
+          unless(
+            unaryOperator(
+              unaryDereferenceOperator(),
+              hasUnaryOperand(
+                anyOf(
+                  // If we're doing *someArg, the argument of the dereference is
+                  // an ImplicitCastExpr LValueToRValue which has the
+                  // DeclRefExpr as an argument.  We could try to match that
+                  // explicitly with a custom matcher (none of the built-in
+                  // matchers seem to match on the thing being cast for an
+                  // implicitCastExpr), but it's simpler to just use
+                  // ignoreTrivials to strip off the cast.
+                  ignoreTrivials(declRefExpr(to(parmVarDecl()))),
+                  cxxThisExpr()
+                )
+              )
+            )
+          ),
           // and which is not a MOZ_KnownLive wrapped value.
-          unless(callExpr(callee(functionDecl(hasName("MOZ_KnownLive"))))),
+          unless(
+            anyOf(
+              MozKnownLiveCall,
+              // MOZ_KnownLive applied to a RefPtr or nsCOMPtr just returns that
+              // same RefPtr/nsCOMPtr type which causes us to have a conversion
+              // operator applied after the MOZ_KnownLive.
+              cxxMemberCallExpr(on(allOf(hasType(isSmartPtrToRefCounted()),
+                                         MozKnownLiveCall)))
+            )
+          ),
           expr().bind("invalidArg")));
 
   auto OptionalInvalidExplicitArg = anyOf(
@@ -180,7 +222,7 @@ void CanRunScriptChecker::check(const MatchFinder::MatchResult &Result) {
   const char *ErrorNonCanRunScriptParent =
       "functions marked as MOZ_CAN_RUN_SCRIPT can only be called from "
       "functions also marked as MOZ_CAN_RUN_SCRIPT";
-  const char *NoteNonCanRunScriptParent = "parent function declared here";
+  const char *NoteNonCanRunScriptParent = "caller function declared here";
 
   const Expr *InvalidArg = Result.Nodes.getNodeAs<Expr>("invalidArg");
 
@@ -246,7 +288,7 @@ void CanRunScriptChecker::check(const MatchFinder::MatchResult &Result) {
     diag(CallRange.getBegin(), ErrorNonCanRunScriptParent, DiagnosticIDs::Error)
         << CallRange;
 
-    diag(ParentFunction->getLocation(), NoteNonCanRunScriptParent,
-         DiagnosticIDs::Note);
+    diag(ParentFunction->getCanonicalDecl()->getLocation(),
+	 NoteNonCanRunScriptParent, DiagnosticIDs::Note);
   }
 }

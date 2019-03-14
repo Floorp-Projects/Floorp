@@ -81,6 +81,7 @@ class nsXBLKeyEventHandler : public nsIDOMEventListener {
   nsXBLKeyEventHandler();
   virtual ~nsXBLKeyEventHandler();
 
+  MOZ_CAN_RUN_SCRIPT
   bool ExecuteMatchedHandlers(mozilla::dom::KeyboardEvent* aEvent,
                               uint32_t aCharCode,
                               const IgnoreModifierState& aIgnoreModifierState);

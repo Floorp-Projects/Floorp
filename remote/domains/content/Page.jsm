@@ -107,9 +107,9 @@ class Page extends ContentProcessDomain {
 function transitionToLoadFlag(transitionType) {
   switch (transitionType) {
   case "reload":
-    return Ci.nsIWebNavigation.LOAD_FLAG_IS_REFRESH;
+    return Ci.nsIWebNavigation.LOAD_FLAGS_IS_REFRESH;
   case "link":
   default:
-    return Ci.nsIWebNavigation.LOAD_FLAG_IS_LINK;
+    return Ci.nsIWebNavigation.LOAD_FLAGS_IS_LINK;
   }
 }

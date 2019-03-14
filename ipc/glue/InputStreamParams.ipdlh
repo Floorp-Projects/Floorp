@@ -87,21 +87,15 @@ union InputStreamParams
   IPCRemoteStreamParams;
 };
 
-union OptionalInputStreamParams
-{
-  void_t;
-  InputStreamParams;
-};
-
 struct BufferedInputStreamParams
 {
-  OptionalInputStreamParams optionalStream;
+  InputStreamParams? optionalStream;
   uint32_t bufferSize;
 };
 
 struct MIMEInputStreamParams
 {
-  OptionalInputStreamParams optionalStream;
+  InputStreamParams? optionalStream;
   HeaderEntry[] headers;
   bool startedReading;
 };

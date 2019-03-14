@@ -4,7 +4,8 @@
 
 //! Module only available when pathfinder is activated
 
-use api::{DeviceIntPoint, DeviceIntSize, DevicePixel, FontKey, FontTemplate, NativeFontHandle};
+use api::{FontKey, FontTemplate, NativeFontHandle};
+use api::units::{DeviceIntPoint, DeviceIntSize, DevicePixel};
 use euclid::{TypedPoint2D, TypedSize2D, TypedVector2D};
 use pathfinder_font_renderer;
 use pathfinder_partitioner::mesh::Mesh as PathfinderMesh;

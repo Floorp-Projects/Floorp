@@ -32,7 +32,7 @@ DEFINES['DAV1D_API'] = ''
 if CONFIG['MOZ_DAV1D_ASM']:
     # Default stack aligment is 16 bytes
     DIRS += ['asm']
-    if CONFIG['OS_TARGET'] == 'WINNT' and CONFIG['CPU_ARCH'] == 'x86_64':
+    if CONFIG['OS_TARGET'] in ('WINNT', 'Darwin') and CONFIG['CPU_ARCH'] == 'x86_64':
          # Update stack aligment to 32 bytes
          if CONFIG['CC_TYPE'] == 'clang':
              CFLAGS += ['-mstack-alignment=32']

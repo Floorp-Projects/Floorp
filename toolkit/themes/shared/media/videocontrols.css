@@ -411,12 +411,29 @@
   background: url(chrome://global/skin/media/stalled.png) no-repeat center;
 }
 
+.statusIcon[type="error"],
+.statusIcon[type="pictureInPicture"] {
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
 .statusIcon[type="error"] {
   min-width: 70px;
   min-height: 60px;
-  background: url(chrome://global/skin/media/error.png) no-repeat center;
-  background-size: contain;
+  background-image: url(chrome://global/skin/media/error.png);
 }
+
+%ifdef NIGHTLY_BUILD
+.statusIcon[type="pictureInPicture"] {
+  min-width: 84px;
+  min-height: 84px;
+  background-image: url(chrome://global/skin/media/pictureinpicture.svg);
+  -moz-context-properties: fill, stroke;
+  fill: #fff;
+  stroke: #fff;
+}
+%endif
 
 /* Overlay Play button */
 .clickToPlay {
@@ -453,8 +470,17 @@
   opacity: 0;
 }
 
-/* Error description formatting */
-.errorLabel {
+.pictureInPictureOverlay {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  opacity: 1;
+  background-color: rgb(12, 12, 13);
+}
+
+/* Status description formatting */
+.statusLabel {
   padding: 0 10px;
   text-align: center;
   font: message-box;
@@ -462,22 +488,17 @@
   color: #ffffff;
 }
 
-.errorLabel {
+.statusLabel {
   display: none;
 }
 
-[error="errorAborted"]         > [anonid="errorAborted"],
-[error="errorNetwork"]         > [anonid="errorNetwork"],
-[error="errorDecode"]          > [anonid="errorDecode"],
-[error="errorSrcNotSupported"] > [anonid="errorSrcNotSupported"],
-[error="errorNoSource"]        > [anonid="errorNoSource"],
-[error="errorGeneric"]         > [anonid="errorGeneric"],
-[error="errorAborted"]         > [id="errorAborted"],
-[error="errorNetwork"]         > [id="errorNetwork"],
-[error="errorDecode"]          > [id="errorDecode"],
-[error="errorSrcNotSupported"] > [id="errorSrcNotSupported"],
-[error="errorNoSource"]        > [id="errorNoSource"],
-[error="errorGeneric"]         > [id="errorGeneric"] {
+[status="errorAborted"]         > [id="errorAborted"],
+[status="errorNetwork"]         > [id="errorNetwork"],
+[status="errorDecode"]          > [id="errorDecode"],
+[status="errorSrcNotSupported"] > [id="errorSrcNotSupported"],
+[status="errorNoSource"]        > [id="errorNoSource"],
+[status="errorGeneric"]         > [id="errorGeneric"],
+[status="pictureInPicture"]     > [id="pictureInPicture"] {
   display: inline;
 }
 

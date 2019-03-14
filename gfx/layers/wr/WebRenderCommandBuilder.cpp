@@ -1102,7 +1102,7 @@ void Grouper::ConstructGroups(nsDisplayListBuilder* aDisplayListBuilder,
                              item);
 
       {
-        auto spaceAndClipChain = mClipManager.SwitchItem(item, aSc);
+        auto spaceAndClipChain = mClipManager.SwitchItem(item);
         wr::SpaceAndClipChainHelper saccHelper(aBuilder, spaceAndClipChain);
 
         sIndent++;
@@ -1603,7 +1603,7 @@ void WebRenderCommandBuilder::CreateWebRenderCommandsFromDisplayList(
 
     // This is where we emulate the clip/scroll stack that was previously
     // implemented on the WR display list side.
-    auto spaceAndClipChain = mClipManager.SwitchItem(item, aSc);
+    auto spaceAndClipChain = mClipManager.SwitchItem(item);
     wr::SpaceAndClipChainHelper saccHelper(aBuilder, spaceAndClipChain);
 
     {  // scope restoreDoGrouping

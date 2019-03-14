@@ -2,12 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{
-    DeviceHomogeneousVector, DevicePoint, DeviceSize, DeviceRect,
-    LayoutRect, LayoutToWorldTransform,
-    PremultipliedColorF, LayoutToPictureTransform, PictureToLayoutTransform, PicturePixel,
-    WorldPixel, WorldToLayoutTransform, LayoutPoint, DeviceVector2D
-};
+use api::PremultipliedColorF;
+use api::units::*;
 use clip_scroll_tree::{ClipScrollTree, ROOT_SPATIAL_NODE_INDEX, SpatialNodeIndex};
 use gpu_cache::{GpuCacheAddress, GpuDataRequest};
 use internal_types::FastHashMap;
@@ -137,7 +133,6 @@ pub struct BorderInstance {
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 #[repr(C)]
 pub struct ClipMaskInstance {
-    pub render_task_address: RenderTaskAddress,
     pub clip_transform_id: TransformPaletteId,
     pub prim_transform_id: TransformPaletteId,
     pub clip_data_address: GpuCacheAddress,
@@ -146,6 +141,9 @@ pub struct ClipMaskInstance {
     pub tile_rect: LayoutRect,
     pub sub_rect: DeviceRect,
     pub snap_offsets: SnapOffsets,
+    pub task_origin: DevicePoint,
+    pub screen_origin: DevicePoint,
+    pub device_pixel_scale: f32,
 }
 
 /// A border corner dot or dash drawn into the clipping mask.

@@ -7,7 +7,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // To generate this file, see the documentation in
-// js/src/frontend/binsource/README.md.
+// js/src/frontend/binast/README.md.
 
 #ifndef frontend_BinASTParser_h
 #define frontend_BinASTParser_h
@@ -16,8 +16,8 @@
 
 #include "frontend/BCEParserHandle.h"
 #include "frontend/BinASTParserPerTokenizer.h"
-#include "frontend/BinToken.h"
-#include "frontend/BinTokenReaderMultipart.h"
+#include "frontend/BinASTToken.h"
+#include "frontend/BinASTTokenReaderMultipart.h"
 #include "frontend/FullParseHandler.h"
 #include "frontend/ParseContext.h"
 #include "frontend/ParseNode.h"
@@ -38,7 +38,7 @@ class BinASTParser : public BinASTParserPerTokenizer<Tok> {
 
   using Tokenizer = Tok;
 
-  using BinFields = typename Tokenizer::BinFields;
+  using BinASTFields = typename Tokenizer::BinASTFields;
   using AutoList = typename Tokenizer::AutoList;
   using AutoTaggedTuple = typename Tokenizer::AutoTaggedTuple;
   using Chars = typename Tokenizer::Chars;
@@ -135,42 +135,44 @@ class BinASTParser : public BinASTParserPerTokenizer<Tok> {
   JS::Result<ParseNode*> parseSpreadElementOrExpression();
   JS::Result<ParseNode*> parseStatement();
   JS::Result<Ok> parseSumAssertedMaybePositionalParameterName(
-      const size_t start, const BinKind kind, const BinFields& fields,
+      const size_t start, const BinASTKind kind, const BinASTFields& fields,
       AssertedScopeKind scopeKind,
       MutableHandle<GCVector<JSAtom*>> positionalParams);
   JS::Result<ParseNode*> parseSumAssignmentTarget(const size_t start,
-                                                  const BinKind kind,
-                                                  const BinFields& fields);
-  JS::Result<ParseNode*> parseSumBinding(const size_t start, const BinKind kind,
-                                         const BinFields& fields);
+                                                  const BinASTKind kind,
+                                                  const BinASTFields& fields);
+  JS::Result<ParseNode*> parseSumBinding(const size_t start,
+                                         const BinASTKind kind,
+                                         const BinASTFields& fields);
   JS::Result<ParseNode*> parseSumExpression(const size_t start,
-                                            const BinKind kind,
-                                            const BinFields& fields);
+                                            const BinASTKind kind,
+                                            const BinASTFields& fields);
   JS::Result<ParseNode*> parseSumExpressionOrSuper(const size_t start,
-                                                   const BinKind kind,
-                                                   const BinFields& fields);
+                                                   const BinASTKind kind,
+                                                   const BinASTFields& fields);
   JS::Result<ParseNode*> parseSumForInOfBindingOrAssignmentTarget(
-      const size_t start, const BinKind kind, const BinFields& fields);
+      const size_t start, const BinASTKind kind, const BinASTFields& fields);
   JS::Result<ParseNode*> parseSumObjectProperty(const size_t start,
-                                                const BinKind kind,
-                                                const BinFields& fields);
+                                                const BinASTKind kind,
+                                                const BinASTFields& fields);
   JS::Result<ParseNode*> parseSumParameter(const size_t start,
-                                           const BinKind kind,
-                                           const BinFields& fields);
-  JS::Result<ParseNode*> parseSumProgram(const size_t start, const BinKind kind,
-                                         const BinFields& fields);
+                                           const BinASTKind kind,
+                                           const BinASTFields& fields);
+  JS::Result<ParseNode*> parseSumProgram(const size_t start,
+                                         const BinASTKind kind,
+                                         const BinASTFields& fields);
   JS::Result<ParseNode*> parseSumPropertyName(const size_t start,
-                                              const BinKind kind,
-                                              const BinFields& fields);
+                                              const BinASTKind kind,
+                                              const BinASTFields& fields);
   JS::Result<ParseNode*> parseSumSimpleAssignmentTarget(
-      const size_t start, const BinKind kind, const BinFields& fields);
+      const size_t start, const BinASTKind kind, const BinASTFields& fields);
   JS::Result<ParseNode*> parseSumSpreadElementOrExpression(
-      const size_t start, const BinKind kind, const BinFields& fields);
+      const size_t start, const BinASTKind kind, const BinASTFields& fields);
   JS::Result<ParseNode*> parseSumStatement(const size_t start,
-                                           const BinKind kind,
-                                           const BinFields& fields);
+                                           const BinASTKind kind,
+                                           const BinASTFields& fields);
   JS::Result<ParseNode*> parseSumVariableDeclarationOrExpression(
-      const size_t start, const BinKind kind, const BinFields& fields);
+      const size_t start, const BinASTKind kind, const BinASTFields& fields);
 
   // ----- Interfaces (by lexicographical order)
   // `ParseNode*` may never be nullptr
@@ -202,252 +204,229 @@ class BinASTParser : public BinASTParserPerTokenizer<Tok> {
   JS::Result<ParseNode*> parseSwitchDefault();
   JS::Result<ParseNode*> parseVariableDeclarator();
   JS::Result<ParseNode*> parseInterfaceArrayAssignmentTarget(
-      const size_t start, const BinKind kind, const BinFields& fields);
+      const size_t start, const BinASTKind kind, const BinASTFields& fields);
   JS::Result<ParseNode*> parseInterfaceArrayBinding(const size_t start,
-                                                    const BinKind kind,
-                                                    const BinFields& fields);
-  JS::Result<ParseNode*> parseInterfaceArrayExpression(const size_t start,
-                                                       const BinKind kind,
-                                                       const BinFields& fields);
+                                                    const BinASTKind kind,
+                                                    const BinASTFields& fields);
+  JS::Result<ParseNode*> parseInterfaceArrayExpression(
+      const size_t start, const BinASTKind kind, const BinASTFields& fields);
   JS::Result<Ok> parseInterfaceAssertedBlockScope(const size_t start,
-                                                  const BinKind kind,
-                                                  const BinFields& fields);
+                                                  const BinASTKind kind,
+                                                  const BinASTFields& fields);
   JS::Result<Ok> parseInterfaceAssertedBoundName(const size_t start,
-                                                 const BinKind kind,
-                                                 const BinFields& fields,
+                                                 const BinASTKind kind,
+                                                 const BinASTFields& fields,
                                                  AssertedScopeKind scopeKind);
-  JS::Result<Ok> parseInterfaceAssertedBoundNamesScope(const size_t start,
-                                                       const BinKind kind,
-                                                       const BinFields& fields);
+  JS::Result<Ok> parseInterfaceAssertedBoundNamesScope(
+      const size_t start, const BinASTKind kind, const BinASTFields& fields);
   JS::Result<Ok> parseInterfaceAssertedDeclaredName(
-      const size_t start, const BinKind kind, const BinFields& fields,
+      const size_t start, const BinASTKind kind, const BinASTFields& fields,
       AssertedScopeKind scopeKind);
   JS::Result<Ok> parseInterfaceAssertedParameterScope(
-      const size_t start, const BinKind kind, const BinFields& fields,
+      const size_t start, const BinASTKind kind, const BinASTFields& fields,
       MutableHandle<GCVector<JSAtom*>> positionalParams);
   JS::Result<Ok> parseInterfaceAssertedPositionalParameterName(
-      const size_t start, const BinKind kind, const BinFields& fields,
+      const size_t start, const BinASTKind kind, const BinASTFields& fields,
       AssertedScopeKind scopeKind,
       MutableHandle<GCVector<JSAtom*>> positionalParams);
   JS::Result<Ok> parseInterfaceAssertedScriptGlobalScope(
-      const size_t start, const BinKind kind, const BinFields& fields);
+      const size_t start, const BinASTKind kind, const BinASTFields& fields);
   JS::Result<Ok> parseInterfaceAssertedVarScope(const size_t start,
-                                                const BinKind kind,
-                                                const BinFields& fields);
+                                                const BinASTKind kind,
+                                                const BinASTFields& fields);
   JS::Result<ParseNode*> parseInterfaceAssignmentExpression(
-      const size_t start, const BinKind kind, const BinFields& fields);
+      const size_t start, const BinASTKind kind, const BinASTFields& fields);
   JS::Result<ParseNode*> parseInterfaceAssignmentTargetIdentifier(
-      const size_t start, const BinKind kind, const BinFields& fields);
-  JS::Result<ParseNode*> parseInterfaceAwaitExpression(const size_t start,
-                                                       const BinKind kind,
-                                                       const BinFields& fields);
+      const size_t start, const BinASTKind kind, const BinASTFields& fields);
+  JS::Result<ParseNode*> parseInterfaceAwaitExpression(
+      const size_t start, const BinASTKind kind, const BinASTFields& fields);
   JS::Result<ParseNode*> parseInterfaceBinaryExpression(
-      const size_t start, const BinKind kind, const BinFields& fields);
+      const size_t start, const BinASTKind kind, const BinASTFields& fields);
   JS::Result<ParseNode*> parseInterfaceBindingIdentifier(
-      const size_t start, const BinKind kind, const BinFields& fields);
+      const size_t start, const BinASTKind kind, const BinASTFields& fields);
   JS::Result<ParseNode*> parseInterfaceBindingWithInitializer(
-      const size_t start, const BinKind kind, const BinFields& fields);
+      const size_t start, const BinASTKind kind, const BinASTFields& fields);
   JS::Result<ParseNode*> parseInterfaceBlock(const size_t start,
-                                             const BinKind kind,
-                                             const BinFields& fields);
-  JS::Result<ParseNode*> parseInterfaceBreakStatement(const size_t start,
-                                                      const BinKind kind,
-                                                      const BinFields& fields);
-  JS::Result<ParseNode*> parseInterfaceCallExpression(const size_t start,
-                                                      const BinKind kind,
-                                                      const BinFields& fields);
+                                             const BinASTKind kind,
+                                             const BinASTFields& fields);
+  JS::Result<ParseNode*> parseInterfaceBreakStatement(
+      const size_t start, const BinASTKind kind, const BinASTFields& fields);
+  JS::Result<ParseNode*> parseInterfaceCallExpression(
+      const size_t start, const BinASTKind kind, const BinASTFields& fields);
   JS::Result<LexicalScopeNode*> parseInterfaceCatchClause(
-      const size_t start, const BinKind kind, const BinFields& fields);
+      const size_t start, const BinASTKind kind, const BinASTFields& fields);
   JS::Result<ParseNode*> parseInterfaceClassDeclaration(
-      const size_t start, const BinKind kind, const BinFields& fields);
-  JS::Result<ParseNode*> parseInterfaceClassExpression(const size_t start,
-                                                       const BinKind kind,
-                                                       const BinFields& fields);
+      const size_t start, const BinASTKind kind, const BinASTFields& fields);
+  JS::Result<ParseNode*> parseInterfaceClassExpression(
+      const size_t start, const BinASTKind kind, const BinASTFields& fields);
   JS::Result<ParseNode*> parseInterfaceCompoundAssignmentExpression(
-      const size_t start, const BinKind kind, const BinFields& fields);
+      const size_t start, const BinASTKind kind, const BinASTFields& fields);
   JS::Result<ParseNode*> parseInterfaceComputedMemberAssignmentTarget(
-      const size_t start, const BinKind kind, const BinFields& fields);
+      const size_t start, const BinASTKind kind, const BinASTFields& fields);
   JS::Result<ParseNode*> parseInterfaceComputedMemberExpression(
-      const size_t start, const BinKind kind, const BinFields& fields);
+      const size_t start, const BinASTKind kind, const BinASTFields& fields);
   JS::Result<ParseNode*> parseInterfaceComputedPropertyName(
-      const size_t start, const BinKind kind, const BinFields& fields);
+      const size_t start, const BinASTKind kind, const BinASTFields& fields);
   JS::Result<ParseNode*> parseInterfaceConditionalExpression(
-      const size_t start, const BinKind kind, const BinFields& fields);
+      const size_t start, const BinASTKind kind, const BinASTFields& fields);
   JS::Result<ParseNode*> parseInterfaceContinueStatement(
-      const size_t start, const BinKind kind, const BinFields& fields);
+      const size_t start, const BinASTKind kind, const BinASTFields& fields);
   JS::Result<ParseNode*> parseInterfaceDataProperty(const size_t start,
-                                                    const BinKind kind,
-                                                    const BinFields& fields);
+                                                    const BinASTKind kind,
+                                                    const BinASTFields& fields);
   JS::Result<ParseNode*> parseInterfaceDebuggerStatement(
-      const size_t start, const BinKind kind, const BinFields& fields);
+      const size_t start, const BinASTKind kind, const BinASTFields& fields);
   JS::Result<ParseNode*> parseInterfaceDirective(const size_t start,
-                                                 const BinKind kind,
-                                                 const BinFields& fields);
+                                                 const BinASTKind kind,
+                                                 const BinASTFields& fields);
   JS::Result<ParseNode*> parseInterfaceDoWhileStatement(
-      const size_t start, const BinKind kind, const BinFields& fields);
+      const size_t start, const BinASTKind kind, const BinASTFields& fields);
   JS::Result<ParseNode*> parseInterfaceEagerArrowExpressionWithExpression(
-      const size_t start, const BinKind kind, const BinFields& fields);
+      const size_t start, const BinASTKind kind, const BinASTFields& fields);
   JS::Result<ParseNode*> parseInterfaceEagerArrowExpressionWithFunctionBody(
-      const size_t start, const BinKind kind, const BinFields& fields);
+      const size_t start, const BinASTKind kind, const BinASTFields& fields);
   JS::Result<ParseNode*> parseInterfaceEagerFunctionDeclaration(
-      const size_t start, const BinKind kind, const BinFields& fields);
+      const size_t start, const BinASTKind kind, const BinASTFields& fields);
   JS::Result<ParseNode*> parseInterfaceEagerFunctionExpression(
-      const size_t start, const BinKind kind, const BinFields& fields);
+      const size_t start, const BinASTKind kind, const BinASTFields& fields);
   JS::Result<ParseNode*> parseInterfaceEagerGetter(const size_t start,
-                                                   const BinKind kind,
-                                                   const BinFields& fields);
+                                                   const BinASTKind kind,
+                                                   const BinASTFields& fields);
   JS::Result<ParseNode*> parseInterfaceEagerMethod(const size_t start,
-                                                   const BinKind kind,
-                                                   const BinFields& fields);
+                                                   const BinASTKind kind,
+                                                   const BinASTFields& fields);
   JS::Result<ParseNode*> parseInterfaceEagerSetter(const size_t start,
-                                                   const BinKind kind,
-                                                   const BinFields& fields);
-  JS::Result<ParseNode*> parseInterfaceEmptyStatement(const size_t start,
-                                                      const BinKind kind,
-                                                      const BinFields& fields);
+                                                   const BinASTKind kind,
+                                                   const BinASTFields& fields);
+  JS::Result<ParseNode*> parseInterfaceEmptyStatement(
+      const size_t start, const BinASTKind kind, const BinASTFields& fields);
   JS::Result<ParseNode*> parseInterfaceExpressionStatement(
-      const size_t start, const BinKind kind, const BinFields& fields);
-  JS::Result<ParseNode*> parseInterfaceForInOfBinding(const size_t start,
-                                                      const BinKind kind,
-                                                      const BinFields& fields);
-  JS::Result<ParseNode*> parseInterfaceForInStatement(const size_t start,
-                                                      const BinKind kind,
-                                                      const BinFields& fields);
-  JS::Result<ParseNode*> parseInterfaceForOfStatement(const size_t start,
-                                                      const BinKind kind,
-                                                      const BinFields& fields);
+      const size_t start, const BinASTKind kind, const BinASTFields& fields);
+  JS::Result<ParseNode*> parseInterfaceForInOfBinding(
+      const size_t start, const BinASTKind kind, const BinASTFields& fields);
+  JS::Result<ParseNode*> parseInterfaceForInStatement(
+      const size_t start, const BinASTKind kind, const BinASTFields& fields);
+  JS::Result<ParseNode*> parseInterfaceForOfStatement(
+      const size_t start, const BinASTKind kind, const BinASTFields& fields);
   JS::Result<ParseNode*> parseInterfaceForStatement(const size_t start,
-                                                    const BinKind kind,
-                                                    const BinFields& fields);
-  JS::Result<ListNode*> parseInterfaceFormalParameters(const size_t start,
-                                                       const BinKind kind,
-                                                       const BinFields& fields);
+                                                    const BinASTKind kind,
+                                                    const BinASTFields& fields);
+  JS::Result<ListNode*> parseInterfaceFormalParameters(
+      const size_t start, const BinASTKind kind, const BinASTFields& fields);
   JS::Result<Ok> parseInterfaceFunctionExpressionContents(
-      const size_t start, const BinKind kind, const BinFields& fields,
+      const size_t start, const BinASTKind kind, const BinASTFields& fields,
       uint32_t funLength, ListNode** paramsOut, ListNode** bodyOut);
   JS::Result<Ok> parseInterfaceFunctionOrMethodContents(
-      const size_t start, const BinKind kind, const BinFields& fields,
+      const size_t start, const BinASTKind kind, const BinASTFields& fields,
       uint32_t funLength, ListNode** paramsOut, ListNode** bodyOut);
   JS::Result<Ok> parseInterfaceGetterContents(
-      const size_t start, const BinKind kind, const BinFields& fields,
+      const size_t start, const BinASTKind kind, const BinASTFields& fields,
       uint32_t funLength, ListNode** paramsOut, ListNode** bodyOut);
   JS::Result<ParseNode*> parseInterfaceIdentifierExpression(
-      const size_t start, const BinKind kind, const BinFields& fields);
+      const size_t start, const BinASTKind kind, const BinASTFields& fields);
   JS::Result<ParseNode*> parseInterfaceIfStatement(const size_t start,
-                                                   const BinKind kind,
-                                                   const BinFields& fields);
+                                                   const BinASTKind kind,
+                                                   const BinASTFields& fields);
   JS::Result<ParseNode*> parseInterfaceLabelledStatement(
-      const size_t start, const BinKind kind, const BinFields& fields);
+      const size_t start, const BinASTKind kind, const BinASTFields& fields);
   JS::Result<ParseNode*> parseInterfaceLazyArrowExpressionWithExpression(
-      const size_t start, const BinKind kind, const BinFields& fields);
+      const size_t start, const BinASTKind kind, const BinASTFields& fields);
   JS::Result<ParseNode*> parseInterfaceLazyArrowExpressionWithFunctionBody(
-      const size_t start, const BinKind kind, const BinFields& fields);
+      const size_t start, const BinASTKind kind, const BinASTFields& fields);
   JS::Result<ParseNode*> parseInterfaceLazyFunctionDeclaration(
-      const size_t start, const BinKind kind, const BinFields& fields);
+      const size_t start, const BinASTKind kind, const BinASTFields& fields);
   JS::Result<ParseNode*> parseInterfaceLazyFunctionExpression(
-      const size_t start, const BinKind kind, const BinFields& fields);
+      const size_t start, const BinASTKind kind, const BinASTFields& fields);
   JS::Result<ParseNode*> parseInterfaceLazyGetter(const size_t start,
-                                                  const BinKind kind,
-                                                  const BinFields& fields);
+                                                  const BinASTKind kind,
+                                                  const BinASTFields& fields);
   JS::Result<ParseNode*> parseInterfaceLazyMethod(const size_t start,
-                                                  const BinKind kind,
-                                                  const BinFields& fields);
+                                                  const BinASTKind kind,
+                                                  const BinASTFields& fields);
   JS::Result<ParseNode*> parseInterfaceLazySetter(const size_t start,
-                                                  const BinKind kind,
-                                                  const BinFields& fields);
+                                                  const BinASTKind kind,
+                                                  const BinASTFields& fields);
   JS::Result<ParseNode*> parseInterfaceLiteralBooleanExpression(
-      const size_t start, const BinKind kind, const BinFields& fields);
+      const size_t start, const BinASTKind kind, const BinASTFields& fields);
   JS::Result<ParseNode*> parseInterfaceLiteralInfinityExpression(
-      const size_t start, const BinKind kind, const BinFields& fields);
+      const size_t start, const BinASTKind kind, const BinASTFields& fields);
   JS::Result<ParseNode*> parseInterfaceLiteralNullExpression(
-      const size_t start, const BinKind kind, const BinFields& fields);
+      const size_t start, const BinASTKind kind, const BinASTFields& fields);
   JS::Result<ParseNode*> parseInterfaceLiteralNumericExpression(
-      const size_t start, const BinKind kind, const BinFields& fields);
+      const size_t start, const BinASTKind kind, const BinASTFields& fields);
   JS::Result<ParseNode*> parseInterfaceLiteralPropertyName(
-      const size_t start, const BinKind kind, const BinFields& fields);
+      const size_t start, const BinASTKind kind, const BinASTFields& fields);
   JS::Result<ParseNode*> parseInterfaceLiteralRegExpExpression(
-      const size_t start, const BinKind kind, const BinFields& fields);
+      const size_t start, const BinASTKind kind, const BinASTFields& fields);
   JS::Result<ParseNode*> parseInterfaceLiteralStringExpression(
-      const size_t start, const BinKind kind, const BinFields& fields);
+      const size_t start, const BinASTKind kind, const BinASTFields& fields);
   JS::Result<ParseNode*> parseInterfaceModule(const size_t start,
-                                              const BinKind kind,
-                                              const BinFields& fields);
-  JS::Result<ParseNode*> parseInterfaceNewExpression(const size_t start,
-                                                     const BinKind kind,
-                                                     const BinFields& fields);
+                                              const BinASTKind kind,
+                                              const BinASTFields& fields);
+  JS::Result<ParseNode*> parseInterfaceNewExpression(
+      const size_t start, const BinASTKind kind, const BinASTFields& fields);
   JS::Result<ParseNode*> parseInterfaceNewTargetExpression(
-      const size_t start, const BinKind kind, const BinFields& fields);
+      const size_t start, const BinASTKind kind, const BinASTFields& fields);
   JS::Result<ParseNode*> parseInterfaceObjectAssignmentTarget(
-      const size_t start, const BinKind kind, const BinFields& fields);
-  JS::Result<ParseNode*> parseInterfaceObjectBinding(const size_t start,
-                                                     const BinKind kind,
-                                                     const BinFields& fields);
+      const size_t start, const BinASTKind kind, const BinASTFields& fields);
+  JS::Result<ParseNode*> parseInterfaceObjectBinding(
+      const size_t start, const BinASTKind kind, const BinASTFields& fields);
   JS::Result<ParseNode*> parseInterfaceObjectExpression(
-      const size_t start, const BinKind kind, const BinFields& fields);
-  JS::Result<ParseNode*> parseInterfaceReturnStatement(const size_t start,
-                                                       const BinKind kind,
-                                                       const BinFields& fields);
+      const size_t start, const BinASTKind kind, const BinASTFields& fields);
+  JS::Result<ParseNode*> parseInterfaceReturnStatement(
+      const size_t start, const BinASTKind kind, const BinASTFields& fields);
   JS::Result<ParseNode*> parseInterfaceScript(const size_t start,
-                                              const BinKind kind,
-                                              const BinFields& fields);
+                                              const BinASTKind kind,
+                                              const BinASTFields& fields);
   JS::Result<Ok> parseInterfaceSetterContents(
-      const size_t start, const BinKind kind, const BinFields& fields,
+      const size_t start, const BinASTKind kind, const BinASTFields& fields,
       uint32_t funLength, ListNode** paramsOut, ListNode** bodyOut);
   JS::Result<ParseNode*> parseInterfaceShorthandProperty(
-      const size_t start, const BinKind kind, const BinFields& fields);
-  JS::Result<ParseNode*> parseInterfaceSpreadElement(const size_t start,
-                                                     const BinKind kind,
-                                                     const BinFields& fields);
+      const size_t start, const BinASTKind kind, const BinASTFields& fields);
+  JS::Result<ParseNode*> parseInterfaceSpreadElement(
+      const size_t start, const BinASTKind kind, const BinASTFields& fields);
   JS::Result<ParseNode*> parseInterfaceStaticMemberAssignmentTarget(
-      const size_t start, const BinKind kind, const BinFields& fields);
+      const size_t start, const BinASTKind kind, const BinASTFields& fields);
   JS::Result<ParseNode*> parseInterfaceStaticMemberExpression(
-      const size_t start, const BinKind kind, const BinFields& fields);
+      const size_t start, const BinASTKind kind, const BinASTFields& fields);
   JS::Result<ParseNode*> parseInterfaceSuper(const size_t start,
-                                             const BinKind kind,
-                                             const BinFields& fields);
+                                             const BinASTKind kind,
+                                             const BinASTFields& fields);
   JS::Result<CaseClause*> parseInterfaceSwitchCase(const size_t start,
-                                                   const BinKind kind,
-                                                   const BinFields& fields);
-  JS::Result<ParseNode*> parseInterfaceSwitchDefault(const size_t start,
-                                                     const BinKind kind,
-                                                     const BinFields& fields);
-  JS::Result<ParseNode*> parseInterfaceSwitchStatement(const size_t start,
-                                                       const BinKind kind,
-                                                       const BinFields& fields);
+                                                   const BinASTKind kind,
+                                                   const BinASTFields& fields);
+  JS::Result<ParseNode*> parseInterfaceSwitchDefault(
+      const size_t start, const BinASTKind kind, const BinASTFields& fields);
+  JS::Result<ParseNode*> parseInterfaceSwitchStatement(
+      const size_t start, const BinASTKind kind, const BinASTFields& fields);
   JS::Result<ParseNode*> parseInterfaceSwitchStatementWithDefault(
-      const size_t start, const BinKind kind, const BinFields& fields);
+      const size_t start, const BinASTKind kind, const BinASTFields& fields);
   JS::Result<ParseNode*> parseInterfaceTemplateExpression(
-      const size_t start, const BinKind kind, const BinFields& fields);
-  JS::Result<ParseNode*> parseInterfaceThisExpression(const size_t start,
-                                                      const BinKind kind,
-                                                      const BinFields& fields);
-  JS::Result<ParseNode*> parseInterfaceThrowStatement(const size_t start,
-                                                      const BinKind kind,
-                                                      const BinFields& fields);
+      const size_t start, const BinASTKind kind, const BinASTFields& fields);
+  JS::Result<ParseNode*> parseInterfaceThisExpression(
+      const size_t start, const BinASTKind kind, const BinASTFields& fields);
+  JS::Result<ParseNode*> parseInterfaceThrowStatement(
+      const size_t start, const BinASTKind kind, const BinASTFields& fields);
   JS::Result<ParseNode*> parseInterfaceTryCatchStatement(
-      const size_t start, const BinKind kind, const BinFields& fields);
+      const size_t start, const BinASTKind kind, const BinASTFields& fields);
   JS::Result<ParseNode*> parseInterfaceTryFinallyStatement(
-      const size_t start, const BinKind kind, const BinFields& fields);
-  JS::Result<ParseNode*> parseInterfaceUnaryExpression(const size_t start,
-                                                       const BinKind kind,
-                                                       const BinFields& fields);
+      const size_t start, const BinASTKind kind, const BinASTFields& fields);
+  JS::Result<ParseNode*> parseInterfaceUnaryExpression(
+      const size_t start, const BinASTKind kind, const BinASTFields& fields);
   JS::Result<ParseNode*> parseInterfaceUpdateExpression(
-      const size_t start, const BinKind kind, const BinFields& fields);
+      const size_t start, const BinASTKind kind, const BinASTFields& fields);
   JS::Result<ParseNode*> parseInterfaceVariableDeclaration(
-      const size_t start, const BinKind kind, const BinFields& fields);
+      const size_t start, const BinASTKind kind, const BinASTFields& fields);
   JS::Result<ParseNode*> parseInterfaceVariableDeclarator(
-      const size_t start, const BinKind kind, const BinFields& fields);
-  JS::Result<ParseNode*> parseInterfaceWhileStatement(const size_t start,
-                                                      const BinKind kind,
-                                                      const BinFields& fields);
-  JS::Result<ParseNode*> parseInterfaceWithStatement(const size_t start,
-                                                     const BinKind kind,
-                                                     const BinFields& fields);
-  JS::Result<ParseNode*> parseInterfaceYieldExpression(const size_t start,
-                                                       const BinKind kind,
-                                                       const BinFields& fields);
+      const size_t start, const BinASTKind kind, const BinASTFields& fields);
+  JS::Result<ParseNode*> parseInterfaceWhileStatement(
+      const size_t start, const BinASTKind kind, const BinASTFields& fields);
+  JS::Result<ParseNode*> parseInterfaceWithStatement(
+      const size_t start, const BinASTKind kind, const BinASTFields& fields);
+  JS::Result<ParseNode*> parseInterfaceYieldExpression(
+      const size_t start, const BinASTKind kind, const BinASTFields& fields);
   JS::Result<ParseNode*> parseInterfaceYieldStarExpression(
-      const size_t start, const BinKind kind, const BinFields& fields);
+      const size_t start, const BinASTKind kind, const BinASTFields& fields);
 
   // ----- String enums (by lexicographical order)
   JS::Result<typename BinASTParser<Tok>::AssertedDeclaredKind>
@@ -487,7 +466,7 @@ class BinASTParser : public BinASTParserPerTokenizer<Tok> {
   JS::Result<ParseNode*> parseOptionalVariableDeclarationOrExpression();
 };
 
-extern template class BinASTParser<BinTokenReaderMultipart>;
+extern template class BinASTParser<BinASTTokenReaderMultipart>;
 
 }  // namespace frontend
 }  // namespace js

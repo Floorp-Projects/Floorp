@@ -4093,13 +4093,6 @@ nsresult nsContentUtils::DispatchEvent(Document* aDoc, nsISupports* aTarget,
   return rv;
 }
 
-// static
-nsresult nsContentUtils::DispatchInputEvent(Element* aEventTargetElement) {
-  RefPtr<TextEditor> textEditor;  // See bug 1506439
-  return DispatchInputEvent(aEventTargetElement, EditorInputType::eUnknown,
-                            textEditor, InputEventOptions());
-}
-
 nsContentUtils::InputEventOptions::InputEventOptions(
     DataTransfer* aDataTransfer)
     : mDataTransfer(aDataTransfer) {

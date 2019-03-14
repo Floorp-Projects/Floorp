@@ -112,7 +112,7 @@
   border-inline-start-width: 1px;
   width: 100%;
   min-height: 23px;
-  text-align: center;
+  text-align: left;
   color: inherit;
   padding: 1px 4px;
 }
@@ -128,21 +128,31 @@
 
 .requests-list-header-button > .button-text {
   display: inline-block;
-  text-align: center;
+  text-align: left;
   vertical-align: middle;
-  /* Align button text to center */
   width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .requests-list-header-button > .button-icon {
-  display: inline-block;
+  /* display icon only when column sorted otherwise display:none */
+  display: none;
   width: 7px;
   height: 4px;
   margin-inline-start: 3px;
   margin-inline-end: 6px;
   vertical-align: middle;
+}
+
+.requests-list-header-button[data-sorted] > .button-icon {
+  /* display icon only when column sorted */
+  display: inline-block;
+}
+
+.requests-list-header-button[data-sorted] > .button-text {
+  /* when sorted - adjust width to fit the icon inside the button */
+  width: calc(100% - 11px);
 }
 
 .requests-list-header-button[data-sorted=ascending] > .button-icon {
@@ -263,7 +273,6 @@
   display: inline-block;
   width: 16px;
   height: 16px;
-  margin: 0 4px;
   vertical-align: text-bottom;
   background-position: center;
   background-repeat: no-repeat;
@@ -309,8 +318,16 @@
   filter: brightness(500%);
 }
 
-.request-list-item .requests-list-cause.requests-list-column {
-  padding-left: 5px;
+.request-list-item .requests-list-column {
+  padding-inline-start: 4px;
+}
+
+.request-list-item .requests-list-waterfall {
+  padding-inline-start: 0px;
+}
+
+.request-list-item .status-code {
+  margin-inline-start: 0px;
 }
 
 .requests-list-cause-stack {

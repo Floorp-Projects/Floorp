@@ -79,7 +79,7 @@ class nsTextFrame : public nsFrame {
   void DestroyFrom(nsIFrame* aDestructRoot,
                    PostDestroyData& aPostDestroyData) override;
 
-  nsresult GetCursor(const nsPoint& aPoint, nsIFrame::Cursor& aCursor) final;
+  mozilla::Maybe<Cursor> GetCursor(const nsPoint&) final;
 
   nsresult CharacterDataChanged(const CharacterDataChangeInfo&) final;
 

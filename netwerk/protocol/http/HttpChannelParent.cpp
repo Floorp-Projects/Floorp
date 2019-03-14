@@ -396,10 +396,10 @@ bool HttpChannelParent::DoAsyncOpen(
     const bool& chooseApplicationCache, const nsCString& appCacheClientID,
     const bool& allowSpdy, const bool& allowAltSvc, const bool& beConservative,
     const uint32_t& tlsFlags, const Maybe<LoadInfoArgs>& aLoadInfoArgs,
-    const OptionalHttpResponseHead& aSynthesizedResponseHead,
+    const Maybe<nsHttpResponseHead>& aSynthesizedResponseHead,
     const nsCString& aSecurityInfoSerialization, const uint32_t& aCacheKey,
     const uint64_t& aRequestContextID,
-    const OptionalCorsPreflightArgs& aCorsPreflightArgs,
+    const Maybe<CorsPreflightArgs>& aCorsPreflightArgs,
     const uint32_t& aInitialRwin, const bool& aBlockAuthPrompt,
     const bool& aSuspendAfterSynthesizeResponse,
     const bool& aAllowStaleCacheContent, const nsCString& aContentTypeHint,
@@ -517,9 +517,8 @@ bool HttpChannelParent::DoAsyncOpen(
 
   httpChannel->SetRequestMethod(nsDependentCString(requestMethod.get()));
 
-  if (aCorsPreflightArgs.type() ==
-      OptionalCorsPreflightArgs::TCorsPreflightArgs) {
-    const CorsPreflightArgs& args = aCorsPreflightArgs.get_CorsPreflightArgs();
+  if (aCorsPreflightArgs.isSome()) {
+    const CorsPreflightArgs& args = aCorsPreflightArgs.ref();
     httpChannel->SetCorsPreflightParameters(args.unsafeHeaders());
   }
 
@@ -546,10 +545,8 @@ bool HttpChannelParent::DoAsyncOpen(
     httpChannel->SetUploadStreamHasHeaders(uploadStreamHasHeaders);
   }
 
-  if (aSynthesizedResponseHead.type() ==
-      OptionalHttpResponseHead::TnsHttpResponseHead) {
-    parentListener->SetupInterception(
-        aSynthesizedResponseHead.get_nsHttpResponseHead());
+  if (aSynthesizedResponseHead.isSome()) {
+    parentListener->SetupInterception(aSynthesizedResponseHead.ref());
     mWillSynthesizeResponse = true;
     httpChannelImpl->SetCouldBeSynthesized();
 
@@ -829,7 +826,7 @@ mozilla::ipc::IPCResult HttpChannelParent::RecvRedirect2Verify(
     const uint32_t& loadFlags, const uint32_t& referrerPolicy,
     const Maybe<URIParams>& aReferrerURI,
     const Maybe<URIParams>& aAPIRedirectURI,
-    const OptionalCorsPreflightArgs& aCorsPreflightArgs,
+    const Maybe<CorsPreflightArgs>& aCorsPreflightArgs,
     const bool& aChooseAppcache) {
   LOG(("HttpChannelParent::RecvRedirect2Verify [this=%p result=%" PRIx32 "]\n",
        this, static_cast<uint32_t>(aResult)));
@@ -870,13 +867,11 @@ mozilla::ipc::IPCResult HttpChannelParent::RecvRedirect2Verify(
         newHttpChannel->SetLoadFlags(loadFlags);
       }
 
-      if (aCorsPreflightArgs.type() ==
-          OptionalCorsPreflightArgs::TCorsPreflightArgs) {
+      if (aCorsPreflightArgs.isSome()) {
         nsCOMPtr<nsIHttpChannelInternal> newInternalChannel =
             do_QueryInterface(newHttpChannel);
         MOZ_RELEASE_ASSERT(newInternalChannel);
-        const CorsPreflightArgs& args =
-            aCorsPreflightArgs.get_CorsPreflightArgs();
+        const CorsPreflightArgs& args = aCorsPreflightArgs.ref();
         newInternalChannel->SetCorsPreflightParameters(args.unsafeHeaders());
       }
 

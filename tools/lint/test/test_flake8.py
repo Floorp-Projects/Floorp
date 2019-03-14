@@ -79,6 +79,20 @@ def test_lint_excluded_file(lint, paths, config):
     assert len(results) == 0
 
 
+def test_lint_excluded_file_with_glob(lint, paths, config):
+    config['exclude'] = paths('ext/*.configure')
+
+    files = paths('ext')
+    results = lint(files, config)
+    print(results)
+    assert len(results) == 0
+
+    files = paths('ext/bad.configure')
+    results = lint(files, config)
+    print(results)
+    assert len(results) == 0
+
+
 def test_lint_uses_custom_extensions(lint, paths):
     assert len(lint(paths('ext'))) == 1
     assert len(lint(paths('ext/bad.configure'))) == 1

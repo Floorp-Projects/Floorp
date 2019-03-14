@@ -142,6 +142,7 @@ sm-tsan-linux64/opt:
     run:
         spidermonkey-variant: tsan
     toolchains:
+        - linux64-binutils
         - linux64-clang
         - linux64-rust
 

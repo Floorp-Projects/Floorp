@@ -7,10 +7,10 @@
 
 function debuggerIsPaused(dbg) {
   const {
-    selectors: { isPaused },
+    selectors: { getIsPaused, getCurrentThread },
     getState,
   } = dbg;
-  return !!isPaused(getState());
+  return !!getIsPaused(getState(), getCurrentThread(getState()));
 }
 
 function waitForPaused(dbg) {

@@ -12,13 +12,7 @@ LOCAL_INCLUDES += [
 # Suppress warnings in third-party code.
 if CONFIG['CC_TYPE'] == 'clang-cl':
     CXXFLAGS += [
-        '-wd4005', # macro redefinition
-        '-wd4146', # negative unsigned
-        '-wd4334', # 32-bit shift to 64 bits
-        '-wd4804', # unsafe use of type 'bool'
-    ]
-    CFLAGS += [
-        '-wd4312', # conversion to greater size
+        '-Wno-macro-redefined',
     ]
 elif CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     CXXFLAGS += [

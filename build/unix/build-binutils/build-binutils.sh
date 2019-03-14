@@ -67,7 +67,9 @@ cd ..
 mkdir binutils-objdir
 cd binutils-objdir
 
-../binutils-$binutils_version/configure --prefix /tools/binutils/ --enable-gold --enable-plugins --disable-nls || exit 1
+# --enable-targets builds extra target support in ld.
+# Enabling aarch64 support brings in arm support, so we don't need to specify that too.
+../binutils-$binutils_version/configure --prefix /tools/binutils/ --enable-gold --enable-plugins --disable-nls --enable-targets=aarch64-unknown-linux-gnu || exit 1
 make $make_flags || exit 1
 make install $make_flags DESTDIR=$root_dir || exit 1
 

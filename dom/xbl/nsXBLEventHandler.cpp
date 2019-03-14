@@ -38,7 +38,8 @@ nsXBLEventHandler::HandleEvent(Event* aEvent) {
 
   if (!EventMatched(aEvent)) return NS_OK;
 
-  mProtoHandler->ExecuteHandler(aEvent->GetCurrentTarget(), aEvent);
+  RefPtr<EventTarget> currentTarget = aEvent->GetCurrentTarget();
+  mProtoHandler->ExecuteHandler(currentTarget, aEvent);
 
   return NS_OK;
 }

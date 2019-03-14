@@ -10,6 +10,7 @@ Test that Accordion renders correctly.
   <meta charset="utf-8">
   <title>Accordion component test</title>
   <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="resource://testing-common/sinon-7.2.7.js"></script>
   <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
   <link rel="stylesheet" href="chrome://devtools/skin/light-theme.css" type="text/css">
 </head>
@@ -24,7 +25,6 @@ Test that Accordion renders correctly.
 window.onload = async function() {
   try {
     const { button, div } = require("devtools/client/shared/vendor/react-dom-factories");
-    const sinon = require("resource://testing-common/sinon-2.3.2.js");
     const React = browserRequire("devtools/client/shared/vendor/react");
     const {
       Simulate,

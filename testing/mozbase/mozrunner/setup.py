@@ -12,7 +12,7 @@ PACKAGE_VERSION = '7.4.0'
 desc = """Reliable start/stop/configuration of Mozilla Applications (Firefox, Thunderbird, etc.)"""
 
 deps = [
-    'mozdevice>=1.1.6',
+    'mozdevice>=3.0.1',
     'mozfile>=1.2',
     'mozinfo>=0.7,<2',
     'mozlog~=4.0',

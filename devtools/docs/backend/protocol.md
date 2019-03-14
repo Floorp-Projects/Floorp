@@ -101,7 +101,7 @@ If an actor receives a packet whose type it does not recognize, it sends an erro
 
 where *message* provides details to help debugger developers understand what went wrong: what kind of actor actor is; the packet received; and so on.
 
-If an actor receives a packet which is missing needed parameters (say, a `"releaseMany"` packet with no `"actors"` parameter), it sends an error reply of the form:
+If an actor receives a packet which is missing needed parameters (say, an `"autocomplete"` packet with no `"text"` parameter), it sends an error reply of the form:
 
 ```
 { "from":actor, "error":"missingParameter", "message":message }
@@ -547,14 +547,6 @@ This closes the grip actor. The `"release"` packet may only be sent to thread-li
 
 ```
 { "from":<gripActor>, "error":"notReleasable", "message":<message> }
-```
-
-where *message* includes whatever further information would be useful to the debugger developers.
-
-The client can release many thread-lifetime grips in a single operation by sending the thread actor a request of the form:
-
-```
-{ "to":<thread>, "type":"releaseMany", "actors":[ <gripActor>, ... ] }
 ```
 
 where each *gripActor* is the name of a child of *thread* that should be freed. The thread actor will reply, simply:

@@ -40,9 +40,6 @@ class nsSplitterFrame final : public nsBoxFrame {
   virtual void Init(nsIContent* aContent, nsContainerFrame* aParent,
                     nsIFrame* aPrevInFlow) override;
 
-  virtual nsresult GetCursor(const nsPoint& aPoint,
-                             nsIFrame::Cursor& aCursor) override;
-
   NS_IMETHOD DoXULLayout(nsBoxLayoutState& aBoxLayoutState) override;
 
   NS_IMETHOD HandlePress(nsPresContext* aPresContext,

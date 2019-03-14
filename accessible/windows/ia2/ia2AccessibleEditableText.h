@@ -34,6 +34,7 @@ class ia2AccessibleEditableText : public IAccessibleEditableText {
       /* [in] */ long startOffset,
       /* [in] */ long endOffset);
 
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   virtual HRESULT STDMETHODCALLTYPE pasteText(
       /* [in] */ long offset);
 

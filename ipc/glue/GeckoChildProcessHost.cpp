@@ -56,6 +56,9 @@
 #    include "mozilla/Preferences.h"
 #    include "mozilla/sandboxing/sandboxLogging.h"
 #    include "WinUtils.h"
+#    if defined(_ARM64_)
+#      include "mozilla/remoteSandboxBroker.h"
+#    endif
 #  endif
 #endif
 
@@ -150,6 +153,12 @@ GeckoChildProcessHost::~GeckoChildProcessHost()
         mChildProcessHandle);
 #endif
   }
+#if defined(MOZ_SANDBOX) && defined(XP_WIN)
+  if (mSandboxBroker) {
+    mSandboxBroker->Shutdown();
+    mSandboxBroker = nullptr;
+  }
+#endif
 }
 
 void GeckoChildProcessHost::Destroy() {
@@ -1019,19 +1028,22 @@ bool GeckoChildProcessHost::PerformAsyncLaunch(
   FilePath exePath;
   BinaryPathType pathType = GetPathToBinary(exePath, mProcessType);
 
-#  if defined(MOZ_SANDBOX) || (defined(_ARM64_) && defined(XP_WIN))
+#  if defined(MOZ_SANDBOX) || defined(_ARM64_)
   const bool isGMP = mProcessType == GeckoProcessType_GMPlugin;
   const bool isWidevine = isGMP && Contains(aExtraOpts, "gmp-widevinecdm");
-#    if defined(_ARM64_) && defined(XP_WIN)
+#    if defined(_ARM64_)
   const bool isClearKey = isGMP && Contains(aExtraOpts, "gmp-clearkey");
-  if (isGMP && (isClearKey || isWidevine)) {
-    // On Windows on ARM64 for ClearKey and Widevine, we want to run the
-    // x86 plugin-container.exe in the "i686" subdirectory, instead of the
-    // aarch64 plugin-container.exe. So insert "i686" into the exePath.
+  const bool isSandboxBroker =
+      mProcessType == GeckoProcessType_RemoteSandboxBroker;
+  if (isClearKey || isWidevine || isSandboxBroker) {
+    // On Windows on ARM64 for ClearKey and Widevine, and for the sandbox
+    // launcher process, we want to run the x86 plugin-container.exe in
+    // the "i686" subdirectory, instead of the aarch64 plugin-container.exe.
+    // So insert "i686" into the exePath.
     exePath = exePath.DirName().AppendASCII("i686").Append(exePath.BaseName());
   }
-#    endif
-#  endif  // defined(MOZ_SANDBOX) || (defined(_ARM64_) && defined(XP_WIN))
+#    endif  // if defined(_ARM64_)
+#  endif    // defined(MOZ_SANDBOX) || defined(_ARM64_)
 
   CommandLine cmdLine(exePath.ToWStringHack());
 
@@ -1063,6 +1075,13 @@ bool GeckoChildProcessHost::PerformAsyncLaunch(
   }
 
 #  if defined(MOZ_SANDBOX)
+#    if defined(_ARM64_)
+  if (isClearKey || isWidevine)
+    mSandboxBroker = new RemoteSandboxBroker();
+  else
+#    endif  // if defined(_ARM64_)
+    mSandboxBroker = new SandboxBroker();
+
   bool shouldSandboxCurrentProcess = false;
 
   // XXX: Bug 1124167: We should get rid of the process specific logic for
@@ -1076,8 +1095,8 @@ bool GeckoChildProcessHost::PerformAsyncLaunch(
         // SetSecurityLevelForContentProcess and just crash there right away.
         // Should this change in the future then we should also handle the error
         // here.
-        mSandboxBroker.SetSecurityLevelForContentProcess(mSandboxLevel,
-                                                         mIsFileContent);
+        mSandboxBroker->SetSecurityLevelForContentProcess(mSandboxLevel,
+                                                          mIsFileContent);
         shouldSandboxCurrentProcess = true;
       }
 #    endif  // defined(MOZ_CONTENT_SANDBOX)
@@ -1085,7 +1104,7 @@ bool GeckoChildProcessHost::PerformAsyncLaunch(
     case GeckoProcessType_Plugin:
       if (mSandboxLevel > 0 && !PR_GetEnv("MOZ_DISABLE_NPAPI_SANDBOX")) {
         bool ok =
-            mSandboxBroker.SetSecurityLevelForPluginProcess(mSandboxLevel);
+            mSandboxBroker->SetSecurityLevelForPluginProcess(mSandboxLevel);
         if (!ok) {
           return false;
         }
@@ -1103,7 +1122,7 @@ bool GeckoChildProcessHost::PerformAsyncLaunch(
         // so use sandbox level USER_RESTRICTED instead of USER_LOCKDOWN.
         auto level =
             isWidevine ? SandboxBroker::Restricted : SandboxBroker::LockDown;
-        bool ok = mSandboxBroker.SetSecurityLevelForGMPlugin(level);
+        bool ok = mSandboxBroker->SetSecurityLevelForGMPlugin(level);
         if (!ok) {
           return false;
         }
@@ -1115,7 +1134,7 @@ bool GeckoChildProcessHost::PerformAsyncLaunch(
         // For now we treat every failure as fatal in
         // SetSecurityLevelForGPUProcess and just crash there right away. Should
         // this change in the future then we should also handle the error here.
-        mSandboxBroker.SetSecurityLevelForGPUProcess(mSandboxLevel);
+        mSandboxBroker->SetSecurityLevelForGPUProcess(mSandboxLevel);
         shouldSandboxCurrentProcess = true;
       }
       break;
@@ -1126,7 +1145,7 @@ bool GeckoChildProcessHost::PerformAsyncLaunch(
       break;
     case GeckoProcessType_RDD:
       if (!PR_GetEnv("MOZ_DISABLE_RDD_SANDBOX")) {
-        if (!mSandboxBroker.SetSecurityLevelForRDDProcess()) {
+        if (!mSandboxBroker->SetSecurityLevelForRDDProcess()) {
           return false;
         }
         shouldSandboxCurrentProcess = true;
@@ -1134,6 +1153,9 @@ bool GeckoChildProcessHost::PerformAsyncLaunch(
       break;
     case GeckoProcessType_Socket:
       // TODO - setup sandboxing for the socket process.
+      break;
+    case GeckoProcessType_RemoteSandboxBroker:
+      // We don't sandbox the sandbox launcher...
       break;
     case GeckoProcessType_Default:
     default:
@@ -1144,7 +1166,7 @@ bool GeckoChildProcessHost::PerformAsyncLaunch(
   if (shouldSandboxCurrentProcess) {
     for (auto it = mAllowedFilesRead.begin(); it != mAllowedFilesRead.end();
          ++it) {
-      mSandboxBroker.AllowReadFile(it->c_str());
+      mSandboxBroker->AllowReadFile(it->c_str());
     }
   }
 #  endif    // defined(MOZ_SANDBOX)
@@ -1179,13 +1201,13 @@ bool GeckoChildProcessHost::PerformAsyncLaunch(
   if (shouldSandboxCurrentProcess) {
     // Mark the handles to inherit as inheritable.
     for (HANDLE h : mLaunchOptions->handles_to_inherit) {
-      mSandboxBroker.AddHandleToShare(h);
+      mSandboxBroker->AddHandleToShare(h);
     }
 
-    if (mSandboxBroker.LaunchApp(cmdLine.program().c_str(),
-                                 cmdLine.command_line_string().c_str(),
-                                 mLaunchOptions->env_map, mProcessType,
-                                 mEnableSandboxLogging, &process)) {
+    if (mSandboxBroker->LaunchApp(cmdLine.program().c_str(),
+                                  cmdLine.command_line_string().c_str(),
+                                  mLaunchOptions->env_map, mProcessType,
+                                  mEnableSandboxLogging, &process)) {
       EnvironmentLog("MOZ_PROCESS_LOG")
           .print("==> process %d launched child process %d (%S)\n",
                  base::GetCurrentProcId(), base::GetProcId(process),
@@ -1207,7 +1229,7 @@ bool GeckoChildProcessHost::PerformAsyncLaunch(
         // No handle duplication necessary.
         break;
       default:
-        if (!mSandboxBroker.AddTargetPeer(process)) {
+        if (!SandboxBroker::AddTargetPeer(process)) {
           NS_WARNING("Failed to add child process as target peer.");
         }
         break;

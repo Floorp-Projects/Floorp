@@ -55,11 +55,6 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk3':
     OS_LIBS += CONFIG['XLIBS']
     OS_LIBS += CONFIG['XEXT_LIBS']
 
-if CONFIG['CC_TYPE'] == 'clang-cl':
-    # This is intended as a temporary hack to support building with VS2015.
-    # conversion from 'X' to 'Y' requires a narrowing conversion
-    CXXFLAGS += ['-wd4838']
-
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     FINAL_TARGET = 'dist/plugins/%s.plugin/Contents/MacOS' % cocoa_name
     OBJDIR_FILES.dist.plugins['%s.plugin' % cocoa_name].Contents += ['%s/Info.plist' % relative_path]

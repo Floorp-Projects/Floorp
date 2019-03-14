@@ -28,9 +28,10 @@ var LoginHelper = {
   debug: null,
   enabled: null,
   formlessCaptureEnabled: null,
-  schemeUpgrades: null,
   insecureAutofill: null,
+  managementURI: null,
   privateBrowsingCaptureEnabled: null,
+  schemeUpgrades: null,
   showAutoCompleteFooter: null,
 
   init() {
@@ -46,9 +47,9 @@ var LoginHelper = {
     this.enabled = Services.prefs.getBoolPref("signon.rememberSignons");
     this.formlessCaptureEnabled = Services.prefs.getBoolPref("signon.formlessCapture.enabled");
     this.insecureAutofill = Services.prefs.getBoolPref("signon.autofillForms.http");
+    this.managementURI = Services.prefs.getStringPref("signon.management.overrideURI", null);
     this.privateBrowsingCaptureEnabled =
       Services.prefs.getBoolPref("signon.privateBrowsingCapture.enabled");
-
     this.schemeUpgrades = Services.prefs.getBoolPref("signon.schemeUpgrades");
     this.showAutoCompleteFooter = Services.prefs.getBoolPref("signon.showAutoCompleteFooter");
     this.storeWhenAutocompleteOff = Services.prefs.getBoolPref("signon.storeWhenAutocompleteOff");
@@ -598,9 +599,15 @@ var LoginHelper = {
    *                 the window from where we want to open the dialog
    *
    * @param {string} [filterString=""]
-   *                 the filterString parameter to pass to the login manager dialog
+   *                 the domain (not origin) to pass to the login manager dialog
+   *                 to pre-filter the results
    */
   openPasswordManager(window, filterString = "") {
+    if (this.managementURI && window.openTrustedLinkIn) {
+      let managementURL = this.managementURI.replace("%DOMAIN%", window.encodeURIComponent(filterString));
+      window.openTrustedLinkIn(managementURL, "tab");
+      return;
+    }
     let win = Services.wm.getMostRecentWindow("Toolkit:PasswordManager");
     if (win) {
       win.setFilter(filterString);

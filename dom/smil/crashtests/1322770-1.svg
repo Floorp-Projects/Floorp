@@ -1,0 +1,3 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+  <animateMotion keyTimes='.1;.6;.6' path='m0,1l7,3' keyPoints='.6;1;.7'/>
+</svg>

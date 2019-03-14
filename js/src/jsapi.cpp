@@ -3425,6 +3425,7 @@ void JS::TransitiveCompileOptions::copyPODTransitiveOptions(
   isProbablySystemCode = rhs.isProbablySystemCode;
   hideScriptFromDebugger = rhs.hideScriptFromDebugger;
   bigIntEnabledOption = rhs.bigIntEnabledOption;
+  fieldsEnabledOption = rhs.fieldsEnabledOption;
 };
 
 void JS::ReadOnlyCompileOptions::copyPODOptions(
@@ -3552,6 +3553,7 @@ JS::CompileOptions::CompileOptions(JSContext* cx)
   throwOnAsmJSValidationFailureOption =
       cx->options().throwOnAsmJSValidationFailure();
   bigIntEnabledOption = cx->realm()->creationOptions().getBigIntEnabled();
+  fieldsEnabledOption = cx->realm()->creationOptions().getFieldsEnabled();
 }
 
 CompileOptions& CompileOptions::setIntroductionInfoToCaller(

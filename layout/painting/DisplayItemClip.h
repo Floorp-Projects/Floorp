@@ -175,7 +175,6 @@ class DisplayItemClip {
   void AppendRoundedRects(nsTArray<RoundedRect>* aArray) const;
 
   void ToComplexClipRegions(int32_t aAppUnitsPerDevPixel,
-                            const layers::StackingContextHelper& aSc,
                             nsTArray<wr::ComplexClipRegion>& aOutArray) const;
 
   static const DisplayItemClip& NoClip();

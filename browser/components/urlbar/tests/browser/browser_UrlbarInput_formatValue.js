@@ -1,8 +1,20 @@
 /* Any copyright is dedicated to the Public Domain.
- * http://creativecommons.org/publicdomain/zero/1.0/
- */
+ * https://creativecommons.org/publicdomain/zero/1.0/ */
 
-function testVal(aExpected) {
+// Checks that the url formatter properly recognizes the host and de-emphasizes
+// the rest of the url.
+
+/**
+ * Tests a given url.
+ * The de-emphasized parts must be wrapped in "<" and ">" chars.
+ * @param {string} aExpected The url to test.
+ * @param {string} aClobbered [optional] Normally the url is de-emphasized
+ *        in-place, thus it's enough to pass aExpected. Though, in some cases
+ *        the formatter may decide to replace the url with a fixed one, because
+ *        it can't properly guess a host. In that case aClobbered is the
+ *        expected de-emphasized value.
+ */
+function testVal(aExpected, aClobbered = null) {
   gURLBar.value = aExpected.replace(/[<>]/g, "");
 
   let selectionController = gURLBar.editor.selectionController;
@@ -16,7 +28,7 @@ function testVal(aExpected) {
     value = value.substring(pos + range.length);
   }
   result += value;
-  is(result, aExpected,
+  is(result, aClobbered || aExpected,
      "Correct part of the urlbar contents is highlighted");
 }
 
@@ -82,6 +94,7 @@ function test() {
   testVal("<foo.bar:@baz@>mozilla.org");
   testVal("<foo.bar@:ba:z@>mozilla.org");
   testVal("<foo.:bar:@baz@>mozilla.org");
+  testVal("foopy:\\blah@somewhere.com//whatever", "foopy</blah@somewhere.com//whatever>");
 
   testVal("<https://sub.>mozilla.org<:666/file.ext>");
   testVal("<sub.>mozilla.org<:666/file.ext>");
@@ -116,6 +129,7 @@ function test() {
     testVal("<https://>" + IP + "</file.ext>");
     testVal("<https://user:pass@>" + IP + "<:666/file.ext>");
     testVal("<user:pass@>" + IP + "<:666/file.ext>");
+    testVal("user:\\pass@" + IP, "user</pass@" + IP + ">");
   });
 
   testVal("mailto:admin@mozilla.org");
@@ -128,6 +142,7 @@ function test() {
   testVal("foo.://mozilla.org/");
   testVal("foo-://mozilla.org/");
 
+  // Disable formatting.
   Services.prefs.setBoolPref(prefname, false);
 
   testVal("https://mozilla.org");

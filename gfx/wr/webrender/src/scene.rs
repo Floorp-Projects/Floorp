@@ -2,9 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{BuiltDisplayList, ColorF, DynamicProperties, Epoch, LayoutSize};
-use api::{FilterOp, TempFilterData, FilterData, ComponentTransferFuncType, LayoutTransform};
+use api::{BuiltDisplayList, ColorF, DynamicProperties, Epoch};
+use api::{FilterOp, TempFilterData, FilterData, ComponentTransferFuncType};
 use api::{PipelineId, PropertyBinding, PropertyBindingId, ItemRange, MixBlendMode, StackingContext};
+use api::units::{LayoutSize, LayoutTransform};
 use internal_types::FastHashMap;
 use std::sync::Arc;
 

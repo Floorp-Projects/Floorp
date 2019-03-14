@@ -299,6 +299,9 @@ class TextInputDelegateTest : BaseSessionTest() {
     @ReuseSession(false) // Test is only reliable on automation when not reusing session.
     @WithDisplay(width = 512, height = 512) // Child process updates require having a display.
     @Test fun inputConnection() {
+        // too slow on debug
+        assumeThat(sessionRule.env.isDebugBuild, equalTo(false))
+
         mainSession.textInput.view = View(InstrumentationRegistry.getTargetContext())
 
         mainSession.loadTestPath(INPUTS_PATH)

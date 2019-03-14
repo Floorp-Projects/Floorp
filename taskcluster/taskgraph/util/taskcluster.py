@@ -31,10 +31,23 @@ CONCURRENCY = 50
 
 
 @memoize
-def get_root_url():
+def get_root_url(use_proxy):
     """Get the current TASKCLUSTER_ROOT_URL.  When running in a task, this must
     come from $TASKCLUSTER_ROOT_URL; when run on the command line, we apply a
-    defualt that points to the production deployment of Taskcluster."""
+    defualt that points to the production deployment of Taskcluster.  If use_proxy
+    is set, this attempts to get TASKCLUSTER_PROXY_URL instead, failing if it
+    is not set."""
+    if use_proxy:
+        try:
+            return os.environ['TASKCLUSTER_PROXY_URL']
+        except KeyError:
+            if 'TASK_ID' not in os.environ:
+                raise RuntimeError(
+                    'taskcluster-proxy is not available when not executing in a task')
+            else:
+                raise RuntimeError(
+                    'taskcluster-proxy is not enabled for this task')
+
     if 'TASKCLUSTER_ROOT_URL' not in os.environ:
         if 'TASK_ID' in os.environ:
             raise RuntimeError('$TASKCLUSTER_ROOT_URL must be set when running in a task')
@@ -92,7 +105,7 @@ def _handle_artifact(path, response):
 
 
 def get_artifact_url(task_id, path, use_proxy=False):
-    artifact_tmpl = liburls.api(get_root_url(), 'queue', 'v1',
+    artifact_tmpl = liburls.api(get_root_url(False), 'queue', 'v1',
                                 'task/{}/artifacts/{}')
     data = artifact_tmpl.format(task_id, path)
     if use_proxy:
@@ -141,11 +154,7 @@ def get_artifact_path(task, path):
 
 
 def get_index_url(index_path, use_proxy=False, multiple=False):
-    if use_proxy:
-        # Until bug 1460015 is finished, use the old baseUrl style of proxy URL
-        index_tmpl = os.environ['TASKCLUSTER_PROXY_URL'] + '/index/v1/task{}/{}'
-    else:
-        index_tmpl = liburls.api(get_root_url(), 'index', 'v1', 'task{}/{}')
+    index_tmpl = liburls.api(get_root_url(use_proxy), 'index', 'v1', 'task{}/{}')
     return index_tmpl.format('s' if multiple else '', index_path)
 
 
@@ -195,11 +204,7 @@ def parse_time(timestamp):
 
 
 def get_task_url(task_id, use_proxy=False):
-    if use_proxy:
-        # Until bug 1460015 is finished, use the old baseUrl style of proxy URL
-        task_tmpl = os.environ['TASKCLUSTER_PROXY_URL'] + '/queue/v1/task/{}'
-    else:
-        task_tmpl = liburls.api(get_root_url(), 'queue', 'v1', 'task/{}')
+    task_tmpl = liburls.api(get_root_url(use_proxy), 'queue', 'v1', 'task/{}')
     return task_tmpl.format(task_id)
 
 
@@ -240,17 +245,13 @@ def rerun_task(task_id):
 def get_current_scopes():
     """Get the current scopes.  This only makes sense in a task with the Taskcluster
     proxy enabled, where it returns the actual scopes accorded to the task."""
-    # Until bug 1460015 is finished, use the old baseUrl style of proxy URL
-    resp = _do_request(os.environ['TASKCLUSTER_PROXY_URL'] + '/auth/v1/scopes/current')
+    auth_url = liburls.api(get_root_url(True), 'auth', 'v1', 'scopes/current')
+    resp = _do_request(auth_url)
     return resp.json().get("scopes", [])
 
 
 def get_purge_cache_url(provisioner_id, worker_type, use_proxy=False):
-    if use_proxy:
-        # Until bug 1460015 is finished, use the old baseUrl style of proxy URL
-        url_tmpl = os.environ['TASKCLUSTER_PROXY_URL'] + '/purge-cache/v1/purge-cache/{}/{}'
-    else:
-        url_tmpl = liburls.api(get_root_url(), 'purge-cache', 'v1', 'purge-cache/{}/{}')
+    url_tmpl = liburls.api(get_root_url(use_proxy), 'purge-cache', 'v1', 'purge-cache/{}/{}')
     return url_tmpl.format(provisioner_id, worker_type)
 
 
@@ -267,11 +268,7 @@ def purge_cache(provisioner_id, worker_type, cache_name, use_proxy=False):
 def send_email(address, subject, content, link, use_proxy=False):
     """Sends an email using the notify service"""
     logger.info('Sending email to {}.'.format(address))
-    if use_proxy:
-        # Until bug 1460015 is finished, use the old baseUrl style of proxy URL
-        url = os.environ['TASKCLUSTER_PROXY_URL'] + '/notify/v1/email'
-    else:
-        url = liburls.api(get_root_url(), 'notify', 'v1', 'email')
+    url = liburls.api(get_root_url(use_proxy), 'notify', 'v1', 'email')
     _do_request(url, json={
         'address': address,
         'subject': subject,
@@ -284,7 +281,7 @@ def list_task_group_incomplete_tasks(task_group_id):
     """Generate the incomplete tasks in a task group"""
     params = {}
     while True:
-        url = liburls.api(get_root_url(), 'queue', 'v1',
+        url = liburls.api(get_root_url(False), 'queue', 'v1',
                           'task-group/{}/list'.format(task_group_id))
         resp = _do_request(url, force_get=True, params=params).json()
         for task in [t['status'] for t in resp['tasks']]:

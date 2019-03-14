@@ -168,6 +168,7 @@ interface nsIEditor  : nsISupports
     * error NS_ERROR_NOT_AVAILABLE is returned.
     *
     */
+  [can_run_script]
   void undo(in unsigned long count);
 
   /** returns state information about the undo system.
@@ -187,6 +188,7 @@ interface nsIEditor  : nsISupports
     * error NS_ERROR_NOT_AVAILABLE is returned.
     *
     */
+  [can_run_script]
   void redo(in unsigned long count);
 
   /** returns state information about the redo system.
@@ -286,11 +288,13 @@ interface nsIEditor  : nsISupports
   /** paste the text in the OS clipboard at the cursor position, replacing
     * the selected text (if any)
     */
+  [can_run_script]
   void paste(in long aSelectionType);
 
   /** Paste the text in |aTransferable| at the cursor position, replacing the
     * selected text (if any).
     */
+  [can_run_script]
   void pasteTransferable(in nsITransferable aTransferable);
 
   /** Can we paste? True if the doc is modifiable, and we have

@@ -140,10 +140,7 @@ async function withMockActionSandboxManagers(actions, testFunction) {
     sinon.stub(managers[action.name], "runAsyncCallback");
   }
 
-  const loadActionSandboxManagers = sinon.stub(RecipeRunner, "loadActionSandboxManagers")
-    .resolves(managers);
   await testFunction(managers);
-  loadActionSandboxManagers.restore();
 
   for (const manager of Object.values(managers)) {
     manager.removeHold("testing");
@@ -359,9 +356,8 @@ decorate_task(
   withStub(RecipeRunner, "enable"),
   withStub(RecipeRunner, "disable"),
   withStub(CleanupManager, "addCleanupHandler"),
-  withStub(AddonStudies, "stop"),
 
-  async function testPrefWatching(runStub, enableStub, disableStub, addCleanupHandlerStub, stopStub) {
+  async function testPrefWatching(runStub, enableStub, disableStub, addCleanupHandlerStub) {
     await RecipeRunner.init();
     is(enableStub.callCount, 1, "Enable should be called initially");
     is(disableStub.callCount, 0, "Disable should not be called initially");

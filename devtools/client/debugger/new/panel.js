@@ -100,7 +100,8 @@ DebuggerPanel.prototype = {
   },
 
   getFrames: function() {
-    const frames = this._selectors.getFrames(this._getState());
+    const thread = this._selectors.getCurrentThread(this._getState());
+    const frames = this._selectors.getFrames(this._getState(), thread);
 
     // Frames is null when the debugger is not paused.
     if (!frames) {
@@ -110,7 +111,10 @@ DebuggerPanel.prototype = {
       };
     }
 
-    const selectedFrame = this._selectors.getSelectedFrame(this._getState());
+    const selectedFrame = this._selectors.getSelectedFrame(
+      this._getState(),
+      thread
+    );
     const selected = frames.findIndex(frame => frame.id == selectedFrame.id);
 
     frames.forEach(frame => {
@@ -125,7 +129,8 @@ DebuggerPanel.prototype = {
   },
 
   isPaused() {
-    return this._selectors.isPaused(this._getState());
+    const thread = this._selectors.getCurrentThread(this._getState());
+    return this._selectors.getIsPaused(this._getState(), thread);
   },
 
   selectSourceURL(url, line) {

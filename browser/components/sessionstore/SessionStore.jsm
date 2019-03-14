@@ -3683,7 +3683,7 @@ var SessionStoreInternal = {
         }
         tabbrowser.moveTabToEnd();
         if (aWindow.gMultiProcessBrowser && !tab.linkedBrowser.isRemoteBrowser) {
-          tabbrowser.updateBrowserRemoteness(tab.linkedBrowser, true);
+          tabbrowser.updateBrowserRemoteness(tab.linkedBrowser, { remoteType: E10SUtils.DEFAULT_REMOTE_TYPE });
         }
       }
 
@@ -4220,7 +4220,7 @@ var SessionStoreInternal = {
     if (aOptions.remoteType !== undefined) {
       // We already have a selected remote type so we update to that.
       isRemotenessUpdate =
-        tabbrowser.updateBrowserRemoteness(browser, !!aOptions.remoteType,
+        tabbrowser.updateBrowserRemoteness(browser,
                                            { remoteType: aOptions.remoteType,
                                              newFrameloader });
     } else {

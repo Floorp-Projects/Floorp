@@ -1262,6 +1262,20 @@ devtools.inspector:
     record_in_processes:
       - 'main'
 
+  element_picker_used:
+    bug_numbers:
+      - 1529883
+    description: >
+      Number of times the element picker is used to select an element from the page.
+    expires: "70"
+    kind: uint
+    notification_emails:
+      - dev-developer-tools@lists.mozilla.org
+      - mbalfanz@mozilla.com
+    release_channel_collection: opt-out
+    record_in_processes:
+      - 'main'
+
 devtools.shadowdom:
   shadow_root_displayed:
     bug_numbers:
@@ -1744,6 +1758,24 @@ devtools.changesview:
     release_channel_collection: opt-out
     record_in_processes:
       - 'main'
+
+dom.event:
+  confluence_load_count:
+    bug_numbers:
+      - 1514940
+    description: >
+      Number of times Confluence instances are loaded, and whether they are
+      compatible with conflated keypress event model or not, using "new"/"old".
+      I.e., collecting percentage of too old Confluence instance use count in
+      all Confluence instance use count.
+    expires: "71"
+    keyed: true
+    kind: uint
+    notification_emails:
+      - mnakano@mozilla.com
+    release_channel_collection: opt-out
+    record_in_processes:
+      - 'content'
 
 navigator.storage:
   estimate_count:

@@ -350,9 +350,9 @@ class RTCPeerConnection {
 
     this._pc = null;
     this._closed = false;
+    this._currentRole = null;
+    this._pendingRole = null;
 
-    this._localType = null;
-    this._remoteType = null;
     // http://rtcweb-wg.github.io/jsep/#rfc.section.4.1.9
     // canTrickle == null means unknown; when a remote description is received it
     // is set to true or false based on the presence of the "trickle" ice-option
@@ -947,8 +947,6 @@ class RTCPeerConnection {
   async _setLocalDescription({ type, sdp }) {
     this._checkClosed();
 
-    this._localType = type;
-
     let action = this._actions[type];
 
     this._sanityCheckSdp(action, type, sdp);
@@ -961,6 +959,12 @@ class RTCPeerConnection {
         this._impl.setLocalDescription(action, sdp);
       });
       this._negotiationNeeded = false;
+      if (type == "answer") {
+        this._currentRole = "answerer";
+        this._pendingRole = null;
+      } else {
+        this._pendingRole = "offerer";
+      }
       this.updateNegotiationNeeded();
     });
   }
@@ -1016,7 +1020,6 @@ class RTCPeerConnection {
 
   async _setRemoteDescription({ type, sdp }) {
     this._checkClosed();
-    this._remoteType = type;
 
     let action = this._actions[type];
 
@@ -1042,6 +1045,12 @@ class RTCPeerConnection {
       }
       await haveSetRemote;
       this._negotiationNeeded = false;
+      if (type == "answer") {
+        this._currentRole = "offerer";
+        this._pendingRole = null;
+      } else {
+        this._pendingRole = "answerer";
+      }
       this.updateNegotiationNeeded();
     });
   }
@@ -1441,12 +1450,7 @@ class RTCPeerConnection {
   }
 
   get localDescription() {
-    this._checkClosed();
-    let sdp = this._impl.localDescription;
-    if (sdp.length == 0) {
-      return null;
-    }
-    return new this._win.RTCSessionDescription({ type: this._localType, sdp });
+    return this.pendingLocalDescription || this.currentLocalDescription;
   }
 
   get currentLocalDescription() {
@@ -1455,7 +1459,8 @@ class RTCPeerConnection {
     if (sdp.length == 0) {
       return null;
     }
-    return new this._win.RTCSessionDescription({ type: this._localType, sdp });
+    const type = this._currentRole == "answerer" ? "answer" : "offer";
+    return new this._win.RTCSessionDescription({ type, sdp });
   }
 
   get pendingLocalDescription() {
@@ -1464,16 +1469,13 @@ class RTCPeerConnection {
     if (sdp.length == 0) {
       return null;
     }
-    return new this._win.RTCSessionDescription({ type: this._localType, sdp });
+    const type = this._pendingRole == "answerer" ? "answer" : "offer";
+    return new this._win.RTCSessionDescription({ type, sdp });
   }
 
+
   get remoteDescription() {
-    this._checkClosed();
-    let sdp = this._impl.remoteDescription;
-    if (sdp.length == 0) {
-      return null;
-    }
-    return new this._win.RTCSessionDescription({ type: this._remoteType, sdp });
+    return this.pendingRemoteDescription || this.currentRemoteDescription;
   }
 
   get currentRemoteDescription() {
@@ -1482,7 +1484,8 @@ class RTCPeerConnection {
     if (sdp.length == 0) {
       return null;
     }
-    return new this._win.RTCSessionDescription({ type: this._remoteType, sdp });
+    const type = this._currentRole == "offerer" ? "answer" : "offer";
+    return new this._win.RTCSessionDescription({ type, sdp });
   }
 
   get pendingRemoteDescription() {
@@ -1491,7 +1494,8 @@ class RTCPeerConnection {
     if (sdp.length == 0) {
       return null;
     }
-    return new this._win.RTCSessionDescription({ type: this._remoteType, sdp });
+    const type = this._pendingRole == "offerer" ? "answer" : "offer";
+    return new this._win.RTCSessionDescription({ type, sdp });
   }
 
   get peerIdentity() { return this._peerIdentity; }
@@ -1533,10 +1537,26 @@ class RTCPeerConnection {
   }
 
   getStats(selector, onSucc, onErr) {
+    if (selector !== null) {
+      let matchingSenders =
+        this.getSenders().filter(s => s.track === selector);
+      let matchingReceivers =
+        this.getReceivers().filter(r => r.track === selector);
+
+      if (matchingSenders.length + matchingReceivers.length != 1) {
+        throw new this._win.DOMException(
+            "track must be associated with a unique sender or receiver, but "
+            + " is associated with " + matchingSenders.length
+            + " senders and " + matchingReceivers.length + " receivers.",
+            "InvalidAccessError");
+      }
+    }
+
     if (this._iceConnectionState === "completed" ||
         this._iceConnectionState === "connected") {
       this._pcTelemetry.recordGetStats();
     }
+
     return this._auto(onSucc, onErr, () => this._getStats(selector));
   }
 
@@ -1664,12 +1684,10 @@ class PeerConnectionObserver {
   }
 
   onSetLocalDescriptionError(code, message) {
-    this._localType = null;
     this._dompc._onSetLocalDescriptionFailure(this.newError(message, code));
   }
 
   onSetRemoteDescriptionError(code, message) {
-    this._remoteType = null;
     this._dompc._onSetRemoteDescriptionFailure(this.newError(message, code));
   }
 

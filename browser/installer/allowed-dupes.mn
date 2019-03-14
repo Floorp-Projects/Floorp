@@ -152,3 +152,7 @@ browser/defaults/settings/main/example.json
 # Bug 1463748 - Fork and pref-off the new error pages
 browser/chrome/browser/content/browser/aboutNetError-new.xhtml
 browser/chrome/browser/content/browser/aboutNetError.xhtml
+#ifdef MOZ_EME_WIN32_ARTIFACT
+gmp-clearkey/0.1/manifest.json
+i686/gmp-clearkey/0.1/manifest.json
+#endif

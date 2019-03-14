@@ -63,7 +63,7 @@ SECStatus tls13_DeriveSecretNullHash(sslSocket *ss, PK11SymKey *key,
                                      PK11SymKey **dest);
 void tls13_FatalError(sslSocket *ss, PRErrorCode prError,
                       SSL3AlertDescription desc);
-SECStatus tls13_SetupClientHello(sslSocket *ss);
+SECStatus tls13_SetupClientHello(sslSocket *ss, sslClientHelloType chType);
 SECStatus tls13_MaybeDo0RTTHandshake(sslSocket *ss);
 PRInt32 tls13_LimitEarlyData(sslSocket *ss, SSLContentType type, PRInt32 toSend);
 PRBool tls13_AllowPskCipher(const sslSocket *ss,

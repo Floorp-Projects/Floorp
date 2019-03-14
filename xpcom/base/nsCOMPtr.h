@@ -875,7 +875,7 @@ class MOZ_IS_REFPTR nsCOMPtr final
  * intermediary code that doesn't know the exact type.
  */
 template <>
-class nsCOMPtr<nsISupports> : private nsCOMPtr_base {
+class MOZ_IS_REFPTR nsCOMPtr<nsISupports> : private nsCOMPtr_base {
  public:
   typedef nsISupports element_type;
 

@@ -288,8 +288,7 @@ nsresult TextEditor::OnDrop(DragEvent* aDropEvent) {
 
     // Let's fire "input" event for the deletion now.
     if (mDispatchInputEvent) {
-      RefPtr<DataTransfer> dataTransfer;  // Required due to bug 1506439
-      FireInputEvent(EditAction::eDeleteByDrag, VoidString(), dataTransfer);
+      FireInputEvent(EditAction::eDeleteByDrag, VoidString(), nullptr);
       if (NS_WARN_IF(Destroyed())) {
         return NS_OK;
       }
@@ -369,8 +368,9 @@ nsresult TextEditor::PasteAsAction(int32_t aClipboardType,
   if (AsHTMLEditor()) {
     editActionData.InitializeDataTransferWithClipboard(
         SettingDataTransfer::eWithFormat, aClipboardType);
-    nsresult rv =
-        AsHTMLEditor()->PasteInternal(aClipboardType, aDispatchPasteEvent);
+    // MOZ_KnownLive because we know "this" must be alive.
+    nsresult rv = MOZ_KnownLive(AsHTMLEditor())
+                      ->PasteInternal(aClipboardType, aDispatchPasteEvent);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return EditorBase::ToGenericNSResult(rv);
     }

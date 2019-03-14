@@ -4,10 +4,9 @@
 
 "use strict";
 
-/* global sinon */
-Services.scriptloader.loadSubScript("resource://testing-common/sinon-2.3.2.js");
+const {sinon} = ChromeUtils.import("resource://testing-common/Sinon.jsm");
 
-const sandbox = sinon.sandbox.create();
+const sandbox = sinon.createSandbox();
 const TAG_NAME = "testTag";
 
 var bookmarks;
@@ -16,7 +15,6 @@ var bookmarkId;
 add_task(async function setup() {
   registerCleanupFunction(async function() {
     sandbox.restore();
-    delete window.sinon;
     await PlacesUtils.bookmarks.eraseEverything();
     await PlacesUtils.history.clear();
   });

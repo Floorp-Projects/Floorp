@@ -396,8 +396,7 @@ def command_task_artifacts(args):
                     task=fetch['task'], artifact=fetch['artifact'])
             url = api(root_url, 'queue', 'v1', path)
         else:
-            # Until bug 1460015 is finished, use the old baseUrl style proxy URLs
-            url = ('{proxy_url}/queue/v1/task/{task}/artifacts/{artifact}').format(
+            url = ('{proxy_url}/api/queue/v1/task/{task}/artifacts/{artifact}').format(
                     proxy_url=os.environ['TASKCLUSTER_PROXY_URL'],
                     task=fetch['task'],
                     artifact=fetch['artifact'])

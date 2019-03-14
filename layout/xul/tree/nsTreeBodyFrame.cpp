@@ -2219,8 +2219,7 @@ nscoord nsTreeBodyFrame::CalcHorzWidth(const ScrollParts& aParts) {
   return width;
 }
 
-nsresult nsTreeBodyFrame::GetCursor(const nsPoint& aPoint,
-                                    nsIFrame::Cursor& aCursor) {
+Maybe<nsIFrame::Cursor> nsTreeBodyFrame::GetCursor(const nsPoint& aPoint) {
   // Check the GetScriptHandlingObject so we don't end up running code when
   // the document is a zombie.
   bool dummy;
@@ -2232,17 +2231,16 @@ nsresult nsTreeBodyFrame::GetCursor(const nsPoint& aPoint,
 
     if (child) {
       // Our scratch array is already prefilled.
-      ComputedStyle* childContext = GetPseudoComputedStyle(child);
-
-      FillCursorInformationFromStyle(childContext->StyleUI(), aCursor);
-      if (aCursor.mCursor == StyleCursorKind::Auto)
-        aCursor.mCursor = StyleCursorKind::Default;
-
-      return NS_OK;
+      RefPtr<ComputedStyle> childContext = GetPseudoComputedStyle(child);
+      StyleCursorKind kind = childContext->StyleUI()->mCursor;
+      if (kind == StyleCursorKind::Auto) {
+        kind = StyleCursorKind::Default;
+      }
+      return Some(
+          Cursor{kind, AllowCustomCursorImage::Yes, std::move(childContext)});
     }
   }
-
-  return nsLeafBoxFrame::GetCursor(aPoint, aCursor);
+  return nsLeafBoxFrame::GetCursor(aPoint);
 }
 
 static uint32_t GetDropEffect(WidgetGUIEvent* aEvent) {

@@ -206,6 +206,7 @@ class DocAccessibleChild : public DocAccessibleChildBase {
                                                  const int32_t& aEndPos,
                                                  bool* aValid) override;
 
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   virtual mozilla::ipc::IPCResult RecvPasteText(const uint64_t& aID,
                                                 const int32_t& aPosition,
                                                 bool* aValid) override;

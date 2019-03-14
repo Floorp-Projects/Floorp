@@ -276,11 +276,11 @@ void InputStreamHelper::PostSerializationActivation(InputStreamParams& aParams,
 }
 
 void InputStreamHelper::PostSerializationActivation(
-    OptionalInputStreamParams& aParams, bool aConsumedByIPC,
+    Maybe<InputStreamParams>& aParams, bool aConsumedByIPC,
     bool aDelayedStart) {
-  if (aParams.type() == OptionalInputStreamParams::TInputStreamParams) {
+  if (aParams.isSome()) {
     InputStreamHelper::PostSerializationActivation(
-        aParams.get_InputStreamParams(), aConsumedByIPC, aDelayedStart);
+        aParams.ref(), aConsumedByIPC, aDelayedStart);
   }
 }
 

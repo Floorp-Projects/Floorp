@@ -416,7 +416,7 @@ SSL_SendAdditionalKeyShares(PRFileDesc *fd, unsigned int count)
  * Called from ssl3_SendClientHello.
  */
 SECStatus
-tls13_SetupClientHello(sslSocket *ss)
+tls13_SetupClientHello(sslSocket *ss, sslClientHelloType chType)
 {
     unsigned int i;
     SSL3Statistics *ssl3stats = SSL_GetStatistics();
@@ -427,17 +427,24 @@ tls13_SetupClientHello(sslSocket *ss)
 
     PORT_Assert(ss->opt.noLocks || ssl_HaveSSL3HandshakeLock(ss));
     PORT_Assert(ss->opt.noLocks || ssl_HaveXmitBufLock(ss));
-    PORT_Assert(PR_CLIST_IS_EMPTY(&ss->ephemeralKeyPairs));
 
-    /* Do encrypted SNI. This may create a key share as a side effect. */
+    /* Do encrypted SNI.
+     * Note: this makes a new key even though we don't need one.
+     * Maybe remove this in future for efficiency. */
     rv = tls13_ClientSetupESNI(ss);
     if (rv != SECSuccess) {
         return SECFailure;
     }
 
+    /* Everything below here is only run on the first CH. */
+    if (chType != client_hello_initial) {
+        return SECSuccess;
+    }
+
     /* Select the first enabled group.
      * TODO(ekr@rtfm.com): be smarter about offering the group
      * that the other side negotiated if we are resuming. */
+    PORT_Assert(PR_CLIST_IS_EMPTY(&ss->ephemeralKeyPairs));
     for (i = 0; i < SSL_NAMED_GROUP_COUNT; ++i) {
         if (!ss->namedGroupPreferences[i]) {
             continue;

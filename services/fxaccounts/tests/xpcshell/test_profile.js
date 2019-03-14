@@ -7,6 +7,7 @@ const {ON_PROFILE_CHANGE_NOTIFICATION, log} = ChromeUtils.import("resource://gre
 const {FxAccountsProfileClient} = ChromeUtils.import("resource://gre/modules/FxAccountsProfileClient.jsm");
 const {FxAccountsProfile} = ChromeUtils.import("resource://gre/modules/FxAccountsProfile.jsm");
 const {PromiseUtils} = ChromeUtils.import("resource://gre/modules/PromiseUtils.jsm");
+const {setTimeout} = ChromeUtils.import("resource://gre/modules/Timer.jsm");
 
 let mockClient = function(fxa) {
   let options = {

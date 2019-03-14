@@ -2100,7 +2100,9 @@ class nsDisplayItem : public nsDisplayItemLink {
         mForceNotVisible(false),
         mDisableSubpixelAA(false),
         mReusedItem(false),
-        mBackfaceHidden(mFrame->In3DContextAndBackfaceIsHidden()),
+        mBackfaceIsHidden(mFrame->BackfaceIsHidden()),
+        mCombines3DTransformWithAncestors(
+            mFrame->Combines3DTransformWithAncestors()),
         mPaintRectValid(false),
         mCanBeReused(true)
 #ifdef MOZ_DUMP_PAINTING
@@ -2175,7 +2177,9 @@ class nsDisplayItem : public nsDisplayItemLink {
         mForceNotVisible(aOther.mForceNotVisible),
         mDisableSubpixelAA(aOther.mDisableSubpixelAA),
         mReusedItem(false),
-        mBackfaceHidden(mFrame->In3DContextAndBackfaceIsHidden()),
+        mBackfaceIsHidden(aOther.mBackfaceIsHidden),
+        mCombines3DTransformWithAncestors(
+            aOther.mCombines3DTransformWithAncestors),
         mPaintRectValid(false),
         mCanBeReused(true)
 #ifdef MOZ_DUMP_PAINTING
@@ -2825,9 +2829,15 @@ class nsDisplayItem : public nsDisplayItemLink {
   void FuseClipChainUpTo(nsDisplayListBuilder* aBuilder,
                          const ActiveScrolledRoot* aASR);
 
-  bool BackfaceIsHidden() const { return mFrame->BackfaceIsHidden(); }
+  bool BackfaceIsHidden() const { return mBackfaceIsHidden; }
 
-  bool In3DContextAndBackfaceIsHidden() { return mBackfaceHidden; }
+  bool Combines3DTransformWithAncestors() const {
+    return mCombines3DTransformWithAncestors;
+  }
+
+  bool In3DContextAndBackfaceIsHidden() const {
+    return mBackfaceIsHidden && mCombines3DTransformWithAncestors;
+  }
 
   bool HasDifferentFrame(const nsDisplayItem* aOther) const {
     return mFrame != aOther->mFrame;
@@ -2947,7 +2957,15 @@ class nsDisplayItem : public nsDisplayItemLink {
   // Guaranteed to be contained in GetBounds().
   nsRect mPaintRect;
 
+  OldListIndex mOldListIndex;
+  uintptr_t mOldList = 0;
+
  protected:
+  struct {
+    RefPtr<const DisplayItemClipChain> mClipChain;
+    const DisplayItemClip* mClip;
+  } mState;
+
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
  public:
   uint32_t mOldListKey = 0;
@@ -2957,24 +2975,19 @@ class nsDisplayItem : public nsDisplayItemLink {
 
  protected:
 #endif
-  OldListIndex mOldListIndex;
-  uintptr_t mOldList = 0;
 
   bool mForceNotVisible;
   bool mDisableSubpixelAA;
   bool mReusedItem;
-  bool mBackfaceHidden;
+  bool mBackfaceIsHidden;
+  bool mCombines3DTransformWithAncestors;
   bool mPaintRectValid;
   bool mCanBeReused;
+
 #ifdef MOZ_DUMP_PAINTING
   // True if this frame has been painted.
   bool mPainted;
 #endif
-
-  struct {
-    RefPtr<const DisplayItemClipChain> mClipChain;
-    const DisplayItemClip* mClip;
-  } mState;
 };
 
 /**
@@ -6783,16 +6796,14 @@ class nsDisplayTransform : public nsDisplayHitTestInfoItem {
    */
   bool IsLeafOf3DContext() {
     return (IsTransformSeparator() ||
-            (!mFrame->Extend3DContext() &&
-             mFrame->Combines3DTransformWithAncestors()));
+            (!mFrame->Extend3DContext() && Combines3DTransformWithAncestors()));
   }
   /**
    * The backing frame of this item participates a 3D rendering
    * context.
    */
   bool IsParticipating3DContext() {
-    return mFrame->Extend3DContext() ||
-           mFrame->Combines3DTransformWithAncestors();
+    return mFrame->Extend3DContext() || Combines3DTransformWithAncestors();
   }
 
  private:

@@ -116,3 +116,4 @@ load 1236639.html
 test-pref(media.navigator.permission.disabled,true) load 1388372.html
 load 1494073.html
 skip-if(Android) load 1526044.html # Bug 1528391
+load 1533909.html

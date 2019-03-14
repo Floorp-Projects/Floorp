@@ -2,19 +2,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-extern crate app_units;
 extern crate euclid;
 extern crate gleam;
 extern crate glutin;
 extern crate webrender;
 extern crate winit;
 
-use app_units::Au;
 use gleam::gl;
 use glutin::GlContext;
 use std::fs::File;
 use std::io::Read;
 use webrender::api::*;
+use webrender::api::units::*;
 use webrender::DebugFlags;
 use winit::dpi::LogicalSize;
 

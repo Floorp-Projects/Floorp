@@ -446,7 +446,7 @@ WebSocketChannelChild::AsyncOpen(nsIURI* aURI, const nsACString& aOrigin,
 
   Maybe<URIParams> uri;
   Maybe<LoadInfoArgs> loadInfoArgs;
-  OptionalTransportProvider transportProvider;
+  Maybe<PTransportProviderChild*> transportProvider;
 
   if (!mIsServerSide) {
     uri.emplace(URIParams());
@@ -454,14 +454,14 @@ WebSocketChannelChild::AsyncOpen(nsIURI* aURI, const nsACString& aOrigin,
     nsresult rv = LoadInfoToLoadInfoArgs(mLoadInfo, &loadInfoArgs);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    transportProvider = void_t();
+    transportProvider = Nothing();
   } else {
     MOZ_ASSERT(mServerTransportProvider);
     PTransportProviderChild* ipcChild;
     nsresult rv = mServerTransportProvider->GetIPCChild(&ipcChild);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    transportProvider = ipcChild;
+    transportProvider = Some(ipcChild);
   }
 
   // This must be called before sending constructor message.

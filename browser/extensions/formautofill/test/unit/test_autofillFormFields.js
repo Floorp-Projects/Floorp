@@ -5,6 +5,8 @@
 
 "use strict";
 
+const {setTimeout, clearTimeout} = ChromeUtils.import("resource://gre/modules/Timer.jsm", {});
+
 var FormAutofillHandler, OSKeyStore;
 add_task(async function setup() {
   ({FormAutofillHandler} = ChromeUtils.import("resource://formautofill/FormAutofillHandler.jsm"));

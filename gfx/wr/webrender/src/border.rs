@@ -2,11 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{BorderRadius, BorderSide, BorderStyle, ColorF, ColorU, DeviceRect, DeviceSize};
-use api::{LayoutSideOffsets, LayoutSizeAu, LayoutPrimitiveInfo, LayoutToDeviceScale};
-use api::{DeviceVector2D, DevicePoint, LayoutRect, LayoutSize, DeviceIntSize};
-use api::{AuHelpers, LayoutPoint, LayoutPointAu, RepeatMode, TexelRect};
-use api::NormalBorder as ApiNormalBorder;
+use api::{BorderRadius, BorderSide, BorderStyle, ColorF, ColorU};
+use api::{LayoutPrimitiveInfo, NormalBorder as ApiNormalBorder, RepeatMode};
+use api::units::*;
 use ellipse::Ellipse;
 use euclid::vec2;
 use display_list_flattener::DisplayListFlattener;

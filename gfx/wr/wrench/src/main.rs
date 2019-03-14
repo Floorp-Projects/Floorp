@@ -2,7 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-extern crate app_units;
 extern crate base64;
 extern crate bincode;
 extern crate byteorder;
@@ -80,6 +79,7 @@ use std::rc::Rc;
 use std::sync::mpsc::{channel, Sender, Receiver};
 use webrender::DebugFlags;
 use webrender::api::*;
+use webrender::api::units::*;
 use winit::dpi::{LogicalPosition, LogicalSize};
 use winit::VirtualKeyCode;
 use wrench::{Wrench, WrenchThing};
@@ -549,10 +549,9 @@ fn render<'a>(
     subargs: &clap::ArgMatches<'a>,
 ) {
     let input_path = subargs.value_of("INPUT").map(PathBuf::from).unwrap();
-    let mut show_stats = false;
 
     // If the input is a directory, we are looking at a capture.
-    let mut thing = if input_path.is_dir() {
+    let mut thing = if input_path.as_path().is_dir() {
         let mut documents = wrench.api.load_capture(input_path);
         println!("loaded {:?}", documents.iter().map(|cd| cd.document_id).collect::<Vec<_>>());
         let captured = documents.swap_remove(0);
@@ -567,7 +566,6 @@ fn render<'a>(
             .expect("Tried to render with an unknown file type.")
             .to_str()
             .expect("Tried to render with an unknown file type.");
-        show_stats = true; // show when invoked on single files
 
         match extension {
             "yaml" => Box::new(YamlFrameReader::new_from_args(subargs)) as Box<WrenchThing>,
@@ -774,13 +772,8 @@ fn render<'a>(
                 wrench.show_onscreen_help();
             }
 
-            let results = wrench.render();
+            wrench.render();
             window.swap_buffers();
-
-            if show_stats {
-                show_stats = false;
-                println!("{:#?}", results.stats);
-            }
 
             if do_loop {
                 thing.next_frame();

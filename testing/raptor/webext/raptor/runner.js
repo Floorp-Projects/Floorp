@@ -398,7 +398,18 @@ async function nextCycle() {
 
 async function timeoutAlarmListener() {
   console.error("raptor-page-timeout on %s" % testURL);
-  postToControlServer("raptor-page-timeout", [testName, testURL]);
+
+  var pendingMetrics = {
+    "hero": isHeroPending,
+    "fnb paint": isFNBPaintPending,
+    "fcp": isFCPPending,
+    "dcf": isDCFPending,
+    "ttfi": isTTFIPending,
+    "load time": isLoadTimePending,
+  };
+
+  postToControlServer("raptor-page-timeout", [testName, testURL, pendingMetrics]);
+
   // take a screen capture
   if (screenCapture) {
     await getScreenCapture();

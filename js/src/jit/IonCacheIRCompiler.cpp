@@ -19,6 +19,7 @@
 
 #include "jit/JSJitFrameIter-inl.h"
 #include "jit/MacroAssembler-inl.h"
+#include "jit/VMFunctionList-inl.h"
 #include "vm/Realm-inl.h"
 #include "vm/TypeInference-inl.h"
 
@@ -103,7 +104,13 @@ class MOZ_RAII IonCacheIRCompiler : public CacheIRCompiler {
   }
 
   void prepareVMCall(MacroAssembler& masm, const AutoSaveLiveRegisters&);
-  void callVM(MacroAssembler& masm, const VMFunction& fun);
+  void callVMInternal(MacroAssembler& masm, VMFunctionId id);
+
+  template <typename Fn, Fn fn>
+  void callVM(MacroAssembler& masm) {
+    VMFunctionId id = VMFunctionToId<Fn, fn>::id;
+    callVMInternal(masm, id);
+  }
 
   MOZ_MUST_USE bool emitAddAndStoreSlotShared(CacheOp op);
 
@@ -324,11 +331,12 @@ void IonCacheIRCompiler::prepareVMCall(MacroAssembler& masm,
 #endif
 }
 
-void IonCacheIRCompiler::callVM(MacroAssembler& masm, const VMFunction& fun) {
+void IonCacheIRCompiler::callVMInternal(MacroAssembler& masm, VMFunctionId id) {
   MOZ_ASSERT(calledPrepareVMCall_);
 
-  TrampolinePtr code = cx_->runtime()->jitRuntime()->getVMWrapper(fun);
+  TrampolinePtr code = cx_->runtime()->jitRuntime()->getVMWrapper(id);
 
+  const VMFunctionData& fun = GetVMFunction(id);
   uint32_t frameSize = fun.explicitStackSlots() * sizeof(void*);
   uint32_t descriptor = MakeFrameDescriptor(frameSize, FrameType::IonICCall,
                                             ExitFrameLayout::Size());
@@ -1145,7 +1153,9 @@ bool IonCacheIRCompiler::emitCallProxyGetByValueResult() {
   masm.Push(idVal);
   masm.Push(obj);
 
-  callVM(masm, ProxyGetPropertyByValueInfo);
+  using Fn =
+      bool (*)(JSContext*, HandleObject, HandleValue, MutableHandleValue);
+  callVM<Fn, ProxyGetPropertyByValue>(masm);
 
   masm.storeCallResultValue(output);
   return true;
@@ -1167,10 +1177,12 @@ bool IonCacheIRCompiler::emitCallProxyHasPropResult() {
   masm.Push(idVal);
   masm.Push(obj);
 
+  using Fn =
+      bool (*)(JSContext*, HandleObject, HandleValue, MutableHandleValue);
   if (hasOwn) {
-    callVM(masm, ProxyHasOwnInfo);
+    callVM<Fn, ProxyHasOwn>(masm);
   } else {
-    callVM(masm, ProxyHasInfo);
+    callVM<Fn, ProxyHas>(masm);
   }
 
   masm.storeCallResultValue(output);
@@ -1193,7 +1205,9 @@ bool IonCacheIRCompiler::emitCallNativeGetElementResult() {
   masm.Push(TypedOrValueRegister(MIRType::Object, AnyRegister(obj)));
   masm.Push(obj);
 
-  callVM(masm, NativeGetElementInfo);
+  using Fn = bool (*)(JSContext*, HandleNativeObject, HandleValue, int32_t,
+                      MutableHandleValue);
+  callVM<Fn, NativeGetElement>(masm);
 
   masm.storeCallResultValue(output);
   return true;
@@ -1292,7 +1306,9 @@ bool IonCacheIRCompiler::emitCallStringSplitResult() {
   masm.Push(ImmGCPtr(group));
   masm.Push(Imm32(INT32_MAX));
 
-  callVM(masm, StringSplitHelperInfo);
+  using Fn = bool (*)(JSContext*, HandleString, HandleString, HandleObjectGroup,
+                      uint32_t limit, MutableHandleValue);
+  callVM<Fn, StringSplitHelper>(masm);
 
   masm.storeCallResultValue(output);
   return true;
@@ -1320,8 +1336,12 @@ bool IonCacheIRCompiler::emitCompareStringResult() {
   masm.Push(right);
   masm.Push(left);
 
-  callVM(masm, (op == JSOP_EQ || op == JSOP_STRICTEQ) ? StringsEqualInfo
-                                                      : StringsNotEqualInfo);
+  using Fn = bool (*)(JSContext*, HandleString, HandleString, bool*);
+  if (op == JSOP_EQ || op == JSOP_STRICTEQ) {
+    callVM<Fn, jit::StringsEqual<true>>(masm);
+  } else {
+    callVM<Fn, jit::StringsEqual<false>>(masm);
+  }
 
   masm.storeCallBoolResult(output.typedReg().gpr());
   masm.bind(&done);
@@ -2189,7 +2209,8 @@ bool IonCacheIRCompiler::emitCallSetArrayLength() {
   masm.Push(val);
   masm.Push(obj);
 
-  callVM(masm, SetArrayLengthInfo);
+  using Fn = bool (*)(JSContext*, HandleObject, HandleValue, bool);
+  callVM<Fn, jit::SetArrayLength>(masm);
   return true;
 }
 
@@ -2213,7 +2234,8 @@ bool IonCacheIRCompiler::emitCallProxySet() {
   masm.Push(id, scratch);
   masm.Push(obj);
 
-  callVM(masm, ProxySetPropertyInfo);
+  using Fn = bool (*)(JSContext*, HandleObject, HandleId, HandleValue, bool);
+  callVM<Fn, ProxySetProperty>(masm);
   return true;
 }
 
@@ -2236,7 +2258,8 @@ bool IonCacheIRCompiler::emitCallProxySetByValue() {
   masm.Push(idVal);
   masm.Push(obj);
 
-  callVM(masm, ProxySetPropertyByValueInfo);
+  using Fn = bool (*)(JSContext*, HandleObject, HandleValue, HandleValue, bool);
+  callVM<Fn, ProxySetPropertyByValue>(masm);
   return true;
 }
 
@@ -2257,7 +2280,9 @@ bool IonCacheIRCompiler::emitCallAddOrUpdateSparseElementHelper() {
   masm.Push(id);
   masm.Push(obj);
 
-  callVM(masm, AddOrUpdateSparseElementHelperInfo);
+  using Fn = bool (*)(JSContext * cx, HandleArrayObject obj, int32_t int_id,
+                      HandleValue v, bool strict);
+  callVM<Fn, AddOrUpdateSparseElementHelper>(masm);
   return true;
 }
 
@@ -2274,7 +2299,9 @@ bool IonCacheIRCompiler::emitCallGetSparseElementResult() {
   masm.Push(id);
   masm.Push(obj);
 
-  callVM(masm, GetSparseElementHelperInfo);
+  using Fn = bool (*)(JSContext * cx, HandleArrayObject obj, int32_t int_id,
+                      MutableHandleValue result);
+  callVM<Fn, GetSparseElementHelper>(masm);
 
   masm.storeCallResultValue(output);
   return true;
@@ -2300,7 +2327,9 @@ bool IonCacheIRCompiler::emitMegamorphicSetElement() {
   masm.Push(idVal);
   masm.Push(obj);
 
-  callVM(masm, SetObjectElementInfo);
+  using Fn = bool (*)(JSContext*, HandleObject, HandleValue, HandleValue,
+                      HandleValue, bool);
+  callVM<Fn, SetObjectElementWithReceiver>(masm);
   return true;
 }
 
@@ -2579,17 +2608,12 @@ bool IonCacheIRCompiler::emitCallStringConcatResult() {
   masm.Push(rhs);
   masm.Push(lhs);
 
-  callVM(masm, ConcatStringsInfo);
+  using Fn = JSString* (*)(JSContext*, HandleString, HandleString);
+  callVM<Fn, ConcatStrings<CanGC>>(masm);
 
   masm.tagValue(JSVAL_TYPE_STRING, ReturnReg, output.valueReg());
   return true;
 }
-
-typedef bool (*DoConcatStringObjectFn)(JSContext*, HandleValue, HandleValue,
-                                       MutableHandleValue);
-const VMFunction DoIonConcatStringObjectInfo =
-    FunctionInfo<DoConcatStringObjectFn>(DoConcatStringObject,
-                                         "DoIonConcatStringObject");
 
 bool IonCacheIRCompiler::emitCallStringObjectConcatResult() {
   JitSpew(JitSpew_Codegen, __FUNCTION__);
@@ -2605,7 +2629,8 @@ bool IonCacheIRCompiler::emitCallStringObjectConcatResult() {
   masm.Push(rhs);
   masm.Push(lhs);
 
-  callVM(masm, DoIonConcatStringObjectInfo);
+  using Fn = bool (*)(JSContext*, HandleValue, HandleValue, MutableHandleValue);
+  callVM<Fn, DoConcatStringObject>(masm);
 
   masm.storeCallResultValue(output);
   return true;

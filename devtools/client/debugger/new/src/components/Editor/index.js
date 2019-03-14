@@ -34,7 +34,8 @@ import {
   getSelectedSource,
   getConditionalPanelLocation,
   getSymbols,
-  getIsPaused
+  getIsPaused,
+  getCurrentThread
 } from "../../selectors";
 
 // Redux actions
@@ -668,7 +669,7 @@ const mapStateToProps = state => {
     searchOn: getActiveSearch(state) === "file",
     conditionalPanelLocation: getConditionalPanelLocation(state),
     symbols: getSymbols(state, selectedSource),
-    isPaused: getIsPaused(state)
+    isPaused: getIsPaused(state, getCurrentThread(state))
   };
 };
 

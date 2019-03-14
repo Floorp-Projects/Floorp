@@ -2528,7 +2528,7 @@ public class GeckoSession implements Parcelable {
         * @param url The resource being loaded.
         */
         @UiThread
-        void onPageStart(@NonNull GeckoSession session, @NonNull String url);
+        default void onPageStart(@NonNull GeckoSession session, @NonNull String url) {}
 
         /**
         * A View has finished loading content from the network.
@@ -2536,7 +2536,7 @@ public class GeckoSession implements Parcelable {
         * @param success Whether the page loaded successfully or an error occurred.
         */
         @UiThread
-        void onPageStop(@NonNull GeckoSession session, boolean success);
+        default void onPageStop(@NonNull GeckoSession session, boolean success) {}
 
         /**
          * Page loading has progressed.
@@ -2544,7 +2544,7 @@ public class GeckoSession implements Parcelable {
          * @param progress Current page load progress value [0, 100].
          */
         @UiThread
-        void onProgressChange(@NonNull GeckoSession session, int progress);
+        default void onProgressChange(@NonNull GeckoSession session, int progress) {}
 
         /**
         * The security status has been updated.
@@ -2552,8 +2552,8 @@ public class GeckoSession implements Parcelable {
         * @param securityInfo The new security information.
         */
         @UiThread
-        void onSecurityChange(@NonNull GeckoSession session,
-                              @NonNull SecurityInformation securityInfo);
+        default void onSecurityChange(@NonNull GeckoSession session,
+                                      @NonNull SecurityInformation securityInfo) {}
     }
 
     /**
@@ -2612,7 +2612,7 @@ public class GeckoSession implements Parcelable {
         * @param title The title sent from the content.
         */
         @UiThread
-        void onTitleChange(@NonNull GeckoSession session, @Nullable String title);
+        default void onTitleChange(@NonNull GeckoSession session, @Nullable String title) {}
 
         /**
         * A page has requested focus. Note that window.focus() in content will not result
@@ -2620,14 +2620,14 @@ public class GeckoSession implements Parcelable {
         * @param session The GeckoSession that initiated the callback.
         */
         @UiThread
-        void onFocusRequest(@NonNull GeckoSession session);
+        default void onFocusRequest(@NonNull GeckoSession session) {}
 
         /**
         * A page has requested to close
         * @param session The GeckoSession that initiated the callback.
         */
         @UiThread
-        void onCloseRequest(@NonNull GeckoSession session);
+        default void onCloseRequest(@NonNull GeckoSession session) {}
 
         /**
          * A page has entered or exited full screen mode. Typically, the implementation
@@ -2638,7 +2638,7 @@ public class GeckoSession implements Parcelable {
          * @param fullScreen True if the page is in full screen mode.
          */
         @UiThread
-        void onFullScreen(@NonNull GeckoSession session, boolean fullScreen);
+        default void onFullScreen(@NonNull GeckoSession session, boolean fullScreen) {}
 
         /**
          * Element details for onContextMenu callbacks.
@@ -2722,9 +2722,9 @@ public class GeckoSession implements Parcelable {
          * @param element The details for the pressed element.
          */
         @UiThread
-        void onContextMenu(@NonNull GeckoSession session,
-                           int screenX, int screenY,
-                           @NonNull ContextElement element);
+        default void onContextMenu(@NonNull GeckoSession session,
+                                   int screenX, int screenY,
+                                   @NonNull ContextElement element) {}
 
         /**
          * This is fired when there is a response that cannot be handled
@@ -2734,7 +2734,8 @@ public class GeckoSession implements Parcelable {
          * @param response the WebResponseInfo for the external response
          */
         @UiThread
-        void onExternalResponse(@NonNull GeckoSession session, @NonNull WebResponseInfo response);
+        default void onExternalResponse(@NonNull GeckoSession session,
+                                        @NonNull WebResponseInfo response) {}
 
         /**
          * The content process hosting this GeckoSession has crashed. The
@@ -2746,7 +2747,7 @@ public class GeckoSession implements Parcelable {
          * @param session The GeckoSession that crashed.
          */
         @UiThread
-        void onCrash(@NonNull GeckoSession session);
+        default void onCrash(@NonNull GeckoSession session) {}
 
         /**
          * Notification that the first content composition has occurred.
@@ -2755,7 +2756,7 @@ public class GeckoSession implements Parcelable {
          * @param session The GeckoSession that had a first paint event.
          */
         @UiThread
-        void onFirstComposite(@NonNull GeckoSession session);
+        default void onFirstComposite(@NonNull GeckoSession session) {}
     }
 
     public interface SelectionActionDelegate {
@@ -2908,8 +2909,8 @@ public class GeckoSession implements Parcelable {
          * multiple times to perform multiple actions at once.
          */
         @UiThread
-        void onShowActionRequest(@NonNull GeckoSession session, @NonNull Selection selection,
-                                 @Action String[] actions, @NonNull GeckoResponse<String> response);
+        default void onShowActionRequest(@NonNull GeckoSession session, @NonNull Selection selection,
+                                         @Action String[] actions, @NonNull GeckoResponse<String> response) {}
 
         @Retention(RetentionPolicy.SOURCE)
         @IntDef({HIDE_REASON_NO_SELECTION,
@@ -2950,7 +2951,7 @@ public class GeckoSession implements Parcelable {
          * {@link #HIDE_REASON_NO_SELECTION HIDE_REASON_*} constants.
          */
         @UiThread
-        void onHideAction(@NonNull GeckoSession session, @HideReason int reason);
+        default void onHideAction(@NonNull GeckoSession session, @HideReason int reason) {}
     }
 
     public interface NavigationDelegate {
@@ -2960,7 +2961,7 @@ public class GeckoSession implements Parcelable {
         * @param url The resource being loaded.
         */
         @UiThread
-        void onLocationChange(@NonNull GeckoSession session, @Nullable String url);
+        default void onLocationChange(@NonNull GeckoSession session, @Nullable String url) {}
 
         /**
         * The view's ability to go back has changed.
@@ -2968,7 +2969,7 @@ public class GeckoSession implements Parcelable {
         * @param canGoBack The new value for the ability.
         */
         @UiThread
-        void onCanGoBack(@NonNull GeckoSession session, boolean canGoBack);
+        default void onCanGoBack(@NonNull GeckoSession session, boolean canGoBack) {}
 
         /**
         * The view's ability to go forward has changed.
@@ -2976,7 +2977,7 @@ public class GeckoSession implements Parcelable {
         * @param canGoForward The new value for the ability.
         */
         @UiThread
-        void onCanGoForward(@NonNull GeckoSession session, boolean canGoForward);
+        default void onCanGoForward(@NonNull GeckoSession session, boolean canGoForward) {}
 
         @Retention(RetentionPolicy.SOURCE)
         @IntDef({TARGET_WINDOW_NONE, TARGET_WINDOW_CURRENT, TARGET_WINDOW_NEW})
@@ -3065,8 +3066,11 @@ public class GeckoSession implements Parcelable {
          *         A null return value is interpreted as false (unhandled).
          */
         @UiThread
-        @Nullable GeckoResult<AllowOrDeny> onLoadRequest(@NonNull GeckoSession session,
-                                                         @NonNull LoadRequest request);
+        default @Nullable GeckoResult<AllowOrDeny> onLoadRequest(@NonNull GeckoSession session,
+                                                                 @NonNull LoadRequest request)
+        {
+            return null;
+        }
 
         /**
         * A request has been made to open a new session. The URI is provided only for
@@ -3081,7 +3085,11 @@ public class GeckoSession implements Parcelable {
          *        <code>window.open()</code> will return null.
         */
         @UiThread
-        @Nullable GeckoResult<GeckoSession> onNewSession(@NonNull GeckoSession session, @NonNull String uri);
+        default @Nullable GeckoResult<GeckoSession> onNewSession(@NonNull GeckoSession session,
+                                                                 @NonNull String uri)
+        {
+            return null;
+        }
 
         /**
          * @param session The GeckoSession that initiated the callback.
@@ -3090,9 +3098,12 @@ public class GeckoSession implements Parcelable {
          * @return A URI to display as an error. Returning null will halt the load entirely.
          */
         @UiThread
-        @Nullable GeckoResult<String> onLoadError(@NonNull GeckoSession session,
-                                                  @Nullable String uri,
-                                                  @NonNull WebRequestError error);
+        default @Nullable GeckoResult<String> onLoadError(@NonNull GeckoSession session,
+                                                          @Nullable String uri,
+                                                          @NonNull WebRequestError error)
+        {
+            return null;
+        }
     }
 
     /**
@@ -3160,8 +3171,11 @@ public class GeckoSession implements Parcelable {
          * @param callback Callback interface.
          */
         @UiThread
-        void onAlert(@NonNull GeckoSession session, @Nullable String title, @Nullable String msg,
-                     @NonNull AlertCallback callback);
+        default void onAlert(@NonNull GeckoSession session, @Nullable String title, @Nullable String msg,
+                             @NonNull AlertCallback callback)
+        {
+            callback.dismiss();
+        }
 
         /**
          * Callback interface for notifying the result of a button prompt.
@@ -3195,9 +3209,12 @@ public class GeckoSession implements Parcelable {
          * @param callback Callback interface.
          */
         @UiThread
-        void onButtonPrompt(@NonNull GeckoSession session, @Nullable String title,
-                            @Nullable String msg, @Nullable String[] btnMsg,
-                            @NonNull ButtonCallback callback);
+        default void onButtonPrompt(@NonNull GeckoSession session, @Nullable String title,
+                                    @Nullable String msg, @Nullable String[] btnMsg,
+                                    @NonNull ButtonCallback callback)
+        {
+            callback.dismiss();
+        }
 
         /**
          * Callback interface for notifying the result of prompts that have text results,
@@ -3224,9 +3241,12 @@ public class GeckoSession implements Parcelable {
          * @param callback Callback interface.
          */
         @UiThread
-        void onTextPrompt(@NonNull GeckoSession session, @Nullable String title,
-                          @Nullable String msg, @Nullable String value,
-                          @NonNull TextCallback callback);
+        default void onTextPrompt(@NonNull GeckoSession session, @Nullable String title,
+                                  @Nullable String msg, @Nullable String value,
+                                  @NonNull TextCallback callback)
+        {
+            callback.dismiss();
+        }
 
         /**
          * Callback interface for notifying the result of authentication prompts.
@@ -3353,9 +3373,12 @@ public class GeckoSession implements Parcelable {
          * @param callback Callback interface.
          */
         @UiThread
-        void onAuthPrompt(@NonNull GeckoSession session, @Nullable String title,
-                          @Nullable String msg, @NonNull AuthOptions options,
-                          @NonNull AuthCallback callback);
+        default void onAuthPrompt(@NonNull GeckoSession session, @Nullable String title,
+                                  @Nullable String msg, @NonNull AuthOptions options,
+                                  @NonNull AuthCallback callback)
+        {
+            callback.dismiss();
+        }
 
         class Choice {
             @Retention(RetentionPolicy.SOURCE)
@@ -3504,9 +3527,12 @@ public class GeckoSession implements Parcelable {
          * @param callback Callback interface.
          */
         @UiThread
-        void onChoicePrompt(@NonNull GeckoSession session, @Nullable String title,
-                            @Nullable String msg, @Choice.ChoiceType int type,
-                            @NonNull Choice[] choices, @NonNull ChoiceCallback callback);
+        default void onChoicePrompt(@NonNull GeckoSession session, @Nullable String title,
+                                    @Nullable String msg, @Choice.ChoiceType int type,
+                                    @NonNull Choice[] choices, @NonNull ChoiceCallback callback)
+        {
+            callback.dismiss();
+        }
 
         /**
          * Display a color prompt.
@@ -3518,8 +3544,11 @@ public class GeckoSession implements Parcelable {
          *                 HTML color format.
          */
         @UiThread
-        void onColorPrompt(@NonNull GeckoSession session, @Nullable String title,
-                           @Nullable String value, @NonNull TextCallback callback);
+        default void onColorPrompt(@NonNull GeckoSession session, @Nullable String title,
+                                   @Nullable String value, @NonNull TextCallback callback)
+        {
+            callback.dismiss();
+        }
 
         @Retention(RetentionPolicy.SOURCE)
         @IntDef({DATETIME_TYPE_DATE, DATETIME_TYPE_MONTH, DATETIME_TYPE_WEEK,
@@ -3564,9 +3593,12 @@ public class GeckoSession implements Parcelable {
          *                 HTML date/time format.
          */
         @UiThread
-        void onDateTimePrompt(@NonNull GeckoSession session, @Nullable String title,
-                              @DatetimeType int type, @Nullable String value, @Nullable String min,
-                              @Nullable String max, @NonNull TextCallback callback);
+        default void onDateTimePrompt(@NonNull GeckoSession session, @Nullable String title,
+                                      @DatetimeType int type, @Nullable String value, @Nullable String min,
+                                      @Nullable String max, @NonNull TextCallback callback)
+        {
+            callback.dismiss();
+        }
 
         /**
          * Callback interface for notifying the result of file prompts.
@@ -3612,8 +3644,11 @@ public class GeckoSession implements Parcelable {
          * @param callback Callback interface.
          */
         @UiThread
-        void onFilePrompt(@NonNull GeckoSession session, @Nullable String title, @FileType int type,
-                          @Nullable String[] mimeTypes, @NonNull FileCallback callback);
+        default void onFilePrompt(@NonNull GeckoSession session, @Nullable String title, @FileType int type,
+                                  @Nullable String[] mimeTypes, @NonNull FileCallback callback)
+        {
+            callback.dismiss();
+        }
 
         /**
          * Display a popup request prompt; this occurs when content attempts to open
@@ -3626,8 +3661,11 @@ public class GeckoSession implements Parcelable {
          *         whether or not the popup should be allowed to open.
          */
         @UiThread
-        GeckoResult<AllowOrDeny> onPopupRequest(@NonNull GeckoSession session,
-                                                @Nullable String targetUri);
+        default @Nullable GeckoResult<AllowOrDeny> onPopupRequest(@NonNull GeckoSession session,
+                                                                  @Nullable String targetUri)
+        {
+            return null;
+        }
     }
 
     /**
@@ -3643,7 +3681,7 @@ public class GeckoSession implements Parcelable {
         * @param scrollY The new vertical scroll position in pixels.
         */
         @UiThread
-        public void onScrollChanged(@NonNull GeckoSession session, int scrollX, int scrollY);
+        default void onScrollChanged(@NonNull GeckoSession session, int scrollX, int scrollY) {}
     }
 
     /**
@@ -3866,9 +3904,12 @@ public class GeckoSession implements Parcelable {
          * @param callback Callback interface.
          */
         @UiThread
-        void onAndroidPermissionsRequest(@NonNull GeckoSession session,
-                                         @Nullable String[] permissions,
-                                         @NonNull Callback callback);
+        default void onAndroidPermissionsRequest(@NonNull GeckoSession session,
+                                                 @Nullable String[] permissions,
+                                                 @NonNull Callback callback)
+        {
+            callback.reject();
+        }
 
         /**
          * Request content permission.
@@ -3881,8 +3922,11 @@ public class GeckoSession implements Parcelable {
          * @param callback Callback interface.
          */
         @UiThread
-        void onContentPermissionRequest(@NonNull GeckoSession session, @Nullable String uri,
-                                        @Permission int type, @NonNull Callback callback);
+        default void onContentPermissionRequest(@NonNull GeckoSession session, @Nullable String uri,
+                                                @Permission int type, @NonNull Callback callback)
+        {
+            callback.reject();
+        }
 
         class MediaSource {
             @Retention(RetentionPolicy.SOURCE)
@@ -4085,9 +4129,12 @@ public class GeckoSession implements Parcelable {
          * @param callback Callback interface.
          */
         @UiThread
-        void onMediaPermissionRequest(@NonNull GeckoSession session, @NonNull String uri,
-                                      @Nullable MediaSource[] video, @Nullable MediaSource[] audio,
-                                      @NonNull MediaCallback callback);
+        default void onMediaPermissionRequest(@NonNull GeckoSession session, @NonNull String uri,
+                                              @Nullable MediaSource[] video, @Nullable MediaSource[] audio,
+                                              @NonNull MediaCallback callback)
+        {
+            callback.reject();
+        }
     }
 
     /**
@@ -4470,14 +4517,15 @@ public class GeckoSession implements Parcelable {
          * @param element The media element that was just created.
          */
         @UiThread
-        void onMediaAdd(@NonNull GeckoSession session, @NonNull MediaElement element);
+        default void onMediaAdd(@NonNull GeckoSession session, @NonNull MediaElement element) {}
+
         /**
          * An HTMLMediaElement has been unloaded.
          * @param session Session instance.
          * @param element The media element that was unloaded.
          */
         @UiThread
-        void onMediaRemove(@NonNull GeckoSession session, @NonNull MediaElement element);
+        default void onMediaRemove(@NonNull GeckoSession session, @NonNull MediaElement element) {}
     }
 
     /**

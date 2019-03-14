@@ -34,6 +34,8 @@
 <!ENTITY error.noSource2 "No video with supported format and MIME type found.">
 <!ENTITY error.generic "Video playback aborted due to an unknown error.">
 
+<!ENTITY status.pictureInPicture "This video is playing in Picture-in-Picture mode.">
+
 <!-- LOCALIZATION NOTE (scrubberScale.nameFormat): the #1 string is the current
 media position, and the #2 string is the total duration. For example, when at
 the 5 minute mark in a 6 hour long video, #1 would be "5:00" and #2 would be

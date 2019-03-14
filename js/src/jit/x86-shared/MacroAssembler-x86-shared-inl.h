@@ -328,7 +328,10 @@ inline void FlexibleShift32(MacroAssembler& masm, Register shift,
   // Add registers we may clobber and want to ensure are restored as live, and
   // remove what we definitely clobber (the destination)
   LiveRegisterSet preserve;
-  preserve.add(ecx);
+
+  if (shift != ecx) {
+    preserve.add(ecx);
+  }
   preserve.add(internalSrcDest);
 
   preserve.takeUnchecked(srcDest);

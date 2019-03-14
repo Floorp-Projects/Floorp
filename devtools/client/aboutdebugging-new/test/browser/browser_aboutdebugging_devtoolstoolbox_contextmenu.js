@@ -28,7 +28,7 @@ add_task(async function() {
   info("Check whether the menu item which opens devtools is enabled");
   await assertContextMenu(rootDocument, devtoolsBrowser, "#mount", true);
 
-  await closeAboutDevtoolsToolbox(devtoolsTab, window);
+  await closeAboutDevtoolsToolbox(document, devtoolsTab, window);
   await removeTab(tab);
 });
 

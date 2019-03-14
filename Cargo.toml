@@ -9,7 +9,7 @@ members = [
   "js/src/rust",
   "js/src/wasm/cranelift",
   "js/rust",
-  "js/src/frontend/binsource", # Code generator.
+  "js/src/frontend/binast", # Code generator.
   "testing/geckodriver",
   "toolkit/crashreporter/rust",
   "toolkit/library/gtest/rust",

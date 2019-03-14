@@ -512,6 +512,7 @@ nsresult nsComponentManagerImpl::Init() {
     // We are going to assume that only a select few (see below) process types
     // want to load chrome manifests, and that any new process types will not
     // want to load them, because they're not going to be executing JS.
+    case GeckoProcessType_RemoteSandboxBroker:
     default:
       loadChromeManifests = false;
       break;

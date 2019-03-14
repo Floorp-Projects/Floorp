@@ -15,7 +15,27 @@ EXTRA_COMPONENTS += [
 JAR_MANIFESTS += ["jar.mn"]
 
 with Files("**"):
-    BUG_COMPONENT = ("DevTools", "Remote Agent")
+    BUG_COMPONENT = ("Remote Protocol", "Agent")
+with Files("targets/**"):
+    BUG_COMPONENT = ("Remote Protocol", "Target")
+with Files("domains/**/Emulation.jsm"):
+    BUG_COMPONENT = ("Remote Protocol", "Emulation")
+with Files("domains/**/Log.jsm"):
+    BUG_COMPONENT = ("Remote Protocol", "Log")
+with Files("domains/**/Network.jsm"):
+    BUG_COMPONENT = ("Remote Protocol", "Network")
+with Files("domains/**/Page.jsm"):
+    BUG_COMPONENT = ("Remote Protocol", "Page")
+with Files("domains/**/Performance.jsm"):
+    BUG_COMPONENT = ("Remote Protocol", "Performance")
+with Files("domains/**/Runtime.jsm"):
+    BUG_COMPONENT = ("Remote Protocol", "Runtime")
+with Files("domains/**/Security.jsm"):
+    BUG_COMPONENT = ("Remote Protocol", "Security")
+with Files("domains/**/Browser.jsm"):
+    BUG_COMPONENT = ("Remote Protocol", "Browser")
+with Files("domains/**/Target.jsm"):
+    BUG_COMPONENT = ("Remote Protocol", "Target")
 
 with Files("doc/**"):
     SCHEDULES.exclusive = ["docs"]

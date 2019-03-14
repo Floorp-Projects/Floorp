@@ -16,6 +16,8 @@ debugger-tests:
         - "'mozlint-eslint"
         - "!asan !pgo 'devtools"
         - "!android !asan !pgo 'mochitest-chrome | 'mochitest-clipboard-e10s"
+        - "!asan !pgo 'linux64/ 'xpcshell"
+        - "!pgo !qr !macosx 'damp"
 
 sample-suites:
     selector: fuzzy

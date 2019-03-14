@@ -241,6 +241,9 @@ const RECOMMENDED_PREFS = new Map([
   // Make sure SNTP requests do not hit the network
   ["network.sntp.pools", "%(server)s"],
 
+  // Don't do network connections for mitm priming
+  ["security.certerrors.mitm.priming.enabled", false],
+
   // Local documents have access to all other local documents,
   // including directory listings
   ["security.fileuri.strict_origin_policy", false],

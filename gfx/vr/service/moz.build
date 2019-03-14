@@ -38,9 +38,3 @@ if CONFIG['OS_TARGET'] in ('WINNT', 'Linux', 'Darwin'):
     ]
 
 FINAL_LIBRARY = 'xul'
-
-# This is intended as a temporary hack to enable VS2015 builds.
-if CONFIG['CC_TYPE'] == 'clang-cl':
-    # ovr_capi_dynamic.h '<unnamed-tag>': Alignment specifier is less than
-    # actual alignment (8), and will be ignored
-    CXXFLAGS += ['-wd4359']

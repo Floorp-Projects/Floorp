@@ -4036,13 +4036,7 @@ TEST_P(JsepSessionTest, TestRejectMline) {
   }
 }
 
-TEST_F(JsepSessionTest, CreateOfferNoMlines) {
-  JsepOfferOptions options;
-  std::string offer;
-  nsresult rv = mSessionOff->CreateOffer(options, &offer);
-  ASSERT_NE(NS_OK, rv);
-  ASSERT_NE("", mSessionOff->GetLastError());
-}
+TEST_F(JsepSessionTest, NegotiationNoMlines) { OfferAnswer(); }
 
 TEST_F(JsepSessionTest, TestIceLite) {
   AddTracks(*mSessionOff, "audio");

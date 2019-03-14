@@ -161,7 +161,7 @@ def create_interactive_action(parameters, graph_config, input, task_group_id, ta
             return
 
         info = {
-            'url': taskcluster_urls.ui(get_root_url(), 'tasks/{}/connect'.format(taskId)),
+            'url': taskcluster_urls.ui(get_root_url(False), 'tasks/{}/connect'.format(taskId)),
             'label': label,
             'revision': parameters['head_rev'],
             'repo': parameters['head_repository'],

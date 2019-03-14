@@ -88,6 +88,7 @@ interface nsICommandManager : nsISupports
    * may be null for parameter-less commands.
    *
    */
+  [can_run_script]
   void        doCommand(in string aCommandName,
                         in nsICommandParams aCommandParams,
                         in mozIDOMWindowProxy aTargetWindow);

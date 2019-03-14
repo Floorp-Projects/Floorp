@@ -31,6 +31,7 @@ class EditorCommandBase : public nsIControllerCommand {
   NS_IMETHOD IsCommandEnabled(const char* aCommandName,
                               nsISupports* aCommandRefCon,
                               bool* aIsEnabled) override = 0;
+  MOZ_CAN_RUN_SCRIPT
   NS_IMETHOD DoCommand(const char* aCommandName,
                        nsISupports* aCommandRefCon) override = 0;
 
@@ -44,8 +45,10 @@ class EditorCommandBase : public nsIControllerCommand {
     NS_IMETHOD IsCommandEnabled(const char* aCommandName,                   \
                                 nsISupports* aCommandRefCon,                \
                                 bool* aIsEnabled) override;                 \
+    MOZ_CAN_RUN_SCRIPT                                                      \
     NS_IMETHOD DoCommand(const char* aCommandName,                          \
                          nsISupports* aCommandRefCon) override;             \
+    MOZ_CAN_RUN_SCRIPT                                                      \
     NS_IMETHOD DoCommandParams(const char* aCommandName,                    \
                                nsICommandParams* aParams,                   \
                                nsISupports* aCommandRefCon) override;       \

@@ -3,7 +3,8 @@
 
 "use strict";
 
-const TEST_URL = "http://example.com/";
+const TEST_URL1 = "http://example.com/1";
+const TEST_URL2 = "http://example.com/2";
 
 add_task(async function setup() {
   let oldHomepagePref = Services.prefs.getCharPref("browser.startup.homepage");
@@ -24,24 +25,45 @@ add_task(async function testSetHomepageFromBookmark() {
   let bm = await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.menuGuid,
     title: "TestHomepage",
-    url: TEST_URL,
+    url: TEST_URL1,
   });
 
   let doc = gBrowser.contentDocument;
-
   // Select the custom URLs option.
   doc.getElementById("homeMode").value = 2;
 
   let promiseSubDialogLoaded = promiseLoadSubDialog("chrome://browser/content/preferences/selectBookmark.xul");
-
   doc.getElementById("useBookmarkBtn").click();
 
   let dialog = await promiseSubDialogLoaded;
-
   dialog.document.getElementById("bookmarks").selectItems([bm.guid]);
-
   dialog.document.documentElement.getButton("accept").click();
 
-  Assert.equal(Services.prefs.getCharPref("browser.startup.homepage"), TEST_URL,
+  Assert.equal(Services.prefs.getCharPref("browser.startup.homepage"), TEST_URL1,
+               "Should have set the homepage to the same as the bookmark.");
+});
+
+add_task(async function testSetHomepageFromTopLevelFolder() {
+  // Insert a second item into the menu folder
+  await PlacesUtils.bookmarks.insert({
+    parentGuid: PlacesUtils.bookmarks.menuGuid,
+    title: "TestHomepage",
+    url: TEST_URL2,
+  });
+
+  let doc = gBrowser.contentDocument;
+  // Select the custom URLs option.
+  doc.getElementById("homeMode").value = 2;
+
+  let promiseSubDialogLoaded = promiseLoadSubDialog("chrome://browser/content/preferences/selectBookmark.xul");
+  doc.getElementById("useBookmarkBtn").click();
+
+  let dialog = await promiseSubDialogLoaded;
+  dialog.document.getElementById("bookmarks")
+        .selectItems([PlacesUtils.bookmarks.menuGuid]);
+  dialog.document.documentElement.getButton("accept").click();
+
+  Assert.equal(Services.prefs.getCharPref("browser.startup.homepage"),
+               `${TEST_URL1}|${TEST_URL2}`,
                "Should have set the homepage to the same as the bookmark.");
 });

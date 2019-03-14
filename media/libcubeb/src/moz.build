@@ -73,7 +73,7 @@ if CONFIG['OS_TARGET'] == 'WINNT':
       "avrt",
     ]
     if CONFIG['CC_TYPE'] == 'clang-cl':
-        CXXFLAGS += ['-wd4005'] # C4005: '_USE_MATH_DEFINES' : macro redefinition
+        CXXFLAGS += ['-Wno-macro-redefined'] # '_USE_MATH_DEFINES' : macro redefinition
 
 if CONFIG['OS_TARGET'] == 'Android':
     SOURCES += ['cubeb_opensl.c']

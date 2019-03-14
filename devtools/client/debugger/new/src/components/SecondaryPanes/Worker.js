@@ -9,7 +9,7 @@ import { connect } from "../../utils/connect";
 import classnames from "classnames";
 
 import actions from "../../actions";
-import { getCurrentThread, getThreadIsPaused } from "../../selectors";
+import { getCurrentThread, getIsPaused } from "../../selectors";
 import { getDisplayName, isWorker } from "../../utils/workers";
 import AccessibleImage from "../shared/AccessibleImage";
 
@@ -59,7 +59,7 @@ export class Worker extends Component<Props> {
 
 const mapStateToProps = (state, props: Props) => ({
   currentThread: getCurrentThread(state),
-  isPaused: getThreadIsPaused(state, props.thread.actor)
+  isPaused: getIsPaused(state, props.thread.actor)
 });
 
 export default connect(

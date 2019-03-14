@@ -7,7 +7,7 @@ import sys
 # The VERSION variable is automagically changed
 # by release.sh.  Make sure you understand how
 # that script works if you want to change this
-VERSION = '4.0.1'
+VERSION = '6.0.0'
 
 tests_require = [
     'nose==1.3.7',
@@ -30,6 +30,7 @@ install_requires = [
     'requests>=2.4.3,<3',
     'mohawk>=0.3.4,<0.4',
     'slugid>=1.0.7,<2',
+    'taskcluster-urls>=10.1.0,<12',
     'six>=1.10.0,<2',
 ]
 

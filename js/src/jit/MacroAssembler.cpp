@@ -2995,38 +2995,38 @@ void MacroAssembler::PushValue(const Address& addr) {
   framePushed_ += sizeof(Value);
 }
 
-void MacroAssembler::PushEmptyRooted(VMFunction::RootType rootType) {
+void MacroAssembler::PushEmptyRooted(VMFunctionData::RootType rootType) {
   switch (rootType) {
-    case VMFunction::RootNone:
+    case VMFunctionData::RootNone:
       MOZ_CRASH("Handle must have root type");
-    case VMFunction::RootObject:
-    case VMFunction::RootString:
-    case VMFunction::RootFunction:
-    case VMFunction::RootCell:
+    case VMFunctionData::RootObject:
+    case VMFunctionData::RootString:
+    case VMFunctionData::RootFunction:
+    case VMFunctionData::RootCell:
       Push(ImmPtr(nullptr));
       break;
-    case VMFunction::RootValue:
+    case VMFunctionData::RootValue:
       Push(UndefinedValue());
       break;
-    case VMFunction::RootId:
+    case VMFunctionData::RootId:
       Push(ImmWord(JSID_BITS(JSID_VOID)));
       break;
   }
 }
 
-void MacroAssembler::popRooted(VMFunction::RootType rootType, Register cellReg,
-                               const ValueOperand& valueReg) {
+void MacroAssembler::popRooted(VMFunctionData::RootType rootType,
+                               Register cellReg, const ValueOperand& valueReg) {
   switch (rootType) {
-    case VMFunction::RootNone:
+    case VMFunctionData::RootNone:
       MOZ_CRASH("Handle must have root type");
-    case VMFunction::RootObject:
-    case VMFunction::RootString:
-    case VMFunction::RootFunction:
-    case VMFunction::RootCell:
-    case VMFunction::RootId:
+    case VMFunctionData::RootObject:
+    case VMFunctionData::RootString:
+    case VMFunctionData::RootFunction:
+    case VMFunctionData::RootCell:
+    case VMFunctionData::RootId:
       Pop(cellReg);
       break;
-    case VMFunction::RootValue:
+    case VMFunctionData::RootValue:
       Pop(valueReg);
       break;
   }

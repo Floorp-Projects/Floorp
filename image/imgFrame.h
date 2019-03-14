@@ -300,12 +300,14 @@ class imgFrame {
    * references, the buffer may be released due to events such as low memory.
    */
   RefPtr<DataSourceSurface> mRawSurface;
+  RefPtr<DataSourceSurface> mBlankRawSurface;
 
   /**
    * Refers to the same data as mRawSurface, but when set, it guarantees that
    * we hold a strong reference to the underlying data buffer.
    */
   RefPtr<DataSourceSurface> mLockedSurface;
+  RefPtr<DataSourceSurface> mBlankLockedSurface;
 
   /**
    * Optimized copy of mRawSurface for the DrawTarget that will render it. This

@@ -22,6 +22,8 @@ mod boilerplate;
 use boilerplate::{Example, HandyDandyRectBuilder};
 use euclid::Angle;
 use webrender::api::*;
+use webrender::api::units::*;
+
 
 struct App {
     property_key0: PropertyBindingKey<LayoutTransform>,

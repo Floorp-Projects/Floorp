@@ -28,15 +28,10 @@ if CONFIG['OS_ARCH'] == 'WINNT':
         '../ffmpeg57/include',
     ]
 
-if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
-  CXXFLAGS += [ '-Wno-deprecated-declarations' ]
+CXXFLAGS += [ '-Wno-deprecated-declarations' ]
 if CONFIG['CC_TYPE'] == 'clang':
   CXXFLAGS += [
     '-Wno-unknown-attributes',
-  ]
-if CONFIG['CC_TYPE'] == 'clang-cl':
-  CXXFLAGS += [
-    '-wd4996', # deprecated declaration
   ]
 
 DEFINES['FFVPX_VERSION'] = 46465650

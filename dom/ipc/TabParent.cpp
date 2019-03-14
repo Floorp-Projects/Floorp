@@ -144,7 +144,8 @@ NS_IMPL_ISUPPORTS(TabParent, nsITabParent, nsIAuthPromptProvider,
                   nsISupportsWeakReference)
 
 TabParent::TabParent(ContentParent* aManager, const TabId& aTabId,
-                     const TabContext& aContext, uint32_t aChromeFlags)
+                     const TabContext& aContext, uint32_t aChromeFlags,
+                     BrowserBridgeParent* aBrowserBridgeParent)
     : TabContext(aContext),
       mFrameElement(nullptr),
       mContentCache(*this),
@@ -162,6 +163,7 @@ TabParent::TabParent(ContentParent* aManager, const TabId& aTabId,
       mIsDestroyed(false),
       mChromeFlags(aChromeFlags),
       mDragValid(false),
+      mBrowserBridgeParent(aBrowserBridgeParent),
       mTabId(aTabId),
       mCreatingWindow(false),
       mCursor(eCursorInvalid),
@@ -2318,6 +2320,10 @@ RenderFrame* TabParent::GetRenderFrame() {
     return nullptr;
   }
   return &mRenderFrame;
+}
+
+BrowserBridgeParent* TabParent::GetBrowserBridgeParent() const {
+  return mBrowserBridgeParent;
 }
 
 mozilla::ipc::IPCResult TabParent::RecvRequestIMEToCommitComposition(

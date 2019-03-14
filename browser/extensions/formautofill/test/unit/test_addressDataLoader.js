@@ -41,14 +41,14 @@ add_task(async function test_loadDataState() {
   Assert.equal(metadata.id, "data/US");
   Assert.ok(metadata.alternative_names,
             "US alternative names should be loaded from extension");
-  AddressDataLoader._loadScripts.reset();
+  AddressDataLoader._loadScripts.resetHistory();
 
   // Load data without country
   let newMetadata = FormAutofillUtils.getCountryAddressData();
   // _loadScripts should not be called
   sinon.assert.notCalled(AddressDataLoader._loadScripts);
   Assert.deepEqual(metadata, newMetadata, "metadata should be US if country is not specified");
-  AddressDataLoader._loadScripts.reset();
+  AddressDataLoader._loadScripts.resetHistory();
 
   // Load level 1 data that does not exist
   let undefinedMetadata = FormAutofillUtils.getCountryAddressData("US", "CA");
@@ -57,7 +57,7 @@ add_task(async function test_loadDataState() {
   Assert.equal(undefinedMetadata, undefined, "metadata should be undefined");
   Assert.ok(AddressDataLoader._dataLoaded.level1.has("US"),
                "level 1 state array should be set even there's no valid metadata");
-  AddressDataLoader._loadScripts.reset();
+  AddressDataLoader._loadScripts.resetHistory();
 
   // Load level 1 data again
   undefinedMetadata = FormAutofillUtils.getCountryAddressData("US", "AS");

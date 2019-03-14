@@ -1,0 +1,10 @@
+[
+  {
+    "size": 5737904,
+    "visibility": "public",
+    "digest": "a90641def190d085f0c18bca7c4bf593e4d488662b97eb567691560f852cc01aa81b4dc8a136ca8cada75c39fba216ccdd5fc43ce9db28fcf61b9034ace4cc12",
+    "algorithm": "sha512",
+    "filename": "mitmproxy-tp6m-cnn-ampstories.zip",
+    "unpack": true
+  }
+]

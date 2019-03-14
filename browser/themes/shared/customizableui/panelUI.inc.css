@@ -303,14 +303,14 @@ panel[photon] > .panel-arrowcontainer > .panel-arrowcontent {
   font-weight: 600;
 }
 
-#confirmation-hint:not(.with-description) #confirmation-hint-message {
+#confirmation-hint-message-container {
   transform: scale(.8);
   opacity: 0;
   transition: transform 120ms cubic-bezier(.25,1.27,.35,1.18),
               opacity 60ms linear;
 }
 
-#confirmation-hint-checkmark-animation-container[animate] + #confirmation-hint-message {
+#confirmation-hint-checkmark-animation-container[animate] + #confirmation-hint-message-container {
   transform: scale(1);
   opacity: 1;
 }

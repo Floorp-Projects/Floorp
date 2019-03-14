@@ -9,6 +9,7 @@ from .hooks import Hooks  # NOQA
 from .index import Index  # NOQA
 from .login import Login  # NOQA
 from .notify import Notify  # NOQA
+from .pulse import Pulse  # NOQA
 from .purgecache import PurgeCache  # NOQA
 from .purgecacheevents import PurgeCacheEvents  # NOQA
 from .queue import Queue  # NOQA

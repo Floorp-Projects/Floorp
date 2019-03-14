@@ -19,8 +19,9 @@ class Notify(AsyncBaseClient):
     """
 
     classOptions = {
-        "baseUrl": "https://notify.taskcluster.net/v1/"
     }
+    serviceName = 'notify'
+    apiVersion = 'v1'
 
     async def ping(self, *args, **kwargs):
         """

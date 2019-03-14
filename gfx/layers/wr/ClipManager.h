@@ -60,8 +60,7 @@ class ClipManager {
   void BeginList(const StackingContextHelper& aStackingContext);
   void EndList(const StackingContextHelper& aStackingContext);
 
-  wr::WrSpaceAndClipChain SwitchItem(
-      nsDisplayItem* aItem, const StackingContextHelper& aStackingContext);
+  wr::WrSpaceAndClipChain SwitchItem(nsDisplayItem* aItem);
   ~ClipManager();
 
   void PushOverrideForASR(const ActiveScrolledRoot* aASR,
@@ -73,13 +72,11 @@ class ClipManager {
 
   Maybe<wr::WrSpaceAndClip> GetScrollLayer(const ActiveScrolledRoot* aASR);
 
-  Maybe<wr::WrSpaceAndClip> DefineScrollLayers(
-      const ActiveScrolledRoot* aASR, nsDisplayItem* aItem,
-      const StackingContextHelper& aSc);
+  Maybe<wr::WrSpaceAndClip> DefineScrollLayers(const ActiveScrolledRoot* aASR,
+                                               nsDisplayItem* aItem);
 
   Maybe<wr::WrClipChainId> DefineClipChain(const DisplayItemClipChain* aChain,
-                                           int32_t aAppUnitsPerDevPixel,
-                                           const StackingContextHelper& aSc);
+                                           int32_t aAppUnitsPerDevPixel);
 
   WebRenderLayerManager* MOZ_NON_OWNING_REF mManager;
   wr::DisplayListBuilder* mBuilder;

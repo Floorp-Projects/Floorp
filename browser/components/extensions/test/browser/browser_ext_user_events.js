@@ -1,31 +1,5 @@
 "use strict";
 
-/**
- * Wait for the given PopupNotification to display
- *
- * @param {string} name
- *        The name of the notification to wait for.
- *
- * @returns {Promise}
- *          Resolves with the notification window.
- */
-function promisePopupNotificationShown(name) {
-  return new Promise(resolve => {
-    function popupshown() {
-      let notification = PopupNotifications.getNotification(name);
-      if (!notification) { return; }
-
-      ok(notification, `${name} notification shown`);
-      ok(PopupNotifications.isPanelOpen, "notification panel open");
-
-      PopupNotifications.panel.removeEventListener("popupshown", popupshown);
-      resolve(PopupNotifications.panel.firstElementChild);
-    }
-
-    PopupNotifications.panel.addEventListener("popupshown", popupshown);
-  });
-}
-
 // Test that different types of events are all considered
 // "handling user input".
 add_task(async function testSources() {

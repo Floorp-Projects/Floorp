@@ -47,23 +47,23 @@ export function paused(pauseInfo: Pause) {
       dispatch(removeBreakpoint(hiddenBreakpoint));
     }
 
-    await dispatch(mapFrames());
+    await dispatch(mapFrames(thread));
 
-    const selectedFrame = getSelectedFrame(getState());
+    const selectedFrame = getSelectedFrame(getState(), thread);
     if (selectedFrame) {
       await dispatch(selectLocation(selectedFrame.location));
     }
 
-    if (!wasStepping(getState())) {
+    if (!wasStepping(getState(), thread)) {
       dispatch(togglePaneCollapse("end", false));
     }
 
-    await dispatch(fetchScopes());
+    await dispatch(fetchScopes(thread));
 
     // Run after fetching scoping data so that it may make use of the sourcemap
     // expression mappings for local variables.
     const atException = why.type == "exception";
-    if (!atException || !isEvaluatingExpression(getState())) {
+    if (!atException || !isEvaluatingExpression(getState(), thread)) {
       await dispatch(evaluateExpressions());
     }
   };

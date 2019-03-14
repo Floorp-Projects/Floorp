@@ -969,8 +969,6 @@ class ADBDevice(ADBCommand):
 
         The default list of directories checked by test_root are:
 
-        - /storage/sdcard0/tests
-        - /storage/sdcard1/tests
         - /sdcard/tests
         - /mnt/sdcard/tests
         - /data/local/tests
@@ -989,9 +987,7 @@ class ADBDevice(ADBCommand):
         if self._initial_test_root:
             paths = [self._initial_test_root]
         else:
-            paths = ['/storage/sdcard0/tests',
-                     '/storage/sdcard1/tests',
-                     '/sdcard/tests',
+            paths = ['/sdcard/tests',
                      '/mnt/sdcard/tests',
                      '/data/local/tests']
 

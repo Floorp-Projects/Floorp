@@ -24,7 +24,7 @@
 #include "builtin/AtomicsObject.h"
 #include "builtin/intl/SharedIntlData.h"
 #include "builtin/Promise.h"
-#include "frontend/BinSourceRuntimeSupport.h"
+#include "frontend/BinASTRuntimeSupport.h"
 #include "frontend/NameCollections.h"
 #include "gc/GCRuntime.h"
 #include "gc/Tracer.h"

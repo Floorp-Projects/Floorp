@@ -120,6 +120,7 @@ class nsSelectionCommandsBase : public nsIControllerCommand {
   NS_IMETHOD GetCommandStateParams(const char *aCommandName,
                                    nsICommandParams *aParams,
                                    nsISupports *aCommandContext) override;
+  MOZ_CAN_RUN_SCRIPT
   NS_IMETHOD DoCommandParams(const char *aCommandName,
                              nsICommandParams *aParams,
                              nsISupports *aCommandContext) override;

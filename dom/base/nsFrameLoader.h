@@ -60,6 +60,8 @@ class Promise;
 class TabParent;
 class MutableTabContext;
 class BrowserBridgeChild;
+class RemoteFrameChild;
+struct RemotenessOptions;
 
 namespace ipc {
 class StructuredCloneData;
@@ -95,9 +97,15 @@ class nsFrameLoader final : public nsStubMutationObserver,
   typedef mozilla::layout::RenderFrame RenderFrame;
 
  public:
-  static nsFrameLoader* Create(
-      mozilla::dom::Element* aOwner, nsPIDOMWindowOuter* aOpener,
-      bool aNetworkCreated);
+  // Called by Frame Elements to create a new FrameLoader.
+  static nsFrameLoader* Create(mozilla::dom::Element* aOwner,
+                               nsPIDOMWindowOuter* aOpener,
+                               bool aNetworkCreated);
+
+  // Called by nsFrameLoaderOwner::ChangeRemoteness when switching out
+  // FrameLoaders.
+  static nsFrameLoader* Create(mozilla::dom::Element* aOwner,
+                               const mozilla::dom::RemotenessOptions& aOptions);
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_FRAMELOADER_IID)
 
@@ -357,6 +365,8 @@ class nsFrameLoader final : public nsStubMutationObserver,
  private:
   nsFrameLoader(mozilla::dom::Element* aOwner, nsPIDOMWindowOuter* aOpener,
                 bool aNetworkCreated);
+  nsFrameLoader(mozilla::dom::Element* aOwner,
+                const mozilla::dom::RemotenessOptions& aOptions);
   ~nsFrameLoader();
 
   void SetOwnerContent(mozilla::dom::Element* aContent);
@@ -479,7 +489,7 @@ class nsFrameLoader final : public nsStubMutationObserver,
   bool mLoadingOriginalSrc : 1;
 
   bool mRemoteBrowserShown : 1;
-  bool mRemoteFrame : 1;
+  bool mIsRemoteFrame : 1;
   bool mObservingOwnerContent : 1;
 };
 

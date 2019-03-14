@@ -29,13 +29,14 @@ already_AddRefed<GLContext> GLContextProviderWayland::CreateWrappingExisting(
 }
 
 already_AddRefed<GLContext> GLContextProviderWayland::CreateForCompositorWidget(
-    CompositorWidget* aCompositorWidget, bool aForceAccelerated) {
+    CompositorWidget* aCompositorWidget, bool aWebRender,
+    bool aForceAccelerated) {
   if (GDK_IS_X11_DISPLAY(gdk_display_get_default())) {
-    return sGLContextProviderGLX.CreateForCompositorWidget(aCompositorWidget,
-                                                           aForceAccelerated);
+    return sGLContextProviderGLX.CreateForCompositorWidget(
+        aCompositorWidget, aWebRender, aForceAccelerated);
   } else {
-    return sGLContextProviderEGL.CreateForCompositorWidget(aCompositorWidget,
-                                                           aForceAccelerated);
+    return sGLContextProviderEGL.CreateForCompositorWidget(
+        aCompositorWidget, aWebRender, aForceAccelerated);
   }
 }
 

@@ -415,11 +415,6 @@ nsresult JsepSessionImpl::CreateOffer(const JsepOfferOptions& options,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  if (!sdp->GetMediaSectionCount()) {
-    JSEP_SET_ERROR("Cannot create offer when there are no valid transceivers.");
-    return NS_ERROR_UNEXPECTED;
-  }
-
   SetupBundle(sdp.get());
 
   rv = RemoveDuplicateTrackIds(sdp.get());
@@ -1262,11 +1257,6 @@ nsresult JsepSessionImpl::ParseSdp(const std::string& sdp,
   }
 
   // Verify that the JSEP rules for all SDP are followed
-  if (!parsed->GetMediaSectionCount()) {
-    JSEP_SET_ERROR("Description has no media sections");
-    return NS_ERROR_INVALID_ARG;
-  }
-
   for (size_t i = 0; i < parsed->GetMediaSectionCount(); ++i) {
     if (mSdpHelper.MsectionIsDisabled(parsed->GetMediaSection(i))) {
       // Disabled, let this stuff slide.

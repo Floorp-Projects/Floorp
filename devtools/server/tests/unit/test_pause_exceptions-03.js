@@ -12,7 +12,7 @@
 add_task(threadClientTest(async ({ threadClient, client, debuggee }) => {
   await executeOnNextTickAndWaitForPause(() => evaluateTestCode(debuggee), client);
 
-  threadClient.pauseOnExceptions(true);
+  threadClient.pauseOnExceptions(true, false);
   await resume(threadClient);
   const paused = await waitForPause(client);
   Assert.equal(paused.why.type, "exception");

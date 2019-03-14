@@ -21,9 +21,6 @@ config = {
         'UPLOAD_PATH': '/builds/worker/artifacts/',
     },
     'secret_files': [
-        {'filename': '/builds/gapi.data',
-         'secret_name': 'project/releng/gecko/build/level-%(scm-level)s/gapi.data',
-         'min_scm_level': 1},
         {'filename': '/builds/gls-gapi.data',
          'secret_name': 'project/releng/gecko/build/level-%(scm-level)s/gls-gapi.data',
          'min_scm_level': 1},

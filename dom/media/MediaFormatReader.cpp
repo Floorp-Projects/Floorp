@@ -2899,7 +2899,11 @@ void MediaFormatReader::SetVideoDecodeThreshold() {
     return;
   }
 
-  LOG("Set seek threshold to %" PRId64, threshold.ToMicroseconds());
+  if (threshold.IsValid()) {
+    LOG("Set seek threshold to %" PRId64, threshold.ToMicroseconds());
+  } else {
+    LOG("Resetting seek threshold");
+  }
   mVideo.mDecoder->SetSeekThreshold(threshold);
 }
 

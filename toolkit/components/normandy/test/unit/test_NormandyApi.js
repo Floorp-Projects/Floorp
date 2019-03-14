@@ -23,7 +23,7 @@ add_task(withMockApiServer(async function test_getApiUrl(serverUrl) {
 
 add_task(withMockApiServer(async function test_getApiUrlSlashes(serverUrl, preferences) {
   const fakeResponse = new MockResponse(JSON.stringify({"test-endpoint": `${serverUrl}/test/`}));
-  const mockGet = sinon.stub(NormandyApi, "get", async () => fakeResponse);
+  const mockGet = sinon.stub(NormandyApi, "get").callsFake(async () => fakeResponse);
 
   // without slash
   {
@@ -32,7 +32,7 @@ add_task(withMockApiServer(async function test_getApiUrlSlashes(serverUrl, prefe
     const endpoint = await NormandyApi.getApiUrl("test-endpoint");
     equal(endpoint, `${serverUrl}/test/`);
     ok(mockGet.calledWithExactly(`${serverUrl}/api/v1/`), "trailing slash was added");
-    mockGet.reset();
+    mockGet.resetHistory();
   }
 
   // with slash
@@ -42,7 +42,7 @@ add_task(withMockApiServer(async function test_getApiUrlSlashes(serverUrl, prefe
     const endpoint = await NormandyApi.getApiUrl("test-endpoint");
     equal(endpoint, `${serverUrl}/test/`);
     ok(mockGet.calledWithExactly(`${serverUrl}/api/v1/`), "existing trailing slash was preserved");
-    mockGet.reset();
+    mockGet.resetHistory();
   }
 
   NormandyApi.clearIndexCache();

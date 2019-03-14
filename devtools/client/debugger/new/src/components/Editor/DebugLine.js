@@ -18,7 +18,8 @@ import { connect } from "../../utils/connect";
 import {
   getVisibleSelectedFrame,
   getPauseReason,
-  getSourceFromId
+  getSourceFromId,
+  getCurrentThread
 } from "../../selectors";
 
 import type { Frame, Why, Source } from "../../types";
@@ -118,7 +119,7 @@ const mapStateToProps = state => {
   return {
     frame,
     source: frame && getSourceFromId(state, frame.location.sourceId),
-    why: getPauseReason(state)
+    why: getPauseReason(state, getCurrentThread(state))
   };
 };
 

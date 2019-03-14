@@ -89,7 +89,9 @@ add_task(async function step_6() {
   BrowserTestUtils.loadURI(tab.linkedBrowser, "about:mozilla");
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
-  gBrowser.updateBrowserRemoteness(tabToKeep.linkedBrowser, tab.linkedBrowser.isRemoteBrowser);
+  gBrowser.updateBrowserRemoteness(tabToKeep.linkedBrowser,
+                                   { remoteType: tab.linkedBrowser.isRemoteBrowser ?
+                                     E10SUtils.DEFAULT_REMOTE_TYPE : E10SUtils.NOT_REMOTE });
   gBrowser.swapBrowsersAndCloseOther(tabToKeep, tab);
 
   await ensure_opentabs_match_db();

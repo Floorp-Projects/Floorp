@@ -17,7 +17,11 @@ namespace dom {
 
 BrowserBridgeParent::BrowserBridgeParent() : mIPCOpen(false) {}
 
-BrowserBridgeParent::~BrowserBridgeParent() {}
+BrowserBridgeParent::~BrowserBridgeParent() {
+  if (mTabParent) {
+    mTabParent->mBrowserBridgeParent = nullptr;
+  }
+}
 
 nsresult BrowserBridgeParent::Init(const nsString& aPresentationURL,
                                    const nsString& aRemoteType) {
@@ -53,7 +57,7 @@ nsresult BrowserBridgeParent::Init(const nsString& aPresentationURL,
   // Construct the TabParent object for our subframe.
   uint32_t chromeFlags = 0;
   RefPtr<TabParent> tabParent(
-      new TabParent(constructorSender, tabId, tabContext, chromeFlags));
+      new TabParent(constructorSender, tabId, tabContext, chromeFlags, this));
 
   PBrowserParent* browser = constructorSender->SendPBrowserConstructor(
       // DeallocPBrowserParent() releases this ref.

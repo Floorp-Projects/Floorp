@@ -373,8 +373,8 @@ public class ContentBlocking {
         * @param event The {@link BlockEvent} details.
         */
         @UiThread
-        void onContentBlocked(@NonNull GeckoSession session,
-                              @NonNull BlockEvent event);
+        default void onContentBlocked(@NonNull GeckoSession session,
+                                      @NonNull BlockEvent event) {}
     }
 
 

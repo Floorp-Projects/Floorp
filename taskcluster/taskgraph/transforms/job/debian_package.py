@@ -153,7 +153,7 @@ def docker_worker_debian_package(config, job, taskdesc):
         '-x',
         '-c',
         # Add sources for packages coming from other package tasks.
-        '/usr/local/sbin/setup_packages.sh {queue_url} $PACKAGES && '
+        '/usr/local/sbin/setup_packages.sh {root_url} $PACKAGES && '
         'apt-get update && '
         # Upgrade packages that might have new versions in package tasks.
         'apt-get dist-upgrade && '
@@ -177,7 +177,7 @@ def docker_worker_debian_package(config, job, taskdesc):
         'apt-ftparchive sources debian | gzip -c9 > debian/Sources.gz && '
         'apt-ftparchive packages debian | gzip -c9 > debian/Packages.gz'
         .format(
-            queue_url=get_root_url(),
+            root_url=get_root_url(False),
             package=package,
             snapshot=run['snapshot'],
             dist=run['dist'],

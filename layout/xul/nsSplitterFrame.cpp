@@ -216,20 +216,6 @@ void nsSplitterFrame::DestroyFrom(nsIFrame* aDestructRoot,
   nsBoxFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
 }
 
-nsresult nsSplitterFrame::GetCursor(const nsPoint& aPoint,
-                                    nsIFrame::Cursor& aCursor) {
-  return nsBoxFrame::GetCursor(aPoint, aCursor);
-
-  /*
-    if (IsXULHorizontal())
-      aCursor = NS_STYLE_CURSOR_N_RESIZE;
-    else
-      aCursor = NS_STYLE_CURSOR_W_RESIZE;
-
-    return NS_OK;
-  */
-}
-
 nsresult nsSplitterFrame::AttributeChanged(int32_t aNameSpaceID,
                                            nsAtom* aAttribute,
                                            int32_t aModType) {

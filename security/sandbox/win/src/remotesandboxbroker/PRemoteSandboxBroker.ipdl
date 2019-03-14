@@ -1,0 +1,35 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+using mozilla::dom::NativeThreadId from "mozilla/dom/TabMessageUtils.h";
+
+namespace mozilla {
+
+struct EnvVar {
+  nsString name;
+  nsString value;
+};
+
+struct LaunchParameters {
+  nsString path;
+  nsString args;
+  EnvVar[] env;
+  uint32_t processType;
+  uint32_t sandboxLevel;
+  nsString[] allowedReadFiles;
+  uint64_t[] shareHandles;
+  bool enableLogging;
+};
+
+intr protocol PRemoteSandboxBroker
+{
+parent:
+  async InitCrashReporter(Shmem shmem, NativeThreadId threadId);
+child:
+  intr LaunchApp(LaunchParameters params)
+    returns (bool ok, uint64_t handle);
+};
+
+} // namespace mozilla
