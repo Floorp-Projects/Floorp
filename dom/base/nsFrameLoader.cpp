@@ -179,10 +179,10 @@ nsFrameLoader::nsFrameLoader(Element* aOwner, nsPIDOMWindowOuter* aOpener,
       mNetworkCreated(aNetworkCreated),
       mLoadingOriginalSrc(false),
       mRemoteBrowserShown(false),
-      mRemoteFrame(false),
+      mIsRemoteFrame(false),
       mObservingOwnerContent(false) {
-  mRemoteFrame = ShouldUseRemoteProcess();
-  MOZ_ASSERT(!mRemoteFrame || !aOpener,
+  mIsRemoteFrame = ShouldUseRemoteProcess();
+  MOZ_ASSERT(!mIsRemoteFrame || !aOpener,
              "Cannot pass aOpener for a remote frame!");
 }
 
@@ -2575,7 +2575,7 @@ bool nsFrameLoader::TryRemoteBrowser() {
 }
 
 bool nsFrameLoader::IsRemoteFrame() {
-  if (mRemoteFrame) {
+  if (mIsRemoteFrame) {
     MOZ_ASSERT(!mDocShell, "Found a remote frame with a DocShell");
     return true;
   }
@@ -2591,7 +2591,7 @@ mozilla::dom::BrowserBridgeChild* nsFrameLoader::GetBrowserBridgeChild() const {
 }
 
 mozilla::layers::LayersId nsFrameLoader::GetLayersId() const {
-  MOZ_ASSERT(mRemoteFrame);
+  MOZ_ASSERT(mIsRemoteFrame);
   if (mRemoteBrowser) {
     return mRemoteBrowser->GetRenderFrame()->GetLayersId();
   }
@@ -2831,7 +2831,7 @@ already_AddRefed<Element> nsFrameLoader::GetOwnerElement() {
 
 void nsFrameLoader::SetRemoteBrowser(nsITabParent* aTabParent) {
   MOZ_ASSERT(!mRemoteBrowser);
-  mRemoteFrame = true;
+  mIsRemoteFrame = true;
   mRemoteBrowser = TabParent::GetFrom(aTabParent);
   mChildID = mRemoteBrowser ? mRemoteBrowser->Manager()->ChildID() : 0;
   MaybeUpdatePrimaryTabParent(eTabParentChanged);
