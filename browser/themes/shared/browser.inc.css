@@ -216,6 +216,10 @@
   border-radius: 2px;
 }
 
+#contextual-feature-recommendation-notification {
+  width: 343px;
+}
+
 #contextual-feature-recommendation-notification .popup-notification-icon {
   margin-inline-end: 4px;
 }
