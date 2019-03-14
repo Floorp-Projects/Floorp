@@ -216,8 +216,7 @@ txStylesheetSink::OnDataAvailable(nsIRequest* aRequest,
     }
   }
 
-  return mListener->OnDataAvailable(aRequest, aInputStream, aOffset,
-                                    aCount);
+  return mListener->OnDataAvailable(aRequest, aInputStream, aOffset, aCount);
 }
 
 NS_IMETHODIMP
@@ -269,8 +268,7 @@ txStylesheetSink::OnStartRequest(nsIRequest* aRequest) {
 }
 
 NS_IMETHODIMP
-txStylesheetSink::OnStopRequest(nsIRequest* aRequest,
-                                nsresult aStatusCode) {
+txStylesheetSink::OnStopRequest(nsIRequest* aRequest, nsresult aStatusCode) {
   bool success = true;
 
   nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aRequest);

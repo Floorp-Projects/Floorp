@@ -89,8 +89,7 @@ MediaDocumentStreamListener::OnDataAvailable(nsIRequest* request,
                                              uint64_t sourceOffset,
                                              uint32_t count) {
   if (mNextStream) {
-    return mNextStream->OnDataAvailable(request, inStr, sourceOffset,
-                                        count);
+    return mNextStream->OnDataAvailable(request, inStr, sourceOffset, count);
   }
 
   return NS_OK;

@@ -238,8 +238,8 @@ Maybe<TextureHost::ResourceUpdateOp> AsyncImagePipelineManager::UpdateImageKeys(
   // Use WebRenderTextureHostWrapper only for video.
   // And WebRenderTextureHostWrapper could be used only with
   // WebRenderTextureHost that supports NativeTexture
-  bool useWrTextureWrapper = useExternalImage && wrTexture &&
-                             wrTexture->SupportsWrNativeTexture();
+  bool useWrTextureWrapper =
+      useExternalImage && wrTexture && wrTexture->SupportsWrNativeTexture();
 
   // The non-external image code path falls back to converting the texture into
   // an rgb image.
@@ -283,13 +283,15 @@ Maybe<TextureHost::ResourceUpdateOp> AsyncImagePipelineManager::UpdateImageKeys(
     MOZ_ASSERT(canUpdate);
     // Reuse WebRenderTextureHostWrapper. With it, rendered frame could be
     // updated without batch re-creation.
-    aPipeline->mWrTextureWrapper->UpdateWebRenderTextureHost(aMaybeFastTxn, wrTexture);
+    aPipeline->mWrTextureWrapper->UpdateWebRenderTextureHost(aMaybeFastTxn,
+                                                             wrTexture);
     // Ensure frame generation.
     SetWillGenerateFrame();
   } else {
     if (useWrTextureWrapper) {
       aPipeline->mWrTextureWrapper = new WebRenderTextureHostWrapper(this);
-      aPipeline->mWrTextureWrapper->UpdateWebRenderTextureHost(aMaybeFastTxn, wrTexture);
+      aPipeline->mWrTextureWrapper->UpdateWebRenderTextureHost(aMaybeFastTxn,
+                                                               wrTexture);
     }
     Range<wr::ImageKey> keys(&aKeys[0], aKeys.Length());
     auto externalImageKey =
@@ -389,8 +391,7 @@ void AsyncImagePipelineManager::ApplyAsyncImageForPipeline(
     // It is for making epoch update consistent.
     aSceneBuilderTxn.UpdateEpoch(aPipelineId, aEpoch);
     if (aPipeline->mCurrentTexture) {
-      HoldExternalImage(aPipelineId, aEpoch,
-                        aPipeline->mCurrentTexture);
+      HoldExternalImage(aPipelineId, aEpoch, aPipeline->mCurrentTexture);
     }
     return;
   }
@@ -432,8 +433,7 @@ void AsyncImagePipelineManager::ApplyAsyncImageForPipeline(
       aPipeline->mCurrentTexture->PushDisplayItems(
           builder, wr::ToRoundedLayoutRect(rect), wr::ToRoundedLayoutRect(rect),
           aPipeline->mFilter, range_keys);
-      HoldExternalImage(aPipelineId, aEpoch,
-                        aPipeline->mCurrentTexture);
+      HoldExternalImage(aPipelineId, aEpoch, aPipeline->mCurrentTexture);
     } else {
       MOZ_ASSERT(keys.Length() == 1);
       builder.PushImage(wr::ToRoundedLayoutRect(rect),

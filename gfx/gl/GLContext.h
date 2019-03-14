@@ -3311,8 +3311,8 @@ class GLContext : public GenericAtomicRefCounted,
   // -----------------------------------------------------------------------------
   // Constructor
  protected:
-  explicit GLContext(CreateContextFlags flags,
-                     const SurfaceCaps& caps, GLContext* sharedContext = nullptr,
+  explicit GLContext(CreateContextFlags flags, const SurfaceCaps& caps,
+                     GLContext* sharedContext = nullptr,
                      bool isOffscreen = false, bool canUseTLSIsCurrent = false);
 
   // -----------------------------------------------------------------------------
@@ -3569,7 +3569,8 @@ class GLContext : public GenericAtomicRefCounted,
   void LoadMoreSymbols(const SymbolLoader& loader);
   bool LoadExtSymbols(const SymbolLoader& loader, const SymLoadStruct* list,
                       GLExtensions ext);
-  bool LoadFeatureSymbols(const SymbolLoader& loader, const SymLoadStruct* list, GLFeature feature);
+  bool LoadFeatureSymbols(const SymbolLoader& loader, const SymLoadStruct* list,
+                          GLFeature feature);
 
  protected:
   void InitExtensions();

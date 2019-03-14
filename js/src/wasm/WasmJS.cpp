@@ -2113,8 +2113,7 @@ bool WasmTableObject::construct(JSContext* cx, unsigned argc, Value* vp) {
 
   TableKind tableKind;
   if (StringEqualsAscii(elementLinearStr, "anyfunc") ||
-      StringEqualsAscii(elementLinearStr, "funcref"))
-  {
+      StringEqualsAscii(elementLinearStr, "funcref")) {
     tableKind = TableKind::AnyFunction;
 #ifdef ENABLE_WASM_REFTYPES
   } else if (StringEqualsAscii(elementLinearStr, "anyref")) {
@@ -2240,16 +2239,14 @@ bool WasmTableObject::get(JSContext* cx, unsigned argc, Value* vp) {
 }
 
 static void TableFunctionFill(JSContext* cx, Table* table, HandleFunction value,
-                              uint32_t index, uint32_t limit)
-{
-  RootedWasmInstanceObject instanceObj(
-    cx, ExportedFunctionToInstanceObject(value));
+                              uint32_t index, uint32_t limit) {
+  RootedWasmInstanceObject instanceObj(cx,
+                                       ExportedFunctionToInstanceObject(value));
   uint32_t funcIndex = ExportedFunctionToFuncIndex(value);
 
 #ifdef DEBUG
   RootedFunction f(cx);
-  MOZ_ASSERT(
-    instanceObj->getExportedFunction(cx, instanceObj, funcIndex, &f));
+  MOZ_ASSERT(instanceObj->getExportedFunction(cx, instanceObj, funcIndex, &f));
   MOZ_ASSERT(value == f);
 #endif
 
@@ -2257,7 +2254,7 @@ static void TableFunctionFill(JSContext* cx, Table* table, HandleFunction value,
   Tier tier = instance.code().bestTier();
   const MetadataTier& metadata = instance.metadata(tier);
   const CodeRange& codeRange =
-    metadata.codeRange(metadata.lookupFuncExport(funcIndex));
+      metadata.codeRange(metadata.lookupFuncExport(funcIndex));
   void* code = instance.codeBase(tier) + codeRange.funcTableEntry();
   while (index < limit) {
     table->setAnyFunc(index++, code, &instance);
@@ -2306,11 +2303,8 @@ bool WasmTableObject::setImpl(JSContext* cx, const CallArgs& args) {
       table.setAnyRef(index, tmp);
       break;
     }
-    default: {
-      MOZ_CRASH("Unexpected table kind");
-    }
+    default: { MOZ_CRASH("Unexpected table kind"); }
   }
-
 
   args.rval().setUndefined();
   return true;
@@ -2350,8 +2344,8 @@ bool WasmTableObject::growImpl(JSContext* cx, const CallArgs& args) {
     fillValue = args[1];
   }
 
-  MOZ_ASSERT(delta <= MaxTableLength); // grow() should ensure this
-  MOZ_ASSERT(oldLength <= MaxTableLength - delta); // ditto
+  MOZ_ASSERT(delta <= MaxTableLength);              // grow() should ensure this
+  MOZ_ASSERT(oldLength <= MaxTableLength - delta);  // ditto
 
   static_assert(MaxTableLength < UINT32_MAX, "Invariant");
 
@@ -2392,9 +2386,7 @@ bool WasmTableObject::growImpl(JSContext* cx, const CallArgs& args) {
       }
       break;
     }
-    default: {
-      MOZ_CRASH("Unexpected table kind");
-    }
+    default: { MOZ_CRASH("Unexpected table kind"); }
   }
 
   args.rval().setInt32(oldLength);

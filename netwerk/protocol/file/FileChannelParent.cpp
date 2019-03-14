@@ -85,8 +85,7 @@ FileChannelParent::OnStartRequest(nsIRequest *aRequest) {
 }
 
 NS_IMETHODIMP
-FileChannelParent::OnStopRequest(nsIRequest *aRequest,
-                                 nsresult aStatusCode) {
+FileChannelParent::OnStopRequest(nsIRequest *aRequest, nsresult aStatusCode) {
   // See above.
   MOZ_ASSERT(NS_FAILED(aStatusCode));
   return NS_OK;

@@ -3523,7 +3523,8 @@ static void dumpValue(const Value& v, js::GenericPrinter& out) {
         JSObject* obj = &v.toObject();
         const Class* clasp = obj->getClass();
         out.printf("<%s%s at %p>", clasp->name,
-                   (clasp == &PlainObject::class_) ? "" : " object", (void*)obj);
+                   (clasp == &PlainObject::class_) ? "" : " object",
+                   (void*)obj);
       }
       break;
     case ValueType::Boolean:

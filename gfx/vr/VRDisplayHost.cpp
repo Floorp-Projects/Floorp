@@ -291,7 +291,7 @@ void VRDisplayHost::SubmitFrameInternal(
 #endif  // !defined(MOZ_WIDGET_ANDROID)
   AUTO_PROFILER_TRACING("VR", "SubmitFrameAtVRDisplayHost", OTHER);
 
-  { // scope lock
+  {  // scope lock
     MonitorAutoLock lock(mCurrentSubmitTaskMonitor);
 
     if (!SubmitFrame(aTexture, aFrameId, aLeftEyeRect, aRightEyeRect)) {
@@ -355,10 +355,9 @@ void VRDisplayHost::SubmitFrame(VRLayerParent* aLayer,
 
   mFrameStarted = false;
 
-  RefPtr<CancelableRunnable> task =
-    NewCancelableRunnableMethod<StoreCopyPassByConstLRef<layers::SurfaceDescriptor>,
-                                uint64_t, StoreCopyPassByConstLRef<gfx::Rect>,
-                                StoreCopyPassByConstLRef<gfx::Rect>>(
+  RefPtr<CancelableRunnable> task = NewCancelableRunnableMethod<
+      StoreCopyPassByConstLRef<layers::SurfaceDescriptor>, uint64_t,
+      StoreCopyPassByConstLRef<gfx::Rect>, StoreCopyPassByConstLRef<gfx::Rect>>(
       "gfx::VRDisplayHost::SubmitFrameInternal", this,
       &VRDisplayHost::SubmitFrameInternal, aTexture, aFrameId, aLeftEyeRect,
       aRightEyeRect);
@@ -375,7 +374,6 @@ void VRDisplayHost::SubmitFrame(VRLayerParent* aLayer,
     CompositorThreadHolder::Loop()->PostTask(task.forget());
 #endif  // defined(MOZ_WIDGET_ANDROID)
   }
-
 }
 
 void VRDisplayHost::CancelCurrentSubmitTask() {
