@@ -157,6 +157,12 @@ nsresult ServoCSSRuleList::InsertRule(const nsAString& aRule, uint32_t aIndex) {
   NS_ConvertUTF16toUTF8 rule(aRule);
   bool nested = !!mParentRule;
   css::Loader* loader = nullptr;
+
+  // TODO(emilio, bug 1535456): Should probably always be able to get a handle
+  // to some loader if we're parsing an @import rule, but which one?
+  //
+  // StyleSheet::ReparseSheet just mints a new loader, but that'd be wrong in
+  // this case I think, since such a load will bypass CSP checks.
   if (Document* doc = mStyleSheet->GetAssociatedDocument()) {
     loader = doc->CSSLoader();
   }
