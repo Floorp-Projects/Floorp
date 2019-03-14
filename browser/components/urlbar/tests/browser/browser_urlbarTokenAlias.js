@@ -229,9 +229,7 @@ add_task(async function clickAndFillAlias() {
   }
 
   // Click it.
-  await UrlbarTestUtils.promisePopupClose(window, () => {
-    EventUtils.synthesizeMouseAtCenter(testEngineItem, {});
-  });
+  EventUtils.synthesizeMouseAtCenter(testEngineItem, {});
 
   // A new search will start and its result should be the alias.
   await promiseSearchComplete();
@@ -285,9 +283,7 @@ add_task(async function enterAndFillAlias() {
 
   // Key down to it and press enter.
   EventUtils.synthesizeKey("KEY_ArrowDown", { repeat: index });
-  await UrlbarTestUtils.promisePopupClose(window, () => {
-    EventUtils.synthesizeKey("KEY_Enter");
-  });
+  EventUtils.synthesizeKey("KEY_Enter");
 
   // A new search will start and its result should be the alias.
   await promiseSearchComplete();
