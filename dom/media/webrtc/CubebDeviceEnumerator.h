@@ -6,8 +6,8 @@
 #define CUBEBDEVICEENUMERATOR_H_
 
 #include "AudioDeviceInfo.h"
-#include "cubeb/cubeb.h"
 #include "CubebUtils.h"
+#include "cubeb/cubeb.h"
 #include "mozilla/Mutex.h"
 #include "nsTArray.h"
 
@@ -33,6 +33,16 @@ class CubebDeviceEnumerator final {
   // This method is safe to call from any thread.
   already_AddRefed<AudioDeviceInfo> DeviceInfoFromID(
       CubebUtils::AudioDeviceID aID);
+  // From a device name, return the info for this device, if it's a valid name,
+  // or nullptr otherwise.
+  // This method is safe to call from any thread.
+  already_AddRefed<AudioDeviceInfo> DeviceInfoFromName(const nsString& aName);
+  enum class Side {
+    INPUT,
+    OUTPUT,
+  };
+  already_AddRefed<AudioDeviceInfo> DeviceInfoFromName(const nsString& aName,
+                                                       Side aSide);
 
  private:
   CubebDeviceEnumerator();
@@ -42,10 +52,6 @@ class CubebDeviceEnumerator final {
   // simply calls `AudioDeviceListChanged` below.
   static void InputAudioDeviceListChanged_s(cubeb* aContext, void* aUser);
   static void OutputAudioDeviceListChanged_s(cubeb* aContext, void* aUser);
-  enum class Side {
-    INPUT,
-    OUTPUT,
-  };
   // Invalidates the cached audio input device list, can be called on any
   // thread.
   void AudioDeviceListChanged(Side aSide);
@@ -63,6 +69,8 @@ class CubebDeviceEnumerator final {
   static StaticRefPtr<CubebDeviceEnumerator> sInstance;
 };
 
+typedef CubebDeviceEnumerator Enumerator;
+typedef CubebDeviceEnumerator::Side EnumeratorSide;
 }  // namespace mozilla
 
 #endif  // CUBEBDEVICEENUMERATOR_H_
