@@ -542,7 +542,8 @@ interface nsIHttpChannel : nsIChannel
      * Returns true if the channel has loaded a resource that is classified as
      * tracker.
      * This is a helper attribute which returns the same value of
-     * (classificationFlags & CLASSIFIED_TRACKING)
+     * (classificationFlags & CLASSIFIED_TRACKING) ||
+     *   (classificationFlags & CLASSIFIED_FINGERPRINTING)
      *
      * Note that top-level channels could be marked as tracking
      * resource. In order to identify third-party tracking resources
@@ -556,7 +557,8 @@ interface nsIHttpChannel : nsIChannel
      * window URI.
      *
      * This is a helper attribute which returns the same value of
-     * (thirdPartyClassificationFlags & CLASSIFIED_TRACKING)
+     * (thirdPartyClassificationFlags & CLASSIFIED_TRACKING) ||
+     *   (thirdPartyClassificationFlags & CLASSIFIED_FINGERPRINTING)
      */
     [infallible] readonly attribute boolean isThirdPartyTrackingResource;
 

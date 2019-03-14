@@ -143,8 +143,8 @@ UrlClassifierFeatureCryptominingProtection::ProcessChannel(
   NS_ENSURE_ARG_POINTER(aChannel);
   NS_ENSURE_ARG_POINTER(aShouldContinue);
 
-  bool isAllowListed =
-      IsAllowListed(aChannel, AntiTrackingCommon::eCryptomining);
+  bool isAllowListed = UrlClassifierCommon::IsAllowListed(
+      aChannel, AntiTrackingCommon::eCryptomining);
 
   // This is a blocking feature.
   *aShouldContinue = isAllowListed;
