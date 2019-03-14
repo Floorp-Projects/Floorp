@@ -237,6 +237,10 @@ void BrowsingContext::Detach(bool aFromIPC) {
 
   Group()->Unregister(this);
 
+  // By definition, we no longer are the current process for this
+  // BrowsingContext - clear our now-dead nsDocShell reference.
+  mDocShell = nullptr;
+
   if (!aFromIPC && XRE_IsContentProcess()) {
     auto cc = ContentChild::GetSingleton();
     MOZ_DIAGNOSTIC_ASSERT(cc);

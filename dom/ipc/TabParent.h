@@ -103,7 +103,8 @@ class TabParent final : public PBrowserParent,
   NS_DECL_NSIDOMEVENTLISTENER
 
   TabParent(ContentParent* aManager, const TabId& aTabId,
-            const TabContext& aContext, uint32_t aChromeFlags,
+            const TabContext& aContext,
+            CanonicalBrowsingContext* aBrowsingContext, uint32_t aChromeFlags,
             BrowserBridgeParent* aBrowserBridgeParent = nullptr);
 
   Element* GetOwnerElement() const { return mFrameElement; }
@@ -629,8 +630,6 @@ class TabParent final : public PBrowserParent,
 
   mozilla::ipc::IPCResult RecvShowCanvasPermissionPrompt(
       const nsCString& aFirstPartyURI, const bool& aHideDoorHanger);
-
-  mozilla::ipc::IPCResult RecvRootBrowsingContext(BrowsingContext* aContext);
 
   mozilla::ipc::IPCResult RecvSetSystemFont(const nsCString& aFontName);
   mozilla::ipc::IPCResult RecvGetSystemFont(nsCString* aFontName);

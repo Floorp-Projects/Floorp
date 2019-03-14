@@ -389,7 +389,8 @@ both:
     // Keep the last 3 attributes in sync with GetProcessAttributes!
     async PBrowser(TabId tabId, TabId sameTabGroupAs,
                    IPCTabContext context, uint32_t chromeFlags,
-                   ContentParentId cpId, bool isForBrowser);
+                   ContentParentId cpId, BrowsingContext browsingContext,
+                   bool isForBrowser);
 
     async PFileDescriptorSet(FileDescriptor fd);
 
