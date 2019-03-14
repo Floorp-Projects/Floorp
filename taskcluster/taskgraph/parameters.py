@@ -81,6 +81,7 @@ PARAMETERS = {
     'required_signoffs': [],
     'signoff_urls': {},
     'target_tasks_method': 'default',
+    'tasks_for': 'hg-push',
     'try_mode': None,
     'try_options': None,
     'try_task_config': None,

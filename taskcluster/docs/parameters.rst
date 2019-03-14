@@ -45,7 +45,7 @@ Push Information
    value may be forged and *must not* be relied on for authentication.
 
 ``message``
-   The commit message
+   The try syntax in the commit message, if any.
 
 ``pushlog_id``
    The ID from the ``hg.mozilla.org`` pushlog
@@ -64,6 +64,9 @@ Push Information
 ``moz_build_date``
    A formatted timestamp of ``build_date``. Expressed as a string with the following
    format: %Y%m%d%H%M%S
+
+``tasks_for``
+   The ``tasks_for`` value used to generate the decision task.
 
 Tree Information
 ----------------
