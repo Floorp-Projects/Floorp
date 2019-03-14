@@ -1,5 +1,5 @@
 ---
-name: " Telemetry User Story"
+name: "📈 Telemetry User Story"
 about: Create a telemetry user story, assigned to an Epic to track telemetry
 
 ---
