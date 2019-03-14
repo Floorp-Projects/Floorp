@@ -682,3 +682,9 @@ def target_tasks_codereview(full_task_graph, parameters, graph_config):
         return False
 
     return [l for l, t in full_task_graph.tasks.iteritems() if filter(t)]
+
+
+@_target_task('nothing')
+def target_tasks_nothing(full_task_graph, parameters, graph_config):
+    """Select nothing, for DONTBUILD pushes"""
+    return []
