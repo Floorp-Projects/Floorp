@@ -1192,18 +1192,6 @@ nsresult nsToolkitProfileService::SelectStartupProfile(
 
   mStartupReason = NS_LITERAL_STRING("default");
 
-  // This code block can be removed before riding the trains to 68.
-  if (mUseDedicatedProfile) {
-    nsCString locked;
-    rv = mInstallData.GetString(mInstallHash.get(), "Locked", locked);
-    if (NS_FAILED(rv) || !locked.EqualsLiteral("1")) {
-      // The profile is unlocked. This can only happen if this profile was the
-      // old default profile and it was chosen as the dedicated default on a
-      // previous run. Check later if this is the default app and if so lock it.
-      mMaybeLockProfile = true;
-    }
-  }
-
   // Use the selected profile.
   mCurrent->GetRootDir(aRootDir);
   mCurrent->GetLocalDir(aLocalDir);
