@@ -32,8 +32,9 @@ T* Allocate(JSContext* cx);
 // optimizations. If dynamic slots are requested they will be allocated and the
 // pointer stored directly in |NativeObject::slots_|.
 template <AllowGC allowGC = CanGC>
-JSObject* AllocateObject(JSContext* cx, gc::AllocKind kind, size_t nDynamicSlots,
-                         gc::InitialHeap heap, const Class* clasp);
+JSObject* AllocateObject(JSContext* cx, gc::AllocKind kind,
+                         size_t nDynamicSlots, gc::InitialHeap heap,
+                         const Class* clasp);
 
 // Internal function used for nursery-allocatable strings.
 template <typename StringAllocT, AllowGC allowGC = CanGC>

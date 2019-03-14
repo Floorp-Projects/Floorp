@@ -11,7 +11,7 @@
 #include "nsString.h"
 
 static void BuildClassName(const char *aProgram, const char *aProfile,
-                           nsString& aClassName) {
+                           nsString &aClassName) {
   aClassName.AppendPrintf("Mozilla_%s_%s_RemoteWindow", aProgram, aProfile);
 }
 

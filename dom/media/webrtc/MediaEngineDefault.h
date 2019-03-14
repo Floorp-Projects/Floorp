@@ -100,7 +100,7 @@ class MediaEngineDefaultVideoSource : public MediaEngineSource {
   int mCb = 16;
   int mCr = 16;
 
-private:
+ private:
   const nsString mName;
 };
 

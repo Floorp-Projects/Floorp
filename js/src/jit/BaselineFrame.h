@@ -103,7 +103,7 @@ class BaselineFrame {
   uint32_t frameSize_;
   uint32_t loReturnValue_;  // If HAS_RVAL, the frame's return value.
   uint32_t hiReturnValue_;
-  uint32_t overrideOffset_;   // If HAS_OVERRIDE_PC, the bytecode offset.
+  uint32_t overrideOffset_;  // If HAS_OVERRIDE_PC, the bytecode offset.
 #if JS_BITS_PER_WORD == 32
   // Ensure frame is 8-byte aligned, see static_assert below.
   uint32_t padding_;

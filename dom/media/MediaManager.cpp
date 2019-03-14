@@ -3084,7 +3084,6 @@ RefPtr<MediaManager::StreamPromise> MediaManager::GetDisplayMedia(
 void MediaManager::AnonymizeDevices(MediaDeviceSet& aDevices,
                                     const nsACString& aOriginKey,
                                     const uint64_t aWindowId) {
-
   if (!aOriginKey.IsEmpty()) {
     for (RefPtr<MediaDevice>& device : aDevices) {
       nsString id;

@@ -85,8 +85,7 @@ SimpleChannelParent::OnStartRequest(nsIRequest* aRequest) {
 }
 
 NS_IMETHODIMP
-SimpleChannelParent::OnStopRequest(nsIRequest* aRequest,
-                                   nsresult aStatusCode) {
+SimpleChannelParent::OnStopRequest(nsIRequest* aRequest, nsresult aStatusCode) {
   // See above.
   MOZ_ASSERT(NS_FAILED(aStatusCode));
   return NS_OK;

@@ -242,7 +242,8 @@ struct SavedFrame::Lookup {
   }
 };
 
-using GCLookupVector = GCVector<SavedFrame::Lookup, ASYNC_STACK_MAX_FRAME_COUNT>;
+using GCLookupVector =
+    GCVector<SavedFrame::Lookup, ASYNC_STACK_MAX_FRAME_COUNT>;
 
 template <class Wrapper>
 class WrappedPtrOperations<SavedFrame::Lookup, Wrapper> {
@@ -267,18 +268,12 @@ class WrappedPtrOperations<SavedFrame::Lookup, Wrapper> {
 template <typename Wrapper>
 class MutableWrappedPtrOperations<SavedFrame::Lookup, Wrapper>
     : public WrappedPtrOperations<SavedFrame::Lookup, Wrapper> {
-  SavedFrame::Lookup& value() {
-    return static_cast<Wrapper*>(this)->get();
-  }
+  SavedFrame::Lookup& value() { return static_cast<Wrapper*>(this)->get(); }
 
  public:
-  void setParent(SavedFrame* parent) {
-    value().parent = parent;
-  }
+  void setParent(SavedFrame* parent) { value().parent = parent; }
 
-  void setAsyncCause(HandleAtom asyncCause) {
-    value().asyncCause = asyncCause;
-  }
+  void setAsyncCause(HandleAtom asyncCause) { value().asyncCause = asyncCause; }
 };
 
 /* static */
@@ -512,8 +507,7 @@ void SavedFrame::initParent(SavedFrame* maybeParent) {
   initReservedSlot(JSSLOT_PARENT, ObjectOrNullValue(maybeParent));
 }
 
-void SavedFrame::initFromLookup(JSContext* cx,
-                                Handle<Lookup> lookup) {
+void SavedFrame::initFromLookup(JSContext* cx, Handle<Lookup> lookup) {
   // Make sure any atoms used in the lookup are marked in the current zone.
   // Normally we would try to keep these mark bits up to date around the
   // points where the context moves between compartments, but Lookups live on
@@ -1416,12 +1410,11 @@ bool SavedStacks::insertFrames(JSContext* cx, MutableHandleSavedFrame frame,
     auto principals = iter.realm()->principals();
     MOZ_ASSERT_IF(framePtr && !iter.isWasm(), iter.pc());
 
-    if (!stackChain.emplaceBack(
-            location.source(), location.sourceId(),
-            location.line(), location.column(), displayAtom,
-            nullptr,  // asyncCause
-            nullptr,  // parent (not known yet)
-            principals, framePtr, iter.pc(), &activation)) {
+    if (!stackChain.emplaceBack(location.source(), location.sourceId(),
+                                location.line(), location.column(), displayAtom,
+                                nullptr,  // asyncCause
+                                nullptr,  // parent (not known yet)
+                                principals, framePtr, iter.pc(), &activation)) {
       ReportOutOfMemory(cx);
       return false;
     }
@@ -1512,7 +1505,8 @@ bool SavedStacks::insertFrames(JSContext* cx, MutableHandleSavedFrame frame,
 
     if (capture.is<JS::AllFrames>() && lookup.framePtr()) {
       auto* cache = lookup.activation()->getLiveSavedFrameCache(cx);
-      if (!cache || !cache->insert(cx, *lookup.framePtr(), lookup.pc(), frame)) {
+      if (!cache ||
+          !cache->insert(cx, *lookup.framePtr(), lookup.pc(), frame)) {
         return false;
       }
     }
@@ -1597,8 +1591,8 @@ bool SavedStacks::adoptAsyncStack(JSContext* cx,
 //
 // Call this function only if we are using the LiveSavedFrameCache; otherwise,
 // FrameIter has already taken care of getting us the right parent.
-bool SavedStacks::checkForEvalInFramePrev(JSContext* cx,
-                                          MutableHandle<SavedFrame::Lookup> lookup) {
+bool SavedStacks::checkForEvalInFramePrev(
+    JSContext* cx, MutableHandle<SavedFrame::Lookup> lookup) {
   MOZ_ASSERT(lookup.framePtr());
   if (!lookup.framePtr()->isInterpreterFrame()) {
     return true;
@@ -1917,10 +1911,10 @@ JS_PUBLIC_API bool ConstructSavedFrameStackSlow(
         js::ReconstructedSavedFramePrincipals::getSingleton(ubiFrame.get());
 
     if (!stackChain.emplaceBack(source, ubiFrame.get().sourceId(),
-                                 ubiFrame.get().line(),
-                                 ubiFrame.get().column(), functionDisplayName,
-                                 /* asyncCause */ nullptr,
-                                 /* parent */ nullptr, principals)) {
+                                ubiFrame.get().line(), ubiFrame.get().column(),
+                                functionDisplayName,
+                                /* asyncCause */ nullptr,
+                                /* parent */ nullptr, principals)) {
       ReportOutOfMemory(cx);
       return false;
     }

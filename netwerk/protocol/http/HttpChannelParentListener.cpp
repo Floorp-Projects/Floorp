@@ -112,8 +112,8 @@ HttpChannelParentListener::OnDataAvailable(nsIRequest* aRequest,
   if (!mNextListener) return NS_ERROR_UNEXPECTED;
 
   LOG(("HttpChannelParentListener::OnDataAvailable [this=%p]\n", this));
-  return mNextListener->OnDataAvailable(aRequest, aInputStream,
-                                        aOffset, aCount);
+  return mNextListener->OnDataAvailable(aRequest, aInputStream, aOffset,
+                                        aCount);
 }
 
 //-----------------------------------------------------------------------------
