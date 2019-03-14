@@ -100,27 +100,6 @@ JSObject* CanonicalBrowsingContext::WrapObject(
   return CanonicalBrowsingContext_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-void CanonicalBrowsingContext::NotifySetUserGestureActivationFromIPC(
-    bool aIsUserGestureActivation) {
-  if (!mCurrentWindowGlobal) {
-    return;
-  }
-
-  if (aIsUserGestureActivation) {
-    SetUserGestureActivation();
-  } else {
-    ResetUserGestureActivation();
-  }
-
-  USER_ACTIVATION_LOG("Chrome browsing context 0x%08" PRIx64
-                      " would notify other browsing contexts for updating "
-                      "user gesture activation flag.",
-                      Id());
-  // XXX(alwu) : we need to sync the flag to other browsing contexts which are
-  // not in the same child process where the flag was set. Will implement that
-  // in bug1519229.
-}
-
 void CanonicalBrowsingContext::Traverse(
     nsCycleCollectionTraversalCallback& cb) {
   CanonicalBrowsingContext* tmp = this;

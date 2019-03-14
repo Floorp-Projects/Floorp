@@ -67,10 +67,12 @@ class WindowProxyHolder;
 // acts as a sentinel for callers of MOZ_FOR_EACH_SYNCED_FIELD.
 
 // clang-format off
-#define MOZ_FOR_EACH_SYNCED_BC_FIELD(declare, ...)        \
-  declare(Name, nsString, nsAString)                   \
-  declare(Closed, bool, bool)                          \
+#define MOZ_FOR_EACH_SYNCED_BC_FIELD(declare, ...)           \
+  declare(Name, nsString, nsAString)                         \
+  declare(Closed, bool, bool)                                \
   declare(CrossOriginPolicy, nsILoadInfo::CrossOriginPolicy, nsILoadInfo::CrossOriginPolicy) \
+  declare(Opener, RefPtr<BrowsingContext>, BrowsingContext*) \
+  declare(IsActivatedByUserGesture, bool, bool)              \
   __VA_ARGS__
 // clang-format on
 
@@ -78,9 +80,9 @@ class WindowProxyHolder;
 #define MOZ_SYNCED_BC_FIELD_ARGUMENT(name, type, atype) \
   transaction->MOZ_SYNCED_BC_FIELD_NAME(name),
 #define MOZ_SYNCED_BC_FIELD_GETTER(name, type, atype) \
-  const type& Get##name() const { return MOZ_SYNCED_BC_FIELD_NAME(name); }
+  type const& Get##name() const { return MOZ_SYNCED_BC_FIELD_NAME(name); }
 #define MOZ_SYNCED_BC_FIELD_SETTER(name, type, atype) \
-  void Set##name(const atype& aValue) {               \
+  void Set##name(atype const& aValue) {               \
     Transaction t;                                    \
     t.MOZ_SYNCED_BC_FIELD_NAME(name).emplace(aValue); \
     t.Commit(this);                                   \
@@ -211,10 +213,6 @@ class BrowsingContext : public nsWrapperCache,
 
   void GetChildren(nsTArray<RefPtr<BrowsingContext>>& aChildren);
 
-  BrowsingContext* GetOpener() const { return mOpener; }
-
-  void SetOpener(BrowsingContext* aOpener);
-
   BrowsingContextGroup* Group() { return mGroup; }
 
   // Using the rules for choosing a browsing context we try to find
@@ -247,11 +245,6 @@ class BrowsingContext : public nsWrapperCache,
   // This function would be called when we want to reset the user gesture
   // activation flag of the top level browsing context.
   void NotifyResetUserGestureActivation();
-
-  // These functions would only be called in the top level browsing context.
-  // They would set/reset the user gesture activation flag.
-  void SetUserGestureActivation();
-  void ResetUserGestureActivation();
 
   // Return true if it corresponding document is activated by user gesture.
   bool GetUserGestureActivation();
@@ -377,7 +370,6 @@ class BrowsingContext : public nsWrapperCache,
   RefPtr<BrowsingContextGroup> mGroup;
   RefPtr<BrowsingContext> mParent;
   Children mChildren;
-  WeakPtr<BrowsingContext> mOpener;
   nsCOMPtr<nsIDocShell> mDocShell;
 
   // This is not a strong reference, but using a JS::Heap for that should be
@@ -386,10 +378,6 @@ class BrowsingContext : public nsWrapperCache,
   // objectMoved hook and clear it from its finalize hook.
   JS::Heap<JSObject*> mWindowProxy;
   LocationProxy mLocation;
-
-  // This flag is only valid in the top level browsing context, it indicates
-  // whether the corresponding document has been activated by user gesture.
-  bool mIsActivatedByUserGesture;
 
   // Is the most recent Document in this BrowsingContext loaded within this
   // process? This may be true with a null mDocShell after the Window has been

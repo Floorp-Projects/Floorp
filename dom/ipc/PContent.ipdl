@@ -1224,19 +1224,6 @@ parent:
 
     async StoreUserInteractionAsPermission(Principal aPrincipal);
 
-    /**
-     * Set the opener of browsing context 'aContext' to the browsing context
-     * with id 'aOpenerId'.
-     */
-    async SetOpenerBrowsingContext(BrowsingContext aContext,
-                                   BrowsingContext aOpenerContext);
-
-    /**
-     * Notify parent to update user gesture activation flag.
-     */
-    async SetUserGestureActivation(BrowsingContext aContext,
-                                   bool aNewValue);
-
 both:
     async CommitBrowsingContextTransaction(BrowsingContext aContext,
                                            BrowsingContextTransaction aTransaction);
