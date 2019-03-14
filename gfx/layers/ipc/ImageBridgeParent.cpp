@@ -175,7 +175,6 @@ class MOZ_STACK_CLASS AutoImageBridgeParentAsyncMessageSender {
 mozilla::ipc::IPCResult ImageBridgeParent::RecvUpdate(
     EditArray&& aEdits, OpDestroyArray&& aToDestroy,
     const uint64_t& aFwdTransactionId) {
-
   AUTO_PROFILER_TRACING("Paint", "ImageBridgeTransaction", GRAPHICS);
   AUTO_PROFILER_LABEL("ImageBridgeParent::RecvUpdate", GRAPHICS);
 

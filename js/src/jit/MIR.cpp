@@ -5497,8 +5497,8 @@ MWasmCall* MWasmCall::New(TempAllocator& alloc, const wasm::CallSiteDesc& desc,
                           MIRType resultType,
                           uint32_t stackArgAreaSizeUnaligned,
                           MDefinition* tableIndex) {
-  MWasmCall* call = new (alloc) MWasmCall(desc, callee,
-                                          stackArgAreaSizeUnaligned);
+  MWasmCall* call =
+      new (alloc) MWasmCall(desc, callee, stackArgAreaSizeUnaligned);
   call->setResultType(resultType);
 
   if (!call->argRegs_.init(alloc, args.length())) {
@@ -5528,9 +5528,8 @@ MWasmCall* MWasmCall::NewBuiltinInstanceMethodCall(
     const wasm::SymbolicAddress builtin, const ABIArg& instanceArg,
     const Args& args, MIRType resultType, uint32_t stackArgAreaSizeUnaligned) {
   auto callee = wasm::CalleeDesc::builtinInstanceMethod(builtin);
-  MWasmCall* call =
-      MWasmCall::New(alloc, desc, callee, args, resultType,
-                     stackArgAreaSizeUnaligned, nullptr);
+  MWasmCall* call = MWasmCall::New(alloc, desc, callee, args, resultType,
+                                   stackArgAreaSizeUnaligned, nullptr);
   if (!call) {
     return nullptr;
   }

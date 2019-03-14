@@ -16,7 +16,7 @@
 #  include "KeychainSecret.h"  // for ScopedCFType
 
 #  include "nsCocoaFeatures.h"
-#endif                         // XP_MACOSX
+#endif  // XP_MACOSX
 
 extern LazyLogModule gPIPNSSLog;
 

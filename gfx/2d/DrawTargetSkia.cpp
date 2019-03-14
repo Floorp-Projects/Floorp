@@ -1451,7 +1451,8 @@ void DrawTargetSkia::MaskSurface(const Pattern& aSource, SourceSurface* aMask,
     return;
   }
 
-  mCanvas->drawImage(alphaMask, aOffset.x + aMask->GetRect().x, aOffset.y + aMask->GetRect().y, &paint.mPaint);
+  mCanvas->drawImage(alphaMask, aOffset.x + aMask->GetRect().x,
+                     aOffset.y + aMask->GetRect().y, &paint.mPaint);
 }
 
 bool DrawTarget::Draw3DTransformedSurface(SourceSurface* aSurface,
