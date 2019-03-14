@@ -17,8 +17,11 @@ function test() {
       "handlerApp.xhtml?uri=%s";
 
   // set up the uri to test with
+  /* eslint-disable mozilla/use-services */
+
   var ioService = Cc["@mozilla.org/network/io-service;1"].
     getService(SpecialPowers.Ci.nsIIOService);
+
   var uri = ioService.newURI(testURI);
 
   // create a window, and launch the handler in it
@@ -43,6 +46,8 @@ function test() {
   localHandler.name = "Test Local Handler App";
 
   // get a local app that we know will be there and do something sane
+  /* eslint-disable mozilla/use-services */
+
   var osString = Cc["@mozilla.org/xre/app-info;1"].
                  getService(SpecialPowers.Ci.nsIXULRuntime).OS;
 
