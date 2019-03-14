@@ -14,7 +14,8 @@ function run_test() {
   const mimeService = Cc["@mozilla.org/mime;1"].
                       getService(Ci.nsIMIMEService);
 
-  const categoryManager = Services.catMan;
+  const categoryManager = Cc["@mozilla.org/categorymanager;1"].
+                          getService(Ci.nsICategoryManager);
 
   // --- Test procedure ---
 

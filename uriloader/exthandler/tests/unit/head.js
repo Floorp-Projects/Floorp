@@ -37,7 +37,7 @@ let unloadHandlerStore = async function() {
   gHandlerService;
 
   let promise = TestUtils.topicObserved("handlersvc-json-replace-complete");
-  Services.obs.notifyObservers(null, "handlersvc-json-replace");
+  Services.obs.notifyObservers(null, "handlersvc-json-replace", null);
   await promise;
 };
 
