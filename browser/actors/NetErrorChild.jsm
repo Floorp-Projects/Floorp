@@ -184,6 +184,10 @@ class NetErrorChild extends ActorChild {
     if (input.data.isDomainMismatch) {
       let subjectAltNames = input.data.certSubjectAltNames.split(",");
       let numSubjectAltNames = subjectAltNames.length;
+
+      subjectAltNames = subjectAltNames.filter(name => name.length > 0);
+      numSubjectAltNames = subjectAltNames.length;
+
       let msgPrefix = "";
       if (numSubjectAltNames != 0) {
         if (numSubjectAltNames == 1) {
