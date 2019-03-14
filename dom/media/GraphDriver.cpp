@@ -11,7 +11,7 @@
 #include "mozilla/SharedThreadPool.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Unused.h"
-#include "CubebUtils.h"
+#include "CubebDeviceEnumerator.h"
 #include "Tracing.h"
 
 #ifdef MOZ_WEBRTC
@@ -578,15 +578,11 @@ bool AudioCallbackDriver::Init() {
 
   char* forcedOutputDeviceName = CubebUtils::GetForcedOutputDevice();
   if (forcedOutputDeviceName) {
-    nsTArray<RefPtr<AudioDeviceInfo>> deviceInfos;
-    GetDeviceCollection(deviceInfos, CubebUtils::Output);
-    for (const auto& device : deviceInfos) {
-      const nsString& name = device->Name();
-      if (name.Equals(NS_ConvertUTF8toUTF16(forcedOutputDeviceName))) {
-        if (device->DeviceID()) {
-          forcedOutputDeviceId = device->DeviceID();
-        }
-      }
+    RefPtr<CubebDeviceEnumerator> enumerator = Enumerator::GetInstance();
+    RefPtr<AudioDeviceInfo> device = enumerator->DeviceInfoFromName(
+        NS_ConvertUTF8toUTF16(forcedOutputDeviceName), EnumeratorSide::OUTPUT);
+    if (device->DeviceID()) {
+      forcedOutputDeviceId = device->DeviceID();
     }
   }
 
