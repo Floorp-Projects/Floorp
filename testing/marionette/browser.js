@@ -329,16 +329,12 @@ browser.Context = class {
 
         await Promise.all([activated, focused, startup]);
 
-        logger.trace("Opening window is active window: " +
-            `${Services.focus.activeWindow == this.window}`);
-        if (!focus) {
-          // The new window shouldn't get focused. As such set the
-          // focus back to the currently selected window.
+        // The new window shouldn't get focused. As such set the
+        // focus back to the opening window if needed.
+        if (!focus && Services.focus.activeWindow != this.window) {
           activated = waitForEvent(this.window, "activate");
           focused = waitForEvent(this.window, "focus", {capture: true});
 
-          logger.trace("Setting focus back to opening window " +
-              `due to focus: ${focus}`);
           this.window.focus();
 
           await Promise.all([activated, focused]);
