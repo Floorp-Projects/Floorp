@@ -658,3 +658,9 @@ def target_tasks_release_simulation(full_task_graph, parameters, graph_config):
             and filter_out_cron(t, parameters)
             and filter_for_target_project(t)
             and filter_out_android_on_esr(t)]
+
+
+@_target_task('nothing')
+def target_tasks_nothing(full_task_graph, parameters, graph_config):
+    """Select nothing, for DONTBUILD pushes"""
+    return []
