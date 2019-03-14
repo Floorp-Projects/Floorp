@@ -37,6 +37,29 @@ void BrowsingContextGroup::Unsubscribe(ContentParent* aOriginProcess) {
   aOriginProcess->OnBrowsingContextGroupUnsubscribe(this);
 }
 
+void BrowsingContextGroup::EnsureSubscribed(ContentParent* aProcess) {
+  MOZ_DIAGNOSTIC_ASSERT(aProcess);
+  if (mSubscribers.Contains(aProcess)) {
+    return;
+  }
+
+  MOZ_RELEASE_ASSERT(
+      mContexts.Count() == 1,
+      "EnsureSubscribed doesn't work on non-fresh BrowsingContextGroups yet!");
+
+  // Subscribe to the BrowsingContext, and send down initial state!
+  Subscribe(aProcess);
+
+  // XXX(nika): We can't send down existing BrowsingContextGroups reliably yet
+  // due to ordering issues! (Bug ?)
+  for (auto iter = mContexts.Iter(); !iter.Done(); iter.Next()) {
+    RefPtr<BrowsingContext> bc = iter.Get()->GetKey();
+    Unused << aProcess->SendAttachBrowsingContext(
+        bc->GetParent(), bc->GetOpener(), BrowsingContextId(bc->Id()),
+        bc->Name());
+  }
+}
+
 BrowsingContextGroup::~BrowsingContextGroup() {
   for (auto iter = mSubscribers.Iter(); !iter.Done(); iter.Next()) {
     nsRefPtrHashKey<ContentParent>* entry = iter.Get();

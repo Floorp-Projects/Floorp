@@ -7,6 +7,8 @@
 #include "mozilla/dom/BrowserBridgeParent.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/ContentProcessManager.h"
+#include "mozilla/dom/CanonicalBrowsingContext.h"
+#include "mozilla/dom/BrowsingContextGroup.h"
 
 using namespace mozilla::ipc;
 using namespace mozilla::layout;
@@ -48,6 +50,17 @@ nsresult BrowserBridgeParent::Init(const nsString& aPresentationURL,
     return NS_ERROR_FAILURE;
   }
 
+  // FIXME: This BrowsingContext should be provided by our embedder!
+  RefPtr<CanonicalBrowsingContext> browsingContext =
+      BrowsingContext::Create(nullptr, nullptr, EmptyString(),
+                              BrowsingContext::Type::Content)
+          .downcast<CanonicalBrowsingContext>();
+
+  // Ensure that our content process is subscribed to our newly created
+  // BrowsingContextGroup.
+  browsingContext->Group()->EnsureSubscribed(constructorSender);
+  browsingContext->SetOwnerProcessId(constructorSender->ChildID());
+
   ContentProcessManager* cpm = ContentProcessManager::GetSingleton();
   TabId tabId(nsContentUtils::GenerateTabId());
   cpm->RegisterRemoteFrame(tabId, ContentParentId(0), TabId(0),
@@ -56,13 +69,14 @@ nsresult BrowserBridgeParent::Init(const nsString& aPresentationURL,
 
   // Construct the TabParent object for our subframe.
   uint32_t chromeFlags = 0;
-  RefPtr<TabParent> tabParent(
-      new TabParent(constructorSender, tabId, tabContext, chromeFlags, this));
+  RefPtr<TabParent> tabParent(new TabParent(constructorSender, tabId,
+                                            tabContext, browsingContext,
+                                            chromeFlags, this));
 
   PBrowserParent* browser = constructorSender->SendPBrowserConstructor(
       // DeallocPBrowserParent() releases this ref.
       tabParent.forget().take(), tabId, TabId(0), tabContext.AsIPCTabContext(),
-      chromeFlags, constructorSender->ChildID(),
+      chromeFlags, constructorSender->ChildID(), browsingContext,
       constructorSender->IsForBrowser());
   if (NS_WARN_IF(!browser)) {
     MOZ_ASSERT(false, "Browser Constructor Failed");
