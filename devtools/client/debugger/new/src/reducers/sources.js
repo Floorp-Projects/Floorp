@@ -309,7 +309,7 @@ function updateLoadedState(
   const { sourceId } = action;
   let source;
 
-  // If there was a nativation between the time the action was started and
+  // If there was a navigation between the time the action was started and
   // completed, we don't want to update the store.
   if (action.epoch !== state.epoch) {
     return state;
@@ -320,6 +320,8 @@ function updateLoadedState(
   } else if (action.status === "error") {
     source = { id: sourceId, error: action.error, loadedState: "loaded" };
   } else {
+    // TODO: Remove this once we centralize pretty-print and this can no longer
+    // return a null value when loading a in-progress prettyprinting file.
     if (!action.value) {
       return state;
     }

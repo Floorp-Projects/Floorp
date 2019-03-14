@@ -22,9 +22,30 @@ const requests = new Map();
 const loadSourceHistogram = "DEVTOOLS_DEBUGGER_LOAD_SOURCE_MS";
 const telemetry = new Telemetry();
 
-async function loadSource(state, source: Source, { sourceMaps, client }) {
+async function loadSource(
+  state,
+  source: Source,
+  { sourceMaps, client }
+): Promise<?{
+  text: string,
+  contentType: string
+}> {
   if (isOriginal(source)) {
-    return sourceMaps.getOriginalSourceText(source);
+    const result = await sourceMaps.getOriginalSourceText(source);
+    if (!result) {
+      // TODO: This allows pretty files to continue working the way they have
+      // been, but is very ugly. Remove this when we centralize pretty-printing
+      // in loadSource. https://github.com/firefox-devtools/debugger/issues/8071
+      if (source.isPrettyPrinted) {
+        return null;
+      }
+
+      // The way we currently try to load and select a pending selected location,
+      // it is possible that we will try to fetch original source text right after
+      // the source map has been cleared after a navigation event.
+      throw new Error("Original source text unavailable");
+    }
+    return result;
   }
 
   if (!source.actors.length) {
@@ -36,7 +57,6 @@ async function loadSource(state, source: Source, { sourceMaps, client }) {
   telemetry.finish(loadSourceHistogram, source);
 
   return {
-    id: source.id,
     text: response.source,
     contentType: response.contentType || "text/javascript"
   };
