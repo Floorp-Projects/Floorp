@@ -1426,6 +1426,10 @@ void gfxWindowsPlatform::RecordContentDeviceFailure(
 }
 
 void gfxWindowsPlatform::RecordStartupTelemetry() {
+  if (!XRE_IsParentProcess()) {
+    return;
+  }
+
   DeviceManagerDx* dx = DeviceManagerDx::Get();
   nsTArray<DXGI_OUTPUT_DESC1> outputs = dx->EnumerateOutputs();
 
