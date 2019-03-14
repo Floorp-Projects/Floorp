@@ -84,10 +84,6 @@ function update(
     case "CLEAR_EXPRESSION_ERROR":
       return state.set("expressionError", false);
 
-    // respond to time travel
-    case "TRAVEL_TO":
-      return travelTo(state, action);
-
     case "AUTOCOMPLETE":
       const { matchProp, matches } = action.result;
 
@@ -102,22 +98,6 @@ function update(
   }
 
   return state;
-}
-
-function travelTo(state, action) {
-  const { expressions } = action.data;
-  if (!expressions) {
-    return state;
-  }
-  return expressions.reduce(
-    (finalState, previousState) =>
-      updateExpressionInList(finalState, previousState.input, {
-        input: previousState.input,
-        value: previousState.value,
-        updating: false
-      }),
-    state
-  );
 }
 
 function restoreExpressions() {
