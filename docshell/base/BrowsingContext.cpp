@@ -681,7 +681,17 @@ void BrowsingContext::Transaction::Commit(BrowsingContext* aBrowsingContext) {
     }
   }
 
-  Apply(aBrowsingContext);
+  Apply(aBrowsingContext, nullptr);
+}
+
+void BrowsingContext::Transaction::Apply(BrowsingContext* aBrowsingContext,
+                                         ContentParent* aSource) {
+#define MOZ_BC_FIELD(name, ...)                         \
+  if (m##name) {                                        \
+    aBrowsingContext->m##name = std::move(*m##name);    \
+    m##name.reset();                                    \
+  }
+#include "mozilla/dom/BrowsingContextFieldList.h"
 }
 
 void BrowsingContext::LocationProxy::SetHref(const nsAString& aHref,
@@ -751,22 +761,21 @@ bool IPDLParamTraits<dom::BrowsingContext>::Read(
 void IPDLParamTraits<dom::BrowsingContext::Transaction>::Write(
     IPC::Message* aMessage, IProtocol* aActor,
     const dom::BrowsingContext::Transaction& aTransaction) {
-  void_t sentinel;
-  const dom::BrowsingContext::Transaction* transaction = &aTransaction;
-  auto tuple = mozilla::Tie(
-      MOZ_FOR_EACH_SYNCED_BC_FIELD(MOZ_SYNCED_BC_FIELD_ARGUMENT, sentinel));
-
-  WriteIPDLParam(aMessage, aActor, tuple);
+#define MOZ_BC_FIELD(name, ...) \
+  WriteIPDLParam(aMessage, aActor, aTransaction.m##name);
+#include "mozilla/dom/BrowsingContextFieldList.h"
 }
 
 bool IPDLParamTraits<dom::BrowsingContext::Transaction>::Read(
     const IPC::Message* aMessage, PickleIterator* aIterator, IProtocol* aActor,
     dom::BrowsingContext::Transaction* aTransaction) {
-  void_t sentinel;
-  dom::BrowsingContext::Transaction* transaction = aTransaction;
-  auto tuple = mozilla::Tie(
-      MOZ_FOR_EACH_SYNCED_BC_FIELD(MOZ_SYNCED_BC_FIELD_ARGUMENT, sentinel));
-  return ReadIPDLParam(aMessage, aIterator, aActor, &tuple);
+#define MOZ_BC_FIELD(name, ...)                                              \
+  if (!ReadIPDLParam(aMessage, aIterator, aActor, &aTransaction->m##name)) { \
+    return false;                                                            \
+  }
+#include "mozilla/dom/BrowsingContextFieldList.h"
+
+  return true;
 }
 
 }  // namespace ipc
