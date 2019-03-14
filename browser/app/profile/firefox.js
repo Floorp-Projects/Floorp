@@ -706,14 +706,21 @@ pref("plugins.testmode", false);
 // Should plugins that are hidden show the infobar UI?
 pref("plugins.show_infobar", false);
 
+#if defined(_ARM64_) && defined(XP_WIN)
+pref("plugin.default.state", 0);
+#else
 pref("plugin.default.state", 1);
+#endif
 
 // Plugins bundled in XPIs are enabled by default.
 pref("plugin.defaultXpi.state", 2);
 
-
-// Flash is Click-to-Activate by default on all channels.
+// Flash is Click-to-Activate by default on all channels. Disabled for ARM builds.
+#if defined(_ARM64_) && defined(XP_WIN)
+pref("plugin.state.flash", 0);
+#else
 pref("plugin.state.flash", 1);
+#endif
 
 // Enables the download and use of the flash blocklists.
 pref("plugins.flashBlock.enabled", true);
