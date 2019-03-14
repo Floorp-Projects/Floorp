@@ -59,6 +59,10 @@ window._gBrowser = {
     messageManager.addMessageListener("Findbar:Keypress", this);
     this._setFindbarData();
 
+    XPCOMUtils.defineLazyModuleGetters(this, {
+      E10SUtils: "resource://gre/modules/E10SUtils.jsm",
+    });
+
     XPCOMUtils.defineLazyPreferenceGetter(this, "animationsEnabled",
       "toolkit.cosmeticAnimations.enabled");
 
@@ -1599,7 +1603,7 @@ window._gBrowser = {
     }
   },
 
-  updateBrowserRemoteness(aBrowser, aShouldBeRemote, {
+  updateBrowserRemoteness(aBrowser, {
     newFrameloader,
     opener,
     remoteType,
@@ -1608,21 +1612,25 @@ window._gBrowser = {
   } = {}) {
     let isRemote = aBrowser.getAttribute("remote") == "true";
 
-    if (!gMultiProcessBrowser && aShouldBeRemote) {
-      throw new Error("Cannot switch to remote browser in a window " +
-        "without the remote tabs load context.");
+    // We have to be careful with this here, as the "no remote type" is null,
+    // not a string. Make sure to check only for undefined, since null is
+    // allowed.
+    if (remoteType === undefined) {
+      throw new Error("Remote type must be set!");
     }
 
-    // Default values for remoteType
-    if (!remoteType) {
-      remoteType = aShouldBeRemote ? E10SUtils.DEFAULT_REMOTE_TYPE : E10SUtils.NOT_REMOTE;
+    let shouldBeRemote = remoteType !== E10SUtils.NOT_REMOTE;
+
+    if (!gMultiProcessBrowser && shouldBeRemote) {
+      throw new Error("Cannot switch to remote browser in a window " +
+        "without the remote tabs load context.");
     }
 
     // If we are passed an opener, we must be making the browser non-remote, and
     // if the browser is _currently_ non-remote, we need the openers to match,
     // because it is already too late to change it.
     if (opener) {
-      if (aShouldBeRemote) {
+      if (shouldBeRemote) {
         throw new Error("Cannot set an opener on a browser which should be remote!");
       }
       if (!isRemote && aBrowser.contentWindow.opener != opener) {
@@ -1632,7 +1640,7 @@ window._gBrowser = {
 
     // Abort if we're not going to change anything
     let oldRemoteType = aBrowser.remoteType;
-    if (isRemote == aShouldBeRemote && !newFrameloader &&
+    if (isRemote == shouldBeRemote && !newFrameloader &&
         (!isRemote || oldRemoteType == remoteType)) {
       return false;
     }
@@ -1670,7 +1678,7 @@ window._gBrowser = {
     // Change the "remote" attribute.
     let parent = aBrowser.parentNode;
     aBrowser.remove();
-    if (aShouldBeRemote) {
+    if (shouldBeRemote) {
       aBrowser.setAttribute("remote", "true");
       aBrowser.setAttribute("remoteType", remoteType);
     } else {
@@ -1693,7 +1701,7 @@ window._gBrowser = {
     if (sameProcessAsFrameLoader) {
       // Always set sameProcessAsFrameLoader when passed in explicitly.
       aBrowser.sameProcessAsFrameLoader = sameProcessAsFrameLoader;
-    } else if (!aShouldBeRemote || oldRemoteType == remoteType) {
+    } else if (!shouldBeRemote || oldRemoteType == remoteType) {
       // Only copy existing sameProcessAsFrameLoader when not switching
       // remote type otherwise it would stop the switch.
       aBrowser.sameProcessAsFrameLoader = oldSameProcessAsFrameLoader;
@@ -1744,7 +1752,7 @@ window._gBrowser = {
                                 [aBrowser.webProgress, null, event, true],
                                 true, false);
 
-    if (aShouldBeRemote) {
+    if (shouldBeRemote) {
       // Switching the browser to be remote will connect to a new child
       // process so the browser can no longer be considered to be
       // crashed.
@@ -1776,8 +1784,9 @@ window._gBrowser = {
   },
 
   updateBrowserRemotenessByURL(aBrowser, aURL, aOptions = {}) {
-    if (!gMultiProcessBrowser)
-      return this.updateBrowserRemoteness(aBrowser, false);
+    if (!gMultiProcessBrowser) {
+      return this.updateBrowserRemoteness(aBrowser, { remoteType: E10SUtils.NOT_REMOTE });
+    }
 
     let oldRemoteType = aBrowser.remoteType;
 
@@ -1791,8 +1800,7 @@ window._gBrowser = {
     // correct type.
     if (oldRemoteType != aOptions.remoteType ||
         aOptions.newFrameloader) {
-      let remote = aOptions.remoteType != E10SUtils.NOT_REMOTE;
-      return this.updateBrowserRemoteness(aBrowser, remote, aOptions);
+      return this.updateBrowserRemoteness(aBrowser, aOptions);
     }
 
     return false;
@@ -4707,7 +4715,7 @@ window._gBrowser = {
       if (this.selectedBrowser == browser) {
         TabCrashHandler.onSelectedBrowserCrash(browser, false);
       } else {
-        this.updateBrowserRemoteness(browser, false);
+        this.updateBrowserRemoteness(browser, { remoteType: E10SUtils.NOT_REMOTE });
         SessionStore.reviveCrashedTab(tab);
       }
 
