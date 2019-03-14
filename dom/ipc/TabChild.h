@@ -674,7 +674,8 @@ class TabChild final : public TabChildBase,
   virtual bool DeallocPWindowGlobalChild(PWindowGlobalChild* aActor) override;
 
   virtual PBrowserBridgeChild* AllocPBrowserBridgeChild(
-      const nsString& aName, const nsString& aRemoteType) override;
+      const nsString& aName, const nsString& aRemoteType,
+      BrowsingContext* aBrowsingContext) override;
 
   virtual bool DeallocPBrowserBridgeChild(PBrowserBridgeChild* aActor) override;
 
