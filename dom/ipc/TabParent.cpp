@@ -149,7 +149,9 @@ NS_IMPL_ISUPPORTS(TabParent, nsITabParent, nsIAuthPromptProvider,
                   nsISupportsWeakReference)
 
 TabParent::TabParent(ContentParent* aManager, const TabId& aTabId,
-                     const TabContext& aContext, CanonicalBrowsingContext* aBrowsingContext, uint32_t aChromeFlags,
+                     const TabContext& aContext,
+                     CanonicalBrowsingContext* aBrowsingContext,
+                     uint32_t aChromeFlags,
                      BrowserBridgeParent* aBrowserBridgeParent)
     : TabContext(aContext),
       mFrameElement(nullptr),
@@ -1019,13 +1021,15 @@ bool TabParent::DeallocPWindowGlobalParent(PWindowGlobalParent* aActor) {
 
 IPCResult TabParent::RecvPBrowserBridgeConstructor(
     PBrowserBridgeParent* aActor, const nsString& aName,
-    const nsString& aRemoteType) {
-  static_cast<BrowserBridgeParent*>(aActor)->Init(aName, aRemoteType);
+    const nsString& aRemoteType, BrowsingContext* aBrowsingContext) {
+  static_cast<BrowserBridgeParent*>(aActor)->Init(
+      aName, aRemoteType, CanonicalBrowsingContext::Cast(aBrowsingContext));
   return IPC_OK();
 }
 
 PBrowserBridgeParent* TabParent::AllocPBrowserBridgeParent(
-    const nsString& aName, const nsString& aRemoteType) {
+    const nsString& aName, const nsString& aRemoteType,
+    BrowsingContext* aBrowsingContext) {
   // Reference freed in DeallocPBrowserBridgeParent.
   return do_AddRef(new BrowserBridgeParent()).take();
 }
