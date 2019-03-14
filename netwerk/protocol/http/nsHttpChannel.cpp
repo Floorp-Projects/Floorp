@@ -650,7 +650,7 @@ nsresult nsHttpChannel::Connect() {
     return RedirectToInterceptedChannel();
   }
 
-  bool isTrackingResource = mIsThirdPartyTrackingResource;  // is atomic
+  bool isTrackingResource = IsThirdPartyTrackingResource();
   LOG(("nsHttpChannel %p tracking resource=%d, cos=%u", this,
        isTrackingResource, mClassOfService));
 
@@ -2350,7 +2350,7 @@ nsresult nsHttpChannel::ProcessResponse() {
     nsCOMPtr<nsILoadContextInfo> lci = GetLoadContextInfo(this);
     mozilla::net::Predictor::UpdateCacheability(
         referrer, mURI, httpStatus, mRequestHead, mResponseHead, lci,
-        mIsThirdPartyTrackingResource);
+        IsThirdPartyTrackingResource());
   }
 
   // Only allow 407 (authentication required) to continue
@@ -3908,7 +3908,7 @@ nsresult nsHttpChannel::OpenCacheEntryInternal(
     extension.Append("TRR");
   }
 
-  if (mIsThirdPartyTrackingResource &&
+  if (IsThirdPartyTrackingResource() &&
       !AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(this, mURI,
                                                                nullptr)) {
     nsCOMPtr<nsIURI> topWindowURI;
