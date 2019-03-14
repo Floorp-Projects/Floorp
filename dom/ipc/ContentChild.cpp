@@ -3794,7 +3794,7 @@ mozilla::ipc::IPCResult ContentChild::RecvWindowPostMessage(
 mozilla::ipc::IPCResult ContentChild::RecvCommitBrowsingContextTransaction(
     BrowsingContext* aContext, BrowsingContext::Transaction&& aTransaction) {
   if (aContext) {
-    aTransaction.Apply(aContext);
+    aTransaction.Apply(aContext, nullptr);
   }
   return IPC_OK();
 }

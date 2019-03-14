@@ -42,6 +42,7 @@ struct IPDLParamTraits;
 }  // namespace ipc
 
 namespace dom {
+class BrowsingContent;
 class BrowsingContextGroup;
 class CanonicalBrowsingContext;
 class ContentParent;
@@ -52,71 +53,18 @@ class Sequence;
 struct WindowPostMessageOptions;
 class WindowProxyHolder;
 
-// MOZ_FOR_EACH_SYNCED_FIELD declares BrowsingContext fields that need
-// to be synced to the synced versions of BrowsingContext in parent
-// and child processes. To add a new field for syncing add a line:
-//
-// declare(name of new field, storage type, parameter type)
-//
-// before __VA_ARGS__. This will declare a private member with the
-// supplied name prepended with 'm'. If the field needs to be
-// initialized in the constructor, then that will have to be done
-// manually, and of course keeping the same order as below.
-//
-// At all times the last line below should be __VA_ARGS__, since that
-// acts as a sentinel for callers of MOZ_FOR_EACH_SYNCED_FIELD.
-
-// clang-format off
-#define MOZ_FOR_EACH_SYNCED_BC_FIELD(declare, ...)           \
-  declare(Name, nsString, nsAString)                         \
-  declare(Closed, bool, bool)                                \
-  declare(CrossOriginPolicy, nsILoadInfo::CrossOriginPolicy, nsILoadInfo::CrossOriginPolicy) \
-  declare(Opener, RefPtr<BrowsingContext>, BrowsingContext*) \
-  declare(IsActivatedByUserGesture, bool, bool)              \
-  __VA_ARGS__
-// clang-format on
-
-#define MOZ_SYNCED_BC_FIELD_NAME(name, ...) m##name
-#define MOZ_SYNCED_BC_FIELD_ARGUMENT(name, type, atype) \
-  transaction->MOZ_SYNCED_BC_FIELD_NAME(name),
-#define MOZ_SYNCED_BC_FIELD_GETTER(name, type, atype) \
-  type const& Get##name() const { return MOZ_SYNCED_BC_FIELD_NAME(name); }
-#define MOZ_SYNCED_BC_FIELD_SETTER(name, type, atype) \
-  void Set##name(atype const& aValue) {               \
-    Transaction t;                                    \
-    t.MOZ_SYNCED_BC_FIELD_NAME(name).emplace(aValue); \
-    t.Commit(this);                                   \
+class BrowsingContextBase {
+ protected:
+  BrowsingContextBase() {
+    // default-construct each field.
+#define MOZ_BC_FIELD(name, type) m##name = type();
+#include "mozilla/dom/BrowsingContextFieldList.h"
   }
-#define MOZ_SYNCED_BC_FIELD_MEMBER(name, type, atype) \
-  type MOZ_SYNCED_BC_FIELD_NAME(name);
-#define MOZ_SYNCED_BC_FIELD_MAYBE_MEMBER(name, type, atype) \
-  mozilla::Maybe<type> MOZ_SYNCED_BC_FIELD_NAME(name);
-#define MOZ_SYNCED_BC_FIELD_APPLIER(name, type, atype) \
-  if (MOZ_SYNCED_BC_FIELD_NAME(name)) {                \
-    aOwner->MOZ_SYNCED_BC_FIELD_NAME(name) =           \
-        std::move(*MOZ_SYNCED_BC_FIELD_NAME(name));    \
-    MOZ_SYNCED_BC_FIELD_NAME(name).reset();            \
-  }
+  ~BrowsingContextBase() = default;
 
-#define MOZ_SYNCED_BC_FIELDS                                              \
- public:                                                                  \
-  MOZ_FOR_EACH_SYNCED_BC_FIELD(MOZ_SYNCED_BC_FIELD_GETTER)                \
-  MOZ_FOR_EACH_SYNCED_BC_FIELD(MOZ_SYNCED_BC_FIELD_SETTER)                \
-  class Transaction {                                                     \
-   public:                                                                \
-    void Commit(BrowsingContext* aOwner);                                 \
-    void Apply(BrowsingContext* aOwner) {                                 \
-      MOZ_FOR_EACH_SYNCED_BC_FIELD(MOZ_SYNCED_BC_FIELD_APPLIER)           \
-      return; /* without this return clang-format messes up formatting */ \
-    }                                                                     \
-                                                                          \
-    MOZ_FOR_EACH_SYNCED_BC_FIELD(MOZ_SYNCED_BC_FIELD_MAYBE_MEMBER)        \
-   private:                                                               \
-    friend struct mozilla::ipc::IPDLParamTraits<Transaction>;             \
-  };                                                                      \
-                                                                          \
- private:                                                                 \
-  MOZ_FOR_EACH_SYNCED_BC_FIELD(MOZ_SYNCED_BC_FIELD_MEMBER)
+#define BC_FIELD(name, type) type m##name;
+#include "mozilla/dom/BCFieldList.h"
+};
 
 // BrowsingContext, in this context, is the cross process replicated
 // environment in which information about documents is stored. In
@@ -136,10 +84,8 @@ class WindowProxyHolder;
 // BrowsingContext::Create* methods.
 class BrowsingContext : public nsWrapperCache,
                         public SupportsWeakPtr<BrowsingContext>,
-                        public LinkedListElement<RefPtr<BrowsingContext>> {
-  // Do not declare members above MOZ_SYNCED_BC_FIELDS
-  MOZ_SYNCED_BC_FIELDS
-
+                        public LinkedListElement<RefPtr<BrowsingContext>>,
+                        public BrowsingContextBase {
  public:
   enum class Type { Chrome, Content };
 
@@ -288,9 +234,43 @@ class BrowsingContext : public nsWrapperCache,
 
   JSObject* WrapObject(JSContext* aCx);
 
-  nsILoadInfo::CrossOriginPolicy CrossOriginPolicy() {
-    return mCrossOriginPolicy;
-  }
+  /**
+   * Transaction object. This object is used to specify and then commit
+   * modifications to synchronized fields in BrowsingContexts.
+   */
+  class Transaction {
+   public:
+    // Apply the changes from this transaction to the specified BrowsingContext
+    // in all processes. This method will call the correct `WillSet` and
+    // `DidSet` methods, as well as move the value.
+    //
+    // NOTE: This method mutates `this`, resetting all members to `Nothing()`
+    void Commit(BrowsingContext* aOwner);
+
+    // You probably don't want to directly call this method - instead call
+    // `Commit`, which will perform the necessary synchronization.
+    //
+    // |aSource| is the ContentParent which is performing the mutation in the
+    // parent process.
+    void Apply(BrowsingContext* aOwner, ContentParent* aSource);
+
+#define MOZ_BC_FIELD(name, type) mozilla::Maybe<type> m##name;
+#include "mozilla/dom/BrowsingContextFieldList.h"
+
+   private:
+    friend struct mozilla::ipc::IPDLParamTraits<Transaction>;
+  };
+
+#define MOZ_BC_FIELD(name, type)                        \
+  template <typename... Args>                           \
+  void Set##name(Args&&... aValue) {                    \
+    Transaction txn;                                    \
+    txn.m##name.emplace(std::forward<Args>(aValue)...); \
+    txn.Commit(this);                                   \
+  }                                                     \
+                                                        \
+  type const& Get##name() const { return m##name; }
+#include "mozilla/dom/BrowsingContextFieldList.h"
 
  protected:
   virtual ~BrowsingContext();
