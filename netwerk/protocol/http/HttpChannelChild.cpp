@@ -1871,14 +1871,15 @@ void HttpChannelChild::ProcessNotifyCookieBlocked(uint32_t aRejectedReason) {
       NS_DISPATCH_NORMAL);
 }
 
-void HttpChannelChild::ProcessNotifyTrackingResource(bool aIsThirdParty) {
+void HttpChannelChild::ProcessNotifyClassificationFlags(
+    uint32_t aClassificationFlags, bool aIsThirdParty) {
   LOG(
-      ("HttpChannelChild::ProcessNotifyTrackingResource thirdparty=%d "
-       "[this=%p]\n",
-       static_cast<int>(aIsThirdParty), this));
+      ("HttpChannelChild::ProcessNotifyClassificationFlags thirdparty=%d "
+       "flags=%" PRIu32 " [this=%p]\n",
+       static_cast<int>(aIsThirdParty), aClassificationFlags, this));
   MOZ_ASSERT(OnSocketThread());
 
-  SetIsTrackingResource(aIsThirdParty);
+  AddClassificationFlags(aClassificationFlags, aIsThirdParty);
 }
 
 void HttpChannelChild::ProcessNotifyFlashPluginStateChanged(
