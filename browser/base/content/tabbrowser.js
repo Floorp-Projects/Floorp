@@ -1671,19 +1671,15 @@ window._gBrowser = {
     let oldSameProcessAsFrameLoader = aBrowser.sameProcessAsFrameLoader;
     let oldUserTypedValue = aBrowser.userTypedValue;
     let hadStartedLoad = aBrowser.didStartLoadSinceLastUserTyping();
+    let parent = aBrowser.parentNode;
+
+    // Change the "remote" attribute.
 
     // Make sure the browser is destroyed so it unregisters from observer notifications
     aBrowser.destroy();
-
-    // Change the "remote" attribute.
-    let parent = aBrowser.parentNode;
-    aBrowser.remove();
-    if (shouldBeRemote) {
-      aBrowser.setAttribute("remote", "true");
-      aBrowser.setAttribute("remoteType", remoteType);
-    } else {
-      aBrowser.setAttribute("remote", "false");
-      aBrowser.removeAttribute("remoteType");
+    // Only remove the node if we're not rebuilding the frameloader via nsFrameLoaderOwner.
+    if (!Services.prefs.getBoolPref("fission.rebuild_frameloaders_on_remoteness_change", false)) {
+      aBrowser.remove();
     }
 
     if (recordExecution) {
@@ -1713,7 +1709,30 @@ window._gBrowser = {
       aBrowser.presetOpenerWindow(opener);
     }
 
-    parent.appendChild(aBrowser);
+    // Note that this block is also affected by the
+    // rebuild_frameloaders_on_remoteness_change pref. If the pref is set to
+    // false, this attribute change is observed by browser-custom-element,
+    // causing browser destroy()/construct() to be run. If the pref is true,
+    // then we update the attributes, we run the construct() call ourselves
+    // after the new frameloader has been created.
+    if (shouldBeRemote) {
+      aBrowser.setAttribute("remote", "true");
+      aBrowser.setAttribute("remoteType", remoteType);
+    } else {
+      aBrowser.setAttribute("remote", "false");
+      aBrowser.removeAttribute("remoteType");
+    }
+
+    if (!Services.prefs.getBoolPref("fission.rebuild_frameloaders_on_remoteness_change", false)) {
+      parent.appendChild(aBrowser);
+    } else {
+      // This call actually switches out our frameloaders. Do this as late as
+      // possible before rebuilding the browser, as we'll need the new browser
+      // state set up completely first.
+      aBrowser.changeRemoteness({ remoteType });
+      // Once we have new frameloaders, this call sets the browser back up.
+      aBrowser.construct();
+    }
 
     aBrowser.userTypedValue = oldUserTypedValue;
     if (hadStartedLoad) {
