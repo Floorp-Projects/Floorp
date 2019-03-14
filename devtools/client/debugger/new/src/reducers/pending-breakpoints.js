@@ -9,10 +9,13 @@
  * @module reducers/pending-breakpoints
  */
 
+import { getSourcesByURL } from "./sources";
+
 import {
   createPendingBreakpoint,
   makePendingLocationId
 } from "../utils/breakpoint";
+import { isGenerated } from "../utils/source";
 
 import type { SourcesState } from "./sources";
 import type { PendingBreakpoint, Source } from "../types";
@@ -152,12 +155,15 @@ export function getPendingBreakpointsForSource(
   state: OuterState,
   source: Source
 ): PendingBreakpoint[] {
-  return getPendingBreakpointList(state).filter(pendingBreakpoint => {
-    return (
-      pendingBreakpoint.location.sourceUrl === source.url ||
-      pendingBreakpoint.generatedLocation.sourceUrl == source.url
-    );
-  });
+  const sources = getSourcesByURL(state, source.url);
+  if (sources.length > 1 && isGenerated(source)) {
+    // Don't return pending breakpoints for duplicated generated sources
+    return [];
+  }
+
+  return getPendingBreakpointList(state).filter(
+    pendingBreakpoint => pendingBreakpoint.location.sourceUrl === source.url
+  );
 }
 
 export default update;
