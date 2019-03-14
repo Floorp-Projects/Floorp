@@ -4,7 +4,7 @@
 
 use api::BorderRadius;
 use api::units::*;
-use euclid::{Point2D, Rect, Size2D, TypedPoint2D, TypedRect, TypedSize2D, Vector2D};
+use euclid::{TypedPoint2D, TypedRect, TypedSize2D, Vector2D};
 use euclid::{TypedTransform2D, TypedTransform3D, TypedVector2D, TypedScale};
 use malloc_size_of::{MallocShallowSizeOf, MallocSizeOf, MallocSizeOfOps};
 use num_traits::Zero;
