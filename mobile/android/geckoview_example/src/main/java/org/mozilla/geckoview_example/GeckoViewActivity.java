@@ -5,7 +5,6 @@
 
 package org.mozilla.geckoview_example;
 
-import org.json.JSONObject;
 import org.mozilla.geckoview.AllowOrDeny;
 import org.mozilla.geckoview.BasicSelectionActionDelegate;
 import org.mozilla.geckoview.ContentBlocking;
@@ -533,11 +532,6 @@ public class GeckoViewActivity extends AppCompatActivity {
         @Override
         public void onFirstComposite(final GeckoSession session) {
             Log.d(LOGTAG, "onFirstComposite");
-        }
-
-        @Override
-        public void onWebAppManifest(final GeckoSession session, JSONObject manifest) {
-            Log.d(LOGTAG, "onWebAppManifest: " + manifest);
         }
     }
 
