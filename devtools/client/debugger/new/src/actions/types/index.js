@@ -4,7 +4,7 @@
 
 // @flow
 
-import type { Frame, Scope, Why, WorkerList, MainThread } from "../../types";
+import type { WorkerList, MainThread } from "../../types";
 import type { State } from "../../reducers/types";
 import type { MatchedLocations } from "../../reducers/file-search";
 import type { TreeNode } from "../../utils/sources-tree/types";
@@ -63,25 +63,6 @@ type UpdateTabAction = {|
   +isOriginal?: boolean,
   +sourceId?: string
 |};
-
-type ReplayAction =
-  | {|
-      +type: "TRAVEL_TO",
-      +data: {
-        paused: {
-          why: Why,
-          scopes: Scope[],
-          frames: Frame[],
-          selectedFrameId: string,
-          loadedObjects: Object
-        },
-        expressions?: Object[]
-      },
-      +position: number
-    |}
-  | {|
-      +type: "CLEAR_HISTORY"
-    |};
 
 type NavigateAction =
   | {| +type: "CONNECT", +mainThread: MainThread, +canRewind: boolean |}
@@ -176,5 +157,4 @@ export type Action =
   | FileTextSearchAction
   | ProjectTextSearchAction
   | DebugeeAction
-  | ReplayAction
   | SourceTreeAction;

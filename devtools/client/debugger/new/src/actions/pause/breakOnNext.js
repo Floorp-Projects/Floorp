@@ -4,8 +4,8 @@
 
 // @flow
 
-import type { ThunkArgs } from "../types";
 import { getCurrentThread } from "../../selectors";
+import type { ThunkArgs } from "../types";
 
 /**
  * Debugger breakOnNext command.
