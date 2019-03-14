@@ -2007,32 +2007,22 @@ VARCACHE_PREF(
 )
 
 // Block 3rd party fingerprinting resources.
+# define PREF_VALUE false
 VARCACHE_PREF(
   "privacy.trackingprotection.fingerprinting.enabled",
    privacy_trackingprotection_fingerprinting_enabled,
-  bool, false
+  bool, PREF_VALUE
 )
-
-// Annotate fingerprinting resources.
-VARCACHE_PREF(
-  "privacy.trackingprotection.fingerprinting.annotate.enabled",
-   privacy_trackingprotection_fingerprinting_annotate_enabled,
-  bool, false
-)
+#undef PREF_VALUE
 
 // Block 3rd party cryptomining resources.
+# define PREF_VALUE false
 VARCACHE_PREF(
   "privacy.trackingprotection.cryptomining.enabled",
    privacy_trackingprotection_cryptomining_enabled,
-  bool, false
+  bool, PREF_VALUE
 )
-
-// Annotate cryptomining resources.
-VARCACHE_PREF(
-  "privacy.trackingprotection.cryptomining.annotate.enabled",
-   privacy_trackingprotection_cryptomining_annotate_enabled,
-  bool, false
-)
+#undef PREF_VALUE
 
 // Lower the priority of network loads for resources on the tracking protection
 // list.  Note that this requires the

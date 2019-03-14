@@ -17,7 +17,7 @@ namespace net {
 
 namespace {
 
-#define FINGERPRINTING_FEATURE_NAME "fingerprinting-protection"
+#define FINGERPRINTING_FEATURE_NAME "fingerprinting"
 
 #define URLCLASSIFIER_FINGERPRINTING_BLACKLIST \
   "urlclassifier.features.fingerprinting.blacklistTables"
@@ -147,31 +147,38 @@ UrlClassifierFeatureFingerprintingProtection::ProcessChannel(
   NS_ENSURE_ARG_POINTER(aChannel);
   NS_ENSURE_ARG_POINTER(aShouldContinue);
 
-  bool isAllowListed = UrlClassifierCommon::IsAllowListed(
-      aChannel, AntiTrackingCommon::eFingerprinting);
+  bool isAllowListed =
+      IsAllowListed(aChannel, AntiTrackingCommon::eFingerprinting);
 
   // This is a blocking feature.
   *aShouldContinue = isAllowListed;
 
   if (isAllowListed) {
-    return NS_OK;
-  }
-
-  UrlClassifierCommon::SetBlockedContent(aChannel, NS_ERROR_FINGERPRINTING_URI,
-                                         aList, EmptyCString(), EmptyCString());
-
-  UC_LOG(
-      ("UrlClassifierFeatureFingerprintingProtection::ProcessChannel, "
-       "cancelling "
-       "channel[%p]",
-       aChannel));
-  nsCOMPtr<nsIHttpChannelInternal> httpChannel = do_QueryInterface(aChannel);
-
-  if (httpChannel) {
-    Unused << httpChannel->CancelByChannelClassifier(
-        NS_ERROR_FINGERPRINTING_URI);
+    // Even with fingerprinting blocking disabled, we still want to show the
+    // user that there are unblocked trackers on the site, so notify the UI that
+    // we loaded tracking content.  UI code can treat this notification
+    // differently depending on whether fingerprinting blocking is enabled or
+    // not.
+    UrlClassifierCommon::NotifyChannelClassifierProtectionDisabled(
+        aChannel, nsIWebProgressListener::STATE_LOADED_FINGERPRINTING_CONTENT);
   } else {
-    Unused << aChannel->Cancel(NS_ERROR_FINGERPRINTING_URI);
+    UrlClassifierCommon::SetBlockedContent(aChannel,
+                                           NS_ERROR_FINGERPRINTING_URI, aList,
+                                           EmptyCString(), EmptyCString());
+
+    UC_LOG(
+        ("UrlClassifierFeatureFingerprintingProtection::ProcessChannel, "
+         "cancelling "
+         "channel[%p]",
+         aChannel));
+    nsCOMPtr<nsIHttpChannelInternal> httpChannel = do_QueryInterface(aChannel);
+
+    if (httpChannel) {
+      Unused << httpChannel->CancelByChannelClassifier(
+          NS_ERROR_FINGERPRINTING_URI);
+    } else {
+      Unused << aChannel->Cancel(NS_ERROR_FINGERPRINTING_URI);
+    }
   }
 
   return NS_OK;

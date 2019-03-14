@@ -48,8 +48,7 @@ FileChannelParent::NotifyCookieBlocked(uint32_t aRejectedReason) {
 }
 
 NS_IMETHODIMP
-FileChannelParent::NotifyClassificationFlags(uint32_t aClassificationFlags,
-                                             bool aIsThirdParty) {
+FileChannelParent::NotifyTrackingResource(bool aIsThirdParty) {
   // Nothing to do.
   return NS_OK;
 }

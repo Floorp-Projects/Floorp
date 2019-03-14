@@ -713,41 +713,18 @@ nsViewSourceChannel::GetIsTrackingResource(bool *aIsTrackingResource) {
 }
 
 NS_IMETHODIMP
+nsViewSourceChannel::GetFlashPluginState(
+    nsIHttpChannel::FlashPluginState *aResult) {
+  return !mHttpChannel ? NS_ERROR_NULL_POINTER
+                       : mHttpChannel->GetFlashPluginState(aResult);
+}
+
+NS_IMETHODIMP
 nsViewSourceChannel::GetIsThirdPartyTrackingResource(
     bool *aIsTrackingResource) {
   return !mHttpChannel ? NS_ERROR_NULL_POINTER
                        : mHttpChannel->GetIsThirdPartyTrackingResource(
                              aIsTrackingResource);
-}
-
-NS_IMETHODIMP
-nsViewSourceChannel::GetClassificationFlags(uint32_t *aClassificationFlags) {
-  return !mHttpChannel
-             ? NS_ERROR_NULL_POINTER
-             : mHttpChannel->GetClassificationFlags(aClassificationFlags);
-}
-
-NS_IMETHODIMP
-nsViewSourceChannel::GetFirstPartyClassificationFlags(
-    uint32_t *aClassificationFlags) {
-  return !mHttpChannel ? NS_ERROR_NULL_POINTER
-                       : mHttpChannel->GetFirstPartyClassificationFlags(
-                             aClassificationFlags);
-}
-
-NS_IMETHODIMP
-nsViewSourceChannel::GetThirdPartyClassificationFlags(
-    uint32_t *aClassificationFlags) {
-  return !mHttpChannel ? NS_ERROR_NULL_POINTER
-                       : mHttpChannel->GetThirdPartyClassificationFlags(
-                             aClassificationFlags);
-}
-
-NS_IMETHODIMP
-nsViewSourceChannel::GetFlashPluginState(
-    nsIHttpChannel::FlashPluginState *aResult) {
-  return !mHttpChannel ? NS_ERROR_NULL_POINTER
-                       : mHttpChannel->GetFlashPluginState(aResult);
 }
 
 NS_IMETHODIMP

@@ -71,8 +71,7 @@ class HttpBackgroundChannelChild final : public PHttpBackgroundChannelChild {
 
   IPCResult RecvNotifyCookieBlocked(const uint32_t& aRejectedReason);
 
-  IPCResult RecvNotifyClassificationFlags(const uint32_t& aClassificationFlags,
-                                          const bool& aIsThirdParty);
+  IPCResult RecvNotifyTrackingResource(const bool& aIsThirdParty);
 
   IPCResult RecvNotifyFlashPluginStateChanged(
       const nsIHttpChannel::FlashPluginState& aState);

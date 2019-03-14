@@ -405,12 +405,11 @@ bool HttpBackgroundChannelParent::OnNotifyCookieBlocked(
   return SendNotifyCookieBlocked(aRejectedReason);
 }
 
-bool HttpBackgroundChannelParent::OnNotifyClassificationFlags(
-    uint32_t aClassificationFlags, bool aIsThirdParty) {
+bool HttpBackgroundChannelParent::OnNotifyTrackingResource(bool aIsThirdParty) {
   LOG(
-      ("HttpBackgroundChannelParent::OnNotifyClassificationFlags "
-       "classificationFlags=%" PRIu32 ", thirdparty=%d [this=%p]\n",
-       aClassificationFlags, static_cast<int>(aIsThirdParty), this));
+      ("HttpBackgroundChannelParent::OnNotifyTrackingResource thirdparty=%d "
+       "[this=%p]\n",
+       static_cast<int>(aIsThirdParty), this));
   AssertIsInMainProcess();
 
   if (NS_WARN_IF(!mIPCOpened)) {
@@ -420,10 +419,10 @@ bool HttpBackgroundChannelParent::OnNotifyClassificationFlags(
   if (!IsOnBackgroundThread()) {
     MutexAutoLock lock(mBgThreadMutex);
     nsresult rv = mBackgroundThread->Dispatch(
-        NewRunnableMethod<uint32_t, bool>(
-            "net::HttpBackgroundChannelParent::OnNotifyClassificationFlags",
-            this, &HttpBackgroundChannelParent::OnNotifyClassificationFlags,
-            aClassificationFlags, aIsThirdParty),
+        NewRunnableMethod<bool>(
+            "net::HttpBackgroundChannelParent::OnNotifyTrackingResource", this,
+            &HttpBackgroundChannelParent::OnNotifyTrackingResource,
+            aIsThirdParty),
         NS_DISPATCH_NORMAL);
 
     MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
@@ -431,7 +430,7 @@ bool HttpBackgroundChannelParent::OnNotifyClassificationFlags(
     return NS_SUCCEEDED(rv);
   }
 
-  return SendNotifyClassificationFlags(aClassificationFlags, aIsThirdParty);
+  return SendNotifyTrackingResource(aIsThirdParty);
 }
 
 bool HttpBackgroundChannelParent::OnNotifyFlashPluginStateChanged(
