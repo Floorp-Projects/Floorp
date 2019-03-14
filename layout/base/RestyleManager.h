@@ -205,8 +205,6 @@ class RestyleManager {
     MOZ_ASSERT(!mReentrantChanges);
   }
 
-  static nsCString RestyleHintToString(nsRestyleHint aHint);
-
 #ifdef DEBUG
   static nsCString ChangeHintToString(nsChangeHint aHint);
 
@@ -315,7 +313,7 @@ class RestyleManager {
   // affect :empty / :-moz-only-whitespace / :-moz-first-node / :-moz-last-node.
   void CharacterDataChanged(nsIContent*, const CharacterDataChangeInfo&);
 
-  void PostRestyleEvent(dom::Element*, nsRestyleHint,
+  void PostRestyleEvent(dom::Element*, RestyleHint,
                         nsChangeHint aMinChangeHint);
 
   /**
@@ -328,13 +326,12 @@ class RestyleManager {
    * traversal of the same restyling process.
    */
   void PostRestyleEventForAnimations(dom::Element*, PseudoStyleType,
-                                     nsRestyleHint);
+                                     RestyleHint);
 
   void NextRestyleIsForCSSRuleChanges() { mRestyleForCSSRuleChanges = true; }
 
-  void RebuildAllStyleData(nsChangeHint aExtraHint, nsRestyleHint aRestyleHint);
-  void PostRebuildAllStyleDataEvent(nsChangeHint aExtraHint,
-                                    nsRestyleHint aRestyleHint);
+  void RebuildAllStyleData(nsChangeHint aExtraHint, RestyleHint);
+  void PostRebuildAllStyleDataEvent(nsChangeHint aExtraHint, RestyleHint);
 
   void ProcessPendingRestyles();
   void ProcessAllPendingAttributeAndStateInvalidations();

@@ -531,9 +531,8 @@ class nsIPresShell : public nsStubDocumentObserver {
                                 mozilla::dom::HTMLSlotElement* aOldSlot,
                                 mozilla::dom::HTMLSlotElement* aNewSlot);
 
-  void PostRecreateFramesFor(mozilla::dom::Element* aElement);
-  void RestyleForAnimation(mozilla::dom::Element* aElement,
-                           nsRestyleHint aHint);
+  void PostRecreateFramesFor(mozilla::dom::Element*);
+  void RestyleForAnimation(mozilla::dom::Element*, mozilla::RestyleHint);
 
   // ShadowRoot has APIs that can change styles. This notifies the shell that
   // stlyes applicable in the shadow tree have potentially changed.
