@@ -98,8 +98,8 @@ nsIconChannel::OnStopRequest(nsIRequest* aRequest, nsresult aStatus) {
 
 // nsIStreamListener methods
 NS_IMETHODIMP
-nsIconChannel::OnDataAvailable(nsIRequest* aRequest, nsIInputStream* aStream,
-                               uint64_t aOffset, uint32_t aCount) {
+nsIconChannel::OnDataAvailable(nsIRequest* aRequest, nsIInputStream* aStream, uint64_t aOffset,
+                               uint32_t aCount) {
   if (mListener) {
     return mListener->OnDataAvailable(this, aStream, aOffset, aCount);
   }

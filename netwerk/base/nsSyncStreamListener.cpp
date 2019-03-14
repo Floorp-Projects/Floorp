@@ -60,9 +60,7 @@ nsSyncStreamListener::GetInputStream(nsIInputStream **result) {
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-nsSyncStreamListener::OnStartRequest(nsIRequest *request) {
-  return NS_OK;
-}
+nsSyncStreamListener::OnStartRequest(nsIRequest *request) { return NS_OK; }
 
 NS_IMETHODIMP
 nsSyncStreamListener::OnDataAvailable(nsIRequest *request,
@@ -87,8 +85,7 @@ nsSyncStreamListener::OnDataAvailable(nsIRequest *request,
 }
 
 NS_IMETHODIMP
-nsSyncStreamListener::OnStopRequest(nsIRequest *request,
-                                    nsresult status) {
+nsSyncStreamListener::OnStopRequest(nsIRequest *request, nsresult status) {
   mStatus = status;
   mKeepWaiting = false;  // unblock Read
   mDone = true;

@@ -3428,9 +3428,8 @@ void MacroAssembler::wasmInterruptCheck(Register tls,
   bind(&ok);
 }
 
-std::pair<CodeOffset, uint32_t>
-MacroAssembler::wasmReserveStackChecked(uint32_t amount,
-                                        wasm::BytecodeOffset trapOffset) {
+std::pair<CodeOffset, uint32_t> MacroAssembler::wasmReserveStackChecked(
+    uint32_t amount, wasm::BytecodeOffset trapOffset) {
   if (amount > MAX_UNCHECKED_LEAF_FRAME_SIZE) {
     // The frame is large.  Don't bump sp until after the stack limit check so
     // that the trap handler isn't called with a wild sp.
@@ -3454,7 +3453,7 @@ MacroAssembler::wasmReserveStackChecked(uint32_t amount,
   wasmTrap(wasm::Trap::StackOverflow, trapOffset);
   CodeOffset trapInsnOffset = CodeOffset(currentOffset());
   bind(&ok);
-  return std::pair<CodeOffset,uint32_t>(trapInsnOffset, amount);
+  return std::pair<CodeOffset, uint32_t>(trapInsnOffset, amount);
 }
 
 CodeOffset MacroAssembler::wasmCallImport(const wasm::CallSiteDesc& desc,

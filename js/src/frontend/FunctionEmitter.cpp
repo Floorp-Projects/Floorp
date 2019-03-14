@@ -491,7 +491,7 @@ bool FunctionScriptEmitter::prepareForBody() {
 
 bool FunctionScriptEmitter::emitAsyncFunctionRejectPrologue() {
   rejectTryCatch_.emplace(bce_, TryEmitter::Kind::TryCatch,
-                   TryEmitter::ControlKind::NonSyntactic);
+                          TryEmitter::ControlKind::NonSyntactic);
   return rejectTryCatch_->emitTry();
 }
 
@@ -508,7 +508,8 @@ bool FunctionScriptEmitter::emitAsyncFunctionRejectEpilogue() {
     //              [stack] EXC GEN
     return false;
   }
-  if (!bce_->emit2(JSOP_ASYNCRESOLVE, uint8_t(AsyncFunctionResolveKind::Reject))) {
+  if (!bce_->emit2(JSOP_ASYNCRESOLVE,
+                   uint8_t(AsyncFunctionResolveKind::Reject))) {
     //              [stack] PROMISE
     return false;
   }

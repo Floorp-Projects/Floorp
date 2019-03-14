@@ -1164,11 +1164,9 @@ class InterceptFailedOnStop : public nsIStreamListener {
     return mNext->OnStopRequest(aRequest, aStatusCode);
   }
 
-  NS_IMETHOD OnDataAvailable(nsIRequest* aRequest,
-                             nsIInputStream* aInputStream, uint64_t aOffset,
-                             uint32_t aCount) override {
-    return mNext->OnDataAvailable(aRequest, aInputStream, aOffset,
-                                  aCount);
+  NS_IMETHOD OnDataAvailable(nsIRequest* aRequest, nsIInputStream* aInputStream,
+                             uint64_t aOffset, uint32_t aCount) override {
+    return mNext->OnDataAvailable(aRequest, aInputStream, aOffset, aCount);
   }
 };
 

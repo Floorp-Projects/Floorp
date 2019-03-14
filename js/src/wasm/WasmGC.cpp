@@ -23,9 +23,10 @@
 namespace js {
 namespace wasm {
 
-bool GenerateStackmapEntriesForTrapExit(
-    const ValTypeVector& args, const MachineState& trapExitLayout,
-    const size_t trapExitLayoutNumWords,  ExitStubMapVector* extras) {
+bool GenerateStackmapEntriesForTrapExit(const ValTypeVector& args,
+                                        const MachineState& trapExitLayout,
+                                        const size_t trapExitLayoutNumWords,
+                                        ExitStubMapVector* extras) {
   MOZ_ASSERT(extras->empty());
 
   // If this doesn't hold, we can't distinguish saved and not-saved
@@ -43,7 +44,7 @@ bool GenerateStackmapEntriesForTrapExit(
     }
 
     size_t offsetFromTop =
-       reinterpret_cast<size_t>(trapExitLayout.address(i->gpr()));
+        reinterpret_cast<size_t>(trapExitLayout.address(i->gpr()));
 
     // If this doesn't hold, the associated register wasn't saved by
     // the trap exit stub.  Better to crash now than much later, in
@@ -66,8 +67,8 @@ void EmitWasmPreBarrierGuard(MacroAssembler& masm, Register tls,
                              Label* skipBarrier) {
   // If no incremental GC has started, we don't need the barrier.
   masm.loadPtr(
-    Address(tls, offsetof(TlsData, addressOfNeedsIncrementalBarrier)),
-    scratch);
+      Address(tls, offsetof(TlsData, addressOfNeedsIncrementalBarrier)),
+      scratch);
   masm.branchTest32(Assembler::Zero, Address(scratch, 0), Imm32(0x1),
                     skipBarrier);
 
@@ -93,7 +94,8 @@ void EmitWasmPreBarrierCall(MacroAssembler& masm, Register tls,
   masm.call(scratch);
 }
 
-void EmitWasmPostBarrierGuard(MacroAssembler& masm, const Maybe<Register>& object,
+void EmitWasmPostBarrierGuard(MacroAssembler& masm,
+                              const Maybe<Register>& object,
                               Register otherScratch, Register setValue,
                               Label* skipBarrier) {
   // If the pointer being stored is null, no barrier.

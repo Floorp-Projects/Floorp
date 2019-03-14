@@ -793,7 +793,8 @@ nsresult nsToolkitProfileService::GetProfileDescriptor(
   return NS_OK;
 }
 
-nsresult nsToolkitProfileService::CreateDefaultProfile(nsIToolkitProfile** aResult) {
+nsresult nsToolkitProfileService::CreateDefaultProfile(
+    nsIToolkitProfile** aResult) {
   // Create a new default profile
   nsAutoCString name;
   if (mUseDevEditionProfile) {
@@ -903,7 +904,8 @@ nsresult nsToolkitProfileService::SelectStartupProfile(
     GetProfileByDir(lf, localDir, getter_AddRefs(profile));
 
     if (profile && mIsFirstRun && mUseDedicatedProfile) {
-      if (profile == (mUseDevEditionProfile ? mDevEditionDefault : mNormalDefault)) {
+      if (profile ==
+          (mUseDevEditionProfile ? mDevEditionDefault : mNormalDefault)) {
         // This is the first run of a dedicated profile build where the selected
         // profile is the previous default so we should either make it the
         // default profile for this install or push the user to a new profile.
@@ -915,7 +917,8 @@ nsresult nsToolkitProfileService::SelectStartupProfile(
         } else {
           if (aIsResetting) {
             // We don't want to create a fresh profile when we're attempting a
-            // profile reset so just bail out here, the calling code will handle it.
+            // profile reset so just bail out here, the calling code will handle
+            // it.
             *aProfile = nullptr;
             return NS_OK;
           }

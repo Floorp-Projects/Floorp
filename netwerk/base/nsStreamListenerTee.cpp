@@ -23,8 +23,7 @@ nsStreamListenerTee::OnStartRequest(nsIRequest *request) {
 }
 
 NS_IMETHODIMP
-nsStreamListenerTee::OnStopRequest(nsIRequest *request,
-                                   nsresult status) {
+nsStreamListenerTee::OnStopRequest(nsIRequest *request, nsresult status) {
   NS_ENSURE_TRUE(mListener, NS_ERROR_NOT_INITIALIZED);
   // it is critical that we close out the input stream tee
   if (mInputTee) {
@@ -46,9 +45,8 @@ nsStreamListenerTee::OnStopRequest(nsIRequest *request,
 }
 
 NS_IMETHODIMP
-nsStreamListenerTee::OnDataAvailable(nsIRequest *request,
-                                     nsIInputStream *input, uint64_t offset,
-                                     uint32_t count) {
+nsStreamListenerTee::OnDataAvailable(nsIRequest *request, nsIInputStream *input,
+                                     uint64_t offset, uint32_t count) {
   NS_ENSURE_TRUE(mListener, NS_ERROR_NOT_INITIALIZED);
   NS_ENSURE_TRUE(mSink, NS_ERROR_NOT_INITIALIZED);
 
