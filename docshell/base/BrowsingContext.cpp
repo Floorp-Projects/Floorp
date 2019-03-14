@@ -231,23 +231,28 @@ void BrowsingContext::Detach(bool aFromIPC) {
     MOZ_DIAGNOSTIC_ASSERT(!mGroup || !mGroup->Toplevels().Contains(this));
     sCachedBrowsingContexts->remove(p);
   } else {
-    Children& children = mParent ? mParent->mChildren : mGroup->Toplevels();
+    Children* children = nullptr;
+    if (mParent) {
+      children = &mParent->mChildren;
+    } else if (mGroup) {
+      children = &mGroup->Toplevels();
+    }
 
-    // TODO(farre): This assert looks extremely fishy, I know, but
-    // what we're actually saying is this: if we're detaching, but our
-    // parent doesn't have any children, it is because we're being
-    // detached by the cycle collector destroying docshells out of
-    // order.
-    MOZ_DIAGNOSTIC_ASSERT(children.IsEmpty() || children.Contains(this));
+    if (children) {
+      // TODO(farre): This assert looks extremely fishy, I know, but
+      // what we're actually saying is this: if we're detaching, but our
+      // parent doesn't have any children, it is because we're being
+      // detached by the cycle collector destroying docshells out of
+      // order.
+      MOZ_DIAGNOSTIC_ASSERT(children->IsEmpty() || children->Contains(this));
 
-    children.RemoveElement(this);
+      children->RemoveElement(this);
+    }
   }
 
-  Group()->Unregister(this);
-
-  // By definition, we no longer are the current process for this
-  // BrowsingContext - clear our now-dead nsDocShell reference.
-  mDocShell = nullptr;
+  if (mGroup) {
+    mGroup->Unregister(this);
+  }
 
   // As our nsDocShell is going away, this should implicitly mark us as closed.
   // We directly set our member, rather than using a transaction as we're going
