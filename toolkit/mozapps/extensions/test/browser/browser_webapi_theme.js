@@ -21,16 +21,22 @@ add_task(async function test_theme_install() {
       Services.obs.removeObserver(observer, "lightweight-theme-styling-update");
     });
 
-    let promptPromise = acceptAppMenuNotificationWhenShown("addon-installed", "theme");
 
+    let prompt1 = waitAppMenuNotificationShown("addon-installed", "theme", false);
     let installPromise = ContentTask.spawn(browser, URL, async (url) => {
       let install = await content.navigator.mozAddonManager.createInstall({url});
       return install.install();
     });
+    await prompt1;
 
-    await promptPromise;
+    // Open a new window and test the app menu panel from there.  This verifies the
+    // incognito checkbox as well as finishing install in this case.
+    let newWin = await BrowserTestUtils.openNewBrowserWindow();
+    await waitAppMenuNotificationShown("addon-installed", "theme", true, newWin);
     await installPromise;
     ok(true, "Theme install completed");
+
+    await BrowserTestUtils.closeWindow(newWin);
 
     Assert.equal(updates.length, 1, "Got a single theme update");
     let parsed = JSON.parse(updates[0]);
