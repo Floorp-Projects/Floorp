@@ -16,7 +16,7 @@ import {
 import { PROMISE } from "../utils/middleware/promise";
 import {
   getSymbols,
-  getFirstVisibleBreakpointPosition,
+  getFirstBreakpointPosition,
   getBreakpointPositionsForSource,
   getSourceFromId
 } from "../../selectors";
@@ -105,7 +105,7 @@ export function addBreakpoint(
     const { sourceId, column } = location;
 
     if (column === undefined) {
-      position = getFirstVisibleBreakpointPosition(getState(), location);
+      position = getFirstBreakpointPosition(getState(), location);
     } else {
       const positions = getBreakpointPositionsForSource(getState(), sourceId);
       position = findPosition(positions, location);
