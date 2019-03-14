@@ -2068,7 +2068,8 @@ main {
   .ds-column-8 .ds-hero .cards {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    grid-column-gap: 24px; }
+    grid-column-gap: 24px;
+    grid-auto-rows: min-content; }
   .ds-column-9 .ds-hero,
   .ds-column-10 .ds-hero,
   .ds-column-11 .ds-hero,
@@ -2146,7 +2147,8 @@ main {
     .ds-column-12 .ds-hero .cards {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
-      grid-column-gap: 24px; }
+      grid-column-gap: 24px;
+      grid-auto-rows: min-content; }
       [lwt-newtab-brighttext]:not(.force-light-theme) .ds-column-9 .ds-hero .cards .ds-card:hover, [lwt-newtab-brighttext]:not(.force-light-theme)
       .ds-column-10 .ds-hero .cards .ds-card:hover, [lwt-newtab-brighttext]:not(.force-light-theme)
       .ds-column-11 .ds-hero .cards .ds-card:hover, [lwt-newtab-brighttext]:not(.force-light-theme)
@@ -2563,6 +2565,8 @@ main {
       color: #45A1FF; }
   .ds-card:active header {
     color: #003EAA; }
+    [lwt-newtab-brighttext]:not(.force-light-theme) .ds-card:active header {
+      color: #0A84FF; }
   .ds-card .img-wrapper {
     width: 100%; }
   .ds-card .img {
