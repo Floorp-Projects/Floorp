@@ -31,7 +31,6 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.ProgressBar;
 
-import org.json.JSONObject;
 import org.mozilla.gecko.ActivityHandlerHelper;
 import org.mozilla.gecko.BrowserApp;
 import org.mozilla.gecko.Clipboard;

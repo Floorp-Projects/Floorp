@@ -6,9 +6,9 @@ package org.mozilla.geckoview.test
 
 import android.app.assist.AssistStructure
 import android.graphics.SurfaceTexture
-import android.net.Uri
 import android.os.Build
 import org.mozilla.geckoview.AllowOrDeny
+import org.mozilla.geckoview.GeckoDisplay
 import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.GeckoSession.NavigationDelegate.LoadRequest
@@ -21,7 +21,6 @@ import org.mozilla.geckoview.test.util.Callbacks
 import org.mozilla.geckoview.test.util.UiThreadUtils
 
 import android.os.Looper
-import android.support.test.InstrumentationRegistry
 import android.support.test.filters.MediumTest
 import android.support.test.filters.SdkSuppress
 import android.support.test.runner.AndroidJUnit4
@@ -32,22 +31,15 @@ import android.view.View
 import android.view.ViewStructure
 import android.widget.EditText
 import org.hamcrest.Matchers.*
-import org.json.JSONObject
 import org.junit.Assume.assumeThat
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mozilla.geckoview.test.util.HttpBin
-
-import java.net.URI
 
 import kotlin.concurrent.thread
 
 @RunWith(AndroidJUnit4::class)
 @MediumTest
 class ContentDelegateTest : BaseSessionTest() {
-    companion object {
-        val TEST_ENDPOINT: String = "http://localhost:4243"
-    }
 
     @Test fun titleChange() {
         sessionRule.session.loadTestPath(TITLE_CHANGE_HTML_PATH)
@@ -587,45 +579,5 @@ class ContentDelegateTest : BaseSessionTest() {
         })
         display.surfaceDestroyed()
         mainSession.releaseDisplay(display)
-    }
-
-    @Test fun webAppManifest() {
-        val httpBin = HttpBin(InstrumentationRegistry.getTargetContext(), URI.create(TEST_ENDPOINT))
-
-        try {
-            httpBin.start()
-
-            mainSession.loadUri("$TEST_ENDPOINT$HELLO_HTML_PATH")
-            mainSession.waitUntilCalled(object : Callbacks.All {
-
-                @AssertCalled(count = 1)
-                override fun onPageStop(session: GeckoSession, success: Boolean) {
-                    assertThat("Page load should succeed", success, equalTo(true))
-                }
-
-                @AssertCalled(count = 1)
-                override fun onWebAppManifest(session: GeckoSession, manifest: JSONObject) {
-                    // These values come from the manifest at assets/www/manifest.webmanifest
-                    assertThat("name should match", manifest.getString("name"), equalTo("App"))
-                    assertThat("short_name should match", manifest.getString("short_name"), equalTo("app"))
-                    assertThat("display should match", manifest.getString("display"), equalTo("standalone"))
-
-                    // The color here is "cadetblue" converted to hex.
-                    assertThat("theme_color should match", manifest.getString("theme_color"), equalTo("#5f9ea0"))
-                    assertThat("background_color should match", manifest.getString("background_color"), equalTo("#c0feee"))
-                    assertThat("start_url should match", manifest.getString("start_url"), equalTo("$TEST_ENDPOINT/assets/www/start/index.html"))
-
-                    val icon = manifest.getJSONArray("icons").getJSONObject(0);
-
-                    val iconSrc = Uri.parse(icon.getString("src"))
-                    assertThat("icon should have a valid src", iconSrc, notNullValue())
-                    assertThat("icon src should be absolute", iconSrc.isAbsolute, equalTo(true))
-                    assertThat("icon should have sizes", icon.getString("sizes"),  not(isEmptyOrNullString()))
-                    assertThat("icon type should match", icon.getString("type"), equalTo("image/gif"))
-                }
-            })
-        } finally {
-            httpBin.stop()
-        }
     }
 }

@@ -8,7 +8,6 @@ import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
-import android.support.test.InstrumentationRegistry
 
 import android.support.test.filters.MediumTest
 import android.support.test.filters.SdkSuppress
@@ -17,6 +16,10 @@ import android.support.test.runner.AndroidJUnit4
 import java.math.BigInteger
 
 import java.net.URI
+
+import java.nio.ByteBuffer
+import java.nio.CharBuffer
+import java.nio.charset.Charset
 
 import java.security.MessageDigest
 
@@ -40,7 +43,6 @@ import org.mozilla.geckoview.test.util.Environment
 import org.mozilla.geckoview.test.util.HttpBin
 import org.mozilla.geckoview.test.util.RuntimeCreator
 import java.net.UnknownHostException
-import java.nio.ByteBuffer
 
 @MediumTest
 @RunWith(AndroidJUnit4::class)
@@ -64,7 +66,7 @@ class WebExecutorTest {
         val latch = CountDownLatch(1)
         Handler(Looper.getMainLooper()).post {
             executor = GeckoWebExecutor(RuntimeCreator.getRuntime())
-            server = HttpBin(InstrumentationRegistry.getTargetContext(), URI.create(TEST_ENDPOINT))
+            server = HttpBin(URI.create(TEST_ENDPOINT))
             server.start()
             latch.countDown()
         }
@@ -85,18 +87,23 @@ class WebExecutorTest {
         return executor.fetch(request, flags).poll(env.defaultTimeoutMillis)!!
     }
 
-    fun WebResponse.getBodyBytes(): ByteBuffer {
-        return ByteBuffer.wrap(byteArray().poll()!!);
+    fun String.toDirectByteBuffer(): ByteBuffer {
+        val chars = CharBuffer.wrap(this)
+        val buffer = ByteBuffer.allocateDirect(this.length)
+        Charset.forName("UTF-8").newEncoder().encode(chars, buffer, true)
+
+        return buffer
     }
 
     fun WebResponse.getJSONBody(): JSONObject {
-        return json().poll()!!
+        val bytes = ByteBuffer.wrap(body!!.readBytes())
+        return JSONObject(Charset.forName("UTF-8").decode(bytes).toString())
     }
 
     @Test
     fun smoke() {
         val uri = "$TEST_ENDPOINT/anything"
-        val requestBody = JSONObject("{ \"foo\": 42 }")
+        val bodyString = "This is the POST data"
         val referrer = "http://foo/bar"
 
         val request = WebRequest.Builder(uri)
@@ -107,7 +114,7 @@ class WebExecutorTest {
                 .addHeader("Header2", "Value2")
                 .referrer(referrer)
                 .header("Content-Type", "text/plain")
-                .body(requestBody)
+                .body(bodyString.toDirectByteBuffer())
                 .build()
 
         val response = fetch(request)
@@ -123,14 +130,7 @@ class WebExecutorTest {
         assertThat("Headers should match", body.getJSONObject("headers").getString("Header2"), equalTo("Value1, Value2"))
         assertThat("Headers should match", body.getJSONObject("headers").getString("Content-Type"), equalTo("text/plain"))
         assertThat("Referrer should match", body.getJSONObject("headers").getString("Referer"), equalTo(referrer))
-        assertThat("Data should match", body.getString("data"), equalTo(requestBody.toString()));
-    }
-
-    @Test
-    fun testFetchAsset() {
-        val response = fetch(WebRequest("$TEST_ENDPOINT/assets/www/hello.html"))
-        assertThat("Status should match", response.statusCode, equalTo(200))
-        assertThat("Body should have bytes", response.getBodyBytes().remaining(), greaterThan(0))
+        assertThat("Data should match", body.getString("data"), equalTo(bodyString));
     }
 
     @Test

@@ -21,7 +21,6 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Toast;
 
-import org.json.JSONObject;
 import org.mozilla.gecko.ActivityHandlerHelper;
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.BrowserApp;

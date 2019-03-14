@@ -6,8 +6,6 @@
 
 package org.mozilla.geckoview;
 
-import org.json.JSONObject;
-
 import org.mozilla.gecko.annotation.WrapForJNI;
 
 import android.support.annotation.AnyThread;
@@ -19,7 +17,6 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
 import java.nio.ByteBuffer;
-import java.nio.charset.Charset;
 
 /**
  * WebRequest represents an HTTP[S] request. The typical pattern is to create instances of this
@@ -169,42 +166,6 @@ public class WebRequest extends WebMessage {
                 throw new IllegalArgumentException("body must be directly allocated");
             }
             mBody = buffer;
-            return this;
-        }
-
-        /**
-         * Set the body.
-         *
-         * @param bytes A non-null byte array.
-         * @return This Builder instance.
-         */
-        public @NonNull Builder body(final @NonNull byte[] bytes) {
-            final ByteBuffer buffer = ByteBuffer.allocateDirect(bytes.length);
-            buffer.put(bytes);
-
-            body(buffer);
-            return this;
-        }
-
-        /**
-         * Set the body.
-         *
-         * @param bodyString A non-null {@link String}.
-         * @return This Builder instance.
-         */
-        public @NonNull Builder body(final @NonNull String bodyString) {
-            body(bodyString.getBytes(Charset.forName("UTF-8")));
-            return this;
-        }
-
-        /**
-         * Set the body.
-         *
-         * @param object A non-null {@link JSONObject}.
-         * @return This Builder instance.
-         */
-        public @NonNull Builder body(final @NonNull JSONObject object) {
-            body(object.toString());
             return this;
         }
 
