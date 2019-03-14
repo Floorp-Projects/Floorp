@@ -5905,7 +5905,7 @@ mozilla::ipc::IPCResult ContentParent::RecvCommitBrowsingContextTransaction(
     }
   }
 
-  aTransaction.Apply(aContext);
+  aTransaction.Apply(aContext, this);
 
   return IPC_OK();
 }

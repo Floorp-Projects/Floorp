@@ -429,7 +429,7 @@ nsresult FetchDriver::HttpFetch(
     nsILoadInfo::CrossOriginPolicy corsCredentials =
         nsILoadInfo::CROSS_ORIGIN_POLICY_NULL;
     if (mDocument && mDocument->GetBrowsingContext()) {
-      corsCredentials = mDocument->GetBrowsingContext()->CrossOriginPolicy();
+      corsCredentials = mDocument->GetBrowsingContext()->GetCrossOriginPolicy();
     }  // TODO Bug 1532287: else use mClientInfo
 
     if (mRequest->Mode() == RequestMode::No_cors &&

@@ -7367,7 +7367,7 @@ nsresult nsHttpChannel::ProcessCrossOriginHeader() {
     return NS_OK;
   }
 
-  nsILoadInfo::CrossOriginPolicy documentPolicy = ctx->CrossOriginPolicy();
+  nsILoadInfo::CrossOriginPolicy documentPolicy = ctx->GetCrossOriginPolicy();
   nsILoadInfo::CrossOriginPolicy resultPolicy =
       nsILoadInfo::CROSS_ORIGIN_POLICY_NULL;
   rv = GetResponseCrossOriginPolicy(&resultPolicy);
