@@ -8,6 +8,7 @@
 
 #include "mozilla/dom/BrowsingContextGroup.h"
 #include "mozilla/dom/WindowGlobalParent.h"
+#include "mozilla/dom/ContentProcessManager.h"
 
 namespace mozilla {
 namespace dom {
@@ -44,10 +45,20 @@ CanonicalBrowsingContext* CanonicalBrowsingContext::Cast(
   return static_cast<CanonicalBrowsingContext*>(aContext);
 }
 
-/* static */ const CanonicalBrowsingContext* CanonicalBrowsingContext::Cast(
+/* static */
+const CanonicalBrowsingContext* CanonicalBrowsingContext::Cast(
     const BrowsingContext* aContext) {
   MOZ_RELEASE_ASSERT(XRE_IsParentProcess());
   return static_cast<const CanonicalBrowsingContext*>(aContext);
+}
+
+ContentParent* CanonicalBrowsingContext::GetContentParent() const {
+  if (mProcessId == 0) {
+    return nullptr;
+  }
+
+  ContentProcessManager* cpm = ContentProcessManager::GetSingleton();
+  return cpm->GetContentProcessById(ContentParentId(mProcessId));
 }
 
 void CanonicalBrowsingContext::GetWindowGlobals(
