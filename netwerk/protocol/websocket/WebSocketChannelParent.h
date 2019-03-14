@@ -45,7 +45,7 @@ class WebSocketChannelParent : public PWebSocketParent,
       const bool& aClientSetPingInterval, const uint32_t& aPingTimeout,
       const bool& aClientSetPingTimeout,
       const Maybe<LoadInfoArgs>& aLoadInfoArgs,
-      const OptionalTransportProvider& aTransportProvider,
+      const Maybe<PTransportProviderParent*>& aTransportProvider,
       const nsCString& aNegotiatedExtensions);
   mozilla::ipc::IPCResult RecvClose(const uint16_t& code,
                                     const nsCString& reason);

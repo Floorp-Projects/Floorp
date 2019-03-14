@@ -589,18 +589,8 @@ pub(crate) mod desc {
         ],
         instance_attributes: &[
             VertexAttribute {
-                name: "aClipRenderTaskAddress",
-                count: 1,
-                kind: VertexAttributeKind::I32,
-            },
-            VertexAttribute {
-                name: "aClipTransformId",
-                count: 1,
-                kind: VertexAttributeKind::I32,
-            },
-            VertexAttribute {
-                name: "aPrimTransformId",
-                count: 1,
+                name: "aTransformIds",
+                count: 2,
                 kind: VertexAttributeKind::I32,
             },
             VertexAttribute {
@@ -627,7 +617,17 @@ pub(crate) mod desc {
                 name: "aClipSnapOffsets",
                 count: 4,
                 kind: VertexAttributeKind::F32,
-            }
+            },
+            VertexAttribute {
+                name: "aClipOrigins",
+                count: 4,
+                kind: VertexAttributeKind::F32,
+            },
+            VertexAttribute {
+                name: "aDevicePixelScale",
+                count: 1,
+                kind: VertexAttributeKind::F32,
+            },
         ],
     };
 

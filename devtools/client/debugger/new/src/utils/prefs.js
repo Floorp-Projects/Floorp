@@ -5,11 +5,11 @@
 // @flow
 
 import { PrefsHelper } from "devtools-modules";
-import { isDevelopment, isTesting } from "devtools-environment";
+import { isDevelopment } from "devtools-environment";
 import Services from "devtools-services";
 import { asyncStoreHelper } from "./asyncStoreHelper";
 
-const prefsSchemaVersion = "1.0.8";
+const prefsSchemaVersion = "1.0.9";
 const pref = Services.pref;
 
 if (isDevelopment()) {
@@ -132,10 +132,12 @@ export const asyncStore = asyncStoreHelper("debugger", {
   eventListenerBreakpoints: ["event-listener-breakpoints", []]
 });
 
-if (!isTesting && prefs.debuggerPrefsSchemaVersion !== prefsSchemaVersion) {
-  // clear pending Breakpoints
-  asyncStore.pendingBreakpoints = {};
-  asyncStore.tabs = [];
-  asyncStore.xhrBreakpoints = [];
-  prefs.debuggerPrefsSchemaVersion = prefsSchemaVersion;
+export function verifyPrefSchema() {
+  if (prefs.debuggerPrefsSchemaVersion !== prefsSchemaVersion) {
+    // clear pending Breakpoints
+    asyncStore.pendingBreakpoints = {};
+    asyncStore.tabs = [];
+    asyncStore.xhrBreakpoints = [];
+    prefs.debuggerPrefsSchemaVersion = prefsSchemaVersion;
+  }
 }

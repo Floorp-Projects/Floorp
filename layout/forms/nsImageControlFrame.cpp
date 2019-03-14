@@ -49,8 +49,8 @@ class nsImageControlFrame final : public nsImageFrame,
   }
 #endif
 
-  virtual nsresult GetCursor(const nsPoint& aPoint,
-                             nsIFrame::Cursor& aCursor) override;
+  Maybe<Cursor> GetCursor(const nsPoint&) override;
+
   // nsIFormContromFrame
   virtual void SetFocus(bool aOn, bool aRepaint) override;
   virtual nsresult SetFormProperty(nsAtom* aName,
@@ -152,17 +152,12 @@ nsresult nsImageControlFrame::HandleEvent(nsPresContext* aPresContext,
 
 void nsImageControlFrame::SetFocus(bool aOn, bool aRepaint) {}
 
-nsresult nsImageControlFrame::GetCursor(const nsPoint& aPoint,
-                                        nsIFrame::Cursor& aCursor) {
-  // Use style defined cursor if one is provided, otherwise when
-  // the cursor style is "auto" we use the pointer cursor.
-  FillCursorInformationFromStyle(StyleUI(), aCursor);
-
-  if (StyleCursorKind::Auto == aCursor.mCursor) {
-    aCursor.mCursor = StyleCursorKind::Pointer;
+Maybe<nsIFrame::Cursor> nsImageControlFrame::GetCursor(const nsPoint&) {
+  StyleCursorKind kind = StyleUI()->mCursor;
+  if (kind == StyleCursorKind::Auto) {
+    kind = StyleCursorKind::Pointer;
   }
-
-  return NS_OK;
+  return Some(Cursor{kind, AllowCustomCursorImage::Yes});
 }
 
 nsresult nsImageControlFrame::SetFormProperty(nsAtom* aName,

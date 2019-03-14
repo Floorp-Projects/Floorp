@@ -7,7 +7,7 @@
 import * as firefox from "./firefox";
 import * as chrome from "./chrome";
 
-import { prefs, asyncStore } from "../utils/prefs";
+import { prefs, asyncStore, verifyPrefSchema } from "../utils/prefs";
 import { setupHelper } from "../utils/dbg";
 
 import {
@@ -76,6 +76,8 @@ export async function onConnect(
   if (!connection) {
     return;
   }
+
+  verifyPrefSchema();
 
   const client = getClient(connection);
   const commands = client.clientCommands;
