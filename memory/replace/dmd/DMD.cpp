@@ -41,6 +41,7 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/StackWalk.h"
+#include "mozilla/ThreadLocal.h"
 
 // CodeAddressService is defined entirely in the header, so this does not make
 // DMD depend on XPCOM's object file.
@@ -435,31 +436,8 @@ class AutoUnlockState {
 };
 
 //---------------------------------------------------------------------------
-// Thread-local storage and blocking of intercepts
+// Per-thread blocking of intercepts
 //---------------------------------------------------------------------------
-
-#ifdef XP_WIN
-
-#  define DMD_TLS_INDEX_TYPE DWORD
-#  define DMD_CREATE_TLS_INDEX(i_) \
-    do {                           \
-      (i_) = TlsAlloc();           \
-    } while (0)
-#  define DMD_DESTROY_TLS_INDEX(i_) TlsFree((i_))
-#  define DMD_GET_TLS_DATA(i_) TlsGetValue((i_))
-#  define DMD_SET_TLS_DATA(i_, v_) TlsSetValue((i_), (v_))
-
-#else
-
-#  define DMD_TLS_INDEX_TYPE pthread_key_t
-#  define DMD_CREATE_TLS_INDEX(i_) pthread_key_create(&(i_), nullptr)
-#  define DMD_DESTROY_TLS_INDEX(i_) pthread_key_delete((i_))
-#  define DMD_GET_TLS_DATA(i_) pthread_getspecific((i_))
-#  define DMD_SET_TLS_DATA(i_, v_) pthread_setspecific((i_), (v_))
-
-#endif
-
-static DMD_TLS_INDEX_TYPE gTlsIndex;
 
 class Thread {
   // Required for allocation via InfallibleAllocPolicy::new_.
@@ -475,8 +453,26 @@ class Thread {
 
   DISALLOW_COPY_AND_ASSIGN(Thread);
 
+  static MOZ_THREAD_LOCAL(Thread*) tlsThread;
+
  public:
-  static Thread* Fetch();
+  static void Init() {
+    if (!tlsThread.init()) {
+      MOZ_CRASH();
+    }
+  }
+
+  static Thread* Fetch() {
+    Thread* t = tlsThread.get();
+    if (MOZ_UNLIKELY(!t)) {
+      // This memory is never freed, even if the thread dies. It's a leak, but
+      // only a tiny one.
+      t = InfallibleAllocPolicy::new_<Thread>();
+      tlsThread.set(t);
+    }
+
+    return t;
+  }
 
   bool BlockIntercepts() {
     MOZ_ASSERT(!mBlockIntercepts);
@@ -491,19 +487,7 @@ class Thread {
   bool InterceptsAreBlocked() const { return mBlockIntercepts; }
 };
 
-/* static */
-Thread* Thread::Fetch() {
-  Thread* t = static_cast<Thread*>(DMD_GET_TLS_DATA(gTlsIndex));
-
-  if (MOZ_UNLIKELY(!t)) {
-    // This memory is never freed, even if the thread dies.  It's a leak, but
-    // only a tiny one.
-    t = InfallibleAllocPolicy::new_<Thread>();
-    DMD_SET_TLS_DATA(gTlsIndex, t);
-  }
-
-  return t;
-}
+MOZ_THREAD_LOCAL(Thread*) Thread::tlsThread;
 
 // An object of this class must be created (on the stack) before running any
 // code that might allocate.
@@ -1410,7 +1394,7 @@ static bool Init(malloc_table_t* aMallocTable) {
       sizeof(FastBernoulliTrial));
   ResetBernoulli();
 
-  DMD_CREATE_TLS_INDEX(gTlsIndex);
+  Thread::Init();
 
   {
     AutoLockState lock;
