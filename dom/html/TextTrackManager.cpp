@@ -21,7 +21,7 @@
 #include "nsVariant.h"
 #include "nsVideoFrame.h"
 
-static mozilla::LazyLogModule gTextTrackLog("TextTrackManager");
+static mozilla::LazyLogModule gTextTrackLog("WebVTT");
 #define WEBVTT_LOG(...) MOZ_LOG(gTextTrackLog, LogLevel::Debug, (__VA_ARGS__))
 #define WEBVTT_LOGV(...) \
   MOZ_LOG(gTextTrackLog, LogLevel::Verbose, (__VA_ARGS__))
