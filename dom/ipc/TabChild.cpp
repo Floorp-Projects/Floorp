@@ -635,10 +635,12 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(TabChild)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(TabChild, TabChildBase)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mWebNav)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mBrowsingContext)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(TabChild, TabChildBase)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mWebNav)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mBrowsingContext)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(TabChild, TabChildBase)
@@ -924,6 +926,10 @@ TabChild::ProvideWindow(mozIDOMWindowProxy* aParent, uint32_t aChromeFlags,
 }
 
 void TabChild::DestroyWindow() {
+  if (mBrowsingContext) {
+    mBrowsingContext = nullptr;
+  }
+
   if (mCoalescedMouseEventFlusher) {
     mCoalescedMouseEventFlusher->RemoveObserver();
     mCoalescedMouseEventFlusher = nullptr;
