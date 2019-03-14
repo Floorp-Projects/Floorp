@@ -135,6 +135,35 @@ mozilla::ipc::IPCResult BrowserBridgeChild::RecvRequestFocus(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult BrowserBridgeChild::RecvMoveFocus(
+    const bool& aForward, const bool& aForDocumentNavigation) {
+  // Adapted from TabParent
+  nsCOMPtr<nsIFocusManager> fm = nsFocusManager::GetFocusManager();
+  if (!fm) {
+    return IPC_OK();
+  }
+
+  RefPtr<Element> owner = mFrameLoader->GetOwnerContent();
+
+  if (!owner || !owner->OwnerDoc()) {
+    return IPC_OK();
+  }
+
+  RefPtr<Element> dummy;
+
+  uint32_t type =
+      aForward
+          ? (aForDocumentNavigation
+                 ? static_cast<uint32_t>(nsIFocusManager::MOVEFOCUS_FORWARDDOC)
+                 : static_cast<uint32_t>(nsIFocusManager::MOVEFOCUS_FORWARD))
+          : (aForDocumentNavigation
+                 ? static_cast<uint32_t>(nsIFocusManager::MOVEFOCUS_BACKWARDDOC)
+                 : static_cast<uint32_t>(nsIFocusManager::MOVEFOCUS_BACKWARD));
+  fm->MoveFocus(nullptr, owner, type, nsIFocusManager::FLAG_BYKEY,
+                getter_AddRefs(dummy));
+  return IPC_OK();
+}
+
 void BrowserBridgeChild::ActorDestroy(ActorDestroyReason aWhy) {
   mIPCOpen = false;
 }

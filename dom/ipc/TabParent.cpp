@@ -482,7 +482,14 @@ void TabParent::ActorDestroy(ActorDestroyReason why) {
 
 mozilla::ipc::IPCResult TabParent::RecvMoveFocus(
     const bool& aForward, const bool& aForDocumentNavigation) {
-  nsCOMPtr<nsIFocusManager> fm = do_GetService(FOCUSMANAGER_CONTRACTID);
+  BrowserBridgeParent* bridgeParent = GetBrowserBridgeParent();
+  if (bridgeParent) {
+    mozilla::Unused << bridgeParent->SendMoveFocus(aForward,
+                                                   aForDocumentNavigation);
+    return IPC_OK();
+  }
+
+  nsCOMPtr<nsIFocusManager> fm = nsFocusManager::GetFocusManager();
   if (fm) {
     RefPtr<Element> dummy;
 
