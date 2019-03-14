@@ -103,6 +103,7 @@ class nsPNGDecoder : public Decoder {
   uint8_t mPass;
   bool mFrameIsHidden;
   bool mDisablePremultipliedAlpha;
+  bool mGotInfoCallback;
 
   struct AnimFrameInfo {
     AnimFrameInfo();

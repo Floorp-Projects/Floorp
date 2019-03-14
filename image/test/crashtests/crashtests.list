@@ -58,3 +58,5 @@ load truncated-second-frame.png # Bug 863975
 
 # Bug 1509998 - Ensure that we handle empty frame rects in animated images.
 load 1509998.gif
+
+load 1526717-1.html
