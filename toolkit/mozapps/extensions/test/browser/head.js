@@ -1399,9 +1399,11 @@ function promisePopupNotificationShown(name = "addon-webext-permissions") {
   });
 }
 
-function acceptAppMenuNotificationWhenShown(id, type) {
+function waitAppMenuNotificationShown(id, type, accept = false, win = window) {
   const {AppMenuNotifications} = ChromeUtils.import("resource://gre/modules/AppMenuNotifications.jsm");
   return new Promise(resolve => {
+    let {document, PanelUI} = win;
+
     function popupshown() {
       let notification = AppMenuNotifications.activeNotification;
       if (!notification) { return; }
@@ -1417,14 +1419,26 @@ function acceptAppMenuNotificationWhenShown(id, type) {
         let checkbox = document.getElementById("addon-incognito-checkbox");
         is(checkbox.hidden, hidden, "checkbox visibility is correct");
       }
-      let popupnotificationID = PanelUI._getPopupId(notification);
-      let popupnotification = document.getElementById(popupnotificationID);
-      popupnotification.button.click();
+      if (accept) {
+        let popupnotificationID = PanelUI._getPopupId(notification);
+        let popupnotification = document.getElementById(popupnotificationID);
+        popupnotification.button.click();
+      }
 
       resolve();
     }
+    // If it's already open just run the test.
+    let notification = AppMenuNotifications.activeNotification;
+    if (notification && PanelUI.isNotificationPanelOpen) {
+      popupshown();
+      return;
+    }
     PanelUI.notificationPanel.addEventListener("popupshown", popupshown);
   });
+}
+
+function acceptAppMenuNotificationWhenShown(id, type) {
+  return waitAppMenuNotificationShown(id, type, true);
 }
 
 function assertTelemetryMatches(events, {filterMethods} = {}) {
