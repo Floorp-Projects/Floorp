@@ -48,6 +48,8 @@ class BrowserBridgeParent : public PBrowserBridgeParent {
 
   mozilla::ipc::IPCResult RecvActivate();
 
+  mozilla::ipc::IPCResult RecvDeactivate();
+
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
  private:

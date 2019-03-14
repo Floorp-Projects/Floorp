@@ -38,6 +38,8 @@ class BrowserBridgeChild : public PBrowserBridgeChild {
 
   void Activate();
 
+  void Deactivate();
+
   static BrowserBridgeChild* GetFrom(nsFrameLoader* aFrameLoader);
 
   static BrowserBridgeChild* GetFrom(nsIContent* aContent);
