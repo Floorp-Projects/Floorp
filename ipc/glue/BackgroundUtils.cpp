@@ -733,9 +733,10 @@ void LoadInfoToParentLoadInfoForwarder(
 
   nsCOMPtr<nsICookieSettings> cookieSettings;
   nsresult rv = aLoadInfo->GetCookieSettings(getter_AddRefs(cookieSettings));
-  if (NS_SUCCEEDED(rv) && cookieSettings) {
+  CookieSettings* cs = static_cast<CookieSettings*>(cookieSettings.get());
+  if (NS_SUCCEEDED(rv) && cookieSettings && cs->HasBeenChanged()) {
     CookieSettingsArgs args;
-    static_cast<CookieSettings*>(cookieSettings.get())->Serialize(args);
+    cs->Serialize(args);
     cookieSettingsArgs = Some(args);
   }
 
