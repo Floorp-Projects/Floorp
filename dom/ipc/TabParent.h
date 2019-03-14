@@ -320,13 +320,14 @@ class TabParent final : public PBrowserParent,
       PWindowGlobalParent* aActor, const WindowGlobalInit& aInit) override;
 
   PBrowserBridgeParent* AllocPBrowserBridgeParent(
-      const nsString& aPresentationURL, const nsString& aRemoteType);
+      const nsString& aPresentationURL, const nsString& aRemoteType,
+      BrowsingContext* aBrowsingContext);
 
   bool DeallocPBrowserBridgeParent(PBrowserBridgeParent* aActor);
 
   virtual mozilla::ipc::IPCResult RecvPBrowserBridgeConstructor(
       PBrowserBridgeParent* aActor, const nsString& aPresentationURL,
-      const nsString& aRemoteType) override;
+      const nsString& aRemoteType, BrowsingContext* aBrowsingContext) override;
 
   void LoadURL(nsIURI* aURI);
 

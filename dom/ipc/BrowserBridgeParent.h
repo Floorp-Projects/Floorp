@@ -20,9 +20,14 @@ class BrowserBridgeParent : public PBrowserBridgeParent {
   BrowserBridgeParent();
 
   // Initialize this actor after performing startup.
-  nsresult Init(const nsString& aPresentationURL, const nsString& aRemoteType);
+  nsresult Init(const nsString& aPresentationURL, const nsString& aRemoteType,
+                CanonicalBrowsingContext* aBrowsingContext);
 
   TabParent* GetTabParent() { return mTabParent; }
+
+  CanonicalBrowsingContext* GetBrowsingContext() {
+    return mTabParent->GetBrowsingContext();
+  }
 
   // Get our manager actor.
   TabParent* Manager() {
