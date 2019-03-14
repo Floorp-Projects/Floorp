@@ -841,8 +841,10 @@ nsToolkitProfileService::SelectStartupProfile(
   }
   argv[argc] = nullptr;
 
+  bool wasDefault;
   nsresult rv = SelectStartupProfile(&argc, argv.get(), aIsResetting, aRootDir,
-                                     aLocalDir, aProfile, aDidCreate);
+                                     aLocalDir, aProfile, aDidCreate,
+                                     &wasDefault);
 
   // Since we were called outside of the normal startup path complete any
   // startup tasks.
@@ -874,13 +876,15 @@ nsToolkitProfileService::SelectStartupProfile(
  */
 nsresult nsToolkitProfileService::SelectStartupProfile(
     int* aArgc, char* aArgv[], bool aIsResetting, nsIFile** aRootDir,
-    nsIFile** aLocalDir, nsIToolkitProfile** aProfile, bool* aDidCreate) {
+    nsIFile** aLocalDir, nsIToolkitProfile** aProfile, bool* aDidCreate,
+    bool* aWasDefaultSelection) {
   if (mStartupProfileSelected) {
     return NS_ERROR_ALREADY_INITIALIZED;
   }
 
   mStartupProfileSelected = true;
   *aDidCreate = false;
+  *aWasDefaultSelection = false;
 
   nsresult rv;
   const char* arg;
@@ -1092,11 +1096,6 @@ nsresult nsToolkitProfileService::SelectStartupProfile(
     return NS_ERROR_SHOW_PROFILE_MANAGER;
   }
 
-  // We've been told not to use the selected profile automatically.
-  if (!mStartWithLast) {
-    return NS_ERROR_SHOW_PROFILE_MANAGER;
-  }
-
   // If this is a first run then create a new profile.
   if (mIsFirstRun) {
     if (aIsResetting) {
@@ -1104,6 +1103,12 @@ nsresult nsToolkitProfileService::SelectStartupProfile(
       // profile reset so just bail out here, the calling code will handle it.
       *aProfile = nullptr;
       return NS_OK;
+    }
+
+    // If we're configured to always show the profile manager then don't create
+    // a new profile to use.
+    if (!mStartWithLast) {
+      return NS_ERROR_SHOW_PROFILE_MANAGER;
     }
 
     if (mUseDedicatedProfile) {
@@ -1190,6 +1195,8 @@ nsresult nsToolkitProfileService::SelectStartupProfile(
     return NS_ERROR_SHOW_PROFILE_MANAGER;
   }
 
+  // Let the caller know that the profile was selected by default.
+  *aWasDefaultSelection = true;
   mStartupReason = NS_LITERAL_STRING("default");
 
   // Use the selected profile.
