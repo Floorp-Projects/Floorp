@@ -13,6 +13,7 @@
 #include "nsStringFwd.h"
 #include "mozilla/Logging.h"
 #include "mozilla/BasePrincipal.h"
+#include "mozilla/AlreadyAddRefed.h"
 #include "ARefBase.h"
 
 //-----------------------------------------------------------------------------
@@ -70,7 +71,7 @@ class nsHttpConnectionInfo final : public ARefBase {
   int32_t RoutedPort() const { return mRoutedPort; }
 
   // OK to treat these as an infalible allocation
-  nsHttpConnectionInfo *Clone() const;
+  already_AddRefed<nsHttpConnectionInfo> Clone() const;
   void CloneAsDirectRoute(nsHttpConnectionInfo **outParam);
   MOZ_MUST_USE nsresult CreateWildCard(nsHttpConnectionInfo **outParam);
 
