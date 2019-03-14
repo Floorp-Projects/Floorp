@@ -4242,7 +4242,10 @@ CodeOffset MacroAssembler::callWithPatch() {
 
 void MacroAssembler::patchCall(uint32_t callerOffset, uint32_t calleeOffset) {
   BufferOffset inst(callerOffset - 4);
-  as_bl(BufferOffset(calleeOffset).diffB<BOffImm>(inst), Always, inst);
+  BOffImm off = BufferOffset(calleeOffset).diffB<BOffImm>(inst);
+  MOZ_RELEASE_ASSERT(!off.isInvalid(),
+                     "Failed to insert necessary far jump islands");
+  as_bl(off, Always, inst);
 }
 
 CodeOffset MacroAssembler::farJumpWithPatch() {
