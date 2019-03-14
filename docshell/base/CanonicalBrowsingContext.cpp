@@ -19,12 +19,11 @@ extern mozilla::LazyLogModule gUserInteractionPRLog;
   MOZ_LOG(gUserInteractionPRLog, LogLevel::Debug, (msg, ##__VA_ARGS__))
 
 CanonicalBrowsingContext::CanonicalBrowsingContext(BrowsingContext* aParent,
-                                                   BrowsingContext* aOpener,
-                                                   const nsAString& aName,
+                                                   BrowsingContextGroup* aGroup,
                                                    uint64_t aBrowsingContextId,
                                                    uint64_t aProcessId,
                                                    BrowsingContext::Type aType)
-    : BrowsingContext(aParent, aOpener, aName, aBrowsingContextId, aType),
+    : BrowsingContext(aParent, aGroup, aBrowsingContextId, aType),
       mProcessId(aProcessId) {
   // You are only ever allowed to create CanonicalBrowsingContexts in the
   // parent process.

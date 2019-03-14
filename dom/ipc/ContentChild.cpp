@@ -28,6 +28,8 @@
 #include "mozilla/VideoDecoderManagerChild.h"
 #include "mozilla/devtools/HeapSnapshotTempFileHelperChild.h"
 #include "mozilla/docshell/OfflineCacheUpdateChild.h"
+#include "mozilla/dom/BrowsingContext.h"
+#include "mozilla/dom/BrowsingContextGroup.h"
 #include "mozilla/dom/ClientManager.h"
 #include "mozilla/dom/ClientOpenWindowOpActors.h"
 #include "mozilla/dom/ChildProcessMessageManager.h"
@@ -3687,14 +3689,16 @@ PContentChild::Result ContentChild::OnMessageReceived(const Message& aMsg,
 }
 
 mozilla::ipc::IPCResult ContentChild::RecvAttachBrowsingContext(
-    BrowsingContext* aParent, BrowsingContext* aOpener,
-    BrowsingContextId aChildId, const nsString& aName) {
-  RefPtr<BrowsingContext> child = BrowsingContext::Get(aChildId);
+    BrowsingContext::IPCInitializer&& aInit) {
+  RefPtr<BrowsingContext> child = BrowsingContext::Get(aInit.mId);
   MOZ_RELEASE_ASSERT(!child || child->IsCached());
 
   if (!child) {
-    child = BrowsingContext::CreateFromIPC(aParent, aOpener, aName,
-                                           (uint64_t)aChildId, nullptr);
+    // Determine the BrowsingContextGroup from our parent or opener fields.
+    RefPtr<BrowsingContextGroup> group =
+        BrowsingContextGroup::Select(aInit.mParentId, aInit.mOpenerId);
+    child = BrowsingContext::CreateFromIPC(std::move(aInit), group, nullptr);
+    child->InitFromIPC(aInit.mOpenerId);
   }
 
   child->Attach(/* aFromIPC */ true);
@@ -3710,6 +3714,47 @@ mozilla::ipc::IPCResult ContentChild::RecvDetachBrowsingContext(
     aContext->CacheChildren(/* aFromIPC */ true);
   } else {
     aContext->Detach(/* aFromIPC */ true);
+  }
+
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult ContentChild::RecvRegisterBrowsingContextGroup(
+    nsTArray<BrowsingContext::IPCInitializer>&& aInits) {
+  RefPtr<BrowsingContextGroup> group = new BrowsingContextGroup();
+
+  // Hold a grip on each created BrowsingContext to ensure they don't die too
+  // early.
+  AutoTArray<RefPtr<BrowsingContext>, 8> grip;
+  grip.SetCapacity(aInits.Length());
+
+  // Each of the initializers in aInits is sorted in pre-order, so our parent
+  // should always be available before the element itself.
+  for (auto& init : aInits) {
+#ifdef DEBUG
+    RefPtr<BrowsingContext> existing = BrowsingContext::Get(init.mId);
+    MOZ_ASSERT(!existing, "BrowsingContext must not exist yet!");
+
+    RefPtr<BrowsingContext> parent = init.GetParent();
+    MOZ_ASSERT_IF(parent, parent->Group() == group);
+#endif
+
+    // Create a BrowsingContext and add it to our grip list.
+    auto* ctxt = grip.AppendElement();
+    *ctxt = BrowsingContext::CreateFromIPC(std::move(init), group, nullptr);
+
+    // FIXME: We should deal with cached & detached contexts as well.
+    (*ctxt)->Attach(/* aFromIPC */ true);
+  }
+
+  // Perform a second pass to initialize the `opener` fields of each
+  // BrowsingContext.
+  // Our `mId` and `mOpenerId` fields won't have been moved by the above loop,
+  // so they're OK to access here.
+  MOZ_ASSERT(grip.Length() == aInits.Length());
+  for (uint32_t i = 0; i < grip.Length(); ++i) {
+    MOZ_ASSERT(grip[i]->Id() == aInits[i].mId);
+    grip[i]->InitFromIPC(aInits[i].mOpenerId);
   }
 
   return IPC_OK();
