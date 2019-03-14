@@ -90,6 +90,11 @@ exclude: true
 
 - Added `default` implementations for all non-functional `interface`s.
 
+- Added [`ContentDelegate.onWebAppManifest`][67.22], which will deliver the contents of a parsed
+  and validated Web App Manifest on pages that contain one.
+
+[67.22]: ../GeckoSession.ContentDelegate.html#onWebAppManifest-org.mozilla.geckoview.GeckoSession-org.json.JSONObject
+
 ## v66
 - Removed redundant field `trackingMode` from [`SecurityInformation`][66.6].
   Use `TrackingProtectionDelegate.onTrackerBlocked` for notification of blocked
@@ -209,4 +214,4 @@ exclude: true
 [65.24]: ../CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: ../GeckoResult.html
 
-[api-version]: 09c473360eb5e17aa801fa0f966cd8671cf2f3d2
+[api-version]: 910e94d6c3ec93faf7ba4ef73c4746b86e77b1c4
