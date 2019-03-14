@@ -146,7 +146,8 @@ add_task(async function() {
 
     check = checkProcess(Services.ppmm);
     // Reset the default browser to start a new child process
-    gBrowser.updateBrowserRemoteness(gBrowser.selectedBrowser, true);
+    gBrowser.updateBrowserRemoteness(gBrowser.selectedBrowser,
+                                     { remoteType: E10SUtils.DEFAULT_REMOTE_TYPE });
     BrowserTestUtils.loadURI(gBrowser.selectedBrowser, "about:blank");
     await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
 
