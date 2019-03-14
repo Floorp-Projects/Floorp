@@ -12,6 +12,7 @@
 #include "mozilla/Types.h"
 #include "nsDebug.h"
 #include "nsTArray.h"
+#include "mozilla/ServoStyleConsts.h"
 
 // Defines for various style related constants
 
@@ -518,127 +519,25 @@ inline nsChangeHint NS_RemoveSubsumedHints(nsChangeHint aOurChange,
   return result;
 }
 
-/**
- * |nsRestyleHint| is a bitfield for the result of
- * |HasStateDependentStyle| and |HasAttributeDependentStyle|.  When no
- * restyling is necessary, use |nsRestyleHint(0)|.
- *
- * Without eRestyle_Force or eRestyle_ForceDescendants, the restyling process
- * can stop processing at a frame when it detects no style changes and it is
- * known that the styles of the subtree beneath it will not change, leaving
- * the old ComputedStyle on the frame.  eRestyle_Force can be used to skip this
- * optimization on a frame, and to force its new ComputedStyle to be used.
- *
- * Similarly, eRestyle_ForceDescendants will cause the frame and all of its
- * descendants to be traversed and for the new ComputedStyles that are created
- * to be set on the frames.
- *
- * NOTE: When adding new restyle hints, please also add them to
- * RestyleManager::RestyleHintToString.
- */
-enum nsRestyleHint : uint32_t {
-  // Rerun selector matching on the element.  If a new ComputedStyle
-  // results, update the ComputedStyles of descendants.  (Irrelevant if
-  // eRestyle_Subtree is also set, since that implies a superset of the
-  // work.)
-  eRestyle_Self = 1 << 0,
+namespace mozilla {
 
-  // Rerun selector matching on descendants of the element that match
-  // a given selector.
-  eRestyle_SomeDescendants = 1 << 1,
+using RestyleHint = StyleRestyleHint;
 
-  // Rerun selector matching on the element and all of its descendants.
-  // (Implies eRestyle_ForceDescendants, which ensures that we continue
-  // the restyling process for all descendants, but doesn't cause
-  // selector matching.)
-  eRestyle_Subtree = 1 << 2,
-
-  // Rerun selector matching on all later siblings of the element and
-  // all of their descendants.
-  eRestyle_LaterSiblings = 1 << 3,
-
-  // Replace the style data coming from CSS transitions without updating
-  // any other style data.  If a new ComputedStyle results, update style
-  // contexts on the descendants.  (Irrelevant if eRestyle_Self or
-  // eRestyle_Subtree is also set, since those imply a superset of the
-  // work.)
-  eRestyle_CSSTransitions = 1 << 4,
-
-  // Replace the style data coming from CSS animations without updating
-  // any other style data.  If a new ComputedStyle results, update style
-  // contexts on the descendants.  (Irrelevant if eRestyle_Self or
-  // eRestyle_Subtree is also set, since those imply a superset of the
-  // work.)
-  eRestyle_CSSAnimations = 1 << 5,
-
-  // Replace the style data coming from inline style without updating
-  // any other style data.  If a new ComputedStyle results, update style
-  // contexts on the descendants.  (Irrelevant if eRestyle_Self or
-  // eRestyle_Subtree is also set, since those imply a superset of the
-  // work.)  Supported only for element ComputedStyles and not for
-  // pseudo-elements or anonymous boxes, on which it converts to
-  // eRestyle_Self.
-  // If the change is for the advance of a declarative animation, use
-  // the value below instead.
-  eRestyle_StyleAttribute = 1 << 6,
-
-  // Same as eRestyle_StyleAttribute, but for when the change results
-  // from the advance of a declarative animation.
-  eRestyle_StyleAttribute_Animations = 1 << 7,
-
-  // Continue the restyling process to the current frame's children even
-  // if this frame's restyling resulted in no style changes.
-  eRestyle_Force = 1 << 8,
-
-  // Continue the restyling process to all of the current frame's
-  // descendants, even if any frame's restyling resulted in no style
-  // changes.  (Implies eRestyle_Force.)  Note that this is weaker than
-  // eRestyle_Subtree, which makes us rerun selector matching on all
-  // descendants rather than just continuing the restyling process.
-  eRestyle_ForceDescendants = 1 << 9,
-
-  // Useful unions:
-  eRestyle_AllHintsWithAnimations = eRestyle_CSSTransitions |
-                                    eRestyle_CSSAnimations |
-                                    eRestyle_StyleAttribute_Animations,
-};
-
-// The functions below need an integral type to cast to to avoid
-// infinite recursion.
-typedef decltype(nsRestyleHint(0) + nsRestyleHint(0)) nsRestyleHint_size_t;
-
-inline constexpr nsRestyleHint operator|(nsRestyleHint aLeft,
-                                         nsRestyleHint aRight) {
-  return nsRestyleHint(nsRestyleHint_size_t(aLeft) |
-                       nsRestyleHint_size_t(aRight));
+inline RestyleHint RestyleHint::RestyleSubtree() {
+  return StyleRestyleHint_RESTYLE_SELF | StyleRestyleHint_RESTYLE_DESCENDANTS;
 }
 
-inline constexpr nsRestyleHint operator&(nsRestyleHint aLeft,
-                                         nsRestyleHint aRight) {
-  return nsRestyleHint(nsRestyleHint_size_t(aLeft) &
-                       nsRestyleHint_size_t(aRight));
+inline RestyleHint RestyleHint::RecascadeSubtree() {
+  return StyleRestyleHint_RECASCADE_SELF |
+         StyleRestyleHint_RECASCADE_DESCENDANTS;
 }
 
-inline nsRestyleHint& operator|=(nsRestyleHint& aLeft, nsRestyleHint aRight) {
-  return aLeft = aLeft | aRight;
+inline RestyleHint RestyleHint::ForAnimations() {
+  return StyleRestyleHint_RESTYLE_CSS_TRANSITIONS |
+         StyleRestyleHint_RESTYLE_CSS_ANIMATIONS |
+         StyleRestyleHint_RESTYLE_SMIL;
 }
 
-inline nsRestyleHint& operator&=(nsRestyleHint& aLeft, nsRestyleHint aRight) {
-  return aLeft = aLeft & aRight;
-}
-
-inline constexpr nsRestyleHint operator~(nsRestyleHint aArg) {
-  return nsRestyleHint(~nsRestyleHint_size_t(aArg));
-}
-
-inline constexpr nsRestyleHint operator^(nsRestyleHint aLeft,
-                                         nsRestyleHint aRight) {
-  return nsRestyleHint(nsRestyleHint_size_t(aLeft) ^
-                       nsRestyleHint_size_t(aRight));
-}
-
-inline nsRestyleHint operator^=(nsRestyleHint& aLeft, nsRestyleHint aRight) {
-  return aLeft = aLeft ^ aRight;
-}
+}  // namespace mozilla
 
 #endif /* nsChangeHint_h___ */

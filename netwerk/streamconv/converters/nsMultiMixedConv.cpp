@@ -235,6 +235,7 @@ nsPartChannel::GetLoadInfo(nsILoadInfo **aLoadInfo) {
 
 NS_IMETHODIMP
 nsPartChannel::SetLoadInfo(nsILoadInfo *aLoadInfo) {
+  MOZ_RELEASE_ASSERT(aLoadInfo, "loadinfo can't be null");
   return mMultipartChannel->SetLoadInfo(aLoadInfo);
 }
 

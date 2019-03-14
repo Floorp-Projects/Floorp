@@ -533,7 +533,7 @@ nsViewSourceChannel::GetLoadInfo(nsILoadInfo **aLoadInfo) {
 NS_IMETHODIMP
 nsViewSourceChannel::SetLoadInfo(nsILoadInfo *aLoadInfo) {
   NS_ENSURE_TRUE(mChannel, NS_ERROR_FAILURE);
-
+  MOZ_RELEASE_ASSERT(aLoadInfo, "loadinfo can't be null");
   return mChannel->SetLoadInfo(aLoadInfo);
 }
 
