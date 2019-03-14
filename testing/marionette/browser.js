@@ -399,7 +399,8 @@ browser.Context = class {
 
     switch (this.driver.appName) {
       case "fennec":
-        tab = this.tabBrowser.addTab(null, {selected: focus});
+        tab = this.tabBrowser.addTab(null);
+        this.tabBrowser.selectTab(focus ? tab : this.tab);
         break;
 
       case "firefox":
