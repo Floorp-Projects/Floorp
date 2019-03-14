@@ -1983,7 +1983,8 @@ static nsresult LockProfile(nsINativeAppSupport* aNative, nsIFile* aRootDir,
 static nsresult SelectProfile(nsToolkitProfileService* aProfileSvc,
                               nsINativeAppSupport* aNative, nsIFile** aRootDir,
                               nsIFile** aLocalDir,
-                              nsIToolkitProfile** aProfile) {
+                              nsIToolkitProfile** aProfile,
+                              bool* aWasDefaultSelection) {
   StartupTimeline::Record(StartupTimeline::SELECT_PROFILE);
 
   nsresult rv;
@@ -2031,7 +2032,7 @@ static nsresult SelectProfile(nsToolkitProfileService* aProfileSvc,
   bool didCreate = false;
   rv = aProfileSvc->SelectStartupProfile(&gArgc, gArgv, gDoProfileReset,
                                          aRootDir, aLocalDir, aProfile,
-                                         &didCreate);
+                                         &didCreate, aWasDefaultSelection);
 
   if (rv == NS_ERROR_SHOW_PROFILE_MANAGER) {
     return ShowProfileManager(aProfileSvc, aNative);
@@ -3915,9 +3916,11 @@ int XREMain::XRE_mainStartup(bool* aExitFlag) {
     return 1;
   }
 
+  bool wasDefaultSelection;
   nsCOMPtr<nsIToolkitProfile> profile;
   rv = SelectProfile(mProfileSvc, mNativeApp, getter_AddRefs(mProfD),
-                     getter_AddRefs(mProfLD), getter_AddRefs(profile));
+                     getter_AddRefs(mProfLD), getter_AddRefs(profile),
+                     &wasDefaultSelection);
   if (rv == NS_ERROR_LAUNCHED_CHILD_PROCESS || rv == NS_ERROR_ABORT) {
     *aExitFlag = true;
     return 0;
@@ -4018,6 +4021,26 @@ int XREMain::XRE_mainStartup(bool* aExitFlag) {
     return 0;
   }
 #endif
+
+  // We now know there is no existing instance using the selected profile. If
+  // the profile wasn't selected by specific command line arguments and the
+  // user has chosen to show the profile manager on startup then do that.
+  if (wasDefaultSelection) {
+    bool useSelectedProfile;
+    rv = mProfileSvc->GetStartWithLastProfile(&useSelectedProfile);
+    NS_ENSURE_SUCCESS(rv, 1);
+
+    if (!useSelectedProfile) {
+      rv = ShowProfileManager(mProfileSvc, mNativeApp);
+      if (rv == NS_ERROR_LAUNCHED_CHILD_PROCESS || rv == NS_ERROR_ABORT) {
+        *aExitFlag = true;
+        return 0;
+      }
+      if (NS_FAILED(rv)) {
+        return 1;
+      }
+    }
+  }
 
   // We always want to lock the profile even if we're actually going to reset
   // it later.
