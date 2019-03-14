@@ -353,7 +353,7 @@ if (AppConstants.NIGHTLY_BUILD) {
     child: {
       module: "resource://gre/actors/PictureInPictureChild.jsm",
       events: {
-        "MozTogglePictureInPicture": {capture: true, wantUntrusted: true},
+        "MozTogglePictureInPicture": {capture: true},
       },
 
       messages: [
