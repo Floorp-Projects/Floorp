@@ -8,6 +8,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use std::sync::Mutex;
 use webrender::api::*;
+use webrender::api::units::{BlobDirtyRect, BlobToDeviceTranslation, TileOffset};
 
 // Serialize/deserialize the blob.
 

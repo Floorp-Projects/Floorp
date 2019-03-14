@@ -2,9 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{DebugFlags, DeviceIntPoint, DeviceIntRect, DeviceIntSize};
-use api::{DirtyRect, ImageDirtyRect, DocumentId, ExternalImageType, ImageFormat};
-use api::{ImageDescriptor};
+use api::{DirtyRect, DocumentId, ExternalImageType, ImageFormat};
+use api::{DebugFlags, ImageDescriptor};
+use api::units::*;
 #[cfg(test)]
 use api::IdNamespace;
 use device::{TextureFilter, total_gpu_bytes_allocated};
