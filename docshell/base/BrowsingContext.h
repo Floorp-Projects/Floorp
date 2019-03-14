@@ -165,6 +165,11 @@ class BrowsingContext : public nsWrapperCache,
   // Cast this object to a canonical browsing context, and return it.
   CanonicalBrowsingContext* Canonical();
 
+  // Is the most recent Document in this BrowsingContext loaded within this
+  // process? This may be true with a null mDocShell after the Window has been
+  // closed.
+  bool IsInProcess() const { return mIsInProcess; }
+
   // Get the DocShell for this BrowsingContext if it is in-process, or
   // null if it's not.
   nsIDocShell* GetDocShell() { return mDocShell; }
@@ -374,6 +379,7 @@ class BrowsingContext : public nsWrapperCache,
   Children mChildren;
   WeakPtr<BrowsingContext> mOpener;
   nsCOMPtr<nsIDocShell> mDocShell;
+
   // This is not a strong reference, but using a JS::Heap for that should be
   // fine. The JSObject stored in here should be a proxy with a
   // nsOuterWindowProxy handler, which will update the pointer from its
@@ -384,6 +390,11 @@ class BrowsingContext : public nsWrapperCache,
   // This flag is only valid in the top level browsing context, it indicates
   // whether the corresponding document has been activated by user gesture.
   bool mIsActivatedByUserGesture;
+
+  // Is the most recent Document in this BrowsingContext loaded within this
+  // process? This may be true with a null mDocShell after the Window has been
+  // closed.
+  bool mIsInProcess : 1;
 };
 
 /**
