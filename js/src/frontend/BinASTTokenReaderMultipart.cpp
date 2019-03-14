@@ -300,10 +300,6 @@ JS::Result<JSAtom*> BinASTTokenReaderMultipart::readIdentifierName() {
   return result;
 }
 
-JS::Result<JSAtom*> BinASTTokenReaderMultipart::readMaybePropertyKey() {
-  return readMaybeAtom();
-}
-
 JS::Result<JSAtom*> BinASTTokenReaderMultipart::readPropertyKey() {
   return readAtom();
 }
