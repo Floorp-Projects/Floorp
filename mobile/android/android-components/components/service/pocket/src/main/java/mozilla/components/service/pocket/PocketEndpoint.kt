@@ -14,7 +14,7 @@ import mozilla.components.service.pocket.net.PocketResponse
 /**
  * Makes requests to the Pocket API and returns the requested data.
  *
- * @see [getInstance] to retrieve an instance.
+ * @see [newInstance] to retrieve an instance.
  */
 class PocketEndpoint internal constructor(
     private val rawEndpoint: PocketEndpointRaw,
@@ -48,7 +48,7 @@ class PocketEndpoint internal constructor(
     companion object {
 
         /**
-         * Returns an instance of [PocketEndpoint].
+         * Returns a new instance of [PocketEndpoint].
          *
          * @param client the HTTP client to use for network requests.
          * @param pocketApiKey the API key for Pocket network requests.
@@ -56,7 +56,7 @@ class PocketEndpoint internal constructor(
          *
          * @throws IllegalArgumentException if the provided API key or user agent is deemed invalid.
          */
-        fun getInstance(client: Client, pocketApiKey: String, userAgent: String): PocketEndpoint {
+        fun newInstance(client: Client, pocketApiKey: String, userAgent: String): PocketEndpoint {
             assertIsValidApiKey(pocketApiKey)
             assertIsValidUserAgent(userAgent)
 

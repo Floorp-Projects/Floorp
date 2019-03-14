@@ -88,17 +88,17 @@ class PocketEndpointTest {
 
     @Test(expected = IllegalArgumentException::class)
     fun `WHEN getInstance is called with a blank API key THEN an exception is thrown`() {
-        PocketEndpoint.getInstance(client, " ", VALID_USER_AGENT)
+        PocketEndpoint.newInstance(client, " ", VALID_USER_AGENT)
     }
 
     @Test(expected = IllegalArgumentException::class)
     fun `WHEN getInstance is called with a blank user agent THEN an exception is thrown`() {
-        PocketEndpoint.getInstance(client, VALID_API_KEY, " ")
+        PocketEndpoint.newInstance(client, VALID_API_KEY, " ")
     }
 
     @Test
     fun `WHEN getInstance is called with valid args THEN no exception is thrown`() {
-        PocketEndpoint.getInstance(client, VALID_API_KEY, VALID_USER_AGENT)
+        PocketEndpoint.newInstance(client, VALID_API_KEY, VALID_USER_AGENT)
     }
 
     @Test
@@ -107,7 +107,7 @@ class PocketEndpointTest {
         // To use this test locally, add the API key file (see API_KEY comments) and comment out ignore annotation.
         val client = HttpURLConnectionClient()
         val apiKey = PocketTestResource.API_KEY.get()
-        val endpoint = PocketEndpoint.getInstance(client, apiKey, "android-components:PocketEndpointTest")
+        val endpoint = PocketEndpoint.newInstance(client, apiKey, "android-components:PocketEndpointTest")
         val response = endpoint.getGlobalVideoRecommendations()
         val results = (response as? PocketResponse.Success)?.data
 
