@@ -137,7 +137,6 @@ pub struct BorderInstance {
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 #[repr(C)]
 pub struct ClipMaskInstance {
-    pub render_task_address: RenderTaskAddress,
     pub clip_transform_id: TransformPaletteId,
     pub prim_transform_id: TransformPaletteId,
     pub clip_data_address: GpuCacheAddress,
@@ -146,6 +145,9 @@ pub struct ClipMaskInstance {
     pub tile_rect: LayoutRect,
     pub sub_rect: DeviceRect,
     pub snap_offsets: SnapOffsets,
+    pub task_origin: DevicePoint,
+    pub screen_origin: DevicePoint,
+    pub device_pixel_scale: f32,
 }
 
 /// A border corner dot or dash drawn into the clipping mask.

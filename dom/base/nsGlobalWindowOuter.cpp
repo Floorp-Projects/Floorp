@@ -2375,7 +2375,7 @@ void nsGlobalWindowOuter::SetDocShell(nsDocShell* aDocShell) {
     return;
   }
 
-  mDocShell = aDocShell;  // Weak Reference
+  mDocShell = aDocShell;
   mBrowsingContext = aDocShell->GetBrowsingContext();
 
   nsCOMPtr<nsPIDOMWindowOuter> parentWindow = GetScriptableParentOrNull();
@@ -2468,7 +2468,7 @@ void nsGlobalWindowOuter::DetachFromDocShell() {
     mContext = nullptr;
   }
 
-  mDocShell = nullptr;  // Weak Reference
+  mDocShell = nullptr;
 
   if (mFrames) {
     mFrames->SetDocShell(nullptr);
@@ -7806,7 +7806,6 @@ mozilla::dom::DocGroup* nsPIDOMWindowOuter::GetDocGroup() const {
 
 nsPIDOMWindowOuter::nsPIDOMWindowOuter(uint64_t aWindowID)
     : mFrameElement(nullptr),
-      mDocShell(nullptr),
       mModalStateDepth(0),
       mIsActive(false),
       mIsBackground(false),

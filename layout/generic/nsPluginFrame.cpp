@@ -1588,24 +1588,23 @@ nsNPAPIPluginInstance* nsPluginFrame::GetPluginInstance() {
   return mInstanceOwner->GetInstance();
 }
 
-nsresult nsPluginFrame::GetCursor(const nsPoint& aPoint,
-                                  nsIFrame::Cursor& aCursor) {
+Maybe<nsIFrame::Cursor> nsPluginFrame::GetCursor(const nsPoint& aPoint) {
   if (!mInstanceOwner) {
-    return NS_ERROR_FAILURE;
+    return Nothing();
   }
 
   RefPtr<nsNPAPIPluginInstance> inst = mInstanceOwner->GetInstance();
   if (!inst) {
-    return NS_ERROR_FAILURE;
+    return Nothing();
   }
 
   bool useDOMCursor =
       static_cast<nsNPAPIPluginInstance*>(inst.get())->UsesDOMForCursor();
   if (!useDOMCursor) {
-    return NS_ERROR_FAILURE;
+    return Nothing();
   }
 
-  return nsFrame::GetCursor(aPoint, aCursor);
+  return nsFrame::GetCursor(aPoint);
 }
 
 void nsPluginFrame::SetIsDocumentActive(bool aIsActive) {

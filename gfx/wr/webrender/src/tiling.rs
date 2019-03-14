@@ -635,6 +635,7 @@ impl RenderTarget for AlphaRenderTarget {
         _: &mut Vec<DeferredResolve>,
     ) {
         let task = &render_tasks[task_id];
+        let (target_rect, _) = task.get_target_rect();
 
         match task.clear_mode {
             ClearMode::Zero => {
@@ -676,9 +677,7 @@ impl RenderTarget for AlphaRenderTarget {
                 );
             }
             RenderTaskKind::CacheMask(ref task_info) => {
-                let task_address = render_tasks.get_task_address(task_id);
                 self.clip_batcher.add(
-                    task_address,
                     task_info.clip_node_range,
                     task_info.root_spatial_node_index,
                     ctx.resource_cache,
@@ -691,19 +690,22 @@ impl RenderTarget for AlphaRenderTarget {
                     &ctx.screen_world_rect,
                     task_info.device_pixel_scale,
                     task_info.snap_offsets,
+                    target_rect.origin.to_f32(),
+                    task_info.actual_rect.origin.to_f32(),
                 );
             }
             RenderTaskKind::ClipRegion(ref region_task) => {
-                let task_address = render_tasks.get_task_address(task_id);
                 let device_rect = DeviceRect::new(
                     DevicePoint::zero(),
-                    task.get_dynamic_size().to_f32(),
+                    target_rect.size.to_f32(),
                 );
                 self.clip_batcher.add_clip_region(
-                    task_address,
                     region_task.clip_data_address,
                     region_task.local_pos,
                     device_rect,
+                    target_rect.origin.to_f32(),
+                    DevicePoint::zero(),
+                    region_task.device_pixel_scale.0,
                 );
             }
             RenderTaskKind::Scaling(ref info) => {
