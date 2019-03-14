@@ -11,9 +11,7 @@ import android.support.annotation.WorkerThread
 import mozilla.components.concept.fetch.Client
 import mozilla.components.concept.fetch.MutableHeaders
 import mozilla.components.concept.fetch.Request
-import mozilla.components.concept.fetch.Response
-import mozilla.components.concept.fetch.isSuccess
-import java.io.IOException
+import mozilla.components.service.pocket.ext.fetchBodyOrNull
 
 /**
  * Make requests to the Pocket endpoint and returns the raw JSON data: this class is intended to be very dumb.
@@ -30,26 +28,18 @@ internal class PocketEndpointRaw(
      * @return The global video recommendations as a raw JSON string or null on error.
      */
     @WorkerThread // synchronous request.
-    fun getGlobalVideoRecommendations(): String? = makeRequest(urls.globalVideoRecs)
+    fun getGlobalVideoRecommendations(): String? = makeRequest("getGlobalVideoRecommendations", urls.globalVideoRecs)
 
     /**
      * @return The requested JSON as a String or null on error.
      */
     @WorkerThread // synchronous request.
-    private fun makeRequest(pocketEndpoint: Uri): String? {
+    private fun makeRequest(callingMethod: String, pocketEndpoint: Uri): String? {
         val request = Request(
             url = pocketEndpoint.toString(),
             headers = MutableHeaders(HEADER_USER_AGENT to userAgent)
         )
-
-        val response: Response? = try {
-            client.fetch(request)
-        } catch (e: IOException) {
-            logger.debug("getGlobalVideoRecommedations: network error", e)
-            null
-        }
-
-        return response?.use { if (response.isSuccess) response.body.string() else null }
+        return client.fetchBodyOrNull(callingMethod, request)
     }
 
     companion object {
