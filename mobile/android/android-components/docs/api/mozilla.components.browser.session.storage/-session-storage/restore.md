@@ -2,7 +2,7 @@
 
 # restore
 
-`fun restore(): `[`Snapshot`](../../mozilla.components.browser.session/-session-manager/-snapshot/index.md)`?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/storage/SessionStorage.kt#L36)
+`@WorkerThread fun restore(): `[`Snapshot`](../../mozilla.components.browser.session/-session-manager/-snapshot/index.md)`?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/storage/SessionStorage.kt#L36)
 
 Reads the saved state from disk. Returns null if no state was found on disk or if reading the file failed.
 

@@ -1,0 +1,8 @@
+[android-components](../../index.md) / [mozilla.components.browser.session.ext](../index.md) / [android.util.AtomicFile](./index.md)
+
+### Extensions for android.util.AtomicFile
+
+| Name | Summary |
+|---|---|
+| [readSnapshot](read-snapshot.md) | `fun `[`AtomicFile`](https://developer.android.com/reference/android/util/AtomicFile.html)`.readSnapshot(engine: `[`Engine`](../../mozilla.components.concept.engine/-engine/index.md)`, serializer: `[`SnapshotSerializer`](../../mozilla.components.browser.session.storage/-snapshot-serializer/index.md)` = SnapshotSerializer()): `[`Snapshot`](../../mozilla.components.browser.session/-session-manager/-snapshot/index.md)`?`<br>Read a [SessionManager.Snapshot](../../mozilla.components.browser.session/-session-manager/-snapshot/index.md) from this [AtomicFile](https://developer.android.com/reference/android/util/AtomicFile.html). Returns `null` if no snapshot could be read. |
+| [writeSnapshot](write-snapshot.md) | `fun `[`AtomicFile`](https://developer.android.com/reference/android/util/AtomicFile.html)`.writeSnapshot(snapshot: `[`Snapshot`](../../mozilla.components.browser.session/-session-manager/-snapshot/index.md)`, serializer: `[`SnapshotSerializer`](../../mozilla.components.browser.session.storage/-snapshot-serializer/index.md)` = SnapshotSerializer()): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Saves the given [SessionManager.Snapshot](../../mozilla.components.browser.session/-session-manager/-snapshot/index.md) to this [AtomicFile](https://developer.android.com/reference/android/util/AtomicFile.html). |

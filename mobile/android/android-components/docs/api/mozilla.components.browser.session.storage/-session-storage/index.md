@@ -2,7 +2,7 @@
 
 # SessionStorage
 
-`class SessionStorage : `[`Storage`](../-auto-save/-storage/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/storage/SessionStorage.kt#L27)
+`class SessionStorage : `[`Storage`](../-auto-save/-storage/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/storage/SessionStorage.kt#L26)
 
 Session storage for persisting the state of a [SessionManager](../../mozilla.components.browser.session/-session-manager/index.md) to disk (browser and engine session states).
 

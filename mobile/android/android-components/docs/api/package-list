@@ -2,6 +2,8 @@ $dokka.format:gfm
 $dokka.linkExtension:md
 $dokka.location:mozilla.components.browser.engine.system.matcher$reverse(kotlin.String)mozilla.components.browser.engine.system.matcher/kotlin.-string/reverse.md
 $dokka.location:mozilla.components.browser.engine.system.matcher$reversible(kotlin.String)mozilla.components.browser.engine.system.matcher/kotlin.-string/reversible.md
+$dokka.location:mozilla.components.browser.session.ext$readSnapshot(android.util.AtomicFile, mozilla.components.concept.engine.Engine, mozilla.components.browser.session.storage.SnapshotSerializer)mozilla.components.browser.session.ext/android.util.-atomic-file/read-snapshot.md
+$dokka.location:mozilla.components.browser.session.ext$writeSnapshot(android.util.AtomicFile, mozilla.components.browser.session.SessionManager.Snapshot, mozilla.components.browser.session.storage.SnapshotSerializer)mozilla.components.browser.session.ext/android.util.-atomic-file/write-snapshot.md
 $dokka.location:mozilla.components.lib.jexl.ext$toJexl(kotlin.Boolean)mozilla.components.lib.jexl.ext/kotlin.-boolean/to-jexl.md
 $dokka.location:mozilla.components.lib.jexl.ext$toJexl(kotlin.Double)mozilla.components.lib.jexl.ext/kotlin.-double/to-jexl.md
 $dokka.location:mozilla.components.lib.jexl.ext$toJexl(kotlin.Float)mozilla.components.lib.jexl.ext/kotlin.-float/to-jexl.md
@@ -47,6 +49,7 @@ $dokka.location:mozilla.components.support.ktx.android.view$isRTL#android.view.V
 $dokka.location:mozilla.components.support.ktx.android.view$isVisible(android.view.View)mozilla.components.support.ktx.android.view/android.view.-view/is-visible.md
 $dokka.location:mozilla.components.support.ktx.android.view$setPadding(android.view.View, mozilla.components.support.base.android.Padding)mozilla.components.support.ktx.android.view/android.view.-view/set-padding.md
 $dokka.location:mozilla.components.support.ktx.android.view$showKeyboard(android.view.View, kotlin.Int)mozilla.components.support.ktx.android.view/android.view.-view/show-keyboard.md
+$dokka.location:mozilla.components.support.ktx.java.io$truncateDirectory(java.io.File)mozilla.components.support.ktx.java.io/java.io.-file/truncate-directory.md
 $dokka.location:mozilla.components.support.ktx.kotlin$ELLIPSIS#kotlin.Char.Companionmozilla.components.support.ktx.kotlin/kotlin.-char/-e-l-l-i-p-s-i-s.md
 $dokka.location:mozilla.components.support.ktx.kotlin$containsAtOffset(kotlin.ByteArray, kotlin.Int, kotlin.ByteArray)mozilla.components.support.ktx.kotlin/kotlin.-byte-array/contains-at-offset.md
 $dokka.location:mozilla.components.support.ktx.kotlin$isEmail(kotlin.String)mozilla.components.support.ktx.kotlin/kotlin.-string/is-email.md
@@ -86,6 +89,7 @@ mozilla.components.browser.search.provider.filter
 mozilla.components.browser.search.provider.localization
 mozilla.components.browser.search.suggestions
 mozilla.components.browser.session
+mozilla.components.browser.session.ext
 mozilla.components.browser.session.manifest
 mozilla.components.browser.session.storage
 mozilla.components.browser.session.tab
@@ -181,6 +185,7 @@ mozilla.components.support.ktx.android.org.json
 mozilla.components.support.ktx.android.os
 mozilla.components.support.ktx.android.util
 mozilla.components.support.ktx.android.view
+mozilla.components.support.ktx.java.io
 mozilla.components.support.ktx.kotlin
 mozilla.components.support.rustlog
 mozilla.components.support.test

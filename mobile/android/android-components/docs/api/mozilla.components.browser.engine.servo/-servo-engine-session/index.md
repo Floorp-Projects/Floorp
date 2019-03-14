@@ -2,7 +2,7 @@
 
 # ServoEngineSession
 
-`class ServoEngineSession : `[`EngineSession`](../../mozilla.components.concept.engine/-engine-session/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-servo/src/main/java/mozilla/components/browser/engine/servo/ServoEngineSession.kt#L21)
+`class ServoEngineSession : `[`EngineSession`](../../mozilla.components.concept.engine/-engine-session/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-servo/src/main/java/mozilla/components/browser/engine/servo/ServoEngineSession.kt#L20)
 
 Servo-based EngineSession implementation.
 
@@ -22,7 +22,6 @@ Servo-based EngineSession implementation.
 
 | Name | Summary |
 |---|---|
-| [captureThumbnail](capture-thumbnail.md) | `fun captureThumbnail(): `[`Bitmap`](https://developer.android.com/reference/android/graphics/Bitmap.html)`?`<br>Takes a screenshot of the actual tab |
 | [clearData](clear-data.md) | `fun clearData(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Clears all user data sources available. |
 | [clearFindMatches](clear-find-matches.md) | `fun clearFindMatches(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Clears the highlighted results of previous calls to [findAll](../../mozilla.components.concept.engine/-engine-session/find-all.md) / [findNext](../../mozilla.components.concept.engine/-engine-session/find-next.md). |
 | [disableTrackingProtection](disable-tracking-protection.md) | `fun disableTrackingProtection(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Disables tracking protection for this engine session. |

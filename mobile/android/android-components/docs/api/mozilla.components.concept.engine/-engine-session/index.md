@@ -32,7 +32,6 @@ In browsers usually a session corresponds to a tab.
 
 | Name | Summary |
 |---|---|
-| [captureThumbnail](capture-thumbnail.md) | `abstract fun captureThumbnail(): `[`Bitmap`](https://developer.android.com/reference/android/graphics/Bitmap.html)`?`<br>Takes a screenshot of the actual tab |
 | [clearData](clear-data.md) | `abstract fun clearData(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Clears all user data sources available. |
 | [clearFindMatches](clear-find-matches.md) | `abstract fun clearFindMatches(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Clears the highlighted results of previous calls to [findAll](find-all.md) / [findNext](find-next.md). |
 | [close](close.md) | `open fun close(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Close the session. This may free underlying objects. Call this when you are finished using this session. |

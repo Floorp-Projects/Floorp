@@ -2,7 +2,7 @@
 
 # SystemEngineSession
 
-`class SystemEngineSession : `[`EngineSession`](../../mozilla.components.concept.engine/-engine-session/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-system/src/main/java/mozilla/components/browser/engine/system/SystemEngineSession.kt#L41)
+`class SystemEngineSession : `[`EngineSession`](../../mozilla.components.concept.engine/-engine-session/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-system/src/main/java/mozilla/components/browser/engine/system/SystemEngineSession.kt#L40)
 
 WebView-based EngineSession implementation.
 
@@ -29,7 +29,6 @@ WebView-based EngineSession implementation.
 
 | Name | Summary |
 |---|---|
-| [captureThumbnail](capture-thumbnail.md) | `fun captureThumbnail(): `[`Bitmap`](https://developer.android.com/reference/android/graphics/Bitmap.html)`?`<br>Takes a screenshot of the actual tab |
 | [clearData](clear-data.md) | `fun clearData(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>See [EngineSession.clearData](../../mozilla.components.concept.engine/-engine-session/clear-data.md) |
 | [clearFindMatches](clear-find-matches.md) | `fun clearFindMatches(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>See [EngineSession.clearFindMatches](../../mozilla.components.concept.engine/-engine-session/clear-find-matches.md) |
 | [close](close.md) | `fun close(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>See [EngineSession.close](../../mozilla.components.concept.engine/-engine-session/close.md) |

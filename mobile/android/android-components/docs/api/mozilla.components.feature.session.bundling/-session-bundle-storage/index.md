@@ -2,7 +2,7 @@
 
 # SessionBundleStorage
 
-`class SessionBundleStorage : `[`Storage`](../../mozilla.components.browser.session.storage/-auto-save/-storage/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/session-bundling/src/main/java/mozilla/components/feature/session/bundling/SessionBundleStorage.kt#L31)
+`class SessionBundleStorage : `[`Storage`](../../mozilla.components.browser.session.storage/-auto-save/-storage/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/session-bundling/src/main/java/mozilla/components/feature/session/bundling/SessionBundleStorage.kt#L36)
 
 A [Session](../../mozilla.components.browser.session/-session/index.md) storage implementation that saves snapshots as a [SessionBundle](../-session-bundle/index.md).
 
@@ -15,7 +15,7 @@ considered expired and a new bundle will be used.
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `SessionBundleStorage(context: `[`Context`](https://developer.android.com/reference/android/content/Context.html)`, bundleLifetime: `[`Pair`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-pair/index.html)`<`[`Long`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html)`, `[`TimeUnit`](https://developer.android.com/reference/java/util/concurrent/TimeUnit.html)`>)`<br>A [Session](../../mozilla.components.browser.session/-session/index.md) storage implementation that saves snapshots as a [SessionBundle](../-session-bundle/index.md). |
+| [&lt;init&gt;](-init-.md) | `SessionBundleStorage(context: `[`Context`](https://developer.android.com/reference/android/content/Context.html)`, engine: `[`Engine`](../../mozilla.components.concept.engine/-engine/index.md)`, bundleLifetime: `[`Pair`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-pair/index.html)`<`[`Long`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html)`, `[`TimeUnit`](https://developer.android.com/reference/java/util/concurrent/TimeUnit.html)`>)`<br>A [Session](../../mozilla.components.browser.session/-session/index.md) storage implementation that saves snapshots as a [SessionBundle](../-session-bundle/index.md). |
 
 ### Functions
 

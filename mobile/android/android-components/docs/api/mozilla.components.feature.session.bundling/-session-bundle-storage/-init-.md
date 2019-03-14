@@ -2,7 +2,7 @@
 
 # &lt;init&gt;
 
-`SessionBundleStorage(context: `[`Context`](https://developer.android.com/reference/android/content/Context.html)`, bundleLifetime: `[`Pair`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-pair/index.html)`<`[`Long`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html)`, `[`TimeUnit`](https://developer.android.com/reference/java/util/concurrent/TimeUnit.html)`>)`
+`SessionBundleStorage(context: `[`Context`](https://developer.android.com/reference/android/content/Context.html)`, engine: `[`Engine`](../../mozilla.components.concept.engine/-engine/index.md)`, bundleLifetime: `[`Pair`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-pair/index.html)`<`[`Long`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html)`, `[`TimeUnit`](https://developer.android.com/reference/java/util/concurrent/TimeUnit.html)`>)`
 
 A [Session](../../mozilla.components.browser.session/-session/index.md) storage implementation that saves snapshots as a [SessionBundle](../-session-bundle/index.md).
 

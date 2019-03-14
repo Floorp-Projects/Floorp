@@ -18,4 +18,4 @@ A bundle of sessions and their state.
 
 | Name | Summary |
 |---|---|
-| [restoreSnapshot](restore-snapshot.md) | `abstract fun restoreSnapshot(engine: `[`Engine`](../../mozilla.components.concept.engine/-engine/index.md)`): `[`Snapshot`](../../mozilla.components.browser.session/-session-manager/-snapshot/index.md)`?`<br>Restore a [SessionManager.Snapshot](../../mozilla.components.browser.session/-session-manager/-snapshot/index.md) from this bundle. The returned snapshot can be used with [SessionManager](../../mozilla.components.browser.session/-session-manager/index.md) to restore the sessions and their state. |
+| [restoreSnapshot](restore-snapshot.md) | `abstract fun restoreSnapshot(): `[`Snapshot`](../../mozilla.components.browser.session/-session-manager/-snapshot/index.md)`?`<br>Restore a [SessionManager.Snapshot](../../mozilla.components.browser.session/-session-manager/-snapshot/index.md) from this bundle. The returned snapshot can be used with [SessionManager](../../mozilla.components.browser.session/-session-manager/index.md) to restore the sessions and their state. |
