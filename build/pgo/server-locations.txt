@@ -119,6 +119,7 @@ https://mismatch.expired.example.com:443	privileged,cert=expired
 https://mismatch.untrusted.example.com:443	privileged,cert=untrusted
 https://untrusted-expired.example.com:443	privileged,cert=untrustedandexpired
 https://mismatch.untrusted-expired.example.com:443	privileged,cert=untrustedandexpired
+https://no-subject-alt-name.example.com:443   cert=noSubjectAltName
 
 # Prevent safebrowsing tests from hitting the network for its-a-trap.html and
 # its-an-attack.html.
