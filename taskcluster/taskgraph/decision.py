@@ -210,6 +210,7 @@ def get_decision_parameters(config, options):
         'owner',
         'level',
         'target_tasks_method',
+        'tasks_for',
     ] if n in options}
 
     for n in (
