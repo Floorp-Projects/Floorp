@@ -48,8 +48,7 @@ SimpleChannelParent::NotifyCookieBlocked(uint32_t aRejectedReason) {
 }
 
 NS_IMETHODIMP
-SimpleChannelParent::NotifyClassificationFlags(uint32_t aClassificationFlags,
-                                               bool aIsThirdParty) {
+SimpleChannelParent::NotifyTrackingResource(bool aIsThirdParty) {
   // Nothing to do.
   return NS_OK;
 }

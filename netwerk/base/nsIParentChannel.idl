@@ -67,15 +67,12 @@ interface nsIParentChannel : nsIStreamListener
 
   /**
    * Called to notify the HttpChannelChild that the resource being loaded
-   * has been classified.
-   * @param aClassificationFlags
-   *        What classifier identifies this channel.
+   * is on the tracking protection list.
    * @param aIsThirdParty
    *        Whether or not the resourced is considered first-party
    *        with the URI of the window.
    */
-  [noscript] void notifyClassificationFlags(in uint32_t aClassificationFlags,
-                                            in bool aIsThirdParty);
+  [noscript] void notifyTrackingResource(in bool aIsThirdParty);
 
   /**
    * Called to invoke deletion of the IPC protocol.
