@@ -479,7 +479,7 @@ class nsFrameLoader final : public nsStubMutationObserver,
   bool mLoadingOriginalSrc : 1;
 
   bool mRemoteBrowserShown : 1;
-  bool mRemoteFrame : 1;
+  bool mIsRemoteFrame : 1;
   bool mObservingOwnerContent : 1;
 };
 
