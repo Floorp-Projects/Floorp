@@ -122,7 +122,7 @@ already_AddRefed<BrowsingContext> BrowsingContext::Create(
   // The name and opener fields need to be explicitly initialized. Don't bother
   // using transactions to set them, as we haven't been attached yet.
   context->mName = aName;
-  context->mOpener = aOpener;
+  context->mOpenerId = aOpener ? aOpener->Id() : 0;
 
   if (aParent) {
     context->mCrossOriginPolicy = aParent->mCrossOriginPolicy;
@@ -165,10 +165,8 @@ already_AddRefed<BrowsingContext> BrowsingContext::CreateFromIPC(
 
   Register(context);
 
-  // Initialize all non-opener fields. We skip the opener here, as when doing
-  // the initial sync of the fields we may not have our opener in this process
-  // yet at this point.
-#define MOZ_BC_FIELD_SKIP_OPENER
+  // Initialize all of our fields from IPC. We don't have to worry about
+  // mOpenerId, as we won't try to dereference it immediately.
 #define MOZ_BC_FIELD(name, ...) context->m##name = aInit.m##name;
 #include "mozilla/dom/BrowsingContextFieldList.h"
 
@@ -495,7 +493,7 @@ bool BrowsingContext::GetUserGestureActivation() {
 NS_IMPL_CYCLE_COLLECTION_CLASS(BrowsingContext)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(BrowsingContext)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocShell, mChildren, mParent, mOpener, mGroup)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocShell, mChildren, mParent, mGroup)
   if (XRE_IsParentProcess()) {
     CanonicalBrowsingContext::Cast(tmp)->Unlink();
   }
@@ -503,7 +501,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(BrowsingContext)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(BrowsingContext)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocShell, mChildren, mParent, mOpener, mGroup)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocShell, mChildren, mParent, mGroup)
   if (XRE_IsParentProcess()) {
     CanonicalBrowsingContext::Cast(tmp)->Traverse(cb);
   }
@@ -589,7 +587,7 @@ Nullable<WindowProxyHolder> BrowsingContext::GetTop(ErrorResult& aError) {
 void BrowsingContext::GetOpener(JSContext* aCx,
                                 JS::MutableHandle<JS::Value> aOpener,
                                 ErrorResult& aError) const {
-  BrowsingContext* opener = GetOpener();
+  RefPtr<BrowsingContext> opener = GetOpener();
   if (!opener) {
     aOpener.setNull();
     return;
@@ -809,13 +807,10 @@ void IPDLParamTraits<dom::BrowsingContext::IPCInitializer>::Write(
     IPC::Message* aMessage, IProtocol* aActor,
     const dom::BrowsingContext::IPCInitializer& aInit) {
   // Write actor ID parameters.
-  // NOTE: mOpenerId is synced separately due to ordering issues.
   WriteIPDLParam(aMessage, aActor, aInit.mId);
   WriteIPDLParam(aMessage, aActor, aInit.mParentId);
-  WriteIPDLParam(aMessage, aActor, aInit.mOpenerId);
 
   // Write other synchronized fields.
-#define MOZ_BC_FIELD_SKIP_OPENER
 #define MOZ_BC_FIELD(name, ...) WriteIPDLParam(aMessage, aActor, aInit.m##name);
 #include "mozilla/dom/BrowsingContextFieldList.h"
 }
@@ -824,15 +819,12 @@ bool IPDLParamTraits<dom::BrowsingContext::IPCInitializer>::Read(
     const IPC::Message* aMessage, PickleIterator* aIterator, IProtocol* aActor,
     dom::BrowsingContext::IPCInitializer* aInit) {
   // Read actor ID parameters.
-  // NOTE: mOpenerId is synced separately due to ordering issues.
   if (!ReadIPDLParam(aMessage, aIterator, aActor, &aInit->mId) ||
-      !ReadIPDLParam(aMessage, aIterator, aActor, &aInit->mParentId) ||
-      !ReadIPDLParam(aMessage, aIterator, aActor, &aInit->mOpenerId)) {
+      !ReadIPDLParam(aMessage, aIterator, aActor, &aInit->mParentId)) {
     return false;
   }
 
   // Read other synchronized fields.
-#define MOZ_BC_FIELD_SKIP_OPENER
 #define MOZ_BC_FIELD(name, ...)                                       \
   if (!ReadIPDLParam(aMessage, aIterator, aActor, &aInit->m##name)) { \
     return false;                                                     \

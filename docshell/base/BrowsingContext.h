@@ -155,7 +155,12 @@ class BrowsingContext : public nsWrapperCache,
 
   uint64_t Id() const { return mBrowsingContextId; }
 
-  BrowsingContext* GetParent() { return mParent; }
+  BrowsingContext* GetParent() const { return mParent; }
+
+  already_AddRefed<BrowsingContext> GetOpener() const { return Get(mOpenerId); }
+  void SetOpener(BrowsingContext* aOpener) {
+    SetOpenerId(aOpener ? aOpener->Id() : 0);
+  }
 
   void GetChildren(nsTArray<RefPtr<BrowsingContext>>& aChildren);
 
@@ -292,13 +297,11 @@ class BrowsingContext : public nsWrapperCache,
     // deserialized before other BrowsingContext in the BrowsingContextGroup
     // have been initialized.
     uint64_t mParentId;
-    uint64_t mOpenerId;
     already_AddRefed<BrowsingContext> GetParent();
     already_AddRefed<BrowsingContext> GetOpener();
 
     // Include each field, skipping mOpener, as we want to handle it
     // separately.
-#define MOZ_BC_FIELD_SKIP_OPENER
 #define MOZ_BC_FIELD(name, type) type m##name;
 #include "mozilla/dom/BrowsingContextFieldList.h"
   };
@@ -308,26 +311,16 @@ class BrowsingContext : public nsWrapperCache,
     IPCInitializer init;
     init.mId = Id();
     init.mParentId = mParent ? mParent->Id() : 0;
-    init.mOpenerId = mOpener ? mOpener->Id() : 0;
 
-#define MOZ_BC_FIELD_SKIP_OPENER
 #define MOZ_BC_FIELD(name, type) init.m##name = m##name;
 #include "mozilla/dom/BrowsingContextFieldList.h"
     return init;
   }
 
-  // Create a BrowsingContext object from over IPC. This method does not
-  // initialize the Opener field, which will need to be set after using the
-  // InitFromIPC method.
+  // Create a BrowsingContext object from over IPC.
   static already_AddRefed<BrowsingContext> CreateFromIPC(
       IPCInitializer&& aInitializer, BrowsingContextGroup* aGroup,
       ContentParent* aOriginProcess);
-
-  // Initialize the Opener property which was not set during CreateFromIPC.
-  void InitFromIPC(uint64_t aOpenerId) {
-    mOpener = BrowsingContext::Get(aOpenerId);
-    MOZ_RELEASE_ASSERT(mOpener || aOpenerId == 0);
-  }
 
  protected:
   virtual ~BrowsingContext();
@@ -398,10 +391,10 @@ class BrowsingContext : public nsWrapperCache,
   };
 
   // Ensure that opener is in the same BrowsingContextGroup.
-  void WillSetOpener(const RefPtr<BrowsingContext>& aValue,
-                     ContentParent* aSource) {
-    if (aValue) {
-      MOZ_RELEASE_ASSERT(aValue->Group() == Group());
+  void WillSetOpener(const uint64_t& aValue, ContentParent* aSource) {
+    if (aValue != 0) {
+      RefPtr<BrowsingContext> opener = Get(aValue);
+      MOZ_RELEASE_ASSERT(opener && opener->Group() == Group());
     }
   }
 
