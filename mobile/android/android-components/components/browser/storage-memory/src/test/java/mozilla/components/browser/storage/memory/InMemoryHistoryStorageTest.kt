@@ -44,6 +44,30 @@ class InMemoryHistoryStorageTest {
     }
 
     @Test
+    fun `store can be used to query detailed visit information`() = runBlocking {
+        val history = InMemoryHistoryStorage()
+
+        history.recordVisit("http://www.mozilla.org", VisitType.LINK)
+        history.recordVisit("http://www.mozilla.org", VisitType.RELOAD)
+        history.recordObservation("http://www.mozilla.org", PageObservation("Mozilla"))
+        history.recordVisit("http://www.firefox.com", VisitType.LINK)
+
+        val visits = history.getDetailedVisits(0)
+        assertEquals(3, visits.size)
+        assertEquals("http://www.mozilla.org", visits[0].url)
+        assertEquals("Mozilla", visits[0].title)
+        assertEquals(VisitType.LINK, visits[0].visitType)
+
+        assertEquals("http://www.mozilla.org", visits[1].url)
+        assertEquals("Mozilla", visits[1].title)
+        assertEquals(VisitType.RELOAD, visits[1].visitType)
+
+        assertEquals("http://www.firefox.com", visits[2].url)
+        assertEquals(null, visits[2].title)
+        assertEquals(VisitType.LINK, visits[2].visitType)
+    }
+
+    @Test
     fun `store can be used to record and retrieve history via webview-style callbacks`() = runBlocking {
         val history = InMemoryHistoryStorage()
 

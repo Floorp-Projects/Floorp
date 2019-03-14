@@ -7,11 +7,14 @@ package mozilla.components.browser.storage.sync
 import kotlinx.coroutines.runBlocking
 import mozilla.components.concept.storage.PageObservation
 import mozilla.components.concept.storage.VisitType
+import mozilla.components.concept.sync.AuthInfo
+import mozilla.components.concept.sync.SyncStatus
 import mozilla.components.support.test.eq
 import org.junit.Test
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Assert.fail
 import org.junit.Before
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers
@@ -19,8 +22,11 @@ import org.mockito.Mockito.`when`
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.times
 import org.mockito.Mockito.never
+import org.mozilla.places.PlacesException
 import org.mozilla.places.ReadablePlacesConnectionInterface
 import org.mozilla.places.SearchResult
+import org.mozilla.places.SyncAuthInfo
+import org.mozilla.places.VisitInfo
 import org.mozilla.places.VisitObservation
 import org.mozilla.places.WritablePlacesConnectionInterface
 import org.robolectric.RobolectricTestRunner
@@ -66,6 +72,36 @@ class PlacesHistoryStorageTest {
         verify(writer, times(1)).noteObservation(
                 VisitObservation("http://www.firefox.com", visitType = org.mozilla.places.VisitType.TYPED)
         )
+
+        storage.recordVisit("http://www.firefox.com", VisitType.REDIRECT_TEMPORARY)
+        verify(writer, times(1)).noteObservation(
+                VisitObservation("http://www.firefox.com", visitType = org.mozilla.places.VisitType.REDIRECT_TEMPORARY)
+        )
+
+        storage.recordVisit("http://www.firefox.com", VisitType.REDIRECT_PERMANENT)
+        verify(writer, times(1)).noteObservation(
+                VisitObservation("http://www.firefox.com", visitType = org.mozilla.places.VisitType.REDIRECT_PERMANENT)
+        )
+
+        storage.recordVisit("http://www.firefox.com", VisitType.FRAMED_LINK)
+        verify(writer, times(1)).noteObservation(
+                VisitObservation("http://www.firefox.com", visitType = org.mozilla.places.VisitType.FRAMED_LINK)
+        )
+
+        storage.recordVisit("http://www.firefox.com", VisitType.EMBED)
+        verify(writer, times(1)).noteObservation(
+                VisitObservation("http://www.firefox.com", visitType = org.mozilla.places.VisitType.EMBED)
+        )
+
+        storage.recordVisit("http://www.firefox.com", VisitType.BOOKMARK)
+        verify(writer, times(1)).noteObservation(
+                VisitObservation("http://www.firefox.com", visitType = org.mozilla.places.VisitType.BOOKMARK)
+        )
+
+        storage.recordVisit("http://www.firefox.com", VisitType.DOWNLOAD)
+        verify(writer, times(1)).noteObservation(
+                VisitObservation("http://www.firefox.com", visitType = org.mozilla.places.VisitType.DOWNLOAD)
+        )
     }
 
     @Test
@@ -106,6 +142,97 @@ class PlacesHistoryStorageTest {
         storage.getVisited()
         verify(reader, times(1)).getVisitedUrlsInRange(eq(0), ArgumentMatchers.anyLong(), eq(true))
         Unit
+    }
+
+    @Test
+    fun `storage passes through getDetailedVisits() calls`() = runBlocking {
+        val storage = storage!!
+        val reader = reader!!
+
+        storage.getDetailedVisits(15, 25)
+        verify(reader, times(1)).getVisitInfos(eq(15), eq(25))
+
+        storage.getDetailedVisits(12345)
+        verify(reader, times(1)).getVisitInfos(eq(12345), eq(Long.MAX_VALUE))
+
+        `when`(reader.getVisitInfos(15, 25)).thenReturn(listOf(
+            VisitInfo(
+                url = "http://www.mozilla.org",
+                visitType = org.mozilla.places.VisitType.TYPED,
+                visitTime = 17,
+                title = null
+            ),
+            VisitInfo(
+                url = "http://www.firefox.com",
+                visitType = org.mozilla.places.VisitType.BOOKMARK,
+                visitTime = 20,
+                title = "Firefox"
+            ),
+            // All other visit types, so that we can check that visit types are being converted.
+            VisitInfo(
+                url = "http://www.firefox.com",
+                visitType = org.mozilla.places.VisitType.RELOAD,
+                visitTime = 20,
+                title = "Firefox"
+            ),
+            VisitInfo(
+                url = "http://www.firefox.com",
+                visitType = org.mozilla.places.VisitType.LINK,
+                visitTime = 20,
+                title = "Firefox"
+            ),
+            VisitInfo(
+                url = "http://www.firefox.com",
+                visitType = org.mozilla.places.VisitType.DOWNLOAD,
+                visitTime = 20,
+                title = "Firefox"
+            ),
+            VisitInfo(
+                url = "http://www.firefox.com",
+                visitType = org.mozilla.places.VisitType.EMBED,
+                visitTime = 20,
+                title = "Firefox"
+            ),
+            VisitInfo(
+                url = "http://www.firefox.com",
+                visitType = org.mozilla.places.VisitType.FRAMED_LINK,
+                visitTime = 20,
+                title = "Firefox"
+            ),
+            VisitInfo(
+                url = "http://www.firefox.com",
+                visitType = org.mozilla.places.VisitType.REDIRECT_PERMANENT,
+                visitTime = 20,
+                title = "Firefox"
+            ),
+            VisitInfo(
+                url = "http://www.firefox.com",
+                visitType = org.mozilla.places.VisitType.REDIRECT_TEMPORARY,
+                visitTime = 20,
+                title = "Firefox"
+            )
+        ))
+        val visits = storage.getDetailedVisits(15, 25)
+        assertEquals(9, visits.size)
+        // Assert type conversions.
+        assertEquals("http://www.mozilla.org", visits[0].url)
+        assertEquals(VisitType.TYPED, visits[0].visitType)
+        assertEquals(17, visits[0].visitTime)
+        assertEquals(null, visits[0].title)
+
+        assertEquals("http://www.firefox.com", visits[1].url)
+        assertEquals(VisitType.BOOKMARK, visits[1].visitType)
+        assertEquals(20, visits[1].visitTime)
+        assertEquals("Firefox", visits[1].title)
+
+        // Visit type assertions.
+        assertEquals(VisitType.RELOAD, visits[2].visitType)
+        assertEquals(VisitType.LINK, visits[3].visitType)
+        assertEquals(VisitType.DOWNLOAD, visits[4].visitType)
+        assertEquals(VisitType.EMBED, visits[5].visitType)
+        assertEquals(VisitType.FRAMED_LINK, visits[6].visitType)
+        assertEquals(VisitType.REDIRECT_PERMANENT, visits[7].visitType)
+        assertEquals(VisitType.REDIRECT_TEMPORARY, visits[8].visitType)
     }
 
     @Test

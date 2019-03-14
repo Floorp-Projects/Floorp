@@ -9,6 +9,7 @@ import mozilla.components.concept.storage.HistoryAutocompleteResult
 import mozilla.components.concept.storage.HistoryStorage
 import mozilla.components.concept.storage.PageObservation
 import mozilla.components.concept.storage.SearchResult
+import mozilla.components.concept.storage.VisitInfo
 import mozilla.components.concept.storage.VisitType
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
@@ -62,6 +63,11 @@ class HistoryDelegateTest {
 
             override suspend fun getVisited(): List<String> {
                 getVisitedPlainCalled = true
+                return emptyList()
+            }
+
+            override suspend fun getDetailedVisits(start: Long, end: Long): List<VisitInfo> {
+                fail()
                 return emptyList()
             }
 

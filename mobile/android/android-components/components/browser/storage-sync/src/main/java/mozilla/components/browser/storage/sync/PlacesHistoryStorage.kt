@@ -6,15 +6,15 @@ package mozilla.components.browser.storage.sync
 
 import android.content.Context
 import android.support.annotation.VisibleForTesting
-import kotlinx.coroutines.async
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import mozilla.components.concept.storage.HistoryAutocompleteResult
 import mozilla.components.concept.storage.HistoryStorage
 import mozilla.components.concept.storage.PageObservation
 import mozilla.components.concept.storage.SearchResult
+import mozilla.components.concept.storage.VisitInfo
 import mozilla.components.concept.sync.SyncStatus
 import mozilla.components.concept.sync.SyncableStore
 import mozilla.components.concept.storage.VisitType
@@ -42,14 +42,14 @@ open class PlacesHistoryStorage(context: Context) : HistoryStorage, SyncableStor
     }
 
     override suspend fun recordVisit(uri: String, visitType: VisitType) {
-        scope.launch {
+        withContext(scope.coroutineContext) {
             places.writer().noteObservation(VisitObservation(uri, visitType = visitType.into()))
-        }.join()
+        }
     }
 
     override suspend fun recordObservation(uri: String, observation: PageObservation) {
-        // NB: visitType of null means "record meta information about this URL".
-        scope.launch {
+        // NB: visitType 'UPDATE_PLACE' means "record meta information about this URL".
+        withContext(scope.coroutineContext) {
             places.writer().noteObservation(
                 VisitObservation(
                     url = uri,
@@ -57,21 +57,27 @@ open class PlacesHistoryStorage(context: Context) : HistoryStorage, SyncableStor
                     title = observation.title
                 )
             )
-        }.join()
+        }
     }
 
     override suspend fun getVisited(uris: List<String>): List<Boolean> {
-        return scope.async { places.reader().getVisited(uris) }.await()
+        return withContext(scope.coroutineContext) { places.reader().getVisited(uris) }
     }
 
     override suspend fun getVisited(): List<String> {
-        return scope.async {
+        return withContext(scope.coroutineContext) {
             places.reader().getVisitedUrlsInRange(
                 start = 0,
                 end = System.currentTimeMillis(),
                 includeRemote = true
             )
-        }.await()
+        }
+    }
+
+    override suspend fun getDetailedVisits(start: Long, end: Long): List<VisitInfo> {
+        return withContext(scope.coroutineContext) {
+            places.reader().getVisitInfos(start, end).map { it.into() }
+        }
     }
 
     override fun cleanup() {

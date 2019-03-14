@@ -9,6 +9,7 @@ import mozilla.components.concept.storage.HistoryAutocompleteResult
 import mozilla.components.concept.storage.HistoryStorage
 import mozilla.components.concept.storage.PageObservation
 import mozilla.components.concept.storage.SearchResult
+import mozilla.components.concept.storage.VisitInfo
 import mozilla.components.concept.storage.VisitType
 import mozilla.components.support.utils.segmentAwareDomainMatch
 
@@ -52,6 +53,25 @@ class InMemoryHistoryStorage : HistoryStorage {
 
     override suspend fun getVisited(): List<String> = synchronized(pages) {
         return pages.keys.toList()
+    }
+
+    override suspend fun getDetailedVisits(start: Long, end: Long): List<VisitInfo> {
+        val visits = mutableListOf<VisitInfo>()
+
+        pages.forEach {
+            it.value.forEach { visit ->
+                if (visit.timestamp >= start && visit.timestamp <= end) {
+                    visits.add(VisitInfo(
+                        url = it.key,
+                        title = pageMeta[it.key]?.title,
+                        visitTime = visit.timestamp,
+                        visitType = visit.type
+                    ))
+                }
+            }
+        }
+
+        return visits
     }
 
     override fun getSuggestions(query: String, limit: Int): List<SearchResult> = synchronized(pages + pageMeta) {

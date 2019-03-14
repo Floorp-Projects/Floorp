@@ -37,6 +37,14 @@ interface HistoryStorage {
     suspend fun getVisited(): List<String>
 
     /**
+     * Retrieves detailed information about all visits that occurred in the given time range.
+     * @param start The (inclusive) start time to bound the query.
+     * @param end The (inclusive) end time to bound the query.
+     * @return A list of all visits within the specified range, described by [VisitInfo].
+     */
+    suspend fun getDetailedVisits(start: Long, end: Long = Long.MAX_VALUE): List<VisitInfo>
+
+    /**
      * Retrieves suggestions matching the [query].
      * @param query A query by which to search the underlying store.
      * @return A List of [SearchResult] matching the query, in no particular order.
@@ -59,14 +67,37 @@ interface HistoryStorage {
 data class PageObservation(val title: String?)
 
 /**
+ * Information about a history visit.
+ *
+ * @property url The URL of the page that was visited.
+ * @property title The title of the page that was visited, if known.
+ * @property visitTime The time the page was visited in integer milliseconds since the unix epoch.
+ * @property visitType What the transition type of the visit is, expressed as [VisitType].
+ */
+data class VisitInfo(
+    val url: String,
+    val title: String?,
+    val visitTime: Long,
+    val visitType: VisitType
+)
+
+/**
  * Visit type constants as defined by Desktop Firefox.
  */
 @SuppressWarnings("MagicNumber")
 enum class VisitType(val type: Int) {
+    // Internal visit type used for meta data updates. Doesn't represent an actual page visit.
+    NOT_A_VISIT(-1),
     // User followed a link.
     LINK(1),
     // User typed a URL or selected it from the UI (autocomplete results, etc).
     TYPED(2),
+    BOOKMARK(3),
+    EMBED(4),
+    REDIRECT_PERMANENT(5),
+    REDIRECT_TEMPORARY(6),
+    DOWNLOAD(7),
+    FRAMED_LINK(8),
     RELOAD(9)
 }
 

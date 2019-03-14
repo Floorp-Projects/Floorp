@@ -29,6 +29,10 @@ permalink: /changelog/
 
 * **concept-storage**
   * ⚠️ **This is a breaking API change!**: Removed sync-related interfaces. See **concept-sync**.
+  * **HistoryStorage** interface has a new method: `getDetailedVisits(start, end) -> List<VisitInfo>`. It provides detailed information about page visits (title, visit type, timestamp, etc).
+
+* **browser-storage-memory**, **browser-storage-sync**:
+  * Added implementations for the new getDetailedVisits API from **concept-storage**.
 
 * **feature-sync**
   * ⚠️ **This is a breaking API change!** Complete overhaul of this component.
