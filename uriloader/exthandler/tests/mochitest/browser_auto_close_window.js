@@ -60,7 +60,6 @@ add_task(async function simple_navigation() {
 // opens with target="_blank" (i.e. a new tab) and ensures that we
 // automatically open and close that tab.
 async function testNewTab(browser) {
-  let targetURL = browser.currentURI.spec;
   let dialogAppeared = promiseHelperAppDialog();
   let tabOpened = BrowserTestUtils.waitForEvent(gBrowser.tabContainer, "TabOpen").then((event) => {
     return [ event.target, BrowserTestUtils.waitForTabClosing(event.target) ];
