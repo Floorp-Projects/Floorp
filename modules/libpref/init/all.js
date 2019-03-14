@@ -5234,8 +5234,6 @@ pref("dom.battery.enabled", true);
 
 // Push
 
-pref("dom.push.alwaysConnect", false);
-
 pref("dom.push.loglevel", "Error");
 
 pref("dom.push.serverURL", "wss://push.services.mozilla.com/");
