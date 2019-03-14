@@ -47,6 +47,8 @@ parent:
    */
   async Activate();
 
+  async Deactivate();
+
 };
 
 }  // namespace dom
