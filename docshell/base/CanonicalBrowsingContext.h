@@ -60,6 +60,11 @@ class CanonicalBrowsingContext final : public BrowsingContext {
   // function)
   void NotifySetUserGestureActivationFromIPC(bool aIsUserGestureActivation);
 
+  // Validate that the given process is allowed to perform the given
+  // transaction. aSource is |nullptr| if set in the parent process.
+  bool ValidateTransaction(const Transaction& aTransaction,
+                           ContentParent* aSource);
+
  protected:
   void Traverse(nsCycleCollectionTraversalCallback& cb);
   void Unlink();

@@ -95,6 +95,15 @@ void CanonicalBrowsingContext::SetCurrentWindowGlobal(
   mCurrentWindowGlobal = aGlobal;
 }
 
+bool CanonicalBrowsingContext::ValidateTransaction(
+    const Transaction& aTransaction, ContentParent* aProcess) {
+  if (NS_WARN_IF(aProcess && mProcessId != aProcess->ChildID())) {
+    return false;
+  }
+
+  return true;
+}
+
 JSObject* CanonicalBrowsingContext::WrapObject(
     JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {
   return CanonicalBrowsingContext_Binding::Wrap(aCx, this, aGivenProto);
