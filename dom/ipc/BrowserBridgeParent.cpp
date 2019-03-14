@@ -127,6 +127,11 @@ IPCResult BrowserBridgeParent::RecvActivate() {
   return IPC_OK();
 }
 
+IPCResult BrowserBridgeParent::RecvDeactivate() {
+  mTabParent->Deactivate();
+  return IPC_OK();
+}
+
 void BrowserBridgeParent::ActorDestroy(ActorDestroyReason aWhy) {
   mIPCOpen = false;
 }
