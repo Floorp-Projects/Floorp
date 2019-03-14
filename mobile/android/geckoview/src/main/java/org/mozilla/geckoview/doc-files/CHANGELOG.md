@@ -95,6 +95,20 @@ exclude: true
 
 [67.22]: ../GeckoSession.ContentDelegate.html#onWebAppManifest-org.mozilla.geckoview.GeckoSession-org.json.JSONObject
 
+- Added [`WebResponse.byteArray()`][67.22], [`WebResponse.text()`][67.23], and
+  [`WebResponse.json()`][67.24] as convenience methods for accessing the response body.
+
+[67.23]: ../WebResponse.html#byteArray--
+[67.24]: ../WebResponse.html#text--
+[67.25]: ../WebResponse.html#json--
+
+- Added [`byte[]`][67.25], [`String`][67.26], and [`JSONObject`][67.27] overloads of
+  `WebRequest.Body.Builder.body()` as convenience methods for setting the request body.
+
+[67.26]: ../WebRequest.Builder.html#body-byte:A-
+[67.27]: ../WebRequest.Builder.html#body-java.lang.String-
+[67.28]: ../WebRequest.Builder.html#body-org.json.JSONObject-
+
 ## v66
 - Removed redundant field `trackingMode` from [`SecurityInformation`][66.6].
   Use `TrackingProtectionDelegate.onTrackerBlocked` for notification of blocked
@@ -214,4 +228,4 @@ exclude: true
 [65.24]: ../CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: ../GeckoResult.html
 
-[api-version]: 910e94d6c3ec93faf7ba4ef73c4746b86e77b1c4
+[api-version]: bf7527ba15aeda260dbfb8dd134e963ab062fba8
