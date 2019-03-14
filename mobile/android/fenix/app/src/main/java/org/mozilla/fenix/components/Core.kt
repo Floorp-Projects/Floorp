@@ -25,6 +25,7 @@ import mozilla.components.feature.session.HistoryDelegate
 import mozilla.components.feature.session.bundling.SessionBundleStorage
 import mozilla.components.lib.crash.handler.CrashHandlerService
 import org.mozilla.fenix.AppRequestInterceptor
+import org.mozilla.fenix.ext.components
 import org.mozilla.geckoview.GeckoRuntime
 import org.mozilla.geckoview.GeckoRuntimeSettings
 import java.util.concurrent.TimeUnit
@@ -75,8 +76,9 @@ class Core(private val context: Context) {
         GeckoViewFetchClient(context, runtime)
     }
 
-    val sessionStorage by lazy {
-        SessionBundleStorage(context, bundleLifetime = Pair(BUNDLE_LIFETIME_IN_MINUTES, TimeUnit.MINUTES))
+    val sessionStorage: SessionBundleStorage by lazy {
+        SessionBundleStorage(context, bundleLifetime = Pair(BUNDLE_LIFETIME_IN_MINUTES, TimeUnit.MINUTES),
+            engine = engine)
     }
 
     /**
@@ -90,7 +92,7 @@ class Core(private val context: Context) {
             // Restore a previous, still active bundle.
             GlobalScope.launch(Dispatchers.Main) {
                 val snapshot = async(Dispatchers.IO) {
-                    sessionStorage.restore()?.restoreSnapshot(engine)
+                    sessionStorage.restore()?.restoreSnapshot()
                 }
 
                 // There's an active bundle with a snapshot: Feed it into the SessionManager.

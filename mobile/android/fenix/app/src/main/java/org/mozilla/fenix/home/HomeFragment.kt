@@ -229,7 +229,7 @@ class HomeFragment : Fragment() {
                     when (it) {
                         is SessionsAction.Select -> {
                             requireComponents.core.sessionStorage.archive(requireComponents.core.sessionManager)
-                            it.archivedSession.bundle.restoreSnapshot(requireComponents.core.engine)?.apply {
+                            it.archivedSession.bundle.restoreSnapshot()?.apply {
                                 requireComponents.core.sessionManager.restore(this)
                                 homeScrollView.smoothScrollTo(0, 0)
                             }

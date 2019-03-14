@@ -12,7 +12,6 @@ import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import kotlinx.android.extensions.LayoutContainer
 import kotlinx.android.synthetic.main.session_bottom_sheet.view.*
 import org.mozilla.fenix.R
-import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.home.sessions.ArchivedSession
 
 class SessionBottomSheetFragment : BottomSheetDialogFragment(), LayoutContainer {
@@ -76,7 +75,7 @@ class SessionBottomSheetFragment : BottomSheetDialogFragment(), LayoutContainer 
                 is SessionType.Current -> it.titles
                 is SessionType.Private -> it.titles
                 is SessionType.Archived ->
-                    it.archivedSession.bundle.restoreSnapshot(requireComponents.core.engine)?.let { snapshot ->
+                    it.archivedSession.bundle.restoreSnapshot()?.let { snapshot ->
                         snapshot.sessions.map { item -> item.session.title }
                     }
             }
