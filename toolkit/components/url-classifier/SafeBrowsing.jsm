@@ -115,17 +115,7 @@ const FEATURES = [
       return Services.prefs.getBoolPref("browser.safebrowsing.features.flashBlock.update", this.enabled());
     },
   },
-  { name: "fingerprinting-annotation",
-    list: ["urlclassifier.features.fingerprinting.annotate.blacklistTables",
-           "urlclassifier.features.fingerprinting.annotate.whitelistTables"],
-    enabled() {
-      return Services.prefs.getBoolPref("privacy.trackingprotection.fingerprinting.annotate.enabled", false);
-    },
-    update() {
-      return Services.prefs.getBoolPref("browser.safebrowsing.features.fingerprinting.annotate.update", this.enabled());
-    },
-  },
-  { name: "fingerprinting-protection",
+  { name: "fingerprinting",
     list: ["urlclassifier.features.fingerprinting.blacklistTables",
            "urlclassifier.features.fingerprinting.whitelistTables"],
     enabled() {
@@ -135,16 +125,7 @@ const FEATURES = [
       return Services.prefs.getBoolPref("browser.safebrowsing.features.fingerprinting.update", this.enabled());
     },
   },
-  { name: "cryptomining-annotation",
-    list: ["urlclassifier.features.cryptomining.annotate.blacklistTables",
-           "urlclassifier.features.cryptomining.annotate.whitelistTables"],
-    enabled() {
-      return Services.prefs.getBoolPref("privacy.trackingprotection.annotate.cryptomining.enabled", false);
-    },
-    update() {
-      return Services.prefs.getBoolPref("browser.safebrowsing.features.cryptomining.annotate.update", this.enabled());
-    },
-  { name: "cryptomining-protection",
+  { name: "cryptomining",
     list: ["urlclassifier.features.cryptomining.blacklistTables",
            "urlclassifier.features.cryptomining.whitelistTables"],
     enabled() {

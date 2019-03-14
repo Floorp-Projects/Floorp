@@ -3340,7 +3340,7 @@ void ScriptLoader::HandleLoadError(ScriptLoadRequest* aRequest,
                                    nsresult aResult) {
   /*
    * Handle script not loading error because source was an tracking URL (or
-   * fingerprinting, cryptomining, etc).
+   * fingerprinting, cryptoming, etc).
    * We make a note of this script node by including it in a dedicated
    * array of blocked tracking nodes under its parent document.
    */

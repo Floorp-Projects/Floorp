@@ -1850,16 +1850,12 @@ HttpChannelParent::SetClassifierMatchedInfo(const nsACString& aList,
 }
 
 NS_IMETHODIMP
-HttpChannelParent::NotifyClassificationFlags(uint32_t aClassificationFlags,
-                                             bool aIsThirdParty) {
-  LOG(
-      ("HttpChannelParent::NotifyClassificationFlags "
-       "classificationFlags=%" PRIu32 ", thirdparty=%d [this=%p]\n",
-       aClassificationFlags, static_cast<int>(aIsThirdParty), this));
+HttpChannelParent::NotifyTrackingResource(bool aIsThirdParty) {
+  LOG(("HttpChannelParent::NotifyTrackingResource thirdparty=%d [this=%p]\n",
+       static_cast<int>(aIsThirdParty), this));
   if (!mIPCClosed) {
     MOZ_ASSERT(mBgParent);
-    Unused << mBgParent->OnNotifyClassificationFlags(aClassificationFlags,
-                                                     aIsThirdParty);
+    Unused << mBgParent->OnNotifyTrackingResource(aIsThirdParty);
   }
   return NS_OK;
 }
