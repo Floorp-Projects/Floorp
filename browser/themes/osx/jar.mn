@@ -17,8 +17,9 @@ browser.jar:
 * skin/classic/browser/customizableui/panelUI.css    (customizableui/panelUI.css)
 * skin/classic/browser/downloads/allDownloadsView.css (downloads/allDownloadsView.css)
 * skin/classic/browser/downloads/downloads.css              (downloads/downloads.css)
-  skin/classic/browser/monitor-base.png
-  skin/classic/browser/monitor-border.png
+  skin/classic/browser/setDesktopBackground.css
+  skin/classic/browser/monitor.png
+  skin/classic/browser/monitor_16-10.png
   skin/classic/browser/notification-icons/geo-blocked.svg  (notification-icons/geo-blocked.svg)
   skin/classic/browser/notification-icons/geo.svg          (notification-icons/geo.svg)
   skin/classic/browser/places/allBookmarks.png              (places/allBookmarks.png)

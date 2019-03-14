@@ -1,0 +1,18 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+@namespace html url("http://www.w3.org/1999/xhtml");
+
+html|canvas#screen {
+  margin: 12px 11px 32px;
+}
+
+#monitor {
+  list-style-image: url("chrome://browser/skin/monitor.png");
+}
+
+#monitor[aspectratio="16:10"] {
+  list-style-image: url("chrome://browser/skin/monitor_16-10.png");
+}

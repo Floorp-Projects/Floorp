@@ -39,16 +39,19 @@ add_task(async function() {
     const win = await dialogLoad;
 
     /* setDesktopBackground.js does a setTimeout to wait for correct
-       dimensions. If we don't wait here we could read the preview dimensions
-       before they're changed to match the screen */
+       dimensions. If we don't wait here we could read the monitor image
+       URL before it's changed to the widescreen version */
     await TestUtils.waitForTick();
 
-    const canvas = win.document.getElementById("screen");
-    // Only test to two decimal places
-    const screenRatio = Math.floor((screen.width / screen.height) * 100);
-    const previewRatio = Math.floor((canvas.clientWidth / canvas.clientHeight) * 100);
+    const img = win.document.getElementById("monitor");
+    const measure = new Image();
+    const measureLoad = BrowserTestUtils.waitForEvent(measure, "load");
+    measure.src =
+      getComputedStyle(img).listStyleImage.slice(4, -1).replace(/"/g, "");
+    await measureLoad;
 
-    Assert.equal(previewRatio, screenRatio, "Preview's aspect ratio matches screen's");
+    Assert.equal(img.clientWidth, measure.naturalWidth, "Monitor image correct width");
+    Assert.equal(img.clientHeight, measure.naturalHeight, "Monitor image correct height");
 
     win.close();
 
