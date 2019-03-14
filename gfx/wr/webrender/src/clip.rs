@@ -2,12 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{BorderRadius, ClipMode, ComplexClipRegion, DeviceIntRect, DevicePixelScale, ImageMask};
-use api::{ImageRendering, LayoutRect, LayoutSize, LayoutPoint, LayoutVector2D};
-use api::{BoxShadowClipMode, LayoutToWorldScale, PicturePixel, WorldPixel};
-use api::{PictureRect, LayoutPixel, WorldPoint, WorldSize, WorldRect, LayoutToWorldTransform};
-use api::{ClipIntern, ImageKey};
-use app_units::Au;
+use api::{BorderRadius, ClipIntern, ClipMode, ComplexClipRegion, ImageMask};
+use api::{BoxShadowClipMode, ImageKey, ImageRendering};
+use api::units::*;
 use border::{ensure_no_corner_overlap, BorderRadiusAu};
 use box_shadow::{BLUR_SAMPLE_SCALE, BoxShadowClipSource, BoxShadowCacheKey};
 use clip_scroll_tree::{ClipScrollTree, SpatialNodeIndex};

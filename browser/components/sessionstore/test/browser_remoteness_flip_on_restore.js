@@ -120,8 +120,9 @@ async function runScenarios(scenarios) {
         tab = tabbrowser.selectedTab;
       }
       let browser = tab.linkedBrowser;
-      let remotenessState = scenario.initialRemoteness[i];
-      tabbrowser.updateBrowserRemoteness(browser, remotenessState);
+      let remotenessState = scenario.initialRemoteness[i] ?
+          E10SUtils.DEFAULT_REMOTE_TYPE : E10SUtils.NOT_REMOTE;
+      tabbrowser.updateBrowserRemoteness(browser, { remoteType: remotenessState });
     }
 
     // And select the requested tab.

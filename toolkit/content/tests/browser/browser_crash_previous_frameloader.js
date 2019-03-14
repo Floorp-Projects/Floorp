@@ -97,7 +97,7 @@ add_task(async function test_crash_in_previous_frameloader() {
       });
     });
 
-    gBrowser.updateBrowserRemoteness(browser, false);
+    gBrowser.updateBrowserRemoteness(browser, { remoteType: E10SUtils.NOT_REMOTE });
     info("Waiting for content process to go away.");
     let [subject /* , data */] = await contentProcessGone;
 
