@@ -34,6 +34,7 @@ class CanonicalBrowsingContext final : public BrowsingContext {
     return mProcessId == aProcessId;
   }
   uint64_t OwnerProcessId() const { return mProcessId; }
+  ContentParent* GetContentParent() const;
 
   void SetOwnerProcessId(uint64_t aProcessId) { mProcessId = aProcessId; }
 
