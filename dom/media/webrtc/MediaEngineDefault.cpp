@@ -63,9 +63,7 @@ MediaEngineDefaultVideoSource::MediaEngineDefaultVideoSource()
 
 MediaEngineDefaultVideoSource::~MediaEngineDefaultVideoSource() {}
 
-nsString MediaEngineDefaultVideoSource::GetName() const {
-  return mName;
-}
+nsString MediaEngineDefaultVideoSource::GetName() const { return mName; }
 
 nsCString MediaEngineDefaultVideoSource::GetUUID() const {
   return NS_LITERAL_CSTRING("1041FCBD-3F12-4F7B-9E9B-1EC556DD5676");
@@ -582,8 +580,8 @@ void MediaEngineDefault::EnumerateDevices(
       devicesForThisWindow->AppendElement(newSource);
       aDevices->AppendElement(MakeRefPtr<MediaDevice>(
           newSource, newSource->GetName(),
-          NS_ConvertUTF8toUTF16(newSource->GetUUID()),
-          newSource->GetGroupId(), NS_LITERAL_STRING("")));
+          NS_ConvertUTF8toUTF16(newSource->GetUUID()), newSource->GetGroupId(),
+          NS_LITERAL_STRING("")));
       return;
     }
     case dom::MediaSourceEnum::Microphone: {
@@ -594,8 +592,8 @@ void MediaEngineDefault::EnumerateDevices(
         if (source->IsAvailable()) {
           aDevices->AppendElement(MakeRefPtr<MediaDevice>(
               source, source->GetName(),
-              NS_ConvertUTF8toUTF16(source->GetUUID()),
-              source->GetGroupId(), NS_LITERAL_STRING("")));
+              NS_ConvertUTF8toUTF16(source->GetUUID()), source->GetGroupId(),
+              NS_LITERAL_STRING("")));
         }
       }
 

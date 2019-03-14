@@ -42,8 +42,7 @@ class InterfaceScanCallbackData {
   HANDLE mAllInterfacesDoneScanningEvent;
 };
 
-static void WINAPI OnScanComplete(PWLAN_NOTIFICATION_DATA data,
-                                    PVOID context) {
+static void WINAPI OnScanComplete(PWLAN_NOTIFICATION_DATA data, PVOID context) {
   if (WLAN_NOTIFICATION_SOURCE_ACM != data->NotificationSource) {
     return;
   }

@@ -1612,8 +1612,7 @@ nsresult nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame,
   return NS_OK;
 }
 
-void nsMenuPopupFrame::GenerateFrames()
-{
+void nsMenuPopupFrame::GenerateFrames() {
   const bool generateFrames = IsLeaf();
   MOZ_ASSERT_IF(generateFrames, !mGeneratedChildren);
   mGeneratedChildren = true;

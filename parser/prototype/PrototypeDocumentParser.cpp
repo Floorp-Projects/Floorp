@@ -133,8 +133,7 @@ PrototypeDocumentParser::OnStartRequest(nsIRequest* request) {
 }
 
 NS_IMETHODIMP
-PrototypeDocumentParser::OnStopRequest(nsIRequest* request,
-                                       nsresult aStatus) {
+PrototypeDocumentParser::OnStopRequest(nsIRequest* request, nsresult aStatus) {
   if (mStreamListener) {
     return mStreamListener->OnStopRequest(request, aStatus);
   }
