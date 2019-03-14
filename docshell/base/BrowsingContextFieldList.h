@@ -8,12 +8,9 @@ MOZ_BC_FIELD(Name, nsString)
 MOZ_BC_FIELD(Closed, bool)
 MOZ_BC_FIELD(CrossOriginPolicy, nsILoadInfo::CrossOriginPolicy)
 
-// The current opener for this BrowsingContext. This field can be skipped by
-// defining `MOZ_BC_FIELD_SKIP_OPENER`, which is used when serializing
-// synchronized field state when initializing browsing contexts.
-#ifndef MOZ_BC_FIELD_SKIP_OPENER
-MOZ_BC_FIELD(Opener, RefPtr<BrowsingContext>)
-#endif
+// The current opener for this BrowsingContext. This is a weak reference, and
+// stored as the opener ID.
+MOZ_BC_FIELD(OpenerId, uint64_t)
 
 // Toplevel browsing contexts only. This field controls whether the browsing
 // context is currently considered to be activated by a gesture.

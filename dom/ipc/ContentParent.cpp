@@ -5740,7 +5740,6 @@ mozilla::ipc::IPCResult ContentParent::RecvAttachBrowsingContext(
     RefPtr<BrowsingContextGroup> group =
       BrowsingContextGroup::Select(aInit.mParentId, aInit.mOpenerId);
     child = BrowsingContext::CreateFromIPC(std::move(aInit), group, this);
-    child->InitFromIPC(aInit.mOpenerId);
   }
 
   child->Attach(/* aFromIPC */ true);
