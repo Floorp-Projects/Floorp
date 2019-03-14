@@ -6,7 +6,6 @@
 #![allow(unused_variables)]
 #![allow(dead_code)]
 
-use app_units::Au;
 use image::{save_buffer, ColorType};
 use premultiply::unpremultiply;
 use serde_json;
@@ -19,6 +18,8 @@ use time;
 use webrender;
 use webrender::api::*;
 use webrender::api::channel::Payload;
+use webrender::api::units::*;
+
 
 enum CachedFont {
     Native(NativeFontHandle),

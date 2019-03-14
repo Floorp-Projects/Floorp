@@ -3397,8 +3397,9 @@ function BrowserReloadWithFlags(reloadFlags) {
     } else if (browser.hasAttribute("recordExecution")) {
       // Recording tabs always use new content processes when reloading, to get
       // a fresh recording.
-      gBrowser.updateBrowserRemoteness(browser, true,
-                                       { recordExecution: "*", newFrameloader: true });
+      gBrowser.updateBrowserRemoteness(browser,
+                                       { recordExecution: "*", newFrameloader: true,
+                                         remoteType: E10SUtils.DEFAULT_REMOTE_TYPE });
       loadBrowserURI(browser, url);
     } else {
       unchangedRemoteness.push(tab);
@@ -4756,7 +4757,8 @@ var XULBrowserWindow = {
   },
 
   forceInitialBrowserNonRemote(aOpener) {
-    gBrowser.updateBrowserRemoteness(gBrowser.initialBrowser, false, { opener: aOpener });
+    gBrowser.updateBrowserRemoteness(gBrowser.initialBrowser, { opener: aOpener,
+                                                                remoteType: E10SUtils.NOT_REMOTE });
   },
 
   setDefaultStatus(status) {

@@ -2,12 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{ColorU, DevicePoint};
 use api::{FontInstanceFlags, FontInstancePlatformOptions};
 use api::{FontKey, FontInstanceKey, FontRenderMode, FontTemplate, FontVariation};
-use api::{GlyphIndex, GlyphDimensions, SyntheticItalics};
-use api::{LayoutPoint, LayoutToWorldTransform, WorldPoint};
-use app_units::Au;
+use api::{ColorU, GlyphIndex, GlyphDimensions, SyntheticItalics};
+use api::units::*;
 use euclid::approxeq::ApproxEq;
 use internal_types::ResourceCacheError;
 use wr_malloc_size_of::{MallocSizeOf, MallocSizeOfOps};
@@ -850,9 +848,9 @@ mod test_glyph_rasterizer {
         use render_task::{RenderTaskCache, RenderTaskTree, RenderTaskTreeCounters};
         use profiler::TextureCacheProfileCounters;
         use api::{FontKey, FontInstanceKey, FontTemplate, FontRenderMode,
-                  IdNamespace, ColorU, DevicePoint};
+                  IdNamespace, ColorU};
+        use api::units::{Au, DevicePoint};
         use render_backend::FrameId;
-        use app_units::Au;
         use thread_profiler::register_thread_with_profiler;
         use std::sync::Arc;
         use glyph_rasterizer::{FontInstance, BaseFontInstance, GlyphKey, GlyphRasterizer};

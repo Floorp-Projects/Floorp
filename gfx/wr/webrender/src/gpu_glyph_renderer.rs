@@ -4,8 +4,8 @@
 
 //! GPU glyph rasterization using Pathfinder.
 
-use api::{DeviceIntPoint, DeviceIntRect, DeviceIntSize, FontRenderMode};
-use api::{ImageFormat, TextureTarget};
+use api::{ImageFormat, FontRenderMode, TextureTarget};
+use api::units::*;
 use debug_colors;
 use device::{DrawTarget, Device, Texture, TextureFilter, VAO};
 use euclid::{Point2D, Size2D, Transform3D, TypedVector2D, Vector2D};

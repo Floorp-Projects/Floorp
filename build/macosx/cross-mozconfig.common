@@ -47,3 +47,5 @@ if [ "x$MOZ_PKG_SPECIAL" != "xasan" -a -z "$MOZ_AUTOMATION_ARTIFACT_BUILDS" ]; t
   # The option is not valid on artifact builds, so don't add it there either.
   ac_add_options --enable-clang-plugin
 fi
+
+unset MOZ_STDCXX_COMPAT

@@ -5,11 +5,12 @@
 use std::fs::File;
 use std::path::{Path, PathBuf};
 
-use api::{CaptureBits, ExternalImageData, ImageDescriptor, TexelRect};
+use api::{CaptureBits, ExternalImageData, ImageDescriptor};
+use api::units::TexelRect;
+#[cfg(feature = "png")]
+use api::units::DeviceIntSize;
 #[cfg(feature = "png")]
 use device::ReadPixelsFormat;
-#[cfg(feature = "png")]
-use api::DeviceIntSize;
 #[cfg(feature = "capture")]
 use print_tree::{PrintableTree, PrintTree};
 use ron;
