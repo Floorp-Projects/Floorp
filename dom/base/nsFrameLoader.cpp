@@ -279,14 +279,19 @@ void nsFrameLoader::LoadFrame(bool aOriginalSrc) {
 
   nsAutoString src;
   nsCOMPtr<nsIPrincipal> principal;
+  nsCOMPtr<nsIContentSecurityPolicy> csp;
 
   bool isSrcdoc = mOwnerContent->IsHTMLElement(nsGkAtoms::iframe) &&
                   mOwnerContent->HasAttr(kNameSpaceID_None, nsGkAtoms::srcdoc);
   if (isSrcdoc) {
     src.AssignLiteral("about:srcdoc");
     principal = mOwnerContent->NodePrincipal();
+    // Currently the NodePrincipal holds the CSP for a document. After
+    // Bug 965637 we can query the CSP from mOwnerContent->OwnerDoc()
+    // instead of mOwnerContent->NodePrincipal().
+    mOwnerContent->NodePrincipal()->GetCsp(getter_AddRefs(csp));
   } else {
-    GetURL(src, getter_AddRefs(principal));
+    GetURL(src, getter_AddRefs(principal), getter_AddRefs(csp));
 
     src.Trim(" \t\n\r");
 
@@ -301,6 +306,10 @@ void nsFrameLoader::LoadFrame(bool aOriginalSrc) {
       }
       src.AssignLiteral("about:blank");
       principal = mOwnerContent->NodePrincipal();
+      // Currently the NodePrincipal holds the CSP for a document. After
+      // Bug 965637 we can query the CSP from mOwnerContent->OwnerDoc()
+      // instead of mOwnerContent->NodePrincipal().
+      mOwnerContent->NodePrincipal()->GetCsp(getter_AddRefs(csp));
     }
   }
 
@@ -327,7 +336,7 @@ void nsFrameLoader::LoadFrame(bool aOriginalSrc) {
   }
 
   if (NS_SUCCEEDED(rv)) {
-    rv = LoadURI(uri, principal, aOriginalSrc);
+    rv = LoadURI(uri, principal, csp, aOriginalSrc);
   }
 
   if (NS_FAILED(rv)) {
@@ -348,6 +357,7 @@ void nsFrameLoader::FireErrorEvent() {
 
 nsresult nsFrameLoader::LoadURI(nsIURI* aURI,
                                 nsIPrincipal* aTriggeringPrincipal,
+                                nsIContentSecurityPolicy* aCsp,
                                 bool aOriginalSrc) {
   if (!aURI) return NS_ERROR_INVALID_POINTER;
   NS_ENSURE_STATE(!mDestroyCalled && mOwnerContent);
@@ -365,10 +375,12 @@ nsresult nsFrameLoader::LoadURI(nsIURI* aURI,
 
   mURIToLoad = aURI;
   mTriggeringPrincipal = aTriggeringPrincipal;
+  mCsp = aCsp;
   rv = doc->InitializeFrameLoader(this);
   if (NS_FAILED(rv)) {
     mURIToLoad = nullptr;
     mTriggeringPrincipal = nullptr;
+    mCsp = nullptr;
   }
   return rv;
 }
@@ -440,22 +452,21 @@ nsresult nsFrameLoader::ReallyStartLoadingInternal() {
     loadState->SetTriggeringPrincipal(mOwnerContent->NodePrincipal());
   }
 
-  // Expanded Principals override the CSP of the document, hence we first check
-  // if the triggeringPrincipal overrides the document's principal. If so, let's
-  // query the CSP from that Principal, otherwise we use the document's CSP.
-  // Note that even after Bug 965637, Expanded Principals will hold their own
-  // CSP.
-  nsCOMPtr<nsIContentSecurityPolicy> csp;
-  if (BasePrincipal::Cast(loadState->TriggeringPrincipal())
-          ->OverridesCSP(mOwnerContent->NodePrincipal())) {
-    loadState->TriggeringPrincipal()->GetCsp(getter_AddRefs(csp));
-  } else {
+  // If we have an explicit CSP, we set it. If not, we only query it from
+  // the NodePrincipal in case there was no explicit triggeringPrincipal.
+  // Otherwise it's possible that the original triggeringPrincipal did not
+  // have a CSP which causes the CSP on the Principal and explicit CSP
+  // to be out of sync.
+  if (mCsp) {
+    loadState->SetCsp(mCsp);
+  } else if (!mTriggeringPrincipal) {
     // Currently the NodePrincipal holds the CSP for a document. After
     // Bug 965637 we can query the CSP from mOwnerContent->OwnerDoc()
     // instead of mOwnerContent->NodePrincipal().
+    nsCOMPtr<nsIContentSecurityPolicy> csp;
     mOwnerContent->NodePrincipal()->GetCsp(getter_AddRefs(csp));
+    loadState->SetCsp(csp);
   }
-  loadState->SetCsp(csp);
 
   nsCOMPtr<nsIURI> referrer;
 
@@ -2192,25 +2203,36 @@ nsresult nsFrameLoader::MaybeCreateDocShell() {
   return NS_OK;
 }
 
-void nsFrameLoader::GetURL(nsString& aURI,
-                           nsIPrincipal** aTriggeringPrincipal) {
+void nsFrameLoader::GetURL(nsString& aURI, nsIPrincipal** aTriggeringPrincipal,
+                           nsIContentSecurityPolicy** aCsp) {
   aURI.Truncate();
+  // Within this function we default to using the NodePrincipal as the
+  // triggeringPrincipal and the CSP of the document, currently stored
+  // on the NodePrincipal. After Bug 965637 we can query the CSP from
+  // mOwnerContent->OwnerDoc() instead of mOwnerContent->NodePrincipal().
+  // Expanded Principals however override the CSP of the document, hence
+  // if frame->GetSrcTriggeringPrincipal() returns a valid principal, we
+  // have to query the CSP from that Principal. Note that even after
+  // Bug 965637, Expanded Principals will hold their own CSP.
+  nsCOMPtr<nsIPrincipal> triggeringPrincipal = mOwnerContent->NodePrincipal();
+  nsCOMPtr<nsIContentSecurityPolicy> csp;
+  mOwnerContent->NodePrincipal()->GetCsp(getter_AddRefs(csp));
 
   if (mOwnerContent->IsHTMLElement(nsGkAtoms::object)) {
     mOwnerContent->GetAttr(kNameSpaceID_None, nsGkAtoms::data, aURI);
-    nsCOMPtr<nsIPrincipal> prin = mOwnerContent->NodePrincipal();
-    prin.forget(aTriggeringPrincipal);
   } else {
     mOwnerContent->GetAttr(kNameSpaceID_None, nsGkAtoms::src, aURI);
     if (RefPtr<nsGenericHTMLFrameElement> frame =
             do_QueryObject(mOwnerContent)) {
-      nsCOMPtr<nsIPrincipal> prin = frame->GetSrcTriggeringPrincipal();
-      prin.forget(aTriggeringPrincipal);
-    } else {
-      nsCOMPtr<nsIPrincipal> prin = mOwnerContent->NodePrincipal();
-      prin.forget(aTriggeringPrincipal);
+      nsCOMPtr<nsIPrincipal> srcPrincipal = frame->GetSrcTriggeringPrincipal();
+      if (srcPrincipal) {
+        triggeringPrincipal = srcPrincipal;
+        triggeringPrincipal->GetCsp(getter_AddRefs(csp));
+      }
     }
   }
+  triggeringPrincipal.forget(aTriggeringPrincipal);
+  csp.forget(aCsp);
 }
 
 nsresult nsFrameLoader::CheckForRecursiveLoad(nsIURI* aURI) {
