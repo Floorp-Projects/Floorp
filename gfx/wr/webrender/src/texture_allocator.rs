@@ -3,7 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::units::{DeviceIntPoint, DeviceIntRect, DeviceIntSize};
-use util;
 
 //TODO: gather real-world statistics on the bin usage in order to assist the decision
 // on where to place the size thresholds.
@@ -167,10 +166,10 @@ impl ArrayAllocationTracker {
         }
 
         // Add the guillotined rects back to the free list.
-        if !util::rect_is_empty(&new_free_rect_to_right) {
+        if !new_free_rect_to_right.is_empty() {
             self.push(chosen.slice, new_free_rect_to_right);
         }
-        if !util::rect_is_empty(&new_free_rect_to_bottom) {
+        if !new_free_rect_to_bottom.is_empty() {
             self.push(chosen.slice, new_free_rect_to_bottom);
         }
     }
