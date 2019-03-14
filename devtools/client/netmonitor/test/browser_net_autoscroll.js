@@ -54,7 +54,8 @@ add_task(async function() {
   await waitForNetworkEvents(monitor, 8);
   await waitSomeTime();
   const requestsContainerHeaders = document.querySelector(".requests-list-headers");
-  const headersHeight = requestsContainerHeaders.offsetHeight;
+  const headersHeight =
+    Math.floor(requestsContainerHeaders.getBoundingClientRect().height);
   is(requestsContainer.scrollTop, headersHeight, "Did not scroll.");
 
   // Stop doing requests.

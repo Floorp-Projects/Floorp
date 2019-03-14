@@ -20,12 +20,12 @@ function HelperAppLauncherDialog() {
 }
 
 HelperAppLauncherDialog.prototype = {
-  show: function(aLauncher, aWindowContext, aReason) {
+  show(aLauncher, aWindowContext, aReason) {
     ok(true, "Showing the helper app dialog");
     curDialogResolve(aWindowContext);
     executeSoon(() => { aLauncher.cancel(Cr.NS_ERROR_ABORT); });
   },
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIHelperAppLauncherDialog])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIHelperAppLauncherDialog]),
 };
 
 function promiseHelperAppDialog() {
@@ -60,7 +60,6 @@ add_task(async function simple_navigation() {
 // opens with target="_blank" (i.e. a new tab) and ensures that we
 // automatically open and close that tab.
 async function testNewTab(browser) {
-  let targetURL = browser.currentURI.spec;
   let dialogAppeared = promiseHelperAppDialog();
   let tabOpened = BrowserTestUtils.waitForEvent(gBrowser.tabContainer, "TabOpen").then((event) => {
     return [ event.target, BrowserTestUtils.waitForTabClosing(event.target) ];

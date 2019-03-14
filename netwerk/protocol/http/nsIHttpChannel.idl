@@ -495,10 +495,55 @@ interface nsIHttpChannel : nsIChannel
     [must_use] attribute uint64_t topLevelContentWindowId;
 
     /**
-     * Returns true if the channel has loaded a resource that is on the tracking
-     * protection list.  This is only available if the
-     * privacy.trackingprotection.annotate_channels pref is set and its value
-     * should only be relied on after the channel has established a connection.
+     * Returns the classification flags if the channel has been processed by
+     * URL-Classifier features and is considered first-party.
+     */
+    [infallible] readonly attribute unsigned long firstPartyClassificationFlags;
+
+    /**
+     * Returns the classification flags if the channel has been processed by
+     * URL-Classifier features and is considered third-party with the top
+     * window URI.
+     */
+    [infallible] readonly attribute unsigned long thirdPartyClassificationFlags;
+
+    /*
+     * Returns the classification flags if the channel has been processed by
+     * URL-Classifier features. This value is equal to
+     * "firstPartyClassificationFlags || thirdPartyClassificationFlags".
+     *
+     * Note that top-level channels could be classified as well.
+     * In order to identify third-party resources specifically, use
+     * classificationThirdPartyFlags;
+     */
+    [infallible] readonly attribute unsigned long classificationFlags;
+
+    cenum ClassificationFlags : 32 {
+      /**
+       * The resource is on the fingerprinting list. This is only available if
+       * the privacy.trackingprotection.fingerprinting_annotate_enabled pref.
+       */
+      CLASSIFIED_FINGERPRINTING = 0x01,
+
+      /**
+       * The resource is on the cryptomining list. This is only available if
+       * the privacy.trackingprotection.cryptomining_annotate_enabled pref is set.
+       */
+      CLASSIFIED_CRYPTOMINING = 0x02,
+
+      /**
+       * The resource is on the tracking protection list. This is only available
+       * if the privacy.trackingprotection.annotate_channels pref.
+       */
+      CLASSIFIED_TRACKING = 0x04,
+    };
+
+    /**
+     * Returns true if the channel has loaded a resource that is classified as
+     * tracker.
+     * This is a helper attribute which returns the same value of
+     * (classificationFlags & CLASSIFIED_TRACKING) ||
+     *   (classificationFlags & CLASSIFIED_FINGERPRINTING)
      *
      * Note that top-level channels could be marked as tracking
      * resource. In order to identify third-party tracking resources
@@ -507,11 +552,13 @@ interface nsIHttpChannel : nsIChannel
     [infallible] readonly attribute boolean isTrackingResource;
 
     /**
-     * Returns true if the channel has loaded a resource that is on the tracking
-     * protection list and is considered third-party with the top window URI.
-     * This is only available if the privacy.trackingprotection.annotate_channels
-     * pref is set and its value should only be relied on after the channel has
-     * established a connection.
+     * Returns the classification flags if the channel has been processed by
+     * URL-Classifier features and is considered third-party with the top
+     * window URI.
+     *
+     * This is a helper attribute which returns the same value of
+     * (thirdPartyClassificationFlags & CLASSIFIED_TRACKING) ||
+     *   (thirdPartyClassificationFlags & CLASSIFIED_FINGERPRINTING)
      */
     [infallible] readonly attribute boolean isThirdPartyTrackingResource;
 

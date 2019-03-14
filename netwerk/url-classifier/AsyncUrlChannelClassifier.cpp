@@ -416,7 +416,8 @@ bool FeatureData::MaybeCompleteClassification(nsIChannel* aChannel) {
     return true;
   }
 
-  if (nsContentUtils::IsURIInList(mBlacklistTables[0]->URI(), skipList)) {
+  if (!mBlacklistTables.IsEmpty() &&
+      nsContentUtils::IsURIInList(mBlacklistTables[0]->URI(), skipList)) {
     UC_LOG(
         ("FeatureData::MaybeCompleteClassification[%p] - uri found in skiplist",
          this));
