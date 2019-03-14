@@ -88,11 +88,6 @@ exclude: true
 - Add missing `@Nullable` annotation to return value for
   `GeckoSession.PromptDelegate.ChoiceCallback.onPopupResult()`
 
-- Added [`ContentDelegate.onWebAppManifest`][67.22], which will deliver the contents of a parsed
-  and validated Web App Manifest on pages that contain one.
-
-[67.22]: ../GeckoSession.ContentDelegate.html#onWebAppManifest-org.mozilla.geckoview.GeckoSession-org.json.JSONObject
-
 ## v66
 - Removed redundant field `trackingMode` from [`SecurityInformation`][66.6].
   Use `TrackingProtectionDelegate.onTrackerBlocked` for notification of blocked
@@ -212,4 +207,4 @@ exclude: true
 [65.24]: ../CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: ../GeckoResult.html
 
-[api-version]: f28417e380e348fb6637fd65d041e39a93748db3
+[api-version]: 577c3b0d000b0b1da57f9af32331f1e9045939b9
