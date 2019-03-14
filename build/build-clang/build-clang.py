@@ -120,8 +120,23 @@ def delete(path):
             pass
 
 
-def install_libgcc(gcc_dir, clang_dir):
-    out = subprocess.check_output([os.path.join(gcc_dir, "bin", "gcc"),
+def install_libgcc(gcc_dir, clang_dir, is_final_stage):
+    gcc_bin_dir = os.path.join(gcc_dir, 'bin')
+
+    # Copy over gcc toolchain bits that clang looks for, to ensure that
+    # clang is using a consistent version of ld, since the system ld may
+    # be incompatible with the output clang produces.  But copy it to a
+    # target-specific directory so a cross-compiler to Mac doesn't pick
+    # up the (Linux-specific) ld with disastrous results.
+    #
+    # Only install this for the bootstrap process; we expect any consumers of
+    # the newly-built toolchain to provide an appropriate ld themselves.
+    if not is_final_stage:
+        x64_bin_dir = os.path.join(clang_dir, 'x86_64-unknown-linux-gnu', 'bin')
+        mkdir_p(x64_bin_dir)
+        shutil.copy2(os.path.join(gcc_bin_dir, 'ld'), x64_bin_dir)
+
+    out = subprocess.check_output([os.path.join(gcc_bin_dir, "gcc"),
                                    '-print-libgcc-file-name'])
 
     libgcc_dir = os.path.dirname(out.rstrip())
@@ -309,7 +324,7 @@ def build_one_stage(cc, cxx, asm, ld, ar, ranlib, libtool,
     build_package(build_dir, cmake_args)
 
     if is_linux():
-        install_libgcc(gcc_dir, inst_dir)
+        install_libgcc(gcc_dir, inst_dir, is_final_stage)
     # For some reasons the import library clang.lib of clang.exe is not
     # installed, so we copy it by ourselves.
     if is_windows():
