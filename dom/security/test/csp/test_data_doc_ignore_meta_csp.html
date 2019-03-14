@@ -26,7 +26,7 @@ function receiveMessage(event) {
   var frame = document.getElementById("testframe");
   var principal = SpecialPowers.wrap(frame.contentDocument).nodePrincipal;
   var cspJSON = principal.cspJSON;
-  is(cspJSON, "{}", "there should be no CSP attached to the iframe");
+  is(cspJSON, "{\"csp-policies\":[]}", "there should be no CSP attached to the iframe");
   SimpleTest.finish();
 }
 
