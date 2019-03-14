@@ -89,6 +89,18 @@ add_task(async function() {
   info("Test pausing in both workers");
   await addBreakpoint(dbg, "simple-worker", 10);
   invokeInTab("sayHello");
+
+  // Wait for both workers to pause. When a thread pauses the current thread
+  // changes, and we don't want to get confused.
+  const {
+    selectors: { getIsPaused },
+    getState
+  } = dbg;
+  await waitFor(() => {
+    const state = getState();
+    return getIsPaused(state, worker1Thread) && getIsPaused(state, worker2Thread);
+  });
+
   dbg.actions.selectThread(worker1Thread);
 
   await waitForPaused(dbg);

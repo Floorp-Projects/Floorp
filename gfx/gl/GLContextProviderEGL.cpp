@@ -868,11 +868,13 @@ already_AddRefed<GLContext> GLContextProviderEGL::CreateWrappingExisting(
 }
 
 already_AddRefed<GLContext> GLContextProviderEGL::CreateForCompositorWidget(
-    CompositorWidget* aCompositorWidget, bool aForceAccelerated) {
-  MOZ_ASSERT(aCompositorWidget);
-  return GLContextEGLFactory::Create(
-      GET_NATIVE_WINDOW_FROM_COMPOSITOR_WIDGET(aCompositorWidget),
-      aCompositorWidget->GetCompositorOptions().UseWebRender());
+    CompositorWidget* aCompositorWidget, bool aWebRender,
+    bool aForceAccelerated) {
+  EGLNativeWindowType window = nullptr;
+  if (aCompositorWidget) {
+    window = GET_NATIVE_WINDOW_FROM_COMPOSITOR_WIDGET(aCompositorWidget);
+  }
+  return GLContextEGLFactory::Create(window, aWebRender);
 }
 
 already_AddRefed<GLContext> GLContextProviderEGL::CreateForWindow(

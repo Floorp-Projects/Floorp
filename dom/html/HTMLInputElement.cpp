@@ -249,7 +249,8 @@ class DispatchChangeEventCallback final : public GetFilesCallback {
 
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
   nsresult DispatchEvents() {
-    nsresult rv = nsContentUtils::DispatchInputEvent(mInputElement);
+    RefPtr<HTMLInputElement> inputElement(mInputElement);
+    nsresult rv = nsContentUtils::DispatchInputEvent(inputElement);
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to dispatch input event");
 
     rv = nsContentUtils::DispatchTrustedEvent(
@@ -605,7 +606,8 @@ nsresult nsColorPickerShownCallback::UpdateInternal(const nsAString& aColor,
   }
 
   mValueChanged = true;
-  DebugOnly<nsresult> rvIgnored = nsContentUtils::DispatchInputEvent(mInput);
+  RefPtr<HTMLInputElement> input(mInput);
+  DebugOnly<nsresult> rvIgnored = nsContentUtils::DispatchInputEvent(input);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
                        "Failed to dispatch input event");
   return NS_OK;
@@ -1381,7 +1383,8 @@ uint32_t HTMLInputElement::Height() {
   if (mType != NS_FORM_INPUT_IMAGE) {
     return 0;
   }
-  return GetWidthHeightForImage(mCurrentRequest).height;
+  RefPtr<imgRequestProxy> currentRequest(mCurrentRequest);
+  return GetWidthHeightForImage(currentRequest).height;
 }
 
 void HTMLInputElement::SetIndeterminateInternal(bool aValue,
@@ -1405,7 +1408,8 @@ uint32_t HTMLInputElement::Width() {
   if (mType != NS_FORM_INPUT_IMAGE) {
     return 0;
   }
-  return GetWidthHeightForImage(mCurrentRequest).width;
+  RefPtr<imgRequestProxy> currentRequest(mCurrentRequest);
+  return GetWidthHeightForImage(currentRequest).width;
 }
 
 void HTMLInputElement::GetValue(nsAString& aValue, CallerType aCallerType) {

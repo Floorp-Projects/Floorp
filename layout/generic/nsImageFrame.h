@@ -94,8 +94,7 @@ class nsImageFrame : public nsAtomicContainerFrame, public nsIReflowCallback {
   virtual nsresult HandleEvent(nsPresContext* aPresContext,
                                mozilla::WidgetGUIEvent* aEvent,
                                nsEventStatus* aEventStatus) override;
-  virtual nsresult GetCursor(const nsPoint& aPoint,
-                             nsIFrame::Cursor& aCursor) override;
+  mozilla::Maybe<Cursor> GetCursor(const nsPoint&) override;
   virtual nsresult AttributeChanged(int32_t aNameSpaceID, nsAtom* aAttribute,
                                     int32_t aModType) override;
 

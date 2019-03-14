@@ -14,6 +14,7 @@ var {AddonTestUtils, MockAsyncShutdown} = ChromeUtils.import("resource://testing
 var {Async} = ChromeUtils.import("resource://services-common/async.js");
 var {CommonUtils} = ChromeUtils.import("resource://services-common/utils.js");
 var {PlacesTestUtils} = ChromeUtils.import("resource://testing-common/PlacesTestUtils.jsm");
+var {sinon} = ChromeUtils.import("resource://testing-common/Sinon.jsm");
 var {SerializableSet, Svc, Utils, getChromeWindow} = ChromeUtils.import("resource://services-sync/util.js");
 var {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 var {PlacesUtils} = ChromeUtils.import("resource://gre/modules/PlacesUtils.jsm");
@@ -32,14 +33,6 @@ add_task(async function head_setup() {
     await Service.promiseInitialized;
   }
 });
-
-// ================================================
-// Load mocking/stubbing library, sinon
-// docs: http://sinonjs.org/releases/v2.3.2/
-var {clearInterval, clearTimeout, setInterval, setIntervalWithTarget, setTimeout, setTimeoutWithTarget} = ChromeUtils.import("resource://gre/modules/Timer.jsm");
-Services.scriptloader.loadSubScript("resource://testing-common/sinon-2.3.2.js", this);
-/* globals sinon */
-// ================================================
 
 XPCOMUtils.defineLazyGetter(this, "SyncPingSchema", function() {
   let ns = {};

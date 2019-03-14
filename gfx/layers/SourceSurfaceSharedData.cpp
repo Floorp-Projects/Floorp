@@ -22,6 +22,8 @@
 #  define SHARED_SURFACE_PROTECT_FINALIZED
 #endif
 
+using namespace mozilla::layers;
+
 namespace mozilla {
 namespace gfx {
 

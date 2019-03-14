@@ -228,7 +228,10 @@ mozilla::ipc::IPCResult TCPSocketParent::RecvData(
       bool ok = IPC::DeserializeArrayBuffer(autoCx, buffer, &val);
       NS_ENSURE_TRUE(ok, IPC_OK());
       RootedSpiderMonkeyInterface<ArrayBuffer> data(autoCx);
-      data.Init(&val.toObject());
+      if (!data.Init(&val.toObject())) {
+        TCPSOCKET_LOG(("%s: Failed to allocate memory", __FUNCTION__));
+        return IPC_FAIL_NO_REASON(this);
+      }
       Optional<uint32_t> byteLength(buffer.Length());
       mSocket->SendWithTrackingNumber(autoCx, data, 0, byteLength,
                                       aTrackingNumber, rv);

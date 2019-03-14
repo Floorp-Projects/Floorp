@@ -9,7 +9,7 @@ import {
   getSelectedSource,
   getSourceInSources
 } from "../reducers/sources";
-import { getFrames } from "../reducers/pause";
+import { getCurrentThreadFrames } from "../reducers/pause";
 import { annotateFrames } from "../utils/pause/frames";
 import { isOriginal } from "../utils/source";
 import { get } from "lodash";
@@ -65,7 +65,7 @@ export function formatCallStackFrames(
 
 // eslint-disable-next-line
 export const getCallStackFrames: State => Frame[] = (createSelector: any)(
-  getFrames,
+  getCurrentThreadFrames,
   getSources,
   getSelectedSource,
   formatCallStackFrames

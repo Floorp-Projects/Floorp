@@ -1,0 +1,84 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Hit-testing on content covered by a fullscreen fixed-position item clipped away</title>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/paint_listener.js"></script>
+  <meta name="viewport" content="width=device-width"/>
+<style>
+.modal
+{
+    position:fixed;
+    z-index:10;
+    width:100%;
+    height:100%;
+    left:0;
+    top:0;
+    clip:rect(1px,1px,1px,1px);
+}
+.modal__content
+{
+    overflow:auto;
+    position:fixed;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+}
+.modal__body
+{
+    position:absolute;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+}
+.content
+{
+    position:fixed;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+    overflow-y:auto
+}
+</style>
+</head>
+<body>
+<div class="content">
+ <div style="height: 5000px; background-image: linear-gradient(red,blue)">
+    Filler to make the content div scrollable
+ </div>
+</div>
+<div class="modal">
+ <div class="modal__content">
+  <div class="modal__body">
+  </div>
+ </div>
+</div>
+</body>
+<script type="application/javascript">
+
+function* test(testDriver) {
+  var config = getHitTestConfig();
+  var utils = config.utils;
+
+  // layerize the scrollable frame
+  var subframe = document.querySelector(".content");
+  utils.setDisplayPortForElement(0, 0, 800, 2000, subframe, 1);
+  yield waitForApzFlushedRepaints(testDriver);
+
+  var target = document.querySelector(".content");
+  checkHitResult(hitTest(centerOf(target)),
+                 APZHitResultFlags.VISIBLE,
+                 utils.getViewId(subframe),
+                 "content covered by a clipped fixed div");
+
+  subtestDone();
+}
+
+waitUntilApzStable().then(runContinuation(test));
+
+</script>
+</html>

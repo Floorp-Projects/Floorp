@@ -1994,9 +1994,10 @@ MOZ_MUST_USE bool TokenStreamSpecific<Unit, AnyCharsAccess>::identifierName(
                "Private identifier starts with #");
     newPrivateNameToken(atom->asPropertyName(), start, modifier, out);
 
-    // TODO(khypera): Delete the below once private names are supported.
-    errorAt(start.offset(), JSMSG_FIELDS_NOT_SUPPORTED);
-    return false;
+    if (!anyCharsAccess().options().fieldsEnabledOption) {
+      errorAt(start.offset(), JSMSG_FIELDS_NOT_SUPPORTED);
+      return false;
+    }
   } else {
     newNameToken(atom->asPropertyName(), start, modifier, out);
   }

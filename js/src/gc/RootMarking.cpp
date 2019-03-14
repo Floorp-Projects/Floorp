@@ -159,8 +159,8 @@ inline void AutoGCRooter::trace(JSTracer* trc) {
       return;
 
 #if defined(JS_BUILD_BINAST)
-    case Tag::BinParser:
-      frontend::TraceBinParser(trc, this);
+    case Tag::BinASTParser:
+      frontend::TraceBinASTParser(trc, this);
       return;
 #endif  // defined(JS_BUILD_BINAST)
 

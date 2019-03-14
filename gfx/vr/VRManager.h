@@ -66,15 +66,16 @@ class VRManager {
   void StartVRNavigation(const uint32_t& aDisplayID);
   void StopVRNavigation(const uint32_t& aDisplayID,
                         const TimeDuration& aTimeout);
-  void Destroy();
+
+  void Shutdown();
 
  protected:
   VRManager();
   ~VRManager();
 
  private:
+  void Destroy();
   void Init();
-  void Shutdown();
   void StartTasks();
   void StopTasks();
   static void TaskTimerCallback(nsITimer* aTimer, void* aClosure);

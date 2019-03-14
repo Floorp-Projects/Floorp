@@ -146,7 +146,6 @@ class SingleTestMixin(FetchesMixin):
                 ('browser-chrome', 'screenshots'): 'browser-chrome-screenshots',
                 ('plain', 'media'): 'mochitest-media',
                 # below should be on test-verify-gpu job
-                ('browser-chrome', 'gpu'): 'browser-chrome-gpu',
                 ('chrome', 'gpu'): 'chrome-gpu',
                 ('plain', 'gpu'): 'plain-gpu',
                 ('plain', 'webgl1-core'): 'mochitest-webgl1-core',

@@ -4031,6 +4031,13 @@ nsCSSFrameConstructor::FindXULButtonData(const Element& aElement,
     return &sXULMenuData;
   }
 
+#  ifdef MOZ_THUNDERBIRD
+  if (aElement.AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
+                           NS_LITERAL_STRING("menu-button"), eCaseMatters)) {
+    return &sXULMenuData;
+  }
+#  endif
+
   static const FrameConstructionData sXULButtonData =
       SCROLLABLE_XUL_FCDATA(NS_NewButtonBoxFrame);
   return &sXULButtonData;

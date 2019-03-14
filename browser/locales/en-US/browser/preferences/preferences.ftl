@@ -235,7 +235,7 @@ containers-remove-cancel-button = Don’t remove this Container
 
 language-and-appearance-header = Language and Appearance
 
-fonts-and-colors-header = Fonts & Colors
+fonts-and-colors-header = Fonts and Colors
 
 default-font = Default font
     .accesskey = D
@@ -682,7 +682,7 @@ privacy-header = Browser Privacy
 
 ## Privacy Section - Forms
 
-logins-header = Logins & Passwords
+logins-header = Logins and Passwords
 forms-ask-to-save-logins =
     .label = Ask to save logins and passwords for websites
     .accesskey = r
@@ -722,7 +722,7 @@ history-remember-option-never =
 history-remember-option-custom =
     .label = Use custom settings for history
 
-history-remember-description = { -brand-short-name } will remember your browsing, download, form and search history.
+history-remember-description = { -brand-short-name } will remember your browsing, download, form, and search history.
 history-dontremember-description = { -brand-short-name } will use the same settings as private browsing, and will not remember any history as you browse the Web.
 
 history-private-browsing-permanent =
@@ -758,7 +758,7 @@ sitedata-total-size-calculating = Calculating site data and cache size…
 # Variables:
 #   $value (Number) - Value of the unit (for example: 4.6, 500)
 #   $unit (String) - Name of the unit (for example: "bytes", "KB")
-sitedata-total-size = Your stored cookies, site data and cache are currently using { $value } { $unit } of disk space.
+sitedata-total-size = Your stored cookies, site data, and cache are currently using { $value } { $unit } of disk space.
 
 sitedata-learn-more = Learn more
 
@@ -854,6 +854,11 @@ content-blocking-warning-title = Heads up!
 content-blocking-warning-description = Blocking content can cause some websites to break. It’s easy to disable blocking for sites you trust.
 content-blocking-learn-how = Learn how
 
+content-blocking-reload-description = You will need to reload your tabs to apply these changes.
+content-blocking-reload-tabs-button =
+  .label = Reload All Tabs
+  .accesskey = R
+
 content-blocking-trackers-label =
   .label = Trackers
   .accesskey = T
@@ -868,6 +873,9 @@ content-blocking-tracking-protection-change-block-list = Change block list
 content-blocking-cookies-label =
   .label = Cookies
   .accesskey = C
+
+content-blocking-expand-section = 
+  .tooltiptext = More information
 
 # Cryptomining refers to using scripts on websites that can use a computer’s resources to mine cryptocurrency without a user’s knowledge.
 content-blocking-cryptominers-label =

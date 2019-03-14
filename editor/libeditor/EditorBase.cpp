@@ -1138,7 +1138,9 @@ EditorBase::CanDelete(bool* aCanDelete) { return NS_ERROR_NOT_IMPLEMENTED; }
 
 NS_IMETHODIMP
 EditorBase::Paste(int32_t aClipboardType) {
-  nsresult rv = AsTextEditor()->PasteAsAction(aClipboardType, true);
+  // MOZ_KnownLive because we know "this" must be alive.
+  nsresult rv =
+      MOZ_KnownLive(AsTextEditor())->PasteAsAction(aClipboardType, true);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }

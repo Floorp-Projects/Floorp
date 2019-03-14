@@ -350,7 +350,7 @@ const CFR_MESSAGES = [
         }],
       },
     },
-    targeting: `localeLanguageCode == "en" && !hasPinnedTabs && recentVisits[.timestamp > (currentDate|date - 3600 * 1000 * 1)]|length >= 3`,
+    targeting: `locale == "en-US" && !hasPinnedTabs && recentVisits[.timestamp > (currentDate|date - 3600 * 1000 * 1)]|length >= 3`,
     frequency: {lifetime: 3},
     trigger: {id: "frequentVisits", params: PINNED_TABS_TARGET_SITES},
   },

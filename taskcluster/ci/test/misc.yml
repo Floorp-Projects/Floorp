@@ -54,7 +54,7 @@ telemetry-tests-client:
     description: "Telemetry tests client run"
     suite: telemetry-tests-client
     treeherder-symbol: tt(c)
-    max-run-time: 5400
+    max-run-time: 600
     tier: 2
     mozharness:
         script: telemetry/telemetry_client.py

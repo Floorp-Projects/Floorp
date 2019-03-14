@@ -12,8 +12,6 @@
     "devtools/client/aboutdebugging/test/browser_service_workers_not_compatible.js": 5813,
     "devtools/client/aboutdebugging/test/browser_service_workers_push.js": 29415,
     "devtools/client/aboutdebugging/test/browser_service_workers_push_service.js": 29953,
-    "devtools/client/canvasdebugger/test/browser_canvas-frontend-call-stack-01.js": 5152,
-    "devtools/client/canvasdebugger/test/browser_canvas-frontend-call-stack-02.js": 4743,
     "devtools/client/commandline/test/browser_cmd_addon.js": 5312,
     "devtools/client/commandline/test/browser_cmd_commands.js": 4915,
     "devtools/client/commandline/test/browser_cmd_csscoverage_startstop.js": 5247,

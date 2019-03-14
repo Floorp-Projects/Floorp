@@ -4,7 +4,13 @@
 // checks to see if the frame is selected and the title is correct
 function isFrameSelected(dbg, index, title) {
   const $frame = findElement(dbg, "frame", index);
-  const frame = dbg.selectors.getSelectedFrame(dbg.getState());
+
+  const {
+    selectors: { getSelectedFrame, getCurrentThread },
+    getState,
+  } = dbg;
+
+  const frame = getSelectedFrame(getState(), getCurrentThread(getState()));
 
   const elSelected = $frame.classList.contains("selected");
   const titleSelected = frame.displayName == title;

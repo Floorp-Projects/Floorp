@@ -172,7 +172,7 @@ class GeckoChildProcessHost : public ChildProcessHost {
   nsString mGroupId;
 
 #  ifdef MOZ_SANDBOX
-  SandboxBroker mSandboxBroker;
+  RefPtr<AbstractSandboxBroker> mSandboxBroker;
   std::vector<std::wstring> mAllowedFilesRead;
   bool mEnableSandboxLogging;
   int32_t mSandboxLevel;

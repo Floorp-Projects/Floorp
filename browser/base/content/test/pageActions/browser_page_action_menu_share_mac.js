@@ -4,8 +4,7 @@
 
 "use strict";
 
-/* global sinon */
-Services.scriptloader.loadSubScript("resource://testing-common/sinon-2.3.2.js");
+const {sinon} = ChromeUtils.import("resource://testing-common/Sinon.jsm");
 
 const URL = "http://example.org/";
 
@@ -38,7 +37,6 @@ let stub = sinon.stub(BrowserPageActions.shareURL, "_sharingService").get(() => 
 
 registerCleanupFunction(async function() {
   stub.restore();
-  delete window.sinon;
   await EventUtils.synthesizeNativeMouseMove(document.documentElement, 0, 0);
   await PlacesUtils.history.clear();
 });

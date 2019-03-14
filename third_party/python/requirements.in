@@ -12,7 +12,7 @@ python-hglib==2.4
 redo==2.0.3
 requests==2.9.1
 six==1.10.0
-taskcluster==4.0.1
+taskcluster==6.0.0
 taskcluster-urls==11.0.0
 virtualenv==15.2.0
 voluptuous==0.11.5

@@ -37,7 +37,8 @@ type FormattedFrame = Frame & {
 import {
   getBreakpointsList,
   getSelectedFrame,
-  getSelectedSource
+  getSelectedSource,
+  getCurrentThread
 } from "../../../selectors";
 
 type Props = {
@@ -211,7 +212,7 @@ const getFormattedFrame = createSelector(
 
 const mapStateToProps = state => ({
   breakpoints: getBreakpointsList(state),
-  frame: getFormattedFrame(state)
+  frame: getFormattedFrame(state, getCurrentThread(state))
 });
 
 export default connect(

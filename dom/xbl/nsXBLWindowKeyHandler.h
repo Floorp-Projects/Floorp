@@ -49,27 +49,33 @@ class nsXBLWindowKeyHandler : public nsIDOMEventListener {
  protected:
   virtual ~nsXBLWindowKeyHandler();
 
+  MOZ_CAN_RUN_SCRIPT
   nsresult WalkHandlers(KeyboardEvent* aKeyEvent);
 
   // walk the handlers, looking for one to handle the event
+  MOZ_CAN_RUN_SCRIPT
   bool WalkHandlersInternal(KeyboardEvent* aKeyEvent, bool aExecute,
                             bool* aOutReservedForChrome = nullptr);
 
   // walk the handlers for aEvent, aCharCode and aIgnoreModifierState. Execute
   // it if aExecute = true.
+  MOZ_CAN_RUN_SCRIPT
   bool WalkHandlersAndExecute(KeyboardEvent* aKeyEvent, uint32_t aCharCode,
                               const IgnoreModifierState& aIgnoreModifierState,
                               bool aExecute,
                               bool* aOutReservedForChrome = nullptr);
 
   // HandleEvent function for the capturing phase in the default event group.
+  MOZ_CAN_RUN_SCRIPT
   void HandleEventOnCaptureInDefaultEventGroup(KeyboardEvent* aEvent);
   // HandleEvent function for the capturing phase in the system event group.
+  MOZ_CAN_RUN_SCRIPT
   void HandleEventOnCaptureInSystemEventGroup(KeyboardEvent* aEvent);
 
   // Check if any handler would handle the given event. Optionally returns
   // whether the command handler for the event is marked with the "reserved"
   // attribute.
+  MOZ_CAN_RUN_SCRIPT
   bool HasHandlerForEvent(KeyboardEvent* aEvent,
                           bool* aOutReservedForChrome = nullptr);
 

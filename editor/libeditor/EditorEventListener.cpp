@@ -62,6 +62,7 @@ namespace mozilla {
 
 using namespace dom;
 
+MOZ_CAN_RUN_SCRIPT
 static void DoCommandCallback(Command aCommand, void* aData) {
   Document* doc = static_cast<Document*>(aData);
   nsPIDOMWindowOuter* win = doc->GetWindow();

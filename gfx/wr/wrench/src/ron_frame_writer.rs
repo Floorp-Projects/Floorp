@@ -11,6 +11,7 @@ use super::CURRENT_FRAME_NUMBER;
 use webrender;
 use webrender::api::*;
 use webrender::api::channel::Payload;
+use webrender::api::units::*;
 
 enum CachedFont {
     Native(NativeFontHandle),

@@ -477,7 +477,7 @@ nsCString DisplayItemClip::ToString() const {
 }
 
 void DisplayItemClip::ToComplexClipRegions(
-    int32_t aAppUnitsPerDevPixel, const layers::StackingContextHelper& aSc,
+    int32_t aAppUnitsPerDevPixel,
     nsTArray<wr::ComplexClipRegion>& aOutArray) const {
   for (const auto& clipRect : mRoundedClipRects) {
     aOutArray.AppendElement(wr::ToComplexClipRegion(

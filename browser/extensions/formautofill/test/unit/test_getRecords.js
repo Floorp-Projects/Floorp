@@ -180,7 +180,7 @@ add_task(async function test_getRecords_creditCards() {
     clonedRecord["cc-number-encrypted"] = await OSKeyStore.encrypt(record["cc-number"]);
     return clonedRecord;
   }));
-  sinon.stub(collection, "getAll", () =>
+  sinon.stub(collection, "getAll").callsFake(() =>
     Promise.resolve([Object.assign({}, encryptedCCRecords[0]), Object.assign({}, encryptedCCRecords[1])]));
 
   let testCases = [

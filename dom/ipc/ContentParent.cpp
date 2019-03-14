@@ -1125,7 +1125,8 @@ TabParent* ContentParent::CreateBrowser(const TabContext& aContext,
   }
 
   RefPtr<ContentParent> constructorSender;
-  MOZ_RELEASE_ASSERT(XRE_IsParentProcess(), "Cannot allocate TabParent in content process");
+  MOZ_RELEASE_ASSERT(XRE_IsParentProcess(),
+                     "Cannot allocate TabParent in content process");
   if (aOpenerContentParent) {
     constructorSender = aOpenerContentParent;
   } else {
@@ -1133,9 +1134,9 @@ TabParent* ContentParent::CreateBrowser(const TabContext& aContext,
       constructorSender =
           GetNewOrUsedJSPluginProcess(aContext.JSPluginId(), initialPriority);
     } else {
-      constructorSender = GetNewOrUsedBrowserProcess(
-          aFrameElement, remoteType, initialPriority, nullptr,
-          isPreloadBrowser);
+      constructorSender =
+          GetNewOrUsedBrowserProcess(aFrameElement, remoteType, initialPriority,
+                                     nullptr, isPreloadBrowser);
     }
     if (!constructorSender) {
       return nullptr;
@@ -1143,8 +1144,8 @@ TabParent* ContentParent::CreateBrowser(const TabContext& aContext,
   }
   ContentProcessManager* cpm = ContentProcessManager::GetSingleton();
   cpm->RegisterRemoteFrame(tabId, ContentParentId(0), openerTabId,
-                            aContext.AsIPCTabContext(),
-                            constructorSender->ChildID());
+                           aContext.AsIPCTabContext(),
+                           constructorSender->ChildID());
 
   if (constructorSender) {
     nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
@@ -3607,7 +3608,8 @@ bool ContentParent::DeallocPChildToParentStreamParent(
 }
 
 PParentToChildStreamParent* ContentParent::AllocPParentToChildStreamParent() {
-  MOZ_CRASH("PParentToChildStreamParent actors should be manually constructed!");
+  MOZ_CRASH(
+      "PParentToChildStreamParent actors should be manually constructed!");
 }
 
 bool ContentParent::DeallocPParentToChildStreamParent(
@@ -5026,6 +5028,9 @@ mozilla::ipc::IPCResult ContentParent::RecvBeginDriverCrashGuard(
       break;
     case gfx::CrashGuardType::D3D11Video:
       guard = MakeUnique<gfx::D3D11VideoCrashGuard>(this);
+      break;
+    case gfx::CrashGuardType::WMFVPXVideo:
+      guard = MakeUnique<gfx::WMFVPXVideoCrashGuard>(this);
       break;
     default:
       MOZ_ASSERT_UNREACHABLE("unknown crash guard type");

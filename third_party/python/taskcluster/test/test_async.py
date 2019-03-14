@@ -21,6 +21,7 @@ class TestAuthenticationAsync(base.TCTest):
         async def x():
             async with subjectAsync.createSession(loop=loop) as session:
                 client = subjectAsync.Auth({
+                    'rootUrl': self.real_root_url,
                     'credentials': {
                         'clientId': 'tester',
                         'accessToken': 'no-secret',
@@ -49,13 +50,14 @@ class TestAuthenticationAsync(base.TCTest):
                     ['test:xyz'],
                 )
                 client = subjectAsync.Auth({
+                    'rootUrl': self.real_root_url,
                     'credentials': tempCred,
                 }, session=session)
 
-                result = client.testAuthenticate({
+                result = await client.testAuthenticate({
                     'clientScopes': ['test:*'],
                     'requiredScopes': ['test:xyz'],
                 })
                 self.assertEqual(result, {'scopes': ['test:xyz'], 'clientId': 'tester'})
 
-        loop.run_until_complete
+        loop.run_until_complete(x())

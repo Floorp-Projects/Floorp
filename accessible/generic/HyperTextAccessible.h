@@ -406,6 +406,7 @@ class HyperTextAccessible : public AccessibleWrap {
   void CopyText(int32_t aStartPos, int32_t aEndPos);
   void CutText(int32_t aStartPos, int32_t aEndPos);
   void DeleteText(int32_t aStartPos, int32_t aEndPos);
+  MOZ_CAN_RUN_SCRIPT
   void PasteText(int32_t aPosition);
 
   /**

@@ -97,43 +97,54 @@ static void CacheDirAndAutoClear(nsIProperties* aDirSvc, const char* aDirKey,
 void SandboxBroker::GeckoDependentInitialize() {
   MOZ_ASSERT(NS_IsMainThread());
 
-  // Cache directory paths for use in policy rules, because the directory
-  // service must be called on the main thread.
-  nsresult rv;
-  nsCOMPtr<nsIProperties> dirSvc =
-      do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
-  if (NS_FAILED(rv)) {
-    MOZ_ASSERT(
-        false,
-        "Failed to get directory service, cannot cache directories for rules.");
-    LOG_E(
-        "Failed to get directory service, cannot cache directories for rules.");
-    return;
-  }
+  bool haveXPCOM = XRE_GetProcessType() != GeckoProcessType_RemoteSandboxBroker;
+  if (haveXPCOM) {
+    // Cache directory paths for use in policy rules, because the directory
+    // service must be called on the main thread.
+    nsresult rv;
+    nsCOMPtr<nsIProperties> dirSvc =
+        do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
+    if (NS_FAILED(rv)) {
+      MOZ_ASSERT(false,
+                 "Failed to get directory service, cannot cache directories "
+                 "for rules.");
+      LOG_E(
+          "Failed to get directory service, cannot cache directories for "
+          "rules.");
+      return;
+    }
 
-  CacheDirAndAutoClear(dirSvc, NS_GRE_DIR, &sBinDir);
-  CacheDirAndAutoClear(dirSvc, NS_APP_USER_PROFILE_50_DIR, &sProfileDir);
-  CacheDirAndAutoClear(dirSvc, NS_APP_CONTENT_PROCESS_TEMP_DIR,
-                       &sContentTempDir);
-  CacheDirAndAutoClear(dirSvc, NS_APP_PLUGIN_PROCESS_TEMP_DIR, &sPluginTempDir);
-  CacheDirAndAutoClear(dirSvc, NS_WIN_APPDATA_DIR, &sRoamingAppDataDir);
-  CacheDirAndAutoClear(dirSvc, NS_WIN_LOCAL_APPDATA_DIR, &sLocalAppDataDir);
-  CacheDirAndAutoClear(dirSvc, XRE_USER_SYS_EXTENSION_DEV_DIR,
-                       &sUserExtensionsDevDir);
+    CacheDirAndAutoClear(dirSvc, NS_GRE_DIR, &sBinDir);
+    CacheDirAndAutoClear(dirSvc, NS_APP_USER_PROFILE_50_DIR, &sProfileDir);
+    CacheDirAndAutoClear(dirSvc, NS_APP_CONTENT_PROCESS_TEMP_DIR,
+                         &sContentTempDir);
+    CacheDirAndAutoClear(dirSvc, NS_APP_PLUGIN_PROCESS_TEMP_DIR,
+                         &sPluginTempDir);
+    CacheDirAndAutoClear(dirSvc, NS_WIN_APPDATA_DIR, &sRoamingAppDataDir);
+    CacheDirAndAutoClear(dirSvc, NS_WIN_LOCAL_APPDATA_DIR, &sLocalAppDataDir);
+    CacheDirAndAutoClear(dirSvc, XRE_USER_SYS_EXTENSION_DEV_DIR,
+                         &sUserExtensionsDevDir);
 #ifdef ENABLE_SYSTEM_EXTENSION_DIRS
-  CacheDirAndAutoClear(dirSvc, XRE_USER_SYS_EXTENSION_DIR, &sUserExtensionsDir);
+    CacheDirAndAutoClear(dirSvc, XRE_USER_SYS_EXTENSION_DIR,
+                         &sUserExtensionsDir);
 #endif
+  }
 
   // Create sLaunchErrors up front because ClearOnShutdown must be called on the
   // main thread.
   sLaunchErrors = MakeUnique<nsTHashtable<nsCStringHashKey>>();
   ClearOnShutdown(&sLaunchErrors);
 
-  // Cache prefs that are needed off main thread.
-  Preferences::AddBoolVarCache(&sRddWin32kDisable,
-                               "security.sandbox.rdd.win32k-disable");
-  Preferences::AddBoolVarCache(&sGmpWin32kDisable,
-                               "security.sandbox.gmp.win32k-disable");
+  if (haveXPCOM) {
+    // Cache prefs that are needed off main thread.
+    Preferences::AddBoolVarCache(&sRddWin32kDisable,
+                                 "security.sandbox.rdd.win32k-disable");
+    Preferences::AddBoolVarCache(&sGmpWin32kDisable,
+                                 "security.sandbox.gmp.win32k-disable");
+  } else {
+    sRddWin32kDisable = false;
+    sGmpWin32kDisable = false;
+  }
 }
 
 SandboxBroker::SandboxBroker() {
@@ -1164,6 +1175,7 @@ bool SandboxBroker::AllowReadFile(wchar_t const* file) {
   return true;
 }
 
+/* static */
 bool SandboxBroker::AddTargetPeer(HANDLE aPeerProcess) {
   if (!sBrokerService) {
     return false;
@@ -1202,6 +1214,24 @@ SandboxBroker::~SandboxBroker() {
     mPolicy->Release();
     mPolicy = nullptr;
   }
+}
+
+#ifdef _ARM64_
+// We can't include remoteSandboxBroker.h here directly, as it includes
+// IPDL headers, which include a different copy of the chromium base
+// libraries, which leads to conflicts.
+extern AbstractSandboxBroker* CreateRemoteSandboxBroker();
+#endif
+
+// static
+AbstractSandboxBroker* AbstractSandboxBroker::Create(
+    GeckoProcessType aProcessType) {
+#ifdef _ARM64_
+  if (aProcessType == GeckoProcessType_GMPlugin) {
+    return CreateRemoteSandboxBroker();
+  }
+#endif
+  return new SandboxBroker();
 }
 
 }  // namespace mozilla

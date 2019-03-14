@@ -5625,7 +5625,34 @@ nsresult nsDocShell::SetCurScrollPosEx(int32_t aCurHorizontalPos,
     scrollMode = nsIScrollableFrame::SMOOTH_MSD;
   }
 
-  sf->ScrollTo(nsPoint(aCurHorizontalPos, aCurVerticalPos), scrollMode);
+  nsPoint targetPos(aCurHorizontalPos, aCurVerticalPos);
+  sf->ScrollTo(targetPos, scrollMode);
+
+  // Set the visual viewport offset as well.
+
+  nsCOMPtr<nsIPresShell> shell = GetPresShell();
+  NS_ENSURE_TRUE(shell, NS_ERROR_FAILURE);
+
+  nsPresContext* presContext = shell->GetPresContext();
+  NS_ENSURE_TRUE(presContext, NS_ERROR_FAILURE);
+
+  // Only the root content document can have a distinct visual viewport offset.
+  if (!presContext->IsRootContentDocument()) {
+    return NS_OK;
+  }
+
+  // Not on a platform with a distinct visual viewport - don't bother setting
+  // the visual viewport offset.
+  if (!shell->IsVisualViewportSizeSet()) {
+    return NS_OK;
+  }
+
+  // TODO: If scrollMode == SMOOTH_MSD, this will effectively override that
+  // and jump to the target position instantly. A proper solution here would
+  // involve giving nsIScrollableFrame a visual viewport smooth scrolling API.
+  shell->SetPendingVisualScrollUpdate(targetPos,
+                                      layers::FrameMetrics::eMainThread);
+
   return NS_OK;
 }
 

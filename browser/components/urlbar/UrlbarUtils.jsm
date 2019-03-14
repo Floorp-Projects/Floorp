@@ -102,7 +102,7 @@ var UrlbarUtils = {
 
   // This defines icon locations that are common used in the UI.
   ICON: {
-    DEFAULT: Ci.nsIFaviconService.FAVICON_DEFAULT_URL,
+    // DEFAULT is defined lazily so it doesn't eagerly initialize PlacesUtils.
     SEARCH_GLASS: "chrome://browser/skin/search-glass.svg",
   },
 
@@ -363,6 +363,10 @@ var UrlbarUtils = {
     return pasteData;
   },
 };
+
+XPCOMUtils.defineLazyGetter(UrlbarUtils.ICON, "DEFAULT", () => {
+  return PlacesUtils.favicons.defaultFavicon.spec;
+});
 
 /**
  * UrlbarQueryContext defines a user's autocomplete input from within the urlbar.

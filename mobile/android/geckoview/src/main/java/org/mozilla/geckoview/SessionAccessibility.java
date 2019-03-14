@@ -368,7 +368,7 @@ public class SessionAccessibility {
 
             // Children
             int[] children = nodeInfo.getIntArray("children");
-            if (children != null) {
+            if (node.getChildCount() == 0 && children != null) {
                 for (int childId : children) {
                     final GeckoBundle childBundle = getMostRecentBundle(childId);
                     if (!fromCache || (childBundle != null && childBundle.getInt("parentId") == id)) {

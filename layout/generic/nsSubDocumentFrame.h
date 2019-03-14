@@ -113,6 +113,7 @@ class nsSubDocumentFrame final : public nsAtomicContainerFrame,
     }
   }
 
+  void UnsetFrameLoader() { mFrameLoader = nullptr; }
   nsFrameLoader* FrameLoader() const;
 
  protected:

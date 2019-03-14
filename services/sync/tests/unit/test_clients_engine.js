@@ -1584,7 +1584,7 @@ add_task(async function test_command_sync() {
 
     await engine.sendCommand("wipeAll", []);
     await engine._tracker.addChangedID(engine.localID);
-    const getClientFxaDeviceId = sinon.stub(engine, "getClientFxaDeviceId", (id) => "fxa-" + id);
+    const getClientFxaDeviceId = sinon.stub(engine, "getClientFxaDeviceId").callsFake((id) => "fxa-" + id);
     const engineMock = sinon.mock(engine);
     let _notifyCollectionChanged = engineMock.expects("_notifyCollectionChanged")
                                              .withArgs(["fxa-" + remoteId, "fxa-" + remoteId2]);
@@ -1796,7 +1796,7 @@ add_task(async function device_disconnected_notification_updates_known_stale_cli
   Services.obs.notifyObservers(null, "fxaccounts:device_disconnected",
                                JSON.stringify({ isLocalDevice: false }));
   ok(spyUpdate.calledOnce, "updateKnownStaleClients should be called");
-  spyUpdate.reset();
+  spyUpdate.resetHistory();
 
   Services.obs.notifyObservers(null, "fxaccounts:device_disconnected",
                                JSON.stringify({ isLocalDevice: true }));
@@ -1811,7 +1811,7 @@ add_task(async function update_known_stale_clients() {
   const stubRemoteClients = sinon.stub(engine._store, "_remoteClients").get(() => {
     return clients;
   });
-  const stubFetchFxADevices = sinon.stub(engine, "_fetchFxADevices", () => {
+  const stubFetchFxADevices = sinon.stub(engine, "_fetchFxADevices").callsFake(() => {
     engine._knownStaleFxADeviceIds = ["fxa-one", "fxa-two"];
   });
 
@@ -1835,7 +1835,7 @@ add_task(async function test_create_record_command_limit() {
   const fakeLimit = 4 * 1024;
 
   let maxSizeStub = sinon.stub(Service,
-    "getMemcacheMaxRecordPayloadSize", () => fakeLimit);
+    "getMemcacheMaxRecordPayloadSize").callsFake(() => fakeLimit);
 
   let user = server.user("foo");
   let remoteId = Utils.makeGUID();

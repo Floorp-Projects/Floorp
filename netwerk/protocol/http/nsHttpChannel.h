@@ -475,6 +475,10 @@ class nsHttpChannel final : public HttpBaseChannel,
    */
   void ProcessSecurityReport(nsresult status);
 
+  nsresult GetResponseCrossOriginPolicy(
+      nsILoadInfo::CrossOriginPolicy *aResponseCrossOriginPolicy);
+  nsresult ProcessCrossOriginHeader();
+
   /**
    * A function to process a single security header (STS or PKP), assumes
    * some basic sanity checks have been applied to the channel. Called

@@ -13,22 +13,6 @@
   -moz-user-focus: normal;
 }
 
-/* SideMenuWidget */
-
-.side-menu-widget-container {
-  overflow-x: hidden;
-  overflow-y: auto;
-}
-
-.side-menu-widget-item-contents {
-  -moz-user-focus: normal;
-}
-
-.side-menu-widget-group-checkbox .checkbox-label-box,
-.side-menu-widget-item-checkbox .checkbox-label-box {
-  display: none; /* See bug 669507 */
-}
-
 /* VariablesView */
 
 .variables-view-container {

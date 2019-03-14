@@ -15,7 +15,8 @@ TESTING_JS_MODULES += [
     'CoverageUtils.jsm',
     'FileTestUtils.jsm',
     'MockRegistrar.jsm',
-    'sinon-2.3.2.js',
+    'sinon-7.2.7.js',
+    'Sinon.jsm',
     'StructuredLog.jsm',
     'TestUtils.jsm',
 ]

@@ -73,7 +73,9 @@ ExtensionPreferencesManager.addSetting("proxy.settings", {
       if (value[prop]) {
         let url = new URL(`http://${value[prop]}`);
         prefs[`network.proxy.${prop}`] = url.hostname;
-        let port = parseInt(url.port, 10) || DEFAULT_PORTS.get(prop);
+        // Only fall back to defaults if no port provided.
+        let [, rawPort] = value[prop].split(":");
+        let port = parseInt(rawPort, 10) || DEFAULT_PORTS.get(prop);
         prefs[`network.proxy.${prop}_port`] = port;
       } else {
         prefs[`network.proxy.${prop}`] = undefined;

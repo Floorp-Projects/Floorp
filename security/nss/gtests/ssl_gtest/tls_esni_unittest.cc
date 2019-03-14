@@ -305,11 +305,14 @@ TEST_P(TlsConnectTls13, ConnectEsniHrr) {
       server_, kTlsHandshakeHelloRetryRequest);
   auto filter =
       MakeTlsFilter<TlsExtensionCapture>(client_, ssl_server_name_xtn);
-  auto cfilter =
-      MakeTlsFilter<TlsExtensionCapture>(client_, ssl_server_name_xtn);
+  auto filter2 =
+      MakeTlsFilter<TlsExtensionCapture>(client_, ssl_server_name_xtn, true);
+  client_->SetFilter(std::make_shared<ChainedPacketFilter>(
+      ChainedPacketFilterInit({filter, filter2})));
   server_->SetSniCallback(SniCallback);
   Connect();
-  CheckSniExtension(cfilter->extension());
+  CheckSniExtension(filter->extension());
+  CheckSniExtension(filter2->extension());
   EXPECT_NE(0UL, hrr_capture->buffer().len());
 }
 

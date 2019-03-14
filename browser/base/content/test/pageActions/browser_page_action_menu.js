@@ -1,11 +1,7 @@
 "use strict";
 
-/* global sinon, UIState */
-Services.scriptloader.loadSubScript("resource://testing-common/sinon-2.3.2.js");
-
-registerCleanupFunction(function() {
-  delete window.sinon;
-});
+const {sinon} = ChromeUtils.import("resource://testing-common/Sinon.jsm");
+/* global UIState */
 
 const lastModifiedFixture = 1507655615.87; // Approx Oct 10th 2017
 const mockTargets = [
@@ -255,7 +251,7 @@ add_task(async function sendToDevice_syncNotReady_other_states() {
   // Open a tab that's sendable.
   await BrowserTestUtils.withNewTab("http://example.com/", async () => {
     await promiseSyncReady();
-    const sandbox = sinon.sandbox.create();
+    const sandbox = sinon.createSandbox();
     sandbox.stub(gSync, "syncReady").get(() => false);
     sandbox.stub(UIState, "get").returns({ status: UIState.STATUS_NOT_VERIFIED });
     sandbox.stub(gSync, "isSendableURI").returns(true);
@@ -311,7 +307,7 @@ add_task(async function sendToDevice_syncNotReady_configured() {
   // Open a tab that's sendable.
   await BrowserTestUtils.withNewTab("http://example.com/", async () => {
     await promiseSyncReady();
-    const sandbox = sinon.sandbox.create();
+    const sandbox = sinon.createSandbox();
     const syncReady = sandbox.stub(gSync, "syncReady").get(() => false);
     const hasSyncedThisSession = sandbox.stub(Weave.Service.clientsEngine, "hasSyncedThisSession").get(() => false);
     sandbox.stub(UIState, "get").returns({ status: UIState.STATUS_SIGNED_IN });
@@ -455,7 +451,7 @@ add_task(async function sendToDevice_noDevices() {
   // Open a tab that's sendable.
   await BrowserTestUtils.withNewTab("http://example.com/", async () => {
     await promiseSyncReady();
-    const sandbox = sinon.sandbox.create();
+    const sandbox = sinon.createSandbox();
     sandbox.stub(gSync, "syncReady").get(() => true);
     sandbox.stub(Weave.Service.clientsEngine, "hasSyncedThisSession").get(() => true);
     sandbox.stub(Weave.Service.clientsEngine, "fxaDevices").get(() => []);
@@ -521,7 +517,7 @@ add_task(async function sendToDevice_devices() {
   // Open a tab that's sendable.
   await BrowserTestUtils.withNewTab("http://example.com/", async () => {
     await promiseSyncReady();
-    const sandbox = sinon.sandbox.create();
+    const sandbox = sinon.createSandbox();
     sandbox.stub(gSync, "syncReady").get(() => true);
     sandbox.stub(Weave.Service.clientsEngine, "hasSyncedThisSession").get(() => true);
     sandbox.stub(UIState, "get").returns({ status: UIState.STATUS_SIGNED_IN });
@@ -587,7 +583,7 @@ add_task(async function sendToDevice_title() {
   await BrowserTestUtils.withNewTab("http://example.com/a", async otherBrowser => {
     await BrowserTestUtils.withNewTab("http://example.com/b", async () => {
       await promiseSyncReady();
-      const sandbox = sinon.sandbox.create();
+      const sandbox = sinon.createSandbox();
       sandbox.stub(gSync, "syncReady").get(() => true);
       sandbox.stub(Weave.Service.clientsEngine, "hasSyncedThisSession").get(() => true);
       sandbox.stub(UIState, "get").returns({ status: UIState.STATUS_SIGNED_IN });
@@ -644,7 +640,7 @@ add_task(async function sendToDevice_inUrlbar() {
   // Open a tab that's sendable.
   await BrowserTestUtils.withNewTab("http://example.com/", async () => {
     await promiseSyncReady();
-    const sandbox = sinon.sandbox.create();
+    const sandbox = sinon.createSandbox();
     sandbox.stub(gSync, "syncReady").get(() => true);
     sandbox.stub(Weave.Service.clientsEngine, "hasSyncedThisSession").get(() => true);
     sandbox.stub(UIState, "get").returns({ status: UIState.STATUS_SIGNED_IN });

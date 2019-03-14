@@ -14,6 +14,7 @@ mod image_helper;
 
 use boilerplate::{Example, HandyDandyRectBuilder};
 use webrender::api::*;
+use webrender::api::units::*;
 
 struct App {
     image_key: ImageKey,

@@ -21,8 +21,7 @@ fuzzy-if(Android,0-51,0-22) skip-if(!Android) pref(apz.allow_zooming,true) == sc
 # Meta-viewport tag support
 skip-if(!Android) pref(apz.allow_zooming,true) == initial-scale-1.html initial-scale-1-ref.html
 
-# Bug 1520320 is tracking the effort to make this test pass again.
-skip-if(!asyncPan) random-if(Android) == frame-reconstruction-scroll-clamping.html frame-reconstruction-scroll-clamping-ref.html
+skip-if(!asyncPan) == frame-reconstruction-scroll-clamping.html frame-reconstruction-scroll-clamping-ref.html
 
 # Test that position:fixed and position:sticky elements are attached to the
 # layout viewport.

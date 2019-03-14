@@ -59,6 +59,16 @@ partial interface HTMLVideoElement {
   // both <video> elements are not attached to a DOM tree.
   [Throws, Func="IsChromeOrXBLOrUAWidget"]
     void cloneElementVisually(HTMLVideoElement target);
+
+  // Stops a <video> from cloning visually. Does nothing if the <video>
+  // wasn't cloning in the first place.
+  [Func="IsChromeOrXBLOrUAWidget"]
+    void stopCloningElementVisually();
+
+  // Returns true if the <video> is being cloned visually to another
+  // <video> element (see cloneElementVisually).
+  [Func="IsChromeOrXBLOrUAWidget"]
+    readonly attribute boolean isCloningElementVisually;
 };
 
 // https://dvcs.w3.org/hg/html-media/raw-file/default/media-source/media-source.html#idl-def-HTMLVideoElement

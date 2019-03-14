@@ -57,15 +57,6 @@ LoginManager.prototype = {
   /* ---------- private members ---------- */
 
 
-  __formFillService: null, // FormFillController, for username autocompleting
-  get _formFillService() {
-    if (!this.__formFillService) {
-      this.__formFillService = Cc["@mozilla.org/satchel/form-fill-controller;1"].
-                               getService(Ci.nsIFormFillController);
-    }
-    return this.__formFillService;
-  },
-
 
   _storage: null, // Storage component which contains the saved logins
   _prefBranch: null, // Preferences service
@@ -138,7 +129,6 @@ LoginManager.prototype = {
           log.debug("Oops! Pref not handled, change ignored.");
         }
       } else if (topic == "xpcom-shutdown") {
-        delete this._pwmgr.__formFillService;
         delete this._pwmgr._storage;
         delete this._pwmgr._prefBranch;
         this._pwmgr = null;

@@ -1628,7 +1628,6 @@ dependencies = [
 name = "webrender"
 version = "0.60.0"
 dependencies = [
- "app_units 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "base64 0.10.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "bincode 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "bitflags 1.0.3 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1783,7 +1782,6 @@ dependencies = [
 name = "wrench"
 version = "0.3.0"
 dependencies = [
- "app_units 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "base64 0.10.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "bincode 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "byteorder 1.2.7 (registry+https://github.com/rust-lang/crates.io-index)",

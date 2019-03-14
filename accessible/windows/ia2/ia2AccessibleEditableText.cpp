@@ -77,7 +77,8 @@ STDMETHODIMP
 ia2AccessibleEditableText::pasteText(long aOffset) {
   MOZ_ASSERT(!HyperTextProxyFor(this));
 
-  HyperTextAccessible* textAcc = static_cast<HyperTextAccessibleWrap*>(this);
+  RefPtr<HyperTextAccessible> textAcc =
+      static_cast<HyperTextAccessibleWrap*>(this);
   if (textAcc->IsDefunct()) return CO_E_OBJNOTCONNECTED;
 
   if (!textAcc->IsValidOffset(aOffset)) return E_INVALIDARG;

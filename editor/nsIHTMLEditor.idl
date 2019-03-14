@@ -138,6 +138,7 @@ interface nsIHTMLEditor : nsISupports
     * Paste the text in the OS clipboard at the cursor position, replacing
     * the selected text (if any), but strip out any HTML styles and formatting
     */
+  [can_run_script]
   void pasteNoFormatting(in long aSelectionType);
 
   /**

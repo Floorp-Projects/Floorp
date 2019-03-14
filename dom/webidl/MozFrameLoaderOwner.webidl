@@ -4,6 +4,12 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+dictionary RemotenessOptions {
+  DOMString? remoteType;
+  FrameLoader? sameProcessAsFrameLoader;
+  WindowProxy? opener;
+};
+
 [NoInterfaceObject]
 interface MozFrameLoaderOwner {
   [ChromeOnly]
@@ -17,4 +23,7 @@ interface MozFrameLoaderOwner {
 
   [ChromeOnly, Throws]
   void swapFrameLoaders(HTMLIFrameElement aOtherLoaderOwner);
+
+  [ChromeOnly, Throws]
+  void changeRemoteness(optional RemotenessOptions aOptions);
 };

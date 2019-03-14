@@ -14,6 +14,7 @@
 #include "webrtc/MediaEngineSource.h"
 
 using ::testing::Return;
+using namespace mozilla;
 
 void PrintTo(const nsString& aValue, ::std::ostream* aStream) {
   NS_ConvertUTF16toUTF8 str(aValue);

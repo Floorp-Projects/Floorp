@@ -144,7 +144,7 @@ function swapToInnerBrowser({ tab, containerURL, getInnerBrowser }) {
           tab.linkedBrowser.remoteType == "privileged") {
         debug(`Tab must flip away from the privileged content process ` +
               `on navigation`);
-        gBrowser.updateBrowserRemoteness(tab.linkedBrowser, true, {
+        gBrowser.updateBrowserRemoteness(tab.linkedBrowser, {
           remoteType: requiredRemoteType,
         });
       }
@@ -229,7 +229,9 @@ function swapToInnerBrowser({ tab, containerURL, getInnerBrowser }) {
       //    must be loaded in the parent process, and we're about to swap the
       //    tool UI into this tab.
       debug("Flip original tab to remote false");
-      gBrowser.updateBrowserRemoteness(tab.linkedBrowser, false);
+      gBrowser.updateBrowserRemoteness(tab.linkedBrowser, {
+        remoteType: E10SUtils.NOT_REMOTE,
+      });
 
       // 6. Swap the tool UI (with viewport showing the content) into the
       //    original browser tab and close the temporary tab used to load the
@@ -301,7 +303,7 @@ function swapToInnerBrowser({ tab, containerURL, getInnerBrowser }) {
       // 5. Force the original browser tab to be remote since web content is
       //    loaded in the child process, and we're about to swap the content
       //    into this tab.
-      gBrowser.updateBrowserRemoteness(tab.linkedBrowser, true, {
+      gBrowser.updateBrowserRemoteness(tab.linkedBrowser, {
         remoteType: contentBrowser.remoteType,
       });
 

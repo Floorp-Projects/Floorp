@@ -15,7 +15,6 @@ import time
 
 import mozcrash
 import mozinfo
-
 from mozdevice import ADBDevice
 from mozlog import commandline, get_default_logger
 from mozprofile import create_profile
@@ -41,6 +40,7 @@ for path in paths:
 
 try:
     from mozbuild.base import MozbuildObject
+
     build = MozbuildObject.from_environment(cwd=here)
 except ImportError:
     build = None
@@ -194,19 +194,16 @@ class Raptor(object):
     def get_playback_config(self, test):
         self.config['playback_tool'] = test.get('playback')
         self.log.info("test uses playback tool: %s " % self.config['playback_tool'])
-        self.config['playback_binary_manifest'] = test.get('playback_binary_manifest', None)
-        _key = 'playback_binary_zip_%s' % self.config['platform']
-        self.config['playback_binary_zip'] = test.get(_key, None)
-        self.config['playback_pageset_manifest'] = test.get('playback_pageset_manifest', None)
-        _key = 'playback_pageset_zip_%s' % self.config['platform']
-        self.config['playback_pageset_zip'] = test.get(_key, None)
-        self.config['playback_recordings'] = test.get('playback_recordings', None)
+        platform = self.config['platform']
+        self.config['playback_binary_zip'] = test.get('playback_binary_zip_%s' % platform)
+        self.config['playback_pageset_zip'] = test.get('playback_pageset_zip_%s' % platform)
         playback_dir = os.path.join(here, 'playback')
+        self.config['playback_binary_manifest'] = test.get('playback_binary_manifest')
+        self.config['playback_pageset_manifest'] = test.get('playback_pageset_manifest')
         for key in ('playback_pageset_manifest', 'playback_pageset_zip'):
             if self.config.get(key) is None:
                 continue
             self.config[key] = os.path.join(playback_dir, self.config[key])
-        self.config['custom_script'] = os.path.join(playback_dir, 'alternate-server-replay.py')
 
     def serve_benchmark_source(self, test):
         # benchmark-type tests require the benchmark test to be served out
@@ -254,9 +251,30 @@ class Raptor(object):
                           but we do not install them on non Firefox browsers.")
 
     def start_playback(self, test):
-        # startup the playback tool
+        # creating the playback tool
         self.get_playback_config(test)
         self.playback = get_playback(self.config, self.device)
+
+        # finish its configuration
+        script = os.path.join(here, "playback", "alternate-server-replay.py")
+        recordings = test.get("playback_recordings")
+        if recordings:
+            script_args = []
+            proxy_dir = self.playback.mozproxy_dir
+            for recording in recordings.split():
+                if not recording:
+                    continue
+                script_args.append(os.path.join(proxy_dir, recording))
+            script = '""%s %s""' % (script, " ".join(script_args))
+
+        # this part is platform-specific
+        if mozinfo.os == "win":
+            script = script.replace("\\", "\\\\\\")
+
+        self.playback.config['playback_tool_args'] = ["-s", script]
+
+        # let's start it!
+        self.playback.start()
 
         # for android we must make the playback server available to the device
         if self.config['app'] in self.firefox_android_apps and self.config['host'] \
@@ -715,8 +733,11 @@ def main(args=sys.argv[1:]):
     pages_that_timed_out = raptor.get_page_timeout_list()
     if len(pages_that_timed_out) > 0:
         for _page in pages_that_timed_out:
-            LOG.critical("TEST-UNEXPECTED-FAIL: test '%s' timed out loading test page: %s"
-                         % (_page['test_name'], _page['url']))
+            LOG.critical("TEST-UNEXPECTED-FAIL: test '%s' timed out loading test page: %s "
+                         "pending metrics: %s"
+                         % (_page['test_name'],
+                            _page['url'],
+                            _page['pending_metrics']))
         os.sys.exit(1)
 
     # when running raptor locally with gecko profiling on, use the view-gecko-profile

@@ -364,28 +364,6 @@
   visibility: visible;
 }
 
-.toolbox-panel_deprecation-notice::before {
-  background-image: url("chrome://global/skin/icons/warning.svg");
-  content: '';
-  display: inline-block;
-  flex-shrink: 0;
-  height: 15px;
-  margin-inline-end: 5px;
-  width: 15px;
-}
-
-.toolbox-panel_deprecation-notice {
-  align-items: center;
-  background-color: hsl(54, 100%, 92%);
-  box-shadow: 0 0 0px 4px hsl(54, 100%, 92%);
-  display: flex;
-  padding: 4px;
-}
-
-.toolbox-panel_deprecation-notice label {
-  color: var(--yellow-80);
-}
-
 /**
  * When panels are collapsed or hidden, making sure that they are also
  * inaccessible by keyboard. This is not the case by default because the are

@@ -46,7 +46,7 @@ parent:
                         ChildLoadInfoForwarderArgs loadInfoForwarder,
                         uint32_t loadFlags, uint32_t referrerPolicy,
                         URIParams? referrerUri, URIParams? apiRedirectTo,
-                        OptionalCorsPreflightArgs corsPreflightArgs,
+                        CorsPreflightArgs? corsPreflightArgs,
                         bool chooseAppcache);
 
   // Sent to the parent in order signal that the child side listeners have been

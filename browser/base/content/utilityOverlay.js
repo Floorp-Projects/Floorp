@@ -553,8 +553,9 @@ function openLinkIn(url, where, params) {
     // start a new recording.
     if (targetBrowser.hasAttribute("recordExecution") &&
         targetBrowser.currentURI.spec != "about:blank") {
-      w.gBrowser.updateBrowserRemoteness(targetBrowser, true,
-                                         { recordExecution: "*", newFrameloader: true });
+      w.gBrowser.updateBrowserRemoteness(targetBrowser,
+                                         { recordExecution: "*", newFrameloader: true,
+                                           remoteType: E10SUtils.DEFAULT_REMOTE_TYPE });
     }
 
     let ReferrerInfo = Components.Constructor("@mozilla.org/referrer-info;1",

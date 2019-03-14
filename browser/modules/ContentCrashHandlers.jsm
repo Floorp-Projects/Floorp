@@ -16,6 +16,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
   clearTimeout: "resource://gre/modules/Timer.jsm",
   CrashSubmit: "resource://gre/modules/CrashSubmit.jsm",
+  E10SUtils: "resource://gre/modules/E10SUtils.jsm",
   PluralForm: "resource://gre/modules/PluralForm.jsm",
   RemotePages: "resource://gre/modules/remotepagemanager/RemotePageManagerParent.jsm",
   SessionStore: "resource:///modules/sessionstore/SessionStore.jsm",
@@ -319,7 +320,7 @@ var TabCrashHandler = {
     let gBrowser = browser.ownerGlobal.gBrowser;
     let tab = gBrowser.getTabForBrowser(browser);
     // The restart required page is non-remote by default.
-    gBrowser.updateBrowserRemoteness(browser, false);
+    gBrowser.updateBrowserRemoteness(browser, { remoteType: E10SUtils.NOT_REMOTE });
 
     browser.docShell.displayLoadError(Cr.NS_ERROR_BUILDID_MISMATCH, uri, null);
     tab.setAttribute("crashed", true);
@@ -345,7 +346,7 @@ var TabCrashHandler = {
     let gBrowser = browser.ownerGlobal.gBrowser;
     let tab = gBrowser.getTabForBrowser(browser);
     // The tab crashed page is non-remote by default.
-    gBrowser.updateBrowserRemoteness(browser, false);
+    gBrowser.updateBrowserRemoteness(browser, { remoteType: E10SUtils.NOT_REMOTE });
 
     browser.setAttribute("crashedPageTitle", title);
     browser.docShell.displayLoadError(Cr.NS_ERROR_CONTENT_CRASHED, uri, null);

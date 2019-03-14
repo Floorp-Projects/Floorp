@@ -40,7 +40,6 @@ BoxShadowData fetch_data(ivec2 address) {
 
 void main(void) {
     ClipMaskInstance cmi = fetch_clip_item();
-    ClipArea area = fetch_clip_area(cmi.render_task_address);
     Transform clip_transform = fetch_transform(cmi.clip_transform_id);
     Transform prim_transform = fetch_transform(cmi.prim_transform_id);
     BoxShadowData bs_data = fetch_data(cmi.clip_data_address);
@@ -53,9 +52,11 @@ void main(void) {
         dest_rect,
         prim_transform,
         clip_transform,
-        area,
         cmi.sub_rect,
-        cmi.snap_offsets
+        cmi.snap_offsets,
+        cmi.task_origin,
+        cmi.screen_origin,
+        cmi.device_pixel_scale
     );
     vLocalPos = vi.local_pos;
     vLayer = res.layer;

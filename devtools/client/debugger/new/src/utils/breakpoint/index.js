@@ -232,7 +232,7 @@ export function getSelectedText(
 
 export function sortSelectedBreakpoints(
   breakpoints: Breakpoint[],
-  selectedSource: Source
+  selectedSource: ?Source
 ): Breakpoint[] {
   return sortBy(breakpoints, [
     // Priority: line number, undefined column, column number

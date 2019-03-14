@@ -7,9 +7,7 @@ from Queue import Empty
 from collections import namedtuple
 from multiprocessing import Process, current_process, Queue
 
-from mozlog import structuredlog
-
-import wptlogging
+from mozlog import structuredlog, capture
 
 # Special value used as a sentinal in various commands
 Stop = object()
@@ -138,7 +136,7 @@ def start_runner(runner_command_queue, runner_result_queue,
 
     logger = MessageLogger(send_message)
 
-    with wptlogging.CaptureIO(logger, capture_stdio):
+    with capture.CaptureIO(logger, capture_stdio):
         try:
             browser = executor_browser_cls(**executor_browser_kwargs)
             executor = executor_cls(browser, **executor_kwargs)

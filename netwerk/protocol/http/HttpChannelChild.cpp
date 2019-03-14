@@ -2213,7 +2213,7 @@ HttpChannelChild::OnRedirectVerifyCallback(nsresult result) {
   RequestHeaderTuples emptyHeaders;
   RequestHeaderTuples* headerTuples = &emptyHeaders;
   nsLoadFlags loadFlags = 0;
-  OptionalCorsPreflightArgs corsPreflightArgs = mozilla::void_t();
+  Maybe<CorsPreflightArgs> corsPreflightArgs;
 
   nsCOMPtr<nsIHttpChannelChild> newHttpChannelChild =
       do_QueryInterface(mRedirectChannelChild);
@@ -2675,11 +2675,10 @@ nsresult HttpChannelChild::ContinueAsyncOpen() {
   }
 
   if (mResponseHead) {
-    openArgs.synthesizedResponseHead() = *mResponseHead;
+    openArgs.synthesizedResponseHead() = Some(*mResponseHead);
     openArgs.suspendAfterSynthesizeResponse() =
         mSuspendParentAfterSynthesizeResponse;
   } else {
-    openArgs.synthesizedResponseHead() = mozilla::void_t();
     openArgs.suspendAfterSynthesizeResponse() = false;
   }
 
@@ -2689,7 +2688,7 @@ nsresult HttpChannelChild::ContinueAsyncOpen() {
                          openArgs.synthesizedSecurityInfoSerialization());
   }
 
-  OptionalCorsPreflightArgs optionalCorsPreflightArgs;
+  Maybe<CorsPreflightArgs> optionalCorsPreflightArgs;
   GetClientSetCorsPreflightParameters(optionalCorsPreflightArgs);
 
   // NB: This call forces us to cache mTopWindowURI if we haven't already.
@@ -3343,13 +3342,13 @@ NS_IMETHODIMP HttpChannelChild::GetClientSetRequestHeaders(
 }
 
 void HttpChannelChild::GetClientSetCorsPreflightParameters(
-    OptionalCorsPreflightArgs& aArgs) {
+    Maybe<CorsPreflightArgs>& aArgs) {
   if (mRequireCORSPreflight) {
     CorsPreflightArgs args;
     args.unsafeHeaders() = mUnsafeHeaders;
-    aArgs = args;
+    aArgs.emplace(args);
   } else {
-    aArgs = mozilla::void_t();
+    aArgs = Nothing();
   }
 }
 

@@ -18,8 +18,21 @@ class Login(BaseClient):
     """
 
     classOptions = {
-        "baseUrl": "https://login.taskcluster.net/v1"
     }
+    serviceName = 'login'
+    apiVersion = 'v1'
+
+    def ping(self, *args, **kwargs):
+        """
+        Ping Server
+
+        Respond without doing anything.
+        This endpoint is used to check that the service is up.
+
+        This method is ``stable``
+        """
+
+        return self._makeApiCall(self.funcinfo["ping"], *args, **kwargs)
 
     def oidcCredentials(self, *args, **kwargs):
         """
@@ -37,7 +50,7 @@ class Login(BaseClient):
         ```
 
         The `access_token` is first verified against the named
-        :provider, then passed to the provider's API to retrieve a user
+        :provider, then passed to the provider's APIBuilder to retrieve a user
         profile. That profile is then used to generate Taskcluster credentials
         appropriate to the user. Note that the resulting credentials may or may
         not include a `certificate` property. Callers should be prepared for either
@@ -47,31 +60,19 @@ class Login(BaseClient):
         monitor this expiration and refresh the credentials if necessary, by calling
         this endpoint again, if they have expired.
 
-        This method gives output: ``http://schemas.taskcluster.net/login/v1/oidc-credentials-response.json``
+        This method gives output: ``v1/oidc-credentials-response.json#``
 
         This method is ``experimental``
         """
 
         return self._makeApiCall(self.funcinfo["oidcCredentials"], *args, **kwargs)
 
-    def ping(self, *args, **kwargs):
-        """
-        Ping Server
-
-        Respond without doing anything.
-        This endpoint is used to check that the service is up.
-
-        This method is ``stable``
-        """
-
-        return self._makeApiCall(self.funcinfo["ping"], *args, **kwargs)
-
     funcinfo = {
         "oidcCredentials": {
             'args': ['provider'],
             'method': 'get',
             'name': 'oidcCredentials',
-            'output': 'http://schemas.taskcluster.net/login/v1/oidc-credentials-response.json',
+            'output': 'v1/oidc-credentials-response.json#',
             'route': '/oidc-credentials/<provider>',
             'stability': 'experimental',
         },

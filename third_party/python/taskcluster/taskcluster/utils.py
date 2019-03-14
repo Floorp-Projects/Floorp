@@ -1,3 +1,4 @@
+# -*- coding: UTF-8 -*-
 from __future__ import absolute_import, division, print_function
 import re
 import json
@@ -10,7 +11,6 @@ import requests.exceptions
 import slugid
 import time
 import six
-import sys
 import random
 
 from . import exceptions
@@ -298,7 +298,7 @@ def putFile(filename, url, contentType):
     with open(filename, 'rb') as f:
         contentLength = os.fstat(f.fileno()).st_size
         return makeHttpRequest('put', url, f, headers={
-            'Content-Length': contentLength,
+            'Content-Length': str(contentLength),
             'Content-Type': contentType,
         })
 
@@ -319,89 +319,30 @@ def isExpired(certificate):
     return expiry < int(time.time() * 1000) + 20 * 60
 
 
-def authenticate(description=None):
-    """
-    Open a web-browser to login.taskcluster.net and listen on localhost for
-    a callback with credentials in query-string.
+def optionsFromEnvironment(defaults=None):
+    """Fetch root URL and credentials from the standard TASKCLUSTER_…
+    environment variables and return them in a format suitable for passing to a
+    client constructor."""
+    options = defaults or {}
+    credentials = options.get('credentials', {})
 
-    The description will be shown on login.taskcluster.net, if not provided
-    a default message with script path will be displayed.
-    """
-    # Importing here to avoid loading these 'obscure' module before it's needed.
-    # Most clients won't use this feature, so we don't want issues with these
-    # modules to affect the library. Maybe they don't work in some environments
-    import webbrowser
-    from six.moves import urllib
-    from six.moves.urllib.parse import quote
-    import BaseHTTPServer
+    rootUrl = os.environ.get('TASKCLUSTER_ROOT_URL')
+    if rootUrl:
+        options['rootUrl'] = rootUrl
 
-    if not description:
-        script = '[interpreter/unknown]'
-        main = sys.modules.get('__main__', None)
-        if main and hasattr(main, '__file__'):
-            script = os.path.abspath(main.__file__)
-        description = (
-            "Python script: `%s`\n\nWould like some temporary credentials."
-            % script
-        )
+    clientId = os.environ.get('TASKCLUSTER_CLIENT_ID')
+    if clientId:
+        credentials['clientId'] = clientId
 
-    creds = [None]
+    accessToken = os.environ.get('TASKCLUSTER_ACCESS_TOKEN')
+    if accessToken:
+        credentials['accessToken'] = accessToken
 
-    class AuthCallBackRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
-        def log_message(format, *args):
-            pass
+    certificate = os.environ.get('TASKCLUSTER_CERTIFICATE')
+    if certificate:
+        credentials['certificate'] = certificate
 
-        def do_GET(self):
-            url = urllib.parse.urlparse(self.path)
-            query = urllib.parse.parse_qs(url.query)
-            clientId = query.get('clientId', [None])[0]
-            accessToken = query.get('accessToken', [None])[0]
-            certificate = query.get('certificate', [None])[0]
-            hasCreds = clientId and accessToken and certificate
-            if hasCreds:
-                creds[0] = {
-                    "clientId": clientId,
-                    "accessToken": accessToken,
-                    "certificate": certificate
-                }
-            self.send_response(200)
-            self.send_header('Content-type', 'text/html')
-            self.end_headers()
-            if hasCreds:
-                self.wfile.write("""
-                    <h1>Credentials transferred successfully</h1>
-                    <i>You can close this window now.</i>
-                    <script>window.close();</script>
-                """)
-            else:
-                self.wfile.write("""
-                    <h1>Transfer of credentials failed!</h1>
-                    <p>Something went wrong, you can navigate back and try again...</p>
-                """)
-            return
+    if credentials:
+        options['credentials'] = credentials
 
-    # Create server on localhost at random port
-    retries = 5
-    while retries > 0:
-        try:
-            server = BaseHTTPServer.HTTPServer(('', 0), AuthCallBackRequestHandler)
-        except:
-            retries -= 1
-        break
-    port = server.server_address[1]
-
-    query = "?target=" + quote('http://localhost:' + str(port), '')
-    query += "&description=" + quote(description, '')
-
-    webbrowser.open('https://login.taskcluster.net' + query, 1, True)
-    print("")
-    print("-------------------------------------------------------")
-    print("  Opening browser window to login.taskcluster.net")
-    print("  Asking you to grant temporary credentials to:")
-    print("     http://localhost:" + str(port))
-    print("-------------------------------------------------------")
-    print("")
-
-    while not creds[0]:
-        server.handle_request()
-    return creds[0]
+    return options

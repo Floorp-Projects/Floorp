@@ -449,6 +449,7 @@ cbindgen-types = [
     { gecko = "StyleGenericBorderRadius", servo = "values::generics::border::BorderRadius" },
     { gecko = "StyleLetterSpacing", servo = "values::computed::text::LetterSpacing" },
     { gecko = "StyleGenericLineHeight", servo = "values::generics::text::LineHeight" },
+    { gecko = "StyleContain", servo = "values::computed::Contain" },
 ]
 
 mapped-generic-types = [

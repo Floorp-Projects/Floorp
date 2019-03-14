@@ -26,7 +26,7 @@ Mozproxy provide a function that returns a playback class. The usage pattern is
 **config** is a dict with the following options:
 
 - **playback_tool**: name of the backend. can be "mitmproxy", "mitmproxy-android"
-- **playback_recordings**: list of recording files
+- **playback_tool_args**: extra options to pass to the playback tool
 - **playback_binary_manifest**: tooltool manifests for the proxy backend binary
 - **playback_pageset_manifest**: tooltool manifest for the pagesets archive
 - **playback_artifacts**: links to downloadable artifacts
@@ -34,7 +34,6 @@ Mozproxy provide a function that returns a playback class. The usage pattern is
 - **obj_path**: build dir
 - **platform**: platform name (provided by mozinfo.os)
 - **run_local**: if True, the test is running locally.
-- **custom_script**: name of the mitm custom script (-s option)
 - **app**: tested app. Can be "firefox",  "geckoview", "refbrow", "fenix" or  "firefox"
 - **host**: hostname for the policies.json file
 - **local_profile_dir**: profile dir

@@ -42,7 +42,12 @@
 
       // Check that re-parsing preserves the mode.
       let mode = sheet.parsingMode;
-      InspectorUtils.parseStyleSheet(sheet, "body { color: chartreuse; }");
+      try {
+        InspectorUtils.parseStyleSheet(sheet, "body { color: chartreuse; }");
+        isnot(sheet.parsingMode, "agent", "Agent sheets cannot be reparsed");
+      } catch (ex) {
+        is(sheet.parsingMode, "agent", "Agent sheets cannot be reparsed");
+      }
       is(sheet.parsingMode, mode,
          "check that re-parsing preserved mode " + mode);
     }

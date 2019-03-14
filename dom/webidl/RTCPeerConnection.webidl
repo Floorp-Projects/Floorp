@@ -167,7 +167,7 @@ interface RTCPeerConnection : EventTarget  {
   attribute EventHandler oniceconnectionstatechange;
   attribute EventHandler onicegatheringstatechange;
 
-  Promise<RTCStatsReport> getStats (optional MediaStreamTrack? selector);
+  Promise<RTCStatsReport> getStats (optional MediaStreamTrack? selector = null);
 
   // Data channel.
   RTCDataChannel createDataChannel (DOMString label,

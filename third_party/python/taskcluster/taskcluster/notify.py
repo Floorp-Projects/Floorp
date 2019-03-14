@@ -19,8 +19,9 @@ class Notify(BaseClient):
     """
 
     classOptions = {
-        "baseUrl": "https://notify.taskcluster.net/v1/"
     }
+    serviceName = 'notify'
+    apiVersion = 'v1'
 
     def ping(self, *args, **kwargs):
         """

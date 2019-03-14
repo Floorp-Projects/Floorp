@@ -70,7 +70,6 @@ struct CacheIndexRecord {
   SHA1Sum::Hash mHash;
   uint32_t mFrecency;
   OriginAttrsHash mOriginAttrsHash;
-  uint32_t mExpirationTime;
   uint16_t mOnStartTime;
   uint16_t mOnStopTime;
 
@@ -90,7 +89,6 @@ struct CacheIndexRecord {
   CacheIndexRecord()
       : mFrecency(0),
         mOriginAttrsHash(0),
-        mExpirationTime(nsICacheEntry::NO_EXPIRATION_TIME),
         mOnStartTime(kIndexTimeNotAvailable),
         mOnStopTime(kIndexTimeNotAvailable),
         mFlags(0) {}
@@ -100,7 +98,6 @@ struct CacheIndexRecord {
 static_assert(sizeof(CacheIndexRecord::mHash) +
                       sizeof(CacheIndexRecord::mFrecency) +
                       sizeof(CacheIndexRecord::mOriginAttrsHash) +
-                      sizeof(CacheIndexRecord::mExpirationTime) +
                       sizeof(CacheIndexRecord::mOnStartTime) +
                       sizeof(CacheIndexRecord::mOnStopTime) +
                       sizeof(CacheIndexRecord::mFlags) ==
@@ -153,7 +150,6 @@ class CacheIndexEntry : public PLDHashEntryHdr {
     MOZ_ASSERT(
         memcmp(&mRec->mHash, &aOther.mRec->mHash, sizeof(SHA1Sum::Hash)) == 0);
     mRec->mFrecency = aOther.mRec->mFrecency;
-    mRec->mExpirationTime = aOther.mRec->mExpirationTime;
     mRec->mOriginAttrsHash = aOther.mRec->mOriginAttrsHash;
     mRec->mOnStartTime = aOther.mRec->mOnStartTime;
     mRec->mOnStopTime = aOther.mRec->mOnStopTime;
@@ -163,7 +159,6 @@ class CacheIndexEntry : public PLDHashEntryHdr {
 
   void InitNew() {
     mRec->mFrecency = 0;
-    mRec->mExpirationTime = nsICacheEntry::NO_EXPIRATION_TIME;
     mRec->mOriginAttrsHash = 0;
     mRec->mOnStartTime = kIndexTimeNotAvailable;
     mRec->mOnStopTime = kIndexTimeNotAvailable;
@@ -172,7 +167,6 @@ class CacheIndexEntry : public PLDHashEntryHdr {
 
   void Init(OriginAttrsHash aOriginAttrsHash, bool aAnonymous, bool aPinned) {
     MOZ_ASSERT(mRec->mFrecency == 0);
-    MOZ_ASSERT(mRec->mExpirationTime == nsICacheEntry::NO_EXPIRATION_TIME);
     MOZ_ASSERT(mRec->mOriginAttrsHash == 0);
     MOZ_ASSERT(mRec->mOnStartTime == kIndexTimeNotAvailable);
     MOZ_ASSERT(mRec->mOnStopTime == kIndexTimeNotAvailable);
@@ -213,11 +207,6 @@ class CacheIndexEntry : public PLDHashEntryHdr {
 
   void SetFrecency(uint32_t aFrecency) { mRec->mFrecency = aFrecency; }
   uint32_t GetFrecency() const { return mRec->mFrecency; }
-
-  void SetExpirationTime(uint32_t aExpirationTime) {
-    mRec->mExpirationTime = aExpirationTime;
-  }
-  uint32_t GetExpirationTime() const { return mRec->mExpirationTime; }
 
   void SetHasAltData(bool aHasAltData) {
     aHasAltData ? mRec->mFlags |= kHasAltDataMask
@@ -261,8 +250,6 @@ class CacheIndexEntry : public PLDHashEntryHdr {
     ptr += sizeof(uint32_t);
     NetworkEndian::writeUint64(ptr, mRec->mOriginAttrsHash);
     ptr += sizeof(uint64_t);
-    NetworkEndian::writeUint32(ptr, mRec->mExpirationTime);
-    ptr += sizeof(uint32_t);
     NetworkEndian::writeUint16(ptr, mRec->mOnStartTime);
     ptr += sizeof(uint16_t);
     NetworkEndian::writeUint16(ptr, mRec->mOnStopTime);
@@ -280,8 +267,6 @@ class CacheIndexEntry : public PLDHashEntryHdr {
     ptr += sizeof(uint32_t);
     mRec->mOriginAttrsHash = NetworkEndian::readUint64(ptr);
     ptr += sizeof(uint64_t);
-    mRec->mExpirationTime = NetworkEndian::readUint32(ptr);
-    ptr += sizeof(uint32_t);
     mRec->mOnStartTime = NetworkEndian::readUint16(ptr);
     ptr += sizeof(uint16_t);
     mRec->mOnStopTime = NetworkEndian::readUint16(ptr);
@@ -293,12 +278,11 @@ class CacheIndexEntry : public PLDHashEntryHdr {
     LOG(
         ("CacheIndexEntry::Log() [this=%p, hash=%08x%08x%08x%08x%08x, fresh=%u,"
          " initialized=%u, removed=%u, dirty=%u, anonymous=%u, "
-         "originAttrsHash=%" PRIx64 ", frecency=%u, expirationTime=%u, "
-         "hasAltData=%u, onStartTime=%u, onStopTime=%u, size=%u]",
+         "originAttrsHash=%" PRIx64 ", frecency=%u, hasAltData=%u, "
+         "onStartTime=%u, onStopTime=%u, size=%u]",
          this, LOGSHA1(mRec->mHash), IsFresh(), IsInitialized(), IsRemoved(),
          IsDirty(), Anonymous(), OriginAttrsHash(), GetFrecency(),
-         GetExpirationTime(), GetHasAltData(), GetOnStartTime(),
-         GetOnStopTime(), GetFileSize()));
+         GetHasAltData(), GetOnStartTime(), GetOnStopTime(), GetFileSize()));
   }
 
   static bool RecordMatchesLoadContextInfo(CacheIndexRecord *aRec,
@@ -379,20 +363,15 @@ class CacheIndexEntryUpdate : public CacheIndexEntry {
   }
 
   void InitNew() {
-    mUpdateFlags = kFrecencyUpdatedMask | kExpirationUpdatedMask |
-                   kHasAltDataUpdatedMask | kOnStartTimeUpdatedMask |
-                   kOnStopTimeUpdatedMask | kFileSizeUpdatedMask;
+    mUpdateFlags = kFrecencyUpdatedMask | kHasAltDataUpdatedMask |
+                   kOnStartTimeUpdatedMask | kOnStopTimeUpdatedMask |
+                   kFileSizeUpdatedMask;
     CacheIndexEntry::InitNew();
   }
 
   void SetFrecency(uint32_t aFrecency) {
     mUpdateFlags |= kFrecencyUpdatedMask;
     CacheIndexEntry::SetFrecency(aFrecency);
-  }
-
-  void SetExpirationTime(uint32_t aExpirationTime) {
-    mUpdateFlags |= kExpirationUpdatedMask;
-    CacheIndexEntry::SetExpirationTime(aExpirationTime);
   }
 
   void SetHasAltData(bool aHasAltData) {
@@ -421,9 +400,6 @@ class CacheIndexEntryUpdate : public CacheIndexEntry {
     if (mUpdateFlags & kFrecencyUpdatedMask) {
       aDst->mRec->mFrecency = mRec->mFrecency;
     }
-    if (mUpdateFlags & kExpirationUpdatedMask) {
-      aDst->mRec->mExpirationTime = mRec->mExpirationTime;
-    }
     aDst->mRec->mOriginAttrsHash = mRec->mOriginAttrsHash;
     if (mUpdateFlags & kOnStartTimeUpdatedMask) {
       aDst->mRec->mOnStartTime = mRec->mOnStartTime;
@@ -449,7 +425,6 @@ class CacheIndexEntryUpdate : public CacheIndexEntry {
 
  private:
   static const uint32_t kFrecencyUpdatedMask = 0x00000001;
-  static const uint32_t kExpirationUpdatedMask = 0x00000002;
   static const uint32_t kFileSizeUpdatedMask = 0x00000004;
   static const uint32_t kHasAltDataUpdatedMask = 0x00000008;
   static const uint32_t kOnStartTimeUpdatedMask = 0x00000010;
@@ -686,7 +661,6 @@ class CacheIndex final : public CacheFileIOListener, public nsIRunnable {
   // Pass nullptr if the value didn't change.
   static nsresult UpdateEntry(const SHA1Sum::Hash *aHash,
                               const uint32_t *aFrecency,
-                              const uint32_t *aExpirationTime,
                               const bool *aHasAltData,
                               const uint16_t *aOnStartTime,
                               const uint16_t *aOnStopTime,
@@ -791,7 +765,6 @@ class CacheIndex final : public CacheFileIOListener, public nsIRunnable {
   // Checks whether any of the information about the entry has changed.
   static bool HasEntryChanged(CacheIndexEntry *aEntry,
                               const uint32_t *aFrecency,
-                              const uint32_t *aExpirationTime,
                               const bool *aHasAltData,
                               const uint16_t *aOnStartTime,
                               const uint16_t *aOnStopTime,

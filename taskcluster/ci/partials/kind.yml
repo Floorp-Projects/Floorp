@@ -24,6 +24,7 @@ only-for-build-platforms:
    - win64-nightly/opt
    - win64-devedition-nightly/opt
    - win64-aarch64-nightly/opt
+   - win64-aarch64-devedition-nightly/opt
    - linux-nightly/opt
    - linux-devedition-nightly/opt
    - linux64-nightly/opt

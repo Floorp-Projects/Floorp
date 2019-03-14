@@ -17,7 +17,8 @@ namespace wr {
 UniquePtr<RenderCompositor> RenderCompositorOGL::Create(
     RefPtr<widget::CompositorWidget>&& aWidget) {
   RefPtr<gl::GLContext> gl;
-  gl = gl::GLContextProvider::CreateForCompositorWidget(aWidget, true);
+  gl = gl::GLContextProvider::CreateForCompositorWidget(
+      aWidget, /* aWebRender */ true, /* aForceAccelerated */ true);
   if (!gl || !gl->MakeCurrent()) {
     gfxCriticalNote << "Failed GL context creation for WebRender: "
                     << gfx::hexa(gl.get());

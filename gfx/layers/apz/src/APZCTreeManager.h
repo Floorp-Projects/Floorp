@@ -19,13 +19,14 @@
 #include "mozilla/layers/APZTestData.h"       // for APZTestData
 #include "mozilla/layers/IAPZCTreeManager.h"  // for IAPZCTreeManager
 #include "mozilla/layers/LayersTypes.h"
-#include "mozilla/layers/KeyboardMap.h"   // for KeyboardMap
-#include "mozilla/layers/TouchCounter.h"  // for TouchCounter
-#include "mozilla/RecursiveMutex.h"       // for RecursiveMutex
-#include "mozilla/RefPtr.h"               // for RefPtr
-#include "mozilla/TimeStamp.h"            // for mozilla::TimeStamp
-#include "mozilla/UniquePtr.h"            // for UniquePtr
-#include "nsCOMPtr.h"                     // for already_AddRefed
+#include "mozilla/layers/KeyboardMap.h"      // for KeyboardMap
+#include "mozilla/layers/TouchCounter.h"     // for TouchCounter
+#include "mozilla/layers/ZoomConstraints.h"  // for ZoomConstraints
+#include "mozilla/RecursiveMutex.h"          // for RecursiveMutex
+#include "mozilla/RefPtr.h"                  // for RefPtr
+#include "mozilla/TimeStamp.h"               // for mozilla::TimeStamp
+#include "mozilla/UniquePtr.h"               // for UniquePtr
+#include "nsCOMPtr.h"                        // for already_AddRefed
 
 #if defined(MOZ_WIDGET_ANDROID)
 #  include "mozilla/layers/AndroidDynamicToolbarAnimator.h"

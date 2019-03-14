@@ -23,16 +23,16 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=959190
   <area id="area" href="http://www.example.com:8080" />
   <script type="application/javascript">
 
-  var url = new URL('http://www.example.com:8080');
-  is(url + '', 'http://www.example.com:8080/', 'URL stringify');
+  var url = new URL("http://www.example.com:8080");
+  is(url + "", "http://www.example.com:8080/", "URL stringify");
 
   var link = document.getElementById("link");
-  is(link + '', 'http://www.example.com:8080/', 'Anchor stringify');
+  is(link + "", "http://www.example.com:8080/", "Anchor stringify");
 
   var area = document.getElementById("area");
-  is(area + '', 'http://www.example.com:8080/', 'Area stringify');
+  is(area + "", "http://www.example.com:8080/", "Area stringify");
 
-  is((location + '').indexOf('http://mochi.test:8888/tests/dom/url/tests/test_urlutils_stringify.html'), 0, 'Location stringify');
+  is((location + "").indexOf("http://mochi.test:8888/tests/dom/url/tests/test_urlutils_stringify.html"), 0, "Location stringify");
   </script>
 </body>
 </html>

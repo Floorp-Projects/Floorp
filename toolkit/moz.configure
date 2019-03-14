@@ -445,7 +445,8 @@ def av1(value):
 def dav1d_asm(target, nasm_version):
     if (
             target.os == 'GNU' and target.kernel == 'Linux' and target.cpu in ('x86', 'x86_64') or
-            target.os == 'WINNT' and target.cpu in ('x86', 'x86_64')
+            target.os == 'WINNT' and target.cpu in ('x86', 'x86_64') or
+            target.os == 'OSX' and target.kernel == 'Darwin' and target.cpu == 'x86_64'
        ):
         if nasm_version < '2.13':
             die('nasm 2.13 or greater is required for AV1 support. '
@@ -521,13 +522,17 @@ def eme_choices(target):
         target.os not in ('Android', 'iOS') and
         target.cpu in ('x86', 'x86_64')):
         return ('widevine',)
+    if target.kernel == 'WINNT' and target.cpu == 'aarch64':
+        return ('widevine',)
 
 
-# Widevine is enabled by default in desktop browser builds.
-@depends(build_project, eme_choices)
-def eme_default(build_project, choices):
+# Widevine is enabled by default in desktop browser builds, except
+# on aarch64 Windows.
+@depends(build_project, eme_choices, target)
+def eme_default(build_project, choices, target):
     if build_project == 'browser':
-        return choices
+        if target.kernel != 'WINNT' or target.cpu != 'aarch64':
+            return choices
 
 
 option('--enable-eme',
@@ -553,6 +558,15 @@ def eme_modules(value):
 # Fallback to an empty list when eme_choices is empty, setting eme_modules to
 # None.
 set_config('MOZ_EME_MODULES', eme_modules | dependable([]))
+
+
+@depends(eme_modules, target, when=eme_modules)
+def eme_win32_artifact(modules, target):
+    if 'widevine' in modules and target.kernel == 'WINNT' and target.cpu == 'aarch64':
+        return True
+
+
+set_config('MOZ_EME_WIN32_ARTIFACT', eme_win32_artifact)
 
 option(name='--enable-chrome-format',
        help='Select FORMAT of chrome files during packaging.',

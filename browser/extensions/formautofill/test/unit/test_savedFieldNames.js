@@ -34,7 +34,7 @@ add_task(async function test_profileSavedFieldNames_observe() {
   });
 
   // profile metadata updated => no need to trigger updateValidFields
-  formAutofillParent._updateSavedFieldNames.reset();
+  formAutofillParent._updateSavedFieldNames.resetHistory();
   formAutofillParent.observe(null, "formautofill-storage-changed", "notifyUsed");
   Assert.equal(formAutofillParent._updateSavedFieldNames.called, false);
 });

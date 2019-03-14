@@ -38,7 +38,7 @@ add_task(async function() {
   await checkTooltipVisibility(
     inspector, eventBadge, rootDocument.querySelector("#titlebar"));
 
-  await closeAboutDevtoolsToolbox(devtoolsTab, window);
+  await closeAboutDevtoolsToolbox(document, devtoolsTab, window);
   await removeTab(tab);
 });
 

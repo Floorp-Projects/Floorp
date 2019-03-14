@@ -23,7 +23,7 @@ if CONFIG['CC_TYPE'] == 'clang':
 
 if CONFIG['CC_TYPE'] == 'clang-cl':
     CXXFLAGS += [
-        '-wd4018', # signed/unsigned mismatch
+        '-Wno-sign-compare',
         '-wd4146', # unary minus operator applied to unsigned type
         '-wd4305', # truncation from 'double' to 'const float'
         '-wd4723', # potential divide by 0

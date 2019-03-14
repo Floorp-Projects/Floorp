@@ -14,6 +14,8 @@ use boilerplate::{Example, HandyDandyRectBuilder};
 use gleam::gl;
 use std::mem;
 use webrender::api::*;
+use webrender::api::units::*;
+
 
 struct ImageGenerator {
     patterns: [[u8; 3]; 6],

@@ -1,16 +1,16 @@
-var EXPORTED_SYMBOLS = ['checkFromJSM'];
+var EXPORTED_SYMBOLS = ["checkFromJSM"];
 
 function checkFromJSM(ok, is) {
-  Cu.importGlobalProperties(['URL', 'Blob']);
+  Cu.importGlobalProperties(["URL", "Blob"]);
 
-  var url = new URL('http://www.example.com');
+  var url = new URL("http://www.example.com");
   is(url.href, "http://www.example.com/", "JSM should have URL");
 
-  var url2 = new URL('/foobar', url);
+  var url2 = new URL("/foobar", url);
   is(url2.href, "http://www.example.com/foobar", "JSM should have URL - based on another URL");
 
-  var blob = new Blob(['a']);
-  var url = URL.createObjectURL(blob);
+  var blob = new Blob(["a"]);
+  url = URL.createObjectURL(blob);
   ok(url, "URL is created!");
 
   var u = new URL(url);

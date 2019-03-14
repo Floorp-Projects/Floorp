@@ -142,7 +142,6 @@ config = {
         "chrome-clipboard": ["--flavor=chrome", "--subsuite=clipboard"],
         "chrome-chunked": ["--flavor=chrome", "--chunk-by-dir=4"],
         "browser-chrome": ["--flavor=browser"],
-        "browser-chrome-gpu": ["--flavor=browser", "--subsuite=gpu"],
         "browser-chrome-clipboard": ["--flavor=browser", "--subsuite=clipboard"],
         "browser-chrome-chunked": ["--flavor=browser", "--chunk-by-runtime"],
         "browser-chrome-addons": ["--flavor=browser", "--chunk-by-runtime", "--tag=addons"],

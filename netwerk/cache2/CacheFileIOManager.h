@@ -320,7 +320,6 @@ class CacheFileIOManager final : public nsITimerCallback, public nsINamed {
                                  bool aAnonymous, bool aPinning);
   static nsresult UpdateIndexEntry(CacheFileHandle *aHandle,
                                    const uint32_t *aFrecency,
-                                   const uint32_t *aExpirationTime,
                                    const bool *aHasAltData,
                                    const uint16_t *aOnStartTime,
                                    const uint16_t *aOnStopTime);

@@ -28,3 +28,4 @@ GECKO_PROCESS_TYPE(VR, "vr", VR)
 GECKO_PROCESS_TYPE(RDD, "rdd", RDD)
 // Socket process
 GECKO_PROCESS_TYPE(Socket, "socket", Socket)
+GECKO_PROCESS_TYPE(RemoteSandboxBroker, "sandbox", RemoteSandboxBroker)

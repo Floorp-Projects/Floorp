@@ -149,15 +149,6 @@
   background: var(--theme-selection-background);
 }
 
-/*
- * Apply the default fill color to toolbar icons
- */
-#canvas-debugging-empty-notice-button .button-icon,
-.event-tooltip-debugger-icon {
-  -moz-context-properties: fill;
-  fill: var(--theme-icon-color);
-}
-
 .devtools-invisible-splitter {
   border-color: transparent;
   background-color: transparent;

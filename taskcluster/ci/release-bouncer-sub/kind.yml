@@ -35,7 +35,7 @@ job-defaults:
 
 jobs:
    devedition:
-      bouncer-platforms: ['linux', 'linux64', 'osx', 'win', 'win64']
+      bouncer-platforms: ['linux', 'linux64', 'osx', 'win', 'win64', 'win64-aarch64']
       bouncer-products: ['complete-mar', 'installer', 'installer-ssl', 'partial-mar', 'stub-installer', 'msi']
       shipping-product: devedition
       treeherder:

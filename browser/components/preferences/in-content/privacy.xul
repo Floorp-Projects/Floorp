@@ -57,7 +57,10 @@
                      value="standard"
                      data-l10n-id="content-blocking-setting-standard"
                      flex="1"/>
-              <button id="standardArrow" class="arrowhead default-content-blocking-ui"/>
+              <button id="standardArrow"
+                      class="arrowhead default-content-blocking-ui"
+                      data-l10n-id="content-blocking-expand-section"
+                      aria-expanded="false"/>
             </hbox>
             <vbox class="indent default-content-blocking-ui">
               <description data-l10n-id="content-blocking-standard-desc"></description>
@@ -72,10 +75,58 @@
                     <label data-l10n-id="content-blocking-third-party-cookies"/>
                   </hbox>
                 </vbox>
+                <vbox class="content-blocking-warning reload-tabs" hidden="true">
+                  <hbox class="indent">
+                    <vbox>
+                      <spacer flex="1"/>
+                      <hbox>
+                        <vbox>
+                          <image class="content-blocking-info-image"/>
+                          <spacer flex="1"/>
+                        </vbox>
+                        <description>
+                          <html:span data-l10n-id="content-blocking-reload-description"></html:span>
+                        </description>
+                      </hbox>
+                      <spacer flex="1"/>
+                    </vbox>
+                    <vbox>
+                      <spacer flex="1"/>
+                      <button class="accessory-button reload-tabs-button"
+                              data-l10n-id="content-blocking-reload-tabs-button"/>
+                      <spacer flex="1"/>
+                    </vbox>
+                  </hbox>
+                </vbox>
               </vbox>
             </vbox>
             <vbox class="indent fallback-content-blocking-ui">
               <description data-l10n-id="content-blocking-standard-description"/>
+              <vbox class="content-blocking-extra-information">
+                <vbox class="content-blocking-warning reload-tabs" hidden="true">
+                  <hbox class="indent">
+                    <vbox>
+                      <spacer flex="1"/>
+                      <hbox>
+                        <vbox>
+                          <image class="content-blocking-info-image"/>
+                          <spacer flex="1"/>
+                        </vbox>
+                        <description>
+                          <html:span data-l10n-id="content-blocking-reload-description"></html:span>
+                        </description>
+                      </hbox>
+                      <spacer flex="1"/>
+                    </vbox>
+                    <vbox>
+                      <spacer flex="1"/>
+                      <button class="accessory-button reload-tabs-button"
+                              data-l10n-id="content-blocking-reload-tabs-button"/>
+                      <spacer flex="1"/>
+                    </vbox>
+                  </hbox>
+                </vbox>
+              </vbox>
             </vbox>
           </vbox>
           <vbox id="contentBlockingOptionStrict" class="content-blocking-category">
@@ -84,7 +135,10 @@
                      value="strict"
                      data-l10n-id="content-blocking-setting-strict"
                      flex="1"/>
-              <button id="strictArrow" class="arrowhead"/>
+              <button id="strictArrow"
+                      class="arrowhead"
+                      data-l10n-id="content-blocking-expand-section"
+                      aria-expanded="false"/>
             </hbox>
             <vbox class="indent">
               <label data-l10n-id="content-blocking-strict-desc"></label>
@@ -97,6 +151,29 @@
                   <hbox class="extra-information-label">
                     <image class="content-blocking-cookies-image"/>
                     <label data-l10n-id="content-blocking-third-party-cookies"/>
+                  </hbox>
+                </vbox>
+                <vbox class="content-blocking-warning reload-tabs" hidden="true">
+                  <hbox class="indent">
+                    <vbox>
+                      <spacer flex="1"/>
+                      <hbox>
+                        <vbox>
+                          <image class="content-blocking-info-image"/>
+                          <spacer flex="1"/>
+                        </vbox>
+                        <description>
+                          <html:span data-l10n-id="content-blocking-reload-description"></html:span>
+                        </description>
+                      </hbox>
+                      <spacer flex="1"/>
+                    </vbox>
+                    <vbox>
+                      <spacer flex="1"/>
+                      <button class="accessory-button reload-tabs-button"
+                              data-l10n-id="content-blocking-reload-tabs-button"/>
+                      <spacer flex="1"/>
+                    </vbox>
                   </hbox>
                 </vbox>
                 <vbox class="content-blocking-warning">
@@ -120,7 +197,10 @@
                    value="custom"
                    data-l10n-id="content-blocking-setting-custom"
                    flex="1"/>
-            <button id="customArrow" class="arrowhead"/>
+            <button id="customArrow"
+                    class="arrowhead"
+                    data-l10n-id="content-blocking-expand-section"
+                    aria-expanded="false"/>
           </hbox>
           <vbox class="indent">
             <description id="contentBlockingCustomDesc" data-l10n-id="content-blocking-custom-desc"></description>
@@ -189,6 +269,29 @@
                             data-l10n-id="content-blocking-fingerprinters-label"
                             aria-describedby="contentBlockingCustomDesc"/>
                 </hbox>
+              <vbox class="content-blocking-warning reload-tabs" hidden="true">
+                <hbox class="indent">
+                  <vbox>
+                    <spacer flex="1"/>
+                    <hbox>
+                      <vbox>
+                        <image class="content-blocking-info-image"/>
+                        <spacer flex="1"/>
+                      </vbox>
+                      <description>
+                        <html:span data-l10n-id="content-blocking-reload-description"></html:span>
+                      </description>
+                    </hbox>
+                    <spacer flex="1"/>
+                  </vbox>
+                  <vbox>
+                    <spacer flex="1"/>
+                    <button class="accessory-button reload-tabs-button"
+                            data-l10n-id="content-blocking-reload-tabs-button"/>
+                    <spacer flex="1"/>
+                  </vbox>
+                </hbox>
+              </vbox>
               <vbox class="content-blocking-warning">
                 <vbox class="indent">
                   <hbox>

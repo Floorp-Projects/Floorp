@@ -14,7 +14,7 @@ const {PlacesUIUtils} = ChromeUtils.import("resource:///modules/PlacesUIUtils.js
 let sandbox;
 
 add_task(function setup() {
-  sandbox = sinon.sandbox.create();
+  sandbox = sinon.createSandbox();
 });
 
 add_task(function test_addToUrlbarHistory() {

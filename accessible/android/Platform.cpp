@@ -107,11 +107,8 @@ void a11y::ProxyTextChangeEvent(ProxyAccessible* aTarget, const nsString& aStr,
 void a11y::ProxyShowHideEvent(ProxyAccessible* aTarget,
                               ProxyAccessible* aParent, bool aInsert,
                               bool aFromUser) {
-  SessionAccessibility* sessionAcc =
-      SessionAccessibility::GetInstanceFor(aTarget);
-  if (sessionAcc) {
-    sessionAcc->SendWindowContentChangedEvent(WrapperFor(aParent));
-  }
+  // We rely on the window content changed events to be dispatched
+  // after the viewport cache is refreshed.
 }
 
 void a11y::ProxySelectionEvent(ProxyAccessible*, ProxyAccessible*, uint32_t) {}

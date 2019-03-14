@@ -114,13 +114,12 @@ nsBaseCommandController::DoCommand(const char* aCommand) {
   NS_ENSURE_ARG_POINTER(aCommand);
   NS_ENSURE_STATE(mCommandTable);
 
-  nsISupports* context = mCommandContextRawPtr;
-  nsCOMPtr<nsISupports> weak;
+  nsCOMPtr<nsISupports> context = mCommandContextRawPtr;
   if (!context) {
-    weak = do_QueryReferent(mCommandContextWeakPtr);
-    context = weak;
+    context = do_QueryReferent(mCommandContextWeakPtr);
   }
-  return mCommandTable->DoCommand(aCommand, context);
+  nsCOMPtr<nsIControllerCommandTable> commandTable(mCommandTable);
+  return commandTable->DoCommand(aCommand, context);
 }
 
 NS_IMETHODIMP
@@ -129,13 +128,12 @@ nsBaseCommandController::DoCommandWithParams(const char* aCommand,
   NS_ENSURE_ARG_POINTER(aCommand);
   NS_ENSURE_STATE(mCommandTable);
 
-  nsISupports* context = mCommandContextRawPtr;
-  nsCOMPtr<nsISupports> weak;
+  nsCOMPtr<nsISupports> context = mCommandContextRawPtr;
   if (!context) {
-    weak = do_QueryReferent(mCommandContextWeakPtr);
-    context = weak;
+    context = do_QueryReferent(mCommandContextWeakPtr);
   }
-  return mCommandTable->DoCommandParams(aCommand, aParams, context);
+  nsCOMPtr<nsIControllerCommandTable> commandTable(mCommandTable);
+  return commandTable->DoCommandParams(aCommand, aParams, context);
 }
 
 NS_IMETHODIMP

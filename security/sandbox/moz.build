@@ -20,6 +20,7 @@ elif CONFIG['OS_ARCH'] == 'WINNT':
     FORCE_STATIC_LIB = True
 
     DIRS += [
+        'win/src/remotesandboxbroker',
         'win/src/sandboxbroker',
         'win/src/sandboxpermissions',
         'win/src/sandboxtarget',
@@ -171,10 +172,5 @@ elif CONFIG['OS_ARCH'] == 'WINNT':
     # Suppress warnings in third-party code.
     if CONFIG['CC_TYPE'] == 'clang-cl':
         CXXFLAGS += [
-            '-wd4275', # non dll-interface class exception used as base for dll-interface class
-            '-wd4717', # recursive on all control paths, function will cause runtime stack overflow
-            '-wd4996', # 'GetVersionExW': was declared deprecated
-            '-wd4302', # 'reinterpret_cast': truncation from 'LPCSTR' to 'WORD'
-            '-wd4311', # 'reinterpret_cast': pointer truncation from 'LPOVERLAPPED' to 'DWORD'
-            '-wd4312', # 'reinterpret_cast': conversion from 'DWORD' to 'LPOVERLAPPED' of greater size
+            '-Wno-deprecated-declarations', # 'GetVersionExW': was declared deprecated
         ]

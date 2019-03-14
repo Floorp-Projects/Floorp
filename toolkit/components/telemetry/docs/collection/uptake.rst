@@ -85,10 +85,11 @@ Additional Event Info
 The Event API allows to report additional information. We support the following optional fields:
 
 - ``trigger``: A label to distinguish what triggered the polling/fetching of remote content (eg. ``"broadcast"``, ``"timer"``, ``"forced"``, ``"manual"``)
+- ``age``: The age of pulled data in seconds (ie. difference between publication time and fetch time).
 
 .. code-block:: js
 
-   UptakeTelemetry.report(component, status, { source, trigger: "timer" });
+   UptakeTelemetry.report(component, status, { source, trigger: "timer", age: 138 });
 
 
 Use-cases

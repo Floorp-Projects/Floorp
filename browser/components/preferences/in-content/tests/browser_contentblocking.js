@@ -16,16 +16,6 @@ const {
   PoliciesPrefTracker,
 } = ChromeUtils.import("resource://testing-common/EnterprisePolicyTesting.jsm", null);
 
-registerCleanupFunction(async function policies_headjs_finishWithCleanSlate() {
-  if (Services.policies.status != Ci.nsIEnterprisePolicies.INACTIVE) {
-    await EnterprisePolicyTesting.setupPolicyEngineWithJson("");
-  }
-  is(Services.policies.status, Ci.nsIEnterprisePolicies.INACTIVE, "Engine is inactive at the end of the test");
-
-  EnterprisePolicyTesting.resetRunOnceState();
-  PoliciesPrefTracker.stop();
-});
-
 requestLongerTimeout(2);
 
 // Tests that the content blocking main category checkboxes have the correct default state.
@@ -412,5 +402,33 @@ add_task(async function testPolicyCategorization() {
   is(strictRadioOption.disabled, true, "the strict option is disabled");
   is(standardRadioOption.disabled, true, "the standard option is disabled");
 
+  gBrowser.removeCurrentTab();
+
+  // Cleanup after this particular test.
+  if (Services.policies.status != Ci.nsIEnterprisePolicies.INACTIVE) {
+    await EnterprisePolicyTesting.setupPolicyEngineWithJson("");
+  }
+  is(Services.policies.status, Ci.nsIEnterprisePolicies.INACTIVE, "Engine is inactive at the end of the test");
+
+  EnterprisePolicyTesting.resetRunOnceState();
+  PoliciesPrefTracker.stop();
+});
+
+// Tests that changing a content blocking pref shows the content blocking warning
+// to reload tabs to apply changes.
+add_task(async function testContentBlockingReloadWarning() {
+  Services.prefs.setStringPref(CAT_PREF, "standard");
+  await openPreferencesViaOpenPreferencesAPI("privacy", {leaveOpen: true});
+  let doc = gBrowser.contentDocument;
+  let reloadWarnings = [...doc.querySelectorAll(".content-blocking-warning.reload-tabs")];
+  let allHidden = reloadWarnings.every((el) => el.hidden);
+  ok(allHidden, "all of the warnings to reload tabs are initially hidden");
+
+  Services.prefs.setStringPref(CAT_PREF, "strict");
+
+  let strictWarning = doc.querySelector("#contentBlockingOptionStrict .content-blocking-warning.reload-tabs");
+  ok(!BrowserTestUtils.is_hidden(strictWarning), "The warning in the strict section should be showing");
+
+  Services.prefs.setStringPref(CAT_PREF, "standard");
   gBrowser.removeCurrentTab();
 });

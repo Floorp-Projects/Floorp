@@ -20,9 +20,9 @@
   worker.onmessage = function(event) {
     is(event.target, worker);
 
-    if (event.data.type == 'finish') {
+    if (event.data.type == "finish") {
       SimpleTest.finish();
-    } else if (event.data.type == 'status') {
+    } else if (event.data.type == "status") {
       ok(event.data.status, event.data.msg);
     }
   };

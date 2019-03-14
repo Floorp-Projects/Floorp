@@ -70,6 +70,12 @@ class RequestListHeaderContextMenu {
       click: () => this.props.resetColumns(),
     });
 
+    menu.push({
+      id: "request-list-header-reset-sorting",
+      label: L10N.getStr("netmonitor.toolbar.resetSorting"),
+      click: () => this.props.resetSorting(),
+    });
+
     showMenu(menu, {
       screenX: event.screenX,
       screenY: event.screenY,

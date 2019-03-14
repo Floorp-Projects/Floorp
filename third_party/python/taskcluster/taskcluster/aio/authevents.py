@@ -13,9 +13,9 @@ _defaultConfig = config
 
 class AuthEvents(AsyncBaseClient):
     """
-    The auth service, typically available at `auth.taskcluster.net`
-    is responsible for storing credentials, managing assignment of scopes,
-    and validation of request signatures from other services.
+    The auth service is responsible for storing credentials, managing
+    assignment of scopes, and validation of request signatures from other
+    services.
 
     These exchanges provides notifications when credentials or roles are
     updated. This is mostly so that multiple instances of the auth service
@@ -24,8 +24,10 @@ class AuthEvents(AsyncBaseClient):
     """
 
     classOptions = {
-        "exchangePrefix": "exchange/taskcluster-auth/v1/"
+        "exchangePrefix": "exchange/taskcluster-auth/v1/",
     }
+    serviceName = 'auth'
+    apiVersion = 'v1'
 
     def clientCreated(self, *args, **kwargs):
         """

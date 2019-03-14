@@ -3,9 +3,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::{BorderRadius, ClipMode, ColorF};
-use api::{FilterOp, ImageRendering, TileOffset, RepeatMode, WorldPoint, WorldSize};
+use api::{FilterOp, ImageRendering, RepeatMode};
 use api::{PremultipliedColorF, PropertyBinding, Shadow, GradientStop};
-use api::{BoxShadowClipMode, LineStyle, LineOrientation, AuHelpers};
+use api::{BoxShadowClipMode, LineStyle, LineOrientation};
 use api::{LayoutPrimitiveInfo, PrimitiveKeyKind};
 use api::units::*;
 use border::{get_max_scale_for_border, build_border_instances};

@@ -8,6 +8,12 @@
 #define nsFrameLoaderOwner_h_
 
 class nsFrameLoader;
+namespace mozilla {
+class ErrorResult;
+namespace dom {
+struct RemotenessOptions;
+}
+}  // namespace mozilla
 
 // IID for the FrameLoaderOwner interface
 #define NS_FRAMELOADEROWNER_IID                      \
@@ -31,6 +37,15 @@ class nsFrameLoaderOwner : public nsISupports {
   nsFrameLoaderOwner() = default;
   already_AddRefed<nsFrameLoader> GetFrameLoader();
   void SetFrameLoader(nsFrameLoader* aNewFrameLoader);
+
+  // Destroy (if it exists) and recreate our frameloader, based on new
+  // remoteness requirements. This should follow the same path as
+  // tabbrowser.js's updateBrowserRemoteness, including running the same logic
+  // and firing the same events as unbinding a XULBrowserElement from the tree.
+  // However, this method is available from backend and does not manipulate the
+  // DOM.
+  void ChangeRemoteness(const mozilla::dom::RemotenessOptions& aOptions,
+                        mozilla::ErrorResult& rv);
 
  protected:
   virtual ~nsFrameLoaderOwner() = default;

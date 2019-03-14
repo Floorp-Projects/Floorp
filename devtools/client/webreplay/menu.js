@@ -18,6 +18,11 @@ const ChromeUtils = require("ChromeUtils");
 ChromeUtils.defineModuleGetter(this, "Services",
                                "resource://gre/modules/Services.jsm");
 
+const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+XPCOMUtils.defineLazyModuleGetters(this, {
+  E10SUtils: "resource://gre/modules/E10SUtils.jsm",
+});
+
 function RecordNewTab() {
   const { gBrowser } = Services.wm.getMostRecentWindow("navigator:browser");
   gBrowser.selectedTab = gBrowser.addWebTab("about:blank", { recordExecution: "*" });
@@ -27,8 +32,10 @@ function RecordNewTab() {
 function ReloadAndRecordTab() {
   const { gBrowser } = Services.wm.getMostRecentWindow("navigator:browser");
   const url = gBrowser.currentURI.spec;
-  gBrowser.updateBrowserRemoteness(gBrowser.selectedBrowser, true,
-                                   { recordExecution: "*", newFrameloader: true });
+  gBrowser.updateBrowserRemoteness(gBrowser.selectedBrowser, {
+    recordExecution: "*", newFrameloader: true,
+    remoteType: E10SUtils.DEFAULT_REMOTE_TYPE,
+  });
   gBrowser.loadURI(url, {
     triggeringPrincipal: gBrowser.selectedBrowser.contentPrincipal,
   });
@@ -38,8 +45,10 @@ function ReloadAndRecordTab() {
 function ReloadAndStopRecordingTab() {
   const { gBrowser } = Services.wm.getMostRecentWindow("navigator:browser");
   const url = gBrowser.currentURI.spec;
-  gBrowser.updateBrowserRemoteness(gBrowser.selectedBrowser, true,
-                                   { newFrameloader: true });
+  gBrowser.updateBrowserRemoteness(gBrowser.selectedBrowser, {
+    newFrameloader: true,
+    remoteType: E10SUtils.DEFAULT_REMOTE_TYPE,
+  });
   gBrowser.loadURI(url, {
     triggeringPrincipal: gBrowser.selectedBrowser.contentPrincipal,
   });

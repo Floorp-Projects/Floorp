@@ -4,9 +4,10 @@
 
 use api::{AsyncBlobImageRasterizer, BlobImageRequest, BlobImageParams, BlobImageResult};
 use api::{DocumentId, PipelineId, ApiMsg, FrameMsg, ResourceUpdate, ExternalEvent, Epoch};
-use api::{BuiltDisplayList, ColorF, LayoutSize, NotificationRequest, Checkpoint, IdNamespace};
+use api::{BuiltDisplayList, ColorF, NotificationRequest, Checkpoint, IdNamespace};
 use api::{ClipIntern, FilterDataIntern, MemoryReport, PrimitiveKeyKind};
 use api::channel::MsgSender;
+use api::units::LayoutSize;
 #[cfg(feature = "capture")]
 use capture::CaptureConfig;
 use frame_builder::{FrameBuilderConfig, FrameBuilder};

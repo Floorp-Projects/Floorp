@@ -1278,13 +1278,15 @@ mozilla::ipc::IPCResult TabChild::RecvHandleTap(
       break;
     case GeckoContentController::TapType::eLongTap:
       if (mTabChildMessageManager) {
-        mAPZEventState->ProcessLongTap(presShell, point, scale, aModifiers,
-                                       aGuid, aInputBlockId);
+        RefPtr<APZEventState> eventState(mAPZEventState);
+        eventState->ProcessLongTap(presShell, point, scale, aModifiers, aGuid,
+                                   aInputBlockId);
       }
       break;
     case GeckoContentController::TapType::eLongTapUp:
       if (mTabChildMessageManager) {
-        mAPZEventState->ProcessLongTapUp(presShell, point, scale, aModifiers);
+        RefPtr<APZEventState> eventState(mAPZEventState);
+        eventState->ProcessLongTapUp(presShell, point, scale, aModifiers);
       }
       break;
   }
@@ -1390,8 +1392,9 @@ mozilla::ipc::IPCResult TabChild::RecvMouseEvent(
   // to be refcounted. This function can run script, which may trigger a nested
   // event loop, which may release this, so we hold a strong reference here.
   RefPtr<TabChild> kungFuDeathGrip(this);
+  nsCOMPtr<nsIPresShell> presShell(GetPresShell());
   APZCCallbackHelper::DispatchMouseEvent(
-      GetPresShell(), aType, CSSPoint(aX, aY), aButton, aClickCount, aModifiers,
+      presShell, aType, CSSPoint(aX, aY), aButton, aClickCount, aModifiers,
       aIgnoreRootScrollFrame, MouseEvent_Binding::MOZ_SOURCE_UNKNOWN,
       0 /* Use the default value here. */);
   return IPC_OK();

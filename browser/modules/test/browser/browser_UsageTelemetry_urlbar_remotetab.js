@@ -16,6 +16,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   URLBAR_SELECTED_RESULT_TYPES: "resource:///modules/BrowserUsageTelemetry.jsm",
   URLBAR_SELECTED_RESULT_METHODS: "resource:///modules/BrowserUsageTelemetry.jsm",
 });
+const {sinon} = ChromeUtils.import("resource://testing-common/Sinon.jsm");
 
 function assertSearchTelemetryEmpty(search_hist) {
   const scalars = TelemetryTestUtils.getProcessScalars("parent", true, false);
@@ -58,9 +59,6 @@ function assertHistogramResults(histograms, type, index, method) {
 
 
 add_task(async function setup() {
-  /* global sinon */
-  Services.scriptloader.loadSubScript("resource://testing-common/sinon-2.3.2.js");
-
   await SpecialPowers.pushPrefEnv({
     set: [
       // Disable search suggestions in the urlbar.
@@ -108,7 +106,7 @@ add_task(async function setup() {
     ],
   };
 
-  const sandbox = sinon.sandbox.create();
+  const sandbox = sinon.createSandbox();
 
   let originalSyncedTabsInternal = SyncedTabs._internal;
   SyncedTabs._internal = {
@@ -137,7 +135,6 @@ add_task(async function setup() {
     await PlacesUtils.history.clear();
     await PlacesUtils.bookmarks.eraseEverything();
     Services.telemetry.setEventRecordingEnabled("navigation", false);
-    delete window.sinon;
   });
 });
 

@@ -1786,7 +1786,7 @@ void MLGDeviceD3D11::InsertPresentWaitQuery() {
 void MLGDeviceD3D11::WaitForPreviousPresentQuery() {
   if (mWaitForPresentQuery) {
     BOOL result;
-    WaitForGPUQuery(mDevice, mCtx, mWaitForPresentQuery, &result);
+    WaitForFrameGPUQuery(mDevice, mCtx, mWaitForPresentQuery, &result);
   }
   mWaitForPresentQuery = mNextWaitForPresentQuery.forget();
 }

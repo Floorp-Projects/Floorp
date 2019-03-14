@@ -2,10 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{AlphaType, ClipMode, DeviceIntRect, DeviceIntPoint, DeviceIntSize, WorldRect};
-use api::{ExternalImageType, FilterOp, ImageRendering, LayoutRect, DeviceRect, DevicePixelScale};
-use api::{YuvColorSpace, YuvFormat, PictureRect, ColorDepth, LayoutPoint, DevicePoint, LayoutSize};
-use api::{PremultipliedColorF, RasterSpace};
+use api::{AlphaType, ClipMode, ExternalImageType, FilterOp, ImageRendering};
+use api::{YuvColorSpace, YuvFormat, ColorDepth, PremultipliedColorF, RasterSpace};
+use api::units::*;
 use clip::{ClipDataStore, ClipNodeFlags, ClipNodeRange, ClipItem, ClipStore, ClipNodeInstance};
 use clip_scroll_tree::{ClipScrollTree, ROOT_SPATIAL_NODE_INDEX, SpatialNodeIndex, CoordinateSystemId};
 use glyph_rasterizer::GlyphFormat;
@@ -29,7 +28,7 @@ use scene::FilterOpHelpers;
 use smallvec::SmallVec;
 use std::{f32, i32, usize};
 use tiling::{RenderTargetContext};
-use util::{project_rect, MaxRect, TransformedRectKind};
+use util::{project_rect, TransformedRectKind};
 
 // Special sentinel value recognized by the shader. It is considered to be
 // a dummy task that doesn't mask out anything.
@@ -984,10 +983,10 @@ impl AlphaBatchBuilder {
                     // Convert all children of the 3D hierarchy root into batches.
                     Picture3DContext::In { root_data: Some(ref list), .. } => {
                         for child in list {
-                            let child_prim_instance = &picture.prim_list.prim_instances[child.anchor];
-                            let child_prim_info = &ctx.scratch.prim_info[child_prim_instance.visibility_info.0 as usize];
+                            let prim_instance = &picture.prim_list.prim_instances[child.anchor];
+                            let prim_info = &ctx.scratch.prim_info[prim_instance.visibility_info.0 as usize];
 
-                            let child_pic_index = match child_prim_instance.kind {
+                            let child_pic_index = match prim_instance.kind {
                                 PrimitiveInstanceKind::Picture { pic_index, .. } => pic_index,
                                 PrimitiveInstanceKind::LineDecoration { .. } |
                                 PrimitiveInstanceKind::TextRun { .. } |
@@ -1008,14 +1007,14 @@ impl AlphaBatchBuilder {
                             // Get clip task, if set, for the picture primitive.
                             let clip_task_address = get_clip_task_address(
                                 &ctx.scratch.clip_mask_instances,
-                                child_prim_info.clip_task_index,
+                                prim_info.clip_task_index,
                                 0,
                                 render_tasks,
                             ).unwrap_or(OPAQUE_TASK_ADDRESS);
 
-                            let child_header = PrimitiveHeader {
+                            let prim_header = PrimitiveHeader {
                                 local_rect: pic.local_rect,
-                                local_clip_rect: child_prim_info.combined_local_clip_rect,
+                                local_clip_rect: prim_info.combined_local_clip_rect,
                                 task_address,
                                 specific_prim_address: GpuCacheAddress::invalid(),
                                 clip_task_address,
@@ -1042,7 +1041,7 @@ impl AlphaBatchBuilder {
                                     gpu_cache,
                                 );
 
-                            let prim_header_index = prim_headers.push(&child_header, z_id, [
+                            let prim_header_index = prim_headers.push(&prim_header, z_id, [
                                 uv_rect_address.as_int(),
                                 if raster_config.establishes_raster_root { 1 } else { 0 },
                                 0,
@@ -1062,7 +1061,7 @@ impl AlphaBatchBuilder {
 
                             self.current_batch_list().push_single_instance(
                                 key,
-                                &child_prim_info.clip_chain.pic_clip_rect,
+                                &prim_info.clip_chain.pic_clip_rect,
                                 z_id,
                                 PrimitiveInstanceData::from(instance),
                             );
@@ -1139,7 +1138,7 @@ impl AlphaBatchBuilder {
                                         // Get the local rect of the tile.
                                         let tile_rect = tile.local_rect;
 
-                                        let tile_header = PrimitiveHeader {
+                                        let prim_header = PrimitiveHeader {
                                             local_rect: tile_rect,
                                             local_clip_rect,
                                             task_address,
@@ -1148,7 +1147,7 @@ impl AlphaBatchBuilder {
                                             transform_id,
                                         };
 
-                                        let prim_header_index = prim_headers.push(&tile_header, z_id, [
+                                        let prim_header_index = prim_headers.push(&prim_header, z_id, [
                                             ShaderColorMode::Image as i32 | ((AlphaType::PremultipliedAlpha as i32) << 16),
                                             RasterizationSpace::Local as i32,
                                             get_shader_opacity(1.0),
@@ -1520,71 +1519,28 @@ impl AlphaBatchBuilder {
                                     PrimitiveInstanceData::from(instance),
                                 );
                             }
-                            PictureCompositeMode::Puppet { master: Some(source) } if ctx.is_picture_surface_visible(source) => return,
-                            PictureCompositeMode::MixBlend { mode, backdrop } if ctx.is_picture_surface_visible(backdrop) => {
-                                let backdrop_picture = &ctx.prim_store.pictures[backdrop.0];
-
-                                let source_id = ctx
-                                    .surfaces[raster_config.surface_index.0]
+                            PictureCompositeMode::MixBlend(mode) => {
+                                let surface = ctx.surfaces[raster_config.surface_index.0]
                                     .surface
                                     .as_ref()
-                                    .expect("bug: source surface must be allocated by now")
-                                    .resolve_render_task_id();
-                                let backdrop_surface_id = backdrop_picture.raster_config
-                                    .as_ref()
-                                    .unwrap()
-                                    .surface_index;
-                                let backdrop_id = ctx.surfaces[backdrop_surface_id.0]
-                                    .surface
-                                    .as_ref()
-                                    .expect("bug: backdrop surface must be allocated by now")
-                                    .resolve_render_task_id();
+                                    .expect("bug: surface must be allocated by now");
+                                let cache_task_id = surface.resolve_render_task_id();
+                                let backdrop_id = picture.secondary_render_task_id.expect("no backdrop!?");
 
                                 let key = BatchKey::new(
                                     BatchKind::Brush(
                                         BrushBatchKind::MixBlend {
                                             task_id,
-                                            source_id,
+                                            source_id: cache_task_id,
                                             backdrop_id,
                                         },
                                     ),
-                                    non_segmented_blend_mode,
+                                    BlendMode::PremultipliedAlpha,
                                     BatchTextures::no_texture(),
                                 );
-
-                                // The trick here is to draw the picture in the space of the backdrop,
-                                // since the source can be attached to a child spatial node.
-                                let expanded_header = PrimitiveHeader {
-                                    local_rect: ctx.clip_scroll_tree
-                                        .map_rect_to_parent_space(
-                                            prim_header.local_rect,
-                                            picture.spatial_node_index,
-                                            backdrop_picture.spatial_node_index,
-                                            &backdrop_picture.local_rect, //Note: this shouldn't be used
-                                        )
-                                        .unwrap_or_else(LayoutRect::zero)
-                                        .union(&backdrop_picture.local_rect),
-                                    local_clip_rect: ctx.clip_scroll_tree
-                                        .map_rect_to_parent_space(
-                                            prim_header.local_clip_rect,
-                                            picture.spatial_node_index,
-                                            backdrop_picture.spatial_node_index,
-                                            &backdrop_picture.local_clip_rect, //Note: this shouldn't be used
-                                        )
-                                        .unwrap_or_else(LayoutRect::zero)
-                                        .union(&backdrop_picture.local_clip_rect),
-                                    transform_id: transforms
-                                        .get_id(
-                                            backdrop_picture.spatial_node_index,
-                                            root_spatial_node_index,
-                                            ctx.clip_scroll_tree,
-                                        ),
-                                    ..prim_header
-                                };
-
                                 let backdrop_task_address = render_tasks.get_task_address(backdrop_id);
-                                let source_task_address = render_tasks.get_task_address(source_id);
-                                let prim_header_index = prim_headers.push(&expanded_header, z_id, [
+                                let source_task_address = render_tasks.get_task_address(cache_task_id);
+                                let prim_header_index = prim_headers.push(&prim_header, z_id, [
                                     mode as u32 as i32,
                                     backdrop_task_address.0 as i32,
                                     source_task_address.0 as i32,
@@ -1598,20 +1554,14 @@ impl AlphaBatchBuilder {
                                     brush_flags,
                                     user_data: 0,
                                 };
-                                //TODO: investigate if we can do better. We can't use the `bounding_rect`
-                                // here because we effectively merge the call with the backdrop,
-                                // and the instance for the backdrop isn't available here.
-                                let conservative_bounding_rect = PictureRect::max_rect();
 
                                 self.current_batch_list().push_single_instance(
                                     key,
-                                    &conservative_bounding_rect,
+                                    bounding_rect,
                                     z_id,
                                     PrimitiveInstanceData::from(instance),
                                 );
                             }
-                            PictureCompositeMode::Puppet { .. } |
-                            PictureCompositeMode::MixBlend { .. } |
                             PictureCompositeMode::Blit(_) => {
                                 let surface = ctx.surfaces[raster_config.surface_index.0]
                                     .surface
@@ -2755,13 +2705,14 @@ impl ClipBatcher {
 
     pub fn add_clip_region(
         &mut self,
-        task_address: RenderTaskAddress,
         clip_data_address: GpuCacheAddress,
         local_pos: LayoutPoint,
         sub_rect: DeviceRect,
+        task_origin: DevicePoint,
+        screen_origin: DevicePoint,
+        device_pixel_scale: f32,
     ) {
         let instance = ClipMaskInstance {
-            render_task_address: task_address,
             clip_transform_id: TransformPaletteId::IDENTITY,
             prim_transform_id: TransformPaletteId::IDENTITY,
             clip_data_address,
@@ -2770,6 +2721,9 @@ impl ClipBatcher {
             tile_rect: LayoutRect::zero(),
             sub_rect,
             snap_offsets: SnapOffsets::empty(),
+            task_origin,
+            screen_origin,
+            device_pixel_scale,
         };
 
         self.primary_clips.rectangles.push(instance);
@@ -2881,7 +2835,6 @@ impl ClipBatcher {
 
     pub fn add(
         &mut self,
-        task_address: RenderTaskAddress,
         clip_node_range: ClipNodeRange,
         root_spatial_node_index: SpatialNodeIndex,
         resource_cache: &ResourceCache,
@@ -2894,6 +2847,8 @@ impl ClipBatcher {
         world_rect: &WorldRect,
         device_pixel_scale: DevicePixelScale,
         snap_offsets: SnapOffsets,
+        task_origin: DevicePoint,
+        screen_origin: DevicePoint,
     ) {
         let mut is_first_clip = true;
 
@@ -2914,7 +2869,6 @@ impl ClipBatcher {
             );
 
             let instance = ClipMaskInstance {
-                render_task_address: task_address,
                 clip_transform_id,
                 prim_transform_id,
                 clip_data_address: GpuCacheAddress::invalid(),
@@ -2926,6 +2880,9 @@ impl ClipBatcher {
                     actual_rect.size.to_f32(),
                 ),
                 snap_offsets,
+                task_origin,
+                screen_origin,
+                device_pixel_scale: device_pixel_scale.0,
             };
 
             let added_clip = match clip_node.item {

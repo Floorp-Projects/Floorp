@@ -16,12 +16,21 @@ function getFrame(browser, { frame = null }) {
 }
 
 function setScrollPosition(browser,
-                           { x = 0, y = 0, zoom = 0, frame }) {
+                           { x = 0, y = 0, zoom = 0, frame = null }) {
   let window = getFrame(browser, {frame});
+  let topLevelUtils = browser.contentWindow.windowUtils;
   if (zoom) {
-    browser.contentWindow.windowUtils.setResolutionAndScaleTo(zoom);
+    topLevelUtils.setResolutionAndScaleTo(zoom);
   }
-  window.scrollTo(x, y);
+  // The root content document has a distinction between visual and layout
+  // scroll positions. We want to set the visual one.
+  // For frames, there is no such distinction and scrollToVisual() does
+  // not support them, so use window.scrollTo().
+  if (frame !== null) {
+    window.scrollTo(x, y);
+  } else {
+    topLevelUtils.scrollToVisual(x, y, topLevelUtils.UPDATE_TYPE_MAIN_THREAD);
+  }
 }
 
 function checkScroll(browser, data) {

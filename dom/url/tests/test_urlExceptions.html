@@ -21,32 +21,32 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=926890
   <script type="application/javascript">
 
   // URL.href throws
-  var url = new URL('http://www.example.com');
+  var url = new URL("http://www.example.com");
   ok(url, "URL created");
 
   try {
-    url.href = '42';
+    url.href = "42";
     ok(false, "url.href = 42 should throw");
-  } catch(e) {
+  } catch (e) {
     ok(true, "url.href = 42 should throw");
     ok(e instanceof TypeError, "error type typeError");
   }
 
-  url.href = 'http://www.example.org';
+  url.href = "http://www.example.org";
   ok(true, "url.href should not throw");
 
   try {
-    new URL('42');
+    new URL("42");
     ok(false, "new URL(42) should throw");
-  } catch(e) {
+  } catch (e) {
     ok(true, "new URL(42) should throw");
     ok(e instanceof TypeError, "error type typeError");
   }
 
   try {
-    new URL('http://www.example.com', '42');
+    new URL("http://www.example.com", "42");
     ok(false, "new URL(something, 42) should throw");
-  } catch(e) {
+  } catch (e) {
     ok(true, "new URL(something, 42) should throw");
     ok(e instanceof TypeError, "error type typeError");
   }

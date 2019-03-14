@@ -1149,10 +1149,6 @@ nsresult CacheFile::SetExpirationTime(uint32_t aExpirationTime) {
 
   PostWriteTimer();
 
-  if (mHandle && !mHandle->IsDoomed())
-    CacheFileIOManager::UpdateIndexEntry(mHandle, nullptr, &aExpirationTime,
-                                         nullptr, nullptr, nullptr);
-
   return mMetadata->SetExpirationTime(aExpirationTime);
 }
 
@@ -1176,7 +1172,7 @@ nsresult CacheFile::SetFrecency(uint32_t aFrecency) {
 
   if (mHandle && !mHandle->IsDoomed())
     CacheFileIOManager::UpdateIndexEntry(mHandle, &aFrecency, nullptr, nullptr,
-                                         nullptr, nullptr);
+                                         nullptr);
 
   return mMetadata->SetFrecency(aFrecency);
 }
@@ -1224,7 +1220,7 @@ nsresult CacheFile::SetNetworkTimes(uint64_t aOnStartTime,
       aOnStopTime <= kIndexTimeOutOfBound ? aOnStopTime : kIndexTimeOutOfBound;
 
   if (mHandle && !mHandle->IsDoomed()) {
-    CacheFileIOManager::UpdateIndexEntry(mHandle, nullptr, nullptr, nullptr,
+    CacheFileIOManager::UpdateIndexEntry(mHandle, nullptr, nullptr,
                                          &onStartTime16, &onStopTime16);
   }
   return NS_OK;
@@ -1283,8 +1279,8 @@ nsresult CacheFile::SetAltMetadata(const char *aAltMetadata) {
   }
 
   if (mHandle && !mHandle->IsDoomed()) {
-    CacheFileIOManager::UpdateIndexEntry(mHandle, nullptr, nullptr, &hasAltData,
-                                         nullptr, nullptr);
+    CacheFileIOManager::UpdateIndexEntry(mHandle, nullptr, &hasAltData, nullptr,
+                                         nullptr);
   }
   return rv;
 }
@@ -2497,9 +2493,6 @@ nsresult CacheFile::InitIndexEntry() {
       mMetadata->IsAnonymous(), mPinned);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  uint32_t expTime;
-  mMetadata->GetExpirationTime(&expTime);
-
   uint32_t frecency;
   mMetadata->GetFrecency(&frecency);
 
@@ -2523,8 +2516,8 @@ nsresult CacheFile::InitIndexEntry() {
   const char *onStopTimeStr = mMetadata->GetElement("net-response-time-onstop");
   uint16_t onStopTime = toUint16(onStopTimeStr);
 
-  rv = CacheFileIOManager::UpdateIndexEntry(
-      mHandle, &frecency, &expTime, &hasAltData, &onStartTime, &onStopTime);
+  rv = CacheFileIOManager::UpdateIndexEntry(mHandle, &frecency, &hasAltData,
+                                            &onStartTime, &onStopTime);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;

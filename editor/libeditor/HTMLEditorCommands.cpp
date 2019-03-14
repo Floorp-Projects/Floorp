@@ -142,7 +142,9 @@ PasteNoFormattingCommand::DoCommand(const char* aCommandName,
   if (NS_WARN_IF(!htmlEditor)) {
     return NS_ERROR_FAILURE;
   }
-  return htmlEditor->PasteNoFormatting(nsIClipboard::kGlobalClipboard);
+  // Known live because we hold a ref above in "editor"
+  return MOZ_KnownLive(htmlEditor)
+      ->PasteNoFormatting(nsIClipboard::kGlobalClipboard);
 }
 
 NS_IMETHODIMP

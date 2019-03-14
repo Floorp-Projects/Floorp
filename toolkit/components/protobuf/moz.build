@@ -138,12 +138,8 @@ if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
         ]
 elif CONFIG['CC_TYPE'] == 'clang-cl':
     CXXFLAGS += [
-        '-wd4005',  # 'WIN32_LEAN_AND_MEAN' : macro redefinition
-        '-wd4018',  # '<' : signed/unsigned mismatch
-        '-wd4065',  # switch statement contains 'default' but no 'case' labels
-        '-wd4099',  # mismatched class/struct tags
-        '-wd4305',  # double to float truncation
-        '-wd4506',  # no definition for inline function (protobuf issue #240)
+        '-Wno-macro-redefined',  # 'WIN32_LEAN_AND_MEAN' : macro redefinition
+        '-Wno-sign-compare',
     ]
 
 if CONFIG['OS_TARGET'] == 'WINNT':

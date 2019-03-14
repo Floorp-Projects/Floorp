@@ -72,14 +72,14 @@ if CONFIG['JS_BUILD_BINAST']:
         'BinASTParser.cpp',
         'BinASTParserBase.cpp',
         'BinASTParserPerTokenizer.cpp',
-        'BinSourceRuntimeSupport.cpp',
-        'BinToken.cpp',
-        'BinTokenReaderBase.cpp',
-        'BinTokenReaderMultipart.cpp',
+        'BinASTRuntimeSupport.cpp',
+        'BinASTToken.cpp',
+        'BinASTTokenReaderBase.cpp',
+        'BinASTTokenReaderMultipart.cpp',
     ]
 
     DIRS += [
-        'binsource'
+        'binast'
     ]
 
     # Instrument BinAST files for fuzzing as we have a fuzzing target for BinAST.
@@ -89,6 +89,6 @@ if CONFIG['JS_BUILD_BINAST']:
         SOURCES['BinASTParser.cpp'].flags += libfuzzer_flags
         SOURCES['BinASTParserBase.cpp'].flags += libfuzzer_flags
         SOURCES['BinASTParserPerTokenizer.cpp'].flags += libfuzzer_flags
-        SOURCES['BinToken.cpp'].flags += libfuzzer_flags
-        SOURCES['BinTokenReaderBase.cpp'].flags += libfuzzer_flags
-        SOURCES['BinTokenReaderMultipart.cpp'].flags += libfuzzer_flags
+        SOURCES['BinASTToken.cpp'].flags += libfuzzer_flags
+        SOURCES['BinASTTokenReaderBase.cpp'].flags += libfuzzer_flags
+        SOURCES['BinASTTokenReaderMultipart.cpp'].flags += libfuzzer_flags

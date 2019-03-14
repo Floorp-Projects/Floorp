@@ -96,6 +96,12 @@ AST_MATCHER(UnaryOperator, unaryArithmeticOperator) {
          OpCode == UO_Not;
 }
 
+/// This matcher will match the unary dereference operator
+AST_MATCHER(UnaryOperator, unaryDereferenceOperator) {
+  UnaryOperatorKind OpCode = Node.getOpcode();
+  return OpCode == UO_Deref;
+}
+
 /// This matcher will match == and != binary operators.
 AST_MATCHER(BinaryOperator, binaryEqualityOperator) {
   BinaryOperatorKind OpCode = Node.getOpcode();
@@ -287,6 +293,13 @@ AST_MATCHER(CXXMethodDecl, isNonVirtual) {
 AST_MATCHER(FunctionDecl, isMozMustReturnFromCaller) {
   const FunctionDecl *Decl = Node.getCanonicalDecl();
   return Decl && hasCustomAttribute<moz_must_return_from_caller>(Decl);
+}
+
+/// This matcher will select default args which have nullptr as the value.
+AST_MATCHER(CXXDefaultArgExpr, isNullDefaultArg) {
+  const Expr *Expr = Node.getExpr();
+  return Expr && Expr->isNullPointerConstant(Finder->getASTContext(),
+                                             Expr::NPC_NeverValueDependent);
 }
 
 #if CLANG_VERSION_FULL < 309

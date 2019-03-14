@@ -2,12 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use app_units::Au;
 use euclid::{Angle, TypedSize2D};
 use parse_function::parse_function;
 use std::f32;
 use std::str::FromStr;
 use webrender::api::*;
+use webrender::api::units::*;
 use yaml_rust::{Yaml, YamlLoader};
 
 pub trait YamlHelper {

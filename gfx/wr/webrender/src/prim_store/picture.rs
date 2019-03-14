@@ -3,11 +3,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::{
-    ColorU, FilterOp, LayoutSize, LayoutPrimitiveInfo, MixBlendMode,
-    PropertyBinding, PropertyBindingId, LayoutVector2D,
+    ColorU, FilterOp, LayoutPrimitiveInfo, MixBlendMode,
+    PropertyBinding, PropertyBindingId,
 };
+use api::units::{Au, LayoutSize, LayoutVector2D};
 use intern::ItemUid;
-use app_units::Au;
 use display_list_flattener::IsVisible;
 use intern::{Internable, InternDebug, Handle as InternHandle};
 use picture::PictureCompositeMode;
@@ -64,7 +64,7 @@ pub enum PictureCompositeKey {
 impl From<Option<PictureCompositeMode>> for PictureCompositeKey {
     fn from(mode: Option<PictureCompositeMode>) -> Self {
         match mode {
-            Some(PictureCompositeMode::MixBlend { mode, .. }) => {
+            Some(PictureCompositeMode::MixBlend(mode)) => {
                 match mode {
                     MixBlendMode::Normal => PictureCompositeKey::Identity,
                     MixBlendMode::Multiply => PictureCompositeKey::Multiply,
@@ -123,7 +123,6 @@ impl From<Option<PictureCompositeMode>> for PictureCompositeKey {
             Some(PictureCompositeMode::ComponentTransferFilter(handle)) => {
                 PictureCompositeKey::ComponentTransfer(handle.uid())
             }
-            Some(PictureCompositeMode::Puppet { .. }) |
             Some(PictureCompositeMode::Blit(_)) |
             Some(PictureCompositeMode::TileCache { .. }) |
             None => {

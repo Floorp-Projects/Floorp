@@ -248,6 +248,8 @@ function promiseRemotenessChange(tab, shouldBeRemote) {
     tab.addEventListener("TabRemotenessChange", function() {
       resolve();
     }, {once: true});
-    gBrowser.updateBrowserRemoteness(browser, shouldBeRemote);
+    let remoteType = shouldBeRemote ?
+        E10SUtils.DEFAULT_REMOTE_TYPE : E10SUtils.NOT_REMOTE;
+    gBrowser.updateBrowserRemoteness(browser, { remoteType });
   });
 }

@@ -17,7 +17,8 @@ import {
   getSelectedSource,
   getBreakpointAtLocation,
   getConditionalPanelLocation,
-  getBreakpointsForSource
+  getBreakpointsForSource,
+  isEmptyLineInSource
 } from "../../selectors";
 import {
   assertBreakpoint,
@@ -32,7 +33,6 @@ import {
 import remapLocations from "./remapLocations";
 import { syncBreakpoint } from "./syncBreakpoint";
 import { closeConditionalPanel } from "../ui";
-import { isEmptyLineInSource } from "../../reducers/ast";
 
 // this will need to be changed so that addCLientBreakpoint is removed
 

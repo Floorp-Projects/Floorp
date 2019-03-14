@@ -222,8 +222,6 @@ function initPage() {
 
   if (err == "sslv3Used") {
     document.getElementById("learnMoreContainer").style.display = "block";
-    let learnMoreLink = document.getElementById("learnMoreLink");
-    learnMoreLink.href = "https://support.mozilla.org/kb/how-resolve-sslv3-error-messages-firefox";
     document.body.className = "certerror";
   }
 
@@ -248,13 +246,6 @@ function initPage() {
     if (getErrorCode() == "nssFailure2") {
       let shortDesc = document.getElementById("errorShortDescText").textContent;
       document.getElementById("learnMoreContainer").style.display = "block";
-      let learnMoreLink = document.getElementById("learnMoreLink");
-      // nssFailure2 also gets us other non-overrideable errors. Choose
-      // a "learn more" link based on description:
-      if (shortDesc.includes("MOZILLA_PKIX_ERROR_KEY_PINNING_FAILURE")) {
-        learnMoreLink.href = "https://support.mozilla.org/kb/certificate-pinning-reports";
-      }
-
       var options = JSON.parse(evt.detail);
       if (options && options.enabled) {
         var checkbox = document.getElementById("automaticallyReportInFuture");

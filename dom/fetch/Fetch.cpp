@@ -1072,6 +1072,8 @@ void FetchBody<Derived>::SetBodyUsed(JSContext* aCx, ErrorResult& aRv) {
   if (mReadableStreamBody) {
     aRv.MightThrowJSException();
 
+    JSAutoRealm ar(aCx, mOwner->GetGlobalJSObject());
+
     JS::Rooted<JSObject*> readableStreamObj(aCx, mReadableStreamBody);
 
     JS::ReadableStreamMode mode;
@@ -1365,6 +1367,8 @@ void FetchBody<Derived>::MaybeTeeReadableStreamBody(
   }
 
   aRv.MightThrowJSException();
+
+  JSAutoRealm ar(aCx, mOwner->GetGlobalJSObject());
 
   JS::Rooted<JSObject*> stream(aCx, mReadableStreamBody);
 

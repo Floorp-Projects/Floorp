@@ -1671,13 +1671,6 @@ JS_PUBLIC_API bool js::ToNumberSlow(JSContext* cx, HandleValue v_,
     *out = 0.0;
     return true;
   }
-  if (v.isSymbol()) {
-    if (!cx->helperThread()) {
-      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                JSMSG_SYMBOL_TO_NUMBER);
-    }
-    return false;
-  }
 
   if (v.isUndefined()) {
     *out = GenericNaN();

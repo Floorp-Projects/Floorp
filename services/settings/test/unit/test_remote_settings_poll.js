@@ -39,9 +39,11 @@ function serveChangesEntries(serverTime, entries) {
     response.setHeader("Content-Type", "application/json; charset=UTF-8");
     response.setHeader("Date", (new Date(serverTime)).toUTCString());
     if (entries.length) {
-      response.setHeader("ETag", `"${entries[0].last_modified}"`);
+      const latest = entries[0].last_modified;
+      response.setHeader("ETag", `"${latest}"`);
+      response.setHeader("Last-Modified", (new Date(latest)).toGMTString());
     }
-    response.write(JSON.stringify({"data": entries}));
+    response.write(JSON.stringify({ "data": entries }));
   };
 }
 
@@ -280,6 +282,29 @@ add_task(async function test_client_last_check_is_saved() {
   await RemoteSettings.pollChanges({ expectedTimestamp: '"42"' });
 
   notEqual(Services.prefs.getIntPref(c.lastCheckTimePref), 0);
+});
+add_task(clear_state);
+
+
+add_task(async function test_age_of_data_is_reported_in_uptake_status() {
+  const serverTime = 1552323900000;
+  server.registerPathHandler(CHANGES_PATH, serveChangesEntries(serverTime, [{
+    id: "b6ba7fab-a40a-4d03-a4af-6b627f3c5b36",
+    last_modified: serverTime - 3600 * 1000,
+    host: "localhost",
+    bucket: "main",
+    collection: "some-entry",
+  }]));
+  const backup = UptakeTelemetry.report;
+  let reportedAge;
+  UptakeTelemetry.report = (component, status, { age }) => {
+    reportedAge = age;
+  };
+
+  await RemoteSettings.pollChanges();
+
+  Assert.equal(reportedAge, 3600);
+  UptakeTelemetry.report = backup;
 });
 add_task(clear_state);
 

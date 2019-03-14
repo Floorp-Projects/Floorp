@@ -132,19 +132,26 @@ function waitForSource(dbg, sourceURL) {
 
 async function waitForPaused(dbg) {
   const onLoadedScope = waitForLoadedScopes(dbg);
+  const {
+    selectors: { getSelectedScope, getIsPaused, getCurrentThread },
+  } = dbg;
   const onStateChange =  waitForState(
     dbg,
     state => {
-      return dbg.selectors.getSelectedScope(state) && dbg.selectors.isPaused(state);
+      const thread = getCurrentThread(state);
+      return getSelectedScope(state, thread) && getIsPaused(state, thread);
     },
   );
   return Promise.all([onLoadedScope, onStateChange]);
 }
 
 async function waitForResumed(dbg) {
+  const {
+    selectors: { getIsPaused, getCurrentThread },
+  } = dbg;
   return waitForState(
     dbg,
-    state => !dbg.selectors.isPaused(state)
+    state => !getIsPaused(state, getCurrentThread(state))
   );
 }
 

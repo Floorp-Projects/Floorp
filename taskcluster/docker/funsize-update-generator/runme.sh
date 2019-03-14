@@ -33,8 +33,7 @@ then
   test "${AWS_BUCKET_NAME}"
 
   set +x  # Don't echo these.
-  # Until bug 1460015 is finished, use baseUrl-style proxy URLs
-  secret_url="${TASKCLUSTER_PROXY_URL}/auth/v1/aws/s3/read-write/${AWS_BUCKET_NAME}/${S3_PATH}"
+  secret_url="${TASKCLUSTER_PROXY_URL}/api/auth/v1/aws/s3/read-write/${AWS_BUCKET_NAME}/${S3_PATH}"
   AUTH=$(curl "${secret_url}")
   AWS_ACCESS_KEY_ID=$(echo "${AUTH}" | jq -r '.credentials.accessKeyId')
   AWS_SECRET_ACCESS_KEY=$(echo "${AUTH}" | jq -r '.credentials.secretAccessKey')

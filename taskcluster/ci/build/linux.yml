@@ -349,6 +349,7 @@ linux64-base-toolchains-clang/opt:
         tooltool-downloads: public
         need-xvfb: true
     toolchains:
+        - linux64-binutils
         - linux64-clang-4.0
         - linux64-rust-1.32
         - linux64-cbindgen
@@ -382,6 +383,7 @@ linux64-base-toolchains-clang/debug:
         tooltool-downloads: public
         need-xvfb: true
     toolchains:
+        - linux64-binutils
         - linux64-clang-4.0
         - linux64-rust-1.32
         - linux64-cbindgen

@@ -15,7 +15,8 @@ import {
   isSelectedFrameVisible,
   getSelectedSource,
   getSelectedFrame,
-  getSymbols
+  getSymbols,
+  getCurrentThread
 } from "../selectors";
 
 import { getMappedExpression } from "./expressions";
@@ -86,7 +87,8 @@ export function setPreview(
           return;
         }
 
-        const selectedFrame = getSelectedFrame(getState());
+        const thread = getCurrentThread(getState());
+        const selectedFrame = getSelectedFrame(getState(), thread);
 
         if (location && isOriginal(source)) {
           const mapResult = await dispatch(getMappedExpression(expression));
@@ -101,7 +103,7 @@ export function setPreview(
 
         const { result } = await client.evaluateInFrame(expression, {
           frameId: selectedFrame.id,
-          thread: selectedFrame.thread
+          thread
         });
 
         // Error case occurs for a token that follows an errored evaluation

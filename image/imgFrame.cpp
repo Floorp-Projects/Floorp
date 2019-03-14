@@ -121,6 +121,39 @@ static already_AddRefed<DataSourceSurface> AllocateBufferForImage(
   return nullptr;
 }
 
+static bool GreenSurface(DataSourceSurface* aSurface, const IntSize& aSize,
+                         SurfaceFormat aFormat) {
+  int32_t stride = aSurface->Stride();
+  uint32_t* surfaceData = reinterpret_cast<uint32_t*>(aSurface->GetData());
+  uint32_t surfaceDataLength = (stride * aSize.height) / sizeof(uint32_t);
+
+  // Start by assuming that GG is in the second byte and
+  // AA is in the final byte -- the most common case.
+  uint32_t color = mozilla::NativeEndian::swapFromBigEndian(0x00FF00FF);
+
+  // We are only going to handle this type of test under
+  // certain circumstances.
+  MOZ_ASSERT(surfaceData);
+  MOZ_ASSERT(aFormat == SurfaceFormat::B8G8R8A8 ||
+             aFormat == SurfaceFormat::B8G8R8X8 ||
+             aFormat == SurfaceFormat::R8G8B8A8 ||
+             aFormat == SurfaceFormat::R8G8B8X8 ||
+             aFormat == SurfaceFormat::A8R8G8B8 ||
+             aFormat == SurfaceFormat::X8R8G8B8);
+  MOZ_ASSERT((stride * aSize.height) % sizeof(uint32_t));
+
+  if (aFormat == SurfaceFormat::A8R8G8B8 ||
+      aFormat == SurfaceFormat::X8R8G8B8) {
+    color = mozilla::NativeEndian::swapFromBigEndian(0xFF00FF00);
+  }
+
+  for (uint32_t i = 0; i < surfaceDataLength; i++) {
+    surfaceData[i] = color;
+  }
+
+  return true;
+}
+
 static bool ClearSurface(DataSourceSurface* aSurface, const IntSize& aSize,
                          SurfaceFormat aFormat) {
   int32_t stride = aSurface->Stride();
@@ -279,6 +312,15 @@ nsresult imgFrame::InitForDecoder(const nsIntSize& aImageSize,
       return NS_ERROR_OUT_OF_MEMORY;
     }
 
+    if (StaticPrefs::browser_measurement_render_anims_and_video_solid() &&
+        aAnimParams) {
+      mBlankRawSurface = AllocateBufferForImage(mFrameRect.Size(), mFormat);
+      if (!mBlankRawSurface) {
+        mAborted = true;
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+    }
+
     mLockedSurface =
         CreateLockedSurface(mRawSurface, mFrameRect.Size(), mFormat);
     if (!mLockedSurface) {
@@ -287,10 +329,28 @@ nsresult imgFrame::InitForDecoder(const nsIntSize& aImageSize,
       return NS_ERROR_OUT_OF_MEMORY;
     }
 
+    if (mBlankRawSurface) {
+      mBlankLockedSurface =
+          CreateLockedSurface(mBlankRawSurface, mFrameRect.Size(), mFormat);
+      if (!mBlankLockedSurface) {
+        NS_WARNING("Failed to create BlankLockedSurface");
+        mAborted = true;
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+    }
+
     if (!ClearSurface(mRawSurface, mFrameRect.Size(), mFormat)) {
       NS_WARNING("Could not clear allocated buffer");
       mAborted = true;
       return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    if (mBlankRawSurface) {
+      if (!GreenSurface(mBlankRawSurface, mFrameRect.Size(), mFormat)) {
+        NS_WARNING("Could not clear allocated blank buffer");
+        mAborted = true;
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
     }
   }
 
@@ -902,6 +962,23 @@ already_AddRefed<SourceSurface> imgFrame::GetSourceSurfaceInternal(
     } else {
       mOptSurface = nullptr;
     }
+  }
+
+  if (mBlankLockedSurface) {
+    // We are going to return the blank surface because of the flags.
+    // We are including comments here that are copied from below
+    // just so that we are on the same page!
+
+    // We don't need to create recycling wrapper for some callers because they
+    // promise to release the surface immediately after.
+    if (!aTemporary && mShouldRecycle) {
+      RefPtr<SourceSurface> surf =
+          new RecyclingSourceSurface(this, mBlankLockedSurface);
+      return surf.forget();
+    }
+
+    RefPtr<SourceSurface> surf(mBlankLockedSurface);
+    return surf.forget();
   }
 
   if (mLockedSurface) {

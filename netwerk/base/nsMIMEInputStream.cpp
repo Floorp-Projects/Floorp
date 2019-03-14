@@ -391,9 +391,7 @@ void nsMIMEInputStream::SerializeInternal(InputStreamParams& aParams,
     NS_ASSERTION(wrappedParams.type() != InputStreamParams::T__None,
                  "Wrapped stream failed to serialize!");
 
-    params.optionalStream() = wrappedParams;
-  } else {
-    params.optionalStream() = mozilla::void_t();
+    params.optionalStream().emplace(wrappedParams);
   }
 
   params.headers() = mHeaders;
@@ -411,24 +409,21 @@ bool nsMIMEInputStream::Deserialize(
   }
 
   const MIMEInputStreamParams& params = aParams.get_MIMEInputStreamParams();
-  const OptionalInputStreamParams& wrappedParams = params.optionalStream();
+  const Maybe<InputStreamParams>& wrappedParams = params.optionalStream();
 
   mHeaders = params.headers();
   mStartedReading = params.startedReading();
 
-  if (wrappedParams.type() == OptionalInputStreamParams::TInputStreamParams) {
+  if (wrappedParams.isSome()) {
     nsCOMPtr<nsIInputStream> stream;
-    stream = InputStreamHelper::DeserializeInputStream(
-        wrappedParams.get_InputStreamParams(), aFileDescriptors);
+    stream = InputStreamHelper::DeserializeInputStream(wrappedParams.ref(),
+                                                       aFileDescriptors);
     if (!stream) {
       NS_WARNING("Failed to deserialize wrapped stream!");
       return false;
     }
 
     mStream = stream;
-  } else {
-    NS_ASSERTION(wrappedParams.type() == OptionalInputStreamParams::Tvoid_t,
-                 "Unknown type for OptionalInputStreamParams!");
   }
 
   return true;
