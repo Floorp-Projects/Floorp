@@ -68,7 +68,7 @@ COMMON_ARGUMENT_GROUPS = {
         [['-p', '--parameters'],
          {'default': None,
           'help': "Use the given parameters.yml to generate tasks, "
-                  "defaults to latest parameters.yml from mozilla-central",
+                  "defaults to a default set of parameters",
           }],
     ],
 }

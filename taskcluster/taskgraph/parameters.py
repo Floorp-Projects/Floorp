@@ -46,7 +46,7 @@ def get_app_version(product_dir='browser'):
 
 
 # Please keep this list sorted and in sync with taskcluster/docs/parameters.rst
-# Parameters are of the form: {name: default}
+# Parameters are of the form: {name: default} or {name: lambda: default}
 PARAMETERS = {
     'app_version': get_app_version(),
     'base_repository': 'https://hg.mozilla.org/mozilla-unified',
