@@ -83,7 +83,7 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
       return (h | 0) * 3600 + (m | 0) * 60 + (s | 0) + (f | 0) / 1000;
     }
 
-    var timestamp = input.match(/^(\d+:)?(\d{2}):(\d{2})\.(\d+)/);
+    let timestamp = input.match(/^(\d+:)?(\d{2}):(\d{2})\.(\d+)/);
     if (!timestamp || timestamp.length !== 5) {
       return null;
     }
@@ -125,7 +125,7 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
     },
     // Accept a setting if its one of the given alternatives.
     alt: function(k, v, a) {
-      for (var n = 0; n < a.length; ++n) {
+      for (let n = 0; n < a.length; ++n) {
         if (v === a[n]) {
           this.set(k, v);
           return true;
@@ -143,7 +143,7 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
     },
     // Accept a setting if its a valid percentage.
     percent: function(k, v) {
-      var m;
+      let m;
       if ((m = v.match(/^([\d]{1,3})(\.[\d]*)?%$/))) {
         v = parseFloat(v);
         if (v >= 0 && v <= 100) {
@@ -164,27 +164,27 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
   // Helper function to parse input into groups separated by 'groupDelim', and
   // interprete each group as a key/value pair separated by 'keyValueDelim'.
   function parseOptions(input, callback, keyValueDelim, groupDelim) {
-    var groups = groupDelim ? input.split(groupDelim) : [input];
-    for (var i in groups) {
+    let groups = groupDelim ? input.split(groupDelim) : [input];
+    for (let i in groups) {
       if (typeof groups[i] !== "string") {
         continue;
       }
-      var kv = groups[i].split(keyValueDelim);
+      let kv = groups[i].split(keyValueDelim);
       if (kv.length !== 2) {
         continue;
       }
-      var k = kv[0];
-      var v = kv[1];
+      let k = kv[0];
+      let v = kv[1];
       callback(k, v);
     }
   }
 
   function parseCue(input, cue, regionList) {
     // Remember the original input if we need to throw an error.
-    var oInput = input;
+    let oInput = input;
     // 4.1 WebVTT timestamp
     function consumeTimeStamp() {
-      var ts = collectTimeStamp(input);
+      let ts = collectTimeStamp(input);
       if (ts === null) {
         throw new ParsingError(ParsingError.Errors.BadTimeStamp,
                               "Malformed timestamp: " + oInput);
@@ -196,12 +196,12 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
 
     // 4.4.2 WebVTT cue settings
     function consumeCueSettings(input, cue) {
-      var settings = new Settings();
+      let settings = new Settings();
       parseOptions(input, function (k, v) {
         switch (k) {
         case "region":
           // Find the last region we parsed with the same region id.
-          for (var i = regionList.length - 1; i >= 0; i--) {
+          for (let i = regionList.length - 1; i >= 0; i--) {
             if (regionList[i].id === v) {
               settings.set(k, regionList[i].region);
               break;
@@ -211,9 +211,9 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
         case "vertical":
           settings.alt(k, v, ["rl", "lr"]);
           break;
-        case "line":
-          var vals = v.split(","),
-              vals0 = vals[0];
+        case "line": {
+          let vals = v.split(",");
+          let vals0 = vals[0];
           settings.digitsValue(k, vals0);
           settings.percent(k, vals0) ? settings.set("snapToLines", false) : null;
           settings.alt(k, vals0, ["auto"]);
@@ -221,8 +221,9 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
             settings.alt("lineAlign", vals[1], ["start", "center", "end"]);
           }
           break;
-        case "position":
-          vals = v.split(",");
+        }
+        case "position": {
+          let vals = v.split(",");
           if (settings.percent(k, vals[0])) {
             if (vals.length === 2) {
               if (!settings.alt("positionAlign", vals[1], ["line-left", "center", "line-right"])) {
@@ -233,6 +234,7 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
             }
           }
           break;
+        }
         case "size":
           settings.percent(k, v);
           break;
@@ -338,7 +340,7 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
         return result;
       }
 
-      var m = input.match(/^([^<]*)(<[^>]+>?)?/);
+      let m = input.match(/^([^<]*)(<[^>]+>?)?/);
       // The input doesn't contain a complete tag.
       if (!m[0]) {
         return null;
@@ -353,6 +355,7 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
       return ESCAPE[e];
     }
     function unescape(s) {
+      let m;
       while ((m = s.match(/&(amp|lt|gt|lrm|rlm|nbsp);/))) {
         s = s.replace(m[0], unescape1);
       }
@@ -366,12 +369,12 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
 
     // Create an element for this tag.
     function createElement(type, annotation) {
-      var tagName = TAG_NAME[type];
+      let tagName = TAG_NAME[type];
       if (!tagName) {
         return null;
       }
-      var element = window.document.createElement(tagName);
-      var name = TAG_ANNOTATION[type];
+      let element = window.document.createElement(tagName);
+      let name = TAG_ANNOTATION[type];
       if (name) {
         element[name] = annotation ? annotation.trim() : "";
       }
@@ -381,10 +384,10 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
     // https://w3c.github.io/webvtt/#webvtt-timestamp-object
     // Return hhhhh:mm:ss.fff
     function normalizedTimeStamp(secondsWithFrag) {
-      var totalsec = parseInt(secondsWithFrag, 10);
-      var hours = Math.floor(totalsec / 3600);
-      var minutes = Math.floor(totalsec % 3600 / 60);
-      var seconds = Math.floor(totalsec % 60);
+      let totalsec = parseInt(secondsWithFrag, 10);
+      let hours = Math.floor(totalsec / 3600);
+      let minutes = Math.floor(totalsec % 3600 / 60);
+      let seconds = Math.floor(totalsec % 60);
       if (hours < 10) {
         hours = "0" + hours;
       }
@@ -394,7 +397,7 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
       if (seconds < 10) {
         seconds = "0" + seconds;
       }
-      var f = secondsWithFrag.toString().split(".");
+      let f = secondsWithFrag.toString().split(".");
       if (f[1]) {
         f = f[1].slice(0, 3).padEnd(3, "0");
       } else {
@@ -403,7 +406,7 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
       return hours + ':' + minutes + ':' + seconds + '.' + f;
     }
 
-    var root;
+    let root;
     switch (mode) {
       case PARSE_CONTENT_MODE.PSUEDO_CUE:
         root = window.document.createElement("div", {pseudo: "::cue"});
@@ -417,7 +420,7 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
         break;
     }
 
-    var current = root,
+    let current = root,
         t,
         tagStack = [];
 
@@ -433,15 +436,15 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
           // Otherwise just ignore the end tag.
           continue;
         }
-        var ts = collectTimeStamp(t.substr(1, t.length - 1));
-        var node;
+        let ts = collectTimeStamp(t.substr(1, t.length - 1));
+        let node;
         if (ts) {
           // Timestamps are lead nodes as well.
           node = window.document.createProcessingInstruction("timestamp", normalizedTimeStamp(ts));
           current.appendChild(node);
           continue;
         }
-        var m = t.match(/^<([^.\s/0-9>]+)(\.[^\s\\>]+)?([^>\\]+)?(\\?)>?$/);
+        let m = t.match(/^<([^.\s/0-9>]+)(\.[^\s\\>]+)?([^>\\]+)?(\\?)>?$/);
         // If we can't parse the tag, skip to the next tag.
         if (!m) {
           continue;
@@ -482,7 +485,7 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
   // div on 'this'.
   StyleBox.prototype.applyStyles = function(styles, div) {
     div = div || this.div;
-    for (var prop in styles) {
+    for (let prop in styles) {
       if (styles.hasOwnProperty(prop)) {
         div.style[prop] = styles[prop];
       }
@@ -695,11 +698,11 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
   function RegionNodeBox(window, region, container) {
     StyleBox.call(this);
 
-    var boxLineHeight = container.height * 0.0533 // 0.0533vh ? 5.33vh
-    var boxHeight = boxLineHeight * region.lines;
-    var boxWidth = container.width * region.width / 100; // convert percentage to px
+    let boxLineHeight = container.height * 0.0533 // 0.0533vh ? 5.33vh
+    let boxHeight = boxLineHeight * region.lines;
+    let boxWidth = container.width * region.width / 100; // convert percentage to px
 
-    var regionNodeStyles = {
+    let regionNodeStyles = {
       position: "absolute",
       height: boxHeight + "px",
       width: boxWidth + "px",
@@ -731,7 +734,7 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
     StyleBox.call(this);
     this.cueDiv = parseContent(window, cue.text, PARSE_CONTENT_MODE.REGION_CUE);
 
-    var regionCueStyles = {
+    let regionCueStyles = {
       position: "relative",
       writingMode: "horizontal-tb",
       unicodeBidi: "plaintext",
@@ -741,7 +744,7 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
     };
     // TODO: fix me, LTR and RTL ? using margin replace the "left/right"
     // 6.1.14.3.3
-    var offset = cue.computedPosition * cue.region.width / 100;
+    let offset = cue.computedPosition * cue.region.width / 100;
     // 6.1.14.3.4
     switch (cue.align) {
       case "start":
@@ -1068,8 +1071,7 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
       return null;
     }
 
-    var controlBar;
-    var controlBarShown;
+    let controlBar, controlBarShown;
     if (controls) {
       // controls is a <div> that is the children of the UA Widget Shadow Root.
       controlBar = controls.parentNode.getElementById("controlBar");
@@ -1088,7 +1090,7 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
         return true;
       }
 
-      for (var i = 0; i < cues.length; i++) {
+      for (let i = 0; i < cues.length; i++) {
         if (cues[i].hasBeenReset || !cues[i].displayState) {
           return true;
         }
@@ -1106,7 +1108,7 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
     while (overlay.firstChild) {
       overlay.firstChild.remove();
     }
-    var rootOfCues = window.document.createElement("div");
+    let rootOfCues = window.document.createElement("div");
     rootOfCues.style.position = "absolute";
     rootOfCues.style.left = "0";
     rootOfCues.style.right = "0";
@@ -1114,12 +1116,11 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
     rootOfCues.style.bottom = "0";
     overlay.appendChild(rootOfCues);
 
-    var boxPositions = [],
+    let boxPositions = [],
         containerBox = new BoxPosition(rootOfCues);
 
     (function() {
-      var styleBox, cue, controlBarBox;
-
+      let styleBox, cue, controlBarBox;
       if (controlBarShown) {
         controlBarBox = new BoxPosition(controlBar);
         // Add an empty output box that cover the same region as video control bar.
@@ -1128,10 +1129,10 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
 
       // https://w3c.github.io/webvtt/#processing-model 6.1.12.1
       // Create regionNode
-      var regionNodeBoxes = {};
-      var regionNodeBox;
+      let regionNodeBoxes = {};
+      let regionNodeBox;
 
-      for (var i = 0; i < cues.length; i++) {
+      for (let i = 0; i < cues.length; i++) {
         cue = cues[i];
         if (cue.region != null) {
          // 6.1.14.1
@@ -1140,7 +1141,7 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
           if (!regionNodeBoxes[cue.region.id]) {
             // create regionNode
             // Adjust the container hieght to exclude the controlBar
-            var adjustContainerBox = new BoxPosition(rootOfCues);
+            let adjustContainerBox = new BoxPosition(rootOfCues);
             if (controlBarShown) {
               adjustContainerBox.height -= controlBarBox.height;
               adjustContainerBox.bottom += controlBarBox.height;
@@ -1149,8 +1150,8 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
             regionNodeBoxes[cue.region.id] = regionNodeBox;
           }
           // 6.1.14.3
-          var currentRegionBox = regionNodeBoxes[cue.region.id];
-          var currentRegionNodeDiv = currentRegionBox.div;
+          let currentRegionBox = regionNodeBoxes[cue.region.id];
+          let currentRegionNodeDiv = currentRegionBox.div;
           // 6.1.14.3.2
           // TODO: fix me, it looks like the we need to set/change "top" attribute at the styleBox.div
           // to do the "scroll up", however, we do not implement it yet?
@@ -1214,12 +1215,12 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
 
       // This parser is line-based. Let's see if we have a line to parse.
       while (/\r\n|\n|\r/.test(this.buffer)) {
-        var buffer = this.buffer;
-        var pos = 0;
+        let buffer = this.buffer;
+        let pos = 0;
         while (buffer[pos] !== '\r' && buffer[pos] !== '\n') {
           ++pos;
         }
-        var line = buffer.substr(0, pos);
+        let line = buffer.substr(0, pos);
         // Advance the buffer early in case we fail below.
         if (buffer[pos] === '\r') {
           ++pos;
@@ -1240,7 +1241,7 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
       return this;
     },
     parseLine: function(line) {
-      var self = this;
+      let self = this;
 
       function createCueIfNeeded() {
         if (!self.cue) {
@@ -1280,7 +1281,7 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
 
       // 3.4 WebVTT region and WebVTT region settings syntax
       function parseRegion(input) {
-        var settings = new Settings();
+        let settings = new Settings();
         parseOptions(input, function (k, v) {
           switch (k) {
           case "id":
@@ -1293,14 +1294,14 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
             settings.digitsValue(k, v);
             break;
           case "regionanchor":
-          case "viewportanchor":
-            var xy = v.split(',');
+          case "viewportanchor": {
+            let xy = v.split(',');
             if (xy.length !== 2) {
               break;
             }
             // We have to make sure both x and y parse, so use a temporary
             // settings object here.
-            var anchor = new Settings();
+            let anchor = new Settings();
             anchor.percent("x", xy[0]);
             anchor.percent("y", xy[1]);
             if (!anchor.has("x") || !anchor.has("y")) {
@@ -1309,6 +1310,7 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
             settings.set(k + "X", anchor.get("x"));
             settings.set(k + "Y", anchor.get("y"));
             break;
+          }
           case "scroll":
             settings.alt(k, v, ["up"]);
             break;
@@ -1320,7 +1322,7 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
         // specified.
         if (settings.has("id")) {
           try {
-            var region = new self.window.VTTRegion();
+            let region = new self.window.VTTRegion();
             region.id = settings.get("id", "");
             region.width = settings.get("width", 100);
             region.lines = settings.get("lines", 3);
@@ -1339,7 +1341,7 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
             });
           } catch(e) {
             dump("VTTRegion Error " + e + "\n");
-            var regionPref = Services.prefs.getBoolPref("media.webvtt.regions.enabled");
+            let regionPref = Services.prefs.getBoolPref("media.webvtt.regions.enabled");
             dump("regionPref " + regionPref + "\n");
           }
         }
@@ -1501,7 +1503,7 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
       return this;
     },
     flush: function () {
-      var self = this;
+      let self = this;
       try {
         // Finish decoding the stream.
         self.buffer += self.decoder.decode();
