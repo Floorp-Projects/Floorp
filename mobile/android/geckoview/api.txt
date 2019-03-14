@@ -957,6 +957,9 @@ package org.mozilla.geckoview {
   @android.support.annotation.AnyThread public static class WebRequest.Builder extends org.mozilla.geckoview.WebMessage.Builder {
     ctor public Builder(@android.support.annotation.NonNull java.lang.String);
     method @android.support.annotation.NonNull public org.mozilla.geckoview.WebRequest.Builder body(@android.support.annotation.Nullable java.nio.ByteBuffer);
+    method @android.support.annotation.NonNull public org.mozilla.geckoview.WebRequest.Builder body(@android.support.annotation.NonNull byte[]);
+    method @android.support.annotation.NonNull public org.mozilla.geckoview.WebRequest.Builder body(@android.support.annotation.NonNull java.lang.String);
+    method @android.support.annotation.NonNull public org.mozilla.geckoview.WebRequest.Builder body(@android.support.annotation.NonNull org.json.JSONObject);
     method @android.support.annotation.NonNull public org.mozilla.geckoview.WebRequest build();
     method @android.support.annotation.NonNull public org.mozilla.geckoview.WebRequest.Builder cacheMode(int);
     method @android.support.annotation.NonNull public org.mozilla.geckoview.WebRequest.Builder method(@android.support.annotation.NonNull java.lang.String);
@@ -1013,6 +1016,9 @@ package org.mozilla.geckoview {
 
   @android.support.annotation.AnyThread public class WebResponse extends org.mozilla.geckoview.WebMessage {
     ctor protected WebResponse(@android.support.annotation.NonNull org.mozilla.geckoview.WebResponse.Builder);
+    method @android.support.annotation.NonNull public org.mozilla.geckoview.GeckoResult<byte[]> byteArray();
+    method @android.support.annotation.NonNull public org.mozilla.geckoview.GeckoResult<org.json.JSONObject> json();
+    method @android.support.annotation.NonNull public org.mozilla.geckoview.GeckoResult<java.lang.String> text();
     field @android.support.annotation.Nullable public final java.io.InputStream body;
     field public final boolean redirected;
     field public final int statusCode;

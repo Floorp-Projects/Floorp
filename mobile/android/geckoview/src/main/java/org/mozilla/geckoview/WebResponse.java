@@ -6,14 +6,19 @@
 
 package org.mozilla.geckoview;
 
+import org.json.JSONObject;
 import org.mozilla.gecko.annotation.WrapForJNI;
 
 import android.support.annotation.AnyThread;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
+import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
+import java.nio.charset.Charset;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * WebResponse represents an HTTP[S] response. It is normally created
@@ -22,6 +27,9 @@ import java.nio.ByteBuffer;
 @WrapForJNI
 @AnyThread
 public class WebResponse extends WebMessage {
+    private static final ExecutorService sExecutorService = Executors.newCachedThreadPool();
+    private static final int BUFSIZE = 8192;
+
     /**
      * The HTTP status code for the response, e.g. 200.
      */
@@ -43,6 +51,77 @@ public class WebResponse extends WebMessage {
         this.statusCode = builder.mStatusCode;
         this.redirected = builder.mRedirected;
         this.body = builder.mBody;
+    }
+
+    /**
+     * Reads the {@link #body} stream into a byte array.
+     *
+     * @return A {@link GeckoResult} which resolves to a byte array containing the response body.
+     */
+    public @NonNull GeckoResult<byte[]> byteArray() {
+        if (body == null) {
+            return GeckoResult.fromValue(new byte[0]);
+        }
+
+        final GeckoResult<byte[]> result = new GeckoResult<>();
+        sExecutorService.submit(() -> {
+            final ByteArrayOutputStream os = new ByteArrayOutputStream();
+            final byte buf[] = new byte[BUFSIZE];
+            int count;
+
+            try {
+                while ((count = body.read(buf)) > 0) {
+                    os.write(buf, 0, count);
+                }
+
+                os.flush();
+
+                result.complete(os.toByteArray());
+            } catch (Exception e) {
+                result.completeExceptionally(e);
+            }
+        });
+
+        return result;
+    }
+
+    /**
+     * Reads the {@link #body} stream into a {@link String}.
+     *
+     * @return A {@link GeckoResult} which resolves to a {@link String} containing the response body.
+     */
+    public @NonNull GeckoResult<String> text() {
+        final GeckoResult<String> result = new GeckoResult<>();
+
+        sExecutorService.submit(() -> {
+            try {
+                final ByteBuffer bytes = ByteBuffer.wrap(byteArray().poll());
+                result.complete(Charset.forName("UTF-8").decode(bytes).toString());
+            } catch (Throwable t) {
+                result.completeExceptionally(t);
+            }
+        });
+
+        return result;
+    }
+
+    /**
+     * Reads the {@link #body} stream into a {@link JSONObject}.
+     *
+     * @return A {@link GeckoResult} which resolves to a {@link JSONObject} containing the response body.
+     */
+    public @NonNull GeckoResult<JSONObject> json() {
+        final GeckoResult<JSONObject> result = new GeckoResult<>();
+
+        sExecutorService.submit(() -> {
+            try {
+                result.complete(new JSONObject(text().poll()));
+            } catch (Throwable t) {
+                result.completeExceptionally(t);
+            }
+        });
+
+        return result;
     }
 
     /**
