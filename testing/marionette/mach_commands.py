@@ -78,6 +78,11 @@ class MarionetteTest(MachCommandBase):
                 tests.append(obj["file_relpath"])
             del kwargs["test_objects"]
 
+        # Force disable e10s because it is not supported in Fennec
+        if "fennec" in kwargs.get("app"):
+            kwargs["e10s"] = False
+
         if not kwargs.get("binary") and conditions.is_firefox(self):
             kwargs["binary"] = self.get_binary_path("app")
+
         return run_marionette(tests, topsrcdir=self.topsrcdir, **kwargs)
