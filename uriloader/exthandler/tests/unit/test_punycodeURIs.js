@@ -22,8 +22,7 @@ function checkFile() {
     if (gCheckExistsAttempts >= kMaxCheckExistAttempts) {
       do_throw("Expected File " + tempFile.path + " does not exist after " +
                  kMaxCheckExistAttempts + " seconds");
-    }
-    else {
+    } else {
       ++gCheckExistsAttempts;
       // Wait a bit longer then try again
       do_timeout(1000, checkFile);
@@ -64,7 +63,7 @@ function checkFile() {
 
 function run_test() {
   if (mozinfo.os == "mac") {
-    dump("INFO | test_punycodeURIs.js | Skipping test on mac, bug 599475")
+    dump("INFO | test_punycodeURIs.js | Skipping test on mac, bug 599475");
     return;
   }
 
@@ -107,7 +106,7 @@ function run_test() {
   envSvc.set("DYLD_LIBRARY_PATH", greDir.path);
   // For Linux
   envSvc.set("LD_LIBRARY_PATH", greDir.path);
-  //XXX: handle windows
+  // XXX: handle windows
 
   // Now tell it where we want the file.
   envSvc.set("WRITE_ARGUMENT_FILE", outFile.path);

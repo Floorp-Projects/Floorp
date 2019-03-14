@@ -15,7 +15,7 @@ add_task(async function() {
     set: [
       ["dom.registerContentHandler.enabled", true],
       ["dom.registerProtocolHandler.insecure.enabled", false],
-    ]
+    ],
   });
 
   let result = "registerProtocolHandler" in navigator;
