@@ -17,7 +17,6 @@ include PBackgroundSharedTypes;
 include DOMTypes;
 
 using mozilla::OriginAttributes from "mozilla/ipc/BackgroundUtils.h";
-using struct mozilla::void_t from "ipc/IPCMessageUtils.h";
 using RequestHeaderTuples from "mozilla/net/PHttpChannelParams.h";
 using struct nsHttpAtom from "nsHttp.h";
 using class mozilla::net::nsHttpResponseHead from "nsHttpResponseHead.h";
@@ -208,21 +207,9 @@ struct ChildLoadInfoForwarderArgs
 // HTTP IPDL structs
 //-----------------------------------------------------------------------------
 
-union OptionalHttpResponseHead
-{
-  void_t;
-  nsHttpResponseHead;
-};
-
 struct CorsPreflightArgs
 {
   nsCString[]   unsafeHeaders;
-};
-
-union OptionalCorsPreflightArgs
-{
-  void_t;
-  CorsPreflightArgs;
 };
 
 struct HttpChannelOpenArgs
@@ -258,11 +245,11 @@ struct HttpChannelOpenArgs
   bool                        beConservative;
   uint32_t                    tlsFlags;
   LoadInfoArgs?               loadInfo;
-  OptionalHttpResponseHead    synthesizedResponseHead;
+  nsHttpResponseHead?         synthesizedResponseHead;
   nsCString                   synthesizedSecurityInfoSerialization;
   uint32_t                    cacheKey;
   uint64_t                    requestContextID;
-  OptionalCorsPreflightArgs   preflightArgs;
+  CorsPreflightArgs?          preflightArgs;
   uint32_t                    initialRwin;
   bool                        blockAuthPrompt;
   bool                        suspendAfterSynthesizeResponse;

@@ -218,9 +218,8 @@ Task group: [{task_group_id}](https://tools.taskcluster.net/groups/{task_group_i
 
     subject = '{} Build of {} {} build {}'.format(subject_prefix, product, version, build_number)
 
-    notify_options = optionsFromEnvironment({'rootUrl': get_root_url()})
-    if 'TASKCLUSTER_PROXY_URL' in os.environ:
-        notify_options['rootUrl'] = os.environ['TASKCLUSTER_PROXY_URL']
+    use_proxy = 'TASKCLUSTER_PROXY_URL' in os.environ
+    notify_options = optionsFromEnvironment({'rootUrl': get_root_url(use_proxy)})
     notify = Notify(notify_options)
     for address in addresses:
         notify.email({

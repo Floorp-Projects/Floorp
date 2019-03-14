@@ -116,6 +116,7 @@ jobs:
           type: decision-task
           treeherder-symbol: Chromium
           target-tasks-method: chromium_update
+          optimize-target-tasks: false
       run-on-projects:
           - mozilla-central
       when:

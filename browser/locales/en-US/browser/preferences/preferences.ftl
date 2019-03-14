@@ -235,7 +235,7 @@ containers-remove-cancel-button = Don’t remove this Container
 
 language-and-appearance-header = Language and Appearance
 
-fonts-and-colors-header = Fonts & Colors
+fonts-and-colors-header = Fonts and Colors
 
 default-font = Default font
     .accesskey = D
@@ -682,7 +682,7 @@ privacy-header = Browser Privacy
 
 ## Privacy Section - Forms
 
-logins-header = Logins & Passwords
+logins-header = Logins and Passwords
 forms-ask-to-save-logins =
     .label = Ask to save logins and passwords for websites
     .accesskey = r
@@ -722,7 +722,7 @@ history-remember-option-never =
 history-remember-option-custom =
     .label = Use custom settings for history
 
-history-remember-description = { -brand-short-name } will remember your browsing, download, form and search history.
+history-remember-description = { -brand-short-name } will remember your browsing, download, form, and search history.
 history-dontremember-description = { -brand-short-name } will use the same settings as private browsing, and will not remember any history as you browse the Web.
 
 history-private-browsing-permanent =
@@ -758,7 +758,7 @@ sitedata-total-size-calculating = Calculating site data and cache size…
 # Variables:
 #   $value (Number) - Value of the unit (for example: 4.6, 500)
 #   $unit (String) - Name of the unit (for example: "bytes", "KB")
-sitedata-total-size = Your stored cookies, site data and cache are currently using { $value } { $unit } of disk space.
+sitedata-total-size = Your stored cookies, site data, and cache are currently using { $value } { $unit } of disk space.
 
 sitedata-learn-more = Learn more
 

@@ -116,6 +116,9 @@ class GeckoInstance(object):
         # Make sure SNTP requests don't hit the network
         "network.sntp.pools": "%(server)s",
 
+        # Don't do network connections for mitm priming
+        "security.certerrors.mitm.priming.enabled": False,
+
         # Tests don't wait for the notification button security delay
         "security.notification_enable_delay": 0,
 

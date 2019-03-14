@@ -173,11 +173,13 @@ static ScreenMargin ScrollFrame(nsIContent* aContent,
     sf->ResetScrollInfoIfGeneration(aRequest.GetScrollGeneration());
     sf->SetScrollableByAPZ(!aRequest.IsScrollInfoLayer());
     if (sf->IsRootScrollFrameOfDocument()) {
-      if (nsCOMPtr<nsIPresShell> shell = GetPresShell(aContent)) {
-        if (shell->SetVisualViewportOffset(
-                CSSPoint::ToAppUnits(aRequest.GetScrollOffset()),
-                shell->GetLayoutViewportOffset())) {
-          sf->MarkEverScrolled();
+      if (!APZCCallbackHelper::IsScrollInProgress(sf)) {
+        if (nsCOMPtr<nsIPresShell> shell = GetPresShell(aContent)) {
+          if (shell->SetVisualViewportOffset(
+                  CSSPoint::ToAppUnits(aRequest.GetScrollOffset()),
+                  shell->GetLayoutViewportOffset())) {
+            sf->MarkEverScrolled();
+          }
         }
       }
     }
