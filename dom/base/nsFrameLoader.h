@@ -150,9 +150,13 @@ class nsFrameLoader final : public nsStubMutationObserver,
    * @param aTriggeringPrincipal The triggering principal for the load. May be
    *        null, in which case the node principal of the owner content will be
    *        used.
+   * @param aCsp The CSP to be used for the load. That is not the CSP to be
+   *        applied to subresources within the frame, but to the iframe load
+   *        itself. E.g. if the CSP holds upgrade-insecure-requests the the
+   *        frame load is upgraded from http to https.
    */
   nsresult LoadURI(nsIURI* aURI, nsIPrincipal* aTriggeringPrincipal,
-                   bool aOriginalSrc);
+                   nsIContentSecurityPolicy* aCsp, bool aOriginalSrc);
 
   /**
    * Destroy the frame loader and everything inside it. This will
@@ -347,7 +351,8 @@ class nsFrameLoader final : public nsStubMutationObserver,
    */
   void ApplySandboxFlags(uint32_t sandboxFlags);
 
-  void GetURL(nsString& aURL, nsIPrincipal** aTriggeringPrincipal);
+  void GetURL(nsString& aURL, nsIPrincipal** aTriggeringPrincipal,
+              nsIContentSecurityPolicy** aCsp);
 
   // Properly retrieves documentSize of any subdocument type.
   nsresult GetWindowDimensions(nsIntRect& aRect);
@@ -441,6 +446,7 @@ class nsFrameLoader final : public nsStubMutationObserver,
   RefPtr<nsDocShell> mDocShell;
   nsCOMPtr<nsIURI> mURIToLoad;
   nsCOMPtr<nsIPrincipal> mTriggeringPrincipal;
+  nsCOMPtr<nsIContentSecurityPolicy> mCsp;
   mozilla::dom::Element* mOwnerContent;  // WEAK
 
   // After the frameloader has been removed from the DOM but before all of the

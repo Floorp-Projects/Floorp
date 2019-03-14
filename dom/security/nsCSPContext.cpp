@@ -382,7 +382,14 @@ nsCSPContext::AppendPolicy(const nsAString& aPolicyString, bool aReportOnly,
     }
 
     mPolicies.AppendElement(policy);
+
+    // set the flag on the document for CSP telemetry
+    nsCOMPtr<Document> doc = do_QueryReferent(mLoadingContext);
+    if (doc) {
+      doc->SetHasCSP(true);
+    }
   }
+
   return NS_OK;
 }
 
@@ -672,9 +679,6 @@ nsCSPContext::SetRequestContext(Document* aDocument, nsIPrincipal* aPrincipal) {
     // console messages until it becomes available, see flushConsoleMessages
     mQueueUpMessages = !mInnerWindowID;
     mCallingChannelLoadGroup = aDocument->GetDocumentLoadGroup();
-
-    // set the flag on the document for CSP telemetry
-    aDocument->SetHasCSP(true);
     mEventTarget = aDocument->EventTargetFor(TaskCategory::Other);
   } else {
     CSPCONTEXTLOG(

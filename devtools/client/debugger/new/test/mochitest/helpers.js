@@ -1598,27 +1598,19 @@ function hideConsoleContextMenu(hud) {
 
 // Return a promise that resolves with the result of a thread evaluating a
 // string in the topmost frame.
-async function evaluateInTopFrame(threadClient, text) {
+async function evaluateInTopFrame(target, text) {
+  const threadClient = target.threadClient;
+  const consoleFront = await target.getFront("console");
   const { frames } = await threadClient.getFrames(0, 1);
   ok(frames.length == 1, "Got one frame");
-  const response = await threadClient.eval(frames[0].actor, text);
-  ok(response.type == "resumed", "Got resume response from eval");
-  let rval;
-  await threadClient.addOneTimeListener("paused", function(event, packet) {
-    ok(
-      packet.type == "paused" &&
-        packet.why.type == "clientEvaluated" &&
-        "return" in packet.why.frameFinished,
-      "Eval returned a value"
-    );
-    rval = packet.why.frameFinished.return;
-  });
-  return rval.type == "undefined" ? undefined : rval;
+  const options = { thread: threadClient.actor, frameActor: frames[0].actor };
+  const response = await consoleFront.evaluateJS(text, options);
+  return response.result.type == "undefined" ? undefined : response.result;
 }
 
 // Return a promise that resolves when a thread evaluates a string in the
 // topmost frame, ensuring the result matches the expected value.
-async function checkEvaluateInTopFrame(threadClient, text, expected) {
-  const rval = await evaluateInTopFrame(threadClient, text);
+async function checkEvaluateInTopFrame(target, text, expected) {
+  const rval = await evaluateInTopFrame(target, text);
   ok(rval == expected, `Eval returned ${expected}`);
 }

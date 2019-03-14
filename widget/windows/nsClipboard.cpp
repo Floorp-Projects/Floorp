@@ -134,7 +134,7 @@ nsresult nsClipboard::CreateNativeDataObject(nsITransferable* aTransferable,
   if (NS_OK == res) {
     *aDataObj = dataObj;
   } else {
-    delete dataObj;
+    dataObj->Release();
   }
   return res;
 }

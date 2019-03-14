@@ -442,6 +442,7 @@ nsBaseChannel::SetOwner(nsISupports *aOwner) {
 
 NS_IMETHODIMP
 nsBaseChannel::SetLoadInfo(nsILoadInfo *aLoadInfo) {
+  MOZ_RELEASE_ASSERT(aLoadInfo, "loadinfo can't be null");
   mLoadInfo = aLoadInfo;
 
   // Need to update |mNeckoTarget| when load info has changed.

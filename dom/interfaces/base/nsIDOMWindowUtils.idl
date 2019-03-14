@@ -1735,7 +1735,7 @@ interface nsIDOMWindowUtils : nsISupports {
   [implicit_jscontext] jsval getCompositorAPZTestData();
 
   /**
-   * Posts an eRestyle_Self restyle event for the given element.
+   * Posts an RestyleHint::RESTYLE_SELF restyle event for the given element.
    */
   void postRestyleSelfEvent(in Element aElement);
 

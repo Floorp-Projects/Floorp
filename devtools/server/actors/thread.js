@@ -1030,42 +1030,6 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     return stepFrame;
   },
 
-  onClientEvaluate: function(request) {
-    if (this.state !== "paused") {
-      return { error: "wrongState",
-               message: "Debuggee must be paused to evaluate code." };
-    }
-
-    const frame = this._requestFrame(request.frame);
-    if (!frame) {
-      return { error: "unknownFrame",
-               message: "Evaluation frame not found" };
-    }
-
-    if (!frame.environment) {
-      return { error: "notDebuggee",
-               message: "cannot access the environment of this frame." };
-    }
-
-    const youngest = this.youngestFrame;
-
-    // Put ourselves back in the running state and inform the client.
-    const resumedPacket = this._resumed();
-    this.conn.send(resumedPacket);
-
-    // Run the expression.
-    // XXX: test syntax errors
-    const completion = frame.eval(request.expression);
-
-    // Put ourselves back in the pause state.
-    const packet = this._paused(youngest);
-    packet.why = { type: "clientEvaluated",
-                   frameFinished: this.createProtocolCompletionValue(completion) };
-
-    // Return back to our previous pause's event loop.
-    return packet;
-  },
-
   onFrames: function(request) {
     if (this.state !== "paused") {
       return { error: "wrongState",
@@ -1743,7 +1707,6 @@ Object.assign(ThreadActor.prototype.requestTypes, {
   "detach": ThreadActor.prototype.onDetach,
   "reconfigure": ThreadActor.prototype.onReconfigure,
   "resume": ThreadActor.prototype.onResume,
-  "clientEvaluate": ThreadActor.prototype.onClientEvaluate,
   "frames": ThreadActor.prototype.onFrames,
   "interrupt": ThreadActor.prototype.onInterrupt,
   "sources": ThreadActor.prototype.onSources,
