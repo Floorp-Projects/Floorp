@@ -131,6 +131,11 @@ using namespace mozilla::gfx;
 
 using mozilla::Unused;
 
+LazyLogModule gBrowserFocusLog("BrowserFocus");
+
+#define LOGBROWSERFOCUS(args) \
+  MOZ_LOG(gBrowserFocusLog, mozilla::LogLevel::Debug, args)
+
 // The flags passed by the webProgress notifications are 16 bits shifted
 // from the ones registered by webProgressListeners.
 #define NOTIFY_FLAG_SHIFT 16
@@ -482,7 +487,16 @@ void TabParent::ActorDestroy(ActorDestroyReason why) {
 
 mozilla::ipc::IPCResult TabParent::RecvMoveFocus(
     const bool& aForward, const bool& aForDocumentNavigation) {
-  nsCOMPtr<nsIFocusManager> fm = do_GetService(FOCUSMANAGER_CONTRACTID);
+  LOGBROWSERFOCUS(("RecvMoveFocus %p, aForward: %d, aForDocumentNavigation: %d",
+                   this, aForward, aForDocumentNavigation));
+  BrowserBridgeParent* bridgeParent = GetBrowserBridgeParent();
+  if (bridgeParent) {
+    mozilla::Unused << bridgeParent->SendMoveFocus(aForward,
+                                                   aForDocumentNavigation);
+    return IPC_OK();
+  }
+
+  nsCOMPtr<nsIFocusManager> fm = nsFocusManager::GetFocusManager();
   if (fm) {
     RefPtr<Element> dummy;
 
@@ -819,12 +833,14 @@ void TabParent::HandleAccessKey(const WidgetKeyboardEvent& aEvent,
 }
 
 void TabParent::Activate() {
+  LOGBROWSERFOCUS(("Activate %p", this));
   if (!mIsDestroyed) {
     Unused << Manager()->SendActivate(this);
   }
 }
 
 void TabParent::Deactivate() {
+  LOGBROWSERFOCUS(("Deactivate %p", this));
   if (!mIsDestroyed) {
     Unused << Manager()->SendDeactivate(this);
   }
@@ -1895,6 +1911,13 @@ mozilla::ipc::IPCResult TabParent::RecvOnWindowedPluginKeyEvent(
 }
 
 mozilla::ipc::IPCResult TabParent::RecvRequestFocus(const bool& aCanRaise) {
+  LOGBROWSERFOCUS(("RecvRequestFocus %p, aCanRaise: %d", this, aCanRaise));
+  BrowserBridgeParent* bridgeParent = GetBrowserBridgeParent();
+  if (bridgeParent) {
+    mozilla::Unused << bridgeParent->SendRequestFocus(aCanRaise);
+    return IPC_OK();
+  }
+
   nsCOMPtr<nsIFocusManager> fm = nsFocusManager::GetFocusManager();
   if (!fm) {
     return IPC_OK();

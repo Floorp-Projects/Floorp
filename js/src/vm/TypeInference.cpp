@@ -93,25 +93,26 @@ const char* js::TypeIdStringImpl(jsid id) {
 /* static */ const char* TypeSet::NonObjectTypeString(TypeSet::Type type) {
   if (type.isPrimitive()) {
     switch (type.primitive()) {
-      case JSVAL_TYPE_UNDEFINED:
+      case ValueType::Undefined:
         return "void";
-      case JSVAL_TYPE_NULL:
+      case ValueType::Null:
         return "null";
-      case JSVAL_TYPE_BOOLEAN:
+      case ValueType::Boolean:
         return "bool";
-      case JSVAL_TYPE_INT32:
+      case ValueType::Int32:
         return "int";
-      case JSVAL_TYPE_DOUBLE:
+      case ValueType::Double:
         return "float";
-      case JSVAL_TYPE_STRING:
+      case ValueType::String:
         return "string";
-      case JSVAL_TYPE_SYMBOL:
+      case ValueType::Symbol:
         return "symbol";
-      case JSVAL_TYPE_BIGINT:
+      case ValueType::BigInt:
         return "BigInt";
-      case JSVAL_TYPE_MAGIC:
+      case ValueType::Magic:
         return "lazyargs";
-      default:
+      case ValueType::PrivateGCThing:
+      case ValueType::Object:
         MOZ_CRASH("Bad type");
     }
   }

@@ -37,7 +37,7 @@ function run_test() {
     function makeForwardingFunction(functionName) {
       return function() {
         return aWrappedObject[functionName].apply(aWrappedObject, arguments);
-      }
+      };
     }
 
     // Forward all the functions that are not explicitly overridden
@@ -59,7 +59,7 @@ function run_test() {
 
     // --- Overridden nsIWindowsRegKey interface functions ---
 
-    open: function(aRootKey, aRelPath, aMode) {
+    open(aRootKey, aRelPath, aMode) {
       // Remember the provided root key and path
       this._rootKey = aRootKey;
       this._relPath = aRelPath;
@@ -68,7 +68,7 @@ function run_test() {
       return this._wrappedObject.open(aRootKey, aRelPath, aMode);
     },
 
-    openChild: function(aRelPath, aMode) {
+    openChild(aRelPath, aMode) {
       // Open the child key and wrap it
       var innerKey = this._wrappedObject.openChild(aRelPath, aMode);
       var key = new MockWindowsRegKey(innerKey);
@@ -79,7 +79,7 @@ function run_test() {
       return key;
     },
 
-    createChild: function(aRelPath, aMode) {
+    createChild(aRelPath, aMode) {
       // Create the child key and wrap it
       var innerKey = this._wrappedObject.createChild(aRelPath, aMode);
       var key = new MockWindowsRegKey(innerKey);
@@ -98,7 +98,7 @@ function run_test() {
       return this._wrappedObject.valueCount;
     },
 
-    readStringValue: function(aName) {
+    readStringValue(aName) {
       // If this is the key under test, return a fake value
       if (this._rootKey == Ci.nsIWindowsRegKey.ROOT_KEY_CLASSES_ROOT &&
           this._relPath.toLowerCase() == ".txt" &&
@@ -108,7 +108,7 @@ function run_test() {
 
       // Return the real value in the registry
       return this._wrappedObject.readStringValue(aName);
-    }
+    },
   };
 
   // --- Mock nsIWindowsRegKey factory ---
@@ -121,19 +121,19 @@ function run_test() {
 
   const kMockCID = Components.ID("{9b23dfe9-296b-4740-ba1c-d39c9a16e55e}");
   const kWindowsRegKeyContractID = "@mozilla.org/windows-registry-key;1";
-  const kWindowsRegKeyClassName = "nsWindowsRegKey";
 
   function registerMockWindowsRegKeyFactory() {
     mockWindowsRegKeyFactory = {
-      createInstance: function(aOuter, aIid) {
+      createInstance(aOuter, aIid) {
         if (aOuter != null)
           throw Cr.NS_ERROR_NO_AGGREGATION;
-
+        // XXX Bug 1533719 - originalWindowsRegKeyFactory is undefined.
+        // eslint-disable-next-line no-undef
         var innerKey = originalWindowsRegKeyFactory.createInstance(null, aIid);
         var key = new MockWindowsRegKey(innerKey);
 
         return key.QueryInterface(aIid);
-      }
+      },
     };
 
     // Preserve the original factory
@@ -171,9 +171,9 @@ function run_test() {
   try {
     // Try and get the MIME type associated with the extension. If this
     // operation does not throw an unexpected exception, the test succeeds.
-    var type = Cc["@mozilla.org/mime;1"].
-               getService(Ci.nsIMIMEService).
-               getTypeFromExtension(".txt");
+    Cc["@mozilla.org/mime;1"].
+      getService(Ci.nsIMIMEService).
+      getTypeFromExtension(".txt");
   } catch (e) {
     if (!(e instanceof Ci.nsIException) ||
         e.result != Cr.NS_ERROR_NOT_AVAILABLE) {

@@ -38,6 +38,8 @@ class BrowserBridgeChild : public PBrowserBridgeChild {
 
   void Activate();
 
+  void Deactivate();
+
   static BrowserBridgeChild* GetFrom(nsFrameLoader* aFrameLoader);
 
   static BrowserBridgeChild* GetFrom(nsIContent* aContent);
@@ -47,6 +49,11 @@ class BrowserBridgeChild : public PBrowserBridgeChild {
 
   mozilla::ipc::IPCResult RecvSetLayersId(
       const mozilla::layers::LayersId& aLayersId);
+
+  mozilla::ipc::IPCResult RecvRequestFocus(const bool& aCanRaise);
+
+  mozilla::ipc::IPCResult RecvMoveFocus(const bool& aForward,
+                                        const bool& aForDocumentNavigation);
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
 

@@ -406,7 +406,8 @@ NS_IMETHODIMP nsExtProtocolChannel::SetClassifierMatchedInfo(
   return NS_OK;
 }
 
-NS_IMETHODIMP nsExtProtocolChannel::NotifyTrackingResource(bool aIsThirdParty) {
+NS_IMETHODIMP nsExtProtocolChannel::NotifyClassificationFlags(
+    uint32_t aClassificationFlags, bool aIsThirdParty) {
   // nothing to do
   return NS_OK;
 }
