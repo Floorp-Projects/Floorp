@@ -2800,7 +2800,8 @@ class XREMain {
         mShuttingDown(false)
 #ifdef MOZ_HAS_REMOTE
         ,
-        mDisableRemote(false)
+        mDisableRemoteClient(false),
+        mDisableRemoteServer(false)
 #endif
 #if defined(MOZ_WIDGET_GTK)
         ,
@@ -2838,7 +2839,8 @@ class XREMain {
   bool mStartOffline;
   bool mShuttingDown;
 #if defined(MOZ_HAS_REMOTE)
-  bool mDisableRemote;
+  bool mDisableRemoteClient;
+  bool mDisableRemoteServer;
 #endif
 
 #if defined(MOZ_WIDGET_GTK)
@@ -3352,11 +3354,12 @@ int XREMain::XRE_mainInit(bool* aExitFlag) {
                "is specified\n");
     return 1;
   }
-  if (ar == ARG_FOUND) {
-    SaveToEnv("MOZ_NO_REMOTE=1");
-    mDisableRemote = true;
-  } else if (EnvHasValue("MOZ_NO_REMOTE")) {
-    mDisableRemote = true;
+  if (ar == ARG_FOUND || EnvHasValue("MOZ_NO_REMOTE")) {
+    mDisableRemoteClient = true;
+    mDisableRemoteServer = true;
+    if (!EnvHasValue("MOZ_NO_REMOTE")) {
+      SaveToEnv("MOZ_NO_REMOTE=1");
+    }
   }
 
   ar = CheckArg("new-instance", nullptr,
@@ -3368,7 +3371,7 @@ int XREMain::XRE_mainInit(bool* aExitFlag) {
     return 1;
   }
   if (ar == ARG_FOUND || EnvHasValue("MOZ_NEW_INSTANCE")) {
-    mDisableRemote = true;
+    mDisableRemoteClient = true;
   }
 #else
   // These arguments do nothing in platforms with no remoting support but we
@@ -3774,7 +3777,8 @@ int XREMain::XRE_mainStartup(bool* aExitFlag) {
 
 #ifdef MOZ_HAS_REMOTE
   if (gfxPlatform::IsHeadless()) {
-    mDisableRemote = true;
+    mDisableRemoteClient = true;
+    mDisableRemoteServer = true;
   }
 #endif
 
@@ -3852,11 +3856,9 @@ int XREMain::XRE_mainStartup(bool* aExitFlag) {
 #endif
 #if defined(MOZ_HAS_REMOTE)
   // handle --remote now that xpcom is fired up
-  if (!mDisableRemote) {
-    mRemoteService = new nsRemoteService(gAppData->remotingName);
-    if (mRemoteService) {
-      mRemoteService->LockStartup();
-    }
+  mRemoteService = new nsRemoteService(gAppData->remotingName);
+  if (mRemoteService && !mDisableRemoteServer) {
+    mRemoteService->LockStartup();
   }
 #endif
 #if defined(MOZ_WIDGET_GTK)
@@ -3945,18 +3947,20 @@ int XREMain::XRE_mainStartup(bool* aExitFlag) {
 
     mRemoteService->SetProfile(profileName);
 
-    // Try to remote the entire command line. If this fails, start up
-    // normally.
-    const char* desktopStartupIDPtr =
-        mDesktopStartupID.IsEmpty() ? nullptr : mDesktopStartupID.get();
+    if (!mDisableRemoteClient) {
+      // Try to remote the entire command line. If this fails, start up
+      // normally.
+      const char* desktopStartupIDPtr =
+          mDesktopStartupID.IsEmpty() ? nullptr : mDesktopStartupID.get();
 
-    RemoteResult rr = mRemoteService->StartClient(desktopStartupIDPtr);
-    if (rr == REMOTE_FOUND) {
-      *aExitFlag = true;
-      return 0;
-    }
-    if (rr == REMOTE_ARG_BAD) {
-      return 1;
+      RemoteResult rr = mRemoteService->StartClient(desktopStartupIDPtr);
+      if (rr == REMOTE_FOUND) {
+        *aExitFlag = true;
+        return 0;
+      }
+      if (rr == REMOTE_ARG_BAD) {
+        return 1;
+      }
     }
   }
 #endif
@@ -4512,7 +4516,7 @@ nsresult XREMain::XRE_mainRun() {
 #if defined(MOZ_HAS_REMOTE)
     // if we have X remote support, start listening for requests on the
     // proxy window.
-    if (mRemoteService) {
+    if (mRemoteService && !mDisableRemoteServer) {
       mRemoteService->StartupServer();
       mRemoteService->UnlockStartup();
     }
@@ -4720,7 +4724,7 @@ int XREMain::XRE_main(int argc, char* argv[], const BootstrapConfig& aConfig) {
   // Shut down the remote service. We must do this before calling LaunchChild
   // if we're restarting because otherwise the new instance will attempt to
   // remote to this instance.
-  if (mRemoteService) {
+  if (mRemoteService && !mDisableRemoteServer) {
     mRemoteService->ShutdownServer();
   }
 #endif /* MOZ_WIDGET_GTK */
