@@ -1304,6 +1304,10 @@ var gPrivacyPane = {
  * information.
  */
   showPasswords() {
+    if (LoginHelper.managementURI) {
+      window.docShell.messageManager.sendAsyncMessage("PasswordManager:OpenPreferences", {});
+      return;
+    }
     gSubDialog.open("chrome://passwordmgr/content/passwordManager.xul");
   },
 
