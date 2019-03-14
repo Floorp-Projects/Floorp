@@ -5,6 +5,7 @@
 import argparse
 import base64
 import os
+import json
 import taskcluster
 
 def write_secret_to_file(path, data, key, base64decode=False, append=False, prefix=''):
@@ -13,7 +14,12 @@ def write_secret_to_file(path, data, key, base64decode=False, append=False, pref
         value = data['secret'][key]
         if base64decode:
             value = base64.b64decode(value)
-        f.write(prefix + value)
+
+        try:
+            json_string = json.dumps(value)
+            f.write(prefix + json_string)
+        except ValueError as e:
+            f.write(prefix + value)
 
 
 def fetch_secret_from_taskcluster(name):

@@ -36,6 +36,9 @@ captures/
 *.iml
 .idea/
 
+# Vim swap files
+*.sw[op]
+
 # Keystore files
 *.jks
 
@@ -53,3 +56,11 @@ jacoco.exec
 
 #Gihub Bot Token
 .github_token
+
+# UI test artifacts 
+.firebase_token*
+results/
+test_artifacts/
+google-cloud-sdk/
+*.jar
+*.gz

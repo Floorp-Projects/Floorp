@@ -9,6 +9,8 @@ import json
 import taskcluster
 
 DEFAULT_EXPIRES_IN = '1 year'
+GOOGLE_PROJECT = 'moz-android-components-230120'
+GOOGLE_APPLICATION_CREDENTIALS = '.firebase_token.json'
 
 
 class TaskBuilder(object):
@@ -47,17 +49,10 @@ class TaskBuilder(object):
 
         command = ' && '.join(cmd for cmd in (gradle_command, post_gradle_command) if cmd)
 
-        features = {}
-        if artifact_info is not None:
-            features['chainOfTrust'] = True
-        elif any(scope.startswith('secrets:') for scope in scopes):
-            features['taskclusterProxy'] = True
-
         return self._craft_build_ish_task(
             name='Android Components - Module {} {}'.format(module_name, subtitle),
-            description='Execure Gradle tasks for module {}'.format(module_name),
+            description='Execute Gradle tasks for module {}'.format(module_name),
             command=command,
-            features=features,
             scopes=scopes,
             artifacts=artifacts
         )
@@ -89,6 +84,46 @@ class TaskBuilder(object):
             name='Android Components - compare-locales',
             description='Validate strings.xml with compare-locales',
             command='pip install "compare-locales>=5.0.2,<6.0" && compare-locales --validate l10n.toml .'
+        )
+
+    def craft_ui_tests_task(self):
+        artifacts = {
+            "public": {
+                "type": "directory",
+                "path": "/build/android-components/results",
+                "expires": taskcluster.stringDate(taskcluster.fromNow(DEFAULT_EXPIRES_IN))
+            }
+        }
+
+        env_vars = {
+            "GOOGLE_PROJECT": "moz-android-components-230120",
+            "GOOGLE_APPLICATION_CREDENTIALS": ".firebase_token.json"
+        }
+
+        gradle_commands = (
+            './gradlew --no-daemon clean assembleGeckoNightly assembleAndroidTest',
+        )
+
+        test_commands = (
+            'automation/taskcluster/androidTest/ui-test.sh browser arm 1',
+        )
+
+        command = ' && '.join(
+            cmd
+            for commands in (gradle_commands, test_commands)
+            for cmd in commands
+            if cmd
+        )
+
+        return self._craft_build_ish_task(
+            name='Android Components - mod UI tests',
+            description='Execute Gradle tasks for UI tests',
+            command=command,
+            scopes=[
+                'secrets:get:project/mobile/android-components/firebase'
+            ],
+            artifacts=artifacts,
+            env_vars=env_vars,
         )
 
     def craft_beetmover_task(
@@ -141,13 +176,14 @@ class TaskBuilder(object):
 
     def _craft_build_ish_task(
         self, name, description, command, dependencies=None, artifacts=None, scopes=None,
-        routes=None, features=None
+        routes=None, features=None, env_vars=None
     ):
         dependencies = [] if dependencies is None else dependencies
         artifacts = {} if artifacts is None else artifacts
         scopes = [] if scopes is None else scopes
         routes = [] if routes is None else routes
         features = {} if features is None else features
+        env_vars = {} if env_vars is None else env_vars 
 
         checkout_command = (
             "git fetch {} {} --tags && "
@@ -159,8 +195,14 @@ class TaskBuilder(object):
 
         command = '{} && {}'.format(checkout_command, command)
 
+        if artifacts:
+            features['chainOfTrust'] = True
+        if any(scope.startswith('secrets:') for scope in scopes):
+            features['taskclusterProxy'] = True
+
         payload = {
             "features": features,
+            "env": env_vars, 
             "maxRunTime": 7200,
             "image": "mozillamobile/android-components:1.17",
             "command": [
@@ -239,3 +281,4 @@ def schedule_task_graph(ordered_groups_of_tasks):
                 'task': queue.task(task_id),
             }
     return full_task_graph
+
