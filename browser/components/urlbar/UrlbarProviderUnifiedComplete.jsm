@@ -248,7 +248,7 @@ function makeUrlbarResult(tokens, info) {
             isKeywordOffer: [
               action.params.alias &&
                 !action.params.searchQuery.trim() &&
-                !info.style.includes("heuristic"),
+                action.params.alias.startsWith("@"),
               false,
             ],
           })

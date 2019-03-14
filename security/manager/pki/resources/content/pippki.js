@@ -91,7 +91,7 @@ function certToFilename(cert) {
 
   // Remove unneeded and/or unsafe characters.
   filename = filename.replace(/\s/g, "")
-                     .replace(/\./g, "")
+                     .replace(/\./g, "_")
                      .replace(/\\/g, "")
                      .replace(/\//g, "");
 

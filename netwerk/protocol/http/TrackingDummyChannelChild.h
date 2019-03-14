@@ -34,7 +34,7 @@ class TrackingDummyChannelChild final : public PTrackingDummyChannelChild {
                   const std::function<void(bool)>& aCallback);
 
   mozilla::ipc::IPCResult Recv__delete__(
-      const bool& aTrackingResource) override;
+      const uint32_t& aClassificationFlags) override;
 
   nsCOMPtr<nsIHttpChannel> mChannel;
   nsCOMPtr<nsIURI> mURI;
