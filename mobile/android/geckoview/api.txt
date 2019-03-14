@@ -353,7 +353,6 @@ package org.mozilla.geckoview {
     method @android.support.annotation.UiThread public void onFocusRequest(@android.support.annotation.NonNull org.mozilla.geckoview.GeckoSession);
     method @android.support.annotation.UiThread public void onFullScreen(@android.support.annotation.NonNull org.mozilla.geckoview.GeckoSession, boolean);
     method @android.support.annotation.UiThread public void onTitleChange(@android.support.annotation.NonNull org.mozilla.geckoview.GeckoSession, @android.support.annotation.Nullable java.lang.String);
-    method @android.support.annotation.UiThread public void onWebAppManifest(@android.support.annotation.NonNull org.mozilla.geckoview.GeckoSession, @android.support.annotation.NonNull org.json.JSONObject);
   }
 
   public static class GeckoSession.ContentDelegate.ContextElement {
