@@ -16,6 +16,7 @@ sample_metrics:
     bugs:
       - 123456789
     data_reviews:
-      - N/A 
+      - N/A
     notification_emails:
       - telemetry-client-dev@mozilla.com
+    expires: never

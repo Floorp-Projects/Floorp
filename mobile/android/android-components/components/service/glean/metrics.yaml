@@ -18,6 +18,7 @@ glean.baseline:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1512938#c3
     notification_emails:
       - telemetry-client-dev@mozilla.com
+    expires: never
 
   os:
     type: string
@@ -32,6 +33,7 @@ glean.baseline:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1512938#c3
     notification_emails:
       - telemetry-client-dev@mozilla.com
+    expires: never
 
   os_version:
     type: string
@@ -46,6 +48,7 @@ glean.baseline:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1512938#c3
     notification_emails:
       - telemetry-client-dev@mozilla.com
+    expires: never
 
   device_manufacturer:
     type: string
@@ -60,6 +63,7 @@ glean.baseline:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1512938#c3
     notification_emails:
       - telemetry-client-dev@mozilla.com
+    expires: never
 
   device_model:
     type: string
@@ -74,6 +78,7 @@ glean.baseline:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1512938#c3
     notification_emails:
       - telemetry-client-dev@mozilla.com
+    expires: never
 
   architecture:
     type: string
@@ -88,6 +93,7 @@ glean.baseline:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1512938#c3
     notification_emails:
       - telemetry-client-dev@mozilla.com
+    expires: never
 
   locale:
     type: string
@@ -103,6 +109,7 @@ glean.baseline:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1512938#c3
     notification_emails:
       - telemetry-client-dev@mozilla.com
+    expires: never
 
 glean.internal.metrics:
   client_id:
@@ -118,6 +125,7 @@ glean.internal.metrics:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1512938#c3
     notification_emails:
       - telemetry-client-dev@mozilla.com
+    expires: never
 
   app_build:
     type: string
@@ -132,6 +140,7 @@ glean.internal.metrics:
     - https://bugzilla.mozilla.org/show_bug.cgi?id=1512938#c3
     notification_emails:
     - telemetry-client-dev@mozilla.com
+    expires: never
 
   app_display_version:
     type: string
@@ -146,6 +155,7 @@ glean.internal.metrics:
     - https://bugzilla.mozilla.org/show_bug.cgi?id=1508305#c9
     notification_emails:
     - telemetry-client-dev@mozilla.com
+    expires: never
 
   first_run_date:
     type: datetime
@@ -161,6 +171,7 @@ glean.internal.metrics:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1525045#c18
     notification_emails:
       - telemetry-client-dev@mozilla.com
+    expires: never
       
 glean.error:
   invalid_value:
@@ -175,6 +186,7 @@ glean.error:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1499761#c5
     notification_emails:
       - telemetry-client-dev@mozilla.com
+    expires: never
 
   invalid_label:
     type: counter
@@ -188,3 +200,4 @@ glean.error:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1499761#c5
     notification_emails:
       - telemetry-client-dev@mozilla.com
+    expires: never

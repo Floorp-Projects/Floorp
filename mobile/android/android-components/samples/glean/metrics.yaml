@@ -18,6 +18,7 @@ browser.engagement:
     extra_keys:
       key1: "This is key one"
       key2: "This is key two"
+    expires: never
 
 basic:
   os:
@@ -30,6 +31,7 @@ basic:
       - N/A 
     notification_emails:
       - telemetry-client-dev@mozilla.com
+    expires: never
 
 test:
   test_string_list:
@@ -45,6 +47,7 @@ test:
       - N/A 
     notification_emails:
       - telemetry-client-dev@mozilla.com
+    expires: never
 
   test_counter:
     type: counter
@@ -59,6 +62,7 @@ test:
       - N/A 
     notification_emails:
       - telemetry-client-dev@mozilla.com
+    expires: never
 
   test_timespan:
     type: timespan
@@ -72,3 +76,4 @@ test:
       - N/A 
     notification_emails:
       - telemetry-client-dev@mozilla.com
+    expires: never
