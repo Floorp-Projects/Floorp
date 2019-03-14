@@ -2,8 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{ApiMsg, DebugCommand, DebugFlags, DeviceIntSize};
+use api::{ApiMsg, DebugCommand, DebugFlags};
 use api::channel::MsgSender;
+use api::units::DeviceIntSize;
 use print_tree::PrintTreePrinter;
 use std::sync::mpsc::{channel, Receiver};
 use std::sync::mpsc::Sender;

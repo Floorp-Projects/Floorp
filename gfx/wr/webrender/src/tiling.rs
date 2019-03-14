@@ -5,6 +5,8 @@
 use api::{ColorF, BorderStyle, MixBlendMode, PipelineId, PremultipliedColorF};
 use api::{DocumentLayer, FilterData, FilterOp, ImageFormat, LineOrientation};
 use api::units::*;
+#[cfg(feature = "pathfinder")]
+use api::FontRenderMode;
 use batch::{AlphaBatchBuilder, AlphaBatchContainer, ClipBatcher, resolve_image};
 use clip::ClipStore;
 use clip_scroll_tree::{ClipScrollTree};
@@ -29,8 +31,7 @@ use render_task::{BlurTask, ClearMode, GlyphTask, RenderTaskLocation, RenderTask
 use resource_cache::ResourceCache;
 use std::{cmp, usize, f32, i32, mem};
 use texture_allocator::{ArrayAllocationTracker, FreeRectSlice};
-#[cfg(feature = "pathfinder")]
-use webrender_api::{DevicePixel, FontRenderMode};
+
 
 const STYLE_SOLID: i32 = ((BorderStyle::Solid as i32) << 8) | ((BorderStyle::Solid as i32) << 16);
 const STYLE_MASK: i32 = 0x00FF_FF00;
