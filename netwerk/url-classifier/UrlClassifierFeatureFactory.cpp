@@ -8,6 +8,7 @@
 
 // List of Features
 #include "UrlClassifierFeatureCryptominingProtection.h"
+#include "UrlClassifierFeatureFingerprintingAnnotation.h"
 #include "UrlClassifierFeatureFingerprintingProtection.h"
 #include "UrlClassifierFeatureFlash.h"
 #include "UrlClassifierFeatureLoginReputation.h"
@@ -29,6 +30,7 @@ void UrlClassifierFeatureFactory::Shutdown() {
   }
 
   UrlClassifierFeatureCryptominingProtection::MaybeShutdown();
+  UrlClassifierFeatureFingerprintingAnnotation::MaybeShutdown();
   UrlClassifierFeatureFingerprintingProtection::MaybeShutdown();
   UrlClassifierFeatureFlash::MaybeShutdown();
   UrlClassifierFeatureLoginReputation::MaybeShutdown();
@@ -59,6 +61,12 @@ void UrlClassifierFeatureFactory::GetFeaturesFromChannel(
 
   // Fingerprinting Protection
   feature = UrlClassifierFeatureFingerprintingProtection::MaybeCreate(aChannel);
+  if (feature) {
+    aFeatures.AppendElement(feature);
+  }
+
+  // Fingerprinting Annotation
+  feature = UrlClassifierFeatureFingerprintingAnnotation::MaybeCreate(aChannel);
   if (feature) {
     aFeatures.AppendElement(feature);
   }
@@ -104,6 +112,13 @@ UrlClassifierFeatureFactory::GetFeatureByName(const nsACString& aName) {
 
   // Cryptomining Protection
   feature = UrlClassifierFeatureCryptominingProtection::GetIfNameMatches(aName);
+  if (feature) {
+    return feature.forget();
+  }
+
+  // Fingerprinting Annotation
+  feature =
+      UrlClassifierFeatureFingerprintingAnnotation::GetIfNameMatches(aName);
   if (feature) {
     return feature.forget();
   }
@@ -157,6 +172,12 @@ void UrlClassifierFeatureFactory::GetFeatureNames(nsTArray<nsCString>& aArray) {
   // Cryptomining Protection
   nsAutoCString name;
   name.Assign(UrlClassifierFeatureCryptominingProtection::Name());
+  if (!name.IsEmpty()) {
+    aArray.AppendElement(name);
+  }
+
+  // Fingerprinting Annotation
+  name.Assign(UrlClassifierFeatureFingerprintingAnnotation::Name());
   if (!name.IsEmpty()) {
     aArray.AppendElement(name);
   }
