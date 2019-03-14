@@ -1759,6 +1759,24 @@ devtools.changesview:
     record_in_processes:
       - 'main'
 
+dom.event:
+  confluence_load_count:
+    bug_numbers:
+      - 1514940
+    description: >
+      Number of times Confluence instances are loaded, and whether they are
+      compatible with conflated keypress event model or not, using "new"/"old".
+      I.e., collecting percentage of too old Confluence instance use count in
+      all Confluence instance use count.
+    expires: "71"
+    keyed: true
+    kind: uint
+    notification_emails:
+      - mnakano@mozilla.com
+    release_channel_collection: opt-out
+    record_in_processes:
+      - 'content'
+
 navigator.storage:
   estimate_count:
     bug_numbers:
