@@ -10,6 +10,7 @@ const {RemotePages} = ChromeUtils.import("resource://gre/modules/remotepagemanag
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 var AboutPrivateBrowsingHandler = {
+  _inited: false,
   _topics: [
     "DontShowIntroPanelAgain",
     "OpenPrivateWindow",
@@ -21,9 +22,13 @@ var AboutPrivateBrowsingHandler = {
     for (let topic of this._topics) {
       this.pageListener.addMessageListener(topic, this.receiveMessage.bind(this));
     }
+    this._inited = true;
   },
 
   uninit() {
+    if (!this._inited) {
+      return;
+    }
     for (let topic of this._topics) {
       this.pageListener.removeMessageListener(topic);
     }

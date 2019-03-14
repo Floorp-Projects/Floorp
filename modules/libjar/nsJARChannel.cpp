@@ -679,6 +679,7 @@ nsJARChannel::GetLoadInfo(nsILoadInfo **aLoadInfo) {
 
 NS_IMETHODIMP
 nsJARChannel::SetLoadInfo(nsILoadInfo *aLoadInfo) {
+  MOZ_RELEASE_ASSERT(aLoadInfo, "loadinfo can't be null");
   mLoadInfo = aLoadInfo;
   return NS_OK;
 }

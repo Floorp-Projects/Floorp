@@ -7764,7 +7764,7 @@ bool nsCSSFrameConstructor::EnsureFrameForTextNodeIsCreatedAfterFlush(
     return false;
   }
 
-  RestyleManager()->PostRestyleEvent(root, nsRestyleHint(0),
+  RestyleManager()->PostRestyleEvent(root, RestyleHint{0},
                                      nsChangeHint_ReconstructFrame);
   return true;
 }
@@ -8682,8 +8682,7 @@ void nsCSSFrameConstructor::RecreateFramesForContent(
       // Also, it'd be nice to just use the `ContentRangeInserted` path for
       // both elements and non-elements, but we need to make lazy frame
       // construction to apply to all elements first.
-      RestyleManager()->PostRestyleEvent(aContent->AsElement(),
-                                         nsRestyleHint(0),
+      RestyleManager()->PostRestyleEvent(aContent->AsElement(), RestyleHint{0},
                                          nsChangeHint_ReconstructFrame);
     } else {
       // Now, recreate the frames associated with this content object. If

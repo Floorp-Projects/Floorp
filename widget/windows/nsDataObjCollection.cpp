@@ -22,7 +22,7 @@ const IID IID_IDataObjCollection = {
  * Class nsDataObjCollection
  */
 
-nsDataObjCollection::nsDataObjCollection() : m_cRef(0) {}
+nsDataObjCollection::nsDataObjCollection() {}
 
 nsDataObjCollection::~nsDataObjCollection() { mDataObjects.Clear(); }
 
@@ -42,8 +42,8 @@ STDMETHODIMP nsDataObjCollection::QueryInterface(REFIID riid, void** ppv) {
     return NOERROR;
   }
   // offer to operate asynchronously (required by nsDragService)
-  if (IID_IAsyncOperation == riid) {
-    *ppv = static_cast<IAsyncOperation*>(this);
+  if (IID_IDataObjectAsyncCapability == riid) {
+    *ppv = static_cast<IDataObjectAsyncCapability*>(this);
     AddRef();
     return NOERROR;
   }

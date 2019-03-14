@@ -558,6 +558,7 @@ HttpBaseChannel::SetOwner(nsISupports* aOwner) {
 
 NS_IMETHODIMP
 HttpBaseChannel::SetLoadInfo(nsILoadInfo* aLoadInfo) {
+  MOZ_RELEASE_ASSERT(aLoadInfo, "loadinfo can't be null");
   mLoadInfo = aLoadInfo;
   return NS_OK;
 }
