@@ -6,11 +6,13 @@
 @namespace html url("http://www.w3.org/1999/xhtml");
 
 html|canvas#screen {
-  border-style: solid;
-  border-width: 12px 11px;
-  border-image: url("chrome://browser/skin/monitor-border.png") 12 11 stretch;
+  margin: 12px 11px 32px;
 }
 
-#monitor-base {
-  list-style-image: url("chrome://browser/skin/monitor-base.png");
+#monitor {
+  list-style-image: url("chrome://browser/skin/monitor.png");
+}
+
+#monitor[aspectratio="16:10"] {
+  list-style-image: url("chrome://browser/skin/monitor_16-10.png");
 }
