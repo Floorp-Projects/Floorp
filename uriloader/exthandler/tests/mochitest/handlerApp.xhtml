@@ -10,15 +10,14 @@ Pseudo Web Handler App
 <script class="testbody" type="text/javascript">
 <![CDATA[
 function onLoad() {
-
   // if we have a window.opener, this must be the windowContext
   // instance of this test.  check that we got the URI right and clean up.
   if (window.opener) {
-    window.opener.is(location.search, 
-                     "?uri=" + encodeURIComponent(window.opener.testURI), 
+    window.opener.is(location.search,
+                     "?uri=" + encodeURIComponent(window.opener.testURI),
                      "uri passed to web-handler app");
     window.opener.SimpleTest.finish();
-  } 
+  }
 
   window.close();
 }

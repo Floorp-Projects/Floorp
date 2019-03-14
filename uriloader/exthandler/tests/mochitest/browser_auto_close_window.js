@@ -20,12 +20,12 @@ function HelperAppLauncherDialog() {
 }
 
 HelperAppLauncherDialog.prototype = {
-  show: function(aLauncher, aWindowContext, aReason) {
+  show(aLauncher, aWindowContext, aReason) {
     ok(true, "Showing the helper app dialog");
     curDialogResolve(aWindowContext);
     executeSoon(() => { aLauncher.cancel(Cr.NS_ERROR_ABORT); });
   },
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIHelperAppLauncherDialog])
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIHelperAppLauncherDialog]),
 };
 
 function promiseHelperAppDialog() {
