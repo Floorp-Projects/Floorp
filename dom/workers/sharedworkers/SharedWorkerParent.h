@@ -16,8 +16,7 @@ namespace dom {
 
 class MessagePortIdentifier;
 class RemoteWorkerData;
-class SharedWorkerManager;
-class SharedWorkerService;
+class SharedWorkerManagerWrapper;
 
 class SharedWorkerParent final : public mozilla::dom::PSharedWorkerParent {
  public:
@@ -28,7 +27,8 @@ class SharedWorkerParent final : public mozilla::dom::PSharedWorkerParent {
   void Initialize(const RemoteWorkerData& aData, uint64_t aWindowID,
                   const MessagePortIdentifier& aPortIdentifier);
 
-  void ManagerCreated(SharedWorkerManager* aWorkerManager);
+  void ManagerCreated(
+      already_AddRefed<SharedWorkerManagerWrapper> aWorkerManagerWrapper);
 
   void ErrorPropagation(nsresult aError);
 
@@ -54,8 +54,7 @@ class SharedWorkerParent final : public mozilla::dom::PSharedWorkerParent {
   void ActorDestroy(IProtocol::ActorDestroyReason aReason) override;
 
   nsCOMPtr<nsIEventTarget> mBackgroundEventTarget;
-  RefPtr<SharedWorkerManager> mWorkerManager;
-  RefPtr<SharedWorkerService> mService;
+  RefPtr<SharedWorkerManagerWrapper> mWorkerManagerWrapper;
 
   enum {
     eInit,
