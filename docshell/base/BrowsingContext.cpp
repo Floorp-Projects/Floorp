@@ -586,18 +586,27 @@ void BrowsingContext::Close(CallerType aCallerType, ErrorResult& aError) {
   //       DOMWindowClose event (which happens in the process where the
   //       document for this browsing context is loaded).
   //       See https://bugzilla.mozilla.org/show_bug.cgi?id=1516343.
-  ContentChild* cc = ContentChild::GetSingleton();
-  cc->SendWindowClose(this, aCallerType == CallerType::System);
+  if (ContentChild* cc = ContentChild::GetSingleton()) {
+    cc->SendWindowClose(this, aCallerType == CallerType::System);
+  } else if (ContentParent* cp = Canonical()->GetContentParent()) {
+    Unused << cp->SendWindowClose(this, aCallerType == CallerType::System);
+  }
 }
 
 void BrowsingContext::Focus(ErrorResult& aError) {
-  ContentChild* cc = ContentChild::GetSingleton();
-  cc->SendWindowFocus(this);
+  if (ContentChild* cc = ContentChild::GetSingleton()) {
+    cc->SendWindowFocus(this);
+  } else if (ContentParent* cp = Canonical()->GetContentParent()) {
+    Unused << cp->SendWindowFocus(this);
+  }
 }
 
 void BrowsingContext::Blur(ErrorResult& aError) {
-  ContentChild* cc = ContentChild::GetSingleton();
-  cc->SendWindowBlur(this);
+  if (ContentChild* cc = ContentChild::GetSingleton()) {
+    cc->SendWindowBlur(this);
+  } else if (ContentParent* cp = Canonical()->GetContentParent()) {
+    Unused << cp->SendWindowBlur(this);
+  }
 }
 
 Nullable<WindowProxyHolder> BrowsingContext::GetTop(ErrorResult& aError) {
@@ -667,14 +676,22 @@ void BrowsingContext::PostMessageMoz(JSContext* aCx,
     return;
   }
 
-  ContentChild* cc = ContentChild::GetSingleton();
   ClonedMessageData messageData;
-  if (!message.BuildClonedMessageDataForChild(cc, messageData)) {
-    aError.Throw(NS_ERROR_FAILURE);
-    return;
-  }
+  if (ContentChild* cc = ContentChild::GetSingleton()) {
+    if (!message.BuildClonedMessageDataForChild(cc, messageData)) {
+      aError.Throw(NS_ERROR_FAILURE);
+      return;
+    }
 
-  cc->SendWindowPostMessage(this, messageData, data);
+    cc->SendWindowPostMessage(this, messageData, data);
+  } else if (ContentParent* cp = Canonical()->GetContentParent()) {
+    if (!message.BuildClonedMessageDataForParent(cp, messageData)) {
+      aError.Throw(NS_ERROR_FAILURE);
+      return;
+    }
+
+    Unused << cp->SendWindowPostMessage(this, messageData, data);
+  }
 }
 
 void BrowsingContext::PostMessageMoz(JSContext* aCx,
