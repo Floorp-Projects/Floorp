@@ -5,7 +5,7 @@
 // @flow
 
 import { PROMISE } from "../utils/middleware/promise";
-import { getSource } from "../../selectors";
+import { getSource, getSourcesEpoch } from "../../selectors";
 import { setBreakpointPositions } from "../breakpoints";
 
 import * as parser from "../../workers/parser";
@@ -44,6 +44,7 @@ async function loadSource(state, source: Source, { sourceMaps, client }) {
 
 async function loadSourceTextPromise(
   source: Source,
+  epoch: number,
   { dispatch, getState, client, sourceMaps }: ThunkArgs
 ): Promise<?Source> {
   if (isLoaded(source)) {
@@ -53,6 +54,7 @@ async function loadSourceTextPromise(
   await dispatch({
     type: "LOAD_SOURCE_TEXT",
     sourceId: source.id,
+    epoch,
     [PROMISE]: loadSource(getState(), source, { sourceMaps, client })
   });
 
@@ -82,12 +84,14 @@ export function loadSourceText(inputSource: ?Source) {
     // below in a way that Flow is happy with.
     const source = inputSource;
 
-    const id = source.id;
+    const epoch = getSourcesEpoch(thunkArgs.getState());
+
+    const id = `${epoch}:${source.id}`;
     let promise = requests.get(id);
     if (!promise) {
       promise = (async () => {
         try {
-          return await loadSourceTextPromise(source, thunkArgs);
+          return await loadSourceTextPromise(source, epoch, thunkArgs);
         } catch (e) {
           // TODO: This swallows errors for now. Ideally we would get rid of
           // this once we have a better handle on our async state management.
