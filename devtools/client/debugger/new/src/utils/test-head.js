@@ -69,6 +69,7 @@ function makeFrame({ id, sourceId }: Object, opts: Object = {}) {
     id,
     scope: { bindings: { variables: {}, arguments: [] } },
     location: { sourceId, line: 4 },
+    thread: "FakeThread",
     ...opts
   };
 }
