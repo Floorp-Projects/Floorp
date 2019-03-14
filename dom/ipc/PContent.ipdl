@@ -99,6 +99,7 @@ using refcounted class nsIInputStream from "mozilla/ipc/IPCStreamUtils.h";
 using refcounted class mozilla::dom::BrowsingContext from "mozilla/dom/BrowsingContext.h";
 using mozilla::dom::BrowsingContextId from "mozilla/dom/ipc/IdType.h";
 using mozilla::dom::BrowsingContextTransaction from "mozilla/dom/BrowsingContext.h";
+using mozilla::dom::BrowsingContextInitializer from "mozilla/dom/BrowsingContext.h";
 
 union ChromeRegistryItem
 {
@@ -776,6 +777,10 @@ child:
                                nsIURI aOriginalURI,
                                uint64_t aIdentifier);
 
+    // Begin subscribing to a new BrowsingContextGroup, sending down the current
+    // value for every individual BrowsingContext.
+    async RegisterBrowsingContextGroup(BrowsingContextInitializer[] aInits);
+
 parent:
     async InitBackground(Endpoint<PBackgroundParent> aEndpoint);
 
@@ -1252,10 +1257,7 @@ both:
      * once for any child BrowsingContext, and only for BrowsingContexts where
      * the parent and the child context contains their nsDocShell.
      */
-    async AttachBrowsingContext(BrowsingContext aParentContext,
-                                BrowsingContext aOpener,
-                                BrowsingContextId aContextId,
-                                nsString aName);
+    async AttachBrowsingContext(BrowsingContextInitializer aInit);
 
     /**
      * Remove the synced BrowsingContext 'aContext' from the parent.

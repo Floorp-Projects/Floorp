@@ -110,11 +110,6 @@ class BrowsingContext : public nsWrapperCache,
                                                   const nsAString& aName,
                                                   Type aType);
 
-  // Create a BrowsingContext object from over IPC.
-  static already_AddRefed<BrowsingContext> CreateFromIPC(
-      BrowsingContext* aParent, BrowsingContext* aOpener,
-      const nsAString& aName, uint64_t aId, ContentParent* aOriginProcess);
-
   // Cast this object to a canonical browsing context, and return it.
   CanonicalBrowsingContext* Canonical();
 
@@ -214,6 +209,15 @@ class BrowsingContext : public nsWrapperCache,
   using Children = nsTArray<RefPtr<BrowsingContext>>;
   const Children& GetChildren() { return mChildren; }
 
+  // Perform a pre-order walk of this BrowsingContext subtree.
+  template <typename Func>
+  void PreOrderWalk(Func&& aCallback) {
+    aCallback(this);
+    for (auto& child : GetChildren()) {
+      child->PreOrderWalk(aCallback);
+    }
+  }
+
   // Window APIs that are cross-origin-accessible (from the HTML spec).
   BrowsingContext* Window() { return Self(); }
   BrowsingContext* Self() { return this; }
@@ -277,11 +281,58 @@ class BrowsingContext : public nsWrapperCache,
   type const& Get##name() const { return m##name; }
 #include "mozilla/dom/BrowsingContextFieldList.h"
 
+  /**
+   * Information required to initialize a BrowsingContext in another process.
+   * This object may be serialized over IPC.
+   */
+  struct IPCInitializer {
+    uint64_t mId;
+
+    // IDs are used for Parent and Opener to allow for this object to be
+    // deserialized before other BrowsingContext in the BrowsingContextGroup
+    // have been initialized.
+    uint64_t mParentId;
+    uint64_t mOpenerId;
+    already_AddRefed<BrowsingContext> GetParent();
+    already_AddRefed<BrowsingContext> GetOpener();
+
+    // Include each field, skipping mOpener, as we want to handle it
+    // separately.
+#define MOZ_BC_FIELD_SKIP_OPENER
+#define MOZ_BC_FIELD(name, type) type m##name;
+#include "mozilla/dom/BrowsingContextFieldList.h"
+  };
+
+  // Create an IPCInitializer object for this BrowsingContext.
+  IPCInitializer GetIPCInitializer() {
+    IPCInitializer init;
+    init.mId = Id();
+    init.mParentId = mParent ? mParent->Id() : 0;
+    init.mOpenerId = mOpener ? mOpener->Id() : 0;
+
+#define MOZ_BC_FIELD_SKIP_OPENER
+#define MOZ_BC_FIELD(name, type) init.m##name = m##name;
+#include "mozilla/dom/BrowsingContextFieldList.h"
+    return init;
+  }
+
+  // Create a BrowsingContext object from over IPC. This method does not
+  // initialize the Opener field, which will need to be set after using the
+  // InitFromIPC method.
+  static already_AddRefed<BrowsingContext> CreateFromIPC(
+      IPCInitializer&& aInitializer, BrowsingContextGroup* aGroup,
+      ContentParent* aOriginProcess);
+
+  // Initialize the Opener property which was not set during CreateFromIPC.
+  void InitFromIPC(uint64_t aOpenerId) {
+    mOpener = BrowsingContext::Get(aOpenerId);
+    MOZ_RELEASE_ASSERT(mOpener || aOpenerId == 0);
+  }
+
  protected:
   virtual ~BrowsingContext();
-  BrowsingContext(BrowsingContext* aParent, BrowsingContext* aOpener,
-                  const nsAString& aName, uint64_t aBrowsingContextId,
-                  Type aType);
+  BrowsingContext(BrowsingContext* aParent, BrowsingContextGroup* aGroup,
+                  uint64_t aBrowsingContextId, Type aType);
 
  private:
   // Find the special browsing context if aName is '_self', '_parent',
@@ -391,6 +442,7 @@ extern bool GetRemoteOuterWindowProxy(JSContext* aCx, BrowsingContext* aContext,
                                       JS::MutableHandle<JSObject*> aRetVal);
 
 typedef BrowsingContext::Transaction BrowsingContextTransaction;
+typedef BrowsingContext::IPCInitializer BrowsingContextInitializer;
 
 }  // namespace dom
 
@@ -412,6 +464,16 @@ struct IPDLParamTraits<dom::BrowsingContext::Transaction> {
   static bool Read(const IPC::Message* aMessage, PickleIterator* aIterator,
                    IProtocol* aActor,
                    dom::BrowsingContext::Transaction* aTransaction);
+};
+
+template <>
+struct IPDLParamTraits<dom::BrowsingContext::IPCInitializer> {
+  static void Write(IPC::Message* aMessage, IProtocol* aActor,
+                    const dom::BrowsingContext::IPCInitializer& aInitializer);
+
+  static bool Read(const IPC::Message* aMessage, PickleIterator* aIterator,
+                   IProtocol* aActor,
+                   dom::BrowsingContext::IPCInitializer* aInitializer);
 };
 
 }  // namespace ipc

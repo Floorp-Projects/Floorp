@@ -5695,9 +5695,14 @@ mozilla::ipc::IPCResult ContentParent::RecvStoreUserInteractionAsPermission(
 }
 
 mozilla::ipc::IPCResult ContentParent::RecvAttachBrowsingContext(
-    BrowsingContext* aParent, BrowsingContext* aOpener,
-    BrowsingContextId aChildId, const nsString& aName) {
-  if (aParent && !aParent->Canonical()->IsOwnedByProcess(ChildID())) {
+    BrowsingContext::IPCInitializer&& aInit) {
+  RefPtr<CanonicalBrowsingContext> parent;
+  if (aInit.mParentId != 0) {
+    parent = CanonicalBrowsingContext::Get(aInit.mParentId);
+    MOZ_RELEASE_ASSERT(parent, "Parent doesn't exist in parent process");
+  }
+
+  if (parent && !parent->IsOwnedByProcess(ChildID())) {
     // Where trying attach a child BrowsingContext to a parent
     // BrowsingContext in another process. This is illegal since the
     // only thing that could create that child BrowsingContext is a
@@ -5712,11 +5717,11 @@ mozilla::ipc::IPCResult ContentParent::RecvAttachBrowsingContext(
     MOZ_LOG(BrowsingContext::GetLog(), LogLevel::Warning,
             ("ParentIPC: Trying to attach to out of process parent context "
              "0x%08" PRIx64,
-             aParent->Id()));
+             aInit.mParentId));
     return IPC_OK();
   }
 
-  RefPtr<BrowsingContext> child = BrowsingContext::Get(aChildId);
+  RefPtr<BrowsingContext> child = BrowsingContext::Get(aInit.mId);
   if (child && !child->IsCached()) {
     // This is highly suspicious. BrowsingContexts should only be
     // attached at most once, but finding one indicates that someone
@@ -5727,13 +5732,15 @@ mozilla::ipc::IPCResult ContentParent::RecvAttachBrowsingContext(
     MOZ_LOG(BrowsingContext::GetLog(), LogLevel::Warning,
             ("ParentIPC: Trying to attach already attached 0x%08" PRIx64
              " to 0x%08" PRIx64,
-             child->Id(), aParent ? aParent->Id() : 0));
+             aInit.mId, aInit.mParentId));
     return IPC_OK();
   }
 
   if (!child) {
-    child = BrowsingContext::CreateFromIPC(aParent, aOpener, aName,
-                                           (uint64_t)aChildId, this);
+    RefPtr<BrowsingContextGroup> group =
+      BrowsingContextGroup::Select(aInit.mParentId, aInit.mOpenerId);
+    child = BrowsingContext::CreateFromIPC(std::move(aInit), group, this);
+    child->InitFromIPC(aInit.mOpenerId);
   }
 
   child->Attach(/* aFromIPC */ true);

@@ -43,21 +43,32 @@ void BrowsingContextGroup::EnsureSubscribed(ContentParent* aProcess) {
     return;
   }
 
-  MOZ_RELEASE_ASSERT(
-      mContexts.Count() == 1,
-      "EnsureSubscribed doesn't work on non-fresh BrowsingContextGroups yet!");
-
   // Subscribe to the BrowsingContext, and send down initial state!
   Subscribe(aProcess);
 
-  // XXX(nika): We can't send down existing BrowsingContextGroups reliably yet
-  // due to ordering issues! (Bug ?)
+  // Iterate over each of our browsing contexts, locating those which are not in
+  // their parent's children list. We can then use those as starting points to
+  // get a pre-order walk of each tree.
+  nsTArray<BrowsingContext::IPCInitializer> inits(mContexts.Count());
   for (auto iter = mContexts.Iter(); !iter.Done(); iter.Next()) {
-    RefPtr<BrowsingContext> bc = iter.Get()->GetKey();
-    Unused << aProcess->SendAttachBrowsingContext(
-        bc->GetParent(), bc->GetOpener(), BrowsingContextId(bc->Id()),
-        bc->Name());
+    auto* context = iter.Get()->GetKey();
+
+    // If we have a parent, and are in our parent's `Children` list, skip
+    // ourselves as we'll be found in the pre-order traversal of our parent.
+    if (context->GetParent() &&
+        context->GetParent()->GetChildren().IndexOf(context) !=
+            BrowsingContext::Children::NoIndex) {
+      continue;
+    }
+
+    // Add all elements to the list in pre-order.
+    context->PreOrderWalk([&](BrowsingContext* aContext) {
+      inits.AppendElement(aContext->GetIPCInitializer());
+    });
   }
+
+  // Send all of our contexts to the target content process.
+  Unused << aProcess->SendRegisterBrowsingContextGroup(inits);
 }
 
 BrowsingContextGroup::~BrowsingContextGroup() {

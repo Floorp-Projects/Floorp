@@ -61,6 +61,28 @@ class BrowsingContextGroup final : public nsWrapperCache {
 
   BrowsingContextGroup() = default;
 
+  static already_AddRefed<BrowsingContextGroup> Select(
+      BrowsingContext* aParent, BrowsingContext* aOpener) {
+    if (aParent) {
+      return do_AddRef(aParent->Group());
+    }
+    if (aOpener) {
+      return do_AddRef(aOpener->Group());
+    }
+    return MakeAndAddRef<BrowsingContextGroup>();
+  }
+
+  static already_AddRefed<BrowsingContextGroup> Select(uint64_t aParentId,
+                                                       uint64_t aOpenerId) {
+    RefPtr<BrowsingContext> parent = BrowsingContext::Get(aParentId);
+    MOZ_RELEASE_ASSERT(parent || aParentId == 0);
+
+    RefPtr<BrowsingContext> opener = BrowsingContext::Get(aOpenerId);
+    MOZ_RELEASE_ASSERT(opener || aOpenerId == 0);
+
+    return Select(parent, opener);
+  }
+
  private:
   friend class CanonicalBrowsingContext;
 
