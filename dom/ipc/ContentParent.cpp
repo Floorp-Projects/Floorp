@@ -5888,6 +5888,13 @@ mozilla::ipc::IPCResult ContentParent::RecvCommitBrowsingContextTransaction(
     return IPC_OK();
   }
 
+  // Check if the transaction is valid.
+  if (!aContext->Canonical()->ValidateTransaction(aTransaction, this)) {
+    MOZ_LOG(BrowsingContext::GetLog(), LogLevel::Error,
+            ("ParentIPC: Trying to run invalid transaction."));
+    return IPC_FAIL_NO_REASON(this);
+  }
+
   for (auto iter = aContext->Group()->ContentParentsIter(); !iter.Done();
        iter.Next()) {
     auto* entry = iter.Get();
