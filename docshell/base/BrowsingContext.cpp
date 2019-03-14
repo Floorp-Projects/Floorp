@@ -688,7 +688,9 @@ void BrowsingContext::Transaction::Apply(BrowsingContext* aBrowsingContext,
                                          ContentParent* aSource) {
 #define MOZ_BC_FIELD(name, ...)                         \
   if (m##name) {                                        \
+    aBrowsingContext->WillSet##name(*m##name, aSource); \
     aBrowsingContext->m##name = std::move(*m##name);    \
+    aBrowsingContext->DidSet##name(aSource);            \
     m##name.reset();                                    \
   }
 #include "mozilla/dom/BrowsingContextFieldList.h"

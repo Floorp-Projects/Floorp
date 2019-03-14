@@ -62,8 +62,13 @@ class BrowsingContextBase {
   }
   ~BrowsingContextBase() = default;
 
-#define BC_FIELD(name, type) type m##name;
-#include "mozilla/dom/BCFieldList.h"
+#define MOZ_BC_FIELD(name, type)                                    \
+  type m##name;                                                     \
+                                                                    \
+  /* shadow to validate fields. aSource is setter process or null*/ \
+  void WillSet##name(type const& aValue, ContentParent* aSource) {} \
+  void DidSet##name(ContentParent* aSource) {}
+#include "mozilla/dom/BrowsingContextFieldList.h"
 };
 
 // BrowsingContext, in this context, is the cross process replicated
@@ -340,6 +345,14 @@ class BrowsingContext : public nsWrapperCache,
           uintptr_t(this) - offsetof(BrowsingContext, mLocation));
     }
   };
+
+  // Ensure that opener is in the same BrowsingContextGroup.
+  void WillSetOpener(const RefPtr<BrowsingContext>& aValue,
+                     ContentParent* aSource) {
+    if (aValue) {
+      MOZ_RELEASE_ASSERT(aValue->Group() == Group());
+    }
+  }
 
   // Type of BrowsingContent
   const Type mType;
