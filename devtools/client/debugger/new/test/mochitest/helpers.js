@@ -863,6 +863,11 @@ async function invokeWithBreakpoint(
   await invokeResult;
 }
 
+function prettyPrint(dbg) {
+  const sourceId = dbg.selectors.getSelectedSourceId(dbg.store.getState());
+  return dbg.actions.togglePrettyPrint(sourceId);
+}
+
 async function expandAllScopes(dbg) {
   const scopes = await waitForElement(dbg, "scopes");
   const scopeElements = scopes.querySelectorAll(
@@ -1086,6 +1091,22 @@ function isVisible(outerEl, innerEl) {
 
   const visible = verticallyVisible && horizontallyVisible;
   return visible;
+}
+
+function getEditorLineEl(dbg, line) {
+  const lines = dbg.win.document.querySelectorAll(".CodeMirror-code > div");
+  return lines[line - 1];
+}
+
+function assertEditorBreakpoint(dbg, line, shouldExist) {
+  const exists = !!getEditorLineEl(dbg, line).querySelector(".new-breakpoint");
+  ok(
+    exists === shouldExist,
+    "Breakpoint " +
+      (shouldExist ? "exists" : "does not exist") +
+      " on line " +
+      line
+  );
 }
 
 const selectors = {
