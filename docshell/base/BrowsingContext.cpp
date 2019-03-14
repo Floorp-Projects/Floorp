@@ -161,6 +161,7 @@ BrowsingContext::BrowsingContext(BrowsingContext* aParent,
       mType(aType),
       mBrowsingContextId(aBrowsingContextId),
       mParent(aParent),
+      mIsInProcess(false),
       mOpener(aOpener),
       mIsActivatedByUserGesture(false) {
   mCrossOriginPolicy = nsILoadInfo::CROSS_ORIGIN_POLICY_NULL;
@@ -184,6 +185,7 @@ void BrowsingContext::SetDocShell(nsIDocShell* aDocShell) {
   // process to the parent & do other validation here.
   MOZ_RELEASE_ASSERT(nsDocShell::Cast(aDocShell)->GetBrowsingContext() == this);
   mDocShell = aDocShell;
+  mIsInProcess = true;
 }
 
 void BrowsingContext::Attach(bool aFromIPC) {
@@ -240,6 +242,11 @@ void BrowsingContext::Detach(bool aFromIPC) {
   // By definition, we no longer are the current process for this
   // BrowsingContext - clear our now-dead nsDocShell reference.
   mDocShell = nullptr;
+
+  // As our nsDocShell is going away, this should implicitly mark us as closed.
+  // We directly set our member, rather than using a transaction as we're going
+  // to send a `Detach` message to other processes either way.
+  mClosed = true;
 
   if (!aFromIPC && XRE_IsContentProcess()) {
     auto cc = ContentChild::GetSingleton();
