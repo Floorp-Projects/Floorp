@@ -329,8 +329,6 @@ nsresult SVGMotionSMILType::ComputeDistance(const SMILValue& aFrom,
     const PathPointParams& toParams = to.mU.mPathPointParams;
     MOZ_ASSERT(fromParams.mPath == toParams.mPath,
                "Interpolation endpoints should be from same path");
-    MOZ_ASSERT(fromParams.mDistToPoint <= toParams.mDistToPoint,
-               "To value shouldn't be before from value on path");
     aDistance = fabs(toParams.mDistToPoint - fromParams.mDistToPoint);
   } else {
     const TranslationParams& fromParams = from.mU.mTranslationParams;
