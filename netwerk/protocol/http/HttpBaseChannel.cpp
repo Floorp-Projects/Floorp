@@ -64,6 +64,7 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Move.h"
 #include "mozilla/net/PartiallySeekableInputStream.h"
+#include "mozilla/net/UrlClassifierCommon.h"
 #include "mozilla/InputStreamLengthHelper.h"
 #include "nsIHttpHeaderVisitor.h"
 #include "nsIMIMEInputStream.h"
@@ -1474,9 +1475,10 @@ bool
 HttpBaseChannel::IsTrackingResource() const {
   MOZ_ASSERT(!mFirstPartyClassificationFlags ||
              !mThirdPartyClassificationFlags);
-  return
-      (mThirdPartyClassificationFlags & nsIHttpChannel::ClassificationFlags::CLASSIFIED_TRACKING) ||
-      (mFirstPartyClassificationFlags & nsIHttpChannel::ClassificationFlags::CLASSIFIED_TRACKING);
+  return UrlClassifierCommon::IsTrackingClassificationFlag(
+             mThirdPartyClassificationFlags) ||
+         UrlClassifierCommon::IsTrackingClassificationFlag(
+             mFirstPartyClassificationFlags);
 }
 
 NS_IMETHODIMP
@@ -1489,7 +1491,8 @@ bool
 HttpBaseChannel::IsThirdPartyTrackingResource() const {
   MOZ_ASSERT(
       !(mFirstPartyClassificationFlags && mThirdPartyClassificationFlags));
-  return (mThirdPartyClassificationFlags & nsIHttpChannel::ClassificationFlags::CLASSIFIED_TRACKING);
+  return UrlClassifierCommon::IsTrackingClassificationFlag(
+      mThirdPartyClassificationFlags);
 }
 
 NS_IMETHODIMP
