@@ -32,6 +32,12 @@ child:
    */
   async RequestFocus(bool canRaise);
 
+  /**
+   * When IPC parent / Web child sends this message, the IPC child / Web parent
+   * should move focus to the next or previous focusable element or document.
+   */
+  async MoveFocus(bool forward, bool forDocumentNavigation);
+
 parent:
   // Destroy the remote web browser due to the nsFrameLoader going away.
   async __delete__();
