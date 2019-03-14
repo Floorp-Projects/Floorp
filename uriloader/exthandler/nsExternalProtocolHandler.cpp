@@ -436,8 +436,8 @@ NS_IMETHODIMP nsExtProtocolChannel::OnStopRequest(nsIRequest *aRequest,
 }
 
 NS_IMETHODIMP nsExtProtocolChannel::OnDataAvailable(
-    nsIRequest *aRequest, nsIInputStream *aInputStream,
-    uint64_t aOffset, uint32_t aCount) {
+    nsIRequest *aRequest, nsIInputStream *aInputStream, uint64_t aOffset,
+    uint32_t aCount) {
   // no data is expected
   MOZ_CRASH("No data expected from external protocol channel");
   return NS_ERROR_UNEXPECTED;

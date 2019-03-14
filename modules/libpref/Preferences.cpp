@@ -2065,9 +2065,7 @@ nsPrefBranch::nsPrefBranch(const char* aPrefRoot, PrefValueKind aKind)
   }
 }
 
-nsPrefBranch::~nsPrefBranch() {
-  FreeObserverList();
-}
+nsPrefBranch::~nsPrefBranch() { FreeObserverList(); }
 
 NS_IMPL_ISUPPORTS(nsPrefBranch, nsIPrefBranch, nsIObserver,
                   nsISupportsWeakReference)
@@ -5460,4 +5458,4 @@ namespace mozilla {
 
 void UnloadPrefsModule() { Preferences::Shutdown(); }
 
-}
+}  // namespace mozilla

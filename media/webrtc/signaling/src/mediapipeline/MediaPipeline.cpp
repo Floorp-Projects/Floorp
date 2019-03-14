@@ -259,7 +259,7 @@ class VideoFrameConverter {
               ("Sending a black video frame"));
       webrtc::I420Buffer::SetBlack(buffer);
 
-      webrtc::VideoFrame frame(buffer, 0, // not setting rtp timestamp
+      webrtc::VideoFrame frame(buffer, 0,  // not setting rtp timestamp
                                now, webrtc::kVideoRotation_0);
       VideoFrameConverted(frame);
       return;
@@ -280,7 +280,7 @@ class VideoFrameConverter {
                 rtc::KeepRefUntilDone(image)));
 
         webrtc::VideoFrame i420_frame(video_frame_buffer,
-                                      0, // not setting rtp timestamp
+                                      0,  // not setting rtp timestamp
                                       now, webrtc::kVideoRotation_0);
         MOZ_LOG(gMediaPipelineLog, LogLevel::Debug,
                 ("Sending an I420 video frame"));
@@ -311,7 +311,7 @@ class VideoFrameConverter {
       return;
     }
 
-    webrtc::VideoFrame frame(buffer, 0, //not setting rtp timestamp
+    webrtc::VideoFrame frame(buffer, 0,  // not setting rtp timestamp
                              now, webrtc::kVideoRotation_0);
     VideoFrameConverted(frame);
   }

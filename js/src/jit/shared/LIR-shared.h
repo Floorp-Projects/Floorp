@@ -6635,10 +6635,12 @@ class LWasmAtomicBinopHeapForEffect : public LInstructionHelper<0, 3, 5> {
 class LWasmLoadSlot : public LInstructionHelper<1, 1, 0> {
   size_t offset_;
   MIRType type_;
+
  public:
   LIR_HEADER(WasmLoadSlot);
-  explicit LWasmLoadSlot(const LAllocation& containerRef, size_t offset, MIRType type)
-    : LInstructionHelper(classOpcode), offset_(offset), type_(type) {
+  explicit LWasmLoadSlot(const LAllocation& containerRef, size_t offset,
+                         MIRType type)
+      : LInstructionHelper(classOpcode), offset_(offset), type_(type) {
     setOperand(0, containerRef);
   }
   const LAllocation* containerRef() { return getOperand(0); }
@@ -6648,10 +6650,11 @@ class LWasmLoadSlot : public LInstructionHelper<1, 1, 0> {
 
 class LWasmLoadSlotI64 : public LInstructionHelper<INT64_PIECES, 1, 0> {
   size_t offset_;
+
  public:
   LIR_HEADER(WasmLoadSlotI64);
   explicit LWasmLoadSlotI64(const LAllocation& containerRef, size_t offset)
-    : LInstructionHelper(classOpcode), offset_(offset) {
+      : LInstructionHelper(classOpcode), offset_(offset) {
     setOperand(0, containerRef);
   }
   const LAllocation* containerRef() { return getOperand(0); }
@@ -6661,11 +6664,12 @@ class LWasmLoadSlotI64 : public LInstructionHelper<INT64_PIECES, 1, 0> {
 class LWasmStoreSlot : public LInstructionHelper<0, 2, 0> {
   size_t offset_;
   MIRType type_;
+
  public:
   LIR_HEADER(WasmStoreSlot);
   LWasmStoreSlot(const LAllocation& value, const LAllocation& containerRef,
                  size_t offset, MIRType type)
-    : LInstructionHelper(classOpcode), offset_(offset), type_(type) {
+      : LInstructionHelper(classOpcode), offset_(offset), type_(type) {
     setOperand(0, value);
     setOperand(1, containerRef);
   }
@@ -6675,15 +6679,14 @@ class LWasmStoreSlot : public LInstructionHelper<0, 2, 0> {
   MIRType type() const { return type_; }
 };
 
-class LWasmStoreSlotI64
-    : public LInstructionHelper<0, INT64_PIECES + 1, 0> {
+class LWasmStoreSlotI64 : public LInstructionHelper<0, INT64_PIECES + 1, 0> {
   size_t offset_;
+
  public:
   LIR_HEADER(WasmStoreSlotI64);
   LWasmStoreSlotI64(const LInt64Allocation& value,
-                    const LAllocation& containerRef,
-                    size_t offset)
-    : LInstructionHelper(classOpcode), offset_(offset) {
+                    const LAllocation& containerRef, size_t offset)
+      : LInstructionHelper(classOpcode), offset_(offset) {
     setInt64Operand(0, value);
     setOperand(INT64_PIECES, containerRef);
   }
@@ -6696,7 +6699,7 @@ class LWasmDerivedPointer : public LInstructionHelper<1, 1, 0> {
  public:
   LIR_HEADER(WasmDerivedPointer);
   explicit LWasmDerivedPointer(const LAllocation& base)
-    : LInstructionHelper(classOpcode) {
+      : LInstructionHelper(classOpcode) {
     setOperand(0, base);
   }
   const LAllocation* base() { return getOperand(0); }
@@ -6707,7 +6710,7 @@ class LWasmLoadRef : public LInstructionHelper<1, 1, 0> {
  public:
   LIR_HEADER(WasmLoadRef);
   explicit LWasmLoadRef(const LAllocation& ptr)
-    : LInstructionHelper(classOpcode) {
+      : LInstructionHelper(classOpcode) {
     setOperand(0, ptr);
   }
   MWasmLoadRef* mir() const { return mirRaw()->toWasmLoadRef(); }
@@ -6719,7 +6722,7 @@ class LWasmStoreRef : public LInstructionHelper<0, 3, 1> {
   LIR_HEADER(WasmStoreRef);
   LWasmStoreRef(const LAllocation& tls, const LAllocation& valueAddr,
                 const LAllocation& value, const LDefinition& temp)
-    : LInstructionHelper(classOpcode) {
+      : LInstructionHelper(classOpcode) {
     setOperand(0, tls);
     setOperand(1, valueAddr);
     setOperand(2, value);
@@ -6800,16 +6803,14 @@ inline bool IsWasmCall(LNode::Opcode op) {
 class LWasmNullConstant : public LInstructionHelper<1, 0, 0> {
  public:
   LIR_HEADER(WasmNullConstant);
-  explicit LWasmNullConstant()
-      : LInstructionHelper(classOpcode) {
-  }
+  explicit LWasmNullConstant() : LInstructionHelper(classOpcode) {}
 };
 
 class LIsNullPointer : public LInstructionHelper<1, 1, 0> {
  public:
   LIR_HEADER(IsNullPointer);
   explicit LIsNullPointer(const LAllocation& value)
-    : LInstructionHelper(classOpcode) {
+      : LInstructionHelper(classOpcode) {
     setOperand(0, value);
   }
   MIsNullPointer* mir() const { return mirRaw()->toIsNullPointer(); }

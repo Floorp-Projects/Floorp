@@ -269,7 +269,8 @@ static void CollectCurrentScrollPosition(JSContext* aCx, Document& aDocument,
   int scrollY = nsPresContext::AppUnitsToIntCSSPixels(scrollPos.y);
 
   if ((scrollX != 0) || (scrollY != 0)) {
-    aRetVal.SetValue().mScroll.Construct() = nsPrintfCString("%d,%d", scrollX, scrollY);
+    aRetVal.SetValue().mScroll.Construct() =
+        nsPrintfCString("%d,%d", scrollX, scrollY);
   }
 }
 
@@ -674,7 +675,8 @@ static void CollectCurrentFormData(JSContext* aCx, Document& aDocument,
 
   Element* bodyElement = aDocument.GetBody();
   if (aDocument.HasFlag(NODE_IS_EDITABLE) && bodyElement) {
-    bodyElement->GetInnerHTML(aRetVal.SetValue().mInnerHTML.Construct(), IgnoreErrors());
+    bodyElement->GetInnerHTML(aRetVal.SetValue().mInnerHTML.Construct(),
+                              IgnoreErrors());
   }
 
   if (aRetVal.IsNull()) {
@@ -1174,7 +1176,8 @@ void SessionStoreUtils::RestoreSessionStorage(
   }
 }
 
-typedef void (*CollectorFunc)(JSContext* aCx, Document& aDocument, Nullable<CollectedData>& aRetVal);
+typedef void (*CollectorFunc)(JSContext* aCx, Document& aDocument,
+                              Nullable<CollectedData>& aRetVal);
 
 /**
  * A function that will recursively call |CollectorFunc| to collect data for all
@@ -1235,11 +1238,13 @@ static void CollectFrameTreeData(JSContext* aCx,
 /* static */ void SessionStoreUtils::CollectScrollPosition(
     const GlobalObject& aGlobal, WindowProxyHolder& aWindow,
     Nullable<CollectedData>& aRetVal) {
-  CollectFrameTreeData(aGlobal.Context(), aWindow.get(), aRetVal, CollectCurrentScrollPosition);
+  CollectFrameTreeData(aGlobal.Context(), aWindow.get(), aRetVal,
+                       CollectCurrentScrollPosition);
 }
 
 /* static */ void SessionStoreUtils::CollectFormData(
     const GlobalObject& aGlobal, WindowProxyHolder& aWindow,
     Nullable<CollectedData>& aRetVal) {
-  CollectFrameTreeData(aGlobal.Context(), aWindow.get(), aRetVal, CollectCurrentFormData);
+  CollectFrameTreeData(aGlobal.Context(), aWindow.get(), aRetVal,
+                       CollectCurrentFormData);
 }

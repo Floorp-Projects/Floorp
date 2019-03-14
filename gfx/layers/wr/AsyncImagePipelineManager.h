@@ -53,8 +53,7 @@ class AsyncImagePipelineManager final {
   WebRenderBridgeParent* GetWrBridge(const wr::PipelineId& aPipelineId);
 
   void HoldExternalImage(const wr::PipelineId& aPipelineId,
-                         const wr::Epoch& aEpoch,
-                         TextureHost* aTexture);
+                         const wr::Epoch& aEpoch, TextureHost* aTexture);
   void HoldExternalImage(const wr::PipelineId& aPipelineId,
                          const wr::Epoch& aEpoch,
                          WebRenderTextureHostWrapper* aWrTextureWrapper);
