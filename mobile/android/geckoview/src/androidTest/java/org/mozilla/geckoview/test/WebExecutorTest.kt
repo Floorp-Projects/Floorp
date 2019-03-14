@@ -8,7 +8,6 @@ import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
-import android.support.test.InstrumentationRegistry
 
 import android.support.test.filters.MediumTest
 import android.support.test.filters.SdkSuppress
@@ -67,7 +66,7 @@ class WebExecutorTest {
         val latch = CountDownLatch(1)
         Handler(Looper.getMainLooper()).post {
             executor = GeckoWebExecutor(RuntimeCreator.getRuntime())
-            server = HttpBin(InstrumentationRegistry.getTargetContext(), URI.create(TEST_ENDPOINT))
+            server = HttpBin(URI.create(TEST_ENDPOINT))
             server.start()
             latch.countDown()
         }
@@ -96,14 +95,9 @@ class WebExecutorTest {
         return buffer
     }
 
-    fun WebResponse.getBodyBytes(): ByteBuffer {
-        return ByteBuffer.wrap(body!!.readBytes())
-    }
-
     fun WebResponse.getJSONBody(): JSONObject {
-        val bytes = this.getBodyBytes()
-        val bodyString = Charset.forName("UTF-8").decode(bytes).toString()
-        return JSONObject(bodyString)
+        val bytes = ByteBuffer.wrap(body!!.readBytes())
+        return JSONObject(Charset.forName("UTF-8").decode(bytes).toString())
     }
 
     @Test
@@ -137,13 +131,6 @@ class WebExecutorTest {
         assertThat("Headers should match", body.getJSONObject("headers").getString("Content-Type"), equalTo("text/plain"))
         assertThat("Referrer should match", body.getJSONObject("headers").getString("Referer"), equalTo(referrer))
         assertThat("Data should match", body.getString("data"), equalTo(bodyString));
-    }
-
-    @Test
-    fun testFetchAsset() {
-        val response = fetch(WebRequest("$TEST_ENDPOINT/assets/www/hello.html"))
-        assertThat("Status should match", response.statusCode, equalTo(200))
-        assertThat("Body should have bytes", response.getBodyBytes().remaining(), greaterThan(0))
     }
 
     @Test
