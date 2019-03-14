@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/BrowserBridgeChild.h"
+#include "nsFocusManager.h"
 #include "nsFrameLoader.h"
 #include "nsFrameLoaderOwner.h"
 #include "nsQueryObject.h"
@@ -108,6 +109,29 @@ IPCResult BrowserBridgeChild::RecvSetLayersId(
     const mozilla::layers::LayersId& aLayersId) {
   MOZ_ASSERT(!mLayersId.IsValid() && aLayersId.IsValid());
   mLayersId = aLayersId;
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult BrowserBridgeChild::RecvRequestFocus(
+    const bool& aCanRaise) {
+  // Adapted from TabParent
+  nsCOMPtr<nsIFocusManager> fm = nsFocusManager::GetFocusManager();
+  if (!fm) {
+    return IPC_OK();
+  }
+
+  RefPtr<Element> owner = mFrameLoader->GetOwnerContent();
+
+  if (!owner || !owner->OwnerDoc()) {
+    return IPC_OK();
+  }
+
+  uint32_t flags = nsIFocusManager::FLAG_NOSCROLL;
+  if (aCanRaise) {
+    flags |= nsIFocusManager::FLAG_RAISE;
+  }
+
+  fm->SetFocus(owner, flags);
   return IPC_OK();
 }
 
