@@ -897,9 +897,11 @@ public class BrowserApp extends GeckoApp
 
         switch (input) {
             case TEXT:
+                cleanupForNewTabEditing();
                 handleTabEditingMode(false);
                 return true;
             case VOICE:
+                cleanupForNewTabEditing();
                 handleTabEditingMode(true);
                 return true;
             default:
@@ -907,6 +909,11 @@ public class BrowserApp extends GeckoApp
                 Log.e(LOGTAG, "can't handle search action :: input == " + input);
                 return false;
         }
+    }
+
+    private void cleanupForNewTabEditing() {
+        closeOptionsMenu();
+        autoHideTabs();
     }
 
     private synchronized void handleTabEditingMode(boolean isVoice) {
