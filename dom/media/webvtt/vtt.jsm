@@ -519,7 +519,11 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
         PARSE_CONTENT_MODE.PSUEDO_CUE : PARSE_CONTENT_MODE.NORMAL_CUE);
       this.div.appendChild(this.cueDiv);
 
+      this.containerHeight = containerBox.height;
+      this.containerWidth = containerBox.width;
       this.fontSize = this._getFontSize(containerBox);
+      this.isCueStyleBox = true;
+
       // As pseudo element won't inherit the parent div's style, so we have to
       // set the font size explicitly.
       if (supportPseudo) {
@@ -528,6 +532,24 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
         this._applyNonPseudoCueStyles();
       }
       this.applyStyles(this._getNodeDefaultStyles(cue));
+    }
+
+    getCueBoxPositionAndSize() {
+      // As `top`, `left`, `width` and `height` are all represented by the
+      // percentage of the container, we need to convert them to the actual
+      // number according to the container's size.
+      const isWritingDirectionHorizontal = this.cue.vertical == "";
+      let top =
+            this.containerHeight * this._tranferPercentageToFloat(this.div.style.top),
+          left =
+            this.containerWidth * this._tranferPercentageToFloat(this.div.style.left),
+          width = isWritingDirectionHorizontal ?
+            this.containerWidth * this._tranferPercentageToFloat(this.div.style.width) :
+            this.div.offsetWidth,
+          height = isWritingDirectionHorizontal ?
+            this.div.offsetHeight :
+            this.containerHeight * this._tranferPercentageToFloat(this.div.style.height);
+      return { top, left, width, height };
     }
 
     move(box) {
@@ -545,6 +567,10 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
      * Following methods are private functions, should not use them outside this
      * class.
      */
+    _tranferPercentageToFloat(input) {
+      return input.replace("%", "") / 100.0;
+    }
+
     _getFontSize(containerBox) {
       // In https://www.w3.org/TR/webvtt1/#applying-css-properties, the spec
       // said the font size is '5vh', which means 5% of the viewport height.
@@ -751,150 +777,126 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
   RegionCueStyleBox.prototype.constructor = RegionCueStyleBox;
 
   // Represents the co-ordinates of an Element in a way that we can easily
-  // compute things with such as if it overlaps or intersects with another Element.
-  // Can initialize it with either a StyleBox or another BoxPosition.
-  function BoxPosition(obj) {
-    // Either a BoxPosition was passed in and we need to copy it, or a StyleBox
-    // was passed in and we need to copy the results of 'getBoundingClientRect'
-    // as the object returned is readonly. All co-ordinate values are in reference
-    // to the viewport origin (top left).
-    var lh, height, width, top;
-    if (obj.div) {
-      height = obj.div.offsetHeight;
-      width = obj.div.offsetWidth;
-      top = obj.div.offsetTop;
-
-      var rects = (rects = obj.div.childNodes) && (rects = rects[0]) &&
-                  rects.getClientRects && rects.getClientRects();
-      obj = obj.div.getBoundingClientRect();
-      // In certain cases the outter div will be slightly larger then the sum of
-      // the inner div's lines. This could be due to bold text, etc, on some platforms.
-      // In this case we should get the average line height and use that. This will
-      // result in the desired behaviour.
-      lh = rects ? Math.max((rects[0] && rects[0].height) || 0, obj.height / rects.length)
-                 : 0;
-
+  // compute things with such as if it overlaps or intersects with other boxes.
+  class BoxPosition {
+    constructor(obj) {
+      // Get dimensions by calling getCueBoxPositionAndSize on a CueStyleBox, by
+      // getting offset properties from an HTMLElement (from the object or its
+      // `div` property), otherwise look at the regular box properties on the
+      // object.
+      const isHTMLElement = !obj.isCueStyleBox && (obj.div || obj.tagName);
+      obj = obj.isCueStyleBox ? obj.getCueBoxPositionAndSize() : obj.div || obj;
+      this.top = isHTMLElement ? obj.offsetTop : obj.top;
+      this.left = isHTMLElement ? obj.offsetLeft : obj.left;
+      this.width = isHTMLElement ? obj.offsetWidth : obj.width;
+      this.height = isHTMLElement ? obj.offsetHeight : obj.height;
     }
-    this.left = obj.left;
-    this.right = obj.right;
-    this.top = obj.top || top;
-    this.height = obj.height || height;
-    this.bottom = obj.bottom || (top + (obj.height || height));
-    this.width = obj.width || width;
-    this.lineHeight = lh !== undefined ? lh : obj.lineHeight;
-  }
 
-  // Move the box along a particular axis. Optionally pass in an amount to move
-  // the box. If no amount is passed then the default is the line height of the
-  // box.
-  BoxPosition.prototype.move = function(axis, toMove) {
-    toMove = toMove !== undefined ? toMove : this.lineHeight;
-    switch (axis) {
-    case "+x":
-      this.left += toMove;
-      this.right += toMove;
-      break;
-    case "-x":
-      this.left -= toMove;
-      this.right -= toMove;
-      break;
-    case "+y":
-      this.top += toMove;
-      this.bottom += toMove;
-      break;
-    case "-y":
-      this.top -= toMove;
-      this.bottom -= toMove;
-      break;
+    get bottom() {
+      return this.top + this.height;
     }
-  };
 
-  // Check if this box overlaps another box, b2.
-  BoxPosition.prototype.overlaps = function(b2) {
-    return this.left < b2.right &&
-           this.right > b2.left &&
-           this.top < b2.bottom &&
-           this.bottom > b2.top;
-  };
+    get right() {
+      return this.left + this.width;
+    }
 
-  // Check if this box overlaps any other boxes in boxes.
-  BoxPosition.prototype.overlapsAny = function(boxes) {
-    for (var i = 0; i < boxes.length; i++) {
-      if (this.overlaps(boxes[i])) {
-        return true;
+    // Move the box along a particular axis. Optionally pass in an amount to move
+    // the box. If no amount is passed then the default is the line height of the
+    // box.
+    move(axis, toMove) {
+      switch (axis) {
+      case "+x":
+        this.left += toMove;
+        break;
+      case "-x":
+        this.left -= toMove;
+        break;
+      case "+y":
+        this.top += toMove;
+        break;
+      case "-y":
+        this.top -= toMove;
+        break;
       }
     }
-    return false;
-  };
 
-  // Check if this box is within another box.
-  BoxPosition.prototype.within = function(container) {
-    return this.top >= container.top &&
-           this.bottom <= container.bottom &&
-           this.left >= container.left &&
-           this.right <= container.right;
-  };
-
-  // Check if this box is entirely within the container or it is overlapping
-  // on the edge opposite of the axis direction passed. For example, if "+x" is
-  // passed and the box is overlapping on the left edge of the container, then
-  // return true.
-  BoxPosition.prototype.overlapsOppositeAxis = function(container, axis) {
-    switch (axis) {
-    case "+x":
-      return this.left < container.left;
-    case "-x":
-      return this.right > container.right;
-    case "+y":
-      return this.top < container.top;
-    case "-y":
-      return this.bottom > container.bottom;
+    // Check if this box overlaps another box, b2.
+    overlaps(b2) {
+      return this.left < b2.right &&
+             this.right > b2.left &&
+             this.top < b2.bottom &&
+             this.bottom > b2.top;
     }
-  };
 
-  // Find the percentage of the area that this box is overlapping with another
-  // box.
-  BoxPosition.prototype.intersectPercentage = function(b2) {
-    var x = Math.max(0, Math.min(this.right, b2.right) - Math.max(this.left, b2.left)),
-        y = Math.max(0, Math.min(this.bottom, b2.bottom) - Math.max(this.top, b2.top)),
-        intersectArea = x * y;
-    return intersectArea / (this.height * this.width);
-  };
+    // Check if this box overlaps any other boxes in boxes.
+    overlapsAny(boxes) {
+      for (let i = 0; i < boxes.length; i++) {
+        if (this.overlaps(boxes[i])) {
+          return true;
+        }
+      }
+      return false;
+    }
 
-  // Convert the positions from this box to CSS compatible positions using
-  // the reference container's positions. This has to be done because this
-  // box's positions are in reference to the viewport origin, whereas, CSS
-  // values are in referecne to their respective edges.
-  BoxPosition.prototype.toCSSCompatValues = function(reference) {
-    return {
-      top: this.top - reference.top,
-      bottom: reference.bottom - this.bottom,
-      left: this.left - reference.left,
-      right: reference.right - this.right,
-      height: this.height,
-      width: this.width
-    };
-  };
+    // Check if this box overlaps any other boxes in boxes.
+    overlapsAny(boxes) {
+      for (let i = 0; i < boxes.length; i++) {
+        if (this.overlaps(boxes[i])) {
+          return true;
+        }
+      }
+      return false;
+    }
 
-  // Get an object that represents the box's position without anything extra.
-  // Can pass a StyleBox, HTMLElement, or another BoxPositon.
-  BoxPosition.getSimpleBoxPosition = function(obj) {
-    var height = obj.div ? obj.div.offsetHeight : obj.tagName ? obj.offsetHeight : 0;
-    var width = obj.div ? obj.div.offsetWidth : obj.tagName ? obj.offsetWidth : 0;
-    var top = obj.div ? obj.div.offsetTop : obj.tagName ? obj.offsetTop : 0;
+    // Check if this box is within another box.
+    within(container) {
+      return this.top >= container.top &&
+             this.bottom <= container.bottom &&
+             this.left >= container.left &&
+             this.right <= container.right;
+    }
 
-    obj = obj.div ? obj.div.getBoundingClientRect() :
-                  obj.tagName ? obj.getBoundingClientRect() : obj;
-    var ret = {
-      left: obj.left,
-      right: obj.right,
-      top: obj.top || top,
-      height: obj.height || height,
-      bottom: obj.bottom || (top + (obj.height || height)),
-      width: obj.width || width
-    };
-    return ret;
-  };
+    // Check if this box is entirely within the container or it is overlapping
+    // on the edge opposite of the axis direction passed. For example, if "+x" is
+    // passed and the box is overlapping on the left edge of the container, then
+    // return true.
+    overlapsOppositeAxis(container, axis) {
+      switch (axis) {
+      case "+x":
+        return this.left < container.left;
+      case "-x":
+        return this.right > container.right;
+      case "+y":
+        return this.top < container.top;
+      case "-y":
+        return this.bottom > container.bottom;
+      }
+    }
+
+    // Find the percentage of the area that this box is overlapping with another
+    // box.
+    intersectPercentage(b2) {
+      let x = Math.max(0, Math.min(this.right, b2.right) - Math.max(this.left, b2.left)),
+          y = Math.max(0, Math.min(this.bottom, b2.bottom) - Math.max(this.top, b2.top)),
+          intersectArea = x * y;
+      return intersectArea / (this.height * this.width);
+    }
+
+    // Convert the positions from this box to CSS compatible positions using
+    // the reference container's positions. This has to be done because this
+    // box's positions are in reference to the viewport origin, whereas, CSS
+    // values are in referecne to their respective edges.
+    toCSSCompatValues(reference) {
+      return {
+        top: this.top - reference.top,
+        bottom: reference.bottom - this.bottom,
+        left: this.left - reference.left,
+        right: reference.right - this.right,
+        height: this.height,
+        width: this.width
+      };
+    }
+  }
 
   // Move a StyleBox to its specified, or next best, position. The containerBox
   // is the box that contains the StyleBox, such as a div. boxPositions are
@@ -1113,13 +1115,13 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
     overlay.appendChild(rootOfCues);
 
     var boxPositions = [],
-        containerBox = BoxPosition.getSimpleBoxPosition(rootOfCues);
+        containerBox = new BoxPosition(rootOfCues);
 
     (function() {
       var styleBox, cue, controlBarBox;
 
       if (controlBarShown) {
-        controlBarBox = BoxPosition.getSimpleBoxPosition(controlBar);
+        controlBarBox = new BoxPosition(controlBar);
         // Add an empty output box that cover the same region as video control bar.
         boxPositions.push(controlBarBox);
       }
@@ -1138,7 +1140,7 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
           if (!regionNodeBoxes[cue.region.id]) {
             // create regionNode
             // Adjust the container hieght to exclude the controlBar
-            var adjustContainerBox = BoxPosition.getSimpleBoxPosition(rootOfCues);
+            var adjustContainerBox = new BoxPosition(rootOfCues);
             if (controlBarShown) {
               adjustContainerBox.height -= controlBarBox.height;
               adjustContainerBox.bottom += controlBarBox.height;
@@ -1160,7 +1162,7 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
           currentRegionNodeDiv.appendChild(styleBox.div);
           rootOfCues.appendChild(currentRegionNodeDiv);
           cue.displayState = styleBox.div;
-          boxPositions.push(BoxPosition.getSimpleBoxPosition(currentRegionBox));
+          boxPositions.push(new BoxPosition(currentRegionBox));
         } else {
           // Compute the intial position and styles of the cue div.
           styleBox = new CueStyleBox(window, cue, containerBox);
@@ -1173,7 +1175,7 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
           // if we don't have too.
           cue.displayState = styleBox.div;
 
-          boxPositions.push(BoxPosition.getSimpleBoxPosition(styleBox));
+          boxPositions.push(new BoxPosition(styleBox));
         }
       }
     })();
