@@ -1895,6 +1895,12 @@ mozilla::ipc::IPCResult TabParent::RecvOnWindowedPluginKeyEvent(
 }
 
 mozilla::ipc::IPCResult TabParent::RecvRequestFocus(const bool& aCanRaise) {
+  BrowserBridgeParent* bridgeParent = GetBrowserBridgeParent();
+  if (bridgeParent) {
+    mozilla::Unused << bridgeParent->SendRequestFocus(aCanRaise);
+    return IPC_OK();
+  }
+
   nsCOMPtr<nsIFocusManager> fm = nsFocusManager::GetFocusManager();
   if (!fm) {
     return IPC_OK();
