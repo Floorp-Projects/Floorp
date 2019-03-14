@@ -610,8 +610,7 @@ class ContentParent final : public PContentParent,
   static bool IsInputEventQueueSupported();
 
   mozilla::ipc::IPCResult RecvAttachBrowsingContext(
-      BrowsingContext* aParentContext, BrowsingContext* aOpener,
-      BrowsingContextId aContextId, const nsString& aName);
+      BrowsingContext::IPCInitializer&& aInit);
 
   mozilla::ipc::IPCResult RecvDetachBrowsingContext(BrowsingContext* aContext,
                                                     bool aMoveToBFCache);

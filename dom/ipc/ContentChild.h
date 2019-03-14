@@ -714,11 +714,13 @@ class ContentChild final : public PContentChild,
   virtual void OnChannelReceivedMessage(const Message& aMsg) override;
 
   mozilla::ipc::IPCResult RecvAttachBrowsingContext(
-      BrowsingContext* aParentContext, BrowsingContext* aOpener,
-      BrowsingContextId aContextId, const nsString& aName);
+      BrowsingContext::IPCInitializer&& aInit);
 
   mozilla::ipc::IPCResult RecvDetachBrowsingContext(BrowsingContext* aContext,
                                                     bool aMoveToBFCache);
+
+  mozilla::ipc::IPCResult RecvRegisterBrowsingContextGroup(
+      nsTArray<BrowsingContext::IPCInitializer>&& aInits);
 
   mozilla::ipc::IPCResult RecvWindowClose(BrowsingContext* aContext,
                                           bool aTrustedCaller);
