@@ -11,6 +11,8 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.ref.WeakReference;
 import java.util.UUID;
 
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.GeckoAppShell;
@@ -343,6 +345,7 @@ public class GeckoSession implements Parcelable {
                 "GeckoView:ExternalResponse",
                 "GeckoView:FullScreenEnter",
                 "GeckoView:FullScreenExit",
+                "GeckoView:WebAppManifest",
             }
         ) {
             @Override
@@ -382,6 +385,17 @@ public class GeckoSession implements Parcelable {
                     delegate.onFullScreen(GeckoSession.this, false);
                 } else if ("GeckoView:ExternalResponse".equals(event)) {
                     delegate.onExternalResponse(GeckoSession.this, new WebResponseInfo(message));
+                } else if ("GeckoView:WebAppManifest".equals(event)) {
+                    final GeckoBundle manifest = message.getBundle("manifest");
+                    if (manifest == null) {
+                        return;
+                    }
+
+                    try {
+                        delegate.onWebAppManifest(GeckoSession.this, manifest.toJSONObject());
+                    } catch (JSONException e) {
+                        Log.e(LOGTAG, "Failed to convert web app manifest to JSON", e);
+                    }
                 }
             }
         };
@@ -2757,6 +2771,16 @@ public class GeckoSession implements Parcelable {
          */
         @UiThread
         default void onFirstComposite(@NonNull GeckoSession session) {}
+
+        /**
+         * This is fired when the loaded document has a valid Web App Manifest present.
+         *
+         * @param session The GeckoSession that contains the Web App Manifest
+         * @param manifest A parsed and validated {@link JSONObject} containing the manifest contents.
+         * @see <a href="https://www.w3.org/TR/appmanifest/">Web App Manifest specification</a>
+         */
+        @UiThread
+        default void onWebAppManifest(@NonNull GeckoSession session, @NonNull JSONObject manifest) {}
     }
 
     public interface SelectionActionDelegate {
