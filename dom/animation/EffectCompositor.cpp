@@ -296,16 +296,16 @@ void EffectCompositor::PostRestyleForAnimation(dom::Element* aElement,
     return;
   }
 
-  nsRestyleHint hint = aCascadeLevel == CascadeLevel::Transitions
-                           ? eRestyle_CSSTransitions
-                           : eRestyle_CSSAnimations;
+  RestyleHint hint = aCascadeLevel == CascadeLevel::Transitions
+                         ? StyleRestyleHint_RESTYLE_CSS_TRANSITIONS
+                         : StyleRestyleHint_RESTYLE_CSS_ANIMATIONS;
 
   MOZ_ASSERT(NS_IsMainThread(),
              "Restyle request during restyling should be requested only on "
              "the main-thread. e.g. after the parallel traversal");
   if (ServoStyleSet::IsInServoTraversal() || mIsInPreTraverse) {
-    MOZ_ASSERT(hint == eRestyle_CSSAnimations ||
-               hint == eRestyle_CSSTransitions);
+    MOZ_ASSERT(hint == StyleRestyleHint_RESTYLE_CSS_ANIMATIONS ||
+               hint == StyleRestyleHint_RESTYLE_CSS_TRANSITIONS);
 
     // We can't call Servo_NoteExplicitHints here since AtomicRefCell does not
     // allow us mutate ElementData of the |aElement| in SequentialTask.
@@ -830,8 +830,9 @@ bool EffectCompositor::PreTraverseInSubtree(ServoTraversalFlags aFlags,
       // middle of the servo traversal.
       mPresContext->RestyleManager()->PostRestyleEventForAnimations(
           target.mElement, target.mPseudoType,
-          cascadeLevel == CascadeLevel::Transitions ? eRestyle_CSSTransitions
-                                                    : eRestyle_CSSAnimations);
+          cascadeLevel == CascadeLevel::Transitions
+              ? StyleRestyleHint_RESTYLE_CSS_TRANSITIONS
+              : StyleRestyleHint_RESTYLE_CSS_ANIMATIONS);
 
       foundElementsNeedingRestyle = true;
 
@@ -908,11 +909,11 @@ bool EffectCompositor::PreTraverse(dom::Element* aElement,
 
     mPresContext->RestyleManager()->PostRestyleEventForAnimations(
         aElement, aPseudoType,
-        cascadeLevel == CascadeLevel::Transitions ? eRestyle_CSSTransitions
-                                                  : eRestyle_CSSAnimations);
+        cascadeLevel == CascadeLevel::Transitions
+            ? StyleRestyleHint_RESTYLE_CSS_TRANSITIONS
+            : StyleRestyleHint_RESTYLE_CSS_ANIMATIONS);
 
-    EffectSet* effects = EffectSet::GetEffectSet(aElement, aPseudoType);
-    if (effects) {
+    if (EffectSet* effects = EffectSet::GetEffectSet(aElement, aPseudoType)) {
       MaybeUpdateCascadeResults(aElement, aPseudoType);
 
       for (KeyframeEffect* effect : *effects) {
