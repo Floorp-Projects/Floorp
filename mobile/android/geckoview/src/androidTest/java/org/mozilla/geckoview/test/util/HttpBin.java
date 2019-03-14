@@ -16,7 +16,6 @@
 
 package org.mozilla.geckoview.test.util;
 
-import android.content.Context;
 import android.os.StrictMode;
 
 import android.support.annotation.NonNull;
@@ -43,8 +42,8 @@ public final class HttpBin {
         org.eclipse.jetty.util.log.Log.setLog(new AndroidLogger());
     }
 
-    public HttpBin(@NonNull Context context, @NonNull URI endpoint) {
-        this(endpoint, new HttpBinHandler(context));
+    public HttpBin(@NonNull URI endpoint) {
+        this(endpoint, new HttpBinHandler());
     }
 
     public HttpBin(@NonNull URI endpoint, @NonNull HttpBinHandler handler) {
