@@ -16,22 +16,6 @@ function clickGutter(dbg, line) {
   clickElement(dbg, "gutter", line);
 }
 
-function getLineEl(dbg, line) {
-  const lines = dbg.win.document.querySelectorAll(".CodeMirror-code > div");
-  return lines[line - 1];
-}
-
-function assertEditorBreakpoint(dbg, line, shouldExist) {
-  const exists = !!getLineEl(dbg, line).querySelector(".new-breakpoint");
-  ok(
-    exists === shouldExist,
-    "Breakpoint " +
-      (shouldExist ? "exists" : "does not exist") +
-      " on line " +
-      line
-  );
-}
-
 add_task(async function() {
   const dbg = await initDebugger("doc-scripts.html", "simple1.js");
   const {
