@@ -118,7 +118,8 @@ const MozElementMixin = Base => class MozElement extends Base {
     this._inheritedAttributesValuesCache = null;
     this.inheritedAttributesCache = new Map();
     for (let selector in inheritedAttributes) {
-      let el = this.querySelector(selector);
+      let parent = this.shadowRoot || this;
+      let el = parent.querySelector(selector);
       // Skip unmatched selectors in case an element omits some elements in certain cases:
       if (!el) {
         continue;
