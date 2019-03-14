@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{DeviceIntPoint, DeviceIntRect, DeviceIntSize};
+use api::units::{DeviceIntPoint, DeviceIntRect, DeviceIntSize};
 use util;
 
 //TODO: gather real-world statistics on the bin usage in order to assist the decision

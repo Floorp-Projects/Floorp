@@ -12,6 +12,7 @@ mod boilerplate;
 
 use boilerplate::{Example, HandyDandyRectBuilder};
 use webrender::api::*;
+use webrender::api::units::*;
 
 // This example uses the push_iframe API to nest a second pipeline's displaylist
 // inside the root pipeline's display list. When it works, a green square is

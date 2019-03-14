@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #[cfg(feature = "pathfinder")]
-use api::DeviceIntPoint;
+use api::units::DeviceIntPoint;
 use glyph_rasterizer::{FontInstance, GlyphFormat, GlyphKey, GlyphRasterizer};
 use internal_types::FastHashMap;
 use render_task::RenderTaskCache;
@@ -15,22 +15,17 @@ use texture_cache::{EvictionNotice, TextureCache};
 #[cfg(not(feature = "pathfinder"))]
 use texture_cache::TextureCacheHandle;
 
-#[cfg(feature = "pathfinder")]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 #[derive(Clone, Debug)]
 pub struct CachedGlyphInfo {
-    pub render_task_cache_key: RenderTaskCacheKey,
     pub format: GlyphFormat,
-    pub origin: DeviceIntPoint,
-}
-
-#[cfg(not(feature = "pathfinder"))]
-#[cfg_attr(feature = "capture", derive(Serialize))]
-#[cfg_attr(feature = "replay", derive(Deserialize))]
-pub struct CachedGlyphInfo {
+    #[cfg(not(feature = "pathfinder"))]
     pub texture_cache_handle: TextureCacheHandle,
-    pub format: GlyphFormat,
+    #[cfg(feature = "pathfinder")]
+    pub render_task_cache_key: RenderTaskCacheKey,
+    #[cfg(feature = "pathfinder")]
+    pub origin: DeviceIntPoint,
 }
 
 #[cfg_attr(feature = "capture", derive(Serialize))]
