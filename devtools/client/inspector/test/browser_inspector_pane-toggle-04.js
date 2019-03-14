@@ -26,7 +26,7 @@ add_task(async function() {
   await onRuleViewAdded;
 
   info("Checking the sizes of the 3 pane inspector");
-  const sidebarSplitBoxWidth = inspector.sidebarSplitBox.state.width;
+  const sidebarSplitBoxWidth = inspector.sidebarSplitBoxRef.current.state.width;
   is(sidebarSplitBoxWidth, toolboxWidth / 2, "Got correct sidebar split box width");
 
   info("Click on the toggle button to toggle OFF the 3 pane inspector");

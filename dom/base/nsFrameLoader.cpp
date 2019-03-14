@@ -82,6 +82,7 @@
 #include "mozilla/dom/ChromeMessageSender.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/FrameLoaderBinding.h"
+#include "mozilla/dom/MozFrameLoaderOwnerBinding.h"
 #include "mozilla/gfx/CrossProcessPaint.h"
 #include "mozilla/jsipc/CrossProcessObjectWrappers.h"
 #include "mozilla/layout/RenderFrame.h"
@@ -179,11 +180,44 @@ nsFrameLoader::nsFrameLoader(Element* aOwner, nsPIDOMWindowOuter* aOpener,
       mNetworkCreated(aNetworkCreated),
       mLoadingOriginalSrc(false),
       mRemoteBrowserShown(false),
-      mRemoteFrame(false),
+      mIsRemoteFrame(false),
       mObservingOwnerContent(false) {
-  mRemoteFrame = ShouldUseRemoteProcess();
-  MOZ_ASSERT(!mRemoteFrame || !aOpener,
+  mIsRemoteFrame = ShouldUseRemoteProcess();
+  MOZ_ASSERT(!mIsRemoteFrame || !aOpener,
              "Cannot pass aOpener for a remote frame!");
+}
+
+nsFrameLoader::nsFrameLoader(Element* aOwner,
+                             const mozilla::dom::RemotenessOptions& aOptions)
+    : mOwnerContent(aOwner),
+      mDetachedSubdocFrame(nullptr),
+      mOpener(nullptr),
+      mRemoteBrowser(nullptr),
+      mChildID(0),
+      mDepthTooGreat(false),
+      mIsTopLevelContent(false),
+      mDestroyCalled(false),
+      mNeedsAsyncDestroy(false),
+      mInSwap(false),
+      mInShow(false),
+      mHideCalled(false),
+      mNetworkCreated(false),
+      mLoadingOriginalSrc(false),
+      mRemoteBrowserShown(false),
+      mIsRemoteFrame(false),
+      mObservingOwnerContent(false) {
+  if (aOptions.mRemoteType.WasPassed() &&
+      (!aOptions.mRemoteType.Value().IsVoid())) {
+    mIsRemoteFrame = true;
+  }
+  bool hasOpener =
+      aOptions.mOpener.WasPassed() && !aOptions.mOpener.Value().IsNull();
+  MOZ_ASSERT(!mIsRemoteFrame || !hasOpener,
+             "Cannot pass aOpener for a remote frame!");
+  if (hasOpener) {
+    // This seems slightly unwieldy.
+    mOpener = aOptions.mOpener.Value().Value().get()->GetDOMWindow();
+  }
 }
 
 nsFrameLoader::~nsFrameLoader() {
@@ -193,6 +227,7 @@ nsFrameLoader::~nsFrameLoader() {
   MOZ_RELEASE_ASSERT(mDestroyCalled);
 }
 
+/* static */
 nsFrameLoader* nsFrameLoader::Create(Element* aOwner,
                                      nsPIDOMWindowOuter* aOpener,
                                      bool aNetworkCreated) {
@@ -225,6 +260,16 @@ nsFrameLoader* nsFrameLoader::Create(Element* aOwner,
                  nullptr);
 
   return new nsFrameLoader(aOwner, aOpener, aNetworkCreated);
+}
+
+/* static */
+nsFrameLoader* nsFrameLoader::Create(
+    mozilla::dom::Element* aOwner,
+    const mozilla::dom::RemotenessOptions& aOptions) {
+  NS_ENSURE_TRUE(aOwner, nullptr);
+  // This version of Create is only called for Remoteness updates, so we can
+  // assume we need a FrameLoader here and skip the check in the other Create.
+  return new nsFrameLoader(aOwner, aOptions);
 }
 
 void nsFrameLoader::LoadFrame(bool aOriginalSrc) {
@@ -2575,7 +2620,7 @@ bool nsFrameLoader::TryRemoteBrowser() {
 }
 
 bool nsFrameLoader::IsRemoteFrame() {
-  if (mRemoteFrame) {
+  if (mIsRemoteFrame) {
     MOZ_ASSERT(!mDocShell, "Found a remote frame with a DocShell");
     return true;
   }
@@ -2591,7 +2636,7 @@ mozilla::dom::BrowserBridgeChild* nsFrameLoader::GetBrowserBridgeChild() const {
 }
 
 mozilla::layers::LayersId nsFrameLoader::GetLayersId() const {
-  MOZ_ASSERT(mRemoteFrame);
+  MOZ_ASSERT(mIsRemoteFrame);
   if (mRemoteBrowser) {
     return mRemoteBrowser->GetRenderFrame()->GetLayersId();
   }
@@ -2831,7 +2876,7 @@ already_AddRefed<Element> nsFrameLoader::GetOwnerElement() {
 
 void nsFrameLoader::SetRemoteBrowser(nsITabParent* aTabParent) {
   MOZ_ASSERT(!mRemoteBrowser);
-  mRemoteFrame = true;
+  mIsRemoteFrame = true;
   mRemoteBrowser = TabParent::GetFrom(aTabParent);
   mChildID = mRemoteBrowser ? mRemoteBrowser->Manager()->ChildID() : 0;
   MaybeUpdatePrimaryTabParent(eTabParentChanged);

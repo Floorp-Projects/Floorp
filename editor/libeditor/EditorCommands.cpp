@@ -73,7 +73,8 @@ UndoCommand::DoCommand(const char* aCommandName, nsISupports* aCommandRefCon) {
   }
   TextEditor* textEditor = editor->AsTextEditor();
   MOZ_ASSERT(textEditor);
-  return textEditor->Undo(1);
+  // MOZ_KnownLive because we are holding a stack ref in "editor".
+  return MOZ_KnownLive(textEditor)->Undo(1);
 }
 
 NS_IMETHODIMP
@@ -126,7 +127,8 @@ RedoCommand::DoCommand(const char* aCommandName, nsISupports* aCommandRefCon) {
   }
   TextEditor* textEditor = editor->AsTextEditor();
   MOZ_ASSERT(textEditor);
-  return textEditor->Redo(1);
+  // MOZ_KnownLive because we are holding a stack ref in "editor".
+  return MOZ_KnownLive(textEditor)->Redo(1);
 }
 
 NS_IMETHODIMP
@@ -395,7 +397,9 @@ PasteCommand::DoCommand(const char* aCommandName, nsISupports* aCommandRefCon) {
   }
   TextEditor* textEditor = editor->AsTextEditor();
   MOZ_ASSERT(textEditor);
-  return textEditor->PasteAsAction(nsIClipboard::kGlobalClipboard, true);
+  // MOZ_KnownLive because we are holding a stack ref in "editor".
+  return MOZ_KnownLive(textEditor)
+      ->PasteAsAction(nsIClipboard::kGlobalClipboard, true);
 }
 
 NS_IMETHODIMP
@@ -469,7 +473,9 @@ PasteTransferableCommand::DoCommandParams(const char* aCommandName,
 
   TextEditor* textEditor = editor->AsTextEditor();
   MOZ_ASSERT(textEditor);
-  nsresult rv = textEditor->PasteTransferable(trans);
+  // We know textEditor is known-live here because we are holding a ref to it
+  // via "editor".
+  nsresult rv = MOZ_KnownLive(textEditor)->PasteTransferable(trans);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -535,7 +541,8 @@ SwitchTextDirectionCommand::DoCommand(const char* aCommandName,
   }
   TextEditor* textEditor = editor->AsTextEditor();
   MOZ_ASSERT(textEditor);
-  return textEditor->ToggleTextDirection();
+  // MOZ_KnownLive because we are holding a stack ref in "editor".
+  return MOZ_KnownLive(textEditor)->ToggleTextDirection();
 }
 
 NS_IMETHODIMP
@@ -1091,8 +1098,10 @@ PasteQuotationCommand::DoCommand(const char* aCommandName,
   }
   TextEditor* textEditor = editor->AsTextEditor();
   MOZ_ASSERT(textEditor);
-  nsresult rv = textEditor->PasteAsQuotationAsAction(
-      nsIClipboard::kGlobalClipboard, true);
+  // MOZ_KnownLive because we are holding a stack ref in "editor".
+  nsresult rv =
+      MOZ_KnownLive(textEditor)
+          ->PasteAsQuotationAsAction(nsIClipboard::kGlobalClipboard, true);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -1109,8 +1118,10 @@ PasteQuotationCommand::DoCommandParams(const char* aCommandName,
   }
   TextEditor* textEditor = editor->AsTextEditor();
   MOZ_ASSERT(textEditor);
-  nsresult rv = textEditor->PasteAsQuotationAsAction(
-      nsIClipboard::kGlobalClipboard, true);
+  // MOZ_KnownLive because we are holding a stack ref in "editor".
+  nsresult rv =
+      MOZ_KnownLive(textEditor)
+          ->PasteAsQuotationAsAction(nsIClipboard::kGlobalClipboard, true);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }

@@ -114,7 +114,7 @@ class AsyncBaseClient(BaseClient):
         the logic about doing failure retry and passes off the actual work
         of doing an HTTP request to another method."""
 
-        url = self._joinBaseUrlAndRoute(route)
+        url = self._constructUrl(route)
         log.debug('Full URL used is: %s', url)
 
         hawkExt = self.makeHawkExt()
@@ -221,7 +221,7 @@ class AsyncBaseClient(BaseClient):
             try:
                 await response.release()
                 return await response.json()
-            except ValueError:
+            except (ValueError, aiohttp.client_exceptions.ContentTypeError):
                 return {"response": response}
 
         # This code-path should be unreachable
@@ -239,6 +239,8 @@ class AsyncBaseClient(BaseClient):
 
 
 def createApiClient(name, api):
+    api = api['reference']
+
     attributes = dict(
         name=name,
         __doc__=api.get('description'),
@@ -246,12 +248,22 @@ def createApiClient(name, api):
         funcinfo={},
     )
 
-    copiedOptions = ('baseUrl', 'exchangePrefix')
-    for opt in copiedOptions:
-        if opt in api['reference']:
-            attributes['classOptions'][opt] = api['reference'][opt]
+    # apply a default for apiVersion; this can be removed when all services
+    # have apiVersion
+    if 'apiVersion' not in api:
+        api['apiVersion'] = 'v1'
 
-    for entry in api['reference']['entries']:
+    copiedOptions = ('exchangePrefix',)
+    for opt in copiedOptions:
+        if opt in api:
+            attributes['classOptions'][opt] = api[opt]
+
+    copiedProperties = ('serviceName', 'apiVersion')
+    for opt in copiedProperties:
+        if opt in api:
+            attributes[opt] = api[opt]
+
+    for entry in api['entries']:
         if entry['type'] == 'function':
             def addApiCall(e):
                 async def apiCall(self, *args, **kwargs):

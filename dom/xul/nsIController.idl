@@ -10,6 +10,7 @@ interface nsIController : nsISupports {
   boolean isCommandEnabled(in string command);
   boolean supportsCommand(in string command);
 
+  [can_run_script]
   void doCommand(in string command);
 
   void onEvent(in string eventName);
@@ -31,6 +32,7 @@ interface nsICommandController : nsISupports
   
   void        getCommandStateWithParams( in string command, in nsICommandParams aCommandParams);
     
+  [can_run_script]
   void        doCommandWithParams(in string command, in nsICommandParams aCommandParams);
 
   void getSupportedCommands(out unsigned long count,

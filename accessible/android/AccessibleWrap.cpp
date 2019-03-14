@@ -68,6 +68,16 @@ nsresult AccessibleWrap::HandleAccEvent(AccEvent* aEvent) {
         }
         break;
       }
+      case nsIAccessibleEvent::EVENT_SHOW:
+      case nsIAccessibleEvent::EVENT_HIDE: {
+        if (DocAccessibleWrap* topContentDoc =
+                doc->GetTopLevelContentDoc(accessible)) {
+          topContentDoc->CacheViewport();
+        }
+        break;
+      }
+      default:
+        break;
     }
   }
 
@@ -157,13 +167,6 @@ nsresult AccessibleWrap::HandleAccEvent(AccEvent* aEvent) {
       sessionAcc->SendScrollingEvent(accessible, event->ScrollX(),
                                      event->ScrollY(), event->MaxScrollX(),
                                      event->MaxScrollY());
-      break;
-    }
-    case nsIAccessibleEvent::EVENT_SHOW:
-    case nsIAccessibleEvent::EVENT_HIDE: {
-      AccMutationEvent* event = downcast_accEvent(aEvent);
-      auto parent = static_cast<AccessibleWrap*>(event->Parent());
-      sessionAcc->SendWindowContentChangedEvent(parent);
       break;
     }
     default:

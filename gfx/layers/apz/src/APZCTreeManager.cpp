@@ -390,6 +390,9 @@ APZCTreeManager::UpdateHitTestingTreeImpl(LayersId aRootLayerTreeId,
                                });
   mRootNode = nullptr;
   mUsingAsyncZoomContainer = false;
+  int asyncZoomContainerNestingDepth = 0;
+  bool haveMultipleAsyncZoomContainers = false;
+  bool haveRootContentOutsideAsyncZoomContainer = false;
 
   if (aRoot) {
     std::stack<gfx::TreeAutoIndent> indents;
@@ -409,7 +412,16 @@ APZCTreeManager::UpdateHitTestingTreeImpl(LayersId aRootLayerTreeId,
           mApzcTreeLog << aLayerMetrics.Name() << '\t';
 
           if (aLayerMetrics.IsAsyncZoomContainer()) {
+            if (mUsingAsyncZoomContainer) {
+              haveMultipleAsyncZoomContainers = true;
+            }
             mUsingAsyncZoomContainer = true;
+            ++asyncZoomContainerNestingDepth;
+          }
+
+          if (aLayerMetrics.Metrics().IsRootContent() &&
+              asyncZoomContainerNestingDepth == 0) {
+            haveRootContentOutsideAsyncZoomContainer = true;
           }
 
           HitTestingTreeNode* node = PrepareNodeForLayer(
@@ -467,6 +479,10 @@ APZCTreeManager::UpdateHitTestingTreeImpl(LayersId aRootLayerTreeId,
               aLayerMetrics.TransformIsPerspective());
         },
         [&](ScrollNode aLayerMetrics) {
+          if (aLayerMetrics.IsAsyncZoomContainer()) {
+            --asyncZoomContainerNestingDepth;
+          }
+
           next = parent;
           parent = parent->GetParent();
           layersId = next->GetLayersId();
@@ -476,6 +492,17 @@ APZCTreeManager::UpdateHitTestingTreeImpl(LayersId aRootLayerTreeId,
         });
 
     mApzcTreeLog << "[end]\n";
+
+    MOZ_ASSERT(
+        !mUsingAsyncZoomContainer || !haveRootContentOutsideAsyncZoomContainer,
+        "If there is an async zoom container, all scroll nodes with root "
+        "content scroll metadata should be inside it");
+    // TODO(bug 1534459): Avoid multiple async zoom containers. They
+    // can't currently occur in production code, but that will become
+    // possible with either OOP iframes or desktop zooming (due to
+    // RDM), and will need to be guarded against.
+    // MOZ_ASSERT(!haveMultipleAsyncZoomContainers,
+    //           "Should only have one async zoom container");
 
     // If we have perspective transforms deferred to children, do another
     // walk of the tree and actually apply them to the children.

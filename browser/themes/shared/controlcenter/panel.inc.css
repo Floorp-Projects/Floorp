@@ -454,6 +454,8 @@ description#identity-popup-content-verifier,
   margin-inline-end: 2px;
 }
 
+.identity-popup-fingerprintersView-icon,
+.identity-popup-cryptominersView-icon,
 .identity-popup-trackersView-icon,
 .identity-popup-cookiesView-icon {
   margin-inline-end: 10px;

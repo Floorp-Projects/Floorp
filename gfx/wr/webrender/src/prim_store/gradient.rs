@@ -3,9 +3,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::{
-    ColorF, ColorU,ExtendMode, GradientStop, LayoutPoint, LayoutSize,
-    LayoutPrimitiveInfo, PremultipliedColorF, LayoutVector2D, LineOrientation,
+    ColorF, ColorU, ExtendMode, GradientStop,
+    LayoutPrimitiveInfo, PremultipliedColorF, LineOrientation,
 };
+use api::units::{LayoutPoint, LayoutSize, LayoutVector2D};
 use display_list_flattener::IsVisible;
 use euclid::approxeq::ApproxEq;
 use frame_builder::FrameBuildingState;

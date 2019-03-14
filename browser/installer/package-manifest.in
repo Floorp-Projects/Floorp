@@ -456,3 +456,18 @@ bin/libfreebl_32int64_3.so
 #ifdef PKG_LOCALE_MANIFEST
 #include @PKG_LOCALE_MANIFEST@
 #endif
+
+#ifdef MOZ_EME_WIN32_ARTIFACT
+i686/plugin-container.exe
+i686/xul.dll
+i686/nss3.dll
+i686/mozglue.dll
+i686/lgpllibs.dll
+i686/msvcp140.dll
+i686/vcruntime140.dll
+i686/gmp-clearkey/0.1/clearkey.dll
+[eme destdir="i686"]
+; We assume the file we generate locally is the same as what was in the win32
+; build, which, practically speaking, is the case.
+@BINPATH@/gmp-clearkey/0.1/manifest.json
+#endif

@@ -23,8 +23,10 @@ class TreeherderEvents(AsyncBaseClient):
     """
 
     classOptions = {
-        "exchangePrefix": "exchange/taskcluster-treeherder/v1/"
+        "exchangePrefix": "exchange/taskcluster-treeherder/v1/",
     }
+    serviceName = 'treeherder'
+    apiVersion = 'v1'
 
     def jobs(self, *args, **kwargs):
         """
@@ -33,7 +35,7 @@ class TreeherderEvents(AsyncBaseClient):
         When a task run is scheduled or resolved, a message is posted to
         this exchange in a Treeherder consumable format.
 
-        This exchange outputs: ``http://schemas.taskcluster.net/taskcluster-treeherder/v1/pulse-job.json#``This exchange takes the following keys:
+        This exchange outputs: ``v1/pulse-job.json#``This exchange takes the following keys:
 
          * destination: destination (required)
 
@@ -59,7 +61,7 @@ class TreeherderEvents(AsyncBaseClient):
                     'name': 'reserved',
                 },
             ],
-            'schema': 'http://schemas.taskcluster.net/taskcluster-treeherder/v1/pulse-job.json#',
+            'schema': 'v1/pulse-job.json#',
         }
         return self._makeTopicExchange(ref, *args, **kwargs)
 

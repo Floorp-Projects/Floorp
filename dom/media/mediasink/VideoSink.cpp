@@ -37,6 +37,17 @@ using namespace mozilla::layers;
 // duration of a 60-fps frame.
 static const int64_t MIN_UPDATE_INTERVAL_US = 1000000 / (60 * 2);
 
+static void SetImageToGreenPixel(PlanarYCbCrImage* aImage) {
+  static uint8_t greenPixel[] = {0x00, 0x00, 0x00};
+  PlanarYCbCrData data;
+  data.mYChannel = greenPixel;
+  data.mCbChannel = greenPixel + 1;
+  data.mCrChannel = greenPixel + 2;
+  data.mYStride = data.mCbCrStride = 1;
+  data.mPicSize = data.mYSize = data.mCbCrSize = gfx::IntSize(1, 1);
+  aImage->CopyData(data);
+}
+
 VideoSink::VideoSink(AbstractThread* aThread, MediaSink* aAudioSink,
                      MediaQueue<VideoData>& aVideoQueue,
                      VideoFrameContainer* aContainer,
@@ -59,9 +70,14 @@ VideoSink::VideoSink(AbstractThread* aThread, MediaSink* aAudioSink,
       ,
       mHiResTimersRequested(false)
 #endif
-
 {
   MOZ_ASSERT(mAudioSink, "AudioSink should exist.");
+
+  if (StaticPrefs::browser_measurement_render_anims_and_video_solid() &&
+      mContainer) {
+    InitializeBlankImage();
+    MOZ_ASSERT(mBlankImage, "Blank image should exist.");
+  }
 }
 
 VideoSink::~VideoSink() {
@@ -305,6 +321,9 @@ void VideoSink::Redraw(const VideoInfo& aInfo) {
 
   RefPtr<VideoData> video = VideoQueue().PeekFront();
   if (video) {
+    if (mBlankImage) {
+      video->mImage = mBlankImage;
+    }
     video->MarkSentToCompositor();
     mContainer->SetCurrentFrame(video->mDisplay, video->mImage, now);
     if (mSecondaryContainer) {
@@ -424,6 +443,9 @@ void VideoSink::RenderVideoFrames(int32_t aMaxFrames, int64_t aClockTime,
     ImageContainer::NonOwningImage* img = images.AppendElement();
     img->mTimeStamp = t;
     img->mImage = frame->mImage;
+    if (mBlankImage) {
+      img->mImage = mBlankImage;
+    }
     img->mFrameID = frame->mFrameID;
     img->mProducerID = mProducerID;
 
@@ -575,4 +597,12 @@ nsCString VideoSink::GetDebugInfo() {
   return std::move(str);
 }
 
+bool VideoSink::InitializeBlankImage() {
+  mBlankImage = mContainer->GetImageContainer()->CreatePlanarYCbCrImage();
+  if (mBlankImage == nullptr) {
+    return false;
+  }
+  SetImageToGreenPixel(mBlankImage->AsPlanarYCbCrImage());
+  return true;
+}
 }  // namespace mozilla

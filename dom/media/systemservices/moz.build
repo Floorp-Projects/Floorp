@@ -48,12 +48,6 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
   UNIFIED_SOURCES += ['OSXRunLoopSingleton.cpp']
   EXPORTS += ['OSXRunLoopSingleton.h']
 
-if CONFIG['CC_TYPE'] == 'clang-cl':
-    # This is intended as a temporary workaround to enable building with VS2015.
-    # media\webrtc\trunk\webrtc/base/criticalsection.h(59): warning C4312:
-    # 'reinterpret_cast': conversion from 'DWORD' to 'HANDLE' of greater size
-    CXXFLAGS += ['-wd4312']
-
 EXPORTS.mozilla += ['ShmemPool.h',]
 
 EXPORTS.mozilla.media += ['CamerasTypes.h',

@@ -210,9 +210,9 @@ function plInit() {
         let remoteType = E10SUtils.getRemoteTypeForURI(pageUrls[0], true);
         let tabbrowser = browserWindow.gBrowser;
         if (remoteType) {
-          tabbrowser.updateBrowserRemoteness(tabbrowser.initialBrowser, true, { remoteType });
+          tabbrowser.updateBrowserRemoteness(tabbrowser.initialBrowser, { remoteType });
         } else {
-          tabbrowser.updateBrowserRemoteness(tabbrowser.initialBrowser, false);
+          tabbrowser.updateBrowserRemoteness(tabbrowser.initialBrowser, { remoteType: E10SUtils.NOT_REMOTE });
         }
 
         browserWindow.resizeTo(winWidth, winHeight);

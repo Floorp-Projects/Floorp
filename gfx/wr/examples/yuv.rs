@@ -13,6 +13,8 @@ mod boilerplate;
 use boilerplate::Example;
 use gleam::gl;
 use webrender::api::*;
+use webrender::api::units::*;
+
 
 fn init_gl_texture(
     id: gl::GLuint,

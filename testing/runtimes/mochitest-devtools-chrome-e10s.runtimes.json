@@ -15,8 +15,6 @@
     "devtools/client/aboutdebugging/test/browser_addons_remove.js": 4510,
     "devtools/client/aboutdebugging/test/browser_service_workers_not_compatible.js": 5357,
     "devtools/client/aboutdebugging/test/browser_service_workers_status.js": 5267,
-    "devtools/client/canvasdebugger/test/browser_canvas-frontend-call-stack-01.js": 4584,
-    "devtools/client/canvasdebugger/test/browser_canvas-frontend-call-stack-02.js": 4191,
     "devtools/client/debugger/new/test/mochitest/browser_dbg-breaking-from-console.js": 7303,
     "devtools/client/debugger/new/test/mochitest/browser_dbg-breaking.js": 7881,
     "devtools/client/debugger/new/test/mochitest/browser_dbg-breakpoints-cond.js": 5276,

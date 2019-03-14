@@ -240,8 +240,10 @@ class AutoInParametersOfAsyncFunction;
 
 class MOZ_STACK_CLASS ParserSharedBase : private JS::AutoGCRooter {
  public:
+  enum class Kind { Parser, BinASTParser };
+
   ParserSharedBase(JSContext* cx, LifoAlloc& alloc, UsedNameTracker& usedNames,
-                   ScriptSourceObject* sourceObject);
+                   ScriptSourceObject* sourceObject, Kind kind);
   ~ParserSharedBase();
 
  public:
@@ -271,8 +273,8 @@ class MOZ_STACK_CLASS ParserSharedBase : private JS::AutoGCRooter {
                                         JS::AutoGCRooter* parser);
 
 #if defined(JS_BUILD_BINAST)
-  friend void js::frontend::TraceBinParser(JSTracer* trc,
-                                           JS::AutoGCRooter* parser);
+  friend void js::frontend::TraceBinASTParser(JSTracer* trc,
+                                              JS::AutoGCRooter* parser);
 #endif  // JS_BUILD_BINAST
 
  private:

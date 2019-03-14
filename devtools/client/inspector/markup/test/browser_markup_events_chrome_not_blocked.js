@@ -2,73 +2,56 @@
 /* Any copyright is dedicated to the Public Domain.
  http://creativecommons.org/publicdomain/zero/1.0/ */
 /* import-globals-from helper_events_test_runner.js */
+/* global sendAsyncMessage */
 
 "use strict";
 
-// Test that markup view event bubbles are shown for <video> tags in the
-// content process when devtools.chrome.enabled=true.
+// Test that markup view chrome event bubbles are shown when
+// devtools.chrome.enabled = true.
 
 const TEST_URL = URL_ROOT + "doc_markup_events_chrome_listeners.html";
+const FRAMESCRIPT_URL = `data:,(${frameScript.toString()})()`;
 
 loadHelperScript("helper_events_test_runner.js");
 
 const TEST_DATA = [
   {
-    selector: "video",
+    selector: "div",
     expected: [
-      createEvent("canplay"),
-      createEvent("canplaythrough"),
-      createEvent("emptied"),
-      createEvent("ended"),
-      createEvent("error"),
-      createEvent("keypress"),
-      createEvent("loadeddata"),
-      createEvent("loadedmetadata"),
-      createEvent("loadstart"),
-      createEvent("mozvideoonlyseekbegin"),
-      createEvent("mozvideoonlyseekcompleted"),
-      createEvent("pause"),
-      createEvent("play"),
-      createEvent("playing"),
-      createEvent("progress"),
-      createEvent("seeked"),
-      createEvent("seeking"),
-      createEvent("stalled"),
-      createEvent("suspend"),
-      createEvent("timeupdate"),
-      createEvent("volumechange"),
-      createEvent("waiting"),
+      {
+        type: "click",
+        filename: `${FRAMESCRIPT_URL}:1`,
+        attributes: [
+          "Bubbling",
+          "DOM2",
+        ],
+        handler: `() => { /* Do nothing */ }`,
+      },
     ],
   },
 ];
 
-function createEvent(type) {
-  return {
-    type: type,
-    filename: "chrome://global/content/elements/videocontrols.js:437",
-    attributes: [
-      "Capturing",
-      "DOM2",
-    ],
-    handler: `
-      ${type === "play" ? "function" : "handleEvent"}(aEvent) {
-        if (!aEvent.isTrusted) {
-          this.log("Drop untrusted event ----> " + aEvent.type);
-          return;
-        }
-
-        this.log("Got event ----> " + aEvent.type);
-
-        if (this.videoEvents.includes(aEvent.type)) {
-          this.handleVideoEvent(aEvent);
-        } else {
-          this.handleControlEvent(aEvent);
-        }
-      }`,
-  };
-}
-
 add_task(async function() {
+  waitForExplicitFinish();
   await pushPref("devtools.chrome.enabled", true);
-  await runEventPopupTests(TEST_URL, TEST_DATA);
+
+  const {tab, inspector, testActor} = await openInspectorForURL(TEST_URL);
+  const browser = tab.linkedBrowser;
+  const mm = browser.messageManager;
+
+  const eventBadgeAdded = inspector.markup.once("badge-added-event");
+  info("Loading frame script");
+  mm.loadFrameScript(`${FRAMESCRIPT_URL}`, false);
+  await eventBadgeAdded;
+
+  for (const test of TEST_DATA) {
+    await checkEventsForNode(test, inspector, testActor);
+  }
 });
+
+function frameScript() {
+  const div = content.document.querySelector("div");
+  div.addEventListener("click", () => {
+   /* Do nothing */
+  });
+}

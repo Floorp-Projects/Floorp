@@ -97,7 +97,17 @@ async function _setBreakpointPositions(sourceId, thunkArgs) {
   let positions = convertToList(results, generatedSource);
   positions = await mapLocations(positions, thunkArgs);
   positions = filterByUniqLocation(positions);
-  dispatch({ type: "ADD_BREAKPOINT_POSITIONS", sourceId, positions });
+
+  const source = getSource(getState(), sourceId);
+  // NOTE: it's possible that the source was removed during a navigate
+  if (!source) {
+    return;
+  }
+  dispatch({
+    type: "ADD_BREAKPOINT_POSITIONS",
+    source: source,
+    positions
+  });
 }
 
 export function setBreakpointPositions(sourceId: string) {

@@ -13,9 +13,8 @@ _defaultConfig = config
 
 class Github(AsyncBaseClient):
     """
-    The github service, typically available at
-    `github.taskcluster.net`, is responsible for publishing pulse
-    messages in response to GitHub events.
+    The github service is responsible for creating tasks in reposnse
+    to GitHub events, and posting results to the GitHub UI.
 
     This document describes the API end-point for consuming GitHub
     web hooks, as well as some useful consumer APIs.
@@ -25,8 +24,9 @@ class Github(AsyncBaseClient):
     """
 
     classOptions = {
-        "baseUrl": "https://github.taskcluster.net/v1/"
     }
+    serviceName = 'github'
+    apiVersion = 'v1'
 
     async def ping(self, *args, **kwargs):
         """

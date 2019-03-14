@@ -314,21 +314,6 @@ enum class StyleContent : uint8_t {
 #define NS_STYLE_WRITING_MODE_SIDEWAYS_LR \
   (NS_STYLE_WRITING_MODE_VERTICAL_LR | NS_STYLE_WRITING_MODE_SIDEWAYS_MASK)
 
-// See nsStyleDisplay
-// If these are re-ordered, nsComputedDOMStyle::DoGetContain() must be updated.
-#define NS_STYLE_CONTAIN_NONE 0
-#define NS_STYLE_CONTAIN_SIZE 0x01
-#define NS_STYLE_CONTAIN_LAYOUT 0x02
-#define NS_STYLE_CONTAIN_PAINT 0x04
-#define NS_STYLE_CONTAIN_STRICT 0x08
-#define NS_STYLE_CONTAIN_CONTENT 0x10
-// NS_STYLE_CONTAIN_ALL_BITS does not correspond to a keyword.
-#define NS_STYLE_CONTAIN_ALL_BITS \
-  (NS_STYLE_CONTAIN_LAYOUT | NS_STYLE_CONTAIN_PAINT | NS_STYLE_CONTAIN_SIZE)
-// NS_STYLE_CONTAIN_CONTENT_BITS does not correspond to a keyword.
-#define NS_STYLE_CONTAIN_CONTENT_BITS \
-  (NS_STYLE_CONTAIN_LAYOUT | NS_STYLE_CONTAIN_PAINT)
-
 // Shared constants for all align/justify properties (nsStylePosition):
 #define NS_STYLE_ALIGN_AUTO 0
 #define NS_STYLE_ALIGN_NORMAL 1

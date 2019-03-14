@@ -618,8 +618,7 @@ XDRResult js::PrivateScriptData::XDR(XDRState<mode>* xdr, HandleScript script,
       if (mode == XDR_ENCODE) {
         scope = vector[i];
       }
-      MOZ_TRY(
-          XDRScope(xdr, script->data_, scriptEnclosingScope, fun, i, &scope));
+      MOZ_TRY(XDRScope(xdr, data, scriptEnclosingScope, fun, i, &scope));
       if (mode == XDR_DECODE) {
         vector[i].init(scope);
       }
@@ -641,7 +640,7 @@ XDRResult js::PrivateScriptData::XDR(XDRState<mode>* xdr, HandleScript script,
       if (mode == XDR_ENCODE) {
         inner = elem;
       }
-      MOZ_TRY(XDRInnerObject(xdr, script->data_, sourceObject, &inner));
+      MOZ_TRY(XDRInnerObject(xdr, data, sourceObject, &inner));
       if (mode == XDR_DECODE) {
         elem.init(inner);
       }
@@ -671,6 +670,66 @@ XDRResult js::PrivateScriptData::XDR(XDRState<mode>* xdr, HandleScript script,
   }
 
   return Ok();
+}
+
+// Placement-new elements of an array. This should optimize away for types with
+// trivial default initiation.
+template <typename T>
+static void DefaultInitializeElements(void* arrayPtr, size_t length) {
+  uintptr_t elem = reinterpret_cast<uintptr_t>(arrayPtr);
+  MOZ_ASSERT(elem % alignof(T) == 0);
+
+  for (size_t i = 0; i < length; ++i) {
+    new (reinterpret_cast<void*>(elem)) T;
+    elem += sizeof(T);
+  }
+}
+
+/* static */ size_t SharedScriptData::AllocationSize(uint32_t codeLength,
+                                                     uint32_t noteLength,
+                                                     uint32_t natoms) {
+  size_t size = sizeof(SharedScriptData);
+
+  size += natoms * sizeof(GCPtrAtom);
+  size += codeLength * sizeof(jsbytecode);
+  size += noteLength * sizeof(jssrcnote);
+
+  return size;
+}
+
+// Placement-new elements of an array. This should optimize away for types with
+// trivial default initiation.
+template <typename T>
+void SharedScriptData::initElements(size_t offset, size_t length) {
+  uintptr_t base = reinterpret_cast<uintptr_t>(this);
+  DefaultInitializeElements<T>(reinterpret_cast<void*>(base + offset), length);
+}
+
+SharedScriptData::SharedScriptData(uint32_t codeLength, uint32_t noteLength,
+                                   uint32_t natoms)
+    : codeLength_(codeLength), noteLength_(noteLength), natoms_(natoms) {
+  // Variable-length data begins immediately after SharedScriptData itself.
+  size_t cursor = sizeof(*this);
+
+  // Default-initialize trailing arrays.
+
+  static_assert(alignof(SharedScriptData) >= alignof(GCPtrAtom),
+                "Incompatible alignment");
+  initElements<GCPtrAtom>(cursor, natoms);
+  cursor += natoms * sizeof(GCPtrAtom);
+
+  static_assert(alignof(GCPtrAtom) >= alignof(jsbytecode),
+                "Incompatible alignment");
+  initElements<jsbytecode>(cursor, codeLength);
+  cursor += codeLength * sizeof(jsbytecode);
+
+  static_assert(alignof(jsbytecode) >= alignof(jssrcnote),
+                "Incompatible alignment");
+  initElements<jssrcnote>(cursor, noteLength);
+  cursor += noteLength * sizeof(jssrcnote);
+
+  // Sanity check
+  MOZ_ASSERT(AllocationSize(codeLength, noteLength, natoms) == cursor);
 }
 
 template <XDRMode mode>
@@ -2572,31 +2631,32 @@ XDRResult ScriptSource::XDR(XDRState<mode>* xdr,
 #if defined(JS_BUILD_BINAST)
       UniquePtr<frontend::BinASTSourceMetadata>& binASTMetadata =
           ss->binASTMetadata_;
-      uint32_t numBinKinds;
+      uint32_t numBinASTKinds;
       uint32_t numStrings;
       if (mode == XDR_ENCODE) {
-        numBinKinds = binASTMetadata->numBinKinds();
+        numBinASTKinds = binASTMetadata->numBinASTKinds();
         numStrings = binASTMetadata->numStrings();
       }
-      MOZ_TRY(xdr->codeUint32(&numBinKinds));
+      MOZ_TRY(xdr->codeUint32(&numBinASTKinds));
       MOZ_TRY(xdr->codeUint32(&numStrings));
 
       if (mode == XDR_DECODE) {
         // Use calloc, since we're storing this immediately, and filling it
         // might GC, to avoid marking bogus atoms.
         auto metadata = static_cast<frontend::BinASTSourceMetadata*>(
-            js_calloc(frontend::BinASTSourceMetadata::totalSize(numBinKinds,
+            js_calloc(frontend::BinASTSourceMetadata::totalSize(numBinASTKinds,
                                                                 numStrings)));
         if (!metadata) {
           return xdr->fail(JS::TranscodeResult_Throw);
         }
-        new (metadata) frontend::BinASTSourceMetadata(numBinKinds, numStrings);
+        new (metadata)
+            frontend::BinASTSourceMetadata(numBinASTKinds, numStrings);
         ss->setBinASTSourceMetadata(metadata);
       }
 
-      for (uint32_t i = 0; i < numBinKinds; i++) {
-        frontend::BinKind* binKindBase = binASTMetadata->binKindBase();
-        MOZ_TRY(xdr->codeEnum32(&binKindBase[i]));
+      for (uint32_t i = 0; i < numBinASTKinds; i++) {
+        frontend::BinASTKind* binASTKindBase = binASTMetadata->binASTKindBase();
+        MOZ_TRY(xdr->codeEnum32(&binASTKindBase[i]));
       }
 
       RootedAtom atom(xdr->cx());
@@ -2870,78 +2930,35 @@ bool ScriptSource::setSourceMapURL(JSContext* cx,
  */
 
 SharedScriptData* js::SharedScriptData::new_(JSContext* cx, uint32_t codeLength,
-                                             uint32_t srcnotesLength,
+                                             uint32_t noteLength,
                                              uint32_t natoms) {
-  size_t dataLength = natoms * sizeof(GCPtrAtom) + codeLength + srcnotesLength;
-  size_t allocLength = offsetof(SharedScriptData, data_) + dataLength;
-  auto entry =
-      reinterpret_cast<SharedScriptData*>(cx->pod_malloc<uint8_t>(allocLength));
-  if (!entry) {
-    ReportOutOfMemory(cx);
+  // Compute size including trailing arrays
+  size_t size = AllocationSize(codeLength, noteLength, natoms);
+
+  // Allocate contiguous raw buffer
+  void* raw = cx->pod_malloc<uint8_t>(size);
+  MOZ_ASSERT(uintptr_t(raw) % alignof(SharedScriptData) == 0);
+  if (!raw) {
     return nullptr;
   }
 
-  /* Diagnostic for Bug 1399373.
-   * We expect bytecode is always non-empty. */
-  MOZ_DIAGNOSTIC_ASSERT(codeLength > 0);
-
-  entry->refCount_ = 0;
-  entry->natoms_ = natoms;
-  entry->codeLength_ = codeLength;
-  entry->noteLength_ = srcnotesLength;
-
-  /*
-   * Call constructors to initialize the storage that will be accessed as a
-   * GCPtrAtom array via atoms().
-   */
-  static_assert(offsetof(SharedScriptData, data_) % sizeof(GCPtrAtom) == 0,
-                "atoms must have GCPtrAtom alignment");
-  GCPtrAtom* atoms = entry->atoms();
-  for (unsigned i = 0; i < natoms; ++i) {
-    new (&atoms[i]) GCPtrAtom();
-  }
-
-  // Sanity check the dataLength() computation
-  MOZ_ASSERT(entry->dataLength() == dataLength);
-
-  return entry;
+  // Constuct the SharedScriptData. Trailing arrays are uninitialized but
+  // GCPtrs are put into a safe state.
+  return new (raw) SharedScriptData(codeLength, noteLength, natoms);
 }
 
 inline js::ScriptBytecodeHasher::Lookup::Lookup(SharedScriptData* data)
     : scriptData(data),
-      hash(mozilla::HashBytes(scriptData->data(), scriptData->dataLength())) {
-  scriptData->incRefCount();
-}
-
-inline js::ScriptBytecodeHasher::Lookup::~Lookup() {
-  scriptData->decRefCount();
-}
+      hash(mozilla::HashBytes(scriptData->data(), scriptData->dataLength())) {}
 
 bool JSScript::createSharedScriptData(JSContext* cx, uint32_t codeLength,
                                       uint32_t noteLength, uint32_t natoms) {
-  MOZ_ASSERT(!scriptData());
-  SharedScriptData* ssd =
-      SharedScriptData::new_(cx, codeLength, noteLength, natoms);
-  if (!ssd) {
-    return false;
-  }
-
-  setScriptData(ssd);
-  return true;
-}
-
-void JSScript::freeScriptData() {
-  if (scriptData_) {
-    scriptData_->decRefCount();
-    scriptData_ = nullptr;
-  }
-}
-
-void JSScript::setScriptData(js::SharedScriptData* data) {
   MOZ_ASSERT(!scriptData_);
-  scriptData_ = data;
-  scriptData_->incRefCount();
+  scriptData_ = SharedScriptData::new_(cx, codeLength, noteLength, natoms);
+  return !!scriptData_;
 }
+
+void JSScript::freeScriptData() { scriptData_ = nullptr; }
 
 /*
  * Takes ownership of its *ssd parameter and either adds it into the runtime's
@@ -2963,20 +2980,20 @@ bool JSScript::shareScriptData(JSContext* cx) {
   ScriptDataTable::AddPtr p = cx->scriptDataTable(lock).lookupForAdd(lookup);
   if (p) {
     MOZ_ASSERT(ssd != *p);
-    freeScriptData();
-    setScriptData(*p);
+    scriptData_ = *p;
   } else {
     if (!cx->scriptDataTable(lock).add(p, ssd)) {
-      freeScriptData();
       ReportOutOfMemory(cx);
       return false;
     }
 
     // Being in the table counts as a reference on the script data.
-    scriptData()->incRefCount();
+    ssd->AddRef();
   }
 
+  // Refs: JSScript, ScriptDataTable
   MOZ_ASSERT(scriptData()->refCount() >= 2);
+
   return true;
 }
 
@@ -2990,7 +3007,7 @@ void js::SweepScriptData(JSRuntime* rt) {
   for (ScriptDataTable::Enum e(table); !e.empty(); e.popFront()) {
     SharedScriptData* scriptData = e.front();
     if (scriptData->refCount() == 1) {
-      scriptData->decRefCount();
+      scriptData->Release();
       e.removeFront();
     }
   }
@@ -3016,19 +3033,6 @@ void js::FreeScriptData(JSRuntime* rt) {
   }
 
   table.clear();
-}
-
-// Placement-new elements of an array. This should optimize away for types with
-// trivial default initiation.
-template <typename T>
-static void DefaultInitializeElements(void* arrayPtr, size_t length) {
-  uintptr_t elem = reinterpret_cast<uintptr_t>(arrayPtr);
-  MOZ_ASSERT(elem % alignof(T) == 0);
-
-  for (size_t i = 0; i < length; ++i) {
-    new (reinterpret_cast<T*>(elem)) T;
-    elem += sizeof(T);
-  }
 }
 
 /* static */
@@ -3262,7 +3266,7 @@ PrivateScriptData* PrivateScriptData::new_(JSContext* cx, uint32_t nscopes,
   return true;
 }
 
-void PrivateScriptData::traceChildren(JSTracer* trc) {
+void PrivateScriptData::trace(JSTracer* trc) {
   auto scopearray = scopes();
   TraceRange(trc, scopearray.size(), scopearray.data(), "scopes");
 
@@ -3741,9 +3745,7 @@ void JSScript::finalize(FreeOp* fop) {
     fop->free_(data_);
   }
 
-  if (scriptData_) {
-    scriptData_->decRefCount();
-  }
+  freeScriptData();
 
   // In most cases, our LazyScript's script pointer will reference this
   // script, and thus be nulled out by normal weakref processing. However, if
@@ -4244,7 +4246,7 @@ JSScript* js::detail::CopyScript(JSContext* cx, HandleScript src,
   if (cx->zone() != src->zoneFromAnyThread()) {
     src->scriptData()->markForCrossZone(cx);
   }
-  dst->setScriptData(src->scriptData());
+  dst->scriptData_ = src->scriptData();
 
   return dst;
 }
@@ -4557,7 +4559,7 @@ void JSScript::traceChildren(JSTracer* trc) {
                 zone()->isCollecting());
 
   if (data_) {
-    data_->traceChildren(trc);
+    data_->trace(trc);
   }
 
   if (scriptData()) {

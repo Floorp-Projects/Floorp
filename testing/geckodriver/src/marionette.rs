@@ -145,7 +145,7 @@ impl MarionetteHandler {
 
         let mut profile = match options.profile {
             Some(x) => x,
-            None => Profile::new(None)?,
+            None => Profile::new()?,
         };
 
         self.set_prefs(port, &mut profile, is_custom_profile, options.prefs)
@@ -1476,6 +1476,10 @@ impl ToMarionette for SwitchToWindowParameters {
             "name".to_string(),
             serde_json::to_value(self.handle.clone())?,
         );
+        data.insert(
+            "handle".to_string(),
+            serde_json::to_value(self.handle.clone())?,
+        );
         Ok(data)
     }
 }
@@ -1519,7 +1523,7 @@ mod tests {
     // several regressions related to marionette.log.level.
     #[test]
     fn test_marionette_log_level() {
-        let mut profile = Profile::new(None).unwrap();
+        let mut profile = Profile::new().unwrap();
         let handler = MarionetteHandler::new(MarionetteSettings::default());
         handler.set_prefs(2828, &mut profile, false, vec![]).ok();
         let user_prefs = profile.user_prefs().unwrap();

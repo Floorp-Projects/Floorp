@@ -287,6 +287,18 @@ void SessionStoreUtils::RestoreScrollPosition(const GlobalObject& aGlobal,
   token = tokenizer.nextToken();
   int pos_Y = atoi(token.get());
   aWindow.ScrollTo(pos_X, pos_Y);
+
+  if (nsCOMPtr<Document> doc = aWindow.GetExtantDoc()) {
+    if (nsPresContext* presContext = doc->GetPresContext()) {
+      if (presContext->IsRootContentDocument()) {
+        // Use eMainThread so this takes precedence over session history
+        // (ScrollFrameHelper::ScrollToRestoredPosition()).
+        presContext->PresShell()->SetPendingVisualScrollUpdate(
+            CSSPoint::ToAppUnits(CSSPoint(pos_X, pos_Y)),
+            layers::FrameMetrics::eMainThread);
+      }
+    }
+  }
 }
 
 // Implements the Luhn checksum algorithm as described at

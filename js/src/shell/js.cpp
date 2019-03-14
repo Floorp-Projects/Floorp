@@ -85,7 +85,7 @@
 #include "jit/JitRealm.h"
 #include "jit/shared/CodeGenerator-shared.h"
 #include "js/ArrayBuffer.h"  // JS::{CreateMappedArrayBufferContents,NewMappedArrayBufferWithContents,IsArrayBufferObject,GetArrayBufferLengthAndData}
-#include "js/BuildId.h"  // JS::BuildIdCharVector, JS::SetProcessBuildIdOp
+#include "js/BuildId.h"      // JS::BuildIdCharVector, JS::SetProcessBuildIdOp
 #include "js/CharacterEncoding.h"
 #include "js/CompilationAndEvaluation.h"
 #include "js/CompileOptions.h"
@@ -503,6 +503,7 @@ static bool enableTestWasmAwaitTier2 = false;
 static bool enableAsyncStacks = false;
 static bool enableStreams = false;
 static bool enableBigInt = false;
+static bool enableFields = false;
 #ifdef JS_GC_ZEAL
 static uint32_t gZealBits = 0;
 static uint32_t gZealFrequency = 0;
@@ -3763,7 +3764,8 @@ static void SetStandardRealmOptions(JS::RealmOptions& options) {
   options.creationOptions()
       .setSharedMemoryAndAtomicsEnabled(enableSharedMemory)
       .setBigIntEnabled(enableBigInt)
-      .setStreamsEnabled(enableStreams);
+      .setStreamsEnabled(enableStreams)
+      .setFieldsEnabled(enableFields);
 }
 
 static MOZ_MUST_USE bool CheckRealmOptions(JSContext* cx,
@@ -5107,7 +5109,7 @@ static bool BinParse(JSContext* cx, unsigned argc, Value* vp) {
   Directives directives(false);
   GlobalSharedContext globalsc(cx, ScopeKind::Global, directives, false);
 
-  auto parseFunc = ParseBinASTData<frontend::BinTokenReaderMultipart>;
+  auto parseFunc = ParseBinASTData<frontend::BinASTTokenReaderMultipart>;
   if (!parseFunc(cx, buf_data, buf_length, &globalsc, usedNames, options,
                  sourceObj)) {
     return false;
@@ -10186,6 +10188,7 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
   enableAsyncStacks = !op.getBoolOption("no-async-stacks");
   enableStreams = !op.getBoolOption("no-streams");
   enableBigInt = !op.getBoolOption("no-bigint");
+  enableFields = op.getBoolOption("enable-experimental-fields");
 
   JS::ContextOptionsRef(cx)
       .setBaseline(enableBaseline)
@@ -10886,7 +10889,8 @@ int main(int argc, char** argv, char** envp) {
                         "Forcibly activate tiering and block "
                         "instantiation on completion of tier2")
 #ifdef ENABLE_WASM_GC
-      || !op.addBoolOption('\0', "wasm-gc", "Enable experimental wasm GC features")
+      ||
+      !op.addBoolOption('\0', "wasm-gc", "Enable experimental wasm GC features")
 #else
       || !op.addBoolOption('\0', "wasm-gc", "No-op")
 #endif
@@ -10897,8 +10901,8 @@ int main(int argc, char** argv, char** envp) {
       !op.addBoolOption('\0', "enable-streams",
                         "Enable WHATWG Streams (default)") ||
       !op.addBoolOption('\0', "no-streams", "Disable WHATWG Streams") ||
-      !op.addBoolOption('\0', "no-bigint",
-                        "Disable experimental BigInt support") ||
+      !op.addBoolOption('\0', "no-bigint", "Disable BigInt support") ||
+      !op.addBoolOption('\0', "enable-experimental-fields", "Enable fields in classes") ||
       !op.addStringOption('\0', "shared-memory", "on/off",
                           "SharedArrayBuffer and Atomics "
 #if SHARED_MEMORY_DEFAULT

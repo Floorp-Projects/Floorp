@@ -14,7 +14,6 @@ DevToolsModules(
     'accessibility.js',
     'actor-registry.js',
     'animation.js',
-    'canvas.js',
     'changes.js',
     'css-properties.js',
     'csscoverage.js',
@@ -23,7 +22,6 @@ DevToolsModules(
     'environment.js',
     'frame.js',
     'framerate.js',
-    'function-call.js',
     'heap-snapshot-file.js',
     'highlighters.js',
     'index.js',
@@ -52,7 +50,5 @@ DevToolsModules(
     'symbol-iterator.js',
     'symbol.js',
     'timeline.js',
-    'webaudio.js',
     'webconsole.js',
-    'webgl.js',
 )

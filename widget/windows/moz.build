@@ -161,7 +161,3 @@ if CONFIG['CC_TYPE'] == 'clang-cl':
         'ToastNotification.cpp',
         'ToastNotificationHandler.cpp',
     ]
-    # C5038: Suppress initializer list order warnings from wrl.h
-    SOURCES['ToastNotification.cpp'].flags += ['-wd5038']
-    SOURCES['ToastNotificationHandler.cpp'].flags += ['-wd5038']
-    SOURCES['WindowsUIUtils.cpp'].flags += ['-wd5038']

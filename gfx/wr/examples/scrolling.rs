@@ -14,7 +14,9 @@ mod boilerplate;
 use boilerplate::{Example, HandyDandyRectBuilder};
 use euclid::SideOffsets2D;
 use webrender::api::*;
+use webrender::api::units::*;
 use winit::dpi::LogicalPosition;
+
 
 struct App {
     cursor_position: WorldPoint,

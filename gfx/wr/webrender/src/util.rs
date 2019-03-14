@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{BorderRadius, DeviceIntPoint, DeviceIntRect, DeviceIntSize, DevicePixelScale};
-use api::{LayoutPixel, DeviceRect, WorldPixel, RasterRect};
+use api::BorderRadius;
+use api::units::*;
 use euclid::{Point2D, Rect, Size2D, TypedPoint2D, TypedRect, TypedSize2D, Vector2D};
 use euclid::{TypedTransform2D, TypedTransform3D, TypedVector2D, TypedScale};
 use malloc_size_of::{MallocShallowSizeOf, MallocSizeOf, MallocSizeOfOps};
@@ -484,7 +484,6 @@ pub fn extract_inner_rect_safe<U>(
 
 #[cfg(test)]
 pub mod test {
-    use api::{LayoutTransform, LayoutVector3D};
     use super::*;
     use euclid::{Point2D, Angle, Transform3D};
     use std::f32::consts::PI;

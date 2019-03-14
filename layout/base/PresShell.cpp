@@ -6439,16 +6439,17 @@ PresShell* PresShell::GetShellForTouchEvent(WidgetGUIEvent* aEvent) {
   return shell;
 }
 
-nsresult PresShell::HandleEvent(nsIFrame* aFrame, WidgetGUIEvent* aGUIEvent,
+nsresult PresShell::HandleEvent(nsIFrame* aFrameForPresShell,
+                                WidgetGUIEvent* aGUIEvent,
                                 bool aDontRetargetEvents,
                                 nsEventStatus* aEventStatus) {
   MOZ_ASSERT(aGUIEvent);
   EventHandler eventHandler(*this);
-  return eventHandler.HandleEvent(aFrame, aGUIEvent, aDontRetargetEvents,
-                                  aEventStatus);
+  return eventHandler.HandleEvent(aFrameForPresShell, aGUIEvent,
+                                  aDontRetargetEvents, aEventStatus);
 }
 
-nsresult PresShell::EventHandler::HandleEvent(nsIFrame* aFrame,
+nsresult PresShell::EventHandler::HandleEvent(nsIFrame* aFrameForPresShell,
                                               WidgetGUIEvent* aGUIEvent,
                                               bool aDontRetargetEvents,
                                               nsEventStatus* aEventStatus) {
@@ -6472,7 +6473,7 @@ nsresult PresShell::EventHandler::HandleEvent(nsIFrame* aFrame,
   }
 #endif
 
-  NS_ASSERTION(aFrame, "aFrame should be not null");
+  NS_ASSERTION(aFrameForPresShell, "aFrameForPresShell should be not null");
 
   // Update the latest focus sequence number with this new sequence number;
   // the next transasction that gets sent to the compositor will carry this over
@@ -6503,8 +6504,8 @@ nsresult PresShell::EventHandler::HandleEvent(nsIFrame* aFrame,
     // If aGUIEvent should be handled in another PresShell, we should call its
     // HandleEvent() and do nothing here.
     nsresult rv = NS_OK;
-    if (MaybeHandleEventWithAnotherPresShell(aFrame, aGUIEvent, aEventStatus,
-                                             &rv)) {
+    if (MaybeHandleEventWithAnotherPresShell(aFrameForPresShell, aGUIEvent,
+                                             aEventStatus, &rv)) {
       // Handled by another PresShell or nobody can handle the event.
       return rv;
     }
@@ -6516,18 +6517,18 @@ nsresult PresShell::EventHandler::HandleEvent(nsIFrame* aFrame,
   }
 
   if (aGUIEvent->IsUsingCoordinates()) {
-    return HandleEventUsingCoordinates(aFrame, aGUIEvent, aEventStatus,
-                                       aDontRetargetEvents);
+    return HandleEventUsingCoordinates(aFrameForPresShell, aGUIEvent,
+                                       aEventStatus, aDontRetargetEvents);
   }
 
   // Activation events need to be dispatched even if no frame was found, since
   // we don't want the focus to be out of sync.
-  if (!aFrame) {
+  if (!aFrameForPresShell) {
     if (!NS_EVENT_NEEDS_FRAME(aGUIEvent)) {
       mPresShell->mCurrentEventFrame = nullptr;
-      nsCOMPtr<nsIContent> overrideClickTarget;  // Required due to bug  1506439
-      return HandleEventInternal(aGUIEvent, aEventStatus, true,
-                                 overrideClickTarget);
+      // XXX Shouldn't we create AutoCurrentEventInfoSetter instance for this
+      //     call even if we set the target to nullptr.
+      return HandleEventWithCurrentEventInfo(aGUIEvent, aEventStatus, true, nullptr);
     }
 
     if (aGUIEvent->HasKeyEventMessage()) {
@@ -6543,7 +6544,8 @@ nsresult PresShell::EventHandler::HandleEvent(nsIFrame* aFrame,
     return HandleEventAtFocusedContent(aGUIEvent, aEventStatus);
   }
 
-  return HandleEventWithFrameForPresShell(aFrame, aGUIEvent, aEventStatus);
+  return HandleEventWithFrameForPresShell(aFrameForPresShell, aGUIEvent,
+                                          aEventStatus);
 }
 
 nsresult PresShell::EventHandler::HandleEventUsingCoordinates(
@@ -6707,8 +6709,11 @@ nsresult PresShell::EventHandler::HandleEventUsingCoordinates(
   // now ask the subshell to dispatch it normally.
   EventHandler eventHandler(*eventTargetData.mPresShell);
   AutoCurrentEventInfoSetter eventInfoSetter(eventHandler, eventTargetData);
-  nsresult rv = eventHandler.HandleEventInternal(
-      aGUIEvent, aEventStatus, true, eventTargetData.mOverrideClickTarget);
+  // eventTargetData is on the stack and is guaranteed to keep its
+  // mOverrideClickTarget alive, so we can just use MOZ_KnownLive here.
+  nsresult rv = eventHandler.HandleEventWithCurrentEventInfo(
+      aGUIEvent, aEventStatus, true,
+      MOZ_KnownLive(eventTargetData.mOverrideClickTarget));
 #ifdef DEBUG
   eventTargetData.mPresShell->ShowEventTargetDebug();
 #endif
@@ -6857,11 +6862,12 @@ bool PresShell::EventHandler::DispatchPrecedingPointerEvent(
 
   AutoWeakFrame weakTargetFrame(targetFrame);
   AutoWeakFrame weakFrame(aEventTargetData->mFrame);
+  nsCOMPtr<nsIContent> content(aEventTargetData->mContent);
+  RefPtr<PresShell> presShell(aEventTargetData->mPresShell);
   nsCOMPtr<nsIContent> targetContent;
   PointerEventHandler::DispatchPointerFromMouseOrTouch(
-      aEventTargetData->mPresShell, aEventTargetData->mFrame,
-      aEventTargetData->mContent, aGUIEvent, aDontRetargetEvents, aEventStatus,
-      getter_AddRefs(targetContent));
+      presShell, aEventTargetData->mFrame, content, aGUIEvent,
+      aDontRetargetEvents, aEventStatus, getter_AddRefs(targetContent));
 
   // If the target frame is alive, the caller should keep handling the event
   // unless event target frame is destroyed.
@@ -7446,9 +7452,7 @@ nsresult PresShell::EventHandler::HandleEventAtFocusedContent(
     return RetargetEventToParent(aGUIEvent, aEventStatus);
   }
 
-  nsCOMPtr<nsIContent> overrideClickTarget;  // Required due to bug  1506439
-  nsresult rv =
-      HandleEventInternal(aGUIEvent, aEventStatus, true, overrideClickTarget);
+  nsresult rv = HandleEventWithCurrentEventInfo(aGUIEvent, aEventStatus, true, nullptr);
 
 #ifdef DEBUG
   mPresShell->ShowEventTargetDebug();
@@ -7552,9 +7556,7 @@ nsresult PresShell::EventHandler::HandleEventWithFrameForPresShell(
 
   nsresult rv = NS_OK;
   if (mPresShell->GetCurrentEventFrame()) {
-    nsCOMPtr<nsIContent> overrideClickTarget;  // Required due to bug  1506439
-    rv =
-        HandleEventInternal(aGUIEvent, aEventStatus, true, overrideClickTarget);
+    rv = HandleEventWithCurrentEventInfo(aGUIEvent, aEventStatus, true, nullptr);
   }
 
 #ifdef DEBUG
@@ -7626,12 +7628,12 @@ nsresult PresShell::EventHandler::HandleEventWithTarget(
                                         aTargetContent);
   AutoCurrentEventInfoSetter eventInfoSetter(*this, aNewEventFrame,
                                              aNewEventContent);
-  nsresult rv =
-      HandleEventInternal(aEvent, aEventStatus, false, aOverrideClickTarget);
+  nsresult rv = HandleEventWithCurrentEventInfo(aEvent, aEventStatus, false,
+                                                aOverrideClickTarget);
   return rv;
 }
 
-nsresult PresShell::EventHandler::HandleEventInternal(
+nsresult PresShell::EventHandler::HandleEventWithCurrentEventInfo(
     WidgetEvent* aEvent, nsEventStatus* aEventStatus,
     bool aIsHandlingNativeEvent, nsIContent* aOverrideClickTarget) {
   MOZ_ASSERT(aEvent);
@@ -7719,11 +7721,15 @@ nsresult PresShell::EventHandler::DispatchEvent(
 
   // 1. Give event to event manager for pre event state changes and
   //    generation of synthetic events.
-  nsresult rv = aEventStateManager->PreHandleEvent(
-      GetPresContext(), aEvent, mPresShell->mCurrentEventFrame,
-      mPresShell->mCurrentEventContent, aEventStatus, aOverrideClickTarget);
-  if (NS_FAILED(rv)) {
-    return rv;
+  {  // Scope for presContext
+    RefPtr<nsPresContext> presContext = GetPresContext();
+    nsCOMPtr<nsIContent> eventContent = mPresShell->mCurrentEventContent;
+    nsresult rv = aEventStateManager->PreHandleEvent(
+        presContext, aEvent, mPresShell->mCurrentEventFrame, eventContent,
+        aEventStatus, aOverrideClickTarget);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
   }
 
   // 2. Give event to the DOM for third party and JS use.
@@ -7777,9 +7783,11 @@ nsresult PresShell::EventHandler::DispatchEvent(
 
   // 3. Give event to event manager for post event state changes and
   //    generation of synthetic events.
+  // Refetch the prescontext, in case it changed.
+  RefPtr<nsPresContext> presContext = GetPresContext();
   return aEventStateManager->PostHandleEvent(
-      GetPresContext(), aEvent, mPresShell->GetCurrentEventFrame(),
-      aEventStatus, aOverrideClickTarget);
+      presContext, aEvent, mPresShell->GetCurrentEventFrame(), aEventStatus,
+      aOverrideClickTarget);
 }
 
 bool PresShell::EventHandler::PrepareToDispatchEvent(WidgetEvent* aEvent) {

@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{TileOffset, TileRange, LayoutRect, LayoutSize, LayoutPoint};
-use api::{DeviceIntSize, DeviceIntRect, TileSize};
+use api::TileSize;
+use api::units::*;
 use euclid::{point2, size2};
 use prim_store::EdgeAaSegmentMask;
 
@@ -565,7 +565,6 @@ pub fn for_each_tile_in_range(
 mod tests {
     use super::*;
     use std::collections::HashSet;
-    use api::LayoutRect;
     use euclid::rect;
 
     // this checks some additional invariants

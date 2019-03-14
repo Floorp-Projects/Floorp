@@ -141,6 +141,9 @@ lazy_static! {
         // c.f. https://github.com/mozilla/geckodriver/issues/225.
         ("plugin.state.flash", Pref::new(0)),
 
+        // Don't do network connections for mitm priming
+        ("security.certerrors.mitm.priming.enabled", Pref::new(false)),
+
         // Ensure blocklist updates don't hit the network
         ("services.settings.server", Pref::new("http://%(server)s/dummy/blocklist/")),
 

@@ -4,7 +4,6 @@
 
 extern crate yaml_rust;
 
-use app_units::Au;
 use euclid::{TypedPoint2D, TypedRect, TypedSize2D, TypedTransform3D, TypedVector2D};
 use image::{save_buffer, ColorType};
 use premultiply::unpremultiply;
@@ -19,6 +18,7 @@ use webrender;
 use webrender::api::*;
 use webrender::api::SpecificDisplayItem as Sdi;
 use webrender::api::channel::Payload;
+use webrender::api::units::*;
 use yaml_helper::StringEnum;
 use yaml_rust::{Yaml, YamlEmitter};
 

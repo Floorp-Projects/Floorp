@@ -49,7 +49,7 @@ class EditorEventListener : public nsIDOMEventListener {
   NS_DECL_ISUPPORTS
 
   // nsIDOMEventListener
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY
+  MOZ_CAN_RUN_SCRIPT
   NS_IMETHOD HandleEvent(dom::Event* aEvent) override;
 
   void SpellCheckIfNeeded();
@@ -65,6 +65,7 @@ class EditorEventListener : public nsIDOMEventListener {
   MOZ_CAN_RUN_SCRIPT
   nsresult KeyUp(const WidgetKeyboardEvent* aKeyboardEvent);
 #endif
+  MOZ_CAN_RUN_SCRIPT
   nsresult KeyPress(WidgetKeyboardEvent* aKeyboardEvent);
   MOZ_CAN_RUN_SCRIPT
   nsresult HandleChangeComposition(WidgetCompositionEvent* aCompositionEvent);

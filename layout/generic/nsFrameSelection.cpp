@@ -811,7 +811,9 @@ nsresult nsFrameSelection::MoveCaret(nsDirection aDirection,
           }
       }
     }
-    result = TakeFocus(pos.mResultContent, pos.mContentOffset,
+    // "pos" is on the stack, so pos.mResultContent has stack lifetime, so using
+    // MOZ_KnownLive is ok.
+    result = TakeFocus(MOZ_KnownLive(pos.mResultContent), pos.mContentOffset,
                        pos.mContentOffset, tHint, aContinueSelection, false);
   } else if (aAmount <= eSelectWordNoSpace && aDirection == eDirNext &&
              !aContinueSelection) {
@@ -2649,7 +2651,8 @@ void nsFrameSelection::SetAncestorLimiter(nsIContent* aLimiter) {
       ClearNormalSelection();
       if (mAncestorLimiter) {
         PostReason(nsISelectionListener::NO_REASON);
-        TakeFocus(mAncestorLimiter, 0, 0, CARET_ASSOCIATE_BEFORE, false, false);
+        nsCOMPtr<nsIContent> limiter(mAncestorLimiter);
+        TakeFocus(limiter, 0, 0, CARET_ASSOCIATE_BEFORE, false, false);
       }
     }
   }

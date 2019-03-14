@@ -289,7 +289,7 @@ var snapshotFormatters = {
     // Create a <tr> element with key and value columns.
     //
     // @key      Text in the key column. Localized automatically, unless starts with "#".
-    // @value    Text in the value column. Not localized.
+    // @value    Fluent ID for text in the value column, or array of children.
     function buildRow(key, value) {
       let title = key[0] == "#" ? key.substr(1) : key;
       let keyStrId = toFluentID(key);
@@ -447,8 +447,8 @@ var snapshotFormatters = {
 
     addRow("features", "asyncPanZoom",
            apzInfo.length
-           ? (await document.l10n.formatValues(apzInfo.map(id => { return {id}; }))).join("; ")
-           : await localizedMsg("apz-none"));
+           ? [new Text((await document.l10n.formatValues(apzInfo.map(id => { return {id}; }))).join("; "))]
+           : "apz-none");
     let featureKeys = [
       "webgl1WSIInfo",
       "webgl1Renderer",
@@ -587,7 +587,7 @@ var snapshotFormatters = {
 
     if (featureLog.fallbacks.length) {
       for (let fallback of featureLog.fallbacks) {
-        addRow("workarounds", fallback.name, fallback.message);
+        addRow("workarounds", fallback.name, [new Text(fallback.message)]);
       }
     } else {
       $("graphics-workarounds-tbody").style.display = "none";
@@ -618,7 +618,7 @@ var snapshotFormatters = {
     // the diagnostics section.
     for (let key in data) {
       let value = data[key];
-      addRow("diagnostics", key, value);
+      addRow("diagnostics", key, [new Text(value)]);
     }
   },
 

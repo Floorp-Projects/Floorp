@@ -331,6 +331,8 @@ def main():
         for p, f in copier:
             if not isinstance(f, Jarrer):
                 continue
+            if respath:
+                p = mozpath.relpath(p, respath)
             if p in log:
                 f.preload(log[p])
             elif p in omnijars:

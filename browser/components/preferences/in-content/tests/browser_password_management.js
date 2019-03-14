@@ -1,5 +1,6 @@
 "use strict";
 const PM_URL = "chrome://passwordmgr/content/passwordManager.xul";
+const PREF_MANAGEMENT_URI = "signon.management.overrideURI";
 
 var passwordsDialog;
 
@@ -15,23 +16,11 @@ add_task(async function test_setup() {
 
   registerCleanupFunction(async function() {
     Services.logins.removeAllLogins();
+    Services.prefs.clearUserPref(PREF_MANAGEMENT_URI);
   });
 });
 
 add_task(async function test_openPasswordSubDialog() {
-  // Undo the save password change.
-  registerCleanupFunction(async function() {
-    await ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
-      let doc = content.document;
-      let savePasswordCheckBox = doc.getElementById("savePasswords");
-      if (savePasswordCheckBox.checked) {
-        savePasswordCheckBox.click();
-      }
-    });
-
-    gBrowser.removeCurrentTab();
-  });
-
   await openPreferencesViaOpenPreferencesAPI("privacy", {leaveOpen: true});
 
   let dialogOpened = promiseLoadSubDialog(PM_URL);
@@ -68,4 +57,35 @@ add_task(async function test_deletePasswordWithKey() {
 
   is_element_visible(content.gSubDialog._dialogs[0]._box,
     "Subdialog is visible after deleting an element");
+});
+
+add_task(async function subdialog_cleanup() {
+  // Undo the save password change.
+  await ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
+    let doc = content.document;
+    let savePasswordCheckBox = doc.getElementById("savePasswords");
+    if (savePasswordCheckBox.checked) {
+      savePasswordCheckBox.click();
+    }
+  });
+  gBrowser.removeCurrentTab();
+});
+
+add_task(async function test_openPasswordManagement_overrideURI() {
+  Services.prefs.setStringPref(PREF_MANAGEMENT_URI, "about:logins?filter=%DOMAIN%");
+  await openPreferencesViaOpenPreferencesAPI("privacy", {leaveOpen: true});
+
+  let tabOpenPromise = BrowserTestUtils.waitForNewTab(gBrowser, "about:logins?filter=");
+
+  await ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
+    let doc = content.document;
+    let showPasswordsButton = doc.getElementById("showPasswords");
+    showPasswordsButton.click();
+  });
+
+  let tab = await tabOpenPromise;
+  ok(tab, "Tab opened");
+  BrowserTestUtils.removeTab(tab);
+  Services.prefs.clearUserPref(PREF_MANAGEMENT_URI);
+  gBrowser.removeCurrentTab();
 });

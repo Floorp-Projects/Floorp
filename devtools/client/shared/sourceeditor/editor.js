@@ -14,11 +14,19 @@ const {
 } = require("devtools/shared/indentation");
 
 const ENABLE_CODE_FOLDING = "devtools.editor.enableCodeFolding";
-const KEYMAP = "devtools.editor.keymap";
+const KEYMAP_PREF = "devtools.editor.keymap";
 const AUTO_CLOSE = "devtools.editor.autoclosebrackets";
 const AUTOCOMPLETE = "devtools.editor.autocomplete";
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-const VALID_KEYMAPS = new Set(["emacs", "vim", "sublime"]);
+
+const VALID_KEYMAPS = new Map([
+  ["emacs", "chrome://devtools/content/shared/sourceeditor/codemirror/keymap/emacs.js"],
+  ["vim", "chrome://devtools/content/shared/sourceeditor/codemirror/keymap/vim.js"],
+  [
+    "sublime",
+    "chrome://devtools/content/shared/sourceeditor/codemirror/keymap/sublime.js",
+  ],
+]);
 
 // Maximum allowed margin (in number of lines) from top or bottom of the editor
 // while shifting to a line which was initially out of view.
@@ -435,16 +443,22 @@ Editor.prototype = {
     editors.set(this, cm);
 
     this.reloadPreferences = this.reloadPreferences.bind(this);
+    this.setKeyMap = this.setKeyMap.bind(this, win);
+
     this._prefObserver = new PrefObserver("devtools.editor.");
     this._prefObserver.on(TAB_SIZE, this.reloadPreferences);
     this._prefObserver.on(EXPAND_TAB, this.reloadPreferences);
-    this._prefObserver.on(KEYMAP, this.reloadPreferences);
     this._prefObserver.on(AUTO_CLOSE, this.reloadPreferences);
     this._prefObserver.on(AUTOCOMPLETE, this.reloadPreferences);
     this._prefObserver.on(DETECT_INDENT, this.reloadPreferences);
     this._prefObserver.on(ENABLE_CODE_FOLDING, this.reloadPreferences);
 
     this.reloadPreferences();
+
+    // Init a map of the loaded keymap files. Should be of the form Map<String->Boolean>.
+    this._loadedKeyMaps = new Set();
+    this._prefObserver.on(KEYMAP_PREF, this.setKeyMap);
+    this.setKeyMap();
 
     win.editor = this;
     const editorReadyEvent = new win.CustomEvent("editorReady");
@@ -614,17 +628,34 @@ Editor.prototype = {
     this.setOption("autoCloseBrackets",
       useAutoClose ? this.config.autoCloseBracketsSaved : false);
 
-    // If alternative keymap is provided, use it.
-    const keyMap = Services.prefs.getCharPref(KEYMAP);
-    if (VALID_KEYMAPS.has(keyMap)) {
-      this.setOption("keyMap", keyMap);
-    } else {
-      this.setOption("keyMap", "default");
-    }
     this.updateCodeFoldingGutter();
 
     this.resetIndentUnit();
     this.setupAutoCompletion();
+  },
+
+  /**
+   * Set the current keyMap for CodeMirror, and load the support file if needed.
+   *
+   * @param {Window} win: The window on which the keymap files should be loaded.
+   */
+  setKeyMap(win) {
+    if (this.config.isReadOnly) {
+      return;
+    }
+
+    const keyMap = Services.prefs.getCharPref(KEYMAP_PREF);
+
+    // If alternative keymap is provided, use it.
+    if (VALID_KEYMAPS.has(keyMap)) {
+      if (!this._loadedKeyMaps.has(keyMap)) {
+        Services.scriptloader.loadSubScript(VALID_KEYMAPS.get(keyMap), win);
+        this._loadedKeyMaps.add(keyMap);
+      }
+      this.setOption("keyMap", keyMap);
+    } else {
+      this.setOption("keyMap", "default");
+    }
   },
 
   /**
@@ -1338,9 +1369,9 @@ Editor.prototype = {
     this.version = null;
 
     if (this._prefObserver) {
+      this._prefObserver.off(KEYMAP_PREF, this.setKeyMap);
       this._prefObserver.off(TAB_SIZE, this.reloadPreferences);
       this._prefObserver.off(EXPAND_TAB, this.reloadPreferences);
-      this._prefObserver.off(KEYMAP, this.reloadPreferences);
       this._prefObserver.off(AUTO_CLOSE, this.reloadPreferences);
       this._prefObserver.off(AUTOCOMPLETE, this.reloadPreferences);
       this._prefObserver.off(DETECT_INDENT, this.reloadPreferences);

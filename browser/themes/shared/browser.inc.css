@@ -326,8 +326,16 @@
   background-image: url("resource://activity-stream/data/content/assets/cfr_pinnedtab_animated.png");
   background-position: top center;
   background-repeat: no-repeat;
+  background-size: cover;
   height: 173px;
+  padding-top: 129px;
   width: 343px;
+}
+
+@media (min-resolution: 2dppx) {
+  #cfr-notification-footer-pintab-animation-container {
+    background-image: url("resource://activity-stream/data/content/assets/cfr_pinnedtab_animated@2x.png");
+  }
 }
 
 #contextual-feature-recommendation-notification[data-notification-category="cfrAddons"] #cfr-notification-footer-pintab-animation-container {
@@ -341,8 +349,23 @@
   background-image: url("resource://activity-stream/data/content/assets/cfr_pinnedtab_static.png");
 }
 
+@media (min-resolution: 2dppx) {
+  #cfr-notification-footer-pintab-animation-container:not([animate]),
+  #cfr-notification-footer-pintab-animation-container[paused],
+  :root[lwt-popup-brighttext] #cfr-notification-footer-pintab-animation-container:not([animate]),
+  :root[lwt-popup-brighttext] #cfr-notification-footer-pintab-animation-container[paused] {
+    background-image: url("resource://activity-stream/data/content/assets/cfr_pinnedtab_static@2x.png");
+  }
+}
+
 :root[lwt-popup-brighttext] #cfr-notification-footer-pintab-animation-container {
   background-image: url("resource://activity-stream/data/content/assets/cfr_pinnedtab_animated_darktheme.png");
+}
+
+@media (min-resolution: 2dppx) {
+  :root[lwt-popup-brighttext] #cfr-notification-footer-pintab-animation-container {
+    background-image: url("resource://activity-stream/data/content/assets/cfr_pinnedtab_animated_darktheme@2x.png");
+  }
 }
 
 #cfr-notification-footer-animation-controls {
@@ -354,31 +377,37 @@
   margin-left: 13px;
 }
 
-#cfr-notification-footer-pintab-animation-container:not([animate]) #cfr-notification-footer-animation-controls,
-#cfr-notification-footer-pintab-animation-container[paused] #cfr-notification-footer-animation-controls {
+#cfr-notification-footer-pintab-animation-container:not([animate]) #cfr-notification-footer-animation-controls {
   visibility: hidden;
 }
 
-#cfr-notification-footer-pause-label {
-  font-weight: 600;
-  line-height: 11px;
-}
-
-#cfr-notification-footer-pause-button,
-#cfr-notification-footer-pause-label {
-  color: rgba(12, 12, 13, 0.8);
-  cursor: pointer;
-}
-
-#cfr-notification-footer-pause-icon {
+#cfr-notification-footer-animation-button {
   background-image: url("resource://activity-stream/data/content/assets/glyph-pause-12.svg");
-  background-position: center center;
+  background-position: right center;
   background-repeat: no-repeat;
   background-size: 12px 10px;
   -moz-context-properties: fill;
   fill: rgba(12, 12, 13, 0.8);
-  height: 12px;
-  width: 10px;
+  padding-inline-end: 10px;
+}
+
+#cfr-notification-footer-pintab-animation-container[paused] #cfr-notification-footer-animation-button {
+  background-image: url("resource://activity-stream/data/content/assets/glyph-play-12.svg");
+}
+
+#cfr-notification-footer-animation-button:-moz-locale-dir(rtl) {
+  background-position-x: left;
+}
+
+#cfr-notification-footer-animation-label {
+  font-weight: 600;
+  line-height: 11px;
+}
+
+#cfr-notification-footer-animation-button,
+#cfr-notification-footer-animation-label {
+  color: rgba(12, 12, 13, 0.8);
+  cursor: pointer;
 }
 
 #content-mask {

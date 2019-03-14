@@ -15,6 +15,8 @@ use boilerplate::{Example, HandyDandyRectBuilder};
 use euclid::TypedScale;
 use gleam::gl;
 use webrender::api::*;
+use webrender::api::units::*;
+
 
 // This example demonstrates using the frame output feature to copy
 // the output of a WR framebuffer to a custom texture.

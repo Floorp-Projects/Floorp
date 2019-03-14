@@ -5302,13 +5302,6 @@ bool BaselineCodeGen<Handler>::emit_JSOP_FINALYIELDRVAL() {
   return emitReturn();
 }
 
-typedef bool (*GeneratorThrowFn)(JSContext*, BaselineFrame*,
-                                 Handle<AbstractGeneratorObject*>, HandleValue,
-                                 uint32_t);
-static const VMFunction GeneratorThrowOrReturnInfo =
-    FunctionInfo<GeneratorThrowFn>(jit::GeneratorThrowOrReturn,
-                                   "GeneratorThrowOrReturn", TailCall);
-
 template <>
 bool BaselineCompilerCodeGen::emit_JSOP_RESUME() {
   auto resumeKind = AbstractGeneratorObject::getResumeKind(handler.pc());
@@ -5518,8 +5511,13 @@ bool BaselineCompilerCodeGen::emit_JSOP_RESUME() {
     pushArg(genObj);
     pushArg(scratch2);
 
-    const VMFunction& fun = GeneratorThrowOrReturnInfo;
-    TrampolinePtr code = cx->runtime()->jitRuntime()->getVMWrapper(fun);
+    using Fn =
+        bool (*)(JSContext*, BaselineFrame*, Handle<AbstractGeneratorObject*>,
+                 HandleValue, uint32_t);
+    TailCallVMFunctionId id =
+        TailCallVMFunctionToId<Fn, jit::GeneratorThrowOrReturn>::id;
+    TrampolinePtr code = cx->runtime()->jitRuntime()->getVMWrapper(id);
+    const VMFunctionData& fun = GetVMFunction(id);
 
     // Create and push the frame descriptor.
     masm.subStackPtrFrom(scratch1);

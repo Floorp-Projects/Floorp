@@ -19,11 +19,12 @@ import type { ResumedPacket } from "../../client/firefox/types";
  */
 export function resumed(packet: ResumedPacket) {
   return async ({ dispatch, client, getState }: ThunkArgs) => {
-    const why = getPauseReason(getState());
+    const thread = packet.from;
+    const why = getPauseReason(getState(), thread);
     const wasPausedInEval = inDebuggerEval(why);
-    const wasStepping = isStepping(getState());
+    const wasStepping = isStepping(getState(), thread);
 
-    dispatch({ type: "RESUME", thread: packet.from, wasStepping });
+    dispatch({ type: "RESUME", thread, wasStepping });
 
     if (!wasStepping && !wasPausedInEval) {
       await dispatch(evaluateExpressions());

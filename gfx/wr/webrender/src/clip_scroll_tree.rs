@@ -12,7 +12,7 @@ use print_tree::{PrintableTree, PrintTree, PrintTreePrinter};
 use scene::SceneProperties;
 use spatial_node::{ScrollFrameInfo, SpatialNode, SpatialNodeType, StickyFrameInfo, ScrollFrameKind};
 use std::{ops, u32};
-use util::{project_rect, LayoutToWorldFastTransform, MatrixHelpers, ScaleOffset};
+use util::{LayoutToWorldFastTransform, MatrixHelpers, ScaleOffset};
 
 pub type ScrollStates = FastHashMap<ExternalScrollId, ScrollFrameInfo>;
 
@@ -227,35 +227,6 @@ impl ClipScrollTree {
             visible_face: relative.visible_face,
             is_perspective: relative.is_perspective,
         }
-    }
-
-    /// Map a rectangle in some child space to a parent.
-    /// Doesn't handle preserve-3d islands.
-    pub fn map_rect_to_parent_space(
-        &self,
-        mut rect: LayoutRect,
-        child_index: SpatialNodeIndex,
-        parent_index: SpatialNodeIndex,
-        parent_bounds: &LayoutRect,
-    ) -> Option<LayoutRect> {
-        if child_index == parent_index {
-            return Some(rect);
-        }
-        assert!(child_index.0 > parent_index.0);
-
-        let child = &self.spatial_nodes[child_index.0 as usize];
-        let parent = &self.spatial_nodes[parent_index.0 as usize];
-
-        let mut coordinate_system_id = child.coordinate_system_id;
-        rect = child.coordinate_system_relative_scale_offset.map_rect(&rect);
-
-        while coordinate_system_id != parent.coordinate_system_id {
-            let coord_system = &self.coord_systems[coordinate_system_id.0 as usize];
-            coordinate_system_id = coord_system.parent.expect("invalid parent!");
-            rect = project_rect(&coord_system.transform, &rect, parent_bounds)?;
-        }
-
-        Some(parent.coordinate_system_relative_scale_offset.unmap_rect(&rect))
     }
 
     /// Returns true if the spatial node is the same as the parent, or is

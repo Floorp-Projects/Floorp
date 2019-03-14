@@ -68,8 +68,7 @@ fi
 if [ -n "${ARC_SECRET}" ] && getent hosts taskcluster
 then
   set +x # Don't echo these
-  # Until bug 1460015 is finished, use baseUrl-style proxy URLs
-  secrets_url="${TASKCLUSTER_PROXY_URL}/secrets/v1/secret/${ARC_SECRET}"
+  secrets_url="${TASKCLUSTER_PROXY_URL}/api/secrets/v1/secret/${ARC_SECRET}"
   SECRET=$(curl "${secrets_url}")
   TOKEN=$(echo "${SECRET}" | jq -r '.secret.token')
 elif [ -n "${ARC_TOKEN}" ] # Allow for local testing.

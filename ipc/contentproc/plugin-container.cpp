@@ -46,6 +46,13 @@ int content_process_main(mozilla::Bootstrap* bootstrap, int argc,
 
   bootstrap->XRE_SetProcessType(argv[--argc]);
 
+#if defined(XP_WIN) && defined(MOZ_SANDBOX)
+  if (bootstrap->XRE_GetProcessType() == GeckoProcessType_RemoteSandboxBroker) {
+    childData.sandboxBrokerServices =
+        mozilla::sandboxing::GetInitializedBrokerServices();
+  }
+#endif
+
   nsresult rv = bootstrap->XRE_InitChildProcess(argc, argv, &childData);
   return NS_FAILED(rv);
 }

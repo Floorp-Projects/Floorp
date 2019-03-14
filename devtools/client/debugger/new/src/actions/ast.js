@@ -7,9 +7,9 @@
 import {
   getSource,
   getSourceFromId,
+  getSourceThreads,
   getSymbols,
-  getSelectedLocation,
-  isPaused
+  getSelectedLocation
 } from "../selectors";
 
 import { mapFrames } from "./pause";
@@ -64,9 +64,8 @@ export function setSymbols(sourceId: SourceId) {
       [PROMISE]: parser.getSymbols(sourceId)
     });
 
-    if (isPaused(getState())) {
-      await dispatch(mapFrames());
-    }
+    const threads = getSourceThreads(getState(), source);
+    await Promise.all(threads.map(thread => dispatch(mapFrames(thread))));
 
     await dispatch(setSourceMetaData(sourceId));
   };
@@ -86,7 +85,7 @@ export function setOutOfScopeLocations() {
     }
 
     let locations = null;
-    if (location.line && source && !source.isWasm && isPaused(getState())) {
+    if (location.line && source && !source.isWasm) {
       locations = await parser.findOutOfScopeLocations(
         source.id,
         ((location: any): parser.AstPosition)

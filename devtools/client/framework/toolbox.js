@@ -1350,6 +1350,7 @@ Toolbox.prototype = {
 
   _onPickerStarted: async function() {
     this.doc.addEventListener("keypress", this._onPickerKeypress, true);
+    this.telemetry.scalarAdd("devtools.inspector.element_picker_used", 1);
   },
 
   _onPickerStopped: function() {
@@ -1813,19 +1814,6 @@ Toolbox.prototype = {
         const vbox = this.doc.getElementById("toolbox-panel-" + id);
         vbox.appendChild(iframe);
         vbox.visibility = "visible";
-      }
-
-      // TODO: remove in Firefox 68, with bug #1528296
-      if (definition.deprecated) {
-        const deprecationURL = this.doc.createXULElement("label");
-        deprecationURL.textContent = L10N.getFormatStr("options.deprecationNotice");
-        deprecationURL.setAttribute("href", definition.deprecationURL);
-        deprecationURL.setAttribute("class", "text-link");
-
-        const deprecationNotice = this.doc.createXULElement("span");
-        deprecationNotice.className = "toolbox-panel_deprecation-notice";
-        deprecationNotice.appendChild(deprecationURL);
-        iframe.parentNode.prepend(deprecationNotice);
       }
 
       const onLoad = async () => {

@@ -13,7 +13,6 @@ from distutils.spawn import find_executable
 
 from mozboot.util import get_state_dir
 from mozterm import Terminal
-from six import string_types
 
 from ..cli import BaseTryParser
 from ..tasks import generate_tasks, filter_tasks_by_paths
@@ -211,9 +210,9 @@ def filter_target_task(task):
     return not any(re.search(pattern, task) for pattern in TARGET_TASK_FILTERS)
 
 
-def run(update=False, query=None, templates=None, full=False, parameters=None, save_query=False,
-        push=True, message='{msg}', test_paths=None, exact=False, closed_tree=False,
-        intersection=False):
+def run(update=False, query=None, intersect_query=None, templates=None, full=False,
+        parameters=None, save_query=False, push=True, message='{msg}',
+        test_paths=None, exact=False, closed_tree=False):
     fzf = fzf_bootstrap(update)
 
     if not fzf:
@@ -247,29 +246,30 @@ def run(update=False, query=None, templates=None, full=False, parameters=None, s
     if exact:
         base_cmd.append('--exact')
 
-    query = query or []
-    if isinstance(query, string_types):
-        query = [query]
-
-    commands = []
-    if query:
-        for q in query:
-            commands.append(base_cmd + ['-f', q])
-    else:
-        commands.append(base_cmd)
-
-    queries = []
     selected = set()
-    for command in commands:
-        query, tasks = run_fzf(command, all_tasks)
-        if tasks:
-            tasks = set(tasks)
-            queries.append(query)
+    queries = []
 
-            if intersection and selected:
-                selected &= tasks
-            else:
-                selected |= tasks
+    def get_tasks(query_arg=None):
+        cmd = base_cmd[:]
+        if query_arg:
+            cmd.extend(['-f', query_arg])
+
+        query_str, tasks = run_fzf(cmd, all_tasks)
+        queries.append(query_str)
+        return set(tasks)
+
+    for q in query or []:
+        selected |= get_tasks(q)
+
+    for q in intersect_query or []:
+        tasks = get_tasks(q)
+        if not selected:
+            selected |= tasks
+        else:
+            selected &= tasks
+
+    if not queries:
+        selected = get_tasks()
 
     if not selected:
         print("no tasks selected")
@@ -280,11 +280,9 @@ def run(update=False, query=None, templates=None, full=False, parameters=None, s
 
     # build commit message
     msg = "Fuzzy"
-    args = []
+    args = ["query={}".format(q) for q in queries]
     if test_paths:
         args.append("paths={}".format(':'.join(test_paths)))
-    if query:
-        args.extend(["query={}".format(q) for q in queries])
     if args:
         msg = "{} {}".format(msg, '&'.join(args))
     return push_to_try('fuzzy', message.format(msg=msg), selected, templates, push=push,

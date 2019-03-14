@@ -166,10 +166,12 @@ static already_AddRefed<GLContext> CreateEAGLContext(CreateContextFlags flags, b
 }
 
 already_AddRefed<GLContext> GLContextProviderEAGL::CreateForCompositorWidget(
-    CompositorWidget* aCompositorWidget, bool aForceAccelerated) {
-  return CreateForWindow(aCompositorWidget->RealWidget(),
-                         aCompositorWidget->GetCompositorOptions().UseWebRender(),
-                         aForceAccelerated);
+    CompositorWidget* aCompositorWidget, bool aWebRender, bool aForceAccelerated) {
+  if (!aCompositorWidget) {
+    MOZ_ASSERT(false);
+    return nullptr;
+  }
+  return CreateForWindow(aCompositorWidget->RealWidget(), aWebRender, aForceAccelerated);
 }
 
 already_AddRefed<GLContext> GLContextProviderEAGL::CreateForWindow(nsIWidget* aWidget,

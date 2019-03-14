@@ -527,7 +527,7 @@ add_task(async function autofill_disabled() {
   Services.prefs.setBoolPref("extensions.formautofill.creditCards.enabled", false);
   FormAutofillContent.formSubmitted(form, null);
   Assert.equal(FormAutofillContent._onFormSubmit.called, false);
-  FormAutofillContent._onFormSubmit.reset();
+  FormAutofillContent._onFormSubmit.resetHistory();
 
   // "_onFormSubmit" should be called as usual.
   Services.prefs.clearUserPref("extensions.formautofill.addresses.enabled");
@@ -536,7 +536,7 @@ add_task(async function autofill_disabled() {
   Assert.equal(FormAutofillContent._onFormSubmit.called, true);
   Assert.notDeepEqual(FormAutofillContent._onFormSubmit.args[0][0].address, []);
   Assert.notDeepEqual(FormAutofillContent._onFormSubmit.args[0][0].creditCard, []);
-  FormAutofillContent._onFormSubmit.reset();
+  FormAutofillContent._onFormSubmit.resetHistory();
 
   // "address" should be empty if "addresses" pref is disabled.
   Services.prefs.setBoolPref("extensions.formautofill.addresses.enabled", false);
@@ -544,7 +544,7 @@ add_task(async function autofill_disabled() {
   Assert.equal(FormAutofillContent._onFormSubmit.called, true);
   Assert.deepEqual(FormAutofillContent._onFormSubmit.args[0][0].address, []);
   Assert.notDeepEqual(FormAutofillContent._onFormSubmit.args[0][0].creditCard, []);
-  FormAutofillContent._onFormSubmit.reset();
+  FormAutofillContent._onFormSubmit.resetHistory();
   Services.prefs.clearUserPref("extensions.formautofill.addresses.enabled");
 
   // "creditCard" should be empty if "creditCards" pref is disabled.
@@ -553,7 +553,7 @@ add_task(async function autofill_disabled() {
   Assert.deepEqual(FormAutofillContent._onFormSubmit.called, true);
   Assert.notDeepEqual(FormAutofillContent._onFormSubmit.args[0][0].address, []);
   Assert.deepEqual(FormAutofillContent._onFormSubmit.args[0][0].creditCard, []);
-  FormAutofillContent._onFormSubmit.reset();
+  FormAutofillContent._onFormSubmit.resetHistory();
   Services.prefs.clearUserPref("extensions.formautofill.creditCards.enabled");
 
   FormAutofillContent._onFormSubmit.restore();

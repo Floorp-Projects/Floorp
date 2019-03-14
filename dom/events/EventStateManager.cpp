@@ -3636,46 +3636,11 @@ void EventStateManager::ClearFrameRefs(nsIFrame* aFrame) {
   }
 }
 
-static Maybe<gfx::IntPoint> ComputeHotspot(const nsIFrame::Cursor& aCursor) {
-  if (!aCursor.mContainer) {
-    return {};
-  }
-
-  // css3-ui says to use the CSS-specified hotspot if present,
-  // otherwise use the intrinsic hotspot, otherwise use the top left
-  // corner.
-  uint32_t hotspotX, hotspotY;
-  if (aCursor.mHaveHotspot) {
-    int32_t imgWidth, imgHeight;
-    aCursor.mContainer->GetWidth(&imgWidth);
-    aCursor.mContainer->GetHeight(&imgHeight);
-
-    // XXX std::max(NS_lround(x), 0)?
-    hotspotX = aCursor.mHotspotX > 0.0f ? uint32_t(aCursor.mHotspotX + 0.5f)
-                                        : uint32_t(0);
-    if (hotspotX >= uint32_t(imgWidth)) hotspotX = imgWidth - 1;
-    hotspotY = aCursor.mHotspotY > 0.0f ? uint32_t(aCursor.mHotspotY + 0.5f)
-                                        : uint32_t(0);
-    if (hotspotY >= uint32_t(imgHeight)) hotspotY = imgHeight - 1;
-  } else {
-    hotspotX = 0;
-    hotspotY = 0;
-    nsCOMPtr<nsIProperties> props(do_QueryInterface(aCursor.mContainer));
-    if (props) {
-      nsCOMPtr<nsISupportsPRUint32> hotspotXWrap, hotspotYWrap;
-
-      props->Get("hotspotX", NS_GET_IID(nsISupportsPRUint32),
-                 getter_AddRefs(hotspotXWrap));
-      props->Get("hotspotY", NS_GET_IID(nsISupportsPRUint32),
-                 getter_AddRefs(hotspotYWrap));
-
-      if (hotspotXWrap) hotspotXWrap->GetData(&hotspotX);
-      if (hotspotYWrap) hotspotYWrap->GetData(&hotspotY);
-    }
-  }
-
-  return Some(gfx::IntPoint{hotspotX, hotspotY});
-}
+struct CursorImage {
+  gfx::IntPoint mHotspot;
+  nsCOMPtr<imgIContainer> mContainer;
+  bool mEarlierCursorLoading = false;
+};
 
 // Given the event that we're processing, and the computed cursor and hotspot,
 // determine whether the custom CSS cursor should be blocked (that is, not
@@ -3692,15 +3657,10 @@ static Maybe<gfx::IntPoint> ComputeHotspot(const nsIFrame::Cursor& aCursor) {
 // co.
 static bool ShouldBlockCustomCursor(nsPresContext* aPresContext,
                                     WidgetEvent* aEvent,
-                                    const nsIFrame::Cursor& aCursor,
-                                    const Maybe<gfx::IntPoint>& aHotspot) {
+                                    const CursorImage& aCursor) {
   if (!StaticPrefs::layout_cursor_block_enabled()) {
     return false;
   }
-  if (!aCursor.mContainer) {
-    return false;
-  }
-  MOZ_ASSERT(aHotspot);
 
   int32_t width = 0;
   int32_t height = 0;
@@ -3728,11 +3688,92 @@ static bool ShouldBlockCustomCursor(nsPresContext* aPresContext,
       aEvent, topLevel->PresShell()->GetRootFrame());
 
   nsSize size(CSSPixel::ToAppUnits(width), CSSPixel::ToAppUnits(height));
-  nsPoint hotspot(CSSPixel::ToAppUnits(aHotspot->x),
-                  CSSPixel::ToAppUnits(aHotspot->y));
+  nsPoint hotspot(CSSPixel::ToAppUnits(aCursor.mHotspot.x),
+                  CSSPixel::ToAppUnits(aCursor.mHotspot.y));
 
   nsRect cursorRect(point - hotspot, size);
   return !topLevel->GetVisibleArea().Contains(cursorRect);
+}
+
+static gfx::IntPoint ComputeHotspot(imgIContainer* aContainer,
+                                    const Maybe<gfx::Point>& aHotspot) {
+  MOZ_ASSERT(aContainer);
+  // css3-ui says to use the CSS-specified hotspot if present,
+  // otherwise use the intrinsic hotspot, otherwise use the top left
+  // corner.
+  uint32_t hotspotX, hotspotY;
+  if (aHotspot) {
+    int32_t imgWidth, imgHeight;
+    aContainer->GetWidth(&imgWidth);
+    aContainer->GetHeight(&imgHeight);
+
+    // XXX std::max(NS_lround(x), 0)?
+    hotspotX = aHotspot->x > 0.0f ? uint32_t(aHotspot->x + 0.5f) : uint32_t(0);
+    if (hotspotX >= uint32_t(imgWidth)) hotspotX = imgWidth - 1;
+    hotspotY = aHotspot->y > 0.0f ? uint32_t(aHotspot->y + 0.5f) : uint32_t(0);
+    if (hotspotY >= uint32_t(imgHeight)) hotspotY = imgHeight - 1;
+  } else {
+    hotspotX = 0;
+    hotspotY = 0;
+    nsCOMPtr<nsIProperties> props(do_QueryInterface(aContainer));
+    if (props) {
+      nsCOMPtr<nsISupportsPRUint32> hotspotXWrap, hotspotYWrap;
+
+      props->Get("hotspotX", NS_GET_IID(nsISupportsPRUint32),
+                 getter_AddRefs(hotspotXWrap));
+      props->Get("hotspotY", NS_GET_IID(nsISupportsPRUint32),
+                 getter_AddRefs(hotspotYWrap));
+
+      if (hotspotXWrap) hotspotXWrap->GetData(&hotspotX);
+      if (hotspotYWrap) hotspotYWrap->GetData(&hotspotY);
+    }
+  }
+  return {hotspotX, hotspotY};
+}
+
+static CursorImage ComputeCustomCursor(nsPresContext* aPresContext,
+                                       WidgetEvent* aEvent,
+                                       const nsIFrame& aFrame,
+                                       const nsIFrame::Cursor& aCursor) {
+  if (aCursor.mAllowCustomCursor == nsIFrame::AllowCustomCursorImage::No) {
+    return {};
+  }
+  const ComputedStyle& style =
+      aCursor.mStyle ? *aCursor.mStyle : *aFrame.Style();
+
+  // If we are falling back because any cursor before us is loading, let the
+  // consumer know.
+  bool loading = false;
+  for (const nsCursorImage& image : style.StyleUI()->mCursorImages) {
+    uint32_t status;
+    imgRequestProxy* req = image.GetImage();
+    if (!req || NS_FAILED(req->GetImageStatus(&status))) {
+      continue;
+    }
+    if (!(status & imgIRequest::STATUS_LOAD_COMPLETE)) {
+      loading = true;
+      continue;
+    }
+    if (status & imgIRequest::STATUS_ERROR) {
+      continue;
+    }
+    nsCOMPtr<imgIContainer> container;
+    req->GetImage(getter_AddRefs(container));
+    if (!container) {
+      continue;
+    }
+    Maybe<gfx::Point> specifiedHotspot =
+        image.mHaveHotspot ? Some(gfx::Point{image.mHotspotX, image.mHotspotY})
+                           : Nothing();
+    gfx::IntPoint hotspot = ComputeHotspot(container, specifiedHotspot);
+    CursorImage result{hotspot, std::move(container), loading};
+    if (ShouldBlockCustomCursor(aPresContext, aEvent, result)) {
+      continue;
+    }
+    // This is the one we want!
+    return result;
+  }
+  return {{}, nullptr, loading};
 }
 
 void EventStateManager::UpdateCursor(nsPresContext* aPresContext,
@@ -3744,7 +3785,7 @@ void EventStateManager::UpdateCursor(nsPresContext* aPresContext,
   }
 
   auto cursor = StyleCursorKind::Default;
-  imgIContainer* container = nullptr;
+  nsCOMPtr<imgIContainer> container;
   Maybe<gfx::IntPoint> hotspot;
 
   // If cursor is locked just use the locked one
@@ -3753,11 +3794,11 @@ void EventStateManager::UpdateCursor(nsPresContext* aPresContext,
   }
   // If not locked, look for correct cursor
   else if (aTargetFrame) {
-    nsIFrame::Cursor framecursor;
     nsPoint pt =
         nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, aTargetFrame);
+    Maybe<nsIFrame::Cursor> framecursor = aTargetFrame->GetCursor(pt);
     // Avoid setting cursor when the mouse is over a windowless plugin.
-    if (NS_FAILED(aTargetFrame->GetCursor(pt, framecursor))) {
+    if (!framecursor) {
       if (XRE_IsContentProcess()) {
         mLastFrameConsumedSetCursor = true;
       }
@@ -3769,21 +3810,22 @@ void EventStateManager::UpdateCursor(nsPresContext* aPresContext,
       ClearCachedWidgetCursor(aTargetFrame);
       mLastFrameConsumedSetCursor = false;
     }
+
+    CursorImage customCursor =
+        ComputeCustomCursor(aPresContext, aEvent, *aTargetFrame, *framecursor);
+
     // If the current cursor is from the same frame, and it is now
     // loading some new image for the cursor, we should wait for a
     // while rather than taking its fallback cursor directly.
-    if (framecursor.mLoading && gLastCursorSourceFrame == aTargetFrame &&
+    if (customCursor.mEarlierCursorLoading &&
+        gLastCursorSourceFrame == aTargetFrame &&
         TimeStamp::NowLoRes() - gLastCursorUpdateTime <
             TimeDuration::FromMilliseconds(kCursorLoadingTimeout)) {
       return;
     }
-    cursor = framecursor.mCursor;
-    container = framecursor.mContainer;
-    hotspot = ComputeHotspot(framecursor);
-
-    if (ShouldBlockCustomCursor(aPresContext, aEvent, framecursor, hotspot)) {
-      container = nullptr;
-    }
+    cursor = framecursor->mCursor;
+    container = customCursor.mContainer.forget();
+    hotspot = Some(customCursor.mHotspot);
   }
 
   if (nsContentUtils::UseActivityCursor()) {

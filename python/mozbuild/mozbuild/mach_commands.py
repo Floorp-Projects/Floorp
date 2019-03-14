@@ -75,6 +75,15 @@ warning heuristic.
 '''
 
 
+# Function used to run clang-format on a batch of files. It is a helper function
+# in order to integrate into the futures ecosystem clang-format.
+def run_one_clang_format_batch(args):
+    try:
+        subprocess.check_output(args)
+    except subprocess.CalledProcessError as e:
+        return e
+
+
 class StoreDebugParamsAndWarnAction(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
         sys.stderr.write('The --debugparams argument is deprecated. Please ' +
@@ -1380,7 +1389,7 @@ class PackageFrontend(MachCommandBase):
             def __init__(self, task_id, artifact_name):
                 for _ in redo.retrier(attempts=retry+1, sleeptime=60):
                     cot = cache._download_manager.session.get(
-                        get_artifact_url(task_id, 'public/chainOfTrust.json.asc'))
+                        get_artifact_url(task_id, 'public/chain-of-trust.json'))
                     if cot.status_code >= 500:
                         continue
                     cot.raise_for_status()
@@ -1389,22 +1398,7 @@ class PackageFrontend(MachCommandBase):
                     cot.raise_for_status()
 
                 digest = algorithm = None
-                data = {}
-                # The file is GPG-signed, but we don't care about validating that.
-                # The data looks like:
-                #     -----BEGIN PGP SIGNED MESSAGE-----
-                #     Hash: SHA256
-                #
-                #     {
-                #       ...
-                #     }
-                #     -----BEGIN PGP SIGNATURE-----
-                #     <signature data>
-                #     -----END PGP SIGNATURE-----
-                # The following code extracts the json from there.
-                data = json.loads(
-                    cot.content.partition("-----BEGIN PGP SIGNATURE-----")[0]
-                               .partition("Hash: SHA256")[2])
+                data = json.loads(cot.content)
                 for algorithm, digest in (data.get('artifacts', {})
                                               .get(artifact_name, {}).items()):
                     pass
@@ -2871,13 +2865,10 @@ class StaticAnalysis(MachCommandBase):
 
         print("Processing %d file(s)..." % len(path_list))
 
-        batchsize = 200
         if show:
-            batchsize = 1
+            for i in range(0, len(path_list)):
+                l = path_list[i: (i + 1)]
 
-        for i in range(0, len(path_list), batchsize):
-            l = path_list[i: (i + batchsize)]
-            if show:
                 # Copy the files into a temp directory
                 # and run clang-format on the temp directory
                 # and show the diff
@@ -2890,15 +2881,14 @@ class StaticAnalysis(MachCommandBase):
                 shutil.copy(l[0], faketmpdir)
                 l[0] = target_file
 
-            # Run clang-format on the list
-            try:
-                check_output(args + l)
-            except CalledProcessError as e:
-                # Something wrong happend
-                print("clang-format: An error occured while running clang-format.")
-                return e.returncode
+                # Run clang-format on the list
+                try:
+                    check_output(args + l)
+                except CalledProcessError as e:
+                    # Something wrong happend
+                    print("clang-format: An error occured while running clang-format.")
+                    return e.returncode
 
-            if show:
                 # show the diff
                 diff_command = ["diff", "-u", original_path, target_file]
                 try:
@@ -2909,8 +2899,49 @@ class StaticAnalysis(MachCommandBase):
                     # there is a diff to show
                     if e.output:
                         print(e.output)
-        if show:
+
             shutil.rmtree(tmpdir)
+            return 0
+
+        # Run clang-format in parallel trying to saturate all of the available cores.
+        import concurrent.futures
+        import multiprocessing
+        import math
+
+        max_workers = multiprocessing.cpu_count()
+
+        # To maximize CPU usage when there are few items to handle,
+        # underestimate the number of items per batch, then dispatch
+        # outstanding items across workers. Per definition, each worker will
+        # handle at most one outstanding item.
+        batch_size = int(math.floor(float(len(path_list)) / max_workers))
+        outstanding_items = len(path_list) - batch_size * max_workers
+
+        batches = []
+
+        i = 0
+        while i < len(path_list):
+            num_items = batch_size + (1 if outstanding_items > 0 else 0)
+            batches.append(args + path_list[i: (i + num_items)])
+
+            outstanding_items -= 1
+            i += num_items
+
+        error_code = None
+
+        with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
+            futures = []
+            for batch in batches:
+                futures.append(executor.submit(run_one_clang_format_batch, batch))
+
+            for future in concurrent.futures.as_completed(futures):
+                # Wait for every task to finish
+                ret_val = future.result()
+                if ret_val is not None:
+                    error_code = ret_val
+
+            if error_code is not None:
+                return error_code
         return 0
 
 @CommandProvider

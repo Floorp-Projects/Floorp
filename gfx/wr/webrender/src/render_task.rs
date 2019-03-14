@@ -2,9 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{DeviceIntPoint, DeviceIntRect, DeviceIntSize, DeviceSize, DeviceIntSideOffsets};
-use api::{DevicePixelScale, ImageDescriptor, ImageFormat, LayoutPoint};
-use api::{LineStyle, LineOrientation, LayoutSize, DirtyRect, ClipMode};
+use api::{ImageDescriptor, ImageFormat};
+use api::{LineStyle, LineOrientation, ClipMode, DirtyRect};
+use api::units::*;
 #[cfg(feature = "pathfinder")]
 use api::FontRenderMode;
 use border::BorderSegmentCacheKey;
@@ -34,8 +34,7 @@ use std::{ops, mem, usize, f32, i32, u32};
 use texture_cache::{TextureCache, TextureCacheHandle, Eviction};
 use tiling::{RenderPass, RenderTargetIndex};
 use tiling::{RenderTargetKind};
-#[cfg(feature = "pathfinder")]
-use webrender_api::DevicePixel;
+
 
 const RENDER_TASK_SIZE_SANITY_CHECK: i32 = 16000;
 const FLOATS_PER_RENDER_TASK_INFO: usize = 8;
@@ -280,7 +279,7 @@ pub struct CacheMaskTask {
 pub struct ClipRegionTask {
     pub clip_data_address: GpuCacheAddress,
     pub local_pos: LayoutPoint,
-    device_pixel_scale: DevicePixelScale,
+    pub device_pixel_scale: DevicePixelScale,
 }
 
 #[derive(Debug)]
@@ -418,6 +417,7 @@ pub enum RenderTaskKind {
     HorizontalBlur(BlurTask),
     #[allow(dead_code)]
     Glyph(GlyphTask),
+    Readback(DeviceIntRect),
     Scaling(ScalingTask),
     Blit(BlitTask),
     Border(BorderTask),
@@ -524,6 +524,15 @@ impl RenderTask {
                 end_point,
             }),
             ClearMode::DontCare,
+        )
+    }
+
+    pub fn new_readback(screen_rect: DeviceIntRect) -> Self {
+        RenderTask::with_dynamic_location(
+            screen_rect.size,
+            Vec::new(),
+            RenderTaskKind::Readback(screen_rect),
+            ClearMode::Transparent,
         )
     }
 
@@ -877,7 +886,8 @@ impl RenderTask {
 
     fn uv_rect_kind(&self) -> UvRectKind {
         match self.kind {
-            RenderTaskKind::CacheMask(..) => {
+            RenderTaskKind::CacheMask(..) |
+            RenderTaskKind::Readback(..) => {
                 unreachable!("bug: unexpected render task");
             }
 
@@ -951,6 +961,7 @@ impl RenderTask {
             RenderTaskKind::Glyph(_) => {
                 [0.0, 1.0, 0.0]
             }
+            RenderTaskKind::Readback(..) |
             RenderTaskKind::Scaling(..) |
             RenderTaskKind::Border(..) |
             RenderTaskKind::LineDecoration(..) |
@@ -992,6 +1003,7 @@ impl RenderTask {
                 gpu_cache.get_address(&info.uv_rect_handle)
             }
             RenderTaskKind::ClipRegion(..) |
+            RenderTaskKind::Readback(..) |
             RenderTaskKind::Scaling(..) |
             RenderTaskKind::Blit(..) |
             RenderTaskKind::Border(..) |
@@ -1045,6 +1057,8 @@ impl RenderTask {
 
     pub fn target_kind(&self) -> RenderTargetKind {
         match self.kind {
+            RenderTaskKind::Readback(..) => RenderTargetKind::Color,
+
             RenderTaskKind::LineDecoration(..) => RenderTargetKind::Color,
 
             RenderTaskKind::ClipRegion(..) |
@@ -1098,6 +1112,7 @@ impl RenderTask {
             RenderTaskKind::Picture(ref mut info) => {
                 (&mut info.uv_rect_handle, info.uv_rect_kind)
             }
+            RenderTaskKind::Readback(..) |
             RenderTaskKind::Scaling(..) |
             RenderTaskKind::Blit(..) |
             RenderTaskKind::ClipRegion(..) |
@@ -1148,6 +1163,10 @@ impl RenderTask {
             RenderTaskKind::HorizontalBlur(ref task) => {
                 pt.new_level("HorizontalBlur".to_owned());
                 task.print_with(pt);
+            }
+            RenderTaskKind::Readback(ref rect) => {
+                pt.new_level("Readback".to_owned());
+                pt.add_item(format!("rect: {:?}", rect));
             }
             RenderTaskKind::Scaling(ref kind) => {
                 pt.new_level("Scaling".to_owned());

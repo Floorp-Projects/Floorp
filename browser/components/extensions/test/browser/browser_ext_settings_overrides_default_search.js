@@ -45,6 +45,81 @@ add_task(async function test_extension_setting_default_engine() {
   is((await Services.search.getDefault()).name, defaultEngineName, `Default engine is ${defaultEngineName}`);
 });
 
+// Test the popup displayed when trying to add a non-built-in default
+// search engine.
+add_task(async function test_extension_setting_default_engine_external() {
+  const NAME = "Example Engine";
+
+  // Load an extension that tries to set the default engine,
+  // and wait for the ensuing prompt.
+  async function startExtension(win = window) {
+    let extension = ExtensionTestUtils.loadExtension({
+      manifest: {
+        "chrome_settings_overrides": {
+          "search_provider": {
+            "name": NAME,
+            "search_url": "https://example.com/?q={searchTerms}",
+            "is_default": true,
+          },
+        },
+      },
+      useAddonManager: "temporary",
+    });
+
+    let [panel] = await Promise.all([
+      promisePopupNotificationShown("addon-webext-defaultsearch", win),
+      extension.startup(),
+    ]);
+
+    isnot(panel, null, "Doorhanger was displayed for non-built-in default engine");
+
+    return {panel, extension};
+  }
+
+  // First time around, don't accept the default engine.
+  let {panel, extension} = await startExtension();
+  panel.secondaryButton.click();
+
+  // There is no explicit event we can wait for to know when the click
+  // callback has been fully processed.  One spin through the Promise
+  // microtask queue should be enough.  If this wait isn't long enough,
+  // the test below where we accept the prompt will fail.
+  await Promise.resolve();
+
+  is((await Services.search.getDefault()).name, defaultEngineName,
+     "Default engine was not changed after rejecting prompt");
+
+  await extension.unload();
+
+  // Do it again, this time accept the prompt.
+  ({panel, extension} = await startExtension());
+
+  panel.button.click();
+  await Promise.resolve();
+
+  is((await Services.search.getDefault()).name, NAME,
+     "Default engine was changed after accepting prompt");
+
+  await extension.unload();
+
+  is((await Services.search.getDefault()).name, defaultEngineName,
+     "Default engine is reverted after uninstalling extension.");
+
+  // One more time, this time close the window where the prompt
+  // appears instead of explicitly accepting or denying it.
+  let win = await BrowserTestUtils.openNewBrowserWindow();
+  await BrowserTestUtils.openNewForegroundTab(win.gBrowser, "about:blank");
+
+  ({extension} = await startExtension(win));
+
+  await BrowserTestUtils.closeWindow(win);
+
+  is((await Services.search.getDefault()).name, defaultEngineName,
+     "Default engine is unchanged when prompt is dismissed");
+
+  await extension.unload();
+});
+
 /* This tests that uninstalling add-ons maintains the proper
  * search default. */
 add_task(async function test_extension_setting_multiple_default_engine() {

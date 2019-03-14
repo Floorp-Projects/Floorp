@@ -21,12 +21,6 @@ SOURCES += [
     'XrayWrapper.cpp',
 ]
 
-# warning C4661 for FilteringWrapper
-if CONFIG['CC_TYPE'] == 'clang-cl':
-    CXXFLAGS += [
-        '-wd4661', # no suitable definition provided for explicit template instantiation request
-    ]
-
 include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'

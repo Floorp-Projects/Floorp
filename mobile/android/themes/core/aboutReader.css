@@ -36,40 +36,9 @@ body.serif {
   font-family: serif;
 }
 
-.container.font-size1 {
-  font-size: 10px;
-}
-
-.container.font-size2 {
-  font-size: 12px;
-}
-
-.container.font-size3 {
-  font-size: 14px;
-}
-
-.container.font-size4  {
-  font-size: 16px;
-}
-
-.container.font-size5 {
-  font-size: 18px;
-}
-
-.container.font-size6 {
-  font-size: 20px;
-}
-
-.container.font-size7 {
-  font-size: 22px;
-}
-
-.container.font-size8 {
-  font-size: 24px;
-}
-
-.container.font-size9 {
-  font-size: 26px;
+.container {
+  --font-size: 12;
+  font-size: var(--font-size);
 }
 
 /* Override some controls and content styles based on color scheme */

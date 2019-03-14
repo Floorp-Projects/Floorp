@@ -245,3 +245,9 @@ user_pref("ui.caretBlinkTime", -1);
 user_pref("webextensions.tests", true);
 // Disable intermittent telemetry collection
 user_pref("toolkit.telemetry.initDelay", 99999999);
+
+// We use data: to tell the Quitter extension to quit.
+user_pref("security.data_uri.block_toplevel_data_uri_navigations", false);
+
+// We use data: to tell the Quitter extension to quit.
+user_pref("security.data_uri.block_toplevel_data_uri_navigations", false);

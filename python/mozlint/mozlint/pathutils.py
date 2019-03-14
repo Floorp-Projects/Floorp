@@ -271,9 +271,13 @@ def expand_exclusions(paths, config, root):
     for path in paths:
         path = mozpath.normsep(path)
         if os.path.isfile(path):
-            if not any(path.startswith(e) for e in exclude):
-                yield path
-            continue
+            if any(path.startswith(e) for e in exclude if '*' not in e):
+                continue
+
+            if any(mozpath.match(path, e) for e in exclude if '*' in e):
+                continue
+
+            yield path
 
         ignore = [e[len(path):].lstrip('/') for e in exclude
                   if mozpath.commonprefix((path, e)) == path]

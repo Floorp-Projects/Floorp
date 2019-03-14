@@ -44,6 +44,17 @@ diff_description_schema = Schema({
 
     # Extra arguments to pass to diffoscope, that can be set per job.
     Optional('extra-args'): basestring,
+
+    # Fail the task when differences are detected.
+    Optional('fail-on-diff'): bool,
+
+    # Whether to unpack first. Diffoscope can normally work without unpacking,
+    # but when one needs to --exclude some contents, that doesn't work out well
+    # if said content is packed (e.g. in omni.ja).
+    Optional('unpack'): bool,
+
+    # Commands to run before performing the diff.
+    Optional('pre-diff-commands'): [basestring],
 })
 
 transforms = TransformSequence()
@@ -130,15 +141,18 @@ def fill_template(config, tasks):
                     'ORIG_URL': urls['original'],
                     'NEW_URL': urls['new'],
                     'DIFFOSCOPE_ARGS': ' '.join(
-                        task[k] for k in ('args', 'extra-args') if k in task)
+                        task[k] for k in ('args', 'extra-args') if k in task),
+                    'PRE_DIFF': '; '.join(task.get('pre-diff-commands', [])),
                 },
                 'max-run-time': 1800,
             },
             'run': {
                 'using': 'run-task',
-                'checkout': False,
-                'command': '/builds/worker/bin/get_and_diffoscope '
-                           '"$ORIG_URL" "$NEW_URL"',
+                'checkout': task.get('unpack', False),
+                'command': '/builds/worker/bin/get_and_diffoscope{}{}'.format(
+                    ' --unpack' if task.get('unpack') else '',
+                    ' --fail' if task.get('fail-on-diff') else '',
+                ),
             },
             'dependencies': deps,
         }

@@ -5,6 +5,8 @@
 use api::{ColorF, BorderStyle, MixBlendMode, PipelineId, PremultipliedColorF};
 use api::{DocumentLayer, FilterData, FilterOp, ImageFormat, LineOrientation};
 use api::units::*;
+#[cfg(feature = "pathfinder")]
+use api::FontRenderMode;
 use batch::{AlphaBatchBuilder, AlphaBatchContainer, ClipBatcher, resolve_image};
 use clip::ClipStore;
 use clip_scroll_tree::{ClipScrollTree};
@@ -21,7 +23,7 @@ use internal_types::{CacheTextureId, FastHashMap, SavedTargetIndex, TextureSourc
 use pathfinder_partitioner::mesh::Mesh;
 use picture::{RecordedDirtyRegion, SurfaceInfo};
 use prim_store::gradient::GRADIENT_FP_STOPS;
-use prim_store::{PictureIndex, PrimitiveStore, DeferredResolve, PrimitiveScratchBuffer};
+use prim_store::{PrimitiveStore, DeferredResolve, PrimitiveScratchBuffer};
 use profiler::FrameProfileCounters;
 use render_backend::{DataStores, FrameId};
 use render_task::{BlitSource, RenderTaskAddress, RenderTaskId, RenderTaskKind};
@@ -29,8 +31,7 @@ use render_task::{BlurTask, ClearMode, GlyphTask, RenderTaskLocation, RenderTask
 use resource_cache::ResourceCache;
 use std::{cmp, usize, f32, i32, mem};
 use texture_allocator::{ArrayAllocationTracker, FreeRectSlice};
-#[cfg(feature = "pathfinder")]
-use webrender_api::{DevicePixel, FontRenderMode};
+
 
 const STYLE_SOLID: i32 = ((BorderStyle::Solid as i32) << 8) | ((BorderStyle::Solid as i32) << 16);
 const STYLE_MASK: i32 = 0x00FF_FF00;
@@ -61,18 +62,6 @@ pub struct RenderTargetContext<'a, 'rc> {
     pub scratch: &'a PrimitiveScratchBuffer,
     pub screen_world_rect: WorldRect,
     pub globals: &'a FrameGlobalResources,
-}
-
-impl<'a, 'rc> RenderTargetContext<'a, 'rc> {
-    /// Returns true if a picture has a surface that is visible.
-    pub fn is_picture_surface_visible(&self, index: PictureIndex) -> bool {
-        match self.prim_store.pictures[index.0].raster_config {
-            Some(ref raster_config) => {
-                self.surfaces[raster_config.surface_index.0].surface.is_some()
-            }
-            None => false,
-        }
-    }
 }
 
 /// Represents a number of rendering operations on a surface.
@@ -372,6 +361,7 @@ pub struct ColorRenderTarget {
     // List of blur operations to apply for this render target.
     pub vertical_blurs: Vec<BlurInstance>,
     pub horizontal_blurs: Vec<BlurInstance>,
+    pub readbacks: Vec<DeviceIntRect>,
     pub scalings: Vec<ScalingInstance>,
     pub blits: Vec<BlitJob>,
     // List of frame buffer outputs for this render target.
@@ -393,6 +383,7 @@ impl RenderTarget for ColorRenderTarget {
             alpha_batch_containers: Vec::new(),
             vertical_blurs: Vec::new(),
             horizontal_blurs: Vec::new(),
+            readbacks: Vec::new(),
             scalings: Vec::new(),
             blits: Vec::new(),
             outputs: Vec::new(),
@@ -525,6 +516,9 @@ impl RenderTarget for ColorRenderTarget {
                 // FIXME(pcwalton): Support color glyphs.
                 panic!("Glyphs should not be added to color target!");
             }
+            RenderTaskKind::Readback(device_rect) => {
+                self.readbacks.push(device_rect);
+            }
             RenderTaskKind::Scaling(..) => {
                 self.scalings.push(ScalingInstance {
                     task_address: render_tasks.get_task_address(task_id),
@@ -642,6 +636,7 @@ impl RenderTarget for AlphaRenderTarget {
         _: &mut Vec<DeferredResolve>,
     ) {
         let task = &render_tasks[task_id];
+        let (target_rect, _) = task.get_target_rect();
 
         match task.clear_mode {
             ClearMode::Zero => {
@@ -657,6 +652,7 @@ impl RenderTarget for AlphaRenderTarget {
         }
 
         match task.kind {
+            RenderTaskKind::Readback(..) |
             RenderTaskKind::Picture(..) |
             RenderTaskKind::Blit(..) |
             RenderTaskKind::Border(..) |
@@ -682,9 +678,7 @@ impl RenderTarget for AlphaRenderTarget {
                 );
             }
             RenderTaskKind::CacheMask(ref task_info) => {
-                let task_address = render_tasks.get_task_address(task_id);
                 self.clip_batcher.add(
-                    task_address,
                     task_info.clip_node_range,
                     task_info.root_spatial_node_index,
                     ctx.resource_cache,
@@ -697,19 +691,22 @@ impl RenderTarget for AlphaRenderTarget {
                     &ctx.screen_world_rect,
                     task_info.device_pixel_scale,
                     task_info.snap_offsets,
+                    target_rect.origin.to_f32(),
+                    task_info.actual_rect.origin.to_f32(),
                 );
             }
             RenderTaskKind::ClipRegion(ref region_task) => {
-                let task_address = render_tasks.get_task_address(task_id);
                 let device_rect = DeviceRect::new(
                     DevicePoint::zero(),
-                    task.get_dynamic_size().to_f32(),
+                    target_rect.size.to_f32(),
                 );
                 self.clip_batcher.add_clip_region(
-                    task_address,
                     region_task.clip_data_address,
                     region_task.local_pos,
                     device_rect,
+                    target_rect.origin.to_f32(),
+                    DevicePoint::zero(),
+                    region_task.device_pixel_scale.0,
                 );
             }
             RenderTaskKind::Scaling(ref info) => {
@@ -863,6 +860,7 @@ impl TextureCacheRenderTarget {
             RenderTaskKind::Picture(..) |
             RenderTaskKind::ClipRegion(..) |
             RenderTaskKind::CacheMask(..) |
+            RenderTaskKind::Readback(..) |
             RenderTaskKind::Scaling(..) => {
                 panic!("BUG: unexpected task kind for texture cache target");
             }

@@ -37,7 +37,7 @@
     await SimpleTest.promiseWaitForCondition(() => statusOverlay.hidden,
       "statusOverlay should not present without error");
 
-    ok(!statusOverlay.hasAttribute("error"), "statusOverlay should not in error state");
+    ok(!statusOverlay.hasAttribute("status"), "statusOverlay should not be showing a state message.");
     isnot(statusIcon.getAttribute("type"), "error", "should not show error icon");
   });
 
@@ -50,7 +50,7 @@
     });
 
     ok(!statusOverlay.hidden, `statusOverlay should show when ${errorType}`);
-    is(statusOverlay.getAttribute("error"), errorType, `statusOverlay should have correct error state: ${errorType}`);
+    is(statusOverlay.getAttribute("status"), errorType, `statusOverlay should have correct error state: ${errorType}`);
     is(statusIcon.getAttribute("type"), "error", `should show error icon when ${errorType}`);
     isnot(statusLabelErrorNoSource.getBoundingClientRect().height, 0,
       "errorNoSource status label should be visible.");

@@ -87,8 +87,7 @@ class nsHTMLFramesetBorderFrame final : public nsLeafFrame {
                                WidgetGUIEvent* aEvent,
                                nsEventStatus* aEventStatus) override;
 
-  virtual nsresult GetCursor(const nsPoint& aPoint,
-                             nsIFrame::Cursor& aCursor) override;
+  Maybe<Cursor> GetCursor(const nsPoint&) override;
 
   virtual void BuildDisplayList(nsDisplayListBuilder* aBuilder,
                                 const nsDisplayListSet& aLists) override;
@@ -630,16 +629,13 @@ nsresult nsHTMLFramesetFrame::HandleEvent(nsPresContext* aPresContext,
   return NS_OK;
 }
 
-nsresult nsHTMLFramesetFrame::GetCursor(const nsPoint& aPoint,
-                                        nsIFrame::Cursor& aCursor) {
-  aCursor.mLoading = false;
+Maybe<nsIFrame::Cursor> nsHTMLFramesetFrame::GetCursor(const nsPoint&) {
+  auto kind = StyleCursorKind::Default;
   if (mDragger) {
-    aCursor.mCursor = (mDragger->mVertical) ? StyleCursorKind::EwResize
-                                            : StyleCursorKind::NsResize;
-  } else {
-    aCursor.mCursor = StyleCursorKind::Default;
+    kind = mDragger->mVertical ? StyleCursorKind::EwResize
+                               : StyleCursorKind::NsResize;
   }
-  return NS_OK;
+  return Some(Cursor{kind, AllowCustomCursorImage::No});
 }
 
 void nsHTMLFramesetFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
@@ -1466,16 +1462,12 @@ nsresult nsHTMLFramesetBorderFrame::HandleEvent(nsPresContext* aPresContext,
   return NS_OK;
 }
 
-nsresult nsHTMLFramesetBorderFrame::GetCursor(const nsPoint& aPoint,
-                                              nsIFrame::Cursor& aCursor) {
-  aCursor.mLoading = false;
-  if (!mCanResize) {
-    aCursor.mCursor = StyleCursorKind::Default;
-  } else {
-    aCursor.mCursor =
-        (mVertical) ? StyleCursorKind::EwResize : StyleCursorKind::NsResize;
+Maybe<nsIFrame::Cursor> nsHTMLFramesetBorderFrame::GetCursor(const nsPoint&) {
+  auto kind = StyleCursorKind::Default;
+  if (mCanResize) {
+    kind = mVertical ? StyleCursorKind::EwResize : StyleCursorKind::NsResize;
   }
-  return NS_OK;
+  return Some(Cursor{kind, AllowCustomCursorImage::No});
 }
 
 #ifdef DEBUG_FRAME_DUMP

@@ -1,5 +1,6 @@
 import datetime
 import uuid
+import os
 
 import taskcluster.utils as subject
 import dateutil.parser
@@ -338,3 +339,101 @@ class TestIsExpired(TestCase):
           }
         """)
         self.assertEqual(isExpired, True)
+
+
+class TestFromEnv(TestCase):
+
+    def clear_env(self):
+        for v in 'ROOT_URL', 'CLIENT_ID', 'ACCESS_TOKEN', 'CERTIFICATE':
+            v = 'TASKCLUSTER_' + v
+            if v in os.environ:
+                del os.environ[v]
+
+    @mock.patch.dict(os.environ)
+    def test_empty(self):
+        self.clear_env()
+        self.assertEqual(subject.optionsFromEnvironment(), {})
+
+    @mock.patch.dict(os.environ)
+    def test_all(self):
+        os.environ['TASKCLUSTER_ROOT_URL'] = 'https://tc.example.com'
+        os.environ['TASKCLUSTER_CLIENT_ID'] = 'me'
+        os.environ['TASKCLUSTER_ACCESS_TOKEN'] = 'shave-and-a-haircut'
+        os.environ['TASKCLUSTER_CERTIFICATE'] = '{"bits":2}'
+        self.assertEqual(subject.optionsFromEnvironment(), {
+            'rootUrl': 'https://tc.example.com',
+            'credentials': {
+                'clientId': 'me',
+                'accessToken': 'shave-and-a-haircut',
+                'certificate': '{"bits":2}',
+            },
+        })
+
+    @mock.patch.dict(os.environ)
+    def test_cred_only(self):
+        os.environ['TASKCLUSTER_ACCESS_TOKEN'] = 'shave-and-a-haircut'
+        self.assertEqual(subject.optionsFromEnvironment(), {
+            'credentials': {
+                'accessToken': 'shave-and-a-haircut',
+            },
+        })
+
+    @mock.patch.dict(os.environ)
+    def test_rooturl_only(self):
+        os.environ['TASKCLUSTER_ROOT_URL'] = 'https://tc.example.com'
+        self.assertEqual(subject.optionsFromEnvironment(), {
+            'rootUrl': 'https://tc.example.com',
+        })
+
+    @mock.patch.dict(os.environ)
+    def test_default_rooturl(self):
+        os.environ['TASKCLUSTER_CLIENT_ID'] = 'me'
+        os.environ['TASKCLUSTER_ACCESS_TOKEN'] = 'shave-and-a-haircut'
+        os.environ['TASKCLUSTER_CERTIFICATE'] = '{"bits":2}'
+        self.assertEqual(
+            subject.optionsFromEnvironment({'rootUrl': 'https://other.example.com'}), {
+                'rootUrl': 'https://other.example.com',
+                'credentials': {
+                    'clientId': 'me',
+                    'accessToken': 'shave-and-a-haircut',
+                    'certificate': '{"bits":2}',
+                    },
+                })
+
+    @mock.patch.dict(os.environ)
+    def test_default_rooturl_overridden(self):
+        os.environ['TASKCLUSTER_ROOT_URL'] = 'https://tc.example.com'
+        self.assertEqual(
+            subject.optionsFromEnvironment({'rootUrl': 'https://other.example.com'}),
+            {'rootUrl': 'https://tc.example.com'})
+
+    @mock.patch.dict(os.environ)
+    def test_default_creds(self):
+        os.environ['TASKCLUSTER_ROOT_URL'] = 'https://tc.example.com'
+        os.environ['TASKCLUSTER_ACCESS_TOKEN'] = 'shave-and-a-haircut'
+        os.environ['TASKCLUSTER_CERTIFICATE'] = '{"bits":2}'
+        self.assertEqual(
+            subject.optionsFromEnvironment({'credentials': {'clientId': 'them'}}), {
+                'rootUrl': 'https://tc.example.com',
+                'credentials': {
+                    'clientId': 'them',
+                    'accessToken': 'shave-and-a-haircut',
+                    'certificate': '{"bits":2}',
+                    },
+                })
+
+    @mock.patch.dict(os.environ)
+    def test_default_creds_overridden(self):
+        os.environ['TASKCLUSTER_ROOT_URL'] = 'https://tc.example.com'
+        os.environ['TASKCLUSTER_CLIENT_ID'] = 'me'
+        os.environ['TASKCLUSTER_ACCESS_TOKEN'] = 'shave-and-a-haircut'
+        os.environ['TASKCLUSTER_CERTIFICATE'] = '{"bits":2}'
+        self.assertEqual(
+            subject.optionsFromEnvironment({'credentials': {'clientId': 'them'}}), {
+                'rootUrl': 'https://tc.example.com',
+                'credentials': {
+                    'clientId': 'me',
+                    'accessToken': 'shave-and-a-haircut',
+                    'certificate': '{"bits":2}',
+                    },
+                })

@@ -1207,7 +1207,9 @@ nsHTMLCopyEncoder::SetSelection(Selection* aSelection) {
     NS_ENSURE_SUCCESS(rv, rv);
 
     ErrorResult result;
-    mSelection->AddRangeInternal(*myRange, mDocument, result);
+    RefPtr<Selection> selection(mSelection);
+    RefPtr<Document> document(mDocument);
+    selection->AddRangeInternal(*myRange, document, result);
     rv = result.StealNSResult();
     NS_ENSURE_SUCCESS(rv, rv);
   }

@@ -25,6 +25,10 @@ EXTRA_JS_MODULES += [
 ]
 
 if CONFIG['OS_ARCH'] == 'WINNT':
+    if CONFIG['ENABLE_TESTS']:
+        DIRS += [
+            'tests/unit/insertIEHistory',
+        ]
     SOURCES += [
         'nsIEHistoryEnumerator.cpp',
     ]

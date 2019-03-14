@@ -51,6 +51,7 @@ namespace mozilla {
 namespace dom {
 
 static bool sVideoStatsEnabled;
+static bool sCloneElementVisuallyTesting;
 
 nsresult HTMLVideoElement::Clone(mozilla::dom::NodeInfo* aNodeInfo,
                                  nsINode** aResult) const {
@@ -134,7 +135,8 @@ nsresult HTMLVideoElement::GetVideoSize(nsIntSize* size) {
 void HTMLVideoElement::Invalidate(bool aImageSizeChanged,
                                   Maybe<nsIntSize>& aNewIntrinsicSize,
                                   bool aForceInvalidate) {
-  HTMLMediaElement::Invalidate(aImageSizeChanged, aNewIntrinsicSize, aForceInvalidate);
+  HTMLMediaElement::Invalidate(aImageSizeChanged, aNewIntrinsicSize,
+                               aForceInvalidate);
   if (mVisualCloneTarget) {
     VideoFrameContainer* container =
         mVisualCloneTarget->GetVideoFrameContainer();
@@ -384,9 +386,10 @@ void HTMLVideoElement::ReleaseVideoWakeLockIfExists() {
 
 bool HTMLVideoElement::SetVisualCloneTarget(
     HTMLVideoElement* aVisualCloneTarget) {
-  MOZ_DIAGNOSTIC_ASSERT(!aVisualCloneTarget || !aVisualCloneTarget->mUnboundFromTree,
-                        "Can't set the clone target to a disconnected video "
-                        "element.");
+  MOZ_DIAGNOSTIC_ASSERT(
+      !aVisualCloneTarget || !aVisualCloneTarget->mUnboundFromTree,
+      "Can't set the clone target to a disconnected video "
+      "element.");
   MOZ_DIAGNOSTIC_ASSERT(!mVisualCloneSource,
                         "Can't clone a video element that is already a clone.");
   if (!aVisualCloneTarget ||
@@ -399,9 +402,10 @@ bool HTMLVideoElement::SetVisualCloneTarget(
 
 bool HTMLVideoElement::SetVisualCloneSource(
     HTMLVideoElement* aVisualCloneSource) {
-  MOZ_DIAGNOSTIC_ASSERT(!aVisualCloneSource || !aVisualCloneSource->mUnboundFromTree,
-                        "Can't set the clone source to a disconnected video "
-                        "element.");
+  MOZ_DIAGNOSTIC_ASSERT(
+      !aVisualCloneSource || !aVisualCloneSource->mUnboundFromTree,
+      "Can't set the clone source to a disconnected video "
+      "element.");
   MOZ_DIAGNOSTIC_ASSERT(!mVisualCloneTarget,
                         "Can't clone a video element that is already a "
                         "clone.");
@@ -417,6 +421,8 @@ bool HTMLVideoElement::SetVisualCloneSource(
 void HTMLVideoElement::InitStatics() {
   Preferences::AddBoolVarCache(&sVideoStatsEnabled,
                                "media.video_stats.enabled");
+  Preferences::AddBoolVarCache(&sCloneElementVisuallyTesting,
+                               "media.cloneElementVisually.testing");
 }
 
 /* static */
@@ -481,7 +487,17 @@ void HTMLVideoElement::CloneElementVisually(HTMLVideoElement& aTargetVideo,
 
   aTargetVideo.SetMediaInfo(mMediaInfo);
 
+  if (IsInComposedDoc() && !sCloneElementVisuallyTesting) {
+    NotifyUAWidgetSetupOrChange();
+  }
+
   MaybeBeginCloningVisually();
+}
+
+void HTMLVideoElement::StopCloningElementVisually() {
+  if (mVisualCloneTarget) {
+    EndCloningVisually();
+  }
 }
 
 void HTMLVideoElement::MaybeBeginCloningVisually() {
@@ -526,6 +542,10 @@ void HTMLVideoElement::EndCloningVisually() {
 
   Unused << mVisualCloneTarget->SetVisualCloneSource(nullptr);
   Unused << SetVisualCloneTarget(nullptr);
+
+  if (IsInComposedDoc() && !sCloneElementVisuallyTesting) {
+    NotifyUAWidgetSetupOrChange();
+  }
 }
 
 }  // namespace dom

@@ -157,6 +157,9 @@ class AccessibilityTest : BaseSessionTest() {
 
             @AssertCalled
             override fun onWinStateChanged(event: AccessibilityEvent) { }
+
+            @AssertCalled
+            override fun onWinContentChanged(event: AccessibilityEvent) { }
         })
 
         if (moveToFirstChild) {
@@ -574,6 +577,26 @@ class AccessibilityTest : BaseSessionTest() {
 
         provider.performAction(nodeId, AccessibilityNodeInfo.ACTION_SELECT, null)
         waitUntilSelect(false)
+    }
+
+    @Test fun testMutation() {
+        sessionRule.session.loadString(
+                "<div><p id='to_show'>I will be shown</p></div>","text/html")
+        waitForInitialFocus()
+
+        val rootNode = createNodeInfo(View.NO_ID)
+        assertThat("Document has 1 child", rootNode.childCount, equalTo(1))
+
+        assertThat("Section has 1 child",
+                createNodeInfo(rootNode.getChildId(0)).childCount, equalTo(1))
+        mainSession.evaluateJS("$('#to_show').style.display = 'none';")
+        sessionRule.waitUntilCalled(object : EventDelegate {
+            @AssertCalled(count = 1)
+            override fun onWinContentChanged(event: AccessibilityEvent) { }
+        })
+
+        assertThat("Section has no children",
+                createNodeInfo(rootNode.getChildId(0)).childCount, equalTo(0))
     }
 
     private fun screenContainsNode(nodeId: Int): Boolean {

@@ -137,8 +137,16 @@ bool GeneralParser<ParseHandler, Unit>::mustMatchTokenInternal(
 
 ParserSharedBase::ParserSharedBase(JSContext* cx, LifoAlloc& alloc,
                                    UsedNameTracker& usedNames,
-                                   ScriptSourceObject* sourceObject)
-    : JS::AutoGCRooter(cx, AutoGCRooter::Tag::Parser),
+                                   ScriptSourceObject* sourceObject, Kind kind)
+    : JS::AutoGCRooter(
+          cx,
+#ifdef JS_BUILD_BINAST
+          kind == Kind::Parser ? JS::AutoGCRooter::Tag::Parser
+                               : JS::AutoGCRooter::Tag::BinASTParser
+#else
+          JS::AutoGCRooter::Tag::Parser
+#endif
+          ),
       cx_(cx),
       alloc_(alloc),
       traceListHead_(nullptr),
@@ -167,7 +175,8 @@ ParserBase::ParserBase(JSContext* cx, LifoAlloc& alloc,
                        const ReadOnlyCompileOptions& options,
                        bool foldConstants, UsedNameTracker& usedNames,
                        ScriptSourceObject* sourceObject, ParseGoal parseGoal)
-    : ParserSharedBase(cx, alloc, usedNames, sourceObject),
+    : ParserSharedBase(cx, alloc, usedNames, sourceObject,
+                       ParserSharedBase::Kind::Parser),
       anyChars(cx, options, thisForCtor()),
       ss(nullptr),
       foldConstants_(foldConstants),
@@ -6776,11 +6785,10 @@ bool GeneralParser<ParseHandler, Unit>::classMember(
   }
 
   if (propType == PropertyType::Field) {
-    // TODO(khyperia): Delete the two lines below once fields are fully
-    // supported in the backend. We can't fail in BytecodeCompiler because of
-    // lazy parsing.
-    errorAt(propNameOffset, JSMSG_FIELDS_NOT_SUPPORTED);
-    return false;
+    if (!options().fieldsEnabledOption) {
+      errorAt(propNameOffset, JSMSG_FIELDS_NOT_SUPPORTED);
+      return false;
+    }
 
     if (isStatic) {
       errorAt(propNameOffset, JSMSG_BAD_METHOD_DEF);

@@ -501,9 +501,9 @@ class UrlbarView {
     if (item) {
       item.toggleAttribute("selected", true);
       item.toggleAttribute("aria-selected", true);
-      this._rows.setAttribute("aria-activedescendant", item.id);
+      this.input.inputField.setAttribute("aria-activedescendant", item.id);
     } else {
-      this._rows.removeAttribute("aria-activedescendant");
+      this.input.inputField.removeAttribute("aria-activedescendant");
     }
 
     if (updateInput) {
@@ -660,6 +660,7 @@ class UrlbarView {
   _on_popuphiding() {
     this.controller.cancelQuery();
     this.window.removeEventListener("resize", this);
+    this.input.inputField.removeAttribute("aria-activedescendant");
   }
 
   _on_resize() {

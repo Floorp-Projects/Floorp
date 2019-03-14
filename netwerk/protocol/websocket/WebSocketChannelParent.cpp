@@ -53,7 +53,7 @@ mozilla::ipc::IPCResult WebSocketChannelParent::RecvAsyncOpen(
     const bool& aSecure, const uint32_t& aPingInterval,
     const bool& aClientSetPingInterval, const uint32_t& aPingTimeout,
     const bool& aClientSetPingTimeout, const Maybe<LoadInfoArgs>& aLoadInfoArgs,
-    const OptionalTransportProvider& aTransportProvider,
+    const Maybe<PTransportProviderParent*>& aTransportProvider,
     const nsCString& aNegotiatedExtensions) {
   LOG(("WebSocketChannelParent::RecvAsyncOpen() %p\n", this));
 
@@ -91,10 +91,9 @@ mozilla::ipc::IPCResult WebSocketChannelParent::RecvAsyncOpen(
   rv = mChannel->SetProtocol(aProtocol);
   if (NS_FAILED(rv)) goto fail;
 
-  if (aTransportProvider.type() != OptionalTransportProvider::Tvoid_t) {
+  if (aTransportProvider.isSome()) {
     RefPtr<TransportProviderParent> provider =
-        static_cast<TransportProviderParent*>(
-            aTransportProvider.get_PTransportProviderParent());
+        static_cast<TransportProviderParent*>(aTransportProvider.value());
     rv = mChannel->SetServerParameters(provider, aNegotiatedExtensions);
     if (NS_FAILED(rv)) {
       goto fail;

@@ -2303,29 +2303,26 @@ nsresult nsImageFrame::HandleEvent(nsPresContext* aPresContext,
                                              aEventStatus);
 }
 
-nsresult nsImageFrame::GetCursor(const nsPoint& aPoint,
-                                 nsIFrame::Cursor& aCursor) {
-  if (nsImageMap* map = GetImageMap()) {
-    nsIntPoint p;
-    TranslateEventCoords(aPoint, p);
-    nsCOMPtr<nsIContent> area = map->GetArea(p.x, p.y);
-    if (area) {
-      // Use the cursor from the style of the *area* element.
-      // XXX Using the image as the parent ComputedStyle isn't
-      // technically correct, but it's probably the right thing to do
-      // here, since it means that areas on which the cursor isn't
-      // specified will inherit the style from the image.
-      RefPtr<ComputedStyle> areaStyle =
-          PresShell()->StyleSet()->ResolveStyleFor(area->AsElement(),
-                                                   LazyComputeBehavior::Allow);
-      FillCursorInformationFromStyle(areaStyle->StyleUI(), aCursor);
-      if (StyleCursorKind::Auto == aCursor.mCursor) {
-        aCursor.mCursor = StyleCursorKind::Default;
-      }
-      return NS_OK;
-    }
+Maybe<nsIFrame::Cursor> nsImageFrame::GetCursor(const nsPoint& aPoint) {
+  nsImageMap* map = GetImageMap();
+  if (!map) {
+    return nsFrame::GetCursor(aPoint);
   }
-  return nsFrame::GetCursor(aPoint, aCursor);
+  nsIntPoint p;
+  TranslateEventCoords(aPoint, p);
+  nsCOMPtr<nsIContent> area = map->GetArea(p.x, p.y);
+  if (!area) {
+    return nsFrame::GetCursor(aPoint);
+  }
+
+  // Use the cursor from the style of the *area* element.
+  RefPtr<ComputedStyle> areaStyle = PresShell()->StyleSet()->ResolveStyleFor(
+      area->AsElement(), LazyComputeBehavior::Allow);
+  StyleCursorKind kind = areaStyle->StyleUI()->mCursor;
+  if (kind == StyleCursorKind::Auto) {
+    kind = StyleCursorKind::Default;
+  }
+  return Some(Cursor{kind, AllowCustomCursorImage::Yes, std::move(areaStyle)});
 }
 
 nsresult nsImageFrame::AttributeChanged(int32_t aNameSpaceID,

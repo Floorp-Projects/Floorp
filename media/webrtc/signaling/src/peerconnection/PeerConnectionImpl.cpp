@@ -2121,14 +2121,6 @@ PeerConnectionImpl::GetFingerprint(char** fingerprint) {
   return NS_OK;
 }
 
-void PeerConnectionImpl::GetLocalDescription(nsAString& aSDP) {
-  PC_AUTO_ENTER_API_CALL_NO_CHECK();
-
-  std::string localSdp =
-      mJsepSession->GetLocalDescription(kJsepDescriptionPendingOrCurrent);
-  aSDP = NS_ConvertASCIItoUTF16(localSdp.c_str());
-}
-
 void PeerConnectionImpl::GetCurrentLocalDescription(nsAString& aSDP) {
   PC_AUTO_ENTER_API_CALL_NO_CHECK();
 
@@ -2143,14 +2135,6 @@ void PeerConnectionImpl::GetPendingLocalDescription(nsAString& aSDP) {
   std::string localSdp =
       mJsepSession->GetLocalDescription(kJsepDescriptionPending);
   aSDP = NS_ConvertASCIItoUTF16(localSdp.c_str());
-}
-
-void PeerConnectionImpl::GetRemoteDescription(nsAString& aSDP) {
-  PC_AUTO_ENTER_API_CALL_NO_CHECK();
-
-  std::string remoteSdp =
-      mJsepSession->GetRemoteDescription(kJsepDescriptionPendingOrCurrent);
-  aSDP = NS_ConvertASCIItoUTF16(remoteSdp.c_str());
 }
 
 void PeerConnectionImpl::GetCurrentRemoteDescription(nsAString& aSDP) {

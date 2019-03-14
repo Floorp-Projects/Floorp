@@ -7,7 +7,6 @@
 import { selectLocation } from "../sources";
 import { evaluateExpressions } from "../expressions";
 import { fetchScopes } from "./fetchScopes";
-import { getCurrentThread } from "../../selectors";
 
 import type { Frame } from "../../types";
 import type { ThunkArgs } from "../types";
@@ -20,13 +19,13 @@ export function selectFrame(frame: Frame) {
   return async ({ dispatch, client, getState, sourceMaps }: ThunkArgs) => {
     dispatch({
       type: "SELECT_FRAME",
-      thread: getCurrentThread(getState()),
+      thread: frame.thread,
       frame
     });
 
     dispatch(selectLocation(frame.location));
 
     dispatch(evaluateExpressions());
-    dispatch(fetchScopes());
+    dispatch(fetchScopes(frame.thread));
   };
 }

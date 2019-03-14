@@ -60,6 +60,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1498892
     }
   }
 
+  function promiseVisualScrollEvent(browser) {
+    return promiseBrowserEvent(browser, "mozvisualscroll",
+                               { mozSystemGroup: true });
+  }
+
   SimpleTest.registerCleanupFunction(function() {
     cleanupTabs();
   });
@@ -78,7 +83,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1498892
 
         // Modify scroll position.
         setScrollPosition(browser, testData);
-        yield promiseTabEvent(browser, "SSTabScrollCaptured");
+        yield promiseVisualScrollEvent(browser);
 
         // Check that we've actually scrolled.
         checkScroll(browser, testData);
@@ -119,7 +124,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1498892
 
         // Modify scroll position and zoom level.
         setScrollPosition(browser, testData1);
-        yield promiseTabEvent(browser, "SSTabScrollCaptured");
+        yield promiseVisualScrollEvent(browser);
 
         // Check that we've actually scrolled and zoomed.
         checkScroll(browser, testData1);
@@ -129,7 +134,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1498892
         yield promiseBrowserEvent(browser, "pageshow");
 
         setScrollPosition(browser, testData2);
-        yield promiseTabEvent(browser, "SSTabScrollCaptured");
+        yield promiseVisualScrollEvent(browser);
 
         checkScroll(browser, testData2);
 
@@ -149,8 +154,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1498892
     let closedTabData = ss.getClosedTabs(chromeWin)[0];
     let browser = ss.undoCloseTab(chromeWin, closedTabData);
     let pageshow = promiseBrowserEvent(browser, "pageshow");
-    let scroll = promiseBrowserEvent(browser, "mozvisualscroll",
-                                     { mozSystemGroup: true });
+    let scroll = promiseVisualScrollEvent(browser);
     await pageshow;
     await scroll;
 
@@ -161,8 +165,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1498892
     // is restored there as well.
     is(browser.canGoBack, true, "can go back");
     pageshow = promiseBrowserEvent(browser, "pageshow");
-    scroll = promiseBrowserEvent(browser, "mozvisualscroll",
-                                 { mozSystemGroup: true });
+    scroll = promiseVisualScrollEvent(browser);
     browser.goBack();
     await pageshow;
     await scroll;
@@ -185,7 +188,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1498892
 
         // Modify scroll position and zoom level.
         setScrollPosition(browser, testData);
-        yield promiseTabEvent(browser, "SSTabScrollCaptured");
+        yield promiseVisualScrollEvent(browser);
 
         // Check that we've actually scrolled and zoomed.
         checkScroll(browser, testData);
@@ -235,17 +238,17 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1498892
 
         // Move the frameset itself.
         setScrollPosition(browser, testDataParent);
-        yield promiseTabEvent(browser, "SSTabScrollCaptured");
+        yield promiseVisualScrollEvent(browser);
         checkScroll(browser, testDataParent);
 
         // Modify scroll position and zoom level for one frame...
         setScrollPosition(browser, testData1);
-        yield promiseTabEvent(browser, "SSTabScrollCaptured");
+        yield promiseVisualScrollEvent(getFrame(browser, testData1));
         checkScroll(browser, testData1);
 
         // ... and the other.
         setScrollPosition(browser, testData2);
-        yield promiseTabEvent(browser, "SSTabScrollCaptured");
+        yield promiseVisualScrollEvent(getFrame(browser, testData2));
         checkScroll(browser, testData2);
 
         // Remove the tab.
@@ -268,15 +271,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1498892
     // We can't add event listeners for the frames until we're sure that they've actually loaded.
     let load = promiseBrowserEvent(browser, "load");
     await load;
-    let scrollParent = promiseBrowserEvent(getFrame(browser, testDataParent),
-                                           "mozvisualscroll",
-                                           { mozSystemGroup: true });
-    let scroll1 = promiseBrowserEvent(getFrame(browser, testData1),
-                                      "mozvisualscroll",
-                                      { mozSystemGroup: true });
-    let scroll2 = promiseBrowserEvent(getFrame(browser, testData2),
-                                      "mozvisualscroll",
-                                      { mozSystemGroup: true });
+    let scrollParent = promiseVisualScrollEvent(getFrame(browser, testDataParent));
+    let scroll1 = promiseVisualScrollEvent(getFrame(browser, testData1));
+    let scroll2 = promiseVisualScrollEvent(getFrame(browser, testData2));
     await pageshow;
     await scrollParent;
     await scroll1;

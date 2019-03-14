@@ -162,6 +162,9 @@ class VideoSink : public MediaSink {
   // but reduces our frame drop rate.
   bool mHiResTimersRequested;
 #endif
+
+  RefPtr<layers::Image> mBlankImage;
+  bool InitializeBlankImage();
 };
 
 }  // namespace mozilla

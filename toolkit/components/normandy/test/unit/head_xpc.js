@@ -1,12 +1,4 @@
 "use strict";
 
 var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
-// ================================================
-// Load mocking/stubbing library, sinon
-// docs: http://sinonjs.org/releases/v2.3.2/
-/* exported sinon */
-var {clearInterval, clearTimeout, setInterval, setIntervalWithTarget, setTimeout, setTimeoutWithTarget} = ChromeUtils.import("resource://gre/modules/Timer.jsm");
-Services.scriptloader.loadSubScript("resource://testing-common/sinon-2.3.2.js", this);
-/* globals sinon */
-// ================================================
+var {sinon} = ChromeUtils.import("resource://testing-common/Sinon.jsm");

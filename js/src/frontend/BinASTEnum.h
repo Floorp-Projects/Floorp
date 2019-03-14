@@ -7,7 +7,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // To generate this file, see the documentation in
-// js/src/frontend/binsource/README.md.
+// js/src/frontend/binast/README.md.
 
 #ifndef frontend_BinASTEnum_h
 #define frontend_BinASTEnum_h

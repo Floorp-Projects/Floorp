@@ -106,6 +106,10 @@ class PictureInPictureChild extends ActorChild {
     }, { once: true });
 
     this.content.addEventListener("unload", () => {
+      let video = gWeakVideo && gWeakVideo.get();
+      if (video) {
+        video.stopCloningElementVisually();
+      }
       gWeakVideo = null;
     }, { once: true });
   }

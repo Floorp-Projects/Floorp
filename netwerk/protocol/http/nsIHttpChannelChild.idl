@@ -6,7 +6,7 @@
 #include "nsISupports.idl"
 
 [ptr] native RequestHeaderTuples(mozilla::net::RequestHeaderTuples);
-[ref] native OptionalCorsPreflightArgsRef(mozilla::net::OptionalCorsPreflightArgs);
+[ref] native MaybeCorsPreflightArgsRef(mozilla::Maybe<mozilla::net::CorsPreflightArgs>);
 
 interface nsIPrincipal;
 interface nsIURI;
@@ -27,7 +27,7 @@ interface nsIHttpChannelChild : nsISupports
 
   // Headers that the channel client has set via SetRequestHeader.
   [notxpcom, nostdcall]
-  void GetClientSetCorsPreflightParameters(in OptionalCorsPreflightArgsRef args);
+  void GetClientSetCorsPreflightParameters(in MaybeCorsPreflightArgsRef args);
 
   // This method is called by nsCORSListenerProxy if we need to remove
   // an entry from the CORS preflight cache in the parent process.

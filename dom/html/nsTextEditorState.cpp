@@ -826,6 +826,7 @@ void TextInputListener::OnSelectionChange(Selection& aSelection,
   UpdateTextInputCommands(NS_LITERAL_STRING("select"), &aSelection, aReason);
 }
 
+MOZ_CAN_RUN_SCRIPT
 static void DoCommandCallback(Command aCommand, void* aData) {
   nsTextControlFrame* frame = static_cast<nsTextControlFrame*>(aData);
   nsIContent* content = frame->GetContent();
@@ -2437,9 +2438,8 @@ bool nsTextEditorState::SetValue(const nsAString& aValue,
         nsCOMPtr<Element> element = do_QueryInterface(textControlElement);
         MOZ_ASSERT(element);
         MOZ_ASSERT(!newValue.IsVoid());
-        RefPtr<TextEditor> textEditor;  // See bug 1506439
         DebugOnly<nsresult> rvIgnored = nsContentUtils::DispatchInputEvent(
-            element, EditorInputType::eInsertReplacementText, textEditor,
+            element, EditorInputType::eInsertReplacementText, nullptr,
             nsContentUtils::InputEventOptions(newValue));
         NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
                              "Failed to dispatch input event");

@@ -84,7 +84,7 @@ class InputStreamHelper {
                                           bool aConsumedByIPC,
                                           bool aDelayedStart);
 
-  static void PostSerializationActivation(OptionalInputStreamParams& aParams,
+  static void PostSerializationActivation(Maybe<InputStreamParams>& aParams,
                                           bool aConsumedByIPC,
                                           bool aDelayedStart);
 

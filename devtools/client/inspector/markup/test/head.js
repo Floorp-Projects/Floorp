@@ -354,6 +354,36 @@ function promiseNextTick() {
 }
 
 /**
+ * `await` with timeout.
+ *
+ * Usage:
+ *   const badgeEventAdded = inspector.markup.once("badge-added-event");
+ *   ...
+ *   const result = await awaitWithTimeout(badgeEventAdded, 3000);
+ *   is(result, "timeout", "Ensure that no event badges were added");
+ *
+ * @param  {Promise} promise
+ *         Promise to resolve
+ * @param  {Number} ms
+ *         Milliseconds to wait.
+ * @return "timeout" on timeout, otherwise the result of the fulfilled promise.
+ */
+async function awaitWithTimeout(promise, ms) {
+  const timeout = new Promise(resolve => {
+    // eslint-disable-next-line
+    const wait = setTimeout(() => {
+      clearTimeout(wait);
+      resolve("timeout");
+    }, ms);
+  });
+
+  return Promise.race([
+    promise,
+    timeout,
+  ]);
+}
+
+/**
  * Collapses the current text selection in an input field and tabs to the next
  * field.
  */

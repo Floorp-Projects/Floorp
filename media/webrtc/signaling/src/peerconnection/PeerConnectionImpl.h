@@ -420,11 +420,9 @@ class PeerConnectionImpl final
     delete[] tmp;
   }
 
-  void GetLocalDescription(nsAString& aSDP);
   void GetCurrentLocalDescription(nsAString& aSDP);
   void GetPendingLocalDescription(nsAString& aSDP);
 
-  void GetRemoteDescription(nsAString& aSDP);
   void GetCurrentRemoteDescription(nsAString& aSDP);
   void GetPendingRemoteDescription(nsAString& aSDP);
 

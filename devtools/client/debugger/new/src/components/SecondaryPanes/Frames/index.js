@@ -23,7 +23,8 @@ import {
   getFrameworkGroupingState,
   getSelectedFrame,
   getCallStackFrames,
-  getPauseReason
+  getPauseReason,
+  getCurrentThread
 } from "../../../selectors";
 
 import "./Frames.css";
@@ -216,9 +217,9 @@ Frames.contextTypes = { l10n: PropTypes.object };
 
 const mapStateToProps = state => ({
   frames: getCallStackFrames(state),
-  why: getPauseReason(state),
+  why: getPauseReason(state, getCurrentThread(state)),
   frameworkGroupingOn: getFrameworkGroupingState(state),
-  selectedFrame: getSelectedFrame(state)
+  selectedFrame: getSelectedFrame(state, getCurrentThread(state))
 });
 
 export default connect(

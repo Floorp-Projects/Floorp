@@ -26,7 +26,7 @@ import type { Source, SourceId, SourceLocation, ThreadId } from "../types";
 import type { PendingSelectedLocation, Selector } from "./types";
 import type { Action, DonePromiseAction, FocusItem } from "../actions/types";
 import type { LoadSourceAction } from "../actions/types/SourceAction";
-import { mapValues, uniqBy } from "lodash";
+import { mapValues, uniqBy, uniq } from "lodash";
 
 export type SourcesMap = { [SourceId]: Source };
 export type SourcesMapByThread = { [ThreadId]: SourcesMap };
@@ -179,6 +179,15 @@ function update(
  */
 function updateSource(state: SourcesState, source: Object) {
   const existingSource = state.sources[source.id];
+
+  // If there is no existing version of the source, it means that we probably
+  // ended up here as a result of an async action, and the sources were cleared
+  // between the action starting and the source being updated.
+  if (!existingSource) {
+    // TODO: We may want to consider throwing here once we have a better
+    // handle on async action flow control.
+    return state;
+  }
   return {
     ...state,
     sources: {
@@ -349,6 +358,15 @@ function getSourceActors(state, source) {
   // Original sources do not have actors, so use the generated source.
   const generatedSource = state.sources[originalToGeneratedId(source.id)];
   return generatedSource ? generatedSource.actors : [];
+}
+
+export function getSourceThreads(
+  state: OuterState,
+  source: Source
+): ThreadId[] {
+  return uniq(
+    getSourceActors(state.sources, source).map(actor => actor.thread)
+  );
 }
 
 export function getSourceInSources(sources: SourcesMap, id: string): ?Source {

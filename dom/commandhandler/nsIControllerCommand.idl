@@ -43,8 +43,10 @@ interface nsIControllerCommand : nsISupports
    *                  allowing the command to get some context information.
    *                  The contents of this cookie are implementation-defined.
    */
+  [can_run_script]
   void    doCommand(in string aCommandName, in nsISupports aCommandContext);
 
+  [can_run_script]
   void    doCommandParams(in string aCommandName, in nsICommandParams aParams, in nsISupports aCommandContext);
   
 };

@@ -200,15 +200,13 @@ void SessionAccessibility::SendScrollingEvent(AccessibleWrap* aAccessible,
   mSessionAccessibility->SendEvent(
       java::sdk::AccessibilityEvent::TYPE_VIEW_SCROLLED, virtualViewId,
       aAccessible->AndroidClass(), eventInfo);
-
-  SendWindowContentChangedEvent(aAccessible);
 }
 
-void SessionAccessibility::SendWindowContentChangedEvent(
-    AccessibleWrap* aAccessible) {
+void SessionAccessibility::SendWindowContentChangedEvent() {
   mSessionAccessibility->SendEvent(
       java::sdk::AccessibilityEvent::TYPE_WINDOW_CONTENT_CHANGED,
-      aAccessible->VirtualViewID(), aAccessible->AndroidClass(), nullptr);
+      AccessibleWrap::kNoID, java::SessionAccessibility::CLASSNAME_WEBVIEW,
+      nullptr);
 }
 
 void SessionAccessibility::SendWindowStateChangedEvent(
@@ -342,6 +340,7 @@ void SessionAccessibility::ReplaceViewportCache(
   }
 
   mSessionAccessibility->ReplaceViewportCache(infos);
+  SendWindowContentChangedEvent();
 }
 
 void SessionAccessibility::ReplaceFocusPathCache(
@@ -391,4 +390,5 @@ void SessionAccessibility::UpdateCachedBounds(
   }
 
   mSessionAccessibility->UpdateCachedBounds(infos);
+  SendWindowContentChangedEvent();
 }

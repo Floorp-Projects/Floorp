@@ -204,7 +204,6 @@ dom/svg/**
 dom/tests/html/**
 dom/tests/mochitest/**
 dom/u2f/**
-dom/url/**
 dom/vr/**
 dom/webauthn/**
 dom/webgpu/**
@@ -323,7 +322,7 @@ testing/mochitest/MochiKit/**
 testing/mochitest/tests/MochiKit-1.4.2/**
 testing/mochitest/tests/SimpleTest/**
 testing/modules/ajv-4.1.1.js
-testing/modules/sinon-2.3.2.js
+testing/modules/sinon-7.2.7.js
 # octothorpe used for pref file comment causes parsing error
 testing/mozbase/mozprofile/tests/files/prefs_with_comments.js
 testing/talos/talos/scripts/jszip.min.js

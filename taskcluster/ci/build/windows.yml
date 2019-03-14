@@ -1044,6 +1044,42 @@ win64-aarch64/opt:
         - win64-nasm
         - win64-node
 
+win64-aarch64-eme/opt:
+    description: "AArch64 Win64 Opt w/ EME"
+    index:
+        product: firefox
+        job-name: win64-aarch64-eme-opt
+    treeherder:
+        platform: windows2012-aarch64/opt
+        symbol: Be
+        tier: 1
+    worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
+    worker:
+        max-run-time: 7200
+        env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/aarch64.manifest"
+            PERFHERDER_EXTRA_OPTIONS: aarch64-eme
+            MOZ_ARTIFACT_TASK: {task-reference: '<win64-aarch64-opt>'}
+            MOZ_ARTIFACT_TASK_WIN32_OPT: {task-reference: '<win32-opt>'}
+            USE_ARTIFACT: '1'
+    run:
+        actions: [get-secrets, build]
+        options: [append-env-variables-from-configs]
+        script: mozharness/scripts/fx_desktop_build.py
+        secrets: true
+        config:
+            - builds/releng_base_firefox.py
+            - builds/taskcluster_base_windows.py
+            - builds/taskcluster_base_win64.py
+        extra-config:
+            stage_platform: win64-aarch64
+            mozconfig_platform: win64-aarch64
+    dependencies:
+        win32-opt: build-win32/opt
+        win64-aarch64-opt: build-win64-aarch64/opt
+    toolchains:
+        - win64-node
+
 win64-aarch64-nightly/opt:
     description: "AArch64 Win64 Nightly"
     index:
@@ -1077,6 +1113,49 @@ win64-aarch64-nightly/opt:
         extra-config:
             stage_platform: win64-aarch64
             mozconfig_platform: win64-aarch64
+    toolchains:
+        - win64-clang-cl
+        - win64-aarch64-rust
+        - win64-cbindgen
+        - win64-nasm
+        - win64-node
+
+
+win64-aarch64-devedition-nightly/opt:
+    description: "AArch64 Win64 MSVC Devedition Nightly"
+    index:
+        product: devedition
+        job-name: win64-aarch64-opt
+        type: nightly
+    attributes:
+        nightly: true
+        enable-full-crashsymbols: true
+    shipping-phase: build
+    shipping-product: devedition
+    treeherder:
+        platform: windows2012-aarch64-devedition/opt
+        symbol: N
+        tier: 1
+    worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
+    worker:
+        max-run-time: 7200
+        env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/aarch64.manifest"
+            PERFHERDER_EXTRA_OPTIONS: aarch64-devedition
+    run:
+        actions: [get-secrets, build]
+        options: [append-env-variables-from-configs]
+        script: mozharness/scripts/fx_desktop_build.py
+        secrets: true
+        config:
+            - builds/releng_base_firefox.py
+            - builds/taskcluster_base_windows.py
+            - taskcluster_nightly.py
+        extra-config:
+            stage_platform: win64-aarch64
+            mozconfig_platform: win64-aarch64
+        mozconfig-variant: devedition
+    run-on-projects: ['mozilla-beta']
     toolchains:
         - win64-clang-cl
         - win64-aarch64-rust

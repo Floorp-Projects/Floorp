@@ -71,11 +71,16 @@ async function test() {
   is(ed.getOption("enableCodeFolding"), undefined,
     "enableCodeFolding is correct");
   is(ed.getOption("indentWithTabs"), false, "indentWithTabs is correct");
-  is(ed.getOption("keyMap"), "sublime", "keyMap is correct");
   is(ed.getOption("autoCloseBrackets"), "()[]{}''\"\"``",
     "autoCloseBrackets is correct");
   is(ed.getOption("autocomplete"), true, "autocomplete is correct");
   ok(ed.isAutocompletionEnabled(), "Autocompletion is enabled");
+
+  // Since the keyMap files are lazily loaded, this can take some time. We need to wait
+  // until the option has the expected value.
+  info("Wait for the keyMap option to be updated");
+  await waitUntil(() => ed.getOption("keyMap") === "sublime");
+  is(ed.getOption("keyMap"), "sublime", "keyMap is correct");
 
   info("Forcing foldGutter off using enableCodeFolding");
   ed.setOption("enableCodeFolding", false);

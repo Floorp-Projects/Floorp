@@ -44,8 +44,9 @@ class AwsProvisioner(BaseClient):
     """
 
     classOptions = {
-        "baseUrl": "https://aws-provisioner.taskcluster.net/v1"
     }
+    serviceName = 'aws-provisioner'
+    apiVersion = 'v1'
 
     def listWorkerTypeSummaries(self, *args, **kwargs):
         """

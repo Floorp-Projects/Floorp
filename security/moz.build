@@ -65,6 +65,11 @@ else:
 
 # This disables building some NSS tools.
 gyp_vars['mozilla_client'] = 1
+
+# This builds NSS tools in COMM applications that Firefox doesn't build.
+if CONFIG['MOZ_BUILD_APP'].startswith('comm/'):
+    gyp_vars['comm_client'] = 1
+
 # We run shlibsign as part of packaging, not build.
 gyp_vars['sign_libs'] = 0
 gyp_vars['python'] = CONFIG['PYTHON']

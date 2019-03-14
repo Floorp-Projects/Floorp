@@ -95,13 +95,13 @@ struct Rectangle {
     renderer: Option<webrender::Renderer>,
     api: api::RenderApi,
     document_id: api::DocumentId,
-    size: api::FramebufferIntSize,
+    size: api::units::FramebufferIntSize,
     color: api::ColorF,
 }
 
 impl Rectangle {
     fn new(composition: &DirectComposition, notifier: &Box<Notifier>,
-           device_pixel_ratio: f32, size: api::FramebufferIntSize, r: f32, g: f32, b: f32, a: f32)
+           device_pixel_ratio: f32, size: api::units::FramebufferIntSize, r: f32, g: f32, b: f32, a: f32)
            -> Self {
         let visual = composition.create_angle_visual(size.width as u32, size.height as u32);
         visual.make_current();

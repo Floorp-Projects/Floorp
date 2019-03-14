@@ -27,7 +27,11 @@ class MozBrowser extends MozElementMixin(XULFrameElement) {
     // When we have already been set up via connectedCallback and the
     // and the [remote] value changes, we need to start over. This used
     // to happen due to a XBL binding change.
-    if (name === "remote" && oldValue != newValue && this.isConnectedAndReady) {
+    //
+    // Only do this when the rebuild frameloaders pref is off. This update isn't
+    // required when we rebuild the frameloaders in the backend.
+    if (!Services.prefs.getBoolPref("fission.rebuild_frameloaders_on_remoteness_change", false) &&
+        name === "remote" && oldValue != newValue && this.isConnectedAndReady) {
       this.destroy();
       this.construct();
     }

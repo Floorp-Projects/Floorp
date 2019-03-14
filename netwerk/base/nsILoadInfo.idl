@@ -1093,4 +1093,10 @@ interface nsILoadInfo : nsISupports
   };
 
   [infallible] attribute nsILoadInfo_CrossOriginOpenerPolicy openerPolicy;
+
+  cenum CrossOriginPolicy : 8 {
+    CROSS_ORIGIN_POLICY_NULL            = 0,
+    CROSS_ORIGIN_POLICY_ANONYMOUS       = 1,
+    CROSS_ORIGIN_POLICY_USE_CREDENTIALS = 2
+  };
 };

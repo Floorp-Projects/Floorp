@@ -2676,11 +2676,42 @@ bool ScrollFrameHelper::GetDisplayPortAtLastApproximateFrameVisibilityUpdate(
 
 void ScrollFrameHelper::ScrollToImpl(nsPoint aPt, const nsRect& aRange,
                                      nsAtom* aOrigin) {
+  // Figure out the effective origin for this scroll request.
   if (aOrigin == nullptr) {
     // If no origin was specified, we still want to set it to something that's
     // non-null, so that we can use nullness to distinguish if the frame was
     // scrolled at all. Default it to some generic placeholder.
     aOrigin = nsGkAtoms::other;
+  }
+
+  // If this scroll is |relative|, but we've already had a user scroll that
+  // was not relative, promote this origin to |other|. This ensures that we
+  // may only transmit a relative update to APZ if all scrolls since the last
+  // transaction or repaint request have been relative.
+  if (aOrigin == nsGkAtoms::relative &&
+      (mLastScrollOrigin && mLastScrollOrigin != nsGkAtoms::relative &&
+       mLastScrollOrigin != nsGkAtoms::apz)) {
+    aOrigin = nsGkAtoms::other;
+  }
+
+  // If the origin is a downgrade, and downgrades are allowed, process the
+  // downgrade even if we're going to early-exit because we're already at
+  // the correct scroll position. This ensures that if there wasn't a main-
+  // thread scroll update pending before a frame reconstruction (as indicated
+  // by mAllowScrollOriginDowngrade=true), then after the frame reconstruction
+  // the origin is downgraded to "restore" even if the layout scroll offset to
+  // be restored is (0,0) (which will take the early-exit below). This is
+  // important so that restoration of a *visual* scroll offset (which might be
+  // to something other than (0,0)) isn't clobbered.
+  bool isScrollOriginDowngrade =
+      nsLayoutUtils::CanScrollOriginClobberApz(mLastScrollOrigin) &&
+      !nsLayoutUtils::CanScrollOriginClobberApz(aOrigin);
+  bool allowScrollOriginChange =
+      mAllowScrollOriginDowngrade && isScrollOriginDowngrade;
+
+  if (allowScrollOriginChange) {
+    mLastScrollOrigin = aOrigin;
+    mAllowScrollOriginDowngrade = false;
   }
 
   nsPresContext* presContext = mOuter->PresContext();
@@ -2690,6 +2721,7 @@ void ScrollFrameHelper::ScrollToImpl(nsPoint aPt, const nsRect& aRange,
   gfxSize scale =
       FrameLayerBuilder::GetPaintedLayerScaleForFrame(mScrolledFrame);
   nsPoint curPos = GetScrollPosition();
+
   nsPoint alignWithPos = mScrollPosForLayerPixelAlignment == nsPoint(-1, -1)
                              ? curPos
                              : mScrollPosForLayerPixelAlignment;
@@ -2738,25 +2770,12 @@ void ScrollFrameHelper::ScrollToImpl(nsPoint aPt, const nsRect& aRange,
   // Update frame position for scrolling
   mScrolledFrame->SetPosition(mScrollPort.TopLeft() - pt);
 
-  // If this scroll is |relative|, but we've already had a user scroll that
-  // was not relative, promote this origin to |other|. This ensures that we
-  // may only transmit a relative update to APZ if all scrolls since the last
-  // transaction or repaint request have been relative.
-  if (aOrigin == nsGkAtoms::relative &&
-      (mLastScrollOrigin && mLastScrollOrigin != nsGkAtoms::relative &&
-       mLastScrollOrigin != nsGkAtoms::apz)) {
-    aOrigin = nsGkAtoms::other;
-  }
-
   // If |mLastScrollOrigin| is already set to something that can clobber APZ's
   // scroll offset, then we don't want to change it to something that can't.
   // If we allowed this, then we could end up in a state where APZ ignores
   // legitimate scroll offset updates because the origin has been masked by
   // a later change within the same refresh driver tick.
-  bool isScrollOriginDowngrade =
-      nsLayoutUtils::CanScrollOriginClobberApz(mLastScrollOrigin) &&
-      !nsLayoutUtils::CanScrollOriginClobberApz(aOrigin);
-  bool allowScrollOriginChange =
+  allowScrollOriginChange =
       mAllowScrollOriginDowngrade || !isScrollOriginDowngrade;
 
   if (allowScrollOriginChange) {
@@ -4469,6 +4488,10 @@ void ScrollFrameHelper::ScrollToRestoredPosition() {
                          nsGkAtoms::restore, nullptr);
       if (!weakFrame.IsAlive()) {
         return;
+      }
+      if (mIsRoot && mOuter->PresContext()->IsRootContentDocument()) {
+        mOuter->PresShell()->SetPendingVisualScrollUpdate(
+            scrollToPos, FrameMetrics::eRestore);
       }
       if (state == LoadingState::Loading || NS_SUBTREE_DIRTY(mOuter)) {
         // If we're trying to do a history scroll restore, then we want to

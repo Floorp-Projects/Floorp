@@ -3086,6 +3086,10 @@ void nsDisplayList::SortByContentOrder(nsIContent* aCommonAncestor) {
   Sort<nsDisplayItem*>(ContentComparator(aCommonAncestor));
 }
 
+#ifndef DEBUG
+static_assert(sizeof(nsDisplayItem) <= 176, "nsDisplayItem has grown");
+#endif
+
 nsDisplayItem::nsDisplayItem(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame)
     : nsDisplayItem(aBuilder, aFrame, aBuilder->CurrentActiveScrolledRoot()) {}
 
@@ -3098,7 +3102,6 @@ nsDisplayItem::nsDisplayItem(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
       mForceNotVisible(aBuilder->IsBuildingInvisibleItems()),
       mDisableSubpixelAA(false),
       mReusedItem(false),
-      mBackfaceHidden(mFrame->In3DContextAndBackfaceIsHidden()),
       mPaintRectValid(false),
       mCanBeReused(true)
 #ifdef MOZ_DUMP_PAINTING
@@ -3129,6 +3132,11 @@ nsDisplayItem::nsDisplayItem(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
   nsRect visible = aBuilder->GetVisibleRect() +
                    aBuilder->GetCurrentFrameOffsetToReferenceFrame();
   SetBuildingRect(visible);
+
+  const nsStyleDisplay* disp = mFrame->StyleDisplay();
+  mBackfaceIsHidden = mFrame->BackfaceIsHidden(disp);
+  mCombines3DTransformWithAncestors =
+      mFrame->Combines3DTransformWithAncestors(disp);
 }
 
 /* static */
@@ -5900,41 +5908,54 @@ bool nsDisplayOpacity::CanApplyOpacity() const {
       mFrame, DisplayItemType::TYPE_OPACITY);
 }
 
+// Only try folding our opacity down if we have at most |kOpacityMaxChildCount|
+// children that don't overlap and can all apply the opacity to themselves.
+static const size_t kOpacityMaxChildCount = 3;
+
+// |kOpacityMaxListSize| defines an early exit condition for opacity items that
+// are likely have more child items than |kOpacityMaxChildCount|.
+static const size_t kOpacityMaxListSize = kOpacityMaxChildCount * 2;
+
 /**
- * Recursively iterates through |aList| and collects at most |aMaxChildCount|
- * display item pointers to items that return true for CanApplyOpacity().
- * The item pointers are added to |aArray|.
+ * Recursively iterates through |aList| and collects at most
+ * |kOpacityMaxChildCount| display item pointers to items that return true for
+ * CanApplyOpacity(). The item pointers are added to |aArray|.
  *
  * LayerEventRegions and WrapList items are ignored.
  *
  * We need to do this recursively, because the child display items might contain
  * nested nsDisplayWrapLists.
  *
- * Returns false if there are more than |aMaxChildCount| items, or if an item
- * that returns false for CanApplyOpacity() is encountered.
+ * Returns false if there are more than |kOpacityMaxChildCount| items, or if an
+ * item that returns false for CanApplyOpacity() is encountered.
  * Otherwise returns true.
  */
 static bool CollectItemsWithOpacity(nsDisplayList* aList,
-                                    nsTArray<nsDisplayItem*>& aArray,
-                                    const size_t aMaxChildCount) {
+                                    nsTArray<nsDisplayItem*>& aArray) {
+  if (aList->Count() > kOpacityMaxListSize) {
+    // Exit early, since |aList| will likely contain more than
+    // |kOpacityMaxChildCount| items.
+    return false;
+  }
+
   for (nsDisplayItem* i = aList->GetBottom(); i; i = i->GetAbove()) {
-    DisplayItemType type = i->GetType();
-    nsDisplayList* children = i->GetChildren();
+    const DisplayItemType type = i->GetType();
 
     // Descend only into wraplists.
-    if (type == DisplayItemType::TYPE_WRAP_LIST && children) {
+    if (type == DisplayItemType::TYPE_WRAP_LIST) {
       // The current display item has children, process them first.
-      if (!CollectItemsWithOpacity(children, aArray, aMaxChildCount)) {
+      if (!CollectItemsWithOpacity(i->GetChildren(), aArray)) {
         return false;
       }
-    }
 
-    if (type == DisplayItemType::TYPE_COMPOSITOR_HITTEST_INFO ||
-        type == DisplayItemType::TYPE_WRAP_LIST) {
       continue;
     }
 
-    if (!i->CanApplyOpacity() || aArray.Length() == aMaxChildCount) {
+    if (type == DisplayItemType::TYPE_COMPOSITOR_HITTEST_INFO) {
+      continue;
+    }
+
+    if (!i->CanApplyOpacity() || aArray.Length() == kOpacityMaxChildCount) {
       return false;
     }
 
@@ -5949,14 +5970,10 @@ bool nsDisplayOpacity::ApplyOpacityToChildren(nsDisplayListBuilder* aBuilder) {
     return false;
   }
 
-  // Only try folding our opacity down if we have at most kMaxChildCount
-  // children that don't overlap and can all apply the opacity to themselves.
-  static const size_t kMaxChildCount = 3;
-
-  // Iterate through the child display list and copy at most kMaxChildCount
-  // child display item pointers to a temporary list.
-  AutoTArray<nsDisplayItem*, kMaxChildCount> items;
-  if (!CollectItemsWithOpacity(&mList, items, kMaxChildCount)) {
+  // Iterate through the child display list and copy at most
+  // |kOpacityMaxChildCount| child display item pointers to a temporary list.
+  AutoTArray<nsDisplayItem*, kOpacityMaxChildCount> items;
+  if (!CollectItemsWithOpacity(&mList, items)) {
     mChildOpacityState = ChildOpacityState::Deferred;
     return false;
   }
@@ -5964,7 +5981,7 @@ bool nsDisplayOpacity::ApplyOpacityToChildren(nsDisplayListBuilder* aBuilder) {
   struct {
     nsDisplayItem* item;
     nsRect bounds;
-  } children[kMaxChildCount];
+  } children[kOpacityMaxChildCount];
 
   bool snap;
   size_t childCount = 0;
@@ -7915,7 +7932,7 @@ bool nsDisplayTransform::ShouldBuildLayerEvenIfInvisible(
   // The visible rect of a Preserves-3D frame is just an intermediate
   // result.  It should always build a layer to make sure it is
   // rendering correctly.
-  return MayBeAnimated(aBuilder) || mFrame->Combines3DTransformWithAncestors();
+  return MayBeAnimated(aBuilder) || Combines3DTransformWithAncestors();
 }
 
 bool nsDisplayTransform::CreateWebRenderCommands(
@@ -8094,7 +8111,7 @@ nsDisplayItem::LayerState nsDisplayTransform::GetLayerState(
   // to be an active layer.
   // Checking HasPerspective() is needed to handle perspective value 0 when
   // the transform is 2D.
-  if (!GetTransform().Is2D() || mFrame->Combines3DTransformWithAncestors() ||
+  if (!GetTransform().Is2D() || Combines3DTransformWithAncestors() ||
       mIsTransformSeparator || mFrame->HasPerspective()) {
     return LAYER_ACTIVE_FORCE;
   }
@@ -8120,7 +8137,7 @@ bool nsDisplayTransform::ComputeVisibility(nsDisplayListBuilder* aBuilder,
   // Calling mStoredList.RecomputeVisibility below for such transform causes the
   // child display items to end up with empty visible rect.
   // We avoid this by bailing out always if we are dealing with a 3d context.
-  if (mFrame->Extend3DContext() || mFrame->Combines3DTransformWithAncestors()) {
+  if (mFrame->Extend3DContext() || Combines3DTransformWithAncestors()) {
     return true;
   }
 
@@ -8213,7 +8230,7 @@ void nsDisplayTransform::UpdateBounds(nsDisplayListBuilder* aBuilder) {
     return;
   }
 
-  if (!mFrame->Combines3DTransformWithAncestors()) {
+  if (!Combines3DTransformWithAncestors()) {
     if (mFrame->Extend3DContext()) {
       // The transform establishes a 3D context. |UpdateBoundsFor3D()| will
       // collect the bounds from the child transforms.
@@ -8972,7 +8989,7 @@ bool nsDisplayMasksAndClipPaths::PaintMask(nsDisplayListBuilder* aBuilder,
                                  : imgIContainer::FLAG_SYNC_DECODE_IF_FAST);
   nsRect borderArea = nsRect(ToReferenceFrame(), mFrame->GetSize());
   nsSVGIntegrationUtils::PaintFramesParams params(
-      *aMaskContext, mFrame, GetBuildingRect(), borderArea, aBuilder, nullptr,
+      *aMaskContext, mFrame, mBounds, borderArea, aBuilder, nullptr,
       mHandleOpacity, imgParams);
   ComputeMaskGeometry(params);
   bool painted = nsSVGIntegrationUtils::PaintMask(params);

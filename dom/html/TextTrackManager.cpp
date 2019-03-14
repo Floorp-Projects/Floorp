@@ -534,6 +534,7 @@ class CompareSimpleTextTrackEvents {
       }
 
       TextTrackCueList* cueList = t1->GetCues();
+      MOZ_ASSERT(cueList);
       nsTArray<RefPtr<TextTrackCue>>& cues = cueList->GetCuesArray();
       auto index1 = cues.IndexOf(c1);
       auto index2 = cues.IndexOf(c2);
@@ -654,7 +655,7 @@ void TextTrackManager::TimeMarchesOn() {
   bool dummy;
   for (uint32_t index = 0; index < mTextTracks->Length(); ++index) {
     TextTrack* ttrack = mTextTracks->IndexedGetter(index, dummy);
-    if (ttrack && dummy) {
+    if (ttrack && ttrack->Mode() != TextTrackMode::Disabled) {
       // TODO: call GetCueListByTimeInterval on mNewCues?
       ttrack->GetCurrentCueList(currentCues);
     }

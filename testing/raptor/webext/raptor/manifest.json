@@ -19,6 +19,8 @@
                   "*://*.amazon.com/*",
                   "*://*.bbc.com/*",
                   "*://*.bing.com/*",
+                  "*://*.booking.com/*",
+                  "*://*.cnn.com/*",
                   "*://*.ebay.com/*",
                   "*://*.ebay-kleinanzeigen.de/*",
                   "*://*.espn.com/*",

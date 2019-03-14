@@ -93,6 +93,7 @@ treeherder:
         'UV': 'Update verify'
         'pipfu': 'pipfile update'
         'WR': 'WebRender standalone'
+        'Gd': 'Geckodriver'
 
 index:
     products:

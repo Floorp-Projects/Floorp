@@ -110,8 +110,12 @@ var Utils = {
     const currentEtag = response.headers.has("ETag") ? response.headers.get("ETag") : undefined;
     let serverTimeMillis = Date.parse(response.headers.get("Date"));
     // Since the response is served via a CDN, the Date header value could have been cached.
-    const ageSeconds = response.headers.has("Age") ? parseInt(response.headers.get("Age"), 10) : 0;
-    serverTimeMillis += ageSeconds * 1000;
+    const cacheAgeSeconds = response.headers.has("Age") ? parseInt(response.headers.get("Age"), 10) : 0;
+    serverTimeMillis += cacheAgeSeconds * 1000;
+
+    // Age of data (time between publication and now).
+    let lastModifiedMillis = Date.parse(response.headers.get("Last-Modified"));
+    const ageSeconds = (serverTimeMillis - lastModifiedMillis) / 1000;
 
     // Check if the server asked the clients to back off.
     let backoffSeconds;
@@ -122,6 +126,6 @@ var Utils = {
       }
     }
 
-    return { changes, currentEtag, serverTimeMillis, backoffSeconds };
+    return { changes, currentEtag, serverTimeMillis, backoffSeconds, ageSeconds };
   },
 };

@@ -14,6 +14,7 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/MaybeOneOf.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/RefPtr.h"
 #include "mozilla/Span.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Utf8.h"
@@ -24,7 +25,7 @@
 
 #include "jstypes.h"
 
-#include "frontend/BinSourceRuntimeSupport.h"
+#include "frontend/BinASTRuntimeSupport.h"
 #include "frontend/NameAnalysisTypes.h"
 #include "gc/Barrier.h"
 #include "gc/Rooting.h"
@@ -1355,7 +1356,7 @@ class alignas(JS::Value) PrivateScriptData final {
 
   // Concrete Fields
   PackedOffsets packedOffsets = {};  // zeroes
-  uint32_t nscopes;
+  uint32_t nscopes = 0;
 
   // Translate an offset into a concrete pointer.
   template <typename T>
@@ -1450,32 +1451,45 @@ class alignas(JS::Value) PrivateScriptData final {
   static bool InitFromEmitter(JSContext* cx, js::HandleScript script,
                               js::frontend::BytecodeEmitter* bce);
 
-  void traceChildren(JSTracer* trc);
+  void trace(JSTracer* trc);
+
+  // PrivateScriptData has trailing data so isn't copyable or movable.
+  PrivateScriptData(const PrivateScriptData&) = delete;
+  PrivateScriptData& operator=(const PrivateScriptData&) = delete;
 };
 
 /*
  * Common data that can be shared between many scripts in a single runtime.
  */
-class SharedScriptData {
+class alignas(uintptr_t) SharedScriptData final {
   // This class is reference counted as follows: each pointer from a JSScript
   // counts as one reference plus there may be one reference from the shared
   // script data table.
   mozilla::Atomic<uint32_t, mozilla::SequentiallyConsistent,
                   mozilla::recordreplay::Behavior::DontPreserve>
-      refCount_;
+      refCount_ = {};
 
-  uint32_t natoms_;
-  uint32_t codeLength_;
-  uint32_t noteLength_;
-  uintptr_t data_[1];
+  uint32_t codeLength_ = 0;
+  uint32_t noteLength_ = 0;
+  uint32_t natoms_ = 0;
+
+  // Size to allocate
+  static size_t AllocationSize(uint32_t codeLength, uint32_t noteLength,
+                               uint32_t natoms);
+
+  template <typename T>
+  void initElements(size_t offset, size_t length);
+
+  // Initialize to GC-safe state
+  SharedScriptData(uint32_t codeLength, uint32_t noteLength, uint32_t natoms);
 
  public:
   static SharedScriptData* new_(JSContext* cx, uint32_t codeLength,
-                                uint32_t srcnotesLength, uint32_t natoms);
+                                uint32_t noteLength, uint32_t natoms);
 
   uint32_t refCount() const { return refCount_; }
-  void incRefCount() { refCount_++; }
-  void decRefCount() {
+  void AddRef() { refCount_++; }
+  void Release() {
     MOZ_ASSERT(refCount_ != 0);
     uint32_t remain = --refCount_;
     if (remain == 0) {
@@ -1487,9 +1501,9 @@ class SharedScriptData {
     return (natoms_ * sizeof(GCPtrAtom)) + codeLength_ + noteLength_;
   }
   const uint8_t* data() const {
-    return reinterpret_cast<const uint8_t*>(data_);
+    return reinterpret_cast<const uint8_t*>(this + 1);
   }
-  uint8_t* data() { return reinterpret_cast<uint8_t*>(data_); }
+  uint8_t* data() { return reinterpret_cast<uint8_t*>(this + 1); }
 
   uint32_t natoms() const { return natoms_; }
   GCPtrAtom* atoms() {
@@ -1512,9 +1526,6 @@ class SharedScriptData {
 
   void traceChildren(JSTracer* trc);
 
-  static constexpr size_t offsetOfData() {
-    return offsetof(SharedScriptData, data_);
-  }
   static constexpr size_t offsetOfNatoms() {
     return offsetof(SharedScriptData, natoms_);
   }
@@ -1529,8 +1540,7 @@ class SharedScriptData {
   // Mark this SharedScriptData for use in a new zone
   void markForCrossZone(JSContext* cx);
 
- private:
-  SharedScriptData() = delete;
+  // SharedScriptData has trailing data so isn't copyable or movable.
   SharedScriptData(const SharedScriptData&) = delete;
   SharedScriptData& operator=(const SharedScriptData&) = delete;
 };
@@ -1539,12 +1549,11 @@ struct ScriptBytecodeHasher {
   class Lookup {
     friend struct ScriptBytecodeHasher;
 
-    SharedScriptData* scriptData;
+    RefPtr<SharedScriptData> scriptData;
     HashNumber hash;
 
    public:
     explicit Lookup(SharedScriptData* data);
-    ~Lookup();
   };
 
   static HashNumber hash(const Lookup& l) { return l.hash; }
@@ -1575,6 +1584,16 @@ extern void FreeScriptData(JSRuntime* rt);
 
 } /* namespace js */
 
+namespace JS {
+
+// Define a GCManagedDeletePolicy to allow deleting type outside of normal
+// sweeping.
+template <>
+struct DeletePolicy<js::PrivateScriptData>
+    : public js::GCManagedDeletePolicy<js::PrivateScriptData> {};
+
+} /* namespace JS */
+
 class JSScript : public js::gc::TenuredCell {
  private:
   // Pointer to baseline->method()->raw(), ion->method()->raw(), a wasm jit
@@ -1584,7 +1603,7 @@ class JSScript : public js::gc::TenuredCell {
   uint8_t* jitCodeSkipArgCheck_ = nullptr;
 
   // Shareable script data
-  js::SharedScriptData* scriptData_ = nullptr;
+  RefPtr<js::SharedScriptData> scriptData_ = {};
 
   // Unshared variable-length data
   js::PrivateScriptData* data_ = nullptr;
@@ -2523,7 +2542,6 @@ class JSScript : public js::gc::TenuredCell {
                               uint32_t noteLength, uint32_t natoms);
   bool shareScriptData(JSContext* cx);
   void freeScriptData();
-  void setScriptData(js::SharedScriptData* data);
 
  public:
   uint32_t getWarmUpCount() const { return warmUpCount; }

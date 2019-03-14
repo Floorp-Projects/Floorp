@@ -2,7 +2,6 @@
 
 const TEST_HOSTNAME = "https://example.com";
 const BASIC_FORM_PAGE_PATH = DIRECTORY_PATH + "form_basic.html";
-const PWMGR_DLG = "chrome://passwordmgr/content/passwordManager.xul";
 
 function loginList() {
   return [

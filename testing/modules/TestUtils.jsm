@@ -70,6 +70,53 @@ var TestUtils = {
   },
 
   /**
+   * Waits for the specified preference to be change.
+   *
+   * @param {string} prefName
+   *        The pref to observe.
+   * @param {function} checkFn [optional]
+   *        Called with the new preference value as argument, should return true if the
+   *        notification is the expected one, or false if it should be ignored
+   *        and listening should continue. If not specified, the first
+   *        notification for the specified topic resolves the returned promise.
+   *
+   * @note Because this function is intended for testing, any error in checkFn
+   *       will cause the returned promise to be rejected instead of waiting for
+   *       the next notification, since this is probably a bug in the test.
+   *
+   * @return {Promise}
+   * @resolves The value of the preference.
+   */
+  waitForPrefChange(prefName, checkFn) {
+    return new Promise((resolve, reject) => {
+      Services.prefs.addObserver(prefName, function observer(subject, topic, data) {
+        try {
+          let prefValue = null;
+          switch (Services.prefs.getPrefType(prefName)) {
+          case Services.prefs.PREF_STRING:
+            prefValue = Services.prefs.getStringPref(prefName);
+            break;
+          case Services.prefs.PREF_INT:
+            prefValue = Services.prefs.getIntPref(prefName);
+            break;
+          case Services.prefs.PREF_BOOL:
+            prefValue = Services.prefs.getBoolPref(prefName);
+            break;
+          }
+          if (checkFn && !checkFn(prefValue)) {
+            return;
+          }
+          Services.prefs.removeObserver(prefName, observer);
+          resolve(prefValue);
+        } catch (ex) {
+          Services.prefs.removeObserver(prefName, observer);
+          reject(ex);
+        }
+      });
+    });
+  },
+
+  /**
    * Takes a screenshot of an area and returns it as a data URL.
    *
    * @param eltOrRect

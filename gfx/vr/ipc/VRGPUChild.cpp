@@ -53,7 +53,7 @@ void VRGPUChild::Shutdown() {
 
 void VRGPUChild::ActorDestroy(ActorDestroyReason aWhy) {
   VRManager* vm = VRManager::Get();
-  vm->Destroy();
+  vm->Shutdown();
   mClosed = true;
 }
 

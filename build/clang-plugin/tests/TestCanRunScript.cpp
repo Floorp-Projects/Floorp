@@ -8,7 +8,7 @@ MOZ_CAN_RUN_SCRIPT void test() {
 
 }
 
-void test_parent() { // expected-note {{parent function declared here}}
+void test_parent() { // expected-note {{caller function declared here}}
   test(); // expected-error {{functions marked as MOZ_CAN_RUN_SCRIPT can only be called from functions also marked as MOZ_CAN_RUN_SCRIPT}}
 }
 
@@ -33,7 +33,7 @@ struct RefCountedBase {
     test2(this);
   }
 
-  virtual void method_test3() { // expected-note {{parent function declared here}}
+  virtual void method_test3() { // expected-note {{caller function declared here}}
     test(); // expected-error {{functions marked as MOZ_CAN_RUN_SCRIPT can only be called from functions also marked as MOZ_CAN_RUN_SCRIPT}}
   }
 };
@@ -43,7 +43,7 @@ MOZ_CAN_RUN_SCRIPT void testLambda() {
     test();
   };
 
-  auto doItWrong = []() { // expected-note {{parent function declared here}}
+  auto doItWrong = []() { // expected-note {{caller function declared here}}
     test(); // expected-error {{functions marked as MOZ_CAN_RUN_SCRIPT can only be called from functions also marked as MOZ_CAN_RUN_SCRIPT}}
   };
 
@@ -51,7 +51,7 @@ MOZ_CAN_RUN_SCRIPT void testLambda() {
   doItWrong();
 }
 
-void test2_parent() { // expected-note {{parent function declared here}}
+void test2_parent() { // expected-note {{caller function declared here}}
   test2(new RefCountedBase); // expected-error {{arguments must all be strong refs or parent parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument)}} \
                              // expected-error {{functions marked as MOZ_CAN_RUN_SCRIPT can only be called from functions also marked as MOZ_CAN_RUN_SCRIPT}}
 }
@@ -85,6 +85,10 @@ MOZ_CAN_RUN_SCRIPT void test2_parent7() {
   t->method_test2(); // expected-error {{arguments must all be strong refs or parent parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument)}}
 }
 
+MOZ_CAN_RUN_SCRIPT void test2_parent8() {
+  test2(nullptr);
+}
+
 MOZ_CAN_RUN_SCRIPT void test3(int* param) {}
 
 MOZ_CAN_RUN_SCRIPT void test3_parent() {
@@ -92,10 +96,10 @@ MOZ_CAN_RUN_SCRIPT void test3_parent() {
 }
 
 struct RefCountedChild : public RefCountedBase {
-  virtual void method_test3() override; // expected-note {{overridden function declared here}} expected-note {{overridden function declared here}}
+  virtual void method_test3() override; // expected-note {{overridden function declared here}} expected-note {{overridden function declared here}} expected-note {{caller function declared here}}
 };
 
-void RefCountedChild::method_test3() { // expected-note {{parent function declared here}}
+void RefCountedChild::method_test3() {
   test(); // expected-error {{functions marked as MOZ_CAN_RUN_SCRIPT can only be called from functions also marked as MOZ_CAN_RUN_SCRIPT}}
 }
 
@@ -196,7 +200,85 @@ MOZ_CAN_RUN_SCRIPT void test_maybe() {
 }
 
 MOZ_CAN_RUN_SCRIPT void test_maybe_2() {
+  // FIXME(bz): This should not generate an error!
   mozilla::Maybe<RefPtr<RefCountedBase>> safe;
   safe.emplace(new RefCountedBase);
-  (*safe)->method_test();
+  (*safe)->method_test(); // expected-error {{arguments must all be strong refs or parent parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument)}}
 }
+
+MOZ_CAN_RUN_SCRIPT void test_defaults_helper_1(RefCountedBase* arg = nullptr) {
+}
+
+MOZ_CAN_RUN_SCRIPT void test_defaults_1() {
+  test_defaults_helper_1();
+}
+
+MOZ_CAN_RUN_SCRIPT void test_defaults_2() {
+  RefCountedBase* t = new RefCountedBase;
+  test_defaults_helper_1(t); // expected-error {{arguments must all be strong refs or parent parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument)}}
+}
+
+MOZ_CAN_RUN_SCRIPT void test_defaults_3() {
+  RefPtr<RefCountedBase> t = new RefCountedBase;
+  test_defaults_helper_1(t);
+}
+
+MOZ_CAN_RUN_SCRIPT void test_defaults_helper_2(RefCountedBase* arg = new RefCountedBase()) {
+}
+
+MOZ_CAN_RUN_SCRIPT void test_defaults_4() {
+  test_defaults_helper_2(); // expected-error {{arguments must all be strong refs or parent parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument)}}
+}
+
+MOZ_CAN_RUN_SCRIPT void test_defaults_5() {
+  RefCountedBase* t = new RefCountedBase;
+  test_defaults_helper_2(t); // expected-error {{arguments must all be strong refs or parent parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument)}}
+}
+
+MOZ_CAN_RUN_SCRIPT void test_defaults_6() {
+  RefPtr<RefCountedBase> t = new RefCountedBase;
+  test_defaults_helper_2(t);
+}
+
+MOZ_CAN_RUN_SCRIPT void test_arg_deref_helper(RefCountedBase&) {
+}
+
+MOZ_CAN_RUN_SCRIPT void test_arg_deref(RefCountedBase* arg) {
+  test_arg_deref_helper(*arg);
+}
+
+struct RefCountedDerefTester : public RefCountedBase {
+  MOZ_CAN_RUN_SCRIPT void foo() {
+    test_arg_deref_helper(*this);
+  }
+};
+
+struct DisallowMemberArgs {
+  RefPtr<RefCountedBase> mRefCounted;
+  MOZ_CAN_RUN_SCRIPT void foo() {
+    mRefCounted->method_test(); // expected-error {{arguments must all be strong refs or parent parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument)}}
+  }
+  MOZ_CAN_RUN_SCRIPT void bar() {
+    test2(mRefCounted); // expected-error {{arguments must all be strong refs or parent parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument)}}
+  }
+};
+
+struct DisallowMemberArgsWithGet {
+  RefPtr<RefCountedBase> mRefCounted;
+  MOZ_CAN_RUN_SCRIPT void foo() {
+    mRefCounted.get()->method_test(); // expected-error {{arguments must all be strong refs or parent parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument)}}
+  }
+  MOZ_CAN_RUN_SCRIPT void bar() {
+    test2(mRefCounted.get()); // expected-error {{arguments must all be strong refs or parent parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument)}}
+  }
+};
+
+struct AllowKnownLiveMemberArgs {
+  RefPtr<RefCountedBase> mRefCounted;
+  MOZ_CAN_RUN_SCRIPT void foo() {
+    MOZ_KnownLive(mRefCounted)->method_test();
+  }
+  MOZ_CAN_RUN_SCRIPT void bar() {
+    test2(MOZ_KnownLive(mRefCounted));
+  }
+};

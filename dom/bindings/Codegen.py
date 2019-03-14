@@ -8724,7 +8724,8 @@ class CGAbstractStaticBindingMethod(CGAbstractStaticMethod):
     """
     def __init__(self, descriptor, name):
         CGAbstractStaticMethod.__init__(self, descriptor, name, "bool",
-                                        JSNativeArguments())
+                                        JSNativeArguments(),
+                                        canRunScript=True)
 
     def definition_body(self):
         # Make sure that "obj" is in the same compartment as "cx", since we'll
