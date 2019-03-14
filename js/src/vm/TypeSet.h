@@ -327,17 +327,17 @@ class TypeSet {
 
     bool isPrimitive() const { return data < JSVAL_TYPE_OBJECT; }
 
-    bool isPrimitive(JSValueType type) const {
-      MOZ_ASSERT(type < JSVAL_TYPE_OBJECT);
-      return (uintptr_t)type == data;
+    bool isPrimitive(ValueType type) const {
+      MOZ_ASSERT(type != ValueType::Object);
+      return uintptr_t(type) == data;
     }
 
-    JSValueType primitive() const {
+    ValueType primitive() const {
       MOZ_ASSERT(isPrimitive());
-      return (JSValueType)data;
+      return ValueType(data);
     }
 
-    bool isMagicArguments() const { return primitive() == JSVAL_TYPE_MAGIC; }
+    bool isMagicArguments() const { return primitive() == ValueType::Magic; }
 
     bool isSomeObject() const {
       return data == JSVAL_TYPE_OBJECT || data > JSVAL_TYPE_UNKNOWN;
