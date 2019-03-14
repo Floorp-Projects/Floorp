@@ -168,8 +168,8 @@ HttpBaseChannel::HttpBaseChannel()
       mReqContentLength(0U),
       mStatus(NS_OK),
       mCanceled(false),
-      mIsFirstPartyTrackingResource(false),
-      mIsThirdPartyTrackingResource(false),
+      mFirstPartyClassificationFlags(0),
+      mThirdPartyClassificationFlags(0),
       mFlashPluginState(nsIHttpChannel::FlashPluginUnknown),
       mLoadFlags(LOAD_NORMAL),
       mCaps(0),
@@ -308,16 +308,17 @@ void HttpBaseChannel::ReleaseMainThreadOnlyReferences() {
   NS_DispatchToMainThread(new ProxyReleaseRunnable(std::move(arrayToRelease)));
 }
 
-void HttpBaseChannel::SetIsTrackingResource(bool aIsThirdParty) {
-  LOG(("HttpBaseChannel::SetIsTrackingResource thirdparty=%d %p",
-       static_cast<int>(aIsThirdParty), this));
+void HttpBaseChannel::AddClassificationFlags(uint32_t aClassificationFlags,
+                                             bool aIsThirdParty) {
+  LOG(
+      ("HttpBaseChannel::AddClassificationFlags classificationFlags=%d "
+       "thirdparty=%d %p",
+       aClassificationFlags, static_cast<int>(aIsThirdParty), this));
 
   if (aIsThirdParty) {
-    MOZ_ASSERT(!mIsFirstPartyTrackingResource);
-    mIsThirdPartyTrackingResource = true;
+    mThirdPartyClassificationFlags |= aClassificationFlags;
   } else {
-    MOZ_ASSERT(!mIsThirdPartyTrackingResource);
-    mIsFirstPartyTrackingResource = true;
+    mFirstPartyClassificationFlags |= aClassificationFlags;
   }
 }
 
@@ -1469,18 +1470,59 @@ NS_IMETHODIMP HttpBaseChannel::SetTopLevelContentWindowId(uint64_t aWindowId) {
   return NS_OK;
 }
 
+bool
+HttpBaseChannel::IsTrackingResource() const {
+  MOZ_ASSERT(!mFirstPartyClassificationFlags ||
+             !mThirdPartyClassificationFlags);
+  return
+      (mThirdPartyClassificationFlags & nsIHttpChannel::ClassificationFlags::CLASSIFIED_TRACKING) ||
+      (mFirstPartyClassificationFlags & nsIHttpChannel::ClassificationFlags::CLASSIFIED_TRACKING);
+}
+
 NS_IMETHODIMP
 HttpBaseChannel::GetIsTrackingResource(bool* aIsTrackingResource) {
-  MOZ_ASSERT(!(mIsFirstPartyTrackingResource && mIsThirdPartyTrackingResource));
-  *aIsTrackingResource =
-      mIsThirdPartyTrackingResource || mIsFirstPartyTrackingResource;
+  *aIsTrackingResource = IsTrackingResource();
   return NS_OK;
+}
+
+bool
+HttpBaseChannel::IsThirdPartyTrackingResource() const {
+  MOZ_ASSERT(
+      !(mFirstPartyClassificationFlags && mThirdPartyClassificationFlags));
+  return (mThirdPartyClassificationFlags & nsIHttpChannel::ClassificationFlags::CLASSIFIED_TRACKING);
 }
 
 NS_IMETHODIMP
 HttpBaseChannel::GetIsThirdPartyTrackingResource(bool* aIsTrackingResource) {
-  MOZ_ASSERT(!(mIsFirstPartyTrackingResource && mIsThirdPartyTrackingResource));
-  *aIsTrackingResource = mIsThirdPartyTrackingResource;
+  *aIsTrackingResource = IsThirdPartyTrackingResource();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HttpBaseChannel::GetClassificationFlags(uint32_t* aFlags) {
+  MOZ_ASSERT(!mFirstPartyClassificationFlags ||
+             !mThirdPartyClassificationFlags);
+  if (mThirdPartyClassificationFlags) {
+    *aFlags = mThirdPartyClassificationFlags;
+  } else {
+    *aFlags = mFirstPartyClassificationFlags;
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HttpBaseChannel::GetFirstPartyClassificationFlags(uint32_t* aFlags) {
+  MOZ_ASSERT(
+      !(mFirstPartyClassificationFlags && mFirstPartyClassificationFlags));
+  *aFlags = mFirstPartyClassificationFlags;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HttpBaseChannel::GetThirdPartyClassificationFlags(uint32_t* aFlags) {
+  MOZ_ASSERT(
+      !(mFirstPartyClassificationFlags && mThirdPartyClassificationFlags));
+  *aFlags = mThirdPartyClassificationFlags;
   return NS_OK;
 }
 
@@ -1494,23 +1536,21 @@ HttpBaseChannel::GetFlashPluginState(nsIHttpChannel::FlashPluginState* aState) {
 NS_IMETHODIMP
 HttpBaseChannel::OverrideTrackingFlagsForDocumentCookieAccessor(
     nsIHttpChannel* aDocumentChannel) {
-  LOG(
-      ("HttpBaseChannel::OverrideTrackingFlagsForDocumentCookieAccessor() %p "
-       "mIsFirstPartyTrackingResource=%d  mIsThirdPartyTrackingResource=%d",
-       this, static_cast<int>(mIsFirstPartyTrackingResource),
-       static_cast<int>(mIsThirdPartyTrackingResource)));
+  LOG(("HttpBaseChannel::OverrideTrackingFlagsForDocumentCookieAccessor() %p",
+       this));
 
   // The semantics we'd like to achieve here are that document.cookie
   // should follow the same rules that the document is subject to with
   // regards to content blocking. Therefore we need to propagate the
   // same flags from the document channel to the fake channel here.
-  if (aDocumentChannel->GetIsThirdPartyTrackingResource()) {
-    mIsThirdPartyTrackingResource = true;
-  } else {
-    mIsFirstPartyTrackingResource = true;
-  }
 
-  MOZ_ASSERT(!(mIsFirstPartyTrackingResource && mIsThirdPartyTrackingResource));
+  mThirdPartyClassificationFlags =
+      aDocumentChannel->GetThirdPartyClassificationFlags();
+  mFirstPartyClassificationFlags =
+      aDocumentChannel->GetFirstPartyClassificationFlags();
+
+  MOZ_ASSERT(
+      !(mFirstPartyClassificationFlags && mThirdPartyClassificationFlags));
   return NS_OK;
 }
 

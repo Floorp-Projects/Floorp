@@ -38,8 +38,8 @@ namespace {
 
 StaticRefPtr<UrlClassifierFeatureTrackingAnnotation> gFeatureTrackingAnnotation;
 
-static void SetIsTrackingResourceHelper(nsIChannel* aChannel,
-                                        bool aIsThirdParty) {
+static void SetClassificationFlagsHelper(nsIChannel* aChannel,
+                                         bool aIsThirdParty) {
   MOZ_ASSERT(aChannel);
 
   nsCOMPtr<nsIParentChannel> parentChannel;
@@ -47,17 +47,19 @@ static void SetIsTrackingResourceHelper(nsIChannel* aChannel,
   if (parentChannel) {
     // This channel is a parent-process proxy for a child process
     // request. We should notify the child process as well.
-    parentChannel->NotifyTrackingResource(aIsThirdParty);
+    parentChannel->NotifyClassificationFlags(
+        nsIHttpChannel::ClassificationFlags::CLASSIFIED_TRACKING, aIsThirdParty);
   }
 
   RefPtr<HttpBaseChannel> httpChannel = do_QueryObject(aChannel);
   if (httpChannel) {
-    httpChannel->SetIsTrackingResource(aIsThirdParty);
+    httpChannel->AddClassificationFlags(nsIHttpChannel::ClassificationFlags::CLASSIFIED_TRACKING,
+                                        aIsThirdParty);
   }
 
   RefPtr<TrackingDummyChannel> dummyChannel = do_QueryObject(aChannel);
   if (dummyChannel) {
-    dummyChannel->SetIsTrackingResource();
+    dummyChannel->AddClassificationFlags(nsIHttpChannel::ClassificationFlags::CLASSIFIED_TRACKING);
   }
 }
 
@@ -216,7 +218,7 @@ UrlClassifierFeatureTrackingAnnotation::ProcessChannel(nsIChannel* aChannel,
        "channel[%p]",
        aChannel));
 
-  SetIsTrackingResourceHelper(aChannel, isThirdPartyWithTopLevelWinURI);
+  SetClassificationFlagsHelper(aChannel, isThirdPartyWithTopLevelWinURI);
 
   if (isThirdPartyWithTopLevelWinURI || isAllowListed) {
     // Even with TP disabled, we still want to show the user that there
