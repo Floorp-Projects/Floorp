@@ -35,6 +35,7 @@ object KotlinCompiler {
         "feature-intent",
         "feature-prompts",
         "feature-search",
+        "feature-session",
         "feature-sitepermissions",
         "feature-tabs",
         "feature-toolbar",
@@ -50,6 +51,7 @@ object KotlinCompiler {
         "support-ktx",
         "support-test",
         "support-utils",
+        "tooling-lint",
         "ui-autocomplete",
         "ui-progress",
         "ui-tabcounter"
