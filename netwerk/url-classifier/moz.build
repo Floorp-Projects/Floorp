@@ -31,6 +31,7 @@ UNIFIED_SOURCES += [
     'nsChannelClassifier.cpp',
     'UrlClassifierCommon.cpp',
     'UrlClassifierFeatureBase.cpp',
+    'UrlClassifierFeatureCryptominingAnnotation.cpp',
     'UrlClassifierFeatureCryptominingProtection.cpp',
     'UrlClassifierFeatureCustomTables.cpp',
     'UrlClassifierFeatureFactory.cpp',

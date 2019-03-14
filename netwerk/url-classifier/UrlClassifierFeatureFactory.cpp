@@ -7,6 +7,7 @@
 #include "mozilla/net/UrlClassifierFeatureFactory.h"
 
 // List of Features
+#include "UrlClassifierFeatureCryptominingAnnotation.h"
 #include "UrlClassifierFeatureCryptominingProtection.h"
 #include "UrlClassifierFeatureFingerprintingAnnotation.h"
 #include "UrlClassifierFeatureFingerprintingProtection.h"
@@ -29,6 +30,7 @@ void UrlClassifierFeatureFactory::Shutdown() {
     return;
   }
 
+  UrlClassifierFeatureCryptominingAnnotation::MaybeShutdown();
   UrlClassifierFeatureCryptominingProtection::MaybeShutdown();
   UrlClassifierFeatureFingerprintingAnnotation::MaybeShutdown();
   UrlClassifierFeatureFingerprintingProtection::MaybeShutdown();
@@ -65,14 +67,20 @@ void UrlClassifierFeatureFactory::GetFeaturesFromChannel(
     aFeatures.AppendElement(feature);
   }
 
-  // Fingerprinting Annotation
-  feature = UrlClassifierFeatureFingerprintingAnnotation::MaybeCreate(aChannel);
+  // Tracking Protection
+  feature = UrlClassifierFeatureTrackingProtection::MaybeCreate(aChannel);
   if (feature) {
     aFeatures.AppendElement(feature);
   }
 
-  // Tracking Protection
-  feature = UrlClassifierFeatureTrackingProtection::MaybeCreate(aChannel);
+  // Cryptomining Annotation
+  feature = UrlClassifierFeatureCryptominingAnnotation::MaybeCreate(aChannel);
+  if (feature) {
+    aFeatures.AppendElement(feature);
+  }
+
+  // Fingerprinting Annotation
+  feature = UrlClassifierFeatureFingerprintingAnnotation::MaybeCreate(aChannel);
   if (feature) {
     aFeatures.AppendElement(feature);
   }
@@ -109,6 +117,12 @@ UrlClassifierFeatureFactory::GetFeatureByName(const nsACString& aName) {
   }
 
   nsCOMPtr<nsIUrlClassifierFeature> feature;
+
+  // Cryptomining Annotation
+  feature = UrlClassifierFeatureCryptominingAnnotation::GetIfNameMatches(aName);
+  if (feature) {
+    return feature.forget();
+  }
 
   // Cryptomining Protection
   feature = UrlClassifierFeatureCryptominingProtection::GetIfNameMatches(aName);
@@ -169,8 +183,15 @@ void UrlClassifierFeatureFactory::GetFeatureNames(nsTArray<nsCString>& aArray) {
     return;
   }
 
-  // Cryptomining Protection
   nsAutoCString name;
+
+  // Cryptomining Annotation
+  name.Assign(UrlClassifierFeatureCryptominingAnnotation::Name());
+  if (!name.IsEmpty()) {
+    aArray.AppendElement(name);
+  }
+
+  // Cryptomining Protection
   name.Assign(UrlClassifierFeatureCryptominingProtection::Name());
   if (!name.IsEmpty()) {
     aArray.AppendElement(name);
