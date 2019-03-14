@@ -18,10 +18,6 @@ import java.math.BigInteger
 
 import java.net.URI
 
-import java.nio.ByteBuffer
-import java.nio.CharBuffer
-import java.nio.charset.Charset
-
 import java.security.MessageDigest
 
 import java.util.concurrent.CountDownLatch
@@ -44,6 +40,7 @@ import org.mozilla.geckoview.test.util.Environment
 import org.mozilla.geckoview.test.util.HttpBin
 import org.mozilla.geckoview.test.util.RuntimeCreator
 import java.net.UnknownHostException
+import java.nio.ByteBuffer
 
 @MediumTest
 @RunWith(AndroidJUnit4::class)
@@ -88,28 +85,18 @@ class WebExecutorTest {
         return executor.fetch(request, flags).poll(env.defaultTimeoutMillis)!!
     }
 
-    fun String.toDirectByteBuffer(): ByteBuffer {
-        val chars = CharBuffer.wrap(this)
-        val buffer = ByteBuffer.allocateDirect(this.length)
-        Charset.forName("UTF-8").newEncoder().encode(chars, buffer, true)
-
-        return buffer
-    }
-
     fun WebResponse.getBodyBytes(): ByteBuffer {
-        return ByteBuffer.wrap(body!!.readBytes())
+        return ByteBuffer.wrap(byteArray().poll()!!);
     }
 
     fun WebResponse.getJSONBody(): JSONObject {
-        val bytes = this.getBodyBytes()
-        val bodyString = Charset.forName("UTF-8").decode(bytes).toString()
-        return JSONObject(bodyString)
+        return json().poll()!!
     }
 
     @Test
     fun smoke() {
         val uri = "$TEST_ENDPOINT/anything"
-        val bodyString = "This is the POST data"
+        val requestBody = JSONObject("{ \"foo\": 42 }")
         val referrer = "http://foo/bar"
 
         val request = WebRequest.Builder(uri)
@@ -120,7 +107,7 @@ class WebExecutorTest {
                 .addHeader("Header2", "Value2")
                 .referrer(referrer)
                 .header("Content-Type", "text/plain")
-                .body(bodyString.toDirectByteBuffer())
+                .body(requestBody)
                 .build()
 
         val response = fetch(request)
@@ -136,7 +123,7 @@ class WebExecutorTest {
         assertThat("Headers should match", body.getJSONObject("headers").getString("Header2"), equalTo("Value1, Value2"))
         assertThat("Headers should match", body.getJSONObject("headers").getString("Content-Type"), equalTo("text/plain"))
         assertThat("Referrer should match", body.getJSONObject("headers").getString("Referer"), equalTo(referrer))
-        assertThat("Data should match", body.getString("data"), equalTo(bodyString));
+        assertThat("Data should match", body.getString("data"), equalTo(requestBody.toString()));
     }
 
     @Test
