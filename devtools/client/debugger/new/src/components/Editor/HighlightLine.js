@@ -13,7 +13,8 @@ import {
   getVisibleSelectedFrame,
   getSelectedLocation,
   getSelectedSource,
-  getPauseCommand
+  getPauseCommand,
+  getCurrentThread
 } from "../../selectors";
 
 import type {
@@ -168,7 +169,7 @@ export class HighlightLine extends Component<Props> {
 }
 
 export default connect(state => ({
-  pauseCommand: getPauseCommand(state),
+  pauseCommand: getPauseCommand(state, getCurrentThread(state)),
   selectedFrame: getVisibleSelectedFrame(state),
   selectedLocation: getSelectedLocation(state),
   selectedSource: getSelectedSource(state)

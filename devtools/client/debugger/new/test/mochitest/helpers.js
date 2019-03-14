@@ -402,10 +402,10 @@ function assertHighlightLocation(dbg, source, line) {
  */
 function isPaused(dbg) {
   const {
-    selectors: { isPaused },
+    selectors: { getIsPaused, getCurrentThread },
     getState
   } = dbg;
-  return !!isPaused(getState());
+  return getIsPaused(getState(), getCurrentThread(getState()));
 }
 
 // Make sure the debugger is paused at a certain source ID and line.
@@ -413,11 +413,11 @@ function assertPausedAtSourceAndLine(dbg, expectedSourceId, expectedLine) {
   assertPaused(dbg);
 
   const {
-    selectors: { getWorkers, getFrames },
+    selectors: { getCurrentThreadFrames },
     getState
   } = dbg;
 
-  const frames = getFrames(getState());
+  const frames = getCurrentThreadFrames(getState());
   ok(frames.length >= 1, "Got at least one frame");
   const { sourceId, line } = frames[0].location;
   ok(sourceId == expectedSourceId, "Frame has correct source");
@@ -451,11 +451,11 @@ async function waitForLoadedScopes(dbg) {
  * @static
  */
 async function waitForPaused(dbg, url) {
-  const { getSelectedScope } = dbg.selectors;
+  const { getSelectedScope, getCurrentThread } = dbg.selectors;
 
   await waitForState(
     dbg,
-    state => isPaused(dbg) && !!getSelectedScope(state),
+    state => isPaused(dbg) && !!getSelectedScope(state, getCurrentThread(state)),
     "paused"
   );
 
@@ -938,7 +938,10 @@ async function togglePauseOnExceptions(
 }
 
 function waitForActive(dbg) {
-  return waitForState(dbg, state => !dbg.selectors.isPaused(state), "active");
+  const {
+    selectors: { getIsPaused, getCurrentThread },
+  } = dbg;
+  return waitForState(dbg, state => !getIsPaused(state, getCurrentThread(state)), "active");
 }
 
 // Helpers
