@@ -180,15 +180,15 @@ class BrowsingContext : public nsWrapperCache,
   // parent process. BrowsingContext objects are created attached by default, so
   // this method need only be called when restoring cached BrowsingContext
   // objects.
-  void Attach();
+  void Attach(bool aFromIPC = false);
 
   // Detach the current BrowsingContext from its parent, in both the
   // child and the parent process.
-  void Detach();
+  void Detach(bool aFromIPC = false);
 
   // Remove all children from the current BrowsingContext and cache
   // them to allow them to be attached again.
-  void CacheChildren();
+  void CacheChildren(bool aFromIPC = false);
 
   // Determine if the current BrowsingContext was 'cached' by the logic in
   // CacheChildren.

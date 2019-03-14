@@ -3679,6 +3679,35 @@ PContentChild::Result ContentChild::OnMessageReceived(const Message& aMsg,
   return result;
 }
 
+mozilla::ipc::IPCResult ContentChild::RecvAttachBrowsingContext(
+    BrowsingContext* aParent, BrowsingContext* aOpener,
+    BrowsingContextId aChildId, const nsString& aName) {
+  RefPtr<BrowsingContext> child = BrowsingContext::Get(aChildId);
+  MOZ_RELEASE_ASSERT(!child || child->IsCached());
+
+  if (!child) {
+    child = BrowsingContext::CreateFromIPC(aParent, aOpener, aName,
+                                           (uint64_t)aChildId, nullptr);
+  }
+
+  child->Attach(/* aFromIPC */ true);
+
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult ContentChild::RecvDetachBrowsingContext(
+    BrowsingContext* aContext, bool aMoveToBFCache) {
+  MOZ_RELEASE_ASSERT(aContext);
+
+  if (aMoveToBFCache) {
+    aContext->CacheChildren(/* aFromIPC */ true);
+  } else {
+    aContext->Detach(/* aFromIPC */ true);
+  }
+
+  return IPC_OK();
+}
+
 mozilla::ipc::IPCResult ContentChild::RecvWindowClose(BrowsingContext* aContext,
                                                       bool aTrustedCaller) {
   if (!aContext) {
