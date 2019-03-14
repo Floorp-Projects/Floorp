@@ -383,13 +383,6 @@ async function test_push_cleared() {
               uaid: userAgentID,
             }));
           },
-          onUnregister(request) {
-            this.serverSendMsg(JSON.stringify({
-              messageType: "unregister",
-              status: 200,
-              channelID: request.channelID,
-            }));
-          },
         });
       },
     });

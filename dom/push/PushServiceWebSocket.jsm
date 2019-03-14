@@ -512,7 +512,7 @@ var PushServiceWebSocket = {
     }
   },
 
-  connect: function(broadcastListeners) {
+  connect: function(records, broadcastListeners) {
     console.debug("connect()", broadcastListeners);
     this._broadcastListeners = broadcastListeners;
     this._beginWSSetup();
