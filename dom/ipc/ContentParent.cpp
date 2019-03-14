@@ -5772,46 +5772,6 @@ mozilla::ipc::IPCResult ContentParent::RecvDetachBrowsingContext(
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult ContentParent::RecvSetOpenerBrowsingContext(
-    BrowsingContext* aContext, BrowsingContext* aOpener) {
-  if (!aContext) {
-    MOZ_LOG(BrowsingContext::GetLog(), LogLevel::Debug,
-            ("ParentIPC: Trying to set opener already detached"));
-    return IPC_OK();
-  }
-
-  if (!aContext->Canonical()->IsOwnedByProcess(ChildID())) {
-    // Where trying to set opener on a child BrowsingContext in
-    // another child process. This is illegal since the owner of the
-    // BrowsingContext is the proccess with the in-process docshell,
-    // which is tracked by OwnerProcessId.
-
-    // TODO(farre): To crash or not to crash. Same reasoning as in
-    // above TODO. [Bug 1471598]
-    MOZ_LOG(BrowsingContext::GetLog(), LogLevel::Warning,
-            ("ParentIPC: Trying to set opener on out of process context "
-             "0x%08" PRIx64,
-             aContext->Id()));
-    return IPC_OK();
-  }
-
-  aContext->SetOpener(aOpener);
-
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult ContentParent::RecvSetUserGestureActivation(
-    BrowsingContext* aContext, bool aNewValue) {
-  if (!aContext) {
-    MOZ_LOG(BrowsingContext::GetLog(), LogLevel::Debug,
-            ("ParentIPC: Trying to activate wrong context"));
-    return IPC_OK();
-  }
-
-  aContext->Canonical()->NotifySetUserGestureActivationFromIPC(aNewValue);
-  return IPC_OK();
-}
-
 void ContentParent::RegisterRemoteWorkerActor() { ++mRemoteWorkerActors; }
 
 void ContentParent::UnregisterRemoveWorkerActor() {
