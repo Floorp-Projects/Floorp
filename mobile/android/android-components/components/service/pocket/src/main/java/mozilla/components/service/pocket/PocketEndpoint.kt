@@ -52,7 +52,7 @@ class PocketEndpoint internal constructor(
          */
         fun newInstance(client: Client, pocketApiKey: String, userAgent: String): PocketEndpoint {
             assertIsValidApiKey(pocketApiKey)
-            assertIsValidUserAgent(userAgent)
+            Arguments.assertIsValidUserAgent(userAgent)
 
             val endpoint = PocketEndpointRaw(client, PocketURLs(pocketApiKey), userAgent)
             return PocketEndpoint(endpoint, PocketJSONParser())
@@ -61,9 +61,5 @@ class PocketEndpoint internal constructor(
 }
 
 private fun assertIsValidApiKey(apiKey: String) {
-    if (apiKey.isBlank()) throw IllegalArgumentException("Expected non-blank API key")
-}
-
-private fun assertIsValidUserAgent(userAgent: String) {
-    if (userAgent.isBlank()) throw java.lang.IllegalArgumentException("Expected non-blank user agent")
+    Arguments.assertIsNotBlank(apiKey, "API key")
 }
