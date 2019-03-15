@@ -68,7 +68,7 @@ class NetworkLocationsForm extends PureComponent {
         },
         dom.button(
           {
-            className: "default-button js-network-form-submit-button",
+            className: "primary-button js-network-form-submit-button",
           },
           "Add"
         )
