@@ -5,10 +5,9 @@
 package mozilla.components.service.pocket
 
 import android.net.Uri
-import android.support.annotation.VisibleForTesting
-import android.support.annotation.VisibleForTesting.PRIVATE
 import android.support.annotation.WorkerThread
 import mozilla.components.concept.fetch.Client
+import mozilla.components.concept.fetch.Headers.Common.USER_AGENT
 import mozilla.components.concept.fetch.MutableHeaders
 import mozilla.components.concept.fetch.Request
 import mozilla.components.service.pocket.ext.fetchBodyOrNull
@@ -37,12 +36,8 @@ internal class PocketEndpointRaw(
     private fun makeRequest(callingMethod: String, pocketEndpoint: Uri): String? {
         val request = Request(
             url = pocketEndpoint.toString(),
-            headers = MutableHeaders(HEADER_USER_AGENT to userAgent)
+            headers = MutableHeaders(USER_AGENT to userAgent)
         )
         return client.fetchBodyOrNull(callingMethod, request)
-    }
-
-    companion object {
-        @VisibleForTesting(otherwise = PRIVATE) const val HEADER_USER_AGENT = "User-Agent"
     }
 }

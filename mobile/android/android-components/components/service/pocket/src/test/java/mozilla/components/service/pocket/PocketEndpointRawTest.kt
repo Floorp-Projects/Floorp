@@ -5,6 +5,7 @@
 package mozilla.components.service.pocket
 
 import mozilla.components.concept.fetch.Client
+import mozilla.components.concept.fetch.Headers.Common.USER_AGENT
 import mozilla.components.concept.fetch.Request
 import mozilla.components.concept.fetch.Response
 import mozilla.components.support.ktx.kotlin.toUri
@@ -76,7 +77,7 @@ class PocketEndpointRawTest {
         assertRequestParams(makeRequest = {
             endpoint.getGlobalVideoRecommendations()
         }, assertParams = { request ->
-            val userAgent = request.headers?.get(PocketEndpointRaw.HEADER_USER_AGENT)
+            val userAgent = request.headers?.get(USER_AGENT)
             assertEquals(TEST_USER_AGENT, userAgent)
         })
     }

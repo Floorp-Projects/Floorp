@@ -51,6 +51,7 @@ interface Headers : Iterable<Header> {
      */
     object Common {
         const val CONTENT_TYPE = "Content-Type"
+        const val USER_AGENT = "User-Agent"
     }
 }
 
