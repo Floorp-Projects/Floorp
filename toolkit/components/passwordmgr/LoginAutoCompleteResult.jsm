@@ -51,7 +51,14 @@ function LoginAutoCompleteResult(aSearchString, matchingLogins, {isSecure, messa
   }
 
   this._showInsecureFieldWarning = (!isSecure && LoginHelper.showInsecureFieldWarning) ? 1 : 0;
-  this._showAutoCompleteFooter = (LoginHelper.showAutoCompleteFooter && LoginHelper.enabled) ? 1 : 0;
+  this._showAutoCompleteFooter = 0;
+  // We need to check LoginHelper.enabled here since the insecure warning should
+  // appear even if pwmgr is disabled but the footer should never appear in that case.
+  if (LoginHelper.showAutoCompleteFooter && LoginHelper.enabled) {
+    // Don't show the footer on non-empty password fields as it's not providing
+    // value and only adding noise since a password was already filled.
+    this._showAutoCompleteFooter = (!isPasswordField || !aSearchString) ? 1 : 0;
+  }
   this.searchString = aSearchString;
   this.logins = matchingLogins.sort(loginSort);
   this.matchCount = matchingLogins.length + this._showInsecureFieldWarning + this._showAutoCompleteFooter;
