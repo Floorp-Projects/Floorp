@@ -96,11 +96,11 @@ class AllocPolicyImpl : public AllocPolicy {
  * This class allows to track and serialise a single decoder allocation at a
  * time
  */
-class LocalAllocPolicy : public AllocPolicyImpl {
+class SingleAllocPolicy : public AllocPolicyImpl {
   using TrackType = TrackInfo::TrackType;
 
  public:
-  LocalAllocPolicy(TrackType aTrack, TaskQueue* aOwnerThread)
+  SingleAllocPolicy(TrackType aTrack, TaskQueue* aOwnerThread)
       : AllocPolicyImpl(1), mTrack(aTrack), mOwnerThread(aOwnerThread) {}
 
   RefPtr<Promise> Alloc() override;
@@ -111,7 +111,7 @@ class LocalAllocPolicy : public AllocPolicyImpl {
 
  private:
   class AutoDeallocCombinedToken;
-  virtual ~LocalAllocPolicy();
+  virtual ~SingleAllocPolicy();
 
   const TrackType mTrack;
   RefPtr<TaskQueue> mOwnerThread;
