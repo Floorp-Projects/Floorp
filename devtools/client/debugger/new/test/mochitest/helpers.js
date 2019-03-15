@@ -1635,3 +1635,26 @@ async function checkEvaluateInTopFrame(target, text, expected) {
   const rval = await evaluateInTopFrame(target, text);
   ok(rval == expected, `Eval returned ${expected}`);
 }
+
+async function findConsoleMessage(dbg, query) {
+  const [message,] = await findConsoleMessages(dbg, query);
+  const value = message.querySelector(".message-body").innerText;
+  const link = message.querySelector(".frame-link-source-inner").innerText;
+  return { value, link };
+}
+
+async function findConsoleMessages(dbg, query) {
+  const webConsole = await dbg.toolbox.getPanel("webconsole");
+  const win = webConsole._frameWindow;
+  return Array.prototype.filter.call(
+    win.document.querySelectorAll(".message"),
+    e => e.innerText.includes(query)
+  );
+}
+
+async function hasConsoleMessage(dbg, msg) {
+  return waitFor(async () => {
+    const messages = await findConsoleMessages(dbg, msg);
+    return messages.length > 0;
+  })
+}
