@@ -661,7 +661,7 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
         return mAutoplayDefault.get();
     }
 
-    private static int FONT_INFLATION_BASE_VALUE = 120;
+    private static final int FONT_INFLATION_BASE_VALUE = 120;
 
     /**
      * Set a font size factor that will operate as a global text zoom. All font sizes will be
