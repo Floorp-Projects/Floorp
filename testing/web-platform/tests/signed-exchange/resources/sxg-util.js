@@ -65,10 +65,3 @@ function runReferrerTests(test_cases) {
     }, 'Referrer of SignedHTTPExchange test : ' + JSON.stringify(test_case));
   }
 }
-
-function addPrefetch(url) {
-  const link = document.createElement('link');
-  link.rel = 'prefetch';
-  link.href = url;
-  document.body.appendChild(link);
-}

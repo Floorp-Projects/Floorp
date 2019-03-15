@@ -17,8 +17,7 @@
       assert_header_equals(e.data, {
         "dest": "document",
         "site": "same-origin",
-        "user": "?F",
-        "mode": "navigate",
+        "user":"?F"
       });
       t.done();
     }));
@@ -34,8 +33,7 @@
       assert_header_equals(e.data, {
         "dest": "document",
         "site": "same-site",
-        "user": "?F",
-        "mode": "navigate",
+        "user":"?F"
       });
       t.done();
     }));
@@ -51,8 +49,7 @@
       assert_header_equals(e.data, {
         "dest": "document",
         "site": "cross-site",
-        "user": "?F",
-        "mode": "navigate",
+        "user":"?F"
       });
       t.done();
     }));
@@ -71,8 +68,7 @@
         assert_header_equals(e.data, {
           "dest": "document",
           "site": "same-origin",
-          "user": "?T",
-          "mode": "navigate",
+          "user": "?T"
         });
         t.done();
       }));
@@ -93,8 +89,7 @@
         assert_header_equals(e.data, {
           "dest": "document",
           "site": "same-site",
-          "user": "?T",
-          "mode": "navigate",
+          "user": "?T"
         });
         t.done();
       }));
@@ -115,8 +110,7 @@
         assert_header_equals(e.data, {
           "dest": "document",
           "site": "cross-site",
-          "user": "?T",
-          "mode": "navigate",
+          "user": "?T"
         });
         t.done();
       }));

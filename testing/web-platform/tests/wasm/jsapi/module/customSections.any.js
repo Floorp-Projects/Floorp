@@ -156,7 +156,9 @@ test(() => {
   assert_sections(WebAssembly.Module.customSections(module, "na\uFFFDme"), [
     bytes,
   ]);
-  assert_sections(WebAssembly.Module.customSections(module, "na\uDC01me"), []);
+  assert_sections(WebAssembly.Module.customSections(module, "na\uDC01me"), [
+    bytes,
+  ]);
 }, "Custom sections with U+FFFD");
 
 test(() => {

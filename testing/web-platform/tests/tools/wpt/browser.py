@@ -5,12 +5,9 @@ import shutil
 import stat
 import subprocess
 import tempfile
-import urlparse
 from abc import ABCMeta, abstractmethod
 from datetime import datetime, timedelta
 from distutils.spawn import find_executable
-
-import requests
 
 from utils import call, get, untar, unzip
 
@@ -96,28 +93,30 @@ class Firefox(Browser):
     def install(self, dest=None, channel="nightly"):
         """Install Firefox."""
 
-        import mozinstall
-
-        product = {
-            "nightly": "firefox-nightly-latest-ssl",
-            "beta": "firefox-beta-latest-ssl",
-            "stable": "firefox-beta-latest-ssl"
+        branch = {
+            "nightly": "mozilla-central",
+            "beta": "mozilla-beta",
+            "stable": "mozilla-stable"
+        }
+        scraper = {
+            "nightly": "daily",
+            "beta": "release",
+            "stable": "release"
+        }
+        version = {
+            "stable": "latest",
+            "beta": "latest-beta",
+            "nightly": "latest"
         }
 
-        os_builds = {
-            ("linux", "x86"): "linux",
-            ("linux", "x86_64"): "linux64",
-            ("win", "x86"): "win",
-            ("win", "x86_64"): "win64",
-            ("macos", "x86_64"): "osx",
-        }
-        os_key = (self.platform, uname[4])
-
-        if channel not in product:
+        if channel not in branch:
             raise ValueError("Unrecognised release channel: %s" % channel)
 
-        if os_key not in os_builds:
-            raise ValueError("Unsupported platform: %s %s" % os_key)
+        from mozdownload import FactoryScraper
+        import mozinstall
+
+        if self.platform is None:
+            raise ValueError("Unable to construct a valid Firefox package name for current platform")
 
         if dest is None:
             # os.getcwd() doesn't include the venv path
@@ -125,35 +124,17 @@ class Firefox(Browser):
 
         dest = os.path.join(dest, "browsers", channel)
 
-        if not os.path.exists(dest):
-            os.makedirs(dest)
+        scraper = FactoryScraper(scraper[channel],
+                                 branch=branch[channel],
+                                 version=version[channel],
+                                 destination=dest)
 
-        url = "https://download.mozilla.org/?product=%s&os=%s&lang=en-US" % (product[channel],
-                                                                             os_builds[os_key])
-        self.logger.info("Downloading Firefox from %s" % url)
-        resp = requests.get(url)
+        self.logger.info("Downloading Firefox from %s" % scraper.url)
 
-        filename = None
-
-        content_disposition = resp.headers.get('content-disposition')
-        if content_disposition:
-            filenames = re.findall("filename=(.+)", content_disposition)
-            if filenames:
-                filename = filenames[0]
-
-        if not filename:
-            filename = urlparse.urlsplit(resp.url).path.rsplit("/", 1)[1]
-
-        if not filename:
-            filename = "firefox.tar.bz2"
-
-        installer_path = os.path.join(dest, filename)
-
-        with open(installer_path, "w") as f:
-            f.write(resp.content)
+        filename = scraper.download()
 
         try:
-            mozinstall.install(installer_path, dest)
+            mozinstall.install(filename, dest)
         except mozinstall.mozinstall.InstallError:
             if self.platform == "macos" and os.path.exists(os.path.join(dest, self.application_name.get(channel, "Firefox Nightly.app"))):
                 # mozinstall will fail if nightly is already installed in the venv because
@@ -163,7 +144,7 @@ class Firefox(Browser):
             else:
                 raise
 
-        os.remove(installer_path)
+        os.remove(filename)
         return self.find_binary_path(dest)
 
     def find_binary_path(self,path=None, channel="nightly"):
@@ -469,7 +450,7 @@ class Chrome(Browser):
                 return None
             m = re.match(r"Google Chrome (.*)", version_string)
             if not m:
-                self.logger.warning("Failed to extract version from: %s", version_string)
+                self.logger.warning("Failed to extract version from: s%", version_string)
                 return None
             return m.group(1)
         self.logger.warning("Unable to extract version from binary on Windows.")
@@ -668,7 +649,7 @@ class Safari(Browser):
             return None
         m = re.match(r"Included with Safari (.*)", version_string)
         if not m:
-            self.logger.warning("Failed to extract version from: %s", version_string)
+            self.logger.warning("Failed to extract version from: s%", version_string)
             return None
         return m.group(1)
 

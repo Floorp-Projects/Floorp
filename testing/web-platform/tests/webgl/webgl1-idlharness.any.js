@@ -1,6 +1,5 @@
 // META: script=/resources/WebIDLParser.js
 // META: script=/resources/idlharness.js
-// META: timeout=long
 
 // https://www.khronos.org/registry/webgl/specs/latest/1.0/
 

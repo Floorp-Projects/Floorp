@@ -25,8 +25,7 @@ try {
         }
     });
 } catch(ex) {
-    // 'paint' property's value is 42, not a function.
-    if (ex.name == 'TypeError')
+    if (ex.name == 'TypeError' && ex.message == "Failed to execute 'registerPaint' on 'PaintWorkletGlobalScope': The 'paint' property on the prototype is not a function.")
         testsPassed = true;
 }
 
