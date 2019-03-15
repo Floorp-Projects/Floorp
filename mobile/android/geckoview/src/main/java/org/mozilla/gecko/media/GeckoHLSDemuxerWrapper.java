@@ -24,7 +24,7 @@ public final class GeckoHLSDemuxerWrapper {
         VIDEO(2),
         TEXT(3);
         private int mType;
-        private TrackType(final int type) {
+        private TrackType(int type) {
             mType = type;
         }
         public int value() {
@@ -34,7 +34,9 @@ public final class GeckoHLSDemuxerWrapper {
 
     private BaseHlsPlayer mPlayer = null;
 
-    public static class Callbacks extends JNIObject implements BaseHlsPlayer.DemuxerCallbacks {
+    public static class Callbacks extends JNIObject
+    implements BaseHlsPlayer.DemuxerCallbacks {
+
         @WrapForJNI(calledFrom = "gecko")
         Callbacks() {}
 
@@ -52,13 +54,13 @@ public final class GeckoHLSDemuxerWrapper {
         }
     } // Callbacks
 
-    private static void assertTrue(final boolean condition) {
+    private static void assertTrue(boolean condition) {
         if (DEBUG && !condition) {
             throw new AssertionError("Expected condition to be true");
         }
     }
 
-    private BaseHlsPlayer.TrackType getPlayerTrackType(final int trackType) {
+    private BaseHlsPlayer.TrackType getPlayerTrackType(int trackType) {
         if (trackType == TrackType.AUDIO.value()) {
             return BaseHlsPlayer.TrackType.AUDIO;
         } else if (trackType == TrackType.VIDEO.value()) {
@@ -76,13 +78,12 @@ public final class GeckoHLSDemuxerWrapper {
     }
 
     @WrapForJNI(calledFrom = "gecko")
-    public static GeckoHLSDemuxerWrapper create(final int id,
-                                                final BaseHlsPlayer.DemuxerCallbacks callback) {
+    public static GeckoHLSDemuxerWrapper create(int id, BaseHlsPlayer.DemuxerCallbacks callback) {
         return new GeckoHLSDemuxerWrapper(id, callback);
     }
 
     @WrapForJNI
-    public int getNumberOfTracks(final int trackType) {
+    public int getNumberOfTracks(int trackType) {
         assertTrue(mPlayer != null);
         int tracks = mPlayer.getNumberOfTracks(getPlayerTrackType(trackType));
         if (DEBUG) Log.d(LOGTAG, "[GetNumberOfTracks] type : " + trackType + ", num = " + tracks);
@@ -90,7 +91,7 @@ public final class GeckoHLSDemuxerWrapper {
     }
 
     @WrapForJNI
-    public GeckoAudioInfo getAudioInfo(final int index) {
+    public GeckoAudioInfo getAudioInfo(int index) {
         assertTrue(mPlayer != null);
         if (DEBUG) Log.d(LOGTAG, "[getAudioInfo] formatIndex : " + index);
         GeckoAudioInfo aInfo = mPlayer.getAudioInfo(index);
@@ -98,7 +99,7 @@ public final class GeckoHLSDemuxerWrapper {
     }
 
     @WrapForJNI
-    public GeckoVideoInfo getVideoInfo(final int index) {
+    public GeckoVideoInfo getVideoInfo(int index) {
         assertTrue(mPlayer != null);
         if (DEBUG) Log.d(LOGTAG, "[getVideoInfo] formatIndex : " + index);
         GeckoVideoInfo vInfo = mPlayer.getVideoInfo(index);
@@ -106,14 +107,14 @@ public final class GeckoHLSDemuxerWrapper {
     }
 
     @WrapForJNI
-    public boolean seek(final long seekTime) {
+    public boolean seek(long seekTime) {
         // seekTime : microseconds.
         assertTrue(mPlayer != null);
         if (DEBUG) Log.d(LOGTAG, "seek  : " + seekTime + " (Us)");
         return mPlayer.seek(seekTime);
     }
 
-    GeckoHLSDemuxerWrapper(final int id, final BaseHlsPlayer.DemuxerCallbacks callback) {
+    GeckoHLSDemuxerWrapper(int id, BaseHlsPlayer.DemuxerCallbacks callback) {
         if (DEBUG) Log.d(LOGTAG, "Constructing GeckoHLSDemuxerWrapper ...");
         assertTrue(callback != null);
         try {
@@ -128,7 +129,7 @@ public final class GeckoHLSDemuxerWrapper {
     }
 
     @WrapForJNI
-    private GeckoHLSSample[] getSamples(final int mediaType, final int number) {
+    private GeckoHLSSample[] getSamples(int mediaType, int number) {
         assertTrue(mPlayer != null);
         ConcurrentLinkedQueue<GeckoHLSSample> samples = null;
         // getA/VSamples will always return a non-null instance.

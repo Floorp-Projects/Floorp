@@ -28,17 +28,16 @@ public final class StrictModeContext implements Closeable {
     private final StrictMode.ThreadPolicy mThreadPolicy;
     private final StrictMode.VmPolicy mVmPolicy;
 
-    private StrictModeContext(final StrictMode.ThreadPolicy threadPolicy,
-                              final StrictMode.VmPolicy vmPolicy) {
+    private StrictModeContext(StrictMode.ThreadPolicy threadPolicy, StrictMode.VmPolicy vmPolicy) {
         mThreadPolicy = threadPolicy;
         mVmPolicy = vmPolicy;
     }
 
-    private StrictModeContext(final StrictMode.ThreadPolicy threadPolicy) {
+    private StrictModeContext(StrictMode.ThreadPolicy threadPolicy) {
         this(threadPolicy, null);
     }
 
-    private StrictModeContext(final StrictMode.VmPolicy vmPolicy) {
+    private StrictModeContext(StrictMode.VmPolicy vmPolicy) {
         this(null, vmPolicy);
     }
 

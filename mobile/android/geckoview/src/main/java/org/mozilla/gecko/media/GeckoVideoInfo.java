@@ -4,6 +4,7 @@
 
 package org.mozilla.gecko.media;
 
+import java.nio.ByteBuffer;
 import org.mozilla.gecko.annotation.WrapForJNI;
 
 //A subset of the class VideoInfo in dom/media/MediaInfo.h
@@ -19,11 +20,10 @@ public final class GeckoVideoInfo {
     final public int stereoMode;
     final public long duration;
     final public String mimeType;
-    public GeckoVideoInfo(final int displayWidth, final int displayHeight,
-                          final int pictureWidth, final int pictureHeight,
-                          final int rotation, final int stereoMode, final long duration,
-                          final String mimeType, final byte[] extraData,
-                          final byte[] codecSpecificData) {
+    public GeckoVideoInfo(int displayWidth, int displayHeight,
+                          int pictureWidth, int pictureHeight,
+                          int rotation, int stereoMode, long duration, String mimeType,
+                          byte[] extraData, byte[] codecSpecificData) {
         this.displayWidth = displayWidth;
         this.displayHeight = displayHeight;
         this.pictureWidth = pictureWidth;

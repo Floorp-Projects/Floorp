@@ -25,26 +25,26 @@ import android.content.Context;
 public class GeckoProfileDirectories {
     @SuppressWarnings("serial")
     public static class NoMozillaDirectoryException extends Exception {
-        public NoMozillaDirectoryException(final Throwable cause) {
+        public NoMozillaDirectoryException(Throwable cause) {
             super(cause);
         }
 
-        public NoMozillaDirectoryException(final String reason) {
+        public NoMozillaDirectoryException(String reason) {
             super(reason);
         }
 
-        public NoMozillaDirectoryException(final String reason, final Throwable cause) {
+        public NoMozillaDirectoryException(String reason, Throwable cause) {
             super(reason, cause);
         }
     }
 
     @SuppressWarnings("serial")
     public static class NoSuchProfileException extends Exception {
-        public NoSuchProfileException(final String detailMessage, final Throwable cause) {
+        public NoSuchProfileException(String detailMessage, Throwable cause) {
             super(detailMessage, cause);
         }
 
-        public NoSuchProfileException(final String detailMessage) {
+        public NoSuchProfileException(String detailMessage) {
             super(detailMessage);
         }
     }
@@ -60,7 +60,7 @@ public class GeckoProfileDirectories {
      */
     private static final INISectionPredicate sectionIsDefault = new INISectionPredicate() {
         @Override
-        public boolean matches(final INISection section) {
+        public boolean matches(INISection section) {
             return section.getIntProperty("Default") == 1;
         }
     };
@@ -70,14 +70,14 @@ public class GeckoProfileDirectories {
      */
     private static final INISectionPredicate sectionHasName = new INISectionPredicate() {
         @Override
-        public boolean matches(final INISection section) {
+        public boolean matches(INISection section) {
             final String name = section.getStringProperty("Name");
             return name != null;
         }
     };
 
     @RobocopTarget
-    public static INIParser getProfilesINI(final File mozillaDir) {
+    public static INIParser getProfilesINI(File mozillaDir) {
         return new INIParser(new File(mozillaDir, "profiles.ini"));
     }
 
@@ -115,8 +115,7 @@ public class GeckoProfileDirectories {
      *             if the directory did not exist and could not be created.
      */
     @RobocopTarget
-    public static File getMozillaDirectory(final Context context)
-            throws NoMozillaDirectoryException {
+    public static File getMozillaDirectory(Context context) throws NoMozillaDirectoryException {
         final File mozillaDir = new File(context.getFilesDir(), MOZILLA_DIR_NAME);
         if (mozillaDir.mkdirs() || mozillaDir.isDirectory()) {
             return mozillaDir;
@@ -138,16 +137,16 @@ public class GeckoProfileDirectories {
      *             if the Mozilla directory did not exist and could not be created.
      */
     static String findDefaultProfileName(final Context context) throws NoMozillaDirectoryException {
-        final INIParser parser = GeckoProfileDirectories.getProfilesINI(getMozillaDirectory(context));
-        if (parser.getSections() != null) {
-            for (Enumeration<INISection> e = parser.getSections().elements(); e.hasMoreElements(); ) {
-                final INISection section = e.nextElement();
-                if (section.getIntProperty("Default") == 1) {
-                    return section.getStringProperty("Name");
-                }
-            }
-        }
-        return null;
+      final INIParser parser = GeckoProfileDirectories.getProfilesINI(getMozillaDirectory(context));
+      if (parser.getSections() != null) {
+          for (Enumeration<INISection> e = parser.getSections().elements(); e.hasMoreElements(); ) {
+              final INISection section = e.nextElement();
+              if (section.getIntProperty("Default") == 1) {
+                  return section.getStringProperty("Name");
+              }
+          }
+      }
+      return null;
     }
 
     static Map<String, String> getDefaultProfile(final File mozillaDir) {
@@ -188,8 +187,7 @@ public class GeckoProfileDirectories {
      *            included.
      * @return a {@link Map} from name to path.
      */
-    public static Map<String, String> getMatchingProfiles(final File mozillaDir,
-            final INISectionPredicate predicate, final boolean stopOnSuccess) {
+    public static Map<String, String> getMatchingProfiles(final File mozillaDir, INISectionPredicate predicate, boolean stopOnSuccess) {
         final HashMap<String, String> result = new HashMap<String, String>();
         final INIParser parser = GeckoProfileDirectories.getProfilesINI(mozillaDir);
 

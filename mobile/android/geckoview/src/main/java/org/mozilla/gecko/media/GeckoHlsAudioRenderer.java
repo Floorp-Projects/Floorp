@@ -25,7 +25,7 @@ import com.google.android.exoplayer2.util.MimeTypes;
 import java.nio.ByteBuffer;
 
 public class GeckoHlsAudioRenderer extends GeckoHlsRendererBase {
-    public GeckoHlsAudioRenderer(final GeckoHlsPlayer.ComponentEventDispatcher eventDispatcher) {
+    public GeckoHlsAudioRenderer(GeckoHlsPlayer.ComponentEventDispatcher eventDispatcher) {
         super(C.TRACK_TYPE_AUDIO, eventDispatcher);
         assertTrue(Build.VERSION.SDK_INT >= 16);
         LOGTAG = getClass().getSimpleName();
@@ -33,7 +33,7 @@ public class GeckoHlsAudioRenderer extends GeckoHlsRendererBase {
     }
 
     @Override
-    public final int supportsFormat(final Format format) {
+    public final int supportsFormat(Format format) {
         /*
          * FORMAT_EXCEEDS_CAPABILITIES : The Renderer is capable of rendering
          *                               formats with the same mime type, but
@@ -98,24 +98,23 @@ public class GeckoHlsAudioRenderer extends GeckoHlsRendererBase {
     }
 
     @Override
-    protected void handleReconfiguration(final DecoderInputBuffer bufferForRead) {
+    protected void handleReconfiguration(DecoderInputBuffer bufferForRead) {
         // Do nothing
     }
 
     @Override
-    protected void handleFormatRead(final DecoderInputBuffer bufferForRead)
-            throws ExoPlaybackException {
+    protected void handleFormatRead(DecoderInputBuffer bufferForRead) throws ExoPlaybackException {
         onInputFormatChanged(mFormatHolder.format);
     }
 
     @Override
-    protected void handleEndOfStream(final DecoderInputBuffer bufferForRead) {
+    protected void handleEndOfStream(DecoderInputBuffer bufferForRead) {
         mInputStreamEnded = true;
         mDemuxedInputSamples.offer(GeckoHLSSample.EOS);
     }
 
     @Override
-    protected void handleSamplePreparation(final DecoderInputBuffer bufferForRead) {
+    protected void handleSamplePreparation(DecoderInputBuffer bufferForRead) {
         int size = bufferForRead.data.limit();
         byte[] realData = new byte[size];
         bufferForRead.data.get(realData, 0, size);
@@ -152,15 +151,13 @@ public class GeckoHlsAudioRenderer extends GeckoHlsRendererBase {
 
     @Override
     protected boolean clearInputSamplesQueue() {
-        if (DEBUG) {
-            Log.d(LOGTAG, "clearInputSamplesQueue");
-        }
+        if (DEBUG) { Log.d(LOGTAG, "clearInputSamplesQueue"); }
         mDemuxedInputSamples.clear();
         return true;
     }
 
     @Override
-    protected void notifyPlayerInputFormatChanged(final Format newFormat) {
+    protected void notifyPlayerInputFormatChanged(Format newFormat) {
         mPlayerEventDispatcher.onAudioInputFormatChanged(newFormat);
     }
 }

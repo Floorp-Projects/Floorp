@@ -28,27 +28,27 @@ public class IOUtils {
     public static class ConsumedInputStream {
         public final int consumedLength;
         // Only reassigned in getTruncatedData.
-        private byte[] mConsumedData;
+        private byte[] consumedData;
 
-        public ConsumedInputStream(final int consumedLength, final byte[] consumedData) {
+        public ConsumedInputStream(int consumedLength, byte[] consumedData) {
             this.consumedLength = consumedLength;
-            this.mConsumedData = consumedData;
+            this.consumedData = consumedData;
         }
 
         /**
          * Get the data trimmed to the length of the actual payload read, caching the result.
          */
         public byte[] getTruncatedData() {
-            if (mConsumedData.length == consumedLength) {
-                return mConsumedData;
+            if (consumedData.length == consumedLength) {
+                return consumedData;
             }
 
-            mConsumedData = truncateBytes(mConsumedData, consumedLength);
-            return mConsumedData;
+            consumedData = truncateBytes(consumedData, consumedLength);
+            return consumedData;
         }
 
         public byte[] getData() {
-            return mConsumedData;
+            return consumedData;
         }
     }
 
@@ -59,7 +59,7 @@ public class IOUtils {
      *                   needed, but if the caller knows something about the InputStream then
      *                   passing a good value here can improve performance.
      */
-    public static ConsumedInputStream readFully(final InputStream iStream, final int bufferSize) {
+    public static ConsumedInputStream readFully(InputStream iStream, int bufferSize) {
         // Allocate a buffer to hold the raw data downloaded.
         byte[] buffer = new byte[bufferSize];
 
@@ -77,8 +77,8 @@ public class IOUtils {
 
                 // If buffer has overflowed, double its size and carry on.
                 if (bPointer == buffer.length) {
-                    int newBufferSize = bufferSize * 2;
-                    byte[] newBuffer = new byte[newBufferSize];
+                    bufferSize *= 2;
+                    byte[] newBuffer = new byte[bufferSize];
 
                     // Copy the contents of the old buffer into the new buffer.
                     System.arraycopy(buffer, 0, newBuffer, 0, buffer.length);
@@ -100,21 +100,21 @@ public class IOUtils {
      * Truncate a given byte[] to a given length. Returns a new byte[] with the first length many
      * bytes of the input.
      */
-    public static byte[] truncateBytes(final byte[] bytes, final int length) {
+    public static byte[] truncateBytes(byte[] bytes, int length) {
         byte[] newBytes = new byte[length];
         System.arraycopy(bytes, 0, newBytes, 0, length);
 
         return newBytes;
     }
 
-    public static void safeStreamClose(final Closeable stream) {
+    public static void safeStreamClose(Closeable stream) {
         try {
             if (stream != null)
                 stream.close();
         } catch (IOException e) { }
     }
 
-    public static void copy(final InputStream in, final OutputStream out) throws IOException {
+    public static void copy(InputStream in, OutputStream out) throws IOException {
         byte[] buffer = new byte[4096];
         int len;
 

@@ -8,6 +8,7 @@ package org.mozilla.gecko.util;
 import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.support.annotation.Nullable;
 import android.support.annotation.NonNull;
 import android.telephony.TelephonyManager;
 
@@ -26,7 +27,7 @@ public class NetworkUtils {
         UNKNOWN("unknown");
 
         public final String value;
-        ConnectionSubType(final String value) {
+        ConnectionSubType(String value) {
             this.value = value;
         }
     }
@@ -42,7 +43,7 @@ public class NetworkUtils {
 
         public final String value;
 
-        NetworkStatus(final String value) {
+        NetworkStatus(String value) {
             this.value = value;
         }
     }
@@ -60,7 +61,7 @@ public class NetworkUtils {
 
         public final int value;
 
-        ConnectionType(final int value) {
+        ConnectionType(int value) {
             this.value = value;
         }
     }
@@ -68,11 +69,11 @@ public class NetworkUtils {
     /**
      * Indicates whether network connectivity exists and it is possible to establish connections and pass data.
      */
-    public static boolean isConnected(final @NonNull Context context) {
+    public static boolean isConnected(@NonNull Context context) {
         return isConnected((ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE));
     }
 
-    public static boolean isConnected(final ConnectivityManager connectivityManager) {
+    public static boolean isConnected(ConnectivityManager connectivityManager) {
         if (connectivityManager == null) {
             return false;
         }
@@ -84,8 +85,7 @@ public class NetworkUtils {
     /**
      * For mobile connections, maps particular connection subtype to a general 2G, 3G, 4G bucket.
      */
-    public static ConnectionSubType getConnectionSubType(
-            final ConnectivityManager connectivityManager) {
+    public static ConnectionSubType getConnectionSubType(ConnectivityManager connectivityManager) {
         if (connectivityManager == null) {
             return ConnectionSubType.UNKNOWN;
         }
@@ -115,7 +115,7 @@ public class NetworkUtils {
         return getConnectionType(connectivityManager) == ConnectionType.WIFI;
     }
 
-    public static ConnectionType getConnectionType(final ConnectivityManager connectivityManager) {
+    public static ConnectionType getConnectionType(ConnectivityManager connectivityManager) {
         if (connectivityManager == null) {
             return ConnectionType.NONE;
         }
@@ -141,7 +141,7 @@ public class NetworkUtils {
         }
     }
 
-    public static NetworkStatus getNetworkStatus(final ConnectivityManager connectivityManager) {
+    public static NetworkStatus getNetworkStatus(ConnectivityManager connectivityManager) {
         if (connectivityManager == null) {
             return NetworkStatus.UNKNOWN;
         }
@@ -152,7 +152,7 @@ public class NetworkUtils {
         return NetworkStatus.DOWN;
     }
 
-    private static ConnectionSubType getGenericMobileSubtype(final int subtype) {
+    private static ConnectionSubType getGenericMobileSubtype(int subtype) {
         switch (subtype) {
             // 2G types: fallthrough 5x
             case TelephonyManager.NETWORK_TYPE_GPRS:

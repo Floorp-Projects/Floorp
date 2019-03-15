@@ -12,7 +12,7 @@ public class SQLiteBridgeException extends RuntimeException {
     static final long serialVersionUID = 1L;
 
     public SQLiteBridgeException() {}
-    public SQLiteBridgeException(final String msg) {
+    public SQLiteBridgeException(String msg) {
         super(msg);
     }
 }

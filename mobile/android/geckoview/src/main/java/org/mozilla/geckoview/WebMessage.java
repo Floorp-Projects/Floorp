@@ -10,6 +10,8 @@ import org.mozilla.gecko.annotation.WrapForJNI;
 
 import android.support.annotation.AnyThread;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+
 import android.support.v4.util.ArrayMap;
 
 import java.nio.ByteBuffer;
