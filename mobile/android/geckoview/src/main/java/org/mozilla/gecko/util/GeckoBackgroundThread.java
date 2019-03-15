@@ -7,8 +7,6 @@ package org.mozilla.gecko.util;
 import android.os.Handler;
 import android.os.Looper;
 
-import java.util.concurrent.SynchronousQueue;
-
 final class GeckoBackgroundThread extends Thread {
     private static final String LOOPER_NAME = "GeckoBackgroundThread";
 

@@ -14,7 +14,6 @@ import android.media.MediaFormat;
 import android.os.DeadObjectException;
 import android.os.IBinder;
 import android.os.RemoteException;
-import android.view.Surface;
 import android.util.Log;
 
 import java.util.LinkedList;

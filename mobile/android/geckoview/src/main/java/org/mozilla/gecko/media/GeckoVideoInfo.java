@@ -4,7 +4,6 @@
 
 package org.mozilla.gecko.media;
 
-import java.nio.ByteBuffer;
 import org.mozilla.gecko.annotation.WrapForJNI;
 
 //A subset of the class VideoInfo in dom/media/MediaInfo.h

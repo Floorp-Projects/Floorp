@@ -16,10 +16,6 @@ import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.geckoview.BuildConfig;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.AnyThread;
 import android.util.Log;
@@ -29,7 +25,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 @RobocopTarget

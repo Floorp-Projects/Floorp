@@ -9,7 +9,6 @@ package org.mozilla.geckoview;
 import org.mozilla.gecko.AndroidGamepadManager;
 import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.InputMethods;
-import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.util.ActivityUtils;
 import org.mozilla.gecko.util.ThreadUtils;
 
