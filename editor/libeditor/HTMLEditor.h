@@ -2126,8 +2126,8 @@ class HTMLEditor final : public TextEditor,
   void RemoveListenerAndDeleteRef(const nsAString& aEvent,
                                   nsIDOMEventListener* aListener,
                                   bool aUseCapture, ManualNACPtr aElement,
-                                  nsIPresShell* aShell);
-  void DeleteRefToAnonymousNode(ManualNACPtr aContent, nsIPresShell* aShell);
+                                  PresShell* aPresShell);
+  void DeleteRefToAnonymousNode(ManualNACPtr aContent, PresShell* aPresShell);
 
   /**
    * RefereshEditingUI() may refresh editing UIs for current Selection, focus,

@@ -11,6 +11,7 @@
 #include "mozilla/FlushType.h"                // for FlushType::Frames
 #include "mozilla/HTMLEditor.h"               // for HTMLEditor
 #include "mozilla/mozalloc.h"                 // for operator new
+#include "mozilla/PresShell.h"                // for PresShell
 #include "nsAString.h"
 #include "nsComponentManagerUtils.h"  // for do_CreateInstance
 #include "nsContentUtils.h"
@@ -33,7 +34,6 @@
 #include "nsIHTMLDocument.h"             // for nsIHTMLDocument, etc
 #include "nsIInterfaceRequestorUtils.h"  // for do_GetInterface
 #include "nsIPlaintextEditor.h"          // for nsIPlaintextEditor, etc
-#include "nsIPresShell.h"                // for nsIPresShell
 #include "nsIRefreshURI.h"               // for nsIRefreshURI
 #include "nsIRequest.h"                  // for nsIRequest
 #include "nsITimer.h"                    // for nsITimer, etc
@@ -366,8 +366,11 @@ nsEditingSession::SetupEditorOnWindow(mozIDOMWindowProxy* aWindow) {
   //  only if we haven't found some error above,
   nsCOMPtr<nsIDocShell> docShell = window->GetDocShell();
   NS_ENSURE_TRUE(docShell, NS_ERROR_FAILURE);
-  nsCOMPtr<nsIPresShell> presShell = docShell->GetPresShell();
-  NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
+  RefPtr<PresShell> presShell =
+      static_cast<PresShell*>(docShell->GetPresShell());
+  if (NS_WARN_IF(!presShell)) {
+    return NS_ERROR_FAILURE;
+  }
 
   if (!mInteractive) {
     // Disable animation of images in this document:
@@ -1203,8 +1206,11 @@ void nsEditingSession::RestoreAnimationMode(nsPIDOMWindowOuter* aWindow) {
 
   nsCOMPtr<nsIDocShell> docShell = aWindow ? aWindow->GetDocShell() : nullptr;
   NS_ENSURE_TRUE_VOID(docShell);
-  nsCOMPtr<nsIPresShell> presShell = docShell->GetPresShell();
-  NS_ENSURE_TRUE_VOID(presShell);
+  RefPtr<PresShell> presShell =
+      static_cast<PresShell*>(docShell->GetPresShell());
+  if (NS_WARN_IF(!presShell)) {
+    return;
+  }
   nsPresContext* presContext = presShell->GetPresContext();
   NS_ENSURE_TRUE_VOID(presContext);
 
@@ -1291,8 +1297,11 @@ nsresult nsEditingSession::ReattachToWindow(mozIDOMWindowProxy* aWindow) {
 
   if (!mInteractive) {
     // Disable animation of images in this document:
-    nsCOMPtr<nsIPresShell> presShell = docShell->GetPresShell();
-    NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
+    RefPtr<PresShell> presShell =
+        static_cast<PresShell*>(docShell->GetPresShell());
+    if (NS_WARN_IF(!presShell)) {
+      return NS_ERROR_FAILURE;
+    }
     nsPresContext* presContext = presShell->GetPresContext();
     NS_ENSURE_TRUE(presContext, NS_ERROR_FAILURE);
 

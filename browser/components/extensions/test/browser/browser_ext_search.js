@@ -39,7 +39,7 @@ add_task(async function test_search() {
     browser.test.sendMessage("searchLoaded", result.url);
 
     // Search with tabId
-    let tab = await browser.tabs.create({});
+    let tab = await browser.tabs.create({url: "about:blank"});
     browser.search.search({query: SEARCH_TERM + "2", engine: "Search Test",
                            tabId: tab.id});
     result = await awaitSearchResult();
