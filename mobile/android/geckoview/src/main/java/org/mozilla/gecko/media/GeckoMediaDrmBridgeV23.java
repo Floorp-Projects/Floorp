@@ -5,15 +5,10 @@
 package org.mozilla.gecko.media;
 
 import android.annotation.TargetApi;
-import android.media.DeniedByServerException;
-import android.media.NotProvisionedException;
 
 import static android.os.Build.VERSION_CODES.M;
 import android.media.MediaDrm;
 import android.util.Log;
-import java.lang.IllegalStateException;
-import java.nio.ByteBuffer;
-import java.util.HashMap;
 import java.util.List;
 
 @TargetApi(M)
