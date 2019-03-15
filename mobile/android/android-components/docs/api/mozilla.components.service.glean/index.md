@@ -11,7 +11,7 @@
 | [CounterMetricType](-counter-metric-type/index.md) | `data class CounterMetricType : `[`CommonMetricData`](-common-metric-data/index.md)<br>This implements the developer facing API for recording counter metrics. |
 | [DatetimeMetricType](-datetime-metric-type/index.md) | `data class DatetimeMetricType : `[`CommonMetricData`](-common-metric-data/index.md)<br>This implements the developer facing API for recording datetime metrics. |
 | [EventMetricType](-event-metric-type/index.md) | `data class EventMetricType : `[`CommonMetricData`](-common-metric-data/index.md)<br>This implements the developer facing API for recording events. |
-| [Glean](-glean/index.md) | `object Glean : `[`GleanInternalAPI`](-glean-internal-a-p-i/index.md) |
+| [Glean](-glean.md) | `object Glean : `[`GleanInternalAPI`](-glean-internal-a-p-i/index.md) |
 | [GleanInternalAPI](-glean-internal-a-p-i/index.md) | `open class GleanInternalAPI` |
 | [LabeledMetricType](-labeled-metric-type/index.md) | `data class LabeledMetricType<T> : `[`CommonMetricData`](-common-metric-data/index.md)<br>This implements the developer facing API for labeled metrics. |
 | [Lifetime](-lifetime/index.md) | `enum class Lifetime`<br>Enumeration of different metric lifetimes. |

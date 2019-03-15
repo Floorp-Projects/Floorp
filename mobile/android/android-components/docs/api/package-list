@@ -122,6 +122,7 @@ mozilla.components.feature.findinpage
 mozilla.components.feature.findinpage.view
 mozilla.components.feature.intent
 mozilla.components.feature.prompts
+mozilla.components.feature.pwa
 mozilla.components.feature.search
 mozilla.components.feature.session
 mozilla.components.feature.session.bundling
@@ -164,7 +165,9 @@ mozilla.components.service.glean.debug
 mozilla.components.service.glean.error
 mozilla.components.service.glean.scheduler
 mozilla.components.service.glean.storages
+mozilla.components.service.pocket
 mozilla.components.service.pocket.data
+mozilla.components.service.pocket.net
 mozilla.components.service.sync.logins
 mozilla.components.support.android.test
 mozilla.components.support.base.android

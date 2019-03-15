@@ -2,15 +2,9 @@
 
 # Author
 
-`data class Author` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/pocket/src/main/java/mozilla/components/service/pocket/data/PocketGlobalVideoRecommendation.kt#L43)
+`data class Author` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/pocket/src/main/java/mozilla/components/service/pocket/data/PocketGlobalVideoRecommendation.kt#L47)
 
 An author or publisher of a [PocketGlobalVideoRecommendation](../index.md).
-
-### Constructors
-
-| Name | Summary |
-|---|---|
-| [&lt;init&gt;](-init-.md) | `Author(id: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, name: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, url: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`)`<br>An author or publisher of a [PocketGlobalVideoRecommendation](../index.md). |
 
 ### Properties
 

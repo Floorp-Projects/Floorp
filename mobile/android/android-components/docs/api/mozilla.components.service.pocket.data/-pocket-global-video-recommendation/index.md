@@ -2,7 +2,7 @@
 
 # PocketGlobalVideoRecommendation
 
-`data class PocketGlobalVideoRecommendation` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/pocket/src/main/java/mozilla/components/service/pocket/data/PocketGlobalVideoRecommendation.kt#L22)
+`data class PocketGlobalVideoRecommendation` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/pocket/src/main/java/mozilla/components/service/pocket/data/PocketGlobalVideoRecommendation.kt#L26)
 
 A recommended video as returned from the Pocket Global Video Recommendation endpoint v2.
 
@@ -11,12 +11,6 @@ A recommended video as returned from the Pocket Global Video Recommendation endp
 | Name | Summary |
 |---|---|
 | [Author](-author/index.md) | `data class Author`<br>An author or publisher of a [PocketGlobalVideoRecommendation](./index.md). |
-
-### Constructors
-
-| Name | Summary |
-|---|---|
-| [&lt;init&gt;](-init-.md) | `PocketGlobalVideoRecommendation(id: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`, url: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, tvURL: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, title: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, excerpt: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, domain: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, imageSrc: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, publishedTimestamp: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, sortId: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`, popularitySortId: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`, authors: `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`Author`](-author/index.md)`>)`<br>A recommended video as returned from the Pocket Global Video Recommendation endpoint v2. |
 
 ### Properties
 
