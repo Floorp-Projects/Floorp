@@ -1767,11 +1767,11 @@ public class GeckoAppShell
     }
 
     private static class BitmapConnection extends URLConnection {
-        private Bitmap bitmap;
+        private Bitmap mBitmap;
 
         BitmapConnection(final Bitmap b) throws MalformedURLException, IOException {
             super(null);
-            bitmap = b;
+            mBitmap = b;
         }
 
         @Override
@@ -1806,7 +1806,7 @@ public class GeckoAppShell
                         @Override
                         public void run() {
                             try {
-                                bitmap.compress(Bitmap.CompressFormat.PNG, 100, output);
+                                mBitmap.compress(Bitmap.CompressFormat.PNG, 100, output);
                             } finally {
                                 IOUtils.safeStreamClose(output);
                             }
