@@ -19,15 +19,10 @@ class RequestInterceptorTest {
         val urlResponse = InterceptionResponse.Url("https://mozilla.org")
         val contentReponse = InterceptionResponse.Content("data")
 
-        var url: String = when (urlResponse) {
-            is InterceptionResponse.Url -> urlResponse.url
-            else -> ""
-        }
-        var content: Triple<String, String, String> = when (contentReponse) {
-            is InterceptionResponse.Content ->
-                Triple(contentReponse.data, contentReponse.encoding, contentReponse.mimeType)
-            else -> Triple("", "", "")
-        }
+        val url: String = urlResponse.url
+
+        val content: Triple<String, String, String> =
+            Triple(contentReponse.data, contentReponse.encoding, contentReponse.mimeType)
 
         assertEquals("https://mozilla.org", url)
         assertEquals(Triple("data", "UTF-8", "text/html"), content)

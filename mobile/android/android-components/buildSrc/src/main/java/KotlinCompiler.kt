@@ -23,7 +23,6 @@ object KotlinCompiler {
         "browser-search",
         "browser-storage-sync",
         "browser-toolbar",
-        "concept-engine",
         "concept-toolbar",
         "feature-accounts",
         "feature-awesomebar",

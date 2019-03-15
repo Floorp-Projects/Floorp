@@ -7,20 +7,23 @@ package mozilla.components.concept.engine
 import android.content.Context
 import android.graphics.Bitmap
 import android.widget.FrameLayout
+import androidx.test.core.app.ApplicationProvider
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.RuntimeEnvironment
 import java.lang.ClassCastException
 
 @RunWith(RobolectricTestRunner::class)
 class EngineViewTest {
+    private val context: Context
+        get() = ApplicationProvider.getApplicationContext()
+
     @Test
     fun `asView method returns underlying Android view`() {
-        val engineView = createDummyEngineView(RuntimeEnvironment.application)
+        val engineView = createDummyEngineView(context)
 
         val view = engineView.asView()
 
@@ -35,7 +38,7 @@ class EngineViewTest {
 
     @Test
     fun lifecycleObserver() {
-        val engineView = spy(createDummyEngineView(RuntimeEnvironment.application))
+        val engineView = spy(createDummyEngineView(context))
         val observer = LifecycleObserver(engineView)
 
         observer.onCreate()
@@ -59,7 +62,7 @@ class EngineViewTest {
 
     private fun createDummyEngineView(context: Context): EngineView = DummyEngineView(context)
 
-    open class DummyEngineView(context: Context?) : FrameLayout(context), EngineView {
+    open class DummyEngineView(context: Context) : FrameLayout(context), EngineView {
         override fun captureThumbnail(onFinish: (Bitmap?) -> Unit) = Unit
         override fun render(session: EngineSession) {}
     }
