@@ -11932,11 +11932,14 @@ class MWasmDerivedPointer : public MUnaryInstruction,
 class MWasmLoadRef : public MUnaryInstruction, public NoTypePolicy::Data {
   AliasSet::Flag aliasSet_;
 
-  explicit MWasmLoadRef(MDefinition* valueAddr, AliasSet::Flag aliasSet)
+  explicit MWasmLoadRef(MDefinition* valueAddr, AliasSet::Flag aliasSet,
+                        bool isMovable = true)
       : MUnaryInstruction(classOpcode, valueAddr), aliasSet_(aliasSet) {
     MOZ_ASSERT(valueAddr->type() == MIRType::Pointer);
     setResultType(MIRType::RefOrNull);
-    setMovable();
+    if (isMovable) {
+      setMovable();
+    }
   }
 
  public:
