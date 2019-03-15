@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-var pdfjsVersion = '2.2.67';
-var pdfjsBuild = 'd587abbc';
+var pdfjsVersion = '2.2.71';
+var pdfjsBuild = '80135378';
 
 var pdfjsSharedUtil = __w_pdfjs_require__(1);
 
@@ -196,6 +196,7 @@ exports.createPromiseCapability = createPromiseCapability;
 exports.getVerbosityLevel = getVerbosityLevel;
 exports.info = info;
 exports.isArrayBuffer = isArrayBuffer;
+exports.isArrayEqual = isArrayEqual;
 exports.isBool = isBool;
 exports.isEmptyObj = isEmptyObj;
 exports.isNum = isNum;
@@ -974,6 +975,16 @@ function isArrayBuffer(v) {
   return typeof v === 'object' && v !== null && v.byteLength !== undefined;
 }
 
+function isArrayEqual(arr1, arr2) {
+  if (arr1.length !== arr2.length) {
+    return false;
+  }
+
+  return arr1.every(function (element, index) {
+    return element === arr2[index];
+  });
+}
+
 function isSpace(ch) {
   return ch === 0x20 || ch === 0x09 || ch === 0x0D || ch === 0x0A;
 }
@@ -1290,7 +1301,7 @@ function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
 
   return worker.messageHandler.sendWithPromise('GetDocRequest', {
     docId,
-    apiVersion: '2.2.67',
+    apiVersion: '2.2.71',
     source: {
       data: source.data,
       url: source.url,
@@ -1418,8 +1429,7 @@ class PDFDataRangeTransport {
 exports.PDFDataRangeTransport = PDFDataRangeTransport;
 
 class PDFDocumentProxy {
-  constructor(pdfInfo, transport, loadingTask) {
-    this.loadingTask = loadingTask;
+  constructor(pdfInfo, transport) {
     this._pdfInfo = pdfInfo;
     this._transport = transport;
   }
@@ -1502,6 +1512,10 @@ class PDFDocumentProxy {
 
   get loadingParams() {
     return this._transport.loadingParams;
+  }
+
+  get loadingTask() {
+    return this._transport.loadingTask;
   }
 
 }
@@ -2371,10 +2385,9 @@ class WorkerTransport {
     messageHandler.on('GetDoc', function ({
       pdfInfo
     }) {
-      this.numPages = pdfInfo.numPages;
-      this.pdfDocument = new PDFDocumentProxy(pdfInfo, this, loadingTask);
+      this._numPages = pdfInfo.numPages;
 
-      loadingTask._capability.resolve(this.pdfDocument);
+      loadingTask._capability.resolve(new PDFDocumentProxy(pdfInfo, this));
     }, this);
     messageHandler.on('PasswordRequest', function (exception) {
       this._passwordCapability = (0, _util.createPromiseCapability)();
@@ -2671,7 +2684,7 @@ class WorkerTransport {
   }
 
   getPage(pageNumber) {
-    if (!Number.isInteger(pageNumber) || pageNumber <= 0 || pageNumber > this.numPages) {
+    if (!Number.isInteger(pageNumber) || pageNumber <= 0 || pageNumber > this._numPages) {
       return Promise.reject(new Error('Invalid page request'));
     }
 
@@ -3033,9 +3046,9 @@ const InternalRenderTask = function InternalRenderTaskClosure() {
   return InternalRenderTask;
 }();
 
-const version = '2.2.67';
+const version = '2.2.71';
 exports.version = version;
-const build = 'd587abbc';
+const build = '80135378';
 exports.build = build;
 
 /***/ }),
