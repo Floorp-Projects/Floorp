@@ -341,6 +341,9 @@
 <!-- Localization note (tab_queue_prompt_settings_button): This button is shown if the user needs to
      enable a permission in Android's setting in order to enable tab queues. -->
 <!ENTITY tab_queue_prompt_settings_button "Go to Settings">
+<!-- Localization note (tab_queue_notification_prompt): This is the text of the default notification
+shown from Android O while a tab is being queued.-->
+<!ENTITY tab_queue_notification_prompt "Adding new tab to queue&#8230;">
 <!ENTITY tab_queue_notification_title "&brandShortName;">
 <!-- Localization note (tab_queue_notification_text_plural2) : The
      formatD is replaced with the number of tabs queued.  The

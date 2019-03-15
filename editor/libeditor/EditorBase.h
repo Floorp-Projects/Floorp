@@ -40,12 +40,12 @@
 
 class mozInlineSpellChecker;
 class nsAtom;
+class nsCaret;
 class nsIContent;
 class nsIDocumentStateListener;
 class nsIEditActionListener;
 class nsIEditorObserver;
 class nsINode;
-class nsIPresShell;
 class nsISupports;
 class nsITransferable;
 class nsITransaction;
@@ -77,6 +77,7 @@ class InsertNodeTransaction;
 class InsertTextTransaction;
 class JoinNodeTransaction;
 class PlaceholderTransaction;
+class PresShell;
 class SplitNodeResult;
 class SplitNodeTransaction;
 class TextComposition;
@@ -194,12 +195,19 @@ class EditorBase : public nsIEditor,
 
   Document* GetDocument() const { return mDocument; }
 
-  nsIPresShell* GetPresShell() const {
-    return mDocument ? mDocument->GetShell() : nullptr;
+  PresShell* GetPresShell() const {
+    return mDocument ? static_cast<PresShell*>(mDocument->GetShell()) : nullptr;
   }
   nsPresContext* GetPresContext() const {
-    nsIPresShell* presShell = GetPresShell();
+    PresShell* presShell = GetPresShell();
     return presShell ? presShell->GetPresContext() : nullptr;
+  }
+  already_AddRefed<nsCaret> GetCaret() const {
+    PresShell* presShell = GetPresShell();
+    if (NS_WARN_IF(!presShell)) {
+      return nullptr;
+    }
+    return presShell->GetCaret();
   }
 
   already_AddRefed<nsIWidget> GetWidget();
@@ -211,12 +219,7 @@ class EditorBase : public nsIEditor,
     if (!mDocument) {
       return nullptr;
     }
-    nsIPresShell* presShell = mDocument->GetShell();
-    if (!presShell) {
-      return nullptr;
-    }
-    nsISelectionController* sc = static_cast<PresShell*>(presShell);
-    return sc;
+    return static_cast<PresShell*>(mDocument->GetShell());
   }
 
   nsresult GetSelection(SelectionType aSelectionType,
