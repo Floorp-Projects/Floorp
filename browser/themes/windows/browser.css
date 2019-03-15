@@ -627,11 +627,6 @@ html|*.urlbar-input:-moz-lwtheme::placeholder,
 
 /* identity box */
 
-#identity-box:not(:active):-moz-focusring {
-  outline: 1px dotted;
-  outline-offset: -3px;
-}
-
 %include ../shared/identity-block/identity-block.inc.css
 
 /* autocomplete */
