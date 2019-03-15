@@ -30,6 +30,7 @@ using refcounted class nsIPrincipal from "mozilla/dom/PermissionMessageUtils.h";
 using refcounted class mozilla::dom::BrowsingContext from "mozilla/dom/BrowsingContext.h";
 using refcounted class nsIURI from "mozilla/ipc/URIUtils.h";
 using refcounted class nsIContentSecurityPolicy from "mozilla/dom/CSPMessageUtils.h";
+using refcounted class nsIReferrerInfo from "mozilla/dom/ReferrerInfoUtils.h";
 
 namespace mozilla {
 namespace dom {
@@ -197,12 +198,12 @@ struct WindowGlobalInit
 
 struct DocShellLoadStateInit
 {
-  nsIURI Referrer;
   nsIURI URI;
   nsIURI OriginalURI;
   nsIURI ResultPrincipalURI;
   bool ResultPrincipalURIIsSome;
   nsIPrincipal TriggeringPrincipal;
+  nsIReferrerInfo ReferrerInfo;
   bool KeepResultPrincipalURIIfSet;
   bool LoadReplace;
   bool InheritPrincipal;
@@ -210,8 +211,6 @@ struct DocShellLoadStateInit
   nsIPrincipal PrincipalToInherit;
   bool ForceAllowDataURI;
   bool OriginalFrameSrc;
-  bool SendReferrer;
-  uint32_t ReferrerPolicy;
   uint32_t LoadType;
   nsString Target;
   nsIURI BaseURI;
