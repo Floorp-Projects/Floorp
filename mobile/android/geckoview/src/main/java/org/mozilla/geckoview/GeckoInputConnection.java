@@ -591,9 +591,9 @@ import java.lang.reflect.Proxy;
     }
 
     @Override
-    public boolean sendKeyEvent(@NonNull KeyEvent event) {
-        event = translateKey(event.getKeyCode(), event);
-        mEditableClient.sendKeyEvent(getView(), event.getAction(), event);
+    public boolean sendKeyEvent(final @NonNull KeyEvent event) {
+        KeyEvent translatedEvent = translateKey(event.getKeyCode(), event);
+        mEditableClient.sendKeyEvent(getView(), event.getAction(), translatedEvent);
         return false; // seems to always return false
     }
 

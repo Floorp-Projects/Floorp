@@ -60,11 +60,12 @@ public class MatrixBlobCursor extends AbstractCursor {
         this.columnNames = columnNames;
         this.columnCount = columnNames.length;
 
-        if (initialCapacity < 1) {
-            initialCapacity = 1;
+        int capacity = initialCapacity;
+        if (capacity < 1) {
+            capacity = 1;
         }
 
-        this.data = new Object[columnCount * initialCapacity];
+        this.data = new Object[columnCount * capacity];
         this.allocationStack = new Throwable("allocationStack");
     }
 

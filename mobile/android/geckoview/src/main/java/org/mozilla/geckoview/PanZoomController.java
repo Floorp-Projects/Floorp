@@ -428,10 +428,10 @@ public class PanZoomController extends JNIObject {
         }
     }
 
-    private void synthesizeNativePointer(int source, int pointerId, int eventType,
-                                         int clientX, int clientY, double pressure,
-                                         int orientation)
-    {
+    private void synthesizeNativePointer(final int source, final int pointerId,
+                                         final int originalEventType,
+                                         final int clientX, final int clientY,
+                                         final double pressure, final int orientation) {
         if (mPointerState == null) {
             mPointerState = new SynthesizedEventState();
         }
@@ -440,7 +440,8 @@ public class PanZoomController extends JNIObject {
         int pointerIndex = mPointerState.getPointerIndex(pointerId);
 
         // Event-specific handling
-        switch (eventType) {
+        int eventType = originalEventType;
+        switch (originalEventType) {
             case MotionEvent.ACTION_POINTER_UP:
                 if (pointerIndex < 0) {
                     Log.w(LOGTAG, "Pointer-up for invalid pointer");

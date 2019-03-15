@@ -88,22 +88,25 @@ public final class GamepadUtils {
         // determine if they are swapped so the proper key codes can be mapped to the keys
         boolean areKeysSwapped = areSonyXperiaGamepadKeysSwapped();
 
+        int translatedKeyCode = keyCode;
         // If a Sony Xperia, remap the cross and circle buttons to buttons
         // A and B for the gamepad API
         switch (keyCode) {
             case KeyEvent.KEYCODE_BACK:
-                keyCode = (areKeysSwapped ? KeyEvent.KEYCODE_BUTTON_A : KeyEvent.KEYCODE_BUTTON_B);
+                translatedKeyCode = (areKeysSwapped ? KeyEvent.KEYCODE_BUTTON_A
+                                                    : KeyEvent.KEYCODE_BUTTON_B);
                 break;
 
             case KeyEvent.KEYCODE_DPAD_CENTER:
-                keyCode = (areKeysSwapped ? KeyEvent.KEYCODE_BUTTON_B : KeyEvent.KEYCODE_BUTTON_A);
+                translatedKeyCode = (areKeysSwapped ? KeyEvent.KEYCODE_BUTTON_B
+                                                    : KeyEvent.KEYCODE_BUTTON_A);
                 break;
 
             default:
                 return event;
         }
 
-        return new KeyEvent(event.getAction(), keyCode);
+        return new KeyEvent(event.getAction(), translatedKeyCode);
     }
 
     public static boolean isSonyXperiaGamepadKeyEvent(KeyEvent event) {
