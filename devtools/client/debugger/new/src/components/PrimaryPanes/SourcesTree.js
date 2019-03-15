@@ -19,7 +19,8 @@ import {
   getDisplayedSourcesForThread,
   getFocusedSourceItem,
   getWorkerByThread,
-  getWorkerCount
+  getWorkerCount,
+  getContext
 } from "../../selectors";
 
 import { getGeneratedSourceByURL } from "../../reducers/sources";
@@ -51,11 +52,12 @@ import type {
   TreeDirectory,
   ParentMap
 } from "../../utils/sources-tree/types";
-import type { Worker, Source } from "../../types";
+import type { Worker, Source, Context } from "../../types";
 import type { SourcesMap, State as AppState } from "../../reducers/types";
 import type { Item } from "../shared/ManagedTree";
 
 type Props = {
+  cx: Context,
   thread: string,
   worker: Worker,
   sources: SourcesMap,
@@ -156,12 +158,12 @@ class SourcesTree extends Component<Props, State> {
 
   selectItem = (item: TreeNode) => {
     if (item.type == "source" && !Array.isArray(item.contents)) {
-      this.props.selectSource(item.contents.id);
+      this.props.selectSource(this.props.cx, item.contents.id);
     }
   };
 
   onFocus = (item: TreeNode) => {
-    this.props.focusItem({ thread: this.props.thread, item });
+    this.props.focusItem(this.props.cx, { thread: this.props.thread, item });
   };
 
   onActivate = (item: TreeNode) => {
@@ -371,6 +373,7 @@ const mapStateToProps = (state, props) => {
   const displayedSources = getDisplayedSourcesForThread(state, thread);
 
   return {
+    cx: getContext(state),
     shownSource: getSourceForTree(state, displayedSources, shownSource, thread),
     selectedSource: getSourceForTree(
       state,

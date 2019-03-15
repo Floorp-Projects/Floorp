@@ -15,7 +15,8 @@ import FrameComponent from "./Frame";
 
 import "./Group.css";
 
-import type { Frame } from "../../../types";
+import actions from "../../../actions";
+import type { Frame, ThreadContext } from "../../../types";
 import Badge from "../../shared/Badge";
 import FrameIndent from "./FrameIndent";
 
@@ -39,9 +40,10 @@ function FrameLocation({ frame, expanded }: FrameLocationProps) {
 FrameLocation.displayName = "FrameLocation";
 
 type Props = {
+  cx: ThreadContext,
   group: Frame[],
   selectedFrame: Frame,
-  selectFrame: Function,
+  selectFrame: typeof actions.selectFrame,
   toggleFrameworkGrouping: Function,
   copyStackTrace: Function,
   toggleBlackBox: Function,
@@ -88,6 +90,7 @@ export default class Group extends Component<Props, State> {
 
   renderFrames() {
     const {
+      cx,
       group,
       selectFrame,
       selectedFrame,
@@ -114,6 +117,7 @@ export default class Group extends Component<Props, State> {
           }
           return acc.concat(
             <FrameComponent
+              cx={cx}
               copyStackTrace={copyStackTrace}
               frame={frame}
               frameworkGroupingOn={frameworkGroupingOn}

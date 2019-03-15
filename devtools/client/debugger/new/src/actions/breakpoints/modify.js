@@ -8,7 +8,8 @@ import type { ThunkArgs } from "../types";
 import type {
   Breakpoint,
   BreakpointOptions,
-  SourceLocation
+  SourceLocation,
+  Context
 } from "../../types";
 
 import {
@@ -76,7 +77,7 @@ function clientRemoveBreakpoint(breakpoint: Breakpoint) {
   };
 }
 
-export function enableBreakpoint(initialBreakpoint: Breakpoint) {
+export function enableBreakpoint(cx: Context, initialBreakpoint: Breakpoint) {
   return async ({ dispatch, getState, client, sourceMaps }: ThunkArgs) => {
     const breakpoint = getBreakpoint(getState(), initialBreakpoint.location);
     if (!breakpoint || !breakpoint.disabled) {
@@ -85,6 +86,7 @@ export function enableBreakpoint(initialBreakpoint: Breakpoint) {
 
     dispatch({
       type: "SET_BREAKPOINT",
+      cx,
       breakpoint: { ...breakpoint, disabled: false }
     });
 
@@ -93,6 +95,7 @@ export function enableBreakpoint(initialBreakpoint: Breakpoint) {
 }
 
 export function addBreakpoint(
+  cx: Context,
   initialLocation: SourceLocation,
   options: BreakpointOptions = {},
   disabled: boolean = false
@@ -102,7 +105,7 @@ export function addBreakpoint(
 
     const { sourceId, column } = initialLocation;
 
-    await dispatch(setBreakpointPositions(sourceId));
+    await dispatch(setBreakpointPositions(cx, sourceId));
 
     const position = column
       ? getBreakpointPositionsForLocation(getState(), initialLocation)
@@ -117,10 +120,13 @@ export function addBreakpoint(
     // Both the original and generated sources must be loaded to get the
     // breakpoint's text.
     await dispatch(
-      loadSourceText(getSourceFromId(getState(), location.sourceId))
+      loadSourceText(cx, getSourceFromId(getState(), location.sourceId))
     );
     await dispatch(
-      loadSourceText(getSourceFromId(getState(), generatedLocation.sourceId))
+      loadSourceText(
+        cx,
+        getSourceFromId(getState(), generatedLocation.sourceId)
+      )
     );
 
     const source = getSourceFromId(getState(), location.sourceId);
@@ -158,12 +164,14 @@ export function addBreakpoint(
     if (id != generatedId && getBreakpoint(getState(), generatedLocation)) {
       dispatch({
         type: "REMOVE_BREAKPOINT",
+        cx,
         location: generatedLocation
       });
     }
 
     dispatch({
       type: "SET_BREAKPOINT",
+      cx,
       breakpoint
     });
 
@@ -183,7 +191,7 @@ export function addBreakpoint(
  * @memberof actions/breakpoints
  * @static
  */
-export function removeBreakpoint(initialBreakpoint: Breakpoint) {
+export function removeBreakpoint(cx: Context, initialBreakpoint: Breakpoint) {
   return ({ dispatch, getState, client }: ThunkArgs) => {
     recordEvent("remove_breakpoint");
 
@@ -194,6 +202,7 @@ export function removeBreakpoint(initialBreakpoint: Breakpoint) {
 
     dispatch({
       type: "REMOVE_BREAKPOINT",
+      cx,
       location: breakpoint.location
     });
 
@@ -212,7 +221,7 @@ export function removeBreakpoint(initialBreakpoint: Breakpoint) {
  * @memberof actions/breakpoints
  * @static
  */
-export function disableBreakpoint(initialBreakpoint: Breakpoint) {
+export function disableBreakpoint(cx: Context, initialBreakpoint: Breakpoint) {
   return ({ dispatch, getState, client }: ThunkArgs) => {
     const breakpoint = getBreakpoint(getState(), initialBreakpoint.location);
     if (!breakpoint || breakpoint.disabled) {
@@ -221,6 +230,7 @@ export function disableBreakpoint(initialBreakpoint: Breakpoint) {
 
     dispatch({
       type: "SET_BREAKPOINT",
+      cx,
       breakpoint: { ...breakpoint, disabled: true }
     });
 
@@ -240,13 +250,14 @@ export function disableBreakpoint(initialBreakpoint: Breakpoint) {
  *        Any options to set on the breakpoint
  */
 export function setBreakpointOptions(
+  cx: Context,
   location: SourceLocation,
   options: BreakpointOptions = {}
 ) {
   return ({ dispatch, getState, client, sourceMaps }: ThunkArgs) => {
     let breakpoint = getBreakpoint(getState(), location);
     if (!breakpoint) {
-      return dispatch(addBreakpoint(location, options));
+      return dispatch(addBreakpoint(cx, location, options));
     }
 
     // Note: setting a breakpoint's options implicitly enables it.
@@ -254,6 +265,7 @@ export function setBreakpointOptions(
 
     dispatch({
       type: "SET_BREAKPOINT",
+      cx,
       breakpoint
     });
 

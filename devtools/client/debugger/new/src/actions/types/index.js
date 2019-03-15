@@ -4,7 +4,7 @@
 
 // @flow
 
-import type { WorkerList, MainThread } from "../../types";
+import type { WorkerList, MainThread, Context } from "../../types";
 import type { State } from "../../reducers/types";
 import type { MatchedLocations } from "../../reducers/file-search";
 import type { TreeNode } from "../../utils/sources-tree/types";
@@ -75,18 +75,23 @@ export type FocusItem = {
 
 export type SourceTreeAction =
   | {| +type: "SET_EXPANDED_STATE", +thread: string, +expanded: any |}
-  | {| +type: "SET_FOCUSED_SOURCE_ITEM", item: FocusItem |};
+  | {| +type: "SET_FOCUSED_SOURCE_ITEM", +cx: Context, item: FocusItem |};
 
 export type ProjectTextSearchAction =
-  | {| +type: "ADD_QUERY", +query: string |}
+  | {| +type: "ADD_QUERY", +cx: Context, +query: string |}
   | {|
       +type: "ADD_SEARCH_RESULT",
+      +cx: Context,
       +result: ProjectTextSearchResult
     |}
-  | {| +type: "UPDATE_STATUS", +status: string |}
-  | {| +type: "CLEAR_SEARCH_RESULTS" |}
-  | {| +type: "ADD_ONGOING_SEARCH", +ongoingSearch: SearchOperation |}
-  | {| +type: "CLEAR_SEARCH" |};
+  | {| +type: "UPDATE_STATUS", +cx: Context, +status: string |}
+  | {| +type: "CLEAR_SEARCH_RESULTS", +cx: Context |}
+  | {|
+      +type: "ADD_ONGOING_SEARCH",
+      +cx: Context,
+      +ongoingSearch: SearchOperation
+    |}
+  | {| +type: "CLEAR_SEARCH", +cx: Context |};
 
 export type FileTextSearchModifier =
   | "caseSensitive"
@@ -96,14 +101,17 @@ export type FileTextSearchModifier =
 export type FileTextSearchAction =
   | {|
       +type: "TOGGLE_FILE_SEARCH_MODIFIER",
+      +cx: Context,
       +modifier: FileTextSearchModifier
     |}
   | {|
       +type: "UPDATE_FILE_SEARCH_QUERY",
+      +cx: Context,
       +query: string
     |}
   | {|
       +type: "UPDATE_SEARCH_RESULTS",
+      +cx: Context,
       +results: {
         matches: MatchedLocations[],
         matchIndex: number,
@@ -117,14 +125,16 @@ export type QuickOpenAction =
   | {| +type: "OPEN_QUICK_OPEN", +query?: string |}
   | {| +type: "CLOSE_QUICK_OPEN" |};
 
-export type DebugeeAction =
+export type DebuggeeAction =
   | {|
       +type: "SET_WORKERS",
+      +cx: Context,
       +workers: WorkerList,
       +mainThread: string
     |}
   | {|
       +type: "SELECT_THREAD",
+      +cx: Context,
       +thread: string
     |};
 
@@ -156,5 +166,5 @@ export type Action =
   | QuickOpenAction
   | FileTextSearchAction
   | ProjectTextSearchAction
-  | DebugeeAction
+  | DebuggeeAction
   | SourceTreeAction;

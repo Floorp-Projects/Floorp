@@ -85,39 +85,39 @@ describe("ui", () => {
 
 describe("setProjectDirectoryRoot", () => {
   it("should set domain directory as root", () => {
-    const { dispatch, getState } = createStore();
-    dispatch(actions.setProjectDirectoryRoot("example.com"));
+    const { dispatch, getState, cx } = createStore();
+    dispatch(actions.setProjectDirectoryRoot(cx, "example.com"));
     expect(getProjectDirectoryRoot(getState())).toBe("example.com");
   });
 
   it("should set a directory as root directory", () => {
-    const { dispatch, getState } = createStore();
-    dispatch(actions.setProjectDirectoryRoot("/example.com/foo"));
+    const { dispatch, getState, cx } = createStore();
+    dispatch(actions.setProjectDirectoryRoot(cx, "/example.com/foo"));
     expect(getProjectDirectoryRoot(getState())).toBe("/example.com/foo");
   });
 
   it("should add to the directory ", () => {
-    const { dispatch, getState } = createStore();
-    dispatch(actions.setProjectDirectoryRoot("/example.com/foo"));
-    dispatch(actions.setProjectDirectoryRoot("/foo/bar"));
+    const { dispatch, getState, cx } = createStore();
+    dispatch(actions.setProjectDirectoryRoot(cx, "/example.com/foo"));
+    dispatch(actions.setProjectDirectoryRoot(cx, "/foo/bar"));
     expect(getProjectDirectoryRoot(getState())).toBe("/example.com/foo/bar");
   });
 
   it("should update the directory ", () => {
-    const { dispatch, getState } = createStore();
-    dispatch(actions.setProjectDirectoryRoot("/example.com/foo"));
-    dispatch(actions.clearProjectDirectoryRoot());
-    dispatch(actions.setProjectDirectoryRoot("/example.com/bar"));
+    const { dispatch, getState, cx } = createStore();
+    dispatch(actions.setProjectDirectoryRoot(cx, "/example.com/foo"));
+    dispatch(actions.clearProjectDirectoryRoot(cx));
+    dispatch(actions.setProjectDirectoryRoot(cx, "/example.com/bar"));
     expect(getProjectDirectoryRoot(getState())).toBe("/example.com/bar");
   });
 
   it("should filter sources", async () => {
     const store = createStore({});
-    const { dispatch, getState } = store;
+    const { dispatch, getState, cx } = store;
     await dispatch(actions.newSource(makeSource("js/scopes.js")));
     await dispatch(actions.newSource(makeSource("lib/vendor.js")));
 
-    dispatch(actions.setProjectDirectoryRoot("localhost:8000/examples/js"));
+    dispatch(actions.setProjectDirectoryRoot(cx, "localhost:8000/examples/js"));
 
     const filteredSourcesByThread = getDisplayedSources(getState());
     const filteredSources = Object.values(filteredSourcesByThread)[0];
@@ -131,16 +131,16 @@ describe("setProjectDirectoryRoot", () => {
   });
 
   it("should update the child directory ", () => {
-    const { dispatch, getState } = createStore();
-    dispatch(actions.setProjectDirectoryRoot("example.com"));
-    dispatch(actions.setProjectDirectoryRoot("example.com/foo/bar"));
+    const { dispatch, getState, cx } = createStore();
+    dispatch(actions.setProjectDirectoryRoot(cx, "example.com"));
+    dispatch(actions.setProjectDirectoryRoot(cx, "example.com/foo/bar"));
     expect(getProjectDirectoryRoot(getState())).toBe("example.com/foo/bar");
   });
 
   it("should update the child directory when domain name is Webpack://", () => {
-    const { dispatch, getState } = createStore();
-    dispatch(actions.setProjectDirectoryRoot("webpack://"));
-    dispatch(actions.setProjectDirectoryRoot("webpack:///app"));
+    const { dispatch, getState, cx } = createStore();
+    dispatch(actions.setProjectDirectoryRoot(cx, "webpack://"));
+    dispatch(actions.setProjectDirectoryRoot(cx, "webpack:///app"));
     expect(getProjectDirectoryRoot(getState())).toBe("webpack:///app");
   });
 });

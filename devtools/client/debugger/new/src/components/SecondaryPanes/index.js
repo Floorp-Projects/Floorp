@@ -21,7 +21,8 @@ import {
   getShouldPauseOnExceptions,
   getShouldPauseOnCaughtExceptions,
   getWorkers,
-  getCurrentThread
+  getCurrentThread,
+  getThreadContext
 } from "../../selectors";
 
 import AccessibleImage from "../shared/AccessibleImage";
@@ -42,7 +43,7 @@ import Scopes from "./Scopes";
 
 import "./SecondaryPanes.css";
 
-import type { Expression, Frame, WorkerList } from "../../types";
+import type { Expression, Frame, WorkerList, ThreadContext } from "../../types";
 
 type AccordionPaneItem = {
   header: string,
@@ -72,6 +73,7 @@ type State = {
 };
 
 type Props = {
+  cx: ThreadContext,
   expressions: List<Expression>,
   hasFrames: boolean,
   horizontal: boolean,
@@ -114,6 +116,7 @@ class SecondaryPanes extends Component<Props, State> {
 
   renderBreakpointsToggle() {
     const {
+      cx,
       toggleAllBreakpoints,
       breakpoints,
       breakpointsDisabled
@@ -135,7 +138,7 @@ class SecondaryPanes extends Component<Props, State> {
       key: "breakpoints-toggle",
       onChange: e => {
         e.stopPropagation();
-        toggleAllBreakpoints(!breakpointsDisabled);
+        toggleAllBreakpoints(cx, !breakpointsDisabled);
       },
       onClick: e => e.stopPropagation(),
       checked: !breakpointsDisabled && !isIndeterminate,
@@ -162,7 +165,7 @@ class SecondaryPanes extends Component<Props, State> {
         debugBtn(
           evt => {
             evt.stopPropagation();
-            this.props.evaluateExpressions();
+            this.props.evaluateExpressions(this.props.cx);
           },
           "refresh",
           "refresh",
@@ -462,6 +465,7 @@ const mapStateToProps = state => {
   const thread = getCurrentThread(state);
 
   return {
+    cx: getThreadContext(state),
     expressions: getExpressions(state),
     hasFrames: !!getTopFrame(state, thread),
     breakpoints: getBreakpointsList(state),

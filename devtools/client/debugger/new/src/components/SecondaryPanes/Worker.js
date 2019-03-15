@@ -9,13 +9,14 @@ import { connect } from "../../utils/connect";
 import classnames from "classnames";
 
 import actions from "../../actions";
-import { getCurrentThread, getIsPaused } from "../../selectors";
+import { getCurrentThread, getIsPaused, getContext } from "../../selectors";
 import { getDisplayName, isWorker } from "../../utils/workers";
 import AccessibleImage from "../shared/AccessibleImage";
 
-import type { Thread } from "../../types";
+import type { Context, Thread } from "../../types";
 
 type Props = {
+  cx: Context,
   selectThread: typeof actions.selectThread,
   isPaused: boolean,
   thread: Thread,
@@ -25,7 +26,7 @@ type Props = {
 export class Worker extends Component<Props> {
   onSelectThread = () => {
     const { thread } = this.props;
-    this.props.selectThread(thread.actor);
+    this.props.selectThread(this.props.cx, thread.actor);
   };
 
   render() {
@@ -57,6 +58,7 @@ export class Worker extends Component<Props> {
 }
 
 const mapStateToProps = (state, props: Props) => ({
+  cx: getContext(state),
   currentThread: getCurrentThread(state),
   isPaused: getIsPaused(state, props.thread.actor)
 });

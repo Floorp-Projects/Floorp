@@ -14,7 +14,8 @@ import {
   getActiveSearch,
   getProjectDirectoryRoot,
   getSelectedPrimaryPaneTab,
-  getThreads
+  getThreads,
+  getContext
 } from "../../selectors";
 import { features, prefs } from "../../utils/prefs";
 import { connect } from "../../utils/connect";
@@ -26,7 +27,7 @@ import AccessibleImage from "../shared/AccessibleImage";
 
 import type { SourcesMapByThread } from "../../reducers/types";
 import type { SelectedPrimaryPaneTabType } from "../../selectors";
-import type { Thread } from "../../types";
+import type { Thread, Context } from "../../types";
 
 import "./Sources.css";
 
@@ -35,6 +36,7 @@ type State = {
 };
 
 type Props = {
+  cx: Context,
   selectedTab: SelectedPrimaryPaneTabType,
   sources: SourcesMapByThread,
   horizontal: boolean,
@@ -101,7 +103,7 @@ class PrimaryPanes extends Component<Props, State> {
   }
 
   renderProjectRootHeader() {
-    const { projectRoot } = this.props;
+    const { cx, projectRoot } = this.props;
 
     if (!projectRoot) {
       return null;
@@ -113,7 +115,7 @@ class PrimaryPanes extends Component<Props, State> {
       <div key="root" className="sources-clear-root-container">
         <button
           className="sources-clear-root"
-          onClick={() => this.props.clearProjectDirectoryRoot()}
+          onClick={() => this.props.clearProjectDirectoryRoot(cx)}
           title={L10N.getStr("removeDirectoryRoot.label")}
         >
           <AccessibleImage className="home" />
@@ -164,6 +166,7 @@ class PrimaryPanes extends Component<Props, State> {
 }
 
 const mapStateToProps = state => ({
+  cx: getContext(state),
   selectedTab: getSelectedPrimaryPaneTab(state),
   sources: getDisplayedSources(state),
   sourceSearchOn: getActiveSearch(state) === "source",
