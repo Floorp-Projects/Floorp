@@ -15,26 +15,26 @@ import android.support.annotation.NonNull;
  * Helper class to run code blocks depending on whether a user has granted or denied certain runtime permissions.
  */
 public class PermissionBlock {
-    private final PermissionsHelper helper;
+    private final PermissionsHelper mHelper;
 
-    private Context context;
-    private String[] permissions;
-    private boolean onUIThread;
-    private boolean onBackgroundThread;
-    private Runnable onPermissionsGranted;
-    private Runnable onPermissionsDenied;
-    private boolean doNotPrompt;
+    private Context mContext;
+    private String[] mPermissions;
+    private boolean mOnUiThread;
+    private boolean mOnBackgroundThread;
+    private Runnable mOnPermissionsGranted;
+    private Runnable mOnPermissionsDenied;
+    private boolean mDoNotPrompt;
 
     /* package-private */ PermissionBlock(final Context context, final PermissionsHelper helper) {
-        this.context = context;
-        this.helper = helper;
+        mContext = context;
+        mHelper = helper;
     }
 
     /**
      * Determine whether the app has been granted the specified permissions.
      */
     public PermissionBlock withPermissions(final @NonNull String... permissions) {
-        this.permissions = permissions;
+        mPermissions = permissions;
         return this;
     }
 
@@ -42,7 +42,7 @@ public class PermissionBlock {
      * Execute all callbacks on the UI thread.
      */
     public PermissionBlock onUIThread() {
-        this.onUIThread = true;
+        mOnUiThread = true;
         return this;
     }
 
@@ -50,7 +50,7 @@ public class PermissionBlock {
      * Execute all callbacks on the background thread.
      */
     public PermissionBlock onBackgroundThread() {
-        this.onBackgroundThread = true;
+        mOnBackgroundThread = true;
         return this;
     }
 
@@ -60,7 +60,7 @@ public class PermissionBlock {
      * thread has been explicitly specified.
      */
     public PermissionBlock doNotPrompt() {
-        doNotPrompt = true;
+        mDoNotPrompt = true;
         return this;
     }
 
@@ -88,38 +88,38 @@ public class PermissionBlock {
      * user if needed.
      */
     public void run(final Runnable onPermissionsGranted) {
-        if (!doNotPrompt && !(context instanceof Activity)) {
+        if (!mDoNotPrompt && !(mContext instanceof Activity)) {
             throw new IllegalStateException("You need to either specify doNotPrompt() or pass in an Activity context");
         }
 
-        this.onPermissionsGranted = onPermissionsGranted;
+        mOnPermissionsGranted = onPermissionsGranted;
 
-        if (hasPermissions(context)) {
+        if (hasPermissions(mContext)) {
             onPermissionsGranted();
-        } else if (doNotPrompt) {
+        } else if (mDoNotPrompt) {
             onPermissionsDenied();
         } else {
-            Permissions.prompt((Activity) context, this);
+            Permissions.prompt((Activity) mContext, this);
         }
 
         // This reference is no longer needed. Let's clear it now to avoid memory leaks.
-        context = null;
+        mContext = null;
     }
 
     /**
      * Execute this fallback if at least one permission has not been granted.
      */
     public PermissionBlock andFallback(final @NonNull Runnable onPermissionsDenied) {
-        this.onPermissionsDenied = onPermissionsDenied;
+        mOnPermissionsDenied = onPermissionsDenied;
         return this;
     }
 
     /* package-private */ void onPermissionsGranted() {
-        executeRunnable(onPermissionsGranted);
+        executeRunnable(mOnPermissionsGranted);
     }
 
     /* package-private */ void onPermissionsDenied() {
-        executeRunnable(onPermissionsDenied);
+        executeRunnable(mOnPermissionsDenied);
     }
 
     private void executeRunnable(final Runnable runnable) {
@@ -127,13 +127,13 @@ public class PermissionBlock {
             return;
         }
 
-        if (onUIThread && onBackgroundThread) {
+        if (mOnUiThread && mOnBackgroundThread) {
             throw new IllegalStateException("Cannot run callback on more than one thread");
         }
 
-        if (onUIThread && !ThreadUtils.isOnUiThread()) {
+        if (mOnUiThread && !ThreadUtils.isOnUiThread()) {
             ThreadUtils.postToUiThread(runnable);
-        } else if (onBackgroundThread && !ThreadUtils.isOnBackgroundThread()) {
+        } else if (mOnBackgroundThread && !ThreadUtils.isOnBackgroundThread()) {
             ThreadUtils.postToBackgroundThread(runnable);
         } else {
             runnable.run();
@@ -141,10 +141,10 @@ public class PermissionBlock {
     }
 
     /* package-private */ String[] getPermissions() {
-        return permissions;
+        return mPermissions;
     }
 
     /* package-private */ boolean hasPermissions(final Context context) {
-        return helper.hasPermissions(context, permissions);
+        return mHelper.hasPermissions(context, mPermissions);
     }
 }

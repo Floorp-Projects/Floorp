@@ -405,8 +405,8 @@ public final class EventDispatcher extends JNIObject {
     }
 
     private static class JavaCallbackDelegate implements EventCallback {
-        private final Thread originalThread = Thread.currentThread();
-        private final EventCallback callback;
+        private final Thread mOriginalThread = Thread.currentThread();
+        private final EventCallback mCallback;
 
         public static EventCallback wrap(final EventCallback callback) {
             if (callback == null) {
@@ -420,7 +420,7 @@ public final class EventDispatcher extends JNIObject {
         }
 
         JavaCallbackDelegate(final EventCallback callback) {
-            this.callback = callback;
+            mCallback = callback;
         }
 
         private void makeCallback(final boolean callSuccess, final Object rawResponse) {
@@ -445,11 +445,11 @@ public final class EventDispatcher extends JNIObject {
 
             // Call back synchronously if we happen to be on the same thread as the thread
             // making the original request.
-            if (ThreadUtils.isOnThread(originalThread)) {
+            if (ThreadUtils.isOnThread(mOriginalThread)) {
                 if (callSuccess) {
-                    callback.sendSuccess(response);
+                    mCallback.sendSuccess(response);
                 } else {
-                    callback.sendError(response);
+                    mCallback.sendError(response);
                 }
                 return;
             }
@@ -457,10 +457,10 @@ public final class EventDispatcher extends JNIObject {
             // Make callback on the thread of the original request, if the original thread
             // is the UI or Gecko thread. Otherwise default to the background thread.
             final Handler handler =
-                    originalThread == ThreadUtils.getUiThread() ? ThreadUtils.getUiHandler() :
-                    originalThread == ThreadUtils.sGeckoThread ? ThreadUtils.sGeckoHandler :
+                    mOriginalThread == ThreadUtils.getUiThread() ? ThreadUtils.getUiHandler() :
+                    mOriginalThread == ThreadUtils.sGeckoThread ? ThreadUtils.sGeckoHandler :
                                                                  ThreadUtils.getBackgroundHandler();
-            final EventCallback callback = this.callback;
+            final EventCallback callback = mCallback;
 
             handler.post(new Runnable() {
                 @Override
