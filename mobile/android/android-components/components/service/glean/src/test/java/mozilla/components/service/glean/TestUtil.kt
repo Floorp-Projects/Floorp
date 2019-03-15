@@ -180,7 +180,8 @@ internal fun isWorkScheduled(tag: String): Boolean {
  */
 internal fun triggerWorkManager() {
     // Check that the work is scheduled
-    Assert.assertTrue(isWorkScheduled(PingUploadWorker.PING_WORKER_TAG))
+    Assert.assertTrue("A scheduled PingUploadWorker must exist",
+        isWorkScheduled(PingUploadWorker.PING_WORKER_TAG))
 
     // Since WorkManager does not properly run in tests, simulate the work being done
     GlobalScope.launch(Dispatchers.IO) {

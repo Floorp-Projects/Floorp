@@ -12,6 +12,7 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.work.testing.WorkManagerTestInitHelper
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.ObsoleteCoroutinesApi
+import kotlinx.coroutines.runBlocking
 import mozilla.components.service.glean.storages.StringsStorageEngine
 import mozilla.components.service.glean.scheduler.GleanLifecycleObserver
 import mozilla.components.service.glean.scheduler.PingUploadWorker
@@ -237,7 +238,9 @@ class GleanTest {
         val gleanSpy = spy<GleanInternalAPI>(GleanInternalAPI::class.java)
 
         gleanSpy.initialized = false
-        gleanSpy.handleBackgroundEvent()
+        runBlocking {
+            gleanSpy.handleBackgroundEvent()
+        }
         assertFalse(isWorkScheduled(PingUploadWorker.PING_WORKER_TAG))
     }
 
@@ -245,8 +248,9 @@ class GleanTest {
     fun `Don't schedule pings if metrics disabled`() {
         Glean.setUploadEnabled(false)
 
-        Glean.handleBackgroundEvent()
-
+        runBlocking {
+            Glean.handleBackgroundEvent()
+        }
         assertFalse(isWorkScheduled(PingUploadWorker.PING_WORKER_TAG))
     }
 
@@ -254,7 +258,9 @@ class GleanTest {
     fun `Don't schedule pings if there is no ping content`() {
         resetGlean(getContextWithMockedInfo())
 
-        Glean.handleBackgroundEvent()
+        runBlocking {
+            Glean.handleBackgroundEvent()
+        }
 
         // We should only have a baseline ping and no events or metrics pings since nothing was
         // recorded

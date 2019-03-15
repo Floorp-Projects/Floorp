@@ -52,6 +52,7 @@ internal class PingStorageEngine(context: Context) {
      * @param ping Serialized JSON string representing the ping payload
      */
     fun store(uuidFileName: UUID, pingPath: String, pingData: String): Job {
+        logger.debug("Storing ping $uuidFileName in $pingPath")
         return GlobalScope.launch(KotlinDispatchers.IO) {
             // Check that the director exists and create it if needed
             ensureDirectoryExists(storageDirectory)

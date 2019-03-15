@@ -44,7 +44,10 @@ interface CommonMetricData {
 
     companion object {
         internal const val DEFAULT_STORAGE_NAME = "default"
-        private const val JOB_TIMEOUT_MS = 250L
+        // The job timeout is useful in tests, which are usually running on CI
+        // infrastructure. The timeout needs to be reasonably high to account for
+        // slow or under-stress hardware.
+        private const val JOB_TIMEOUT_MS = 5000L
     }
 
     fun shouldRecord(logger: Logger): Boolean {

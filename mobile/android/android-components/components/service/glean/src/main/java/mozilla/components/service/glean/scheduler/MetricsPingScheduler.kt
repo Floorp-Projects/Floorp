@@ -201,6 +201,7 @@ internal class MetricsPingScheduler(val applicationContext: Context) {
             // The ping wasn't already sent today. Are we overdue or just waiting for
             // the right time?
             isAfterDueTime(now) -> {
+                logger.info("The 'metrics' ping is scheduled for immediate collection")
                 // The reason why we're collecting the "metrics" ping in the `Dispatchers.API`
                 // context is that we want to make sure no other metric API adds data before
                 // the ping is collected. All the exposed metrics API dispatch calls to the
@@ -214,6 +215,7 @@ internal class MetricsPingScheduler(val applicationContext: Context) {
             }
             else -> {
                 // This covers (3).
+                logger.info("The 'metrics' collection scheduled for the next calendar day")
                 schedulePingCollection(now, sendTheNextCalendarDay = false)
             }
         }

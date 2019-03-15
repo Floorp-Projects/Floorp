@@ -119,6 +119,7 @@ internal class PingMaker(
      * @return a string holding the data for the ping, or null if there is no data to send.
      */
     fun collect(storage: String): String? {
+        logger.debug("Collecting $storage")
         val jsonPing = storageManager.collect(storage)
 
         // Return null if there is nothing in the jsonPing object so that this can be used by

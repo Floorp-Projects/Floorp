@@ -262,7 +262,7 @@ class MetricsPingSchedulerTest {
 
             val expectedValue = "test-only metric"
             testMetric.set(expectedValue)
-            assertTrue(testMetric.testHasValue())
+            assertTrue("The initial test data must have been recorded", testMetric.testHasValue())
 
             // Manually call the function to trigger the collection.
             Glean.metricsPingScheduler.collectPingAndReschedule(Calendar.getInstance())
@@ -272,14 +272,15 @@ class MetricsPingSchedulerTest {
 
             // Fetch the ping from the server and decode its JSON body.
             val request = server.takeRequest(20L, AndroidTimeUnit.SECONDS)
-            assertEquals("POST", request.method)
             val metricsJsonData = request.body.readUtf8()
             val metricsJson = JSONObject(metricsJsonData)
 
             // Validate the received data.
             checkPingSchema(metricsJson)
-            assertEquals("metrics", metricsJson.getJSONObject("ping_info")["ping_type"])
+            assertEquals("The received ping must be a 'metrics' ping",
+                "metrics", metricsJson.getJSONObject("ping_info")["ping_type"])
             assertEquals(
+                "The reported metric must contain the expected value",
                 expectedValue,
                 metricsJson.getJSONObject("metrics")
                     .getJSONObject("string")
@@ -420,7 +421,7 @@ class MetricsPingSchedulerTest {
         // Record the data we expect to be in the final metrics ping.
         val expectedValue = "expected_data!"
         stringMetric.set(expectedValue)
-        assertTrue(stringMetric.testHasValue())
+        assertTrue("The initial expected data must be recorded", stringMetric.testHasValue())
 
         // Pretend glean is disabled. This is used so that any API call will be discarded and
         // glean will init again.
@@ -477,14 +478,15 @@ class MetricsPingSchedulerTest {
             }
 
             // Parse the received ping payload to a JSON object.
-            assertEquals("POST", request.method)
             val metricsJsonData = request.body.readUtf8()
             val metricsJson = JSONObject(metricsJsonData)
 
             // Validate the received data.
             checkPingSchema(metricsJson)
-            assertEquals("metrics", metricsJson.getJSONObject("ping_info")["ping_type"])
+            assertEquals("The received ping must be a 'metrics' ping",
+                "metrics", metricsJson.getJSONObject("ping_info")["ping_type"])
             assertEquals(
+                "The reported metric must contain the expected value",
                 expectedValue,
                 metricsJson.getJSONObject("metrics")
                     .getJSONObject("string")
