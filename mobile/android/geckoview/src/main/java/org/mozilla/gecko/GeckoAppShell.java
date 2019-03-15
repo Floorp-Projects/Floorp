@@ -393,7 +393,7 @@ public class GeckoAppShell
     }
 
     @WrapForJNI(calledFrom = "ui", dispatchTo = "gecko")
-    /* package */ static native void onSensorChanged(int hal_type, float x, float y, float z,
+    /* package */ static native void onSensorChanged(int halType, float x, float y, float z,
                                                      float w, long time);
 
     @WrapForJNI(calledFrom = "any", dispatchTo = "gecko")

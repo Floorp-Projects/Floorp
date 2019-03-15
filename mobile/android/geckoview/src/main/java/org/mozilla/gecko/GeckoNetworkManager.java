@@ -317,7 +317,7 @@ public class GeckoNetworkManager extends BroadcastReceiver implements BundleEven
 
     @WrapForJNI(dispatchTo = "gecko")
     private static native void onConnectionChanged(int type, String subType,
-                                                   boolean isWifi, int DHCPGateway);
+                                                   boolean isWifi, int dhcpGateway);
 
     @WrapForJNI(dispatchTo = "gecko")
     private static native void onStatusChanged(String status);
