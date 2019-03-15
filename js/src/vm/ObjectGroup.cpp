@@ -787,9 +787,9 @@ struct ObjectGroupRealm::ArrayObjectKey : public DefaultHasher<ArrayObjectKey> {
 };
 
 static inline bool NumberTypes(TypeSet::Type a, TypeSet::Type b) {
-  return (a.isPrimitive(JSVAL_TYPE_INT32) ||
-          a.isPrimitive(JSVAL_TYPE_DOUBLE)) &&
-         (b.isPrimitive(JSVAL_TYPE_INT32) || b.isPrimitive(JSVAL_TYPE_DOUBLE));
+  return (a.isPrimitive(ValueType::Int32) ||
+          a.isPrimitive(ValueType::Double)) &&
+         (b.isPrimitive(ValueType::Int32) || b.isPrimitive(ValueType::Double));
 }
 
 /*
@@ -1323,12 +1323,12 @@ JSObject* ObjectGroup::newPlainObject(JSContext* cx, IdValuePair* properties,
       if (ntype == type) {
         continue;
       }
-      if (ntype.isPrimitive(JSVAL_TYPE_INT32) &&
-          type.isPrimitive(JSVAL_TYPE_DOUBLE)) {
+      if (ntype.isPrimitive(ValueType::Int32) &&
+          type.isPrimitive(ValueType::Double)) {
         // The property types already reflect 'int32'.
       } else {
-        if (ntype.isPrimitive(JSVAL_TYPE_DOUBLE) &&
-            type.isPrimitive(JSVAL_TYPE_INT32)) {
+        if (ntype.isPrimitive(ValueType::Double) &&
+            type.isPrimitive(ValueType::Int32)) {
           // Include 'double' in the property types to avoid the update below
           // later.
           p->value().types[i] = TypeSet::DoubleType();

@@ -43,6 +43,9 @@ class BrowsingContextGroup final : public nsWrapperCache {
   void Subscribe(ContentParent* aOriginProcess);
   void Unsubscribe(ContentParent* aOriginProcess);
 
+  // Force the given ContentParent to subscribe to our BrowsingContextGroup.
+  void EnsureSubscribed(ContentParent* aProcess);
+
   ContentParents::Iterator ContentParentsIter() { return mSubscribers.Iter(); }
 
   // Get a reference to the list of toplevel contexts in this
@@ -57,6 +60,28 @@ class BrowsingContextGroup final : public nsWrapperCache {
                        JS::Handle<JSObject*> aGivenProto) override;
 
   BrowsingContextGroup() = default;
+
+  static already_AddRefed<BrowsingContextGroup> Select(
+      BrowsingContext* aParent, BrowsingContext* aOpener) {
+    if (aParent) {
+      return do_AddRef(aParent->Group());
+    }
+    if (aOpener) {
+      return do_AddRef(aOpener->Group());
+    }
+    return MakeAndAddRef<BrowsingContextGroup>();
+  }
+
+  static already_AddRefed<BrowsingContextGroup> Select(uint64_t aParentId,
+                                                       uint64_t aOpenerId) {
+    RefPtr<BrowsingContext> parent = BrowsingContext::Get(aParentId);
+    MOZ_RELEASE_ASSERT(parent || aParentId == 0);
+
+    RefPtr<BrowsingContext> opener = BrowsingContext::Get(aOpenerId);
+    MOZ_RELEASE_ASSERT(opener || aOpenerId == 0);
+
+    return Select(parent, opener);
+  }
 
  private:
   friend class CanonicalBrowsingContext;

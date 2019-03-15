@@ -194,6 +194,8 @@ body:not(:-moz-any(.clockSkewError,.badStsCert,.neterror)) #advancedButton {
   font-family: monospace;
   white-space: pre-wrap;
   padding: 1em 0;
+  display: flex;
+  flex-wrap: wrap;
 }
 
 #cert_domain_link:not([href]) {

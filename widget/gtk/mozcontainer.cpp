@@ -185,8 +185,7 @@ static void frame_callback_handler(void *data, struct wl_callback *callback,
 }
 
 void moz_container_set_initial_draw_callback(
-    MozContainer *container,
-    std::function<void(void)> inital_draw_cb) {
+    MozContainer *container, std::function<void(void)> inital_draw_cb) {
   container->inital_draw_cb = inital_draw_cb;
 }
 

@@ -278,10 +278,7 @@ namespace jit {
   _(GeneratorThrowOrReturn, js::jit::GeneratorThrowOrReturn, 0)
 
 #define DEF_ID(name, ...) name,
-enum class VMFunctionId {
-  VMFUNCTION_LIST(DEF_ID)
-      Count
-};
+enum class VMFunctionId { VMFUNCTION_LIST(DEF_ID) Count };
 enum class TailCallVMFunctionId { TAIL_CALL_VMFUNCTION_LIST(DEF_ID) Count };
 #undef DEF_ID
 
@@ -326,4 +323,4 @@ TAIL_CALL_VMFUNCTION_LIST(DEF_TEMPLATE)
 }  // namespace jit
 }  // namespace js
 
-#endif // jit_VMFunctionList_inl_h
+#endif  // jit_VMFunctionList_inl_h

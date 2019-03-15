@@ -153,8 +153,7 @@ mozilla::ipc::IPCResult ExternalHelperAppParent::RecvOnDataAvailable(
       NS_NewByteInputStream(getter_AddRefs(stringStream),
                             MakeSpan(data).To(count), NS_ASSIGNMENT_DEPEND);
   NS_ASSERTION(NS_SUCCEEDED(rv), "failed to create dependent string!");
-  mStatus =
-      mListener->OnDataAvailable(this, stringStream, offset, count);
+  mStatus = mListener->OnDataAvailable(this, stringStream, offset, count);
 
   return IPC_OK();
 }
@@ -166,8 +165,7 @@ mozilla::ipc::IPCResult ExternalHelperAppParent::RecvOnStopRequest(
 
   mPending = false;
   mListener->OnStopRequest(
-      this,
-      (NS_SUCCEEDED(code) && NS_FAILED(mStatus)) ? mStatus : code);
+      this, (NS_SUCCEEDED(code) && NS_FAILED(mStatus)) ? mStatus : code);
   Delete();
   return IPC_OK();
 }
@@ -204,8 +202,7 @@ ExternalHelperAppParent::OnStartRequest(nsIRequest* request) {
 }
 
 NS_IMETHODIMP
-ExternalHelperAppParent::OnStopRequest(nsIRequest* request,
-                                       nsresult status) {
+ExternalHelperAppParent::OnStopRequest(nsIRequest* request, nsresult status) {
   MOZ_ASSERT(mDiverted);
   nsresult rv = mListener->OnStopRequest(request, status);
   Delete();

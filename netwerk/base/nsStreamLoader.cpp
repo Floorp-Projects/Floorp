@@ -77,8 +77,7 @@ nsStreamLoader::OnStartRequest(nsIRequest *request) {
 }
 
 NS_IMETHODIMP
-nsStreamLoader::OnStopRequest(nsIRequest *request,
-                              nsresult aStatus) {
+nsStreamLoader::OnStopRequest(nsIRequest *request, nsresult aStatus) {
   AUTO_PROFILER_LABEL("nsStreamLoader::OnStopRequest", NETWORK);
 
   if (mObserver) {
@@ -124,9 +123,8 @@ nsresult nsStreamLoader::WriteSegmentFun(nsIInputStream *inStr, void *closure,
 }
 
 NS_IMETHODIMP
-nsStreamLoader::OnDataAvailable(nsIRequest *request,
-                                nsIInputStream *inStr, uint64_t sourceOffset,
-                                uint32_t count) {
+nsStreamLoader::OnDataAvailable(nsIRequest *request, nsIInputStream *inStr,
+                                uint64_t sourceOffset, uint32_t count) {
   uint32_t countRead;
   return inStr->ReadSegments(WriteSegmentFun, this, count, &countRead);
 }

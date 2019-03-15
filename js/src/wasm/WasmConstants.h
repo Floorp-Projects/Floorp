@@ -170,8 +170,8 @@ enum class Op {
   TeeLocal = 0x22,
   GetGlobal = 0x23,
   SetGlobal = 0x24,
-  TableGet = 0x25,              // Reftypes,
-  TableSet = 0x26,              //   per proposal as of February 2019
+  TableGet = 0x25,  // Reftypes,
+  TableSet = 0x26,  //   per proposal as of February 2019
 
   // Memory-related operators
   I32Load = 0x28,

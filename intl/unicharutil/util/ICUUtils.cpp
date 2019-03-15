@@ -4,8 +4,8 @@
 
 #ifdef MOZILLA_INTERNAL_API
 
-#include "mozilla/Assertions.h"
-#include "mozilla/UniquePtr.h"
+#  include "mozilla/Assertions.h"
+#  include "mozilla/UniquePtr.h"
 
 #  include "ICUUtils.h"
 #  include "mozilla/Preferences.h"
@@ -157,10 +157,9 @@ double ICUUtils::ParseNumber(nsAString& aValue,
     int32_t parsePos = 0;
     static_assert(sizeof(UChar) == 2 && sizeof(nsAString::char_type) == 2,
                   "Unexpected character size - the following cast is unsafe");
-    double val =
-        unum_parseDouble(format.get(),
-                         (const UChar*)PromiseFlatString(aValue).get(),
-                         length, &parsePos, &status);
+    double val = unum_parseDouble(format.get(),
+                                  (const UChar*)PromiseFlatString(aValue).get(),
+                                  length, &parsePos, &status);
     if (U_SUCCESS(status) && parsePos == (int32_t)length) {
       return val;
     }

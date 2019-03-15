@@ -107,7 +107,6 @@ class MOZ_STACK_CLASS BinASTTokenReaderMultipart
   /**
    * Read a single PropertyKey value.
    */
-  MOZ_MUST_USE JS::Result<JSAtom*> readMaybePropertyKey();
   MOZ_MUST_USE JS::Result<JSAtom*> readPropertyKey();
 
   /**

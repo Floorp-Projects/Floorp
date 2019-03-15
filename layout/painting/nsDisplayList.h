@@ -896,6 +896,12 @@ class nsDisplayListBuilder {
   uint32_t GetBackgroundPaintFlags();
 
   /**
+   * Helper method to generate image decoding flags based on the
+   * information available in the display list builder.
+   */
+  uint32_t GetImageDecodeFlags() const;
+
+  /**
    * Subtracts aRegion from *aVisibleRegion. We avoid letting
    * aVisibleRegion become overcomplex by simplifying it if necessary.
    */

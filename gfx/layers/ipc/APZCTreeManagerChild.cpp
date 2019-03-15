@@ -128,9 +128,8 @@ mozilla::ipc::IPCResult APZCTreeManagerChild::RecvHandleTap(
       mCompositorSession->RootLayerTreeId() == aGuid.mLayersId &&
       mCompositorSession->GetContentController()) {
     RefPtr<GeckoContentController> controller =
-      mCompositorSession->GetContentController();
-    controller->HandleTap(
-        aType, aPoint, aModifiers, aGuid, aInputBlockId);
+        mCompositorSession->GetContentController();
+    controller->HandleTap(aType, aPoint, aModifiers, aGuid, aInputBlockId);
     return IPC_OK();
   }
   dom::TabParent* tab =

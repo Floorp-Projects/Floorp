@@ -2189,9 +2189,8 @@ void nsLineLayout::VerticalAlignFrames(PerSpanData* psd) {
       if (pfd->mIsTextFrame) {
         // Only consider text frames if they're not empty and
         // line-height=normal.
-        canUpdate =
-            pfd->mIsNonWhitespaceTextFrame &&
-            frame->StyleText()->mLineHeight.IsNormal();
+        canUpdate = pfd->mIsNonWhitespaceTextFrame &&
+                    frame->StyleText()->mLineHeight.IsNormal();
       } else {
         canUpdate = !pfd->mIsPlaceholder;
       }

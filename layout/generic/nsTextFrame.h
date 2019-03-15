@@ -183,8 +183,8 @@ class nsTextFrame : public nsFrame {
       PeekOffsetCharacterOptions aOptions = PeekOffsetCharacterOptions()) final;
   FrameSearchResult PeekOffsetWord(bool aForward, bool aWordSelectEatSpace,
                                    bool aIsKeyboardSelect, int32_t* aOffset,
-                                   PeekWordState* aState, bool aTrimSpaces)
-                                   final;
+                                   PeekWordState* aState,
+                                   bool aTrimSpaces) final;
 
   nsresult CheckVisibility(nsPresContext* aContext, int32_t aStartIndex,
                            int32_t aEndIndex, bool aRecurse, bool* aFinished,
@@ -580,7 +580,8 @@ class nsTextFrame : public nsFrame {
     kNoTrimAfter = 1 << 1,
     kNoTrimBefore = 1 << 2
   };
-  TrimmedOffsets GetTrimmedOffsets(const nsTextFragment* aFrag,
+  TrimmedOffsets GetTrimmedOffsets(
+      const nsTextFragment* aFrag,
       TrimmedOffsetFlags aFlags = TrimmedOffsetFlags::kDefaultTrimFlags) const;
 
   // Similar to Reflow(), but for use from nsLineLayout

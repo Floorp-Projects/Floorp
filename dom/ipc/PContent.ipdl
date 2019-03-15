@@ -99,6 +99,7 @@ using refcounted class nsIInputStream from "mozilla/ipc/IPCStreamUtils.h";
 using refcounted class mozilla::dom::BrowsingContext from "mozilla/dom/BrowsingContext.h";
 using mozilla::dom::BrowsingContextId from "mozilla/dom/ipc/IdType.h";
 using mozilla::dom::BrowsingContextTransaction from "mozilla/dom/BrowsingContext.h";
+using mozilla::dom::BrowsingContextInitializer from "mozilla/dom/BrowsingContext.h";
 
 union ChromeRegistryItem
 {
@@ -389,7 +390,8 @@ both:
     // Keep the last 3 attributes in sync with GetProcessAttributes!
     async PBrowser(TabId tabId, TabId sameTabGroupAs,
                    IPCTabContext context, uint32_t chromeFlags,
-                   ContentParentId cpId, bool isForBrowser);
+                   ContentParentId cpId, BrowsingContext browsingContext,
+                   bool isForBrowser);
 
     async PFileDescriptorSet(FileDescriptor fd);
 
@@ -775,6 +777,10 @@ child:
                                nsIURI aOriginalURI,
                                uint64_t aIdentifier);
 
+    // Begin subscribing to a new BrowsingContextGroup, sending down the current
+    // value for every individual BrowsingContext.
+    async RegisterBrowsingContextGroup(BrowsingContextInitializer[] aInits);
+
 parent:
     async InitBackground(Endpoint<PBackgroundParent> aEndpoint);
 
@@ -1118,11 +1124,10 @@ parent:
                        bool aSizeSpecified,
                        URIParams? aURIToLoad,
                        nsCString aFeatures,
-                       nsCString aBaseURI,
                        float aFullZoom,
                        Principal aTriggeringPrincipal,
                        nsIContentSecurityPolicy aCsp,
-                       uint32_t aReferrerPolicy)
+                       nsIReferrerInfo aReferrerInfo)
         returns (CreatedWindowInfo window);
 
     async CreateWindowInDifferentProcess(
@@ -1133,12 +1138,11 @@ parent:
       bool aSizeSpecified,
       URIParams? aURIToLoad,
       nsCString aFeatures,
-      nsCString aBaseURI,
       float aFullZoom,
       nsString aName,
       Principal aTriggeringPrincipal,
       nsIContentSecurityPolicy aCsp,
-      uint32_t aReferrerPolicy);
+      nsIReferrerInfo aReferrerInfo);
 
     /**
      * Tells the parent to ungrab the pointer on the default display.
@@ -1223,47 +1227,6 @@ parent:
 
     async StoreUserInteractionAsPermission(Principal aPrincipal);
 
-    /**
-     * Sync the BrowsingContext with id 'aContextId' and name 'aName' to the
-     * parent, and attach it to the BrowsingContext 'aParentContext'. If
-     * 'aParentContext' is 'nullptr' the BrowsingContext is a root in the
-     * BrowsingContext tree. AttachBrowsingContext must only be called at most
-     * once for any child BrowsingContext, and only for BrowsingContexts where
-     * the parent and the child context contains their nsDocShell.
-     */
-    async AttachBrowsingContext(BrowsingContext aParentContext,
-                                BrowsingContext aOpener,
-                                BrowsingContextId aContextId,
-                                nsString aName);
-
-    /**
-     * Remove the synced BrowsingContext 'aContext' from the parent.
-     * DetachBrowsingContext is only needed to be called once for any
-     * BrowsingContext, since detaching a node in the BrowsingContext detaches
-     * the entire sub-tree rooted at that node. Calling DetachBrowsingContext
-     * with an already detached BrowsingContext effectively does nothing. Note
-     * that it is not an error to call DetachBrowsingContext on a
-     * BrowsingContext belonging to an already detached subtree. The
-     * 'aMoveToBFCache' paramater controls if detaching a BrowsingContext
-     * should move it to the bfcache allowing it to be re-attached if navigated
-     * to.
-     */
-    async DetachBrowsingContext(BrowsingContext aContext,
-                                bool aMoveToBFCache);
-
-    /**
-     * Set the opener of browsing context 'aContext' to the browsing context
-     * with id 'aOpenerId'.
-     */
-    async SetOpenerBrowsingContext(BrowsingContext aContext,
-                                   BrowsingContext aOpenerContext);
-
-    /**
-     * Notify parent to update user gesture activation flag.
-     */
-    async SetUserGestureActivation(BrowsingContext aContext,
-                                   bool aNewValue);
-
 both:
     async CommitBrowsingContextTransaction(BrowsingContext aContext,
                                            BrowsingContextTransaction aTransaction);
@@ -1283,6 +1246,31 @@ both:
      */
     async PushError(nsCString scope, Principal principal, nsString message,
                     uint32_t flags);
+
+    /**
+     * Sync the BrowsingContext with id 'aContextId' and name 'aName' to the
+     * parent, and attach it to the BrowsingContext 'aParentContext'. If
+     * 'aParentContext' is 'nullptr' the BrowsingContext is a root in the
+     * BrowsingContext tree. AttachBrowsingContext must only be called at most
+     * once for any child BrowsingContext, and only for BrowsingContexts where
+     * the parent and the child context contains their nsDocShell.
+     */
+    async AttachBrowsingContext(BrowsingContextInitializer aInit);
+
+    /**
+     * Remove the synced BrowsingContext 'aContext' from the parent.
+     * DetachBrowsingContext is only needed to be called once for any
+     * BrowsingContext, since detaching a node in the BrowsingContext detaches
+     * the entire sub-tree rooted at that node. Calling DetachBrowsingContext
+     * with an already detached BrowsingContext effectively does nothing. Note
+     * that it is not an error to call DetachBrowsingContext on a
+     * BrowsingContext belonging to an already detached subtree. The
+     * 'aMoveToBFCache' paramater controls if detaching a BrowsingContext
+     * should move it to the bfcache allowing it to be re-attached if navigated
+     * to.
+     */
+    async DetachBrowsingContext(BrowsingContext aContext,
+                                bool aMoveToBFCache);
 
     async WindowClose(BrowsingContext aContext, bool aTrustedCaller);
     async WindowFocus(BrowsingContext aContext);

@@ -644,8 +644,8 @@ bool Module::initSegments(JSContext* cx, HandleWasmInstanceObject instanceObj,
       }
 #ifdef ENABLE_WASM_BULKMEM_OPS
       if (fail) {
-        JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_FIT,
-                                 "elem", "table");
+        JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                                 JSMSG_WASM_BAD_FIT, "elem", "table");
         return false;
       }
 #endif

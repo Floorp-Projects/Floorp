@@ -484,6 +484,34 @@ function DiscoveryStream(prevState = INITIAL_STATE.DiscoveryStream, action) {
           spocs_endpoint: action.data || INITIAL_STATE.DiscoveryStream.spocs.spocs_endpoint,
         },
       };
+    case at.PLACES_LINK_BLOCKED:
+      // Return if action data is empty, or spocs or feeds data is not loaded
+      if (!action.data || !prevState.spocs.loaded || !prevState.feeds.loaded) {
+        return prevState;
+      }
+      // Filter spocs and recommendations data inside feeds by removing action.data.url
+      // received on PLACES_LINK_BLOCKED triggered by dismiss link menu option
+      return {
+        ...prevState,
+        spocs: {
+          ...prevState.spocs,
+          data: prevState.spocs.data.spocs ? {
+            spocs: prevState.spocs.data.spocs.filter(s => s.url !== action.data.url),
+          } : {},
+        },
+        feeds: {
+          ...prevState.feeds,
+          data: Object.keys(prevState.feeds.data).reduce((accumulator, feed_url) => {
+            accumulator[feed_url] = {
+              data: {
+                ...prevState.feeds.data[feed_url].data,
+                recommendations: prevState.feeds.data[feed_url].data.recommendations.filter(r => r.url !== action.data.url),
+              },
+            };
+            return accumulator;
+          }, {}),
+        },
+      };
     case at.DISCOVERY_STREAM_SPOCS_UPDATE:
       if (action.data) {
         return {

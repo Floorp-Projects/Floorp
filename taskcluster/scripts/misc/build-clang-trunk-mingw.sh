@@ -321,7 +321,6 @@ popd
 mkdir -p $UPLOAD_DIR
 
 pushd $(dirname $INSTALL_DIR)
-rm -f clang/lib/libstdc++*
 tar caf clangmingw.tar.xz clang
 mv clangmingw.tar.xz $UPLOAD_DIR
 popd

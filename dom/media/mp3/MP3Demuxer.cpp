@@ -297,16 +297,17 @@ int64_t MP3TrackDemuxer::GetResourceOffset() const { return mOffset; }
 
 TimeIntervals MP3TrackDemuxer::GetBuffered() {
   AutoPinned<MediaResource> stream(mSource.GetResource());
-  TimeIntervals buffered;
+  TimeIntervals duration;
+  duration += TimeInterval(TimeUnit(), Duration());
 
   if (Duration() > TimeUnit() && stream->IsDataCachedToEndOfResource(0)) {
     // Special case completely cached files. This also handles local files.
-    buffered += TimeInterval(TimeUnit(), Duration());
     MP3LOGV("buffered = [[%" PRId64 ", %" PRId64 "]]",
             TimeUnit().ToMicroseconds(), Duration().ToMicroseconds());
-    return buffered;
+    return duration;
   }
 
+  TimeIntervals buffered;
   MediaByteRangeSet ranges;
   nsresult rv = stream->GetCachedRanges(ranges);
   NS_ENSURE_SUCCESS(rv, buffered);
@@ -322,7 +323,11 @@ TimeIntervals MP3TrackDemuxer::GetBuffered() {
     buffered += TimeInterval(start, end);
   }
 
-  return buffered;
+  // If the number of frames presented in header is valid, the duration
+  // calculated from it should be the maximal duration.
+  return ValidNumAudioFrames().isSome() && buffered.GetEnd() > duration.GetEnd()
+             ? duration
+             : buffered;
 }
 
 int64_t MP3TrackDemuxer::StreamLength() const { return mSource.GetLength(); }
@@ -333,8 +338,8 @@ TimeUnit MP3TrackDemuxer::Duration() const {
   }
 
   int64_t numFrames = 0;
-  const auto numAudioFrames = mParser.VBRInfo().NumAudioFrames();
-  if (mParser.VBRInfo().IsValid() && numAudioFrames.valueOr(0) + 1 > 1) {
+  const auto numAudioFrames = ValidNumAudioFrames();
+  if (numAudioFrames.isSome()) {
     // VBR headers don't include the VBR header frame.
     numFrames = numAudioFrames.value() + 1;
     return Duration(numFrames);
@@ -726,6 +731,13 @@ double MP3TrackDemuxer::AverageFrameLength() const {
            (vbr.NumAudioFrames().value() + 1);
   }
   return 0.0;
+}
+
+Maybe<uint32_t> MP3TrackDemuxer::ValidNumAudioFrames() const {
+  return mParser.VBRInfo().IsValid() &&
+                 mParser.VBRInfo().NumAudioFrames().valueOr(0) + 1 > 1
+             ? mParser.VBRInfo().NumAudioFrames()
+             : Maybe<uint32_t>();
 }
 
 }  // namespace mozilla

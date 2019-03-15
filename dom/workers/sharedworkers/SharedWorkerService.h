@@ -45,9 +45,6 @@ class SharedWorkerService final {
       const RemoteWorkerData& aData, uint64_t aWindowID,
       const MessagePortIdentifier& aPortIdentifier);
 
-  // PBackground method only.
-  void RemoveWorkerManager(SharedWorkerManager* aManager);
-
   void RemoveWorkerManagerOnMainThread(SharedWorkerManager* aManager);
 
  private:

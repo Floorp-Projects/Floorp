@@ -179,8 +179,8 @@ void ServoStyleSet::RecordShadowStyleChange(ShadowRoot& aShadowRoot) {
 
   // FIXME(emilio): This should be done using stylesheet invalidation instead.
   if (nsPresContext* pc = GetPresContext()) {
-    pc->RestyleManager()->PostRestyleEvent(aShadowRoot.Host(), eRestyle_Subtree,
-                                           nsChangeHint(0));
+    pc->RestyleManager()->PostRestyleEvent(
+        aShadowRoot.Host(), RestyleHint::RestyleSubtree(), nsChangeHint(0));
   }
 }
 
@@ -232,7 +232,7 @@ static const MediaFeatureChangeReason kMediaFeaturesAffectingDefaultStyle =
     // relying on the pres context (bug 1418159).
     MediaFeatureChangeReason::ResolutionChange;
 
-nsRestyleHint ServoStyleSet::MediumFeaturesChanged(
+RestyleHint ServoStyleSet::MediumFeaturesChanged(
     MediaFeatureChangeReason aReason) {
   AutoTArray<RawServoAuthorStylesBorrowedMut, 20> nonDocumentStyles;
 
@@ -270,16 +270,16 @@ nsRestyleHint ServoStyleSet::MediumFeaturesChanged(
   }
 
   if (rulesChanged) {
-    return eRestyle_Subtree;
+    return RestyleHint::RestyleSubtree();
   }
 
   const bool viewportChanged =
       bool(aReason & MediaFeatureChangeReason::ViewportChange);
   if (result.mUsesViewportUnits && viewportChanged) {
-    return eRestyle_ForceDescendants;
+    return RestyleHint::RecascadeSubtree();
   }
 
-  return nsRestyleHint(0);
+  return RestyleHint{0};
 }
 
 MOZ_DEFINE_MALLOC_SIZE_OF(ServoStyleSetMallocSizeOf)
@@ -335,8 +335,8 @@ void ServoStyleSet::SetAuthorStyleDisabled(bool aStyleDisabled) {
   mAuthorStyleDisabled = aStyleDisabled;
   if (Element* root = mDocument->GetRootElement()) {
     if (nsPresContext* pc = GetPresContext()) {
-      pc->RestyleManager()->PostRestyleEvent(root, eRestyle_Subtree,
-                                             nsChangeHint(0));
+      pc->RestyleManager()->PostRestyleEvent(
+          root, RestyleHint::RestyleSubtree(), nsChangeHint(0));
     }
   }
   Servo_StyleSet_SetAuthorStyleDisabled(mRawSet.get(), mAuthorStyleDisabled);

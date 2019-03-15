@@ -8,6 +8,7 @@
 
 #include "mozilla/AntiTrackingCommon.h"
 #include "mozilla/BasePrincipal.h"
+#include "mozilla/net/HttpBaseChannel.h"
 #include "mozilla/net/UrlClassifierFeatureFactory.h"
 #include "mozilla/StaticPrefs.h"
 #include "mozIThirdPartyUtil.h"
@@ -22,6 +23,8 @@
 #include "nsIScriptError.h"
 #include "nsIWebProgressListener.h"
 #include "nsNetUtil.h"
+#include "nsQueryObject.h"
+#include "TrackingDummyChannel.h"
 
 namespace mozilla {
 namespace net {
@@ -273,6 +276,189 @@ nsresult UrlClassifierCommon::CreatePairwiseWhiteListURI(nsIChannel* aChannel,
 
   whitelistURI.forget(aURI);
   return NS_OK;
+}
+
+namespace {
+
+void SetClassificationFlagsHelper(nsIChannel* aChannel,
+                                  uint32_t aClassificationFlags,
+                                  bool aIsThirdParty) {
+  MOZ_ASSERT(aChannel);
+
+  nsCOMPtr<nsIParentChannel> parentChannel;
+  NS_QueryNotificationCallbacks(aChannel, parentChannel);
+  if (parentChannel) {
+    // This channel is a parent-process proxy for a child process
+    // request. We should notify the child process as well.
+    parentChannel->NotifyClassificationFlags(aClassificationFlags,
+                                             aIsThirdParty);
+  }
+
+  RefPtr<HttpBaseChannel> httpChannel = do_QueryObject(aChannel);
+  if (httpChannel) {
+    httpChannel->AddClassificationFlags(aClassificationFlags, aIsThirdParty);
+  }
+
+  RefPtr<TrackingDummyChannel> dummyChannel = do_QueryObject(aChannel);
+  if (dummyChannel) {
+    dummyChannel->AddClassificationFlags(aClassificationFlags);
+  }
+}
+
+void LowerPriorityHelper(nsIChannel* aChannel) {
+  MOZ_ASSERT(aChannel);
+
+  bool isBlockingResource = false;
+
+  nsCOMPtr<nsIClassOfService> cos(do_QueryInterface(aChannel));
+  if (cos) {
+    if (nsContentUtils::IsTailingEnabled()) {
+      uint32_t cosFlags = 0;
+      cos->GetClassFlags(&cosFlags);
+      isBlockingResource =
+          cosFlags & (nsIClassOfService::UrgentStart |
+                      nsIClassOfService::Leader | nsIClassOfService::Unblocked);
+
+      // Requests not allowed to be tailed are usually those with higher
+      // prioritization.  That overweights being a tracker: don't throttle
+      // them when not in background.
+      if (!(cosFlags & nsIClassOfService::TailForbidden)) {
+        cos->AddClassFlags(nsIClassOfService::Throttleable);
+      }
+    } else {
+      // Yes, we even don't want to evaluate the isBlockingResource when tailing
+      // is off see bug 1395525.
+
+      cos->AddClassFlags(nsIClassOfService::Throttleable);
+    }
+  }
+
+  if (!isBlockingResource) {
+    nsCOMPtr<nsISupportsPriority> p = do_QueryInterface(aChannel);
+    if (p) {
+      if (UC_LOG_ENABLED()) {
+        nsCOMPtr<nsIURI> uri;
+        aChannel->GetURI(getter_AddRefs(uri));
+        nsAutoCString spec;
+        uri->GetAsciiSpec(spec);
+        spec.Truncate(
+            std::min(spec.Length(), UrlClassifierCommon::sMaxSpecLength));
+        UC_LOG(("Setting PRIORITY_LOWEST for channel[%p] (%s)", aChannel,
+                spec.get()));
+      }
+      p->SetPriority(nsISupportsPriority::PRIORITY_LOWEST);
+    }
+  }
+}
+
+}  // namespace
+
+// static
+void UrlClassifierCommon::AnnotateChannel(
+    nsIChannel* aChannel,
+    AntiTrackingCommon::ContentBlockingAllowListPurpose aPurpose,
+    uint32_t aClassificationFlags, uint32_t aLoadingState) {
+  MOZ_ASSERT(aChannel);
+  MOZ_ASSERT(aPurpose == AntiTrackingCommon::eTrackingProtection ||
+             aPurpose == AntiTrackingCommon::eTrackingAnnotations ||
+             aPurpose == AntiTrackingCommon::eFingerprinting ||
+             aPurpose == AntiTrackingCommon::eCryptomining);
+
+  nsCOMPtr<nsIURI> chanURI;
+  nsresult rv = aChannel->GetURI(getter_AddRefs(chanURI));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    UC_LOG(
+        ("UrlClassifierCommon::AnnotateChannel nsIChannel::GetURI(%p) failed",
+         (void*)aChannel));
+    return;
+  }
+
+  bool isThirdPartyWithTopLevelWinURI =
+      nsContentUtils::IsThirdPartyWindowOrChannel(nullptr, aChannel, chanURI);
+
+  UC_LOG(("UrlClassifierCommon::AnnotateChannel, annotating channel[%p]",
+          aChannel));
+
+  SetClassificationFlagsHelper(aChannel, aClassificationFlags,
+                               isThirdPartyWithTopLevelWinURI);
+
+  if (isThirdPartyWithTopLevelWinURI || IsAllowListed(aChannel, aPurpose)) {
+    UrlClassifierCommon::NotifyChannelClassifierProtectionDisabled(
+        aChannel, aLoadingState);
+  }
+
+  if (isThirdPartyWithTopLevelWinURI &&
+      StaticPrefs::privacy_trackingprotection_lower_network_priority()) {
+    LowerPriorityHelper(aChannel);
+  }
+}
+
+// static
+bool UrlClassifierCommon::IsAllowListed(
+    nsIChannel* aChannel,
+    AntiTrackingCommon::ContentBlockingAllowListPurpose aPurpose) {
+  MOZ_ASSERT(aPurpose == AntiTrackingCommon::eTrackingProtection ||
+             aPurpose == AntiTrackingCommon::eTrackingAnnotations ||
+             aPurpose == AntiTrackingCommon::eFingerprinting ||
+             aPurpose == AntiTrackingCommon::eCryptomining);
+
+  nsCOMPtr<nsIHttpChannelInternal> channel = do_QueryInterface(aChannel);
+  if (!channel) {
+    UC_LOG(("nsChannelClassifier: Not an HTTP channel"));
+    return false;
+  }
+
+  nsCOMPtr<nsIURI> topWinURI;
+  nsresult rv = channel->GetTopWindowURI(getter_AddRefs(topWinURI));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return false;
+  }
+
+  if (!topWinURI && StaticPrefs::channelclassifier_allowlist_example()) {
+    UC_LOG(("nsChannelClassifier: Allowlisting test domain"));
+    nsCOMPtr<nsIIOService> ios = services::GetIOService();
+    if (NS_WARN_IF(!ios)) {
+      return false;
+    }
+
+    rv = ios->NewURI(NS_LITERAL_CSTRING("http://allowlisted.example.com"),
+                     nullptr, nullptr, getter_AddRefs(topWinURI));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return false;
+    }
+  }
+
+  bool isAllowListed = false;
+  rv = AntiTrackingCommon::IsOnContentBlockingAllowList(
+      topWinURI, NS_UsePrivateBrowsing(aChannel), aPurpose, isAllowListed);
+  if (NS_FAILED(rv)) {  // normal for some loads, no need to print a warning
+    return false;
+  }
+
+  if (isAllowListed) {
+    if (UC_LOG_ENABLED()) {
+      nsCOMPtr<nsIURI> chanURI;
+      nsresult rv = aChannel->GetURI(getter_AddRefs(chanURI));
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return isAllowListed;
+      }
+
+      nsCString chanSpec = chanURI->GetSpecOrDefault();
+      chanSpec.Truncate(
+          std::min(chanSpec.Length(), UrlClassifierCommon::sMaxSpecLength));
+      UC_LOG(("nsChannelClassifier: User override on channel[%p] (%s)",
+              aChannel, chanSpec.get()));
+    }
+  }
+
+  return isAllowListed;
+}
+
+// static
+bool UrlClassifierCommon::IsTrackingClassificationFlag(uint32_t aFlag) {
+  return (aFlag & nsIHttpChannel::ClassificationFlags::CLASSIFIED_TRACKING) ||
+         (aFlag &
+          nsIHttpChannel::ClassificationFlags::CLASSIFIED_FINGERPRINTING);
 }
 
 }  // namespace net

@@ -364,8 +364,8 @@ nsresult StreamFilterParent::Write(Data& aData) {
       MakeSpan(reinterpret_cast<char*>(aData.Elements()), aData.Length()));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = mOrigListener->OnDataAvailable(mChannel, stream, mOffset,
-                                      aData.Length());
+  rv =
+      mOrigListener->OnDataAvailable(mChannel, stream, mOffset, aData.Length());
   NS_ENSURE_SUCCESS(rv, rv);
 
   mOffset += aData.Length();
@@ -503,8 +503,7 @@ StreamFilterParent::OnStartRequest(nsIRequest* aRequest) {
 }
 
 NS_IMETHODIMP
-StreamFilterParent::OnStopRequest(nsIRequest* aRequest,
-                                  nsresult aStatusCode) {
+StreamFilterParent::OnStopRequest(nsIRequest* aRequest, nsresult aStatusCode) {
   AssertIsMainThread();
 
   mReceivedStop = true;

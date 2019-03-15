@@ -116,6 +116,7 @@ public final class GeckoLoader {
         }
     }
 
+    @SuppressWarnings("deprecation") // for Build.CPU_ABI
     public synchronized static void setupGeckoEnvironment(final Context context,
                                                           final String profilePath,
                                                           final Collection<String> env,
@@ -176,6 +177,7 @@ public final class GeckoLoader {
         }
 
         putenv("MOZ_ANDROID_DEVICE_SDK_VERSION=" + Build.VERSION.SDK_INT);
+        putenv("MOZ_ANDROID_CPU_ABI=" + Build.CPU_ABI);
 
         setupInitialPrefs(prefs);
 

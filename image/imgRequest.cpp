@@ -735,8 +735,7 @@ imgRequest::OnStartRequest(nsIRequest* aRequest) {
 }
 
 NS_IMETHODIMP
-imgRequest::OnStopRequest(nsIRequest* aRequest,
-                          nsresult status) {
+imgRequest::OnStopRequest(nsIRequest* aRequest, nsresult status) {
   LOG_FUNC(gImgLog, "imgRequest::OnStopRequest");
   MOZ_ASSERT(NS_IsMainThread(), "Can't send notifications off-main-thread");
 
@@ -779,7 +778,8 @@ imgRequest::OnStopRequest(nsIRequest* aRequest,
   // trigger a failure, since the image might be waiting for more non-optional
   // data and this is the point where we break the news that it's not coming.
   if (image) {
-    nsresult rv = image->OnImageDataComplete(aRequest, nullptr, status, lastPart);
+    nsresult rv =
+        image->OnImageDataComplete(aRequest, nullptr, status, lastPart);
 
     // If we got an error in the OnImageDataComplete() call, we don't want to
     // proceed as if nothing bad happened. However, we also want to give
@@ -989,9 +989,8 @@ void imgRequest::FinishPreparingForNewPart(const NewPartResult& aResult) {
 }
 
 NS_IMETHODIMP
-imgRequest::OnDataAvailable(nsIRequest* aRequest,
-                            nsIInputStream* aInStr, uint64_t aOffset,
-                            uint32_t aCount) {
+imgRequest::OnDataAvailable(nsIRequest* aRequest, nsIInputStream* aInStr,
+                            uint64_t aOffset, uint32_t aCount) {
   LOG_SCOPE_WITH_PARAM(gImgLog, "imgRequest::OnDataAvailable", "count", aCount);
 
   NS_ASSERTION(aRequest, "imgRequest::OnDataAvailable -- no request!");
@@ -1062,8 +1061,8 @@ imgRequest::OnDataAvailable(nsIRequest* aRequest,
 
   // Notify the image that it has new data.
   if (aInStr) {
-    nsresult rv = image->OnImageDataAvailable(aRequest, nullptr, aInStr,
-                                              aOffset, aCount);
+    nsresult rv =
+        image->OnImageDataAvailable(aRequest, nullptr, aInStr, aOffset, aCount);
 
     if (NS_FAILED(rv)) {
       MOZ_LOG(gImgLog, LogLevel::Warning,

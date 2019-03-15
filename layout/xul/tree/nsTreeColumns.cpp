@@ -242,7 +242,7 @@ already_AddRefed<nsTreeColumn> nsTreeColumn::GetPreviousColumn() {
     frame = frame->GetPrevSibling();
     if (frame && frame->GetContent()->IsElement()) {
       RefPtr<nsTreeColumn> column =
-        mColumns->GetColumnFor(frame->GetContent()->AsElement());
+          mColumns->GetColumnFor(frame->GetContent()->AsElement());
       if (column) {
         return column.forget();
       }

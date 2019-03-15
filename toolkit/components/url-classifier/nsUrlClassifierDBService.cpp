@@ -1877,8 +1877,7 @@ ThreatHitReportListener::OnDataAvailable(nsIRequest* aRequest,
 }
 
 NS_IMETHODIMP
-ThreatHitReportListener::OnStopRequest(nsIRequest* aRequest,
-                                       nsresult aStatus) {
+ThreatHitReportListener::OnStopRequest(nsIRequest* aRequest, nsresult aStatus) {
   nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aRequest);
   NS_ENSURE_TRUE(httpChannel, aStatus);
 

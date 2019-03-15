@@ -414,7 +414,8 @@ void nsPresContext::AppUnitsPerDevPixelChanged() {
     mDeviceContext->FlushFontCache();
   }
 
-  MediaFeatureValuesChanged({eRestyle_ForceDescendants, NS_STYLE_HINT_REFLOW,
+  MediaFeatureValuesChanged({RestyleHint::RecascadeSubtree(),
+                             NS_STYLE_HINT_REFLOW,
                              MediaFeatureChangeReason::ResolutionChange});
 
   mCurAppUnitsPerDevPixel = mDeviceContext->AppUnitsPerDevPixel();
@@ -543,7 +544,7 @@ void nsPresContext::UpdateAfterPreferencesChanged() {
 
   // Preferences require rerunning selector matching because we rebuild
   // the pref style sheet for some preference changes.
-  RebuildAllStyleData(hint, eRestyle_Subtree);
+  RebuildAllStyleData(hint, RestyleHint::RestyleSubtree());
 }
 
 nsresult nsPresContext::Init(nsDeviceContext* aDeviceContext) {
@@ -729,7 +730,7 @@ void nsPresContext::DoChangeCharSet(NotNull<const Encoding*> aCharSet) {
   // descendants to make their style data up-to-date.
   //
   // FIXME(emilio): Revisit whether this is true after bug 1438911.
-  RebuildAllStyleData(NS_STYLE_HINT_REFLOW, eRestyle_ForceDescendants);
+  RebuildAllStyleData(NS_STYLE_HINT_REFLOW, RestyleHint::RecascadeSubtree());
 }
 
 void nsPresContext::UpdateCharSet(NotNull<const Encoding*> aCharSet) {
@@ -946,7 +947,8 @@ void nsPresContext::UpdateEffectiveTextZoom() {
 
   // Media queries could have changed, since we changed the meaning
   // of 'em' units in them.
-  MediaFeatureValuesChanged({eRestyle_ForceDescendants, NS_STYLE_HINT_REFLOW,
+  MediaFeatureValuesChanged({RestyleHint::RecascadeSubtree(),
+                             NS_STYLE_HINT_REFLOW,
                              MediaFeatureChangeReason::ZoomChange});
 }
 
@@ -1341,7 +1343,7 @@ void nsPresContext::SysColorChangedInternal() {
 
   // The system color values are computed to colors in the style data,
   // so normal style data comparison is sufficient here.
-  RebuildAllStyleData(nsChangeHint(0), nsRestyleHint(0));
+  RebuildAllStyleData(nsChangeHint(0), RestyleHint{0});
 }
 
 void nsPresContext::RefreshSystemMetrics() {
@@ -1356,7 +1358,7 @@ void nsPresContext::RefreshSystemMetrics() {
   // changes are not), and -moz-appearance (whose changes likewise are
   // not), so we need to recascade for the first, and reflow for the rest.
   MediaFeatureValuesChangedAllDocuments({
-      eRestyle_ForceDescendants,
+      RestyleHint::RecascadeSubtree(),
       NS_STYLE_HINT_REFLOW,
       MediaFeatureChangeReason::SystemMetricsChange,
   });
@@ -1452,11 +1454,12 @@ void nsPresContext::StopEmulatingMedium() {
 }
 
 void nsPresContext::ContentLanguageChanged() {
-  PostRebuildAllStyleDataEvent(nsChangeHint(0), eRestyle_ForceDescendants);
+  PostRebuildAllStyleDataEvent(nsChangeHint(0),
+                               RestyleHint::RecascadeSubtree());
 }
 
 void nsPresContext::RebuildAllStyleData(nsChangeHint aExtraHint,
-                                        nsRestyleHint aRestyleHint) {
+                                        RestyleHint aRestyleHint) {
   if (!mShell) {
     // We must have been torn down. Nothing to do here.
     return;
@@ -1481,7 +1484,7 @@ void nsPresContext::RebuildAllStyleData(nsChangeHint aExtraHint,
 }
 
 void nsPresContext::PostRebuildAllStyleDataEvent(nsChangeHint aExtraHint,
-                                                 nsRestyleHint aRestyleHint) {
+                                                 RestyleHint aRestyleHint) {
   if (!mShell) {
     // We must have been torn down. Nothing to do here.
     return;
@@ -1640,7 +1643,8 @@ bool nsPresContext::HasAuthorSpecifiedRules(const nsIFrame* aFrame,
   }
 
   auto* set = PresShell()->StyleSet()->RawSet();
-  return Servo_HasAuthorSpecifiedRules(set, aFrame->Style(), elem, aRuleTypeMask);
+  return Servo_HasAuthorSpecifiedRules(set, aFrame->Style(), elem,
+                                       aRuleTypeMask);
 }
 
 gfxUserFontSet* nsPresContext::GetUserFontSet() {
@@ -1657,7 +1661,7 @@ void nsPresContext::UserFontSetUpdated(gfxUserFontEntry* aUpdatedFont) {
   // full restyle in these cases.
   if (!aUpdatedFont) {
     PostRebuildAllStyleDataEvent(NS_STYLE_HINT_REFLOW,
-                                 eRestyle_ForceDescendants);
+                                 RestyleHint::RecascadeSubtree());
     return;
   }
 
@@ -1666,7 +1670,8 @@ void nsPresContext::UserFontSetUpdated(gfxUserFontEntry* aUpdatedFont) {
   // rebuilding the rule tree from the top, avoiding the reuse of cached
   // data even when no style rules have changed.
   if (UsesExChUnits()) {
-    PostRebuildAllStyleDataEvent(nsChangeHint(0), eRestyle_ForceDescendants);
+    PostRebuildAllStyleDataEvent(nsChangeHint(0),
+                                 RestyleHint::RecascadeSubtree());
   }
 
   // Iterate over the frame tree looking for frames associated with the
@@ -1713,7 +1718,7 @@ void nsPresContext::FlushCounterStyles() {
     bool changed = mCounterStyleManager->NotifyRuleChanged();
     if (changed) {
       PresShell()->NotifyCounterStylesAreDirty();
-      PostRebuildAllStyleDataEvent(NS_STYLE_HINT_REFLOW, nsRestyleHint(0));
+      PostRebuildAllStyleDataEvent(NS_STYLE_HINT_REFLOW, RestyleHint{0});
       RefreshDriver()->AddPostRefreshObserver(
           new CounterStyleCleaner(RefreshDriver(), mCounterStyleManager));
     }
@@ -1742,7 +1747,7 @@ void nsPresContext::EnsureSafeToHandOutCSSRules() {
     return;
   }
 
-  RebuildAllStyleData(nsChangeHint(0), eRestyle_Subtree);
+  RebuildAllStyleData(nsChangeHint(0), RestyleHint::RestyleSubtree());
 }
 
 void nsPresContext::FireDOMPaintEvent(

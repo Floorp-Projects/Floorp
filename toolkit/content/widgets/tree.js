@@ -512,7 +512,7 @@
 
       this.attachShadow({ mode: "open" });
       this.shadowRoot.appendChild(MozXULElement.parseXULToFragment(`
-        <html:link rel="stylesheet" href="chrome://global/skin/tree.css" />
+        <html:link rel="stylesheet" href="chrome://global/content/widgets.css" />
         <html:slot name="treecols"></html:slot>
         <stack class="tree-stack" flex="1">
           <hbox class="tree-rows" flex="1">

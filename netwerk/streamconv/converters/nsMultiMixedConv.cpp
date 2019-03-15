@@ -235,6 +235,7 @@ nsPartChannel::GetLoadInfo(nsILoadInfo **aLoadInfo) {
 
 NS_IMETHODIMP
 nsPartChannel::SetLoadInfo(nsILoadInfo *aLoadInfo) {
+  MOZ_RELEASE_ASSERT(aLoadInfo, "loadinfo can't be null");
   return mMultipartChannel->SetLoadInfo(aLoadInfo);
 }
 
@@ -494,9 +495,8 @@ nsMultiMixedConv::OnStartRequest(nsIRequest *request) {
 
 // nsIStreamListener implementation
 NS_IMETHODIMP
-nsMultiMixedConv::OnDataAvailable(nsIRequest *request,
-                                  nsIInputStream *inStr, uint64_t sourceOffset,
-                                  uint32_t count) {
+nsMultiMixedConv::OnDataAvailable(nsIRequest *request, nsIInputStream *inStr,
+                                  uint64_t sourceOffset, uint32_t count) {
   // Failing these assertions may indicate that some of the target listeners of
   // this converter is looping the thead queue, which is harmful to how we
   // collect the raw (content) data.
@@ -523,8 +523,7 @@ nsMultiMixedConv::OnDataAvailable(nsIRequest *request,
 }
 
 NS_IMETHODIMP
-nsMultiMixedConv::OnStopRequest(nsIRequest *request,
-                                nsresult aStatus) {
+nsMultiMixedConv::OnStopRequest(nsIRequest *request, nsresult aStatus) {
   nsresult rv;
 
   if (mBoundary.IsEmpty()) {  // no token, no love.

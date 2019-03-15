@@ -244,7 +244,8 @@ BEGIN_TEST(testArrayBuffer_serializeExternal) {
 
   {
     JS::RootedFunction serialize(cx);
-    serialize = JS_NewFunction(cx, js::testingFunc_serialize, 1, 0, "serialize");
+    serialize =
+        JS_NewFunction(cx, js::testingFunc_serialize, 1, 0, "serialize");
     CHECK(serialize);
 
     serializeValue.setObject(*JS_GetFunctionObject(serialize));
@@ -258,7 +259,8 @@ BEGIN_TEST(testArrayBuffer_serializeExternal) {
   CHECK(!data.wasFreed());
 
   JS::RootedValue v(cx, JS::ObjectValue(*externalBuffer));
-  JS::RootedObject transferMap(cx, JS_NewArrayObject(cx, JS::HandleValueArray(v)));
+  JS::RootedObject transferMap(cx,
+                               JS_NewArrayObject(cx, JS::HandleValueArray(v)));
   CHECK(transferMap);
 
   JS::AutoValueArray<2> args(cx);

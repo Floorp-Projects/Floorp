@@ -600,10 +600,11 @@ void nsBufferedInputStream::Serialize(InputStreamParams& aParams,
                     aSizeUsed, aManager);
 }
 
-void nsBufferedInputStream::Serialize(
-    InputStreamParams& aParams, FileDescriptorArray& aFileDescriptors,
-    bool aDelayedStart, uint32_t aMaxSize, uint32_t* aSizeUsed,
-    mozilla::dom::ContentParent* aManager) {
+void nsBufferedInputStream::Serialize(InputStreamParams& aParams,
+                                      FileDescriptorArray& aFileDescriptors,
+                                      bool aDelayedStart, uint32_t aMaxSize,
+                                      uint32_t* aSizeUsed,
+                                      mozilla::dom::ContentParent* aManager) {
   SerializeInternal(aParams, aFileDescriptors, aDelayedStart, aMaxSize,
                     aSizeUsed, aManager);
 }

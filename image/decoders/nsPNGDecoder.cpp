@@ -117,6 +117,7 @@ nsPNGDecoder::nsPNGDecoder(RasterImage* aImage)
       mPass(0),
       mFrameIsHidden(false),
       mDisablePremultipliedAlpha(false),
+      mGotInfoCallback(false),
       mNumFrames(0) {}
 
 nsPNGDecoder::~nsPNGDecoder() {
@@ -536,6 +537,13 @@ void nsPNGDecoder::info_callback(png_structp png_ptr, png_infop info_ptr) {
 
   nsPNGDecoder* decoder =
       static_cast<nsPNGDecoder*>(png_get_progressive_ptr(png_ptr));
+
+  if (decoder->mGotInfoCallback) {
+    MOZ_LOG(sPNGLog, LogLevel::Warning, ("libpng called info_callback more than once\n"));
+    return;
+  }
+
+  decoder->mGotInfoCallback = true;
 
   // Always decode to 24-bit RGB or 32-bit RGBA
   png_get_IHDR(png_ptr, info_ptr, &width, &height, &bit_depth, &color_type,

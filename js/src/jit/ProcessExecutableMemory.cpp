@@ -172,9 +172,10 @@ static bool RegisterExecutableMemory(void* p, size_t bytes, size_t pageSize) {
   // Use a fake unwind code to make the Windows unwinder do _something_. If the
   // PC and SP both stay unchanged, we'll fail the unwinder's sanity checks and
   // it won't call our exception handler.
-  r->unwindInfo.codeWords = 1; // one 32-bit word gives us up to 4 codes
-  r->unwindInfo.unwindCodes[0] = 0b00000001; // alloc_s small stack of size 1*16
-  r->unwindInfo.unwindCodes[1] = 0b11100100; // end
+  r->unwindInfo.codeWords = 1;  // one 32-bit word gives us up to 4 codes
+  r->unwindInfo.unwindCodes[0] =
+      0b00000001;  // alloc_s small stack of size 1*16
+  r->unwindInfo.unwindCodes[1] = 0b11100100;  // end
 
   uint32_t* thunk = (uint32_t*)r->thunk;
   uint16_t* addr = (uint16_t*)&handler;

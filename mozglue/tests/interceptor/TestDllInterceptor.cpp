@@ -610,12 +610,12 @@ extern "C" int wmain(int argc, wchar_t* argv[]) {
       TEST_HOOK(ntdll.dll, NtWriteFile, NotEquals, 0) &&
       TEST_HOOK(ntdll.dll, NtWriteFileGather, NotEquals, 0) &&
       TEST_HOOK(ntdll.dll, NtQueryFullAttributesFile, NotEquals, 0) &&
-#ifndef MOZ_ASAN
+#  ifndef MOZ_ASAN
       // Bug 733892: toolkit/crashreporter/nsExceptionHandler.cpp
       // This fails on ASan because the ASan runtime already hooked this
       // function
       TEST_HOOK(kernel32.dll, SetUnhandledExceptionFilter, Ignore, nullptr) &&
-#endif
+#  endif
 #endif
 #ifdef _M_IX86
       TEST_HOOK_FOR_INVALID_HANDLE_VALUE(kernel32.dll, CreateFileW) &&
@@ -682,8 +682,7 @@ extern "C" int wmain(int argc, wchar_t* argv[]) {
       TEST_HOOK(sspicli.dll, FreeCredentialsHandle, NotEquals, SEC_E_OK) &&
 #endif
       TEST_DETOUR_SKIP_EXEC(kernel32.dll, BaseThreadInitThunk) &&
-      TEST_DETOUR_SKIP_EXEC(ntdll.dll, LdrLoadDll) && TestTenByteDetour()
-      ) {
+      TEST_DETOUR_SKIP_EXEC(ntdll.dll, LdrLoadDll) && TestTenByteDetour()) {
     printf("TEST-PASS | WindowsDllInterceptor | all checks passed\n");
 
     LARGE_INTEGER end, freq;

@@ -5,15 +5,18 @@
 "use strict";
 
 const TRACKING_PAGE = "http://example.org/browser/browser/base/content/test/trackingUI/trackingPage.html";
-const CM_PREF = "privacy.trackingprotection.cryptomining.enabled";
+const CM_PROTECTION_PREF = "privacy.trackingprotection.cryptomining.enabled";
+const CM_ANNOTATION_PREF = "privacy.trackingprotection.cryptomining.annotate.enabled";
 
 add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({set: [
     [ ContentBlocking.prefIntroCount, ContentBlocking.MAX_INTROS ],
     [ "urlclassifier.features.cryptomining.blacklistHosts", "cryptomining.example.com" ],
+    [ "urlclassifier.features.cryptomining.annotate.blacklistHosts", "cryptomining.example.com" ],
     [ "privacy.trackingprotection.enabled", false ],
     [ "privacy.trackingprotection.annotate_channels", false ],
     [ "privacy.trackingprotection.fingerprinting.enabled", false ],
+    [ "privacy.trackingprotection.fingerprinting.annotate.enabled", false ],
   ]});
 });
 
@@ -104,7 +107,8 @@ async function testSubview(hasException) {
 }
 
 add_task(async function test() {
-  Services.prefs.setBoolPref(CM_PREF, true);
+  Services.prefs.setBoolPref(CM_PROTECTION_PREF, true);
+  Services.prefs.setBoolPref(CM_ANNOTATION_PREF, true);
 
   await testIdentityState(false);
   await testIdentityState(true);
@@ -112,6 +116,7 @@ add_task(async function test() {
   await testSubview(false);
   await testSubview(true);
 
-  Services.prefs.clearUserPref(CM_PREF);
+  Services.prefs.clearUserPref(CM_PROTECTION_PREF);
+  Services.prefs.clearUserPref(CM_ANNOTATION_PREF);
 });
 

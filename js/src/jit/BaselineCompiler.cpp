@@ -1662,8 +1662,7 @@ MOZ_MUST_USE bool BaselineCompilerCodeGen::emitTestScriptFlag(
 template <>
 template <typename F>
 MOZ_MUST_USE bool BaselineCompilerCodeGen::emitTestScriptFlag(
-    JSScript::MutableFlags flag, bool value, const F& emit,
-    Register scratch) {
+    JSScript::MutableFlags flag, bool value, const F& emit, Register scratch) {
   if (handler.script()->hasFlag(flag) == value) {
     return emit();
   }
@@ -1693,8 +1692,7 @@ MOZ_MUST_USE bool BaselineInterpreterCodeGen::emitTestScriptFlag(
 template <>
 template <typename F>
 MOZ_MUST_USE bool BaselineInterpreterCodeGen::emitTestScriptFlag(
-    JSScript::MutableFlags flag, bool value, const F& emit,
-    Register scratch) {
+    JSScript::MutableFlags flag, bool value, const F& emit, Register scratch) {
   Label done;
   loadScript(scratch);
   masm.branchTest32(value ? Assembler::Zero : Assembler::NonZero,

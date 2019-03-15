@@ -269,39 +269,6 @@ ThreadClient.prototype = {
   }),
 
   /**
-   * Send a clientEvaluate packet to the debuggee. Response
-   * will be a resume packet.
-   *
-   * @param string frame
-   *        The actor ID of the frame where the evaluation should take place.
-   * @param string expression
-   *        The expression that will be evaluated in the scope of the frame
-   *        above.
-   * @param function onResponse
-   *        Called with the response packet.
-   */
-  eval: DebuggerClient.requester({
-    type: "clientEvaluate",
-    frame: arg(0),
-    expression: arg(1),
-  }, {
-    before: function(packet) {
-      this._assertPaused("eval");
-      // Put the client in a tentative "resuming" state so we can prevent
-      // further requests that should only be sent in the paused state.
-      this._state = "resuming";
-      return packet;
-    },
-    after: function(response) {
-      if (response.error) {
-        // There was an error resuming, back to paused state.
-        this._state = "paused";
-      }
-      return response;
-    },
-  }),
-
-  /**
    * Detach from the thread actor.
    *
    * @param function onResponse

@@ -3847,8 +3847,7 @@ WebSocketChannel::OnStartRequest(nsIRequest *aRequest) {
 }
 
 NS_IMETHODIMP
-WebSocketChannel::OnStopRequest(nsIRequest *aRequest,
-                                nsresult aStatusCode) {
+WebSocketChannel::OnStopRequest(nsIRequest *aRequest, nsresult aStatusCode) {
   LOG(("WebSocketChannel::OnStopRequest() %p [%p %p %" PRIx32 "]\n", this,
        aRequest, mHttpChannel.get(), static_cast<uint32_t>(aStatusCode)));
   MOZ_ASSERT(NS_IsMainThread(), "not main thread");

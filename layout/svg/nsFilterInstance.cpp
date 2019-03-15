@@ -95,8 +95,7 @@ void nsFilterInstance::PaintFilteredFrame(
   }
 }
 
-static mozilla::wr::ComponentTransferFuncType
-FuncTypeToWr(uint8_t aFuncType) {
+static mozilla::wr::ComponentTransferFuncType FuncTypeToWr(uint8_t aFuncType) {
   switch (aFuncType) {
     case SVG_FECOMPONENTTRANSFER_TYPE_IDENTITY:
       return mozilla::wr::ComponentTransferFuncType::Identity;
@@ -282,9 +281,9 @@ bool nsFilterInstance::BuildWebRenderFilters(nsIFrame* aFilteredFrame,
       const ComponentTransferAttributes& attributes =
           attr.as<ComponentTransferAttributes>();
 
-      size_t numValues = attributes.mValues[0].Length() +
-          attributes.mValues[1].Length() + attributes.mValues[2].Length() +
-          attributes.mValues[3].Length();
+      size_t numValues =
+          attributes.mValues[0].Length() + attributes.mValues[1].Length() +
+          attributes.mValues[2].Length() + attributes.mValues[3].Length();
       if (numValues > 1024) {
         // Depending on how the wr shaders are implemented we may need to
         // limit the total number of values.
@@ -294,7 +293,8 @@ bool nsFilterInstance::BuildWebRenderFilters(nsIFrame* aFilteredFrame,
       wr::FilterOp filterOp = {wr::FilterOp::Tag::ComponentTransfer};
       wr::WrFilterData filterData;
       aWrFilters.values.AppendElement(nsTArray<float>());
-      nsTArray<float>* values = &aWrFilters.values[aWrFilters.values.Length()-1];
+      nsTArray<float>* values =
+          &aWrFilters.values[aWrFilters.values.Length() - 1];
       values->SetCapacity(numValues);
 
       filterData.funcR_type = FuncTypeToWr(attributes.mTypes[0]);
@@ -317,10 +317,14 @@ bool nsFilterInstance::BuildWebRenderFilters(nsIFrame* aFilteredFrame,
       values->AppendElements(attributes.mValues[3]);
       filterData.A_values_count = attributes.mValues[3].Length();
 
-      filterData.R_values = filterData.R_values_count > 0 ? &((*values)[R_startindex]) : nullptr;
-      filterData.G_values = filterData.G_values_count > 0 ? &((*values)[G_startindex]) : nullptr;
-      filterData.B_values = filterData.B_values_count > 0 ? &((*values)[B_startindex]) : nullptr;
-      filterData.A_values = filterData.A_values_count > 0 ? &((*values)[A_startindex]) : nullptr;
+      filterData.R_values =
+          filterData.R_values_count > 0 ? &((*values)[R_startindex]) : nullptr;
+      filterData.G_values =
+          filterData.G_values_count > 0 ? &((*values)[G_startindex]) : nullptr;
+      filterData.B_values =
+          filterData.B_values_count > 0 ? &((*values)[B_startindex]) : nullptr;
+      filterData.A_values =
+          filterData.A_values_count > 0 ? &((*values)[A_startindex]) : nullptr;
 
       aWrFilters.filters.AppendElement(filterOp);
       aWrFilters.filter_datas.AppendElement(filterData);
@@ -329,8 +333,10 @@ bool nsFilterInstance::BuildWebRenderFilters(nsIFrame* aFilteredFrame,
     }
 
     if (filterIsNoop && aWrFilters.filters.Length() > 0 &&
-        (aWrFilters.filters.LastElement().tag == wr::FilterOp::Tag::SrgbToLinear ||
-         aWrFilters.filters.LastElement().tag == wr::FilterOp::Tag::LinearToSrgb)) {
+        (aWrFilters.filters.LastElement().tag ==
+             wr::FilterOp::Tag::SrgbToLinear ||
+         aWrFilters.filters.LastElement().tag ==
+             wr::FilterOp::Tag::LinearToSrgb)) {
       // We pushed a color space conversion filter in prevision of applying
       // another filter which turned out to be a no-op, so the conversion is
       // unnecessary. Remove it from the filter list.

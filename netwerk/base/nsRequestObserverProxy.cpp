@@ -132,8 +132,7 @@ nsRequestObserverProxy::OnStartRequest(nsIRequest *request) {
 }
 
 NS_IMETHODIMP
-nsRequestObserverProxy::OnStopRequest(nsIRequest *request,
-                                      nsresult status) {
+nsRequestObserverProxy::OnStopRequest(nsIRequest *request, nsresult status) {
   LOG(("nsRequestObserverProxy: OnStopRequest [this=%p req=%p status=%" PRIx32
        "]\n",
        this, request, static_cast<uint32_t>(status)));

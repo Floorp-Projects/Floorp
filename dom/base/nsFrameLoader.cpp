@@ -279,14 +279,19 @@ void nsFrameLoader::LoadFrame(bool aOriginalSrc) {
 
   nsAutoString src;
   nsCOMPtr<nsIPrincipal> principal;
+  nsCOMPtr<nsIContentSecurityPolicy> csp;
 
   bool isSrcdoc = mOwnerContent->IsHTMLElement(nsGkAtoms::iframe) &&
                   mOwnerContent->HasAttr(kNameSpaceID_None, nsGkAtoms::srcdoc);
   if (isSrcdoc) {
     src.AssignLiteral("about:srcdoc");
     principal = mOwnerContent->NodePrincipal();
+    // Currently the NodePrincipal holds the CSP for a document. After
+    // Bug 965637 we can query the CSP from mOwnerContent->OwnerDoc()
+    // instead of mOwnerContent->NodePrincipal().
+    mOwnerContent->NodePrincipal()->GetCsp(getter_AddRefs(csp));
   } else {
-    GetURL(src, getter_AddRefs(principal));
+    GetURL(src, getter_AddRefs(principal), getter_AddRefs(csp));
 
     src.Trim(" \t\n\r");
 
@@ -301,6 +306,10 @@ void nsFrameLoader::LoadFrame(bool aOriginalSrc) {
       }
       src.AssignLiteral("about:blank");
       principal = mOwnerContent->NodePrincipal();
+      // Currently the NodePrincipal holds the CSP for a document. After
+      // Bug 965637 we can query the CSP from mOwnerContent->OwnerDoc()
+      // instead of mOwnerContent->NodePrincipal().
+      mOwnerContent->NodePrincipal()->GetCsp(getter_AddRefs(csp));
     }
   }
 
@@ -327,7 +336,7 @@ void nsFrameLoader::LoadFrame(bool aOriginalSrc) {
   }
 
   if (NS_SUCCEEDED(rv)) {
-    rv = LoadURI(uri, principal, aOriginalSrc);
+    rv = LoadURI(uri, principal, csp, aOriginalSrc);
   }
 
   if (NS_FAILED(rv)) {
@@ -348,6 +357,7 @@ void nsFrameLoader::FireErrorEvent() {
 
 nsresult nsFrameLoader::LoadURI(nsIURI* aURI,
                                 nsIPrincipal* aTriggeringPrincipal,
+                                nsIContentSecurityPolicy* aCsp,
                                 bool aOriginalSrc) {
   if (!aURI) return NS_ERROR_INVALID_POINTER;
   NS_ENSURE_STATE(!mDestroyCalled && mOwnerContent);
@@ -365,10 +375,12 @@ nsresult nsFrameLoader::LoadURI(nsIURI* aURI,
 
   mURIToLoad = aURI;
   mTriggeringPrincipal = aTriggeringPrincipal;
+  mCsp = aCsp;
   rv = doc->InitializeFrameLoader(this);
   if (NS_FAILED(rv)) {
     mURIToLoad = nullptr;
     mTriggeringPrincipal = nullptr;
+    mCsp = nullptr;
   }
   return rv;
 }
@@ -440,22 +452,21 @@ nsresult nsFrameLoader::ReallyStartLoadingInternal() {
     loadState->SetTriggeringPrincipal(mOwnerContent->NodePrincipal());
   }
 
-  // Expanded Principals override the CSP of the document, hence we first check
-  // if the triggeringPrincipal overrides the document's principal. If so, let's
-  // query the CSP from that Principal, otherwise we use the document's CSP.
-  // Note that even after Bug 965637, Expanded Principals will hold their own
-  // CSP.
-  nsCOMPtr<nsIContentSecurityPolicy> csp;
-  if (BasePrincipal::Cast(loadState->TriggeringPrincipal())
-          ->OverridesCSP(mOwnerContent->NodePrincipal())) {
-    loadState->TriggeringPrincipal()->GetCsp(getter_AddRefs(csp));
-  } else {
+  // If we have an explicit CSP, we set it. If not, we only query it from
+  // the NodePrincipal in case there was no explicit triggeringPrincipal.
+  // Otherwise it's possible that the original triggeringPrincipal did not
+  // have a CSP which causes the CSP on the Principal and explicit CSP
+  // to be out of sync.
+  if (mCsp) {
+    loadState->SetCsp(mCsp);
+  } else if (!mTriggeringPrincipal) {
     // Currently the NodePrincipal holds the CSP for a document. After
     // Bug 965637 we can query the CSP from mOwnerContent->OwnerDoc()
     // instead of mOwnerContent->NodePrincipal().
+    nsCOMPtr<nsIContentSecurityPolicy> csp;
     mOwnerContent->NodePrincipal()->GetCsp(getter_AddRefs(csp));
+    loadState->SetCsp(csp);
   }
-  loadState->SetCsp(csp);
 
   nsCOMPtr<nsIURI> referrer;
 
@@ -838,11 +849,12 @@ void nsFrameLoader::MarginsChanged(uint32_t aMarginWidth,
 
   // Trigger a restyle if there's a prescontext
   // FIXME: This could do something much less expensive.
-  RefPtr<nsPresContext> presContext = mDocShell->GetPresContext();
-  if (presContext)
+  if (nsPresContext* presContext = mDocShell->GetPresContext()) {
     // rebuild, because now the same nsMappedAttributes* will produce
     // a different style
-    presContext->RebuildAllStyleData(nsChangeHint(0), eRestyle_Subtree);
+    presContext->RebuildAllStyleData(nsChangeHint(0),
+                                     RestyleHint::RestyleSubtree());
+  }
 }
 
 bool nsFrameLoader::ShowRemoteFrame(const ScreenIntSize& size,
@@ -1882,7 +1894,7 @@ static already_AddRefed<BrowsingContext> CreateBrowsingContext(
     const nsAString& aName, bool aIsContent) {
   // If we're content but our parent isn't, we're going to want to start a new
   // browsing context tree.
-  if (aIsContent && !aParentContext->IsContent()) {
+  if (aIsContent && aParentContext && !aParentContext->IsContent()) {
     aParentContext = nullptr;
   }
 
@@ -1890,6 +1902,20 @@ static already_AddRefed<BrowsingContext> CreateBrowsingContext(
                                           : BrowsingContext::Type::Chrome;
 
   return BrowsingContext::Create(aParentContext, aOpenerContext, aName, type);
+}
+
+static void GetFrameName(Element* aOwnerContent, nsAString& aFrameName) {
+  int32_t namespaceID = aOwnerContent->GetNameSpaceID();
+  if (namespaceID == kNameSpaceID_XHTML && !aOwnerContent->IsInHTMLDocument()) {
+    aOwnerContent->GetAttr(kNameSpaceID_None, nsGkAtoms::id, aFrameName);
+  } else {
+    aOwnerContent->GetAttr(kNameSpaceID_None, nsGkAtoms::name, aFrameName);
+    // XXX if no NAME then use ID, after a transition period this will be
+    // changed so that XUL only uses ID too (bug 254284).
+    if (aFrameName.IsEmpty() && namespaceID == kNameSpaceID_XUL) {
+      aOwnerContent->GetAttr(kNameSpaceID_None, nsGkAtoms::id, aFrameName);
+    }
+  }
 }
 
 nsresult nsFrameLoader::MaybeCreateDocShell() {
@@ -1933,18 +1959,7 @@ nsresult nsFrameLoader::MaybeCreateDocShell() {
 
   // Determine the frame name for the new browsing context.
   nsAutoString frameName;
-
-  int32_t namespaceID = mOwnerContent->GetNameSpaceID();
-  if (namespaceID == kNameSpaceID_XHTML && !mOwnerContent->IsInHTMLDocument()) {
-    mOwnerContent->GetAttr(kNameSpaceID_None, nsGkAtoms::id, frameName);
-  } else {
-    mOwnerContent->GetAttr(kNameSpaceID_None, nsGkAtoms::name, frameName);
-    // XXX if no NAME then use ID, after a transition period this will be
-    // changed so that XUL only uses ID too (bug 254284).
-    if (frameName.IsEmpty() && namespaceID == kNameSpaceID_XUL) {
-      mOwnerContent->GetAttr(kNameSpaceID_None, nsGkAtoms::id, frameName);
-    }
-  }
+  GetFrameName(mOwnerContent, frameName);
 
   // Check if our new context is chrome or content
   bool isContent = parentBC->IsContent() ||
@@ -2192,25 +2207,36 @@ nsresult nsFrameLoader::MaybeCreateDocShell() {
   return NS_OK;
 }
 
-void nsFrameLoader::GetURL(nsString& aURI,
-                           nsIPrincipal** aTriggeringPrincipal) {
+void nsFrameLoader::GetURL(nsString& aURI, nsIPrincipal** aTriggeringPrincipal,
+                           nsIContentSecurityPolicy** aCsp) {
   aURI.Truncate();
+  // Within this function we default to using the NodePrincipal as the
+  // triggeringPrincipal and the CSP of the document, currently stored
+  // on the NodePrincipal. After Bug 965637 we can query the CSP from
+  // mOwnerContent->OwnerDoc() instead of mOwnerContent->NodePrincipal().
+  // Expanded Principals however override the CSP of the document, hence
+  // if frame->GetSrcTriggeringPrincipal() returns a valid principal, we
+  // have to query the CSP from that Principal. Note that even after
+  // Bug 965637, Expanded Principals will hold their own CSP.
+  nsCOMPtr<nsIPrincipal> triggeringPrincipal = mOwnerContent->NodePrincipal();
+  nsCOMPtr<nsIContentSecurityPolicy> csp;
+  mOwnerContent->NodePrincipal()->GetCsp(getter_AddRefs(csp));
 
   if (mOwnerContent->IsHTMLElement(nsGkAtoms::object)) {
     mOwnerContent->GetAttr(kNameSpaceID_None, nsGkAtoms::data, aURI);
-    nsCOMPtr<nsIPrincipal> prin = mOwnerContent->NodePrincipal();
-    prin.forget(aTriggeringPrincipal);
   } else {
     mOwnerContent->GetAttr(kNameSpaceID_None, nsGkAtoms::src, aURI);
     if (RefPtr<nsGenericHTMLFrameElement> frame =
             do_QueryObject(mOwnerContent)) {
-      nsCOMPtr<nsIPrincipal> prin = frame->GetSrcTriggeringPrincipal();
-      prin.forget(aTriggeringPrincipal);
-    } else {
-      nsCOMPtr<nsIPrincipal> prin = mOwnerContent->NodePrincipal();
-      prin.forget(aTriggeringPrincipal);
+      nsCOMPtr<nsIPrincipal> srcPrincipal = frame->GetSrcTriggeringPrincipal();
+      if (srcPrincipal) {
+        triggeringPrincipal = srcPrincipal;
+        triggeringPrincipal->GetCsp(getter_AddRefs(csp));
+      }
     }
   }
+  triggeringPrincipal.forget(aTriggeringPrincipal);
+  csp.forget(aCsp);
 }
 
 nsresult nsFrameLoader::CheckForRecursiveLoad(nsIURI* aURI) {
@@ -2555,8 +2581,21 @@ bool nsFrameLoader::TryRemoteBrowser() {
 
   // If we're in a content process, create a BrowserBridgeChild actor.
   if (XRE_IsContentProcess()) {
+    // Determine the frame name for the new browsing context.
+    nsAutoString frameName;
+    GetFrameName(mOwnerContent, frameName);
+
+    RefPtr<BrowsingContext> parentBC;
+    parentDocShell->GetBrowsingContext(getter_AddRefs(parentBC));
+    MOZ_ASSERT(parentBC, "docShell must have BrowsingContext");
+
+    // XXX(nika): due to limitations with Browsing Context Groups and multiple
+    // processes, we can't link up aParent yet! (Bug 1532661)
+    RefPtr<BrowsingContext> browsingContext =
+        CreateBrowsingContext(parentBC, nullptr, frameName, true);
+
     mBrowserBridgeChild = BrowserBridgeChild::Create(
-        this, context, NS_LITERAL_STRING(DEFAULT_REMOTE_TYPE));
+        this, context, NS_LITERAL_STRING(DEFAULT_REMOTE_TYPE), browsingContext);
     return !!mBrowserBridgeChild;
   }
 
@@ -3091,8 +3130,13 @@ already_AddRefed<nsITabParent> nsFrameLoader::GetTabParent() {
 
 already_AddRefed<nsILoadContext> nsFrameLoader::LoadContext() {
   nsCOMPtr<nsILoadContext> loadContext;
-  if (IsRemoteFrame() && (mRemoteBrowser || TryRemoteBrowser())) {
-    loadContext = mRemoteBrowser->GetLoadContext();
+  if (IsRemoteFrame() &&
+      (mRemoteBrowser || mBrowserBridgeChild || TryRemoteBrowser())) {
+    if (mRemoteBrowser) {
+      loadContext = mRemoteBrowser->GetLoadContext();
+    } else {
+      loadContext = mBrowserBridgeChild->GetLoadContext();
+    }
   } else {
     loadContext = do_GetInterface(ToSupports(GetDocShell(IgnoreErrors())));
   }
@@ -3101,8 +3145,13 @@ already_AddRefed<nsILoadContext> nsFrameLoader::LoadContext() {
 
 already_AddRefed<BrowsingContext> nsFrameLoader::GetBrowsingContext() {
   RefPtr<BrowsingContext> browsingContext;
-  if (IsRemoteFrame() && (mRemoteBrowser || TryRemoteBrowser())) {
-    browsingContext = mRemoteBrowser->GetBrowsingContext();
+  if (IsRemoteFrame() &&
+      (mRemoteBrowser || mBrowserBridgeChild || TryRemoteBrowser())) {
+    if (mRemoteBrowser) {
+      browsingContext = mRemoteBrowser->GetBrowsingContext();
+    } else {
+      browsingContext = mBrowserBridgeChild->GetBrowsingContext();
+    }
   } else if (GetDocShell(IgnoreErrors())) {
     browsingContext = nsDocShell::Cast(mDocShell)->GetBrowsingContext();
   }

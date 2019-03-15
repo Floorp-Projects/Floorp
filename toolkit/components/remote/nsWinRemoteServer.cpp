@@ -232,22 +232,21 @@ LRESULT CALLBACK WindowProc(HWND msgWindow, UINT msg, WPARAM wp, LPARAM lp) {
   return DefWindowProc(msgWindow, msg, wp, lp);
 }
 
-nsresult nsWinRemoteServer::Startup(const char* aAppName,
-    const char* aProfileName) {
-
+nsresult nsWinRemoteServer::Startup(const char *aAppName,
+                                    const char *aProfileName) {
   nsString className;
   BuildClassName(aAppName, aProfileName, className);
 
-  WNDCLASSW classStruct = {0,                           // style
-                           &WindowProc,                 // lpfnWndProc
-                           0,                           // cbClsExtra
-                           0,                           // cbWndExtra
-                           0,                           // hInstance
-                           0,                           // hIcon
-                           0,                           // hCursor
-                           0,                           // hbrBackground
-                           0,                           // lpszMenuName
-                           className.get()};            // lpszClassName
+  WNDCLASSW classStruct = {0,                 // style
+                           &WindowProc,       // lpfnWndProc
+                           0,                 // cbClsExtra
+                           0,                 // cbWndExtra
+                           0,                 // hInstance
+                           0,                 // hIcon
+                           0,                 // hCursor
+                           0,                 // hbrBackground
+                           0,                 // lpszMenuName
+                           className.get()};  // lpszClassName
 
   // Register the window class.
   NS_ENSURE_TRUE(::RegisterClassW(&classStruct), NS_ERROR_FAILURE);

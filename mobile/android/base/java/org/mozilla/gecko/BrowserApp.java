@@ -89,8 +89,6 @@ import org.mozilla.gecko.dlc.DlcStudyService;
 import org.mozilla.gecko.dlc.DlcSyncService;
 import org.mozilla.gecko.extensions.ExtensionPermissionsHelper;
 import org.mozilla.gecko.firstrun.OnboardingHelper;
-import org.mozilla.gecko.search.SearchWidgetProvider;
-import org.mozilla.geckoview.DynamicToolbarAnimator.PinReason;
 import org.mozilla.gecko.home.BrowserSearch;
 import org.mozilla.gecko.home.HomeBanner;
 import org.mozilla.gecko.home.HomeConfig;
@@ -126,6 +124,7 @@ import org.mozilla.gecko.reader.SavedReaderViewHelper;
 import org.mozilla.gecko.restrictions.Restrictable;
 import org.mozilla.gecko.restrictions.Restrictions;
 import org.mozilla.gecko.search.SearchEngineManager;
+import org.mozilla.gecko.search.SearchWidgetProvider;
 import org.mozilla.gecko.switchboard.AsyncConfigLoader;
 import org.mozilla.gecko.switchboard.SwitchBoard;
 import org.mozilla.gecko.sync.repositories.android.FennecTabsRepository;
@@ -168,6 +167,7 @@ import org.mozilla.gecko.widget.AnimatedProgressBar;
 import org.mozilla.gecko.widget.GeckoActionProvider;
 import org.mozilla.gecko.widget.SplashScreen;
 import org.mozilla.geckoview.DynamicToolbarAnimator;
+import org.mozilla.geckoview.DynamicToolbarAnimator.PinReason;
 import org.mozilla.geckoview.GeckoSession;
 
 import java.io.File;
@@ -183,15 +183,9 @@ import java.util.List;
 import java.util.Locale;
 import java.util.regex.Pattern;
 
-import static org.mozilla.gecko.Tabs.LOADURL_DELAY_LOAD;
-import static org.mozilla.gecko.Tabs.LOADURL_EXTERNAL;
-import static org.mozilla.gecko.Tabs.LOADURL_PINNED;
-import static org.mozilla.gecko.Tabs.LOADURL_START_EDITING;
-import static org.mozilla.gecko.Tabs.TabEvents.LOADED;
 import static org.mozilla.gecko.Tabs.TabEvents.THUMBNAIL;
 import static org.mozilla.gecko.mma.MmaDelegate.INTERACT_WITH_SEARCH_WIDGET_URL_AREA;
 import static org.mozilla.gecko.mma.MmaDelegate.NEW_TAB;
-import static org.mozilla.gecko.search.SearchWidgetProvider.INPUT_TYPE_KEY;
 import static org.mozilla.gecko.util.JavaUtil.getBundleSizeInBytes;
 
 public class BrowserApp extends GeckoApp
@@ -893,12 +887,15 @@ public class BrowserApp extends GeckoApp
         }
 
         MmaDelegate.track(INTERACT_WITH_SEARCH_WIDGET_URL_AREA);
+        Telemetry.sendUIEvent(TelemetryContract.Event.SEARCH, TelemetryContract.Method.WIDGET);
 
         switch (input) {
             case TEXT:
+                cleanupForNewTabEditing();
                 handleTabEditingMode(false);
                 return true;
             case VOICE:
+                cleanupForNewTabEditing();
                 handleTabEditingMode(true);
                 return true;
             default:
@@ -906,6 +903,11 @@ public class BrowserApp extends GeckoApp
                 Log.e(LOGTAG, "can't handle search action :: input == " + input);
                 return false;
         }
+    }
+
+    private void cleanupForNewTabEditing() {
+        closeOptionsMenu();
+        autoHideTabs();
     }
 
     private synchronized void handleTabEditingMode(boolean isVoice) {

@@ -992,8 +992,7 @@ ExternalResourceMap::PendingLoad::OnDataAvailable(nsIRequest* aRequest,
   if (mDisplayDocument->ExternalResourceMap().HaveShutDown()) {
     return NS_BINDING_ABORTED;
   }
-  return mTargetListener->OnDataAvailable(aRequest, aStream, aOffset,
-                                          aCount);
+  return mTargetListener->OnDataAvailable(aRequest, aStream, aOffset, aCount);
 }
 
 NS_IMETHODIMP
@@ -2545,14 +2544,11 @@ nsresult Document::StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
     }
   }
 
-  // If this is not a data document, set CSP.
-  if (!mLoadedAsData) {
-    nsresult rv = InitCSP(aChannel);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
+  nsresult rv = InitCSP(aChannel);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // Initialize FeaturePolicy
-  nsresult rv = InitFeaturePolicy(aChannel);
+  rv = InitFeaturePolicy(aChannel);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // XFO needs to be checked after CSP because it is ignored if
@@ -2650,6 +2646,11 @@ nsresult Document::InitCSP(nsIChannel* aChannel) {
     return NS_OK;
   }
 
+  // If this is a data document - no need to set CSP.
+  if (mLoadedAsData) {
+    return NS_OK;
+  }
+
   nsAutoCString tCspHeaderValue, tCspROHeaderValue;
 
   nsCOMPtr<nsIHttpChannel> httpChannel;
@@ -2672,6 +2673,20 @@ nsresult Document::InitCSP(nsIChannel* aChannel) {
   // Check if this is a document from a WebExtension.
   nsCOMPtr<nsIPrincipal> principal = NodePrincipal();
   auto addonPolicy = BasePrincipal::Cast(principal)->AddonPolicy();
+
+  // Unless the NodePrincipal is a SystemPrincipal, which currently can not
+  // hold a CSP, we always call EnsureCSP() on the Principal. We do this
+  // so that a Meta CSP does not have to create a new CSP object. This is
+  // important because history entries hold a reference to the CSP object,
+  // which then gets dynamically updated in case a meta CSP is present.
+  // Note that after Bug 965637 we can remove that carve out, because the
+  // CSP will hang off the Client/Document and not the Principal anymore.
+  if (principal->IsSystemPrincipal()) {
+    return NS_OK;
+  }
+  nsCOMPtr<nsIContentSecurityPolicy> csp;
+  rv = principal->EnsureCSP(this, getter_AddRefs(csp));
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // Check if this is a signed content to apply default CSP.
   bool applySignedContentCSP = false;
@@ -2697,10 +2712,6 @@ nsresult Document::InitCSP(nsIChannel* aChannel) {
 
   MOZ_LOG(gCspPRLog, LogLevel::Debug,
           ("Document is an add-on or CSP header specified %p", this));
-
-  nsCOMPtr<nsIContentSecurityPolicy> csp;
-  rv = principal->EnsureCSP(this, getter_AddRefs(csp));
-  NS_ENSURE_SUCCESS(rv, rv);
 
   // ----- if the doc is an addon, apply its CSP.
   if (addonPolicy) {
@@ -6503,6 +6514,8 @@ nsINode* Document::AdoptNode(nsINode& aAdoptedNode, ErrorResult& rv) {
   return adoptedNode;
 }
 
+bool Document::UseWidthDeviceWidthFallbackViewport() const { return false; }
+
 void Document::ParseWidthAndHeightInMetaViewport(
     const nsAString& aWidthString, const nsAString& aHeightString,
     const nsAString& aScaleString) {
@@ -6542,6 +6555,9 @@ void Document::ParseWidthAndHeightInMetaViewport(
       mMinWidth = nsViewportInfo::ExtendToZoom;
       mMaxWidth = nsViewportInfo::ExtendToZoom;
     }
+  } else if (aHeightString.IsEmpty() && UseWidthDeviceWidthFallbackViewport()) {
+    mMinWidth = nsViewportInfo::ExtendToZoom;
+    mMaxWidth = nsViewportInfo::DeviceSize;
   }
 
   mMinHeight = nsViewportInfo::Auto;

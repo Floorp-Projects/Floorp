@@ -9,6 +9,9 @@ XPCOMUtils.defineLazyServiceGetter(this, "aboutNewTabService",
                                    "nsIAboutNewTabService");
 XPCOMUtils.defineLazyPreferenceGetter(this, "proxyType", PROXY_PREF);
 
+const {AddonTestUtils} = ChromeUtils.import("resource://testing-common/AddonTestUtils.jsm");
+AddonTestUtils.initMochitest(this);
+
 const TEST_DIR = gTestPath.substr(0, gTestPath.lastIndexOf("/"));
 const CHROME_URL_ROOT = TEST_DIR + "/";
 const PERMISSIONS_URL = "chrome://browser/content/preferences/sitePermissions.xul";
@@ -468,6 +471,7 @@ add_task(async function testExtensionControlledDefaultSearch() {
 
   let messageShown = waitForMessageShown("browserDefaultSearchExtensionContent");
   await originalExtension.startup();
+  await AddonTestUtils.waitForSearchProviderStartup(originalExtension);
   await messageShown;
 
   let addon = await AddonManager.getAddonByID(extensionId);
@@ -512,6 +516,7 @@ add_task(async function testExtensionControlledDefaultSearch() {
     manifest: Object.assign({}, manifest, {version: "2.0"}),
   });
   await updatedExtension.startup();
+  await AddonTestUtils.waitForSearchProviderStartup(updatedExtension);
   addon = await AddonManager.getAddonByID(extensionId);
 
   // Verify the extension is updated and search engine didn't change.

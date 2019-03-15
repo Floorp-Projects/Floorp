@@ -322,7 +322,7 @@ void nsSVGRenderingObserverProperty::OnRenderingChange() {
     // do that using a change hint (multiple change hints of the same type are
     // coalesced).
     nsLayoutUtils::PostRestyleEvent(frame->GetContent()->AsElement(),
-                                    nsRestyleHint(0),
+                                    RestyleHint{0},
                                     nsChangeHint_InvalidateRenderingObservers);
   }
 }
@@ -383,7 +383,7 @@ void SVGTextPathObserver::OnRenderingChange() {
   nsChangeHint changeHint =
       nsChangeHint(nsChangeHint_RepaintFrame | nsChangeHint_UpdateTextPath);
   frame->PresContext()->RestyleManager()->PostRestyleEvent(
-      frame->GetContent()->AsElement(), nsRestyleHint(0), changeHint);
+      frame->GetContent()->AsElement(), RestyleHint{0}, changeHint);
 }
 
 class SVGMarkerObserver final : public nsSVGRenderingObserverProperty {
@@ -414,7 +414,7 @@ void SVGMarkerObserver::OnRenderingChange() {
     nsSVGUtils::ScheduleReflowSVG(frame);
   }
   frame->PresContext()->RestyleManager()->PostRestyleEvent(
-      frame->GetContent()->AsElement(), nsRestyleHint(0),
+      frame->GetContent()->AsElement(), RestyleHint{0},
       nsChangeHint_RepaintFrame);
 }
 
@@ -675,7 +675,7 @@ void SVGFilterObserverListForCSSProp::OnRenderingChange() {
     changeHint |= nsChangeHint_UpdateOverflow;
   }
   frame->PresContext()->RestyleManager()->PostRestyleEvent(
-      frame->GetContent()->AsElement(), nsRestyleHint(0), changeHint);
+      frame->GetContent()->AsElement(), RestyleHint{0}, changeHint);
 }
 
 class SVGFilterObserverListForCanvasContext final

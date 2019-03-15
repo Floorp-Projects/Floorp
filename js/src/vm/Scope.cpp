@@ -1587,7 +1587,7 @@ PositionalFormalParameterIter::PositionalFormalParameterIter(Scope* scope)
 }
 
 PositionalFormalParameterIter::PositionalFormalParameterIter(JSScript* script)
-    : PositionalFormalParameterIter(script->bodyScope()) { }
+    : PositionalFormalParameterIter(script->bodyScope()) {}
 
 void js::DumpBindings(JSContext* cx, Scope* scopeArg) {
   RootedScope scope(cx, scopeArg);

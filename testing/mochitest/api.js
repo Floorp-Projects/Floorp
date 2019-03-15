@@ -99,7 +99,7 @@ function loadMochitest(e) {
 
   // for mochitest-plain, navigating to the url is all we need
   if (!IS_THUNDERBIRD) {
-    win.loadURI(url, null, null, null, null, null, null, null,
+    win.loadURI(url, null, null, null, null, null, null,
       Services.scriptSecurityManager.getSystemPrincipal());
   }
   if (flavor == "mochitest") {

@@ -10484,7 +10484,8 @@ bool BaseCompiler::emitStructNew() {
         }
 
         RegPtr otherScratch = needRef();
-        EmitWasmPostBarrierGuard(masm, Some(rowner), otherScratch, value, &skipBarrier);
+        EmitWasmPostBarrierGuard(masm, Some(rowner), otherScratch, value,
+                                 &skipBarrier);
         freeRef(otherScratch);
 
         if (!structType.isInline_) {

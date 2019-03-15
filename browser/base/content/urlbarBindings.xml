@@ -22,7 +22,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
           xmlns:xbl="http://www.mozilla.org/xbl">
 
   <binding id="urlbar" extends="chrome://global/content/bindings/textbox.xml#textbox">
-    <content>
+    <content role="combobox">
       <children includes="box"/>
       <xul:moz-input-box anonid="moz-input-box"
                          tooltip="aHTMLTooltip"
@@ -35,7 +35,6 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
                     xbl:inherits="textoverflow,focused"/>
         <html:input anonid="input"
                     class="urlbar-input textbox-input"
-                    role="combobox"
                     aria-owns="urlbarView-results"
                     aria-controls="urlbarView-results"
                     aria-autocomplete="both"

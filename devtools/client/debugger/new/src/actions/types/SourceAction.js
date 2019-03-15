@@ -10,7 +10,8 @@ import type { PromiseAction } from "../utils/middleware/promise";
 export type LoadSourceAction = PromiseAction<
   {|
     +type: "LOAD_SOURCE_TEXT",
-    +sourceId: string
+    +sourceId: string,
+    +epoch: number
   |},
   Source
 >;

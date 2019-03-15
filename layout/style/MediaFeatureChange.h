@@ -44,14 +44,14 @@ enum class MediaFeatureChangeReason {
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(MediaFeatureChangeReason)
 
 struct MediaFeatureChange {
-  nsRestyleHint mRestyleHint;
+  RestyleHint mRestyleHint;
   nsChangeHint mChangeHint;
   MediaFeatureChangeReason mReason;
 
   MOZ_IMPLICIT MediaFeatureChange(MediaFeatureChangeReason aReason)
-      : MediaFeatureChange(nsRestyleHint(0), nsChangeHint(0), aReason) {}
+      : MediaFeatureChange(RestyleHint{0}, nsChangeHint(0), aReason) {}
 
-  MediaFeatureChange(nsRestyleHint aRestyleHint, nsChangeHint aChangeHint,
+  MediaFeatureChange(RestyleHint aRestyleHint, nsChangeHint aChangeHint,
                      MediaFeatureChangeReason aReason)
       : mRestyleHint(aRestyleHint),
         mChangeHint(aChangeHint),

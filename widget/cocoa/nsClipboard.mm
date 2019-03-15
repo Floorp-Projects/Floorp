@@ -59,8 +59,7 @@ mozilla::StaticRefPtr<nsITransferable> nsClipboard::sSelectionCache;
 @end  // UTIHelper
 
 nsClipboard::nsClipboard()
-    : mCachedClipboard(-1), mChangeCount(0), mIgnoreEmptyNotification(false) {
-}
+    : mCachedClipboard(-1), mChangeCount(0), mIgnoreEmptyNotification(false) {}
 
 nsClipboard::~nsClipboard() {
   EmptyClipboard(kGlobalClipboard);

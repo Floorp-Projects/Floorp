@@ -132,7 +132,7 @@ class AudioSink : private AudioStream::DataSource {
   UniquePtr<AudioConverter> mConverter;
   MediaQueue<AudioData> mProcessedQueue;
   // Length in microseconds of the ProcessedQueue
-  Atomic<int32_t> mProcessedQueueLength;
+  Atomic<uint64_t> mProcessedQueueLength;
   MediaEventListener mAudioQueueListener;
   MediaEventListener mAudioQueueFinishListener;
   MediaEventListener mProcessedQueueListener;

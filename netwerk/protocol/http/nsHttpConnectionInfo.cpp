@@ -230,8 +230,8 @@ void nsHttpConnectionInfo::SetOriginServer(const nsACString &host,
   BuildHashKey();
 }
 
-nsHttpConnectionInfo *nsHttpConnectionInfo::Clone() const {
-  nsHttpConnectionInfo *clone;
+already_AddRefed<nsHttpConnectionInfo> nsHttpConnectionInfo::Clone() const {
+  RefPtr<nsHttpConnectionInfo> clone;
   if (mRoutedHost.IsEmpty()) {
     clone =
         new nsHttpConnectionInfo(mOrigin, mOriginPort, mNPNToken, mUsername,
@@ -256,12 +256,13 @@ nsHttpConnectionInfo *nsHttpConnectionInfo::Clone() const {
   clone->SetIPv6Disabled(GetIPv6Disabled());
   MOZ_ASSERT(clone->Equals(this));
 
-  return clone;
+  return clone.forget();
 }
 
 void nsHttpConnectionInfo::CloneAsDirectRoute(nsHttpConnectionInfo **outCI) {
   if (mRoutedHost.IsEmpty()) {
-    *outCI = Clone();
+    RefPtr<nsHttpConnectionInfo> clone = Clone();
+    clone.forget(outCI);
     return;
   }
 

@@ -452,8 +452,7 @@ nsDocLoader::OnStartRequest(nsIRequest* request) {
 }
 
 NS_IMETHODIMP
-nsDocLoader::OnStopRequest(nsIRequest* aRequest,
-                           nsresult aStatus) {
+nsDocLoader::OnStopRequest(nsIRequest* aRequest, nsresult aStatus) {
   nsresult rv = NS_OK;
 
   if (MOZ_LOG_TEST(gDocLoaderLog, LogLevel::Debug)) {

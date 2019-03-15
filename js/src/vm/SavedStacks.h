@@ -221,8 +221,8 @@ class SavedStacks {
   MOZ_MUST_USE bool adoptAsyncStack(
       JSContext* cx, MutableHandleSavedFrame asyncStack, HandleAtom asyncCause,
       const mozilla::Maybe<size_t>& maxFrameCount);
-  MOZ_MUST_USE bool checkForEvalInFramePrev(JSContext* cx,
-                                            MutableHandle<SavedFrame::Lookup> lookup);
+  MOZ_MUST_USE bool checkForEvalInFramePrev(
+      JSContext* cx, MutableHandle<SavedFrame::Lookup> lookup);
   SavedFrame* getOrCreateSavedFrame(JSContext* cx,
                                     Handle<SavedFrame::Lookup> lookup);
   SavedFrame* createFrameFromLookup(JSContext* cx,
@@ -244,7 +244,8 @@ class SavedStacks {
  public:
   struct LocationValue {
     LocationValue() : source(nullptr), sourceId(0), line(0), column(0) {}
-    LocationValue(JSAtom* source, uint32_t sourceId, size_t line, uint32_t column)
+    LocationValue(JSAtom* source, uint32_t sourceId, size_t line,
+                  uint32_t column)
         : source(source), sourceId(sourceId), line(line), column(column) {}
 
     void trace(JSTracer* trc) {

@@ -134,8 +134,7 @@ PSMContentStreamListener::OnDataAvailable(nsIRequest* request,
 }
 
 NS_IMETHODIMP
-PSMContentStreamListener::OnStopRequest(nsIRequest* request,
-                                        nsresult aStatus) {
+PSMContentStreamListener::OnStopRequest(nsIRequest* request, nsresult aStatus) {
   MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("CertDownloader::OnStopRequest\n"));
 
   // Because importing the cert can spin the event loop (via alerts), we can't
@@ -230,8 +229,7 @@ mozilla::ipc::IPCResult PSMContentDownloaderParent::RecvOnStopRequest(
 }
 
 NS_IMETHODIMP
-PSMContentDownloaderParent::OnStopRequest(nsIRequest* request,
-                                          nsresult code) {
+PSMContentDownloaderParent::OnStopRequest(nsIRequest* request, nsresult code) {
   nsresult rv = PSMContentStreamListener::OnStopRequest(request, code);
 
   if (mIPCOpen) {

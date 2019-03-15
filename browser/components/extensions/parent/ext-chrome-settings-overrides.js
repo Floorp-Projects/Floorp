@@ -79,6 +79,13 @@ async function handleInitialHomepagePopup(extensionId, homepageUrl) {
   homepagePopup.addObserver(extensionId);
 }
 
+// When an extension starts up, a search engine may asynchronously be
+// registered, without blocking the startup. When an extension is
+// uninstalled, we need to wait for this registration to finish
+// before running the uninstallation handler.
+// Map[extension id -> Promise]
+var pendingSearchSetupTasks = new Map();
+
 this.chrome_settings_overrides = class extends ExtensionAPI {
   static async processDefaultSearchSetting(action, id) {
     await ExtensionSettingsStore.initialize();
@@ -131,7 +138,11 @@ this.chrome_settings_overrides = class extends ExtensionAPI {
     ]);
   }
 
-  static onUninstall(id) {
+  static async onUninstall(id) {
+    let searchStartupPromise = pendingSearchSetupTasks.get(id);
+    if (searchStartupPromise) {
+      await searchStartupPromise;
+    }
     // Note: We do not have to deal with homepage here as it is managed by
     // the ExtensionPreferencesManager.
     return Promise.all([
@@ -190,68 +201,90 @@ this.chrome_settings_overrides = class extends ExtensionAPI {
       });
     }
     if (manifest.chrome_settings_overrides.search_provider) {
-      await searchInitialized;
-      extension.callOnClose({
-        close: () => {
-          if (extension.shutdownReason == "ADDON_DISABLE") {
-            chrome_settings_overrides.processDefaultSearchSetting("disable", extension.id);
-            chrome_settings_overrides.removeEngine(extension.id);
+      // Registering a search engine can potentially take a long while,
+      // or not complete at all (when searchInitialized is never resolved),
+      // so we are deliberately not awaiting the returned promise here.
+      let searchStartupPromise =
+        this.processSearchProviderManifestEntry().finally(() => {
+          if (pendingSearchSetupTasks.get(extension.id) === searchStartupPromise) {
+            pendingSearchSetupTasks.delete(extension.id);
           }
-        },
-      });
+        });
 
-      let searchProvider = manifest.chrome_settings_overrides.search_provider;
-      let engineName = searchProvider.name.trim();
-      if (searchProvider.is_default) {
+      // Save the promise so we can await at onUninstall.
+      pendingSearchSetupTasks.set(extension.id, searchStartupPromise);
+    }
+  }
+
+  async processSearchProviderManifestEntry() {
+    await searchInitialized;
+
+    let {extension} = this;
+    if (!extension) {
+      Cu.reportError(`Extension shut down before search provider was registered`);
+      return;
+    }
+    extension.callOnClose({
+      close: () => {
+        if (extension.shutdownReason == "ADDON_DISABLE") {
+          chrome_settings_overrides.processDefaultSearchSetting("disable", extension.id);
+          chrome_settings_overrides.removeEngine(extension.id);
+        }
+      },
+    });
+
+    let {manifest} = extension;
+    let searchProvider = manifest.chrome_settings_overrides.search_provider;
+    let engineName = searchProvider.name.trim();
+    if (searchProvider.is_default) {
+      let engine = Services.search.getEngineByName(engineName);
+      let defaultEngines = await Services.search.getDefaultEngines();
+      if (engine && defaultEngines.some(defaultEngine => defaultEngine.name == engineName)) {
+        // Needs to be called every time to handle reenabling, but
+        // only sets default for install or enable.
+        await this.setDefault(engineName);
+        // For built in search engines, we don't do anything further
+        return;
+      }
+    }
+    await this.addSearchEngine();
+    if (searchProvider.is_default) {
+      if (extension.startupReason === "ADDON_INSTALL") {
+        // Don't ask if it already the current engine
         let engine = Services.search.getEngineByName(engineName);
-        let defaultEngines = await Services.search.getDefaultEngines();
-        if (engine && defaultEngines.some(defaultEngine => defaultEngine.name == engineName)) {
-          // Needs to be called every time to handle reenabling, but
-          // only sets default for install or enable.
-          await this.setDefault(engineName);
-          // For built in search engines, we don't do anything further
-          return;
-        }
-      }
-      await this.addSearchEngine();
-      if (searchProvider.is_default) {
-        if (extension.startupReason === "ADDON_INSTALL") {
-          // Don't ask if it already the current engine
-          let engine = Services.search.getEngineByName(engineName);
-          let defaultEngine = await Services.search.getDefault();
-          if (defaultEngine.name != engine.name) {
-            let subject = {
-              wrappedJSObject: {
-                // This is a hack because we don't have the browser of
-                // the actual install. This means the popup might show
-                // in a different window. Will be addressed in a followup bug.
-                browser: windowTracker.topWindow.gBrowser.selectedBrowser,
-                name: this.extension.name,
-                icon: this.extension.iconURL,
-                currentEngine: defaultEngine.name,
-                newEngine: engineName,
-                respond(allow) {
-                  if (allow) {
-                    ExtensionSettingsStore.addSetting(
-                      extension.id, DEFAULT_SEARCH_STORE_TYPE, DEFAULT_SEARCH_SETTING_NAME, engineName, () => defaultEngine.name);
-                    Services.search.defaultEngine = Services.search.getEngineByName(engineName);
-                  }
-                },
+        let defaultEngine = await Services.search.getDefault();
+        if (defaultEngine.name != engine.name) {
+          let subject = {
+            wrappedJSObject: {
+              // This is a hack because we don't have the browser of
+              // the actual install. This means the popup might show
+              // in a different window. Will be addressed in a followup bug.
+              browser: windowTracker.topWindow.gBrowser.selectedBrowser,
+              name: this.extension.name,
+              icon: this.extension.iconURL,
+              currentEngine: defaultEngine.name,
+              newEngine: engineName,
+              respond(allow) {
+                if (allow) {
+                  ExtensionSettingsStore.addSetting(
+                    extension.id, DEFAULT_SEARCH_STORE_TYPE, DEFAULT_SEARCH_SETTING_NAME, engineName, () => defaultEngine.name);
+                  Services.search.defaultEngine = Services.search.getEngineByName(engineName);
+                }
               },
-            };
-            Services.obs.notifyObservers(subject, "webextension-defaultsearch-prompt");
-          }
-        } else {
-          // Needs to be called every time to handle reenabling, but
-          // only sets default for install or enable.
-          this.setDefault(engineName);
+            },
+          };
+          Services.obs.notifyObservers(subject, "webextension-defaultsearch-prompt");
         }
-      } else if (ExtensionSettingsStore.hasSetting(extension.id,
-                                                   DEFAULT_SEARCH_STORE_TYPE,
-                                                   DEFAULT_SEARCH_SETTING_NAME)) {
-        // is_default has been removed, but we still have a setting. Remove it.
-        chrome_settings_overrides.processDefaultSearchSetting("removeSetting", extension.id);
+      } else {
+        // Needs to be called every time to handle reenabling, but
+        // only sets default for install or enable.
+        this.setDefault(engineName);
       }
+    } else if (ExtensionSettingsStore.hasSetting(extension.id,
+                                                 DEFAULT_SEARCH_STORE_TYPE,
+                                                 DEFAULT_SEARCH_SETTING_NAME)) {
+      // is_default has been removed, but we still have a setting. Remove it.
+      chrome_settings_overrides.processDefaultSearchSetting("removeSetting", extension.id);
     }
   }
 

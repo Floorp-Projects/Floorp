@@ -29,7 +29,7 @@ add_task(async function() {
   let handler = handlers.queryElementAt(0, Ci.nsIHandlerApp);
   ok(handler instanceof Ci.nsIWebHandlerApp, "the handler is a web handler");
   is(handler.uriTemplate, "https://example.com/foobar?uri=%s",
-     "correct url template")
+     "correct url template");
   protoInfo.preferredApplicationHandler = handler;
   protoInfo.alwaysAskBeforeHandling = false;
   const handlerSvc = Cc["@mozilla.org/uriloader/handler-service;1"].

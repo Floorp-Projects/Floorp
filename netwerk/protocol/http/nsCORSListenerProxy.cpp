@@ -602,8 +602,7 @@ nsresult nsCORSListenerProxy::CheckRequestApproved(nsIRequest* aRequest) {
 }
 
 NS_IMETHODIMP
-nsCORSListenerProxy::OnStopRequest(nsIRequest* aRequest,
-                                   nsresult aStatusCode) {
+nsCORSListenerProxy::OnStopRequest(nsIRequest* aRequest, nsresult aStatusCode) {
   MOZ_ASSERT(mInited, "nsCORSListenerProxy has not been initialized properly");
   nsCOMPtr<nsIStreamListener> listener;
   {
@@ -634,8 +633,7 @@ nsCORSListenerProxy::OnDataAvailable(nsIRequest* aRequest,
     MutexAutoLock lock(mMutex);
     listener = mOuterListener;
   }
-  return listener->OnDataAvailable(aRequest, aInputStream, aOffset,
-                                   aCount);
+  return listener->OnDataAvailable(aRequest, aInputStream, aOffset, aCount);
 }
 
 void nsCORSListenerProxy::SetInterceptController(
@@ -1231,8 +1229,7 @@ nsCORSPreflightListener::OnStartRequest(nsIRequest* aRequest) {
 }
 
 NS_IMETHODIMP
-nsCORSPreflightListener::OnStopRequest(nsIRequest* aRequest,
-                                       nsresult aStatus) {
+nsCORSPreflightListener::OnStopRequest(nsIRequest* aRequest, nsresult aStatus) {
   mCallback = nullptr;
   return NS_OK;
 }

@@ -42,6 +42,7 @@ add_task(async function test_extension_adding_engine() {
   });
 
   await ext1.startup();
+  await AddonTestUtils.waitForSearchProviderStartup(ext1);
 
   let engine = Services.search.getEngineByName("MozSearch");
   ok(engine, "Engine should exist.");
@@ -83,6 +84,7 @@ add_task(async function test_extension_adding_engine_with_spaces() {
   });
 
   await ext1.startup();
+  await AddonTestUtils.waitForSearchProviderStartup(ext1);
 
   let engine = Services.search.getEngineByName("MozSearch");
   ok(engine, "Engine should exist.");
@@ -116,6 +118,7 @@ add_task(async function test_upgrade_default_position_engine() {
   });
 
   await ext1.startup();
+  await AddonTestUtils.waitForSearchProviderStartup(ext1);
 
   let engine = Services.search.getEngineByName("MozSearch");
   await Services.search.setDefault(engine);
@@ -139,6 +142,7 @@ add_task(async function test_upgrade_default_position_engine() {
     },
     useAddonManager: "temporary",
   });
+  await AddonTestUtils.waitForSearchProviderStartup(ext1);
 
   engine = Services.search.getEngineByName("MozSearch");
   equal(Services.search.defaultEngine, engine, "Default engine should still be MozSearch");
@@ -170,6 +174,7 @@ add_task(async function test_extension_post_params() {
   });
 
   await ext1.startup();
+  await AddonTestUtils.waitForSearchProviderStartup(ext1);
 
   let engine = Services.search.getEngineByName("MozSearch");
   ok(engine, "Engine should exist.");

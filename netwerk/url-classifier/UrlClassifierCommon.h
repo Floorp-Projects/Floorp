@@ -42,6 +42,17 @@ class UrlClassifierCommon final {
   static nsresult CreatePairwiseWhiteListURI(nsIChannel* aChannel,
                                              nsIURI** aURI);
 
+  static void AnnotateChannel(
+      nsIChannel* aChannel,
+      AntiTrackingCommon::ContentBlockingAllowListPurpose aPurpose,
+      uint32_t aClassificationFlags, uint32_t aLoadingState);
+
+  static bool IsAllowListed(
+      nsIChannel* aChannel,
+      AntiTrackingCommon::ContentBlockingAllowListPurpose aPurpose);
+
+  static bool IsTrackingClassificationFlag(uint32_t aFlag);
+
  private:
   // aBlockedReason must be one of the nsIWebProgressListener state.
   static void NotifyChannelBlocked(nsIChannel* aChannel,

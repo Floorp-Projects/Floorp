@@ -16,7 +16,7 @@ var unsafeBidiChars = [
   "\xe2\x80\xab", // RLE
   "\xe2\x80\xac", // PDF
   "\xe2\x80\xad", // LRO
-  "\xe2\x80\xae"  // RLO
+  "\xe2\x80\xae",  // RLO
 ];
 
 var tests = [
@@ -35,7 +35,7 @@ function replace(name, x) {
 }
 
 function sanitize(name) {
-  return replace(name, '_');
+  return replace(name, "_");
 }
 
 const INSECURE_REGISTER_PREF = "dom.registerProtocolHandler.insecure.enabled";

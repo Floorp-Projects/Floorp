@@ -199,8 +199,7 @@ class LoaderListener final : public nsIStreamListener,
   }
 
   NS_IMETHOD
-  OnStopRequest(nsIRequest* aRequest,
-                nsresult aStatusCode) override {
+  OnStopRequest(nsIRequest* aRequest, nsresult aStatusCode) override {
     if (mStream) {
       mStream->SendEof();
     }
@@ -208,9 +207,8 @@ class LoaderListener final : public nsIStreamListener,
   }
 
   NS_IMETHOD
-  OnDataAvailable(nsIRequest* aRequest,
-                  nsIInputStream* aInputStream, uint64_t aOffset,
-                  uint32_t aCount) override {
+  OnDataAvailable(nsIRequest* aRequest, nsIInputStream* aInputStream,
+                  uint64_t aOffset, uint32_t aCount) override {
     MOZ_ASSERT(mStream);
 
     // We only need this for the ReadSegments call, the value is unused.

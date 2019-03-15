@@ -10,16 +10,16 @@
 add_task(async function() {
   const dbg = await attachRecordingDebugger("doc_rr_basic.html",
                                             { waitForRecording: true });
-  const {threadClient, tab, toolbox} = dbg;
+  const {threadClient, tab, toolbox, target} = dbg;
 
   const bp = await setBreakpoint(threadClient, "doc_rr_basic.html", 21);
   await rewindToLine(threadClient, 21);
-  await checkEvaluateInTopFrame(threadClient, "number", 10);
-  await checkEvaluateInTopFrameThrows(threadClient, "window.alert(3)");
-  await checkEvaluateInTopFrame(threadClient, "number", 10);
-  await checkEvaluateInTopFrameThrows(threadClient, "window.alert(3)");
-  await checkEvaluateInTopFrame(threadClient, "number", 10);
-  await checkEvaluateInTopFrame(threadClient, "testStepping2()", undefined);
+  await checkEvaluateInTopFrame(target, "number", 10);
+  await checkEvaluateInTopFrameThrows(target, "window.alert(3)");
+  await checkEvaluateInTopFrame(target, "number", 10);
+  await checkEvaluateInTopFrameThrows(target, "window.alert(3)");
+  await checkEvaluateInTopFrame(target, "number", 10);
+  await checkEvaluateInTopFrame(target, "testStepping2()", undefined);
 
   await threadClient.removeBreakpoint(bp);
   await toolbox.destroy();

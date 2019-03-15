@@ -61,7 +61,6 @@ hide-types = [
 ]
 bitfield-enums = [
     "nsChangeHint",
-    "nsRestyleHint",
     "mozilla::OriginFlags",
 ]
 rusty-enums = [
@@ -260,7 +259,6 @@ whitelist-types = [
     "nsMediaFeature",
     "nsMediaFeatures",
     "nsRect",
-    "nsRestyleHint",
     "nsresult",
     "nsSimpleContentList",
     "nsSize",
@@ -450,6 +448,7 @@ cbindgen-types = [
     { gecko = "StyleLetterSpacing", servo = "values::computed::text::LetterSpacing" },
     { gecko = "StyleGenericLineHeight", servo = "values::generics::text::LineHeight" },
     { gecko = "StyleContain", servo = "values::computed::Contain" },
+    { gecko = "StyleRestyleHint", servo = "invalidation::element::restyle_hints::RestyleHint" },
 ]
 
 mapped-generic-types = [
@@ -519,6 +518,7 @@ structs-types = [
     "mozilla::StyleUnicodeRange",
     "mozilla::StyleFontLanguageOverride",
     "mozilla::StyleFontFaceSourceListComponent",
+    "mozilla::RestyleHint",
     "gfxFontFeature",
     "mozilla::gfx::FontVariation",
     "mozilla::DeclarationBlockMutationClosure",
@@ -592,7 +592,6 @@ structs-types = [
     "nsAtom",
     "nsIURI",
     "nsCompatibility",
-    "nsRestyleHint",
     "nsStyleBackground",
     "nsStyleBorder",
     "nsStyleColor",

@@ -1,0 +1,10 @@
+<script>
+  function start() {
+    const style = document.createElement('style')
+    document.head.appendChild(style)
+    const sheet_1 = style.sheet
+    document.head.appendChild(style)
+    sheet_1.insertRule('@import url()', 0)
+  }
+  document.addEventListener('DOMContentLoaded', start)
+</script>

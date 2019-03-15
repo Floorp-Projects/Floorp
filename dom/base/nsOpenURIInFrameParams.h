@@ -8,6 +8,7 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsIBrowserDOMWindow.h"
 #include "nsFrameLoaderOwner.h"
+#include "nsIReferrerInfo.h"
 #include "nsString.h"
 
 namespace mozilla {
@@ -28,8 +29,7 @@ class nsOpenURIInFrameParams final : public nsIOpenURIInFrameParams {
 
   mozilla::OriginAttributes mOpenerOriginAttributes;
   RefPtr<Element> mOpenerBrowser;
-  nsString mReferrer;
-  uint32_t mReferrerPolicy;
+  nsCOMPtr<nsIReferrerInfo> mReferrerInfo;
   nsCOMPtr<nsIPrincipal> mTriggeringPrincipal;
   nsCOMPtr<nsIContentSecurityPolicy> mCsp;
 };

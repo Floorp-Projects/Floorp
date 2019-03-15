@@ -386,9 +386,8 @@ class BaselineCodeGen {
                                        bool value, const F& emit,
                                        Register scratch);
   template <typename F>
-  MOZ_MUST_USE bool emitTestScriptFlag(JSScript::MutableFlags flag,
-                                       bool value, const F& emit,
-                                       Register scratch);
+  MOZ_MUST_USE bool emitTestScriptFlag(JSScript::MutableFlags flag, bool value,
+                                       const F& emit, Register scratch);
 
   MOZ_MUST_USE bool emitCheckThis(ValueOperand val, bool reinit = false);
   void emitLoadReturnValue(ValueOperand val);

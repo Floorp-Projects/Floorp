@@ -1242,7 +1242,7 @@ class AstDataSegment : public AstNode {
 
 typedef AstVector<AstDataSegment*> AstDataSegmentVector;
 
-struct AstNullValue { };
+struct AstNullValue {};
 typedef Variant<AstRef, AstNullValue> AstElem;
 typedef AstVector<AstElem> AstElemVector;
 

@@ -170,7 +170,7 @@ class MachCommands(MachCommandBase):
             return return_code or ret
 
         with ThreadPoolExecutor(max_workers=self.jobs) as executor:
-            futures = [executor.submit(self._run_python_test, test['path'])
+            futures = [executor.submit(self._run_python_test, test)
                        for test in parallel]
 
             try:
@@ -184,14 +184,17 @@ class MachCommands(MachCommandBase):
                 raise
 
         for test in sequential:
-            return_code = on_test_finished(self._run_python_test(test['path']))
+            return_code = on_test_finished(self._run_python_test(test))
 
         self.log(logging.INFO, 'python-test', {'return_code': return_code},
                  'Return code from mach python-test: {return_code}')
         return return_code
 
-    def _run_python_test(self, test_path):
+    def _run_python_test(self, test):
         from mozprocess import ProcessHandler
+
+        if test.get('requirements'):
+            self.virtualenv_manager.install_pip_requirements(test['requirements'], quiet=True)
 
         output = []
 
@@ -217,8 +220,8 @@ class MachCommands(MachCommandBase):
 
             _log(line)
 
-        _log(test_path)
-        cmd = [self.virtualenv_manager.python_path, test_path]
+        _log(test['path'])
+        cmd = [self.virtualenv_manager.python_path, test['path']]
         env = os.environ.copy()
         env[b'PYTHONDONTWRITEBYTECODE'] = b'1'
 
@@ -229,12 +232,12 @@ class MachCommands(MachCommandBase):
 
         if not file_displayed_test:
             _log('TEST-UNEXPECTED-FAIL | No test output (missing mozunit.main() '
-                 'call?): {}'.format(test_path))
+                 'call?): {}'.format(test['path']))
 
         if self.verbose:
             if return_code != 0:
-                _log('Test failed: {}'.format(test_path))
+                _log('Test failed: {}'.format(test['path']))
             else:
-                _log('Test passed: {}'.format(test_path))
+                _log('Test passed: {}'.format(test['path']))
 
-        return output, return_code, test_path
+        return output, return_code, test['path']

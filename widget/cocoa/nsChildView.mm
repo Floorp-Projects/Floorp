@@ -335,8 +335,7 @@ nsChildView::nsChildView()
       mDrawing(false),
       mIsDispatchPaint(false),
       mPluginFocused{false},
-      mCurrentPanGestureBelongsToSwipe{false} {
-}
+      mCurrentPanGestureBelongsToSwipe{false} {}
 
 nsChildView::~nsChildView() {
   ReleaseTitlebarCGContext();

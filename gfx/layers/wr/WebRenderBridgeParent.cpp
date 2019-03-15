@@ -65,13 +65,14 @@ void gecko_profiler_end_marker(const char* name) {
 #endif
 }
 
-void gecko_profiler_add_text_marker(const char* name, const char* text_bytes, size_t text_len, uint64_t microseconds) {
+void gecko_profiler_add_text_marker(const char* name, const char* text_bytes,
+                                    size_t text_len, uint64_t microseconds) {
 #ifdef MOZ_GECKO_PROFILER
   if (profiler_thread_is_being_profiled()) {
     auto now = mozilla::TimeStamp::Now();
     auto start = now - mozilla::TimeDuration::FromMicroseconds(microseconds);
-    profiler_add_text_marker(
-        name, nsDependentCString(text_bytes, text_len), JS::ProfilingCategoryPair::GRAPHICS, start, now);
+    profiler_add_text_marker(name, nsDependentCString(text_bytes, text_len),
+                             JS::ProfilingCategoryPair::GRAPHICS, start, now);
   }
 #endif
 }

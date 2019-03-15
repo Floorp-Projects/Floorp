@@ -849,8 +849,7 @@ nsresult CompareNetwork::SetPrincipalInfo(nsIChannel* aChannel) {
 }
 
 NS_IMETHODIMP
-CompareNetwork::OnStopRequest(nsIRequest* aRequest,
-                              nsresult aStatusCode) {
+CompareNetwork::OnStopRequest(nsIRequest* aRequest, nsresult aStatusCode) {
   // Nothing to do here!
   return NS_OK;
 }

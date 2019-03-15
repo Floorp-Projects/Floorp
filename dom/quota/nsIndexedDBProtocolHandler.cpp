@@ -37,15 +37,15 @@ NS_IMETHODIMP nsIndexedDBProtocolHandler::GetProtocolFlags(
   return NS_OK;
 }
 
-NS_IMETHODIMP nsIndexedDBProtocolHandler::NewURI(
-    const nsACString& aSpec, const char* aOriginCharset, nsIURI* aBaseURI,
-    nsIURI** _retval) {
+NS_IMETHODIMP nsIndexedDBProtocolHandler::NewURI(const nsACString& aSpec,
+                                                 const char* aOriginCharset,
+                                                 nsIURI* aBaseURI,
+                                                 nsIURI** _retval) {
   nsCOMPtr<nsIURI> baseURI(aBaseURI);
   return NS_MutateURI(new nsStandardURL::Mutator())
-      .Apply(NS_MutatorMethod(&nsIStandardURLMutator::Init,
-                              nsIStandardURL::URLTYPE_AUTHORITY, 0,
-                              nsCString(aSpec), aOriginCharset, baseURI,
-                              nullptr))
+      .Apply(NS_MutatorMethod(
+          &nsIStandardURLMutator::Init, nsIStandardURL::URLTYPE_AUTHORITY, 0,
+          nsCString(aSpec), aOriginCharset, baseURI, nullptr))
       .Finalize(_retval);
 }
 

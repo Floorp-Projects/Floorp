@@ -68,7 +68,7 @@ void TrackingDummyChannelChild::Initialize(
 }
 
 mozilla::ipc::IPCResult TrackingDummyChannelChild::Recv__delete__(
-    const bool& aTrackingResource) {
+    const uint32_t& aClassificationFlags) {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (!mChannel) {
@@ -78,9 +78,7 @@ mozilla::ipc::IPCResult TrackingDummyChannelChild::Recv__delete__(
   nsCOMPtr<nsIHttpChannel> channel = std::move(mChannel);
 
   RefPtr<HttpBaseChannel> httpChannel = do_QueryObject(channel);
-  if (aTrackingResource) {
-    httpChannel->SetIsTrackingResource(mIsThirdParty);
-  }
+  httpChannel->AddClassificationFlags(aClassificationFlags, mIsThirdParty);
 
   bool storageGranted = AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
       httpChannel, mURI, nullptr);

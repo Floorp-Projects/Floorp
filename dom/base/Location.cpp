@@ -772,7 +772,8 @@ nsresult Location::Reload(bool aForceget) {
 
     nsPresContext* pcx;
     if (doc && (pcx = doc->GetPresContext())) {
-      pcx->RebuildAllStyleData(NS_STYLE_HINT_REFLOW, eRestyle_Subtree);
+      pcx->RebuildAllStyleData(NS_STYLE_HINT_REFLOW,
+                               RestyleHint::RestyleSubtree());
     }
 
     return NS_OK;

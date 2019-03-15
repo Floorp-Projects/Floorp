@@ -179,9 +179,7 @@ class GLXLibrary final {
   bool IsATI() { return mIsATI; }
   bool IsMesa() { return mClientIsMesa; }
 
-  auto GetGetProcAddress() const {
-    return mSymbols.fGetProcAddress;
-  }
+  auto GetGetProcAddress() const { return mSymbols.fGetProcAddress; }
 
  private:
   struct {

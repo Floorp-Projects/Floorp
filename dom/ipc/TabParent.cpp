@@ -131,6 +131,11 @@ using namespace mozilla::gfx;
 
 using mozilla::Unused;
 
+LazyLogModule gBrowserFocusLog("BrowserFocus");
+
+#define LOGBROWSERFOCUS(args) \
+  MOZ_LOG(gBrowserFocusLog, mozilla::LogLevel::Debug, args)
+
 // The flags passed by the webProgress notifications are 16 bits shifted
 // from the ones registered by webProgressListeners.
 #define NOTIFY_FLAG_SHIFT 16
@@ -144,7 +149,9 @@ NS_IMPL_ISUPPORTS(TabParent, nsITabParent, nsIAuthPromptProvider,
                   nsISupportsWeakReference)
 
 TabParent::TabParent(ContentParent* aManager, const TabId& aTabId,
-                     const TabContext& aContext, uint32_t aChromeFlags,
+                     const TabContext& aContext,
+                     CanonicalBrowsingContext* aBrowsingContext,
+                     uint32_t aChromeFlags,
                      BrowserBridgeParent* aBrowserBridgeParent)
     : TabContext(aContext),
       mFrameElement(nullptr),
@@ -163,6 +170,7 @@ TabParent::TabParent(ContentParent* aManager, const TabId& aTabId,
       mIsDestroyed(false),
       mChromeFlags(aChromeFlags),
       mDragValid(false),
+      mBrowsingContext(aBrowsingContext),
       mBrowserBridgeParent(aBrowserBridgeParent),
       mTabId(aTabId),
       mCreatingWindow(false),
@@ -482,7 +490,16 @@ void TabParent::ActorDestroy(ActorDestroyReason why) {
 
 mozilla::ipc::IPCResult TabParent::RecvMoveFocus(
     const bool& aForward, const bool& aForDocumentNavigation) {
-  nsCOMPtr<nsIFocusManager> fm = do_GetService(FOCUSMANAGER_CONTRACTID);
+  LOGBROWSERFOCUS(("RecvMoveFocus %p, aForward: %d, aForDocumentNavigation: %d",
+                   this, aForward, aForDocumentNavigation));
+  BrowserBridgeParent* bridgeParent = GetBrowserBridgeParent();
+  if (bridgeParent) {
+    mozilla::Unused << bridgeParent->SendMoveFocus(aForward,
+                                                   aForDocumentNavigation);
+    return IPC_OK();
+  }
+
+  nsCOMPtr<nsIFocusManager> fm = nsFocusManager::GetFocusManager();
   if (fm) {
     RefPtr<Element> dummy;
 
@@ -819,12 +836,14 @@ void TabParent::HandleAccessKey(const WidgetKeyboardEvent& aEvent,
 }
 
 void TabParent::Activate() {
+  LOGBROWSERFOCUS(("Activate %p", this));
   if (!mIsDestroyed) {
     Unused << Manager()->SendActivate(this);
   }
 }
 
 void TabParent::Deactivate() {
+  LOGBROWSERFOCUS(("Deactivate %p", this));
   if (!mIsDestroyed) {
     Unused << Manager()->SendDeactivate(this);
   }
@@ -1002,13 +1021,15 @@ bool TabParent::DeallocPWindowGlobalParent(PWindowGlobalParent* aActor) {
 
 IPCResult TabParent::RecvPBrowserBridgeConstructor(
     PBrowserBridgeParent* aActor, const nsString& aName,
-    const nsString& aRemoteType) {
-  static_cast<BrowserBridgeParent*>(aActor)->Init(aName, aRemoteType);
+    const nsString& aRemoteType, BrowsingContext* aBrowsingContext) {
+  static_cast<BrowserBridgeParent*>(aActor)->Init(
+      aName, aRemoteType, CanonicalBrowsingContext::Cast(aBrowsingContext));
   return IPC_OK();
 }
 
 PBrowserBridgeParent* TabParent::AllocPBrowserBridgeParent(
-    const nsString& aName, const nsString& aRemoteType) {
+    const nsString& aName, const nsString& aRemoteType,
+    BrowsingContext* aBrowsingContext) {
   // Reference freed in DeallocPBrowserBridgeParent.
   return do_AddRef(new BrowserBridgeParent()).take();
 }
@@ -1895,6 +1916,13 @@ mozilla::ipc::IPCResult TabParent::RecvOnWindowedPluginKeyEvent(
 }
 
 mozilla::ipc::IPCResult TabParent::RecvRequestFocus(const bool& aCanRaise) {
+  LOGBROWSERFOCUS(("RecvRequestFocus %p, aCanRaise: %d", this, aCanRaise));
+  BrowserBridgeParent* bridgeParent = GetBrowserBridgeParent();
+  if (bridgeParent) {
+    mozilla::Unused << bridgeParent->SendRequestFocus(aCanRaise);
+    return IPC_OK();
+  }
+
   nsCOMPtr<nsIFocusManager> fm = nsFocusManager::GetFocusManager();
   if (!fm) {
     return IPC_OK();
@@ -3481,14 +3509,6 @@ mozilla::ipc::IPCResult TabParent::RecvGetSystemFont(nsCString* aFontName) {
   if (widget) {
     widget->GetSystemFont(*aFontName);
   }
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult TabParent::RecvRootBrowsingContext(
-    BrowsingContext* aBrowsingContext) {
-  MOZ_ASSERT(!mBrowsingContext, "May only set browsing context once!");
-  mBrowsingContext = CanonicalBrowsingContext::Cast(aBrowsingContext);
-  MOZ_ASSERT(mBrowsingContext, "Invalid ID!");
   return IPC_OK();
 }
 

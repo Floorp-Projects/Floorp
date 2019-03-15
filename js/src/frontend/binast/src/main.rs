@@ -1628,19 +1628,7 @@ impl CPPExporter {
                                 first_line = first_line,
                                 kind = parser.name.to_str()));
                         } else {
-                            buffer.push_str(&format!("{first_line}
-{{
-    BINJS_MOZ_TRY_DECL(result, tokenizer_->readMaybePropertyKey());
-
-{build}
-
-    return result;
-}}
-
-",
-                                first_line = first_line,
-                                build = build_result,
-                            ));
+                            panic!("PropertyKey shouldn't be optional");
                         }
                     }
                     _else => unimplemented!("{:?}", _else)
@@ -1788,8 +1776,7 @@ impl CPPExporter {
                         Some(format!("MOZ_TRY_VAR({var_name}, tokenizer_->readMaybeIdentifierName());", var_name = var_name)))
                 }
                 Some(IsNullable { is_nullable: true, content: Primitive::PropertyKey }) => {
-                    (Some(format!("RootedAtom {var_name}(cx_);", var_name = var_name)),
-                        Some(format!("MOZ_TRY_VAR({var_name}, tokenizer_->readMaybePropertyKey());", var_name = var_name)))
+                    panic!("PropertyKey shouldn't be optional");
                 }
                 _else => {
                     let typename = TypeName::type_(field.type_());

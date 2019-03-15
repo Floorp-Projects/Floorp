@@ -126,7 +126,8 @@ static bool GenerateCraneliftCode(WasmMacroAssembler& masm,
 #endif
     // TODO(bug 1532716): Cranelift gives null bytecode offsets for symbolic
     // accesses.
-    uint32_t bytecodeOffset = metadata.srcLoc ? metadata.srcLoc : lineOrBytecode;
+    uint32_t bytecodeOffset =
+        metadata.srcLoc ? metadata.srcLoc : lineOrBytecode;
 
     switch (metadata.which) {
       case CraneliftMetadataEntry::Which::DirectCall: {
@@ -193,8 +194,7 @@ CraneliftFuncCompileInput::CraneliftFuncCompileInput(
     : bytecode(func.begin),
       bytecodeSize(func.end - func.begin),
       index(func.index),
-      offset_in_module(func.lineOrBytecode)
-    {}
+      offset_in_module(func.lineOrBytecode) {}
 
 #ifndef WASM_HUGE_MEMORY
 static_assert(offsetof(TlsData, boundsCheckLimit) == sizeof(size_t),
@@ -258,9 +258,7 @@ static size_t globalToTlsOffset(size_t globalOffset) {
 
 CraneliftModuleEnvironment::CraneliftModuleEnvironment(
     const ModuleEnvironment& env)
-    : env(&env),
-      min_memory_length(env.minMemoryLength)
-{}
+    : env(&env), min_memory_length(env.minMemoryLength) {}
 
 TypeCode env_unpack(BD_ValType valType) {
   return TypeCode(UnpackTypeCodeType(PackedTypeCode(valType.packed)));
@@ -273,7 +271,8 @@ const FuncTypeWithId* env_function_signature(
 
 size_t env_func_import_tls_offset(const CraneliftModuleEnvironment* wrapper,
                                   size_t funcIndex) {
-  return globalToTlsOffset(wrapper->env->funcImportGlobalDataOffsets[funcIndex]);
+  return globalToTlsOffset(
+      wrapper->env->funcImportGlobalDataOffsets[funcIndex]);
 }
 
 bool env_func_is_import(const CraneliftModuleEnvironment* wrapper,

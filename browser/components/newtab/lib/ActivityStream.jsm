@@ -243,6 +243,10 @@ const PREFS_CONFIG = new Map([
       });
     },
   }],
+  ["discoverystream.endpoints", {
+    title: "Endpoint prefixes (comma-separated) that are allowed to be requested",
+    value: "https://getpocket.cdn.mozilla.net/",
+  }],
   ["discoverystream.optOut.0", {
     title: "Opt out of new layout v0",
     value: false,

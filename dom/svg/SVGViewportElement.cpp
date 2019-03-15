@@ -167,7 +167,7 @@ void SVGViewportElement::ChildrenOnlyTransformChanged(uint32_t aFlags) {
   // anyway (which will include our children).
   if ((changeHint & nsChangeHint_ReconstructFrame) ||
       !(aFlags & eDuringReflow)) {
-    nsLayoutUtils::PostRestyleEvent(this, nsRestyleHint(0), changeHint);
+    nsLayoutUtils::PostRestyleEvent(this, RestyleHint{0}, changeHint);
   }
 }
 

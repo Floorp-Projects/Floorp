@@ -187,8 +187,8 @@ void ProxyObject::nuke() {
   gc::InitialHeap heap = GetInitialHeap(newKind, clasp);
   debugCheckNewObject(group, shape, allocKind, heap);
 
-  JSObject* obj = js::AllocateObject(cx, allocKind, /* nDynamicSlots = */ 0,
-                                     heap, clasp);
+  JSObject* obj =
+      js::AllocateObject(cx, allocKind, /* nDynamicSlots = */ 0, heap, clasp);
   if (!obj) {
     return cx->alreadyReportedOOM();
   }

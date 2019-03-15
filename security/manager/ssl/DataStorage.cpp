@@ -66,7 +66,6 @@ class DataStorageSharedThread final {
  private:
   DataStorageSharedThread() : mThread(nullptr) {}
 
-
   nsCOMPtr<nsIThread> mThread;
 };
 

@@ -89,6 +89,49 @@ add_task(async function test_update() {
   await SpecialPowers.popPrefEnv();
   await SpecialPowers.popPrefEnv();
 });
+
+// Test variant to ensure that we properly keep the timer alive by having a
+// non-zero but small timer duration. In this case, the delay is simply our
+// exponential growth rate of 30, so if we end up getting to version 4, that's
+// okay and the test may need to be updated.
+add_task(async function test_delay_update() {
+  let version;
+  navigator.serviceWorker.onmessage = function(event) {
+    ok (event.data.version <= 3, "Service worker updated too many times." + event.data.version);
+    version = event.data.version;
+  }
+
+  await SpecialPowers.pushPrefEnv({"set": [
+    ["dom.serviceWorkers.update_delay", 1],
+    ["dom.serviceWorkers.idle_extended_timeout", 299999]]});
+
+  // clear version counter
+  await fetch("self_update_worker.sjs?clearcounter");
+
+  var worker;
+  let registration = await navigator.serviceWorker.register(
+    "self_update_worker.sjs",
+    { scope: "./test_self_update_worker.html?random=" + Date.now()})
+    .then(function(registration) {
+      worker = registration.installing;
+      // We can't wait for 'activated' here, since it's possible for
+      // the update process to kill the worker before it activates.
+      // See: https://github.com/w3c/ServiceWorker/issues/1285
+      return waitForState(worker, 'activating', registration);
+    });
+
+  // We need to wait a reasonable time to give the self updating worker a chance
+  // to change to a newer version. Register and activate an empty worker 5 times.
+  for (i = 0; i < 5; i++) {
+    await activateDummyWorker();
+  }
+
+  is(version, 3, "Service worker version should be 3.");
+
+  await registration.unregister();
+  await SpecialPowers.popPrefEnv();
+  await SpecialPowers.popPrefEnv();
+});
 </script>
 </body>
 </html>

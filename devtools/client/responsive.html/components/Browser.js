@@ -72,7 +72,7 @@ class Browser extends PureComponent {
     // Notify manager.js that this browser has mounted, so that it can trigger
     // a swap if needed and continue with the rest of its startup.
     await this.browserShown;
-    this.props.onBrowserMounted();
+    this.props.onBrowserMounted(this.browser);
 
     // If we are swapping browsers after mount, wait for the swap to complete
     // and start the frame script after that.

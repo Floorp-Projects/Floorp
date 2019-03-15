@@ -13,7 +13,7 @@ import { generatedToOriginalId } from "devtools-source-map";
 import { flatten } from "lodash";
 
 import { toggleBlackBox } from "./blackbox";
-import { syncBreakpoint } from "../breakpoints";
+import { syncBreakpoint, addBreakpoint } from "../breakpoints";
 import { loadSourceText } from "./loadSourceText";
 import { togglePrettyPrint } from "./prettyPrint";
 import { selectLocation } from "../sources";
@@ -186,8 +186,19 @@ function checkPendingBreakpoints(sourceId: string) {
     // load the source text if there is a pending breakpoint for it
     await dispatch(loadSourceText(source));
 
+    // Matching pending breakpoints could have either the same generated or the
+    // same original source. We expect the generated source to appear first and
+    // will add a breakpoint at that location initially. If the original source
+    // appears later then we use syncBreakpoint to see if the generated location
+    // changed and we need to remove the breakpoint we added earlier.
     await Promise.all(
-      pendingBreakpoints.map(bp => dispatch(syncBreakpoint(sourceId, bp)))
+      pendingBreakpoints.map(bp => {
+        if (source.url == bp.location.sourceUrl) {
+          return dispatch(syncBreakpoint(sourceId, bp));
+        }
+        const { line, column } = bp.generatedLocation;
+        return dispatch(addBreakpoint({ sourceId, line, column }, bp.options));
+      })
     );
   };
 }

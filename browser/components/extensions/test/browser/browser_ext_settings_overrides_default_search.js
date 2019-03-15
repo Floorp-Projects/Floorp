@@ -6,8 +6,12 @@
 ChromeUtils.defineModuleGetter(this, "AddonManager",
                                "resource://gre/modules/AddonManager.jsm");
 
+const {AddonTestUtils} = ChromeUtils.import("resource://testing-common/AddonTestUtils.jsm");
+
 const EXTENSION1_ID = "extension1@mozilla.com";
 const EXTENSION2_ID = "extension2@mozilla.com";
+
+AddonTestUtils.initMochitest(this);
 
 var defaultEngineName;
 
@@ -37,6 +41,7 @@ add_task(async function test_extension_setting_default_engine() {
   });
 
   await ext1.startup();
+  await AddonTestUtils.waitForSearchProviderStartup(ext1);
 
   is((await Services.search.getDefault()).name, "DuckDuckGo", "Default engine is DuckDuckGo");
 
@@ -150,10 +155,12 @@ add_task(async function test_extension_setting_multiple_default_engine() {
   });
 
   await ext1.startup();
+  await AddonTestUtils.waitForSearchProviderStartup(ext1);
 
   is((await Services.search.getDefault()).name, "DuckDuckGo", "Default engine is DuckDuckGo");
 
   await ext2.startup();
+  await AddonTestUtils.waitForSearchProviderStartup(ext2);
 
   is((await Services.search.getDefault()).name, "Twitter", "Default engine is Twitter");
 
@@ -196,10 +203,12 @@ add_task(async function test_extension_setting_multiple_default_engine_reversed(
   });
 
   await ext1.startup();
+  await AddonTestUtils.waitForSearchProviderStartup(ext1);
 
   is((await Services.search.getDefault()).name, "DuckDuckGo", "Default engine is DuckDuckGo");
 
   await ext2.startup();
+  await AddonTestUtils.waitForSearchProviderStartup(ext2);
 
   is((await Services.search.getDefault()).name, "Twitter", "Default engine is Twitter");
 
@@ -229,6 +238,7 @@ add_task(async function test_user_changing_default_engine() {
   });
 
   await ext1.startup();
+  await AddonTestUtils.waitForSearchProviderStartup(ext1);
 
   is((await Services.search.getDefault()).name, "DuckDuckGo", "Default engine is DuckDuckGo");
 
@@ -263,6 +273,7 @@ add_task(async function test_user_change_with_disabling() {
   });
 
   await ext1.startup();
+  await AddonTestUtils.waitForSearchProviderStartup(ext1);
 
   is((await Services.search.getDefault()).name, "DuckDuckGo", "Default engine is DuckDuckGo");
 
@@ -328,6 +339,7 @@ add_task(async function test_two_addons_with_first_disabled_before_second() {
   });
 
   await ext1.startup();
+  await AddonTestUtils.waitForSearchProviderStartup(ext1);
 
   is((await Services.search.getDefault()).name, "DuckDuckGo", "Default engine is DuckDuckGo");
 
@@ -339,6 +351,7 @@ add_task(async function test_two_addons_with_first_disabled_before_second() {
   is((await Services.search.getDefault()).name, defaultEngineName, `Default engine is ${defaultEngineName}`);
 
   await ext2.startup();
+  await AddonTestUtils.waitForSearchProviderStartup(ext2);
 
   is((await Services.search.getDefault()).name, "Twitter", "Default engine is Twitter");
 
@@ -396,10 +409,12 @@ add_task(async function test_two_addons_with_first_disabled() {
   });
 
   await ext1.startup();
+  await AddonTestUtils.waitForSearchProviderStartup(ext1);
 
   is((await Services.search.getDefault()).name, "DuckDuckGo", "Default engine is DuckDuckGo");
 
   await ext2.startup();
+  await AddonTestUtils.waitForSearchProviderStartup(ext2);
 
   is((await Services.search.getDefault()).name, "Twitter", "Default engine is Twitter");
 
@@ -464,10 +479,12 @@ add_task(async function test_two_addons_with_second_disabled() {
   });
 
   await ext1.startup();
+  await AddonTestUtils.waitForSearchProviderStartup(ext1);
 
   is((await Services.search.getDefault()).name, "DuckDuckGo", "Default engine is DuckDuckGo");
 
   await ext2.startup();
+  await AddonTestUtils.waitForSearchProviderStartup(ext2);
 
   is((await Services.search.getDefault()).name, "Twitter", "Default engine is Twitter");
 

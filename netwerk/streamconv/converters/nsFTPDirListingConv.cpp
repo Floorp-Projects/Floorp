@@ -72,8 +72,7 @@ nsFTPDirListingConv::AsyncConvertData(const char *aFromType,
 
 // nsIStreamListener implementation
 NS_IMETHODIMP
-nsFTPDirListingConv::OnDataAvailable(nsIRequest *request,
-                                     nsIInputStream *inStr,
+nsFTPDirListingConv::OnDataAvailable(nsIRequest *request, nsIInputStream *inStr,
                                      uint64_t sourceOffset, uint32_t count) {
   NS_ASSERTION(request, "FTP dir listing stream converter needs a request");
 
@@ -168,8 +167,7 @@ nsFTPDirListingConv::OnStartRequest(nsIRequest *request) {
 }
 
 NS_IMETHODIMP
-nsFTPDirListingConv::OnStopRequest(nsIRequest *request,
-                                   nsresult aStatus) {
+nsFTPDirListingConv::OnStopRequest(nsIRequest *request, nsresult aStatus) {
   // we don't care about stop. move along...
 
   return mFinalListener->OnStopRequest(request, aStatus);

@@ -38,6 +38,7 @@
 #include "nsRefPtrHashtable.h"
 #include "PermissionMessageUtils.h"
 #include "DriverCrashGuard.h"
+#include "nsIReferrerInfo.h"
 
 #define CHILD_PROCESS_SHUTDOWN_MESSAGE \
   NS_LITERAL_STRING("child-process-shutdown")
@@ -513,19 +514,17 @@ class ContentParent final : public PContentParent,
       const uint32_t& aChromeFlags, const bool& aCalledFromJS,
       const bool& aPositionSpecified, const bool& aSizeSpecified,
       const Maybe<URIParams>& aURIToLoad, const nsCString& aFeatures,
-      const nsCString& aBaseURI, const float& aFullZoom,
-      const IPC::Principal& aTriggeringPrincipal,
-      nsIContentSecurityPolicy* aCsp, const uint32_t& aReferrerPolicy,
+      const float& aFullZoom, const IPC::Principal& aTriggeringPrincipal,
+      nsIContentSecurityPolicy* aCsp, nsIReferrerInfo* aReferrerInfo,
       CreateWindowResolver&& aResolve);
 
   mozilla::ipc::IPCResult RecvCreateWindowInDifferentProcess(
       PBrowserParent* aThisTab, const uint32_t& aChromeFlags,
       const bool& aCalledFromJS, const bool& aPositionSpecified,
       const bool& aSizeSpecified, const Maybe<URIParams>& aURIToLoad,
-      const nsCString& aFeatures, const nsCString& aBaseURI,
-      const float& aFullZoom, const nsString& aName,
+      const nsCString& aFeatures, const float& aFullZoom, const nsString& aName,
       const IPC::Principal& aTriggeringPrincipal,
-      nsIContentSecurityPolicy* aCsp, const uint32_t& aReferrerPolicy);
+      nsIContentSecurityPolicy* aCsp, nsIReferrerInfo* aReferrerInfo);
 
   static void BroadcastBlobURLRegistration(
       const nsACString& aURI, BlobImpl* aBlobImpl, nsIPrincipal* aPrincipal,
@@ -610,14 +609,10 @@ class ContentParent final : public PContentParent,
   static bool IsInputEventQueueSupported();
 
   mozilla::ipc::IPCResult RecvAttachBrowsingContext(
-      BrowsingContext* aParentContext, BrowsingContext* aOpener,
-      BrowsingContextId aContextId, const nsString& aName);
+      BrowsingContext::IPCInitializer&& aInit);
 
   mozilla::ipc::IPCResult RecvDetachBrowsingContext(BrowsingContext* aContext,
                                                     bool aMoveToBFCache);
-
-  mozilla::ipc::IPCResult RecvSetOpenerBrowsingContext(
-      BrowsingContext* aContext, BrowsingContext* aOpener);
 
   mozilla::ipc::IPCResult RecvWindowClose(BrowsingContext* aContext,
                                           bool aTrustedCaller);
@@ -626,9 +621,6 @@ class ContentParent final : public PContentParent,
   mozilla::ipc::IPCResult RecvWindowPostMessage(
       BrowsingContext* aContext, const ClonedMessageData& aMessage,
       const PostMessageData& aData);
-
-  mozilla::ipc::IPCResult RecvSetUserGestureActivation(
-      BrowsingContext* aContext, bool aNewValue);
 
   FORWARD_SHMEM_ALLOCATOR_TO(PContentParent)
 
@@ -670,12 +662,12 @@ class ContentParent final : public PContentParent,
       PBrowserParent* aThisTab, bool aSetOpener, const uint32_t& aChromeFlags,
       const bool& aCalledFromJS, const bool& aPositionSpecified,
       const bool& aSizeSpecified, nsIURI* aURIToLoad,
-      const nsCString& aFeatures, const nsCString& aBaseURI,
-      const float& aFullZoom, uint64_t aNextTabParentId, const nsString& aName,
-      nsresult& aResult, nsCOMPtr<nsITabParent>& aNewTabParent,
-      bool* aWindowIsNew, int32_t& aOpenLocation,
-      nsIPrincipal* aTriggeringPrincipal, uint32_t aReferrerPolicy,
-      bool aLoadUri, nsIContentSecurityPolicy* aCsp);
+      const nsCString& aFeatures, const float& aFullZoom,
+      uint64_t aNextTabParentId, const nsString& aName, nsresult& aResult,
+      nsCOMPtr<nsITabParent>& aNewTabParent, bool* aWindowIsNew,
+      int32_t& aOpenLocation, nsIPrincipal* aTriggeringPrincipal,
+      nsIReferrerInfo* aReferrerInfo, bool aLoadUri,
+      nsIContentSecurityPolicy* aCsp);
 
   enum RecordReplayState { eNotRecordingOrReplaying, eRecording, eReplaying };
 
@@ -822,6 +814,7 @@ class ContentParent final : public PContentParent,
                                       const IPCTabContext& aContext,
                                       const uint32_t& aChromeFlags,
                                       const ContentParentId& aCpId,
+                                      BrowsingContext* aBrowsingContext,
                                       const bool& aIsForBrowser);
 
   bool DeallocPBrowserParent(PBrowserParent* frame);
@@ -829,7 +822,8 @@ class ContentParent final : public PContentParent,
   virtual mozilla::ipc::IPCResult RecvPBrowserConstructor(
       PBrowserParent* actor, const TabId& tabId, const TabId& sameTabGroupAs,
       const IPCTabContext& context, const uint32_t& chromeFlags,
-      const ContentParentId& cpId, const bool& isForBrowser) override;
+      const ContentParentId& cpId, BrowsingContext* aBrowsingContext,
+      const bool& isForBrowser) override;
 
   PIPCBlobInputStreamParent* AllocPIPCBlobInputStreamParent(
       const nsID& aID, const uint64_t& aSize);

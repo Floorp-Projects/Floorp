@@ -2565,8 +2565,7 @@ class nsLayoutUtils {
    * can avoid including nsCSSFrameConstructor.h and all its dependencies
    * in content files.
    */
-  static void PostRestyleEvent(mozilla::dom::Element* aElement,
-                               nsRestyleHint aRestyleHint,
+  static void PostRestyleEvent(mozilla::dom::Element*, mozilla::RestyleHint,
                                nsChangeHint aMinChangeHint);
 
   /**
