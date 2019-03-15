@@ -154,6 +154,15 @@ function makeMockExpression(value: Object): Expression {
   };
 }
 
+// Mock contexts for use in tests that do not create a redux store.
+const mockcx = { navigateCounter: 0 };
+const mockthreadcx = {
+  navigateCounter: 0,
+  thread: "FakeThread",
+  pauseCounter: 0,
+  isPaused: false
+};
+
 export {
   makeMockSource,
   makeMockWasmSource,
@@ -164,5 +173,7 @@ export {
   makeMockFrameWithURL,
   makeWhyNormal,
   makeWhyThrow,
-  makeMockExpression
+  makeMockExpression,
+  mockcx,
+  mockthreadcx
 };

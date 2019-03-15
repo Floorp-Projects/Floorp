@@ -8,7 +8,7 @@ import React, { Component } from "react";
 import { connect } from "../../../utils/connect";
 import PropTypes from "prop-types";
 
-import type { Frame, Why } from "../../../types";
+import type { Frame, Why, ThreadContext } from "../../../types";
 
 import FrameComponent from "./Frame";
 import Group from "./Group";
@@ -24,7 +24,8 @@ import {
   getSelectedFrame,
   getCallStackFrames,
   getPauseReason,
-  getCurrentThread
+  getCurrentThread,
+  getThreadContext
 } from "../../../selectors";
 
 import "./Frames.css";
@@ -32,11 +33,12 @@ import "./Frames.css";
 const NUM_FRAMES_SHOWN = 7;
 
 type Props = {
+  cx: ThreadContext,
   frames: Array<Frame>,
   frameworkGroupingOn: boolean,
   selectedFrame: Object,
   why: Why,
-  selectFrame: Function,
+  selectFrame: typeof actions.selectFrame,
   toggleBlackBox: Function,
   toggleFrameworkGrouping: Function,
   disableFrameTruncate: boolean,
@@ -114,6 +116,7 @@ class Frames extends Component<Props, State> {
 
   renderFrames(frames: Frame[]) {
     const {
+      cx,
       selectFrame,
       selectedFrame,
       toggleBlackBox,
@@ -136,6 +139,7 @@ class Frames extends Component<Props, State> {
           (frameOrGroup: FrameOrGroup) =>
             frameOrGroup.id ? (
               <FrameComponent
+                cx={cx}
                 frame={(frameOrGroup: any)}
                 toggleFrameworkGrouping={this.toggleFrameworkGrouping}
                 copyStackTrace={this.copyStackTrace}
@@ -151,6 +155,7 @@ class Frames extends Component<Props, State> {
               />
             ) : (
               <Group
+                cx={cx}
                 group={(frameOrGroup: any)}
                 toggleFrameworkGrouping={this.toggleFrameworkGrouping}
                 copyStackTrace={this.copyStackTrace}
@@ -216,6 +221,7 @@ class Frames extends Component<Props, State> {
 Frames.contextTypes = { l10n: PropTypes.object };
 
 const mapStateToProps = state => ({
+  cx: getThreadContext(state),
   frames: getCallStackFrames(state),
   why: getPauseReason(state, getCurrentThread(state)),
   frameworkGroupingOn: getFrameworkGroupingState(state),

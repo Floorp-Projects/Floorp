@@ -98,12 +98,12 @@ add_task(async function() {
   await stepIn(dbg);
   assertPausedLocation(dbg);
 
-  await dbg.actions.jumpToMappedSelectedLocation();
+  await dbg.actions.jumpToMappedSelectedLocation(getContext(dbg));
   await stepOver(dbg);
   assertPausedLocation(dbg);
   assertDebugLine(dbg, 71);
 
-  await dbg.actions.jumpToMappedSelectedLocation();
+  await dbg.actions.jumpToMappedSelectedLocation(getContext(dbg));
   await stepOut(dbg);
   assertPausedLocation(dbg);
   assertDebugLine(dbg, 16);

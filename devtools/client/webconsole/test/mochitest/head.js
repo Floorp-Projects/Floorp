@@ -1203,7 +1203,7 @@ function isConfirmDialogOpened(toolbox) {
 
 async function selectFrame(dbg, frame) {
   const onScopes = waitForDispatch(dbg, "ADD_SCOPES");
-  await dbg.actions.selectFrame(frame);
+  await dbg.actions.selectFrame(dbg.selectors.getThreadContext(dbg.getState()), frame);
   await onScopes;
 }
 

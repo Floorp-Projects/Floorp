@@ -7,7 +7,11 @@
 import React from "react";
 import { shallow } from "enzyme";
 import Group from "../Group.js";
-import { makeMockFrame, makeMockSource } from "../../../../utils/test-mockup";
+import {
+  makeMockFrame,
+  makeMockSource,
+  mockthreadcx
+} from "../../../../utils/test-mockup";
 
 import FrameMenu from "../FrameMenu";
 jest.mock("../FrameMenu", () => jest.fn());
@@ -15,6 +19,7 @@ jest.mock("../FrameMenu", () => jest.fn());
 function render(overrides = {}) {
   const frame = { ...makeMockFrame(), displayName: "foo", library: "Back" };
   const defaultProps = {
+    cx: mockthreadcx,
     group: [frame],
     selectedFrame: frame,
     frameworkGroupingOn: true,

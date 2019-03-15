@@ -18,10 +18,10 @@ describe("breakpointPositions", () => {
       getBreakpointPositions: async () => ({ "9": [1] })
     });
 
-    const { dispatch, getState } = store;
+    const { dispatch, getState, cx } = store;
     await dispatch(actions.newSource(makeSource("foo")));
 
-    dispatch(actions.setBreakpointPositions("foo"));
+    dispatch(actions.setBreakpointPositions(cx, "foo"));
 
     await waitForState(store, state =>
       selectors.hasBreakpointPositions(state, "foo")
@@ -58,11 +58,11 @@ describe("breakpointPositions", () => {
         })
     });
 
-    const { dispatch, getState } = store;
+    const { dispatch, getState, cx } = store;
     await dispatch(actions.newSource(makeSource("foo")));
 
-    dispatch(actions.setBreakpointPositions("foo"));
-    dispatch(actions.setBreakpointPositions("foo"));
+    dispatch(actions.setBreakpointPositions(cx, "foo"));
+    dispatch(actions.setBreakpointPositions(cx, "foo"));
 
     resolve({ "9": [1] });
     await waitForState(store, state =>

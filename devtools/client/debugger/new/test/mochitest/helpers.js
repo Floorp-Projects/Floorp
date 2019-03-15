@@ -622,6 +622,15 @@ function waitForLoadedSources(dbg) {
     "loaded source"
   );
 }
+
+function getContext(dbg) {
+  return dbg.selectors.getContext(dbg.getState());
+}
+
+function getThreadContext(dbg) {
+  return dbg.selectors.getThreadContext(dbg.getState());
+}
+
 /**
  * Selects the source.
  *
@@ -635,6 +644,7 @@ function waitForLoadedSources(dbg) {
 async function selectSource(dbg, url, line) {
   const source = findSource(dbg, url);
   await dbg.actions.selectLocation(
+    getContext(dbg),
     { sourceId: source.id, line },
     { keepContext: false }
   );
@@ -642,7 +652,7 @@ async function selectSource(dbg, url, line) {
 }
 
 async function closeTab(dbg, url) {
-  await dbg.actions.closeTab(findSource(dbg, url));
+  await dbg.actions.closeTab(getContext(dbg), findSource(dbg, url));
 }
 
 function countTabs(dbg) {
@@ -660,7 +670,7 @@ function countTabs(dbg) {
 async function stepOver(dbg) {
   const pauseLine = getVisibleSelectedFrameLine(dbg);
   info(`Stepping over from ${pauseLine}`);
-  await dbg.actions.stepOver();
+  await dbg.actions.stepOver(getThreadContext(dbg));
   return waitForPaused(dbg);
 }
 
@@ -675,7 +685,7 @@ async function stepOver(dbg) {
 async function stepIn(dbg) {
   const pauseLine = getVisibleSelectedFrameLine(dbg);
   info(`Stepping in from ${pauseLine}`);
-  await dbg.actions.stepIn();
+  await dbg.actions.stepIn(getThreadContext(dbg));
   return waitForPaused(dbg);
 }
 
@@ -690,7 +700,7 @@ async function stepIn(dbg) {
 async function stepOut(dbg) {
   const pauseLine = getVisibleSelectedFrameLine(dbg);
   info(`Stepping out from ${pauseLine}`);
-  await dbg.actions.stepOut();
+  await dbg.actions.stepOut(getThreadContext(dbg));
   return waitForPaused(dbg);
 }
 
@@ -705,7 +715,7 @@ async function stepOut(dbg) {
 function resume(dbg) {
   const pauseLine = getVisibleSelectedFrameLine(dbg);
   info(`Resuming from ${pauseLine}`);
-  return dbg.actions.resume();
+  return dbg.actions.resume(getThreadContext(dbg));
 }
 
 function deleteExpression(dbg, input) {
@@ -773,7 +783,7 @@ async function addBreakpoint(dbg, source, line, column, options) {
   source = findSource(dbg, source);
   const sourceId = source.id;
   const bpCount = dbg.selectors.getBreakpointCount(dbg.getState());
-  await dbg.actions.addBreakpoint({ sourceId, line, column }, options);
+  await dbg.actions.addBreakpoint(getContext(dbg), { sourceId, line, column }, options);
   is(
     dbg.selectors.getBreakpointCount(dbg.getState()),
     bpCount + 1,
@@ -786,14 +796,14 @@ function disableBreakpoint(dbg, source, line, column) {
     column || getFirstBreakpointColumn(dbg, { line, sourceId: source.id });
   const location = { sourceId: source.id, sourceUrl: source.url, line, column };
   const bp = dbg.selectors.getBreakpointForLocation(dbg.getState(), location);
-  return dbg.actions.disableBreakpoint(bp);
+  return dbg.actions.disableBreakpoint(getContext(dbg), bp);
 }
 
 function setBreakpointOptions(dbg, source, line, column, options) {
   source = findSource(dbg, source);
   const sourceId = source.id;
   column = column || getFirstBreakpointColumn(dbg, {line, sourceId});
-  return dbg.actions.setBreakpointOptions({ sourceId, line, column }, options);
+  return dbg.actions.setBreakpointOptions(getContext(dbg), { sourceId, line, column }, options);
 }
 
 function findBreakpoint(dbg, url, line) {
@@ -879,7 +889,7 @@ async function invokeWithBreakpoint(
 
 function prettyPrint(dbg) {
   const sourceId = dbg.selectors.getSelectedSourceId(dbg.store.getState());
-  return dbg.actions.togglePrettyPrint(sourceId);
+  return dbg.actions.togglePrettyPrint(getContext(dbg), sourceId);
 }
 
 async function expandAllScopes(dbg) {
@@ -931,7 +941,7 @@ function removeBreakpoint(dbg, sourceId, line, column) {
   column = column || getFirstBreakpointColumn(dbg, {line, sourceId});
   const location = { sourceId, sourceUrl: source.url, line, column };
   const bp = dbg.selectors.getBreakpointForLocation(dbg.getState(), location);
-  return dbg.actions.removeBreakpoint(bp);
+  return dbg.actions.removeBreakpoint(getContext(dbg), bp);
 }
 
 /**
@@ -1527,7 +1537,7 @@ async function assertPreviews(dbg, previews) {
       });
     }
 
-    dbg.actions.clearPreview();
+    dbg.actions.clearPreview(getContext(dbg));
   }
 }
 

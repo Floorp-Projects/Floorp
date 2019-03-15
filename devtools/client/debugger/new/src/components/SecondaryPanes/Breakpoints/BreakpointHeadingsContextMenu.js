@@ -7,9 +7,10 @@
 import { buildMenu, showMenu } from "devtools-contextmenu";
 
 import actions from "../../../actions";
-import type { Breakpoint, Source } from "../../../types";
+import type { Breakpoint, Source, Context } from "../../../types";
 
 type Props = {
+  cx: Context,
   source: Source,
   breakpointsForSource: Breakpoint[],
   disableBreakpointsInSource: typeof actions.disableBreakpointsInSource,
@@ -20,6 +21,7 @@ type Props = {
 
 export default function showContextMenu(props: Props) {
   const {
+    cx,
     source,
     breakpointsForSource,
     disableBreakpointsInSource,
@@ -54,7 +56,7 @@ export default function showContextMenu(props: Props) {
     label: disableInSourceLabel,
     accesskey: disableInSourceKey,
     disabled: false,
-    click: () => disableBreakpointsInSource(source)
+    click: () => disableBreakpointsInSource(cx, source)
   };
 
   const enableInSourceItem = {
@@ -62,7 +64,7 @@ export default function showContextMenu(props: Props) {
     label: enableInSourceLabel,
     accesskey: enableInSourceKey,
     disabled: false,
-    click: () => enableBreakpointsInSource(source)
+    click: () => enableBreakpointsInSource(cx, source)
   };
 
   const removeInSourceItem = {
@@ -70,7 +72,7 @@ export default function showContextMenu(props: Props) {
     label: removeInSourceLabel,
     accesskey: removeInSourceKey,
     disabled: false,
-    click: () => removeBreakpointsInSource(source)
+    click: () => removeBreakpointsInSource(cx, source)
   };
 
   const hideDisableInSourceItem = breakpointsForSource.every(

@@ -35,26 +35,39 @@ import {
   getSelectedSource
 } from "../../selectors";
 
-import type { SourceLocation, PartialPosition, Source } from "../../types";
+import type {
+  SourceLocation,
+  PartialPosition,
+  Source,
+  Context
+} from "../../types";
 import type { ThunkArgs } from "../types";
 
 export const setSelectedLocation = (
+  cx: Context,
   source: Source,
   location: SourceLocation
 ) => ({
   type: "SET_SELECTED_LOCATION",
+  cx,
   source,
   location
 });
 
-export const setPendingSelectedLocation = (url: string, options: Object) => ({
+export const setPendingSelectedLocation = (
+  cx: Context,
+  url: string,
+  options: Object
+) => ({
   type: "SET_PENDING_SELECTED_LOCATION",
+  cx,
   url: url,
   line: options.location ? options.location.line : null
 });
 
-export const clearSelectedLocation = () => ({
-  type: "CLEAR_SELECTED_LOCATION"
+export const clearSelectedLocation = (cx: Context) => ({
+  type: "CLEAR_SELECTED_LOCATION",
+  cx
 });
 
 /**
@@ -69,18 +82,19 @@ export const clearSelectedLocation = () => ({
  * @static
  */
 export function selectSourceURL(
+  cx: Context,
   url: string,
   options: PartialPosition = { line: 1 }
 ) {
   return async ({ dispatch, getState, sourceMaps }: ThunkArgs) => {
     const source = getSourceByURL(getState(), url);
     if (!source) {
-      return dispatch(setPendingSelectedLocation(url, options));
+      return dispatch(setPendingSelectedLocation(cx, url, options));
     }
 
     const sourceId = source.id;
     const location = createLocation({ ...options, sourceId });
-    return dispatch(selectLocation(location));
+    return dispatch(selectLocation(cx, location));
   };
 }
 
@@ -89,12 +103,13 @@ export function selectSourceURL(
  * @static
  */
 export function selectSource(
+  cx: Context,
   sourceId: string,
   options: PartialPosition = { line: 1 }
 ) {
   return async ({ dispatch }: ThunkArgs) => {
     const location = createLocation({ ...options, sourceId });
-    return dispatch(selectSpecificLocation(location));
+    return dispatch(selectSpecificLocation(cx, location));
   };
 }
 
@@ -103,6 +118,7 @@ export function selectSource(
  * @static
  */
 export function selectLocation(
+  cx: Context,
   location: SourceLocation,
   { keepContext = true }: Object = {}
 ) {
@@ -118,7 +134,7 @@ export function selectLocation(
     let source = getSource(getState(), location.sourceId);
     if (!source) {
       // If there is no source we deselect the current selected source
-      return dispatch(clearSelectedLocation());
+      return dispatch(clearSelectedLocation(cx));
     }
 
     const activeSearch = getActiveSearch(getState());
@@ -143,9 +159,9 @@ export function selectLocation(
       dispatch(addTab(source));
     }
 
-    dispatch(setSelectedLocation(source, location));
+    dispatch(setSelectedLocation(cx, source, location));
 
-    await dispatch(loadSourceText(source));
+    await dispatch(loadSourceText(cx, source));
     const loadedSource = getSource(getState(), source.id);
 
     if (!loadedSource) {
@@ -160,17 +176,17 @@ export function selectLocation(
       shouldPrettyPrint(loadedSource) &&
       isMinified(loadedSource)
     ) {
-      await dispatch(togglePrettyPrint(loadedSource.id));
-      dispatch(closeTab(loadedSource));
+      await dispatch(togglePrettyPrint(cx, loadedSource.id));
+      dispatch(closeTab(cx, loadedSource));
     }
 
-    dispatch(setSymbols(loadedSource.id));
-    dispatch(setOutOfScopeLocations());
+    dispatch(setSymbols(cx, loadedSource.id));
+    dispatch(setOutOfScopeLocations(cx));
 
     // If a new source is selected update the file search results
     const newSource = getSelectedSource(getState());
     if (currentSource && currentSource !== newSource) {
-      dispatch(updateActiveFileSearch());
+      dispatch(updateActiveFileSearch(cx));
     }
   };
 }
@@ -179,15 +195,15 @@ export function selectLocation(
  * @memberof actions/sources
  * @static
  */
-export function selectSpecificLocation(location: SourceLocation) {
-  return selectLocation(location, { keepContext: false });
+export function selectSpecificLocation(cx: Context, location: SourceLocation) {
+  return selectLocation(cx, location, { keepContext: false });
 }
 
 /**
  * @memberof actions/sources
  * @static
  */
-export function jumpToMappedLocation(location: SourceLocation) {
+export function jumpToMappedLocation(cx: Context, location: SourceLocation) {
   return async function({ dispatch, getState, client, sourceMaps }: ThunkArgs) {
     if (!client) {
       return;
@@ -195,17 +211,17 @@ export function jumpToMappedLocation(location: SourceLocation) {
 
     const pairedLocation = await mapLocation(getState(), sourceMaps, location);
 
-    return dispatch(selectSpecificLocation({ ...pairedLocation }));
+    return dispatch(selectSpecificLocation(cx, { ...pairedLocation }));
   };
 }
 
-export function jumpToMappedSelectedLocation() {
+export function jumpToMappedSelectedLocation(cx: Context) {
   return async function({ dispatch, getState }: ThunkArgs) {
     const location = getSelectedLocation(getState());
     if (!location) {
       return;
     }
 
-    await dispatch(jumpToMappedLocation(location));
+    await dispatch(jumpToMappedLocation(cx, location));
   };
 }
