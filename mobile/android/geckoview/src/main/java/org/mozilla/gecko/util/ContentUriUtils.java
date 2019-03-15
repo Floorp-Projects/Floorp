@@ -133,9 +133,9 @@ public class ContentUriUtils {
         }
 
         if (!TextUtils.isEmpty(fileName) && success) {
-                File copyFile = new File(folder.getPath(), fileName);
-                FileUtils.copy(context, contentUri, copyFile);
-                return copyFile.getAbsolutePath();
+            File copyFile = new File(folder.getPath(), fileName);
+            FileUtils.copy(context, contentUri, copyFile);
+            return copyFile.getAbsolutePath();
         }
         return null;
     }
@@ -155,7 +155,7 @@ public class ContentUriUtils {
                                         final String selection, final String[] selectionArgs) {
         final String column = "_data";
         final String[] projection = {
-                column
+            column
         };
 
         try (Cursor cursor = context.getContentResolver().query(uri, projection, selection, selectionArgs,

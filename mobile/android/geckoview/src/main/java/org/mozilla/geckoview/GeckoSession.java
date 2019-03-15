@@ -747,71 +747,71 @@ public class GeckoSession implements Parcelable {
             new GeckoSessionHandler<MediaDelegate>(
                     "GeckoViewMedia", this,
                     new String[]{
-                            "GeckoView:MediaAdd",
-                            "GeckoView:MediaRemove",
-                            "GeckoView:MediaRemoveAll",
-                            "GeckoView:MediaReadyStateChanged",
-                            "GeckoView:MediaTimeChanged",
-                            "GeckoView:MediaPlaybackStateChanged",
-                            "GeckoView:MediaMetadataChanged",
-                            "GeckoView:MediaProgress",
-                            "GeckoView:MediaVolumeChanged",
-                            "GeckoView:MediaRateChanged",
-                            "GeckoView:MediaFullscreenChanged",
-                            "GeckoView:MediaError",
+                        "GeckoView:MediaAdd",
+                        "GeckoView:MediaRemove",
+                        "GeckoView:MediaRemoveAll",
+                        "GeckoView:MediaReadyStateChanged",
+                        "GeckoView:MediaTimeChanged",
+                        "GeckoView:MediaPlaybackStateChanged",
+                        "GeckoView:MediaMetadataChanged",
+                        "GeckoView:MediaProgress",
+                        "GeckoView:MediaVolumeChanged",
+                        "GeckoView:MediaRateChanged",
+                        "GeckoView:MediaFullscreenChanged",
+                        "GeckoView:MediaError",
                     }
             ) {
-                @Override
-                public void handleMessage(final MediaDelegate delegate,
-                                          final String event,
-                                          final GeckoBundle message,
-                                          final EventCallback callback) {
-                    if ("GeckoView:MediaAdd".equals(event)) {
-                        final MediaElement element = new MediaElement(message.getLong("id"), GeckoSession.this);
-                        delegate.onMediaAdd(GeckoSession.this, element);
-                        return;
-                    } else if ("GeckoView:MediaRemoveAll".equals(event)) {
-                        for (int i = 0; i < mMediaElements.size(); i++) {
-                            final long key = mMediaElements.keyAt(i);
-                            delegate.onMediaRemove(GeckoSession.this, mMediaElements.get(key));
-                        }
-                        mMediaElements.clear();
-                        return;
-                    }
-
-                    final long id = message.getLong("id", 0);
-                    final MediaElement element = mMediaElements.get(id);
-                    if (element == null) {
-                        Log.w(LOGTAG, "MediaElement not found for '" + id + "'");
-                        return;
-                    }
-
-                    if ("GeckoView:MediaTimeChanged".equals(event)) {
-                        element.notifyTimeChange(message.getDouble("time"));
-                    } else if ("GeckoView:MediaProgress".equals(event)) {
-                        element.notifyLoadProgress(message);
-                    } else if ("GeckoView:MediaMetadataChanged".equals(event)) {
-                        element.notifyMetadataChange(message);
-                    } else if ("GeckoView:MediaReadyStateChanged".equals(event)) {
-                        element.notifyReadyStateChange(message.getInt("readyState"));
-                    } else if ("GeckoView:MediaPlaybackStateChanged".equals(event)) {
-                        element.notifyPlaybackStateChange(message.getString("playbackState"));
-                    } else if ("GeckoView:MediaVolumeChanged".equals(event)) {
-                        element.notifyVolumeChange(message.getDouble("volume"), message.getBoolean("muted"));
-                    } else if ("GeckoView:MediaRateChanged".equals(event)) {
-                        element.notifyPlaybackRateChange(message.getDouble("rate"));
-                    } else if ("GeckoView:MediaFullscreenChanged".equals(event)) {
-                        element.notifyFullscreenChange(message.getBoolean("fullscreen"));
-                    } else if ("GeckoView:MediaRemove".equals(event)) {
-                        delegate.onMediaRemove(GeckoSession.this, element);
-                        mMediaElements.remove(element.getVideoId());
-                    } else if ("GeckoView:MediaError".equals(event)) {
-                        element.notifyError(message.getInt("code"));
-                    } else {
-                        throw new UnsupportedOperationException(event + " media message not implemented");
-                    }
+        @Override
+        public void handleMessage(final MediaDelegate delegate,
+                                  final String event,
+                                  final GeckoBundle message,
+                                  final EventCallback callback) {
+            if ("GeckoView:MediaAdd".equals(event)) {
+                final MediaElement element = new MediaElement(message.getLong("id"), GeckoSession.this);
+                delegate.onMediaAdd(GeckoSession.this, element);
+                return;
+            } else if ("GeckoView:MediaRemoveAll".equals(event)) {
+                for (int i = 0; i < mMediaElements.size(); i++) {
+                    final long key = mMediaElements.keyAt(i);
+                    delegate.onMediaRemove(GeckoSession.this, mMediaElements.get(key));
                 }
-            };
+                mMediaElements.clear();
+                return;
+            }
+
+            final long id = message.getLong("id", 0);
+            final MediaElement element = mMediaElements.get(id);
+            if (element == null) {
+                Log.w(LOGTAG, "MediaElement not found for '" + id + "'");
+                return;
+            }
+
+            if ("GeckoView:MediaTimeChanged".equals(event)) {
+                element.notifyTimeChange(message.getDouble("time"));
+            } else if ("GeckoView:MediaProgress".equals(event)) {
+                element.notifyLoadProgress(message);
+            } else if ("GeckoView:MediaMetadataChanged".equals(event)) {
+                element.notifyMetadataChange(message);
+            } else if ("GeckoView:MediaReadyStateChanged".equals(event)) {
+                element.notifyReadyStateChange(message.getInt("readyState"));
+            } else if ("GeckoView:MediaPlaybackStateChanged".equals(event)) {
+                element.notifyPlaybackStateChange(message.getString("playbackState"));
+            } else if ("GeckoView:MediaVolumeChanged".equals(event)) {
+                element.notifyVolumeChange(message.getDouble("volume"), message.getBoolean("muted"));
+            } else if ("GeckoView:MediaRateChanged".equals(event)) {
+                element.notifyPlaybackRateChange(message.getDouble("rate"));
+            } else if ("GeckoView:MediaFullscreenChanged".equals(event)) {
+                element.notifyFullscreenChange(message.getBoolean("fullscreen"));
+            } else if ("GeckoView:MediaRemove".equals(event)) {
+                delegate.onMediaRemove(GeckoSession.this, element);
+                mMediaElements.remove(element.getVideoId());
+            } else if ("GeckoView:MediaError".equals(event)) {
+                element.notifyError(message.getInt("code"));
+            } else {
+                throw new UnsupportedOperationException(event + " media message not implemented");
+            }
+        }
+    };
 
 
     /* package */ int handlersCount;

@@ -420,58 +420,58 @@ public class GeckoAppShell {
             final long time = s.timestamp / 1000;
 
             switch (sensorType) {
-            case Sensor.TYPE_ACCELEROMETER:
-            case Sensor.TYPE_LINEAR_ACCELERATION:
-            case Sensor.TYPE_ORIENTATION:
-                if (sensorType == Sensor.TYPE_ACCELEROMETER) {
-                    halType = GeckoHalDefines.SENSOR_ACCELERATION;
-                } else if (sensorType == Sensor.TYPE_LINEAR_ACCELERATION) {
-                    halType = GeckoHalDefines.SENSOR_LINEAR_ACCELERATION;
-                } else {
-                    halType = GeckoHalDefines.SENSOR_ORIENTATION;
-                }
-                x = s.values[0];
-                y = s.values[1];
-                z = s.values[2];
-                break;
+                case Sensor.TYPE_ACCELEROMETER:
+                case Sensor.TYPE_LINEAR_ACCELERATION:
+                case Sensor.TYPE_ORIENTATION:
+                    if (sensorType == Sensor.TYPE_ACCELEROMETER) {
+                        halType = GeckoHalDefines.SENSOR_ACCELERATION;
+                    } else if (sensorType == Sensor.TYPE_LINEAR_ACCELERATION) {
+                        halType = GeckoHalDefines.SENSOR_LINEAR_ACCELERATION;
+                    } else {
+                        halType = GeckoHalDefines.SENSOR_ORIENTATION;
+                    }
+                    x = s.values[0];
+                    y = s.values[1];
+                    z = s.values[2];
+                    break;
 
-            case Sensor.TYPE_GYROSCOPE:
-                halType = GeckoHalDefines.SENSOR_GYROSCOPE;
-                x = (float) Math.toDegrees(s.values[0]);
-                y = (float) Math.toDegrees(s.values[1]);
-                z = (float) Math.toDegrees(s.values[2]);
-                break;
+                case Sensor.TYPE_GYROSCOPE:
+                    halType = GeckoHalDefines.SENSOR_GYROSCOPE;
+                    x = (float) Math.toDegrees(s.values[0]);
+                    y = (float) Math.toDegrees(s.values[1]);
+                    z = (float) Math.toDegrees(s.values[2]);
+                    break;
 
-            case Sensor.TYPE_PROXIMITY:
-                halType = GeckoHalDefines.SENSOR_PROXIMITY;
-                x = s.values[0];
-                z = s.sensor.getMaximumRange();
-                break;
+                case Sensor.TYPE_PROXIMITY:
+                    halType = GeckoHalDefines.SENSOR_PROXIMITY;
+                    x = s.values[0];
+                    z = s.sensor.getMaximumRange();
+                    break;
 
-            case Sensor.TYPE_LIGHT:
-                halType = GeckoHalDefines.SENSOR_LIGHT;
-                x = s.values[0];
-                break;
+                case Sensor.TYPE_LIGHT:
+                    halType = GeckoHalDefines.SENSOR_LIGHT;
+                    x = s.values[0];
+                    break;
 
-            case Sensor.TYPE_ROTATION_VECTOR:
-            case Sensor.TYPE_GAME_ROTATION_VECTOR: // API >= 18
-                halType = (sensorType == Sensor.TYPE_ROTATION_VECTOR ?
-                        GeckoHalDefines.SENSOR_ROTATION_VECTOR :
-                        GeckoHalDefines.SENSOR_GAME_ROTATION_VECTOR);
-                x = s.values[0];
-                y = s.values[1];
-                z = s.values[2];
-                if (s.values.length >= 4) {
-                    w = s.values[3];
-                } else {
-                    // s.values[3] was optional in API <= 18, so we need to compute it
-                    // The values form a unit quaternion, so we can compute the angle of
-                    // rotation purely based on the given 3 values.
-                    w = 1.0f - s.values[0] * s.values[0] -
-                            s.values[1] * s.values[1] - s.values[2] * s.values[2];
-                    w = (w > 0.0f) ? (float) Math.sqrt(w) : 0.0f;
-                }
-                break;
+                case Sensor.TYPE_ROTATION_VECTOR:
+                case Sensor.TYPE_GAME_ROTATION_VECTOR: // API >= 18
+                    halType = (sensorType == Sensor.TYPE_ROTATION_VECTOR ?
+                            GeckoHalDefines.SENSOR_ROTATION_VECTOR :
+                            GeckoHalDefines.SENSOR_GAME_ROTATION_VECTOR);
+                    x = s.values[0];
+                    y = s.values[1];
+                    z = s.values[2];
+                    if (s.values.length >= 4) {
+                        w = s.values[3];
+                    } else {
+                        // s.values[3] was optional in API <= 18, so we need to compute it
+                        // The values form a unit quaternion, so we can compute the angle of
+                        // rotation purely based on the given 3 values.
+                        w = 1.0f - s.values[0] * s.values[0] -
+                                s.values[1] * s.values[1] - s.values[2] * s.values[2];
+                        w = (w > 0.0f) ? (float) Math.sqrt(w) : 0.0f;
+                    }
+                    break;
             }
 
             GeckoAppShell.onSensorChanged(halType, x, y, z, w, time);
@@ -572,13 +572,13 @@ public class GeckoAppShell {
 
                 if (WakeLockDelegate.LOCK_CPU.equals(lock) ||
                     WakeLockDelegate.LOCK_AUDIO_PLAYING.equals(lock)) {
-                  wl = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, lock);
+                    wl = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, lock);
                 } else if (WakeLockDelegate.LOCK_SCREEN.equals(lock) ||
                            WakeLockDelegate.LOCK_VIDEO_PLAYING.equals(lock)) {
                   // ON_AFTER_RELEASE is set, the user activity timer will be reset when the
                   // WakeLock is released, causing the illumination to remain on a bit longer.
-                  wl = pm.newWakeLock(PowerManager.SCREEN_BRIGHT_WAKE_LOCK |
-                                      PowerManager.ON_AFTER_RELEASE, lock);
+                    wl = pm.newWakeLock(PowerManager.SCREEN_BRIGHT_WAKE_LOCK |
+                                        PowerManager.ON_AFTER_RELEASE, lock);
                 } else {
                     Log.w(LOGTAG, "Unsupported wake-lock: " + lock);
                     return;
@@ -677,108 +677,108 @@ public class GeckoAppShell {
             getApplicationContext().getSystemService(Context.SENSOR_SERVICE);
 
         switch (aSensortype) {
-        case GeckoHalDefines.SENSOR_GAME_ROTATION_VECTOR:
-            if (gGameRotationVectorSensor == null) {
-                gGameRotationVectorSensor = sm.getDefaultSensor(
-                        Sensor.TYPE_GAME_ROTATION_VECTOR);
-            }
-            if (gGameRotationVectorSensor != null) {
-                sm.registerListener(getSensorListener(),
-                                    gGameRotationVectorSensor,
-                                    SensorManager.SENSOR_DELAY_FASTEST);
-            }
-            if (gGameRotationVectorSensor != null) {
-              break;
-            }
-            // Fallthrough
+            case GeckoHalDefines.SENSOR_GAME_ROTATION_VECTOR:
+                if (gGameRotationVectorSensor == null) {
+                    gGameRotationVectorSensor = sm.getDefaultSensor(
+                            Sensor.TYPE_GAME_ROTATION_VECTOR);
+                }
+                if (gGameRotationVectorSensor != null) {
+                    sm.registerListener(getSensorListener(),
+                                        gGameRotationVectorSensor,
+                                        SensorManager.SENSOR_DELAY_FASTEST);
+                }
+                if (gGameRotationVectorSensor != null) {
+                    break;
+                }
+                // Fallthrough
 
-        case GeckoHalDefines.SENSOR_ROTATION_VECTOR:
-            if (gRotationVectorSensor == null) {
-                gRotationVectorSensor = sm.getDefaultSensor(
-                    Sensor.TYPE_ROTATION_VECTOR);
-            }
-            if (gRotationVectorSensor != null) {
-                sm.registerListener(getSensorListener(),
-                                    gRotationVectorSensor,
-                                    SensorManager.SENSOR_DELAY_FASTEST);
-            }
-            if (gRotationVectorSensor != null) {
-              break;
-            }
-            // Fallthrough
+            case GeckoHalDefines.SENSOR_ROTATION_VECTOR:
+                if (gRotationVectorSensor == null) {
+                    gRotationVectorSensor = sm.getDefaultSensor(
+                        Sensor.TYPE_ROTATION_VECTOR);
+                }
+                if (gRotationVectorSensor != null) {
+                    sm.registerListener(getSensorListener(),
+                                        gRotationVectorSensor,
+                                        SensorManager.SENSOR_DELAY_FASTEST);
+                }
+                if (gRotationVectorSensor != null) {
+                    break;
+                }
+                // Fallthrough
 
-        case GeckoHalDefines.SENSOR_ORIENTATION:
-            if (gOrientationSensor == null) {
-                gOrientationSensor = sm.getDefaultSensor(
-                    Sensor.TYPE_ORIENTATION);
-            }
-            if (gOrientationSensor != null) {
-                sm.registerListener(getSensorListener(),
-                                    gOrientationSensor,
-                                    SensorManager.SENSOR_DELAY_FASTEST);
-            }
-            break;
+            case GeckoHalDefines.SENSOR_ORIENTATION:
+                if (gOrientationSensor == null) {
+                    gOrientationSensor = sm.getDefaultSensor(
+                        Sensor.TYPE_ORIENTATION);
+                }
+                if (gOrientationSensor != null) {
+                    sm.registerListener(getSensorListener(),
+                                        gOrientationSensor,
+                                        SensorManager.SENSOR_DELAY_FASTEST);
+                }
+                break;
 
-        case GeckoHalDefines.SENSOR_ACCELERATION:
-            if (gAccelerometerSensor == null) {
-                gAccelerometerSensor = sm.getDefaultSensor(
-                    Sensor.TYPE_ACCELEROMETER);
-            }
-            if (gAccelerometerSensor != null) {
-                sm.registerListener(getSensorListener(),
-                                    gAccelerometerSensor,
-                                    SensorManager.SENSOR_DELAY_FASTEST);
-            }
-            break;
+            case GeckoHalDefines.SENSOR_ACCELERATION:
+                if (gAccelerometerSensor == null) {
+                    gAccelerometerSensor = sm.getDefaultSensor(
+                        Sensor.TYPE_ACCELEROMETER);
+                }
+                if (gAccelerometerSensor != null) {
+                    sm.registerListener(getSensorListener(),
+                                        gAccelerometerSensor,
+                                        SensorManager.SENSOR_DELAY_FASTEST);
+                }
+                break;
 
-        case GeckoHalDefines.SENSOR_PROXIMITY:
-            if (gProximitySensor == null) {
-                gProximitySensor = sm.getDefaultSensor(Sensor.TYPE_PROXIMITY);
-            }
-            if (gProximitySensor != null) {
-                sm.registerListener(getSensorListener(),
-                                    gProximitySensor,
-                                    SensorManager.SENSOR_DELAY_NORMAL);
-            }
-            break;
+            case GeckoHalDefines.SENSOR_PROXIMITY:
+                if (gProximitySensor == null) {
+                    gProximitySensor = sm.getDefaultSensor(Sensor.TYPE_PROXIMITY);
+                }
+                if (gProximitySensor != null) {
+                    sm.registerListener(getSensorListener(),
+                                        gProximitySensor,
+                                        SensorManager.SENSOR_DELAY_NORMAL);
+                }
+                break;
 
-        case GeckoHalDefines.SENSOR_LIGHT:
-            if (gLightSensor == null) {
-                gLightSensor = sm.getDefaultSensor(Sensor.TYPE_LIGHT);
-            }
-            if (gLightSensor != null) {
-                sm.registerListener(getSensorListener(),
-                                    gLightSensor,
-                                    SensorManager.SENSOR_DELAY_NORMAL);
-            }
-            break;
+            case GeckoHalDefines.SENSOR_LIGHT:
+                if (gLightSensor == null) {
+                    gLightSensor = sm.getDefaultSensor(Sensor.TYPE_LIGHT);
+                }
+                if (gLightSensor != null) {
+                    sm.registerListener(getSensorListener(),
+                                        gLightSensor,
+                                        SensorManager.SENSOR_DELAY_NORMAL);
+                }
+                break;
 
-        case GeckoHalDefines.SENSOR_LINEAR_ACCELERATION:
-            if (gLinearAccelerometerSensor == null) {
-                gLinearAccelerometerSensor = sm.getDefaultSensor(
-                    Sensor.TYPE_LINEAR_ACCELERATION);
-            }
-            if (gLinearAccelerometerSensor != null) {
-                sm.registerListener(getSensorListener(),
-                                    gLinearAccelerometerSensor,
-                                    SensorManager.SENSOR_DELAY_FASTEST);
-            }
-            break;
+            case GeckoHalDefines.SENSOR_LINEAR_ACCELERATION:
+                if (gLinearAccelerometerSensor == null) {
+                    gLinearAccelerometerSensor = sm.getDefaultSensor(
+                        Sensor.TYPE_LINEAR_ACCELERATION);
+                }
+                if (gLinearAccelerometerSensor != null) {
+                    sm.registerListener(getSensorListener(),
+                                        gLinearAccelerometerSensor,
+                                        SensorManager.SENSOR_DELAY_FASTEST);
+                }
+                break;
 
-        case GeckoHalDefines.SENSOR_GYROSCOPE:
-            if (gGyroscopeSensor == null) {
-                gGyroscopeSensor = sm.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
-            }
-            if (gGyroscopeSensor != null) {
-                sm.registerListener(getSensorListener(),
-                                    gGyroscopeSensor,
-                                    SensorManager.SENSOR_DELAY_FASTEST);
-            }
-            break;
+            case GeckoHalDefines.SENSOR_GYROSCOPE:
+                if (gGyroscopeSensor == null) {
+                    gGyroscopeSensor = sm.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
+                }
+                if (gGyroscopeSensor != null) {
+                    sm.registerListener(getSensorListener(),
+                                        gGyroscopeSensor,
+                                        SensorManager.SENSOR_DELAY_FASTEST);
+                }
+                break;
 
-        default:
-            Log.w(LOGTAG, "Error! Can't enable unknown SENSOR type " +
-                  aSensortype);
+            default:
+                Log.w(LOGTAG, "Error! Can't enable unknown SENSOR type " +
+                      aSensortype);
         }
     }
 
@@ -789,57 +789,57 @@ public class GeckoAppShell {
             getApplicationContext().getSystemService(Context.SENSOR_SERVICE);
 
         switch (aSensortype) {
-        case GeckoHalDefines.SENSOR_GAME_ROTATION_VECTOR:
-            if (gGameRotationVectorSensor != null) {
-                sm.unregisterListener(getSensorListener(), gGameRotationVectorSensor);
-              break;
-            }
-            // Fallthrough
+            case GeckoHalDefines.SENSOR_GAME_ROTATION_VECTOR:
+                if (gGameRotationVectorSensor != null) {
+                    sm.unregisterListener(getSensorListener(), gGameRotationVectorSensor);
+                    break;
+                }
+                // Fallthrough
 
-        case GeckoHalDefines.SENSOR_ROTATION_VECTOR:
-            if (gRotationVectorSensor != null) {
-                sm.unregisterListener(getSensorListener(), gRotationVectorSensor);
-              break;
-            }
-            // Fallthrough
+            case GeckoHalDefines.SENSOR_ROTATION_VECTOR:
+                if (gRotationVectorSensor != null) {
+                    sm.unregisterListener(getSensorListener(), gRotationVectorSensor);
+                    break;
+                }
+                // Fallthrough
 
-        case GeckoHalDefines.SENSOR_ORIENTATION:
-            if (gOrientationSensor != null) {
-                sm.unregisterListener(getSensorListener(), gOrientationSensor);
-            }
-            break;
+            case GeckoHalDefines.SENSOR_ORIENTATION:
+                if (gOrientationSensor != null) {
+                    sm.unregisterListener(getSensorListener(), gOrientationSensor);
+                }
+                break;
 
-        case GeckoHalDefines.SENSOR_ACCELERATION:
-            if (gAccelerometerSensor != null) {
-                sm.unregisterListener(getSensorListener(), gAccelerometerSensor);
-            }
-            break;
+            case GeckoHalDefines.SENSOR_ACCELERATION:
+                if (gAccelerometerSensor != null) {
+                    sm.unregisterListener(getSensorListener(), gAccelerometerSensor);
+                }
+                break;
 
-        case GeckoHalDefines.SENSOR_PROXIMITY:
-            if (gProximitySensor != null) {
-                sm.unregisterListener(getSensorListener(), gProximitySensor);
-            }
-            break;
+            case GeckoHalDefines.SENSOR_PROXIMITY:
+                if (gProximitySensor != null) {
+                    sm.unregisterListener(getSensorListener(), gProximitySensor);
+                }
+                break;
 
-        case GeckoHalDefines.SENSOR_LIGHT:
-            if (gLightSensor != null) {
-                sm.unregisterListener(getSensorListener(), gLightSensor);
-            }
-            break;
+            case GeckoHalDefines.SENSOR_LIGHT:
+                if (gLightSensor != null) {
+                    sm.unregisterListener(getSensorListener(), gLightSensor);
+                }
+                break;
 
-        case GeckoHalDefines.SENSOR_LINEAR_ACCELERATION:
-            if (gLinearAccelerometerSensor != null) {
-                sm.unregisterListener(getSensorListener(), gLinearAccelerometerSensor);
-            }
-            break;
+            case GeckoHalDefines.SENSOR_LINEAR_ACCELERATION:
+                if (gLinearAccelerometerSensor != null) {
+                    sm.unregisterListener(getSensorListener(), gLinearAccelerometerSensor);
+                }
+                break;
 
-        case GeckoHalDefines.SENSOR_GYROSCOPE:
-            if (gGyroscopeSensor != null) {
-                sm.unregisterListener(getSensorListener(), gGyroscopeSensor);
-            }
-            break;
-        default:
-            Log.w(LOGTAG, "Error! Can't disable unknown SENSOR type " + aSensortype);
+            case GeckoHalDefines.SENSOR_GYROSCOPE:
+                if (gGyroscopeSensor != null) {
+                    sm.unregisterListener(getSensorListener(), gGyroscopeSensor);
+                }
+                break;
+            default:
+                Log.w(LOGTAG, "Error! Can't disable unknown SENSOR type " + aSensortype);
         }
     }
 
@@ -875,12 +875,12 @@ public class GeckoAppShell {
 
     @WrapForJNI(calledFrom = "gecko")
     private static boolean getHWEncoderCapability() {
-      return HardwareCodecCapabilityUtils.getHWEncoderCapability();
+        return HardwareCodecCapabilityUtils.getHWEncoderCapability();
     }
 
     @WrapForJNI(calledFrom = "gecko")
     private static boolean getHWDecoderCapability() {
-      return HardwareCodecCapabilityUtils.getHWDecoderCapability();
+        return HardwareCodecCapabilityUtils.getHWDecoderCapability();
     }
 
     static List<ResolveInfo> queryIntentActivities(final Intent intent) {
@@ -1124,7 +1124,7 @@ public class GeckoAppShell {
         long vibrationDuration = 0;
         int iterLen = pattern.length & ~1;
         for (int i = 0; i < iterLen; i++) {
-          vibrationDuration += pattern[i];
+            vibrationDuration += pattern[i];
         }
 
         sVibrationEndTime = System.nanoTime() + vibrationDuration * 1000000;
@@ -1151,7 +1151,7 @@ public class GeckoAppShell {
     @WrapForJNI(calledFrom = "gecko")
     private static boolean isNetworkLinkUp() {
         ConnectivityManager cm = (ConnectivityManager)
-           getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);
+                getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);
         try {
             NetworkInfo info = cm.getActiveNetworkInfo();
             if (info == null || !info.isConnected())
@@ -1783,8 +1783,7 @@ public class GeckoAppShell {
 
             @Override
             public synchronized int read(final byte[] buffer, final int byteOffset,
-                                         final int byteCount)
-            throws IOException {
+                                         final int byteCount) throws IOException {
                 if (mHaveConnected) {
                     return super.read(buffer, byteOffset, byteCount);
                 }

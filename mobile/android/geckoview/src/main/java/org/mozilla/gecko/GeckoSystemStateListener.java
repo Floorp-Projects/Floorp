@@ -92,7 +92,7 @@ public class GeckoSystemStateListener
      */
     private static boolean prefersReducedMotion() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN_MR1) {
-          return false;
+            return false;
         }
 
         ContentResolver contentResolver = sApplicationContext.getContentResolver();

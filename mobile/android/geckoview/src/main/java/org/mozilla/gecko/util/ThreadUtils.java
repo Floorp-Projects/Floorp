@@ -185,10 +185,10 @@ public final class ThreadUtils {
         final IllegalThreadStateException e = new IllegalThreadStateException(message);
 
         switch (behavior) {
-        case THROW:
-            throw e;
-        default:
-            Log.e(LOGTAG, "Method called on wrong thread!", e);
+            case THROW:
+                throw e;
+            default:
+                Log.e(LOGTAG, "Method called on wrong thread!", e);
         }
     }
 

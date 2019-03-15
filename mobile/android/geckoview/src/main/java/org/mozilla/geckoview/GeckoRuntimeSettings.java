@@ -806,17 +806,17 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
     }
 
     public static final Parcelable.Creator<GeckoRuntimeSettings> CREATOR
-        = new Parcelable.Creator<GeckoRuntimeSettings>() {
-        @Override
-        public GeckoRuntimeSettings createFromParcel(final Parcel in) {
-            final GeckoRuntimeSettings settings = new GeckoRuntimeSettings();
-            settings.readFromParcel(in);
-            return settings;
-        }
+            = new Parcelable.Creator<GeckoRuntimeSettings>() {
+                @Override
+                public GeckoRuntimeSettings createFromParcel(final Parcel in) {
+                    final GeckoRuntimeSettings settings = new GeckoRuntimeSettings();
+                    settings.readFromParcel(in);
+                    return settings;
+                }
 
-        @Override
-        public GeckoRuntimeSettings[] newArray(final int size) {
-            return new GeckoRuntimeSettings[size];
-        }
-    };
+                @Override
+                public GeckoRuntimeSettings[] newArray(final int size) {
+                    return new GeckoRuntimeSettings[size];
+                }
+            };
 }
