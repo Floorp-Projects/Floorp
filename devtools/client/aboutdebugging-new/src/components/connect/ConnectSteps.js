@@ -4,22 +4,14 @@
 
 "use strict";
 
-const { PureComponent, createFactory } = require("devtools/client/shared/vendor/react");
+const { PureComponent } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-
-const FluentReact = require("devtools/client/shared/vendor/fluent-react");
-const Localized = createFactory(FluentReact.Localized);
 
 class ConnectSteps extends PureComponent {
   static get propTypes() {
     return {
-      steps: PropTypes.arrayOf(
-        PropTypes.shape({
-          localizationId: PropTypes.string.isRequired,
-          url: PropTypes.string,
-        }).isRequired,
-      ),
+      steps: PropTypes.arrayOf(PropTypes.string).isRequired,
     };
   }
 
@@ -28,23 +20,12 @@ class ConnectSteps extends PureComponent {
       {
         className: "connect-page__step-list",
       },
-      this.props.steps.map(step =>
-        Localized(
-          {
-            id: step.localizationId,
-            a: step.url ? dom.a({
-              href: step.url,
-              target: "_blank",
-            }) : null,
-          },
-          dom.li(
-            {
-              className: "connect-page__step",
-              key: step,
-            },
-            step
-          )
-        )
+      this.props.steps.map(step => dom.li(
+        {
+          className: "connect-page__step",
+          key: step,
+        },
+        step)
       )
     );
   }

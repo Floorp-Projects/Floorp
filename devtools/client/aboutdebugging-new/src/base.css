@@ -50,7 +50,6 @@
   --body-20-font-weight: 700;
   --caption-20-font-size: 13px;
   --caption-20-font-weight: 400;
-  --caption-20-color: var(--grey-50);
   --display-20-font-size: 36px;
   --display-20-font-weight: 200;
   --title-20-font-size: 17px;
@@ -70,9 +69,8 @@
   --message-font-size: 13px; /* Body 10 in Photon - https://design.firefox.com/photon/visuals/typography.html */
   --button-font-size: var(--base-font-size);
   --micro-font-size: 11px;
-  --monospace-font-family: monospace;
 
-  --card-separator-color: var(--grey-20);
+  --monospace-font-family: monospace;
 
   /*
    * Variables particular to about:debugging
@@ -129,6 +127,7 @@ p, h1 {
   margin: 0;
 }
 
+
 /*
 * Utils
 */
@@ -148,13 +147,6 @@ p, h1 {
 /* Text that is not selectable */
 .unselectable-text {
   -moz-user-select: none;
-}
-
-/* Links that need to look like current text */
-.undecorated-link,
-.undecorated-link:hover {
-  text-decoration: none;
-  color: currentColor;
 }
 
 /*
@@ -202,8 +194,9 @@ p, h1 {
 
 /* Alternative style for a heading (i.e. h1) */
 .alt-heading {
-  font-weight: var(--title-20-font-weight);
-  font-size: var(--title-20-font-size);
+  font-weight: 300;
+  font-size: 1.46em;
+  line-height: 1.2; /* odd value - from common.inc.css */
 
   margin-block-start: 0;
   margin-block-end: calc(var(--base-unit) * 4);
@@ -261,51 +254,20 @@ Form controls
   font-size: 1em;
 }
 
-/* Buttons from Photon */
-.default-button, .primary-button {
+/* standard, normal button */
+.default-button {
   -moz-appearance: none;
+  color: var(--grey-90); /* Note: this is from Photon Default button */
+  background-color: var(--grey-90-a10); /* Note: this is from Photon Default button */
+  font-size: var(--button-font-size); /* Note: this is from Photon Default button */
+
   margin: 0;
-  height: calc(var(--base-unit) * 8);
+  height: calc(var(--base-unit) * 8); /* Note: this is from Photon, not common.css */
   padding-inline-start: calc(var(--base-unit) * 5);
   padding-inline-end: calc(var(--base-unit) * 5);
 
   border: none;
   border-radius: calc(var(--base-unit) / 2);
-
-  font-size: var(--button-font-size);
-}
-
-/* Disabled state for buttons from Photon */
-.default-button:disabled, .primary-button:disabled {
-  opacity: 0.4;
-}
-
-/* Smaller variant size for buttons, from Photon */
-.default-button--micro, .primary-button--micro {
-  padding-inline-start: calc(2 * var(--base-unit));
-  padding-inline-end: calc(2 * var(--base-unit));
-  font-size: var(--micro-font-size);
-  height: calc(var(--base-unit) * 6);
-}
-
-/* Photon button representing a primary action */
-.primary-button {
-  color: var(--white-100);
-  background-color: var(--blue-60);
-}
-
-.primary-button:enabled:hover {
-  background-color: var(--blue-70);
-}
-
-.primary-button:enabled:active {
-  background-color: var(--blue-80);
-}
-
-/* Photon standard button */
-.default-button {
-  color: var(--grey-90); /* Note: this is from Photon Default button */
-  background-color: var(--grey-90-a10); /* Note: this is from Photon Default button */
 }
 
 .default-button:enabled:hover {
@@ -316,7 +278,19 @@ Form controls
   background: var(--grey-90-a30); /* Note: this is from Photon Default button */
 }
 
-/* Photon ghost button. Icon button with no background */
+.default-button:disabled {
+  opacity: 0.4; /* Note: this is from Photon Default button */
+}
+
+/* smaller size for a default button */
+.default-button--micro {
+  padding-inline-start: calc(2 * var(--base-unit));
+  padding-inline-end: calc(2 * var(--base-unit));
+  font-size: var(--micro-font-size);
+  height: calc(var(--base-unit) * 6);
+}
+
+/* ghost button. icon button with no background from Photon guidelines */
 .ghost-button {
   border: none;
   border-radius: calc(var(--base-unit) / 2);
@@ -336,7 +310,7 @@ Form controls
   background-color: var(--grey-40);
 }
 
-/* Standard inputs */
+/* standard inputs */
 .default-input {
   line-height: unset;
   padding: 0 calc(var(--base-unit) * 2);
@@ -348,8 +322,8 @@ Form controls
   background-color: var(--box-background);
 }
 
-/* Standard checkbox, from Photon */
 .default-checkbox {
+  /* Note: this styles are from Photon, not common.css */
   height: calc(var(--base-unit) * 4);
   margin-inline-end: var(--base-unit);
   width: calc(var(--base-unit) * 4);
@@ -387,15 +361,18 @@ Form controls
 }
 
 /*
- * Card UI, from Photon
+ * Card style which is used in debug target item and so on.
  */
 .card {
   background-color: var(--white-100); /* from common.inc.css */
   border-radius: var(--base-unit); /* from common.inc.css */
   box-shadow: 0 1px 4px var(--grey-90-a10); /* from common.inc.css */
+  padding-block: calc(var(--base-unit) * 3) calc(var(--base-unit) * 2);
+  padding-inline: calc(var(--base-unit) * 3) calc(var(--base-unit) * 2);
 }
 
-.card__heading {
-  font-size: var(--title-20-font-size); /* Note: this is from Photon Title 20 */
-  font-weight: var(--title-20-font-weight); /* Note: this is from Photon Title 20 */
+.undecorated-link,
+.undecorated-link:hover {
+  text-decoration: none;
+  color: currentColor;
 }

@@ -5,7 +5,6 @@
 DevToolsModules(
     'ConnectPage.css',
     'ConnectPage.js',
-    'ConnectSection.css',
     'ConnectSection.js',
     'ConnectSteps.css',
     'ConnectSteps.js',
