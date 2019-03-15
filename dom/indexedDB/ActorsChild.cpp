@@ -1224,24 +1224,19 @@ class MOZ_STACK_CLASS FileHandleResultHelper final
       return NS_ERROR_DOM_FILEHANDLE_UNKNOWN_ERR;
     }
 
-    const FileRequestSize& size = aMetadata->size();
-    if (size.type() != FileRequestSize::Tvoid_t) {
-      MOZ_ASSERT(size.type() == FileRequestSize::Tuint64_t);
-
-      JS::Rooted<JS::Value> number(aCx, JS_NumberValue(size.get_uint64_t()));
+    const Maybe<uint64_t>& size = aMetadata->size();
+    if (size.isSome()) {
+      JS::Rooted<JS::Value> number(aCx, JS_NumberValue(size.value()));
 
       if (NS_WARN_IF(!JS_DefineProperty(aCx, obj, "size", number, 0))) {
         return NS_ERROR_DOM_FILEHANDLE_UNKNOWN_ERR;
       }
     }
 
-    const FileRequestLastModified& lastModified = aMetadata->lastModified();
-    if (lastModified.type() != FileRequestLastModified::Tvoid_t) {
-      MOZ_ASSERT(lastModified.type() == FileRequestLastModified::Tint64_t);
-
+    const Maybe<int64_t>& lastModified = aMetadata->lastModified();
+    if (lastModified.isSome()) {
       JS::Rooted<JSObject*> date(
-          aCx,
-          JS::NewDateObject(aCx, JS::TimeClip(lastModified.get_int64_t())));
+          aCx, JS::NewDateObject(aCx, JS::TimeClip(lastModified.value())));
       if (NS_WARN_IF(!date)) {
         return NS_ERROR_DOM_FILEHANDLE_UNKNOWN_ERR;
       }
@@ -1265,15 +1260,15 @@ already_AddRefed<File> ConvertActorToFile(
 
   const FileRequestMetadata& metadata = aResponse.metadata();
 
-  const FileRequestSize& size = metadata.size();
-  MOZ_ASSERT(size.type() == FileRequestSize::Tuint64_t);
+  const Maybe<uint64_t>& size = metadata.size();
+  MOZ_ASSERT(size.isSome());
 
-  const FileRequestLastModified& lastModified = metadata.lastModified();
-  MOZ_ASSERT(lastModified.type() == FileRequestLastModified::Tint64_t);
+  const Maybe<int64_t>& lastModified = metadata.lastModified();
+  MOZ_ASSERT(lastModified.isSome());
 
   RefPtr<BlobImpl> blobImpl = actor->SetPendingInfoAndDeleteActor(
-      mutableFile->Name(), mutableFile->Type(), size.get_uint64_t(),
-      lastModified.get_int64_t());
+      mutableFile->Name(), mutableFile->Type(), size.value(),
+      lastModified.value());
   MOZ_ASSERT(blobImpl);
 
   RefPtr<BlobImpl> blobImplSnapshot =
