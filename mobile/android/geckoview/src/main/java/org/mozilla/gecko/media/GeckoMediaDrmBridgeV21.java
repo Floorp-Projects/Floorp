@@ -4,7 +4,6 @@
 
 package org.mozilla.gecko.media;
 
-import java.lang.*;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -26,9 +25,7 @@ import android.os.Handler;
 import android.os.HandlerThread;
 import android.media.DeniedByServerException;
 import android.media.MediaCrypto;
-import android.media.MediaCryptoException;
 import android.media.MediaDrm;
-import android.media.MediaDrmException;
 import android.media.NotProvisionedException;
 import android.util.Log;
 
