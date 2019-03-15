@@ -1,15 +1,14 @@
 import random, string, datetime
 
-def id_token():
+def token():
    letters = string.ascii_lowercase
    return ''.join(random.choice(letters) for i in range(20))
 
 def main(request, response):
-    token = request.GET.first("token", None)
-    value = request.server.stash.take(token)
+    cookie = request.cookies.first("Count", None)
     count = 0
-    if value != None:
-      count = int(value)
+    if cookie != None:
+      count = int(cookie.value)
     if request.GET.first("query", None) != None:
       headers = [("Count", count)]
       content = ""
@@ -17,10 +16,10 @@ def main(request, response):
     else:
       count = count + 1
 
-      unique_id = id_token()
+      unique_id = token()
       headers = [("Content-Type", "text/javascript"),
-                 ("Cache-Control", "private, max-age=0, stale-while-revalidate=60"),
-                 ("Unique-Id", unique_id)]
+                 ("Cache-Control", "private, max-age=0, stale-while-revalidate=10"),
+                 ("Set-Cookie", "Count={}".format(count)),
+                 ("Token", unique_id)]
       content = "report('{}')".format(unique_id)
-      request.server.stash.put(token, count)
       return 200, headers, content

@@ -23,8 +23,7 @@ try {
     a.prototype = undefined;
     registerPaint('foo5', a);
 } catch(ex) {
-    // The prototype object is undefined, not an object.
-    if (ex.name == 'TypeError')
+    if (ex.name == 'TypeError' && ex.message == "Failed to execute 'registerPaint' on 'PaintWorkletGlobalScope': The 'prototype' object on the class does not exist.")
         testsPassed = true;
 }
 

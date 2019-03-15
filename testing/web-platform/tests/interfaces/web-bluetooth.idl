@@ -199,7 +199,6 @@ interface mixin CharacteristicEventHandlers {
 
 [SecureContext]
 interface mixin BluetoothDeviceEventHandlers {
-  attribute EventHandler onadvertisementreceived;
   attribute EventHandler ongattserverdisconnected;
 };
 
