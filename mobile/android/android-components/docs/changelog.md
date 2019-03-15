@@ -69,6 +69,9 @@ permalink: /changelog/
 * **service-pocket**
   * Access the list of global video recommendations via `PocketEndpoint.getGlobalVideoRecommendations`.
 
+* **concept-fetch**
+  * Added common HTTP header constants in `Headers.Common`. This collection is incomplete: add your own!
+
 # 0.46.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.45.0...v0.46.0)
