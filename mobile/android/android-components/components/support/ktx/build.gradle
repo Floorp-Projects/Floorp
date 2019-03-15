@@ -30,6 +30,7 @@ dependencies {
     implementation project(':support-base')
 
     testImplementation project(':support-test')
+    testImplementation Dependencies.androidx_test_core
     testImplementation Dependencies.testing_junit
     testImplementation Dependencies.testing_robolectric
     testImplementation Dependencies.testing_mockito

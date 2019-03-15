@@ -13,6 +13,8 @@ import android.content.Intent.EXTRA_SUBJECT
 import android.content.Intent.EXTRA_TEXT
 import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
 import android.content.pm.PackageManager.PERMISSION_GRANTED
+import android.os.Process
+import android.support.annotation.VisibleForTesting
 import android.support.v4.content.ContextCompat.checkSelfPermission
 import mozilla.components.support.base.log.Log
 import mozilla.components.support.ktx.R
@@ -77,5 +79,34 @@ fun Context.share(text: String, subject: String = getString(R.string.mozac_suppo
     } catch (e: ActivityNotFoundException) {
         Log.log(Log.Priority.WARN, message = "No activity to share to found", throwable = e, tag = "Reference-Browser")
         false
+    }
+}
+
+@VisibleForTesting
+internal var isMainProcess: Boolean? = null
+
+/**
+ *  Returns true if we are running in the main process false otherwise.
+ */
+fun Context.isMainProcess(): Boolean {
+    if (isMainProcess != null) return isMainProcess as Boolean
+
+    val pid = Process.myPid()
+    val activityManager = getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+
+    isMainProcess = (activityManager.runningAppProcesses?.any { processInfo ->
+        (processInfo.pid == pid && processInfo.processName == packageName)
+    }) ?: false
+
+    return isMainProcess as Boolean
+}
+
+/**
+ * Takes a function runs it only it if we are running in the main process, otherwise the function will not be executed.
+ * @param [block] function to be executed in the main process.
+ */
+inline fun Context.runOnlyInMainProcess(block: () -> Unit) {
+    if (isMainProcess()) {
+        block()
     }
 }

@@ -49,6 +49,16 @@ permalink: /changelog/
 
 * **support-ktx**
   * Added `File.truncateDirectory()` to remove all files (and sub directories) in a directory.
+  * Added `Context.isMainProcess` and `Context.runOnlyInMainProcess(block: () -> Unit)` to detect when you're running on the main process.
+```kotlin
+      // true if we are running in the main process otherwise false .
+      val isMainProcess = context.isMainProcess()
+
+      context.runOnlyInMainProcess {
+            /* This function is only going to run if we are
+                in the main process, otherwise it won't be executed.  */
+       }
+```
 
 * **feature-session**
   * Adds support for the picture-in-picture mode in `PictureInPictureFeature`.
