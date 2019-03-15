@@ -308,10 +308,6 @@ void LIRGenerator::visitWasmNeg(MWasmNeg* ins) {
   }
 }
 
-void LIRGenerator::visitWasmSelect(MWasmSelect* ins) {
-  MOZ_CRASH("visitWasmSelect");
-}
-
 void LIRGeneratorARM64::lowerUDiv(MDiv* div) {
   LAllocation lhs = useRegister(div->lhs());
   // TODO (Bug 1523568): Implement the division-avoidance paths when rhs is
