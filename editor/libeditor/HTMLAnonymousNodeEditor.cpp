@@ -5,6 +5,7 @@
 #include "mozilla/HTMLEditor.h"
 
 #include "mozilla/Attributes.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/EventTarget.h"
 #include "mozilla/mozalloc.h"
@@ -26,7 +27,6 @@
 #include "nsIHTMLObjectResizer.h"
 #include "nsStubMutationObserver.h"
 #include "nsINode.h"
-#include "nsIPresShell.h"
 #include "nsISupportsImpl.h"
 #include "nsISupportsUtils.h"
 #include "nsLiteralString.h"
@@ -146,8 +146,8 @@ ManualNACPtr HTMLEditor::CreateAnonymousElement(nsAtom* aTag,
   }
 
   // Get the pres shell
-  nsCOMPtr<nsIPresShell> ps = GetPresShell();
-  if (NS_WARN_IF(!ps)) {
+  RefPtr<PresShell> presShell = GetPresShell();
+  if (NS_WARN_IF(!presShell)) {
     return nullptr;
   }
 
@@ -192,7 +192,7 @@ ManualNACPtr HTMLEditor::CreateAnonymousElement(nsAtom* aTag,
 
   // Must style the new element, otherwise the PostRecreateFramesFor call
   // below will do nothing.
-  ServoStyleSet* styleSet = ps->StyleSet();
+  ServoStyleSet* styleSet = presShell->StyleSet();
   // Sometimes editor likes to append anonymous content to elements
   // in display:none subtrees, so avoid styling in those cases.
   if (ServoStyleSet::MayTraverseFrom(newContent)) {
@@ -215,7 +215,7 @@ ManualNACPtr HTMLEditor::CreateAnonymousElement(nsAtom* aTag,
 #endif  // DEBUG
 
   // display the element
-  ps->PostRecreateFramesFor(newContent);
+  presShell->PostRecreateFramesFor(newContent);
 
   return newContent;
 }
@@ -225,16 +225,16 @@ void HTMLEditor::RemoveListenerAndDeleteRef(const nsAString& aEvent,
                                             nsIDOMEventListener* aListener,
                                             bool aUseCapture,
                                             ManualNACPtr aElement,
-                                            nsIPresShell* aShell) {
+                                            PresShell* aPresShell) {
   if (aElement) {
     aElement->RemoveEventListener(aEvent, aListener, aUseCapture);
   }
-  DeleteRefToAnonymousNode(std::move(aElement), aShell);
+  DeleteRefToAnonymousNode(std::move(aElement), aPresShell);
 }
 
 // Deletes all references to an anonymous element
 void HTMLEditor::DeleteRefToAnonymousNode(ManualNACPtr aContent,
-                                          nsIPresShell* aShell) {
+                                          PresShell* aPresShell) {
   // call ContentRemoved() for the anonymous content
   // node so its references get removed from the frame manager's
   // undisplay map, and its layout frames get destroyed!
@@ -250,15 +250,16 @@ void HTMLEditor::DeleteRefToAnonymousNode(ManualNACPtr aContent,
   }
 
   nsAutoScriptBlocker scriptBlocker;
-  // Need to check whether aShell has been destroyed (but not yet deleted).
+  // Need to check whether aPresShell has been destroyed (but not yet deleted).
   // See bug 338129.
-  if (aContent->IsInComposedDoc() && aShell && !aShell->IsDestroying()) {
+  if (aContent->IsInComposedDoc() && aPresShell &&
+      !aPresShell->IsDestroying()) {
     MOZ_ASSERT(aContent->IsRootOfAnonymousSubtree());
     MOZ_ASSERT(!aContent->GetPreviousSibling(), "NAC has no siblings");
 
     // FIXME(emilio): This is the only caller to PresShell::ContentRemoved that
     // passes NAC into it. This is not great!
-    aShell->ContentRemoved(aContent, nullptr);
+    aPresShell->ContentRemoved(aContent, nullptr);
   }
 
   // The ManualNACPtr destructor will invoke UnbindFromTree.
