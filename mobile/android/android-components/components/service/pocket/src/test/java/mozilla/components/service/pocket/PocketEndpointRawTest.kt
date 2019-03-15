@@ -6,8 +6,9 @@ package mozilla.components.service.pocket
 
 import mozilla.components.concept.fetch.Client
 import mozilla.components.concept.fetch.Headers.Common.USER_AGENT
-import mozilla.components.concept.fetch.Request
 import mozilla.components.concept.fetch.Response
+import mozilla.components.service.pocket.helpers.assertRequestParams
+import mozilla.components.service.pocket.helpers.assertResponseIsClosed
 import mozilla.components.support.ktx.kotlin.toUri
 import mozilla.components.support.test.any
 import org.junit.Assert.assertEquals
@@ -17,8 +18,6 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.mock
-import org.mockito.Mockito.times
-import org.mockito.Mockito.verify
 import org.robolectric.RobolectricTestRunner
 import java.io.IOException
 
@@ -65,7 +64,7 @@ class PocketEndpointRawTest {
         val expectedUrl = "https://mozilla.org/global-video-recs"
         `when`(urls.globalVideoRecs).thenReturn(expectedUrl.toUri())
 
-        assertRequestParams(makeRequest = {
+        assertRequestParams(client, makeRequest = {
             endpoint.getGlobalVideoRecommendations()
         }, assertParams = { request ->
             assertEquals(expectedUrl, request.url)
@@ -74,7 +73,7 @@ class PocketEndpointRawTest {
 
     @Test
     fun `WHEN requesting global video recs THEN the headers include the user agent`() {
-        assertRequestParams(makeRequest = {
+        assertRequestParams(client, makeRequest = {
             endpoint.getGlobalVideoRecommendations()
         }, assertParams = { request ->
             val userAgent = request.headers?.get(USER_AGENT)
@@ -116,34 +115,16 @@ class PocketEndpointRawTest {
 
     @Test
     fun `WHEN requesting global video recs and the response is an error THEN response is closed`() {
-        assertResponseIsClosed(errorResponse) {
+        assertResponseIsClosed(client, errorResponse) {
             endpoint.getGlobalVideoRecommendations()
         }
     }
 
     @Test
     fun `WHEN requesting global video recs and the response is a success THEN response is closed`() {
-        assertResponseIsClosed(successResponse) {
+        assertResponseIsClosed(client, successResponse) {
             endpoint.getGlobalVideoRecommendations()
         }
-    }
-
-    private fun assertRequestParams(makeRequest: () -> Unit, assertParams: (Request) -> Unit) {
-        `when`(client.fetch(any())).thenAnswer {
-            val request = it.arguments[0] as Request
-            assertParams(request)
-            defaultResponse
-        }
-
-        makeRequest()
-
-        verify(client, times(1)).fetch(any())
-    }
-
-    private fun assertResponseIsClosed(response: Response, makeRequest: () -> Unit) {
-        `when`(client.fetch(any())).thenReturn(response)
-        makeRequest()
-        verify(response, times(1)).close()
     }
 
     private fun getMockResponse(status: Int): Response = mock(Response::class.java).also {
