@@ -447,7 +447,7 @@ public class CrashHandler implements Thread.UncaughtExceptionHandler {
      * @param exc An uncaught exception
      */
     @Override
-    public void uncaughtException(Thread thread, Throwable exc) {
+    public void uncaughtException(final Thread thread, final Throwable exc) {
         if (this.crashing) {
             // Prevent possible infinite recusions.
             return;

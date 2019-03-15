@@ -134,7 +134,7 @@ public class GeckoServiceChildProcess extends Service {
     }
 
     @Override
-    public boolean onUnbind(Intent intent) {
+    public boolean onUnbind(final Intent intent) {
         Log.i(LOGTAG, "Service has been unbound. Stopping.");
         stopSelf();
         Process.killProcess(Process.myPid());

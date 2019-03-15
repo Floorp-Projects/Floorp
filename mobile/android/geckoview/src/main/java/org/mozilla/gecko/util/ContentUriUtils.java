@@ -131,7 +131,8 @@ public class ContentUriUtils {
      * @return The path of the temporary file, or <code>null</code> if there was an error
      *         retrieving the file.
      */
-    public static @Nullable String getTempFilePathFromContentUri(Context context, Uri contentUri) {
+    public static @Nullable String getTempFilePathFromContentUri(final Context context,
+                                                                 final Uri contentUri) {
         //copy file and send new file path
         final String fileName = FileUtils.getFileNameFromContentUri(context, contentUri);
         final File folder = new File(context.getCacheDir(), FileUtils.CONTENT_TEMP_DIRECTORY);
@@ -159,8 +160,8 @@ public class ContentUriUtils {
      * @return The value of the _data column, which is typically a file path.
      * @author paulburke
      */
-    private static String getDataColumn(Context context, Uri uri, String selection,
-                                        String[] selectionArgs) {
+    private static String getDataColumn(final Context context, final Uri uri,
+                                        final String selection, final String[] selectionArgs) {
         final String column = "_data";
         final String[] projection = {
                 column
@@ -181,7 +182,7 @@ public class ContentUriUtils {
      * @return Whether the Uri authority is ExternalStorageProvider.
      * @author paulburke
      */
-    public static boolean isExternalStorageDocument(Uri uri) {
+    public static boolean isExternalStorageDocument(final Uri uri) {
         return "com.android.externalstorage.documents".equals(uri.getAuthority());
     }
 
@@ -190,7 +191,7 @@ public class ContentUriUtils {
      * @return Whether the Uri authority is DownloadsProvider.
      * @author paulburke
      */
-    public static boolean isDownloadsDocument(Uri uri) {
+    public static boolean isDownloadsDocument(final Uri uri) {
         return "com.android.providers.downloads.documents".equals(uri.getAuthority());
     }
 
@@ -199,7 +200,7 @@ public class ContentUriUtils {
      * @return Whether the Uri authority is MediaProvider.
      * @author paulburke
      */
-    public static boolean isMediaDocument(Uri uri) {
+    public static boolean isMediaDocument(final Uri uri) {
         return "com.android.providers.media.documents".equals(uri.getAuthority());
     }
 
@@ -207,7 +208,7 @@ public class ContentUriUtils {
      * @param uri The Uri to check.
      * @return Whether the Uri authority is Google Photos.
      */
-    public static boolean isGooglePhotosUri(Uri uri) {
+    public static boolean isGooglePhotosUri(final Uri uri) {
         return "com.google.android.apps.photos.content".equals(uri.getAuthority());
     }
 }

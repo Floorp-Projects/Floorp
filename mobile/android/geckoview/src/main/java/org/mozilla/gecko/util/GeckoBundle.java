@@ -740,7 +740,7 @@ public final class GeckoBundle implements Parcelable {
     }
 
     @Override // Object
-    public boolean equals(Object other) {
+    public boolean equals(final Object other) {
         if (!(other instanceof GeckoBundle)) {
             return false;
         }
@@ -925,7 +925,7 @@ public final class GeckoBundle implements Parcelable {
         return new GeckoBundle(keys, values);
     }
 
-    private static Object fromJSONValue(Object value) throws JSONException {
+    private static Object fromJSONValue(final Object value) throws JSONException {
         if (value == null || value == JSONObject.NULL) {
             return null;
         } else if (value instanceof JSONObject) {

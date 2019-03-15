@@ -71,7 +71,7 @@ public class GeckoThread extends Thread {
          */
         private final int rank;
 
-        private State(int rank) {
+        private State(final int rank) {
             this.rank = rank;
         }
 
@@ -596,7 +596,7 @@ public class GeckoThread extends Thread {
         return waitOnGecko(DEFAULT_TIMEOUT);
     }
 
-    public static boolean waitOnGecko(long timeoutMillis) {
+    public static boolean waitOnGecko(final long timeoutMillis) {
         return nativeWaitOnGecko(timeoutMillis);
     }
 
@@ -646,7 +646,7 @@ public class GeckoThread extends Thread {
     public static native void crash();
 
     @WrapForJNI
-    private static void requestUiThreadCallback(long delay) {
+    private static void requestUiThreadCallback(final long delay) {
         ThreadUtils.getUiHandler().postDelayed(UI_THREAD_CALLBACK, delay);
     }
 

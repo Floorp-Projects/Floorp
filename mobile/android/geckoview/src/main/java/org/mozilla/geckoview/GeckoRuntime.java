@@ -163,7 +163,7 @@ public final class GeckoRuntime implements Parcelable {
         }
     };
 
-    private static String getProcessName(Context context) {
+    private static String getProcessName(final Context context) {
         final ActivityManager manager = (ActivityManager)context.getSystemService(Context.ACTIVITY_SERVICE);
         for (final ActivityManager.RunningAppProcessInfo info : manager.getRunningAppProcesses()) {
             if (info.pid == Process.myPid()) {
@@ -243,7 +243,7 @@ public final class GeckoRuntime implements Parcelable {
         return true;
     }
 
-    /* package */ void setDefaultPrefs(GeckoBundle prefs) {
+    /* package */ void setDefaultPrefs(final GeckoBundle prefs) {
         EventDispatcher.getInstance().dispatch("GeckoView:SetDefaultPrefs", prefs);
     }
 
@@ -297,7 +297,7 @@ public final class GeckoRuntime implements Parcelable {
         final GeckoSession.CallbackResult<Void> result =
                 new GeckoSession.CallbackResult<Void>() {
                     @Override
-                    public void sendSuccess(Object response) {
+                    public void sendSuccess(final Object response) {
                         complete(null);
                     }
                 };
@@ -391,7 +391,7 @@ public final class GeckoRuntime implements Parcelable {
     }
 
     /* package */ void setPref(final String name, final Object value,
-                               boolean override) {
+                               final boolean override) {
         if (override || !GeckoAppShell.isFennec()) {
             // Override pref on Fennec only when requested to prevent
             // overriding of persistent prefs.
@@ -442,7 +442,7 @@ public final class GeckoRuntime implements Parcelable {
      *                       {@link android.content.res.Configuration}.
      */
     @UiThread
-    public void orientationChanged(int newOrientation) {
+    public void orientationChanged(final int newOrientation) {
         ThreadUtils.assertOnUiThread();
         GeckoScreenOrientation.getInstance().update(newOrientation);
     }
@@ -455,7 +455,7 @@ public final class GeckoRuntime implements Parcelable {
 
     @Override // Parcelable
     @AnyThread
-    public void writeToParcel(Parcel out, int flags) {
+    public void writeToParcel(final Parcel out, final int flags) {
         out.writeParcelable(mSettings, flags);
     }
 

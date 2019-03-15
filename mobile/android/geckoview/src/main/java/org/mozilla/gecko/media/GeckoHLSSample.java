@@ -37,7 +37,7 @@ public final class GeckoHLSSample {
     private ByteBuffer buffer = null;
 
     @WrapForJNI
-    public void writeToByteBuffer(ByteBuffer dest) throws IOException {
+    public void writeToByteBuffer(final ByteBuffer dest) throws IOException {
         if (buffer != null && dest != null && info.size > 0) {
             dest.put(buffer);
         }
@@ -53,13 +53,13 @@ public final class GeckoHLSSample {
         return (info.flags & MediaCodec.BUFFER_FLAG_KEY_FRAME) != 0;
     }
 
-    public static GeckoHLSSample create(ByteBuffer src, BufferInfo info, CryptoInfo cryptoInfo,
-                                        int formatIndex) {
+    public static GeckoHLSSample create(final ByteBuffer src, final BufferInfo info,
+                                        final CryptoInfo cryptoInfo, final int formatIndex) {
         return new GeckoHLSSample(src, info, cryptoInfo, formatIndex);
     }
 
-    private GeckoHLSSample(ByteBuffer buffer, BufferInfo info, CryptoInfo cryptoInfo,
-                           int formatIndex) {
+    private GeckoHLSSample(final ByteBuffer buffer, final BufferInfo info,
+                           final CryptoInfo cryptoInfo, final int formatIndex) {
         this.formatIndex = formatIndex;
         duration = Long.MAX_VALUE;
         this.buffer = buffer;
