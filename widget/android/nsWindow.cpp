@@ -864,9 +864,13 @@ class nsWindow::LayerViewSupport final
 
       uiThread->Dispatch(NS_NewRunnableFunction(
           "LayerViewSupport::OnDetach",
-          [compositor, disposer = RefPtr<Runnable>(aDisposer), result = &mCapturePixelsResults] {
+          [compositor, disposer = RefPtr<Runnable>(aDisposer),
+           result = &mCapturePixelsResults] {
             while (!result->empty()) {
-              result->front()->CompleteExceptionally(java::sdk::IllegalStateException::New("The compositor has detached from the session").Cast<jni::Throwable>());
+              result->front()->CompleteExceptionally(
+                  java::sdk::IllegalStateException::New(
+                      "The compositor has detached from the session")
+                      .Cast<jni::Throwable>());
               result->pop();
             }
             compositor->OnCompositorDetached();
@@ -896,21 +900,21 @@ class nsWindow::LayerViewSupport final
   int8_t* FlipScreenPixels(Shmem& aMem, const ScreenIntSize& aSize) {
     const IntSize size(aSize.width, aSize.height);
     RefPtr<DataSourceSurface> image = gfx::CreateDataSourceSurfaceFromData(
-      size, 
-      SurfaceFormat::B8G8R8A8, 
-      aMem.get<uint8_t>(), 
-      StrideForFormatAndWidth(SurfaceFormat::B8G8R8A8, aSize.width));
-    RefPtr<DrawTarget> drawTarget = gfxPlatform::GetPlatform()->CreateOffscreenContentDrawTarget(
-      size, SurfaceFormat::B8G8R8A8);
-    drawTarget->SetTransform(Matrix::Scaling(1.0, -1.0) * Matrix::Translation(0, aSize.height));
-      
+        size, SurfaceFormat::B8G8R8A8, aMem.get<uint8_t>(),
+        StrideForFormatAndWidth(SurfaceFormat::B8G8R8A8, aSize.width));
+    RefPtr<DrawTarget> drawTarget =
+        gfxPlatform::GetPlatform()->CreateOffscreenContentDrawTarget(
+            size, SurfaceFormat::B8G8R8A8);
+    drawTarget->SetTransform(Matrix::Scaling(1.0, -1.0) *
+                             Matrix::Translation(0, aSize.height));
+
     gfx::Rect drawRect(0, 0, aSize.width, aSize.height);
     drawTarget->DrawSurface(image, drawRect, drawRect);
 
     RefPtr<SourceSurface> snapshot = drawTarget->Snapshot();
     RefPtr<DataSourceSurface> data = snapshot->GetDataSurface();
     DataSourceSurface::ScopedMap* smap =
-      new DataSourceSurface::ScopedMap(data, DataSourceSurface::READ);
+        new DataSourceSurface::ScopedMap(data, DataSourceSurface::READ);
     return reinterpret_cast<int8_t*>(smap->GetData());
   }
 
@@ -1112,22 +1116,24 @@ class nsWindow::LayerViewSupport final
 
   void RequestScreenPixels(jni::Object::Param aResult) {
     MOZ_ASSERT(AndroidBridge::IsJavaUiThread());
-    mCapturePixelsResults.push(java::GeckoResult::GlobalRef(java::GeckoResult::LocalRef(aResult)));
+    mCapturePixelsResults.push(
+        java::GeckoResult::GlobalRef(java::GeckoResult::LocalRef(aResult)));
     if (mCapturePixelsResults.size() == 1) {
       if (RefPtr<UiCompositorControllerChild> child =
               GetUiCompositorControllerChild()) {
         child->RequestScreenPixels();
       }
     }
-  } 
+  }
 
   void RecvScreenPixels(Shmem&& aMem, const ScreenIntSize& aSize) {
     MOZ_ASSERT(AndroidBridge::IsJavaUiThread());
     auto aResult = java::GeckoResult::LocalRef(mCapturePixelsResults.front());
     if (aResult) {
-      auto pixels =
-          mozilla::jni::ByteBuffer::New(FlipScreenPixels(aMem, aSize), aMem.Size<int8_t>());
-      auto bitmap = java::sdk::Bitmap::CreateBitmap(aSize.width, aSize.height, java::sdk::Config::ARGB_8888());
+      auto pixels = mozilla::jni::ByteBuffer::New(FlipScreenPixels(aMem, aSize),
+                                                  aMem.Size<int8_t>());
+      auto bitmap = java::sdk::Bitmap::CreateBitmap(
+          aSize.width, aSize.height, java::sdk::Config::ARGB_8888());
       bitmap->CopyPixelsFromBuffer(pixels);
       aResult->Complete(bitmap);
       mCapturePixelsResults.pop();

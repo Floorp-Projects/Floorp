@@ -48,7 +48,8 @@ DataChannelParent::NotifyCookieBlocked(uint32_t aRejectedReason) {
 }
 
 NS_IMETHODIMP
-DataChannelParent::NotifyTrackingResource(bool aIsThirdParty) {
+DataChannelParent::NotifyClassificationFlags(uint32_t aClassificationFlags,
+                                             bool aIsThirdParty) {
   // Nothing to do.
   return NS_OK;
 }
@@ -85,8 +86,7 @@ DataChannelParent::OnStartRequest(nsIRequest *aRequest) {
 }
 
 NS_IMETHODIMP
-DataChannelParent::OnStopRequest(nsIRequest *aRequest,
-                                 nsresult aStatusCode) {
+DataChannelParent::OnStopRequest(nsIRequest *aRequest, nsresult aStatusCode) {
   // See above.
   MOZ_ASSERT(NS_FAILED(aStatusCode));
   return NS_OK;

@@ -607,9 +607,8 @@ class CanvasRenderingContext2D final : public nsICanvasRenderingContextInternal,
    *
    * Returns true on success.
    */
-  bool EnsureTarget(
-      const gfx::Rect* aCoveredRect = nullptr,
-      bool aWillClear = false);
+  bool EnsureTarget(const gfx::Rect* aCoveredRect = nullptr,
+                    bool aWillClear = false);
 
   void RestoreClipsAndTransformToTarget();
 

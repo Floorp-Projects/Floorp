@@ -2126,15 +2126,15 @@ void InitializeQuotaManager() {
     NS_WARNING("Failed to initialize quota manager!");
   }
 
-   if (NS_FAILED(Preferences::AddAtomicIntVarCache(
-           &gFixedLimitKB, PREF_FIXED_LIMIT, kDefaultFixedLimitKB)) ||
-       NS_FAILED(Preferences::AddAtomicUintVarCache(
-           &gChunkSizeKB, PREF_CHUNK_SIZE, kDefaultChunkSizeKB))) {
+  if (NS_FAILED(Preferences::AddAtomicIntVarCache(
+          &gFixedLimitKB, PREF_FIXED_LIMIT, kDefaultFixedLimitKB)) ||
+      NS_FAILED(Preferences::AddAtomicUintVarCache(
+          &gChunkSizeKB, PREF_CHUNK_SIZE, kDefaultChunkSizeKB))) {
     NS_WARNING("Unable to respond to temp storage pref changes!");
   }
 
-   if (NS_FAILED(Preferences::AddAtomicBoolVarCache(
-           &gTestingEnabled, PREF_TESTING_FEATURES, false))) {
+  if (NS_FAILED(Preferences::AddAtomicBoolVarCache(
+          &gTestingEnabled, PREF_TESTING_FEATURES, false))) {
     NS_WARNING("Unable to respond to testing pref changes!");
   }
 

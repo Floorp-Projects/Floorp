@@ -538,20 +538,23 @@ void ScreenOrientation::UpdateActiveOrientationLock(
   }
 }
 
-nsCOMPtr<nsIRunnable> ScreenOrientation::DispatchChangeEventAndResolvePromise() {
+nsCOMPtr<nsIRunnable>
+ScreenOrientation::DispatchChangeEventAndResolvePromise() {
   RefPtr<Document> doc = GetResponsibleDocument();
   RefPtr<ScreenOrientation> self = this;
-  return NS_NewRunnableFunction("dom::ScreenOrientation::DispatchChangeEvent", [self, doc]() {
-    DebugOnly<nsresult> rv = self->DispatchTrustedEvent(NS_LITERAL_STRING("change"));
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "DispatchTrustedEvent failed");
-    if (doc) {
-      Promise* pendingPromise = doc->GetOrientationPendingPromise();
-      if (pendingPromise) {
-        pendingPromise->MaybeResolveWithUndefined();
-        doc->SetOrientationPendingPromise(nullptr);
-      }
-    }
-  });
+  return NS_NewRunnableFunction(
+      "dom::ScreenOrientation::DispatchChangeEvent", [self, doc]() {
+        DebugOnly<nsresult> rv =
+            self->DispatchTrustedEvent(NS_LITERAL_STRING("change"));
+        NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "DispatchTrustedEvent failed");
+        if (doc) {
+          Promise* pendingPromise = doc->GetOrientationPendingPromise();
+          if (pendingPromise) {
+            pendingPromise->MaybeResolveWithUndefined();
+            doc->SetOrientationPendingPromise(nullptr);
+          }
+        }
+      });
 }
 
 JSObject* ScreenOrientation::WrapObject(JSContext* aCx,
@@ -604,7 +607,8 @@ ScreenOrientation::VisibleEventListener::HandleEvent(Event* aEvent) {
     doc->SetCurrentOrientation(orientation->DeviceType(CallerType::System),
                                orientation->DeviceAngle(CallerType::System));
 
-    nsCOMPtr<nsIRunnable> runnable = orientation->DispatchChangeEventAndResolvePromise();
+    nsCOMPtr<nsIRunnable> runnable =
+        orientation->DispatchChangeEventAndResolvePromise();
     rv = NS_DispatchToMainThread(runnable);
     if (NS_WARN_IF(rv.Failed())) {
       return rv.StealNSResult();

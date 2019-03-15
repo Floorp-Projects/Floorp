@@ -180,8 +180,7 @@ nsXBLStreamListener::OnDataAvailable(nsIRequest* request,
                                      nsIInputStream* aInStr,
                                      uint64_t aSourceOffset, uint32_t aCount) {
   if (mInner)
-    return mInner->OnDataAvailable(request, aInStr, aSourceOffset,
-                                   aCount);
+    return mInner->OnDataAvailable(request, aInStr, aSourceOffset, aCount);
   return NS_ERROR_FAILURE;
 }
 
@@ -212,8 +211,7 @@ nsXBLStreamListener::OnStartRequest(nsIRequest* request) {
 }
 
 NS_IMETHODIMP
-nsXBLStreamListener::OnStopRequest(nsIRequest* request,
-                                   nsresult aStatus) {
+nsXBLStreamListener::OnStopRequest(nsIRequest* request, nsresult aStatus) {
   nsresult rv = NS_OK;
   if (mInner) {
     rv = mInner->OnStopRequest(request, aStatus);

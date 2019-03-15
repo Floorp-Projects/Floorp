@@ -128,8 +128,7 @@ ImageListener::OnStartRequest(nsIRequest* request) {
 }
 
 NS_IMETHODIMP
-ImageListener::OnStopRequest(nsIRequest* aRequest,
-                             nsresult aStatus) {
+ImageListener::OnStopRequest(nsIRequest* aRequest, nsresult aStatus) {
   ImageDocument* imgDoc = static_cast<ImageDocument*>(mDocument.get());
   nsContentUtils::DispatchChromeEvent(imgDoc, ToSupports(imgDoc),
                                       NS_LITERAL_STRING("ImageContentLoaded"),

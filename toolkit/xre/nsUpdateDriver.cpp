@@ -566,7 +566,7 @@ static void ApplyUpdate(nsIFile *greDir, nsIFile *updateDir, nsIFile *appDir,
       argc += 1;
     }
   }
-  char** argv = static_cast<char**>(malloc((argc + 1) * sizeof(char*)));
+  char **argv = static_cast<char **>(malloc((argc + 1) * sizeof(char *)));
   if (!argv) {
     return;
   }

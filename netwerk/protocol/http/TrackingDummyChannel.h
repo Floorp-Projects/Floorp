@@ -66,9 +66,9 @@ class TrackingDummyChannel final : public nsIChannel,
   TrackingDummyChannel(nsIURI* aURI, nsIURI* aTopWindowURI,
                        nsresult aTopWindowURIResult, nsILoadInfo* aLoadInfo);
 
-  bool IsTrackingResource() const;
+  uint32_t ClassificationFlags() const;
 
-  void SetIsTrackingResource();
+  void AddClassificationFlags(uint32_t);
 
  private:
   ~TrackingDummyChannel();
@@ -78,7 +78,7 @@ class TrackingDummyChannel final : public nsIChannel,
   nsCOMPtr<nsIURI> mTopWindowURI;
   nsresult mTopWindowURIResult;
 
-  bool mIsTrackingResource;
+  uint32_t mClassificationFlags;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(TrackingDummyChannel, TRACKING_DUMMY_CHANNEL_IID)

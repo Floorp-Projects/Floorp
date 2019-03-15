@@ -58,10 +58,6 @@ class UrlClassifierFeatureBase : public nsIUrlClassifierFeature,
   void InitializePreferences();
   void ShutdownPreferences();
 
-  bool IsAllowListed(
-      nsIChannel* aChannel,
-      AntiTrackingCommon::ContentBlockingAllowListPurpose aPurpose);
-
  private:
   nsCString mName;
 

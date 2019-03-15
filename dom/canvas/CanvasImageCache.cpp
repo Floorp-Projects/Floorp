@@ -44,8 +44,7 @@ struct ImageCacheEntryData {
         mSourceSurface(aOther.mSourceSurface),
         mSize(aOther.mSize) {}
   explicit ImageCacheEntryData(const ImageCacheKey& aKey)
-      : mImage(aKey.mImage),
-        mCanvas(aKey.mCanvas) {}
+      : mImage(aKey.mImage), mCanvas(aKey.mCanvas) {}
 
   nsExpirationState* GetExpirationState() { return &mState; }
   size_t SizeInBytes() { return mSize.width * mSize.height * 4; }
@@ -87,8 +86,7 @@ class ImageCacheEntry : public PLDHashEntryHdr {
  * Used for all images across all canvases.
  */
 struct AllCanvasImageCacheKey {
-  explicit AllCanvasImageCacheKey(imgIContainer* aImage)
-      : mImage(aImage) {}
+  explicit AllCanvasImageCacheKey(imgIContainer* aImage) : mImage(aImage) {}
 
   nsCOMPtr<imgIContainer> mImage;
 };
@@ -102,14 +100,11 @@ class AllCanvasImageCacheEntry : public PLDHashEntryHdr {
       : mImage(aKey->mImage) {}
 
   AllCanvasImageCacheEntry(const AllCanvasImageCacheEntry& toCopy)
-      : mImage(toCopy.mImage),
-        mSourceSurface(toCopy.mSourceSurface) {}
+      : mImage(toCopy.mImage), mSourceSurface(toCopy.mSourceSurface) {}
 
   ~AllCanvasImageCacheEntry() {}
 
-  bool KeyEquals(KeyTypePointer key) const {
-    return mImage == key->mImage;
-  }
+  bool KeyEquals(KeyTypePointer key) const { return mImage == key->mImage; }
 
   static KeyTypePointer KeyToPointer(KeyType& key) { return &key; }
   static PLDHashNumber HashKey(KeyTypePointer key) {
@@ -139,8 +134,7 @@ class ImageCache final : public nsExpirationTracker<ImageCacheEntryData, 4> {
 
     // Remove from the all canvas cache entry first since nsExpirationTracker
     // will delete aObject.
-    mAllCanvasCache.RemoveEntry(
-        AllCanvasImageCacheKey(aObject->mImage));
+    mAllCanvasCache.RemoveEntry(AllCanvasImageCacheKey(aObject->mImage));
 
     // Deleting the entry will delete aObject since the entry owns aObject.
     mCache.RemoveEntry(ImageCacheKey(aObject->mImage, aObject->mCanvas));
@@ -337,8 +331,8 @@ SourceSurface* CanvasImageCache::LookupCanvas(Element* aImage,
     return nullptr;
   }
 
-  ImageCacheEntry* entry = gImageCache->mCache.GetEntry(
-      ImageCacheKey(imgContainer, aCanvas));
+  ImageCacheEntry* entry =
+      gImageCache->mCache.GetEntry(ImageCacheKey(imgContainer, aCanvas));
   if (!entry) {
     return nullptr;
   }

@@ -166,7 +166,8 @@ void nsHistory::Go(int32_t aDelta, ErrorResult& aRv) {
 
       nsPresContext* pcx;
       if (doc && (pcx = doc->GetPresContext())) {
-        pcx->RebuildAllStyleData(NS_STYLE_HINT_REFLOW, eRestyle_Subtree);
+        pcx->RebuildAllStyleData(NS_STYLE_HINT_REFLOW,
+                                 RestyleHint::RestyleSubtree());
       }
 
       return;

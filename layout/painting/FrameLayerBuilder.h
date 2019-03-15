@@ -490,8 +490,7 @@ class FrameLayerBuilder : public layers::LayerUserData {
    * The enumeration stops if |aCallback| returns false.
    */
   static void EnumerateGenerationForDedicatedLayers(
-      const nsIFrame* aFrame,
-      const AnimationGenerationCallback& aCallback);
+      const nsIFrame* aFrame, const AnimationGenerationCallback& aCallback);
 
   /**
    * This callback must be provided to EndTransaction. The callback data

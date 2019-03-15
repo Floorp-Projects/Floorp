@@ -1010,8 +1010,7 @@ const ClassSpec DataViewObject::classSpec_ = {
     nullptr,
     DataViewObject::methods,
     DataViewObject::properties,
-    DataViewObject::finishInit
-};
+    DataViewObject::finishInit};
 
 const Class DataViewObject::class_ = {
     "DataView",
@@ -1047,8 +1046,7 @@ const JSFunctionSpec DataViewObject::bigIntMethods[] = {
     JS_FN("getBigInt64", DataViewObject::fun_getBigInt64, 1, 0),
     JS_FN("getBigUint64", DataViewObject::fun_getBigUint64, 1, 0),
     JS_FN("setBigInt64", DataViewObject::fun_setBigInt64, 2, 0),
-    JS_FN("setBigUint64", DataViewObject::fun_setBigUint64, 2, 0),
-    JS_FS_END};
+    JS_FN("setBigUint64", DataViewObject::fun_setBigUint64, 2, 0), JS_FS_END};
 
 const JSPropertySpec DataViewObject::properties[] = {
     JS_PSG("buffer", DataViewObject::bufferGetter, 0),

@@ -539,8 +539,7 @@ NS_IMETHODIMP nsZipWriter::ProcessQueue(nsIRequestObserver *aObserver,
   mProcessContext = aContext;
   mInQueue = true;
 
-  if (mProcessObserver)
-    mProcessObserver->OnStartRequest(nullptr);
+  if (mProcessObserver) mProcessObserver->OnStartRequest(nullptr);
 
   BeginProcessingNextItem();
 

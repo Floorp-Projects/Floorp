@@ -640,8 +640,7 @@ nsIncrementalDownload::OnStartRequest(nsIRequest *request) {
 }
 
 NS_IMETHODIMP
-nsIncrementalDownload::OnStopRequest(nsIRequest *request,
-                                     nsresult status) {
+nsIncrementalDownload::OnStopRequest(nsIRequest *request, nsresult status) {
   // Not a real error; just a trick to kill off the channel without our
   // listener having to care.
   if (status == NS_ERROR_DOWNLOAD_NOT_PARTIAL) return NS_OK;

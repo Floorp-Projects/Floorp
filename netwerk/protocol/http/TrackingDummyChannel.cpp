@@ -78,7 +78,7 @@ TrackingDummyChannel::TrackingDummyChannel(nsIURI* aURI, nsIURI* aTopWindowURI,
                                            nsILoadInfo* aLoadInfo)
     : mTopWindowURI(aTopWindowURI),
       mTopWindowURIResult(aTopWindowURIResult),
-      mIsTrackingResource(false) {
+      mClassificationFlags(0) {
   MOZ_ASSERT(XRE_IsParentProcess());
 
   SetOriginalURI(aURI);
@@ -94,12 +94,13 @@ TrackingDummyChannel::~TrackingDummyChannel() {
                                     mTopWindowURI.forget());
 }
 
-bool TrackingDummyChannel::IsTrackingResource() const {
-  return mIsTrackingResource;
+uint32_t TrackingDummyChannel::ClassificationFlags() const {
+  return mClassificationFlags;
 }
 
-void TrackingDummyChannel::SetIsTrackingResource() {
-  mIsTrackingResource = true;
+void TrackingDummyChannel::AddClassificationFlags(
+    uint32_t aClassificationFlags) {
+  mClassificationFlags |= aClassificationFlags;
 }
 
 //-----------------------------------------------------------------------------
@@ -236,6 +237,7 @@ TrackingDummyChannel::GetLoadInfo(nsILoadInfo** aLoadInfo) {
 
 NS_IMETHODIMP
 TrackingDummyChannel::SetLoadInfo(nsILoadInfo* aLoadInfo) {
+  MOZ_RELEASE_ASSERT(aLoadInfo, "loadinfo can't be null");
   mLoadInfo = aLoadInfo;
   return NS_OK;
 }

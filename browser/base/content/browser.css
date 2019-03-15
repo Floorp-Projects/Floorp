@@ -718,10 +718,12 @@ html|input.urlbar-input {
 
 #PopupAutoComplete > richlistbox > richlistitem[originaltype="loginsFooter"] {
   color: var(--btn-text-color);
-  padding: 0 20px;
   min-height: 40px;
   border-top: 1px solid rgba(38,38,38,.15);
   background-color: #EDEDED;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 #PopupAutoComplete > richlistbox > richlistitem[originaltype="loginsFooter"]:hover,

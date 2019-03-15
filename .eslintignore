@@ -27,8 +27,6 @@ netwerk/test/browser/**
 netwerk/test/mochitests/**
 netwerk/test/unit*/**
 tools/update-packaging/**
-uriloader/exthandler/**
-uriloader/exthandler/tests/mochitest/**
 xpfe/**
 
 # We currently have no js files in these directories, so we ignore them by

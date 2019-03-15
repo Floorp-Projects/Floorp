@@ -24,7 +24,7 @@ const EXAMPLE_URL =
 async function attachDebugger(tab) {
   const target = await TargetFactory.forTab(tab);
   const toolbox = await gDevTools.showToolbox(target, "jsdebugger");
-  return toolbox;
+  return { toolbox, target };
 }
 
 async function attachRecordingDebugger(url,
@@ -36,12 +36,12 @@ async function attachRecordingDebugger(url,
   if (waitForRecording) {
     await once(Services.ppmm, "RecordingFinished");
   }
-  const toolbox = await attachDebugger(tab);
+  const { target, toolbox } = await attachDebugger(tab);
   const dbg = createDebuggerContext(toolbox);
   const threadClient = dbg.toolbox.threadClient;
 
   await threadClient.interrupt();
-  return {...dbg, tab, threadClient};
+  return {...dbg, tab, threadClient, target};
 }
 
 // Return a promise that resolves when a breakpoint has been set.
@@ -78,16 +78,14 @@ var stepOutToLine = resumeThenPauseAtLineFunctionFactory("stepOut");
 
 // Return a promise that resolves when a thread evaluates a string in the
 // topmost frame, with the result throwing an exception.
-async function checkEvaluateInTopFrameThrows(threadClient, text) {
-  const {frames} = await threadClient.getFrames(0, 1);
+async function checkEvaluateInTopFrameThrows(target, text) {
+  const threadClient = target.threadClient;
+  const consoleFront = await target.getFront("console");
+  const { frames } = await threadClient.getFrames(0, 1);
   ok(frames.length == 1, "Got one frame");
-  const response = await threadClient.eval(frames[0].actor, text);
-  ok(response.type == "resumed", "Got resume response from eval");
-  await threadClient.addOneTimeListener("paused", function(event, packet) {
-    ok(packet.type == "paused" &&
-       packet.why.type == "clientEvaluated" &&
-       "throw" in packet.why.frameFinished, "Eval threw an exception");
-  });
+  const options = { thread: threadClient.actor, frameActor: frames[0].actor };
+  const response = await consoleFront.evaluateJS(text, options);
+  ok(response.exception, "Eval threw an exception");
 }
 
 // Return a pathname that can be used for a new recording file.

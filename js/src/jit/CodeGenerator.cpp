@@ -6001,8 +6001,8 @@ void CodeGenerator::emitAssertGCThingResult(Register input, MIRType type,
   }
 
   // Check that we have a valid GC pointer.
-  // Disable for wasm because we don't have a context on wasm compilation threads
-  // and this needs a context.
+  // Disable for wasm because we don't have a context on wasm compilation
+  // threads and this needs a context.
   if (JitOptions.fullDebugChecks && !IsCompilingWasm()) {
     saveVolatile();
     masm.setupUnalignedABICall(temp);
@@ -7500,9 +7500,7 @@ void CodeGenerator::emitWasmCallBase(LWasmCallBase<Defs>* lir) {
   }
 }
 
-void CodeGenerator::visitWasmCall(LWasmCall* ins) {
-  emitWasmCallBase(ins);
-}
+void CodeGenerator::visitWasmCall(LWasmCall* ins) { emitWasmCallBase(ins); }
 
 void CodeGenerator::visitWasmCallVoid(LWasmCallVoid* ins) {
   emitWasmCallBase(ins);
@@ -10318,7 +10316,7 @@ void CodeGenerator::visitRest(LRest* lir) {
 typedef Vector<bool, 128, SystemAllocPolicy> StackMapBoolVector;
 
 static wasm::StackMap* ConvertStackMapBoolVectorToStackMap(
-                          const StackMapBoolVector& vec, bool hasRefs) {
+    const StackMapBoolVector& vec, bool hasRefs) {
   wasm::StackMap* stackMap = wasm::StackMap::create(vec.length());
   if (!stackMap) {
     return nullptr;
@@ -10372,7 +10370,8 @@ static bool CreateStackMapFromLSafepoint(LSafepoint& safepoint,
   MOZ_ASSERT(nNonTrapBytes % sizeof(void*) == 0);
 
   // This is the total number of bytes covered by the map.
-  const DebugOnly<size_t> nTotalBytes = nNonTrapBytes +
+  const DebugOnly<size_t> nTotalBytes =
+      nNonTrapBytes +
       (safepoint.isWasmTrap() ? (trapExitLayoutNumWords * sizeof(void*)) : 0);
 
   // Create the stackmap initially in this vector.  Since most frames will
@@ -10398,7 +10397,7 @@ static bool CreateStackMapFromLSafepoint(LSafepoint& safepoint,
     for (; gcRegsIter.more(); ++gcRegsIter) {
       Register reg = *gcRegsIter;
       size_t offsetFromTop =
-        reinterpret_cast<size_t>(trapExitLayout.address(reg));
+          reinterpret_cast<size_t>(trapExitLayout.address(reg));
 
       // If this doesn't hold, the associated register wasn't saved by
       // the trap exit stub.  Better to crash now than much later, in
@@ -10467,8 +10466,8 @@ static bool CreateStackMapFromLSafepoint(LSafepoint& safepoint,
   // Record in the map, how far down from the highest address the Frame* is.
   // Take the opportunity to check that we haven't marked any part of the
   // Frame itself as a pointer.
-  stackMap->setFrameOffsetFromTop((nInboundStackArgBytes + nFrameBytes)
-                                  / sizeof(void*));
+  stackMap->setFrameOffsetFromTop((nInboundStackArgBytes + nFrameBytes) /
+                                  sizeof(void*));
 #ifdef DEBUG
   for (uint32_t i = 0; i < nFrameBytes / sizeof(void*); i++) {
     MOZ_ASSERT(stackMap->getBit(stackMap->numMappedWords -
@@ -10500,12 +10499,9 @@ static bool CreateStackMapFromLSafepoint(LSafepoint& safepoint,
 // MacroAssembler::wasmReserveStackChecked, in the case where the frame is
 // "small", as determined by that function.
 static bool CreateStackMapForFunctionEntryTrap(
-                const wasm::ValTypeVector& argTypes,
-                const MachineState& trapExitLayout,
-                size_t trapExitLayoutWords,
-                size_t nBytesReservedBeforeTrap,
-                size_t nInboundStackArgBytes,
-                wasm::StackMap** result) {
+    const wasm::ValTypeVector& argTypes, const MachineState& trapExitLayout,
+    size_t trapExitLayoutWords, size_t nBytesReservedBeforeTrap,
+    size_t nInboundStackArgBytes, wasm::StackMap** result) {
   // Ensure this is defined on all return paths.
   *result = nullptr;
 
@@ -10516,9 +10512,9 @@ static bool CreateStackMapForFunctionEntryTrap(
   const size_t trapExitLayoutBytes = trapExitLayoutWords * sizeof(void*);
 
   // This is the total number of bytes covered by the map.
-  const DebugOnly<size_t> nTotalBytes =
-      trapExitLayoutBytes + nBytesReservedBeforeTrap + nFrameBytes +
-      nInboundStackArgBytes;
+  const DebugOnly<size_t> nTotalBytes = trapExitLayoutBytes +
+                                        nBytesReservedBeforeTrap + nFrameBytes +
+                                        nInboundStackArgBytes;
 
   // Create the stackmap initially in this vector.  Since most frames will
   // contain 128 or fewer words, heap allocation is avoided in the majority of
@@ -10531,9 +10527,8 @@ static bool CreateStackMapForFunctionEntryTrap(
 
   // REG DUMP AREA
   wasm::ExitStubMapVector trapExitExtras;
-  if (!GenerateStackmapEntriesForTrapExit(argTypes, trapExitLayout,
-                                          trapExitLayoutWords,
-                                          &trapExitExtras)) {
+  if (!GenerateStackmapEntriesForTrapExit(
+          argTypes, trapExitLayout, trapExitLayoutWords, &trapExitExtras)) {
     return false;
   }
   MOZ_ASSERT(trapExitExtras.length() == trapExitLayoutWords);
@@ -10596,8 +10591,8 @@ static bool CreateStackMapForFunctionEntryTrap(
   }
   stackMap->setExitStubWords(trapExitLayoutWords);
 
-  stackMap->setFrameOffsetFromTop(nFrameBytes / sizeof(void*)
-                                  + numStackArgWords);
+  stackMap->setFrameOffsetFromTop(nFrameBytes / sizeof(void*) +
+                                  numStackArgWords);
 #ifdef DEBUG
   for (uint32_t i = 0; i < nFrameBytes / sizeof(void*); i++) {
     MOZ_ASSERT(stackMap->getBit(stackMap->numMappedWords -
@@ -10633,9 +10628,10 @@ bool CodeGenerator::generateWasm(wasm::FuncTypeIdDesc funcTypeId,
     size_t nBytesReservedBeforeTrap = pair.second;
 
     wasm::StackMap* functionEntryStackMap = nullptr;
-    if (!CreateStackMapForFunctionEntryTrap(argTypes, trapExitLayout,
-            trapExitLayoutNumWords, nBytesReservedBeforeTrap,
-            nInboundStackArgBytes, &functionEntryStackMap)) {
+    if (!CreateStackMapForFunctionEntryTrap(
+            argTypes, trapExitLayout, trapExitLayoutNumWords,
+            nBytesReservedBeforeTrap, nInboundStackArgBytes,
+            &functionEntryStackMap)) {
       return false;
     }
     // In debug builds, we'll always have a stack map, even if there are no
@@ -10690,7 +10686,8 @@ bool CodeGenerator::generateWasm(wasm::FuncTypeIdDesc funcTypeId,
   for (SafepointIndex& index : safepointIndices_) {
     wasm::StackMap* stackMap = nullptr;
     if (!CreateStackMapFromLSafepoint(*index.safepoint(), trapExitLayout,
-            trapExitLayoutNumWords, nInboundStackArgBytes, &stackMap)) {
+                                      trapExitLayoutNumWords,
+                                      nInboundStackArgBytes, &stackMap)) {
       return false;
     }
     // In debug builds, we'll always have a stack map.

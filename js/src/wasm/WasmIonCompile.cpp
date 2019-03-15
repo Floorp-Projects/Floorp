@@ -730,7 +730,7 @@ class FunctionCompiler {
 
   MDefinition* derefTableElementPointer(MDefinition* base) {
     MWasmLoadRef* load =
-      MWasmLoadRef::New(alloc(), base, AliasSet::WasmTableElement);
+        MWasmLoadRef::New(alloc(), base, AliasSet::WasmTableElement);
     curBlock_->add(load);
     return load;
   }
@@ -939,10 +939,9 @@ class FunctionCompiler {
     } else {
       // Store the value directly in TlsData::globalArea.
       if (v->type() == MIRType::RefOrNull) {
-        valueAddr =
-          MWasmDerivedPointer::New(alloc(), tlsPointer_,
-                                   offsetof(wasm::TlsData, globalArea) +
-                                   globalDataOffset);
+        valueAddr = MWasmDerivedPointer::New(
+            alloc(), tlsPointer_,
+            offsetof(wasm::TlsData, globalArea) + globalDataOffset);
         curBlock_->add(valueAddr);
         store = MWasmStoreRef::New(alloc(), tlsPointer_, valueAddr, v,
                                    AliasSet::WasmGlobalVar);
@@ -990,7 +989,8 @@ class FunctionCompiler {
   }
 
   // Do not call this directly.  Call one of the passArg() variants instead.
-  bool passArgWorker(MDefinition* argDef, MIRType type, CallCompileState* call) {
+  bool passArgWorker(MDefinition* argDef, MIRType type,
+                     CallCompileState* call) {
     ABIArg arg = call->abi_.next(type);
     switch (arg.kind()) {
 #ifdef JS_CODEGEN_REGISTER_PAIR
@@ -1109,10 +1109,9 @@ class FunctionCompiler {
     }
 
     CallSiteDesc desc(lineOrBytecode, CallSiteDesc::Dynamic);
-    auto* ins = MWasmCall::New(alloc(), desc, callee, call.regArgs_,
-                               ToMIRType(funcType.ret()),
-                               StackArgAreaSizeUnaligned(funcType.args()),
-                               index);
+    auto* ins = MWasmCall::New(
+        alloc(), desc, callee, call.regArgs_, ToMIRType(funcType.ret()),
+        StackArgAreaSizeUnaligned(funcType.args()), index);
     if (!ins) {
       return false;
     }
@@ -2202,7 +2201,7 @@ static bool EmitSetGlobal(FunctionCompiler& f) {
   const GlobalDesc& global = f.env().globals[id];
   MOZ_ASSERT(global.isMutable());
   MInstruction* barrierAddr =
-    f.storeGlobalVar(global.offset(), global.isIndirect(), value);
+      f.storeGlobalVar(global.offset(), global.isIndirect(), value);
 
   // We always call the C++ postbarrier because the location will never be in
   // the nursery, and the value stored will very frequently be in the nursery.
@@ -2214,7 +2213,7 @@ static bool EmitSetGlobal(FunctionCompiler& f) {
       return false;
     }
     if (!f.passArg(barrierAddr, ValType::AnyRef, &args)) {
-        return false;
+      return false;
     }
     f.finishCall(&args);
     MDefinition* ret;
@@ -2962,7 +2961,8 @@ static bool EmitMemOrTableCopy(FunctionCompiler& f, bool isMem) {
     return false;
   }
 
-  const SymbolicAddressSignature& callee = isMem ? SASigMemCopy : SASigTableCopy;
+  const SymbolicAddressSignature& callee =
+      isMem ? SASigMemCopy : SASigTableCopy;
   MDefinition* ret;
   if (!f.builtinInstanceMethodCall(callee, lineOrBytecode, args, &ret)) {
     return false;
@@ -3106,7 +3106,8 @@ static bool EmitMemOrTableInit(FunctionCompiler& f, bool isMem) {
     return false;
   }
 
-  const SymbolicAddressSignature& callee = isMem ? SASigMemInit : SASigTableInit;
+  const SymbolicAddressSignature& callee =
+      isMem ? SASigMemInit : SASigTableInit;
   MDefinition* ret;
   if (!f.builtinInstanceMethodCall(callee, lineOrBytecode, args, &ret)) {
     return false;
@@ -3146,8 +3147,8 @@ static bool EmitTableGet(FunctionCompiler& f) {
     return false;
   }
 
-  MDefinition* tableIndexArg = f.constant(Int32Value(tableIndex),
-                                          MIRType::Int32);
+  MDefinition* tableIndexArg =
+      f.constant(Int32Value(tableIndex), MIRType::Int32);
   if (!tableIndexArg) {
     return false;
   }
@@ -3206,8 +3207,8 @@ static bool EmitTableGrow(FunctionCompiler& f) {
     return false;
   }
 
-  MDefinition* tableIndexArg = f.constant(Int32Value(tableIndex),
-                                          MIRType::Int32);
+  MDefinition* tableIndexArg =
+      f.constant(Int32Value(tableIndex), MIRType::Int32);
   if (!tableIndexArg) {
     return false;
   }
@@ -3256,8 +3257,8 @@ static bool EmitTableSet(FunctionCompiler& f) {
     return false;
   }
 
-  MDefinition* tableIndexArg = f.constant(Int32Value(tableIndex),
-                                          MIRType::Int32);
+  MDefinition* tableIndexArg =
+      f.constant(Int32Value(tableIndex), MIRType::Int32);
   if (!tableIndexArg) {
     return false;
   }
@@ -3352,8 +3353,8 @@ static bool EmitRefIsNull(FunctionCompiler& f) {
   if (!nullVal) {
     return false;
   }
-  f.iter().setResult(f.compare(input, nullVal, JSOP_EQ,
-                               MCompare::Compare_RefOrNull));
+  f.iter().setResult(
+      f.compare(input, nullVal, JSOP_EQ, MCompare::Compare_RefOrNull));
   return true;
 }
 #endif

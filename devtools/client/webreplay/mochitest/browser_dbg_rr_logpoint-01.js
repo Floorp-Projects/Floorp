@@ -14,7 +14,7 @@ add_task(async function() {
     { waitForRecording: true }
   );
 
-  const {tab, toolbox, threadClient} = dbg;
+  const {tab, toolbox, threadClient, target} = dbg;
   const console = await getDebuggerSplitConsole(dbg);
   const hud = console.hud;
 
@@ -35,7 +35,7 @@ add_task(async function() {
   await warpToMessage(hud, dbg, "Number 5");
   await threadClient.interrupt();
 
-  await checkEvaluateInTopFrame(threadClient, "number", 5);
+  await checkEvaluateInTopFrame(target, "number", 5);
   await reverseStepOverToLine(threadClient, 20);
 
   await threadClient.removeBreakpoint(bp1);

@@ -118,7 +118,7 @@ void RestyleManager::ContentAppended(nsIContent* aFirstNewContent) {
   }
 
   if (selectorFlags & NODE_HAS_SLOW_SELECTOR) {
-    PostRestyleEvent(container, eRestyle_Subtree, nsChangeHint(0));
+    PostRestyleEvent(container, RestyleHint::RestyleSubtree(), nsChangeHint(0));
     // Restyling the container is the most we can do here, so we're done.
     return;
   }
@@ -128,23 +128,36 @@ void RestyleManager::ContentAppended(nsIContent* aFirstNewContent) {
     for (nsIContent* cur = aFirstNewContent->GetPreviousSibling(); cur;
          cur = cur->GetPreviousSibling()) {
       if (cur->IsElement()) {
-        PostRestyleEvent(cur->AsElement(), eRestyle_Subtree, nsChangeHint(0));
+        PostRestyleEvent(cur->AsElement(), RestyleHint::RestyleSubtree(),
+                         nsChangeHint(0));
         break;
       }
     }
   }
 }
 
+static void RestyleSiblingsStartingWith(RestyleManager& aRM,
+                                        nsIContent* aStartingSibling) {
+  for (nsIContent* sibling = aStartingSibling; sibling;
+       sibling = sibling->GetNextSibling()) {
+    if (auto* element = Element::FromNode(sibling)) {
+      aRM.PostRestyleEvent(element, RestyleHint::RestyleSubtree(),
+                           nsChangeHint(0));
+    }
+  }
+}
+
 void RestyleManager::RestyleForEmptyChange(Element* aContainer) {
+  PostRestyleEvent(aContainer, RestyleHint::RestyleSubtree(), nsChangeHint(0));
+
   // In some cases (:empty + E, :empty ~ E), a change in the content of
   // an element requires restyling its parent's siblings.
-  nsRestyleHint hint = eRestyle_Subtree;
   nsIContent* grandparent = aContainer->GetParent();
-  if (grandparent &&
-      (grandparent->GetFlags() & NODE_HAS_SLOW_SELECTOR_LATER_SIBLINGS)) {
-    hint = nsRestyleHint(hint | eRestyle_LaterSiblings);
+  if (!grandparent ||
+      !(grandparent->GetFlags() & NODE_HAS_SLOW_SELECTOR_LATER_SIBLINGS)) {
+    return;
   }
-  PostRestyleEvent(aContainer, hint, nsChangeHint(0));
+  RestyleSiblingsStartingWith(*this, aContainer->GetNextSibling());
 }
 
 void RestyleManager::MaybeRestyleForEdgeChildChange(Element* aContainer,
@@ -161,7 +174,7 @@ void RestyleManager::MaybeRestyleForEdgeChildChange(Element* aContainer,
     }
     if (content->IsElement()) {
       if (passedChild) {
-        PostRestyleEvent(content->AsElement(), eRestyle_Subtree,
+        PostRestyleEvent(content->AsElement(), RestyleHint::RestyleSubtree(),
                          nsChangeHint(0));
       }
       break;
@@ -177,27 +190,9 @@ void RestyleManager::MaybeRestyleForEdgeChildChange(Element* aContainer,
     }
     if (content->IsElement()) {
       if (passedChild) {
-        PostRestyleEvent(content->AsElement(), eRestyle_Subtree,
+        PostRestyleEvent(content->AsElement(), RestyleHint::RestyleSubtree(),
                          nsChangeHint(0));
       }
-      break;
-    }
-  }
-}
-
-// Needed since we can't use PostRestyleEvent on non-elements (with
-// eRestyle_LaterSiblings or nsRestyleHint(eRestyle_Subtree |
-// eRestyle_LaterSiblings) as appropriate).
-static void RestyleSiblingsStartingWith(
-    RestyleManager* aRestyleManager,
-    nsIContent* aStartingSibling /* may be null */) {
-  for (nsIContent* sibling = aStartingSibling; sibling;
-       sibling = sibling->GetNextSibling()) {
-    if (sibling->IsElement()) {
-      aRestyleManager->PostRestyleEvent(
-          sibling->AsElement(),
-          nsRestyleHint(eRestyle_Subtree | eRestyle_LaterSiblings),
-          nsChangeHint(0));
       break;
     }
   }
@@ -354,14 +349,14 @@ void RestyleManager::RestyleForInsertOrChange(nsIContent* aChild) {
   }
 
   if (selectorFlags & NODE_HAS_SLOW_SELECTOR) {
-    PostRestyleEvent(container, eRestyle_Subtree, nsChangeHint(0));
+    PostRestyleEvent(container, RestyleHint::RestyleSubtree(), nsChangeHint(0));
     // Restyling the container is the most we can do here, so we're done.
     return;
   }
 
   if (selectorFlags & NODE_HAS_SLOW_SELECTOR_LATER_SIBLINGS) {
     // Restyle all later siblings.
-    RestyleSiblingsStartingWith(this, aChild->GetNextSibling());
+    RestyleSiblingsStartingWith(*this, aChild->GetNextSibling());
   }
 
   if (selectorFlags & NODE_HAS_EDGE_CHILD_SELECTOR) {
@@ -416,14 +411,14 @@ void RestyleManager::ContentRemoved(nsIContent* aOldChild,
   }
 
   if (selectorFlags & NODE_HAS_SLOW_SELECTOR) {
-    PostRestyleEvent(container, eRestyle_Subtree, nsChangeHint(0));
+    PostRestyleEvent(container, RestyleHint::RestyleSubtree(), nsChangeHint(0));
     // Restyling the container is the most we can do here, so we're done.
     return;
   }
 
   if (selectorFlags & NODE_HAS_SLOW_SELECTOR_LATER_SIBLINGS) {
     // Restyle all later siblings.
-    RestyleSiblingsStartingWith(this, aFollowingSibling);
+    RestyleSiblingsStartingWith(*this, aFollowingSibling);
   }
 
   if (selectorFlags & NODE_HAS_EDGE_CHILD_SELECTOR) {
@@ -437,7 +432,7 @@ void RestyleManager::ContentRemoved(nsIContent* aOldChild,
       }
       if (content->IsElement()) {
         if (reachedFollowingSibling) {
-          PostRestyleEvent(content->AsElement(), eRestyle_Subtree,
+          PostRestyleEvent(content->AsElement(), RestyleHint::RestyleSubtree(),
                            nsChangeHint(0));
         }
         break;
@@ -449,7 +444,7 @@ void RestyleManager::ContentRemoved(nsIContent* aOldChild,
          content = content->GetPreviousSibling()) {
       if (content->IsElement()) {
         if (reachedFollowingSibling) {
-          PostRestyleEvent(content->AsElement(), eRestyle_Subtree,
+          PostRestyleEvent(content->AsElement(), RestyleHint::RestyleSubtree(),
                            nsChangeHint(0));
         }
         break;
@@ -509,39 +504,6 @@ static nsChangeHint ChangeForContentStateChange(const Element& aElement,
   }
 
   return changeHint;
-}
-
-/* static */
-nsCString RestyleManager::RestyleHintToString(nsRestyleHint aHint) {
-  nsCString result;
-  bool any = false;
-  const char* names[] = {"Self",           "SomeDescendants",
-                         "Subtree",        "LaterSiblings",
-                         "CSSTransitions", "CSSAnimations",
-                         "StyleAttribute", "StyleAttribute_Animations",
-                         "Force",          "ForceDescendants"};
-  uint32_t hint = aHint & ((1 << ArrayLength(names)) - 1);
-  uint32_t rest = aHint & ~((1 << ArrayLength(names)) - 1);
-  for (uint32_t i = 0; i < ArrayLength(names); i++) {
-    if (hint & (1 << i)) {
-      if (any) {
-        result.AppendLiteral(" | ");
-      }
-      result.AppendPrintf("eRestyle_%s", names[i]);
-      any = true;
-    }
-  }
-  if (rest) {
-    if (any) {
-      result.AppendLiteral(" | ");
-    }
-    result.AppendPrintf("0x%0x", rest);
-  } else {
-    if (!any) {
-      result.AppendLiteral("0");
-    }
-  }
-  return result;
 }
 
 #ifdef DEBUG
@@ -2293,7 +2255,7 @@ nsIFrame* ServoRestyleState::TableAwareParentFor(const nsIFrame* aChild) {
 }
 
 void RestyleManager::PostRestyleEvent(Element* aElement,
-                                      nsRestyleHint aRestyleHint,
+                                      RestyleHint aRestyleHint,
                                       nsChangeHint aMinChangeHint) {
   MOZ_ASSERT(!(aMinChangeHint & nsChangeHint_NeutralChange),
              "Didn't expect explicit change hints to be neutral!");
@@ -2306,7 +2268,8 @@ void RestyleManager::PostRestyleEvent(Element* aElement,
   // within the restyle algorithm itself.
   MOZ_ASSERT(!ServoStyleSet::IsInServoTraversal());
 
-  if (aRestyleHint == 0 && !aMinChangeHint) {
+  if (!aRestyleHint && !aMinChangeHint) {
+    // FIXME(emilio): we should assert against this instead.
     return;  // Nothing to do.
   }
 
@@ -2314,6 +2277,10 @@ void RestyleManager::PostRestyleEvent(Element* aElement,
   // getComputedStyle, since we don't know if any of the restyling that we do
   // would affect undisplayed elements.
   if (aRestyleHint) {
+    if (!(aRestyleHint & RestyleHint::ForAnimations())) {
+      mHaveNonAnimationRestyles = true;
+    }
+
     IncrementUndisplayedRestyleGeneration();
   }
 
@@ -2325,21 +2292,6 @@ void RestyleManager::PostRestyleEvent(Element* aElement,
     return;
   }
 
-  if (aRestyleHint & ~eRestyle_AllHintsWithAnimations) {
-    mHaveNonAnimationRestyles = true;
-  }
-
-  if (aRestyleHint & eRestyle_LaterSiblings) {
-    aRestyleHint &= ~eRestyle_LaterSiblings;
-
-    nsRestyleHint siblingHint = eRestyle_Subtree;
-    Element* current = aElement->GetNextElementSibling();
-    while (current) {
-      Servo_NoteExplicitHints(current, siblingHint, nsChangeHint(0));
-      current = current->GetNextElementSibling();
-    }
-  }
-
   if (aRestyleHint || aMinChangeHint) {
     Servo_NoteExplicitHints(aElement, aRestyleHint, aMinChangeHint);
   }
@@ -2347,7 +2299,7 @@ void RestyleManager::PostRestyleEvent(Element* aElement,
 
 void RestyleManager::PostRestyleEventForAnimations(Element* aElement,
                                                    PseudoStyleType aPseudoType,
-                                                   nsRestyleHint aRestyleHint) {
+                                                   RestyleHint aRestyleHint) {
   Element* elementToRestyle =
       EffectCompositor::GetElementToRestyle(aElement, aPseudoType);
 
@@ -2364,14 +2316,14 @@ void RestyleManager::PostRestyleEventForAnimations(Element* aElement,
 }
 
 void RestyleManager::RebuildAllStyleData(nsChangeHint aExtraHint,
-                                         nsRestyleHint aRestyleHint) {
+                                         RestyleHint aRestyleHint) {
   // NOTE(emilio): GeckoRestlyeManager does a sync style flush, which seems not
   // to be needed in my testing.
   PostRebuildAllStyleDataEvent(aExtraHint, aRestyleHint);
 }
 
 void RestyleManager::PostRebuildAllStyleDataEvent(nsChangeHint aExtraHint,
-                                                  nsRestyleHint aRestyleHint) {
+                                                  RestyleHint aRestyleHint) {
   // NOTE(emilio): The semantics of these methods are quite funny, in the sense
   // that we're not supposed to need to rebuild the actual stylist data.
   //
@@ -3233,7 +3185,7 @@ void RestyleManager::ContentStateChanged(nsIContent* aContent,
   }
 
   if (auto changeHint = ChangeForContentStateChange(element, aChangedBits)) {
-    Servo_NoteExplicitHints(&element, nsRestyleHint(0), changeHint);
+    Servo_NoteExplicitHints(&element, RestyleHint{0}, changeHint);
   }
 
   // Don't bother taking a snapshot if no rules depend on these state bits.
@@ -3376,16 +3328,17 @@ void RestyleManager::AttributeChanged(Element* aElement, int32_t aNameSpaceID,
   MOZ_ASSERT(!mInStyleRefresh);
 
   auto changeHint = nsChangeHint(0);
-  auto restyleHint = nsRestyleHint(0);
+  auto restyleHint = RestyleHint{0};
 
   changeHint |= aElement->GetAttributeChangeHint(aAttribute, aModType);
 
   if (aAttribute == nsGkAtoms::style) {
-    restyleHint |= eRestyle_StyleAttribute;
+    restyleHint |= StyleRestyleHint_RESTYLE_STYLE_ATTRIBUTE;
   } else if (AttributeChangeRequiresSubtreeRestyle(*aElement, aAttribute)) {
-    restyleHint |= eRestyle_Subtree;
+    restyleHint |= RestyleHint::RestyleSubtree();
   } else if (aElement->IsAttributeMapped(aAttribute)) {
-    restyleHint |= eRestyle_Self;
+    // FIXME(emilio): Does this really need to re-selector-match?
+    restyleHint |= StyleRestyleHint_RESTYLE_SELF;
   }
 
   if (nsIFrame* primaryFrame = aElement->GetPrimaryFrame()) {

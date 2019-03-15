@@ -841,7 +841,8 @@ bool GLContext::InitImpl() {
         // see bug 737182 for 2D textures, bug 684882 for cube map textures.
         mMaxTextureSize = std::min(mMaxTextureSize, 4096);
         mMaxCubeMapTextureSize = std::min(mMaxCubeMapTextureSize, 512);
-        // for good measure, we align renderbuffers on what we do for 2D textures
+        // for good measure, we align renderbuffers on what we do for 2D
+        // textures
         mMaxRenderbufferSize = std::min(mMaxRenderbufferSize, 4096);
         mNeedsTextureSizeChecks = true;
       } else if (mVendor == GLVendor::NVIDIA) {
@@ -890,8 +891,7 @@ bool GLContext::InitImpl() {
     }
 #endif
 #if MOZ_WIDGET_ANDROID
-    if (Renderer() == GLRenderer::SGX540 &&
-        jni::GetAPIVersion() <= 15) {
+    if (Renderer() == GLRenderer::SGX540 && jni::GetAPIVersion() <= 15) {
       // Bug 1288446. Driver sometimes crashes when uploading data to a
       // texture if the render target has changed since the texture was
       // rendered from. Calling glCheckFramebufferStatus after

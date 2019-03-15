@@ -16,4 +16,3 @@ void CookieModuleDtor();
 }  // namespace mozilla
 
 #endif
-

@@ -102,9 +102,10 @@ nsIWidget* nsWebBrowser::EnsureWidget() {
 /* static */
 already_AddRefed<nsWebBrowser> nsWebBrowser::Create(
     nsIWebBrowserChrome* aContainerWindow, nsIWidget* aParentWidget,
-    const OriginAttributes& aOriginAttributes, mozIDOMWindowProxy* aOpener,
-    int aItemType) {
-  RefPtr<nsWebBrowser> browser = new nsWebBrowser(aItemType);
+    const OriginAttributes& aOriginAttributes,
+    dom::BrowsingContext* aBrowsingContext) {
+  RefPtr<nsWebBrowser> browser = new nsWebBrowser(
+      aBrowsingContext->IsContent() ? typeContentWrapper : typeChromeWrapper);
 
   // nsWebBrowser::SetContainer also calls nsWebBrowser::EnsureDocShellTreeOwner
   NS_ENSURE_SUCCESS(browser->SetContainerWindow(aContainerWindow), nullptr);
@@ -115,19 +116,7 @@ already_AddRefed<nsWebBrowser> nsWebBrowser::Create(
     return nullptr;
   }
 
-  // XXX(nika): Consider supporting creating nsWebBrowser for an existing
-  // BrowsingContext (e.g. during a X-process load).
-  using BrowsingContext = mozilla::dom::BrowsingContext;
-  RefPtr<BrowsingContext> openerContext =
-      aOpener ? nsPIDOMWindowOuter::From(aOpener)->GetBrowsingContext()
-              : nullptr;
-
-  RefPtr<BrowsingContext> browsingContext = BrowsingContext::Create(
-      /* aParent */ nullptr, openerContext, EmptyString(),
-      aItemType != typeChromeWrapper ? BrowsingContext::Type::Content
-                                     : BrowsingContext::Type::Chrome);
-
-  RefPtr<nsDocShell> docShell = nsDocShell::Create(browsingContext);
+  RefPtr<nsDocShell> docShell = nsDocShell::Create(aBrowsingContext);
   if (NS_WARN_IF(!docShell)) {
     return nullptr;
   }

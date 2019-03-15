@@ -442,6 +442,7 @@ nsBaseChannel::SetOwner(nsISupports *aOwner) {
 
 NS_IMETHODIMP
 nsBaseChannel::SetLoadInfo(nsILoadInfo *aLoadInfo) {
+  MOZ_RELEASE_ASSERT(aLoadInfo, "loadinfo can't be null");
   mLoadInfo = aLoadInfo;
 
   // Need to update |mNeckoTarget| when load info has changed.
@@ -765,8 +766,7 @@ nsBaseChannel::OnStartRequest(nsIRequest *request) {
 }
 
 NS_IMETHODIMP
-nsBaseChannel::OnStopRequest(nsIRequest *request,
-                             nsresult status) {
+nsBaseChannel::OnStopRequest(nsIRequest *request, nsresult status) {
   // If both mStatus and status are failure codes, we keep mStatus as-is since
   // that is consistent with our GetStatus and Cancel methods.
   if (NS_SUCCEEDED(mStatus)) mStatus = status;
@@ -796,13 +796,11 @@ nsBaseChannel::OnStopRequest(nsIRequest *request,
 // nsBaseChannel::nsIStreamListener
 
 NS_IMETHODIMP
-nsBaseChannel::OnDataAvailable(nsIRequest *request,
-                               nsIInputStream *stream, uint64_t offset,
-                               uint32_t count) {
+nsBaseChannel::OnDataAvailable(nsIRequest *request, nsIInputStream *stream,
+                               uint64_t offset, uint32_t count) {
   SUSPEND_PUMP_FOR_SCOPE();
 
-  nsresult rv =
-      mListener->OnDataAvailable(this, stream, offset, count);
+  nsresult rv = mListener->OnDataAvailable(this, stream, offset, count);
   if (mSynthProgressEvents && NS_SUCCEEDED(rv)) {
     int64_t prog = offset + count;
     if (NS_IsMainThread()) {

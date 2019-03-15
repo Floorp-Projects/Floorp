@@ -10902,7 +10902,8 @@ int main(int argc, char** argv, char** envp) {
                         "Enable WHATWG Streams (default)") ||
       !op.addBoolOption('\0', "no-streams", "Disable WHATWG Streams") ||
       !op.addBoolOption('\0', "no-bigint", "Disable BigInt support") ||
-      !op.addBoolOption('\0', "enable-experimental-fields", "Enable fields in classes") ||
+      !op.addBoolOption('\0', "enable-experimental-fields",
+                        "Enable fields in classes") ||
       !op.addStringOption('\0', "shared-memory", "on/off",
                           "SharedArrayBuffer and Atomics "
 #if SHARED_MEMORY_DEFAULT

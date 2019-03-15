@@ -56,14 +56,23 @@ class ClickHandlerChild extends ActorChild {
       csp = E10SUtils.serializeCSP(csp);
     }
 
+    let ReferrerInfo = Components.Constructor("@mozilla.org/referrer-info;1",
+                                              "nsIReferrerInfo",
+                                              "init");
+    let referrerInfo = new ReferrerInfo(
+      referrerPolicy,
+      !BrowserUtils.linkHasNoReferrer(node),
+      ownerDoc.documentURIObject);
+    referrerInfo = E10SUtils.serializeReferrerInfo(referrerInfo);
     let frameOuterWindowID = WebNavigationFrames.getFrameId(ownerDoc.defaultView);
 
     let json = { button: event.button, shiftKey: event.shiftKey,
                  ctrlKey: event.ctrlKey, metaKey: event.metaKey,
                  altKey: event.altKey, href: null, title: null,
-                 frameOuterWindowID, referrerPolicy,
+                 frameOuterWindowID,
                  triggeringPrincipal: principal,
                  csp,
+                 referrerInfo,
                  originAttributes: principal ? principal.originAttributes : {},
                  isContentWindowPrivate: PrivateBrowsingUtils.isContentWindowPrivate(ownerDoc.defaultView)};
 
@@ -78,7 +87,7 @@ class ClickHandlerChild extends ActorChild {
       if (node) {
         json.title = node.getAttribute("title");
       }
-      json.noReferrer = BrowserUtils.linkHasNoReferrer(node);
+
 
       // Check if the link needs to be opened with mixed content allowed.
       // Only when the owner doc has |mixedContentChannel| and the same origin

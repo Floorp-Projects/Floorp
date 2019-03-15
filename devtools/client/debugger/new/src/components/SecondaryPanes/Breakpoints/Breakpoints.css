@@ -135,7 +135,8 @@ html .breakpoints-list .breakpoint.paused {
   text-align: end;
 }
 
-.breakpoints-list .breakpoint:hover .breakpoint-line {
+.breakpoints-list .breakpoint:hover .breakpoint-line,
+.breakpoints-list .breakpoint-line-close:focus-within .breakpoint-line {
   color: transparent;
 }
 

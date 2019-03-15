@@ -32,7 +32,7 @@ linux64-llvm-dsymutil:
         script: build-llvm-dsymutil.sh
         toolchain-artifact: public/build/llvm-dsymutil.tar.xz
     toolchains:
-        - linux64-gcc-4.9
+        - linux64-gcc-6
 
 linux64-binutils:
     description: "Binutils toolchain build"
@@ -85,7 +85,7 @@ linux64-tup:
         - trunk
         - try
     toolchains:
-        - linux64-gcc-4.9
+        - linux64-gcc-6
 
 linux64-custom-v8:
     description: "Custom v8 build"

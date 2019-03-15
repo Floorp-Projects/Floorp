@@ -18,7 +18,8 @@ import { getTextAtPosition } from "../../utils/source";
 import { comparePosition } from "../../utils/location";
 
 import { originalToGeneratedId, isOriginalId } from "devtools-source-map";
-import { getSource } from "../../selectors";
+import { getSource, getBreakpointsList } from "../../selectors";
+import { removeBreakpoint } from ".";
 
 import type { ThunkArgs, Action } from "../types";
 
@@ -87,6 +88,19 @@ function createSyncData(
   return { breakpoint, previousLocation };
 }
 
+// Look for an existing breakpoint at the specified generated location.
+function findExistingBreakpoint(state, generatedLocation) {
+  const breakpoints = getBreakpointsList(state);
+
+  return breakpoints.find(bp => {
+    return (
+      bp.generatedLocation.sourceUrl == generatedLocation.sourceUrl &&
+      bp.generatedLocation.line == generatedLocation.line &&
+      bp.generatedLocation.column == generatedLocation.column
+    );
+  });
+}
+
 // we have three forms of syncing: disabled syncing, existing server syncing
 // and adding a new breakpoint
 export async function syncBreakpointPromise(
@@ -94,7 +108,7 @@ export async function syncBreakpointPromise(
   sourceId: SourceId,
   pendingBreakpoint: PendingBreakpoint
 ): Promise<?BreakpointSyncData> {
-  const { getState, client } = thunkArgs;
+  const { getState, client, dispatch } = thunkArgs;
   assertPendingBreakpoint(pendingBreakpoint);
 
   const source = getSource(getState(), sourceId);
@@ -152,8 +166,11 @@ export async function syncBreakpointPromise(
     );
   }
 
-  // clear server breakpoints if they exist and we have moved
-  await client.removeBreakpoint(generatedLocation);
+  // Clear any breakpoint for the generated location.
+  const bp = findExistingBreakpoint(getState(), generatedLocation);
+  if (bp) {
+    await dispatch(removeBreakpoint(bp));
+  }
 
   if (!newGeneratedLocation) {
     return { previousLocation, breakpoint: null };

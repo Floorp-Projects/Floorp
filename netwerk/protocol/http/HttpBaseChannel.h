@@ -239,6 +239,11 @@ class HttpBaseChannel : public nsHashPropertyBag,
   NS_IMETHOD GetIsTrackingResource(bool *aIsTrackingResource) override;
   NS_IMETHOD GetIsThirdPartyTrackingResource(
       bool *aIsTrackingResource) override;
+  NS_IMETHOD GetClassificationFlags(uint32_t *aIsClassificationFlags) override;
+  NS_IMETHOD GetFirstPartyClassificationFlags(
+      uint32_t *aIsClassificationFlags) override;
+  NS_IMETHOD GetThirdPartyClassificationFlags(
+      uint32_t *aIsClassificationFlags) override;
   NS_IMETHOD OverrideTrackingFlagsForDocumentCookieAccessor(
       nsIHttpChannel *aDocumentChannel) override;
   NS_IMETHOD GetFlashPluginState(
@@ -417,7 +422,7 @@ class HttpBaseChannel : public nsHashPropertyBag,
   // |EnsureUploadStreamIsCloneableComplete| to main thread.
   virtual void OnCopyComplete(nsresult aStatus);
 
-  void SetIsTrackingResource(bool aIsThirdParty);
+  void AddClassificationFlags(uint32_t aFlags, bool aIsThirdParty);
 
   void SetFlashPluginState(nsIHttpChannel::FlashPluginState aState);
 
@@ -532,6 +537,9 @@ class HttpBaseChannel : public nsHashPropertyBag,
 
   bool MaybeWaitForUploadStreamLength(nsIStreamListener *aListener,
                                       nsISupports *aContext);
+
+  bool IsThirdPartyTrackingResource() const;
+  bool IsTrackingResource() const;
 
   friend class PrivateBrowsingChannel<HttpBaseChannel>;
   friend class InterceptFailedOnStop;
@@ -662,8 +670,8 @@ class HttpBaseChannel : public nsHashPropertyBag,
   // Use Release-Acquire ordering to ensure the OMT ODA is ignored while channel
   // is canceled on main thread.
   Atomic<bool, ReleaseAcquire> mCanceled;
-  Atomic<bool, ReleaseAcquire> mIsFirstPartyTrackingResource;
-  Atomic<bool, ReleaseAcquire> mIsThirdPartyTrackingResource;
+  Atomic<uint32_t, ReleaseAcquire> mFirstPartyClassificationFlags;
+  Atomic<uint32_t, ReleaseAcquire> mThirdPartyClassificationFlags;
   Atomic<uint32_t, ReleaseAcquire> mFlashPluginState;
 
   uint32_t mLoadFlags;

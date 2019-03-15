@@ -40,11 +40,15 @@ public final class DynamicToolbarAnimator {
 
     public interface ToolbarChromeProxy {
         @UiThread
-        public @Nullable Bitmap getBitmapOfToolbarChrome();
+        @Nullable default Bitmap getBitmapOfToolbarChrome() {
+            return null;
+        }
         @UiThread
-        public boolean isToolbarChromeVisible();
+        default boolean isToolbarChromeVisible() {
+            return false;
+        }
         @UiThread
-        public void toggleToolbarChrome(boolean aShow);
+        default void toggleToolbarChrome(boolean aShow) {}
     }
 
     private final Set<PinReason> mPinFlags = EnumSet.noneOf(PinReason.class);

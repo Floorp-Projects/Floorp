@@ -119,10 +119,9 @@ bool GLContextCGL::SwapBuffers() {
 
 void GLContextCGL::GetWSIInfo(nsCString* const out) const { out->AppendLiteral("CGL"); }
 
-Maybe<SymbolLoader> GLContextCGL::GetSymbolLoader() const
-{
-    const auto& lib = sCGLLibrary.Library();
-    return Some(SymbolLoader(*lib));
+Maybe<SymbolLoader> GLContextCGL::GetSymbolLoader() const {
+  const auto& lib = sCGLLibrary.Library();
+  return Some(SymbolLoader(*lib));
 }
 
 already_AddRefed<GLContext> GLContextProviderCGL::CreateWrappingExisting(void*, void*) {

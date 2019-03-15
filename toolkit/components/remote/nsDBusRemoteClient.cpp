@@ -90,9 +90,8 @@ bool nsDBusRemoteClient::GetRemoteDestinationName(const char *aProgram,
   if (aDestinationName.Length() > DBUS_MAXIMUM_NAME_LENGTH)
     aDestinationName.Truncate(DBUS_MAXIMUM_NAME_LENGTH);
 
-  static auto sDBusValidateBusName =
-      (bool (*)(const char *, DBusError *))dlsym(RTLD_DEFAULT,
-                                                  "dbus_validate_bus_name");
+  static auto sDBusValidateBusName = (bool (*)(const char *, DBusError *))dlsym(
+      RTLD_DEFAULT, "dbus_validate_bus_name");
   if (!sDBusValidateBusName) {
     return false;
   }

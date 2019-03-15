@@ -101,8 +101,7 @@ nsForceXMLListener::OnStartRequest(nsIRequest *aRequest) {
 }
 
 NS_IMETHODIMP
-nsForceXMLListener::OnStopRequest(nsIRequest *aRequest,
-                                  nsresult aStatusCode) {
+nsForceXMLListener::OnStopRequest(nsIRequest *aRequest, nsresult aStatusCode) {
   return mListener->OnStopRequest(aRequest, aStatusCode);
 }
 
@@ -244,8 +243,7 @@ nsSyncLoader::OnStartRequest(nsIRequest *aRequest) {
 }
 
 NS_IMETHODIMP
-nsSyncLoader::OnStopRequest(nsIRequest *aRequest,
-                            nsresult aStatusCode) {
+nsSyncLoader::OnStopRequest(nsIRequest *aRequest, nsresult aStatusCode) {
   if (NS_SUCCEEDED(mAsyncLoadStatus) && NS_FAILED(aStatusCode)) {
     mAsyncLoadStatus = aStatusCode;
   }
@@ -346,8 +344,7 @@ nsresult nsSyncLoadService::PushSyncStreamToListener(
       if (readCount > UINT32_MAX) readCount = UINT32_MAX;
 
       rv = aListener->OnDataAvailable(
-          aChannel, in,
-          (uint32_t)std::min(sourceOffset, (uint64_t)UINT32_MAX),
+          aChannel, in, (uint32_t)std::min(sourceOffset, (uint64_t)UINT32_MAX),
           (uint32_t)readCount);
       if (NS_FAILED(rv)) {
         break;

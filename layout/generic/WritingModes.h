@@ -1566,8 +1566,7 @@ class LogicalRect {
     if (aWritingMode.IsVertical()) {
       return aWritingMode.IsVerticalLR() ? mBStart : aContainerWidth - BEnd();
     }
-    return aWritingMode.IsInlineReversed() ? aContainerWidth - IEnd()
-                                           : mIStart;
+    return aWritingMode.IsInlineReversed() ? aContainerWidth - IEnd() : mIStart;
   }
 
   nscoord Y(WritingMode aWritingMode, nscoord aContainerHeight) const {
@@ -1594,8 +1593,7 @@ class LogicalRect {
     if (aWritingMode.IsVertical()) {
       return aWritingMode.IsVerticalLR() ? BEnd() : aContainerWidth - mBStart;
     }
-    return aWritingMode.IsInlineReversed() ? aContainerWidth - mIStart
-                                           : IEnd();
+    return aWritingMode.IsInlineReversed() ? aContainerWidth - mIStart : IEnd();
   }
 
   nscoord YMost(WritingMode aWritingMode, nscoord aContainerHeight) const {

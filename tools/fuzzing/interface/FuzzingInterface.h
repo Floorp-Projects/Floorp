@@ -16,22 +16,21 @@
 #include "mozilla/Assertions.h"
 
 #ifndef JS_STANDALONE
-#include "mozilla/Logging.h"
+#  include "mozilla/Logging.h"
 #endif
 
 namespace mozilla {
 
 #ifdef JS_STANDALONE
 void fuzzing_log(const char* aFmt, ...);
-#define MOZ_LOG_EXPAND_ARGS(...) __VA_ARGS__
+#  define MOZ_LOG_EXPAND_ARGS(...) __VA_ARGS__
 
-#define FUZZING_LOG(args) \
-  fuzzing_log(MOZ_LOG_EXPAND_ARGS args);
+#  define FUZZING_LOG(args) fuzzing_log(MOZ_LOG_EXPAND_ARGS args);
 #else
 extern LazyLogModule gFuzzingLog;
 
-#define FUZZING_LOG(args) \
-  MOZ_LOG(mozilla::gFuzzingLog, mozilla::LogLevel::Verbose, args)
+#  define FUZZING_LOG(args) \
+    MOZ_LOG(mozilla::gFuzzingLog, mozilla::LogLevel::Verbose, args)
 #endif  // JS_STANDALONE
 
 typedef int (*FuzzingTestFuncRaw)(const uint8_t*, size_t);

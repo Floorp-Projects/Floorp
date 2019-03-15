@@ -306,7 +306,7 @@ class wrap:
         """
         Set identifier name value
 
-        :param value (int)
+        :param value (str)
                the value to set
         :return (wrap)
                 self
@@ -317,6 +317,17 @@ class wrap:
         if type(value) is not str and type(value) is not unicode:
             raise Exception('passed value is not string: {}'.format(value))
         self.obj['@VALUE'] = value
+        return self
+
+    def set_null_identifier_name(self):
+        """
+        Set identifier name value to null
+
+        :return (wrap)
+                self
+        """
+        self.assert_identifier_name()
+        self.obj['@VALUE'] = None
         return self
 
     # ==== unsigned long ====

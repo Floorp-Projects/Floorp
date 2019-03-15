@@ -810,9 +810,8 @@ void Servo_InitializeCooperativeThread();
 void Servo_Shutdown();
 
 // Restyle and change hints.
-void Servo_NoteExplicitHints(RawGeckoElementBorrowed element,
-                             nsRestyleHint restyle_hint,
-                             nsChangeHint change_hint);
+void Servo_NoteExplicitHints(RawGeckoElementBorrowed, mozilla::RestyleHint,
+                             nsChangeHint);
 
 // We'd like to return `nsChangeHint` here, but bindgen bitfield enums don't
 // work as return values with the Linux 32-bit ABI at the moment because

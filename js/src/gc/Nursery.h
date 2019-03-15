@@ -151,7 +151,8 @@ class Nursery {
    * should be a multiple of the Step.
    */
   static const size_t SubChunkLimit = 192 * 1024;
-  static_assert(SubChunkLimit % SubChunkStep == 0, "The limit should be a multiple of the step");
+  static_assert(SubChunkLimit % SubChunkStep == 0,
+                "The limit should be a multiple of the step");
 
   struct alignas(gc::CellAlignBytes) CellAlignedByte {
     char byte;

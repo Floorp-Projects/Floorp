@@ -21,10 +21,12 @@
 #include "nsVariant.h"
 #include "nsVideoFrame.h"
 
-static mozilla::LazyLogModule gTextTrackLog("TextTrackManager");
-#define WEBVTT_LOG(...) MOZ_LOG(gTextTrackLog, LogLevel::Debug, (__VA_ARGS__))
-#define WEBVTT_LOGV(...) \
-  MOZ_LOG(gTextTrackLog, LogLevel::Verbose, (__VA_ARGS__))
+mozilla::LazyLogModule gTextTrackLog("WebVTT");
+
+#define WEBVTT_LOG(msg, ...) \
+  MOZ_LOG(gTextTrackLog, LogLevel::Debug, ("TextTrackManager=%p, " msg, this, ##__VA_ARGS__))
+#define WEBVTT_LOGV(msg, ...) \
+  MOZ_LOG(gTextTrackLog, LogLevel::Verbose, ("TextTrackManager=%p, " msg, this, ##__VA_ARGS__))
 
 namespace mozilla {
 namespace dom {
@@ -118,7 +120,7 @@ TextTrackManager::TextTrackManager(HTMLMediaElement* aMediaElement)
   nsISupports* parentObject = mMediaElement->OwnerDoc()->GetParentObject();
 
   NS_ENSURE_TRUE_VOID(parentObject);
-  WEBVTT_LOG("%p Create TextTrackManager", this);
+  WEBVTT_LOG("Create TextTrackManager");
   nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(parentObject);
   mNewCues = new TextTrackCueList(window);
   mLastActiveCues = new TextTrackCueList(window);
@@ -136,7 +138,7 @@ TextTrackManager::TextTrackManager(HTMLMediaElement* aMediaElement)
 }
 
 TextTrackManager::~TextTrackManager() {
-  WEBVTT_LOG("%p ~TextTrackManager", this);
+  WEBVTT_LOG("~TextTrackManager");
   mShutdownProxy->Unregister();
 }
 
@@ -149,13 +151,12 @@ already_AddRefed<TextTrack> TextTrackManager::AddTextTrack(
   if (!mMediaElement || !mTextTracks) {
     return nullptr;
   }
-  WEBVTT_LOG("%p AddTextTrack", this);
-  WEBVTT_LOGV("AddTextTrack kind %" PRIu32 " Label %s Language %s",
-              static_cast<uint32_t>(aKind), NS_ConvertUTF16toUTF8(aLabel).get(),
-              NS_ConvertUTF16toUTF8(aLanguage).get());
   RefPtr<TextTrack> track = mTextTracks->AddTextTrack(
       aKind, aLabel, aLanguage, aMode, aReadyState, aTextTrackSource,
       CompareTextTracks(mMediaElement));
+  WEBVTT_LOG("AddTextTrack %p kind %" PRIu32 " Label %s Language %s",
+             track.get(), static_cast<uint32_t>(aKind), NS_ConvertUTF16toUTF8(aLabel).get(),
+             NS_ConvertUTF16toUTF8(aLanguage).get());
   AddCues(track);
   ReportTelemetryForTrack(track);
 
@@ -173,7 +174,7 @@ void TextTrackManager::AddTextTrack(TextTrack* aTextTrack) {
   if (!mMediaElement || !mTextTracks) {
     return;
   }
-  WEBVTT_LOG("%p AddTextTrack TextTrack %p", this, aTextTrack);
+  WEBVTT_LOG("AddTextTrack TextTrack %p", aTextTrack);
   mTextTracks->AddTextTrack(aTextTrack, CompareTextTracks(mMediaElement));
   AddCues(aTextTrack);
   ReportTelemetryForTrack(aTextTrack);
@@ -195,7 +196,7 @@ void TextTrackManager::AddCues(TextTrack* aTextTrack) {
   TextTrackCueList* cueList = aTextTrack->GetCues();
   if (cueList) {
     bool dummy;
-    WEBVTT_LOGV("AddCues cueList->Length() %d", cueList->Length());
+    WEBVTT_LOGV("AddCues, CuesNum=%d", cueList->Length());
     for (uint32_t i = 0; i < cueList->Length(); ++i) {
       mNewCues->AddCue(*cueList->IndexedGetter(i, dummy));
     }
@@ -209,7 +210,7 @@ void TextTrackManager::RemoveTextTrack(TextTrack* aTextTrack,
     return;
   }
 
-  WEBVTT_LOG("%p RemoveTextTrack TextTrack %p", this, aTextTrack);
+  WEBVTT_LOG("RemoveTextTrack TextTrack %p", aTextTrack);
   mPendingTextTracks->RemoveTextTrack(aTextTrack);
   if (aPendingListOnly) {
     return;
@@ -219,7 +220,7 @@ void TextTrackManager::RemoveTextTrack(TextTrack* aTextTrack,
   // Remove the cues in mNewCues belong to aTextTrack.
   TextTrackCueList* removeCueList = aTextTrack->GetCues();
   if (removeCueList) {
-    WEBVTT_LOGV("RemoveTextTrack removeCueList->Length() %d",
+    WEBVTT_LOGV("RemoveTextTrack removeCuesNum=%d",
                 removeCueList->Length());
     for (uint32_t i = 0; i < removeCueList->Length(); ++i) {
       mNewCues->RemoveCue(*((*removeCueList)[i]));
@@ -229,7 +230,7 @@ void TextTrackManager::RemoveTextTrack(TextTrack* aTextTrack,
 }
 
 void TextTrackManager::DidSeek() {
-  WEBVTT_LOG("%p DidSeek", this);
+  WEBVTT_LOG("DidSeek");
   if (mMediaElement) {
     mLastTimeMarchesOnCalled = mMediaElement->CurrentTime();
     WEBVTT_LOGV("DidSeek set mLastTimeMarchesOnCalled %lf",
@@ -262,9 +263,8 @@ void TextTrackManager::UpdateCueDisplay() {
   mTextTracks->GetShowingCues(showingCues);
 
   if (showingCues.Length() > 0) {
-    WEBVTT_LOG("UpdateCueDisplay ProcessCues");
-    WEBVTT_LOGV("UpdateCueDisplay showingCues.Length() %zu",
-                showingCues.Length());
+    WEBVTT_LOG("UpdateCueDisplay, processCues, showingCuesNum=%zu",
+               showingCues.Length());
     RefPtr<nsVariantCC> jsCues = new nsVariantCC();
 
     jsCues->SetAsArray(nsIDataType::VTYPE_INTERFACE, &NS_GET_IID(EventTarget),
@@ -281,7 +281,7 @@ void TextTrackManager::UpdateCueDisplay() {
 }
 
 void TextTrackManager::NotifyCueAdded(TextTrackCue& aCue) {
-  WEBVTT_LOG("NotifyCueAdded");
+  WEBVTT_LOG("NotifyCueAdded, cue=%p", &aCue);
   if (mNewCues) {
     mNewCues->AddCue(aCue);
   }
@@ -290,7 +290,7 @@ void TextTrackManager::NotifyCueAdded(TextTrackCue& aCue) {
 }
 
 void TextTrackManager::NotifyCueRemoved(TextTrackCue& aCue) {
-  WEBVTT_LOG("NotifyCueRemoved");
+  WEBVTT_LOG("NotifyCueRemoved, cue=%p", &aCue);
   if (mNewCues) {
     mNewCues->RemoveCue(aCue);
   }
@@ -820,7 +820,7 @@ void TextTrackManager::TimeMarchesOn() {
 
 void TextTrackManager::NotifyCueUpdated(TextTrackCue* aCue) {
   // TODO: Add/Reorder the cue to mNewCues if we have some optimization?
-  WEBVTT_LOG("NotifyCueUpdated");
+  WEBVTT_LOG("NotifyCueUpdated, cue=%p", aCue);
   TimeMarchesOn();
   // For the case "Texttrack.mode = hidden/showing", if the mode
   // changing between showing and hidden, TimeMarchesOn

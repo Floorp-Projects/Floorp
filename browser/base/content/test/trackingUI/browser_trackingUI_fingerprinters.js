@@ -5,15 +5,18 @@
 "use strict";
 
 const TRACKING_PAGE = "http://example.org/browser/browser/base/content/test/trackingUI/trackingPage.html";
-const FP_PREF = "privacy.trackingprotection.fingerprinting.enabled";
+const FP_PROTECTION_PREF = "privacy.trackingprotection.fingerprinting.enabled";
+const FP_ANNOTATION_PREF = "privacy.trackingprotection.fingerprinting.annotate.enabled";
 
 add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({set: [
     [ ContentBlocking.prefIntroCount, ContentBlocking.MAX_INTROS ],
     [ "urlclassifier.features.fingerprinting.blacklistHosts", "fingerprinting.example.com" ],
+    [ "urlclassifier.features.fingerprinting.annotate.blacklistHosts", "fingerprinting.example.com" ],
     [ "privacy.trackingprotection.enabled", false ],
     [ "privacy.trackingprotection.annotate_channels", false ],
     [ "privacy.trackingprotection.cryptomining.enabled", false ],
+    [ "privacy.trackingprotection.cryptomining.annotate.enabled", false ],
   ]});
 });
 
@@ -104,7 +107,8 @@ async function testSubview(hasException) {
 }
 
 add_task(async function test() {
-  Services.prefs.setBoolPref(FP_PREF, true);
+  Services.prefs.setBoolPref(FP_PROTECTION_PREF, true);
+  Services.prefs.setBoolPref(FP_ANNOTATION_PREF, true);
 
   await testIdentityState(false);
   await testIdentityState(true);
@@ -112,6 +116,6 @@ add_task(async function test() {
   await testSubview(false);
   await testSubview(true);
 
-  Services.prefs.clearUserPref(FP_PREF);
+  Services.prefs.clearUserPref(FP_PROTECTION_PREF);
+  Services.prefs.clearUserPref(FP_ANNOTATION_PREF);
 });
-

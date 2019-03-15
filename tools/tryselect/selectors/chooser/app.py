@@ -184,7 +184,8 @@ def create_application(tg):
             app.tasks.extend(labels)
 
         shutdown = request.environ.get('werkzeug.server.shutdown')
-        shutdown()
+        if shutdown:
+            shutdown()
         return render_template('close.html')
 
     return app

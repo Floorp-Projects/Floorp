@@ -76,7 +76,6 @@ NS_IMETHODIMP SandboxSettings::GetEffectiveContentSandboxLevel(
 
 }  // namespace mozilla
 
-
 NS_IMPL_COMPONENT_FACTORY(mozISandboxSettings) {
   return MakeAndAddRef<SandboxSettings>().downcast<nsISupports>();
 }

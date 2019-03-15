@@ -204,10 +204,9 @@ this.windows = class extends ExtensionAPI {
           }
 
           args.appendElement(null); // unused
-          args.appendElement(null); // referrer
+          args.appendElement(null); // referrerInfo
           args.appendElement(null); // postData
           args.appendElement(null); // allowThirdPartyFixup
-          args.appendElement(null); // referrerPolicy
 
           if (createData.cookieStoreId) {
             let userContextIdSupports = Cc["@mozilla.org/supports-PRUint32;1"].createInstance(Ci.nsISupportsPRUint32);

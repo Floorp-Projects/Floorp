@@ -425,7 +425,8 @@ var PushServiceHttp2 = {
     return serverURI.scheme == "https";
   },
 
-  connect: function(subscriptions, broadcastListeners) {
+  async connect(broadcastListeners) {
+    let subscriptions = await this._mainPushService.getAllUnexpired();
     this.startConnections(subscriptions);
   },
 

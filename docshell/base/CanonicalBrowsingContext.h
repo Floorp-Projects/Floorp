@@ -34,6 +34,9 @@ class CanonicalBrowsingContext final : public BrowsingContext {
     return mProcessId == aProcessId;
   }
   uint64_t OwnerProcessId() const { return mProcessId; }
+  ContentParent* GetContentParent() const;
+
+  void SetOwnerProcessId(uint64_t aProcessId) { mProcessId = aProcessId; }
 
   void GetWindowGlobals(nsTArray<RefPtr<WindowGlobalParent>>& aWindows);
 
@@ -57,14 +60,20 @@ class CanonicalBrowsingContext final : public BrowsingContext {
   // function)
   void NotifySetUserGestureActivationFromIPC(bool aIsUserGestureActivation);
 
+  // Validate that the given process is allowed to perform the given
+  // transaction. aSource is |nullptr| if set in the parent process.
+  bool ValidateTransaction(const Transaction& aTransaction,
+                           ContentParent* aSource);
+
  protected:
   void Traverse(nsCycleCollectionTraversalCallback& cb);
   void Unlink();
 
   using Type = BrowsingContext::Type;
-  CanonicalBrowsingContext(BrowsingContext* aParent, BrowsingContext* aOpener,
-                           const nsAString& aName, uint64_t aBrowsingContextId,
-                           uint64_t aProcessId, Type aType = Type::Chrome);
+  CanonicalBrowsingContext(BrowsingContext* aParent,
+                           BrowsingContextGroup* aGroup,
+                           uint64_t aBrowsingContextId, uint64_t aProcessId,
+                           Type aType);
 
  private:
   friend class BrowsingContext;

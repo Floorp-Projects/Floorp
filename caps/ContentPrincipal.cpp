@@ -411,8 +411,7 @@ static nsresult GetSpecialBaseDomain(const nsCOMPtr<nsIURI>& aCodebase,
   }
 
   bool isBehaved;
-  if (NS_SUCCEEDED(aCodebase->SchemeIs("indexeddb", &isBehaved)) &&
-      isBehaved) {
+  if (NS_SUCCEEDED(aCodebase->SchemeIs("indexeddb", &isBehaved)) && isBehaved) {
     *aHandled = true;
     return aCodebase->GetSpec(aBaseDomain);
   }

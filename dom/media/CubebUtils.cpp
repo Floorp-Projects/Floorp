@@ -54,7 +54,8 @@
 #define PREF_AUDIOIPC_POOL_SIZE "media.audioipc.pool_size"
 #define PREF_AUDIOIPC_STACK_SIZE "media.audioipc.stack_size"
 
-#if (defined(XP_LINUX) && !defined(MOZ_WIDGET_ANDROID)) || defined(XP_MACOSX) || (defined(XP_WIN) && !defined(_ARM64_))
+#if (defined(XP_LINUX) && !defined(MOZ_WIDGET_ANDROID)) || \
+    defined(XP_MACOSX) || (defined(XP_WIN) && !defined(_ARM64_))
 #  define MOZ_CUBEB_REMOTING
 #endif
 

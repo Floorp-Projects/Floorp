@@ -62,14 +62,11 @@ void nsAutoConfig::SetConfigURL(const char *aConfigURL) {
 }
 
 NS_IMETHODIMP
-nsAutoConfig::OnStartRequest(nsIRequest *request) {
-  return NS_OK;
-}
+nsAutoConfig::OnStartRequest(nsIRequest *request) { return NS_OK; }
 
 NS_IMETHODIMP
-nsAutoConfig::OnDataAvailable(nsIRequest *request,
-                              nsIInputStream *aIStream, uint64_t aSourceOffset,
-                              uint32_t aLength) {
+nsAutoConfig::OnDataAvailable(nsIRequest *request, nsIInputStream *aIStream,
+                              uint64_t aSourceOffset, uint32_t aLength) {
   uint32_t amt, size;
   nsresult rv;
   char buf[1024];
@@ -85,8 +82,7 @@ nsAutoConfig::OnDataAvailable(nsIRequest *request,
 }
 
 NS_IMETHODIMP
-nsAutoConfig::OnStopRequest(nsIRequest *request,
-                            nsresult aStatus) {
+nsAutoConfig::OnStopRequest(nsIRequest *request, nsresult aStatus) {
   nsresult rv;
 
   // If the request is failed, go read the failover.jsc file

@@ -5,6 +5,37 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import mozunit
+import pytest
+
+
+TASKS = [
+    {
+        'kind': 'build',
+        'label': 'build-windows',
+        'attributes': {
+            'build_platform': 'windows',
+        },
+    },
+    {
+        'kind': 'test',
+        'label': 'test-windows-mochitest-e10s',
+        'attributes': {
+            'unittest_suite': 'mochitest',
+            'unittest_flavor': 'browser-chrome',
+            'mochitest_try_name': 'mochitest',
+        },
+    },
+]
+
+
+@pytest.fixture(autouse=True)
+def skip_taskgraph_generation(monkeypatch, tg):
+
+    def fake_generate_tasks(*args, **kwargs):
+        return tg
+
+    from tryselect import tasks
+    monkeypatch.setattr(tasks, 'generate_tasks', fake_generate_tasks)
 
 
 def test_shared_presets(run_mach, shared_name, shared_preset):

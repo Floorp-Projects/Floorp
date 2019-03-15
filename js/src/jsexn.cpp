@@ -451,10 +451,9 @@ bool Error(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  RootedObject obj(cx,
-                   ErrorObject::create(cx, exnType, stack, fileName, sourceId,
-                                       lineNumber, columnNumber, nullptr,
-                                       message, proto));
+  RootedObject obj(cx, ErrorObject::create(cx, exnType, stack, fileName,
+                                           sourceId, lineNumber, columnNumber,
+                                           nullptr, message, proto));
   if (!obj) {
     return false;
   }
@@ -671,7 +670,7 @@ void js::ErrorToException(JSContext* cx, JSErrorReport* reportp,
   }
 
   ErrorObject* errObject =
-    ErrorObject::create(cx, exnType, stack, fileName, sourceId, lineNumber,
+      ErrorObject::create(cx, exnType, stack, fileName, sourceId, lineNumber,
                           columnNumber, std::move(report), messageStr);
   if (!errObject) {
     return;
@@ -960,7 +959,7 @@ bool ErrorReport::populateUncaughtExceptionReportUTF8VA(JSContext* cx,
     ownedReport.filename = iter.filename();
     uint32_t column;
     ownedReport.sourceId =
-      iter.hasScript() ? iter.script()->scriptSource()->id() : 0;
+        iter.hasScript() ? iter.script()->scriptSource()->id() : 0;
     ownedReport.lineno = iter.computeLine(&column);
     ownedReport.column = FixupColumnForDisplay(column);
     ownedReport.isMuted = iter.mutedErrors();
@@ -1005,8 +1004,8 @@ JSObject* js::CopyErrorObject(JSContext* cx, Handle<ErrorObject*> err) {
 
   // Create the Error object.
   return ErrorObject::create(cx, errorType, stack, fileName, sourceId,
-                             lineNumber, columnNumber,
-                             std::move(copyReport), message);
+                             lineNumber, columnNumber, std::move(copyReport),
+                             message);
 }
 
 JS_PUBLIC_API bool JS::CreateError(JSContext* cx, JSExnType type,

@@ -849,7 +849,8 @@ static void ReloadPrefsCallback(const char* pref, XPCJSContext* xpccx) {
   sSharedMemoryEnabled =
       Preferences::GetBool(JS_OPTIONS_DOT_STR "shared_memory");
   sStreamsEnabled = Preferences::GetBool(JS_OPTIONS_DOT_STR "streams");
-  sFieldsEnabled = Preferences::GetBool(JS_OPTIONS_DOT_STR "experimental.fields");
+  sFieldsEnabled =
+      Preferences::GetBool(JS_OPTIONS_DOT_STR "experimental.fields");
 
 #ifdef DEBUG
   sExtraWarningsForSystemJS =

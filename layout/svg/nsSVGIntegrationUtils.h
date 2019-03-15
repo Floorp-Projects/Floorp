@@ -37,7 +37,8 @@ struct nsSize;
 struct WrFiltersHolder {
   nsTArray<mozilla::wr::FilterOp> filters;
   nsTArray<mozilla::wr::WrFilterData> filter_datas;
-  // This exists just to own the values long enough for them to be copied into rust.
+  // This exists just to own the values long enough for them to be copied into
+  // rust.
   nsTArray<nsTArray<float>> values;
 };
 

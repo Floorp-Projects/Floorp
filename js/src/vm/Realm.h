@@ -290,11 +290,13 @@ class ObjectRealm {
 }  // namespace js
 
 namespace JS {
-template <> struct GCPolicy<js::ImmediateMetadata>:
-  public IgnoreGCPolicy<js::ImmediateMetadata> {};
-template <> struct GCPolicy<js::DelayMetadata>:
-  public IgnoreGCPolicy<js::DelayMetadata> {};
-} // namespace JS
+template <>
+struct GCPolicy<js::ImmediateMetadata>
+    : public IgnoreGCPolicy<js::ImmediateMetadata> {};
+template <>
+struct GCPolicy<js::DelayMetadata> : public IgnoreGCPolicy<js::DelayMetadata> {
+};
+}  // namespace JS
 
 class JS::Realm : public JS::shadow::Realm {
   JS::Zone* zone_;

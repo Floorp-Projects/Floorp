@@ -1326,7 +1326,8 @@ int XRE_XPCShellMain(int argc, char** argv, char** envp,
 
     // Ensure that DLL Services are running
     RefPtr<DllServices> dllSvc(DllServices::Get());
-    auto dllServicesDisable = MakeScopeExit([&dllSvc]() { dllSvc->DisableFull(); });
+    auto dllServicesDisable =
+        MakeScopeExit([&dllSvc]() { dllSvc->DisableFull(); });
 
 #  if defined(MOZ_SANDBOX)
     // Required for sandboxed child processes.

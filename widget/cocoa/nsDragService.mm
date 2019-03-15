@@ -53,8 +53,7 @@ NSString* const kMozCustomTypesPboardType = @"org.mozilla.custom-clipdata";
 NSString* const kMozFileUrlsPboardType = @"org.mozilla.file-urls";
 
 nsDragService::nsDragService()
-    : mNativeDragView(nil), mNativeDragEvent(nil), mDragImageChanged(false) {
-}
+    : mNativeDragView(nil), mNativeDragEvent(nil), mDragImageChanged(false) {}
 
 nsDragService::~nsDragService() {}
 

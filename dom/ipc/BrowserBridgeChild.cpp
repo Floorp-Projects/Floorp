@@ -5,6 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/BrowserBridgeChild.h"
+#include "mozilla/dom/BrowsingContext.h"
+#include "nsFocusManager.h"
 #include "nsFrameLoader.h"
 #include "nsFrameLoaderOwner.h"
 #include "nsQueryObject.h"
@@ -14,14 +16,18 @@ using namespace mozilla::ipc;
 namespace mozilla {
 namespace dom {
 
-BrowserBridgeChild::BrowserBridgeChild(nsFrameLoader* aFrameLoader)
-    : mLayersId{0}, mIPCOpen(true), mFrameLoader(aFrameLoader) {}
+BrowserBridgeChild::BrowserBridgeChild(nsFrameLoader* aFrameLoader,
+                                       BrowsingContext* aBrowsingContext)
+    : mLayersId{0},
+      mIPCOpen(true),
+      mFrameLoader(aFrameLoader),
+      mBrowsingContext(aBrowsingContext) {}
 
 BrowserBridgeChild::~BrowserBridgeChild() {}
 
 already_AddRefed<BrowserBridgeChild> BrowserBridgeChild::Create(
     nsFrameLoader* aFrameLoader, const TabContext& aContext,
-    const nsString& aRemoteType) {
+    const nsString& aRemoteType, BrowsingContext* aBrowsingContext) {
   MOZ_ASSERT(XRE_IsContentProcess());
 
   // Determine our embedder's TabChild actor.
@@ -35,11 +41,12 @@ already_AddRefed<BrowserBridgeChild> BrowserBridgeChild::Create(
   MOZ_DIAGNOSTIC_ASSERT(tabChild);
 
   RefPtr<BrowserBridgeChild> browserBridge =
-      new BrowserBridgeChild(aFrameLoader);
+      new BrowserBridgeChild(aFrameLoader, aBrowsingContext);
   // Reference is freed in TabChild::DeallocPBrowserBridgeChild.
   tabChild->SendPBrowserBridgeConstructor(
       do_AddRef(browserBridge).take(),
-      PromiseFlatString(aContext.PresentationURL()), aRemoteType);
+      PromiseFlatString(aContext.PresentationURL()), aRemoteType,
+      aBrowsingContext);
   browserBridge->mIPCOpen = true;
 
   return browserBridge.forget();
@@ -84,6 +91,8 @@ void BrowserBridgeChild::NavigateByKey(bool aForward,
 
 void BrowserBridgeChild::Activate() { Unused << SendActivate(); }
 
+void BrowserBridgeChild::Deactivate() { Unused << SendDeactivate(); }
+
 /*static*/
 BrowserBridgeChild* BrowserBridgeChild::GetFrom(nsFrameLoader* aFrameLoader) {
   if (!aFrameLoader) {
@@ -106,6 +115,58 @@ IPCResult BrowserBridgeChild::RecvSetLayersId(
     const mozilla::layers::LayersId& aLayersId) {
   MOZ_ASSERT(!mLayersId.IsValid() && aLayersId.IsValid());
   mLayersId = aLayersId;
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult BrowserBridgeChild::RecvRequestFocus(
+    const bool& aCanRaise) {
+  // Adapted from TabParent
+  nsCOMPtr<nsIFocusManager> fm = nsFocusManager::GetFocusManager();
+  if (!fm) {
+    return IPC_OK();
+  }
+
+  RefPtr<Element> owner = mFrameLoader->GetOwnerContent();
+
+  if (!owner || !owner->OwnerDoc()) {
+    return IPC_OK();
+  }
+
+  uint32_t flags = nsIFocusManager::FLAG_NOSCROLL;
+  if (aCanRaise) {
+    flags |= nsIFocusManager::FLAG_RAISE;
+  }
+
+  fm->SetFocus(owner, flags);
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult BrowserBridgeChild::RecvMoveFocus(
+    const bool& aForward, const bool& aForDocumentNavigation) {
+  // Adapted from TabParent
+  nsCOMPtr<nsIFocusManager> fm = nsFocusManager::GetFocusManager();
+  if (!fm) {
+    return IPC_OK();
+  }
+
+  RefPtr<Element> owner = mFrameLoader->GetOwnerContent();
+
+  if (!owner || !owner->OwnerDoc()) {
+    return IPC_OK();
+  }
+
+  RefPtr<Element> dummy;
+
+  uint32_t type =
+      aForward
+          ? (aForDocumentNavigation
+                 ? static_cast<uint32_t>(nsIFocusManager::MOVEFOCUS_FORWARDDOC)
+                 : static_cast<uint32_t>(nsIFocusManager::MOVEFOCUS_FORWARD))
+          : (aForDocumentNavigation
+                 ? static_cast<uint32_t>(nsIFocusManager::MOVEFOCUS_BACKWARDDOC)
+                 : static_cast<uint32_t>(nsIFocusManager::MOVEFOCUS_BACKWARD));
+  fm->MoveFocus(nullptr, owner, type, nsIFocusManager::FLAG_BYKEY,
+                getter_AddRefs(dummy));
   return IPC_OK();
 }
 

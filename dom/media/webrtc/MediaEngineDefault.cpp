@@ -37,14 +37,18 @@ static nsString DefaultVideoName() {
   // by pref.
   nsAutoString cameraNameFromPref;
   nsresult rv;
-  NS_DispatchToMainThread(
-      NS_NewRunnableFunction(__func__,
-                             [&]() {
-                               rv = Preferences::GetString(
-                                   "media.getusermedia.fake-camera-name",
-                                   cameraNameFromPref);
-                             }),
-      NS_DISPATCH_SYNC);
+  // Here it is preferred a "hard" block, provided by the combination of Await &
+  // InvokeAsync, instead of "soft" block, provided by sync dispatch which
+  // allows the waiting thread to spin its event loop. The latter would allow
+  // miltiple enumeration requests being processed out-of-order.
+  media::Await(
+      do_AddRef(SystemGroup::EventTargetFor(TaskCategory::Other)),
+      InvokeAsync(
+          SystemGroup::EventTargetFor(TaskCategory::Other), __func__, [&]() {
+            rv = Preferences::GetString("media.getusermedia.fake-camera-name",
+                                        cameraNameFromPref);
+            return GenericPromise::CreateAndResolve(true, __func__);
+          }));
 
   if (NS_SUCCEEDED(rv)) {
     return std::move(cameraNameFromPref);
@@ -63,9 +67,7 @@ MediaEngineDefaultVideoSource::MediaEngineDefaultVideoSource()
 
 MediaEngineDefaultVideoSource::~MediaEngineDefaultVideoSource() {}
 
-nsString MediaEngineDefaultVideoSource::GetName() const {
-  return mName;
-}
+nsString MediaEngineDefaultVideoSource::GetName() const { return mName; }
 
 nsCString MediaEngineDefaultVideoSource::GetUUID() const {
   return NS_LITERAL_CSTRING("1041FCBD-3F12-4F7B-9E9B-1EC556DD5676");
@@ -582,8 +584,8 @@ void MediaEngineDefault::EnumerateDevices(
       devicesForThisWindow->AppendElement(newSource);
       aDevices->AppendElement(MakeRefPtr<MediaDevice>(
           newSource, newSource->GetName(),
-          NS_ConvertUTF8toUTF16(newSource->GetUUID()),
-          newSource->GetGroupId(), NS_LITERAL_STRING("")));
+          NS_ConvertUTF8toUTF16(newSource->GetUUID()), newSource->GetGroupId(),
+          NS_LITERAL_STRING("")));
       return;
     }
     case dom::MediaSourceEnum::Microphone: {
@@ -594,8 +596,8 @@ void MediaEngineDefault::EnumerateDevices(
         if (source->IsAvailable()) {
           aDevices->AppendElement(MakeRefPtr<MediaDevice>(
               source, source->GetName(),
-              NS_ConvertUTF8toUTF16(source->GetUUID()),
-              source->GetGroupId(), NS_LITERAL_STRING("")));
+              NS_ConvertUTF8toUTF16(source->GetUUID()), source->GetGroupId(),
+              NS_LITERAL_STRING("")));
         }
       }
 

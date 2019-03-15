@@ -1330,8 +1330,7 @@ nsresult nsParser::OnDataAvailable(nsIRequest* request,
  *  This is called by the networking library once the last block of data
  *  has been collected from the net.
  */
-nsresult nsParser::OnStopRequest(nsIRequest* request,
-                                 nsresult status) {
+nsresult nsParser::OnStopRequest(nsIRequest* request, nsresult status) {
   nsresult rv = NS_OK;
 
   CParserContext* pc = mParserContext;

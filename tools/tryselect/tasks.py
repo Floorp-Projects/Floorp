@@ -55,8 +55,6 @@ def invalidate(cache, root):
 
 
 def generate_tasks(params, full, root):
-    params = params or "project=mozilla-central"
-
     # Try to delete the old taskgraph cache directory.
     old_cache_dir = os.path.join(get_state_dir(), 'cache', 'taskgraph')
     if os.path.isdir(old_cache_dir):

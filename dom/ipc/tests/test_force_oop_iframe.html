@@ -13,7 +13,8 @@
 /* eslint-env mozilla/frame-script */
 
 add_task(async function() {
-  await SpecialPowers.pushPrefEnv({"set": [["fission.oopif.attribute", true]]});
+  await SpecialPowers.pushPrefEnv({"set": [["fission.oopif.attribute", true],
+                                           ["dom.ipc.processCount", 10000]]});
 
   // This iframe should be loaded out of process. Unfortunately as of the time
   // of this test's creation, many different events which we could use to detect
@@ -48,6 +49,15 @@ add_task(async function() {
   is(frameLoader.tabParent, null);
 
   await contentCreated;
+
+  ok(frameLoader.browsingContext, "Has BrowsingContext");
+  ok(frameLoader.browsingContext.parent, "BrowsingContext has parent");
+
+  let wgc = SpecialPowers.wrap(window).getWindowGlobalChild();
+  ok(wgc, "we have a WindowGlobalChild");
+  is(SpecialPowers.unwrap(wgc.browsingContext),
+     SpecialPowers.unwrap(frameLoader.browsingContext.parent),
+     "BrowsingContext matches");
 });
 
 </script>

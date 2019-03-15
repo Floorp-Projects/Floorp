@@ -48,7 +48,8 @@ SimpleChannelParent::NotifyCookieBlocked(uint32_t aRejectedReason) {
 }
 
 NS_IMETHODIMP
-SimpleChannelParent::NotifyTrackingResource(bool aIsThirdParty) {
+SimpleChannelParent::NotifyClassificationFlags(uint32_t aClassificationFlags,
+                                               bool aIsThirdParty) {
   // Nothing to do.
   return NS_OK;
 }
@@ -85,8 +86,7 @@ SimpleChannelParent::OnStartRequest(nsIRequest* aRequest) {
 }
 
 NS_IMETHODIMP
-SimpleChannelParent::OnStopRequest(nsIRequest* aRequest,
-                                   nsresult aStatusCode) {
+SimpleChannelParent::OnStopRequest(nsIRequest* aRequest, nsresult aStatusCode) {
   // See above.
   MOZ_ASSERT(NS_FAILED(aStatusCode));
   return NS_OK;

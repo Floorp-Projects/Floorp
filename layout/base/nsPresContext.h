@@ -258,35 +258,18 @@ class nsPresContext : public nsISupports,
    * For aRestyleHint, see RestyleManager::RebuildAllStyleData.
    * Also rebuild the user font set and counter style manager.
    */
-  void RebuildAllStyleData(nsChangeHint aExtraHint, nsRestyleHint aRestyleHint);
+  void RebuildAllStyleData(nsChangeHint aExtraHint, mozilla::RestyleHint);
   /**
    * Just like RebuildAllStyleData, except (1) asynchronous and (2) it
    * doesn't rebuild the user font set.
    */
   void PostRebuildAllStyleDataEvent(nsChangeHint aExtraHint,
-                                    nsRestyleHint aRestyleHint);
+                                    mozilla::RestyleHint);
 
   void ContentLanguageChanged();
 
   /**
-   * Handle changes in the values of media features (used in media
-   * queries).
-   *
-   * There are three sensible values to use for aRestyleHint:
-   *  * nsRestyleHint(0) to rebuild style data, with rerunning of
-   *    selector matching, only if media features have changed
-   *  * eRestyle_ForceDescendants to force rebuilding of style data (but
-   *    still only rerun selector matching if media query results have
-   *    changed).  (RebuildAllStyleData always adds
-   *    eRestyle_ForceDescendants internally, so here we're only using
-   *    it to distinguish from nsRestyleHint(0) whether we need to call
-   *    RebuildAllStyleData at all.)
-   *  * eRestyle_Subtree to force rebuilding of style data with
-   *    rerunning of selector matching
-   *
-   * For aChangeHint, see RestyleManager::RebuildAllStyleData.  (Passing
-   * a nonzero aChangeHint forces rebuilding style data even if
-   * nsRestyleHint(0) is passed.)
+   * Handle changes in the values of media features (used in media queries).
    */
   void MediaFeatureValuesChanged(const mozilla::MediaFeatureChange& aChange) {
     if (mShell) {

@@ -276,8 +276,8 @@ nsresult nsPluginStreamListenerPeer::SetStreamOffset(int32_t value) {
 }
 
 NS_IMETHODIMP nsPluginStreamListenerPeer::OnDataAvailable(
-    nsIRequest* request, nsIInputStream* aIStream,
-    uint64_t sourceOffset, uint32_t aLength) {
+    nsIRequest* request, nsIInputStream* aIStream, uint64_t sourceOffset,
+    uint32_t aLength) {
   if (mRequests.IndexOfObject(request) == -1) {
     MOZ_ASSERT(false, "Received OnDataAvailable for untracked request.");
     return NS_ERROR_UNEXPECTED;

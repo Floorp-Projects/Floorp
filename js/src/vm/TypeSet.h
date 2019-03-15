@@ -89,7 +89,8 @@ enum : uint32_t {
 
   /* Mask containing all "immediate" primitives (not heap-allocated) */
   TYPE_FLAG_PRIMITIVE_IMMEDIATE = TYPE_FLAG_UNDEFINED | TYPE_FLAG_NULL |
-      TYPE_FLAG_BOOLEAN | TYPE_FLAG_INT32 | TYPE_FLAG_DOUBLE,
+                                  TYPE_FLAG_BOOLEAN | TYPE_FLAG_INT32 |
+                                  TYPE_FLAG_DOUBLE,
   /* Mask containing all GCThing primitives (heap-allocated) */
   TYPE_FLAG_PRIMITIVE_GCTHING =
       TYPE_FLAG_STRING | TYPE_FLAG_SYMBOL | TYPE_FLAG_BIGINT,
@@ -327,17 +328,17 @@ class TypeSet {
 
     bool isPrimitive() const { return data < JSVAL_TYPE_OBJECT; }
 
-    bool isPrimitive(JSValueType type) const {
-      MOZ_ASSERT(type < JSVAL_TYPE_OBJECT);
-      return (uintptr_t)type == data;
+    bool isPrimitive(ValueType type) const {
+      MOZ_ASSERT(type != ValueType::Object);
+      return uintptr_t(type) == data;
     }
 
-    JSValueType primitive() const {
+    ValueType primitive() const {
       MOZ_ASSERT(isPrimitive());
-      return (JSValueType)data;
+      return ValueType(data);
     }
 
-    bool isMagicArguments() const { return primitive() == JSVAL_TYPE_MAGIC; }
+    bool isMagicArguments() const { return primitive() == ValueType::Magic; }
 
     bool isSomeObject() const {
       return data == JSVAL_TYPE_OBJECT || data > JSVAL_TYPE_UNKNOWN;

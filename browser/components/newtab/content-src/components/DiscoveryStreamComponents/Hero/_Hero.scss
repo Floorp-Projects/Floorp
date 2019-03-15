@@ -172,6 +172,7 @@ $card-header-in-hero-line-height: 20;
       display: grid;
       grid-template-columns: repeat(2, 1fr);
       grid-column-gap: 24px;
+      grid-auto-rows: min-content;
     }
   }
 
@@ -231,6 +232,7 @@ $card-header-in-hero-line-height: 20;
       display: grid;
       grid-template-columns: repeat(2, 1fr);
       grid-column-gap: 24px;
+      grid-auto-rows: min-content;
 
       .ds-card {
         &:hover {

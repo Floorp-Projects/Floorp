@@ -26,9 +26,8 @@ class ScheduleUpdateRenderTextureHost : public wr::NotificationHandler {
   virtual void Notify(wr::Checkpoint aCheckpoint) override {
     if (aCheckpoint == wr::Checkpoint::FrameTexturesUpdated) {
       MOZ_ASSERT(wr::RenderThread::IsInRenderThread());
-      wr::RenderThread::Get()->UpdateRenderTextureHost(
-          mSrcExternalImageId,
-          mWrappedExternalImageId);
+      wr::RenderThread::Get()->UpdateRenderTextureHost(mSrcExternalImageId,
+                                                       mWrappedExternalImageId);
     } else {
       MOZ_ASSERT(aCheckpoint == wr::Checkpoint::TransactionDropped);
     }
@@ -57,8 +56,7 @@ WebRenderTextureHostWrapper::~WebRenderTextureHostWrapper() {
 }
 
 void WebRenderTextureHostWrapper::UpdateWebRenderTextureHost(
-    wr::TransactionBuilder& aTxn,
-    WebRenderTextureHost* aTextureHost) {
+    wr::TransactionBuilder& aTxn, WebRenderTextureHost* aTextureHost) {
   MOZ_ASSERT(aTextureHost);
 
   // AsyncImagePipelineManager is responsible of holding compositable ref of
@@ -66,9 +64,9 @@ void WebRenderTextureHostWrapper::UpdateWebRenderTextureHost(
   // ScheduleUpdateRenderTextureHost does not need to handle it.
 
   aTxn.Notify(wr::Checkpoint::FrameTexturesUpdated,
-      MakeUnique<ScheduleUpdateRenderTextureHost>(
-        wr::AsUint64(mExternalImageId),
-        wr::AsUint64(aTextureHost->GetExternalImageKey())));
+              MakeUnique<ScheduleUpdateRenderTextureHost>(
+                  wr::AsUint64(mExternalImageId),
+                  wr::AsUint64(aTextureHost->GetExternalImageKey())));
 
   mWrTextureHost = aTextureHost;
 }

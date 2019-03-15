@@ -533,7 +533,7 @@ nsViewSourceChannel::GetLoadInfo(nsILoadInfo **aLoadInfo) {
 NS_IMETHODIMP
 nsViewSourceChannel::SetLoadInfo(nsILoadInfo *aLoadInfo) {
   NS_ENSURE_TRUE(mChannel, NS_ERROR_FAILURE);
-
+  MOZ_RELEASE_ASSERT(aLoadInfo, "loadinfo can't be null");
   return mChannel->SetLoadInfo(aLoadInfo);
 }
 
@@ -635,8 +635,7 @@ nsViewSourceChannel::OnStartRequest(nsIRequest *aRequest) {
 }
 
 NS_IMETHODIMP
-nsViewSourceChannel::OnStopRequest(nsIRequest *aRequest,
-                                   nsresult aStatus) {
+nsViewSourceChannel::OnStopRequest(nsIRequest *aRequest, nsresult aStatus) {
   NS_ENSURE_TRUE(mListener, NS_ERROR_FAILURE);
   if (mChannel) {
     nsCOMPtr<nsILoadGroup> loadGroup;
@@ -657,8 +656,7 @@ nsViewSourceChannel::OnDataAvailable(nsIRequest *aRequest,
                                      uint64_t aSourceOffset, uint32_t aLength) {
   NS_ENSURE_TRUE(mListener, NS_ERROR_FAILURE);
   return mListener->OnDataAvailable(static_cast<nsIViewSourceChannel *>(this),
-                                    aInputStream, aSourceOffset,
-                                    aLength);
+                                    aInputStream, aSourceOffset, aLength);
 }
 
 // nsIHttpChannel methods
@@ -713,18 +711,41 @@ nsViewSourceChannel::GetIsTrackingResource(bool *aIsTrackingResource) {
 }
 
 NS_IMETHODIMP
-nsViewSourceChannel::GetFlashPluginState(
-    nsIHttpChannel::FlashPluginState *aResult) {
-  return !mHttpChannel ? NS_ERROR_NULL_POINTER
-                       : mHttpChannel->GetFlashPluginState(aResult);
-}
-
-NS_IMETHODIMP
 nsViewSourceChannel::GetIsThirdPartyTrackingResource(
     bool *aIsTrackingResource) {
   return !mHttpChannel ? NS_ERROR_NULL_POINTER
                        : mHttpChannel->GetIsThirdPartyTrackingResource(
                              aIsTrackingResource);
+}
+
+NS_IMETHODIMP
+nsViewSourceChannel::GetClassificationFlags(uint32_t *aClassificationFlags) {
+  return !mHttpChannel
+             ? NS_ERROR_NULL_POINTER
+             : mHttpChannel->GetClassificationFlags(aClassificationFlags);
+}
+
+NS_IMETHODIMP
+nsViewSourceChannel::GetFirstPartyClassificationFlags(
+    uint32_t *aClassificationFlags) {
+  return !mHttpChannel ? NS_ERROR_NULL_POINTER
+                       : mHttpChannel->GetFirstPartyClassificationFlags(
+                             aClassificationFlags);
+}
+
+NS_IMETHODIMP
+nsViewSourceChannel::GetThirdPartyClassificationFlags(
+    uint32_t *aClassificationFlags) {
+  return !mHttpChannel ? NS_ERROR_NULL_POINTER
+                       : mHttpChannel->GetThirdPartyClassificationFlags(
+                             aClassificationFlags);
+}
+
+NS_IMETHODIMP
+nsViewSourceChannel::GetFlashPluginState(
+    nsIHttpChannel::FlashPluginState *aResult) {
+  return !mHttpChannel ? NS_ERROR_NULL_POINTER
+                       : mHttpChannel->GetFlashPluginState(aResult);
 }
 
 NS_IMETHODIMP

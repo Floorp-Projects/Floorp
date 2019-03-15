@@ -332,12 +332,12 @@ hpp:
       /**
        * Return a string describing a `BinASTField`.
        */
-      const char* describeBinASTField(const BinASTField& kind);
+      const char* describeBinASTField(const BinASTField& field);
 
       /**
        * Return a string describing a `BinASTVariant`.
        */
-      const char* describeBinASTVariant(const BinASTVariant& kind);
+      const char* describeBinASTVariant(const BinASTVariant& variant);
 
       } // namespace frontend
       } // namespace js

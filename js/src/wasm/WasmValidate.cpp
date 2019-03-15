@@ -1376,11 +1376,14 @@ static bool DecodeGCFeatureOptInSection(Decoder& d, ModuleEnvironment* env) {
     case 1:
     case 2:
       return d.fail(
-          "Wasm GC feature versions 1 and 2 are no longer supported by this engine.\n"
-          "The current version is 3, which is not backward-compatible with earlier\n"
+          "Wasm GC feature versions 1 and 2 are no longer supported by this "
+          "engine.\n"
+          "The current version is 3, which is not backward-compatible with "
+          "earlier\n"
           "versions:\n"
           " - The v1 encoding of ref.null is no longer accepted.\n"
-          " - The v2 encodings of ref.eq, table.get, table.set, and table.size\n"
+          " - The v2 encodings of ref.eq, table.get, table.set, and "
+          "table.size\n"
           "   are no longer accepted.\n");
     case 3:
       break;
@@ -1577,8 +1580,7 @@ static bool DecodeTableTypeAndLimits(Decoder& d, bool gcTypesEnabled,
   // initial > maximum is carried out by the DecodeLimits call above, so
   // we don't repeat it here.
   if (limits.initial > MaxTableInitialLength ||
-      ((limits.maximum.isSome() &&
-        limits.maximum.value() > MaxTableLength))) {
+      ((limits.maximum.isSome() && limits.maximum.value() > MaxTableLength))) {
     return d.fail("too many table elements");
   }
 
@@ -1956,8 +1958,8 @@ static bool DecodeInitializerExpression(Decoder& d, ModuleEnvironment* env,
       }
       if (expected.isReference()) {
         bool fail = false;
-        if ((expected.isRef() || globals[i].type().isRef())
-            && !env->gcTypesEnabled()) {
+        if ((expected.isRef() || globals[i].type().isRef()) &&
+            !env->gcTypesEnabled()) {
           fail = true;
         } else if (!(globals[i].type().isReference() &&
                      env->isRefSubtypeOf(globals[i].type(), expected))) {

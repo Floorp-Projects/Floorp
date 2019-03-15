@@ -69,7 +69,7 @@ bool ToJSValue(JSContext* aCx, const WindowProxyHolder& aArgument,
     return true;
   }
   JS::Rooted<JSObject*> windowProxy(aCx);
-  if (bc->GetDocShell()) {
+  if (bc->IsInProcess()) {
     windowProxy = bc->GetWindowProxy();
     if (!windowProxy) {
       nsPIDOMWindowOuter* window = bc->GetDOMWindow();

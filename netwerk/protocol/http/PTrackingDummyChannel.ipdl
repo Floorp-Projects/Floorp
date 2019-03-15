@@ -11,9 +11,9 @@ namespace mozilla {
 namespace net {
 
 // This protocol provides a mechanism for the "child intercept" mode of
-// ServiceWorker operation to work correctly with Tracking Protection
-// annotations.  ServiceWorkers should not be allowed for third-party iframes
-// which are annotated as tracking origins.
+// ServiceWorker operation to work correctly with Classified channels.
+// ServiceWorkers should not be allowed for third-party iframes which are
+// annotated as tracking origins.
 //
 // In child intercept mode, the decision to intercept a channel is made in the
 // child process without consulting the parent process.  The decision is based
@@ -39,7 +39,7 @@ protocol PTrackingDummyChannel
   manager PNecko;
 
 child:
-  async __delete__(bool aTrackingResource);
+  async __delete__(uint32_t aClassificationFlags);
 };
 
 } // namespace net

@@ -103,7 +103,8 @@ class TabParent final : public PBrowserParent,
   NS_DECL_NSIDOMEVENTLISTENER
 
   TabParent(ContentParent* aManager, const TabId& aTabId,
-            const TabContext& aContext, uint32_t aChromeFlags,
+            const TabContext& aContext,
+            CanonicalBrowsingContext* aBrowsingContext, uint32_t aChromeFlags,
             BrowserBridgeParent* aBrowserBridgeParent = nullptr);
 
   Element* GetOwnerElement() const { return mFrameElement; }
@@ -319,13 +320,14 @@ class TabParent final : public PBrowserParent,
       PWindowGlobalParent* aActor, const WindowGlobalInit& aInit) override;
 
   PBrowserBridgeParent* AllocPBrowserBridgeParent(
-      const nsString& aPresentationURL, const nsString& aRemoteType);
+      const nsString& aPresentationURL, const nsString& aRemoteType,
+      BrowsingContext* aBrowsingContext);
 
   bool DeallocPBrowserBridgeParent(PBrowserBridgeParent* aActor);
 
   virtual mozilla::ipc::IPCResult RecvPBrowserBridgeConstructor(
       PBrowserBridgeParent* aActor, const nsString& aPresentationURL,
-      const nsString& aRemoteType) override;
+      const nsString& aRemoteType, BrowsingContext* aBrowsingContext) override;
 
   void LoadURL(nsIURI* aURI);
 
@@ -629,8 +631,6 @@ class TabParent final : public PBrowserParent,
 
   mozilla::ipc::IPCResult RecvShowCanvasPermissionPrompt(
       const nsCString& aFirstPartyURI, const bool& aHideDoorHanger);
-
-  mozilla::ipc::IPCResult RecvRootBrowsingContext(BrowsingContext* aContext);
 
   mozilla::ipc::IPCResult RecvSetSystemFont(const nsCString& aFontName);
   mozilla::ipc::IPCResult RecvGetSystemFont(nsCString* aFontName);

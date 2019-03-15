@@ -52,14 +52,16 @@ IMPL_WEBGL_EXTENSION_GOOP(WebGLExtensionFloatBlend, EXT_float_blend)
 
 // -
 
-WebGLExtensionFBORenderMipmap::WebGLExtensionFBORenderMipmap(WebGLContext* const webgl)
+WebGLExtensionFBORenderMipmap::WebGLExtensionFBORenderMipmap(
+    WebGLContext* const webgl)
     : WebGLExtensionBase(webgl) {
   MOZ_ASSERT(IsSupported(webgl), "Don't construct extension if unsupported.");
 }
 
 WebGLExtensionFBORenderMipmap::~WebGLExtensionFBORenderMipmap() = default;
 
-bool WebGLExtensionFBORenderMipmap::IsSupported(const WebGLContext* const webgl) {
+bool WebGLExtensionFBORenderMipmap::IsSupported(
+    const WebGLContext* const webgl) {
   if (webgl->IsWebGL2()) return false;
   if (!gfxPrefs::WebGLDraftExtensionsEnabled()) return false;
 

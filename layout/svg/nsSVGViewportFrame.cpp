@@ -168,7 +168,7 @@ nsresult nsSVGViewportFrame::AttributeChanged(int32_t aNameSpaceID,
 
     if (aAttribute == nsGkAtoms::width || aAttribute == nsGkAtoms::height) {
       nsLayoutUtils::PostRestyleEvent(
-          mContent->AsElement(), nsRestyleHint(0),
+          mContent->AsElement(), RestyleHint{0},
           nsChangeHint_InvalidateRenderingObservers);
       nsSVGUtils::ScheduleReflowSVG(this);
 
@@ -205,7 +205,7 @@ nsresult nsSVGViewportFrame::AttributeChanged(int32_t aNameSpaceID,
 
       if (aAttribute == nsGkAtoms::x || aAttribute == nsGkAtoms::y) {
         nsLayoutUtils::PostRestyleEvent(
-            mContent->AsElement(), nsRestyleHint(0),
+            mContent->AsElement(), RestyleHint{0},
             nsChangeHint_InvalidateRenderingObservers);
         nsSVGUtils::ScheduleReflowSVG(this);
       } else if (aAttribute == nsGkAtoms::viewBox ||

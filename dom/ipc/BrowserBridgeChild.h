@@ -12,6 +12,7 @@
 
 namespace mozilla {
 namespace dom {
+class BrowsingContext;
 
 /**
  * Child side for a remote frame.
@@ -27,9 +28,14 @@ class BrowserBridgeChild : public PBrowserBridgeChild {
 
   mozilla::layers::LayersId GetLayersId() { return mLayersId; }
 
+  BrowsingContext* GetBrowsingContext() { return mBrowsingContext; }
+
+  // XXX(nika): We should have a load context here. (bug 1532664)
+  nsILoadContext* GetLoadContext() { return nullptr; }
+
   static already_AddRefed<BrowserBridgeChild> Create(
       nsFrameLoader* aFrameLoader, const TabContext& aContext,
-      const nsString& aRemoteType);
+      const nsString& aRemoteType, BrowsingContext* aBrowsingContext);
 
   void UpdateDimensions(const nsIntRect& aRect,
                         const mozilla::ScreenIntSize& aSize);
@@ -37,6 +43,8 @@ class BrowserBridgeChild : public PBrowserBridgeChild {
   void NavigateByKey(bool aForward, bool aForDocumentNavigation);
 
   void Activate();
+
+  void Deactivate();
 
   static BrowserBridgeChild* GetFrom(nsFrameLoader* aFrameLoader);
 
@@ -48,15 +56,22 @@ class BrowserBridgeChild : public PBrowserBridgeChild {
   mozilla::ipc::IPCResult RecvSetLayersId(
       const mozilla::layers::LayersId& aLayersId);
 
+  mozilla::ipc::IPCResult RecvRequestFocus(const bool& aCanRaise);
+
+  mozilla::ipc::IPCResult RecvMoveFocus(const bool& aForward,
+                                        const bool& aForDocumentNavigation);
+
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
  private:
-  explicit BrowserBridgeChild(nsFrameLoader* aFrameLoader);
+  explicit BrowserBridgeChild(nsFrameLoader* aFrameLoader,
+                              BrowsingContext* aBrowsingContext);
   ~BrowserBridgeChild();
 
   mozilla::layers::LayersId mLayersId;
   bool mIPCOpen;
   RefPtr<nsFrameLoader> mFrameLoader;
+  RefPtr<BrowsingContext> mBrowsingContext;
 };
 
 }  // namespace dom

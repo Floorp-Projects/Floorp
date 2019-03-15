@@ -28,7 +28,7 @@ sixgill_repo=https://hg.mozilla.org/users/sfink_mozilla.com/sixgill
 . $data_dir/build-gcc.sh
 
 pushd $root_dir/gcc-$gcc_version
-ln -sf ../binutils-2.28.1 binutils
+ln -sf ../binutils-2.31.1 binutils
 ln -sf ../gmp-5.1.3 gmp
 ln -sf ../isl-0.15 isl
 ln -sf ../mpc-0.8.2 mpc

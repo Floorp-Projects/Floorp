@@ -31,9 +31,9 @@ SharedWorkerParent::~SharedWorkerParent() = default;
 void SharedWorkerParent::ActorDestroy(IProtocol::ActorDestroyReason aReason) {
   AssertIsOnBackgroundThread();
 
-  if (mWorkerManager) {
-    mWorkerManager->RemoveActor(this);
-    mWorkerManager = nullptr;
+  if (mWorkerManagerWrapper) {
+    mWorkerManagerWrapper->Manager()->RemoveActor(this);
+    mWorkerManagerWrapper = nullptr;
   }
 }
 
@@ -43,14 +43,13 @@ void SharedWorkerParent::Initialize(
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(mStatus == eInit);
 
-  // Let's keep the service alive.
-  mService = SharedWorkerService::GetOrCreate();
-  MOZ_ASSERT(mService);
-
   mWindowID = aWindowID;
 
   mStatus = ePending;
-  mService->GetOrCreateWorkerManager(this, aData, aWindowID, aPortIdentifier);
+
+  RefPtr<SharedWorkerService> service = SharedWorkerService::GetOrCreate();
+  MOZ_ASSERT(service);
+  service->GetOrCreateWorkerManager(this, aData, aWindowID, aPortIdentifier);
 }
 
 IPCResult SharedWorkerParent::RecvClose() {
@@ -59,9 +58,9 @@ IPCResult SharedWorkerParent::RecvClose() {
 
   mStatus = eClosed;
 
-  if (mWorkerManager) {
-    mWorkerManager->RemoveActor(this);
-    mWorkerManager = nullptr;
+  if (mWorkerManagerWrapper) {
+    mWorkerManagerWrapper->Manager()->RemoveActor(this);
+    mWorkerManagerWrapper = nullptr;
   }
 
   Unused << Send__delete__(this);
@@ -76,8 +75,8 @@ IPCResult SharedWorkerParent::RecvSuspend() {
   mSuspended = true;
 
   if (mStatus == eActive) {
-    MOZ_ASSERT(mWorkerManager);
-    mWorkerManager->UpdateSuspend();
+    MOZ_ASSERT(mWorkerManagerWrapper);
+    mWorkerManagerWrapper->Manager()->UpdateSuspend();
   }
 
   return IPC_OK();
@@ -91,8 +90,8 @@ IPCResult SharedWorkerParent::RecvResume() {
   mSuspended = false;
 
   if (mStatus == eActive) {
-    MOZ_ASSERT(mWorkerManager);
-    mWorkerManager->UpdateSuspend();
+    MOZ_ASSERT(mWorkerManagerWrapper);
+    mWorkerManagerWrapper->Manager()->UpdateSuspend();
   }
 
   return IPC_OK();
@@ -106,8 +105,8 @@ IPCResult SharedWorkerParent::RecvFreeze() {
   mFrozen = true;
 
   if (mStatus == eActive) {
-    MOZ_ASSERT(mWorkerManager);
-    mWorkerManager->UpdateFrozen();
+    MOZ_ASSERT(mWorkerManagerWrapper);
+    mWorkerManagerWrapper->Manager()->UpdateFrozen();
   }
 
   return IPC_OK();
@@ -121,30 +120,32 @@ IPCResult SharedWorkerParent::RecvThaw() {
   mFrozen = false;
 
   if (mStatus == eActive) {
-    MOZ_ASSERT(mWorkerManager);
-    mWorkerManager->UpdateFrozen();
+    MOZ_ASSERT(mWorkerManagerWrapper);
+    mWorkerManagerWrapper->Manager()->UpdateFrozen();
   }
 
   return IPC_OK();
 }
 
-void SharedWorkerParent::ManagerCreated(SharedWorkerManager* aWorkerManager) {
+void SharedWorkerParent::ManagerCreated(
+    already_AddRefed<SharedWorkerManagerWrapper> aWorkerManagerWrapper) {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(aWorkerManager);
-  MOZ_ASSERT(!mWorkerManager);
+  MOZ_ASSERT(!mWorkerManagerWrapper);
   MOZ_ASSERT(mStatus == ePending || mStatus == eClosed);
+
+  RefPtr<SharedWorkerManagerWrapper> wrapper = aWorkerManagerWrapper;
 
   // Already gone.
   if (mStatus == eClosed) {
-    aWorkerManager->RemoveActor(this);
+    wrapper->Manager()->RemoveActor(this);
     return;
   }
 
   mStatus = eActive;
-  mWorkerManager = aWorkerManager;
+  mWorkerManagerWrapper = wrapper;
 
-  mWorkerManager->UpdateFrozen();
-  mWorkerManager->UpdateSuspend();
+  mWorkerManagerWrapper->Manager()->UpdateFrozen();
+  mWorkerManagerWrapper->Manager()->UpdateSuspend();
 }
 
 void SharedWorkerParent::ErrorPropagation(nsresult aError) {

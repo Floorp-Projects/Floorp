@@ -679,6 +679,7 @@ nsJARChannel::GetLoadInfo(nsILoadInfo **aLoadInfo) {
 
 NS_IMETHODIMP
 nsJARChannel::SetLoadInfo(nsILoadInfo *aLoadInfo) {
+  MOZ_RELEASE_ASSERT(aLoadInfo, "loadinfo can't be null");
   mLoadInfo = aLoadInfo;
   return NS_OK;
 }
@@ -1015,8 +1016,7 @@ nsJARChannel::OnStartRequest(nsIRequest *req) {
 }
 
 NS_IMETHODIMP
-nsJARChannel::OnStopRequest(nsIRequest *req,
-                            nsresult status) {
+nsJARChannel::OnStopRequest(nsIRequest *req, nsresult status) {
   LOG(("nsJARChannel::OnStopRequest [this=%p %s status=%" PRIx32 "]\n", this,
        mSpec.get(), static_cast<uint32_t>(status)));
 
@@ -1046,9 +1046,8 @@ nsJARChannel::OnStopRequest(nsIRequest *req,
 }
 
 NS_IMETHODIMP
-nsJARChannel::OnDataAvailable(nsIRequest *req,
-                              nsIInputStream *stream, uint64_t offset,
-                              uint32_t count) {
+nsJARChannel::OnDataAvailable(nsIRequest *req, nsIInputStream *stream,
+                              uint64_t offset, uint32_t count) {
   LOG(("nsJARChannel::OnDataAvailable [this=%p %s]\n", this, mSpec.get()));
 
   nsresult rv;

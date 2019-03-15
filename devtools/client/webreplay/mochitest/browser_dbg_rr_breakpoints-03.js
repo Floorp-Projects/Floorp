@@ -9,13 +9,13 @@
 // Test some issues when stepping around after hitting a breakpoint while recording.
 add_task(async function() {
   const dbg = await attachRecordingDebugger("doc_rr_continuous.html");
-  const {threadClient, tab, toolbox} = dbg;
+  const {threadClient, tab, toolbox, target} = dbg;
 
   await threadClient.interrupt();
   const bp1 = await setBreakpoint(threadClient, "doc_rr_continuous.html", 19);
   await resumeToLine(threadClient, 19);
   await reverseStepOverToLine(threadClient, 18);
-  await checkEvaluateInTopFrame(threadClient,
+  await checkEvaluateInTopFrame(target,
     "SpecialPowers.Cu.recordReplayDirective(/* AlwaysTakeTemporarySnapshots */ 3)",
     undefined);
   await stepInToLine(threadClient, 22);

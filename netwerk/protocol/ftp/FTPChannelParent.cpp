@@ -441,8 +441,7 @@ FTPChannelParent::OnStartRequest(nsIRequest* aRequest) {
 }
 
 NS_IMETHODIMP
-FTPChannelParent::OnStopRequest(nsIRequest* aRequest,
-                                nsresult aStatusCode) {
+FTPChannelParent::OnStopRequest(nsIRequest* aRequest, nsresult aStatusCode) {
   LOG(("FTPChannelParent::OnStopRequest: [this=%p status=%" PRIu32 "]\n", this,
        static_cast<uint32_t>(aStatusCode)));
 
@@ -472,8 +471,8 @@ FTPChannelParent::OnDataAvailable(nsIRequest* aRequest,
   if (mDivertingFromChild) {
     MOZ_RELEASE_ASSERT(mDivertToListener,
                        "Cannot divert if listener is unset!");
-    return mDivertToListener->OnDataAvailable(aRequest, aInputStream,
-                                              aOffset, aCount);
+    return mDivertToListener->OnDataAvailable(aRequest, aInputStream, aOffset,
+                                              aCount);
   }
 
   nsCString data;
@@ -516,7 +515,8 @@ FTPChannelParent::NotifyCookieBlocked(uint32_t aRejectedReason) {
 }
 
 NS_IMETHODIMP
-FTPChannelParent::NotifyTrackingResource(bool aIsThirdParty) {
+FTPChannelParent::NotifyClassificationFlags(uint32_t aClassificationFlags,
+                                            bool aIsThirdParty) {
   // One day, this should probably be filled in.
   return NS_OK;
 }

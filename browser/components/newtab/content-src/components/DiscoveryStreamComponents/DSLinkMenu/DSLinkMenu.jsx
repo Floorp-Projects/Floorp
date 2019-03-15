@@ -42,9 +42,9 @@ export class _DSLinkMenu extends React.PureComponent {
   render() {
     const {index, dispatch} = this.props;
     const isContextMenuOpen = this.state.showContextMenu && this.state.activeCard === index;
-    const TOP_STORIES_SOURCE = "TOP_STORIES";
-    const TOP_STORIES_CONTEXT_MENU_OPTIONS = ["OpenInNewWindow", "OpenInPrivateWindow"];
+    const TOP_STORIES_CONTEXT_MENU_OPTIONS = ["OpenInNewWindow", "OpenInPrivateWindow", "Separator", "BlockUrl"];
     const title = this.props.title || this.props.source;
+    const type = this.props.type || "DISCOVERY_STREAM";
 
     return (<div>
       <button ref={this.contextMenuButtonRef}
@@ -59,15 +59,17 @@ export class _DSLinkMenu extends React.PureComponent {
         <LinkMenu
           dispatch={dispatch}
           index={index}
-          source={TOP_STORIES_SOURCE}
+          source={type.toUpperCase()}
           onUpdate={this.onMenuUpdate}
           onShow={this.onMenuShow}
           options={TOP_STORIES_CONTEXT_MENU_OPTIONS}
+          shouldSendImpressionStats={true}
           site={{
             referrer: "https://getpocket.com/recommendations",
             title: this.props.title,
             type: this.props.type,
             url: this.props.url,
+            guid: this.props.id,
           }} />
       }
     </div>);

@@ -4420,121 +4420,149 @@ pref("font.name-list.emoji", "Twemoji Mozilla");
 pref("font.name-list.serif.ar", "serif");
 pref("font.name-list.sans-serif.ar", "sans-serif");
 pref("font.name-list.monospace.ar", "monospace");
+pref("font.name-list.cursive.ar", "cursive");
 pref("font.size.fixed.ar", 12);
 
 pref("font.name-list.serif.el", "serif");
 pref("font.name-list.sans-serif.el", "sans-serif");
 pref("font.name-list.monospace.el", "monospace");
+pref("font.name-list.cursive.el", "cursive");
 pref("font.size.fixed.el", 12);
 
 pref("font.name-list.serif.he", "serif");
 pref("font.name-list.sans-serif.he", "sans-serif");
 pref("font.name-list.monospace.he", "monospace");
+pref("font.name-list.cursive.he", "cursive");
 pref("font.size.fixed.he", 12);
 
 pref("font.name-list.serif.ja", "serif");
 pref("font.name-list.sans-serif.ja", "sans-serif");
 pref("font.name-list.monospace.ja", "monospace");
+pref("font.name-list.cursive.ja", "cursive");
 
 pref("font.name-list.serif.ko", "serif");
 pref("font.name-list.sans-serif.ko", "sans-serif");
 pref("font.name-list.monospace.ko", "monospace");
+pref("font.name-list.cursive.ko", "cursive");
 
 pref("font.name-list.serif.th", "serif");
 pref("font.name-list.sans-serif.th", "sans-serif");
 pref("font.name-list.monospace.th", "monospace");
+pref("font.name-list.cursive.th", "cursive");
 pref("font.minimum-size.th", 13);
 
 pref("font.name-list.serif.x-armn", "serif");
 pref("font.name-list.sans-serif.x-armn", "sans-serif");
 pref("font.name-list.monospace.x-armn", "monospace");
+pref("font.name-list.cursive.x-armn", "cursive");
 
 pref("font.name-list.serif.x-beng", "serif");
 pref("font.name-list.sans-serif.x-beng", "sans-serif");
 pref("font.name-list.monospace.x-beng", "monospace");
+pref("font.name-list.cursive.x-beng", "cursive");
 
 pref("font.name-list.serif.x-cans", "serif");
 pref("font.name-list.sans-serif.x-cans", "sans-serif");
 pref("font.name-list.monospace.x-cans", "monospace");
+pref("font.name-list.cursive.x-cans", "cursive");
 
 pref("font.name-list.serif.x-cyrillic", "serif");
 pref("font.name-list.sans-serif.x-cyrillic", "sans-serif");
 pref("font.name-list.monospace.x-cyrillic", "monospace");
+pref("font.name-list.cursive.x-cyrillic", "cursive");
 pref("font.size.fixed.x-cyrillic", 12);
 
 pref("font.name-list.serif.x-devanagari", "serif");
 pref("font.name-list.sans-serif.x-devanagari", "sans-serif");
 pref("font.name-list.monospace.x-devanagari", "monospace");
+pref("font.name-list.cursive.x-devanagari", "cursive");
 
 pref("font.name-list.serif.x-ethi", "serif");
 pref("font.name-list.sans-serif.x-ethi", "sans-serif");
 pref("font.name-list.monospace.x-ethi", "monospace");
+pref("font.name-list.cursive.x-ethi", "cursive");
 
 pref("font.name-list.serif.x-geor", "serif");
 pref("font.name-list.sans-serif.x-geor", "sans-serif");
 pref("font.name-list.monospace.x-geor", "monospace");
+pref("font.name-list.cursive.x-geor", "cursive");
 
 pref("font.name-list.serif.x-gujr", "serif");
 pref("font.name-list.sans-serif.x-gujr", "sans-serif");
 pref("font.name-list.monospace.x-gujr", "monospace");
+pref("font.name-list.cursive.x-gujr", "cursive");
 
 pref("font.name-list.serif.x-guru", "serif");
 pref("font.name-list.sans-serif.x-guru", "sans-serif");
 pref("font.name-list.monospace.x-guru", "monospace");
+pref("font.name-list.cursive.x-guru", "cursive");
 
 pref("font.name-list.serif.x-khmr", "serif");
 pref("font.name-list.sans-serif.x-khmr", "sans-serif");
 pref("font.name-list.monospace.x-khmr", "monospace");
+pref("font.name-list.cursive.x-khmr", "cursive");
 
 pref("font.name-list.serif.x-knda", "serif");
 pref("font.name-list.sans-serif.x-knda", "sans-serif");
 pref("font.name-list.monospace.x-knda", "monospace");
+pref("font.name-list.cursive.x-knda", "cursive");
 
 pref("font.name-list.serif.x-mlym", "serif");
 pref("font.name-list.sans-serif.x-mlym", "sans-serif");
 pref("font.name-list.monospace.x-mlym", "monospace");
+pref("font.name-list.cursive.x-mlym", "cursive");
 
 pref("font.name-list.serif.x-orya", "serif");
 pref("font.name-list.sans-serif.x-orya", "sans-serif");
 pref("font.name-list.monospace.x-orya", "monospace");
+pref("font.name-list.cursive.x-orya", "cursive");
 
 pref("font.name-list.serif.x-sinh", "serif");
 pref("font.name-list.sans-serif.x-sinh", "sans-serif");
 pref("font.name-list.monospace.x-sinh", "monospace");
+pref("font.name-list.cursive.x-sinh", "cursive");
 
 pref("font.name-list.serif.x-tamil", "serif");
 pref("font.name-list.sans-serif.x-tamil", "sans-serif");
 pref("font.name-list.monospace.x-tamil", "monospace");
+pref("font.name-list.cursive.x-tamil", "cursive");
 
 pref("font.name-list.serif.x-telu", "serif");
 pref("font.name-list.sans-serif.x-telu", "sans-serif");
 pref("font.name-list.monospace.x-telu", "monospace");
+pref("font.name-list.cursive.x-telu", "cursive");
 
 pref("font.name-list.serif.x-tibt", "serif");
 pref("font.name-list.sans-serif.x-tibt", "sans-serif");
 pref("font.name-list.monospace.x-tibt", "monospace");
+pref("font.name-list.cursive.x-tibt", "cursive");
 
 pref("font.name-list.serif.x-unicode", "serif");
 pref("font.name-list.sans-serif.x-unicode", "sans-serif");
 pref("font.name-list.monospace.x-unicode", "monospace");
+pref("font.name-list.cursive.x-unicode", "cursive");
 pref("font.size.fixed.x-unicode", 12);
 
 pref("font.name-list.serif.x-western", "serif");
 pref("font.name-list.sans-serif.x-western", "sans-serif");
 pref("font.name-list.monospace.x-western", "monospace");
+pref("font.name-list.cursive.x-western", "cursive");
 pref("font.size.fixed.x-western", 12);
 
 pref("font.name-list.serif.zh-CN", "serif");
 pref("font.name-list.sans-serif.zh-CN", "sans-serif");
 pref("font.name-list.monospace.zh-CN", "monospace");
+pref("font.name-list.cursive.zh-CN", "cursive");
 
 pref("font.name-list.serif.zh-HK", "serif");
 pref("font.name-list.sans-serif.zh-HK", "sans-serif");
 pref("font.name-list.monospace.zh-HK", "monospace");
+pref("font.name-list.cursive.zh-HK", "cursive");
 
 pref("font.name-list.serif.zh-TW", "serif");
 pref("font.name-list.sans-serif.zh-TW", "sans-serif");
 pref("font.name-list.monospace.zh-TW", "monospace");
+pref("font.name-list.cursive.zh-TW", "cursive");
 
 /* PostScript print module prefs */
 // pref("print.postscript.enabled",      true);
@@ -5233,8 +5261,6 @@ pref("dom.vibrator.max_vibrate_list_len", 128);
 pref("dom.battery.enabled", true);
 
 // Push
-
-pref("dom.push.alwaysConnect", false);
 
 pref("dom.push.loglevel", "Error");
 

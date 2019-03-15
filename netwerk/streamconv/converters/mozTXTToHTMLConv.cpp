@@ -1220,9 +1220,8 @@ mozTXTToHTMLConv::AsyncConvertData(const char* aFromType, const char* aToType,
 }
 
 NS_IMETHODIMP
-mozTXTToHTMLConv::OnDataAvailable(nsIRequest* request,
-                                  nsIInputStream* inStr, uint64_t sourceOffset,
-                                  uint32_t count) {
+mozTXTToHTMLConv::OnDataAvailable(nsIRequest* request, nsIInputStream* inStr,
+                                  uint64_t sourceOffset, uint32_t count) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -1232,8 +1231,7 @@ mozTXTToHTMLConv::OnStartRequest(nsIRequest* request) {
 }
 
 NS_IMETHODIMP
-mozTXTToHTMLConv::OnStopRequest(nsIRequest* request,
-                                nsresult aStatus) {
+mozTXTToHTMLConv::OnStopRequest(nsIRequest* request, nsresult aStatus) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 

@@ -92,10 +92,10 @@ function assertAllHandlerInfosMatchTestData() {
     possibleApplicationHandlers: [{
       name: "Example Default Handler",
       uriTemplate: "https://www.example.com/?url=%s",
-    },{
+    }, {
       name: "Example Possible Handler One",
       uriTemplate: "http://www.example.com/?id=1&url=%s",
-    },{
+    }, {
       name: "Example Possible Handler Two",
       uriTemplate: "http://www.example.com/?id=2&url=%s",
     }],
@@ -126,10 +126,10 @@ function assertAllHandlerInfosMatchTestData() {
     possibleApplicationHandlers: [{
       name: "Example Default Handler",
       uriTemplate: "https://www.example.com/?url=%s",
-    },{
+    }, {
       name: "Example Possible Handler One",
       uriTemplate: "http://www.example.com/?id=1&url=%s",
-    },{
+    }, {
       name: "Example Possible Handler Two",
       uriTemplate: "http://www.example.com/?id=2&url=%s",
     }],
@@ -466,7 +466,7 @@ add_task(async function test_store_deletes_properties_except_extensions() {
     alwaysAskBeforeHandling: false,
     fileExtensions: [
       "example_two",
-      "example_three"
+      "example_three",
     ],
   });
 });
@@ -537,7 +537,7 @@ function assertAllHandlerInfosMatchDefaultHandlers() {
     possibleApplicationHandlers: [{
       name: "Yahoo! Mail",
       uriTemplate: "https://compose.mail.yahoo.com/?To=%s",
-    },{
+    }, {
       name: "Gmail",
       uriTemplate: "https://mail.google.com/mail/?extsrc=mailto&url=%s",
     }],

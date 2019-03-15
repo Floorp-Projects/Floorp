@@ -6432,19 +6432,16 @@ static bool EncodeTableGet(Encoder& e, AstTableGet& s) {
 
 static bool EncodeTableGrow(Encoder& e, AstTableGrow& s) {
   return EncodeExpr(e, s.delta()) && EncodeExpr(e, s.initValue()) &&
-         e.writeOp(MiscOp::TableGrow) &&
-         e.writeVarU32(s.targetTable().index());
+         e.writeOp(MiscOp::TableGrow) && e.writeVarU32(s.targetTable().index());
 }
 
 static bool EncodeTableSet(Encoder& e, AstTableSet& s) {
   return EncodeExpr(e, s.index()) && EncodeExpr(e, s.value()) &&
-         e.writeOp(Op::TableSet) &&
-         e.writeVarU32(s.targetTable().index());
+         e.writeOp(Op::TableSet) && e.writeVarU32(s.targetTable().index());
 }
 
 static bool EncodeTableSize(Encoder& e, AstTableSize& s) {
-  return e.writeOp(MiscOp::TableSize) &&
-         e.writeVarU32(s.targetTable().index());
+  return e.writeOp(MiscOp::TableSize) && e.writeVarU32(s.targetTable().index());
 }
 #endif
 
@@ -7213,8 +7210,8 @@ static bool EncodeElemSegment(Encoder& e, AstElemSegment& segment) {
   for (const AstElem& elem : segment.elems()) {
     if (elem.is<AstRef>()) {
       const AstRef& ref = elem.as<AstRef>();
-      // Passive segments have an initializer expression, for now restricted to a
-      // function index.
+      // Passive segments have an initializer expression, for now restricted to
+      // a function index.
       if (segment.isPassive() && !e.writeFixedU8(uint8_t(Op::RefFunc))) {
         return false;
       }

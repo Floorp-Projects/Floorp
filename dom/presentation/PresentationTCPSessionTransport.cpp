@@ -44,13 +44,10 @@ class CopierCallbacks final : public nsIRequestObserver {
 NS_IMPL_ISUPPORTS(CopierCallbacks, nsIRequestObserver)
 
 NS_IMETHODIMP
-CopierCallbacks::OnStartRequest(nsIRequest* aRequest) {
-  return NS_OK;
-}
+CopierCallbacks::OnStartRequest(nsIRequest* aRequest) { return NS_OK; }
 
 NS_IMETHODIMP
-CopierCallbacks::OnStopRequest(nsIRequest* aRequest,
-                               nsresult aStatus) {
+CopierCallbacks::OnStopRequest(nsIRequest* aRequest, nsresult aStatus) {
   mOwner->NotifyCopyComplete(aStatus);
   return NS_OK;
 }

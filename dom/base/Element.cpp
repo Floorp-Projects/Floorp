@@ -2033,14 +2033,12 @@ nsresult Element::SetSMILOverrideStyleDeclaration(
 
   slots->mSMILOverrideStyleDeclaration = aDeclaration;
 
-  Document* doc = GetComposedDoc();
   // Only need to request a restyle if we're in a document.  (We might not
   // be in a document, if we're clearing animation effects on a target node
   // that's been detached since the previous animation sample.)
-  if (doc) {
-    nsCOMPtr<nsIPresShell> shell = doc->GetShell();
-    if (shell) {
-      shell->RestyleForAnimation(this, eRestyle_StyleAttribute_Animations);
+  if (Document* doc = GetComposedDoc()) {
+    if (nsIPresShell* shell = doc->GetShell()) {
+      shell->RestyleForAnimation(this, StyleRestyleHint_RESTYLE_SMIL);
     }
   }
 
