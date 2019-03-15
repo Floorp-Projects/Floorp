@@ -24,9 +24,9 @@
 #include "mozilla/net/FileChannelParent.h"
 #include "mozilla/net/DNSRequestParent.h"
 #include "mozilla/net/ChannelDiverterParent.h"
+#include "mozilla/net/ClassifierDummyChannelParent.h"
 #include "mozilla/net/IPCTransportProvider.h"
 #include "mozilla/net/RequestContextService.h"
-#include "mozilla/net/TrackingDummyChannelParent.h"
 #include "mozilla/net/SocketProcessParent.h"
 #include "mozilla/net/PSocketProcessBridgeParent.h"
 #ifdef MOZ_WEBRTC
@@ -905,18 +905,18 @@ mozilla::ipc::IPCResult NeckoParent::RecvGetExtensionFD(
   return IPC_OK();
 }
 
-PTrackingDummyChannelParent* NeckoParent::AllocPTrackingDummyChannelParent(
+PClassifierDummyChannelParent* NeckoParent::AllocPClassifierDummyChannelParent(
     nsIURI* aURI, nsIURI* aTopWindowURI, const nsresult& aTopWindowURIResult,
     const Maybe<LoadInfoArgs>& aLoadInfo) {
-  RefPtr<TrackingDummyChannelParent> c = new TrackingDummyChannelParent();
+  RefPtr<ClassifierDummyChannelParent> c = new ClassifierDummyChannelParent();
   return c.forget().take();
 }
 
-mozilla::ipc::IPCResult NeckoParent::RecvPTrackingDummyChannelConstructor(
-    PTrackingDummyChannelParent* aActor, nsIURI* aURI, nsIURI* aTopWindowURI,
+mozilla::ipc::IPCResult NeckoParent::RecvPClassifierDummyChannelConstructor(
+    PClassifierDummyChannelParent* aActor, nsIURI* aURI, nsIURI* aTopWindowURI,
     const nsresult& aTopWindowURIResult, const Maybe<LoadInfoArgs>& aLoadInfo) {
-  TrackingDummyChannelParent* p =
-      static_cast<TrackingDummyChannelParent*>(aActor);
+  ClassifierDummyChannelParent* p =
+      static_cast<ClassifierDummyChannelParent*>(aActor);
 
   if (NS_WARN_IF(!aURI)) {
     return IPC_FAIL_NO_REASON(this);
@@ -932,10 +932,10 @@ mozilla::ipc::IPCResult NeckoParent::RecvPTrackingDummyChannelConstructor(
   return IPC_OK();
 }
 
-bool NeckoParent::DeallocPTrackingDummyChannelParent(
-    PTrackingDummyChannelParent* aActor) {
-  RefPtr<TrackingDummyChannelParent> c =
-      dont_AddRef(static_cast<TrackingDummyChannelParent*>(aActor));
+bool NeckoParent::DeallocPClassifierDummyChannelParent(
+    PClassifierDummyChannelParent* aActor) {
+  RefPtr<ClassifierDummyChannelParent> c =
+      dont_AddRef(static_cast<ClassifierDummyChannelParent*>(aActor));
   MOZ_ASSERT(c);
   return true;
 }

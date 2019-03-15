@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "TrackingDummyChannelChild.h"
+#include "ClassifierDummyChannelChild.h"
 #include "mozilla/ipc/BackgroundUtils.h"
 #include "mozilla/ipc/URIUtils.h"
 #include "nsIChannel.h"
@@ -14,7 +14,7 @@ namespace mozilla {
 namespace net {
 
 /* static */
-bool TrackingDummyChannelChild::Create(
+bool ClassifierDummyChannelChild::Create(
     nsIHttpChannel* aChannel, nsIURI* aURI,
     const std::function<void(bool)>& aCallback) {
   MOZ_ASSERT(NS_IsMainThread());
@@ -37,8 +37,8 @@ bool TrackingDummyChannelChild::Create(
   Maybe<LoadInfoArgs> loadInfoArgs;
   mozilla::ipc::LoadInfoToLoadInfoArgs(loadInfo, &loadInfoArgs);
 
-  PTrackingDummyChannelChild* actor =
-      gNeckoChild->SendPTrackingDummyChannelConstructor(
+  PClassifierDummyChannelChild* actor =
+      gNeckoChild->SendPClassifierDummyChannelConstructor(
           aURI, topWindowURI, topWindowURIResult, loadInfoArgs);
   if (!actor) {
     return false;
@@ -47,16 +47,17 @@ bool TrackingDummyChannelChild::Create(
   bool isThirdParty =
       nsContentUtils::IsThirdPartyWindowOrChannel(nullptr, aChannel, aURI);
 
-  static_cast<TrackingDummyChannelChild*>(actor)->Initialize(
+  static_cast<ClassifierDummyChannelChild*>(actor)->Initialize(
       aChannel, aURI, isThirdParty, aCallback);
   return true;
 }
 
-TrackingDummyChannelChild::TrackingDummyChannelChild() : mIsThirdParty(false) {}
+ClassifierDummyChannelChild::ClassifierDummyChannelChild()
+    : mIsThirdParty(false) {}
 
-TrackingDummyChannelChild::~TrackingDummyChannelChild() = default;
+ClassifierDummyChannelChild::~ClassifierDummyChannelChild() = default;
 
-void TrackingDummyChannelChild::Initialize(
+void ClassifierDummyChannelChild::Initialize(
     nsIHttpChannel* aChannel, nsIURI* aURI, bool aIsThirdParty,
     const std::function<void(bool)>& aCallback) {
   MOZ_ASSERT(NS_IsMainThread());
@@ -67,7 +68,7 @@ void TrackingDummyChannelChild::Initialize(
   mCallback = aCallback;
 }
 
-mozilla::ipc::IPCResult TrackingDummyChannelChild::Recv__delete__(
+mozilla::ipc::IPCResult ClassifierDummyChannelChild::Recv__delete__(
     const uint32_t& aClassificationFlags) {
   MOZ_ASSERT(NS_IsMainThread());
 

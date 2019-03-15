@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "TrackingDummyChannelParent.h"
+#include "ClassifierDummyChannelParent.h"
 #include "mozilla/net/AsyncUrlChannelClassifier.h"
 #include "mozilla/Unused.h"
 #include "nsIChannel.h"
@@ -14,16 +14,17 @@
 namespace mozilla {
 namespace net {
 
-TrackingDummyChannelParent::TrackingDummyChannelParent() : mIPCActive(true) {}
+ClassifierDummyChannelParent::ClassifierDummyChannelParent()
+    : mIPCActive(true) {}
 
-TrackingDummyChannelParent::~TrackingDummyChannelParent() = default;
+ClassifierDummyChannelParent::~ClassifierDummyChannelParent() = default;
 
-void TrackingDummyChannelParent::Init(nsIURI* aURI, nsIURI* aTopWindowURI,
-                                      nsresult aTopWindowURIResult,
-                                      nsILoadInfo* aLoadInfo) {
+void ClassifierDummyChannelParent::Init(nsIURI* aURI, nsIURI* aTopWindowURI,
+                                        nsresult aTopWindowURIResult,
+                                        nsILoadInfo* aLoadInfo) {
   MOZ_ASSERT(mIPCActive);
 
-  RefPtr<TrackingDummyChannelParent> self = this;
+  RefPtr<ClassifierDummyChannelParent> self = this;
   auto onExit =
       MakeScopeExit([self] { Unused << Send__delete__(self, false); });
 
@@ -31,7 +32,7 @@ void TrackingDummyChannelParent::Init(nsIURI* aURI, nsIURI* aTopWindowURI,
     return;
   }
 
-  RefPtr<TrackingDummyChannel> channel = new TrackingDummyChannel(
+  RefPtr<ClassifierDummyChannel> channel = new ClassifierDummyChannel(
       aURI, aTopWindowURI, aTopWindowURIResult, aLoadInfo);
 
   bool willCallback = NS_SUCCEEDED(AsyncUrlChannelClassifier::CheckChannel(
@@ -46,7 +47,7 @@ void TrackingDummyChannelParent::Init(nsIURI* aURI, nsIURI* aTopWindowURI,
   }
 }
 
-void TrackingDummyChannelParent::ActorDestroy(ActorDestroyReason aWhy) {
+void ClassifierDummyChannelParent::ActorDestroy(ActorDestroyReason aWhy) {
   mIPCActive = false;
 }
 
