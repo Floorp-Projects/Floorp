@@ -2,42 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+.connect-page__usb__toggle-button {
+  margin-top: calc(var(--base-unit) * 4);
+}
+
 .connect-page__disabled-section {
   color: var(--grey-40);
-}
-
-.connect-page__breather {
-  margin-block-start: calc(var(--base-unit) * 6);
-}
-
-/*
- *   +--------+----------------------+
- *   | USB    |            |<button> |
- *   +--------+            |         |
- *   | status |            |         |
- *   +--------+----------------------+
- */
-.connect-page__usb-section__heading {
-  display: grid;
-  align-items: center;
-  grid-template-areas: "title  . toggle"
-                       "status . toggle";
-  grid-template-columns: auto 1fr auto;
-  grid-column-gap: calc(var(--base-unit) * 2);
-}
-
-.connect-page__usb-section__heading__toggle {
-  grid-area: toggle;
-}
-
-.connect-page__usb-section__heading__title {
-  grid-area: title;
-  line-height: 1;
-}
-.connect-page__usb-section__heading__status {
-  grid-area: status;
-  line-height: 1;
-  font-size: var(--caption-20-font-size);
-  font-weight: var(--caption-20-font-weight);
-  color: var(--caption-20-color);
 }

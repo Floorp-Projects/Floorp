@@ -21,7 +21,7 @@ const SidebarFixedItem = createFactory(require("./SidebarFixedItem"));
 const SidebarRuntimeItem = createFactory(require("./SidebarRuntimeItem"));
 const RefreshDevicesButton = createFactory(require("./RefreshDevicesButton"));
 const FIREFOX_ICON = "chrome://devtools/skin/images/aboutdebugging-firefox-logo.svg";
-const CONNECT_ICON = "chrome://devtools/skin/images/settings.svg";
+const CONNECT_ICON = "chrome://devtools/skin/images/aboutdebugging-connect-icon.svg";
 const GLOBE_ICON = "chrome://devtools/skin/images/aboutdebugging-globe-icon.svg";
 const USB_ICON = "chrome://devtools/skin/images/aboutdebugging-connect-icon.svg";
 
@@ -133,14 +133,14 @@ class Sidebar extends PureComponent {
       dom.ul(
         {},
         Localized(
-          { id: "about-debugging-sidebar-setup", attrs: { name: true } },
+          { id: "about-debugging-sidebar-connect", attrs: { name: true } },
           SidebarFixedItem({
             dispatch,
             icon: CONNECT_ICON,
             isSelected: PAGE_TYPES.CONNECT === selectedPage,
             key: PAGE_TYPES.CONNECT,
-            name: "Setup",
-            to: "/setup",
+            name: "Connect",
+            to: "/connect",
           })
         ),
         Localized(
