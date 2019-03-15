@@ -6514,6 +6514,8 @@ nsINode* Document::AdoptNode(nsINode& aAdoptedNode, ErrorResult& rv) {
   return adoptedNode;
 }
 
+bool Document::UseWidthDeviceWidthFallbackViewport() const { return false; }
+
 void Document::ParseWidthAndHeightInMetaViewport(
     const nsAString& aWidthString, const nsAString& aHeightString,
     const nsAString& aScaleString) {
@@ -6553,6 +6555,9 @@ void Document::ParseWidthAndHeightInMetaViewport(
       mMinWidth = nsViewportInfo::ExtendToZoom;
       mMaxWidth = nsViewportInfo::ExtendToZoom;
     }
+  } else if (aHeightString.IsEmpty() && UseWidthDeviceWidthFallbackViewport()) {
+    mMinWidth = nsViewportInfo::ExtendToZoom;
+    mMaxWidth = nsViewportInfo::DeviceSize;
   }
 
   mMinHeight = nsViewportInfo::Auto;
