@@ -858,6 +858,7 @@ class ArrowExpanderClass extends Component {
       className: "arrow theme-twisty",
       // To collapse/expand the tree rows use left/right arrow keys.
       tabIndex: "-1",
+      "aria-hidden": true,
       onClick: this.props.expanded
         ? () => this.props.onCollapse(this.props.item)
         : e => this.props.onExpand(this.props.item, e.altKey),
