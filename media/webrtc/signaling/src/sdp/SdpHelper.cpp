@@ -400,9 +400,10 @@ nsresult SdpHelper::GetMsids(const SdpMediaSection& msection,
                              std::vector<SdpMsidAttributeList::Msid>* msids) {
   if (msection.GetAttributeList().HasAttribute(SdpAttribute::kMsidAttribute)) {
     *msids = msection.GetAttributeList().GetMsid().mMsids;
+    return NS_OK;
   }
 
-  // Can we find some additional msids in ssrc attributes?
+  // If there are no a=msid, can we find msids in ssrc attributes?
   // (Chrome does not put plain-old msid attributes in its SDP)
   if (msection.GetAttributeList().HasAttribute(SdpAttribute::kSsrcAttribute)) {
     auto& ssrcs = msection.GetAttributeList().GetSsrc().mSsrcs;
