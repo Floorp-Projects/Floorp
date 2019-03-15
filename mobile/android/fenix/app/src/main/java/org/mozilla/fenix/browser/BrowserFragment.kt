@@ -49,6 +49,7 @@ import org.mozilla.fenix.components.toolbar.ToolbarComponent
 import org.mozilla.fenix.components.toolbar.ToolbarIntegration
 import org.mozilla.fenix.components.toolbar.ToolbarMenu
 import org.mozilla.fenix.components.toolbar.ToolbarUIView
+import org.mozilla.fenix.customtabs.CustomTabsIntegration
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.share
@@ -68,6 +69,8 @@ class BrowserFragment : Fragment(), BackHandler, ComponentCallbacks2 {
     private val sitePermissionsFeature = ViewBoundFeatureWrapper<SitePermissionsFeature>()
     private val fullScreenFeature = ViewBoundFeatureWrapper<FullScreenFeature>()
     private val thumbnailsFeature = ViewBoundFeatureWrapper<ThumbnailsFeature>()
+    private val customTabsIntegration = ViewBoundFeatureWrapper<CustomTabsIntegration>()
+
     var sessionId: String? = null
 
     override fun onCreateView(
@@ -216,6 +219,22 @@ class BrowserFragment : Fragment(), BackHandler, ComponentCallbacks2 {
             owner = this,
             view = view
         )
+
+        val actionEmitter = ActionBusFactory.get(this).getManagedEmitter(SearchAction::class.java)
+        sessionId?.let { id ->
+            customTabsIntegration.set(
+                feature = CustomTabsIntegration(
+                    requireContext(),
+                    requireComponents.core.sessionManager,
+                    toolbar,
+                    id,
+                    requireActivity(),
+                    onItemTapped = { actionEmitter.onNext(SearchAction.ToolbarMenuItemTapped(it)) }
+                ),
+                owner = this,
+                view = view
+            )
+        }
     }
 
     override fun onResume() {

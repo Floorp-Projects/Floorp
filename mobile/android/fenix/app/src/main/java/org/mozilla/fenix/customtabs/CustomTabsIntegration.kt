@@ -1,41 +1,37 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
-   License, v. 2.0. If a copy of the MPL was not distributed with this
-   file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.fenix.components.toolbar
+package org.mozilla.fenix.customtabs
 
+import android.app.Activity
 import android.content.Context
 import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.menu.item.BrowserMenuDivider
 import mozilla.components.browser.menu.item.BrowserMenuImageText
 import mozilla.components.browser.menu.item.BrowserMenuItemToolbar
 import mozilla.components.browser.menu.item.BrowserMenuSwitch
+import mozilla.components.browser.menu.item.SimpleBrowserMenuItem
+import mozilla.components.browser.session.SessionManager
+import mozilla.components.browser.toolbar.BrowserToolbar
+import mozilla.components.feature.customtabs.CustomTabsToolbarFeature
+import mozilla.components.support.base.feature.BackHandler
+import mozilla.components.support.base.feature.LifecycleAwareFeature
 import org.mozilla.fenix.DefaultThemeManager
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.toolbar.ToolbarMenu
 import org.mozilla.fenix.ext.components
 
-class ToolbarMenu(
-    private val context: Context,
-    private val sessionId: String?,
-    private val requestDesktopStateProvider: () -> Boolean = { false },
-    private val onItemTapped: (Item) -> Unit = {}
-) {
-    sealed class Item {
-        object Help : Item()
-        object Settings : Item()
-        object Library : Item()
-        data class RequestDesktop(val isChecked: Boolean) : Item()
-        object FindInPage : Item()
-        object NewPrivateTab : Item()
-        object NewTab : Item()
-        object Share : Item()
-        object Back : Item()
-        object Forward : Item()
-        object Reload : Item()
-        object Stop : Item()
-        object ReportIssue : Item()
-        object OpenInFenix : Item()
-    }
+class CustomTabsIntegration(
+    context: Context,
+    sessionManager: SessionManager,
+    toolbar: BrowserToolbar,
+    sessionId: String,
+    activity: Activity?,
+    onItemTapped: (ToolbarMenu.Item) -> Unit = {}
+
+) : LifecycleAwareFeature, BackHandler {
+    private val session = sessionManager.findSessionById(sessionId)
 
     val menuBuilder by lazy { BrowserMenuBuilder(menuItems) }
 
@@ -56,7 +52,7 @@ class ToolbarMenu(
             ),
             disableInSecondaryState = true
         ) {
-            onItemTapped.invoke(Item.Back)
+            onItemTapped.invoke(ToolbarMenu.Item.Back)
         }
 
         val forward = BrowserMenuItemToolbar.TwoStateButton(
@@ -75,7 +71,7 @@ class ToolbarMenu(
             ),
             disableInSecondaryState = true
         ) {
-            onItemTapped.invoke(Item.Forward)
+            onItemTapped.invoke(ToolbarMenu.Item.Forward)
         }
 
         val refresh = BrowserMenuItemToolbar.TwoStateButton(
@@ -98,9 +94,9 @@ class ToolbarMenu(
             disableInSecondaryState = false
         ) {
             if (context.components.core.sessionManager.selectedSession?.loading == true) {
-                onItemTapped.invoke(Item.Stop)
+                onItemTapped.invoke(ToolbarMenu.Item.Stop)
             } else {
-                onItemTapped.invoke(Item.Reload)
+                onItemTapped.invoke(ToolbarMenu.Item.Reload)
             }
         }
 
@@ -109,84 +105,58 @@ class ToolbarMenu(
 
     private val menuItems by lazy {
         listOf(
-            BrowserMenuImageText(
-                context.getString(R.string.browser_menu_help),
-                R.drawable.ic_help,
+            SimpleBrowserMenuItem(
+                context.getString(R.string.browser_menu_powered_by),
+                ToolbarMenu.CAPTION_TEXT_SIZE,
                 DefaultThemeManager.resolveAttribute(R.attr.browserToolbarMenuIcons, context)
-            ) {
-                onItemTapped.invoke(Item.Help)
-            },
-
-            BrowserMenuImageText(
-                context.getString(R.string.browser_menu_settings),
-                R.drawable.ic_settings,
-                DefaultThemeManager.resolveAttribute(R.attr.browserToolbarMenuIcons, context)
-            ) {
-                onItemTapped.invoke(Item.Settings)
-            },
-
-            BrowserMenuImageText(
-                context.getString(R.string.browser_menu_library),
-                R.drawable.ic_library,
-                DefaultThemeManager.resolveAttribute(R.attr.browserToolbarMenuIcons, context)
-            ) {
-                onItemTapped.invoke(Item.Library)
-            },
-
+            ),
             BrowserMenuDivider(),
-
-            BrowserMenuSwitch(context.getString(R.string.browser_menu_desktop_site),
-                requestDesktopStateProvider, { checked ->
-                    onItemTapped.invoke(Item.RequestDesktop(checked))
-                }),
-
+            SimpleBrowserMenuItem(
+                context.getString(R.string.browser_menu_open_in_fenix),
+                textColorResource = DefaultThemeManager.resolveAttribute(
+                    R.attr.browserToolbarMenuIcons,
+                    context
+                )
+            ) {
+                onItemTapped.invoke(ToolbarMenu.Item.OpenInFenix)
+            },
             BrowserMenuImageText(
                 context.getString(R.string.browser_menu_find_in_page),
                 R.drawable.mozac_ic_search,
                 DefaultThemeManager.resolveAttribute(R.attr.browserToolbarMenuIcons, context)
             ) {
-                onItemTapped.invoke(Item.FindInPage)
+                onItemTapped.invoke(ToolbarMenu.Item.FindInPage)
             },
-
-            BrowserMenuImageText(
-                context.getString(R.string.browser_menu_private_tab),
-                R.drawable.ic_private_browsing,
-                DefaultThemeManager.resolveAttribute(R.attr.browserToolbarMenuIcons, context)
-            ) {
-                onItemTapped.invoke(Item.NewPrivateTab)
-            },
-
-            BrowserMenuImageText(
-                context.getString(R.string.browser_menu_new_tab),
-                R.drawable.ic_new,
-                DefaultThemeManager.resolveAttribute(R.attr.browserToolbarMenuIcons, context)
-            ) {
-                onItemTapped.invoke(Item.NewTab)
-            },
-
+            BrowserMenuSwitch(context.getString(R.string.browser_menu_desktop_site),
+                { session?.desktopMode ?: false }, { checked ->
+                    onItemTapped.invoke(ToolbarMenu.Item.RequestDesktop(checked))
+                }),
             BrowserMenuImageText(
                 context.getString(R.string.browser_menu_share),
                 R.drawable.mozac_ic_share,
                 DefaultThemeManager.resolveAttribute(R.attr.browserToolbarMenuIcons, context)
             ) {
-                onItemTapped.invoke(Item.Share)
+                onItemTapped.invoke(ToolbarMenu.Item.Share)
             },
-
-            BrowserMenuImageText(
-                context.getString(R.string.browser_menu_report_issue),
-                R.drawable.ic_report_issues,
-                DefaultThemeManager.resolveAttribute(R.attr.browserToolbarMenuIcons, context)
-            ) {
-                onItemTapped.invoke(Item.ReportIssue)
-            },
-
-            BrowserMenuDivider(),
-
             menuToolbar
         )
     }
+    private val feature = CustomTabsToolbarFeature(
+        sessionManager,
+        toolbar,
+        sessionId,
+        menuBuilder,
+        closeListener = { activity?.finish() })
 
-    companion object {
-        const val CAPTION_TEXT_SIZE = 12f
+    override fun start() {
+        feature.start()
+    }
+
+    override fun stop() {
+        feature.stop()
+    }
+
+    override fun onBackPressed(): Boolean {
+        return feature.onBackPressed()
     }
 }
