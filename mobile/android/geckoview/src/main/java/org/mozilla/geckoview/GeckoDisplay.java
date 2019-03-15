@@ -38,7 +38,7 @@ public class GeckoDisplay {
      * @param height New height of the Surface. Can not be negative.
      */
     @UiThread
-    public void surfaceChanged(@NonNull Surface surface, int width, int height) {
+    public void surfaceChanged(@NonNull final Surface surface, final int width, final int height) {
         surfaceChanged(surface, 0, 0, width, height);
     }
 
@@ -58,7 +58,8 @@ public class GeckoDisplay {
      * @throws IllegalArgumentException if left or top are negative.
      */
     @UiThread
-    public void surfaceChanged(@NonNull Surface surface, int left, int top, int width, int height) {
+    public void surfaceChanged(@NonNull final Surface surface, final int left, final int top,
+                               final int width, final int height) {
         ThreadUtils.assertOnUiThread();
 
         if ((left < 0) || (top < 0)) {

@@ -134,8 +134,8 @@ import android.view.inputmethod.EditorInfo;
     private static final int IME_RANGE_BACKCOLOR = 4;
     private static final int IME_RANGE_LINECOLOR = 8;
 
-    private void onKeyEvent(final IGeckoEditableChild child, KeyEvent event, int action,
-                            int savedMetaState, boolean isSynthesizedImeKey)
+    private void onKeyEvent(final IGeckoEditableChild child, final KeyEvent event, final int action,
+                            final int savedMetaState, final boolean isSynthesizedImeKey)
             throws RemoteException {
         // Use a separate action argument so we can override the key's original action,
         // e.g. change ACTION_MULTIPLE to ACTION_DOWN. That way we don't have to allocate
@@ -451,11 +451,11 @@ import android.view.inputmethod.EditorInfo;
         int mSpanFlags;
         Handler mHandler;
 
-        Action(int type) {
+        Action(final int type) {
             mType = type;
         }
 
-        static Action newReplaceText(CharSequence text, int start, int end) {
+        static Action newReplaceText(final CharSequence text, final int start, final int end) {
             if (start < 0 || start > end) {
                 Log.e(LOGTAG, "invalid replace text offsets: " + start + " to " + end);
                 throw new IllegalArgumentException("invalid replace text offsets");
@@ -468,7 +468,8 @@ import android.view.inputmethod.EditorInfo;
             return action;
         }
 
-        static Action newSetSpan(Object object, int start, int end, int flags) {
+        static Action newSetSpan(final Object object, final int start, final int end,
+                                 final int flags) {
             if (start < 0 || start > end) {
                 Log.e(LOGTAG, "invalid span offsets: " + start + " to " + end);
                 throw new IllegalArgumentException("invalid span offsets");
@@ -481,13 +482,13 @@ import android.view.inputmethod.EditorInfo;
             return action;
         }
 
-        static Action newRemoveSpan(Object object) {
+        static Action newRemoveSpan(final Object object) {
             final Action action = new Action(TYPE_REMOVE_SPAN);
             action.mSpanObject = object;
             return action;
         }
 
-        static Action newSetHandler(Handler handler) {
+        static Action newSetHandler(final Handler handler) {
             final Action action = new Action(TYPE_SET_HANDLER);
             action.mHandler = handler;
             return action;
@@ -601,7 +602,7 @@ import android.view.inputmethod.EditorInfo;
         }
     }
 
-    private KeyEvent [] synthesizeKeyEvents(CharSequence cs) {
+    private KeyEvent [] synthesizeKeyEvents(final CharSequence cs) {
         try {
             if (mKeyMap == null) {
                 mKeyMap = KeyCharacterMap.load(KeyCharacterMap.VIRTUAL_KEYBOARD);
@@ -619,7 +620,7 @@ import android.view.inputmethod.EditorInfo;
         return keyEvents;
     }
 
-    private void sendCharKeyEvents(Action action) throws RemoteException {
+    private void sendCharKeyEvents(final Action action) throws RemoteException {
         if (action.mSequence.length() != 1 ||
             (action.mSequence instanceof Spannable &&
             ((Spannable)action.mSequence).nextSpanTransition(
@@ -700,7 +701,7 @@ import android.view.inputmethod.EditorInfo;
         ThreadUtils.assertOnThread(mIcRunHandler.getLooper().getThread(), AssertBehavior.THROW);
     }
 
-    private Object getField(Object obj, String field, Object def) {
+    private Object getField(final Object obj, final String field, final Object def) {
         try {
             return obj.getClass().getField(field).get(obj);
         } catch (Exception e) {
@@ -894,7 +895,8 @@ import android.view.inputmethod.EditorInfo;
     }
 
     @Override // SessionTextInput.EditableClient
-    public void sendKeyEvent(final @Nullable View view, final int action, @NonNull KeyEvent event) {
+    public void sendKeyEvent(final @Nullable View view, final int action,
+                             final @NonNull KeyEvent event) {
         final Editable editable = mProxy;
         final KeyListener keyListener = TextKeyListener.getInstance();
         KeyEvent translatedEvent = translateKey(event.getKeyCode(), event);
@@ -1011,7 +1013,7 @@ import android.view.inputmethod.EditorInfo;
     }
 
     @Override // SessionTextInput.EditableClient
-    public void setBatchMode(boolean inBatchMode) {
+    public void setBatchMode(final boolean inBatchMode) {
         if (!onIcThread()) {
             // Android may be holding an old InputConnection; ignore
             if (DEBUG) {
@@ -1042,7 +1044,7 @@ import android.view.inputmethod.EditorInfo;
         mText.syncShadowText(mListener);
     }
 
-    private void setSuppressKeyUp(boolean suppress) {
+    private void setSuppressKeyUp(final boolean suppress) {
         if (DEBUG) {
             assertOnIcThread();
         }
@@ -1097,7 +1099,7 @@ import android.view.inputmethod.EditorInfo;
     }
 
     @Override // SessionTextInput.EditableClient
-    public void requestCursorUpdates(int requestMode) {
+    public void requestCursorUpdates(final int requestMode) {
         try {
             if (mFocusedChild != null) {
                 mFocusedChild.onImeRequestCursorUpdates(requestMode);
@@ -1660,7 +1662,7 @@ import android.view.inputmethod.EditorInfo;
         });
     }
 
-    private boolean geckoIsSameText(int start, int oldEnd, CharSequence newText) {
+    private boolean geckoIsSameText(final int start, final int oldEnd, final CharSequence newText) {
         return oldEnd - start == newText.length() && TextUtils.regionMatches(
                 mText.getCurrentText(), start, newText, 0, oldEnd - start);
     }
@@ -1792,7 +1794,7 @@ import android.view.inputmethod.EditorInfo;
 
     // InvocationHandler interface
 
-    static String getConstantName(Class<?> cls, String prefix, Object value) {
+    static String getConstantName(final Class<?> cls, final String prefix, final Object value) {
         for (Field fld : cls.getDeclaredFields()) {
             try {
                 if (fld.getName().startsWith(prefix) &&
@@ -1805,7 +1807,7 @@ import android.view.inputmethod.EditorInfo;
         return String.valueOf(value);
     }
 
-    private static String getPrintableChar(char chr) {
+    private static String getPrintableChar(final char chr) {
         if (chr >= 0x20 && chr <= 0x7e) {
             return String.valueOf(chr);
         } else if (chr == '\n') {
@@ -1814,7 +1816,7 @@ import android.view.inputmethod.EditorInfo;
         return String.format("\\u%04x", (int) chr);
     }
 
-    static StringBuilder debugAppend(StringBuilder sb, Object obj) {
+    static StringBuilder debugAppend(final StringBuilder sb, final Object obj) {
         if (obj == null) {
             sb.append("null");
         } else if (obj instanceof GeckoEditable) {
@@ -1847,8 +1849,8 @@ import android.view.inputmethod.EditorInfo;
     }
 
     @Override
-    public Object invoke(Object proxy, Method method, Object[] args)
-                         throws Throwable {
+    public Object invoke(final Object proxy, final Method method, final Object[] args)
+            throws Throwable {
         Object target;
         final Class<?> methodInterface = method.getDeclaringClass();
         if (DEBUG) {
@@ -1889,7 +1891,7 @@ import android.view.inputmethod.EditorInfo;
     // Spannable interface
 
     @Override
-    public void removeSpan(Object what) {
+    public void removeSpan(final Object what) {
         if (what == null) {
             return;
         }
@@ -1903,24 +1905,24 @@ import android.view.inputmethod.EditorInfo;
     }
 
     @Override
-    public void setSpan(Object what, int start, int end, int flags) {
+    public void setSpan(final Object what, final int start, final int end, final int flags) {
         icOfferAction(Action.newSetSpan(what, start, end, flags));
     }
 
     // Appendable interface
 
     @Override
-    public Editable append(CharSequence text) {
+    public Editable append(final CharSequence text) {
         return replace(mProxy.length(), mProxy.length(), text, 0, text.length());
     }
 
     @Override
-    public Editable append(CharSequence text, int start, int end) {
+    public Editable append(final CharSequence text, final int start, final int end) {
         return replace(mProxy.length(), mProxy.length(), text, start, end);
     }
 
     @Override
-    public Editable append(char text) {
+    public Editable append(final char text) {
         return replace(mProxy.length(), mProxy.length(), String.valueOf(text), 0, 1);
     }
 
@@ -1932,7 +1934,7 @@ import android.view.inputmethod.EditorInfo;
     }
 
     @Override
-    public void setFilters(InputFilter[] filters) {
+    public void setFilters(final InputFilter[] filters) {
         mFilters = filters;
     }
 
@@ -1945,9 +1947,8 @@ import android.view.inputmethod.EditorInfo;
     }
 
     @Override
-    public Editable replace(int st, int en,
-            CharSequence source, int start, int end) {
-
+    public Editable replace(final int st, final int en, final CharSequence source,
+                            final int start, final int end) {
         CharSequence text = source;
         if (start < 0 || start > end || end > text.length()) {
             Log.e(LOGTAG, "invalid replace offsets: " +
@@ -1981,30 +1982,30 @@ import android.view.inputmethod.EditorInfo;
     }
 
     @Override
-    public Editable delete(int st, int en) {
+    public Editable delete(final int st, final int en) {
         return replace(st, en, "", 0, 0);
     }
 
     @Override
-    public Editable insert(int where, CharSequence text,
-                                int start, int end) {
+    public Editable insert(final int where, final CharSequence text, final int start,
+                           final int end) {
         return replace(where, where, text, start, end);
     }
 
     @Override
-    public Editable insert(int where, CharSequence text) {
+    public Editable insert(final int where, final CharSequence text) {
         return replace(where, where, text, 0, text.length());
     }
 
     @Override
-    public Editable replace(int st, int en, CharSequence text) {
+    public Editable replace(final int st, final int en, final CharSequence text) {
         return replace(st, en, text, 0, text.length());
     }
 
     /* GetChars interface */
 
     @Override
-    public void getChars(int start, int end, char[] dest, int destoff) {
+    public void getChars(final int start, final int end, final char[] dest, final int destoff) {
         /* overridden Editable interface methods in GeckoEditable must not be called directly
            outside of GeckoEditable. Instead, the call must go through mProxy, which ensures
            that Java is properly synchronized with Gecko */
@@ -2014,35 +2015,35 @@ import android.view.inputmethod.EditorInfo;
     /* Spanned interface */
 
     @Override
-    public int getSpanEnd(Object tag) {
+    public int getSpanEnd(final Object tag) {
         throw new UnsupportedOperationException("method must be called through mProxy");
     }
 
     @Override
-    public int getSpanFlags(Object tag) {
+    public int getSpanFlags(final Object tag) {
         throw new UnsupportedOperationException("method must be called through mProxy");
     }
 
     @Override
-    public int getSpanStart(Object tag) {
+    public int getSpanStart(final Object tag) {
         throw new UnsupportedOperationException("method must be called through mProxy");
     }
 
     @Override
-    public <T> T[] getSpans(int start, int end, Class<T> type) {
+    public <T> T[] getSpans(final int start, final int end, final Class<T> type) {
         throw new UnsupportedOperationException("method must be called through mProxy");
     }
 
     @Override
     @SuppressWarnings("rawtypes") // nextSpanTransition uses raw Class in its Android declaration
-    public int nextSpanTransition(int start, int limit, Class type) {
+    public int nextSpanTransition(final int start, final int limit, final Class type) {
         throw new UnsupportedOperationException("method must be called through mProxy");
     }
 
     /* CharSequence interface */
 
     @Override
-    public char charAt(int index) {
+    public char charAt(final int index) {
         throw new UnsupportedOperationException("method must be called through mProxy");
     }
 
@@ -2052,7 +2053,7 @@ import android.view.inputmethod.EditorInfo;
     }
 
     @Override
-    public CharSequence subSequence(int start, int end) {
+    public CharSequence subSequence(final int start, final int end) {
         throw new UnsupportedOperationException("method must be called through mProxy");
     }
 
@@ -2076,8 +2077,8 @@ import android.view.inputmethod.EditorInfo;
         return processKey(view, KeyEvent.ACTION_UP, keyCode, event);
     }
 
-    public boolean onKeyMultiple(final @Nullable View view, final int keyCode, int repeatCount,
-                                 final @NonNull KeyEvent event) {
+    public boolean onKeyMultiple(final @Nullable View view, final int keyCode,
+                                 final int repeatCount, final @NonNull KeyEvent event) {
         if (keyCode == KeyEvent.KEYCODE_UNKNOWN) {
             // KEYCODE_UNKNOWN means the characters are in KeyEvent.getCharacters()
             final String str = event.getCharacters();
@@ -2121,7 +2122,7 @@ import android.view.inputmethod.EditorInfo;
             }
 
             @Override
-            public int getUnicodeChar(int metaState) {
+            public int getUnicodeChar(final int metaState) {
                 return c;
             }
         };
@@ -2142,7 +2143,7 @@ import android.view.inputmethod.EditorInfo;
         return true;
     }
 
-    private static boolean shouldProcessKey(int keyCode, KeyEvent event) {
+    private static boolean shouldProcessKey(final int keyCode, final KeyEvent event) {
         switch (keyCode) {
             case KeyEvent.KEYCODE_MENU:
             case KeyEvent.KEYCODE_BACK:

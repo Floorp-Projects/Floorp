@@ -29,19 +29,20 @@ public final class BitmapUtils {
 
     private BitmapUtils() {}
 
-    public static Bitmap decodeByteArray(byte[] bytes) {
+    public static Bitmap decodeByteArray(final byte[] bytes) {
         return decodeByteArray(bytes, null);
     }
 
-    public static Bitmap decodeByteArray(byte[] bytes, BitmapFactory.Options options) {
+    public static Bitmap decodeByteArray(final byte[] bytes, final BitmapFactory.Options options) {
         return decodeByteArray(bytes, 0, bytes.length, options);
     }
 
-    public static Bitmap decodeByteArray(byte[] bytes, int offset, int length) {
+    public static Bitmap decodeByteArray(final byte[] bytes, final int offset, final int length) {
         return decodeByteArray(bytes, offset, length, null);
     }
 
-    public static Bitmap decodeByteArray(byte[] bytes, int offset, int length, BitmapFactory.Options options) {
+    public static Bitmap decodeByteArray(final byte[] bytes, final int offset, final int length,
+                                         final BitmapFactory.Options options) {
         if (bytes.length <= 0) {
             throw new IllegalArgumentException("bytes.length " + bytes.length
                                                + " must be a positive number");
@@ -71,7 +72,7 @@ public final class BitmapUtils {
         return bitmap;
     }
 
-    public static Bitmap decodeStream(InputStream inputStream) {
+    public static Bitmap decodeStream(final InputStream inputStream) {
         try {
             return BitmapFactory.decodeStream(inputStream);
         } catch (OutOfMemoryError e) {
@@ -80,11 +81,11 @@ public final class BitmapUtils {
         }
     }
 
-    public static Bitmap decodeUrl(Uri uri) {
+    public static Bitmap decodeUrl(final Uri uri) {
         return decodeUrl(uri.toString());
     }
 
-    public static Bitmap decodeUrl(String urlString) {
+    public static Bitmap decodeUrl(final String urlString) {
         URL url;
 
         try {
@@ -97,7 +98,7 @@ public final class BitmapUtils {
         return decodeUrl(url);
     }
 
-    public static Bitmap decodeUrl(URL url) {
+    public static Bitmap decodeUrl(final URL url) {
         InputStream stream = null;
 
         try {
@@ -123,11 +124,12 @@ public final class BitmapUtils {
         return bitmap;
     }
 
-    public static Bitmap decodeResource(Context context, int id) {
+    public static Bitmap decodeResource(final Context context, final int id) {
         return decodeResource(context, id, null);
     }
 
-    public static Bitmap decodeResource(Context context, int id, BitmapFactory.Options options) {
+    public static Bitmap decodeResource(final Context context, final int id,
+                                        final BitmapFactory.Options options) {
         Resources resources = context.getResources();
         try {
             return BitmapFactory.decodeResource(resources, id, options);
@@ -137,7 +139,8 @@ public final class BitmapUtils {
         }
     }
 
-    public static @ColorInt int getDominantColor(Bitmap source, @ColorInt int defaultColor) {
+    public static @ColorInt int getDominantColor(final Bitmap source,
+                                                 final @ColorInt int defaultColor) {
         if (HardwareUtils.isX86System()) {
             // (Bug 1318667) We are running into crashes when using the palette library with
             // specific icons on x86 devices. They take down the whole VM and are not recoverable.
@@ -160,13 +163,12 @@ public final class BitmapUtils {
         }
     }
 
-    public static @ColorInt int getDominantColorCustomImplementation(Bitmap source) {
+    public static @ColorInt int getDominantColorCustomImplementation(final Bitmap source) {
         return getDominantColorCustomImplementation(source, true, Color.WHITE);
     }
 
-    public static @ColorInt int getDominantColorCustomImplementation(Bitmap source,
-                                                                     boolean applyThreshold,
-                                                                     @ColorInt int defaultColor) {
+    public static @ColorInt int getDominantColorCustomImplementation(
+        final Bitmap source, final boolean applyThreshold, final @ColorInt int defaultColor) {
       if (source == null) {
           return defaultColor;
       }
@@ -238,7 +240,7 @@ public final class BitmapUtils {
      * @param dataURI a Base64-encoded data URI string
      * @return        the decoded bitmap, or null if the data URI is invalid
      */
-    public static Bitmap getBitmapFromDataURI(String dataURI) {
+    public static Bitmap getBitmapFromDataURI(final String dataURI) {
         if (dataURI == null) {
             return null;
         }
@@ -255,7 +257,7 @@ public final class BitmapUtils {
      * Return a byte[] containing the bytes in a given base64 string, or null if this is not a valid
      * base64 string.
      */
-    public static byte[] getBytesFromBase64(String base64) {
+    public static byte[] getBytesFromBase64(final String base64) {
         try {
             return Base64.decode(base64, Base64.DEFAULT);
         } catch (Exception e) {
@@ -265,12 +267,12 @@ public final class BitmapUtils {
         return null;
     }
 
-    public static byte[] getBytesFromDataURI(String dataURI) {
+    public static byte[] getBytesFromDataURI(final String dataURI) {
         final String base64 = dataURI.substring(dataURI.indexOf(',') + 1);
         return getBytesFromBase64(base64);
     }
 
-    public static Bitmap getBitmapFromDrawable(Drawable drawable) {
+    public static Bitmap getBitmapFromDrawable(final Drawable drawable) {
         if (drawable instanceof BitmapDrawable) {
             return ((BitmapDrawable) drawable).getBitmap();
         }

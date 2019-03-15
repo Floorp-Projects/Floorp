@@ -39,7 +39,7 @@ final class RemoteMediaDrmBridgeStub extends IMediaDrmBridge.Stub implements IBi
         return mBridge != null ? mBridge.getMediaCrypto() : null;
     }
 
-    public static synchronized MediaCrypto getMediaCrypto(String stubId) {
+    public static synchronized MediaCrypto getMediaCrypto(final String stubId) {
         if (DEBUG) Log.d(LOGTAG, "getMediaCrypto()");
 
         for (int i = 0; i < mBridgeStubs.size(); i++) {
@@ -55,15 +55,15 @@ final class RemoteMediaDrmBridgeStub extends IMediaDrmBridge.Stub implements IBi
     private final class Callbacks implements GeckoMediaDrm.Callbacks {
         private IMediaDrmBridgeCallbacks mRemoteCallbacks;
 
-        public Callbacks(IMediaDrmBridgeCallbacks remote) {
+        public Callbacks(final IMediaDrmBridgeCallbacks remote) {
             mRemoteCallbacks = remote;
         }
 
         @Override
-        public void onSessionCreated(int createSessionToken,
-                                     int promiseId,
-                                     byte[] sessionId,
-                                     byte[] request) {
+        public void onSessionCreated(final int createSessionToken,
+                                     final int promiseId,
+                                     final byte[] sessionId,
+                                     final byte[] request) {
             if (DEBUG) Log.d(LOGTAG, "onSessionCreated()");
             try {
                 mRemoteCallbacks.onSessionCreated(createSessionToken,
@@ -76,7 +76,7 @@ final class RemoteMediaDrmBridgeStub extends IMediaDrmBridge.Stub implements IBi
         }
 
         @Override
-        public void onSessionUpdated(int promiseId, byte[] sessionId) {
+        public void onSessionUpdated(final int promiseId, final byte[] sessionId) {
             if (DEBUG) Log.d(LOGTAG, "onSessionUpdated()");
             try {
                 mRemoteCallbacks.onSessionUpdated(promiseId, sessionId);
@@ -86,7 +86,7 @@ final class RemoteMediaDrmBridgeStub extends IMediaDrmBridge.Stub implements IBi
         }
 
         @Override
-        public void onSessionClosed(int promiseId, byte[] sessionId) {
+        public void onSessionClosed(final int promiseId, final byte[] sessionId) {
             if (DEBUG) Log.d(LOGTAG, "onSessionClosed()");
             try {
                 mRemoteCallbacks.onSessionClosed(promiseId, sessionId);
@@ -96,9 +96,9 @@ final class RemoteMediaDrmBridgeStub extends IMediaDrmBridge.Stub implements IBi
         }
 
         @Override
-        public void onSessionMessage(byte[] sessionId,
-                                     int sessionMessageType,
-                                     byte[] request) {
+        public void onSessionMessage(final byte[] sessionId,
+                                     final int sessionMessageType,
+                                     final byte[] request) {
             if (DEBUG) Log.d(LOGTAG, "onSessionMessage()");
             try {
                 mRemoteCallbacks.onSessionMessage(sessionId, sessionMessageType, request);
@@ -108,7 +108,7 @@ final class RemoteMediaDrmBridgeStub extends IMediaDrmBridge.Stub implements IBi
         }
 
         @Override
-        public void onSessionError(byte[] sessionId, String message) {
+        public void onSessionError(final byte[] sessionId, final String message) {
             if (DEBUG) Log.d(LOGTAG, "onSessionError()");
             try {
                 mRemoteCallbacks.onSessionError(sessionId, message);
@@ -118,8 +118,8 @@ final class RemoteMediaDrmBridgeStub extends IMediaDrmBridge.Stub implements IBi
         }
 
         @Override
-        public void onSessionBatchedKeyChanged(byte[] sessionId,
-                                               SessionKeyInfo[] keyInfos) {
+        public void onSessionBatchedKeyChanged(final byte[] sessionId,
+                                               final SessionKeyInfo[] keyInfos) {
             if (DEBUG) Log.d(LOGTAG, "onSessionBatchedKeyChanged()");
             try {
                 mRemoteCallbacks.onSessionBatchedKeyChanged(sessionId, keyInfos);
@@ -129,7 +129,7 @@ final class RemoteMediaDrmBridgeStub extends IMediaDrmBridge.Stub implements IBi
         }
 
         @Override
-        public void onRejectPromise(int promiseId, String message) {
+        public void onRejectPromise(final int promiseId, final String message) {
             if (DEBUG) Log.d(LOGTAG, "onRejectPromise()");
             try {
                 mRemoteCallbacks.onRejectPromise(promiseId, message);
@@ -139,13 +139,13 @@ final class RemoteMediaDrmBridgeStub extends IMediaDrmBridge.Stub implements IBi
         }
     }
 
-    /* package-private */ void assertTrue(boolean condition) {
+    /* package-private */ void assertTrue(final boolean condition) {
         if (DEBUG && !condition) {
             throw new AssertionError("Expected condition to be true");
         }
     }
 
-    RemoteMediaDrmBridgeStub(String keySystem, String stubId) throws RemoteException {
+    RemoteMediaDrmBridgeStub(final String keySystem, final String stubId) throws RemoteException {
         if (Build.VERSION.SDK_INT < 21) {
             Log.e(LOGTAG, "Pre-Lollipop should never enter here!!");
             throw new RemoteException("Error, unsupported version!");
@@ -164,7 +164,8 @@ final class RemoteMediaDrmBridgeStub extends IMediaDrmBridge.Stub implements IBi
     }
 
     @Override
-    public synchronized void setCallbacks(IMediaDrmBridgeCallbacks callbacks) throws RemoteException {
+    public synchronized void setCallbacks(final IMediaDrmBridgeCallbacks callbacks)
+            throws RemoteException {
         if (DEBUG) Log.d(LOGTAG, "setCallbacks()");
         assertTrue(mBridge != null);
         assertTrue(callbacks != null);
@@ -174,10 +175,10 @@ final class RemoteMediaDrmBridgeStub extends IMediaDrmBridge.Stub implements IBi
     }
 
     @Override
-    public synchronized void createSession(int createSessionToken,
-                                           int promiseId,
-                                           String initDataType,
-                                           byte[] initData) throws RemoteException {
+    public synchronized void createSession(final int createSessionToken,
+                                           final int promiseId,
+                                           final String initDataType,
+                                           final byte[] initData) throws RemoteException {
         if (DEBUG) Log.d(LOGTAG, "createSession()");
         try {
             assertTrue(mCallbacks != null);
@@ -193,9 +194,9 @@ final class RemoteMediaDrmBridgeStub extends IMediaDrmBridge.Stub implements IBi
     }
 
     @Override
-    public synchronized void updateSession(int promiseId,
-                                           String sessionId,
-                                           byte[] response) throws RemoteException {
+    public synchronized void updateSession(final int promiseId,
+                                           final String sessionId,
+                                           final byte[] response) throws RemoteException {
         if (DEBUG) Log.d(LOGTAG, "updateSession()");
         try {
             assertTrue(mCallbacks != null);
@@ -208,7 +209,8 @@ final class RemoteMediaDrmBridgeStub extends IMediaDrmBridge.Stub implements IBi
     }
 
     @Override
-    public synchronized void closeSession(int promiseId, String sessionId) throws RemoteException {
+    public synchronized void closeSession(final int promiseId, final String sessionId)
+            throws RemoteException {
         if (DEBUG) Log.d(LOGTAG, "closeSession()");
         try {
             assertTrue(mCallbacks != null);

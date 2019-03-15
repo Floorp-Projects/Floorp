@@ -114,7 +114,7 @@ public class SessionAccessibility {
 
     /* package */ final class NodeProvider extends AccessibilityNodeProvider {
         @Override
-        public AccessibilityNodeInfo createAccessibilityNodeInfo(int virtualDescendantId) {
+        public AccessibilityNodeInfo createAccessibilityNodeInfo(final int virtualDescendantId) {
             AccessibilityNodeInfo node = null;
             if (mAttached) {
                 node = mSession.getSettings().getFullAccessibilityTree() ?
@@ -136,7 +136,8 @@ public class SessionAccessibility {
         }
 
         @Override
-        public boolean performAction(final int virtualViewId, int action, Bundle arguments) {
+        public boolean performAction(final int virtualViewId, final int action,
+                                     final Bundle arguments) {
             final GeckoBundle data;
 
             switch (action) {
@@ -242,7 +243,7 @@ public class SessionAccessibility {
         }
 
         @Override
-        public AccessibilityNodeInfo findFocus(int focus) {
+        public AccessibilityNodeInfo findFocus(final int focus) {
             switch (focus) {
                 case AccessibilityNodeInfo.FOCUS_ACCESSIBILITY:
                     if (mAccessibilityFocusedNode != 0) {
@@ -557,7 +558,7 @@ public class SessionAccessibility {
             accessibilityManager.addAccessibilityStateChangeListener(
             new AccessibilityManager.AccessibilityStateChangeListener() {
                 @Override
-                public void onAccessibilityStateChanged(boolean enabled) {
+                public void onAccessibilityStateChanged(final boolean enabled) {
                     updateAccessibilitySettings();
                 }
             }
@@ -567,7 +568,7 @@ public class SessionAccessibility {
                 accessibilityManager.addTouchExplorationStateChangeListener(
                 new AccessibilityManager.TouchExplorationStateChangeListener() {
                     @Override
-                    public void onTouchExplorationStateChanged(boolean enabled) {
+                    public void onTouchExplorationStateChanged(final boolean enabled) {
                         updateAccessibilitySettings();
                     }
                 }
@@ -576,7 +577,7 @@ public class SessionAccessibility {
 
             PrefsHelper.PrefHandler prefHandler = new PrefsHelper.PrefHandlerBase() {
                 @Override
-                public void prefValue(String pref, int value) {
+                public void prefValue(final String pref, final int value) {
                     if (pref.equals(FORCE_ACCESSIBILITY_PREF)) {
                         sForceEnabled = value < 0;
                         dispatch();

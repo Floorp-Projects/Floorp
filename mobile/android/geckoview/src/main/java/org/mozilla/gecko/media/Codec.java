@@ -34,22 +34,23 @@ import org.mozilla.gecko.gfx.GeckoSurface;
 
     private final class Callbacks implements AsyncCodec.Callbacks {
         @Override
-        public void onInputBufferAvailable(AsyncCodec codec, int index) {
+        public void onInputBufferAvailable(final AsyncCodec codec, final int index) {
             mInputProcessor.onBuffer(index);
         }
 
         @Override
-        public void onOutputBufferAvailable(AsyncCodec codec, int index, MediaCodec.BufferInfo info) {
+        public void onOutputBufferAvailable(final AsyncCodec codec, final int index,
+                                            final MediaCodec.BufferInfo info) {
             mOutputProcessor.onBuffer(index, info);
         }
 
         @Override
-        public void onError(AsyncCodec codec, int error) {
+        public void onError(final AsyncCodec codec, final int error) {
             reportError(Error.FATAL, new Exception("codec error:" + error));
         }
 
         @Override
-        public void onOutputFormatChanged(AsyncCodec codec, MediaFormat format) {
+        public void onOutputFormatChanged(final AsyncCodec codec, final MediaFormat format) {
             mOutputProcessor.onFormatChanged(format);
         }
     }
@@ -70,13 +71,13 @@ import org.mozilla.gecko.gfx.GeckoSurface;
         private Queue<Input> mInputSamples = new LinkedList<>();
         private boolean mStopped;
 
-        private synchronized Sample onAllocate(int size) {
+        private synchronized Sample onAllocate(final int size) {
             Sample sample = mSamplePool.obtainInput(size);
             mDequeuedSamples.add(sample);
             return sample;
         }
 
-        private synchronized void onSample(Sample sample) {
+        private synchronized void onSample(final Sample sample) {
             if (sample == null) {
                 // Ignore empty input.
                 mSamplePool.recycleInput(mDequeuedSamples.remove());
@@ -97,7 +98,7 @@ import org.mozilla.gecko.gfx.GeckoSurface;
             sample.dispose();
         }
 
-        private void queueSample(Sample sample) {
+        private void queueSample(final Sample sample) {
             if (!mInputSamples.offer(new Input(sample))) {
                 reportError(Error.FATAL, new Exception("FAIL: input sample queue is full"));
                 return;
@@ -110,7 +111,7 @@ import org.mozilla.gecko.gfx.GeckoSurface;
             }
         }
 
-        private synchronized void onBuffer(int index) {
+        private synchronized void onBuffer(final int index) {
             if (mStopped || !isValidBuffer(index)) {
                 return;
             }
@@ -226,7 +227,7 @@ import org.mozilla.gecko.gfx.GeckoSurface;
         public final Sample sample;
         public final int index;
 
-        public Output(final Sample sample, int index) {
+        public Output(final Sample sample, final int index) {
             this.sample = sample;
             this.index = index;
         }
@@ -238,11 +239,11 @@ import org.mozilla.gecko.gfx.GeckoSurface;
         private Queue<Output> mSentOutputs = new LinkedList<>();
         private boolean mStopped;
 
-        private OutputProcessor(boolean renderToSurface) {
+        private OutputProcessor(final boolean renderToSurface) {
             mRenderToSurface = renderToSurface;
         }
 
-        private synchronized void onBuffer(int index, MediaCodec.BufferInfo info) {
+        private synchronized void onBuffer(final int index, final MediaCodec.BufferInfo info) {
             if (mStopped || !isValidBuffer(index)) {
                 return;
             }
@@ -271,7 +272,7 @@ import org.mozilla.gecko.gfx.GeckoSurface;
             }
         }
 
-        private Sample obtainOutputSample(int index, MediaCodec.BufferInfo info) {
+        private Sample obtainOutputSample(final int index, final MediaCodec.BufferInfo info) {
             Sample sample = mSamplePool.obtainOutput(info);
 
             if (mRenderToSurface) {
@@ -298,7 +299,7 @@ import org.mozilla.gecko.gfx.GeckoSurface;
             return sample;
         }
 
-        private synchronized void onRelease(Sample sample, boolean render) {
+        private synchronized void onRelease(final Sample sample, final boolean render) {
             final Output output = mSentOutputs.poll();
             if (output == null) {
                 if (DEBUG) { Log.d(LOGTAG, sample + " already released"); }
@@ -310,7 +311,7 @@ import org.mozilla.gecko.gfx.GeckoSurface;
             sample.dispose();
         }
 
-        private void onFormatChanged(MediaFormat format) {
+        private void onFormatChanged(final MediaFormat format) {
             try {
                 mCallbacks.onOutputFormatChanged(new FormatParam(format));
             } catch (RemoteException re) {
@@ -353,7 +354,7 @@ import org.mozilla.gecko.gfx.GeckoSurface;
     private volatile boolean mIsHardwareAccelerated = false;
     private boolean mIsTunneledPlaybackSupported = false;
 
-    public synchronized void setCallbacks(ICodecCallbacks callbacks) throws RemoteException {
+    public synchronized void setCallbacks(final ICodecCallbacks callbacks) throws RemoteException {
         mCallbacks = callbacks;
         callbacks.asBinder().linkToDeath(this, 0);
     }
@@ -370,10 +371,10 @@ import org.mozilla.gecko.gfx.GeckoSurface;
     }
 
     @Override
-    public synchronized boolean configure(FormatParam format,
-                                          GeckoSurface surface,
-                                          int flags,
-                                          String drmStubId) throws RemoteException {
+    public synchronized boolean configure(final FormatParam format,
+                                          final GeckoSurface surface,
+                                          final int flags,
+                                          final String drmStubId) throws RemoteException {
         if (mCallbacks == null) {
             Log.e(LOGTAG, "FAIL: callbacks must be set before calling configure()");
             return false;
@@ -501,7 +502,7 @@ import org.mozilla.gecko.gfx.GeckoSurface;
         }
     }
 
-    private void reportError(Error error, Exception e) {
+    private void reportError(final Error error, final Exception e) {
         if (e != null) {
             e.printStackTrace();
         }
@@ -545,7 +546,7 @@ import org.mozilla.gecko.gfx.GeckoSurface;
     }
 
     @Override
-    public synchronized Sample dequeueInput(int size) throws RemoteException {
+    public synchronized Sample dequeueInput(final int size) throws RemoteException {
         try {
             return mInputProcessor.onAllocate(size);
         } catch (Exception e) {
@@ -555,7 +556,7 @@ import org.mozilla.gecko.gfx.GeckoSurface;
     }
 
     @Override
-    public synchronized void queueInput(Sample sample) throws RemoteException {
+    public synchronized void queueInput(final Sample sample) throws RemoteException {
         try {
             mInputProcessor.onSample(sample);
         } catch (Exception e) {
@@ -564,7 +565,7 @@ import org.mozilla.gecko.gfx.GeckoSurface;
     }
 
     @Override
-    public synchronized void setRates(int newBitRate) {
+    public synchronized void setRates(final int newBitRate) {
         try {
             mCodec.setRates(newBitRate);
         } catch (Exception e) {
@@ -573,7 +574,7 @@ import org.mozilla.gecko.gfx.GeckoSurface;
     }
 
     @Override
-    public synchronized void releaseOutput(Sample sample, boolean render) {
+    public synchronized void releaseOutput(final Sample sample, final boolean render) {
         try {
             mOutputProcessor.onRelease(sample, render);
         } catch (Exception e) {

@@ -50,7 +50,7 @@ public class GeckoWebExecutor {
     private static native void nativeResolve(String host, GeckoResult<InetAddress[]> result);
 
     @WrapForJNI(calledFrom = "gecko", exceptionMode = "nsresult")
-    private static ByteBuffer createByteBuffer(int capacity) {
+    private static ByteBuffer createByteBuffer(final int capacity) {
         return ByteBuffer.allocateDirect(capacity);
     }
 

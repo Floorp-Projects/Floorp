@@ -27,7 +27,7 @@ public class ContextUtils {
         }
     }
 
-    public static boolean isPackageInstalled(final Context context, String packageName) {
+    public static boolean isPackageInstalled(final Context context, final String packageName) {
         try {
             PackageManager pm = context.getPackageManager();
             pm.getPackageInfo(packageName, 0);
