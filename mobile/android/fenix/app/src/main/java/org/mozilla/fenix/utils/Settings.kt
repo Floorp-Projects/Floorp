@@ -49,4 +49,9 @@ class Settings private constructor(context: Context) {
         appContext.getPreferenceKey(R.string.pref_key_show_search_suggestions),
         true
     )
+
+    fun crashReportingEnabled(): Boolean = preferences.getBoolean(
+        appContext.getPreferenceKey(R.string.pref_key_crash_reporter),
+        true
+    )
 }

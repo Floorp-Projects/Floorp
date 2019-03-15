@@ -2,18 +2,23 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-
-<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
     <androidx.preference.SwitchPreference
-            android:key="@string/pref_key_telemetry"
-            android:title="@string/preferences_telemetry" />
+        android:key="@string/pref_key_telemetry"
+        android:title="@string/preferences_telemetry"
+        app:iconSpaceReserved="false" />
     <androidx.preference.SwitchPreference
-            android:key="@string/pref_key_crash_reporter"
-            android:title="@string/preferences_crash_reporter" />
+        android:defaultValue="true"
+        android:key="@string/pref_key_crash_reporter"
+        android:title="@string/preferences_crash_reporter"
+        app:iconSpaceReserved="false" />
     <androidx.preference.SwitchPreference
-            android:key="@string/pref_key_mozilla_location_service"
-            android:title="@string/preferences_mozilla_location_service" />
+        android:key="@string/pref_key_mozilla_location_service"
+        android:title="@string/preferences_mozilla_location_service"
+        app:iconSpaceReserved="false" />
     <androidx.preference.SwitchPreference
-            android:key="@string/pref_key_fenix_health_report"
-            android:title="@string/preferences_fenix_health_report" />
+        android:key="@string/pref_key_fenix_health_report"
+        android:title="@string/preferences_fenix_health_report"
+        app:iconSpaceReserved="false" />
 </PreferenceScreen>
