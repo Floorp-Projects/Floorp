@@ -73,7 +73,7 @@ final class JellyBeanAsyncCodec implements AsyncCodec {
                     break;
             }
         }
-     }
+    }
 
     // A handler to invoke AsyncCodec.Callbacks methods.
     private final class CallbackSender extends CancelableHandler {
@@ -84,8 +84,8 @@ final class JellyBeanAsyncCodec implements AsyncCodec {
         private Callbacks mCallbacks;
 
         private CallbackSender(final Looper looper, final Callbacks callbacks) {
-          super(looper);
-          mCallbacks = callbacks;
+            super(looper);
+            mCallbacks = callbacks;
         }
 
         public void notifyInputBuffer(final int index) {

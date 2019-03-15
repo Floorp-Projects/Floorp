@@ -214,7 +214,7 @@ import org.mozilla.gecko.mozglue.JNIObject;
         for (GeckoSurfaceTexture tex : list) {
             try {
                 if (tex.isSingleBuffer()) {
-                   tex.releaseTexImage();
+                    tex.releaseTexImage();
                 }
 
                 tex.detachFromGLContext();

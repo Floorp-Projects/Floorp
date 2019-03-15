@@ -392,20 +392,20 @@ public final class GeckoBundle implements Parcelable {
     }
 
     private void put(final String key, final Object value) {
-      // We intentionally disallow a generic put() method for type safety and sanity. For
-      // example, we assume elsewhere in the code that a value belongs to a small list of
-      // predefined types, and cannot be any arbitrary object. If you want to put an
-      // Object in the bundle, check the type of the Object first and call the
-      // corresponding put methods. For example,
-      //
-      //   if (obj instanceof Integer) {
-      //     bundle.putInt(key, (Integer) key);
-      //   } else if (obj instanceof String) {
-      //     bundle.putString(key, (String) obj);
-      //   } else {
-      //     throw new IllegalArgumentException("unexpected type");
-      //   }
-      throw new UnsupportedOperationException();
+        // We intentionally disallow a generic put() method for type safety and sanity. For
+        // example, we assume elsewhere in the code that a value belongs to a small list of
+        // predefined types, and cannot be any arbitrary object. If you want to put an
+        // Object in the bundle, check the type of the Object first and call the
+        // corresponding put methods. For example,
+        //
+        //   if (obj instanceof Integer) {
+        //     bundle.putInt(key, (Integer) key);
+        //   } else if (obj instanceof String) {
+        //     bundle.putString(key, (String) obj);
+        //   } else {
+        //     throw new IllegalArgumentException("unexpected type");
+        //   }
+        throw new UnsupportedOperationException();
     }
 
     /**

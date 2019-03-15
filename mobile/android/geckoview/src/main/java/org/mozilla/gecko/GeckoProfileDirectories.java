@@ -138,16 +138,16 @@ public class GeckoProfileDirectories {
      *             if the Mozilla directory did not exist and could not be created.
      */
     static String findDefaultProfileName(final Context context) throws NoMozillaDirectoryException {
-      final INIParser parser = GeckoProfileDirectories.getProfilesINI(getMozillaDirectory(context));
-      if (parser.getSections() != null) {
-          for (Enumeration<INISection> e = parser.getSections().elements(); e.hasMoreElements(); ) {
-              final INISection section = e.nextElement();
-              if (section.getIntProperty("Default") == 1) {
-                  return section.getStringProperty("Name");
-              }
-          }
-      }
-      return null;
+        final INIParser parser = GeckoProfileDirectories.getProfilesINI(getMozillaDirectory(context));
+        if (parser.getSections() != null) {
+            for (Enumeration<INISection> e = parser.getSections().elements(); e.hasMoreElements(); ) {
+                final INISection section = e.nextElement();
+                if (section.getIntProperty("Default") == 1) {
+                    return section.getStringProperty("Name");
+                }
+            }
+        }
+        return null;
     }
 
     static Map<String, String> getDefaultProfile(final File mozillaDir) {

@@ -62,7 +62,7 @@ public class INISection {
     public String getStringProperty(final String key) {
         Object val = getProperty(key);
         if (val == null)
-          return null;
+            return null;
 
         return val.toString();
     }

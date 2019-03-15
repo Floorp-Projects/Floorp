@@ -81,6 +81,6 @@ public final class GeckoHLSSample {
                 append(", duration=").append(duration).
                 append(", flags=").append(Integer.toHexString(info.flags)).append(" }").
                 append(" }");
-            return str.toString();
+        return str.toString();
     }
 }
