@@ -77,8 +77,8 @@ public class IOUtils {
 
                 // If buffer has overflowed, double its size and carry on.
                 if (bPointer == buffer.length) {
-                    bufferSize *= 2;
-                    byte[] newBuffer = new byte[bufferSize];
+                    int newBufferSize = bufferSize * 2;
+                    byte[] newBuffer = new byte[newBufferSize];
 
                     // Copy the contents of the old buffer into the new buffer.
                     System.arraycopy(buffer, 0, newBuffer, 0, buffer.length);

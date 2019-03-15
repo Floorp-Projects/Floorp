@@ -1421,24 +1421,28 @@ public class GeckoAppShell
     @WrapForJNI(calledFrom = "gecko")
     private static byte[] getIconForExtension(String aExt, int iconSize) {
         try {
-            if (iconSize <= 0)
-                iconSize = 16;
+            int resolvedIconSize = iconSize;
+            if (iconSize <= 0) {
+                resolvedIconSize = 16;
+            }
 
-            if (aExt != null && aExt.length() > 1 && aExt.charAt(0) == '.')
-                aExt = aExt.substring(1);
+            String resolvedExt = aExt;
+            if (aExt != null && aExt.length() > 1 && aExt.charAt(0) == '.') {
+                resolvedExt = aExt.substring(1);
+            }
 
             PackageManager pm = getApplicationContext().getPackageManager();
-            Drawable icon = getDrawableForExtension(pm, aExt);
+            Drawable icon = getDrawableForExtension(pm, resolvedExt);
             if (icon == null) {
                 // Use a generic icon
                 icon = pm.getDefaultActivityIcon();
             }
 
             Bitmap bitmap = ((BitmapDrawable)icon).getBitmap();
-            if (bitmap.getWidth() != iconSize || bitmap.getHeight() != iconSize)
-                bitmap = Bitmap.createScaledBitmap(bitmap, iconSize, iconSize, true);
+            if (bitmap.getWidth() != resolvedIconSize || bitmap.getHeight() != resolvedIconSize)
+                bitmap = Bitmap.createScaledBitmap(bitmap, resolvedIconSize, resolvedIconSize, true);
 
-            ByteBuffer buf = ByteBuffer.allocate(iconSize * iconSize * 4);
+            ByteBuffer buf = ByteBuffer.allocate(resolvedIconSize * resolvedIconSize * 4);
             bitmap.copyPixelsToBuffer(buf);
 
             return buf.array();

@@ -50,13 +50,13 @@ public class StringUtils {
     */
     public static boolean isSearchQuery(String text, boolean wasSearchQuery) {
         // We remove leading and trailing white spaces when decoding URLs
-        text = text.trim();
-        if (text.length() == 0) {
+        String trimmedText = text.trim();
+        if (trimmedText.length() == 0) {
             return wasSearchQuery;
         }
-        int colon = text.indexOf(':');
-        int dot = text.indexOf('.');
-        int space = text.indexOf(' ');
+        int colon = trimmedText.indexOf(':');
+        int dot = trimmedText.indexOf('.');
+        int space = trimmedText.indexOf(' ');
 
         // If a space is found in a trimmed string, we assume this is a search query(Bug 1278245)
         if (space > -1) {
