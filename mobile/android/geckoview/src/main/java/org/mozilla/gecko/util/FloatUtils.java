@@ -5,8 +5,6 @@
 
 package org.mozilla.gecko.util;
 
-import java.lang.IllegalArgumentException;
-
 public final class FloatUtils {
     private FloatUtils() {}
 
