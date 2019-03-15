@@ -3576,6 +3576,13 @@ class Document : public nsINode,
  protected:
   RefPtr<DocumentL10n> mDocumentL10n;
 
+  /**
+   * Return true when you want a document without explicitly specified viewport
+   * dimensions/scale to be treated as if "width=device-width" had in fact been
+   * specified.
+   */
+  virtual bool UseWidthDeviceWidthFallbackViewport() const;
+
  private:
   void InitializeLocalization(nsTArray<nsString>& aResourceIds);
 
