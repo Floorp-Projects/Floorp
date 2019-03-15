@@ -5,21 +5,23 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "TrackingDummyChannel.h"
+#include "ClassifierDummyChannel.h"
 
 #include "mozilla/AntiTrackingCommon.h"
-#include "mozilla/net/TrackingDummyChannelChild.h"
+#include "mozilla/net/ClassifierDummyChannelChild.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/Preferences.h"
+#include "nsContentSecurityManager.h"
 #include "nsIChannel.h"
 #include "nsIURI.h"
 #include "nsProxyRelease.h"
+#include "nsQueryObject.h"
 
 namespace mozilla {
 namespace net {
 
-/* static */ TrackingDummyChannel::StorageAllowedState
-TrackingDummyChannel::StorageAllowed(
+/* static */ ClassifierDummyChannel::StorageAllowedState
+ClassifierDummyChannel::StorageAllowed(
     nsIChannel* aChannel, const std::function<void(bool)>& aCallback) {
   MOZ_ASSERT(!XRE_IsParentProcess());
 
@@ -43,12 +45,12 @@ TrackingDummyChannel::StorageAllowed(
   aChannel->GetURI(getter_AddRefs(uri));
 
   if (StaticPrefs::privacy_trackingprotection_annotate_channels()) {
-    ContentChild* cc = static_cast<ContentChild*>(gNeckoChild->Manager());
+    dom::ContentChild* cc = static_cast<dom::ContentChild*>(gNeckoChild->Manager());
     if (cc->IsShuttingDown()) {
       return eStorageDenied;
     }
 
-    if (!TrackingDummyChannelChild::Create(httpChannel, uri, aCallback)) {
+    if (!ClassifierDummyChannelChild::Create(httpChannel, uri, aCallback)) {
       return eStorageDenied;
     }
 
@@ -63,19 +65,20 @@ TrackingDummyChannel::StorageAllowed(
   return eStorageDenied;
 }
 
-NS_IMPL_ADDREF(TrackingDummyChannel)
-NS_IMPL_RELEASE(TrackingDummyChannel)
+NS_IMPL_ADDREF(ClassifierDummyChannel)
+NS_IMPL_RELEASE(ClassifierDummyChannel)
 
-NS_INTERFACE_MAP_BEGIN(TrackingDummyChannel)
+NS_INTERFACE_MAP_BEGIN(ClassifierDummyChannel)
   NS_INTERFACE_MAP_ENTRY(nsIRequest)
   NS_INTERFACE_MAP_ENTRY(nsIChannel)
   NS_INTERFACE_MAP_ENTRY(nsIHttpChannelInternal)
-  NS_INTERFACE_MAP_ENTRY_CONCRETE(TrackingDummyChannel)
+  NS_INTERFACE_MAP_ENTRY_CONCRETE(ClassifierDummyChannel)
 NS_INTERFACE_MAP_END
 
-TrackingDummyChannel::TrackingDummyChannel(nsIURI* aURI, nsIURI* aTopWindowURI,
-                                           nsresult aTopWindowURIResult,
-                                           nsILoadInfo* aLoadInfo)
+ClassifierDummyChannel::ClassifierDummyChannel(nsIURI* aURI,
+                                               nsIURI* aTopWindowURI,
+                                               nsresult aTopWindowURIResult,
+                                               nsILoadInfo* aLoadInfo)
     : mTopWindowURI(aTopWindowURI),
       mTopWindowURIResult(aTopWindowURIResult),
       mClassificationFlags(0) {
@@ -85,105 +88,105 @@ TrackingDummyChannel::TrackingDummyChannel(nsIURI* aURI, nsIURI* aTopWindowURI,
   SetLoadInfo(aLoadInfo);
 }
 
-TrackingDummyChannel::~TrackingDummyChannel() {
-  NS_ReleaseOnMainThreadSystemGroup("TrackingDummyChannel::mLoadInfo",
+ClassifierDummyChannel::~ClassifierDummyChannel() {
+  NS_ReleaseOnMainThreadSystemGroup("ClassifierDummyChannel::mLoadInfo",
                                     mLoadInfo.forget());
-  NS_ReleaseOnMainThreadSystemGroup("TrackingDummyChannel::mURI",
+  NS_ReleaseOnMainThreadSystemGroup("ClassifierDummyChannel::mURI",
                                     mURI.forget());
-  NS_ReleaseOnMainThreadSystemGroup("TrackingDummyChannel::mTopWindowURI",
+  NS_ReleaseOnMainThreadSystemGroup("ClassifierDummyChannel::mTopWindowURI",
                                     mTopWindowURI.forget());
 }
 
-uint32_t TrackingDummyChannel::ClassificationFlags() const {
+uint32_t ClassifierDummyChannel::ClassificationFlags() const {
   return mClassificationFlags;
 }
 
-void TrackingDummyChannel::AddClassificationFlags(
+void ClassifierDummyChannel::AddClassificationFlags(
     uint32_t aClassificationFlags) {
   mClassificationFlags |= aClassificationFlags;
 }
 
 //-----------------------------------------------------------------------------
-// TrackingDummyChannel::nsIChannel
+// ClassifierDummyChannel::nsIChannel
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-TrackingDummyChannel::GetOriginalURI(nsIURI** aOriginalURI) {
+ClassifierDummyChannel::GetOriginalURI(nsIURI** aOriginalURI) {
   NS_IF_ADDREF(*aOriginalURI = mURI);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-TrackingDummyChannel::SetOriginalURI(nsIURI* aOriginalURI) {
+ClassifierDummyChannel::SetOriginalURI(nsIURI* aOriginalURI) {
   mURI = aOriginalURI;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-TrackingDummyChannel::GetURI(nsIURI** aURI) {
+ClassifierDummyChannel::GetURI(nsIURI** aURI) {
   NS_IF_ADDREF(*aURI = mURI);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-TrackingDummyChannel::GetOwner(nsISupports** aOwner) {
+ClassifierDummyChannel::GetOwner(nsISupports** aOwner) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-TrackingDummyChannel::SetOwner(nsISupports* aOwner) {
+ClassifierDummyChannel::SetOwner(nsISupports* aOwner) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-TrackingDummyChannel::GetNotificationCallbacks(
+ClassifierDummyChannel::GetNotificationCallbacks(
     nsIInterfaceRequestor** aNotificationCallbacks) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-TrackingDummyChannel::SetNotificationCallbacks(
+ClassifierDummyChannel::SetNotificationCallbacks(
     nsIInterfaceRequestor* aNotificationCallbacks) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-TrackingDummyChannel::GetSecurityInfo(nsISupports** aSecurityInfo) {
+ClassifierDummyChannel::GetSecurityInfo(nsISupports** aSecurityInfo) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-TrackingDummyChannel::GetContentType(nsACString& aContentType) {
+ClassifierDummyChannel::GetContentType(nsACString& aContentType) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-TrackingDummyChannel::SetContentType(const nsACString& aContentType) {
+ClassifierDummyChannel::SetContentType(const nsACString& aContentType) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-TrackingDummyChannel::GetContentCharset(nsACString& aContentCharset) {
+ClassifierDummyChannel::GetContentCharset(nsACString& aContentCharset) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-TrackingDummyChannel::SetContentCharset(const nsACString& aContentCharset) {
+ClassifierDummyChannel::SetContentCharset(const nsACString& aContentCharset) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-TrackingDummyChannel::GetContentLength(int64_t* aContentLength) {
+ClassifierDummyChannel::GetContentLength(int64_t* aContentLength) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-TrackingDummyChannel::SetContentLength(int64_t aContentLength) {
+ClassifierDummyChannel::SetContentLength(int64_t aContentLength) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-TrackingDummyChannel::Open(nsIInputStream** aStream) {
+ClassifierDummyChannel::Open(nsIInputStream** aStream) {
   nsCOMPtr<nsIStreamListener> listener;
   nsresult rv =
       nsContentSecurityManager::doContentSecurityCheck(this, listener);
@@ -193,7 +196,7 @@ TrackingDummyChannel::Open(nsIInputStream** aStream) {
 }
 
 NS_IMETHODIMP
-TrackingDummyChannel::AsyncOpen(nsIStreamListener* aListener) {
+ClassifierDummyChannel::AsyncOpen(nsIStreamListener* aListener) {
   nsCOMPtr<nsIStreamListener> listener = aListener;
   nsresult rv =
       nsContentSecurityManager::doContentSecurityCheck(this, listener);
@@ -202,418 +205,423 @@ TrackingDummyChannel::AsyncOpen(nsIStreamListener* aListener) {
 }
 
 NS_IMETHODIMP
-TrackingDummyChannel::GetContentDisposition(uint32_t* aContentDisposition) {
+ClassifierDummyChannel::GetContentDisposition(uint32_t* aContentDisposition) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-TrackingDummyChannel::SetContentDisposition(uint32_t aContentDisposition) {
+ClassifierDummyChannel::SetContentDisposition(uint32_t aContentDisposition) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-TrackingDummyChannel::GetContentDispositionFilename(
+ClassifierDummyChannel::GetContentDispositionFilename(
     nsAString& aContentDispositionFilename) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-TrackingDummyChannel::SetContentDispositionFilename(
+ClassifierDummyChannel::SetContentDispositionFilename(
     const nsAString& aContentDispositionFilename) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-TrackingDummyChannel::GetContentDispositionHeader(
+ClassifierDummyChannel::GetContentDispositionHeader(
     nsACString& aContentDispositionHeader) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-TrackingDummyChannel::GetLoadInfo(nsILoadInfo** aLoadInfo) {
+ClassifierDummyChannel::GetLoadInfo(nsILoadInfo** aLoadInfo) {
   NS_IF_ADDREF(*aLoadInfo = mLoadInfo);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-TrackingDummyChannel::SetLoadInfo(nsILoadInfo* aLoadInfo) {
+ClassifierDummyChannel::SetLoadInfo(nsILoadInfo* aLoadInfo) {
   MOZ_RELEASE_ASSERT(aLoadInfo, "loadinfo can't be null");
   mLoadInfo = aLoadInfo;
   return NS_OK;
 }
 
 //-----------------------------------------------------------------------------
-// TrackingDummyChannel::nsIRequest
+// ClassifierDummyChannel::nsIRequest
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-TrackingDummyChannel::GetName(nsACString& aName) {
+ClassifierDummyChannel::GetName(nsACString& aName) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-TrackingDummyChannel::IsPending(bool* aRetval) {
+ClassifierDummyChannel::IsPending(bool* aRetval) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-TrackingDummyChannel::GetStatus(nsresult* aStatus) {
+ClassifierDummyChannel::GetStatus(nsresult* aStatus) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-TrackingDummyChannel::Cancel(nsresult aStatus) {
+ClassifierDummyChannel::Cancel(nsresult aStatus) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-TrackingDummyChannel::Suspend() { return NS_ERROR_NOT_IMPLEMENTED; }
+ClassifierDummyChannel::Suspend() { return NS_ERROR_NOT_IMPLEMENTED; }
 
 NS_IMETHODIMP
-TrackingDummyChannel::Resume() { return NS_ERROR_NOT_IMPLEMENTED; }
+ClassifierDummyChannel::Resume() { return NS_ERROR_NOT_IMPLEMENTED; }
 
 NS_IMETHODIMP
-TrackingDummyChannel::GetLoadGroup(nsILoadGroup** aLoadGroup) {
+ClassifierDummyChannel::GetLoadGroup(nsILoadGroup** aLoadGroup) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-TrackingDummyChannel::SetLoadGroup(nsILoadGroup* aLoadGroup) {
+ClassifierDummyChannel::SetLoadGroup(nsILoadGroup* aLoadGroup) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-TrackingDummyChannel::GetLoadFlags(nsLoadFlags* aLoadFlags) {
+ClassifierDummyChannel::GetLoadFlags(nsLoadFlags* aLoadFlags) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-TrackingDummyChannel::SetLoadFlags(nsLoadFlags aLoadFlags) {
+ClassifierDummyChannel::SetLoadFlags(nsLoadFlags aLoadFlags) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-TrackingDummyChannel::GetIsDocument(bool* aIsDocument) {
+ClassifierDummyChannel::GetIsDocument(bool* aIsDocument) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 //-----------------------------------------------------------------------------
-// TrackingDummyChannel::nsIHttpChannelInternal
+// ClassifierDummyChannel::nsIHttpChannelInternal
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-TrackingDummyChannel::GetDocumentURI(nsIURI** aDocumentURI) {
+ClassifierDummyChannel::GetDocumentURI(nsIURI** aDocumentURI) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-TrackingDummyChannel::SetDocumentURI(nsIURI* aDocumentURI) {
+ClassifierDummyChannel::SetDocumentURI(nsIURI* aDocumentURI) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-TrackingDummyChannel::GetRequestVersion(uint32_t* aMajor, uint32_t* aMinor) {
+ClassifierDummyChannel::GetRequestVersion(uint32_t* aMajor, uint32_t* aMinor) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-TrackingDummyChannel::GetResponseVersion(uint32_t* aMajor, uint32_t* aMinor) {
+ClassifierDummyChannel::GetResponseVersion(uint32_t* aMajor, uint32_t* aMinor) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-TrackingDummyChannel::TakeAllSecurityMessages(
+ClassifierDummyChannel::TakeAllSecurityMessages(
     nsCOMArray<nsISecurityConsoleMessage>& aMessages) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-TrackingDummyChannel::SetCookie(const char* aCookieHeader) {
+ClassifierDummyChannel::SetCookie(const char* aCookieHeader) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-TrackingDummyChannel::SetupFallbackChannel(const char* aFallbackKey) {
+ClassifierDummyChannel::SetupFallbackChannel(const char* aFallbackKey) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-TrackingDummyChannel::GetThirdPartyFlags(uint32_t* aThirdPartyFlags) {
+ClassifierDummyChannel::GetThirdPartyFlags(uint32_t* aThirdPartyFlags) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-TrackingDummyChannel::SetThirdPartyFlags(uint32_t aThirdPartyFlags) {
+ClassifierDummyChannel::SetThirdPartyFlags(uint32_t aThirdPartyFlags) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-TrackingDummyChannel::GetForceAllowThirdPartyCookie(
+ClassifierDummyChannel::GetForceAllowThirdPartyCookie(
     bool* aForceAllowThirdPartyCookie) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-TrackingDummyChannel::SetForceAllowThirdPartyCookie(
+ClassifierDummyChannel::SetForceAllowThirdPartyCookie(
     bool aForceAllowThirdPartyCookie) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-TrackingDummyChannel::GetCanceled(bool* aCanceled) {
+ClassifierDummyChannel::GetCanceled(bool* aCanceled) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-TrackingDummyChannel::GetChannelIsForDownload(bool* aChannlIsForDownload) {
+ClassifierDummyChannel::GetChannelIsForDownload(bool* aChannlIsForDownload) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-TrackingDummyChannel::SetChannelIsForDownload(bool aChannlIsForDownload) {
+ClassifierDummyChannel::SetChannelIsForDownload(bool aChannlIsForDownload) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-TrackingDummyChannel::GetLocalAddress(nsACString& aLocalAddress) {
+ClassifierDummyChannel::GetLocalAddress(nsACString& aLocalAddress) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-TrackingDummyChannel::GetLocalPort(int32_t* aLocalPort) {
+ClassifierDummyChannel::GetLocalPort(int32_t* aLocalPort) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-TrackingDummyChannel::GetRemoteAddress(nsACString& aRemoteAddress) {
+ClassifierDummyChannel::GetRemoteAddress(nsACString& aRemoteAddress) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-TrackingDummyChannel::GetRemotePort(int32_t* aRemotePort) {
+ClassifierDummyChannel::GetRemotePort(int32_t* aRemotePort) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-TrackingDummyChannel::SetCacheKeysRedirectChain(
+ClassifierDummyChannel::SetCacheKeysRedirectChain(
     nsTArray<nsCString>* aCacheKeys) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-TrackingDummyChannel::HTTPUpgrade(const nsACString& aProtocolName,
-                                  nsIHttpUpgradeListener* aListener) {
+ClassifierDummyChannel::HTTPUpgrade(const nsACString& aProtocolName,
+                                    nsIHttpUpgradeListener* aListener) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-TrackingDummyChannel::GetOnlyConnect(bool* aOnlyConnect) {
+ClassifierDummyChannel::GetOnlyConnect(bool* aOnlyConnect) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-TrackingDummyChannel::SetConnectOnly() { return NS_ERROR_NOT_IMPLEMENTED; }
+ClassifierDummyChannel::SetConnectOnly() { return NS_ERROR_NOT_IMPLEMENTED; }
 
 NS_IMETHODIMP
-TrackingDummyChannel::GetAllowSpdy(bool* aAllowSpdy) {
+ClassifierDummyChannel::GetAllowSpdy(bool* aAllowSpdy) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-TrackingDummyChannel::SetAllowSpdy(bool aAllowSpdy) {
+ClassifierDummyChannel::SetAllowSpdy(bool aAllowSpdy) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-TrackingDummyChannel::GetResponseTimeoutEnabled(bool* aResponseTimeoutEnabled) {
+ClassifierDummyChannel::GetResponseTimeoutEnabled(
+    bool* aResponseTimeoutEnabled) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-TrackingDummyChannel::SetResponseTimeoutEnabled(bool aResponseTimeoutEnabled) {
+ClassifierDummyChannel::SetResponseTimeoutEnabled(
+    bool aResponseTimeoutEnabled) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-TrackingDummyChannel::GetInitialRwin(uint32_t* aInitialRwin) {
+ClassifierDummyChannel::GetInitialRwin(uint32_t* aInitialRwin) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-TrackingDummyChannel::SetInitialRwin(uint32_t aInitialRwin) {
+ClassifierDummyChannel::SetInitialRwin(uint32_t aInitialRwin) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-TrackingDummyChannel::GetApiRedirectToURI(nsIURI** aApiRedirectToURI) {
+ClassifierDummyChannel::GetApiRedirectToURI(nsIURI** aApiRedirectToURI) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-TrackingDummyChannel::GetAllowAltSvc(bool* aAllowAltSvc) {
+ClassifierDummyChannel::GetAllowAltSvc(bool* aAllowAltSvc) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-TrackingDummyChannel::SetAllowAltSvc(bool aAllowAltSvc) {
+ClassifierDummyChannel::SetAllowAltSvc(bool aAllowAltSvc) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-TrackingDummyChannel::GetBeConservative(bool* aBeConservative) {
+ClassifierDummyChannel::GetBeConservative(bool* aBeConservative) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-TrackingDummyChannel::SetBeConservative(bool aBeConservative) {
+ClassifierDummyChannel::SetBeConservative(bool aBeConservative) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-TrackingDummyChannel::GetTrr(bool* aTrr) { return NS_ERROR_NOT_IMPLEMENTED; }
+ClassifierDummyChannel::GetTrr(bool* aTrr) { return NS_ERROR_NOT_IMPLEMENTED; }
 
 NS_IMETHODIMP
-TrackingDummyChannel::SetTrr(bool aTrr) { return NS_ERROR_NOT_IMPLEMENTED; }
+ClassifierDummyChannel::SetTrr(bool aTrr) { return NS_ERROR_NOT_IMPLEMENTED; }
 
 NS_IMETHODIMP
-TrackingDummyChannel::GetTlsFlags(uint32_t* aTlsFlags) {
+ClassifierDummyChannel::GetTlsFlags(uint32_t* aTlsFlags) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-TrackingDummyChannel::SetTlsFlags(uint32_t aTlsFlags) {
+ClassifierDummyChannel::SetTlsFlags(uint32_t aTlsFlags) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-TrackingDummyChannel::GetLastModifiedTime(PRTime* aLastModifiedTime) {
+ClassifierDummyChannel::GetLastModifiedTime(PRTime* aLastModifiedTime) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-TrackingDummyChannel::GetCorsIncludeCredentials(bool* aCorsIncludeCredentials) {
+ClassifierDummyChannel::GetCorsIncludeCredentials(
+    bool* aCorsIncludeCredentials) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-TrackingDummyChannel::SetCorsIncludeCredentials(bool aCorsIncludeCredentials) {
+ClassifierDummyChannel::SetCorsIncludeCredentials(
+    bool aCorsIncludeCredentials) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-TrackingDummyChannel::GetCorsMode(uint32_t* aCorsMode) {
+ClassifierDummyChannel::GetCorsMode(uint32_t* aCorsMode) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-TrackingDummyChannel::SetCorsMode(uint32_t aCorsMode) {
+ClassifierDummyChannel::SetCorsMode(uint32_t aCorsMode) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-TrackingDummyChannel::GetRedirectMode(uint32_t* aRedirectMode) {
+ClassifierDummyChannel::GetRedirectMode(uint32_t* aRedirectMode) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-TrackingDummyChannel::SetRedirectMode(uint32_t aRedirectMode) {
+ClassifierDummyChannel::SetRedirectMode(uint32_t aRedirectMode) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-TrackingDummyChannel::GetFetchCacheMode(uint32_t* aFetchCacheMode) {
+ClassifierDummyChannel::GetFetchCacheMode(uint32_t* aFetchCacheMode) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-TrackingDummyChannel::SetFetchCacheMode(uint32_t aFetchCacheMode) {
+ClassifierDummyChannel::SetFetchCacheMode(uint32_t aFetchCacheMode) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-TrackingDummyChannel::GetTopWindowURI(nsIURI** aTopWindowURI) {
+ClassifierDummyChannel::GetTopWindowURI(nsIURI** aTopWindowURI) {
   nsCOMPtr<nsIURI> topWindowURI = mTopWindowURI;
   topWindowURI.forget(aTopWindowURI);
   return mTopWindowURIResult;
 }
 
 NS_IMETHODIMP
-TrackingDummyChannel::SetTopWindowURIIfUnknown(nsIURI* aTopWindowURI) {
+ClassifierDummyChannel::SetTopWindowURIIfUnknown(nsIURI* aTopWindowURI) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-TrackingDummyChannel::SetTopWindowPrincipal(nsIPrincipal* aTopWindowPrincipal) {
+ClassifierDummyChannel::SetTopWindowPrincipal(
+    nsIPrincipal* aTopWindowPrincipal) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-TrackingDummyChannel::GetProxyURI(nsIURI** aProxyURI) {
+ClassifierDummyChannel::GetProxyURI(nsIURI** aProxyURI) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-void TrackingDummyChannel::SetCorsPreflightParameters(
+void ClassifierDummyChannel::SetCorsPreflightParameters(
     const nsTArray<nsCString>& aUnsafeHeaders) {}
 
-void TrackingDummyChannel::SetAltDataForChild(bool aIsForChild) {}
+void ClassifierDummyChannel::SetAltDataForChild(bool aIsForChild) {}
 
 NS_IMETHODIMP
-TrackingDummyChannel::GetBlockAuthPrompt(bool* aBlockAuthPrompt) {
+ClassifierDummyChannel::GetBlockAuthPrompt(bool* aBlockAuthPrompt) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-TrackingDummyChannel::SetBlockAuthPrompt(bool aBlockAuthPrompt) {
+ClassifierDummyChannel::SetBlockAuthPrompt(bool aBlockAuthPrompt) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-TrackingDummyChannel::GetIntegrityMetadata(nsAString& aIntegrityMetadata) {
+ClassifierDummyChannel::GetIntegrityMetadata(nsAString& aIntegrityMetadata) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-TrackingDummyChannel::SetIntegrityMetadata(
+ClassifierDummyChannel::SetIntegrityMetadata(
     const nsAString& aIntegrityMetadata) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-TrackingDummyChannel::GetConnectionInfoHashKey(
+ClassifierDummyChannel::GetConnectionInfoHashKey(
     nsACString& aConnectionInfoHashKey) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-TrackingDummyChannel::GetLastRedirectFlags(uint32_t* aLastRedirectFlags) {
+ClassifierDummyChannel::GetLastRedirectFlags(uint32_t* aLastRedirectFlags) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-TrackingDummyChannel::SetLastRedirectFlags(uint32_t aLastRedirectFlags) {
+ClassifierDummyChannel::SetLastRedirectFlags(uint32_t aLastRedirectFlags) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-TrackingDummyChannel::GetNavigationStartTimeStamp(
+ClassifierDummyChannel::GetNavigationStartTimeStamp(
     TimeStamp* aNavigationStartTimeStamp) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-TrackingDummyChannel::SetNavigationStartTimeStamp(
+ClassifierDummyChannel::SetNavigationStartTimeStamp(
     TimeStamp aNavigationStartTimeStamp) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-TrackingDummyChannel::CancelByChannelClassifier(nsresult aErrorCode) {
+ClassifierDummyChannel::CancelByChannelClassifier(nsresult aErrorCode) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-void TrackingDummyChannel::SetIPv4Disabled() {}
+void ClassifierDummyChannel::SetIPv4Disabled() {}
 
-void TrackingDummyChannel::SetIPv6Disabled() {}
+void ClassifierDummyChannel::SetIPv6Disabled() {}
 
 }  // namespace net
 }  // namespace mozilla

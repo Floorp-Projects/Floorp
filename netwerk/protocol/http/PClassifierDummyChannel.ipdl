@@ -34,7 +34,7 @@ namespace net {
 // to be confident we will never need/want to turn it off.  Then as part of bug
 // 1496997 we can remove this implementation.  Bug 1498259 covers removing this
 // hack in particular.
-protocol PTrackingDummyChannel
+protocol PClassifierDummyChannel
 {
   manager PNecko;
 

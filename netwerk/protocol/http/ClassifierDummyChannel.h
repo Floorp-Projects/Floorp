@@ -5,13 +5,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_net_TrackingDummyChannel_h
-#define mozilla_net_TrackingDummyChannel_h
+#ifndef mozilla_net_ClassifierDummyChannel_h
+#define mozilla_net_ClassifierDummyChannel_h
 
 #include "nsIChannel.h"
 #include <functional>
 
-#define TRACKING_DUMMY_CHANNEL_IID                   \
+#define CLASSIFIER_DUMMY_CHANNEL_IID                 \
   {                                                  \
     0x70ceb97d, 0xbfa6, 0x4255, {                    \
       0xb7, 0x08, 0xe1, 0xb4, 0x4a, 0x1e, 0x0e, 0x9a \
@@ -44,10 +44,10 @@ namespace net {
  * 1496997 we can remove this implementation.  Bug 1498259 covers removing this
  * hack in particular.
  */
-class TrackingDummyChannel final : public nsIChannel,
-                                   public nsIHttpChannelInternal {
+class ClassifierDummyChannel final : public nsIChannel,
+                                     public nsIHttpChannelInternal {
  public:
-  NS_DECLARE_STATIC_IID_ACCESSOR(TRACKING_DUMMY_CHANNEL_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(CLASSIFIER_DUMMY_CHANNEL_IID)
 
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIREQUEST
@@ -63,15 +63,15 @@ class TrackingDummyChannel final : public nsIChannel,
   static StorageAllowedState StorageAllowed(
       nsIChannel* aChannel, const std::function<void(bool)>& aCallback);
 
-  TrackingDummyChannel(nsIURI* aURI, nsIURI* aTopWindowURI,
-                       nsresult aTopWindowURIResult, nsILoadInfo* aLoadInfo);
+  ClassifierDummyChannel(nsIURI* aURI, nsIURI* aTopWindowURI,
+                         nsresult aTopWindowURIResult, nsILoadInfo* aLoadInfo);
 
   uint32_t ClassificationFlags() const;
 
   void AddClassificationFlags(uint32_t);
 
  private:
-  ~TrackingDummyChannel();
+  ~ClassifierDummyChannel();
 
   nsCOMPtr<nsILoadInfo> mLoadInfo;
   nsCOMPtr<nsIURI> mURI;
@@ -81,9 +81,10 @@ class TrackingDummyChannel final : public nsIChannel,
   uint32_t mClassificationFlags;
 };
 
-NS_DEFINE_STATIC_IID_ACCESSOR(TrackingDummyChannel, TRACKING_DUMMY_CHANNEL_IID)
+NS_DEFINE_STATIC_IID_ACCESSOR(ClassifierDummyChannel,
+                              CLASSIFIER_DUMMY_CHANNEL_IID)
 
 }  // namespace net
 }  // namespace mozilla
 
-#endif  // mozilla_net_TrackingDummyChannel_h
+#endif  // mozilla_net_ClassifierDummyChannel_h
