@@ -13,8 +13,8 @@
 #include "nsAString.h"                // params
 #include "nsDebug.h"                  // for NS_ASSERTION, etc
 #include "nsError.h"                  // for NS_SUCCEEDED, NS_FAILED, etc
-#include "nsIPresShell.h"             // nsISelectionController constants
 #include "nsRange.h"                  // local var
+#include "nsISelectionController.h"   // for nsISelectionController constants
 #include "nsQueryObject.h"            // for do_QueryObject
 
 namespace mozilla {
