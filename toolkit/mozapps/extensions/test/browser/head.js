@@ -1449,3 +1449,18 @@ function assertTelemetryMatches(events, {filterMethods} = {}) {
   Assert.deepEqual(relatedEvents, events, "The events are recorded correctly");
 }
 
+/* HTML view helpers */
+function mockPromptService() {
+  let {prompt} = Services;
+  let promptService = {
+    // The prompt returns 1 for cancelled and 0 for accepted.
+    _response: 1,
+    QueryInterface: ChromeUtils.generateQI([Ci.nsIPromptService]),
+    confirmEx: () => promptService._response,
+  };
+  Services.prompt = promptService;
+  registerCleanupFunction(() => {
+    Services.prompt = prompt;
+  });
+  return promptService;
+}
