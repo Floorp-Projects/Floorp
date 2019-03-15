@@ -14,10 +14,7 @@ buildscript {
         classpath Dependencies.tools_androidgradle
         classpath Dependencies.tools_kotlingradle
         classpath Dependencies.tools_dokka
-
-        // Publish.
-        classpath Dependencies.tools_mavengradle
-
+        classpath Dependencies.tools_androidmavenpublish
         // Mozilla Android gradle plugin. For details, see the repo:
         // https://github.com/mozilla-mobile/android-automation-tools/tree/master/gradle-plugin
         classpath "org.mozilla.android:gradle-plugin:0.2"

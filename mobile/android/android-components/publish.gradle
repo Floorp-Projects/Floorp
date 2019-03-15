@@ -9,94 +9,51 @@ def libLicense = properties.libLicense
 def libLicenseUrl = properties.libLicenseUrl
 
 ext.configurePublish = { groupIdArg, artifactIdArg, descriptionArg ->
-    apply plugin: 'com.github.dcendents.android-maven'
-
-    group = groupIdArg
-
-    install {
-        repositories.mavenInstaller {
-            pom {
-                project {
-                    packaging 'aar'
-                    groupId groupIdArg
-                    artifactId artifactIdArg
-
-                    name libRepoName
-                    description descriptionArg
-                    url libUrl
-
-                    licenses {
-                        license {
-                            name libLicense
-                            url libLicenseUrl
-                        }
-                    }
-
-                    developers {
-                        developer {
-                            id 'mozact'
-                            name 'Mozilla Android Components Team'
-                            email 'android-components@lists.mozilla.org'
-                        }
-                    }
-
-                    scm {
-                        connection libVcsUrl
-                        developerConnection libVcsUrl
-                        url libUrl
-                    }
-                }
-            }
-        }
-    }
-
-    version = config.componentsVersion + (project.hasProperty('snapshot') ? '-SNAPSHOT' : '')
+    apply plugin: 'digital.wup.android-maven-publish'
 
     task sourcesJar(type: Jar) {
         from android.sourceSets.main.java.srcDirs
         classifier = 'sources'
     }
 
-    task javadoc(type: Javadoc) {
-        source = android.sourceSets.main.java.srcDirs
-        classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
-    }
+    publishing {
+        publications {
+            aar(MavenPublication) {
+                from components.android
+                artifact sourcesJar
 
-    task javadocJar(type: Jar, dependsOn: javadoc) {
-        classifier = 'javadoc'
-        from javadoc.destinationDir
-    }
+                pom {
+                    groupId = groupIdArg
+                    artifactId = artifactIdArg
+                    description = descriptionArg
+                    version = config.componentsVersion + (project.hasProperty('snapshot') ? '-SNAPSHOT' : '')
 
-    artifacts {
-        //archives javadocJar
-        archives sourcesJar
-    }
-
-    Properties localProperties = null;
-    if (project.rootProject.file('local.properties').canRead()) {
-        localProperties = new Properties()
-        localProperties.load(project.rootProject.file('local.properties').newDataInputStream())
-    }
-
-    apply plugin: 'maven'
-
-    uploadArchives {
-        repositories {
-            mavenDeployer {
-                pom.groupId = groupIdArg
-                pom.artifactId = artifactIdArg
-                pom.version = config.componentsVersion + (project.hasProperty('snapshot') ? '-SNAPSHOT' : '')
-
-                pom.project {
                     licenses {
                         license {
-                            name libLicense
-                            url libLicenseUrl
-                            distribution 'repo'
+                            name = libLicense
+                            url = libLicenseUrl
                         }
                     }
+
+                    developers {
+                        developer {
+                            name = 'Mozilla Android Components Team'
+                            email = 'android-components@lists.mozilla.org'
+                        }
+                    }
+
+                    scm {
+                        connection = libVcsUrl
+                        developerConnection = libVcsUrl
+                        url = libUrl
+                    }
                 }
-                repository(url: "file://${project.buildDir}/maven")
+            }
+        }
+
+        repositories {
+            maven {
+                url = "$buildDir/maven"
             }
         }
     }
