@@ -53,7 +53,8 @@ import java.util.concurrent.Executors;
  * timeout (TOAST_TIMEOUT), the url is added to a file which is then read in Fennec on next launch, this allows the
  * user to quickly queue urls to open without having to open Fennec each time. If the Service receives an Intent whilst
  * the created View is still active, the old url is immediately processed and the View is re-purposed with the new
- * Intent data.
+ * Intent data. From Android O, due to background limitations, this is a foreground service as it may be started
+ * from the background.
  * <p/>
  * The SYSTEM_ALERT_WINDOW permission is used to allow us to insert a View from this Service which responds to user
  * interaction, whilst still allowing whatever is in the background to be seen and interacted with.
@@ -126,6 +127,10 @@ public class TabQueueService extends Service {
 
     @Override
     public int onStartCommand(final Intent intent, final int flags, final int startId) {
+        if (!AppConstants.Versions.preO) {
+            startForeground(TabQueueHelper.TAB_QUEUE_NOTIFICATION_ID, TabQueueHelper.getStartupNotification(TabQueueService.this));
+        }
+
         // If this is a redelivery then lets bypass the entire double tap to open now code as that's a big can of worms,
         // we also don't expect redeliveries because of the short time window associated with this feature.
         if (flags != START_FLAG_REDELIVERY) {
@@ -149,6 +154,7 @@ public class TabQueueService extends Service {
                     // need to remove it before proceeding or that url will open multiple times.
                     if (stopServiceRunnable != null) {
                         tabQueueHandler.removeCallbacks(stopServiceRunnable);
+                        stopForeground(false);
                         stopSelfResult(stopServiceRunnable.getStartId());
                         stopServiceRunnable = null;
                         removeView();
@@ -212,6 +218,7 @@ public class TabQueueService extends Service {
         forwardIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         startActivity(forwardIntent);
 
+        stopForeground(false);
         TabQueueHelper.removeNotification(getApplicationContext());
 
         GeckoSharedPrefs.forApp(getApplicationContext()).edit().remove(GeckoPreferences.PREFS_TAB_QUEUE_LAST_SITE)
@@ -327,6 +334,7 @@ public class TabQueueService extends Service {
                 removeView();
             }
 
+            stopForeground(false);
             stopSelfResult(startId);
         }
 
