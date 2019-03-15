@@ -20,7 +20,7 @@ import java.util.List;
 public class GeckoMediaDrmBridgeV23 extends GeckoMediaDrmBridgeV21 {
     private static final boolean DEBUG = false;
 
-    GeckoMediaDrmBridgeV23(String keySystem) throws Exception {
+    GeckoMediaDrmBridgeV23(final String keySystem) throws Exception {
         super(keySystem);
         if (DEBUG) Log.d(LOGTAG, "GeckoMediaDrmBridgeV23 ctor");
         mDrm.setOnKeyStatusChangeListener(new KeyStatusChangeListener(), null);
@@ -28,10 +28,10 @@ public class GeckoMediaDrmBridgeV23 extends GeckoMediaDrmBridgeV21 {
 
     private class KeyStatusChangeListener implements MediaDrm.OnKeyStatusChangeListener {
         @Override
-        public void onKeyStatusChange(MediaDrm mediaDrm,
-                                      byte[] sessionId,
-                                      List<MediaDrm.KeyStatus> keyInformation,
-                                      boolean hasNewUsableKey) {
+        public void onKeyStatusChange(final MediaDrm mediaDrm,
+                                      final byte[] sessionId,
+                                      final List<MediaDrm.KeyStatus> keyInformation,
+                                      final boolean hasNewUsableKey) {
             if (DEBUG) Log.d(LOGTAG, "[onKeyStatusChange] hasNewUsableKey = " + hasNewUsableKey);
             if (keyInformation.size() == 0) {
                 return;
@@ -48,7 +48,7 @@ public class GeckoMediaDrmBridgeV23 extends GeckoMediaDrmBridgeV21 {
     }
 
     @Override
-    protected void HandleKeyStatusChangeByDummyKey(String sessionId)
+    protected void HandleKeyStatusChangeByDummyKey(final String sessionId)
     {
         // MediaDrm.KeyStatus information listener is supported on M+, there is no need to use
         // dummy key id to report key status anymore.

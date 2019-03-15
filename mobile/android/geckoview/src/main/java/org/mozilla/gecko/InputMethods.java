@@ -35,12 +35,13 @@ final public class InputMethods {
 
     private InputMethods() {}
 
-    public static String getCurrentInputMethod(Context context) {
+    public static String getCurrentInputMethod(final Context context) {
         String inputMethod = Secure.getString(context.getContentResolver(), Secure.DEFAULT_INPUT_METHOD);
         return (inputMethod != null ? inputMethod : "");
     }
 
-    public static InputMethodInfo getInputMethodInfo(Context context, String inputMethod) {
+    public static InputMethodInfo getInputMethodInfo(final Context context,
+                                                     final String inputMethod) {
         InputMethodManager imm = getInputMethodManager(context);
         Collection<InputMethodInfo> infos = imm.getEnabledInputMethodList();
         for (InputMethodInfo info : infos) {
@@ -51,11 +52,11 @@ final public class InputMethods {
         return null;
     }
 
-    public static InputMethodManager getInputMethodManager(Context context) {
+    public static InputMethodManager getInputMethodManager(final Context context) {
         return (InputMethodManager) context.getSystemService(Context.INPUT_METHOD_SERVICE);
     }
 
-    public static void restartInput(Context context, View view) {
+    public static void restartInput(final Context context, final View view) {
         final InputMethodManager imm = getInputMethodManager(context);
         if (imm != null) {
             imm.restartInput(view);
@@ -88,7 +89,7 @@ final public class InputMethods {
         return METHOD_HTC_TOUCH_INPUT.equals(inputMethod);
     }
 
-    public static boolean needsRestartOnReplaceRemove(Context context) {
+    public static boolean needsRestartOnReplaceRemove(final Context context) {
         String inputMethod = getCurrentInputMethod(context);
         return METHOD_SONY.equals(inputMethod);
     }

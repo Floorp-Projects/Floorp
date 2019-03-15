@@ -25,7 +25,7 @@ public class PermissionBlock {
     private Runnable onPermissionsDenied;
     private boolean doNotPrompt;
 
-    /* package-private */ PermissionBlock(Context context, PermissionsHelper helper) {
+    /* package-private */ PermissionBlock(final Context context, final PermissionsHelper helper) {
         this.context = context;
         this.helper = helper;
     }
@@ -33,7 +33,7 @@ public class PermissionBlock {
     /**
      * Determine whether the app has been granted the specified permissions.
      */
-    public PermissionBlock withPermissions(@NonNull String... permissions) {
+    public PermissionBlock withPermissions(final @NonNull String... permissions) {
         this.permissions = permissions;
         return this;
     }
@@ -68,7 +68,7 @@ public class PermissionBlock {
      * If the condition is true then do not prompt the user to accept the permission if it has not
      * been granted yet.
      */
-    public PermissionBlock doNotPromptIf(boolean condition) {
+    public PermissionBlock doNotPromptIf(final boolean condition) {
         if (condition) {
             doNotPrompt();
         }
@@ -87,7 +87,7 @@ public class PermissionBlock {
      * Execute the specified runnable if the app has been granted all permissions. Calling this method will prompt the
      * user if needed.
      */
-    public void run(Runnable onPermissionsGranted) {
+    public void run(final Runnable onPermissionsGranted) {
         if (!doNotPrompt && !(context instanceof Activity)) {
             throw new IllegalStateException("You need to either specify doNotPrompt() or pass in an Activity context");
         }
@@ -109,7 +109,7 @@ public class PermissionBlock {
     /**
      * Execute this fallback if at least one permission has not been granted.
      */
-    public PermissionBlock andFallback(@NonNull Runnable onPermissionsDenied) {
+    public PermissionBlock andFallback(final @NonNull Runnable onPermissionsDenied) {
         this.onPermissionsDenied = onPermissionsDenied;
         return this;
     }
@@ -122,7 +122,7 @@ public class PermissionBlock {
         executeRunnable(onPermissionsDenied);
     }
 
-    private void executeRunnable(Runnable runnable) {
+    private void executeRunnable(final Runnable runnable) {
         if (runnable == null) {
             return;
         }
@@ -144,7 +144,7 @@ public class PermissionBlock {
         return permissions;
     }
 
-    /* package-private */ boolean hasPermissions(Context context) {
+    /* package-private */ boolean hasPermissions(final Context context) {
         return helper.hasPermissions(context, permissions);
     }
 }
