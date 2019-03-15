@@ -7,6 +7,7 @@ package mozilla.components.service.pocket
 import mozilla.components.concept.fetch.Client
 import mozilla.components.lib.fetch.httpurlconnection.HttpURLConnectionClient
 import mozilla.components.service.pocket.helpers.PocketTestResource
+import mozilla.components.service.pocket.helpers.assertResponseIsFailure
 import mozilla.components.service.pocket.net.PocketResponse
 import mozilla.components.support.test.any
 import org.junit.Assert.assertEquals
@@ -45,7 +46,7 @@ class PocketEndpointTest {
     fun `WHEN getting video recommendations and the endpoint returns null THEN a failure is returned`() {
         `when`(raw.getGlobalVideoRecommendations()).thenReturn(null)
         `when`(jsonParser.jsonToGlobalVideoRecommendations(any())).thenThrow(AssertionError("We assume this won't get called so we don't mock it"))
-        assertIsFailure(endpoint.getGlobalVideoRecommendations())
+        assertResponseIsFailure(endpoint.getGlobalVideoRecommendations())
     }
 
     @Test
@@ -66,14 +67,14 @@ class PocketEndpointTest {
     fun `WHEN getting video recommendations, the server returns a String, and the JSON parser returns null THEN a failure is returned`() {
         `when`(raw.getGlobalVideoRecommendations()).thenReturn("")
         `when`(jsonParser.jsonToGlobalVideoRecommendations(any())).thenReturn(null)
-        assertIsFailure(endpoint.getGlobalVideoRecommendations())
+        assertResponseIsFailure(endpoint.getGlobalVideoRecommendations())
     }
 
     @Test
     fun `WHEN getting video recommendations, the server returns a String, and the jsonParser returns an empty list THEN a failure is returned`() {
         `when`(raw.getGlobalVideoRecommendations()).thenReturn("")
         `when`(jsonParser.jsonToGlobalVideoRecommendations(any())).thenReturn(emptyList())
-        assertIsFailure(endpoint.getGlobalVideoRecommendations())
+        assertResponseIsFailure(endpoint.getGlobalVideoRecommendations())
     }
 
     @Test
@@ -114,8 +115,4 @@ class PocketEndpointTest {
         assertEquals(20, results?.size)
         results?.forEach { println(it.toString()) }
     }
-}
-
-private fun assertIsFailure(actual: Any) {
-    assertEquals(PocketResponse.Failure::class.java, actual.javaClass)
 }

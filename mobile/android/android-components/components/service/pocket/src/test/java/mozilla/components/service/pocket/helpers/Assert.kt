@@ -8,6 +8,7 @@ import mozilla.components.concept.fetch.Client
 import mozilla.components.concept.fetch.MutableHeaders
 import mozilla.components.concept.fetch.Request
 import mozilla.components.concept.fetch.Response
+import mozilla.components.service.pocket.net.PocketResponse
 import mozilla.components.support.test.any
 import org.junit.Assert.assertEquals
 import org.mockito.Mockito.`when`
@@ -56,7 +57,6 @@ fun assertSuccessfulRequestReturnsResponseBody(client: Client, makeRequest: () -
     `when`(client.fetch(any())).thenReturn(response)
 
     assertEquals(expectedBody, makeRequest())
-
 }
 
 /**
@@ -68,4 +68,8 @@ fun assertResponseIsClosed(client: Client, response: Response, makeRequest: () -
     `when`(client.fetch(any())).thenReturn(response)
     makeRequest()
     verify(response, times(1)).close()
+}
+
+fun assertResponseIsFailure(response: Any) {
+    assertEquals(PocketResponse.Failure::class.java, response.javaClass)
 }
