@@ -657,9 +657,9 @@ LexerTransition<nsBMPDecoder::State> nsBMPDecoder::ReadBitfields(
   }
 
   MOZ_ASSERT(!mImageData, "Already have a buffer allocated?");
-  nsresult rv = AllocateFrame(
-      OutputSize(), FullOutputFrame(),
-      mMayHaveTransparency ? SurfaceFormat::B8G8R8A8 : SurfaceFormat::B8G8R8X8);
+  nsresult rv = AllocateFrame(OutputSize(), mMayHaveTransparency
+                                                ? SurfaceFormat::B8G8R8A8
+                                                : SurfaceFormat::B8G8R8X8);
   if (NS_FAILED(rv)) {
     return Transition::TerminateFailure();
   }

@@ -1196,8 +1196,6 @@ bool RasterImage::Decode(const IntSize& aSize, uint32_t aFlags,
   nsresult rv;
   bool animated = mAnimationState && aPlaybackType == PlaybackType::eAnimated;
   if (animated) {
-    decoderFlags |= DecoderFlags::BLEND_ANIMATION;
-
     size_t currentFrame = mAnimationState->GetCurrentAnimationFrameIndex();
     rv = DecoderFactory::CreateAnimationDecoder(
         mDecoderType, WrapNotNull(this), mSourceBuffer, mSize, decoderFlags,
@@ -1348,7 +1346,7 @@ ImgDrawResult RasterImage::DrawInternal(DrawableSurface&& aSurface,
 
   // By now we may have a frame with the requested size. If not, we need to
   // adjust the drawing parameters accordingly.
-  IntSize finalSize = aSurface->GetImageSize();
+  IntSize finalSize = aSurface->GetSize();
   bool couldRedecodeForBetterFrame = false;
   if (finalSize != aSize) {
     gfx::Size scale(double(aSize.width) / finalSize.width,

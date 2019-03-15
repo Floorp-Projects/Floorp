@@ -360,11 +360,6 @@ class BlendAnimationFilter final : public SurfaceFilter {
       return rv;
     }
 
-    if (!aConfig.mDecoder || !aConfig.mDecoder->ShouldBlendAnimation()) {
-      MOZ_ASSERT_UNREACHABLE("Expected image decoder that is blending!");
-      return NS_ERROR_INVALID_ARG;
-    }
-
     imgFrame* currentFrame = aConfig.mDecoder->GetCurrentFrame();
     if (!currentFrame) {
       MOZ_ASSERT_UNREACHABLE("Decoder must have current frame!");
@@ -418,7 +413,7 @@ class BlendAnimationFilter final : public SurfaceFilter {
       const RawAccessFrameRef& restoreFrame =
           aConfig.mDecoder->GetRestoreFrameRef();
       if (restoreFrame) {
-        MOZ_ASSERT(restoreFrame->GetImageSize() == outputSize);
+        MOZ_ASSERT(restoreFrame->GetSize() == outputSize);
         MOZ_ASSERT(restoreFrame->IsFinished());
 
         // We can safely use this pointer without holding a RawAccessFrameRef
