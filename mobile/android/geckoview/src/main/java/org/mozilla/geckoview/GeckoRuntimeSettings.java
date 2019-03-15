@@ -497,14 +497,18 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
      *
      * @return True if the pause is enabled.
      */
-    public boolean getPauseForDebuggerEnabled() { return mDebugPause; }
+    public boolean getPauseForDebuggerEnabled() {
+        return mDebugPause;
+    }
 
     /**
      * Gets whether the compositor should use the maximum screen depth when rendering.
      *
      * @return True if the maximum screen depth should be used.
      */
-    public boolean getUseMaxScreenDepth() { return mUseMaxScreenDepth; }
+    public boolean getUseMaxScreenDepth() {
+        return mUseMaxScreenDepth;
+    }
 
     /**
      * Gets the display density override value.
