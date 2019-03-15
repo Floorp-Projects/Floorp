@@ -12,9 +12,6 @@ import android.support.annotation.NonNull;
 import android.text.TextUtils;
 
 import java.nio.charset.Charset;
-import java.util.Collections;
-import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Set;
 
 public class StringUtils {

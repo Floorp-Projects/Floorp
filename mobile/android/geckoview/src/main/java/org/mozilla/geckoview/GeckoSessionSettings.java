@@ -8,18 +8,12 @@ package org.mozilla.geckoview;
 
 import org.mozilla.gecko.util.GeckoBundle;
 
-import android.app.Service;
-import android.os.Bundle;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.support.annotation.AnyThread;
-import android.support.annotation.IntDef;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.util.Log;
 
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
 import java.util.Arrays;
 import java.util.Collection;
 

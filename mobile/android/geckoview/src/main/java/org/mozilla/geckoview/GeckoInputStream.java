@@ -6,7 +6,6 @@ import org.mozilla.gecko.util.ThreadUtils;
 
 import android.support.annotation.AnyThread;
 import android.support.annotation.NonNull;
-import android.util.Log;
 
 import java.io.IOException;
 import java.io.InputStream;

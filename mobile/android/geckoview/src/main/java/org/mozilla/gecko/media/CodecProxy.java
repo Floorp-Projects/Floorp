@@ -11,7 +11,6 @@ import android.media.MediaFormat;
 import android.os.DeadObjectException;
 import android.os.RemoteException;
 import android.util.Log;
-import android.view.Surface;
 
 import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.gfx.GeckoSurface;

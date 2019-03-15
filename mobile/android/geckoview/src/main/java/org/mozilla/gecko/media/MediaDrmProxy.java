@@ -12,8 +12,6 @@ import org.mozilla.gecko.mozglue.JNIObject;
 import org.mozilla.gecko.annotation.WrapForJNI;
 
 import android.annotation.SuppressLint;
-import android.media.MediaCodecInfo;
-import android.media.MediaCodecList;
 import android.media.MediaCrypto;
 import android.media.MediaDrm;
 import android.os.Build;
