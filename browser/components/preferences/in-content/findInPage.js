@@ -35,9 +35,9 @@ var gSearchResultsPane = {
     helpContainer.querySelector("a").href = helpUrl;
   },
 
-  handleEvent(event) {
+  async handleEvent(event) {
     // Ensure categories are initialized if idle callback didn't run sooo enough.
-    this.initializeCategories();
+    await this.initializeCategories();
     this.searchFunction(event);
   },
 
@@ -63,14 +63,14 @@ var gSearchResultsPane = {
   /**
    * Will attempt to initialize all uninitialized categories
    */
-  initializeCategories() {
+  async initializeCategories() {
     //  Initializing all the JS for all the tabs
     if (!this.categoriesInitialized) {
       this.categoriesInitialized = true;
       // Each element of gCategoryInits is a name
       for (let [/* name */, category] of gCategoryInits) {
         if (!category.inited) {
-          category.init();
+          await category.init();
         }
       }
     }
@@ -223,10 +223,10 @@ var gSearchResultsPane = {
 
     let srHeader = document.getElementById("header-searchResults");
     let noResultsEl = document.getElementById("no-results-message");
-    srHeader.hidden = !this.query;
     if (this.query) {
       // Showing the Search Results Tag
-      gotoPref("paneSearchResults");
+      await gotoPref("paneSearchResults");
+      srHeader.hidden = false;
 
       let resultsFound = false;
 
@@ -307,7 +307,8 @@ var gSearchResultsPane = {
       noResultsEl.hidden = true;
       document.getElementById("sorry-message-query").textContent = "";
       // Going back to General when cleared
-      gotoPref("paneGeneral");
+      await gotoPref("paneGeneral");
+      srHeader.hidden = true;
 
       // Hide some special second level headers in normal view
       for (let element of document.querySelectorAll(".search-header")) {
