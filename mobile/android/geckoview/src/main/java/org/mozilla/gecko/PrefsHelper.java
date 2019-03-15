@@ -209,13 +209,18 @@ public final class PrefsHelper {
     }
 
     @WrapForJNI(calledFrom = "gecko")
-    private static void callPrefHandler(final PrefHandler handler, int type, final String pref,
-                                        boolean boolVal, int intVal, String strVal) {
+    private static void callPrefHandler(final PrefHandler handler, final int originalType,
+                                        final String pref, final boolean originalBoolVal,
+                                        final int intVal, final String originalStrVal) {
 
         // Some Gecko preferences use integers or strings to reference state instead of
         // directly representing the value.  Since the Java UI uses the type to determine
         // which ui elements to show and how to handle them, we need to normalize these
         // preferences to the correct type.
+        int type = originalType;
+        String strVal = originalStrVal;
+        boolean boolVal = originalBoolVal;
+
         if (INT_TO_STRING_PREFS.contains(pref)) {
             type = PREF_STRING;
             strVal = String.valueOf(intVal);

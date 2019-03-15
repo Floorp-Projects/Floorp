@@ -124,17 +124,17 @@ import org.mozilla.gecko.annotation.WrapForJNI;
         mScrollerX.setFinalPosition(x);
     }
 
-    private static float viscousFluid(float x) {
-        x *= sViscousFluidScale;
-        if (x < 1.0f) {
-            x -= (1.0f - (float) Math.exp(-x));
+    private static float viscousFluid(final float x) {
+        float y = x * sViscousFluidScale;
+        if (y < 1.0f) {
+            y -= (1.0f - (float) Math.exp(-y));
         } else {
             float start = 0.36787944117f; // 1/e == exp(-1)
-            x = 1.0f - (float) Math.exp(1.0f - x);
-            x = start + x * (1.0f - start);
+            y = 1.0f - (float) Math.exp(1.0f - y);
+            y = start + y * (1.0f - start);
         }
-        x *= sViscousFluidNormalize;
-        return x;
+        y *= sViscousFluidNormalize;
+        return y;
     }
 
     /**
@@ -255,27 +255,31 @@ import org.mozilla.gecko.annotation.WrapForJNI;
      * @param overY Overfling range. If > 0, vertical overfling in either
      *            direction will be possible.
      */
-    public void fling(int startX, int startY, int velocityX, int velocityY, int minX, int maxX,
-            int minY, int maxY, int overX, int overY, long time) {
+    public void fling(final int startX, final int startY, final int velocityX, final int velocityY,
+                      final int minX, final int maxX, final int minY, final int maxY,
+                      final int overX, final int overY, final long time) {
+        int newVelocityX = velocityX;
+        int newVelocityY = velocityY;
+
         // Continue a scroll or fling in progress
         if (mFlywheel && !isFinished()) {
             float oldVelocityX = mScrollerX.mCurrVelocity;
             float oldVelocityY = mScrollerY.mCurrVelocity;
-            boolean sameXDirection = (velocityX == 0) || (oldVelocityX == 0) ||
-                ((velocityX < 0) == (oldVelocityX < 0));
-            boolean sameYDirection = (velocityY == 0) || (oldVelocityY == 0) ||
-                ((velocityY < 0) == (oldVelocityY < 0));
+            boolean sameXDirection = (newVelocityX == 0) || (oldVelocityX == 0) ||
+                ((newVelocityX < 0) == (oldVelocityX < 0));
+            boolean sameYDirection = (newVelocityY == 0) || (oldVelocityY == 0) ||
+                ((newVelocityY < 0) == (oldVelocityY < 0));
             if (sameXDirection) {
-                velocityX += oldVelocityX;
+                newVelocityX += + oldVelocityX;
             }
             if (sameYDirection) {
-                velocityY += oldVelocityY;
+                newVelocityY += oldVelocityY;
             }
         }
 
         mMode = FLING_MODE;
-        mScrollerX.fling(startX, velocityX, minX, maxX, overX, time);
-        mScrollerY.fling(startY, velocityY, minY, maxY, overY, time);
+        mScrollerX.fling(startX, newVelocityX, minX, maxX, overX, time);
+        mScrollerY.fling(startY, newVelocityY, minY, maxY, overY, time);
     }
 
     /**

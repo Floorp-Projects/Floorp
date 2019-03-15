@@ -286,14 +286,15 @@ public class FileUtils {
         if (prefix.length() < 3) {
             throw new IllegalArgumentException("prefix must be at least 3 characters");
         }
-        if (directory == null) {
+        File tempDirectory = directory;
+        if (tempDirectory == null) {
             String tmpDir = System.getProperty("java.io.tmpdir", ".");
-            directory = new File(tmpDir);
+            tempDirectory = new File(tmpDir);
         }
         File result;
         Random random = new Random();
         do {
-            result = new File(directory, prefix + random.nextInt());
+            result = new File(tempDirectory, prefix + random.nextInt());
         } while (!result.mkdirs());
         return result;
     }
