@@ -79,13 +79,13 @@ public class FileUtils {
         String[] files = null;
 
         if (filter != null) {
-          files = dir.list(filter);
+            files = dir.list(filter);
         } else {
-          files = dir.list();
+            files = dir.list();
         }
 
         if (files == null) {
-          return;
+            return;
         }
 
         for (String file : files) {

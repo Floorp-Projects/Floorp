@@ -269,6 +269,6 @@ public final class Sample implements Parcelable {
                 append(", pts=").append(info.presentationTimeUs).
                 append(", flags=").append(Integer.toHexString(info.flags)).append(" }").
                 append(" }");
-            return str.toString();
+        return str.toString();
     }
 }

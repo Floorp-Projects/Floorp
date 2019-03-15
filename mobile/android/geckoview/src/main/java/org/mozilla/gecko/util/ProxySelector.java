@@ -138,14 +138,14 @@ public class ProxySelector {
         for (int i = 0; i < nonProxyHosts.length(); i++) {
             char c = nonProxyHosts.charAt(i);
             switch (c) {
-            case '.':
-                patternBuilder.append("\\.");
-                break;
-            case '*':
-                patternBuilder.append(".*");
-                break;
-            default:
-                patternBuilder.append(c);
+                case '.':
+                    patternBuilder.append("\\.");
+                    break;
+                case '*':
+                    patternBuilder.append(".*");
+                    break;
+                default:
+                    patternBuilder.append(c);
             }
         }
         // check whether the host is the nonProxyHosts.

@@ -294,13 +294,12 @@ public final class GeckoRuntime implements Parcelable {
     @UiThread
     public @NonNull GeckoResult<Void> registerWebExtension(
             final @NonNull WebExtension webExtension) {
-        final GeckoSession.CallbackResult<Void> result =
-                new GeckoSession.CallbackResult<Void>() {
-                    @Override
-                    public void sendSuccess(final Object response) {
-                        complete(null);
-                    }
-                };
+        final GeckoSession.CallbackResult<Void> result = new GeckoSession.CallbackResult<Void>() {
+            @Override
+            public void sendSuccess(final Object response) {
+                complete(null);
+            }
+        };
 
         final GeckoBundle bundle = new GeckoBundle(1);
         bundle.putString("locationUri", webExtension.location.toString());
@@ -465,8 +464,8 @@ public final class GeckoRuntime implements Parcelable {
         mSettings = source.readParcelable(getClass().getClassLoader());
     }
 
-    public static final Parcelable.Creator<GeckoRuntime> CREATOR
-        = new Parcelable.Creator<GeckoRuntime>() {
+    public static final Parcelable.Creator<GeckoRuntime> CREATOR =
+            new Parcelable.Creator<GeckoRuntime>() {
         @Override
         @AnyThread
         public GeckoRuntime createFromParcel(final Parcel in) {

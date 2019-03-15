@@ -88,12 +88,12 @@ public class GeckoMediaDrmBridgeV21 implements GeckoMediaDrm {
             return mCrypto.requiresSecureDecoderComponent(mimeType);
         }
         return false;
-      }
+    }
 
     private static void assertTrue(final boolean condition) {
-      if (DEBUG && !condition) {
-        throw new AssertionError("Expected condition to be true");
-      }
+        if (DEBUG && !condition) {
+            throw new AssertionError("Expected condition to be true");
+        }
     }
 
     @SuppressLint("WrongConstant")
@@ -672,11 +672,11 @@ public class GeckoMediaDrmBridgeV21 implements GeckoMediaDrm {
     }
 
     private UUID convertKeySystemToSchemeUUID(final String keySystem) {
-      if (WIDEVINE_KEY_SYSTEM.equals(keySystem)) {
-          return WIDEVINE_SCHEME_UUID;
-      }
-      if (DEBUG) Log.d(LOGTAG, "Cannot convert unsupported key system : " + keySystem);
-      return new UUID(0L, 0L);
+        if (WIDEVINE_KEY_SYSTEM.equals(keySystem)) {
+            return WIDEVINE_SCHEME_UUID;
+        }
+        if (DEBUG) Log.d(LOGTAG, "Cannot convert unsupported key system : " + keySystem);
+        return new UUID(0L, 0L);
     }
 
     private String getCDMUserAgent() {

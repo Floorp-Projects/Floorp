@@ -117,9 +117,9 @@ public class GeckoNetworkManager extends BroadcastReceiver implements BundleEven
         final Context applicationContext = GeckoAppShell.getApplicationContext();
         final ConnectionType connectionType = mCurrentConnectionType;
         return new double[] {
-                connectionType.value,
-                connectionType == ConnectionType.WIFI ? 1.0 : 0.0,
-                connectionType == ConnectionType.WIFI ? wifiDhcpGatewayAddress(applicationContext) : 0.0
+            connectionType.value,
+            connectionType == ConnectionType.WIFI ? 1.0 : 0.0,
+            connectionType == ConnectionType.WIFI ? wifiDhcpGatewayAddress(applicationContext) : 0.0
         };
     }
 
