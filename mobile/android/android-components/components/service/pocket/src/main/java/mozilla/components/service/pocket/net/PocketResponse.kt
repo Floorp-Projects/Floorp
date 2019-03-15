@@ -20,4 +20,23 @@ sealed class PocketResponse<T> {
      * A failure response from the Pocket API.
      */
     class Failure<T> internal constructor() : PocketResponse<T>()
+
+    companion object {
+
+        /**
+         * Wraps the given [target] in a [PocketResponse]: if [target] is
+         * - null, then Failure
+         * - a Collection and empty, then Failure
+         * - otherwise, Success
+         */
+        internal fun <T : Any> wrap(target: T?): PocketResponse<T> = when (target) {
+            null -> Failure()
+            is Collection<*> -> if (target.isEmpty()) {
+                Failure()
+            } else {
+                Success<T>(target)
+            }
+            else -> Success(target)
+        }
+    }
 }

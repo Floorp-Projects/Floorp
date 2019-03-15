@@ -36,13 +36,7 @@ class PocketEndpoint internal constructor(
     fun getGlobalVideoRecommendations(): PocketResponse<List<PocketGlobalVideoRecommendation>> {
         val json = rawEndpoint.getGlobalVideoRecommendations()
         val videoRecs = json?.let { jsonParser.jsonToGlobalVideoRecommendations(it) }
-        return videoRecs.wrapInResponse()
-    }
-
-    private fun <T> List<T>?.wrapInResponse(): PocketResponse<List<T>> = if (isNullOrEmpty()) {
-        PocketResponse.Failure()
-    } else {
-        PocketResponse.Success(this!!)
+        return PocketResponse.wrap(videoRecs)
     }
 
     companion object {
