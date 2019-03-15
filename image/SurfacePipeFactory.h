@@ -59,10 +59,6 @@ enum class SurfacePipeFlags {
                                  // result in a better user experience for
                                  // progressive display but which may be more
                                  // computationally expensive.
-
-  BLEND_ANIMATION = 1 << 4  // If set, produce the next full frame of an
-                            // animation instead of a partial frame to be
-                            // blended later.
 };
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(SurfacePipeFlags)
 
@@ -102,8 +98,7 @@ class SurfacePipeFactory {
     const bool downscale = aInputSize != aOutputSize;
     const bool removeFrameRect = !aFrameRect.IsEqualEdges(
         nsIntRect(0, 0, aInputSize.width, aInputSize.height));
-    const bool blendAnimation =
-        bool(aFlags & SurfacePipeFlags::BLEND_ANIMATION);
+    const bool blendAnimation = aAnimParams.isSome();
 
     // Don't interpolate if we're sure we won't show this surface to the user
     // until it's completely decoded. The final pass of an ADAM7 image doesn't
@@ -117,8 +112,6 @@ class SurfacePipeFactory {
       MOZ_ASSERT_UNREACHABLE("ADAM7 deinterlacing is handled by libpng");
       return Nothing();
     }
-
-    MOZ_ASSERT_IF(blendAnimation, aAnimParams);
 
     // Construct configurations for the SurfaceFilters. Note that the order of
     // these filters is significant. We want to deinterlace or interpolate raw

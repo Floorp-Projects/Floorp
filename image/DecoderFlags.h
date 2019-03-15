@@ -31,14 +31,6 @@ enum class DecoderFlags : uint8_t {
    * set.
    */
   CANNOT_SUBSTITUTE = 1 << 4,
-
-  /**
-   * By default, an animation decoder will produce partial frames that need to
-   * be combined with the previously displayed/composited frame by FrameAnimator
-   * to produce a complete frame. If this flag is set, the decoder will perform
-   * this blending at decode time, and the frames produced are complete.
-   */
-  BLEND_ANIMATION = 1 << 5
 };
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(DecoderFlags)
 
