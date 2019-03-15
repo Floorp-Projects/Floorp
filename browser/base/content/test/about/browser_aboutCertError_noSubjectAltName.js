@@ -3,6 +3,7 @@
 
 "use strict";
 
+const PREF_NEW_CERT_ERRORS = "browser.security.newcerterrorpage.enabled";
 const UNKNOWN_ISSUER = "https://no-subject-alt-name.example.com:443";
 
 const checkAdvancedAndGetTechnicalInfoText = async () => {
@@ -40,6 +41,7 @@ const checkCorrectMessages = (message) => {
 };
 
 add_task(async function checkUntrustedCertError() {
+  Services.prefs.setBoolPref(PREF_NEW_CERT_ERRORS, true);
   info(`Loading ${UNKNOWN_ISSUER} which does not have a subject specified in the certificate`);
   let tab = await openErrorPage(UNKNOWN_ISSUER);
   let browser = tab.linkedBrowser;
@@ -48,4 +50,5 @@ add_task(async function checkUntrustedCertError() {
     await ContentTask.spawn(browser, null, checkAdvancedAndGetTechnicalInfoText);
   checkCorrectMessages(badCertTechnicalInfoText, browser);
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  Services.prefs.clearUserPref(PREF_NEW_CERT_ERRORS);
 });
