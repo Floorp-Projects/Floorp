@@ -1,2 +1,7 @@
 == test_bug920877.html test_bug920877-ref.html
 HTTP == test_xmlPrettyPrint_csp.xml test_xmlPrettyPrint_csp-ref.xml
+# Ordinarily, reftests use a browser.viewport.desktopWidth of 800px, same as the
+# size of the reftest document. This test however needs something more representative
+# of a real mobile device, where the desktop viewport width doesn't match the
+# width of the device screen.
+test-pref(dom.meta-viewport.enabled,true) test-pref(browser.viewport.desktopWidth,1200) test-pref(plain_text.wrap_long_lines,true) == test_bug1525662.txt test_bug1525662-ref.html
