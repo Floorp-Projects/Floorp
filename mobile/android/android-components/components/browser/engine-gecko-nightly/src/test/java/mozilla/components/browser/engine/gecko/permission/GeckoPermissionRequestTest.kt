@@ -86,9 +86,8 @@ class GeckoPermissionRequestTest {
     @Test
     fun `grant app permission request`() {
         val callback: GeckoSession.PermissionDelegate.Callback = mock()
-        val uri = "https://mozilla.org"
 
-        var request = GeckoPermissionRequest.App(listOf(Manifest.permission.CAMERA), callback)
+        val request = GeckoPermissionRequest.App(listOf(Manifest.permission.CAMERA), callback)
         request.grant()
         verify(callback).grant()
     }
@@ -96,9 +95,8 @@ class GeckoPermissionRequestTest {
     @Test
     fun `reject app permission request`() {
         val callback: GeckoSession.PermissionDelegate.Callback = mock()
-        val uri = "https://mozilla.org"
 
-        var request = GeckoPermissionRequest.App(listOf(Manifest.permission.CAMERA), callback)
+        val request = GeckoPermissionRequest.App(listOf(Manifest.permission.CAMERA), callback)
         request.reject()
         verify(callback).reject()
     }

@@ -7,7 +7,7 @@ package mozilla.components.browser.engine.gecko
 import android.os.Handler
 import android.os.Message
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.newSingleThreadContext
+import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.errorpages.ErrorType
 import mozilla.components.concept.engine.DefaultSettings
@@ -62,6 +62,7 @@ import org.mozilla.geckoview.WebRequestError.ERROR_CATEGORY_UNKNOWN
 import org.mozilla.geckoview.WebRequestError.ERROR_MALFORMED_URI
 import org.mozilla.geckoview.WebRequestError.ERROR_UNKNOWN
 import org.robolectric.RobolectricTestRunner
+import java.util.concurrent.Executors
 
 @RunWith(RobolectricTestRunner::class)
 class GeckoEngineSessionTest {
@@ -75,7 +76,8 @@ class GeckoEngineSessionTest {
     private lateinit var contentBlockingDelegate: ArgumentCaptor<ContentBlocking.Delegate>
     private lateinit var historyDelegate: ArgumentCaptor<GeckoSession.HistoryDelegate>
 
-    private val testMainScope = CoroutineScope(newSingleThreadContext("Test"))
+    private val testMainScope = CoroutineScope(
+        Executors.newSingleThreadExecutor().asCoroutineDispatcher())
 
     @Before
     fun setup() {

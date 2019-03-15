@@ -151,6 +151,7 @@ class GeckoViewFetchUnitTestCases : mozilla.components.tooling.fetch.tests.Fetch
 
         val geckoResult = mock(GeckoResult::class.java)
         `when`(geckoResult.poll(anyLong())).thenThrow(TimeoutException::class.java)
+        @Suppress("UNCHECKED_CAST")
         `when`(geckoWebExecutor!!.fetch(any(), anyInt())).thenReturn(geckoResult as GeckoResult<WebResponse>)
 
         super.get200WithReadTimeout()
@@ -224,6 +225,7 @@ class GeckoViewFetchUnitTestCases : mozilla.components.tooling.fetch.tests.Fetch
 
         val geckoResult = mock(GeckoResult::class.java)
         `when`(geckoResult.poll(anyLong())).thenReturn(null)
+        @Suppress("UNCHECKED_CAST")
         `when`(geckoWebExecutor!!.fetch(any(), anyInt())).thenReturn(geckoResult as GeckoResult<WebResponse>)
 
         val request = mock(Request::class.java)
