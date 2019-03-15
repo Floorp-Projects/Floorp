@@ -99,7 +99,7 @@ public class WebResponse extends WebMessage {
          * @param code A int representing the HTTP status code.
          * @return This Builder instance.
          */
-        public @NonNull Builder statusCode(int code) {
+        public @NonNull Builder statusCode(final int code) {
             mStatusCode = code;
             return this;
         }

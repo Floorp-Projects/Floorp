@@ -55,13 +55,14 @@ public abstract class GeckoHlsRendererBase extends BaseRenderer {
         new DecoderInputBuffer(DecoderInputBuffer.BUFFER_REPLACEMENT_MODE_NORMAL);
     private final DecoderInputBuffer mflagsOnlyBuffer = DecoderInputBuffer.newFlagsOnlyInstance();
 
-    protected void assertTrue(boolean condition) {
+    protected void assertTrue(final boolean condition) {
         if (DEBUG && !condition) {
             throw new AssertionError("Expected condition to be true");
         }
     }
 
-    public GeckoHlsRendererBase(int trackType, GeckoHlsPlayer.ComponentEventDispatcher eventDispatcher) {
+    public GeckoHlsRendererBase(final int trackType,
+                                final GeckoHlsPlayer.ComponentEventDispatcher eventDispatcher) {
         super(trackType);
         mPlayerEventDispatcher = eventDispatcher;
     }
@@ -85,7 +86,7 @@ public abstract class GeckoHlsRendererBase extends BaseRenderer {
         return Math.abs(lastPTS - firstPTS) > QUEUED_INPUT_SAMPLE_DURATION_THRESHOLD;
     }
 
-    public Format getFormat(int index) {
+    public Format getFormat(final int index) {
         assertTrue(index >= 0);
         Format fmt = index < mFormats.size() ? mFormats.get(index) : null;
         if (DEBUG) { Log.d(LOGTAG, "getFormat : index = " + index + ", format : " + fmt); }
@@ -94,7 +95,7 @@ public abstract class GeckoHlsRendererBase extends BaseRenderer {
 
     public synchronized long getFirstSamplePTS() { return mFirstSampleStartTime; }
 
-    public synchronized ConcurrentLinkedQueue<GeckoHLSSample> getQueuedSamples(int number) {
+    public synchronized ConcurrentLinkedQueue<GeckoHLSSample> getQueuedSamples(final int number) {
         ConcurrentLinkedQueue<GeckoHLSSample> samples =
             new ConcurrentLinkedQueue<GeckoHLSSample>();
 
@@ -119,7 +120,7 @@ public abstract class GeckoHlsRendererBase extends BaseRenderer {
         return samples;
     }
 
-    protected void handleDrmInitChanged(Format oldFormat, Format newFormat) {
+    protected void handleDrmInitChanged(final Format oldFormat, final Format newFormat) {
         Object oldDrmInit = oldFormat == null ? null : oldFormat.drmInitData;
         Object newDrnInit = newFormat.drmInitData;
 
@@ -131,7 +132,7 @@ public abstract class GeckoHlsRendererBase extends BaseRenderer {
         }
     }
 
-    protected boolean canReconfigure(Format oldFormat, Format newFormat) {
+    protected boolean canReconfigure(final Format oldFormat, final Format newFormat) {
         // Referring to ExoPlayer's MediaCodecBaseRenderer, the default is set
         // to false. Only override it in video renderer subclass.
         return false;
@@ -142,11 +143,11 @@ public abstract class GeckoHlsRendererBase extends BaseRenderer {
         // renderer handles this.
     }
 
-    protected void updateCSDInfo(Format format) {
+    protected void updateCSDInfo(final Format format) {
         // do nothing.
     }
 
-    protected void onInputFormatChanged(Format newFormat) throws ExoPlaybackException {
+    protected void onInputFormatChanged(final Format newFormat) throws ExoPlaybackException {
         Format oldFormat;
         try {
             oldFormat = mFormats.get(mFormats.size() - 1);
@@ -258,7 +259,7 @@ public abstract class GeckoHlsRendererBase extends BaseRenderer {
     }
 
     @Override
-    protected void onEnabled(boolean joining) {
+    protected void onEnabled(final boolean joining) {
         // Do nothing.
     }
 
@@ -279,7 +280,7 @@ public abstract class GeckoHlsRendererBase extends BaseRenderer {
     }
 
     @Override
-    protected synchronized void onPositionReset(long positionUs, boolean joining) {
+    protected synchronized void onPositionReset(final long positionUs, final boolean joining) {
         if (DEBUG) { Log.d(LOGTAG, "onPositionReset : positionUs = " + positionUs); }
         mInputStreamEnded = false;
         if (mInitialized) {
@@ -293,7 +294,8 @@ public abstract class GeckoHlsRendererBase extends BaseRenderer {
      * calls renderer.render by passing its wall clock time.
      */
     @Override
-    public void render(long positionUs, long elapsedRealtimeUs) throws ExoPlaybackException {
+    public void render(final long positionUs, final long elapsedRealtimeUs)
+            throws ExoPlaybackException {
         if (BuildConfig.DEBUG_BUILD) {
             Log.d(LOGTAG, "positionUs = " + positionUs +
                           ", mInputStreamEnded = " + mInputStreamEnded);

@@ -38,7 +38,7 @@ public class PrefUtils {
         }
     }
 
-    private static Set<String> getFromJSON(SharedPreferences prefs, String key) {
+    private static Set<String> getFromJSON(final SharedPreferences prefs, final String key) {
         try {
             final String val = prefs.getString(key, "[]");
             return JSONUtils.parseStringSet(new JSONArray(val));

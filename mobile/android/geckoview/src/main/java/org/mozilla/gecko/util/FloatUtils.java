@@ -10,7 +10,7 @@ import java.lang.IllegalArgumentException;
 public final class FloatUtils {
     private FloatUtils() {}
 
-    public static boolean fuzzyEquals(float a, float b) {
+    public static boolean fuzzyEquals(final float a, final float b) {
         return (Math.abs(a - b) < 1e-6);
     }
 }
