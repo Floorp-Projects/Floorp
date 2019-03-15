@@ -122,9 +122,13 @@ public class SharedMemory implements Parcelable {
 
     private native void unmap(long address, int size);
 
-    public boolean isValid() { return mDescriptor != null; }
+    public boolean isValid() {
+        return mDescriptor != null;
+    }
 
-    public int getSize() { return mSize; }
+    public int getSize() {
+        return mSize;
+    }
 
     private int getFD() {
         return isValid() ? mDescriptor.getFd() : -1;

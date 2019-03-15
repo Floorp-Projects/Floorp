@@ -5,8 +5,7 @@
 
 package org.mozilla.gecko;
 
-public interface NotificationListener
-{
+public interface NotificationListener {
     void showNotification(String name, String cookie, String title, String text,
                           String host, String imageUrl);
 

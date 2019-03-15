@@ -114,8 +114,7 @@ public class GeckoWebExecutor {
         }
 
         if (request.cacheMode < WebRequest.CACHE_MODE_FIRST ||
-            request.cacheMode > WebRequest.CACHE_MODE_LAST)
-        {
+            request.cacheMode > WebRequest.CACHE_MODE_LAST) {
             throw new IllegalArgumentException("Unknown cache mode");
         }
 

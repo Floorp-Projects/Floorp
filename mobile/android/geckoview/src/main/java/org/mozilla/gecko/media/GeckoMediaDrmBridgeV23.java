@@ -48,8 +48,7 @@ public class GeckoMediaDrmBridgeV23 extends GeckoMediaDrmBridgeV21 {
     }
 
     @Override
-    protected void HandleKeyStatusChangeByDummyKey(final String sessionId)
-    {
+    protected void HandleKeyStatusChangeByDummyKey(final String sessionId) {
         // MediaDrm.KeyStatus information listener is supported on M+, there is no need to use
         // dummy key id to report key status anymore.
     }

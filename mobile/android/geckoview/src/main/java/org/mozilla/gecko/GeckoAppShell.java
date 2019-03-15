@@ -87,8 +87,7 @@ import android.view.InputDevice;
 import android.view.WindowManager;
 import android.webkit.MimeTypeMap;
 
-public class GeckoAppShell
-{
+public class GeckoAppShell {
     private static final String LOGTAG = "GeckoAppShell";
 
     // We have static members only.
@@ -513,19 +512,13 @@ public class GeckoAppShell
         }
 
         @Override
-        public void onProviderDisabled(final String provider)
-        {
-        }
+        public void onProviderDisabled(final String provider) {}
 
         @Override
-        public void onProviderEnabled(final String provider)
-        {
-        }
+        public void onProviderEnabled(final String provider) {}
 
         @Override
-        public void onStatusChanged(final String provider, final int status, final Bundle extras)
-        {
-        }
+        public void onStatusChanged(final String provider, final int status, final Bundle extras) {}
 
         @Override // NotificationListener
         public void showNotification(final String name, final String cookie, final String host,
@@ -1449,8 +1442,7 @@ public class GeckoAppShell
             bitmap.copyPixelsToBuffer(buf);
 
             return buf.array();
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             Log.w(LOGTAG, "getIconForExtension failed.",  e);
             return null;
         }
@@ -1490,8 +1482,7 @@ public class GeckoAppShell
                 Settings.System.getInt(getApplicationContext().getContentResolver(),
                                        Settings.System.TEXT_SHOW_PASSWORD, 1);
             return (showPassword > 0);
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             return true;
         }
     }

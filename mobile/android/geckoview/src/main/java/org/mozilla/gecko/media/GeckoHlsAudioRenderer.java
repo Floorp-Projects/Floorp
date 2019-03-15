@@ -152,7 +152,9 @@ public class GeckoHlsAudioRenderer extends GeckoHlsRendererBase {
 
     @Override
     protected boolean clearInputSamplesQueue() {
-        if (DEBUG) { Log.d(LOGTAG, "clearInputSamplesQueue"); }
+        if (DEBUG) {
+            Log.d(LOGTAG, "clearInputSamplesQueue");
+        }
         mDemuxedInputSamples.clear();
         return true;
     }

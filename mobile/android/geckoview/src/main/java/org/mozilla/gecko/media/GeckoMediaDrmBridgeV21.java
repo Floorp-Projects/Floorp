@@ -315,8 +315,7 @@ public class GeckoMediaDrmBridgeV21 implements GeckoMediaDrm {
         return;
     }
 
-    protected void HandleKeyStatusChangeByDummyKey(final String sessionId)
-    {
+    protected void HandleKeyStatusChangeByDummyKey(final String sessionId) {
         SessionKeyInfo[] keyInfos = new SessionKeyInfo[1];
         keyInfos[0] = new SessionKeyInfo(DUMMY_KEY_ID,
                                          MediaDrm.KeyStatus.STATUS_USABLE);
