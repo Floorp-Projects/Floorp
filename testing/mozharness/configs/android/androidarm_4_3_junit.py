@@ -9,13 +9,14 @@ config = {
     "emulator_manifest": """
         [
         {
-        "size": 38451805,
-        "digest": "ac3000aa6846dd1b09a420a1ba84727e393036f49da1419d6c9e5ec2490fc6105c74ca18b616c465dbe693992e2939afd88bc2042d961a9050a3cafd2a673ff4",
-        "algorithm": "sha512",
-        "filename": "android-sdk_r24.0.2a-linux.tar.gz",
-        "unpack": "True"
+            "algorithm": "sha512",
+            "visibility": "internal",
+            "filename": "android-sdk_r24.0.2a-linux.tar.gz",
+            "unpack": true,
+            "digest": "9b7d4a6fcb33d80884c68e9099a3e11963a79ec0a380a5a9e1a093e630f960d0a5083392c8804121c3ad27ee8ba29ca8df785d19d5a7fdc89458c4e51ada5120",
+            "size": 38591399
         }
-        ] """,
+        ]""",
     "emulator_avd_name": "test-1",
     "emulator_process_name": "emulator64-arm",
     "emulator_extra_args": "-show-kernel -debug init,console,gles,memcheck,adbserver,adbclient,adb,avd_config,socket -audio oss",

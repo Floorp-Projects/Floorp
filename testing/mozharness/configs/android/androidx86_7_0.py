@@ -8,11 +8,12 @@ config = {
     "emulator_manifest": """
         [
         {
-        "size": 131698372,
-        "digest": "2f62e4f39e2bd858f640b53bbb6cd33de6646f21419d1a9531d9ab5528a7ca6ab6f4cfe370cbb72c4fd475cb9db842a89acdbb9b647d9c0861ee85bc5901dfed",
-        "algorithm": "sha512",
-        "filename": "android-sdk_r27.3.10-linux-x86emu.tar.gz",
-        "unpack": "True"
+            "algorithm": "sha512",
+            "visibility": "internal",
+            "filename": "android-sdk_r27.3.10-linux-x86emu.tar.gz",
+            "unpack": true,
+            "digest": "1e226ec63fbfd9e33b2522da0f35960773cbfd6ab310167c49a5d5caf8333ac44a692cf2b20e00acceda02a3dca731883d65c4401a0d3eb79fdf11007ec04e8e",
+            "size": 131714575
         }
         ] """,
     "emulator_avd_name": "test-1",
