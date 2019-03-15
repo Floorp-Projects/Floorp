@@ -218,6 +218,7 @@ public final class GeckoProfile {
         // ------------------------------------------
         //     Yes    |    Yes    | Active profile or default profile
 
+        String resolvedProfileName = profileName;
         if (TextUtils.isEmpty(profileName) && profileDir == null) {
             // If no profile info was passed in, look for the active profile or a default profile.
             final GeckoProfile profile = GeckoThread.getActiveProfile();
@@ -230,25 +231,25 @@ public final class GeckoProfile {
             return GeckoProfile.initFromArgs(context, sIntentArgs);
         } else if (profileName == null) {
             // If only profile dir was passed in, use custom (anonymous) profile.
-            profileName = CUSTOM_PROFILE;
+            resolvedProfileName = CUSTOM_PROFILE;
         }
 
         // We require the profile dir to exist if specified, so create it here if needed.
         final boolean init = profileDir != null && profileDir.mkdirs();
 
         // Actually try to look up the profile.
-        GeckoProfile profile = sProfileCache.get(profileName);
+        GeckoProfile profile = sProfileCache.get(resolvedProfileName);
         GeckoProfile newProfile = null;
 
         if (profile == null) {
             try {
-                newProfile = new GeckoProfile(context, profileName, profileDir);
+                newProfile = new GeckoProfile(context, resolvedProfileName, profileDir);
             } catch (NoMozillaDirectoryException e) {
                 // We're unable to do anything sane here.
                 throw new RuntimeException(e);
             }
 
-            profile = sProfileCache.putIfAbsent(profileName, newProfile);
+            profile = sProfileCache.putIfAbsent(resolvedProfileName, newProfile);
         }
 
         if (profile == null) {

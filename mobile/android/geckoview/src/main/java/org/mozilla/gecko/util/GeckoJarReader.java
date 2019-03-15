@@ -187,6 +187,7 @@ public final class GeckoJarReader {
     private static InputStream getStream(NativeZip zip, Stack<String> jarUrls, String origUrl) {
         InputStream inputStream = null;
 
+        NativeZip currentZip = zip;
         // loop through children jar files until we reach the innermost one
         while (!jarUrls.empty()) {
             String fileName = jarUrls.pop();
@@ -194,7 +195,7 @@ public final class GeckoJarReader {
             if (inputStream != null) {
                 // intermediate NativeZips and InputStreams will be garbage collected.
                 try {
-                    zip = new NativeZip(inputStream);
+                    currentZip = new NativeZip(inputStream);
                 } catch (IllegalArgumentException e) {
                     String description = "!!! BUG 849589 !!! origUrl=" + origUrl;
                     Log.e(LOGTAG, description, e);
@@ -202,7 +203,7 @@ public final class GeckoJarReader {
                 }
             }
 
-            inputStream = zip.getInputStream(fileName);
+            inputStream = currentZip.getInputStream(fileName);
             if (inputStream == null) {
                 Log.d(LOGTAG, "No Entry for " + fileName);
                 return null;
@@ -221,15 +222,11 @@ public final class GeckoJarReader {
      *    omni.ja
      *    chrome/chrome/content/branding/favicon32.png
      */
-    private static Stack<String> parseUrl(String url) {
-        return parseUrl(url, null);
+    private static Stack<String> parseUrl(final String url) {
+        return parseUrl(url, new Stack<>());
     }
 
-    private static Stack<String> parseUrl(String url, Stack<String> results) {
-        if (results == null) {
-            results = new Stack<String>();
-        }
-
+    private static Stack<String> parseUrl(final String url, final Stack<String> results) {
         if (url.startsWith("jar:")) {
             int jarEnd = url.lastIndexOf("!");
             String subStr = url.substring(4, jarEnd);

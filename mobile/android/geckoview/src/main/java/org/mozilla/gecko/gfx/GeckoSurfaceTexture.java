@@ -261,24 +261,25 @@ import org.mozilla.gecko.mozglue.JNIObject;
                 return null;
             }
 
-            if (handle == 0) {
+            int resolvedHandle = handle;
+            if (resolvedHandle == 0) {
                 // Generate new handle value when none specified.
-                handle = sNextHandle++;
+                resolvedHandle = sNextHandle++;
             }
 
             final GeckoSurfaceTexture gst;
             if (isSingleBufferSupported()) {
-                gst = new GeckoSurfaceTexture(handle, singleBufferMode);
+                gst = new GeckoSurfaceTexture(resolvedHandle, singleBufferMode);
             } else {
-                gst = new GeckoSurfaceTexture(handle);
+                gst = new GeckoSurfaceTexture(resolvedHandle);
             }
 
-            if (sSurfaceTextures.containsKey(handle)) {
+            if (sSurfaceTextures.containsKey(resolvedHandle)) {
                 gst.release();
                 throw new IllegalArgumentException("Already have a GeckoSurfaceTexture with that handle");
             }
 
-            sSurfaceTextures.put(handle, gst);
+            sSurfaceTextures.put(resolvedHandle, gst);
             return gst;
         }
     }
