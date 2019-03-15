@@ -535,8 +535,7 @@ public class PanZoomController extends JNIObject {
         if (eventType == MotionEvent.ACTION_POINTER_UP ||
             eventType == MotionEvent.ACTION_UP ||
             eventType == MotionEvent.ACTION_CANCEL ||
-            eventType == MotionEvent.ACTION_HOVER_MOVE)
-        {
+            eventType == MotionEvent.ACTION_HOVER_MOVE) {
             mPointerState.pointers.remove(pointerIndex);
         }
     }

@@ -51,10 +51,14 @@ public final class Sample implements Parcelable {
             mArray = in.createByteArray();
         }
 
-        private ArrayBuffer(final byte[] bytes) { mArray = bytes; }
+        private ArrayBuffer(final byte[] bytes) {
+            mArray = bytes;
+        }
 
         @Override
-        public int describeContents() { return 0; }
+        public int describeContents() {
+            return 0;
+        }
 
         @Override
         public void writeToParcel(final Parcel dest, final int flags) {
@@ -93,7 +97,9 @@ public final class Sample implements Parcelable {
     public BufferInfo info;
     public CryptoInfo cryptoInfo;
 
-    public static Sample create() { return create(null, new BufferInfo(), null); }
+    public static Sample create() {
+        return create(null, new BufferInfo(), null);
+    }
 
     public static Sample create(final ByteBuffer src, final BufferInfo info,
                                 final CryptoInfo cryptoInfo) {

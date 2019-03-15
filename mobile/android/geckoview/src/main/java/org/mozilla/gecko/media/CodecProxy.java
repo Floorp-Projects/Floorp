@@ -171,8 +171,7 @@ public final class CodecProxy {
     }
 
     @WrapForJNI
-    public synchronized boolean isAdaptivePlaybackSupported()
-    {
+    public synchronized boolean isAdaptivePlaybackSupported() {
       if (mRemote == null) {
           Log.e(LOGTAG, "cannot check isAdaptivePlaybackSupported with an ended codec");
           return false;
@@ -186,8 +185,7 @@ public final class CodecProxy {
     }
 
     @WrapForJNI
-    public synchronized boolean isHardwareAccelerated()
-    {
+    public synchronized boolean isHardwareAccelerated() {
       if (mRemote == null) {
           Log.e(LOGTAG, "cannot check isHardwareAccelerated with an ended codec");
           return false;
@@ -201,8 +199,7 @@ public final class CodecProxy {
     }
 
     @WrapForJNI
-    public synchronized boolean isTunneledPlaybackSupported()
-    {
+    public synchronized boolean isTunneledPlaybackSupported() {
       if (mRemote == null) {
           Log.e(LOGTAG, "cannot check isTunneledPlaybackSupported with an ended codec");
           return false;
@@ -266,7 +263,9 @@ public final class CodecProxy {
             return false;
         }
         try {
-            if (DEBUG) { Log.d(LOGTAG, "flush " + this); }
+            if (DEBUG) {
+                Log.d(LOGTAG, "flush " + this);
+            }
             mRemote.flush();
             mFlushed = true;
         } catch (DeadObjectException e) {
@@ -286,7 +285,9 @@ public final class CodecProxy {
                 Log.w(LOGTAG, "codec already ended");
                 return true;
             }
-            if (DEBUG) { Log.d(LOGTAG, "release " + this); }
+            if (DEBUG) {
+                Log.d(LOGTAG, "release " + this);
+            }
 
             if (!mSurfaceOutputs.isEmpty()) {
                 // Flushing output buffers to surface may cause some frames to be skipped and

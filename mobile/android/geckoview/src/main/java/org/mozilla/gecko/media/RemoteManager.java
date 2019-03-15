@@ -79,7 +79,9 @@ public final class RemoteManager implements IBinder.DeathRecipient {
                     wait(1000);
                     waitCount++;
                 } catch (InterruptedException e) {
-                    if (DEBUG) { e.printStackTrace(); }
+                    if (DEBUG) {
+                        e.printStackTrace();
+                    }
                 }
             }
             if (DEBUG) {
@@ -92,7 +94,9 @@ public final class RemoteManager implements IBinder.DeathRecipient {
                 try {
                     wait(1000);
                 } catch (InterruptedException e) {
-                    if (DEBUG) { e.printStackTrace(); }
+                    if (DEBUG) {
+                        e.printStackTrace();
+                    }
                 }
             }
         }

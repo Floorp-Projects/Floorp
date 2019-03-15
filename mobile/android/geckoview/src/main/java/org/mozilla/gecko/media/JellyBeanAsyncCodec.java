@@ -64,7 +64,9 @@ final class JellyBeanAsyncCodec implements AsyncCodec {
             switch (msg.what) {
                 case MSG_CANCELLATION:
                     // Just a marker. Nothing to do here.
-                    if (DEBUG) { Log.d(LOGTAG, "handler " + this + " done cancellation, codec=" + JellyBeanAsyncCodec.this); }
+                    if (DEBUG) {
+                        Log.d(LOGTAG, "handler " + this + " done cancellation, codec=" + JellyBeanAsyncCodec.this);
+                    }
                     break;
                 default:
                     super.handleMessage(msg);
@@ -276,7 +278,9 @@ final class JellyBeanAsyncCodec implements AsyncCodec {
         HandlerThread thread = new HandlerThread(name);
         thread.start();
         mBufferPoller = new BufferPoller(thread.getLooper());
-        if (DEBUG) { Log.d(LOGTAG, "start poller for codec:" + this + ", thread=" + thread.getThreadId()); }
+        if (DEBUG) {
+            Log.d(LOGTAG, "start poller for codec:" + this + ", thread=" + thread.getThreadId());
+        }
     }
 
     @Override
@@ -295,7 +299,9 @@ final class JellyBeanAsyncCodec implements AsyncCodec {
             looper = mBufferPoller.getLooper();
         }
         mCallbackSender = new CallbackSender(looper, callbacks);
-        if (DEBUG) { Log.d(LOGTAG, "setCallbacks(): sender=" + mCallbackSender); }
+        if (DEBUG) {
+            Log.d(LOGTAG, "setCallbacks(): sender=" + mCallbackSender);
+        }
     }
 
     @Override
@@ -468,6 +474,8 @@ final class JellyBeanAsyncCodec implements AsyncCodec {
         mBufferPoller.getLooper().quit();
         mBufferPoller = null;
 
-        if (DEBUG) { Log.d(LOGTAG, "stop poller " + this); }
+        if (DEBUG) {
+            Log.d(LOGTAG, "stop poller " + this);
+        }
     }
 }
