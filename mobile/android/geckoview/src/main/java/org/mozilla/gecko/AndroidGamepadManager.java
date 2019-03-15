@@ -185,11 +185,11 @@ public class AndroidGamepadManager {
     }
 
     @WrapForJNI
-    private static void onGamepadAdded(final int device_id, final int service_id) {
+    private static void onGamepadAdded(final int deviceId, final int serviceId) {
         ThreadUtils.postToUiThread(new Runnable() {
             @Override
             public void run() {
-                handleGamepadAdded(device_id, service_id);
+                handleGamepadAdded(deviceId, serviceId);
             }
         });
     }
