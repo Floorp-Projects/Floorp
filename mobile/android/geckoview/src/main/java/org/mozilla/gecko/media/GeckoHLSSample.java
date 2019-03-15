@@ -34,12 +34,12 @@ public final class GeckoHLSSample {
     @WrapForJNI
     final public CryptoInfo cryptoInfo;
 
-    private ByteBuffer buffer = null;
+    private ByteBuffer mBuffer = null;
 
     @WrapForJNI
     public void writeToByteBuffer(final ByteBuffer dest) throws IOException {
-        if (buffer != null && dest != null && info.size > 0) {
-            dest.put(buffer);
+        if (mBuffer != null && dest != null && info.size > 0) {
+            dest.put(mBuffer);
         }
     }
 
@@ -62,7 +62,7 @@ public final class GeckoHLSSample {
                            final CryptoInfo cryptoInfo, final int formatIndex) {
         this.formatIndex = formatIndex;
         duration = Long.MAX_VALUE;
-        this.buffer = buffer;
+        this.mBuffer = buffer;
         this.info = info;
         this.cryptoInfo = cryptoInfo;
     }

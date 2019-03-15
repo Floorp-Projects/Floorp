@@ -53,7 +53,7 @@ public abstract class GeckoHlsRendererBase extends BaseRenderer {
 
     private DecoderInputBuffer mBufferForRead =
         new DecoderInputBuffer(DecoderInputBuffer.BUFFER_REPLACEMENT_MODE_NORMAL);
-    private final DecoderInputBuffer mflagsOnlyBuffer = DecoderInputBuffer.newFlagsOnlyInstance();
+    private final DecoderInputBuffer mFlagsOnlyBuffer = DecoderInputBuffer.newFlagsOnlyInstance();
 
     protected void assertTrue(final boolean condition) {
         if (DEBUG && !condition) {
@@ -251,8 +251,8 @@ public abstract class GeckoHlsRendererBase extends BaseRenderer {
     }
 
     private void readFormat() throws ExoPlaybackException {
-        mflagsOnlyBuffer.clear();
-        int result = readSource(mFormatHolder, mflagsOnlyBuffer, true);
+        mFlagsOnlyBuffer.clear();
+        int result = readSource(mFormatHolder, mFlagsOnlyBuffer, true);
         if (result == C.RESULT_FORMAT_READ) {
             onInputFormatChanged(mFormatHolder.format);
         }
