@@ -538,6 +538,11 @@ var BrowserApp = {
       // Bug 778855 - Perf regression if we do this here. To be addressed in bug 779008.
       InitLater(() => SafeBrowsing.init(), window, "SafeBrowsing");
 
+      // Start Marionette after all startup scripts have been run.
+      InitLater(() => {
+        Services.obs.notifyObservers(window, "marionette-startup-requested");
+      });
+
       // This should always go last, since the idle tasks (except for the ones with
       // timeouts) should execute in order. Note that this observer notification is
       // not guaranteed to fire, since the window could close before we get here.
