@@ -12,51 +12,79 @@
 #include "PlatformDecoderModule.h"
 #include "TimeUnits.h"
 #include "mozilla/MozPromise.h"
+#include "mozilla/NotNull.h"
 #include "mozilla/ReentrantMonitor.h"
 #include "mozilla/StaticMutex.h"
 
 namespace mozilla {
 
 /**
- * This is a singleton which controls the number of decoders that can be
- * created concurrently. Before calling PDMFactory::CreateDecoder(), Alloc()
- * must be called to get a token object as a permission to create a decoder.
- * The token should stay alive until Shutdown() is called on the decoder.
- * The destructor of the token will restore the decoder count so it is available
+ * Before calling PDMFactory::CreateDecoder(), Alloc() must be called on the
+ * policy to get a token object as a permission to create a decoder. The
+ * token should stay alive until Shutdown() is called on the decoder. The
+ * destructor of the token will restore the decoder count so it is available
  * for next calls of Alloc().
  */
-class GlobalAllocPolicy {
+class AllocPolicy {
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(AllocPolicy)
+
  public:
   class Token {
     NS_INLINE_DECL_THREADSAFE_REFCOUNTING(Token)
    protected:
-    virtual ~Token() {}
+    virtual ~Token() = default;
   };
-
   using Promise = MozPromise<RefPtr<Token>, bool, true>;
 
   // Acquire a token for decoder creation. Thread-safe.
-  RefPtr<Promise> Alloc();
+  virtual RefPtr<Promise> Alloc() = 0;
 
-  // Called by ClearOnShutdown() to delete the singleton.
-  void operator=(decltype(nullptr));
+ protected:
+  virtual ~AllocPolicy() = default;
+};
 
+/**
+ * This is a singleton which controls the number of decoders that can be created
+ * concurrently.
+ * Instance() will return the TrackType global AllocPolicy.
+ * Instance() will always return a non-null value.
+ */
+class GlobalAllocPolicy {
+ public:
   // Get the singleton for the given track type. Thread-safe.
-  static GlobalAllocPolicy& Instance(TrackInfo::TrackType aTrack);
+  static NotNull<AllocPolicy*> Instance(TrackInfo::TrackType aTrack);
+
+ private:
+  // Protect access to Instance().
+  static StaticMutex sMutex;
+};
+
+/** This the actual base implementation underneath all AllocPolicy objects and
+ * control how many decoders can be created concurrently.
+ * Alloc() must be called to get a token object as a permission to perform an
+ * action. The token should stay alive until Shutdown() is called on the
+ * decoder. The destructor of the token will restore the decoder count so it is
+ * available for next calls of Alloc().
+ **/
+class AllocPolicyImpl : public AllocPolicy {
+ public:
+  explicit AllocPolicyImpl(int aDecoderLimit);
+  RefPtr<Promise> Alloc() override;
+
+ protected:
+  virtual ~AllocPolicyImpl();
+  void RejectAll();
+  int MaxDecoderLimit() const { return mMaxDecoderLimit; }
 
  private:
   class AutoDeallocToken;
   using PromisePrivate = Promise::Private;
-  GlobalAllocPolicy();
-  ~GlobalAllocPolicy();
   // Called by the destructor of TokenImpl to restore the decoder limit.
   void Dealloc();
   // Decrement the decoder limit and resolve a promise if available.
   void ResolvePromise(ReentrantMonitorAutoEnter& aProofOfLock);
 
-  // Protect access to Instance().
-  static StaticMutex sMutex;
-
+  const int mMaxDecoderLimit;
   ReentrantMonitor mMonitor;
   // The number of decoders available for creation.
   int mDecoderLimit;
@@ -68,58 +96,23 @@ class GlobalAllocPolicy {
  * This class allows to track and serialise a single decoder allocation at a
  * time
  */
-class LocalAllocPolicy {
+class LocalAllocPolicy : public AllocPolicyImpl {
   using TrackType = TrackInfo::TrackType;
-  using Promise = GlobalAllocPolicy::Promise;
-  using Token = GlobalAllocPolicy::Token;
-
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(LocalAllocPolicy)
 
  public:
   LocalAllocPolicy(TrackType aTrack, TaskQueue* aOwnerThread)
-      : mTrack(aTrack), mOwnerThread(aOwnerThread) {}
+      : AllocPolicyImpl(1), mTrack(aTrack), mOwnerThread(aOwnerThread) {}
 
-  // Acquire a token for decoder creation. Note the resolved token will
-  // aggregate a GlobalAllocPolicy token to comply to its policy. Note
-  // this function shouldn't be called again until the returned promise
-  // is resolved or rejected.
-  RefPtr<Promise> Alloc();
+  RefPtr<Promise> Alloc() override;
 
   // Cancel the request to GlobalAllocPolicy and reject the current token
   // request. Note this must happen before mOwnerThread->BeginShutdown().
   void Cancel();
 
  private:
-  /*
-   * An RAII class to manage LocalAllocPolicy::mDecoderLimit.
-   */
-  class AutoDeallocToken : public Token {
-   public:
-    explicit AutoDeallocToken(LocalAllocPolicy* aOwner) : mOwner(aOwner) {
-      MOZ_DIAGNOSTIC_ASSERT(mOwner->mDecoderLimit > 0);
-      --mOwner->mDecoderLimit;
-    }
-    // Aggregate a GlobalAllocPolicy token to present a single instance of
-    // Token to the client so the client doesn't have to deal with
-    // GlobalAllocPolicy and LocalAllocPolicy separately.
-    void Append(Token* aToken) { mToken = aToken; }
+  class AutoDeallocCombinedToken;
+  virtual ~LocalAllocPolicy();
 
-   private:
-    // Release tokens allocated from GlobalAllocPolicy and LocalAllocPolicy
-    // and process next token request if any.
-    ~AutoDeallocToken() {
-      mToken = nullptr;          // Dealloc the global token.
-      ++mOwner->mDecoderLimit;   // Dealloc the local token.
-      mOwner->ProcessRequest();  // Process next pending request.
-    }
-    RefPtr<LocalAllocPolicy> mOwner;
-    RefPtr<Token> mToken;
-  };
-
-  ~LocalAllocPolicy() = default;
-  void ProcessRequest();
-
-  int mDecoderLimit = 1;
   const TrackType mTrack;
   RefPtr<TaskQueue> mOwnerThread;
   MozPromiseHolder<Promise> mPendingPromise;
@@ -127,7 +120,7 @@ class LocalAllocPolicy {
 };
 
 class AllocationWrapper : public MediaDataDecoder {
-  using Token = GlobalAllocPolicy::Token;
+  using Token = AllocPolicy::Token;
 
  public:
   AllocationWrapper(already_AddRefed<MediaDataDecoder> aDecoder,
