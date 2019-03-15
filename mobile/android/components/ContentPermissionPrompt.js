@@ -90,6 +90,13 @@ ContentPermissionPrompt.prototype = {
        return;
     }
 
+    if (perm.type === "desktop-notification" &&
+        Services.prefs.getBoolPref("dom.webnotifications.requireuserinteraction", false) &&
+        !request.isHandlingUserInput) {
+      request.cancel();
+      return;
+    }
+
     let browserBundle = Services.strings.createBundle("chrome://browser/locale/browser.properties");
     let entityName = kEntities[perm.type];
 
