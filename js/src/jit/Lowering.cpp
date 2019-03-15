@@ -904,21 +904,28 @@ static inline bool CanEmitCompareAtUses(MInstruction* ins) {
     return false;
   }
 
-  bool foundTest = false;
-  for (MUseIterator iter(ins->usesBegin()); iter != ins->usesEnd(); iter++) {
-    MNode* node = iter->consumer();
-    if (!node->isDefinition()) {
-      return false;
-    }
-    if (!node->toDefinition()->isTest()) {
-      return false;
-    }
-    if (foundTest) {
-      return false;
-    }
-    foundTest = true;
+  // If the result is never used, we can usefully defer emission to the use
+  // point, since that will never happen.
+  MUseIterator iter(ins->usesBegin());
+  if (iter == ins->usesEnd()) {
+    return true;
   }
-  return true;
+
+  // If the first use isn't of the expected form, the answer is No.
+  MNode* node = iter->consumer();
+  if (!node->isDefinition()) {
+    return false;
+  }
+
+  MDefinition* use = node->toDefinition();
+  if (!use->isTest() && !use->isWasmSelect()) {
+    return false;
+  }
+
+  // Emission can be deferred to the first use point, but only if there are no
+  // other use points.
+  iter++;
+  return iter == ins->usesEnd();
 }
 
 void LIRGenerator::visitCompare(MCompare* comp) {
@@ -5047,6 +5054,52 @@ void LIRGenerator::visitIonToWasmCall(MIonToWasmCall* ins) {
 
   defineReturn(lir, ins);
   assignSafepoint(lir, ins);
+}
+
+void LIRGenerator::visitWasmSelect(MWasmSelect* ins) {
+  MDefinition* condExpr = ins->condExpr();
+
+  // Pick off specific cases that we can do with LWasmCompareAndSelect.
+  // Currently only{U,}Int32 selection driven by a comparison of {U,}Int32
+  // values.
+  if (condExpr->isCompare() && condExpr->isEmittedAtUses() &&
+      ins->type() == MIRType::Int32) {
+    MCompare* comp = condExpr->toCompare();
+    JSOp jsop = comp->jsop();
+    MCompare::CompareType compTy = comp->compareType();
+    // We don't currently generate any other JSOPs for the comparison, and if
+    // that changes, we want to know about it.  Hence this assertion.
+    MOZ_ASSERT(jsop == JSOP_EQ || jsop == JSOP_NE || jsop == JSOP_LT ||
+               jsop == JSOP_GT || jsop == JSOP_LE || jsop == JSOP_GE);
+    if (compTy == MCompare::Compare_Int32 ||
+        compTy == MCompare::Compare_UInt32) {
+      auto* lir = new (alloc())
+        LWasmCompareAndSelect(useRegister(comp->lhs()), useAny(comp->rhs()),
+                              compTy, jsop,
+                              useRegisterAtStart(ins->trueExpr()),
+                              useAny(ins->falseExpr()));
+
+      defineReuseInput(lir, ins, LWasmCompareAndSelect::IfTrueExprIndex);
+      return;
+    }
+    // Otherwise fall through to normal handling, which appears to emit the
+    // condexpr itself anyway.
+  }
+
+  if (ins->type() == MIRType::Int64) {
+    auto* lir = new (alloc()) LWasmSelectI64(
+        useInt64RegisterAtStart(ins->trueExpr()), useInt64(ins->falseExpr()),
+        useRegister(ins->condExpr()));
+
+    defineInt64ReuseInput(lir, ins, LWasmSelectI64::TrueExprIndex);
+    return;
+  }
+
+  auto* lir = new (alloc())
+      LWasmSelect(useRegisterAtStart(ins->trueExpr()), useAny(ins->falseExpr()),
+                  useRegister(ins->condExpr()));
+
+  defineReuseInput(lir, ins, LWasmSelect::TrueExprIndex);
 }
 
 static_assert(!std::is_polymorphic<LIRGenerator>::value,

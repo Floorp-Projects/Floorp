@@ -992,6 +992,20 @@ void MacroAssembler::cmp32Move32(Condition cond, Register lhs,
   cmovCCl(cond, src, dest);
 }
 
+void MacroAssembler::cmp32Load32(Condition cond, Register lhs,
+                                 const Address& rhs, const Address& src,
+                                 Register dest) {
+  cmp32(lhs, Operand(rhs));
+  cmovCCl(cond, Operand(src), dest);
+}
+
+void MacroAssembler::cmp32Load32(Condition cond, Register lhs,
+                                 Register rhs, const Address& src,
+                                 Register dest) {
+  cmp32(lhs, rhs);
+  cmovCCl(cond, Operand(src), dest);
+}
+
 void MacroAssembler::spectreZeroRegister(Condition cond, Register scratch,
                                          Register dest) {
   // Note: use movl instead of move32/xorl to ensure flags are not clobbered.
