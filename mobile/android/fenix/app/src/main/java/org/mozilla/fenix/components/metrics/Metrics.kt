@@ -3,6 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 package org.mozilla.fenix.components.metrics
 
+import org.mozilla.fenix.BuildConfig
+
 sealed class Event {
     object AddBookmark : Event()
     object RemoveBookmark : Event()
@@ -46,12 +48,19 @@ interface MetricsService {
     fun shouldTrack(event: Event): Boolean
 }
 
-class Metrics(private val services: List<MetricsService>) {
+class Metrics(private val services: List<MetricsService>, private val isTelemetryEnabled: () -> Boolean) {
+    private var initialized = false
+
     fun start() {
+        if (BuildConfig.TELEMETRY && !isTelemetryEnabled.invoke() || initialized) { return }
+
         services.forEach { it.start() }
+        initialized = true
     }
 
     fun track(event: Event) {
+        if (BuildConfig.TELEMETRY && !isTelemetryEnabled.invoke() && !initialized) { return }
+
         services
             .filter { it.shouldTrack(event) }
             .forEach { it.track(event) }

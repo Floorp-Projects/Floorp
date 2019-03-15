@@ -19,7 +19,6 @@ import mozilla.components.support.base.log.Log
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.base.log.sink.AndroidLogSink
 import mozilla.components.support.rustlog.RustLog
-import org.mozilla.fenix.AdjustHelper.setupAdjustIfNeeded
 import org.mozilla.fenix.components.Components
 import java.io.File
 
@@ -44,9 +43,7 @@ open class FenixApplication : Application() {
         }
 
         setupLeakCanary()
-
         loadExperiments()
-        setupAdjustIfNeeded(this)
         components.analytics.metrics.start()
     }
 

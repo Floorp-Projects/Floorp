@@ -1,30 +1,27 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-package org.mozilla.fenix
+package org.mozilla.fenix.components.metrics
 
 import android.app.Activity
 import android.app.Application
 import android.os.Bundle
-import android.text.TextUtils
-
+import android.util.Log
 import com.adjust.sdk.Adjust
 import com.adjust.sdk.AdjustConfig
 import com.adjust.sdk.LogLevel
-import mozilla.components.service.glean.Glean
+import org.mozilla.fenix.BuildConfig
+import java.lang.IllegalStateException
 
-object AdjustHelper {
-    @Suppress("UnreachableCode")
-    fun setupAdjustIfNeeded(application: FenixApplication) {
-        // RELEASE: Enable Adjust - This class has different implementations for all build types.
-        return
+class AdjustMetricsService(private val application: Application) : MetricsService {
+    override fun start() {
+        if ((BuildConfig.ADJUST_TOKEN.isNullOrEmpty())) {
+            Log.i(LOGTAG, "No adjust token defined")
 
-        if (TextUtils.isEmpty(BuildConfig.ADJUST_TOKEN)) {
-            throw IllegalStateException("No adjust token defined for release build")
-        }
+            if (!BuildConfig.DEBUG) {
+                throw IllegalStateException("No adjust token defined for release build")
+            }
 
-        if (!Glean.getUploadEnabled()) {
             return
         }
 
@@ -40,6 +37,14 @@ object AdjustHelper {
         Adjust.onCreate(config)
 
         application.registerActivityLifecycleCallbacks(AdjustLifecycleCallbacks())
+    }
+
+    // We're not currently sending events directly to Adjust
+    override fun track(event: Event) { }
+    override fun shouldTrack(event: Event): Boolean = false
+
+    companion object {
+        private const val LOGTAG = "AdjustMetricsService"
     }
 
     private class AdjustLifecycleCallbacks : Application.ActivityLifecycleCallbacks {
