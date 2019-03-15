@@ -554,9 +554,23 @@ inline nsresult NotificationPermissionRequest::DispatchResolvePromise() {
 
 nsresult NotificationPermissionRequest::ResolvePromise() {
   nsresult rv = NS_OK;
+  // This will still be "default" if the user dismissed the doorhanger,
+  // or "denied" otherwise.
   if (mPermission == NotificationPermission::Default) {
-    // This will still be "default" if the user dismissed the doorhanger,
-    // or "denied" otherwise.
+    // When the front-end has decided to deny the permission request
+    // automatically and we are not handling user input, then log a
+    // warning in the current document that this happened because
+    // Notifications require a user gesture.
+    if (!mIsHandlingUserInput &&
+        StaticPrefs::dom_webnotifications_requireuserinteraction()) {
+      nsCOMPtr<Document> doc = mWindow->GetExtantDoc();
+      if (doc) {
+        nsContentUtils::ReportToConsole(
+            nsIScriptError::errorFlag, NS_LITERAL_CSTRING("DOM"), doc,
+            nsContentUtils::eDOM_PROPERTIES, "NotificationsRequireUserGesture");
+      }
+    }
+
     mPermission = Notification::TestPermission(mPrincipal);
   }
   if (mCallback) {
@@ -1539,7 +1553,7 @@ already_AddRefed<Promise> Notification::RequestPermission(
       do_QueryInterface(aGlobal.GetAsSupports());
   nsCOMPtr<nsIScriptObjectPrincipal> sop =
       do_QueryInterface(aGlobal.GetAsSupports());
-  if (!sop) {
+  if (!sop || !window) {
     aRv.Throw(NS_ERROR_UNEXPECTED);
     return nullptr;
   }
