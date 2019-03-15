@@ -23,6 +23,7 @@ add_task(async () => {
   let service = getProfileService();
 
   let profileData = readProfilesIni();
+  let installData = readInstallsIni();
 
   Assert.ok(profileData.options.startWithLastProfile, "Should be set to start with the last profile.");
   Assert.equal(profileData.profiles.length, 1, "Should have the right number of profiles.");
@@ -32,9 +33,9 @@ add_task(async () => {
   Assert.equal(profile.path, defaultProfile.leafName, "Should be the original default profile.");
   Assert.ok(!profile.default, "Should not be marked as the old-style default.");
 
-  Assert.ok(!profileData.installs, "Should be no defaults for installs yet.");
+  Assert.equal(Object.keys(installData.installs).length, 0, "Should be no defaults for installs yet.");
 
-  checkProfileService(profileData);
+  checkProfileService(profileData, installData);
 
   let { profile: selectedProfile, didCreate } = selectStartupProfile();
   checkStartupReason("firstrun-skipped-default");
