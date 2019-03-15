@@ -34,9 +34,7 @@ public final class GeckoHLSDemuxerWrapper {
 
     private BaseHlsPlayer mPlayer = null;
 
-    public static class Callbacks extends JNIObject
-    implements BaseHlsPlayer.DemuxerCallbacks {
-
+    public static class Callbacks extends JNIObject implements BaseHlsPlayer.DemuxerCallbacks {
         @WrapForJNI(calledFrom = "gecko")
         Callbacks() {}
 

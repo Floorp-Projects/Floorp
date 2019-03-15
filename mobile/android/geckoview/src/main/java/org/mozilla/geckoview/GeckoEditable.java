@@ -544,60 +544,60 @@ import android.view.inputmethod.EditorInfo;
 
     private void icPerformAction(final Action action) throws RemoteException {
         switch (action.mType) {
-        case Action.TYPE_EVENT:
-        case Action.TYPE_SET_HANDLER:
-            mFocusedChild.onImeSynchronize();
-            break;
+            case Action.TYPE_EVENT:
+            case Action.TYPE_SET_HANDLER:
+                mFocusedChild.onImeSynchronize();
+                break;
 
-        case Action.TYPE_SET_SPAN: {
-            final boolean needUpdate = (action.mSpanFlags & Spanned.SPAN_INTERMEDIATE) == 0 &&
-                                       ((action.mSpanFlags & Spanned.SPAN_COMPOSING) != 0 ||
-                                        action.mSpanObject == Selection.SELECTION_START ||
-                                        action.mSpanObject == Selection.SELECTION_END);
+            case Action.TYPE_SET_SPAN: {
+                final boolean needUpdate = (action.mSpanFlags & Spanned.SPAN_INTERMEDIATE) == 0 &&
+                        ((action.mSpanFlags & Spanned.SPAN_COMPOSING) != 0 ||
+                                action.mSpanObject == Selection.SELECTION_START ||
+                                action.mSpanObject == Selection.SELECTION_END);
 
-            action.mSequence = TextUtils.substring(
-                    mText.getShadowText(), action.mStart, action.mEnd);
+                action.mSequence = TextUtils.substring(
+                        mText.getShadowText(), action.mStart, action.mEnd);
 
-            mNeedUpdateComposition |= needUpdate;
-            if (needUpdate) {
-                icMaybeSendComposition(mText.getShadowText(), SEND_COMPOSITION_NOTIFY_GECKO |
-                                                              SEND_COMPOSITION_KEEP_CURRENT);
+                mNeedUpdateComposition |= needUpdate;
+                if (needUpdate) {
+                    icMaybeSendComposition(mText.getShadowText(), SEND_COMPOSITION_NOTIFY_GECKO |
+                            SEND_COMPOSITION_KEEP_CURRENT);
+                }
+
+                mFocusedChild.onImeSynchronize();
+                break;
             }
+            case Action.TYPE_REMOVE_SPAN: {
+                final boolean needUpdate = (action.mSpanFlags & Spanned.SPAN_INTERMEDIATE) == 0 &&
+                        (action.mSpanFlags & Spanned.SPAN_COMPOSING) != 0;
 
-            mFocusedChild.onImeSynchronize();
-            break;
-        }
-        case Action.TYPE_REMOVE_SPAN: {
-            final boolean needUpdate = (action.mSpanFlags & Spanned.SPAN_INTERMEDIATE) == 0 &&
-                                       (action.mSpanFlags & Spanned.SPAN_COMPOSING) != 0;
+                mNeedUpdateComposition |= needUpdate;
+                if (needUpdate) {
+                    icMaybeSendComposition(mText.getShadowText(), SEND_COMPOSITION_NOTIFY_GECKO |
+                            SEND_COMPOSITION_KEEP_CURRENT);
+                }
 
-            mNeedUpdateComposition |= needUpdate;
-            if (needUpdate) {
-                icMaybeSendComposition(mText.getShadowText(), SEND_COMPOSITION_NOTIFY_GECKO |
-                                                              SEND_COMPOSITION_KEEP_CURRENT);
+                mFocusedChild.onImeSynchronize();
+                break;
             }
+            case Action.TYPE_REPLACE_TEXT:
+                // Always sync text after a replace action, so that if the Gecko
+                // text is not changed, we will revert the shadow text to before.
+                mNeedSync = true;
 
-            mFocusedChild.onImeSynchronize();
-            break;
-        }
-        case Action.TYPE_REPLACE_TEXT:
-            // Always sync text after a replace action, so that if the Gecko
-            // text is not changed, we will revert the shadow text to before.
-            mNeedSync = true;
+                // Because we get composition styling here essentially for free,
+                // we don't need to check if we're in batch mode.
+                if (!icMaybeSendComposition(
+                        action.mSequence, SEND_COMPOSITION_USE_ENTIRE_TEXT)) {
+                    // Since we don't have a composition, we can try sending key events.
+                    sendCharKeyEvents(action);
+                }
+                mFocusedChild.onImeReplaceText(
+                        action.mStart, action.mEnd, action.mSequence.toString());
+                break;
 
-            // Because we get composition styling here essentially for free,
-            // we don't need to check if we're in batch mode.
-            if (!icMaybeSendComposition(
-                    action.mSequence, SEND_COMPOSITION_USE_ENTIRE_TEXT)) {
-                // Since we don't have a composition, we can try sending key events.
-                sendCharKeyEvents(action);
-            }
-            mFocusedChild.onImeReplaceText(
-                    action.mStart, action.mEnd, action.mSequence.toString());
-            break;
-
-        default:
-            throw new IllegalStateException("Action not processed");
+            default:
+                throw new IllegalStateException("Action not processed");
         }
     }
 
@@ -1137,79 +1137,79 @@ import android.view.inputmethod.EditorInfo;
                           getConstantName(Action.class, "TYPE_", action.mType) + ")");
         }
         switch (action.mType) {
-        case Action.TYPE_REPLACE_TEXT: {
-            final Spanned currentText = mText.getCurrentText();
-            final int actionNewEnd = action.mStart + action.mSequence.length();
-            if (mLastTextChangeStart > mLastTextChangeNewEnd ||
-                mLastTextChangeNewEnd > currentText.length() ||
-                action.mStart < mLastTextChangeStart || actionNewEnd > mLastTextChangeNewEnd) {
-                // Replace-text action doesn't match our text change.
-                break;
-            }
-
-            int indexInText = TextUtils.indexOf(currentText, action.mSequence,
-                                                action.mStart, mLastTextChangeNewEnd);
-            if (indexInText < 0 && action.mStart != mLastTextChangeStart) {
-                final String changedText = TextUtils.substring(
-                        currentText, mLastTextChangeStart, actionNewEnd);
-                indexInText = changedText.lastIndexOf(action.mSequence.toString());
-                if (indexInText >= 0) {
-                    indexInText += mLastTextChangeStart;
+            case Action.TYPE_REPLACE_TEXT: {
+                final Spanned currentText = mText.getCurrentText();
+                final int actionNewEnd = action.mStart + action.mSequence.length();
+                if (mLastTextChangeStart > mLastTextChangeNewEnd ||
+                        mLastTextChangeNewEnd > currentText.length() ||
+                        action.mStart < mLastTextChangeStart || actionNewEnd > mLastTextChangeNewEnd) {
+                    // Replace-text action doesn't match our text change.
+                    break;
                 }
-            }
-            if (indexInText < 0) {
-                // Replace-text action doesn't match our current text.
-                break;
-            }
 
-            final int selStart = Selection.getSelectionStart(currentText);
-            final int selEnd = Selection.getSelectionEnd(currentText);
-
-            // Replace-text action matches our current text; copy the new spans to the
-            // current text.
-            mText.currentReplace(indexInText,
-                                 indexInText + action.mSequence.length(),
-                                 action.mSequence);
-            // Make sure selection is preserved.
-            mText.currentSetSelection(selStart, selEnd);
-
-            // The text change is caused by the replace-text event. If the text change
-            // replaced the previous selection, we need to rely on Gecko for an updated
-            // selection, so don't ignore selection change. However, if the text change
-            // did not replace the previous selection, we can ignore the Gecko selection
-            // in favor of the Java selection.
-            mIgnoreSelectionChange = !mLastTextChangeReplacedSelection;
-            break;
-        }
-
-        case Action.TYPE_SET_SPAN:
-            final int len = mText.getCurrentText().length();
-            if (action.mStart > len || action.mEnd > len ||
-                    !TextUtils.substring(mText.getCurrentText(), action.mStart,
-                                         action.mEnd).equals(action.mSequence)) {
-                if (DEBUG) {
-                    Log.d(LOGTAG, "discarding stale set span call");
+                int indexInText = TextUtils.indexOf(currentText, action.mSequence,
+                        action.mStart, mLastTextChangeNewEnd);
+                if (indexInText < 0 && action.mStart != mLastTextChangeStart) {
+                    final String changedText = TextUtils.substring(
+                            currentText, mLastTextChangeStart, actionNewEnd);
+                    indexInText = changedText.lastIndexOf(action.mSequence.toString());
+                    if (indexInText >= 0) {
+                        indexInText += mLastTextChangeStart;
+                    }
                 }
+                if (indexInText < 0) {
+                    // Replace-text action doesn't match our current text.
+                    break;
+                }
+
+                final int selStart = Selection.getSelectionStart(currentText);
+                final int selEnd = Selection.getSelectionEnd(currentText);
+
+                // Replace-text action matches our current text; copy the new spans to the
+                // current text.
+                mText.currentReplace(indexInText,
+                        indexInText + action.mSequence.length(),
+                        action.mSequence);
+                // Make sure selection is preserved.
+                mText.currentSetSelection(selStart, selEnd);
+
+                // The text change is caused by the replace-text event. If the text change
+                // replaced the previous selection, we need to rely on Gecko for an updated
+                // selection, so don't ignore selection change. However, if the text change
+                // did not replace the previous selection, we can ignore the Gecko selection
+                // in favor of the Java selection.
+                mIgnoreSelectionChange = !mLastTextChangeReplacedSelection;
                 break;
             }
-            if ((action.mSpanObject == Selection.SELECTION_START ||
-                 action.mSpanObject == Selection.SELECTION_END) &&
-                (action.mStart < mLastTextChangeStart && action.mEnd < mLastTextChangeStart ||
-                 action.mStart > mLastTextChangeOldEnd && action.mEnd > mLastTextChangeOldEnd)) {
-                // Use the Java selection if, between text-change notification and replace-text
-                // processing, we specifically set the selection to outside the replaced range.
-                mLastTextChangeReplacedSelection = false;
-            }
-            mText.currentSetSpan(action.mSpanObject, action.mStart, action.mEnd, action.mSpanFlags);
-            break;
 
-        case Action.TYPE_REMOVE_SPAN:
-            mText.currentRemoveSpan(action.mSpanObject);
-            break;
+            case Action.TYPE_SET_SPAN:
+                final int len = mText.getCurrentText().length();
+                if (action.mStart > len || action.mEnd > len ||
+                        !TextUtils.substring(mText.getCurrentText(), action.mStart,
+                                action.mEnd).equals(action.mSequence)) {
+                    if (DEBUG) {
+                        Log.d(LOGTAG, "discarding stale set span call");
+                    }
+                    break;
+                }
+                if ((action.mSpanObject == Selection.SELECTION_START ||
+                        action.mSpanObject == Selection.SELECTION_END) &&
+                        (action.mStart < mLastTextChangeStart && action.mEnd < mLastTextChangeStart ||
+                                action.mStart > mLastTextChangeOldEnd && action.mEnd > mLastTextChangeOldEnd)) {
+                    // Use the Java selection if, between text-change notification and replace-text
+                    // processing, we specifically set the selection to outside the replaced range.
+                    mLastTextChangeReplacedSelection = false;
+                }
+                mText.currentSetSpan(action.mSpanObject, action.mStart, action.mEnd, action.mSpanFlags);
+                break;
 
-        case Action.TYPE_SET_HANDLER:
-            geckoSetIcHandler(action.mHandler);
-            break;
+            case Action.TYPE_REMOVE_SPAN:
+                mText.currentRemoveSpan(action.mSpanObject);
+                break;
+
+            case Action.TYPE_SET_HANDLER:
+                geckoSetIcHandler(action.mHandler);
+                break;
         }
     }
 
@@ -1830,12 +1830,12 @@ import android.view.inputmethod.EditorInfo;
             final String str = obj.toString();
             sb.append('"');
             for (int i = 0; i < str.length(); i++) {
-              final char chr = str.charAt(i);
-              if (chr >= 0x20 && chr <= 0x7e) {
-                sb.append(chr);
-              } else {
-                sb.append(getPrintableChar(chr));
-              }
+                final char chr = str.charAt(i);
+                if (chr >= 0x20 && chr <= 0x7e) {
+                    sb.append(chr);
+                } else {
+                    sb.append(getPrintableChar(chr));
+                }
             }
             sb.append('"');
         } else if (obj.getClass().isArray()) {

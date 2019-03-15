@@ -133,9 +133,9 @@ import java.lang.reflect.Proxy;
         return (SessionTextInput.InputConnectionClient) Proxy.newProxyInstance(
                 GeckoInputConnection.class.getClassLoader(),
                 new Class<?>[] {
-                        InputConnection.class,
-                        SessionTextInput.InputConnectionClient.class,
-                        SessionTextInput.EditableListener.class
+                    InputConnection.class,
+                    SessionTextInput.InputConnectionClient.class,
+                    SessionTextInput.EditableListener.class
                 }, handler);
     }
 

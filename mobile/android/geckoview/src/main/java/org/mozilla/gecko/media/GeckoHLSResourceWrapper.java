@@ -16,8 +16,7 @@ public class GeckoHLSResourceWrapper {
     private BaseHlsPlayer mPlayer = null;
     private boolean mDestroy = false;
 
-    public static class Callbacks extends JNIObject
-    implements BaseHlsPlayer.ResourceCallbacks {
+    public static class Callbacks extends JNIObject implements BaseHlsPlayer.ResourceCallbacks {
         @WrapForJNI(calledFrom = "gecko")
         Callbacks() {}
 
