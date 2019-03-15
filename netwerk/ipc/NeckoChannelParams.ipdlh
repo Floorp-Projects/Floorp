@@ -130,7 +130,7 @@ struct LoadInfoArgs
    * window/worker client.  We must send this across IPC to support
    * performing interception in the parent.
    */
-  OptionalIPCServiceWorkerDescriptor controller;
+  IPCServiceWorkerDescriptor? controller;
 
   nsCString[]                 corsUnsafeHeaders;
   bool                        forcePreflight;
@@ -162,7 +162,7 @@ struct ParentLoadInfoForwarderArgs
 
   // The ServiceWorker controller that may be set in the parent when
   // interception occurs.
-  OptionalIPCServiceWorkerDescriptor controller;
+  IPCServiceWorkerDescriptor? controller;
 
   // The service worker may synthesize a Response with a particular
   // tainting value.
@@ -200,7 +200,7 @@ struct ChildLoadInfoForwarderArgs
 
   // The ServiceWorker controller may be cleared in the child during
   // a redirect.
-  OptionalIPCServiceWorkerDescriptor controller;
+  IPCServiceWorkerDescriptor? controller;
 };
 
 //-----------------------------------------------------------------------------
