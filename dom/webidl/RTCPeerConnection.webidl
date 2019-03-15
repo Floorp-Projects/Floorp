@@ -163,6 +163,7 @@ interface RTCPeerConnection : EventTarget  {
   attribute EventHandler onaddstream; // obsolete
   attribute EventHandler onaddtrack;  // obsolete
   attribute EventHandler ontrack;     // replaces onaddtrack and onaddstream.
+  attribute EventHandler onremovestream;
   attribute EventHandler oniceconnectionstatechange;
   attribute EventHandler onicegatheringstatechange;
 
