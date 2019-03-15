@@ -4,6 +4,7 @@
 
 package mozilla.components.concept.fetch
 
+import mozilla.components.concept.fetch.Headers.Common.CONTENT_TYPE
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -16,7 +17,6 @@ import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 import java.io.IOException
 import java.io.InputStream
-import java.lang.RuntimeException
 
 class ResponseTest {
     @Test
@@ -148,7 +148,7 @@ class ResponseTest {
             url = "https://www.mozilla.org",
             status = 200,
             headers = MutableHeaders(
-                "Content-Type" to "text/html; charset=utf-8",
+                CONTENT_TYPE to "text/html; charset=utf-8",
                 "Connection" to "Close",
                 "Expires" to "Thu, 08 Nov 2018 15:41:43 GMT"
             ),
