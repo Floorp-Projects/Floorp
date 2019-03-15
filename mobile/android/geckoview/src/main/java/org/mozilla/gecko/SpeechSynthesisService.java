@@ -37,7 +37,7 @@ public class SpeechSynthesisService  {
 
         sTTS = new TextToSpeech(ctx, new TextToSpeech.OnInitListener() {
             @Override
-            public void onInit(int status) {
+            public void onInit(final int status) {
                 if (status != TextToSpeech.SUCCESS) {
                     Log.w(LOGTAG, "Failed to initialize TextToSpeech");
                     return;
@@ -90,7 +90,8 @@ public class SpeechSynthesisService  {
     private static native void doneRegisteringVoices();
 
     @WrapForJNI(calledFrom = "gecko")
-    public static String speak(final String uri, final String text, float rate, float pitch, float volume) {
+    public static String speak(final String uri, final String text, final float rate,
+                               final float pitch, final float volume) {
         if (sTTS == null) {
             Log.w(LOGTAG, "TextToSpeech is not initialized");
             return null;
@@ -119,22 +120,22 @@ public class SpeechSynthesisService  {
 
         sTTS.setOnUtteranceProgressListener(new UtteranceProgressListener() {
             @Override
-            public void onDone(String utteranceId) {
+            public void onDone(final String utteranceId) {
                 dispatchEnd(utteranceId);
             }
 
             @Override
-            public void onError(String utteranceId) {
+            public void onError(final String utteranceId) {
                 dispatchError(utteranceId);
             }
 
             @Override
-            public void onStart(String utteranceId) {
+            public void onStart(final String utteranceId) {
                 dispatchStart(utteranceId);
             }
 
             @Override
-            public void onStop(String utteranceId, boolean interrupted) {
+            public void onStop(final String utteranceId, final boolean interrupted) {
                 if (interrupted) {
                     dispatchEnd(utteranceId);
                 } else {
@@ -143,7 +144,8 @@ public class SpeechSynthesisService  {
                 }
             }
 
-            public void onRangeStart (String utteranceId, int start, int end, int frame) {
+            public void onRangeStart(final String utteranceId, final int start, final int end,
+                                     final int frame) {
                 dispatchBoundary(utteranceId, start, end);
             }
         });

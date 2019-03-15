@@ -78,7 +78,7 @@ public class GeckoBatteryManager extends BroadcastReceiver {
                                                double remainingTime);
 
     @Override
-    public void onReceive(Context context, Intent intent) {
+    public void onReceive(final Context context, final Intent intent) {
         if (!intent.getAction().equals(Intent.ACTION_BATTERY_CHANGED)) {
             Log.e(LOGTAG, "Got an unexpected intent!");
             return;
