@@ -406,7 +406,8 @@ nsDependentCSubstring IMContextWrapper::GetIMName() const {
   // If the context is XIM, actual engine must be specified with
   // |XMODIFIERS=@im=foo|.
   const char* xmodifiersChar = PR_GetEnv("XMODIFIERS");
-  if (!im.EqualsLiteral("xim") || !xmodifiersChar) {
+  if (!xmodifiersChar ||
+      (!im.EqualsLiteral("xim") && !im.EqualsLiteral("wayland"))) {
     return im;
   }
 
