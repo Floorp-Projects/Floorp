@@ -894,15 +894,13 @@ add_task(async function test_form13_stays_open_upon_empty_search() {
   checkACForm("", "prefilled");
 
   info("testing password field");
-  shownPromise = promiseACShown();
   synthesizeMouseAtCenter(pword, {});
-  await shownPromise;
   pword.select();
-  synthesizeKey("KEY_Delete");
-
-  await spinEventLoop();
   popupState = await getPopupState();
-  is(popupState.open, true, "Check popup is still open");
+  is(popupState.open, false, "Check popup closed since password field isn't empty");
+  shownPromise = promiseACShown();
+  synthesizeKey("KEY_Delete");
+  await shownPromise;
   checkACForm("", "");
 });
 </script>
