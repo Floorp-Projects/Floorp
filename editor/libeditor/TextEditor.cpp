@@ -18,6 +18,7 @@
 #include "mozilla/IMEStateManager.h"
 #include "mozilla/mozalloc.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/TextEditRules.h"
 #include "mozilla/TextComposition.h"
 #include "mozilla/TextEvents.h"
@@ -42,7 +43,6 @@
 #include "nsIContent.h"
 #include "nsIDocumentEncoder.h"
 #include "nsINode.h"
-#include "nsIPresShell.h"
 #include "nsISelectionController.h"
 #include "nsISupportsPrimitives.h"
 #include "nsITransferable.h"
@@ -1322,8 +1322,7 @@ nsresult TextEditor::OnCompositionChange(
     return NS_OK;
   }
 
-  nsIPresShell* presShell = GetPresShell();
-  if (NS_WARN_IF(!presShell)) {
+  if (NS_WARN_IF(!GetPresShell())) {
     return NS_ERROR_NOT_INITIALIZED;
   }
 
@@ -1342,7 +1341,7 @@ nsresult TextEditor::OnCompositionChange(
       compositionChangeEventHandlingMarker(mComposition,
                                            &aCompositionChangeEvent);
 
-  RefPtr<nsCaret> caretP = presShell->GetCaret();
+  RefPtr<nsCaret> caret = GetCaret();
 
   nsresult rv;
   {
@@ -1355,8 +1354,8 @@ nsresult TextEditor::OnCompositionChange(
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                          "Failed to insert new composition string");
 
-    if (caretP) {
-      caretP->SetSelection(SelectionRefPtr());
+    if (caret) {
+      caret->SetSelection(SelectionRefPtr());
     }
   }
 
@@ -1755,7 +1754,7 @@ bool TextEditor::FireClipboardEvent(EventMessage aEventMessage,
     CommitComposition();
   }
 
-  nsCOMPtr<nsIPresShell> presShell = GetPresShell();
+  RefPtr<PresShell> presShell = GetPresShell();
   if (NS_WARN_IF(!presShell)) {
     return false;
   }
