@@ -1124,11 +1124,10 @@ parent:
                        bool aSizeSpecified,
                        URIParams? aURIToLoad,
                        nsCString aFeatures,
-                       nsCString aBaseURI,
                        float aFullZoom,
                        Principal aTriggeringPrincipal,
                        nsIContentSecurityPolicy aCsp,
-                       uint32_t aReferrerPolicy)
+                       nsIReferrerInfo aReferrerInfo)
         returns (CreatedWindowInfo window);
 
     async CreateWindowInDifferentProcess(
@@ -1139,12 +1138,11 @@ parent:
       bool aSizeSpecified,
       URIParams? aURIToLoad,
       nsCString aFeatures,
-      nsCString aBaseURI,
       float aFullZoom,
       nsString aName,
       Principal aTriggeringPrincipal,
       nsIContentSecurityPolicy aCsp,
-      uint32_t aReferrerPolicy);
+      nsIReferrerInfo aReferrerInfo);
 
     /**
      * Tells the parent to ungrab the pointer on the default display.
