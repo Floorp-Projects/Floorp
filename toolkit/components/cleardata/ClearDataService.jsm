@@ -85,6 +85,22 @@ const CookieCleaner = {
 };
 
 const NetworkCacheCleaner = {
+  deleteByHost(aHost, aOriginAttributes) {
+    return new Promise(aResolve => {
+      // Delete data from both HTTP and HTTPS sites.
+      let httpURI = Services.io.newURI("http://" + aHost);
+      let httpsURI = Services.io.newURI("https://" + aHost);
+      let httpPrincipal = Services.scriptSecurityManager
+                                   .createCodebasePrincipal(httpURI, aOriginAttributes);
+      let httpsPrincipal = Services.scriptSecurityManager
+                                   .createCodebasePrincipal(httpsURI, aOriginAttributes);
+
+      Services.cache2.asyncClearOrigin(httpPrincipal);
+      Services.cache2.asyncClearOrigin(httpsPrincipal);
+      aResolve();
+    });
+  },
+
   deleteByPrincipal(aPrincipal) {
     return new Promise(aResolve => {
       Services.cache2.asyncClearOrigin(aPrincipal);
@@ -101,6 +117,26 @@ const NetworkCacheCleaner = {
 };
 
 const ImageCacheCleaner = {
+  deleteByHost(aHost, aOriginAttributes) {
+    return new Promise(aResolve => {
+      let imageCache = Cc["@mozilla.org/image/tools;1"]
+                         .getService(Ci.imgITools)
+                         .getImgCacheForDocument(null);
+
+      // Delete data from both HTTP and HTTPS sites.
+      let httpURI = Services.io.newURI("http://" + aHost);
+      let httpsURI = Services.io.newURI("https://" + aHost);
+      let httpPrincipal = Services.scriptSecurityManager
+                                   .createCodebasePrincipal(httpURI, aOriginAttributes);
+      let httpsPrincipal = Services.scriptSecurityManager
+                                   .createCodebasePrincipal(httpsURI, aOriginAttributes);
+
+      imageCache.removeEntriesFromPrincipal(httpPrincipal);
+      imageCache.removeEntriesFromPrincipal(httpsPrincipal);
+      aResolve();
+    });
+  },
+
   deleteByPrincipal(aPrincipal) {
     return new Promise(aResolve => {
       let imageCache = Cc["@mozilla.org/image/tools;1"]
