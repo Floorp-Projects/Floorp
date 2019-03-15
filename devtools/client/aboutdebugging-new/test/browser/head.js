@@ -197,7 +197,7 @@ async function selectThisFirefoxPage(doc, store) {
 async function selectConnectPage(doc) {
   const sidebarItems = doc.querySelectorAll(".js-sidebar-item");
   const connectSidebarItem = [...sidebarItems].find(element => {
-    return element.textContent === "Connect";
+    return element.textContent === "Setup";
   });
   ok(connectSidebarItem, "Sidebar contains a Connect item");
   const connectLink = connectSidebarItem.querySelector(".js-sidebar-link");
