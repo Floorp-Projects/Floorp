@@ -22,7 +22,6 @@ object KotlinCompiler {
         "browser-errorpages",
         "browser-menu",
         "browser-search",
-        "browser-session",
         "browser-storage-sync",
         "browser-toolbar",
         "concept-engine",

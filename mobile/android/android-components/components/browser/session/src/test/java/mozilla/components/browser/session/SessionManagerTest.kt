@@ -18,15 +18,15 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mockito
-import org.mockito.Mockito.verify
-import org.mockito.Mockito.never
-import org.mockito.Mockito.times
-import org.mockito.Mockito.mock
-import org.mockito.Mockito.verifyNoMoreInteractions
 import org.mockito.Mockito.`when`
-import org.mockito.Mockito.reset
 import org.mockito.Mockito.doReturn
+import org.mockito.Mockito.mock
+import org.mockito.Mockito.never
+import org.mockito.Mockito.reset
 import org.mockito.Mockito.spy
+import org.mockito.Mockito.times
+import org.mockito.Mockito.verify
+import org.mockito.Mockito.verifyNoMoreInteractions
 
 class SessionManagerTest {
     @Test
@@ -451,7 +451,7 @@ class SessionManagerTest {
         manager.add(privateCustomTabSession)
 
         val snapshot = manager.createSnapshot()
-        assertEquals(3, snapshot!!.sessions.size)
+        assertEquals(3, snapshot.sessions.size)
         assertEquals(1, snapshot.selectedSessionIndex)
 
         val snapshotSession = snapshot.sessions[0]
@@ -478,7 +478,7 @@ class SessionManagerTest {
         manager.add(privateSession, true)
 
         val snapshot = manager.createSnapshot()
-        assertEquals(2, snapshot!!.sessions.size)
+        assertEquals(2, snapshot.sessions.size)
         assertEquals(0, snapshot.selectedSessionIndex)
     }
 

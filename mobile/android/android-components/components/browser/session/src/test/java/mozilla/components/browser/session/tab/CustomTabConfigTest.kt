@@ -5,12 +5,14 @@
 package mozilla.components.browser.session.tab
 
 import android.app.PendingIntent
+import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Color
 import android.os.Bundle
 import android.support.customtabs.CustomTabsIntent
 import android.util.DisplayMetrics
+import androidx.test.core.app.ApplicationProvider
 import mozilla.components.support.test.mock
 import mozilla.components.support.utils.SafeIntent
 import org.junit.Assert.assertEquals
@@ -23,10 +25,11 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.mock
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.RuntimeEnvironment
 
 @RunWith(RobolectricTestRunner::class)
 class CustomTabConfigTest {
+    private val context: Context
+        get() = ApplicationProvider.getApplicationContext()
 
     @Test
     fun isCustomTabIntent() {
@@ -145,7 +148,7 @@ class CustomTabConfigTest {
         val builder = CustomTabsIntent.Builder()
 
         val bitmap = mock(Bitmap::class.java)
-        val intent = PendingIntent.getActivity(RuntimeEnvironment.application, 0, Intent("testAction"), 0)
+        val intent = PendingIntent.getActivity(context, 0, Intent("testAction"), 0)
         builder.setActionButton(bitmap, "desc", intent)
 
         val customTabsIntent = builder.build()
