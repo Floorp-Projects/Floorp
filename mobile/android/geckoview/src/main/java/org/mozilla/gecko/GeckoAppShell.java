@@ -414,22 +414,22 @@ public class GeckoAppShell
 
         @Override
         public void onSensorChanged(final SensorEvent s) {
-            int sensor_type = s.sensor.getType();
-            int hal_type = 0;
+            int sensorType = s.sensor.getType();
+            int halType = 0;
             float x = 0.0f, y = 0.0f, z = 0.0f, w = 0.0f;
             // SensorEvent timestamp is in nanoseconds, Gecko expects microseconds.
             final long time = s.timestamp / 1000;
 
-            switch (sensor_type) {
+            switch (sensorType) {
             case Sensor.TYPE_ACCELEROMETER:
             case Sensor.TYPE_LINEAR_ACCELERATION:
             case Sensor.TYPE_ORIENTATION:
-                if (sensor_type == Sensor.TYPE_ACCELEROMETER) {
-                    hal_type = GeckoHalDefines.SENSOR_ACCELERATION;
-                } else if (sensor_type == Sensor.TYPE_LINEAR_ACCELERATION) {
-                    hal_type = GeckoHalDefines.SENSOR_LINEAR_ACCELERATION;
+                if (sensorType == Sensor.TYPE_ACCELEROMETER) {
+                    halType = GeckoHalDefines.SENSOR_ACCELERATION;
+                } else if (sensorType == Sensor.TYPE_LINEAR_ACCELERATION) {
+                    halType = GeckoHalDefines.SENSOR_LINEAR_ACCELERATION;
                 } else {
-                    hal_type = GeckoHalDefines.SENSOR_ORIENTATION;
+                    halType = GeckoHalDefines.SENSOR_ORIENTATION;
                 }
                 x = s.values[0];
                 y = s.values[1];
@@ -437,26 +437,26 @@ public class GeckoAppShell
                 break;
 
             case Sensor.TYPE_GYROSCOPE:
-                hal_type = GeckoHalDefines.SENSOR_GYROSCOPE;
+                halType = GeckoHalDefines.SENSOR_GYROSCOPE;
                 x = (float) Math.toDegrees(s.values[0]);
                 y = (float) Math.toDegrees(s.values[1]);
                 z = (float) Math.toDegrees(s.values[2]);
                 break;
 
             case Sensor.TYPE_PROXIMITY:
-                hal_type = GeckoHalDefines.SENSOR_PROXIMITY;
+                halType = GeckoHalDefines.SENSOR_PROXIMITY;
                 x = s.values[0];
                 z = s.sensor.getMaximumRange();
                 break;
 
             case Sensor.TYPE_LIGHT:
-                hal_type = GeckoHalDefines.SENSOR_LIGHT;
+                halType = GeckoHalDefines.SENSOR_LIGHT;
                 x = s.values[0];
                 break;
 
             case Sensor.TYPE_ROTATION_VECTOR:
             case Sensor.TYPE_GAME_ROTATION_VECTOR: // API >= 18
-                hal_type = (sensor_type == Sensor.TYPE_ROTATION_VECTOR ?
+                halType = (sensorType == Sensor.TYPE_ROTATION_VECTOR ?
                         GeckoHalDefines.SENSOR_ROTATION_VECTOR :
                         GeckoHalDefines.SENSOR_GAME_ROTATION_VECTOR);
                 x = s.values[0];
@@ -475,7 +475,7 @@ public class GeckoAppShell
                 break;
             }
 
-            GeckoAppShell.onSensorChanged(hal_type, x, y, z, w, time);
+            GeckoAppShell.onSensorChanged(halType, x, y, z, w, time);
         }
 
         // Geolocation.
