@@ -6,8 +6,8 @@
 
 #include "AllocationPolicy.h"
 
-#include "PDMFactory.h"
 #include "MediaInfo.h"
+#include "PDMFactory.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/SystemGroup.h"
 #ifdef MOZ_WIDGET_ANDROID
@@ -103,6 +103,49 @@ void GlobalAllocPolicy::ResolvePromise(
 }
 
 void GlobalAllocPolicy::operator=(std::nullptr_t) { delete this; }
+
+RefPtr<LocalAllocPolicy::Promise> LocalAllocPolicy::Alloc() {
+  MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
+  MOZ_DIAGNOSTIC_ASSERT(mPendingPromise.IsEmpty());
+  RefPtr<Promise> p = mPendingPromise.Ensure(__func__);
+  if (mDecoderLimit > 0) {
+    ProcessRequest();
+  }
+  return p.forget();
+}
+
+void LocalAllocPolicy::ProcessRequest() {
+  MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
+  MOZ_DIAGNOSTIC_ASSERT(mDecoderLimit > 0);
+
+  // No pending request.
+  if (mPendingPromise.IsEmpty()) {
+    return;
+  }
+
+  RefPtr<AutoDeallocToken> token = new AutoDeallocToken(this);
+  RefPtr<LocalAllocPolicy> self = this;
+
+  GlobalAllocPolicy::Instance(mTrack)
+      .Alloc()
+      ->Then(mOwnerThread, __func__,
+             [self, token](RefPtr<Token> aToken) {
+               self->mTokenRequest.Complete();
+               token->Append(aToken);
+               self->mPendingPromise.Resolve(token, __func__);
+             },
+             [self, token]() {
+               self->mTokenRequest.Complete();
+               self->mPendingPromise.Reject(true, __func__);
+             })
+      ->Track(mTokenRequest);
+}
+
+void LocalAllocPolicy::Cancel() {
+  MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
+  mPendingPromise.RejectIfExists(true, __func__);
+  mTokenRequest.DisconnectIfExists();
+}
 
 AllocationWrapper::AllocationWrapper(
     already_AddRefed<MediaDataDecoder> aDecoder, already_AddRefed<Token> aToken)
