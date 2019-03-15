@@ -39,6 +39,19 @@ interface Headers : Iterable<Header> {
      * Returns true if a [Header] with the given [name] exists.
      */
     operator fun contains(name: String): Boolean
+
+    /**
+     * A collection of common HTTP header definitions.
+     *
+     * A list of common HTTP request headers can be found at
+     *   https://en.wikipedia.org/wiki/List_of_HTTP_header_fields#Standard_request_fields
+     *
+     * A list of common HTTP response headers can be found at
+     *   https://en.wikipedia.org/wiki/List_of_HTTP_header_fields#Standard_response_fields
+     */
+    object Common {
+        const val CONTENT_TYPE = "Content-Type"
+    }
 }
 
 /**
