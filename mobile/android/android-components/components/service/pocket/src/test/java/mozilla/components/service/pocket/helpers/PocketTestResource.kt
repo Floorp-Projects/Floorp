@@ -17,8 +17,9 @@ enum class PocketTestResource(private val path: String) {
     POCKET_VIDEO_RECOMMENDATION("$POCKET_DIR/video_recommendations.json"),
     LISTEN_ARTICLE_METADATA("$POCKET_DIR/listen_article_metadata.json"),
 
-    // NEVER COMMIT THE API KEY FILE. Add this file with a valid API key to use this resource.
-    API_KEY("$POCKET_DIR/apiKey.txt");
+    // NEVER COMMIT THESE KEY FILES. Add this file with a valid API key to use this resource.
+    API_KEY("$POCKET_DIR/apiKey.txt"),
+    LISTEN_ACCESS_TOKEN("$POCKET_DIR/listenAccessToken.txt"); // note: file must not end in newline.
 
     /** @return the raw resource. */
     fun get(): String = this::class.java.classLoader!!.getResource(path)!!.readText()
