@@ -53,7 +53,7 @@ public class GeckoSystemStateListener
         Uri animationSetting = Settings.System.getUriFor(Settings.Global.ANIMATOR_DURATION_SCALE);
         mContentObserver = new ContentObserver(new Handler(Looper.getMainLooper())) {
             @Override
-            public void onChange(boolean selfChange) {
+            public void onChange(final boolean selfChange) {
                 onDeviceChanged();
             }
         };
@@ -122,7 +122,7 @@ public class GeckoSystemStateListener
         }
     }
 
-    private void notifyDeviceChanged(int deviceId) {
+    private void notifyDeviceChanged(final int deviceId) {
         InputDevice device = InputDevice.getDevice(deviceId);
         if (device == null ||
             !InputDeviceUtils.isPointerTypeDevice(device)) {
@@ -132,12 +132,12 @@ public class GeckoSystemStateListener
     }
 
     @Override
-    public void onInputDeviceAdded(int deviceId) {
+    public void onInputDeviceAdded(final int deviceId) {
         notifyDeviceChanged(deviceId);
     }
 
     @Override
-    public void onInputDeviceRemoved(int deviceId) {
+    public void onInputDeviceRemoved(final int deviceId) {
         // Call onDeviceChanged directly without checking device source types
         // since we can no longer get a valid `InputDevice` in the case of
         // device removal.
@@ -145,7 +145,7 @@ public class GeckoSystemStateListener
     }
 
     @Override
-    public void onInputDeviceChanged(int deviceId) {
+    public void onInputDeviceChanged(final int deviceId) {
         notifyDeviceChanged(deviceId);
     }
 }

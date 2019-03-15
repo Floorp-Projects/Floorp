@@ -60,33 +60,34 @@ public final class CodecProxy {
         private final Callbacks mCallbacks;
         private boolean mCodecProxyReleased;
 
-        CallbacksForwarder(Callbacks callbacks) {
+        CallbacksForwarder(final Callbacks callbacks) {
             mCallbacks = callbacks;
         }
 
         @Override
-        public synchronized void onInputQueued(long timestamp) throws RemoteException {
+        public synchronized void onInputQueued(final long timestamp) throws RemoteException {
             if (!mCodecProxyReleased) {
                 mCallbacks.onInputStatus(timestamp, true /* processed */);
             }
         }
 
         @Override
-        public synchronized void onInputPending(long timestamp) throws RemoteException {
+        public synchronized void onInputPending(final long timestamp) throws RemoteException {
             if (!mCodecProxyReleased) {
                 mCallbacks.onInputStatus(timestamp, false /* processed */);
             }
         }
 
         @Override
-        public synchronized void onOutputFormatChanged(FormatParam format) throws RemoteException {
+        public synchronized void onOutputFormatChanged(final FormatParam format)
+                throws RemoteException {
             if (!mCodecProxyReleased) {
                 mCallbacks.onOutputFormatChanged(format.asFormat());
             }
         }
 
         @Override
-        public synchronized void onOutput(Sample sample) throws RemoteException {
+        public synchronized void onOutput(final Sample sample) throws RemoteException {
             if (mCodecProxyReleased) {
                 sample.dispose();
                 return;
@@ -99,11 +100,11 @@ public final class CodecProxy {
         }
 
         @Override
-        public void onError(boolean fatal) throws RemoteException {
+        public void onError(final boolean fatal) throws RemoteException {
             reportError(fatal);
         }
 
-        private synchronized void reportError(boolean fatal) {
+        private synchronized void reportError(final boolean fatal) {
             if (!mCodecProxyReleased) {
                 mCallbacks.onError(fatal);
             }
@@ -115,23 +116,25 @@ public final class CodecProxy {
     }
 
     @WrapForJNI
-    public static CodecProxy create(boolean isEncoder,
-                                    MediaFormat format,
-                                    GeckoSurface surface,
-                                    Callbacks callbacks,
-                                    String drmStubId) {
+    public static CodecProxy create(final boolean isEncoder,
+                                    final MediaFormat format,
+                                    final GeckoSurface surface,
+                                    final Callbacks callbacks,
+                                    final String drmStubId) {
         return RemoteManager.getInstance().createCodec(isEncoder, format, surface, callbacks, drmStubId);
     }
 
-    public static CodecProxy createCodecProxy(boolean isEncoder,
-                                              MediaFormat format,
-                                              GeckoSurface surface,
-                                              Callbacks callbacks,
-                                              String drmStubId) {
+    public static CodecProxy createCodecProxy(final boolean isEncoder,
+                                              final MediaFormat format,
+                                              final GeckoSurface surface,
+                                              final Callbacks callbacks,
+                                              final String drmStubId) {
         return new CodecProxy(isEncoder, format, surface, callbacks, drmStubId);
     }
 
-    private CodecProxy(boolean isEncoder, MediaFormat format, GeckoSurface surface, Callbacks callbacks, String drmStubId) {
+    private CodecProxy(final boolean isEncoder, final MediaFormat format,
+                       final GeckoSurface surface, final Callbacks callbacks,
+                       final String drmStubId) {
         mIsEncoder = isEncoder;
         mFormat = new FormatParam(format);
         mOutputSurface = surface;
@@ -139,7 +142,7 @@ public final class CodecProxy {
         mCallbacks = new CallbacksForwarder(callbacks);
     }
 
-    boolean init(ICodec remote) {
+    boolean init(final ICodec remote) {
         try {
             remote.setCallbacks(mCallbacks);
             if (!remote.configure(mFormat, mOutputSurface, mIsEncoder ? MediaCodec.CONFIGURE_FLAG_ENCODE : 0, mRemoteDrmStubId)) {
@@ -213,7 +216,8 @@ public final class CodecProxy {
     }
 
     @WrapForJNI
-    public synchronized boolean input(ByteBuffer bytes, BufferInfo info, CryptoInfo cryptoInfo) {
+    public synchronized boolean input(final ByteBuffer bytes, final BufferInfo info,
+                                      final CryptoInfo cryptoInfo) {
         if (mRemote == null) {
             Log.e(LOGTAG, "cannot send input to an ended codec");
             return false;
@@ -237,7 +241,7 @@ public final class CodecProxy {
         return false;
     }
 
-    private boolean sendInput(Sample sample) {
+    private boolean sendInput(final Sample sample) {
         try {
             mRemote.queueInput(sample);
             if (sample != null) {
@@ -311,7 +315,7 @@ public final class CodecProxy {
     }
 
     @WrapForJNI
-    public synchronized boolean setRates(int newBitRate) {
+    public synchronized boolean setRates(final int newBitRate) {
         if (!mIsEncoder) {
             Log.w(LOGTAG, "this api is encoder-only");
             return false;
@@ -337,7 +341,7 @@ public final class CodecProxy {
     }
 
     @WrapForJNI
-    public synchronized boolean releaseOutput(Sample sample, boolean render) {
+    public synchronized boolean releaseOutput(final Sample sample, final boolean render) {
         if (mOutputSurface != null) {
             if (!mSurfaceOutputs.remove(sample)) {
                 if (mRemote != null) Log.w(LOGTAG, "already released: " + sample);
@@ -366,7 +370,7 @@ public final class CodecProxy {
         return true;
     }
 
-    /* package */ void reportError(boolean fatal) {
+    /* package */ void reportError(final boolean fatal) {
         mCallbacks.reportError(fatal);
     }
 }

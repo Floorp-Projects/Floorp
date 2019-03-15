@@ -22,7 +22,7 @@ public class NonEvictingLruCache<K, V> {
         evictable = new LruCache<K, V>(evictableSize);
     }
 
-    public V get(K key) {
+    public V get(final K key) {
         V val = permanent.get(key);
         if (val == null) {
             return evictable.get(key);
@@ -30,11 +30,11 @@ public class NonEvictingLruCache<K, V> {
         return val;
     }
 
-    public void putWithoutEviction(K key, V value) {
+    public void putWithoutEviction(final K key, final V value) {
         permanent.put(key, value);
     }
 
-    public void put(K key, V value) {
+    public void put(final K key, final V value) {
         evictable.put(key, value);
     }
 

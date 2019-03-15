@@ -105,7 +105,7 @@ public class WebRequest extends WebMessage {
     /**
      * Constructs a new WebRequest from a {@link WebRequest.Builder}.
      */
-    /* package */ WebRequest(@NonNull Builder builder) {
+    /* package */ WebRequest(final @NonNull Builder builder) {
         super(builder);
         method = builder.mMethod;
         cacheMode = builder.mCacheMode;
@@ -137,7 +137,7 @@ public class WebRequest extends WebMessage {
         }
 
         @Override
-        public @NonNull Builder uri(@NonNull String uri) {
+        public @NonNull Builder uri(final @NonNull String uri) {
             super.uri(uri);
             return this;
         }

@@ -124,7 +124,7 @@ public class GeckoNetworkManager extends BroadcastReceiver implements BundleEven
     }
 
     @Override
-    public void onReceive(Context aContext, Intent aIntent) {
+    public void onReceive(final Context aContext, final Intent aIntent) {
         handleManagerEvent(ManagerEvent.receivedUpdate);
     }
 
@@ -152,7 +152,7 @@ public class GeckoNetworkManager extends BroadcastReceiver implements BundleEven
      * @param event Incoming event
      * @return Boolean indicating if transition was performed.
      */
-    private synchronized boolean handleManagerEvent(ManagerEvent event) {
+    private synchronized boolean handleManagerEvent(final ManagerEvent event) {
         final ManagerState nextState = getNextState(currentState, event);
 
         Log.d(LOGTAG, "Incoming event " + event + " for state " + currentState + " -> " + nextState);
@@ -194,7 +194,8 @@ public class GeckoNetworkManager extends BroadcastReceiver implements BundleEven
      * @return State into which we should transition as result of given event
      */
     @Nullable
-    public static ManagerState getNextState(@NonNull ManagerState currentState, @NonNull ManagerEvent event) {
+    public static ManagerState getNextState(final @NonNull ManagerState currentState,
+                                            final @NonNull ManagerEvent event) {
         switch (currentState) {
             case OffNoListeners:
                 switch (event) {
@@ -466,7 +467,7 @@ public class GeckoNetworkManager extends BroadcastReceiver implements BundleEven
         callback.sendSuccess(Formatter.formatIpAddress(ip));
     }
 
-    private static int getNetworkOperator(InfoType type, Context context) {
+    private static int getNetworkOperator(final InfoType type, final Context context) {
         if (null == context) {
             return -1;
         }

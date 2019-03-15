@@ -29,7 +29,7 @@ import android.graphics.SurfaceTexture;
     private native void nativeOnFrameAvailable();
 
     @Override // SurfaceTexture.OnFrameAvailableListener
-    public void onFrameAvailable(SurfaceTexture surfaceTexture) {
+    public void onFrameAvailable(final SurfaceTexture surfaceTexture) {
         try {
             nativeOnFrameAvailable();
         } catch (final NullPointerException e) {

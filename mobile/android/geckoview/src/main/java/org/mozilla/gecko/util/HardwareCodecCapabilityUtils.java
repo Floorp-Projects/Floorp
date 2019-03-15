@@ -58,7 +58,7 @@ public final class HardwareCodecCapabilityUtils {
   };
 
   @WrapForJNI
-  public static boolean findDecoderCodecInfoForMimeType(String aMimeType) {
+  public static boolean findDecoderCodecInfoForMimeType(final String aMimeType) {
     int numCodecs = 0;
     try {
       numCodecs = MediaCodecList.getCodecCount();
@@ -82,7 +82,8 @@ public final class HardwareCodecCapabilityUtils {
   }
 
   @WrapForJNI
-  public static boolean checkSupportsAdaptivePlayback(MediaCodec aCodec, String aMimeType) {
+  public static boolean checkSupportsAdaptivePlayback(final MediaCodec aCodec,
+                                                      final String aMimeType) {
     // isFeatureSupported supported on API level >= 19.
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.KITKAT ||
         isAdaptivePlaybackBlacklisted(aMimeType)) {
@@ -103,7 +104,7 @@ public final class HardwareCodecCapabilityUtils {
 
   // See Bug1360626 and
   // https://codereview.chromium.org/1869103002 for details.
-  private static boolean isAdaptivePlaybackBlacklisted(String aMimeType) {
+  private static boolean isAdaptivePlaybackBlacklisted(final String aMimeType) {
     Log.d(LOGTAG, "The device ModelID is " + Build.MODEL);
     if (!aMimeType.equals("video/avc") && !aMimeType.equals("video/avc1")) {
       return false;
@@ -183,7 +184,7 @@ public final class HardwareCodecCapabilityUtils {
     return getHWDecoderCapability(VP9_MIME_TYPE);
   }
 
-  public static boolean getHWDecoderCapability(String aMimeType) {
+  public static boolean getHWDecoderCapability(final String aMimeType) {
     if (Build.VERSION.SDK_INT >= 20) {
       for (int i = 0; i < MediaCodecList.getCodecCount(); ++i) {
         MediaCodecInfo info = MediaCodecList.getCodecInfoAt(i);

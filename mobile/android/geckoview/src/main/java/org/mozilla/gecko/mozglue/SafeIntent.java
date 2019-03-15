@@ -30,7 +30,7 @@ public class SafeIntent {
         this.intent = intent;
     }
 
-    public boolean hasExtra(String name) {
+    public boolean hasExtra(final String name) {
         try {
             return intent.hasExtra(name);
         } catch (OutOfMemoryError e) {
