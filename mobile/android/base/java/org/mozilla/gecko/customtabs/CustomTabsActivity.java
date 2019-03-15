@@ -630,12 +630,6 @@ public class CustomTabsActivity extends AppCompatActivity
         throw new IllegalStateException("Unexpected new session");
     }
 
-    @Override
-    public GeckoResult<String> onLoadError(final GeckoSession session, final String urlStr,
-                                           final WebRequestError error) {
-        return null;
-    }
-
     /* GeckoSession.ProgressDelegate */
     @Override
     public void onPageStart(GeckoSession session, String url) {
@@ -681,11 +675,6 @@ public class CustomTabsActivity extends AppCompatActivity
     }
 
     @Override
-    public void onCloseRequest(GeckoSession session) {
-        // Ignore
-    }
-
-    @Override
     public void onFullScreen(GeckoSession session, boolean fullScreen) {
         ActivityUtils.setFullScreen(this, fullScreen);
         if (fullScreen) {
@@ -713,20 +702,6 @@ public class CustomTabsActivity extends AppCompatActivity
                 WebApps.openInFennec(validUri, CustomTabsActivity.this);
             }
         });
-    }
-
-    @Override
-    public void onExternalResponse(final GeckoSession session, final GeckoSession.WebResponseInfo request) {
-        // Won't happen, as we don't use the GeckoView download support in Fennec
-    }
-
-    @Override
-    public void onCrash(final GeckoSession session) {
-        // Won't happen, as we don't use e10s in Fennec
-    }
-
-    @Override
-    public void onFirstComposite(final GeckoSession session) {
     }
 
     @Override // ActionModePresenter
