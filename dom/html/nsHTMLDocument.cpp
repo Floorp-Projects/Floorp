@@ -181,7 +181,8 @@ nsHTMLDocument::nsHTMLDocument()
       mEditingState(EditingState::eOff),
       mDisableCookieAccess(false),
       mPendingMaybeEditingStateChanged(false),
-      mHasBeenEditable(false) {
+      mHasBeenEditable(false),
+      mIsPlainText(false) {
   mType = eHTML;
   mDefaultElementType = kNameSpaceID_XHTML;
   mCompatMode = eCompatibility_NavQuirks;
@@ -492,15 +493,15 @@ nsresult nsHTMLDocument::StartDocumentLoad(const char* aCommand,
   bool html = contentType.EqualsLiteral(TEXT_HTML);
   bool xhtml = !html && (contentType.EqualsLiteral(APPLICATION_XHTML_XML) ||
                          contentType.EqualsLiteral(APPLICATION_WAPXHTML_XML));
-  bool plainText =
+  mIsPlainText =
       !html && !xhtml && nsContentUtils::IsPlainTextType(contentType);
-  if (!(html || xhtml || plainText || viewSource)) {
+  if (!(html || xhtml || mIsPlainText || viewSource)) {
     MOZ_ASSERT(false, "Channel with bad content type.");
     return NS_ERROR_INVALID_ARG;
   }
 
   bool forceUtf8 =
-      plainText && nsContentUtils::IsUtf8OnlyPlainTextType(contentType);
+      mIsPlainText && nsContentUtils::IsUtf8OnlyPlainTextType(contentType);
 
   bool loadAsHtml5 = true;
 
@@ -549,7 +550,7 @@ nsresult nsHTMLDocument::StartDocumentLoad(const char* aCommand,
   bool loadWithPrototype = false;
   if (loadAsHtml5) {
     mParser = nsHtml5Module::NewHtml5Parser();
-    if (plainText) {
+    if (mIsPlainText) {
       if (viewSource) {
         mParser->MarkAsNotScriptCreated("view-source-plain");
       } else {
@@ -706,7 +707,7 @@ nsresult nsHTMLDocument::StartDocumentLoad(const char* aCommand,
     }
   }
 
-  if (plainText && !nsContentUtils::IsChildOfSameType(this) &&
+  if (mIsPlainText && !nsContentUtils::IsChildOfSameType(this) &&
       Preferences::GetBool("plain_text.wrap_long_lines")) {
     nsCOMPtr<nsIStringBundleService> bundleService =
         do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
@@ -784,6 +785,16 @@ void nsHTMLDocument::SetCompatibilityMode(nsCompatibility aMode) {
   if (nsPresContext* pc = GetPresContext()) {
     pc->CompatibilityModeChanged();
   }
+}
+
+bool nsHTMLDocument::UseWidthDeviceWidthFallbackViewport() const {
+  if (mIsPlainText) {
+    // Plain text documents are simple enough that font inflation doesn't offer
+    // any appreciable advantage over defaulting to "width=device-width" and
+    // subsequently turning on word-wrapping.
+    return true;
+  }
+  return Document::UseWidthDeviceWidthFallbackViewport();
 }
 
 Element* nsHTMLDocument::GetUnfocusedKeyEventTarget() {
