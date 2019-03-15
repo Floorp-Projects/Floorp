@@ -276,7 +276,7 @@ public class SQLiteBridge {
 
     public void close() {
         if (isOpen()) {
-          closeDatabase(mDbPointer);
+            closeDatabase(mDbPointer);
         }
         mDbPointer = 0L;
     }
@@ -308,11 +308,11 @@ public class SQLiteBridge {
             return;
 
         try {
-          if (mTransactionSuccess) {
-              execSQL("COMMIT TRANSACTION");
-          } else {
-              execSQL("ROLLBACK TRANSACTION");
-          }
+            if (mTransactionSuccess) {
+                execSQL("COMMIT TRANSACTION");
+            } else {
+                execSQL("ROLLBACK TRANSACTION");
+            }
         } catch (SQLiteBridgeException ex) {
             Log.e(LOGTAG, "Error ending transaction", ex);
         }

@@ -290,8 +290,9 @@ public class GeckoHlsVideoRenderer extends GeckoHlsRendererBase {
     @Override
     protected boolean canReconfigure(final Format oldFormat, final Format newFormat) {
         boolean canReconfig = areAdaptationCompatible(oldFormat, newFormat)
-          && newFormat.width <= mCodecMaxValues.width && newFormat.height <= mCodecMaxValues.height
-          && newFormat.maxInputSize <= mCodecMaxValues.inputSize;
+                && newFormat.width <= mCodecMaxValues.width
+                && newFormat.height <= mCodecMaxValues.height
+                && newFormat.maxInputSize <= mCodecMaxValues.inputSize;
         if (DEBUG) {
             Log.d(LOGTAG, "[canReconfigure] : " + canReconfig);
         }

@@ -172,11 +172,11 @@ public final class CodecProxy {
 
     @WrapForJNI
     public synchronized boolean isAdaptivePlaybackSupported() {
-      if (mRemote == null) {
-          Log.e(LOGTAG, "cannot check isAdaptivePlaybackSupported with an ended codec");
-          return false;
-      }
-      try {
+        if (mRemote == null) {
+            Log.e(LOGTAG, "cannot check isAdaptivePlaybackSupported with an ended codec");
+            return false;
+        }
+        try {
             return mRemote.isAdaptivePlaybackSupported();
         } catch (RemoteException e) {
             e.printStackTrace();
@@ -186,11 +186,11 @@ public final class CodecProxy {
 
     @WrapForJNI
     public synchronized boolean isHardwareAccelerated() {
-      if (mRemote == null) {
-          Log.e(LOGTAG, "cannot check isHardwareAccelerated with an ended codec");
-          return false;
-      }
-      try {
+        if (mRemote == null) {
+            Log.e(LOGTAG, "cannot check isHardwareAccelerated with an ended codec");
+            return false;
+        }
+        try {
             return mRemote.isHardwareAccelerated();
         } catch (RemoteException e) {
             e.printStackTrace();
@@ -200,11 +200,11 @@ public final class CodecProxy {
 
     @WrapForJNI
     public synchronized boolean isTunneledPlaybackSupported() {
-      if (mRemote == null) {
-          Log.e(LOGTAG, "cannot check isTunneledPlaybackSupported with an ended codec");
-          return false;
-      }
-      try {
+        if (mRemote == null) {
+            Log.e(LOGTAG, "cannot check isTunneledPlaybackSupported with an ended codec");
+            return false;
+        }
+        try {
             return mRemote.isTunneledPlaybackSupported();
         } catch (RemoteException e) {
             e.printStackTrace();

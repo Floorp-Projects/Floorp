@@ -100,8 +100,8 @@ public final class MediaDrmProxy {
                               int sessionMessageType,
                               byte[] request);
 
-       void onSessionError(byte[] sessionId,
-                           String message);
+        void onSessionError(byte[] sessionId,
+                            String message);
 
         // MediaDrm.KeyStatus is available in API level 23(M)
         // https://developer.android.com/reference/android/media/MediaDrm.KeyStatus.html
