@@ -910,18 +910,6 @@ public abstract class GeckoApp extends GeckoActivity
     }
 
     @Override // GeckoSession.ContentDelegate
-    public void onTitleChange(final GeckoSession session, final String title) {
-    }
-
-    @Override // GeckoSession.ContentDelegate
-    public void onFocusRequest(final GeckoSession session) {
-    }
-
-    @Override // GeckoSession.ContentDelegate
-    public void onCloseRequest(final GeckoSession session) {
-    }
-
-    @Override // GeckoSession.ContentDelegate
     public void onFullScreen(final GeckoSession session, final boolean fullScreen) {
         if (fullScreen) {
             SnackbarBuilder.builder(this)
@@ -930,26 +918,6 @@ public abstract class GeckoApp extends GeckoActivity
         }
         ThreadUtils.assertOnUiThread();
         ActivityUtils.setFullScreen(this, fullScreen);
-    }
-
-    @Override
-    public void onContextMenu(final GeckoSession session,
-                              final int screenX, final int screenY,
-                              final GeckoSession.ContentDelegate.ContextElement element) {
-    }
-
-    @Override
-    public void onExternalResponse(final GeckoSession session, final GeckoSession.WebResponseInfo request) {
-        // Won't happen, as we don't use the GeckoView download support in Fennec
-    }
-
-    @Override
-    public void onCrash(final GeckoSession session) {
-        // Won't happen, as we don't use e10s in Fennec
-    }
-
-    @Override
-    public void onFirstComposite(final GeckoSession session) {
     }
 
     protected void setFullScreen(final boolean fullscreen) {
