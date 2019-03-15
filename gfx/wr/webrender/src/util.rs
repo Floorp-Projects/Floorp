@@ -4,9 +4,10 @@
 
 use api::BorderRadius;
 use api::units::*;
-use euclid::{TypedPoint2D, TypedRect, TypedSize2D, Vector2D};
+use euclid::{Point2D, Rect, Size2D, TypedPoint2D, TypedRect, TypedSize2D, Vector2D};
 use euclid::{TypedTransform2D, TypedTransform3D, TypedVector2D, TypedScale};
 use malloc_size_of::{MallocShallowSizeOf, MallocSizeOf, MallocSizeOfOps};
+use num_traits::Zero;
 use plane_split::{Clipper, Polygon};
 use std::{i32, f32, fmt, ptr};
 use std::borrow::Cow;
@@ -412,6 +413,12 @@ impl<U> RectHelpers<U> for TypedRect<f32, U> {
     fn is_well_formed_and_nonempty(&self) -> bool {
         self.size.width > 0.0 && self.size.height > 0.0
     }
+}
+
+// Don't use `euclid`'s `is_empty` because that has effectively has an "and" in the conditional
+// below instead of an "or".
+pub fn rect_is_empty<N: PartialEq + Zero, U>(rect: &TypedRect<N, U>) -> bool {
+    rect.size.width == Zero::zero() || rect.size.height == Zero::zero()
 }
 
 #[allow(dead_code)]
