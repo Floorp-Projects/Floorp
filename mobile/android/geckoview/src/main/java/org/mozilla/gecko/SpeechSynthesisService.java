@@ -7,7 +7,6 @@
 package org.mozilla.gecko;
 
 import org.mozilla.gecko.annotation.WrapForJNI;
-import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.util.ThreadUtils;
 
 import android.content.Context;
@@ -16,7 +15,6 @@ import android.speech.tts.TextToSpeech;
 import android.speech.tts.UtteranceProgressListener;
 import android.util.Log;
 
-import java.lang.System;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Locale;
