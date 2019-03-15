@@ -38,7 +38,7 @@ class PocketJSONParserTest {
 
     @Test
     fun `WHEN parsing valid global video recommendations THEN pocket videos are returned`() {
-        val expectedSubset = PocketTestResource.videoRecommendationFirstTwo
+        val expectedSubset = PocketTestResource.getExpectedPocketVideoRecommendationFirstTwo()
         val pocketJSON = PocketTestResource.POCKET_VIDEO_RECOMMENDATION.get()
         val actualVideos = parser.jsonToGlobalVideoRecommendations(pocketJSON)
 

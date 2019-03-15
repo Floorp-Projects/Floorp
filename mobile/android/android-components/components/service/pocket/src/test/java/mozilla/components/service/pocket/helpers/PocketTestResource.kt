@@ -12,16 +12,17 @@ private const val POCKET_DIR = "pocket"
  * Accessors to resources used in testing. These files are available in `app/src/test/resources`.
  */
 enum class PocketTestResource(private val path: String) {
+    // For expected Kotlin data type representations of this test data, see the companion object.
     POCKET_VIDEO_RECOMMENDATION("$POCKET_DIR/video_recommendations.json"),
 
     // NEVER COMMIT THE API KEY FILE. Add this file with a valid API key to use this resource.
     API_KEY("$POCKET_DIR/apiKey.txt");
 
+    /** @return the raw resource. */
     fun get(): String = this::class.java.classLoader!!.getResource(path)!!.readText()
 
     companion object {
-
-        val videoRecommendationFirstTwo by lazy { listOf(
+        fun getExpectedPocketVideoRecommendationFirstTwo(): List<PocketGlobalVideoRecommendation> = listOf(
             PocketGlobalVideoRecommendation(
                 id = 27587,
                 url = "https://www.youtube.com/watch?v=953Qt4FnAcU",
@@ -60,6 +61,6 @@ enum class PocketTestResource(private val path: String) {
                     )
                 )
             )
-        ) }
+        )
     }
 }

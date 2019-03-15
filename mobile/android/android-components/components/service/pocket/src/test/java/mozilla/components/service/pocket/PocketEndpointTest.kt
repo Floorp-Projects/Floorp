@@ -78,7 +78,7 @@ class PocketEndpointTest {
 
     @Test
     fun `WHEN getting video recommendations, the server returns a String, and the jsonParser returns valid data THEN a success with the data is returned`() {
-        val expected = PocketTestResource.videoRecommendationFirstTwo
+        val expected = PocketTestResource.getExpectedPocketVideoRecommendationFirstTwo()
         `when`(raw.getGlobalVideoRecommendations()).thenReturn("")
         `when`(jsonParser.jsonToGlobalVideoRecommendations(any())).thenReturn(expected)
 
