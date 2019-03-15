@@ -23,6 +23,15 @@ Unreleased
 
   Thanks to [Kriti Singh] for this patch.
 
+- Support for application bundle paths on macOS
+
+  It is now possible to pass an application bundle path, such as
+  `/Applications/Firefox.app` as argument to the `binary` field in
+  [`moz:firefoxOptions`].  This will be automatically resolved to
+  the absolute path of the binary when Firefox is started.
+
+  Thanks to [Nupur Baghel] for this patch.
+
 ### Removed
 
 - Dropped support for legacy Selenium web element references
@@ -1212,5 +1221,6 @@ and greater.
 [Kalpesh Krishna]: https://github.com/martiansideofthemoon
 [Kriti Singh]: https://github.com/kritisingh1
 [Mike Pennisi]: https://github.com/jugglinmike
+[Nupur Baghel]: https://github.com/nupurbaghel
 [Sven Jost]: https://github/mythsunwind
 [Vlad Filippov]: https://github.com/vladikoff
