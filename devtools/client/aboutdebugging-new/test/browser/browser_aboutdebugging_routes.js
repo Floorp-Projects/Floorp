@@ -4,12 +4,12 @@
 "use strict";
 
 /**
- * Test that the initial route is /connect
+ * Test that the initial route is /setup
  */
 add_task(async function() {
-  info("Check root route redirects to connect page");
+  info("Check root route redirects to setup page");
   const { document, tab } = await openAboutDebugging();
-  is(document.location.hash, "#/connect");
+  is(document.location.hash, "#/setup");
 
   await removeTab(tab);
 });
@@ -36,14 +36,14 @@ add_task(async function() {
       "Checking title for 'runtime' page"
   );
 
-  info("Check 'Connect' page");
-  document.location.hash = "#/connect";
+  info("Check 'Setup' page");
+  document.location.hash = "#/setup";
   await waitUntil(() => document.querySelector(".js-connect-page"));
-  ok(true, "Connect page has been shown");
+  ok(true, "Setup page has been shown");
   is(
       document.title,
-      "Debugging - Connect",
-      "Checking title for 'connect' page"
+      "Debugging - Setup",
+      "Checking title for 'setup' page"
   );
 
   info("Check 'USB device runtime' page");
@@ -75,7 +75,7 @@ add_task(async function() {
   info("Check an invalid route redirects to root");
   const { document, tab } = await openAboutDebugging();
 
-  info("Waiting for a non connect page to load");
+  info("Waiting for a non setup page to load");
   document.location.hash = "#/runtime/this-firefox";
   await waitUntil(() => document.querySelector(".js-runtime-page"));
 
@@ -84,10 +84,10 @@ add_task(async function() {
   await waitUntil(() => document.querySelector(".js-connect-page"));
   is(
       document.title,
-      "Debugging - Connect",
-      "Checking title for 'connect' page"
+      "Debugging - Setup",
+      "Checking title for 'setup' page"
   );
-  is(document.location.hash, "#/connect", "Redirected to root");
+  is(document.location.hash, "#/setup", "Redirected to root");
 
   await removeTab(tab);
 });
