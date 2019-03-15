@@ -7,13 +7,13 @@
 #ifndef AllocationPolicy_h_
 #define AllocationPolicy_h_
 
+#include <queue>
 #include "MediaInfo.h"
 #include "PlatformDecoderModule.h"
 #include "TimeUnits.h"
 #include "mozilla/MozPromise.h"
-#include "mozilla/StaticMutex.h"
 #include "mozilla/ReentrantMonitor.h"
-#include <queue>
+#include "mozilla/StaticMutex.h"
 
 namespace mozilla {
 
@@ -62,6 +62,68 @@ class GlobalAllocPolicy {
   int mDecoderLimit;
   // Requests to acquire tokens.
   std::queue<RefPtr<PromisePrivate>> mPromises;
+};
+
+/**
+ * This class allows to track and serialise a single decoder allocation at a
+ * time
+ */
+class LocalAllocPolicy {
+  using TrackType = TrackInfo::TrackType;
+  using Promise = GlobalAllocPolicy::Promise;
+  using Token = GlobalAllocPolicy::Token;
+
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(LocalAllocPolicy)
+
+ public:
+  LocalAllocPolicy(TrackType aTrack, TaskQueue* aOwnerThread)
+      : mTrack(aTrack), mOwnerThread(aOwnerThread) {}
+
+  // Acquire a token for decoder creation. Note the resolved token will
+  // aggregate a GlobalAllocPolicy token to comply to its policy. Note
+  // this function shouldn't be called again until the returned promise
+  // is resolved or rejected.
+  RefPtr<Promise> Alloc();
+
+  // Cancel the request to GlobalAllocPolicy and reject the current token
+  // request. Note this must happen before mOwnerThread->BeginShutdown().
+  void Cancel();
+
+ private:
+  /*
+   * An RAII class to manage LocalAllocPolicy::mDecoderLimit.
+   */
+  class AutoDeallocToken : public Token {
+   public:
+    explicit AutoDeallocToken(LocalAllocPolicy* aOwner) : mOwner(aOwner) {
+      MOZ_DIAGNOSTIC_ASSERT(mOwner->mDecoderLimit > 0);
+      --mOwner->mDecoderLimit;
+    }
+    // Aggregate a GlobalAllocPolicy token to present a single instance of
+    // Token to the client so the client doesn't have to deal with
+    // GlobalAllocPolicy and LocalAllocPolicy separately.
+    void Append(Token* aToken) { mToken = aToken; }
+
+   private:
+    // Release tokens allocated from GlobalAllocPolicy and LocalAllocPolicy
+    // and process next token request if any.
+    ~AutoDeallocToken() {
+      mToken = nullptr;          // Dealloc the global token.
+      ++mOwner->mDecoderLimit;   // Dealloc the local token.
+      mOwner->ProcessRequest();  // Process next pending request.
+    }
+    RefPtr<LocalAllocPolicy> mOwner;
+    RefPtr<Token> mToken;
+  };
+
+  ~LocalAllocPolicy() = default;
+  void ProcessRequest();
+
+  int mDecoderLimit = 1;
+  const TrackType mTrack;
+  RefPtr<TaskQueue> mOwnerThread;
+  MozPromiseHolder<Promise> mPendingPromise;
+  MozPromiseRequestHolder<Promise> mTokenRequest;
 };
 
 class AllocationWrapper : public MediaDataDecoder {
