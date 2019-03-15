@@ -239,7 +239,13 @@ function background(events) {
     },
     onErrorOccurred(expected, details, result) {
       if (expected.error) {
-        browser.test.assertEq(expected.error, details.error, "expected error message received in onErrorOccurred");
+        if (Array.isArray(expected.error)) {
+          browser.test.assertTrue(
+            expected.error.includes(details.error),
+            "expected error message received in onErrorOccurred");
+        } else {
+          browser.test.assertEq(expected.error, details.error, "expected error message received in onErrorOccurred");
+        }
       }
     },
   };

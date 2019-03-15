@@ -21,6 +21,10 @@ $excerpt-line-height: 20;
 
   &:active {
     header {
+      @include dark-theme-only {
+        color: $blue-50;
+      }
+
       color: $blue-70;
     }
   }

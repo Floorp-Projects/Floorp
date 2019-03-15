@@ -32,7 +32,7 @@ export class Hero extends React.PureComponent {
     const {data} = this.props;
 
     // Handle a render before feed has been fetched by displaying nothing
-    if (!data || !data.recommendations) {
+    if (!data || !data.recommendations || !data.recommendations.length) {
       return (
         <div />
       );
@@ -97,7 +97,8 @@ export class Hero extends React.PureComponent {
                 source={this.props.type} />
             </SafeAnchor>
             <DSLinkMenu
-              index={this.props.index}
+              id={heroRec.id}
+              index={heroRec.pos}
               dispatch={this.props.dispatch}
               intl={this.props.intl}
               url={heroRec.url}

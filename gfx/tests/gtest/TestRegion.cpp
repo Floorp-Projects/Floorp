@@ -1191,8 +1191,8 @@ struct RegionBitmap {
   int height;
 };
 
-static void VisitEdge(void *closure, VisitSide side, int x1, int y1,
-                      int x2, int y2) {
+static void VisitEdge(void *closure, VisitSide side, int x1, int y1, int x2,
+                      int y2) {
   EXPECT_GE(x2, x1);
   RegionBitmap *visitor = static_cast<RegionBitmap *>(closure);
   unsigned char *bitmap = visitor->bitmap;

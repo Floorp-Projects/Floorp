@@ -8,24 +8,26 @@ var testURI = "webcal://127.0.0.1/rheeeeet.html";
 const Cc = SpecialPowers.Cc;
 
 function test() {
-
   // set up the web handler object
   var webHandler = Cc["@mozilla.org/uriloader/web-handler-app;1"].
     createInstance(SpecialPowers.Ci.nsIWebHandlerApp);
   webHandler.name = "Test Web Handler App";
   webHandler.uriTemplate =
-      "https://example.com/tests/uriloader/exthandler/tests/mochitest/" + 
+      "https://example.com/tests/uriloader/exthandler/tests/mochitest/" +
       "handlerApp.xhtml?uri=%s";
-  
+
   // set up the uri to test with
+  /* eslint-disable mozilla/use-services */
+
   var ioService = Cc["@mozilla.org/network/io-service;1"].
     getService(SpecialPowers.Ci.nsIIOService);
+
   var uri = ioService.newURI(testURI);
 
   // create a window, and launch the handler in it
   var newWindow = window.open("", "handlerWindow", "height=300,width=300");
   var windowContext = SpecialPowers.wrap(newWindow).docShell;
- 
+
   webHandler.launchWithURI(uri, windowContext);
 
   // if we get this far without an exception, we've at least partly passed
@@ -34,7 +36,7 @@ function test() {
 
   // make the web browser launch in its own window/tab
   webHandler.launchWithURI(uri);
-  
+
   // if we get this far without an exception, we've passed
   ok(true, "webHandler launchWithURI (new window/tab) test started");
 
@@ -42,8 +44,10 @@ function test() {
   var localHandler = Cc["@mozilla.org/uriloader/local-handler-app;1"].
     createInstance(SpecialPowers.Ci.nsILocalHandlerApp);
   localHandler.name = "Test Local Handler App";
-  
+
   // get a local app that we know will be there and do something sane
+  /* eslint-disable mozilla/use-services */
+
   var osString = Cc["@mozilla.org/xre/app-info;1"].
                  getService(SpecialPowers.Ci.nsIXULRuntime).OS;
 
@@ -53,8 +57,7 @@ function test() {
     var windowsDir = dirSvc.getFile("WinD", {});
     var exe = windowsDir.clone().QueryInterface(SpecialPowers.Ci.nsIFile);
     exe.appendRelativePath("SYSTEM32\\HOSTNAME.EXE");
-
-  } else if (osString == "Darwin") { 
+  } else if (osString == "Darwin") {
     var localAppsDir = dirSvc.getFile("LocApp", {});
     exe = localAppsDir.clone();
     exe.append("iCal.app"); // lingers after the tests finish, but this seems
@@ -85,19 +88,18 @@ function test() {
   // if we get this far without an exception, we've passed
   ok(true, "localHandler launchWithURI test");
 
-  // if we ever decide that killing iCal is the right thing to do, change 
+  // if we ever decide that killing iCal is the right thing to do, change
   // the if statement below from "NOTDarwin" to "Darwin"
   if (osString == "NOTDarwin") {
-
     var killall = Cc["@mozilla.org/file/local;1"].
                   createInstance(SpecialPowers.Ci.nsIFile);
     killall.initWithPath("/usr/bin/killall");
-  
+
     var process = Cc["@mozilla.org/process/util;1"].
                   createInstance(SpecialPowers.Ci.nsIProcess);
     process.init(killall);
-    
-    var args = ['iCal'];
+
+    var args = ["iCal"];
     process.run(false, args, args.length);
   }
 

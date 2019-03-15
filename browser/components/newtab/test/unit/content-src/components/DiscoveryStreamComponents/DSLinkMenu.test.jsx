@@ -24,16 +24,16 @@ describe("<DSLinkMenu>", () => {
     assert.equal(wrapper.find(LinkMenu).length, 1);
   });
 
-  it("should pass dispatch, onUpdate, onShow, site, options, source and index to LinkMenu", () => {
+  it("should pass dispatch, onUpdate, onShow, site, options, shouldSendImpressionStats, source and index to LinkMenu", () => {
     wrapper.find(".context-menu-button").simulate("click", {preventDefault: () => {}});
     const linkMenuProps = wrapper.find(LinkMenu).props();
-    ["dispatch", "onUpdate", "onShow", "site", "index", "options", "source"].forEach(prop => assert.property(linkMenuProps, prop));
+    ["dispatch", "onUpdate", "onShow", "site", "index", "options", "source", "shouldSendImpressionStats"].forEach(prop => assert.property(linkMenuProps, prop));
   });
 
   it("should pass through the correct menu options to LinkMenu", () => {
     wrapper.find(".context-menu-button").simulate("click", {preventDefault: () => {}});
     const linkMenuProps = wrapper.find(LinkMenu).props();
     assert.deepEqual(linkMenuProps.options,
-      ["OpenInNewWindow", "OpenInPrivateWindow"]);
+      ["OpenInNewWindow", "OpenInPrivateWindow", "Separator", "BlockUrl"]);
   });
 });

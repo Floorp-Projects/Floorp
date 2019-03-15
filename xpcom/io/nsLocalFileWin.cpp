@@ -1134,12 +1134,12 @@ nsLocalFile::OpenANSIFileDesc(const char* aMode, FILE** aResult) {
   return NS_ERROR_FAILURE;
 }
 
-static nsresult
-do_create(nsIFile* aFile, const nsString& aPath, uint32_t aAttributes) {
+static nsresult do_create(nsIFile* aFile, const nsString& aPath,
+                          uint32_t aAttributes) {
   PRFileDesc* file;
-  nsresult rv = OpenFile(aPath,
-                         PR_RDONLY | PR_CREATE_FILE | PR_APPEND | PR_EXCL, aAttributes,
-                         false, &file);
+  nsresult rv =
+      OpenFile(aPath, PR_RDONLY | PR_CREATE_FILE | PR_APPEND | PR_EXCL,
+               aAttributes, false, &file);
   if (file) {
     PR_Close(file);
   }
@@ -1154,8 +1154,7 @@ do_create(nsIFile* aFile, const nsString& aPath, uint32_t aAttributes) {
   return rv;
 }
 
-static nsresult
-do_mkdir(nsIFile*, const nsString& aPath, uint32_t) {
+static nsresult do_mkdir(nsIFile*, const nsString& aPath, uint32_t) {
   if (!::CreateDirectoryW(aPath.get(), nullptr)) {
     return ConvertWinError(GetLastError());
   }

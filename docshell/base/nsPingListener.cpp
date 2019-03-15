@@ -327,21 +327,17 @@ nsresult nsPingListener::StartTimeout(DocGroup* aDocGroup) {
 }
 
 NS_IMETHODIMP
-nsPingListener::OnStartRequest(nsIRequest* aRequest) {
-  return NS_OK;
-}
+nsPingListener::OnStartRequest(nsIRequest* aRequest) { return NS_OK; }
 
 NS_IMETHODIMP
-nsPingListener::OnDataAvailable(nsIRequest* aRequest,
-                                nsIInputStream* aStream, uint64_t aOffset,
-                                uint32_t aCount) {
+nsPingListener::OnDataAvailable(nsIRequest* aRequest, nsIInputStream* aStream,
+                                uint64_t aOffset, uint32_t aCount) {
   uint32_t result;
   return aStream->ReadSegments(NS_DiscardSegment, nullptr, aCount, &result);
 }
 
 NS_IMETHODIMP
-nsPingListener::OnStopRequest(nsIRequest* aRequest,
-                              nsresult aStatus) {
+nsPingListener::OnStopRequest(nsIRequest* aRequest, nsresult aStatus) {
   mLoadGroup = nullptr;
 
   if (mTimer) {

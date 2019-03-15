@@ -244,8 +244,8 @@ global.TabContext = class extends EventEmitter {
 
 // This promise is used to wait for the search service to be initialized.
 // None of the code in the WebExtension modules requests that initialization.
-// It is assumed that it is started at some point. If tests start to fail
-// because this promise never resolves, that's likely the cause.
+// It is assumed that it is started at some point. That might never happen,
+// e.g. if the application shuts down before the search service initializes.
 XPCOMUtils.defineLazyGetter(global, "searchInitialized", () => {
   if (Services.search.isInitialized) {
     return Promise.resolve();

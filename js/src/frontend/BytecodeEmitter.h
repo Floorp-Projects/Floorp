@@ -163,11 +163,13 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   unsigned firstLine = 0; /* first line, for JSScript::initFromEmitter */
 
   uint32_t maxFixedSlots = 0; /* maximum number of fixed frame slots so far */
-  uint32_t maxStackDepth = 0; /* maximum number of expression stack slots so far */
+  uint32_t maxStackDepth =
+      0; /* maximum number of expression stack slots so far */
 
   int32_t stackDepth = 0; /* current stack depth in script frame */
 
-  uint32_t bodyScopeIndex = UINT32_MAX; /* index into scopeList of the body scope */
+  uint32_t bodyScopeIndex =
+      UINT32_MAX; /* index into scopeList of the body scope */
 
   EmitterScope* varEmitterScope = nullptr;
   NestableControl* innermostNestableControl = nullptr;
@@ -352,8 +354,8 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   Scope* outermostScope() const { return scopeList.vector[0]; }
   Scope* innermostScope() const;
   Scope* bodyScope() const {
-      MOZ_ASSERT(bodyScopeIndex < scopeList.length());
-      return scopeList.vector[bodyScopeIndex];
+    MOZ_ASSERT(bodyScopeIndex < scopeList.length());
+    return scopeList.vector[bodyScopeIndex];
   }
 
   MOZ_ALWAYS_INLINE

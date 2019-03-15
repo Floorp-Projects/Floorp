@@ -47,15 +47,14 @@ nsresult nsUnknownDecoder::ConvertedStreamListener::AppendDataToString(
 }
 
 NS_IMETHODIMP
-nsUnknownDecoder::ConvertedStreamListener::OnStartRequest(
-    nsIRequest* request) {
+nsUnknownDecoder::ConvertedStreamListener::OnStartRequest(nsIRequest* request) {
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsUnknownDecoder::ConvertedStreamListener::OnDataAvailable(
-    nsIRequest* request, nsIInputStream* stream,
-    uint64_t offset, uint32_t count) {
+    nsIRequest* request, nsIInputStream* stream, uint64_t offset,
+    uint32_t count) {
   uint32_t read;
   nsAutoCString decodedData;
   {
@@ -152,8 +151,7 @@ nsUnknownDecoder::AsyncConvertData(const char* aFromType, const char* aToType,
 // ----
 
 NS_IMETHODIMP
-nsUnknownDecoder::OnDataAvailable(nsIRequest* request,
-                                  nsIInputStream* aStream,
+nsUnknownDecoder::OnDataAvailable(nsIRequest* request, nsIInputStream* aStream,
                                   uint64_t aSourceOffset, uint32_t aCount) {
   nsresult rv = NS_OK;
 
@@ -227,8 +225,7 @@ nsUnknownDecoder::OnDataAvailable(nsIRequest* request,
       MutexAutoLock lock(mMutex);
       listener = mNextListener;
     }
-    rv = listener->OnDataAvailable(request, aStream, aSourceOffset,
-                                   aCount);
+    rv = listener->OnDataAvailable(request, aStream, aSourceOffset, aCount);
   }
 
   return rv;
@@ -268,8 +265,7 @@ nsUnknownDecoder::OnStartRequest(nsIRequest* request) {
 }
 
 NS_IMETHODIMP
-nsUnknownDecoder::OnStopRequest(nsIRequest* request,
-                                nsresult aStatus) {
+nsUnknownDecoder::OnStopRequest(nsIRequest* request, nsresult aStatus) {
   nsresult rv = NS_OK;
 
   bool contentTypeEmpty;

@@ -19,6 +19,17 @@ debugger-tests:
         - "!asan !pgo 'linux64/ 'xpcshell"
         - "!pgo !qr !macosx 'damp"
 
+perf:
+    selector: fuzzy
+    description: >-
+        Runs all performance (raptor and talos) tasks across all platforms.
+        This preset can be filtered down further (e.g to limit it to a specific
+        platform) via |mach try --preset perf -xq "'windows"|.
+
+        Android hardware platforms are excluded due to resource limitations.
+    query:
+        - "^test- !android-hw 'raptor | 'talos"
+
 sample-suites:
     selector: fuzzy
     description: >-

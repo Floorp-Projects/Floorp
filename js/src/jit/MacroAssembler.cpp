@@ -49,35 +49,36 @@ static void EmitTypeCheck(MacroAssembler& masm, Assembler::Condition cond,
     return;
   }
   switch (type.primitive()) {
-    case JSVAL_TYPE_DOUBLE:
+    case ValueType::Double:
       // TI double type includes int32.
       masm.branchTestNumber(cond, src, label);
       break;
-    case JSVAL_TYPE_INT32:
+    case ValueType::Int32:
       masm.branchTestInt32(cond, src, label);
       break;
-    case JSVAL_TYPE_BOOLEAN:
+    case ValueType::Boolean:
       masm.branchTestBoolean(cond, src, label);
       break;
-    case JSVAL_TYPE_STRING:
+    case ValueType::String:
       masm.branchTestString(cond, src, label);
       break;
-    case JSVAL_TYPE_SYMBOL:
+    case ValueType::Symbol:
       masm.branchTestSymbol(cond, src, label);
       break;
-    case JSVAL_TYPE_BIGINT:
+    case ValueType::BigInt:
       masm.branchTestBigInt(cond, src, label);
       break;
-    case JSVAL_TYPE_NULL:
+    case ValueType::Null:
       masm.branchTestNull(cond, src, label);
       break;
-    case JSVAL_TYPE_UNDEFINED:
+    case ValueType::Undefined:
       masm.branchTestUndefined(cond, src, label);
       break;
-    case JSVAL_TYPE_MAGIC:
+    case ValueType::Magic:
       masm.branchTestMagic(cond, src, label);
       break;
-    default:
+    case ValueType::PrivateGCThing:
+    case ValueType::Object:
       MOZ_CRASH("Unexpected type");
   }
 }
@@ -3427,9 +3428,8 @@ void MacroAssembler::wasmInterruptCheck(Register tls,
   bind(&ok);
 }
 
-std::pair<CodeOffset, uint32_t>
-MacroAssembler::wasmReserveStackChecked(uint32_t amount,
-                                        wasm::BytecodeOffset trapOffset) {
+std::pair<CodeOffset, uint32_t> MacroAssembler::wasmReserveStackChecked(
+    uint32_t amount, wasm::BytecodeOffset trapOffset) {
   if (amount > MAX_UNCHECKED_LEAF_FRAME_SIZE) {
     // The frame is large.  Don't bump sp until after the stack limit check so
     // that the trap handler isn't called with a wild sp.
@@ -3453,7 +3453,7 @@ MacroAssembler::wasmReserveStackChecked(uint32_t amount,
   wasmTrap(wasm::Trap::StackOverflow, trapOffset);
   CodeOffset trapInsnOffset = CodeOffset(currentOffset());
   bind(&ok);
-  return std::pair<CodeOffset,uint32_t>(trapInsnOffset, amount);
+  return std::pair<CodeOffset, uint32_t>(trapInsnOffset, amount);
 }
 
 CodeOffset MacroAssembler::wasmCallImport(const wasm::CallSiteDesc& desc,

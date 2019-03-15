@@ -14,7 +14,7 @@ data_dir=$HOME_DIR/src/build/unix/build-gcc
 
 gcc_version=7.3.0
 gcc_ext=xz
-binutils_version=2.28.1
+binutils_version=2.31.1
 binutils_ext=xz
 
 pushd $root_dir/gcc-$gcc_version

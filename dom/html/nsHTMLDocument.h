@@ -68,6 +68,10 @@ class nsHTMLDocument : public mozilla::dom::Document, public nsIHTMLDocument {
   virtual void BeginLoad() override;
   virtual void EndLoad() override;
 
+ protected:
+  virtual bool UseWidthDeviceWidthFallbackViewport() const override;
+
+ public:
   // nsIHTMLDocument
   virtual void SetCompatibilityMode(nsCompatibility aMode) override;
 
@@ -343,6 +347,11 @@ class nsHTMLDocument : public mozilla::dom::Document, public nsIHTMLDocument {
   // mHasBeenEditable is set to true when mEditingState is firstly set to
   // eDesignMode or eContentEditable.
   bool mHasBeenEditable;
+
+  /**
+   * Set to true once we know that we are loading plain text content.
+   */
+  bool mIsPlainText;
 };
 
 namespace mozilla {

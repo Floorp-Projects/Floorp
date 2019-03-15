@@ -18,7 +18,7 @@
 #include "mozilla/TypeTraits.h"
 #include "mozilla/Unused.h"
 
-#include <algorithm>  // std::{all_of,copy_n,enable_if,is_const,move}
+#include <algorithm>    // std::{all_of,copy_n,enable_if,is_const,move}
 #include <type_traits>  // std::is_unsigned
 
 #include "jsfriendapi.h"
@@ -811,7 +811,7 @@ static void FillAndTerminate(Dest* dest, Source src, size_t length) {
   for (size_t i = 0; i < length; i++) {
     auto srcChar = src[i];
     static_assert(std::is_unsigned<decltype(srcChar)>::value &&
-                  std::is_unsigned<Dest>::value,
+                      std::is_unsigned<Dest>::value,
                   "source/destination characters are unsigned for simplicity");
     *dest++ = srcChar;
   }
@@ -839,7 +839,7 @@ static void FillFromCompatibleAndTerminate(Dest* dest, Source src,
   for (size_t i = 0; i < length; i++) {
     auto srcChar = src[i];
     static_assert(std::is_unsigned<decltype(srcChar)>::value &&
-                  std::is_unsigned<Dest>::value,
+                      std::is_unsigned<Dest>::value,
                   "source/destination characters are unsigned for simplicity");
     *dest++ = AssertedCast<Dest>(src[i]);
   }

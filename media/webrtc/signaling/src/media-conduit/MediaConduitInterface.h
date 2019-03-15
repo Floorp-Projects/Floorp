@@ -231,7 +231,7 @@ class MediaSessionConduit {
       webrtc::RtcpPacketTypeCounter* aPacketCounts) = 0;
 
   virtual bool GetRTPReceiverStats(unsigned int* jitterMs,
-                           unsigned int* cumulativeLost) = 0;
+                                   unsigned int* cumulativeLost) = 0;
   virtual bool GetRTCPReceiverReport(uint32_t* jitterMs,
                                      uint32_t* packetsReceived,
                                      uint64_t* bytesReceived,
@@ -463,6 +463,7 @@ class VideoSessionConduit : public MediaSessionConduit {
                                     double* bitrateMean, double* bitrateStdDev,
                                     uint32_t* discardedPackets,
                                     uint32_t* framesDecoded) = 0;
+
  protected:
   /* RTCP feedback settings, for unit testing purposes */
   FrameRequestType mFrameRequestMethod;

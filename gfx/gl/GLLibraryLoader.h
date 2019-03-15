@@ -23,35 +23,29 @@ struct SymLoadStruct final {
 void ClearSymbols(const SymLoadStruct* firstStruct);
 
 class SymbolLoader final {
-public:
-  typedef PRFuncPtr (GLAPIENTRY * GetProcAddressT)(const char*);
+ public:
+  typedef PRFuncPtr(GLAPIENTRY* GetProcAddressT)(const char*);
 
-  GetProcAddressT mPfn = nullptr; // Try this first, if not null.
+  GetProcAddressT mPfn = nullptr;  // Try this first, if not null.
   PRLibrary* mLib = nullptr;
 
-  explicit SymbolLoader(void* (GLAPIENTRY * pfn)(const char*))
-    : mPfn(GetProcAddressT(pfn))
-  {
+  explicit SymbolLoader(void*(GLAPIENTRY* pfn)(const char*))
+      : mPfn(GetProcAddressT(pfn)) {
     MOZ_ASSERT(mPfn);
   }
 
-  explicit SymbolLoader(const GetProcAddressT pfn)
-    : mPfn(pfn)
-  {
+  explicit SymbolLoader(const GetProcAddressT pfn) : mPfn(pfn) {
     MOZ_ASSERT(mPfn);
   }
 
-  explicit SymbolLoader(PRLibrary& lib)
-    : mLib(&lib)
-  {
-    MOZ_ASSERT(mLib);
-  }
+  explicit SymbolLoader(PRLibrary& lib) : mLib(&lib) { MOZ_ASSERT(mLib); }
 
   PRFuncPtr GetProcAddress(const char*) const;
-  bool LoadSymbols(const SymLoadStruct* firstStruct, bool warnOnFailures = true) const;
+  bool LoadSymbols(const SymLoadStruct* firstStruct,
+                   bool warnOnFailures = true) const;
 };
 
-} // namespace gl
-} // namespace mozilla
+}  // namespace gl
+}  // namespace mozilla
 
-#endif // GLLIBRARYLOADER_H_
+#endif  // GLLIBRARYLOADER_H_

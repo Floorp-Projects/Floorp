@@ -160,8 +160,7 @@ nsresult nsDeflateConverter::PushAvailableData(nsIRequest *aRequest,
       getter_AddRefs(stream), MakeSpan((char *)mWriteBuffer, bytesToWrite));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = mListener->OnDataAvailable(aRequest, stream, mOffset,
-                                  bytesToWrite);
+  rv = mListener->OnDataAvailable(aRequest, stream, mOffset, bytesToWrite);
 
   // now set the state for 'deflate'
   mZstream.next_out = mWriteBuffer;

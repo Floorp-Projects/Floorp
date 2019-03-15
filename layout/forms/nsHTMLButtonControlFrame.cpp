@@ -88,8 +88,8 @@ void nsHTMLButtonControlFrame::BuildDisplayList(
       nsRect rect(aBuilder->ToReferenceFrame(this), GetSize());
       nscoord radii[8];
       bool hasRadii = GetBorderRadii(radii);
-      eventClipState->ClipContainingBlockDescendants(rect,
-          hasRadii ? radii : nullptr);
+      eventClipState->ClipContainingBlockDescendants(
+          rect, hasRadii ? radii : nullptr);
     }
 
     mRenderer.DisplayButton(aBuilder, aLists.BorderBackground(), &onTop);

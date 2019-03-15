@@ -67,8 +67,7 @@ nsDownloader::OnStartRequest(nsIRequest *request) {
 }
 
 NS_IMETHODIMP
-nsDownloader::OnStopRequest(nsIRequest *request,
-                            nsresult status) {
+nsDownloader::OnStopRequest(nsIRequest *request, nsresult status) {
   if (mSink) {
     mSink->Close();
     mSink = nullptr;
@@ -92,9 +91,8 @@ nsresult nsDownloader::ConsumeData(nsIInputStream *in, void *closure,
 }
 
 NS_IMETHODIMP
-nsDownloader::OnDataAvailable(nsIRequest *request,
-                              nsIInputStream *inStr, uint64_t sourceOffset,
-                              uint32_t count) {
+nsDownloader::OnDataAvailable(nsIRequest *request, nsIInputStream *inStr,
+                              uint64_t sourceOffset, uint32_t count) {
   uint32_t n;
   return inStr->ReadSegments(ConsumeData, this, count, &n);
 }

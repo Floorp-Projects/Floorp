@@ -62,6 +62,7 @@ class TestGetDecisionParameters(unittest.TestCase):
             'pushlog_id': 143,
             'pushdate': 1503691511,
             'owner': 'nobody@mozilla.com',
+            'tasks_for': 'hg-push',
             'level': 3,
         }
 

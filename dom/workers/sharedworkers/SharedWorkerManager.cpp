@@ -19,6 +19,20 @@
 namespace mozilla {
 namespace dom {
 
+// static
+already_AddRefed<SharedWorkerManagerHolder> SharedWorkerManager::Create(
+    SharedWorkerService* aService, nsIEventTarget* aPBackgroundEventTarget,
+    const RemoteWorkerData& aData, nsIPrincipal* aLoadingPrincipal) {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  RefPtr<SharedWorkerManager> manager = new SharedWorkerManager(
+      aPBackgroundEventTarget, aData, aLoadingPrincipal);
+
+  RefPtr<SharedWorkerManagerHolder> holder =
+      new SharedWorkerManagerHolder(manager, aService);
+  return holder.forget();
+}
+
 SharedWorkerManager::SharedWorkerManager(
     nsIEventTarget* aPBackgroundEventTarget, const RemoteWorkerData& aData,
     nsIPrincipal* aLoadingPrincipal)
@@ -65,20 +79,31 @@ bool SharedWorkerManager::MaybeCreateRemoteWorker(
   return true;
 }
 
-bool SharedWorkerManager::MatchOnMainThread(
-    const nsACString& aDomain, nsIURI* aScriptURL, const nsAString& aName,
-    nsIPrincipal* aLoadingPrincipal) const {
+already_AddRefed<SharedWorkerManagerHolder>
+SharedWorkerManager::MatchOnMainThread(SharedWorkerService* aService,
+                                       const nsACString& aDomain,
+                                       nsIURI* aScriptURL,
+                                       const nsAString& aName,
+                                       nsIPrincipal* aLoadingPrincipal) {
   MOZ_ASSERT(NS_IsMainThread());
+
   bool urlEquals;
   if (NS_FAILED(aScriptURL->Equals(mResolvedScriptURL, &urlEquals))) {
-    return false;
+    return nullptr;
   }
 
-  return aDomain == mDomain && urlEquals && aName == mName &&
-         // We want to be sure that the window's principal subsumes the
-         // SharedWorker's loading principal and vice versa.
-         mLoadingPrincipal->Subsumes(aLoadingPrincipal) &&
-         aLoadingPrincipal->Subsumes(mLoadingPrincipal);
+  bool match = aDomain == mDomain && urlEquals && aName == mName &&
+               // We want to be sure that the window's principal subsumes the
+               // SharedWorker's loading principal and vice versa.
+               mLoadingPrincipal->Subsumes(aLoadingPrincipal) &&
+               aLoadingPrincipal->Subsumes(mLoadingPrincipal);
+  if (!match) {
+    return nullptr;
+  }
+
+  RefPtr<SharedWorkerManagerHolder> holder =
+      new SharedWorkerManagerHolder(this, aService);
+  return holder.forget();
 }
 
 void SharedWorkerManager::AddActor(SharedWorkerParent* aParent) {
@@ -112,14 +137,15 @@ void SharedWorkerManager::RemoveActor(SharedWorkerParent* aParent) {
     UpdateFrozen();
     return;
   }
+}
 
-  // Time to go.
+void SharedWorkerManager::Terminate() {
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(mActors.IsEmpty());
+  MOZ_ASSERT(mHolders.IsEmpty());
 
   mRemoteWorkerController->Terminate();
   mRemoteWorkerController = nullptr;
-
-  // SharedWorkerService exists because it is kept alive by SharedWorkerParent.
-  SharedWorkerService::Get()->RemoveWorkerManager(this);
 }
 
 void SharedWorkerManager::UpdateSuspend() {
@@ -207,6 +233,63 @@ void SharedWorkerManager::Terminated() {
   for (SharedWorkerParent* actor : mActors) {
     Unused << actor->SendTerminate();
   }
+}
+
+void SharedWorkerManager::RegisterHolder(SharedWorkerManagerHolder* aHolder) {
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aHolder);
+  MOZ_ASSERT(!mHolders.Contains(aHolder));
+
+  mHolders.AppendElement(aHolder);
+}
+
+void SharedWorkerManager::UnregisterHolder(SharedWorkerManagerHolder* aHolder) {
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aHolder);
+  MOZ_ASSERT(mHolders.Contains(aHolder));
+
+  mHolders.RemoveElement(aHolder);
+
+  if (!mHolders.IsEmpty()) {
+    return;
+  }
+
+  // Time to go.
+
+  aHolder->Service()->RemoveWorkerManagerOnMainThread(this);
+
+  RefPtr<SharedWorkerManager> self = this;
+  mPBackgroundEventTarget->Dispatch(
+      NS_NewRunnableFunction(
+          "SharedWorkerService::RemoveWorkerManagerOnMainThread",
+          [self]() { self->Terminate(); }),
+      NS_DISPATCH_NORMAL);
+}
+
+SharedWorkerManagerHolder::SharedWorkerManagerHolder(
+    SharedWorkerManager* aManager, SharedWorkerService* aService)
+    : mManager(aManager), mService(aService) {
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aManager);
+  MOZ_ASSERT(aService);
+
+  aManager->RegisterHolder(this);
+}
+
+SharedWorkerManagerHolder::~SharedWorkerManagerHolder() {
+  MOZ_ASSERT(NS_IsMainThread());
+  mManager->UnregisterHolder(this);
+}
+
+SharedWorkerManagerWrapper::SharedWorkerManagerWrapper(
+    already_AddRefed<SharedWorkerManagerHolder> aHolder)
+    : mHolder(aHolder) {
+  MOZ_ASSERT(NS_IsMainThread());
+}
+
+SharedWorkerManagerWrapper::~SharedWorkerManagerWrapper() {
+  NS_ReleaseOnMainThreadSystemGroup("SharedWorkerManagerWrapper::mHolder",
+                                    mHolder.forget());
 }
 
 }  // namespace dom

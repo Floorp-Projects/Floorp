@@ -316,7 +316,8 @@ MOZ_ALWAYS_INLINE JSThinInlineString* JSThinInlineString::new_(JSContext* cx) {
     return (JSThinInlineString*)(js::Allocate<js::NormalAtom, allowGC>(cx));
   }
 
-  return js::AllocateString<JSThinInlineString, allowGC>(cx, js::gc::DefaultHeap);
+  return js::AllocateString<JSThinInlineString, allowGC>(cx,
+                                                         js::gc::DefaultHeap);
 }
 
 template <js::AllowGC allowGC>
@@ -325,7 +326,8 @@ MOZ_ALWAYS_INLINE JSFatInlineString* JSFatInlineString::new_(JSContext* cx) {
     return (JSFatInlineString*)(js::Allocate<js::FatInlineAtom, allowGC>(cx));
   }
 
-  return js::AllocateString<JSFatInlineString, allowGC>(cx, js::gc::DefaultHeap);
+  return js::AllocateString<JSFatInlineString, allowGC>(cx,
+                                                        js::gc::DefaultHeap);
 }
 
 template <>

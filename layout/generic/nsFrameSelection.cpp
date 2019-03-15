@@ -111,8 +111,7 @@ nsPeekOffsetStruct::nsPeekOffsetStruct(
     nsPoint aDesiredPos, bool aJumpLines, bool aScrollViewStop,
     bool aIsKeyboardSelect, bool aVisual, bool aExtend,
     ForceEditableRegion aForceEditableRegion,
-    EWordMovementType aWordMovementType,
-    bool aTrimSpaces)
+    EWordMovementType aWordMovementType, bool aTrimSpaces)
     : mAmount(aAmount),
       mDirection(aDirection),
       mStartOffset(aStartOffset),

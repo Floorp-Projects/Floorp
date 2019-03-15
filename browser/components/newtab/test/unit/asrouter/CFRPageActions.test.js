@@ -31,6 +31,7 @@ describe("CFRPageActions", () => {
     "cfr-notification-footer-learn-more-link",
     "cfr-notification-footer-pintab-animation-container",
     "cfr-notification-footer-animation-button",
+    "cfr-notification-footer-animation-label",
   ];
   const elementClassNames = [
     "popup-notification-body-container",

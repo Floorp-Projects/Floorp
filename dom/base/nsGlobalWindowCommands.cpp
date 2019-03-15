@@ -476,8 +476,8 @@ nsresult nsClipboardCommand::IsCommandEnabled(const char *aCommandName,
   NS_ENSURE_ARG_POINTER(outCmdEnabled);
   *outCmdEnabled = false;
 
-  if (strcmp(aCommandName, "cmd_copy") &&
-      strcmp(aCommandName, "cmd_cut") && strcmp(aCommandName, "cmd_paste")) {
+  if (strcmp(aCommandName, "cmd_copy") && strcmp(aCommandName, "cmd_cut") &&
+      strcmp(aCommandName, "cmd_paste")) {
     return NS_OK;
   }
 

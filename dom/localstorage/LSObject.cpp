@@ -217,8 +217,8 @@ void LSObject::Initialize() {
         }
       });
 
-  if (NS_WARN_IF(NS_FAILED(domFileThread->Dispatch(runnable,
-                                                   NS_DISPATCH_NORMAL)))) {
+  if (NS_WARN_IF(
+          NS_FAILED(domFileThread->Dispatch(runnable, NS_DISPATCH_NORMAL)))) {
     return;
   }
 }
@@ -419,9 +419,10 @@ LSRequestChild* LSObject::StartRequest(nsIEventTarget* aMainEventTarget,
                                        LSRequestChildCallback* aCallback) {
   AssertIsOnDOMFileThread();
 
-  PBackgroundChild* backgroundActor = XRE_IsParentProcess() ?
-      BackgroundChild::GetOrCreateForCurrentThread(aMainEventTarget) :
-      BackgroundChild::GetForCurrentThread();
+  PBackgroundChild* backgroundActor =
+      XRE_IsParentProcess()
+          ? BackgroundChild::GetOrCreateForCurrentThread(aMainEventTarget)
+          : BackgroundChild::GetForCurrentThread();
   if (NS_WARN_IF(!backgroundActor)) {
     return nullptr;
   }
@@ -1047,9 +1048,9 @@ nsresult RequestHelper::StartAndReturnResponse(LSRequestResponse& aResponse) {
     mNestedEventTargetWrapper =
         new NestedEventTargetWrapper(mNestedEventTarget);
 
-    nsCOMPtr<nsIEventTarget> domFileThread = XRE_IsParentProcess() ?
-        IPCBlobInputStreamThread::GetOrCreate() :
-        IPCBlobInputStreamThread::Get();
+    nsCOMPtr<nsIEventTarget> domFileThread =
+        XRE_IsParentProcess() ? IPCBlobInputStreamThread::GetOrCreate()
+                              : IPCBlobInputStreamThread::Get();
     if (NS_WARN_IF(!domFileThread)) {
       return NS_ERROR_FAILURE;
     }

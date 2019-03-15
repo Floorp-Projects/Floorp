@@ -79,7 +79,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIIPCSerializableInputStream,
 #define NS_DECL_NSIIPCSERIALIZABLEINPUTSTREAM                             \
   virtual void Serialize(mozilla::ipc::InputStreamParams&,                \
                          FileDescriptorArray&, bool, uint32_t, uint32_t*, \
-                         mozilla::dom::ContentChild*) override;        \
+                         mozilla::dom::ContentChild*) override;           \
                                                                           \
   virtual void Serialize(mozilla::ipc::InputStreamParams&,                \
                          FileDescriptorArray&, bool, uint32_t, uint32_t*, \
@@ -87,7 +87,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIIPCSerializableInputStream,
                                                                           \
   virtual void Serialize(mozilla::ipc::InputStreamParams&,                \
                          FileDescriptorArray&, bool, uint32_t, uint32_t*, \
-                         mozilla::dom::ContentParent*) override;       \
+                         mozilla::dom::ContentParent*) override;          \
                                                                           \
   virtual void Serialize(mozilla::ipc::InputStreamParams&,                \
                          FileDescriptorArray&, bool, uint32_t, uint32_t*, \
@@ -101,7 +101,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIIPCSerializableInputStream,
                          FileDescriptorArray& aFileDescriptors,                \
                          bool aDelayedStart, uint32_t aMaxSize,                \
                          uint32_t* aSizeUsed,                                  \
-                         mozilla::dom::ContentChild* aManager) override {   \
+                         mozilla::dom::ContentChild* aManager) override {      \
     _to Serialize(aParams, aFileDescriptors, aDelayedStart, aMaxSize,          \
                   aSizeUsed, aManager);                                        \
   }                                                                            \
@@ -119,7 +119,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIIPCSerializableInputStream,
                          FileDescriptorArray& aFileDescriptors,                \
                          bool aDelayedStart, uint32_t aMaxSize,                \
                          uint32_t* aSizeUsed,                                  \
-                         mozilla::dom::ContentParent* aManager) override {  \
+                         mozilla::dom::ContentParent* aManager) override {     \
     _to Serialize(aParams, aFileDescriptors, aDelayedStart, aMaxSize,          \
                   aSizeUsed, aManager);                                        \
   }                                                                            \
@@ -144,7 +144,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIIPCSerializableInputStream,
                          FileDescriptorArray& aFileDescriptors,                \
                          bool aDelayedStart, uint32_t aMaxSize,                \
                          uint32_t* aSizeUsed,                                  \
-                         mozilla::dom::ContentChild* aManager) override {   \
+                         mozilla::dom::ContentChild* aManager) override {      \
     if (_to) {                                                                 \
       _to->Serialize(aParams, aFileDescriptors, aDelayedStart, aMaxSize,       \
                      aSizeUsed, aManager);                                     \
@@ -166,7 +166,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIIPCSerializableInputStream,
                          FileDescriptorArray& aFileDescriptors,                \
                          bool aDelayedStart, uint32_t aMaxSize,                \
                          uint32_t* aSizeUsed,                                  \
-                         mozilla::dom::ContentParent* aManager) override {  \
+                         mozilla::dom::ContentParent* aManager) override {     \
     if (_to) {                                                                 \
       _to->Serialize(aParams, aFileDescriptors, aDelayedStart, aMaxSize,       \
                      aSizeUsed, aManager);                                     \

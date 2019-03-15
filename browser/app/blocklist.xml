@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<blocklist lastupdate="1551794995188" xmlns="http://www.mozilla.org/2006/addons-blocklist">
+<blocklist lastupdate="1552492951595" xmlns="http://www.mozilla.org/2006/addons-blocklist">
   <emItems>
     <emItem blockID="i334" id="{0F827075-B026-42F3-885D-98981EE7B1AE}">
       <prefs/>
@@ -2553,6 +2553,14 @@
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
     <emItem blockID="aca80fb4-760e-4cd4-9fec-649fb38b2947" id="/^((\{ee2d725e-9726-43ac-8040-60ce9ff2831b\})|(\{55417a80-e6f7-4d77-8d73-f59045e5e890\}))$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="2c739daa-ffee-48d9-a825-e53c8fd2bb3c" id="{c04d9d7d-1c8c-4eab-a51a-828c47e1b8b7}">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="b57d9505-21bf-4a24-accb-05ceac50dadc" id="/^((\{86c18738-11ed-4c16-af92-786aa036c83c\})|(\{d0fee16a-f4eb-4dc1-9961-82b913e5943d\})|(\{1c4937a1-c678-4607-8665-a16384ee302e\})|(\{22caeb02-38a3-415d-b168-64fadccbb4a4\})|(\{1c9372e7-5f0e-4541-99cf-dfbf2ab00b01\})|(\{9fe66994-8ed1-4317-a20a-1d0544ca062f\})|(\{6df222d8-97c7-42bf-9683-1cf8119c1e9e\})|(\{4c2dda03-bad0-4160-a8a1-6d089200420e\})|(\{7aae7d4f-55b9-42eb-b683-932591265e17\})|(\{e6f8ab99-3c96-410c-95d1-267ad48ed3e2\})|(\{6d8c5068-d0cb-47a5-af5e-3f23064f4608\})|(\{90481f38-d06a-465e-a54c-206bbb1ee9ae\})|(\{4b75aeb8-f14a-4ef3-b1ad-09733b40dac3\})|(\{3a8ca495-f5ab-4320-b070-4f44266fe3d1\})|(\{84f8914f-0dec-48ed-a0fd-4a7712c06793\})|(\{aa613fce-603c-41df-bf49-9b09614cebe6\})|(\{30314350-199a-4951-9c05-c3537a946492\})|(\{a2edce1d-10ab-483d-8c01-5e5fe0c82902\})|(\{ec91a3d4-8311-4700-aa15-b3941f21a052\})|(\{e9049687-164a-4cf3-be1f-1291cfb0f44a\})|(\{2be73925-ebaf-43ca-8b26-bd820887f591\})|(\{840eadea-1c68-411f-b4e9-08d9f236385d\})|(\{0a89d040-5fb1-46d7-bf81-43b55e83695d\})|(\{6a1e76ed-4ac2-4a0c-8beb-43ae63558b36\})|(\{1b90c930-e7d7-486a-9085-8b57129489c7\})|(\{eab649ca-af76-4de9-95b0-8036e35a66cc\})|(\{0628e652-98f4-4e58-9ecb-ad996b061aef\})|(elfr@geckoaddon\.org)|(else@geckoaddon\.org)|(fr_b@iext\.pro)|(it_b@iext\.pro)|(sv_b@iext\.pro)|(no_b1@iext\.pro)|(fi_b@iext\.pro)|(au_b@iext\.pro)|(elfr12@geckoaddon\.org)|(test@informations\.to)|(se_pop@informations\.to)|(it@spongebog\.funny-ok\.com)|(it@tsunami\.funny-ok\.com)|(fi@spongebog\.funny-ok\.com)|(fi@tsunami\.funny-ok\.com)|(no@spongebog\.funny-ok\.com)|(no@tsunami\.funny-ok\.com)|(fr@tsunami\.funny-ok\.com)|(fr@spongebog\.funny-ok\.com)|(se@tsunami\.funny-ok\.com)|(se@spongebog\.funny-ok\.com)|(au@spongebog\.funny-ok\.com)|(au@tsunami\.funny-ok\.com)|(nz@spongebog\.funny-ok\.com)|(nz@tsunami\.funny-ok\.com)|(gr@spongebog\.funny-ok\.com)|(gr@tsunami\.funny-ok\.com)|(nz_fnew@tsunami\.funny-ok\.com))$/">
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>

@@ -14,10 +14,10 @@
 
 #include <sys/param.h>
 #ifdef XP_MACOSX
-#include <fcntl.h>
+#  include <fcntl.h>
 #else
-#include "prprf.h"
-#include <unistd.h>
+#  include "prprf.h"
+#  include <unistd.h>
 #endif
 
 namespace {
@@ -32,7 +32,7 @@ PRFsyncFN sFSyncFn = nullptr;
 PRFileInfoFN sFileInfoFn = nullptr;
 PRFileInfo64FN sFileInfo64Fn = nullptr;
 
-static int32_t GetPathFromFd(int32_t aFd, char *aBuf, size_t aBufSize) {
+static int32_t GetPathFromFd(int32_t aFd, char* aBuf, size_t aBufSize) {
 #ifdef XP_MACOSX
   NS_ASSERTION(aBufSize >= MAXPATHLEN,
                "aBufSize should be a least MAXPATHLEN long");
@@ -40,8 +40,8 @@ static int32_t GetPathFromFd(int32_t aFd, char *aBuf, size_t aBufSize) {
   return fcntl(aFd, F_GETPATH, aBuf);
 #else
   char procPath[32];
-  if (PR_snprintf(procPath, sizeof(procPath),
-                  "/proc/self/fd/%i", aFd) == (PRUint32)-1) {
+  if (PR_snprintf(procPath, sizeof(procPath), "/proc/self/fd/%i", aFd) ==
+      (PRUint32)-1) {
     return -1;
   }
 
@@ -61,7 +61,7 @@ static int32_t GetPathFromFd(int32_t aFd, char *aBuf, size_t aBufSize) {
 class NSPRIOAutoObservation : public IOInterposeObserver::Observation {
  public:
   explicit NSPRIOAutoObservation(IOInterposeObserver::Operation aOp,
-                                 PRFileDesc *aFd)
+                                 PRFileDesc* aFd)
       : IOInterposeObserver::Observation(aOp, "NSPRIOInterposer") {
     char filename[MAXPATHLEN];
     if (mShouldReport && aFd &&

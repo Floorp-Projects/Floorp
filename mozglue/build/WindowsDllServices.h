@@ -169,15 +169,13 @@ class DllServices : public detail::DllServicesBase {
 
 class BasicDllServices final : public detail::DllServicesBase {
  public:
-  BasicDllServices() {
-    EnableBasic();
-  }
+  BasicDllServices() { EnableBasic(); }
 
   ~BasicDllServices() = default;
 
   // Not useful in this class, so provide a default implementation
-  virtual void DispatchDllLoadNotification(PCUNICODE_STRING aDllName) override
-      {}
+  virtual void DispatchDllLoadNotification(PCUNICODE_STRING aDllName) override {
+  }
 
   virtual void NotifyUntrustedModuleLoads(
       const Vector<glue::ModuleLoadEvent, 0, InfallibleAllocPolicy>& aEvents)

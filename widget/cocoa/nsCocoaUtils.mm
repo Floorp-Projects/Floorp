@@ -348,8 +348,7 @@ void nsCocoaUtils::CleanUpAfterNativeAppModalDialog() {
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-static void data_ss_release_callback(void* aDataSourceSurface,
-                                     const void* data, size_t size) {
+static void data_ss_release_callback(void* aDataSourceSurface, const void* data, size_t size) {
   if (aDataSourceSurface) {
     static_cast<DataSourceSurface*>(aDataSourceSurface)->Unmap();
     static_cast<DataSourceSurface*>(aDataSourceSurface)->Release();

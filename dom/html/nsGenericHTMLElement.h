@@ -619,8 +619,7 @@ class nsGenericHTMLElement : public nsGenericHTMLElementBase {
 
   virtual bool IsInteractiveHTMLContent(bool aIgnoreTabindex) const override;
 
-  static bool LegacyTouchAPIEnabled(JSContext* aCx,
-                                    JSObject* aObj);
+  static bool LegacyTouchAPIEnabled(JSContext* aCx, JSObject* aObj);
 
   static inline bool CanHaveName(nsAtom* aTag) {
     return aTag == nsGkAtoms::img || aTag == nsGkAtoms::form ||

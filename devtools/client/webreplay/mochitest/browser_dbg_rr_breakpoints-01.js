@@ -12,30 +12,30 @@ add_task(async function() {
     "doc_rr_basic.html",
     { waitForRecording: true }
   );
-  const {threadClient, tab, toolbox} = dbg;
+  const {threadClient, tab, toolbox, target} = dbg;
 
   const bp = await setBreakpoint(threadClient, "doc_rr_basic.html", 21);
 
   // Visit a lot of breakpoints so that we are sure we have crossed major
   // checkpoint boundaries.
   await rewindToLine(threadClient, 21);
-  await checkEvaluateInTopFrame(threadClient, "number", 10);
+  await checkEvaluateInTopFrame(target, "number", 10);
   await rewindToLine(threadClient, 21);
-  await checkEvaluateInTopFrame(threadClient, "number", 9);
+  await checkEvaluateInTopFrame(target, "number", 9);
   await rewindToLine(threadClient, 21);
-  await checkEvaluateInTopFrame(threadClient, "number", 8);
+  await checkEvaluateInTopFrame(target, "number", 8);
   await rewindToLine(threadClient, 21);
-  await checkEvaluateInTopFrame(threadClient, "number", 7);
+  await checkEvaluateInTopFrame(target, "number", 7);
   await rewindToLine(threadClient, 21);
-  await checkEvaluateInTopFrame(threadClient, "number", 6);
+  await checkEvaluateInTopFrame(target, "number", 6);
   await resumeToLine(threadClient, 21);
-  await checkEvaluateInTopFrame(threadClient, "number", 7);
+  await checkEvaluateInTopFrame(target, "number", 7);
   await resumeToLine(threadClient, 21);
-  await checkEvaluateInTopFrame(threadClient, "number", 8);
+  await checkEvaluateInTopFrame(target, "number", 8);
   await resumeToLine(threadClient, 21);
-  await checkEvaluateInTopFrame(threadClient, "number", 9);
+  await checkEvaluateInTopFrame(target, "number", 9);
   await resumeToLine(threadClient, 21);
-  await checkEvaluateInTopFrame(threadClient, "number", 10);
+  await checkEvaluateInTopFrame(target, "number", 10);
 
   await threadClient.removeBreakpoint(bp);
   await toolbox.closeToolbox();

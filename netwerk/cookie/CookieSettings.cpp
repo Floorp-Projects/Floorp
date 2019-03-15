@@ -78,7 +78,7 @@ already_AddRefed<nsICookieSettings> CookieSettings::Create() {
 }
 
 CookieSettings::CookieSettings(uint32_t aCookieBehavior, State aState)
-    : mCookieBehavior(aCookieBehavior), mState(aState) {
+    : mCookieBehavior(aCookieBehavior), mState(aState), mToBeMerged(false) {
   MOZ_ASSERT(NS_IsMainThread());
 }
 
@@ -149,6 +149,7 @@ CookieSettings::CookiePermission(nsIPrincipal* aPrincipal,
     mCookiePermissions.AppendElement(permission);
   }
 
+  mToBeMerged = true;
   return NS_OK;
 }
 
@@ -180,6 +181,8 @@ void CookieSettings::Serialize(CookieSettingsArgs& aData) {
     aData.cookiePermissions().AppendElement(
         CookiePermissionData(principalInfo, cookiePermission));
   }
+
+  mToBeMerged = false;
 }
 
 /* static */ void CookieSettings::Deserialize(

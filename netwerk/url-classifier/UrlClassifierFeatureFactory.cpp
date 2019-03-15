@@ -7,7 +7,9 @@
 #include "mozilla/net/UrlClassifierFeatureFactory.h"
 
 // List of Features
+#include "UrlClassifierFeatureCryptominingAnnotation.h"
 #include "UrlClassifierFeatureCryptominingProtection.h"
+#include "UrlClassifierFeatureFingerprintingAnnotation.h"
 #include "UrlClassifierFeatureFingerprintingProtection.h"
 #include "UrlClassifierFeatureFlash.h"
 #include "UrlClassifierFeatureLoginReputation.h"
@@ -28,7 +30,9 @@ void UrlClassifierFeatureFactory::Shutdown() {
     return;
   }
 
+  UrlClassifierFeatureCryptominingAnnotation::MaybeShutdown();
   UrlClassifierFeatureCryptominingProtection::MaybeShutdown();
+  UrlClassifierFeatureFingerprintingAnnotation::MaybeShutdown();
   UrlClassifierFeatureFingerprintingProtection::MaybeShutdown();
   UrlClassifierFeatureFlash::MaybeShutdown();
   UrlClassifierFeatureLoginReputation::MaybeShutdown();
@@ -69,6 +73,18 @@ void UrlClassifierFeatureFactory::GetFeaturesFromChannel(
     aFeatures.AppendElement(feature);
   }
 
+  // Cryptomining Annotation
+  feature = UrlClassifierFeatureCryptominingAnnotation::MaybeCreate(aChannel);
+  if (feature) {
+    aFeatures.AppendElement(feature);
+  }
+
+  // Fingerprinting Annotation
+  feature = UrlClassifierFeatureFingerprintingAnnotation::MaybeCreate(aChannel);
+  if (feature) {
+    aFeatures.AppendElement(feature);
+  }
+
   // Tracking Annotation
   feature = UrlClassifierFeatureTrackingAnnotation::MaybeCreate(aChannel);
   if (feature) {
@@ -102,8 +118,21 @@ UrlClassifierFeatureFactory::GetFeatureByName(const nsACString& aName) {
 
   nsCOMPtr<nsIUrlClassifierFeature> feature;
 
+  // Cryptomining Annotation
+  feature = UrlClassifierFeatureCryptominingAnnotation::GetIfNameMatches(aName);
+  if (feature) {
+    return feature.forget();
+  }
+
   // Cryptomining Protection
   feature = UrlClassifierFeatureCryptominingProtection::GetIfNameMatches(aName);
+  if (feature) {
+    return feature.forget();
+  }
+
+  // Fingerprinting Annotation
+  feature =
+      UrlClassifierFeatureFingerprintingAnnotation::GetIfNameMatches(aName);
   if (feature) {
     return feature.forget();
   }
@@ -154,9 +183,22 @@ void UrlClassifierFeatureFactory::GetFeatureNames(nsTArray<nsCString>& aArray) {
     return;
   }
 
-  // Cryptomining Protection
   nsAutoCString name;
+
+  // Cryptomining Annotation
+  name.Assign(UrlClassifierFeatureCryptominingAnnotation::Name());
+  if (!name.IsEmpty()) {
+    aArray.AppendElement(name);
+  }
+
+  // Cryptomining Protection
   name.Assign(UrlClassifierFeatureCryptominingProtection::Name());
+  if (!name.IsEmpty()) {
+    aArray.AppendElement(name);
+  }
+
+  // Fingerprinting Annotation
+  name.Assign(UrlClassifierFeatureFingerprintingAnnotation::Name());
   if (!name.IsEmpty()) {
     aArray.AppendElement(name);
   }

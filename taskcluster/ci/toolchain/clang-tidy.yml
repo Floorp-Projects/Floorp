@@ -34,7 +34,7 @@ linux64-clang-tidy:
             - 'build/build-clang/clang-tidy-linux64.json'
             - 'taskcluster/scripts/misc/tooltool-download.sh'
     toolchains:
-        - linux64-gcc-4.9
+        - linux64-gcc-6
 
 macosx64-clang-tidy:
     index:
@@ -55,27 +55,8 @@ macosx64-clang-tidy:
     toolchains:
         - linux64-cctools-port
         - linux64-clang-7
-        - linux64-gcc-4.9
+        - linux64-gcc-6
         - linux64-node
-
-win32-clang-tidy:
-    description: "Clang-tidy toolchain build"
-    index:
-        job-name: win32-clang-tidy
-    treeherder:
-        symbol: TW32(clang-tidy)
-        tier: 2
-    worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
-    worker:
-        max-run-time: 7200
-        env:
-            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win32/build-clang-cl.manifest"
-    run:
-        script: build-clang-tidy32-windows.sh
-        resources:
-            - 'build/build-clang/clang-tidy-win32.json'
-            - 'taskcluster/scripts/misc/build-clang-windows-helper32.sh'
-        toolchain-artifact: public/build/clang-tidy.tar.bz2
 
 win64-clang-tidy:
     description: "Clang-tidy toolchain build"

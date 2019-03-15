@@ -293,15 +293,11 @@ JS::Result<JSAtom*> BinASTTokenReaderMultipart::readMaybeIdentifierName() {
 }
 
 JS::Result<JSAtom*> BinASTTokenReaderMultipart::readIdentifierName() {
-  BINJS_MOZ_TRY_DECL(result, readMaybeAtom());
+  BINJS_MOZ_TRY_DECL(result, readAtom());
   if (!IsIdentifier(result)) {
     return raiseError("Invalid identifier");
   }
   return result;
-}
-
-JS::Result<JSAtom*> BinASTTokenReaderMultipart::readMaybePropertyKey() {
-  return readMaybeAtom();
 }
 
 JS::Result<JSAtom*> BinASTTokenReaderMultipart::readPropertyKey() {

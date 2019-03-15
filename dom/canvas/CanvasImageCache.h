@@ -33,7 +33,8 @@ class CanvasImageCache {
    */
   static void NotifyDrawImage(dom::Element* aImage,
                               dom::HTMLCanvasElement* aCanvas,
-                              SourceSurface* aSource, const gfx::IntSize& aSize);
+                              SourceSurface* aSource,
+                              const gfx::IntSize& aSize);
 
   /**
    * Check whether aImage has recently been drawn any canvas. If we return

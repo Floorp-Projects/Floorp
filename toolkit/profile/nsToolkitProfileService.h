@@ -76,7 +76,8 @@ class nsToolkitProfileService final : public nsIToolkitProfileService {
 
   nsresult SelectStartupProfile(int* aArgc, char* aArgv[], bool aIsResetting,
                                 nsIFile** aRootDir, nsIFile** aLocalDir,
-                                nsIToolkitProfile** aProfile, bool* aDidCreate);
+                                nsIToolkitProfile** aProfile, bool* aDidCreate,
+                                bool* aWasDefaultSelection);
   nsresult CreateResetProfile(nsIToolkitProfile** aNewProfile);
   nsresult ApplyResetProfile(nsIToolkitProfile* aOldProfile);
   void CompleteStartup();

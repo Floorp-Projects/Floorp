@@ -1,0 +1,27 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test the relationship between annotation vs blocking - cryptomining</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="features.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+
+<body>
+<script class="testbody" type="text/javascript">
+
+runTests(SpecialPowers.Ci.nsIHttpChannel.CLASSIFIED_CRYPTOMINING,
+         [
+           ["privacy.trackingprotection.enabled", false],
+           ["privacy.trackingprotection.annotate_channels", false],
+           ["privacy.trackingprotection.fingerprinting.annotate.enabled", false],
+           ["privacy.trackingprotection.fingerprinting.enabled", false],
+           ["privacy.trackingprotection.cryptomining.annotate.enabled", true],
+           ["privacy.trackingprotection.cryptomining.enabled", true],
+         ],
+         false /* a tracking resource */);
+SimpleTest.waitForExplicitFinish();
+
+</script>
+</body>
+</html>

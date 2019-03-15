@@ -48,137 +48,103 @@ static const unsigned BUILTIN_THUNK_LIFO_SIZE = 64 * 1024;
 // wasm operations: type descriptions.
 
 // Some abbreviations, for the sake of conciseness.
-#define _F64  MIRType::Double
-#define _F32  MIRType::Float32
-#define _I32  MIRType::Int32
-#define _I64  MIRType::Int64
-#define _PTR  MIRType::Pointer
-#define _RoN  MIRType::RefOrNull
+#define _F64 MIRType::Double
+#define _F32 MIRType::Float32
+#define _I32 MIRType::Int32
+#define _I64 MIRType::Int64
+#define _PTR MIRType::Pointer
+#define _RoN MIRType::RefOrNull
 #define _VOID MIRType::None
-#define _END  MIRType::None
+#define _END MIRType::None
 
 namespace js {
 namespace wasm {
 
 const SymbolicAddressSignature SASigSinD = {
-  SymbolicAddress::SinD, _F64, 1, { _F64, _END }
-};
+    SymbolicAddress::SinD, _F64, 1, {_F64, _END}};
 const SymbolicAddressSignature SASigCosD = {
-  SymbolicAddress::CosD, _F64, 1, { _F64, _END }
-};
+    SymbolicAddress::CosD, _F64, 1, {_F64, _END}};
 const SymbolicAddressSignature SASigTanD = {
-  SymbolicAddress::TanD, _F64, 1, { _F64, _END }
-};
+    SymbolicAddress::TanD, _F64, 1, {_F64, _END}};
 const SymbolicAddressSignature SASigASinD = {
-  SymbolicAddress::ASinD, _F64, 1, { _F64, _END }
-};
+    SymbolicAddress::ASinD, _F64, 1, {_F64, _END}};
 const SymbolicAddressSignature SASigACosD = {
-  SymbolicAddress::ACosD, _F64, 1, { _F64, _END }
-};
+    SymbolicAddress::ACosD, _F64, 1, {_F64, _END}};
 const SymbolicAddressSignature SASigATanD = {
-  SymbolicAddress::ATanD, _F64, 1, { _F64, _END }
-};
+    SymbolicAddress::ATanD, _F64, 1, {_F64, _END}};
 const SymbolicAddressSignature SASigCeilD = {
-  SymbolicAddress::CeilD, _F64, 1, { _F64, _END }
-};
+    SymbolicAddress::CeilD, _F64, 1, {_F64, _END}};
 const SymbolicAddressSignature SASigCeilF = {
-  SymbolicAddress::CeilF, _F32, 1, { _F32, _END }
-};
+    SymbolicAddress::CeilF, _F32, 1, {_F32, _END}};
 const SymbolicAddressSignature SASigFloorD = {
-  SymbolicAddress::FloorD, _F64, 1, { _F64, _END }
-};
+    SymbolicAddress::FloorD, _F64, 1, {_F64, _END}};
 const SymbolicAddressSignature SASigFloorF = {
-  SymbolicAddress::FloorF, _F32, 1, { _F32, _END }
-};
+    SymbolicAddress::FloorF, _F32, 1, {_F32, _END}};
 const SymbolicAddressSignature SASigTruncD = {
-  SymbolicAddress::TruncD, _F64, 1, { _F64, _END }
-};
+    SymbolicAddress::TruncD, _F64, 1, {_F64, _END}};
 const SymbolicAddressSignature SASigTruncF = {
-  SymbolicAddress::TruncF, _F32, 1, { _F32, _END }
-};
+    SymbolicAddress::TruncF, _F32, 1, {_F32, _END}};
 const SymbolicAddressSignature SASigNearbyIntD = {
-  SymbolicAddress::NearbyIntD, _F64, 1, { _F64, _END }
-};
+    SymbolicAddress::NearbyIntD, _F64, 1, {_F64, _END}};
 const SymbolicAddressSignature SASigNearbyIntF = {
-  SymbolicAddress::NearbyIntF, _F32, 1, { _F32, _END }
-};
+    SymbolicAddress::NearbyIntF, _F32, 1, {_F32, _END}};
 const SymbolicAddressSignature SASigExpD = {
-  SymbolicAddress::ExpD, _F64, 1, { _F64, _END }
-};
+    SymbolicAddress::ExpD, _F64, 1, {_F64, _END}};
 const SymbolicAddressSignature SASigLogD = {
-  SymbolicAddress::LogD, _F64, 1, { _F64, _END }
-};
+    SymbolicAddress::LogD, _F64, 1, {_F64, _END}};
 const SymbolicAddressSignature SASigPowD = {
-  SymbolicAddress::PowD, _F64, 2, { _F64, _F64, _END }
-};
+    SymbolicAddress::PowD, _F64, 2, {_F64, _F64, _END}};
 const SymbolicAddressSignature SASigATan2D = {
-  SymbolicAddress::ATan2D, _F64, 2, { _F64, _F64, _END }
-};
+    SymbolicAddress::ATan2D, _F64, 2, {_F64, _F64, _END}};
 const SymbolicAddressSignature SASigMemoryGrow = {
-  SymbolicAddress::MemoryGrow, _I32, 2, { _PTR, _I32, _END }
-};
+    SymbolicAddress::MemoryGrow, _I32, 2, {_PTR, _I32, _END}};
 const SymbolicAddressSignature SASigMemorySize = {
-  SymbolicAddress::MemorySize, _I32, 1, { _PTR, _END }
-};
+    SymbolicAddress::MemorySize, _I32, 1, {_PTR, _END}};
 const SymbolicAddressSignature SASigWaitI32 = {
-  SymbolicAddress::WaitI32, _I32, 4, { _PTR, _I32, _I32, _I64, _END }
-};
+    SymbolicAddress::WaitI32, _I32, 4, {_PTR, _I32, _I32, _I64, _END}};
 const SymbolicAddressSignature SASigWaitI64 = {
-  SymbolicAddress::WaitI64, _I32, 4, { _PTR, _I32, _I64, _I64, _END }
-};
+    SymbolicAddress::WaitI64, _I32, 4, {_PTR, _I32, _I64, _I64, _END}};
 const SymbolicAddressSignature SASigWake = {
-  SymbolicAddress::Wake, _I32, 3, { _PTR, _I32, _I32, _END }
-};
+    SymbolicAddress::Wake, _I32, 3, {_PTR, _I32, _I32, _END}};
 const SymbolicAddressSignature SASigMemCopy = {
-  SymbolicAddress::MemCopy, _I32, 4, { _PTR, _I32, _I32, _I32, _END }
-};
+    SymbolicAddress::MemCopy, _I32, 4, {_PTR, _I32, _I32, _I32, _END}};
 const SymbolicAddressSignature SASigDataDrop = {
-  SymbolicAddress::DataDrop, _I32, 2, { _PTR, _I32, _END }
-};
+    SymbolicAddress::DataDrop, _I32, 2, {_PTR, _I32, _END}};
 const SymbolicAddressSignature SASigMemFill = {
-  SymbolicAddress::MemFill, _I32, 4, { _PTR, _I32, _I32, _I32, _END }
-};
+    SymbolicAddress::MemFill, _I32, 4, {_PTR, _I32, _I32, _I32, _END}};
 const SymbolicAddressSignature SASigMemInit = {
-  SymbolicAddress::MemInit, _I32, 5, { _PTR, _I32, _I32, _I32, _I32, _END }
-};
+    SymbolicAddress::MemInit, _I32, 5, {_PTR, _I32, _I32, _I32, _I32, _END}};
 const SymbolicAddressSignature SASigTableCopy = {
-  SymbolicAddress::TableCopy,
-  _I32, 6, { _PTR, _I32, _I32, _I32, _I32, _I32, _END }
-};
+    SymbolicAddress::TableCopy,
+    _I32,
+    6,
+    {_PTR, _I32, _I32, _I32, _I32, _I32, _END}};
 const SymbolicAddressSignature SASigElemDrop = {
-  SymbolicAddress::ElemDrop, _I32, 2, { _PTR, _I32, _END }
-};
+    SymbolicAddress::ElemDrop, _I32, 2, {_PTR, _I32, _END}};
 const SymbolicAddressSignature SASigTableGet = {
-  SymbolicAddress::TableGet, _PTR, 3, { _PTR, _I32, _I32, _END }
-};
+    SymbolicAddress::TableGet, _PTR, 3, {_PTR, _I32, _I32, _END}};
 const SymbolicAddressSignature SASigTableGrow = {
-  SymbolicAddress::TableGrow, _I32, 4, { _PTR, _I32, _RoN, _I32, _END }
-};
+    SymbolicAddress::TableGrow, _I32, 4, {_PTR, _I32, _RoN, _I32, _END}};
 const SymbolicAddressSignature SASigTableInit = {
-  SymbolicAddress::TableInit,
-  _I32, 6, { _PTR, _I32, _I32, _I32, _I32, _I32, _END }
-};
+    SymbolicAddress::TableInit,
+    _I32,
+    6,
+    {_PTR, _I32, _I32, _I32, _I32, _I32, _END}};
 const SymbolicAddressSignature SASigTableSet = {
-  SymbolicAddress::TableSet, _I32, 4, { _PTR, _I32, _RoN, _I32, _END }
-};
+    SymbolicAddress::TableSet, _I32, 4, {_PTR, _I32, _RoN, _I32, _END}};
 const SymbolicAddressSignature SASigTableSize = {
-  SymbolicAddress::TableSize, _I32, 2, { _PTR, _I32, _END }
-};
+    SymbolicAddress::TableSize, _I32, 2, {_PTR, _I32, _END}};
 const SymbolicAddressSignature SASigPostBarrier = {
-  SymbolicAddress::PostBarrier, _VOID, 2, { _PTR, _PTR, _END }
-};
+    SymbolicAddress::PostBarrier, _VOID, 2, {_PTR, _PTR, _END}};
 const SymbolicAddressSignature SASigPostBarrierFiltering = {
-  SymbolicAddress::PostBarrierFiltering, _VOID, 2, { _PTR, _PTR, _END }
-};
+    SymbolicAddress::PostBarrierFiltering, _VOID, 2, {_PTR, _PTR, _END}};
 const SymbolicAddressSignature SASigStructNew = {
-  SymbolicAddress::StructNew, _RoN, 2, { _PTR, _I32, _END }
-};
+    SymbolicAddress::StructNew, _RoN, 2, {_PTR, _I32, _END}};
 const SymbolicAddressSignature SASigStructNarrow = {
-  SymbolicAddress::StructNarrow, _RoN, 4, { _PTR, _I32, _I32, _RoN, _END }
-};
+    SymbolicAddress::StructNarrow, _RoN, 4, {_PTR, _I32, _I32, _RoN, _END}};
 
-} // namespace wasm
-} // namespace js
+}  // namespace wasm
+}  // namespace js
 
 #undef _F64
 #undef _F32

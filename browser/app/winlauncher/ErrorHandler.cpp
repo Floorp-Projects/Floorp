@@ -176,8 +176,8 @@ static mozilla::UniquePtr<char[]> WideToUTF8(const wchar_t* aStr,
   // WideCharToMultiByte fail in that unlikely case.
   size_t cvtLen = std::min(aStrLenExclNul, kMaxStrLen);
 
-  int numConv = ::WideCharToMultiByte(CP_UTF8, 0, aStr, cvtLen, nullptr,
-                                      0, nullptr, nullptr);
+  int numConv = ::WideCharToMultiByte(CP_UTF8, 0, aStr, cvtLen, nullptr, 0,
+                                      nullptr, nullptr);
   if (!numConv) {
     return nullptr;
   }
@@ -185,8 +185,8 @@ static mozilla::UniquePtr<char[]> WideToUTF8(const wchar_t* aStr,
   // Include room for the null terminator by adding one
   auto buf = mozilla::MakeUnique<char[]>(numConv + 1);
 
-  numConv = ::WideCharToMultiByte(CP_UTF8, 0, aStr, cvtLen, buf.get(),
-                                  numConv, nullptr, nullptr);
+  numConv = ::WideCharToMultiByte(CP_UTF8, 0, aStr, cvtLen, buf.get(), numConv,
+                                  nullptr, nullptr);
   if (!numConv) {
     return nullptr;
   }
@@ -207,7 +207,7 @@ static mozilla::UniquePtr<char[]> WideToUTF8(const std::wstring& aStr) {
 }
 
 // MinGW does not support the Windows Security Center APIs.
-#if !defined(__MINGW32__)
+#  if !defined(__MINGW32__)
 
 static mozilla::UniquePtr<char[]> WideToUTF8(const _bstr_t& aStr) {
   return WideToUTF8(static_cast<const wchar_t*>(aStr), aStr.length());
@@ -327,7 +327,7 @@ static bool AddWscInfo(mozilla::JSONWriter& aJson) {
 
   return true;
 }
-#endif  // !defined(__MINGW32__)
+#  endif  // !defined(__MINGW32__)
 
 // Max array length for telemetry intake.
 static const size_t kMaxArrayLen = 1000;
@@ -452,16 +452,15 @@ struct PingThreadContext {
 
 }  // anonymous namespace
 
-static bool PrepPing(const PingThreadContext& aContext,
-                     const std::wstring& aId,
+static bool PrepPing(const PingThreadContext& aContext, const std::wstring& aId,
                      mozilla::JSONWriter& aJson) {
-#if defined(DEBUG)
+#  if defined(DEBUG)
   const mozilla::JSONWriter::CollectionStyle style =
       mozilla::JSONWriter::MultiLineStyle;
-#else
+#  else
   const mozilla::JSONWriter::CollectionStyle style =
       mozilla::JSONWriter::SingleLineStyle;
-#endif  // defined(DEBUG)
+#  endif  // defined(DEBUG)
 
   aJson.Start(style);
 
@@ -563,11 +562,11 @@ static bool PrepPing(const PingThreadContext& aContext,
   aJson.IntProperty("hresult", aContext.mLauncherError.mError.AsHResult());
   aJson.EndObject();
 
-#if !defined(__MINGW32__)
+#  if !defined(__MINGW32__)
   if (!AddWscInfo(aJson)) {
     return false;
   }
-#endif  // !defined(__MINGW32__)
+#  endif  // !defined(__MINGW32__)
 
   if (!AddModuleInfo(aContext.mModulesSnapshot, aJson)) {
     return false;
@@ -682,7 +681,7 @@ static unsigned __stdcall SendPingThread(void* aContext) {
 
 static bool SendPing(const mozilla::LauncherError& aError) {
 #if defined(MOZ_TELEMETRY_REPORTING)
-#if defined(MOZ_LAUNCHER_PROCESS)
+#  if defined(MOZ_LAUNCHER_PROCESS)
   mozilla::LauncherRegistryInfo regInfo;
   mozilla::LauncherResult<mozilla::LauncherRegistryInfo::EnabledState>
       launcherEnabled = regInfo.IsEnabled();
@@ -693,7 +692,7 @@ static bool SendPing(const mozilla::LauncherError& aError) {
     // (since studies and thus telemetry have been opted out)
     return false;
   }
-#endif  // defined(MOZ_LAUNCHER_PROCESS)
+#  endif  // defined(MOZ_LAUNCHER_PROCESS)
 
   // We send this ping when the launcher process fails. After we start the
   // SendPingThread, this thread falls back from running as the launcher process
@@ -745,8 +744,6 @@ void SetLauncherErrorAppData(const StaticXREAppData& aAppData) {
   gAppData = &aAppData;
 }
 
-void SetLauncherErrorForceEventLog() {
-  gForceEventLog = true;
-}
+void SetLauncherErrorForceEventLog() { gForceEventLog = true; }
 
 }  // namespace mozilla

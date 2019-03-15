@@ -47,8 +47,11 @@ class MockMP3StreamMediaResource
 };
 
 struct MP3Resource {
+  enum HeaderType { NONE, XING, VBRI };
+
   const char* mFilePath;
   bool mIsVBR;
+  HeaderType mHeaderType;
   int64_t mFileSize;
   int32_t mMPEGLayer;
   int32_t mMPEGVersion;
@@ -83,6 +86,7 @@ class MP3DemuxerTest : public ::testing::Test {
       MP3Resource res;
       res.mFilePath = "noise.mp3";
       res.mIsVBR = false;
+      res.mHeaderType = MP3Resource::NONE;
       res.mFileSize = 965257;
       res.mMPEGLayer = 3;
       res.mMPEGVersion = 1;
@@ -127,6 +131,7 @@ class MP3DemuxerTest : public ::testing::Test {
       // the artificially added extraneous header at 114532.
       res.mFilePath = "id3v2header.mp3";
       res.mIsVBR = false;
+      res.mHeaderType = MP3Resource::NONE;
       res.mFileSize = 191302;
       res.mMPEGLayer = 3;
       res.mMPEGVersion = 1;
@@ -166,6 +171,7 @@ class MP3DemuxerTest : public ::testing::Test {
       MP3Resource res;
       res.mFilePath = "noise_vbr.mp3";
       res.mIsVBR = true;
+      res.mHeaderType = MP3Resource::XING;
       res.mFileSize = 583679;
       res.mMPEGLayer = 3;
       res.mMPEGVersion = 1;
@@ -204,6 +210,7 @@ class MP3DemuxerTest : public ::testing::Test {
       MP3Resource res;
       res.mFilePath = "small-shot.mp3";
       res.mIsVBR = true;
+      res.mHeaderType = MP3Resource::XING;
       res.mFileSize = 6825;
       res.mMPEGLayer = 3;
       res.mMPEGVersion = 1;
@@ -244,6 +251,7 @@ class MP3DemuxerTest : public ::testing::Test {
       // which should be identified as a false positive and skipped.
       res.mFilePath = "small-shot-false-positive.mp3";
       res.mIsVBR = true;
+      res.mHeaderType = MP3Resource::XING;
       res.mFileSize = 6845;
       res.mMPEGLayer = 3;
       res.mMPEGVersion = 1;
@@ -282,6 +290,7 @@ class MP3DemuxerTest : public ::testing::Test {
       MP3Resource res;
       res.mFilePath = "small-shot-partial-xing.mp3";
       res.mIsVBR = true;
+      res.mHeaderType = MP3Resource::XING;
       res.mFileSize = 6825;
       res.mMPEGLayer = 3;
       res.mMPEGVersion = 1;
@@ -304,6 +313,45 @@ class MP3DemuxerTest : public ::testing::Test {
       res.mSyncOffsets.insert(res.mSyncOffsets.begin(), syncs, syncs + 13);
 
       // No content length can be estimated for CBR stream resources.
+      MP3Resource streamRes = res;
+      streamRes.mFileSize = -1;
+
+      res.mResource = new MockMP3MediaResource(res.mFilePath);
+      res.mDemuxer = new MP3TrackDemuxer(res.mResource);
+      mTargets.push_back(res);
+
+      streamRes.mResource = new MockMP3StreamMediaResource(streamRes.mFilePath);
+      streamRes.mDemuxer = new MP3TrackDemuxer(streamRes.mResource);
+      mTargets.push_back(streamRes);
+    }
+
+    {
+      MP3Resource res;
+      res.mFilePath = "test_vbri.mp3";
+      res.mIsVBR = true;
+      res.mHeaderType = MP3Resource::VBRI;
+      res.mFileSize = 16519;
+      res.mMPEGLayer = 3;
+      res.mMPEGVersion = 1;
+      res.mID3MajorVersion = 3;
+      res.mID3MinorVersion = 0;
+      res.mID3Flags = 0;
+      res.mID3Size = 4202;
+      res.mDuration = 783660;
+      res.mDurationError = 0.01f;
+      res.mSeekError = 0.02f;
+      res.mSampleRate = 44100;
+      res.mSamplesPerFrame = 1152;
+      res.mNumSamples = 29;
+      res.mNumTrailingFrames = 0;
+      res.mBitrate = 0;
+      res.mSlotSize = 1;
+      res.mPrivate = 0;
+      const int syncs[] = {4212, 4734, 5047, 5464, 5986, 6403};
+      res.mSyncOffsets.insert(res.mSyncOffsets.begin(), syncs, syncs + 6);
+
+      // VBR stream resources contain header info on total frames numbers, which
+      // is used to estimate the total duration.
       MP3Resource streamRes = res;
       streamRes.mFileSize = -1;
 
@@ -347,12 +395,15 @@ TEST_F(MP3DemuxerTest, VBRHeader) {
 
     const auto& vbr = target.mDemuxer->VBRInfo();
 
-    if (target.mIsVBR) {
+    if (target.mHeaderType == MP3Resource::XING) {
       EXPECT_EQ(FrameParser::VBRHeader::XING, vbr.Type());
       // TODO: find reference number which accounts for trailing headers.
       // EXPECT_EQ(target.mNumSamples / target.mSamplesPerFrame,
       // vbr.NumAudioFrames().value());
-    } else {
+    } else if (target.mHeaderType == MP3Resource::VBRI) {
+      EXPECT_TRUE(target.mIsVBR);
+      EXPECT_EQ(FrameParser::VBRHeader::VBRI, vbr.Type());
+    } else {  // MP3Resource::NONE
       EXPECT_EQ(FrameParser::VBRHeader::NONE, vbr.Type());
       EXPECT_FALSE(vbr.NumAudioFrames());
     }

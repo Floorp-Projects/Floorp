@@ -1367,8 +1367,7 @@ VectorImage::OnStartRequest(nsIRequest* aRequest) {
 
 //******************************************************************************
 NS_IMETHODIMP
-VectorImage::OnStopRequest(nsIRequest* aRequest,
-                           nsresult aStatus) {
+VectorImage::OnStopRequest(nsIRequest* aRequest, nsresult aStatus) {
   if (mError) {
     return NS_ERROR_FAILURE;
   }
@@ -1468,15 +1467,14 @@ void VectorImage::OnSVGDocumentError() {
 
 //******************************************************************************
 NS_IMETHODIMP
-VectorImage::OnDataAvailable(nsIRequest* aRequest,
-                             nsIInputStream* aInStr, uint64_t aSourceOffset,
-                             uint32_t aCount) {
+VectorImage::OnDataAvailable(nsIRequest* aRequest, nsIInputStream* aInStr,
+                             uint64_t aSourceOffset, uint32_t aCount) {
   if (mError) {
     return NS_ERROR_FAILURE;
   }
 
-  return mSVGDocumentWrapper->OnDataAvailable(aRequest, aInStr,
-                                              aSourceOffset, aCount);
+  return mSVGDocumentWrapper->OnDataAvailable(aRequest, aInStr, aSourceOffset,
+                                              aCount);
 }
 
 // --------------------------

@@ -120,6 +120,11 @@ class CookieSettings final : public nsICookieSettings {
 
   void Merge(const CookieSettingsArgs& aData);
 
+  // We don't want to send this object from parent to child process if there are
+  // no reasons. HasBeenChanged() returns true if the object has changed its
+  // internal state and it must be sent beck to the content process.
+  bool HasBeenChanged() const { return mToBeMerged; }
+
  private:
   enum State {
     // No cookie permissions are allowed to be stored in this object.
@@ -137,6 +142,8 @@ class CookieSettings final : public nsICookieSettings {
   CookiePermissionList mCookiePermissions;
 
   State mState;
+
+  bool mToBeMerged;
 };
 
 }  // namespace net

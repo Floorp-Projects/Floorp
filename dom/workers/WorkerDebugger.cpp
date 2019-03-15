@@ -380,8 +380,7 @@ WorkerDebugger::RemoveListener(nsIWorkerDebuggerListener* aListener) {
 }
 
 NS_IMETHODIMP
-WorkerDebugger::SetDebuggerReady(bool aReady)
-{
+WorkerDebugger::SetDebuggerReady(bool aReady) {
   return mWorkerPrivate->SetIsDebuggerReady(aReady);
 }
 

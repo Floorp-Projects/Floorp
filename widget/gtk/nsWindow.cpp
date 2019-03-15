@@ -6814,7 +6814,6 @@ void nsWindow::ForceTitlebarRedraw(void) {
   frame = FindTitlebarFrame(frame);
   if (frame) {
     nsLayoutUtils::PostRestyleEvent(frame->GetContent()->AsElement(),
-                                    nsRestyleHint(0),
-                                    nsChangeHint_RepaintFrame);
+                                    RestyleHint{0}, nsChangeHint_RepaintFrame);
   }
 }

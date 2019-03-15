@@ -73,6 +73,11 @@ TestTabList.prototype = {
 };
 
 exports.createRootActor = function createRootActor(connection) {
+  ActorRegistry.registerModule("devtools/server/actors/webconsole", {
+    prefix: "console",
+    constructor: "WebConsoleActor",
+    type: { target: true },
+  });
   const root = new RootActor(connection, {
     tabList: new TestTabList(connection),
     globalActorFactories: ActorRegistry.globalActorFactories,

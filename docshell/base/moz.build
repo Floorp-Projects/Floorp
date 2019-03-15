@@ -76,6 +76,7 @@ EXPORTS.mozilla += [
 
 EXPORTS.mozilla.dom += [
     'BrowsingContext.h',
+    'BrowsingContextFieldList.h',
     'BrowsingContextGroup.h',
     'CanonicalBrowsingContext.h',
     'ChildProcessChannelListener.h',

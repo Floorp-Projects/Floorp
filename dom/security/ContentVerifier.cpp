@@ -102,8 +102,8 @@ void ContentVerifier::FinishSignature() {
       break;
     }
     // let the next listener know that there is data in oInStr
-    rv = nextListener->OnDataAvailable(mContentRequest, oInStr,
-                                       offset, mContent[i].Length());
+    rv = nextListener->OnDataAvailable(mContentRequest, oInStr, offset,
+                                       mContent[i].Length());
     offset += mContent[i].Length();
     if (NS_FAILED(rv)) {
       break;
@@ -121,8 +121,7 @@ ContentVerifier::OnStartRequest(nsIRequest* aRequest) {
 }
 
 NS_IMETHODIMP
-ContentVerifier::OnStopRequest(nsIRequest* aRequest,
-                               nsresult aStatus) {
+ContentVerifier::OnStopRequest(nsIRequest* aRequest, nsresult aStatus) {
   // If we don't have a next listener, we handed off this request already.
   // Return, there's nothing to do here.
   if (!mNextListener) {
@@ -188,8 +187,8 @@ ContentVerifier::ContextCreated(bool successful) {
     CSV_LOG(("failed to get a valid cert chain\n"));
     if (mContentRequest && nextListener) {
       mContentRequest->Cancel(NS_ERROR_INVALID_SIGNATURE);
-      nsresult rv = nextListener->OnStopRequest(
-          mContentRequest, NS_ERROR_INVALID_SIGNATURE);
+      nsresult rv = nextListener->OnStopRequest(mContentRequest,
+                                                NS_ERROR_INVALID_SIGNATURE);
       mContentRequest = nullptr;
       mContentContext = nullptr;
       return rv;

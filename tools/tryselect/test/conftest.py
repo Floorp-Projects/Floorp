@@ -10,8 +10,25 @@ import pytest
 import yaml
 from mock import MagicMock
 from moztest.resolve import TestResolver
+from taskgraph.graph import Graph
+from taskgraph.task import Task
+from taskgraph.taskgraph import TaskGraph
 
 from tryselect import push
+
+
+@pytest.fixture
+def tg(request):
+    if not hasattr(request.module, 'TASKS'):
+        pytest.fail("'tg' fixture used from a module that didn't define the TASKS variable")
+
+    tasks = request.module.TASKS
+    for task in tasks:
+        task.setdefault('task', {})
+        task['task'].setdefault('tags', {})
+
+    tasks = {t['label']: Task(**t) for t in tasks}
+    return TaskGraph(tasks, Graph(tasks.keys(), set()))
 
 
 @pytest.fixture

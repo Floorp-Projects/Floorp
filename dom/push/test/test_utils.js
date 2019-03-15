@@ -9,8 +9,7 @@
    * from the DOM API. This allows tests to simulate local errors and error
    * reporting, bypassing the `PushService.jsm` machinery.
    */
-  function replacePushService(mockService) {
-    chromeScript.sendSyncMessage("service-replace");
+  async function replacePushService(mockService) {
     chromeScript.addMessageListener("service-delivery-error", function(msg) {
       mockService.reportDeliveryError(msg.messageId, msg.reason);
     });
@@ -34,10 +33,23 @@
         });
       });
     });
+    await new Promise(resolve => {
+      chromeScript.addMessageListener("service-replaced", function onReplaced() {
+        chromeScript.removeMessageListener("service-replaced", onReplaced);
+        resolve();
+      });
+      chromeScript.sendAsyncMessage("service-replace");
+    });
   }
 
-  function restorePushService() {
-    chromeScript.sendSyncMessage("service-restore");
+  async function restorePushService() {
+    await new Promise(resolve => {
+      chromeScript.addMessageListener("service-restored", function onRestored() {
+        chromeScript.removeMessageListener("service-restored", onRestored);
+        resolve();
+      });
+      chromeScript.sendAsyncMessage("service-restore");
+    });
   }
 
   let userAgentID = "8e1c93a9-139b-419c-b200-e715bb1e8ce8";
@@ -153,13 +165,11 @@
 }(this));
 
 // Remove permissions and prefs when the test finishes.
-SimpleTest.registerCleanupFunction(() => {
-  return new Promise(resolve =>
-    SpecialPowers.flushPermissions(resolve)
-  ).then(_ => SpecialPowers.flushPrefEnv()).then(_ => {
-    restorePushService();
-    return teardownMockPushSocket();
-  });
+SimpleTest.registerCleanupFunction(async function() {
+  await new Promise(resolve => SpecialPowers.flushPermissions(resolve));
+  await SpecialPowers.flushPrefEnv();
+  await restorePushService();
+  await teardownMockPushSocket();
 });
 
 function setPushPermission(allow) {
@@ -181,9 +191,9 @@ function setupPrefs() {
     ]});
 }
 
-function setupPrefsAndReplaceService(mockService) {
-  replacePushService(mockService);
-  return setupPrefs();
+async function setupPrefsAndReplaceService(mockService) {
+  await replacePushService(mockService);
+  await setupPrefs();
 }
 
 function setupPrefsAndMockSocket(mockSocket) {

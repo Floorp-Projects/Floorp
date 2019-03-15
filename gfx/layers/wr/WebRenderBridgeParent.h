@@ -47,11 +47,12 @@ class CompositorVsyncScheduler;
 class AsyncImagePipelineManager;
 class WebRenderImageHost;
 
-class WebRenderBridgeParent final : public PWebRenderBridgeParent,
-                                    public CompositorVsyncSchedulerOwner,
-                                    public CompositableParentManager,
-                                    public layers::FrameRecorder,
-                                    public SupportsWeakPtr<WebRenderBridgeParent> {
+class WebRenderBridgeParent final
+    : public PWebRenderBridgeParent,
+      public CompositorVsyncSchedulerOwner,
+      public CompositableParentManager,
+      public layers::FrameRecorder,
+      public SupportsWeakPtr<WebRenderBridgeParent> {
  public:
   MOZ_DECLARE_WEAKREFERENCE_TYPENAME(WebRenderBridgeParent)
   WebRenderBridgeParent(CompositorBridgeParentBase* aCompositorBridge,

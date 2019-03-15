@@ -1087,15 +1087,16 @@ void nsFrame::DidSetComputedStyle(ComputedStyle* aOldComputedStyle) {
   // doesn't affect correctness because text can't match selectors.
   //
   // FIXME(emilio): We should consider fixing that.
-  const bool isNonTextFirstContinuation =
-      !IsTextFrame() && !GetPrevContinuation();
-  if (isNonTextFirstContinuation) {
+  //
+  // TODO(emilio): Can we avoid doing some / all of the image stuff when
+  // isNonTextFirstContinuation is false? We should consider doing this just for
+  // primary frames and pseudos, but the first-line reparenting code makes it
+  // all bad, should get around to bug 1465474 eventually :(
+  const bool isNonText = !IsTextFrame();
+  if (isNonText) {
     mComputedStyle->StartImageLoads(*doc);
   }
 
-  // TODO(emilio): Can we avoid doing some / all of this when
-  // isNonTextFirstContinuation is false? We should consider doing this just for
-  // primary frames and pseudos.
   const nsStyleImageLayers* oldLayers =
       aOldComputedStyle ? &aOldComputedStyle->StyleBackground()->mImage
                         : nullptr;
@@ -1228,6 +1229,7 @@ void nsFrame::DidSetComputedStyle(ComputedStyle* aOldComputedStyle) {
 
   // SVGObserverUtils::GetEffectProperties() asserts that we only invoke it with
   // the first continuation so we need to check that in advance.
+  const bool isNonTextFirstContinuation = isNonText && !GetPrevContinuation();
   if (isNonTextFirstContinuation) {
     // Kick off loading of external SVG resources referenced from properties if
     // any. This currently includes filter, clip-path, and mask.

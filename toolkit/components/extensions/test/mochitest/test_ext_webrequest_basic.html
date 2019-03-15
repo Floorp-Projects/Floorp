@@ -378,7 +378,11 @@ add_task(async function test_webRequest_frames() {
       type: "sub_frame",
       status: 404,
       events: ["onBeforeRequest", "onBeforeSendHeaders", "onSendHeaders", "onErrorOccurred"],
-      error: "NS_ERROR_UNKNOWN_HOST",
+      // When an url's hostname fails to be resolved, an NS_ERROR_NET_ON_RESOLVED/RESOLVING
+      // onError event may be fired right before the NS_ERROR_UNKNOWN_HOST
+      // (See Bug 1516862 for a rationale).
+      optional_events: ["onErrorOccurred"],
+      error: ["NS_ERROR_UNKNOWN_HOST", "NS_ERROR_NET_ON_RESOLVED", "NS_ERROR_NET_ON_RESOLVING"],
     },
   };
   extension.sendMessage("set-expected", {expect, origin: location.href});

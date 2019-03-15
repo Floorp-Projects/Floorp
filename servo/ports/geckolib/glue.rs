@@ -130,7 +130,6 @@ use style::gecko_bindings::structs::nsCSSPropertyID;
 use style::gecko_bindings::structs::nsCSSValueSharedList;
 use style::gecko_bindings::structs::nsChangeHint;
 use style::gecko_bindings::structs::nsCompatibility;
-use style::gecko_bindings::structs::nsRestyleHint;
 use style::gecko_bindings::structs::nsStyleTransformMatrix::MatrixTransformOperator;
 use style::gecko_bindings::structs::nsTArray;
 use style::gecko_bindings::structs::nsTimingFunction;
@@ -168,7 +167,7 @@ use style::gecko_bindings::sugar::ownership::{HasSimpleFFI, Strong};
 use style::gecko_bindings::sugar::refptr::RefPtr;
 use style::gecko_properties;
 use style::global_style_data::{GlobalStyleData, GLOBAL_STYLE_DATA, STYLE_THREAD_POOL};
-use style::invalidation::element::restyle_hints;
+use style::invalidation::element::restyle_hints::RestyleHint;
 use style::media_queries::MediaList;
 use style::parser::{self, Parse, ParserContext};
 use style::properties::animated_properties::AnimationValue;
@@ -240,7 +239,6 @@ pub unsafe extern "C" fn Servo_Initialize(dummy_url_data: *mut URLExtraData) {
     thread_state::initialize(thread_state::ThreadState::LAYOUT);
 
     // Perform some debug-only runtime assertions.
-    restyle_hints::assert_restyle_hints_match();
     origin_flags::assert_flags_match();
     parser::assert_parsing_mode_match();
     traversal_flags::assert_traversal_flags_match();
@@ -4812,7 +4810,7 @@ pub extern "C" fn Servo_CSSSupports(cond: *const nsACString) -> bool {
 #[no_mangle]
 pub unsafe extern "C" fn Servo_NoteExplicitHints(
     element: RawGeckoElementBorrowed,
-    restyle_hint: nsRestyleHint,
+    restyle_hint: RestyleHint,
     change_hint: nsChangeHint,
 ) {
     GeckoElement(element).note_explicit_hints(restyle_hint, change_hint);

@@ -14,7 +14,9 @@ class PictureInPictureChild extends ActorChild {
   handleEvent(event) {
     switch (event.type) {
       case "MozTogglePictureInPicture": {
-        this.togglePictureInPicture(event.target);
+        if (event.isTrusted) {
+          this.togglePictureInPicture(event.target);
+        }
         break;
       }
     }

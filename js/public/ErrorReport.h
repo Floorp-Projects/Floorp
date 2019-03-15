@@ -153,18 +153,18 @@ class JSErrorNotes {
   ~JSErrorNotes();
 
   // Add an note to the given position.
-  bool addNoteASCII(JSContext* cx, const char* filename,
-                    unsigned sourceId, unsigned lineno,
-                    unsigned column, JSErrorCallback errorCallback,
-                    void* userRef, const unsigned errorNumber, ...);
-  bool addNoteLatin1(JSContext* cx, const char* filename,
-                     unsigned sourceId, unsigned lineno,
-                     unsigned column, JSErrorCallback errorCallback,
-                     void* userRef, const unsigned errorNumber, ...);
-  bool addNoteUTF8(JSContext* cx, const char* filename,
-                   unsigned sourceId, unsigned lineno,
-                   unsigned column, JSErrorCallback errorCallback,
-                   void* userRef, const unsigned errorNumber, ...);
+  bool addNoteASCII(JSContext* cx, const char* filename, unsigned sourceId,
+                    unsigned lineno, unsigned column,
+                    JSErrorCallback errorCallback, void* userRef,
+                    const unsigned errorNumber, ...);
+  bool addNoteLatin1(JSContext* cx, const char* filename, unsigned sourceId,
+                     unsigned lineno, unsigned column,
+                     JSErrorCallback errorCallback, void* userRef,
+                     const unsigned errorNumber, ...);
+  bool addNoteUTF8(JSContext* cx, const char* filename, unsigned sourceId,
+                   unsigned lineno, unsigned column,
+                   JSErrorCallback errorCallback, void* userRef,
+                   const unsigned errorNumber, ...);
 
   JS_PUBLIC_API size_t length();
 

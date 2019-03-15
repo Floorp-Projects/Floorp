@@ -214,22 +214,18 @@ nsresult nsManifestCheck::ReadManifest(nsIInputStream *aInputStream,
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-nsManifestCheck::OnStartRequest(nsIRequest *aRequest) {
-  return NS_OK;
-}
+nsManifestCheck::OnStartRequest(nsIRequest *aRequest) { return NS_OK; }
 
 NS_IMETHODIMP
-nsManifestCheck::OnDataAvailable(nsIRequest *aRequest,
-                                 nsIInputStream *aStream, uint64_t aOffset,
-                                 uint32_t aCount) {
+nsManifestCheck::OnDataAvailable(nsIRequest *aRequest, nsIInputStream *aStream,
+                                 uint64_t aOffset, uint32_t aCount) {
   uint32_t bytesRead;
   aStream->ReadSegments(ReadManifest, this, aCount, &bytesRead);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsManifestCheck::OnStopRequest(nsIRequest *aRequest,
-                               nsresult aStatus) {
+nsManifestCheck::OnStopRequest(nsIRequest *aRequest, nsresult aStatus) {
   nsAutoCString manifestHash;
   if (NS_SUCCEEDED(aStatus)) {
     mManifestHash->Finish(true, manifestHash);
@@ -1085,8 +1081,7 @@ nsOfflineManifestItem::OnDataAvailable(nsIRequest *aRequest,
 }
 
 NS_IMETHODIMP
-nsOfflineManifestItem::OnStopRequest(nsIRequest *aRequest,
-                                     nsresult aStatus) {
+nsOfflineManifestItem::OnStopRequest(nsIRequest *aRequest, nsresult aStatus) {
   if (mBytesRead == 0) {
     // We didn't need to read (because LOAD_ONLY_IF_MODIFIED was
     // specified).

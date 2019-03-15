@@ -28,9 +28,7 @@ namespace layers {
 class ISurfaceAllocator;
 
 WebRenderImageHost::WebRenderImageHost(const TextureInfo& aTextureInfo)
-    : CompositableHost(aTextureInfo),
-      ImageComposite(),
-      mWrBridgeBindings(0) {}
+    : CompositableHost(aTextureInfo), ImageComposite(), mWrBridgeBindings(0) {}
 
 WebRenderImageHost::~WebRenderImageHost() { MOZ_ASSERT(!mWrBridge); }
 

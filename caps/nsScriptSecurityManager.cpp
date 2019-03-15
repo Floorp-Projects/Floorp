@@ -289,12 +289,69 @@ static void InheritAndSetCSPOnPrincipalIfNeeded(nsIChannel* aChannel,
   nsCOMPtr<nsIContentSecurityPolicy> nullPrincipalCSP;
   aPrincipal->GetCsp(getter_AddRefs(nullPrincipalCSP));
   if (nullPrincipalCSP) {
-    MOZ_ASSERT(nullPrincipalCSP == originalCSP,
-               "There should be no other CSP here.");
+#ifdef DEBUG
+    {
+      uint32_t nullPrincipalCSPCount = 0;
+      nullPrincipalCSP->GetPolicyCount(&nullPrincipalCSPCount);
+
+      uint32_t originalCSPCount = 0;
+      originalCSP->GetPolicyCount(&originalCSPCount);
+
+      MOZ_ASSERT(nullPrincipalCSPCount == originalCSPCount,
+                 "There should be no other CSP here.");
+
+      nsAutoString nullPrincipalCSPStr, originalCSPStr;
+      for (uint32_t i = 0; i < originalCSPCount; ++i) {
+        originalCSP->GetPolicyString(i, originalCSPStr);
+        nullPrincipalCSP->GetPolicyString(i, nullPrincipalCSPStr);
+        MOZ_ASSERT(originalCSPStr.Equals(nullPrincipalCSPStr),
+                   "There should be no other CSP string here.");
+      }
+    }
+#endif
     // CSPs are equal, no need to set it again.
     return;
   }
-  aPrincipal->SetCsp(originalCSP);
+
+  // After 965637 all that magical CSP inheritance goes away. For now,
+  // we have to create a clone of the current CSP and have to manually
+  // set it on the Principal.
+  uint32_t count = 0;
+  rv = originalCSP->GetPolicyCount(&count);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
+
+  if (count == 0) {
+    // fast path: if there is nothing to inherit, we can return here.
+    return;
+  }
+
+  RefPtr<nsCSPContext> newCSP = new nsCSPContext();
+  nsWeakPtr loadingContext =
+      static_cast<nsCSPContext*>(originalCSP.get())->GetLoadingContext();
+  nsCOMPtr<Document> doc = do_QueryReferent(loadingContext);
+
+  rv = doc ? newCSP->SetRequestContext(doc, nullptr)
+           : newCSP->SetRequestContext(nullptr, aPrincipal);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
+
+  for (uint32_t i = 0; i < count; ++i) {
+    const nsCSPPolicy* policy = originalCSP->GetPolicy(i);
+    MOZ_ASSERT(policy);
+
+    nsAutoString policyString;
+    policy->toString(policyString);
+
+    rv = newCSP->AppendPolicy(policyString, policy->getReportOnlyFlag(),
+                              policy->getDeliveredViaMetaTagFlag());
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return;
+    }
+  }
+  aPrincipal->SetCsp(newCSP);
 }
 
 nsresult nsScriptSecurityManager::GetChannelResultPrincipal(

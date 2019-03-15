@@ -541,8 +541,8 @@ EHTable::EHTable(const void *aELF, size_t aSize, const std::string &aName)
   if (memcmp(&file.e_ident[EI_MAG0], ELFMAG, SELFMAG) != 0 ||
       file.e_ident[EI_CLASS] != ELFCLASS32 ||
       file.e_ident[EI_DATA] != hostEndian ||
-      file.e_ident[EI_VERSION] != EV_CURRENT ||
-      file.e_machine != EM_ARM || file.e_version != EV_CURRENT)
+      file.e_ident[EI_VERSION] != EV_CURRENT || file.e_machine != EM_ARM ||
+      file.e_version != EV_CURRENT)
     // e_flags?
     return;
 

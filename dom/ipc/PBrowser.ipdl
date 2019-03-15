@@ -178,7 +178,8 @@ parent:
     /**
      * Construct a new Remote iframe actor.
      */
-    async PBrowserBridge(nsString aPresentationURL, nsString aRemoteType);
+    async PBrowserBridge(nsString aPresentationURL, nsString aRemoteType,
+                         BrowsingContext aBrowsingContext);
 
     /**
      * Sends an NS_NATIVE_CHILD_OF_SHAREABLE_WINDOW to be adopted by the
@@ -619,8 +620,6 @@ parent:
 
     sync SetPrefersReducedMotionOverrideForTest(bool aValue);
     sync ResetPrefersReducedMotionOverrideForTest();
-
-    async RootBrowsingContext(BrowsingContext aContext);
 
 child:
     /**

@@ -161,9 +161,12 @@ export function getPendingBreakpointsForSource(
     return [];
   }
 
-  return getPendingBreakpointList(state).filter(
-    pendingBreakpoint => pendingBreakpoint.location.sourceUrl === source.url
-  );
+  return getPendingBreakpointList(state).filter(pendingBreakpoint => {
+    return (
+      pendingBreakpoint.location.sourceUrl === source.url ||
+      pendingBreakpoint.generatedLocation.sourceUrl == source.url
+    );
+  });
 }
 
 export default update;

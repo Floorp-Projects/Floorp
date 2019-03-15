@@ -127,8 +127,7 @@ nsHTTPCompressConv::OnStartRequest(nsIRequest *request) {
 }
 
 NS_IMETHODIMP
-nsHTTPCompressConv::OnStopRequest(nsIRequest *request,
-                                  nsresult aStatus) {
+nsHTTPCompressConv::OnStopRequest(nsIRequest *request, nsresult aStatus) {
   nsresult status = aStatus;
   LOG(("nsHttpCompresssConv %p onstop %" PRIx32 "\n", this,
        static_cast<uint32_t>(aStatus)));
@@ -257,8 +256,7 @@ nsresult nsHTTPCompressConv::BrotliHandler(nsIInputStream *stream,
 }
 
 NS_IMETHODIMP
-nsHTTPCompressConv::OnDataAvailable(nsIRequest *request,
-                                    nsIInputStream *iStr,
+nsHTTPCompressConv::OnDataAvailable(nsIRequest *request, nsIInputStream *iStr,
                                     uint64_t aSourceOffset, uint32_t aCount) {
   nsresult rv = NS_ERROR_INVALID_CONTENT_ENCODING;
   uint32_t streamLen = aCount;
@@ -492,8 +490,7 @@ nsHTTPCompressConv::OnDataAvailable(nsIRequest *request,
         MutexAutoLock lock(mMutex);
         listener = mListener;
       }
-      rv = listener->OnDataAvailable(request, iStr, aSourceOffset,
-                                     aCount);
+      rv = listener->OnDataAvailable(request, iStr, aSourceOffset, aCount);
       if (NS_FAILED(rv)) {
         return rv;
       }
@@ -528,8 +525,7 @@ nsresult nsHTTPCompressConv::do_OnDataAvailable(nsIRequest *request,
     MutexAutoLock lock(mMutex);
     listener = mListener;
   }
-  nsresult rv =
-      listener->OnDataAvailable(request, mStream, offset, count);
+  nsresult rv = listener->OnDataAvailable(request, mStream, offset, count);
 
   // Make sure the stream no longer references |buffer| in case our listener
   // is crazy enough to try to read from |mStream| after ODA.

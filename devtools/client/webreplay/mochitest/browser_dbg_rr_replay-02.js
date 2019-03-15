@@ -15,13 +15,16 @@ add_task(async function() {
   gBrowser.selectedTab = recordingTab;
   openTrustedLinkIn(EXAMPLE_URL + "doc_rr_continuous.html", "current");
 
-  let toolbox = await attachDebugger(recordingTab), client = toolbox.threadClient;
+  const firstTab = await attachDebugger(recordingTab);
+  let toolbox = firstTab.toolbox;
+  let target = firstTab.target;
+  let client = toolbox.threadClient;
   await client.interrupt();
   let bp = await setBreakpoint(client, "doc_rr_continuous.html", 14);
   await resumeToLine(client, 14);
   await resumeToLine(client, 14);
   await reverseStepOverToLine(client, 13);
-  const lastNumberValue = await evaluateInTopFrame(client, "number");
+  const lastNumberValue = await evaluateInTopFrame(target, "number");
 
   const tabParent = recordingTab.linkedBrowser.frameLoader.tabParent;
   ok(tabParent, "Found recording tab parent");
@@ -37,16 +40,18 @@ add_task(async function() {
   gBrowser.selectedTab = replayingTab;
   await once(Services.ppmm, "HitRecordingEndpoint");
 
-  toolbox = await attachDebugger(replayingTab);
+  const rplyTab = await attachDebugger(replayingTab);
+  toolbox = rplyTab.toolbox;
+  target = rplyTab.target;
   client = toolbox.threadClient;
   await client.interrupt();
-  await checkEvaluateInTopFrame(client, "number", lastNumberValue);
+  await checkEvaluateInTopFrame(target, "number", lastNumberValue);
   await reverseStepOverToLine(client, 13);
   bp = await setBreakpoint(client, "doc_rr_continuous.html", 14);
   await rewindToLine(client, 14);
-  await checkEvaluateInTopFrame(client, "number", lastNumberValue - 1);
+  await checkEvaluateInTopFrame(target, "number", lastNumberValue - 1);
   await resumeToLine(client, 14);
-  await checkEvaluateInTopFrame(client, "number", lastNumberValue);
+  await checkEvaluateInTopFrame(target, "number", lastNumberValue);
 
   await client.removeBreakpoint(bp);
   await toolbox.destroy();

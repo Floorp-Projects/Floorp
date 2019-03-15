@@ -16,7 +16,7 @@
 #include "nsURLParsers.h"
 
 #ifdef OS_WIN
-#include "WinWebAuthnManager.h"
+#  include "WinWebAuthnManager.h"
 #endif
 
 using namespace mozilla::ipc;

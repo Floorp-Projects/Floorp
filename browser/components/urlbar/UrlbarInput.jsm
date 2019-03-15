@@ -371,7 +371,9 @@ class UrlbarInput {
       allowInheritPrincipal: false,
     };
 
-    this.view.close();
+    if (!result.payload.isKeywordOffer) {
+      this.view.close();
+    }
     this.controller.recordSelectedResult(event, resultIndex);
 
     if (isCanonized) {

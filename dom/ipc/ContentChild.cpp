@@ -28,6 +28,8 @@
 #include "mozilla/VideoDecoderManagerChild.h"
 #include "mozilla/devtools/HeapSnapshotTempFileHelperChild.h"
 #include "mozilla/docshell/OfflineCacheUpdateChild.h"
+#include "mozilla/dom/BrowsingContext.h"
+#include "mozilla/dom/BrowsingContextGroup.h"
 #include "mozilla/dom/ClientManager.h"
 #include "mozilla/dom/ClientOpenWindowOpActors.h"
 #include "mozilla/dom/ChildProcessMessageManager.h"
@@ -165,7 +167,7 @@
 #  include "nsPrintingProxy.h"
 #endif
 #include "nsWindowMemoryReporter.h"
-#include "nsIReferrerInfo.h"
+#include "ReferrerInfo.h"
 
 #include "IHistory.h"
 #include "nsNetUtil.h"
@@ -756,19 +758,38 @@ ContentChild::ProvideWindow(mozIDOMWindowProxy* aParent, uint32_t aChromeFlags,
                              aWindowIsNew, aReturn);
 }
 
-static nsresult GetCreateWindowParams(
-    mozIDOMWindowProxy* aParent, nsDocShellLoadState* aLoadState,
-    nsACString& aBaseURIString, float* aFullZoom, uint32_t* aReferrerPolicy,
-    nsIPrincipal** aTriggeringPrincipal, nsIContentSecurityPolicy** aCsp) {
+static nsresult GetCreateWindowParams(mozIDOMWindowProxy* aParent,
+                                      nsDocShellLoadState* aLoadState,
+                                      float* aFullZoom,
+                                      nsIReferrerInfo** aReferrerInfo,
+                                      nsIPrincipal** aTriggeringPrincipal,
+                                      nsIContentSecurityPolicy** aCsp) {
   *aFullZoom = 1.0f;
   if (!aTriggeringPrincipal || !aCsp) {
     NS_ERROR("aTriggeringPrincipal || aCsp is null");
     return NS_ERROR_FAILURE;
   }
+
+  if (!aReferrerInfo) {
+    NS_ERROR("aReferrerInfo is null");
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsIReferrerInfo> referrerInfo;
+  if (aLoadState) {
+    referrerInfo = aLoadState->GetReferrerInfo();
+  }
+
   auto* opener = nsPIDOMWindowOuter::From(aParent);
   if (!opener) {
     nsCOMPtr<nsIPrincipal> nullPrincipal =
         NullPrincipal::CreateWithoutOriginAttributes();
+    if (!referrerInfo) {
+      referrerInfo =
+          new ReferrerInfo(nullptr, mozilla::net::ReferrerPolicy::RP_Unset);
+    }
+
+    referrerInfo.swap(*aReferrerInfo);
     NS_ADDREF(*aTriggeringPrincipal = nullPrincipal);
     return NS_OK;
   }
@@ -790,15 +811,12 @@ static nsresult GetCreateWindowParams(
     return NS_ERROR_FAILURE;
   }
 
-  baseURI->GetSpec(aBaseURIString);
-  if (aLoadState) {
-    nsCOMPtr<nsIReferrerInfo> referrerInfo = aLoadState->GetReferrerInfo();
-    if (referrerInfo && referrerInfo->GetSendReferrer()) {
-      referrerInfo->GetReferrerPolicy(aReferrerPolicy);
-    } else {
-      *aReferrerPolicy = mozilla::net::RP_No_Referrer;
-    }
+  if (!referrerInfo) {
+    referrerInfo =
+        new ReferrerInfo(doc->GetDocBaseURI(), doc->GetReferrerPolicy());
   }
+
+  referrerInfo.swap(*aReferrerInfo);
 
   RefPtr<nsDocShell> openerDocShell =
       static_cast<nsDocShell*>(opener->GetDocShell());
@@ -861,13 +879,12 @@ nsresult ContentChild::ProvideWindowCommon(
   // If we're in a content process and we have noopener set, there's no reason
   // to load in our process, so let's load it elsewhere!
   if (loadInDifferentProcess) {
-    nsAutoCString baseURIString;
     float fullZoom;
     nsCOMPtr<nsIPrincipal> triggeringPrincipal;
     nsCOMPtr<nsIContentSecurityPolicy> csp;
-    uint32_t referrerPolicy = mozilla::net::RP_Unset;
+    nsCOMPtr<nsIReferrerInfo> referrerInfo;
     rv = GetCreateWindowParams(
-        aParent, aLoadState, baseURIString, &fullZoom, &referrerPolicy,
+        aParent, aLoadState, &fullZoom, getter_AddRefs(referrerInfo),
         getter_AddRefs(triggeringPrincipal), getter_AddRefs(csp));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
@@ -877,8 +894,8 @@ nsresult ContentChild::ProvideWindowCommon(
     SerializeURI(aURI, uriToLoad);
     Unused << SendCreateWindowInDifferentProcess(
         aTabOpener, aChromeFlags, aCalledFromJS, aPositionSpecified,
-        aSizeSpecified, uriToLoad, features, baseURIString, fullZoom, name,
-        Principal(triggeringPrincipal), csp, referrerPolicy);
+        aSizeSpecified, uriToLoad, features, fullZoom, name,
+        Principal(triggeringPrincipal), csp, referrerInfo);
 
     // We return NS_ERROR_ABORT, so that the caller knows that we've abandoned
     // the window open as far as it is concerned.
@@ -912,9 +929,15 @@ nsresult ContentChild::ProvideWindowCommon(
     tabGroup = new TabGroup();
   }
 
+  RefPtr<BrowsingContext> openerBC =
+      aParent ? nsPIDOMWindowOuter::From(aParent)->GetBrowsingContext()
+              : nullptr;
+  RefPtr<BrowsingContext> browsingContext = BrowsingContext::Create(
+      nullptr, openerBC, aName, BrowsingContext::Type::Content);
+
   TabContext newTabContext = aTabOpener ? *aTabOpener : TabContext();
-  RefPtr<TabChild> newChild =
-      new TabChild(this, tabId, tabGroup, newTabContext, aChromeFlags);
+  RefPtr<TabChild> newChild = new TabChild(this, tabId, tabGroup, newTabContext,
+                                           browsingContext, aChromeFlags);
 
   if (aTabOpener) {
     MOZ_ASSERT(ipcContext->type() == IPCTabContext::TPopupIPCTabContext);
@@ -928,7 +951,7 @@ nsresult ContentChild::ProvideWindowCommon(
   Unused << SendPBrowserConstructor(
       // We release this ref in DeallocPBrowserChild
       RefPtr<TabChild>(newChild).forget().take(), tabId, TabId(0), *ipcContext,
-      aChromeFlags, GetID(), IsForBrowser());
+      aChromeFlags, GetID(), browsingContext, IsForBrowser());
 
   // Now that |newChild| has had its IPC link established, call |Init| to set it
   // up.
@@ -1061,13 +1084,12 @@ nsresult ContentChild::ProvideWindowCommon(
                                          name, NS_ConvertUTF8toUTF16(features),
                                          std::move(resolve), std::move(reject));
   } else {
-    nsAutoCString baseURIString;
     float fullZoom;
     nsCOMPtr<nsIPrincipal> triggeringPrincipal;
     nsCOMPtr<nsIContentSecurityPolicy> csp;
-    uint32_t referrerPolicy = mozilla::net::RP_Unset;
+    nsCOMPtr<nsIReferrerInfo> referrerInfo;
     rv = GetCreateWindowParams(
-        aParent, aLoadState, baseURIString, &fullZoom, &referrerPolicy,
+        aParent, aLoadState, &fullZoom, getter_AddRefs(referrerInfo),
         getter_AddRefs(triggeringPrincipal), getter_AddRefs(csp));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
@@ -1080,9 +1102,8 @@ nsresult ContentChild::ProvideWindowCommon(
 
     SendCreateWindow(aTabOpener, newChild, aChromeFlags, aCalledFromJS,
                      aPositionSpecified, aSizeSpecified, uriToLoad, features,
-                     baseURIString, fullZoom, Principal(triggeringPrincipal),
-                     csp, referrerPolicy, std::move(resolve),
-                     std::move(reject));
+                     fullZoom, Principal(triggeringPrincipal), csp,
+                     referrerInfo, std::move(resolve), std::move(reject));
   }
 
   // =======================
@@ -1697,12 +1718,11 @@ bool ContentChild::DeallocPJavaScriptChild(PJavaScriptChild* aChild) {
   return true;
 }
 
-PBrowserChild* ContentChild::AllocPBrowserChild(const TabId& aTabId,
-                                                const TabId& aSameTabGroupAs,
-                                                const IPCTabContext& aContext,
-                                                const uint32_t& aChromeFlags,
-                                                const ContentParentId& aCpID,
-                                                const bool& aIsForBrowser) {
+PBrowserChild* ContentChild::AllocPBrowserChild(
+    const TabId& aTabId, const TabId& aSameTabGroupAs,
+    const IPCTabContext& aContext, const uint32_t& aChromeFlags,
+    const ContentParentId& aCpID, BrowsingContext* aBrowsingContext,
+    const bool& aIsForBrowser) {
   // We'll happily accept any kind of IPCTabContext here; we don't need to
   // check that it's of a certain type for security purposes, because we
   // believe whatever the parent process tells us.
@@ -1716,9 +1736,9 @@ PBrowserChild* ContentChild::AllocPBrowserChild(const TabId& aTabId,
     MOZ_CRASH("Invalid TabContext received from the parent process.");
   }
 
-  RefPtr<TabChild> child =
-      TabChild::Create(static_cast<ContentChild*>(this), aTabId,
-                       aSameTabGroupAs, tc.GetTabContext(), aChromeFlags);
+  RefPtr<TabChild> child = TabChild::Create(
+      static_cast<ContentChild*>(this), aTabId, aSameTabGroupAs,
+      tc.GetTabContext(), aBrowsingContext, aChromeFlags);
 
   // The ref here is released in DeallocPBrowserChild.
   return child.forget().take();
@@ -1727,20 +1747,22 @@ PBrowserChild* ContentChild::AllocPBrowserChild(const TabId& aTabId,
 bool ContentChild::SendPBrowserConstructor(
     PBrowserChild* aActor, const TabId& aTabId, const TabId& aSameTabGroupAs,
     const IPCTabContext& aContext, const uint32_t& aChromeFlags,
-    const ContentParentId& aCpID, const bool& aIsForBrowser) {
+    const ContentParentId& aCpID, BrowsingContext* aBrowsingContext,
+    const bool& aIsForBrowser) {
   if (IsShuttingDown()) {
     return false;
   }
 
   return PContentChild::SendPBrowserConstructor(aActor, aTabId, aSameTabGroupAs,
                                                 aContext, aChromeFlags, aCpID,
-                                                aIsForBrowser);
+                                                aBrowsingContext, aIsForBrowser);
 }
 
 mozilla::ipc::IPCResult ContentChild::RecvPBrowserConstructor(
     PBrowserChild* aActor, const TabId& aTabId, const TabId& aSameTabGroupAs,
     const IPCTabContext& aContext, const uint32_t& aChromeFlags,
-    const ContentParentId& aCpID, const bool& aIsForBrowser) {
+    const ContentParentId& aCpID, BrowsingContext* aBrowsingContext,
+    const bool& aIsForBrowser) {
   MOZ_ASSERT(!IsShuttingDown());
 
   static bool hasRunOnce = false;
@@ -3679,6 +3701,60 @@ PContentChild::Result ContentChild::OnMessageReceived(const Message& aMsg,
   return result;
 }
 
+mozilla::ipc::IPCResult ContentChild::RecvAttachBrowsingContext(
+    BrowsingContext::IPCInitializer&& aInit) {
+  RefPtr<BrowsingContext> child = BrowsingContext::Get(aInit.mId);
+  MOZ_RELEASE_ASSERT(!child || child->IsCached());
+
+  if (!child) {
+    // Determine the BrowsingContextGroup from our parent or opener fields.
+    RefPtr<BrowsingContextGroup> group =
+        BrowsingContextGroup::Select(aInit.mParentId, aInit.mOpenerId);
+    child = BrowsingContext::CreateFromIPC(std::move(aInit), group, nullptr);
+  }
+
+  child->Attach(/* aFromIPC */ true);
+
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult ContentChild::RecvDetachBrowsingContext(
+    BrowsingContext* aContext, bool aMoveToBFCache) {
+  MOZ_RELEASE_ASSERT(aContext);
+
+  if (aMoveToBFCache) {
+    aContext->CacheChildren(/* aFromIPC */ true);
+  } else {
+    aContext->Detach(/* aFromIPC */ true);
+  }
+
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult ContentChild::RecvRegisterBrowsingContextGroup(
+    nsTArray<BrowsingContext::IPCInitializer>&& aInits) {
+  RefPtr<BrowsingContextGroup> group = new BrowsingContextGroup();
+
+  // Each of the initializers in aInits is sorted in pre-order, so our parent
+  // should always be available before the element itself.
+  for (auto& init : aInits) {
+#ifdef DEBUG
+    RefPtr<BrowsingContext> existing = BrowsingContext::Get(init.mId);
+    MOZ_ASSERT(!existing, "BrowsingContext must not exist yet!");
+
+    RefPtr<BrowsingContext> parent = init.GetParent();
+    MOZ_ASSERT_IF(parent, parent->Group() == group);
+#endif
+
+    RefPtr<BrowsingContext> ctxt = BrowsingContext::CreateFromIPC(std::move(init), group, nullptr);
+
+    // FIXME: We should deal with cached & detached contexts as well.
+    ctxt->Attach(/* aFromIPC */ true);
+  }
+
+  return IPC_OK();
+}
+
 mozilla::ipc::IPCResult ContentChild::RecvWindowClose(BrowsingContext* aContext,
                                                       bool aTrustedCaller) {
   if (!aContext) {
@@ -3758,7 +3834,7 @@ mozilla::ipc::IPCResult ContentChild::RecvWindowPostMessage(
 mozilla::ipc::IPCResult ContentChild::RecvCommitBrowsingContextTransaction(
     BrowsingContext* aContext, BrowsingContext::Transaction&& aTransaction) {
   if (aContext) {
-    aTransaction.Apply(aContext);
+    aTransaction.Apply(aContext, nullptr);
   }
   return IPC_OK();
 }

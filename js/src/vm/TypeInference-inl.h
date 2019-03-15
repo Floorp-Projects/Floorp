@@ -164,29 +164,32 @@ inline TypeSet::Type TypeSet::GetMaybeUntrackedValueType(const Value& val) {
   return IsUntrackedValue(val) ? UnknownType() : GetValueType(val);
 }
 
-inline TypeFlags PrimitiveTypeFlag(JSValueType type) {
+inline TypeFlags PrimitiveTypeFlag(ValueType type) {
   switch (type) {
-    case JSVAL_TYPE_UNDEFINED:
+    case ValueType::Undefined:
       return TYPE_FLAG_UNDEFINED;
-    case JSVAL_TYPE_NULL:
+    case ValueType::Null:
       return TYPE_FLAG_NULL;
-    case JSVAL_TYPE_BOOLEAN:
+    case ValueType::Boolean:
       return TYPE_FLAG_BOOLEAN;
-    case JSVAL_TYPE_INT32:
+    case ValueType::Int32:
       return TYPE_FLAG_INT32;
-    case JSVAL_TYPE_DOUBLE:
+    case ValueType::Double:
       return TYPE_FLAG_DOUBLE;
-    case JSVAL_TYPE_STRING:
+    case ValueType::String:
       return TYPE_FLAG_STRING;
-    case JSVAL_TYPE_SYMBOL:
+    case ValueType::Symbol:
       return TYPE_FLAG_SYMBOL;
-    case JSVAL_TYPE_BIGINT:
+    case ValueType::BigInt:
       return TYPE_FLAG_BIGINT;
-    case JSVAL_TYPE_MAGIC:
+    case ValueType::Magic:
       return TYPE_FLAG_LAZYARGS;
-    default:
-      MOZ_CRASH("Bad JSValueType");
+    case ValueType::PrivateGCThing:
+    case ValueType::Object:
+      break;
   }
+
+  MOZ_CRASH("Bad ValueType");
 }
 
 inline JSValueType TypeFlagPrimitive(TypeFlags flags) {

@@ -171,10 +171,10 @@ const char* const ApplicationReputationService::kBinaryFileExtensions[] = {
     //".app", exec  // Executable application
     ".applescript",
     //".application", exec // MS ClickOnce
-    ".appref-ms",    // MS ClickOnce
+    ".appref-ms",  // MS ClickOnce
     //".arc",
     //".arj",
-    ".as",   // Mac archive
+    ".as",  // Mac archive
     //".asp", exec  // Windows Server script
     ".asx",  // Windows Media Player
     //".b64",
@@ -197,13 +197,13 @@ const char* const ApplicationReputationService::kBinaryFileExtensions[] = {
     ".cfg",        // Windows
     ".chi",        // Windows Help
     //".chm", exec // Windows Help
-    ".class",      // Java
+    ".class",  // Java
     //".cmd", exec // Windows executable
     //".com", exec // Windows executable
-    ".command",    // Mac script
-    ".cpgz",       // Mac archive
-    ".cpi",        // Control Panel Item. Executable used for adding icons
-                   // to Control Panel
+    ".command",  // Mac script
+    ".cpgz",     // Mac archive
+    ".cpi",      // Control Panel Item. Executable used for adding icons
+                 // to Control Panel
     //".cpio",
     //".cpl", exec  // Windows executable
     //".crt", exec  // Windows signed certificate
@@ -236,7 +236,7 @@ const char* const ApplicationReputationService::kBinaryFileExtensions[] = {
     ".eml",         // MS Outlook
     //".exe", exec // Windows executable
     //".fat",
-    ".fon",     // Windows font
+    ".fon",  // Windows font
     //".fxp", exec // MS FoxPro
     ".gadget",  // Windows
     //".gif",
@@ -245,7 +245,7 @@ const char* const ApplicationReputationService::kBinaryFileExtensions[] = {
     ".gzip",  // Linux archive (gzip)
     ".hfs",   // Mac disk image
     //".hlp", exec // Windows Help
-    ".hqx",   // Mac archive
+    ".hqx",  // Mac archive
     //".hta", exec // HTML trusted application
     ".htm", ".html",
     ".htt",  // MS HTML template
@@ -253,7 +253,7 @@ const char* const ApplicationReputationService::kBinaryFileExtensions[] = {
     ".img",      // Mac disk image
     ".imgpart",  // Mac disk image
     //".inf", exec // Windows installer
-    ".ini",      // Generic config file
+    ".ini",  // Generic config file
     //".ins", exec // IIS config
     //".inx", // InstallShield
     ".iso",  // CD image
@@ -293,18 +293,18 @@ const char* const ApplicationReputationService::kBinaryFileExtensions[] = {
     //".mdt", exec  // MS Access
     //".mdw", exec  // MS Access
     //".mdz", exec  // MS Access
-    ".mht",       // MS HTML
-    ".mhtml",     // MS HTML
-    ".mim",       // MS Mail
+    ".mht",    // MS HTML
+    ".mhtml",  // MS HTML
+    ".mim",    // MS Mail
     //".mkv",
     ".mmc",  // MS Office
     ".mof",  // Windows
     //".mov",
     //".mp3",
     //".mp4",
-    ".mpkg",     // Mac installer
+    ".mpkg",  // Mac installer
     //".msc", exec  // Windows executable
-    ".msg",      // MS Outlook
+    ".msg",  // MS Outlook
     //".msh", exec  // Windows shell
     //".msh1", exec // Windows shell
     //".msh1xml", exec  // Windows shell
@@ -314,9 +314,9 @@ const char* const ApplicationReputationService::kBinaryFileExtensions[] = {
     //".msi", exec  // Windows installer
     //".msp", exec  // Windows installer
     //".mst", exec  // Windows installer
-    ".ndif",     // Mac disk image
+    ".ndif",  // Mac disk image
     //".ntfs", // 7z
-    ".ocx",   // ActiveX
+    ".ocx",  // ActiveX
     //".ops", exec  // MS Office
     ".osas",  // AppleScript
     ".osax",  // AppleScript
@@ -331,7 +331,7 @@ const char* const ApplicationReputationService::kBinaryFileExtensions[] = {
     ".partial",  // Downloads
     ".pax",      // Mac archive
     //".pcd", exec     // Microsoft Visual Test
-    ".pdf",      // Adobe Acrobat
+    ".pdf",  // Adobe Acrobat
     //".pea",
     ".pet",  // Linux package
     //".pif", exec // Windows
@@ -339,16 +339,16 @@ const char* const ApplicationReputationService::kBinaryFileExtensions[] = {
     ".pl",   // Perl script
     //".plg", exec // MS Visual Studio
     //".png",
-    ".pot",     // MS PowerPoint
-    ".potm",    // MS PowerPoint
-    ".potx",    // MS PowerPoint
-    ".ppam",    // MS PowerPoint
-    ".pps",     // MS PowerPoint
-    ".ppsm",    // MS PowerPoint
-    ".ppsx",    // MS PowerPoint
-    ".ppt",     // MS PowerPoint
-    ".pptm",    // MS PowerPoint
-    ".pptx",    // MS PowerPoint
+    ".pot",   // MS PowerPoint
+    ".potm",  // MS PowerPoint
+    ".potx",  // MS PowerPoint
+    ".ppam",  // MS PowerPoint
+    ".pps",   // MS PowerPoint
+    ".ppsm",  // MS PowerPoint
+    ".ppsx",  // MS PowerPoint
+    ".ppt",   // MS PowerPoint
+    ".pptm",  // MS PowerPoint
+    ".pptx",  // MS PowerPoint
     //".prf", exec // MS Outlook
     //".prg", exec // Windows
     ".ps1",     // Windows shell
@@ -358,12 +358,12 @@ const char* const ApplicationReputationService::kBinaryFileExtensions[] = {
     ".psc1",    // Windows shell
     ".psc2",    // Windows shell
     //".pst", exec // MS Outlook
-    ".pup",     // Linux package
-    ".py",      // Python script
-    ".pyc",     // Python binary
-    ".pyd",     // Equivalent of a DLL, for python libraries
-    ".pyo",     // Compiled python code
-    ".pyw",     // Python GUI
+    ".pup",  // Linux package
+    ".py",   // Python script
+    ".pyc",  // Python binary
+    ".pyd",  // Equivalent of a DLL, for python libraries
+    ".pyo",  // Compiled python code
+    ".pyw",  // Python GUI
     //".quad",
     //".r00",
     //".r01",
@@ -396,7 +396,7 @@ const char* const ApplicationReputationService::kBinaryFileExtensions[] = {
     //".r28",
     //".r29",
     //".rar",
-    ".rb",    // Ruby script
+    ".rb",  // Ruby script
     //".reg", exec  // Windows Registry
     ".rels",  // MS Office
     //".rgs", // Windows Registry
@@ -404,28 +404,28 @@ const char* const ApplicationReputationService::kBinaryFileExtensions[] = {
     ".rtf",  // MS Office
     //".run", // Linux shell
     //".scf", exec         // Windows shell
-    ".scpt",               // AppleScript
-    ".scptd",              // AppleScript
+    ".scpt",   // AppleScript
+    ".scptd",  // AppleScript
     //".scr", exec         // Windows
     //".sct", exec         // Windows shell
-    ".search-ms",          // Windows
-    ".seplugin",           // AppleScript
+    ".search-ms",  // Windows
+    ".seplugin",   // AppleScript
     //".settingcontent-ms", exec // Windows settings
-    ".sh",                 // Linux shell
-    ".shar",               // Linux shell
+    ".sh",    // Linux shell
+    ".shar",  // Linux shell
     //".shb", exec         // Windows
     //".shs", exec         // Windows shell
-    ".sht",                // HTML
-    ".shtm",               // HTML
-    ".shtml",              // HTML
-    ".sldm",               // MS PowerPoint
-    ".sldx",               // MS PowerPoint
-    ".slk",                // MS Excel
-    ".slp",                // Linux package
-    ".smi",                // Mac disk image
-    ".sparsebundle",       // Mac disk image
-    ".sparseimage",        // Mac disk image
-    ".spl",                // Adobe Flash
+    ".sht",           // HTML
+    ".shtm",          // HTML
+    ".shtml",         // HTML
+    ".sldm",          // MS PowerPoint
+    ".sldx",          // MS PowerPoint
+    ".slk",           // MS Excel
+    ".slp",           // Linux package
+    ".smi",           // Mac disk image
+    ".sparsebundle",  // Mac disk image
+    ".sparseimage",   // Mac disk image
+    ".spl",           // Adobe Flash
     //".squashfs",
     ".svg",
     ".swf",   // Adobe Flash
@@ -455,9 +455,9 @@ const char* const ApplicationReputationService::kBinaryFileExtensions[] = {
     //".vbs", exec // Visual Basic script
     //".vbscript", // Visual Basic script
     //".vdx", exec // MS Visio
-    ".vhd",       // Windows virtual hard drive
-    ".vhdx",      // Windows virtual hard drive
-    ".vmdk",      // VMware virtual disk
+    ".vhd",   // Windows virtual hard drive
+    ".vhdx",  // Windows virtual hard drive
+    ".vmdk",  // VMware virtual disk
     //".vsd", exec  // MS Visio
     //".vsdm", exec // MS Visio
     //".vsdx", exec // MS Visio
@@ -1746,21 +1746,17 @@ static nsresult AppendSegmentToString(nsIInputStream* inputStream,
 }
 
 NS_IMETHODIMP
-PendingLookup::OnDataAvailable(nsIRequest* aRequest,
-                               nsIInputStream* aStream, uint64_t offset,
-                               uint32_t count) {
+PendingLookup::OnDataAvailable(nsIRequest* aRequest, nsIInputStream* aStream,
+                               uint64_t offset, uint32_t count) {
   uint32_t read;
   return aStream->ReadSegments(AppendSegmentToString, &mResponse, count, &read);
 }
 
 NS_IMETHODIMP
-PendingLookup::OnStartRequest(nsIRequest* aRequest) {
-  return NS_OK;
-}
+PendingLookup::OnStartRequest(nsIRequest* aRequest) { return NS_OK; }
 
 NS_IMETHODIMP
-PendingLookup::OnStopRequest(nsIRequest* aRequest,
-                             nsresult aResult) {
+PendingLookup::OnStopRequest(nsIRequest* aRequest, nsresult aResult) {
   NS_ENSURE_STATE(mCallback);
 
   if (aResult != NS_ERROR_NET_TIMEOUT) {
@@ -1853,9 +1849,8 @@ nsresult PendingLookup::OnStopRequestInternal(nsIRequest* aRequest,
   Accumulate(mozilla::Telemetry::APPLICATION_REPUTATION_SERVER_VERDICT,
              std::min<uint32_t>(response.verdict(), 7));
   const char* ext = GetFileExt(mFileName);
-  AccumulateCategoricalKeyed(
-      nsCString(ext),
-      VerdictToLabel(std::min<uint32_t>(response.verdict(), 7)));
+  AccumulateCategoricalKeyed(nsCString(ext), VerdictToLabel(std::min<uint32_t>(
+                                                 response.verdict(), 7)));
   switch (response.verdict()) {
     case safe_browsing::ClientDownloadResponse::DANGEROUS:
       aVerdict = nsIApplicationReputationService::VERDICT_DANGEROUS;

@@ -12,14 +12,11 @@
 
 using namespace mozilla;
 
-nsresult nsWinRemoteClient::Init() {
-  return NS_OK;
-}
+nsresult nsWinRemoteClient::Init() { return NS_OK; }
 
-nsresult nsWinRemoteClient::SendCommandLine(const char *aProgram, const char *aProfile,
-                                            int32_t argc, char **argv,
-                                            const char *aDesktopStartupID,
-                                            char **aResponse, bool *aSucceeded) {
+nsresult nsWinRemoteClient::SendCommandLine(
+    const char *aProgram, const char *aProfile, int32_t argc, char **argv,
+    const char *aDesktopStartupID, char **aResponse, bool *aSucceeded) {
   *aSucceeded = false;
 
   nsString className;

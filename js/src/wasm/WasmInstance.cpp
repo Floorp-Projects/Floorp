@@ -766,19 +766,19 @@ void Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
           // Instance so that future Table.get()s produce the same
           // function object as was imported.
           WasmInstanceObject* calleeInstanceObj =
-            ExportedFunctionToInstanceObject(fun);
+              ExportedFunctionToInstanceObject(fun);
           Instance& calleeInstance = calleeInstanceObj->instance();
           Tier calleeTier = calleeInstance.code().bestTier();
           const CodeRange& calleeCodeRange =
-            calleeInstanceObj->getExportedFunctionCodeRange(fun, calleeTier);
+              calleeInstanceObj->getExportedFunctionCodeRange(fun, calleeTier);
           void* code = calleeInstance.codeBase(calleeTier) +
-            calleeCodeRange.funcTableEntry();
+                       calleeCodeRange.funcTableEntry();
           table.setAnyFunc(dstOffset + i, code, &calleeInstance);
           continue;
         }
       }
-      void* code =
-        codeBaseTier + codeRanges[funcToCodeRange[funcIndex]].funcTableEntry();
+      void* code = codeBaseTier +
+                   codeRanges[funcToCodeRange[funcIndex]].funcTableEntry();
       table.setAnyFunc(dstOffset + i, code, this);
     }
   }

@@ -198,6 +198,7 @@ class ContentChild final : public PContentChild,
                                     const IPCTabContext& aContext,
                                     const uint32_t& aChromeFlags,
                                     const ContentParentId& aCpID,
+                                    BrowsingContext* aBrowsingContext,
                                     const bool& aIsForBrowser);
 
   bool DeallocPBrowserChild(PBrowserChild*);
@@ -515,12 +516,14 @@ class ContentChild final : public PContentChild,
                                const IPCTabContext& context,
                                const uint32_t& chromeFlags,
                                const ContentParentId& aCpID,
+                               BrowsingContext* aBrowsingContext,
                                const bool& aIsForBrowser);
 
   virtual mozilla::ipc::IPCResult RecvPBrowserConstructor(
       PBrowserChild* aCctor, const TabId& aTabId, const TabId& aSameTabGroupAs,
       const IPCTabContext& aContext, const uint32_t& aChromeFlags,
-      const ContentParentId& aCpID, const bool& aIsForBrowser) override;
+      const ContentParentId& aCpID, BrowsingContext* aBrowsingContext,
+      const bool& aIsForBrowser) override;
 
   FORWARD_SHMEM_ALLOCATOR_TO(PContentChild)
 
@@ -709,6 +712,15 @@ class ContentChild final : public PContentChild,
       const Message& aMsg) override;
 
   virtual void OnChannelReceivedMessage(const Message& aMsg) override;
+
+  mozilla::ipc::IPCResult RecvAttachBrowsingContext(
+      BrowsingContext::IPCInitializer&& aInit);
+
+  mozilla::ipc::IPCResult RecvDetachBrowsingContext(BrowsingContext* aContext,
+                                                    bool aMoveToBFCache);
+
+  mozilla::ipc::IPCResult RecvRegisterBrowsingContextGroup(
+      nsTArray<BrowsingContext::IPCInitializer>&& aInits);
 
   mozilla::ipc::IPCResult RecvWindowClose(BrowsingContext* aContext,
                                           bool aTrustedCaller);

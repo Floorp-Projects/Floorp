@@ -226,12 +226,9 @@ template <class ObjectSubclass>
   return true;
 }
 
-inline AutoRooterGetterSetter::Inner::Inner(uint8_t attrs,
-                                            GetterOp* pgetter_,
+inline AutoRooterGetterSetter::Inner::Inner(uint8_t attrs, GetterOp* pgetter_,
                                             SetterOp* psetter_)
-    : attrs(attrs),
-      pgetter(pgetter_),
-      psetter(psetter_) {}
+    : attrs(attrs), pgetter(pgetter_), psetter(psetter_) {}
 
 inline AutoRooterGetterSetter::AutoRooterGetterSetter(
     JSContext* cx, uint8_t attrs, GetterOp* pgetter,

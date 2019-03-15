@@ -107,8 +107,7 @@ void SVGElement::DidAnimateClass() {
   // For Servo, snapshot the element before we change it.
   nsIPresShell* shell = OwnerDoc()->GetShell();
   if (shell) {
-    nsPresContext* presContext = shell->GetPresContext();
-    if (presContext) {
+    if (nsPresContext* presContext = shell->GetPresContext()) {
       presContext->RestyleManager()->ClassAttributeWillBeChangedBySMIL(this);
     }
   }
@@ -120,8 +119,10 @@ void SVGElement::DidAnimateClass() {
   }
   mClassAnimAttr->ParseAtomArray(src);
 
+  // FIXME(emilio): This re-selector-matches, but we do the snapshot stuff right
+  // above... Is this needed anymore?
   if (shell) {
-    shell->RestyleForAnimation(this, eRestyle_Self);
+    shell->RestyleForAnimation(this, StyleRestyleHint_RESTYLE_SELF);
   }
 }
 
@@ -2004,7 +2005,7 @@ void SVGElement::DidAnimateTransformList(int32_t aModType) {
     // anyway), so we need to post the change event ourself.
     nsChangeHint changeHint = GetAttributeChangeHint(transformAttr, aModType);
     if (changeHint) {
-      nsLayoutUtils::PostRestyleEvent(this, nsRestyleHint(0), changeHint);
+      nsLayoutUtils::PostRestyleEvent(this, RestyleHint{0}, changeHint);
     }
   }
 }

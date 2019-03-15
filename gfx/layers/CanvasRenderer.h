@@ -45,7 +45,7 @@ struct CanvasInitializeData final {
   void* mDidTransCallbackData = nullptr;
 
   // The size of the canvas content
-  gfx::IntSize mSize = {0,0};
+  gfx::IntSize mSize = {0, 0};
 
   // Whether the canvas drawingbuffer has an alpha channel.
   bool mHasAlpha = false;

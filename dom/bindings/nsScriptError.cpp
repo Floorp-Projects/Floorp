@@ -406,15 +406,17 @@ bool nsScriptErrorBase::ComputeIsFromPrivateWindow(
 NS_IMPL_ISUPPORTS(nsScriptError, nsIConsoleMessage, nsIScriptError)
 
 nsScriptErrorNote::nsScriptErrorNote()
-: mMessage(), mSourceName(), mSourceId(0), mLineNumber(0), mColumnNumber(0) {}
+    : mMessage(),
+      mSourceName(),
+      mSourceId(0),
+      mLineNumber(0),
+      mColumnNumber(0) {}
 
 nsScriptErrorNote::~nsScriptErrorNote() {}
 
 void nsScriptErrorNote::Init(const nsAString& message,
-                             const nsAString& sourceName,
-                             uint32_t sourceId,
-                             uint32_t lineNumber,
-                             uint32_t columnNumber) {
+                             const nsAString& sourceName, uint32_t sourceId,
+                             uint32_t lineNumber, uint32_t columnNumber) {
   mMessage.Assign(message);
   AssignSourceNameHelper(mSourceName, sourceName);
   mSourceId = sourceId;

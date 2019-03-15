@@ -1087,8 +1087,7 @@ void HttpChannelParent::DivertOnDataAvailable(const nsCString& data,
 
   AutoEventEnqueuer ensureSerialDispatch(mEventQ);
 
-  rv = mParentListener->OnDataAvailable(mChannel, stringStream, offset,
-                                        count);
+  rv = mParentListener->OnDataAvailable(mChannel, stringStream, offset, count);
   stringStream->Close();
   if (NS_FAILED(rv)) {
     if (mChannel) {
@@ -1476,8 +1475,7 @@ HttpChannelParent::OnStartRequest(nsIRequest* aRequest) {
 }
 
 NS_IMETHODIMP
-HttpChannelParent::OnStopRequest(nsIRequest* aRequest,
-                                 nsresult aStatusCode) {
+HttpChannelParent::OnStopRequest(nsIRequest* aRequest, nsresult aStatusCode) {
   LOG(("HttpChannelParent::OnStopRequest: [this=%p aRequest=%p status=%" PRIx32
        "]\n",
        this, aRequest, static_cast<uint32_t>(aStatusCode)));
@@ -1850,12 +1848,16 @@ HttpChannelParent::SetClassifierMatchedInfo(const nsACString& aList,
 }
 
 NS_IMETHODIMP
-HttpChannelParent::NotifyTrackingResource(bool aIsThirdParty) {
-  LOG(("HttpChannelParent::NotifyTrackingResource thirdparty=%d [this=%p]\n",
-       static_cast<int>(aIsThirdParty), this));
+HttpChannelParent::NotifyClassificationFlags(uint32_t aClassificationFlags,
+                                             bool aIsThirdParty) {
+  LOG(
+      ("HttpChannelParent::NotifyClassificationFlags "
+       "classificationFlags=%" PRIu32 ", thirdparty=%d [this=%p]\n",
+       aClassificationFlags, static_cast<int>(aIsThirdParty), this));
   if (!mIPCClosed) {
     MOZ_ASSERT(mBgParent);
-    Unused << mBgParent->OnNotifyTrackingResource(aIsThirdParty);
+    Unused << mBgParent->OnNotifyClassificationFlags(aClassificationFlags,
+                                                     aIsThirdParty);
   }
   return NS_OK;
 }

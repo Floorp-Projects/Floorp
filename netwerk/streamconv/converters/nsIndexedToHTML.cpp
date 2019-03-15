@@ -641,8 +641,7 @@ nsresult nsIndexedToHTML::DoOnStartRequest(nsIRequest* request,
 }
 
 NS_IMETHODIMP
-nsIndexedToHTML::OnStopRequest(nsIRequest* request,
-                               nsresult aStatus) {
+nsIndexedToHTML::OnStopRequest(nsIRequest* request, nsresult aStatus) {
   if (NS_SUCCEEDED(aStatus)) {
     nsCString buffer;
     buffer.AssignLiteral("</tbody></table></body></html>\n");
@@ -662,14 +661,12 @@ nsresult nsIndexedToHTML::SendToListener(nsIRequest* aRequest,
   nsCOMPtr<nsIInputStream> inputData;
   nsresult rv = NS_NewCStringInputStream(getter_AddRefs(inputData), aBuffer);
   NS_ENSURE_SUCCESS(rv, rv);
-  return mListener->OnDataAvailable(aRequest, inputData, 0,
-                                    aBuffer.Length());
+  return mListener->OnDataAvailable(aRequest, inputData, 0, aBuffer.Length());
 }
 
 NS_IMETHODIMP
-nsIndexedToHTML::OnDataAvailable(nsIRequest* aRequest,
-                                 nsIInputStream* aInput, uint64_t aOffset,
-                                 uint32_t aCount) {
+nsIndexedToHTML::OnDataAvailable(nsIRequest* aRequest, nsIInputStream* aInput,
+                                 uint64_t aOffset, uint32_t aCount) {
   return mParser->OnDataAvailable(aRequest, aInput, aOffset, aCount);
 }
 

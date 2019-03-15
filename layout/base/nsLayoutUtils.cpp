@@ -7934,12 +7934,10 @@ void nsLayoutUtils::DeregisterImageRequest(nsPresContext* aPresContext,
 
 /* static */
 void nsLayoutUtils::PostRestyleEvent(Element* aElement,
-                                     nsRestyleHint aRestyleHint,
+                                     RestyleHint aRestyleHint,
                                      nsChangeHint aMinChangeHint) {
-  Document* doc = aElement->GetComposedDoc();
-  if (doc) {
-    RefPtr<nsPresContext> presContext = doc->GetPresContext();
-    if (presContext) {
+  if (Document* doc = aElement->GetComposedDoc()) {
+    if (nsPresContext* presContext = doc->GetPresContext()) {
       presContext->RestyleManager()->PostRestyleEvent(aElement, aRestyleHint,
                                                       aMinChangeHint);
     }

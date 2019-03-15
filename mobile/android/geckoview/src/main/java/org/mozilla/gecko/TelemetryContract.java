@@ -88,6 +88,9 @@ public interface TelemetryContract {
         // Set default search engine.
         SEARCH_SET_DEFAULT("search.setdefault.1"),
 
+        // Searches initiated from the widget.
+        SEARCH_WIDGET("search.widget.1"),
+
         // Sharing content.
         SHARE("share.1"),
 

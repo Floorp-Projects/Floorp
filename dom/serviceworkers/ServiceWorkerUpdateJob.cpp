@@ -363,7 +363,8 @@ void ServiceWorkerUpdateJob::ComparisonResult(nsresult aStatus,
   }
 
   nsCOMPtr<nsIURI> scopeURI;
-  rv = NS_NewURI(getter_AddRefs(scopeURI), mRegistration->Scope(), nullptr, scriptURI);
+  rv = NS_NewURI(getter_AddRefs(scopeURI), mRegistration->Scope(), nullptr,
+                 scriptURI);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     FailUpdateJob(NS_ERROR_FAILURE);
     return;

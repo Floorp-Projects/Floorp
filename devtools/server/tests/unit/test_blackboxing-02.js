@@ -33,19 +33,9 @@ const BLACK_BOXED_URL = "http://example.com/blackboxme.js";
 const SOURCE_URL = "http://example.com/source.js";
 
 function test_black_box() {
-  gClient.addOneTimeListener("paused", function(event, packet) {
-    gThreadClient.eval(packet.frame.actor, "doStuff", function(response) {
-      gThreadClient.addOneTimeListener("paused", function(event, packet) {
-        const obj = gThreadClient.pauseGrip(packet.why.frameFinished.return);
-        obj.getDefinitionSite(runWithSource);
-      });
-    });
-
-    function runWithSource(packet) {
-      const source = gThreadClient.source(packet.source);
-      gThreadClient.setBreakpoint({ sourceUrl: source.url, line: 2 }, {});
-      gThreadClient.resume(test_black_box_breakpoint);
-    }
+  gClient.addOneTimeListener("paused", async function(event, packet) {
+    gThreadClient.setBreakpoint({ sourceUrl: BLACK_BOXED_URL, line: 2 }, {});
+    gThreadClient.resume(test_black_box_breakpoint);
   });
 
   /* eslint-disable no-multi-spaces, no-undef */

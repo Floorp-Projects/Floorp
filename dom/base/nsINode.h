@@ -1078,10 +1078,10 @@ class nsINode : public mozilla::dom::EventTarget {
   }
 
   void UnsetFlags(FlagsType aFlagsToUnset) {
-    NS_ASSERTION(!(aFlagsToUnset & (NODE_IS_ANONYMOUS_ROOT |
-                                    NODE_HAS_BEEN_IN_UA_WIDGET |
-                                    NODE_IS_NATIVE_ANONYMOUS_ROOT)),
-                 "Trying to unset write-only flags");
+    NS_ASSERTION(
+        !(aFlagsToUnset & (NODE_IS_ANONYMOUS_ROOT | NODE_HAS_BEEN_IN_UA_WIDGET |
+                           NODE_IS_NATIVE_ANONYMOUS_ROOT)),
+        "Trying to unset write-only flags");
     nsWrapperCache::UnsetFlags(aFlagsToUnset);
   }
 

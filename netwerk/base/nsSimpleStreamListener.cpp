@@ -27,10 +27,8 @@ nsSimpleStreamListener::OnStartRequest(nsIRequest *aRequest) {
 }
 
 NS_IMETHODIMP
-nsSimpleStreamListener::OnStopRequest(nsIRequest *request,
-                                      nsresult aStatus) {
-  return mObserver ? mObserver->OnStopRequest(request, aStatus)
-                   : NS_OK;
+nsSimpleStreamListener::OnStopRequest(nsIRequest *request, nsresult aStatus) {
+  return mObserver ? mObserver->OnStopRequest(request, aStatus) : NS_OK;
 }
 
 //

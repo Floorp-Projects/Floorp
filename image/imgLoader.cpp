@@ -2693,8 +2693,7 @@ ProxyListener::OnStartRequest(nsIRequest* aRequest) {
 }
 
 NS_IMETHODIMP
-ProxyListener::OnStopRequest(nsIRequest* aRequest,
-                             nsresult status) {
+ProxyListener::OnStopRequest(nsIRequest* aRequest, nsresult status) {
   if (!mDestListener) {
     return NS_ERROR_FAILURE;
   }
@@ -2705,15 +2704,13 @@ ProxyListener::OnStopRequest(nsIRequest* aRequest,
 /** nsIStreamListener methods **/
 
 NS_IMETHODIMP
-ProxyListener::OnDataAvailable(nsIRequest* aRequest,
-                               nsIInputStream* inStr, uint64_t sourceOffset,
-                               uint32_t count) {
+ProxyListener::OnDataAvailable(nsIRequest* aRequest, nsIInputStream* inStr,
+                               uint64_t sourceOffset, uint32_t count) {
   if (!mDestListener) {
     return NS_ERROR_FAILURE;
   }
 
-  return mDestListener->OnDataAvailable(aRequest, inStr, sourceOffset,
-                                        count);
+  return mDestListener->OnDataAvailable(aRequest, inStr, sourceOffset, count);
 }
 
 /** nsThreadRetargetableStreamListener methods **/
@@ -2919,8 +2916,7 @@ imgCacheValidator::OnStartRequest(nsIRequest* aRequest) {
 }
 
 NS_IMETHODIMP
-imgCacheValidator::OnStopRequest(nsIRequest* aRequest,
-                                 nsresult status) {
+imgCacheValidator::OnStopRequest(nsIRequest* aRequest, nsresult status) {
   // Be sure we've released the document that we may have been holding on to.
   mContext = nullptr;
 
@@ -2934,9 +2930,8 @@ imgCacheValidator::OnStopRequest(nsIRequest* aRequest,
 /** nsIStreamListener methods **/
 
 NS_IMETHODIMP
-imgCacheValidator::OnDataAvailable(nsIRequest* aRequest,
-                                   nsIInputStream* inStr, uint64_t sourceOffset,
-                                   uint32_t count) {
+imgCacheValidator::OnDataAvailable(nsIRequest* aRequest, nsIInputStream* inStr,
+                                   uint64_t sourceOffset, uint32_t count) {
   if (!mDestListener) {
     // XXX see bug 113959
     uint32_t _retval;
@@ -2944,8 +2939,7 @@ imgCacheValidator::OnDataAvailable(nsIRequest* aRequest,
     return NS_OK;
   }
 
-  return mDestListener->OnDataAvailable(aRequest, inStr, sourceOffset,
-                                        count);
+  return mDestListener->OnDataAvailable(aRequest, inStr, sourceOffset, count);
 }
 
 /** nsIThreadRetargetableStreamListener methods **/

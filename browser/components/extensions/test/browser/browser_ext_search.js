@@ -2,8 +2,12 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
+const {AddonTestUtils} = ChromeUtils.import("resource://testing-common/AddonTestUtils.jsm");
+
 const SEARCH_TERM = "test";
 const SEARCH_URL = "https://localhost/?q={searchTerms}";
+
+AddonTestUtils.initMochitest(this);
 
 add_task(async function test_search() {
   async function background(SEARCH_TERM) {
@@ -57,6 +61,7 @@ add_task(async function test_search() {
     useAddonManager: "temporary",
   });
   await extension.startup();
+  await AddonTestUtils.waitForSearchProviderStartup(extension);
 
   let addonEngines = await extension.awaitMessage("engines");
   let engines = (await Services.search.getEngines()).filter(engine => !engine.hidden);

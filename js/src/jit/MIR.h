@@ -115,11 +115,11 @@ static inline MIRType MIRTypeFromValue(const js::Value& vp) {
    */                                                                          \
   _(GuardRangeBailouts)                                                        \
                                                                                \
-  /* Some instructions have uses that aren't directly represented in the graph,\
-   * and need to be handled specially. As an example, this is used to keep the \
-   * flagged instruction in resume points, not substituting with an            \
-   * UndefinedValue. This can be used by call inlining when a function argument\
-   * is not used by the inlined instructions.                                  \
+  /* Some instructions have uses that aren't directly represented in the       \
+   * graph, and need to be handled specially. As an example, this is used to   \
+   * keep the flagged instruction in resume points, not substituting with an   \
+   * UndefinedValue. This can be used by call inlining when a function         \
+   * argument is not used by the inlined instructions.                         \
    */                                                                          \
   _(ImplicitlyUsed)                                                            \
                                                                                \
@@ -1572,12 +1572,13 @@ class MWasmNullConstant : public MNullaryInstruction {
 };
 
 class MIsNullPointer : public MUnaryInstruction, public NoTypePolicy::Data {
-  explicit MIsNullPointer(MDefinition* value) : MUnaryInstruction(classOpcode,
-                                                                  value) {
+  explicit MIsNullPointer(MDefinition* value)
+      : MUnaryInstruction(classOpcode, value) {
     MOZ_ASSERT(value->type() == MIRType::Pointer);
     setResultType(MIRType::Boolean);
     setMovable();
   }
+
  public:
   INSTRUCTION_HEADER(IsNullPointer);
 
@@ -3218,7 +3219,8 @@ class MCompare : public MBinaryInstruction, public ComparePolicy::Data {
       : MCompare(left, right, jsop) {
     MOZ_ASSERT(compareType == Compare_Int32 || compareType == Compare_UInt32 ||
                compareType == Compare_Int64 || compareType == Compare_UInt64 ||
-               compareType == Compare_Double || compareType == Compare_Float32 ||
+               compareType == Compare_Double ||
+               compareType == Compare_Float32 ||
                compareType == Compare_RefOrNull);
     compareType_ = compareType;
     operandMightEmulateUndefined_ = false;
@@ -11903,7 +11905,7 @@ class MWasmStoreGlobalCell : public MBinaryInstruction,
 class MWasmDerivedPointer : public MUnaryInstruction,
                             public NoTypePolicy::Data {
   MWasmDerivedPointer(MDefinition* base, size_t offset)
-    : MUnaryInstruction(classOpcode, base), offset_(offset) {
+      : MUnaryInstruction(classOpcode, base), offset_(offset) {
     MOZ_ASSERT(offset <= INT32_MAX);
     setResultType(MIRType::Pointer);
     setMovable();
@@ -11927,8 +11929,7 @@ class MWasmDerivedPointer : public MUnaryInstruction,
   ALLOW_CLONE(MWasmDerivedPointer)
 };
 
-class MWasmLoadRef : public MUnaryInstruction,
-                     public NoTypePolicy::Data {
+class MWasmLoadRef : public MUnaryInstruction, public NoTypePolicy::Data {
   AliasSet::Flag aliasSet_;
 
   explicit MWasmLoadRef(MDefinition* valueAddr, AliasSet::Flag aliasSet)
@@ -11950,13 +11951,12 @@ class MWasmLoadRef : public MUnaryInstruction,
   ALLOW_CLONE(MWasmLoadRef)
 };
 
-class MWasmStoreRef : public MAryInstruction<3>,
-                      public NoTypePolicy::Data {
+class MWasmStoreRef : public MAryInstruction<3>, public NoTypePolicy::Data {
   AliasSet::Flag aliasSet_;
 
   MWasmStoreRef(MDefinition* tls, MDefinition* valueAddr, MDefinition* value,
                 AliasSet::Flag aliasSet)
-    : MAryInstruction<3>(classOpcode), aliasSet_(aliasSet) {
+      : MAryInstruction<3>(classOpcode), aliasSet_(aliasSet) {
     MOZ_ASSERT(valueAddr->type() == MIRType::Pointer);
     MOZ_ASSERT(value->type() == MIRType::RefOrNull);
     initOperand(0, tls);
@@ -11969,9 +11969,7 @@ class MWasmStoreRef : public MAryInstruction<3>,
   TRIVIAL_NEW_WRAPPERS
   NAMED_OPERANDS((0, tls), (1, valueAddr), (2, value))
 
-  AliasSet getAliasSet() const override {
-    return AliasSet::Store(aliasSet_);
-  }
+  AliasSet getAliasSet() const override { return AliasSet::Store(aliasSet_); }
 };
 
 class MWasmParameter : public MNullaryInstruction {
@@ -12033,7 +12031,9 @@ class MWasmCall final : public MVariadicInstruction, public NoTypePolicy::Data {
 
   MWasmCall(const wasm::CallSiteDesc& desc, const wasm::CalleeDesc& callee,
             uint32_t stackArgAreaSizeUnaligned)
-      : MVariadicInstruction(classOpcode), desc_(desc), callee_(callee),
+      : MVariadicInstruction(classOpcode),
+        desc_(desc),
+        callee_(callee),
         stackArgAreaSizeUnaligned_(stackArgAreaSizeUnaligned) {}
 
  public:

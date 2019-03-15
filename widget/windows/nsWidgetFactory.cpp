@@ -48,9 +48,7 @@ NS_IMPL_COMPONENT_FACTORY(nsIClipboard) {
   return inst.forget().downcast<nsISupports>();
 }
 
-nsresult nsWidgetWindowsModuleCtor() {
-  return nsAppShellInit();
-}
+nsresult nsWidgetWindowsModuleCtor() { return nsAppShellInit(); }
 
 void nsWidgetWindowsModuleDtor() {
   // Shutdown all XP level widget classes.

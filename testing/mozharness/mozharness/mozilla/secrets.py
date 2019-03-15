@@ -56,7 +56,7 @@ class SecretsMixin(object):
         }
 
         for sf in secret_files:
-            filename = sf['filename']
+            filename = os.path.abspath(sf['filename'])
             secret_name = sf['secret_name'] % subst
             min_scm_level = sf.get('min_scm_level', 0)
             if scm_level < min_scm_level:

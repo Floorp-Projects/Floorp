@@ -10,6 +10,11 @@
 #include "nsComponentManagerUtils.h"
 #include "mozilla/ClearOnShutdown.h"
 
+extern mozilla::LazyLogModule gTextTrackLog;
+
+#define LOG(msg, ...) \
+  MOZ_LOG(gTextTrackLog, LogLevel::Debug, ("TextTrackCue=%p, " msg, this, ##__VA_ARGS__))
+
 namespace mozilla {
 namespace dom {
 
@@ -52,6 +57,7 @@ TextTrackCue::TextTrackCue(nsPIDOMWindowInner* aOwnerWindow, double aStartTime,
       mHaveStartedWatcher(false),
       mWatchManager(
           this, GetOwnerGlobal()->AbstractMainThreadFor(TaskCategory::Other)) {
+  LOG("create TextTrackCue");
   SetDefaultCueSettings();
   MOZ_ASSERT(aOwnerWindow);
   if (NS_FAILED(StashDocument())) {
@@ -73,6 +79,7 @@ TextTrackCue::TextTrackCue(nsPIDOMWindowInner* aOwnerWindow, double aStartTime,
       mHaveStartedWatcher(false),
       mWatchManager(
           this, GetOwnerGlobal()->AbstractMainThreadFor(TaskCategory::Other)) {
+  LOG("create TextTrackCue");
   SetDefaultCueSettings();
   MOZ_ASSERT(aOwnerWindow);
   if (NS_FAILED(StashDocument())) {
@@ -221,6 +228,7 @@ void TextTrackCue::SetActive(bool aActive) {
     return;
   }
 
+  LOG("TextTrackCue, SetActive=%d", aActive);
   mActive = aActive;
   mDisplayState = mActive ? mDisplayState : nullptr;
   if (mTrack) {

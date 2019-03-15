@@ -103,8 +103,7 @@ gboolean moz_container_surface_needs_clear(MozContainer *container);
 void moz_container_scale_changed(MozContainer *container,
                                  GtkAllocation *aAllocation);
 void moz_container_set_initial_draw_callback(
-    MozContainer *container,
-    std::function<void(void)> inital_draw_cb);
+    MozContainer *container, std::function<void(void)> inital_draw_cb);
 #endif
 
 #endif /* __MOZ_CONTAINER_H__ */

@@ -28,8 +28,10 @@ class AudioInputProcessing;
 class MediaEngineWebRTCMicrophoneSource : public MediaEngineSource {
  public:
   MediaEngineWebRTCMicrophoneSource(RefPtr<AudioDeviceInfo> aInfo,
-                                    const nsString& aName, const nsCString& aUuid,
-                                    const nsString& aGroupId, uint32_t aMaxChannelCount,
+                                    const nsString& aName,
+                                    const nsCString& aUuid,
+                                    const nsString& aGroupId,
+                                    uint32_t aMaxChannelCount,
                                     bool aDelayAgnostic, bool aExtendedFilter);
 
   bool RequiresSharing() const override { return false; }

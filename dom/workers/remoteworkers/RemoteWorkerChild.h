@@ -8,6 +8,7 @@
 #define mozilla_dom_RemoteWorkerChild_h
 
 #include "mozilla/dom/PRemoteWorkerChild.h"
+#include "mozilla/DataMutex.h"
 #include "mozilla/ThreadBound.h"
 #include "mozilla/UniquePtr.h"
 #include "nsISupportsImpl.h"
@@ -56,6 +57,13 @@ class RemoteWorkerChild final : public PRemoteWorkerChild {
 
   mozilla::ipc::IPCResult RecvExecOp(const RemoteWorkerOp& aOp);
 
+  // This member is a function template because DataMutex<SharedData>::AutoLock
+  // is private, yet it must be passed by const reference into ExecuteOperation.
+  // There should only be one instantiation of this template.
+  template <typename T>
+  mozilla::ipc::IPCResult ExecuteOperation(const RemoteWorkerOp&,
+                                           const T& aLock);
+
   void RecvExecOpOnMainThread(const RemoteWorkerOp& aOp);
 
   nsresult ExecWorkerOnMainThread(const RemoteWorkerData& aData);
@@ -77,7 +85,6 @@ class RemoteWorkerChild final : public PRemoteWorkerChild {
   // Touched on main-thread only.
   nsTArray<uint64_t> mWindowIDs;
 
-  RefPtr<WorkerPrivate> mWorkerPrivate;
   RefPtr<WeakWorkerRef> mWorkerRef;
   bool mIPCActive;
 
@@ -96,8 +103,14 @@ class RemoteWorkerChild final : public PRemoteWorkerChild {
     eTerminated,
   };
 
-  // Touched only on the owning thread (Worker Launcher).
-  WorkerState mWorkerState;
+  struct SharedData {
+    SharedData();
+
+    RefPtr<WorkerPrivate> mWorkerPrivate;
+    WorkerState mWorkerState;
+  };
+
+  DataMutex<SharedData> mSharedData;
 
   // Touched only on the owning thread (Worker Launcher).
   struct LauncherBoundData {

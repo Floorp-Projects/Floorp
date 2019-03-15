@@ -73,8 +73,9 @@ class HttpBackgroundChannelParent final : public PHttpBackgroundChannelParent {
   // To send NotifyCookieBlocked message over background channel.
   bool OnNotifyCookieBlocked(uint32_t aRejectedReason);
 
-  // To send NotifyTrackingResource message over background channel.
-  bool OnNotifyTrackingResource(bool aIsThirdParty);
+  // To send NotifyClassificationFlags message over background channel.
+  bool OnNotifyClassificationFlags(uint32_t aClassificationFlags,
+                                   bool aIsThirdParty);
 
   // To send NotifyFlashPluginStateChanged message over background channel.
   bool OnNotifyFlashPluginStateChanged(nsIHttpChannel::FlashPluginState aState);
