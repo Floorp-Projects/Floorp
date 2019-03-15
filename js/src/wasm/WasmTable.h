@@ -38,7 +38,7 @@ namespace wasm {
 // the most appropriate representation for Cell::anyref.
 STATIC_ASSERT_ANYREF_IS_JSOBJECT;
 
-typedef GCVector<JS::Heap<JSObject*>, 0, SystemAllocPolicy> TableAnyRefVector;
+typedef GCVector<HeapPtr<JSObject*>, 0, SystemAllocPolicy> TableAnyRefVector;
 
 class Table : public ShareableBase<Table> {
   using InstanceSet = JS::WeakCache<GCHashSet<
@@ -87,7 +87,7 @@ class Table : public ShareableBase<Table> {
   void setAnyFunc(uint32_t index, void* code, const Instance* instance);
 
   AnyRef getAnyRef(uint32_t index) const;
-  const void* getAnyRefLocForCompiledCode(uint32_t index) const;
+  const void* getShortlivedAnyRefLocForCompiledCode(uint32_t index) const;
   void setAnyRef(uint32_t index, AnyRef);
 
   void setNull(uint32_t index);
