@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 /* eslint max-len: ["error", 80] */
 /* exported initialize, hide, show */
+/* global windowRoot */
 
 "use strict";
 
@@ -316,12 +317,25 @@ class AddonCard extends HTMLElement {
           }
           break;
         case "remove":
-          await addon.uninstall();
+          {
+            panel.hide();
+            let response = windowRoot.ownerGlobal.promptRemoveExtension(addon);
+            if (response == 0) {
+              await addon.uninstall();
+              this.sendEvent("remove");
+            } else {
+              this.sendEvent("remove-cancelled");
+            }
+          }
           break;
       }
     });
 
     this.appendChild(this.card);
+  }
+
+  sendEvent(name, detail) {
+    this.dispatchEvent(new CustomEvent(name, {detail}));
   }
 }
 customElements.define("addon-card", AddonCard);

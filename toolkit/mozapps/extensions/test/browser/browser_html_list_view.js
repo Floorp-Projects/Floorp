@@ -1,5 +1,7 @@
 /* eslint max-len: ["error", 80] */
 
+let promptService;
+
 let gManagerWindow;
 let gCategoryUtilities;
 
@@ -46,6 +48,7 @@ add_task(async function enableHtmlViews() {
   await SpecialPowers.pushPrefEnv({
     set: [["extensions.htmlaboutaddons.enabled", true]],
   });
+  promptService = mockPromptService();
 });
 
 let extensionsCreated = 0;
@@ -122,7 +125,14 @@ add_task(async function testExtensionList() {
   is(doc.l10n.getAttributes(removeButton).id, "remove-addon-button",
      "The button has the remove label");
 
+  // Remove but cancel.
+  let cancelled = BrowserTestUtils.waitForEvent(card, "remove-cancelled");
+  removeButton.click();
+  await cancelled;
+
   let removed = BrowserTestUtils.waitForEvent(list, "remove");
+  // Tell the mock prompt service that the prompt was accepted.
+  promptService._response = 0;
   removeButton.click();
   await removed;
 
