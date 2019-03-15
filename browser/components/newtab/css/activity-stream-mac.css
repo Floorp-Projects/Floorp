@@ -511,7 +511,7 @@ main {
   .top-site-outer .context-menu-button {
     background-clip: padding-box;
     background-color: var(--newtab-contextmenu-button-color);
-    background-image: url("chrome://browser/skin/page-action.svg");
+    background-image: url("chrome://global/skin/icons/more.svg");
     background-position: 55%;
     border: 1px solid var(--newtab-border-primary-color);
     border-radius: 100%;
@@ -1301,7 +1301,7 @@ main {
   .card-outer .context-menu-button {
     background-clip: padding-box;
     background-color: var(--newtab-contextmenu-button-color);
-    background-image: url("chrome://browser/skin/page-action.svg");
+    background-image: url("chrome://global/skin/icons/more.svg");
     background-position: 55%;
     border: 1px solid var(--newtab-border-primary-color);
     border-radius: 100%;
@@ -1593,7 +1593,7 @@ main {
     margin-bottom: 13px;
     position: relative; }
     .collapsible-section .section-top-bar .context-menu-button {
-      background: url("chrome://browser/skin/page-action.svg") no-repeat right center;
+      background: url("chrome://global/skin/icons/more.svg") no-repeat right center;
       border: 0;
       cursor: pointer;
       fill: var(--newtab-section-header-text-color);
@@ -2494,7 +2494,7 @@ main {
 .ds-card .context-menu-button {
   background-clip: padding-box;
   background-color: var(--newtab-contextmenu-button-color);
-  background-image: url("chrome://browser/skin/page-action.svg");
+  background-image: url("chrome://global/skin/icons/more.svg");
   background-position: 55%;
   border: 1px solid var(--newtab-border-primary-color);
   border-radius: 100%;
