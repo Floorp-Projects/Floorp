@@ -1080,6 +1080,46 @@ win64-aarch64-eme/opt:
     toolchains:
         - win64-node
 
+win64-aarch64-nightly-no-eme/opt:
+    description: "AArch64 Win64 Nightly w/o EME"
+    index:
+        product: firefox
+        job-name: win64-aarch64-no-eme-opt
+        type: nightly
+    attributes:
+        enable-full-crashsymbols: true
+    shipping-phase: build
+    shipping-product: firefox
+    treeherder:
+        platform: windows2012-aarch64/opt
+        symbol: Nn
+        tier: 1
+    worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
+    worker:
+        max-run-time: 7200
+        env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/aarch64.manifest"
+            PERFHERDER_EXTRA_OPTIONS: aarch64-no-eme
+    run:
+        actions: [get-secrets, build]
+        options: [append-env-variables-from-configs]
+        script: mozharness/scripts/fx_desktop_build.py
+        secrets: true
+        config:
+            - builds/releng_base_firefox.py
+            - builds/taskcluster_base_windows.py
+            - taskcluster_nightly.py
+        extra-config:
+            stage_platform: win64-aarch64
+            mozconfig_platform: win64-aarch64
+    run-on-projects: []
+    toolchains:
+        - win64-clang-cl
+        - win64-aarch64-rust
+        - win64-cbindgen
+        - win64-nasm
+        - win64-node
+
 win64-aarch64-nightly/opt:
     description: "AArch64 Win64 Nightly"
     index:
@@ -1101,6 +1141,9 @@ win64-aarch64-nightly/opt:
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/aarch64.manifest"
             PERFHERDER_EXTRA_OPTIONS: aarch64
+            MOZ_ARTIFACT_TASK: {task-reference: '<win64-aarch64-opt>'}
+            MOZ_ARTIFACT_TASK_WIN32_OPT: {task-reference: '<win32-opt>'}
+            USE_ARTIFACT: '1'
     run:
         actions: [get-secrets, build]
         options: [append-env-variables-from-configs]
@@ -1113,13 +1156,22 @@ win64-aarch64-nightly/opt:
         extra-config:
             stage_platform: win64-aarch64
             mozconfig_platform: win64-aarch64
+    dependencies:
+        win32-opt: build-win32-nightly/opt
+        win64-aarch64-opt: build-win64-aarch64-nightly-no-eme/opt
+    fetches:
+        # Abuse fetches to copy the generated-files artifact from the non-eme
+        # build directly to the artifacts directory of this build. Likewise
+        # for target.langpack.xpi
+        win64-aarch64-opt:
+            - artifact: target.generated-files.tar.gz
+              extract: false
+              dest: ../public/build
+            - artifact: target.langpack.xpi
+              extract: false
+              dest: ../public/build
     toolchains:
-        - win64-clang-cl
-        - win64-aarch64-rust
-        - win64-cbindgen
-        - win64-nasm
         - win64-node
-
 
 win64-aarch64-devedition-nightly/opt:
     description: "AArch64 Win64 MSVC Devedition Nightly"
