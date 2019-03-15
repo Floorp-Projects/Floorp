@@ -7,6 +7,7 @@ package mozilla.components.service.pocket
 import mozilla.components.concept.fetch.Client
 import mozilla.components.concept.fetch.Headers.Common.USER_AGENT
 import mozilla.components.concept.fetch.Response
+import mozilla.components.service.pocket.helpers.MockResponses
 import mozilla.components.service.pocket.helpers.assertRequestParams
 import mozilla.components.service.pocket.helpers.assertResponseIsClosed
 import mozilla.components.support.ktx.kotlin.toUri
@@ -39,14 +40,8 @@ class PocketEndpointRawTest {
 
     @Before
     fun setUp() {
-        errorResponse = getMockResponse(404)
-        successResponse = getMockResponse(200).also {
-            // A successful response must contain a body.
-            val body = mock(Response.Body::class.java).also { body ->
-                `when`(body.string()).thenReturn("{}")
-            }
-            `when`(it.body).thenReturn(body)
-        }
+        errorResponse = MockResponses.getError()
+        successResponse = MockResponses.getSuccess()
         defaultResponse = errorResponse
 
         client = mock(Client::class.java).also {
@@ -125,9 +120,5 @@ class PocketEndpointRawTest {
         assertResponseIsClosed(client, successResponse) {
             endpoint.getGlobalVideoRecommendations()
         }
-    }
-
-    private fun getMockResponse(status: Int): Response = mock(Response::class.java).also {
-        `when`(it.status).thenReturn(status)
     }
 }
