@@ -174,7 +174,7 @@ class RuntimePage extends PureComponent {
       {
         className: "page js-runtime-page",
       },
-      RuntimeInfo(runtimeDetails.info),
+      RuntimeInfo({ ...runtimeDetails.info, runtimeId, dispatch }),
       RuntimeActions({ dispatch, runtimeId, runtimeDetails }),
       runtimeDetails.serviceWorkersAvailable ? null : ServiceWorkersWarning(),
       CompatibilityWarning({ compatibilityReport }),
