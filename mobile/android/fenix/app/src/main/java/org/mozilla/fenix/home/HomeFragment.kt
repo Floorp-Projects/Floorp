@@ -21,15 +21,20 @@ import androidx.lifecycle.Observer
 import androidx.navigation.Navigation
 import kotlinx.android.synthetic.main.fragment_home.*
 import kotlinx.android.synthetic.main.fragment_home.view.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Dispatchers.IO
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 import mozilla.components.browser.menu.BrowserMenu
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
-import mozilla.components.feature.session.bundling.SessionBundleStorage
+import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.BrowsingModeManager
 import org.mozilla.fenix.DefaultThemeManager
 import org.mozilla.fenix.HomeActivity
-import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.R
+import org.mozilla.fenix.ext.archive
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.home.sessions.ArchivedSession
 import org.mozilla.fenix.home.sessions.SessionsAction
@@ -44,30 +49,27 @@ import org.mozilla.fenix.mvi.ActionBusFactory
 import org.mozilla.fenix.mvi.getAutoDisposeObservable
 import org.mozilla.fenix.mvi.getManagedEmitter
 import org.mozilla.fenix.settings.SupportUtils
-import org.mozilla.fenix.utils.Settings
+import kotlin.coroutines.CoroutineContext
 import kotlin.math.roundToInt
 
-fun SessionBundleStorage.archive(sessionManager: SessionManager) {
-        save(sessionManager.createSnapshot())
-        sessionManager.sessions.filter { !it.private }.forEach {
-            sessionManager.remove(it)
-        }
-        new()
-}
-
 @SuppressWarnings("TooManyFunctions")
-class HomeFragment : Fragment() {
+class HomeFragment : Fragment(), CoroutineScope {
     private val bus = ActionBusFactory.get(this)
     private var sessionObserver: SessionManager.Observer? = null
     private var homeMenu: HomeMenu? = null
     private lateinit var tabsComponent: TabsComponent
     private lateinit var sessionsComponent: SessionsComponent
 
+    private lateinit var job: Job
+    override val coroutineContext: CoroutineContext
+        get() = Dispatchers.Main + job
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
+        job = Job()
         val view = inflater.inflate(R.layout.fragment_home, container, false)
         val sessionManager = requireComponents.core.sessionManager
         tabsComponent = TabsComponent(
@@ -174,8 +176,9 @@ class HomeFragment : Fragment() {
     }
 
     override fun onDestroyView() {
-        super.onDestroyView()
         homeMenu = null
+        job.cancel()
+        super.onDestroyView()
     }
 
     override fun onResume() {
@@ -191,7 +194,9 @@ class HomeFragment : Fragment() {
                 .subscribe {
                     when (it) {
                         is TabsAction.Archive -> {
-                            requireComponents.core.sessionStorage.archive(requireComponents.core.sessionManager)
+                            launch {
+                                requireComponents.core.sessionStorage.archive(requireComponents.core.sessionManager)
+                            }
                         }
                         is TabsAction.MenuTapped -> {
                             val isPrivate = (activity as HomeActivity).browsingModeManager.isPrivate
@@ -228,14 +233,18 @@ class HomeFragment : Fragment() {
                 .subscribe {
                     when (it) {
                         is SessionsAction.Select -> {
-                            requireComponents.core.sessionStorage.archive(requireComponents.core.sessionManager)
+                            launch {
+                                requireComponents.core.sessionStorage.archive(requireComponents.core.sessionManager)
+                            }
                             it.archivedSession.bundle.restoreSnapshot()?.apply {
                                 requireComponents.core.sessionManager.restore(this)
                                 homeScrollView.smoothScrollTo(0, 0)
                             }
                         }
                         is SessionsAction.Delete -> {
-                            requireComponents.core.sessionStorage.remove(it.archivedSession.bundle)
+                            launch(IO) {
+                                requireComponents.core.sessionStorage.remove(it.archivedSession.bundle)
+                            }
                         }
                         is SessionsAction.MenuTapped ->
                             openSessionMenu(SessionBottomSheetFragment.SessionType.Archived(it.archivedSession))
@@ -358,17 +367,23 @@ class HomeFragment : Fragment() {
     private fun openSessionMenu(sessionType: SessionBottomSheetFragment.SessionType) {
         SessionBottomSheetFragment.create(sessionType).apply {
             onArchive = {
-                requireComponents.core.sessionStorage.archive(requireComponents.core.sessionManager)
+                launch {
+                    requireComponents.core.sessionStorage.archive(requireComponents.core.sessionManager)
+                }
             }
             onDelete = {
                 when (it) {
                     is SessionBottomSheetFragment.SessionType.Archived -> {
-                        requireComponents.core.sessionStorage.remove(it.archivedSession.bundle)
+                        launch(IO) {
+                            requireComponents.core.sessionStorage.remove(it.archivedSession.bundle)
+                        }
                     }
                     is SessionBottomSheetFragment.SessionType.Current -> {
                         requireComponents.useCases.tabsUseCases.removeAllTabsOfType.invoke(false)
-                        requireComponents.core.sessionStorage.current()?.apply {
-                            requireComponents.core.sessionStorage.remove(this)
+                        launch(IO) {
+                            requireComponents.core.sessionStorage.current()?.apply {
+                                requireComponents.core.sessionStorage.remove(this)
+                            }
                         }
                     }
                     is SessionBottomSheetFragment.SessionType.Private -> {

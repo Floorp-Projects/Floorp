@@ -46,7 +46,7 @@ object Deps {
     const val tools_appservicesgradle = "org.mozilla.appservices:gradle-plugin:${Versions.appservices_gradle_plugin}"
     const val kotlin_stdlib = "org.jetbrains.kotlin:kotlin-stdlib-jdk7:${Versions.kotlin}"
 
-    const val allopen =  "org.jetbrains.kotlin:kotlin-allopen:${Versions.kotlin}"
+    const val allopen = "org.jetbrains.kotlin:kotlin-allopen:${Versions.kotlin}"
 
     const val rxKotlin = "io.reactivex.rxjava2:rxkotlin:${Versions.rxKotlin}"
     const val rxAndroid = "io.reactivex.rxjava2:rxandroid:${Versions.rxAndroid}"
@@ -147,4 +147,3 @@ object Deps {
     const val glide = "com.github.bumptech.glide:glide:${Versions.glide}"
     const val glideAnnotationProcessor = "com.github.bumptech.glide:compiler:${Versions.glide}"
 }
-
