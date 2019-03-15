@@ -172,6 +172,92 @@ class PlacesHistoryStorageTest {
     }
 
     @Test
+    fun `storage passes through sync calls`() = runBlocking {
+        var passedAuthInfo: SyncAuthInfo? = null
+        val conn = object : Connection {
+            override fun reader(): ReadablePlacesConnectionInterface {
+                fail()
+                return mock()
+            }
+
+            override fun writer(): WritablePlacesConnectionInterface {
+                fail()
+                return mock()
+            }
+
+            override fun sync(syncInfo: SyncAuthInfo) {
+                assertNull(passedAuthInfo)
+                passedAuthInfo = syncInfo
+            }
+
+            override fun close() {
+                fail()
+            }
+        }
+        val storage = TestablePlacesHistoryStorage(conn)
+
+        storage.sync(AuthInfo("kid", "token", "key", "serverUrl"))
+
+        assertEquals("kid", passedAuthInfo!!.kid)
+        assertEquals("serverUrl", passedAuthInfo!!.tokenserverURL)
+        assertEquals("token", passedAuthInfo!!.fxaAccessToken)
+        assertEquals("key", passedAuthInfo!!.syncKey)
+    }
+
+    @Test
+    fun `storage passes through sync OK results`() = runBlocking {
+        val conn = object : Connection {
+            override fun reader(): ReadablePlacesConnectionInterface {
+                fail()
+                return mock()
+            }
+
+            override fun writer(): WritablePlacesConnectionInterface {
+                fail()
+                return mock()
+            }
+
+            override fun sync(syncInfo: SyncAuthInfo) {}
+
+            override fun close() {
+                fail()
+            }
+        }
+        val storage = TestablePlacesHistoryStorage(conn)
+
+        val result = storage.sync(AuthInfo("kid", "token", "key", "serverUrl"))
+        assertEquals(SyncStatus.Ok, result)
+    }
+
+    @Test
+    fun `storage passes through sync exceptions`() = runBlocking {
+        val exception = PlacesException("test error")
+        val conn = object : Connection {
+            override fun reader(): ReadablePlacesConnectionInterface {
+                fail()
+                return mock()
+            }
+
+            override fun writer(): WritablePlacesConnectionInterface {
+                fail()
+                return mock()
+            }
+
+            override fun sync(syncInfo: SyncAuthInfo) {
+                throw exception
+            }
+
+            override fun close() {
+                fail()
+            }
+        }
+        val storage = TestablePlacesHistoryStorage(conn)
+
+        val result = storage.sync(AuthInfo("kid", "token", "key", "serverUrl"))
+        assertEquals(SyncStatus.Error(exception), result)
+    }
+
+    @Test
     fun `storage passes through calls to cleanup`() {
         val storage = storage!!
         val conn = conn!!
