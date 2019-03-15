@@ -306,10 +306,10 @@ class MediaFormatReader::DecoderFactory {
     Data(DecoderData& aOwnerData, TrackType aTrack, TaskQueue* aThread)
         : mOwnerData(aOwnerData),
           mTrack(aTrack),
-          mPolicy(new LocalAllocPolicy(aTrack, aThread)) {}
+          mPolicy(new SingleAllocPolicy(aTrack, aThread)) {}
     DecoderData& mOwnerData;
     const TrackType mTrack;
-    RefPtr<LocalAllocPolicy> mPolicy;
+    RefPtr<SingleAllocPolicy> mPolicy;
     Stage mStage = Stage::None;
     RefPtr<Token> mToken;
     RefPtr<MediaDataDecoder> mDecoder;

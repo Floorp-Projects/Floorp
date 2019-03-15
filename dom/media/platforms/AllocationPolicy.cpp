@@ -114,25 +114,25 @@ NotNull<AllocPolicy*> GlobalAllocPolicy::Instance(TrackType aTrack) {
   return WrapNotNull(sVideoPolicy.get());
 }
 
-class LocalAllocPolicy::AutoDeallocCombinedToken : public Token {
+class SingleAllocPolicy::AutoDeallocCombinedToken : public Token {
  public:
-  AutoDeallocCombinedToken(already_AddRefed<Token> aLocalAllocPolicyToken,
+  AutoDeallocCombinedToken(already_AddRefed<Token> aSingleAllocPolicyToken,
                            already_AddRefed<Token> aGlobalAllocPolicyToken)
-      : mLocalToken(aLocalAllocPolicyToken),
+      : mSingleToken(aSingleAllocPolicyToken),
         mGlobalToken(aGlobalAllocPolicyToken) {}
 
  private:
   // Release tokens allocated from GlobalAllocPolicy and LocalAllocPolicy
   // and process next token request if any.
   ~AutoDeallocCombinedToken() = default;
-  const RefPtr<Token> mLocalToken;
+  const RefPtr<Token> mSingleToken;
   const RefPtr<Token> mGlobalToken;
 };
 
-auto LocalAllocPolicy::Alloc() -> RefPtr<Promise> {
+auto SingleAllocPolicy::Alloc() -> RefPtr<Promise> {
   MOZ_DIAGNOSTIC_ASSERT(MaxDecoderLimit() == 1,
                         "We can only handle at most one token out at a time.");
-  RefPtr<LocalAllocPolicy> self = this;
+  RefPtr<SingleAllocPolicy> self = this;
   return AllocPolicyImpl::Alloc()->Then(
       mOwnerThread, __func__,
       [self](RefPtr<Token> aToken) {
@@ -158,12 +158,12 @@ auto LocalAllocPolicy::Alloc() -> RefPtr<Promise> {
       []() { return Promise::CreateAndReject(true, __func__); });
 }
 
-LocalAllocPolicy::~LocalAllocPolicy() {
+SingleAllocPolicy::~SingleAllocPolicy() {
   mPendingPromise.RejectIfExists(true, __func__);
   mTokenRequest.DisconnectIfExists();
 }
 
-void LocalAllocPolicy::Cancel() {
+void SingleAllocPolicy::Cancel() {
   MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
   mPendingPromise.RejectIfExists(true, __func__);
   mTokenRequest.DisconnectIfExists();
