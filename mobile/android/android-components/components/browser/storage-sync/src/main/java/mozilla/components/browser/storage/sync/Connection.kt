@@ -5,11 +5,9 @@
 package mozilla.components.browser.storage.sync
 
 import android.support.annotation.GuardedBy
-import org.mozilla.places.PlacesApi
-import org.mozilla.places.ReadablePlacesConnection
-import org.mozilla.places.ReadablePlacesConnectionInterface
-import org.mozilla.places.SyncAuthInfo
-import org.mozilla.places.WritablePlacesConnectionInterface
+import mozilla.appservices.places.PlacesApi
+import mozilla.appservices.places.ReadableHistoryConnection
+import mozilla.appservices.places.WritableHistoryConnection
 import java.io.Closeable
 import java.io.File
 
@@ -25,8 +23,8 @@ const val DB_NAME = "places.sqlite"
  * Writer is always the same, as guaranteed by [PlacesApi].
  */
 interface Connection : Closeable {
-    fun reader(): ReadablePlacesConnectionInterface
-    fun writer(): WritablePlacesConnectionInterface
+    fun reader(): ReadableHistoryConnection
+    fun writer(): WritableHistoryConnection
     fun sync(syncInfo: SyncAuthInfo)
 }
 
@@ -38,7 +36,7 @@ internal object RustPlacesConnection : Connection {
     private var api: PlacesApi? = null
 
     @GuardedBy("this")
-    private var cachedReader: ReadablePlacesConnection? = null
+    private var cachedReader: ReadableHistoryConnection? = null
 
     /**
      * Creates a long-lived [PlacesApi] instance, and caches a reader connection.
@@ -54,12 +52,12 @@ internal object RustPlacesConnection : Connection {
         cachedReader = api!!.openReader()
     }
 
-    override fun reader(): ReadablePlacesConnectionInterface = synchronized(this) {
+    override fun reader(): ReadableHistoryConnection = synchronized(this) {
         check(cachedReader != null) { "must call init first" }
         return cachedReader!!
     }
 
-    override fun writer(): WritablePlacesConnectionInterface {
+    override fun writer(): WritableHistoryConnection {
         check(api != null) { "must call init first" }
         return api!!.getWriter()
     }

@@ -32,7 +32,7 @@ object Versions {
     const val room = "1.1.1"
     const val paging = "1.0.1"
 
-    const val mozilla_appservices = "0.19.0"
+    const val mozilla_appservices = "0.20.2"
     const val servo = "0.0.1.20181017.aa95911"
 }
 
@@ -82,9 +82,9 @@ object Dependencies {
     const val tools_lintapi = "com.android.tools.lint:lint-api:${Versions.lint}"
     const val tools_linttests = "com.android.tools.lint:lint-tests:${Versions.lint}"
 
-    const val mozilla_fxa = "org.mozilla.fxaclient:fxaclient:${Versions.mozilla_appservices}"
-    const val mozilla_sync_logins = "org.mozilla.sync15:logins:${Versions.mozilla_appservices}"
-    const val mozilla_places = "org.mozilla.places:places:${Versions.mozilla_appservices}"
+    const val mozilla_fxa = "org.mozilla.appservices:fxaclient:${Versions.mozilla_appservices}"
+    const val mozilla_sync_logins = "org.mozilla.appservices:logins:${Versions.mozilla_appservices}"
+    const val mozilla_places = "org.mozilla.appservices:places:${Versions.mozilla_appservices}"
     const val mozilla_rustlog = "org.mozilla.appservices:rustlog:${Versions.mozilla_appservices}"
     const val mozilla_servo_arm = "org.mozilla.servoview:servoview-armv7:${Versions.servo}"
     const val mozilla_servo_x86 = "org.mozilla.servoview:servoview-x86:${Versions.servo}"

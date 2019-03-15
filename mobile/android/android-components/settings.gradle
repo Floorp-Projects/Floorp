@@ -65,9 +65,9 @@ if (localProperties != null) {
 
         includeBuild(appServicesLocalPath) {
             dependencySubstitution {
-                substitute module('org.mozilla.fxaclient:fxaclient') with project(':fxa-client-library')
-                substitute module('org.mozilla.sync15:logins') with project(':logins-library')
-                substitute module('org.mozilla.places:places') with project(':places-library')
+                substitute module('org.mozilla.appservices:fxaclient') with project(':fxa-client-library')
+                substitute module('org.mozilla.appservices:logins') with project(':logins-library')
+                substitute module('org.mozilla.appservices:places') with project(':places-library')
                 substitute module('org.mozilla.appservices:rustlog') with project(':rustlog-library')
             }
         }

@@ -5,6 +5,12 @@
 package mozilla.components.browser.storage.sync
 
 import kotlinx.coroutines.runBlocking
+import mozilla.appservices.places.PlacesException
+import mozilla.appservices.places.ReadableHistoryConnection
+import mozilla.appservices.places.SearchResult
+import mozilla.appservices.places.VisitInfo
+import mozilla.appservices.places.VisitObservation
+import mozilla.appservices.places.WritableHistoryConnection
 import mozilla.components.concept.storage.PageObservation
 import mozilla.components.concept.storage.VisitType
 import mozilla.components.concept.sync.AuthInfo
@@ -22,13 +28,6 @@ import org.mockito.Mockito.`when`
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.times
 import org.mockito.Mockito.never
-import org.mozilla.places.PlacesException
-import org.mozilla.places.ReadablePlacesConnectionInterface
-import org.mozilla.places.SearchResult
-import org.mozilla.places.SyncAuthInfo
-import org.mozilla.places.VisitInfo
-import org.mozilla.places.VisitObservation
-import org.mozilla.places.WritablePlacesConnectionInterface
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
 import java.lang.IllegalArgumentException
@@ -36,8 +35,8 @@ import java.lang.IllegalArgumentException
 @RunWith(RobolectricTestRunner::class)
 class PlacesHistoryStorageTest {
     private var conn: Connection? = null
-    private var reader: ReadablePlacesConnectionInterface? = null
-    private var writer: WritablePlacesConnectionInterface? = null
+    private var reader: ReadableHistoryConnection? = null
+    private var writer: WritableHistoryConnection? = null
 
     private var storage: PlacesHistoryStorage? = null
 
@@ -60,47 +59,47 @@ class PlacesHistoryStorageTest {
 
         storage.recordVisit("http://www.mozilla.org", VisitType.LINK)
         verify(writer, times(1)).noteObservation(
-                VisitObservation("http://www.mozilla.org", visitType = org.mozilla.places.VisitType.LINK)
+                VisitObservation("http://www.mozilla.org", visitType = mozilla.appservices.places.VisitType.LINK)
         )
 
         storage.recordVisit("http://www.mozilla.org", VisitType.RELOAD)
         verify(writer, times(1)).noteObservation(
-                VisitObservation("http://www.mozilla.org", visitType = org.mozilla.places.VisitType.RELOAD)
+                VisitObservation("http://www.mozilla.org", visitType = mozilla.appservices.places.VisitType.RELOAD)
         )
 
         storage.recordVisit("http://www.firefox.com", VisitType.TYPED)
         verify(writer, times(1)).noteObservation(
-                VisitObservation("http://www.firefox.com", visitType = org.mozilla.places.VisitType.TYPED)
+                VisitObservation("http://www.firefox.com", visitType = mozilla.appservices.places.VisitType.TYPED)
         )
 
         storage.recordVisit("http://www.firefox.com", VisitType.REDIRECT_TEMPORARY)
         verify(writer, times(1)).noteObservation(
-                VisitObservation("http://www.firefox.com", visitType = org.mozilla.places.VisitType.REDIRECT_TEMPORARY)
+                VisitObservation("http://www.firefox.com", visitType = mozilla.appservices.places.VisitType.REDIRECT_TEMPORARY)
         )
 
         storage.recordVisit("http://www.firefox.com", VisitType.REDIRECT_PERMANENT)
         verify(writer, times(1)).noteObservation(
-                VisitObservation("http://www.firefox.com", visitType = org.mozilla.places.VisitType.REDIRECT_PERMANENT)
+                VisitObservation("http://www.firefox.com", visitType = mozilla.appservices.places.VisitType.REDIRECT_PERMANENT)
         )
 
         storage.recordVisit("http://www.firefox.com", VisitType.FRAMED_LINK)
         verify(writer, times(1)).noteObservation(
-                VisitObservation("http://www.firefox.com", visitType = org.mozilla.places.VisitType.FRAMED_LINK)
+                VisitObservation("http://www.firefox.com", visitType = mozilla.appservices.places.VisitType.FRAMED_LINK)
         )
 
         storage.recordVisit("http://www.firefox.com", VisitType.EMBED)
         verify(writer, times(1)).noteObservation(
-                VisitObservation("http://www.firefox.com", visitType = org.mozilla.places.VisitType.EMBED)
+                VisitObservation("http://www.firefox.com", visitType = mozilla.appservices.places.VisitType.EMBED)
         )
 
         storage.recordVisit("http://www.firefox.com", VisitType.BOOKMARK)
         verify(writer, times(1)).noteObservation(
-                VisitObservation("http://www.firefox.com", visitType = org.mozilla.places.VisitType.BOOKMARK)
+                VisitObservation("http://www.firefox.com", visitType = mozilla.appservices.places.VisitType.BOOKMARK)
         )
 
         storage.recordVisit("http://www.firefox.com", VisitType.DOWNLOAD)
         verify(writer, times(1)).noteObservation(
-                VisitObservation("http://www.firefox.com", visitType = org.mozilla.places.VisitType.DOWNLOAD)
+                VisitObservation("http://www.firefox.com", visitType = mozilla.appservices.places.VisitType.DOWNLOAD)
         )
     }
 
@@ -111,12 +110,12 @@ class PlacesHistoryStorageTest {
 
         storage.recordObservation("http://www.mozilla.org", PageObservation(title = "Mozilla"))
         verify(writer, times(1)).noteObservation(
-                VisitObservation("http://www.mozilla.org", visitType = org.mozilla.places.VisitType.UPDATE_PLACE, title = "Mozilla")
+                VisitObservation("http://www.mozilla.org", visitType = mozilla.appservices.places.VisitType.UPDATE_PLACE, title = "Mozilla")
         )
 
         storage.recordObservation("http://www.firefox.com", PageObservation(title = null))
         verify(writer, times(1)).noteObservation(
-                VisitObservation("http://www.firefox.com", visitType = org.mozilla.places.VisitType.UPDATE_PLACE, title = null)
+                VisitObservation("http://www.firefox.com", visitType = mozilla.appservices.places.VisitType.UPDATE_PLACE, title = null)
         )
     }
 
@@ -158,56 +157,56 @@ class PlacesHistoryStorageTest {
         `when`(reader.getVisitInfos(15, 25)).thenReturn(listOf(
             VisitInfo(
                 url = "http://www.mozilla.org",
-                visitType = org.mozilla.places.VisitType.TYPED,
+                visitType = mozilla.appservices.places.VisitType.TYPED,
                 visitTime = 17,
                 title = null
             ),
             VisitInfo(
                 url = "http://www.firefox.com",
-                visitType = org.mozilla.places.VisitType.BOOKMARK,
+                visitType = mozilla.appservices.places.VisitType.BOOKMARK,
                 visitTime = 20,
                 title = "Firefox"
             ),
             // All other visit types, so that we can check that visit types are being converted.
             VisitInfo(
                 url = "http://www.firefox.com",
-                visitType = org.mozilla.places.VisitType.RELOAD,
+                visitType = mozilla.appservices.places.VisitType.RELOAD,
                 visitTime = 20,
                 title = "Firefox"
             ),
             VisitInfo(
                 url = "http://www.firefox.com",
-                visitType = org.mozilla.places.VisitType.LINK,
+                visitType = mozilla.appservices.places.VisitType.LINK,
                 visitTime = 20,
                 title = "Firefox"
             ),
             VisitInfo(
                 url = "http://www.firefox.com",
-                visitType = org.mozilla.places.VisitType.DOWNLOAD,
+                visitType = mozilla.appservices.places.VisitType.DOWNLOAD,
                 visitTime = 20,
                 title = "Firefox"
             ),
             VisitInfo(
                 url = "http://www.firefox.com",
-                visitType = org.mozilla.places.VisitType.EMBED,
+                visitType = mozilla.appservices.places.VisitType.EMBED,
                 visitTime = 20,
                 title = "Firefox"
             ),
             VisitInfo(
                 url = "http://www.firefox.com",
-                visitType = org.mozilla.places.VisitType.FRAMED_LINK,
+                visitType = mozilla.appservices.places.VisitType.FRAMED_LINK,
                 visitTime = 20,
                 title = "Firefox"
             ),
             VisitInfo(
                 url = "http://www.firefox.com",
-                visitType = org.mozilla.places.VisitType.REDIRECT_PERMANENT,
+                visitType = mozilla.appservices.places.VisitType.REDIRECT_PERMANENT,
                 visitTime = 20,
                 title = "Firefox"
             ),
             VisitInfo(
                 url = "http://www.firefox.com",
-                visitType = org.mozilla.places.VisitType.REDIRECT_TEMPORARY,
+                visitType = mozilla.appservices.places.VisitType.REDIRECT_TEMPORARY,
                 visitTime = 20,
                 title = "Firefox"
             )
@@ -302,12 +301,12 @@ class PlacesHistoryStorageTest {
     fun `storage passes through sync calls`() = runBlocking {
         var passedAuthInfo: SyncAuthInfo? = null
         val conn = object : Connection {
-            override fun reader(): ReadablePlacesConnectionInterface {
+            override fun reader(): ReadableHistoryConnection {
                 fail()
                 return mock()
             }
 
-            override fun writer(): WritablePlacesConnectionInterface {
+            override fun writer(): WritableHistoryConnection {
                 fail()
                 return mock()
             }
@@ -334,12 +333,12 @@ class PlacesHistoryStorageTest {
     @Test
     fun `storage passes through sync OK results`() = runBlocking {
         val conn = object : Connection {
-            override fun reader(): ReadablePlacesConnectionInterface {
+            override fun reader(): ReadableHistoryConnection {
                 fail()
                 return mock()
             }
 
-            override fun writer(): WritablePlacesConnectionInterface {
+            override fun writer(): WritableHistoryConnection {
                 fail()
                 return mock()
             }
@@ -360,12 +359,12 @@ class PlacesHistoryStorageTest {
     fun `storage passes through sync exceptions`() = runBlocking {
         val exception = PlacesException("test error")
         val conn = object : Connection {
-            override fun reader(): ReadablePlacesConnectionInterface {
+            override fun reader(): ReadableHistoryConnection {
                 fail()
                 return mock()
             }
 
-            override fun writer(): WritablePlacesConnectionInterface {
+            override fun writer(): WritableHistoryConnection {
                 fail()
                 return mock()
             }
