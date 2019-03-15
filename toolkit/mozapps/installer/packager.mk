@@ -53,6 +53,11 @@ ifdef MOZ_ARTIFACT_BUILD_SYMBOLS
 	$(NSINSTALL) -D $(DIST)/$(PKG_PATH)
 	cd $(DIST)/crashreporter-symbols && \
           zip -r5D '../$(PKG_PATH)$(SYMBOL_ARCHIVE_BASENAME).zip' . -i '*.sym' -i '*.txt'
+ifeq ($(MOZ_ARTIFACT_BUILD_SYMBOLS),full)
+	$(NSINSTALL) -D $(DIST)/$(PKG_PATH)
+	cd $(DIST)/crashreporter-symbols && \
+          zip -r5D '../$(PKG_PATH)$(SYMBOL_FULL_ARCHIVE_BASENAME).zip' .
+endif
 endif # MOZ_ARTIFACT_BUILD_SYMBOLS
 ifdef MOZ_CODE_COVERAGE
 	@echo 'Generating chrome-map for coverage data...'
