@@ -1,0 +1,90 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width; initial-scale=1.0">
+  <title>Test for Bug 1506497</title>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/paint_listener.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="application/javascript">
+
+function* test(testDriver) {
+  document.getElementById("overlay").addEventListener("touchstart", function(e) {
+    // no need to do anything here. Just having a non-passive touchstart
+    // listener will force APZ to wait for the main thread to handle the
+    // touch event. The bug is that the touch-action:none property on the
+    // overlay gets ignored in this case and the body gets scrolled.
+  }, {passive: false});
+
+  // Ensure that APZ gets updated hit-test info
+  yield waitForAllPaints(testDriver);
+
+  // Register a listener that fails the test if the APZ:TransformEnd event fires,
+  // because this test shouldn't actually be triggering any transforms
+  SpecialPowers.Services.obs.addObserver(function() {
+    ok(false, "The test fired an unexpected APZ:TransformEnd");
+  }, "APZ:TransformEnd");
+
+  // Listen for changes to the visual viewport offset.
+  let visScrEvtInternal = new EventCounter(window, "mozvisualscroll",
+                                           { mozSystemGroup: true });
+
+  // This listener will continue the test after the main thread has processed
+  // all the synthesized touch events.
+  var waitForTouchEnd = function(e) {
+    dump("touchend listener hit\n");
+    setTimeout(testDriver, 0);
+  };
+  document.documentElement.addEventListener("touchend", waitForTouchEnd, {passive: true, once: true});
+
+  synthesizeNativeTouchDrag(document.getElementById("boxOnTop"), 5, 5, 0, -50);
+  dump("finished drag, waiting for touchend listener...");
+  yield;
+
+  // Flush state.
+  yield waitForApzFlushedRepaints(testDriver);
+
+  // Check that the touch was prevented, per the touch-action
+  is(window.scrollY, 0, "window didn't scroll");
+  is(document.scrollingElement.scrollTop, 0, "scrollingElement didn't scroll");
+  visScrEvtInternal.unregister();
+  is(visScrEvtInternal.count, 0, "visual viewport didn't scroll");
+}
+
+waitUntilApzStable()
+.then(runContinuation(test))
+.then(subtestDone);
+
+  </script>
+  <style>
+    #filler {
+        height: 3000px;
+        background-image: linear-gradient(red, blue, green);
+    }
+    #overlay {
+        position: fixed;
+        width: 100%;
+        height: 100%;
+        left: 0;
+        top: 0;
+        touch-action: none;
+    }
+    #boxOnTop {
+        position: fixed;
+        background-color: coral;
+        width: 20vw;
+        height: 20vh;
+        left: 40%;
+        top: 40%;
+    }
+  </style>
+</head>
+<body>
+ <div id="filler"></div>
+ <div id="overlay">
+   <div id="boxOnTop">Touch here and drag up</div>
+ </div>
+</body>
+</html>

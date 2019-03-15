@@ -754,6 +754,12 @@ function getPrefs(ident) {
         // All of test cases should define viewport meta tag.
         ["dom.meta-viewport.enabled", true],
       ];
+    case "TOUCH_ACTION":
+      return [
+        ...getPrefs("TOUCH_EVENTS:PAN"),
+        ["layout.css.touch_action.enabled", true],
+        ["apz.test.fails_with_native_injection", getPlatform() == "windows"],
+      ];
     default:
       return [];
   }
