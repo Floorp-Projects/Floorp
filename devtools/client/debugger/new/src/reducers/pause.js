@@ -13,6 +13,7 @@
 import { isGeneratedId } from "devtools-source-map";
 import { prefs } from "../utils/prefs";
 import { getSelectedSourceId } from "./sources";
+import { getSelectedFrame } from "../selectors/pause";
 
 import type { OriginalScope } from "../utils/pause/mapScopes";
 import type { Action } from "../actions/types";
@@ -562,17 +563,6 @@ export function getSelectedFrameId(state: OuterState, thread: ThreadId) {
 export function getTopFrame(state: OuterState, thread: ThreadId) {
   const frames = getFrames(state, thread);
   return frames && frames[0];
-}
-
-export function getSelectedFrame(state: OuterState, thread: ThreadId) {
-  const selectedFrameId = getSelectedFrameId(state, thread);
-  const frames = getFrames(state, thread);
-
-  if (!frames) {
-    return null;
-  }
-
-  return frames.find(frame => frame.id == selectedFrameId);
 }
 
 export function getSkipPausing(state: OuterState) {
