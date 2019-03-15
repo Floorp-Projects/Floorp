@@ -587,7 +587,9 @@ public class SessionAccessibility {
             PrefsHelper.addObserver(new String[]{ FORCE_ACCESSIBILITY_PREF }, prefHandler);
         }
 
-        public static boolean isPlatformEnabled() { return sEnabled; }
+        public static boolean isPlatformEnabled() {
+            return sEnabled;
+        }
 
         public static boolean isEnabled() {
             return sEnabled || sForceEnabled;

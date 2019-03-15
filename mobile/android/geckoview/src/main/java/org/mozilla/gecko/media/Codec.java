@@ -136,7 +136,9 @@ import org.mozilla.gecko.gfx.GeckoSurface;
             try {
                 return mCodec.getInputBuffer(index) != null;
             } catch (IllegalStateException e) {
-                if (DEBUG) { Log.d(LOGTAG, "invalid input buffer#" + index, e); }
+                if (DEBUG) {
+                    Log.d(LOGTAG, "invalid input buffer#" + index, e);
+                }
                 return false;
             }
         }
@@ -267,7 +269,9 @@ import org.mozilla.gecko.gfx.GeckoSurface;
             try {
                 return (mCodec.getOutputBuffer(index) != null) || mRenderToSurface;
             } catch (IllegalStateException e) {
-                if (DEBUG) { Log.e(LOGTAG, "invalid buffer#" + index, e); }
+                if (DEBUG) {
+                    Log.e(LOGTAG, "invalid buffer#" + index, e);
+                }
                 return false;
             }
         }
@@ -302,7 +306,9 @@ import org.mozilla.gecko.gfx.GeckoSurface;
         private synchronized void onRelease(final Sample sample, final boolean render) {
             final Output output = mSentOutputs.poll();
             if (output == null) {
-                if (DEBUG) { Log.d(LOGTAG, sample + " already released"); }
+                if (DEBUG) {
+                    Log.d(LOGTAG, sample + " already released");
+                }
                 return;
             }
             mCodec.releaseOutputBuffer(output.index, render);
@@ -381,11 +387,15 @@ import org.mozilla.gecko.gfx.GeckoSurface;
         }
 
         if (mCodec != null) {
-            if (DEBUG) { Log.d(LOGTAG, "release existing codec: " + mCodec); }
+            if (DEBUG) {
+                Log.d(LOGTAG, "release existing codec: " + mCodec);
+            }
             mCodec.release();
         }
 
-        if (DEBUG) { Log.d(LOGTAG, "configure " + this); }
+        if (DEBUG) {
+            Log.d(LOGTAG, "configure " + this);
+        }
 
         final MediaFormat fmt = format.asFormat();
         final String mime = fmt.getString(MediaFormat.KEY_MIME);
@@ -410,7 +420,9 @@ import org.mozilla.gecko.gfx.GeckoSurface;
             if (renderToSurface) {
                 mIsTunneledPlaybackSupported = mCodec.isTunneledPlaybackSupported(mime);
             }
-            if (DEBUG) { Log.d(LOGTAG, codec.toString() + " created. Render to surface?" + renderToSurface); }
+            if (DEBUG) {
+                Log.d(LOGTAG, codec.toString() + " created. Render to surface?" + renderToSurface);
+            }
             return true;
         }
 
@@ -468,7 +480,9 @@ import org.mozilla.gecko.gfx.GeckoSurface;
         mIsAdaptivePlaybackSupported = codec.isAdaptivePlaybackSupported(
                 format.getString(MediaFormat.KEY_MIME));
         if (mIsAdaptivePlaybackSupported) {
-            if (DEBUG) { Log.d(LOGTAG, "codec supports adaptive playback  = " + mIsAdaptivePlaybackSupported); }
+            if (DEBUG) {
+                Log.d(LOGTAG, "codec supports adaptive playback  = " + mIsAdaptivePlaybackSupported);
+            }
             // TODO: may need to find a way to not use hard code to decide the max w/h.
             format.setInteger(MediaFormat.KEY_MAX_WIDTH, 1920);
             format.setInteger(MediaFormat.KEY_MAX_HEIGHT, 1080);
@@ -492,7 +506,9 @@ import org.mozilla.gecko.gfx.GeckoSurface;
 
     @Override
     public synchronized void start() throws RemoteException {
-        if (DEBUG) { Log.d(LOGTAG, "start " + this); }
+        if (DEBUG) {
+            Log.d(LOGTAG, "start " + this);
+        }
         mInputProcessor.start();
         mOutputProcessor.start();
         try {
@@ -517,7 +533,9 @@ import org.mozilla.gecko.gfx.GeckoSurface;
 
     @Override
     public synchronized void stop() throws RemoteException {
-        if (DEBUG) { Log.d(LOGTAG, "stop " + this); }
+        if (DEBUG) {
+            Log.d(LOGTAG, "stop " + this);
+        }
         try {
             mInputProcessor.stop();
             mOutputProcessor.stop();
@@ -530,13 +548,17 @@ import org.mozilla.gecko.gfx.GeckoSurface;
 
     @Override
     public synchronized void flush() throws RemoteException {
-        if (DEBUG) { Log.d(LOGTAG, "flush " + this); }
+        if (DEBUG) {
+            Log.d(LOGTAG, "flush " + this);
+        }
         try {
             mInputProcessor.stop();
             mOutputProcessor.stop();
 
             mCodec.flush();
-            if (DEBUG) { Log.d(LOGTAG, "flushed " + this); }
+            if (DEBUG) {
+                Log.d(LOGTAG, "flushed " + this);
+            }
             mInputProcessor.start();
             mOutputProcessor.start();
             mCodec.resumeReceivingInputs();
@@ -584,7 +606,9 @@ import org.mozilla.gecko.gfx.GeckoSurface;
 
     @Override
     public synchronized void release() throws RemoteException {
-        if (DEBUG) { Log.d(LOGTAG, "release " + this); }
+        if (DEBUG) {
+            Log.d(LOGTAG, "release " + this);
+        }
         try {
             // In case Codec.stop() is not called yet.
             mInputProcessor.stop();
