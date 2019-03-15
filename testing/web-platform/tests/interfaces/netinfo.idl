@@ -23,7 +23,7 @@ enum EffectiveConnectionType {
 };
 
 interface mixin NavigatorNetworkInformation {
-  [SameObject] readonly attribute NetworkInformation connection;
+  readonly attribute NetworkInformation connection;
 };
 
 Navigator includes NavigatorNetworkInformation;
