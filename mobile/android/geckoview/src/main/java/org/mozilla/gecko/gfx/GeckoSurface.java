@@ -28,7 +28,7 @@ public final class GeckoSurface extends Surface {
     private GeckoSurface mSyncSurface;
 
     @WrapForJNI(exceptionMode = "nsresult")
-    public GeckoSurface(final GeckoSurfaceTexture gst) {
+    public GeckoSurface(GeckoSurfaceTexture gst) {
         super(gst);
         mHandle = gst.getHandle();
         mIsSingleBuffer = gst.isSingleBuffer();
@@ -36,7 +36,7 @@ public final class GeckoSurface extends Surface {
         mMyPid = android.os.Process.myPid();
     }
 
-    public GeckoSurface(final Parcel p, final SurfaceTexture dummy) {
+    public GeckoSurface(Parcel p, SurfaceTexture dummy) {
         // A no-arg constructor exists, but is hidden in the SDK. We need to create a dummy
         // SurfaceTexture here in order to create the instance. This is used to transfer the
         // GeckoSurface across binder.
@@ -52,17 +52,17 @@ public final class GeckoSurface extends Surface {
     }
 
     public static final Parcelable.Creator<GeckoSurface> CREATOR = new Parcelable.Creator<GeckoSurface>() {
-        public GeckoSurface createFromParcel(final Parcel p) {
+        public GeckoSurface createFromParcel(Parcel p) {
             return new GeckoSurface(p, new SurfaceTexture(0));
         }
 
-        public GeckoSurface[] newArray(final int size) {
+        public GeckoSurface[] newArray(int size) {
             return new GeckoSurface[size];
         }
     };
 
     @Override
-    public void writeToParcel(final Parcel out, final int flags) {
+    public void writeToParcel(Parcel out, int flags) {
         super.writeToParcel(out, flags);
         out.writeInt(mHandle);
         out.writeByte((byte) (mIsSingleBuffer ? 1 : 0));
@@ -99,7 +99,7 @@ public final class GeckoSurface extends Surface {
     }
 
     @WrapForJNI
-    public void setAvailable(final boolean available) {
+    public void setAvailable(boolean available) {
         mIsAvailable = available;
     }
 
@@ -107,7 +107,7 @@ public final class GeckoSurface extends Surface {
         return android.os.Process.myPid() == mMyPid;
     }
 
-    /* package */ SyncConfig initSyncSurface(final int width, final int height) {
+    /* package */ SyncConfig initSyncSurface(int width, int height) {
         if (DEBUG_BUILD) {
             if (inProcess()) {
                 throw new AssertionError("no need for sync when allocated in process");

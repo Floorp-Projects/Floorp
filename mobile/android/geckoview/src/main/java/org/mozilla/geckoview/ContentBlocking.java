@@ -41,7 +41,7 @@ public class ContentBlocking {
              *            {@link ContentBlocking#AT_AD AT_* or SB_*} flags.
              * @return This Builder instance.
              */
-            public @NonNull Builder categories(final @Category int cat) {
+            public @NonNull Builder categories(@Category int cat) {
                 getSettings().setCategories(cat);
                 return this;
             }
@@ -53,7 +53,7 @@ public class ContentBlocking {
              *                 Use one of the {@link #COOKIE_ACCEPT_ALL COOKIE_ACCEPT_*} flags.
              * @return The Builder instance.
              */
-            public @NonNull Builder cookieBehavior(final @CookieBehavior int behavior) {
+            public @NonNull Builder cookieBehavior(@CookieBehavior int behavior) {
                 getSettings().setCookieBehavior(behavior);
                 return this;
             }
@@ -65,7 +65,7 @@ public class ContentBlocking {
              *                 Use one of the {@link #COOKIE_LIFETIME_NORMAL COOKIE_LIFETIME_*} flags.
              * @return The Builder instance.
              */
-            public @NonNull Builder cookieLifetime(final @CookieLifetime int lifetime) {
+            public @NonNull Builder cookieLifetime(@CookieLifetime int lifetime) {
                 getSettings().setCookieLifetime(lifetime);
                 return this;
             }
@@ -163,7 +163,7 @@ public class ContentBlocking {
          * @return This Settings instance.
          */
         public @NonNull Settings setCookieBehavior(
-                final @CookieBehavior int behavior) {
+                @CookieBehavior int behavior) {
             mCookieBehavior.commit(behavior);
             return this;
         }
@@ -185,7 +185,7 @@ public class ContentBlocking {
          * @return This Settings instance.
          */
         public @NonNull Settings setCookieLifetime(
-                final @CookieLifetime int lifetime) {
+                @CookieLifetime int lifetime) {
             mCookieLifetime.commit(lifetime);
             return this;
         }
@@ -336,7 +336,7 @@ public class ContentBlocking {
         public final @Category int categories;
 
         public BlockEvent(@NonNull final String uri,
-                          @Category final int categories) {
+                                 @Category int categories) {
             this.uri = uri;
             this.categories = categories;
         }
@@ -384,25 +384,25 @@ public class ContentBlocking {
     private static final String SOCIAL = "social-track-digest256";
     private static final String CONTENT = "content-track-digest256";
 
-    /* package */ static @Category int sbMalwareToCat(final boolean enabled) {
+    /* package */ static @Category int sbMalwareToCat(boolean enabled) {
         return enabled ? (SB_MALWARE | SB_UNWANTED | SB_HARMFUL)
                        : NONE;
     }
 
-    /* package */ static @Category int sbPhishingToCat(final boolean enabled) {
+    /* package */ static @Category int sbPhishingToCat(boolean enabled) {
         return enabled ? SB_PHISHING
                        : NONE;
     }
 
-    /* package */ static boolean catToSbMalware(@Category final int cat) {
+    /* package */ static boolean catToSbMalware(@Category int cat) {
         return (cat & (SB_MALWARE | SB_UNWANTED | SB_HARMFUL)) != 0;
     }
 
-    /* package */ static boolean catToSbPhishing(@Category final int cat) {
+    /* package */ static boolean catToSbPhishing(@Category int cat) {
         return (cat & SB_PHISHING) != 0;
     }
 
-    /* package */ static String catToAtPref(@Category final int cat) {
+    /* package */ static String catToAtPref(@Category int cat) {
         StringBuilder builder = new StringBuilder();
 
         if ((cat & AT_TEST) != 0) {

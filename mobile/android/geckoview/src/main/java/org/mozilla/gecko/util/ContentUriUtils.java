@@ -65,7 +65,9 @@ public class ContentUriUtils {
                 }
                 return !TextUtils.isEmpty(rootPath) ?
                         rootPath + "/" + docPath : null;
-            } else if (isDownloadsDocument(uri)) { // DownloadsProvider
+            }
+            // DownloadsProvider
+            else if (isDownloadsDocument(uri)) {
                 final String id = DocumentsContract.getDocumentId(uri);
                 // workaround for issue (https://bugzilla.mozilla.org/show_bug.cgi?id=1502721) and
                 // as per https://github.com/Yalantis/uCrop/issues/318#issuecomment-333066640
@@ -81,7 +83,9 @@ public class ContentUriUtils {
                         return null;
                     }
                 }
-            } else if (isMediaDocument(uri)) { // MediaProvider
+            }
+            // MediaProvider
+            else if (isMediaDocument(uri)) {
                 final String docId = DocumentsContract.getDocumentId(uri);
                 final String[] split = docId.split(":");
                 final String type = split[0];
@@ -102,13 +106,18 @@ public class ContentUriUtils {
 
                 return getDataColumn(context, contentUri, selection, selectionArgs);
             }
-        } else if ("content".equalsIgnoreCase(uri.getScheme())) { // MediaStore (and general)
+        }
+        // MediaStore (and general)
+        else if ("content".equalsIgnoreCase(uri.getScheme())) {
+
             // Return the remote address
             if (isGooglePhotosUri(uri))
                 return uri.getLastPathSegment();
 
             return getDataColumn(context, uri, null, null);
-        } else if ("file".equalsIgnoreCase(uri.getScheme())) { // File
+        }
+        // File
+        else if ("file".equalsIgnoreCase(uri.getScheme())) {
             return uri.getPath();
         }
 
@@ -122,8 +131,7 @@ public class ContentUriUtils {
      * @return The path of the temporary file, or <code>null</code> if there was an error
      *         retrieving the file.
      */
-    public static @Nullable String getTempFilePathFromContentUri(final Context context,
-                                                                 final Uri contentUri) {
+    public static @Nullable String getTempFilePathFromContentUri(Context context, Uri contentUri) {
         //copy file and send new file path
         final String fileName = FileUtils.getFileNameFromContentUri(context, contentUri);
         final File folder = new File(context.getCacheDir(), FileUtils.CONTENT_TEMP_DIRECTORY);
@@ -133,9 +141,9 @@ public class ContentUriUtils {
         }
 
         if (!TextUtils.isEmpty(fileName) && success) {
-            File copyFile = new File(folder.getPath(), fileName);
-            FileUtils.copy(context, contentUri, copyFile);
-            return copyFile.getAbsolutePath();
+                File copyFile = new File(folder.getPath(), fileName);
+                FileUtils.copy(context, contentUri, copyFile);
+                return copyFile.getAbsolutePath();
         }
         return null;
     }
@@ -151,11 +159,11 @@ public class ContentUriUtils {
      * @return The value of the _data column, which is typically a file path.
      * @author paulburke
      */
-    private static String getDataColumn(final Context context, final Uri uri,
-                                        final String selection, final String[] selectionArgs) {
+    private static String getDataColumn(Context context, Uri uri, String selection,
+                                        String[] selectionArgs) {
         final String column = "_data";
         final String[] projection = {
-            column
+                column
         };
 
         try (Cursor cursor = context.getContentResolver().query(uri, projection, selection, selectionArgs,
@@ -173,7 +181,7 @@ public class ContentUriUtils {
      * @return Whether the Uri authority is ExternalStorageProvider.
      * @author paulburke
      */
-    public static boolean isExternalStorageDocument(final Uri uri) {
+    public static boolean isExternalStorageDocument(Uri uri) {
         return "com.android.externalstorage.documents".equals(uri.getAuthority());
     }
 
@@ -182,7 +190,7 @@ public class ContentUriUtils {
      * @return Whether the Uri authority is DownloadsProvider.
      * @author paulburke
      */
-    public static boolean isDownloadsDocument(final Uri uri) {
+    public static boolean isDownloadsDocument(Uri uri) {
         return "com.android.providers.downloads.documents".equals(uri.getAuthority());
     }
 
@@ -191,7 +199,7 @@ public class ContentUriUtils {
      * @return Whether the Uri authority is MediaProvider.
      * @author paulburke
      */
-    public static boolean isMediaDocument(final Uri uri) {
+    public static boolean isMediaDocument(Uri uri) {
         return "com.android.providers.media.documents".equals(uri.getAuthority());
     }
 
@@ -199,7 +207,7 @@ public class ContentUriUtils {
      * @param uri The Uri to check.
      * @return Whether the Uri authority is Google Photos.
      */
-    public static boolean isGooglePhotosUri(final Uri uri) {
+    public static boolean isGooglePhotosUri(Uri uri) {
         return "com.google.android.apps.photos.content".equals(uri.getAuthority());
     }
 }

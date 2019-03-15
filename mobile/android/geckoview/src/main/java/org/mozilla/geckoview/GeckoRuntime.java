@@ -20,6 +20,7 @@ import android.support.annotation.AnyThread;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.UiThread;
+import android.text.TextUtils;
 import android.util.Log;
 
 import org.mozilla.gecko.EventDispatcher;
@@ -31,6 +32,7 @@ import org.mozilla.gecko.PrefsHelper;
 import org.mozilla.gecko.util.BundleEventListener;
 import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.GeckoBundle;
+import org.mozilla.gecko.util.StringUtils;
 import org.mozilla.gecko.util.ThreadUtils;
 
 import java.io.File;
@@ -161,7 +163,7 @@ public final class GeckoRuntime implements Parcelable {
         }
     };
 
-    private static String getProcessName(final Context context) {
+    private static String getProcessName(Context context) {
         final ActivityManager manager = (ActivityManager)context.getSystemService(Context.ACTIVITY_SERVICE);
         for (final ActivityManager.RunningAppProcessInfo info : manager.getRunningAppProcesses()) {
             if (info.pid == Process.myPid()) {
@@ -241,7 +243,7 @@ public final class GeckoRuntime implements Parcelable {
         return true;
     }
 
-    /* package */ void setDefaultPrefs(final GeckoBundle prefs) {
+    /* package */ void setDefaultPrefs(GeckoBundle prefs) {
         EventDispatcher.getInstance().dispatch("GeckoView:SetDefaultPrefs", prefs);
     }
 
@@ -292,12 +294,13 @@ public final class GeckoRuntime implements Parcelable {
     @UiThread
     public @NonNull GeckoResult<Void> registerWebExtension(
             final @NonNull WebExtension webExtension) {
-        final GeckoSession.CallbackResult<Void> result = new GeckoSession.CallbackResult<Void>() {
-            @Override
-            public void sendSuccess(final Object response) {
-                complete(null);
-            }
-        };
+        final GeckoSession.CallbackResult<Void> result =
+                new GeckoSession.CallbackResult<Void>() {
+                    @Override
+                    public void sendSuccess(Object response) {
+                        complete(null);
+                    }
+                };
 
         final GeckoBundle bundle = new GeckoBundle(1);
         bundle.putString("locationUri", webExtension.location.toString());
@@ -388,7 +391,7 @@ public final class GeckoRuntime implements Parcelable {
     }
 
     /* package */ void setPref(final String name, final Object value,
-                               final boolean override) {
+                               boolean override) {
         if (override || !GeckoAppShell.isFennec()) {
             // Override pref on Fennec only when requested to prevent
             // overriding of persistent prefs.
@@ -439,7 +442,7 @@ public final class GeckoRuntime implements Parcelable {
      *                       {@link android.content.res.Configuration}.
      */
     @UiThread
-    public void orientationChanged(final int newOrientation) {
+    public void orientationChanged(int newOrientation) {
         ThreadUtils.assertOnUiThread();
         GeckoScreenOrientation.getInstance().update(newOrientation);
     }
@@ -452,7 +455,7 @@ public final class GeckoRuntime implements Parcelable {
 
     @Override // Parcelable
     @AnyThread
-    public void writeToParcel(final Parcel out, final int flags) {
+    public void writeToParcel(Parcel out, int flags) {
         out.writeParcelable(mSettings, flags);
     }
 
@@ -462,8 +465,8 @@ public final class GeckoRuntime implements Parcelable {
         mSettings = source.readParcelable(getClass().getClassLoader());
     }
 
-    public static final Parcelable.Creator<GeckoRuntime> CREATOR =
-            new Parcelable.Creator<GeckoRuntime>() {
+    public static final Parcelable.Creator<GeckoRuntime> CREATOR
+        = new Parcelable.Creator<GeckoRuntime>() {
         @Override
         @AnyThread
         public GeckoRuntime createFromParcel(final Parcel in) {

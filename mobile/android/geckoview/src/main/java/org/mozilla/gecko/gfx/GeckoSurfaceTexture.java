@@ -40,13 +40,13 @@ import org.mozilla.gecko.mozglue.JNIObject;
     private int mUpstream;
     private NativeGLBlitHelper mBlitter;
 
-    private GeckoSurfaceTexture(final int handle) {
+    private GeckoSurfaceTexture(int handle) {
         super(0);
         init(handle, false);
     }
 
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
-    private GeckoSurfaceTexture(final int handle, final boolean singleBufferMode) {
+    private GeckoSurfaceTexture(int handle, boolean singleBufferMode) {
         super(0, singleBufferMode);
         init(handle, singleBufferMode);
     }
@@ -62,7 +62,7 @@ import org.mozilla.gecko.mozglue.JNIObject;
         super.finalize();
     }
 
-    private void init(final int handle, final boolean singleBufferMode) {
+    private void init(int handle, boolean singleBufferMode) {
         mHandle = handle;
         mIsSingleBuffer = singleBufferMode;
         mUseCount = new AtomicInteger(1);
@@ -82,7 +82,7 @@ import org.mozilla.gecko.mozglue.JNIObject;
     }
 
     @WrapForJNI(exceptionMode = "nsresult")
-    public synchronized void attachToGLContext(final long context, final int texName) {
+    public synchronized void attachToGLContext(long context, int texName) {
         if (context == mAttachedContext && texName == mTexName) {
             return;
         }
@@ -102,7 +102,7 @@ import org.mozilla.gecko.mozglue.JNIObject;
     }
 
     @WrapForJNI
-    public synchronized boolean isAttachedToGLContext(final long context) {
+    public synchronized boolean isAttachedToGLContext(long context) {
         return mAttachedContext == context;
     }
 
@@ -160,7 +160,7 @@ import org.mozilla.gecko.mozglue.JNIObject;
         }
     }
 
-    public synchronized void setListener(final GeckoSurfaceTexture.Callbacks listener) {
+    public synchronized void setListener(GeckoSurfaceTexture.Callbacks listener) {
         mListener = listener;
     }
 
@@ -201,7 +201,7 @@ import org.mozilla.gecko.mozglue.JNIObject;
     }
 
     @WrapForJNI
-    public static void destroyUnused(final long context) {
+    public static void destroyUnused(long context) {
         LinkedList<GeckoSurfaceTexture> list;
         synchronized (sUnusedTextures) {
             list = sUnusedTextures.remove(context);
@@ -214,7 +214,7 @@ import org.mozilla.gecko.mozglue.JNIObject;
         for (GeckoSurfaceTexture tex : list) {
             try {
                 if (tex.isSingleBuffer()) {
-                    tex.releaseTexImage();
+                   tex.releaseTexImage();
                 }
 
                 tex.detachFromGLContext();
@@ -234,7 +234,7 @@ import org.mozilla.gecko.mozglue.JNIObject;
     }
 
     @WrapForJNI
-    public static void detachAllFromGLContext(final long context) {
+    public static void detachAllFromGLContext(long context) {
         synchronized (sSurfaceTextures) {
             for (GeckoSurfaceTexture tex : sSurfaceTextures.values()) {
                 try {
@@ -248,7 +248,7 @@ import org.mozilla.gecko.mozglue.JNIObject;
         }
     }
 
-    public static GeckoSurfaceTexture acquire(final boolean singleBufferMode, final int handle) {
+    public static GeckoSurfaceTexture acquire(boolean singleBufferMode, int handle) {
         if (singleBufferMode && !isSingleBufferSupported()) {
             throw new IllegalArgumentException("single buffer mode not supported on API version < 19");
         }
@@ -261,42 +261,40 @@ import org.mozilla.gecko.mozglue.JNIObject;
                 return null;
             }
 
-            int resolvedHandle = handle;
-            if (resolvedHandle == 0) {
+            if (handle == 0) {
                 // Generate new handle value when none specified.
-                resolvedHandle = sNextHandle++;
+                handle = sNextHandle++;
             }
 
             final GeckoSurfaceTexture gst;
             if (isSingleBufferSupported()) {
-                gst = new GeckoSurfaceTexture(resolvedHandle, singleBufferMode);
+                gst = new GeckoSurfaceTexture(handle, singleBufferMode);
             } else {
-                gst = new GeckoSurfaceTexture(resolvedHandle);
+                gst = new GeckoSurfaceTexture(handle);
             }
 
-            if (sSurfaceTextures.containsKey(resolvedHandle)) {
+            if (sSurfaceTextures.containsKey(handle)) {
                 gst.release();
                 throw new IllegalArgumentException("Already have a GeckoSurfaceTexture with that handle");
             }
 
-            sSurfaceTextures.put(resolvedHandle, gst);
+            sSurfaceTextures.put(handle, gst);
             return gst;
         }
     }
 
     @WrapForJNI
-    public static GeckoSurfaceTexture lookup(final int handle) {
+    public static GeckoSurfaceTexture lookup(int handle) {
         synchronized (sSurfaceTextures) {
             return sSurfaceTextures.get(handle);
         }
     }
 
-    /* package */ synchronized void track(final int upstream) {
+    /* package */ synchronized void track(int upstream) {
         mUpstream = upstream;
     }
 
-    /* package */ synchronized void configureSnapshot(final GeckoSurface target,
-                                                      final int width, final int height) {
+    /* package */ synchronized void configureSnapshot(GeckoSurface target, int width, int height) {
         mBlitter = NativeGLBlitHelper.create(mHandle, target, width, height);
     }
 

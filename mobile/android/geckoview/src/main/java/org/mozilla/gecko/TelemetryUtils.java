@@ -44,7 +44,7 @@ public class TelemetryUtils {
 
     // Define new histograms in:
     // toolkit/components/telemetry/Histograms.json
-    public static void addToHistogram(final String name, final int value) {
+    public static void addToHistogram(String name, int value) {
         if (GeckoThread.isRunning()) {
             nativeAddHistogram(name, value);
         } else {
@@ -53,7 +53,7 @@ public class TelemetryUtils {
         }
     }
 
-    public static void addToKeyedHistogram(final String name, final String key, final int value) {
+    public static void addToKeyedHistogram(String name, String key, int value) {
         if (GeckoThread.isRunning()) {
             nativeAddKeyedHistogram(name, key, value);
         } else {
@@ -71,7 +71,7 @@ public class TelemetryUtils {
 
         protected abstract long now();
 
-        public Timer(final String name) {
+        public Timer(String name) {
             mName = name;
             mStartTime = now();
         }
@@ -81,7 +81,7 @@ public class TelemetryUtils {
         }
 
         public long getElapsed() {
-            return mElapsed;
+          return mElapsed;
         }
 
         public void stop() {
@@ -109,7 +109,7 @@ public class TelemetryUtils {
     }
 
     public static class RealtimeTimer extends Timer {
-        public RealtimeTimer(final String name) {
+        public RealtimeTimer(String name) {
             super(name);
         }
 
@@ -120,7 +120,7 @@ public class TelemetryUtils {
     }
 
     public static class UptimeTimer extends Timer {
-        public UptimeTimer(final String name) {
+        public UptimeTimer(String name) {
             super(name);
         }
 

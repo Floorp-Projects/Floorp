@@ -14,7 +14,7 @@ class ByteBufferInputStream extends InputStream {
     // Reference to a native object holding the data backing the ByteBuffer.
     private final NativeReference mNativeRef;
 
-    protected ByteBufferInputStream(final ByteBuffer buffer, final NativeReference ref) {
+    protected ByteBufferInputStream(ByteBuffer buffer, NativeReference ref) {
         mBuf = buffer;
         mNativeRef = ref;
     }
@@ -40,25 +40,25 @@ class ByteBufferInputStream extends InputStream {
     }
 
     @Override
-    public int read(final byte[] buffer, final int offset, final int length) {
+    public int read(byte[] buffer, int offset, int length) {
         if (!mBuf.hasRemaining() || mNativeRef.isReleased()) {
             return -1;
         }
 
-        int remainingLength = Math.min(length, mBuf.remaining());
-        mBuf.get(buffer, offset, remainingLength);
+        length = Math.min(length, mBuf.remaining());
+        mBuf.get(buffer, offset, length);
         return length;
     }
 
     @Override
-    public long skip(final long byteCount) {
+    public long skip(long byteCount) {
         if (byteCount < 0 || mNativeRef.isReleased()) {
             return 0;
         }
 
-        long remainingByteCount = Math.min(byteCount, mBuf.remaining());
-        mBuf.position(mBuf.position() + (int) remainingByteCount);
-        return remainingByteCount;
+        byteCount = Math.min(byteCount, mBuf.remaining());
+        mBuf.position(mBuf.position() + (int)byteCount);
+        return byteCount;
     }
 
 }

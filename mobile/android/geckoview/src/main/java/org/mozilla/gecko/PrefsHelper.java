@@ -9,6 +9,8 @@ import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.annotation.WrapForJNI;
 
 import android.support.v4.util.SimpleArrayMap;
+import android.util.Log;
+import android.util.SparseArray;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -207,17 +209,13 @@ public final class PrefsHelper {
     }
 
     @WrapForJNI(calledFrom = "gecko")
-    private static void callPrefHandler(final PrefHandler handler, final int originalType,
-                                        final String pref, final boolean originalBoolVal,
-                                        final int intVal, final String originalStrVal) {
+    private static void callPrefHandler(final PrefHandler handler, int type, final String pref,
+                                        boolean boolVal, int intVal, String strVal) {
+
         // Some Gecko preferences use integers or strings to reference state instead of
         // directly representing the value.  Since the Java UI uses the type to determine
         // which ui elements to show and how to handle them, we need to normalize these
         // preferences to the correct type.
-        int type = originalType;
-        String strVal = originalStrVal;
-        boolean boolVal = originalBoolVal;
-
         if (INT_TO_STRING_PREFS.contains(pref)) {
             type = PREF_STRING;
             strVal = String.valueOf(intVal);
@@ -286,19 +284,19 @@ public final class PrefsHelper {
 
     public static abstract class PrefHandlerBase implements PrefHandler {
         @Override
-        public void prefValue(final String pref, final boolean value) {
+        public void prefValue(String pref, boolean value) {
             throw new UnsupportedOperationException(
                     "Unhandled boolean pref " + pref + "; wrong type?");
         }
 
         @Override
-        public void prefValue(final String pref, final int value) {
+        public void prefValue(String pref, int value) {
             throw new UnsupportedOperationException(
                     "Unhandled int pref " + pref + "; wrong type?");
         }
 
         @Override
-        public void prefValue(final String pref, final String value) {
+        public void prefValue(String pref, String value) {
             throw new UnsupportedOperationException(
                     "Unhandled String pref " + pref + "; wrong type?");
         }

@@ -222,14 +222,14 @@ public class WebRequestError extends Exception {
      * @param code An error code, e.g. {@link #ERROR_MALFORMED_URI}
      * @param category An error category, e.g. {@link #ERROR_CATEGORY_URI}
      */
-    public WebRequestError(final @Error int code, final @ErrorCategory int category) {
+    public WebRequestError(@Error int code, @ErrorCategory int category) {
         super(String.format("Request failed, error=0x%x, category=0x%x", code, category));
         this.code = code;
         this.category = category;
     }
 
     @Override
-    public boolean equals(final Object other) {
+    public boolean equals(Object other) {
         if (other == null || !(other instanceof WebRequestError)) {
             return false;
         }
@@ -246,9 +246,8 @@ public class WebRequestError extends Exception {
     }
 
     @WrapForJNI
-    /* package */ static WebRequestError fromGeckoError(final long geckoError,
-                                                        final int geckoErrorModule,
-                                                        final int geckoErrorClass) {
+    /* package */ static WebRequestError fromGeckoError(long geckoError, int geckoErrorModule,
+                                                        int geckoErrorClass) {
         int code = convertGeckoError(geckoError, geckoErrorModule, geckoErrorClass);
         int category = getErrorCategory(geckoErrorModule, code);
         return new WebRequestError(code, category);
@@ -257,7 +256,7 @@ public class WebRequestError extends Exception {
     @SuppressLint("WrongConstant")
     @WrapForJNI
     /* package */ static @ErrorCategory int getErrorCategory(
-            final long errorModule, final @Error int error) {
+            long errorModule, @Error int error) {
         // Match flags with XPCOM ErrorList.h.
         if (errorModule == 21) {
             return ERROR_CATEGORY_SECURITY;
@@ -267,7 +266,7 @@ public class WebRequestError extends Exception {
 
     @WrapForJNI
     /* package */ static @Error int convertGeckoError(
-            final long geckoError, final int geckoErrorModule, final int geckoErrorClass) {
+            long geckoError, int geckoErrorModule, int geckoErrorClass) {
         // Match flags with XPCOM ErrorList.h.
         // safebrowsing
         if (geckoError == 0x805D001FL) {

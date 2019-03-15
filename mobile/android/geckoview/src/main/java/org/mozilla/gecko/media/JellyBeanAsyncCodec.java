@@ -34,7 +34,7 @@ final class JellyBeanAsyncCodec implements AsyncCodec {
     private abstract class CancelableHandler extends Handler {
         private static final int MSG_CANCELLATION = 0x434E434C; // 'CNCL'
 
-        protected CancelableHandler(final Looper looper) {
+        protected CancelableHandler(Looper looper) {
             super(looper);
         }
 
@@ -53,7 +53,7 @@ final class JellyBeanAsyncCodec implements AsyncCodec {
         // Warning: Never, ever call super.handleMessage() in this method!
         protected abstract boolean handleMessageLocked(Message msg);
 
-        public final void handleMessage(final Message msg) {
+        public final void handleMessage(Message msg) {
             // Block cancel() during handleMessageLocked().
             synchronized (this) {
                 if (isCanceled() || handleMessageLocked(msg)) {
@@ -64,16 +64,14 @@ final class JellyBeanAsyncCodec implements AsyncCodec {
             switch (msg.what) {
                 case MSG_CANCELLATION:
                     // Just a marker. Nothing to do here.
-                    if (DEBUG) {
-                        Log.d(LOGTAG, "handler " + this + " done cancellation, codec=" + JellyBeanAsyncCodec.this);
-                    }
+                    if (DEBUG) { Log.d(LOGTAG, "handler " + this + " done cancellation, codec=" + JellyBeanAsyncCodec.this); }
                     break;
                 default:
                     super.handleMessage(msg);
                     break;
             }
         }
-    }
+     }
 
     // A handler to invoke AsyncCodec.Callbacks methods.
     private final class CallbackSender extends CancelableHandler {
@@ -83,12 +81,12 @@ final class JellyBeanAsyncCodec implements AsyncCodec {
         private static final int MSG_ERROR = 4;
         private Callbacks mCallbacks;
 
-        private CallbackSender(final Looper looper, final Callbacks callbacks) {
-            super(looper);
-            mCallbacks = callbacks;
+        private CallbackSender(Looper looper, Callbacks callbacks) {
+          super(looper);
+          mCallbacks = callbacks;
         }
 
-        public void notifyInputBuffer(final int index) {
+        public void notifyInputBuffer(int index) {
             if (isCanceled()) {
                 return;
             }
@@ -98,7 +96,7 @@ final class JellyBeanAsyncCodec implements AsyncCodec {
             processMessage(msg);
         }
 
-        private void processMessage(final Message msg) {
+        private void processMessage(Message msg) {
             if (Looper.myLooper() == getLooper()) {
                 handleMessage(msg);
             } else {
@@ -106,7 +104,7 @@ final class JellyBeanAsyncCodec implements AsyncCodec {
             }
         }
 
-        public void notifyOutputBuffer(final int index, final MediaCodec.BufferInfo info) {
+        public void notifyOutputBuffer(int index, MediaCodec.BufferInfo info) {
             if (isCanceled()) {
                 return;
             }
@@ -116,19 +114,19 @@ final class JellyBeanAsyncCodec implements AsyncCodec {
             processMessage(msg);
         }
 
-        public void notifyOutputFormat(final MediaFormat format) {
+        public void notifyOutputFormat(MediaFormat format) {
             if (isCanceled()) {
                 return;
             }
             processMessage(obtainMessage(MSG_OUTPUT_FORMAT_CHANGE, format));
         }
 
-        public void notifyError(final int result) {
+        public void notifyError(int result) {
             Log.e(LOGTAG, "codec error:" + result);
             processMessage(obtainMessage(MSG_ERROR, result, 0));
         }
 
-        protected boolean handleMessageLocked(final Message msg) {
+        protected boolean handleMessageLocked(Message msg) {
             switch (msg.what) {
                 case MSG_INPUT_BUFFER_AVAILABLE: // arg1: buffer index.
                     mCallbacks.onInputBufferAvailable(JellyBeanAsyncCodec.this,
@@ -165,11 +163,11 @@ final class JellyBeanAsyncCodec implements AsyncCodec {
 
         private static final long DEQUEUE_TIMEOUT_US = 10000;
 
-        public BufferPoller(final Looper looper) {
+        public BufferPoller(Looper looper) {
             super(looper);
         }
 
-        private void schedulePollingIfNotCanceled(final int what) {
+        private void schedulePollingIfNotCanceled(int what) {
             if (isCanceled()) {
                 return;
             }
@@ -177,13 +175,13 @@ final class JellyBeanAsyncCodec implements AsyncCodec {
             schedulePolling(what);
         }
 
-        private void schedulePolling(final int what) {
+        private void schedulePolling(int what) {
             if (needsBuffer(what)) {
                 sendEmptyMessage(what);
             }
         }
 
-        private boolean needsBuffer(final int what) {
+        private boolean needsBuffer(int what) {
             if (mOutputEnded && (what == MSG_POLL_OUTPUT_BUFFERS)) {
                 return false;
             }
@@ -195,7 +193,7 @@ final class JellyBeanAsyncCodec implements AsyncCodec {
             return true;
         }
 
-        protected boolean handleMessageLocked(final Message msg) {
+        protected boolean handleMessageLocked(Message msg) {
             try {
                 switch (msg.what) {
                     case MSG_POLL_INPUT_BUFFERS:
@@ -265,12 +263,12 @@ final class JellyBeanAsyncCodec implements AsyncCodec {
     private volatile boolean mOutputEnded;
 
     // Must be called on a thread with looper.
-    /* package */ JellyBeanAsyncCodec(final String name) throws IOException {
+    /* package */ JellyBeanAsyncCodec(String name) throws IOException {
         mCodec = MediaCodec.createByCodecName(name);
         initBufferPoller(name + " buffer poller");
     }
 
-    private void initBufferPoller(final String name) {
+    private void initBufferPoller(String name) {
         if (mBufferPoller != null) {
             Log.e(LOGTAG, "poller already initialized");
             return;
@@ -278,13 +276,11 @@ final class JellyBeanAsyncCodec implements AsyncCodec {
         HandlerThread thread = new HandlerThread(name);
         thread.start();
         mBufferPoller = new BufferPoller(thread.getLooper());
-        if (DEBUG) {
-            Log.d(LOGTAG, "start poller for codec:" + this + ", thread=" + thread.getThreadId());
-        }
+        if (DEBUG) { Log.d(LOGTAG, "start poller for codec:" + this + ", thread=" + thread.getThreadId()); }
     }
 
     @Override
-    public void setCallbacks(final AsyncCodec.Callbacks callbacks, final Handler handler) {
+    public void setCallbacks(AsyncCodec.Callbacks callbacks, Handler handler) {
         if (callbacks == null) {
             return;
         }
@@ -299,21 +295,18 @@ final class JellyBeanAsyncCodec implements AsyncCodec {
             looper = mBufferPoller.getLooper();
         }
         mCallbackSender = new CallbackSender(looper, callbacks);
-        if (DEBUG) {
-            Log.d(LOGTAG, "setCallbacks(): sender=" + mCallbackSender);
-        }
+        if (DEBUG) { Log.d(LOGTAG, "setCallbacks(): sender=" + mCallbackSender); }
     }
 
     @Override
-    public void configure(final MediaFormat format, final Surface surface,
-                          final MediaCrypto crypto, final int flags) {
+    public void configure(MediaFormat format, Surface surface, MediaCrypto crypto, int flags) {
         assertCallbacks();
 
         mCodec.configure(format, surface, crypto, flags);
     }
 
     @Override
-    public boolean isAdaptivePlaybackSupported(final String mimeType) {
+    public boolean isAdaptivePlaybackSupported(String mimeType) {
         return HardwareCodecCapabilityUtils.checkSupportsAdaptivePlayback(mCodec, mimeType);
     }
 
@@ -355,7 +348,7 @@ final class JellyBeanAsyncCodec implements AsyncCodec {
     }
 
     @Override
-    public final void setRates(final int newBitRate) {
+    public final void setRates(int newBitRate) {
         if (android.os.Build.VERSION.SDK_INT >= 19) {
             Bundle params = new Bundle();
             params.putInt(MediaCodec.PARAMETER_KEY_VIDEO_BITRATE, newBitRate * 1000);
@@ -364,8 +357,7 @@ final class JellyBeanAsyncCodec implements AsyncCodec {
     }
 
     @Override
-    public final void queueInputBuffer(final int index, final int offset, final int size,
-                                       final long presentationTimeUs, final int flags) {
+    public final void queueInputBuffer(int index, int offset, int size, long presentationTimeUs, int flags) {
         assertCallbacks();
 
         mInputEnded = (flags & MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0;
@@ -390,11 +382,11 @@ final class JellyBeanAsyncCodec implements AsyncCodec {
     }
 
     @Override
-    public final void queueSecureInputBuffer(final int index,
-                                             final int offset,
-                                             final MediaCodec.CryptoInfo cryptoInfo,
-                                             final long presentationTimeUs,
-                                             final int flags) {
+    public final void queueSecureInputBuffer(int index,
+                                             int offset,
+                                             MediaCodec.CryptoInfo cryptoInfo,
+                                             long presentationTimeUs,
+                                             int flags) {
         assertCallbacks();
 
         mInputEnded = (flags & MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0;
@@ -412,21 +404,21 @@ final class JellyBeanAsyncCodec implements AsyncCodec {
     }
 
     @Override
-    public final void releaseOutputBuffer(final int index, final boolean render) {
+    public final void releaseOutputBuffer(int index, boolean render) {
         assertCallbacks();
 
         mCodec.releaseOutputBuffer(index, render);
     }
 
     @Override
-    public final ByteBuffer getInputBuffer(final int index) {
+    public final ByteBuffer getInputBuffer(int index) {
         assertCallbacks();
 
         return mInputBuffers[index];
     }
 
     @Override
-    public final ByteBuffer getOutputBuffer(final int index) {
+    public final ByteBuffer getOutputBuffer(int index) {
         assertCallbacks();
 
         return mOutputBuffers[index];
@@ -474,8 +466,6 @@ final class JellyBeanAsyncCodec implements AsyncCodec {
         mBufferPoller.getLooper().quit();
         mBufferPoller = null;
 
-        if (DEBUG) {
-            Log.d(LOGTAG, "stop poller " + this);
-        }
+        if (DEBUG) { Log.d(LOGTAG, "stop poller " + this); }
     }
 }

@@ -12,6 +12,8 @@ import org.mozilla.gecko.mozglue.JNIObject;
 import org.mozilla.gecko.annotation.WrapForJNI;
 
 import android.annotation.SuppressLint;
+import android.media.MediaCodecInfo;
+import android.media.MediaCodecList;
 import android.media.MediaCrypto;
 import android.media.MediaDrm;
 import android.os.Build;
@@ -57,7 +59,7 @@ public final class MediaDrmProxy {
 
     @SuppressLint("NewApi")
     @WrapForJNI
-    public static boolean isSchemeSupported(final String keySystem) {
+    public static boolean isSchemeSupported(String keySystem) {
         if (!isSystemSupported()) {
             return false;
         }
@@ -71,8 +73,8 @@ public final class MediaDrmProxy {
 
     @SuppressLint("NewApi")
     @WrapForJNI
-    public static boolean IsCryptoSchemeSupported(final String keySystem,
-                                                  final String container) {
+    public static boolean IsCryptoSchemeSupported(String keySystem,
+                                                  String container) {
         if (!isSystemSupported()) {
             return false;
         }
@@ -98,8 +100,8 @@ public final class MediaDrmProxy {
                               int sessionMessageType,
                               byte[] request);
 
-        void onSessionError(byte[] sessionId,
-                            String message);
+       void onSessionError(byte[] sessionId,
+                           String message);
 
         // MediaDrm.KeyStatus is available in API level 23(M)
         // https://developer.android.com/reference/android/media/MediaDrm.KeyStatus.html
@@ -163,16 +165,16 @@ public final class MediaDrmProxy {
         private final Callbacks mNativeCallbacks;
         private final MediaDrmProxy mProxy;
 
-        public MediaDrmProxyCallbacks(final MediaDrmProxy proxy, final Callbacks callbacks) {
+        public MediaDrmProxyCallbacks(MediaDrmProxy proxy, Callbacks callbacks) {
             mNativeCallbacks = callbacks;
             mProxy = proxy;
         }
 
         @Override
-        public void onSessionCreated(final int createSessionToken,
-                                     final int promiseId,
-                                     final byte[] sessionId,
-                                     final byte[] request) {
+        public void onSessionCreated(int createSessionToken,
+                                     int promiseId,
+                                     byte[] sessionId,
+                                     byte[] request) {
             if (!mProxy.isDestroyed()) {
                 mNativeCallbacks.onSessionCreated(createSessionToken,
                                                   promiseId,
@@ -182,47 +184,47 @@ public final class MediaDrmProxy {
         }
 
         @Override
-        public void onSessionUpdated(final int promiseId, final byte[] sessionId) {
+        public void onSessionUpdated(int promiseId, byte[] sessionId) {
             if (!mProxy.isDestroyed()) {
                 mNativeCallbacks.onSessionUpdated(promiseId, sessionId);
             }
         }
 
         @Override
-        public void onSessionClosed(final int promiseId, final byte[] sessionId) {
+        public void onSessionClosed(int promiseId, byte[] sessionId) {
             if (!mProxy.isDestroyed()) {
                 mNativeCallbacks.onSessionClosed(promiseId, sessionId);
             }
         }
 
         @Override
-        public void onSessionMessage(final byte[] sessionId,
-                                     final int sessionMessageType,
-                                     final byte[] request) {
+        public void onSessionMessage(byte[] sessionId,
+                                     int sessionMessageType,
+                                     byte[] request) {
             if (!mProxy.isDestroyed()) {
                 mNativeCallbacks.onSessionMessage(sessionId, sessionMessageType, request);
             }
         }
 
         @Override
-        public void onSessionError(final byte[] sessionId,
-                                   final String message) {
+        public void onSessionError(byte[] sessionId,
+                                   String message) {
             if (!mProxy.isDestroyed()) {
                 mNativeCallbacks.onSessionError(sessionId, message);
             }
         }
 
         @Override
-        public void onSessionBatchedKeyChanged(final byte[] sessionId,
-                                               final SessionKeyInfo[] keyInfos) {
+        public void onSessionBatchedKeyChanged(byte[] sessionId,
+                                               SessionKeyInfo[] keyInfos) {
             if (!mProxy.isDestroyed()) {
                 mNativeCallbacks.onSessionBatchedKeyChanged(sessionId, keyInfos);
             }
         }
 
         @Override
-        public void onRejectPromise(final int promiseId,
-                                    final String message) {
+        public void onRejectPromise(int promiseId,
+                                    String message) {
             if (!mProxy.isDestroyed()) {
                 mNativeCallbacks.onRejectPromise(promiseId, message);
             }
@@ -234,13 +236,13 @@ public final class MediaDrmProxy {
     }
 
     @WrapForJNI(calledFrom = "gecko")
-    public static MediaDrmProxy create(final String keySystem,
-                                       final Callbacks nativeCallbacks) {
+    public static MediaDrmProxy create(String keySystem,
+                                       Callbacks nativeCallbacks) {
         MediaDrmProxy proxy = new MediaDrmProxy(keySystem, nativeCallbacks);
         return proxy;
     }
 
-    MediaDrmProxy(final String keySystem, final Callbacks nativeCallbacks) {
+    MediaDrmProxy(String keySystem, Callbacks nativeCallbacks) {
         if (DEBUG) Log.d(LOGTAG, "Constructing MediaDrmProxy");
         try {
             mDrmStubId = UUID.randomUUID().toString();
@@ -255,10 +257,10 @@ public final class MediaDrmProxy {
     }
 
     @WrapForJNI
-    private void createSession(final int createSessionToken,
-                               final int promiseId,
-                               final String initDataType,
-                               final byte[] initData) {
+    private void createSession(int createSessionToken,
+                               int promiseId,
+                               String initDataType,
+                               byte[] initData) {
         if (DEBUG) Log.d(LOGTAG, "createSession, promiseId = " + promiseId);
         mImpl.createSession(createSessionToken,
                             promiseId,
@@ -267,13 +269,13 @@ public final class MediaDrmProxy {
     }
 
     @WrapForJNI
-    private void updateSession(final int promiseId, final String sessionId, final byte[] response) {
+    private void updateSession(int promiseId, String sessionId, byte[] response) {
         if (DEBUG) Log.d(LOGTAG, "updateSession, primiseId(" + promiseId  + "sessionId(" + sessionId + ")");
         mImpl.updateSession(promiseId, sessionId, response);
     }
 
     @WrapForJNI
-    private void closeSession(final int promiseId, final String sessionId) {
+    private void closeSession(int promiseId, String sessionId) {
         if (DEBUG) Log.d(LOGTAG, "closeSession, primiseId(" + promiseId  + "sessionId(" + sessionId + ")");
         mImpl.closeSession(promiseId, sessionId);
     }
@@ -296,7 +298,7 @@ public final class MediaDrmProxy {
     // Get corresponding MediaCrypto object by a generated UUID for MediaCodec.
     // Will be called on MediaFormatReader's TaskQueue.
     @WrapForJNI
-    public static MediaCrypto getMediaCrypto(final String stubId) {
+    public static MediaCrypto getMediaCrypto(String stubId) {
         for (MediaDrmProxy proxy : sProxyList) {
             if (proxy.getStubId().equals(stubId)) {
                 return proxy.getMediaCryptoFromBridge();

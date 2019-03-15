@@ -15,7 +15,7 @@ import android.util.Log;
 import org.mozilla.gecko.mozglue.GeckoLoader;
 
 public final class MediaManager extends Service {
-    private static final String LOGTAG = "GeckoMediaManager";
+    private static String LOGTAG = "GeckoMediaManager";
     private static boolean sNativeLibLoaded;
 
     private Binder mBinder = new IMediaManager.Stub() {
@@ -25,8 +25,8 @@ public final class MediaManager extends Service {
         }
 
         @Override
-        public IMediaDrmBridge createRemoteMediaDrmBridge(final String keySystem,
-                                                          final String stubId)
+        public IMediaDrmBridge createRemoteMediaDrmBridge(String keySystem,
+                                                          String stubId)
             throws RemoteException {
             return new RemoteMediaDrmBridgeStub(keySystem, stubId);
         }
@@ -42,12 +42,12 @@ public final class MediaManager extends Service {
     }
 
     @Override
-    public IBinder onBind(final Intent intent) {
+    public IBinder onBind(Intent intent) {
         return mBinder;
     }
 
     @Override
-    public boolean onUnbind(final Intent intent) {
+    public boolean onUnbind(Intent intent) {
         Log.i(LOGTAG, "Media service has been unbound. Stopping.");
         stopSelf();
         Process.killProcess(Process.myPid());

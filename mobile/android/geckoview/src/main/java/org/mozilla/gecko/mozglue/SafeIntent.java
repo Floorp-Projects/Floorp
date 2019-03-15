@@ -23,16 +23,16 @@ import java.util.ArrayList;
 public class SafeIntent {
     private static final String LOGTAG = "Gecko" + SafeIntent.class.getSimpleName();
 
-    private final Intent mIntent;
+    private final Intent intent;
 
     public SafeIntent(final Intent intent) {
         stripDataUri(intent);
-        mIntent = intent;
+        this.intent = intent;
     }
 
-    public boolean hasExtra(final String name) {
+    public boolean hasExtra(String name) {
         try {
-            return mIntent.hasExtra(name);
+            return intent.hasExtra(name);
         } catch (OutOfMemoryError e) {
             Log.w(LOGTAG, "Couldn't determine if intent had an extra: OOM. Malformed?");
             return false;
@@ -44,7 +44,7 @@ public class SafeIntent {
 
     public @Nullable Bundle getExtras() {
         try {
-            return mIntent.getExtras();
+            return intent.getExtras();
         } catch (OutOfMemoryError e) {
             Log.w(LOGTAG, "Couldn't get intent extras: OOM. Malformed?");
             return null;
@@ -56,7 +56,7 @@ public class SafeIntent {
 
     public boolean getBooleanExtra(final String name, final boolean defaultValue) {
         try {
-            return mIntent.getBooleanExtra(name, defaultValue);
+            return intent.getBooleanExtra(name, defaultValue);
         } catch (OutOfMemoryError e) {
             Log.w(LOGTAG, "Couldn't get intent extras: OOM. Malformed?");
             return defaultValue;
@@ -68,7 +68,7 @@ public class SafeIntent {
 
     public int getIntExtra(final String name, final int defaultValue) {
         try {
-            return mIntent.getIntExtra(name, defaultValue);
+            return intent.getIntExtra(name, defaultValue);
         } catch (OutOfMemoryError e) {
             Log.w(LOGTAG, "Couldn't get intent extras: OOM. Malformed?");
             return defaultValue;
@@ -80,7 +80,7 @@ public class SafeIntent {
 
     public String getStringExtra(final String name) {
         try {
-            return mIntent.getStringExtra(name);
+            return intent.getStringExtra(name);
         } catch (OutOfMemoryError e) {
             Log.w(LOGTAG, "Couldn't get intent extras: OOM. Malformed?");
             return null;
@@ -92,7 +92,7 @@ public class SafeIntent {
 
     public Bundle getBundleExtra(final String name) {
         try {
-            return mIntent.getBundleExtra(name);
+            return intent.getBundleExtra(name);
         } catch (OutOfMemoryError e) {
             Log.w(LOGTAG, "Couldn't get intent extras: OOM. Malformed?");
             return null;
@@ -103,12 +103,12 @@ public class SafeIntent {
     }
 
     public String getAction() {
-        return mIntent.getAction();
+        return intent.getAction();
     }
 
     public String getDataString() {
         try {
-            return mIntent.getDataString();
+            return intent.getDataString();
         } catch (OutOfMemoryError e) {
             Log.w(LOGTAG, "Couldn't get intent data string: OOM. Malformed?");
             return null;
@@ -120,7 +120,7 @@ public class SafeIntent {
 
     public ArrayList<String> getStringArrayListExtra(final String name) {
         try {
-            return mIntent.getStringArrayListExtra(name);
+            return intent.getStringArrayListExtra(name);
         } catch (OutOfMemoryError e) {
             Log.w(LOGTAG, "Couldn't get intent data string: OOM. Malformed?");
             return null;
@@ -132,7 +132,7 @@ public class SafeIntent {
 
     public Uri getData() {
         try {
-            return mIntent.getData();
+            return intent.getData();
         } catch (OutOfMemoryError e) {
             Log.w(LOGTAG, "Couldn't get intent data: OOM. Malformed?");
             return null;
@@ -143,7 +143,7 @@ public class SafeIntent {
     }
 
     public Intent getUnsafe() {
-        return mIntent;
+        return intent;
     }
 
     private static void stripDataUri(final Intent intent) {

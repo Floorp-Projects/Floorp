@@ -20,12 +20,12 @@ public final class JSONUtils {
 
     private JSONUtils() {}
 
-    public static UUID getUUID(final String name, final JSONObject json) {
+    public static UUID getUUID(String name, JSONObject json) {
         String uuid = json.optString(name, null);
         return (uuid != null) ? UUID.fromString(uuid) : null;
     }
 
-    public static void putUUID(final String name, final UUID uuid, final JSONObject json) {
+    public static void putUUID(String name, UUID uuid, JSONObject json) {
         String uuidString = uuid.toString();
         try {
             json.put(name, uuidString);
@@ -34,7 +34,7 @@ public final class JSONUtils {
         }
     }
 
-    public static JSONObject bundleToJSON(final Bundle bundle) {
+    public static JSONObject bundleToJSON(Bundle bundle) {
         if (bundle == null || bundle.isEmpty()) {
             return null;
         }
@@ -52,7 +52,7 @@ public final class JSONUtils {
     }
 
     // Handles conversions between a JSONArray and a Set<String>
-    public static Set<String> parseStringSet(final JSONArray json) {
+    public static Set<String> parseStringSet(JSONArray json) {
         final Set<String> ret = new HashSet<String>();
 
         for (int i = 0; i < json.length(); i++) {

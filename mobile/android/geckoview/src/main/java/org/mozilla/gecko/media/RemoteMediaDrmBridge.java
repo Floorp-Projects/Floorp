@@ -16,16 +16,16 @@ final class RemoteMediaDrmBridge implements GeckoMediaDrm {
     // Forward callbacks from remote bridge stub to MediaDrmProxy.
     private static class CallbacksForwarder extends IMediaDrmBridgeCallbacks.Stub {
         private final GeckoMediaDrm.Callbacks mProxyCallbacks;
-        CallbacksForwarder(final Callbacks callbacks) {
+        CallbacksForwarder(Callbacks callbacks) {
             assertTrue(callbacks != null);
             mProxyCallbacks = callbacks;
         }
 
         @Override
-        public void onSessionCreated(final int createSessionToken,
-                                     final int promiseId,
-                                     final byte[] sessionId,
-                                     final byte[] request) {
+        public void onSessionCreated(int createSessionToken,
+                                     int promiseId,
+                                     byte[] sessionId,
+                                     byte[] request) {
             mProxyCallbacks.onSessionCreated(createSessionToken,
                                              promiseId,
                                              sessionId,
@@ -33,52 +33,52 @@ final class RemoteMediaDrmBridge implements GeckoMediaDrm {
         }
 
         @Override
-        public void onSessionUpdated(final int promiseId, final byte[] sessionId) {
+        public void onSessionUpdated(int promiseId, byte[] sessionId) {
             mProxyCallbacks.onSessionUpdated(promiseId, sessionId);
         }
 
         @Override
-        public void onSessionClosed(final int promiseId, final byte[] sessionId) {
+        public void onSessionClosed(int promiseId, byte[] sessionId) {
             mProxyCallbacks.onSessionClosed(promiseId, sessionId);
         }
 
         @Override
-        public void onSessionMessage(final byte[] sessionId,
-                                     final int sessionMessageType,
-                                     final byte[] request) {
+        public void onSessionMessage(byte[] sessionId,
+                                     int sessionMessageType,
+                                     byte[] request) {
             mProxyCallbacks.onSessionMessage(sessionId, sessionMessageType, request);
         }
 
         @Override
-        public void onSessionError(final byte[] sessionId, final String message) {
+        public void onSessionError(byte[] sessionId, String message) {
             mProxyCallbacks.onSessionError(sessionId, message);
         }
 
         @Override
-        public void onSessionBatchedKeyChanged(final byte[] sessionId,
-                                               final SessionKeyInfo[] keyInfos) {
+        public void onSessionBatchedKeyChanged(byte[] sessionId,
+                                               SessionKeyInfo[] keyInfos) {
             mProxyCallbacks.onSessionBatchedKeyChanged(sessionId, keyInfos);
         }
 
         @Override
-        public void onRejectPromise(final int promiseId, final String message) {
+        public void onRejectPromise(int promiseId, String message) {
             mProxyCallbacks.onRejectPromise(promiseId, message);
         }
     } // CallbacksForwarder
 
-    /* package-private */ static void assertTrue(final boolean condition) {
+    /* package-private */ static void assertTrue(boolean condition) {
         if (DEBUG && !condition) {
             throw new AssertionError("Expected condition to be true");
         }
     }
 
-    public RemoteMediaDrmBridge(final IMediaDrmBridge remoteBridge) {
+    public RemoteMediaDrmBridge(IMediaDrmBridge remoteBridge) {
         assertTrue(remoteBridge != null);
         mRemote = remoteBridge;
     }
 
     @Override
-    public synchronized void setCallbacks(final Callbacks callbacks) {
+    public synchronized void setCallbacks(Callbacks callbacks) {
         if (DEBUG) Log.d(LOGTAG, "setCallbacks()");
         assertTrue(callbacks != null);
         assertTrue(mRemote != null);
@@ -92,10 +92,10 @@ final class RemoteMediaDrmBridge implements GeckoMediaDrm {
     }
 
     @Override
-    public synchronized void createSession(final int createSessionToken,
-                                           final int promiseId,
-                                           final String initDataType,
-                                           final byte[] initData) {
+    public synchronized void createSession(int createSessionToken,
+                                           int promiseId,
+                                           String initDataType,
+                                           byte[] initData) {
         if (DEBUG) Log.d(LOGTAG, "createSession()");
 
         try {
@@ -107,8 +107,7 @@ final class RemoteMediaDrmBridge implements GeckoMediaDrm {
     }
 
     @Override
-    public synchronized void updateSession(final int promiseId, final String sessionId,
-                                           final byte[] response) {
+    public synchronized void updateSession(int promiseId, String sessionId, byte[] response) {
         if (DEBUG) Log.d(LOGTAG, "updateSession()");
 
         try {
@@ -120,7 +119,7 @@ final class RemoteMediaDrmBridge implements GeckoMediaDrm {
     }
 
     @Override
-    public synchronized void closeSession(final int promiseId, final String sessionId) {
+    public synchronized void closeSession(int promiseId, String sessionId) {
         if (DEBUG) Log.d(LOGTAG, "closeSession()");
 
         try {
@@ -162,3 +161,4 @@ final class RemoteMediaDrmBridge implements GeckoMediaDrm {
         }
     }
 }
+
