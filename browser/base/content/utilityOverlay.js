@@ -102,10 +102,10 @@ function doGetProtocolFlags(aURI) {
  * @param {Boolean} aIgnoreAlt
  * @param {Boolean} aAllowThirdPartyFixup
  * @param {Object} aPostData
- * @param {nsIURI} aReferrerURI
+ * @param {Object} aReferrerInfo
  */
 function openUILink(url, event, aIgnoreButton, aIgnoreAlt, aAllowThirdPartyFixup,
-                    aPostData, aReferrerURI) {
+                    aPostData, aReferrerInfo) {
   event = getRootEvent(event);
   let params;
 
@@ -121,8 +121,7 @@ function openUILink(url, event, aIgnoreButton, aIgnoreAlt, aAllowThirdPartyFixup
     params = {
       allowThirdPartyFixup: aAllowThirdPartyFixup,
       postData: aPostData,
-      referrerURI: aReferrerURI,
-      referrerPolicy: Ci.nsIHttpChannel.REFERRER_POLICY_UNSET,
+      referrerInfo: aReferrerInfo,
       initiatingDoc: event ? event.target.ownerDocument : null,
     };
   }
@@ -280,7 +279,7 @@ function openWebLinkIn(url, where, params) {
  * these properties:
  *   allowThirdPartyFixup (boolean)
  *   postData             (nsIInputStream)
- *   referrerURI          (nsIURI)
+ *   referrerInfo         (nsIReferrerInfo)
  *   relatedToCurrent     (boolean)
  *   skipTabAnimation     (boolean)
  *   allowPinnedTabHostChange (boolean)
@@ -288,7 +287,7 @@ function openWebLinkIn(url, where, params) {
  *   userContextId        (unsigned int)
  *   targetBrowser        (XUL browser)
  */
-function openUILinkIn(url, where, aAllowThirdPartyFixup, aPostData, aReferrerURI) {
+function openUILinkIn(url, where, aAllowThirdPartyFixup, aPostData, aReferrerInfo) {
   var params;
 
   if (arguments.length == 3 && typeof arguments[2] == "object") {
@@ -307,14 +306,17 @@ function openUILinkIn(url, where, aAllowThirdPartyFixup, aPostData, aReferrerURI
 function openLinkIn(url, where, params) {
   if (!where || !url)
     return;
+  let ReferrerInfo = Components.Constructor("@mozilla.org/referrer-info;1",
+                                            "nsIReferrerInfo",
+                                            "init");
 
   var aFromChrome           = params.fromChrome;
   var aAllowThirdPartyFixup = params.allowThirdPartyFixup;
   var aPostData             = params.postData;
   var aCharset              = params.charset;
-  var aReferrerURI          = params.referrerURI;
-  var aReferrerPolicy       = ("referrerPolicy" in params ?
-      params.referrerPolicy : Ci.nsIHttpChannel.REFERRER_POLICY_UNSET);
+  var aReferrerInfo       = ("referrerInfo" in params)
+    ? params.referrerInfo
+    : new ReferrerInfo(Ci.nsIHttpChannel.REFERRER_POLICY_UNSET, true, null);
   var aRelatedToCurrent     = params.relatedToCurrent;
   var aAllowInheritPrincipal = !!params.allowInheritPrincipal;
   var aAllowMixedContent    = params.allowMixedContent;
@@ -324,7 +326,6 @@ function openLinkIn(url, where, params) {
   var aIsPrivate            = params.private;
   var aSkipTabAnimation     = params.skipTabAnimation;
   var aAllowPinnedTabHostChange = !!params.allowPinnedTabHostChange;
-  var aNoReferrer           = params.noReferrer;
   var aAllowPopups          = !!params.allowPopups;
   var aUserContextId        = params.userContextId;
   var aIndicateErrorPageLoad = params.indicateErrorPageLoad;
@@ -341,10 +342,9 @@ function openLinkIn(url, where, params) {
 
   if (where == "save") {
     // TODO(1073187): propagate referrerPolicy.
-
     // ContentClick.jsm passes isContentWindowPrivate for saveURL instead of passing a CPOW initiatingDoc
     if ("isContentWindowPrivate" in params) {
-      saveURL(url, null, null, true, true, aNoReferrer ? null : aReferrerURI,
+      saveURL(url, null, null, true, true, aReferrerInfo.sendReferrer ? aReferrerInfo.originalReferrer : null,
               null, params.isContentWindowPrivate, aPrincipal);
     } else {
       if (!aInitiatingDoc) {
@@ -352,7 +352,7 @@ function openLinkIn(url, where, params) {
           "where == 'save' but without initiatingDoc.  See bug 814264.");
         return;
       }
-      saveURL(url, null, null, true, true, aNoReferrer ? null : aReferrerURI, aInitiatingDoc);
+      saveURL(url, null, null, true, true, aReferrerInfo.sendReferrer ? aReferrerInfo.originalReferrer : null, aInitiatingDoc);
     }
     return;
   }
@@ -396,7 +396,7 @@ function openLinkIn(url, where, params) {
       features += ",private";
       // To prevent regular browsing data from leaking to private browsing sites,
       // strip the referrer when opening a new private window. (See Bug: 1409226)
-      aNoReferrer = true;
+      aReferrerInfo.sendReferrer = false;
     }
 
     // This propagates to window.arguments.
@@ -418,27 +418,15 @@ function openLinkIn(url, where, params) {
                                        createInstance(Ci.nsISupportsPRBool);
     allowThirdPartyFixupSupports.data = aAllowThirdPartyFixup;
 
-    var referrerURISupports = null;
-    if (aReferrerURI && !aNoReferrer) {
-      referrerURISupports = Cc["@mozilla.org/supports-string;1"].
-                            createInstance(Ci.nsISupportsString);
-      referrerURISupports.data = aReferrerURI.spec;
-    }
-
-    var referrerPolicySupports = Cc["@mozilla.org/supports-PRUint32;1"].
-                                 createInstance(Ci.nsISupportsPRUint32);
-    referrerPolicySupports.data = aReferrerPolicy;
-
     var userContextIdSupports = Cc["@mozilla.org/supports-PRUint32;1"].
                                  createInstance(Ci.nsISupportsPRUint32);
     userContextIdSupports.data = aUserContextId;
 
     sa.appendElement(wuri);
     sa.appendElement(charset);
-    sa.appendElement(referrerURISupports);
+    sa.appendElement(aReferrerInfo);
     sa.appendElement(aPostData);
     sa.appendElement(allowThirdPartyFixupSupports);
-    sa.appendElement(referrerPolicySupports);
     sa.appendElement(userContextIdSupports);
     sa.appendElement(aPrincipal);
     sa.appendElement(aTriggeringPrincipal);
@@ -558,15 +546,11 @@ function openLinkIn(url, where, params) {
                                            remoteType: E10SUtils.DEFAULT_REMOTE_TYPE });
     }
 
-    let ReferrerInfo = Components.Constructor("@mozilla.org/referrer-info;1",
-                                              "nsIReferrerInfo",
-                                              "init");
     targetBrowser.loadURI(url, {
       triggeringPrincipal: aTriggeringPrincipal,
       csp: aCsp,
-      referrerInfo: new ReferrerInfo(
-        aReferrerPolicy, !aNoReferrer, aReferrerURI),
       flags,
+      referrerInfo: aReferrerInfo,
       postData: aPostData,
       userContextId: aUserContextId,
     });
@@ -584,8 +568,7 @@ function openLinkIn(url, where, params) {
       && !aboutNewTabService.willNotifyUser;
 
     let tabUsedForLoad = w.gBrowser.loadOneTab(url, {
-      referrerURI: aReferrerURI,
-      referrerPolicy: aReferrerPolicy,
+      referrerInfo: aReferrerInfo,
       charset: aCharset,
       postData: aPostData,
       inBackground: loadInBackground,
@@ -593,7 +576,6 @@ function openLinkIn(url, where, params) {
       relatedToCurrent: aRelatedToCurrent,
       skipAnimation: aSkipTabAnimation,
       allowMixedContent: aAllowMixedContent,
-      noReferrer: aNoReferrer,
       userContextId: aUserContextId,
       originPrincipal: aPrincipal,
       triggeringPrincipal: aTriggeringPrincipal,
