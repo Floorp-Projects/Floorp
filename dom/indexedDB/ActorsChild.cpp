@@ -2053,7 +2053,7 @@ bool BackgroundDatabaseChild::DeallocPBackgroundMutableFileChild(
 }
 
 mozilla::ipc::IPCResult BackgroundDatabaseChild::RecvVersionChange(
-    const uint64_t& aOldVersion, const NullableVersion& aNewVersion) {
+    const uint64_t& aOldVersion, const Maybe<uint64_t>& aNewVersion) {
   AssertIsOnOwningThread();
 
   MaybeCollectGarbageOnIPCMessage();
@@ -2092,21 +2092,14 @@ mozilla::ipc::IPCResult BackgroundDatabaseChild::RecvVersionChange(
 
   RefPtr<Event> versionChangeEvent;
 
-  switch (aNewVersion.type()) {
-    case NullableVersion::Tnull_t:
-      versionChangeEvent =
-          IDBVersionChangeEvent::Create(kungFuDeathGrip, type, aOldVersion);
-      MOZ_ASSERT(versionChangeEvent);
-      break;
-
-    case NullableVersion::Tuint64_t:
-      versionChangeEvent = IDBVersionChangeEvent::Create(
-          kungFuDeathGrip, type, aOldVersion, aNewVersion.get_uint64_t());
-      MOZ_ASSERT(versionChangeEvent);
-      break;
-
-    default:
-      MOZ_CRASH("Should never get here!");
+  if (aNewVersion.isNothing()) {
+    versionChangeEvent =
+        IDBVersionChangeEvent::Create(kungFuDeathGrip, type, aOldVersion);
+    MOZ_ASSERT(versionChangeEvent);
+  } else {
+    versionChangeEvent = IDBVersionChangeEvent::Create(
+        kungFuDeathGrip, type, aOldVersion, aNewVersion.value());
+    MOZ_ASSERT(versionChangeEvent);
   }
 
   IDB_LOG_MARK("IndexedDB %s: Child : Firing \"versionchange\" event",
