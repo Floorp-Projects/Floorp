@@ -6,9 +6,9 @@
 const FHR_UPLOAD_ENABLED = "datareporting.healthreport.uploadEnabled";
 
 function runPaneTest(fn) {
-  open_preferences((win) => {
+  open_preferences(async (win) => {
     let doc = win.document;
-    win.gotoPref("paneAdvanced");
+    await win.gotoPref("paneAdvanced");
     let advancedPrefs = doc.getElementById("advancedPrefs");
     let tab = doc.getElementById("dataChoicesTab");
     advancedPrefs.selectedTab = tab;
