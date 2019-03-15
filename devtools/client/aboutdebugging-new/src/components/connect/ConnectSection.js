@@ -11,57 +11,31 @@ const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 class ConnectSection extends PureComponent {
   static get propTypes() {
     return {
-      children: PropTypes.node,
+      children: PropTypes.node.isRequired,
       className: PropTypes.string,
-      extraContent: PropTypes.node,
       icon: PropTypes.string.isRequired,
-      title: PropTypes.node.isRequired,
+      title: PropTypes.string.isRequired,
     };
   }
 
-  renderExtraContent() {
-    const { extraContent } = this.props;
-    return dom.section(
-      {
-        className: "connect-section__extra",
-      },
-      extraContent,
-    );
-  }
-
   render() {
-    const { extraContent } = this.props;
-
     return dom.section(
       {
-        className: `card connect-section ${this.props.className || ""}`,
+        className: `page__section ${this.props.className || ""}`,
       },
-      dom.header(
+      dom.h2(
         {
-          className: "connect-section__header",
+          className: "alt-subheading",
         },
         dom.img(
           {
-            className: "connect-section__header__icon",
+            className: "alt-subheading__icon",
             src: this.props.icon,
-          },
+          }
         ),
-        dom.h1(
-          {
-            className: "card__heading connect-section__header__title",
-          },
-          this.props.title,
-        ),
+        this.props.title
       ),
       this.props.children
-        ? dom.div(
-          {
-            className: "connect-section__content",
-          },
-          this.props.children
-        )
-        : null,
-      extraContent ? this.renderExtraContent() : null,
     );
   }
 }

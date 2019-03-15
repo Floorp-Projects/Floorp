@@ -14,6 +14,4 @@
   grid-column-gap: calc(var(--base-unit) * 2);
   grid-template-columns: auto 1fr auto;
   align-items: center;
-  padding-block-start: calc(var(--base-unit) * 4);
-  padding-inline: calc(var(--base-unit) * 6);
 }
