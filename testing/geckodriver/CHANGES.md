@@ -7,6 +7,31 @@ All notable changes to this program is documented in this file.
 Unreleased
 ----------
 
+### Added
+
+- Added support for searching for Nightly’s default path on macOS
+
+  If the location of the Firefox binary is not given, geckodriver
+  will from now also look for the location of Firefox Nightly in
+  the default locations.  The ordered list of search paths on macOS
+  is as follows:
+
+    1. `/Applications/Firefox.app/Contents/MacOS/firefox-bin`
+    2. `$HOME/Applications/Firefox.app/Contents/MacOS/firefox-bin`
+    3. `/Applications/Firefox Nightly.app/Contents/MacOS/firefox-bin`
+    4. `$HOME/Applications/Firefox Nightly.app/Contents/MacOS/firefox-bin`
+
+  Thanks to [Kriti Singh] for this patch.
+
+- Support for application bundle paths on macOS
+
+  It is now possible to pass an application bundle path, such as
+  `/Applications/Firefox.app` as argument to the `binary` field in
+  [`moz:firefoxOptions`].  This will be automatically resolved to
+  the absolute path of the binary when Firefox is started.
+
+  Thanks to [Nupur Baghel] for this patch.
+
 ### Removed
 
 - Dropped support for legacy Selenium web element references
@@ -1194,6 +1219,8 @@ and greater.
 [Jeremy Lempereur]: https://github.com/o0Ignition0o
 [Joshua Bruning]: https://github.com/joshbruning
 [Kalpesh Krishna]: https://github.com/martiansideofthemoon
+[Kriti Singh]: https://github.com/kritisingh1
 [Mike Pennisi]: https://github.com/jugglinmike
+[Nupur Baghel]: https://github.com/nupurbaghel
 [Sven Jost]: https://github/mythsunwind
 [Vlad Filippov]: https://github.com/vladikoff
