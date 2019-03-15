@@ -28,27 +28,27 @@ public class IOUtils {
     public static class ConsumedInputStream {
         public final int consumedLength;
         // Only reassigned in getTruncatedData.
-        private byte[] consumedData;
+        private byte[] mConsumedData;
 
         public ConsumedInputStream(final int consumedLength, final byte[] consumedData) {
             this.consumedLength = consumedLength;
-            this.consumedData = consumedData;
+            this.mConsumedData = consumedData;
         }
 
         /**
          * Get the data trimmed to the length of the actual payload read, caching the result.
          */
         public byte[] getTruncatedData() {
-            if (consumedData.length == consumedLength) {
-                return consumedData;
+            if (mConsumedData.length == consumedLength) {
+                return mConsumedData;
             }
 
-            consumedData = truncateBytes(consumedData, consumedLength);
-            return consumedData;
+            mConsumedData = truncateBytes(mConsumedData, consumedLength);
+            return mConsumedData;
         }
 
         public byte[] getData() {
-            return consumedData;
+            return mConsumedData;
         }
     }
 
