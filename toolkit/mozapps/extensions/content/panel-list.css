@@ -1,0 +1,73 @@
+:host(:not([open])) {
+  display: none;
+}
+
+:host([showing]) {
+  visibility: hidden;
+}
+
+:host {
+  position: absolute;
+  background: var(--in-content-box-background);
+  border: 1px solid var(--panel-border-color);
+  border-radius: var(--panel-border-radius);
+  padding: 6px 0;
+  margin-bottom: 16px;
+  box-shadow: var(--shadow-30);
+  min-width: 12em;
+  z-index: 1;
+  white-space: nowrap;
+}
+
+:host([valign="top"]) {
+  bottom: 30px;
+}
+
+:host([valign="bottom"]) {
+  top: 30px;
+}
+
+:host([align="left"]) {
+  left: -14px;
+}
+
+:host([align="right"]) {
+  right: -14px;
+}
+
+.list {
+  margin: 0;
+  padding: 0;
+}
+
+.arrow {
+  width: 18px;
+  height: 9px;
+  -moz-context-properties: fill, stroke;
+  stroke: var(--panel-border-color);
+  fill: var(--in-content-box-background);
+  background: url("chrome://global/skin/arrow/panelarrow-vertical.svg");
+  position: absolute;
+}
+
+:host([valign="bottom"]) > .arrow.bottom,
+:host([valign="top"]) > .arrow.top {
+  display: none;
+}
+
+.arrow.top {
+  top: -9px;
+}
+
+.arrow.bottom {
+  bottom: -9px;
+  transform: scaleY(-1);
+}
+
+:host([align="left"]) > .arrow {
+  left: 16px;
+}
+
+:host([align="right"]) > .arrow {
+  right: 16px;
+}
