@@ -20,8 +20,7 @@ private object Versions {
     const val androidx_annotation = "1.1.0-alpha02"
     const val androidx_lifecycle = "2.1.0-alpha03"
     const val androidx_fragment = "1.1.0-alpha05"
-    const val androidx_safeargs = "1.0.0-beta01"
-    const val androidx_navigation = "2.0.0-rc02"
+    const val androidx_navigation = "2.0.0"
 
     const val appservices_gradle_plugin = "0.3.1"
     const val mozilla_android_components = "0.47.0-SNAPSHOT"
@@ -124,7 +123,7 @@ object Deps {
     const val androidx_legacy = "androidx.legacy:legacy-support-v4:${Versions.androidx_legacy}"
     const val androidx_lifecycle_runtime = "androidx.lifecycle:lifecycle-runtime:${Versions.androidx_lifecycle}"
     const val androidx_preference = "androidx.preference:preference-ktx:${Versions.androidx_preference}"
-    const val androidx_safeargs = "android.arch.navigation:navigation-safe-args-gradle-plugin:${Versions.androidx_safeargs}"
+    const val androidx_safeargs = "androidx.navigation:navigation-safe-args-gradle-plugin:${Versions.androidx_navigation}"
     const val androidx_navigation_fragment = "androidx.navigation:navigation-fragment:${Versions.androidx_navigation}"
     const val androidx_navigation_ui = "androidx.navigation:navigation-ui:${Versions.androidx_navigation}"
 
