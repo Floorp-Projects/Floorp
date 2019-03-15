@@ -151,9 +151,9 @@ CLONE_VCS_PROMPT = '''
 Destination directory for {} clone (leave empty to not clone): '''.lstrip()
 
 CLONE_VCS_NOT_EMPTY = '''
-ERROR! Destination directory '{}' is not empty.
+Destination directory '{}' is not empty.
 
-Would you like to clone to '{}'?
+Would you like to clone to '{}' instead?
 
   1. Yes
   2. No, let me enter another path
@@ -162,7 +162,7 @@ Would you like to clone to '{}'?
 Please enter your reply: '''.lstrip()
 
 CLONE_VCS_NOT_EMPTY_FALLBACK_FAILED = '''
-ERROR! Destination directory '{}' is not empty.
+ERROR! Destination directory '{}' is not empty and '{}' exists.
 '''
 
 CLONE_VCS_NOT_DIR = '''
@@ -325,7 +325,7 @@ class Bootstrapper(object):
 
             newdest = os.path.join(dest, repo_name)
             if os.path.exists(newdest):
-                print(CLONE_VCS_NOT_EMPTY_FALLBACK_FAILED.format(dest))
+                print(CLONE_VCS_NOT_EMPTY_FALLBACK_FAILED.format(dest, newdest))
                 continue
 
             choice = self.instance.prompt_int(prompt=CLONE_VCS_NOT_EMPTY.format(dest,
