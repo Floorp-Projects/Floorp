@@ -27,7 +27,7 @@ public class GeckoSystemStateListener
 
     private static final GeckoSystemStateListener listenerInstance = new GeckoSystemStateListener();
 
-    private boolean initialized;
+    private boolean mInitialized;
     private ContentObserver mContentObserver;
     private static Context sApplicationContext;
     private InputManager mInputManager;
@@ -40,7 +40,7 @@ public class GeckoSystemStateListener
     }
 
     public synchronized void initialize(final Context context) {
-        if (initialized) {
+        if (mInitialized) {
             Log.w(LOGTAG, "Already initialized!");
             return;
         }
@@ -59,11 +59,11 @@ public class GeckoSystemStateListener
         };
         contentResolver.registerContentObserver(animationSetting, false, mContentObserver);
 
-        initialized = true;
+        mInitialized = true;
     }
 
     public synchronized void shutdown() {
-        if (!initialized) {
+        if (!mInitialized) {
             Log.w(LOGTAG, "Already shut down!");
             return;
         }
@@ -78,7 +78,7 @@ public class GeckoSystemStateListener
         ContentResolver contentResolver = sApplicationContext.getContentResolver();
         contentResolver.unregisterContentObserver(mContentObserver);
 
-        initialized = false;
+        mInitialized = false;
         mInputManager = null;
         mContentObserver = null;
     }
