@@ -334,6 +334,12 @@ VARCACHE_PREF(
 )
 
 VARCACHE_PREF(
+  "dom.webnotifications.requireuserinteraction",
+   dom_webnotifications_requireuserinteraction,
+  RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
   "dom.webnotifications.serviceworker.enabled",
    dom_webnotifications_serviceworker_enabled,
   RelaxedAtomicBool, true

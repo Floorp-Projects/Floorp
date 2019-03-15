@@ -167,6 +167,14 @@ var PermissionPromptPrototype = {
   },
 
   /**
+   * If true, the prompt will be cancelled automatically unless
+   * request.isHandlingUserInput is true.
+   */
+  get requiresUserInput() {
+    return false;
+  },
+
+  /**
    * PopupNotification requires a unique ID to open the notification.
    * You must return a unique ID string here, for which PopupNotification
    * will then create a <xul:popupnotification> node with the ID
@@ -330,6 +338,11 @@ var PermissionPromptPrototype = {
         this.cancel();
         return;
       }
+    }
+
+    if (this.requiresUserInput && !this.request.isHandlingUserInput) {
+      this.cancel();
+      return;
     }
 
     let chromeWin = this.browser.ownerGlobal;
@@ -570,6 +583,9 @@ PermissionUI.GeolocationPermissionPrompt = GeolocationPermissionPrompt;
  */
 function DesktopNotificationPermissionPrompt(request) {
   this.request = request;
+
+  XPCOMUtils.defineLazyPreferenceGetter(this, "requiresUserInput",
+                                        "dom.webnotifications.requireuserinteraction");
 }
 
 DesktopNotificationPermissionPrompt.prototype = {
