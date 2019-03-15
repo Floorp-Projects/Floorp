@@ -19,11 +19,18 @@ import java.util.concurrent.TimeUnit
 /**
  * A [AwesomeBar.SuggestionProvider] implementation that provides a suggestion containing search engine suggestions (as
  * chips) from the passed in [SearchEngine].
+ *
+ * @param searchEngine The search engine to request suggestions from.
+ * @param searchUseCase The use case to invoke for searches.
+ * @param fetchClient The HTTP client for requesting suggestions from the search engine.
+ * @param limit The maximum number of suggestions that should be returned.
+ * @param mode Whether to return a single search suggestion (with chips) or one suggestion per item.
  */
 class SearchSuggestionProvider(
     private val searchEngine: SearchEngine,
     private val searchUseCase: SearchUseCases.SearchUseCase,
     private val fetchClient: Client,
+    private val limit: Int = 15,
     private val mode: Mode = Mode.SINGLE_SUGGESTION
 ) : AwesomeBar.SuggestionProvider {
     override val id: String = UUID.randomUUID().toString()
@@ -78,7 +85,7 @@ class SearchSuggestionProvider(
             list.add(0, text)
         }
 
-        list.forEachIndexed { index, item ->
+        list.take(limit).forEachIndexed { index, item ->
             suggestions.add(AwesomeBar.Suggestion(
                 provider = this,
                 // We always use the same ID for the entered text so that this suggestion gets replaced "in place".
@@ -106,7 +113,7 @@ class SearchSuggestionProvider(
             chips.add(AwesomeBar.Suggestion.Chip(text))
         }
 
-        result?.forEach { title ->
+        result?.take(limit - chips.size)?. forEach { title ->
             chips.add(AwesomeBar.Suggestion.Chip(title))
         }
 

@@ -74,9 +74,10 @@ class AwesomeBarFeature(
         searchEngine: SearchEngine,
         searchUseCase: SearchUseCases.SearchUseCase,
         fetchClient: Client,
+        limit: Int = 15,
         mode: SearchSuggestionProvider.Mode = SearchSuggestionProvider.Mode.SINGLE_SUGGESTION
     ): AwesomeBarFeature {
-        awesomeBar.addProviders(SearchSuggestionProvider(searchEngine, searchUseCase, fetchClient, mode))
+        awesomeBar.addProviders(SearchSuggestionProvider(searchEngine, searchUseCase, fetchClient, limit, mode))
         return this
     }
 

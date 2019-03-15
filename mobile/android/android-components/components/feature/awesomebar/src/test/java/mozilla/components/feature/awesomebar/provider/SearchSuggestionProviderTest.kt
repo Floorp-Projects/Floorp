@@ -4,6 +4,8 @@
 
 package mozilla.components.feature.awesomebar.provider
 
+import android.content.Context
+import androidx.test.core.app.ApplicationProvider
 import junit.framework.Assert.assertEquals
 import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.search.SearchEngine
@@ -34,6 +36,9 @@ private const val GOOGLE_MOCK_RESPONSE = "[\"firefox\",[\"firefox\",\"firefox fo
 
 @RunWith(RobolectricTestRunner::class)
 class SearchSuggestionProviderTest {
+    private val context: Context
+        get() = ApplicationProvider.getApplicationContext()
+
     @Test
     fun `Provider returns suggestion with chips based on search engine suggestion`() {
         runBlocking {
@@ -117,7 +122,7 @@ class SearchSuggestionProviderTest {
                 searchEngine,
                 useCase,
                 HttpURLConnectionClient(),
-                SearchSuggestionProvider.Mode.MULTIPLE_SUGGESTIONS
+                mode = SearchSuggestionProvider.Mode.MULTIPLE_SUGGESTIONS
             )
 
             try {
@@ -144,6 +149,99 @@ class SearchSuggestionProviderTest {
                 suggestions[6].onSuggestionClicked!!.invoke()
 
                 verify(useCase).invoke(eq("firefox focus"), any<Session>(), any<SearchEngine>())
+            } finally {
+                server.shutdown()
+            }
+        }
+    }
+
+    @Test
+    fun `Provider returns multiple suggestions with limit`() {
+        runBlocking {
+            val server = MockWebServer()
+            server.enqueue(MockResponse().setBody(GOOGLE_MOCK_RESPONSE))
+            server.start()
+
+            val searchEngine: SearchEngine = mock()
+            doReturn(server.url("/").toString())
+                .`when`(searchEngine).buildSuggestionsURL("fire")
+            doReturn(true).`when`(searchEngine).canProvideSearchSuggestions
+            doReturn("google").`when`(searchEngine).name
+
+            val searchEngineManager: SearchEngineManager = mock()
+            doReturn(searchEngine).`when`(searchEngineManager).getDefaultSearchEngine(any(), any())
+
+            val useCase = spy(SearchUseCases(
+                RuntimeEnvironment.application,
+                searchEngineManager,
+                SessionManager(mock()).apply { add(Session("https://www.mozilla.org")) }
+            ).defaultSearch)
+            doNothing().`when`(useCase).invoke(anyString(), any<Session>(), any<SearchEngine>())
+
+            val provider = SearchSuggestionProvider(
+                searchEngine,
+                useCase,
+                HttpURLConnectionClient(),
+                mode = SearchSuggestionProvider.Mode.MULTIPLE_SUGGESTIONS,
+                limit = 5
+            )
+
+            try {
+                val suggestions = provider.onInputChanged("fire")
+
+                println(suggestions)
+
+                assertEquals(5, suggestions.size)
+
+                assertEquals("fire", suggestions[0].title)
+                assertEquals("firefox", suggestions[1].title)
+                assertEquals("firefox for mac", suggestions[2].title)
+                assertEquals("firefox quantum", suggestions[3].title)
+                assertEquals("firefox update", suggestions[4].title)
+            } finally {
+                server.shutdown()
+            }
+        }
+    }
+
+    @Test
+    fun `Provider returns chips with limit`() {
+        runBlocking {
+            val server = MockWebServer()
+            server.enqueue(MockResponse().setBody(GOOGLE_MOCK_RESPONSE))
+            server.start()
+
+            val searchEngine: SearchEngine = mock()
+            doReturn(server.url("/").toString())
+                .`when`(searchEngine).buildSuggestionsURL("fire")
+            doReturn(true).`when`(searchEngine).canProvideSearchSuggestions
+            doReturn("google").`when`(searchEngine).name
+
+            val searchEngineManager: SearchEngineManager = mock()
+            doReturn(searchEngine).`when`(searchEngineManager).getDefaultSearchEngine(any(), any())
+
+            val useCase = spy(SearchUseCases(
+                RuntimeEnvironment.application,
+                searchEngineManager,
+                SessionManager(mock()).apply { add(Session("https://www.mozilla.org")) }
+            ).defaultSearch)
+            doNothing().`when`(useCase).invoke(anyString(), any<Session>(), any<SearchEngine>())
+
+            val provider =
+                SearchSuggestionProvider(searchEngine, useCase, HttpURLConnectionClient(), limit = 5)
+
+            try {
+                val suggestions = provider.onInputChanged("fire")
+                assertEquals(1, suggestions.size)
+
+                val suggestion = suggestions[0]
+                assertEquals(5, suggestion.chips.size)
+
+                assertEquals("fire", suggestion.chips[0].title)
+                assertEquals("firefox", suggestion.chips[1].title)
+                assertEquals("firefox for mac", suggestion.chips[2].title)
+                assertEquals("firefox quantum", suggestion.chips[3].title)
+                assertEquals("firefox update", suggestion.chips[4].title)
             } finally {
                 server.shutdown()
             }

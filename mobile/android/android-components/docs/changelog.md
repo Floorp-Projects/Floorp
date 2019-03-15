@@ -66,6 +66,9 @@ permalink: /changelog/
   * Saving, restoring and removing `SessionBundle` instances need to happen on a worker thread now (off the main thread).
   * The actual session state is now saved on the file system outside of the internally used SQLite database.
 
+* **feature-awesomebar**
+  * `SearchSuggestionProvider` and `AwesomeBarFeature` now allow setting a search suggestion limit.
+
 * **support-ktx**
   * Added `File.truncateDirectory()` to remove all files (and sub directories) in a directory.
   * Added `Activity.applyOrientation(manifest: WebAppManifest)` extension method for applying orientation modes #2291.
