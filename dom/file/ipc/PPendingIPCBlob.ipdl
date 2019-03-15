@@ -21,22 +21,13 @@ struct PendingIPCFileData
   int64_t lastModified;
 };
 
-// Union for blob vs file.
-union PendingIPCFileUnion
-{
-  // For Blob.
-  void_t;
-
-  // For File.
-  PendingIPCFileData;
-};
-
 struct PendingIPCBlobData
 {
   nsString type;
   uint64_t size;
 
-  PendingIPCFileUnion file;
+  // Nothing() is used for Blob
+  PendingIPCFileData? file;
 };
 
 protocol PPendingIPCBlob
