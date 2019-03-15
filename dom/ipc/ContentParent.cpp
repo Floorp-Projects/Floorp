@@ -4694,11 +4694,11 @@ mozilla::ipc::IPCResult ContentParent::CommonCreateWindow(
     PBrowserParent* aThisTab, bool aSetOpener, const uint32_t& aChromeFlags,
     const bool& aCalledFromJS, const bool& aPositionSpecified,
     const bool& aSizeSpecified, nsIURI* aURIToLoad, const nsCString& aFeatures,
-    const nsCString& aBaseURI, const float& aFullZoom,
-    uint64_t aNextTabParentId, const nsString& aName, nsresult& aResult,
-    nsCOMPtr<nsITabParent>& aNewTabParent, bool* aWindowIsNew,
-    int32_t& aOpenLocation, nsIPrincipal* aTriggeringPrincipal,
-    uint32_t aReferrerPolicy, bool aLoadURI, nsIContentSecurityPolicy* aCsp)
+    const float& aFullZoom, uint64_t aNextTabParentId, const nsString& aName,
+    nsresult& aResult, nsCOMPtr<nsITabParent>& aNewTabParent,
+    bool* aWindowIsNew, int32_t& aOpenLocation,
+    nsIPrincipal* aTriggeringPrincipal, nsIReferrerInfo* aReferrerInfo,
+    bool aLoadURI, nsIContentSecurityPolicy* aCsp)
 
 {
   // The content process should never be in charge of computing whether or
@@ -4778,10 +4778,9 @@ mozilla::ipc::IPCResult ContentParent::CommonCreateWindow(
 
     nsCOMPtr<nsIOpenURIInFrameParams> params =
         new nsOpenURIInFrameParams(openerOriginAttributes, openerElement);
-    params->SetReferrer(NS_ConvertUTF8toUTF16(aBaseURI));
+    params->SetReferrerInfo(aReferrerInfo);
     MOZ_ASSERT(aTriggeringPrincipal, "need a valid triggeringPrincipal");
     params->SetTriggeringPrincipal(aTriggeringPrincipal);
-    params->SetReferrerPolicy(aReferrerPolicy);
     params->SetCsp(aCsp);
 
     RefPtr<Element> el;
@@ -4898,9 +4897,9 @@ mozilla::ipc::IPCResult ContentParent::RecvCreateWindow(
     const uint32_t& aChromeFlags, const bool& aCalledFromJS,
     const bool& aPositionSpecified, const bool& aSizeSpecified,
     const Maybe<URIParams>& aURIToLoad, const nsCString& aFeatures,
-    const nsCString& aBaseURI, const float& aFullZoom,
-    const IPC::Principal& aTriggeringPrincipal, nsIContentSecurityPolicy* aCsp,
-    const uint32_t& aReferrerPolicy, CreateWindowResolver&& aResolve) {
+    const float& aFullZoom, const IPC::Principal& aTriggeringPrincipal,
+    nsIContentSecurityPolicy* aCsp, nsIReferrerInfo* aReferrerInfo,
+    CreateWindowResolver&& aResolve) {
   nsresult rv = NS_OK;
   CreatedWindowInfo cwi;
 
@@ -4943,9 +4942,9 @@ mozilla::ipc::IPCResult ContentParent::RecvCreateWindow(
   int32_t openLocation = nsIBrowserDOMWindow::OPEN_NEWWINDOW;
   mozilla::ipc::IPCResult ipcResult = CommonCreateWindow(
       aThisTab, /* aSetOpener = */ true, aChromeFlags, aCalledFromJS,
-      aPositionSpecified, aSizeSpecified, uriToLoad, aFeatures, aBaseURI,
-      aFullZoom, nextTabParentId, VoidString(), rv, newRemoteTab,
-      &cwi.windowOpened(), openLocation, aTriggeringPrincipal, aReferrerPolicy,
+      aPositionSpecified, aSizeSpecified, uriToLoad, aFeatures, aFullZoom,
+      nextTabParentId, VoidString(), rv, newRemoteTab, &cwi.windowOpened(),
+      openLocation, aTriggeringPrincipal, aReferrerInfo,
       /* aLoadUri = */ false, aCsp);
   if (!ipcResult) {
     return ipcResult;
@@ -4978,10 +4977,9 @@ mozilla::ipc::IPCResult ContentParent::RecvCreateWindowInDifferentProcess(
     PBrowserParent* aThisTab, const uint32_t& aChromeFlags,
     const bool& aCalledFromJS, const bool& aPositionSpecified,
     const bool& aSizeSpecified, const Maybe<URIParams>& aURIToLoad,
-    const nsCString& aFeatures, const nsCString& aBaseURI,
-    const float& aFullZoom, const nsString& aName,
+    const nsCString& aFeatures, const float& aFullZoom, const nsString& aName,
     const IPC::Principal& aTriggeringPrincipal, nsIContentSecurityPolicy* aCsp,
-    const uint32_t& aReferrerPolicy) {
+    nsIReferrerInfo* aReferrerInfo) {
   nsCOMPtr<nsITabParent> newRemoteTab;
   bool windowIsNew;
   nsCOMPtr<nsIURI> uriToLoad = DeserializeURI(aURIToLoad);
@@ -4990,10 +4988,9 @@ mozilla::ipc::IPCResult ContentParent::RecvCreateWindowInDifferentProcess(
   nsresult rv;
   mozilla::ipc::IPCResult ipcResult = CommonCreateWindow(
       aThisTab, /* aSetOpener = */ false, aChromeFlags, aCalledFromJS,
-      aPositionSpecified, aSizeSpecified, uriToLoad, aFeatures, aBaseURI,
-      aFullZoom,
+      aPositionSpecified, aSizeSpecified, uriToLoad, aFeatures, aFullZoom,
       /* aNextTabParentId = */ 0, aName, rv, newRemoteTab, &windowIsNew,
-      openLocation, aTriggeringPrincipal, aReferrerPolicy,
+      openLocation, aTriggeringPrincipal, aReferrerInfo,
       /* aLoadUri = */ true, aCsp);
   if (!ipcResult) {
     return ipcResult;

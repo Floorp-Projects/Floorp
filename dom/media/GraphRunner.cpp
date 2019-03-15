@@ -9,6 +9,7 @@
 #include "GraphDriver.h"
 #include "MediaStreamGraph.h"
 #include "MediaStreamGraphImpl.h"
+#include "mozilla/dom/WorkletThread.h"
 #include "nsISupportsImpl.h"
 #include "prthread.h"
 #include "Tracing.h"
@@ -101,6 +102,8 @@ void GraphRunner::Run() {
     mStillProcessing = mGraph->OneIterationImpl(mStateEnd);
     mMonitor.Notify();  // Signal that mStillProcessing was updated
   }
+
+  dom::WorkletThread::DeleteCycleCollectedJSContext();
 }
 
 bool GraphRunner::OnThread() { return PR_GetCurrentThread() == mThread; }
