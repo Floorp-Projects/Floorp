@@ -151,11 +151,11 @@ class AllocationWrapper : public MediaDataDecoder {
                      /* IsExclusive = */ true>
       AllocateDecoderPromise;
   // Will create a decoder has soon as one can be created according to the
-  // GlobalAllocPolicy.
+  // AllocPolicy (or GlobalAllocPolicy if aPolicy is null)
   // Warning: all aParams members must be valid until the promise has been
   // resolved, as some contains raw pointers to objects.
   static RefPtr<AllocateDecoderPromise> CreateDecoder(
-      const CreateDecoderParams& aParams);
+      const CreateDecoderParams& aParams, AllocPolicy* aPolicy = nullptr);
 
  private:
   RefPtr<MediaDataDecoder> mDecoder;
