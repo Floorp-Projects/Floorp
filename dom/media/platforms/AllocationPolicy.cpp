@@ -18,17 +18,61 @@ namespace mozilla {
 
 using TrackType = TrackInfo::TrackType;
 
-StaticMutex GlobalAllocPolicy::sMutex;
-
-class GlobalAllocPolicy::AutoDeallocToken : public Token {
+class AllocPolicyImpl::AutoDeallocToken : public Token {
  public:
-  explicit AutoDeallocToken(GlobalAllocPolicy& aPolicy) : mPolicy(aPolicy) {}
+  explicit AutoDeallocToken(const RefPtr<AllocPolicyImpl>& aPolicy)
+      : mPolicy(aPolicy) {}
 
  private:
-  ~AutoDeallocToken() { mPolicy.Dealloc(); }
+  ~AutoDeallocToken() { mPolicy->Dealloc(); }
 
-  GlobalAllocPolicy& mPolicy;  // reference to a singleton object.
+  RefPtr<AllocPolicyImpl> mPolicy;
 };
+
+AllocPolicyImpl::AllocPolicyImpl(int aDecoderLimit)
+    : mMaxDecoderLimit(aDecoderLimit),
+      mMonitor("AllocPolicyImpl"),
+      mDecoderLimit(aDecoderLimit) {}
+AllocPolicyImpl::~AllocPolicyImpl() { RejectAll(); }
+
+auto AllocPolicyImpl::Alloc() -> RefPtr<Promise> {
+  ReentrantMonitorAutoEnter mon(mMonitor);
+  // No decoder limit set.
+  if (mDecoderLimit < 0) {
+    return Promise::CreateAndResolve(new Token(), __func__);
+  }
+
+  RefPtr<PromisePrivate> p = new PromisePrivate(__func__);
+  mPromises.push(p);
+  ResolvePromise(mon);
+  return p.forget();
+}
+
+void AllocPolicyImpl::Dealloc() {
+  ReentrantMonitorAutoEnter mon(mMonitor);
+  ++mDecoderLimit;
+  ResolvePromise(mon);
+}
+
+void AllocPolicyImpl::ResolvePromise(ReentrantMonitorAutoEnter& aProofOfLock) {
+  MOZ_ASSERT(mDecoderLimit >= 0);
+
+  if (mDecoderLimit > 0 && !mPromises.empty()) {
+    --mDecoderLimit;
+    RefPtr<PromisePrivate> p = mPromises.front().forget();
+    mPromises.pop();
+    p->Resolve(new AutoDeallocToken(this), __func__);
+  }
+}
+
+void AllocPolicyImpl::RejectAll() {
+  ReentrantMonitorAutoEnter mon(mMonitor);
+  while (!mPromises.empty()) {
+    RefPtr<PromisePrivate> p = mPromises.front().forget();
+    mPromises.pop();
+    p->Reject(true, __func__);
+  }
+}
 
 static int32_t MediaDecoderLimitDefault() {
 #ifdef MOZ_WIDGET_ANDROID
@@ -42,109 +86,88 @@ static int32_t MediaDecoderLimitDefault() {
   return -1;
 }
 
-GlobalAllocPolicy::GlobalAllocPolicy()
-    : mMonitor("DecoderAllocPolicy::mMonitor"),
-      mDecoderLimit(MediaDecoderLimitDefault()) {
-  SystemGroup::Dispatch(
-      TaskCategory::Other,
-      NS_NewRunnableFunction("GlobalAllocPolicy::GlobalAllocPolicy", [this]() {
-        ClearOnShutdown(this, ShutdownPhase::ShutdownThreads);
-      }));
-}
+StaticMutex GlobalAllocPolicy::sMutex;
 
-GlobalAllocPolicy::~GlobalAllocPolicy() {
-  while (!mPromises.empty()) {
-    RefPtr<PromisePrivate> p = mPromises.front().forget();
-    mPromises.pop();
-    p->Reject(true, __func__);
-  }
-}
-
-GlobalAllocPolicy& GlobalAllocPolicy::Instance(TrackType aTrack) {
+NotNull<AllocPolicy*> GlobalAllocPolicy::Instance(TrackType aTrack) {
   StaticMutexAutoLock lock(sMutex);
   if (aTrack == TrackType::kAudioTrack) {
-    static auto sAudioPolicy = new GlobalAllocPolicy();
-    return *sAudioPolicy;
-  } else {
-    static auto sVideoPolicy = new GlobalAllocPolicy();
-    return *sVideoPolicy;
+    static RefPtr<AllocPolicyImpl> sAudioPolicy = []() {
+      SystemGroup::Dispatch(
+          TaskCategory::Other,
+          NS_NewRunnableFunction(
+              "GlobalAllocPolicy::GlobalAllocPolicy:Audio", []() {
+                ClearOnShutdown(&sAudioPolicy, ShutdownPhase::ShutdownThreads);
+              }));
+      return new AllocPolicyImpl(MediaDecoderLimitDefault());
+    }();
+    return WrapNotNull(sAudioPolicy.get());
   }
+  static RefPtr<AllocPolicyImpl> sVideoPolicy = []() {
+    SystemGroup::Dispatch(
+        TaskCategory::Other,
+        NS_NewRunnableFunction(
+            "GlobalAllocPolicy::GlobalAllocPolicy:Audio", []() {
+              ClearOnShutdown(&sVideoPolicy, ShutdownPhase::ShutdownThreads);
+            }));
+    return new AllocPolicyImpl(MediaDecoderLimitDefault());
+  }();
+  return WrapNotNull(sVideoPolicy.get());
 }
 
-auto GlobalAllocPolicy::Alloc() -> RefPtr<Promise> {
-  // No decoder limit set.
-  if (mDecoderLimit < 0) {
-    return Promise::CreateAndResolve(new Token(), __func__);
-  }
+class LocalAllocPolicy::AutoDeallocCombinedToken : public Token {
+ public:
+  AutoDeallocCombinedToken(already_AddRefed<Token> aLocalAllocPolicyToken,
+                           already_AddRefed<Token> aGlobalAllocPolicyToken)
+      : mLocalToken(aLocalAllocPolicyToken),
+        mGlobalToken(aGlobalAllocPolicyToken) {}
 
-  ReentrantMonitorAutoEnter mon(mMonitor);
-  RefPtr<PromisePrivate> p = new PromisePrivate(__func__);
-  mPromises.push(p);
-  ResolvePromise(mon);
-  return p.forget();
-}
+ private:
+  // Release tokens allocated from GlobalAllocPolicy and LocalAllocPolicy
+  // and process next token request if any.
+  ~AutoDeallocCombinedToken() = default;
+  const RefPtr<Token> mLocalToken;
+  const RefPtr<Token> mGlobalToken;
+};
 
-void GlobalAllocPolicy::Dealloc() {
-  ReentrantMonitorAutoEnter mon(mMonitor);
-  ++mDecoderLimit;
-  ResolvePromise(mon);
-}
-
-void GlobalAllocPolicy::ResolvePromise(
-    ReentrantMonitorAutoEnter& aProofOfLock) {
-  MOZ_ASSERT(mDecoderLimit >= 0);
-
-  if (mDecoderLimit > 0 && !mPromises.empty()) {
-    --mDecoderLimit;
-    RefPtr<PromisePrivate> p = mPromises.front().forget();
-    mPromises.pop();
-    p->Resolve(new AutoDeallocToken(*this), __func__);
-  }
-}
-
-void GlobalAllocPolicy::operator=(std::nullptr_t) { delete this; }
-
-RefPtr<LocalAllocPolicy::Promise> LocalAllocPolicy::Alloc() {
-  MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
-  MOZ_DIAGNOSTIC_ASSERT(mPendingPromise.IsEmpty());
-  RefPtr<Promise> p = mPendingPromise.Ensure(__func__);
-  if (mDecoderLimit > 0) {
-    ProcessRequest();
-  }
-  return p.forget();
-}
-
-void LocalAllocPolicy::ProcessRequest() {
-  MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
-  MOZ_DIAGNOSTIC_ASSERT(mDecoderLimit > 0);
-
-  // No pending request.
-  if (mPendingPromise.IsEmpty()) {
-    return;
-  }
-
-  RefPtr<AutoDeallocToken> token = new AutoDeallocToken(this);
+auto LocalAllocPolicy::Alloc() -> RefPtr<Promise> {
+  MOZ_DIAGNOSTIC_ASSERT(MaxDecoderLimit() == 1,
+                        "We can only handle at most one token out at a time.");
   RefPtr<LocalAllocPolicy> self = this;
+  return AllocPolicyImpl::Alloc()->Then(
+      mOwnerThread, __func__,
+      [self](RefPtr<Token> aToken) {
+        RefPtr<Token> localToken = aToken.forget();
+        RefPtr<Promise> p = self->mPendingPromise.Ensure(__func__);
+        GlobalAllocPolicy::Instance(self->mTrack)
+            ->Alloc()
+            ->Then(self->mOwnerThread, __func__,
+                   [self, localToken = std::move(localToken)](
+                       RefPtr<Token> aToken) mutable {
+                     self->mTokenRequest.Complete();
+                     RefPtr<Token> combinedToken = new AutoDeallocCombinedToken(
+                         localToken.forget(), aToken.forget());
+                     self->mPendingPromise.Resolve(combinedToken, __func__);
+                   },
+                   [self]() {
+                     self->mTokenRequest.Complete();
+                     self->mPendingPromise.Reject(true, __func__);
+                   })
+            ->Track(self->mTokenRequest);
+        return p;
+      },
+      []() { return Promise::CreateAndReject(true, __func__); });
+}
 
-  GlobalAllocPolicy::Instance(mTrack)
-      .Alloc()
-      ->Then(mOwnerThread, __func__,
-             [self, token](RefPtr<Token> aToken) {
-               self->mTokenRequest.Complete();
-               token->Append(aToken);
-               self->mPendingPromise.Resolve(token, __func__);
-             },
-             [self, token]() {
-               self->mTokenRequest.Complete();
-               self->mPendingPromise.Reject(true, __func__);
-             })
-      ->Track(mTokenRequest);
+LocalAllocPolicy::~LocalAllocPolicy() {
+  mPendingPromise.RejectIfExists(true, __func__);
+  mTokenRequest.DisconnectIfExists();
 }
 
 void LocalAllocPolicy::Cancel() {
   MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
   mPendingPromise.RejectIfExists(true, __func__);
   mTokenRequest.DisconnectIfExists();
+  RejectAll();
 }
 
 AllocationWrapper::AllocationWrapper(
@@ -187,7 +210,7 @@ AllocationWrapper::CreateDecoder(const CreateDecoderParams& aParams) {
 
   RefPtr<AllocateDecoderPromise> p =
       GlobalAllocPolicy::Instance(aParams.mType)
-          .Alloc()
+          ->Alloc()
           ->Then(AbstractThread::GetCurrent(), __func__,
                  [=](RefPtr<Token> aToken) {
                    // result may not always be updated by

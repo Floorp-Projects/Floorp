@@ -262,8 +262,8 @@ void MediaFormatReader::DecoderData::Flush() {
 
 class MediaFormatReader::DecoderFactory {
   using InitPromise = MediaDataDecoder::InitPromise;
-  using TokenPromise = GlobalAllocPolicy::Promise;
-  using Token = GlobalAllocPolicy::Token;
+  using TokenPromise = AllocPolicy::Promise;
+  using Token = AllocPolicy::Token;
 
  public:
   explicit DecoderFactory(MediaFormatReader* aOwner)
