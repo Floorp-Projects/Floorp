@@ -897,26 +897,26 @@ import android.view.inputmethod.EditorInfo;
     public void sendKeyEvent(final @Nullable View view, final int action, @NonNull KeyEvent event) {
         final Editable editable = mProxy;
         final KeyListener keyListener = TextKeyListener.getInstance();
-        event = translateKey(event.getKeyCode(), event);
+        KeyEvent translatedEvent = translateKey(event.getKeyCode(), event);
 
         // We only let TextKeyListener do UI things on the UI thread.
         final View v = ThreadUtils.isOnUiThread() ? view : null;
-        final int keyCode = event.getKeyCode();
+        final int keyCode = translatedEvent.getKeyCode();
         final boolean handled;
 
-        if (shouldSkipKeyListener(keyCode, event)) {
+        if (shouldSkipKeyListener(keyCode, translatedEvent)) {
             handled = false;
         } else if (action == KeyEvent.ACTION_DOWN) {
             setSuppressKeyUp(true);
-            handled = keyListener.onKeyDown(v, editable, keyCode, event);
+            handled = keyListener.onKeyDown(v, editable, keyCode, translatedEvent);
         } else if (action == KeyEvent.ACTION_UP) {
-            handled = keyListener.onKeyUp(v, editable, keyCode, event);
+            handled = keyListener.onKeyUp(v, editable, keyCode, translatedEvent);
         } else {
-            handled = keyListener.onKeyOther(v, editable, event);
+            handled = keyListener.onKeyOther(v, editable, translatedEvent);
         }
 
         if (!handled) {
-            sendKeyEvent(event, action, TextKeyListener.getMetaState(editable));
+            sendKeyEvent(translatedEvent, action, TextKeyListener.getMetaState(editable));
         }
 
         if (action == KeyEvent.ACTION_DOWN) {
@@ -1384,7 +1384,7 @@ import android.view.inputmethod.EditorInfo;
         });
     }
 
-    /* package */ void icNotifyIMEContext(int state, final String typeHint,
+    /* package */ void icNotifyIMEContext(final int originalState, final String typeHint,
                                           final String modeHint, final String actionHint,
                                           final int flags) {
         if (DEBUG) {
@@ -1394,12 +1394,15 @@ import android.view.inputmethod.EditorInfo;
         // For some input type we will use a widget to display the ui, for those we must not
         // display the ime. We can display a widget for date and time types and, if the sdk version
         // is 11 or greater, for datetime/month/week as well.
+        int state;
         if (typeHint != null && (typeHint.equalsIgnoreCase("date") ||
                                  typeHint.equalsIgnoreCase("time") ||
                                  typeHint.equalsIgnoreCase("month") ||
                                  typeHint.equalsIgnoreCase("week") ||
                                  typeHint.equalsIgnoreCase("datetime-local"))) {
             state = SessionTextInput.EditableListener.IME_STATE_DISABLED;
+        } else {
+            state = originalState;
         }
 
         final int oldState = mIMEState;
@@ -2090,12 +2093,13 @@ import android.view.inputmethod.EditorInfo;
             return true;
         }
 
-        while ((repeatCount--) > 0) {
+        for (int i = 0; i < repeatCount; i++) {
             if (!processKey(view, KeyEvent.ACTION_DOWN, keyCode, event) ||
                 !processKey(view, KeyEvent.ACTION_UP, keyCode, event)) {
                 return false;
             }
         }
+
         return true;
     }
 

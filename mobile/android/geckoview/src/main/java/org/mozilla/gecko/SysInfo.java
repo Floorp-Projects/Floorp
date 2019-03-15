@@ -109,17 +109,16 @@ public final class SysInfo {
             return 0;
         }
 
-        while (offset < length && buffer[offset] != '\n') {
-            if (buffer[offset] >= '0' && buffer[offset] <= '9') {
-                int start = offset++;
-                while (offset < length &&
-                       buffer[offset] >= '0' &&
-                       buffer[offset] <= '9') {
-                    ++offset;
+        int i = offset;
+        while (i < length && buffer[i] != '\n') {
+            if (buffer[i] >= '0' && buffer[i] <= '9') {
+                int start = i++;
+                while (i < length && buffer[i] >= '0' && buffer[i] <= '9') {
+                    ++i;
                 }
-                return Integer.parseInt(new String(buffer, start, offset - start), 10);
+                return Integer.parseInt(new String(buffer, start, i - start), 10);
             }
-            ++offset;
+            ++i;
         }
         return 0;
     }

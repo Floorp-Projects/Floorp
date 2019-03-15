@@ -73,7 +73,6 @@ public class ActivityUtils {
             if (context instanceof Activity) {
                 return (Activity) context;
             }
-            context = ((ContextWrapper) context).getBaseContext();
         }
         return null;
     }
