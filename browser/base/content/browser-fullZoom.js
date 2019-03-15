@@ -267,23 +267,33 @@ var FullZoom = {
   // Setting & Pref Manipulation
 
   /**
-   * Reduces the zoom level of the page in the current browser.
+   * If browser in reader mode sends message to reader in order to decrease font size,
+   * Otherwise reduces the zoom level of the page in the current browser.
    */
   async reduce() {
-    ZoomManager.reduce();
     let browser = gBrowser.selectedBrowser;
-    this._ignorePendingZoomAccesses(browser);
-    await this._applyZoomToPref(browser);
+    if (browser.currentURI.spec.startsWith("about:reader")) {
+      browser.messageManager.sendAsyncMessage("Reader:ZoomOut");
+    } else {
+      ZoomManager.reduce();
+      this._ignorePendingZoomAccesses(browser);
+      await this._applyZoomToPref(browser);
+    }
   },
 
   /**
-   * Enlarges the zoom level of the page in the current browser.
+   * If browser in reader mode sends message to reader in order to increase font size,
+   * Otherwise enlarges the zoom level of the page in the current browser.
    */
   async enlarge() {
-    ZoomManager.enlarge();
     let browser = gBrowser.selectedBrowser;
-    this._ignorePendingZoomAccesses(browser);
-    await this._applyZoomToPref(browser);
+    if (browser.currentURI.spec.startsWith("about:reader")) {
+      browser.messageManager.sendAsyncMessage("Reader:ZoomIn");
+    } else {
+      ZoomManager.enlarge();
+      this._ignorePendingZoomAccesses(browser);
+      await this._applyZoomToPref(browser);
+    }
   },
 
   /**
