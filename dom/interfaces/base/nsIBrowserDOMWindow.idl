@@ -10,13 +10,13 @@ interface nsIDOMWindow;
 interface nsIURI;
 interface nsIPrincipal;
 interface nsIContentSecurityPolicy;
+interface nsIReferrerInfo;
 webidl Element;
 
 [scriptable, uuid(e774db14-79ac-4156-a7a3-aa3fd0a22c10)]
 interface nsIOpenURIInFrameParams : nsISupports
 {
-  attribute AString referrer;
-  attribute unsigned long referrerPolicy;
+  attribute nsIReferrerInfo referrerInfo;
   readonly attribute boolean isPrivate;
   attribute nsIPrincipal triggeringPrincipal;
   attribute nsIContentSecurityPolicy csp;

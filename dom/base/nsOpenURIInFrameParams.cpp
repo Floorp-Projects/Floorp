@@ -21,33 +21,19 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(nsOpenURIInFrameParams)
 
 nsOpenURIInFrameParams::nsOpenURIInFrameParams(
     const mozilla::OriginAttributes& aOriginAttributes, Element* aOpener)
-    : mOpenerOriginAttributes(aOriginAttributes),
-      mOpenerBrowser(aOpener),
-      mReferrerPolicy(mozilla::net::RP_Unset) {}
+    : mOpenerOriginAttributes(aOriginAttributes), mOpenerBrowser(aOpener) {}
 
 nsOpenURIInFrameParams::~nsOpenURIInFrameParams() {}
 
 NS_IMETHODIMP
-nsOpenURIInFrameParams::GetReferrer(nsAString& aReferrer) {
-  aReferrer = mReferrer;
+nsOpenURIInFrameParams::GetReferrerInfo(nsIReferrerInfo** aReferrerInfo) {
+  NS_IF_ADDREF(*aReferrerInfo = mReferrerInfo);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsOpenURIInFrameParams::SetReferrer(const nsAString& aReferrer) {
-  mReferrer = aReferrer;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsOpenURIInFrameParams::GetReferrerPolicy(uint32_t* aReferrerPolicy) {
-  *aReferrerPolicy = mReferrerPolicy;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsOpenURIInFrameParams::SetReferrerPolicy(uint32_t aReferrerPolicy) {
-  mReferrerPolicy = aReferrerPolicy;
+nsOpenURIInFrameParams::SetReferrerInfo(nsIReferrerInfo* aReferrerInfo) {
+  mReferrerInfo = aReferrerInfo;
   return NS_OK;
 }
 

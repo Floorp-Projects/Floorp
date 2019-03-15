@@ -38,6 +38,7 @@
 #include "nsRefPtrHashtable.h"
 #include "PermissionMessageUtils.h"
 #include "DriverCrashGuard.h"
+#include "nsIReferrerInfo.h"
 
 #define CHILD_PROCESS_SHUTDOWN_MESSAGE \
   NS_LITERAL_STRING("child-process-shutdown")
@@ -513,19 +514,17 @@ class ContentParent final : public PContentParent,
       const uint32_t& aChromeFlags, const bool& aCalledFromJS,
       const bool& aPositionSpecified, const bool& aSizeSpecified,
       const Maybe<URIParams>& aURIToLoad, const nsCString& aFeatures,
-      const nsCString& aBaseURI, const float& aFullZoom,
-      const IPC::Principal& aTriggeringPrincipal,
-      nsIContentSecurityPolicy* aCsp, const uint32_t& aReferrerPolicy,
+      const float& aFullZoom, const IPC::Principal& aTriggeringPrincipal,
+      nsIContentSecurityPolicy* aCsp, nsIReferrerInfo* aReferrerInfo,
       CreateWindowResolver&& aResolve);
 
   mozilla::ipc::IPCResult RecvCreateWindowInDifferentProcess(
       PBrowserParent* aThisTab, const uint32_t& aChromeFlags,
       const bool& aCalledFromJS, const bool& aPositionSpecified,
       const bool& aSizeSpecified, const Maybe<URIParams>& aURIToLoad,
-      const nsCString& aFeatures, const nsCString& aBaseURI,
-      const float& aFullZoom, const nsString& aName,
+      const nsCString& aFeatures, const float& aFullZoom, const nsString& aName,
       const IPC::Principal& aTriggeringPrincipal,
-      nsIContentSecurityPolicy* aCsp, const uint32_t& aReferrerPolicy);
+      nsIContentSecurityPolicy* aCsp, nsIReferrerInfo* aReferrerInfo);
 
   static void BroadcastBlobURLRegistration(
       const nsACString& aURI, BlobImpl* aBlobImpl, nsIPrincipal* aPrincipal,
@@ -663,12 +662,12 @@ class ContentParent final : public PContentParent,
       PBrowserParent* aThisTab, bool aSetOpener, const uint32_t& aChromeFlags,
       const bool& aCalledFromJS, const bool& aPositionSpecified,
       const bool& aSizeSpecified, nsIURI* aURIToLoad,
-      const nsCString& aFeatures, const nsCString& aBaseURI,
-      const float& aFullZoom, uint64_t aNextTabParentId, const nsString& aName,
-      nsresult& aResult, nsCOMPtr<nsITabParent>& aNewTabParent,
-      bool* aWindowIsNew, int32_t& aOpenLocation,
-      nsIPrincipal* aTriggeringPrincipal, uint32_t aReferrerPolicy,
-      bool aLoadUri, nsIContentSecurityPolicy* aCsp);
+      const nsCString& aFeatures, const float& aFullZoom,
+      uint64_t aNextTabParentId, const nsString& aName, nsresult& aResult,
+      nsCOMPtr<nsITabParent>& aNewTabParent, bool* aWindowIsNew,
+      int32_t& aOpenLocation, nsIPrincipal* aTriggeringPrincipal,
+      nsIReferrerInfo* aReferrerInfo, bool aLoadUri,
+      nsIContentSecurityPolicy* aCsp);
 
   enum RecordReplayState { eNotRecordingOrReplaying, eRecording, eReplaying };
 

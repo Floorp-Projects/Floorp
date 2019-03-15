@@ -54,9 +54,7 @@ nsDocShellLoadState::nsDocShellLoadState(DocShellLoadStateInit& aLoadState) {
   mFileName = aLoadState.FileName();
   mIsFromProcessingFrameAttributes =
       aLoadState.IsFromProcessingFrameAttributes();
-  mReferrerInfo =
-      new ReferrerInfo(aLoadState.Referrer(), aLoadState.ReferrerPolicy(),
-                       aLoadState.SendReferrer());
+  mReferrerInfo = aLoadState.ReferrerInfo();
   mURI = aLoadState.URI();
   mOriginalURI = aLoadState.OriginalURI();
   mBaseURI = aLoadState.BaseURI();
@@ -467,8 +465,6 @@ DocShellLoadStateInit nsDocShellLoadState::Serialize() {
   loadState.TriggeringPrincipal() = mTriggeringPrincipal;
   loadState.PrincipalToInherit() = mPrincipalToInherit;
   loadState.Csp() = mCsp;
-  loadState.Referrer() = mReferrerInfo->GetOriginalReferrer();
-  loadState.SendReferrer() = mReferrerInfo->GetSendReferrer();
-  loadState.ReferrerPolicy() = mReferrerInfo->GetReferrerPolicy();
+  loadState.ReferrerInfo() = mReferrerInfo;
   return loadState;
 }
