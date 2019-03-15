@@ -6600,7 +6600,7 @@ class FactoryOp : public DatabaseOperationBase,
   nsresult SendVersionChangeMessages(DatabaseActorInfo* aDatabaseActorInfo,
                                      Database* aOpeningDatabase,
                                      uint64_t aOldVersion,
-                                     const NullableVersion& aNewVersion);
+                                     const Maybe<uint64_t>& aNewVersion);
 
   // Methods that subclasses must implement.
   virtual nsresult DatabaseOpen() = 0;
@@ -19394,7 +19394,7 @@ nsresult FactoryOp::CheckPermission(
 
 nsresult FactoryOp::SendVersionChangeMessages(
     DatabaseActorInfo* aDatabaseActorInfo, Database* aOpeningDatabase,
-    uint64_t aOldVersion, const NullableVersion& aNewVersion) {
+    uint64_t aOldVersion, const Maybe<uint64_t>& aNewVersion) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aDatabaseActorInfo);
   MOZ_ASSERT(mState == State::BeginVersionChange);
@@ -20426,7 +20426,7 @@ nsresult OpenDatabaseOp::BeginVersionChange() {
   MOZ_ASSERT(info->mMetadata != mMetadata);
   mMetadata = info->mMetadata;
 
-  NullableVersion newVersion = mRequestedVersion;
+  Maybe<uint64_t> newVersion = Some(mRequestedVersion);
 
   nsresult rv = SendVersionChangeMessages(
       info, mDatabase, mMetadata->mCommonMetadata.version(), newVersion);
@@ -21185,10 +21185,8 @@ nsresult DeleteDatabaseOp::BeginVersionChange() {
   if (gLiveDatabaseHashtable->Get(mDatabaseId, &info)) {
     MOZ_ASSERT(!info->mWaitingFactoryOp);
 
-    NullableVersion newVersion = null_t();
-
     nsresult rv =
-        SendVersionChangeMessages(info, nullptr, mPreviousVersion, newVersion);
+        SendVersionChangeMessages(info, nullptr, mPreviousVersion, Nothing());
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
