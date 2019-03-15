@@ -4,10 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_net_TrackingDummyChannelChild_h
-#define mozilla_net_TrackingDummyChannelChild_h
+#ifndef mozilla_net_ClassifierDummyChannelChild_h
+#define mozilla_net_ClassifierDummyChannelChild_h
 
-#include "mozilla/net/PTrackingDummyChannelChild.h"
+#include "mozilla/net/PClassifierDummyChannelChild.h"
 #include "nsCOMPtr.h"
 
 #include <functional>
@@ -18,16 +18,16 @@ class nsIURI;
 namespace mozilla {
 namespace net {
 
-class TrackingDummyChannelChild final : public PTrackingDummyChannelChild {
-  friend class PTrackingDummyChannelChild;
+class ClassifierDummyChannelChild final : public PClassifierDummyChannelChild {
+  friend class PClassifierDummyChannelChild;
 
  public:
   static bool Create(nsIHttpChannel* aChannel, nsIURI* aURI,
                      const std::function<void(bool)>& aCallback);
 
   // Used by PNeckoChild only!
-  TrackingDummyChannelChild();
-  ~TrackingDummyChannelChild();
+  ClassifierDummyChannelChild();
+  ~ClassifierDummyChannelChild();
 
  private:
   void Initialize(nsIHttpChannel* aChannel, nsIURI* aURI, bool aIsThirdParty,
@@ -45,4 +45,4 @@ class TrackingDummyChannelChild final : public PTrackingDummyChannelChild {
 }  // namespace net
 }  // namespace mozilla
 
-#endif  // mozilla_net_TrackingDummyChannelChild_h
+#endif  // mozilla_net_ClassifierDummyChannelChild_h

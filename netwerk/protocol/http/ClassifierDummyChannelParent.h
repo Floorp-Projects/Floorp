@@ -4,10 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_net_TrackingDummyChannelParent_h
-#define mozilla_net_TrackingDummyChannelParent_h
+#ifndef mozilla_net_ClassifierDummyChannelParent_h
+#define mozilla_net_ClassifierDummyChannelParent_h
 
-#include "mozilla/net/PTrackingDummyChannelParent.h"
+#include "mozilla/net/PClassifierDummyChannelParent.h"
 #include "nsISupportsImpl.h"
 
 class nsILoadInfo;
@@ -16,17 +16,18 @@ class nsIURI;
 namespace mozilla {
 namespace net {
 
-class TrackingDummyChannelParent final : public PTrackingDummyChannelParent {
+class ClassifierDummyChannelParent final
+    : public PClassifierDummyChannelParent {
  public:
-  NS_INLINE_DECL_REFCOUNTING(TrackingDummyChannelParent)
+  NS_INLINE_DECL_REFCOUNTING(ClassifierDummyChannelParent)
 
-  TrackingDummyChannelParent();
+  ClassifierDummyChannelParent();
 
   void Init(nsIURI* aURI, nsIURI* aTopWindowURI, nsresult aTopWindowURIResult,
             nsILoadInfo* aLoadInfo);
 
  private:
-  ~TrackingDummyChannelParent();
+  ~ClassifierDummyChannelParent();
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
@@ -36,4 +37,4 @@ class TrackingDummyChannelParent final : public PTrackingDummyChannelParent {
 }  // namespace net
 }  // namespace mozilla
 
-#endif  // mozilla_net_TrackingDummyChannelParent_h
+#endif  // mozilla_net_ClassifierDummyChannelParent_h
