@@ -1582,6 +1582,7 @@ BigInt* BigInt::createFromDouble(JSContext* cx, double d) {
     digit = mantissa << (msdTopBit - mantissaTopBit);
     mantissa = 0;
   }
+  MOZ_ASSERT(digit != 0, "most significant digit should not be zero");
   result->setDigit(--length, digit);
 
   // Fill in digits containing mantissa contributions.
@@ -2290,7 +2291,7 @@ BigInt* BigInt::truncateAndSubFromPowerOfTwo(JSContext* cx, HandleBigInt x,
   }
   result->setDigit(resultLength - 1, resultMSD);
 
-  return trimHighZeroDigits(cx, result);
+  return destructivelyTrimHighZeroDigits(cx, result);
 }
 
 BigInt* BigInt::asUintN(JSContext* cx, HandleBigInt x, uint64_t bits) {
@@ -2327,21 +2328,33 @@ BigInt* BigInt::asUintN(JSContext* cx, HandleBigInt x, uint64_t bits) {
   }
 
   size_t length = CeilDiv(bits, DigitBits);
-  bool isNegative = false;
-
-  BigInt* res = createUninitialized(cx, length, isNegative);
-  if (!res) {
-    return nullptr;
-  }
-
   MOZ_ASSERT(length >= 2, "single-digit cases should be handled above");
   MOZ_ASSERT(length <= x->digitLength());
-  for (size_t i = 0; i < length - 1; i++) {
-    res->setDigit(i, x->digit(i));
+
+  // Eagerly trim high zero digits.
+  const size_t highDigitBits = ((bits - 1) % DigitBits) + 1;
+  const Digit highDigitMask = Digit(-1) >> (DigitBits - highDigitBits);
+  Digit mask = highDigitMask;
+  while (length > 0) {
+    if (x->digit(length - 1) & mask) {
+      break;
+    }
+
+    mask = Digit(-1);
+    length--;
   }
 
-  Digit mask = Digit(-1) >> (DigitBits - (bits % DigitBits));
-  res->setDigit(length - 1, x->digit(length - 1) & mask);
+  const bool isNegative = false;
+  BigInt* res = createUninitialized(cx, length, isNegative);
+  if (res == nullptr) {
+    return nullptr;
+  }
+  
+  while (length-- > 0) {
+    res->setDigit(length, x->digit(length) & mask);
+    mask = Digit(-1);
+  }
+  MOZ_ASSERT_IF(length == 0, res->isZero());
 
   return res;
 }
