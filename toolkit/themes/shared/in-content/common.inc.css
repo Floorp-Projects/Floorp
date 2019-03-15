@@ -48,6 +48,9 @@
   --in-content-table-border-dark-color: #d1d1d1;
   --in-content-table-header-background: #0a84ff;
 
+  --panel-border-color: var(--grey-90-a20);
+  --panel-border-radius: 2px; /* This is overridden on Windows */
+
   /* The photon animation curve */
   --animation-curve: cubic-bezier(.07,.95,0,1);
 
@@ -77,6 +80,8 @@
   --yellow-90: #3e2800;
 
   --shadow-10: 0 1px 4px var(--grey-90-a10);
+  --shadow-30: 0 4px 16px var(--grey-90-a10);
+
   --card-padding: 16px;
   --card-shadow: var(--shadow-10);
   --card-outline-color: var(--grey-30);

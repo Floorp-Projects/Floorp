@@ -1,0 +1,23 @@
+button {
+  background-color: transparent;
+  background-image: var(--icon);
+  background-position: 16px center;
+  background-repeat: no-repeat;
+  background-size: 16px;
+  border: none;
+  display: block;
+  font-size: inherit;
+  padding: 4px 40px;
+  padding-inline-end: 12px;
+  text-align: start;
+  width: 100%;
+}
+
+button:focus,
+button:hover {
+  background-color: var(--in-content-button-background);
+}
+
+button:hover:active {
+  background-color: var(--in-content-button-background-hover);
+}
