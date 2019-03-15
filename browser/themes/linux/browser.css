@@ -267,12 +267,6 @@ menuitem.bookmark-item {
 %include ../shared/notification-icons.inc.css
 %include ../shared/addon-notification.inc.css
 
-/* Notification icon box */
-
-.notification-anchor-icon:-moz-focusring {
-  outline: 1px dotted -moz-DialogText;
-}
-
 /* Translation infobar */
 
 %include ../shared/translation/infobar.inc.css

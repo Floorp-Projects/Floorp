@@ -705,10 +705,6 @@ html|input.urlbar-input {
 
 %include ../shared/notification-icons.inc.css
 
-.notification-anchor-icon:-moz-focusring {
-  box-shadow: var(--focus-ring-box-shadow);
-}
-
 /* Translation */
 
 %include ../shared/translation/infobar.inc.css
