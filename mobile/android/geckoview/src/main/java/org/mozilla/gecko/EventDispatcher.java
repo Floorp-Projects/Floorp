@@ -16,6 +16,10 @@ import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.geckoview.BuildConfig;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.AnyThread;
 import android.util.Log;
@@ -25,6 +29,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 @RobocopTarget
@@ -87,7 +92,7 @@ public final class EventDispatcher extends JNIObject {
         mAttachedToGecko = (state == ATTACHED);
     }
 
-    private void dispose(final boolean force) {
+    private void dispose(boolean force) {
         final Handler geckoHandler = ThreadUtils.sGeckoHandler;
         if (geckoHandler == null) {
             return;
@@ -400,8 +405,8 @@ public final class EventDispatcher extends JNIObject {
     }
 
     private static class JavaCallbackDelegate implements EventCallback {
-        private final Thread mOriginalThread = Thread.currentThread();
-        private final EventCallback mCallback;
+        private final Thread originalThread = Thread.currentThread();
+        private final EventCallback callback;
 
         public static EventCallback wrap(final EventCallback callback) {
             if (callback == null) {
@@ -415,7 +420,7 @@ public final class EventDispatcher extends JNIObject {
         }
 
         JavaCallbackDelegate(final EventCallback callback) {
-            mCallback = callback;
+            this.callback = callback;
         }
 
         private void makeCallback(final boolean callSuccess, final Object rawResponse) {
@@ -440,11 +445,11 @@ public final class EventDispatcher extends JNIObject {
 
             // Call back synchronously if we happen to be on the same thread as the thread
             // making the original request.
-            if (ThreadUtils.isOnThread(mOriginalThread)) {
+            if (ThreadUtils.isOnThread(originalThread)) {
                 if (callSuccess) {
-                    mCallback.sendSuccess(response);
+                    callback.sendSuccess(response);
                 } else {
-                    mCallback.sendError(response);
+                    callback.sendError(response);
                 }
                 return;
             }
@@ -452,10 +457,10 @@ public final class EventDispatcher extends JNIObject {
             // Make callback on the thread of the original request, if the original thread
             // is the UI or Gecko thread. Otherwise default to the background thread.
             final Handler handler =
-                    mOriginalThread == ThreadUtils.getUiThread() ? ThreadUtils.getUiHandler() :
-                    mOriginalThread == ThreadUtils.sGeckoThread ? ThreadUtils.sGeckoHandler :
+                    originalThread == ThreadUtils.getUiThread() ? ThreadUtils.getUiHandler() :
+                    originalThread == ThreadUtils.sGeckoThread ? ThreadUtils.sGeckoHandler :
                                                                  ThreadUtils.getBackgroundHandler();
-            final EventCallback callback = mCallback;
+            final EventCallback callback = this.callback;
 
             handler.post(new Runnable() {
                 @Override
@@ -470,12 +475,12 @@ public final class EventDispatcher extends JNIObject {
         }
 
         @Override // EventCallback
-        public void sendSuccess(final Object response) {
+        public void sendSuccess(Object response) {
             makeCallback(/* success */ true, response);
         }
 
         @Override // EventCallback
-        public void sendError(final Object response) {
+        public void sendError(Object response) {
             makeCallback(/* success */ false, response);
         }
     }

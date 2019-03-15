@@ -68,12 +68,12 @@ public final class DynamicToolbarAnimator {
         return mToolbarChromeProxy;
     }
 
-    public void setToolbarChromeProxy(@Nullable final ToolbarChromeProxy aToolbarChromeProxy) {
+    public void setToolbarChromeProxy(@Nullable ToolbarChromeProxy aToolbarChromeProxy) {
         ThreadUtils.assertOnUiThread();
         mToolbarChromeProxy = aToolbarChromeProxy;
     }
 
-    public void setMaxToolbarHeight(final int maxToolbarHeight) {
+    public void setMaxToolbarHeight(int maxToolbarHeight) {
         ThreadUtils.assertOnUiThread();
 
         mMaxToolbarHeight = maxToolbarHeight;
@@ -104,7 +104,7 @@ public final class DynamicToolbarAnimator {
         return !mPinFlags.isEmpty();
     }
 
-    public boolean isPinnedBy(@NonNull final PinReason reason) {
+    public boolean isPinnedBy(@NonNull PinReason reason) {
         ThreadUtils.assertOnUiThread();
 
         return mPinFlags.contains(reason);
@@ -124,7 +124,7 @@ public final class DynamicToolbarAnimator {
         }
     }
 
-    public void showToolbar(final boolean immediately) {
+    public void showToolbar(boolean immediately) {
         ThreadUtils.assertOnUiThread();
 
         if (mCompositor.isReady()) {
@@ -134,7 +134,7 @@ public final class DynamicToolbarAnimator {
         }
     }
 
-    public void hideToolbar(final boolean immediately) {
+    public void hideToolbar(boolean immediately) {
         ThreadUtils.assertOnUiThread();
 
         if (mCompositor.isReady()) {

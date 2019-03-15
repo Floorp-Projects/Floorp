@@ -9,6 +9,7 @@ package org.mozilla.geckoview;
 import org.mozilla.gecko.AndroidGamepadManager;
 import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.InputMethods;
+import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.util.ActivityUtils;
 import org.mozilla.gecko.util.ThreadUtils;
 
@@ -457,7 +458,7 @@ public class GeckoView extends FrameLayout {
     }
 
     @Override
-    protected void onConfigurationChanged(final Configuration newConfig) {
+    protected void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
 
         if (mRuntime != null) {
@@ -531,7 +532,7 @@ public class GeckoView extends FrameLayout {
     }
 
     @Override
-    public void onWindowFocusChanged(final boolean hasWindowFocus) {
+    public void onWindowFocusChanged(boolean hasWindowFocus) {
         super.onWindowFocusChanged(hasWindowFocus);
 
         // Only call setFocus(true) when the window gains focus. Any focus loss could be temporary
@@ -543,7 +544,7 @@ public class GeckoView extends FrameLayout {
     }
 
     @Override
-    protected void onWindowVisibilityChanged(final int visibility) {
+    protected void onWindowVisibilityChanged(int visibility) {
         super.onWindowVisibilityChanged(visibility);
 
         // We can be reasonably sure that the focus loss is not temporary, so call setFocus(false).
@@ -553,8 +554,7 @@ public class GeckoView extends FrameLayout {
     }
 
     @Override
-    protected void onFocusChanged(final boolean gainFocus, final int direction,
-                                  final Rect previouslyFocusedRect) {
+    protected void onFocusChanged(boolean gainFocus, int direction, Rect previouslyFocusedRect) {
         super.onFocusChanged(gainFocus, direction, previouslyFocusedRect);
 
         if (mIsResettingFocus) {
@@ -620,7 +620,7 @@ public class GeckoView extends FrameLayout {
     }
 
     @Override
-    public boolean onKeyPreIme(final int keyCode, final KeyEvent event) {
+    public boolean onKeyPreIme(int keyCode, KeyEvent event) {
         if (super.onKeyPreIme(keyCode, event)) {
             return true;
         }
@@ -629,7 +629,7 @@ public class GeckoView extends FrameLayout {
     }
 
     @Override
-    public boolean onKeyUp(final int keyCode, final KeyEvent event) {
+    public boolean onKeyUp(int keyCode, KeyEvent event) {
         if (super.onKeyUp(keyCode, event)) {
             return true;
         }
@@ -638,7 +638,7 @@ public class GeckoView extends FrameLayout {
     }
 
     @Override
-    public boolean onKeyDown(final int keyCode, final KeyEvent event) {
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
         if (super.onKeyDown(keyCode, event)) {
             return true;
         }
@@ -647,7 +647,7 @@ public class GeckoView extends FrameLayout {
     }
 
     @Override
-    public boolean onKeyLongPress(final int keyCode, final KeyEvent event) {
+    public boolean onKeyLongPress(int keyCode, KeyEvent event) {
         if (super.onKeyLongPress(keyCode, event)) {
             return true;
         }
@@ -656,7 +656,7 @@ public class GeckoView extends FrameLayout {
     }
 
     @Override
-    public boolean onKeyMultiple(final int keyCode, final int repeatCount, final KeyEvent event) {
+    public boolean onKeyMultiple(int keyCode, int repeatCount, KeyEvent event) {
         if (super.onKeyMultiple(keyCode, repeatCount, event)) {
             return true;
         }
@@ -701,8 +701,7 @@ public class GeckoView extends FrameLayout {
     }
 
     @Override
-    public void onProvideAutofillVirtualStructure(final ViewStructure structure,
-                                                  final int flags) {
+    public void onProvideAutofillVirtualStructure(final ViewStructure structure, int flags) {
         super.onProvideAutofillVirtualStructure(structure, flags);
 
         if (mSession != null) {

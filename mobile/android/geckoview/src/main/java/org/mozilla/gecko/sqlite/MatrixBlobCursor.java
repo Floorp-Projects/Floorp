@@ -40,13 +40,13 @@ import android.util.Log;
 public class MatrixBlobCursor extends AbstractCursor {
     private static final String LOGTAG = "GeckoMatrixCursor";
 
-    private final String[] mColumnNames;
-    private final int mColumnCount;
+    private final String[] columnNames;
+    private final int columnCount;
 
-    private int mRowCount;
-    private Throwable mAllocationStack;
+    private int rowCount;
+    private Throwable allocationStack;
 
-    Object[] mData;
+    Object[] data;
 
     /**
      * Constructs a new cursor with the given initial capacity.
@@ -56,17 +56,16 @@ public class MatrixBlobCursor extends AbstractCursor {
      * @param initialCapacity in rows
      */
     @JNITarget
-    public MatrixBlobCursor(final String[] columnNames, final int initialCapacity) {
-        mColumnNames = columnNames;
-        mColumnCount = columnNames.length;
+    public MatrixBlobCursor(String[] columnNames, int initialCapacity) {
+        this.columnNames = columnNames;
+        this.columnCount = columnNames.length;
 
-        int capacity = initialCapacity;
-        if (capacity < 1) {
-            capacity = 1;
+        if (initialCapacity < 1) {
+            initialCapacity = 1;
         }
 
-        mData = new Object[mColumnCount * capacity];
-        mAllocationStack = new Throwable("allocationStack");
+        this.data = new Object[columnCount * initialCapacity];
+        this.allocationStack = new Throwable("allocationStack");
     }
 
     /**
@@ -76,7 +75,7 @@ public class MatrixBlobCursor extends AbstractCursor {
      *  determines column ordering elsewhere in this cursor
      */
     @JNITarget
-    public MatrixBlobCursor(final String[] columnNames) {
+    public MatrixBlobCursor(String[] columnNames) {
         this(columnNames, 16);
     }
 
@@ -84,26 +83,26 @@ public class MatrixBlobCursor extends AbstractCursor {
      * Closes the Cursor, releasing all of its resources.
      */
     public void close() {
-        mAllocationStack = null;
-        mData = null;
+        this.allocationStack = null;
+        this.data = null;
         super.close();
     }
 
     /**
      * Gets value at the given column for the current row.
      */
-    protected Object get(final int column) {
-        if (column < 0 || column >= mColumnCount) {
+    protected Object get(int column) {
+        if (column < 0 || column >= columnCount) {
             throw new CursorIndexOutOfBoundsException("Requested column: "
-                    + column + ", # of columns: " +  mColumnCount);
+                    + column + ", # of columns: " +  columnCount);
         }
         if (mPos < 0) {
             throw new CursorIndexOutOfBoundsException("Before first row.");
         }
-        if (mPos >= mRowCount) {
+        if (mPos >= rowCount) {
             throw new CursorIndexOutOfBoundsException("After last row.");
         }
-        return mData[mPos * mColumnCount + column];
+        return data[mPos * columnCount + column];
     }
 
     /**
@@ -114,10 +113,10 @@ public class MatrixBlobCursor extends AbstractCursor {
      *  row
      */
     public RowBuilder newRow() {
-        mRowCount++;
-        int endIndex = mRowCount * mColumnCount;
+        rowCount++;
+        int endIndex = rowCount * columnCount;
         ensureCapacity(endIndex);
-        int start = endIndex - mColumnCount;
+        int start = endIndex - columnCount;
         return new RowBuilder(start, endIndex);
     }
 
@@ -131,16 +130,16 @@ public class MatrixBlobCursor extends AbstractCursor {
      *  at cursor construction time
      */
     @JNITarget
-    public void addRow(final Object[] columnValues) {
-        if (columnValues.length != mColumnCount) {
+    public void addRow(Object[] columnValues) {
+        if (columnValues.length != columnCount) {
             throw new IllegalArgumentException("columnNames.length = "
-                    + mColumnCount + ", columnValues.length = "
+                    + columnCount + ", columnValues.length = "
                     + columnValues.length);
         }
 
-        int start = mRowCount++ * mColumnCount;
-        ensureCapacity(start + mColumnCount);
-        System.arraycopy(columnValues, 0, mData, start, mColumnCount);
+        int start = rowCount++ * columnCount;
+        ensureCapacity(start + columnCount);
+        System.arraycopy(columnValues, 0, data, start, columnCount);
     }
 
     /**
@@ -153,19 +152,19 @@ public class MatrixBlobCursor extends AbstractCursor {
      *  at cursor construction time
      */
     @JNITarget
-    public void addRow(final Iterable<?> columnValues) {
-        final int start = mRowCount * mColumnCount;
+    public void addRow(Iterable<?> columnValues) {
+        final int start = rowCount * columnCount;
 
         if (columnValues instanceof ArrayList<?>) {
             addRow((ArrayList<?>) columnValues, start);
             return;
         }
 
-        final int end = start + mColumnCount;
+        final int end = start + columnCount;
         int current = start;
 
         ensureCapacity(end);
-        final Object[] localData = mData;
+        final Object[] localData = data;
         for (Object columnValue : columnValues) {
             if (current == end) {
                 // TODO: null out row?
@@ -182,29 +181,29 @@ public class MatrixBlobCursor extends AbstractCursor {
         }
 
         // Increase row count here in case we encounter an exception.
-        mRowCount++;
+        rowCount++;
     }
 
     /** Optimization for {@link ArrayList}. */
     @JNITarget
-    private void addRow(final ArrayList<?> columnValues, final int start) {
+    private void addRow(ArrayList<?> columnValues, int start) {
         final int size = columnValues.size();
-        if (size != mColumnCount) {
+        if (size != columnCount) {
             throw new IllegalArgumentException("columnNames.length = "
-                    + mColumnCount + ", columnValues.size() = " + size);
+                    + columnCount + ", columnValues.size() = " + size);
         }
 
-        final int end = start + mColumnCount;
+        final int end = start + columnCount;
         ensureCapacity(end);
 
         // Take a reference just in case someone calls ensureCapacity
         // and `data` gets replaced by a new array!
-        final Object[] localData = mData;
+        final Object[] localData = data;
         for (int i = 0; i < size; i++) {
             localData[start + i] = columnValues.get(i);
         }
 
-        mRowCount++;
+        rowCount++;
     }
 
     /**
@@ -212,13 +211,13 @@ public class MatrixBlobCursor extends AbstractCursor {
      * a new array, the existing capacity will be at least doubled.
      */
     private void ensureCapacity(final int size) {
-        if (size <= mData.length) {
+        if (size <= data.length) {
             return;
         }
 
-        final Object[] oldData = mData;
-        mData = new Object[Math.max(size, mData.length * 2)];
-        System.arraycopy(oldData, 0, mData, 0, oldData.length);
+        final Object[] oldData = this.data;
+        this.data = new Object[Math.max(size, data.length * 2)];
+        System.arraycopy(oldData, 0, this.data, 0, oldData.length);
     }
 
     /**
@@ -229,12 +228,12 @@ public class MatrixBlobCursor extends AbstractCursor {
      * Not thread-safe.
      */
     public class RowBuilder {
-        private int mIndex;
-        private final int mEndIndex;
+        private int index;
+        private final int endIndex;
 
-        RowBuilder(final int index, final int endIndex) {
-            this.mIndex = index;
-            this.mEndIndex = endIndex;
+        RowBuilder(int index, int endIndex) {
+            this.index = index;
+            this.endIndex = endIndex;
         }
 
         /**
@@ -245,11 +244,11 @@ public class MatrixBlobCursor extends AbstractCursor {
          * @return this builder to support chaining
          */
         public RowBuilder add(final Object columnValue) {
-            if (mIndex == mEndIndex) {
+            if (index == endIndex) {
                 throw new CursorIndexOutOfBoundsException("No more columns left.");
             }
 
-            mData[mIndex++] = columnValue;
+            data[index++] = columnValue;
             return this;
         }
     }
@@ -257,40 +256,40 @@ public class MatrixBlobCursor extends AbstractCursor {
     /**
      * Not thread safe.
      */
-    public void set(final int column, final Object value) {
-        if (column < 0 || column >= mColumnCount) {
+    public void set(int column, Object value) {
+        if (column < 0 || column >= columnCount) {
             throw new CursorIndexOutOfBoundsException("Requested column: "
-                    + column + ", # of columns: " +  mColumnCount);
+                    + column + ", # of columns: " +  columnCount);
         }
         if (mPos < 0) {
             throw new CursorIndexOutOfBoundsException("Before first row.");
         }
-        if (mPos >= mRowCount) {
+        if (mPos >= rowCount) {
             throw new CursorIndexOutOfBoundsException("After last row.");
         }
-        mData[mPos * mColumnCount + column] = value;
+        data[mPos * columnCount + column] = value;
     }
 
     // AbstractCursor implementation.
     @Override
     public int getCount() {
-        return mRowCount;
+        return rowCount;
     }
 
     @Override
     public String[] getColumnNames() {
-        return mColumnNames;
+        return columnNames;
     }
 
     @Override
-    public String getString(final int column) {
+    public String getString(int column) {
         Object value = get(column);
         if (value == null) return null;
         return value.toString();
     }
 
     @Override
-    public short getShort(final int column) {
+    public short getShort(int column) {
         final Object value = get(column);
         if (value == null) return 0;
         if (value instanceof Number) return ((Number) value).shortValue();
@@ -298,7 +297,7 @@ public class MatrixBlobCursor extends AbstractCursor {
     }
 
     @Override
-    public int getInt(final int column) {
+    public int getInt(int column) {
         Object value = get(column);
         if (value == null) return 0;
         if (value instanceof Number) return ((Number) value).intValue();
@@ -306,7 +305,7 @@ public class MatrixBlobCursor extends AbstractCursor {
     }
 
     @Override
-    public long getLong(final int column) {
+    public long getLong(int column) {
         Object value = get(column);
         if (value == null) return 0;
         if (value instanceof Number) return ((Number) value).longValue();
@@ -314,7 +313,7 @@ public class MatrixBlobCursor extends AbstractCursor {
     }
 
     @Override
-    public float getFloat(final int column) {
+    public float getFloat(int column) {
         Object value = get(column);
         if (value == null) return 0.0f;
         if (value instanceof Number) return ((Number) value).floatValue();
@@ -322,7 +321,7 @@ public class MatrixBlobCursor extends AbstractCursor {
     }
 
     @Override
-    public double getDouble(final int column) {
+    public double getDouble(int column) {
         Object value = get(column);
         if (value == null) return 0.0d;
         if (value instanceof Number) return ((Number) value).doubleValue();
@@ -330,7 +329,7 @@ public class MatrixBlobCursor extends AbstractCursor {
     }
 
     @Override
-    public byte[] getBlob(final int column) {
+    public byte[] getBlob(int column) {
         Object value = get(column);
         if (value == null) return null;
         if (value instanceof byte[]) {
@@ -347,14 +346,14 @@ public class MatrixBlobCursor extends AbstractCursor {
     }
 
     @Override
-    public boolean isNull(final int column) {
+    public boolean isNull(int column) {
         return get(column) == null;
     }
 
     @Override
     protected void finalize() {
         if (!isClosed()) {
-            Log.e(LOGTAG, "Cursor finalized without being closed", mAllocationStack);
+            Log.e(LOGTAG, "Cursor finalized without being closed", this.allocationStack);
         }
 
         super.finalize();

@@ -98,7 +98,7 @@ import android.util.Log;
      *
      * @param enabled True if automatic font size setting should be enabled.
      */
-    public void setEnabled(final boolean enabled) {
+    public void setEnabled(boolean enabled) {
         ThreadUtils.assertOnUiThread();
         mEnabled = enabled;
         onEnabledChange();
@@ -152,8 +152,7 @@ import android.util.Log;
         mRunning = false;
     }
 
-    private void onSystemFontScaleChange(final ContentResolver contentResolver,
-                                         final boolean stopping) {
+    private void onSystemFontScaleChange(final ContentResolver contentResolver, boolean stopping) {
         float fontScale;
         boolean fontInflationEnabled;
 
@@ -171,7 +170,7 @@ import android.util.Log;
 
     @UiThread // See constructor.
     @Override
-    public void onChange(final boolean selfChange) {
+    public void onChange(boolean selfChange) {
         onSystemFontScaleChange(mApplicationContext.getContentResolver(), false);
     }
 }

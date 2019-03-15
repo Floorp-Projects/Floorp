@@ -7,6 +7,7 @@
 package org.mozilla.gecko;
 
 import org.mozilla.gecko.annotation.WrapForJNI;
+import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.util.ThreadUtils;
 
 import android.content.Context;
@@ -15,6 +16,7 @@ import android.speech.tts.TextToSpeech;
 import android.speech.tts.UtteranceProgressListener;
 import android.util.Log;
 
+import java.lang.System;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Locale;
@@ -35,7 +37,7 @@ public class SpeechSynthesisService  {
 
         sTTS = new TextToSpeech(ctx, new TextToSpeech.OnInitListener() {
             @Override
-            public void onInit(final int status) {
+            public void onInit(int status) {
                 if (status != TextToSpeech.SUCCESS) {
                     Log.w(LOGTAG, "Failed to initialize TextToSpeech");
                     return;
@@ -88,8 +90,7 @@ public class SpeechSynthesisService  {
     private static native void doneRegisteringVoices();
 
     @WrapForJNI(calledFrom = "gecko")
-    public static String speak(final String uri, final String text, final float rate,
-                               final float pitch, final float volume) {
+    public static String speak(final String uri, final String text, float rate, float pitch, float volume) {
         if (sTTS == null) {
             Log.w(LOGTAG, "TextToSpeech is not initialized");
             return null;
@@ -118,22 +119,22 @@ public class SpeechSynthesisService  {
 
         sTTS.setOnUtteranceProgressListener(new UtteranceProgressListener() {
             @Override
-            public void onDone(final String utteranceId) {
+            public void onDone(String utteranceId) {
                 dispatchEnd(utteranceId);
             }
 
             @Override
-            public void onError(final String utteranceId) {
+            public void onError(String utteranceId) {
                 dispatchError(utteranceId);
             }
 
             @Override
-            public void onStart(final String utteranceId) {
+            public void onStart(String utteranceId) {
                 dispatchStart(utteranceId);
             }
 
             @Override
-            public void onStop(final String utteranceId, final boolean interrupted) {
+            public void onStop(String utteranceId, boolean interrupted) {
                 if (interrupted) {
                     dispatchEnd(utteranceId);
                 } else {
@@ -142,8 +143,7 @@ public class SpeechSynthesisService  {
                 }
             }
 
-            public void onRangeStart(final String utteranceId, final int start, final int end,
-                                     final int frame) {
+            public void onRangeStart (String utteranceId, int start, int end, int frame) {
                 dispatchBoundary(utteranceId, start, end);
             }
         });

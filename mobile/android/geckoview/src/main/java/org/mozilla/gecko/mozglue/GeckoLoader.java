@@ -9,6 +9,7 @@ import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.annotation.JNITarget;
 import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.util.HardwareUtils;
+import org.mozilla.geckoview.BuildConfig;
 
 import android.content.Context;
 import android.os.Build;
@@ -39,14 +40,14 @@ public final class GeckoLoader {
         // prevent instantiation
     }
 
-    public static File getCacheDir(final Context context) {
+    public static File getCacheDir(Context context) {
         if (sCacheFile == null) {
             sCacheFile = context.getCacheDir();
         }
         return sCacheFile;
     }
 
-    public static File getGREDir(final Context context) {
+    public static File getGREDir(Context context) {
         if (sGREDir == null) {
             sGREDir = new File(context.getApplicationInfo().dataDir);
         }
@@ -70,7 +71,7 @@ public final class GeckoLoader {
         }
     }
 
-    private static void delTree(final File file) {
+    private static void delTree(File file) {
         if (file.isDirectory()) {
             File children[] = file.listFiles();
             for (File child : children) {
@@ -80,7 +81,7 @@ public final class GeckoLoader {
         file.delete();
     }
 
-    private static File getTmpDir(final Context context) {
+    private static File getTmpDir(Context context) {
         File tmpDir = context.getDir("tmpdir", Context.MODE_PRIVATE);
         // check if the old tmp dir is there
         File oldDir = new File(tmpDir.getParentFile(), "app_tmp");
@@ -184,7 +185,7 @@ public final class GeckoLoader {
         loadLibsSetupLocked(context);
     }
 
-    private static void loadLibsSetupLocked(final Context context) {
+    private static void loadLibsSetupLocked(Context context) {
         putenv("GRE_HOME=" + getGREDir(context).getPath());
         putenv("MOZ_ANDROID_LIBDIR=" + context.getApplicationInfo().nativeLibraryDir);
     }
@@ -225,8 +226,7 @@ public final class GeckoLoader {
      * @param outDir the output directory for the .so. No trailing slash.
      * @return true on success, false on failure.
      */
-    private static boolean extractLibrary(final Context context, final String lib,
-                                          final String outDir) {
+    private static boolean extractLibrary(final Context context, final String lib, final String outDir) {
         final String apkPath = context.getApplicationInfo().sourceDir;
 
         // Sanity check.
@@ -258,8 +258,7 @@ public final class GeckoLoader {
         }
     }
 
-    private static boolean tryLoadWithABI(final String lib, final String outDir,
-                                          final String apkPath, final String abi) {
+    private static boolean tryLoadWithABI(String lib, String outDir, String apkPath, String abi) {
         try {
             final ZipFile zipFile = new ZipFile(new File(apkPath));
             try {
@@ -480,7 +479,7 @@ public final class GeckoLoader {
 
     @SuppressWarnings("serial")
     public static class AbortException extends Exception {
-        public AbortException(final String msg) {
+        public AbortException(String msg) {
             super(msg);
         }
     }

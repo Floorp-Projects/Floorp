@@ -16,7 +16,7 @@ public final class SessionKeyInfo implements Parcelable {
     public int status;
 
     @WrapForJNI
-    public SessionKeyInfo(final byte[] keyId, final int status) {
+    public SessionKeyInfo(byte[] keyId, int status) {
         this.keyId = keyId;
         this.status = status;
     }
@@ -27,24 +27,24 @@ public final class SessionKeyInfo implements Parcelable {
     }
 
     @Override
-    public void writeToParcel(final Parcel dest, final int parcelableFlags) {
+    public void writeToParcel(Parcel dest, int parcelableFlags) {
         dest.writeByteArray(keyId);
         dest.writeInt(status);
     }
 
     public static final Creator<SessionKeyInfo> CREATOR = new Creator<SessionKeyInfo>() {
         @Override
-        public SessionKeyInfo createFromParcel(final Parcel in) {
+        public SessionKeyInfo createFromParcel(Parcel in) {
             return new SessionKeyInfo(in);
         }
 
         @Override
-        public SessionKeyInfo[] newArray(final int size) {
+        public SessionKeyInfo[] newArray(int size) {
             return new SessionKeyInfo[size];
         }
     };
 
-    private SessionKeyInfo(final Parcel src) {
+    private SessionKeyInfo(Parcel src) {
         keyId = src.createByteArray();
         status = src.readInt();
     }
