@@ -168,70 +168,70 @@ public final class BitmapUtils {
     }
 
     public static @ColorInt int getDominantColorCustomImplementation(
-        final Bitmap source, final boolean applyThreshold, final @ColorInt int defaultColor) {
-      if (source == null) {
-          return defaultColor;
-      }
-
-      // Keep track of how many times a hue in a given bin appears in the image.
-      // Hue values range [0 .. 360), so dividing by 10, we get 36 bins.
-      int[] colorBins = new int[36];
-
-      // The bin with the most colors. Initialize to -1 to prevent accidentally
-      // thinking the first bin holds the dominant color.
-      int maxBin = -1;
-
-      // Keep track of sum hue/saturation/value per hue bin, which we'll use to
-      // compute an average to for the dominant color.
-      float[] sumHue = new float[36];
-      float[] sumSat = new float[36];
-      float[] sumVal = new float[36];
-      float[] hsv = new float[3];
-
-      int height = source.getHeight();
-      int width = source.getWidth();
-      int[] pixels = new int[width * height];
-      source.getPixels(pixels, 0, width, 0, 0, width, height);
-      for (int row = 0; row < height; row++) {
-        for (int col = 0; col < width; col++) {
-          int c = pixels[col + row * width];
-          // Ignore pixels with a certain transparency.
-          if (Color.alpha(c) < 128)
-            continue;
-
-          Color.colorToHSV(c, hsv);
-
-          // If a threshold is applied, ignore arbitrarily chosen values for "white" and "black".
-          if (applyThreshold && (hsv[1] <= 0.35f || hsv[2] <= 0.35f))
-            continue;
-
-          // We compute the dominant color by putting colors in bins based on their hue.
-          int bin = (int) Math.floor(hsv[0] / 10.0f);
-
-          // Update the sum hue/saturation/value for this bin.
-          sumHue[bin] = sumHue[bin] + hsv[0];
-          sumSat[bin] = sumSat[bin] + hsv[1];
-          sumVal[bin] = sumVal[bin] + hsv[2];
-
-          // Increment the number of colors in this bin.
-          colorBins[bin]++;
-
-          // Keep track of the bin that holds the most colors.
-          if (maxBin < 0 || colorBins[bin] > colorBins[maxBin])
-            maxBin = bin;
+            final Bitmap source, final boolean applyThreshold, final @ColorInt int defaultColor) {
+        if (source == null) {
+            return defaultColor;
         }
-      }
 
-      // maxBin may never get updated if the image holds only transparent and/or black/white pixels.
-      if (maxBin < 0) {
-          return defaultColor;
-      }
+        // Keep track of how many times a hue in a given bin appears in the image.
+        // Hue values range [0 .. 360), so dividing by 10, we get 36 bins.
+        int[] colorBins = new int[36];
 
-      // Return a color with the average hue/saturation/value of the bin with the most colors.
-      hsv[0] = sumHue[maxBin] / colorBins[maxBin];
-      hsv[1] = sumSat[maxBin] / colorBins[maxBin];
-      hsv[2] = sumVal[maxBin] / colorBins[maxBin];
-      return Color.HSVToColor(hsv);
+        // The bin with the most colors. Initialize to -1 to prevent accidentally
+        // thinking the first bin holds the dominant color.
+        int maxBin = -1;
+
+        // Keep track of sum hue/saturation/value per hue bin, which we'll use to
+        // compute an average to for the dominant color.
+        float[] sumHue = new float[36];
+        float[] sumSat = new float[36];
+        float[] sumVal = new float[36];
+        float[] hsv = new float[3];
+
+        int height = source.getHeight();
+        int width = source.getWidth();
+        int[] pixels = new int[width * height];
+        source.getPixels(pixels, 0, width, 0, 0, width, height);
+        for (int row = 0; row < height; row++) {
+            for (int col = 0; col < width; col++) {
+                int c = pixels[col + row * width];
+                // Ignore pixels with a certain transparency.
+                if (Color.alpha(c) < 128)
+                    continue;
+
+                Color.colorToHSV(c, hsv);
+
+                // If a threshold is applied, ignore arbitrarily chosen values for "white" and "black".
+                if (applyThreshold && (hsv[1] <= 0.35f || hsv[2] <= 0.35f))
+                    continue;
+
+                // We compute the dominant color by putting colors in bins based on their hue.
+                int bin = (int) Math.floor(hsv[0] / 10.0f);
+
+                // Update the sum hue/saturation/value for this bin.
+                sumHue[bin] = sumHue[bin] + hsv[0];
+                sumSat[bin] = sumSat[bin] + hsv[1];
+                sumVal[bin] = sumVal[bin] + hsv[2];
+
+                // Increment the number of colors in this bin.
+                colorBins[bin]++;
+
+                // Keep track of the bin that holds the most colors.
+                if (maxBin < 0 || colorBins[bin] > colorBins[maxBin])
+                    maxBin = bin;
+            }
+        }
+
+        // maxBin may never get updated if the image holds only transparent and/or black/white pixels.
+        if (maxBin < 0) {
+            return defaultColor;
+        }
+
+        // Return a color with the average hue/saturation/value of the bin with the most colors.
+        hsv[0] = sumHue[maxBin] / colorBins[maxBin];
+        hsv[1] = sumSat[maxBin] / colorBins[maxBin];
+        hsv[2] = sumVal[maxBin] / colorBins[maxBin];
+        return Color.HSVToColor(hsv);
     }
 
     /**

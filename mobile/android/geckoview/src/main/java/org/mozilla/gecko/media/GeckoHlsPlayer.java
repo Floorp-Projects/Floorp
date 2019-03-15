@@ -173,9 +173,9 @@ public class GeckoHlsPlayer implements BaseHlsPlayer, ExoPlayer.EventListener {
     private BaseHlsPlayer.ResourceCallbacks mResourceCallbacks;
 
     private static void assertTrue(final boolean condition) {
-      if (DEBUG && !condition) {
-        throw new AssertionError("Expected condition to be true");
-      }
+        if (DEBUG && !condition) {
+            throw new AssertionError("Expected condition to be true");
+        }
     }
 
     protected void checkInitDone() {
@@ -512,23 +512,23 @@ public class GeckoHlsPlayer implements BaseHlsPlayer, ExoPlayer.EventListener {
         }
         Timeline.Period period = new Timeline.Period();
         for (int i = 0; i < Math.min(periodCount, MAX_TIMELINE_ITEM_LINES); i++) {
-          timeline.getPeriod(i, period);
-          if (mDurationUs < period.getDurationUs()) {
-              mDurationUs = period.getDurationUs();
-          }
+            timeline.getPeriod(i, period);
+            if (mDurationUs < period.getDurationUs()) {
+                mDurationUs = period.getDurationUs();
+            }
         }
         for (int i = 0; i < Math.min(windowCount, MAX_TIMELINE_ITEM_LINES); i++) {
-          timeline.getWindow(i, window);
-          if (mDurationUs < window.getDurationUs()) {
-              mDurationUs = window.getDurationUs();
-          }
+            timeline.getWindow(i, window);
+            if (mDurationUs < window.getDurationUs()) {
+                mDurationUs = window.getDurationUs();
+            }
         }
         // TODO : Need to check if the duration from play.getDuration is different
         // with the one calculated from multi-timelines/windows.
         if (DEBUG) {
             Log.d(LOGTAG, "Media duration (from Timeline) = " + mDurationUs +
-                          "(us)" + " player.getDuration() = " + mPlayer.getDuration() +
-                          "(ms)");
+                    "(us)" + " player.getDuration() = " + mPlayer.getDuration() +
+                    "(ms)");
         }
     }
 
@@ -549,45 +549,45 @@ public class GeckoHlsPlayer implements BaseHlsPlayer, ExoPlayer.EventListener {
 
     private static String getFormatSupportString(final int formatSupport) {
         switch (formatSupport) {
-          case RendererCapabilities.FORMAT_HANDLED:
-            return "YES";
-          case RendererCapabilities.FORMAT_EXCEEDS_CAPABILITIES:
-            return "NO_EXCEEDS_CAPABILITIES";
-          case RendererCapabilities.FORMAT_UNSUPPORTED_SUBTYPE:
-            return "NO_UNSUPPORTED_TYPE";
-          case RendererCapabilities.FORMAT_UNSUPPORTED_TYPE:
-            return "NO";
-          default:
-            return "?";
+            case RendererCapabilities.FORMAT_HANDLED:
+                return "YES";
+            case RendererCapabilities.FORMAT_EXCEEDS_CAPABILITIES:
+                return "NO_EXCEEDS_CAPABILITIES";
+            case RendererCapabilities.FORMAT_UNSUPPORTED_SUBTYPE:
+                return "NO_UNSUPPORTED_TYPE";
+            case RendererCapabilities.FORMAT_UNSUPPORTED_TYPE:
+                return "NO";
+            default:
+                return "?";
         }
-      }
+    }
 
     private static String getAdaptiveSupportString(final int trackCount,
                                                    final int adaptiveSupport) {
         if (trackCount < 2) {
-          return "N/A";
+            return "N/A";
         }
         switch (adaptiveSupport) {
-          case RendererCapabilities.ADAPTIVE_SEAMLESS:
-            return "YES";
-          case RendererCapabilities.ADAPTIVE_NOT_SEAMLESS:
-            return "YES_NOT_SEAMLESS";
-          case RendererCapabilities.ADAPTIVE_NOT_SUPPORTED:
-            return "NO";
-          default:
-            return "?";
+            case RendererCapabilities.ADAPTIVE_SEAMLESS:
+                return "YES";
+            case RendererCapabilities.ADAPTIVE_NOT_SEAMLESS:
+                return "YES_NOT_SEAMLESS";
+            case RendererCapabilities.ADAPTIVE_NOT_SUPPORTED:
+                return "NO";
+            default:
+                return "?";
         }
-      }
+    }
 
-      private static String getTrackStatusString(final TrackSelection selection,
-                                                 final TrackGroup group, final int trackIndex) {
+    private static String getTrackStatusString(final TrackSelection selection,
+                                               final TrackGroup group, final int trackIndex) {
         return getTrackStatusString(selection != null && selection.getTrackGroup() == group
                 && selection.indexOf(trackIndex) != C.INDEX_UNSET);
-      }
+    }
 
-      private static String getTrackStatusString(final boolean enabled) {
+    private static String getTrackStatusString(final boolean enabled) {
         return enabled ? "[X]" : "[ ]";
-      }
+    }
 
     // Called on GeckoHlsPlayerThread
     private synchronized void createExoPlayer(final String url) {
@@ -828,7 +828,7 @@ public class GeckoHlsPlayer implements BaseHlsPlayer, ExoPlayer.EventListener {
     @Override
     public synchronized void resume() {
         if (!mExoplayerSuspended) {
-          return;
+            return;
         }
         if (mMediaDecoderPlayState == MediaDecoderPlayState.PLAY_STATE_PLAYING) {
             if (DEBUG) {

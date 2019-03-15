@@ -81,7 +81,7 @@ public class TelemetryUtils {
         }
 
         public long getElapsed() {
-          return mElapsed;
+            return mElapsed;
         }
 
         public void stop() {

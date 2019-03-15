@@ -692,16 +692,16 @@ public final class GeckoSessionSettings implements Parcelable {
 
     public static final Parcelable.Creator<GeckoSessionSettings> CREATOR
             = new Parcelable.Creator<GeckoSessionSettings>() {
-        @Override
-        public GeckoSessionSettings createFromParcel(final Parcel in) {
-            final GeckoSessionSettings settings = new GeckoSessionSettings();
-            settings.readFromParcel(in);
-            return settings;
-        }
+                @Override
+                public GeckoSessionSettings createFromParcel(final Parcel in) {
+                    final GeckoSessionSettings settings = new GeckoSessionSettings();
+                    settings.readFromParcel(in);
+                    return settings;
+                }
 
-        @Override
-        public GeckoSessionSettings[] newArray(final int size) {
-            return new GeckoSessionSettings[size];
-        }
-    };
+                @Override
+                public GeckoSessionSettings[] newArray(final int size) {
+                    return new GeckoSessionSettings[size];
+                }
+            };
 }
