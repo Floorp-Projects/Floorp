@@ -57,11 +57,11 @@ already_AddRefed<BlobImpl> Deserialize(const IPCBlob& aIPCBlob) {
 
   RefPtr<StreamBlobImpl> blobImpl;
 
-  if (aIPCBlob.file().type() == IPCFileUnion::Tvoid_t) {
+  if (aIPCBlob.file().isNothing()) {
     blobImpl = StreamBlobImpl::Create(inputStream.forget(), aIPCBlob.type(),
                                       aIPCBlob.size(), aIPCBlob.blobImplType());
   } else {
-    const IPCFile& file = aIPCBlob.file().get_IPCFile();
+    const IPCFile& file = aIPCBlob.file().ref();
     blobImpl = StreamBlobImpl::Create(inputStream.forget(), file.name(),
                                       aIPCBlob.type(), file.lastModified(),
                                       aIPCBlob.size(), aIPCBlob.blobImplType());
@@ -189,7 +189,7 @@ nsresult SerializeInternal(BlobImpl* aBlobImpl, M* aManager,
   }
 
   if (!aBlobImpl->IsFile()) {
-    aIPCBlob.file() = void_t();
+    aIPCBlob.file() = Nothing();
   } else {
     IPCFile file;
 
@@ -212,7 +212,7 @@ nsresult SerializeInternal(BlobImpl* aBlobImpl, M* aManager,
 
     file.isDirectory() = aBlobImpl->IsDirectory();
 
-    aIPCBlob.file() = file;
+    aIPCBlob.file() = Some(file);
   }
 
   aIPCBlob.fileId() = aBlobImpl->GetFileId();
