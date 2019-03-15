@@ -11,6 +11,7 @@ import mozilla.components.concept.fetch.Response
 import mozilla.components.support.test.any
 import org.junit.Assert.assertEquals
 import org.mockito.Mockito.`when`
+import org.mockito.Mockito.mock
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import kotlin.reflect.KClass
@@ -38,6 +39,24 @@ fun assertRequestParams(client: Client, makeRequest: () -> Unit, assertParams: (
 
     // Ensure fetch is called so that the assertions in assertParams are called.
     verify(client, times(1)).fetch(any())
+}
+
+/**
+ * @param client the underlying mock client for the raw endpoint making the request.
+ * @param makeRequest makes the request using the raw endpoint and returns the body text, or null on error
+ */
+fun assertSuccessfulRequestReturnsResponseBody(client: Client, makeRequest: () -> String?) {
+    val expectedBody = "{\"jsonStr\": true}"
+    val body = mock(Response.Body::class.java).also {
+        `when`(it.string()).thenReturn(expectedBody)
+    }
+    val response = MockResponses.getSuccess().also {
+        `when`(it.body).thenReturn(body)
+    }
+    `when`(client.fetch(any())).thenReturn(response)
+
+    assertEquals(expectedBody, makeRequest())
+
 }
 
 /**

@@ -9,6 +9,7 @@ import mozilla.components.concept.fetch.Headers.Common.USER_AGENT
 import mozilla.components.concept.fetch.Response
 import mozilla.components.service.pocket.helpers.MockResponses
 import mozilla.components.service.pocket.helpers.assertRequestParams
+import mozilla.components.service.pocket.helpers.assertSuccessfulRequestReturnsResponseBody
 import mozilla.components.service.pocket.helpers.assertResponseIsClosed
 import mozilla.components.support.ktx.kotlin.toUri
 import mozilla.components.support.test.any
@@ -96,16 +97,7 @@ class PocketEndpointRawTest {
 
     @Test
     fun `WHEN requesting global video recs and the response is a success THEN the response body is returned`() {
-        val expectedBody = "{\"jsonStr\": true}"
-        val body = mock(Response.Body::class.java).also {
-            `when`(it.string()).thenReturn(expectedBody)
-        }
-        val response = successResponse.also {
-            `when`(it.body).thenReturn(body)
-        }
-        `when`(client.fetch(any())).thenReturn(response)
-
-        assertEquals(expectedBody, endpoint.getGlobalVideoRecommendations())
+        assertSuccessfulRequestReturnsResponseBody(client, endpoint::getGlobalVideoRecommendations)
     }
 
     @Test
