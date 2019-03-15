@@ -89,11 +89,15 @@ public abstract class GeckoHlsRendererBase extends BaseRenderer {
     public Format getFormat(final int index) {
         assertTrue(index >= 0);
         Format fmt = index < mFormats.size() ? mFormats.get(index) : null;
-        if (DEBUG) { Log.d(LOGTAG, "getFormat : index = " + index + ", format : " + fmt); }
+        if (DEBUG) {
+            Log.d(LOGTAG, "getFormat : index = " + index + ", format : " + fmt);
+        }
         return fmt;
     }
 
-    public synchronized long getFirstSamplePTS() { return mFirstSampleStartTime; }
+    public synchronized long getFirstSamplePTS() {
+        return mFirstSampleStartTime;
+    }
 
     public synchronized ConcurrentLinkedQueue<GeckoHLSSample> getQueuedSamples(final int number) {
         ConcurrentLinkedQueue<GeckoHLSSample> samples =
@@ -111,11 +115,15 @@ public abstract class GeckoHlsRendererBase extends BaseRenderer {
 
         sample = samples.isEmpty() ? null : samples.peek();
         if (sample == null) {
-            if (DEBUG) { Log.d(LOGTAG, "getQueuedSamples isEmpty, mWaitingForData = true !"); }
+            if (DEBUG) {
+                Log.d(LOGTAG, "getQueuedSamples isEmpty, mWaitingForData = true !");
+            }
             mWaitingForData = true;
         } else if (mFirstSampleStartTime == Long.MIN_VALUE) {
             mFirstSampleStartTime = sample.info.presentationTimeUs;
-            if (DEBUG) { Log.d(LOGTAG, "mFirstSampleStartTime = " + mFirstSampleStartTime); }
+            if (DEBUG) {
+                Log.d(LOGTAG, "mFirstSampleStartTime = " + mFirstSampleStartTime);
+            }
         }
         return samples;
     }
@@ -176,7 +184,9 @@ public abstract class GeckoHlsRendererBase extends BaseRenderer {
         if (mInitialized || mFormats.size() == 0) {
             return;
         }
-        if (DEBUG) { Log.d(LOGTAG, "Initializing ... "); }
+        if (DEBUG) {
+            Log.d(LOGTAG, "Initializing ... ");
+        }
         try {
             createInputBuffer();
             mInitialized = true;
@@ -229,7 +239,9 @@ public abstract class GeckoHlsRendererBase extends BaseRenderer {
 
         // We've read a buffer.
         if (mBufferForRead.isEndOfStream()) {
-            if (DEBUG) { Log.d(LOGTAG, "Now we're at the End Of Stream."); }
+            if (DEBUG) {
+                Log.d(LOGTAG, "Now we're at the End Of Stream.");
+            }
             handleEndOfStream(mBufferForRead);
             return false;
         }
@@ -244,7 +256,9 @@ public abstract class GeckoHlsRendererBase extends BaseRenderer {
 
     private void maybeNotifyDataArrived() {
         if (mWaitingForData && isQueuedEnoughData()) {
-            if (DEBUG) { Log.d(LOGTAG, "onDataArrived"); }
+            if (DEBUG) {
+                Log.d(LOGTAG, "onDataArrived");
+            }
             mPlayerEventDispatcher.onDataArrived(getTrackType());
             mWaitingForData = false;
         }
@@ -281,7 +295,9 @@ public abstract class GeckoHlsRendererBase extends BaseRenderer {
 
     @Override
     protected synchronized void onPositionReset(final long positionUs, final boolean joining) {
-        if (DEBUG) { Log.d(LOGTAG, "onPositionReset : positionUs = " + positionUs); }
+        if (DEBUG) {
+            Log.d(LOGTAG, "onPositionReset : positionUs = " + positionUs);
+        }
         mInputStreamEnded = false;
         if (mInitialized) {
             clearInputSamplesQueue();

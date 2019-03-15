@@ -88,5 +88,7 @@ public final class SharedMemBuffer implements Sample.Buffer {
         }
     }
 
-    @Override public String toString() { return "Buffer: " + mSharedMem; }
+    @Override public String toString() {
+        return "Buffer: " + mSharedMem;
+    }
 }

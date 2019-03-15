@@ -267,8 +267,7 @@ import android.view.inputmethod.EditorInfo;
         }
 
         public void shadowReplace(final int start, final int end,
-                                  final CharSequence newText)
-        {
+                                  final CharSequence newText) {
             if (DEBUG) {
                 assertOnIcThread();
             }

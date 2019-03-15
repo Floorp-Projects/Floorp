@@ -65,9 +65,7 @@ public class ContentUriUtils {
                 }
                 return !TextUtils.isEmpty(rootPath) ?
                         rootPath + "/" + docPath : null;
-            }
-            // DownloadsProvider
-            else if (isDownloadsDocument(uri)) {
+            } else if (isDownloadsDocument(uri)) { // DownloadsProvider
                 final String id = DocumentsContract.getDocumentId(uri);
                 // workaround for issue (https://bugzilla.mozilla.org/show_bug.cgi?id=1502721) and
                 // as per https://github.com/Yalantis/uCrop/issues/318#issuecomment-333066640
@@ -83,9 +81,7 @@ public class ContentUriUtils {
                         return null;
                     }
                 }
-            }
-            // MediaProvider
-            else if (isMediaDocument(uri)) {
+            } else if (isMediaDocument(uri)) { // MediaProvider
                 final String docId = DocumentsContract.getDocumentId(uri);
                 final String[] split = docId.split(":");
                 final String type = split[0];
@@ -106,18 +102,13 @@ public class ContentUriUtils {
 
                 return getDataColumn(context, contentUri, selection, selectionArgs);
             }
-        }
-        // MediaStore (and general)
-        else if ("content".equalsIgnoreCase(uri.getScheme())) {
-
+        } else if ("content".equalsIgnoreCase(uri.getScheme())) { // MediaStore (and general)
             // Return the remote address
             if (isGooglePhotosUri(uri))
                 return uri.getLastPathSegment();
 
             return getDataColumn(context, uri, null, null);
-        }
-        // File
-        else if ("file".equalsIgnoreCase(uri.getScheme())) {
+        } else if ("file".equalsIgnoreCase(uri.getScheme())) { // File
             return uri.getPath();
         }
 
