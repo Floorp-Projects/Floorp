@@ -134,11 +134,13 @@ DebuggerPanel.prototype = {
   },
 
   selectSourceURL(url, line, column) {
-    return this._actions.selectSourceURL(url, { line, column });
+    const cx = this._selectors.getContext(this._getState());
+    return this._actions.selectSourceURL(cx, url, { line, column });
   },
 
   selectSource(sourceId, line, column) {
-    return this._actions.selectSource(sourceId, { line, column });
+    const cx = this._selectors.getContext(this._getState());
+    return this._actions.selectSource(cx, sourceId, { line, column });
   },
 
   getSourceByActorId(sourceId) {

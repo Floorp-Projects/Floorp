@@ -3,6 +3,12 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+// Debugger operations may still be in progress when we switch threads.
+const { PromiseTestUtils } = scopedCuImport(
+  "resource://testing-common/PromiseTestUtils.jsm"
+);
+PromiseTestUtils.whitelistRejectionsGlobally(/Current thread has paused or resumed/);
+PromiseTestUtils.whitelistRejectionsGlobally(/Current thread has changed/);
 
 function threadIsPaused(dbg, index) {
   return findElement(dbg, "threadsPaneItem", index).querySelector(
@@ -49,14 +55,14 @@ add_task(async function() {
 
   info("Test pausing in the main thread");
   assertNotPaused(dbg);
-  await dbg.actions.breakOnNext();
+  await dbg.actions.breakOnNext(getThreadContext(dbg));
   await waitForPaused(dbg, "doc-windowless-workers.html");
   assertPausedAtSourceAndLine(dbg, mainThreadSource.id, 10);
 
   info("Test pausing in a worker");
-  await dbg.actions.selectThread(worker1Thread);
+  await dbg.actions.selectThread(getContext(dbg), worker1Thread);
   assertNotPaused(dbg);
-  await dbg.actions.breakOnNext();
+  await dbg.actions.breakOnNext(getThreadContext(dbg));
   await waitForPaused(dbg, "simple-worker.js");
   assertPausedAtSourceAndLine(dbg, workerSource.id, 3);
 
@@ -80,7 +86,7 @@ add_task(async function() {
   assertNotPaused(dbg);
 
   info("Test stepping in the main thread");
-  dbg.actions.selectThread(mainThread);
+  dbg.actions.selectThread(getContext(dbg), mainThread);
   await stepOver(dbg);
   assertPausedAtSourceAndLine(dbg, mainThreadSource.id, 11);
 
@@ -103,18 +109,18 @@ add_task(async function() {
     return getIsPaused(state, worker1Thread) && getIsPaused(state, worker2Thread);
   });
 
-  dbg.actions.selectThread(worker1Thread);
+  dbg.actions.selectThread(getContext(dbg), worker1Thread);
 
   await waitForPaused(dbg);
   assertPausedAtSourceAndLine(dbg, workerSource.id, 10);
 
-  dbg.actions.selectThread(worker2Thread);
+  dbg.actions.selectThread(getContext(dbg), worker2Thread);
   await waitForPaused(dbg);
   assertPausedAtSourceAndLine(dbg, workerSource.id, 10);
 
   info("Test stepping in second worker and not the first");
   await stepOver(dbg);
   assertPausedAtSourceAndLine(dbg, workerSource.id, 11);
-  dbg.actions.selectThread(worker1Thread);
+  dbg.actions.selectThread(getContext(dbg), worker1Thread);
   assertPausedAtSourceAndLine(dbg, workerSource.id, 10);
 });

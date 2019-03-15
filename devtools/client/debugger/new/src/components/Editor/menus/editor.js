@@ -19,20 +19,26 @@ import { downloadFile } from "../../../utils/utils";
 
 import actions from "../../../actions";
 
-import type { Source, SourceLocation } from "../../../types";
+import type {
+  Source,
+  SourceLocation,
+  Context,
+  ThreadContext
+} from "../../../types";
 
 function isMapped(selectedSource) {
   return isOriginalId(selectedSource.id) || !!selectedSource.sourceMapURL;
 }
 
 export const continueToHereItem = (
+  cx: ThreadContext,
   location: SourceLocation,
   isPaused: boolean,
   editorActions: EditorItemActions
 ) => ({
   accesskey: L10N.getStr("editor.continueToHere.accesskey"),
   disabled: !isPaused,
-  click: () => editorActions.continueToHere(location.line, location.column),
+  click: () => editorActions.continueToHere(cx, location.line, location.column),
   id: "node-menu-continue-to-here",
   label: L10N.getStr("editor.continueToHere.label")
 });
@@ -85,6 +91,7 @@ const copySourceUri2Item = (
 });
 
 const jumpToMappedLocationItem = (
+  cx: Context,
   selectedSource: Source,
   location: SourceLocation,
   hasPrettySource: boolean,
@@ -100,10 +107,11 @@ const jumpToMappedLocationItem = (
   accesskey: L10N.getStr("editor.jumpToMappedLocation1.accesskey"),
   disabled:
     (!isMapped(selectedSource) && !isPretty(selectedSource)) || hasPrettySource,
-  click: () => editorActions.jumpToMappedLocation(location)
+  click: () => editorActions.jumpToMappedLocation(cx, location)
 });
 
 const showSourceMenuItem = (
+  cx: Context,
   selectedSource: Source,
   editorActions: EditorItemActions
 ) => ({
@@ -111,10 +119,11 @@ const showSourceMenuItem = (
   label: L10N.getStr("sourceTabs.revealInTree"),
   accesskey: L10N.getStr("sourceTabs.revealInTree.accesskey"),
   disabled: !selectedSource.url,
-  click: () => editorActions.showSource(selectedSource.id)
+  click: () => editorActions.showSource(cx, selectedSource.id)
 });
 
 const blackBoxMenuItem = (
+  cx: Context,
   selectedSource: Source,
   editorActions: EditorItemActions
 ) => ({
@@ -124,10 +133,11 @@ const blackBoxMenuItem = (
     : L10N.getStr("sourceFooter.blackbox"),
   accesskey: L10N.getStr("sourceFooter.blackbox.accesskey"),
   disabled: !shouldBlackbox(selectedSource),
-  click: () => editorActions.toggleBlackBox(selectedSource)
+  click: () => editorActions.toggleBlackBox(cx, selectedSource)
 });
 
 const watchExpressionItem = (
+  cx: ThreadContext,
   selectedSource: Source,
   selectionText: string,
   editorActions: EditorItemActions
@@ -135,7 +145,7 @@ const watchExpressionItem = (
   id: "node-menu-add-watch-expression",
   label: L10N.getStr("expressions.label"),
   accesskey: L10N.getStr("expressions.accesskey"),
-  click: () => editorActions.addExpression(selectionText)
+  click: () => editorActions.addExpression(cx, selectionText)
 });
 
 const evaluateInConsoleItem = (
@@ -161,6 +171,7 @@ const downloadFileItem = (
 };
 
 export function editorMenuItems({
+  cx,
   editorActions,
   selectedSource,
   location,
@@ -169,6 +180,7 @@ export function editorMenuItems({
   isTextSelected,
   isPaused
 }: {
+  cx: ThreadContext,
   editorActions: EditorItemActions,
   selectedSource: Source,
   location: SourceLocation,
@@ -181,26 +193,27 @@ export function editorMenuItems({
 
   items.push(
     jumpToMappedLocationItem(
+      cx,
       selectedSource,
       location,
       hasPrettySource,
       editorActions
     ),
-    continueToHereItem(location, isPaused, editorActions),
+    continueToHereItem(cx, location, isPaused, editorActions),
     { type: "separator" },
     copyToClipboardItem(selectedSource, editorActions),
     copySourceItem(selectedSource, selectionText, editorActions),
     copySourceUri2Item(selectedSource, editorActions),
     downloadFileItem(selectedSource, editorActions),
     { type: "separator" },
-    showSourceMenuItem(selectedSource, editorActions),
-    blackBoxMenuItem(selectedSource, editorActions)
+    showSourceMenuItem(cx, selectedSource, editorActions),
+    blackBoxMenuItem(cx, selectedSource, editorActions)
   );
 
   if (isTextSelected) {
     items.push(
       { type: "separator" },
-      watchExpressionItem(selectedSource, selectionText, editorActions),
+      watchExpressionItem(cx, selectedSource, selectionText, editorActions),
       evaluateInConsoleItem(selectedSource, selectionText, editorActions)
     );
   }
