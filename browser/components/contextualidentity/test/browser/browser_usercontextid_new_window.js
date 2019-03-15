@@ -24,7 +24,6 @@ function openWindowWithUserContextId(userContextId, isPrivate) {
   args.appendElement(null);
   args.appendElement(null);
   args.appendElement(null);
-  args.appendElement(null);
 
   let userContextIdSupports = Cc["@mozilla.org/supports-PRUint32;1"].createInstance(Ci.nsISupportsPRUint32);
   userContextIdSupports.data = userContextId;

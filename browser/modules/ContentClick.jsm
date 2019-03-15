@@ -71,9 +71,7 @@ var ContentClick = {
 
     let params = {
       charset: browser.characterSet,
-      referrerURI: browser.documentURI,
-      referrerPolicy: json.referrerPolicy,
-      noReferrer: json.noReferrer,
+      referrerInfo: E10SUtils.deserializeReferrerInfo(json.referrerInfo),
       allowMixedContent: json.allowMixedContent,
       isContentWindowPrivate: json.isContentWindowPrivate,
       originPrincipal: json.originPrincipal,
