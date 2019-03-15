@@ -345,7 +345,7 @@ static void WithSingleChunkAnimationDecode(const ImageTestCase& aTestCase,
   task->Run();
 
   // Create a decoder.
-  DecoderFlags decoderFlags = DecoderFlags::BLEND_ANIMATION;
+  DecoderFlags decoderFlags = DefaultDecoderFlags();
   SurfaceFlags surfaceFlags = DefaultSurfaceFlags();
   RefPtr<Decoder> decoder = DecoderFactory::CreateAnonymousDecoder(
       decoderType, sourceBuffer, Nothing(), decoderFlags, surfaceFlags);

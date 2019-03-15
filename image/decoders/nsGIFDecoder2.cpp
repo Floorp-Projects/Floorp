@@ -86,6 +86,8 @@ nsGIFDecoder2::nsGIFDecoder2(RasterImage* aImage)
       mOldColor(0),
       mCurrentFrameIndex(-1),
       mColorTablePos(0),
+      mColormap(nullptr),
+      mColormapSize(0),
       mColorMask('\0'),
       mGIFOpen(false),
       mSawTransparency(false) {
@@ -164,15 +166,17 @@ nsresult nsGIFDecoder2::BeginImageFrame(const IntRect& aFrameRect,
   MOZ_ASSERT(HasSize());
 
   bool hasTransparency = CheckForTransparency(aFrameRect);
-  bool blendAnimation = ShouldBlendAnimation();
 
   // Make sure there's no animation if we're downscaling.
   MOZ_ASSERT_IF(Size() != OutputSize(), !GetImageMetadata().HasAnimation());
 
-  AnimationParams animParams{
-      aFrameRect, FrameTimeout::FromRawMilliseconds(mGIFStruct.delay_time),
-      uint32_t(mGIFStruct.images_decoded), BlendMethod::OVER,
-      DisposalMethod(mGIFStruct.disposal_method)};
+  Maybe<AnimationParams> animParams;
+  if (!IsFirstFrameDecode()) {
+    animParams.emplace(aFrameRect,
+                       FrameTimeout::FromRawMilliseconds(mGIFStruct.delay_time),
+                       uint32_t(mGIFStruct.images_decoded), BlendMethod::OVER,
+                       DisposalMethod(mGIFStruct.disposal_method));
+  }
 
   SurfacePipeFlags pipeFlags =
       aIsInterlaced ? SurfacePipeFlags::DEINTERLACE : SurfacePipeFlags();
@@ -188,30 +192,8 @@ nsresult nsGIFDecoder2::BeginImageFrame(const IntRect& aFrameRect,
     format = SurfaceFormat::B8G8R8A8;
   }
 
-  if (blendAnimation) {
-    pipeFlags |= SurfacePipeFlags::BLEND_ANIMATION;
-  }
-
-  Maybe<SurfacePipe> pipe;
-  if (mGIFStruct.images_decoded == 0 || blendAnimation) {
-    // The first frame is always decoded into an RGB surface.
-    pipe = SurfacePipeFactory::CreateSurfacePipe(this, Size(), OutputSize(),
-                                                 aFrameRect, format,
-                                                 Some(animParams), pipeFlags);
-  } else {
-    // This is an animation frame (and not the first). To minimize the memory
-    // usage of animations, the image data is stored in paletted form.
-    //
-    // We should never use paletted surfaces with a draw target directly, so
-    // the only practical difference between B8G8R8A8 and B8G8R8X8 is the
-    // cleared pixel value if we get truncated. We want 0 in that case to
-    // ensure it is an acceptable value for the color map as was the case
-    // historically.
-    MOZ_ASSERT(Size() == OutputSize());
-    pipe = SurfacePipeFactory::CreatePalettedSurfacePipe(
-        this, Size(), aFrameRect, format, aDepth, Some(animParams), pipeFlags);
-  }
-
+  Maybe<SurfacePipe> pipe = SurfacePipeFactory::CreateSurfacePipe(
+      this, Size(), OutputSize(), aFrameRect, format, animParams, pipeFlags);
   mCurrentFrameIndex = mGIFStruct.images_decoded;
 
   if (!pipe) {
@@ -255,6 +237,8 @@ void nsGIFDecoder2::EndImageFrame() {
     mOldColor = 0;
   }
 
+  mColormap = nullptr;
+  mColormapSize = 0;
   mCurrentFrameIndex = -1;
 }
 
@@ -874,11 +858,6 @@ LexerTransition<nsGIFDecoder2::State> nsGIFDecoder2::FinishImageDescriptor(
     mGIFStruct.local_colormap_size = 1 << depth;
 
     if (!mColormap) {
-      // Allocate a buffer to store the local color tables. This could be if the
-      // first frame has a local color table, or for subsequent frames when
-      // blending the animation during decoding.
-      MOZ_ASSERT(mGIFStruct.images_decoded == 0 || ShouldBlendAnimation());
-
       // Ensure our current colormap buffer is large enough to hold the new one.
       mColormapSize = sizeof(uint32_t) << realDepth;
       if (mGIFStruct.local_colormap_buffer_size < mColormapSize) {
@@ -1019,18 +998,11 @@ LexerTransition<nsGIFDecoder2::State> nsGIFDecoder2::ReadLZWData(
          (length > 0 || mGIFStruct.bits >= mGIFStruct.codesize)) {
     size_t bytesRead = 0;
 
-    auto result =
-        mGIFStruct.images_decoded == 0 || ShouldBlendAnimation()
-            ? mPipe.WritePixelBlocks<uint32_t>(
-                  [&](uint32_t* aPixelBlock, int32_t aBlockSize) {
-                    return YieldPixels<uint32_t>(data, length, &bytesRead,
-                                                 aPixelBlock, aBlockSize);
-                  })
-            : mPipe.WritePixelBlocks<uint8_t>(
-                  [&](uint8_t* aPixelBlock, int32_t aBlockSize) {
-                    return YieldPixels<uint8_t>(data, length, &bytesRead,
-                                                aPixelBlock, aBlockSize);
-                  });
+    auto result = mPipe.WritePixelBlocks<uint32_t>(
+        [&](uint32_t* aPixelBlock, int32_t aBlockSize) {
+          return YieldPixels<uint32_t>(data, length, &bytesRead, aPixelBlock,
+                                       aBlockSize);
+        });
 
     if (MOZ_UNLIKELY(bytesRead > length)) {
       MOZ_ASSERT_UNREACHABLE("Overread?");

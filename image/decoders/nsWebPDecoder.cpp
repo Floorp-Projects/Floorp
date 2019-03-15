@@ -231,16 +231,13 @@ nsresult nsWebPDecoder::CreateFrame(const nsIntRect& aFrameRect) {
 
   SurfacePipeFlags pipeFlags = SurfacePipeFlags();
 
-  if (ShouldBlendAnimation()) {
-    pipeFlags |= SurfacePipeFlags::BLEND_ANIMATION;
+  Maybe<AnimationParams> animParams;
+  if (!IsFirstFrameDecode()) {
+    animParams.emplace(aFrameRect, mTimeout, mCurrentFrame, mBlend, mDisposal);
   }
 
-  AnimationParams animParams{aFrameRect, mTimeout, mCurrentFrame, mBlend,
-                             mDisposal};
-
   Maybe<SurfacePipe> pipe = SurfacePipeFactory::CreateSurfacePipe(
-      this, Size(), OutputSize(), aFrameRect, mFormat, Some(animParams),
-      pipeFlags);
+      this, Size(), OutputSize(), aFrameRect, mFormat, animParams, pipeFlags);
   if (!pipe) {
     MOZ_LOG(sWebPLog, LogLevel::Error,
             ("[this=%p] nsWebPDecoder::CreateFrame -- no pipe\n", this));

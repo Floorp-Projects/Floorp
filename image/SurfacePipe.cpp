@@ -54,20 +54,14 @@ uint8_t* AbstractSurfaceSink::DoAdvanceRow() {
 }
 
 nsresult SurfaceSink::Configure(const SurfaceConfig& aConfig) {
-  // For non-paletted surfaces, the surface size is just the output size.
   IntSize surfaceSize = aConfig.mOutputSize;
-
-  // Non-paletted surfaces should not have frame rects, so we just pass
-  // AllocateFrame() a frame rect which covers the entire surface.
-  IntRect frameRect(0, 0, surfaceSize.width, surfaceSize.height);
 
   // Allocate the frame.
   // XXX(seth): Once every Decoder subclass uses SurfacePipe, we probably want
   // to allocate the frame directly here and get rid of Decoder::AllocateFrame
   // altogether.
-  nsresult rv = aConfig.mDecoder->AllocateFrame(
-      surfaceSize, frameRect, aConfig.mFormat,
-      /* aPaletteDepth */ 0, aConfig.mAnimParams);
+  nsresult rv = aConfig.mDecoder->AllocateFrame(surfaceSize, aConfig.mFormat,
+                                                aConfig.mAnimParams);
   if (NS_FAILED(rv)) {
     return rv;
   }

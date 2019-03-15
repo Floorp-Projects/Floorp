@@ -143,6 +143,8 @@ class nsGIFDecoder2 : public Decoder {
   // current position - i.e., the offset into which the next byte should be
   // written.
   size_t mColorTablePos;
+  uint32_t* mColormap;  // Current colormap to be used in Cairo format
+  uint32_t mColormapSize;
 
   uint8_t mColorMask;  // Apply this to the pixel to keep within colormap
   bool mGIFOpen;

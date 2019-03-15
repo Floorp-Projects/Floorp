@@ -31,19 +31,12 @@ AnimationSurfaceProvider::AnimationSurfaceProvider(
   MOZ_ASSERT(!mDecoder->IsFirstFrameDecode(),
              "Use DecodedSurfaceProvider for single-frame image decodes");
 
-  // We may produce paletted surfaces for GIF which means the frames are smaller
-  // than one would expect.
-  size_t pixelSize = !aDecoder->ShouldBlendAnimation() &&
-                             aDecoder->GetType() == DecoderType::GIF
-                         ? sizeof(uint8_t)
-                         : sizeof(uint32_t);
-
   // Calculate how many frames we need to decode in this animation before we
   // enter decode-on-demand mode.
   IntSize frameSize = aSurfaceKey.Size();
   size_t threshold =
       (size_t(gfxPrefs::ImageAnimatedDecodeOnDemandThresholdKB()) * 1024) /
-      (pixelSize * frameSize.width * frameSize.height);
+      (sizeof(uint32_t) * frameSize.width * frameSize.height);
   size_t batch = gfxPrefs::ImageAnimatedDecodeOnDemandBatchSize();
 
   mFrames.reset(
@@ -413,13 +406,8 @@ void AnimationSurfaceProvider::RequestFrameDiscarding() {
   auto oldFrameQueue =
       static_cast<AnimationFrameRetainedBuffer*>(mFrames.get());
 
-  // We only recycle if it is a full frame. Partial frames may be sized
-  // differently from each other. We do not support recycling with WebRender
-  // and shared surfaces at this time as there is additional synchronization
-  // required to know when it is safe to recycle.
   MOZ_ASSERT(!mDecoder->GetFrameRecycler());
-  if (gfxPrefs::ImageAnimatedDecodeOnDemandRecycle() &&
-      mDecoder->ShouldBlendAnimation()) {
+  if (gfxPrefs::ImageAnimatedDecodeOnDemandRecycle()) {
     mFrames.reset(new AnimationFrameRecyclingQueue(std::move(*oldFrameQueue)));
     mDecoder->SetFrameRecycler(this);
   } else {
