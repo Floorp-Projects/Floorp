@@ -9,7 +9,6 @@ import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.annotation.JNITarget;
 import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.util.HardwareUtils;
-import org.mozilla.geckoview.BuildConfig;
 
 import android.content.Context;
 import android.os.Build;

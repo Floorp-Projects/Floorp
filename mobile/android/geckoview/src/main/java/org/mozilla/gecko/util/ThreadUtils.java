@@ -11,7 +11,6 @@ import java.util.Map;
 
 import android.os.Handler;
 import android.os.Looper;
-import android.os.MessageQueue;
 import android.util.Log;
 
 public final class ThreadUtils {
