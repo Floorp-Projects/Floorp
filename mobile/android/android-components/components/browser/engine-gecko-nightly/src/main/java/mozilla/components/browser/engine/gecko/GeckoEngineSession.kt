@@ -480,8 +480,10 @@ class GeckoEngineSession(
         override fun onFocusRequest(session: GeckoSession) = Unit
     }
 
-    private fun createContentBlockingDelegate() = ContentBlocking.Delegate {
-        _, event -> notifyObservers { onTrackerBlocked(event.uri) }
+    private fun createContentBlockingDelegate() = object : ContentBlocking.Delegate {
+        override fun onContentBlocked(session: GeckoSession, event: ContentBlocking.BlockEvent) {
+            notifyObservers { onTrackerBlocked(event.uri) }
+        }
     }
 
     private fun createPermissionDelegate() = object : GeckoSession.PermissionDelegate {
