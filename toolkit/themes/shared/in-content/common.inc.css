@@ -278,6 +278,18 @@ xul|button.primary:not([disabled="true"]):hover:active {
   background-color: var(--in-content-primary-button-background-active);
 }
 
+html|button.ghost-button {
+  background-color: transparent;
+}
+
+html|button.ghost-button:enabled:hover {
+  background-color: var(--in-content-button-background);
+}
+
+html|button.ghost-button:enabled:hover:active {
+  background-color: var(--in-content-button-background-hover);
+}
+
 html|input[type="color"] {
   padding: 6px;
   width: 50px;
