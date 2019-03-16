@@ -1617,7 +1617,6 @@ class StaticAnalysisMonitor(object):
         self._warnings_database = WarningsDatabase()
 
         def on_warning(warning):
-            filename = warning['filename']
             self._warnings_database.insert(warning)
 
         self._warnings_collector = WarningsCollector(on_warning, objdir=objdir)
@@ -2466,7 +2465,6 @@ class StaticAnalysis(MachCommandBase):
         regex_header = re.compile(
             r'(.+):(\d+):(\d+): (warning|error): ([^\[\]\n]+)(?: \[([\.\w-]+)\])?$', re.MULTILINE)
 
-        something = regex_header.finditer(clang_output)
         headers = sorted(
             regex_header.finditer(clang_output),
             key=lambda h: h.start()
