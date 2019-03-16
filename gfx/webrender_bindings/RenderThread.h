@@ -218,11 +218,19 @@ class RenderThread final {
   /// Can be called from any thread.
   WebRenderThreadPool& ThreadPool() { return mThreadPool; }
 
+  /// Returns the cache used to serialize shader programs to disk, if enabled.
+  ///
   /// Can only be called from the render thread.
-  WebRenderProgramCache* ProgramCache();
+  WebRenderProgramCache* GetProgramCache() {
+    MOZ_ASSERT(IsInRenderThread());
+    return mProgramCache.get();
+  }
 
   /// Can only be called from the render thread.
-  WebRenderShaders* Shaders() { return mShaders.get(); }
+  WebRenderShaders* GetShaders() {
+    MOZ_ASSERT(IsInRenderThread());
+    return mShaders.get();
+  }
 
   /// Can only be called from the render thread.
   gl::GLContext* SharedGL();
