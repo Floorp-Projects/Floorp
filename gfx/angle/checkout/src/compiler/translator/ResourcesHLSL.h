@@ -35,13 +35,20 @@ class ResourcesHLSL : angle::NonCopyable
                         TSymbolTable *symbolTable);
 
     // Must be called after uniformsHeader
-    void samplerMetadataUniforms(TInfoSinkBase &out, const char *reg);
-
+    void samplerMetadataUniforms(TInfoSinkBase &out, unsigned int regIndex);
+    unsigned int getSamplerCount() const { return mSamplerCount; }
+    void imageMetadataUniforms(TInfoSinkBase &out, unsigned int regIndex);
     TString uniformBlocksHeader(const ReferencedInterfaceBlocks &referencedInterfaceBlocks);
+    TString shaderStorageBlocksHeader(const ReferencedInterfaceBlocks &referencedInterfaceBlocks);
 
     // Used for direct index references
-    static TString UniformBlockInstanceString(const ImmutableString &instanceName,
-                                              unsigned int arrayIndex);
+    static TString InterfaceBlockInstanceString(const ImmutableString &instanceName,
+                                                unsigned int arrayIndex);
+
+    const std::map<std::string, unsigned int> &getShaderStorageBlockRegisterMap() const
+    {
+        return mShaderStorageBlockRegisterMap;
+    }
 
     const std::map<std::string, unsigned int> &getUniformBlockRegisterMap() const
     {
@@ -52,11 +59,19 @@ class ResourcesHLSL : angle::NonCopyable
         return mUniformRegisterMap;
     }
 
+    unsigned int getReadonlyImage2DRegisterIndex() const { return mReadonlyImage2DRegisterIndex; }
+    unsigned int getImage2DRegisterIndex() const { return mImage2DRegisterIndex; }
+
   private:
     TString uniformBlockString(const TInterfaceBlock &interfaceBlock,
                                const TVariable *instanceVariable,
                                unsigned int registerIndex,
                                unsigned int arrayIndex);
+
+    TString shaderStorageBlockString(const TInterfaceBlock &interfaceBlock,
+                                     const TVariable *instanceVariable,
+                                     unsigned int registerIndex,
+                                     unsigned int arrayIndex);
     TString uniformBlockMembersString(const TInterfaceBlock &interfaceBlock,
                                       TLayoutBlockStorage blockStorage);
     TString uniformBlockStructString(const TInterfaceBlock &interfaceBlock);
@@ -70,6 +85,9 @@ class ResourcesHLSL : angle::NonCopyable
                        const TType &type,
                        const TVariable &variable,
                        const unsigned int registerIndex);
+    void outputAtomicCounterBuffer(TInfoSinkBase &out,
+                                   const int binding,
+                                   const unsigned int registerIndex);
 
     // Returns the uniform's register index
     unsigned int assignUniformRegister(const TType &type,
@@ -93,26 +111,29 @@ class ResourcesHLSL : angle::NonCopyable
     void outputHLSLReadonlyImageUniformGroup(TInfoSinkBase &out,
                                              const HLSLTextureGroup textureGroup,
                                              const TVector<const TVariable *> &group,
-                                             unsigned int *groupTextureRegisterIndex,
-                                             unsigned int *imageUniformGroupIndex);
+                                             unsigned int *groupTextureRegisterIndex);
     void outputHLSLImageUniformGroup(TInfoSinkBase &out,
                                      const HLSLRWTextureGroup textureGroup,
                                      const TVector<const TVariable *> &group,
-                                     unsigned int *groupTextureRegisterIndex,
-                                     unsigned int *imageUniformGroupIndex);
+                                     unsigned int *groupTextureRegisterIndex);
 
     unsigned int mUniformRegister;
     unsigned int mUniformBlockRegister;
     unsigned int mTextureRegister;
-    unsigned int mRWTextureRegister;
+    unsigned int mUAVRegister;
     unsigned int mSamplerCount;
+    unsigned int mReadonlyImageCount;
+    unsigned int mImageCount;
     StructureHLSL *mStructureHLSL;
     ShShaderOutput mOutputType;
 
     const std::vector<Uniform> &mUniforms;
     std::map<std::string, unsigned int> mUniformBlockRegisterMap;
+    std::map<std::string, unsigned int> mShaderStorageBlockRegisterMap;
     std::map<std::string, unsigned int> mUniformRegisterMap;
+    unsigned int mReadonlyImage2DRegisterIndex;
+    unsigned int mImage2DRegisterIndex;
 };
-}
+}  // namespace sh
 
 #endif  // COMPILER_TRANSLATOR_RESOURCESHLSL_H_

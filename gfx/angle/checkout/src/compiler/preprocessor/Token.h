@@ -24,7 +24,7 @@ struct Token
     {
         // Calling this ERROR causes a conflict with wingdi.h
         GOT_ERROR = -1,
-        LAST  = 0,  // EOF.
+        LAST      = 0,  // EOF.
 
         IDENTIFIER = 258,
 
@@ -105,6 +105,8 @@ inline bool operator!=(const Token &lhs, const Token &rhs)
 }
 
 std::ostream &operator<<(std::ostream &out, const Token &token);
+
+constexpr char kDefined[] = "defined";
 
 }  // namespace pp
 

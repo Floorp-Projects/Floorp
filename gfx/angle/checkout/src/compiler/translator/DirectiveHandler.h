@@ -7,11 +7,11 @@
 #ifndef COMPILER_TRANSLATOR_DIRECTIVEHANDLER_H_
 #define COMPILER_TRANSLATOR_DIRECTIVEHANDLER_H_
 
+#include "GLSLANG/ShaderLang.h"
 #include "common/angleutils.h"
+#include "compiler/preprocessor/DirectiveHandlerBase.h"
 #include "compiler/translator/ExtensionBehavior.h"
 #include "compiler/translator/Pragma.h"
-#include "compiler/preprocessor/DirectiveHandlerBase.h"
-#include "GLSLANG/ShaderLang.h"
 
 namespace sh
 {

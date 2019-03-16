@@ -10,8 +10,8 @@
 #define LIBANGLE_RENDERER_DEVICEIMPL_H_
 
 #include "common/angleutils.h"
-#include "libANGLE/Error.h"
 #include "libANGLE/Caps.h"
+#include "libANGLE/Error.h"
 
 namespace egl
 {
@@ -28,11 +28,11 @@ class DeviceImpl : angle::NonCopyable
 
     virtual egl::Error initialize() = 0;
 
-    virtual egl::Error getDevice(void **outValue) = 0;
-    virtual EGLint getType() = 0;
+    virtual egl::Error getDevice(void **outValue)                               = 0;
+    virtual EGLint getType()                                                    = 0;
     virtual void generateExtensions(egl::DeviceExtensions *outExtensions) const = 0;
 };
 
-}
+}  // namespace rx
 
-#endif // LIBANGLE_RENDERER_DEVICEIMPL_H_
+#endif  // LIBANGLE_RENDERER_DEVICEIMPL_H_

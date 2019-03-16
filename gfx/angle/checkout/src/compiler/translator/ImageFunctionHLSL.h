@@ -31,6 +31,10 @@ class ImageFunctionHLSL final : angle::NonCopyable
                                      bool readonly);
 
     void imageFunctionHeader(TInfoSinkBase &out);
+    const std::set<std::string> &getUsedImage2DFunctionNames() const
+    {
+        return mUsedImage2DFunctionNames;
+    }
 
   private:
     struct ImageFunction
@@ -84,6 +88,7 @@ class ImageFunctionHLSL final : angle::NonCopyable
                                              const ImmutableString &imageReference);
     using ImageFunctionSet = std::set<ImageFunction>;
     ImageFunctionSet mUsesImage;
+    std::set<std::string> mUsedImage2DFunctionNames;
 };
 
 }  // namespace sh

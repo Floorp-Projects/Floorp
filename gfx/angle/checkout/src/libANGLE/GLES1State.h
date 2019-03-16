@@ -14,6 +14,7 @@
 
 #include "common/FixedVector.h"
 #include "common/angleutils.h"
+#include "common/bitset_utils.h"
 #include "common/matrix_utils.h"
 #include "common/vector_utils.h"
 #include "libANGLE/Caps.h"
@@ -37,6 +38,8 @@ struct TextureCoordF
 
 struct MaterialParameters
 {
+    MaterialParameters();
+
     ColorF ambient;
     ColorF diffuse;
     ColorF specular;
@@ -46,12 +49,17 @@ struct MaterialParameters
 
 struct LightModelParameters
 {
+    LightModelParameters();
+
     ColorF color;
     bool twoSided;
 };
 
 struct LightParameters
 {
+    LightParameters();
+    LightParameters(const LightParameters &other);
+
     bool enabled                 = false;
     ColorF ambient               = {0.0f, 0.0f, 0.0f, 1.0f};
     ColorF diffuse               = {0.0f, 0.0f, 0.0f, 1.0f};
@@ -67,6 +75,8 @@ struct LightParameters
 
 struct FogParameters
 {
+    FogParameters();
+
     FogMode mode;
     GLfloat density;
     GLfloat start;
@@ -76,6 +86,9 @@ struct FogParameters
 
 struct TextureEnvironmentParameters
 {
+    TextureEnvironmentParameters();
+    TextureEnvironmentParameters(const TextureEnvironmentParameters &other);
+
     TextureEnvMode mode         = TextureEnvMode::Modulate;
     TextureCombine combineRgb   = TextureCombine::Modulate;
     TextureCombine combineAlpha = TextureCombine::Modulate;
@@ -107,6 +120,9 @@ struct TextureEnvironmentParameters
 
 struct PointParameters
 {
+    PointParameters();
+    PointParameters(const PointParameters &other);
+
     GLfloat pointSizeMin                    = 0.0f;
     GLfloat pointSizeMax                    = 1.0f;
     GLfloat pointFadeThresholdSize          = 1.0f;
@@ -116,6 +132,10 @@ struct PointParameters
 
 struct ClipPlaneParameters
 {
+    ClipPlaneParameters();
+    ClipPlaneParameters(bool enabled, const angle::Vector4 &equation);
+    ClipPlaneParameters(const ClipPlaneParameters &other);
+
     bool enabled;
     angle::Vector4 equation;
 };
@@ -205,6 +225,34 @@ class GLES1State final : angle::NonCopyable
 
     // Back pointer for reading from State.
     const State *mGLState;
+
+    enum DirtyGles1Type
+    {
+        DIRTY_GLES1_TEXTURE_UNIT_ENABLE = 0,
+        DIRTY_GLES1_CLIENT_STATE_ENABLE,
+        DIRTY_GLES1_FEATURE_ENABLE,
+        DIRTY_GLES1_CURRENT_VECTOR,
+        DIRTY_GLES1_CLIENT_ACTIVE_TEXTURE,
+        DIRTY_GLES1_MATRICES,
+        DIRTY_GLES1_TEXTURE_ENVIRONMENT,
+        DIRTY_GLES1_MATERIAL,
+        DIRTY_GLES1_LIGHTS,
+        DIRTY_GLES1_FOG,
+        DIRTY_GLES1_SHADE_MODEL,
+        DIRTY_GLES1_POINT_PARAMETERS,
+        DIRTY_GLES1_ALPHA_TEST,
+        DIRTY_GLES1_LOGIC_OP,
+        DIRTY_GLES1_CLIP_PLANES,
+        DIRTY_GLES1_HINT_SETTING,
+        DIRTY_GLES1_MAX,
+    };
+    using DirtyBits = angle::BitSet<DIRTY_GLES1_MAX>;
+    DirtyBits mDirtyBits;
+
+    void setDirty(DirtyGles1Type type);
+    void setAllDirty();
+    void clearDirty();
+    bool isDirty(DirtyGles1Type type) const;
 
     // All initial state values come from the
     // OpenGL ES 1.1 spec.

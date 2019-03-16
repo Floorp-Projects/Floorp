@@ -30,7 +30,7 @@ class TSymbolTable;
 class TField : angle::NonCopyable
 {
   public:
-    POOL_ALLOCATOR_NEW_DELETE();
+    POOL_ALLOCATOR_NEW_DELETE
     TField(TType *type, const ImmutableString &name, const TSourceLoc &line, SymbolType symbolType)
         : mType(type), mName(name), mLine(line), mSymbolType(symbolType)
     {
@@ -91,7 +91,7 @@ class TFieldListCollection : angle::NonCopyable
 class TType
 {
   public:
-    POOL_ALLOCATOR_NEW_DELETE();
+    POOL_ALLOCATOR_NEW_DELETE
     TType();
     explicit TType(TBasicType t, unsigned char ps = 1, unsigned char ss = 1);
     TType(TBasicType t,
@@ -126,8 +126,7 @@ class TType
           mStructure(nullptr),
           mIsStructSpecifier(false),
           mMangledName(mangledName)
-    {
-    }
+    {}
 
     constexpr TType(TType &&t)
         : type(t.type),
@@ -143,8 +142,7 @@ class TType
           mStructure(t.mStructure),
           mIsStructSpecifier(t.mIsStructSpecifier),
           mMangledName(t.mMangledName)
-    {
-    }
+    {}
 
     constexpr TBasicType getBasicType() const { return type; }
     void setBasicType(TBasicType t);

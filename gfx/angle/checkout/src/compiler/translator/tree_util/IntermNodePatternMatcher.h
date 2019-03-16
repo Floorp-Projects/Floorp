@@ -24,6 +24,7 @@ class TIntermUnary;
 class IntermNodePatternMatcher
 {
   public:
+    static bool IsDynamicIndexingOfNonSSBOVectorOrMatrix(TIntermBinary *node);
     static bool IsDynamicIndexingOfVectorOrMatrix(TIntermBinary *node);
 
     enum PatternType

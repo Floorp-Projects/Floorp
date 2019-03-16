@@ -25,6 +25,8 @@
 #endif
 #if defined(__clang__)
 #pragma GCC diagnostic ignored "-Wimplicit-fallthrough"
+// Flex isn't semi-colon clean.
+#pragma clang diagnostic ignored "-Wextra-semi-stmt"
 #endif
 
 
@@ -1225,6 +1227,7 @@ static int ES2_and_ES3_reserved_ES3_1_keyword(TParseContext *context, int token)
 static int ES2_and_ES3_ident_ES3_1_keyword(TParseContext *context, int token);
 static int ES3_extension_keyword_else_ident(TParseContext *context, TExtension extension, int token);
 static int ES2_ident_ES3_reserved_ES3_1_extension_keyword(TParseContext *context, TExtension extension, int token);
+static int ES3_extension_and_ES3_1_keyword_ES3_reserved_else_ident(TParseContext *context, TExtension extension, int token);
 static int uint_constant(TParseContext *context);
 static int int_constant(TParseContext *context);
 static int float_constant(yyscan_t yyscanner);
@@ -1968,7 +1971,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 68:
 YY_RULE_SETUP
-{ return ES2_ident_ES3_reserved_ES3_1_keyword(context, SAMPLER2DMS); }
+{ return ES3_extension_and_ES3_1_keyword_ES3_reserved_else_ident(context, TExtension::ANGLE_texture_multisample, SAMPLER2DMS); }
 	YY_BREAK
 case 69:
 YY_RULE_SETUP
@@ -1988,7 +1991,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 73:
 YY_RULE_SETUP
-{ return ES2_ident_ES3_reserved_ES3_1_keyword(context, ISAMPLER2DMS); }
+{ return ES3_extension_and_ES3_1_keyword_ES3_reserved_else_ident(context, TExtension::ANGLE_texture_multisample, ISAMPLER2DMS); }
 	YY_BREAK
 case 74:
 YY_RULE_SETUP
@@ -2008,7 +2011,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case 78:
 YY_RULE_SETUP
-{ return ES2_ident_ES3_reserved_ES3_1_keyword(context, USAMPLER2DMS); }
+{ return ES3_extension_and_ES3_1_keyword_ES3_reserved_else_ident(context, TExtension::ANGLE_texture_multisample, USAMPLER2DMS); }
 	YY_BREAK
 case 79:
 YY_RULE_SETUP
@@ -3964,6 +3967,26 @@ int ES2_ident_ES3_reserved_ES3_1_extension_keyword(TParseContext *context, TExte
     return check_type(yyscanner);
 }
 
+int ES3_extension_and_ES3_1_keyword_ES3_reserved_else_ident(TParseContext *context, TExtension extension, int token)
+{
+    struct yyguts_t* yyg = (struct yyguts_t*) context->getScanner();
+    yyscan_t yyscanner = (yyscan_t) context->getScanner();
+
+    // A keyword in GLSL ES 3.00 with enabled extension or in GLSL ES 3.10
+    if (context->getShaderVersion() >= 310 || (context->getShaderVersion() == 300 && context->isExtensionEnabled(extension)))
+    {
+        return token;
+    }
+
+    if(context->getShaderVersion() == 300)
+    {
+        return reserved_word(yyscanner);
+    }
+
+    yylval->lex.string = AllocatePoolCharArray(yytext, yyleng);
+    return check_type(yyscanner);
+}
+
 int uint_constant(TParseContext *context)
 {
     struct yyguts_t* yyg = (struct yyguts_t*) context->getScanner();
@@ -4086,3 +4109,4 @@ int glslang_scan(size_t count, const char* const string[], const int length[],
     return 0;
 }
 
+ 

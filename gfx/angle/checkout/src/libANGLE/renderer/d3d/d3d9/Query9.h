@@ -13,6 +13,7 @@
 
 namespace rx
 {
+class Context9;
 class Renderer9;
 
 class Query9 : public QueryImpl
@@ -21,20 +22,20 @@ class Query9 : public QueryImpl
     Query9(Renderer9 *renderer, gl::QueryType type);
     ~Query9() override;
 
-    gl::Error begin(const gl::Context *context) override;
-    gl::Error end(const gl::Context *context) override;
-    gl::Error queryCounter(const gl::Context *context) override;
-    gl::Error getResult(const gl::Context *context, GLint *params) override;
-    gl::Error getResult(const gl::Context *context, GLuint *params) override;
-    gl::Error getResult(const gl::Context *context, GLint64 *params) override;
-    gl::Error getResult(const gl::Context *context, GLuint64 *params) override;
-    gl::Error isResultAvailable(const gl::Context *context, bool *available) override;
+    angle::Result begin(const gl::Context *context) override;
+    angle::Result end(const gl::Context *context) override;
+    angle::Result queryCounter(const gl::Context *context) override;
+    angle::Result getResult(const gl::Context *context, GLint *params) override;
+    angle::Result getResult(const gl::Context *context, GLuint *params) override;
+    angle::Result getResult(const gl::Context *context, GLint64 *params) override;
+    angle::Result getResult(const gl::Context *context, GLuint64 *params) override;
+    angle::Result isResultAvailable(const gl::Context *context, bool *available) override;
 
   private:
-    gl::Error testQuery();
+    angle::Result testQuery(Context9 *context9);
 
     template <typename T>
-    gl::Error getResultBase(T *params);
+    angle::Result getResultBase(Context9 *context9, T *params);
 
     unsigned int mGetDataAttemptCount;
     GLuint64 mResult;
@@ -44,6 +45,6 @@ class Query9 : public QueryImpl
     IDirect3DQuery9 *mQuery;
 };
 
-}
+}  // namespace rx
 
-#endif // LIBANGLE_RENDERER_D3D_D3D9_QUERY9_H_
+#endif  // LIBANGLE_RENDERER_D3D_D3D9_QUERY9_H_

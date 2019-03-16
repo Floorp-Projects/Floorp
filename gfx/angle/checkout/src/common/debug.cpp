@@ -13,15 +13,16 @@
 #include <array>
 #include <cstdio>
 #include <fstream>
+#include <mutex>
 #include <ostream>
 #include <vector>
 
 #if defined(ANGLE_PLATFORM_ANDROID)
-#include <android/log.h>
+#    include <android/log.h>
 #endif
 
-#include "common/angleutils.h"
 #include "common/Optional.h"
+#include "common/angleutils.h"
 
 namespace gl
 {
@@ -30,6 +31,8 @@ namespace
 {
 
 DebugAnnotator *g_debugAnnotator = nullptr;
+
+std::mutex *g_debugMutex = nullptr;
 
 constexpr std::array<const char *, LOG_NUM_SEVERITIES> g_logSeverityNames = {
     {"EVENT", "WARN", "ERR"}};
@@ -96,10 +99,19 @@ void UninitializeDebugAnnotations()
     g_debugAnnotator = nullptr;
 }
 
-ScopedPerfEventHelper::ScopedPerfEventHelper(const char *format, ...)
+void InitializeDebugMutexIfNeeded()
 {
+    if (g_debugMutex == nullptr)
+    {
+        g_debugMutex = new std::mutex();
+    }
+}
+
+ScopedPerfEventHelper::ScopedPerfEventHelper(const char *format, ...) : mFunctionName(nullptr)
+{
+    bool dbgTrace = DebugAnnotationsActive();
 #if !defined(ANGLE_ENABLE_DEBUG_TRACE)
-    if (!DebugAnnotationsActive())
+    if (!dbgTrace)
     {
         return;
     }
@@ -110,14 +122,20 @@ ScopedPerfEventHelper::ScopedPerfEventHelper(const char *format, ...)
     std::vector<char> buffer(512);
     size_t len = FormatStringIntoVector(format, vararg, buffer);
     ANGLE_LOG(EVENT) << std::string(&buffer[0], len);
+    // Pull function name from variable args
+    mFunctionName = va_arg(vararg, const char *);
     va_end(vararg);
+    if (dbgTrace)
+    {
+        g_debugAnnotator->beginEvent(mFunctionName, buffer.data());
+    }
 }
 
 ScopedPerfEventHelper::~ScopedPerfEventHelper()
 {
     if (DebugAnnotationsActive())
     {
-        g_debugAnnotator->endEvent();
+        g_debugAnnotator->endEvent(mFunctionName);
     }
 }
 
@@ -133,6 +151,12 @@ LogMessage::LogMessage(const char *function, int line, LogSeverity severity)
 
 LogMessage::~LogMessage()
 {
+    std::unique_lock<std::mutex> lock;
+    if (g_debugMutex != nullptr)
+    {
+        lock = std::unique_lock<std::mutex>(*g_debugMutex);
+    }
+
     if (DebugAnnotationsInitialized() && (mSeverity == LOG_ERR || mSeverity == LOG_WARN))
     {
         g_debugAnnotator->logMessage(*this);
@@ -154,15 +178,14 @@ void Trace(LogSeverity severity, const char *message)
 
     if (DebugAnnotationsActive())
     {
-        std::wstring formattedWideMessage(str.begin(), str.end());
 
         switch (severity)
         {
             case LOG_EVENT:
-                g_debugAnnotator->beginEvent(formattedWideMessage.c_str());
+                // Debugging logging done in ScopedPerfEventHelper
                 break;
             default:
-                g_debugAnnotator->setMarker(formattedWideMessage.c_str());
+                g_debugAnnotator->setMarker(message);
                 break;
         }
     }
@@ -181,21 +204,21 @@ void Trace(LogSeverity severity, const char *message)
 
 #if defined(ANGLE_PLATFORM_WINDOWS) && \
     (defined(ANGLE_ENABLE_DEBUG_TRACE_TO_DEBUGGER) || !defined(NDEBUG))
-#if !defined(ANGLE_ENABLE_DEBUG_TRACE_TO_DEBUGGER)
+#    if !defined(ANGLE_ENABLE_DEBUG_TRACE_TO_DEBUGGER)
     if (severity == LOG_ERR)
-#endif  // !defined(ANGLE_ENABLE_DEBUG_TRACE_TO_DEBUGGER)
+#    endif  // !defined(ANGLE_ENABLE_DEBUG_TRACE_TO_DEBUGGER)
     {
         OutputDebugStringA(str.c_str());
     }
 #endif
 
 #if defined(ANGLE_ENABLE_DEBUG_TRACE)
-#if defined(NDEBUG)
+#    if defined(NDEBUG)
     if (severity == LOG_EVENT || severity == LOG_WARN)
     {
         return;
     }
-#endif  // defined(NDEBUG)
+#    endif  // defined(NDEBUG)
     static std::ofstream file(TRACE_OUTPUT_FILE, std::ofstream::app);
     if (file)
     {

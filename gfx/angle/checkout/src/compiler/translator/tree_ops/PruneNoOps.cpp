@@ -58,8 +58,7 @@ void PruneNoOpsTraverser::apply(TIntermBlock *root, TSymbolTable *symbolTable)
 
 PruneNoOpsTraverser::PruneNoOpsTraverser(TSymbolTable *symbolTable)
     : TIntermTraverser(true, false, false, symbolTable)
-{
-}
+{}
 
 bool PruneNoOpsTraverser::visitDeclaration(Visit, TIntermDeclaration *node)
 {

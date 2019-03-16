@@ -43,14 +43,14 @@ egl::Error EGLImageD3D::initialize(const egl::Display *display)
     return egl::NoError();
 }
 
-gl::Error EGLImageD3D::orphan(const gl::Context *context, egl::ImageSibling *sibling)
+angle::Result EGLImageD3D::orphan(const gl::Context *context, egl::ImageSibling *sibling)
 {
     if (sibling == mState.source)
     {
         ANGLE_TRY(copyToLocalRendertarget(context));
     }
 
-    return gl::NoError();
+    return angle::Result::Continue;
 }
 
 angle::Result EGLImageD3D::getRenderTarget(const gl::Context *context,
@@ -60,18 +60,18 @@ angle::Result EGLImageD3D::getRenderTarget(const gl::Context *context,
     {
         ASSERT(!mRenderTarget);
         FramebufferAttachmentRenderTarget *rt = nullptr;
-        ANGLE_TRY_HANDLE(context, mState.source->getAttachmentRenderTarget(context, GL_NONE,
-                                                                           mState.imageIndex, &rt));
+        ANGLE_TRY(
+            mState.source->getAttachmentRenderTarget(context, GL_NONE, mState.imageIndex, &rt));
         *outRT = static_cast<RenderTargetD3D *>(rt);
-        return angle::Result::Continue();
+        return angle::Result::Continue;
     }
 
     ASSERT(mRenderTarget);
     *outRT = mRenderTarget;
-    return angle::Result::Continue();
+    return angle::Result::Continue;
 }
 
-gl::Error EGLImageD3D::copyToLocalRendertarget(const gl::Context *context)
+angle::Result EGLImageD3D::copyToLocalRendertarget(const gl::Context *context)
 {
     ASSERT(mState.source != nullptr);
     ASSERT(mRenderTarget == nullptr);
@@ -79,10 +79,10 @@ gl::Error EGLImageD3D::copyToLocalRendertarget(const gl::Context *context)
     RenderTargetD3D *curRenderTarget = nullptr;
     ANGLE_TRY(getRenderTarget(context, &curRenderTarget));
 
-    // This only currently applies do D3D11, where it invalidates FBOs with this Image attached.
+    // Invalidate FBOs with this Image attached. Only currently applies to D3D11.
     for (egl::ImageSibling *target : mState.targets)
     {
-        target->getSubject()->onStateChange(context, angle::SubjectMessage::DEPENDENT_DIRTY_BITS);
+        target->onStateChange(context, angle::SubjectMessage::STORAGE_CHANGED);
     }
 
     return mRenderer->createRenderTargetCopy(context, curRenderTarget, &mRenderTarget);

@@ -36,8 +36,7 @@ class Traverser : public TIntermTraverser
 
 Traverser::Traverser(const TSymbolTable &symbolTable, int shaderVersion)
     : TIntermTraverser(true, false, false), symbolTable(&symbolTable), shaderVersion(shaderVersion)
-{
-}
+{}
 
 // static
 void Traverser::Apply(TIntermNode *root, const TSymbolTable &symbolTable, int shaderVersion)

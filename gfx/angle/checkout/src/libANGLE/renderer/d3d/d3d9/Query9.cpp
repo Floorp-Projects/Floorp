@@ -7,8 +7,11 @@
 // Query9.cpp: Defines the rx::Query9 class which implements rx::QueryImpl.
 
 #include "libANGLE/renderer/d3d/d3d9/Query9.h"
-#include "libANGLE/renderer/d3d/d3d9/renderer9_utils.h"
+
+#include "libANGLE/Context.h"
+#include "libANGLE/renderer/d3d/d3d9/Context9.h"
 #include "libANGLE/renderer/d3d/d3d9/Renderer9.h"
+#include "libANGLE/renderer/d3d/d3d9/renderer9_utils.h"
 
 #include <GLES2/gl2ext.h>
 
@@ -21,72 +24,59 @@ Query9::Query9(Renderer9 *renderer, gl::QueryType type)
       mQueryFinished(false),
       mRenderer(renderer),
       mQuery(nullptr)
-{
-}
+{}
 
 Query9::~Query9()
 {
     SafeRelease(mQuery);
 }
 
-gl::Error Query9::begin(const gl::Context *context)
+angle::Result Query9::begin(const gl::Context *context)
 {
+    Context9 *context9 = GetImplAs<Context9>(context);
+
     D3DQUERYTYPE d3dQueryType = gl_d3d9::ConvertQueryType(getType());
     if (mQuery == nullptr)
     {
         HRESULT result = mRenderer->getDevice()->CreateQuery(d3dQueryType, &mQuery);
-        if (FAILED(result))
-        {
-            return gl::OutOfMemory() << "Internal query creation failed, " << gl::FmtHR(result);
-        }
+        ANGLE_TRY_HR(context9, result, "Internal query creation failed");
     }
 
     if (d3dQueryType != D3DQUERYTYPE_EVENT)
     {
         HRESULT result = mQuery->Issue(D3DISSUE_BEGIN);
         ASSERT(SUCCEEDED(result));
-        if (FAILED(result))
-        {
-            return gl::OutOfMemory() << "Failed to begin internal query, " << gl::FmtHR(result);
-        }
+        ANGLE_TRY_HR(context9, result, "Failed to begin internal query");
     }
 
-    return gl::NoError();
+    return angle::Result::Continue;
 }
 
-gl::Error Query9::end(const gl::Context *context)
+angle::Result Query9::end(const gl::Context *context)
 {
+    Context9 *context9 = GetImplAs<Context9>(context);
     ASSERT(mQuery);
 
     HRESULT result = mQuery->Issue(D3DISSUE_END);
     ASSERT(SUCCEEDED(result));
-    if (FAILED(result))
-    {
-        return gl::OutOfMemory() << "Failed to end internal query, " << gl::FmtHR(result);
-    }
-
+    ANGLE_TRY_HR(context9, result, "Failed to end internal query");
     mQueryFinished = false;
-    mResult = GL_FALSE;
+    mResult        = GL_FALSE;
 
-    return gl::NoError();
+    return angle::Result::Continue;
 }
 
-gl::Error Query9::queryCounter(const gl::Context *context)
+angle::Result Query9::queryCounter(const gl::Context *context)
 {
-    UNIMPLEMENTED();
-    return gl::InternalError() << "Unimplemented";
+    ANGLE_HR_UNREACHABLE(GetImplAs<Context9>(context));
 }
 
 template <typename T>
-gl::Error Query9::getResultBase(T *params)
+angle::Result Query9::getResultBase(Context9 *context9, T *params)
 {
     while (!mQueryFinished)
     {
-        gl::Error error = testQuery();
-        if (error.isError())
-        {
-            return error;
-        }
+        ANGLE_TRY(testQuery(context9));
 
         if (!mQueryFinished)
         {
@@ -96,43 +86,37 @@ gl::Error Query9::getResultBase(T *params)
 
     ASSERT(mQueryFinished);
     *params = static_cast<T>(mResult);
-    return gl::NoError();
+    return angle::Result::Continue;
 }
 
-gl::Error Query9::getResult(const gl::Context *context, GLint *params)
+angle::Result Query9::getResult(const gl::Context *context, GLint *params)
 {
-    return getResultBase(params);
+    return getResultBase(GetImplAs<Context9>(context), params);
 }
 
-gl::Error Query9::getResult(const gl::Context *context, GLuint *params)
+angle::Result Query9::getResult(const gl::Context *context, GLuint *params)
 {
-    return getResultBase(params);
+    return getResultBase(GetImplAs<Context9>(context), params);
 }
 
-gl::Error Query9::getResult(const gl::Context *context, GLint64 *params)
+angle::Result Query9::getResult(const gl::Context *context, GLint64 *params)
 {
-    return getResultBase(params);
+    return getResultBase(GetImplAs<Context9>(context), params);
 }
 
-gl::Error Query9::getResult(const gl::Context *context, GLuint64 *params)
+angle::Result Query9::getResult(const gl::Context *context, GLuint64 *params)
 {
-    return getResultBase(params);
+    return getResultBase(GetImplAs<Context9>(context), params);
 }
 
-gl::Error Query9::isResultAvailable(const gl::Context *context, bool *available)
+angle::Result Query9::isResultAvailable(const gl::Context *context, bool *available)
 {
-    gl::Error error = testQuery();
-    if (error.isError())
-    {
-        return error;
-    }
-
+    ANGLE_TRY(testQuery(GetImplAs<Context9>(context)));
     *available = mQueryFinished;
-
-    return gl::NoError();
+    return angle::Result::Continue;
 }
 
-gl::Error Query9::testQuery()
+angle::Result Query9::testQuery(Context9 *context9)
 {
     if (!mQueryFinished)
     {
@@ -145,7 +129,7 @@ gl::Error Query9::testQuery()
             case gl::QueryType::AnySamplesConservative:
             {
                 DWORD numPixels = 0;
-                result = mQuery->GetData(&numPixels, sizeof(numPixels), D3DGETDATA_FLUSH);
+                result          = mQuery->GetData(&numPixels, sizeof(numPixels), D3DGETDATA_FLUSH);
                 if (result == S_OK)
                 {
                     mQueryFinished = true;
@@ -157,7 +141,7 @@ gl::Error Query9::testQuery()
             case gl::QueryType::CommandsCompleted:
             {
                 BOOL completed = FALSE;
-                result = mQuery->GetData(&completed, sizeof(completed), D3DGETDATA_FLUSH);
+                result         = mQuery->GetData(&completed, sizeof(completed), D3DGETDATA_FLUSH);
                 if (result == S_OK)
                 {
                     mQueryFinished = true;
@@ -173,24 +157,20 @@ gl::Error Query9::testQuery()
 
         if (!mQueryFinished)
         {
-            if (d3d9::isDeviceLostError(result))
-            {
-                mRenderer->notifyDeviceLost();
-                return gl::OutOfMemory() << "Failed to test get query result, device is lost.";
-            }
+            ANGLE_TRY_HR(context9, result, "Failed to test get query result");
 
             mGetDataAttemptCount++;
             bool checkDeviceLost =
                 (mGetDataAttemptCount % kPollingD3DDeviceLostCheckFrequency) == 0;
             if (checkDeviceLost && mRenderer->testDeviceLost())
             {
-                mRenderer->notifyDeviceLost();
-                return gl::OutOfMemory() << "Failed to test get query result, device is lost.";
+                ANGLE_TRY_HR(context9, D3DERR_DEVICELOST,
+                             "Failed to test get query result, device is lost");
             }
         }
     }
 
-    return gl::NoError();
+    return angle::Result::Continue;
 }
 
-}
+}  // namespace rx

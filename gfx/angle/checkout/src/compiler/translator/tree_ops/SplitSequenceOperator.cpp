@@ -48,8 +48,7 @@ SplitSequenceOperatorTraverser::SplitSequenceOperatorTraverser(unsigned int patt
       mFoundExpressionToSplit(false),
       mInsideSequenceOperator(0),
       mPatternToSplitMatcher(patternsToSplitMask)
-{
-}
+{}
 
 void SplitSequenceOperatorTraverser::nextIteration()
 {

@@ -291,7 +291,17 @@ void FixedVector<T, N, Storage>::swap(FixedVector<T, N, Storage> &other)
 template <class T, size_t N, class Storage>
 void FixedVector<T, N, Storage>::resize(size_type count)
 {
-    resize(count, value_type());
+    ASSERT(count <= N);
+    while (mSize > count)
+    {
+        mSize--;
+        mStorage[mSize] = value_type();
+    }
+    while (mSize < count)
+    {
+        mStorage[mSize] = value_type();
+        mSize++;
+    }
 }
 
 template <class T, size_t N, class Storage>
@@ -301,7 +311,7 @@ void FixedVector<T, N, Storage>::resize(size_type count, const value_type &value
     while (mSize > count)
     {
         mSize--;
-        mStorage[mSize] = T();
+        mStorage[mSize] = value_type();
     }
     while (mSize < count)
     {

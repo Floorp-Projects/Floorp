@@ -102,8 +102,7 @@ egl::Error GetGLDescFromTex(ID3D11Texture2D *const tex,
 
 StreamProducerD3DTexture::StreamProducerD3DTexture(Renderer11 *renderer)
     : mRenderer(renderer), mTexture(nullptr), mArraySlice(0), mPlaneOffset(0)
-{
-}
+{}
 
 StreamProducerD3DTexture::~StreamProducerD3DTexture()
 {
