@@ -81,6 +81,7 @@ permalink: /changelog/
 
 * **service-pocket**
   * Access the list of global video recommendations via `PocketEndpoint.getGlobalVideoRecommendations`.
+  * Access an article's text-to-speech listen metadata via `PocketListenEndpoint.getListenArticleMetadata`.
   * ⚠️ **This is a breaking API change!**: `PocketGlobalVideoRecommendation.id` is now a Long instead of an Int
 
 * **concept-fetch**
