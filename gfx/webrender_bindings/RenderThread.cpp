@@ -647,8 +647,8 @@ void RenderThread::InitDeviceTask() {
   MOZ_ASSERT(!mSharedGL);
 
   mSharedGL = CreateGLContext();
-  if (XRE_IsGPUProcess() && gfx::gfxVars::UseWebRenderProgramBinary()) {
-    ProgramCache();
+  if (gfx::gfxVars::UseWebRenderProgramBinaryDisk()) {
+    mProgramCache = MakeUnique<WebRenderProgramCache>(ThreadPool().Raw());
   }
   // Query the shared GL context to force the
   // lazy initialization to happen now.
@@ -699,15 +699,6 @@ void RenderThread::SimulateDeviceReset() {
     // them.
     HandleDeviceReset("SimulateDeviceReset", /* aNotify */ false);
   }
-}
-
-WebRenderProgramCache* RenderThread::ProgramCache() {
-  MOZ_ASSERT(IsInRenderThread());
-
-  if (!mProgramCache) {
-    mProgramCache = MakeUnique<WebRenderProgramCache>(ThreadPool().Raw());
-  }
-  return mProgramCache.get();
 }
 
 gl::GLContext* RenderThread::SharedGL() {

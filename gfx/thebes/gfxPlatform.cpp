@@ -2744,13 +2744,9 @@ void gfxPlatform::InitWebRenderConfig() {
   }
 #endif
 
-  if (Preferences::GetBool("gfx.webrender.program-binary", false)) {
-    gfxVars::SetUseWebRenderProgramBinary(
+  if (Preferences::GetBool("gfx.webrender.program-binary-disk", false)) {
+    gfxVars::SetUseWebRenderProgramBinaryDisk(
         gfxConfig::IsEnabled(Feature::WEBRENDER));
-    if (Preferences::GetBool("gfx.webrender.program-binary-disk", false)) {
-      gfxVars::SetUseWebRenderProgramBinaryDisk(
-          gfxConfig::IsEnabled(Feature::WEBRENDER));
-    }
   }
 
 #ifdef MOZ_WIDGET_ANDROID
