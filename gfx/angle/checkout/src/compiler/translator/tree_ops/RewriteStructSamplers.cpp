@@ -576,8 +576,7 @@ class Traverser final : public TIntermTraverser
       public:
         CreateStructSamplerFunctionVisitor(TSymbolTable *symbolTable)
             : mSymbolTable(symbolTable), mNewFunction(nullptr)
-        {
-        }
+        {}
 
         ImmutableString getNameFromIndex(const TFunction *function, size_t paramIndex) override
         {
@@ -637,8 +636,7 @@ class Traverser final : public TIntermTraverser
       public:
         GetSamplerArgumentsVisitor(TSymbolTable *symbolTable, const TIntermSequence *arguments)
             : mSymbolTable(symbolTable), mArguments(arguments), mNewArguments(new TIntermSequence)
-        {
-        }
+        {}
 
         ImmutableString getNameFromIndex(const TFunction *function, size_t paramIndex) override
         {
@@ -658,7 +656,7 @@ class Traverser final : public TIntermTraverser
         {
             // The tree structure of the parameter is modified to point to the new type. This leaves
             // the tree in a consistent state.
-            TIntermTyped *argument = (*mArguments)[paramIndex]->getAsTyped();
+            TIntermTyped *argument    = (*mArguments)[paramIndex]->getAsTyped();
             TIntermTyped *replacement = ReplaceTypeOfTypedStructNode(argument, mSymbolTable);
             mNewArguments->push_back(replacement);
         }

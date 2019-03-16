@@ -17,7 +17,7 @@ namespace angle
 {
 struct CompilerWorkaroundsD3D;
 struct WorkaroundsD3D;
-}
+}  // namespace angle
 
 namespace gl
 {
@@ -42,7 +42,7 @@ class ShaderD3D : public ShaderImpl
     ShCompileOptions prepareSourceAndReturnOptions(const gl::Context *context,
                                                    std::stringstream *sourceStream,
                                                    std::string *sourcePath) override;
-    bool postTranslateCompile(gl::Compiler *compiler, std::string *infoLog) override;
+    bool postTranslateCompile(gl::ShCompilerInstance *compiler, std::string *infoLog) override;
     std::string getDebugInfo() const override;
 
     // D3D-specific methods
@@ -55,6 +55,10 @@ class ShaderD3D : public ShaderImpl
     unsigned int getUniformRegister(const std::string &uniformName) const;
 
     unsigned int getUniformBlockRegister(const std::string &blockName) const;
+    unsigned int getShaderStorageBlockRegister(const std::string &blockName) const;
+    unsigned int getReadonlyImage2DRegisterIndex() const { return mReadonlyImage2DRegisterIndex; }
+    unsigned int getImage2DRegisterIndex() const { return mImage2DRegisterIndex; }
+    bool useImage2DFunction(const std::string &functionName) const;
     void appendDebugInfo(const std::string &info) const { mDebugInfo += info; }
 
     void generateWorkarounds(angle::CompilerWorkaroundsD3D *workarounds) const;
@@ -93,6 +97,10 @@ class ShaderD3D : public ShaderImpl
     mutable std::string mDebugInfo;
     std::map<std::string, unsigned int> mUniformRegisterMap;
     std::map<std::string, unsigned int> mUniformBlockRegisterMap;
+    std::map<std::string, unsigned int> mShaderStorageBlockRegisterMap;
+    unsigned int mReadonlyImage2DRegisterIndex;
+    unsigned int mImage2DRegisterIndex;
+    std::set<std::string> mUsedImage2DFunctionNames;
     ShCompileOptions mAdditionalOptions;
 };
 }  // namespace rx

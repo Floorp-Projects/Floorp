@@ -375,6 +375,8 @@ GLenum GLVariableType(const TType &type)
             return GL_SAMPLER_2D_ARRAY;
         case EbtSampler2DMS:
             return GL_SAMPLER_2D_MULTISAMPLE;
+        case EbtSampler2DMSArray:
+            return GL_SAMPLER_2D_MULTISAMPLE_ARRAY;
         case EbtISampler2D:
             return GL_INT_SAMPLER_2D;
         case EbtISampler3D:
@@ -385,6 +387,8 @@ GLenum GLVariableType(const TType &type)
             return GL_INT_SAMPLER_2D_ARRAY;
         case EbtISampler2DMS:
             return GL_INT_SAMPLER_2D_MULTISAMPLE;
+        case EbtISampler2DMSArray:
+            return GL_INT_SAMPLER_2D_MULTISAMPLE_ARRAY;
         case EbtUSampler2D:
             return GL_UNSIGNED_INT_SAMPLER_2D;
         case EbtUSampler3D:
@@ -395,6 +399,8 @@ GLenum GLVariableType(const TType &type)
             return GL_UNSIGNED_INT_SAMPLER_2D_ARRAY;
         case EbtUSampler2DMS:
             return GL_UNSIGNED_INT_SAMPLER_2D_MULTISAMPLE;
+        case EbtUSampler2DMSArray:
+            return GL_UNSIGNED_INT_SAMPLER_2D_MULTISAMPLE_ARRAY;
         case EbtSampler2DShadow:
             return GL_SAMPLER_2D_SHADOW;
         case EbtSamplerCubeShadow:
@@ -478,7 +484,7 @@ ImmutableString ArrayString(const TType &type)
     if (!type.isArray())
         return ImmutableString("");
 
-    const TVector<unsigned int> &arraySizes = *type.getArraySizes();
+    const TVector<unsigned int> &arraySizes         = *type.getArraySizes();
     constexpr const size_t kMaxDecimalDigitsPerSize = 10u;
     ImmutableStringBuilder arrayString(arraySizes.size() * (kMaxDecimalDigitsPerSize + 2u));
     for (auto arraySizeIter = arraySizes.rbegin(); arraySizeIter != arraySizes.rend();
@@ -743,6 +749,68 @@ bool IsOutputHLSL(ShShaderOutput output)
 bool IsOutputVulkan(ShShaderOutput output)
 {
     return output == SH_GLSL_VULKAN_OUTPUT;
+}
+
+bool IsInShaderStorageBlock(TIntermTyped *node)
+{
+    TIntermSwizzle *swizzleNode = node->getAsSwizzleNode();
+    if (swizzleNode)
+    {
+        return IsInShaderStorageBlock(swizzleNode->getOperand());
+    }
+
+    TIntermBinary *binaryNode = node->getAsBinaryNode();
+    if (binaryNode)
+    {
+        switch (binaryNode->getOp())
+        {
+            case EOpIndexDirectInterfaceBlock:
+            case EOpIndexIndirect:
+            case EOpIndexDirect:
+            case EOpIndexDirectStruct:
+                return IsInShaderStorageBlock(binaryNode->getLeft());
+            default:
+                return false;
+        }
+    }
+
+    const TType &type = node->getType();
+    return type.getQualifier() == EvqBuffer;
+}
+
+GLenum GetImageInternalFormatType(TLayoutImageInternalFormat iifq)
+{
+    switch (iifq)
+    {
+        case EiifRGBA32F:
+            return GL_RGBA32F;
+        case EiifRGBA16F:
+            return GL_RGBA16F;
+        case EiifR32F:
+            return GL_R32F;
+        case EiifRGBA32UI:
+            return GL_RGBA32UI;
+        case EiifRGBA16UI:
+            return GL_RGBA16UI;
+        case EiifRGBA8UI:
+            return GL_RGBA8UI;
+        case EiifR32UI:
+            return GL_R32UI;
+        case EiifRGBA32I:
+            return GL_RGBA32I;
+        case EiifRGBA16I:
+            return GL_RGBA16I;
+        case EiifRGBA8I:
+            return GL_RGBA8I;
+        case EiifR32I:
+            return GL_R32I;
+        case EiifRGBA8:
+            return GL_RGBA8;
+        case EiifRGBA8_SNORM:
+            return GL_RGBA8_SNORM;
+        default:
+            return GL_NONE;
+    }
 }
 
 }  // namespace sh

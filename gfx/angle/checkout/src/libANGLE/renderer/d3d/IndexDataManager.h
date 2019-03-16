@@ -44,7 +44,7 @@ struct SourceIndexData
     BufferD3D *srcBuffer;
     const void *srcIndices;
     unsigned int srcCount;
-    GLenum srcIndexType;
+    gl::DrawElementsType srcIndexType;
     bool srcIndicesChanged;
 };
 
@@ -55,7 +55,7 @@ struct TranslatedIndexData
 
     IndexBuffer *indexBuffer;
     BufferD3D *storage;
-    GLenum indexType;
+    gl::DrawElementsType indexType;
     unsigned int serial;
 
     SourceIndexData srcIndexData;
@@ -70,8 +70,8 @@ class IndexDataManager : angle::NonCopyable
     void deinitialize();
 
     angle::Result prepareIndexData(const gl::Context *context,
-                                   GLenum srcType,
-                                   GLenum dstType,
+                                   gl::DrawElementsType srcType,
+                                   gl::DrawElementsType dstType,
                                    GLsizei count,
                                    gl::Buffer *glBuffer,
                                    const void *indices,
@@ -81,12 +81,12 @@ class IndexDataManager : angle::NonCopyable
     angle::Result streamIndexData(const gl::Context *context,
                                   const void *data,
                                   unsigned int count,
-                                  GLenum srcType,
-                                  GLenum dstType,
+                                  gl::DrawElementsType srcType,
+                                  gl::DrawElementsType dstType,
                                   bool usePrimitiveRestartFixedIndex,
                                   TranslatedIndexData *translated);
     angle::Result getStreamingIndexBuffer(const gl::Context *context,
-                                          GLenum destinationIndexType,
+                                          gl::DrawElementsType destinationIndexType,
                                           IndexBufferInterface **outBuffer);
 
     using StreamingBuffer = std::unique_ptr<StreamingIndexBufferInterface>;
@@ -97,12 +97,16 @@ class IndexDataManager : angle::NonCopyable
 };
 
 angle::Result GetIndexTranslationDestType(const gl::Context *context,
-                                          const gl::DrawCallParams &drawCallParams,
+                                          GLsizei indexCount,
+                                          gl::DrawElementsType indexType,
+                                          const void *indices,
                                           bool usePrimitiveRestartWorkaround,
-                                          GLenum *destTypeOut);
+                                          gl::DrawElementsType *destTypeOut);
 
-bool IsOffsetAligned(GLenum elementType, unsigned int offset);
-
+ANGLE_INLINE bool IsOffsetAligned(gl::DrawElementsType elementType, unsigned int offset)
+{
+    return (offset % gl::GetDrawElementsTypeSize(elementType) == 0);
+}
 }  // namespace rx
 
 #endif  // LIBANGLE_INDEXDATAMANAGER_H_

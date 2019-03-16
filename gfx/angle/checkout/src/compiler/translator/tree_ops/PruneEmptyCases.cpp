@@ -66,9 +66,7 @@ void PruneEmptyCasesTraverser::apply(TIntermBlock *root)
     prune.updateTree();
 }
 
-PruneEmptyCasesTraverser::PruneEmptyCasesTraverser() : TIntermTraverser(true, false, false)
-{
-}
+PruneEmptyCasesTraverser::PruneEmptyCasesTraverser() : TIntermTraverser(true, false, false) {}
 
 bool PruneEmptyCasesTraverser::visitSwitch(Visit visit, TIntermSwitch *node)
 {

@@ -85,9 +85,14 @@ void InitMinimumTextureCapsMap(const Version &clientVersion,
                                const Extensions &extensions,
                                TextureCapsMap *capsMap);
 
+// Returns true if all the formats required to support GL_CHROMIUM_compressed_texture_etc are
+// present. Does not determine if they are natively supported without decompression.
+bool DetermineCompressedTextureETCSupport(const TextureCapsMap &textureCaps);
+
 struct Extensions
 {
     Extensions();
+    Extensions(const Extensions &other);
 
     // Generate a vector of supported extension strings
     std::vector<std::string> getStrings() const;
@@ -109,6 +114,7 @@ struct Extensions
     // GL_ANGLE_depth_texture, GL_OES_depth32
     // GL_EXT_color_buffer_float
     // GL_EXT_texture_norm16
+    // GL_EXT_texture_compression_bptc
     void setTextureExtensionSupport(const TextureCapsMap &textureCaps);
 
     // ES2 Extension support
@@ -182,6 +188,9 @@ struct Extensions
     // GL_KHR_texture_compression_astc_ldr
     bool textureCompressionASTCLDR;
 
+    // GL_EXT_texture_compression_bptc
+    bool textureCompressionBPTC;
+
     // GL_OES_compressed_ETC1_RGB8_texture
     // Implies that TextureCaps for GL_ETC1_RGB8_OES exist
     bool compressedETC1RGB8Texture;
@@ -215,6 +224,13 @@ struct Extensions
 
     // OES_compressed_EAC_RG11_signed_texture
     bool compressedEACRG11SignedTexture;
+
+    // GL_CHROMIUM_compressed_texture_etc
+    // ONLY exposed if ETC texture formats are natively supported without decompression
+    // Backends should enable this extension explicitly. It is not enabled with
+    // setTextureExtensionSupport, use DetermineCompressedTextureETCSupport to check if all of the
+    // individual formats required to support this extension are available.
+    bool compressedTextureETC;
 
     // GL_EXT_sRGB
     // Implies that TextureCaps for GL_SRGB8_ALPHA8 and GL_SRGB8 exist
@@ -268,7 +284,11 @@ struct Extensions
     bool framebufferMultisample;
 
     // GL_ANGLE_instanced_arrays
-    bool instancedArrays;
+    bool instancedArraysANGLE;
+    // GL_EXT_instanced_arrays
+    bool instancedArraysEXT;
+    // Any version of the instanced arrays extension
+    bool instancedArraysAny() const { return (instancedArraysANGLE || instancedArraysEXT); }
 
     // GL_ANGLE_pack_reverse_row_order
     bool packReverseRowOrder;
@@ -310,6 +330,9 @@ struct Extensions
     // GL_OES_EGL_image_external_essl3
     bool eglImageExternalEssl3;
 
+    // GL_OES_EGL_sync
+    bool eglSync;
+
     // NV_EGL_stream_consumer_external
     bool eglStreamConsumerExternal;
 
@@ -347,6 +370,9 @@ struct Extensions
     // GL_CHROMIUM_copy_compressed_texture
     bool copyCompressedTexture;
 
+    // GL_ANGLE_copy_texture_3d
+    bool copyTexture3d;
+
     // GL_ANGLE_webgl_compatibility
     bool webglCompatibility;
 
@@ -358,6 +384,9 @@ struct Extensions
 
     // GL_ANGLE_robust_client_memory
     bool robustClientMemory;
+
+    // GL_OES_texture_border_clamp
+    bool textureBorderClamp;
 
     // GL_EXT_texture_sRGB_decode
     bool textureSRGBDecode;
@@ -427,8 +456,30 @@ struct Extensions
     // GL_KHR_parallel_shader_compile
     bool parallelShaderCompile;
 
-    // GL_ANGLE_texture_multisample_array
-    bool textureMultisampleArray;
+    // GL_OES_texture_storage_multisample_2d_array
+    bool textureStorageMultisample2DArray;
+
+    // GL_ANGLE_multiview_multisample
+    bool multiviewMultisample;
+
+    // GL_EXT_blend_func_extended
+    bool blendFuncExtended;
+    GLuint maxDualSourceDrawBuffers;
+
+    // GL_EXT_float_blend
+    bool floatBlend;
+
+    // GL_ANGLE_memory_size
+    bool memorySize;
+
+    // GL_ANGLE_texture_multisample
+    bool textureMultisample;
+
+    // GL_ANGLE_multi_draw
+    bool multiDraw;
+
+    // GL_ANGLE_provoking_vertex
+    bool provokingVertex = false;
 };
 
 struct ExtensionInfo
@@ -469,6 +520,9 @@ struct Limitations
 
     // D3D9 does not support flexible varying register packing.
     bool noFlexibleVaryingPacking;
+
+    // D3D does not support having multiple transform feedback outputs go to the same buffer.
+    bool noDoubleBoundTransformFeedbackBuffers;
 };
 
 struct TypePrecision
@@ -642,7 +696,7 @@ struct Caps
 };
 
 Caps GenerateMinimumCaps(const Version &clientVersion, const Extensions &extensions);
-}
+}  // namespace gl
 
 namespace egl
 {
@@ -725,6 +779,9 @@ struct DisplayExtensions
     // EGL_ANGLE_direct_composition
     bool directComposition;
 
+    // EGL_ANGLE_windows_ui_composition
+    bool windowsUIComposition;
+
     // KHR_create_context_no_error
     bool createContextNoError;
 
@@ -739,6 +796,12 @@ struct DisplayExtensions
 
     // EGL_ANGLE_stream_producer_d3d_texture
     bool streamProducerD3DTexture;
+
+    // EGL_KHR_fence_sync
+    bool fenceSync;
+
+    // EGL_KHR_wait_sync
+    bool waitSync;
 
     // EGL_ANGLE_create_context_webgl_compatibility
     bool createContextWebGLCompatibility;
@@ -776,11 +839,20 @@ struct DisplayExtensions
     // EGL_ANGLE_create_context_extensions_enabled
     bool createContextExtensionsEnabled;
 
-    // EGL_MOZ_create_context_provoking_vertex_dont_care
-    bool provokingVertexDontCare;
-
-  // EGL_ANDROID_presentation_time
+    // EGL_ANDROID_presentation_time
     bool presentationTime;
+
+    // EGL_ANDROID_blob_cache
+    bool blobCache;
+
+    // EGL_ANDROID_image_native_buffer
+    bool imageNativeBuffer;
+
+    // EGL_ANDROID_get_frame_timestamps
+    bool getFrameTimestamps;
+
+    // EGL_ANDROID_recordable
+    bool recordable;
 };
 
 struct DeviceExtensions

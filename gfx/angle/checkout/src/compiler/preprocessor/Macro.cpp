@@ -15,13 +15,9 @@ namespace angle
 namespace pp
 {
 
-Macro::Macro() : predefined(false), disabled(false), expansionCount(0), type(kTypeObj)
-{
-}
+Macro::Macro() : predefined(false), disabled(false), expansionCount(0), type(kTypeObj) {}
 
-Macro::~Macro()
-{
-}
+Macro::~Macro() {}
 
 bool Macro::equals(const Macro &other) const
 {

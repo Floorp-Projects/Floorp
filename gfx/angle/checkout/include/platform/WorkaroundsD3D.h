@@ -26,6 +26,9 @@ struct CompilerWorkaroundsD3D
 
 struct WorkaroundsD3D
 {
+    WorkaroundsD3D();
+    WorkaroundsD3D(const WorkaroundsD3D &other);
+
     // On some systems, having extra rendertargets than necessary slows down the shader.
     // We can fix this by optimizing those out of the shader. At the same time, we can
     // work around a bug on some nVidia drivers that they ignore "null" render targets
@@ -129,6 +132,9 @@ struct WorkaroundsD3D
     // specific cases the driver would not handle constant register zero correctly.
     bool skipVSConstantRegisterZero = false;
 };
+
+inline WorkaroundsD3D::WorkaroundsD3D()                            = default;
+inline WorkaroundsD3D::WorkaroundsD3D(const WorkaroundsD3D &other) = default;
 
 }  // namespace angle
 

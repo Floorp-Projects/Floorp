@@ -64,4 +64,4 @@ class HandleAllocator final : angle::NonCopyable
 
 }  // namespace gl
 
-#endif   // LIBANGLE_HANDLEALLOCATOR_H_
+#endif  // LIBANGLE_HANDLEALLOCATOR_H_

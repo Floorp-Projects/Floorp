@@ -311,6 +311,18 @@ LoadImageFunctionInfo COMPRESSED_RGBA8_ETC2_EAC_to_R8G8B8A8_UNORM(GLenum type)
     }
 }
 
+LoadImageFunctionInfo COMPRESSED_RGBA_BPTC_UNORM_EXT_to_default(GLenum type)
+{
+    switch (type)
+    {
+        case GL_UNSIGNED_BYTE:
+            return LoadImageFunctionInfo(LoadCompressedToNative<4, 4, 16>, true);
+        default:
+            UNREACHABLE();
+            return LoadImageFunctionInfo(UnreachableLoadFunction, true);
+    }
+}
+
 LoadImageFunctionInfo COMPRESSED_RGBA_S3TC_DXT1_EXT_to_default(GLenum type)
 {
     switch (type)
@@ -336,6 +348,30 @@ LoadImageFunctionInfo COMPRESSED_RGBA_S3TC_DXT3_ANGLE_to_default(GLenum type)
 }
 
 LoadImageFunctionInfo COMPRESSED_RGBA_S3TC_DXT5_ANGLE_to_default(GLenum type)
+{
+    switch (type)
+    {
+        case GL_UNSIGNED_BYTE:
+            return LoadImageFunctionInfo(LoadCompressedToNative<4, 4, 16>, true);
+        default:
+            UNREACHABLE();
+            return LoadImageFunctionInfo(UnreachableLoadFunction, true);
+    }
+}
+
+LoadImageFunctionInfo COMPRESSED_RGB_BPTC_SIGNED_FLOAT_EXT_to_default(GLenum type)
+{
+    switch (type)
+    {
+        case GL_UNSIGNED_BYTE:
+            return LoadImageFunctionInfo(LoadCompressedToNative<4, 4, 16>, true);
+        default:
+            UNREACHABLE();
+            return LoadImageFunctionInfo(UnreachableLoadFunction, true);
+    }
+}
+
+LoadImageFunctionInfo COMPRESSED_RGB_BPTC_UNSIGNED_FLOAT_EXT_to_default(GLenum type)
 {
     switch (type)
     {
@@ -440,6 +476,18 @@ COMPRESSED_SRGB8_PUNCHTHROUGH_ALPHA1_LOSSY_DECODE_ETC2_ANGLE_to_BC1_RGBA_UNORM_S
     {
         case GL_UNSIGNED_BYTE:
             return LoadImageFunctionInfo(LoadETC2SRGB8A1ToBC1, true);
+        default:
+            UNREACHABLE();
+            return LoadImageFunctionInfo(UnreachableLoadFunction, true);
+    }
+}
+
+LoadImageFunctionInfo COMPRESSED_SRGB_ALPHA_BPTC_UNORM_EXT_to_default(GLenum type)
+{
+    switch (type)
+    {
+        case GL_UNSIGNED_BYTE:
+            return LoadImageFunctionInfo(LoadCompressedToNative<4, 4, 16>, true);
         default:
             UNREACHABLE();
             return LoadImageFunctionInfo(UnreachableLoadFunction, true);
@@ -1740,12 +1788,18 @@ LoadFunctionMap GetLoadFunctionsMap(GLenum internalFormat, FormatID angleFormat)
             }
             break;
         }
+        case GL_COMPRESSED_RGBA_BPTC_UNORM_EXT:
+            return COMPRESSED_RGBA_BPTC_UNORM_EXT_to_default;
         case GL_COMPRESSED_RGBA_S3TC_DXT1_EXT:
             return COMPRESSED_RGBA_S3TC_DXT1_EXT_to_default;
         case GL_COMPRESSED_RGBA_S3TC_DXT3_ANGLE:
             return COMPRESSED_RGBA_S3TC_DXT3_ANGLE_to_default;
         case GL_COMPRESSED_RGBA_S3TC_DXT5_ANGLE:
             return COMPRESSED_RGBA_S3TC_DXT5_ANGLE_to_default;
+        case GL_COMPRESSED_RGB_BPTC_SIGNED_FLOAT_EXT:
+            return COMPRESSED_RGB_BPTC_SIGNED_FLOAT_EXT_to_default;
+        case GL_COMPRESSED_RGB_BPTC_UNSIGNED_FLOAT_EXT:
+            return COMPRESSED_RGB_BPTC_UNSIGNED_FLOAT_EXT_to_default;
         case GL_COMPRESSED_RGB_S3TC_DXT1_EXT:
             return COMPRESSED_RGB_S3TC_DXT1_EXT_to_default;
         case GL_COMPRESSED_SIGNED_R11_EAC:
@@ -1825,6 +1879,8 @@ LoadFunctionMap GetLoadFunctionsMap(GLenum internalFormat, FormatID angleFormat)
             }
             break;
         }
+        case GL_COMPRESSED_SRGB_ALPHA_BPTC_UNORM_EXT:
+            return COMPRESSED_SRGB_ALPHA_BPTC_UNORM_EXT_to_default;
         case GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT1_EXT:
             return COMPRESSED_SRGB_ALPHA_S3TC_DXT1_EXT_to_default;
         case GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT3_EXT:

@@ -9,6 +9,7 @@
 
 #include <cstddef>
 
+#include "GLSLANG/ShaderLang.h"
 #include "common/angleutils.h"
 
 namespace angle
@@ -22,10 +23,16 @@ class DirectiveHandler;
 struct PreprocessorImpl;
 struct Token;
 
-struct PreprocessorSettings : private angle::NonCopyable
+struct PreprocessorSettings final
 {
-    PreprocessorSettings() : maxMacroExpansionDepth(1000) {}
+    PreprocessorSettings(ShShaderSpec shaderSpec)
+        : maxMacroExpansionDepth(1000), shaderSpec(shaderSpec)
+    {}
+
+    PreprocessorSettings(const PreprocessorSettings &other) = default;
+
     int maxMacroExpansionDepth;
+    ShShaderSpec shaderSpec;
 };
 
 class Preprocessor : angle::NonCopyable

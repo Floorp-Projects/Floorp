@@ -80,7 +80,9 @@ void InitBuiltInAtanFunctionEmulatorForGLSLWorkarounds(BuiltInFunctionEmulator *
                              "    else return 1.57079632 * sign(y);\n"
                              "}\n");
     static const std::array<TSymbolUniqueId, 4> ids = {
-        BuiltInId::atan_Float1_Float1, BuiltInId::atan_Float2_Float2, BuiltInId::atan_Float3_Float3,
+        BuiltInId::atan_Float1_Float1,
+        BuiltInId::atan_Float2_Float2,
+        BuiltInId::atan_Float3_Float3,
         BuiltInId::atan_Float4_Float4,
     };
     for (int dim = 2; dim <= 4; ++dim)

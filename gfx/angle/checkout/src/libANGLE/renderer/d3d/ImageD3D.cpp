@@ -10,11 +10,6 @@
 
 #include "libANGLE/renderer/d3d/ImageD3D.h"
 
-#include "libANGLE/Framebuffer.h"
-#include "libANGLE/FramebufferAttachment.h"
-#include "libANGLE/renderer/d3d/FramebufferD3D.h"
-#include "libANGLE/renderer/d3d/RenderTargetD3D.h"
-
 namespace rx
 {
 
@@ -26,14 +21,13 @@ ImageD3D::ImageD3D()
       mRenderable(false),
       mType(gl::TextureType::InvalidEnum),
       mDirty(false)
-{
-}
+{}
 
 angle::Result ImageD3D::setManagedSurface2D(const gl::Context *context,
                                             TextureStorage *storage,
                                             int level)
 {
-    return angle::Result::Continue();
+    return angle::Result::Continue;
 }
 
 angle::Result ImageD3D::setManagedSurfaceCube(const gl::Context *context,
@@ -41,14 +35,14 @@ angle::Result ImageD3D::setManagedSurfaceCube(const gl::Context *context,
                                               int face,
                                               int level)
 {
-    return angle::Result::Continue();
+    return angle::Result::Continue;
 }
 
 angle::Result ImageD3D::setManagedSurface3D(const gl::Context *context,
                                             TextureStorage *storage,
                                             int level)
 {
-    return angle::Result::Continue();
+    return angle::Result::Continue;
 }
 
 angle::Result ImageD3D::setManagedSurface2DArray(const gl::Context *context,
@@ -56,7 +50,7 @@ angle::Result ImageD3D::setManagedSurface2DArray(const gl::Context *context,
                                                  int layer,
                                                  int level)
 {
-    return angle::Result::Continue();
+    return angle::Result::Continue;
 }
 
 }  // namespace rx

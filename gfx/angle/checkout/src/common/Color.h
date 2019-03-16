@@ -18,7 +18,7 @@ template <typename T>
 struct Color
 {
     Color();
-    Color(T r, T g, T b, T a);
+    constexpr Color(T r, T g, T b, T a);
 
     const T *data() const { return &red; }
     T *ptr() { return &red; }
@@ -48,6 +48,34 @@ typedef Color<float> ColorF;
 typedef Color<int> ColorI;
 typedef Color<unsigned int> ColorUI;
 
+struct ColorGeneric
+{
+    inline ColorGeneric();
+    inline ColorGeneric(const ColorF &color);
+    inline ColorGeneric(const ColorI &color);
+    inline ColorGeneric(const ColorUI &color);
+
+    enum class Type : uint8_t
+    {
+        Float = 0,
+        Int   = 1,
+        UInt  = 2
+    };
+
+    union
+    {
+        ColorF colorF;
+        ColorI colorI;
+        ColorUI colorUI;
+    };
+
+    Type type;
+};
+
+inline bool operator==(const ColorGeneric &a, const ColorGeneric &b);
+
+inline bool operator!=(const ColorGeneric &a, const ColorGeneric &b);
+
 struct DepthStencil
 {
     DepthStencil() : depth(0), stencil(0) {}
@@ -63,10 +91,11 @@ namespace gl
 {
 
 template <typename T>
-using Color   = angle::Color<T>;
-using ColorF  = angle::ColorF;
-using ColorI  = angle::ColorI;
-using ColorUI = angle::ColorUI;
+using Color        = angle::Color<T>;
+using ColorF       = angle::ColorF;
+using ColorI       = angle::ColorI;
+using ColorUI      = angle::ColorUI;
+using ColorGeneric = angle::ColorGeneric;
 
 }  // namespace gl
 

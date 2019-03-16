@@ -20,8 +20,7 @@ class ImmutableStringBuilder
   public:
     ImmutableStringBuilder(size_t maxLength)
         : mPos(0u), mMaxLength(maxLength), mData(AllocateEmptyPoolCharArray(maxLength))
-    {
-    }
+    {}
 
     ImmutableStringBuilder &operator<<(const ImmutableString &str);
 

@@ -91,7 +91,7 @@ void InsertUseCode(TIntermSequence *sequence,
     }
 }
 
-}  // namespace anonymous
+}  // namespace
 
 void UseInterfaceBlockFields(TIntermBlock *root,
                              const InterfaceBlockList &blocks,

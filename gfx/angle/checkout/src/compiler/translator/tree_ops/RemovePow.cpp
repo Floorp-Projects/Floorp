@@ -48,8 +48,7 @@ class RemovePowTraverser : public TIntermTraverser
 
 RemovePowTraverser::RemovePowTraverser(TSymbolTable *symbolTable)
     : TIntermTraverser(true, false, false, symbolTable), mNeedAnotherIteration(false)
-{
-}
+{}
 
 bool RemovePowTraverser::visitAggregate(Visit visit, TIntermAggregate *node)
 {

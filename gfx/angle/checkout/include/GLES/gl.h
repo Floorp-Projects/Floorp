@@ -1,12 +1,12 @@
-#ifndef __gl_h_
-#define __gl_h_ 1
+#ifndef __gles1_gl_h_
+#define __gles1_gl_h_ 1
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /*
-** Copyright (c) 2013-2017 The Khronos Group Inc.
+** Copyright (c) 2013-2018 The Khronos Group Inc.
 **
 ** Permission is hereby granted, free of charge, to any person obtaining a
 ** copy of this software and/or associated documentation files (the
@@ -36,7 +36,11 @@ extern "C" {
 
 #include <GLES/glplatform.h>
 
-/* Generated on date 20171212 */
+#ifndef GL_APIENTRYP
+#define GL_APIENTRYP GL_APIENTRY*
+#endif
+
+/* Generated on date 20181204 */
 
 /* Generated C header for:
  * API: gles1
@@ -53,8 +57,8 @@ extern "C" {
 #include <KHR/khrplatform.h>
 typedef khronos_int8_t GLbyte;
 typedef khronos_float_t GLclampf;
-typedef short GLshort;
-typedef unsigned short GLushort;
+typedef khronos_int16_t GLshort;
+typedef khronos_uint16_t GLushort;
 typedef void GLvoid;
 typedef unsigned int GLenum;
 typedef khronos_float_t GLfloat;
@@ -401,6 +405,151 @@ typedef khronos_int32_t GLclampx;
 #define GL_SRC2_ALPHA                     0x858A
 #define GL_DOT3_RGB                       0x86AE
 #define GL_DOT3_RGBA                      0x86AF
+typedef void (GL_APIENTRYP PFNGLALPHAFUNCPROC) (GLenum func, GLfloat ref);
+typedef void (GL_APIENTRYP PFNGLCLEARCOLORPROC) (GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha);
+typedef void (GL_APIENTRYP PFNGLCLEARDEPTHFPROC) (GLfloat d);
+typedef void (GL_APIENTRYP PFNGLCLIPPLANEFPROC) (GLenum p, const GLfloat *eqn);
+typedef void (GL_APIENTRYP PFNGLCOLOR4FPROC) (GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha);
+typedef void (GL_APIENTRYP PFNGLDEPTHRANGEFPROC) (GLfloat n, GLfloat f);
+typedef void (GL_APIENTRYP PFNGLFOGFPROC) (GLenum pname, GLfloat param);
+typedef void (GL_APIENTRYP PFNGLFOGFVPROC) (GLenum pname, const GLfloat *params);
+typedef void (GL_APIENTRYP PFNGLFRUSTUMFPROC) (GLfloat l, GLfloat r, GLfloat b, GLfloat t, GLfloat n, GLfloat f);
+typedef void (GL_APIENTRYP PFNGLGETCLIPPLANEFPROC) (GLenum plane, GLfloat *equation);
+typedef void (GL_APIENTRYP PFNGLGETFLOATVPROC) (GLenum pname, GLfloat *data);
+typedef void (GL_APIENTRYP PFNGLGETLIGHTFVPROC) (GLenum light, GLenum pname, GLfloat *params);
+typedef void (GL_APIENTRYP PFNGLGETMATERIALFVPROC) (GLenum face, GLenum pname, GLfloat *params);
+typedef void (GL_APIENTRYP PFNGLGETTEXENVFVPROC) (GLenum target, GLenum pname, GLfloat *params);
+typedef void (GL_APIENTRYP PFNGLGETTEXPARAMETERFVPROC) (GLenum target, GLenum pname, GLfloat *params);
+typedef void (GL_APIENTRYP PFNGLLIGHTMODELFPROC) (GLenum pname, GLfloat param);
+typedef void (GL_APIENTRYP PFNGLLIGHTMODELFVPROC) (GLenum pname, const GLfloat *params);
+typedef void (GL_APIENTRYP PFNGLLIGHTFPROC) (GLenum light, GLenum pname, GLfloat param);
+typedef void (GL_APIENTRYP PFNGLLIGHTFVPROC) (GLenum light, GLenum pname, const GLfloat *params);
+typedef void (GL_APIENTRYP PFNGLLINEWIDTHPROC) (GLfloat width);
+typedef void (GL_APIENTRYP PFNGLLOADMATRIXFPROC) (const GLfloat *m);
+typedef void (GL_APIENTRYP PFNGLMATERIALFPROC) (GLenum face, GLenum pname, GLfloat param);
+typedef void (GL_APIENTRYP PFNGLMATERIALFVPROC) (GLenum face, GLenum pname, const GLfloat *params);
+typedef void (GL_APIENTRYP PFNGLMULTMATRIXFPROC) (const GLfloat *m);
+typedef void (GL_APIENTRYP PFNGLMULTITEXCOORD4FPROC) (GLenum target, GLfloat s, GLfloat t, GLfloat r, GLfloat q);
+typedef void (GL_APIENTRYP PFNGLNORMAL3FPROC) (GLfloat nx, GLfloat ny, GLfloat nz);
+typedef void (GL_APIENTRYP PFNGLORTHOFPROC) (GLfloat l, GLfloat r, GLfloat b, GLfloat t, GLfloat n, GLfloat f);
+typedef void (GL_APIENTRYP PFNGLPOINTPARAMETERFPROC) (GLenum pname, GLfloat param);
+typedef void (GL_APIENTRYP PFNGLPOINTPARAMETERFVPROC) (GLenum pname, const GLfloat *params);
+typedef void (GL_APIENTRYP PFNGLPOINTSIZEPROC) (GLfloat size);
+typedef void (GL_APIENTRYP PFNGLPOLYGONOFFSETPROC) (GLfloat factor, GLfloat units);
+typedef void (GL_APIENTRYP PFNGLROTATEFPROC) (GLfloat angle, GLfloat x, GLfloat y, GLfloat z);
+typedef void (GL_APIENTRYP PFNGLSCALEFPROC) (GLfloat x, GLfloat y, GLfloat z);
+typedef void (GL_APIENTRYP PFNGLTEXENVFPROC) (GLenum target, GLenum pname, GLfloat param);
+typedef void (GL_APIENTRYP PFNGLTEXENVFVPROC) (GLenum target, GLenum pname, const GLfloat *params);
+typedef void (GL_APIENTRYP PFNGLTEXPARAMETERFPROC) (GLenum target, GLenum pname, GLfloat param);
+typedef void (GL_APIENTRYP PFNGLTEXPARAMETERFVPROC) (GLenum target, GLenum pname, const GLfloat *params);
+typedef void (GL_APIENTRYP PFNGLTRANSLATEFPROC) (GLfloat x, GLfloat y, GLfloat z);
+typedef void (GL_APIENTRYP PFNGLACTIVETEXTUREPROC) (GLenum texture);
+typedef void (GL_APIENTRYP PFNGLALPHAFUNCXPROC) (GLenum func, GLfixed ref);
+typedef void (GL_APIENTRYP PFNGLBINDBUFFERPROC) (GLenum target, GLuint buffer);
+typedef void (GL_APIENTRYP PFNGLBINDTEXTUREPROC) (GLenum target, GLuint texture);
+typedef void (GL_APIENTRYP PFNGLBLENDFUNCPROC) (GLenum sfactor, GLenum dfactor);
+typedef void (GL_APIENTRYP PFNGLBUFFERDATAPROC) (GLenum target, GLsizeiptr size, const void *data, GLenum usage);
+typedef void (GL_APIENTRYP PFNGLBUFFERSUBDATAPROC) (GLenum target, GLintptr offset, GLsizeiptr size, const void *data);
+typedef void (GL_APIENTRYP PFNGLCLEARPROC) (GLbitfield mask);
+typedef void (GL_APIENTRYP PFNGLCLEARCOLORXPROC) (GLfixed red, GLfixed green, GLfixed blue, GLfixed alpha);
+typedef void (GL_APIENTRYP PFNGLCLEARDEPTHXPROC) (GLfixed depth);
+typedef void (GL_APIENTRYP PFNGLCLEARSTENCILPROC) (GLint s);
+typedef void (GL_APIENTRYP PFNGLCLIENTACTIVETEXTUREPROC) (GLenum texture);
+typedef void (GL_APIENTRYP PFNGLCLIPPLANEXPROC) (GLenum plane, const GLfixed *equation);
+typedef void (GL_APIENTRYP PFNGLCOLOR4UBPROC) (GLubyte red, GLubyte green, GLubyte blue, GLubyte alpha);
+typedef void (GL_APIENTRYP PFNGLCOLOR4XPROC) (GLfixed red, GLfixed green, GLfixed blue, GLfixed alpha);
+typedef void (GL_APIENTRYP PFNGLCOLORMASKPROC) (GLboolean red, GLboolean green, GLboolean blue, GLboolean alpha);
+typedef void (GL_APIENTRYP PFNGLCOLORPOINTERPROC) (GLint size, GLenum type, GLsizei stride, const void *pointer);
+typedef void (GL_APIENTRYP PFNGLCOMPRESSEDTEXIMAGE2DPROC) (GLenum target, GLint level, GLenum internalformat, GLsizei width, GLsizei height, GLint border, GLsizei imageSize, const void *data);
+typedef void (GL_APIENTRYP PFNGLCOMPRESSEDTEXSUBIMAGE2DPROC) (GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLsizei imageSize, const void *data);
+typedef void (GL_APIENTRYP PFNGLCOPYTEXIMAGE2DPROC) (GLenum target, GLint level, GLenum internalformat, GLint x, GLint y, GLsizei width, GLsizei height, GLint border);
+typedef void (GL_APIENTRYP PFNGLCOPYTEXSUBIMAGE2DPROC) (GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint x, GLint y, GLsizei width, GLsizei height);
+typedef void (GL_APIENTRYP PFNGLCULLFACEPROC) (GLenum mode);
+typedef void (GL_APIENTRYP PFNGLDELETEBUFFERSPROC) (GLsizei n, const GLuint *buffers);
+typedef void (GL_APIENTRYP PFNGLDELETETEXTURESPROC) (GLsizei n, const GLuint *textures);
+typedef void (GL_APIENTRYP PFNGLDEPTHFUNCPROC) (GLenum func);
+typedef void (GL_APIENTRYP PFNGLDEPTHMASKPROC) (GLboolean flag);
+typedef void (GL_APIENTRYP PFNGLDEPTHRANGEXPROC) (GLfixed n, GLfixed f);
+typedef void (GL_APIENTRYP PFNGLDISABLEPROC) (GLenum cap);
+typedef void (GL_APIENTRYP PFNGLDISABLECLIENTSTATEPROC) (GLenum array);
+typedef void (GL_APIENTRYP PFNGLDRAWARRAYSPROC) (GLenum mode, GLint first, GLsizei count);
+typedef void (GL_APIENTRYP PFNGLDRAWELEMENTSPROC) (GLenum mode, GLsizei count, GLenum type, const void *indices);
+typedef void (GL_APIENTRYP PFNGLENABLEPROC) (GLenum cap);
+typedef void (GL_APIENTRYP PFNGLENABLECLIENTSTATEPROC) (GLenum array);
+typedef void (GL_APIENTRYP PFNGLFINISHPROC) (void);
+typedef void (GL_APIENTRYP PFNGLFLUSHPROC) (void);
+typedef void (GL_APIENTRYP PFNGLFOGXPROC) (GLenum pname, GLfixed param);
+typedef void (GL_APIENTRYP PFNGLFOGXVPROC) (GLenum pname, const GLfixed *param);
+typedef void (GL_APIENTRYP PFNGLFRONTFACEPROC) (GLenum mode);
+typedef void (GL_APIENTRYP PFNGLFRUSTUMXPROC) (GLfixed l, GLfixed r, GLfixed b, GLfixed t, GLfixed n, GLfixed f);
+typedef void (GL_APIENTRYP PFNGLGETBOOLEANVPROC) (GLenum pname, GLboolean *data);
+typedef void (GL_APIENTRYP PFNGLGETBUFFERPARAMETERIVPROC) (GLenum target, GLenum pname, GLint *params);
+typedef void (GL_APIENTRYP PFNGLGETCLIPPLANEXPROC) (GLenum plane, GLfixed *equation);
+typedef void (GL_APIENTRYP PFNGLGENBUFFERSPROC) (GLsizei n, GLuint *buffers);
+typedef void (GL_APIENTRYP PFNGLGENTEXTURESPROC) (GLsizei n, GLuint *textures);
+typedef GLenum (GL_APIENTRYP PFNGLGETERRORPROC) (void);
+typedef void (GL_APIENTRYP PFNGLGETFIXEDVPROC) (GLenum pname, GLfixed *params);
+typedef void (GL_APIENTRYP PFNGLGETINTEGERVPROC) (GLenum pname, GLint *data);
+typedef void (GL_APIENTRYP PFNGLGETLIGHTXVPROC) (GLenum light, GLenum pname, GLfixed *params);
+typedef void (GL_APIENTRYP PFNGLGETMATERIALXVPROC) (GLenum face, GLenum pname, GLfixed *params);
+typedef void (GL_APIENTRYP PFNGLGETPOINTERVPROC) (GLenum pname, void **params);
+typedef const GLubyte *(GL_APIENTRYP PFNGLGETSTRINGPROC) (GLenum name);
+typedef void (GL_APIENTRYP PFNGLGETTEXENVIVPROC) (GLenum target, GLenum pname, GLint *params);
+typedef void (GL_APIENTRYP PFNGLGETTEXENVXVPROC) (GLenum target, GLenum pname, GLfixed *params);
+typedef void (GL_APIENTRYP PFNGLGETTEXPARAMETERIVPROC) (GLenum target, GLenum pname, GLint *params);
+typedef void (GL_APIENTRYP PFNGLGETTEXPARAMETERXVPROC) (GLenum target, GLenum pname, GLfixed *params);
+typedef void (GL_APIENTRYP PFNGLHINTPROC) (GLenum target, GLenum mode);
+typedef GLboolean (GL_APIENTRYP PFNGLISBUFFERPROC) (GLuint buffer);
+typedef GLboolean (GL_APIENTRYP PFNGLISENABLEDPROC) (GLenum cap);
+typedef GLboolean (GL_APIENTRYP PFNGLISTEXTUREPROC) (GLuint texture);
+typedef void (GL_APIENTRYP PFNGLLIGHTMODELXPROC) (GLenum pname, GLfixed param);
+typedef void (GL_APIENTRYP PFNGLLIGHTMODELXVPROC) (GLenum pname, const GLfixed *param);
+typedef void (GL_APIENTRYP PFNGLLIGHTXPROC) (GLenum light, GLenum pname, GLfixed param);
+typedef void (GL_APIENTRYP PFNGLLIGHTXVPROC) (GLenum light, GLenum pname, const GLfixed *params);
+typedef void (GL_APIENTRYP PFNGLLINEWIDTHXPROC) (GLfixed width);
+typedef void (GL_APIENTRYP PFNGLLOADIDENTITYPROC) (void);
+typedef void (GL_APIENTRYP PFNGLLOADMATRIXXPROC) (const GLfixed *m);
+typedef void (GL_APIENTRYP PFNGLLOGICOPPROC) (GLenum opcode);
+typedef void (GL_APIENTRYP PFNGLMATERIALXPROC) (GLenum face, GLenum pname, GLfixed param);
+typedef void (GL_APIENTRYP PFNGLMATERIALXVPROC) (GLenum face, GLenum pname, const GLfixed *param);
+typedef void (GL_APIENTRYP PFNGLMATRIXMODEPROC) (GLenum mode);
+typedef void (GL_APIENTRYP PFNGLMULTMATRIXXPROC) (const GLfixed *m);
+typedef void (GL_APIENTRYP PFNGLMULTITEXCOORD4XPROC) (GLenum texture, GLfixed s, GLfixed t, GLfixed r, GLfixed q);
+typedef void (GL_APIENTRYP PFNGLNORMAL3XPROC) (GLfixed nx, GLfixed ny, GLfixed nz);
+typedef void (GL_APIENTRYP PFNGLNORMALPOINTERPROC) (GLenum type, GLsizei stride, const void *pointer);
+typedef void (GL_APIENTRYP PFNGLORTHOXPROC) (GLfixed l, GLfixed r, GLfixed b, GLfixed t, GLfixed n, GLfixed f);
+typedef void (GL_APIENTRYP PFNGLPIXELSTOREIPROC) (GLenum pname, GLint param);
+typedef void (GL_APIENTRYP PFNGLPOINTPARAMETERXPROC) (GLenum pname, GLfixed param);
+typedef void (GL_APIENTRYP PFNGLPOINTPARAMETERXVPROC) (GLenum pname, const GLfixed *params);
+typedef void (GL_APIENTRYP PFNGLPOINTSIZEXPROC) (GLfixed size);
+typedef void (GL_APIENTRYP PFNGLPOLYGONOFFSETXPROC) (GLfixed factor, GLfixed units);
+typedef void (GL_APIENTRYP PFNGLPOPMATRIXPROC) (void);
+typedef void (GL_APIENTRYP PFNGLPUSHMATRIXPROC) (void);
+typedef void (GL_APIENTRYP PFNGLREADPIXELSPROC) (GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, void *pixels);
+typedef void (GL_APIENTRYP PFNGLROTATEXPROC) (GLfixed angle, GLfixed x, GLfixed y, GLfixed z);
+typedef void (GL_APIENTRYP PFNGLSAMPLECOVERAGEPROC) (GLfloat value, GLboolean invert);
+typedef void (GL_APIENTRYP PFNGLSAMPLECOVERAGEXPROC) (GLclampx value, GLboolean invert);
+typedef void (GL_APIENTRYP PFNGLSCALEXPROC) (GLfixed x, GLfixed y, GLfixed z);
+typedef void (GL_APIENTRYP PFNGLSCISSORPROC) (GLint x, GLint y, GLsizei width, GLsizei height);
+typedef void (GL_APIENTRYP PFNGLSHADEMODELPROC) (GLenum mode);
+typedef void (GL_APIENTRYP PFNGLSTENCILFUNCPROC) (GLenum func, GLint ref, GLuint mask);
+typedef void (GL_APIENTRYP PFNGLSTENCILMASKPROC) (GLuint mask);
+typedef void (GL_APIENTRYP PFNGLSTENCILOPPROC) (GLenum fail, GLenum zfail, GLenum zpass);
+typedef void (GL_APIENTRYP PFNGLTEXCOORDPOINTERPROC) (GLint size, GLenum type, GLsizei stride, const void *pointer);
+typedef void (GL_APIENTRYP PFNGLTEXENVIPROC) (GLenum target, GLenum pname, GLint param);
+typedef void (GL_APIENTRYP PFNGLTEXENVXPROC) (GLenum target, GLenum pname, GLfixed param);
+typedef void (GL_APIENTRYP PFNGLTEXENVIVPROC) (GLenum target, GLenum pname, const GLint *params);
+typedef void (GL_APIENTRYP PFNGLTEXENVXVPROC) (GLenum target, GLenum pname, const GLfixed *params);
+typedef void (GL_APIENTRYP PFNGLTEXIMAGE2DPROC) (GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const void *pixels);
+typedef void (GL_APIENTRYP PFNGLTEXPARAMETERIPROC) (GLenum target, GLenum pname, GLint param);
+typedef void (GL_APIENTRYP PFNGLTEXPARAMETERXPROC) (GLenum target, GLenum pname, GLfixed param);
+typedef void (GL_APIENTRYP PFNGLTEXPARAMETERIVPROC) (GLenum target, GLenum pname, const GLint *params);
+typedef void (GL_APIENTRYP PFNGLTEXPARAMETERXVPROC) (GLenum target, GLenum pname, const GLfixed *params);
+typedef void (GL_APIENTRYP PFNGLTEXSUBIMAGE2DPROC) (GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, const void *pixels);
+typedef void (GL_APIENTRYP PFNGLTRANSLATEXPROC) (GLfixed x, GLfixed y, GLfixed z);
+typedef void (GL_APIENTRYP PFNGLVERTEXPOINTERPROC) (GLint size, GLenum type, GLsizei stride, const void *pointer);
+typedef void (GL_APIENTRYP PFNGLVIEWPORTPROC) (GLint x, GLint y, GLsizei width, GLsizei height);
+#if GL_GLES_PROTOTYPES
 GL_API void GL_APIENTRY glAlphaFunc (GLenum func, GLfloat ref);
 GL_API void GL_APIENTRY glClearColor (GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha);
 GL_API void GL_APIENTRY glClearDepthf (GLfloat d);
@@ -545,6 +694,7 @@ GL_API void GL_APIENTRY glTexSubImage2D (GLenum target, GLint level, GLint xoffs
 GL_API void GL_APIENTRY glTranslatex (GLfixed x, GLfixed y, GLfixed z);
 GL_API void GL_APIENTRY glVertexPointer (GLint size, GLenum type, GLsizei stride, const void *pointer);
 GL_API void GL_APIENTRY glViewport (GLint x, GLint y, GLsizei width, GLsizei height);
+#endif
 #endif /* GL_VERSION_ES_CM_1_0 */
 
 #ifndef GL_OES_compressed_paletted_texture
@@ -568,7 +718,10 @@ GL_API void GL_APIENTRY glViewport (GLint x, GLint y, GLsizei width, GLsizei hei
 #define GL_POINT_SIZE_ARRAY_STRIDE_OES    0x898B
 #define GL_POINT_SIZE_ARRAY_POINTER_OES   0x898C
 #define GL_POINT_SIZE_ARRAY_BUFFER_BINDING_OES 0x8B9F
+typedef void (GL_APIENTRYP PFNGLPOINTSIZEPOINTEROESPROC) (GLenum type, GLsizei stride, const void *pointer);
+#if GL_GLES_PROTOTYPES
 GL_API void GL_APIENTRY glPointSizePointerOES (GLenum type, GLsizei stride, const void *pointer);
+#endif
 #endif /* GL_OES_point_size_array */
 
 #ifndef GL_OES_point_sprite

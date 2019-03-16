@@ -29,8 +29,7 @@ TOutputGLSL::TOutputGLSL(TInfoSinkBase &objSink,
                       shaderVersion,
                       output,
                       compileOptions)
-{
-}
+{}
 
 bool TOutputGLSL::writeVariablePrecision(TPrecision)
 {
@@ -78,7 +77,7 @@ void TOutputGLSL::visitSymbol(TIntermSymbol *node)
 
 ImmutableString TOutputGLSL::translateTextureFunction(const ImmutableString &name)
 {
-    static const char *simpleRename[] = {"texture2DLodEXT",
+    static const char *simpleRename[]       = {"texture2DLodEXT",
                                          "texture2DLod",
                                          "texture2DProjLodEXT",
                                          "texture2DProjLod",

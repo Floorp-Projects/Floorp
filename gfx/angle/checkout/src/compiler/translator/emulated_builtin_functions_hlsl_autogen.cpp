@@ -22,8 +22,7 @@ struct FunctionPair
 {
     constexpr FunctionPair(const TSymbolUniqueId &idIn, const char *bodyIn)
         : id(idIn.get()), body(bodyIn)
-    {
-    }
+    {}
 
     int id;
     const char *body;

@@ -23,6 +23,11 @@ constexpr FLOAT kDebugColorInitClearValue[4] = {0.3f, 0.5f, 0.7f, 0.5f};
 constexpr FLOAT kDebugDepthInitValue         = 0.2f;
 constexpr UINT8 kDebugStencilInitValue       = 3;
 
+// A hard limit on buffer size. This works around a problem in the NVIDIA drivers where buffer sizes
+// close to MAX_UINT would give undefined results. The limit of MAX_UINT/2 should be generous enough
+// for almost any demanding application.
+constexpr UINT kMaximumBufferSizeHardLimit = std::numeric_limits<UINT>::max() >> 1;
+
 uint64_t ComputeMippedMemoryUsage(unsigned int width,
                                   unsigned int height,
                                   unsigned int depth,
@@ -109,6 +114,12 @@ HRESULT CreateResource(ID3D11Device *device,
                        const D3D11_SUBRESOURCE_DATA *initData,
                        ID3D11Buffer **buffer)
 {
+    // Force buffers to be limited to a fixed max size.
+    if (desc->ByteWidth > kMaximumBufferSizeHardLimit)
+    {
+        return E_OUTOFMEMORY;
+    }
+
     return device->CreateBuffer(desc, initData, buffer);
 }
 
@@ -266,7 +277,7 @@ angle::Result ClearResource(d3d::Context *context,
                             ResourceT *texture)
 {
     // No-op.
-    return angle::Result::Continue();
+    return angle::Result::Continue;
 }
 
 template <>
@@ -316,7 +327,7 @@ angle::Result ClearResource(d3d::Context *context,
         deviceContext->ClearRenderTargetView(rtv.get(), kDebugColorInitClearValue);
     }
 
-    return angle::Result::Continue();
+    return angle::Result::Continue;
 }
 
 template <>
@@ -334,7 +345,7 @@ angle::Result ClearResource(d3d::Context *context,
     ANGLE_TRY(renderer->allocateResourceNoDesc(context, texture, &rtv));
 
     deviceContext->ClearRenderTargetView(rtv.get(), kDebugColorInitClearValue);
-    return angle::Result::Continue();
+    return angle::Result::Continue;
 }
 
 #define ANGLE_RESOURCE_STRINGIFY_OP(NAME, RESTYPE, D3D11TYPE, DESCTYPE, INITDATATYPE) \
@@ -400,7 +411,7 @@ angle::Result ResourceManager11::allocate(d3d::Context *context,
     ASSERT(resource);
     incrResource(GetResourceTypeFromD3D11<T>(), ComputeMemoryUsage(desc));
     *resourceOut = std::move(Resource11<T>(resource, this));
-    return angle::Result::Continue();
+    return angle::Result::Continue;
 }
 
 void ResourceManager11::incrResource(ResourceType resourceType, uint64_t memorySize)
@@ -532,12 +543,10 @@ void ResourceManager11::setAllocationsInitialized(bool initialize)
     mInitializeAllocations = initialize;
 }
 
-#define ANGLE_INSTANTIATE_OP(NAME, RESTYPE, D3D11TYPE, DESCTYPE, INITDATATYPE)                  \
-    \
-template \
-angle::Result                                                                                   \
-    ResourceManager11::allocate(d3d::Context *, Renderer11 *, const DESCTYPE *, INITDATATYPE *, \
-                                Resource11<D3D11TYPE> *);
+#define ANGLE_INSTANTIATE_OP(NAME, RESTYPE, D3D11TYPE, DESCTYPE, INITDATATYPE) \
+                                                                               \
+    template angle::Result ResourceManager11::allocate(                        \
+        d3d::Context *, Renderer11 *, const DESCTYPE *, INITDATATYPE *, Resource11<D3D11TYPE> *);
 
 ANGLE_RESOURCE_TYPE_OP(Instantitate, ANGLE_INSTANTIATE_OP)
 }  // namespace rx

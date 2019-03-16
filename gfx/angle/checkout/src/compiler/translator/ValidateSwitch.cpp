@@ -90,7 +90,7 @@ void ValidateSwitch::visitSymbol(TIntermSymbol *)
 {
     if (!mFirstCaseFound)
         mStatementBeforeCase = true;
-    mLastStatementWasCase    = false;
+    mLastStatementWasCase = false;
 }
 
 void ValidateSwitch::visitConstantUnion(TIntermConstantUnion *)
@@ -99,14 +99,14 @@ void ValidateSwitch::visitConstantUnion(TIntermConstantUnion *)
     // Could be just a statement like "0;"
     if (!mFirstCaseFound)
         mStatementBeforeCase = true;
-    mLastStatementWasCase    = false;
+    mLastStatementWasCase = false;
 }
 
 bool ValidateSwitch::visitDeclaration(Visit, TIntermDeclaration *)
 {
     if (!mFirstCaseFound)
         mStatementBeforeCase = true;
-    mLastStatementWasCase    = false;
+    mLastStatementWasCase = false;
     return true;
 }
 
@@ -116,7 +116,7 @@ bool ValidateSwitch::visitBlock(Visit visit, TIntermBlock *)
     {
         if (!mFirstCaseFound)
             mStatementBeforeCase = true;
-        mLastStatementWasCase    = false;
+        mLastStatementWasCase = false;
         if (visit == PreVisit)
             ++mControlFlowDepth;
         if (visit == PostVisit)
@@ -129,7 +129,7 @@ bool ValidateSwitch::visitBinary(Visit, TIntermBinary *)
 {
     if (!mFirstCaseFound)
         mStatementBeforeCase = true;
-    mLastStatementWasCase    = false;
+    mLastStatementWasCase = false;
     return true;
 }
 
@@ -137,7 +137,7 @@ bool ValidateSwitch::visitUnary(Visit, TIntermUnary *)
 {
     if (!mFirstCaseFound)
         mStatementBeforeCase = true;
-    mLastStatementWasCase    = false;
+    mLastStatementWasCase = false;
     return true;
 }
 
@@ -145,7 +145,7 @@ bool ValidateSwitch::visitTernary(Visit, TIntermTernary *)
 {
     if (!mFirstCaseFound)
         mStatementBeforeCase = true;
-    mLastStatementWasCase    = false;
+    mLastStatementWasCase = false;
     return true;
 }
 
@@ -153,7 +153,7 @@ bool ValidateSwitch::visitSwizzle(Visit, TIntermSwizzle *)
 {
     if (!mFirstCaseFound)
         mStatementBeforeCase = true;
-    mLastStatementWasCase    = false;
+    mLastStatementWasCase = false;
     return true;
 }
 
@@ -165,7 +165,7 @@ bool ValidateSwitch::visitIfElse(Visit visit, TIntermIfElse *)
         --mControlFlowDepth;
     if (!mFirstCaseFound)
         mStatementBeforeCase = true;
-    mLastStatementWasCase    = false;
+    mLastStatementWasCase = false;
     return true;
 }
 
@@ -173,7 +173,7 @@ bool ValidateSwitch::visitSwitch(Visit, TIntermSwitch *)
 {
     if (!mFirstCaseFound)
         mStatementBeforeCase = true;
-    mLastStatementWasCase    = false;
+    mLastStatementWasCase = false;
     // Don't go into nested switch statements
     return false;
 }
@@ -253,7 +253,7 @@ bool ValidateSwitch::visitAggregate(Visit visit, TIntermAggregate *)
         // This is not the statementList node, but some other node.
         if (!mFirstCaseFound)
             mStatementBeforeCase = true;
-        mLastStatementWasCase    = false;
+        mLastStatementWasCase = false;
     }
     return true;
 }
@@ -266,7 +266,7 @@ bool ValidateSwitch::visitLoop(Visit visit, TIntermLoop *)
         --mControlFlowDepth;
     if (!mFirstCaseFound)
         mStatementBeforeCase = true;
-    mLastStatementWasCase    = false;
+    mLastStatementWasCase = false;
     return true;
 }
 
@@ -274,7 +274,7 @@ bool ValidateSwitch::visitBranch(Visit, TIntermBranch *)
 {
     if (!mFirstCaseFound)
         mStatementBeforeCase = true;
-    mLastStatementWasCase    = false;
+    mLastStatementWasCase = false;
     return true;
 }
 

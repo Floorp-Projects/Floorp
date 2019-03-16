@@ -26,6 +26,6 @@ void EmulateGLFragColorBroadcast(TIntermBlock *root,
                                  std::vector<OutputVariable> *outputVariables,
                                  TSymbolTable *symbolTable,
                                  int shaderVersion);
-}
+}  // namespace sh
 
 #endif  // COMPILER_TRANSLATOR_TREEOPS_EMULATEGLFRAGCOLORBROADCAST_H_

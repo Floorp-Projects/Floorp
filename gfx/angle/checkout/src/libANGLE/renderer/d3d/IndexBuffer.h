@@ -10,6 +10,7 @@
 #ifndef LIBANGLE_RENDERER_D3D_INDEXBUFFER_H_
 #define LIBANGLE_RENDERER_D3D_INDEXBUFFER_H_
 
+#include "common/PackedEnums.h"
 #include "common/angleutils.h"
 #include "libANGLE/Error.h"
 
@@ -30,7 +31,7 @@ class IndexBuffer : angle::NonCopyable
 
     virtual angle::Result initialize(const gl::Context *context,
                                      unsigned int bufferSize,
-                                     GLenum indexType,
+                                     gl::DrawElementsType indexType,
                                      bool dynamic) = 0;
 
     virtual angle::Result mapBuffer(const gl::Context *context,
@@ -41,11 +42,11 @@ class IndexBuffer : angle::NonCopyable
 
     virtual angle::Result discard(const gl::Context *context) = 0;
 
-    virtual GLenum getIndexType() const = 0;
-    virtual unsigned int getBufferSize() const = 0;
+    virtual gl::DrawElementsType getIndexType() const             = 0;
+    virtual unsigned int getBufferSize() const                    = 0;
     virtual angle::Result setSize(const gl::Context *context,
                                   unsigned int bufferSize,
-                                  GLenum indexType) = 0;
+                                  gl::DrawElementsType indexType) = 0;
 
     unsigned int getSerial() const;
 
@@ -65,9 +66,9 @@ class IndexBufferInterface : angle::NonCopyable
 
     virtual angle::Result reserveBufferSpace(const gl::Context *context,
                                              unsigned int size,
-                                             GLenum indexType) = 0;
+                                             gl::DrawElementsType indexType) = 0;
 
-    GLenum getIndexType() const;
+    gl::DrawElementsType getIndexType() const;
     unsigned int getBufferSize() const;
 
     unsigned int getSerial() const;
@@ -88,7 +89,7 @@ class IndexBufferInterface : angle::NonCopyable
 
     angle::Result setBufferSize(const gl::Context *context,
                                 unsigned int bufferSize,
-                                GLenum indexType);
+                                gl::DrawElementsType indexType);
 
   private:
     IndexBuffer *mIndexBuffer;
@@ -105,7 +106,7 @@ class StreamingIndexBufferInterface : public IndexBufferInterface
 
     angle::Result reserveBufferSpace(const gl::Context *context,
                                      unsigned int size,
-                                     GLenum indexType) override;
+                                     gl::DrawElementsType indexType) override;
 };
 
 class StaticIndexBufferInterface : public IndexBufferInterface
@@ -116,9 +117,9 @@ class StaticIndexBufferInterface : public IndexBufferInterface
 
     angle::Result reserveBufferSpace(const gl::Context *context,
                                      unsigned int size,
-                                     GLenum indexType) override;
+                                     gl::DrawElementsType indexType) override;
 };
 
 }  // namespace rx
 
-#endif // LIBANGLE_RENDERER_D3D_INDEXBUFFER_H_
+#endif  // LIBANGLE_RENDERER_D3D_INDEXBUFFER_H_

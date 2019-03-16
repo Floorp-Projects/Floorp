@@ -11,6 +11,7 @@
 
 #include <float.h>
 
+#include "common/Color.h"
 #include "common/debug.h"
 #include "libANGLE/Context.h"
 #include "libANGLE/Framebuffer.h"
@@ -29,12 +30,9 @@ RenderStateCache::RenderStateCache()
       mRasterizerStateCache(kMaxStates),
       mDepthStencilStateCache(kMaxStates),
       mSamplerStateCache(kMaxStates)
-{
-}
+{}
 
-RenderStateCache::~RenderStateCache()
-{
-}
+RenderStateCache::~RenderStateCache() {}
 
 void RenderStateCache::clear()
 {
@@ -81,7 +79,7 @@ angle::Result RenderStateCache::getBlendState(const gl::Context *context,
     if (keyIter != mBlendStateCache.end())
     {
         *outBlendState = &keyIter->second;
-        return angle::Result::Continue();
+        return angle::Result::Continue;
     }
 
     TrimCache(kMaxStates, kGCLimit, "blend state", &mBlendStateCache);
@@ -121,7 +119,7 @@ angle::Result RenderStateCache::getBlendState(const gl::Context *context,
 
     *outBlendState = &iter->second;
 
-    return angle::Result::Continue();
+    return angle::Result::Continue;
 }
 
 angle::Result RenderStateCache::getRasterizerState(const gl::Context *context,
@@ -138,7 +136,7 @@ angle::Result RenderStateCache::getRasterizerState(const gl::Context *context,
     if (keyIter != mRasterizerStateCache.end())
     {
         *outRasterizerState = keyIter->second.get();
-        return angle::Result::Continue();
+        return angle::Result::Continue;
     }
 
     TrimCache(kMaxStates, kGCLimit, "rasterizer state", &mRasterizerStateCache);
@@ -180,7 +178,7 @@ angle::Result RenderStateCache::getRasterizerState(const gl::Context *context,
     *outRasterizerState = dx11RasterizerState.get();
     mRasterizerStateCache.Put(key, std::move(dx11RasterizerState));
 
-    return angle::Result::Continue();
+    return angle::Result::Continue;
 }
 
 angle::Result RenderStateCache::getDepthStencilState(const gl::Context *context,
@@ -192,7 +190,7 @@ angle::Result RenderStateCache::getDepthStencilState(const gl::Context *context,
     if (keyIter != mDepthStencilStateCache.end())
     {
         *outDSState = &keyIter->second;
-        return angle::Result::Continue();
+        return angle::Result::Continue;
     }
 
     TrimCache(kMaxStates, kGCLimit, "depth stencil state", &mDepthStencilStateCache);
@@ -220,7 +218,7 @@ angle::Result RenderStateCache::getDepthStencilState(const gl::Context *context,
 
     *outDSState = &iter->second;
 
-    return angle::Result::Continue();
+    return angle::Result::Continue;
 }
 
 angle::Result RenderStateCache::getSamplerState(const gl::Context *context,
@@ -232,7 +230,7 @@ angle::Result RenderStateCache::getSamplerState(const gl::Context *context,
     if (keyIter != mSamplerStateCache.end())
     {
         *outSamplerState = keyIter->second.get();
-        return angle::Result::Continue();
+        return angle::Result::Continue;
     }
 
     TrimCache(kMaxStates, kGCLimit, "sampler state", &mSamplerStateCache);
@@ -241,28 +239,33 @@ angle::Result RenderStateCache::getSamplerState(const gl::Context *context,
 
     D3D11_SAMPLER_DESC samplerDesc;
     samplerDesc.Filter =
-        gl_d3d11::ConvertFilter(samplerState.minFilter, samplerState.magFilter,
-                                samplerState.maxAnisotropy, samplerState.compareMode);
-    samplerDesc.AddressU   = gl_d3d11::ConvertTextureWrap(samplerState.wrapS);
-    samplerDesc.AddressV   = gl_d3d11::ConvertTextureWrap(samplerState.wrapT);
-    samplerDesc.AddressW   = gl_d3d11::ConvertTextureWrap(samplerState.wrapR);
+        gl_d3d11::ConvertFilter(samplerState.getMinFilter(), samplerState.getMagFilter(),
+                                samplerState.getMaxAnisotropy(), samplerState.getCompareMode());
+    samplerDesc.AddressU   = gl_d3d11::ConvertTextureWrap(samplerState.getWrapS());
+    samplerDesc.AddressV   = gl_d3d11::ConvertTextureWrap(samplerState.getWrapT());
+    samplerDesc.AddressW   = gl_d3d11::ConvertTextureWrap(samplerState.getWrapR());
     samplerDesc.MipLODBias = 0;
     samplerDesc.MaxAnisotropy =
-        gl_d3d11::ConvertMaxAnisotropy(samplerState.maxAnisotropy, featureLevel);
-    samplerDesc.ComparisonFunc = gl_d3d11::ConvertComparison(samplerState.compareFunc);
-    samplerDesc.BorderColor[0] = 0.0f;
-    samplerDesc.BorderColor[1] = 0.0f;
-    samplerDesc.BorderColor[2] = 0.0f;
-    samplerDesc.BorderColor[3] = 0.0f;
-    samplerDesc.MinLOD         = samplerState.minLod;
-    samplerDesc.MaxLOD         = samplerState.maxLod;
+        gl_d3d11::ConvertMaxAnisotropy(samplerState.getMaxAnisotropy(), featureLevel);
+    samplerDesc.ComparisonFunc = gl_d3d11::ConvertComparison(samplerState.getCompareFunc());
+    angle::ColorF borderColor;
+    if (samplerState.getBorderColor().type == angle::ColorGeneric::Type::Float)
+    {
+        borderColor = samplerState.getBorderColor().colorF;
+    }
+    samplerDesc.BorderColor[0] = borderColor.red;
+    samplerDesc.BorderColor[1] = borderColor.green;
+    samplerDesc.BorderColor[2] = borderColor.blue;
+    samplerDesc.BorderColor[3] = borderColor.alpha;
+    samplerDesc.MinLOD         = samplerState.getMinLod();
+    samplerDesc.MaxLOD         = samplerState.getMaxLod();
 
     if (featureLevel <= D3D_FEATURE_LEVEL_9_3)
     {
         // Check that maxLOD is nearly FLT_MAX (1000.0f is the default), since 9_3 doesn't support
         // anything other than FLT_MAX. Note that Feature Level 9_* only supports GL ES 2.0, so the
         // consumer of ANGLE can't modify the Max LOD themselves.
-        ASSERT(samplerState.maxLod >= 999.9f);
+        ASSERT(samplerState.getMaxLod() >= 999.9f);
 
         // Now just set MaxLOD to FLT_MAX. Other parts of the renderer (e.g. the non-zero max LOD
         // workaround) should take account of this.
@@ -275,7 +278,7 @@ angle::Result RenderStateCache::getSamplerState(const gl::Context *context,
     *outSamplerState = dx11SamplerState.get();
     mSamplerStateCache.Put(samplerState, std::move(dx11SamplerState));
 
-    return angle::Result::Continue();
+    return angle::Result::Continue;
 }
 
 }  // namespace rx

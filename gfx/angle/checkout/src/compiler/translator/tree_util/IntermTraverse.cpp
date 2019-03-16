@@ -218,9 +218,7 @@ TIntermTraverser::TIntermTraverser(bool preVisit,
     ASSERT(!(inVisit && !preVisit && !postVisit));
 }
 
-TIntermTraverser::~TIntermTraverser()
-{
-}
+TIntermTraverser::~TIntermTraverser() {}
 
 void TIntermTraverser::setMaxAllowedDepth(int depth)
 {
@@ -280,6 +278,18 @@ void TIntermTraverser::insertStatementInParentBlock(TIntermNode *statement)
     TIntermSequence insertions;
     insertions.push_back(statement);
     insertStatementsInParentBlock(insertions);
+}
+
+void TIntermTraverser::insertStatementsInBlockAtPosition(TIntermBlock *parent,
+                                                         size_t position,
+                                                         const TIntermSequence &insertionsBefore,
+                                                         const TIntermSequence &insertionsAfter)
+{
+    ASSERT(parent);
+    ASSERT(position >= 0);
+    ASSERT(position < parent->getChildCount());
+
+    mInsertions.emplace_back(parent, position, insertionsBefore, insertionsAfter);
 }
 
 void TLValueTrackingTraverser::setInFunctionCallOutParameter(bool inOutParameter)
