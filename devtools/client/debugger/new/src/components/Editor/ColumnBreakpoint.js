@@ -34,7 +34,6 @@ function makeBookmark({ breakpoint }, { onClick, onContextMenu }) {
   const bp = breakpointImg.cloneNode(true);
 
   const isActive = breakpoint && !breakpoint.disabled;
-  const isDisabled = breakpoint && breakpoint.disabled;
   const condition = breakpoint && breakpoint.options.condition;
   const logValue = breakpoint && breakpoint.options.logValue;
 
@@ -42,7 +41,7 @@ function makeBookmark({ breakpoint }, { onClick, onContextMenu }) {
     "has-condition": condition,
     "has-log": logValue,
     active: isActive,
-    disabled: isDisabled
+    disabled: !isActive
   });
 
   if (condition) {
