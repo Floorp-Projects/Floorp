@@ -47,8 +47,7 @@ class DoWhileRewriter : public TIntermTraverser
 {
   public:
     DoWhileRewriter(TSymbolTable *symbolTable) : TIntermTraverser(true, false, false, symbolTable)
-    {
-    }
+    {}
 
     bool visitBlock(Visit, TIntermBlock *node) override
     {

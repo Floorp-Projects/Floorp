@@ -64,7 +64,7 @@ class TypedResourceManager : public ResourceManagerBase<HandleAllocatorType>
     TypedResourceManager() {}
 
     void deleteObject(const Context *context, GLuint handle);
-    bool isHandleGenerated(GLuint handle) const
+    ANGLE_INLINE bool isHandleGenerated(GLuint handle) const
     {
         // Zero is always assumed to have been generated implicitly.
         return handle == 0 || mObjectMap.contains(handle);
@@ -147,7 +147,8 @@ class ShaderProgramManager : public ResourceManagerBase<HandleAllocator>
 
     GLuint createProgram(rx::GLImplFactory *factory);
     void deleteProgram(const Context *context, GLuint program);
-    Program *getProgram(GLuint handle) const;
+
+    ANGLE_INLINE Program *getProgram(GLuint handle) const { return mPrograms.query(handle); }
 
   protected:
     ~ShaderProgramManager() override;
@@ -166,11 +167,17 @@ class TextureManager : public TypedResourceManager<Texture, HandleAllocator, Tex
 {
   public:
     GLuint createTexture();
-    Texture *getTexture(GLuint handle) const;
+    ANGLE_INLINE Texture *getTexture(GLuint handle) const
+    {
+        ASSERT(mObjectMap.query(0) == nullptr);
+        return mObjectMap.query(handle);
+    }
 
     void signalAllTexturesDirty(const Context *context) const;
 
-    Texture *checkTextureAllocation(rx::GLImplFactory *factory, GLuint handle, TextureType type)
+    ANGLE_INLINE Texture *checkTextureAllocation(rx::GLImplFactory *factory,
+                                                 GLuint handle,
+                                                 TextureType type)
     {
         return checkObjectAllocation(factory, handle, type);
     }
@@ -239,7 +246,7 @@ class PathManager : public ResourceManagerBase<HandleRangeAllocator>
   public:
     PathManager();
 
-    ErrorOrResult<GLuint> createPaths(rx::GLImplFactory *factory, GLsizei range);
+    angle::Result createPaths(Context *context, GLsizei range, GLuint *numCreated);
     void deletePaths(GLuint first, GLsizei range);
     Path *getPath(GLuint handle) const;
     bool hasPath(GLuint handle) const;
@@ -299,4 +306,4 @@ class ProgramPipelineManager
 
 }  // namespace gl
 
-#endif // LIBANGLE_RESOURCEMANAGER_H_
+#endif  // LIBANGLE_RESOURCEMANAGER_H_

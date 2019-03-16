@@ -9,11 +9,12 @@
 #include "common/aligned_memory.h"
 
 #include "common/debug.h"
+#include "common/platform.h"
 
 #if defined(COMPILER_MSVC)
-#include <malloc.h>
+#    include <malloc.h>
 #else
-#include <stdlib.h>
+#    include <stdlib.h>
 #endif
 
 namespace angle

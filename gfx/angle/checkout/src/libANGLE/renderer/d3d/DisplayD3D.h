@@ -9,8 +9,8 @@
 #ifndef LIBANGLE_RENDERER_D3D_DISPLAYD3D_H_
 #define LIBANGLE_RENDERER_D3D_DISPLAYD3D_H_
 
-#include "libANGLE/renderer/DisplayImpl.h"
 #include "libANGLE/Device.h"
+#include "libANGLE/renderer/DisplayImpl.h"
 
 #include "libANGLE/renderer/d3d/RendererD3D.h"
 
@@ -43,7 +43,8 @@ class DisplayD3D : public DisplayImpl, public d3d::Context
                            EGLenum target,
                            const egl::AttributeMap &attribs) override;
 
-    ContextImpl *createContext(const gl::ContextState &state,
+    ContextImpl *createContext(const gl::State &state,
+                               gl::ErrorSet *errorSet,
                                const egl::Config *configuration,
                                const gl::Context *shareContext,
                                const egl::AttributeMap &attribs) override;
@@ -51,7 +52,9 @@ class DisplayD3D : public DisplayImpl, public d3d::Context
     StreamProducerImpl *createStreamProducerD3DTexture(egl::Stream::ConsumerType consumerType,
                                                        const egl::AttributeMap &attribs) override;
 
-    egl::Error makeCurrent(egl::Surface *drawSurface, egl::Surface *readSurface, gl::Context *context) override;
+    egl::Error makeCurrent(egl::Surface *drawSurface,
+                           egl::Surface *readSurface,
+                           gl::Context *context) override;
 
     egl::ConfigSet generateConfigs() override;
 
@@ -72,11 +75,11 @@ class DisplayD3D : public DisplayImpl, public d3d::Context
     egl::Error waitNative(const gl::Context *context, EGLint engine) override;
     gl::Version getMaxSupportedESVersion() const override;
 
-    void handleError(HRESULT hr,
-                     const char *message,
-                     const char *file,
-                     const char *function,
-                     unsigned int line) override;
+    void handleResult(HRESULT hr,
+                      const char *message,
+                      const char *file,
+                      const char *function,
+                      unsigned int line) override;
 
     const std::string &getStoredErrorString() const { return mStoredErrorString; }
 
@@ -92,4 +95,4 @@ class DisplayD3D : public DisplayImpl, public d3d::Context
 
 }  // namespace rx
 
-#endif // LIBANGLE_RENDERER_D3D_DISPLAYD3D_H_
+#endif  // LIBANGLE_RENDERER_D3D_DISPLAYD3D_H_

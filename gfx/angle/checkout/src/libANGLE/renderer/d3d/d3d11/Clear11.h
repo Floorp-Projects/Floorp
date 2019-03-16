@@ -12,9 +12,9 @@
 #include <map>
 #include <vector>
 
-#include "libANGLE/angletypes.h"
 #include "libANGLE/Error.h"
 #include "libANGLE/Framebuffer.h"
+#include "libANGLE/angletypes.h"
 #include "libANGLE/renderer/d3d/d3d11/renderer11_utils.h"
 
 namespace rx
@@ -37,7 +37,8 @@ class Clear11 : angle::NonCopyable
     explicit Clear11(Renderer11 *renderer);
     ~Clear11();
 
-    // Clears the framebuffer with the supplied clear parameters, assumes that the framebuffer is currently applied.
+    // Clears the framebuffer with the supplied clear parameters, assumes that the framebuffer is
+    // currently applied.
     angle::Result clearFramebuffer(const gl::Context *context,
                                    const ClearParameters &clearParams,
                                    const gl::FramebufferState &fboData);
@@ -98,4 +99,4 @@ class Clear11 : angle::NonCopyable
 
 }  // namespace rx
 
-#endif // LIBANGLE_RENDERER_D3D_D3D11_CLEAR11_H_
+#endif  // LIBANGLE_RENDERER_D3D_D3D11_CLEAR11_H_

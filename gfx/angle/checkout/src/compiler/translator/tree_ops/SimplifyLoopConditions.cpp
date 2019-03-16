@@ -52,8 +52,7 @@ SimplifyLoopConditionsTraverser::SimplifyLoopConditionsTraverser(
       mFoundLoopToChange(false),
       mInsideLoopInitConditionOrExpression(false),
       mConditionsToSimplify(conditionsToSimplifyMask)
-{
-}
+{}
 
 // If we're inside a loop initialization, condition, or expression, we check for expressions that
 // should be moved out of the loop condition or expression. If one is found, the loop is

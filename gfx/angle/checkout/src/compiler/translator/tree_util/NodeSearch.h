@@ -51,6 +51,6 @@ class FindDiscard : public NodeSearchTraverser<FindDiscard>
         return !mFound;
     }
 };
-}
+}  // namespace sh
 
 #endif  // COMPILER_TRANSLATOR_TREEUTIL_NODESEARCH_H_

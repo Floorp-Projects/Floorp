@@ -20,6 +20,6 @@ class TIntermBlock;
 class TSymbolTable;
 
 void PruneNoOps(TIntermBlock *root, TSymbolTable *symbolTable);
-}
+}  // namespace sh
 
 #endif  // COMPILER_TRANSLATOR_TREEOPS_PRUNENOOPS_H_

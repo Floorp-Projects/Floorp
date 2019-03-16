@@ -16,12 +16,9 @@ namespace sh
 
 TDiagnostics::TDiagnostics(TInfoSinkBase &infoSink)
     : mInfoSink(infoSink), mNumErrors(0), mNumWarnings(0)
-{
-}
+{}
 
-TDiagnostics::~TDiagnostics()
-{
-}
+TDiagnostics::~TDiagnostics() {}
 
 void TDiagnostics::writeInfo(Severity severity,
                              const angle::pp::SourceLocation &loc,

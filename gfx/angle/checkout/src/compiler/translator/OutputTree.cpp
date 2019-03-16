@@ -33,8 +33,7 @@ class TOutputTraverser : public TIntermTraverser
   public:
     TOutputTraverser(TInfoSinkBase &out)
         : TIntermTraverser(true, false, false), mOut(out), mIndentDepth(0)
-    {
-    }
+    {}
 
   protected:
     void visitSymbol(TIntermSymbol *) override;

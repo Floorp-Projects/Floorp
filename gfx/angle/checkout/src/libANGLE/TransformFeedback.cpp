@@ -10,8 +10,8 @@
 #include "libANGLE/Buffer.h"
 #include "libANGLE/Caps.h"
 #include "libANGLE/Context.h"
-#include "libANGLE/ContextState.h"
 #include "libANGLE/Program.h"
+#include "libANGLE/State.h"
 #include "libANGLE/renderer/GLImplFactory.h"
 #include "libANGLE/renderer/TransformFeedbackImpl.h"
 
@@ -55,12 +55,9 @@ TransformFeedbackState::TransformFeedbackState(size_t maxIndexedBuffers)
       mVertexCapacity(0),
       mProgram(nullptr),
       mIndexedBuffers(maxIndexedBuffers)
-{
-}
+{}
 
-TransformFeedbackState::~TransformFeedbackState()
-{
-}
+TransformFeedbackState::~TransformFeedbackState() {}
 
 const OffsetBindingPointer<Buffer> &TransformFeedbackState::getIndexedBuffer(size_t idx) const
 {
@@ -80,7 +77,7 @@ TransformFeedback::TransformFeedback(rx::GLImplFactory *implFactory, GLuint id, 
     ASSERT(mImplementation != nullptr);
 }
 
-Error TransformFeedback::onDestroy(const Context *context)
+void TransformFeedback::onDestroy(const Context *context)
 {
     ASSERT(!context || !context->isCurrentTransformFeedback(this));
     if (mState.mProgram)
@@ -92,10 +89,8 @@ Error TransformFeedback::onDestroy(const Context *context)
     ASSERT(!mState.mProgram);
     for (size_t i = 0; i < mState.mIndexedBuffers.size(); i++)
     {
-        mState.mIndexedBuffers[i].set(context, nullptr);
+        mState.mIndexedBuffers[i].set(context, nullptr, 0, 0);
     }
-
-    return NoError();
 }
 
 TransformFeedback::~TransformFeedback()
@@ -103,7 +98,7 @@ TransformFeedback::~TransformFeedback()
     SafeDelete(mImplementation);
 }
 
-void TransformFeedback::setLabel(const std::string &label)
+void TransformFeedback::setLabel(const Context *context, const std::string &label)
 {
     mState.mLabel = label;
 }
@@ -113,13 +108,15 @@ const std::string &TransformFeedback::getLabel() const
     return mState.mLabel;
 }
 
-void TransformFeedback::begin(const Context *context, PrimitiveMode primitiveMode, Program *program)
+angle::Result TransformFeedback::begin(const Context *context,
+                                       PrimitiveMode primitiveMode,
+                                       Program *program)
 {
+    ANGLE_TRY(mImplementation->begin(context, primitiveMode));
     mState.mActive        = true;
     mState.mPrimitiveMode = primitiveMode;
     mState.mPaused        = false;
     mState.mVerticesDrawn = 0;
-    mImplementation->begin(primitiveMode);
     bindProgram(context, program);
 
     if (program)
@@ -140,38 +137,37 @@ void TransformFeedback::begin(const Context *context, PrimitiveMode primitiveMod
     {
         mState.mVertexCapacity = 0;
     }
+    return angle::Result::Continue;
 }
 
-void TransformFeedback::end(const Context *context)
+angle::Result TransformFeedback::end(const Context *context)
 {
+    ANGLE_TRY(mImplementation->end(context));
     mState.mActive         = false;
     mState.mPrimitiveMode  = PrimitiveMode::InvalidEnum;
     mState.mPaused         = false;
     mState.mVerticesDrawn  = 0;
     mState.mVertexCapacity = 0;
-    mImplementation->end();
     if (mState.mProgram)
     {
         mState.mProgram->release(context);
         mState.mProgram = nullptr;
     }
+    return angle::Result::Continue;
 }
 
-void TransformFeedback::pause()
+angle::Result TransformFeedback::pause(const Context *context)
 {
+    ANGLE_TRY(mImplementation->pause(context));
     mState.mPaused = true;
-    mImplementation->pause();
+    return angle::Result::Continue;
 }
 
-void TransformFeedback::resume()
+angle::Result TransformFeedback::resume(const Context *context)
 {
+    ANGLE_TRY(mImplementation->resume(context));
     mState.mPaused = false;
-    mImplementation->resume();
-}
-
-bool TransformFeedback::isActive() const
-{
-    return mState.mActive;
+    return angle::Result::Continue;
 }
 
 bool TransformFeedback::isPaused() const
@@ -229,7 +225,7 @@ bool TransformFeedback::hasBoundProgram(GLuint program) const
     return mState.mProgram != nullptr && mState.mProgram->id() == program;
 }
 
-void TransformFeedback::detachBuffer(const Context *context, GLuint bufferName)
+angle::Result TransformFeedback::detachBuffer(const Context *context, GLuint bufferName)
 {
     bool isBound = context->isCurrentTransformFeedback(this);
     for (size_t index = 0; index < mState.mIndexedBuffers.size(); index++)
@@ -240,17 +236,20 @@ void TransformFeedback::detachBuffer(const Context *context, GLuint bufferName)
             {
                 mState.mIndexedBuffers[index]->onTFBindingChanged(context, false, true);
             }
-            mState.mIndexedBuffers[index].set(context, nullptr);
-            mImplementation->bindIndexedBuffer(index, mState.mIndexedBuffers[index]);
+            mState.mIndexedBuffers[index].set(context, nullptr, 0, 0);
+            ANGLE_TRY(
+                mImplementation->bindIndexedBuffer(context, index, mState.mIndexedBuffers[index]));
         }
     }
+
+    return angle::Result::Continue;
 }
 
-void TransformFeedback::bindIndexedBuffer(const Context *context,
-                                          size_t index,
-                                          Buffer *buffer,
-                                          size_t offset,
-                                          size_t size)
+angle::Result TransformFeedback::bindIndexedBuffer(const Context *context,
+                                                   size_t index,
+                                                   Buffer *buffer,
+                                                   size_t offset,
+                                                   size_t size)
 {
     ASSERT(index < mState.mIndexedBuffers.size());
     bool isBound = context && context->isCurrentTransformFeedback(this);
@@ -264,7 +263,7 @@ void TransformFeedback::bindIndexedBuffer(const Context *context,
         buffer->onTFBindingChanged(context, true, true);
     }
 
-    mImplementation->bindIndexedBuffer(index, mState.mIndexedBuffers[index]);
+    return mImplementation->bindIndexedBuffer(context, index, mState.mIndexedBuffers[index]);
 }
 
 const OffsetBindingPointer<Buffer> &TransformFeedback::getIndexedBuffer(size_t index) const

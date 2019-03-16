@@ -22,8 +22,7 @@ class Traverser : public TIntermTraverser
   public:
     explicit Traverser(TSymbolTable *symbolTable)
         : TIntermTraverser(true, false, false, symbolTable)
-    {
-    }
+    {}
 
     bool visitDeclaration(Visit visit, TIntermDeclaration *decl) override
     {

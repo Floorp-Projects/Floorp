@@ -47,8 +47,7 @@ class ScalarizeArgsTraverser : public TIntermTraverser
           mShaderType(shaderType),
           mFragmentPrecisionHigh(fragmentPrecisionHigh),
           mNodesToScalarize(IntermNodePatternMatcher::kScalarizedVecOrMatConstructor)
-    {
-    }
+    {}
 
   protected:
     bool visitAggregate(Visit visit, TIntermAggregate *node) override;
@@ -213,7 +212,7 @@ TVariable *ScalarizeArgsTraverser::createTempVariable(TIntermTyped *original)
     return variable;
 }
 
-}  // namespace anonymous
+}  // namespace
 
 void ScalarizeVecAndMatConstructorArgs(TIntermBlock *root,
                                        sh::GLenum shaderType,

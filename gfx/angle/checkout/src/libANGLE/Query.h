@@ -30,20 +30,20 @@ class Query final : public RefCountObject, public LabeledObject
 {
   public:
     Query(rx::QueryImpl *impl, GLuint id);
-    void destroy(const gl::Context *context) {}
     ~Query() override;
+    void onDestroy(const Context *context) override;
 
-    void setLabel(const std::string &label) override;
+    void setLabel(const Context *context, const std::string &label) override;
     const std::string &getLabel() const override;
 
-    Error begin(const Context *context);
-    Error end(const Context *context);
-    Error queryCounter(const Context *context);
-    Error getResult(const Context *context, GLint *params);
-    Error getResult(const Context *context, GLuint *params);
-    Error getResult(const Context *context, GLint64 *params);
-    Error getResult(const Context *context, GLuint64 *params);
-    Error isResultAvailable(const Context *context, bool *available);
+    angle::Result begin(const Context *context);
+    angle::Result end(const Context *context);
+    angle::Result queryCounter(const Context *context);
+    angle::Result getResult(const Context *context, GLint *params);
+    angle::Result getResult(const Context *context, GLuint *params);
+    angle::Result getResult(const Context *context, GLint64 *params);
+    angle::Result getResult(const Context *context, GLuint64 *params);
+    angle::Result isResultAvailable(const Context *context, bool *available);
 
     QueryType getType() const;
 
@@ -55,6 +55,6 @@ class Query final : public RefCountObject, public LabeledObject
 
     std::string mLabel;
 };
-}
+}  // namespace gl
 
 #endif  // LIBANGLE_QUERY_H_

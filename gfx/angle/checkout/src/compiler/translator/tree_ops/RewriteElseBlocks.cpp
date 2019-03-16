@@ -37,8 +37,7 @@ class ElseBlockRewriter : public TIntermTraverser
 
 ElseBlockRewriter::ElseBlockRewriter(TSymbolTable *symbolTable)
     : TIntermTraverser(true, false, true, symbolTable), mFunctionType(nullptr)
-{
-}
+{}
 
 bool ElseBlockRewriter::visitFunctionDefinition(Visit visit, TIntermFunctionDefinition *node)
 {
