@@ -37,7 +37,7 @@ struct EntityNode {
   uint32_t mUnicode;
 };
 
-EntityNode gEntities[] = {
+static const EntityNode gEntities[] = {
     {"nbsp", 160},   {"iexcl", 161}, {"cent", 162},   {"pound", 163},
     {"curren", 164}, {"yen", 165},   {"brvbar", 166}, {"sect", 167},
     {"uml", 168},    {"copy", 169},  {"ordf", 170},   {"laquo", 171},
@@ -85,8 +85,8 @@ static uint32_t nsTIterPrintRemove(nsTHashtable<EntityToUnicodeEntry>& hash) {
   return n;
 }
 
-void testTHashtable(nsTHashtable<EntityToUnicodeEntry>& hash,
-                    uint32_t numEntries) {
+static void testTHashtable(nsTHashtable<EntityToUnicodeEntry>& hash,
+                           uint32_t numEntries) {
   uint32_t i;
   for (i = 0; i < numEntries; ++i) {
     EntityToUnicodeEntry* entry = hash.PutEntry(gEntities[i].mStr);
@@ -202,7 +202,7 @@ nsresult IFoo::GetString(nsACString& aString) {
   return NS_OK;
 }
 
-nsresult CreateIFoo(IFoo** result)
+static nsresult CreateIFoo(IFoo** result)
 // a typical factory function (that calls AddRef)
 {
   auto* foop = new IFoo();

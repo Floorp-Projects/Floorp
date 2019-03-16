@@ -67,9 +67,9 @@ class ScopedXPCOM : public nsIDirectoryServiceProvider2 {
     mTestName = testName;
     printf("Running %s tests...\n", mTestName);
 
-    nsresult rv = NS_InitXPCOM2(&mServMgr, nullptr, this);
+    nsresult rv = NS_InitXPCOM(&mServMgr, nullptr, this);
     if (NS_FAILED(rv)) {
-      fail("NS_InitXPCOM2 returned failure code 0x%" PRIx32,
+      fail("NS_InitXPCOM returned failure code 0x%" PRIx32,
            static_cast<uint32_t>(rv));
       mServMgr = nullptr;
       return;
