@@ -95,7 +95,7 @@ class nsReceiver final : public nsIRunnable {
 
 NS_IMPL_ISUPPORTS(nsReceiver, nsIRunnable)
 
-nsresult TestPipe(nsIInputStream* in, nsIOutputStream* out) {
+static nsresult TestPipe(nsIInputStream* in, nsIOutputStream* out) {
   RefPtr<nsReceiver> receiver = new nsReceiver(in);
   if (!receiver) return NS_ERROR_OUT_OF_MEMORY;
 
@@ -209,7 +209,7 @@ class nsShortReader final : public nsIRunnable {
 
 NS_IMPL_ISUPPORTS(nsShortReader, nsIRunnable)
 
-nsresult TestShortWrites(nsIInputStream* in, nsIOutputStream* out) {
+static nsresult TestShortWrites(nsIInputStream* in, nsIOutputStream* out) {
   RefPtr<nsShortReader> receiver = new nsShortReader(in);
   if (!receiver) return NS_ERROR_OUT_OF_MEMORY;
 
@@ -351,7 +351,7 @@ TEST(Pipes, ChainedPipes) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void RunTests(uint32_t segSize, uint32_t segCount) {
+static void RunTests(uint32_t segSize, uint32_t segCount) {
   nsresult rv;
   nsCOMPtr<nsIInputStream> in;
   nsCOMPtr<nsIOutputStream> out;

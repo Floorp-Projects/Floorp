@@ -101,7 +101,7 @@ int main(int argc, char *argv[]) {
   nsresult rv;
   {
     nsCOMPtr<nsIServiceManager> servMan;
-    rv = NS_InitXPCOM2(getter_AddRefs(servMan), nullptr, nullptr);
+    rv = NS_InitXPCOM(getter_AddRefs(servMan), nullptr, nullptr);
     if (NS_FAILED(rv)) return -1;
     nsCOMPtr<nsIComponentRegistrar> registrar = do_QueryInterface(servMan);
     NS_ASSERTION(registrar, "Null nsIComponentRegistrar");
