@@ -32,7 +32,7 @@ int WINAPI WinMain(HINSTANCE inst, HINSTANCE prevInstance, LPSTR lpszCmdLine,
   {  //  Needed to scope all nsCOMPtr within XPCOM Init and Shutdown
     nsresult rv;
     nsCOMPtr<nsIServiceManager> servMan;
-    rv = NS_InitXPCOM2(getter_AddRefs(servMan), nullptr, nullptr);
+    rv = NS_InitXPCOM(getter_AddRefs(servMan), nullptr, nullptr);
     if (NS_FAILED(rv)) {
       ErrorBox("Failed to initialize xpcom.");
       return -1;

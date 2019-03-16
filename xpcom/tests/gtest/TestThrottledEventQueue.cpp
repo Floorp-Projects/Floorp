@@ -93,7 +93,7 @@ struct RunnableQueue : nsISerialEventTarget {
 
 NS_IMPL_ISUPPORTS(RunnableQueue, nsIEventTarget, nsISerialEventTarget)
 
-void Enqueue(nsIEventTarget* target, function<void()>&& aCallable) {
+static void Enqueue(nsIEventTarget* target, function<void()>&& aCallable) {
   nsresult rv =
       target->Dispatch(NS_NewRunnableFunction("TEQ GTest", move(aCallable)));
   MOZ_ALWAYS_TRUE(NS_SUCCEEDED(rv));

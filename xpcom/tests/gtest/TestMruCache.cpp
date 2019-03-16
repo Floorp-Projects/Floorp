@@ -49,7 +49,7 @@ struct Convertable {
 };
 
 // Helper to create a StringStructMap key.
-nsCString MakeStringKey(char aKey) {
+static nsCString MakeStringKey(char aKey) {
   nsCString key;
   key.Append(aKey);
   return key;
