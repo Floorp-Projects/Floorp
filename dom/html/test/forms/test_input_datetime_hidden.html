@@ -21,7 +21,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1514040
 let el = document.getElementById("date");
 ok(el.hidden, "element is hidden");
 is(el.value, "1947-02-28", ".value is set correctly");
-let fieldElements = Array.from(SpecialPowers.wrap(el).openOrClosedShadowRoot.getElementsByClassName("datetime-edit-field"));
+let fieldElements = Array.from(SpecialPowers.wrap(el).openOrClosedShadowRoot.querySelectorAll(".datetime-edit-field"));
 is(fieldElements[0].textContent, "02", "month is set");
 is(fieldElements[1].textContent, "28", "day is set");
 is(fieldElements[2].textContent, "1947", "year is set");
