@@ -418,6 +418,60 @@ class Tree extends Component {
   }
 
   /**
+   * Scroll item into view. Depending on whether the item is already rendered,
+   * we might have to calculate the position of the item based on its index and
+   * the item height.
+   *
+   * @param {Object} item
+   *        The item to be scrolled into view.
+   * @param {Number|undefined} index
+   *        The index of the item in a full DFS traversal (ignoring collapsed
+   *        nodes) or undefined.
+   * @param {Object} options
+   *        Optional information regarding item's requested alignement when
+   *        scrolling.
+   */
+  _scrollIntoView(item, index, options = {}) {
+    const treeElement = this.refs.tree;
+    if (!treeElement) {
+      return;
+    }
+
+    const element = document.getElementById(this.props.getKey(item));
+    if (element) {
+      scrollIntoView(element, { ...options, container: treeElement });
+      return;
+    }
+
+    if (index == null) {
+      // If index is not provided, determine item index from traversal.
+      const traversal = this._dfsFromRoots();
+      index = traversal.findIndex(({ item: i }) => i === item);
+    }
+
+    if (index == null || index < 0) {
+      return;
+    }
+
+    const { itemHeight } = this.props;
+    const { clientHeight, scrollTop } = treeElement;
+    const elementTop = index * itemHeight;
+    let scrollTo;
+    if (scrollTop >= elementTop + itemHeight) {
+      scrollTo = elementTop;
+    } else if (scrollTop + clientHeight <= elementTop) {
+      scrollTo = elementTop + itemHeight - clientHeight;
+    }
+
+    if (scrollTo != undefined) {
+      treeElement.scrollTo({
+        left: 0,
+        top: scrollTo,
+      });
+    }
+  }
+
+  /**
    * Sets the passed in item to be the focused item.
    *
    * @param {Number} index
@@ -429,12 +483,7 @@ class Tree extends Component {
    */
   _focus(index, item, options = {}) {
     if (item !== undefined && !options.preventAutoScroll) {
-      const treeElement = this.refs.tree;
-      const element = document.getElementById(this.props.getKey(item));
-      scrollIntoView(element, {
-        ...options,
-        container: treeElement,
-      });
+      this._scrollIntoView(item, index, options);
     }
 
     if (this.props.active != null) {
