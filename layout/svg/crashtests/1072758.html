@@ -1,0 +1,35 @@
+<style>
+#x9 {
+  display:none;
+}
+</style>
+
+<body onload="go()">
+<svg>
+<path id="a"></path>
+
+<mask id="m">
+  <text id="y">
+    <tspan id="x1"></tspan>
+    <textPath id="x2"></textPath>
+    <a id="x3">Hello</a>
+    <tspan><tspan id="x4"></tspan></tspan>
+    <tspan id="x5"></tspan>
+  </text>
+</mask>
+
+<rect width="600" height="400" mask="url(#m)"/>
+</svg>
+</body>
+
+<script>
+
+function go() {
+  x1.style.display = "none";
+  x2.style.display = "none";
+  x3.style.display = "none";
+  x4.style.display = "none";
+  x5.id = "x9";
+};
+
+</script>
