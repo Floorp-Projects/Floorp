@@ -1325,7 +1325,7 @@ var BrowserApp = {
     }
     this._tabs[toPosition] = movedTab;
 
-    let evt = new UIEvent("TabMove", {"bubbles":true, "cancellable":false, "view":window, "detail":fromPosition});
+    let evt = new UIEvent("TabMove", {"bubbles":true, "cancelable":false, "view":window, "detail":fromPosition});
     this.tabs[toPosition].browser.dispatchEvent(evt);
   },
 
