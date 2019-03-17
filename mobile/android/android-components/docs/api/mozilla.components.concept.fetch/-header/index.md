@@ -2,7 +2,7 @@
 
 # Header
 
-`data class Header` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/fetch/src/main/java/mozilla/components/concept/fetch/Headers.kt#L47)
+`data class Header` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/fetch/src/main/java/mozilla/components/concept/fetch/Headers.kt#L60)
 
 Represents a [Header](./index.md) containing of a [name](name.md) and [value](value.md).
 

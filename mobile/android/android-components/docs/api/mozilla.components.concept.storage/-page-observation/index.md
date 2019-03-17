@@ -2,7 +2,7 @@
 
 # PageObservation
 
-`data class PageObservation` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/storage/src/main/java/mozilla/components/concept/storage/HistoryStorage.kt#L59)
+`data class PageObservation` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/storage/src/main/java/mozilla/components/concept/storage/HistoryStorage.kt#L67)
 
 ### Constructors
 

@@ -6,6 +6,12 @@
 
 A collection of HTTP [Headers](./index.md) (immutable) of a [Request](../-request/index.md) or [Response](../-response/index.md).
 
+### Types
+
+| Name | Summary |
+|---|---|
+| [Common](-common/index.md) | `object Common`<br>A collection of common HTTP header definitions. |
+
 ### Properties
 
 | Name | Summary |
