@@ -176,6 +176,30 @@
 
         // get anonymous content references
         this._wizardHeader = document.getAnonymousElementByAttribute(this, "anonid", "Header");
+
+        this._wizardHeader.appendChild(
+          MozXULElement.parseXULToFragment(/Mac/.test(navigator.platform) ?
+            `<stack class="wizard-header-stack" flex="1">
+              <vbox class="wizard-header-box-1">
+                <vbox class="wizard-header-box-text">
+                  <label class="wizard-header-label"/>
+                </vbox>
+              </vbox>
+              <hbox class="wizard-header-box-icon">
+                <spacer flex="1"/>
+                <image class="wizard-header-icon"/>
+              </hbox>
+            </stack>` :
+            `<hbox class="wizard-header-box-1" flex="1">
+              <vbox class="wizard-header-box-text" flex="1">
+                <label class="wizard-header-label"/>
+                <label class="wizard-header-description"/>
+              </vbox>
+              <image class="wizard-header-icon"/>
+            </hbox>`
+          )
+        );
+
         this._wizardButtons = document.getAnonymousElementByAttribute(this, "anonid", "Buttons");
         this._deck = document.getAnonymousElementByAttribute(this, "anonid", "Deck");
 
@@ -390,8 +414,14 @@
               label = this._bundle.formatStringFromName("default-last-title", [this.title], 1);
             }
           }
-          this._wizardHeader.setAttribute("label", label);
-          this._wizardHeader.setAttribute("description", this.currentPage.getAttribute("description"));
+          this._wizardHeader.
+            querySelector(".wizard-header-label").textContent = label;
+          let headerDescEl =
+            this._wizardHeader.querySelector(".wizard-header-description");
+          if (headerDescEl) {
+            headerDescEl.textContent =
+              this.currentPage.getAttribute("description");
+          }
         ]]></body>
       </method>
 
@@ -443,22 +473,6 @@
   </binding>
 
 #ifdef XP_MACOSX
-  <binding id="wizard-header">
-    <content>
-      <xul:stack class="wizard-header-stack" flex="1">
-        <xul:vbox class="wizard-header-box-1">
-          <xul:vbox class="wizard-header-box-text">
-            <xul:label class="wizard-header-label" xbl:inherits="xbl:text=label"/>
-          </xul:vbox>
-        </xul:vbox>
-        <xul:hbox class="wizard-header-box-icon">
-          <xul:spacer flex="1"/>
-          <xul:image class="wizard-header-icon" xbl:inherits="src=iconsrc"/>
-        </xul:hbox>
-      </xul:stack>
-    </content>
-  </binding>
-
   <binding id="wizard-buttons">
     <content>
       <xul:vbox flex="1">
@@ -489,18 +503,6 @@
   </binding>
 
 #else
-
-  <binding id="wizard-header">
-    <content>
-      <xul:hbox class="wizard-header-box-1" flex="1">
-        <xul:vbox class="wizard-header-box-text" flex="1">
-          <xul:label class="wizard-header-label" xbl:inherits="xbl:text=label"/>
-          <xul:label class="wizard-header-description" xbl:inherits="xbl:text=description"/>
-        </xul:vbox>
-        <xul:image class="wizard-header-icon" xbl:inherits="src=iconsrc"/>
-      </xul:hbox>
-    </content>
-  </binding>
 
   <binding id="wizard-buttons">
     <content>
