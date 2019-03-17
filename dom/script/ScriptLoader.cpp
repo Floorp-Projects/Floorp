@@ -3496,7 +3496,7 @@ nsresult ScriptLoader::PrepareLoadedRequest(ScriptLoadRequest* aRequest,
       aRequest->mSourceMapURL = NS_ConvertUTF8toUTF16(sourceMapURL);
     }
 
-    if (httpChannel->GetIsThirdPartyTrackingResource()) {
+    if (httpChannel->IsThirdPartyTrackingResource()) {
       aRequest->SetIsTracking();
     }
   }
