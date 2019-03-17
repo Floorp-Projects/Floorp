@@ -8,7 +8,7 @@ with Files('*Selection*'):
     BUG_COMPONENT = ('Core', 'Selection')
 
 with Files("**"):
-    BUG_COMPONENT = ("Core", "DOM")
+    BUG_COMPONENT = ("Core", "DOM: Core & HTML")
 
 TEST_DIRS += ['test']
 

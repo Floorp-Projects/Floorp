@@ -6,7 +6,7 @@
 
 
 with Files("**"):
-    BUG_COMPONENT = ("Core", "DOM")
+    BUG_COMPONENT = ("Core", "DOM: Core & HTML")
 
 EXPORTS.mozilla.dom.cache += [
     'Action.h',

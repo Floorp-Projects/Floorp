@@ -6,7 +6,7 @@
 
 # interfaces/*/ are annotated per directory, this is for new files
 with Files("**"):
-    BUG_COMPONENT = ("Core", "DOM")
+    BUG_COMPONENT = ("Core", "DOM: Core & HTML")
 
 with Files("plugins/**"):
     BUG_COMPONENT = ("Core", "Plug-ins")
