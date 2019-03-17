@@ -10,9 +10,7 @@
 # project is required:
 #  - The "Build pull requests from forks of this repository" setting must be
 #    enabled: https://docs.microsoft.com/en-us/azure/devops/pipelines/repos/github#validate-contributions-from-forks
-#  - A scheduled build needs to be set up for the the epochs/daily branch.
-#  - To get results from scheduled builds into wpt.fyi, a service connection
-#    named wpt.fyi with URL https://wpt.fyi is needed.
+#  - A scheduled build needs to be set up for one of the epochs/* branches.
 #  - Self-hosted agents for Windows 10 are used:
 #    - 'Hosted Windows Client' is the latest Windows 10
 #    - 'Hosted Windows Client Next' is Windows 10 Insider Preview
@@ -22,7 +20,7 @@
 jobs:
 # The affected tests jobs are unconditional for speed, as most PRs have one or
 # more affected tests: https://github.com/web-platform-tests/wpt/issues/13936.
-- job: affected_macOS
+- job: affected_safari_preview
   displayName: 'affected tests (Safari Technology Preview)'
   condition: eq(variables['Build.Reason'], 'PullRequest')
   pool:
@@ -30,9 +28,13 @@ jobs:
   steps:
   - template: tools/ci/azure/affected_tests.yml
     parameters:
-      artifactName: 'affected-tests'
+      artifactName: 'safari-preview-affected-tests'
+- template: tools/ci/azure/fyi_hook.yml
+  parameters:
+    dependsOn: affected_safari_preview
+    artifactName: safari-preview-affected-tests
 
-- job: affected_without_changes_macOS
+- job: affected_without_changes_safari_preview
   displayName: 'affected tests without changes (Safari Technology Preview)'
   condition: eq(variables['Build.Reason'], 'PullRequest')
   pool:
@@ -42,7 +44,11 @@ jobs:
     parameters:
       checkoutCommit: 'HEAD^1'
       affectedRange: 'HEAD@{1}'
-      artifactName: 'affected-tests-without-changes'
+      artifactName: 'safari-preview-affected-tests-without-changes'
+- template: tools/ci/azure/fyi_hook.yml
+  parameters:
+    dependsOn: affected_without_changes_safari_preview
+    artifactName: safari-preview-affected-tests-without-changes
 
 # The decision jobs runs `./wpt test-jobs` to determine which jobs to run,
 # and all following jobs wait for it to finish and depend on its output.
@@ -157,7 +163,7 @@ jobs:
     condition: succeededOrFailed()
   - template: tools/ci/azure/cleanup_win10.yml
 
-- job: all_edge
+- job: results_edge
   displayName: 'all tests (Edge)'
   # This job is only triggered manually until it has been shown to be robust.
   condition: and(eq(variables['Build.Reason'], 'Manual'), variables['run_all_edge'])
@@ -182,12 +188,20 @@ jobs:
   - task: PublishBuildArtifacts@1
     displayName: 'Publish results'
     inputs:
-      artifactName: 'results'
+      artifactName: 'edge-results'
   - template: tools/ci/azure/cleanup_win10.yml
+- template: tools/ci/azure/fyi_hook.yml
+  parameters:
+    dependsOn: results_edge
+    artifactName: edge-results
 
-- job: all_macOS
+# All `./wpt run` tests are run from epochs/* branches on a schedule. See
+# documentation at the top of this file for required setup.
+- job: results_safari_preview
   displayName: 'all tests (Safari Technology Preview)'
-  condition: eq(variables['Build.Reason'], 'Schedule')
+  condition: |
+    or(eq(variables['Build.Reason'], 'Schedule'),
+       and(eq(variables['Build.Reason'], 'Manual'), variables['run_all_safari_preview']))
   strategy:
     parallel: 4 # chosen to make runtime ~2h
   timeoutInMinutes: 360
@@ -208,21 +222,8 @@ jobs:
   - task: PublishBuildArtifacts@1
     displayName: 'Publish results'
     inputs:
-      artifactName: 'results'
-
-# The InvokeRESTAPI task can only run in a server job.
-- job: all_post
-  displayName: 'all tests (wpt.fyi hook)'
-  dependsOn: all_macOS
-  pool: server
-  steps:
-  - task: InvokeRESTAPI@1
-    displayName: 'Invoke wpt.fyi hook'
-    inputs:
-      serviceConnection: wpt.fyi
-      urlSuffix: /api/checks/azure/$(Build.BuildId)
-  - task: InvokeRESTAPI@1
-    displayName: 'Invoke staging.wpt.fyi hook'
-    inputs:
-      serviceConnection: staging.wpt.fyi
-      urlSuffix: /api/checks/azure/$(Build.BuildId)
+      artifactName: 'safari-preview-results'
+- template: tools/ci/azure/fyi_hook.yml
+  parameters:
+    dependsOn: results_safari_preview
+    artifactName: safari-preview-results
