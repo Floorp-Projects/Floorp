@@ -5,7 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 with Files("**"):
-    BUG_COMPONENT = ("Core", "DOM")
+    BUG_COMPONENT = ("Core", "DOM: Core & HTML")
 
 with Files("APZTestData.webidl"):
     BUG_COMPONENT = ("Core", "Panning and Zooming")
@@ -38,7 +38,7 @@ with Files("BiquadFilterNode.webidl"):
     BUG_COMPONENT = ("Core", "Web Audio")
 
 with Files("BrowserElement*"):
-    BUG_COMPONENT = ("Core", "DOM")
+    BUG_COMPONENT = ("Core", "DOM: Core & HTML")
 
 with Files("CSP*"):
     BUG_COMPONENT = ("Core", "DOM: Security")
@@ -146,7 +146,7 @@ with Files("IIRFilterNode.webidl"):
     BUG_COMPONENT = ("Core", "Web Audio")
 
 with Files("Image*"):
-    BUG_COMPONENT = ("Core", "DOM")
+    BUG_COMPONENT = ("Core", "DOM: Core & HTML")
 
 with Files("ImageCapture*"):
     BUG_COMPONENT = ("Core", "Audio/Video")
