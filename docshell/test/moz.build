@@ -119,7 +119,7 @@ with Files('navigation/*430624*'):
     BUG_COMPONENT = ('Core', 'Editor')
 
 with Files('navigation/*430723*'):
-    BUG_COMPONENT = ('Core', 'Keyboard: Navigation')
+    BUG_COMPONENT = ('Core', 'User events and focus handling')
 
 with Files('navigation/*child*'):
     BUG_COMPONENT = ('Core', 'Security')
