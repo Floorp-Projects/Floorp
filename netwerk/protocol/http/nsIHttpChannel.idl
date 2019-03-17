@@ -560,9 +560,20 @@ interface nsIHttpChannel : nsIChannel
      *
      * Note that top-level channels could be marked as tracking
      * resource. In order to identify third-party tracking resources
-     * specifically, use isThirdPartyTrackingResource.
+     * specifically, use isThirdPartyTrackingResource().
      */
-    [infallible] readonly attribute boolean isTrackingResource;
+    boolean isTrackingResource();
+
+%{ C++
+  inline bool IsTrackingResource()
+  {
+    bool value = false;
+    if (NS_SUCCEEDED(IsTrackingResource(&value)) && value) {
+      return true;
+    }
+    return false;
+  }
+%}
 
     /**
      * Returns the classification flags if the channel has been processed by
@@ -572,7 +583,18 @@ interface nsIHttpChannel : nsIChannel
      * This is a helper attribute which returns the same value of
      * (thirdPartyClassificationFlags & CLASSIFIED_ANY_TRACKING)
      */
-    [infallible] readonly attribute boolean isThirdPartyTrackingResource;
+    boolean isThirdPartyTrackingResource();
+
+%{ C++
+  inline bool IsThirdPartyTrackingResource()
+  {
+    bool value = false;
+    if (NS_SUCCEEDED(IsThirdPartyTrackingResource(&value)) && value) {
+      return true;
+    }
+    return false;
+  }
+%}
 
     /**
      * Returns the allowing status for flash plugin for this channel.
