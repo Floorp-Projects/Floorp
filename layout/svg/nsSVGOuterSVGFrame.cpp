@@ -485,12 +485,17 @@ void nsSVGOuterSVGFrame::Reflow(nsPresContext* aPresContext,
   // overflow rects here! (Again, see bug 875175.)
   //
   aDesiredSize.SetOverflowAreasToDesiredBounds();
-  if (!mIsRootContent) {
-    aDesiredSize.mOverflowAreas.VisualOverflow().UnionRect(
-        aDesiredSize.mOverflowAreas.VisualOverflow(),
-        anonKid->GetVisualOverflowRect() + anonKid->GetPosition());
+
+  // An outer SVG will be here as a nondisplay if it fails the conditional
+  // processing test. In that case, we don't maintain its overflow.
+  if (!HasAnyStateBits(NS_FRAME_IS_NONDISPLAY)) {
+    if (!mIsRootContent) {
+      aDesiredSize.mOverflowAreas.VisualOverflow().UnionRect(
+          aDesiredSize.mOverflowAreas.VisualOverflow(),
+          anonKid->GetVisualOverflowRect() + anonKid->GetPosition());
+    }
+    FinishAndStoreOverflow(&aDesiredSize);
   }
-  FinishAndStoreOverflow(&aDesiredSize);
 
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
                  ("exit nsSVGOuterSVGFrame::Reflow: size=%d,%d",
