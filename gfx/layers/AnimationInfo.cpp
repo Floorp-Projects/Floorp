@@ -129,8 +129,10 @@ bool AnimationInfo::ApplyPendingUpdatesForThisTransaction() {
 }
 
 bool AnimationInfo::HasTransformAnimation() const {
+  const nsCSSPropertyIDSet& transformSet =
+      LayerAnimationInfo::GetCSSPropertiesFor(DisplayItemType::TYPE_TRANSFORM);
   for (uint32_t i = 0; i < mAnimations.Length(); i++) {
-    if (mAnimations[i].property() == eCSSProperty_transform) {
+    if (transformSet.HasProperty(mAnimations[i].property())) {
       return true;
     }
   }
