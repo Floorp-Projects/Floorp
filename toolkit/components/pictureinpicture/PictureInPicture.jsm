@@ -9,7 +9,7 @@ var EXPORTED_SYMBOLS = ["PictureInPicture"];
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const PLAYER_URI = "chrome://global/content/pictureinpicture/player.xhtml";
-const PLAYER_FEATURES = `chrome,titlebar=no,alwaysontop,resizable`;
+const PLAYER_FEATURES = `chrome,titlebar=no,alwaysontop,lockaspectratio,resizable`;
 const WINDOW_TYPE = "Toolkit:PictureInPicture";
 
 /**
