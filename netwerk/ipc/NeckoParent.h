@@ -237,6 +237,9 @@ class NeckoParent : public PNeckoParent {
 
   mozilla::ipc::IPCResult RecvInitSocketProcessBridge(
       InitSocketProcessBridgeResolver&& aResolver);
+
+  mozilla::ipc::IPCResult RecvEnsureHSTSData(
+      EnsureHSTSDataResolver&& aResolver);
 };
 
 }  // namespace net
