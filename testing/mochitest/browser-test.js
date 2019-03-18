@@ -929,7 +929,7 @@ Tester.prototype = {
           BackgroundPageThumbs._destroy();
 
           if (window.gBrowser) {
-            NewTabPagePreloading.removePreloadedBrowser(window);
+            gBrowser.removePreloadedBrowser();
           }
         }
 

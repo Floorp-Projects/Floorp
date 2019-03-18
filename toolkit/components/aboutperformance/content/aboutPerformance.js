@@ -52,8 +52,8 @@ let tabFinder = {
           this._map.set(id, browser);
         }
       }
-      if (tabbrowser.preloadedBrowser) {
-        let browser = tabbrowser.preloadedBrowser;
+      if (tabbrowser._preloadedBrowser) {
+        let browser = tabbrowser._preloadedBrowser;
         if (browser.outerWindowID)
           this._map.set(browser.outerWindowID, browser);
       }

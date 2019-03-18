@@ -81,7 +81,7 @@ add_task(async function test_support_ntp_colors() {
   registerCleanupFunction(() => {
     SpecialPowers.clearUserPref("browser.newtab.preload");
   });
-  NewTabPagePreloading.removePreloadedBrowser(window);
+  gBrowser.removePreloadedBrowser();
   for (let url of ["about:newtab", "about:home", "about:welcome"]) {
     info("Opening url: " + url);
     await BrowserTestUtils.withNewTab({gBrowser, url}, async browser => {
