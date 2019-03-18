@@ -8,6 +8,12 @@
 
 #include "AutoSQLiteLifetime.h"
 
+#ifdef MOZ_WIDGET_ANDROID
+#  ifdef MOZ_PROFILE_GENERATE
+extern "C" int __llvm_profile_dump(void);
+#  endif
+#endif
+
 namespace mozilla {
 
 class BootstrapImpl final : public Bootstrap {
@@ -75,6 +81,14 @@ class BootstrapImpl final : public Bootstrap {
       JNIEnv* aEnv, const XRE_AndroidChildFds& aFds) override {
     ::XRE_SetAndroidChildFds(aEnv, aFds);
   }
+
+#  ifdef MOZ_PROFILE_GENERATE
+  virtual void XRE_WriteLLVMProfData() override {
+    __android_log_print(ANDROID_LOG_INFO, "GeckoLibLoad",
+                        "Calling __llvm_profile_dump()");
+    __llvm_profile_dump();
+  }
+#  endif
 #endif
 
 #ifdef LIBFUZZER
