@@ -250,7 +250,6 @@ a {
 
 /* The bubble that shows the number of times a message is repeated */
 .message-repeats {
-  -moz-user-select: none;
   flex-shrink: 0;
   margin: 2px 5px 0 5px;
   padding: 0 6px;
