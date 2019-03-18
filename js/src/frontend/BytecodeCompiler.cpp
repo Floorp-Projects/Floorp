@@ -503,9 +503,7 @@ bool BytecodeCompiler::deoptimizeArgumentsInEnclosingScripts(
         return false;
       }
       if (script->argumentsHasVarBinding()) {
-        if (!JSScript::argumentsOptimizationFailed(cx, script)) {
-          return false;
-        }
+        JSScript::argumentsOptimizationFailed(cx, script);
       }
     }
     env = env->enclosingEnvironment();
