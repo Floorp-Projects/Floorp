@@ -220,27 +220,81 @@ class AnimationHelper {
   /**
    * Sample animations based on a given time stamp for a element(layer) with
    * its animation data.
-   * Generally |aPreviousFrameTimeStamp| is used for the sampling if it's
+   * Generally |aPreviousFrameTime| is used for the sampling if it's
    * supplied to make the animation more in sync with other animations on the
    * main-thread.  But in the case where the animation just started at the time
-   * when the animation was sent to the compositor, |aCurrentTime| is used for
-   * the sampling instead to avoid flickering the animation.
+   * when the animation was sent to the compositor, |aCurrentFrameTime| is used
+   * for sampling instead to avoid flicker.
    *
    * Returns SampleResult::None if none of the animations are producing a result
    * (e.g. they are in the delay phase with no backwards fill),
    * SampleResult::Skipped if the animation output did not change since the last
    * call of this function,
    * SampleResult::Sampled if the animation output was updated.
+   *
+   * Using the same example from ExtractAnimations (below):
+   *
+   * Input |aPropertyAnimationGroups| (ignoring the base animation style):
+   *
+   * [
+   *   Group A: [ { rotate, Animation A }, { rotate, Animation B } ],
+   *   Group B: [ { scale, Animation B } ],
+   *   Group C: [ { transform, Animation A }, { transform, Animation B } ],
+   * ]
+   *
+   * For each property group, this function interpolates each animation in turn,
+   * using the result of interpolating one animation as input for the next such
+   * that it reduces each property group to a single output value:
+   *
+   * [
+   *   { rotate, RawServoAnimationValue },
+   *   { scale, RawServoAnimationValue },
+   *   { transform, RawServoAnimationValue },
+   * ]
+   *
+   * For transform animations, the caller (SampleAnimations) will combine the
+   * result of the various transform properties into a final matrix.
    */
   static SampleResult SampleAnimationForEachNode(
       TimeStamp aPreviousFrameTime, TimeStamp aCurrentFrameTime,
+      const AnimatedValue* aPreviousValue,
       nsTArray<PropertyAnimationGroup>& aPropertyAnimationGroups,
-      RefPtr<RawServoAnimationValue>& aAnimationValue,
-      const AnimatedValue* aPreviousValue);
+      nsTArray<RefPtr<RawServoAnimationValue>>& aAnimationValues);
 
   /**
    * Extract organized animation data by property into an array of
-   * PropertyAnimationGroup.
+   * PropertyAnimationGroup objects.
+   *
+   * For example, suppose we have the following animations:
+   *
+   *   Animation A: [ transform, rotate ]
+   *   Animation B: [ rotate, scale ]
+   *   Animation C: [ transform ]
+   *   Animation D: [ opacity ]
+   *
+   * When we go to send transform-like properties to the compositor, we
+   * sort them as follows:
+   *
+   *   [
+   *     { rotate: Animation A (rotate segments only) },
+   *     { rotate: Animation B ( " " ) },
+   *     { scale: Animation B (scale segments only) },
+   *     { transform: Animation A (transform segments only) },
+   *     { transform: Animation C ( " " ) },
+   *   ]
+   *
+   * In this function, we group these animations together by property producing
+   * output such as the following:
+   *
+   *   [
+   *     [ { rotate, Animation A }, { rotate, Animation B } ],
+   *     [ { scale, Animation B } ],
+   *     [ { transform, Animation A }, { transform, Animation B } ],
+   *   ]
+   *
+   * In the process of grouping these animations, we also convert their values
+   * from the rather compact representation we use for transferring across the
+   * IPC boundary into something we can readily use for sampling.
    */
   static nsTArray<PropertyAnimationGroup> ExtractAnimations(
       const AnimationArray& aAnimations);
@@ -271,12 +325,12 @@ class AnimationHelper {
                                TimeStamp aCurrentFrameTime);
 
   /**
-   * Convert an animation value into a matrix given the corresponding transform
-   * parameters. |aValue| must be a transform-like value (e.g. transform,
-   * translate etc.).
+   * Convert an array of animation values into a matrix given the corresponding
+   * transform parameters. |aValue| must be a transform-like value
+   * (e.g. transform, translate etc.).
    */
   static gfx::Matrix4x4 ServoAnimationValueToMatrix4x4(
-      const RefPtr<RawServoAnimationValue>& aValue,
+      const nsTArray<RefPtr<RawServoAnimationValue>>& aValue,
       const TransformData& aTransformData);
 };
 

@@ -2269,6 +2269,16 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
     return mIndividualTransform ? do_AddRef(mIndividualTransform) : nullptr;
   }
 
+  /**
+   * Returns the combined transform list based on translate, rotate, scale
+   * individual transforms. The combination order is defined in
+   * https://drafts.csswg.org/css-transforms-2/#ctm
+   */
+  static already_AddRefed<nsCSSValueSharedList>
+  GenerateCombinedIndividualTransform(nsCSSValueSharedList* aTranslate,
+                                      nsCSSValueSharedList* aRotate,
+                                      nsCSSValueSharedList* aScale);
+
   void GenerateCombinedIndividualTransform();
 };
 

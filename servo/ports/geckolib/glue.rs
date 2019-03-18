@@ -856,7 +856,7 @@ pub extern "C" fn Servo_AnimationValue_Color(
 pub unsafe extern "C" fn Servo_AnimationValue_GetTransform(
     value: RawServoAnimationValueBorrowed,
     list: *mut structs::RefPtr<nsCSSValueSharedList>,
-) {
+) -> nsCSSPropertyID {
     let list = &mut *list;
     let value = AnimationValue::as_arc(&value);
     match **value {
@@ -866,6 +866,7 @@ pub unsafe extern "C" fn Servo_AnimationValue_GetTransform(
             } else {
                 gecko_properties::convert_transform(&servo_list.0, list);
             }
+            nsCSSPropertyID::eCSSProperty_transform
         },
         AnimationValue::Translate(ref v) => {
             if let Some(v) = v.to_transform_operation() {
@@ -873,6 +874,7 @@ pub unsafe extern "C" fn Servo_AnimationValue_GetTransform(
             } else {
                 list.set_move(RefPtr::from_addrefed(Gecko_NewNoneTransform()));
             }
+            nsCSSPropertyID::eCSSProperty_translate
         },
         AnimationValue::Rotate(ref v) => {
             if let Some(v) = v.to_transform_operation() {
@@ -880,6 +882,7 @@ pub unsafe extern "C" fn Servo_AnimationValue_GetTransform(
             } else {
                 list.set_move(RefPtr::from_addrefed(Gecko_NewNoneTransform()));
             }
+            nsCSSPropertyID::eCSSProperty_rotate
         },
         AnimationValue::Scale(ref v) => {
             if let Some(v) = v.to_transform_operation() {
@@ -887,18 +890,49 @@ pub unsafe extern "C" fn Servo_AnimationValue_GetTransform(
             } else {
                 list.set_move(RefPtr::from_addrefed(Gecko_NewNoneTransform()));
             }
+            nsCSSPropertyID::eCSSProperty_scale
         },
         _ => unreachable!("Unsupported transform-like animation value"),
     }
 }
 
 #[no_mangle]
-pub extern "C" fn Servo_AnimationValue_Transform(
+pub unsafe extern "C" fn Servo_AnimationValue_Transform(
+    property: nsCSSPropertyID,
     list: *const nsCSSValueSharedList,
 ) -> RawServoAnimationValueStrong {
-    let list = unsafe { (&*list).mHead.as_ref() };
+    use style::values::computed::transform::{Rotate, Scale, Translate};
+
+    let property = LonghandId::from_nscsspropertyid(property)
+        .expect("We don't have shorthand property animation value");
+    let list = (&*list).mHead.as_ref();
     let transform = gecko_properties::clone_transform_from_list(list);
-    Arc::new(AnimationValue::Transform(transform)).into_strong()
+    match property {
+        LonghandId::Rotate => {
+            let rotate = if transform.0.is_empty() {
+                style::values::generics::transform::Rotate::None
+            } else {
+                debug_assert_eq!(transform.0.len(), 1);
+                Rotate::from_transform_operation(&(transform.0)[0])
+            };
+            Arc::new(AnimationValue::Rotate(rotate)).into_strong()
+        },
+        LonghandId::Scale => {
+            debug_assert_eq!(transform.0.len(), 1);
+            Arc::new(AnimationValue::Scale(Scale::from_transform_operation(&(transform.0)[0])))
+                .into_strong()
+        },
+        LonghandId::Translate => {
+            debug_assert_eq!(transform.0.len(), 1);
+            Arc::new(AnimationValue::Translate(
+                    Translate::from_transform_operation(&(transform.0)[0])))
+                .into_strong()
+        },
+        LonghandId::Transform => {
+            Arc::new(AnimationValue::Transform(transform)).into_strong()
+        },
+        _ => unreachable!("Unsupported transform-like animation value"),
+    }
 }
 
 #[no_mangle]
