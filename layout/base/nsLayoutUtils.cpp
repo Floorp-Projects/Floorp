@@ -321,21 +321,25 @@ bool nsLayoutUtils::HasEffectiveAnimation(
 
 /* static */
 nsCSSPropertyIDSet nsLayoutUtils::GetAnimationPropertiesForCompositor(
-    const nsIFrame* aFrame) {
+    const nsIFrame* aStyleFrame) {
   nsCSSPropertyIDSet properties;
 
-  EffectSet* effects = EffectSet::GetEffectSet(aFrame);
+  // We fetch the effects for the style frame here since this method is called
+  // by RestyleManager::AddLayerChangesForAnimation which takes care to apply
+  // the relevant hints to the primary frame as needed.
+  EffectSet* effects = EffectSet::GetEffectSetForStyleFrame(aStyleFrame);
   if (!effects) {
     return properties;
   }
 
   AnimationPerformanceWarning::Type warning;
-  if (!EffectCompositor::AllowCompositorAnimationsOnFrame(aFrame, warning)) {
+  if (!EffectCompositor::AllowCompositorAnimationsOnFrame(aStyleFrame,
+                                                          warning)) {
     return properties;
   }
 
   for (const KeyframeEffect* effect : *effects) {
-    properties |= effect->GetPropertiesForCompositor(*effects, aFrame);
+    properties |= effect->GetPropertiesForCompositor(*effects, aStyleFrame);
   }
 
   return properties;
