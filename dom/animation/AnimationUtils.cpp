@@ -73,9 +73,14 @@ bool AnimationUtils::IsOffscreenThrottlingEnabled() {
 }
 
 /* static */
-bool AnimationUtils::EffectSetContainsAnimatedScale(EffectSet& aEffects,
-                                                    const nsIFrame* aFrame) {
-  for (const dom::KeyframeEffect* effect : aEffects) {
+bool AnimationUtils::FrameHasAnimatedScale(const nsIFrame* aFrame) {
+  EffectSet* effectSet = EffectSet::GetEffectSetForFrame(
+      aFrame, nsCSSPropertyIDSet::TransformLikeProperties());
+  if (!effectSet) {
+    return false;
+  }
+
+  for (const dom::KeyframeEffect* effect : *effectSet) {
     if (effect->ContainsAnimatedScale(aFrame)) {
       return true;
     }
