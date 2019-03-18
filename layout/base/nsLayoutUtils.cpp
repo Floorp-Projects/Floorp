@@ -240,21 +240,9 @@ static bool HasMatchingAnimations(const nsIFrame* aFrame,
     return false;
   }
 
-  // For transform animations, we run the animations on the primary frame, but
-  // store the "may have transform animation" bit on the style frame.
-  if (aPropertySet.IsSubsetOf(nsCSSPropertyIDSet::TransformLikeProperties())) {
-    // We specifically don't check aFrame->IsPrimaryFrame() here since this is
-    // called by nsFrame::Init (to set the NS_FRAME_MAY_BE_TRANSFORMED bit if it
-    // has any matching animations) but at that point the "primary frame" bit
-    // might not yet have been set on the frame.
-    if (!aFrame->IsFrameOfType(nsIFrame::eSupportsCSSTransforms)) {
-      return false;
-    }
-
-    const nsIFrame* styleFrame = nsLayoutUtils::GetStyleFrame(aFrame);
-    if (!styleFrame || !styleFrame->MayHaveTransformAnimation()) {
-      return false;
-    }
+  if (aPropertySet.IsSubsetOf(nsCSSPropertyIDSet::TransformLikeProperties()) &&
+      !aFrame->MayHaveTransformAnimation()) {
+    return false;
   }
 
   EffectSet* effectSet = EffectSet::GetEffectSetForFrame(aFrame, aPropertySet);
