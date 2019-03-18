@@ -3131,9 +3131,9 @@ nsIFrame* nsCSSFrameConstructor::ConstructFieldSetFrame(
   nsFrameConstructorSaveState absoluteSaveState;
   nsFrameItems childItems;
 
-  contentFrame->AddStateBits(NS_FRAME_CAN_HAVE_ABSPOS_CHILDREN);
+  contentFrameTop->AddStateBits(NS_FRAME_CAN_HAVE_ABSPOS_CHILDREN);
   if (absPosContainer) {
-    aState.PushAbsoluteContainingBlock(contentFrame, absPosContainer,
+    aState.PushAbsoluteContainingBlock(contentFrameTop, absPosContainer,
                                        absoluteSaveState);
   }
 
