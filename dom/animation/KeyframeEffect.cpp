@@ -1765,16 +1765,24 @@ void KeyframeEffect::UpdateEffectSet(EffectSet* aEffectSet) const {
     return;
   }
 
-  nsIFrame* frame = GetStyleFrame();
+  nsIFrame* styleFrame = GetStyleFrame();
   if (HasAnimationOfPropertySet(nsCSSPropertyIDSet::OpacityProperties())) {
     effectSet->SetMayHaveOpacityAnimation();
-    EnumerateContinuationsOrIBSplitSiblings(
-        frame, [](nsIFrame* aFrame) { aFrame->SetMayHaveOpacityAnimation(); });
+    EnumerateContinuationsOrIBSplitSiblings(styleFrame, [](nsIFrame* aFrame) {
+      aFrame->SetMayHaveOpacityAnimation();
+    });
   }
+
+  nsIFrame* primaryFrame = GetPrimaryFrame();
   if (HasAnimationOfPropertySet(
           nsCSSPropertyIDSet::TransformLikeProperties())) {
     effectSet->SetMayHaveTransformAnimation();
-    EnumerateContinuationsOrIBSplitSiblings(frame, [](nsIFrame* aFrame) {
+    // For table frames, it's not clear if we should iterate over the
+    // continuations of the table wrapper or the inner table frame.
+    //
+    // Fortunately, this is not currently an issue because we only split tables
+    // when printing (page breaks) where we don't run animations.
+    EnumerateContinuationsOrIBSplitSiblings(primaryFrame, [](nsIFrame* aFrame) {
       aFrame->SetMayHaveTransformAnimation();
     });
   }
