@@ -46,8 +46,6 @@ class MOZ_STACK_CLASS AutoRecordDecoderTelemetry final {
 Decoder::Decoder(RasterImage* aImage)
     : mImageData(nullptr),
       mImageDataLength(0),
-      mColormap(nullptr),
-      mColormapSize(0),
       mImage(aImage),
       mFrameRecycler(nullptr),
       mProgress(NoProgress),
@@ -253,20 +251,16 @@ DecoderTelemetry Decoder::Telemetry() const {
 }
 
 nsresult Decoder::AllocateFrame(const gfx::IntSize& aOutputSize,
-                                const gfx::IntRect& aFrameRect,
                                 gfx::SurfaceFormat aFormat,
-                                uint8_t aPaletteDepth,
                                 const Maybe<AnimationParams>& aAnimParams) {
-  mCurrentFrame =
-      AllocateFrameInternal(aOutputSize, aFrameRect, aFormat, aPaletteDepth,
-                            aAnimParams, std::move(mCurrentFrame));
+  mCurrentFrame = AllocateFrameInternal(aOutputSize, aFormat, aAnimParams,
+                                        std::move(mCurrentFrame));
 
   if (mCurrentFrame) {
     mHasFrameToTake = true;
 
     // Gather the raw pointers the decoders will use.
     mCurrentFrame->GetImageData(&mImageData, &mImageDataLength);
-    mCurrentFrame->GetPaletteData(&mColormap, &mColormapSize);
 
     // We should now be on |aFrameNum|. (Note that we're comparing the frame
     // number, which is zero-based, with the frame count, which is one-based.)
@@ -284,8 +278,7 @@ nsresult Decoder::AllocateFrame(const gfx::IntSize& aOutputSize,
 }
 
 RawAccessFrameRef Decoder::AllocateFrameInternal(
-    const gfx::IntSize& aOutputSize, const gfx::IntRect& aFrameRect,
-    SurfaceFormat aFormat, uint8_t aPaletteDepth,
+    const gfx::IntSize& aOutputSize, SurfaceFormat aFormat,
     const Maybe<AnimationParams>& aAnimParams,
     RawAccessFrameRef&& aPreviousFrame) {
   if (HasError()) {
@@ -298,8 +291,7 @@ RawAccessFrameRef Decoder::AllocateFrameInternal(
     return RawAccessFrameRef();
   }
 
-  if (aOutputSize.width <= 0 || aOutputSize.height <= 0 ||
-      aFrameRect.Width() <= 0 || aFrameRect.Height() <= 0) {
+  if (aOutputSize.width <= 0 || aOutputSize.height <= 0) {
     NS_WARNING("Trying to add frame with zero or negative size");
     return RawAccessFrameRef();
   }
@@ -310,23 +302,21 @@ RawAccessFrameRef Decoder::AllocateFrameInternal(
   }
 
   if (frameNum > 0) {
-    if (ShouldBlendAnimation()) {
-      if (aPreviousFrame->GetDisposalMethod() !=
-          DisposalMethod::RESTORE_PREVIOUS) {
-        // If the new restore frame is the direct previous frame, then we know
-        // the dirty rect is composed only of the current frame's blend rect and
-        // the restore frame's clear rect (if applicable) which are handled in
-        // filters.
-        mRestoreFrame = std::move(aPreviousFrame);
-        mRestoreDirtyRect.SetBox(0, 0, 0, 0);
-      } else {
-        // We only need the previous frame's dirty rect, because while there may
-        // have been several frames between us and mRestoreFrame, the only areas
-        // that changed are the restore frame's clear rect, the current frame
-        // blending rect, and the previous frame's blending rect. All else is
-        // forgotten due to us restoring the same frame again.
-        mRestoreDirtyRect = aPreviousFrame->GetBoundedBlendRect();
-      }
+    if (aPreviousFrame->GetDisposalMethod() !=
+        DisposalMethod::RESTORE_PREVIOUS) {
+      // If the new restore frame is the direct previous frame, then we know
+      // the dirty rect is composed only of the current frame's blend rect and
+      // the restore frame's clear rect (if applicable) which are handled in
+      // filters.
+      mRestoreFrame = std::move(aPreviousFrame);
+      mRestoreDirtyRect.SetBox(0, 0, 0, 0);
+    } else {
+      // We only need the previous frame's dirty rect, because while there may
+      // have been several frames between us and mRestoreFrame, the only areas
+      // that changed are the restore frame's clear rect, the current frame
+      // blending rect, and the previous frame's blending rect. All else is
+      // forgotten due to us restoring the same frame again.
+      mRestoreDirtyRect = aPreviousFrame->GetBoundedBlendRect();
     }
   }
 
@@ -337,10 +327,7 @@ RawAccessFrameRef Decoder::AllocateFrameInternal(
   // memory footprint, then the recycler will allow us to reuse the buffers.
   // Each frame should be the same size and have mostly the same properties.
   if (mFrameRecycler) {
-    MOZ_ASSERT(ShouldBlendAnimation());
-    MOZ_ASSERT(aPaletteDepth == 0);
     MOZ_ASSERT(aAnimParams);
-    MOZ_ASSERT(aFrameRect.IsEqualEdges(IntRect(IntPoint(0, 0), aOutputSize)));
 
     ref = mFrameRecycler->RecycleFrame(mRecycleRect);
     if (ref) {
@@ -368,9 +355,8 @@ RawAccessFrameRef Decoder::AllocateFrameInternal(
 
     bool nonPremult = bool(mSurfaceFlags & SurfaceFlags::NO_PREMULTIPLY_ALPHA);
     auto frame = MakeNotNull<RefPtr<imgFrame>>();
-    if (NS_FAILED(frame->InitForDecoder(
-            aOutputSize, aFrameRect, aFormat, aPaletteDepth, nonPremult,
-            aAnimParams, ShouldBlendAnimation(), bool(mFrameRecycler)))) {
+    if (NS_FAILED(frame->InitForDecoder(aOutputSize, aFormat, nonPremult,
+                                        aAnimParams, bool(mFrameRecycler)))) {
       NS_WARNING("imgFrame::Init should succeed");
       return RawAccessFrameRef();
     }

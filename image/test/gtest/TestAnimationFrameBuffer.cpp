@@ -18,9 +18,8 @@ static already_AddRefed<imgFrame> CreateEmptyFrame(
   AnimationParams animParams{aFrameRect, FrameTimeout::Forever(),
                              /* aFrameNum */ 1, BlendMethod::OVER,
                              DisposalMethod::NOT_SPECIFIED};
-  nsresult rv = frame->InitForDecoder(aSize, IntRect(IntPoint(0, 0), aSize),
-                                      SurfaceFormat::B8G8R8A8, 0, false,
-                                      Some(animParams), true, aCanRecycle);
+  nsresult rv = frame->InitForDecoder(aSize, SurfaceFormat::B8G8R8A8, false,
+                                      Some(animParams), aCanRecycle);
   EXPECT_TRUE(NS_SUCCEEDED(rv));
   RawAccessFrameRef frameRef = frame->RawAccessRef();
   frame->SetRawAccessOnly();

@@ -7548,6 +7548,8 @@ bool GCRuntime::shouldRepeatForDeadZone(JS::GCReason reason) {
 
 void GCRuntime::collect(bool nonincrementalByAPI, SliceBudget budget,
                         JS::GCReason reason) {
+  MOZ_ASSERT(reason != JS::GCReason::NO_REASON);
+
   // Checks run for each request, even if we do not actually GC.
   checkCanCallAPI();
 

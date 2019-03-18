@@ -158,7 +158,7 @@ def make_task_worker(config, jobs):
         # Works with Firefox/Devedition. Commented for migration.
         if should_use_artifact_map(platform, config.params['project']):
             upstream_artifacts = generate_beetmover_upstream_artifacts(
-                job, platform=None, locale=None
+                config, job, platform=None, locale=None
             )
         else:
             upstream_artifacts = generate_upstream_artifacts(

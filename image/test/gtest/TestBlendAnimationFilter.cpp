@@ -22,7 +22,7 @@ using namespace mozilla::image;
 static already_AddRefed<Decoder> CreateTrivialBlendingDecoder() {
   gfxPrefs::GetSingleton();
   DecoderType decoderType = DecoderFactory::GetDecoderType("image/gif");
-  DecoderFlags decoderFlags = DecoderFlags::BLEND_ANIMATION;
+  DecoderFlags decoderFlags = DefaultDecoderFlags();
   SurfaceFlags surfaceFlags = DefaultSurfaceFlags();
   auto sourceBuffer = MakeNotNull<RefPtr<SourceBuffer>>();
   return DecoderFactory::CreateAnonymousDecoder(

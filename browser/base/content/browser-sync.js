@@ -16,6 +16,8 @@ ChromeUtils.defineModuleGetter(this, "Weave",
 
 const MIN_STATUS_ANIMATION_DURATION = 1600;
 
+const FXA_NO_AVATAR_ZEROS = "00000000000000000000000000000000";
+
 var gSync = {
   _initialized: false,
   // The last sync start time. Used to calculate the leftover animation time
@@ -98,7 +100,7 @@ var gSync = {
         "identity.fxaccounts.enabled");
   },
 
-  _maybeUpdateUIState() {
+  maybeUpdateUIState() {
     // Update the UI.
     if (UIState.isReady()) {
       const state = UIState.get();
@@ -143,7 +145,7 @@ var gSync = {
 
     this._generateNodeGetters();
 
-    this._maybeUpdateUIState();
+    this.maybeUpdateUIState();
 
     EnsureFxAccountsWebChannel();
 
@@ -191,6 +193,151 @@ var gSync = {
     this.updateState(state);
     this.updateSyncButtonsTooltip(state);
     this.updateSyncStatus(state);
+    this.updateFxAToolbarPanel(state);
+  },
+
+  updateSendToDeviceTitle() {
+    let string = gBrowserBundle.GetStringFromName("sendTabsToDevice.label");
+    let title = PluralForm.get(1, string).replace("#1", 1);
+    if (gBrowser.selectedTab.multiselected) {
+      let tabCount = gBrowser.selectedTabs.length;
+      title = PluralForm.get(tabCount, string).replace("#1", tabCount);
+    }
+
+    document.getElementById("PanelUI-fxa-menu-sendtab-button").setAttribute("label", title);
+  },
+
+  showSendToDeviceView(anchor) {
+    PanelUI.showSubView("PanelUI-sendTabToDevice", anchor);
+    let panelViewNode = document.getElementById("PanelUI-sendTabToDevice");
+    this.populateSendTabToDevicesView(panelViewNode, this.populateSendTabToDevicesView);
+  },
+
+  populateSendTabToDevicesView(panelViewNode, reloadFunc) {
+    let bodyNode = panelViewNode.querySelector(".panel-subview-body");
+    let panelNode = panelViewNode.closest("panel");
+    let browser = gBrowser.selectedBrowser;
+    let url = browser.currentURI.spec;
+    let title = browser.contentTitle;
+    let multiselected = gBrowser.selectedTab.multiselected;
+
+    // This is on top because it also clears the device list between state
+    // changes.
+    this.populateSendTabToDevicesMenu(bodyNode, url, title, multiselected, (clientId, name, clientType, lastModified) => {
+      if (!name) {
+        return document.createXULElement("toolbarseparator");
+      }
+      let item = document.createXULElement("toolbarbutton");
+      item.classList.add("pageAction-sendToDevice-device", "subviewbutton");
+      if (clientId) {
+        item.classList.add("subviewbutton-iconic");
+        if (lastModified) {
+          item.setAttribute("tooltiptext", gSync.formatLastSyncDate(lastModified));
+        }
+      }
+
+      item.addEventListener("command", event => {
+        if (panelNode) {
+          PanelMultiView.hidePopup(panelNode);
+        }
+        // There are items in the subview that don't represent devices: "Sign
+        // in", "Learn about Sync", etc.  Device items will be .sendtab-target.
+        if (event.target.classList.contains("sendtab-target")) {
+          let action = PageActions.actionForID("sendToDevice");
+          let messageId = gSync.offline && "sendToDeviceOffline";
+          showBrowserPageActionFeedback(action, event, messageId);
+        }
+      });
+      return item;
+    });
+
+    bodyNode.removeAttribute("state");
+    // In the first ~10 sec after startup, Sync may not be loaded and the list
+    // of devices will be empty.
+    if (gSync.sendTabConfiguredAndLoading) {
+      bodyNode.setAttribute("state", "notready");
+      // Force a background Sync
+      Services.tm.dispatchToMainThread(async () => {
+        await Weave.Service.sync({why: "pageactions", engines: []}); // [] = clients engine only
+        // There's no way Sync is still syncing at this point, but we check
+        // anyway to avoid infinite looping.
+        if (!window.closed && !gSync.sendTabConfiguredAndLoading) {
+          reloadFunc(panelViewNode);
+        }
+      });
+    }
+  },
+
+  toggleAccountPanel(viewId, aEvent) {
+    // Don't show the panel if the window is in customization mode.
+    if (document.documentElement.hasAttribute("customizing")) {
+      return;
+    }
+
+    if ((aEvent.type == "mousedown" && aEvent.button != 0) ||
+        (aEvent.type == "keypress" && aEvent.charCode != KeyEvent.DOM_VK_SPACE &&
+        aEvent.keyCode != KeyEvent.DOM_VK_RETURN)) {
+      return;
+    }
+
+    if (!gFxaToolbarAccessed) {
+      Services.prefs.setBoolPref("identity.fxaccounts.toolbar.accessed", true);
+      document.documentElement.removeAttribute("fxa_avatar_badged");
+    }
+
+    const anchor = document.getElementById("fxa-toolbar-menu-button");
+    if (anchor.getAttribute("open") == "true") {
+      PanelUI.hide();
+    } else {
+      PanelUI.showSubView(viewId, anchor);
+    }
+  },
+
+  updateFxAToolbarPanel(state = {}) {
+    if (!gFxaToolbarEnabled) {
+      return;
+    }
+
+    const mainWindowEl = document.documentElement;
+
+    // The Firefox Account toolbar currently handles 3 different states for
+    // users. The default `not_configured state shows an empty avatar, `unverified`
+    // state shows an avatar with an email icon and the `verified` state will show
+    // the users custom profile image or a filled avatar.
+    let stateValue = "not_configured";
+    if (state.status === UIState.STATUS_LOGIN_FAILED || state.status === UIState.STATUS_NOT_VERIFIED) {
+      stateValue = "unverified";
+    } else if (state.status === UIState.STATUS_SIGNED_IN) {
+      stateValue = "signedin";
+      // Firefox Account specifies a `default` avatar image that uses the convention
+      // of all 0s in url. The default used in the design of the toolbar menu is
+      // different from the one provided by Firefox Account. Perform a check and only
+      // change avatar *if* this is not a default avatar.
+      if (state.avatarURL && !state.avatarURL.includes(FXA_NO_AVATAR_ZEROS)) {
+        // The user has specified a custom avatar, attempt to load the image on all the menu buttons.
+        const bgImage = `url("${state.avatarURL}")`;
+        let img = new Image();
+        img.onload = () => {
+          // If the image has successfully loaded, update the menu buttons else
+          // we will use the default avatar image.
+          mainWindowEl.style.setProperty("--avatar-image-url", bgImage);
+        };
+        img.onerror = () => {
+          // If the image failed to load, remove the property and default
+          // to standard avatar.
+          mainWindowEl.style.removeProperty("--avatar-image-url");
+        };
+        img.src = state.avatarURL;
+      } else {
+        mainWindowEl.style.removeProperty("--avatar-image-url");
+      }
+
+      document.getElementById("fxa-menu-email").value = state.email;
+
+      let defaultPanelTitle = this.fxaStrings.GetStringFromName("account.title");
+      document.getElementById("PanelUI-fxa").setAttribute("title", state.displayName ? state.displayName : defaultPanelTitle);
+    }
+    mainWindowEl.setAttribute("fxastatus", stateValue);
   },
 
   updatePanelPopup(state) {
@@ -314,6 +461,21 @@ var gSync = {
   openSendToDevicePromo() {
     let url = this.PRODUCT_INFO_BASE_URL;
     url += "send-tabs/?utm_source=" + Services.appinfo.name.toLowerCase();
+    switchToTabHavingURI(url, true, { replaceQueryString: true });
+  },
+
+  async openFxAChangeAvatar(entryPoint) {
+    const url = await FxAccounts.config.promiseChangeAvatarURI(entryPoint);
+    switchToTabHavingURI(url, true, { replaceQueryString: true });
+  },
+
+  async openFxAEmailFirstPage(entryPoint) {
+    const url = await FxAccounts.config.promiseEmailFirstURI(entryPoint);
+    switchToTabHavingURI(url, true, { replaceQueryString: true });
+  },
+
+  async openFxAManagePage(entryPoint) {
+    const url = await FxAccounts.config.promiseManageURI(entryPoint);
     switchToTabHavingURI(url, true, { replaceQueryString: true });
   },
 
@@ -594,28 +756,40 @@ var gSync = {
     this._syncStartTime = Date.now();
 
     let label = this.syncStrings.GetStringFromName("syncingtabs.label");
-    let syncIcon = document.getElementById("appMenu-fxa-icon");
-    let syncNow = document.getElementById("PanelUI-remotetabs-syncnow");
-    syncIcon.setAttribute("syncstatus", "active");
-    syncIcon.setAttribute("label", label);
-    syncIcon.setAttribute("disabled", "true");
-    syncNow.setAttribute("syncstatus", "active");
-    syncNow.setAttribute("label", label);
-    syncNow.setAttribute("disabled", "true");
+    let remotetabsSyncNowEl = document.getElementById("PanelUI-remotetabs-syncnow");
+    let fxaMenuSyncNowEl = document.getElementById("PanelUI-fxa-menu-syncnow-button");
+    let syncElements = [
+      document.getElementById("appMenu-fxa-icon"),
+      remotetabsSyncNowEl,
+      fxaMenuSyncNowEl,
+    ];
+
+    syncElements.forEach((el) => {
+      el.setAttribute("syncstatus", "active");
+      el.setAttribute("disabled", "true");
+    });
+
+    remotetabsSyncNowEl.setAttribute("label", label);
+    fxaMenuSyncNowEl.setAttribute("label", fxaMenuSyncNowEl.getAttribute("syncinglabel"));
   },
 
   _onActivityStop() {
     if (!gBrowser)
       return;
+
     let label = this.syncStrings.GetStringFromName("syncnow.label");
-    let syncIcon = document.getElementById("appMenu-fxa-icon");
-    let syncNow = document.getElementById("PanelUI-remotetabs-syncnow");
-    syncIcon.removeAttribute("syncstatus");
-    syncIcon.removeAttribute("disabled");
-    syncIcon.setAttribute("label", label);
-    syncNow.removeAttribute("syncstatus");
-    syncNow.removeAttribute("disabled");
-    syncNow.setAttribute("label", label);
+    let syncElements = [
+      document.getElementById("appMenu-fxa-icon"),
+      document.getElementById("PanelUI-remotetabs-syncnow"),
+      document.getElementById("PanelUI-fxa-menu-syncnow-button"),
+    ];
+
+    syncElements.forEach((el) => {
+      el.removeAttribute("syncstatus");
+      el.removeAttribute("disabled");
+      el.setAttribute("label", label);
+    });
+
     Services.obs.notifyObservers(null, "test:browser-sync:activity-stop");
   },
 
