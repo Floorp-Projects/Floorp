@@ -84,7 +84,6 @@ function setupAdvancedButton() {
 
   // Register click handler for the weakCryptoAdvancedPanel
   document.getElementById("advancedButton").addEventListener("click", togglePanelVisibility);
-  document.getElementById("moreInformationButton").addEventListener("click", togglePanelVisibility);
 
   function togglePanelVisibility() {
     toggleDisplay(panel);
