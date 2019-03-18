@@ -171,6 +171,7 @@ void moz_container_init(MozContainer *container) {
   container->subsurface = nullptr;
   container->eglwindow = nullptr;
   container->frame_callback_handler = nullptr;
+  container->frame_callback_handler_surface_id = -1;
   // We can draw to x11 window any time.
   container->ready_to_draw = GDK_IS_X11_DISPLAY(gdk_display_get_default());
   container->surface_needs_clear = true;
@@ -181,6 +182,11 @@ void moz_container_init(MozContainer *container) {
 }
 
 #if defined(MOZ_WAYLAND)
+void moz_container_set_initial_draw_callback(
+    MozContainer *container, std::function<void(void)> inital_draw_cb) {
+  container->inital_draw_cb = inital_draw_cb;
+}
+
 static wl_surface *moz_container_get_gtk_container_surface(
     MozContainer *container) {
   static auto sGdkWaylandWindowGetWlSurface = (wl_surface * (*)(GdkWindow *))
@@ -189,8 +195,9 @@ static wl_surface *moz_container_get_gtk_container_surface(
   GdkWindow *window = gtk_widget_get_window(GTK_WIDGET(container));
   wl_surface *surface = sGdkWaylandWindowGetWlSurface(window);
 
-  LOG(("%s [%p] wl_surface %p\n", __FUNCTION__, (void *)container,
-       (void *)surface));
+  LOG(("%s [%p] wl_surface %p ID %d\n", __FUNCTION__, (void *)container,
+       (void *)surface,
+       surface ? wl_proxy_get_id((struct wl_proxy *)surface) : -1));
 
   return surface;
 }
@@ -200,14 +207,14 @@ static void frame_callback_handler(void *data, struct wl_callback *callback,
   MozContainer *container = MOZ_CONTAINER(data);
 
   LOG(
-      ("%s [%p] frame_callback_handler %p "
-       "ready_to_draw %d (set to true) "
+      ("%s [%p] frame_callback_handler %p ready_to_draw %d (set to true) "
        "inital_draw callback %d\n",
        __FUNCTION__, (void *)container,
        (void *)container->frame_callback_handler, container->ready_to_draw,
        container->inital_draw_cb ? 1 : 0));
 
   g_clear_pointer(&container->frame_callback_handler, wl_callback_destroy);
+  container->frame_callback_handler_surface_id = -1;
 
   if (!container->ready_to_draw && container->inital_draw_cb) {
     container->inital_draw_cb();
@@ -215,43 +222,57 @@ static void frame_callback_handler(void *data, struct wl_callback *callback,
   container->ready_to_draw = true;
 }
 
-void moz_container_set_initial_draw_callback(
-    MozContainer *container, std::function<void(void)> inital_draw_cb) {
-  container->inital_draw_cb = inital_draw_cb;
-}
-
 static const struct wl_callback_listener frame_listener = {
     frame_callback_handler};
+
+static void moz_container_request_parent_frame_callback(
+    MozContainer *container) {
+  wl_surface *gtk_container_surface =
+      moz_container_get_gtk_container_surface(container);
+  int gtk_container_surface_id =
+      gtk_container_surface
+          ? wl_proxy_get_id((struct wl_proxy *)gtk_container_surface)
+          : -1;
+
+  LOG(
+      ("%s [%p] frame_callback_handler %p "
+       "frame_callback_handler_surface_id %d\n",
+       __FUNCTION__, (void *)container, container->frame_callback_handler,
+       container->frame_callback_handler_surface_id));
+
+  if (container->frame_callback_handler &&
+      container->frame_callback_handler_surface_id ==
+          gtk_container_surface_id) {
+    return;
+  }
+
+  // If there's pending frame callback, delete it.
+  if (container->frame_callback_handler) {
+    g_clear_pointer(&container->frame_callback_handler, wl_callback_destroy);
+  }
+
+  if (gtk_container_surface) {
+    container->frame_callback_handler_surface_id = gtk_container_surface_id;
+    container->frame_callback_handler = wl_surface_frame(gtk_container_surface);
+    wl_callback_add_listener(container->frame_callback_handler, &frame_listener,
+                             container);
+  } else {
+    container->frame_callback_handler_surface_id = -1;
+  }
+}
 
 static gboolean moz_container_map_wayland(GtkWidget *widget,
                                           GdkEventAny *event) {
   MozContainer *container = MOZ_CONTAINER(widget);
 
-  LOG(
-      ("%s begin [%p] ready_to_draw %d "
-       "frame_callback_handler %p\n",
-       __FUNCTION__, (void *)container, container->ready_to_draw,
-       (void *)container->frame_callback_handler));
+  LOG(("%s begin [%p] ready_to_draw %d\n", __FUNCTION__, (void *)container,
+       container->ready_to_draw));
 
-  if (container->ready_to_draw || container->frame_callback_handler) {
+  if (container->ready_to_draw) {
     return FALSE;
   }
 
-  wl_surface *gtk_container_surface =
-      moz_container_get_gtk_container_surface(container);
-
-  if (gtk_container_surface) {
-    container->frame_callback_handler = wl_surface_frame(gtk_container_surface);
-    wl_callback_add_listener(container->frame_callback_handler, &frame_listener,
-                             container);
-  }
-
-  LOG(
-      ("%s end [%p] gtk_container_surface %p "
-       "frame_callback_handler %p\n",
-       __FUNCTION__, (void *)container, (void *)gtk_container_surface,
-       (void *)container->frame_callback_handler));
-
+  moz_container_request_parent_frame_callback(MOZ_CONTAINER(widget));
   return FALSE;
 }
 
@@ -260,6 +281,7 @@ static void moz_container_unmap_wayland(MozContainer *container) {
   g_clear_pointer(&container->subsurface, wl_subsurface_destroy);
   g_clear_pointer(&container->surface, wl_surface_destroy);
   g_clear_pointer(&container->frame_callback_handler, wl_callback_destroy);
+  container->frame_callback_handler_surface_id = -1;
 
   container->surface_needs_clear = true;
   container->ready_to_draw = false;
@@ -377,6 +399,10 @@ void moz_container_realize(GtkWidget *widget) {
             : gtk_widget_get_visual(widget);
 
     window = gdk_window_new(parent, &attributes, attributes_mask);
+
+    LOG(("moz_container_realize() [%p] GdkWindow %p\n", (void *)container,
+         (void *)window));
+
     gdk_window_set_user_data(window, widget);
   } else {
     window = parent;
@@ -545,6 +571,7 @@ struct wl_surface *moz_container_get_wl_surface(MozContainer *container) {
 
   if (!container->surface) {
     if (!container->ready_to_draw) {
+      moz_container_request_parent_frame_callback(container);
       return nullptr;
     }
     GdkDisplay *display = gtk_widget_get_display(GTK_WIDGET(container));
