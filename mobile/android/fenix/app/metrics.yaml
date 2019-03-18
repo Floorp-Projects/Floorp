@@ -8,9 +8,22 @@ events:
   app_opened:
     type: event
     description: >
-      A User opened the app
+      A user opened the app
     extra_keys:
       source: "The source from which the app was opened"
+    bugs:
+    - 123456789
+    data_reviews:
+    - N/A
+    notification_emails:
+    - telemetry-client-dev@mozilla.com
+    expires: never
+  search_bar_tapped:
+    type: event
+    description: >
+      A user tapped the search bar
+    extra_keys:
+      source: "The source from which the search bar was tapped"
     bugs:
     - 123456789
     data_reviews:

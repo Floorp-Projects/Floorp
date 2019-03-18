@@ -11,7 +11,7 @@ import com.leanplum.annotations.Parser
 import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.utils.Settings
 
-private val Event.name: String
+private val Event.name: String?
     get() = when (this) {
     is Event.AddBookmark -> "E_Add_Bookmark"
     is Event.RemoveBookmark -> "E_Remove_Bookmark"
@@ -44,6 +44,9 @@ private val Event.name: String
     is Event.UserDownloadedSend -> "E_User_Downloaded_Send"
     is Event.OpenedPocketStory -> "E_Opened_Pocket_Story"
     is Event.DarkModeEnabled -> "E_Dark_Mode_Enabled"
+
+    // Do not track these events in Leanplum
+    is Event.SearchBarTapped -> ""
 }
 
 class LeanplumMetricsService(private val application: Application) : MetricsService {
@@ -84,12 +87,14 @@ class LeanplumMetricsService(private val application: Application) : MetricsServ
     }
 
     override fun track(event: Event) {
-        Leanplum.track(event.name, event.extras)
+        event.name?.also {
+            Leanplum.track(it, event.extras)
+        }
     }
 
     override fun shouldTrack(event: Event): Boolean {
         return Settings.getInstance(application).isTelemetryEnabled &&
-                token.type != Token.Type.Invalid
+                token.type != Token.Type.Invalid && !event.name.isNullOrEmpty()
     }
 
     companion object {

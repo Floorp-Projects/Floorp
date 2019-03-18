@@ -12,6 +12,13 @@ import org.mozilla.fenix.utils.Settings
 import org.mozilla.fenix.debug.GleanMetrics.Metrics
 import org.mozilla.fenix.debug.GleanMetrics.Events
 
+private val Event.metricType: EventMetricType?
+    get() = when(this) {
+        is Event.OpenedApp -> Events.appOpened
+        is Event.SearchBarTapped -> Events.searchBarTapped
+        else -> null
+    }
+
 class GleanMetricsService(private val context: Context) : MetricsService {
     override fun start() {
         Glean.initialize(context)
@@ -22,17 +29,12 @@ class GleanMetricsService(private val context: Context) : MetricsService {
         }
     }
 
-    private fun mapEventToGlean(event: Event): EventMetricType? = when(event) {
-        is Event.OpenedApp -> Events.appOpened
-        else -> null
-    }
-
     override fun track(event: Event) {
-        mapEventToGlean(event)?.record(event.extras)
+        event.metricType?.record(event.extras)
     }
 
     override fun shouldTrack(event: Event): Boolean {
-        return Settings.getInstance(context).isTelemetryEnabled
+        return Settings.getInstance(context).isTelemetryEnabled && event.metricType != null
     }
 
     companion object {

@@ -65,7 +65,7 @@ open class HomeActivity : AppCompatActivity() {
         val safeIntent = intent?.let { SafeIntent(it) }
 
         if (safeIntent?.isLauncherIntent == true) {
-            val source = if (isCustomTab) Event.OpenedAppSource.CUSTOM_TAB else Event.OpenedAppSource.APP_ICON
+            val source = if (isCustomTab) Event.OpenedApp.Source.CUSTOM_TAB else Event.OpenedApp.Source.APP_ICON
             components.analytics.metrics.track(Event.OpenedApp(source))
         }
 

@@ -42,6 +42,7 @@ import org.mozilla.fenix.IntentReceiverActivity
 import org.mozilla.fenix.utils.ItsNotBrokenSnack
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FindInPageIntegration
+import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.toolbar.SearchAction
 import org.mozilla.fenix.components.toolbar.SearchState
 import org.mozilla.fenix.components.toolbar.ToolbarComponent
@@ -242,11 +243,16 @@ class BrowserFragment : Fragment(), BackHandler {
         getAutoDisposeObservable<SearchAction>()
             .subscribe {
                 when (it) {
-                    is SearchAction.ToolbarTapped -> Navigation.findNavController(toolbarComponent.getView())
-                        .navigate(
-                            BrowserFragmentDirections.actionBrowserFragmentToSearchFragment(
-                                requireComponents.core.sessionManager.selectedSession?.id)
-                        )
+                    is SearchAction.ToolbarTapped -> {
+                        Navigation
+                            .findNavController(toolbarComponent.getView())
+                            .navigate(
+                                BrowserFragmentDirections.actionBrowserFragmentToSearchFragment(
+                                    requireComponents.core.sessionManager.selectedSession?.id)
+                            )
+
+                        requireComponents.analytics.metrics.track(Event.SearchBarTapped(Event.SearchBarTapped.Source.BROWSER))
+                    }
                     is SearchAction.ToolbarMenuItemTapped -> handleToolbarItemInteraction(it)
                 }
             }

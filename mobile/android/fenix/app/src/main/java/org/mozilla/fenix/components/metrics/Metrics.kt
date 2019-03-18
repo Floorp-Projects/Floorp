@@ -10,10 +10,9 @@ sealed class Event {
     object RemoveBookmark : Event()
     object OpenedBookmark : Event()
 
-    enum class OpenedAppSource {
-        APP_ICON, CUSTOM_TAB
-    }
-    data class OpenedApp(val source: OpenedAppSource) : Event() {
+
+    data class OpenedApp(val source: Source) : Event() {
+        enum class Source { APP_ICON, CUSTOM_TAB }
         override val extras: Map<String, String>?
             get() = hashMapOf("source" to source.name)
     }
@@ -45,6 +44,13 @@ sealed class Event {
     object UserDownloadedSend : Event()
     object OpenedPocketStory : Event()
     object DarkModeEnabled : Event()
+
+    // Interaction Events
+    data class SearchBarTapped(val source: Source) : Event() {
+        enum class Source { HOME, BROWSER }
+        override val extras: Map<String, String>?
+            get() = mapOf("source" to source.name)
+    }
 
     open val extras: Map<String, String>?
         get() = null
