@@ -496,10 +496,9 @@ function prompt(aBrowser, aRequest) {
       let doc = this.browser.ownerDocument;
 
       // Clean-up video streams of screensharing previews.
-      if ((aTopic == "dismissed" || aTopic == "removed") &&
-          requestTypes.includes("Screen")) {
+      if (((aTopic == "dismissed" || aTopic == "removed") &&
+          requestTypes.includes("Screen")) || !(requestTypes.includes("Screen"))) {
         let video = doc.getElementById("webRTC-previewVideo");
-        video.deviceId = undefined;
         if (video.stream) {
           video.stream.getTracks().forEach(t => t.stop());
           video.stream = null;
