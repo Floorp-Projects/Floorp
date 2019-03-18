@@ -423,7 +423,8 @@ const ExpectComparisonTo = {
                                    pseudo) {
     // Check input
     // FIXME: Auto generate this array.
-    const omtaProperties = [ "transform", "opacity", "background-color" ];
+    const omtaProperties = [ "transform", "translate", "rotate", "scale",
+                             "opacity", "background-color" ];
     if (!omtaProperties.includes(property)) {
       ok(false, property + " is not an OMTA property");
       return;
@@ -433,6 +434,9 @@ const ExpectComparisonTo = {
     var normalizedToString = JSON.stringify;
     switch (property) {
       case "transform":
+      case "translate":
+      case "rotate":
+      case "scale":
         normalize = convertTo3dMatrix;
         compare = matricesRoughlyEqual;
         normalizedToString = convert3dMatrixToString;
@@ -442,9 +446,17 @@ const ExpectComparisonTo = {
         compare = function(a, b, error) { return Math.abs(a - b) <= error; };
         break;
       default:
-        normalize = function(value) { return value; };
+        normalize = value => value;
         compare = function(a, b, error) { return a == b; };
         break;
+    }
+
+    if (!!expected.compositorValue) {
+      const originalNormalize = normalize;
+      normalize = value =>
+        !!value.compositorValue
+          ? originalNormalize(value.compositorValue)
+          : originalNormalize(value);
     }
 
     // Get actual values
@@ -507,9 +519,40 @@ const ExpectComparisonTo = {
              desc + " - got " + actualStr + ", expected " +
              normalizedToString(expectedValue));
 
-    // For compositor animations do an additional check that they match
-    // the value calculated on the main thread
-    if (actualStr === compositorStr) {
+    // For transform-like properties, if we have multiple transform-like
+    // properties, the OMTA value and getComputedStyle() must be different,
+    // so use this flag to skip the following tests.
+    // FIXME: Putting this property on the expected value is a little bit odd.
+    // It's not really a product of the expected value, but rather the kind of
+    // test we're running. That said, the omta_is, omta_todo_is etc. methods are
+    // already pretty complex and adding another parameter would probably
+    // complicate things too much so this is fine for now. If we extend these
+    // functions any more, though, we should probably reconsider this API.
+    if (expected.usesMultipleProperties) {
+      return;
+    }
+
+    if (typeof expected.computed !== 'undefined') {
+      // For some tests we specify a separate computed value for comparing
+      // with getComputedStyle.
+      //
+      // In particular, we do this for the individual transform functions since
+      // the form returned from getComputedStyle() reflects the individual
+      // properties (e.g. 'translate: 100px') while the form we read back from
+      // the compositor represents the combined result of all the transform
+      // properties as a single transform matrix (e.g. [0, 0, 0, 0, 100, 0]).
+      //
+      // Despite the fact that we can't directly compare the OMTA value against
+      // the getComputedStyle value in this case, it is still worth checking the
+      // result of getComputedStyle since it will help to alert us if some
+      // discrepancy arises between the way we calculate values on the main
+      // thread and compositor.
+      okOrTodo(computedStr == expected.computed,
+               desc + ": Computed style should be equal to " +
+               expected.computed);
+    } else if (actualStr === compositorStr) {
+      // For compositor animations do an additional check that they match
+      // the value calculated on the main thread
       var computedValue = normalize(computedStr);
       if (computedValue === null) {
         ok(false, desc + ": test framework should parse computed style" +
