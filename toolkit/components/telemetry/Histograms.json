@@ -11460,6 +11460,34 @@
     "alert_emails": ["pdol@mozilla.com", "safebrowsing-telemetry@mozilla.org"],
     "bug_numbers": [1200944]
   },
+  "FINGERPRINTERS_BLOCKED_COUNT": {
+    "record_in_processes": ["main"],
+    "expires_in_version": "never",
+    "releaseChannelCollection": "opt-out",
+    "kind": "categorical",
+    "labels": [
+      "pageLoad",
+      "blocked",
+      "allowed"
+    ],
+    "description": "A count of the status of fingerprinter blocking per top level page load. ('pageLoad' = There was a page load, 'blocked' = at least one fingerprinter was blocked, 'allowed' = at least one fingerprinter was detected and allowed.) Note, pageLoad is used as a baseline measurement.",
+    "alert_emails": ["aedelstein@mozilla.com", "seceng-telemetry@mozilla.com"],
+    "bug_numbers": [1522919]
+  },
+  "CRYPTOMINERS_BLOCKED_COUNT": {
+    "record_in_processes": ["main"],
+    "expires_in_version": "never",
+    "releaseChannelCollection": "opt-out",
+    "kind": "categorical",
+    "labels": [
+      "pageLoad",
+      "blocked",
+      "allowed"
+    ],
+    "description": "A count of the status of cryptominer blocking per top level page load. ('pageLoad' = There was a page load, 'blocked' = at least one cryptominer was blocked, 'allowed' = at least one cryptominer was detected and allowed.) Note, pageLoad is used as a baseline measurement.",
+    "alert_emails": ["aedelstein@mozilla.com", "seceng-telemetry@mozilla.com"],
+    "bug_numbers": [1522919]
+  },
   "FENNEC_TRACKING_PROTECTION_STATE": {
     "record_in_processes": ["main", "content"],
     "expires_in_version": "never",
