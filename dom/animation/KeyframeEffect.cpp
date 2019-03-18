@@ -258,23 +258,36 @@ const AnimationProperty* KeyframeEffect::GetEffectiveAnimationOfProperty(
 }
 
 bool KeyframeEffect::HasEffectiveAnimationOfPropertySet(
-    const nsCSSPropertyIDSet& aPropertySet, const EffectSet& aEffect) const {
-  bool ret = false;
+    const nsCSSPropertyIDSet& aPropertySet, const EffectSet& aEffectSet) const {
+  // The various transform properties ('transform', 'scale' etc.) get combined
+  // on the compositor.
+  //
+  // As a result, if we have an animation of 'scale' and 'translate', but the
+  // 'translate' property is covered by an !important rule, we will not be
+  // able to combine the result on the compositor since we won't have the
+  // !important rule to incorporate. In that case we should run all the
+  // transform-related animations on the main thread (where we have the
+  // !important rule).
+  //
+  // Bug 1534884: Move this check to ShouldBlockAsyncTransformAnimations (or
+  // similar) and add a performance warning for this case.
+
+  bool result = false;
+
   for (const AnimationProperty& property : mProperties) {
     if (!aPropertySet.HasProperty(property.mProperty)) {
       continue;
     }
 
-    // Only consider the property if it is not overridden by !important rules in
-    // the transitions level. If one of the properties is overridden by
-    // !important rules, we return false. This is especially for transform-like
-    // properties because all of them should be running on the same thread.
-    if (!IsEffectiveProperty(aEffect, property.mProperty)) {
+    if (IsEffectiveProperty(aEffectSet, property.mProperty)) {
+      result = true;
+    } else if (nsCSSPropertyIDSet::TransformLikeProperties().HasProperty(
+                   property.mProperty)) {
       return false;
     }
-    ret = true;
   }
-  return ret;
+
+  return result;
 }
 
 nsCSSPropertyIDSet KeyframeEffect::GetPropertiesForCompositor(
