@@ -182,11 +182,12 @@ void DynamicsCompressor::process(const AudioBlock* sourceChunk,
         m_sourceChannels[1] = m_sourceChannels[0];
 
       break;
+    case 1:
+      m_sourceChannels[0] =
+        static_cast<const float*>(sourceChunk->mChannelData[0]);
+      break;
     default:
-      // FIXME : support other number of channels.
-      NS_WARNING("Support other number of channels");
-      destinationChunk->SetNull(WEBAUDIO_BLOCK_SIZE);
-      return;
+      MOZ_CRASH("not supported.");
   }
 
   for (unsigned i = 0; i < numberOfChannels; ++i)
