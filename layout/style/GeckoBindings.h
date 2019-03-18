@@ -459,7 +459,7 @@ void Gecko_EnsureStyleAnimationArrayLength(void* array, size_t len);
 void Gecko_EnsureStyleTransitionArrayLength(void* array, size_t len);
 void Gecko_ClearWillChange(nsStyleDisplay* display, size_t length);
 void Gecko_AppendWillChange(nsStyleDisplay* display, nsAtom* atom);
-void Gecko_CopyWillChangeFrom(nsStyleDisplay* dest, nsStyleDisplay* src);
+void Gecko_CopyWillChangeFrom(nsStyleDisplay* dest, const nsStyleDisplay* src);
 
 // Searches from the beginning of |keyframes| for a Keyframe object with the
 // specified offset and timing function. If none is found, a new Keyframe object
