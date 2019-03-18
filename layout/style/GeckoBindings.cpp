@@ -1430,7 +1430,8 @@ void Gecko_AppendWillChange(nsStyleDisplay* aDisplay, nsAtom* aAtom) {
   aDisplay->mWillChange.AppendElement(aAtom);
 }
 
-void Gecko_CopyWillChangeFrom(nsStyleDisplay* aDest, nsStyleDisplay* aSrc) {
+void Gecko_CopyWillChangeFrom(nsStyleDisplay* aDest,
+                              const nsStyleDisplay* aSrc) {
   aDest->mWillChange.Clear();
   aDest->mWillChange.AppendElements(aSrc->mWillChange);
 }

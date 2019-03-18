@@ -240,16 +240,6 @@ enum class StyleOrient : uint8_t {
   Vertical,
 };
 
-// See nsStyleDisplay
-//
-// These need to be in sync with WillChangeBits in box.rs.
-#define NS_STYLE_WILL_CHANGE_STACKING_CONTEXT (1 << 0)
-#define NS_STYLE_WILL_CHANGE_TRANSFORM (1 << 1)
-#define NS_STYLE_WILL_CHANGE_SCROLL (1 << 2)
-#define NS_STYLE_WILL_CHANGE_OPACITY (1 << 3)
-#define NS_STYLE_WILL_CHANGE_FIXPOS_CB (1 << 4)
-#define NS_STYLE_WILL_CHANGE_ABSPOS_CB (1 << 5)
-
 // See AnimationEffect.webidl
 // and mozilla/dom/AnimationEffectBinding.h
 namespace dom {
