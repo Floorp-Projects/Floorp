@@ -562,20 +562,6 @@ enum class StyleGridTrackBreadth : uint8_t {
 // Note: make sure that the largest NS_STYLE_TEXT_ALIGN_* value is smaller than
 // the smallest NS_STYLE_VERTICAL_ALIGN_* value below!
 
-// See nsStyleText, nsStyleFont
-#define NS_STYLE_TEXT_DECORATION_LINE_NONE 0
-#define NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE 0x01
-#define NS_STYLE_TEXT_DECORATION_LINE_OVERLINE 0x02
-#define NS_STYLE_TEXT_DECORATION_LINE_LINE_THROUGH 0x04
-#define NS_STYLE_TEXT_DECORATION_LINE_BLINK 0x08
-// OVERRIDE_ALL does not occur in stylesheets; it only comes from HTML
-// attribute mapping (and thus appears in computed data)
-#define NS_STYLE_TEXT_DECORATION_LINE_OVERRIDE_ALL 0x10
-#define NS_STYLE_TEXT_DECORATION_LINE_LINES_MASK \
-  (NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE |     \
-   NS_STYLE_TEXT_DECORATION_LINE_OVERLINE |      \
-   NS_STYLE_TEXT_DECORATION_LINE_LINE_THROUGH)
-
 // See nsStyleText
 #define NS_STYLE_TEXT_DECORATION_STYLE_NONE \
   0  // not in CSS spec, mapped to -moz-none

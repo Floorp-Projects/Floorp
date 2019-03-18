@@ -5279,10 +5279,11 @@ void nsTextFrame::GetTextDecorations(
     }
 
     const nsStyleTextReset* const styleText = context->StyleTextReset();
-    const uint8_t textDecorations = styleText->mTextDecorationLine;
+    const StyleTextDecorationLine textDecorations =
+        styleText->mTextDecorationLine;
 
     if (!useOverride &&
-        (NS_STYLE_TEXT_DECORATION_LINE_OVERRIDE_ALL & textDecorations)) {
+        (StyleTextDecorationLine_COLOR_OVERRIDE & textDecorations)) {
       // This handles the <a href="blah.html"><font color="green">La
       // la la</font></a> case. The link underline should be green.
       useOverride = true;
@@ -5347,12 +5348,12 @@ void nsTextFrame::GetTextDecorations(
       }
 
       bool swapUnderlineAndOverline = vertical && IsUnderlineRight(f);
-      const uint8_t kUnderline = swapUnderlineAndOverline
-                                     ? NS_STYLE_TEXT_DECORATION_LINE_OVERLINE
-                                     : NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE;
-      const uint8_t kOverline = swapUnderlineAndOverline
-                                    ? NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE
-                                    : NS_STYLE_TEXT_DECORATION_LINE_OVERLINE;
+      const auto kUnderline = swapUnderlineAndOverline
+                                  ? StyleTextDecorationLine_OVERLINE
+                                  : StyleTextDecorationLine_UNDERLINE;
+      const auto kOverline = swapUnderlineAndOverline
+                                 ? StyleTextDecorationLine_UNDERLINE
+                                 : StyleTextDecorationLine_OVERLINE;
 
       if (textDecorations & kUnderline) {
         aDecorations.mUnderlines.AppendElement(
@@ -5362,7 +5363,7 @@ void nsTextFrame::GetTextDecorations(
         aDecorations.mOverlines.AppendElement(
             nsTextFrame::LineDecoration(f, baselineOffset, color, style));
       }
-      if (textDecorations & NS_STYLE_TEXT_DECORATION_LINE_LINE_THROUGH) {
+      if (textDecorations & StyleTextDecorationLine_LINE_THROUGH) {
         aDecorations.mStrikes.AppendElement(
             nsTextFrame::LineDecoration(f, baselineOffset, color, style));
       }
@@ -5551,11 +5552,11 @@ void nsTextFrame::UnionAdditionalOverflow(nsPresContext* aPresContext,
     params.sidewaysLeft = mTextRun->IsSidewaysLeft();
 
     params.offset = underlineOffset / appUnitsPerDevUnit;
-    params.decoration = NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE;
+    params.decoration = StyleTextDecorationLine_UNDERLINE;
     nsRect underlineRect =
         nsCSSRendering::GetTextDecorationRect(aPresContext, params);
     params.offset = maxAscent / appUnitsPerDevUnit;
-    params.decoration = NS_STYLE_TEXT_DECORATION_LINE_OVERLINE;
+    params.decoration = StyleTextDecorationLine_OVERLINE;
     nsRect overlineRect =
         nsCSSRendering::GetTextDecorationRect(aPresContext, params);
 
@@ -5638,17 +5639,17 @@ void nsTextFrame::UnionAdditionalOverflow(nsPresContext* aPresContext,
 
       // Below we loop through all text decorations and compute the rectangle
       // containing all of them, in this frame's coordinate space
-      params.decoration = NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE;
+      params.decoration = StyleTextDecorationLine_UNDERLINE;
       for (const LineDecoration& dec : textDecs.mUnderlines) {
         accumulateDecorationRect(dec, &Metrics::underlineSize,
                                  &Metrics::underlineOffset);
       }
-      params.decoration = NS_STYLE_TEXT_DECORATION_LINE_OVERLINE;
+      params.decoration = StyleTextDecorationLine_OVERLINE;
       for (const LineDecoration& dec : textDecs.mOverlines) {
         accumulateDecorationRect(dec, &Metrics::underlineSize,
                                  &Metrics::maxAscent);
       }
-      params.decoration = NS_STYLE_TEXT_DECORATION_LINE_LINE_THROUGH;
+      params.decoration = StyleTextDecorationLine_LINE_THROUGH;
       for (const LineDecoration& dec : textDecs.mStrikes) {
         accumulateDecorationRect(dec, &Metrics::strikeoutSize,
                                  &Metrics::strikeoutOffset);
@@ -5789,14 +5790,14 @@ void nsTextFrame::DrawSelectionDecorations(
     const TextRangeStyle& aRangeStyle, const Point& aPt,
     gfxFloat aICoordInFrame, gfxFloat aWidth, gfxFloat aAscent,
     const gfxFont::Metrics& aFontMetrics, DrawPathCallbacks* aCallbacks,
-    bool aVertical, uint8_t aDecoration) {
+    bool aVertical, StyleTextDecorationLine aDecoration) {
   PaintDecorationLineParams params;
   params.context = aContext;
   params.dirtyRect = aDirtyRect;
   params.pt = aPt;
   params.lineSize.width = aWidth;
   params.ascent = aAscent;
-  params.offset = aDecoration == NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE
+  params.offset = aDecoration == StyleTextDecorationLine_UNDERLINE
                       ? aFontMetrics.underlineOffset
                       : aFontMetrics.maxAscent;
   params.decoration = aDecoration;
@@ -5894,7 +5895,7 @@ void nsTextFrame::DrawSelectionDecorations(
       params.style = NS_STYLE_TEXT_DECORATION_STYLE_SOLID;
       params.lineSize.height = metrics.strikeoutSize;
       params.offset = metrics.strikeoutOffset + 0.5;
-      params.decoration = NS_STYLE_TEXT_DECORATION_LINE_LINE_THROUGH;
+      params.decoration = StyleTextDecorationLine_LINE_THROUGH;
       break;
     }
     default:
@@ -6413,9 +6414,8 @@ void nsTextFrame::PaintTextSelectionDecorations(
   gfxFont* firstFont = aParams.provider->GetFontGroup()->GetFirstValidFont();
   bool verticalRun = mTextRun->IsVertical();
   bool rightUnderline = verticalRun && IsUnderlineRight(this);
-  const uint8_t kDecoration = rightUnderline
-                                  ? NS_STYLE_TEXT_DECORATION_LINE_OVERLINE
-                                  : NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE;
+  const auto kDecoration = rightUnderline ? StyleTextDecorationLine_OVERLINE
+                                          : StyleTextDecorationLine_UNDERLINE;
   bool useVerticalMetrics = verticalRun && mTextRun->UseCenterBaseline();
   gfxFont::Metrics decorationMetrics(firstFont->GetMetrics(
       useVerticalMetrics ? gfxFont::eVertical : gfxFont::eHorizontal));
@@ -7126,14 +7126,14 @@ void nsTextFrame::DrawTextRunAndDecorations(
   }
 
   // Underlines
-  params.decoration = NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE;
+  params.decoration = StyleTextDecorationLine_UNDERLINE;
   for (const LineDecoration& dec : Reversed(aDecorations.mUnderlines)) {
     paintDecorationLine(dec, &Metrics::underlineSize,
                         &Metrics::underlineOffset);
   }
 
   // Overlines
-  params.decoration = NS_STYLE_TEXT_DECORATION_LINE_OVERLINE;
+  params.decoration = StyleTextDecorationLine_OVERLINE;
   for (const LineDecoration& dec : Reversed(aDecorations.mOverlines)) {
     paintDecorationLine(dec, &Metrics::underlineSize, &Metrics::maxAscent);
   }
@@ -7166,7 +7166,7 @@ void nsTextFrame::DrawTextRunAndDecorations(
   }
 
   // Line-throughs
-  params.decoration = NS_STYLE_TEXT_DECORATION_LINE_LINE_THROUGH;
+  params.decoration = StyleTextDecorationLine_LINE_THROUGH;
   for (const LineDecoration& dec : Reversed(aDecorations.mStrikes)) {
     paintDecorationLine(dec, &Metrics::strikeoutSize,
                         &Metrics::strikeoutOffset);
