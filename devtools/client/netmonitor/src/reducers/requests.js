@@ -206,17 +206,14 @@ function closeCustomRequest(state) {
 
   const removedRequest = requests.get(selectedId);
 
-  // Only custom requests can be removed
-  if (!removedRequest || !removedRequest.isCustom) {
-    return state;
-  }
-
   // If the custom request is already in the Map, select it immediately,
   // and reset `preselectedId` attribute.
   const hasPreselectedId = preselectedId && requests.has(preselectedId);
   return {
     ...state,
-    requests: mapDelete(requests, selectedId),
+    // Only custom requests can be removed
+    [(removedRequest && removedRequest.isCustom)
+      && "requests"]: mapDelete(requests, selectedId),
     preselectedId: hasPreselectedId ? null : preselectedId,
     selectedId: hasPreselectedId ? preselectedId : null,
   };
