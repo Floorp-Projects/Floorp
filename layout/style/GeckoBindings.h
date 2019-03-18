@@ -675,8 +675,14 @@ void Gecko_nsStyleFont_PrefillDefaultForGeneric(nsStyleFont* font,
                                                 const mozilla::dom::Document*,
                                                 uint8_t generic_id);
 
-void Gecko_nsStyleFont_FixupMinFontSize(nsStyleFont* font,
-                                        const mozilla::dom::Document*);
+nscoord Gecko_nsStyleFont_ComputeMinSize(const nsStyleFont*,
+                                         const mozilla::dom::Document*);
+
+// Computes the default generic font for a generic family and language.
+mozilla::FontFamilyType Gecko_nsStyleFont_ComputeDefaultFontType(
+    const mozilla::dom::Document*,
+    uint8_t generic_family,
+    nsAtom* language);
 
 mozilla::FontSizePrefs Gecko_GetBaseSize(nsAtom* lang);
 
