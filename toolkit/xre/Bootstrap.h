@@ -114,6 +114,9 @@ class Bootstrap {
 
   virtual void XRE_SetAndroidChildFds(JNIEnv* aEnv,
                                       const XRE_AndroidChildFds& fds) = 0;
+#  ifdef MOZ_PROFILE_GENERATE
+  virtual void XRE_WriteLLVMProfData() = 0;
+#  endif
 #endif
 
 #ifdef LIBFUZZER

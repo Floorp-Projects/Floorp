@@ -33,6 +33,9 @@ for var in ('ANDROID_PACKAGE_NAME',
             'ANDROID_CPU_ARCH'):
     DEFINES[var] = '"%s"' % CONFIG[var]
 
+if CONFIG['MOZ_PROFILE_GENERATE']:
+    DEFINES['MOZ_PROFILE_GENERATE'] = True
+
 if CONFIG['MOZ_FOLD_LIBS']:
     DEFINES['MOZ_FOLD_LIBS'] = True
 
