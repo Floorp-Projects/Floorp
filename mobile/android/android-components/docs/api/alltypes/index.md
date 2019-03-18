@@ -11,6 +11,7 @@
 | [mozilla.components.service.fxa.AccountState](../mozilla.components.service.fxa/-account-state/index.md) |  |
 | [mozilla.components.service.fxa.AccountStorage](../mozilla.components.service.fxa/-account-storage/index.md) |  |
 | [mozilla.components.support.base.facts.Action](../mozilla.components.support.base.facts/-action/index.md) | A user or system action that causes [Fact](../mozilla.components.support.base.facts/-fact/index.md) instances to be emitted. |
+| [android.app.Activity](../mozilla.components.feature.pwa.ext/android.app.-activity/index.md) (extensions in package mozilla.components.feature.pwa.ext) |  |
 | [android.app.Activity](../mozilla.components.support.ktx.android.view/android.app.-activity/index.md) (extensions in package mozilla.components.support.ktx.android.view) |  |
 | [mozilla.components.feature.downloads.AndroidDownloadManager](../mozilla.components.feature.downloads/-android-download-manager.md) |  |
 | [mozilla.components.support.base.log.sink.AndroidLogSink](../mozilla.components.support.base.log.sink/-android-log-sink/index.md) | LogSink implementation that writes to Android's log. |
@@ -287,7 +288,6 @@
 | [mozilla.components.service.fxa.PersistCallback](../mozilla.components.service.fxa/-persist-callback.md) |  |
 | [mozilla.components.feature.session.PictureInPictureFeature](../mozilla.components.feature.session/-picture-in-picture-feature/index.md) | A simple implementation of Picture-in-picture mode if on a supported platform. |
 | [mozilla.components.service.glean.scheduler.PingUploadWorker](../mozilla.components.service.glean.scheduler/-ping-upload-worker/index.md) | This class is the worker class used by [WorkManager](#) to handle uploading the ping to the server. |
-| [mozilla.components.feature.pwa.Placeholder](../mozilla.components.feature.pwa/-placeholder/index.md) |  |
 | [mozilla.components.browser.storage.sync.PlacesHistoryStorage](../mozilla.components.browser.storage.sync/-places-history-storage/index.md) | Implementation of the [HistoryStorage](../mozilla.components.concept.storage/-history-storage/index.md) which is backed by a Rust Places lib via [PlacesConnection](#). |
 | [mozilla.components.service.pocket.PocketEndpoint](../mozilla.components.service.pocket/-pocket-endpoint/index.md) | Makes requests to the Pocket API and returns the requested data. |
 | [mozilla.components.service.pocket.data.PocketGlobalVideoRecommendation](../mozilla.components.service.pocket.data/-pocket-global-video-recommendation/index.md) | A recommended video as returned from the Pocket Global Video Recommendation endpoint v2. |

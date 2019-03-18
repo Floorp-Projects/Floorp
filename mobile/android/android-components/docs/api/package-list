@@ -4,6 +4,7 @@ $dokka.location:mozilla.components.browser.engine.system.matcher$reverse(kotlin.
 $dokka.location:mozilla.components.browser.engine.system.matcher$reversible(kotlin.String)mozilla.components.browser.engine.system.matcher/kotlin.-string/reversible.md
 $dokka.location:mozilla.components.browser.session.ext$readSnapshot(android.util.AtomicFile, mozilla.components.concept.engine.Engine, mozilla.components.browser.session.storage.SnapshotSerializer)mozilla.components.browser.session.ext/android.util.-atomic-file/read-snapshot.md
 $dokka.location:mozilla.components.browser.session.ext$writeSnapshot(android.util.AtomicFile, mozilla.components.browser.session.SessionManager.Snapshot, mozilla.components.browser.session.storage.SnapshotSerializer)mozilla.components.browser.session.ext/android.util.-atomic-file/write-snapshot.md
+$dokka.location:mozilla.components.feature.pwa.ext$applyOrientation(android.app.Activity, mozilla.components.browser.session.manifest.WebAppManifest)mozilla.components.feature.pwa.ext/android.app.-activity/apply-orientation.md
 $dokka.location:mozilla.components.lib.jexl.ext$toJexl(kotlin.Boolean)mozilla.components.lib.jexl.ext/kotlin.-boolean/to-jexl.md
 $dokka.location:mozilla.components.lib.jexl.ext$toJexl(kotlin.Double)mozilla.components.lib.jexl.ext/kotlin.-double/to-jexl.md
 $dokka.location:mozilla.components.lib.jexl.ext$toJexl(kotlin.Float)mozilla.components.lib.jexl.ext/kotlin.-float/to-jexl.md
@@ -124,7 +125,7 @@ mozilla.components.feature.findinpage
 mozilla.components.feature.findinpage.view
 mozilla.components.feature.intent
 mozilla.components.feature.prompts
-mozilla.components.feature.pwa
+mozilla.components.feature.pwa.ext
 mozilla.components.feature.search
 mozilla.components.feature.session
 mozilla.components.feature.session.bundling
