@@ -20,6 +20,20 @@
 #  include "maiRedundantObjectFactory.h"
 #endif
 
+#undef LOG
+#ifdef MOZ_LOGGING
+
+#  include "mozilla/Logging.h"
+#  include "nsTArray.h"
+#  include "Units.h"
+
+extern mozilla::LazyLogModule gWidgetLog;
+
+#  define LOG(args) MOZ_LOG(gWidgetLog, mozilla::LogLevel::Debug, args)
+#else
+#  define LOG(args)
+#endif /* MOZ_LOGGING */
+
 #ifdef MOZ_WAYLAND
 using namespace mozilla;
 using namespace mozilla::widget;
@@ -162,6 +176,8 @@ void moz_container_init(MozContainer *container) {
   container->surface_needs_clear = true;
   container->inital_draw_cb = nullptr;
 #endif
+
+  LOG(("%s [%p]\n", __FUNCTION__, (void *)container));
 }
 
 #if defined(MOZ_WAYLAND)
@@ -171,13 +187,28 @@ static wl_surface *moz_container_get_gtk_container_surface(
       dlsym(RTLD_DEFAULT, "gdk_wayland_window_get_wl_surface");
 
   GdkWindow *window = gtk_widget_get_window(GTK_WIDGET(container));
-  return sGdkWaylandWindowGetWlSurface(window);
+  wl_surface *surface = sGdkWaylandWindowGetWlSurface(window);
+
+  LOG(("%s [%p] wl_surface %p\n", __FUNCTION__, (void *)container,
+       (void *)surface));
+
+  return surface;
 }
 
 static void frame_callback_handler(void *data, struct wl_callback *callback,
                                    uint32_t time) {
   MozContainer *container = MOZ_CONTAINER(data);
+
+  LOG(
+      ("%s [%p] frame_callback_handler %p "
+       "ready_to_draw %d (set to true) "
+       "inital_draw callback %d\n",
+       __FUNCTION__, (void *)container,
+       (void *)container->frame_callback_handler, container->ready_to_draw,
+       container->inital_draw_cb ? 1 : 0));
+
   g_clear_pointer(&container->frame_callback_handler, wl_callback_destroy);
+
   if (!container->ready_to_draw && container->inital_draw_cb) {
     container->inital_draw_cb();
   }
@@ -196,6 +227,12 @@ static gboolean moz_container_map_wayland(GtkWidget *widget,
                                           GdkEventAny *event) {
   MozContainer *container = MOZ_CONTAINER(widget);
 
+  LOG(
+      ("%s begin [%p] ready_to_draw %d "
+       "frame_callback_handler %p\n",
+       __FUNCTION__, (void *)container, container->ready_to_draw,
+       (void *)container->frame_callback_handler));
+
   if (container->ready_to_draw || container->frame_callback_handler) {
     return FALSE;
   }
@@ -209,6 +246,12 @@ static gboolean moz_container_map_wayland(GtkWidget *widget,
                              container);
   }
 
+  LOG(
+      ("%s end [%p] gtk_container_surface %p "
+       "frame_callback_handler %p\n",
+       __FUNCTION__, (void *)container, (void *)gtk_container_surface,
+       (void *)container->frame_callback_handler));
+
   return FALSE;
 }
 
@@ -220,6 +263,8 @@ static void moz_container_unmap_wayland(MozContainer *container) {
 
   container->surface_needs_clear = true;
   container->ready_to_draw = false;
+
+  LOG(("%s [%p]\n", __FUNCTION__, (void *)container));
 }
 
 static gint moz_container_get_scale(MozContainer *container) {
@@ -236,6 +281,9 @@ static gint moz_container_get_scale(MozContainer *container) {
 
 void moz_container_scale_changed(MozContainer *container,
                                  GtkAllocation *aAllocation) {
+  LOG(("%s [%p] surface %p eglwindow %p\n", __FUNCTION__, (void *)container,
+       (void *)container->surface, (void *)container->eglwindow));
+
   if (!container->surface) {
     return;
   }
@@ -345,12 +393,8 @@ void moz_container_size_allocate(GtkWidget *widget, GtkAllocation *allocation) {
 
   g_return_if_fail(IS_MOZ_CONTAINER(widget));
 
-  /*  printf("moz_container_size_allocate %p %d %d %d %d\n",
-      (void *)widget,
-      allocation->x,
-      allocation->y,
-      allocation->width,
-      allocation->height); */
+  LOG(("%s [%p] %d %d %d %d\n", __FUNCTION__, (void *)widget, allocation->x,
+       allocation->y, allocation->width, allocation->height));
 
   /* short circuit if you can */
   container = MOZ_CONTAINER(widget);
@@ -496,6 +540,9 @@ static void moz_container_add(GtkContainer *container, GtkWidget *widget) {
 
 #ifdef MOZ_WAYLAND
 struct wl_surface *moz_container_get_wl_surface(MozContainer *container) {
+  LOG(("%s [%p] surface %p ready_to_draw %d\n", __FUNCTION__, (void *)container,
+       (void *)container->surface, container->ready_to_draw));
+
   if (!container->surface) {
     if (!container->ready_to_draw) {
       return nullptr;
@@ -535,10 +582,16 @@ struct wl_surface *moz_container_get_wl_surface(MozContainer *container) {
     WaylandDisplayRelease(waylandDisplay);
   }
 
+  LOG(("%s [%p] created surface %p\n", __FUNCTION__, (void *)container,
+       (void *)container->surface));
+
   return container->surface;
 }
 
 struct wl_egl_window *moz_container_get_wl_egl_window(MozContainer *container) {
+  LOG(("%s [%p] eglwindow %p\n", __FUNCTION__, (void *)container,
+       (void *)container->eglwindow));
+
   if (!container->eglwindow) {
     wl_surface *surface = moz_container_get_wl_surface(container);
     if (!surface) {
@@ -552,6 +605,10 @@ struct wl_egl_window *moz_container_get_wl_egl_window(MozContainer *container) {
                              gdk_window_get_height(window) * scale);
     wl_surface_set_buffer_scale(surface, scale);
   }
+
+  LOG(("%s [%p] created eglwindow %p\n", __FUNCTION__, (void *)container,
+       (void *)container->eglwindow));
+
   return container->eglwindow;
 }
 
