@@ -235,10 +235,10 @@ class HomeFragment : Fragment(), CoroutineScope {
                         is SessionsAction.Select -> {
                             launch {
                                 requireComponents.core.sessionStorage.archive(requireComponents.core.sessionManager)
-                            }
-                            it.archivedSession.bundle.restoreSnapshot()?.apply {
-                                requireComponents.core.sessionManager.restore(this)
-                                homeScrollView.smoothScrollTo(0, 0)
+                                it.archivedSession.bundle.restoreSnapshot()?.apply {
+                                    requireComponents.core.sessionManager.restore(this)
+                                    homeScrollView.smoothScrollTo(0, 0)
+                                }
                             }
                         }
                         is SessionsAction.Delete -> {

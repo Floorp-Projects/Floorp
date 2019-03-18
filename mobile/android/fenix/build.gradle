@@ -44,7 +44,7 @@ task clean(type: Delete) {
 detekt {
     // The version number is duplicated, please refer to plugins block for more details
     version = "1.0.0.RC9.2"
-    input = files("$projectDir/app", "$projectDir/architecture")
+    input = files("$projectDir/app/src", "$projectDir/architecture/src")
     config = files("$projectDir/config/detekt.yml")
     filters = ".*test.*,.*/resources/.*,.*/tmp/.*"
 
