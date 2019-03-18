@@ -181,7 +181,8 @@ class MachRaptor(MachCommandBase):
         if conditions.is_android(build_obj) or kwargs['app'] in firefox_android_browsers:
             from mozrunner.devices.android_device import verify_android_device
             from mozdevice import ADBAndroid, ADBHost
-            if not verify_android_device(build_obj, install=True, app=kwargs['binary']):
+            if not verify_android_device(build_obj, install=True, app=kwargs['binary'],
+                                         xre=True):  # Equivalent to 'run_local' = True.
                 return 1
 
         debug_command = '--debug-command'
