@@ -762,10 +762,11 @@ var gSync = {
 
     let label = this.syncStrings.GetStringFromName("syncingtabs.label");
     let remotetabsSyncNowEl = document.getElementById("PanelUI-remotetabs-syncnow");
+    let fxaMenuSyncNowEl = document.getElementById("PanelUI-fxa-menu-syncnow-button");
     let syncElements = [
       document.getElementById("appMenu-fxa-icon"),
       remotetabsSyncNowEl,
-      document.getElementById("PanelUI-fxa-menu-syncnow-button"),
+      fxaMenuSyncNowEl,
     ];
 
     syncElements.forEach((el) => {
@@ -774,6 +775,7 @@ var gSync = {
     });
 
     remotetabsSyncNowEl.setAttribute("label", label);
+    fxaMenuSyncNowEl.setAttribute("label", fxaMenuSyncNowEl.getAttribute("syncinglabel"));
   },
 
   _onActivityStop() {
