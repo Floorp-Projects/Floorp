@@ -9,8 +9,7 @@
  * quota object. See bug 1516333.
  */
 
-async function testSteps()
-{
+async function testSteps() {
   const principal = getPrincipal("https://foo.bar.mozilla-iot.org");
 
   info("Clearing");
