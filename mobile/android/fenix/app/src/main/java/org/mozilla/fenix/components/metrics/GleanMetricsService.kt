@@ -5,13 +5,19 @@ package org.mozilla.fenix.components.metrics
 
 import android.content.Context
 import mozilla.components.service.glean.Glean
+import mozilla.components.support.utils.Browsers
 import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.utils.Settings
+import org.mozilla.fenix.debug.GleanMetrics.Metrics
 
 class GleanMetricsService(private val context: Context) : MetricsService {
     override fun start() {
         Glean.initialize(context)
         Glean.setUploadEnabled(IsGleanEnabled)
+
+        Metrics.apply {
+            defaultBrowser.set(Browsers.all(context).isDefaultBrowser)
+        }
     }
 
     override fun track(event: Event) { }
