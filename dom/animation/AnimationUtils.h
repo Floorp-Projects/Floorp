@@ -83,6 +83,13 @@ class AnimationUtils {
    */
   static bool EffectSetContainsAnimatedScale(EffectSet& aEffects,
                                              const nsIFrame* aFrame);
+
+  /**
+   * Returns true if the given (pseudo-)element has any transitions that are
+   * current (playing or waiting to play) or in effect (e.g. filling forwards).
+   */
+  static bool HasCurrentTransitions(const dom::Element* aElement,
+                                    PseudoStyleType aPseudoType);
 };
 
 }  // namespace mozilla
