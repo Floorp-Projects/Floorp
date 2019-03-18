@@ -1782,6 +1782,66 @@ waitForAllPaints(() => {
     await ensureElementRemoval(div);
   });
 
+  add_task(async function restyling_translate_animations_on_invisible_element() {
+    const div = addDiv(null, { style: 'visibility: hidden;' });
+
+    const animation =
+      div.animate([ { translate: '100px' } ],
+                  { duration: 100 * MS_PER_SEC,
+                    iterations: Infinity });
+
+    await waitForAnimationReadyToRestyle(animation);
+
+    ok(!SpecialPowers.wrap(animation).isRunningOnCompositor);
+
+    const markers = await observeStyling(5);
+
+    is(markers.length, 0,
+       'Translate animations without 100% keyframe on visibility hidden ' +
+       'element should be throttled');
+    await ensureElementRemoval(div);
+  });
+
+  add_task(async function restyling_rotate_animations_on_invisible_element() {
+    const div = addDiv(null, { style: 'visibility: hidden;' });
+
+    const animation =
+      div.animate([ { rotate: '45deg' } ],
+                  { duration: 100 * MS_PER_SEC,
+                    iterations: Infinity });
+
+    await waitForAnimationReadyToRestyle(animation);
+
+    ok(!SpecialPowers.wrap(animation).isRunningOnCompositor);
+
+    const markers = await observeStyling(5);
+
+    is(markers.length, 0,
+       'Rotate animations without 100% keyframe on visibility hidden ' +
+       'element should be throttled');
+    await ensureElementRemoval(div);
+  });
+
+  add_task(async function restyling_scale_animations_on_invisible_element() {
+    const div = addDiv(null, { style: 'visibility: hidden;' });
+
+    const animation =
+      div.animate([ { scale: '2 2' } ],
+                  { duration: 100 * MS_PER_SEC,
+                    iterations: Infinity });
+
+    await waitForAnimationReadyToRestyle(animation);
+
+    ok(!SpecialPowers.wrap(animation).isRunningOnCompositor);
+
+    const markers = await observeStyling(5);
+
+    is(markers.length, 0,
+       'Scale animations without 100% keyframe on visibility hidden ' +
+       'element should be throttled');
+    await ensureElementRemoval(div);
+  });
+
   add_task(
     async function restyling_transform_animations_having_abs_pos_child_on_invisible_element() {
       const div = addDiv(null, { style: 'visibility: hidden;' });
