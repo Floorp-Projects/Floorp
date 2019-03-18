@@ -463,27 +463,19 @@ bool AnimationHelper::SampleAnimations(CompositorAnimationStorage* aStorage,
         break;
       }
       case eCSSProperty_transform: {
-        RefPtr<nsCSSValueSharedList> list;
-        Servo_AnimationValue_GetTransform(animationValue, &list);
         const TransformData& transformData =
             animation.data().get_TransformData();
-        nsPoint origin = transformData.origin();
-        // we expect all our transform data to arrive in device pixels
-        gfx::Point3D transformOrigin = transformData.transformOrigin();
-        nsDisplayTransform::FrameTransformProperties props(std::move(list),
-                                                           transformOrigin);
 
         gfx::Matrix4x4 transform =
-            nsDisplayTransform::GetResultingTransformMatrix(
-                props, origin, transformData.appUnitsPerDevPixel(), 0,
-                &transformData.bounds());
+            ServoAnimationValueToMatrix4x4(animationValue, transformData);
         gfx::Matrix4x4 frameTransform = transform;
         // If the parent has perspective transform, then the offset into
         // reference frame coordinates is already on this transform. If not,
         // then we need to ask for it to be added here.
         if (!transformData.hasPerspectiveParent()) {
-          nsLayoutUtils::PostTranslate(
-              transform, origin, transformData.appUnitsPerDevPixel(), true);
+          nsLayoutUtils::PostTranslate(transform, transformData.origin(),
+                                       transformData.appUnitsPerDevPixel(),
+                                       true);
         }
 
         transform.PostScale(transformData.inheritedXScale(),
@@ -499,6 +491,23 @@ bool AnimationHelper::SampleAnimations(CompositorAnimationStorage* aStorage,
   }
 
   return isAnimating;
+}
+
+gfx::Matrix4x4 AnimationHelper::ServoAnimationValueToMatrix4x4(
+    const RefPtr<RawServoAnimationValue>& aValue,
+    const TransformData& aTransformData) {
+  // FIXME: Bug 1457033: We should convert servo's animation value to matrix
+  // directly without nsCSSValueSharedList.
+  RefPtr<nsCSSValueSharedList> list;
+  Servo_AnimationValue_GetTransform(aValue, &list);
+  // We expect all our transform data to arrive in device pixels
+  gfx::Point3D transformOrigin = aTransformData.transformOrigin();
+  nsDisplayTransform::FrameTransformProperties props(std::move(list),
+                                                     transformOrigin);
+
+  return nsDisplayTransform::GetResultingTransformMatrix(
+      props, aTransformData.origin(), aTransformData.appUnitsPerDevPixel(), 0,
+      &aTransformData.bounds());
 }
 
 }  // namespace layers
