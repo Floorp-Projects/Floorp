@@ -280,7 +280,10 @@ class FlexItemSizingProperties extends PureComponent {
     // Calculate the final size. This is base + delta, then clamped by min or max.
     let mainFinalSize = mainBaseSize + mainDeltaSize;
     mainFinalSize = Math.max(mainFinalSize, mainMinSize);
-    mainFinalSize = Math.min(mainFinalSize, mainMaxSize);
+    mainFinalSize =
+      mainMaxSize === null ?
+        mainFinalSize :
+        Math.min(mainFinalSize, mainMaxSize);
 
     return (
       dom.ul({ className: "flex-item-sizing" },
