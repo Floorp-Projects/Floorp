@@ -144,6 +144,9 @@ parent:
   async InitSocketProcessBridge()
     returns (Endpoint<PSocketProcessBridgeChild> endpoint);
 
+  async EnsureHSTSData()
+    returns (bool result);
+
 child:
   /*
    * Bring up the http auth prompt for a nested remote mozbrowser.

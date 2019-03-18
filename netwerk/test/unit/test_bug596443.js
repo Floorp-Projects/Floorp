@@ -1,6 +1,9 @@
 const {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js");
 const {NetUtil} = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
+var httpProtocolHandler = Cc["@mozilla.org/network/protocol;1?name=http"]
+                          .getService(Ci.nsIHttpProtocolHandler);
+
 var httpserver = new HttpServer();
 
 var expectedOnStopRequests = 3;
@@ -61,14 +64,16 @@ function run_test() {
     // clear cache
     evict_cache_entries();
 
-    var ch0 = setupChannel("/bug596443", "Response0", Ci.nsIRequest.LOAD_BYPASS_CACHE);
-    ch0.asyncOpen(new Listener("Response0"));
+    httpProtocolHandler.EnsureHSTSDataReady().then(function() {
+        var ch0 = setupChannel("/bug596443", "Response0", Ci.nsIRequest.LOAD_BYPASS_CACHE);
+        ch0.asyncOpen(new Listener("Response0"));
 
-    var ch1 = setupChannel("/bug596443", "Response1", Ci.nsIRequest.LOAD_BYPASS_CACHE);
-    ch1.asyncOpen(new Listener("Response1"));
+        var ch1 = setupChannel("/bug596443", "Response1", Ci.nsIRequest.LOAD_BYPASS_CACHE);
+        ch1.asyncOpen(new Listener("Response1"));
 
-    var ch2 = setupChannel("/bug596443", "Should not be used");
-    ch2.asyncOpen(new Listener("Response1")); // Note param: we expect this to come from cache
+        var ch2 = setupChannel("/bug596443", "Should not be used");
+        ch2.asyncOpen(new Listener("Response1")); // Note param: we expect this to come from cache
+    });
 
     do_test_pending();
 }

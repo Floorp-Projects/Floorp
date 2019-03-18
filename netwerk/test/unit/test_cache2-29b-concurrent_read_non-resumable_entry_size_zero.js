@@ -16,6 +16,9 @@ This test is using a non-resumable response.
 const {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js");
 const {NetUtil} = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
+var httpProtocolHandler = Cc["@mozilla.org/network/protocol;1?name=http"]
+                          .getService(Ci.nsIHttpProtocolHandler);
+
 XPCOMUtils.defineLazyGetter(this, "URL", function() {
   return "http://localhost:" + httpServer.identity.primaryPort;
 });
@@ -51,10 +54,12 @@ function run_test()
   httpServer.registerPathHandler("/content", contentHandler);
   httpServer.start(-1);
 
-  var chan1 = make_channel(URL + "/content");
-  chan1.asyncOpen(new ChannelListener(firstTimeThrough, null, CL_ALLOW_UNKNOWN_CL));
-  var chan2 = make_channel(URL + "/content");
-  chan2.asyncOpen(new ChannelListener(secondTimeThrough, null, CL_ALLOW_UNKNOWN_CL));
+  httpProtocolHandler.EnsureHSTSDataReady().then(function() {
+    var chan1 = make_channel(URL + "/content");
+    chan1.asyncOpen(new ChannelListener(firstTimeThrough, null, CL_ALLOW_UNKNOWN_CL));
+    var chan2 = make_channel(URL + "/content");
+    chan2.asyncOpen(new ChannelListener(secondTimeThrough, null, CL_ALLOW_UNKNOWN_CL));
+  });
 
   do_test_pending();
 }
