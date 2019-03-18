@@ -6719,14 +6719,14 @@ class nsDisplayTransform : public nsDisplayHitTestInfoItem {
     FrameTransformProperties(const nsIFrame* aFrame, float aAppUnitsPerPixel,
                              const nsRect* aBoundsOverride);
     // This constructor is used on the compositor (for animations).
-    // Bug 1186329, Bug 1425837, If we want to support compositor animationsf
-    // or individual transforms and motion path, we may need to update this.
-    // For now, let mIndividualTransformList and mMotion as nullptr and
-    // Nothing().
+    // FIXME: Bug 1186329: if we want to support compositor animations for
+    // motion path, we need to update this. For now, let mMotion be Nothing().
     FrameTransformProperties(
+        RefPtr<const nsCSSValueSharedList>&& aIndividualTransform,
         RefPtr<const nsCSSValueSharedList>&& aTransformList,
         const Point3D& aToTransformOrigin)
         : mFrame(nullptr),
+          mIndividualTransformList(std::move(aIndividualTransform)),
           mTransformList(std::move(aTransformList)),
           mToTransformOrigin(aToTransformOrigin) {}
 
