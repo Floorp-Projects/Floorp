@@ -597,23 +597,6 @@ void AsyncCompositionManager::AdjustFixedOrStickyLayer(
   }
 }
 
-static Matrix4x4 ServoAnimationValueToMatrix4x4(
-    const RefPtr<RawServoAnimationValue>& aValue,
-    const TransformData& aTransformData) {
-  // FIXME: Bug 1457033: We should convert servo's animation value to matrix
-  // directly without nsCSSValueSharedList.
-  RefPtr<nsCSSValueSharedList> list;
-  Servo_AnimationValue_GetTransform(aValue, &list);
-  // we expect all our transform data to arrive in device pixels
-  Point3D transformOrigin = aTransformData.transformOrigin();
-  nsDisplayTransform::FrameTransformProperties props(std::move(list),
-                                                     transformOrigin);
-
-  return nsDisplayTransform::GetResultingTransformMatrix(
-      props, aTransformData.origin(), aTransformData.appUnitsPerDevPixel(), 0,
-      &aTransformData.bounds());
-}
-
 static Matrix4x4 FrameTransformToTransformInDevice(
     const Matrix4x4& aFrameTransform, Layer* aLayer,
     const TransformData& aTransformData) {
@@ -675,7 +658,8 @@ static void ApplyAnimatedValue(Layer* aLayer,
       const TransformData& transformData = aAnimationData.get_TransformData();
 
       Matrix4x4 frameTransform =
-          ServoAnimationValueToMatrix4x4(aValue, transformData);
+          AnimationHelper::ServoAnimationValueToMatrix4x4(aValue,
+                                                          transformData);
 
       Matrix4x4 transform = FrameTransformToTransformInDevice(
           frameTransform, aLayer, transformData);
@@ -753,7 +737,8 @@ static bool SampleAnimations(Layer* aLayer,
             const TransformData& transformData =
                 animations[0].data().get_TransformData();
             Matrix4x4 frameTransform =
-                ServoAnimationValueToMatrix4x4(animationValue, transformData);
+                AnimationHelper::ServoAnimationValueToMatrix4x4(animationValue,
+                                                                transformData);
             Matrix4x4 transformInDevice = FrameTransformToTransformInDevice(
                 frameTransform, layer, transformData);
             MOZ_ASSERT(previousValue->mTransform.mTransformInDevSpace
