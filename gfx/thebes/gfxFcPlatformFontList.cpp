@@ -41,7 +41,7 @@
 #  include "mozilla/X11Util.h"
 #endif
 
-#if defined(MOZ_CONTENT_SANDBOX) && defined(XP_LINUX)
+#if defined(MOZ_SANDBOX) && defined(XP_LINUX)
 #  include "mozilla/SandboxBrokerPolicyFactory.h"
 #  include "mozilla/SandboxSettings.h"
 #endif
@@ -1438,7 +1438,7 @@ void gfxFcPlatformFontList::AddFontSetFamilies(FcFontSet* aFontSet,
       continue;
     }
 
-#if defined(MOZ_CONTENT_SANDBOX) && defined(XP_LINUX)
+#if defined(MOZ_SANDBOX) && defined(XP_LINUX)
     // Skip any fonts that will be blocked by the content-process sandbox
     // policy.
     if (aPolicy && !(aPolicy->Lookup(reinterpret_cast<const char*>(path)) &
@@ -1595,7 +1595,7 @@ nsresult gfxFcPlatformFontList::InitFontListForPlatform() {
 
   UniquePtr<SandboxPolicy> policy;
 
-#if defined(MOZ_CONTENT_SANDBOX) && defined(XP_LINUX)
+#if defined(MOZ_SANDBOX) && defined(XP_LINUX)
   // If read sandboxing is enabled, create a temporary SandboxPolicy to
   // check font paths; use a fake PID to avoid picking up any PID-specific
   // rules by accident.

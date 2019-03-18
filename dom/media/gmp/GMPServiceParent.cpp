@@ -27,7 +27,7 @@
 #include "nsComponentManagerUtils.h"
 #include "runnable_utils.h"
 #include "VideoUtils.h"
-#if defined(XP_LINUX) && defined(MOZ_GMP_SANDBOX)
+#if defined(XP_LINUX) && defined(MOZ_SANDBOX)
 #  include "mozilla/SandboxInfo.h"
 #endif
 #include "nsAppDirectoryServiceDefs.h"
@@ -785,7 +785,7 @@ already_AddRefed<GMPParent> GeckoMediaPluginServiceParent::SelectPluginForAPI(
 }
 
 RefPtr<GMPParent> CreateGMPParent(AbstractThread* aMainThread) {
-#if defined(XP_LINUX) && defined(MOZ_GMP_SANDBOX)
+#if defined(XP_LINUX) && defined(MOZ_SANDBOX)
   if (!SandboxInfo::Get().CanSandboxMedia()) {
     if (!StaticPrefs::MediaGmpInsecureAllow()) {
       NS_WARNING("Denying media plugin load due to lack of sandboxing.");

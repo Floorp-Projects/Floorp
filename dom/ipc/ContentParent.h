@@ -67,7 +67,7 @@ class nsIWidget;
 namespace mozilla {
 class PRemoteSpellcheckEngineParent;
 
-#if defined(XP_LINUX) && defined(MOZ_CONTENT_SANDBOX)
+#if defined(XP_LINUX) && defined(MOZ_SANDBOX)
 class SandboxBroker;
 class SandboxBrokerPolicyFactory;
 #endif
@@ -650,7 +650,7 @@ class ContentParent final : public PContentParent,
       sJSPluginContentParents;
   static StaticAutoPtr<LinkedList<ContentParent>> sContentParents;
 
-#if defined(XP_MACOSX) && defined(MOZ_CONTENT_SANDBOX)
+#if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
   // Cached Mac sandbox params used when launching content processes.
   static StaticAutoPtr<std::vector<std::string>> sMacSandboxParams;
 #endif
@@ -1151,7 +1151,7 @@ class ContentParent final : public PContentParent,
   // initializing.
   void MaybeEnableRemoteInputEventQueue();
 
-#if defined(XP_MACOSX) && defined(MOZ_CONTENT_SANDBOX)
+#if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
   void AppendSandboxParams(std::vector<std::string>& aArgs);
   void AppendDynamicSandboxParams(std::vector<std::string>& aArgs);
 #endif
@@ -1275,7 +1275,7 @@ class ContentParent final : public PContentParent,
   UniquePtr<gfx::DriverCrashGuard> mDriverCrashGuard;
   UniquePtr<MemoryReportRequestHost> mMemoryReportRequest;
 
-#if defined(XP_LINUX) && defined(MOZ_CONTENT_SANDBOX)
+#if defined(XP_LINUX) && defined(MOZ_SANDBOX)
   mozilla::UniquePtr<SandboxBroker> mSandboxBroker;
   static mozilla::UniquePtr<SandboxBrokerPolicyFactory>
       sSandboxBrokerPolicyFactory;
@@ -1305,7 +1305,7 @@ class ContentParent final : public PContentParent,
   static uint64_t sNextTabParentId;
   static nsDataHashtable<nsUint64HashKey, TabParent*> sNextTabParents;
 
-#if defined(XP_MACOSX) && defined(MOZ_CONTENT_SANDBOX)
+#if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
   // When set to true, indicates that content processes should
   // initialize their sandbox during startup instead of waiting
   // for the SetProcessSandbox IPDL message.

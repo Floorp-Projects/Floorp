@@ -106,12 +106,12 @@ Logger::Logger(const nsACString& aLeafBaseName)
     rv = NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(logFileName));
   } else if (procType == GeckoProcessType_Content) {
     leafName.AppendLiteral("-Content-");
-#if defined(MOZ_CONTENT_SANDBOX)
+#if defined(MOZ_SANDBOX)
     rv = NS_GetSpecialDirectory(NS_APP_CONTENT_PROCESS_TEMP_DIR,
                                 getter_AddRefs(logFileName));
 #else
     rv = NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(logFileName));
-#endif  // defined(MOZ_CONTENT_SANDBOX)
+#endif  // defined(MOZ_SANDBOX)
   } else {
     return;
   }

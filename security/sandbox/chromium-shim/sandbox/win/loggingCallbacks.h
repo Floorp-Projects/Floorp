@@ -89,7 +89,7 @@ InitLoggingIfRequired(ProvideLogFunctionCb aProvideLogFunctionCb)
       PR_GetEnv("MOZ_SANDBOX_LOGGING")) {
     aProvideLogFunctionCb(Log);
 
-#if defined(MOZ_CONTENT_SANDBOX)
+#if defined(MOZ_SANDBOX)
     // We can only log the stack trace on process types where we know that the
     // sandbox won't prevent it.
     if (XRE_IsContentProcess()) {

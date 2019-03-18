@@ -18,13 +18,13 @@ class nsMacUtilsImpl final : public nsIMacUtils {
 
   nsMacUtilsImpl() {}
 
-#if defined(MOZ_CONTENT_SANDBOX)
+#if defined(MOZ_SANDBOX)
   static bool GetAppPath(nsCString &aAppPath);
 
 #  ifdef DEBUG
   static nsAutoCString GetDirectoryPath(const char *aPath);
 #  endif /* DEBUG */
-#endif   /* MOZ_CONTENT_SANDBOX */
+#endif   /* MOZ_SANDBOX */
 
  private:
   ~nsMacUtilsImpl() {}

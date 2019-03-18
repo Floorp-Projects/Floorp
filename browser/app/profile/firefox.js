@@ -1025,7 +1025,6 @@ pref("dom.ipc.plugins.sandbox-level.flash", 3);
 pref("dom.ipc.plugins.sandbox-level.flash", 0);
 #endif
 
-#if defined(MOZ_CONTENT_SANDBOX)
 // This controls the strength of the Windows content process sandbox for testing
 // purposes. This will require a restart.
 // On windows these levels are:
@@ -1038,7 +1037,6 @@ pref("security.sandbox.content.level", 5);
 // process because the only other sandbox (for GMP) has too strict a policy to
 // allow stack tracing.  This does not require a restart to take effect.
 pref("security.sandbox.windows.log.stackTraceDepth", 0);
-#endif
 
 // This controls the strength of the Windows GPU process sandbox.  Changes
 // will require restart.
@@ -1059,9 +1057,7 @@ pref("security.sandbox.gmp.win32k-disable", false);
 // Start the Mac sandbox early during child process startup instead
 // of when messaged by the parent after the message loop is running.
 pref("security.sandbox.content.mac.earlyinit", true);
-#endif
 
-#if defined(XP_MACOSX) && defined(MOZ_SANDBOX) && defined(MOZ_CONTENT_SANDBOX)
 // This pref is discussed in bug 1083344, the naming is inspired from its
 // Windows counterpart, but on Mac it's an integer which means:
 // 0 -> "no sandbox" (nightly only)
@@ -1077,9 +1073,7 @@ pref("security.sandbox.content.mac.earlyinit", true);
 // process is killed when all windows are closed, so a change will take effect
 // when the 1st window is opened.
 pref("security.sandbox.content.level", 3);
-#endif
 
-#if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
 // Prefs for controlling whether and how the Mac NPAPI Flash plugin process is
 // sandboxed. On Mac these levels are:
 // 0 - "no sandbox"
@@ -1099,7 +1093,7 @@ pref("dom.ipc.plugins.sandbox-level.flash.max-legacy-os-minor", 10);
 pref("dom.ipc.plugins.sandbox-level.default", 1);
 #endif
 
-#if defined(XP_LINUX) && defined(MOZ_SANDBOX) && defined(MOZ_CONTENT_SANDBOX)
+#if defined(XP_LINUX) && defined(MOZ_SANDBOX)
 // This pref is introduced as part of bug 742434, the naming is inspired from
 // its Windows/Mac counterpart, but on Linux it's an integer which means:
 // 0 -> "no sandbox"
@@ -1122,23 +1116,17 @@ pref("security.sandbox.content.syscall_whitelist", "");
 // default pledge strings for the main & content processes, cf bug 1457092
 // broad list for now, has to be refined over time
 pref("security.sandbox.pledge.main", "stdio rpath wpath cpath inet proc exec prot_exec flock ps sendfd recvfd dns vminfo tty drm unix fattr getpw mcast");
-#if defined(MOZ_CONTENT_SANDBOX)
 pref("security.sandbox.content.level", 1);
 pref("security.sandbox.pledge.content", "stdio rpath wpath cpath inet recvfd sendfd prot_exec unix drm ps");
 #endif
-#endif
 
 #if defined(MOZ_SANDBOX)
-#if defined(MOZ_CONTENT_SANDBOX)
 // ID (a UUID when set by gecko) that is used to form the name of a
 // sandbox-writable temporary directory to be used by content processes
 // when a temporary writable file is required in a level 1 sandbox.
 pref("security.sandbox.content.tempDirSuffix", "");
-#endif
 pref("security.sandbox.plugin.tempDirSuffix", "");
-#endif
 
-#if defined(MOZ_SANDBOX)
 // This pref determines if messages relevant to sandbox violations are
 // logged.
 #if defined(XP_WIN) || defined(XP_MACOSX)

@@ -37,7 +37,7 @@ using namespace mozilla::ipc;
 #  include <unistd.h>  // for _exit()
 #endif
 
-#if defined(MOZ_GMP_SANDBOX)
+#if defined(MOZ_SANDBOX)
 #  if defined(XP_MACOSX)
 #    include "mozilla/Sandbox.h"
 #  endif
@@ -132,7 +132,7 @@ static nsCString GetNativeTarget(nsIFile* aFile) {
   return path;
 }
 
-#  if defined(MOZ_GMP_SANDBOX)
+#  if defined(MOZ_SANDBOX)
 static bool GetPluginPaths(const nsAString& aPluginPath,
                            nsCString& aPluginDirectoryPath,
                            nsCString& aPluginFilePath) {
@@ -218,7 +218,7 @@ bool GMPChild::SetMacSandboxInfo(MacSandboxPluginType aPluginType) {
   mGMPLoader->SetSandboxInfo(&info);
   return true;
 }
-#  endif  // MOZ_GMP_SANDBOX
+#  endif  // MOZ_SANDBOX
 #endif    // XP_MACOSX
 
 bool GMPChild::Init(const nsAString& aPluginPath, base::ProcessId aParentPid,
@@ -305,7 +305,7 @@ static bool ResolveLinks(nsCOMPtr<nsIFile>& aPath) {
 }
 
 bool GMPChild::GetUTF8LibPath(nsACString& aOutLibPath) {
-#if defined(XP_MACOSX) && defined(MOZ_GMP_SANDBOX)
+#if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
   nsAutoCString pluginDirectoryPath, pluginFilePath;
   if (!GetPluginPaths(mPluginPath, pluginDirectoryPath, pluginFilePath)) {
     MOZ_CRASH("Error scanning plugin path");
@@ -553,7 +553,7 @@ mozilla::ipc::IPCResult GMPChild::AnswerStartPlugin(const nsString& aAdapter) {
   InitPlatformAPI(*platformAPI, this);
 
   mGMPLoader = MakeUnique<GMPLoader>();
-#if defined(MOZ_GMP_SANDBOX)
+#if defined(MOZ_SANDBOX)
   if (!mGMPLoader->CanSandbox()) {
     LOGD("%s Can't sandbox GMP, failing", __FUNCTION__);
     delete platformAPI;
@@ -561,7 +561,7 @@ mozilla::ipc::IPCResult GMPChild::AnswerStartPlugin(const nsString& aAdapter) {
   }
 #endif
   bool isChromium = aAdapter.EqualsLiteral("chromium");
-#if defined(MOZ_GMP_SANDBOX) && defined(XP_MACOSX)
+#if defined(MOZ_SANDBOX) && defined(XP_MACOSX)
   MacSandboxPluginType pluginType = MacSandboxPluginType_GMPlugin_Default;
   if (isChromium) {
     pluginType = MacSandboxPluginType_GMPlugin_EME_Widevine;

@@ -12,9 +12,7 @@
 #include "SandboxFilter.h"
 #include "SandboxInternal.h"
 #include "SandboxLogging.h"
-#ifdef MOZ_GMP_SANDBOX
-#  include "SandboxOpenedFiles.h"
-#endif
+#include "SandboxOpenedFiles.h"
 #include "SandboxReporterClient.h"
 
 #include <dirent.h>
@@ -576,7 +574,6 @@ static void SetCurrentProcessSandbox(
   EnterChroot();
 }
 
-#ifdef MOZ_CONTENT_SANDBOX
 /**
  * Starts the seccomp sandbox for a content process.  Should be called
  * only once, and before any potentially harmful content is loaded.
@@ -608,9 +605,6 @@ bool SetContentProcessSandbox(ContentProcessSandboxParams&& aParams) {
       GetContentSandboxPolicy(sBroker, std::move(aParams)));
   return true;
 }
-#endif  // MOZ_CONTENT_SANDBOX
-
-#ifdef MOZ_GMP_SANDBOX
 /**
  * Starts the seccomp sandbox for a media plugin process.  Should be
  * called only once, and before any potentially harmful content is
@@ -651,7 +645,6 @@ void SetMediaPluginSandbox(const char* aFilePath) {
   // Finally, start the sandbox.
   SetCurrentProcessSandbox(GetMediaSandboxPolicy(files));
 }
-#endif  // MOZ_GMP_SANDBOX
 
 void SetRemoteDataDecoderSandbox(int aBroker) {
   if (PR_GetEnv("MOZ_DISABLE_RDD_SANDBOX") != nullptr) {

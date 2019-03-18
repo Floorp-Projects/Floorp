@@ -15,10 +15,8 @@ class SandboxBrokerPolicyFactory {
  public:
   SandboxBrokerPolicyFactory();
 
-#ifdef MOZ_CONTENT_SANDBOX
   UniquePtr<SandboxBroker::Policy> GetContentPolicy(int aPid,
                                                     bool aFileProcess);
-#endif
 
   static UniquePtr<SandboxBroker::Policy> GetUtilityPolicy(int aPid);
 

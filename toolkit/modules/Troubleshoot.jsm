@@ -686,7 +686,7 @@ if (AppConstants.MOZ_SANDBOX) {
       data.syscallLog = syscalls;
     }
 
-    if (AppConstants.MOZ_CONTENT_SANDBOX) {
+    if (AppConstants.MOZ_SANDBOX) {
       let sandboxSettings = Cc["@mozilla.org/sandbox/sandbox-settings;1"].
                             getService(Ci.mozISandboxSettings);
       data.contentSandboxLevel =
