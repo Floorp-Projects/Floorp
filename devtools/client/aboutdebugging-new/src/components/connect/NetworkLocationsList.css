@@ -9,8 +9,12 @@
  *  | Location (eg localhost:8080)        | Remove button |
  *  +-------------------------------------+---------------+
  */
-.connect-page__network-location {
+.network-location {
   display: grid;
   grid-template-columns: auto max-content;
-  margin: calc(var(--base-unit) * 2) 0;
+  align-items: center;
+
+  padding-block: calc(var(--base-unit) * 2);
+  padding-inline: calc(var(--base-unit) * 6);
+  border-bottom: 1px solid var(--card-separator-color);
 }

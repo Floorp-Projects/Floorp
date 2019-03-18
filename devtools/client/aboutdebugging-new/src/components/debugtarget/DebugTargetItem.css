@@ -19,6 +19,9 @@
   grid-template-areas: "icon name   action"
                        ".    detail detail";
   margin-block-end: calc(var(--base-unit) * 4);
+
+  padding-block: calc(var(--base-unit) * 3) calc(var(--base-unit) * 2);
+  padding-inline: calc(var(--base-unit) * 3) calc(var(--base-unit) * 2);
 }
 
 .debug-target-item__icon {
