@@ -1582,7 +1582,8 @@ void KeyframeEffect::CalculateCumulativeChangeHint(
       // on invisible elements because we can't calculate the change hint for
       // such properties until we compose it.
       if (!segment.HasReplaceableValues()) {
-        if (property.mProperty != eCSSProperty_transform) {
+        if (!nsCSSPropertyIDSet::TransformLikeProperties().HasProperty(
+                property.mProperty)) {
           mCumulativeChangeHint = ~nsChangeHint_Hints_CanIgnoreIfNotVisible;
           return;
         }
