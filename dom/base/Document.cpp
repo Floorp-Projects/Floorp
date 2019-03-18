@@ -1340,8 +1340,7 @@ Document::Document(const char* aContentType)
       mSavedResolution(1.0f),
       mPendingInitialTranslation(false),
       mGeneration(0),
-      mCachedTabSizeGeneration(0),
-      mInRDMPane(false) {
+      mCachedTabSizeGeneration(0) {
   MOZ_LOG(gDocumentLeakPRLog, LogLevel::Debug, ("DOCUMENT %p created", this));
 
   SetIsInDocument();
@@ -6772,9 +6771,10 @@ nsViewportInfo Document::GetViewportInfo(const ScreenIntSize& aDisplaySize) {
       CSSCoord maxHeight = mMaxHeight;
 
       // aDisplaySize is in screen pixels; convert them to CSS pixels for the
-      // viewport size. We need to use this scaled size for any clamping of
-      // width or height.
-      CSSSize displaySize = ScreenSize(aDisplaySize) / defaultScale;
+      // viewport size.
+      CSSToScreenScale defaultPixelScale =
+          layoutDeviceScale * LayoutDeviceToScreenScale(1.0f);
+      CSSSize displaySize = ScreenSize(aDisplaySize) / defaultPixelScale;
 
       // Resolve device-width and device-height first.
       if (maxWidth == nsViewportInfo::DeviceSize) {
@@ -6851,7 +6851,7 @@ nsViewportInfo Document::GetViewportInfo(const ScreenIntSize& aDisplaySize) {
       // https://drafts.csswg.org/css-device-adapt/#resolve-height
       if (height == nsViewportInfo::Auto) {
         if (aDisplaySize.width == 0) {
-          height = displaySize.height;
+          height = aDisplaySize.height;
         } else {
           height = width * aDisplaySize.height / aDisplaySize.width;
         }
@@ -6894,8 +6894,8 @@ nsViewportInfo Document::GetViewportInfo(const ScreenIntSize& aDisplaySize) {
       // Also recalculate the default zoom, if it wasn't specified in the
       // metadata, and the width is specified.
       if (mScaleStrEmpty && !mWidthStrEmpty) {
-        CSSToScreenScale bestFitScale(float(aDisplaySize.width) / size.width);
-        scaleFloat = (scaleFloat > bestFitScale) ? scaleFloat : bestFitScale;
+        CSSToScreenScale defaultScale(float(aDisplaySize.width) / size.width);
+        scaleFloat = (scaleFloat > defaultScale) ? scaleFloat : defaultScale;
       }
 
       size.height = clamped(size.height, effectiveMinSize.height,

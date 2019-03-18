@@ -3715,9 +3715,6 @@ class Document : public nsINode,
 
   void SetPrototypeDocument(nsXULPrototypeDocument* aPrototype);
 
-  bool InRDMPane() const { return mInRDMPane; }
-  void SetInRDMPane(bool aInRDMPane) { mInRDMPane = aInRDMPane; }
-
  protected:
   void DoUpdateSVGUseElementShadowTrees();
 
@@ -4680,8 +4677,6 @@ class Document : public nsINode,
   // Cached TabSizes values for the document.
   int32_t mCachedTabSizeGeneration;
   nsTabSizes mCachedTabSizes;
-
-  bool mInRDMPane;
 
  public:
   // Needs to be public because the bindings code pokes at it.

@@ -549,7 +549,7 @@ ResponsiveUI.prototype = {
         this.onRemoveDeviceAssociation();
         break;
       case "viewport-resize":
-        this.onResizeViewport(event);
+        this.onViewportResize(event);
         break;
     }
   },
@@ -629,7 +629,7 @@ ResponsiveUI.prototype = {
     this.emit("device-association-removed");
   },
 
-  onResizeViewport(event) {
+  onViewportResize(event) {
     const { width, height } = event.data;
     this.emit("viewport-resize", {
       width,

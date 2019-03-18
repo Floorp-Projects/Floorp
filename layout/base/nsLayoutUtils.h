@@ -2704,12 +2704,6 @@ class nsLayoutUtils {
   static float GetCurrentAPZResolutionScale(nsIPresShell* aShell);
 
   /**
-   * Returns true if aDocument should be allowed to use resolution
-   * zooming.
-   */
-  static bool AllowZoomingForDocument(const mozilla::dom::Document* aDocument);
-
-  /**
    * Returns true if we need to disable async scrolling for this particular
    * element. Note that this does a partial disabling - the displayport still
    * exists but uses a very small margin, and the compositor doesn't apply the
@@ -3001,7 +2995,7 @@ class nsLayoutUtils {
    * Returns true if there are any preferences or overrides that indicate a
    * need to create a MobileViewportManager.
    */
-  static bool ShouldHandleMetaViewport(const mozilla::dom::Document*);
+  static bool ShouldHandleMetaViewport(mozilla::dom::Document*);
 
   /**
    * Resolve a CSS <length-percentage> value to a definite size.

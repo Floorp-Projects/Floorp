@@ -150,33 +150,33 @@ function waitForViewportResizeTo(ui, width, height) {
       return;
     }
 
-    // Otherwise, we'll listen to the viewport's resize event, and the
-    // browser's load end; since a racing condition can happen, where the
-    // viewport's listener is added after the resize, because the viewport's
-    // document was reloaded; therefore the test would hang forever.
-    // See bug 1302879.
+    // Otherwise, we'll listen to the content's resize event, the viewport's resize event,
+    // and the browser's load end; since a racing condition can happen, where the
+    // content's listener is added after the resize, because the content's document was
+    // reloaded; therefore the test would hang forever. See bug 1302879.
     const browser = ui.getViewportBrowser();
 
-    const onResizeViewport = data => {
+    const onResize = data => {
       if (!isSizeMatching(data)) {
         return;
       }
-      ui.off("viewport-resize", onResizeViewport);
+      ui.off("viewport-resize", onResize);
+      ui.off("content-resize", onResize);
       browser.removeEventListener("mozbrowserloadend", onBrowserLoadEnd);
-      info(`Got viewport-resize to ${width} x ${height}`);
+      info(`Got content-resize or viewport-resize to ${width} x ${height}`);
       resolve();
     };
 
     const onBrowserLoadEnd = async function() {
       const data = ui.getViewportSize(ui);
-      onResizeViewport(data);
+      onResize(data);
     };
 
-    info(`Waiting for viewport-resize to ${width} x ${height}`);
-    // We're changing the viewport size, which may also change the content
-    // size. We wait on the viewport resize event, and check for the
-    // desired size.
-    ui.on("viewport-resize", onResizeViewport);
+    info(`Waiting for content-resize or viewport-resize to ${width} x ${height}`);
+    // Depending on whether or not the viewport is overridden, we'll either get a
+    // viewport-resize event or a content-resize event.
+    ui.on("viewport-resize", onResize);
+    ui.on("content-resize", onResize);
     browser.addEventListener("mozbrowserloadend",
       onBrowserLoadEnd, { once: true });
   });
