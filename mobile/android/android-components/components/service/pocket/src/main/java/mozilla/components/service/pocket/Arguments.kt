@@ -14,6 +14,6 @@ internal object Arguments {
     }
 
     fun assertIsNotBlank(input: String, exceptionIdentifier: String) {
-        if (input.isBlank()) throw IllegalArgumentException("Expected non-blank $exceptionIdentifier")
+        require(input.isNotBlank()) { "Expected non-blank $exceptionIdentifier" }
     }
 }
