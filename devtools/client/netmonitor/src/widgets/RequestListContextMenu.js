@@ -47,6 +47,7 @@ class RequestListContextMenu {
     const {
       connector,
       cloneSelectedRequest,
+      sendCustomRequest,
       openStatistics,
     } = this.props;
     const menu = [];
@@ -173,6 +174,14 @@ class RequestListContextMenu {
     menu.push({
       type: "separator",
       visible: copySubmenu.slice(10, 14).some((subMenu) => subMenu.visible),
+    });
+
+    menu.push({
+      id: "request-list-context-resend-only",
+      label: L10N.getStr("netmonitor.context.resend.label"),
+      accesskey: L10N.getStr("netmonitor.context.resend.accesskey"),
+      visible: !!(selectedRequest && !isCustom),
+      click: sendCustomRequest,
     });
 
     menu.push({
