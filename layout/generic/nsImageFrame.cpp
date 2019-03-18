@@ -691,8 +691,6 @@ nsresult nsImageFrame::OnSizeAvailable(imgIRequest* aRequest,
       // so we're ready to request a decode.
       MaybeDecodeForPredictedSize();
     }
-
-    mPrevImage = nullptr;
   }
 
   return NS_OK;
@@ -807,8 +805,6 @@ void nsImageFrame::NotifyNewCurrentRequest(imgIRequest* aRequest,
         // so we're ready to request a decode.
         MaybeDecodeForPredictedSize();
       }
-
-      mPrevImage = nullptr;
     }
     // Update border+content to account for image change
     InvalidateFrame();
