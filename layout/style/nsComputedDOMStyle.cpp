@@ -2249,22 +2249,6 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetWillChange() {
   return valueList.forget();
 }
 
-already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetTouchAction() {
-  RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-
-  int32_t intValue = StyleDisplay()->mTouchAction;
-
-  // None and Auto and Manipulation values aren't allowed
-  // to be in conjunction with other values.
-  // But there are all checks in CSSParserImpl::ParseTouchAction
-  nsAutoString valueStr;
-  nsStyleUtil::AppendBitmaskCSSValue(
-      nsCSSProps::kTouchActionKTable, intValue, NS_STYLE_TOUCH_ACTION_NONE,
-      NS_STYLE_TOUCH_ACTION_MANIPULATION, valueStr);
-  val->SetString(valueStr);
-  return val.forget();
-}
-
 already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetHeight() {
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
 

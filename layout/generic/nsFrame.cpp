@@ -10898,13 +10898,13 @@ CompositorHitTestInfo nsIFrame::GetCompositorHitTestInfo(
 
     result += inheritedTouchAction;
 
-    const uint32_t touchAction =
+    const StyleTouchAction touchAction =
         nsLayoutUtils::GetTouchActionFromFrame(touchActionFrame);
     // The CSS allows the syntax auto | none | [pan-x || pan-y] | manipulation
     // so we can eliminate some combinations of things.
-    if (touchAction == NS_STYLE_TOUCH_ACTION_AUTO) {
+    if (touchAction == StyleTouchAction_AUTO) {
       // nothing to do
-    } else if (touchAction & NS_STYLE_TOUCH_ACTION_MANIPULATION) {
+    } else if (touchAction & StyleTouchAction_MANIPULATION) {
       result += CompositorHitTestFlags::eTouchActionDoubleTapZoomDisabled;
     } else {
       // This path handles the cases none | [pan-x || pan-y] and so both
@@ -10912,13 +10912,13 @@ CompositorHitTestInfo nsIFrame::GetCompositorHitTestInfo(
       result += CompositorHitTestFlags::eTouchActionPinchZoomDisabled;
       result += CompositorHitTestFlags::eTouchActionDoubleTapZoomDisabled;
 
-      if (!(touchAction & NS_STYLE_TOUCH_ACTION_PAN_X)) {
+      if (!(touchAction & StyleTouchAction_PAN_X)) {
         result += CompositorHitTestFlags::eTouchActionPanXDisabled;
       }
-      if (!(touchAction & NS_STYLE_TOUCH_ACTION_PAN_Y)) {
+      if (!(touchAction & StyleTouchAction_PAN_Y)) {
         result += CompositorHitTestFlags::eTouchActionPanYDisabled;
       }
-      if (touchAction & NS_STYLE_TOUCH_ACTION_NONE) {
+      if (touchAction & StyleTouchAction_NONE) {
         // all the touch-action disabling flags will already have been set above
         MOZ_ASSERT(result.contains(CompositorHitTestTouchActionMask));
       }

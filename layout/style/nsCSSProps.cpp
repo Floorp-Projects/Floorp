@@ -381,14 +381,6 @@ const KTableEntry nsCSSProps::kTextOverflowKTable[] = {
     {eCSSKeyword_ellipsis, NS_STYLE_TEXT_OVERFLOW_ELLIPSIS},
     {eCSSKeyword_UNKNOWN, -1}};
 
-const KTableEntry nsCSSProps::kTouchActionKTable[] = {
-    {eCSSKeyword_none, NS_STYLE_TOUCH_ACTION_NONE},
-    {eCSSKeyword_auto, NS_STYLE_TOUCH_ACTION_AUTO},
-    {eCSSKeyword_pan_x, NS_STYLE_TOUCH_ACTION_PAN_X},
-    {eCSSKeyword_pan_y, NS_STYLE_TOUCH_ACTION_PAN_Y},
-    {eCSSKeyword_manipulation, NS_STYLE_TOUCH_ACTION_MANIPULATION},
-    {eCSSKeyword_UNKNOWN, -1}};
-
 const KTableEntry nsCSSProps::kVerticalAlignKTable[] = {
     {eCSSKeyword_baseline, NS_STYLE_VERTICAL_ALIGN_BASELINE},
     {eCSSKeyword_sub, NS_STYLE_VERTICAL_ALIGN_SUB},

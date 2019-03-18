@@ -118,7 +118,6 @@ LONGHANDS_NOT_SERIALIZED_WITH_SERVO = [
     "text-emphasis-style",
     "text-overflow",
     "text-shadow",
-    "touch-action",
     "transition-delay",
     "transition-duration",
     "transition-property",

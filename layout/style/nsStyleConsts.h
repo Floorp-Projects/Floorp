@@ -586,13 +586,6 @@ enum class StyleGridTrackBreadth : uint8_t {
 #define NS_STYLE_TEXT_TRANSFORM_FULL_SIZE_KANA 5
 
 // See nsStyleDisplay
-#define NS_STYLE_TOUCH_ACTION_NONE (1 << 0)
-#define NS_STYLE_TOUCH_ACTION_AUTO (1 << 1)
-#define NS_STYLE_TOUCH_ACTION_PAN_X (1 << 2)
-#define NS_STYLE_TOUCH_ACTION_PAN_Y (1 << 3)
-#define NS_STYLE_TOUCH_ACTION_MANIPULATION (1 << 4)
-
-// See nsStyleDisplay
 #define NS_STYLE_TOP_LAYER_NONE 0  // not in the top layer
 #define NS_STYLE_TOP_LAYER_TOP 1   // in the top layer
 
