@@ -16,7 +16,6 @@ var syncedTabsDeckComponent = new SyncedTabsDeckComponent({window, SyncedTabs, f
 let themeListener;
 
 let onLoaded = () => {
-  window.top.MozXULElement.insertFTLIfNeeded("browser/syncedTabs.ftl");
   themeListener = new LightweightThemeChild({
     content: window,
     chromeOuterWindowID: window.top.windowUtils.outerWindowID,
