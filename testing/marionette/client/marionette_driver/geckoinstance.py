@@ -402,7 +402,7 @@ class FennecInstance(GeckoInstance):
 
     def __init__(self, emulator_binary=None, avd_home=None, avd=None,
                  adb_path=None, serial=None, connect_to_running_emulator=False,
-                 package_name=None, *args, **kwargs):
+                 package_name=None, env=None, *args, **kwargs):
         required_prefs = deepcopy(FennecInstance.fennec_prefs)
         required_prefs.update(kwargs.get("prefs", {}))
 
@@ -416,6 +416,7 @@ class FennecInstance(GeckoInstance):
         self.avd_home = avd_home
         self.adb_path = adb_path
         self.avd = avd
+        self.env = env
         self.serial = serial
         self.connect_to_running_emulator = connect_to_running_emulator
 
@@ -460,6 +461,7 @@ class FennecInstance(GeckoInstance):
             "avd_home": self.avd_home,
             "adb_path": self.adb_path,
             "binary": self.emulator_binary,
+            "env": self.env,
             "profile": self.profile,
             "cmdargs": ["-marionette"] + self.app_args,
             "symbols_path": self.symbols_path,
