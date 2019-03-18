@@ -316,9 +316,73 @@ void MobileViewportManager::UpdateResolution(
       //    viewport tag is added or removed)
       // 4. neither screen size nor CSS viewport changes
       if (aDisplayWidthChangeRatio) {
-        newZoom = Some(
-            ScaleZoomWithDisplayWidth(zoom, aDisplayWidthChangeRatio.value(),
-                                      viewportSize, mMobileViewportSize));
+        // One more complication is that our current zoom level may be the
+        // result of clamping to either the minimum or maximum zoom level
+        // allowed by the viewport. If we naively scale the zoom level with
+        // the change in the display width, we might be scaling one of these
+        // clamped values. What we really want to do is to make scaling of the
+        // zoom aware of these minimum and maximum clamping points, so that we
+        // keep display width changes completely reversible.
+
+        // Because of the behavior of ShrinkToDisplaySizeIfNeeded, we are
+        // choosing zoom clamping points based on the content size of the
+        // scrollable rect, which might different from aViewportOrContentSize.
+        CSSSize contentSize = aViewportOrContentSize;
+        nsIScrollableFrame* rootScrollableFrame =
+            mPresShell->GetRootScrollFrameAsScrollable();
+        if (rootScrollableFrame) {
+          nsRect scrollableRect =
+              nsLayoutUtils::CalculateScrollableRectForFrame(
+                  rootScrollableFrame, nullptr);
+          contentSize = CSSSize::FromAppUnits(scrollableRect.Size());
+        }
+
+        // We scale the sizes, though we only care about the scaled widths.
+        ScreenSize minZoomDisplaySize =
+            contentSize * aViewportInfo.GetMinZoom();
+        ScreenSize maxZoomDisplaySize =
+            contentSize * aViewportInfo.GetMaxZoom();
+
+        float ratio = aDisplayWidthChangeRatio.value();
+        ScreenSize newDisplaySize(aDisplaySize);
+        ScreenSize oldDisplaySize = newDisplaySize / ratio;
+
+        // To calculate an adjusted ratio, we use some combination of these
+        // four values:
+        float a(minZoomDisplaySize.width);
+        float b(maxZoomDisplaySize.width);
+        float c(oldDisplaySize.width);
+        float d(newDisplaySize.width);
+
+        // For both oldDisplaySize and aDisplaySize, the values are in one of
+        // three "zones":
+        // 1) Less than or equal to minZoomDisplaySize.
+        // 2) Between minZoomDisplaySize and maxZoomDisplaySize.
+        // 3) Greater than or equal to maxZoomDisplaySize.
+
+        // Depending on which zone each are in, the adjusted ratio is shown in
+        // the table below (using the a-b-c-d coding from above):
+
+        //   d | 1 | 2 | 3 |
+        // c   +---+---+---+
+        //     | a | d | b |
+        // 1   | a | a | a |
+        //     +---+---+---+
+        //     | a | d | b |
+        // 2   | c | c | c |
+        //     +---+---+---+
+        //     | a | d | b |
+        // 3   | b | b | b |
+        //     +---+---+---+
+
+        // Conveniently, the numerator is just d clamped to a..b, and the
+        // denominator is c clamped to a..b.
+        float numerator = clamped(d, a, b);
+        float denominator = clamped(c, a, b);
+
+        float adjustedRatio = numerator / denominator;
+        newZoom = Some(ScaleZoomWithDisplayWidth(
+            zoom, adjustedRatio, viewportSize, mMobileViewportSize));
       }
     }
   } else {  // aType == UpdateType::ContentSize
