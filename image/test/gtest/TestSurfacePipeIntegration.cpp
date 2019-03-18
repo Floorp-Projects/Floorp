@@ -80,47 +80,6 @@ void CheckSurfacePipeMethodResults(SurfacePipe* aPipe, Decoder* aDecoder,
   EXPECT_TRUE(invalidRect.isNothing());
 }
 
-void CheckPalettedSurfacePipeMethodResults(
-    SurfacePipe* aPipe, Decoder* aDecoder,
-    const IntRect& aRect = IntRect(0, 0, 100, 100)) {
-  // Check that the pipeline ended up in the state we expect.  Note that we're
-  // explicitly testing the SurfacePipe versions of these methods, so we don't
-  // want to use AssertCorrectPipelineFinalState() here.
-  EXPECT_TRUE(aPipe->IsSurfaceFinished());
-  Maybe<SurfaceInvalidRect> invalidRect = aPipe->TakeInvalidRect();
-  EXPECT_TRUE(invalidRect.isSome());
-  EXPECT_EQ(IntRect(0, 0, 100, 100), invalidRect->mInputSpaceRect);
-  EXPECT_EQ(IntRect(0, 0, 100, 100), invalidRect->mOutputSpaceRect);
-
-  // Check the generated image.
-  CheckGeneratedPalettedImage(aDecoder, aRect);
-
-  // Reset and clear the image before the next test.
-  aPipe->ResetToFirstRow();
-  EXPECT_FALSE(aPipe->IsSurfaceFinished());
-  invalidRect = aPipe->TakeInvalidRect();
-  EXPECT_TRUE(invalidRect.isNothing());
-
-  uint32_t count = 0;
-  auto result = aPipe->WritePixels<uint8_t>([&]() {
-    ++count;
-    return AsVariant(uint8_t(0));
-  });
-  EXPECT_EQ(WriteState::FINISHED, result);
-  EXPECT_EQ(100u * 100u, count);
-
-  EXPECT_TRUE(aPipe->IsSurfaceFinished());
-  invalidRect = aPipe->TakeInvalidRect();
-  EXPECT_TRUE(invalidRect.isSome());
-  EXPECT_EQ(IntRect(0, 0, 100, 100), invalidRect->mInputSpaceRect);
-  EXPECT_EQ(IntRect(0, 0, 100, 100), invalidRect->mOutputSpaceRect);
-
-  aPipe->ResetToFirstRow();
-  EXPECT_FALSE(aPipe->IsSurfaceFinished());
-  invalidRect = aPipe->TakeInvalidRect();
-  EXPECT_TRUE(invalidRect.isNothing());
-}
-
 class ImageSurfacePipeIntegration : public ::testing::Test {
  protected:
   AutoInitializeImageLib mInit;
@@ -218,100 +177,6 @@ TEST_F(ImageSurfacePipeIntegration, SurfacePipe) {
     EXPECT_EQ(WriteState::FINISHED, result);
     EXPECT_EQ(100u, count);
     CheckSurfacePipeMethodResults(&pipe, decoder, IntRect(0, 0, 0, 0));
-  }
-
-  // Mark the frame as finished so we don't get an assertion.
-  RawAccessFrameRef currentFrame = decoder->GetCurrentFrameRef();
-  currentFrame->Finish();
-}
-
-TEST_F(ImageSurfacePipeIntegration, PalettedSurfacePipe) {
-  // Create a SurfacePipe containing a PalettedSurfaceSink.
-  RefPtr<Decoder> decoder = CreateTrivialDecoder();
-  ASSERT_TRUE(decoder != nullptr);
-
-  auto sink = MakeUnique<PalettedSurfaceSink>();
-  nsresult rv = sink->Configure(
-      PalettedSurfaceConfig{decoder, IntSize(100, 100), IntRect(0, 0, 100, 100),
-                            SurfaceFormat::B8G8R8A8, 8, false});
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
-
-  SurfacePipe pipe = TestSurfacePipeFactory::SurfacePipeFromPipeline(sink);
-
-  // Test that WritePixels() gets passed through to the underlying pipeline.
-  {
-    uint32_t count = 0;
-    auto result = pipe.WritePixels<uint8_t>([&]() {
-      ++count;
-      return AsVariant(uint8_t(255));
-    });
-    EXPECT_EQ(WriteState::FINISHED, result);
-    EXPECT_EQ(100u * 100u, count);
-    CheckPalettedSurfacePipeMethodResults(&pipe, decoder);
-  }
-
-  // Create a buffer the same size as one row of the surface, containing all
-  // 255 pixels. We'll use this for the WriteBuffer() tests.
-  uint8_t buffer[100];
-  for (int i = 0; i < 100; ++i) {
-    buffer[i] = 255;
-  }
-
-  // Test that WriteBuffer() gets passed through to the underlying pipeline.
-  {
-    uint32_t count = 0;
-    WriteState result = WriteState::NEED_MORE_DATA;
-    while (result == WriteState::NEED_MORE_DATA) {
-      result = pipe.WriteBuffer(buffer);
-      ++count;
-    }
-    EXPECT_EQ(WriteState::FINISHED, result);
-    EXPECT_EQ(100u, count);
-    CheckPalettedSurfacePipeMethodResults(&pipe, decoder);
-  }
-
-  // Test that the 3 argument version of WriteBuffer() gets passed through to
-  // the underlying pipeline.
-  {
-    uint32_t count = 0;
-    WriteState result = WriteState::NEED_MORE_DATA;
-    while (result == WriteState::NEED_MORE_DATA) {
-      result = pipe.WriteBuffer(buffer, 0, 100);
-      ++count;
-    }
-    EXPECT_EQ(WriteState::FINISHED, result);
-    EXPECT_EQ(100u, count);
-    CheckPalettedSurfacePipeMethodResults(&pipe, decoder);
-  }
-
-  // Test that WritePixelBlocks() gets passed through to the underlying
-  // pipeline.
-  {
-    uint32_t count = 0;
-    WriteState result = pipe.WritePixelBlocks<uint8_t>(
-        [&](uint8_t* aBlockStart, int32_t aLength) {
-          ++count;
-          EXPECT_EQ(int32_t(100), aLength);
-          memcpy(aBlockStart, buffer, 100 * sizeof(uint8_t));
-          return MakeTuple(int32_t(100), Maybe<WriteState>());
-        });
-
-    EXPECT_EQ(WriteState::FINISHED, result);
-    EXPECT_EQ(100u, count);
-    CheckPalettedSurfacePipeMethodResults(&pipe, decoder);
-  }
-
-  // Test that WriteEmptyRow() gets passed through to the underlying pipeline.
-  {
-    uint32_t count = 0;
-    WriteState result = WriteState::NEED_MORE_DATA;
-    while (result == WriteState::NEED_MORE_DATA) {
-      result = pipe.WriteEmptyRow();
-      ++count;
-    }
-    EXPECT_EQ(WriteState::FINISHED, result);
-    EXPECT_EQ(100u, count);
-    CheckPalettedSurfacePipeMethodResults(&pipe, decoder, IntRect(0, 0, 0, 0));
   }
 
   // Mark the frame as finished so we don't get an assertion.
@@ -466,34 +331,6 @@ TEST_F(ImageSurfacePipeIntegration,
       RemoveFrameRectConfig{IntRect(50, 50, 100, 100)},
       DownscalingConfig{IntSize(100, 100), SurfaceFormat::B8G8R8A8},
       SurfaceConfig{decoder, IntSize(20, 20), SurfaceFormat::B8G8R8A8, false});
-}
-
-TEST_F(ImageSurfacePipeIntegration,
-       ConfiguringPalettedRemoveFrameRectDownscaleFails) {
-  RefPtr<Decoder> decoder = CreateTrivialDecoder();
-  ASSERT_TRUE(decoder != nullptr);
-
-  // This is an invalid pipeline for paletted images, so configuration should
-  // fail.
-  AssertConfiguringPipelineFails(
-      decoder, RemoveFrameRectConfig{IntRect(0, 0, 50, 50)},
-      DownscalingConfig{IntSize(100, 100), SurfaceFormat::B8G8R8A8},
-      PalettedSurfaceConfig{decoder, IntSize(100, 100), IntRect(0, 0, 50, 50),
-                            SurfaceFormat::B8G8R8A8, 8, false});
-}
-
-TEST_F(ImageSurfacePipeIntegration,
-       ConfiguringPalettedDeinterlaceDownscaleFails) {
-  RefPtr<Decoder> decoder = CreateTrivialDecoder();
-  ASSERT_TRUE(decoder != nullptr);
-
-  // This is an invalid pipeline for paletted images, so configuration should
-  // fail.
-  AssertConfiguringPipelineFails(
-      decoder, DeinterlacingConfig<uint8_t>{/* mProgressiveDisplay = */ true},
-      DownscalingConfig{IntSize(100, 100), SurfaceFormat::B8G8R8A8},
-      PalettedSurfaceConfig{decoder, IntSize(100, 100), IntRect(0, 0, 20, 20),
-                            SurfaceFormat::B8G8R8A8, 8, false});
 }
 
 TEST_F(ImageSurfacePipeIntegration, ConfiguringHugeDeinterlacingBufferFails) {

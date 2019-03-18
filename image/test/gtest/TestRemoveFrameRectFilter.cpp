@@ -289,15 +289,3 @@ TEST(ImageRemoveFrameRectFilter,
   AssertConfiguringRemoveFrameRectFilterFails(IntSize(100, 100),
                                               IntRect(0, 0, -1, -1));
 }
-
-TEST(ImageRemoveFrameRectFilter, ConfiguringPalettedRemoveFrameRectFails) {
-  RefPtr<Decoder> decoder = CreateTrivialDecoder();
-  ASSERT_TRUE(decoder != nullptr);
-
-  // RemoveFrameRectFilter does not support paletted images, so configuration
-  // should fail.
-  AssertConfiguringPipelineFails(
-      decoder, RemoveFrameRectConfig{IntRect(0, 0, 50, 50)},
-      PalettedSurfaceConfig{decoder, IntSize(100, 100), IntRect(0, 0, 50, 50),
-                            SurfaceFormat::B8G8R8A8, 8, false});
-}

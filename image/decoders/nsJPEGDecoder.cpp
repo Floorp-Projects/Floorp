@@ -385,8 +385,7 @@ LexerTransition<nsJPEGDecoder::State> nsJPEGDecoder::ReadJPEGData(
       jpeg_calc_output_dimensions(&mInfo);
 
       MOZ_ASSERT(!mImageData, "Already have a buffer allocated?");
-      nsresult rv = AllocateFrame(OutputSize(), FullOutputFrame(),
-                                  SurfaceFormat::B8G8R8X8);
+      nsresult rv = AllocateFrame(OutputSize(), SurfaceFormat::B8G8R8X8);
       if (NS_FAILED(rv)) {
         mState = JPEG_ERROR;
         MOZ_LOG(sJPEGDecoderAccountingLog, LogLevel::Debug,

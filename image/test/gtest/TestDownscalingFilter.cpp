@@ -214,15 +214,3 @@ TEST(ImageDownscalingFilter, WritePixelsOutput100_100to10_20) {
                                       /* aFuzz = */ 3));
       });
 }
-
-TEST(ImageDownscalingFilter, ConfiguringPalettedDownscaleFails) {
-  RefPtr<Decoder> decoder = CreateTrivialDecoder();
-  ASSERT_TRUE(decoder != nullptr);
-
-  // DownscalingFilter does not support paletted images, so configuration should
-  // fail.
-  AssertConfiguringPipelineFails(
-      decoder, DownscalingConfig{IntSize(100, 100), SurfaceFormat::B8G8R8A8},
-      PalettedSurfaceConfig{decoder, IntSize(20, 20), IntRect(0, 0, 20, 20),
-                            SurfaceFormat::B8G8R8A8, 8, false});
-}

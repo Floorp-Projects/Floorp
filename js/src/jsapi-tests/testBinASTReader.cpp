@@ -240,13 +240,11 @@ void runTestFromPath(JSContext* cx, const char* path) {
       continue;
     }
 
-    {
-      // Make sure that we run GC between two tests. Otherwise, since we're
-      // running everything from the same cx and without returning to JS, there
-      // is nothing to deallocate the ASTs.
-      JS::PrepareForFullGC(cx);
-      cx->runtime()->gc.gc(GC_NORMAL, JS::GCReason::NO_REASON);
-    }
+    // Make sure that we run GC between two tests. Otherwise, since we're
+    // running everything from the same cx and without returning to JS, there is
+    // nothing to deallocate the ASTs.
+    JS_GC(cx);
+
     LifoAllocScope allocScope(&cx->tempLifoAlloc());
 
     // Find files whose name ends with ".binjs".

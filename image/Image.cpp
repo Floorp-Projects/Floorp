@@ -97,11 +97,10 @@ void ImageResource::SetCurrentImage(ImageContainer* aContainer,
     aContainer->SetCurrentImages(imageList);
   }
 
-  // If we are generating full frames, and we are animated, then we should
-  // request that the image container be treated as such, to avoid display
-  // list rebuilding to update frames for WebRender.
-  if (gfxPrefs::ImageAnimatedGenerateFullFrames() &&
-      mProgressTracker->GetProgress() & FLAG_IS_ANIMATED) {
+  // If we are animated, then we should request that the image container be
+  // treated as such, to avoid display list rebuilding to update frames for
+  // WebRender.
+  if (mProgressTracker->GetProgress() & FLAG_IS_ANIMATED) {
     if (aDirtyRect) {
       layers::SharedSurfacesChild::UpdateAnimation(aContainer, aSurface,
                                                    aDirtyRect.ref());
