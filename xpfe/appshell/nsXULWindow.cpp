@@ -2297,6 +2297,13 @@ nsXULWindow::BeforeStartLayout() {
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsXULWindow::LockAspectRatio(bool aShouldLock)
+{
+  mWindow->LockAspectRatio(aShouldLock);
+  return NS_OK;
+}
+
 void nsXULWindow::LoadPersistentWindowState() {
   nsCOMPtr<dom::Element> docShellElement = GetWindowDOMElement();
   if (!docShellElement) {
