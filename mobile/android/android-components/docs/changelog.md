@@ -101,6 +101,7 @@ permalink: /changelog/
 * **feature-findinpage**
   * ⚠️ **This is a breaking API change!**: `FindInPageFeature` constructor now takes an `EngineView` instance.
   * Blur controlled `EngineView` for better screen reader accessibility.
+  * Announce result count for screen reader users.
 
 # 0.46.0
 

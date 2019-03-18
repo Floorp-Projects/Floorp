@@ -14,6 +14,7 @@ import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 import org.robolectric.RobolectricTestRunner
 
@@ -89,7 +90,7 @@ class FindInPageBarTest {
 
     @Test
     fun `displayResult with matches will update views`() {
-        val view = FindInPageBar(context)
+        val view = spy(FindInPageBar(context))
 
         view.displayResult(Session.FindResult(0, 100, false))
 
@@ -98,6 +99,7 @@ class FindInPageBarTest {
 
         assertEquals(textCorrectValue, view.resultsCountTextView.text)
         assertEquals(contentDesCorrectValue, view.resultsCountTextView.contentDescription)
+        verify(view).announceForAccessibility(contentDesCorrectValue)
     }
 
     @Test

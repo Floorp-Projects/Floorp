@@ -87,7 +87,9 @@ class FindInPageBar @JvmOverloads constructor(
                 // increment it by one.
                 val ordinal = activeMatchOrdinal + 1
                 resultsCountTextView.text = String.format(resultFormat, ordinal, numberOfMatches)
-                resultsCountTextView.contentDescription = String.format(accessibilityFormat, ordinal, numberOfMatches)
+                val accessibilityLabel = String.format(accessibilityFormat, ordinal, numberOfMatches)
+                resultsCountTextView.contentDescription = accessibilityLabel
+                announceForAccessibility(accessibilityLabel)
             } else {
                 resultsCountTextView.text = ""
                 resultsCountTextView.contentDescription = ""
