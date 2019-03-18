@@ -231,6 +231,15 @@ class AnimationHelper {
   static bool SampleAnimations(CompositorAnimationStorage* aStorage,
                                TimeStamp aPreviousFrameTime,
                                TimeStamp aCurrentFrameTime);
+
+  /**
+   * Convert an animation value into a matrix given the corresponding transform
+   * parameters. |aValue| must be a transform-like value (e.g. transform,
+   * translate etc.).
+   */
+  static gfx::Matrix4x4 ServoAnimationValueToMatrix4x4(
+      const RefPtr<RawServoAnimationValue>& aValue,
+      const TransformData& aTransformData);
 };
 
 }  // namespace layers
