@@ -13,6 +13,7 @@ job-defaults:
         by-test-platform:
             windows10-64-ux: ['try', 'mozilla-central']
             (?:windows10-64|windows7-32|linux64)(?:-qr)?/opt: ['mozilla-central', 'try']
+            android-hw-.*-api-16/opt: ['try']
             default: ['try', 'trunk', 'mozilla-beta']
     tier:
         by-test-platform:
@@ -263,7 +264,8 @@ raptor-tp6m-1-geckoview:
     treeherder-symbol: Rap(tp6m-1)
     run-on-projects:
         by-test-platform:
-            android-hw-p2-8-0-arm7.*: ['try', 'mozilla-central']
+            android-hw-p2-8-0-arm7.*-pgo/opt: ['try', 'mozilla-central']
+            android-hw-.*-api-16/opt: ['try']
             default: ['try', 'trunk', 'mozilla-beta']
     target: geckoview_example.apk
     tier:
@@ -284,8 +286,9 @@ raptor-tp6m-2-geckoview:
     target: geckoview_example.apk
     run-on-projects:
         by-test-platform:
-            android-hw-p2-8-0-arm7.*: ['try', 'mozilla-central']
-            android-hw-g5.*: ['try', 'mozilla-central']
+            android-hw-p2-8-0-arm7.*-pgo/opt: ['try', 'mozilla-central']
+            android-hw-g5.*-pgo/opt: ['try', 'mozilla-central']
+            android-hw-.*-api-16/opt: ['try']
             default: ['try', 'trunk', 'mozilla-beta']
     tier: 2
     mozharness:
@@ -327,8 +330,9 @@ raptor-tp6m-5-geckoview:
     treeherder-symbol: Rap(tp6m-5)
     run-on-projects:
         by-test-platform:
-            android-hw-p2-8-0-arm7.*: ['try', 'mozilla-central']
-            android-hw-g5.*: ['try', 'mozilla-central']
+            android-hw-p2-8-0-arm7.*-pgo/opt: ['try', 'mozilla-central']
+            android-hw-g5.*-pgo/opt: ['try', 'mozilla-central']
+            android-hw-.*-api-16/opt: ['try']
             default: ['try', 'trunk', 'mozilla-beta']
     target: geckoview_example.apk
     tier: 2
@@ -345,8 +349,9 @@ raptor-tp6m-6-geckoview:
     treeherder-symbol: Rap(tp6m-6)
     run-on-projects:
         by-test-platform:
-            android-hw-p2-8-0-arm7.*: ['try', 'mozilla-central']
-            android-hw-g5.*: ['try', 'mozilla-central']
+            android-hw-p2-8-0-arm7.*-pgo/opt: ['try', 'mozilla-central']
+            android-hw-g5.*-pgo/opt: ['try', 'mozilla-central']
+            android-hw-.*-api-16/opt: ['try']
             default: ['try', 'trunk', 'mozilla-beta']
     target: geckoview_example.apk
     tier: 2
@@ -376,8 +381,9 @@ raptor-tp6m-8-geckoview:
     treeherder-symbol: Rap(tp6m-8)
     run-on-projects:
         by-test-platform:
-            android-hw-p2-8-0-arm7.*: ['try', 'mozilla-central']
-            android-hw-g5.*: ['try', 'mozilla-central']
+            android-hw-p2-8-0-arm7.*-pgo/opt: ['try', 'mozilla-central']
+            android-hw-g5.*-pgo/opt: ['try', 'mozilla-central']
+            android-hw-.*-api-16/opt: ['try']
             default: ['try', 'trunk', 'mozilla-beta']
     target: geckoview_example.apk
     tier: 2
@@ -429,7 +435,8 @@ raptor-speedometer-geckoview:
     target: geckoview_example.apk
     run-on-projects:
         by-test-platform:
-            android-hw-p2-8-0-arm7.*: ['try', 'mozilla-central']
+            android-hw-p2-8-0-arm7.*-pgo/opt: ['try', 'mozilla-central']
+            android-hw-.*-api-16/opt: ['try']
             default: ['try', 'trunk', 'mozilla-beta']
     max-run-time: 900
     mozharness:
@@ -446,7 +453,9 @@ raptor-speedometer-geckoview-power:
     target: geckoview_example.apk
     run-on-projects:
         by-test-platform:
-            android-hw.*: ['try', 'mozilla-central']
+            android-hw.*-pgo/opt: ['try', 'mozilla-central']
+            android-hw-.*-aarch64/opt: ['try', 'mozilla-central']
+            android-hw-.*-api-16/opt: ['try']
     max-run-time: 1800
     mozharness:
         extra-options:
@@ -465,6 +474,7 @@ raptor-speedometer-fennec:
     target: target.apk
     run-on-projects:
         by-test-platform:
+            android-hw-.*-api-16/opt: ['try']
             android-hw.*: ['try', 'trunk', 'mozilla-beta']
     tier: 2
     max-run-time: 900
@@ -607,7 +617,8 @@ raptor-unity-webgl-geckoview:
     target: geckoview_example.apk
     run-on-projects:
         by-test-platform:
-            android-hw-p2-8-0-arm7.*: ['try', 'mozilla-central']
+            android-hw-p2-8-0-arm7.*-pgo/opt: ['try', 'mozilla-central']
+            android-hw-.*-api-16/opt: ['try']
             default: ['try', 'trunk', 'mozilla-beta']
     max-run-time: 900
     tier: 3

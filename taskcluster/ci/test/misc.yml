@@ -16,7 +16,12 @@ geckoview-junit:
             android-em-4.3-arm7-api-16-ccov/debug: 8
             android-em-4.3-arm7-api-16/debug: 8
             android-em-4.3-arm7-api-16/opt: 3
+            android-em-4.3-arm7-api-16-pgo/opt: 3
             default: 1
+    run-on-projects:
+        by-test-platform:
+            android-em-4.3-arm7-api-16/opt: ['try']
+            default: built-projects
     mozharness:
         script: android_emulator_unittest.py
         config:
@@ -40,8 +45,13 @@ robocop:
             # android-em-4.3-arm7-api-16/debug -- not run
             android-em-4.3-arm7-api-16-ccov/debug: 8
             android-em-4.3-arm7-api-16/opt: 4
+            android-em-4.3-arm7-api-16-pgo/opt: 4
     loopback-video: true
     e10s: false
+    run-on-projects:
+        by-test-platform:
+            android-em-4.3-arm7-api-16/opt: ['try']
+            default: built-projects
     mozharness:
         script: android_emulator_unittest.py
         config:
@@ -77,6 +87,7 @@ test-verify:
     allow-software-gl-layers: false
     run-on-projects:
         by-test-platform:
+            android-em-4.3-arm7-api-16/opt: ['try']
             # do not run on ccov
             .*-ccov/.*: []
             .*-asan/.*: []
