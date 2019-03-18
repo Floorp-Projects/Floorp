@@ -3171,7 +3171,6 @@ var BrowserOnClick = {
         break;
 
       case "advancedButton":
-      case "moreInformationButton":
         securityInfo = getSecurityInfo(securityInfoAsString);
         let errorInfo = getDetailedCertErrorInfo(location,
                                                  securityInfo);
