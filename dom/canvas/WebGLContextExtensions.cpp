@@ -283,14 +283,26 @@ void WebGLContext::GetExtension(JSContext* cx, const nsAString& wideName,
 
   // Step 4: Enable any implied extensions.
   switch (ext) {
+    case WebGLExtensionID::EXT_color_buffer_float:
+      EnableSupportedExtension(callerType,
+                               WebGLExtensionID::EXT_float_blend);
+      break;
+
     case WebGLExtensionID::OES_texture_float:
       EnableSupportedExtension(callerType,
                                WebGLExtensionID::WEBGL_color_buffer_float);
+      EnableSupportedExtension(callerType,
+                               WebGLExtensionID::EXT_float_blend);
       break;
 
     case WebGLExtensionID::OES_texture_half_float:
       EnableSupportedExtension(callerType,
                                WebGLExtensionID::EXT_color_buffer_half_float);
+      break;
+
+    case WebGLExtensionID::WEBGL_color_buffer_float:
+      EnableSupportedExtension(callerType,
+                               WebGLExtensionID::EXT_float_blend);
       break;
 
     default:
