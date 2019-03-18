@@ -16,4 +16,9 @@ interface nsIGfxInfoDebug : nsISupports
   void spoofDriverVersion(in AString aDriverVersion);
 
   void spoofOSVersion(in unsigned long aVersion);
+
+  /* Manually invoke any test processes required to query for driver
+     information. This is used by XPC shell tests which do not run these queries
+     by default. */
+  void fireTestProcess();
 };

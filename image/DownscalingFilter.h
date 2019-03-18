@@ -112,10 +112,6 @@ class DownscalingFilter final : public SurfaceFilter {
       return rv;
     }
 
-    if (mNext.IsValidPalettedPipe()) {
-      NS_WARNING("Created a downscaler for a paletted surface?");
-      return NS_ERROR_INVALID_ARG;
-    }
     if (mNext.InputSize() == aConfig.mInputSize) {
       NS_WARNING("Created a downscaler, but not downscaling?");
       return NS_ERROR_INVALID_ARG;
