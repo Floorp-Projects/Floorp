@@ -298,6 +298,9 @@ var Logins = {
           if (newPassword !== origPassword) {
             propBag.setProperty("password", newPassword);
           }
+          // Sync relies on timePasswordChanged to decide whether
+          // or not to sync a login, so touch it.
+          propBag.setProperty("timePasswordChanged", Date.now());
           Services.logins.modifyLogin(logins[i], propBag);
           break;
         }
