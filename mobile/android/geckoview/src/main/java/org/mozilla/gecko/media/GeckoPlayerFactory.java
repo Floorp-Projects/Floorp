@@ -24,7 +24,7 @@ public final class GeckoPlayerFactory {
         return null;
     }
 
-    synchronized static BaseHlsPlayer getPlayer(int id) {
+    synchronized static BaseHlsPlayer getPlayer(final int id) {
         for (BaseHlsPlayer player : sPlayerList) {
             if (player.getId() == id) {
                 return player;
@@ -34,7 +34,7 @@ public final class GeckoPlayerFactory {
         return null;
     }
 
-    synchronized static void removePlayer(@NonNull BaseHlsPlayer player) {
+    synchronized static void removePlayer(final @NonNull BaseHlsPlayer player) {
         int index = sPlayerList.indexOf(player);
         if (index >= 0) {
             sPlayerList.remove(player);

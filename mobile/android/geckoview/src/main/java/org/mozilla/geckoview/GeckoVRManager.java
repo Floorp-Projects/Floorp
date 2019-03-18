@@ -24,7 +24,7 @@ public class GeckoVRManager {
 
     @WrapForJNI
     private static synchronized long getExternalContext() {
-      return mExternalContext;
+        return mExternalContext;
     }
 
     /**
@@ -37,5 +37,4 @@ public class GeckoVRManager {
     public static synchronized void setExternalContext(final long externalContext) {
         mExternalContext = externalContext;
     }
-
 }

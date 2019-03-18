@@ -11,7 +11,6 @@ import re
 import requests
 from taskcluster.notify import Notify
 from taskcluster import optionsFromEnvironment
-from taskgraph.util.taskcluster import get_root_url
 from operator import itemgetter
 
 from mozilla_version.gecko import GeckoVersion
@@ -218,8 +217,12 @@ Task group: [{task_group_id}](https://tools.taskcluster.net/groups/{task_group_i
 
     subject = '{} Build of {} {} build {}'.format(subject_prefix, product, version, build_number)
 
-    use_proxy = 'TASKCLUSTER_PROXY_URL' in os.environ
-    notify_options = optionsFromEnvironment({'rootUrl': get_root_url(use_proxy)})
+    # use proxy if configured, otherwise local credentials from env vars
+    if 'TASKCLUSTER_PROXY_URL' in os.environ:
+        notify_options = {'rootUrl': os.environ['TASKCLUSTER_PROXY_URL']}
+    else:
+        notify_options = optionsFromEnvironment()
+
     notify = Notify(notify_options)
     for address in addresses:
         notify.email({

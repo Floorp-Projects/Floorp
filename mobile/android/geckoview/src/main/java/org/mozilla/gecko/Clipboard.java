@@ -4,10 +4,7 @@
 
 package org.mozilla.gecko;
 
-import java.util.concurrent.SynchronousQueue;
-
 import org.mozilla.gecko.annotation.WrapForJNI;
-import org.mozilla.gecko.util.ThreadUtils;
 
 import android.content.ClipboardManager;
 import android.content.ClipData;

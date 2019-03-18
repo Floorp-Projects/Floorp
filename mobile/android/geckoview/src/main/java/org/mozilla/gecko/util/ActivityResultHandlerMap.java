@@ -10,12 +10,12 @@ public final class ActivityResultHandlerMap {
     private final SparseArray<ActivityResultHandler> mMap = new SparseArray<ActivityResultHandler>();
     private int mCounter;
 
-    public synchronized int put(ActivityResultHandler handler) {
+    public synchronized int put(final ActivityResultHandler handler) {
         mMap.put(mCounter, handler);
         return mCounter++;
     }
 
-    public synchronized ActivityResultHandler getAndRemove(int i) {
+    public synchronized ActivityResultHandler getAndRemove(final int i) {
         ActivityResultHandler handler = mMap.get(i);
         mMap.delete(i);
 

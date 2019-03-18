@@ -319,8 +319,8 @@ var gSearchPane = {
     }
   },
 
-  onRestoreDefaults() {
-    let num = gEngineView._engineStore.restoreDefaultEngines();
+  async onRestoreDefaults() {
+    let num = await gEngineView._engineStore.restoreDefaultEngines();
     gEngineView.rowCountChanged(0, num);
     gEngineView.invalidate();
   },
@@ -633,7 +633,7 @@ EngineView.prototype = {
             sourceIndex != targetIndex + orientation);
   },
 
-  drop(dropIndex, orientation, dataTransfer) {
+  async drop(dropIndex, orientation, dataTransfer) {
     var sourceIndex = this.getSourceIndexFromDrag(dataTransfer);
     var sourceEngine = this._engineStore.engines[sourceIndex];
 
@@ -645,7 +645,7 @@ EngineView.prototype = {
       dropIndex++;
     }
 
-    this._engineStore.moveEngine(sourceEngine, dropIndex);
+    await this._engineStore.moveEngine(sourceEngine, dropIndex);
     gSearchPane.showRestoreDefaults(true);
     gSearchPane.buildDefaultEngineDropDown();
 

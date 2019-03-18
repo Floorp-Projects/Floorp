@@ -5091,6 +5091,9 @@ var XULBrowserWindow = {
     }
 
     ContentBlocking.onContentBlockingEvent(this._event, aWebProgress, aIsSimulated);
+    // Because this function will only receive content blocking event updates
+    // for the currently selected tab, we handle updates to background tabs in
+    // TabsProgressListener.onContentBlockingEvent.
     gBrowser.selectedBrowser.updateSecurityUIForContentBlockingEvent(aEvent);
   },
 
@@ -5461,6 +5464,14 @@ const AccessibilityRefreshBlocker = {
 };
 
 var TabsProgressListener = {
+  onContentBlockingEvent(aBrowser, aWebProgress, aRequest, aEvent) {
+    // Handle content blocking events for background (=non-selected) tabs.
+    // This event is processed for the selected tab in XULBrowserWindow.onContentBlockingEvent.
+    if (aBrowser != gBrowser.selectedBrowser) {
+      aBrowser.updateSecurityUIForContentBlockingEvent(aEvent);
+    }
+  },
+
   onStateChange(aBrowser, aWebProgress, aRequest, aStateFlags, aStatus) {
     // Collect telemetry data about tab load times.
     if (aWebProgress.isTopLevel && (!aRequest.originalURI || aRequest.originalURI.scheme != "about")) {
@@ -6455,6 +6466,20 @@ function UpdateCurrentCharset(target) {
   }
 }
 
+function promptRemoveExtension(addon) {
+  let {name} = addon;
+  let brand = document.getElementById("bundle_brand").getString("brandShorterName");
+  let {getFormattedString, getString} = gNavigatorBundle;
+  let title = getFormattedString("webext.remove.confirmation.title", [name]);
+  let message = getFormattedString("webext.remove.confirmation.message", [name, brand]);
+  let btnTitle = getString("webext.remove.confirmation.button");
+  let {BUTTON_TITLE_IS_STRING: titleString, BUTTON_TITLE_CANCEL: titleCancel,
+        BUTTON_POS_0, BUTTON_POS_1, confirmEx} = Services.prompt;
+  let btnFlags = BUTTON_POS_0 * titleString + BUTTON_POS_1 * titleCancel;
+  return confirmEx(null, title, message, btnFlags, btnTitle, null, null, null,
+                    {value: 0});
+}
+
 var ToolbarContextMenu = {
   updateDownloadsAutoHide(popup) {
     let checkbox = document.getElementById("toolbar-context-autohide-downloads-button");
@@ -6504,17 +6529,7 @@ var ToolbarContextMenu = {
     if (!addon || !(addon.permissions & AddonManager.PERM_CAN_UNINSTALL)) {
       return;
     }
-    let {name} = addon;
-    let brand = document.getElementById("bundle_brand").getString("brandShorterName");
-    let {getFormattedString, getString} = gNavigatorBundle;
-    let title = getFormattedString("webext.remove.confirmation.title", [name]);
-    let message = getFormattedString("webext.remove.confirmation.message", [name, brand]);
-    let btnTitle = getString("webext.remove.confirmation.button");
-    let {BUTTON_TITLE_IS_STRING: titleString, BUTTON_TITLE_CANCEL: titleCancel,
-         BUTTON_POS_0, BUTTON_POS_1, confirmEx} = Services.prompt;
-    let btnFlags = BUTTON_POS_0 * titleString + BUTTON_POS_1 * titleCancel;
-    let response = confirmEx(null, title, message, btnFlags, btnTitle, null, null, null,
-                             {value: 0});
+    let response = promptRemoveExtension(addon);
     AMTelemetry.recordActionEvent({
       object: "browserAction",
       action: "uninstall",

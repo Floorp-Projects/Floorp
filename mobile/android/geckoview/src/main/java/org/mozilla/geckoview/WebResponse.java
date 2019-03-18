@@ -13,7 +13,6 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import java.io.InputStream;
-import java.nio.ByteBuffer;
 
 /**
  * WebResponse represents an HTTP[S] response. It is normally created
@@ -99,7 +98,7 @@ public class WebResponse extends WebMessage {
          * @param code A int representing the HTTP status code.
          * @return This Builder instance.
          */
-        public @NonNull Builder statusCode(int code) {
+        public @NonNull Builder statusCode(final int code) {
             mStatusCode = code;
             return this;
         }

@@ -6,7 +6,7 @@ async function runTestOnPrivacyPrefPane(testFunc) {
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:preferences", true, true);
   let browser = tab.linkedBrowser;
   info("loaded about:preferences");
-  browser.contentWindow.gotoPref("panePrivacy");
+  await browser.contentWindow.gotoPref("panePrivacy");
   info("viewing privacy pane, executing testFunc");
   await testFunc(browser.contentWindow);
   BrowserTestUtils.removeTab(tab);

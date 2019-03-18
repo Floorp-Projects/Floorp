@@ -190,7 +190,7 @@ nsresult XRE_InitEmbedding2(nsIFile* aLibXULDirectory, nsIFile* aAppDirectory,
                                        aAppDirProvider);
   if (NS_FAILED(rv)) return rv;
 
-  rv = NS_InitXPCOM2(nullptr, aAppDirectory, gDirServiceProvider);
+  rv = NS_InitXPCOM(nullptr, aAppDirectory, gDirServiceProvider);
   if (NS_FAILED(rv)) return rv;
 
   // We do not need to autoregister components here. The CheckCompatibility()

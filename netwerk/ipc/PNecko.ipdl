@@ -25,7 +25,7 @@ include protocol PChildToParentStream; //FIXME: bug #792908
 include protocol PParentToChildStream; //FIXME: bug #792908
 include protocol PStunAddrsRequest;
 include protocol PFileChannel;
-include protocol PTrackingDummyChannel;
+include protocol PClassifierDummyChannel;
 include protocol PWebrtcProxyChannel;
 include protocol PSocketProcessBridge;
 
@@ -64,7 +64,7 @@ nested(upto inside_cpow) sync protocol PNecko
   manages PTransportProvider;
   manages PAltDataOutputStream;
   manages PStunAddrsRequest;
-  manages PTrackingDummyChannel;
+  manages PClassifierDummyChannel;
   manages PWebrtcProxyChannel;
 
 parent:
@@ -112,9 +112,9 @@ parent:
 
   async PChannelDiverter(ChannelDiverterArgs channel);
 
-  async PTrackingDummyChannel(nsIURI uri, nsIURI aTopWindowURI,
-                              nsresult aTopWindowURIResult,
-                              LoadInfoArgs? loadInfo);
+  async PClassifierDummyChannel(nsIURI uri, nsIURI aTopWindowURI,
+                                nsresult aTopWindowURIResult,
+                                LoadInfoArgs? loadInfo);
 
   /**
    * These are called from the child with the results of the auth prompt.

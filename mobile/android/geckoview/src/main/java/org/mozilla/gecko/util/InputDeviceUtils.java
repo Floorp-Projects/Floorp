@@ -8,7 +8,7 @@ package org.mozilla.gecko.util;
 import android.view.InputDevice;
 
 public class InputDeviceUtils {
-    public static boolean isPointerTypeDevice(InputDevice inputDevice) {
+    public static boolean isPointerTypeDevice(final InputDevice inputDevice) {
         int sources = inputDevice.getSources();
         return (sources & (InputDevice.SOURCE_CLASS_JOYSTICK |
                            InputDevice.SOURCE_CLASS_POINTER |

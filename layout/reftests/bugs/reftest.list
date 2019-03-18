@@ -40,13 +40,13 @@
 != 24998-1.html 24998-1-ref.html
 # Debug builds and ASAN builds have larger stack frames, so skipped.
 # 32-bit Windows doesn't have enough run-time stack to deal with the test, so skipped.
-skip-if(isDebugBuild||AddressSanitizer||(winWidget&&(!is64Bit))||(Android&&AndroidVersion<21)) == 256180-1.html 256180-1-ref.html
+skip-if(isDebugBuild||AddressSanitizer||(winWidget&&(!is64Bit))||(Android&&AndroidVersion<21)||(/^Windows\x20NT\x2010\.0/.test(http.oscpu),0-1,0-256)&&(/^aarch64-msvc/.test(xulRuntime.XPCOMABI))) == 256180-1.html 256180-1-ref.html
 # Debug builds have larger stack frames, so skipped.
 # 32-bit Windows doesn't have enough run-time stack to deal with the test, so skipped.
-skip-if(isDebugBuild||(winWidget&&(!is64Bit))||(Android&&AndroidVersion<21)) == 256180-2.html 256180-2-ref.html
+skip-if(isDebugBuild||(winWidget&&(!is64Bit))||(Android&&AndroidVersion<21)||(/^Windows\x20NT\x2010\.0/.test(http.oscpu),0-1,0-256)&&(/^aarch64-msvc/.test(xulRuntime.XPCOMABI))) == 256180-2.html 256180-2-ref.html
 # Debug builds and ASAN builds have larger stack frames, so skipped.
 # 32-bit Windows doesn't have enough run-time stack to deal with the test, so skipped.
-skip-if(isDebugBuild||AddressSanitizer||(winWidget&&(!is64Bit))||(Android&&AndroidVersion<21)) == 256180-3.html 256180-3-ref.html
+skip-if(isDebugBuild||AddressSanitizer||(winWidget&&(!is64Bit))||(Android&&AndroidVersion<21)||(/^Windows\x20NT\x2010\.0/.test(http.oscpu),0-1,0-256)&&(/^aarch64-msvc/.test(xulRuntime.XPCOMABI))) == 256180-3.html 256180-3-ref.html
 # Debug builds have larger stack frames, so skipped.
 skip-if(isDebugBuild) == 256180-4.html 256180-4-ref.html
 skip-if(isDebugBuild) == 256180-6.html 256180-6-ref.html
@@ -1919,13 +1919,13 @@ pref(apz.allow_zooming,true) skip-if(!Android) == 1133905-3-h.html 1133905-ref-h
 pref(apz.allow_zooming,true) skip-if(!Android) == 1133905-4-h.html 1133905-ref-h.html
 pref(apz.allow_zooming,true) skip-if(!Android) == 1133905-5-h.html 1133905-ref-h.html
 pref(apz.allow_zooming,true) skip-if(!Android) == 1133905-6-h.html 1133905-ref-h.html
-pref(apz.allow_zooming,true) pref(layout.scroll.root-frame-containers,0) skip-if(!Android) fuzzy-if(Android,0-54,0-6) == 1133905-1-vh.html 1133905-ref-vh.html
-pref(apz.allow_zooming,true) pref(layout.scroll.root-frame-containers,0) skip-if(!Android) fuzzy-if(Android,0-45,0-4) == 1133905-2-vh.html 1133905-ref-vh.html
-pref(apz.allow_zooming,true) pref(layout.scroll.root-frame-containers,0) skip-if(!Android) == 1133905-3-vh.html 1133905-ref-vh.html
-pref(apz.allow_zooming,true) pref(layout.scroll.root-frame-containers,0) skip-if(!Android) fuzzy-if(Android,0-45,0-4) == 1133905-4-vh.html 1133905-ref-vh.html
-pref(apz.allow_zooming,true) pref(layout.scroll.root-frame-containers,0) skip-if(!Android) fuzzy-if(Android,0-54,0-6) == 1133905-5-vh.html 1133905-ref-vh.html
-pref(apz.allow_zooming,true) pref(layout.scroll.root-frame-containers,0) skip-if(!Android) fuzzy-if(Android,0-54,0-8) == 1133905-6-vh.html 1133905-ref-vh.html
-pref(apz.allow_zooming,true) pref(layout.scroll.root-frame-containers,0) skip-if(!Android) != 1133905-ref-vh.html about:blank # make sure it doesn't render blank
+pref(apz.allow_zooming,true) skip-if(!Android) fuzzy-if(Android,0-54,0-6) == 1133905-1-vh.html 1133905-ref-vh.html
+pref(apz.allow_zooming,true) skip-if(!Android) fuzzy-if(Android,0-45,0-4) == 1133905-2-vh.html 1133905-ref-vh.html
+pref(apz.allow_zooming,true) skip-if(!Android) == 1133905-3-vh.html 1133905-ref-vh.html
+pref(apz.allow_zooming,true) skip-if(!Android) fuzzy-if(Android,0-45,0-4) == 1133905-4-vh.html 1133905-ref-vh.html
+pref(apz.allow_zooming,true) skip-if(!Android) fuzzy-if(Android,0-54,0-6) == 1133905-5-vh.html 1133905-ref-vh.html
+pref(apz.allow_zooming,true) skip-if(!Android) fuzzy-if(Android,0-54,0-8) == 1133905-6-vh.html 1133905-ref-vh.html
+pref(apz.allow_zooming,true) skip-if(!Android) != 1133905-ref-vh.html about:blank # make sure it doesn't render blank
 pref(apz.allow_zooming,true) skip-if(!Android) == 1133905-1-rtl.html 1133905-ref-rtl.html
 pref(apz.allow_zooming,true) skip-if(!Android) == 1133905-2-rtl.html 1133905-ref-rtl.html
 pref(apz.allow_zooming,true) skip-if(!Android) == 1133905-3-rtl.html 1133905-ref-rtl.html
@@ -1944,13 +1944,13 @@ pref(apz.allow_zooming,true) skip-if(!Android) == 1133905-3-h-rtl.html 1133905-r
 pref(apz.allow_zooming,true) skip-if(!Android) == 1133905-4-h-rtl.html 1133905-ref-h-rtl.html
 pref(apz.allow_zooming,true) skip-if(!Android) == 1133905-5-h-rtl.html 1133905-ref-h-rtl.html
 pref(apz.allow_zooming,true) skip-if(!Android) == 1133905-6-h-rtl.html 1133905-ref-h-rtl.html
-pref(apz.allow_zooming,true) pref(layout.scroll.root-frame-containers,0) skip-if(!Android) fuzzy-if(Android,0-54,0-6) == 1133905-1-vh-rtl.html 1133905-ref-vh-rtl.html
-pref(apz.allow_zooming,true) pref(layout.scroll.root-frame-containers,0) skip-if(!Android) fuzzy-if(Android,0-45,0-4) == 1133905-2-vh-rtl.html 1133905-ref-vh-rtl.html
-pref(apz.allow_zooming,true) pref(layout.scroll.root-frame-containers,0) skip-if(!Android) == 1133905-3-vh-rtl.html 1133905-ref-vh-rtl.html
-pref(apz.allow_zooming,true) pref(layout.scroll.root-frame-containers,0) skip-if(!Android) fails-if(Android) == 1133905-4-vh-rtl.html 1133905-ref-vh-rtl.html # bug 1527511
-pref(apz.allow_zooming,true) pref(layout.scroll.root-frame-containers,0) skip-if(!Android) fails-if(Android) == 1133905-5-vh-rtl.html 1133905-ref-vh-rtl.html # bug 1527511
-pref(apz.allow_zooming,true) pref(layout.scroll.root-frame-containers,0) skip-if(!Android) fails-if(Android) == 1133905-6-vh-rtl.html 1133905-ref-vh-rtl.html # bug 1527511
-pref(apz.allow_zooming,true) pref(layout.scroll.root-frame-containers,0) skip-if(!Android) != 1133905-ref-vh-rtl.html about:blank # make sure it doesn't render blank
+pref(apz.allow_zooming,true) skip-if(!Android) fuzzy-if(Android,0-54,0-6) == 1133905-1-vh-rtl.html 1133905-ref-vh-rtl.html
+pref(apz.allow_zooming,true) skip-if(!Android) fuzzy-if(Android,0-45,0-4) == 1133905-2-vh-rtl.html 1133905-ref-vh-rtl.html
+pref(apz.allow_zooming,true) skip-if(!Android) == 1133905-3-vh-rtl.html 1133905-ref-vh-rtl.html
+pref(apz.allow_zooming,true) skip-if(!Android) fails-if(Android) == 1133905-4-vh-rtl.html 1133905-ref-vh-rtl.html # bug 1527511
+pref(apz.allow_zooming,true) skip-if(!Android) fails-if(Android) == 1133905-5-vh-rtl.html 1133905-ref-vh-rtl.html # bug 1527511
+pref(apz.allow_zooming,true) skip-if(!Android) fails-if(Android) == 1133905-6-vh-rtl.html 1133905-ref-vh-rtl.html # bug 1527511
+pref(apz.allow_zooming,true) skip-if(!Android) != 1133905-ref-vh-rtl.html about:blank # make sure it doesn't render blank
 == 1149304-1-transform-change.html 1149304-1-transform-change-ref.html
 == 1150021-1.xul 1150021-1-ref.xul
 == 1151145-1.html 1151145-1-ref.html

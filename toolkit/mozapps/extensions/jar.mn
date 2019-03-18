@@ -22,4 +22,6 @@ toolkit.jar:
   content/mozapps/extensions/aboutaddons.html                   (content/aboutaddons.html)
   content/mozapps/extensions/aboutaddons.js                     (content/aboutaddons.js)
   content/mozapps/extensions/aboutaddons.css                    (content/aboutaddons.css)
+  content/mozapps/extensions/panel-list.css                     (content/panel-list.css)
+  content/mozapps/extensions/panel-item.css                     (content/panel-item.css)
 #endif

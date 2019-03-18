@@ -21,7 +21,7 @@ with Files("talos/tests/cpstartup/**"):
     BUG_COMPONENT = ("Firefox", "Tabbed Browser")
 
 with Files("talos/tests/dromaeo/**"):
-    BUG_COMPONENT = ("Core", "DOM")
+    BUG_COMPONENT = ("Core", "DOM: Core & HTML")
 
 with Files("talos/tests/kraken/**"):
     BUG_COMPONENT = ("Core", "JavaScript Engine")

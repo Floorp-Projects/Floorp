@@ -863,6 +863,11 @@ async function invokeWithBreakpoint(
   await invokeResult;
 }
 
+function prettyPrint(dbg) {
+  const sourceId = dbg.selectors.getSelectedSourceId(dbg.store.getState());
+  return dbg.actions.togglePrettyPrint(sourceId);
+}
+
 async function expandAllScopes(dbg) {
   const scopes = await waitForElement(dbg, "scopes");
   const scopeElements = scopes.querySelectorAll(
@@ -1086,6 +1091,22 @@ function isVisible(outerEl, innerEl) {
 
   const visible = verticallyVisible && horizontallyVisible;
   return visible;
+}
+
+function getEditorLineEl(dbg, line) {
+  const lines = dbg.win.document.querySelectorAll(".CodeMirror-code > div");
+  return lines[line - 1];
+}
+
+function assertEditorBreakpoint(dbg, line, shouldExist) {
+  const exists = !!getEditorLineEl(dbg, line).querySelector(".new-breakpoint");
+  ok(
+    exists === shouldExist,
+    "Breakpoint " +
+      (shouldExist ? "exists" : "does not exist") +
+      " on line " +
+      line
+  );
 }
 
 const selectors = {
@@ -1613,4 +1634,27 @@ async function evaluateInTopFrame(target, text) {
 async function checkEvaluateInTopFrame(target, text, expected) {
   const rval = await evaluateInTopFrame(target, text);
   ok(rval == expected, `Eval returned ${expected}`);
+}
+
+async function findConsoleMessage(dbg, query) {
+  const [message,] = await findConsoleMessages(dbg, query);
+  const value = message.querySelector(".message-body").innerText;
+  const link = message.querySelector(".frame-link-source-inner").innerText;
+  return { value, link };
+}
+
+async function findConsoleMessages(dbg, query) {
+  const webConsole = await dbg.toolbox.getPanel("webconsole");
+  const win = webConsole._frameWindow;
+  return Array.prototype.filter.call(
+    win.document.querySelectorAll(".message"),
+    e => e.innerText.includes(query)
+  );
+}
+
+async function hasConsoleMessage(dbg, msg) {
+  return waitFor(async () => {
+    const messages = await findConsoleMessages(dbg, msg);
+    return messages.length > 0;
+  })
 }

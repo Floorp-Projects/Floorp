@@ -6,6 +6,7 @@
 
 #include "UrlClassifierFeatureTrackingAnnotation.h"
 
+#include "Classifier.h"
 #include "mozilla/AntiTrackingCommon.h"
 #include "mozilla/Logging.h"
 #include "mozilla/StaticPrefs.h"
@@ -34,7 +35,6 @@ namespace {
 #define TABLE_ANNOTATION_WHITELIST_PREF "annotation-whitelist-pref"
 
 StaticRefPtr<UrlClassifierFeatureTrackingAnnotation> gFeatureTrackingAnnotation;
-
 
 }  // namespace
 
@@ -124,9 +124,39 @@ UrlClassifierFeatureTrackingAnnotation::ProcessChannel(nsIChannel* aChannel,
   // This is not a blocking feature.
   *aShouldContinue = true;
 
+  nsTArray<nsCString> list;
+  Classifier::SplitTables(aList, list);
+
+  uint32_t flags = 0;
+  for (nsCString& table : list) {
+    if (StringBeginsWith(table, NS_LITERAL_CSTRING("ads-track-"))) {
+      flags |= nsIHttpChannel::ClassificationFlags::CLASSIFIED_TRACKING_AD;
+      continue;
+    }
+
+    if (StringBeginsWith(table, NS_LITERAL_CSTRING("analytics-track-"))) {
+      flags |=
+          nsIHttpChannel::ClassificationFlags::CLASSIFIED_TRACKING_ANALYTICS;
+      continue;
+    }
+
+    if (StringBeginsWith(table, NS_LITERAL_CSTRING("social-track-"))) {
+      flags |= nsIHttpChannel::ClassificationFlags::CLASSIFIED_TRACKING_SOCIAL;
+      continue;
+    }
+
+    if (StringBeginsWith(table, NS_LITERAL_CSTRING("content-track-"))) {
+      flags |= nsIHttpChannel::ClassificationFlags::CLASSIFIED_TRACKING_CONTENT;
+      continue;
+    }
+  }
+
+  if (flags == 0) {
+    flags |= nsIHttpChannel::ClassificationFlags::CLASSIFIED_TRACKING;
+  }
+
   UrlClassifierCommon::AnnotateChannel(
-      aChannel, AntiTrackingCommon::eTrackingAnnotations,
-      nsIHttpChannel::ClassificationFlags::CLASSIFIED_TRACKING,
+      aChannel, AntiTrackingCommon::eTrackingAnnotations, flags,
       nsIWebProgressListener::STATE_LOADED_TRACKING_CONTENT);
 
   return NS_OK;

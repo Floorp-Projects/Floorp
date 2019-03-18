@@ -118,7 +118,7 @@ this.AntiTracking = {
           blockingByContentBlockingRTUI: true,
           allowList: false,
           callback: callbackNonTracking,
-          extraPrefs: [],
+          extraPrefs,
           expectedBlockingNotifications: 0,
           runInPrivateWindow,
           iframeSandbox,
@@ -133,7 +133,7 @@ this.AntiTracking = {
           blockingByContentBlockingRTUI: false,
           allowList: true,
           callback: callbackNonTracking,
-          extraPrefs: [],
+          extraPrefs,
           expectedBlockingNotifications: 0,
           runInPrivateWindow,
           iframeSandbox,
@@ -148,7 +148,7 @@ this.AntiTracking = {
           blockingByContentBlockingRTUI: false,
           allowList: false,
           callback: callbackNonTracking,
-          extraPrefs: [],
+          extraPrefs,
           expectedBlockingNotifications: 0,
           runInPrivateWindow,
           iframeSandbox,
@@ -163,7 +163,7 @@ this.AntiTracking = {
           blockingByContentBlockingRTUI: true,
           allowList: false,
           callback: callbackTracking,
-          extraPrefs: [],
+          extraPrefs,
           expectedBlockingNotifications: 0,
           runInPrivateWindow,
           iframeSandbox,
@@ -178,7 +178,7 @@ this.AntiTracking = {
           blockingByContentBlockingRTUI: true,
           allowList: true,
           callback: callbackNonTracking,
-          extraPrefs: [],
+          extraPrefs,
           expectedBlockingNotifications: 0,
           runInPrivateWindow,
           iframeSandbox,
@@ -193,7 +193,7 @@ this.AntiTracking = {
           blockingByContentBlockingRTUI: true,
           allowList: true,
           callback: callbackNonTracking,
-          extraPrefs: [],
+          extraPrefs,
           expectedBlockingNotifications: 0,
           runInPrivateWindow,
           iframeSandbox,
@@ -208,7 +208,7 @@ this.AntiTracking = {
           blockingByContentBlockingRTUI: true,
           allowList: true,
           callback: callbackNonTracking,
-          extraPrefs: [],
+          extraPrefs,
           expectedBlockingNotifications: 0,
           runInPrivateWindow,
           iframeSandbox,
@@ -223,7 +223,7 @@ this.AntiTracking = {
           blockingByContentBlockingRTUI: false,
           allowList: false,
           callback: callbackNonTracking,
-          extraPrefs: [],
+          extraPrefs,
           expectedBlockingNotifications: false,
           runInPrivateWindow,
           iframeSandbox,
@@ -483,7 +483,7 @@ this.AntiTracking = {
         await TestUtils.topicObserved("browser-delayed-startup-finished");
       }
 
-      await AntiTracking._setupTest(win, BEHAVIOR_REJECT_TRACKER, true, true, extraPrefs);
+      await AntiTracking._setupTest(win, BEHAVIOR_REJECT_TRACKER, true, extraPrefs);
 
       info("Creating a new tab");
       let tab = BrowserTestUtils.addTab(win.gBrowser, TEST_TOP_PAGE);
@@ -560,7 +560,7 @@ this.AntiTracking = {
         await TestUtils.topicObserved("browser-delayed-startup-finished");
       }
 
-      await AntiTracking._setupTest(win, BEHAVIOR_REJECT_TRACKER, true, true, extraPrefs);
+      await AntiTracking._setupTest(win, BEHAVIOR_REJECT_TRACKER, true, extraPrefs);
 
       info("Creating a new tab");
       let tab = BrowserTestUtils.addTab(win.gBrowser, TEST_TOP_PAGE);

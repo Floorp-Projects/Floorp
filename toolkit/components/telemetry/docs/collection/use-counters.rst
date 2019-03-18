@@ -72,7 +72,7 @@ The definition files are processed twice:
 
 .. note::
 
-    The histograms that are generated out of use counters are set to *never* expire and are *opt-in*.
+    The histograms that are generated out of use counters are set to *never* expire and are collected from Firefox release. Note that before Firefox 65 they were only collected on pre-release.
 
 gen-usecounters.py
 ------------------

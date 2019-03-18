@@ -87,7 +87,7 @@ TouchBehaviorFlags TouchActionHelper::GetAllowedTouchBehavior(
   bool considerPanning = true;
 
   for (nsIFrame* frame = target; frame && frame->GetContent() && behavior;
-       frame = frame->GetParent()) {
+       frame = frame->GetInFlowParent()) {
     UpdateAllowedBehavior(nsLayoutUtils::GetTouchActionFromFrame(frame),
                           considerPanning, behavior);
 

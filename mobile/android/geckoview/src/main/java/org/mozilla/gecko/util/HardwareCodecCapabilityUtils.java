@@ -18,220 +18,222 @@ import android.util.Log;
 import java.util.Locale;
 
 public final class HardwareCodecCapabilityUtils {
-  private static final String LOGTAG = "GeckoHardwareCodecCapabilityUtils";
+    private static final String LOGTAG = "GeckoHardwareCodecCapabilityUtils";
 
-  // List of supported HW VP8 encoders.
-  private static final String[] supportedVp8HwEncCodecPrefixes =
-  {"OMX.qcom.", "OMX.Intel." };
-  // List of supported HW VP8 decoders.
-  private static final String[] supportedVp8HwDecCodecPrefixes =
-  {"OMX.qcom.", "OMX.Nvidia.", "OMX.Exynos.", "OMX.Intel." };
-  private static final String VP8_MIME_TYPE = "video/x-vnd.on2.vp8";
-  private static final String VP9_MIME_TYPE = "video/x-vnd.on2.vp9";
-  // NV12 color format supported by QCOM codec, but not declared in MediaCodec -
-  // see /hardware/qcom/media/mm-core/inc/OMX_QCOMExtns.h
-  private static final int
-    COLOR_QCOM_FORMATYUV420PackedSemiPlanar32m = 0x7FA30C04;
-  // Allowable color formats supported by codec - in order of preference.
-  private static final int[] supportedColorList = {
-    CodecCapabilities.COLOR_FormatYUV420Planar,
-    CodecCapabilities.COLOR_FormatYUV420SemiPlanar,
-    CodecCapabilities.COLOR_QCOM_FormatYUV420SemiPlanar,
-    COLOR_QCOM_FORMATYUV420PackedSemiPlanar32m
-  };
-  private static final String[] adaptivePlaybackBlacklist =
-  {
-    "GT-I9300",         // S3 (I9300 / I9300I)
-    "SCH-I535",         // S3
-    "SGH-T999",         // S3 (T-Mobile)
-    "SAMSUNG-SGH-T999", // S3 (T-Mobile)
-    "SGH-M919",         // S4
-    "GT-I9505",         // S4
-    "GT-I9515",         // S4
-    "SCH-R970",         // S4
-    "SGH-I337",         // S4
-    "SPH-L720",         // S4 (Sprint)
-    "SAMSUNG-SGH-I337", // S4
-    "GT-I9195",         // S4 Mini
-    "300E5EV/300E4EV/270E5EV/270E4EV/2470EV/2470EE",
-    "LG-D605"           // LG Optimus L9 II
-  };
+    // List of supported HW VP8 encoders.
+    private static final String[] supportedVp8HwEncCodecPrefixes = {
+        "OMX.qcom.", "OMX.Intel."
+    };
+    // List of supported HW VP8 decoders.
+    private static final String[] supportedVp8HwDecCodecPrefixes = {
+        "OMX.qcom.", "OMX.Nvidia.", "OMX.Exynos.", "OMX.Intel."
+    };
+    private static final String VP8_MIME_TYPE = "video/x-vnd.on2.vp8";
+    private static final String VP9_MIME_TYPE = "video/x-vnd.on2.vp9";
+    // NV12 color format supported by QCOM codec, but not declared in MediaCodec -
+    // see /hardware/qcom/media/mm-core/inc/OMX_QCOMExtns.h
+    private static final int
+            COLOR_QCOM_FORMATYUV420PackedSemiPlanar32m = 0x7FA30C04;
+    // Allowable color formats supported by codec - in order of preference.
+    private static final int[] supportedColorList = {
+        CodecCapabilities.COLOR_FormatYUV420Planar,
+        CodecCapabilities.COLOR_FormatYUV420SemiPlanar,
+        CodecCapabilities.COLOR_QCOM_FormatYUV420SemiPlanar,
+        COLOR_QCOM_FORMATYUV420PackedSemiPlanar32m
+    };
+    private static final String[] adaptivePlaybackBlacklist = {
+        "GT-I9300",         // S3 (I9300 / I9300I)
+        "SCH-I535",         // S3
+        "SGH-T999",         // S3 (T-Mobile)
+        "SAMSUNG-SGH-T999", // S3 (T-Mobile)
+        "SGH-M919",         // S4
+        "GT-I9505",         // S4
+        "GT-I9515",         // S4
+        "SCH-R970",         // S4
+        "SGH-I337",         // S4
+        "SPH-L720",         // S4 (Sprint)
+        "SAMSUNG-SGH-I337", // S4
+        "GT-I9195",         // S4 Mini
+        "300E5EV/300E4EV/270E5EV/270E4EV/2470EV/2470EE",
+        "LG-D605"           // LG Optimus L9 II
+    };
 
-  @WrapForJNI
-  public static boolean findDecoderCodecInfoForMimeType(String aMimeType) {
-    int numCodecs = 0;
-    try {
-      numCodecs = MediaCodecList.getCodecCount();
-    } catch (final RuntimeException e) {
-      Log.e(LOGTAG, "Failed to retrieve media codec count", e);
-      return false;
-    }
-
-    for (int i = 0; i < numCodecs; ++i) {
-      MediaCodecInfo info = MediaCodecList.getCodecInfoAt(i);
-      if (info.isEncoder()) {
-        continue;
-      }
-      for (String mimeType : info.getSupportedTypes()) {
-        if (mimeType.equals(aMimeType)) {
-          return true;
-        }
-      }
-    }
-    return false;
-  }
-
-  @WrapForJNI
-  public static boolean checkSupportsAdaptivePlayback(MediaCodec aCodec, String aMimeType) {
-    // isFeatureSupported supported on API level >= 19.
-    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.KITKAT ||
-        isAdaptivePlaybackBlacklisted(aMimeType)) {
-      return false;
-    }
-
-    try {
-      MediaCodecInfo info = aCodec.getCodecInfo();
-      MediaCodecInfo.CodecCapabilities capabilities = info.getCapabilitiesForType(aMimeType);
-      return capabilities != null &&
-             capabilities.isFeatureSupported(
-               MediaCodecInfo.CodecCapabilities.FEATURE_AdaptivePlayback);
-    } catch (IllegalArgumentException e) {
-      Log.e(LOGTAG, "Retrieve codec information failed", e);
-    }
-    return false;
-  }
-
-  // See Bug1360626 and
-  // https://codereview.chromium.org/1869103002 for details.
-  private static boolean isAdaptivePlaybackBlacklisted(String aMimeType) {
-    Log.d(LOGTAG, "The device ModelID is " + Build.MODEL);
-    if (!aMimeType.equals("video/avc") && !aMimeType.equals("video/avc1")) {
-      return false;
-    }
-
-    if (!Build.MANUFACTURER.toLowerCase(Locale.getDefault()).equals("samsung")) {
-      return false;
-    }
-
-    for (String model : adaptivePlaybackBlacklist) {
-      if (Build.MODEL.startsWith(model)) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  public static boolean getHWEncoderCapability() {
-    if (Build.VERSION.SDK_INT >= 20) {
-      for (int i = 0; i < MediaCodecList.getCodecCount(); ++i) {
-        MediaCodecInfo info = MediaCodecList.getCodecInfoAt(i);
-        if (!info.isEncoder()) {
-          continue;
-        }
-        String name = null;
-        for (String mimeType : info.getSupportedTypes()) {
-          if (mimeType.equals(VP8_MIME_TYPE)) {
-            name = info.getName();
-            break;
-          }
-        }
-        if (name == null) {
-          continue;  // No HW support in this codec; try the next one.
-        }
-        Log.e(LOGTAG, "Found candidate encoder " + name);
-
-        // Check if this is supported encoder.
-        boolean supportedCodec = false;
-        for (String codecPrefix : supportedVp8HwEncCodecPrefixes) {
-          if (name.startsWith(codecPrefix)) {
-            supportedCodec = true;
-            break;
-          }
-        }
-        if (!supportedCodec) {
-          continue;
+    @WrapForJNI
+    public static boolean findDecoderCodecInfoForMimeType(final String aMimeType) {
+        int numCodecs = 0;
+        try {
+            numCodecs = MediaCodecList.getCodecCount();
+        } catch (final RuntimeException e) {
+            Log.e(LOGTAG, "Failed to retrieve media codec count", e);
+            return false;
         }
 
-        // Check if codec supports either yuv420 or nv12.
-        CodecCapabilities capabilities =
-          info.getCapabilitiesForType(VP8_MIME_TYPE);
-        for (int colorFormat : capabilities.colorFormats) {
-          Log.v(LOGTAG, "   Color: 0x" + Integer.toHexString(colorFormat));
-        }
-        for (int supportedColorFormat : supportedColorList) {
-          for (int codecColorFormat : capabilities.colorFormats) {
-            if (codecColorFormat == supportedColorFormat) {
-              // Found supported HW Encoder.
-              Log.e(LOGTAG, "Found target encoder " + name +
-                  ". Color: 0x" + Integer.toHexString(codecColorFormat));
-              return true;
+        for (int i = 0; i < numCodecs; ++i) {
+            MediaCodecInfo info = MediaCodecList.getCodecInfoAt(i);
+            if (info.isEncoder()) {
+                continue;
             }
-          }
-        }
-      }
-    }
-    // No HW encoder.
-    return false;
-  }
-
-  public static boolean getHWDecoderCapability() {
-    return getHWDecoderCapability(VP8_MIME_TYPE);
-  }
-
-  @WrapForJNI
-  public static boolean HasHWVP9() {
-    return getHWDecoderCapability(VP9_MIME_TYPE);
-  }
-
-  public static boolean getHWDecoderCapability(String aMimeType) {
-    if (Build.VERSION.SDK_INT >= 20) {
-      for (int i = 0; i < MediaCodecList.getCodecCount(); ++i) {
-        MediaCodecInfo info = MediaCodecList.getCodecInfoAt(i);
-        if (info.isEncoder()) {
-          continue;
-        }
-        String name = null;
-        for (String mimeType : info.getSupportedTypes()) {
-          if (mimeType.equals(aMimeType)) {
-            name = info.getName();
-            break;
-          }
-        }
-        if (name == null) {
-          continue;  // No HW support in this codec; try the next one.
-        }
-        Log.e(LOGTAG, "Found candidate decoder " + name);
-
-        // Check if this is supported decoder.
-        boolean supportedCodec = false;
-        for (String codecPrefix : supportedVp8HwDecCodecPrefixes) {
-          if (name.startsWith(codecPrefix)) {
-            supportedCodec = true;
-            break;
-          }
-        }
-        if (!supportedCodec) {
-          continue;
-        }
-
-        // Check if codec supports either yuv420 or nv12.
-        CodecCapabilities capabilities =
-          info.getCapabilitiesForType(aMimeType);
-        for (int colorFormat : capabilities.colorFormats) {
-          Log.v(LOGTAG, "   Color: 0x" + Integer.toHexString(colorFormat));
-        }
-        for (int supportedColorFormat : supportedColorList) {
-          for (int codecColorFormat : capabilities.colorFormats) {
-            if (codecColorFormat == supportedColorFormat) {
-              // Found supported HW decoder.
-              Log.e(LOGTAG, "Found target decoder " + name +
-                  ". Color: 0x" + Integer.toHexString(codecColorFormat));
-              return true;
+            for (String mimeType : info.getSupportedTypes()) {
+                if (mimeType.equals(aMimeType)) {
+                    return true;
+                }
             }
-          }
         }
-      }
+        return false;
     }
-    return false;  // No HW decoder.
-  }
+
+    @WrapForJNI
+    public static boolean checkSupportsAdaptivePlayback(final MediaCodec aCodec,
+                                                        final String aMimeType) {
+        // isFeatureSupported supported on API level >= 19.
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.KITKAT ||
+                isAdaptivePlaybackBlacklisted(aMimeType)) {
+            return false;
+        }
+
+        try {
+            MediaCodecInfo info = aCodec.getCodecInfo();
+            MediaCodecInfo.CodecCapabilities capabilities = info.getCapabilitiesForType(aMimeType);
+            return capabilities != null &&
+                    capabilities.isFeatureSupported(
+                            MediaCodecInfo.CodecCapabilities.FEATURE_AdaptivePlayback);
+        } catch (IllegalArgumentException e) {
+            Log.e(LOGTAG, "Retrieve codec information failed", e);
+        }
+        return false;
+    }
+
+    // See Bug1360626 and
+    // https://codereview.chromium.org/1869103002 for details.
+    private static boolean isAdaptivePlaybackBlacklisted(final String aMimeType) {
+        Log.d(LOGTAG, "The device ModelID is " + Build.MODEL);
+        if (!aMimeType.equals("video/avc") && !aMimeType.equals("video/avc1")) {
+            return false;
+        }
+
+        if (!Build.MANUFACTURER.toLowerCase(Locale.getDefault()).equals("samsung")) {
+            return false;
+        }
+
+        for (String model : adaptivePlaybackBlacklist) {
+            if (Build.MODEL.startsWith(model)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public static boolean getHWEncoderCapability() {
+        if (Build.VERSION.SDK_INT >= 20) {
+            for (int i = 0; i < MediaCodecList.getCodecCount(); ++i) {
+                MediaCodecInfo info = MediaCodecList.getCodecInfoAt(i);
+                if (!info.isEncoder()) {
+                    continue;
+                }
+                String name = null;
+                for (String mimeType : info.getSupportedTypes()) {
+                    if (mimeType.equals(VP8_MIME_TYPE)) {
+                        name = info.getName();
+                        break;
+                    }
+                }
+                if (name == null) {
+                    continue;  // No HW support in this codec; try the next one.
+                }
+                Log.e(LOGTAG, "Found candidate encoder " + name);
+
+                // Check if this is supported encoder.
+                boolean supportedCodec = false;
+                for (String codecPrefix : supportedVp8HwEncCodecPrefixes) {
+                    if (name.startsWith(codecPrefix)) {
+                        supportedCodec = true;
+                        break;
+                    }
+                }
+                if (!supportedCodec) {
+                    continue;
+                }
+
+                // Check if codec supports either yuv420 or nv12.
+                CodecCapabilities capabilities =
+                        info.getCapabilitiesForType(VP8_MIME_TYPE);
+                for (int colorFormat : capabilities.colorFormats) {
+                    Log.v(LOGTAG, "   Color: 0x" + Integer.toHexString(colorFormat));
+                }
+                for (int supportedColorFormat : supportedColorList) {
+                    for (int codecColorFormat : capabilities.colorFormats) {
+                        if (codecColorFormat == supportedColorFormat) {
+                            // Found supported HW Encoder.
+                            Log.e(LOGTAG, "Found target encoder " + name +
+                                    ". Color: 0x" + Integer.toHexString(codecColorFormat));
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+        // No HW encoder.
+        return false;
+    }
+
+    public static boolean getHWDecoderCapability() {
+        return getHWDecoderCapability(VP8_MIME_TYPE);
+    }
+
+    @WrapForJNI
+    public static boolean HasHWVP9() {
+        return getHWDecoderCapability(VP9_MIME_TYPE);
+    }
+
+    public static boolean getHWDecoderCapability(final String aMimeType) {
+        if (Build.VERSION.SDK_INT >= 20) {
+            for (int i = 0; i < MediaCodecList.getCodecCount(); ++i) {
+                MediaCodecInfo info = MediaCodecList.getCodecInfoAt(i);
+                if (info.isEncoder()) {
+                    continue;
+                }
+                String name = null;
+                for (String mimeType : info.getSupportedTypes()) {
+                    if (mimeType.equals(aMimeType)) {
+                        name = info.getName();
+                        break;
+                    }
+                }
+                if (name == null) {
+                    continue;  // No HW support in this codec; try the next one.
+                }
+                Log.e(LOGTAG, "Found candidate decoder " + name);
+
+                // Check if this is supported decoder.
+                boolean supportedCodec = false;
+                for (String codecPrefix : supportedVp8HwDecCodecPrefixes) {
+                    if (name.startsWith(codecPrefix)) {
+                        supportedCodec = true;
+                        break;
+                    }
+                }
+                if (!supportedCodec) {
+                    continue;
+                }
+
+                // Check if codec supports either yuv420 or nv12.
+                CodecCapabilities capabilities =
+                        info.getCapabilitiesForType(aMimeType);
+                for (int colorFormat : capabilities.colorFormats) {
+                    Log.v(LOGTAG, "   Color: 0x" + Integer.toHexString(colorFormat));
+                }
+                for (int supportedColorFormat : supportedColorList) {
+                    for (int codecColorFormat : capabilities.colorFormats) {
+                        if (codecColorFormat == supportedColorFormat) {
+                            // Found supported HW decoder.
+                            Log.e(LOGTAG, "Found target decoder " + name +
+                                    ". Color: 0x" + Integer.toHexString(codecColorFormat));
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+        return false;  // No HW decoder.
+    }
 }

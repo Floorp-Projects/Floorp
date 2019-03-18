@@ -176,7 +176,7 @@ with Files('tests/mochitest/*autocomplete*'):
     BUG_COMPONENT = ('Toolkit', 'Autocomplete')
 
 with Files('tests/mochitest/*mousecapture*'):
-    BUG_COMPONENT = ('Core', 'Event Handling')
+    BUG_COMPONENT = ('Core', 'User events and focus handling')
 
 with Files('tests/reftests/*multiline*'):
     BUG_COMPONENT = ('Core', 'XBL')
@@ -203,7 +203,7 @@ with Files('tests/widgets/*menubar*'):
     BUG_COMPONENT = ('Core', 'XUL')
 
 with Files('tests/widgets/*capture*'):
-    BUG_COMPONENT = ('Core', 'Event Handling')
+    BUG_COMPONENT = ('Core', 'User events and focus handling')
 
 with Files('tests/widgets/*popup*'):
     BUG_COMPONENT = ('Toolkit', 'XUL Widgets')

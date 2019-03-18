@@ -22,7 +22,7 @@
 #include "mozilla/dom/network/TCPServerSocketChild.h"
 #include "mozilla/dom/network/UDPSocketChild.h"
 #include "mozilla/net/AltDataOutputStreamChild.h"
-#include "mozilla/net/TrackingDummyChannelChild.h"
+#include "mozilla/net/ClassifierDummyChannelChild.h"
 #include "mozilla/net/SocketProcessBridgeChild.h"
 #ifdef MOZ_WEBRTC
 #  include "mozilla/net/StunAddrsRequestChild.h"
@@ -409,15 +409,15 @@ mozilla::ipc::IPCResult NeckoChild::RecvNetworkChangeNotification(
   return IPC_OK();
 }
 
-PTrackingDummyChannelChild* NeckoChild::AllocPTrackingDummyChannelChild(
+PClassifierDummyChannelChild* NeckoChild::AllocPClassifierDummyChannelChild(
     nsIURI* aURI, nsIURI* aTopWindowURI, const nsresult& aTopWindowURIResult,
     const Maybe<LoadInfoArgs>& aLoadInfo) {
-  return new TrackingDummyChannelChild();
+  return new ClassifierDummyChannelChild();
 }
 
-bool NeckoChild::DeallocPTrackingDummyChannelChild(
-    PTrackingDummyChannelChild* aActor) {
-  delete static_cast<TrackingDummyChannelChild*>(aActor);
+bool NeckoChild::DeallocPClassifierDummyChannelChild(
+    PClassifierDummyChannelChild* aActor) {
+  delete static_cast<ClassifierDummyChannelChild*>(aActor);
   return true;
 }
 

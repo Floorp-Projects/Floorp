@@ -4,7 +4,6 @@
 
 package org.mozilla.gecko.media;
 
-import java.nio.ByteBuffer;
 import org.mozilla.gecko.annotation.WrapForJNI;
 
 //A subset of the class AudioInfo in dom/media/MediaInfo.h
@@ -17,8 +16,9 @@ public final class GeckoAudioInfo {
     final public int profile;
     final public long duration;
     final public String mimeType;
-    public GeckoAudioInfo(int rate, int channels, int bitDepth, int profile,
-                          long duration, String mimeType, byte[] codecSpecificData) {
+    public GeckoAudioInfo(final int rate, final int channels, final int bitDepth, final int profile,
+                          final long duration, final String mimeType,
+                          final byte[] codecSpecificData) {
         this.rate = rate;
         this.channels = channels;
         this.bitDepth = bitDepth;

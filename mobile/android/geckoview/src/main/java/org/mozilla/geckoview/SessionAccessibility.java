@@ -85,22 +85,22 @@ public class SessionAccessibility {
     @WrapForJNI static final int CLASSNAME_WEBVIEW = 15;
 
     private static final String[] CLASSNAMES = {
-            "android.view.View",
-            "android.widget.Button",
-            "android.widget.CheckBox",
-            "android.app.Dialog",
-            "android.widget.EditText",
-            "android.widget.GridView",
-            "android.widget.Image",
-            "android.widget.ListView",
-            "android.view.MenuItem",
-            "android.widget.ProgressBar",
-            "android.widget.RadioButton",
-            "android.widget.SeekBar",
-            "android.widget.Spinner",
-            "android.widget.TabWidget",
-            "android.widget.ToggleButton",
-            "android.webkit.WebView"
+        "android.view.View",
+        "android.widget.Button",
+        "android.widget.CheckBox",
+        "android.app.Dialog",
+        "android.widget.EditText",
+        "android.widget.GridView",
+        "android.widget.Image",
+        "android.widget.ListView",
+        "android.view.MenuItem",
+        "android.widget.ProgressBar",
+        "android.widget.RadioButton",
+        "android.widget.SeekBar",
+        "android.widget.Spinner",
+        "android.widget.TabWidget",
+        "android.widget.ToggleButton",
+        "android.webkit.WebView"
     };
 
     static private String getClassName(final int index) {
@@ -114,7 +114,7 @@ public class SessionAccessibility {
 
     /* package */ final class NodeProvider extends AccessibilityNodeProvider {
         @Override
-        public AccessibilityNodeInfo createAccessibilityNodeInfo(int virtualDescendantId) {
+        public AccessibilityNodeInfo createAccessibilityNodeInfo(final int virtualDescendantId) {
             AccessibilityNodeInfo node = null;
             if (mAttached) {
                 node = mSession.getSettings().getFullAccessibilityTree() ?
@@ -136,14 +136,15 @@ public class SessionAccessibility {
         }
 
         @Override
-        public boolean performAction(final int virtualViewId, int action, Bundle arguments) {
+        public boolean performAction(final int virtualViewId, final int action,
+                                     final Bundle arguments) {
             final GeckoBundle data;
 
             switch (action) {
-            case AccessibilityNodeInfo.ACTION_CLEAR_ACCESSIBILITY_FOCUS:
-                sendEvent(AccessibilityEvent.TYPE_VIEW_ACCESSIBILITY_FOCUS_CLEARED, virtualViewId, CLASSNAME_UNKNOWN, null);
-                return true;
-            case AccessibilityNodeInfo.ACTION_ACCESSIBILITY_FOCUS:
+                case AccessibilityNodeInfo.ACTION_CLEAR_ACCESSIBILITY_FOCUS:
+                    sendEvent(AccessibilityEvent.TYPE_VIEW_ACCESSIBILITY_FOCUS_CLEARED, virtualViewId, CLASSNAME_UNKNOWN, null);
+                    return true;
+                case AccessibilityNodeInfo.ACTION_ACCESSIBILITY_FOCUS:
                     if (virtualViewId == View.NO_ID) {
                         sendEvent(AccessibilityEvent.TYPE_VIEW_ACCESSIBILITY_FOCUSED, View.NO_ID, CLASSNAME_WEBVIEW, null);
                     } else {
@@ -153,96 +154,96 @@ public class SessionAccessibility {
                             sendEvent(AccessibilityEvent.TYPE_VIEW_ACCESSIBILITY_FOCUSED, virtualViewId, CLASSNAME_UNKNOWN, null);
                         }
                     }
-                return true;
-            case AccessibilityNodeInfo.ACTION_CLICK:
-                nativeProvider.click(virtualViewId);
-                GeckoBundle nodeInfo = getMostRecentBundle(virtualViewId);
-                if (nodeInfo != null) {
-                    if ((nodeInfo.getInt("flags") & (FLAG_SELECTABLE | FLAG_CHECKABLE)) == 0) {
-                        sendEvent(AccessibilityEvent.TYPE_VIEW_CLICKED, virtualViewId, nodeInfo.getInt("className"), null);
+                    return true;
+                case AccessibilityNodeInfo.ACTION_CLICK:
+                    nativeProvider.click(virtualViewId);
+                    GeckoBundle nodeInfo = getMostRecentBundle(virtualViewId);
+                    if (nodeInfo != null) {
+                        if ((nodeInfo.getInt("flags") & (FLAG_SELECTABLE | FLAG_CHECKABLE)) == 0) {
+                            sendEvent(AccessibilityEvent.TYPE_VIEW_CLICKED, virtualViewId, nodeInfo.getInt("className"), null);
+                        }
                     }
-                }
-                return true;
-            case AccessibilityNodeInfo.ACTION_LONG_CLICK:
-                mSession.getEventDispatcher().dispatch("GeckoView:AccessibilityLongPress", null);
-                return true;
-            case AccessibilityNodeInfo.ACTION_SCROLL_FORWARD:
-                mSession.getEventDispatcher().dispatch("GeckoView:AccessibilityScrollForward", null);
-                return true;
-            case AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD:
-                mSession.getEventDispatcher().dispatch("GeckoView:AccessibilityScrollBackward", null);
-                return true;
-            case AccessibilityNodeInfo.ACTION_SELECT:
-                nativeProvider.click(virtualViewId);
-                return true;
-            case AccessibilityNodeInfo.ACTION_NEXT_HTML_ELEMENT:
-            case AccessibilityNodeInfo.ACTION_PREVIOUS_HTML_ELEMENT:
-                if (arguments != null) {
+                    return true;
+                case AccessibilityNodeInfo.ACTION_LONG_CLICK:
+                    mSession.getEventDispatcher().dispatch("GeckoView:AccessibilityLongPress", null);
+                    return true;
+                case AccessibilityNodeInfo.ACTION_SCROLL_FORWARD:
+                    mSession.getEventDispatcher().dispatch("GeckoView:AccessibilityScrollForward", null);
+                    return true;
+                case AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD:
+                    mSession.getEventDispatcher().dispatch("GeckoView:AccessibilityScrollBackward", null);
+                    return true;
+                case AccessibilityNodeInfo.ACTION_SELECT:
+                    nativeProvider.click(virtualViewId);
+                    return true;
+                case AccessibilityNodeInfo.ACTION_NEXT_HTML_ELEMENT:
+                case AccessibilityNodeInfo.ACTION_PREVIOUS_HTML_ELEMENT:
+                    if (arguments != null) {
+                        data = new GeckoBundle(1);
+                        data.putString("rule", arguments.getString(AccessibilityNodeInfo.ACTION_ARGUMENT_HTML_ELEMENT_STRING));
+                    } else {
+                        data = null;
+                    }
+                    mSession.getEventDispatcher().dispatch(action == AccessibilityNodeInfo.ACTION_NEXT_HTML_ELEMENT ?
+                                                           "GeckoView:AccessibilityNext" : "GeckoView:AccessibilityPrevious", data);
+                    return true;
+                case AccessibilityNodeInfo.ACTION_NEXT_AT_MOVEMENT_GRANULARITY:
+                case AccessibilityNodeInfo.ACTION_PREVIOUS_AT_MOVEMENT_GRANULARITY:
+                    // XXX: Self brailling gives this action with a bogus argument instead of an actual click action;
+                    // the argument value is the BRAILLE_CLICK_BASE_INDEX - the index of the routing key that was hit.
+                    // Other negative values are used by ChromeVox, but we don't support them.
+                    // FAKE_GRANULARITY_READ_CURRENT = -1
+                    // FAKE_GRANULARITY_READ_TITLE = -2
+                    // FAKE_GRANULARITY_STOP_SPEECH = -3
+                    // FAKE_GRANULARITY_CHANGE_SHIFTER = -4
+                    int granularity = arguments.getInt(AccessibilityNodeInfo.ACTION_ARGUMENT_MOVEMENT_GRANULARITY_INT);
+                    if (granularity <= BRAILLE_CLICK_BASE_INDEX) {
+                        int keyIndex = BRAILLE_CLICK_BASE_INDEX - granularity;
+                        data = new GeckoBundle(1);
+                        data.putInt("keyIndex", keyIndex);
+                        mSession.getEventDispatcher().dispatch("GeckoView:AccessibilityActivate", data);
+                    } else if (granularity > 0) {
+                        boolean extendSelection = arguments.getBoolean(AccessibilityNodeInfo.ACTION_ARGUMENT_EXTEND_SELECTION_BOOLEAN);
+                        data = new GeckoBundle(3);
+                        data.putString("direction", action == AccessibilityNodeInfo.ACTION_NEXT_AT_MOVEMENT_GRANULARITY ? "Next" : "Previous");
+                        data.putInt("granularity", granularity);
+                        data.putBoolean("select", extendSelection);
+                        mSession.getEventDispatcher().dispatch("GeckoView:AccessibilityByGranularity", data);
+                    }
+                    return true;
+                case AccessibilityNodeInfo.ACTION_SET_SELECTION:
+                    if (arguments == null) {
+                        return false;
+                    }
+                    int selectionStart = arguments.getInt(AccessibilityNodeInfo.ACTION_ARGUMENT_SELECTION_START_INT);
+                    int selectionEnd = arguments.getInt(AccessibilityNodeInfo.ACTION_ARGUMENT_SELECTION_END_INT);
+                    data = new GeckoBundle(2);
+                    data.putInt("start", selectionStart);
+                    data.putInt("end", selectionEnd);
+                    mSession.getEventDispatcher().dispatch("GeckoView:AccessibilitySetSelection", data);
+                    return true;
+                case AccessibilityNodeInfo.ACTION_CUT:
+                case AccessibilityNodeInfo.ACTION_COPY:
+                case AccessibilityNodeInfo.ACTION_PASTE:
                     data = new GeckoBundle(1);
-                    data.putString("rule", arguments.getString(AccessibilityNodeInfo.ACTION_ARGUMENT_HTML_ELEMENT_STRING));
-                } else {
-                    data = null;
-                }
-                mSession.getEventDispatcher().dispatch(action == AccessibilityNodeInfo.ACTION_NEXT_HTML_ELEMENT ?
-                                                       "GeckoView:AccessibilityNext" : "GeckoView:AccessibilityPrevious", data);
-                return true;
-            case AccessibilityNodeInfo.ACTION_NEXT_AT_MOVEMENT_GRANULARITY:
-            case AccessibilityNodeInfo.ACTION_PREVIOUS_AT_MOVEMENT_GRANULARITY:
-                // XXX: Self brailling gives this action with a bogus argument instead of an actual click action;
-                // the argument value is the BRAILLE_CLICK_BASE_INDEX - the index of the routing key that was hit.
-                // Other negative values are used by ChromeVox, but we don't support them.
-                // FAKE_GRANULARITY_READ_CURRENT = -1
-                // FAKE_GRANULARITY_READ_TITLE = -2
-                // FAKE_GRANULARITY_STOP_SPEECH = -3
-                // FAKE_GRANULARITY_CHANGE_SHIFTER = -4
-                int granularity = arguments.getInt(AccessibilityNodeInfo.ACTION_ARGUMENT_MOVEMENT_GRANULARITY_INT);
-                if (granularity <= BRAILLE_CLICK_BASE_INDEX) {
-                    int keyIndex = BRAILLE_CLICK_BASE_INDEX - granularity;
-                    data = new GeckoBundle(1);
-                    data.putInt("keyIndex", keyIndex);
-                    mSession.getEventDispatcher().dispatch("GeckoView:AccessibilityActivate", data);
-                } else if (granularity > 0) {
-                    boolean extendSelection = arguments.getBoolean(AccessibilityNodeInfo.ACTION_ARGUMENT_EXTEND_SELECTION_BOOLEAN);
-                    data = new GeckoBundle(3);
-                    data.putString("direction", action == AccessibilityNodeInfo.ACTION_NEXT_AT_MOVEMENT_GRANULARITY ? "Next" : "Previous");
-                    data.putInt("granularity", granularity);
-                    data.putBoolean("select", extendSelection);
-                    mSession.getEventDispatcher().dispatch("GeckoView:AccessibilityByGranularity", data);
-                }
-                return true;
-            case AccessibilityNodeInfo.ACTION_SET_SELECTION:
-                if (arguments == null) {
-                    return false;
-                }
-                int selectionStart = arguments.getInt(AccessibilityNodeInfo.ACTION_ARGUMENT_SELECTION_START_INT);
-                int selectionEnd = arguments.getInt(AccessibilityNodeInfo.ACTION_ARGUMENT_SELECTION_END_INT);
-                data = new GeckoBundle(2);
-                data.putInt("start", selectionStart);
-                data.putInt("end", selectionEnd);
-                mSession.getEventDispatcher().dispatch("GeckoView:AccessibilitySetSelection", data);
-                return true;
-            case AccessibilityNodeInfo.ACTION_CUT:
-            case AccessibilityNodeInfo.ACTION_COPY:
-            case AccessibilityNodeInfo.ACTION_PASTE:
-                data = new GeckoBundle(1);
-                data.putInt("action", action);
-                mSession.getEventDispatcher().dispatch("GeckoView:AccessibilityClipboard", data);
-                return true;
-            case AccessibilityNodeInfo.ACTION_SET_TEXT:
-                final String value = arguments.getString(Build.VERSION.SDK_INT >= 21
-                        ? AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE
-                        : ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE);
-                if (mAttached) {
-                    nativeProvider.setText(virtualViewId, value);
-                }
-                return true;
+                    data.putInt("action", action);
+                    mSession.getEventDispatcher().dispatch("GeckoView:AccessibilityClipboard", data);
+                    return true;
+                case AccessibilityNodeInfo.ACTION_SET_TEXT:
+                    final String value = arguments.getString(Build.VERSION.SDK_INT >= 21
+                            ? AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE
+                            : ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE);
+                    if (mAttached) {
+                        nativeProvider.setText(virtualViewId, value);
+                    }
+                    return true;
             }
 
             return mView.performAccessibilityAction(action, arguments);
         }
 
         @Override
-        public AccessibilityNodeInfo findFocus(int focus) {
+        public AccessibilityNodeInfo findFocus(final int focus) {
             switch (focus) {
                 case AccessibilityNodeInfo.FOCUS_ACCESSIBILITY:
                     if (mAccessibilityFocusedNode != 0) {
@@ -256,7 +257,7 @@ public class SessionAccessibility {
                     break;
             }
 
-          return super.findFocus(focus);
+            return super.findFocus(focus);
         }
 
         private AccessibilityNodeInfo getNodeFromGecko(final int virtualViewId) {
@@ -554,29 +555,17 @@ public class SessionAccessibility {
             AccessibilityManager accessibilityManager =
                 (AccessibilityManager) context.getSystemService(Context.ACCESSIBILITY_SERVICE);
 
-            accessibilityManager.addAccessibilityStateChangeListener(
-            new AccessibilityManager.AccessibilityStateChangeListener() {
-                @Override
-                public void onAccessibilityStateChanged(boolean enabled) {
-                    updateAccessibilitySettings();
-                }
-            }
-            );
+            accessibilityManager.addAccessibilityStateChangeListener(enabled ->
+                    updateAccessibilitySettings());
 
             if (Build.VERSION.SDK_INT >= 19) {
-                accessibilityManager.addTouchExplorationStateChangeListener(
-                new AccessibilityManager.TouchExplorationStateChangeListener() {
-                    @Override
-                    public void onTouchExplorationStateChanged(boolean enabled) {
-                        updateAccessibilitySettings();
-                    }
-                }
-                );
+                accessibilityManager.addTouchExplorationStateChangeListener(enabled ->
+                        updateAccessibilitySettings());
             }
 
             PrefsHelper.PrefHandler prefHandler = new PrefsHelper.PrefHandlerBase() {
                 @Override
-                public void prefValue(String pref, int value) {
+                public void prefValue(final String pref, final int value) {
                     if (pref.equals(FORCE_ACCESSIBILITY_PREF)) {
                         sForceEnabled = value < 0;
                         dispatch();
@@ -586,7 +575,9 @@ public class SessionAccessibility {
             PrefsHelper.addObserver(new String[]{ FORCE_ACCESSIBILITY_PREF }, prefHandler);
         }
 
-        public static boolean isPlatformEnabled() { return sEnabled; }
+        public static boolean isPlatformEnabled() {
+            return sEnabled;
+        }
 
         public static boolean isEnabled() {
             return sEnabled || sForceEnabled;

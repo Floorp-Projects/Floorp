@@ -116,7 +116,7 @@ TEST(UTF, Hash16) {
  * This tests the handling of a non-ascii character at various locations in a
  * UTF-16 string that is being converted to UTF-8.
  */
-void NonASCII16_helper(const size_t aStrSize) {
+static void NonASCII16_helper(const size_t aStrSize) {
   const size_t kTestSize = aStrSize;
   const size_t kMaxASCII = 0x80;
   const char16_t kUTF16Char = 0xC9;
@@ -154,7 +154,7 @@ void NonASCII16_helper(const size_t aStrSize) {
     // First add the leading ASCII chars.
     expected.Append(asciiCString.BeginReading(), i);
 
-    // Now append the UTF-8 surrogate pair we expect the UTF-16 unicode char to
+    // Now append the UTF-8 pair we expect the UTF-16 unicode char to
     // be converted to.
     for (auto& c : kUTF8Surrogates) {
       expected.Append(c);
@@ -165,6 +165,15 @@ void NonASCII16_helper(const size_t aStrSize) {
 
     EXPECT_STREQ(dest.BeginReading(), expected.BeginReading());
   }
+}
+
+TEST(UTF, NonASCII16) {
+  // Test with various string sizes to catch any special casing.
+  NonASCII16_helper(1);
+  NonASCII16_helper(8);
+  NonASCII16_helper(16);
+  NonASCII16_helper(32);
+  NonASCII16_helper(512);
 }
 
 TEST(UTF, UTF8CharEnumerator) {

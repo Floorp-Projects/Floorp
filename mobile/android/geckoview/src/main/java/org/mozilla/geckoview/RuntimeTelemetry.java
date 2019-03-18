@@ -8,7 +8,6 @@ package org.mozilla.geckoview;
 
 import android.support.annotation.AnyThread;
 import android.support.annotation.NonNull;
-import android.util.Log;
 
 import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.util.GeckoBundle;

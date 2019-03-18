@@ -37,27 +37,31 @@ public final class Sample implements Parcelable {
 
         public static final Creator<ArrayBuffer> CREATOR = new Creator<ArrayBuffer>() {
             @Override
-            public ArrayBuffer createFromParcel(Parcel in) {
+            public ArrayBuffer createFromParcel(final Parcel in) {
                 return new ArrayBuffer(in);
             }
 
             @Override
-            public ArrayBuffer[] newArray(int size) {
+            public ArrayBuffer[] newArray(final int size) {
                 return new ArrayBuffer[size];
             }
         };
 
-        private ArrayBuffer(Parcel in) {
+        private ArrayBuffer(final Parcel in) {
             mArray = in.createByteArray();
         }
 
-        private ArrayBuffer(byte[] bytes) { mArray = bytes; }
+        private ArrayBuffer(final byte[] bytes) {
+            mArray = bytes;
+        }
 
         @Override
-        public int describeContents() { return 0; }
+        public int describeContents() {
+            return 0;
+        }
 
         @Override
-        public void writeToParcel(Parcel dest, int flags) {
+        public void writeToParcel(final Parcel dest, final int flags) {
             dest.writeByteArray(mArray);
         }
 
@@ -67,7 +71,8 @@ public final class Sample implements Parcelable {
         }
 
         @Override
-        public void readFromByteBuffer(ByteBuffer src, int offset, int size) throws IOException {
+        public void readFromByteBuffer(final ByteBuffer src, final int offset, final int size)
+                throws IOException {
             src.position(offset);
             if (mArray == null || mArray.length != size) {
                 mArray = new byte[size];
@@ -76,7 +81,8 @@ public final class Sample implements Parcelable {
         }
 
         @Override
-        public void writeToByteBuffer(ByteBuffer dest, int offset, int size) throws IOException {
+        public void writeToByteBuffer(final ByteBuffer dest, final int offset, final int size)
+                throws IOException {
             dest.put(mArray, offset, size);
         }
 
@@ -91,9 +97,12 @@ public final class Sample implements Parcelable {
     public BufferInfo info;
     public CryptoInfo cryptoInfo;
 
-    public static Sample create() { return create(null, new BufferInfo(), null); }
+    public static Sample create() {
+        return create(null, new BufferInfo(), null);
+    }
 
-    public static Sample create(ByteBuffer src, BufferInfo info, CryptoInfo cryptoInfo) {
+    public static Sample create(final ByteBuffer src, final BufferInfo info,
+                                final CryptoInfo cryptoInfo) {
         ArrayBuffer buffer = new ArrayBuffer(byteArrayFromBuffer(src, info.offset, info.size));
 
         BufferInfo bufferInfo = new BufferInfo();
@@ -102,23 +111,23 @@ public final class Sample implements Parcelable {
         return new Sample(buffer, bufferInfo, cryptoInfo);
     }
 
-    public static Sample create(SharedMemory sharedMem) {
+    public static Sample create(final SharedMemory sharedMem) {
         return new Sample(new SharedMemBuffer(sharedMem), new BufferInfo(), null);
     }
 
-    private Sample(Buffer bytes, BufferInfo info, CryptoInfo cryptoInfo) {
+    private Sample(final Buffer bytes, final BufferInfo info, final CryptoInfo cryptoInfo) {
         buffer = bytes;
         this.info = info;
         this.cryptoInfo = cryptoInfo;
     }
 
-    private Sample(Parcel in) {
+    private Sample(final Parcel in) {
         readInfo(in);
         readCrypto(in);
         buffer = in.readParcelable(Sample.class.getClassLoader());
     }
 
-    private void readInfo(Parcel in) {
+    private void readInfo(final Parcel in) {
         int offset = in.readInt();
         int size = in.readInt();
         long pts = in.readLong();
@@ -128,7 +137,7 @@ public final class Sample implements Parcelable {
         info.set(offset, size, pts, flags);
     }
 
-    private void readCrypto(Parcel in) {
+    private void readCrypto(final Parcel in) {
         int hasCryptoInfo = in.readInt();
         if (hasCryptoInfo == 0) {
             return;
@@ -150,7 +159,8 @@ public final class Sample implements Parcelable {
                       mode);
     }
 
-    public Sample set(ByteBuffer bytes, BufferInfo info, CryptoInfo cryptoInfo) throws IOException {
+    public Sample set(final ByteBuffer bytes, final BufferInfo info, final CryptoInfo cryptoInfo)
+            throws IOException {
         if (bytes != null && info.size > 0) {
             buffer.readFromByteBuffer(bytes, info.offset, info.size);
         }
@@ -180,12 +190,12 @@ public final class Sample implements Parcelable {
 
     public static final Creator<Sample> CREATOR = new Creator<Sample>() {
         @Override
-        public Sample createFromParcel(Parcel in) {
+        public Sample createFromParcel(final Parcel in) {
             return new Sample(in);
         }
 
         @Override
-        public Sample[] newArray(int size) {
+        public Sample[] newArray(final int size) {
             return new Sample[size];
         }
     };
@@ -196,20 +206,20 @@ public final class Sample implements Parcelable {
     }
 
     @Override
-    public void writeToParcel(Parcel dest, int parcelableFlags) {
+    public void writeToParcel(final Parcel dest, final int parcelableFlags) {
         writeInfo(dest);
         writeCrypto(dest);
         dest.writeParcelable(buffer, parcelableFlags);
     }
 
-    private void writeInfo(Parcel dest) {
+    private void writeInfo(final Parcel dest) {
         dest.writeInt(info.offset);
         dest.writeInt(info.size);
         dest.writeLong(info.presentationTimeUs);
         dest.writeInt(info.flags);
     }
 
-    private void writeCrypto(Parcel dest) {
+    private void writeCrypto(final Parcel dest) {
         if (cryptoInfo != null) {
             dest.writeInt(1);
             dest.writeByteArray(cryptoInfo.iv);
@@ -223,7 +233,8 @@ public final class Sample implements Parcelable {
         }
     }
 
-    public static byte[] byteArrayFromBuffer(ByteBuffer buffer, int offset, int size) {
+    public static byte[] byteArrayFromBuffer(final ByteBuffer buffer, final int offset,
+                                             final int size) {
         if (buffer == null || buffer.capacity() == 0 || size == 0) {
             return null;
         }
@@ -238,7 +249,7 @@ public final class Sample implements Parcelable {
     }
 
     @WrapForJNI
-    public void writeToByteBuffer(ByteBuffer dest) throws IOException {
+    public void writeToByteBuffer(final ByteBuffer dest) throws IOException {
         if (buffer != null && dest != null && info.size > 0) {
             buffer.writeToByteBuffer(dest, info.offset, info.size);
         }
@@ -258,6 +269,6 @@ public final class Sample implements Parcelable {
                 append(", pts=").append(info.presentationTimeUs).
                 append(", flags=").append(Integer.toHexString(info.flags)).append(" }").
                 append(" }");
-            return str.toString();
+        return str.toString();
     }
 }

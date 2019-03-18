@@ -62,6 +62,7 @@
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/NullPrincipal.h"
 #include <stdint.h>
+#include "mozilla/dom/nsCSPContext.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/StaticPtr.h"
@@ -289,26 +290,7 @@ static void InheritAndSetCSPOnPrincipalIfNeeded(nsIChannel* aChannel,
   nsCOMPtr<nsIContentSecurityPolicy> nullPrincipalCSP;
   aPrincipal->GetCsp(getter_AddRefs(nullPrincipalCSP));
   if (nullPrincipalCSP) {
-#ifdef DEBUG
-    {
-      uint32_t nullPrincipalCSPCount = 0;
-      nullPrincipalCSP->GetPolicyCount(&nullPrincipalCSPCount);
-
-      uint32_t originalCSPCount = 0;
-      originalCSP->GetPolicyCount(&originalCSPCount);
-
-      MOZ_ASSERT(nullPrincipalCSPCount == originalCSPCount,
-                 "There should be no other CSP here.");
-
-      nsAutoString nullPrincipalCSPStr, originalCSPStr;
-      for (uint32_t i = 0; i < originalCSPCount; ++i) {
-        originalCSP->GetPolicyString(i, originalCSPStr);
-        nullPrincipalCSP->GetPolicyString(i, nullPrincipalCSPStr);
-        MOZ_ASSERT(originalCSPStr.Equals(nullPrincipalCSPStr),
-                   "There should be no other CSP string here.");
-      }
-    }
-#endif
+    MOZ_ASSERT(nsCSPContext::Equals(originalCSP, nullPrincipalCSP));
     // CSPs are equal, no need to set it again.
     return;
   }

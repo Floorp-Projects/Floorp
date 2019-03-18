@@ -133,9 +133,9 @@ import java.lang.reflect.Proxy;
         return (SessionTextInput.InputConnectionClient) Proxy.newProxyInstance(
                 GeckoInputConnection.class.getClassLoader(),
                 new Class<?>[] {
-                        InputConnection.class,
-                        SessionTextInput.InputConnectionClient.class,
-                        SessionTextInput.EditableListener.class
+                    InputConnection.class,
+                    SessionTextInput.InputConnectionClient.class,
+                    SessionTextInput.EditableListener.class
                 }, handler);
     }
 
@@ -183,7 +183,7 @@ import java.lang.reflect.Proxy;
     }
 
     @Override
-    public boolean performContextMenuAction(int id) {
+    public boolean performContextMenuAction(final int id) {
         final View view = getView();
         final Editable editable = getEditable();
         if (view == null || editable == null) {
@@ -228,7 +228,7 @@ import java.lang.reflect.Proxy;
     }
 
     @Override
-    public ExtractedText getExtractedText(ExtractedTextRequest req, int flags) {
+    public ExtractedText getExtractedText(final ExtractedTextRequest req, final int flags) {
         if (req == null)
             return null;
 
@@ -393,7 +393,7 @@ import java.lang.reflect.Proxy;
     }
 
     @Override
-    public boolean requestCursorUpdates(int cursorUpdateMode) {
+    public boolean requestCursorUpdates(final int cursorUpdateMode) {
 
         if ((cursorUpdateMode & InputConnection.CURSOR_UPDATE_IMMEDIATE) != 0) {
             mEditableClient.requestCursorUpdates(
@@ -499,7 +499,7 @@ import java.lang.reflect.Proxy;
     }
 
     @Override // SessionTextInput.InputConnectionClient
-    public Handler getHandler(Handler defHandler) {
+    public Handler getHandler(final Handler defHandler) {
         if (!canReturnCustomHandler()) {
             return defHandler;
         }
@@ -514,7 +514,7 @@ import java.lang.reflect.Proxy;
     }
 
     @Override // SessionTextInput.InputConnectionClient
-    public synchronized InputConnection onCreateInputConnection(EditorInfo outAttrs) {
+    public synchronized InputConnection onCreateInputConnection(final EditorInfo outAttrs) {
         if (mIMEState == IME_STATE_DISABLED) {
             return null;
         }
@@ -563,7 +563,7 @@ import java.lang.reflect.Proxy;
     }
 
     @Override
-    public boolean commitText(CharSequence text, int newCursorPosition) {
+    public boolean commitText(final CharSequence text, final int newCursorPosition) {
         if (InputMethods.shouldCommitCharAsKey(mCurrentInputMethod) &&
             text.length() == 1 && newCursorPosition > 0) {
             if (DEBUG) {
@@ -580,7 +580,7 @@ import java.lang.reflect.Proxy;
     }
 
     @Override
-    public boolean setSelection(int start, int end) {
+    public boolean setSelection(final int start, final int end) {
         if (start < 0 || end < 0) {
             // Some keyboards (e.g. Samsung) can call setSelection with
             // negative offsets. In that case we ignore the call, similar to how
@@ -591,9 +591,9 @@ import java.lang.reflect.Proxy;
     }
 
     @Override
-    public boolean sendKeyEvent(@NonNull KeyEvent event) {
-        event = translateKey(event.getKeyCode(), event);
-        mEditableClient.sendKeyEvent(getView(), event.getAction(), event);
+    public boolean sendKeyEvent(final @NonNull KeyEvent event) {
+        KeyEvent translatedEvent = translateKey(event.getKeyCode(), event);
+        mEditableClient.sendKeyEvent(getView(), event.getAction(), translatedEvent);
         return false; // seems to always return false
     }
 
@@ -610,7 +610,7 @@ import java.lang.reflect.Proxy;
     }
 
     // Called by OnDefaultKeyEvent handler, up from Gecko
-    /* package */ void performDefaultKeyAction(KeyEvent event) {
+    /* package */ void performDefaultKeyAction(final KeyEvent event) {
         switch (event.getKeyCode()) {
             case KeyEvent.KEYCODE_MUTE:
             case KeyEvent.KEYCODE_HEADSETHOOK:

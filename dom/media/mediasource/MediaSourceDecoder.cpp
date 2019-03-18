@@ -288,12 +288,12 @@ bool MediaSourceDecoder::CanPlayThroughImpl() {
   if (duration <= currentPosition) {
     return true;
   }
-  // If we have data up to the mediasource's duration or 10s ahead, we can
+  // If we have data up to the mediasource's duration or 3s ahead, we can
   // assume that we can play without interruption.
   TimeIntervals buffered = GetBuffered();
   buffered.SetFuzz(MediaSourceDemuxer::EOS_FUZZ / 2);
   TimeUnit timeAhead =
-      std::min(duration, currentPosition + TimeUnit::FromSeconds(10));
+      std::min(duration, currentPosition + TimeUnit::FromSeconds(3));
   TimeInterval interval(currentPosition, timeAhead);
   return buffered.ContainsWithStrictEnd(ClampIntervalToEnd(interval));
 }

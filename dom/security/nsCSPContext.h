@@ -54,6 +54,9 @@ class nsCSPContext : public nsIContentSecurityPolicy {
  public:
   nsCSPContext();
 
+  static bool Equals(nsIContentSecurityPolicy* aCSP,
+                     nsIContentSecurityPolicy* aOtherCSP);
+
   nsresult InitFromOther(nsCSPContext* otherContext,
                          mozilla::dom::Document* aDoc,
                          nsIPrincipal* aPrincipal);

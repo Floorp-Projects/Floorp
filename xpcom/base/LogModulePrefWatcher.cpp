@@ -34,7 +34,7 @@ NS_IMPL_ISUPPORTS(LogModulePrefWatcher, nsIObserver)
  * If logging after restart is desired, set the logging.config.clear_on_startup
  * pref to false, or use the MOZ_LOG_FILE and MOZ_LOG_MODULES env vars.
  */
-void ResetExistingPrefs() {
+static void ResetExistingPrefs() {
   uint32_t count;
   char** names;
   nsresult rv = Preferences::GetRootBranch()->GetChildList(kLoggingPrefPrefix,
@@ -106,7 +106,7 @@ static void LoadPrefValue(const char* aName) {
   LogModule::Get(moduleName)->SetLevel(logLevel);
 }
 
-void LoadExistingPrefs() {
+static void LoadExistingPrefs() {
   nsIPrefBranch* root = Preferences::GetRootBranch();
   if (!root) {
     return;

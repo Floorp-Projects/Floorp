@@ -5,10 +5,10 @@ with Files('browser/*_bug234628*'):
     BUG_COMPONENT = ('Core', 'Internationalization')
 
 with Files('browser/*_bug349769*'):
-    BUG_COMPONENT = ('Core', 'DOM')
+    BUG_COMPONENT = ('Core', 'DOM: Core & HTML')
 
 with Files('browser/*_bug388121*'):
-    BUG_COMPONENT = ('Core', 'DOM')
+    BUG_COMPONENT = ('Core', 'DOM: Core & HTML')
 
 with Files('browser/*_bug655270*'):
     BUG_COMPONENT = ('Toolkit', 'Places')
@@ -47,13 +47,13 @@ with Files('chrome/*565388*'):
     BUG_COMPONENT = ('Core', 'Widget')
 
 with Files('chrome/*582176*'):
-    BUG_COMPONENT = ('Core', 'DOM')
+    BUG_COMPONENT = ('Core', 'DOM: Core & HTML')
 
 with Files('chrome/*608669*'):
-    BUG_COMPONENT = ('Core', 'DOM')
+    BUG_COMPONENT = ('Core', 'DOM: Core & HTML')
 
 with Files('chrome/*690056*'):
-    BUG_COMPONENT = ('Core', 'DOM')
+    BUG_COMPONENT = ('Core', 'DOM: Core & HTML')
 
 with Files('chrome/*92598*'):
     BUG_COMPONENT = ('Core', 'Networking: HTTP')
@@ -70,7 +70,7 @@ with Files('iframesandbox/*marquee_event_handlers*'):
 
 
 with Files('mochitest/*1045096*'):
-    BUG_COMPONENT = ('Core', 'DOM')
+    BUG_COMPONENT = ('Core', 'DOM: Core & HTML')
 
 with Files('mochitest/*1151421*'):
     BUG_COMPONENT = ('Core', 'DOM: Core & HTML')
@@ -85,13 +85,13 @@ with Files('mochitest/*511449*'):
     BUG_COMPONENT = ('Core', 'Widget: Cocoa')
 
 with Files('mochitest/*551225*'):
-    BUG_COMPONENT = ('Core', 'DOM')
+    BUG_COMPONENT = ('Core', 'DOM: Core & HTML')
 
 with Files('mochitest/*570341*'):
-    BUG_COMPONENT = ('Core', 'DOM')
+    BUG_COMPONENT = ('Core', 'DOM: Core & HTML')
 
 with Files('mochitest/*580069*'):
-    BUG_COMPONENT = ('Core', 'DOM')
+    BUG_COMPONENT = ('Core', 'DOM: Core & HTML')
 
 with Files('mochitest/*637644*'):
     BUG_COMPONENT = ('Core', 'DOM: Core & HTML')
@@ -100,7 +100,7 @@ with Files('mochitest/*640387*'):
     BUG_COMPONENT = ('Core', 'DOM: Events')
 
 with Files('mochitest/*668513*'):
-    BUG_COMPONENT = ('Core', 'DOM')
+    BUG_COMPONENT = ('Core', 'DOM: Core & HTML')
 
 with Files('mochitest/*797909*'):
     BUG_COMPONENT = ('Core', 'DOM: Core & HTML')
@@ -119,7 +119,7 @@ with Files('navigation/*430624*'):
     BUG_COMPONENT = ('Core', 'Editor')
 
 with Files('navigation/*430723*'):
-    BUG_COMPONENT = ('Core', 'Keyboard: Navigation')
+    BUG_COMPONENT = ('Core', 'User events and focus handling')
 
 with Files('navigation/*child*'):
     BUG_COMPONENT = ('Core', 'Security')

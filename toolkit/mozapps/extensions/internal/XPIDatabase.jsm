@@ -598,7 +598,7 @@ class AddonInternal {
     if (!this.appDisabled) {
       if (this.userDisabled || this.softDisabled) {
         permissions |= AddonManager.PERM_CAN_ENABLE;
-      } else if (this.type != "theme") {
+      } else {
         permissions |= AddonManager.PERM_CAN_DISABLE;
       }
     }

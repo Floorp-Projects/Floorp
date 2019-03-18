@@ -5681,7 +5681,7 @@ AbortReasonOr<Ok> IonBuilder::jsop_optimize_spreadcall() {
   // TODO: Investigate dynamic checks.
   bool result = false;
   do {
-    // Inline with a constant if the conditions described in
+    // Inline with MIsPackedArray if the conditions described in
     // js::OptimizeSpreadCall() are all met or can be expressed through
     // compiler constraints.
 
@@ -5727,7 +5727,13 @@ AbortReasonOr<Ok> IonBuilder::jsop_optimize_spreadcall() {
     result = true;
   } while (false);
 
-  pushConstant(BooleanValue(result));
+  if (result) {
+    auto* ins = MIsPackedArray::New(alloc(), arr);
+    current->add(ins);
+    current->push(ins);
+  } else {
+    pushConstant(BooleanValue(false));
+  }
   return Ok();
 }
 

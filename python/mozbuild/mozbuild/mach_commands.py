@@ -1211,6 +1211,14 @@ class ArtifactSubCommand(SubCommand):
         return after
 
 
+class SymbolsAction(argparse.Action):
+    def __call__(self, parser, namespace, values, option_string=None):
+        # If this function is called, it means the --symbols option was given,
+        # so we want to store the value `True` if no explicit value was given
+        # to the option.
+        setattr(namespace, self.dest, values or True)
+
+
 @CommandProvider
 class PackageFrontend(MachCommandBase):
     """Fetch and install binary artifacts from Mozilla automation."""
@@ -1266,7 +1274,7 @@ class PackageFrontend(MachCommandBase):
         help='Skip all local caches to force re-fetching remote artifacts.',
         default=False)
     @CommandArgument('--no-tests', action='store_true', help="Don't install tests.")
-    @CommandArgument('--symbols', action='store_true', help='Download symbols.')
+    @CommandArgument('--symbols', nargs='?', action=SymbolsAction, help='Download symbols.')
     @CommandArgument('--host-bins', action='store_true', help='Download host binaries.')
     @CommandArgument('--distdir', help='Where to install artifacts to.')
     def artifact_install(self, source=None, skip_cache=False, tree=None, job=None, verbose=False,
@@ -1609,7 +1617,6 @@ class StaticAnalysisMonitor(object):
         self._warnings_database = WarningsDatabase()
 
         def on_warning(warning):
-            filename = warning['filename']
             self._warnings_database.insert(warning)
 
         self._warnings_collector = WarningsCollector(on_warning, objdir=objdir)
@@ -2458,7 +2465,6 @@ class StaticAnalysis(MachCommandBase):
         regex_header = re.compile(
             r'(.+):(\d+):(\d+): (warning|error): ([^\[\]\n]+)(?: \[([\.\w-]+)\])?$', re.MULTILINE)
 
-        something = regex_header.finditer(clang_output)
         headers = sorted(
             regex_header.finditer(clang_output),
             key=lambda h: h.start()

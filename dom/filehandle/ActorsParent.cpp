@@ -1988,9 +1988,9 @@ nsresult GetMetadataOp::DoFileWork(FileHandle* aFileHandle) {
       return NS_ERROR_FAILURE;
     }
 
-    mMetadata.size() = uint64_t(size);
+    mMetadata.size() = Some(uint64_t(size));
   } else {
-    mMetadata.size() = void_t();
+    mMetadata.size() = Nothing();
   }
 
   if (mParams.lastModified()) {
@@ -2000,9 +2000,9 @@ nsresult GetMetadataOp::DoFileWork(FileHandle* aFileHandle) {
       return rv;
     }
 
-    mMetadata.lastModified() = lastModified;
+    mMetadata.lastModified() = Some(lastModified);
   } else {
-    mMetadata.lastModified() = void_t();
+    mMetadata.lastModified() = Nothing();
   }
 
   return NS_OK;

@@ -23,11 +23,5 @@ struct IPCServiceWorkerDescriptor
   ServiceWorkerState state;
 };
 
-union OptionalIPCServiceWorkerDescriptor
-{
-  IPCServiceWorkerDescriptor;
-  void_t;
-};
-
 } // namespace dom
 } // namespace mozilla

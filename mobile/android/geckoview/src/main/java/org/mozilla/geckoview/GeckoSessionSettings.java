@@ -8,18 +8,12 @@ package org.mozilla.geckoview;
 
 import org.mozilla.gecko.util.GeckoBundle;
 
-import android.app.Service;
-import android.os.Bundle;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.support.annotation.AnyThread;
-import android.support.annotation.IntDef;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.util.Log;
 
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
 import java.util.Arrays;
 import java.util.Collection;
 
@@ -658,7 +652,7 @@ public final class GeckoSessionSettings implements Parcelable {
         return mBundle.hashCode();
     }
 
-    private <T> boolean valueChangedLocked(final Key<T> key, T value) {
+    private <T> boolean valueChangedLocked(final Key<T> key, final T value) {
         if (key.initOnly && mSession != null && mSession.isOpen()) {
             throw new IllegalStateException("Read-only property");
         } else if (key.values != null && !key.values.contains(value)) {
@@ -681,7 +675,7 @@ public final class GeckoSessionSettings implements Parcelable {
     }
 
     @Override // Parcelable
-    public void writeToParcel(@NonNull Parcel out, int flags) {
+    public void writeToParcel(final @NonNull Parcel out, final int flags) {
         mBundle.writeToParcel(out, flags);
     }
 
@@ -692,16 +686,16 @@ public final class GeckoSessionSettings implements Parcelable {
 
     public static final Parcelable.Creator<GeckoSessionSettings> CREATOR
             = new Parcelable.Creator<GeckoSessionSettings>() {
-        @Override
-        public GeckoSessionSettings createFromParcel(final Parcel in) {
-            final GeckoSessionSettings settings = new GeckoSessionSettings();
-            settings.readFromParcel(in);
-            return settings;
-        }
+                @Override
+                public GeckoSessionSettings createFromParcel(final Parcel in) {
+                    final GeckoSessionSettings settings = new GeckoSessionSettings();
+                    settings.readFromParcel(in);
+                    return settings;
+                }
 
-        @Override
-        public GeckoSessionSettings[] newArray(final int size) {
-            return new GeckoSessionSettings[size];
-        }
-    };
+                @Override
+                public GeckoSessionSettings[] newArray(final int size) {
+                    return new GeckoSessionSettings[size];
+                }
+            };
 }

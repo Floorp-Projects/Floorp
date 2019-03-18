@@ -28,11 +28,12 @@ imply_option('--enable-artifact-build-symbols',
              depends(artifact_builds)(lambda v: False if v is None else None),
              reason='--disable-artifact-builds')
 
-option('--enable-artifact-build-symbols',
+option('--enable-artifact-build-symbols', nargs='?', choices=('full',),
        help='Download symbols when artifact builds are enabled.')
 
 set_config('MOZ_ARTIFACT_BUILD_SYMBOLS',
-           depends_if('--enable-artifact-build-symbols')(lambda _: True))
+           depends('--enable-artifact-build-symbols')(
+               lambda v: v[0] if len(v) else (bool(v) or None)))
 
 @depends('--enable-artifact-builds')
 def imply_disable_compile_environment(value):

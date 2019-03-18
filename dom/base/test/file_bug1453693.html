@@ -800,7 +800,7 @@
         document.body.offsetLeft;
 
         // Test shadow tree which doesn't have anything tab-focusable.
-        host1.shadowRoot.getElementsByTagName("div")[0].focus();
+        host1.shadowRoot.querySelector("div").focus();
         synthesizeKey("KEY_Tab");
         is(document.activeElement, input, "Should have focused input element.");
         synthesizeKey("KEY_Tab", {shiftKey: true});
@@ -814,12 +814,12 @@
         var input3 = document.createElement("input");
         lastHost.appendChild(input3);
         document.body.offsetLeft;
-        host3.shadowRoot.getElementsByTagName("div")[0].focus();
+        host3.shadowRoot.querySelector("div").focus();
         synthesizeKey("KEY_Tab");
         is(document.activeElement, input3, "Should have focused input3 element.");
 
         // ...and backwards
-        host3.shadowRoot.getElementsByTagName("div")[0].focus();
+        host3.shadowRoot.querySelector("div").focus();
         synthesizeKey("KEY_Tab", {shiftKey: true});
         is(document.activeElement, input2, "Should have focused input2 element.");
 

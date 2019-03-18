@@ -40,12 +40,6 @@ union DatabaseRequestParams
   CreateFileParams;
 };
 
-union NullableVersion
-{
-  null_t;
-  uint64_t;
-};
-
 sync protocol PBackgroundIDBDatabase
 {
   manager PBackgroundIDBFactory;
@@ -72,7 +66,7 @@ parent:
 child:
   async __delete__();
 
-  async VersionChange(uint64_t oldVersion, NullableVersion newVersion);
+  async VersionChange(uint64_t oldVersion, uint64_t? newVersion);
 
   async Invalidate();
 

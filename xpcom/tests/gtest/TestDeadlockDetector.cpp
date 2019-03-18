@@ -59,7 +59,7 @@ class TESTNAME(DeadlockDetectorTest) : public ::testing::Test {
   unsigned int mOldSleepDuration;
 };
 
-void DisableCrashReporter() {
+static void DisableCrashReporter() {
   nsCOMPtr<nsICrashReporter> crashreporter =
       do_GetService("@mozilla.org/toolkit/crash-reporter;1");
   if (crashreporter) {
@@ -71,7 +71,7 @@ void DisableCrashReporter() {
 // Single-threaded sanity tests
 
 // Stupidest possible deadlock.
-int Sanity_Child() {
+static int Sanity_Child() {
   DisableCrashReporter();
 
   MUTEX m1("dd.sanity.m1");
@@ -92,7 +92,7 @@ TEST_F(TESTNAME(DeadlockDetectorTest), TESTNAME(SanityDeathTest)) {
 }
 
 // Slightly less stupid deadlock.
-int Sanity2_Child() {
+static int Sanity2_Child() {
   DisableCrashReporter();
 
   MUTEX m1("dd.sanity2.m1");
@@ -156,7 +156,7 @@ TEST_F(TESTNAME(DeadlockDetectorTest), TESTNAME(Sanity3DeathTest))
 }
 #endif
 
-int Sanity4_Child() {
+static int Sanity4_Child() {
   DisableCrashReporter();
 
   mozilla::ReentrantMonitor m1("dd.sanity4.m1");
@@ -179,7 +179,7 @@ TEST_F(TESTNAME(DeadlockDetectorTest), TESTNAME(Sanity4DeathTest)) {
   ASSERT_DEATH_IF_SUPPORTED(Sanity4_Child(), regex);
 }
 
-int Sanity5_Child() {
+static int Sanity5_Child() {
   DisableCrashReporter();
 
   mozilla::RecursiveMutex m1("dd.sanity4.m1");
@@ -300,7 +300,7 @@ static void ContentionNoDeadlock_thread(void* arg) {
   }
 }
 
-int ContentionNoDeadlock_Child() {
+static int ContentionNoDeadlock_Child() {
   const size_t kMutexCount = 4;
 
   PRThread* threads[3];

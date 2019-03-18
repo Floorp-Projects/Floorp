@@ -20,10 +20,10 @@ import org.mozilla.gecko.util.ThreadUtils;
  * {@link #surfaceChanged(Surface, int, int, int, int)} is called and before {@link #surfaceDestroyed()} returns.
  */
 public class GeckoDisplay {
-    private final GeckoSession session;
+    private final GeckoSession mSession;
 
     protected GeckoDisplay(final GeckoSession session) {
-        this.session = session;
+        mSession = session;
     }
 
     /**
@@ -38,7 +38,7 @@ public class GeckoDisplay {
      * @param height New height of the Surface. Can not be negative.
      */
     @UiThread
-    public void surfaceChanged(@NonNull Surface surface, int width, int height) {
+    public void surfaceChanged(@NonNull final Surface surface, final int width, final int height) {
         surfaceChanged(surface, 0, 0, width, height);
     }
 
@@ -58,15 +58,16 @@ public class GeckoDisplay {
      * @throws IllegalArgumentException if left or top are negative.
      */
     @UiThread
-    public void surfaceChanged(@NonNull Surface surface, int left, int top, int width, int height) {
+    public void surfaceChanged(@NonNull final Surface surface, final int left, final int top,
+                               final int width, final int height) {
         ThreadUtils.assertOnUiThread();
 
         if ((left < 0) || (top < 0)) {
             throw new IllegalArgumentException("Parameters can not be negative.");
         }
 
-        if (session.getDisplay() == this) {
-            session.onSurfaceChanged(surface, left, top, width, height);
+        if (mSession.getDisplay() == this) {
+            mSession.onSurfaceChanged(surface, left, top, width, height);
         }
     }
 
@@ -81,8 +82,8 @@ public class GeckoDisplay {
     public void surfaceDestroyed() {
         ThreadUtils.assertOnUiThread();
 
-        if (session.getDisplay() == this) {
-            session.onSurfaceDestroyed();
+        if (mSession.getDisplay() == this) {
+            mSession.onSurfaceDestroyed();
         }
     }
 
@@ -99,8 +100,8 @@ public class GeckoDisplay {
     public void screenOriginChanged(final int left, final int top) {
         ThreadUtils.assertOnUiThread();
 
-        if (session.getDisplay() == this) {
-            session.onScreenOriginChanged(left, top);
+        if (mSession.getDisplay() == this) {
+            mSession.onScreenOriginChanged(left, top);
         }
     }
 
@@ -117,7 +118,7 @@ public class GeckoDisplay {
     @UiThread
     public boolean shouldPinOnScreen() {
         ThreadUtils.assertOnUiThread();
-        return session.getDisplay() == this && session.shouldPinOnScreen();
+        return mSession.getDisplay() == this && mSession.shouldPinOnScreen();
     }
 
     /**
@@ -138,12 +139,12 @@ public class GeckoDisplay {
     @UiThread
     public @NonNull GeckoResult<Bitmap> capturePixels() {
         ThreadUtils.assertOnUiThread();
-        if (!session.isCompositorReady()) {
+        if (!mSession.isCompositorReady()) {
             return GeckoResult.fromException(
                     new IllegalStateException("Compositor must be ready before pixels can be captured"));
         }
         GeckoResult<Bitmap> result = new GeckoResult<>();
-        session.mCompositor.requestScreenPixels(result);
+        mSession.mCompositor.requestScreenPixels(result);
         return result;
     }
 }

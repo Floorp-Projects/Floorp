@@ -289,9 +289,12 @@ def build_one_stage(cc, cxx, asm, ld, ar, ranlib, libtool,
             android_flags = ["-isystem %s" % d for d in android_include_dirs]
             android_flags += ["--gcc-toolchain=%s" % android_gcc_dir]
             android_flags += ["-D__ANDROID_API__=%s" % api_level]
-            rt_c_flags = " ".join(android_flags + cc[1:])
-            rt_cxx_flags = " ".join(android_flags + cxx[1:])
-            rt_asm_flags = " ".join(android_flags + asm[1:])
+
+            # Our flags go last to override any --gcc-toolchain that may have
+            # been set earlier.
+            rt_c_flags = " ".join(cc[1:] + android_flags)
+            rt_cxx_flags = " ".join(cxx[1:] + android_flags)
+            rt_asm_flags = " ".join(asm[1:] + android_flags)
 
             cmake_args += [
                 "-DBUILTINS_%s_ANDROID=1" % target,

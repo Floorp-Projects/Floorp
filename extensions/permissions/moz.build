@@ -15,4 +15,4 @@ XPCOM_MANIFESTS += [
 FINAL_LIBRARY = 'xul'
 
 with Files('**'):
-    BUG_COMPONENT = ('Core', 'DOM')
+    BUG_COMPONENT = ('Core', 'DOM: Core & HTML')

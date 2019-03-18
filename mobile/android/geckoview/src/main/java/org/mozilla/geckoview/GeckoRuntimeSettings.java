@@ -120,7 +120,7 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
          *                Defaults to false.
          * @return This Builder.
          */
-        public @NonNull Builder pauseForDebugger(boolean enabled) {
+        public @NonNull Builder pauseForDebugger(final boolean enabled) {
             getSettings().mDebugPause = enabled;
             return this;
         }
@@ -134,7 +134,7 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
          * @param enable A flag determining whether maximum screen depth should be used.
          * @return This Builder.
          */
-        public @NonNull Builder useMaxScreenDepth(boolean enable) {
+        public @NonNull Builder useMaxScreenDepth(final boolean enable) {
             getSettings().mUseMaxScreenDepth = enable;
             return this;
         }
@@ -149,7 +149,7 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
          *                printed to logcat.
          * @return The builder instance.
          */
-        public @NonNull Builder consoleOutput(boolean enabled) {
+        public @NonNull Builder consoleOutput(final boolean enabled) {
             getSettings().mConsoleOutput.set(enabled);
             return this;
         }
@@ -162,7 +162,7 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
          *                to match the device's system font scale.
          * @return The builder instance.
          */
-        public @NonNull Builder automaticFontSizeAdjustment(boolean enabled) {
+        public @NonNull Builder automaticFontSizeAdjustment(final boolean enabled) {
             getSettings().setAutomaticFontSizeAdjustment(enabled);
             return this;
         }
@@ -182,7 +182,7 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
          *                       {@link Builder#fontInflation font inflation}.
          * @return The builder instance.
          */
-        public @NonNull Builder fontSizeFactor(float fontSizeFactor) {
+        public @NonNull Builder fontSizeFactor(final float fontSizeFactor) {
             getSettings().setFontSizeFactor(fontSizeFactor);
             return this;
         }
@@ -207,7 +207,7 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
          * @param enabled A flag determining whether or not font inflation should be enabled.
          * @return The builder instance.
          */
-        public @NonNull Builder fontInflation(boolean enabled) {
+        public @NonNull Builder fontInflation(final boolean enabled) {
             getSettings().setFontInflationEnabled(enabled);
             return this;
         }
@@ -218,7 +218,7 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
          * @param density The display density value to use for overriding the system default.
          * @return The builder instance.
          */
-        public @NonNull Builder displayDensityOverride(float density) {
+        public @NonNull Builder displayDensityOverride(final float density) {
             getSettings().mDisplayDensityOverride = density;
             return this;
         }
@@ -229,7 +229,7 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
          * @param dpi The display DPI value to use for overriding the system default.
          * @return The builder instance.
          */
-        public @NonNull Builder displayDpiOverride(int dpi) {
+        public @NonNull Builder displayDpiOverride(final int dpi) {
             getSettings().mDisplayDpiOverride = dpi;
             return this;
         }
@@ -241,7 +241,7 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
          * @param height The screen height value to use for overriding the system default.
          * @return The builder instance.
          */
-        public @NonNull Builder screenSizeOverride(int width, int height) {
+        public @NonNull Builder screenSizeOverride(final int width, final int height) {
             getSettings().mScreenWidthOverride = width;
             getSettings().mScreenHeightOverride = height;
             return this;
@@ -291,7 +291,7 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
          * @param requestedLocales List of locale codes in Gecko format ("en" or "en-US").
          * @return The builder instance.
          */
-        public @NonNull Builder locales(String[] requestedLocales) {
+        public @NonNull Builder locales(final String[] requestedLocales) {
             getSettings().mRequestedLocales = requestedLocales;
             return this;
         }
@@ -308,7 +308,7 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
          * @param autoplay Allows or blocks video autoplay.
          * @return This Builder instance.
          */
-        public @NonNull Builder autoplayDefault(@AutoplayDefault int autoplay) {
+        public @NonNull Builder autoplayDefault(final @AutoplayDefault int autoplay) {
             getSettings().mAutoplayDefault.set(autoplay);
             return this;
         }
@@ -497,14 +497,18 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
      *
      * @return True if the pause is enabled.
      */
-    public boolean getPauseForDebuggerEnabled() { return mDebugPause; }
+    public boolean getPauseForDebuggerEnabled() {
+        return mDebugPause;
+    }
 
     /**
      * Gets whether the compositor should use the maximum screen depth when rendering.
      *
      * @return True if the maximum screen depth should be used.
      */
-    public boolean getUseMaxScreenDepth() { return mUseMaxScreenDepth; }
+    public boolean getUseMaxScreenDepth() {
+        return mUseMaxScreenDepth;
+    }
 
     /**
      * Gets the display density override value.
@@ -561,7 +565,7 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
      *
      * @param requestedLocales An ordered list of locales in Gecko format ("en-US").
      */
-    public void setLocales(@Nullable String[] requestedLocales) {
+    public void setLocales(final @Nullable String[] requestedLocales) {
         mRequestedLocales = requestedLocales;
         commitLocales();
     }
@@ -586,7 +590,7 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
      * @return This GeckoRuntimeSettings instance.
      */
 
-    public @NonNull GeckoRuntimeSettings setConsoleOutputEnabled(boolean enabled) {
+    public @NonNull GeckoRuntimeSettings setConsoleOutputEnabled(final boolean enabled) {
         mConsoleOutput.commit(enabled);
         return this;
     }
@@ -611,7 +615,7 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
      *                to match the device's system font scale.
      * @return This GeckoRuntimeSettings instance.
      */
-    public @NonNull GeckoRuntimeSettings setAutomaticFontSizeAdjustment(boolean enabled) {
+    public @NonNull GeckoRuntimeSettings setAutomaticFontSizeAdjustment(final boolean enabled) {
         GeckoFontScaleListener.getInstance().setEnabled(enabled);
         return this;
     }
@@ -647,7 +651,7 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
      * @param autoplay Allows or blocks video autoplay.
      * @return This GeckoRuntimeSettings instance.
      */
-    public @NonNull GeckoRuntimeSettings setAutoplayDefault(@AutoplayDefault int autoplay) {
+    public @NonNull GeckoRuntimeSettings setAutoplayDefault(final @AutoplayDefault int autoplay) {
         mAutoplayDefault.commit(autoplay);
         return this;
     }
@@ -661,7 +665,7 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
         return mAutoplayDefault.get();
     }
 
-    private static int FONT_INFLATION_BASE_VALUE = 120;
+    private static final int FONT_INFLATION_BASE_VALUE = 120;
 
     /**
      * Set a font size factor that will operate as a global text zoom. All font sizes will be
@@ -680,14 +684,15 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
      *                       {@link GeckoRuntimeSettings#setFontInflationEnabled font inflation}.
      * @return This GeckoRuntimeSettings instance.
      */
-    public @NonNull GeckoRuntimeSettings setFontSizeFactor(float fontSizeFactor) {
+    public @NonNull GeckoRuntimeSettings setFontSizeFactor(final float fontSizeFactor) {
         if (getAutomaticFontSizeAdjustment()) {
             throw new IllegalStateException("Not allowed when automatic font size adjustment is enabled");
         }
         return setFontSizeFactorInternal(fontSizeFactor);
     }
 
-    /* package */ @NonNull GeckoRuntimeSettings setFontSizeFactorInternal(float fontSizeFactor) {
+    /* package */ @NonNull GeckoRuntimeSettings setFontSizeFactorInternal(
+            final float fontSizeFactor) {
         if (fontSizeFactor < 0) {
             throw new IllegalArgumentException("fontSizeFactor cannot be < 0");
         }
@@ -731,14 +736,14 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
      * @param enabled A flag determining whether or not font inflation should be enabled.
      * @return This GeckoRuntimeSettings instance.
      */
-    public @NonNull GeckoRuntimeSettings setFontInflationEnabled(boolean enabled) {
+    public @NonNull GeckoRuntimeSettings setFontInflationEnabled(final boolean enabled) {
         if (getAutomaticFontSizeAdjustment()) {
             throw new IllegalStateException("Not allowed when automatic font size adjustment is enabled");
         }
         return setFontInflationEnabledInternal(enabled);
     }
 
-    /* package */ @NonNull GeckoRuntimeSettings setFontInflationEnabledInternal(boolean enabled) {
+    /* package */ @NonNull GeckoRuntimeSettings setFontInflationEnabledInternal(final boolean enabled) {
         final int minTwips =
                 enabled ? Math.round(FONT_INFLATION_BASE_VALUE * getFontSizeFactor()) : 0;
         mFontInflationMinTwips.commit(minTwips);
@@ -755,7 +760,7 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
     }
 
     @Override // Parcelable
-    public void writeToParcel(Parcel out, int flags) {
+    public void writeToParcel(final Parcel out, final int flags) {
         super.writeToParcel(out, flags);
 
         ParcelableUtils.writeBoolean(out, mUseContentProcess);
@@ -801,17 +806,17 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
     }
 
     public static final Parcelable.Creator<GeckoRuntimeSettings> CREATOR
-        = new Parcelable.Creator<GeckoRuntimeSettings>() {
-        @Override
-        public GeckoRuntimeSettings createFromParcel(final Parcel in) {
-            final GeckoRuntimeSettings settings = new GeckoRuntimeSettings();
-            settings.readFromParcel(in);
-            return settings;
-        }
+            = new Parcelable.Creator<GeckoRuntimeSettings>() {
+                @Override
+                public GeckoRuntimeSettings createFromParcel(final Parcel in) {
+                    final GeckoRuntimeSettings settings = new GeckoRuntimeSettings();
+                    settings.readFromParcel(in);
+                    return settings;
+                }
 
-        @Override
-        public GeckoRuntimeSettings[] newArray(final int size) {
-            return new GeckoRuntimeSettings[size];
-        }
-    };
+                @Override
+                public GeckoRuntimeSettings[] newArray(final int size) {
+                    return new GeckoRuntimeSettings[size];
+                }
+            };
 }

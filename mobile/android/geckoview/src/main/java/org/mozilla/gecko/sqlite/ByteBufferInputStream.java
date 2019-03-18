@@ -16,7 +16,7 @@ import java.nio.ByteBuffer;
 public class ByteBufferInputStream extends InputStream {
     private final ByteBuffer mByteBuffer;
 
-    public ByteBufferInputStream(ByteBuffer aByteBuffer) {
+    public ByteBufferInputStream(final ByteBuffer aByteBuffer) {
         mByteBuffer = aByteBuffer;
     }
 
@@ -29,8 +29,8 @@ public class ByteBufferInputStream extends InputStream {
     }
 
     @Override
-    public synchronized int read(byte[] aBytes, int aOffset, int aLen)
-        throws IOException {
+    public synchronized int read(final byte[] aBytes, final int aOffset, final int aLen)
+            throws IOException {
         int toRead = Math.min(aLen, mByteBuffer.remaining());
         mByteBuffer.get(aBytes, aOffset, toRead);
         return toRead;

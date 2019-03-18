@@ -20,13 +20,6 @@ AntiTracking.runTest("ServiceWorkers",
 
 AntiTracking.runTest("ServiceWorkers and Storage Access API",
   async _ => {
-    await SpecialPowers.pushPrefEnv({"set": [
-       ["dom.serviceWorkers.exemptFromPerDomainMax", true],
-       ["dom.ipc.processCount", 1],
-       ["dom.serviceWorkers.enabled", true],
-       ["dom.serviceWorkers.testing.enabled", true],
-    ]});
-
     /* import-globals-from storageAccessAPIHelpers.js */
     await noStorageAccessInitially();
 
@@ -53,13 +46,6 @@ AntiTracking.runTest("ServiceWorkers and Storage Access API",
     }
   },
   async _ => {
-    await SpecialPowers.pushPrefEnv({"set": [
-       ["dom.serviceWorkers.exemptFromPerDomainMax", true],
-       ["dom.ipc.processCount", 1],
-       ["dom.serviceWorkers.enabled", true],
-       ["dom.serviceWorkers.testing.enabled", true],
-    ]});
-
     /* import-globals-from storageAccessAPIHelpers.js */
     if (allowListed) {
       await hasStorageAccessInitially();

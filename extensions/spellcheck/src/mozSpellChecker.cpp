@@ -100,7 +100,8 @@ nsresult mozSpellChecker::NextMisspelledWord(nsAString &aWord,
         result = CheckWord(currWord, &isMisspelled, aSuggestions);
         if (isMisspelled) {
           aWord = currWord;
-          mTextServicesDocument->SetSelection(begin, end - begin);
+          MOZ_KnownLive(mTextServicesDocument)
+              ->SetSelection(begin, end - begin);
           // After ScrollSelectionIntoView(), the pending notifications might
           // be flushed and PresShell/PresContext/Frames may be dead.
           // See bug 418470.
@@ -224,8 +225,9 @@ nsresult mozSpellChecker::Replace(const nsAString &aOldWord,
                 selOffset = begin;
               }
             }
-            mTextServicesDocument->SetSelection(begin, end - begin);
-            mTextServicesDocument->InsertText(&newWord);
+            MOZ_KnownLive(mTextServicesDocument)
+                ->SetSelection(begin, end - begin);
+            MOZ_KnownLive(mTextServicesDocument)->InsertText(&newWord);
             mTextServicesDocument->GetCurrentTextBlock(&str);
             end += (aNewWord.Length() -
                     aOldWord.Length());  // recursion was cute in GEB, not here.
@@ -267,13 +269,13 @@ nsresult mozSpellChecker::Replace(const nsAString &aOldWord,
         result = mTextServicesDocument->GetCurrentTextBlock(&str);
         result = mConverter->FindNextWord(str.get(), str.Length(), selOffset,
                                           &begin, &end);
-        mTextServicesDocument->SetSelection(begin, 0);
+        MOZ_KnownLive(mTextServicesDocument)->SetSelection(begin, 0);
       } else {
-        mTextServicesDocument->SetSelection(begin, 0);
+        MOZ_KnownLive(mTextServicesDocument)->SetSelection(begin, 0);
       }
     }
   } else {
-    mTextServicesDocument->InsertText(&newWord);
+    MOZ_KnownLive(mTextServicesDocument)->InsertText(&newWord);
   }
   return NS_OK;
 }
@@ -461,8 +463,8 @@ nsresult mozSpellChecker::SetupDoc(int32_t *outBlockOffset) {
   *outBlockOffset = 0;
 
   if (!mFromStart) {
-    rv = mTextServicesDocument->LastSelectedBlock(&blockStatus, &selOffset,
-                                                  &selLength);
+    rv = MOZ_KnownLive(mTextServicesDocument)
+             ->LastSelectedBlock(&blockStatus, &selOffset, &selLength);
     if (NS_SUCCEEDED(rv) &&
         blockStatus !=
             TextServicesDocument::BlockSelectionStatus::eBlockNotFound) {

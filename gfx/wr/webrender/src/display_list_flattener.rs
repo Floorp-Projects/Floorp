@@ -1434,10 +1434,7 @@ impl<'a> DisplayListFlattener<'a> {
         //     without having to consider cuts at stacking context boundaries.
         let parent_is_empty = match self.sc_stack.last_mut() {
             Some(parent_sc) => {
-                if stacking_context.is_redundant(
-                    parent_sc,
-                    self.clip_scroll_tree,
-                ) {
+                if stacking_context.is_redundant(parent_sc) {
                     // If the parent context primitives list is empty, it's faster
                     // to assign the storage of the popped context instead of paying
                     // the copying cost for extend.
@@ -2737,7 +2734,6 @@ impl FlattenedStackingContext {
     pub fn is_redundant(
         &self,
         parent: &FlattenedStackingContext,
-        clip_scroll_tree: &ClipScrollTree,
     ) -> bool {
         // Any 3d context is required
         if let Picture3DContext::In { .. } = self.context_3d {
@@ -2773,11 +2769,6 @@ impl FlattenedStackingContext {
 
         // If need to isolate in surface due to clipping / mix-blend-mode
         if !self.blit_reason.is_empty() {
-            return false;
-        }
-
-        // If represents a transform, it may affect backface visibility of children
-        if !clip_scroll_tree.node_is_identity(self.spatial_node_index) {
             return false;
         }
 

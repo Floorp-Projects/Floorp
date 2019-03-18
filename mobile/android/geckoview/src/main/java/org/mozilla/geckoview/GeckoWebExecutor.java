@@ -14,7 +14,6 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
 import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.util.List;
 
@@ -50,7 +49,7 @@ public class GeckoWebExecutor {
     private static native void nativeResolve(String host, GeckoResult<InetAddress[]> result);
 
     @WrapForJNI(calledFrom = "gecko", exceptionMode = "nsresult")
-    private static ByteBuffer createByteBuffer(int capacity) {
+    private static ByteBuffer createByteBuffer(final int capacity) {
         return ByteBuffer.allocateDirect(capacity);
     }
 
@@ -114,8 +113,7 @@ public class GeckoWebExecutor {
         }
 
         if (request.cacheMode < WebRequest.CACHE_MODE_FIRST ||
-            request.cacheMode > WebRequest.CACHE_MODE_LAST)
-        {
+            request.cacheMode > WebRequest.CACHE_MODE_LAST) {
             throw new IllegalArgumentException("Unknown cache mode");
         }
 

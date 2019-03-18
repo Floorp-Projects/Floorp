@@ -103,7 +103,7 @@ TEST(MultiplexInputStream, Seek_SET) {
   ASSERT_EQ(0, strncmp(readBuf, "The qu", count));
 }
 
-already_AddRefed<nsIInputStream> CreateStreamHelper() {
+static already_AddRefed<nsIInputStream> CreateStreamHelper() {
   nsCOMPtr<nsIMultiplexInputStream> multiplexStream =
       do_CreateInstance("@mozilla.org/io/multiplex-input-stream;1");
 

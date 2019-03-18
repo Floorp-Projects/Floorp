@@ -8328,7 +8328,7 @@ bool nsContentUtils::IsTrackingResourceWindow(nsPIDOMWindowInner* aWindow) {
     return false;
   }
 
-  return httpChannel->GetIsTrackingResource();
+  return httpChannel->IsTrackingResource();
 }
 
 // static public
@@ -8347,7 +8347,7 @@ bool nsContentUtils::IsThirdPartyTrackingResourceWindow(
     return false;
   }
 
-  return httpChannel->GetIsThirdPartyTrackingResource();
+  return httpChannel->IsThirdPartyTrackingResource();
 }
 
 static bool StorageDisabledByAntiTrackingInternal(nsPIDOMWindowInner* aWindow,

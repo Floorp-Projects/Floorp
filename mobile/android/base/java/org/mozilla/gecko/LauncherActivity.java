@@ -5,6 +5,7 @@
 
 package org.mozilla.gecko;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.PendingIntent;
 import android.appwidget.AppWidgetManager;
@@ -108,10 +109,15 @@ public class LauncherActivity extends Activity {
     /**
      * Launch tab queue service to display overlay.
      */
+    @SuppressLint("NewApi")
     private void dispatchTabQueueIntent() {
         Intent intent = new Intent(getIntent());
         intent.setClass(getApplicationContext(), TabQueueService.class);
-        startService(intent);
+        if (AppConstants.Versions.preO) {
+            startService(intent);
+        } else {
+            startForegroundService(intent);
+        }
     }
 
     /**

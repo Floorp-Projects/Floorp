@@ -163,7 +163,7 @@ public final class GeckoProfile {
         return GeckoProfile.get(context, profileName, profilePath);
     }
 
-    private static GeckoProfile getDefaultProfile(Context context) {
+    private static GeckoProfile getDefaultProfile(final Context context) {
         try {
             return get(context, getDefaultProfileName(context));
 
@@ -174,11 +174,11 @@ public final class GeckoProfile {
         }
     }
 
-    public static GeckoProfile get(Context context) {
+    public static GeckoProfile get(final Context context) {
         return get(context, null, (File) null);
     }
 
-    public static GeckoProfile get(Context context, String profileName) {
+    public static GeckoProfile get(final Context context, final String profileName) {
         if (profileName != null) {
             GeckoProfile profile = sProfileCache.get(profileName);
             if (profile != null)
@@ -188,7 +188,8 @@ public final class GeckoProfile {
     }
 
     @RobocopTarget
-    public static GeckoProfile get(Context context, String profileName, String profilePath) {
+    public static GeckoProfile get(final Context context, final String profileName,
+                                   final String profilePath) {
         File dir = null;
         if (!TextUtils.isEmpty(profilePath)) {
             dir = new File(profilePath);
@@ -202,7 +203,8 @@ public final class GeckoProfile {
     // Note that the profile cache respects only the profile name!
     // If the directory changes, the returned GeckoProfile instance will be mutated.
     @RobocopTarget
-    public static GeckoProfile get(Context context, String profileName, File profileDir) {
+    public static GeckoProfile get(final Context context, final String profileName,
+                                   final File profileDir) {
         if (context == null) {
             throw new IllegalArgumentException("context must be non-null");
         }
@@ -218,6 +220,7 @@ public final class GeckoProfile {
         // ------------------------------------------
         //     Yes    |    Yes    | Active profile or default profile
 
+        String resolvedProfileName = profileName;
         if (TextUtils.isEmpty(profileName) && profileDir == null) {
             // If no profile info was passed in, look for the active profile or a default profile.
             final GeckoProfile profile = GeckoThread.getActiveProfile();
@@ -230,25 +233,25 @@ public final class GeckoProfile {
             return GeckoProfile.initFromArgs(context, sIntentArgs);
         } else if (profileName == null) {
             // If only profile dir was passed in, use custom (anonymous) profile.
-            profileName = CUSTOM_PROFILE;
+            resolvedProfileName = CUSTOM_PROFILE;
         }
 
         // We require the profile dir to exist if specified, so create it here if needed.
         final boolean init = profileDir != null && profileDir.mkdirs();
 
         // Actually try to look up the profile.
-        GeckoProfile profile = sProfileCache.get(profileName);
+        GeckoProfile profile = sProfileCache.get(resolvedProfileName);
         GeckoProfile newProfile = null;
 
         if (profile == null) {
             try {
-                newProfile = new GeckoProfile(context, profileName, profileDir);
+                newProfile = new GeckoProfile(context, resolvedProfileName, profileDir);
             } catch (NoMozillaDirectoryException e) {
                 // We're unable to do anything sane here.
                 throw new RuntimeException(e);
             }
 
-            profile = sProfileCache.putIfAbsent(profileName, newProfile);
+            profile = sProfileCache.putIfAbsent(resolvedProfileName, newProfile);
         }
 
         if (profile == null) {
@@ -339,7 +342,8 @@ public final class GeckoProfile {
         }
     }
 
-    private GeckoProfile(Context context, String profileName, File profileDir) throws NoMozillaDirectoryException {
+    private GeckoProfile(final Context context, final String profileName, final File profileDir)
+            throws NoMozillaDirectoryException {
         if (profileName == null) {
             throw new IllegalArgumentException("Unable to create GeckoProfile for empty profile name.");
         }
@@ -405,7 +409,7 @@ public final class GeckoProfile {
         mData = data;
     }
 
-    private void setDir(File dir) {
+    private void setDir(final File dir) {
         if (dir != null && dir.exists() && dir.isDirectory()) {
             synchronized (this) {
                 mProfileDir = dir;
@@ -473,7 +477,7 @@ public final class GeckoProfile {
         }
     }
 
-    public File getFile(String aFile) {
+    public File getFile(final String aFile) {
         File f = getDir();
         if (f == null)
             return null;
@@ -662,7 +666,7 @@ public final class GeckoProfile {
      *
      * @param shouldRestore Pass true if we are automatically restoring last session's tabs.
      */
-    public void updateSessionFile(boolean shouldRestore) {
+    public void updateSessionFile(final boolean shouldRestore) {
         File sessionFilePrevious = getFile(SESSION_FILE_PREVIOUS);
         if (!shouldRestore) {
             File sessionFile = getFile(SESSION_FILE);
@@ -705,7 +709,7 @@ public final class GeckoProfile {
      *
      * @return the session string
      */
-    public String readSessionFile(boolean readBackup) {
+    public String readSessionFile(final boolean readBackup) {
         return readSessionFile(readBackup ? SESSION_FILE_BACKUP : SESSION_FILE);
     }
 
@@ -721,7 +725,7 @@ public final class GeckoProfile {
         return readSessionFile(SESSION_FILE_PREVIOUS);
     }
 
-    private String readSessionFile(String fileName) {
+    private String readSessionFile(final String fileName) {
         File sessionFile = getFile(fileName);
 
         try {
@@ -811,7 +815,7 @@ public final class GeckoProfile {
         return jsonArray;
     }
 
-    public String readFile(String filename) throws IOException {
+    public String readFile(final String filename) throws IOException {
         File dir = getDir();
         if (dir == null) {
             throw new IOException("No profile directory found");
@@ -820,7 +824,7 @@ public final class GeckoProfile {
         return readFile(target);
     }
 
-    private String readFile(File target) throws IOException {
+    private String readFile(final File target) throws IOException {
         FileReader fr = new FileReader(target);
         try {
             StringBuilder sb = new StringBuilder();
@@ -836,7 +840,7 @@ public final class GeckoProfile {
         }
     }
 
-    public boolean deleteFileFromProfileDir(String fileName) throws IllegalArgumentException {
+    public boolean deleteFileFromProfileDir(final String fileName) throws IllegalArgumentException {
         if (TextUtils.isEmpty(fileName)) {
             throw new IllegalArgumentException("Filename cannot be empty.");
         }

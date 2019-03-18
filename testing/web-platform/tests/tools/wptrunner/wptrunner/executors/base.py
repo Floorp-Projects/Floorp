@@ -152,6 +152,11 @@ class TestExecutor(object):
         if self.protocol is not None:
             self.protocol.teardown()
 
+    def reset(self):
+        """Re-initialize internal state to facilitate repeated test execution
+        as implemented by the `--rerun` command-line argument."""
+        pass
+
     def run_test(self, test):
         """Run a particular test.
 
@@ -266,6 +271,9 @@ class RefTestImplementation(object):
 
         self.message.append("%s %s" % (test.url, rv[0]))
         return True, rv
+
+    def reset(self):
+        self.screenshot_cache.clear()
 
     def is_pass(self, lhs_hash, rhs_hash, relation):
         assert relation in ("==", "!=")
@@ -509,7 +517,8 @@ class CallbackHandler(object):
         self.actions = {
             "click": ClickAction(self.logger, self.protocol),
             "send_keys": SendKeysAction(self.logger, self.protocol),
-            "action_sequence": ActionSequenceAction(self.logger, self.protocol)
+            "action_sequence": ActionSequenceAction(self.logger, self.protocol),
+            "generate_test_report": GenerateTestReportAction(self.logger, self.protocol)
         }
 
     def __call__(self, result):
@@ -593,3 +602,13 @@ class ActionSequenceAction(object):
     def get_element(self, selector):
         element = self.protocol.select.element_by_selector(selector)
         return element
+
+class GenerateTestReportAction(object):
+    def __init__(self, logger, protocol):
+        self.logger = logger
+        self.protocol = protocol
+
+    def __call__(self, payload):
+        message = payload["message"]
+        self.logger.debug("Generating test report: %s" % message)
+        self.protocol.generate_test_report.generate_test_report(message)

@@ -16,7 +16,7 @@ import java.nio.ByteBuffer;
 public final class DirectBufferAllocator {
     private DirectBufferAllocator() {}
 
-    public static ByteBuffer allocate(int size) {
+    public static ByteBuffer allocate(final int size) {
         if (size <= 0) {
             throw new IllegalArgumentException("Invalid size " + size);
         }
@@ -33,7 +33,7 @@ public final class DirectBufferAllocator {
         return directBuffer;
     }
 
-    public static ByteBuffer free(ByteBuffer buffer) {
+    public static ByteBuffer free(final ByteBuffer buffer) {
         if (buffer == null) {
             return null;
         }

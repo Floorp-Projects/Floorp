@@ -1689,13 +1689,11 @@ already_AddRefed<IDBRequest> IDBObjectStore::GetAllInternal(
 
   const int64_t id = Id();
 
-  OptionalKeyRange optionalKeyRange;
+  Maybe<SerializedKeyRange> optionalKeyRange;
   if (keyRange) {
     SerializedKeyRange serializedKeyRange;
     keyRange->ToSerialized(serializedKeyRange);
-    optionalKeyRange = serializedKeyRange;
-  } else {
-    optionalKeyRange = void_t();
+    optionalKeyRange.emplace(serializedKeyRange);
   }
 
   const uint32_t limit = aLimit.WasPassed() ? aLimit.Value() : 0;
@@ -2231,9 +2229,7 @@ already_AddRefed<IDBRequest> IDBObjectStore::Count(JSContext* aCx,
   if (keyRange) {
     SerializedKeyRange serializedKeyRange;
     keyRange->ToSerialized(serializedKeyRange);
-    params.optionalKeyRange() = serializedKeyRange;
-  } else {
-    params.optionalKeyRange() = void_t();
+    params.optionalKeyRange().emplace(serializedKeyRange);
   }
 
   RefPtr<IDBRequest> request = GenerateRequest(aCx, this);
@@ -2278,15 +2274,13 @@ already_AddRefed<IDBRequest> IDBObjectStore::OpenCursorInternal(
 
   int64_t objectStoreId = Id();
 
-  OptionalKeyRange optionalKeyRange;
+  Maybe<SerializedKeyRange> optionalKeyRange;
 
   if (keyRange) {
     SerializedKeyRange serializedKeyRange;
     keyRange->ToSerialized(serializedKeyRange);
 
-    optionalKeyRange = std::move(serializedKeyRange);
-  } else {
-    optionalKeyRange = void_t();
+    optionalKeyRange.emplace(std::move(serializedKeyRange));
   }
 
   IDBCursor::Direction direction = IDBCursor::ConvertDirection(aDirection);

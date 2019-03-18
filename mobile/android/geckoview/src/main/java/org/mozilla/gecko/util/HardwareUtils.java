@@ -41,7 +41,7 @@ public final class HardwareUtils {
     private HardwareUtils() {
     }
 
-    public static void init(Context context) {
+    public static void init(final Context context) {
         if (sInited) {
             return;
         }
@@ -156,7 +156,7 @@ public final class HardwareUtils {
         }
     }
 
-    private static String machineTypeToString(int machineType) {
+    private static String machineTypeToString(final int machineType) {
         switch (machineType) {
             case ELF_MACHINE_X86:
                 return "x86";

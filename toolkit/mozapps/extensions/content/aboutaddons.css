@@ -62,3 +62,37 @@
   color: var(--grey-60);
   font-weight: 400;
 }
+
+.more-options-menu {
+  position: relative;
+  /* Add some negative margin to account for the button's padding */
+  margin-top: -10px;
+  margin-inline-end: -8px;
+}
+
+button[action="more-options"] {
+  min-width: auto;
+  min-height: auto;
+  width: 24px;
+  height: 24px;
+  margin: 0;
+  background: url("chrome://global/skin/icons/more.svg") no-repeat center center;
+}
+
+panel-item[action="remove"] {
+  -moz-context-properties: fill;
+  fill: currentColor;
+  --icon: url("chrome://global/skin/icons/delete.svg");
+}
+
+panel-item-separator {
+  display: block;
+  height: 1px;
+  background: var(--panel-border-color);
+  padding: 0;
+  margin: 6px 0;
+}
+
+panel-item-separator[hidden] {
+  display: none;
+}

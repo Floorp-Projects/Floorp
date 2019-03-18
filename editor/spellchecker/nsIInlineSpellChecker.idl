@@ -25,6 +25,7 @@ interface nsIInlineSpellChecker : nsISupports
   void spellCheckRange(in Range aSelection);
 
   Range getMisspelledWord(in Node aNode, in long aOffset);
+  [can_run_script]
   void replaceWord(in Node aNode, in long aOffset, in AString aNewword);
   void addWordToDictionary(in AString aWord);
   void removeWordFromDictionary(in AString aWord);

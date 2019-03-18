@@ -35,13 +35,14 @@ public final class GeckoJarReader {
 
     private GeckoJarReader() {}
 
-    public static Bitmap getBitmap(Context context, Resources resources, String url) {
+    public static Bitmap getBitmap(final Context context, final Resources resources,
+                                   final String url) {
         BitmapDrawable drawable = getBitmapDrawable(context, resources, url);
         return (drawable != null) ? drawable.getBitmap() : null;
     }
 
-    public static BitmapDrawable getBitmapDrawable(Context context, Resources resources,
-                                                   String url) {
+    public static BitmapDrawable getBitmapDrawable(final Context context, final Resources resources,
+                                                   final String url) {
         Stack<String> jarUrls = parseUrl(url);
         InputStream inputStream = null;
         BitmapDrawable bitmap = null;
@@ -72,7 +73,7 @@ public final class GeckoJarReader {
         return bitmap;
     }
 
-    public static String getText(Context context, String url) {
+    public static String getText(final Context context, final String url) {
         Stack<String> jarUrls = parseUrl(url);
 
         NativeZip zip = null;
@@ -100,7 +101,7 @@ public final class GeckoJarReader {
         return text;
     }
 
-    private static NativeZip getZipFile(Context context, String url)
+    private static NativeZip getZipFile(final Context context, final String url)
             throws IOException, URISyntaxException {
         URI fileUrl = new URI(url);
         GeckoLoader.loadMozGlue(context);
@@ -117,7 +118,8 @@ public final class GeckoJarReader {
      * @return a <code>File</code>, if one could be written; otherwise null.
      * @throws IOException if an error occured.
      */
-    public static File extractStream(Context context, String url, File dir, String suffix) throws IOException {
+    public static File extractStream(final Context context, final String url, final File dir,
+                                     final String suffix) throws IOException {
         InputStream input = null;
         try {
             try {
@@ -170,7 +172,7 @@ public final class GeckoJarReader {
     }
 
     @RobocopTarget
-    public static InputStream getStream(Context context, String url) {
+    public static InputStream getStream(final Context context, final String url) {
         Stack<String> jarUrls = parseUrl(url);
         try {
             NativeZip zip = getZipFile(context, jarUrls.pop());
@@ -184,9 +186,11 @@ public final class GeckoJarReader {
         }
     }
 
-    private static InputStream getStream(NativeZip zip, Stack<String> jarUrls, String origUrl) {
+    private static InputStream getStream(final NativeZip zip, final Stack<String> jarUrls,
+                                         final String origUrl) {
         InputStream inputStream = null;
 
+        NativeZip currentZip = zip;
         // loop through children jar files until we reach the innermost one
         while (!jarUrls.empty()) {
             String fileName = jarUrls.pop();
@@ -194,7 +198,7 @@ public final class GeckoJarReader {
             if (inputStream != null) {
                 // intermediate NativeZips and InputStreams will be garbage collected.
                 try {
-                    zip = new NativeZip(inputStream);
+                    currentZip = new NativeZip(inputStream);
                 } catch (IllegalArgumentException e) {
                     String description = "!!! BUG 849589 !!! origUrl=" + origUrl;
                     Log.e(LOGTAG, description, e);
@@ -202,7 +206,7 @@ public final class GeckoJarReader {
                 }
             }
 
-            inputStream = zip.getInputStream(fileName);
+            inputStream = currentZip.getInputStream(fileName);
             if (inputStream == null) {
                 Log.d(LOGTAG, "No Entry for " + fileName);
                 return null;
@@ -221,15 +225,11 @@ public final class GeckoJarReader {
      *    omni.ja
      *    chrome/chrome/content/branding/favicon32.png
      */
-    private static Stack<String> parseUrl(String url) {
-        return parseUrl(url, null);
+    private static Stack<String> parseUrl(final String url) {
+        return parseUrl(url, new Stack<>());
     }
 
-    private static Stack<String> parseUrl(String url, Stack<String> results) {
-        if (results == null) {
-            results = new Stack<String>();
-        }
-
+    private static Stack<String> parseUrl(final String url, final Stack<String> results) {
         if (url.startsWith("jar:")) {
             int jarEnd = url.lastIndexOf("!");
             String subStr = url.substring(4, jarEnd);
@@ -241,7 +241,7 @@ public final class GeckoJarReader {
         }
     }
 
-    public static String getJarURL(Context context, String pathInsideJAR) {
+    public static String getJarURL(final Context context, final String pathInsideJAR) {
         // We need to encode the package resource path, because it might contain illegal characters. For example:
         //   /mnt/asec2/[2]org.mozilla.fennec-1/pkg.apk
         // The round-trip through a URI does this for us.
@@ -253,7 +253,7 @@ public final class GeckoJarReader {
      * Encodes its resource path correctly.
      */
     @RobocopTarget
-    public static String computeJarURI(String resourcePath, String pathInsideJAR) {
+    public static String computeJarURI(final String resourcePath, final String pathInsideJAR) {
         final String resURI = new File(resourcePath).toURI().toString();
 
         // TODO: do we need to encode the file path, too?

@@ -3,11 +3,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 /* eslint max-len: ["error", 80] */
 /* exported initialize, hide, show */
+/* global windowRoot */
 
 "use strict";
 
 const {XPCOMUtils} = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   AddonManager: "resource://gre/modules/AddonManager.jsm",
@@ -39,6 +41,177 @@ function importTemplate(name) {
   }
   throw new Error(`Unknown template: ${name}`);
 }
+
+class PanelList extends HTMLElement {
+  static get observedAttributes() {
+    return ["open"];
+  }
+
+  constructor() {
+    super();
+    this.attachShadow({mode: "open"});
+    this.shadowRoot.appendChild(importTemplate("panel-list"));
+  }
+
+  attributeChangedCallback(name, oldVal, newVal) {
+    if (name == "open" && newVal != oldVal) {
+      if (this.open) {
+        this.onShow();
+      } else {
+        this.onHide();
+      }
+    }
+  }
+
+  get open() {
+    return this.hasAttribute("open");
+  }
+
+  set open(val) {
+    if (val) {
+      this.setAttribute("open", "true");
+    } else {
+      this.removeAttribute("open");
+    }
+  }
+
+  show(triggeringEvent) {
+    this.open = true;
+    this.triggeringEvent = triggeringEvent;
+  }
+
+  hide(triggeringEvent) {
+    this.open = false;
+    this.triggeringEvent = triggeringEvent;
+  }
+
+  toggle(triggeringEvent) {
+    if (this.open) {
+      this.hide(triggeringEvent);
+    } else {
+      this.show(triggeringEvent);
+    }
+  }
+
+  async setAlign() {
+    // Set the showing attribute to hide the panel until its alignment is set.
+    this.setAttribute("showing", "true");
+    // Tell the parent node to hide any overflow in case the panel extends off
+    // the page before the alignment is set.
+    this.parentNode.style.overflow = "hidden";
+
+    // Wait for a layout flush, then find the bounds.
+    let {height, width, y, left, right, winHeight, winWidth} =
+      await new Promise(resolve => {
+        requestAnimationFrame(() => setTimeout(() => {
+          // Use y since top is reserved.
+          let {y, left, right} =
+            window.windowUtils.getBoundsWithoutFlushing(this.parentNode);
+          let {height, width} =
+            window.windowUtils.getBoundsWithoutFlushing(this);
+          resolve({
+            height, width, y, left, right,
+            winHeight: innerHeight, winWidth: innerWidth,
+          });
+        }, 0));
+      });
+
+    // Calculate the left/right alignment.
+    let align;
+    if (Services.locale.isAppLocaleRTL) {
+      // Prefer aligning on the right.
+      align = right - width + 14 < 0 ? "left" : "right";
+    } else {
+      // Prefer aligning on the left.
+      align = left + width - 14 > winWidth ? "right" : "left";
+    }
+
+    // "bottom" style will move the panel down 30px from the top of the parent.
+    let valign = y + height + 30 > winHeight ? "top" : "bottom";
+
+    // Set the alignments and show the panel.
+    this.setAttribute("align", align);
+    this.setAttribute("valign", valign);
+    this.parentNode.style.overflow = "";
+    this.removeAttribute("showing");
+
+    // Send the shown event after the next paint.
+    requestAnimationFrame(() => this.sendEvent("shown"));
+  }
+
+  addHideListeners() {
+    // Hide when a panel-item is clicked in the list.
+    this.addEventListener("click", this);
+    // Hide when a click is initiated outside the panel.
+    document.addEventListener("mousedown", this);
+    // Hide if focus changes and the panel isn't in focus.
+    document.addEventListener("focusin", this);
+    // Hide on resize, scroll or losing window focus.
+    window.addEventListener("resize", this);
+    window.addEventListener("scroll", this);
+    window.addEventListener("blur", this);
+  }
+
+  removeHideListeners() {
+    this.removeEventListener("click", this);
+    document.removeEventListener("mousedown", this);
+    document.removeEventListener("focusin", this);
+    window.removeEventListener("resize", this);
+    window.removeEventListener("scroll", this);
+    window.removeEventListener("blur", this);
+  }
+
+  handleEvent(e) {
+    // Ignore the event if it caused the panel to open.
+    if (e == this.triggeringEvent) {
+      return;
+    }
+
+    switch (e.type) {
+      case "resize":
+      case "scroll":
+      case "blur":
+        this.hide();
+        break;
+      case "click":
+        if (e.target.tagName == "PANEL-ITEM") {
+          this.hide();
+        }
+        break;
+      case "mousedown":
+      case "focusin":
+        // If the target isn't in the panel, hide. This will close when focus
+        // moves out of the panel, or there's a click started outside the panel.
+        if (!e.target || e.target.closest("panel-list") != this) {
+          this.hide();
+        }
+        break;
+    }
+  }
+
+  onShow() {
+    this.setAlign();
+    this.addHideListeners();
+  }
+
+  onHide() {
+    this.removeHideListeners();
+  }
+
+  sendEvent(name, detail) {
+    this.dispatchEvent(new CustomEvent(name, {detail}));
+  }
+}
+customElements.define("panel-list", PanelList);
+
+class PanelItem extends HTMLElement {
+  constructor() {
+    super();
+    this.attachShadow({mode: "open"});
+    this.shadowRoot.appendChild(importTemplate("panel-item"));
+  }
+}
+customElements.define("panel-item", PanelItem);
 
 /**
  * A card component for managing an add-on. It should be initialized by setting
@@ -87,14 +260,18 @@ class AddonCard extends HTMLElement {
     card.querySelector(".addon-icon").src = icon;
     card.querySelector(".addon-name").textContent = addon.name;
     card.querySelector(".addon-description").textContent = addon.description;
-    card.querySelector('[action="remove"]').hidden =
-      !hasPermission(addon, "uninstall");
+    let removeButton = card.querySelector('[action="remove"]');
+    removeButton.hidden = !hasPermission(addon, "uninstall");
 
     let disableButton = card.querySelector('[action="toggle-disabled"]');
     let disableAction = addon.userDisabled ? "enable" : "disable";
     document.l10n.setAttributes(
       disableButton, `${disableAction}-addon-button`);
     disableButton.hidden = !hasPermission(addon, disableAction);
+
+    // If disable and remove are hidden, we don't need the separator.
+    let separator = card.querySelector("panel-item-separator");
+    separator.hidden = removeButton.hidden && disableButton.hidden;
   }
 
   render() {
@@ -111,22 +288,54 @@ class AddonCard extends HTMLElement {
     // Set the contents.
     this.update();
 
-    this.addEventListener("click", async (e) => {
-      switch (e.target.getAttribute("action")) {
+    let panel = this.card.querySelector("panel-list");
+
+    let moreOptionsButton = this.card.querySelector('[action="more-options"]');
+    // Open on mousedown when the mouse is used.
+    moreOptionsButton.addEventListener("mousedown", (e) => {
+      panel.toggle(e);
+    });
+    // Open when there's a click from the keyboard.
+    moreOptionsButton.addEventListener("click", (e) => {
+      if (e.mozInputSource == MouseEvent.MOZ_SOURCE_KEYBOARD) {
+        panel.toggle(e);
+      }
+    });
+
+    panel.addEventListener("click", async (e) => {
+      let action = e.target.getAttribute("action");
+      switch (action) {
         case "toggle-disabled":
           if (addon.userDisabled) {
             await addon.enable();
           } else {
             await addon.disable();
           }
+          if (e.mozInputSource == MouseEvent.MOZ_SOURCE_KEYBOARD) {
+            // Refocus the open menu button so it's clear where the focus is.
+            this.querySelector('[action="more-options"]').focus();
+          }
           break;
         case "remove":
-          await addon.uninstall();
+          {
+            panel.hide();
+            let response = windowRoot.ownerGlobal.promptRemoveExtension(addon);
+            if (response == 0) {
+              await addon.uninstall();
+              this.sendEvent("remove");
+            } else {
+              this.sendEvent("remove-cancelled");
+            }
+          }
           break;
       }
     });
 
     this.appendChild(this.card);
+  }
+
+  sendEvent(name, detail) {
+    this.dispatchEvent(new CustomEvent(name, {detail}));
   }
 }
 customElements.define("addon-card", AddonCard);

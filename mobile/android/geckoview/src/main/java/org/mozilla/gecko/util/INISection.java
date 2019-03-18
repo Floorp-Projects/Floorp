@@ -17,8 +17,12 @@ public class INISection {
 
     // default file to read and write to
     private String mName;
-    public String getName() { return mName; }
-    public void setName(String name) { mName = name; }
+    public String getName() {
+        return mName;
+    }
+    public void setName(final String name) {
+        mName = name;
+    }
 
     // show or hide debug logging
     private  boolean mDebug;
@@ -28,25 +32,25 @@ public class INISection {
 
     // create a parser. The file will not be read until you attempt to
     // access sections or properties inside it. At that point its read synchronously
-    public INISection(String name) {
+    public INISection(final String name) {
         mName = name;
     }
 
     // log a debug string to the console
-    protected void debug(String msg) {
+    protected void debug(final String msg) {
         if (mDebug) {
             Log.i(LOGTAG, msg);
         }
     }
 
     // get a global property out of the hash table. will return null if the property doesn't exist
-    public Object getProperty(String key) {
+    public Object getProperty(final String key) {
         getProperties(); // ensure that we have parsed the file
         return mProperties.get(key);
     }
 
     // get a global property out of the hash table. will return null if the property doesn't exist
-    public int getIntProperty(String key) {
+    public int getIntProperty(final String key) {
         Object val = getProperty(key);
         if (val == null)
             return -1;
@@ -55,10 +59,10 @@ public class INISection {
     }
 
     // get a global property out of the hash table. will return null if the property doesn't exist
-    public String getStringProperty(String key) {
+    public String getStringProperty(final String key) {
         Object val = getProperty(key);
         if (val == null)
-          return null;
+            return null;
 
         return val.toString();
     }
@@ -81,7 +85,7 @@ public class INISection {
     }
 
     // set a property. Will erase the property if value = null
-    public void setProperty(String key, Object value) {
+    public void setProperty(final String key, final Object value) {
         getProperties(); // ensure that we have parsed the file
         if (value == null)
             removeProperty(key);
@@ -90,13 +94,13 @@ public class INISection {
     }
 
     // remove a property
-    public void removeProperty(String name) {
+    public void removeProperty(final String name) {
         // ensure that we have parsed the file
         getProperties();
         mProperties.remove(name);
     }
 
-    public void write(BufferedWriter writer) throws IOException {
+    public void write(final BufferedWriter writer) throws IOException {
         if (!TextUtils.isEmpty(mName)) {
             writer.write("[" + mName + "]");
             writer.newLine();
@@ -112,7 +116,7 @@ public class INISection {
     }
 
     // Helper function to write out a property
-    private void writeProperty(BufferedWriter writer, String key, Object value) {
+    private void writeProperty(final BufferedWriter writer, final String key, final Object value) {
         try {
             writer.write(key + "=" + value);
             writer.newLine();

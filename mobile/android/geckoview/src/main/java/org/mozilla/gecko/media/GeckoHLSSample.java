@@ -34,12 +34,12 @@ public final class GeckoHLSSample {
     @WrapForJNI
     final public CryptoInfo cryptoInfo;
 
-    private ByteBuffer buffer = null;
+    private ByteBuffer mBuffer = null;
 
     @WrapForJNI
-    public void writeToByteBuffer(ByteBuffer dest) throws IOException {
-        if (buffer != null && dest != null && info.size > 0) {
-            dest.put(buffer);
+    public void writeToByteBuffer(final ByteBuffer dest) throws IOException {
+        if (mBuffer != null && dest != null && info.size > 0) {
+            dest.put(mBuffer);
         }
     }
 
@@ -53,16 +53,16 @@ public final class GeckoHLSSample {
         return (info.flags & MediaCodec.BUFFER_FLAG_KEY_FRAME) != 0;
     }
 
-    public static GeckoHLSSample create(ByteBuffer src, BufferInfo info, CryptoInfo cryptoInfo,
-                                        int formatIndex) {
+    public static GeckoHLSSample create(final ByteBuffer src, final BufferInfo info,
+                                        final CryptoInfo cryptoInfo, final int formatIndex) {
         return new GeckoHLSSample(src, info, cryptoInfo, formatIndex);
     }
 
-    private GeckoHLSSample(ByteBuffer buffer, BufferInfo info, CryptoInfo cryptoInfo,
-                           int formatIndex) {
+    private GeckoHLSSample(final ByteBuffer buffer, final BufferInfo info,
+                           final CryptoInfo cryptoInfo, final int formatIndex) {
         this.formatIndex = formatIndex;
         duration = Long.MAX_VALUE;
-        this.buffer = buffer;
+        this.mBuffer = buffer;
         this.info = info;
         this.cryptoInfo = cryptoInfo;
     }
@@ -81,6 +81,6 @@ public final class GeckoHLSSample {
                 append(", duration=").append(duration).
                 append(", flags=").append(Integer.toHexString(info.flags)).append(" }").
                 append(" }");
-            return str.toString();
+        return str.toString();
     }
 }

@@ -51,7 +51,7 @@ int main(int argc, char** argv) {
   int count = 1;
   if (argc > 1) count = atoi(argv[1]);
 
-  if (NS_FAILED(NS_InitXPCOM2(nullptr, nullptr, nullptr))) return -1;
+  if (NS_FAILED(NS_InitXPCOM(nullptr, nullptr, nullptr))) return -1;
 
   while (count--) {
     for (const Test* t = tests; t->name != nullptr; ++t) {

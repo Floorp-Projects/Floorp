@@ -698,7 +698,7 @@ const PanelUI = {
       doorhangers.forEach(n => {
         n.dismissed = true;
         if (n.options.onDismissed) {
-          n.options.onDismissed();
+          n.options.onDismissed(window);
         }
       });
       this._hidePopup();
@@ -778,6 +778,9 @@ const PanelUI = {
       popupnotification.setAttribute("label", desc.start);
       popupnotification.setAttribute("name", desc.name);
       popupnotification.setAttribute("endlabel", desc.end);
+    }
+    if (notification.options.onRefresh) {
+      notification.options.onRefresh(window);
     }
     if (notification.options.popupIconURL) {
       popupnotification.setAttribute("icon", notification.options.popupIconURL);
