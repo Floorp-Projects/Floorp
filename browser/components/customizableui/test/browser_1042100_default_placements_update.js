@@ -121,12 +121,13 @@ function test() {
   is(navbarPlacements[5], "downloads-button", "Downloads button is in the right place.");
   is(navbarPlacements[6], "library-button", "Library button is in the right place.");
   is(navbarPlacements[7], "sidebar-button", "Sidebar button is in the right place.");
-  is(navbarPlacements.length, 8, "Should have 8 items");
+  is(navbarPlacements[8], "fxa-toolbar-menu-button", "FxA button is in the right place.");
+  is(navbarPlacements.length, 9, "Should have 9 items");
 
   let overflowPlacements = CustomizableUIBSPass.gSavedState.placements["widget-overflow-fixed-list"];
   Assert.deepEqual(overflowPlacements, ["panic-button"]);
 
-  // Finally test that the downloads migration works:
+  // Finally, test the downloads and fxa avatar button migrations work.
   let oldNavbarPlacements = [
     "urlbar-container", "customizableui-special-spring3", "search-container",
   ];
@@ -139,7 +140,7 @@ function test() {
   };
   CustomizableUIInternal._updateForNewVersion();
   navbarPlacements = CustomizableUIBSPass.gSavedState.placements["nav-bar"];
-  Assert.deepEqual(navbarPlacements, oldNavbarPlacements.concat(["downloads-button"]),
+  Assert.deepEqual(navbarPlacements, oldNavbarPlacements.concat(["downloads-button", "fxa-toolbar-menu-button"]),
                    "Downloads button inserted in navbar");
   Assert.deepEqual(CustomizableUIBSPass.gSavedState.placements["widget-overflow-fixed-list"], [],
                    "Overflow panel is empty");
@@ -152,7 +153,7 @@ function test() {
   };
   CustomizableUIInternal._updateForNewVersion();
   navbarPlacements = CustomizableUIBSPass.gSavedState.placements["nav-bar"];
-  Assert.deepEqual(navbarPlacements, oldNavbarPlacements.concat(["downloads-button"]),
+  Assert.deepEqual(navbarPlacements, oldNavbarPlacements.concat(["downloads-button", "fxa-toolbar-menu-button"]),
                    "Downloads button reinserted in navbar");
 
   oldNavbarPlacements = [
@@ -168,7 +169,7 @@ function test() {
   navbarPlacements = CustomizableUIBSPass.gSavedState.placements["nav-bar"];
   let expectedNavbarPlacements = [
     "urlbar-container", "customizableui-special-spring3", "search-container",
-    "downloads-button", "other-widget",
+    "downloads-button", "other-widget", "fxa-toolbar-menu-button",
   ];
   Assert.deepEqual(navbarPlacements, expectedNavbarPlacements,
                    "Downloads button inserted in navbar before other widgets");

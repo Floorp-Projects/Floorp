@@ -355,7 +355,7 @@ void CheckGeneratedSurface(SourceSurface* aSurface, const IntRect& aRect,
 
 void CheckGeneratedPalettedImage(Decoder* aDecoder, const IntRect& aRect) {
   RawAccessFrameRef currentFrame = aDecoder->GetCurrentFrameRef();
-  IntSize imageSize = currentFrame->GetImageSize();
+  IntSize imageSize = currentFrame->GetSize();
 
   // This diagram shows how the surface is divided into regions that the code
   // below tests for the correct content. The output rect is the bounds of the

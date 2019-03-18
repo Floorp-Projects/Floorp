@@ -34,4 +34,8 @@ not-for-build-platforms:
 job-template:
     shipping-phase: promote
     attributes:
-        artifact_map: taskcluster/taskgraph/manifests/fennec_nightly.yml
+        artifact_map:
+            by-project:
+                mozilla-release: taskcluster/taskgraph/manifests/fennec_candidates.yml
+                mozilla-beta: taskcluster/taskgraph/manifests/fennec_candidates.yml
+                default: taskcluster/taskgraph/manifests/fennec_nightly.yml

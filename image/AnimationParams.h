@@ -33,6 +33,15 @@ enum class DisposalMethod : int8_t {
 };
 
 struct AnimationParams {
+  AnimationParams(const gfx::IntRect& aBlendRect, const FrameTimeout& aTimeout,
+                  uint32_t aFrameNum, BlendMethod aBlendMethod,
+                  DisposalMethod aDisposalMethod)
+      : mBlendRect(aBlendRect),
+        mTimeout(aTimeout),
+        mFrameNum(aFrameNum),
+        mBlendMethod(aBlendMethod),
+        mDisposalMethod(aDisposalMethod) {}
+
   gfx::IntRect mBlendRect;
   FrameTimeout mTimeout;
   uint32_t mFrameNum;

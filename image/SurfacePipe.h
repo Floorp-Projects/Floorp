@@ -424,9 +424,6 @@ class SurfaceFilter {
   // Methods Subclasses Should Override
   //////////////////////////////////////////////////////////////////////////////
 
-  /// @return true if this SurfaceFilter can be used with paletted surfaces.
-  virtual bool IsValidPalettedPipe() const { return false; }
-
   /**
    * @return a SurfaceInvalidRect representing the region of the surface that
    *         has been written to since the last time TakeInvalidRect() was
@@ -747,9 +744,8 @@ struct SurfaceConfig {
 };
 
 /**
- * A sink for normal (i.e., non-paletted) surfaces. It handles the allocation of
- * the surface and protects against buffer overflow. This sink should be used
- * for all non-animated images and for the first frame of animated images.
+ * A sink for surfaces. It handles the allocation of the surface and protects
+ * against buffer overflow. This sink should be used for images.
  *
  * Sinks must always be at the end of the SurfaceFilter chain.
  */
@@ -759,47 +755,6 @@ class SurfaceSink final : public AbstractSurfaceSink {
 
  protected:
   uint8_t* GetRowPointer() const override;
-};
-
-class PalettedSurfaceSink;
-
-struct PalettedSurfaceConfig {
-  using Filter = PalettedSurfaceSink;
-  Decoder* mDecoder;           /// Which Decoder to use to allocate the surface.
-  gfx::IntSize mOutputSize;    /// The logical size of the surface.
-  gfx::IntRect mFrameRect;     /// The surface subrect which contains data.
-  gfx::SurfaceFormat mFormat;  /// The surface format (BGRA or BGRX).
-  uint8_t mPaletteDepth;       /// The palette depth of this surface.
-  bool mFlipVertically;        /// If true, write the rows from bottom to top.
-  Maybe<AnimationParams> mAnimParams;  /// Given for animated images.
-};
-
-/**
- * A sink for paletted surfaces. It handles the allocation of the surface and
- * protects against buffer overflow. This sink can be used for frames of
- * animated images except the first.
- *
- * Sinks must always be at the end of the SurfaceFilter chain.
- *
- * XXX(seth): We'll remove all support for paletted surfaces in bug 1247520,
- * which means we can remove PalettedSurfaceSink entirely.
- */
-class PalettedSurfaceSink final : public AbstractSurfaceSink {
- public:
-  bool IsValidPalettedPipe() const override { return true; }
-
-  nsresult Configure(const PalettedSurfaceConfig& aConfig);
-
- protected:
-  uint8_t* GetRowPointer() const override;
-
- private:
-  /**
-   * The surface subrect which contains data. Note that the surface size we
-   * actually allocate is the size of the frame rect, not the logical size of
-   * the surface.
-   */
-  gfx::IntRect mFrameRect;
 };
 
 }  // namespace image

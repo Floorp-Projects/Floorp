@@ -50,24 +50,10 @@ class imgFrame {
    * when drawing content into an imgFrame, as it may use a different graphics
    * backend than normal content drawing.
    */
-  nsresult InitForDecoder(const nsIntSize& aImageSize, const nsIntRect& aRect,
-                          SurfaceFormat aFormat, uint8_t aPaletteDepth,
+  nsresult InitForDecoder(const nsIntSize& aImageSize, SurfaceFormat aFormat,
                           bool aNonPremult,
                           const Maybe<AnimationParams>& aAnimParams,
-                          bool aIsFullFrame, bool aShouldRecycle);
-
-  nsresult InitForAnimator(const nsIntSize& aSize, SurfaceFormat aFormat) {
-    nsIntRect frameRect(0, 0, aSize.width, aSize.height);
-    AnimationParams animParams{frameRect, FrameTimeout::Forever(),
-                               /* aFrameNum */ 1, BlendMethod::OVER,
-                               DisposalMethod::NOT_SPECIFIED};
-    // We set aIsFullFrame to false because we don't want the compositing frame
-    // to be allocated into shared memory for WebRender. mIsFullFrame is only
-    // otherwise used for frames produced by Decoder, so it isn't relevant.
-    return InitForDecoder(aSize, frameRect, aFormat, /* aPaletteDepth */ 0,
-                          /* aNonPremult */ false, Some(animParams),
-                          /* aIsFullFrame */ false, /* aShouldRecycle */ false);
-  }
+                          bool aShouldRecycle);
 
   /**
    * Reinitialize this imgFrame with the new parameters, but otherwise retain
@@ -174,14 +160,13 @@ class imgFrame {
    * changes caused by Optimize(), since an imgFrame is not optimized throughout
    * its lifetime.
    */
-  uint32_t GetBytesPerPixel() const { return GetIsPaletted() ? 1 : 4; }
+  uint32_t GetBytesPerPixel() const { return 4; }
 
-  const IntSize& GetImageSize() const { return mImageSize; }
-  const IntRect& GetRect() const { return mFrameRect; }
-  IntSize GetSize() const { return mFrameRect.Size(); }
+  const IntSize& GetSize() const { return mImageSize; }
+  IntRect GetRect() const { return IntRect(IntPoint(0, 0), mImageSize); }
   const IntRect& GetBlendRect() const { return mBlendRect; }
   IntRect GetBoundedBlendRect() const {
-    return mBlendRect.Intersect(mFrameRect);
+    return mBlendRect.Intersect(GetRect());
   }
   FrameTimeout GetTimeout() const { return mTimeout; }
   BlendMethod GetBlendMethod() const { return mBlendMethod; }
@@ -190,18 +175,8 @@ class imgFrame {
   void GetImageData(uint8_t** aData, uint32_t* length) const;
   uint8_t* GetImageData() const;
 
-  bool GetIsPaletted() const;
-  void GetPaletteData(uint32_t** aPalette, uint32_t* length) const;
-  uint32_t* GetPaletteData() const;
-  uint8_t GetPaletteDepth() const { return mPaletteDepth; }
-
   const IntRect& GetDirtyRect() const { return mDirtyRect; }
   void SetDirtyRect(const IntRect& aDirtyRect) { mDirtyRect = aDirtyRect; }
-
-  bool IsFullFrame() const { return mIsFullFrame; }
-
-  bool GetCompositingFailed() const;
-  void SetCompositingFailed(bool val);
 
   void SetOptimizable();
 
@@ -255,10 +230,6 @@ class imgFrame {
    *                    must be freed before releasing the main thread context.
    */
   already_AddRefed<SourceSurface> GetSourceSurfaceInternal(bool aTemporary);
-
-  uint32_t PaletteDataLength() const {
-    return mPaletteDepth ? (size_t(1) << mPaletteDepth) * sizeof(uint32_t) : 0;
-  }
 
   struct SurfaceWithFormat {
     RefPtr<gfxDrawable> mDrawable;
@@ -336,17 +307,6 @@ class imgFrame {
   //! The size of the buffer we are decoding to.
   IntSize mImageSize;
 
-  //! XXX(aosmond): This means something different depending on the context. We
-  //!               should correct this.
-  //!
-  //! There are several different contexts for mFrameRect:
-  //! - If for non-animated image, it will be originate at (0, 0) and matches
-  //!   the dimensions of mImageSize.
-  //! - If for an APNG, it also matches the above.
-  //! - If for a GIF which is producing full frames, it matches the above.
-  //! - If for a GIF which is producing partial frames, it matches mBlendRect.
-  IntRect mFrameRect;
-
   //! The contents for the frame, as represented in the encoded image. This may
   //! differ from mImageSize because it may be a partial frame. For the first
   //! frame, this means we need to shift the data in place, and for animated
@@ -366,24 +326,7 @@ class imgFrame {
   BlendMethod mBlendMethod;
   SurfaceFormat mFormat;
 
-  // The palette and image data for images that are paletted, since Cairo
-  // doesn't support these images.
-  // The paletted data comes first, then the image data itself.
-  // Total length is PaletteDataLength() + GetImageDataLength().
-  uint8_t* mPalettedImageData;
-  uint8_t mPaletteDepth;
-
   bool mNonPremult;
-
-  //! True if the frame has all of the data stored in it, false if it needs to
-  //! be combined with another frame (e.g. the previous frame) to be complete.
-  bool mIsFullFrame;
-
-  //////////////////////////////////////////////////////////////////////////////
-  // Main-thread-only mutable data.
-  //////////////////////////////////////////////////////////////////////////////
-
-  bool mCompositingFailed;
 };
 
 /**
@@ -400,7 +343,6 @@ class DrawableFrameRef final {
   explicit DrawableFrameRef(imgFrame* aFrame) : mFrame(aFrame) {
     MOZ_ASSERT(aFrame);
     MonitorAutoLock lock(aFrame->mMonitor);
-    MOZ_ASSERT(!aFrame->GetIsPaletted(), "Paletted must use RawAccessFrameRef");
 
     if (aFrame->mRawSurface) {
       mRef.emplace(aFrame->mRawSurface, DataSourceSurface::READ);
@@ -454,10 +396,10 @@ class DrawableFrameRef final {
 /**
  * A reference to an imgFrame that holds the imgFrame's surface in memory in a
  * format appropriate for access as raw data. If you have a RawAccessFrameRef
- * |ref| and |if (ref)| is true, then calls to GetImageData() and
- * GetPaletteData() are guaranteed to succeed. This guarantee is stronger than
- * DrawableFrameRef, so everything that a valid DrawableFrameRef guarantees is
- * also guaranteed by a valid RawAccessFrameRef.
+ * |ref| and |if (ref)| is true, then calls to GetImageData() is guaranteed to
+ * succeed. This guarantee is stronger than DrawableFrameRef, so everything that
+ * a valid DrawableFrameRef guarantees is also guaranteed by a valid
+ * RawAccessFrameRef.
  *
  * This may be considerably more expensive than is necessary just for drawing,
  * so only use this when you need to read or write the raw underlying image data
@@ -529,7 +471,6 @@ class RawAccessFrameRef final {
   }
 
   uint8_t* Data() const { return mData; }
-  uint32_t PaletteDataLength() const { return mFrame->PaletteDataLength(); }
 
  private:
   RawAccessFrameRef(const RawAccessFrameRef& aOther) = delete;
