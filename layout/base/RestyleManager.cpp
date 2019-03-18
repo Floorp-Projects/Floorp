@@ -643,9 +643,10 @@ static nsIFrame* GetFrameForChildrenOnlyTransformHint(nsIFrame* aFrame) {
   return aFrame;
 }
 
-// Returns true if this function managed to successfully move a frame, and
-// false if it could not process the position change, and a reflow should
-// be performed instead.
+// This function tries to optimize a position style change by either
+// moving aFrame or ignoring the style change when it's safe to do so.
+// It returns true when that succeeds, otherwise it posts a reflow request
+// and returns false.
 static bool RecomputePosition(nsIFrame* aFrame) {
   // Don't process position changes on table frames, since we already handle
   // the dynamic position change on the table wrapper frame, and the
@@ -680,6 +681,12 @@ static bool RecomputePosition(nsIFrame* aFrame) {
                                     nsChangeHint_ReflowChangesSizeOrPosition);
       return false;
     }
+  }
+
+  // It's pointless to move around frames that have never been reflowed or
+  // are dirty (i.e. they will be reflowed).
+  if (aFrame->HasAnyStateBits(NS_FRAME_FIRST_REFLOW | NS_FRAME_IS_DIRTY)) {
+    return true;
   }
 
   aFrame->SchedulePaint();
