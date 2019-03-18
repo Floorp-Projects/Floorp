@@ -28,6 +28,7 @@ class Browser extends PureComponent {
     return {
       onBrowserMounted: PropTypes.func.isRequired,
       onContentResize: PropTypes.func.isRequired,
+      onResizeViewport: PropTypes.func.isRequired,
       swapAfterMount: PropTypes.bool.isRequired,
       userContextId: PropTypes.number.isRequired,
     };
@@ -36,6 +37,7 @@ class Browser extends PureComponent {
   constructor(props) {
     super(props);
     this.onContentResize = this.onContentResize.bind(this);
+    this.onResizeViewport = this.onResizeViewport.bind(this);
   }
 
   /**
@@ -97,10 +99,20 @@ class Browser extends PureComponent {
     });
   }
 
+  onResizeViewport(msg) {
+    const { onResizeViewport } = this.props;
+    const { width, height } = msg.data;
+    onResizeViewport({
+      width,
+      height,
+    });
+  }
+
   async startFrameScript() {
     const {
       browser,
       onContentResize,
+      onResizeViewport,
     } = this;
     const mm = browser.frameLoader.messageManager;
 
@@ -109,6 +121,7 @@ class Browser extends PureComponent {
     // since it still needs to do async work before the content is actually
     // resized to match.
     e10s.on(mm, "OnContentResize", onContentResize);
+    e10s.on(mm, "OnResizeViewport", onResizeViewport);
 
     const ready = e10s.once(mm, "ChildScriptReady");
     mm.loadFrameScript(FRAME_SCRIPT, true);
@@ -129,10 +142,12 @@ class Browser extends PureComponent {
     const {
       browser,
       onContentResize,
+      onResizeViewport,
     } = this;
     const mm = browser.frameLoader.messageManager;
 
     e10s.off(mm, "OnContentResize", onContentResize);
+    e10s.off(mm, "OnResizeViewport", onResizeViewport);
     await e10s.request(mm, "Stop");
     message.post(window, "stop-frame-script:done");
   }
