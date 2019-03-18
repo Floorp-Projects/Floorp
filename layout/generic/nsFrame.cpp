@@ -1593,10 +1593,9 @@ bool nsIFrame::IsCSSTransformed(const nsStyleDisplay* aStyleDisplay) const {
 }
 
 bool nsIFrame::HasAnimationOfTransform() const {
-  const nsIFrame* styleFrame = nsLayoutUtils::GetStyleFrame(this);
-  return IsPrimaryFrame() && styleFrame &&
+  return IsPrimaryFrame() &&
          nsLayoutUtils::HasAnimationOfPropertySet(
-             styleFrame, nsCSSPropertyIDSet::TransformLikeProperties()) &&
+             this, nsCSSPropertyIDSet::TransformLikeProperties()) &&
          IsFrameOfType(eSupportsCSSTransforms);
 }
 
@@ -1620,16 +1619,11 @@ bool nsIFrame::HasOpacityInternal(float aThreshold,
     return false;
   }
 
-  EffectSet* effects = aEffectSet ? aEffectSet : EffectSet::GetEffectSet(this);
-  if (!effects) {
-    return false;
-  }
-
   return ((nsLayoutUtils::IsPrimaryStyleFrame(this) ||
            nsLayoutUtils::FirstContinuationOrIBSplitSibling(this)
                ->IsPrimaryFrame()) &&
           nsLayoutUtils::HasAnimationOfPropertySet(
-              effects, nsCSSPropertyIDSet::OpacityProperties()));
+              this, nsCSSPropertyIDSet::OpacityProperties(), aEffectSet));
 }
 
 bool nsIFrame::IsSVGTransformed(gfx::Matrix* aOwnTransforms,
@@ -1639,7 +1633,7 @@ bool nsIFrame::IsSVGTransformed(gfx::Matrix* aOwnTransforms,
 
 bool nsIFrame::Extend3DContext(const nsStyleDisplay* aStyleDisplay,
                                const nsStyleEffects* aStyleEffects,
-                               mozilla::EffectSet* aEffectSet) const {
+                               mozilla::EffectSet* aEffectSetForOpacity) const {
   if (!(mState & NS_FRAME_MAY_BE_TRANSFORMED)) {
     return false;
   }
@@ -1656,7 +1650,7 @@ bool nsIFrame::Extend3DContext(const nsStyleDisplay* aStyleDisplay,
   }
 
   const nsStyleEffects* effects = StyleEffectsWithOptionalParam(aStyleEffects);
-  if (HasOpacity(disp, effects, aEffectSet)) {
+  if (HasOpacity(disp, effects, aEffectSetForOpacity)) {
     return false;
   }
 
@@ -2813,7 +2807,8 @@ void nsIFrame::BuildDisplayListForStackingContext(
 
   const nsStyleDisplay* disp = StyleDisplay();
   const nsStyleEffects* effects = StyleEffects();
-  EffectSet* effectSet = EffectSet::GetEffectSet(this);
+  EffectSet* effectSetForOpacity = EffectSet::GetEffectSetForFrame(
+      this, nsCSSPropertyIDSet::OpacityProperties());
   // We can stop right away if this is a zero-opacity stacking context and
   // we're painting, and we're not animating opacity. Don't do this
   // if we're going to compute plugin geometry, since opacity-0 plugins
@@ -2825,7 +2820,7 @@ void nsIFrame::BuildDisplayListForStackingContext(
   if (effects->mOpacity == 0.0 && aBuilder->IsForPainting() &&
       !(disp->mWillChangeBitField & NS_STYLE_WILL_CHANGE_OPACITY) &&
       !nsLayoutUtils::HasAnimationOfPropertySet(
-          effectSet, nsCSSPropertyIDSet::OpacityProperties())) {
+          this, nsCSSPropertyIDSet::OpacityProperties(), effectSetForOpacity)) {
     if (needHitTestInfo || aBuilder->WillComputePluginGeometry()) {
       opacityItemForEventsAndPluginsOnly = true;
     } else {
@@ -2852,12 +2847,14 @@ void nsIFrame::BuildDisplayListForStackingContext(
   // restore our mechanism to do that (changed in bug 1482403), and we'd
   // need to invalidate the frame if the value that would be return from
   // NeedsActiveLayer was to change, which we don't currently do.
-  const bool useOpacity = HasVisualOpacity(disp, effects, effectSet) &&
-                          !nsSVGUtils::CanOptimizeOpacity(this);
+  const bool useOpacity =
+      HasVisualOpacity(disp, effects, effectSetForOpacity) &&
+      !nsSVGUtils::CanOptimizeOpacity(this);
 
   const bool isTransformed = IsTransformed(disp);
   const bool hasPerspective = isTransformed && HasPerspective(disp);
-  const bool extend3DContext = Extend3DContext(disp, effects, effectSet);
+  const bool extend3DContext =
+      Extend3DContext(disp, effects, effectSetForOpacity);
   const bool combines3DTransformWithAncestors =
       (extend3DContext || isTransformed) &&
       Combines3DTransformWithAncestors(disp);
@@ -9069,7 +9066,6 @@ bool nsIFrame::FinishAndStoreOverflow(nsOverflowAreas& aOverflowAreas,
              "Don't call - overflow rects not maintained on these SVG frames");
 
   const nsStyleDisplay* disp = StyleDisplayWithOptionalParam(aStyleDisplay);
-  EffectSet* effectSet = EffectSet::GetEffectSet(this);
   bool hasTransform = IsTransformed(disp);
 
   nsRect bounds(nsPoint(0, 0), aNewSize);
@@ -9233,7 +9229,7 @@ bool nsIFrame::FinishAndStoreOverflow(nsOverflowAreas& aOverflowAreas,
        * the code above set their overflow area to empty. Manually collect these
        * overflow areas now.
        */
-      if (Extend3DContext(disp, effects, effectSet)) {
+      if (Extend3DContext(disp, effects)) {
         ComputePreserve3DChildrenOverflow(aOverflowAreas);
       }
     }
