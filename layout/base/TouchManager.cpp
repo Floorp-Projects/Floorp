@@ -114,8 +114,7 @@ nsIFrame* TouchManager::SetupTarget(WidgetTouchEvent* aEvent,
   // Setting this flag will skip the scrollbars on the root frame from
   // participating in hit-testing, and we only want that to happen on
   // zoomable platforms (for now).
-  dom::Document* doc = aFrame->PresContext()->Document();
-  if (nsLayoutUtils::AllowZoomingForDocument(doc)) {
+  if (gfxPrefs::APZAllowZooming()) {
     flags |= INPUT_IGNORE_ROOT_SCROLL_FRAME;
   }
 

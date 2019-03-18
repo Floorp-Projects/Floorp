@@ -60,7 +60,7 @@ class MobileViewportManager final : public nsIDOMEventListener,
  public:
   /* Notify the MobileViewportManager that a reflow was requested in the
    * presShell.*/
-  void RequestReflow(bool aForceAdjustResolution);
+  void RequestReflow();
 
   /* Notify the MobileViewportManager that the resolution on the presShell was
    * updated, and the visual viewport size needs to be updated. */

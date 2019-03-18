@@ -41,7 +41,7 @@ class Toolbar extends PureComponent {
       onChangeUserAgent: PropTypes.func.isRequired,
       onExit: PropTypes.func.isRequired,
       onRemoveDeviceAssociation: PropTypes.func.isRequired,
-      doResizeViewport: PropTypes.func.isRequired,
+      onResizeViewport: PropTypes.func.isRequired,
       onRotateViewport: PropTypes.func.isRequired,
       onScreenshot: PropTypes.func.isRequired,
       onToggleLeftAlignment: PropTypes.func.isRequired,
@@ -88,7 +88,7 @@ class Toolbar extends PureComponent {
       onChangeTouchSimulation,
       onExit,
       onRemoveDeviceAssociation,
-      doResizeViewport,
+      onResizeViewport,
       onRotateViewport,
       onScreenshot,
       onToggleLeftAlignment,
@@ -118,7 +118,7 @@ class Toolbar extends PureComponent {
           DeviceSelector({
             devices,
             onChangeDevice,
-            doResizeViewport,
+            onResizeViewport,
             onUpdateDeviceModal,
             selectedDevice,
             viewportId: viewport.id,
@@ -126,7 +126,7 @@ class Toolbar extends PureComponent {
           dom.div({ className: "devtools-separator" }),
           ViewportDimension({
             onRemoveDeviceAssociation,
-            doResizeViewport,
+            onResizeViewport,
             viewport,
           }),
           dom.button({
