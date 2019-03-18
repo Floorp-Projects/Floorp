@@ -262,9 +262,15 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
     }
 
     // If it does, then check it also has scrollbars.
-    const walker = new DocumentWalker(this.rawNode, this.rawNode.ownerGlobal,
-                                      { filter: scrollbarTreeWalkerFilter });
-    return !!walker.firstChild();
+    try {
+      const walker = new DocumentWalker(this.rawNode, this.rawNode.ownerGlobal,
+                                        { filter: scrollbarTreeWalkerFilter });
+      return !!walker.firstChild();
+    } catch (e) {
+      // We have no access to a DOM object. This is probably due to a CORS
+      // violation. Using try / catch is the only way to avoid this error.
+      return false;
+    }
   },
 
   /**
@@ -339,6 +345,10 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
   getCustomElementLocation: function() {
     // Get a reference to the custom element definition function.
     const name = this.rawNode.localName;
+
+    if (!this.rawNode.ownerGlobal) {
+      return undefined;
+    }
 
     const customElementsRegistry = this.rawNode.ownerGlobal.customElements;
     const customElement = customElementsRegistry && customElementsRegistry.get(name);
