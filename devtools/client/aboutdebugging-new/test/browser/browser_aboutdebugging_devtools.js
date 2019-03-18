@@ -17,7 +17,7 @@ add_task(async function() {
   const { document, tab, window } = await openAboutDebugging();
   await selectThisFirefoxPage(document, window.AboutDebugging.store);
 
-  const connectSidebarItem = findSidebarItemByText("Connect", document);
+  const connectSidebarItem = findSidebarItemByText("Setup", document);
   const connectLink = connectSidebarItem.querySelector(".js-sidebar-link");
   ok(connectSidebarItem, "Found the Connect sidebar item");
 
