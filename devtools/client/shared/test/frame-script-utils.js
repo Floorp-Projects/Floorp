@@ -74,6 +74,50 @@ function promiseXHR(data) {
 }
 
 /**
+ * Performs a single websocket request and returns a promise that resolves once
+ * the request has loaded.
+ *
+ * @param Object data
+ *        { url: the url to request (default: content.location.href),
+ *          nocache: append an unique token to the query string (default: true),
+ *        }
+ *
+ * @return Promise A promise that's resolved with object
+ *         { status: websocket status(101),
+ *           response: empty string }
+ *
+ */
+function promiseWS(data) {
+  return new Promise((resolve, reject) => {
+    let url = data.url;
+
+    if (data.nocache) {
+      url += "?devtools-cachebust=" + Math.random();
+    }
+
+    /* Create websocket instance */
+    const socket = new content.WebSocket(url);
+
+    /* Since we only use HTTP server to mock websocket, so just ignore the error */
+    socket.onclose = (e) => {
+      socket.close();
+      resolve({
+        status: 101,
+        response: "",
+      });
+    };
+
+    socket.onerror = (e) => {
+      socket.close();
+      resolve({
+        status: 101,
+        response: "",
+      });
+    };
+  });
+}
+
+/**
  * Performs XMLHttpRequest request(s) in the context of the page. The data
  * parameter can be either a single object or an array of objects described
  * below. The requests will be performed one at a time in the order they appear
@@ -105,7 +149,12 @@ addMessageListener("devtools:test:xhr", async function({ data }) {
   const responses = [];
 
   for (const request of requests) {
-    const response = await promiseXHR(request);
+    let response = null;
+    if (request.ws) {
+      response = await promiseWS(request);
+    } else {
+      response = await promiseXHR(request);
+    }
     responses.push(response);
   }
 
