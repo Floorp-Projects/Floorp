@@ -105,6 +105,7 @@ class TextEditor : public EditorBase, public nsIPlaintextEditor {
     return NS_SUCCEEDED(rv) && isEmpty;
   }
 
+  MOZ_CAN_RUN_SCRIPT
   virtual nsresult HandleKeyPressEvent(
       WidgetKeyboardEvent* aKeyboardEvent) override;
 

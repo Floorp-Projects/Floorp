@@ -1727,7 +1727,7 @@ HTMLEditor::SelectElement(Element* aElement) {
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  nsresult rv = SelectContentInternal(*aElement);
+  nsresult rv = SelectContentInternal(MOZ_KnownLive(*aElement));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -1742,28 +1742,18 @@ nsresult HTMLEditor::SelectContentInternal(nsIContent& aContentToSelect) {
     return NS_ERROR_FAILURE;
   }
 
-  nsINode* parent = aContentToSelect.GetParentNode();
-  if (NS_WARN_IF(!parent)) {
+  EditorRawDOMPoint newSelectionStart(&aContentToSelect);
+  if (NS_WARN_IF(!newSelectionStart.IsSet())) {
     return NS_ERROR_FAILURE;
   }
-
-  // Don't notify selection change at collapse.
-  AutoUpdateViewBatch notifySelectionChangeOnce(*this);
-
-  // XXX Perhaps, Selection should have SelectNode(nsIContent&).
-  int32_t offsetInParent = parent->ComputeIndexOf(&aContentToSelect);
-
-  // Collapse selection to just before desired element,
-  nsresult rv = SelectionRefPtr()->Collapse(parent, offsetInParent);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-  // then extend it to just after
-  rv = SelectionRefPtr()->Extend(parent, offsetInParent + 1);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-  return NS_OK;
+  EditorRawDOMPoint newSelectionEnd(&aContentToSelect);
+  MOZ_ASSERT(newSelectionEnd.IsSet());
+  DebugOnly<bool> advanced = newSelectionEnd.AdvanceOffset();
+  ErrorResult error;
+  MOZ_KnownLive(SelectionRefPtr())
+      ->SetStartAndEndInLimiter(newSelectionStart, newSelectionEnd, error);
+  NS_WARNING_ASSERTION(!error.Failed(), "Failed to select the given content");
+  return error.StealNSResult();
 }
 
 NS_IMETHODIMP
