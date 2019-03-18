@@ -58,6 +58,8 @@ typedef std::vector<VerifiedSCT> VerifiedSCTList;
 // Holds Signed Certificate Timestamps verification results.
 class CTVerifyResult {
  public:
+  CTVerifyResult() { Reset(); }
+
   // SCTs that were processed during the verification along with their
   // verification results.
   VerifiedSCTList verifiedScts;

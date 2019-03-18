@@ -163,21 +163,10 @@ add_task(async function() {
   setCertTrust(ca_cert, ",,");
   setCertTrust(int_cert, ",,");
 
-  // If an end-entity certificate is manually trusted, it may not be the root of
-  // its own verified chain. In general this will cause "unknown issuer" errors
-  // unless a CA trust anchor can be found.
+  // End-entities can be trust anchors for interoperability with users who
+  // prefer not to build a hierarchy and instead directly trust a particular
+  // server certificate.
   setCertTrust(ee_cert, "CTu,CTu,CTu");
-  await checkCertErrorGeneric(certdb, ee_cert, SEC_ERROR_UNKNOWN_ISSUER,
-                              certificateUsageSSLServer);
-  await checkCertErrorGeneric(certdb, ee_cert, SEC_ERROR_UNKNOWN_ISSUER,
-                              certificateUsageSSLClient);
-  await checkCertErrorGeneric(certdb, ee_cert, SEC_ERROR_UNKNOWN_ISSUER,
-                              certificateUsageEmailSigner);
-  await checkCertErrorGeneric(certdb, ee_cert, SEC_ERROR_UNKNOWN_ISSUER,
-                              certificateUsageEmailRecipient);
-
-  // Now make a CA trust anchor available.
-  setCertTrust(ca_cert, "CTu,CTu,CTu");
   await checkCertErrorGeneric(certdb, ee_cert, PRErrorCodeSuccess,
                               certificateUsageSSLServer);
   await checkCertErrorGeneric(certdb, ee_cert, PRErrorCodeSuccess,
