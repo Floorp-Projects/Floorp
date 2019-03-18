@@ -3,6 +3,7 @@
 
 "use strict";
 
+const BROWSER_NAME = document.getElementById("bundle_brand").getString("brandShortName");
 const UNKNOWN_ISSUER = "https://no-subject-alt-name.example.com:443";
 
 const checkAdvancedAndGetTechnicalInfoText = async () => {
@@ -30,8 +31,8 @@ const checkAdvancedAndGetTechnicalInfoText = async () => {
 
 const checkCorrectMessages = (message) => {
   let isCorrectMessage =
-    message.includes("Websites prove their identity via certificates."
-      + " Nightly does not trust this site because it uses a certificate that is"
+    message.includes("Websites prove their identity via certificates. "
+      + BROWSER_NAME + " does not trust this site because it uses a certificate that is"
       + " not valid for no-subject-alt-name.example.com");
   is(isCorrectMessage, true, "That message should appear");
   let isWrongMessage =
