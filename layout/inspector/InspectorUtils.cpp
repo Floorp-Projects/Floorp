@@ -440,16 +440,32 @@ bool InspectorUtils::CssPropertyIsShorthand(GlobalObject& aGlobalObject,
   return isShorthand;
 }
 
+// This should match the constants in specified_value_info.rs
+//
+// Once we can use bitflags in consts, we can also cbindgen that and use them
+// here instead.
+static uint8_t ToServoCssType(InspectorPropertyType aType) {
+  switch (aType) {
+    case InspectorPropertyType::Color:
+      return 1;
+    case InspectorPropertyType::Gradient:
+      return 1 << 1;
+    case InspectorPropertyType::Timing_function:
+      return 1 << 2;
+    default:
+      MOZ_ASSERT_UNREACHABLE("Unknown property type?");
+      return 0;
+  }
+}
+
 bool InspectorUtils::CssPropertySupportsType(GlobalObject& aGlobalObject,
                                              const nsAString& aProperty,
-                                             uint32_t aType, ErrorResult& aRv) {
+                                             InspectorPropertyType aType,
+                                             ErrorResult& aRv) {
   NS_ConvertUTF16toUTF8 property(aProperty);
-  if (!aType || aType > InspectorUtils_Binding::TYPE_TIMING_FUNCTION) {
-    aRv.Throw(NS_ERROR_INVALID_ARG);
-    return false;
-  }
   bool found;
-  bool result = Servo_Property_SupportsType(&property, aType, &found);
+  bool result =
+      Servo_Property_SupportsType(&property, ToServoCssType(aType), &found);
   if (!found) {
     aRv.Throw(NS_ERROR_FAILURE);
     return false;
