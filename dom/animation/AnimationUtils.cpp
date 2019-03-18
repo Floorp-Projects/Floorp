@@ -84,4 +84,25 @@ bool AnimationUtils::EffectSetContainsAnimatedScale(EffectSet& aEffects,
   return false;
 }
 
+/* static */
+bool AnimationUtils::HasCurrentTransitions(const Element* aElement,
+                                           PseudoStyleType aPseudoType) {
+  MOZ_ASSERT(aElement);
+
+  EffectSet* effectSet = EffectSet::GetEffectSet(aElement, aPseudoType);
+  if (!effectSet) {
+    return false;
+  }
+
+  for (const dom::KeyframeEffect* effect : *effectSet) {
+    // If |effect| is current, it must have an associated Animation
+    // so we don't need to null-check the result of GetAnimation().
+    if (effect->IsCurrent() && effect->GetAnimation()->AsCSSTransition()) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 }  // namespace mozilla
