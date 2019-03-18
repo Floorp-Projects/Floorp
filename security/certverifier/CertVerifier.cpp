@@ -299,7 +299,19 @@ Result CertVerifier::VerifyCertificateTransparencyPolicy(
   CERTCertListNode* issuerNode = CERT_LIST_NEXT(endEntityNode);
   if (!issuerNode || CERT_LIST_END(issuerNode, builtChain)) {
     // Issuer certificate is required for SCT verification.
-    return Result::FATAL_ERROR_INVALID_ARGS;
+    // If we've arrived here, we probably have a "trust chain" with only one
+    // certificate (i.e. a self-signed end-entity that has been set as a trust
+    // anchor either by a third party modifying our trust DB or via the
+    // enterprise roots feature). If this is the case, certificate transparency
+    // information will probably not be present, and it certainly won't verify
+    // correctly. To simplify things, we return an empty CTVerifyResult and a
+    // "not enough SCTs" CTPolicyCompliance result.
+    if (ctInfo) {
+      CTVerifyResult emptyResult;
+      ctInfo->verifyResult = std::move(emptyResult);
+      ctInfo->policyCompliance = CTPolicyCompliance::NotEnoughScts;
+    }
+    return Success;
   }
 
   CERTCertificate* endEntity = endEntityNode->cert;
