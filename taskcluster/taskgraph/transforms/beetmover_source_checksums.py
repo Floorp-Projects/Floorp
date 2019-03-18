@@ -138,7 +138,8 @@ def make_beetmover_checksums_worker(config, jobs):
                 "Beetmover checksums must have a beetmover and signing dependency!")
 
         if should_use_artifact_map(platform, config.params['project']):
-            upstream_artifacts = generate_beetmover_upstream_artifacts(job, platform, locale)
+            upstream_artifacts = generate_beetmover_upstream_artifacts(config,
+                                                                       job, platform, locale)
         else:
             upstream_artifacts = generate_upstream_artifacts(refs, platform, locale)
 
