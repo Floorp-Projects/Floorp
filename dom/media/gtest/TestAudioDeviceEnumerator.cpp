@@ -5,10 +5,9 @@
 
 #define ENABLE_SET_CUBEB_BACKEND 1
 #include "CubebDeviceEnumerator.h"
-#include "gtest/gtest-printers.h"
 #include "gtest/gtest.h"
-#include "mozilla/Attributes.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/Attributes.h"
 #include "nsTArray.h"
 
 using namespace mozilla;
@@ -380,13 +379,12 @@ void PrintDevice(AudioDeviceInfo* aInfo) {
       minRate, minLatency, maxLatency);
 }
 
-cubeb_device_info DeviceTemplate(cubeb_devid aId, cubeb_device_type aType,
-                                 const char* name) {
+cubeb_device_info DeviceTemplate(cubeb_devid aId, cubeb_device_type aType) {
   // A fake input device
   cubeb_device_info device;
   device.devid = aId;
   device.device_id = "nice name";
-  device.friendly_name = name;
+  device.friendly_name = "an even nicer name";
   device.group_id = "the physical device";
   device.vendor_name = "mozilla";
   device.type = aType;
@@ -402,10 +400,6 @@ cubeb_device_info DeviceTemplate(cubeb_devid aId, cubeb_device_type aType,
   device.latency_hi = 1024;
 
   return device;
-}
-
-cubeb_device_info DeviceTemplate(cubeb_devid aId, cubeb_device_type aType) {
-  return DeviceTemplate(aId, aType, "nice name");
 }
 
 enum DeviceOperation { ADD, REMOVE };
@@ -598,55 +592,6 @@ TEST(CubebDeviceEnumerator, DeviceInfoFromId) {
       devInfo = enumerator->DeviceInfoFromID(id_5);
       EXPECT_TRUE(devInfo) << "newly added device must exist";
       EXPECT_EQ(devInfo->DeviceID(), id_5) << "verify the device";
-    }
-  }
-  // Shutdown for `supports` to take effect
-  CubebDeviceEnumerator::Shutdown();
-}
-
-TEST(CubebDeviceEnumerator, DeviceInfoFromName) {
-  MockCubeb* mock = new MockCubeb();
-  mozilla::CubebUtils::ForceSetCubebContext(mock->AsCubebContext());
-
-  cubeb_device_type deviceTypes[2] = {CUBEB_DEVICE_TYPE_INPUT,
-                                      CUBEB_DEVICE_TYPE_OUTPUT};
-
-  bool supportsDeviceChangeCallback[2] = {true, false};
-  for (bool supports : supportsDeviceChangeCallback) {
-    // Shutdown for `supports` to take effect
-    CubebDeviceEnumerator::Shutdown();
-    mock->SetSupportDeviceChangeCallback(supports);
-    for (cubeb_device_type& deviceType : deviceTypes) {
-      cubeb_devid id_1 = reinterpret_cast<cubeb_devid>(1);
-      mock->AddDevice(DeviceTemplate(id_1, deviceType, "device name 1"));
-      cubeb_devid id_2 = reinterpret_cast<cubeb_devid>(2);
-      nsString device_name = NS_LITERAL_STRING("device name 2");
-      mock->AddDevice(DeviceTemplate(id_2, deviceType,
-                                     NS_ConvertUTF16toUTF8(device_name).get()));
-      cubeb_devid id_3 = reinterpret_cast<cubeb_devid>(3);
-      mock->AddDevice(DeviceTemplate(id_3, deviceType, "device name 3"));
-
-      RefPtr<CubebDeviceEnumerator> enumerator =
-          CubebDeviceEnumerator::GetInstance();
-
-      RefPtr<AudioDeviceInfo> devInfo =
-          enumerator->DeviceInfoFromName(device_name);
-      EXPECT_TRUE(devInfo) << "the device exist";
-      EXPECT_EQ(devInfo->Name(), device_name) << "verify the device";
-
-      EnumeratorSide side = (deviceType == CUBEB_DEVICE_TYPE_INPUT)
-                                ? EnumeratorSide::INPUT
-                                : EnumeratorSide::OUTPUT;
-      devInfo = enumerator->DeviceInfoFromName(device_name, side);
-      EXPECT_TRUE(devInfo) << "the device exist";
-      EXPECT_EQ(devInfo->Name(), device_name) << "verify the device";
-
-      mock->RemoveDevice(id_2);
-      devInfo = enumerator->DeviceInfoFromName(device_name);
-      EXPECT_FALSE(devInfo) << "the device does not exist any more";
-
-      devInfo = enumerator->DeviceInfoFromName(device_name, side);
-      EXPECT_FALSE(devInfo) << "the device does not exist any more";
     }
   }
   // Shutdown for `supports` to take effect
