@@ -483,11 +483,10 @@ VARCACHE_PREF(
 )
 
 // Enable content type normalization of XHR uploads via MIME Sniffing standard
-// Disabled for now in bz1499136
 VARCACHE_PREF(
   "dom.xhr.standard_content_type_normalization",
    dom_xhr_standard_content_type_normalization,
-  RelaxedAtomicBool, false
+  RelaxedAtomicBool, true
 )
 
 // Block multiple external protocol URLs in iframes per single event.
