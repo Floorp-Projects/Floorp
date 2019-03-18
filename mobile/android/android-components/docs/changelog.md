@@ -21,6 +21,9 @@ permalink: /changelog/
 * **feature-findinpage**
    * Find in Page now emits facts
 
+* **browser-toolbar**
+   * Adds `browserToolbarProgressBarGravity` attr with options `top` and `bottom` (default).
+
 # 0.49.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.48.0...v0.49.0)

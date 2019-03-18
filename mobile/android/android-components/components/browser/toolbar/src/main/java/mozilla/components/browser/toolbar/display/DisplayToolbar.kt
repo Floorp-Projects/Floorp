@@ -154,6 +154,9 @@ internal class DisplayToolbar(
     // Margin between browser actions.
     internal var browserActionMargin = 0
 
+    // Location of progress bar
+    internal var progressBarGravity = BOTTOM_PROGRESS_BAR
+
     // Horizontal margin of URL Box (surrounding URL and page actions).
     internal var urlBoxMargin = 0
 
@@ -323,6 +326,7 @@ internal class DisplayToolbar(
     }
 
     // We layout the toolbar ourselves to avoid the overhead from using complex ViewGroup implementations
+    @Suppress("ComplexMethod")
     override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
         // First we layout the navigation actions if there are any:
         //   +-------------+------------------------------------------------+
@@ -413,9 +417,13 @@ internal class DisplayToolbar(
         val urlLeft = navigationActionsWidth + iconWidth + urlBoxMargin
         urlView.layout(urlLeft, 0, urlLeft + urlView.measuredWidth, measuredHeight)
 
-        // The progress bar is going to be drawn at the bottom of the toolbar:
-
-        progressView.layout(0, measuredHeight - progressView.measuredHeight, measuredWidth, measuredHeight)
+        // The progress bar by default is going to be drawn at the bottom of the toolbar, top if defined:
+        progressView.layout(
+            0,
+            if (progressBarGravity == TOP_PROGRESS_BAR) 0 else measuredHeight - progressView.measuredHeight,
+            measuredWidth,
+            if (progressBarGravity == TOP_PROGRESS_BAR) progressView.measuredHeight else measuredHeight
+        )
 
         // The URL box view (if exists) is positioned behind the icon, the url and page actions:
 
@@ -428,6 +436,8 @@ internal class DisplayToolbar(
     companion object {
         internal const val URL_FADING_EDGE_SIZE_DP = 24
 
+        private const val BOTTOM_PROGRESS_BAR = 0
+        private const val TOP_PROGRESS_BAR = 1
         private const val ICON_PADDING_DP = 16
         private const val MENU_PADDING_DP = 16
         private const val URL_TEXT_SIZE = 15f
