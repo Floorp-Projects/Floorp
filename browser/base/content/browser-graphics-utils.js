@@ -6,13 +6,21 @@
 /* eslint-env mozilla/browser-window */
 
 /**
- * Global browser interface with the WebRender backend.
+ * Global browser interface with graphics utilities.
  */
-var gWebRender = {
+var gGfxUtils = {
+  _isRecording: false,
+  /**
+   * Toggle composition recording for the current window.
+   */
+  toggleWindowRecording() {
+    window.windowUtils.setCompositionRecording(!this._isRecording);
+    this._isRecording = !this._isRecording;
+  },
   /**
    * Trigger a WebRender capture of the current state into a local folder.
    */
-  capture() {
+  webrenderCapture() {
     window.windowUtils.wrCapture();
   },
 };
