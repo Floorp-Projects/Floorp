@@ -2,9 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "nsIArray.idl"
 #include "nsIBaseWindow.idl"
 #include "nsISupports.idl"
-#include "nsITouchBarInput.idl"
 
 /**
  * Front-to-backend communication to keep Touch Bar updated
@@ -13,8 +13,7 @@
 interface nsITouchBarUpdater : nsISupports
 {
   /**
-   * Updates a Touch Bar input in the specified window with the properties in
-   * aInput.
+   * Updates an array of nsITouchBarInputs in the specified window.
    */
-  void updateTouchBarInput(in nsIBaseWindow aWindow, in nsITouchBarInput aInput);
+  void updateTouchBarInputs(in nsIBaseWindow aWindow, in nsIArray aInputs);
 };
