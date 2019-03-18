@@ -449,9 +449,8 @@ bool ActiveLayerTracker::IsBackgroundPositionAnimated(
     }
   }
   return nsLayoutUtils::HasEffectiveAnimation(
-             aFrame, eCSSProperty_background_position_x) ||
-         nsLayoutUtils::HasEffectiveAnimation(
-             aFrame, eCSSProperty_background_position_y);
+      aFrame, nsCSSPropertyIDSet({eCSSProperty_background_position_x,
+                                  eCSSProperty_background_position_y}));
 }
 
 /* static */
