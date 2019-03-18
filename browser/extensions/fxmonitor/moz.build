@@ -32,7 +32,5 @@ FINAL_TARGET_FILES.features['fxmonitor@mozilla.org']['privileged']['subscripts']
   'privileged/subscripts/PanelUI.jsm'
 ]
 
-BROWSER_CHROME_MANIFESTS += ['test/browser/browser.ini']
-
 with Files('**'):
   BUG_COMPONENT = ('Firefox', 'Firefox Monitor')
