@@ -368,7 +368,8 @@ already_AddRefed<Promise> ServiceWorkerContainer::Register(
 
   window->NoteCalledRegisterForServiceWorkerScope(cleanedScopeURL);
 
-  RefPtr<Promise> outer = Promise::Create(global, aRv);
+  RefPtr<Promise> outer =
+      Promise::Create(global, aRv, Promise::ePropagateUserInteraction);
   if (aRv.Failed()) {
     return nullptr;
   }
@@ -417,7 +418,8 @@ already_AddRefed<Promise> ServiceWorkerContainer::GetRegistrations(
     return nullptr;
   }
 
-  RefPtr<Promise> outer = Promise::Create(global, aRv);
+  RefPtr<Promise> outer =
+      Promise::Create(global, aRv, Promise::ePropagateUserInteraction);
   if (aRv.Failed()) {
     return nullptr;
   }
@@ -492,7 +494,8 @@ already_AddRefed<Promise> ServiceWorkerContainer::GetRegistration(
     return nullptr;
   }
 
-  RefPtr<Promise> outer = Promise::Create(global, aRv);
+  RefPtr<Promise> outer =
+      Promise::Create(global, aRv, Promise::ePropagateUserInteraction);
   if (aRv.Failed()) {
     return nullptr;
   }
@@ -543,7 +546,8 @@ Promise* ServiceWorkerContainer::GetReady(ErrorResult& aRv) {
     return nullptr;
   }
 
-  mReadyPromise = Promise::Create(global, aRv);
+  mReadyPromise =
+      Promise::Create(global, aRv, Promise::ePropagateUserInteraction);
   if (aRv.Failed()) {
     return nullptr;
   }
