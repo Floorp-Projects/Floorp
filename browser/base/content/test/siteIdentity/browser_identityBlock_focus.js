@@ -5,6 +5,14 @@
 const TEST_PATH = getRootDirectory(gTestPath).replace("chrome://mochitests/content", "https://example.com");
 const PERMISSIONS_PAGE = TEST_PATH + "permissions.html";
 
+// The DevEdition has the DevTools button in the toolbar by default. Remove it
+// to prevent branch-specific rules what button should be focused.
+CustomizableUI.removeWidgetFromArea("developer-button");
+
+registerCleanupFunction(async function resetToolbar() {
+  await CustomizableUI.reset();
+});
+
 function synthesizeKeyAndWaitForFocus(element, keyCode, options) {
   let focused = BrowserTestUtils.waitForEvent(element, "focus");
   EventUtils.synthesizeKey(keyCode, options);
