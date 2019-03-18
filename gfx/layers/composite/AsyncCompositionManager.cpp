@@ -686,31 +686,36 @@ static bool SampleAnimations(Layer* aLayer,
   bool isAnimating = false;
 
   ForEachNode<ForwardIterator>(aLayer, [&](Layer* layer) {
-    AnimationArray& animations = layer->GetAnimations();
-    if (animations.IsEmpty()) {
+    auto& propertyAnimationGroups = layer->GetPropertyAnimationGroups();
+    if (propertyAnimationGroups.IsEmpty()) {
       return;
     }
+
     isAnimating = true;
     AnimatedValue* previousValue =
         aStorage->GetAnimatedValue(layer->GetCompositorAnimationsId());
-    RefPtr<RawServoAnimationValue> animationValue =
-        layer->GetBaseAnimationStyle();
+
+    RefPtr<RawServoAnimationValue> animationValue;
     AnimationHelper::SampleResult sampleResult =
         AnimationHelper::SampleAnimationForEachNode(
-            aPreviousFrameTime, aCurrentFrameTime, animations,
-            layer->GetAnimationData(), animationValue, previousValue);
+            aPreviousFrameTime, aCurrentFrameTime, propertyAnimationGroups,
+            animationValue, previousValue);
+
+    const PropertyAnimationGroup& lastPropertyAnimationGroup =
+        propertyAnimationGroups.LastElement();
+
     switch (sampleResult) {
       case AnimationHelper::SampleResult::Sampled: {
-        Animation& animation = animations.LastElement();
-        ApplyAnimatedValue(layer, aStorage, animation.property(),
-                           animation.data(), animationValue);
+        ApplyAnimatedValue(
+            layer, aStorage, lastPropertyAnimationGroup.mProperty,
+            lastPropertyAnimationGroup.mAnimationData, animationValue);
         break;
       }
       case AnimationHelper::SampleResult::Skipped:
-        switch (animations[0].property()) {
+        switch (lastPropertyAnimationGroup.mProperty) {
           case eCSSProperty_background_color:
           case eCSSProperty_opacity: {
-            if (animations[0].property() == eCSSProperty_opacity) {
+            if (lastPropertyAnimationGroup.mProperty == eCSSProperty_opacity) {
               MOZ_ASSERT(
                   layer->AsHostLayer()->GetShadowOpacitySetByAnimation());
 #ifdef DEBUG
@@ -735,7 +740,7 @@ static bool SampleAnimations(Layer* aLayer,
             MOZ_ASSERT(previousValue);
 #ifdef DEBUG
             const TransformData& transformData =
-                animations[0].data().get_TransformData();
+                lastPropertyAnimationGroup.mAnimationData.get_TransformData();
             Matrix4x4 frameTransform =
                 AnimationHelper::ServoAnimationValueToMatrix4x4(animationValue,
                                                                 transformData);
