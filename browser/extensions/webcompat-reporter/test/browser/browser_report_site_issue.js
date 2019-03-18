@@ -1,20 +1,6 @@
 "use strict";
 
-/* Test that clicking on the Report Site Issue button opens a new tab
-   and sends a postMessaged blob to it. */
-add_task(async function test_opened_page() {
-  requestLongerTimeout(2);
-
-  const serverLanding = await startIssueServer();
-
-  // ./head.js sets the value for PREF_WC_REPORTER_ENDPOINT
-  await SpecialPowers.pushPrefEnv({set: [
-    [PREF_WC_REPORTER_ENABLED, true],
-    [PREF_WC_REPORTER_ENDPOINT, serverLanding],
-  ]});
-
-  let tab1 = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_PAGE);
-
+async function clickToReportAndAwaitReportTabLoad() {
   await openPageActions();
   await isPanelItemEnabled();
 
@@ -28,8 +14,28 @@ add_task(async function test_opened_page() {
     }, {once: true});
   });
   document.getElementById(WC_PAGE_ACTION_PANEL_ID).click();
-  let tab2 = await newTabPromise;
+  const tab = await newTabPromise;
   await screenshotPromise;
+  return tab;
+}
+
+add_task(async function start_issue_server() {
+  requestLongerTimeout(2);
+
+  const serverLanding = await startIssueServer();
+
+  // ./head.js sets the value for PREF_WC_REPORTER_ENDPOINT
+  await SpecialPowers.pushPrefEnv({set: [
+    [PREF_WC_REPORTER_ENABLED, true],
+    [PREF_WC_REPORTER_ENDPOINT, serverLanding],
+  ]});
+});
+
+/* Test that clicking on the Report Site Issue button opens a new tab
+   and sends a postMessaged blob to it. */
+add_task(async function test_opened_page() {
+  let tab1 = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_PAGE);
+  let tab2 = await clickToReportAndAwaitReportTabLoad();
 
   await ContentTask.spawn(tab2.linkedBrowser, {TEST_PAGE}, async function(args) {
     async function isGreen(dataUrl) {
@@ -67,6 +73,7 @@ add_task(async function test_opened_page() {
     ok(typeof details.buildID == "string", "Details has a buildID string.");
     ok(typeof details.channel == "string", "Details has a channel string.");
     ok(typeof details.hasTouchScreen == "boolean", "Details has a hasTouchScreen flag.");
+    ok(typeof details.hasFastClick == "undefined", "Details does not have FastClick if not found.");
     ok(typeof details["mixed active content blocked"] == "boolean", "Details has a mixed active content blocked flag.");
     ok(typeof details["mixed passive content blocked"] == "boolean", "Details has a mixed passive content blocked flag.");
     ok(typeof details["tracking content blocked"] == "string", "Details has a tracking content blocked string.");
@@ -80,6 +87,38 @@ add_task(async function test_opened_page() {
     const bgUrl = preview.style.backgroundImage.match(/url\(\"(.*)\"\)/)[1];
     ok(bgUrl.startsWith("data:image/jpeg;base64,"), "A jpeg screenshot was successfully postMessaged");
     await isGreen(bgUrl);
+  });
+
+  BrowserTestUtils.removeTab(tab2);
+  BrowserTestUtils.removeTab(tab1);
+});
+
+add_task(async function test_fastclick_detection1() {
+  let tab1 = await BrowserTestUtils.openNewForegroundTab(gBrowser, FASTCLICK_TEST_PAGE1);
+  let tab2 = await clickToReportAndAwaitReportTabLoad();
+
+  await ContentTask.spawn(tab2.linkedBrowser, {}, async function(args) {
+    let doc = content.document;
+    let detailsParam = doc.getElementById("details").innerText;
+    const details = JSON.parse(detailsParam);
+    ok(typeof details == "object", "Details param is a stringified JSON object.");
+    is(details.hasFastClick, true, "FastClick was found.");
+  });
+
+  BrowserTestUtils.removeTab(tab2);
+  BrowserTestUtils.removeTab(tab1);
+});
+
+add_task(async function test_fastclick_detection2() {
+  let tab1 = await BrowserTestUtils.openNewForegroundTab(gBrowser, FASTCLICK_TEST_PAGE2);
+  let tab2 = await clickToReportAndAwaitReportTabLoad();
+
+  await ContentTask.spawn(tab2.linkedBrowser, {}, async function(args) {
+    let doc = content.document;
+    let detailsParam = doc.getElementById("details").innerText;
+    const details = JSON.parse(detailsParam);
+    ok(typeof details == "object", "Details param is a stringified JSON object.");
+    is(details.hasFastClick, true, "FastClick was found.");
   });
 
   BrowserTestUtils.removeTab(tab2);
