@@ -24,6 +24,9 @@ var FIRST_CHAR = ["[_a-z]", NON_ASCII, ESCAPE].join("|");
 var TRAILING_CHAR = ["[_a-z0-9-]", NON_ASCII, ESCAPE].join("|");
 var IS_VARIABLE_TOKEN = new RegExp(`^--(${FIRST_CHAR})(${TRAILING_CHAR})*$`,
                                    "i");
+
+loader.lazyRequireGetter(this, "CSS_TYPES", "devtools/shared/css/constants", true);
+
 /**
  * Check that this is a CSS variable.
  *
@@ -162,14 +165,16 @@ CssProperties.prototype = {
 
   /**
    * Checks if the property supports the given CSS type.
-   * CSS types should come from devtools/shared/css/constants.js' CSS_TYPES.
    *
    * @param {String} property The property to be checked.
-   * @param {Number} type One of the type values from CSS_TYPES.
+   * @param {String} type One of the values from InspectorPropertyType.
    * @return {Boolean}
    */
   supportsType(property, type) {
-    return this.properties[property] && this.properties[property].supports.includes(type);
+    const id = CSS_TYPES[type];
+    return this.properties[property] &&
+      (this.properties[property].supports.includes(type) ||
+       this.properties[property].supports.includes(id));
   },
 
   /**
