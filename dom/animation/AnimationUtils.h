@@ -78,11 +78,16 @@ class AnimationUtils {
   static bool IsOffscreenThrottlingEnabled();
 
   /**
-   * Returns true if the given EffectSet contains a current effect that animates
-   * scale. |aFrame| is used for calculation of scale values.
+   * Returns true if the given frame has an animated scale.
    */
-  static bool EffectSetContainsAnimatedScale(EffectSet& aEffects,
-                                             const nsIFrame* aFrame);
+  static bool FrameHasAnimatedScale(const nsIFrame* aFrame);
+
+  /**
+   * Returns true if the given (pseudo-)element has any transitions that are
+   * current (playing or waiting to play) or in effect (e.g. filling forwards).
+   */
+  static bool HasCurrentTransitions(const dom::Element* aElement,
+                                    PseudoStyleType aPseudoType);
 };
 
 }  // namespace mozilla

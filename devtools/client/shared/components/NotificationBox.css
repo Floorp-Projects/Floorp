@@ -92,3 +92,7 @@
 .notificationbox .messageCloseButton:active {
   background-color: rgba(170, 170, 170, .4); /* --toolbar-tab-hover-active */
 }
+
+.notificationbox.wrapping .notificationInner .messageText {
+  white-space: normal;
+}

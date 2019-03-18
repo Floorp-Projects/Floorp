@@ -53,6 +53,7 @@ class RequestListContent extends Component {
       networkDetailsWidth: PropTypes.number,
       networkDetailsHeight: PropTypes.number,
       cloneSelectedRequest: PropTypes.func.isRequired,
+      sendCustomRequest: PropTypes.func.isRequired,
       displayedRequests: PropTypes.array.isRequired,
       firstRequestStartedMillis: PropTypes.number.isRequired,
       fromCache: PropTypes.bool,
@@ -241,10 +242,16 @@ class RequestListContent extends Component {
     const { selectedRequest, displayedRequests } = this.props;
 
     if (!this.contextMenu) {
-      const { connector, cloneSelectedRequest, openStatistics } = this.props;
+      const {
+        connector,
+        cloneSelectedRequest,
+        sendCustomRequest,
+        openStatistics,
+      } = this.props;
       this.contextMenu = new RequestListContextMenu({
         connector,
         cloneSelectedRequest,
+        sendCustomRequest,
         openStatistics,
       });
     }
@@ -329,6 +336,7 @@ module.exports = connect(
   }),
   (dispatch, props) => ({
     cloneSelectedRequest: () => dispatch(Actions.cloneSelectedRequest()),
+    sendCustomRequest: () => dispatch(Actions.sendCustomRequest(props.connector)),
     openStatistics: (open) => dispatch(Actions.openStatistics(props.connector, open)),
     /**
      * A handler that opens the stack trace tab when a stack trace is available

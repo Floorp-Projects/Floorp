@@ -46,7 +46,7 @@ inline nsresult NS_NewCheckSummedOutputStream(nsIOutputStream **result,
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIBufferedOutputStream> out = new nsCheckSummedOutputStream();
-  rv = out->Init(localOutFile, nsCheckSummedOutputStream::CHECKSUM_SIZE);
+  rv = out->Init(localOutFile, nsCheckSummedOutputStream::MAX_BUFFER_SIZE);
   if (NS_SUCCEEDED(rv)) {
     out.forget(result);
   }
