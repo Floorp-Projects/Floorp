@@ -77,6 +77,7 @@ struct _MozContainer {
   struct wl_subsurface *subsurface;
   struct wl_egl_window *eglwindow;
   struct wl_callback *frame_callback_handler;
+  int frame_callback_handler_surface_id;
   gboolean surface_needs_clear;
   gboolean ready_to_draw;
   std::function<void(void)> inital_draw_cb;
