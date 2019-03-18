@@ -344,6 +344,8 @@ void MobileViewportManager::UpdateResolution(
   }
 
   // If the zoom has changed, update the pres shell resolution accordingly.
+  // This will also call UpdateVisualViewportSize, which means we can early
+  // exit afterwards.
   if (newZoom) {
     LayoutDeviceToLayerScale resolution = ZoomToResolution(*newZoom, cssToDev);
     MVM_LOG("%p: setting resolution %f\n", this, resolution.scale);
@@ -351,11 +353,12 @@ void MobileViewportManager::UpdateResolution(
         resolution.scale, nsIPresShell::ChangeOrigin::eMainThread);
 
     MVM_LOG("%p: New zoom is %f\n", this, newZoom->scale);
+    return;
   }
 
-  // The visual viewport size depends on both the zoom and the display size,
-  // and needs to be updated if either might have changed.
-  if (newZoom || aType == UpdateType::ViewportSize) {
+  // The visual viewport size also depends on the display size, and needs
+  // to be updated if if we didn't already update due to a zoom change.
+  if (aType == UpdateType::ViewportSize) {
     UpdateVisualViewportSize(aDisplaySize, newZoom ? *newZoom : zoom);
   }
 }
