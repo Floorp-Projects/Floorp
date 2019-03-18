@@ -31,6 +31,32 @@ events:
     notification_emails:
     - telemetry-client-dev@mozilla.com
     expires: never
+  entered_url:
+    type: event
+    description: >
+      A user entered a url
+    extra_keys:
+      autocomplete: "The url was filled by the autocomplete"
+    bugs:
+    - 123456789
+    data_reviews:
+    - N/A
+    notification_emails:
+    - telemetry-client-dev@mozilla.com
+    expires: never
+  performed_search:
+    type: event
+    description: >
+      A user performed a search
+    extra_keys:
+      search_suggestion: "The search was initiated from a search suggestion"
+    bugs:
+    - 123456789
+    data_reviews:
+    - N/A
+    notification_emails:
+    - telemetry-client-dev@mozilla.com
+    expires: never
 
 metrics:
   default_browser:

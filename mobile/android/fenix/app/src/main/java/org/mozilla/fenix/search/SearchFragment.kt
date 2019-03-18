@@ -14,10 +14,12 @@ import androidx.fragment.app.Fragment
 import kotlinx.android.synthetic.main.fragment_search.view.*
 import mozilla.components.feature.search.SearchUseCases
 import mozilla.components.feature.session.SessionUseCases
+import mozilla.components.support.ktx.kotlin.isUrl
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.utils.ItsNotBrokenSnack
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.toolbar.SearchAction
 import org.mozilla.fenix.components.toolbar.SearchState
 import org.mozilla.fenix.components.toolbar.ToolbarComponent
@@ -92,6 +94,14 @@ class SearchFragment : Fragment() {
                         if (it.url.isNotBlank()) {
                             (activity as HomeActivity).openToBrowserAndLoad(it.url, it.session,
                                 BrowserDirection.FromSearch)
+
+                            val event = if (it.url.isUrl()) {
+                                Event.EnteredUrl(false)
+                            } else {
+                                Event.PerformedSearch(false)
+                            }
+
+                            requireComponents.analytics.metrics.track(event)
                         }
                     }
                     is SearchAction.TextChanged -> {
@@ -109,11 +119,13 @@ class SearchFragment : Fragment() {
                     is AwesomeBarAction.URLTapped -> {
                         getSessionUseCase(requireContext(), sessionId == null).invoke(it.url)
                         (activity as HomeActivity).openToBrowser(sessionId, BrowserDirection.FromSearch)
+                        requireComponents.analytics.metrics.track(Event.EnteredUrl(false))
                     }
                     is AwesomeBarAction.SearchTermsTapped -> {
                         getSearchUseCase(requireContext(), sessionId == null)
                             .invoke(it.searchTerms, it.engine)
                         (activity as HomeActivity).openToBrowser(sessionId, BrowserDirection.FromSearch)
+                        requireComponents.analytics.metrics.track(Event.PerformedSearch(true))
                     }
                 }
             }

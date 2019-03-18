@@ -52,6 +52,16 @@ sealed class Event {
             get() = mapOf("source" to source.name)
     }
 
+    data class EnteredUrl(val autoCompleted: Boolean) : Event() {
+        override val extras: Map<String, String>?
+            get() = mapOf("autocomplete" to autoCompleted.toString())
+    }
+
+    data class PerformedSearch(val fromSearchSuggestion: Boolean) : Event() {
+        override val extras: Map<String, String>?
+            get() = mapOf("search_suggestion" to fromSearchSuggestion.toString())
+    }
+
     open val extras: Map<String, String>?
         get() = null
 }
