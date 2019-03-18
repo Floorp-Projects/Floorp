@@ -2277,7 +2277,7 @@ void internal_ApplyKeyedScalarActions(
     if (NS_FAILED(rv)) {
       // Bug 1513496 - We no longer log a warning if the scalar is expired.
       if (rv != NS_ERROR_NOT_AVAILABLE) {
-        NS_WARNING("NS_FAILED internal_GetScalarByEnum for CHILD");
+        NS_WARNING("NS_FAILED internal_GetKeyedScalarByEnum for CHILD");
       }
       continue;
     }
