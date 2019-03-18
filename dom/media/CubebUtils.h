@@ -43,8 +43,6 @@ uint32_t GetCubebPlaybackLatencyInMilliseconds();
 uint32_t GetCubebMSGLatencyInFrames(cubeb_stream_params* params);
 bool CubebLatencyPrefSet();
 void GetCurrentBackend(nsAString& aBackend);
-void GetDeviceCollection(nsTArray<RefPtr<AudioDeviceInfo>>& aDeviceInfos,
-                         Side aSide);
 cubeb_stream_prefs GetDefaultStreamPrefs();
 char* GetForcedOutputDevice();
 
