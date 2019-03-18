@@ -37,7 +37,8 @@ views:
       Recorded when the login view is opened.
     ...
     extra_keys:
-      source: The source from which the login view was opened, e.g. "toolbar".
+      source: 
+        description: The source from which the login view was opened, e.g. "toolbar".
 ```
 
 Now you can use the event from the applications code:

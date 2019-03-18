@@ -16,8 +16,10 @@ browser.engagement:
     notification_emails:
       - telemetry-client-dev@mozilla.com
     extra_keys:
-      key1: "This is key one"
-      key2: "This is key two"
+      key1:
+        description: "This is key one"
+      key2:
+        description: "This is key two"
     expires: never
 
 basic:
