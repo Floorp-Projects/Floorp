@@ -105,10 +105,6 @@ struct AnimationValue {
                                    const nsAString& aValue,
                                    dom::Element* aElement);
 
-  // Create an AnimationValue from an opacity value.
-  static AnimationValue Opacity(float aOpacity);
-  // Create an AnimationValue from a transform list.
-  static AnimationValue Transform(nsCSSValueSharedList& aList);
   // Create an already_AddRefed<RawServoAnimationValue> from a
   // layers::Animatable. Basically, this function should return AnimationValue,
   // but it seems the caller, AnimationHelper, only needs

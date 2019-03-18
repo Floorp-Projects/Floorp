@@ -340,22 +340,8 @@ AnimationValue AnimationValue::FromString(nsCSSPropertyID aProperty,
 }
 
 /* static */
-AnimationValue AnimationValue::Opacity(float aOpacity) {
-  AnimationValue result;
-  result.mServo = Servo_AnimationValue_Opacity(aOpacity).Consume();
-  return result;
-}
-
-/* static */
-AnimationValue AnimationValue::Transform(nsCSSValueSharedList& aList) {
-  AnimationValue result;
-  result.mServo = Servo_AnimationValue_Transform(aList).Consume();
-  return result;
-}
-
-/* static */ already_AddRefed<RawServoAnimationValue>
-AnimationValue::FromAnimatable(nsCSSPropertyID aProperty,
-                               const layers::Animatable& aAnimatable) {
+already_AddRefed<RawServoAnimationValue> AnimationValue::FromAnimatable(
+    nsCSSPropertyID aProperty, const layers::Animatable& aAnimatable) {
   RefPtr<RawServoAnimationValue> result;
 
   switch (aAnimatable.type()) {
@@ -368,7 +354,8 @@ AnimationValue::FromAnimatable(nsCSSPropertyID aProperty,
       if (listOrError.isOk()) {
         RefPtr<nsCSSValueSharedList> list = listOrError.unwrap();
         MOZ_ASSERT(list, "Transform list should be non null");
-        result = Servo_AnimationValue_Transform(*list).Consume();
+        result = Servo_AnimationValue_Transform(eCSSProperty_transform, *list)
+                     .Consume();
       }
       break;
     }
@@ -379,6 +366,72 @@ AnimationValue::FromAnimatable(nsCSSPropertyID aProperty,
       result = Servo_AnimationValue_Color(aProperty, aAnimatable.get_nscolor())
                    .Consume();
       break;
+    case layers::Animatable::TRotate: {
+      RefPtr<nsCSSValueSharedList> list = new nsCSSValueSharedList;
+      list->mHead = new nsCSSValueList;
+
+      const layers::Rotate& r = aAnimatable.get_Rotate();
+      if (r.type() == layers::Rotate::Tnull_t) {
+        list->mHead->mValue.SetNoneValue();
+      } else {
+        RefPtr<nsCSSValue::Array> arr;
+        if (r.type() == layers::Rotate::TRotation) {
+          const layers::CSSAngle& angle = r.get_Rotation().angle();
+          arr = AppendFunction(eCSSKeyword_rotate);
+          auto rv = SetCSSAngle(angle, arr->Item(1));
+          if (rv.isErr()) {
+            arr->Item(1).SetFloatValue(0.0, eCSSUnit_Degree);
+          }
+        } else {
+          MOZ_ASSERT(r.type() == layers::Rotate::TRotation3D,
+                     "Should be rotate3D");
+          float x = r.get_Rotation3D().x();
+          float y = r.get_Rotation3D().y();
+          float z = r.get_Rotation3D().z();
+          const layers::CSSAngle& angle = r.get_Rotation3D().angle();
+          arr = AppendFunction(eCSSKeyword_rotate3d);
+          arr->Item(1).SetFloatValue(x, eCSSUnit_Number);
+          arr->Item(2).SetFloatValue(y, eCSSUnit_Number);
+          arr->Item(3).SetFloatValue(z, eCSSUnit_Number);
+          auto rv = SetCSSAngle(angle, arr->Item(4));
+          if (rv.isErr()) {
+            arr->Item(4).SetFloatValue(0.0, eCSSUnit_Degree);
+          }
+        }
+        list->mHead->mValue.SetArrayValue(arr, eCSSUnit_Function);
+      }
+      result =
+          Servo_AnimationValue_Transform(eCSSProperty_rotate, *list).Consume();
+      break;
+    }
+    case layers::Animatable::TScale: {
+      const layers::Scale& scale = aAnimatable.get_Scale();
+      RefPtr<nsCSSValue::Array> arr = AppendFunction(eCSSKeyword_scale3d);
+      arr->Item(1).SetFloatValue(scale.x(), eCSSUnit_Number);
+      arr->Item(2).SetFloatValue(scale.y(), eCSSUnit_Number);
+      arr->Item(3).SetFloatValue(scale.z(), eCSSUnit_Number);
+
+      RefPtr<nsCSSValueSharedList> list = new nsCSSValueSharedList;
+      list->mHead = new nsCSSValueList;
+      list->mHead->mValue.SetArrayValue(arr, eCSSUnit_Function);
+      result =
+          Servo_AnimationValue_Transform(eCSSProperty_scale, *list).Consume();
+      break;
+    }
+    case layers::Animatable::TTranslation: {
+      const layers::Translation& translate = aAnimatable.get_Translation();
+      RefPtr<nsCSSValue::Array> arr = AppendFunction(eCSSKeyword_translate3d);
+      arr->Item(1).SetFloatValue(translate.x(), eCSSUnit_Pixel);
+      arr->Item(2).SetFloatValue(translate.y(), eCSSUnit_Pixel);
+      arr->Item(3).SetFloatValue(translate.z(), eCSSUnit_Pixel);
+
+      RefPtr<nsCSSValueSharedList> list = new nsCSSValueSharedList;
+      list->mHead = new nsCSSValueList;
+      list->mHead->mValue.SetArrayValue(arr, eCSSUnit_Function);
+      result = Servo_AnimationValue_Transform(eCSSProperty_translate, *list)
+                   .Consume();
+      break;
+    }
     default:
       MOZ_ASSERT_UNREACHABLE("Unsupported type");
   }
