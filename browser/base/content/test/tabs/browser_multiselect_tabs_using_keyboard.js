@@ -22,8 +22,13 @@ add_task(async function setup() {
     set: [[PREF_MULTISELECT_TABS, true]],
   });
 
+  // The DevEdition has the DevTools button in the toolbar by default. Remove it
+  // to prevent branch-specific rules what button should be focused.
+  CustomizableUI.removeWidgetFromArea("developer-button");
+
   let prevActiveElement = document.activeElement;
   registerCleanupFunction(() => {
+    CustomizableUI.reset();
     prevActiveElement.focus();
   });
 });
