@@ -9351,7 +9351,8 @@ static void UpdateDisplayPortMarginsForPendingMetrics(
     return;
   }
 
-  if (gfxPrefs::APZAllowZooming() && aMetrics.IsRootContent()) {
+  if (nsLayoutUtils::AllowZoomingForDocument(shell->GetDocument()) &&
+      aMetrics.IsRootContent()) {
     // See APZCCallbackHelper::UpdateRootFrame for details.
     float presShellResolution = shell->GetResolution();
     if (presShellResolution != aMetrics.GetPresShellResolution()) {

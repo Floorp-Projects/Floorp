@@ -307,7 +307,8 @@ void APZCCallbackHelper::UpdateRootFrame(const RepaintRequest& aRequest) {
     return;
   }
 
-  if (gfxPrefs::APZAllowZooming() && aRequest.GetScrollOffsetUpdated()) {
+  if (nsLayoutUtils::AllowZoomingForDocument(shell->GetDocument()) &&
+      aRequest.GetScrollOffsetUpdated()) {
     // If zooming is disabled then we don't really want to let APZ fiddle
     // with these things. In theory setting the resolution here should be a
     // no-op, but setting the visual viewport size is bad because it can cause a
@@ -671,7 +672,8 @@ static bool PrepareForSetTargetAPZCNotification(
   nsPoint point = nsLayoutUtils::GetEventCoordinatesRelativeTo(
       aWidget, aRefPoint, aRootFrame);
   EnumSet<FrameForPointOption> options;
-  if (gfxPrefs::APZAllowZooming()) {
+  if (nsLayoutUtils::AllowZoomingForDocument(
+          aRootFrame->PresShell()->GetDocument())) {
     // If zooming is enabled, we need IgnoreRootScrollFrame for correct
     // hit testing. Otherwise, don't use it because it interferes with
     // hit testing for some purposes such as scrollbar dragging (this will
