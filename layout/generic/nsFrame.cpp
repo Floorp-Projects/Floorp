@@ -7099,7 +7099,7 @@ Layer* nsIFrame::InvalidateLayer(DisplayItemType aDisplayItemKey,
   Layer* layer = FrameLayerBuilder::GetDedicatedLayer(this, aDisplayItemKey);
 
   nsIFrame* displayRoot = nsLayoutUtils::GetDisplayRootFrame(this);
-  InvalidateRenderingObservers(displayRoot, this);
+  InvalidateRenderingObservers(displayRoot, this, false);
 
   // Check if frame supports WebRender's async update
   if ((aFlags & UPDATE_IS_ASYNC) &&
