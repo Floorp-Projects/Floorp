@@ -277,7 +277,6 @@ var Logins = {
     let newPassword = document.getElementById("password").value;
     let origUsername = this._selectedLogin.username;
     let origPassword = this._selectedLogin.password;
-    let origDomain = this._selectedLogin.hostname;
 
     try {
       if ((newUsername === origUsername) && (newPassword === origPassword)) {
@@ -286,7 +285,7 @@ var Logins = {
         return;
       }
 
-      let logins = Services.logins.findLogins({}, origDomain, origDomain, null);
+      let logins = Services.logins.findLogins({}, this._selectedLogin.hostname, this._selectedLogin.formSubmitURL, this._selectedLogin.httpRealm);
 
       for (let i = 0; i < logins.length; i++) {
         if (logins[i].username == origUsername) {
