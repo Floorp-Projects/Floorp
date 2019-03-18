@@ -34,6 +34,7 @@ xpcshell:
         by-test-platform:
             windows10-64-asan/opt: []  # No XPCShell on ASAN yet
             windows10-aarch64/opt: ['try', 'mozilla-central']
+            android-em-4.3-arm7-api-16/opt: ['try']
             default: built-projects
     chunks:
         by-test-platform:
