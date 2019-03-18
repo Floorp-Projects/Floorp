@@ -1701,6 +1701,13 @@ bool KeyframeEffect::HasComputedTimingChanged() const {
 }
 
 bool KeyframeEffect::ContainsAnimatedScale(const nsIFrame* aFrame) const {
+  // For display:table content, transform animations run on the table wrapper
+  // frame. If we are being passed a frame that doesn't support transforms
+  // (i.e. the inner table frame) we could just return false, but it possibly
+  // means we looked up the wrong EffectSet so for now we just assert instead.
+  MOZ_ASSERT(aFrame && aFrame->IsFrameOfType(nsIFrame::eSupportsCSSTransforms),
+             "We should be passed a frame that supports transforms");
+
   if (!IsCurrent()) {
     return false;
   }
