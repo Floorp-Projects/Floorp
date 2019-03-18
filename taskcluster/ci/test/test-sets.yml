@@ -422,6 +422,7 @@ android-hw-arm7-raptor:
     - raptor-tp6m-6-geckoview
     - raptor-tp6m-7-geckoview
     - raptor-tp6m-8-geckoview
+    - raptor-tp6m-9-geckoview
 
 android-hw-aarch64-raptor:
     - raptor-speedometer-geckoview
@@ -433,6 +434,7 @@ android-hw-aarch64-raptor:
     - raptor-tp6m-6-geckoview
     - raptor-tp6m-7-geckoview
     - raptor-tp6m-8-geckoview
+    - raptor-tp6m-9-geckoview
 
 android-hw-arm7-raptor-power:
     - raptor-speedometer-geckoview-power
