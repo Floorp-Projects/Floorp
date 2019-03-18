@@ -27,17 +27,17 @@ internal class PocketEndpointRaw(
      * @return The global video recommendations as a raw JSON string or null on error.
      */
     @WorkerThread // synchronous request.
-    fun getGlobalVideoRecommendations(): String? = makeRequest("getGlobalVideoRecommendations", urls.globalVideoRecs)
+    fun getGlobalVideoRecommendations(): String? = makeRequest(urls.globalVideoRecs)
 
     /**
      * @return The requested JSON as a String or null on error.
      */
     @WorkerThread // synchronous request.
-    private fun makeRequest(callingMethod: String, pocketEndpoint: Uri): String? {
+    private fun makeRequest(pocketEndpoint: Uri): String? {
         val request = Request(
             url = pocketEndpoint.toString(),
             headers = MutableHeaders(USER_AGENT to userAgent)
         )
-        return client.fetchBodyOrNull(callingMethod, request)
+        return client.fetchBodyOrNull(request)
     }
 }

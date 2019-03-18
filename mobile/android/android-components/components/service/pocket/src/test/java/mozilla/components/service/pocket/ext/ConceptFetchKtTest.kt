@@ -46,31 +46,31 @@ class ConceptFetchKtTest {
     @Test
     fun `GIVEN fetch throws an exception WHEN fetchBodyOrNull is called THEN null is returned`() {
         `when`(client.fetch(any())).thenThrow(IOException())
-        assertNull(client.fetchBodyOrNull("", testRequest))
+        assertNull(client.fetchBodyOrNull(testRequest))
     }
 
     @Test
     fun `GIVEN fetch returns a failure response WHEN fetchBodyOrNull is called THEN null is returned`() {
         setUpClientFailureResponse()
-        assertNull(client.fetchBodyOrNull("", testRequest))
+        assertNull(client.fetchBodyOrNull(testRequest))
     }
 
     @Test
     fun `GIVEN fetch returns a success response WHEN fetchBodyOrNull is called THEN the response body is returned`() {
-        val actual = client.fetchBodyOrNull("", testRequest)
+        val actual = client.fetchBodyOrNull(testRequest)
         assertEquals(EXPECTED_DEFAULT_RESPONSE_BODY, actual)
     }
 
     @Test
     fun `GIVEN fetch returns a success response WHEN fetchBodyOrNull is called THEN the response is closed`() {
-        client.fetchBodyOrNull("", testRequest)
+        client.fetchBodyOrNull(testRequest)
         verify(defaultResponse, times(1)).close()
     }
 
     @Test
     fun `GIVEN fetch returns a failure response WHEN fetchBodyOrNull is called THEN the response is closed`() {
         setUpClientFailureResponse()
-        client.fetchBodyOrNull("", testRequest)
+        client.fetchBodyOrNull(testRequest)
         verify(failureResponse, times(1)).close()
     }
 

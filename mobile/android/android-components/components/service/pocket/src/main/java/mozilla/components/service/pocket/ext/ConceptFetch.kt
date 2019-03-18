@@ -18,11 +18,11 @@ import java.io.IOException
  * @return returns the string contained within the response body for the given [request] or null, on error.
  */
 @WorkerThread // synchronous network call.
-internal fun Client.fetchBodyOrNull(callingMethod: String, request: Request): String? {
+internal fun Client.fetchBodyOrNull(request: Request): String? {
     val response: Response? = try {
         fetch(request)
     } catch (e: IOException) {
-        logger.debug("$callingMethod: network error", e)
+        logger.debug("network error", e)
         null
     }
 

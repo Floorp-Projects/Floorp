@@ -53,7 +53,7 @@ internal class PocketListenEndpointRaw(
         )
 
         // If an invalid body is sent to the server, 404 is returned.
-        return client.fetchBodyOrNull("getArticleListenMetadata", request)
+        return client.fetchBodyOrNull(request)
     }
 
     companion object {
