@@ -72,6 +72,8 @@ class NotificationBox extends Component {
       notifications: PropTypes.instanceOf(Map),
       // Message that should be shown when hovering over the close button
       closeButtonTooltip: PropTypes.string,
+      // Wraps text when passed from console window as wrapping: true
+      wrapping: PropTypes.boolean,
     };
   }
 
@@ -241,9 +243,12 @@ class NotificationBox extends Component {
     const content = notification
       ? this.renderNotification(notification)
       : null;
-
+    const classNames = ["notificationbox"];
+    if (this.props.wrapping) {
+      classNames.push("wrapping");
+    }
     return div({
-      className: "notificationbox",
+      className: classNames.join(" "),
       id: this.props.id,
     }, content);
   }

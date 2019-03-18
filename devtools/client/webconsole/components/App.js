@@ -240,6 +240,7 @@ class App extends Component {
           }),
           NotificationBox({
             id: "webconsole-notificationbox",
+            wrapping: true,
             notifications,
           }),
           JSTerm({
