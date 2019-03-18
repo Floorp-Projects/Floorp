@@ -10,6 +10,8 @@ const PREF_WC_REPORTER_ENDPOINT = "extensions.webcompat-reporter.newIssueEndpoin
 
 const TEST_ROOT = getRootDirectory(gTestPath).replace("chrome://mochitests/content", "http://example.com");
 const TEST_PAGE = TEST_ROOT + "test.html";
+const FASTCLICK_TEST_PAGE1 = TEST_ROOT + "fastclick1.html";
+const FASTCLICK_TEST_PAGE2 = TEST_ROOT + "fastclick2.html";
 const NEW_ISSUE_PAGE = TEST_ROOT + "webcompat.html";
 
 const WC_ADDON_ID = "webcompat-reporter@mozilla.org";
