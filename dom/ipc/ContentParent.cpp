@@ -261,7 +261,7 @@
 #  include "mozilla/dom/SpeechSynthesisParent.h"
 #endif
 
-#if defined(MOZ_CONTENT_SANDBOX)
+#if defined(MOZ_SANDBOX)
 #  include "mozilla/SandboxSettings.h"
 #  if defined(XP_LINUX)
 #    include "mozilla/SandboxInfo.h"
@@ -565,13 +565,13 @@ nsDataHashtable<nsUint32HashKey, ContentParent*>*
     ContentParent::sJSPluginContentParents;
 nsTArray<ContentParent*>* ContentParent::sPrivateContent;
 StaticAutoPtr<LinkedList<ContentParent>> ContentParent::sContentParents;
-#if defined(XP_LINUX) && defined(MOZ_CONTENT_SANDBOX)
+#if defined(XP_LINUX) && defined(MOZ_SANDBOX)
 UniquePtr<SandboxBrokerPolicyFactory>
     ContentParent::sSandboxBrokerPolicyFactory;
 #endif
 uint64_t ContentParent::sNextTabParentId = 0;
 nsDataHashtable<nsUint64HashKey, TabParent*> ContentParent::sNextTabParents;
-#if defined(XP_MACOSX) && defined(MOZ_CONTENT_SANDBOX)
+#if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
 StaticAutoPtr<std::vector<std::string>> ContentParent::sMacSandboxParams;
 #endif
 
@@ -613,7 +613,7 @@ static const char* sObserverTopics[] = {
     "clear-site-data-reload-needed",
 };
 
-#if defined(XP_MACOSX) && defined(MOZ_CONTENT_SANDBOX)
+#if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
 bool ContentParent::sEarlySandboxInit = false;
 #endif
 
@@ -648,11 +648,11 @@ void ContentParent::StartUp() {
 
   sDisableUnsafeCPOWWarnings = PR_GetEnv("DISABLE_UNSAFE_CPOW_WARNINGS");
 
-#if defined(XP_LINUX) && defined(MOZ_CONTENT_SANDBOX)
+#if defined(XP_LINUX) && defined(MOZ_SANDBOX)
   sSandboxBrokerPolicyFactory = MakeUnique<SandboxBrokerPolicyFactory>();
 #endif
 
-#if defined(XP_MACOSX) && defined(MOZ_CONTENT_SANDBOX)
+#if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
   sMacSandboxParams = new std::vector<std::string>;
 #endif
 }
@@ -663,11 +663,11 @@ void ContentParent::ShutDown() {
   // ClearOnShutdown() to clean up our state.
   sCanLaunchSubprocesses = false;
 
-#if defined(XP_LINUX) && defined(MOZ_CONTENT_SANDBOX)
+#if defined(XP_LINUX) && defined(MOZ_SANDBOX)
   sSandboxBrokerPolicyFactory = nullptr;
 #endif
 
-#if defined(XP_MACOSX) && defined(MOZ_CONTENT_SANDBOX)
+#if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
   sMacSandboxParams = nullptr;
 #endif
 }
@@ -1890,7 +1890,7 @@ TestShellParent* ContentParent::GetTestShellSingleton() {
   return static_cast<TestShellParent*>(p);
 }
 
-#if defined(XP_MACOSX) && defined(MOZ_CONTENT_SANDBOX)
+#if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
 // Append the sandbox command line parameters that are not static. i.e.,
 // parameters that can be different for different child processes.
 void ContentParent::AppendDynamicSandboxParams(
@@ -2026,7 +2026,7 @@ void ContentParent::AppendSandboxParams(std::vector<std::string>& aArgs) {
   // Append remaining arguments.
   AppendDynamicSandboxParams(aArgs);
 }
-#endif  // XP_MACOSX && MOZ_CONTENT_SANDBOX
+#endif  // XP_MACOSX && MOZ_SANDBOX
 
 void ContentParent::LaunchSubprocessInternal(
     ProcessPriority aInitialPriority,
@@ -2116,7 +2116,7 @@ void ContentParent::LaunchSubprocessInternal(
     extraArgs.push_back("-safeMode");
   }
 
-#if defined(XP_MACOSX) && defined(MOZ_CONTENT_SANDBOX)
+#if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
   // If we're launching a middleman process for a
   // recording or replay, start the sandbox later.
   if (sEarlySandboxInit && IsContentSandboxEnabled() &&
@@ -2307,7 +2307,7 @@ ContentParent::ContentParent(ContentParent* aOpener,
   bool isFile = mRemoteType.EqualsLiteral(FILE_REMOTE_TYPE);
   mSubprocess = new GeckoChildProcessHost(GeckoProcessType_Content, isFile);
 
-#if defined(XP_MACOSX) && defined(MOZ_CONTENT_SANDBOX)
+#if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
   // sEarlySandboxInit is statically initialized to false.
   // Once we've set it to true due to the pref, avoid checking the
   // pref on subsequent calls. As a result, changing the earlyinit
@@ -2582,7 +2582,7 @@ void ContentParent::InitInternal(ProcessPriority aInitialPriority) {
   }
 #endif
 
-#ifdef MOZ_CONTENT_SANDBOX
+#ifdef MOZ_SANDBOX
   bool shouldSandbox = true;
   Maybe<FileDescriptor> brokerFd;
   // XXX: Checking the pref here makes it possible to enable/disable sandboxing

@@ -212,14 +212,11 @@ class SandboxFork : public base::LaunchOptions::ForkDelegate {
 static int GetEffectiveSandboxLevel(GeckoProcessType aType) {
   auto info = SandboxInfo::Get();
   switch (aType) {
-#ifdef MOZ_GMP_SANDBOX
     case GeckoProcessType_GMPlugin:
       if (info.Test(SandboxInfo::kEnabledForMedia)) {
         return 1;
       }
       return 0;
-#endif
-#ifdef MOZ_CONTENT_SANDBOX
     case GeckoProcessType_Content:
       // GetEffectiveContentSandboxLevel is main-thread-only due to prefs.
       MOZ_ASSERT(NS_IsMainThread());
@@ -227,7 +224,6 @@ static int GetEffectiveSandboxLevel(GeckoProcessType aType) {
         return GetEffectiveContentSandboxLevel();
       }
       return 0;
-#endif
     case GeckoProcessType_RDD:
       return PR_GetEnv("MOZ_DISABLE_RDD_SANDBOX") == nullptr ? 1 : 0;
     default:
@@ -277,16 +273,13 @@ void SandboxLaunchPrepare(GeckoProcessType aType,
   }
 
   switch (aType) {
-#ifdef MOZ_GMP_SANDBOX
     case GeckoProcessType_GMPlugin:
-#endif
     case GeckoProcessType_RDD:
       if (level >= 1) {
         canChroot = true;
         flags |= CLONE_NEWNET | CLONE_NEWIPC;
       }
       break;
-#ifdef MOZ_CONTENT_SANDBOX
     case GeckoProcessType_Content:
       if (level >= 4) {
         canChroot = true;
@@ -306,7 +299,6 @@ void SandboxLaunchPrepare(GeckoProcessType aType,
         flags |= CLONE_NEWUSER;
       }
       break;
-#endif
     default:
       // Nothing yet.
       break;

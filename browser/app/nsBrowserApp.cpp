@@ -196,12 +196,10 @@ static int do_main(int argc, char* argv[], char* envp[]) {
       sandboxing::GetInitializedBrokerServices();
   sandboxing::PermissionsService* permissionsService =
       sandboxing::GetPermissionsService();
-#  if defined(MOZ_CONTENT_SANDBOX)
   if (!brokerServices) {
     Output("Couldn't initialize the broker services.\n");
     return 255;
   }
-#  endif
   config.sandboxBrokerServices = brokerServices;
   config.sandboxPermissionsService = permissionsService;
 #endif

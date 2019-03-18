@@ -745,11 +745,11 @@ const SNAPSHOT_SCHEMA = {
           type: "boolean",
         },
         contentSandboxLevel: {
-          required: AppConstants.MOZ_CONTENT_SANDBOX,
+          required: AppConstants.MOZ_SANDBOX,
           type: "number",
         },
         effectiveContentSandboxLevel: {
-          required: AppConstants.MOZ_CONTENT_SANDBOX,
+          required: AppConstants.MOZ_SANDBOX,
           type: "number",
         },
         syscallLog: {

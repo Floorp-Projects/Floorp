@@ -179,7 +179,6 @@ SandboxInfo::SandboxInfo() {
     }
   }
 
-#ifdef MOZ_CONTENT_SANDBOX
   // We can't use mozilla::IsContentSandboxEnabled() here because a)
   // libmozsandbox can't depend on libxul, and b) this is called in a static
   // initializer before the prefences service is ready.
@@ -189,12 +188,9 @@ SandboxInfo::SandboxInfo() {
   if (getenv("MOZ_PERMISSIVE_CONTENT_SANDBOX")) {
     flags |= kPermissive;
   }
-#endif
-#ifdef MOZ_GMP_SANDBOX
   if (!getenv("MOZ_DISABLE_GMP_SANDBOX")) {
     flags |= kEnabledForMedia;
   }
-#endif
   if (getenv("MOZ_SANDBOX_LOGGING")) {
     flags |= kVerbose;
   }

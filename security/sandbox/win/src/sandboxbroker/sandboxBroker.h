@@ -35,10 +35,8 @@ class AbstractSandboxBroker {
                          const bool aEnableLogging, void **aProcessHandle) = 0;
 
   // Security levels for different types of processes
-#if defined(MOZ_CONTENT_SANDBOX)
   virtual void SetSecurityLevelForContentProcess(int32_t aSandboxLevel,
                                                  bool aIsFileProcess) = 0;
-#endif
 
   virtual void SetSecurityLevelForGPUProcess(int32_t aSandboxLevel) = 0;
   virtual bool SetSecurityLevelForRDDProcess() = 0;
@@ -83,10 +81,8 @@ class SandboxBroker : public AbstractSandboxBroker {
   virtual ~SandboxBroker();
 
   // Security levels for different types of processes
-#if defined(MOZ_CONTENT_SANDBOX)
   void SetSecurityLevelForContentProcess(int32_t aSandboxLevel,
                                          bool aIsFileProcess) override;
-#endif
 
   void SetSecurityLevelForGPUProcess(int32_t aSandboxLevel) override;
   bool SetSecurityLevelForRDDProcess() override;

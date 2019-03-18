@@ -127,7 +127,7 @@ nsMacUtilsImpl::GetIsTranslated(bool* aIsTranslated) {
   return NS_OK;
 }
 
-#if defined(MOZ_CONTENT_SANDBOX)
+#if defined(MOZ_SANDBOX)
 // Get the path to the .app directory (aka bundle) for the parent process.
 // When executing in the child process, this is the outer .app (such as
 // Firefox.app) and not the inner .app containing the child process
@@ -202,4 +202,4 @@ nsAutoCString nsMacUtilsImpl::GetDirectoryPath(const char* aPath) {
   return directoryPath;
 }
 #  endif /* DEBUG */
-#endif   /* MOZ_CONTENT_SANDBOX */
+#endif   /* MOZ_SANDBOX */

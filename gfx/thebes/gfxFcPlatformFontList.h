@@ -23,7 +23,7 @@
 #include <cairo.h>
 #include <cairo-ft.h>
 
-#if defined(MOZ_CONTENT_SANDBOX) && defined(XP_LINUX)
+#if defined(MOZ_SANDBOX) && defined(XP_LINUX)
 #  include "mozilla/SandboxBroker.h"
 #endif
 
@@ -321,7 +321,7 @@ class gfxFcPlatformFontList : public gfxPlatformFontList {
  protected:
   virtual ~gfxFcPlatformFontList();
 
-#if defined(MOZ_CONTENT_SANDBOX) && defined(XP_LINUX)
+#if defined(MOZ_SANDBOX) && defined(XP_LINUX)
   typedef mozilla::SandboxBroker::Policy SandboxPolicy;
 #else
   // Dummy type just so we can still have a SandboxPolicy* parameter.

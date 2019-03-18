@@ -12,9 +12,7 @@
 #include "SandboxInfo.h"
 #include "SandboxInternal.h"
 #include "SandboxLogging.h"
-#ifdef MOZ_GMP_SANDBOX
-#  include "SandboxOpenedFiles.h"
-#endif
+#include "SandboxOpenedFiles.h"
 #include "mozilla/Move.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/TemplateLib.h"
@@ -655,7 +653,6 @@ class SandboxPolicyCommon : public SandboxPolicyBase {
 
 // The process-type-specific syscall rules start here:
 
-#ifdef MOZ_CONTENT_SANDBOX
 // The seccomp-bpf filter for content processes is not a true sandbox
 // on its own; its purpose is attack surface reduction and syscall
 // interception in support of a semantic sandboxing layer.  On B2G
@@ -1264,9 +1261,7 @@ UniquePtr<sandbox::bpf_dsl::Policy> GetContentSandboxPolicy(
     SandboxBrokerClient* aMaybeBroker, ContentProcessSandboxParams&& aParams) {
   return MakeUnique<ContentSandboxPolicy>(aMaybeBroker, std::move(aParams));
 }
-#endif  // MOZ_CONTENT_SANDBOX
 
-#ifdef MOZ_GMP_SANDBOX
 // Unlike for content, the GeckoMediaPlugin seccomp-bpf policy needs
 // to be an effective sandbox by itself, because we allow GMP on Linux
 // systems where that's the only sandboxing mechanism we can use.
@@ -1398,7 +1393,6 @@ UniquePtr<sandbox::bpf_dsl::Policy> GetMediaSandboxPolicy(
   return UniquePtr<sandbox::bpf_dsl::Policy>(new GMPSandboxPolicy(aFiles));
 }
 
-#endif  // MOZ_GMP_SANDBOX
 
 // The policy for the data decoder process is similar to the one for
 // media plugins, but the codec code is all in-tree so it's better

@@ -1637,8 +1637,6 @@ MOZ_NO_SMART_CARDS=
 NECKO_COOKIES=1
 MOZ_USE_NATIVE_POPUP_WINDOWS=
 MOZ_EXCLUDE_HYPHENATION_DICTIONARIES=
-MOZ_CONTENT_SANDBOX=
-MOZ_GMP_SANDBOX=
 MOZ_SANDBOX=1
 MOZ_BINARY_EXTENSIONS=
 MOZ_DEVTOOLS=server
@@ -2286,70 +2284,24 @@ MOZ_ARG_DISABLE_BOOL(sandbox,
     MOZ_SANDBOX=,
     MOZ_SANDBOX=1)
 
-dnl ========================================================
-dnl = Content process sandboxing
-dnl ========================================================
-
 case "$OS_TARGET" in
-WINNT)
-    MOZ_CONTENT_SANDBOX=$MOZ_SANDBOX
-    ;;
-Darwin)
-    MOZ_CONTENT_SANDBOX=$MOZ_SANDBOX
-    ;;
+WINNT|Darwin)
+;;
 Linux)
     case $CPU_ARCH in
         x86_64|x86)
-            MOZ_CONTENT_SANDBOX=$MOZ_SANDBOX
+        ;;
+        # Linux sandbox is only available on x86 and x86_64.
+        *)
+            MOZ_SANDBOX=
         ;;
     esac
     ;;
-esac
-
-MOZ_ARG_ENABLE_BOOL(content-sandbox,
-[  --enable-content-sandbox Enable sandboxing support for content-processes
-  --disable-content-sandbox Disable sandboxing support for content-processes],
-    MOZ_CONTENT_SANDBOX=1,
-    MOZ_CONTENT_SANDBOX=)
-
-if test -n "$MOZ_CONTENT_SANDBOX" -a -z "$MOZ_SANDBOX"; then
-    AC_MSG_ERROR([--enable-content-sandbox and --disable-sandbox are conflicting options])
-fi
-
-if test -n "$MOZ_CONTENT_SANDBOX"; then
-    AC_DEFINE(MOZ_CONTENT_SANDBOX)
-fi
-
-AC_SUBST(MOZ_CONTENT_SANDBOX)
-
-dnl ========================================================
-dnl = Gecko Media Plugin sandboxing
-dnl ========================================================
-case $OS_TARGET in
-WINNT)
-    MOZ_GMP_SANDBOX=$MOZ_SANDBOX
-    ;;
-Linux)
-    case $CPU_ARCH in
-    x86_64|x86)
-        MOZ_GMP_SANDBOX=$MOZ_SANDBOX
-        ;;
-    esac
-    ;;
-Darwin)
-    MOZ_GMP_SANDBOX=$MOZ_SANDBOX
-    ;;
-esac
-
-if test -n "$MOZ_GMP_SANDBOX"; then
-    AC_DEFINE(MOZ_GMP_SANDBOX)
-fi
-
-AC_SUBST(MOZ_GMP_SANDBOX)
-
-if test -z "$MOZ_CONTENT_SANDBOX" -a -z "$MOZ_GMP_SANDBOX"; then
+*)
+    # Only enable the sandbox by default on Linux, macOS, and Windows
     MOZ_SANDBOX=
-fi
+;;
+esac
 
 if test -n "$MOZ_SANDBOX"; then
     AC_DEFINE(MOZ_SANDBOX)

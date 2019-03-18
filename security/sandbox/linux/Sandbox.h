@@ -25,7 +25,6 @@ class FileDescriptor;
 // (See bug 1176099.)
 MOZ_EXPORT void SandboxEarlyInit();
 
-#ifdef MOZ_CONTENT_SANDBOX
 // A collection of sandbox parameters that have to be extracted from
 // prefs or other libxul facilities and passed down, because
 // libmozsandbox can't link against the APIs to read them.
@@ -53,14 +52,11 @@ struct ContentProcessSandboxParams {
 // (No-op if the sandbox is disabled.)
 // isFileProcess determines whether we allow system wide file reads.
 MOZ_EXPORT bool SetContentProcessSandbox(ContentProcessSandboxParams&& aParams);
-#endif
 
-#ifdef MOZ_GMP_SANDBOX
 // Call only if SandboxInfo::CanSandboxMedia() returns true.
 // (No-op if MOZ_DISABLE_GMP_SANDBOX is set.)
 // aFilePath is the path to the plugin file.
 MOZ_EXPORT void SetMediaPluginSandbox(const char* aFilePath);
-#endif
 
 MOZ_EXPORT void SetRemoteDataDecoderSandbox(int aBroker);
 

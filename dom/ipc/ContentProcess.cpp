@@ -11,12 +11,12 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/recordreplay/ParentIPC.h"
 
-#if defined(XP_MACOSX) && defined(MOZ_CONTENT_SANDBOX)
+#if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
 #  include <stdlib.h>
 #  include "mozilla/Sandbox.h"
 #endif
 
-#if (defined(XP_WIN) || defined(XP_MACOSX)) && defined(MOZ_CONTENT_SANDBOX)
+#if (defined(XP_WIN) || defined(XP_MACOSX)) && defined(MOZ_SANDBOX)
 #  include "mozilla/SandboxSettings.h"
 #  include "nsAppDirectoryServiceDefs.h"
 #  include "nsDirectoryService.h"
@@ -28,7 +28,7 @@ using mozilla::ipc::IOThreadChild;
 namespace mozilla {
 namespace dom {
 
-#if defined(XP_WIN) && defined(MOZ_CONTENT_SANDBOX)
+#if defined(XP_WIN) && defined(MOZ_SANDBOX)
 static void SetTmpEnvironmentVariable(nsIFile* aValue) {
   // Save the TMP environment variable so that is is picked up by GetTempPath().
   // Note that we specifically write to the TMP variable, as that is the first
@@ -45,7 +45,7 @@ static void SetTmpEnvironmentVariable(nsIFile* aValue) {
 }
 #endif
 
-#if defined(XP_WIN) && defined(MOZ_CONTENT_SANDBOX)
+#if defined(XP_WIN) && defined(MOZ_SANDBOX)
 static void SetUpSandboxEnvironment() {
   MOZ_ASSERT(
       nsDirectoryService::gService,
@@ -85,7 +85,7 @@ bool ContentProcess::Init(int aArgc, char* aArgv[]) {
   char* prefMapHandle = nullptr;
   char* prefsLen = nullptr;
   char* prefMapSize = nullptr;
-#if defined(XP_MACOSX) && defined(MOZ_CONTENT_SANDBOX)
+#if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
   nsCOMPtr<nsIFile> profileDir;
 #endif
 
@@ -149,7 +149,7 @@ bool ContentProcess::Init(int aArgc, char* aArgv[]) {
       }
       parentBuildID = Some(aArgv[i]);
 
-#if defined(XP_MACOSX) && defined(MOZ_CONTENT_SANDBOX)
+#if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
     } else if (strcmp(aArgv[i], "-profile") == 0) {
       if (++i == aArgc) {
         return false;
@@ -160,7 +160,7 @@ bool ContentProcess::Init(int aArgc, char* aArgv[]) {
         NS_WARNING("Invalid profile directory passed to content process.");
         profileDir = nullptr;
       }
-#endif /* XP_MACOSX && MOZ_CONTENT_SANDBOX */
+#endif /* XP_MACOSX && MOZ_SANDBOX */
     }
   }
 
@@ -186,7 +186,7 @@ bool ContentProcess::Init(int aArgc, char* aArgv[]) {
                 IOThreadChild::channel(), *childID, *isForBrowser);
 
   mXREEmbed.Start();
-#if (defined(XP_MACOSX)) && defined(MOZ_CONTENT_SANDBOX)
+#if (defined(XP_MACOSX)) && defined(MOZ_SANDBOX)
   mContent.SetProfileDir(profileDir);
 #  if defined(DEBUG)
   // For WebReplay middleman processes, the sandbox is
@@ -197,9 +197,9 @@ bool ContentProcess::Init(int aArgc, char* aArgv[]) {
     AssertMacSandboxEnabled();
   }
 #  endif /* DEBUG */
-#endif   /* XP_MACOSX && MOZ_CONTENT_SANDBOX */
+#endif   /* XP_MACOSX && MOZ_SANDBOX */
 
-#if defined(XP_WIN) && defined(MOZ_CONTENT_SANDBOX)
+#if defined(XP_WIN) && defined(MOZ_SANDBOX)
   SetUpSandboxEnvironment();
 #endif
 

@@ -23,7 +23,7 @@
 #include "prenv.h"
 #include "nsXPCOMPrivate.h"
 
-#if defined(MOZ_CONTENT_SANDBOX)
+#if defined(MOZ_SANDBOX)
 #  include "mozilla/SandboxSettings.h"
 #  include "nsAppDirectoryServiceDefs.h"
 #endif
@@ -281,7 +281,7 @@ void GeckoChildProcessHost::PrepareLaunch() {
     InitWindowsGroupID();
   }
 
-#  if defined(MOZ_CONTENT_SANDBOX)
+#  if defined(MOZ_SANDBOX)
   // We need to get the pref here as the process is launched off main thread.
   if (mProcessType == GeckoProcessType_Content) {
     mSandboxLevel = GetEffectiveContentSandboxLevel();
@@ -323,7 +323,7 @@ void GeckoChildProcessHost::PrepareLaunch() {
       mEnableSandboxLogging || !!PR_GetEnv("MOZ_SANDBOX_LOGGING");
 #  endif
 #elif defined(XP_LINUX)
-#  if defined(MOZ_CONTENT_SANDBOX)
+#  if defined(MOZ_SANDBOX)
   // Get and remember the path to the per-content-process tmpdir
   if (ShouldHaveDirectoryService()) {
     nsCOMPtr<nsIFile> contentTempDir;
@@ -666,7 +666,7 @@ AddAppDirToCommandLine(std::vector<std::string>& aCmdLine)
 #endif
       }
 
-#if defined(XP_MACOSX) && defined(MOZ_CONTENT_SANDBOX)
+#if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
       // Full path to the profile dir
       nsCOMPtr<nsIFile> profileDir;
       rv =
@@ -737,7 +737,7 @@ bool GeckoChildProcessHost::PerformAsyncLaunch(
         ENVIRONMENT_STRING(childRustLog.get());
   }
 
-#if defined(XP_LINUX) && defined(MOZ_CONTENT_SANDBOX)
+#if defined(XP_LINUX) && defined(MOZ_SANDBOX)
   if (!mTmpDirName.IsEmpty()) {
     // Point a bunch of things that might want to write from content to our
     // shiny new content-process specific tmpdir
@@ -1089,7 +1089,6 @@ bool GeckoChildProcessHost::PerformAsyncLaunch(
   // of reorganizing so I don't think this patch is the right time.
   switch (mProcessType) {
     case GeckoProcessType_Content:
-#    if defined(MOZ_CONTENT_SANDBOX)
       if (mSandboxLevel > 0) {
         // For now we treat every failure as fatal in
         // SetSecurityLevelForContentProcess and just crash there right away.
@@ -1099,7 +1098,6 @@ bool GeckoChildProcessHost::PerformAsyncLaunch(
                                                           mIsFileContent);
         shouldSandboxCurrentProcess = true;
       }
-#    endif  // defined(MOZ_CONTENT_SANDBOX)
       break;
     case GeckoProcessType_Plugin:
       if (mSandboxLevel > 0 && !PR_GetEnv("MOZ_DISABLE_NPAPI_SANDBOX")) {
