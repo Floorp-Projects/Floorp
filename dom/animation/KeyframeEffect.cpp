@@ -1425,11 +1425,19 @@ bool KeyframeEffect::IsGeometricProperty(const nsCSSPropertyID aProperty) {
 bool KeyframeEffect::CanAnimateTransformOnCompositor(
     const nsIFrame* aFrame,
     AnimationPerformanceWarning::Type& aPerformanceWarning /* out */) {
+  // In some cases, such as when we are simply collecting all the compositor
+  // animations regardless of the frame on which they run in order to calculate
+  // change hints, |aFrame| will be the style frame. However, even in that case
+  // we should look at the primary frame since that is where the transform will
+  // be applied.
+  const nsIFrame* primaryFrame =
+      nsLayoutUtils::GetPrimaryFrameFromStyleFrame(aFrame);
+
   // Disallow OMTA for preserve-3d transform. Note that we check the style
   // property rather than Extend3DContext() since that can recurse back into
   // this function via HasOpacity(). See bug 779598.
-  if (aFrame->Combines3DTransformWithAncestors() ||
-      aFrame->StyleDisplay()->mTransformStyle ==
+  if (primaryFrame->Combines3DTransformWithAncestors() ||
+      primaryFrame->StyleDisplay()->mTransformStyle ==
           NS_STYLE_TRANSFORM_STYLE_PRESERVE_3D) {
     aPerformanceWarning =
         AnimationPerformanceWarning::Type::TransformPreserve3D;
@@ -1439,14 +1447,14 @@ bool KeyframeEffect::CanAnimateTransformOnCompositor(
   // what we need for animating backface-visibility correctly if we
   // remove the above test for Extend3DContext(); that would require
   // looking at backface-visibility on descendants as well. See bug 1186204.
-  if (aFrame->BackfaceIsHidden()) {
+  if (primaryFrame->BackfaceIsHidden()) {
     aPerformanceWarning =
         AnimationPerformanceWarning::Type::TransformBackfaceVisibilityHidden;
     return false;
   }
   // Async 'transform' animations of aFrames with SVG transforms is not
   // supported.  See bug 779599.
-  if (aFrame->IsSVGTransformed()) {
+  if (primaryFrame->IsSVGTransformed()) {
     aPerformanceWarning = AnimationPerformanceWarning::Type::TransformSVG;
     return false;
   }
