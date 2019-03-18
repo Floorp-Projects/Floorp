@@ -673,11 +673,6 @@ nsresult nsZipArchive::BuildFileList(PRFileDesc *aFd) {
         entry.VirtualAddress = const_cast<uint8_t *>(startp);
         entry.NumberOfBytes = readaheadLength;
         prefetchVirtualMemory(GetCurrentProcess(), 1, &entry, 0);
-        readaheadLength = 0;
-      }
-      if (readaheadLength && aFd) {
-        HANDLE hFile = (HANDLE)PR_FileDesc2NativeHandle(aFd);
-        mozilla::ReadAhead(hFile, 0, readaheadLength);
       }
 #endif
     }
