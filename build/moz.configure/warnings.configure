@@ -123,7 +123,13 @@ check_and_add_gcc_warning('-Wno-error=deprecated-declarations')
 check_and_add_gcc_warning('-Wno-error=array-bounds')
 
 # can't get rid of those PGO warnings
-check_and_add_gcc_warning('-Wno-error=coverage-mismatch', when='MOZ_PGO')
+check_and_add_gcc_warning('-Wno-error=coverage-mismatch')
+
+# -Wbackend-plugin warnings from Android PGO profile-use builds:
+# error: /builds/worker/workspace/build/src/mozglue/misc/AutoProfilerLabel.cpp:
+#  Function control flow change detected (hash mismatch)
+#  _ZN7mozilla17AutoProfilerLabelD2Ev [-Werror,-Wbackend-plugin]
+check_and_add_gcc_warning('-Wno-error=backend-plugin')
 
 # false positives depending on optimizations
 check_and_add_gcc_warning('-Wno-error=free-nonheap-object')
