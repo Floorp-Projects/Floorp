@@ -639,13 +639,32 @@ void nsFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
     mMayHaveOpacityAnimation = aPrevInFlow->MayHaveOpacityAnimation();
     mMayHaveTransformAnimation = aPrevInFlow->MayHaveTransformAnimation();
   } else if (mContent) {
-    // Even for mMayHaveTransformAnimation we store the flag on the _style_
-    // frame, despite the fact that the transform is applied to the _primary_
-    // frame since we don't have access to the primary frame at this point.
+    // It's fine to fetch the EffectSet for the style frame here because in the
+    // following code we take care of the case where animations may target
+    // a different frame.
     EffectSet* effectSet = EffectSet::GetEffectSetForStyleFrame(this);
     if (effectSet) {
       mMayHaveOpacityAnimation = effectSet->MayHaveOpacityAnimation();
-      mMayHaveTransformAnimation = effectSet->MayHaveTransformAnimation();
+
+      if (effectSet->MayHaveTransformAnimation()) {
+        // If we are the inner table frame for display:table content, then
+        // transform animations should go on our parent frame (the table wrapper
+        // frame).
+        //
+        // We do this when initializing the child frame (table inner frame),
+        // because when initializng the table wrapper frame, we don't yet have
+        // access to its children so we can't tell if we have transform
+        // animations or not.
+        if (IsFrameOfType(eSupportsCSSTransforms)) {
+          mMayHaveTransformAnimation = true;
+        } else if (aParent && nsLayoutUtils::GetStyleFrame(aParent) == this) {
+          MOZ_ASSERT(
+              aParent->IsFrameOfType(eSupportsCSSTransforms),
+              "Style frames that don't support transforms should have parents"
+              " that do");
+          aParent->mMayHaveTransformAnimation = true;
+        }
+      }
     }
   }
 
