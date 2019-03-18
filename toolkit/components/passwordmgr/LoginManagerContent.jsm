@@ -69,6 +69,14 @@ var observer = {
   },
 
   onStateChange(aWebProgress, aRequest, aState, aStatus) {
+    if ((aState & Ci.nsIWebProgressListener.STATE_RESTORING) &&
+        (aState & Ci.nsIWebProgressListener.STATE_STOP)) {
+      // Re-fill a document restored from bfcache since password field values
+      // aren't persisted there.
+      LoginManagerContent._onDocumentRestored(aWebProgress.DOMWindow.document);
+      return;
+    }
+
     if (!(aState & Ci.nsIWebProgressListener.STATE_START)) {
       return;
     }
@@ -981,7 +989,29 @@ var LoginManagerContent = {
   },
 
   /**
-   * Trigger capture on any relevant LoginForms due to a navigation alone (not
+   * Fill a page that was restored from bfcache since we wouldn't receive
+   * DOMInputPasswordAdded or DOMFormHasPassword events for it.
+   * @param {Document} aDocument that was restored from bfcache.
+   */
+  _onDocumentRestored(aDocument) {
+    let rootElsWeakSet = LoginFormFactory.getRootElementsWeakSetForDocument(aDocument);
+    let weakLoginFormRootElements = ChromeUtils.nondeterministicGetWeakSetKeys(rootElsWeakSet);
+
+    log("_onDocumentRestored: loginFormRootElements approx size:", weakLoginFormRootElements.length,
+        "document:", aDocument);
+
+    for (let formRoot of weakLoginFormRootElements) {
+      if (!formRoot.isConnected) {
+        continue;
+      }
+
+      let formLike = LoginFormFactory.getForRootElement(formRoot);
+      this._fetchLoginsFromParentAndFillForm(formLike);
+    }
+  },
+
+  /**
+   * Trigger capture on any relevant FormLikes due to a navigation alone (not
    * necessarily due to an actual form submission). This method is used to
    * capture logins for cases where form submit events are not used.
    *
