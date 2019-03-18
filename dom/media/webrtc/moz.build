@@ -15,7 +15,6 @@ XPIDL_MODULE = 'content_webrtc'
 
 EXPORTS += [
     'AllocationHandle.h',
-    'CubebDeviceEnumerator.h',
     'MediaEngine.h',
     'MediaEngineDefault.h',
     'MediaEnginePrefs.h',
@@ -24,12 +23,9 @@ EXPORTS += [
     'SineWaveGenerator.h',
 ]
 
-SOURCES += [
-    'CubebDeviceEnumerator.cpp',
-]
-
 if CONFIG['MOZ_WEBRTC']:
     EXPORTS += [
+        'CubebDeviceEnumerator.h',
         'MediaEngineRemoteVideoSource.h',
         'MediaEngineWebRTC.h'
     ]
@@ -43,6 +39,7 @@ if CONFIG['MOZ_WEBRTC']:
     ]
     # MediaEngineWebRTC.cpp needs to be built separately.
     SOURCES += [
+        'CubebDeviceEnumerator.cpp',
         'MediaEngineWebRTC.cpp',
     ]
     LOCAL_INCLUDES += [
