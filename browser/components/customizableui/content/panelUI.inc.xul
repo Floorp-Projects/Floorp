@@ -767,6 +767,7 @@
           <toolbarseparator/>
           <toolbarbutton id="PanelUI-fxa-menu-syncnow-button"
                          label="&syncSyncNowItem.label;"
+                         syncinglabel="&syncSyncNowItemSyncing.label;"
                          class="subviewbutton subviewbutton-iconic"
                          oncommand="gSync.doSync();"
                          closemenu="none"/>
