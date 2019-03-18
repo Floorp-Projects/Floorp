@@ -22,6 +22,7 @@ httpServer.registerPathHandler("/test.js", function(request, response) {
       function wrapper() {
         console.log(new Error("error object"));
         console.trace();
+        for (let i = 0; i < 2; i++) console.log("repeated")
       }
       wrapper();
     };
@@ -99,7 +100,7 @@ async function testMessagesCopy(hud, timestamp) {
   }
   is(lines[1], `    wrapper ${TEST_URI}test.js:6`,
     "Stacktrace first line has the expected text");
-  is(lines[2], `    logStuff ${TEST_URI}test.js:8`,
+  is(lines[2], `    logStuff ${TEST_URI}test.js:9`,
     "Stacktrace second line has the expected text");
 
   info("Test copy menu item for the error message");
@@ -117,7 +118,7 @@ async function testMessagesCopy(hud, timestamp) {
   }
   is(lines[1], `    wrapper ${TEST_URI}test.js:5`,
     "Error Stacktrace first line has the expected text");
-  is(lines[2], `    logStuff ${TEST_URI}test.js:8`,
+  is(lines[2], `    logStuff ${TEST_URI}test.js:9`,
     "Error Stacktrace second line has the expected text");
 
   info("Test copy menu item for the reference error message");
@@ -126,7 +127,7 @@ async function testMessagesCopy(hud, timestamp) {
   ok(true, "Clipboard text was found and saved");
   lines = clipboardText.split(newLineString);
   is(lines[0], (timestamp ? getTimestampText(message) + " " : "") +
-    "ReferenceError: z is not defined test.js:10:5",
+    "ReferenceError: z is not defined test.js:11:5",
     "ReferenceError first line has expected text");
   if (timestamp) {
     ok(LOG_FORMAT_WITH_TIMESTAMP.test(lines[0]),
@@ -136,6 +137,10 @@ async function testMessagesCopy(hud, timestamp) {
     "There is a Learn More link in the ReferenceError message");
   is(clipboardText.toLowerCase().includes("Learn More"), false,
     "The Learn More text wasn't put in the clipboard");
+
+  message = await waitFor(() => findMessage(hud, "repeated 2"));
+  clipboardText = await copyMessageContent(hud, message);
+  ok(true, "Clipboard text was found and saved");
 }
 
 function getTimestampText(messageEl) {

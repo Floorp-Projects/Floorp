@@ -986,22 +986,40 @@ promise_test(async t => {
    'property is overridden by an !important rule');
 
 promise_test(async t => {
-  var div = addDiv(null, { style: 'display: table;' });
+  var div = addDiv(t, { style: 'display: table' });
   var animation =
     div.animate({ transform: ['rotate(0deg)', 'rotate(360deg)'] },
                 100 * MS_PER_SEC);
 
-  await animation.ready;
-
-  if (animationStartsRightNow(animation)) {
-    await waitForNextFrame();
-  }
+  await waitForAnimationReadyToRestyle(animation);
 
   await waitForPaints();
 
   assert_animation_is_running_on_compositor(animation,
-    'Transform animation on table element should be running on the compositor');
-}, 'Transform animation on table element runs on the compositor');
+    'Transform animation on display:table element should be running on the'
+    + ' compositor');
+}, 'Transform animation on display:table element runs on the compositor');
+
+promise_test(async t => {
+  const div = addDiv(t, { style: 'display: table' });
+  const animation = div.animate(null, 100 * MS_PER_SEC);
+  const effect = new KeyframeEffect(div,
+                                    { transform: ['none', 'none']},
+                                    100 * MS_PER_SEC);
+
+  await waitForAnimationReadyToRestyle(animation);
+
+  animation.effect = effect;
+
+  await waitForNextFrame();
+  await waitForPaints();
+
+  assert_animation_is_running_on_compositor(
+    animation,
+    'Transform animation on table element should be running on the compositor'
+  );
+}, 'Empty transform effect assigned after the fact to display:table content'
+   + ' runs on the compositor');
 
 promise_test(async t => {
   const div = addDiv(t);

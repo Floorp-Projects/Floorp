@@ -31,6 +31,7 @@
 #include "nsFrameManager.h"
 #include "nsIObserverService.h"
 #include "XULDocument.h"
+#include "mozilla/AnimationUtils.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Event.h"  // for Event
 #include "mozilla/dom/KeyboardEvent.h"
@@ -1453,7 +1454,8 @@ void nsXULPopupManager::FirePopupHidingEvent(
           popupFrame = do_QueryFrame(aPopup->GetPrimaryFrame());
           if (!popupFrame) return;
 
-          if (nsLayoutUtils::HasCurrentTransitions(popupFrame)) {
+          if (AnimationUtils::HasCurrentTransitions(
+                  aPopup->AsElement(), PseudoStyleType::NotPseudo)) {
             RefPtr<TransitionEnder> ender =
                 new TransitionEnder(aPopup, aDeselectMenu);
             aPopup->AddSystemEventListener(NS_LITERAL_STRING("transitionend"),

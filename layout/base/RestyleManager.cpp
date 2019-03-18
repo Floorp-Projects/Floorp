@@ -1832,8 +1832,8 @@ void RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList) {
 }
 
 /* static */
-uint64_t RestyleManager::GetAnimationGenerationForFrame(nsIFrame* aFrame) {
-  EffectSet* effectSet = EffectSet::GetEffectSet(aFrame);
+uint64_t RestyleManager::GetAnimationGenerationForFrame(nsIFrame* aStyleFrame) {
+  EffectSet* effectSet = EffectSet::GetEffectSetForStyleFrame(aStyleFrame);
   return effectSet ? effectSet->GetAnimationGeneration() : 0;
 }
 

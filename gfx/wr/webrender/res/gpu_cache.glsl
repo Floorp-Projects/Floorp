@@ -13,7 +13,7 @@ uniform HIGHP_SAMPLER_FLOAT sampler2D sGpuCache;
 //           use 2x unsigned shorts as vertex attributes
 //           instead of an int, and encode the UV directly
 //           in the vertices.
-ivec2 get_gpu_cache_uv(int address) {
+ivec2 get_gpu_cache_uv(HIGHP_FS_ADDRESS int address) {
     return ivec2(uint(address) % WR_MAX_VERTEX_TEXTURE_WIDTH,
                  uint(address) / WR_MAX_VERTEX_TEXTURE_WIDTH);
 }
@@ -25,7 +25,7 @@ vec4[2] fetch_from_gpu_cache_2_direct(ivec2 address) {
     );
 }
 
-vec4[2] fetch_from_gpu_cache_2(int address) {
+vec4[2] fetch_from_gpu_cache_2(HIGHP_FS_ADDRESS int address) {
     ivec2 uv = get_gpu_cache_uv(address);
     return vec4[2](
         TEXEL_FETCH(sGpuCache, uv, 0, ivec2(0, 0)),
@@ -37,7 +37,7 @@ vec4 fetch_from_gpu_cache_1_direct(ivec2 address) {
     return texelFetch(sGpuCache, address, 0);
 }
 
-vec4 fetch_from_gpu_cache_1(int address) {
+vec4 fetch_from_gpu_cache_1(HIGHP_FS_ADDRESS int address) {
     ivec2 uv = get_gpu_cache_uv(address);
     return texelFetch(sGpuCache, uv, 0);
 }

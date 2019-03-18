@@ -1826,15 +1826,18 @@ class nsIFrame : public nsQueryFrame {
    * @param aStyleEffects:  If the caller has this->StyleEffects(), providing
    *   it here will improve performance.
    *
-   * @param aEffectSet: This function may need to look up EffectSet property.
-   *   If a caller already have one, pass it in can save property look up
-   *   time; otherwise, just leave it as nullptr.
+   * @param aEffectSetForOpacity: This function may need to look up the
+   *   EffectSet for opacity animations on this frame.
+   *   If the caller already has looked up this EffectSet, it may pass it in to
+   *   save an extra property lookup.
    */
-  bool Extend3DContext(const nsStyleDisplay* aStyleDisplay,
-                       const nsStyleEffects* aStyleEffects,
-                       mozilla::EffectSet* aEffectSet = nullptr) const;
-  bool Extend3DContext(mozilla::EffectSet* aEffectSet = nullptr) const {
-    return Extend3DContext(StyleDisplay(), StyleEffects(), aEffectSet);
+  bool Extend3DContext(
+      const nsStyleDisplay* aStyleDisplay, const nsStyleEffects* aStyleEffects,
+      mozilla::EffectSet* aEffectSetForOpacity = nullptr) const;
+  bool Extend3DContext(
+      mozilla::EffectSet* aEffectSetForOpacity = nullptr) const {
+    return Extend3DContext(StyleDisplay(), StyleEffects(),
+                           aEffectSetForOpacity);
   }
 
   /**
