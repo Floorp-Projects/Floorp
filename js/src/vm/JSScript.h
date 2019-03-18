@@ -2264,7 +2264,7 @@ class JSScript : public js::gc::TenuredCell {
     return hasFlag(MutableFlags::NeedsArgsObj);
   }
   void setNeedsArgsObj(bool needsArgsObj);
-  static bool argumentsOptimizationFailed(JSContext* cx,
+  static void argumentsOptimizationFailed(JSContext* cx,
                                           js::HandleScript script);
 
   bool hasMappedArgsObj() const {
