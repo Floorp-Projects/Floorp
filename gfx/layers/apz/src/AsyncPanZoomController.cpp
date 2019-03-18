@@ -1525,6 +1525,8 @@ nsEventStatus AsyncPanZoomController::OnScaleBegin(
 
   // For platforms that don't support APZ zooming, dispatch a message to the
   // content controller, it may want to do something else with this gesture.
+  // FIXME: bug 1525793 -- this may need to handle zooming or not on a
+  // per-document basis.
   if (!gfxPrefs::APZAllowZooming()) {
     if (RefPtr<GeckoContentController> controller =
             GetGeckoContentController()) {
@@ -1569,6 +1571,8 @@ nsEventStatus AsyncPanZoomController::OnScale(const PinchGestureInput& aEvent) {
     mY.UpdateWithTouchAtDevicePoint(aEvent.mLocalFocusPoint.y, aEvent.mTime);
   }
 
+  // FIXME: bug 1525793 -- this may need to handle zooming or not on a
+  // per-document basis.
   if (!gfxPrefs::APZAllowZooming()) {
     if (RefPtr<GeckoContentController> controller =
             GetGeckoContentController()) {
@@ -1702,6 +1706,8 @@ nsEventStatus AsyncPanZoomController::OnScaleEnd(
     return nsEventStatus_eIgnore;
   }
 
+  // FIXME: bug 1525793 -- this may need to handle zooming or not on a
+  // per-document basis.
   if (!gfxPrefs::APZAllowZooming()) {
     if (RefPtr<GeckoContentController> controller =
             GetGeckoContentController()) {
@@ -4074,6 +4080,8 @@ AsyncPanZoomController::GetCurrentAsyncTransformForFixedAdjustment(
   // Use the layout viewport to adjust fixed position elements if and only if
   // it's larger than the visual viewport (assuming we're scrolling the RCD-RSF
   // with apz.allow_zooming enabled).
+  // FIXME: bug 1525793 -- this may need to handle zooming or not on a
+  // per-document basis.
   return (gfxPrefs::APZAllowZooming() && Metrics().IsRootContent() &&
           Metrics().GetVisualViewport().Size() <=
               Metrics().GetLayoutViewport().Size())
