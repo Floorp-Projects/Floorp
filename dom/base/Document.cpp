@@ -1340,7 +1340,8 @@ Document::Document(const char* aContentType)
       mSavedResolution(1.0f),
       mPendingInitialTranslation(false),
       mGeneration(0),
-      mCachedTabSizeGeneration(0) {
+      mCachedTabSizeGeneration(0),
+      mInRDMPane(false) {
   MOZ_LOG(gDocumentLeakPRLog, LogLevel::Debug, ("DOCUMENT %p created", this));
 
   SetIsInDocument();

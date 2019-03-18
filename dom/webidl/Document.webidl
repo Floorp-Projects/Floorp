@@ -567,3 +567,13 @@ partial interface Document {
     [SameObject, Pref="dom.security.featurePolicy.webidl.enabled"]
     readonly attribute Policy policy;
 };
+
+/**
+ * Document extensions to support devtools.
+ */
+partial interface Document {
+  // Is the Document embedded in a Responsive Design Mode pane. This property
+  // is not propegated to descendant Documents upon settting.
+  [ChromeOnly]
+  attribute boolean inRDMPane;
+};
