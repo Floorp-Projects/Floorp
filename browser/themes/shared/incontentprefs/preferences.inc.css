@@ -921,3 +921,12 @@ menulist[indicator=true] > menupopup menuitem[indicator=true]:not([image]) > .me
 #updateSettingCrossUserWarning:-moz-locale-dir(rtl) {
   background-position-x: right 2px;
 }
+
+richlistitem .text-link {
+  color: inherit;
+  text-decoration: underline;
+}
+
+richlistitem .text-link:hover {
+  color: inherit;
+}
