@@ -5,7 +5,7 @@
 .connect-page__step-list {
   list-style-type: decimal;
   list-style-position: outside;
-  margin-inline-start: calc(var(--section-inline-margin) + var(--base-unit) * 4);
+  margin-inline-start: calc(var(--base-unit) * 4);
 }
 
 .connect-page__step {
