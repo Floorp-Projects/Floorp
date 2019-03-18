@@ -71,7 +71,6 @@ class App extends PureComponent {
     this.onExit = this.onExit.bind(this);
     this.onRemoveCustomDevice = this.onRemoveCustomDevice.bind(this);
     this.onRemoveDeviceAssociation = this.onRemoveDeviceAssociation.bind(this);
-    this.doResizeViewport = this.doResizeViewport.bind(this);
     this.onResizeViewport = this.onResizeViewport.bind(this);
     this.onRotateViewport = this.onRotateViewport.bind(this);
     this.onScreenshot = this.onScreenshot.bind(this);
@@ -189,20 +188,13 @@ class App extends PureComponent {
     this.props.dispatch(changeUserAgent(""));
   }
 
-  doResizeViewport(id, width, height) {
-    // This is the setter function that we pass to Toolbar and Viewports
-    // so they can modify the viewport.
-    this.props.dispatch(resizeViewport(id, width, height));
-  }
-
-  onResizeViewport({ width, height }) {
-    // This is the response function that listens to changes to the size
-    // and sends out a "viewport-resize" message with the new size.
+  onResizeViewport(id, width, height) {
     window.postMessage({
       type: "viewport-resize",
       width,
       height,
     }, "*");
+    this.props.dispatch(resizeViewport(id, width, height));
   }
 
   onRotateViewport(id) {
@@ -258,7 +250,6 @@ class App extends PureComponent {
       onExit,
       onRemoveCustomDevice,
       onRemoveDeviceAssociation,
-      doResizeViewport,
       onResizeViewport,
       onRotateViewport,
       onScreenshot,
@@ -298,7 +289,7 @@ class App extends PureComponent {
           onChangeUserAgent,
           onExit,
           onRemoveDeviceAssociation,
-          doResizeViewport,
+          onResizeViewport,
           onRotateViewport,
           onScreenshot,
           onToggleLeftAlignment,
@@ -313,7 +304,6 @@ class App extends PureComponent {
           onBrowserMounted,
           onContentResize,
           onRemoveDeviceAssociation,
-          doResizeViewport,
           onResizeViewport,
         }),
         devices.isModalOpen ?

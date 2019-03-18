@@ -25,7 +25,6 @@ class ResizableViewport extends PureComponent {
       onBrowserMounted: PropTypes.func.isRequired,
       onContentResize: PropTypes.func.isRequired,
       onRemoveDeviceAssociation: PropTypes.func.isRequired,
-      doResizeViewport: PropTypes.func.isRequired,
       onResizeViewport: PropTypes.func.isRequired,
       screenshot: PropTypes.shape(Types.screenshot).isRequired,
       swapAfterMount: PropTypes.bool.isRequired,
@@ -48,6 +47,7 @@ class ResizableViewport extends PureComponent {
     this.onResizeDrag = this.onResizeDrag.bind(this);
     this.onResizeStart = this.onResizeStart.bind(this);
     this.onResizeStop = this.onResizeStop.bind(this);
+    this.onResizeViewport = this.onResizeViewport.bind(this);
   }
 
   onRemoveDeviceAssociation() {
@@ -97,11 +97,7 @@ class ResizableViewport extends PureComponent {
     }
 
     // Update the viewport store with the new width and height.
-    const {
-      doResizeViewport,
-      viewport,
-    } = this.props;
-    doResizeViewport(viewport.id, width, height);
+    this.onResizeViewport(width, height);
     // Change the device selector back to an unselected device
     // TODO: Bug 1332754: Logic like this probably belongs in the action creator.
     if (this.props.viewport.device) {
@@ -144,6 +140,15 @@ class ResizableViewport extends PureComponent {
     });
   }
 
+  onResizeViewport(width, height) {
+    const {
+      viewport,
+      onResizeViewport,
+    } = this.props;
+
+    onResizeViewport(viewport.id, width, height);
+  }
+
   render() {
     const {
       screenshot,
@@ -151,7 +156,6 @@ class ResizableViewport extends PureComponent {
       viewport,
       onBrowserMounted,
       onContentResize,
-      onResizeViewport,
     } = this.props;
 
     let resizeHandleClass = "viewport-resize-handle";
@@ -180,7 +184,6 @@ class ResizableViewport extends PureComponent {
               userContextId: viewport.userContextId,
               onBrowserMounted,
               onContentResize,
-              onResizeViewport,
             })
           ),
           dom.div({

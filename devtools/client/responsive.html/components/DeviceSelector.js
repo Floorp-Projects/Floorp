@@ -18,7 +18,7 @@ class DeviceSelector extends PureComponent {
     return {
       devices: PropTypes.shape(Types.devices).isRequired,
       onChangeDevice: PropTypes.func.isRequired,
-      doResizeViewport: PropTypes.func.isRequired,
+      onResizeViewport: PropTypes.func.isRequired,
       onUpdateDeviceModal: PropTypes.func.isRequired,
       selectedDevice: PropTypes.string.isRequired,
       viewportId: PropTypes.number.isRequired,
@@ -34,7 +34,7 @@ class DeviceSelector extends PureComponent {
     const {
       devices,
       onChangeDevice,
-      doResizeViewport,
+      onResizeViewport,
       onUpdateDeviceModal,
       selectedDevice,
       viewportId,
@@ -50,7 +50,7 @@ class DeviceSelector extends PureComponent {
             type: "checkbox",
             checked: selectedDevice === device.name,
             click: () => {
-              doResizeViewport(viewportId, device.width, device.height);
+              onResizeViewport(viewportId, device.width, device.height);
               onChangeDevice(viewportId, device, type);
             },
           });

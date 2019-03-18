@@ -5921,11 +5921,10 @@ void ScrollFrameHelper::LayoutScrollbars(nsBoxLayoutState& aState,
 
   bool hasResizer = HasResizer();
   bool scrollbarOnLeft = !IsScrollbarOnRight();
-  bool overlayScrollBars =
-      LookAndFeel::GetInt(LookAndFeel::eIntID_UseOverlayScrollbars) ||
-      presShell->GetDocument()->InRDMPane();
   bool overlayScrollBarsWithZoom =
-      overlayScrollBars && mIsRoot && presShell->IsVisualViewportSizeSet();
+      mIsRoot &&
+      LookAndFeel::GetInt(LookAndFeel::eIntID_UseOverlayScrollbars) &&
+      presShell->IsVisualViewportSizeSet();
 
   nsSize scrollPortClampingSize = mScrollPort.Size();
   double res = 1.0;

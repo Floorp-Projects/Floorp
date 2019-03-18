@@ -168,10 +168,10 @@ void ZoomConstraintsClient::ScreenSizeChanged() {
 }
 
 static mozilla::layers::ZoomConstraints ComputeZoomConstraintsFromViewportInfo(
-    const nsViewportInfo& aViewportInfo, Document* aDocument) {
+    const nsViewportInfo& aViewportInfo) {
   mozilla::layers::ZoomConstraints constraints;
-  constraints.mAllowZoom = aViewportInfo.IsZoomAllowed() &&
-                           nsLayoutUtils::AllowZoomingForDocument(aDocument);
+  constraints.mAllowZoom =
+      aViewportInfo.IsZoomAllowed() && gfxPrefs::APZAllowZooming();
   constraints.mAllowDoubleTapZoom =
       constraints.mAllowZoom && gfxPrefs::APZAllowDoubleTapZooming();
   if (constraints.mAllowZoom) {
@@ -209,7 +209,7 @@ void ZoomConstraintsClient::RefreshZoomConstraints() {
       screenSize, PixelCastJustification::LayoutDeviceIsScreenForBounds));
 
   mozilla::layers::ZoomConstraints zoomConstraints =
-      ComputeZoomConstraintsFromViewportInfo(viewportInfo, mDocument);
+      ComputeZoomConstraintsFromViewportInfo(viewportInfo);
 
   if (mDocument->Fullscreen()) {
     ZCC_LOG("%p is in fullscreen, disallowing zooming\n", this);
