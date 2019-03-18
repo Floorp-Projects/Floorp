@@ -37,7 +37,7 @@ def main():
 
     schema = luscious.get_jsonschema(mozbuild.telemetry.schema)
     with open(args.output, 'wb') as f:
-        json.dump(schema, f, indent=2, sort_keys=True)
+        json.dump(schema, f, indent=2, separators=(',', ': '), sort_keys=True)
 
 
 if __name__ == '__main__':
