@@ -329,6 +329,8 @@ class nsHttpChannel final : public HttpBaseChannel,
   MOZ_MUST_USE nsresult PrepareToConnect();
   void HandleOnBeforeConnect();
   MOZ_MUST_USE nsresult OnBeforeConnect();
+  MOZ_MUST_USE nsresult ContinueOnBeforeConnect(bool aShouldUpgrade,
+                                                nsresult aStatus);
   void OnBeforeConnectContinue();
   MOZ_MUST_USE nsresult Connect();
   void SpeculativeConnect();
