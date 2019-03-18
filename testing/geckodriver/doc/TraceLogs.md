@@ -71,7 +71,7 @@ enable trace logs for both geckodriver and Marionette:
 	% geckodriver -vv
 
 The second way of setting the log level is through capabilities.
-geckodriver accepts a Mozila-specific configuration object
+geckodriver accepts a Mozilla-specific configuration object
 in [`moz:firefoxOptions`].  This JSON Object, which is further
 described in the [README] can hold Firefox-specific configuration,
 such as which Firefox binary to use, additional preferences to set,
