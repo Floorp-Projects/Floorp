@@ -10,11 +10,6 @@ const LABELS_STARTUP_CACHE_REQUESTS = {
 };
 
 add_task(async function() {
-  // Turn off tab preloading to avoid issues with RemoteController.js
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.newtab.preload", false]],
-  });
-
   Services.obs.notifyObservers(null, "startupcache-invalidate");
   Services.telemetry.getSnapshotForHistograms("main", true);
   let newWin = await BrowserTestUtils.openNewBrowserWindow();

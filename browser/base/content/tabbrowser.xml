@@ -1095,7 +1095,7 @@
           // session restore), preload the next about:newtab if we don't
           // already have a preloaded browser.
           if (tab.linkedPanel) {
-            NewTabPagePreloading.maybeCreatePreloadedBrowser(window);
+            gBrowser._createPreloadBrowser();
           }
         ]]></body>
       </method>

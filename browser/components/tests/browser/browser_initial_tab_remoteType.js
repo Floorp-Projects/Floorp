@@ -145,10 +145,9 @@ function constructOnePageCmdLine(aURL) {
 }
 
 add_task(async function setup() {
-  NewTabPagePreloading.removePreloadedBrowser(window);
+  gBrowser.removePreloadedBrowser();
 
   await SpecialPowers.pushPrefEnv({"set": [
-    ["browser.newtab.preload", false],
     ["browser.startup.homepage", "about:home"],
     ["browser.startup.page", 1],
   ]});

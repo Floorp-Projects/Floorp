@@ -145,7 +145,7 @@ add_task(async function test_per_window_ntp_theme() {
 
   extension.onMessage("check-window", async ({theme, isBrightText, winId}) => {
     let win = Services.wm.getOuterWindowWithId(winId);
-    win.NewTabPagePreloading.removePreloadedBrowser(win);
+    win.gBrowser.removePreloadedBrowser();
     for (let url of ["about:newtab", "about:home", "about:welcome"]) {
       info("Opening url: " + url);
       await BrowserTestUtils.withNewTab({gBrowser: win.gBrowser, url}, async browser => {

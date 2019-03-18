@@ -88,24 +88,22 @@ class TestMemoryUsage(AwsyTestCase):
         """
         self.logger.info("closing preloaded browser")
         script = """
-            if (window.NewTabPagePreloading) {
-                return NewTabPagePreloading.removePreloadedBrowser(window);
-            }
             if ("removePreloadedBrowser" in gBrowser) {
                 return gBrowser.removePreloadedBrowser();
+            } else {
+                return "gBrowser.removePreloadedBrowser not available";
             }
-            return "gBrowser.removePreloadedBrowser not available";
             """
         try:
             result = self.marionette.execute_script(script,
                                                     script_timeout=180000)
         except JavascriptException, e:
-            self.logger.error("removePreloadedBrowser() JavaScript error: %s" % e)
+            self.logger.error("gBrowser.removePreloadedBrowser() JavaScript error: %s" % e)
         except ScriptTimeoutException:
-            self.logger.error("removePreloadedBrowser() timed out")
+            self.logger.error("gBrowser.removePreloadedBrowser() timed out")
         except Exception:
             self.logger.error(
-                "removePreloadedBrowser() Unexpected error: %s" % sys.exc_info()[0])
+                "gBrowser.removePreloadedBrowser() Unexpected error: %s" % sys.exc_info()[0])
         else:
             if result:
                 self.logger.info(result)
