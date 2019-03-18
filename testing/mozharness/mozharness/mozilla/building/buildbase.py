@@ -373,6 +373,7 @@ class BuildOptionParser(object):
         'api-16-debug-searchfox': 'builds/releng_sub_%s_configs/%s_api_16_debug_searchfox.py',
         'api-16-gradle': 'builds/releng_sub_%s_configs/%s_api_16_gradle.py',
         'api-16-profile-generate': 'builds/releng_sub_%s_configs/%s_api_16_profile_generate.py',
+        'api-16-profile-use': 'builds/releng_sub_%s_configs/%s_api_16_profile_use.py',
         'api-16-without-google-play-services':
             'builds/releng_sub_%s_configs/%s_api_16_without_google_play_services.py',
         'rusttests': 'builds/releng_sub_%s_configs/%s_rusttests.py',
