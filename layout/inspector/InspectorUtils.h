@@ -11,6 +11,7 @@
 #include "mozilla/dom/InspectorUtilsBinding.h"
 
 class nsAtom;
+class nsINode;
 class ComputedStyle;
 
 namespace mozilla {
@@ -153,7 +154,7 @@ class InspectorUtils {
   // unknown types.
   static bool CssPropertySupportsType(GlobalObject& aGlobal,
                                       const nsAString& aProperty,
-                                      uint32_t aType, ErrorResult& aRv);
+                                      InspectorPropertyType, ErrorResult& aRv);
 
   static bool IsIgnorableWhitespace(GlobalObject& aGlobalObject,
                                     CharacterData& aDataNode) {
