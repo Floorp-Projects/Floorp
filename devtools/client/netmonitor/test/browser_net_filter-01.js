@@ -37,8 +37,8 @@ const REQUESTS_WITH_MEDIA_AND_FLASH = REQUESTS_WITH_MEDIA.concat([
 ]);
 
 const REQUESTS_WITH_MEDIA_AND_FLASH_AND_WS = REQUESTS_WITH_MEDIA_AND_FLASH.concat([
-  /* "Upgrade" is a reserved header and can not be set on XMLHttpRequest */
-  { url: "sjs_content-type-test-server.sjs?fmt=ws" },
+  /* Use new WebSocket() to mock native websocket request, then "Upgrade" will be added */
+  { url: WS_URL + "sjs_content-type-test-server.sjs?fmt=ws", ws: true },
 ]);
 
 const EXPECTED_REQUESTS = [
@@ -187,7 +187,7 @@ const EXPECTED_REQUESTS = [
   },
   {
     method: "GET",
-    url: CONTENT_TYPE_SJS + "?fmt=ws",
+    url: WS_CONTENT_TYPE_SJS + "?fmt=ws",
     data: {
       fuzzyUrl: true,
       status: 101,

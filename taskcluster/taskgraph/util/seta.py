@@ -90,6 +90,13 @@ class SETA(object):
                 if type(task_list.values()[0]) == list and len(task_list.values()[0]) > 0:
                     high_value_tasks = task_list.values()[0]
 
+            # hack seta to treat all Android Raptor tasks as low value - see Bug 1535016
+            def only_android_raptor(task):
+                return task.startswith('test-android') and 'raptor' in task
+
+            high_value_android_tasks = list(filter(only_android_raptor, high_value_tasks))
+            low_value_tasks.extend(high_value_android_tasks)
+
             opt = ['test-windows10-64/opt',
                    'test-windows7-32/opt',
                    'test-linux64/opt',

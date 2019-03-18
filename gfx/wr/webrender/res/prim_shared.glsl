@@ -286,7 +286,7 @@ vec4 dither(vec4 color) {
 }
 #endif //WR_FEATURE_DITHERING
 
-vec4 sample_gradient(int address, float offset, float gradient_repeat) {
+vec4 sample_gradient(HIGHP_FS_ADDRESS int address, float offset, float gradient_repeat) {
     // Modulo the offset if the gradient repeats.
     float x = mix(offset, fract(offset), gradient_repeat);
 

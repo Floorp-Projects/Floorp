@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<blocklist lastupdate="1552492951595" xmlns="http://www.mozilla.org/2006/addons-blocklist">
+<blocklist lastupdate="1552695747900" xmlns="http://www.mozilla.org/2006/addons-blocklist">
   <emItems>
     <emItem blockID="i334" id="{0F827075-B026-42F3-885D-98981EE7B1AE}">
       <prefs/>
@@ -2561,6 +2561,50 @@
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
     <emItem blockID="b57d9505-21bf-4a24-accb-05ceac50dadc" id="/^((\{86c18738-11ed-4c16-af92-786aa036c83c\})|(\{d0fee16a-f4eb-4dc1-9961-82b913e5943d\})|(\{1c4937a1-c678-4607-8665-a16384ee302e\})|(\{22caeb02-38a3-415d-b168-64fadccbb4a4\})|(\{1c9372e7-5f0e-4541-99cf-dfbf2ab00b01\})|(\{9fe66994-8ed1-4317-a20a-1d0544ca062f\})|(\{6df222d8-97c7-42bf-9683-1cf8119c1e9e\})|(\{4c2dda03-bad0-4160-a8a1-6d089200420e\})|(\{7aae7d4f-55b9-42eb-b683-932591265e17\})|(\{e6f8ab99-3c96-410c-95d1-267ad48ed3e2\})|(\{6d8c5068-d0cb-47a5-af5e-3f23064f4608\})|(\{90481f38-d06a-465e-a54c-206bbb1ee9ae\})|(\{4b75aeb8-f14a-4ef3-b1ad-09733b40dac3\})|(\{3a8ca495-f5ab-4320-b070-4f44266fe3d1\})|(\{84f8914f-0dec-48ed-a0fd-4a7712c06793\})|(\{aa613fce-603c-41df-bf49-9b09614cebe6\})|(\{30314350-199a-4951-9c05-c3537a946492\})|(\{a2edce1d-10ab-483d-8c01-5e5fe0c82902\})|(\{ec91a3d4-8311-4700-aa15-b3941f21a052\})|(\{e9049687-164a-4cf3-be1f-1291cfb0f44a\})|(\{2be73925-ebaf-43ca-8b26-bd820887f591\})|(\{840eadea-1c68-411f-b4e9-08d9f236385d\})|(\{0a89d040-5fb1-46d7-bf81-43b55e83695d\})|(\{6a1e76ed-4ac2-4a0c-8beb-43ae63558b36\})|(\{1b90c930-e7d7-486a-9085-8b57129489c7\})|(\{eab649ca-af76-4de9-95b0-8036e35a66cc\})|(\{0628e652-98f4-4e58-9ecb-ad996b061aef\})|(elfr@geckoaddon\.org)|(else@geckoaddon\.org)|(fr_b@iext\.pro)|(it_b@iext\.pro)|(sv_b@iext\.pro)|(no_b1@iext\.pro)|(fi_b@iext\.pro)|(au_b@iext\.pro)|(elfr12@geckoaddon\.org)|(test@informations\.to)|(se_pop@informations\.to)|(it@spongebog\.funny-ok\.com)|(it@tsunami\.funny-ok\.com)|(fi@spongebog\.funny-ok\.com)|(fi@tsunami\.funny-ok\.com)|(no@spongebog\.funny-ok\.com)|(no@tsunami\.funny-ok\.com)|(fr@tsunami\.funny-ok\.com)|(fr@spongebog\.funny-ok\.com)|(se@tsunami\.funny-ok\.com)|(se@spongebog\.funny-ok\.com)|(au@spongebog\.funny-ok\.com)|(au@tsunami\.funny-ok\.com)|(nz@spongebog\.funny-ok\.com)|(nz@tsunami\.funny-ok\.com)|(gr@spongebog\.funny-ok\.com)|(gr@tsunami\.funny-ok\.com)|(nz_fnew@tsunami\.funny-ok\.com))$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="67025e3b-860c-4680-949f-ec472cd72fae" id="/^((ads@firefox\.pl)|(adsfinland@firefox\.pl)|(adsfrance@firefox\.pl)|(dodateknowy@o2\.pl)|(dodateksuper1@firefox\.pl)|(dodateksuper2@firefox\.pl)|(dodateksuper3@firefox\.pl)|(dodateksuper5@firefox\.pl)|(dodateksuper6@firefox\.pl)|(dodateksuper@firefox\.pl)|(test_b@iext\.pro)|(\{697be03c-cdd2-430e-b6cf-0f9b5f0556ee\})|(\{c9ced03f-a5cf-4dbf-b5ba-67673e442590\})|(\{cbe59f66-a23a-45c1-81ac-d0cbedf9ea4e\})|(\{dbf0a186-d41c-40ae-8841-e9d8a6b49d8d\}))$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="3d52fe32-71e5-47bd-8eda-d98fa0c489e9" id="web-private@ext.com">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="3cfd9af5-a7d0-49d3-971b-7af5e2eab78f" id="{ae5b30dd-b29d-4ae6-844b-5d7bfc3d7915}">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="ed853ce8-83e0-42b7-8d93-7f48041d4987" id="{6fb28b6b-abf2-4937-af28-340851faa971}">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="e9227d28-b627-48b8-8392-e9fb5a00d9b6" id="{7b6def45-d585-431a-a479-5bb2badf2506}">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="4bec4aaf-dd5b-4754-bd01-461fdc7ea5ca" id="{54fc344c-e8ba-462a-a6d9-9ce1b794ce46}">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="ce66baec-1237-481c-87db-ccc1bcf0359d" id="{fb62e856-f09b-4cbc-ba07-642ab55f6cb4}">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="5027a1c1-e050-434f-ba77-56417bc2d7cf" id="{e19fed8c-637a-42e3-b62a-3a6c4040ded8}">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="5b807d5f-a192-450a-a0b3-98113c4beff1" id="{b6f5f2d0-1aa3-4e43-b536-6db1b1bf7d1c}">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="f9cd41dd-9e52-4506-bb58-a31e189f4ab9" id="/^((\{0f6b717d-1625-4434-b770-5ae33eb64b16\})|(\{6d092be7-0bad-46af-9489-04e4b3988644\})|(\{7f6049d6-e8b0-4c42-8028-204d1458ddb6\})|(\{12b75028-c038-40bd-be5b-2809b7d18d78\})|(\{46f35a01-faaf-4fab-95e6-7dfc8b6d8b73\})|(\{55d2c6f7-62fa-4091-988b-7f4c4b3c1bff\})|(\{75aeaeec-d415-404d-84ba-bd70bcc5e70c\})|(\{76b8cf24-227d-4e2b-af4c-39ec5b47babf\})|(\{77b725cc-5d0e-4b82-88f0-ec6961acd697\})|(\{90fc8426-06ba-43ab-8110-7478ff86f531\})|(\{90fc8426-06ba-43ab-8110-7478ff86f539\})|(\{157cd8f9-48f0-43a1-9bcf-c4316753e084\})|(\{157cd8f9-48f0-43a1-9bcf-c4316753e085\})|(\{201ec7f7-57b1-48dd-945c-b1ea7489195d\})|(\{280fc0f5-6dfb-4a3c-92ae-acb2d5352175\})|(\{388f6d65-4a1b-43ac-b791-387882c30599\})|(\{0575cabd-38f3-4964-bdc3-0141a2f062e9\})|(\{927e4189-4f56-437e-a0d4-5e232612b5c7\})|(\{7277d7cf-c598-420b-ab6e-ab066e1e2fdd\})|(\{67775ec2-c879-438b-9409-89fba7ffc684\})|(\{397386d2-bb76-4b69-8121-86fad15c5216\})|(\{bd7f03dc-b362-4744-b118-43ab916205f9\})|(\{c133fb29-c967-4aec-953a-4974e8cbdb26\})|(\{cc94c8a7-efa3-435c-91fe-ca305f70e39d\})|(\{cfd2ff68-6579-4448-8a26-561bdb63877c\})|(\{d00f0050-a66c-49fc-9236-1498d4d29f67\})|(\{daa287a2-5916-413e-9b61-52c00b5aa061\})|(\{dcfac76f-2fd2-4477-9a60-22d167cabcb4\})|(\{dd1bbcf4-bff3-4f15-8a2c-3d52ce987f70\})|(\{ddb546b5-6490-4af5-8813-8e701bc06e26\})|(\{ead6848b-4bd6-4f9a-93bd-b8460c6f6973\})|(\{eb8f7a97-ffb0-40f1-9321-5ab1de884f1c\})|(\{ec3e8a3d-df39-4f84-ab31-dae369a225e4\})|(\{ef986f55-2dc9-4e39-8c87-618cf4fe5e69\})|(\{f8b4b601-7917-40c1-94ec-8efbbf125a46\})|(\{f8bc456c-0fb4-4d5d-a85f-dfeb25459e76\})|(\{f0458469-cc09-407e-a891-be8606553341\})|(\{fa73622c-8b41-45b8-9d93-6d66e7633765\})|(@loveroms)|(loveroms-ash1280@jetpack)|(searchdimension@gmail\.com))$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="d2da9c45-59f8-4257-9d7e-07c4fa5de958" id="{a4491aab-e273-4bc3-b45e-a7b9b9414a5f}">
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
