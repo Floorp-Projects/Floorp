@@ -66,9 +66,20 @@ var global = this;
   }
 
   function onResize() {
-    const { width, height } = content.screen;
-    debug(`EMIT RESIZE: ${width} x ${height}`);
+    // Send both a content-resize event and a viewport-resize event, since both
+    // may have changed.
+    let { width, height } = content.screen;
+    debug(`EMIT CONTENTRESIZE: ${width} x ${height}`);
     sendAsyncMessage("ResponsiveMode:OnContentResize", {
+      width,
+      height,
+    });
+
+    const zoom = content.windowUtils.getResolution();
+    width = content.innerWidth * zoom;
+    height = content.innerHeight * zoom;
+    debug(`EMIT RESIZEVIEWPORT: ${width} x ${height}`);
+    sendAsyncMessage("ResponsiveMode:OnResizeViewport", {
       width,
       height,
     });
