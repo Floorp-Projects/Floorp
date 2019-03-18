@@ -75,6 +75,14 @@ class nsCSSPropertyIDSet {
     return COMPOSITOR_ANIMATABLE_PROPERTY_LIST_LENGTH;
   }
 
+  static constexpr size_t CompositorAnimatableDisplayItemCount() {
+    // We have 3 individual transforms, and they also use
+    // DisplayItemType::TYPE_TRANSFORM.
+    // TODO: Bug 1429305: In order to support motion path transoform, we have
+    // to update this count.
+    return COMPOSITOR_ANIMATABLE_PROPERTY_LIST_LENGTH - 3;
+  }
+
   static constexpr nsCSSPropertyIDSet TransformLikeProperties() {
     // FIXME: Bug 1186329: Add motion-path transform properties.
     return nsCSSPropertyIDSet{eCSSProperty_transform, eCSSProperty_translate,
