@@ -667,6 +667,16 @@ bool nsLayoutUtils::AsyncPanZoomEnabled(nsIFrame* aFrame) {
   return widget->AsyncPanZoomEnabled();
 }
 
+bool nsLayoutUtils::AllowZoomingForDocument(
+    const mozilla::dom::Document* aDocument) {
+  // True if we allow zooming for all documents on this platform, or if we are
+  // in RDM and handling meta viewports, which force zoom under some
+  // circumstances.
+  return gfxPrefs::APZAllowZooming() ||
+         (aDocument && aDocument->InRDMPane() &&
+          nsLayoutUtils::ShouldHandleMetaViewport(aDocument));
+}
+
 float nsLayoutUtils::GetCurrentAPZResolutionScale(nsIPresShell* aShell) {
   return aShell ? aShell->GetCumulativeNonRootScaleResolution() : 1.0;
 }
@@ -9783,7 +9793,7 @@ void nsLayoutUtils::ComputeSystemFont(nsFont* aSystemFont,
 }
 
 /* static */
-bool nsLayoutUtils::ShouldHandleMetaViewport(Document* aDocument) {
+bool nsLayoutUtils::ShouldHandleMetaViewport(const Document* aDocument) {
   auto metaViewportOverride = nsIDocShell::META_VIEWPORT_OVERRIDE_NONE;
   if (aDocument) {
     if (nsIDocShell* docShell = aDocument->GetDocShell()) {
