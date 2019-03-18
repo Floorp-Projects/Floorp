@@ -312,7 +312,7 @@ def make_task_worker(config, jobs):
 
         if should_use_artifact_map(platform, config.params['project']):
             upstream_artifacts = generate_beetmover_upstream_artifacts(
-                job, platform, locale
+                config, job, platform, locale
             )
         else:
             upstream_artifacts = generate_upstream_artifacts(

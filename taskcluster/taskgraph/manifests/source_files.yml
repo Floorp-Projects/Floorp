@@ -1,8 +1,4 @@
 ---
-metadata:
-  description: Source file archives
-  name: Beetmover source archive manifest
-  owner: release@mozilla.com
 s3_bucket_paths:
   by-platform:
     fennec-source:
@@ -36,6 +32,7 @@ default: &default
 mapping:
   source.tar.xz:
     <<: *default
+    description: "Source file with the in-tree code archived"
     pretty_name:
       by-platform:
         firefox-source: firefox-${version}.source.tar.xz
@@ -43,11 +40,12 @@ mapping:
         fennec-source: fennec-${version}.source.tar.xz
     checksums_path:
       by-platform:
-        firefox-source: firefox-${version}.source.tar.xz
-        devedition-source: firefox-${version}.source.tar.xz
-        fennec-source: fennec-${version}.source.tar.xz
+        firefox-source: source/firefox-${version}.source.tar.xz
+        devedition-source: source/firefox-${version}.source.tar.xz
+        fennec-source: source/fennec-${version}.source.tar.xz
   source.tar.xz.asc:
     <<: *default
+    description: "Detached signature for the source file"
     pretty_name:
       by-platform:
         firefox-source: firefox-${version}.source.tar.xz.asc
@@ -55,6 +53,6 @@ mapping:
         fennec-source: fennec-${version}.source.tar.xz.asc
     checksums_path:
       by-platform:
-        firefox-source: firefox-${version}.source.tar.xz.asc
-        devedition-source: firefox-${version}.source.tar.xz.asc
-        fennec-source: fennec-${version}.source.tar.xz.asc
+        firefox-source: source/firefox-${version}.source.tar.xz.asc
+        devedition-source: source/firefox-${version}.source.tar.xz.asc
+        fennec-source: source/fennec-${version}.source.tar.xz.asc

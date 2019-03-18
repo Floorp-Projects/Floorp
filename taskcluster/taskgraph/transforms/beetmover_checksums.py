@@ -147,7 +147,7 @@ def make_beetmover_checksums_worker(config, jobs):
 
         if should_use_artifact_map(platform, config.params['project']):
             upstream_artifacts = generate_beetmover_upstream_artifacts(
-                job, platform, locale
+                config, job, platform, locale
             )
             worker['artifact-map'] = generate_beetmover_artifact_map(
                 config, job, platform=platform, locale=locale)
