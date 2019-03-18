@@ -2321,9 +2321,12 @@ class nsLayoutUtils {
                                     const nsCSSPropertyIDSet& aPropertySet);
 
   /**
-   * Returns all effective animated CSS properties on |aFrame|. Properties that
-   * can be animated on the compositor but which are overridden by !important
-   * rules are not returned.
+   * Returns all effective animated CSS properties on |aStyleFrame| and its
+   * corresponding primary frame (for content that makes this distinction,
+   * notable display:table content) that can be animated on the compositor.
+   *
+   * Properties that can be animated on the compositor but which are overridden
+   * by !important rules are not returned.
    *
    * Unlike HasEffectiveAnimation, however, this does not check the set of
    * transform-like properties to ensure that if any such properties are
@@ -2331,7 +2334,7 @@ class nsLayoutUtils {
    * not run on the compositor (see bug 1534884).
    */
   static nsCSSPropertyIDSet GetAnimationPropertiesForCompositor(
-      const nsIFrame* aFrame);
+      const nsIFrame* aStyleFrame);
 
   /**
    * Checks if off-main-thread animations are enabled.

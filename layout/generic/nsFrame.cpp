@@ -639,7 +639,10 @@ void nsFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
     mMayHaveOpacityAnimation = aPrevInFlow->MayHaveOpacityAnimation();
     mMayHaveTransformAnimation = aPrevInFlow->MayHaveTransformAnimation();
   } else if (mContent) {
-    EffectSet* effectSet = EffectSet::GetEffectSet(this);
+    // Even for mMayHaveTransformAnimation we store the flag on the _style_
+    // frame, despite the fact that the transform is applied to the _primary_
+    // frame since we don't have access to the primary frame at this point.
+    EffectSet* effectSet = EffectSet::GetEffectSetForStyleFrame(this);
     if (effectSet) {
       mMayHaveOpacityAnimation = effectSet->MayHaveOpacityAnimation();
       mMayHaveTransformAnimation = effectSet->MayHaveTransformAnimation();
@@ -769,7 +772,10 @@ void nsFrame::DestroyFrom(nsIFrame* aDestructRoot,
   }
 
   if (HasCSSAnimations() || HasCSSTransitions() ||
-      EffectSet::GetEffectSet(this)) {
+      // It's fine to look up the style frame here since if we're destroying the
+      // frames for display:table content we should be destroying both wrapper
+      // and inner frame.
+      EffectSet::GetEffectSetForStyleFrame(this)) {
     // If no new frame for this element is created by the end of the
     // restyling process, stop animations and transitions for this frame
     RestyleManager::AnimationsWithDestroyedFrame* adf =
