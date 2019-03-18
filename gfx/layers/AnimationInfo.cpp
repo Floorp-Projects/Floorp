@@ -8,6 +8,7 @@
 #include "mozilla/LayerAnimationInfo.h"
 #include "mozilla/layers/WebRenderLayerManager.h"
 #include "mozilla/layers/AnimationHelper.h"
+#include "mozilla/layers/CompositorThread.h"
 #include "mozilla/dom/Animation.h"
 #include "nsIContent.h"
 #include "PuppetWidget.h"
@@ -26,6 +27,7 @@ void AnimationInfo::EnsureAnimationsId() {
 }
 
 Animation* AnimationInfo::AddAnimation() {
+  MOZ_ASSERT(!CompositorThreadHolder::IsInCompositorThread());
   // Here generates a new id when the first animation is added and
   // this id is used to represent the animations in this layer.
   EnsureAnimationsId();
@@ -40,6 +42,7 @@ Animation* AnimationInfo::AddAnimation() {
 }
 
 Animation* AnimationInfo::AddAnimationForNextTransaction() {
+  MOZ_ASSERT(!CompositorThreadHolder::IsInCompositorThread());
   MOZ_ASSERT(mPendingAnimations,
              "should have called ClearAnimationsForNextTransaction first");
 
@@ -51,12 +54,12 @@ Animation* AnimationInfo::AddAnimationForNextTransaction() {
 void AnimationInfo::ClearAnimations() {
   mPendingAnimations = nullptr;
 
-  if (mAnimations.IsEmpty() && mAnimationData.IsEmpty()) {
+  if (mAnimations.IsEmpty() && mPropertyAnimationGroups.IsEmpty()) {
     return;
   }
 
   mAnimations.Clear();
-  mAnimationData.Clear();
+  mPropertyAnimationGroups.Clear();
 
   mMutated = true;
 }
@@ -72,11 +75,9 @@ void AnimationInfo::ClearAnimationsForNextTransaction() {
 
 void AnimationInfo::SetCompositorAnimations(
     const CompositorAnimations& aCompositorAnimations) {
-  mAnimations = aCompositorAnimations.animations();
   mCompositorAnimationsId = aCompositorAnimations.id();
-  mAnimationData.Clear();
-  AnimationHelper::SetAnimations(mAnimations, mAnimationData,
-                                 mBaseAnimationStyle);
+  mPropertyAnimationGroups =
+      AnimationHelper::ExtractAnimations(aCompositorAnimations.animations());
 }
 
 bool AnimationInfo::StartPendingAnimations(const TimeStamp& aReadyTime) {

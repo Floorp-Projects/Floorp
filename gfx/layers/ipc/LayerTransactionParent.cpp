@@ -537,7 +537,7 @@ bool LayerTransactionParent::SetLayerAttributes(
   // Clean up the Animations by id in the CompositorAnimationStorage
   // if there are no active animations on the layer
   if (mAnimStorage && layer->GetCompositorAnimationsId() &&
-      layer->GetAnimations().IsEmpty()) {
+      layer->GetPropertyAnimationGroups().IsEmpty()) {
     mAnimStorage->ClearById(layer->GetCompositorAnimationsId());
   }
   if (common.scrollMetadata() != layer->GetAllScrollMetadata()) {
@@ -722,18 +722,18 @@ mozilla::ipc::IPCResult LayerTransactionParent::RecvGetTransform(
   float scale = 1;
   Point3D scaledOrigin;
   Point3D transformOrigin;
-  for (uint32_t i = 0; i < layer->GetAnimations().Length(); i++) {
-    if (layer->GetAnimations()[i].data().type() ==
-        AnimationData::TTransformData) {
-      const TransformData& data =
-          layer->GetAnimations()[i].data().get_TransformData();
-      scale = data.appUnitsPerDevPixel();
-      scaledOrigin = Point3D(
-          NS_round(NSAppUnitsToFloatPixels(data.origin().x, scale)),
-          NS_round(NSAppUnitsToFloatPixels(data.origin().y, scale)), 0.0f);
-      transformOrigin = data.transformOrigin();
-      break;
+  for (const PropertyAnimationGroup& group :
+       layer->GetPropertyAnimationGroups()) {
+    if (group.mAnimationData.type() != AnimationData::TTransformData) {
+      continue;
     }
+    const TransformData& data = group.mAnimationData.get_TransformData();
+    scale = data.appUnitsPerDevPixel();
+    scaledOrigin = Point3D(
+        NS_round(NSAppUnitsToFloatPixels(data.origin().x, scale)),
+        NS_round(NSAppUnitsToFloatPixels(data.origin().y, scale)), 0.0f);
+    transformOrigin = data.transformOrigin();
+    break;
   }
 
   // If our parent isn't a perspective layer, then the offset into reference

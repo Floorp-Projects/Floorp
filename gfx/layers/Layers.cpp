@@ -763,10 +763,6 @@ bool Layer::GetVisibleRegionRelativeToRootLayer(nsIntRegion& aResult,
   return true;
 }
 
-InfallibleTArray<AnimData>& Layer::GetAnimationData() {
-  return mAnimationInfo.GetAnimationData();
-}
-
 Maybe<ParentLayerIntRect> Layer::GetCombinedClipRect() const {
   Maybe<ParentLayerIntRect> clip = GetClipRect();
 
@@ -1773,6 +1769,12 @@ void Layer::PrintInfo(std::stringstream& aStream, const char* aPrefix) {
       AppendToString(aStream, mScrollMetadata[i], "", "]");
     }
   }
+  // FIXME: On the compositor thread, we don't set mAnimationInfo::mAnimations,
+  // All animations are transformed by AnimationHelper::ExtractAnimations() into
+  // mAnimationInfo.mPropertyAnimationGroups, instead. So if we want to check
+  // if layer trees are properly synced up across processes, we should dump
+  // mAnimationInfo.mPropertyAnimationGroups for the compositor thread.
+  // (See AnimationInfo.h for more details.)
   if (!mAnimationInfo.GetAnimations().IsEmpty()) {
     aStream << nsPrintfCString(" [%d animations with id=%" PRIu64 " ]",
                                (int)mAnimationInfo.GetAnimations().Length(),
