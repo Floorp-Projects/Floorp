@@ -42,11 +42,14 @@ add_task(async function changeSelectionUsingKeyboard() {
   await BrowserTestUtils.switchTab(gBrowser, tab3);
   info("Move focus to location bar using the keyboard");
   await synthesizeKeyAndWaitForFocus(gURLBar, "l", {accelKey: true});
-  ok(document.activeElement, "urlbar should be focused");
+  is(document.activeElement, gURLBar.inputField, "urlbar should be focused");
 
   info("Move focus to the selected tab using the keyboard");
   let identityBox = document.querySelector("#identity-box");
   await synthesizeKeyAndWaitForFocus(identityBox, "VK_TAB", {shiftKey: true});
+  is(document.activeElement, identityBox, "identity box should be focused");
+  await synthesizeKeyAndWaitForFocus(document.getElementById("reload-button"),
+    "VK_TAB", {shiftKey: true});
   await synthesizeKeyAndWaitForFocus(tab3, "VK_TAB", {shiftKey: true});
   is(document.activeElement, tab3, "Tab3 should be focused");
 

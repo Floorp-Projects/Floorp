@@ -14,7 +14,7 @@ namespace TestCRT {
 
 // The return from strcmp etc is only defined to be postive, zero or
 // negative. The magnitude of a non-zero return is irrelevant.
-int sign(int val) {
+static int sign(int val) {
   if (val == 0) {
     return 0;
   } else {

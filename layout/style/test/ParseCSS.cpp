@@ -57,7 +57,7 @@ int main(int argc, char **argv) {
   if (argc < 2) {
     fprintf(stderr, "%s [FILE]...\n", argv[0]);
   }
-  nsresult rv = NS_InitXPCOM2(nullptr, nullptr, nullptr);
+  nsresult rv = NS_InitXPCOM(nullptr, nullptr, nullptr);
   if (NS_FAILED(rv)) return (int)rv;
 
   int res = 0;

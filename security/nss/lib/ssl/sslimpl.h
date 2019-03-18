@@ -1779,6 +1779,12 @@ SECStatus SSLExp_HkdfExpandLabel(PRUint16 version, PRUint16 cipherSuite, PK11Sym
                                  const PRUint8 *hsHash, unsigned int hsHashLen,
                                  const char *label, unsigned int labelLen,
                                  PK11SymKey **key);
+SECStatus
+SSLExp_HkdfExpandLabelWithMech(PRUint16 version, PRUint16 cipherSuite, PK11SymKey *prk,
+                               const PRUint8 *hsHash, unsigned int hsHashLen,
+                               const char *label, unsigned int labelLen,
+                               CK_MECHANISM_TYPE mech, unsigned int keySize,
+                               PK11SymKey **keyp);
 
 SEC_END_PROTOS
 

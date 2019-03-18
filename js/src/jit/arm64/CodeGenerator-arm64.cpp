@@ -318,7 +318,9 @@ void CodeGenerator::visitMulI(LMulI* ins) {
         masm.Mov(destreg32, wzr);
         return;  // Avoid overflow check.
       case 1:
-        // nop
+        if (destreg != lhsreg) {
+          masm.Mov(destreg32, lhsreg32);
+        }
         return;  // Avoid overflow check.
       case 2:
         masm.Adds(destreg32, lhsreg32, Operand(lhsreg32));

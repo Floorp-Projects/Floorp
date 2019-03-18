@@ -29,9 +29,9 @@ struct IPCServiceWorkerRegistrationDescriptor
 
   ServiceWorkerUpdateViaCache updateViaCache;
 
-  OptionalIPCServiceWorkerDescriptor installing;
-  OptionalIPCServiceWorkerDescriptor waiting;
-  OptionalIPCServiceWorkerDescriptor active;
+  IPCServiceWorkerDescriptor? installing;
+  IPCServiceWorkerDescriptor? waiting;
+  IPCServiceWorkerDescriptor? active;
 };
 
 union IPCServiceWorkerRegistrationDescriptorOrCopyableErrorResult

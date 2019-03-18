@@ -1372,7 +1372,9 @@ class RTCPeerConnection {
     if (this._remoteIdp) {
         this._remoteIdp.close();
     }
-    this._transceivers.forEach(t => t.setStopped());
+    if (!this._suppressEvents) {
+      this._transceivers.forEach(t => t.setStopped());
+    }
     this._impl.close();
     this._suppressEvents = true;
     delete this._pc;

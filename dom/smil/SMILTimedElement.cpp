@@ -1713,7 +1713,7 @@ SMILTimeValue SMILTimedElement::CalcActiveEnd(const SMILTimeValue& aBegin,
 SMILTimeValue SMILTimedElement::GetRepeatDuration() const {
   SMILTimeValue multipliedDuration;
   if (mRepeatCount.IsDefinite() && mSimpleDur.IsDefinite()) {
-    if (mRepeatCount * double(mSimpleDur.GetMillis()) <=
+    if (mRepeatCount * double(mSimpleDur.GetMillis()) <
         std::numeric_limits<SMILTime>::max()) {
       multipliedDuration.SetMillis(
           SMILTime(mRepeatCount * mSimpleDur.GetMillis()));

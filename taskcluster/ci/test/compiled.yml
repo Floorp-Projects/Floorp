@@ -83,6 +83,7 @@ jittest:
             windows.*: 1
             windows10-64-ccov/debug: 6
             macosx.*: 1
+            macosx64/debug: 3
             macosx64-ccov/debug: 4
             android-em-4.3-arm7-api-15/debug: 20
             android.*: 10

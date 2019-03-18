@@ -12,13 +12,12 @@ import android.content.Intent;
 import android.os.Build;
 import android.view.View;
 import android.view.Window;
-import android.view.WindowManager;
 
 public class ActivityUtils {
     private ActivityUtils() {
     }
 
-    public static void setFullScreen(Activity activity, boolean fullscreen) {
+    public static void setFullScreen(final Activity activity, final boolean fullscreen) {
         // Hide/show the system notification bar
         Window window = activity.getWindow();
 
@@ -60,7 +59,7 @@ public class ActivityUtils {
     /**
      * Finish this activity and launch the default home screen activity.
      */
-    public static void goToHomeScreen(Context context) {
+    public static void goToHomeScreen(final Context context) {
         Intent intent = new Intent(Intent.ACTION_MAIN);
 
         intent.addCategory(Intent.CATEGORY_HOME);
@@ -68,22 +67,22 @@ public class ActivityUtils {
         context.startActivity(intent);
     }
 
-    public static Activity getActivityFromContext(Context context) {
+    public static Activity getActivityFromContext(final Context context) {
         while (context instanceof ContextWrapper) {
             if (context instanceof Activity) {
                 return (Activity) context;
             }
-            context = ((ContextWrapper) context).getBaseContext();
         }
         return null;
     }
 
-    public static void preventDisplayStatusbar(final Activity activity, boolean registering) {
+    public static void preventDisplayStatusbar(final Activity activity,
+                                               final boolean registering) {
         final View decorView = activity.getWindow().getDecorView();
         if (registering) {
             decorView.setOnSystemUiVisibilityChangeListener(new View.OnSystemUiVisibilityChangeListener() {
                 @Override
-                public void onSystemUiVisibilityChange(int visibility) {
+                public void onSystemUiVisibilityChange(final int visibility) {
                     if ((visibility & View.SYSTEM_UI_FLAG_FULLSCREEN) == 0) {
                         setFullScreen(activity, true);
                     }

@@ -24,8 +24,8 @@ fails-if(Android) skip-if(Android&&AndroidVersion=='18') == poster-2.html poster
 random-if(Android) == poster-3.html poster-ref-black140x100.html
 == poster-4.html poster-ref-black140x100.html
 random-if(Android) == poster-5.html poster-ref-black140x100.html
-fails-if(Android&&!release_or_beta) == poster-6.html poster-ref-black140x100.html
-fails-if(Android&&!release_or_beta) == poster-7.html poster-ref-red140x100.html
+fails-if(Android) == poster-6.html poster-ref-black140x100.html
+fails-if(Android) == poster-7.html poster-ref-red140x100.html
 fuzzy-if(Android,0-2,0-14000) == poster-8.html poster-ref-black140x100.html
 random == poster-10.html poster-ref-blue125x100.html
 random == poster-11.html poster-ref-blue140x100.html

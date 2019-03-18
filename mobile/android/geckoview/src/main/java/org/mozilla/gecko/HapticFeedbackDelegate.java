@@ -5,8 +5,6 @@
 
 package org.mozilla.gecko;
 
-import android.view.HapticFeedbackConstants;
-
 /**
  * A <code>HapticFeedbackDelegate</code> is responsible for performing haptic feedback.
  */

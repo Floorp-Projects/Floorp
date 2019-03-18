@@ -5406,7 +5406,7 @@ class DatabaseOperationBase : public Runnable,
 
   static nsresult DeleteObjectStoreDataTableRowsWithIndexes(
       DatabaseConnection* aConnection, const int64_t aObjectStoreId,
-      const OptionalKeyRange& aKeyRange);
+      const Maybe<SerializedKeyRange>& aKeyRange);
 
   static nsresult UpdateIndexValues(
       DatabaseConnection* aConnection, const int64_t aObjectStoreId,
@@ -6226,7 +6226,7 @@ class TransactionBase {
 
   bool VerifyRequestParams(const ObjectStoreAddPutParams& aParams) const;
 
-  bool VerifyRequestParams(const OptionalKeyRange& aKeyRange) const;
+  bool VerifyRequestParams(const Maybe<SerializedKeyRange>& aKeyRange) const;
 
   void CommitOrAbort();
 };
@@ -6600,7 +6600,7 @@ class FactoryOp : public DatabaseOperationBase,
   nsresult SendVersionChangeMessages(DatabaseActorInfo* aDatabaseActorInfo,
                                      Database* aOpeningDatabase,
                                      uint64_t aOldVersion,
-                                     const NullableVersion& aNewVersion);
+                                     const Maybe<uint64_t>& aNewVersion);
 
   // Methods that subclasses must implement.
   virtual nsresult DatabaseOpen() = 0;
@@ -7247,7 +7247,7 @@ class ObjectStoreGetRequestOp final : public NormalTransactionOp {
 
   const uint32_t mObjectStoreId;
   RefPtr<Database> mDatabase;
-  const OptionalKeyRange mOptionalKeyRange;
+  const Maybe<SerializedKeyRange> mOptionalKeyRange;
   AutoTArray<StructuredCloneReadInfo, 1> mResponse;
   PBackgroundParent* mBackgroundParent;
   uint32_t mPreprocessInfoCount;
@@ -7277,7 +7277,7 @@ class ObjectStoreGetKeyRequestOp final : public NormalTransactionOp {
   friend class TransactionBase;
 
   const uint32_t mObjectStoreId;
-  const OptionalKeyRange mOptionalKeyRange;
+  const Maybe<SerializedKeyRange> mOptionalKeyRange;
   const uint32_t mLimit;
   const bool mGetAll;
   FallibleTArray<Key> mResponse;
@@ -7378,7 +7378,7 @@ class IndexGetRequestOp final : public IndexRequestOpBase {
   friend class TransactionBase;
 
   RefPtr<Database> mDatabase;
-  const OptionalKeyRange mOptionalKeyRange;
+  const Maybe<SerializedKeyRange> mOptionalKeyRange;
   AutoTArray<StructuredCloneReadInfo, 1> mResponse;
   PBackgroundParent* mBackgroundParent;
   const uint32_t mLimit;
@@ -7399,7 +7399,7 @@ class IndexGetRequestOp final : public IndexRequestOpBase {
 class IndexGetKeyRequestOp final : public IndexRequestOpBase {
   friend class TransactionBase;
 
-  const OptionalKeyRange mOptionalKeyRange;
+  const Maybe<SerializedKeyRange> mOptionalKeyRange;
   AutoTArray<Key, 1> mResponse;
   const uint32_t mLimit;
   const bool mGetAll;
@@ -7555,11 +7555,11 @@ class Cursor::CursorOpBase : public TransactionDatabaseOperationBase {
 class Cursor::OpenOp final : public Cursor::CursorOpBase {
   friend class Cursor;
 
-  const OptionalKeyRange mOptionalKeyRange;
+  const Maybe<SerializedKeyRange> mOptionalKeyRange;
 
  private:
   // Only created by Cursor.
-  OpenOp(Cursor* aCursor, const OptionalKeyRange& aOptionalKeyRange)
+  OpenOp(Cursor* aCursor, const Maybe<SerializedKeyRange>& aOptionalKeyRange)
       : CursorOpBase(aCursor), mOptionalKeyRange(aOptionalKeyRange) {}
 
   // Reference counted.
@@ -13793,23 +13793,14 @@ bool TransactionBase::VerifyRequestParams(
 }
 
 bool TransactionBase::VerifyRequestParams(
-    const OptionalKeyRange& aParams) const {
+    const Maybe<SerializedKeyRange>& aParams) const {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(aParams.type() != OptionalKeyRange::T__None);
 
-  switch (aParams.type()) {
-    case OptionalKeyRange::TSerializedKeyRange:
-      if (NS_WARN_IF(!VerifyRequestParams(aParams.get_SerializedKeyRange()))) {
-        ASSERT_UNLESS_FUZZING();
-        return false;
-      }
-      break;
-
-    case OptionalKeyRange::Tvoid_t:
-      break;
-
-    default:
-      MOZ_CRASH("Should never get here!");
+  if (aParams.isSome()) {
+    if (NS_WARN_IF(!VerifyRequestParams(aParams.ref()))) {
+      ASSERT_UNLESS_FUZZING();
+      return false;
+    }
   }
 
   return true;
@@ -15041,7 +15032,7 @@ bool Cursor::Start(const OpenCursorParams& aParams) {
     return false;
   }
 
-  const OptionalKeyRange& optionalKeyRange =
+  const Maybe<SerializedKeyRange>& optionalKeyRange =
       mType == OpenCursorParams::TObjectStoreOpenCursorParams
           ? aParams.get_ObjectStoreOpenCursorParams().optionalKeyRange()
           : mType == OpenCursorParams::TObjectStoreOpenKeyCursorParams
@@ -18530,7 +18521,7 @@ nsresult DatabaseOperationBase::DeleteIndexDataTableRows(
 // static
 nsresult DatabaseOperationBase::DeleteObjectStoreDataTableRowsWithIndexes(
     DatabaseConnection* aConnection, const int64_t aObjectStoreId,
-    const OptionalKeyRange& aKeyRange) {
+    const Maybe<SerializedKeyRange>& aKeyRange) {
   MOZ_ASSERT(aConnection);
   aConnection->AssertIsOnConnectionThread();
   MOZ_ASSERT(aObjectStoreId);
@@ -18548,9 +18539,7 @@ nsresult DatabaseOperationBase::DeleteObjectStoreDataTableRowsWithIndexes(
   AUTO_PROFILER_LABEL(
       "DatabaseOperationBase::DeleteObjectStoreDataTableRowsWithIndexes", DOM);
 
-  const bool singleRowOnly =
-      aKeyRange.type() == OptionalKeyRange::TSerializedKeyRange &&
-      aKeyRange.get_SerializedKeyRange().isOnly();
+  const bool singleRowOnly = aKeyRange.isSome() && aKeyRange.ref().isOnly();
 
   NS_NAMED_LITERAL_CSTRING(objectStoreIdString, "object_store_id");
   NS_NAMED_LITERAL_CSTRING(keyString, "key");
@@ -18570,7 +18559,7 @@ nsresult DatabaseOperationBase::DeleteObjectStoreDataTableRowsWithIndexes(
       return rv;
     }
 
-    objectStoreKey = aKeyRange.get_SerializedKeyRange().lower();
+    objectStoreKey = aKeyRange.ref().lower();
 
     rv = objectStoreKey.BindToStatement(selectStmt, keyString);
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -18578,9 +18567,8 @@ nsresult DatabaseOperationBase::DeleteObjectStoreDataTableRowsWithIndexes(
     }
   } else {
     nsAutoCString keyRangeClause;
-    if (aKeyRange.type() == OptionalKeyRange::TSerializedKeyRange) {
-      GetBindingClauseForKeyRange(aKeyRange.get_SerializedKeyRange(), keyString,
-                                  keyRangeClause);
+    if (aKeyRange.isSome()) {
+      GetBindingClauseForKeyRange(aKeyRange.ref(), keyString, keyRangeClause);
     }
 
     rv = aConnection->GetCachedStatement(
@@ -18593,8 +18581,8 @@ nsresult DatabaseOperationBase::DeleteObjectStoreDataTableRowsWithIndexes(
       return rv;
     }
 
-    if (aKeyRange.type() == OptionalKeyRange::TSerializedKeyRange) {
-      rv = BindKeyRangeToStatement(aKeyRange, selectStmt);
+    if (aKeyRange.isSome()) {
+      rv = BindKeyRangeToStatement(aKeyRange.ref(), selectStmt);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -19394,7 +19382,7 @@ nsresult FactoryOp::CheckPermission(
 
 nsresult FactoryOp::SendVersionChangeMessages(
     DatabaseActorInfo* aDatabaseActorInfo, Database* aOpeningDatabase,
-    uint64_t aOldVersion, const NullableVersion& aNewVersion) {
+    uint64_t aOldVersion, const Maybe<uint64_t>& aNewVersion) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aDatabaseActorInfo);
   MOZ_ASSERT(mState == State::BeginVersionChange);
@@ -20426,7 +20414,7 @@ nsresult OpenDatabaseOp::BeginVersionChange() {
   MOZ_ASSERT(info->mMetadata != mMetadata);
   mMetadata = info->mMetadata;
 
-  NullableVersion newVersion = mRequestedVersion;
+  Maybe<uint64_t> newVersion = Some(mRequestedVersion);
 
   nsresult rv = SendVersionChangeMessages(
       info, mDatabase, mMetadata->mCommonMetadata.version(), newVersion);
@@ -21185,10 +21173,8 @@ nsresult DeleteDatabaseOp::BeginVersionChange() {
   if (gLiveDatabaseHashtable->Get(mDatabaseId, &info)) {
     MOZ_ASSERT(!info->mWaitingFactoryOp);
 
-    NullableVersion newVersion = null_t();
-
     nsresult rv =
-        SendVersionChangeMessages(info, nullptr, mPreviousVersion, newVersion);
+        SendVersionChangeMessages(info, nullptr, mPreviousVersion, Nothing());
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -22437,7 +22423,7 @@ nsresult DeleteObjectStoreOp::DoDatabaseWork(DatabaseConnection* aConnection) {
 
     if (hasIndexes) {
       rv = DeleteObjectStoreDataTableRowsWithIndexes(
-          aConnection, mMetadata->mCommonMetadata.id(), void_t());
+          aConnection, mMetadata->mCommonMetadata.id(), Nothing());
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -24285,8 +24271,7 @@ ObjectStoreGetRequestOp::ObjectStoreGetRequestOp(TransactionBase* aTransaction,
       mDatabase(aTransaction->GetDatabase()),
       mOptionalKeyRange(
           aGetAll ? aParams.get_ObjectStoreGetAllParams().optionalKeyRange()
-                  : OptionalKeyRange(
-                        aParams.get_ObjectStoreGetParams().keyRange())),
+                  : Some(aParams.get_ObjectStoreGetParams().keyRange())),
       mBackgroundParent(aTransaction->GetBackgroundParent()),
       mPreprocessInfoCount(0),
       mLimit(aGetAll ? aParams.get_ObjectStoreGetAllParams().limit() : 1),
@@ -24295,8 +24280,7 @@ ObjectStoreGetRequestOp::ObjectStoreGetRequestOp(TransactionBase* aTransaction,
              aParams.type() == RequestParams::TObjectStoreGetAllParams);
   MOZ_ASSERT(mObjectStoreId);
   MOZ_ASSERT(mDatabase);
-  MOZ_ASSERT_IF(!aGetAll, mOptionalKeyRange.type() ==
-                              OptionalKeyRange::TSerializedKeyRange);
+  MOZ_ASSERT_IF(!aGetAll, mOptionalKeyRange.isSome());
   MOZ_ASSERT(mBackgroundParent);
 }
 
@@ -24339,18 +24323,16 @@ nsresult ObjectStoreGetRequestOp::DoDatabaseWork(
     DatabaseConnection* aConnection) {
   MOZ_ASSERT(aConnection);
   aConnection->AssertIsOnConnectionThread();
-  MOZ_ASSERT_IF(!mGetAll, mOptionalKeyRange.type() ==
-                              OptionalKeyRange::TSerializedKeyRange);
+  MOZ_ASSERT_IF(!mGetAll, mOptionalKeyRange.isSome());
   MOZ_ASSERT_IF(!mGetAll, mLimit == 1);
 
   AUTO_PROFILER_LABEL("ObjectStoreGetRequestOp::DoDatabaseWork", DOM);
 
-  const bool hasKeyRange =
-      mOptionalKeyRange.type() == OptionalKeyRange::TSerializedKeyRange;
+  const bool hasKeyRange = mOptionalKeyRange.isSome();
 
   nsAutoCString keyRangeClause;
   if (hasKeyRange) {
-    GetBindingClauseForKeyRange(mOptionalKeyRange.get_SerializedKeyRange(),
+    GetBindingClauseForKeyRange(mOptionalKeyRange.ref(),
                                 NS_LITERAL_CSTRING("key"), keyRangeClause);
   }
 
@@ -24379,8 +24361,7 @@ nsresult ObjectStoreGetRequestOp::DoDatabaseWork(
   }
 
   if (hasKeyRange) {
-    rv = BindKeyRangeToStatement(mOptionalKeyRange.get_SerializedKeyRange(),
-                                 stmt);
+    rv = BindKeyRangeToStatement(mOptionalKeyRange.ref(), stmt);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -24525,15 +24506,13 @@ ObjectStoreGetKeyRequestOp::ObjectStoreGetKeyRequestOp(
                   : aParams.get_ObjectStoreGetKeyParams().objectStoreId()),
       mOptionalKeyRange(
           aGetAll ? aParams.get_ObjectStoreGetAllKeysParams().optionalKeyRange()
-                  : OptionalKeyRange(
-                        aParams.get_ObjectStoreGetKeyParams().keyRange())),
+                  : Some(aParams.get_ObjectStoreGetKeyParams().keyRange())),
       mLimit(aGetAll ? aParams.get_ObjectStoreGetAllKeysParams().limit() : 1),
       mGetAll(aGetAll) {
   MOZ_ASSERT(aParams.type() == RequestParams::TObjectStoreGetKeyParams ||
              aParams.type() == RequestParams::TObjectStoreGetAllKeysParams);
   MOZ_ASSERT(mObjectStoreId);
-  MOZ_ASSERT_IF(!aGetAll, mOptionalKeyRange.type() ==
-                              OptionalKeyRange::TSerializedKeyRange);
+  MOZ_ASSERT_IF(!aGetAll, mOptionalKeyRange.isSome());
 }
 
 nsresult ObjectStoreGetKeyRequestOp::DoDatabaseWork(
@@ -24543,12 +24522,11 @@ nsresult ObjectStoreGetKeyRequestOp::DoDatabaseWork(
 
   AUTO_PROFILER_LABEL("ObjectStoreGetKeyRequestOp::DoDatabaseWork", DOM);
 
-  const bool hasKeyRange =
-      mOptionalKeyRange.type() == OptionalKeyRange::TSerializedKeyRange;
+  const bool hasKeyRange = mOptionalKeyRange.isSome();
 
   nsAutoCString keyRangeClause;
   if (hasKeyRange) {
-    GetBindingClauseForKeyRange(mOptionalKeyRange.get_SerializedKeyRange(),
+    GetBindingClauseForKeyRange(mOptionalKeyRange.ref(),
                                 NS_LITERAL_CSTRING("key"), keyRangeClause);
   }
 
@@ -24577,8 +24555,7 @@ nsresult ObjectStoreGetKeyRequestOp::DoDatabaseWork(
   }
 
   if (hasKeyRange) {
-    rv = BindKeyRangeToStatement(mOptionalKeyRange.get_SerializedKeyRange(),
-                                 stmt);
+    rv = BindKeyRangeToStatement(mOptionalKeyRange.ref(), stmt);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -24673,7 +24650,7 @@ nsresult ObjectStoreDeleteRequestOp::DoDatabaseWork(
 
   if (objectStoreHasIndexes) {
     rv = DeleteObjectStoreDataTableRowsWithIndexes(
-        aConnection, mParams.objectStoreId(), mParams.keyRange());
+        aConnection, mParams.objectStoreId(), Some(mParams.keyRange()));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -24756,7 +24733,7 @@ nsresult ObjectStoreClearRequestOp::DoDatabaseWork(
 
   if (objectStoreHasIndexes) {
     rv = DeleteObjectStoreDataTableRowsWithIndexes(
-        aConnection, mParams.objectStoreId(), void_t());
+        aConnection, mParams.objectStoreId(), Nothing());
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -24797,14 +24774,12 @@ nsresult ObjectStoreCountRequestOp::DoDatabaseWork(
 
   AUTO_PROFILER_LABEL("ObjectStoreCountRequestOp::DoDatabaseWork", DOM);
 
-  const bool hasKeyRange = mParams.optionalKeyRange().type() ==
-                           OptionalKeyRange::TSerializedKeyRange;
+  const bool hasKeyRange = mParams.optionalKeyRange().isSome();
 
   nsAutoCString keyRangeClause;
   if (hasKeyRange) {
-    GetBindingClauseForKeyRange(
-        mParams.optionalKeyRange().get_SerializedKeyRange(),
-        NS_LITERAL_CSTRING("key"), keyRangeClause);
+    GetBindingClauseForKeyRange(mParams.optionalKeyRange().ref(),
+                                NS_LITERAL_CSTRING("key"), keyRangeClause);
   }
 
   nsCString query = NS_LITERAL_CSTRING(
@@ -24826,8 +24801,7 @@ nsresult ObjectStoreCountRequestOp::DoDatabaseWork(
   }
 
   if (hasKeyRange) {
-    rv = BindKeyRangeToStatement(
-        mParams.optionalKeyRange().get_SerializedKeyRange(), stmt);
+    rv = BindKeyRangeToStatement(mParams.optionalKeyRange().ref(), stmt);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -24926,31 +24900,28 @@ IndexGetRequestOp::IndexGetRequestOp(TransactionBase* aTransaction,
                                      const RequestParams& aParams, bool aGetAll)
     : IndexRequestOpBase(aTransaction, aParams),
       mDatabase(aTransaction->GetDatabase()),
-      mOptionalKeyRange(
-          aGetAll ? aParams.get_IndexGetAllParams().optionalKeyRange()
-                  : OptionalKeyRange(aParams.get_IndexGetParams().keyRange())),
+      mOptionalKeyRange(aGetAll
+                            ? aParams.get_IndexGetAllParams().optionalKeyRange()
+                            : Some(aParams.get_IndexGetParams().keyRange())),
       mBackgroundParent(aTransaction->GetBackgroundParent()),
       mLimit(aGetAll ? aParams.get_IndexGetAllParams().limit() : 1),
       mGetAll(aGetAll) {
   MOZ_ASSERT(aParams.type() == RequestParams::TIndexGetParams ||
              aParams.type() == RequestParams::TIndexGetAllParams);
   MOZ_ASSERT(mDatabase);
-  MOZ_ASSERT_IF(!aGetAll, mOptionalKeyRange.type() ==
-                              OptionalKeyRange::TSerializedKeyRange);
+  MOZ_ASSERT_IF(!aGetAll, mOptionalKeyRange.isSome());
   MOZ_ASSERT(mBackgroundParent);
 }
 
 nsresult IndexGetRequestOp::DoDatabaseWork(DatabaseConnection* aConnection) {
   MOZ_ASSERT(aConnection);
   aConnection->AssertIsOnConnectionThread();
-  MOZ_ASSERT_IF(!mGetAll, mOptionalKeyRange.type() ==
-                              OptionalKeyRange::TSerializedKeyRange);
+  MOZ_ASSERT_IF(!mGetAll, mOptionalKeyRange.isSome());
   MOZ_ASSERT_IF(!mGetAll, mLimit == 1);
 
   AUTO_PROFILER_LABEL("IndexGetRequestOp::DoDatabaseWork", DOM);
 
-  const bool hasKeyRange =
-      mOptionalKeyRange.type() == OptionalKeyRange::TSerializedKeyRange;
+  const bool hasKeyRange = mOptionalKeyRange.isSome();
 
   nsCString indexTable;
   if (mMetadata->mCommonMetadata.unique()) {
@@ -24961,7 +24932,7 @@ nsresult IndexGetRequestOp::DoDatabaseWork(DatabaseConnection* aConnection) {
 
   nsAutoCString keyRangeClause;
   if (hasKeyRange) {
-    GetBindingClauseForKeyRange(mOptionalKeyRange.get_SerializedKeyRange(),
+    GetBindingClauseForKeyRange(mOptionalKeyRange.ref(),
                                 NS_LITERAL_CSTRING("value"), keyRangeClause);
   }
 
@@ -24998,8 +24969,7 @@ nsresult IndexGetRequestOp::DoDatabaseWork(DatabaseConnection* aConnection) {
   }
 
   if (hasKeyRange) {
-    rv = BindKeyRangeToStatement(mOptionalKeyRange.get_SerializedKeyRange(),
-                                 stmt);
+    rv = BindKeyRangeToStatement(mOptionalKeyRange.ref(), stmt);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -25114,28 +25084,24 @@ IndexGetKeyRequestOp::IndexGetKeyRequestOp(TransactionBase* aTransaction,
                                            bool aGetAll)
     : IndexRequestOpBase(aTransaction, aParams),
       mOptionalKeyRange(
-          aGetAll
-              ? aParams.get_IndexGetAllKeysParams().optionalKeyRange()
-              : OptionalKeyRange(aParams.get_IndexGetKeyParams().keyRange())),
+          aGetAll ? aParams.get_IndexGetAllKeysParams().optionalKeyRange()
+                  : Some(aParams.get_IndexGetKeyParams().keyRange())),
       mLimit(aGetAll ? aParams.get_IndexGetAllKeysParams().limit() : 1),
       mGetAll(aGetAll) {
   MOZ_ASSERT(aParams.type() == RequestParams::TIndexGetKeyParams ||
              aParams.type() == RequestParams::TIndexGetAllKeysParams);
-  MOZ_ASSERT_IF(!aGetAll, mOptionalKeyRange.type() ==
-                              OptionalKeyRange::TSerializedKeyRange);
+  MOZ_ASSERT_IF(!aGetAll, mOptionalKeyRange.isSome());
 }
 
 nsresult IndexGetKeyRequestOp::DoDatabaseWork(DatabaseConnection* aConnection) {
   MOZ_ASSERT(aConnection);
   aConnection->AssertIsOnConnectionThread();
-  MOZ_ASSERT_IF(!mGetAll, mOptionalKeyRange.type() ==
-                              OptionalKeyRange::TSerializedKeyRange);
+  MOZ_ASSERT_IF(!mGetAll, mOptionalKeyRange.isSome());
   MOZ_ASSERT_IF(!mGetAll, mLimit == 1);
 
   AUTO_PROFILER_LABEL("IndexGetKeyRequestOp::DoDatabaseWork", DOM);
 
-  const bool hasKeyRange =
-      mOptionalKeyRange.type() == OptionalKeyRange::TSerializedKeyRange;
+  const bool hasKeyRange = mOptionalKeyRange.isSome();
 
   nsCString indexTable;
   if (mMetadata->mCommonMetadata.unique()) {
@@ -25146,7 +25112,7 @@ nsresult IndexGetKeyRequestOp::DoDatabaseWork(DatabaseConnection* aConnection) {
 
   nsAutoCString keyRangeClause;
   if (hasKeyRange) {
-    GetBindingClauseForKeyRange(mOptionalKeyRange.get_SerializedKeyRange(),
+    GetBindingClauseForKeyRange(mOptionalKeyRange.ref(),
                                 NS_LITERAL_CSTRING("value"), keyRangeClause);
   }
 
@@ -25176,8 +25142,7 @@ nsresult IndexGetKeyRequestOp::DoDatabaseWork(DatabaseConnection* aConnection) {
   }
 
   if (hasKeyRange) {
-    rv = BindKeyRangeToStatement(mOptionalKeyRange.get_SerializedKeyRange(),
-                                 stmt);
+    rv = BindKeyRangeToStatement(mOptionalKeyRange.ref(), stmt);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -25238,8 +25203,7 @@ nsresult IndexCountRequestOp::DoDatabaseWork(DatabaseConnection* aConnection) {
 
   AUTO_PROFILER_LABEL("IndexCountRequestOp::DoDatabaseWork", DOM);
 
-  const bool hasKeyRange = mParams.optionalKeyRange().type() ==
-                           OptionalKeyRange::TSerializedKeyRange;
+  const bool hasKeyRange = mParams.optionalKeyRange().isSome();
 
   nsCString indexTable;
   if (mMetadata->mCommonMetadata.unique()) {
@@ -25250,9 +25214,8 @@ nsresult IndexCountRequestOp::DoDatabaseWork(DatabaseConnection* aConnection) {
 
   nsAutoCString keyRangeClause;
   if (hasKeyRange) {
-    GetBindingClauseForKeyRange(
-        mParams.optionalKeyRange().get_SerializedKeyRange(),
-        NS_LITERAL_CSTRING("value"), keyRangeClause);
+    GetBindingClauseForKeyRange(mParams.optionalKeyRange().ref(),
+                                NS_LITERAL_CSTRING("value"), keyRangeClause);
   }
 
   nsCString query = NS_LITERAL_CSTRING(
@@ -25275,8 +25238,7 @@ nsresult IndexCountRequestOp::DoDatabaseWork(DatabaseConnection* aConnection) {
   }
 
   if (hasKeyRange) {
-    rv = BindKeyRangeToStatement(
-        mParams.optionalKeyRange().get_SerializedKeyRange(), stmt);
+    rv = BindKeyRangeToStatement(mParams.optionalKeyRange().ref(), stmt);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -25465,9 +25427,8 @@ void Cursor::OpenOp::GetRangeKeyInfo(bool aLowerBound, Key* aKey, bool* aOpen) {
   MOZ_ASSERT(aKey->IsUnset());
   MOZ_ASSERT(aOpen);
 
-  if (mOptionalKeyRange.type() == OptionalKeyRange::TSerializedKeyRange) {
-    const SerializedKeyRange& range =
-        mOptionalKeyRange.get_SerializedKeyRange();
+  if (mOptionalKeyRange.isSome()) {
+    const SerializedKeyRange& range = mOptionalKeyRange.ref();
     if (range.isOnly()) {
       *aKey = range.lower();
       *aOpen = false;
@@ -25501,8 +25462,7 @@ nsresult Cursor::OpenOp::DoObjectStoreDatabaseWork(
 
   AUTO_PROFILER_LABEL("Cursor::OpenOp::DoObjectStoreDatabaseWork", DOM);
 
-  const bool usingKeyRange =
-      mOptionalKeyRange.type() == OptionalKeyRange::TSerializedKeyRange;
+  const bool usingKeyRange = mOptionalKeyRange.isSome();
 
   NS_NAMED_LITERAL_CSTRING(keyString, "key");
   NS_NAMED_LITERAL_CSTRING(id, "id");
@@ -25517,8 +25477,8 @@ nsresult Cursor::OpenOp::DoObjectStoreDatabaseWork(
 
   nsAutoCString keyRangeClause;
   if (usingKeyRange) {
-    GetBindingClauseForKeyRange(mOptionalKeyRange.get_SerializedKeyRange(),
-                                keyString, keyRangeClause);
+    GetBindingClauseForKeyRange(mOptionalKeyRange.ref(), keyString,
+                                keyRangeClause);
   }
 
   nsAutoCString directionClause = NS_LITERAL_CSTRING(" ORDER BY ") + keyString;
@@ -25554,8 +25514,7 @@ nsresult Cursor::OpenOp::DoObjectStoreDatabaseWork(
   }
 
   if (usingKeyRange) {
-    rv = BindKeyRangeToStatement(mOptionalKeyRange.get_SerializedKeyRange(),
-                                 stmt);
+    rv = BindKeyRangeToStatement(mOptionalKeyRange.ref(), stmt);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -25645,8 +25604,7 @@ nsresult Cursor::OpenOp::DoObjectStoreKeyDatabaseWork(
 
   AUTO_PROFILER_LABEL("Cursor::OpenOp::DoObjectStoreKeyDatabaseWork", DOM);
 
-  const bool usingKeyRange =
-      mOptionalKeyRange.type() == OptionalKeyRange::TSerializedKeyRange;
+  const bool usingKeyRange = mOptionalKeyRange.isSome();
 
   NS_NAMED_LITERAL_CSTRING(keyString, "key");
   NS_NAMED_LITERAL_CSTRING(id, "id");
@@ -25660,8 +25618,8 @@ nsresult Cursor::OpenOp::DoObjectStoreKeyDatabaseWork(
 
   nsAutoCString keyRangeClause;
   if (usingKeyRange) {
-    GetBindingClauseForKeyRange(mOptionalKeyRange.get_SerializedKeyRange(),
-                                keyString, keyRangeClause);
+    GetBindingClauseForKeyRange(mOptionalKeyRange.ref(), keyString,
+                                keyRangeClause);
   }
 
   nsAutoCString directionClause = NS_LITERAL_CSTRING(" ORDER BY ") + keyString;
@@ -25697,8 +25655,7 @@ nsresult Cursor::OpenOp::DoObjectStoreKeyDatabaseWork(
   }
 
   if (usingKeyRange) {
-    rv = BindKeyRangeToStatement(mOptionalKeyRange.get_SerializedKeyRange(),
-                                 stmt);
+    rv = BindKeyRangeToStatement(mOptionalKeyRange.ref(), stmt);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -25786,8 +25743,7 @@ nsresult Cursor::OpenOp::DoIndexDatabaseWork(DatabaseConnection* aConnection) {
 
   AUTO_PROFILER_LABEL("Cursor::OpenOp::DoIndexDatabaseWork", DOM);
 
-  const bool usingKeyRange =
-      mOptionalKeyRange.type() == OptionalKeyRange::TSerializedKeyRange;
+  const bool usingKeyRange = mOptionalKeyRange.isSome();
 
   nsCString indexTable = mCursor->mUniqueIndex
                              ? NS_LITERAL_CSTRING("unique_index_data")
@@ -25827,8 +25783,8 @@ nsresult Cursor::OpenOp::DoIndexDatabaseWork(DatabaseConnection* aConnection) {
 
   nsAutoCString keyRangeClause;
   if (usingKeyRange) {
-    GetBindingClauseForKeyRange(mOptionalKeyRange.get_SerializedKeyRange(),
-                                sortColumn, keyRangeClause);
+    GetBindingClauseForKeyRange(mOptionalKeyRange.ref(), sortColumn,
+                                keyRangeClause);
   }
 
   nsAutoCString directionClause = NS_LITERAL_CSTRING(" ORDER BY ") + sortColumn;
@@ -25869,11 +25825,10 @@ nsresult Cursor::OpenOp::DoIndexDatabaseWork(DatabaseConnection* aConnection) {
 
   if (usingKeyRange) {
     if (mCursor->IsLocaleAware()) {
-      rv = BindKeyRangeToStatement(mOptionalKeyRange.get_SerializedKeyRange(),
-                                   stmt, mCursor->mLocale);
+      rv = BindKeyRangeToStatement(mOptionalKeyRange.ref(), stmt,
+                                   mCursor->mLocale);
     } else {
-      rv = BindKeyRangeToStatement(mOptionalKeyRange.get_SerializedKeyRange(),
-                                   stmt);
+      rv = BindKeyRangeToStatement(mOptionalKeyRange.ref(), stmt);
     }
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
@@ -26012,8 +25967,7 @@ nsresult Cursor::OpenOp::DoIndexKeyDatabaseWork(
 
   AUTO_PROFILER_LABEL("Cursor::OpenOp::DoIndexKeyDatabaseWork", DOM);
 
-  const bool usingKeyRange =
-      mOptionalKeyRange.type() == OptionalKeyRange::TSerializedKeyRange;
+  const bool usingKeyRange = mOptionalKeyRange.isSome();
 
   nsCString table = mCursor->mUniqueIndex
                         ? NS_LITERAL_CSTRING("unique_index_data")
@@ -26043,8 +25997,8 @@ nsresult Cursor::OpenOp::DoIndexKeyDatabaseWork(
 
   nsAutoCString keyRangeClause;
   if (usingKeyRange) {
-    GetBindingClauseForKeyRange(mOptionalKeyRange.get_SerializedKeyRange(),
-                                sortColumn, keyRangeClause);
+    GetBindingClauseForKeyRange(mOptionalKeyRange.ref(), sortColumn,
+                                keyRangeClause);
   }
 
   nsAutoCString directionClause = NS_LITERAL_CSTRING(" ORDER BY ") + sortColumn;
@@ -26085,11 +26039,10 @@ nsresult Cursor::OpenOp::DoIndexKeyDatabaseWork(
 
   if (usingKeyRange) {
     if (mCursor->IsLocaleAware()) {
-      rv = BindKeyRangeToStatement(mOptionalKeyRange.get_SerializedKeyRange(),
-                                   stmt, mCursor->mLocale);
+      rv = BindKeyRangeToStatement(mOptionalKeyRange.ref(), stmt,
+                                   mCursor->mLocale);
     } else {
-      rv = BindKeyRangeToStatement(mOptionalKeyRange.get_SerializedKeyRange(),
-                                   stmt);
+      rv = BindKeyRangeToStatement(mOptionalKeyRange.ref(), stmt);
     }
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;

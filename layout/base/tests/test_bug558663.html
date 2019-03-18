@@ -28,7 +28,7 @@
   SimpleTest.waitForExplicitFinish();
   // AccessibleCaret's pref is checked only when PresShell is initialized. To turn
   // off the pref, we test bug 558663 in an iframe.
-  SpecialPowers.pushPrefEnv({"set": [['layout.accessiblecaret.enabled', false]]}, function() {
+  SpecialPowers.pushPrefEnv({"set": [['layout.accessiblecaret.enabled_on_touch', false]]}, function() {
     var iframe = document.createElement("iframe");
     iframe.src = "bug558663.html";
     document.getElementById('container').appendChild(iframe);

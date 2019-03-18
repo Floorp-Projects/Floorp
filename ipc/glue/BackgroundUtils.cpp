@@ -494,10 +494,10 @@ nsresult LoadInfoToLoadInfoArgs(nsILoadInfo* aLoadInfo,
     ipcInitialClientInfo.emplace(initialClientInfo.ref().ToIPC());
   }
 
-  OptionalIPCServiceWorkerDescriptor ipcController = mozilla::void_t();
+  Maybe<IPCServiceWorkerDescriptor> ipcController;
   const Maybe<ServiceWorkerDescriptor>& controller = aLoadInfo->GetController();
   if (controller.isSome()) {
-    ipcController = controller.ref().ToIPC();
+    ipcController.emplace(controller.ref().ToIPC());
   }
 
   nsAutoString cspNonce;
@@ -656,10 +656,9 @@ nsresult LoadInfoArgsToLoadInfo(
       NS_ERROR_UNEXPECTED);
 
   Maybe<ServiceWorkerDescriptor> controller;
-  if (loadInfoArgs.controller().type() !=
-      OptionalIPCServiceWorkerDescriptor::Tvoid_t) {
-    controller.emplace(ServiceWorkerDescriptor(
-        loadInfoArgs.controller().get_IPCServiceWorkerDescriptor()));
+  if (loadInfoArgs.controller().isSome()) {
+    controller.emplace(
+        ServiceWorkerDescriptor(loadInfoArgs.controller().ref()));
   }
 
   nsCOMPtr<nsICookieSettings> cookieSettings;
@@ -709,7 +708,7 @@ void LoadInfoToParentLoadInfoForwarder(
     nsILoadInfo* aLoadInfo, ParentLoadInfoForwarderArgs* aForwarderArgsOut) {
   if (!aLoadInfo) {
     *aForwarderArgsOut = ParentLoadInfoForwarderArgs(
-        false, void_t(), nsILoadInfo::TAINTING_BASIC,
+        false, Nothing(), nsILoadInfo::TAINTING_BASIC,
         false,  // serviceWorkerTaintingSynthesized
         false,  // documentHasUserInteracted
         false,  // documentHasLoaded
@@ -717,10 +716,10 @@ void LoadInfoToParentLoadInfoForwarder(
     return;
   }
 
-  OptionalIPCServiceWorkerDescriptor ipcController = void_t();
+  Maybe<IPCServiceWorkerDescriptor> ipcController;
   Maybe<ServiceWorkerDescriptor> controller(aLoadInfo->GetController());
   if (controller.isSome()) {
-    ipcController = controller.ref().ToIPC();
+    ipcController.emplace(controller.ref().ToIPC());
   }
 
   uint32_t tainting = nsILoadInfo::TAINTING_BASIC;
@@ -761,9 +760,8 @@ nsresult MergeParentLoadInfoForwarder(
 
   aLoadInfo->ClearController();
   auto& controller = aForwarderArgs.controller();
-  if (controller.type() != OptionalIPCServiceWorkerDescriptor::Tvoid_t) {
-    aLoadInfo->SetController(
-        ServiceWorkerDescriptor(controller.get_IPCServiceWorkerDescriptor()));
+  if (controller.isSome()) {
+    aLoadInfo->SetController(ServiceWorkerDescriptor(controller.ref()));
   }
 
   if (aForwarderArgs.serviceWorkerTaintingSynthesized()) {
@@ -799,7 +797,7 @@ void LoadInfoToChildLoadInfoForwarder(
     nsILoadInfo* aLoadInfo, ChildLoadInfoForwarderArgs* aForwarderArgsOut) {
   if (!aLoadInfo) {
     *aForwarderArgsOut =
-        ChildLoadInfoForwarderArgs(Nothing(), Nothing(), void_t());
+        ChildLoadInfoForwarderArgs(Nothing(), Nothing(), Nothing());
     return;
   }
 
@@ -815,10 +813,10 @@ void LoadInfoToChildLoadInfoForwarder(
     ipcInitial.emplace(initial.ref().ToIPC());
   }
 
-  OptionalIPCServiceWorkerDescriptor ipcController = void_t();
+  Maybe<IPCServiceWorkerDescriptor> ipcController;
   Maybe<ServiceWorkerDescriptor> controller(aLoadInfo->GetController());
   if (controller.isSome()) {
-    ipcController = controller.ref().ToIPC();
+    ipcController.emplace(controller.ref().ToIPC());
   }
 
   *aForwarderArgsOut =
@@ -870,9 +868,8 @@ nsresult MergeChildLoadInfoForwarder(
 
   aLoadInfo->ClearController();
   auto& controller = aForwarderArgs.controller();
-  if (controller.type() != OptionalIPCServiceWorkerDescriptor::Tvoid_t) {
-    aLoadInfo->SetController(
-        ServiceWorkerDescriptor(controller.get_IPCServiceWorkerDescriptor()));
+  if (controller.isSome()) {
+    aLoadInfo->SetController(ServiceWorkerDescriptor(controller.ref()));
   }
 
   return NS_OK;

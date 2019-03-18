@@ -48,13 +48,7 @@ using mozilla::LookAndFeel;
 #  define GTK_STATE_FLAG_LINK (static_cast<GtkStateFlags>(1 << 9))
 #endif
 
-nsLookAndFeel::nsLookAndFeel()
-    : nsXPLookAndFeel(),
-      mDefaultFontCached(false),
-      mButtonFontCached(false),
-      mFieldFontCached(false),
-      mMenuFontCached(false),
-      mInitialized(false) {}
+nsLookAndFeel::nsLookAndFeel() = default;
 
 nsLookAndFeel::~nsLookAndFeel() {}
 
@@ -865,6 +859,11 @@ void nsLookAndFeel::EnsureInit() {
   // ask Gtk to create it explicitly. Otherwise we may end up
   // with wrong color theme, see Bug 972382
   GtkSettings* settings = gtk_settings_get_for_screen(gdk_screen_get_default());
+
+  if (MOZ_UNLIKELY(!settings)) {
+      NS_WARNING("EnsureInit: No settings");
+      return;
+  }
 
   // Dark themes interacts poorly with widget styling (see bug 1216658).
   // We disable dark themes by default for all processes (chrome, web content)

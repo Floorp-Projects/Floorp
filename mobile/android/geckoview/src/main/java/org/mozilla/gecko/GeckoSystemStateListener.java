@@ -27,7 +27,7 @@ public class GeckoSystemStateListener
 
     private static final GeckoSystemStateListener listenerInstance = new GeckoSystemStateListener();
 
-    private boolean initialized;
+    private boolean mInitialized;
     private ContentObserver mContentObserver;
     private static Context sApplicationContext;
     private InputManager mInputManager;
@@ -40,7 +40,7 @@ public class GeckoSystemStateListener
     }
 
     public synchronized void initialize(final Context context) {
-        if (initialized) {
+        if (mInitialized) {
             Log.w(LOGTAG, "Already initialized!");
             return;
         }
@@ -53,17 +53,17 @@ public class GeckoSystemStateListener
         Uri animationSetting = Settings.System.getUriFor(Settings.Global.ANIMATOR_DURATION_SCALE);
         mContentObserver = new ContentObserver(new Handler(Looper.getMainLooper())) {
             @Override
-            public void onChange(boolean selfChange) {
+            public void onChange(final boolean selfChange) {
                 onDeviceChanged();
             }
         };
         contentResolver.registerContentObserver(animationSetting, false, mContentObserver);
 
-        initialized = true;
+        mInitialized = true;
     }
 
     public synchronized void shutdown() {
-        if (!initialized) {
+        if (!mInitialized) {
             Log.w(LOGTAG, "Already shut down!");
             return;
         }
@@ -78,7 +78,7 @@ public class GeckoSystemStateListener
         ContentResolver contentResolver = sApplicationContext.getContentResolver();
         contentResolver.unregisterContentObserver(mContentObserver);
 
-        initialized = false;
+        mInitialized = false;
         mInputManager = null;
         mContentObserver = null;
     }
@@ -92,7 +92,7 @@ public class GeckoSystemStateListener
      */
     private static boolean prefersReducedMotion() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN_MR1) {
-          return false;
+            return false;
         }
 
         ContentResolver contentResolver = sApplicationContext.getContentResolver();
@@ -122,7 +122,7 @@ public class GeckoSystemStateListener
         }
     }
 
-    private void notifyDeviceChanged(int deviceId) {
+    private void notifyDeviceChanged(final int deviceId) {
         InputDevice device = InputDevice.getDevice(deviceId);
         if (device == null ||
             !InputDeviceUtils.isPointerTypeDevice(device)) {
@@ -132,12 +132,12 @@ public class GeckoSystemStateListener
     }
 
     @Override
-    public void onInputDeviceAdded(int deviceId) {
+    public void onInputDeviceAdded(final int deviceId) {
         notifyDeviceChanged(deviceId);
     }
 
     @Override
-    public void onInputDeviceRemoved(int deviceId) {
+    public void onInputDeviceRemoved(final int deviceId) {
         // Call onDeviceChanged directly without checking device source types
         // since we can no longer get a valid `InputDevice` in the case of
         // device removal.
@@ -145,7 +145,7 @@ public class GeckoSystemStateListener
     }
 
     @Override
-    public void onInputDeviceChanged(int deviceId) {
+    public void onInputDeviceChanged(final int deviceId) {
         notifyDeviceChanged(deviceId);
     }
 }

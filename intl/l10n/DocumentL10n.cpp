@@ -351,6 +351,14 @@ already_AddRefed<Promise> DocumentL10n::TranslateElements(
   return MaybeWrapPromise(promise);
 }
 
+void DocumentL10n::PauseObserving(ErrorResult& aRv) {
+  aRv = mDOMLocalization->PauseObserving();
+}
+
+void DocumentL10n::ResumeObserving(ErrorResult& aRv) {
+  aRv = mDOMLocalization->ResumeObserving();
+}
+
 class L10nReadyHandler final : public PromiseNativeHandler {
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS

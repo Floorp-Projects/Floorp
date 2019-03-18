@@ -16,8 +16,7 @@ public class NSSBridge {
     private static native String nativeDecrypt(String aDb, String aValue);
 
     @RobocopTarget
-    static public String encrypt(Context context, String aValue)
-      throws Exception {
+    static public String encrypt(final Context context, final String aValue) throws Exception {
         GeckoLoader.loadNSSLibs(context);
 
         String path = GeckoProfile.get(context).getDir().toString();
@@ -25,16 +24,15 @@ public class NSSBridge {
     }
 
     @RobocopTarget
-    static public String encrypt(Context context, String profilePath, String aValue)
-      throws Exception {
+    static public String encrypt(final Context context, final String profilePath,
+                                 final String aValue) throws Exception {
         GeckoLoader.loadNSSLibs(context);
 
         return nativeEncrypt(profilePath, aValue);
     }
 
     @RobocopTarget
-    static public String decrypt(Context context, String aValue)
-      throws Exception {
+    static public String decrypt(final Context context, final String aValue) throws Exception {
         GeckoLoader.loadNSSLibs(context);
 
         String path = GeckoProfile.get(context).getDir().toString();
@@ -42,8 +40,8 @@ public class NSSBridge {
     }
 
     @RobocopTarget
-    static public String decrypt(Context context, String profilePath, String aValue)
-      throws Exception {
+    static public String decrypt(final Context context, final String profilePath,
+                                 final String aValue) throws Exception {
         GeckoLoader.loadNSSLibs(context);
 
         return nativeDecrypt(profilePath, aValue);

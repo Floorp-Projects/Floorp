@@ -5,13 +5,17 @@
 // Ensures the input is displayed and focused when "+" is clicked
 add_task(async function() {
   const dbg = await initDebugger("doc-script-switching.html");
-  // Close the panel
+
+  info(">> Close the panel");
   clickElementWithSelector(dbg, ".watch-expressions-pane ._header");
-  // Click + to add the new expression
+
+  info(">> Click + to add the new expression");
   clickElementWithSelector(dbg, ".watch-expressions-pane ._header .plus");
-  // Ensure element gets focused
+
+  info(">> Ensure element gets focused");
   await waitForElementWithSelector(dbg, ".expression-input-container.focused");
-  // Ensure the element is focused
+
+  info(">> Ensure the element is focused");
   is(
     dbg.win.document.activeElement.classList.contains("input-expression"),
     true

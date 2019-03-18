@@ -166,6 +166,11 @@ interface nsIAutoCompleteInput : nsISupports
    */
   readonly attribute boolean noRollupOnCaretMove;
 
+  /*
+   * Don't rollup the popup when the search string becomes "".
+   */
+  readonly attribute boolean noRollupOnEmptySearch;
+
   /**
    * The userContextId of the current browser.
    */

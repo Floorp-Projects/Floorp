@@ -29,15 +29,8 @@ pref("geckoview.logging", "Debug");
 // Disable Web Push until we get it working
 pref("dom.push.enabled", false);
 
-// Use containerless scrolling on the Nightly channel.
-// Bug 1137890 tracks letting it ride the trains.
-// For now, on non-Nightly channels we use containerless scrolling with
-// WebRender only (that's what the "2" means).
-#ifdef NIGHTLY_BUILD
+// Use containerless scrolling.
 pref("layout.scroll.root-frame-containers", 0);
-#else
-pref("layout.scroll.root-frame-containers", 2);
-#endif
 
 // Inherit locale from the OS, used for multi-locale builds
 pref("intl.locale.requested", "");

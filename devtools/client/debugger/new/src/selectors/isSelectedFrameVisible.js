@@ -5,8 +5,7 @@
 // @flow
 
 import { originalToGeneratedId, isOriginalId } from "devtools-source-map";
-import { getSelectedFrame, getCurrentThread } from "../reducers/pause";
-import { getSelectedLocation } from "../reducers/sources";
+import { getSelectedFrame, getSelectedLocation, getCurrentThread } from ".";
 import type { State } from "../reducers/types";
 
 function getGeneratedId(sourceId) {

@@ -30,16 +30,6 @@ struct IPCFile
   bool isDirectory;
 };
 
-// Union for blob vs file.
-union IPCFileUnion
-{
-  // For Blob.
-  void_t;
-
-  // For File.
-  IPCFile;
-};
-
 union IPCBlobStream
 {
   // Parent to Child: The child will receive a IPCBlobInputStream. Nothing
@@ -58,7 +48,8 @@ struct IPCBlob
 
   IPCBlobStream inputStream;
 
-  IPCFileUnion file;
+  // Nothing is for Blob
+  IPCFile? file;
 
   // This ID is used only by indexedDB tests.
   int64_t fileId;

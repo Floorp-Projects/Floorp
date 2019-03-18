@@ -35,7 +35,7 @@ public class SharedMemory implements Parcelable {
         sGetFDMethod = method;
     }
 
-    private SharedMemory(Parcel in) {
+    private SharedMemory(final Parcel in) {
         mDescriptor = in.readFileDescriptor();
         mSize = in.readInt();
         mId = in.readInt();
@@ -43,12 +43,12 @@ public class SharedMemory implements Parcelable {
 
     public static final Creator<SharedMemory> CREATOR = new Creator<SharedMemory>() {
         @Override
-        public SharedMemory createFromParcel(Parcel in) {
+        public SharedMemory createFromParcel(final Parcel in) {
             return new SharedMemory(in);
         }
 
         @Override
-        public SharedMemory[] newArray(int size) {
+        public SharedMemory[] newArray(final int size) {
             return new SharedMemory[size];
         }
     };
@@ -59,14 +59,14 @@ public class SharedMemory implements Parcelable {
     }
 
     @Override
-    public void writeToParcel(Parcel dest, int flags) {
+    public void writeToParcel(final Parcel dest, final int flags) {
         // We don't want ParcelFileDescriptor.writeToParcel() to close the fd.
         dest.writeFileDescriptor(mDescriptor.getFileDescriptor());
         dest.writeInt(mSize);
         dest.writeInt(mId);
     }
 
-    public SharedMemory(int id, int size) throws NoSuchMethodException, IOException {
+    public SharedMemory(final int id, final int size) throws NoSuchMethodException, IOException {
         if (sGetFDMethod == null) {
             throw new NoSuchMethodException("MemoryFile.getFileDescriptor() doesn't exist.");
         }
@@ -122,9 +122,13 @@ public class SharedMemory implements Parcelable {
 
     private native void unmap(long address, int size);
 
-    public boolean isValid() { return mDescriptor != null; }
+    public boolean isValid() {
+        return mDescriptor != null;
+    }
 
-    public int getSize() { return mSize; }
+    public int getSize() {
+        return mSize;
+    }
 
     private int getFD() {
         return isValid() ? mDescriptor.getFd() : -1;
@@ -167,7 +171,7 @@ public class SharedMemory implements Parcelable {
     }
 
     @Override
-    public boolean equals(Object that) {
+    public boolean equals(final Object that) {
         return (this == that) ||
                 ((that instanceof SharedMemory) && (hashCode() == that.hashCode()));
     }

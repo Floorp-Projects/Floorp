@@ -236,9 +236,8 @@ class HttpBaseChannel : public nsHashPropertyBag,
   NS_IMETHOD SetTopLevelContentWindowId(uint64_t aContentWindowId) override;
   NS_IMETHOD GetTopLevelOuterContentWindowId(uint64_t *aWindowId) override;
   NS_IMETHOD SetTopLevelOuterContentWindowId(uint64_t aWindowId) override;
-  NS_IMETHOD GetIsTrackingResource(bool *aIsTrackingResource) override;
-  NS_IMETHOD GetIsThirdPartyTrackingResource(
-      bool *aIsTrackingResource) override;
+  NS_IMETHOD IsTrackingResource(bool *aIsTrackingResource) override;
+  NS_IMETHOD IsThirdPartyTrackingResource(bool *aIsTrackingResource) override;
   NS_IMETHOD GetClassificationFlags(uint32_t *aIsClassificationFlags) override;
   NS_IMETHOD GetFirstPartyClassificationFlags(
       uint32_t *aIsClassificationFlags) override;
@@ -248,6 +247,8 @@ class HttpBaseChannel : public nsHashPropertyBag,
       nsIHttpChannel *aDocumentChannel) override;
   NS_IMETHOD GetFlashPluginState(
       nsIHttpChannel::FlashPluginState *aState) override;
+
+  using nsIHttpChannel::IsThirdPartyTrackingResource;
 
   // nsIHttpChannelInternal
   NS_IMETHOD GetDocumentURI(nsIURI **aDocumentURI) override;
@@ -537,9 +538,6 @@ class HttpBaseChannel : public nsHashPropertyBag,
 
   bool MaybeWaitForUploadStreamLength(nsIStreamListener *aListener,
                                       nsISupports *aContext);
-
-  bool IsThirdPartyTrackingResource() const;
-  bool IsTrackingResource() const;
 
   friend class PrivateBrowsingChannel<HttpBaseChannel>;
   friend class InterceptFailedOnStop;

@@ -25,6 +25,10 @@ interface mozIDOMLocalization : nsISupports
 
   void connectRoot(in Element aElement);
   void disconnectRoot(in Element aElement);
+
+  void pauseObserving();
+  void resumeObserving();
+
   Promise translateRoots();
   readonly attribute Promise ready;
 };

@@ -141,6 +141,7 @@ class HTMLEditor final : public TextEditor,
 
   NS_IMETHOD InsertLineBreak() override;
 
+  MOZ_CAN_RUN_SCRIPT
   virtual nsresult HandleKeyPressEvent(
       WidgetKeyboardEvent* aKeyboardEvent) override;
   virtual nsIContent* GetFocusedContent() override;
@@ -423,6 +424,7 @@ class HTMLEditor final : public TextEditor,
    * activation of an inline table editing UI element
    * @param aUIAnonymousElement [IN] the inline table editing UI element
    */
+  MOZ_CAN_RUN_SCRIPT
   nsresult DoInlineTableEditingAction(const Element& aUIAnonymousElement);
 
   /**
@@ -641,6 +643,7 @@ class HTMLEditor final : public TextEditor,
    * a cell which contains first selection range.  This does not return
    * error even if selection is not in cell element, just does nothing.
    */
+  MOZ_CAN_RUN_SCRIPT
   nsresult DeleteTableCellContentsWithTransaction();
 
   void IsNextCharInNodeWhitespace(nsIContent* aContent, int32_t aOffset,
@@ -955,6 +958,7 @@ class HTMLEditor final : public TextEditor,
    */
   nsresult InsertParagraphSeparatorAsSubAction();
 
+  MOZ_CAN_RUN_SCRIPT
   virtual nsresult SelectAllInternal() override;
 
   /**
@@ -963,6 +967,7 @@ class HTMLEditor final : public TextEditor,
    *
    * @param aContentToSelect    The content which should be selected.
    */
+  MOZ_CAN_RUN_SCRIPT
   nsresult SelectContentInternal(nsIContent& aContentToSelect);
 
   /**
@@ -1521,6 +1526,7 @@ class HTMLEditor final : public TextEditor,
   /**
    * Make the given selection span the entire document.
    */
+  MOZ_CAN_RUN_SCRIPT
   virtual nsresult SelectEntireDocument() override;
 
   /**
@@ -1663,6 +1669,7 @@ class HTMLEditor final : public TextEditor,
    */
   bool SetCaretInTableCell(dom::Element* aElement);
 
+  MOZ_CAN_RUN_SCRIPT
   nsresult TabInTable(bool inIsShift, bool* outHandled);
 
   /**
@@ -1694,6 +1701,7 @@ class HTMLEditor final : public TextEditor,
    * @param aInsertPosition             Before or after the target cell which
    *                                    contains first selection range.
    */
+  MOZ_CAN_RUN_SCRIPT
   nsresult InsertTableCellsWithTransaction(int32_t aNumberOfCellsToInsert,
                                            InsertPosition aInsertPosition);
 
@@ -1709,6 +1717,7 @@ class HTMLEditor final : public TextEditor,
    * @param aInsertPosition             Before or after the target cell which
    *                                    contains first selection range.
    */
+  MOZ_CAN_RUN_SCRIPT
   nsresult InsertTableColumnsWithTransaction(int32_t aNumberOfColumnsToInsert,
                                              InsertPosition aInsertPosition);
 
@@ -1724,6 +1733,7 @@ class HTMLEditor final : public TextEditor,
    * @param aInsertPosition             Before or after the target cell which
    *                                    contains first selection range.
    */
+  MOZ_CAN_RUN_SCRIPT
   nsresult InsertTableRowsWithTransaction(int32_t aNumberOfRowsToInsert,
                                           InsertPosition aInsertPosition);
 
@@ -1753,6 +1763,7 @@ class HTMLEditor final : public TextEditor,
    *                                    ignored if 2 ore more cells are
    *                                    selected.
    */
+  MOZ_CAN_RUN_SCRIPT
   nsresult DeleteSelectedTableColumnsWithTransaction(
       int32_t aNumberOfColumnsToDelete);
 
@@ -1768,6 +1779,7 @@ class HTMLEditor final : public TextEditor,
    * @param aRowIndex           Index of the column which you want to remove.
    *                            0 is the first column.
    */
+  MOZ_CAN_RUN_SCRIPT
   nsresult DeleteTableColumnWithTransaction(Element& aTableElement,
                                             int32_t aColumnIndex);
 
@@ -1786,6 +1798,7 @@ class HTMLEditor final : public TextEditor,
    * @param aNumberOfRowsToDelete   Number of rows to remove.  This is ignored
    *                                if 2 or more cells are selected.
    */
+  MOZ_CAN_RUN_SCRIPT
   nsresult DeleteSelectedTableRowsWithTransaction(
       int32_t aNumberOfRowsToDelete);
 
@@ -1800,6 +1813,7 @@ class HTMLEditor final : public TextEditor,
    * @param aRowIndex           Index of the <tr> element which you want to
    *                            remove.  0 is the first row.
    */
+  MOZ_CAN_RUN_SCRIPT
   nsresult DeleteTableRowWithTransaction(Element& aTableElement,
                                          int32_t aRowIndex);
 
@@ -1817,6 +1831,7 @@ class HTMLEditor final : public TextEditor,
    * @param aNumberOfCellsToDelete  Number of cells to remove.  This is ignored
    *                                if 2 or more cells are selected.
    */
+  MOZ_CAN_RUN_SCRIPT
   nsresult DeleteTableCellWithTransaction(int32_t aNumberOfCellsToDelete);
 
   /**
@@ -2120,14 +2135,15 @@ class HTMLEditor final : public TextEditor,
    *                    AutoSelectionSetterAfterTableEdit stack-based object to
    *                    insure we reset the caret in a table-editing method.
    */
+  MOZ_CAN_RUN_SCRIPT
   void SetSelectionAfterTableEdit(Element* aTable, int32_t aRow, int32_t aCol,
                                   int32_t aDirection, bool aSelected);
 
   void RemoveListenerAndDeleteRef(const nsAString& aEvent,
                                   nsIDOMEventListener* aListener,
                                   bool aUseCapture, ManualNACPtr aElement,
-                                  nsIPresShell* aShell);
-  void DeleteRefToAnonymousNode(ManualNACPtr aContent, nsIPresShell* aShell);
+                                  PresShell* aPresShell);
+  void DeleteRefToAnonymousNode(ManualNACPtr aContent, PresShell* aPresShell);
 
   /**
    * RefereshEditingUI() may refresh editing UIs for current Selection, focus,

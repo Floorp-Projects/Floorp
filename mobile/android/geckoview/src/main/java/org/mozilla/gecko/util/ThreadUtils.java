@@ -11,7 +11,6 @@ import java.util.Map;
 
 import android.os.Handler;
 import android.os.Looper;
-import android.os.MessageQueue;
 import android.util.Log;
 
 public final class ThreadUtils {
@@ -54,15 +53,15 @@ public final class ThreadUtils {
             super();
         }
 
-        public UiThreadBlockedException(String msg) {
+        public UiThreadBlockedException(final String msg) {
             super(msg);
         }
 
-        public UiThreadBlockedException(String msg, Throwable e) {
+        public UiThreadBlockedException(final String msg, final Throwable e) {
             super(msg, e);
         }
 
-        public UiThreadBlockedException(Throwable e) {
+        public UiThreadBlockedException(final Throwable e) {
             super(e);
         }
     }
@@ -79,7 +78,7 @@ public final class ThreadUtils {
         }
     }
 
-    public static void setBackgroundThread(Thread thread) {
+    public static void setBackgroundThread(final Thread thread) {
         sBackgroundThread = thread;
     }
 
@@ -91,15 +90,15 @@ public final class ThreadUtils {
         return sUiHandler;
     }
 
-    public static void postToUiThread(Runnable runnable) {
+    public static void postToUiThread(final Runnable runnable) {
         sUiHandler.post(runnable);
     }
 
-    public static void postDelayedToUiThread(Runnable runnable, long timeout) {
+    public static void postDelayedToUiThread(final Runnable runnable, final long timeout) {
         sUiHandler.postDelayed(runnable, timeout);
     }
 
-    public static void removeCallbacksFromUiThread(Runnable runnable) {
+    public static void removeCallbacksFromUiThread(final Runnable runnable) {
         sUiHandler.removeCallbacks(runnable);
     }
 
@@ -111,11 +110,11 @@ public final class ThreadUtils {
         return GeckoBackgroundThread.getHandler();
     }
 
-    public static void postToBackgroundThread(Runnable runnable) {
+    public static void postToBackgroundThread(final Runnable runnable) {
         GeckoBackgroundThread.post(runnable);
     }
 
-    public static void postDelayedToBackgroundThread(Runnable runnable, long timeout) {
+    public static void postDelayedToBackgroundThread(final Runnable runnable, final long timeout) {
         GeckoBackgroundThread.postDelayed(runnable, timeout);
     }
 
@@ -152,15 +151,18 @@ public final class ThreadUtils {
         assertOnThread(expectedThread, AssertBehavior.THROW);
     }
 
-    public static void assertOnThread(final Thread expectedThread, AssertBehavior behavior) {
+    public static void assertOnThread(final Thread expectedThread, final AssertBehavior behavior) {
         assertOnThreadComparison(expectedThread, behavior, true);
     }
 
-    public static void assertNotOnThread(final Thread expectedThread, AssertBehavior behavior) {
+    public static void assertNotOnThread(final Thread expectedThread,
+                                         final AssertBehavior behavior) {
         assertOnThreadComparison(expectedThread, behavior, false);
     }
 
-    private static void assertOnThreadComparison(final Thread expectedThread, AssertBehavior behavior, boolean expected) {
+    private static void assertOnThreadComparison(final Thread expectedThread,
+                                                 final AssertBehavior behavior,
+                                                 final boolean expected) {
         final Thread currentThread = Thread.currentThread();
         final long currentThreadId = currentThread.getId();
         final long expectedThreadId = expectedThread.getId();
@@ -182,10 +184,10 @@ public final class ThreadUtils {
         final IllegalThreadStateException e = new IllegalThreadStateException(message);
 
         switch (behavior) {
-        case THROW:
-            throw e;
-        default:
-            Log.e(LOGTAG, "Method called on wrong thread!", e);
+            case THROW:
+                throw e;
+            default:
+                Log.e(LOGTAG, "Method called on wrong thread!", e);
         }
     }
 
@@ -210,7 +212,7 @@ public final class ThreadUtils {
     }
 
     @RobocopTarget
-    public static boolean isOnThread(Thread thread) {
+    public static boolean isOnThread(final Thread thread) {
         return (Thread.currentThread().getId() == thread.getId());
     }
 
@@ -223,7 +225,7 @@ public final class ThreadUtils {
      *
      * @param timeout Timeout in ms after which the priority will be reset
      */
-    public static void reduceGeckoPriority(long timeout) {
+    public static void reduceGeckoPriority(final long timeout) {
         if (Runtime.getRuntime().availableProcessors() > 1) {
             // Don't reduce priority for multicore devices. We use availableProcessors()
             // for its fast performance. It may give false negatives (i.e. multicore

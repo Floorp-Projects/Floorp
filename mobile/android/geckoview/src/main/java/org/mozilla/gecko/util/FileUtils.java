@@ -55,13 +55,13 @@ public class FileUtils {
         final private String mName;
         final private double mMaxAge;
 
-        public NameAndAgeFilter(String name, double age) {
+        public NameAndAgeFilter(final String name, final double age) {
             mName = name;
             mMaxAge = age;
         }
 
         @Override
-        public boolean accept(File dir, String filename) {
+        public boolean accept(final File dir, final String filename) {
             if (mName == null || mName.matches(filename)) {
                 File f = new File(dir, filename);
 
@@ -75,17 +75,17 @@ public class FileUtils {
     }
 
     @RobocopTarget
-    public static void delTree(File dir, FilenameFilter filter, boolean recurse) {
+    public static void delTree(final File dir, final FilenameFilter filter, final boolean recurse) {
         String[] files = null;
 
         if (filter != null) {
-          files = dir.list(filter);
+            files = dir.list(filter);
         } else {
-          files = dir.list();
+            files = dir.list();
         }
 
         if (files == null) {
-          return;
+            return;
         }
 
         for (String file : files) {
@@ -94,11 +94,11 @@ public class FileUtils {
         }
     }
 
-    public static boolean delete(File file) throws IOException {
+    public static boolean delete(final File file) throws IOException {
         return delete(file, true);
     }
 
-    public static boolean delete(File file, boolean recurse) {
+    public static boolean delete(final File file, final boolean recurse) {
         if (file.isDirectory() && recurse) {
             // If the quick delete failed and this is a dir, recursively delete the contents of the dir
             String files[] = file.list();
@@ -281,19 +281,20 @@ public class FileUtils {
         }
     }
 
-    public static File createTempDir(File directory, String prefix) {
+    public static File createTempDir(final File directory, final String prefix) {
         // Force a prefix null check first
         if (prefix.length() < 3) {
             throw new IllegalArgumentException("prefix must be at least 3 characters");
         }
-        if (directory == null) {
+        File tempDirectory = directory;
+        if (tempDirectory == null) {
             String tmpDir = System.getProperty("java.io.tmpdir", ".");
-            directory = new File(tmpDir);
+            tempDirectory = new File(tmpDir);
         }
         File result;
         Random random = new Random();
         do {
-            result = new File(directory, prefix + random.nextInt());
+            result = new File(tempDirectory, prefix + random.nextInt());
         } while (!result.mkdirs());
         return result;
     }
@@ -310,7 +311,7 @@ public class FileUtils {
         return !TextUtils.isEmpty(path) ? String.format(FILE_ABSOLUTE_URI, path) : path;
     }
 
-    public static String getFileNameFromContentUri(Context context, Uri uri) {
+    public static String getFileNameFromContentUri(final Context context, final Uri uri) {
         final ContentResolver cr = context.getContentResolver();
         final String[] projection = {MediaStore.MediaColumns.DISPLAY_NAME};
         String fileName = null;
@@ -326,7 +327,7 @@ public class FileUtils {
         return fileName;
     }
 
-    public static void copy(Context context, Uri srcUri, File dstFile) {
+    public static void copy(final Context context, final Uri srcUri, final File dstFile) {
         try (InputStream inputStream = context.getContentResolver().openInputStream(srcUri);
              OutputStream outputStream = new FileOutputStream(dstFile)) {
             IOUtils.copy(inputStream, outputStream);
@@ -335,11 +336,11 @@ public class FileUtils {
         }
     }
 
-    public static boolean isContentUri(Uri uri) {
+    public static boolean isContentUri(final Uri uri) {
         return uri != null && uri.getScheme() != null && CONTENT_SCHEME.equals(uri.getScheme());
     }
 
-    public static boolean isContentUri(String sUri) {
+    public static boolean isContentUri(final String sUri) {
         return sUri != null && sUri.startsWith(CONTENT_SCHEME);
     }
 
@@ -354,7 +355,8 @@ public class FileUtils {
      * @return The root path of the storage device.
      */
     @TargetApi(19)
-    public static @Nullable String getExternalStoragePath(Context context, @Nullable String uuid) {
+    public static @Nullable String getExternalStoragePath(final Context context,
+                                                          final @Nullable String uuid) {
         // Since around the time of Lollipop or Marshmallow, the common convention is for external
         // SD cards to be mounted at /storage/<file system UUID>/, however this pattern is still not
         // guaranteed to be 100 % reliable. Therefore we need another way of getting all potential
@@ -404,7 +406,7 @@ public class FileUtils {
      *
      * @see Environment#isExternalStorageEmulated(File)
      */
-    public static boolean isExternalStorageEmulated(File path) {
+    public static boolean isExternalStorageEmulated(final File path) {
         if (Build.VERSION.SDK_INT >= 21) {
             return Environment.isExternalStorageEmulated(path);
         } else {

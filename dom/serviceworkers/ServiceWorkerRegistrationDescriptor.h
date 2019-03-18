@@ -19,7 +19,6 @@ class PrincipalInfo;
 namespace dom {
 
 class IPCServiceWorkerRegistrationDescriptor;
-class OptionalIPCServiceWorkerDescriptor;
 class ServiceWorkerInfo;
 enum class ServiceWorkerUpdateViaCache : uint8_t;
 

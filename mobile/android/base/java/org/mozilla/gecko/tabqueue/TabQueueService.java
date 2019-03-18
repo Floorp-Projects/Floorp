@@ -53,7 +53,8 @@ import java.util.concurrent.Executors;
  * timeout (TOAST_TIMEOUT), the url is added to a file which is then read in Fennec on next launch, this allows the
  * user to quickly queue urls to open without having to open Fennec each time. If the Service receives an Intent whilst
  * the created View is still active, the old url is immediately processed and the View is re-purposed with the new
- * Intent data.
+ * Intent data. From Android O, due to background limitations, this is a foreground service as it may be started
+ * from the background.
  * <p/>
  * The SYSTEM_ALERT_WINDOW permission is used to allow us to insert a View from this Service which responds to user
  * interaction, whilst still allowing whatever is in the background to be seen and interacted with.
@@ -104,10 +105,10 @@ public class TabQueueService extends Service {
 
         final Resources resources = getResources();
 
-        TextView messageView = (TextView) toastLayout.findViewById(R.id.toast_message);
+        TextView messageView = toastLayout.findViewById(R.id.toast_message);
         messageView.setText(resources.getText(R.string.tab_queue_toast_message));
 
-        openNowButton = (Button) toastLayout.findViewById(R.id.toast_button);
+        openNowButton = toastLayout.findViewById(R.id.toast_button);
         openNowButton.setText(resources.getText(R.string.tab_queue_toast_action));
 
         toastLayoutParams = new WindowManager.LayoutParams(
@@ -126,6 +127,10 @@ public class TabQueueService extends Service {
 
     @Override
     public int onStartCommand(final Intent intent, final int flags, final int startId) {
+        if (!AppConstants.Versions.preO) {
+            startForeground(TabQueueHelper.TAB_QUEUE_NOTIFICATION_ID, TabQueueHelper.getStartupNotification(TabQueueService.this));
+        }
+
         // If this is a redelivery then lets bypass the entire double tap to open now code as that's a big can of worms,
         // we also don't expect redeliveries because of the short time window associated with this feature.
         if (flags != START_FLAG_REDELIVERY) {
@@ -142,26 +147,24 @@ public class TabQueueService extends Service {
 
             if (!TextUtils.isEmpty(lastUrl) && lastUrl.equals(intentUrl) && isWithinDoubleTapTimeLimit) {
                 // Background thread because we could do some file IO if we have to remove a url from the list.
-                tabQueueHandler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        // If there is a runnable around, that means that the previous process hasn't yet completed, so
-                        // we will need to prevent it from running and remove the view from the window manager.
-                        // If there is no runnable around then the url has already been added to the list, so we'll
-                        // need to remove it before proceeding or that url will open multiple times.
-                        if (stopServiceRunnable != null) {
-                            tabQueueHandler.removeCallbacks(stopServiceRunnable);
-                            stopSelfResult(stopServiceRunnable.getStartId());
-                            stopServiceRunnable = null;
-                            removeView();
-                        } else {
-                            TabQueueHelper.removeURLFromFile(applicationContext, intentUrl, TabQueueHelper.FILE_NAME);
-                        }
-                        openNow(safeIntent.getUnsafe());
-
-                        Telemetry.sendUIEvent(TelemetryContract.Event.LOAD_URL, TelemetryContract.Method.INTENT, "tabqueue-doubletap");
-                        stopSelfResult(startId);
+                tabQueueHandler.post(() -> {
+                    // If there is a runnable around, that means that the previous process hasn't yet completed, so
+                    // we will need to prevent it from running and remove the view from the window manager.
+                    // If there is no runnable around then the url has already been added to the list, so we'll
+                    // need to remove it before proceeding or that url will open multiple times.
+                    if (stopServiceRunnable != null) {
+                        tabQueueHandler.removeCallbacks(stopServiceRunnable);
+                        stopForeground(false);
+                        stopSelfResult(stopServiceRunnable.getStartId());
+                        stopServiceRunnable = null;
+                        removeView();
+                    } else {
+                        TabQueueHelper.removeURLFromFile(applicationContext, intentUrl, TabQueueHelper.FILE_NAME);
                     }
+                    openNow(safeIntent.getUnsafe());
+
+                    Telemetry.sendUIEvent(TelemetryContract.Event.LOAD_URL, TelemetryContract.Method.INTENT, "tabqueue-doubletap");
+                    stopSelfResult(startId);
                 });
 
                 return START_REDELIVER_INTENT;
@@ -194,17 +197,14 @@ public class TabQueueService extends Service {
             }
         };
 
-        openNowButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(final View view) {
-                tabQueueHandler.removeCallbacks(stopServiceRunnable);
-                stopServiceRunnable = null;
-                removeView();
-                openNow(intent);
+        openNowButton.setOnClickListener(view -> {
+            tabQueueHandler.removeCallbacks(stopServiceRunnable);
+            stopServiceRunnable = null;
+            removeView();
+            openNow(intent);
 
-                Telemetry.sendUIEvent(TelemetryContract.Event.LOAD_URL, TelemetryContract.Method.INTENT, "tabqueue-now");
-                stopSelfResult(startId);
-            }
+            Telemetry.sendUIEvent(TelemetryContract.Event.LOAD_URL, TelemetryContract.Method.INTENT, "tabqueue-now");
+            stopSelfResult(startId);
         });
 
         tabQueueHandler.postDelayed(stopServiceRunnable, TOAST_TIMEOUT);
@@ -218,18 +218,16 @@ public class TabQueueService extends Service {
         forwardIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         startActivity(forwardIntent);
 
+        stopForeground(false);
         TabQueueHelper.removeNotification(getApplicationContext());
 
         GeckoSharedPrefs.forApp(getApplicationContext()).edit().remove(GeckoPreferences.PREFS_TAB_QUEUE_LAST_SITE)
                                                                .remove(GeckoPreferences.PREFS_TAB_QUEUE_LAST_TIME)
                                                                .apply();
 
-        executorService.submit(new Runnable() {
-            @Override
-            public void run() {
-                int queuedTabCount = TabQueueHelper.getTabQueueLength(TabQueueService.this);
-                Telemetry.addToHistogram("FENNEC_TABQUEUE_QUEUESIZE", queuedTabCount);
-            }
+        executorService.submit(() -> {
+            int queuedTabCount = TabQueueHelper.getTabQueueLength(TabQueueService.this);
+            Telemetry.addToHistogram("FENNEC_TABQUEUE_QUEUESIZE", queuedTabCount);
         });
 
     }
@@ -290,23 +288,20 @@ public class TabQueueService extends Service {
         final String intentData = safeIntent.getDataString();
 
         // As we're doing disk IO, let's run this stuff in a separate thread.
-        executorService.submit(new Runnable() {
-            @Override
-            public void run() {
-                Context applicationContext = getApplicationContext();
-                final GeckoProfile profile = GeckoProfile.get(applicationContext);
-                int tabsQueued = TabQueueHelper.queueURL(profile, intentData, filename);
-                List<String> urls = TabQueueHelper.getLastURLs(applicationContext, filename);
+        executorService.submit(() -> {
+            Context applicationContext = getApplicationContext();
+            final GeckoProfile profile = GeckoProfile.get(applicationContext);
+            int tabsQueued = TabQueueHelper.queueURL(profile, intentData, filename);
+            List<String> urls = TabQueueHelper.getLastURLs(applicationContext, filename);
 
-                TabQueueHelper.showNotification(applicationContext, tabsQueued, urls);
+            TabQueueHelper.showNotification(applicationContext, tabsQueued, urls);
 
-                // Store the number of URLs queued so that we don't have to read and process the file to see if we have
-                // any urls to open.
-                // TODO: Use profile shared prefs when bug 1147925 gets fixed.
-                final SharedPreferences prefs = GeckoSharedPrefs.forApp(applicationContext);
+            // Store the number of URLs queued so that we don't have to read and process the file to see if we have
+            // any urls to open.
+            // TODO: Use profile shared prefs when bug 1147925 gets fixed.
+            final SharedPreferences prefs = GeckoSharedPrefs.forApp(applicationContext);
 
-                prefs.edit().putInt(TabQueueHelper.PREF_TAB_QUEUE_COUNT, tabsQueued).apply();
-            }
+            prefs.edit().putInt(TabQueueHelper.PREF_TAB_QUEUE_COUNT, tabsQueued).apply();
         });
     }
 
@@ -324,7 +319,7 @@ public class TabQueueService extends Service {
 
         private final int startId;
 
-        public StopServiceRunnable(final int startId) {
+        /*package*/ StopServiceRunnable(final int startId) {
             this.startId = startId;
         }
 
@@ -339,10 +334,11 @@ public class TabQueueService extends Service {
                 removeView();
             }
 
+            stopForeground(false);
             stopSelfResult(startId);
         }
 
-        public int getStartId() {
+        /*package*/ int getStartId() {
             return startId;
         }
 

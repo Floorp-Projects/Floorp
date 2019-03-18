@@ -93,11 +93,12 @@ class NeckoChild : public PNeckoChild {
   mozilla::ipc::IPCResult RecvSpeculativeConnectRequest();
   mozilla::ipc::IPCResult RecvNetworkChangeNotification(nsCString const& type);
 
-  PTrackingDummyChannelChild* AllocPTrackingDummyChannelChild(
+  PClassifierDummyChannelChild* AllocPClassifierDummyChannelChild(
       nsIURI* aURI, nsIURI* aTopWindowURI, const nsresult& aTopWindowURIResult,
       const Maybe<LoadInfoArgs>& aLoadInfo);
 
-  bool DeallocPTrackingDummyChannelChild(PTrackingDummyChannelChild* aChannel);
+  bool DeallocPClassifierDummyChannelChild(
+      PClassifierDummyChannelChild* aChannel);
 };
 
 /**

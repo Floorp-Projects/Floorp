@@ -25,7 +25,7 @@ already_AddRefed<BlobImpl> PendingIPCBlobChild::SetPendingInfoAndDeleteActor(
   blobImpl->SetLazyData(aName, aContentType, aLength, aLastModifiedDate);
 
   PendingIPCFileData fileData(nsString(aName), aLastModifiedDate);
-  PendingIPCBlobData blobData(nsString(aContentType), aLength, fileData);
+  PendingIPCBlobData blobData(nsString(aContentType), aLength, Some(fileData));
   Unused << Send__delete__(this, blobData);
 
   return blobImpl.forget();
@@ -38,7 +38,7 @@ already_AddRefed<BlobImpl> PendingIPCBlobChild::SetPendingInfoAndDeleteActor(
 
   blobImpl->SetLazyData(VoidString(), aContentType, aLength, INT64_MAX);
 
-  PendingIPCBlobData data(nsString(aContentType), aLength, void_t());
+  PendingIPCBlobData data(nsString(aContentType), aLength, Nothing());
   Unused << Send__delete__(this, data);
 
   return blobImpl.forget();

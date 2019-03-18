@@ -102,7 +102,7 @@ void Foo::VirtualMemberFunction(int aArg1, int* aArgPtr, int& aArgRef) {}
 void Foo::VirtualConstMemberFunction(int aArg1, int* aArgPtr,
                                      int& aArgRef) const {}
 
-nsresult CreateFoo(void** result)
+static nsresult CreateFoo(void** result)
 // a typical factory function (that calls AddRef)
 {
   auto* foop = new Foo;
@@ -113,14 +113,14 @@ nsresult CreateFoo(void** result)
   return NS_OK;
 }
 
-void set_a_Foo(RefPtr<Foo>* result) {
+static void set_a_Foo(RefPtr<Foo>* result) {
   assert(result);
 
   RefPtr<Foo> foop(do_QueryObject(new Foo));
   *result = foop;
 }
 
-RefPtr<Foo> return_a_Foo() {
+static RefPtr<Foo> return_a_Foo() {
   RefPtr<Foo> foop(do_QueryObject(new Foo));
   return foop;
 }
@@ -388,8 +388,8 @@ class ObjectForConstPtr {
 #undef NS_INLINE_DECL_THREADSAFE_MUTABLE_REFCOUNTING
 
 namespace TestNsRefPtr {
-void AnFooPtrPtrContext(Foo**) {}
-void AVoidPtrPtrContext(void**) {}
+static void AnFooPtrPtrContext(Foo**) {}
+static void AVoidPtrPtrContext(void**) {}
 }  // namespace TestNsRefPtr
 
 TEST(nsRefPtr, RefPtrCompilationTests) {

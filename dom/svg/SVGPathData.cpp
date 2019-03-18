@@ -757,6 +757,7 @@ void SVGPathData::GetMarkerPositioningData(nsTArray<SVGMark>* aMarks) const {
   // info on current [sub]path (reset every M command):
   Point pathStart(0.0, 0.0);
   float pathStartAngle = 0.0f;
+  uint32_t pathStartIndex = 0;
 
   // info on previous segment:
   uint16_t prevSegType = PATHSEG_UNKNOWN;
@@ -788,6 +789,7 @@ void SVGPathData::GetMarkerPositioningData(nsTArray<SVGMark>* aMarks) const {
           segEnd = segStart + Point(mData[i], mData[i + 1]);
         }
         pathStart = segEnd;
+        pathStartIndex = aMarks->Length();
         // If authors are going to specify multiple consecutive moveto commands
         // with markers, me might as well make the angle do something useful:
         segStartAngle = segEndAngle = AngleOfVector(segEnd, segStart);
@@ -1042,8 +1044,7 @@ void SVGPathData::GetMarkerPositioningData(nsTArray<SVGMark>* aMarks) const {
     }
 
     if (segType == PATHSEG_CLOSEPATH && prevSegType != PATHSEG_CLOSEPATH) {
-      aMarks->LastElement().angle =
-          // aMarks->ElementAt(pathStartIndex).angle =
+      aMarks->LastElement().angle = aMarks->ElementAt(pathStartIndex).angle =
           SVGContentUtils::AngleBisect(segEndAngle, pathStartAngle);
     }
 

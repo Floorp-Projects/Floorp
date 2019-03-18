@@ -5,16 +5,16 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 with Files("**"):
-    BUG_COMPONENT = ("Core", "DOM")
+    BUG_COMPONENT = ("Core", "DOM: Core & HTML")
 
 with Files("en-US/chrome/accessibility/**"):
     BUG_COMPONENT = ("Core", "Disability Access APIs")
 
 with Files("en-US/chrome/dom/**"):
-    BUG_COMPONENT = ("Core", "DOM")
+    BUG_COMPONENT = ("Core", "DOM: Core & HTML")
 
 with Files("en-US/chrome/layout/**"):
-    BUG_COMPONENT = ("Core", "DOM")
+    BUG_COMPONENT = ("Core", "DOM: Core & HTML")
 
 with Files("en-US/chrome/layout/css.properties"):
     BUG_COMPONENT = ("Core", "CSS Parsing and Computation")

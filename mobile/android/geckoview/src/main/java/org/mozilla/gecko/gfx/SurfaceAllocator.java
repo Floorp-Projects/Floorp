@@ -39,7 +39,8 @@ import org.mozilla.gecko.GeckoAppShell;
     }
 
     @WrapForJNI
-    public static GeckoSurface acquireSurface(int width, int height, boolean singleBufferMode) {
+    public static GeckoSurface acquireSurface(final int width, final int height,
+                                              final boolean singleBufferMode) {
         try {
             ensureConnection();
 
@@ -59,7 +60,7 @@ import org.mozilla.gecko.GeckoAppShell;
     }
 
     @WrapForJNI
-    public static void disposeSurface(GeckoSurface surface) {
+    public static void disposeSurface(final GeckoSurface surface) {
         try {
             ensureConnection();
         } catch (Exception e) {
@@ -82,7 +83,7 @@ import org.mozilla.gecko.GeckoAppShell;
         }
     }
 
-    public static void sync(int upstream) {
+    public static void sync(final int upstream) {
         try {
             ensureConnection();
         } catch (Exception e) {
@@ -112,13 +113,14 @@ import org.mozilla.gecko.GeckoAppShell;
         }
 
         @Override
-        public synchronized void onServiceConnected(ComponentName name, IBinder service) {
+        public synchronized void onServiceConnected(final ComponentName name,
+                                                    final IBinder service) {
             mAllocator = ISurfaceAllocator.Stub.asInterface(service);
             this.notifyAll();
         }
 
         @Override
-        public synchronized void onServiceDisconnected(ComponentName name) {
+        public synchronized void onServiceDisconnected(final ComponentName name) {
             mAllocator = null;
         }
     }

@@ -1,6 +1,7 @@
 buildDir "${topobjdir}/gradle/build/mobile/android/geckoview"
 
 apply plugin: 'com.android.library'
+apply plugin: 'checkstyle'
 apply plugin: 'kotlin-android'
 
 apply from: "${topsrcdir}/mobile/android/gradle/product_flavors.gradle"
@@ -296,6 +297,14 @@ android.libraryVariants.all { variant ->
         description = "Generate Javadoc for build variant $name"
         destinationDir = new File(destinationDir, variant.baseName)
         from files(variant.javaCompile.source)
+    }
+
+    task("checkstyle${name.capitalize()}", type: Checkstyle) {
+        classpath = variant.javaCompile.classpath
+        configFile file("checkstyle.xml")
+        // TODO: cleanup and include all sources
+        source = ['src/main/java/']
+        include '**/*.java'
     }
 }
 

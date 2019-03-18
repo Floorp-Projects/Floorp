@@ -7,8 +7,6 @@ package org.mozilla.gecko.util;
 import android.os.Handler;
 import android.os.Looper;
 
-import java.util.concurrent.SynchronousQueue;
-
 final class GeckoBackgroundThread extends Thread {
     private static final String LOOPER_NAME = "GeckoBackgroundThread";
 
@@ -18,11 +16,11 @@ final class GeckoBackgroundThread extends Thread {
 
     // The initial Runnable to run on the new thread. Its purpose
     // is to avoid us having to wait for the new thread to start.
-    private Runnable initialRunnable;
+    private Runnable mInitialRunnable;
 
     // Singleton, so private constructor.
     private GeckoBackgroundThread(final Runnable initialRunnable) {
-        this.initialRunnable = initialRunnable;
+        mInitialRunnable = initialRunnable;
     }
 
     @Override
@@ -35,9 +33,9 @@ final class GeckoBackgroundThread extends Thread {
             GeckoBackgroundThread.class.notifyAll();
         }
 
-        if (initialRunnable != null) {
-            initialRunnable.run();
-            initialRunnable = null;
+        if (mInitialRunnable != null) {
+            mInitialRunnable.run();
+            mInitialRunnable = null;
         }
 
         Looper.loop();

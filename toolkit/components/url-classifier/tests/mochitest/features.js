@@ -130,7 +130,7 @@ function runTests(flag, prefs, trackingResource) {
       // eslint-disable-next-line no-undef
       sendAsyncMessage("last-channel-flags", {
         classificationFlags: channel.classificationFlags,
-        isTrackingResource: channel.isTrackingResource,
+        isTrackingResource: channel.isTrackingResource(),
       });
     }
 

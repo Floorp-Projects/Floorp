@@ -84,12 +84,12 @@ NullHttpChannel::SetTopLevelOuterContentWindowId(uint64_t aWindowId) {
 }
 
 NS_IMETHODIMP
-NullHttpChannel::GetIsTrackingResource(bool *aIsTrackingResource) {
+NullHttpChannel::IsTrackingResource(bool *aIsTrackingResource) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-NullHttpChannel::GetIsThirdPartyTrackingResource(bool *aIsTrackingResource) {
+NullHttpChannel::IsThirdPartyTrackingResource(bool *aIsTrackingResource) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 

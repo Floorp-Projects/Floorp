@@ -36,6 +36,7 @@ interface nsIEditorSpellCheck : nsISupports
    *
    * @see mozSpellChecker::GetNextMisspelledWord
    */
+  [can_run_script]
   AString       GetNextMisspelledWord();
 
   /**
@@ -64,6 +65,7 @@ interface nsIEditorSpellCheck : nsISupports
    *
    * @see mozSpellChecker::CheckCurrentWord
    */
+  [can_run_script]
   void          ReplaceWord(in AString misspelledWord, in AString replaceWord, in boolean allOccurrences);
 
   /**

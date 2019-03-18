@@ -29,7 +29,7 @@ import java.net.URLConnection;
 import java.util.List;
 
 public class ProxySelector {
-    public static URLConnection openConnectionWithProxy(URI uri) throws IOException {
+    public static URLConnection openConnectionWithProxy(final URI uri) throws IOException {
         java.net.ProxySelector ps = java.net.ProxySelector.getDefault();
         Proxy proxy = Proxy.NO_PROXY;
         if (ps != null) {
@@ -45,7 +45,7 @@ public class ProxySelector {
     public ProxySelector() {
     }
 
-    public Proxy select(String scheme, String host) {
+    public Proxy select(final String scheme, final String host) {
         int port = -1;
         Proxy proxy = null;
         String nonProxyHostsKey = null;
@@ -97,7 +97,8 @@ public class ProxySelector {
      * null.
      */
     @Nullable
-    private Proxy lookupProxy(String hostKey, String portKey, Proxy.Type type, int defaultPort) {
+    private Proxy lookupProxy(final String hostKey, final String portKey, final Proxy.Type type,
+                              final int defaultPort) {
         final String host = System.getProperty(hostKey);
         if (TextUtils.isEmpty(host)) {
             return null;
@@ -112,7 +113,7 @@ public class ProxySelector {
         return new Proxy(type, InetSocketAddress.createUnresolved(host, port));
     }
 
-    private int getSystemPropertyInt(String key, int defaultValue) {
+    private int getSystemPropertyInt(final String key, final int defaultValue) {
         String string = System.getProperty(key);
         if (string != null) {
             try {
@@ -127,7 +128,7 @@ public class ProxySelector {
      * Returns true if the {@code nonProxyHosts} system property pattern exists
      * and matches {@code host}.
      */
-    private boolean isNonProxyHost(String host, String nonProxyHosts) {
+    private boolean isNonProxyHost(final String host, final String nonProxyHosts) {
         if (host == null || nonProxyHosts == null) {
             return false;
         }
@@ -137,14 +138,14 @@ public class ProxySelector {
         for (int i = 0; i < nonProxyHosts.length(); i++) {
             char c = nonProxyHosts.charAt(i);
             switch (c) {
-            case '.':
-                patternBuilder.append("\\.");
-                break;
-            case '*':
-                patternBuilder.append(".*");
-                break;
-            default:
-                patternBuilder.append(c);
+                case '.':
+                    patternBuilder.append("\\.");
+                    break;
+                case '*':
+                    patternBuilder.append(".*");
+                    break;
+                default:
+                    patternBuilder.append(c);
             }
         }
         // check whether the host is the nonProxyHosts.

@@ -2515,6 +2515,9 @@ nsIFrame* nsCSSFrameConstructor::ConstructDocElementFrame(
                                        aDocElement);
   }
 
+  MOZ_ASSERT(!state.mHavePendingPopupgroup,
+             "Should have proccessed pending popup group by now");
+
   return newFrame;
 }
 
@@ -9536,8 +9539,6 @@ inline void nsCSSFrameConstructor::ConstructFramesFromItemList(
   }
 
   VerifyGridFlexContainerChildren(aParentFrame, aFrameItems);
-  NS_ASSERTION(!aState.mHavePendingPopupgroup,
-               "Should have proccessed it by now");
 
   if (aParentIsWrapperAnonBox) {
     for (nsIFrame* f : aFrameItems) {

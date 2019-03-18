@@ -1,0 +1,94 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width">
+  <title>Sanity check for one-touch pinch zooming</title>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/paint_listener.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="application/javascript">
+
+function* test(testDriver) {
+  let visResEvt = new EventCounter(window.visualViewport, "resize");
+  let visScrEvt = new EventCounter(window.visualViewport, "scroll");
+  // Our internal visual viewport events aren't restricted to the visual view-
+  // port itself, so we can listen on the window itself, however the event
+  // listener needs to be in the system group.
+  let visResEvtInternal = new EventCounter(window, "mozvisualresize",
+                                           { mozSystemGroup: true });
+  let visScrEvtInternal = new EventCounter(window, "mozvisualscroll",
+                                           { mozSystemGroup: true });
+  let visResEvtContent = new EventCounter(window, "mozvisualresize");
+  let visScrEvtContent = new EventCounter(window, "mozvisualscroll");
+
+  var initial_resolution = getResolution();
+  ok(initial_resolution > 0,
+      "The initial_resolution is " + initial_resolution + ", which is some sane value");
+
+  // This listener will trigger the test to continue once APZ is done with
+  // processing the scroll.
+  SpecialPowers.Services.obs.addObserver(testDriver, "APZ:TransformEnd");
+
+  var zoom_in = [
+      [ { x: 150, y: 300 } ],
+      [ null ],
+      [ { x: 150, y: 300 } ],
+      [ { x: 150, y: 305 } ],
+      [ { x: 150, y: 310 } ],
+      [ { x: 150, y: 315 } ],
+      [ { x: 150, y: 320 } ],
+      [ { x: 150, y: 325 } ],
+  ];
+
+  var touchIds = [0];
+  yield* synthesizeNativeTouchSequences(document.body, zoom_in, null, touchIds);
+
+  // Wait for the APZ:TransformEnd to be fired after touch events are processed.
+  yield true;
+
+  // We get here once the APZ:TransformEnd has fired, so we don't need that
+  // observer any more.
+  SpecialPowers.Services.obs.removeObserver(testDriver, "APZ:TransformEnd");
+
+  // Flush state and get the resolution we're at now
+  yield waitForApzFlushedRepaints(testDriver);
+  let final_resolution = getResolution();
+  ok(final_resolution > initial_resolution, "The final resolution (" + final_resolution + ") is greater after zooming in");
+
+  // Check we've got the expected events.
+  // Zooming the page should fire visual viewport resize events:
+  visResEvt.unregister();
+  ok(visResEvt.count > 0, "Got some visual viewport resize events");
+  visResEvtInternal.unregister();
+  ok(visResEvtInternal.count > 0, "Got some mozvisualresize events");
+
+  // We're zooming somewhere in the middle of the page, so the visual
+  // viewport's coordinates change, too.
+  // This is true both relative to the page (mozvisualscroll), as well as
+  // relative to the layout viewport (visual viewport "scroll" event).
+  visScrEvt.unregister();
+  ok(visScrEvt.count > 0, "Got some visual viewport scroll events");
+  visScrEvtInternal.unregister();
+  ok(visScrEvtInternal.count > 0, "Got some mozvisualscroll events");
+
+  // Our internal events shouldn't leak to normal content.
+  visResEvtContent.unregister();
+  is(visResEvtContent.count, 0, "Got no mozvisualresize events in content");
+  visScrEvtContent.unregister();
+  is(visScrEvtContent.count, 0, "Got no mozvisualscroll events in content");
+}
+
+waitUntilApzStable()
+.then(runContinuation(test))
+.then(subtestDone);
+
+  </script>
+</head>
+<body>
+  Here is some text to stare at as the test runs. It serves no functional
+  purpose, but gives you an idea of the zoom level. It's harder to tell what
+  the zoom level is when the page is just solid white.
+</body>
+</html>

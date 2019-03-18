@@ -237,7 +237,7 @@ TEST(NsDeque, TestPushFront) {
       << "verify pushfront 3";
 }
 
-void CheckIfQueueEmpty(nsDeque& d) {
+static void CheckIfQueueEmpty(nsDeque& d) {
   EXPECT_EQ(0u, d.GetSize()) << "Size should be 0";
   EXPECT_EQ(nullptr, d.Pop()) << "Invalid operation should return nullptr";
   EXPECT_EQ(nullptr, d.PopFront()) << "Invalid operation should return nullptr";

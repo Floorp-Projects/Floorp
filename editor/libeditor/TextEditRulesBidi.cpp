@@ -13,7 +13,6 @@
 #include "nsFrameSelection.h"
 #include "nsIContent.h"
 #include "nsIEditor.h"
-#include "nsIPresShell.h"
 #include "nsISupportsImpl.h"
 #include "nsPresContext.h"
 #include "nscore.h"

@@ -20,7 +20,8 @@ from .protocol import (BaseProtocolPart,
                        ClickProtocolPart,
                        SendKeysProtocolPart,
                        ActionSequenceProtocolPart,
-                       TestDriverProtocolPart)
+                       TestDriverProtocolPart,
+                       GenerateTestReportProtocolPart)
 from ..testrunner import Stop
 
 import webdriver as client
@@ -188,6 +189,15 @@ class WebDriverTestDriverProtocolPart(TestDriverProtocolPart):
         self.webdriver.execute_script("window.postMessage(%s, '*')" % json.dumps(obj))
 
 
+class WebDriverGenerateTestReportProtocolPart(GenerateTestReportProtocolPart):
+    def setup(self):
+        self.webdriver = self.parent.webdriver
+
+    def generate_test_report(self, message):
+        json_message = {"message": message}
+        self.webdriver.send_session_command("POST", "reporting/generate_test_report", json_message)
+
+
 class WebDriverProtocol(Protocol):
     implements = [WebDriverBaseProtocolPart,
                   WebDriverTestharnessProtocolPart,
@@ -195,7 +205,8 @@ class WebDriverProtocol(Protocol):
                   WebDriverClickProtocolPart,
                   WebDriverSendKeysProtocolPart,
                   WebDriverActionSequenceProtocolPart,
-                  WebDriverTestDriverProtocolPart]
+                  WebDriverTestDriverProtocolPart,
+                  WebDriverGenerateTestReportProtocolPart]
 
     def __init__(self, executor, browser, capabilities, **kwargs):
         super(WebDriverProtocol, self).__init__(executor, browser)
@@ -213,9 +224,6 @@ class WebDriverProtocol(Protocol):
         self.webdriver = client.Session(host, port, capabilities=capabilities)
         self.webdriver.start()
 
-
-    def after_conect(self):
-        pass
 
     def teardown(self):
         self.logger.debug("Hanging up on WebDriver session")
@@ -397,6 +405,9 @@ class WebDriverRefTestExecutor(RefTestExecutor):
         with open(os.path.join(here, "reftest-wait_webdriver.js")) as f:
             self.wait_script = f.read()
 
+    def reset(self):
+        self.implementation.reset()
+
     def is_alive(self):
         return self.protocol.is_alive()
 
@@ -406,7 +417,7 @@ class WebDriverRefTestExecutor(RefTestExecutor):
                        window.outerHeight - window.innerHeight];"""
         )
         self.protocol.webdriver.window.position = (0, 0)
-        self.protocol.webdriver.window.size = (600 + width_offset, 600 + height_offset)
+        self.protocol.webdriver.window.size = (800 + width_offset, 600 + height_offset)
 
         result = self.implementation.run_test(test)
 

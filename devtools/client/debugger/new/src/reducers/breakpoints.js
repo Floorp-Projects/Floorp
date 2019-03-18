@@ -15,6 +15,9 @@ import { isEqual } from "lodash";
 import { makeBreakpointId } from "../utils/breakpoint";
 import { findEmptyLines } from "../utils/empty-lines";
 
+// eslint-disable-next-line max-len
+import { getBreakpointsList as getBreakpointsListSelector } from "../selectors/breakpoints";
+
 import type {
   XHRBreakpoint,
   Breakpoint,
@@ -293,7 +296,7 @@ export function getBreakpointsMap(state: OuterState): BreakpointsMap {
 }
 
 export function getBreakpointsList(state: OuterState): Breakpoint[] {
-  return (Object.values(getBreakpointsMap(state)): any);
+  return getBreakpointsListSelector((state: any));
 }
 
 export function getBreakpointCount(state: OuterState): number {

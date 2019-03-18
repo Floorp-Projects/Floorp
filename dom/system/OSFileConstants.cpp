@@ -223,7 +223,7 @@ nsresult OSFileConstantsService::InitOSFileConstants() {
   // Get the umask from the system-info service.
   // The property will always be present, but it will be zero on
   // non-Unix systems.
-  // nsSystemInfo::gUserUmask is initialized by NS_InitXPCOM2 so we don't need
+  // nsSystemInfo::gUserUmask is initialized by NS_InitXPCOM so we don't need
   // to initialize the service.
   mUserUmask = nsSystemInfo::gUserUmask;
 

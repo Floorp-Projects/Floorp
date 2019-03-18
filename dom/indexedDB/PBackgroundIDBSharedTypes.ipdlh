@@ -86,12 +86,6 @@ struct IndexUpdateInfo
   Key localizedValue;
 };
 
-union OptionalKeyRange
-{
-  SerializedKeyRange;
-  void_t;
-};
-
 struct DatabaseMetadata
 {
   nsString name;
@@ -133,14 +127,14 @@ struct ObjectStoreSpec
 struct ObjectStoreOpenCursorParams
 {
   int64_t objectStoreId;
-  OptionalKeyRange optionalKeyRange;
+  SerializedKeyRange? optionalKeyRange;
   Direction direction;
 };
 
 struct ObjectStoreOpenKeyCursorParams
 {
   int64_t objectStoreId;
-  OptionalKeyRange optionalKeyRange;
+  SerializedKeyRange? optionalKeyRange;
   Direction direction;
 };
 
@@ -148,7 +142,7 @@ struct IndexOpenCursorParams
 {
   int64_t objectStoreId;
   int64_t indexId;
-  OptionalKeyRange optionalKeyRange;
+  SerializedKeyRange? optionalKeyRange;
   Direction direction;
 };
 
@@ -156,7 +150,7 @@ struct IndexOpenKeyCursorParams
 {
   int64_t objectStoreId;
   int64_t indexId;
-  OptionalKeyRange optionalKeyRange;
+  SerializedKeyRange? optionalKeyRange;
   Direction direction;
 };
 
@@ -214,14 +208,14 @@ struct ObjectStoreGetKeyParams
 struct ObjectStoreGetAllParams
 {
   int64_t objectStoreId;
-  OptionalKeyRange optionalKeyRange;
+  SerializedKeyRange? optionalKeyRange;
   uint32_t limit;
 };
 
 struct ObjectStoreGetAllKeysParams
 {
   int64_t objectStoreId;
-  OptionalKeyRange optionalKeyRange;
+  SerializedKeyRange? optionalKeyRange;
   uint32_t limit;
 };
 
@@ -239,7 +233,7 @@ struct ObjectStoreClearParams
 struct ObjectStoreCountParams
 {
   int64_t objectStoreId;
-  OptionalKeyRange optionalKeyRange;
+  SerializedKeyRange? optionalKeyRange;
 };
 
 struct IndexGetParams
@@ -260,7 +254,7 @@ struct IndexGetAllParams
 {
   int64_t objectStoreId;
   int64_t indexId;
-  OptionalKeyRange optionalKeyRange;
+  SerializedKeyRange? optionalKeyRange;
   uint32_t limit;
 };
 
@@ -268,7 +262,7 @@ struct IndexGetAllKeysParams
 {
   int64_t objectStoreId;
   int64_t indexId;
-  OptionalKeyRange optionalKeyRange;
+  SerializedKeyRange? optionalKeyRange;
   uint32_t limit;
 };
 
@@ -276,7 +270,7 @@ struct IndexCountParams
 {
   int64_t objectStoreId;
   int64_t indexId;
-  OptionalKeyRange optionalKeyRange;
+  SerializedKeyRange? optionalKeyRange;
 };
 
 union RequestParams

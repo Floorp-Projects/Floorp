@@ -33,12 +33,15 @@ class nsLookAndFeel final : public nsXPLookAndFeel {
 
   bool IsCSDAvailable() const { return mCSDAvailable; }
 
+  static const nscolor kBlack = NS_RGB(0, 0, 0);
+  static const nscolor kWhite = NS_RGB(255, 255, 255);
+
  protected:
   // Cached fonts
-  bool mDefaultFontCached;
-  bool mButtonFontCached;
-  bool mFieldFontCached;
-  bool mMenuFontCached;
+  bool mDefaultFontCached = false;
+  bool mButtonFontCached = false;
+  bool mFieldFontCached = false;
+  bool mMenuFontCached = false;
   nsString mDefaultFontName;
   nsString mButtonFontName;
   nsString mFieldFontName;
@@ -49,48 +52,48 @@ class nsLookAndFeel final : public nsXPLookAndFeel {
   gfxFontStyle mMenuFontStyle;
 
   // Cached colors
-  nscolor mInfoBackground;
-  nscolor mInfoText;
-  nscolor mMenuBackground;
-  nscolor mMenuBarText;
-  nscolor mMenuBarHoverText;
-  nscolor mMenuText;
-  nscolor mMenuTextInactive;
-  nscolor mMenuHover;
-  nscolor mMenuHoverText;
-  nscolor mButtonDefault;
-  nscolor mButtonText;
-  nscolor mButtonHoverText;
-  nscolor mButtonHoverFace;
-  nscolor mFrameOuterLightBorder;
-  nscolor mFrameInnerDarkBorder;
-  nscolor mOddCellBackground;
-  nscolor mNativeHyperLinkText;
-  nscolor mComboBoxText;
-  nscolor mComboBoxBackground;
-  nscolor mMozFieldText;
-  nscolor mMozFieldBackground;
-  nscolor mMozWindowText;
-  nscolor mMozWindowBackground;
-  nscolor mMozWindowActiveBorder;
-  nscolor mMozWindowInactiveBorder;
-  nscolor mMozWindowInactiveCaption;
-  nscolor mMozCellHighlightBackground;
-  nscolor mMozCellHighlightText;
-  nscolor mTextSelectedText;
-  nscolor mTextSelectedBackground;
-  nscolor mMozScrollbar;
-  nscolor mInfoBarText;
-  char16_t mInvisibleCharacter;
-  float mCaretRatio;
-  bool mMenuSupportsDrag;
-  bool mCSDAvailable;
-  bool mCSDHideTitlebarByDefault;
-  bool mCSDMaximizeButton;
-  bool mCSDMinimizeButton;
-  bool mCSDCloseButton;
-  bool mCSDReversedPlacement;
-  bool mInitialized;
+  nscolor mInfoBackground = kWhite;
+  nscolor mInfoText = kBlack;
+  nscolor mMenuBackground = kWhite;
+  nscolor mMenuBarText = kBlack;
+  nscolor mMenuBarHoverText = kBlack;
+  nscolor mMenuText = kBlack;
+  nscolor mMenuTextInactive = kWhite;
+  nscolor mMenuHover = kWhite;
+  nscolor mMenuHoverText = kBlack;
+  nscolor mButtonDefault = kWhite;
+  nscolor mButtonText = kBlack;
+  nscolor mButtonHoverText = kBlack;
+  nscolor mButtonHoverFace = kWhite;
+  nscolor mFrameOuterLightBorder = kBlack;
+  nscolor mFrameInnerDarkBorder = kBlack;
+  nscolor mOddCellBackground = kWhite;
+  nscolor mNativeHyperLinkText = kBlack;
+  nscolor mComboBoxText = kBlack;
+  nscolor mComboBoxBackground = kWhite;
+  nscolor mMozFieldText = kBlack;
+  nscolor mMozFieldBackground = kWhite;
+  nscolor mMozWindowText = kBlack;
+  nscolor mMozWindowBackground = kWhite;
+  nscolor mMozWindowActiveBorder = kBlack;
+  nscolor mMozWindowInactiveBorder = kBlack;
+  nscolor mMozWindowInactiveCaption = kWhite;
+  nscolor mMozCellHighlightBackground = kWhite;
+  nscolor mMozCellHighlightText = kBlack;
+  nscolor mTextSelectedText = kBlack;
+  nscolor mTextSelectedBackground = kWhite;
+  nscolor mMozScrollbar = kWhite;
+  nscolor mInfoBarText = kBlack;
+  char16_t mInvisibleCharacter = 0;
+  float mCaretRatio = 0.0f;
+  bool mMenuSupportsDrag = false;
+  bool mCSDAvailable = false;
+  bool mCSDHideTitlebarByDefault = false;
+  bool mCSDMaximizeButton = false;
+  bool mCSDMinimizeButton = false;
+  bool mCSDCloseButton = false;
+  bool mCSDReversedPlacement = false;
+  bool mInitialized = false;
 
   void EnsureInit();
 

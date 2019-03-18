@@ -22,11 +22,6 @@ $card-header-in-hero-line-height: 20;
     margin: 4px 0 8px;
   }
 
-  .ds-list {
-    border-top: 0;
-    padding-top: 0;
-  }
-
   .ds-card {
     border: 0;
     padding-bottom: 20px;
@@ -61,7 +56,6 @@ $card-header-in-hero-line-height: 20;
   // "1/3 width layout" (aka "Mobile First")
   .wrapper {
     @include ds-border-top;
-    @include ds-border-bottom;
     @include dark-theme-only {
       color: $grey-30;
     }
@@ -69,10 +63,10 @@ $card-header-in-hero-line-height: 20;
     color: $grey-50;
     display: block;
     margin: 12px 0 16px;
-    padding: 16px 0;
+    padding-top: 16px;
     height: 100%;
 
-    @at-root .ds-hero-no-border .wrapper {
+    @at-root .ds-hero-no-border .ds-hero-item .wrapper {
       border-top: 0;
       border-bottom: 0;
       padding: 0 0 8px;

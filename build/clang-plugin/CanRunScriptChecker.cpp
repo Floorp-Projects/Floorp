@@ -2,6 +2,48 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/**
+ * This checker implements the "can run script" analysis.  The idea is to detect
+ * functions that can run script that are being passed reference-counted
+ * arguments (including "this") whose refcount might go to zero as a result of
+ * the script running.  We want to prevent that.
+ *
+ * The approach is to attempt to enforce the following invariants on the call
+ * graph:
+ *
+ * 1) Any caller of a MOZ_CAN_RUN_SCRIPT function is itself MOZ_CAN_RUN_SCRIPT.
+ * 2) If a virtual MOZ_CAN_RUN_SCRIPT method overrides a base class method,
+ *    that base class method is also MOZ_CAN_RUN_SCRIPT.
+ *
+ * Invariant 2 ensures that we don't accidentally call a MOZ_CAN_RUN_SCRIPT
+ * function via a base-class virtual call.  Invariant 1 ensures that
+ * the property of being able to run script propagates up the callstack.  There
+ * is an opt-out for invariant 1: A function (declaration _or_ implementation)
+ * can be decorated with MOZ_CAN_RUN_SCRIPT_BOUNDARY to indicate that we do not
+ * require it or any of its callers to be MOZ_CAN_RUN_SCRIPT even if it calls
+ * MOZ_CAN_RUN_SCRIPT functions.
+ *
+ * There are two known holes in invariant 1, apart from the
+ * MOZ_CAN_RUN_SCRIPT_BOUNDARY opt-out:
+ *
+ *  - Functions called via function pointers can be MOZ_CAN_RUN_SCRIPT even if
+ *    their caller is not, because we have no way to determine from the function
+ *    pointer what function is being called.
+ *  - MOZ_CAN_RUN_SCRIPT destructors can happen in functions that are not
+ *    MOZ_CAN_RUN_SCRIPT.
+ *    https://bugzilla.mozilla.org/show_bug.cgi?id=1535523 tracks this.
+ *
+ * Given those invariants we then require that when calling a MOZ_CAN_RUN_SCRIPT
+ * function all refcounted arguments (including "this") satisfy one of three
+ * conditions:
+ *  a) The argument is held via a strong pointer on the stack.
+ *  b) The argument is an argument of the caller (and hence held by a strong
+ *     pointer somewhere higher up the callstack).
+ *  c) The argument is explicitly annotated with MOZ_KnownLive, which indicates
+ *     that something is guaranteed to keep it alive (e.g. it's rooted via a JS
+ *     reflector).
+ */
+
 #include "CanRunScriptChecker.h"
 #include "CustomMatchers.h"
 

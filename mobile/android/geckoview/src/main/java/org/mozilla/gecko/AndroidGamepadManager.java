@@ -36,7 +36,7 @@ public class AndroidGamepadManager {
 
         public final int axis;
 
-        private Axis(int axis) {
+        private Axis(final int axis) {
             this.axis = axis;
         }
     }
@@ -49,7 +49,7 @@ public class AndroidGamepadManager {
 
         public final int button;
 
-        private Trigger(int button) {
+        private Trigger(final int button) {
             this.button = button;
         }
     }
@@ -65,7 +65,7 @@ public class AndroidGamepadManager {
         public final int negativeButton;
         public final int positiveButton;
 
-        private DpadAxis(int axis, int negativeButton, int positiveButton) {
+        private DpadAxis(final int axis, final int negativeButton, final int positiveButton) {
             this.axis = axis;
             this.negativeButton = negativeButton;
             this.positiveButton = positiveButton;
@@ -92,7 +92,7 @@ public class AndroidGamepadManager {
 
         public final int button;
 
-        private Button(int button) {
+        private Button(final int button) {
             this.button = button;
         }
     }
@@ -106,7 +106,7 @@ public class AndroidGamepadManager {
         public int triggerAxes[];
         public float triggers[];
 
-        public Gamepad(int serviceId, int deviceId) {
+        public Gamepad(final int serviceId, final int deviceId) {
             id = serviceId;
             axes = new float[Axis.values().length];
             dpad = new boolean[4];
@@ -185,16 +185,16 @@ public class AndroidGamepadManager {
     }
 
     @WrapForJNI
-    private static void onGamepadAdded(final int device_id, final int service_id) {
+    private static void onGamepadAdded(final int deviceId, final int serviceId) {
         ThreadUtils.postToUiThread(new Runnable() {
             @Override
             public void run() {
-                handleGamepadAdded(device_id, service_id);
+                handleGamepadAdded(deviceId, serviceId);
             }
         });
     }
 
-    /* package */ static void handleGamepadAdded(int deviceId, int serviceId) {
+    /* package */ static void handleGamepadAdded(final int deviceId, final int serviceId) {
         ThreadUtils.assertOnUiThread();
         if (!sStarted) {
             return;
@@ -214,24 +214,24 @@ public class AndroidGamepadManager {
         }
     }
 
-    private static float deadZone(MotionEvent ev, int axis) {
+    private static float deadZone(final MotionEvent ev, final int axis) {
         if (GamepadUtils.isValueInDeadZone(ev, axis)) {
             return 0.0f;
         }
         return ev.getAxisValue(axis);
     }
 
-    private static void mapDpadAxis(Gamepad gamepad,
-                                    boolean pressed,
-                                    float value,
-                                    int which) {
+    private static void mapDpadAxis(final Gamepad gamepad,
+                                    final boolean pressed,
+                                    final float value,
+                                    final int which) {
         if (pressed != gamepad.dpad[which]) {
             gamepad.dpad[which] = pressed;
             onButtonChange(gamepad.id, FIRST_DPAD_BUTTON + which, pressed, Math.abs(value));
         }
     }
 
-    public static boolean handleMotionEvent(MotionEvent ev) {
+    public static boolean handleMotionEvent(final MotionEvent ev) {
         ThreadUtils.assertOnUiThread();
         if (!sStarted) {
             return false;
@@ -284,7 +284,7 @@ public class AndroidGamepadManager {
         return true;
     }
 
-    public static boolean handleKeyEvent(KeyEvent ev) {
+    public static boolean handleKeyEvent(final KeyEvent ev) {
         ThreadUtils.assertOnUiThread();
         if (!sStarted) {
             return false;
@@ -351,12 +351,12 @@ public class AndroidGamepadManager {
         }
     }
 
-    private static void addGamepad(InputDevice device) {
+    private static void addGamepad(final InputDevice device) {
         sPendingGamepads.put(device.getId(), new ArrayList<KeyEvent>());
         onGamepadChange(device.getId(), true);
     }
 
-    private static void removeGamepad(int deviceId) {
+    private static void removeGamepad(final int deviceId) {
         Gamepad gamepad = sGamepads.get(deviceId);
         onGamepadChange(gamepad.id, false);
         sGamepads.remove(deviceId);
@@ -380,7 +380,7 @@ public class AndroidGamepadManager {
         } else {
             sListener = new InputManager.InputDeviceListener() {
                 @Override
-                public void onInputDeviceAdded(int deviceId) {
+                public void onInputDeviceAdded(final int deviceId) {
                     InputDevice device = InputDevice.getDevice(deviceId);
                     if (device == null) {
                         return;
@@ -391,7 +391,7 @@ public class AndroidGamepadManager {
                 }
 
                 @Override
-                public void onInputDeviceRemoved(int deviceId) {
+                public void onInputDeviceRemoved(final int deviceId) {
                     if (sPendingGamepads.get(deviceId) != null) {
                         // Got removed before Gecko's ack reached us.
                         // gamepadAdded will deal with it.
@@ -404,7 +404,7 @@ public class AndroidGamepadManager {
                 }
 
                 @Override
-                public void onInputDeviceChanged(int deviceId) {
+                public void onInputDeviceChanged(final int deviceId) {
                 }
             };
             final InputManager im = (InputManager)

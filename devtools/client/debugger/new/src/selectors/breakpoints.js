@@ -11,6 +11,7 @@ import type {
   XHRBreakpointsList
 } from "../reducers/breakpoints";
 import type { Selector } from "../reducers/types";
+import type { Breakpoint } from "../types";
 
 type OuterState = { breakpoints: BreakpointsState };
 
@@ -28,4 +29,9 @@ export const shouldPauseOnAnyXHR: Selector<boolean> = createSelector(
 
     return !emptyBp.disabled;
   }
+);
+
+export const getBreakpointsList: Selector<Breakpoint[]> = createSelector(
+  (state: OuterState) => state.breakpoints.breakpoints,
+  breakpoints => (Object.values(breakpoints): any)
 );

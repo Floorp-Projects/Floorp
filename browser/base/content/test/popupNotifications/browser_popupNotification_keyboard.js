@@ -12,6 +12,18 @@ function test() {
   SpecialPowers.pushPrefEnv({"set": [["accessibility.tabfocus", 7]]}).then(setup);
 }
 
+// Focusing on notification icon buttons is handled by the ToolbarKeyboardNavigator
+// component and arrow keys (see browser/base/content/browser-toolbarKeyNav.js).
+function focusNotificationAnchor(anchor) {
+  let urlbarContainer = anchor.closest("#urlbar-container");
+  urlbarContainer.querySelector("toolbartabstop").focus();
+  const identityBox = urlbarContainer.querySelector("#identity-box");
+  is(document.activeElement, identityBox, "Identity box is focused.");
+  while (document.activeElement !== anchor) {
+    EventUtils.synthesizeKey("ArrowRight");
+  }
+}
+
 var tests = [
   // Test that for persistent notifications,
   // the secondary action is triggered by pressing the escape key.
@@ -68,8 +80,7 @@ var tests = [
     onShown(popup) {
       checkPopup(popup, this.notifyObj);
       let anchor = document.getElementById(this.notifyObj.anchorID);
-      anchor.focus();
-      is(document.activeElement, anchor);
+      focusNotificationAnchor(anchor);
       EventUtils.sendString(" ");
       is(document.activeElement, popup.children[0].closebutton);
       this.notification.remove();
@@ -109,7 +120,7 @@ var tests = [
 
       // Activate the anchor for notification 1 and wait until it's shown.
       let anchor = document.getElementById(notifyObj1.anchorID);
-      anchor.focus();
+      focusNotificationAnchor(anchor);
       is(document.activeElement, anchor);
       opened = waitForNotificationPanel();
       EventUtils.sendString(" ");
@@ -120,7 +131,7 @@ var tests = [
 
       // Activate the anchor for notification 2 and wait until it's shown.
       anchor = document.getElementById(notifyObj2.anchorID);
-      anchor.focus();
+      focusNotificationAnchor(anchor);
       is(document.activeElement, anchor);
       opened = waitForNotificationPanel();
       EventUtils.sendString(" ");

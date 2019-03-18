@@ -319,6 +319,13 @@
   background-color: transparent;
 }
 
+.urlbar-icon:-moz-focusring,
+.urlbar-icon-wrapper:-moz-focusring {
+  outline: var(--toolbarbutton-focus-outline);
+  outline-offset: -2px;
+  -moz-outline-radius: var(--toolbarbutton-border-radius);
+}
+
 .urlbar-go-button,
 .search-go-button {
   list-style-image: url("chrome://browser/skin/forward.svg");
@@ -351,7 +358,7 @@
 
 #pageActionButton,
 .share-more-button {
-  list-style-image: url("chrome://browser/skin/page-action.svg");
+  list-style-image: url("chrome://global/skin/icons/more.svg");
 }
 
 @keyframes bookmark-animation {
@@ -696,6 +703,12 @@
 
 :root[lwt-toolbar-field-brighttext] #urlbar-zoom-button:hover:active {
   background-color: rgba(255,255,255,.3);
+}
+
+#urlbar-zoom-button:-moz-focusring {
+  outline: var(--toolbarbutton-focus-outline);
+  outline-offset: unset;
+  -moz-outline-radius: 1em;
 }
 
 #urlbar-zoom-button > .toolbarbutton-text {

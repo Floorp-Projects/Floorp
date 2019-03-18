@@ -38,6 +38,12 @@
   fill-opacity: .8;
 }
 
+#identity-box:not(:active):-moz-focusring {
+  outline: var(--toolbarbutton-focus-outline);
+  outline-offset: -2px;
+  -moz-outline-radius: var(--toolbarbutton-border-radius);
+}
+
 #urlbar[pageproxystate="valid"] > #identity-box.verifiedIdentity > #identity-icon-labels {
   color: #058B00;
 }

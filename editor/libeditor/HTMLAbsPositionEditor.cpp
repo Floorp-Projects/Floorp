@@ -12,6 +12,7 @@
 #include "TextEditUtils.h"
 #include "mozilla/EditAction.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/TextEditRules.h"
 #include "mozilla/dom/Selection.h"
 #include "mozilla/dom/Element.h"
@@ -30,7 +31,6 @@
 #include "nsIDOMWindow.h"
 #include "nsIHTMLObjectResizer.h"
 #include "nsINode.h"
-#include "nsIPresShell.h"
 #include "nsISupportsImpl.h"
 #include "nsISupportsUtils.h"
 #include "nsLiteralString.h"
@@ -301,7 +301,7 @@ void HTMLEditor::HideGrabberInternal() {
   // We allow the pres shell to be null; when it is, we presume there
   // are no document observers to notify, but we still want to
   // UnbindFromTree.
-  nsCOMPtr<nsIPresShell> presShell = GetPresShell();
+  RefPtr<PresShell> presShell = GetPresShell();
   if (grabber) {
     DeleteRefToAnonymousNode(std::move(grabber), presShell);
   }
@@ -404,10 +404,12 @@ nsresult HTMLEditor::GrabberClicked() {
 
 nsresult HTMLEditor::EndMoving() {
   if (mPositioningShadow) {
-    nsCOMPtr<nsIPresShell> ps = GetPresShell();
-    NS_ENSURE_TRUE(ps, NS_ERROR_NOT_INITIALIZED);
+    RefPtr<PresShell> presShell = GetPresShell();
+    if (NS_WARN_IF(!presShell)) {
+      return NS_ERROR_NOT_INITIALIZED;
+    }
 
-    DeleteRefToAnonymousNode(std::move(mPositioningShadow), ps);
+    DeleteRefToAnonymousNode(std::move(mPositioningShadow), presShell);
 
     mPositioningShadow = nullptr;
   }

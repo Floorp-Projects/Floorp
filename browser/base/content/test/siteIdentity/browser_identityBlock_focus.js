@@ -36,12 +36,12 @@ add_task(async function testWithoutNotifications() {
 
     await synthesizeKeyAndWaitForFocus(gURLBar, "l", {accelKey: true});
     is(document.activeElement, gURLBar.inputField, "urlbar should be focused");
-    let geoIcon = document.getElementById("geo-notification-icon");
-    await synthesizeKeyAndWaitForFocus(geoIcon, "VK_TAB", {shiftKey: true});
-    is(document.activeElement, geoIcon, "notification anchor should be focused");
     await synthesizeKeyAndWaitForFocus(gIdentityHandler._identityBox, "VK_TAB", {shiftKey: true});
     is(document.activeElement, gIdentityHandler._identityBox,
-       "identity block should be focused");
+      "identity block should be focused");
+    let geoIcon = document.getElementById("geo-notification-icon");
+    await synthesizeKeyAndWaitForFocus(geoIcon, "ArrowRight");
+    is(document.activeElement, geoIcon, "notification anchor should be focused");
   });
 });
 
@@ -55,6 +55,8 @@ add_task(async function testInvalidPageProxyState() {
       await synthesizeKeyAndWaitForFocus(gURLBar, "l", {accelKey: true});
     }
     is(document.activeElement, gURLBar.inputField, "urlbar should be focused");
+    await synthesizeKeyAndWaitForFocus(document.getElementById("home-button"),
+      "VK_TAB", {shiftKey: true});
     await synthesizeKeyAndWaitForFocus(gBrowser.getTabForBrowser(browser), "VK_TAB", {shiftKey: true});
     isnot(document.activeElement, gIdentityHandler._identityBox,
           "identity block should not be focused");

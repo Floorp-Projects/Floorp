@@ -58,12 +58,6 @@ function workerTestExec(script) {
           permissions: event.data.permissions,
           result,
         });
-      } else if (event.data.type == "getVersion") {
-        let result = Services.appinfo.version;
-        worker.postMessage({
-          type: "returnVersion",
-          result,
-        });
       } else if (event.data.type == "getUserAgent") {
         worker.postMessage({
           type: "returnUserAgent",

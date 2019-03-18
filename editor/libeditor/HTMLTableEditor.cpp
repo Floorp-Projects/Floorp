@@ -13,6 +13,7 @@
 #include "mozilla/EditorDOMPoint.h"
 #include "mozilla/EditorUtils.h"
 #include "mozilla/FlushType.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/dom/Selection.h"
 #include "mozilla/dom/Element.h"
 #include "nsAString.h"
@@ -26,7 +27,6 @@
 #include "nsIContent.h"
 #include "nsIFrame.h"
 #include "nsINode.h"
-#include "nsIPresShell.h"
 #include "nsISupportsUtils.h"
 #include "nsITableCellLayout.h"  // For efficient access to table cell
 #include "nsLiteralString.h"
@@ -63,10 +63,12 @@ class MOZ_STACK_CLASS AutoSelectionSetterAfterTableEdit final {
         mDirection(aDirection),
         mSelected(aSelected) {}
 
+  MOZ_CAN_RUN_SCRIPT
   ~AutoSelectionSetterAfterTableEdit() {
     if (mHTMLEditor) {
-      mHTMLEditor->SetSelectionAfterTableEdit(mTable, mRow, mCol, mDirection,
-                                              mSelected);
+      MOZ_KnownLive(mHTMLEditor)
+          ->SetSelectionAfterTableEdit(MOZ_KnownLive(mTable), mRow, mCol,
+                                       mDirection, mSelected);
     }
   }
 
@@ -772,7 +774,7 @@ nsresult HTMLEditor::InsertTableRowsWithTransaction(
   // SetSelectionAfterTableEdit from AutoSelectionSetterAfterTableEdit will
   // access frame selection, so we need reframe.
   // Because GetTableCellElementAt() depends on frame.
-  nsCOMPtr<nsIPresShell> presShell = GetPresShell();
+  RefPtr<PresShell> presShell = GetPresShell();
   if (presShell) {
     presShell->FlushPendingNotifications(FlushType::Frames);
   }

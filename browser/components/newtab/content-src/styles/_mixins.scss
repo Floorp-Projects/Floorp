@@ -17,7 +17,7 @@
 }
 
 @mixin dark-theme-only {
-  [lwt-newtab-brighttext]:not(.force-light-theme) & {
+  [lwt-newtab-brighttext] & {
     @content;
   }
 }

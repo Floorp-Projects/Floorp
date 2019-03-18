@@ -704,18 +704,16 @@ nsViewSourceChannel::SetTopLevelOuterContentWindowId(uint64_t aWindowId) {
 }
 
 NS_IMETHODIMP
-nsViewSourceChannel::GetIsTrackingResource(bool *aIsTrackingResource) {
-  return !mHttpChannel
-             ? NS_ERROR_NULL_POINTER
-             : mHttpChannel->GetIsTrackingResource(aIsTrackingResource);
+nsViewSourceChannel::IsTrackingResource(bool *aIsTrackingResource) {
+  return !mHttpChannel ? NS_ERROR_NULL_POINTER
+                       : mHttpChannel->IsTrackingResource(aIsTrackingResource);
 }
 
 NS_IMETHODIMP
-nsViewSourceChannel::GetIsThirdPartyTrackingResource(
-    bool *aIsTrackingResource) {
-  return !mHttpChannel ? NS_ERROR_NULL_POINTER
-                       : mHttpChannel->GetIsThirdPartyTrackingResource(
-                             aIsTrackingResource);
+nsViewSourceChannel::IsThirdPartyTrackingResource(bool *aIsTrackingResource) {
+  return !mHttpChannel
+             ? NS_ERROR_NULL_POINTER
+             : mHttpChannel->IsThirdPartyTrackingResource(aIsTrackingResource);
 }
 
 NS_IMETHODIMP

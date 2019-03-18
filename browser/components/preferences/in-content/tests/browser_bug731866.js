@@ -35,7 +35,7 @@ function checkElements(expectedPane) {
   }
 }
 
-function runTest(win) {
+async function runTest(win) {
   is(gBrowser.currentURI.spec, "about:preferences", "about:preferences loaded");
 
   let tab = win.document;
@@ -47,7 +47,7 @@ function runTest(win) {
   ];
 
   for (let pane of panes) {
-    win.gotoPref("pane" + pane);
+    await win.gotoPref("pane" + pane);
     checkElements(pane);
   }
 

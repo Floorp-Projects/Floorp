@@ -26,6 +26,7 @@
 #include "nsIEncodedChannel.h"
 #include "nsIApplicationCacheChannel.h"
 #include "nsIMutableArray.h"
+#include "nsIURIMutator.h"
 #include "nsEscape.h"
 #include "nsStreamListenerWrapper.h"
 #include "nsISecurityConsoleMessage.h"
@@ -66,6 +67,7 @@
 #include "mozilla/net/PartiallySeekableInputStream.h"
 #include "mozilla/net/UrlClassifierCommon.h"
 #include "mozilla/InputStreamLengthHelper.h"
+#include "mozilla/Tokenizer.h"
 #include "nsIHttpHeaderVisitor.h"
 #include "nsIMIMEInputStream.h"
 #include "nsIXULRuntime.h"
@@ -1471,33 +1473,23 @@ NS_IMETHODIMP HttpBaseChannel::SetTopLevelContentWindowId(uint64_t aWindowId) {
   return NS_OK;
 }
 
-bool
-HttpBaseChannel::IsTrackingResource() const {
+NS_IMETHODIMP
+HttpBaseChannel::IsTrackingResource(bool* aIsTrackingResource) {
   MOZ_ASSERT(!mFirstPartyClassificationFlags ||
              !mThirdPartyClassificationFlags);
-  return UrlClassifierCommon::IsTrackingClassificationFlag(
-             mThirdPartyClassificationFlags) ||
-         UrlClassifierCommon::IsTrackingClassificationFlag(
-             mFirstPartyClassificationFlags);
-}
-
-NS_IMETHODIMP
-HttpBaseChannel::GetIsTrackingResource(bool* aIsTrackingResource) {
-  *aIsTrackingResource = IsTrackingResource();
+  *aIsTrackingResource = UrlClassifierCommon::IsTrackingClassificationFlag(
+                             mThirdPartyClassificationFlags) ||
+                         UrlClassifierCommon::IsTrackingClassificationFlag(
+                             mFirstPartyClassificationFlags);
   return NS_OK;
 }
 
-bool
-HttpBaseChannel::IsThirdPartyTrackingResource() const {
+NS_IMETHODIMP
+HttpBaseChannel::IsThirdPartyTrackingResource(bool* aIsTrackingResource) {
   MOZ_ASSERT(
       !(mFirstPartyClassificationFlags && mThirdPartyClassificationFlags));
-  return UrlClassifierCommon::IsTrackingClassificationFlag(
+  *aIsTrackingResource = UrlClassifierCommon::IsTrackingClassificationFlag(
       mThirdPartyClassificationFlags);
-}
-
-NS_IMETHODIMP
-HttpBaseChannel::GetIsThirdPartyTrackingResource(bool* aIsTrackingResource) {
-  *aIsTrackingResource = IsThirdPartyTrackingResource();
   return NS_OK;
 }
 

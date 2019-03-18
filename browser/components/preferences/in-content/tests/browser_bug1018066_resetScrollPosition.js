@@ -17,7 +17,8 @@ add_task(async function() {
   mainContent.scrollTop = 50;
   is(mainContent.scrollTop, 50, "main-content should be scrolled 50 pixels");
 
-  gBrowser.contentWindow.gotoPref("paneGeneral");
+  await gBrowser.contentWindow.gotoPref("paneGeneral");
+
   is(mainContent.scrollTop, 0,
      "Switching to a different category should reset the scroll position");
 });

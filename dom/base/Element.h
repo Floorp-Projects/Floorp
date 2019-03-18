@@ -1131,7 +1131,7 @@ class Element : public FragmentOrElement {
       aError.Throw(NS_ERROR_DOM_INVALID_POINTER_ERR);
       return;
     }
-    if (!IsInUncomposedDoc()) {
+    if (!IsInComposedDoc()) {
       aError.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
       return;
     }

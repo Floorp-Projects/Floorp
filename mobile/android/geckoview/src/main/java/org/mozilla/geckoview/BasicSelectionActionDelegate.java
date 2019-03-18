@@ -389,7 +389,7 @@ public class BasicSelectionActionDelegate implements ActionMode.Callback,
     }
 
     @Override
-    public void onHideAction(GeckoSession session, int reason) {
+    public void onHideAction(final GeckoSession session, final int reason) {
         ThreadUtils.assertOnUiThread();
         if (mActionMode == null) {
             return;

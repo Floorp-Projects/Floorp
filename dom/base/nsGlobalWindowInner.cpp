@@ -7009,7 +7009,8 @@ void nsPIDOMWindowInner::BroadcastReport(Report* aReport) {
 }
 
 void nsPIDOMWindowInner::NotifyReportingObservers() {
-  for (ReportingObserver* observer : mReportingObservers) {
+  nsTArray<RefPtr<ReportingObserver>> reportingObservers(mReportingObservers);
+  for (ReportingObserver* observer : reportingObservers) {
     observer->MaybeNotify();
   }
 }

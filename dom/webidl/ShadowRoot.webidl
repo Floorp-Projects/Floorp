@@ -23,11 +23,8 @@ interface ShadowRoot : DocumentFragment
   readonly attribute ShadowRootMode mode;
   readonly attribute Element host;
 
-  // [deprecated] Shadow DOM v0
   Element? getElementById(DOMString elementId);
-  HTMLCollection getElementsByTagName(DOMString localName);
-  HTMLCollection getElementsByTagNameNS(DOMString? namespace, DOMString localName);
-  HTMLCollection getElementsByClassName(DOMString classNames);
+
   [CEReactions, SetterThrows]
   attribute [TreatNullAs=EmptyString] DOMString innerHTML;
 

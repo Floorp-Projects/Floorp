@@ -39,10 +39,10 @@ PendingIPCBlobParent::PendingIPCBlobParent(BlobImpl* aBlobImpl)
 
 IPCResult PendingIPCBlobParent::Recv__delete__(
     const PendingIPCBlobData& aData) {
-  if (aData.file().type() == PendingIPCFileUnion::Tvoid_t) {
+  if (aData.file().isNothing()) {
     mBlobImpl->SetLazyData(VoidString(), aData.type(), aData.size(), INT64_MAX);
   } else {
-    const PendingIPCFileData& fileData = aData.file().get_PendingIPCFileData();
+    const PendingIPCFileData& fileData = aData.file().ref();
     mBlobImpl->SetLazyData(fileData.name(), aData.type(), aData.size(),
                            fileData.lastModified());
   }

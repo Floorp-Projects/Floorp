@@ -34,7 +34,7 @@ import org.mozilla.gecko.annotation.WrapForJNI;
      * Creates an StackScroller with a viscous fluid scroll interpolator and flywheel.
      * @param context
      */
-    public StackScroller(Context context) {
+    public StackScroller(final Context context) {
         mFlywheel = true;
         mScrollerX = new SplineStackScroller(context);
         mScrollerY = new SplineStackScroller(context);
@@ -67,7 +67,7 @@ import org.mozilla.gecko.annotation.WrapForJNI;
      *
      * @param finished The new finished value.
      */
-    public final void forceFinished(boolean finished) {
+    public final void forceFinished(final boolean finished) {
         mScrollerX.mFinished = mScrollerY.mFinished = finished;
     }
 
@@ -120,28 +120,28 @@ import org.mozilla.gecko.annotation.WrapForJNI;
      *
      * @param x The final X offset as an absolute distance from the origin.
      */
-    public final void setFinalX(int x) {
+    public final void setFinalX(final int x) {
         mScrollerX.setFinalPosition(x);
     }
 
-    private static float viscousFluid(float x) {
-        x *= sViscousFluidScale;
-        if (x < 1.0f) {
-            x -= (1.0f - (float) Math.exp(-x));
+    private static float viscousFluid(final float x) {
+        float y = x * sViscousFluidScale;
+        if (y < 1.0f) {
+            y -= (1.0f - (float) Math.exp(-y));
         } else {
             float start = 0.36787944117f; // 1/e == exp(-1)
-            x = 1.0f - (float) Math.exp(1.0f - x);
-            x = start + x * (1.0f - start);
+            y = 1.0f - (float) Math.exp(1.0f - y);
+            y = start + y * (1.0f - start);
         }
-        x *= sViscousFluidNormalize;
-        return x;
+        y *= sViscousFluidNormalize;
+        return y;
     }
 
     /**
      * Call this when you want to know the new location. If it returns true, the
      * animation is not yet finished.
      */
-    public boolean computeScrollOffset(long time) {
+    public boolean computeScrollOffset(final long time) {
         if (isFinished()) {
             return false;
         }
@@ -202,7 +202,8 @@ import org.mozilla.gecko.annotation.WrapForJNI;
      *        content up.
      * @param duration Duration of the scroll in milliseconds.
      */
-    public void startScroll(int startX, int startY, int dx, int dy, long startTime, int duration) {
+    public void startScroll(final int startX, final int startY, final int dx, final int dy,
+                            final long startTime, final int duration) {
         mMode = SCROLL_MODE;
         mScrollerX.startScroll(startX, dx, startTime, duration);
         mScrollerY.startScroll(startY, dy, startTime, duration);
@@ -221,7 +222,8 @@ import org.mozilla.gecko.annotation.WrapForJNI;
      *          already within the valid range.
      */
     public boolean springBack(
-            int startX, int startY, int minX, int maxX, int minY, int maxY, long time) {
+            final int startX, final int startY, final int minX, final int maxX, final int minY,
+            final int maxY, final long time) {
         mMode = FLING_MODE;
 
         // Make sure both methods are called.
@@ -255,27 +257,31 @@ import org.mozilla.gecko.annotation.WrapForJNI;
      * @param overY Overfling range. If > 0, vertical overfling in either
      *            direction will be possible.
      */
-    public void fling(int startX, int startY, int velocityX, int velocityY, int minX, int maxX,
-            int minY, int maxY, int overX, int overY, long time) {
+    public void fling(final int startX, final int startY, final int velocityX, final int velocityY,
+                      final int minX, final int maxX, final int minY, final int maxY,
+                      final int overX, final int overY, final long time) {
+        int newVelocityX = velocityX;
+        int newVelocityY = velocityY;
+
         // Continue a scroll or fling in progress
         if (mFlywheel && !isFinished()) {
             float oldVelocityX = mScrollerX.mCurrVelocity;
             float oldVelocityY = mScrollerY.mCurrVelocity;
-            boolean sameXDirection = (velocityX == 0) || (oldVelocityX == 0) ||
-                ((velocityX < 0) == (oldVelocityX < 0));
-            boolean sameYDirection = (velocityY == 0) || (oldVelocityY == 0) ||
-                ((velocityY < 0) == (oldVelocityY < 0));
+            boolean sameXDirection = (newVelocityX == 0) || (oldVelocityX == 0) ||
+                ((newVelocityX < 0) == (oldVelocityX < 0));
+            boolean sameYDirection = (newVelocityY == 0) || (oldVelocityY == 0) ||
+                ((newVelocityY < 0) == (oldVelocityY < 0));
             if (sameXDirection) {
-                velocityX += oldVelocityX;
+                newVelocityX += + oldVelocityX;
             }
             if (sameYDirection) {
-                velocityY += oldVelocityY;
+                newVelocityY += oldVelocityY;
             }
         }
 
         mMode = FLING_MODE;
-        mScrollerX.fling(startX, velocityX, minX, maxX, overX, time);
-        mScrollerY.fling(startY, velocityY, minY, maxY, overY, time);
+        mScrollerX.fling(startX, newVelocityX, minX, maxX, overX, time);
+        mScrollerY.fling(startY, newVelocityY, minY, maxY, overY, time);
     }
 
     /**
@@ -393,7 +399,7 @@ import org.mozilla.gecko.annotation.WrapForJNI;
             SPLINE_POSITION[NB_SAMPLES] = SPLINE_TIME[NB_SAMPLES] = 1.0f;
         }
 
-        SplineStackScroller(Context context) {
+        SplineStackScroller(final Context context) {
             mFinished = true;
             final float ppi = context.getResources().getDisplayMetrics().density * 160.0f;
             mPhysicalCoeff = SensorManager.GRAVITY_EARTH // g (m/s^2)
@@ -401,14 +407,14 @@ import org.mozilla.gecko.annotation.WrapForJNI;
                     * ppi * 0.84f; // look and feel tuning
         }
 
-        void updateScroll(float q) {
+        void updateScroll(final float q) {
             mCurrentPosition = mStart + Math.round(q * (mFinal - mStart));
         }
 
         /*
          * Get a signed deceleration that will reduce the velocity.
          */
-        private static float getDeceleration(int velocity) {
+        private static float getDeceleration(final int velocity) {
             return velocity > 0 ? -GRAVITY : GRAVITY;
         }
 
@@ -416,7 +422,7 @@ import org.mozilla.gecko.annotation.WrapForJNI;
          * Modifies mDuration to the duration it takes to get from start to newFinal using the
          * spline interpolation. The previous duration was needed to get to oldFinal.
          */
-        private void adjustDuration(int start, int oldFinal, int newFinal) {
+        private void adjustDuration(final int start, final int oldFinal, final int newFinal) {
             final int oldDistance = oldFinal - start;
             final int newDistance = newFinal - start;
             final float x = Math.abs((float) newDistance / oldDistance);
@@ -431,7 +437,8 @@ import org.mozilla.gecko.annotation.WrapForJNI;
             }
         }
 
-        void startScroll(int start, int distance, long startTime, int duration) {
+        void startScroll(final int start, final int distance, final long startTime,
+                         final int duration) {
             mFinished = false;
 
             mStart = start;
@@ -453,12 +460,12 @@ import org.mozilla.gecko.annotation.WrapForJNI;
             mFinished = true;
         }
 
-        void setFinalPosition(int position) {
+        void setFinalPosition(final int position) {
             mFinal = position;
             mFinished = false;
         }
 
-        boolean springback(int start, int min, int max, long time) {
+        boolean springback(final int start, final int min, final int max, final long time) {
             mFinished = true;
 
             mStart = mFinal = start;
@@ -476,7 +483,7 @@ import org.mozilla.gecko.annotation.WrapForJNI;
             return !mFinished;
         }
 
-        private void startSpringback(int start, int end, int velocity) {
+        private void startSpringback(final int start, final int end, final int velocity) {
             // mStartTime has been set
             mFinished = false;
             mState = CUBIC;
@@ -490,7 +497,8 @@ import org.mozilla.gecko.annotation.WrapForJNI;
             mDuration = (int) (1000.0 * Math.sqrt(-2.0 * delta / mDeceleration));
         }
 
-        void fling(int start, int velocity, int min, int max, int over, long time) {
+        void fling(final int start, final int velocity, final int min, final int max,
+                   final int over, final long time) {
             mOver = over;
             mFinished = false;
             mCurrVelocity = mVelocity = velocity;
@@ -526,11 +534,11 @@ import org.mozilla.gecko.annotation.WrapForJNI;
             }
         }
 
-        private double getSplineDeceleration(int velocity) {
+        private double getSplineDeceleration(final int velocity) {
             return Math.log(INFLEXION * Math.abs(velocity) / (mFlingFriction * mPhysicalCoeff));
         }
 
-        private double getSplineFlingDistance(int velocity) {
+        private double getSplineFlingDistance(final int velocity) {
             final double l = getSplineDeceleration(velocity);
             final double decelMinusOne = DECELERATION_RATE - 1.0;
             return mFlingFriction * mPhysicalCoeff
@@ -538,13 +546,13 @@ import org.mozilla.gecko.annotation.WrapForJNI;
         }
 
         /* Returns the duration, expressed in milliseconds */
-        private int getSplineFlingDuration(int velocity) {
+        private int getSplineFlingDuration(final int velocity) {
             final double l = getSplineDeceleration(velocity);
             final double decelMinusOne = DECELERATION_RATE - 1.0;
             return (int) (1000.0 * Math.exp(l / decelMinusOne));
         }
 
-        private void fitOnBounceCurve(int start, int end, int velocity) {
+        private void fitOnBounceCurve(final int start, final int end, final int velocity) {
             // Simulate a bounce that started from edge
             final float durationToApex = -velocity / mDeceleration;
             final float distanceToApex = velocity * velocity / 2.0f / Math.abs(mDeceleration);
@@ -556,13 +564,14 @@ import org.mozilla.gecko.annotation.WrapForJNI;
             mVelocity = (int) (-mDeceleration * totalDuration);
         }
 
-        private void startBounceAfterEdge(int start, int end, int velocity) {
+        private void startBounceAfterEdge(final int start, final int end, final int velocity) {
             mDeceleration = getDeceleration(velocity == 0 ? start - end : velocity);
             fitOnBounceCurve(start, end, velocity);
             onEdgeReached();
         }
 
-        private void startAfterEdge(int start, int min, int max, int velocity, long time) {
+        private void startAfterEdge(final int start, final int min, final int max,
+                                    final int velocity, final long time) {
             if (start > min && start < max) {
                 Log.e("StackScroller", "startAfterEdge called from a valid position");
                 mFinished = true;
@@ -603,7 +612,7 @@ import org.mozilla.gecko.annotation.WrapForJNI;
             mDuration = -(int) (1000.0f * mVelocity / mDeceleration);
         }
 
-        boolean continueWhenFinished(long time) {
+        boolean continueWhenFinished(final long time) {
             switch (mState) {
                 case SPLINE:
                     // Duration from start to null velocity
@@ -637,7 +646,7 @@ import org.mozilla.gecko.annotation.WrapForJNI;
          * true if update has been done and false if animation duration has been
          * reached.
          */
-        boolean update(long time) {
+        boolean update(final long time) {
             final long currentTime = time - mStartTime;
 
             if (((mState == SPLINE) && (mSplineDuration <= 0)) ||

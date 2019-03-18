@@ -6,7 +6,7 @@
 
 # moved from embedding/components/webbrowserpersist Jan 13, 2017
 with Files("**"):
-    BUG_COMPONENT = ("Core", "DOM")
+    BUG_COMPONENT = ("Core", "DOM: Core & HTML")
 
 XPIDL_SOURCES += [
     'nsIWebBrowserPersist.idl',

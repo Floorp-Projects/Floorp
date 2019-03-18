@@ -63,7 +63,7 @@ public final class SysInfo {
     private static int readCPUCount() {
         class CpuFilter implements FileFilter {
             @Override
-            public boolean accept(File pathname) {
+            public boolean accept(final File pathname) {
                 return Pattern.matches("cpu[0-9]+", pathname.getName());
             }
         }
@@ -81,7 +81,8 @@ public final class SysInfo {
      * Pulled from:
      * http://androidxref.com/4.2_r1/xref/frameworks/base/core/java/com/android/internal/util/MemInfoReader.java
      */
-    private static boolean matchMemText(byte[] buffer, int index, int bufferLength, byte[] text) {
+    private static boolean matchMemText(final byte[] buffer, final int index,
+                                        final int bufferLength, final byte[] text) {
         final int N = text.length;
         if ((index + N) >= bufferLength) {
             return false;
@@ -104,22 +105,21 @@ public final class SysInfo {
      * @return the first uninterrupted sequence of digits following the
      *         specified index, parsed as an integer value in KB.
      */
-    private static int extractMemValue(byte[] buffer, int offset, int length) {
+    private static int extractMemValue(final byte[] buffer, final int offset, final int length) {
         if (offset >= length) {
             return 0;
         }
 
-        while (offset < length && buffer[offset] != '\n') {
-            if (buffer[offset] >= '0' && buffer[offset] <= '9') {
-                int start = offset++;
-                while (offset < length &&
-                       buffer[offset] >= '0' &&
-                       buffer[offset] <= '9') {
-                    ++offset;
+        int i = offset;
+        while (i < length && buffer[i] != '\n') {
+            if (buffer[i] >= '0' && buffer[i] <= '9') {
+                int start = i++;
+                while (i < length && buffer[i] >= '0' && buffer[i] <= '9') {
+                    ++i;
                 }
-                return Integer.parseInt(new String(buffer, start, offset - start), 10);
+                return Integer.parseInt(new String(buffer, start, i - start), 10);
             }
-            ++offset;
+            ++i;
         }
         return 0;
     }

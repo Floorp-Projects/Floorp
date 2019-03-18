@@ -88,7 +88,7 @@ public final class SessionFinder {
         final GeckoSession.CallbackResult<FinderResult> result =
                 new GeckoSession.CallbackResult<FinderResult>() {
             @Override
-            public void sendSuccess(Object response) {
+            public void sendSuccess(final Object response) {
                 complete(new FinderResult((GeckoBundle) response));
             }
         };

@@ -108,8 +108,9 @@ class NonSeekableStringStream final : public nsIAsyncInputStream {
 NS_IMPL_ISUPPORTS(NonSeekableStringStream, nsIInputStream, nsIAsyncInputStream)
 
 // Helper function for creating a seekable nsIInputStream + a SlicedInputStream.
-SlicedInputStream* CreateSeekableStreams(uint32_t aSize, uint64_t aStart,
-                                         uint64_t aLength, nsCString& aBuffer) {
+static SlicedInputStream* CreateSeekableStreams(uint32_t aSize, uint64_t aStart,
+                                                uint64_t aLength,
+                                                nsCString& aBuffer) {
   aBuffer.SetLength(aSize);
   for (uint32_t i = 0; i < aSize; ++i) {
     aBuffer.BeginWriting()[i] = i % 10;
@@ -122,9 +123,10 @@ SlicedInputStream* CreateSeekableStreams(uint32_t aSize, uint64_t aStart,
 
 // Helper function for creating a non-seekable nsIInputStream + a
 // SlicedInputStream.
-SlicedInputStream* CreateNonSeekableStreams(uint32_t aSize, uint64_t aStart,
-                                            uint64_t aLength,
-                                            nsCString& aBuffer) {
+static SlicedInputStream* CreateNonSeekableStreams(uint32_t aSize,
+                                                   uint64_t aStart,
+                                                   uint64_t aLength,
+                                                   nsCString& aBuffer) {
   aBuffer.SetLength(aSize);
   for (uint32_t i = 0; i < aSize; ++i) {
     aBuffer.BeginWriting()[i] = i % 10;

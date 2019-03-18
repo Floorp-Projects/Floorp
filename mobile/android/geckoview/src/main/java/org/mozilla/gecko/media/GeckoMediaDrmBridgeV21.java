@@ -4,7 +4,6 @@
 
 package org.mozilla.gecko.media;
 
-import java.lang.*;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -26,9 +25,7 @@ import android.os.Handler;
 import android.os.HandlerThread;
 import android.media.DeniedByServerException;
 import android.media.MediaCrypto;
-import android.media.MediaCryptoException;
 import android.media.MediaDrm;
-import android.media.MediaDrmException;
 import android.media.NotProvisionedException;
 import android.util.Log;
 
@@ -74,8 +71,8 @@ public class GeckoMediaDrmBridgeV21 implements GeckoMediaDrm {
         public final byte[] mInitData;
         public final String mMimeType;
 
-        private PendingCreateSessionData(int token, int promiseId,
-                                         byte[] initData, String mimeType) {
+        private PendingCreateSessionData(final int token, final int promiseId,
+                                         final byte[] initData, final String mimeType) {
             mToken = token;
             mPromiseId = promiseId;
             mInitData = initData;
@@ -83,17 +80,17 @@ public class GeckoMediaDrmBridgeV21 implements GeckoMediaDrm {
         }
     }
 
-    public boolean isSecureDecoderComonentRequired(String mimeType) {
+    public boolean isSecureDecoderComonentRequired(final String mimeType) {
         if (mCrypto != null) {
             return mCrypto.requiresSecureDecoderComponent(mimeType);
         }
         return false;
-      }
+    }
 
-    private static void assertTrue(boolean condition) {
-      if (DEBUG && !condition) {
-        throw new AssertionError("Expected condition to be true");
-      }
+    private static void assertTrue(final boolean condition) {
+        if (DEBUG && !condition) {
+            throw new AssertionError("Expected condition to be true");
+        }
     }
 
     @SuppressLint("WrongConstant")
@@ -110,7 +107,7 @@ public class GeckoMediaDrmBridgeV21 implements GeckoMediaDrm {
         }
     }
 
-    GeckoMediaDrmBridgeV21(String keySystem) throws Exception {
+    GeckoMediaDrmBridgeV21(final String keySystem) throws Exception {
         LOGTAG = getClass().getSimpleName();
         if (DEBUG) Log.d(LOGTAG, "GeckoMediaDrmBridgeV21 ctor");
 
@@ -141,16 +138,16 @@ public class GeckoMediaDrmBridgeV21 implements GeckoMediaDrm {
     }
 
     @Override
-    public void setCallbacks(GeckoMediaDrm.Callbacks callbacks) {
+    public void setCallbacks(final GeckoMediaDrm.Callbacks callbacks) {
         assertTrue(callbacks != null);
         mCallbacks = callbacks;
     }
 
     @Override
-    public void createSession(int createSessionToken,
-                              int promiseId,
-                              String initDataType,
-                              byte[] initData) {
+    public void createSession(final int createSessionToken,
+                              final int promiseId,
+                              final String initDataType,
+                              final byte[] initData) {
         if (DEBUG) Log.d(LOGTAG, "createSession()");
         if (mDrm == null) {
             onRejectPromise(promiseId, "MediaDrm instance doesn't exist !!");
@@ -209,9 +206,9 @@ public class GeckoMediaDrmBridgeV21 implements GeckoMediaDrm {
     }
 
     @Override
-    public void updateSession(int promiseId,
-                              String sessionId,
-                              byte[] response) {
+    public void updateSession(final int promiseId,
+                              final String sessionId,
+                              final byte[] response) {
         if (DEBUG) Log.d(LOGTAG, "updateSession(), sessionId = " + sessionId);
         if (mDrm == null) {
             onRejectPromise(promiseId, "MediaDrm instance doesn't exist !!");
@@ -246,7 +243,7 @@ public class GeckoMediaDrmBridgeV21 implements GeckoMediaDrm {
     }
 
     @Override
-    public void closeSession(int promiseId, String sessionId) {
+    public void closeSession(final int promiseId, final String sessionId) {
         if (DEBUG) Log.d(LOGTAG, "closeSession()");
         if (mDrm == null) {
             onRejectPromise(promiseId, "MediaDrm instance doesn't exist !!");
@@ -315,8 +312,7 @@ public class GeckoMediaDrmBridgeV21 implements GeckoMediaDrm {
         return;
     }
 
-    protected void HandleKeyStatusChangeByDummyKey(String sessionId)
-    {
+    protected void HandleKeyStatusChangeByDummyKey(final String sessionId) {
         SessionKeyInfo[] keyInfos = new SessionKeyInfo[1];
         keyInfos[0] = new SessionKeyInfo(DUMMY_KEY_ID,
                                          MediaDrm.KeyStatus.STATUS_USABLE);
@@ -324,64 +320,64 @@ public class GeckoMediaDrmBridgeV21 implements GeckoMediaDrm {
         if (DEBUG) Log.d(LOGTAG, "Key successfully added for session " + sessionId);
     }
 
-    protected void onSessionCreated(int createSessionToken,
-                                    int promiseId,
-                                    byte[] sessionId,
-                                    byte[] request) {
+    protected void onSessionCreated(final int createSessionToken,
+                                    final int promiseId,
+                                    final byte[] sessionId,
+                                    final byte[] request) {
         assertTrue(mCallbacks != null);
         if (mCallbacks != null) {
             mCallbacks.onSessionCreated(createSessionToken, promiseId, sessionId, request);
         }
     }
 
-    protected void onSessionUpdated(int promiseId, byte[] sessionId) {
+    protected void onSessionUpdated(final int promiseId, final byte[] sessionId) {
         assertTrue(mCallbacks != null);
         if (mCallbacks != null) {
             mCallbacks.onSessionUpdated(promiseId, sessionId);
         }
     }
 
-    protected void onSessionClosed(int promiseId, byte[] sessionId) {
+    protected void onSessionClosed(final int promiseId, final byte[] sessionId) {
         assertTrue(mCallbacks != null);
         if (mCallbacks != null) {
             mCallbacks.onSessionClosed(promiseId, sessionId);
         }
     }
 
-    protected void onSessionMessage(byte[] sessionId,
-                                    int sessionMessageType,
-                                    byte[] request) {
+    protected void onSessionMessage(final byte[] sessionId,
+                                    final int sessionMessageType,
+                                    final byte[] request) {
         assertTrue(mCallbacks != null);
         if (mCallbacks != null) {
             mCallbacks.onSessionMessage(sessionId, sessionMessageType, request);
         }
     }
 
-    protected void onSessionError(byte[] sessionId, String message) {
+    protected void onSessionError(final byte[] sessionId, final String message) {
         assertTrue(mCallbacks != null);
         if (mCallbacks != null) {
             mCallbacks.onSessionError(sessionId, message);
         }
     }
 
-    protected void  onSessionBatchedKeyChanged(byte[] sessionId,
-                                               SessionKeyInfo[] keyInfos) {
+    protected void  onSessionBatchedKeyChanged(final byte[] sessionId,
+                                               final SessionKeyInfo[] keyInfos) {
         assertTrue(mCallbacks != null);
         if (mCallbacks != null) {
             mCallbacks.onSessionBatchedKeyChanged(sessionId, keyInfos);
         }
     }
 
-    protected void onRejectPromise(int promiseId, String message) {
+    protected void onRejectPromise(final int promiseId, final String message) {
         assertTrue(mCallbacks != null);
         if (mCallbacks != null) {
             mCallbacks.onRejectPromise(promiseId, message);
         }
     }
 
-    private MediaDrm.KeyRequest getKeyRequest(ByteBuffer aSession,
-                                              byte[] data,
-                                              String mimeType)
+    private MediaDrm.KeyRequest getKeyRequest(final ByteBuffer aSession,
+                                              final byte[] data,
+                                              final String mimeType)
         throws android.media.NotProvisionedException {
         if (mProvisioningPromiseId > 0) {
             // Now provisioning.
@@ -403,8 +399,8 @@ public class GeckoMediaDrmBridgeV21 implements GeckoMediaDrm {
 
     private class MediaDrmListener implements MediaDrm.OnEventListener {
         @Override
-        public void onEvent(MediaDrm mediaDrm, byte[] sessionArray, int event,
-                            int extra, byte[] data) {
+        public void onEvent(final MediaDrm mediaDrm, final byte[] sessionArray, final int event,
+                            final int extra, final byte[] data) {
             if (DEBUG) Log.d(LOGTAG, "MediaDrmListener.onEvent()");
             if (sessionArray == null) {
                 if (DEBUG) Log.d(LOGTAG, "MediaDrmListener: Null session.");
@@ -459,7 +455,7 @@ public class GeckoMediaDrmBridgeV21 implements GeckoMediaDrm {
         }
     }
 
-    protected boolean sessionExists(ByteBuffer session) {
+    protected boolean sessionExists(final ByteBuffer session) {
         if (mCryptoSessionId == null) {
             if (DEBUG) Log.d(LOGTAG, "Session doesn't exist because media crypto session is not created.");
             return false;
@@ -479,14 +475,14 @@ public class GeckoMediaDrmBridgeV21 implements GeckoMediaDrm {
         private byte[] mDrmRequest;
         private byte[] mResponseBody;
 
-        PostRequestTask(int promiseId, String url, byte[] drmRequest) {
+        PostRequestTask(final int promiseId, final String url, final byte[] drmRequest) {
             this.mPromiseId = promiseId;
             this.mURL = url;
             this.mDrmRequest = drmRequest;
         }
 
         @Override
-        protected Void doInBackground(Void... params) {
+        protected Void doInBackground(final Void... params) {
             HttpURLConnection urlConnection = null;
             BufferedReader in = null;
             try {
@@ -539,12 +535,12 @@ public class GeckoMediaDrmBridgeV21 implements GeckoMediaDrm {
         }
 
         @Override
-        protected void onPostExecute(Void v) {
+        protected void onPostExecute(final Void v) {
             onProvisionResponse(mPromiseId, mResponseBody);
         }
     }
 
-    private boolean provideProvisionResponse(byte[] response) {
+    private boolean provideProvisionResponse(final byte[] response) {
         if (response == null || response.length == 0) {
             if (DEBUG) Log.d(LOGTAG, "Invalid provision response.");
             return false;
@@ -561,10 +557,10 @@ public class GeckoMediaDrmBridgeV21 implements GeckoMediaDrm {
         return false;
     }
 
-    private void savePendingCreateSessionData(int token,
-                                              int promiseId,
-                                              byte[] initData,
-                                              String mime) {
+    private void savePendingCreateSessionData(final int token,
+                                              final int promiseId,
+                                              final byte[] initData,
+                                              final String mime) {
         if (DEBUG) Log.d(LOGTAG, "savePendingCreateSessionData, promiseId : " + promiseId);
         mPendingCreateSessionDataQueue.offer(new PendingCreateSessionData(token, promiseId, initData, mime));
     }
@@ -608,7 +604,7 @@ public class GeckoMediaDrmBridgeV21 implements GeckoMediaDrm {
     }
 
     // Only triggered when failed on {openSession, getKeyRequest}
-    private void startProvisioning(int promiseId) {
+    private void startProvisioning(final int promiseId) {
         if (DEBUG) Log.d(LOGTAG, "startProvisioning()");
         if (mProvisioningPromiseId > 0) {
             // Already in provisioning.
@@ -626,7 +622,7 @@ public class GeckoMediaDrmBridgeV21 implements GeckoMediaDrm {
         }
     }
 
-    private void onProvisionResponse(int promiseId, byte[] response) {
+    private void onProvisionResponse(final int promiseId, final byte[] response) {
         if (DEBUG) Log.d(LOGTAG, "onProvisionResponse()");
 
         mProvisioningPromiseId = 0;
@@ -672,12 +668,12 @@ public class GeckoMediaDrmBridgeV21 implements GeckoMediaDrm {
         }
     }
 
-    private UUID convertKeySystemToSchemeUUID(String keySystem) {
-      if (WIDEVINE_KEY_SYSTEM.equals(keySystem)) {
-          return WIDEVINE_SCHEME_UUID;
-      }
-      if (DEBUG) Log.d(LOGTAG, "Cannot convert unsupported key system : " + keySystem);
-      return new UUID(0L, 0L);
+    private UUID convertKeySystemToSchemeUUID(final String keySystem) {
+        if (WIDEVINE_KEY_SYSTEM.equals(keySystem)) {
+            return WIDEVINE_SCHEME_UUID;
+        }
+        if (DEBUG) Log.d(LOGTAG, "Cannot convert unsupported key system : " + keySystem);
+        return new UUID(0L, 0L);
     }
 
     private String getCDMUserAgent() {

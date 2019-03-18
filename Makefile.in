@@ -168,7 +168,7 @@ endif
 # enable --host-bins only for automation builds, which only require Linux and
 # Windows host binaries.
 recurse_artifact:
-	$(topsrcdir)/mach --log-no-times artifact install$(if $(MOZ_ARTIFACT_BUILD_SYMBOLS), --symbols)$(if $(MOZ_AUTOMATION), --host-bins)
+	$(topsrcdir)/mach --log-no-times artifact install$(if $(MOZ_ARTIFACT_BUILD_SYMBOLS), --symbols$(addprefix =,$(filter full,$(MOZ_ARTIFACT_BUILD_SYMBOLS))))$(if $(MOZ_AUTOMATION), --host-bins)
 
 ifdef MOZ_EME_WIN32_ARTIFACT
 recurse_win32-artifact:

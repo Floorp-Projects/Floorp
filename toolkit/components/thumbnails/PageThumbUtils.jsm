@@ -21,17 +21,16 @@ var PageThumbUtils = {
   HTML_NAMESPACE: "http://www.w3.org/1999/xhtml",
 
   /**
-   * Creates a new canvas element in the context of aWindow, or if aWindow
-   * is undefined, in the context of hiddenDOMWindow.
+   * Creates a new canvas element in the context of aWindow.
    *
-   * @param aWindow (optional) The document of this window will be used to
-   *  create the canvas.  If not given, the hidden window will be used.
+   * @param aWindow The document of this window will be used to
+   *  create the canvas.
    * @param aWidth (optional) width of the canvas to create
    * @param aHeight (optional) height of the canvas to create
    * @return The newly created canvas.
    */
   createCanvas(aWindow, aWidth = 0, aHeight = 0) {
-    let doc = (aWindow || Services.appShell.hiddenDOMWindow).document;
+    let doc = aWindow.document;
     let canvas = doc.createElementNS(this.HTML_NAMESPACE, "canvas");
     canvas.mozOpaque = true;
     canvas.imageSmoothingEnabled = true;

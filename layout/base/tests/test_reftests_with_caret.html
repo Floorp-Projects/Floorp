@@ -114,7 +114,7 @@ var tests = [
     // The following test cases are all involving with one sending
     // synthesizeKey(), the other without. They fail when accessiblecaret
     // is enabled. Test them with the preference off.
-    function() {SpecialPowers.pushPrefEnv({'set': [['layout.accessiblecaret.enabled', false]]}, nextTest);} ,
+    function() {SpecialPowers.pushPrefEnv({'set': [['layout.accessiblecaret.enabled_on_touch', false]]}, nextTest);} ,
     [ 'bug240933-1.html' , 'bug240933-1-ref.html' ] ,
     [ 'bug240933-2.html' , 'bug240933-1-ref.html' ] ,
     [ 'bug389321-1.html' , 'bug389321-1-ref.html' ] ,
@@ -218,7 +218,7 @@ var tests = [
     [ 'bug1518339-1.html' , 'bug1518339-1-ref.html' ] ,
     [ 'bug1518339-2.html' , 'bug1518339-2-ref.html' ] ,
     [ 'bug1524266-1.html' , 'bug1524266-1-ref.html' ] ,
-    function() {SpecialPowers.pushPrefEnv({'clear': [['layout.accessiblecaret.enabled']]}, nextTest);} ,
+    function() {SpecialPowers.pushPrefEnv({'clear': [['layout.accessiblecaret.enabled_on_touch']]}, nextTest);} ,
 ];
 
 if (!navigator.appVersion.includes("Android")) {
@@ -237,6 +237,9 @@ if (!navigator.appVersion.includes("Android")) {
 
 if (navigator.platform.includes("Linux")) {
   tests = tests.concat([
+    // Turn off accessiblecaret to prevent it from interfering with the
+    // multi-range selection.
+    function() {SpecialPowers.pushPrefEnv({'set': [['layout.accessiblecaret.enabled_on_touch', false]]}, nextTest);} ,
     // eDirPrevious, Shift+click
     [ 'multi-range-user-select.html#prev1S_' , 'multi-range-user-select-ref.html#prev1S_'  ] ,
     [ 'multi-range-user-select.html#prev2S_' , 'multi-range-user-select-ref.html#prev2S_'  ] ,
@@ -335,6 +338,7 @@ if (navigator.platform.includes("Linux")) {
     [ 'bug1524266-3.html' , 'bug1524266-2-ref.html' ] ,
     // Tries to select and delete non-editable content in a user-select subtree.
     [ 'bug1524266-4.html' , 'bug1524266-2-ref.html' ] ,
+    function() {SpecialPowers.pushPrefEnv({'clear': [['layout.accessiblecaret.enabled_on_touch']]}, nextTest);} ,
   ]);
 }
 

@@ -190,7 +190,7 @@ function securityOnLoad(uri, windowInfo) {
   security.init(uri, windowInfo);
 
   var info = security._getSecurityInfo();
-  if (!info || uri.scheme === "about") {
+  if (!info || (uri.scheme === "about" && !uri.spec.startsWith("about:certerror"))) {
     document.getElementById("securityTab").hidden = true;
     return;
   }

@@ -5,6 +5,8 @@
 
 package org.mozilla.gecko.tabqueue;
 
+import android.annotation.TargetApi;
+import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
@@ -12,6 +14,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.graphics.PixelFormat;
+import android.os.Build;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.ContextCompat;
 import android.text.TextUtils;
@@ -261,6 +264,36 @@ public class TabQueueHelper {
 
         NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
         notificationManager.notify(TabQueueHelper.TAB_QUEUE_NOTIFICATION_ID, builder.build());
+    }
+
+    /**
+     * Displays a foreground service notification used from Android O prompting the user that a tab
+     * is being added to the queue.
+     *
+     * @param context
+     * @return startupNotification
+     */
+    @TargetApi(Build.VERSION_CODES.O)
+    public static Notification getStartupNotification(final Context context) {
+        final Resources resources = context.getResources();
+
+        NotificationCompat.InboxStyle inboxStyle = new NotificationCompat.InboxStyle();
+        inboxStyle.setBigContentTitle(resources.getString(R.string.tab_queue_notification_prompt));
+        inboxStyle.setSummaryText(resources.getString(R.string.tab_queue_notification_title));
+
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(context)
+                .setSmallIcon(R.drawable.ic_status_logo)
+                .setContentTitle(resources.getString(R.string.tab_queue_notification_prompt))
+                .setContentText(resources.getString(R.string.tab_queue_notification_title))
+                .setStyle(inboxStyle)
+                .setColor(ContextCompat.getColor(context, R.color.fennec_ui_accent));
+
+        if (!AppConstants.Versions.preO) {
+            builder.setChannelId(NotificationHelper.getInstance(context)
+                    .getNotificationChannel(NotificationHelper.Channel.DEFAULT).getId());
+        }
+
+        return builder.build();
     }
 
     public static boolean shouldOpenTabQueueUrls(final Context context) {

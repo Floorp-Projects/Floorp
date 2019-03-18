@@ -73,8 +73,8 @@ struct Module;
  *         initialisation.
  */
 XPCOM_API(nsresult)
-NS_InitXPCOM2(nsIServiceManager** aResult, nsIFile* aBinDirectory,
-              nsIDirectoryServiceProvider* aAppFileLocationProvider);
+NS_InitXPCOM(nsIServiceManager** aResult, nsIFile* aBinDirectory,
+             nsIDirectoryServiceProvider* aAppFileLocationProvider);
 
 /**
  * Initialize only minimal components of XPCOM. This ensures nsThreadManager,

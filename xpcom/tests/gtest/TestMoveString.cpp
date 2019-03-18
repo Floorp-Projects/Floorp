@@ -22,7 +22,7 @@ namespace TestMoveString {
 
 typedef mozilla::detail::StringDataFlags Df;
 
-void SetAsOwned(nsACString& aStr, const char* aValue) {
+static void SetAsOwned(nsACString& aStr, const char* aValue) {
   size_t len = strlen(aValue);
   char* data = new char[len + 1];
   memcpy(data, aValue, len + 1);
@@ -31,13 +31,13 @@ void SetAsOwned(nsACString& aStr, const char* aValue) {
   EXPECT_STREQ(aStr.BeginReading(), aValue);
 }
 
-void ExpectTruncated(const nsACString& aStr) {
+static void ExpectTruncated(const nsACString& aStr) {
   EXPECT_EQ(aStr.Length(), uint32_t(0));
   EXPECT_STREQ(aStr.BeginReading(), "");
   EXPECT_EQ(aStr.GetDataFlags(), Df::TERMINATED);
 }
 
-void ExpectNew(const nsACString& aStr) {
+static void ExpectNew(const nsACString& aStr) {
   EXPECT_EQ(aStr.Length(), strlen(NEW_VAL));
   EXPECT_TRUE(aStr.EqualsASCII(NEW_VAL));
 }

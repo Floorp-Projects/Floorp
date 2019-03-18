@@ -122,10 +122,6 @@ class MP3TrackDemuxer : public MediaTrackDemuxer,
   // Returns the average frame length derived from the previously parsed frames.
   double AverageFrameLength() const;
 
-  // Returns the number of frames reported by the header if it's valid. Nothing
-  // otherwise.
-  Maybe<uint32_t> ValidNumAudioFrames() const;
-
   // The (hopefully) MPEG resource.
   MediaResourceIndex mSource;
 

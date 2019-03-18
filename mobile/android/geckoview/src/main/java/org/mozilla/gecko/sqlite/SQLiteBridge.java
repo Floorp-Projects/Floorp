@@ -61,26 +61,25 @@ public class SQLiteBridge {
 
     // Takes the path to the database we want to access.
     @RobocopTarget
-    public SQLiteBridge(String aDb) throws SQLiteBridgeException {
+    public SQLiteBridge(final String aDb) throws SQLiteBridgeException {
         mDb = aDb;
     }
 
     // Executes a simple line of sql.
-    public void execSQL(String sql)
-                throws SQLiteBridgeException {
+    public void execSQL(final String sql) throws SQLiteBridgeException {
         Cursor cursor = internalQuery(sql, null);
         cursor.close();
     }
 
     // Executes a simple line of sql. Allow you to bind arguments
-    public void execSQL(String sql, String[] bindArgs)
+    public void execSQL(final String sql, final String[] bindArgs)
                 throws SQLiteBridgeException {
         Cursor cursor = internalQuery(sql, bindArgs);
         cursor.close();
     }
 
     // Executes a DELETE statement on the database
-    public int delete(String table, String whereClause, String[] whereArgs)
+    public int delete(final String table, final String whereClause, final String[] whereArgs)
                throws SQLiteBridgeException {
         StringBuilder sb = new StringBuilder("DELETE from ");
         sb.append(table);
@@ -92,14 +91,14 @@ public class SQLiteBridge {
         return (int)mQueryResults[RESULT_ROWS_CHANGED];
     }
 
-    public Cursor query(String table,
-                        String[] columns,
-                        String selection,
-                        String[] selectionArgs,
-                        String groupBy,
-                        String having,
-                        String orderBy,
-                        String limit)
+    public Cursor query(final String table,
+                        final String[] columns,
+                        final String selection,
+                        final String[] selectionArgs,
+                        final String groupBy,
+                        final String having,
+                        final String orderBy,
+                        final String limit)
                throws SQLiteBridgeException {
         StringBuilder sb = new StringBuilder("SELECT ");
         if (columns != null)
@@ -134,12 +133,12 @@ public class SQLiteBridge {
     }
 
     @RobocopTarget
-    public Cursor rawQuery(String sql, String[] selectionArgs)
+    public Cursor rawQuery(final String sql, final String[] selectionArgs)
         throws SQLiteBridgeException {
         return internalQuery(sql, selectionArgs);
     }
 
-    public long insert(String table, String nullColumnHack, ContentValues values)
+    public long insert(final String table, final String nullColumnHack, final ContentValues values)
                throws SQLiteBridgeException {
         if (values == null)
             return 0;
@@ -178,8 +177,8 @@ public class SQLiteBridge {
         return mQueryResults[RESULT_INSERT_ROW_ID];
     }
 
-    public int update(String table, ContentValues values, String whereClause, String[] whereArgs)
-               throws SQLiteBridgeException {
+    public int update(final String table, final ContentValues values, final String whereClause,
+                      final String[] whereArgs) throws SQLiteBridgeException {
         if (values == null)
             return 0;
 
@@ -237,7 +236,7 @@ public class SQLiteBridge {
     // Do an SQL query, substituting the parameters in the query with the passed
     // parameters. The parameters are substituted in order: named parameters
     // are not supported.
-    private Cursor internalQuery(String aQuery, String[] aParams)
+    private Cursor internalQuery(final String aQuery, final String[] aParams)
         throws SQLiteBridgeException {
 
         mQueryResults = new long[2];
@@ -251,8 +250,9 @@ public class SQLiteBridge {
      * The second two parameters here are just provided for compatibility with SQLiteDatabase
      * Support for them is not currently implemented.
     */
-    public static SQLiteBridge openDatabase(String path, SQLiteDatabase.CursorFactory factory, int flags)
-        throws SQLiteException {
+    public static SQLiteBridge openDatabase(final String path,
+                                            final SQLiteDatabase.CursorFactory factory,
+                                            final int flags) throws SQLiteException {
         if (factory != null) {
             throw new RuntimeException("factory not supported.");
         }
@@ -276,7 +276,7 @@ public class SQLiteBridge {
 
     public void close() {
         if (isOpen()) {
-          closeDatabase(mDbPointer);
+            closeDatabase(mDbPointer);
         }
         mDbPointer = 0L;
     }
@@ -308,11 +308,11 @@ public class SQLiteBridge {
             return;
 
         try {
-          if (mTransactionSuccess) {
-              execSQL("COMMIT TRANSACTION");
-          } else {
-              execSQL("ROLLBACK TRANSACTION");
-          }
+            if (mTransactionSuccess) {
+                execSQL("COMMIT TRANSACTION");
+            } else {
+                execSQL("ROLLBACK TRANSACTION");
+            }
         } catch (SQLiteBridgeException ex) {
             Log.e(LOGTAG, "Error ending transaction", ex);
         }

@@ -644,6 +644,19 @@ nsFormFillController::GetNoRollupOnCaretMove(bool* aNoRollupOnCaretMove) {
 }
 
 NS_IMETHODIMP
+nsFormFillController::GetNoRollupOnEmptySearch(bool* aNoRollupOnEmptySearch) {
+  if (mFocusedInput &&
+      (mPwmgrInputs.Get(mFocusedInput) ||
+       mFocusedInput->ControlType() == NS_FORM_INPUT_PASSWORD)) {
+    // Don't close the login popup when the field is cleared (bug 1534896).
+    *aNoRollupOnEmptySearch = true;
+  } else {
+    *aNoRollupOnEmptySearch = false;
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsFormFillController::GetUserContextId(uint32_t* aUserContextId) {
   *aUserContextId = nsIScriptSecurityManager::DEFAULT_USER_CONTEXT_ID;
   return NS_OK;

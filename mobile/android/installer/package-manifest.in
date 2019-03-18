@@ -113,7 +113,8 @@
 @BINPATH@/components/amWebAPI.js
 @BINPATH@/components/amInstallTrigger.js
 #ifndef RELEASE_OR_BETA
-@BINPATH@/components/TabSource.js
+# Bug 1440601
+# @BINPATH@/components/TabSource.js
 #endif
 #endif
 

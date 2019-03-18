@@ -18,6 +18,13 @@
   padding-inline-end: 5px;
 }
 
+.blocked-permission-icon:-moz-focusring,
+.notification-anchor-icon:-moz-focusring {
+  outline: var(--toolbarbutton-focus-outline);
+  outline-offset: 4px;
+  -moz-outline-radius: var(--toolbarbutton-border-radius);
+}
+
 /* This class can be used alone or in combination with the class defining the
    type of icon displayed. This rule must be defined before the others in order
    for its list-style-image to be overridden. */

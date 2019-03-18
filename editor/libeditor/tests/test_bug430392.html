@@ -38,9 +38,7 @@ function test() {
     synthesizeKey("KEY_Enter");
     synthesizeKey("KEY_Backspace");
     synthesizeKey("KEY_Backspace");
-  // For some reason this test fails if the separator is not "br"
-  }, () => document.queryCommandValue("defaultParagraphSeparator") == "br"
-           ? undefined : " A; B ; C "],
+  }],
   ["adding shift-returns", () => {
     getSelection().collapse(edit.firstChild, 0);
     synthesizeKey("KEY_ArrowRight");

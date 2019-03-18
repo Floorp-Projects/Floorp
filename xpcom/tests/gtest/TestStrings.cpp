@@ -468,7 +468,7 @@ class Strings : public ::testing::Test {
   nsCString mViThousandUtf8;
 };
 
-void test_assign_helper(const nsACString& in, nsACString& _retval) {
+static void test_assign_helper(const nsACString& in, nsACString& _retval) {
   _retval = in;
 }
 

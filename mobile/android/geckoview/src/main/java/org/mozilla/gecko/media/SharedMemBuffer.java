@@ -15,16 +15,16 @@ public final class SharedMemBuffer implements Sample.Buffer {
     private SharedMemory mSharedMem;
 
     /* package */
-    public SharedMemBuffer(SharedMemory sharedMem) {
+    public SharedMemBuffer(final SharedMemory sharedMem) {
         mSharedMem = sharedMem;
     }
 
-    protected SharedMemBuffer(Parcel in) {
+    protected SharedMemBuffer(final Parcel in) {
         mSharedMem = in.readParcelable(Sample.class.getClassLoader());
     }
 
     @Override
-    public void writeToParcel(Parcel dest, int flags) {
+    public void writeToParcel(final Parcel dest, final int flags) {
         dest.writeParcelable(mSharedMem, flags);
     }
 
@@ -35,12 +35,12 @@ public final class SharedMemBuffer implements Sample.Buffer {
 
     public static final Creator<SharedMemBuffer> CREATOR = new Creator<SharedMemBuffer>() {
         @Override
-        public SharedMemBuffer createFromParcel(Parcel in) {
+        public SharedMemBuffer createFromParcel(final Parcel in) {
             return new SharedMemBuffer(in);
         }
 
         @Override
-        public SharedMemBuffer[] newArray(int size) {
+        public SharedMemBuffer[] newArray(final int size) {
             return new SharedMemBuffer[size];
         }
     };
@@ -51,7 +51,8 @@ public final class SharedMemBuffer implements Sample.Buffer {
     }
 
     @Override
-    public void readFromByteBuffer(ByteBuffer src, int offset, int size) throws IOException {
+    public void readFromByteBuffer(final ByteBuffer src, final int offset, final int size)
+            throws IOException {
         if (!src.isDirect()) {
             throw new IOException("SharedMemBuffer only support reading from direct byte buffer.");
         }
@@ -65,7 +66,8 @@ public final class SharedMemBuffer implements Sample.Buffer {
     private native static void nativeReadFromDirectBuffer(ByteBuffer src, long dest, int offset, int size);
 
     @Override
-    public void writeToByteBuffer(ByteBuffer dest, int offset, int size) throws IOException {
+    public void writeToByteBuffer(final ByteBuffer dest, final int offset, final int size)
+            throws IOException {
         if (!dest.isDirect()) {
             throw new IOException("SharedMemBuffer only support writing to direct byte buffer.");
         }
@@ -86,5 +88,7 @@ public final class SharedMemBuffer implements Sample.Buffer {
         }
     }
 
-    @Override public String toString() { return "Buffer: " + mSharedMem; }
+    @Override public String toString() {
+        return "Buffer: " + mSharedMem;
+    }
 }
