@@ -46,18 +46,6 @@ EffectSet* EffectSet::GetEffectSet(const dom::Element* aElement,
 }
 
 /* static */
-EffectSet* EffectSet::GetEffectSet(const nsIFrame* aFrame) {
-  Maybe<NonOwningAnimationTarget> target =
-      EffectCompositor::GetAnimationElementAndPseudoForFrame(aFrame);
-
-  if (!target) {
-    return nullptr;
-  }
-
-  return GetEffectSet(target->mElement, target->mPseudoType);
-}
-
-/* static */
 EffectSet* EffectSet::GetOrCreateEffectSet(dom::Element* aElement,
                                            PseudoStyleType aPseudoType) {
   EffectSet* effectSet = GetEffectSet(aElement, aPseudoType);
@@ -81,6 +69,58 @@ EffectSet* EffectSet::GetOrCreateEffectSet(dom::Element* aElement,
   aElement->SetMayHaveAnimations();
 
   return effectSet;
+}
+
+/* static */
+EffectSet* EffectSet::GetEffectSetForFrame(
+    const nsIFrame* aFrame, const nsCSSPropertyIDSet& aProperties) {
+  MOZ_ASSERT(aFrame);
+
+  // Transform animations are run on the primary frame (but stored on the
+  // content associated with the style frame).
+  const nsIFrame* frameToQuery = nullptr;
+  if (aProperties.IsSubsetOf(nsCSSPropertyIDSet::TransformLikeProperties())) {
+    // Make sure to return nullptr if we're looking for transform animations on
+    // the inner table frame.
+    if (!aFrame->IsFrameOfType(nsIFrame::eSupportsCSSTransforms)) {
+      return nullptr;
+    }
+    frameToQuery = nsLayoutUtils::GetStyleFrame(aFrame);
+  } else {
+    MOZ_ASSERT(
+        !aProperties.Intersects(nsCSSPropertyIDSet::TransformLikeProperties()),
+        "We should have only transform properties or no transform properties");
+    // We don't need to explicitly return nullptr when |aFrame| is NOT the style
+    // frame since there will be no effect set in that case.
+    frameToQuery = aFrame;
+  }
+
+  Maybe<NonOwningAnimationTarget> target =
+      EffectCompositor::GetAnimationElementAndPseudoForFrame(frameToQuery);
+  if (!target) {
+    return nullptr;
+  }
+
+  return GetEffectSet(target->mElement, target->mPseudoType);
+}
+
+/* static */
+EffectSet* EffectSet::GetEffectSetForFrame(const nsIFrame* aFrame,
+                                           DisplayItemType aDisplayItemType) {
+  return EffectSet::GetEffectSetForFrame(
+      aFrame, LayerAnimationInfo::GetCSSPropertiesFor(aDisplayItemType));
+}
+
+/* static */
+EffectSet* EffectSet::GetEffectSetForStyleFrame(const nsIFrame* aStyleFrame) {
+  Maybe<NonOwningAnimationTarget> target =
+      EffectCompositor::GetAnimationElementAndPseudoForFrame(aStyleFrame);
+
+  if (!target) {
+    return nullptr;
+  }
+
+  return GetEffectSet(target->mElement, target->mPseudoType);
 }
 
 /* static */

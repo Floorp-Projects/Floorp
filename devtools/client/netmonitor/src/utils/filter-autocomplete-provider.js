@@ -4,7 +4,7 @@
 
 "use strict";
 
-const { FILTER_FLAGS } = require("../constants");
+const { FILTER_FLAGS, SUPPORTED_HTTP_CODES } = require("../constants");
 
 /**
  * Generates a value for the given filter
@@ -158,11 +158,28 @@ function autocompleteProvider(filter, requests) {
   if (availableValues.length > 0) {
     autocompleteList = availableValues;
   } else {
-    autocompleteList = baseList
-      .filter((item) => {
-        return item.toLowerCase().startsWith(lastToken.toLowerCase())
-          && item.toLowerCase() !== lastToken.toLowerCase();
-      });
+    const isNegativeFlag = lastToken.startsWith("-");
+
+    // Stores list of HTTP codes that starts with value of lastToken
+    const filteredStatusCodes = SUPPORTED_HTTP_CODES.filter((item) => {
+      item = isNegativeFlag ? item.substr(1) : item;
+      return item.toLowerCase().startsWith(lastToken.toLowerCase());
+    });
+
+    if (filteredStatusCodes.length > 0) {
+      // Shows an autocomplete list of "status-code" values from filteredStatusCodes
+      autocompleteList = isNegativeFlag ?
+        filteredStatusCodes.map((item) => `-status-code:${item}`) :
+        filteredStatusCodes.map((item) => `status-code:${item}`);
+    } else {
+      // Shows an autocomplete list of values from baseList
+      // that starts with value of lastToken
+      autocompleteList = baseList
+        .filter((item) => {
+          return item.toLowerCase().startsWith(lastToken.toLowerCase())
+            && item.toLowerCase() !== lastToken.toLowerCase();
+        });
+    }
   }
 
   return autocompleteList

@@ -73,10 +73,36 @@ bool AnimationUtils::IsOffscreenThrottlingEnabled() {
 }
 
 /* static */
-bool AnimationUtils::EffectSetContainsAnimatedScale(EffectSet& aEffects,
-                                                    const nsIFrame* aFrame) {
-  for (const dom::KeyframeEffect* effect : aEffects) {
+bool AnimationUtils::FrameHasAnimatedScale(const nsIFrame* aFrame) {
+  EffectSet* effectSet = EffectSet::GetEffectSetForFrame(
+      aFrame, nsCSSPropertyIDSet::TransformLikeProperties());
+  if (!effectSet) {
+    return false;
+  }
+
+  for (const dom::KeyframeEffect* effect : *effectSet) {
     if (effect->ContainsAnimatedScale(aFrame)) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+/* static */
+bool AnimationUtils::HasCurrentTransitions(const Element* aElement,
+                                           PseudoStyleType aPseudoType) {
+  MOZ_ASSERT(aElement);
+
+  EffectSet* effectSet = EffectSet::GetEffectSet(aElement, aPseudoType);
+  if (!effectSet) {
+    return false;
+  }
+
+  for (const dom::KeyframeEffect* effect : *effectSet) {
+    // If |effect| is current, it must have an associated Animation
+    // so we don't need to null-check the result of GetAnimation().
+    if (effect->IsCurrent() && effect->GetAnimation()->AsCSSTransition()) {
       return true;
     }
   }

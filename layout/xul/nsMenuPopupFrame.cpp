@@ -44,6 +44,7 @@
 #include "nsTransitionManager.h"
 #include "nsDisplayList.h"
 #include "nsIDOMXULSelectCntrlItemEl.h"
+#include "mozilla/AnimationUtils.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventStateManager.h"
 #include "mozilla/EventStates.h"
@@ -571,7 +572,8 @@ void nsMenuPopupFrame::LayoutPopup(nsBoxLayoutState& aState,
     if (mContent->AsElement()->AttrValueIs(kNameSpaceID_None,
                                            nsGkAtoms::animate, nsGkAtoms::open,
                                            eCaseMatters) &&
-        nsLayoutUtils::HasCurrentTransitions(this)) {
+        AnimationUtils::HasCurrentTransitions(mContent->AsElement(),
+                                              PseudoStyleType::NotPseudo)) {
       mPopupShownDispatcher = new nsXULPopupShownEvent(mContent, pc);
       mContent->AddSystemEventListener(NS_LITERAL_STRING("transitionend"),
                                        mPopupShownDispatcher, false, false);

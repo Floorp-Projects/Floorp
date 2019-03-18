@@ -265,7 +265,15 @@ class MainEventCollector {
   }
 
   getJQuery(node) {
+    if (Cu.isDeadWrapper(node)) {
+      return null;
+    }
+
     const global = this.unwrap(node.ownerGlobal);
+    if (!global) {
+      return null;
+    }
+
     const hasJQuery = global.jQuery && global.jQuery.fn && global.jQuery.fn.jquery;
 
     if (hasJQuery) {
@@ -390,14 +398,25 @@ class JQueryEventCollector extends MainEventCollector {
     }
 
     let eventsObj = null;
-
     const data = jQuery._data || jQuery.data;
+
     if (data) {
       // jQuery 1.2+
-      eventsObj = data(node, "events");
+      try {
+        eventsObj = data(node, "events");
+      } catch (e) {
+        // We have no access to a JS object. This is probably due to a CORS
+        // violation. Using try / catch is the only way to avoid this error.
+      }
     } else {
       // JQuery 1.0 & 1.1
-      const entry = jQuery(node)[0];
+      let entry;
+      try {
+        entry = entry = jQuery(node)[0];
+      } catch (e) {
+        // We have no access to a JS object. This is probably due to a CORS
+        // violation. Using try / catch is the only way to avoid this error.
+      }
 
       if (!entry || !entry.events) {
         if (checkOnly) {
@@ -474,7 +493,14 @@ class JQueryLiveEventCollector extends MainEventCollector {
       // Any element matching the specified selector will trigger the live
       // event.
       const win = this.unwrap(node.ownerGlobal);
-      const events = data(win.document, "events");
+      let events = null;
+
+      try {
+        events = data(win.document, "events");
+      } catch (e) {
+        // We have no access to a JS object. This is probably due to a CORS
+        // violation. Using try / catch is the only way to avoid this error.
+      }
 
       if (events) {
         for (const [, eventHolder] of Object.entries(events)) {
