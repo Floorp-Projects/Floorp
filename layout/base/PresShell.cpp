@@ -1839,8 +1839,10 @@ nsresult PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight,
   if (mMobileViewportManager) {
     // If we have a mobile viewport manager, request a reflow from it. It can
     // recompute the final CSS viewport and trigger a call to
-    // ResizeReflowIgnoreOverride if it changed.
-    mMobileViewportManager->RequestReflow();
+    // ResizeReflowIgnoreOverride if it changed. We don't force adjusting
+    // of resolution, because that is only necessary when we are destroying
+    // the MVM.
+    mMobileViewportManager->RequestReflow(false);
     return NS_OK;
   }
 
@@ -10527,8 +10529,19 @@ void PresShell::UpdateViewportOverridden(bool aAfterInitialization) {
 
   MOZ_ASSERT(mMobileViewportManager,
              "Shouldn't reach this without a MobileViewportManager.");
-  mMobileViewportManager->Destroy();
-  mMobileViewportManager = nullptr;
+  // Before we get rid of our MVM, ask it to update the viewport while
+  // forcing resolution, which will undo any scaling it might have imposed.
+  // To do this correctly, we need to first null out mMobileViewportManager,
+  // because during reflow we will check PresShell::GetIsViewportOverriden(),
+  // which uses that value as a signifier.
+  RefPtr<MobileViewportManager> oldMVM;
+  mMobileViewportManager.swap(oldMVM);
+
+  oldMVM->RequestReflow(true);
+  ResetVisualViewportSize();
+
+  oldMVM->Destroy();
+  oldMVM = nullptr;
 
   if (aAfterInitialization) {
     // Force a reflow to our correct size by going back to the docShell
