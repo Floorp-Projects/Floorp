@@ -16,6 +16,7 @@
 #include "nsTHashtable.h"  // For nsTHashtable
 
 class nsPresContext;
+enum class DisplayItemType : uint32_t;
 
 namespace mozilla {
 
@@ -62,6 +63,12 @@ class EffectSet {
   static EffectSet* GetEffectSet(const nsIFrame* aFrame);
   static EffectSet* GetOrCreateEffectSet(dom::Element* aElement,
                                          PseudoStyleType aPseudoType);
+
+  static EffectSet* GetEffectSetForFrame(const nsIFrame* aFrame,
+                                         const nsCSSPropertyIDSet& aProperties);
+  static EffectSet* GetEffectSetForFrame(const nsIFrame* aFrame,
+                                         DisplayItemType aDisplayItemType);
+
   static void DestroyEffectSet(dom::Element* aElement,
                                PseudoStyleType aPseudoType);
 
