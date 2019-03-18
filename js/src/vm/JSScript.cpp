@@ -4734,7 +4734,7 @@ void js::SetFrameArgumentsObject(JSContext* cx, AbstractFramePtr frame,
 }
 
 /* static */
-bool JSScript::argumentsOptimizationFailed(JSContext* cx, HandleScript script) {
+void JSScript::argumentsOptimizationFailed(JSContext* cx, HandleScript script) {
   MOZ_ASSERT(script->functionNonDelazifying());
   MOZ_ASSERT(script->analyzedArgsUsage());
   MOZ_ASSERT(script->argumentsHasVarBinding());
@@ -4747,7 +4747,7 @@ bool JSScript::argumentsOptimizationFailed(JSContext* cx, HandleScript script) {
    * argsobj.
    */
   if (script->needsArgsObj()) {
-    return true;
+    return;
   }
 
   MOZ_ASSERT(!script->isGenerator());
@@ -4790,8 +4790,6 @@ bool JSScript::argumentsOptimizationFailed(JSContext* cx, HandleScript script) {
       SetFrameArgumentsObject(cx, frame, script, argsobj);
     }
   }
-
-  return true;
 }
 
 bool JSScript::formalIsAliased(unsigned argSlot) {
