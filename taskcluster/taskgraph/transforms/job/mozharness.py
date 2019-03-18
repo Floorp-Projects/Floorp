@@ -210,6 +210,8 @@ def mozharness_on_docker_worker_setup(config, job, taskdesc):
     # Xvfb
     if run['need-xvfb']:
         env['NEED_XVFB'] = 'true'
+    else:
+        env['NEED_XVFB'] = 'false'
 
     if run['tooltool-downloads']:
         internal = run['tooltool-downloads'] == 'internal'
