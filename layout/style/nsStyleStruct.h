@@ -1425,15 +1425,16 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleTextReset {
   // Note the difference between this and
   // ComputedStyle::HasTextDecorationLines.
   bool HasTextDecorationLines() const {
-    return mTextDecorationLine != NS_STYLE_TEXT_DECORATION_LINE_NONE &&
-           mTextDecorationLine != NS_STYLE_TEXT_DECORATION_LINE_OVERRIDE_ALL;
+    return mTextDecorationLine != mozilla::StyleTextDecorationLine_NONE &&
+           mTextDecorationLine !=
+               mozilla::StyleTextDecorationLine_COLOR_OVERRIDE;
   }
 
   nsChangeHint CalcDifference(const nsStyleTextReset& aNewData) const;
 
   nsStyleTextOverflow mTextOverflow;  // enum, string
 
-  uint8_t mTextDecorationLine;   // NS_STYLE_TEXT_DECORATION_LINE_*
+  mozilla::StyleTextDecorationLine mTextDecorationLine;
   uint8_t mTextDecorationStyle;  // NS_STYLE_TEXT_DECORATION_STYLE_*
   uint8_t mUnicodeBidi;          // NS_STYLE_UNICODE_BIDI_*
   nscoord mInitialLetterSink;    // 0 means normal

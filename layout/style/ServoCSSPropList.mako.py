@@ -114,7 +114,6 @@ LONGHANDS_NOT_SERIALIZED_WITH_SERVO = [
     "scroll-snap-points-x",
     "scroll-snap-points-y",
     "stroke",
-    "text-decoration-line",
     "text-emphasis-position",
     "text-emphasis-style",
     "text-overflow",

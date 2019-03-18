@@ -3618,7 +3618,7 @@ nsChangeHint nsStyleContent::CalcDifference(
 
 nsStyleTextReset::nsStyleTextReset(const Document& aDocument)
     : mTextOverflow(),
-      mTextDecorationLine(NS_STYLE_TEXT_DECORATION_LINE_NONE),
+      mTextDecorationLine(StyleTextDecorationLine_NONE),
       mTextDecorationStyle(NS_STYLE_TEXT_DECORATION_STYLE_SOLID),
       mUnicodeBidi(NS_STYLE_UNICODE_BIDI_NORMAL),
       mInitialLetterSink(0),

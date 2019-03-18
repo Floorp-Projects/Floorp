@@ -606,9 +606,9 @@ TextAttrsMgr::TextDecorValue::TextDecorValue(nsIFrame* aFrame) {
   const nsStyleTextReset* textReset = aFrame->StyleTextReset();
   mStyle = textReset->mTextDecorationStyle;
   mColor = textReset->mTextDecorationColor.CalcColor(aFrame);
-  mLine = textReset->mTextDecorationLine &
-          (NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE |
-           NS_STYLE_TEXT_DECORATION_LINE_LINE_THROUGH);
+  mLine =
+      textReset->mTextDecorationLine & (StyleTextDecorationLine_UNDERLINE |
+                                        StyleTextDecorationLine_LINE_THROUGH);
 }
 
 TextAttrsMgr::TextDecorTextAttr::TextDecorTextAttr(nsIFrame* aRootFrame,
