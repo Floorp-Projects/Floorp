@@ -161,7 +161,7 @@ class DynamicsCompressorNodeEngine final : public AudioNodeEngine {
 };
 
 DynamicsCompressorNode::DynamicsCompressorNode(AudioContext* aContext)
-    : AudioNode(aContext, 2, ChannelCountMode::Explicit,
+    : AudioNode(aContext, 2, ChannelCountMode::Clamped_max,
                 ChannelInterpretation::Speakers),
       mThreshold(new AudioParam(this, DynamicsCompressorNodeEngine::THRESHOLD,
                                 "threshold", -24.f, -100.f, 0.f)),
