@@ -17,6 +17,10 @@ buildscript {
 
         // Publish.
         classpath Dependencies.tools_mavengradle
+
+        // Mozilla Android gradle plugin. For details, see the repo:
+        // https://github.com/mozilla-mobile/android-automation-tools/tree/master/gradle-plugin
+        classpath "org.mozilla.android:gradle-plugin:0.2"
     }
 }
 
@@ -41,6 +45,9 @@ allprojects {
             url "https://download.servo.org/nightly/maven"
         }
     }
+
+    // Apply necessary Mozilla repositories as defined by the shared plugin.
+    apply plugin: 'org.mozilla.android'
 }
 
 subprojects {
