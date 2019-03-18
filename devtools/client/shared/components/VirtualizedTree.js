@@ -205,6 +205,9 @@ class Tree extends Component {
       // Handle when item is activated with a keyboard (using Space or Enter)
       onActivate: PropTypes.func,
 
+      // The currently shown item, if any such item exists.
+      shown: PropTypes.any,
+
       // Indicates if pressing ArrowRight key should only expand expandable node
       // or if the selection should also move to the next node.
       preventNavigationOnArrowRight: PropTypes.bool,
@@ -277,6 +280,7 @@ class Tree extends Component {
     window.addEventListener("resize", this._onResize);
     this._autoExpand();
     this._updateHeight();
+    this._scrollItemIntoView();
   }
 
   componentWillReceiveProps(nextProps) {
@@ -293,8 +297,21 @@ class Tree extends Component {
            mouseDown === nextState.mouseDown;
   }
 
+  componentDidUpdate() {
+    this._scrollItemIntoView();
+  }
+
   componentWillUnmount() {
     window.removeEventListener("resize", this._onResize);
+  }
+
+  _scrollItemIntoView() {
+    const { shown } = this.props;
+    if (!shown) {
+      return;
+    }
+
+    this._scrollIntoView(shown);
   }
 
   _autoExpand() {
