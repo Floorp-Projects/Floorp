@@ -58,7 +58,7 @@ browser.jar:
         content/browser/browser-tabsintitlebar.js     (content/browser-tabsintitlebar.js)
         content/browser/browser-toolbarKeyNav.js      (content/browser-toolbarKeyNav.js)
         content/browser/browser-thumbnails.js         (content/browser-thumbnails.js)
-        content/browser/browser-webrender.js          (content/browser-webrender.js)
+        content/browser/browser-graphics-utils.js     (content/browser-graphics-utils.js)
         content/browser/tab-content.js                (content/tab-content.js)
         content/browser/content.js                    (content/content.js)
         content/browser/defaultthemes/1.header.jpg    (content/defaultthemes/1.header.jpg)

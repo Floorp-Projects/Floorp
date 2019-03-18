@@ -141,8 +141,8 @@ XPCOMUtils.defineLazyScriptGetter(this, "gEditItemOverlay",
 XPCOMUtils.defineLazyScriptGetter(this, "SearchOneOffs",
                                   "chrome://browser/content/search/search-one-offs.js");
 if (AppConstants.NIGHTLY_BUILD) {
-  XPCOMUtils.defineLazyScriptGetter(this, "gWebRender",
-                                    "chrome://browser/content/browser-webrender.js");
+  XPCOMUtils.defineLazyScriptGetter(this, "gGfxUtils",
+                                    "chrome://browser/content/browser-graphics-utils.js");
 }
 
 XPCOMUtils.defineLazyScriptGetter(this, "pktUI", "chrome://pocket/content/main.js");
