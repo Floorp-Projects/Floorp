@@ -362,9 +362,9 @@ already_AddRefed<FilterNode> DrawTargetCaptureImpl::CreateFilter(
 bool DrawTargetCaptureImpl::IsEmpty() const { return mCommands.IsEmpty(); }
 
 void DrawTargetCaptureImpl::Dump() {
-  TreeLog output;
+  TreeLog<> output;
   output << "DrawTargetCapture(" << (void*)(this) << ")\n";
-  TreeAutoIndent indent(output);
+  TreeAutoIndent<> indent(output);
   mCommands.Log(output);
   output << "\n";
 }
