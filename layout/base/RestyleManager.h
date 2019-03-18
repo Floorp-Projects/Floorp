@@ -369,7 +369,9 @@ class RestyleManager {
   // track whether off-main-thread animations are up-to-date.
   uint64_t GetAnimationGeneration() const { return mAnimationGeneration; }
 
-  static uint64_t GetAnimationGenerationForFrame(nsIFrame* aFrame);
+  // Typically only style frames have animations associated with them so this
+  // will likely return zero for anything that is not a style frame.
+  static uint64_t GetAnimationGenerationForFrame(nsIFrame* aStyleFrame);
 
   // Update the animation generation count to mark that animation state
   // has changed.
