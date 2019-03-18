@@ -354,7 +354,11 @@ class MitmproxyAndroid(Mitmproxy):
         self.CERTUTIL_SLEEP = 10
         if self.config['run_local']:
             # when running locally, it is found in the Firefox desktop build (..obj../dist/bin)
-            self.certutil = os.path.join(self.config['obj_path'], 'dist', 'bin')
+            self.certutil = os.path.join(os.environ['MOZ_HOST_BIN'], 'certutil')
+            if not (os.path.isfile(self.certutil) and os.access(self.certutil, os.X_OK)):
+                LOG.critical("Abort: unable to execute certutil: {}".format(self.certutil))
+                raise
+            self.certutil = os.environ['MOZ_HOST_BIN']
             os.environ['LD_LIBRARY_PATH'] = self.certutil
         else:
             # must download certutil inside hostutils via tooltool; use this manifest:
