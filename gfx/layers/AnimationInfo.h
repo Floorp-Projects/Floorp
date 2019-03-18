@@ -78,7 +78,8 @@ class AnimationInfo final {
       nsIFrame* aFrame, DisplayItemType aDisplayItemKey);
 
   using CompositorAnimatableDisplayItemTypes =
-      Array<DisplayItemType, nsCSSPropertyIDSet::CompositorAnimatableCount()>;
+      Array<DisplayItemType,
+            nsCSSPropertyIDSet::CompositorAnimatableDisplayItemCount()>;
   using AnimationGenerationCallback = std::function<bool(
       const Maybe<uint64_t>& aGeneration, DisplayItemType aDisplayItemType)>;
   // Enumerates animation generations on |aFrame| for the given display item

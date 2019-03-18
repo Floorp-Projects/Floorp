@@ -30,7 +30,8 @@ struct LayerAnimationInfo {
   static inline const nsCSSPropertyIDSet& GetCSSPropertiesFor(
       DisplayItemType aDisplayItemType) {
     static const nsCSSPropertyIDSet transformProperties =
-        nsCSSPropertyIDSet{eCSSProperty_transform};
+        nsCSSPropertyIDSet{eCSSProperty_transform, eCSSProperty_translate,
+                           eCSSProperty_scale, eCSSProperty_rotate};
     static const nsCSSPropertyIDSet opacityProperties =
         nsCSSPropertyIDSet{eCSSProperty_opacity};
     static const nsCSSPropertyIDSet backgroundColorProperties =
@@ -76,13 +77,13 @@ struct LayerAnimationInfo {
     }
   }
 
-  // An array of DisplayItemType corresponding to the display item taht we can
+  // An array of DisplayItemType corresponding to the display item that we can
   // animate on the compositor.
   //
   // This is used to look up the appropriate change hint in cases when
   // animations need updating but no other change hint is generated.
   static const Array<DisplayItemType,
-                     nsCSSPropertyIDSet::CompositorAnimatableCount()>
+                     nsCSSPropertyIDSet::CompositorAnimatableDisplayItemCount()>
       sDisplayItemTypes;
 };
 
