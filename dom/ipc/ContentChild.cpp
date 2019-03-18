@@ -112,7 +112,7 @@
 #  include "ChildProfilerController.h"
 #endif
 
-#if defined(MOZ_CONTENT_SANDBOX)
+#if defined(MOZ_SANDBOX)
 #  include "mozilla/SandboxSettings.h"
 #  if defined(XP_WIN)
 #    include "mozilla/sandboxTarget.h"
@@ -1497,7 +1497,7 @@ mozilla::ipc::IPCResult ContentChild::RecvReinitRenderingForDeviceReset() {
   return IPC_OK();
 }
 
-#if defined(XP_MACOSX) && defined(MOZ_CONTENT_SANDBOX)
+#if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
 extern "C" {
 CGError CGSSetDenyWindowServerConnections(bool);
 void CGSShutdownServerConnections();
@@ -1636,7 +1636,7 @@ mozilla::ipc::IPCResult ContentChild::RecvSetProcessSandbox(
     const Maybe<mozilla::ipc::FileDescriptor>& aBroker) {
   // We may want to move the sandbox initialization somewhere else
   // at some point; see bug 880808.
-#if defined(MOZ_CONTENT_SANDBOX)
+#if defined(MOZ_SANDBOX)
   bool sandboxEnabled = true;
 #  if defined(XP_LINUX)
   // On Linux, we have to support systems that can't use any sandboxing.
@@ -1677,7 +1677,7 @@ mozilla::ipc::IPCResult ContentChild::RecvSetProcessSandbox(
 #  endif /* XP_LINUX && !OS_ANDROID */
   CrashReporter::AnnotateCrashReport(CrashReporter::Annotation::RemoteType,
                                      NS_ConvertUTF16toUTF8(GetRemoteType()));
-#endif /* MOZ_CONTENT_SANDBOX */
+#endif /* MOZ_SANDBOX */
 
   return IPC_OK();
 }
@@ -3841,7 +3841,7 @@ mozilla::ipc::IPCResult ContentChild::RecvCommitBrowsingContextTransaction(
 
 }  // namespace dom
 
-#if defined(__OpenBSD__) && defined(MOZ_CONTENT_SANDBOX)
+#if defined(__OpenBSD__) && defined(MOZ_SANDBOX)
 #  include <unistd.h>
 
 static LazyLogModule sPledgeLog("SandboxPledge");

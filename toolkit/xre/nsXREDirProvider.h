@@ -128,11 +128,9 @@ class nsXREDirProvider final : public nsIDirectoryServiceProvider2,
   // delimiters.
   static inline nsresult AppendProfileString(nsIFile* aFile, const char* aPath);
 
-#if defined(MOZ_CONTENT_SANDBOX)
+#if defined(MOZ_SANDBOX)
   // Load the temp directory for sandboxed content processes
   nsresult LoadContentProcessTempDir();
-#endif
-#if defined(MOZ_SANDBOX)
   nsresult LoadPluginProcessTempDir();
 #endif
 
@@ -149,11 +147,9 @@ class nsXREDirProvider final : public nsIDirectoryServiceProvider2,
   nsCOMPtr<nsIFile> mProfileLocalDir;
   bool mProfileNotified;
   bool mPrefsInitialized = false;
-#if defined(MOZ_CONTENT_SANDBOX)
+#if defined(MOZ_SANDBOX)
   nsCOMPtr<nsIFile> mContentTempDir;
   nsCOMPtr<nsIFile> mContentProcessSandboxTempDir;
-#endif
-#if defined(MOZ_SANDBOX)
   nsCOMPtr<nsIFile> mPluginTempDir;
   nsCOMPtr<nsIFile> mPluginProcessSandboxTempDir;
 #endif

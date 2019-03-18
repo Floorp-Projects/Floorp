@@ -21,7 +21,7 @@
 #include "nsIObserverService.h"
 #include "GMPTimerParent.h"
 #include "runnable_utils.h"
-#if defined(XP_LINUX) && defined(MOZ_GMP_SANDBOX)
+#if defined(XP_LINUX) && defined(MOZ_SANDBOX)
 #  include "mozilla/SandboxInfo.h"
 #endif
 #include "CDMStorageIdProvider.h"
@@ -691,7 +691,7 @@ RefPtr<GenericPromise> GMPParent::ParseChromiumManifest(
   mDescription = NS_ConvertUTF16toUTF8(m.mDescription);
   mVersion = NS_ConvertUTF16toUTF8(m.mVersion);
 
-#if defined(XP_LINUX) && defined(MOZ_GMP_SANDBOX)
+#if defined(XP_LINUX) && defined(MOZ_SANDBOX)
   if (!mozilla::SandboxInfo::Get().CanSandboxMedia()) {
     nsPrintfCString msg(
         "GMPParent::ParseChromiumManifest: Plugin \"%s\" is an EME CDM"

@@ -257,9 +257,9 @@ class DocAccessibleParent : public ProxyAccessible,
   // The handle associated with the emulated window that contains this document
   HWND mEmulatedWindowHandle;
 
-#  if defined(MOZ_CONTENT_SANDBOX)
+#  if defined(MOZ_SANDBOX)
   mscom::PreservedStreamPtr mParentProxyStream;
-#  endif  // defined(MOZ_CONTENT_SANDBOX)
+#  endif  // defined(MOZ_SANDBOX)
 #endif    // defined(XP_WIN)
 
   /*

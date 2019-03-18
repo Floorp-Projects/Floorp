@@ -122,7 +122,7 @@
 #  endif
 #endif
 
-#if defined(MOZ_CONTENT_SANDBOX)
+#if defined(MOZ_SANDBOX)
 #  include "mozilla/SandboxSettings.h"
 #  if (defined(XP_WIN) || defined(XP_MACOSX))
 #    include "nsIUUIDGenerator.h"
@@ -3208,7 +3208,7 @@ int XREMain::XRE_mainInit(bool* aExitFlag) {
   if (mAppData->sandboxBrokerServices) {
     SandboxBroker::Initialize(mAppData->sandboxBrokerServices);
   } else {
-#  if defined(MOZ_CONTENT_SANDBOX)
+#  if defined(MOZ_SANDBOX)
     // If we're sandboxing content and we fail to initialize, then crashing here
     // seems like the sensible option.
     if (BrowserTabsRemoteAutostart()) {
@@ -4209,7 +4209,7 @@ int XREMain::XRE_mainStartup(bool* aExitFlag) {
   return 0;
 }
 
-#if defined(MOZ_CONTENT_SANDBOX)
+#if defined(MOZ_SANDBOX)
 void AddSandboxAnnotations() {
   // Include the sandbox content level, regardless of platform
   int level = GetEffectiveContentSandboxLevel();
@@ -4239,7 +4239,7 @@ void AddSandboxAnnotations() {
   CrashReporter::AnnotateCrashReport(
       CrashReporter::Annotation::ContentSandboxCapable, sandboxCapable);
 }
-#endif /* MOZ_CONTENT_SANDBOX */
+#endif /* MOZ_SANDBOX */
 
 /*
  * XRE_mainRun - Command line startup, profile migration, and
@@ -4579,9 +4579,9 @@ nsresult XREMain::XRE_mainRun() {
       CrashReporter::Annotation::ContentSandboxCapabilities, flagsString);
 #endif /* MOZ_SANDBOX && XP_LINUX */
 
-#if defined(MOZ_CONTENT_SANDBOX)
+#if defined(MOZ_SANDBOX)
   AddSandboxAnnotations();
-#endif /* MOZ_CONTENT_SANDBOX */
+#endif /* MOZ_SANDBOX */
 
   mProfileSvc->CompleteStartup();
 

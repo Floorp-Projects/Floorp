@@ -584,7 +584,7 @@ nsresult GetSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory,
       }
       return rv;
     }
-#  if defined(MOZ_CONTENT_SANDBOX)
+#  if defined(MOZ_SANDBOX)
     case Win_LocalAppdataLow: {
       GUID localAppDataLowGuid = FOLDERID_LocalAppDataLow;
       return GetKnownFolder(&localAppDataLowGuid, aFile);

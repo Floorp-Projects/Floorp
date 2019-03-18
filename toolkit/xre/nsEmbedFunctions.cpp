@@ -94,7 +94,7 @@
 #  include "mozilla/RemoteSandboxBrokerProcessChild.h"
 #endif
 
-#if defined(MOZ_CONTENT_SANDBOX)
+#if defined(MOZ_SANDBOX)
 #  include "mozilla/SandboxSettings.h"
 #  include "mozilla/Preferences.h"
 #endif
@@ -295,7 +295,7 @@ void SetTaskbarGroupId(const nsString& aId) {
 }
 #endif
 
-#if defined(MOZ_CONTENT_SANDBOX)
+#if defined(MOZ_SANDBOX)
 void AddContentSandboxLevelAnnotation() {
   if (XRE_GetProcessType() == GeckoProcessType_Content) {
     int level = GetEffectiveContentSandboxLevel();
@@ -303,7 +303,7 @@ void AddContentSandboxLevelAnnotation() {
         CrashReporter::Annotation::ContentSandboxLevel, level);
   }
 }
-#endif /* MOZ_CONTENT_SANDBOX */
+#endif /* MOZ_SANDBOX */
 
 namespace {
 
@@ -420,11 +420,11 @@ nsresult XRE_InitChildProcess(int aArgc, char* aArgv[],
 #ifdef XP_MACOSX
   if (aArgc < 1) return NS_ERROR_FAILURE;
 
-#  if defined(MOZ_CONTENT_SANDBOX)
+#  if defined(MOZ_SANDBOX)
   // Save the original number of arguments to pass to the sandbox
   // setup routine which also uses the crash server argument.
   int allArgc = aArgc;
-#  endif /* MOZ_CONTENT_SANDBOX */
+#  endif /* MOZ_SANDBOX */
 
   const char* const mach_port_name = aArgv[--aArgc];
 
@@ -502,13 +502,13 @@ nsresult XRE_InitChildProcess(int aArgc, char* aArgv[],
     return NS_ERROR_FAILURE;
   }
 
-#  if defined(MOZ_CONTENT_SANDBOX)
+#  if defined(MOZ_SANDBOX)
   std::string sandboxError;
   if (!EarlyStartMacSandboxIfEnabled(allArgc, aArgv, sandboxError)) {
     printf_stderr("Sandbox error: %s\n", sandboxError.c_str());
     MOZ_CRASH("Sandbox initialization failed");
   }
-#  endif /* MOZ_CONTENT_SANDBOX */
+#  endif /* MOZ_SANDBOX */
 
   pt.reset();
 #endif /* XP_MACOSX */
@@ -763,7 +763,7 @@ nsresult XRE_InitChildProcess(int aArgc, char* aArgv[],
         OverrideDefaultLocaleIfNeeded();
       }
 
-#if defined(MOZ_CONTENT_SANDBOX)
+#if defined(MOZ_SANDBOX)
       AddContentSandboxLevelAnnotation();
 #endif
 

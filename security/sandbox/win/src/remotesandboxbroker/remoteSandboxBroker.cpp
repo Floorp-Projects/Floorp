@@ -128,13 +128,11 @@ void RemoteSandboxBroker::AddHandleToShare(HANDLE aHandle) {
   mParameters.shareHandles().AppendElement(uint64_t(aHandle));
 }
 
-#ifdef MOZ_CONTENT_SANDBOX
 void RemoteSandboxBroker::SetSecurityLevelForContentProcess(
     int32_t aSandboxLevel, bool aIsFileProcess) {
   MOZ_CRASH(
       "RemoteSandboxBroker::SetSecurityLevelForContentProcess not Implemented");
 }
-#endif
 
 void RemoteSandboxBroker::SetSecurityLevelForGPUProcess(int32_t aSandboxLevel) {
   MOZ_CRASH(

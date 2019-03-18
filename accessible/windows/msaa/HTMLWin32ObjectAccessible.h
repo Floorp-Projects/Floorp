@@ -8,7 +8,7 @@
 
 #include "BaseAccessibles.h"
 
-#if defined(MOZ_CONTENT_SANDBOX)
+#if defined(MOZ_SANDBOX)
 #  include "mozilla/mscom/Ptr.h"
 #endif
 
@@ -57,7 +57,7 @@ class HTMLWin32ObjectAccessible : public DummyAccessible {
 
  protected:
   void* mHwnd;
-#if defined(MOZ_CONTENT_SANDBOX)
+#if defined(MOZ_SANDBOX)
   mscom::ProxyUniquePtr<IAccessible> mCOMProxy;
 #endif
 };

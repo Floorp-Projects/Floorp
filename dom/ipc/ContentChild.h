@@ -25,7 +25,7 @@
 
 #include "nsIWindowProvider.h"
 
-#if defined(XP_MACOSX) && defined(MOZ_CONTENT_SANDBOX)
+#if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
 #  include "nsIFile.h"
 #endif
 
@@ -139,7 +139,7 @@ class ContentChild final : public PContentChild,
 
   void LaunchRDDProcess();
 
-#if defined(XP_MACOSX) && defined(MOZ_CONTENT_SANDBOX)
+#if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
   void GetProfileDir(nsIFile** aProfileDir) const {
     *aProfileDir = mProfileDir;
     NS_IF_ADDREF(*aProfileDir);
@@ -799,7 +799,7 @@ class ContentChild final : public PContentChild,
   RefPtr<ChildProfilerController> mProfilerController;
 #endif
 
-#if defined(XP_MACOSX) && defined(MOZ_CONTENT_SANDBOX)
+#if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
   nsCOMPtr<nsIFile> mProfileDir;
 #endif
 

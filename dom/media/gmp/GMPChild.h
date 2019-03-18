@@ -34,7 +34,7 @@ class GMPChild : public PGMPChild {
   GMPTimerChild* GetGMPTimers();
   GMPStorageChild* GetGMPStorage();
 
-#if defined(XP_MACOSX) && defined(MOZ_GMP_SANDBOX)
+#if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
   bool SetMacSandboxInfo(MacSandboxPluginType aPluginType);
 #endif
 

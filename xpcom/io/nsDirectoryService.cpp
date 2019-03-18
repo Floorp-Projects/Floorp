@@ -308,7 +308,7 @@ nsDirectoryService::UnregisterProvider(nsIDirectoryServiceProvider* aProv) {
   return NS_OK;
 }
 
-#if defined(MOZ_CONTENT_SANDBOX) && defined(XP_WIN)
+#if defined(MOZ_SANDBOX) && defined(XP_WIN)
 static nsresult GetLowIntegrityTempBase(nsIFile** aLowIntegrityTempBase) {
   nsCOMPtr<nsIFile> localFile;
   nsresult rv =
@@ -418,7 +418,7 @@ nsDirectoryService::GetFile(const char* aProp, bool* aPersistent,
     rv = GetSpecialSystemDirectory(Win_Appdata, getter_AddRefs(localFile));
   } else if (inAtom == nsGkAtoms::DirectoryService_LocalAppdata) {
     rv = GetSpecialSystemDirectory(Win_LocalAppdata, getter_AddRefs(localFile));
-#  if defined(MOZ_CONTENT_SANDBOX)
+#  if defined(MOZ_SANDBOX)
   } else if (inAtom == nsGkAtoms::DirectoryService_LocalAppdataLow) {
     rv = GetSpecialSystemDirectory(Win_LocalAppdataLow,
                                    getter_AddRefs(localFile));

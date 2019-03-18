@@ -1267,7 +1267,7 @@ VARCACHE_PREF(
   bool, false
 )
 
-#if defined(XP_LINUX) && defined(MOZ_GMP_SANDBOX)
+#if defined(XP_LINUX) && defined(MOZ_SANDBOX)
 // Whether to allow, on a Linux system that doesn't support the necessary
 // sandboxing features, loading Gecko Media Plugins unsandboxed.  However, EME
 // CDMs will not be loaded without sandboxing even if this pref is changed.

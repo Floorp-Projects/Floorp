@@ -368,7 +368,6 @@ static sandbox::ResultCode SetJobLevel(sandbox::TargetPolicy* aPolicy,
   return aPolicy->SetJobLevel(sandbox::JOB_NONE, 0);
 }
 
-#if defined(MOZ_CONTENT_SANDBOX)
 
 void SandboxBroker::SetSecurityLevelForContentProcess(int32_t aSandboxLevel,
                                                       bool aIsFileProcess) {
@@ -592,7 +591,6 @@ void SandboxBroker::SetSecurityLevelForContentProcess(int32_t aSandboxLevel,
       sandbox::SBOX_ALL_OK == result,
       "With these static arguments AddRule should never fail, what happened?");
 }
-#endif
 
 void SandboxBroker::SetSecurityLevelForGPUProcess(int32_t aSandboxLevel) {
   MOZ_RELEASE_ASSERT(mPolicy, "mPolicy must be set before this call.");
