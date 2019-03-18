@@ -459,6 +459,34 @@ class SVGMozElementObserver final : public nsSVGPaintingProperty {
   bool ObservesReflow() override { return true; }
 };
 
+class BackgroundClipRenderingObserver : public SVGRenderingObserver {
+ public:
+  explicit BackgroundClipRenderingObserver(nsIFrame* aFrame) : mFrame(aFrame) {}
+
+  NS_DECL_ISUPPORTS
+
+ private:
+  virtual ~BackgroundClipRenderingObserver() { StopObserving(); }
+
+  Element* GetReferencedElementWithoutObserving() final {
+    return mFrame->GetContent()->AsElement();
+  }
+
+  void OnRenderingChange() final;
+  bool ObservesReflow() final { return true; }
+
+  nsIFrame* mFrame;
+};
+
+NS_IMPL_ISUPPORTS(BackgroundClipRenderingObserver, nsIMutationObserver)
+
+void BackgroundClipRenderingObserver::OnRenderingChange() {
+  for (nsIFrame* f = mFrame; f;
+       f = nsLayoutUtils::GetNextContinuationOrIBSplitSibling(f)) {
+    f->InvalidateFrame();
+  }
+}
+
 /**
  * In a filter chain, there can be multiple SVG reference filters.
  * e.g. filter: url(#svg-filter-1) blur(10px) url(#svg-filter-2);
@@ -991,6 +1019,8 @@ NS_DECLARE_FRAME_PROPERTY_RELEASABLE(HrefAsTextPathProperty,
                                      SVGTextPathObserver)
 NS_DECLARE_FRAME_PROPERTY_DELETABLE(BackgroundImageProperty,
                                     URIObserverHashtable)
+NS_DECLARE_FRAME_PROPERTY_RELEASABLE(BackgroundClipObserverProperty,
+                                     BackgroundClipRenderingObserver)
 
 template <class T>
 static T* GetEffectProperty(
@@ -1353,6 +1383,19 @@ Element* SVGObserverUtils::GetAndObserveBackgroundImage(nsIFrame* aFrame,
     hashtable->Put(url, observer);
   }
   return observer->GetAndObserveReferencedElement();
+}
+
+Element* SVGObserverUtils::GetAndObserveBackgroundClip(nsIFrame* aFrame) {
+  bool found;
+  BackgroundClipRenderingObserver* obs =
+      aFrame->GetProperty(BackgroundClipObserverProperty(), &found);
+  if (!found) {
+    obs = new BackgroundClipRenderingObserver(aFrame);
+    NS_ADDREF(obs);
+    aFrame->AddProperty(BackgroundClipObserverProperty(), obs);
+  }
+
+  return obs->GetAndObserveReferencedElement();
 }
 
 nsSVGPaintServerFrame* SVGObserverUtils::GetAndObservePaintServer(

@@ -394,6 +394,12 @@ class SVGObserverUtils {
                                                const nsAtom* aHref);
 
   /**
+   * Gets an arbitrary element and starts observing it.  Used to detect
+   * invalidation changes for background-clip:text.
+   */
+  static Element* GetAndObserveBackgroundClip(nsIFrame* aFrame);
+
+  /**
    * A helper function to resolve filter URL.
    */
   static already_AddRefed<URLAndReferrerInfo> GetFilterURI(
