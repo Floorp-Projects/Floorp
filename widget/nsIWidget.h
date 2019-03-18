@@ -735,6 +735,14 @@ class nsIWidget : public nsISupports {
   virtual void Resize(double aWidth, double aHeight, bool aRepaint) = 0;
 
   /**
+   * Lock the aspect ratio of a Window
+   *
+   * @param aShouldLock bool
+   *
+   */
+  virtual void LockAspectRatio(bool aShouldLock) {};
+
+  /**
    * Move or resize this widget. Any size constraints set for the window by
    * a previous call to SetSizeConstraints will be applied.
    *

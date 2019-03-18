@@ -309,6 +309,7 @@ struct SizeSpec {
         mOuterHeightSpecified(false),
         mInnerWidthSpecified(false),
         mInnerHeightSpecified(false),
+        mLockAspectRatio(false),
         mUseDefaultWidth(false),
         mUseDefaultHeight(false) {}
 
@@ -325,6 +326,7 @@ struct SizeSpec {
   bool mOuterHeightSpecified;
   bool mInnerWidthSpecified;
   bool mInnerHeightSpecified;
+  bool mLockAspectRatio;
 
   // If these booleans are true, don't look at the corresponding width values
   // even if they're specified -- they'll be bogus
@@ -2082,6 +2084,10 @@ void nsWindowWatcher::CalcSizeSpec(const nsACString& aFeatures,
     }
     aResult.mInnerHeightSpecified = true;
   }
+
+  if (WinHasOption(aFeatures, "lockaspectratio", 0, nullptr)) {
+    aResult.mLockAspectRatio = true;
+  }
 }
 
 /* Size and position a new window according to aSizeSpec. This method
@@ -2357,6 +2363,14 @@ void nsWindowWatcher::SizeOpenedWindow(nsIDocShellTreeOwner* aTreeOwner,
       treeOwnerAsWin->SetSize(width * scale, height * scale, false);
     }
   }
+
+  if (aIsCallerChrome) {
+    nsCOMPtr<nsIXULWindow> xulWin = do_GetInterface(treeOwnerAsWin);
+    if (xulWin && aSizeSpec.mLockAspectRatio) {
+      xulWin->LockAspectRatio(true);
+    }
+  }
+
   treeOwnerAsWin->SetVisibility(true);
 }
 
