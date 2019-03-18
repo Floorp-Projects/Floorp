@@ -2285,13 +2285,6 @@ class nsLayoutUtils {
                                         bool clear);
 
   /**
-   * Returns true if the frame has any current CSS transitions.
-   * A current transition is any transition that has not yet finished playing
-   * including paused transitions.
-   */
-  static bool HasCurrentTransitions(const nsIFrame* aFrame);
-
-  /**
    * Returns true if |aFrame| has an animation of a property in |aPropertySet|
    * regardless of whether any property in the set is overridden by !important
    * rule.
