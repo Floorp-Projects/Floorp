@@ -408,7 +408,7 @@ class HashMap {
   using Range = typename Impl::Range;
   using Enum = typename Impl::Enum;
   Range all() const { return mImpl.all(); }
-};
+} MOZ_INHERIT_TYPE_ANNOTATIONS_FROM_TEMPLATE_ARGS;
 
 //---------------------------------------------------------------------------
 // HashSet
@@ -699,7 +699,7 @@ class HashSet {
   using Range = typename Impl::Range;
   using Enum = typename Impl::Enum;
   Range all() const { return mImpl.all(); }
-};
+} MOZ_INHERIT_TYPE_ANNOTATIONS_FROM_TEMPLATE_ARGS;
 
 //---------------------------------------------------------------------------
 // Hash Policy
