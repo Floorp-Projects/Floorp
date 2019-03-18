@@ -7,6 +7,7 @@
 const TRACKING_PAGE = "http://example.org/browser/browser/base/content/test/trackingUI/trackingPage.html";
 const FP_PROTECTION_PREF = "privacy.trackingprotection.fingerprinting.enabled";
 const FP_ANNOTATION_PREF = "privacy.trackingprotection.fingerprinting.annotate.enabled";
+let fpHistogram;
 
 add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({set: [
@@ -18,9 +19,14 @@ add_task(async function setup() {
     [ "privacy.trackingprotection.cryptomining.enabled", false ],
     [ "privacy.trackingprotection.cryptomining.annotate.enabled", false ],
   ]});
+  fpHistogram = Services.telemetry.getHistogramById("FINGERPRINTERS_BLOCKED_COUNT");
+  registerCleanupFunction(() => {
+    fpHistogram.clear();
+  });
 });
 
 async function testIdentityState(hasException) {
+  fpHistogram.clear();
   let promise = BrowserTestUtils.openNewForegroundTab({url: TRACKING_PAGE, gBrowser});
   let [tab] = await Promise.all([promise, waitForContentBlockingEvent()]);
 
@@ -52,10 +58,14 @@ async function testIdentityState(hasException) {
     await loaded;
   }
 
+  let loads = hasException ? 3 : 1;
+  testTelemetry(loads, 1, hasException);
+
   BrowserTestUtils.removeTab(tab);
 }
 
 async function testSubview(hasException) {
+  fpHistogram.clear();
   let promise = BrowserTestUtils.openNewForegroundTab({url: TRACKING_PAGE, gBrowser});
   let [tab] = await Promise.all([promise, waitForContentBlockingEvent()]);
 
@@ -103,7 +113,17 @@ async function testSubview(hasException) {
     await loaded;
   }
 
+  let loads = hasException ? 3 : 1;
+  testTelemetry(loads, 1, hasException);
+
   BrowserTestUtils.removeTab(tab);
+}
+
+function testTelemetry(pagesVisited, pagesWithBlockableContent, hasException) {
+  let results = fpHistogram.snapshot();
+  Assert.equal(results.values[0], pagesVisited, "The correct number of page loads have been recorded");
+  let expectedValue = hasException ? 2 : 1;
+  Assert.equal(results.values[expectedValue], pagesWithBlockableContent, "The correct number of fingerprinters have been recorded as blocked or allowed.");
 }
 
 add_task(async function test() {
