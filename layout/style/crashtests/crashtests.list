@@ -208,6 +208,7 @@ load font-face-truncated-src.html
 load large_border_image_width.html
 load link-transition-before.html
 skip-if(winWidget&&isDebugBuild&&/^Windows\x20NT\x206\.1/.test(http.oscpu)) load long-url-list-stack-overflow.html #Bug 1525117
+load scale-on-block-continuation.html
 skip-if(Android&&AndroidVersion<21) load 1383981.html
 skip-if(Android&&AndroidVersion<21) load 1383981-2.html
 skip-if(Android&&AndroidVersion<21) load 1383981-3.html

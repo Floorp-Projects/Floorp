@@ -120,7 +120,7 @@ bool FindAnimationsForCompositor(
   MOZ_ASSERT(!aMatches || aMatches->IsEmpty(),
              "Matches array, if provided, should be empty");
 
-  EffectSet* effects = EffectSet::GetEffectSet(aFrame);
+  EffectSet* effects = EffectSet::GetEffectSetForFrame(aFrame, aPropertySet);
   if (!effects || effects->IsEmpty()) {
     return false;
   }
@@ -171,7 +171,8 @@ bool FindAnimationsForCompositor(
   // sure the cascade is up to date since if it *is* up to date, this is
   // basically a no-op.
   Maybe<NonOwningAnimationTarget> pseudoElement =
-      EffectCompositor::GetAnimationElementAndPseudoForFrame(aFrame);
+      EffectCompositor::GetAnimationElementAndPseudoForFrame(
+          nsLayoutUtils::GetStyleFrame(aFrame));
   MOZ_ASSERT(pseudoElement,
              "We have a valid element for the frame, if we don't we should "
              "have bailed out at above the call to EffectSet::GetEffectSet");
@@ -499,7 +500,7 @@ nsTArray<RefPtr<dom::Animation>> EffectCompositor::GetAnimationsForCompositor(
 /* static */
 void EffectCompositor::ClearIsRunningOnCompositor(const nsIFrame* aFrame,
                                                   DisplayItemType aType) {
-  EffectSet* effects = EffectSet::GetEffectSet(aFrame);
+  EffectSet* effects = EffectSet::GetEffectSetForFrame(aFrame, aType);
   if (!effects) {
     return;
   }
@@ -710,7 +711,8 @@ void EffectCompositor::UpdateCascadeResults(EffectSet& aEffectSet,
 void EffectCompositor::SetPerformanceWarning(
     const nsIFrame* aFrame, nsCSSPropertyID aProperty,
     const AnimationPerformanceWarning& aWarning) {
-  EffectSet* effects = EffectSet::GetEffectSet(aFrame);
+  EffectSet* effects =
+      EffectSet::GetEffectSetForFrame(aFrame, nsCSSPropertyIDSet{aProperty});
   if (!effects) {
     return;
   }

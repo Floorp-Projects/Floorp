@@ -15,15 +15,23 @@
         // Define highp precision macro to allow lossless FLOAT texture sampling.
         #define HIGHP_SAMPLER_FLOAT highp
 
+        // Default int precision in GLES 3 is highp (32 bits) in vertex shaders
+        // and mediump (16 bits) in fragment shaders. If an int is being used as
+        // a texel address in a fragment shader it, and therefore requires > 16
+        // bits, it must be qualified with this.
+        #define HIGHP_FS_ADDRESS highp
+
         // texelFetchOffset is buggy on some Android GPUs (see issue #1694).
         // Fallback to texelFetch on mobile GPUs.
         #define TEXEL_FETCH(sampler, position, lod, offset) texelFetch(sampler, position + offset, lod)
     #else
         #define HIGHP_SAMPLER_FLOAT
+        #define HIGHP_FS_ADDRESS
         #define TEXEL_FETCH(sampler, position, lod, offset) texelFetchOffset(sampler, position, lod, offset)
     #endif
 #else
     #define HIGHP_SAMPLER_FLOAT
+    #define HIGHP_FS_ADDRESS
     #define TEXEL_FETCH(sampler, position, lod, offset) texelFetchOffset(sampler, position, lod, offset)
 #endif
 

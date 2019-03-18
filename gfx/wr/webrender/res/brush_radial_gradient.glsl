@@ -6,7 +6,7 @@
 
 #include shared,prim_shared,brush
 
-flat varying int vGradientAddress;
+flat varying HIGHP_FS_ADDRESS int vGradientAddress;
 flat varying float vGradientRepeat;
 
 flat varying vec2 vCenter;

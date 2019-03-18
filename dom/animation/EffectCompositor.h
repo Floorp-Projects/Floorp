@@ -169,13 +169,20 @@ class EffectCompositor {
   // element on which we store the animations (i.e. the EffectSet and/or
   // AnimationCollection), *not* the generated content.
   //
+  // For display:table content, which maintains a distinction between primary
+  // frame (table wrapper frame) and style frame (inner table frame), animations
+  // are stored on the content associated with the _style_ frame even though
+  // some (particularly transform-like animations) may be applied to the
+  // _primary_ frame. As a result, callers will typically want to pass the style
+  // frame to this function.
+  //
   // Returns an empty result when a suitable element cannot be found including
   // when the frame represents a pseudo-element on which we do not support
   // animations.
   static Maybe<NonOwningAnimationTarget> GetAnimationElementAndPseudoForFrame(
       const nsIFrame* aFrame);
 
-  // Associates a performance warning with effects on |aFrame| that animates
+  // Associates a performance warning with effects on |aFrame| that animate
   // |aProperty|.
   static void SetPerformanceWarning(
       const nsIFrame* aFrame, nsCSSPropertyID aProperty,
