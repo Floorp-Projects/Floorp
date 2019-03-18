@@ -61,7 +61,7 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
         private IChildProcess mChild;
         private int mPid;
 
-        public ChildConnection(String type) {
+        public ChildConnection(final String type) {
             mType = type;
         }
 
@@ -134,7 +134,8 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
         }
 
         @Override
-        public synchronized void onServiceConnected(ComponentName name, IBinder service) {
+        public synchronized void onServiceConnected(final ComponentName name,
+                                                    final IBinder service) {
             try {
                 service.linkToDeath(this, 0);
             } catch (final RemoteException e) {
@@ -147,7 +148,7 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
         }
 
         @Override
-        public synchronized void onServiceDisconnected(ComponentName name) {
+        public synchronized void onServiceDisconnected(final ComponentName name) {
             mChild = null;
             mPid = 0;
             mWaiting = false;
@@ -213,7 +214,7 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
         return INSTANCE.start(type, args, prefsFd, prefMapFd, ipcFd, crashFd, crashAnnotationFd, /* retry */ false);
     }
 
-    private int filterFlagsForChild(int flags) {
+    private int filterFlagsForChild(final int flags) {
         return flags & GeckoThread.FLAG_ENABLE_NATIVE_CRASHREPORTER;
     }
 

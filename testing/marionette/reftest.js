@@ -128,7 +128,7 @@ reftest.Runner = class {
     let reftestWin = this.parentWindow.open(
         "chrome://marionette/content/reftest.xul",
         "reftest",
-        `chrome,height=${width},width=${height}`);
+        `chrome,height=${height},width=${width}`);
 
     await new Promise(resolve => {
       reftestWin.addEventListener("load", resolve, {once: true});
@@ -460,16 +460,21 @@ max-width: ${width}px; max-height: ${height}px`;
 
       let ctxInterface = win.CanvasRenderingContext2D;
       let flags = ctxInterface.DRAWWINDOW_DRAW_CARET |
-          ctxInterface.DRAWWINDOW_DRAW_VIEW;
+          ctxInterface.DRAWWINDOW_DRAW_VIEW |
+          ctxInterface.DRAWWINDOW_USE_WIDGET_LAYERS;
 
-      if (0 <= browserRect.left &&
-          0 <= browserRect.top &&
-          win.innerWidth >= browserRect.width &&
-          win.innerHeight >= browserRect.height) {
-        logger.debug("Using DRAWWINDOW_USE_WIDGET_LAYERS");
-        flags |= ctxInterface.DRAWWINDOW_USE_WIDGET_LAYERS;
-      } else {
-        logger.debug("Not using DRAWWINDOW_USE_WIDGET_LAYERS");
+      if (!(0 <= browserRect.left &&
+            0 <= browserRect.top &&
+            win.innerWidth >= browserRect.width &&
+            win.innerHeight >= browserRect.height)) {
+        logger.error(`Invalid window dimensions:
+browserRect.left: ${browserRect.left}
+browserRect.top: ${browserRect.top}
+win.innerWidth: ${win.innerWidth}
+browserRect.width: ${browserRect.width}
+win.innerHeight: ${win.innerHeight}
+browserRect.height: ${browserRect.height}`);
+        throw new Error("Window has incorrect dimensions");
       }
 
       url = new URL(url).href; // normalize the URL

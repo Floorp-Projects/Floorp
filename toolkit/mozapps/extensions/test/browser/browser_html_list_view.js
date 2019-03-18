@@ -1,5 +1,7 @@
 /* eslint max-len: ["error", 80] */
 
+let promptService;
+
 let gManagerWindow;
 let gCategoryUtilities;
 
@@ -46,6 +48,7 @@ add_task(async function enableHtmlViews() {
   await SpecialPowers.pushPrefEnv({
     set: [["extensions.htmlaboutaddons.enabled", true]],
   });
+  promptService = mockPromptService();
 });
 
 let extensionsCreated = 0;
@@ -122,12 +125,118 @@ add_task(async function testExtensionList() {
   is(doc.l10n.getAttributes(removeButton).id, "remove-addon-button",
      "The button has the remove label");
 
+  // Remove but cancel.
+  let cancelled = BrowserTestUtils.waitForEvent(card, "remove-cancelled");
+  removeButton.click();
+  await cancelled;
+
   let removed = BrowserTestUtils.waitForEvent(list, "remove");
+  // Tell the mock prompt service that the prompt was accepted.
+  promptService._response = 0;
   removeButton.click();
   await removed;
 
   addon = await AddonManager.getAddonByID("test@mochi.test");
   ok(!addon, "The addon is not longer found");
+
+  await extension.unload();
+  await closeView(win);
+});
+
+add_task(async function testKeyboardSupport() {
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      name: "Test extension",
+      applications: {gecko: {id: "test@mochi.test"}},
+    },
+    useAddonManager: "temporary",
+  });
+  await extension.startup();
+
+  let win = await loadInitialView("extension");
+  let doc = win.document;
+
+  // Some helpers.
+  let tab = event => EventUtils.synthesizeKey("VK_TAB", event);
+  let space = () => EventUtils.synthesizeKey(" ", {});
+  let isFocused = (el, msg) => is(doc.activeElement, el, msg);
+
+  // Find the addon-list to listen for events.
+  let list = doc.querySelector("addon-list");
+  let enabledSection = getSection(doc, "enabled");
+  let disabledSection = getSection(doc, "disabled");
+
+  // Find the card.
+  let [card] = getTestCards(list);
+  is(card.addon.id, "test@mochi.test", "The right card is found");
+
+  // Focus the more options menu button.
+  let moreOptionsButton = card.querySelector('[action="more-options"]');
+  moreOptionsButton.focus();
+  isFocused(moreOptionsButton, "The more options button is focused");
+
+  // Test opening and closing the menu.
+  let moreOptionsMenu = card.querySelector("panel-list");
+  is(moreOptionsMenu.open, false, "The menu is closed");
+  space();
+  is(moreOptionsMenu.open, true, "The menu is open");
+  space();
+  is(moreOptionsMenu.open, false, "The menu is closed");
+
+  // Test tabbing out of the menu.
+  space();
+  is(moreOptionsMenu.open, true, "The menu is open");
+  tab({shiftKey: true});
+  is(moreOptionsMenu.open, false, "Tabbing away from the menu closes it");
+  tab();
+  isFocused(moreOptionsButton, "The button is focused again");
+  space();
+  is(moreOptionsMenu.open, true, "The menu is open");
+  tab();
+  tab();
+  tab();
+  isFocused(moreOptionsButton, "The last item is focused");
+  tab();
+  is(moreOptionsMenu.open, false, "Tabbing out of the menu closes it");
+
+  // Focus the button again, focus may have moved out of the browser.
+  moreOptionsButton.focus();
+  isFocused(moreOptionsButton, "The button is focused again");
+
+  // Open the menu to test contents.
+  let shown = BrowserTestUtils.waitForEvent(moreOptionsMenu, "shown");
+  space();
+  is(moreOptionsMenu.open, true, "The menu is open");
+  // Wait for the panel to be shown.
+  await shown;
+
+  // Disable the add-on.
+  let toggleDisableButton = card.querySelector('[action="toggle-disabled"]');
+  tab();
+  isFocused(toggleDisableButton, "The disable button is focused");
+  is(card.parentNode, enabledSection, "The card is in the enabled section");
+  let disabled = BrowserTestUtils.waitForEvent(list, "move");
+  space();
+  await disabled;
+  is(moreOptionsMenu.open, false, "The menu is closed");
+  is(card.parentNode, disabledSection,
+     "The card is now in the disabled section");
+
+  // Open the menu again.
+  shown = BrowserTestUtils.waitForEvent(moreOptionsMenu, "shown");
+  isFocused(moreOptionsButton, "The more options button is focused");
+  space();
+  await shown;
+
+  // Remove the add-on.
+  tab();
+  tab();
+  let removeButton = card.querySelector('[action="remove"]');
+  isFocused(removeButton, "The remove button is focused");
+  let removed = BrowserTestUtils.waitForEvent(list, "remove");
+  space();
+  await removed;
+  is(card.parentNode, null, "The card is no longer on the page");
 
   await extension.unload();
   await closeView(win);

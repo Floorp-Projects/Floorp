@@ -155,7 +155,7 @@ $textbox-shadow-size: 4px;
   .context-menu-button {
     background-clip: padding-box;
     background-color: var(--newtab-contextmenu-button-color);
-    background-image: url('chrome://browser/skin/page-action.svg');
+    background-image: url('chrome://global/skin/icons/more.svg');
     background-position: 55%;
     border: $border-primary;
     border-radius: 100%;

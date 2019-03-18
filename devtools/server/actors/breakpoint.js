@@ -212,16 +212,17 @@ BreakpointActor.prototype = {
     }
 
     if (logValue) {
-      const completion = frame.eval(logValue);
+      const completion = frame.eval(`[${logValue}]`);
       let value;
       if (!completion) {
         // The evaluation was killed (possibly by the slow script dialog).
-        value = "Log value evaluation incomplete";
+        value = ["Log value evaluation incomplete"];
       } else if ("return" in completion) {
         value = completion.return;
       } else {
-        value = this.getThrownMessage(completion);
+        value = [this.getThrownMessage(completion)];
       }
+
       if (value && typeof value.unsafeDereference === "function") {
         value = value.unsafeDereference();
       }
@@ -230,7 +231,7 @@ BreakpointActor.prototype = {
         filename: url,
         lineNumber: generatedLine,
         columnNumber: generatedColumn,
-        "arguments": [value],
+        "arguments": value,
       };
       this.threadActor._parent._consoleActor.onConsoleAPICall(message);
 

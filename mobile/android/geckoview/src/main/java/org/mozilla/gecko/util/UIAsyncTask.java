@@ -34,7 +34,7 @@ public abstract class UIAsyncTask<Param, Result> {
      * from UiAsyncTask in parameterless equivalents.
      */
     public static abstract class WithoutParams<InnerResult> extends UIAsyncTask<Void, InnerResult> {
-        public WithoutParams(Handler backgroundThreadHandler) {
+        public WithoutParams(final Handler backgroundThreadHandler) {
             super(backgroundThreadHandler);
         }
 
@@ -43,7 +43,7 @@ public abstract class UIAsyncTask<Param, Result> {
         }
 
         @Override
-        protected InnerResult doInBackground(Void unused) {
+        protected InnerResult doInBackground(final Void unused) {
             return doInBackground();
         }
 
@@ -59,7 +59,7 @@ public abstract class UIAsyncTask<Param, Result> {
      *
      * @param backgroundThreadHandler the handler to execute the background task on
      */
-    public UIAsyncTask(Handler backgroundThreadHandler) {
+    public UIAsyncTask(final Handler backgroundThreadHandler) {
         mBackgroundThreadHandler = backgroundThreadHandler;
     }
 
@@ -74,7 +74,7 @@ public abstract class UIAsyncTask<Param, Result> {
     private final class BackgroundTaskRunnable implements Runnable {
         private final Param mParam;
 
-        public BackgroundTaskRunnable(Param param) {
+        public BackgroundTaskRunnable(final Param param) {
             mParam = param;
         }
 
@@ -115,7 +115,7 @@ public abstract class UIAsyncTask<Param, Result> {
     }
 
     protected void onPreExecute() { }
-    protected void onPostExecute(Result result) { }
+    protected void onPostExecute(final Result result) { }
     protected void onCancelled() { }
     protected abstract Result doInBackground(Param param);
 }

@@ -16,20 +16,6 @@ function waitForConsolePanelChange(dbg) {
   });
 }
 
-function findMessages(win, query) {
-  return Array.prototype.filter.call(
-    win.document.querySelectorAll(".message"),
-    e => e.innerText.includes(query)
-  );
-}
-
-async function hasMessage(dbg, msg) {
-  const webConsole = await dbg.toolbox.getPanel("webconsole");
-  return waitFor(
-    async () => findMessages(webConsole._frameWindow, msg).length > 0
-  );
-}
-
 add_task(async function() {
   const dbg = await initDebugger("doc-scripts.html", "simple2");
 
@@ -44,5 +30,5 @@ add_task(async function() {
   selectContextMenuItem(dbg, "#node-menu-evaluate-in-console");
 
   await waitForConsolePanelChange(dbg);
-  await hasMessage(dbg, "undefined");
+  await hasConsoleMessage(dbg, "undefined");
 });

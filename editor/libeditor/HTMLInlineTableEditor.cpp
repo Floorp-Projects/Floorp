@@ -5,6 +5,7 @@
 #include "mozilla/HTMLEditor.h"
 
 #include "HTMLEditUtils.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/dom/Element.h"
 #include "nsAString.h"
 #include "nsCOMPtr.h"
@@ -13,7 +14,6 @@
 #include "nsGenericHTMLElement.h"
 #include "nsIContent.h"
 #include "nsIHTMLObjectResizer.h"
-#include "nsIPresShell.h"
 #include "nsLiteralString.h"
 #include "nsReadableUtils.h"
 #include "nsString.h"
@@ -167,7 +167,7 @@ void HTMLEditor::HideInlineTableEditingUIInternal() {
   RemoveMouseClickListener(mAddRowAfterButton);
 
   // get the presshell's document observer interface.
-  nsCOMPtr<nsIPresShell> ps = GetPresShell();
+  RefPtr<PresShell> presShell = GetPresShell();
   // We allow the pres shell to be null; when it is, we presume there
   // are no document observers to notify, but we still want to
   // UnbindFromTree.
@@ -183,12 +183,12 @@ void HTMLEditor::HideInlineTableEditingUIInternal() {
   ManualNACPtr removeRowButton(std::move(mRemoveRowButton));
   ManualNACPtr addRowAfterButton(std::move(mAddRowAfterButton));
 
-  DeleteRefToAnonymousNode(std::move(addColumnBeforeButton), ps);
-  DeleteRefToAnonymousNode(std::move(removeColumnButton), ps);
-  DeleteRefToAnonymousNode(std::move(addColumnAfterButton), ps);
-  DeleteRefToAnonymousNode(std::move(addRowBeforeButton), ps);
-  DeleteRefToAnonymousNode(std::move(removeRowButton), ps);
-  DeleteRefToAnonymousNode(std::move(addRowAfterButton), ps);
+  DeleteRefToAnonymousNode(std::move(addColumnBeforeButton), presShell);
+  DeleteRefToAnonymousNode(std::move(removeColumnButton), presShell);
+  DeleteRefToAnonymousNode(std::move(addColumnAfterButton), presShell);
+  DeleteRefToAnonymousNode(std::move(addRowBeforeButton), presShell);
+  DeleteRefToAnonymousNode(std::move(removeRowButton), presShell);
+  DeleteRefToAnonymousNode(std::move(addRowAfterButton), presShell);
 }
 
 nsresult HTMLEditor::DoInlineTableEditingAction(const Element& aElement) {

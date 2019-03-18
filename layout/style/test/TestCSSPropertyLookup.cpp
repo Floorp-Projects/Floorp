@@ -84,7 +84,7 @@ bool TestKeywords() {
 }
 
 int main(void) {
-  nsresult rv = NS_InitXPCOM2(nullptr, nullptr, nullptr);
+  nsresult rv = NS_InitXPCOM(nullptr, nullptr, nullptr);
   NS_ENSURE_SUCCESS(rv, 2);
 
   bool testOK = true;

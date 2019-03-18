@@ -200,9 +200,6 @@ class SelectionActionDelegateTest : BaseSessionTest() {
                          result: (SelectedContent) -> Unit,
                          vararg sideEffects: (SelectedContent) -> Unit) {
 
-        sessionRule.setPrefsUntilTestEnd(mapOf(
-                "layout.accessiblecaret.enabled_on_touch" to true))
-
         mainSession.loadTestPath(INPUTS_PATH)
         mainSession.waitForPageStop()
 

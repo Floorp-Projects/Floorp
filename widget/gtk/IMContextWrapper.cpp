@@ -406,7 +406,8 @@ nsDependentCSubstring IMContextWrapper::GetIMName() const {
   // If the context is XIM, actual engine must be specified with
   // |XMODIFIERS=@im=foo|.
   const char* xmodifiersChar = PR_GetEnv("XMODIFIERS");
-  if (!im.EqualsLiteral("xim") || !xmodifiersChar) {
+  if (!xmodifiersChar ||
+      (!im.EqualsLiteral("xim") && !im.EqualsLiteral("wayland"))) {
     return im;
   }
 
@@ -2464,6 +2465,7 @@ already_AddRefed<TextRangeArray> IMContextWrapper::CreateTextRangeArray(
   }
 
   uint32_t minOffsetOfClauses = aCompositionString.Length();
+  uint32_t maxOffsetOfClauses = 0;
   do {
     TextRange range;
     if (!SetTextRange(iter, preedit_string, caretOffsetInUTF16, range)) {
@@ -2471,6 +2473,7 @@ already_AddRefed<TextRangeArray> IMContextWrapper::CreateTextRangeArray(
     }
     MOZ_ASSERT(range.Length());
     minOffsetOfClauses = std::min(minOffsetOfClauses, range.mStartOffset);
+    maxOffsetOfClauses = std::max(maxOffsetOfClauses, range.mEndOffset);
     textRangeArray->AppendElement(range);
   } while (pango_attr_iterator_next(iter));
 
@@ -2484,9 +2487,29 @@ already_AddRefed<TextRangeArray> IMContextWrapper::CreateTextRangeArray(
     dummyClause.mEndOffset = minOffsetOfClauses;
     dummyClause.mRangeType = TextRangeType::eRawClause;
     textRangeArray->InsertElementAt(0, dummyClause);
+    maxOffsetOfClauses = std::max(maxOffsetOfClauses, dummyClause.mEndOffset);
     MOZ_LOG(gGtkIMLog, LogLevel::Warning,
             ("0x%p   CreateTextRangeArray(), inserting a dummy clause "
              "at the beginning of the composition string mStartOffset=%u, "
+             "mEndOffset=%u, mRangeType=%s",
+             this, dummyClause.mStartOffset, dummyClause.mEndOffset,
+             ToChar(dummyClause.mRangeType)));
+  }
+
+  // If the IME doesn't define clause at end of the composition, we should
+  // insert dummy clause information since TextRangeArray assumes that there
+  // must be a clase whose end is the length of the composition string when
+  // there is one or more clauses.
+  if (!textRangeArray->IsEmpty() &&
+      maxOffsetOfClauses < aCompositionString.Length()) {
+    TextRange dummyClause;
+    dummyClause.mStartOffset = maxOffsetOfClauses;
+    dummyClause.mEndOffset = aCompositionString.Length();
+    dummyClause.mRangeType = TextRangeType::eRawClause;
+    textRangeArray->AppendElement(dummyClause);
+    MOZ_LOG(gGtkIMLog, LogLevel::Warning,
+            ("0x%p   CreateTextRangeArray(), inserting a dummy clause "
+             "at the end of the composition string mStartOffset=%u, "
              "mEndOffset=%u, mRangeType=%s",
              this, dummyClause.mStartOffset, dummyClause.mEndOffset,
              ToChar(dummyClause.mRangeType)));
@@ -2660,14 +2683,6 @@ bool IMContextWrapper::SetTextRange(PangoAttrIterator* aPangoAttrIter,
    *
    * So, we shouldn't guess the meaning from its visual style.
    */
-
-  if (!attrUnderline && !attrForeground && !attrBackground) {
-    MOZ_LOG(gGtkIMLog, LogLevel::Warning,
-            ("0x%p   SetTextRange(), FAILED, due to no attr, "
-             "aTextRange= { mStartOffset=%u, mEndOffset=%u }",
-             this, aTextRange.mStartOffset, aTextRange.mEndOffset));
-    return false;
-  }
 
   // If the range covers whole of composition string and the caret is at
   // the end of the composition string, the range is probably not converted.

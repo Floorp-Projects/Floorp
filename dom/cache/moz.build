@@ -6,7 +6,7 @@
 
 
 with Files("**"):
-    BUG_COMPONENT = ("Core", "DOM")
+    BUG_COMPONENT = ("Core", "DOM: Core & HTML")
 
 EXPORTS.mozilla.dom.cache += [
     'Action.h',
@@ -89,7 +89,7 @@ MOCHITEST_MANIFESTS += [
 ]
 
 BROWSER_CHROME_MANIFESTS += [
-    'test/mochitest/browser.ini',
+    'test/browser/browser.ini',
 ]
 
 XPCSHELL_TESTS_MANIFESTS += [

@@ -33,13 +33,16 @@ started and run. It may contain any of the following fields:
    to select which custom browser binary to use.
    If left undefined geckodriver will attempt
    to deduce the default location of Firefox
-   on the current system.
+   on the current system. If Firefox stable is
+   not installed, it will suggest the default
+   location of Firefox Nightly instead.
 
    <p>
    On macOS the path must be absolute to the browser binary,
-   e.g. <code>/Applications/Firefox.app/Contents/MacOS/firefox</code>.
+   e.g. <code>/Applications/Firefox.app/Contents/MacOS/firefox</code> or,
+   in case of Nightly, <code>/Applications/Firefox Nightly.app/Contents/MacOS/firefox</code>
    Specifying an application bundle such as <code>/Applications/Firefox.app</code>
-   will <em>not</em> work.
+   or <code>/Applications/Firefox Nightly.app</code> will <em>not</em> work.
  </tr>
 
  <tr id=capability-args>

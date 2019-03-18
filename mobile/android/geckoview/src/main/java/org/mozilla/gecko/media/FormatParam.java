@@ -39,23 +39,23 @@ public final class FormatParam implements Parcelable {
         return mFormat;
     }
 
-    public FormatParam(MediaFormat format) {
+    public FormatParam(final MediaFormat format) {
         mFormat = format;
     }
 
-    protected FormatParam(Parcel in) {
+    protected FormatParam(final Parcel in) {
         mFormat = new MediaFormat();
         readFromParcel(in);
     }
 
     public static final Creator<FormatParam> CREATOR = new Creator<FormatParam>() {
         @Override
-        public FormatParam createFromParcel(Parcel in) {
+        public FormatParam createFromParcel(final Parcel in) {
             return new FormatParam(in);
         }
 
         @Override
-        public FormatParam[] newArray(int size) {
+        public FormatParam[] newArray(final int size) {
             return new FormatParam[size];
         }
     };
@@ -65,12 +65,12 @@ public final class FormatParam implements Parcelable {
         return 0;
     }
 
-    public void readFromParcel(Parcel in) {
+    public void readFromParcel(final Parcel in) {
         Bundle bundle = in.readBundle();
         fromBundle(bundle);
     }
 
-    private void fromBundle(Bundle bundle) {
+    private void fromBundle(final Bundle bundle) {
         if (bundle.containsKey(MediaFormat.KEY_MIME)) {
             mFormat.setString(MediaFormat.KEY_MIME,
                     bundle.getString(MediaFormat.KEY_MIME));
@@ -122,7 +122,7 @@ public final class FormatParam implements Parcelable {
     }
 
     @Override
-    public void writeToParcel(Parcel dest, int flags) {
+    public void writeToParcel(final Parcel dest, final int flags) {
         dest.writeBundle(toBundle());
     }
 

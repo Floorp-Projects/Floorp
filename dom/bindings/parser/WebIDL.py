@@ -5913,6 +5913,12 @@ class Parser(Tokenizer):
             assert len(p) == 3  # Must be []
             p[0] = IDLEmptySequenceValue(self.getLocation(p, 1))
 
+    def p_DefaultValueNull(self, p):
+        """
+            DefaultValue : NULL
+        """
+        p[0] = IDLNullValue(self.getLocation(p, 1))
+
     def p_Exception(self, p):
         """
             Exception : EXCEPTION IDENTIFIER Inheritance LBRACE ExceptionMembers RBRACE SEMICOLON
@@ -6041,12 +6047,6 @@ class Parser(Tokenizer):
         location = self.getLocation(p, 1)
         stringType = BuiltinTypes[IDLBuiltinType.Types.domstring]
         p[0] = IDLValue(location, stringType, p[1])
-
-    def p_ConstValueNull(self, p):
-        """
-            ConstValue : NULL
-        """
-        p[0] = IDLNullValue(self.getLocation(p, 1))
 
     def p_BooleanLiteralTrue(self, p):
         """
@@ -6758,19 +6758,17 @@ class Parser(Tokenizer):
 
     def p_ConstType(self, p):
         """
-            ConstType : PrimitiveType Null
+            ConstType : PrimitiveType
         """
-        type = BuiltinTypes[p[1]]
-        p[0] = self.handleNullable(type, p[2])
+        p[0] = BuiltinTypes[p[1]]
 
     def p_ConstTypeIdentifier(self, p):
         """
-            ConstType : IDENTIFIER Null
+            ConstType : IDENTIFIER
         """
         identifier = IDLUnresolvedIdentifier(self.getLocation(p, 1), p[1])
 
-        type = IDLUnresolvedType(self.getLocation(p, 1), identifier)
-        p[0] = self.handleNullable(type, p[2])
+        p[0] = IDLUnresolvedType(self.getLocation(p, 1), identifier)
 
     def p_PrimitiveTypeUint(self, p):
         """

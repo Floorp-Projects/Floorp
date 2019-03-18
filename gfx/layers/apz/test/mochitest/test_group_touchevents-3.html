@@ -9,11 +9,7 @@
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <script type="application/javascript">
 
-var touch_action_prefs = [
-  ...getPrefs("TOUCH_EVENTS:PAN"),
-  ["layout.css.touch_action.enabled", true],
-  ["apz.test.fails_with_native_injection", getPlatform() == "windows"],
-];
+var touch_action_prefs = getPrefs("TOUCH_ACTION");
 
 var subtests = [
   // Simple test to exercise touch-action CSS property

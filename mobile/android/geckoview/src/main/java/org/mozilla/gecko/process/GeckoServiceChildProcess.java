@@ -8,10 +8,7 @@ package org.mozilla.gecko.process;
 import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.IGeckoEditableChild;
-import org.mozilla.gecko.IGeckoEditableParent;
-import org.mozilla.gecko.mozglue.GeckoLoader;
 import org.mozilla.gecko.GeckoThread;
-import org.mozilla.gecko.mozglue.SafeIntent;
 import org.mozilla.gecko.util.ThreadUtils;
 
 import android.app.Service;
@@ -134,7 +131,7 @@ public class GeckoServiceChildProcess extends Service {
     }
 
     @Override
-    public boolean onUnbind(Intent intent) {
+    public boolean onUnbind(final Intent intent) {
         Log.i(LOGTAG, "Service has been unbound. Stopping.");
         stopSelf();
         Process.killProcess(Process.myPid());

@@ -23,6 +23,7 @@
 #ifdef JS_CODEGEN_ARM64
 #  include "jit/arm64/vixl/Cpu-vixl.h"
 #endif
+#include "jit/AtomicOperations.h"
 #include "threading/LockGuard.h"
 #include "threading/Mutex.h"
 #include "util/Windows.h"
@@ -724,6 +725,19 @@ bool js::jit::ReprotectRegion(void* start, size_t size,
   MOZ_ASSERT((uintptr_t(pageStart) % pageSize) == 0);
 
   execMemory.assertValidAddress(pageStart, size);
+
+  // On weak memory systems, make sure new code is visible on all cores before
+  // addresses of the code are made public.  Now is the latest moment in time
+  // when we can do that, and we're assuming that every other thread that has
+  // written into the memory that is being reprotected here has synchronized
+  // with this thread in such a way that the memory writes have become visible
+  // and we therefore only need to execute the fence once here.  See bug 1529933
+  // for a longer discussion of why this is both necessary and sufficient.
+  //
+  // We use the C++ fence here -- and not AtomicOperations::fenceSeqCst() --
+  // primarily because ReprotectRegion will be called while we construct our own
+  // jitted atomics.  But the C++ fence is sufficient and correct, too.
+  std::atomic_thread_fence(std::memory_order_seq_cst);
 
 #ifdef XP_WIN
   DWORD oldProtect;

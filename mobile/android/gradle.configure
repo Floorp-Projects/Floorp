@@ -236,11 +236,12 @@ def gradle_android_api_lint_tasks(build_config):
 set_config('GRADLE_ANDROID_API_LINT_TASKS', gradle_android_api_lint_tasks)
 
 
-@dependable
-def gradle_android_checkstyle_tasks():
+@depends(gradle_android_build_config)
+def gradle_android_checkstyle_tasks(build_config):
     '''Gradle tasks run by |mach android checkstyle|.'''
     return [
         'app:checkstyle',
+        'geckoview:checkstyle{geckoview.variant.name}'.format(geckoview=build_config.geckoview),
     ]
 
 set_config('GRADLE_ANDROID_CHECKSTYLE_TASKS', gradle_android_checkstyle_tasks)

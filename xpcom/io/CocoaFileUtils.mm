@@ -192,7 +192,7 @@ void AddOriginMetadataToFile(const CFStringRef filePath, const CFURLRef sourceUR
 }
 
 // Can be called off of the main thread.
-CFStringRef GetQuarantinePropKey() {
+static CFStringRef GetQuarantinePropKey() {
   if (nsCocoaFeatures::OnYosemiteOrLater()) {
     return kCFURLQuarantinePropertiesKey;
   }
@@ -200,8 +200,8 @@ CFStringRef GetQuarantinePropKey() {
 }
 
 // Can be called off of the main thread.
-CFMutableDictionaryRef CreateQuarantineDictionary(const CFURLRef aFileURL,
-                                                  const bool aCreateProps) {
+static CFMutableDictionaryRef CreateQuarantineDictionary(const CFURLRef aFileURL,
+                                                         const bool aCreateProps) {
   // The properties key changed in 10.10:
   CFDictionaryRef quarantineProps = NULL;
   if (aCreateProps) {

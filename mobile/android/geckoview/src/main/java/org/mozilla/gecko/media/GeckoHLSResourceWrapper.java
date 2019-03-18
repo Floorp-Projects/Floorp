@@ -16,8 +16,7 @@ public class GeckoHLSResourceWrapper {
     private BaseHlsPlayer mPlayer = null;
     private boolean mDestroy = false;
 
-    public static class Callbacks extends JNIObject
-    implements BaseHlsPlayer.ResourceCallbacks {
+    public static class Callbacks extends JNIObject implements BaseHlsPlayer.ResourceCallbacks {
         @WrapForJNI(calledFrom = "gecko")
         Callbacks() {}
 
@@ -35,8 +34,8 @@ public class GeckoHLSResourceWrapper {
         }
     } // Callbacks
 
-    private GeckoHLSResourceWrapper(String url,
-                                    BaseHlsPlayer.ResourceCallbacks callback) {
+    private GeckoHLSResourceWrapper(final String url,
+                                    final BaseHlsPlayer.ResourceCallbacks callback) {
         if (DEBUG) Log.d(LOGTAG, "GeckoHLSResourceWrapper created with url = " + url);
         assertTrue(callback != null);
 
@@ -50,8 +49,8 @@ public class GeckoHLSResourceWrapper {
     }
 
     @WrapForJNI(calledFrom = "gecko")
-    public static GeckoHLSResourceWrapper create(String url,
-                                                 BaseHlsPlayer.ResourceCallbacks callback) {
+    public static GeckoHLSResourceWrapper create(final String url,
+                                                 final BaseHlsPlayer.ResourceCallbacks callback) {
         return new GeckoHLSResourceWrapper(url, callback);
     }
 
@@ -95,7 +94,7 @@ public class GeckoHLSResourceWrapper {
         }
     }
 
-    private static void assertTrue(boolean condition) {
+    private static void assertTrue(final boolean condition) {
         if (DEBUG && !condition) {
             throw new AssertionError("Expected condition to be true");
         }

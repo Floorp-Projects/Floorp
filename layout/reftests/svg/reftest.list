@@ -269,6 +269,7 @@ fuzzy-if(skiaContent,0-1,0-100) == marker-orientation-01.svg marker-orientation-
 fuzzy-if(skiaContent,0-1,0-5) == marker-orientation-02.svg marker-orientation-02-ref.svg
 == marker-orientation-03.svg pass.svg
 == marker-orientation-04.svg pass.svg
+== marker-orientation-05.svg pass.svg
 
 fuzzy(0-28,0-28) == mask-and-clipPath.html mask-and-clipPath-ref.html
 == mask-and-clipPath-2.svg pass.svg

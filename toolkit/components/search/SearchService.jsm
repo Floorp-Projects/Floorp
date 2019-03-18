@@ -23,11 +23,7 @@ XPCOMUtils.defineLazyServiceGetters(this, {
 
 const BROWSER_SEARCH_PREF = "browser.search.";
 
-XPCOMUtils.defineLazyPreferenceGetter(this, "resetStatus", BROWSER_SEARCH_PREF + "reset.status", "");
 XPCOMUtils.defineLazyPreferenceGetter(this, "loggingEnabled", BROWSER_SEARCH_PREF + "log", false);
-XPCOMUtils.defineLazyGetter(this, "resetEnabled", () => {
-  return Services.prefs.getDefaultBranch(BROWSER_SEARCH_PREF).getBoolPref("reset.enabled");
-});
 // Can't use defineLazyPreferenceGetter because we want the value
 // from the default branch
 XPCOMUtils.defineLazyGetter(this, "distroID", () => {
@@ -2323,27 +2319,6 @@ Engine.prototype = {
     if (!aResponseType) {
       aResponseType = AppConstants.platform == "android" ? this._defaultMobileResponseType :
                                                            URLTYPE_SEARCH_HTML;
-    }
-
-    let resetPending;
-    if (aResponseType == URLTYPE_SEARCH_HTML &&
-        ((resetPending = resetStatus == "pending") ||
-         resetEnabled) &&
-        this.name == Services.search.defaultEngine.name &&
-        !this._isDefault &&
-        this.name != Services.search.originalDefaultEngine.name &&
-        (resetPending || !this.getAttr("loadPathHash") ||
-         this.getAttr("loadPathHash") != getVerificationHash(this._loadPath)) &&
-        !this._isWhiteListed) {
-      let url = "about:searchreset";
-      let data = [];
-      if (aData)
-        data.push("data=" + encodeURIComponent(aData));
-      if (aPurpose)
-        data.push("purpose=" + aPurpose);
-      if (data.length)
-        url += "?" + data.join("&");
-      return new Submission(makeURI(url));
     }
 
     var url = this._getURLOfType(aResponseType);

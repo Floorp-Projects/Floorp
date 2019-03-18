@@ -66,20 +66,6 @@ function workerTestGetPermissions(permissions, cb) {
   });
 }
 
-function workerTestGetVersion(cb) {
-  addEventListener("message", function workerTestGetVersionCB(e) {
-    if (e.data.type !== "returnVersion") {
-      return;
-    }
-    removeEventListener("message", workerTestGetVersionCB);
-    cb(e.data.result);
-  });
-  client.postMessage({
-    context,
-    type: "getVersion",
-  });
-}
-
 function workerTestGetUserAgent(cb) {
   addEventListener("message", function workerTestGetUserAgentCB(e) {
     if (e.data.type !== "returnUserAgent") {

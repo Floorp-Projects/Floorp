@@ -54,6 +54,8 @@ class UrlbarInput {
     // In the future this may be moved to the view, so it can customize
     // the container element.
     let MozXULElement = this.window.MozXULElement;
+    // TODO Bug 1535659: urlbarView-body-inner possibly doesn't need the
+    // role="combobox" once bug 1513337 is fixed.
     this.document.getElementById("mainPopupSet").appendChild(
       MozXULElement.parseXULToFragment(`
         <panel id="urlbar-results"
@@ -65,7 +67,8 @@ class UrlbarInput {
                norolluponanchor="true"
                level="parent">
           <html:div class="urlbarView-body-outer">
-            <html:div class="urlbarView-body-inner">
+            <html:div class="urlbarView-body-inner"
+                      role="combobox">
               <html:div id="urlbarView-results"
                         role="listbox"/>
             </html:div>

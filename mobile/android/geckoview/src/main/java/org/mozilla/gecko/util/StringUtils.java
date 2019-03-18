@@ -12,9 +12,6 @@ import android.support.annotation.NonNull;
 import android.text.TextUtils;
 
 import java.nio.charset.Charset;
-import java.util.Collections;
-import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Set;
 
 public class StringUtils {
@@ -48,15 +45,15 @@ public class StringUtils {
      * in text. In ambiguous cases where the new text can be either a search or a URL,
      * wasSearchQuery is returned
     */
-    public static boolean isSearchQuery(String text, boolean wasSearchQuery) {
+    public static boolean isSearchQuery(final String text, final boolean wasSearchQuery) {
         // We remove leading and trailing white spaces when decoding URLs
-        text = text.trim();
-        if (text.length() == 0) {
+        String trimmedText = text.trim();
+        if (trimmedText.length() == 0) {
             return wasSearchQuery;
         }
-        int colon = text.indexOf(':');
-        int dot = text.indexOf('.');
-        int space = text.indexOf(' ');
+        int colon = trimmedText.indexOf(':');
+        int dot = trimmedText.indexOf('.');
+        int space = trimmedText.indexOf(' ');
 
         // If a space is found in a trimmed string, we assume this is a search query(Bug 1278245)
         if (space > -1) {
@@ -107,11 +104,11 @@ public class StringUtils {
         public static final int STRIP_HTTPS = 1;
     }
 
-    public static String stripScheme(String url) {
+    public static String stripScheme(final String url) {
         return stripScheme(url, UrlFlags.NONE);
     }
 
-    public static String stripScheme(String url, int flags) {
+    public static String stripScheme(final String url, final int flags) {
         if (url == null) {
             return url;
         }
@@ -131,7 +128,7 @@ public class StringUtils {
         return newURL;
     }
 
-    public static boolean isHttpOrHttps(String url) {
+    public static boolean isHttpOrHttps(final String url) {
         if (TextUtils.isEmpty(url)) {
             return false;
         }
@@ -139,7 +136,7 @@ public class StringUtils {
         return url.startsWith("http://") || url.startsWith("https://");
     }
 
-    public static String stripCommonSubdomains(String host) {
+    public static String stripCommonSubdomains(final String host) {
         if (host == null) {
             return host;
         }
@@ -162,7 +159,7 @@ public class StringUtils {
     /**
      * Searches the url query string for the first value with the given key.
      */
-    public static String getQueryParameter(String url, String desiredKey) {
+    public static String getQueryParameter(final String url, final String desiredKey) {
         if (TextUtils.isEmpty(url) || TextUtils.isEmpty(desiredKey)) {
             return null;
         }
@@ -195,7 +192,7 @@ public class StringUtils {
         return null;
     }
 
-    public static boolean isFilterUrl(String url) {
+    public static boolean isFilterUrl(final String url) {
         if (TextUtils.isEmpty(url)) {
             return false;
         }
@@ -203,7 +200,7 @@ public class StringUtils {
         return url.startsWith(FILTER_URL_PREFIX);
     }
 
-    public static String getFilterFromUrl(String url) {
+    public static String getFilterFromUrl(final String url) {
         if (TextUtils.isEmpty(url)) {
             return null;
         }
@@ -217,7 +214,7 @@ public class StringUtils {
                 "file".equals(scheme) || "resource".equals(scheme));
     }
 
-    public static boolean isUserEnteredUrl(String url) {
+    public static boolean isUserEnteredUrl(final String url) {
         return (url != null && url.startsWith(USER_ENTERED_URL_PREFIX));
     }
 
@@ -230,7 +227,7 @@ public class StringUtils {
      * @param  url to be decoded
      * @return url component entered by user
      */
-    public static String decodeUserEnteredUrl(String url) {
+    public static String decodeUserEnteredUrl(final String url) {
         Uri uri = Uri.parse(url);
         if ("user-entered".equals(uri.getScheme())) {
             return uri.getSchemeSpecificPart();
@@ -238,7 +235,7 @@ public class StringUtils {
         return url;
     }
 
-    public static String encodeUserEnteredUrl(String url) {
+    public static String encodeUserEnteredUrl(final String url) {
         return Uri.fromParts("user-entered", url, null).toString();
     }
 
@@ -253,14 +250,14 @@ public class StringUtils {
      *
      * @return a set of decoded names
      */
-    public static Set<String> getQueryParameterNames(Uri uri) {
+    public static Set<String> getQueryParameterNames(final Uri uri) {
         return uri.getQueryParameterNames();
     }
 
     /**
      * @return  the index of the path segment of URLs
      */
-    public static int pathStartIndex(String text) {
+    public static int pathStartIndex(final String text) {
         if (text.contains("://")) {
             return text.indexOf('/', text.indexOf("://") + 3);
         } else {
@@ -277,7 +274,7 @@ public class StringUtils {
     /**
      * Check if this might be a RTL (right-to-left) text by looking at the first character.
      */
-    public static boolean isRTL(String text) {
+    public static boolean isRTL(final String text) {
         if (TextUtils.isEmpty(text)) {
             return false;
         }
@@ -294,7 +291,7 @@ public class StringUtils {
     /**
      * Force LTR (left-to-right) by prepending the text with the "left-to-right mark" (U+200E) if needed.
      */
-    public static String forceLTR(String text) {
+    public static String forceLTR(final String text) {
         if (!isRTL(text)) {
             return text;
         }
@@ -305,14 +302,15 @@ public class StringUtils {
     /**
      * Case-insensitive version of {@link String#startsWith(String)}.
      */
-    public static boolean caseInsensitiveStartsWith(String text, String prefix) {
+    public static boolean caseInsensitiveStartsWith(final String text, final String prefix) {
         return caseInsensitiveStartsWith(text, prefix, 0);
     }
 
     /**
      * Case-insensitive version of {@link String#startsWith(String, int)}.
      */
-    public static boolean caseInsensitiveStartsWith(String text, String prefix, int start) {
+    public static boolean caseInsensitiveStartsWith(final String text, final String prefix,
+                                                    final int start) {
         return text.regionMatches(true, start, prefix, 0, prefix.length());
     }
 

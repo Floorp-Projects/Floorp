@@ -45,13 +45,25 @@ var doubletap_prefs = [
   ["apz.max_tap_time", 10000],
 ];
 
+// Increase the tap timeouts so the one-touch-pinch gesture is still detected
+// in case of random delays during testing. Also ensure that the feature is
+// actually enabled (which it should be by default, but it's good to be safe).
+var onetouchpinch_prefs = [
+  ...prefs,
+  ["apz.one_touch_pinch.enabled", true],
+  ["ui.click_hold_context_menus.delay", 10000],
+  ["apz.max_tap_time", 10000],
+];
+
 var subtests = [
   {"file": "helper_bug1280013.html", "prefs": prefs},
   {"file": "helper_basic_zoom.html", "prefs": prefs},
+  {"file": "helper_basic_onetouchpinch.html", "prefs": onetouchpinch_prefs},
   {"file": "helper_zoom_prevented.html", "prefs": prefs},
   {"file": "helper_zoomed_pan.html", "prefs": prefs},
   {"file": "helper_fixed_position_scroll_hittest.html", "prefs": prefs},
   {"file": "helper_basic_doubletap_zoom.html", "prefs": doubletap_prefs},
+  {"file": "helper_onetouchpinch_nested.html", "prefs": onetouchpinch_prefs},
 ];
 
 if (isApzEnabled()) {

@@ -319,6 +319,20 @@ function loadPageInfo(frameOuterWindowID, imageElement, browser) {
 
   let imageInfo = imageElement;
 
+  // Generate security information if it is a security error page.
+  let documentURI = browser.documentURI.spec;
+  if (documentURI.startsWith("about:certerror")) {
+    let hostName = null;
+    try {
+      hostName = browser.currentURI.displayHost;
+    } catch (exception) { }
+    let info = {
+      isTopWindow: !!frameOuterWindowID,
+      hostName,
+    };
+    securityOnLoad(documentURI, info);
+  }
+
   // Look for pageInfoListener in content.js. Sends message to listener with arguments.
   mm.sendAsyncMessage("PageInfo:getData", {strings: gStrings, frameOuterWindowID});
 

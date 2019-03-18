@@ -39,6 +39,9 @@ EXPORTS.mozilla.net += [
     'AltDataOutputStreamChild.h',
     'AltDataOutputStreamParent.h',
     'BackgroundChannelRegistrar.h',
+    'ClassifierDummyChannel.h',
+    'ClassifierDummyChannelChild.h',
+    'ClassifierDummyChannelParent.h',
     'HttpAuthUtils.h',
     'HttpBackgroundChannelChild.h',
     'HttpBackgroundChannelParent.h',
@@ -51,9 +54,6 @@ EXPORTS.mozilla.net += [
     'PHttpChannelParams.h',
     'PSpdyPush.h',
     'TimingStruct.h',
-    'TrackingDummyChannel.h',
-    'TrackingDummyChannelChild.h',
-    'TrackingDummyChannelParent.h',
 ]
 
 SOURCES += [
@@ -67,6 +67,9 @@ UNIFIED_SOURCES += [
     'ASpdySession.cpp',
     'BackgroundChannelRegistrar.cpp',
     'CacheControlParser.cpp',
+    'ClassifierDummyChannel.cpp',
+    'ClassifierDummyChannelChild.cpp',
+    'ClassifierDummyChannelParent.cpp',
     'ConnectionDiagnostics.cpp',
     'DelayHttpChannelQueue.cpp',
     'Http2Compression.cpp',
@@ -103,9 +106,6 @@ UNIFIED_SOURCES += [
     'nsServerTiming.cpp',
     'NullHttpChannel.cpp',
     'NullHttpTransaction.cpp',
-    'TrackingDummyChannel.cpp',
-    'TrackingDummyChannelChild.cpp',
-    'TrackingDummyChannelParent.cpp',
     'TunnelUtils.cpp',
 ]
 
@@ -116,9 +116,9 @@ SOURCES += [
 
 IPDL_SOURCES += [
     'PAltDataOutputStream.ipdl',
+    'PClassifierDummyChannel.ipdl',
     'PHttpBackgroundChannel.ipdl',
     'PHttpChannel.ipdl',
-    'PTrackingDummyChannel.ipdl',
 ]
 
 EXTRA_JS_MODULES += [

@@ -583,7 +583,10 @@ MediaResult WMFVideoMFTManager::InitInternal() {
     attr->GetUINT32(MF_SA_D3D_AWARE, &aware);
     attr->SetUINT32(CODECAPI_AVDecNumWorkerThreads,
                     WMFDecoderModule::GetNumDecoderThreads());
-    if (mLowLatency || gfxPrefs::PDMWMFLowLatencyEnabled()) {
+    bool lowLatency =
+        (gfxPrefs::PDMWMFLowLatencyEnabled() || IsWin10OrLater()) &&
+        !gfxPrefs::PDMWMFLowLatencyForceDisabled();
+    if (mLowLatency || lowLatency) {
       hr = attr->SetUINT32(CODECAPI_AVLowLatencyMode, TRUE);
       if (SUCCEEDED(hr)) {
         LOG("Enabling Low Latency Mode");

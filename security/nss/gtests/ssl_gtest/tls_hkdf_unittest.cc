@@ -68,6 +68,18 @@ size_t GetHashLength(SSLHashType hash) {
   return 0;
 }
 
+CK_MECHANISM_TYPE GetHkdfMech(SSLHashType hash) {
+  switch (hash) {
+    case ssl_hash_sha256:
+      return CKM_NSS_HKDF_SHA256;
+    case ssl_hash_sha384:
+      return CKM_NSS_HKDF_SHA384;
+    default:
+      ADD_FAILURE() << "Unknown hash: " << hash;
+  }
+  return CKM_INVALID_MECHANISM;
+}
+
 PRUint16 GetSomeCipherSuiteForHash(SSLHashType hash) {
   switch (hash) {
     case ssl_hash_sha256:
@@ -136,15 +148,19 @@ class TlsHkdfTest : public ::testing::Test,
     ImportKey(&k2_, kKey2, hash_type_, slot_.get());
   }
 
-  void VerifyKey(const ScopedPK11SymKey& key, const DataBuffer& expected) {
+  void VerifyKey(const ScopedPK11SymKey& key, CK_MECHANISM_TYPE expected_mech,
+                 const DataBuffer& expected_value) {
+    EXPECT_EQ(expected_mech, PK11_GetMechanism(key.get()));
+
     SECStatus rv = PK11_ExtractKeyValue(key.get());
     ASSERT_EQ(SECSuccess, rv);
 
     SECItem* key_data = PK11_GetKeyData(key.get());
     ASSERT_NE(nullptr, key_data);
 
-    EXPECT_EQ(expected.len(), key_data->len);
-    EXPECT_EQ(0, memcmp(expected.data(), key_data->data, expected.len()));
+    EXPECT_EQ(expected_value.len(), key_data->len);
+    EXPECT_EQ(
+        0, memcmp(expected_value.data(), key_data->data, expected_value.len()));
   }
 
   void HkdfExtract(const ScopedPK11SymKey& ikmk1, const ScopedPK11SymKey& ikmk2,
@@ -157,7 +173,7 @@ class TlsHkdfTest : public ::testing::Test,
     ScopedPK11SymKey prkk(prk);
 
     DumpKey("Output", prkk);
-    VerifyKey(prkk, expected);
+    VerifyKey(prkk, GetHkdfMech(base_hash), expected);
 
     // Now test the public wrapper.
     PRUint16 cs = GetSomeCipherSuiteForHash(base_hash);
@@ -165,7 +181,7 @@ class TlsHkdfTest : public ::testing::Test,
                          ikmk2.get(), &prk);
     ASSERT_EQ(SECSuccess, rv);
     ASSERT_NE(nullptr, prk);
-    VerifyKey(ScopedPK11SymKey(prk), expected);
+    VerifyKey(ScopedPK11SymKey(prk), GetHkdfMech(base_hash), expected);
   }
 
   void HkdfExpandLabel(ScopedPK11SymKey* prk, SSLHashType base_hash,
@@ -191,7 +207,23 @@ class TlsHkdfTest : public ::testing::Test,
                              &secret);
     EXPECT_EQ(SECSuccess, rv);
     ASSERT_NE(nullptr, prk);
-    VerifyKey(ScopedPK11SymKey(secret), expected);
+    VerifyKey(ScopedPK11SymKey(secret), GetHkdfMech(base_hash), expected);
+
+    // Verify that a key can be created with a different key type and size.
+    rv = SSL_HkdfExpandLabelWithMech(
+        SSL_LIBRARY_VERSION_TLS_1_3, cs, prk->get(), session_hash,
+        session_hash_len, label, label_len, CKM_DES3_CBC_PAD, 24, &secret);
+    EXPECT_EQ(SECSuccess, rv);
+    ASSERT_NE(nullptr, prk);
+    ScopedPK11SymKey with_mech(secret);
+    EXPECT_EQ(static_cast<CK_MECHANISM_TYPE>(CKM_DES3_CBC_PAD),
+              PK11_GetMechanism(with_mech.get()));
+    // Just verify that the key is the right size.
+    rv = PK11_ExtractKeyValue(with_mech.get());
+    ASSERT_EQ(SECSuccess, rv);
+    SECItem* key_data = PK11_GetKeyData(with_mech.get());
+    ASSERT_NE(nullptr, key_data);
+    EXPECT_EQ(24U, key_data->len);
   }
 
  protected:

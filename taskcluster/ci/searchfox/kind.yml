@@ -48,6 +48,7 @@ jobs:
             tooltool-downloads: public
             keep-artifacts: false
         toolchains:
+            - linux64-binutils
             - linux64-clang
             - linux64-nasm
             - linux64-node
@@ -80,6 +81,7 @@ jobs:
             tooltool-downloads: internal
             keep-artifacts: false
         toolchains:
+            - linux64-binutils
             - linux64-cctools-port
             - linux64-clang
             - linux64-hfsplus

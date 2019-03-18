@@ -20,10 +20,30 @@
           <span class="addon-name"></span>
           <span class="addon-description"></span>
         </div>
-        <div class="card-actions">
-          <button action="toggle-disabled"></button><button action="remove" data-l10n-id="remove-addon-button"></button>
+        <div class="more-options-menu">
+          <button class="ghost-button" action="more-options"></button>
+          <panel-list>
+            <panel-item action="toggle-disabled"></panel-item>
+            <panel-item data-l10n-id="remove-addon-button" action="remove"></panel-item>
+            <panel-item-separator></panel-item-separator>
+            <panel-item data-l10n-id="expand-addon-button" action="expand"></panel-item>
+          </panel-list>
         </div>
       </div>
+    </template>
+
+    <template name="panel-list">
+      <link rel="stylesheet" href="chrome://mozapps/content/extensions/panel-list.css"/>
+      <div class="arrow top"></div>
+      <div class="list">
+        <slot/>
+      </div>
+      <div class="arrow bottom"></div>
+    </template>
+
+    <template name="panel-item">
+      <link rel="stylesheet" href="chrome://mozapps/content/extensions/panel-item.css"/>
+      <button><slot/></button>
     </template>
   </body>
 </html>

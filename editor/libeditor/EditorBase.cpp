@@ -41,6 +41,7 @@
 #include "mozilla/mozInlineSpellChecker.h"  // for mozInlineSpellChecker
 #include "mozilla/mozSpellChecker.h"        // for mozSpellChecker
 #include "mozilla/Preferences.h"            // for Preferences
+#include "mozilla/PresShell.h"              // for PresShell
 #include "mozilla/RangeBoundary.h"      // for RawRangeBoundary, RangeBoundary
 #include "mozilla/dom/Selection.h"      // for Selection, etc.
 #include "mozilla/Services.h"           // for GetObserverService
@@ -87,7 +88,6 @@
 #include "nsNameSpaceManager.h"        // for kNameSpaceID_None, etc.
 #include "nsINode.h"                   // for nsINode, etc.
 #include "nsIPlaintextEditor.h"        // for nsIPlaintextEditor, etc.
-#include "nsIPresShell.h"              // for nsIPresShell
 #include "nsISelectionController.h"    // for nsISelectionController, etc.
 #include "nsISelectionDisplay.h"       // for nsISelectionDisplay, etc.
 #include "nsISupportsBase.h"           // for nsISupports
@@ -261,8 +261,7 @@ nsresult EditorBase::Init(Document& aDocument, Element* aRoot,
     mSelectionController = aSelectionController;
     selectionController = aSelectionController;
   } else {
-    nsCOMPtr<nsIPresShell> presShell = GetPresShell();
-    selectionController = do_QueryInterface(presShell);
+    selectionController = GetPresShell();
   }
   MOZ_ASSERT(selectionController,
              "Selection controller should be available at this point");
@@ -450,7 +449,7 @@ bool EditorBase::GetDesiredSpellCheckState() {
     return false;
   }
 
-  nsCOMPtr<nsIPresShell> presShell = GetPresShell();
+  PresShell* presShell = GetPresShell();
   if (presShell) {
     nsPresContext* context = presShell->GetPresContext();
     if (context && !context->IsDynamic()) {
@@ -642,11 +641,11 @@ EditorBase::GetDocument(Document** aDoc) {
 }
 
 already_AddRefed<nsIWidget> EditorBase::GetWidget() {
-  nsCOMPtr<nsIPresShell> ps = GetPresShell();
-  NS_ENSURE_TRUE(ps, nullptr);
-  nsPresContext* pc = ps->GetPresContext();
-  NS_ENSURE_TRUE(pc, nullptr);
-  nsCOMPtr<nsIWidget> widget = pc->GetRootWidget();
+  nsPresContext* presContext = GetPresContext();
+  if (NS_WARN_IF(!presContext)) {
+    return nullptr;
+  }
+  nsCOMPtr<nsIWidget> widget = presContext->GetRootWidget();
   NS_ENSURE_TRUE(widget.get(), nullptr);
   return widget.forget();
 }
@@ -2661,19 +2660,6 @@ nsresult EditorBase::InsertTextIntoTextNodeWithTransaction(
   return rv;
 }
 
-nsresult EditorBase::SelectEntireDocument() {
-  MOZ_ASSERT(IsEditActionDataAvailable());
-
-  Element* rootElement = GetRoot();
-  if (!rootElement) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
-
-  ErrorResult errorResult;
-  SelectionRefPtr()->SelectAllChildren(*rootElement, errorResult);
-  return errorResult.StealNSResult();
-}
-
 nsINode* EditorBase::GetFirstEditableNode(nsINode* aRoot) {
   MOZ_ASSERT(aRoot);
 
@@ -2950,9 +2936,9 @@ void EditorBase::DoSplitNode(const EditorDOMPoint& aStartOfRightNode,
   aError.SuppressException();
 
   // Handle selection
-  nsCOMPtr<nsIPresShell> ps = GetPresShell();
-  if (ps) {
-    ps->FlushPendingNotifications(FlushType::Frames);
+  RefPtr<PresShell> presShell = GetPresShell();
+  if (presShell) {
+    presShell->FlushPendingNotifications(FlushType::Frames);
   }
   NS_WARNING_ASSERTION(!Destroyed(),
                        "The editor is destroyed during splitting a node");
@@ -4379,11 +4365,6 @@ nsresult EditorBase::InitializeSelection(EventTarget* aFocusEventTarget) {
     return NS_OK;
   }
 
-  nsCOMPtr<nsIPresShell> presShell = GetPresShell();
-  if (NS_WARN_IF(!presShell)) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
-
   nsCOMPtr<nsISelectionController> selectionController =
       GetSelectionController();
   if (NS_WARN_IF(!selectionController)) {
@@ -4391,7 +4372,7 @@ nsresult EditorBase::InitializeSelection(EventTarget* aFocusEventTarget) {
   }
 
   // Init the caret
-  RefPtr<nsCaret> caret = presShell->GetCaret();
+  RefPtr<nsCaret> caret = GetCaret();
   if (NS_WARN_IF(!caret)) {
     return NS_ERROR_FAILURE;
   }
@@ -4482,12 +4463,11 @@ nsresult EditorBase::FinalizeSelection() {
 
   SelectionRefPtr()->SetAncestorLimiter(nullptr);
 
-  nsCOMPtr<nsIPresShell> presShell = GetPresShell();
-  if (NS_WARN_IF(!presShell)) {
+  if (NS_WARN_IF(!GetPresShell())) {
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  if (RefPtr<nsCaret> caret = presShell->GetCaret()) {
+  if (RefPtr<nsCaret> caret = GetCaret()) {
     caret->SetIgnoreUserModify(true);
   }
 
@@ -4865,10 +4845,10 @@ void EditorBase::HideCaret(bool aHide) {
     return;
   }
 
-  nsCOMPtr<nsIPresShell> presShell = GetPresShell();
-  NS_ENSURE_TRUE_VOID(presShell);
-  RefPtr<nsCaret> caret = presShell->GetCaret();
-  NS_ENSURE_TRUE_VOID(caret);
+  RefPtr<nsCaret> caret = GetCaret();
+  if (NS_WARN_IF(!caret)) {
+    return;
+  }
 
   mHidingCaret = aHide;
   if (aHide) {

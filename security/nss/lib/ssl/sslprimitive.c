@@ -45,7 +45,9 @@ tls13_GetHashAndCipher(PRUint16 version, PRUint16 cipherSuite,
         return SECFailure;
     }
     *hash = suiteDef->prf_hash;
-    *cipher = cipherDef;
+    if (cipher != NULL) {
+        *cipher = cipherDef;
+    }
     return SECSuccess;
 }
 
@@ -216,9 +218,8 @@ SSLExp_HkdfExtract(PRUint16 version, PRUint16 cipherSuite,
     }
 
     SSLHashType hash;
-    const ssl3BulkCipherDef *cipher; /* Unused here. */
     SECStatus rv = tls13_GetHashAndCipher(version, cipherSuite,
-                                          &hash, &cipher);
+                                          &hash, NULL);
     if (rv != SECSuccess) {
         return SECFailure; /* Code already set. */
     }
@@ -238,13 +239,36 @@ SSLExp_HkdfExpandLabel(PRUint16 version, PRUint16 cipherSuite, PK11SymKey *prk,
     }
 
     SSLHashType hash;
-    const ssl3BulkCipherDef *cipher; /* Unused here. */
     SECStatus rv = tls13_GetHashAndCipher(version, cipherSuite,
-                                          &hash, &cipher);
+                                          &hash, NULL);
     if (rv != SECSuccess) {
         return SECFailure; /* Code already set. */
     }
     return tls13_HkdfExpandLabel(prk, hash, hsHash, hsHashLen, label, labelLen,
                                  tls13_GetHkdfMechanismForHash(hash),
                                  tls13_GetHashSizeForHash(hash), keyp);
+}
+
+SECStatus
+SSLExp_HkdfExpandLabelWithMech(PRUint16 version, PRUint16 cipherSuite, PK11SymKey *prk,
+                               const PRUint8 *hsHash, unsigned int hsHashLen,
+                               const char *label, unsigned int labelLen,
+                               CK_MECHANISM_TYPE mech, unsigned int keySize,
+                               PK11SymKey **keyp)
+{
+    if (prk == NULL || keyp == NULL ||
+        label == NULL || labelLen == 0 ||
+        mech == CKM_INVALID_MECHANISM || keySize == 0) {
+        PORT_SetError(SEC_ERROR_INVALID_ARGS);
+        return SECFailure;
+    }
+
+    SSLHashType hash;
+    SECStatus rv = tls13_GetHashAndCipher(version, cipherSuite,
+                                          &hash, NULL);
+    if (rv != SECSuccess) {
+        return SECFailure; /* Code already set. */
+    }
+    return tls13_HkdfExpandLabel(prk, hash, hsHash, hsHashLen, label, labelLen,
+                                 mech, keySize, keyp);
 }

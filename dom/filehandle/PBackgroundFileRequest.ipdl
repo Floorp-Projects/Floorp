@@ -11,22 +11,10 @@ using struct mozilla::void_t
 namespace mozilla {
 namespace dom {
 
-union FileRequestSize
-{
-  void_t;
-  uint64_t;
-};
-
-union FileRequestLastModified
-{
-  void_t;
-  int64_t;
-};
-
 struct FileRequestMetadata
 {
-  FileRequestSize size;
-  FileRequestLastModified lastModified;
+  uint64_t? size;
+  int64_t? lastModified;
 };
 
 struct FileRequestGetMetadataResponse

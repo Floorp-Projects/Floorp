@@ -11,6 +11,7 @@
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/mozalloc.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/MouseEvent.h"
@@ -25,7 +26,6 @@
 #include "nsIContent.h"
 #include "nsID.h"
 #include "mozilla/dom/Document.h"
-#include "nsIPresShell.h"
 #include "nsISupportsUtils.h"
 #include "nsPIDOMWindow.h"
 #include "nsReadableUtils.h"
@@ -449,7 +449,7 @@ nsresult HTMLEditor::HideResizersInternal() {
   }
 
   // get the presshell's document observer interface.
-  nsCOMPtr<nsIPresShell> presShell = GetPresShell();
+  RefPtr<PresShell> presShell = GetPresShell();
   NS_WARNING_ASSERTION(presShell, "There is no presShell");
   // We allow the pres shell to be null; when it is, we presume there
   // are no document observers to notify, but we still want to

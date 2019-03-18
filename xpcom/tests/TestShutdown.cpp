@@ -8,10 +8,9 @@
 // Gee this seems simple! It's for testing for memory leaks with Purify.
 
 void main(int argc, char* argv[]) {
-  nsresult rv;
   nsIServiceManager* servMgr;
-  rv = NS_InitXPCOM2(&servMgr, nullptr, nullptr);
-  NS_ASSERTION(NS_SUCCEEDED(rv), "NS_InitXPCOM failed");
+  nsresult rv = NS_InitXPCOM(&servMgr, nullptr, nullptr);
+  MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv), "NS_InitXPCOM failed");
 
   // try loading a component and releasing it to see if it leaks
   if (argc > 1 && argv[1] != nullptr) {
@@ -34,5 +33,5 @@ void main(int argc, char* argv[]) {
   }
 
   rv = NS_ShutdownXPCOM(servMgr);
-  NS_ASSERTION(NS_SUCCEEDED(rv), "NS_ShutdownXPCOM failed");
+  MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv), "NS_ShutdownXPCOM failed");
 }

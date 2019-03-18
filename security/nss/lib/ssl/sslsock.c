@@ -4054,6 +4054,7 @@ struct {
     EXP(InstallExtensionHooks),
     EXP(HkdfExtract),
     EXP(HkdfExpandLabel),
+    EXP(HkdfExpandLabelWithMech),
     EXP(KeyUpdate),
     EXP(MakeAead),
     EXP(RecordLayerData),

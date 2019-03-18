@@ -19,8 +19,7 @@ add_task(async function() {
   let noResultsEl = gBrowser.contentDocument.querySelector("#no-results-message");
   is_element_visible(noResultsEl, "Should be reporting no results for this query");
 
-  let privacyCategory = gBrowser.contentDocument.querySelector("#category-privacy");
-  privacyCategory.click();
+  await gBrowser.contentWindow.gotoPref("panePrivacy");
   is_element_hidden(noResultsEl,
                     "Should not be showing the 'no results' message after selecting a category");
 

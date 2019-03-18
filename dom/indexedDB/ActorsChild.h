@@ -351,7 +351,7 @@ class BackgroundDatabaseChild final : public PBackgroundIDBDatabaseChild {
       PBackgroundMutableFileChild* aActor) override;
 
   virtual mozilla::ipc::IPCResult RecvVersionChange(
-      const uint64_t& aOldVersion, const NullableVersion& aNewVersion) override;
+      const uint64_t& aOldVersion, const Maybe<uint64_t>& aNewVersion) override;
 
   virtual mozilla::ipc::IPCResult RecvInvalidate() override;
 

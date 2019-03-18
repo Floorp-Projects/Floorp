@@ -307,6 +307,8 @@ add_task(async function tab_opens_popup() {
   textbox.value = "foo";
 
   let promise = promiseEvent(searchPopup, "popupshown");
+  // Extra tab stop for url buttons.
+  EventUtils.synthesizeKey("KEY_Tab");
   EventUtils.synthesizeKey("KEY_Tab");
   await promise;
   isnot(searchPopup.getAttribute("showonlysettings"), "true", "Should show the full popup");
@@ -327,6 +329,8 @@ add_no_popup_task(function tab_doesnt_open_popup() {
   gURLBar.focus();
   textbox.value = "foo";
 
+  // Extra tab stop for url buttons.
+  EventUtils.synthesizeKey("KEY_Tab");
   EventUtils.synthesizeKey("KEY_Tab");
 
   is(Services.focus.focusedElement, textbox.inputField, "Should have focused the search bar");
@@ -379,6 +383,8 @@ add_task(async function refocus_window_doesnt_open_popup_keyboard() {
   textbox.value = "foo";
 
   let promise = promiseEvent(searchPopup, "popupshown");
+  // Extra tab stop for url buttons.
+  EventUtils.synthesizeKey("KEY_Tab");
   EventUtils.synthesizeKey("KEY_Tab");
   await promise;
   isnot(searchPopup.getAttribute("showonlysettings"), "true", "Should show the full popup");
@@ -543,6 +549,8 @@ add_task(async function dont_open_in_customization() {
   textbox.value = "foo";
 
   let promise = promiseEvent(searchPopup, "popupshown");
+  // Extra tab stop for url buttons.
+  EventUtils.synthesizeKey("KEY_Tab");
   EventUtils.synthesizeKey("KEY_Tab");
   await promise;
   isnot(searchPopup.getAttribute("showonlysettings"), "true", "Should show the full popup");

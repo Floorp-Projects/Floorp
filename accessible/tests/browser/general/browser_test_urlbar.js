@@ -4,6 +4,8 @@
 
 "use strict";
 
+const {UrlbarTestUtils} = ChromeUtils.import("resource://testing-common/UrlbarTestUtils.jsm");
+
 // Checking that the awesomebar popup gets COMBOBOX_LIST role instead of
 // LISTBOX, since its parent is a <panel> (see Bug 1422465)
 add_task(async function testAutocompleteRichResult() {
@@ -11,19 +13,21 @@ add_task(async function testAutocompleteRichResult() {
   let accService = await initAccessibilityService();
 
   info("Opening the URL bar and entering a key to show the PopupAutoCompleteRichResult panel");
-  let urlbar = document.getElementById("urlbar");
-  urlbar.focus();
-  let urlbarPopup = document.getElementById("PopupAutoCompleteRichResult");
-  let shown = BrowserTestUtils.waitForEvent(urlbarPopup, "popupshown");
-  EventUtils.sendString("a");
-  await shown;
+  await UrlbarTestUtils.promiseAutocompleteResultPopup(window, "a", waitForFocus);
 
   info("Waiting for accessibility to be created for the richlistbox");
-  let richlistbox = document.getAnonymousElementByAttribute(urlbarPopup, "anonid", "richlistbox");
-  await BrowserTestUtils.waitForCondition(() => accService.getAccessibleFor(richlistbox));
+  let resultsView;
+  if (UrlbarPrefs.get("quantumbar")) {
+    resultsView = gURLBar.view.panel.querySelector("#urlbarView-results");
+    await BrowserTestUtils.waitForCondition(() => accService.getAccessibleFor(resultsView));
+  } else {
+    let urlbarPopup = document.getElementById("PopupAutoCompleteRichResult");
+    resultsView = document.getAnonymousElementByAttribute(urlbarPopup, "anonid", "richlistbox");
+    await BrowserTestUtils.waitForCondition(() => accService.getAccessibleFor(resultsView));
+  }
 
   info("Confirming that the special case is handled in XULListboxAccessible");
-  let accessible = accService.getAccessibleFor(richlistbox);
+  let accessible = accService.getAccessibleFor(resultsView);
   is(accessible.role, ROLE_COMBOBOX_LIST, "Right role");
 
   BrowserTestUtils.removeTab(tab);

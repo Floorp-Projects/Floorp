@@ -8,6 +8,7 @@ include protocol PSocketProcessBridge;
 include PBrowserOrId;
 
 // ParamTraits stuff for generated code and other classes we don't want to change
+include "mozilla/net/NrIceStunAddrMessageUtils.h";
 include "mozilla/media/webrtc/WebrtcIPCTraits.h";
 using StringVector from "mozilla/media/webrtc/WebrtcIPCTraits.h";
 using CandidateInfo from "mozilla/media/webrtc/WebrtcIPCTraits.h";

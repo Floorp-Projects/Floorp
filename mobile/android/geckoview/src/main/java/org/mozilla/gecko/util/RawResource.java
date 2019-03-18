@@ -22,7 +22,7 @@ import java.io.StringWriter;
  * cases where need to read such assets.
  */
 public final class RawResource {
-    public static String getAsString(Context context, int id) throws IOException {
+    public static String getAsString(final Context context, final int id) throws IOException {
         InputStreamReader reader = null;
 
         try {

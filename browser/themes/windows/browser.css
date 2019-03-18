@@ -627,11 +627,6 @@ html|*.urlbar-input:-moz-lwtheme::placeholder,
 
 /* identity box */
 
-#identity-box:not(:active):-moz-focusring {
-  outline: 1px dotted;
-  outline-offset: -3px;
-}
-
 %include ../shared/identity-block/identity-block.inc.css
 
 /* autocomplete */
@@ -764,12 +759,6 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
 
 %include ../shared/notification-icons.inc.css
 %include ../shared/addon-notification.inc.css
-
-/* Notification icon box */
-
-.notification-anchor-icon:-moz-focusring {
-  outline: 1px dotted -moz-DialogText;
-}
 
 /* Translation infobar */
 

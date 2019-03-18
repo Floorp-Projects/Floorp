@@ -10,12 +10,12 @@ import android.content.Intent;
 import android.speech.RecognizerIntent;
 
 public class InputOptionsUtils {
-    public static boolean supportsVoiceRecognizer(Context context, String prompt) {
+    public static boolean supportsVoiceRecognizer(final Context context, final String prompt) {
         final Intent intent = createVoiceRecognizerIntent(prompt);
         return intent.resolveActivity(context.getPackageManager()) != null;
     }
 
-    public static Intent createVoiceRecognizerIntent(String prompt) {
+    public static Intent createVoiceRecognizerIntent(final String prompt) {
         final Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
         intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_WEB_SEARCH);
         intent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 1);
@@ -23,11 +23,11 @@ public class InputOptionsUtils {
         return intent;
     }
 
-    public static boolean supportsIntent(Intent intent, Context context) {
+    public static boolean supportsIntent(final Intent intent, final Context context) {
         return intent.resolveActivity(context.getPackageManager()) != null;
     }
 
-    public static boolean supportsQrCodeReader(Context context) {
+    public static boolean supportsQrCodeReader(final Context context) {
         final Intent intent = createQRCodeReaderIntent();
         return supportsIntent(intent, context);
     }

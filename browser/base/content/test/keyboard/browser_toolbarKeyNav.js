@@ -13,7 +13,10 @@ const PERMISSIONS_PAGE = "https://example.com/browser/browser/base/content/test/
 
 // The DevEdition has the DevTools button in the toolbar by default. Remove it
 // to prevent branch-specific rules what button should be focused.
-CustomizableUI.removeWidgetFromArea("developer-button");
+function resetToolbarWithoutDevEditionButtons() {
+  CustomizableUI.reset();
+  CustomizableUI.removeWidgetFromArea("developer-button");
+}
 
 async function expectFocusAfterKey(aKey, aFocus, aAncestorOk = false) {
   let res = aKey.match(/^(Shift\+)?(?:(.)|(.+))$/);
@@ -37,9 +40,11 @@ async function expectFocusAfterKey(aKey, aFocus, aAncestorOk = false) {
       friendlyExpected = "Web document";
     }
   }
+  info("Listening on item " + (expected.id || expected.className));
   let focused = BrowserTestUtils.waitForEvent(expected, "focus", aAncestorOk);
   EventUtils.synthesizeKey(key, {shiftKey: shift});
-  await focused;
+  let receivedEvent = await focused;
+  info("Got focus on item: " + (receivedEvent.target.id || receivedEvent.target.className));
   ok(true, friendlyExpected + " focused after " + aKey + " pressed");
 }
 
@@ -69,13 +74,14 @@ function withNewBlankTab(taskFn) {
   });
 }
 
-add_task(async function setPref() {
+add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["browser.toolbars.keyboard_navigation", true],
       ["accessibility.tabfocus", 7],
     ],
   });
+  resetToolbarWithoutDevEditionButtons();
 });
 
 // Test tab stops with no page loaded.
@@ -149,7 +155,7 @@ add_task(async function testTabStopNoButtons() {
     startFromUrlBar();
     await expectFocusAfterKey("Shift+Tab", "tabbrowser-tabs", true);
     await expectFocusAfterKey("Tab", gURLBar.inputField);
-    CustomizableUI.reset();
+    resetToolbarWithoutDevEditionButtons();
     // Make sure the button is reachable now that it has been re-added.
     await expectFocusAfterKey("Shift+Tab", "home-button", true);
   });
@@ -228,13 +234,11 @@ add_task(async function testArrowsOverflowButton() {
     await expectFocusAfterKey("ArrowLeft", "nav-bar-overflow-button");
     // Make sure the button is not reachable once it is invisible again.
     await expectFocusAfterKey("ArrowRight", "PanelUI-menu-button");
-    CustomizableUI.reset();
+    resetToolbarWithoutDevEditionButtons();
     // Flush layout so its invisibility can be detected.
     document.getElementById("nav-bar-overflow-button").clientWidth;
     await expectFocusAfterKey("ArrowLeft", "sidebar-button");
   });
 });
 
-registerCleanupFunction(async function resetToolbar() {
-  await CustomizableUI.reset();
-});
+registerCleanupFunction(() => CustomizableUI.reset());

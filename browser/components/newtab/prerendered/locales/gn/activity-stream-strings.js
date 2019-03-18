@@ -41,7 +41,7 @@ window.gActivityStreamStrings = {
   "prefs_home_header": "Kuatiarogue retepy Firefox ñepyrũháme",
   "prefs_home_description": "Eiporavo mba’e retepýpa eipota Firefox mba’erechaha ñepyrũháme.",
   "prefs_content_discovery_header": "Firefox kuatiarogue ñepyrũ",
-  "prefs_content_discovery_description": "Content Discovery in Firefox Home allows you to discover high-quality, relevant articles from across the web.",
+  "prefs_content_discovery_description": "Content Discovery Firefox kuatiarogue ñepyrũme ohechaukakuaa tetepy oikóva ha iporãva ñandutípe g̃uarã.",
   "prefs_content_discovery_button": "Eipe'a Content Discovery",
   "prefs_section_rows_option": "{num} rysýi; {num} rysýi",
   "prefs_search_header": "Ñandutípe jeheka",

@@ -24,7 +24,7 @@ ChromeUtils.defineModuleGetter(this, "AMTelemetry",
 ChromeUtils.defineModuleGetter(this, "formAutofillParent",
                                "resource://formautofill/FormAutofillParent.jsm");
 
-var gLastHash = "";
+var gLastCategory = {category: undefined, subcategory: undefined};
 const gXULDOMParser = new DOMParser();
 
 var gCategoryInits = new Map();
@@ -34,48 +34,27 @@ function init_category_if_required(category) {
     throw "Unknown in-content prefs category! Can't init " + category;
   }
   if (categoryInfo.inited) {
-    return;
+    return null;
   }
-  categoryInfo.init();
+  return categoryInfo.init();
 }
 
 function register_module(categoryName, categoryObject) {
   gCategoryInits.set(categoryName, {
     inited: false,
-    init() {
+    async init() {
       let template = document.getElementById("template-" + categoryName);
       if (template) {
         // Replace the template element with the nodes from the parsed comment
         // string.
         let frag = MozXULElement.parseXULToFragment(template.firstChild.data);
 
-        // Gather the to-be-translated elements so that we could pass them to
-        // l10n.translateElements() and get a translated promise.
-        // Here we loop through the first level elements (<hbox>/<groupbox>/<deck>/etc)
-        // because we know that they are not implemented by XBL bindings,
-        // so it's ok to get a reference of them before inserting the node
-        // to the DOM.
-        //
-        // If we don't have to worry about XBL, this can simply be
-        // let l10nUpdatedElements = Array.from(frag.querySelectorAll("[data-l10n-id]"))
-        //
-        // If we can get a translated promise after insertion, this can all be
-        // removed (see bug 1520659.)
-        let firstLevelElements = Array.from(frag.children);
+        await document.l10n.translateFragment(frag);
 
         // Actually insert them into the DOM.
+        document.l10n.pauseObserving();
         template.replaceWith(frag);
-
-        let l10nUpdatedElements = [];
-        // Collect the elements from the newly inserted first level elements.
-        for (let el of firstLevelElements) {
-          l10nUpdatedElements = l10nUpdatedElements.concat(
-            Array.from(el.querySelectorAll("[data-l10n-id]")));
-        }
-
-        // Set a promise on the categoryInfo object that the highlight code can await on.
-        this.translated = document.l10n.translateElements(l10nUpdatedElements)
-          .then(() => this.translated = undefined);
+        document.l10n.resumeObserving();
 
         // Asks Preferences to update the attribute value of the entire
         // document again (this can be simplified if we could seperate the
@@ -122,26 +101,27 @@ function init_all() {
   maybeDisplayPoliciesNotice();
 
   window.addEventListener("hashchange", onHashChange);
-  gotoPref();
 
-  let helpButton = document.getElementById("helpButton");
-  let helpUrl = Services.urlFormatter.formatURLPref("app.support.baseURL") + "preferences";
-  helpButton.setAttribute("href", helpUrl);
+  gotoPref().then(() => {
+    let helpButton = document.getElementById("helpButton");
+    let helpUrl = Services.urlFormatter.formatURLPref("app.support.baseURL") + "preferences";
+    helpButton.setAttribute("href", helpUrl);
 
-  document.getElementById("addonsButton")
-    .addEventListener("click", () => {
-      let mainWindow = window.docShell.rootTreeItem.domWindow;
-      mainWindow.BrowserOpenAddonsMgr();
-      AMTelemetry.recordLinkEvent({
-        object: "aboutPreferences",
-        value: "about:addons",
+    document.getElementById("addonsButton")
+      .addEventListener("click", () => {
+        let mainWindow = window.docShell.rootTreeItem.domWindow;
+        mainWindow.BrowserOpenAddonsMgr();
+        AMTelemetry.recordLinkEvent({
+          object: "aboutPreferences",
+          value: "about:addons",
+        });
       });
-    });
 
-  document.dispatchEvent(new CustomEvent("Initialized", {
-    "bubbles": true,
-    "cancelable": true,
-  }));
+    document.dispatchEvent(new CustomEvent("Initialized", {
+      "bubbles": true,
+      "cancelable": true,
+    }));
+  });
 }
 
 function telemetryBucketForCategory(category) {
@@ -164,7 +144,7 @@ function onHashChange() {
   gotoPref();
 }
 
-function gotoPref(aCategory) {
+async function gotoPref(aCategory) {
   let categories = document.getElementById("categories");
   const kDefaultCategoryInternalName = "paneGeneral";
   const kDefaultCategory = "general";
@@ -195,7 +175,7 @@ function gotoPref(aCategory) {
 
   // Updating the hash (below) or changing the selected category
   // will re-enter gotoPref.
-  if (gLastHash == category && !subcategory)
+  if (gLastCategory.category == category && !subcategory)
     return;
 
   let item;
@@ -207,26 +187,35 @@ function gotoPref(aCategory) {
     }
   }
 
-  try {
-    init_category_if_required(category);
-  } catch (ex) {
-    Cu.reportError("Error initializing preference category " + category + ": " + ex);
-    throw ex;
-  }
-
-  let friendlyName = internalPrefCategoryNameToFriendlyName(category);
-  if (gLastHash || category != kDefaultCategoryInternalName || subcategory) {
+  if (gLastCategory.category || category != kDefaultCategoryInternalName || subcategory) {
+    let friendlyName = internalPrefCategoryNameToFriendlyName(category);
     document.location.hash = friendlyName;
   }
-  // Need to set the gLastHash before setting categories.selectedItem since
+  // Need to set the gLastCategory before setting categories.selectedItem since
   // the categories 'select' event will re-enter the gotoPref codepath.
-  gLastHash = category;
+  gLastCategory.category = category;
+  gLastCategory.subcategory = subcategory;
   if (item) {
     categories.selectedItem = item;
   } else {
     categories.clearSelection();
   }
   window.history.replaceState(category, document.title);
+
+  try {
+    await init_category_if_required(category);
+  } catch (ex) {
+    Cu.reportError(new Error("Error initializing preference category " + category + ": " + ex));
+    throw ex;
+  }
+
+  // Bail out of this goToPref if the category
+  // or subcategory changed during async operation.
+  if (gLastCategory.category !== category ||
+      gLastCategory.subcategory !== subcategory) {
+    return;
+  }
+
   search(category, "data-category");
 
   let mainContent = document.querySelector(".main-content");
@@ -284,7 +273,6 @@ async function scrollAndHighlight(subcategory, category) {
     return;
   }
   let header = getClosestDisplayedHeader(element);
-  await gCategoryInits.get(category).translated;
 
   scrollContentTo(header);
   element.classList.add("spotlight");

@@ -9,6 +9,7 @@ license = "MPL-2.0"
 [dependencies]
 log = "0.4"
 mozprofile = { path = "../mozprofile" }
+plist = "0.4"
 
 [target.'cfg(target_os = "windows")'.dependencies]
 winreg = "0.5"

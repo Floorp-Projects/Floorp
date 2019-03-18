@@ -35,7 +35,7 @@ SimpleTest.waitForFocus(function() {
 });
 
 function checkInnerTextboxTabindex(input, tabindex) {
-  let fields = SpecialPowers.wrap(input).openOrClosedShadowRoot.getElementsByClassName("datetime-edit-field");
+  let fields = SpecialPowers.wrap(input).openOrClosedShadowRoot.querySelectorAll(".datetime-edit-field");
 
   for (let field of fields) {
     is(field.tabIndex, tabindex, "tabIndex in the inner textbox should be correct");

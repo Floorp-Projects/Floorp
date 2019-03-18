@@ -532,24 +532,48 @@ interface nsIHttpChannel : nsIChannel
       CLASSIFIED_CRYPTOMINING = 0x02,
 
       /**
-       * The resource is on the tracking protection list. This is only available
+       * The following are about tracking annotation and are available only
        * if the privacy.trackingprotection.annotate_channels pref.
+       * CLASSIFIED_TRACKING is set if we are not able to identify the
+       * type of classification.
        */
       CLASSIFIED_TRACKING = 0x04,
+      CLASSIFIED_TRACKING_AD = 0x08,
+      CLASSIFIED_TRACKING_ANALYTICS = 0x10,
+      CLASSIFIED_TRACKING_SOCIAL = 0x20,
+      CLASSIFIED_TRACKING_CONTENT = 0x40,
+
+      /**
+       * This is exposed to help to identify tracking classification
+       */
+      CLASSIFIED_ANY_TRACKING = CLASSIFIED_TRACKING |
+        CLASSIFIED_TRACKING_AD | CLASSIFIED_TRACKING_ANALYTICS |
+        CLASSIFIED_TRACKING_SOCIAL | CLASSIFIED_TRACKING_CONTENT |
+        CLASSIFIED_FINGERPRINTING,
     };
 
     /**
      * Returns true if the channel has loaded a resource that is classified as
      * tracker.
      * This is a helper attribute which returns the same value of
-     * (classificationFlags & CLASSIFIED_TRACKING) ||
-     *   (classificationFlags & CLASSIFIED_FINGERPRINTING)
+     * (classificationFlags & CLASSIFIED_ANY_TRACKING)
      *
      * Note that top-level channels could be marked as tracking
      * resource. In order to identify third-party tracking resources
-     * specifically, use isThirdPartyTrackingResource.
+     * specifically, use isThirdPartyTrackingResource().
      */
-    [infallible] readonly attribute boolean isTrackingResource;
+    boolean isTrackingResource();
+
+%{ C++
+  inline bool IsTrackingResource()
+  {
+    bool value = false;
+    if (NS_SUCCEEDED(IsTrackingResource(&value)) && value) {
+      return true;
+    }
+    return false;
+  }
+%}
 
     /**
      * Returns the classification flags if the channel has been processed by
@@ -557,10 +581,20 @@ interface nsIHttpChannel : nsIChannel
      * window URI.
      *
      * This is a helper attribute which returns the same value of
-     * (thirdPartyClassificationFlags & CLASSIFIED_TRACKING) ||
-     *   (thirdPartyClassificationFlags & CLASSIFIED_FINGERPRINTING)
+     * (thirdPartyClassificationFlags & CLASSIFIED_ANY_TRACKING)
      */
-    [infallible] readonly attribute boolean isThirdPartyTrackingResource;
+    boolean isThirdPartyTrackingResource();
+
+%{ C++
+  inline bool IsThirdPartyTrackingResource()
+  {
+    bool value = false;
+    if (NS_SUCCEEDED(IsThirdPartyTrackingResource(&value)) && value) {
+      return true;
+    }
+    return false;
+  }
+%}
 
     /**
      * Returns the allowing status for flash plugin for this channel.

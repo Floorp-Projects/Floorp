@@ -682,7 +682,10 @@ typedef struct SSLAeadContextStr SSLAeadContext;
 
 /* SSL_HkdfExtract and SSL_HkdfExpandLabel implement the functions from TLS,
  * using the version and ciphersuite to set parameters. This allows callers to
- * use these TLS functions as a KDF. This is only supported for TLS 1.3. */
+ * use these TLS functions as a KDF. This is only supported for TLS 1.3.
+ *
+ * SSL_HkdfExtract produces a key with a mechanism that is suitable for input to
+ * SSL_HkdfExpandLabel (and SSL_HkdfExpandLabelWithMech). */
 #define SSL_HkdfExtract(version, cipherSuite, salt, ikm, keyp)      \
     SSL_EXPERIMENTAL_API("SSL_HkdfExtract",                         \
                          (PRUint16 _version, PRUint16 _cipherSuite, \
@@ -690,6 +693,8 @@ typedef struct SSLAeadContextStr SSLAeadContext;
                           PK11SymKey * *_keyp),                     \
                          (version, cipherSuite, salt, ikm, keyp))
 
+/* SSL_HkdfExpandLabel produces a key with a mechanism that is suitable for
+ * input to SSL_HkdfExpandLabel or SSL_MakeAead. */
 #define SSL_HkdfExpandLabel(version, cipherSuite, prk,                     \
                             hsHash, hsHashLen, label, labelLen, keyp)      \
     SSL_EXPERIMENTAL_API("SSL_HkdfExpandLabel",                            \
@@ -700,6 +705,23 @@ typedef struct SSLAeadContextStr SSLAeadContext;
                           PK11SymKey **_keyp),                             \
                          (version, cipherSuite, prk,                       \
                           hsHash, hsHashLen, label, labelLen, keyp))
+
+/* SSL_HkdfExpandLabelWithMech uses the KDF from the selected TLS version and
+ * cipher suite, as with the other calls, but the provided mechanism and key
+ * size. This allows the key to be used more widely. */
+#define SSL_HkdfExpandLabelWithMech(version, cipherSuite, prk,             \
+                                    hsHash, hsHashLen, label, labelLen,    \
+                                    mech, keySize, keyp)                   \
+    SSL_EXPERIMENTAL_API("SSL_HkdfExpandLabelWithMech",                    \
+                         (PRUint16 _version, PRUint16 _cipherSuite,        \
+                          PK11SymKey * _prk,                               \
+                          const PRUint8 *_hsHash, unsigned int _hsHashLen, \
+                          const char *_label, unsigned int _labelLen,      \
+                          CK_MECHANISM_TYPE _mech, unsigned int _keySize,  \
+                          PK11SymKey **_keyp),                             \
+                         (version, cipherSuite, prk,                       \
+                          hsHash, hsHashLen, label, labelLen,              \
+                          mech, keySize, keyp))
 
 /* Deprecated experimental APIs */
 #define SSL_UseAltServerHelloType(fd, enable) SSL_DEPRECATED_EXPERIMENTAL_API

@@ -7,7 +7,6 @@ package org.mozilla.geckoview;
 
 import org.mozilla.gecko.InputMethods;
 import org.mozilla.gecko.annotation.WrapForJNI;
-import org.mozilla.gecko.GeckoEditableChild;
 import org.mozilla.gecko.IGeckoEditableParent;
 import org.mozilla.gecko.NativeQueue;
 import org.mozilla.gecko.util.ActivityUtils;

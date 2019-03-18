@@ -148,7 +148,7 @@ function createThisFirefoxRuntime() {
   };
 }
 
-function disconnectRuntime(id) {
+function disconnectRuntime(id, shouldRedirect = false) {
   return async (dispatch, getState) => {
     dispatch({ type: DISCONNECT_RUNTIME_START });
     try {
@@ -163,8 +163,10 @@ function disconnectRuntime(id) {
       if (runtime.type !== RUNTIMES.THIS_FIREFOX) {
         clientWrapper.removeListener("closed", onRemoteDebuggerClientClosed);
       }
-
       await clientWrapper.close();
+      if (shouldRedirect) {
+        await dispatch(Actions.selectPage(PAGE_TYPES.RUNTIME, RUNTIMES.THIS_FIREFOX));
+      }
 
       dispatch({
         type: DISCONNECT_RUNTIME_SUCCESS,

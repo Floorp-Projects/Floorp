@@ -1,0 +1,67 @@
+<?xml version="1.0"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<!DOCTYPE module PUBLIC
+    "-//Puppy Crawl//DTD Check Configuration 1.2//EN"
+    "http://www.puppycrawl.com/dtds/configuration_1_2.dtd">
+
+<module name="Checker">
+    <property name="charset" value="UTF-8"/>
+
+    <!-- Disallow tabs -->
+    <module name="FileTabCharacter">
+        <property name="eachLine" value="true"/>
+    </module>
+
+    <!-- Disallow trailing whitespace -->
+    <module name="RegexpSingleline">
+        <property name="format" value="\s+$"/>
+        <property name="message" value="Trailing whitespace"/>
+    </module>
+
+    <module name="TreeWalker">
+        <module name="FinalParameters"/>
+        <module name="ParameterName"/>
+        <module name="StaticVariableName"/>
+        <module name="LeftCurly"/>
+        <module name="RightCurly"/>
+        <module name="Indentation"/>
+        <module name="OneStatementPerLine"/>
+        <module name="AvoidStarImport"/>
+        <module name="UnusedImports"/>
+
+        <module name="MemberName">
+            <!-- Private members must use mHungarianNotation -->
+            <property name="format" value="m[A-Z][A-Za-z]*$"/>
+            <property name="applyToPrivate" value="true" />
+            <property name="applyToPublic" value="false" />
+            <property name="applyToPackage" value="false" />
+            <property name="applyToProtected" value="false" />
+        </module>
+
+        <module name="ClassTypeParameterName">
+            <property name="format" value="^[A-Z][A-Za-z]*$"/>
+        </module>
+        <module name="InterfaceTypeParameterName">
+            <property name="format" value="^[A-Z][A-Za-z]*$"/>
+        </module>
+        <module name="LocalVariableName"/>
+
+        <module name="GenericWhitespace"/>
+        <module name="NoLineWrap">
+            <property name="tokens" value="IMPORT,PACKAGE_DEF"/>
+        </module>
+        <module name="OuterTypeFilename"/>
+        <module name="WhitespaceAfter">
+            <property name="tokens" value="COMMA, SEMI"/>
+        </module>
+        <module name="WhitespaceAround">
+            <property name="allowEmptyConstructors" value="true"/>
+            <property name="allowEmptyMethods" value="true"/>
+            <property name="allowEmptyTypes" value="true"/>
+        </module>
+        <module name="OneTopLevelClass"/>
+    </module>
+
+</module>

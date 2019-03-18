@@ -305,6 +305,7 @@ interface nsIEditor  : nsISupports
   /* ------------ Selection methods -------------- */
 
   /** sets the document selection to the entire contents of the document */
+  [can_run_script]
   void selectAll();
 
   /**

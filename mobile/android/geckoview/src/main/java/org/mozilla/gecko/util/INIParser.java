@@ -23,7 +23,7 @@ public final class INIParser extends INISection {
 
     // create a parser. The file will not be read until you attempt to
     // access sections or properties inside it. At that point its read synchronously
-    public INIParser(File iniFile) {
+    public INIParser(final File iniFile) {
         super("");
         mFile = iniFile;
     }
@@ -34,7 +34,7 @@ public final class INIParser extends INISection {
     }
 
     // write to the specified file. Will overwrite anything current inside
-    public void writeTo(File f) {
+    public void writeTo(final File f) {
         if (f == null)
             return;
 
@@ -56,7 +56,7 @@ public final class INIParser extends INISection {
     }
 
     @Override
-    public void write(BufferedWriter writer) throws IOException {
+    public void write(final BufferedWriter writer) throws IOException {
         super.write(writer);
 
         if (mSections != null) {
@@ -88,7 +88,7 @@ public final class INIParser extends INISection {
     }
 
     // parse a passed in file
-    private void parse(File f) throws IOException {
+    private void parse(final File f) throws IOException {
         // Set up internal data members
         mSections = new Hashtable<String, INISection>();
 
@@ -139,21 +139,21 @@ public final class INIParser extends INISection {
     }
 
     // add a section to the file
-    public void addSection(INISection sect) {
+    public void addSection(final INISection sect) {
         // ensure that we have parsed the file
         getSections();
         mSections.put(sect.getName(), sect);
     }
 
     // get a section from the file. will return null if the section doesn't exist
-    public INISection getSection(String key) {
+    public INISection getSection(final String key) {
         // ensure that we have parsed the file
         getSections();
         return mSections.get(key);
     }
 
     // remove an entire section from the file
-    public void removeSection(String name) {
+    public void removeSection(final String name) {
         // ensure that we have parsed the file
         getSections();
         mSections.remove(name);
@@ -161,7 +161,7 @@ public final class INIParser extends INISection {
 
     // rename a section; nuking any previous section with the new
     // name in the process
-    public void renameSection(String oldName, String newName) {
+    public void renameSection(final String oldName, final String newName) {
         // ensure that we have parsed the file
         getSections();
 

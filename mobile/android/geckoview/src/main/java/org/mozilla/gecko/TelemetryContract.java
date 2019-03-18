@@ -120,15 +120,15 @@ public interface TelemetryContract {
         _TEST4("_test_event_4.1"),
         ;
 
-        private final String string;
+        private final String mString;
 
         Event(final String string) {
-            this.string = string;
+            mString = string;
         }
 
         @Override
         public String toString() {
-            return string;
+            return mString;
         }
     }
 
@@ -218,15 +218,15 @@ public interface TelemetryContract {
         _TEST2("_test_method_2"),
         ;
 
-        private final String string;
+        private final String mString;
 
         Method(final String string) {
-            this.string = string;
+            mString = string;
         }
 
         @Override
         public String toString() {
-            return string;
+            return mString;
         }
     }
 
@@ -272,15 +272,15 @@ public interface TelemetryContract {
         _TEST_STOPPED_TWICE("_test_session_stopped_twice.1"),
         ;
 
-        private final String string;
+        private final String mString;
 
         Session(final String string) {
-            this.string = string;
+            mString = string;
         }
 
         @Override
         public String toString() {
-            return string;
+            return mString;
         }
     }
 
@@ -303,15 +303,15 @@ public interface TelemetryContract {
         _TEST_IGNORED("_test_reason_ignored"),
         ;
 
-        private final String string;
+        private final String mString;
 
         Reason(final String string) {
-            this.string = string;
+            mString = string;
         }
 
         @Override
         public String toString() {
-            return string;
+            return mString;
         }
     }
 }

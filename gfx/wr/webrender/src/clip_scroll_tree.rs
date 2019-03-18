@@ -530,49 +530,6 @@ impl ClipScrollTree {
             self.print_with(&mut pt);
         }
     }
-
-    /// Return true if this is a guaranteed identity transform. This
-    /// is conservative, it assumes not identity if a property
-    /// binding animation, or scroll frame is found, for example.
-    pub fn node_is_identity(
-        &self,
-        spatial_node_index: SpatialNodeIndex,
-    ) -> bool {
-        let mut current = spatial_node_index;
-
-        while current != ROOT_SPATIAL_NODE_INDEX {
-            let node = &self.spatial_nodes[current.0 as usize];
-
-            match node.node_type {
-                SpatialNodeType::ReferenceFrame(ref info) => {
-                    match info.source_transform {
-                        PropertyBinding::Value(transform) => {
-                            if transform != LayoutTransform::identity() {
-                                return false;
-                            }
-                        }
-                        PropertyBinding::Binding(..) => {
-                            // Assume not identity since it may change with animation.
-                            return false;
-                        }
-                    }
-                }
-                SpatialNodeType::ScrollFrame(ref info) => {
-                    // Assume not identity since it may change with scrolling.
-                    if let ScrollFrameKind::Explicit = info.frame_kind {
-                        return false;
-                    }
-                }
-                SpatialNodeType::StickyFrame(..) => {
-                    // Assume not identity since it may change with scrolling.
-                    return false;
-                }
-            }
-            current = node.parent.unwrap();
-        }
-
-        true
-    }
 }
 
 impl PrintableTree for ClipScrollTree {

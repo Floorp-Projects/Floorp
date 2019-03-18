@@ -442,11 +442,15 @@ var ExtensionsUI = {
                                             ["<>", appName]);
     return new Promise(resolve => {
       // Show or hide private permission ui based on the pref.
-      let checkbox = window.document.getElementById("addon-incognito-checkbox");
-      checkbox.checked = false;
-      checkbox.hidden = allowPrivateBrowsingByDefault || addon.type !== "extension";
+      function setCheckbox(win) {
+        let checkbox = win.document.getElementById("addon-incognito-checkbox");
+        checkbox.checked = false;
+        checkbox.hidden = allowPrivateBrowsingByDefault || addon.type !== "extension";
+      }
+      setCheckbox(window);
 
-      async function actionResolve() {
+      async function actionResolve(win) {
+        let checkbox = win.document.getElementById("addon-incognito-checkbox");
         if (checkbox.checked) {
           let perms = {permissions: ["internal:privateBrowsingAllowed"], origins: []};
           await ExtensionPermissions.add(addon.id, perms);
@@ -479,9 +483,10 @@ var ExtensionsUI = {
         name: addon.name,
         message,
         popupIconURL: icon,
-        onDismissed: () => {
+        onRefresh: setCheckbox,
+        onDismissed: (win) => {
           AppMenuNotifications.removeNotification("addon-installed");
-          actionResolve();
+          actionResolve(win);
         },
       };
       AppMenuNotifications.showNotification("addon-installed", action, null, options);

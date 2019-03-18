@@ -35,10 +35,14 @@ export {
 export { inComponent } from "./inComponent";
 export { isSelectedFrameVisible } from "./isSelectedFrameVisible";
 export { getCallStackFrames } from "./getCallStackFrames";
-export { getVisibleSelectedFrame } from "./visibleSelectedFrame";
 export { getBreakpointSources } from "./breakpointSources";
 export { getXHRBreakpoints, shouldPauseOnAnyXHR } from "./breakpoints";
 export * from "./visibleColumnBreakpoints";
+export {
+  getSelectedFrame,
+  getSelectedFrames,
+  getVisibleSelectedFrame
+} from "./pause";
 
 import { objectInspector } from "devtools-reps";
 

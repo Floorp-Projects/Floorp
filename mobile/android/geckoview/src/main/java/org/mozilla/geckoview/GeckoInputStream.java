@@ -6,7 +6,6 @@ import org.mozilla.gecko.util.ThreadUtils;
 
 import android.support.annotation.AnyThread;
 import android.support.annotation.NonNull;
-import android.util.Log;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -33,7 +32,7 @@ import java.util.LinkedList;
      *
      * @param support An instance of {@link Support}, used for native callbacks.
      */
-    private GeckoInputStream(@NonNull Support support) {
+    private GeckoInputStream(final @NonNull Support support) {
         mSupport = support;
     }
 
@@ -69,12 +68,13 @@ import java.util.LinkedList;
     }
 
     @Override
-    public int read(@NonNull byte[] b) throws IOException {
+    public int read(final @NonNull byte[] b) throws IOException {
         return read(b, 0, b.length);
     }
 
     @Override
-    public synchronized int read(@NonNull byte[] dest, int offset, int length) throws IOException {
+    public synchronized int read(final @NonNull byte[] dest, final int offset, final int length)
+            throws IOException {
         while (!mEOF && mBuffers.size() == 0) {
             // The underlying channel is suspended, so resume that before
             // waiting for a buffer.
@@ -123,7 +123,7 @@ import java.util.LinkedList;
      * @throws IOException
      */
     @WrapForJNI(exceptionMode = "nsresult", calledFrom = "gecko")
-    private synchronized void appendBuffer(byte[] buf) throws IOException {
+    private synchronized void appendBuffer(final byte[] buf) throws IOException {
         ThreadUtils.assertOnGeckoThread();
 
         if (mEOF) {

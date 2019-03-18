@@ -163,7 +163,7 @@ var PageThumbs = {
     }
 
     return new Promise(resolve => {
-      let canvas = this.createCanvas(aBrowser.contentWindow);
+      let canvas = this.createCanvas(aBrowser.ownerGlobal);
       this.captureToCanvas(aBrowser, canvas, () => {
         canvas.toBlob(blob => {
           resolve(blob, this.contentType);
@@ -261,7 +261,7 @@ var PageThumbs = {
       return;
     }
     // The content is a local page, grab a thumbnail sync.
-    PageThumbUtils.createSnapshotThumbnail(aBrowser.contentWindow,
+    PageThumbUtils.createSnapshotThumbnail(aBrowser.ownerGlobal,
                                            aCanvas,
                                            aArgs);
 

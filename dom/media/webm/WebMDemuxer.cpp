@@ -373,6 +373,10 @@ nsresult WebMDemuxer::ReadMetadata() {
       if (r == -1) {
         return NS_ERROR_FAILURE;
       }
+      if (params.rate > AudioInfo::MAX_RATE ||
+          params.channels > AudioConfig::ChannelLayout::MAX_CHANNELS) {
+        return NS_ERROR_DOM_MEDIA_METADATA_ERR;
+      }
 
       mAudioTrack = track;
       mHasAudio = true;

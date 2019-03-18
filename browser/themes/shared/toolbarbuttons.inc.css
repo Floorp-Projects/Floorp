@@ -8,6 +8,8 @@
   --toolbarbutton-outer-padding: 2px;
   --toolbarbutton-inner-padding: 6px;
 
+  --toolbarbutton-focus-outline: 2px solid currentColor;
+
   /* These hover and active colors should work on both light and dark
      backgrounds. We'll later set colors that cater for light and dark
      backgrounds specifically when we can detect them. */
@@ -197,6 +199,37 @@ toolbar .toolbarbutton-1[checked]:not(:active):hover > .toolbarbutton-icon {
   transition: background-color .4s;
 }
 
+/* Keyboard focus styling */
+#PersonalToolbar .toolbarbutton-1:-moz-focusring,
+.findbar-button:-moz-focusring,
+findbar toolbarbutton.tabbable:-moz-focusring,
+toolbarbutton.bookmark-item:not(.subviewbutton):-moz-focusring,
+toolbar:not(#PersonalToolbar) .toolbarbutton-1:-moz-focusring > .toolbarbutton-icon,
+toolbar:not(#PersonalToolbar) .toolbarbutton-1:-moz-focusring > .toolbarbutton-text,
+toolbar:not(#PersonalToolbar) .toolbarbutton-1:-moz-focusring > .toolbarbutton-badge-stack {
+  color: inherit;
+  outline: var(--toolbarbutton-focus-outline);
+  -moz-outline-radius: var(--toolbarbutton-border-radius);
+  outline-offset: unset;
+}
+
+:root[uidensity=compact] .findbar-button:-moz-focusring,
+:root[uidensity=compact] findbar toolbarbutton.tabbable:-moz-focusring,
+:root[uidensity=compact] toolbar:not(#PersonalToolbar) .toolbarbutton-1:-moz-focusring > .toolbarbutton-icon,
+:root[uidensity=compact] toolbar:not(#PersonalToolbar) .toolbarbutton-1:-moz-focusring > .toolbarbutton-text,
+:root[uidensity=compact] toolbar:not(#PersonalToolbar) .toolbarbutton-1:-moz-focusring > .toolbarbutton-badge-stack {
+  outline-offset: -1px;
+}
+
+#PersonalToolbar .toolbarbutton-1:-moz-focusring,
+toolbarbutton.bookmark-item:not(.subviewbutton):-moz-focusring {
+  outline-offset: -2px;
+}
+
+toolbar .toolbarbutton-1:-moz-focusring {
+  outline: none;
+}
+
 :root:not([uidensity=compact]) #back-button {
   padding-top: 3px;
   padding-bottom: 3px;
@@ -226,6 +259,14 @@ toolbar .toolbarbutton-1[checked]:not(:active):hover > .toolbarbutton-icon {
   padding: 8px;
   transition-property: box-shadow;
   transition-duration: var(--toolbarbutton-hover-transition-duration);
+}
+
+:root:not([uidensity=compact]) #back-button:-moz-focusring > .toolbarbutton-icon {
+  -moz-outline-radius: 10000px;
+}
+
+:root[uidensity=touch] #back-button:-moz-focusring > .toolbarbutton-icon {
+  outline-offset: -2px;
 }
 
 :root[uidensity=touch] #back-button {

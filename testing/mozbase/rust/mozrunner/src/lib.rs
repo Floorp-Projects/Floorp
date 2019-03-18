@@ -5,6 +5,8 @@ extern crate mozprofile;
 extern crate winreg;
 #[cfg(target_os = "macos")]
 extern crate dirs;
+#[cfg(target_os = "macos")]
+extern crate plist;
 
 pub mod firefox_args;
 pub mod path;

@@ -65,8 +65,8 @@ root1.attachShadow({ mode: "open" }).innerHTML = "<button class=yes>button in sh
 var root2 = document.getElementById("root2");
 root2.attachShadow({ mode: "open" }).innerHTML = "<div class=yes>text in shadow tree</div>";
 var yes_nodes_in_shadow_tree =
-  Array.from(root1.shadowRoot.getElementsByClassName("yes")).concat(
-    Array.from(root2.shadowRoot.getElementsByClassName("yes")));
+  Array.from(root1.shadowRoot.querySelectorAll(".yes")).concat(
+    Array.from(root2.shadowRoot.querySelectorAll(".yes")));
 
 var no_nodes = Array.from(document.getElementsByClassName("no"));
 

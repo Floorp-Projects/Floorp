@@ -18,6 +18,7 @@
 #include "mozilla/IMEStateManager.h"
 #include "mozilla/mozalloc.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/TextEditRules.h"
 #include "mozilla/TextComposition.h"
 #include "mozilla/TextEvents.h"
@@ -42,7 +43,6 @@
 #include "nsIContent.h"
 #include "nsIDocumentEncoder.h"
 #include "nsINode.h"
-#include "nsIPresShell.h"
 #include "nsISelectionController.h"
 #include "nsISupportsPrimitives.h"
 #include "nsITransferable.h"
@@ -1198,18 +1198,25 @@ nsresult TextEditor::SetTextAsSubAction(const nsAString& aString) {
     // shouldn't receive such selectionchange before the first mutation.
     AutoUpdateViewBatch preventSelectionChangeEvent(*this);
 
+    Element* rootElement = GetRoot();
+    if (NS_WARN_IF(!rootElement)) {
+      return NS_ERROR_FAILURE;
+    }
+
     // We want to select trailing BR node to remove all nodes to replace all,
     // but TextEditor::SelectEntireDocument doesn't select that BR node.
     if (rules->DocumentIsEmpty()) {
-      // if it's empty, don't select entire doc - that would select
-      // the bogus node
-      Element* rootElement = GetRoot();
-      if (NS_WARN_IF(!rootElement)) {
-        return NS_ERROR_FAILURE;
-      }
       rv = SelectionRefPtr()->Collapse(rootElement, 0);
+      NS_WARNING_ASSERTION(
+          NS_SUCCEEDED(rv),
+          "Failed to move caret to start of the editor root element");
     } else {
-      rv = EditorBase::SelectEntireDocument();
+      ErrorResult error;
+      SelectionRefPtr()->SelectAllChildren(*rootElement, error);
+      NS_WARNING_ASSERTION(
+          !error.Failed(),
+          "Failed to select all children of the editor root element");
+      rv = error.StealNSResult();
     }
     if (NS_SUCCEEDED(rv)) {
       rv = ReplaceSelectionAsSubAction(aString);
@@ -1322,8 +1329,7 @@ nsresult TextEditor::OnCompositionChange(
     return NS_OK;
   }
 
-  nsIPresShell* presShell = GetPresShell();
-  if (NS_WARN_IF(!presShell)) {
+  if (NS_WARN_IF(!GetPresShell())) {
     return NS_ERROR_NOT_INITIALIZED;
   }
 
@@ -1342,7 +1348,7 @@ nsresult TextEditor::OnCompositionChange(
       compositionChangeEventHandlingMarker(mComposition,
                                            &aCompositionChangeEvent);
 
-  RefPtr<nsCaret> caretP = presShell->GetCaret();
+  RefPtr<nsCaret> caret = GetCaret();
 
   nsresult rv;
   {
@@ -1355,8 +1361,8 @@ nsresult TextEditor::OnCompositionChange(
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                          "Failed to insert new composition string");
 
-    if (caretP) {
-      caretP->SetSelection(SelectionRefPtr());
+    if (caret) {
+      caret->SetSelection(SelectionRefPtr());
     }
   }
 
@@ -1755,7 +1761,7 @@ bool TextEditor::FireClipboardEvent(EventMessage aEventMessage,
     CommitComposition();
   }
 
-  nsCOMPtr<nsIPresShell> presShell = GetPresShell();
+  RefPtr<PresShell> presShell = GetPresShell();
   if (NS_WARN_IF(!presShell)) {
     return false;
   }
@@ -2144,31 +2150,28 @@ nsresult TextEditor::SelectEntireDocument() {
     return NS_ERROR_NULL_POINTER;
   }
 
+  Element* rootElement = GetRoot();
+  if (NS_WARN_IF(!rootElement)) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
   // Protect the edit rules object from dying
   RefPtr<TextEditRules> rules(mRules);
 
-  // is doc empty?
+  // If we're empty, don't select all children because that would select the
+  // bogus node.
   if (rules->DocumentIsEmpty()) {
-    // get root node
-    Element* rootElement = GetRoot();
-    if (NS_WARN_IF(!rootElement)) {
-      return NS_ERROR_FAILURE;
-    }
-
-    // if it's empty don't select entire doc - that would select the bogus node
-    return SelectionRefPtr()->Collapse(rootElement, 0);
-  }
-
-  SelectionBatcher selectionBatcher(SelectionRefPtr());
-  nsresult rv = EditorBase::SelectEntireDocument();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
+    nsresult rv = SelectionRefPtr()->Collapse(rootElement, 0);
+    NS_WARNING_ASSERTION(
+        NS_SUCCEEDED(rv),
+        "Failed to move caret to start of the editor root element");
     return rv;
   }
 
   // Don't select the trailing BR node if we have one
   nsCOMPtr<nsIContent> childNode;
-  rv = EditorBase::GetEndChildNode(*SelectionRefPtr(),
-                                   getter_AddRefs(childNode));
+  nsresult rv = EditorBase::GetEndChildNode(*SelectionRefPtr(),
+                                            getter_AddRefs(childNode));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -2177,13 +2180,22 @@ nsresult TextEditor::SelectEntireDocument() {
   }
 
   if (childNode && TextEditUtils::IsMozBR(childNode)) {
-    int32_t parentOffset;
-    nsINode* parentNode = GetNodeLocation(childNode, &parentOffset);
-
-    return SelectionRefPtr()->Extend(parentNode, parentOffset);
+    ErrorResult error;
+    MOZ_KnownLive(SelectionRefPtr())
+        ->SetStartAndEndInLimiter(RawRangeBoundary(rootElement, 0),
+                                  EditorRawDOMPoint(childNode), error);
+    NS_WARNING_ASSERTION(!error.Failed(),
+                         "Failed to select all children of the editor root "
+                         "element except the moz-<br> element");
+    return error.StealNSResult();
   }
 
-  return NS_OK;
+  ErrorResult error;
+  SelectionRefPtr()->SelectAllChildren(*rootElement, error);
+  NS_WARNING_ASSERTION(
+      !error.Failed(),
+      "Failed to select all children of the editor root element");
+  return error.StealNSResult();
 }
 
 EventTarget* TextEditor::GetDOMEventTarget() { return mEventTarget; }

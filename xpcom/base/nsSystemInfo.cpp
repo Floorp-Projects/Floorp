@@ -66,7 +66,7 @@
 #  include "mozilla/SandboxInfo.h"
 #endif
 
-// Slot for NS_InitXPCOM2 to pass information to nsSystemInfo::Init.
+// Slot for NS_InitXPCOM to pass information to nsSystemInfo::Init.
 // Only set to nonzero (potentially) if XP_UNIX.  On such systems, the
 // system call to discover the appropriate value is not thread-safe,
 // so we must call it before going multithreaded, but nsSystemInfo::Init

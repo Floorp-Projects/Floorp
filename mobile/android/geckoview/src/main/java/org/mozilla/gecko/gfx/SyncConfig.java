@@ -9,10 +9,10 @@ import android.os.Parcelable;
     final int width;
     final int height;
 
-    /* package */ SyncConfig(int sourceTextureHandle,
-                             GeckoSurface targetSurface,
-                             int width,
-                             int height) {
+    /* package */ SyncConfig(final int sourceTextureHandle,
+                             final GeckoSurface targetSurface,
+                             final int width,
+                             final int height) {
         this.sourceTextureHandle = sourceTextureHandle;
         this.targetSurface = targetSurface;
         this.width = width;
@@ -22,17 +22,17 @@ import android.os.Parcelable;
     public static final Creator<SyncConfig> CREATOR =
         new Creator<SyncConfig>() {
             @Override
-            public SyncConfig createFromParcel(Parcel parcel) {
+            public SyncConfig createFromParcel(final Parcel parcel) {
                 return new SyncConfig(parcel);
             }
 
             @Override
-            public SyncConfig[] newArray(int i) {
+            public SyncConfig[] newArray(final int i) {
                 return new SyncConfig[i];
             }
         };
 
-    private SyncConfig(Parcel parcel) {
+    private SyncConfig(final Parcel parcel) {
         sourceTextureHandle = parcel.readInt();
         targetSurface = GeckoSurface.CREATOR.createFromParcel(parcel);
         width = parcel.readInt();
@@ -45,7 +45,7 @@ import android.os.Parcelable;
     }
 
     @Override
-    public void writeToParcel(Parcel parcel, int flags) {
+    public void writeToParcel(final Parcel parcel, final int flags) {
         parcel.writeInt(sourceTextureHandle);
         targetSurface.writeToParcel(parcel, flags);
         parcel.writeInt(width);

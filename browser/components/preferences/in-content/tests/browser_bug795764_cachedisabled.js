@@ -17,14 +17,14 @@ function test() {
   ]}).then(() => open_preferences(runTest));
 }
 
-function runTest(win) {
+async function runTest(win) {
   is(gBrowser.currentURI.spec, "about:preferences", "about:preferences loaded");
 
   let tab = win.document;
   let elements = tab.getElementById("mainPrefPane").children;
 
   // Test if privacy pane is opened correctly
-  win.gotoPref("panePrivacy");
+  await win.gotoPref("panePrivacy");
   for (let element of elements) {
     let attributeValue = element.getAttribute("data-category");
     if (attributeValue == "panePrivacy") {

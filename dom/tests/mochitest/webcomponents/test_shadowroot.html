@@ -39,25 +39,11 @@ createIframe(content)
     is(shadow.getElementById("svgmovedtoshadow"), inShadowSVGEl, "SVG element appended to a ShadowRoot should be accessible from ShadowRoot API.");
     ok(!aDocument.getElementById("svgmovedtoshadow"), "SVG element appended to a ShadowRoot should not be accessible from document.");
 
-    // Test getElementsByClassName
-    is(aDocument.getElementsByClassName("testclass").length, 0, "Element removed from DOM should not be accessible by DOM accessors.");
-    is(shadow.getElementsByClassName("testclass").length, 1, "Element added to ShadowRoot should be accessible by ShadowRoot API.");
-
-    // Test getElementsByTagName{NS}
-    is(aDocument.getElementsByTagName("div").length, 0, "Element removed from DOM should not be accessible from DOM accessors.");
-    is(shadow.getElementsByTagName("div").length, 1, "Elements in the ShadowRoot should be accessible from the ShadowRoot API.");
-    is(aDocument.getElementsByTagName("svg").length, 0, "SVG elements removed from DOM should not be accessible from DOM accessors.");
-    is(shadow.getElementsByTagName("svg").length, 1, "SVG element in the ShadowRoot should be accessible from the ShadowRoot API.");
-    is(shadow.getElementsByTagNameNS("http://www.w3.org/2000/svg", "svg").length, 1, "SVG element in the ShadowRoot should be accessible from the ShadowRoot API.");
-
     // Remove elements from ShadowRoot and make sure that they are no longer accessible via the ShadowRoot API.
     shadow.removeChild(inShadowEl);
     shadow.removeChild(inShadowSVGEl);
     ok(!shadow.getElementById("movedtoshadow"), "ShadowRoot API should not be able to access elements removed from ShadowRoot.");
     ok(!shadow.getElementById("svgmovedtoshadow"), "ShadowRoot API should not be able to access elements removed from ShadowRoot.");
-    is(shadow.getElementsByClassName("testclass").length, 0, "ShadowRoot getElementsByClassName should not be able to access elements removed from ShadowRoot.");
-    is(shadow.getElementsByTagName("svg").length, 0, "ShadowRoot getElementsByTagName should not be able to access elements removed from ShadowRoot.");
-    is(shadow.getElementsByTagNameNS("http://www.w3.org/2000/svg", "svg").length, 0, "ShadowRoot getElementsByTagNameNS should not be able to access elements removed from ShadowRoot.");
 
     // Test querySelector on element in a ShadowRoot.
     element = aDocument.createElement("div");

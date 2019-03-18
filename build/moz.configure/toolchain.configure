@@ -1617,6 +1617,9 @@ def security_hardening_cflags(hardening_flag, asan, optimize, c_compiler, target
             # mingw-clang cross-compile toolchain has bugs with stack protector
             if target.os != 'WINNT' or c_compiler == 'gcc':
                 flags.append("-fstack-protector-strong")
+                ldflags.append("-fstack-protector-strong")
+                js_flags.append("-fstack-protector-strong")
+                js_ldflags.append("-fstack-protector-strong")
 
         # ASLR ------------------------------------------------
         # ASLR (dynamicbase) is enabled by default in clang-cl; but the

@@ -85,7 +85,7 @@ public abstract class RuntimeSettings implements Parcelable {
             RuntimeSettings.this.addPref(this);
         }
 
-        public void set(T newValue) {
+        public void set(final T newValue) {
             mValue = newValue;
             mIsSet = true;
         }
@@ -252,7 +252,7 @@ public abstract class RuntimeSettings implements Parcelable {
 
     @Override // Parcelable
     @AnyThread
-    public void writeToParcel(Parcel out, int flags) {
+    public void writeToParcel(final Parcel out, final int flags) {
         for (final Pref<?> pref : mPrefs) {
             out.writeValue(pref.get());
         }

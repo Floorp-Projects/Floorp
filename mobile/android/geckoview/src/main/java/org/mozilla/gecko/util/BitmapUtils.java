@@ -29,19 +29,20 @@ public final class BitmapUtils {
 
     private BitmapUtils() {}
 
-    public static Bitmap decodeByteArray(byte[] bytes) {
+    public static Bitmap decodeByteArray(final byte[] bytes) {
         return decodeByteArray(bytes, null);
     }
 
-    public static Bitmap decodeByteArray(byte[] bytes, BitmapFactory.Options options) {
+    public static Bitmap decodeByteArray(final byte[] bytes, final BitmapFactory.Options options) {
         return decodeByteArray(bytes, 0, bytes.length, options);
     }
 
-    public static Bitmap decodeByteArray(byte[] bytes, int offset, int length) {
+    public static Bitmap decodeByteArray(final byte[] bytes, final int offset, final int length) {
         return decodeByteArray(bytes, offset, length, null);
     }
 
-    public static Bitmap decodeByteArray(byte[] bytes, int offset, int length, BitmapFactory.Options options) {
+    public static Bitmap decodeByteArray(final byte[] bytes, final int offset, final int length,
+                                         final BitmapFactory.Options options) {
         if (bytes.length <= 0) {
             throw new IllegalArgumentException("bytes.length " + bytes.length
                                                + " must be a positive number");
@@ -71,7 +72,7 @@ public final class BitmapUtils {
         return bitmap;
     }
 
-    public static Bitmap decodeStream(InputStream inputStream) {
+    public static Bitmap decodeStream(final InputStream inputStream) {
         try {
             return BitmapFactory.decodeStream(inputStream);
         } catch (OutOfMemoryError e) {
@@ -80,11 +81,11 @@ public final class BitmapUtils {
         }
     }
 
-    public static Bitmap decodeUrl(Uri uri) {
+    public static Bitmap decodeUrl(final Uri uri) {
         return decodeUrl(uri.toString());
     }
 
-    public static Bitmap decodeUrl(String urlString) {
+    public static Bitmap decodeUrl(final String urlString) {
         URL url;
 
         try {
@@ -97,7 +98,7 @@ public final class BitmapUtils {
         return decodeUrl(url);
     }
 
-    public static Bitmap decodeUrl(URL url) {
+    public static Bitmap decodeUrl(final URL url) {
         InputStream stream = null;
 
         try {
@@ -123,11 +124,12 @@ public final class BitmapUtils {
         return bitmap;
     }
 
-    public static Bitmap decodeResource(Context context, int id) {
+    public static Bitmap decodeResource(final Context context, final int id) {
         return decodeResource(context, id, null);
     }
 
-    public static Bitmap decodeResource(Context context, int id, BitmapFactory.Options options) {
+    public static Bitmap decodeResource(final Context context, final int id,
+                                        final BitmapFactory.Options options) {
         Resources resources = context.getResources();
         try {
             return BitmapFactory.decodeResource(resources, id, options);
@@ -137,7 +139,8 @@ public final class BitmapUtils {
         }
     }
 
-    public static @ColorInt int getDominantColor(Bitmap source, @ColorInt int defaultColor) {
+    public static @ColorInt int getDominantColor(final Bitmap source,
+                                                 final @ColorInt int defaultColor) {
         if (HardwareUtils.isX86System()) {
             // (Bug 1318667) We are running into crashes when using the palette library with
             // specific icons on x86 devices. They take down the whole VM and are not recoverable.
@@ -160,76 +163,75 @@ public final class BitmapUtils {
         }
     }
 
-    public static @ColorInt int getDominantColorCustomImplementation(Bitmap source) {
+    public static @ColorInt int getDominantColorCustomImplementation(final Bitmap source) {
         return getDominantColorCustomImplementation(source, true, Color.WHITE);
     }
 
-    public static @ColorInt int getDominantColorCustomImplementation(Bitmap source,
-                                                                     boolean applyThreshold,
-                                                                     @ColorInt int defaultColor) {
-      if (source == null) {
-          return defaultColor;
-      }
-
-      // Keep track of how many times a hue in a given bin appears in the image.
-      // Hue values range [0 .. 360), so dividing by 10, we get 36 bins.
-      int[] colorBins = new int[36];
-
-      // The bin with the most colors. Initialize to -1 to prevent accidentally
-      // thinking the first bin holds the dominant color.
-      int maxBin = -1;
-
-      // Keep track of sum hue/saturation/value per hue bin, which we'll use to
-      // compute an average to for the dominant color.
-      float[] sumHue = new float[36];
-      float[] sumSat = new float[36];
-      float[] sumVal = new float[36];
-      float[] hsv = new float[3];
-
-      int height = source.getHeight();
-      int width = source.getWidth();
-      int[] pixels = new int[width * height];
-      source.getPixels(pixels, 0, width, 0, 0, width, height);
-      for (int row = 0; row < height; row++) {
-        for (int col = 0; col < width; col++) {
-          int c = pixels[col + row * width];
-          // Ignore pixels with a certain transparency.
-          if (Color.alpha(c) < 128)
-            continue;
-
-          Color.colorToHSV(c, hsv);
-
-          // If a threshold is applied, ignore arbitrarily chosen values for "white" and "black".
-          if (applyThreshold && (hsv[1] <= 0.35f || hsv[2] <= 0.35f))
-            continue;
-
-          // We compute the dominant color by putting colors in bins based on their hue.
-          int bin = (int) Math.floor(hsv[0] / 10.0f);
-
-          // Update the sum hue/saturation/value for this bin.
-          sumHue[bin] = sumHue[bin] + hsv[0];
-          sumSat[bin] = sumSat[bin] + hsv[1];
-          sumVal[bin] = sumVal[bin] + hsv[2];
-
-          // Increment the number of colors in this bin.
-          colorBins[bin]++;
-
-          // Keep track of the bin that holds the most colors.
-          if (maxBin < 0 || colorBins[bin] > colorBins[maxBin])
-            maxBin = bin;
+    public static @ColorInt int getDominantColorCustomImplementation(
+            final Bitmap source, final boolean applyThreshold, final @ColorInt int defaultColor) {
+        if (source == null) {
+            return defaultColor;
         }
-      }
 
-      // maxBin may never get updated if the image holds only transparent and/or black/white pixels.
-      if (maxBin < 0) {
-          return defaultColor;
-      }
+        // Keep track of how many times a hue in a given bin appears in the image.
+        // Hue values range [0 .. 360), so dividing by 10, we get 36 bins.
+        int[] colorBins = new int[36];
 
-      // Return a color with the average hue/saturation/value of the bin with the most colors.
-      hsv[0] = sumHue[maxBin] / colorBins[maxBin];
-      hsv[1] = sumSat[maxBin] / colorBins[maxBin];
-      hsv[2] = sumVal[maxBin] / colorBins[maxBin];
-      return Color.HSVToColor(hsv);
+        // The bin with the most colors. Initialize to -1 to prevent accidentally
+        // thinking the first bin holds the dominant color.
+        int maxBin = -1;
+
+        // Keep track of sum hue/saturation/value per hue bin, which we'll use to
+        // compute an average to for the dominant color.
+        float[] sumHue = new float[36];
+        float[] sumSat = new float[36];
+        float[] sumVal = new float[36];
+        float[] hsv = new float[3];
+
+        int height = source.getHeight();
+        int width = source.getWidth();
+        int[] pixels = new int[width * height];
+        source.getPixels(pixels, 0, width, 0, 0, width, height);
+        for (int row = 0; row < height; row++) {
+            for (int col = 0; col < width; col++) {
+                int c = pixels[col + row * width];
+                // Ignore pixels with a certain transparency.
+                if (Color.alpha(c) < 128)
+                    continue;
+
+                Color.colorToHSV(c, hsv);
+
+                // If a threshold is applied, ignore arbitrarily chosen values for "white" and "black".
+                if (applyThreshold && (hsv[1] <= 0.35f || hsv[2] <= 0.35f))
+                    continue;
+
+                // We compute the dominant color by putting colors in bins based on their hue.
+                int bin = (int) Math.floor(hsv[0] / 10.0f);
+
+                // Update the sum hue/saturation/value for this bin.
+                sumHue[bin] = sumHue[bin] + hsv[0];
+                sumSat[bin] = sumSat[bin] + hsv[1];
+                sumVal[bin] = sumVal[bin] + hsv[2];
+
+                // Increment the number of colors in this bin.
+                colorBins[bin]++;
+
+                // Keep track of the bin that holds the most colors.
+                if (maxBin < 0 || colorBins[bin] > colorBins[maxBin])
+                    maxBin = bin;
+            }
+        }
+
+        // maxBin may never get updated if the image holds only transparent and/or black/white pixels.
+        if (maxBin < 0) {
+            return defaultColor;
+        }
+
+        // Return a color with the average hue/saturation/value of the bin with the most colors.
+        hsv[0] = sumHue[maxBin] / colorBins[maxBin];
+        hsv[1] = sumSat[maxBin] / colorBins[maxBin];
+        hsv[2] = sumVal[maxBin] / colorBins[maxBin];
+        return Color.HSVToColor(hsv);
     }
 
     /**
@@ -238,7 +240,7 @@ public final class BitmapUtils {
      * @param dataURI a Base64-encoded data URI string
      * @return        the decoded bitmap, or null if the data URI is invalid
      */
-    public static Bitmap getBitmapFromDataURI(String dataURI) {
+    public static Bitmap getBitmapFromDataURI(final String dataURI) {
         if (dataURI == null) {
             return null;
         }
@@ -255,7 +257,7 @@ public final class BitmapUtils {
      * Return a byte[] containing the bytes in a given base64 string, or null if this is not a valid
      * base64 string.
      */
-    public static byte[] getBytesFromBase64(String base64) {
+    public static byte[] getBytesFromBase64(final String base64) {
         try {
             return Base64.decode(base64, Base64.DEFAULT);
         } catch (Exception e) {
@@ -265,12 +267,12 @@ public final class BitmapUtils {
         return null;
     }
 
-    public static byte[] getBytesFromDataURI(String dataURI) {
+    public static byte[] getBytesFromDataURI(final String dataURI) {
         final String base64 = dataURI.substring(dataURI.indexOf(',') + 1);
         return getBytesFromBase64(base64);
     }
 
-    public static Bitmap getBitmapFromDrawable(Drawable drawable) {
+    public static Bitmap getBitmapFromDrawable(final Drawable drawable) {
         if (drawable instanceof BitmapDrawable) {
             return ((BitmapDrawable) drawable).getBitmap();
         }

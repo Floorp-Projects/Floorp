@@ -6494,6 +6494,7 @@ class DebuggerScriptGetPossibleBreakpointsMatcher {
                                   JSMSG_UNEXPECTED_TYPE,
                                   "getPossibleBreakpoints' 'line'",
                                   "not allowed alongside 'minLine'/'maxLine'");
+        return false;
       }
 
       size_t line;

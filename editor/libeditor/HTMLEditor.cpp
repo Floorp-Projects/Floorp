@@ -12,6 +12,7 @@
 #include "mozilla/EditorDOMPoint.h"
 #include "mozilla/EventStates.h"
 #include "mozilla/mozInlineSpellChecker.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/TextEvents.h"
 
 #include "nsCRT.h"
@@ -38,7 +39,6 @@
 #include "nsContentUtils.h"
 #include "nsIDocumentEncoder.h"
 #include "nsGenericHTMLElement.h"
-#include "nsIPresShell.h"
 #include "nsPresContext.h"
 #include "nsFocusManager.h"
 #include "nsPIDOMWindow.h"
@@ -196,10 +196,9 @@ HTMLEditor::~HTMLEditor() {
   mTypeInState = nullptr;
 
   if (mLinkHandler && IsInitialized()) {
-    nsCOMPtr<nsIPresShell> ps = GetPresShell();
-
-    if (ps && ps->GetPresContext()) {
-      ps->GetPresContext()->SetLinkHandler(mLinkHandler);
+    PresShell* presShell = GetPresShell();
+    if (presShell && presShell->GetPresContext()) {
+      presShell->GetPresContext()->SetLinkHandler(mLinkHandler);
     }
   }
 
@@ -301,8 +300,10 @@ nsresult HTMLEditor::Init(Document& aDoc, Element* aRoot,
     mCSSEditUtils = MakeUnique<CSSEditUtils>(this);
 
     // disable links
-    nsCOMPtr<nsIPresShell> presShell = GetPresShell();
-    NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
+    PresShell* presShell = GetPresShell();
+    if (NS_WARN_IF(!presShell)) {
+      return NS_ERROR_FAILURE;
+    }
     nsPresContext* context = presShell->GetPresContext();
     NS_ENSURE_TRUE(context, NS_ERROR_NULL_POINTER);
     if (!IsPlaintextEditor() && !IsInteractionAllowed()) {
@@ -1726,7 +1727,7 @@ HTMLEditor::SelectElement(Element* aElement) {
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  nsresult rv = SelectContentInternal(*aElement);
+  nsresult rv = SelectContentInternal(MOZ_KnownLive(*aElement));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -1741,28 +1742,18 @@ nsresult HTMLEditor::SelectContentInternal(nsIContent& aContentToSelect) {
     return NS_ERROR_FAILURE;
   }
 
-  nsINode* parent = aContentToSelect.GetParentNode();
-  if (NS_WARN_IF(!parent)) {
+  EditorRawDOMPoint newSelectionStart(&aContentToSelect);
+  if (NS_WARN_IF(!newSelectionStart.IsSet())) {
     return NS_ERROR_FAILURE;
   }
-
-  // Don't notify selection change at collapse.
-  AutoUpdateViewBatch notifySelectionChangeOnce(*this);
-
-  // XXX Perhaps, Selection should have SelectNode(nsIContent&).
-  int32_t offsetInParent = parent->ComputeIndexOf(&aContentToSelect);
-
-  // Collapse selection to just before desired element,
-  nsresult rv = SelectionRefPtr()->Collapse(parent, offsetInParent);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-  // then extend it to just after
-  rv = SelectionRefPtr()->Extend(parent, offsetInParent + 1);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-  return NS_OK;
+  EditorRawDOMPoint newSelectionEnd(&aContentToSelect);
+  MOZ_ASSERT(newSelectionEnd.IsSet());
+  DebugOnly<bool> advanced = newSelectionEnd.AdvanceOffset();
+  ErrorResult error;
+  MOZ_KnownLive(SelectionRefPtr())
+      ->SetStartAndEndInLimiter(newSelectionStart, newSelectionEnd, error);
+  NS_WARNING_ASSERTION(!error.Failed(), "Failed to select the given content");
+  return error.StealNSResult();
 }
 
 NS_IMETHODIMP
@@ -3083,7 +3074,7 @@ nsresult HTMLEditor::AddOverrideStyleSheetInternal(const nsAString& aURL) {
   }
 
   // Make sure the pres shell doesn't disappear during the load.
-  nsCOMPtr<nsIPresShell> presShell = GetPresShell();
+  RefPtr<PresShell> presShell = GetPresShell();
   if (NS_WARN_IF(!presShell)) {
     return NS_ERROR_NOT_INITIALIZED;
   }
@@ -3184,7 +3175,7 @@ nsresult HTMLEditor::RemoveOverrideStyleSheetInternal(const nsAString& aURL) {
     return NS_OK;  // It's okay even if not found.
   }
 
-  nsCOMPtr<nsIPresShell> presShell = GetPresShell();
+  RefPtr<PresShell> presShell = GetPresShell();
   if (NS_WARN_IF(!presShell)) {
     return NS_ERROR_NOT_INITIALIZED;
   }
@@ -3602,23 +3593,31 @@ nsresult HTMLEditor::SelectEntireDocument() {
     return NS_ERROR_NULL_POINTER;
   }
 
+  RefPtr<Element> rootElement = GetRoot();
+  if (NS_WARN_IF(!rootElement)) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
   // Protect the edit rules object from dying
   RefPtr<TextEditRules> rules(mRules);
 
-  // is doc empty?
+  // If we're empty, don't select all children because that would select the
+  // bogus node.
   if (rules->DocumentIsEmpty()) {
-    // get editor root node
-    Element* rootElement = GetRoot();
-
-    // if its empty dont select entire doc - that would select the bogus node
     nsresult rv = SelectionRefPtr()->Collapse(rootElement, 0);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-    return NS_OK;
+    NS_WARNING_ASSERTION(
+        NS_SUCCEEDED(rv),
+        "Failed to move caret to start of the editor root element");
+    return rv;
   }
 
-  return EditorBase::SelectEntireDocument();
+  // Otherwise, select all children.
+  ErrorResult error;
+  SelectionRefPtr()->SelectAllChildren(*rootElement, error);
+  NS_WARNING_ASSERTION(
+      !error.Failed(),
+      "Failed to select all children of the editor root element");
+  return error.StealNSResult();
 }
 
 nsresult HTMLEditor::SelectAllInternal() {
@@ -3646,8 +3645,8 @@ nsresult HTMLEditor::SelectAllInternal() {
     SelectionRefPtr()->SetAncestorLimiter(nullptr);
     rootContent = mRootElement;
   } else {
-    nsCOMPtr<nsIPresShell> ps = GetPresShell();
-    rootContent = anchorContent->GetSelectionRootContent(ps);
+    RefPtr<PresShell> presShell = GetPresShell();
+    rootContent = anchorContent->GetSelectionRootContent(presShell);
   }
 
   if (NS_WARN_IF(!rootContent)) {
@@ -4604,14 +4603,18 @@ nsresult HTMLEditor::GetElementOrigin(Element& aElement, int32_t& aX,
   if (NS_WARN_IF(!IsInitialized())) {
     return NS_ERROR_NOT_INITIALIZED;
   }
-  nsCOMPtr<nsIPresShell> ps = GetPresShell();
-  NS_ENSURE_TRUE(ps, NS_ERROR_NOT_INITIALIZED);
+  PresShell* presShell = GetPresShell();
+  if (NS_WARN_IF(!presShell)) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
 
   nsIFrame* frame = aElement.GetPrimaryFrame();
   NS_ENSURE_TRUE(frame, NS_OK);
 
-  nsIFrame* container = ps->GetAbsoluteContainingBlock(frame);
-  NS_ENSURE_TRUE(container, NS_OK);
+  nsIFrame* container = presShell->GetAbsoluteContainingBlock(frame);
+  if (NS_WARN_IF(!container)) {
+    return NS_OK;
+  }
   nsPoint off = frame->GetOffsetTo(container);
   aX = nsPresContext::AppUnitsToIntCSSPixels(off.x);
   aY = nsPresContext::AppUnitsToIntCSSPixels(off.y);

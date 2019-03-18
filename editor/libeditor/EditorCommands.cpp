@@ -695,7 +695,7 @@ SelectAllCommand::DoCommand(const char* aCommandName,
   }
   TextEditor* textEditor = editor->AsTextEditor();
   MOZ_ASSERT(textEditor);
-  return textEditor->SelectAll();
+  return MOZ_KnownLive(textEditor)->SelectAll();
 }
 
 NS_IMETHODIMP

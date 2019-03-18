@@ -52,7 +52,7 @@ public class Permissions {
      * Note: The provided context needs to be an Activity context in order to prompt. Use doNotPrompt()
      * for all other contexts.
      */
-    public static PermissionBlock from(@NonNull Context context) {
+    public static PermissionBlock from(final @NonNull Context context) {
         return new PermissionBlock(context, permissionHelper);
     }
 
@@ -62,7 +62,7 @@ public class Permissions {
      *
      * @return true if all of the permissions have been granted. False if any of the permissions have been denied.
      */
-    public static boolean waitFor(@NonNull Activity activity, String... permissions) {
+    public static boolean waitFor(final @NonNull Activity activity, final String... permissions) {
         ThreadUtils.assertNotOnUiThread(); // We do not want to block the UI thread.
 
         // This task will block until all of the permissions have been granted
@@ -96,11 +96,11 @@ public class Permissions {
     /**
      * Determine whether you have been granted particular permissions.
      */
-    public static boolean has(Context context, String... permissions) {
+    public static boolean has(final Context context, final String... permissions) {
         return permissionHelper.hasPermissions(context, permissions);
     }
 
-    /* package-private */ static void setPermissionHelper(PermissionsHelper permissionHelper) {
+    /* package-private */ static void setPermissionHelper(final PermissionsHelper permissionHelper) {
         Permissions.permissionHelper = permissionHelper;
     }
 
@@ -108,13 +108,16 @@ public class Permissions {
      * Callback for Activity.onRequestPermissionsResult(). All activities that prompt for permissions using this class
      * should implement onRequestPermissionsResult() and call this method.
      */
-    public static synchronized void onRequestPermissionsResult(@NonNull Activity activity, @NonNull String[] permissions, @NonNull int[] grantResults) {
+    public static synchronized void onRequestPermissionsResult(final @NonNull Activity activity,
+                                                               final @NonNull String[] permissions,
+                                                               final @NonNull int[] grantResults) {
         processGrantResults(permissions, grantResults);
 
         processQueue(activity, permissions, grantResults);
     }
 
-    /* package-private */ static synchronized void prompt(Activity activity, PermissionBlock block) {
+    /* package-private */ static synchronized void prompt(final Activity activity,
+                                                          final PermissionBlock block) {
         if (prompt.isEmpty()) {
             prompt.add(block);
             showPrompt(activity);
@@ -123,7 +126,8 @@ public class Permissions {
         }
     }
 
-    private static synchronized void processGrantResults(@NonNull String[] permissions, @NonNull int[] grantResults) {
+    private static synchronized void processGrantResults(final @NonNull String[] permissions,
+                                                         final @NonNull int[] grantResults) {
         final HashSet<String> grantedPermissions = collectGrantedPermissions(permissions, grantResults);
 
         while (!prompt.isEmpty()) {
@@ -137,7 +141,9 @@ public class Permissions {
         }
     }
 
-    private static synchronized void processQueue(Activity activity, String[] permissions, int[] grantResults) {
+    private static synchronized void processQueue(final Activity activity,
+                                                  final String[] permissions,
+                                                  final int[] grantResults) {
         final HashSet<String> deniedPermissions = collectDeniedPermissions(permissions, grantResults);
 
         while (!waiting.isEmpty()) {
@@ -161,7 +167,7 @@ public class Permissions {
         }
     }
 
-    private static synchronized void showPrompt(Activity activity) {
+    private static synchronized void showPrompt(final Activity activity) {
         HashSet<String> permissions = new HashSet<>();
 
         for (PermissionBlock block : prompt) {
@@ -171,15 +177,19 @@ public class Permissions {
         permissionHelper.prompt(activity, permissions.toArray(new String[permissions.size()]));
     }
 
-    private static HashSet<String> collectGrantedPermissions(@NonNull String[] permissions, @NonNull int[] grantResults) {
+    private static HashSet<String> collectGrantedPermissions(final @NonNull String[] permissions,
+                                                             final @NonNull int[] grantResults) {
         return filterPermissionsByResult(permissions, grantResults, PackageManager.PERMISSION_GRANTED);
     }
 
-    private static HashSet<String> collectDeniedPermissions(@NonNull String[] permissions, @NonNull int[] grantResults) {
+    private static HashSet<String> collectDeniedPermissions(final @NonNull String[] permissions,
+                                                            final @NonNull int[] grantResults) {
         return filterPermissionsByResult(permissions, grantResults, PackageManager.PERMISSION_DENIED);
     }
 
-    private static HashSet<String> filterPermissionsByResult(@NonNull String[] permissions, @NonNull int[] grantResults, int result) {
+    private static HashSet<String> filterPermissionsByResult(final @NonNull String[] permissions,
+                                                             final @NonNull int[] grantResults,
+                                                             final int result) {
         HashSet<String> grantedPermissions = new HashSet<>(permissions.length);
         for (int i = 0; i < permissions.length; i++) {
             if (grantResults[i] == result) {
@@ -189,7 +199,8 @@ public class Permissions {
         return grantedPermissions;
     }
 
-    private static boolean allPermissionsGranted(PermissionBlock block, HashSet<String> grantedPermissions) {
+    private static boolean allPermissionsGranted(final PermissionBlock block,
+                                                 final HashSet<String> grantedPermissions) {
         for (String permission : block.getPermissions()) {
             if (!grantedPermissions.contains(permission)) {
                 return false;
@@ -199,7 +210,8 @@ public class Permissions {
         return true;
     }
 
-    private static boolean atLeastOnePermissionDenied(PermissionBlock block, HashSet<String> deniedPermissions) {
+    private static boolean atLeastOnePermissionDenied(final PermissionBlock block,
+                                                      final HashSet<String> deniedPermissions) {
         for (String permission : block.getPermissions()) {
             if (deniedPermissions.contains(permission)) {
                 return true;

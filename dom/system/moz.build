@@ -6,7 +6,7 @@
 
 # This picks up *hapticfeedback* which is graveyard
 with Files("**"):
-    BUG_COMPONENT = ("Core", "DOM")
+    BUG_COMPONENT = ("Core", "DOM: Core & HTML")
 
 with Files("*OSFile*"):
     BUG_COMPONENT = ("Toolkit", "OS.File")

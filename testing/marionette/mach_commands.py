@@ -79,7 +79,7 @@ class MarionetteTest(MachCommandBase):
             del kwargs["test_objects"]
 
         # Force disable e10s because it is not supported in Fennec
-        if "fennec" in kwargs.get("app"):
+        if kwargs.get("app") == "fennec":
             kwargs["e10s"] = False
 
         if not kwargs.get("binary") and conditions.is_firefox(self):

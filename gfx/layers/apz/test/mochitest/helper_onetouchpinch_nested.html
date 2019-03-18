@@ -1,0 +1,109 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width">
+  <title>One-touch pinch zooming while on a non-root scroller</title>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/paint_listener.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="application/javascript">
+
+function* test_onetouchpinch(testDriver) {
+  // layerize the scroller so it gets an APZC and GestureEventListener
+  var scroller = document.getElementById("scroller");
+  SpecialPowers.getDOMWindowUtils(window).setDisplayPortForElement(0, 0, 400, 1000, scroller, 1);
+  yield waitForApzFlushedRepaints(testDriver);
+
+  ok(isLayerized("scroller"), "scroller has been successfully layerized");
+
+  var initial_resolution = getResolution();
+  ok(initial_resolution > 0,
+      "The initial_resolution is " + initial_resolution + ", which is some sane value");
+
+  // This listener will trigger the test to continue once APZ is done with
+  // processing the scroll.
+  SpecialPowers.Services.obs.addObserver(testDriver, "APZ:TransformEnd");
+
+  function translateY(point, dy) {
+    return {x: point.x, y: point.y + dy};
+  }
+
+  var zoom_point = centerOf(scroller);
+  var zoom_in = [
+      [ zoom_point ],
+      [ null ],
+      [ zoom_point ],
+      [ translateY(zoom_point, 5) ],
+      [ translateY(zoom_point, 10) ],
+      [ translateY(zoom_point, 15) ],
+      [ translateY(zoom_point, 20) ],
+      [ translateY(zoom_point, 25) ],
+  ];
+
+  var touchIds = [0];
+  yield* synthesizeNativeTouchSequences(scroller, zoom_in, null, touchIds);
+
+  // Wait for the APZ:TransformEnd to be fired after touch events are processed.
+  yield true;
+
+  // We get here once the APZ:TransformEnd has fired, so we don't need that
+  // observer any more.
+  SpecialPowers.Services.obs.removeObserver(testDriver, "APZ:TransformEnd");
+
+  // Flush state and get the resolution we're at now
+  yield waitForApzFlushedRepaints(testDriver);
+  let final_resolution = getResolution();
+  ok(final_resolution > initial_resolution, "The final resolution (" + final_resolution + ") is greater after zooming in");
+
+  // Also check that the scroller didn't get scrolled.
+  is(scroller.scrollTop, 0, "scroller didn't y-scroll");
+  is(scroller.scrollLeft, 0, "scroller didn't x-scroll");
+}
+
+function* test(testDriver) {
+  // Run the test with the scrollable div
+  yield* test_onetouchpinch(testDriver);
+  dump("Wrapping scroller in fixed-pos div...\n");
+  // Now wrap the scrollable div inside a fixed-pos div
+  var fixedElement = document.createElement("div");
+  fixedElement.id = "fixed";
+  document.body.appendChild(fixedElement);
+  fixedElement.appendChild(document.getElementById("scroller"));
+  dump("Done wrapping scroller in fixed-pos div.\n");
+  // Now run the test again, with the scrollable div inside a fixed-pos div
+  yield* test_onetouchpinch(testDriver);
+}
+
+waitUntilApzStable()
+.then(runContinuation(test))
+.then(subtestDone);
+
+  </script>
+  <style>
+    #scroller {
+        width: 300px;
+        height: 300px;
+        overflow: scroll;
+    }
+
+    #fixed {
+        background-color: green;
+        position: fixed;
+        width: 300px;
+        height: 300px;
+        left: 100px;
+        top: 100px;
+    }
+  </style>
+</head>
+<body>
+  Here is some text outside the scrollable div.
+  <div id="scroller">
+   Here is some text inside the scrollable div.
+   <div style="height: 2000px">This div actually makes it overflow.</div>
+  </div>
+  <div style="height: 2000px">This div makes the body scrollable.</div>
+</body>
+</html>

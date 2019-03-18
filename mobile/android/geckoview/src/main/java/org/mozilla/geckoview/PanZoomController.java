@@ -74,7 +74,7 @@ public class PanZoomController extends JNIObject {
             int action, long time, int metaState,
             float x, float y, int buttons);
 
-    private boolean handleMotionEvent(MotionEvent event) {
+    private boolean handleMotionEvent(final MotionEvent event) {
         if (!mAttached) {
             mQueuedEvents.add(new Pair<>(EVENT_SOURCE_MOTION, event));
             return false;
@@ -129,7 +129,7 @@ public class PanZoomController extends JNIObject {
                 toolMajor, toolMinor);
     }
 
-    private boolean handleScrollEvent(MotionEvent event) {
+    private boolean handleScrollEvent(final MotionEvent event) {
         if (!mAttached) {
             mQueuedEvents.add(new Pair<>(EVENT_SOURCE_SCROLL, event));
             return false;
@@ -158,7 +158,7 @@ public class PanZoomController extends JNIObject {
                                  hScroll, vScroll);
     }
 
-    private boolean handleMouseEvent(MotionEvent event) {
+    private boolean handleMouseEvent(final MotionEvent event) {
         if (!mAttached) {
             mQueuedEvents.add(new Pair<>(EVENT_SOURCE_MOUSE, event));
             return false;
@@ -251,7 +251,7 @@ public class PanZoomController extends JNIObject {
      * @param event MotionEvent to process.
      * @return True if the event was handled.
      */
-    public boolean onMotionEvent(@NonNull MotionEvent event) {
+    public boolean onMotionEvent(final @NonNull MotionEvent event) {
         ThreadUtils.assertOnUiThread();
 
         final int action = event.getActionMasked();
@@ -326,7 +326,7 @@ public class PanZoomController extends JNIObject {
      *
      * @param isLongpressEnabled True if Gecko should generate long-press events.
      */
-    public void setIsLongpressEnabled(boolean isLongpressEnabled) {
+    public void setIsLongpressEnabled(final boolean isLongpressEnabled) {
         ThreadUtils.assertOnUiThread();
 
         if (mAttached) {
@@ -366,7 +366,7 @@ public class PanZoomController extends JNIObject {
             pointers = new ArrayList<PointerInfo>();
         }
 
-        int getPointerIndex(int pointerId) {
+        int getPointerIndex(final int pointerId) {
             for (int i = 0; i < pointers.size(); i++) {
                 if (pointers.get(i).pointerId == pointerId) {
                     return i;
@@ -375,7 +375,7 @@ public class PanZoomController extends JNIObject {
             return -1;
         }
 
-        int addPointer(int pointerId, int source) {
+        int addPointer(final int pointerId, final int source) {
             PointerInfo info = new PointerInfo();
             info.pointerId = pointerId;
             info.source = source;
@@ -383,7 +383,7 @@ public class PanZoomController extends JNIObject {
             return pointers.size() - 1;
         }
 
-        int getPointerCount(int source) {
+        int getPointerCount(final int source) {
             int count = 0;
             for (int i = 0; i < pointers.size(); i++) {
                 if (pointers.get(i).source == source) {
@@ -393,7 +393,7 @@ public class PanZoomController extends JNIObject {
             return count;
         }
 
-        MotionEvent.PointerProperties[] getPointerProperties(int source) {
+        MotionEvent.PointerProperties[] getPointerProperties(final int source) {
             MotionEvent.PointerProperties[] props =
                     new MotionEvent.PointerProperties[getPointerCount(source)];
             int index = 0;
@@ -415,7 +415,7 @@ public class PanZoomController extends JNIObject {
             return props;
         }
 
-        MotionEvent.PointerCoords[] getPointerCoords(int source) {
+        MotionEvent.PointerCoords[] getPointerCoords(final int source) {
             MotionEvent.PointerCoords[] coords =
                     new MotionEvent.PointerCoords[getPointerCount(source)];
             int index = 0;
@@ -428,10 +428,10 @@ public class PanZoomController extends JNIObject {
         }
     }
 
-    private void synthesizeNativePointer(int source, int pointerId, int eventType,
-                                         int clientX, int clientY, double pressure,
-                                         int orientation)
-    {
+    private void synthesizeNativePointer(final int source, final int pointerId,
+                                         final int originalEventType,
+                                         final int clientX, final int clientY,
+                                         final double pressure, final int orientation) {
         if (mPointerState == null) {
             mPointerState = new SynthesizedEventState();
         }
@@ -440,7 +440,8 @@ public class PanZoomController extends JNIObject {
         int pointerIndex = mPointerState.getPointerIndex(pointerId);
 
         // Event-specific handling
-        switch (eventType) {
+        int eventType = originalEventType;
+        switch (originalEventType) {
             case MotionEvent.ACTION_POINTER_UP:
                 if (pointerIndex < 0) {
                     Log.w(LOGTAG, "Pointer-up for invalid pointer");
@@ -534,15 +535,15 @@ public class PanZoomController extends JNIObject {
         if (eventType == MotionEvent.ACTION_POINTER_UP ||
             eventType == MotionEvent.ACTION_UP ||
             eventType == MotionEvent.ACTION_CANCEL ||
-            eventType == MotionEvent.ACTION_HOVER_MOVE)
-        {
+            eventType == MotionEvent.ACTION_HOVER_MOVE) {
             mPointerState.pointers.remove(pointerIndex);
         }
     }
 
     @WrapForJNI(calledFrom = "ui")
-    private void synthesizeNativeTouchPoint(int pointerId, int eventType, int clientX,
-                                            int clientY, double pressure, int orientation) {
+    private void synthesizeNativeTouchPoint(final int pointerId, final int eventType,
+                                            final int clientX, final int clientY,
+                                            final double pressure, final int orientation) {
         if (pointerId == PointerInfo.RESERVED_MOUSE_POINTER_ID) {
             throw new IllegalArgumentException("Pointer ID reserved for mouse");
         }
@@ -551,7 +552,8 @@ public class PanZoomController extends JNIObject {
     }
 
     @WrapForJNI(calledFrom = "ui")
-    private void synthesizeNativeMouseEvent(int eventType, int clientX, int clientY) {
+    private void synthesizeNativeMouseEvent(final int eventType, final int clientX,
+                                            final int clientY) {
         synthesizeNativePointer(InputDevice.SOURCE_MOUSE,
                                 PointerInfo.RESERVED_MOUSE_POINTER_ID,
                                 eventType, clientX, clientY, 0, 0);
@@ -565,7 +567,7 @@ public class PanZoomController extends JNIObject {
      * @param height {@link ScreenLength} offset to scroll along Y axis.
      */
     @UiThread
-    public void scrollBy(@NonNull ScreenLength width, @NonNull ScreenLength height) {
+    public void scrollBy(final @NonNull ScreenLength width, final @NonNull ScreenLength height) {
         scrollBy(width, height, SCROLL_BEHAVIOR_SMOOTH);
     }
 
@@ -578,7 +580,8 @@ public class PanZoomController extends JNIObject {
      *                 that specifies how to scroll the content.
      */
     @UiThread
-    public void scrollBy(@NonNull ScreenLength width, @NonNull ScreenLength height, @ScrollBehaviorType int behavior) {
+    public void scrollBy(final @NonNull ScreenLength width, final @NonNull ScreenLength height,
+                         final @ScrollBehaviorType int behavior) {
         final GeckoBundle msg = buildScrollMessage(width, height, behavior);
         mSession.getEventDispatcher().dispatch("GeckoView:ScrollBy", msg);
     }
@@ -591,7 +594,7 @@ public class PanZoomController extends JNIObject {
      * @param height {@link ScreenLength} position to scroll along Y axis.
      */
     @UiThread
-    public void scrollTo(@NonNull ScreenLength width, @NonNull ScreenLength height) {
+    public void scrollTo(final @NonNull ScreenLength width, final @NonNull ScreenLength height) {
         scrollTo(width, height, SCROLL_BEHAVIOR_SMOOTH);
     }
 
@@ -604,7 +607,8 @@ public class PanZoomController extends JNIObject {
      *                 that specifies how to scroll the content.
      */
     @UiThread
-    public void scrollTo(@NonNull ScreenLength width, @NonNull ScreenLength height, @ScrollBehaviorType int behavior) {
+    public void scrollTo(final @NonNull ScreenLength width, final @NonNull ScreenLength height,
+                         final @ScrollBehaviorType int behavior) {
         final GeckoBundle msg = buildScrollMessage(width, height, behavior);
         mSession.getEventDispatcher().dispatch("GeckoView:ScrollTo", msg);
     }
@@ -627,7 +631,9 @@ public class PanZoomController extends JNIObject {
         scrollTo(ScreenLength.zero(), ScreenLength.bottom(), SCROLL_BEHAVIOR_SMOOTH);
     }
 
-    private GeckoBundle buildScrollMessage(@NonNull ScreenLength width, @NonNull ScreenLength height, @ScrollBehaviorType int behavior) {
+    private GeckoBundle buildScrollMessage(final @NonNull ScreenLength width,
+                                           final @NonNull ScreenLength height,
+                                           final @ScrollBehaviorType int behavior) {
         final GeckoBundle msg = new GeckoBundle();
         msg.putDouble("widthValue", width.getValue());
         msg.putInt("widthType", width.getType());

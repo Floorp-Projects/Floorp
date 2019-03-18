@@ -288,8 +288,8 @@ class WebConsoleUI {
       shortcuts.on("CmdOrCtrl+Alt+R", quickRestart);
     } else if (Services.prefs.getBoolPref(PREF_SIDEBAR_ENABLED)) {
       shortcuts.on("Esc", event => {
-        if (!this.jsterm.autocompletePopup || !this.jsterm.autocompletePopup.isOpen) {
-          this.wrapper.dispatchSidebarClose();
+        this.wrapper.dispatchSidebarClose();
+        if (this.jsterm) {
           this.jsterm.focus();
         }
       });
@@ -338,7 +338,11 @@ class WebConsoleUI {
    * @private
    */
   _onPanelSelected() {
-    this.jsterm.focus();
+    // We can only focus when we have the jsterm reference. This is fine because if the
+    // jsterm is not mounted yet, it will be focused in JSTerm's componentDidMount.
+    if (this.jsterm) {
+      this.jsterm.focus();
+    }
   }
 
   _onChangeSplitConsoleState() {

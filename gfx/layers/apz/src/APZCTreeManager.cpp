@@ -1648,7 +1648,7 @@ APZCTreeManager::GetTouchInputBlockAPZC(
     if (aOutTouchBehaviors) {
       aOutTouchBehaviors->AppendElement(ConvertToTouchBehavior(hitResult));
     }
-    apzc = GetMultitouchTarget(apzc, apzc2);
+    apzc = GetZoomableTarget(apzc, apzc2);
     APZCTM_LOG("Using APZC %p as the root APZC for multi-touch\n", apzc.get());
     // A multi-touch gesture will not be a scrollbar drag, even if the
     // first touch point happened to hit a scrollbar.
@@ -2107,7 +2107,7 @@ void APZCTreeManager::SetTargetAPZC(
   }
   for (size_t i = 1; i < aTargets.Length(); i++) {
     RefPtr<AsyncPanZoomController> apzc = GetTargetAPZC(aTargets[i]);
-    target = GetMultitouchTarget(target, apzc);
+    target = GetZoomableTarget(target, apzc);
   }
   mInputQueue->SetConfirmedTargetApzc(aInputBlockId, target);
 }
@@ -2790,6 +2790,11 @@ AsyncPanZoomController* APZCTreeManager::FindRootApzcForLayersId(
   return resultNode ? resultNode->GetApzc() : nullptr;
 }
 
+already_AddRefed<AsyncPanZoomController> APZCTreeManager::FindZoomableApzc(
+    AsyncPanZoomController* aStart) const {
+  return GetZoomableTarget(aStart, aStart);
+}
+
 AsyncPanZoomController* APZCTreeManager::FindRootContentApzcForLayersId(
     LayersId aLayersId) const {
   mTreeLock.AssertCurrentThreadIn();
@@ -3017,7 +3022,7 @@ ScreenPoint APZCTreeManager::GetCurrentMousePosition() const {
   return mCurrentMousePosition;
 }
 
-already_AddRefed<AsyncPanZoomController> APZCTreeManager::GetMultitouchTarget(
+already_AddRefed<AsyncPanZoomController> APZCTreeManager::GetZoomableTarget(
     AsyncPanZoomController* aApzc1, AsyncPanZoomController* aApzc2) const {
   RecursiveMutexAutoLock lock(mTreeLock);
   RefPtr<AsyncPanZoomController> apzc;

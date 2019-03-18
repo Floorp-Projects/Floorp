@@ -32,8 +32,8 @@ class nsSystemInfo final : public nsHashPropertyBag
 
   nsresult Init();
 
-  // Slot for NS_InitXPCOM2 to pass information to nsSystemInfo::Init.
-  // See comments above the variable definition and in NS_InitXPCOM2.
+  // Slot for NS_InitXPCOM to pass information to nsSystemInfo::Init.
+  // See comments above the variable definition and in NS_InitXPCOM.
   static uint32_t gUserUmask;
 
 #ifdef MOZ_WIDGET_ANDROID

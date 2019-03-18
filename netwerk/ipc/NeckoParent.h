@@ -223,15 +223,16 @@ class NeckoParent : public PNeckoParent {
   mozilla::ipc::IPCResult RecvGetExtensionFD(const URIParams& aURI,
                                              GetExtensionFDResolver&& aResolve);
 
-  PTrackingDummyChannelParent* AllocPTrackingDummyChannelParent(
+  PClassifierDummyChannelParent* AllocPClassifierDummyChannelParent(
       nsIURI* aURI, nsIURI* aTopWindowURI, const nsresult& aTopWindowURIResult,
       const Maybe<LoadInfoArgs>& aLoadInfo);
 
-  bool DeallocPTrackingDummyChannelParent(PTrackingDummyChannelParent* aChild);
+  bool DeallocPClassifierDummyChannelParent(
+      PClassifierDummyChannelParent* aChild);
 
-  virtual mozilla::ipc::IPCResult RecvPTrackingDummyChannelConstructor(
-      PTrackingDummyChannelParent* aActor, nsIURI* aURI, nsIURI* aTopWindowURI,
-      const nsresult& aTopWindowURIResult,
+  virtual mozilla::ipc::IPCResult RecvPClassifierDummyChannelConstructor(
+      PClassifierDummyChannelParent* aActor, nsIURI* aURI,
+      nsIURI* aTopWindowURI, const nsresult& aTopWindowURIResult,
       const Maybe<LoadInfoArgs>& aLoadInfo) override;
 
   mozilla::ipc::IPCResult RecvInitSocketProcessBridge(

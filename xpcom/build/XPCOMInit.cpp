@@ -203,11 +203,6 @@ NS_GetDebug(nsIDebug2** aResult) {
   return nsDebugImpl::Create(nullptr, NS_GET_IID(nsIDebug2), (void**)aResult);
 }
 
-EXPORT_XPCOM_API(nsresult)
-NS_InitXPCOM(nsIServiceManager** aResult, nsIFile* aBinDirectory) {
-  return NS_InitXPCOM2(aResult, aBinDirectory, nullptr);
-}
-
 class ICUReporter final : public nsIMemoryReporter,
                           public CountingAllocatorBase<ICUReporter> {
  public:
@@ -273,8 +268,8 @@ static bool sInitializedJS = false;
 
 // Note that on OSX, aBinDirectory will point to .app/Contents/Resources/browser
 EXPORT_XPCOM_API(nsresult)
-NS_InitXPCOM2(nsIServiceManager** aResult, nsIFile* aBinDirectory,
-              nsIDirectoryServiceProvider* aAppFileLocationProvider) {
+NS_InitXPCOM(nsIServiceManager** aResult, nsIFile* aBinDirectory,
+            nsIDirectoryServiceProvider* aAppFileLocationProvider) {
   static bool sInitialized = false;
   if (sInitialized) {
     return NS_ERROR_FAILURE;

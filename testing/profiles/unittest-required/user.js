@@ -154,7 +154,6 @@ user_pref("identity.fxaccounts.remote.root", "https://{server}/");
 // cause unexpected test timeouts.
 user_pref("idle.lastDailyNotification", -1);
 user_pref("javascript.options.showInConsole", true);
-user_pref("layout.accessiblecaret.enabled_on_touch", false);
 // Make sure CSS error reporting is enabled for tests
 user_pref("layout.css.report_errors", true);
 // Disable spammy layout warnings because they pollute test logs
