@@ -228,6 +228,19 @@ def get_build_opts(substs):
         return {}
 
 
+def get_build_attrs(attrs):
+    '''
+    Extracts clobber and cpu usage info from command attributes.
+    '''
+    res = {}
+    clobber = attrs.get('clobber')
+    if clobber:
+        res['clobber'] = clobber
+    usage = attrs.get('usage')
+    if usage:
+        res['cpu_percent'] = int(round(usage['cpu_percent']))
+    return res
+
 def filter_args(command, argv, paths):
     '''
     Given the full list of command-line arguments, remove anything up to and including `command`,
@@ -253,7 +266,7 @@ def filter_args(command, argv, paths):
 
 
 def gather_telemetry(command='', success=False, start_time=None, end_time=None,
-                     mach_context=None, substs={}, paths={}):
+                     mach_context=None, substs={}, paths={}, command_attrs=None):
     '''
     Gather telemetry about the build and the user's system and pass it to the telemetry
     handler to be stored for later submission.
@@ -274,6 +287,7 @@ def gather_telemetry(command='', success=False, start_time=None, end_time=None,
         # TODO: use a monotonic clock: https://bugzilla.mozilla.org/show_bug.cgi?id=1481624
         'duration_ms': int((end_time - start_time) * 1000),
         'build_opts': get_build_opts(substs),
+        'build_attrs': get_build_attrs(command_attrs),
         'system': get_system_info(),
         # TODO: exception: https://bugzilla.mozilla.org/show_bug.cgi?id=1481617
         # TODO: file_types_changed: https://bugzilla.mozilla.org/show_bug.cgi?id=1481774

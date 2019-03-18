@@ -12,6 +12,7 @@ class CommandContext(object):
         self.settings = settings
         self.log_manager = log_manager
         self.commands = commands
+        self.command_attrs = {}
 
         for k, v in kwargs.items():
             setattr(self, k, v)
