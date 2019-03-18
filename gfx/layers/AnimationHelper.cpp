@@ -342,183 +342,6 @@ AnimationHelper::SampleResult AnimationHelper::SampleAnimationForEachNode(
   return hasInEffectAnimations ? SampleResult::Sampled : SampleResult::None;
 }
 
-struct BogusAnimation {};
-
-static inline Result<Ok, BogusAnimation> SetCSSAngle(const CSSAngle& aAngle,
-                                                     nsCSSValue& aValue) {
-  aValue.SetFloatValue(aAngle.value(), nsCSSUnit(aAngle.unit()));
-  if (!aValue.IsAngularUnit()) {
-    NS_ERROR("Bogus animation from IPC");
-    return Err(BogusAnimation{});
-  }
-  return Ok();
-}
-
-static Result<nsCSSValueSharedList*, BogusAnimation> CreateCSSValueList(
-    const InfallibleTArray<TransformFunction>& aFunctions) {
-  nsAutoPtr<nsCSSValueList> result;
-  nsCSSValueList** resultTail = getter_Transfers(result);
-  for (uint32_t i = 0; i < aFunctions.Length(); i++) {
-    RefPtr<nsCSSValue::Array> arr;
-    switch (aFunctions[i].type()) {
-      case TransformFunction::TRotationX: {
-        const CSSAngle& angle = aFunctions[i].get_RotationX().angle();
-        arr = AnimationValue::AppendTransformFunction(eCSSKeyword_rotatex,
-                                                      resultTail);
-        MOZ_TRY(SetCSSAngle(angle, arr->Item(1)));
-        break;
-      }
-      case TransformFunction::TRotationY: {
-        const CSSAngle& angle = aFunctions[i].get_RotationY().angle();
-        arr = AnimationValue::AppendTransformFunction(eCSSKeyword_rotatey,
-                                                      resultTail);
-        MOZ_TRY(SetCSSAngle(angle, arr->Item(1)));
-        break;
-      }
-      case TransformFunction::TRotationZ: {
-        const CSSAngle& angle = aFunctions[i].get_RotationZ().angle();
-        arr = AnimationValue::AppendTransformFunction(eCSSKeyword_rotatez,
-                                                      resultTail);
-        MOZ_TRY(SetCSSAngle(angle, arr->Item(1)));
-        break;
-      }
-      case TransformFunction::TRotation: {
-        const CSSAngle& angle = aFunctions[i].get_Rotation().angle();
-        arr = AnimationValue::AppendTransformFunction(eCSSKeyword_rotate,
-                                                      resultTail);
-        MOZ_TRY(SetCSSAngle(angle, arr->Item(1)));
-        break;
-      }
-      case TransformFunction::TRotation3D: {
-        float x = aFunctions[i].get_Rotation3D().x();
-        float y = aFunctions[i].get_Rotation3D().y();
-        float z = aFunctions[i].get_Rotation3D().z();
-        const CSSAngle& angle = aFunctions[i].get_Rotation3D().angle();
-        arr = AnimationValue::AppendTransformFunction(eCSSKeyword_rotate3d,
-                                                      resultTail);
-        arr->Item(1).SetFloatValue(x, eCSSUnit_Number);
-        arr->Item(2).SetFloatValue(y, eCSSUnit_Number);
-        arr->Item(3).SetFloatValue(z, eCSSUnit_Number);
-        MOZ_TRY(SetCSSAngle(angle, arr->Item(4)));
-        break;
-      }
-      case TransformFunction::TScale: {
-        arr = AnimationValue::AppendTransformFunction(eCSSKeyword_scale3d,
-                                                      resultTail);
-        arr->Item(1).SetFloatValue(aFunctions[i].get_Scale().x(),
-                                   eCSSUnit_Number);
-        arr->Item(2).SetFloatValue(aFunctions[i].get_Scale().y(),
-                                   eCSSUnit_Number);
-        arr->Item(3).SetFloatValue(aFunctions[i].get_Scale().z(),
-                                   eCSSUnit_Number);
-        break;
-      }
-      case TransformFunction::TTranslation: {
-        arr = AnimationValue::AppendTransformFunction(eCSSKeyword_translate3d,
-                                                      resultTail);
-        arr->Item(1).SetFloatValue(aFunctions[i].get_Translation().x(),
-                                   eCSSUnit_Pixel);
-        arr->Item(2).SetFloatValue(aFunctions[i].get_Translation().y(),
-                                   eCSSUnit_Pixel);
-        arr->Item(3).SetFloatValue(aFunctions[i].get_Translation().z(),
-                                   eCSSUnit_Pixel);
-        break;
-      }
-      case TransformFunction::TSkewX: {
-        const CSSAngle& x = aFunctions[i].get_SkewX().x();
-        arr = AnimationValue::AppendTransformFunction(eCSSKeyword_skewx,
-                                                      resultTail);
-        MOZ_TRY(SetCSSAngle(x, arr->Item(1)));
-        break;
-      }
-      case TransformFunction::TSkewY: {
-        const CSSAngle& y = aFunctions[i].get_SkewY().y();
-        arr = AnimationValue::AppendTransformFunction(eCSSKeyword_skewy,
-                                                      resultTail);
-        MOZ_TRY(SetCSSAngle(y, arr->Item(1)));
-        break;
-      }
-      case TransformFunction::TSkew: {
-        const CSSAngle& x = aFunctions[i].get_Skew().x();
-        const CSSAngle& y = aFunctions[i].get_Skew().y();
-        arr = AnimationValue::AppendTransformFunction(eCSSKeyword_skew,
-                                                      resultTail);
-        MOZ_TRY(SetCSSAngle(x, arr->Item(1)));
-        MOZ_TRY(SetCSSAngle(y, arr->Item(2)));
-        break;
-      }
-      case TransformFunction::TTransformMatrix: {
-        arr = AnimationValue::AppendTransformFunction(eCSSKeyword_matrix3d,
-                                                      resultTail);
-        const gfx::Matrix4x4& matrix =
-            aFunctions[i].get_TransformMatrix().value();
-        arr->Item(1).SetFloatValue(matrix._11, eCSSUnit_Number);
-        arr->Item(2).SetFloatValue(matrix._12, eCSSUnit_Number);
-        arr->Item(3).SetFloatValue(matrix._13, eCSSUnit_Number);
-        arr->Item(4).SetFloatValue(matrix._14, eCSSUnit_Number);
-        arr->Item(5).SetFloatValue(matrix._21, eCSSUnit_Number);
-        arr->Item(6).SetFloatValue(matrix._22, eCSSUnit_Number);
-        arr->Item(7).SetFloatValue(matrix._23, eCSSUnit_Number);
-        arr->Item(8).SetFloatValue(matrix._24, eCSSUnit_Number);
-        arr->Item(9).SetFloatValue(matrix._31, eCSSUnit_Number);
-        arr->Item(10).SetFloatValue(matrix._32, eCSSUnit_Number);
-        arr->Item(11).SetFloatValue(matrix._33, eCSSUnit_Number);
-        arr->Item(12).SetFloatValue(matrix._34, eCSSUnit_Number);
-        arr->Item(13).SetFloatValue(matrix._41, eCSSUnit_Number);
-        arr->Item(14).SetFloatValue(matrix._42, eCSSUnit_Number);
-        arr->Item(15).SetFloatValue(matrix._43, eCSSUnit_Number);
-        arr->Item(16).SetFloatValue(matrix._44, eCSSUnit_Number);
-        break;
-      }
-      case TransformFunction::TPerspective: {
-        float perspective = aFunctions[i].get_Perspective().value();
-        arr = AnimationValue::AppendTransformFunction(eCSSKeyword_perspective,
-                                                      resultTail);
-        arr->Item(1).SetFloatValue(perspective, eCSSUnit_Pixel);
-        break;
-      }
-      default:
-        NS_ASSERTION(false, "All functions should be implemented?");
-    }
-  }
-  if (aFunctions.Length() == 0) {
-    result = new nsCSSValueList();
-    result->mValue.SetNoneValue();
-  }
-  return new nsCSSValueSharedList(result.forget());
-}
-
-static already_AddRefed<RawServoAnimationValue> ToAnimationValue(
-    nsCSSPropertyID aProperty, const Animatable& aAnimatable) {
-  RefPtr<RawServoAnimationValue> result;
-
-  switch (aAnimatable.type()) {
-    case Animatable::Tnull_t:
-      break;
-    case Animatable::TArrayOfTransformFunction: {
-      const InfallibleTArray<TransformFunction>& transforms =
-          aAnimatable.get_ArrayOfTransformFunction();
-      auto listOrError = CreateCSSValueList(transforms);
-      if (listOrError.isOk()) {
-        RefPtr<nsCSSValueSharedList> list = listOrError.unwrap();
-        MOZ_ASSERT(list, "Transform list should be non null");
-        result = Servo_AnimationValue_Transform(*list).Consume();
-      }
-      break;
-    }
-    case Animatable::Tfloat:
-      result = Servo_AnimationValue_Opacity(aAnimatable.get_float()).Consume();
-      break;
-    case Animatable::Tnscolor:
-      result = Servo_AnimationValue_Color(aProperty, aAnimatable.get_nscolor())
-                   .Consume();
-      break;
-    default:
-      MOZ_ASSERT_UNREACHABLE("Unsupported type");
-  }
-  return result.forget();
-}
-
 void AnimationHelper::SetAnimations(
     AnimationArray& aAnimations, InfallibleTArray<AnimData>& aAnimData,
     RefPtr<RawServoAnimationValue>& aBaseAnimationStyle) {
@@ -550,8 +373,8 @@ void AnimationHelper::SetAnimations(
     }
 
     if (animation.baseStyle().type() != Animatable::Tnull_t) {
-      aBaseAnimationStyle =
-          ToAnimationValue(animation.property(), animation.baseStyle());
+      aBaseAnimationStyle = AnimationValue::FromAnimatable(
+          animation.property(), animation.baseStyle());
     }
 
     AnimData* data = aAnimData.AppendElement();
@@ -575,10 +398,10 @@ void AnimationHelper::SetAnimations(
 
     const InfallibleTArray<AnimationSegment>& segments = animation.segments();
     for (const AnimationSegment& segment : segments) {
-      startValues.AppendElement(
-          ToAnimationValue(animation.property(), segment.startState()));
-      endValues.AppendElement(
-          ToAnimationValue(animation.property(), segment.endState()));
+      startValues.AppendElement(AnimationValue::FromAnimatable(
+          animation.property(), segment.startState()));
+      endValues.AppendElement(AnimationValue::FromAnimatable(
+          animation.property(), segment.endState()));
 
       TimingFunction tf = segment.sampleFn();
       Maybe<ComputedTimingFunction> ctf =
