@@ -108,7 +108,7 @@ class CaptureCommandList {
     uint8_t* mEnd;
   };
 
-  void Log(TreeLog& aStream) {
+  void Log(TreeLog<>& aStream) {
     for (iterator iter(*this); !iter.Done(); iter.Next()) {
       DrawingCommand* cmd = iter.Get();
       cmd->Log(aStream);

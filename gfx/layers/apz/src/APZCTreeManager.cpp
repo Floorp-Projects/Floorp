@@ -395,7 +395,7 @@ APZCTreeManager::UpdateHitTestingTreeImpl(LayersId aRootLayerTreeId,
   bool haveRootContentOutsideAsyncZoomContainer = false;
 
   if (aRoot) {
-    std::stack<gfx::TreeAutoIndent> indents;
+    std::stack<gfx::TreeAutoIndent<LOG_DEFAULT>> indents;
     std::stack<AncestorTransform> ancestorTransforms;
     HitTestingTreeNode* parent = nullptr;
     HitTestingTreeNode* next = nullptr;
@@ -474,7 +474,7 @@ APZCTreeManager::UpdateHitTestingTreeImpl(LayersId aRootLayerTreeId,
             layersId = *newLayersId;
           }
 
-          indents.push(gfx::TreeAutoIndent(mApzcTreeLog));
+          indents.push(gfx::TreeAutoIndent<LOG_DEFAULT>(mApzcTreeLog));
           state.mParentHasPerspective.push(
               aLayerMetrics.TransformIsPerspective());
         },
