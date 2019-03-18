@@ -1,0 +1,8 @@
+. "$topsrcdir/mobile/android/config/mozconfigs/android-api-16/nightly"
+
+mk_add_options "export MOZ_AUTOMATION_BUILD_SYMBOLS=0"
+mk_add_options "export MOZ_AUTOMATION_PACKAGE_TESTS=0"
+mk_add_options "export MOZ_AUTOMATION_PACKAGE_GENERATED_SOURCES=0"
+
+ac_add_options --enable-profile-generate
+unset MOZ_LTO
