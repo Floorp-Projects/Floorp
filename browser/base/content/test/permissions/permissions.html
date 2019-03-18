@@ -10,11 +10,29 @@
 var gKeyDowns = 0;
 var gKeyPresses = 0;
 
+navigator.serviceWorker.register("dummy.js");
+
+function requestPush() {
+  return navigator.serviceWorker.ready.then(function(serviceWorkerRegistration) {
+    serviceWorkerRegistration.pushManager.subscribe();
+  });
+}
+
+window.onmessage = function(event) {
+  switch (event.data) {
+  case "push":
+      requestPush();
+      break;
+  }
+};
+
 </script>
   <body onkeydown="gKeyDowns++;" onkeypress="gKeyPresses++">
 	<!-- This page could eventually request permissions from content
 	     and make sure that chrome responds appropriately -->
   <button id="geo" onclick="navigator.geolocation.getCurrentPosition(() => {})">Geolocation</button>
+  <button id="desktop-notification" onclick="Notification.requestPermission()">Notifications</button>
+  <button id="push" onclick="requestPush()">Push Notifications</button>
   <button id="camera" onclick="navigator.mediaDevices.getUserMedia({video: true, fake: true})">Camera</button>
   </body>
 </html>
