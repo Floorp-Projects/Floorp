@@ -638,6 +638,7 @@ void nsFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
   if (aPrevInFlow) {
     mMayHaveOpacityAnimation = aPrevInFlow->MayHaveOpacityAnimation();
     mMayHaveTransformAnimation = aPrevInFlow->MayHaveTransformAnimation();
+    mState |= aPrevInFlow->mState & NS_FRAME_MAY_BE_TRANSFORMED;
   } else if (mContent) {
     // It's fine to fetch the EffectSet for the style frame here because in the
     // following code we take care of the case where animations may target
@@ -657,23 +658,22 @@ void nsFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
         // animations or not.
         if (IsFrameOfType(eSupportsCSSTransforms)) {
           mMayHaveTransformAnimation = true;
+          AddStateBits(NS_FRAME_MAY_BE_TRANSFORMED);
         } else if (aParent && nsLayoutUtils::GetStyleFrame(aParent) == this) {
           MOZ_ASSERT(
               aParent->IsFrameOfType(eSupportsCSSTransforms),
               "Style frames that don't support transforms should have parents"
               " that do");
           aParent->mMayHaveTransformAnimation = true;
+          aParent->AddStateBits(NS_FRAME_MAY_BE_TRANSFORMED);
         }
       }
     }
   }
 
   const nsStyleDisplay* disp = StyleDisplay();
-  if (disp->HasTransform(this) ||
-      (IsFrameOfType(eSupportsCSSTransforms) &&
-       nsLayoutUtils::HasAnimationOfPropertySet(
-           this, nsCSSPropertyIDSet::TransformLikeProperties()))) {
-    // The frame gets reconstructed if we toggle the -moz-transform
+  if (disp->HasTransform(this)) {
+    // The frame gets reconstructed if we toggle the transform
     // property, so we can set this bit here and then ignore it.
     AddStateBits(NS_FRAME_MAY_BE_TRANSFORMED);
   }
