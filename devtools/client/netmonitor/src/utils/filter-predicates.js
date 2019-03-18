@@ -63,7 +63,12 @@ function isMedia({ mimeType }) {
     mimeType === "application/x-mpegurl");
 }
 
-function isWS({ requestHeaders, responseHeaders }) {
+function isWS({ requestHeaders, responseHeaders, cause }) {
+  // For the first call, the requestHeaders is not ready(empty),
+  // so checking for cause.type instead (Bug-1454962)
+  if (typeof cause.type === "string" && cause.type === "websocket") {
+    return true;
+  }
   // Detect a websocket upgrade if request has an Upgrade header with value 'websocket'
   if (!requestHeaders || !Array.isArray(requestHeaders.headers)) {
     return false;
