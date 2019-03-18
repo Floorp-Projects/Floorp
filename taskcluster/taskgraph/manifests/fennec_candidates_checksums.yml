@@ -1,6 +1,6 @@
 ---
 s3_bucket_paths:
-  - pub/mobile/nightly
+  - pub/mobile/candidates
 default_locales:  # if given an empty locale, use these locales
   - en-US
 tasktype_map:  # Map task reference to task type.
@@ -32,24 +32,16 @@ default: &default
       default: ''
       en-US: '${locale}/'
   source_path_modifier: ''
-  destinations:  # locale_prefix is appended
-    by-locale:
-      multi:
-        - latest-${branch}-${path_platform}
-        - ${year}/${month}/${upload_date}-${branch}-${path_platform}
-      en-US:
-        - latest-${branch}-${path_platform}
-        - ${year}/${month}/${upload_date}-${branch}-${path_platform}
-      default:
-        - latest-${branch}-${path_platform}-l10n
-        - ${year}/${month}/${upload_date}-${branch}-${path_platform}-l10n
+  destinations:
+    - ${version}-candidates/build${build_number}/beetmover-checksums/${path_platform}
+    - ${version}-candidates/build${build_number}/${path_platform}
 
 # Configuration for individual files. Extends 'default', above.
 mapping:
   target.checksums:
     <<: *default
     description: "Checksums file containing size, hash, sha algorithm and filename"
-    pretty_name: fennec-${version}.${locale}.${filename_platform}.checksums
+    pretty_name: fennec-${version}.${locale}.${filename_platform}.checksums.beet
     checksums_path: fennec-${version}.${locale}.${filename_platform}.checksums
   target.checksums.asc:
     <<: *default

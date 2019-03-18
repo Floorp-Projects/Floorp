@@ -401,7 +401,7 @@ def get_worker_type_for_scope(config, scope):
 
 
 # generate_beetmover_upstream_artifacts {{{1
-def generate_beetmover_upstream_artifacts(job, platform, locale=None, dependencies=None):
+def generate_beetmover_upstream_artifacts(config, job, platform, locale=None, dependencies=None):
     """Generate the upstream artifacts for beetmover, using the artifact map.
 
     Currently only applies to beetmover tasks.
@@ -416,7 +416,12 @@ def generate_beetmover_upstream_artifacts(job, platform, locale=None, dependenci
         list: A list of dictionaries conforming to the upstream_artifacts spec.
     """
     base_artifact_prefix = get_artifact_prefix(job)
-    resolve_keyed_by(job, 'attributes.artifact_map', 'artifact map', platform=platform)
+    resolve_keyed_by(
+        job, 'attributes.artifact_map',
+        'artifact map',
+        project=config.params['project'],
+        platform=platform
+    )
     map_config = load_yaml(job['attributes']['artifact_map'])
     upstream_artifacts = list()
 
@@ -531,7 +536,12 @@ def generate_beetmover_artifact_map(config, job, **kwargs):
             maps for beetmover.
     """
     platform = kwargs.get('platform', '')
-    resolve_keyed_by(job, 'attributes.artifact_map', 'artifact map', platform=platform)
+    resolve_keyed_by(
+        job, 'attributes.artifact_map',
+        'artifact map',
+        project=config.params['project'],
+        platform=platform
+    )
     map_config = load_yaml(job['attributes']['artifact_map'])
     base_artifact_prefix = map_config.get('base_artifact_prefix', get_artifact_prefix(job))
 
@@ -556,8 +566,6 @@ def generate_beetmover_artifact_map(config, job, **kwargs):
             if locale != 'en-US' and not map_config['mapping'][filename]['all_locales']:
                 # This locale either doesn't produce or shouldn't upload this file.
                 continue
-
-            # Filling in destinations
 
             # deepcopy because the next time we look at this file the locale will differ.
             file_config = deepcopy(map_config['mapping'][filename])
@@ -611,7 +619,6 @@ def generate_beetmover_artifact_map(config, job, **kwargs):
             continue
 
         # Render all variables for the artifact map
-
         platforms = deepcopy(map_config['platform_names'])
         if platform:
             for key in platforms.keys():
@@ -621,7 +628,7 @@ def generate_beetmover_artifact_map(config, job, **kwargs):
 
         kwargs.update({
             'locale': locale,
-            'version': config.params['app_version'],
+            'version': config.params['version'],
             'branch': config.params['project'],
             'build_number': config.params['build_number'],
             'filename_platform': platforms['filename_platform'],
@@ -650,7 +657,7 @@ def should_use_artifact_map(platform, project):
     platforms = ['android', 'fennec']
     # FIXME: once we're ready to switch fully to declarative artifacts on other
     # branches, we can expand this
-    projects = ['mozilla-central']
+    projects = ['mozilla-central', 'mozilla-beta', 'mozilla-release']
 
     if any([pl in platform for pl in platforms]) and any([pj in project for pj in projects]):
         return True
