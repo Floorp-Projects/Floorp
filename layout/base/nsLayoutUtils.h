@@ -2620,7 +2620,7 @@ class nsLayoutUtils {
   /**
    * Helper method to get touch action behaviour from the frame
    */
-  static uint32_t GetTouchActionFromFrame(nsIFrame* aFrame);
+  static mozilla::StyleTouchAction GetTouchActionFromFrame(nsIFrame* aFrame);
 
   /**
    * Helper method to transform |aBounds| from aFrame to aAncestorFrame,

@@ -1888,7 +1888,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
                                 // require a stacking context.
   nsTArray<RefPtr<nsAtom>> mWillChange;
 
-  uint8_t mTouchAction;     // NS_STYLE_TOUCH_ACTION_*
+  mozilla::StyleTouchAction mTouchAction;
   uint8_t mScrollBehavior;  // NS_STYLE_SCROLL_BEHAVIOR_*
   mozilla::StyleOverscrollBehavior mOverscrollBehaviorX;
   mozilla::StyleOverscrollBehavior mOverscrollBehaviorY;
