@@ -476,10 +476,16 @@ bool ActiveLayerTracker::IsStyleAnimated(
           aPropertySet.IsSubsetOf(nsCSSPropertyIDSet::OpacityProperties()),
       "Only subset of opacity or transform-like properties set calls this");
 
+  // For display:table content, transforms are applied to the table wrapper
+  // (primary frame) but their will-change style will be specified on the style
+  // frame and, unlike other transform properties, not inherited.
+  // As a result, for transform properties only we need to be careful to look up
+  // the will-change style on the _style_ frame.
+  const nsIFrame* styleFrame = nsLayoutUtils::GetStyleFrame(aFrame);
   const nsCSSPropertyIDSet transformSet =
       nsCSSPropertyIDSet::TransformLikeProperties();
-  if ((aFrame->StyleDisplay()->mWillChangeBitField &
-       NS_STYLE_WILL_CHANGE_TRANSFORM) &&
+  if ((styleFrame && (styleFrame->StyleDisplay()->mWillChangeBitField &
+                      NS_STYLE_WILL_CHANGE_TRANSFORM)) &&
       aPropertySet.Intersects(transformSet) &&
       (!aBuilder ||
        aBuilder->IsInWillChangeBudget(aFrame, aFrame->GetSize()))) {
