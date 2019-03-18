@@ -506,7 +506,7 @@ void MobileViewportManager::RefreshViewportSize(bool aForceAdjustResolution) {
   MVM_LOG("%p: Updating properties because %d || %d\n", this, mIsFirstPaint,
           mMobileViewportSize != viewport);
 
-  if (gfxPrefs::APZAllowZooming()) {
+  if (nsLayoutUtils::AllowZoomingForDocument(mDocument)) {
     UpdateResolution(viewportInfo, displaySize, viewport,
                      displayWidthChangeRatio, UpdateType::ViewportSize);
   } else {
@@ -545,8 +545,8 @@ void MobileViewportManager::ShrinkToDisplaySizeIfNeeded(
     return;
   }
 
-  if (!gfxPrefs::APZAllowZooming()) {
-    // If the APZ is disabled, we don't scale down wider contents to fit them
+  if (!nsLayoutUtils::AllowZoomingForDocument(mDocument)) {
+    // If zoom is disabled, we don't scale down wider contents to fit them
     // into device screen because users won't be able to zoom out the tiny
     // contents.
     return;
