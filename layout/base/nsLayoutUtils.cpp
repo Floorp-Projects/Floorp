@@ -247,9 +247,11 @@ static bool MayHaveAnimationOfPropertySet(
     return aTarget->MayHaveOpacityAnimation();
   }
 
-  MOZ_ASSERT(aPropertySet.Equals(nsCSSPropertyIDSet::TransformLikeProperties()),
-             "Should equal to transform-like properties at this branch");
-  return aTarget->MayHaveTransformAnimation();
+  if (aPropertySet.Equals(nsCSSPropertyIDSet::TransformLikeProperties())) {
+    return aTarget->MayHaveTransformAnimation();
+  }
+
+  return true;
 }
 
 template <typename EffectSetOrFrame>

@@ -2307,16 +2307,26 @@ class nsLayoutUtils {
                                     nsCSSPropertyID aProperty);
 
   /**
-   * Returns true if |aFrame| has animations of properties in |aPropertySet|,
-   * and all of these properties are not overridden by !important rules.
+   * Returns true if |aFrame| has an animation where at least one of the
+   * properties in |aPropertySet| is not overridden by !important rules.
+   *
+   * If |aPropertySet| includes transform-like properties (transform, rotate,
+   * etc.) however, this will return false if any of the transform-like
+   * properties is overriden by an !important rule since these properties should
+   * be combined on the compositor.
    */
   static bool HasEffectiveAnimation(const nsIFrame* aFrame,
                                     const nsCSSPropertyIDSet& aPropertySet);
 
   /**
-   * Returns all effective animated CSS properties on |aFrame|. That means
-   * properties that can be animated on the compositor and are not overridden by
-   * a higher cascade level.
+   * Returns all effective animated CSS properties on |aFrame|. Properties that
+   * can be animated on the compositor but which are overridden by !important
+   * rules are not returned.
+   *
+   * Unlike HasEffectiveAnimation, however, this does not check the set of
+   * transform-like properties to ensure that if any such properties are
+   * overridden by !important rules, the other transform-like properties are
+   * not run on the compositor (see bug 1534884).
    */
   static nsCSSPropertyIDSet GetAnimationPropertiesForCompositor(
       const nsIFrame* aFrame);
