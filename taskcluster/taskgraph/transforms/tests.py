@@ -613,6 +613,7 @@ def set_treeherder_machine_platform(config, tests):
         'android-api-16/debug': 'android-em-4-3-armv7-api16/debug',
         'android-api-16-ccov/debug': 'android-em-4-3-armv7-api16-ccov/debug',
         'android-api-16/opt': 'android-em-4-3-armv7-api16/opt',
+        'android-api-16-pgo/opt': 'android-em-4-3-armv7-api16-pgo/opt',
         'android-x86/opt': 'android-em-4-2-x86/opt',
         'android-api-16-gradle/opt': 'android-api-16-gradle/opt',
     }
@@ -686,6 +687,7 @@ def set_tier(config, tests):
                                          'macosx64-qr/debug',
                                          'android-em-4.3-arm7-api-16/opt',
                                          'android-em-4.3-arm7-api-16/debug',
+                                         'android-em-4.3-arm7-api-16-pgo/opt',
                                          'android-em-4.2-x86/opt',
                                          'android-em-7.0-x86_64/opt',
                                          'android-em-7.0-x86_64/debug',
