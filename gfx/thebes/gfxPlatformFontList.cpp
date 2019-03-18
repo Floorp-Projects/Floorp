@@ -679,6 +679,10 @@ gfxFontEntry* gfxPlatformFontList::GlobalFontFallback(
     RefPtr<gfxFontFamily>& family = iter.Data();
     // evaluate all fonts in this family for a match
     family->FindFontForChar(&data);
+    if (data.mMatchDistance == 0.0) {
+      // no better style match is possible, so stop searching
+      break;
+    }
   }
 
   aCmapCount = data.mCmapsTested;
