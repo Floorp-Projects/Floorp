@@ -51,11 +51,11 @@ def make_release_generate_checksums_signing_description(config, jobs):
         description = "Signing of the overall release-related checksums"
 
         dependencies = {
-            "build": dep_job.label
+            str(dep_job.kind): dep_job.label
         }
 
         upstream_artifacts = [{
-            "taskId": {"task-reference": "<build>"},
+            "taskId": {"task-reference": "<{}>".format(str(dep_job.kind))},
             "taskType": "build",
             "paths": [
                 get_artifact_path(dep_job, "SHA256SUMS"),

@@ -1,10 +1,10 @@
 ---
 s3_bucket_paths:
-  - pub/mobile/nightly
+  - pub/mobile/candidates
 default_locales:  # if given an empty locale, use these locales
   - en-US
   - multi
-tasktype_map:  # Map task reference to task type.
+tasktype_map:  # map task reference to task type.
   build: build
   build-signing: signing
   nightly-l10n-signing: signing
@@ -30,35 +30,23 @@ default: &default
     - build
   all_locales: false
   description: "TODO"
-  locale_prefix:
-    by-locale:
-      default: ''
-      en-US: '${locale}/'
-  source_path_modifier:  # Anything between artifact prefix and filename
+  locale_prefix: '${locale}/'
+  # anything between artifact prefix and filename within upstream task
+  source_path_modifier:
     by-locale:
       default: '${locale}'
       multi: ''
-  destinations:  # locale_prefix is appended
-    by-locale:
-      multi:
-        - latest-${branch}-${path_platform}
-        - ${year}/${month}/${upload_date}-${branch}-${path_platform}
-      en-US:
-        - latest-${branch}-${path_platform}
-        - ${year}/${month}/${upload_date}-${branch}-${path_platform}
-      default:
-        - latest-${branch}-${path_platform}-l10n
-        - ${year}/${month}/${upload_date}-${branch}-${path_platform}-l10n
+  destinations:
+    - ${version}-candidates/build${build_number}/${path_platform}
 
-# Configuration for individual files. Extends 'default', above.
+# configuration for individual files. Extends 'default', above.
 mapping:
   buildhub.json:
     <<: *default
     all_locales: true
     description: "Build related information to be consumed by Buildhub service"
-    locale_prefix: ''
-    pretty_name: fennec-${version}.${locale}.${filename_platform}.buildhub.json
-    checksums_path: fennec-${version}.${locale}.${filename_platform}.buildhub.json
+    pretty_name: buildhub.json
+    checksums_path: ${path_platform}/${locale}/buildhub.json
   target.common.tests.tar.gz:
     <<: *default
     description: "Mixture of reftests, mochitests, UI and others, commonly bundled together in a test suite"
@@ -131,9 +119,12 @@ mapping:
   target_info.txt:
     <<: *default
     all_locales: true
+    locale_prefix: ''
     description: "File containing the buildID"
-    pretty_name: fennec-${version}.${locale}.${filename_platform}_info.txt
-    checksums_path: fennec-${version}.${locale}.${filename_platform}_info.txt
+    pretty_name: ${path_platform}_info.txt
+    checksums_path: ${path_platform}_info.txt
+    destinations:
+      - ${version}-candidates/build${build_number}
   mozharness.zip:
     <<: *default
     description: "File containing the mozharness set of scripts and configuration used by various automation tools"
