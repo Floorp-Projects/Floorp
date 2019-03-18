@@ -2924,7 +2924,7 @@ nsStyleDisplay::nsStyleDisplay(const Document& aDocument)
       mIsolation(NS_STYLE_ISOLATION_AUTO),
       mTopLayer(NS_STYLE_TOP_LAYER_NONE),
       mWillChangeBitField(0),
-      mTouchAction(NS_STYLE_TOUCH_ACTION_AUTO),
+      mTouchAction(StyleTouchAction_AUTO),
       mScrollBehavior(NS_STYLE_SCROLL_BEHAVIOR_AUTO),
       mOverscrollBehaviorX(StyleOverscrollBehavior::Auto),
       mOverscrollBehaviorY(StyleOverscrollBehavior::Auto),

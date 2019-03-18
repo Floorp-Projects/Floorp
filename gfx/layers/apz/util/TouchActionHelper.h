@@ -20,11 +20,6 @@ namespace layers {
  * the touch-action spec.
  */
 class TouchActionHelper {
- private:
-  static void UpdateAllowedBehavior(uint32_t aTouchActionValue,
-                                    bool aConsiderPanning,
-                                    TouchBehaviorFlags& aOutBehavior);
-
  public:
   /*
    * Performs hit testing on content, finds frame that corresponds to the aPoint
