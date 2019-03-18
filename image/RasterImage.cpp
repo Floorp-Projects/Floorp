@@ -372,14 +372,6 @@ LookupResult RasterImage::LookupFrame(const IntSize& aSize, uint32_t aFlags,
     return result;
   }
 
-  if (result.Surface()->GetCompositingFailed()) {
-    DrawableSurface tmp = std::move(result.Surface());
-    return result;
-  }
-
-  MOZ_ASSERT(!result.Surface()->GetIsPaletted(),
-             "Should not have a paletted frame");
-
   // Sync decoding guarantees that we got the frame, but if it's owned by an
   // async decoder that's currently running, the contents of the frame may not
   // be available yet. Make sure we get everything.
@@ -682,9 +674,6 @@ void RasterImage::CollectSizeOfSurfaces(
     nsTArray<SurfaceMemoryCounter>& aCounters,
     MallocSizeOf aMallocSizeOf) const {
   SurfaceCache::CollectSizeOfSurfaces(ImageKey(this), aCounters, aMallocSizeOf);
-  if (mFrameAnimator) {
-    mFrameAnimator->CollectSizeOfCompositingSurfaces(aCounters, aMallocSizeOf);
-  }
 }
 
 bool RasterImage::SetMetadata(const ImageMetadata& aMetadata,
@@ -1207,10 +1196,6 @@ bool RasterImage::Decode(const IntSize& aSize, uint32_t aFlags,
   nsresult rv;
   bool animated = mAnimationState && aPlaybackType == PlaybackType::eAnimated;
   if (animated) {
-    if (gfxPrefs::ImageAnimatedGenerateFullFrames()) {
-      decoderFlags |= DecoderFlags::BLEND_ANIMATION;
-    }
-
     size_t currentFrame = mAnimationState->GetCurrentAnimationFrameIndex();
     rv = DecoderFactory::CreateAnimationDecoder(
         mDecoderType, WrapNotNull(this), mSourceBuffer, mSize, decoderFlags,
@@ -1361,7 +1346,7 @@ ImgDrawResult RasterImage::DrawInternal(DrawableSurface&& aSurface,
 
   // By now we may have a frame with the requested size. If not, we need to
   // adjust the drawing parameters accordingly.
-  IntSize finalSize = aSurface->GetImageSize();
+  IntSize finalSize = aSurface->GetSize();
   bool couldRedecodeForBetterFrame = false;
   if (finalSize != aSize) {
     gfx::Size scale(double(aSize.width) / finalSize.width,

@@ -272,14 +272,6 @@ class Decoder {
   }
 
   /**
-   * Should blend the current frame with the previous frames to produce a
-   * complete frame instead of a partial frame for animated images.
-   */
-  bool ShouldBlendAnimation() const {
-    return bool(mDecoderFlags & DecoderFlags::BLEND_ANIMATION);
-  }
-
-  /**
    * @return the number of complete animation frames which have been decoded so
    * far, if it has changed since the last call to TakeCompleteFrameCount();
    * otherwise, returns Nothing().
@@ -418,20 +410,11 @@ class Decoder {
    * For use during decoding only. Allows the BlendAnimationFilter to get the
    * frame it should be pulling the previous frame data from.
    */
-  const RawAccessFrameRef& GetRestoreFrameRef() const {
-    MOZ_ASSERT(ShouldBlendAnimation());
-    return mRestoreFrame;
-  }
+  const RawAccessFrameRef& GetRestoreFrameRef() const { return mRestoreFrame; }
 
-  const gfx::IntRect& GetRestoreDirtyRect() const {
-    MOZ_ASSERT(ShouldBlendAnimation());
-    return mRestoreDirtyRect;
-  }
+  const gfx::IntRect& GetRestoreDirtyRect() const { return mRestoreDirtyRect; }
 
-  const gfx::IntRect& GetRecycleRect() const {
-    MOZ_ASSERT(ShouldBlendAnimation());
-    return mRecycleRect;
-  }
+  const gfx::IntRect& GetRecycleRect() const { return mRecycleRect; }
 
   const gfx::IntRect& GetFirstFrameRefreshArea() const {
     return mFirstFrameRefreshArea;
@@ -542,12 +525,9 @@ class Decoder {
 
   /**
    * Allocates a new frame, making it our current frame if successful.
-   *
-   * If a non-paletted frame is desired, pass 0 for aPaletteDepth.
    */
   nsresult AllocateFrame(const gfx::IntSize& aOutputSize,
-                         const gfx::IntRect& aFrameRect,
-                         gfx::SurfaceFormat aFormat, uint8_t aPaletteDepth = 0,
+                         gfx::SurfaceFormat aFormat,
                          const Maybe<AnimationParams>& aAnimParams = Nothing());
 
  private:
@@ -572,18 +552,15 @@ class Decoder {
   }
 
   RawAccessFrameRef AllocateFrameInternal(
-      const gfx::IntSize& aOutputSize, const gfx::IntRect& aFrameRect,
-      gfx::SurfaceFormat aFormat, uint8_t aPaletteDepth,
+      const gfx::IntSize& aOutputSize, gfx::SurfaceFormat aFormat,
       const Maybe<AnimationParams>& aAnimParams,
       RawAccessFrameRef&& aPreviousFrame);
 
  protected:
   Maybe<Downscaler> mDownscaler;
 
-  uint8_t* mImageData;  // Pointer to image data in either Cairo or 8bit format
+  uint8_t* mImageData;  // Pointer to image data in BGRA/X
   uint32_t mImageDataLength;
-  uint32_t* mColormap;  // Current colormap to be used in Cairo format
-  uint32_t mColormapSize;
 
  private:
   RefPtr<RasterImage> mImage;

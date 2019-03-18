@@ -195,7 +195,7 @@ nsresult nsPNGDecoder::CreateFrame(const FrameInfo& aFrameInfo) {
 
   Maybe<AnimationParams> animParams;
 #ifdef PNG_APNG_SUPPORTED
-  if (png_get_valid(mPNG, mInfo, PNG_INFO_acTL)) {
+  if (!IsFirstFrameDecode() && png_get_valid(mPNG, mInfo, PNG_INFO_acTL)) {
     mAnimInfo = AnimFrameInfo(mPNG, mInfo);
 
     if (mAnimInfo.mDispose == DisposalMethod::CLEAR) {
@@ -220,10 +220,6 @@ nsresult nsPNGDecoder::CreateFrame(const FrameInfo& aFrameInfo) {
   if (mNumFrames == 0) {
     // The first frame may be displayed progressively.
     pipeFlags |= SurfacePipeFlags::PROGRESSIVE_DISPLAY;
-  }
-
-  if (ShouldBlendAnimation()) {
-    pipeFlags |= SurfacePipeFlags::BLEND_ANIMATION;
   }
 
   Maybe<SurfacePipe> pipe = SurfacePipeFactory::CreateSurfacePipe(
@@ -539,7 +535,8 @@ void nsPNGDecoder::info_callback(png_structp png_ptr, png_infop info_ptr) {
       static_cast<nsPNGDecoder*>(png_get_progressive_ptr(png_ptr));
 
   if (decoder->mGotInfoCallback) {
-    MOZ_LOG(sPNGLog, LogLevel::Warning, ("libpng called info_callback more than once\n"));
+    MOZ_LOG(sPNGLog, LogLevel::Warning,
+            ("libpng called info_callback more than once\n"));
     return;
   }
 

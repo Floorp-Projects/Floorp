@@ -1,8 +1,4 @@
 ---
-metadata:
-  name: "Beetmover for checksums artifacts"
-  description: "Uploads checksum files to s3 buckets"
-  owner: "release@mozilla.com"
 s3_bucket_paths:
   by-platform:
     fennec-release:
@@ -14,8 +10,8 @@ s3_bucket_paths:
 default_locales:  # if given an empty locale, use these locales
   - en-US
 tasktype_map:  # Map task reference to task type.
-  release-generate-checksums-signing: signing
   release-generate-checksums: build
+  release-generate-checksums-signing: signing
 platform_names:
   path_platform: ''
   filename_platform: ''
@@ -37,33 +33,40 @@ default: &default
 mapping:
   SHA256SUMMARY:
     <<: *default
+    description: "Merkle-tree for the release artifacts with sha 256 hashes"
     from:
       - release-generate-checksums
     pretty_name: SHA256SUMMARY
     checksums_path: SHA256SUMMARY
   SHA512SUMMARY:
     <<: *default
+    description: "Merkle-tree for the release artifacts with sha 512 hashes"
     from:
       - release-generate-checksums
     pretty_name: SHA512SUMMARY
     checksums_path: SHA512SUMMARY
   KEY:
     <<: *default
+    description: "Public side of the key that was used to sign the release artifacts"
     pretty_name: KEY
     checksums_path: KEY
   SHA256SUMS:
     <<: *default
+    description: "Aggregated checksums with main installers details per platform in sha512 hashes"
     pretty_name: SHA256SUMS
     checksums_path: SHA256SUMS
   SHA256SUMS.asc:
     <<: *default
+    description: "Detached signature for the checksums file"
     pretty_name: SHA256SUMS.asc
     checksums_path: SHA256SUMS.asc
   SHA512SUMS:
     <<: *default
+    description: "Aggregated checksums with main installers details per platform in sha256 hashes"
     pretty_name: SHA512SUMS
     checksums_path: SHA512SUMS
   SHA512SUMS.asc:
     <<: *default
+    description: "Detached signature for the checksums file"
     pretty_name: SHA512SUMS.asc
     checksums_path: SHA512SUMS.asc

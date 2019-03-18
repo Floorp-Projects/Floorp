@@ -59,10 +59,6 @@ enum class SurfacePipeFlags {
                                  // result in a better user experience for
                                  // progressive display but which may be more
                                  // computationally expensive.
-
-  BLEND_ANIMATION = 1 << 4  // If set, produce the next full frame of an
-                            // animation instead of a partial frame to be
-                            // blended later.
 };
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(SurfacePipeFlags)
 
@@ -102,8 +98,7 @@ class SurfacePipeFactory {
     const bool downscale = aInputSize != aOutputSize;
     const bool removeFrameRect = !aFrameRect.IsEqualEdges(
         nsIntRect(0, 0, aInputSize.width, aInputSize.height));
-    const bool blendAnimation =
-        bool(aFlags & SurfacePipeFlags::BLEND_ANIMATION);
+    const bool blendAnimation = aAnimParams.isSome();
 
     // Don't interpolate if we're sure we won't show this surface to the user
     // until it's completely decoded. The final pass of an ADAM7 image doesn't
@@ -117,8 +112,6 @@ class SurfacePipeFactory {
       MOZ_ASSERT_UNREACHABLE("ADAM7 deinterlacing is handled by libpng");
       return Nothing();
     }
-
-    MOZ_ASSERT_IF(blendAnimation, aAnimParams);
 
     // Construct configurations for the SurfaceFilters. Note that the order of
     // these filters is significant. We want to deinterlace or interpolate raw
@@ -190,56 +183,6 @@ class SurfacePipeFactory {
           pipe = MakePipe(surfaceConfig);
         }
       }
-    }
-
-    return pipe;
-  }
-
-  /**
-   * Creates and initializes a paletted SurfacePipe.
-   *
-   * XXX(seth): We'll remove all support for paletted surfaces in bug 1247520,
-   * which means we can remove CreatePalettedSurfacePipe() entirely.
-   *
-   * @param aDecoder The decoder whose current frame the SurfacePipe will write
-   *                 to.
-   * @param aInputSize The original size of the image.
-   * @param aFrameRect The portion of the image that actually contains data.
-   * @param aFormat The surface format of the image; generally B8G8R8A8 or
-   *                B8G8R8X8.
-   * @param aPaletteDepth The palette depth of the image.
-   * @param aAnimParams Extra parameters used by animated images.
-   * @param aFlags Flags enabling or disabling various functionality for the
-   *               SurfacePipe; see the SurfacePipeFlags documentation for more
-   *               information.
-   *
-   * @return A SurfacePipe if the parameters allowed one to be created
-   *         successfully, or Nothing() if the SurfacePipe could not be
-   *         initialized.
-   */
-  static Maybe<SurfacePipe> CreatePalettedSurfacePipe(
-      Decoder* aDecoder, const nsIntSize& aInputSize,
-      const nsIntRect& aFrameRect, gfx::SurfaceFormat aFormat,
-      uint8_t aPaletteDepth, const Maybe<AnimationParams>& aAnimParams,
-      SurfacePipeFlags aFlags) {
-    const bool deinterlace = bool(aFlags & SurfacePipeFlags::DEINTERLACE);
-    const bool flipVertically =
-        bool(aFlags & SurfacePipeFlags::FLIP_VERTICALLY);
-    const bool progressiveDisplay =
-        bool(aFlags & SurfacePipeFlags::PROGRESSIVE_DISPLAY);
-
-    // Construct configurations for the SurfaceFilters.
-    DeinterlacingConfig<uint8_t> deinterlacingConfig{progressiveDisplay};
-    PalettedSurfaceConfig palettedSurfaceConfig{
-        aDecoder,      aInputSize,     aFrameRect, aFormat,
-        aPaletteDepth, flipVertically, aAnimParams};
-
-    Maybe<SurfacePipe> pipe;
-
-    if (deinterlace) {
-      pipe = MakePipe(deinterlacingConfig, palettedSurfaceConfig);
-    } else {
-      pipe = MakePipe(palettedSurfaceConfig);
     }
 
     return pipe;
