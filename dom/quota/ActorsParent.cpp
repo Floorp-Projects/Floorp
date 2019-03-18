@@ -3572,6 +3572,66 @@ nsresult QuotaManager::GetDirectoryMetadata2(
     return rv;
   }
 
+  rv = binaryStream->Close();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+ if (!origin.EqualsLiteral(kChromeOrigin)) {
+    OriginAttributes originAttributes;
+    nsCString originNoSuffix;
+    if (NS_WARN_IF(!originAttributes.PopulateFromOrigin(origin,
+                                                        originNoSuffix))) {
+      return NS_ERROR_FAILURE;
+    }
+
+    RefPtr<MozURL> url;
+    rv = MozURL::Init(getter_AddRefs(url), originNoSuffix);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    nsCString baseDomain;
+    rv = url->BaseDomain(baseDomain);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    nsCString upToDateGroup = baseDomain + suffix;
+
+    if (group != upToDateGroup) {
+      group = upToDateGroup;
+
+      rv = CreateDirectoryMetadata(
+          aDirectory, timestamp, suffix, group, origin);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+
+      rv = CreateDirectoryMetadata2(
+          aDirectory, timestamp, persisted, suffix, group, origin);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+
+  #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+      ContentPrincipalInfo contentPrincipalInfo;
+      contentPrincipalInfo.attrs() = originAttributes;
+      contentPrincipalInfo.originNoSuffix() = originNoSuffix;
+      contentPrincipalInfo.spec() = originNoSuffix;
+      contentPrincipalInfo.baseDomain() = baseDomain;
+
+      PrincipalInfo principalInfo(contentPrincipalInfo);
+
+      nsTArray<PrincipalInfo> principalInfos;
+      principalInfos.AppendElement(principalInfo);
+
+      RefPtr<PrincipalVerifier> principalVerifier =
+          PrincipalVerifier::CreateAndDispatch(std::move(principalInfos));
+  #endif
+    }
+  }
+
   *aTimestamp = timestamp;
   *aPersisted = persisted;
   aSuffix = suffix;
