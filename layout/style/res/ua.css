@@ -47,6 +47,11 @@
   /* Bug 724750 */
   backface-visibility: inherit;
   clip: inherit;
+  /* Other transform-related properties */
+  transform-style: inherit;
+  rotate: inherit;
+  scale: inherit;
+  translate: inherit;
   /* When the table wrapper is a Flex/Grid item we need these: */
   align-self: inherit;
   justify-self: inherit;
