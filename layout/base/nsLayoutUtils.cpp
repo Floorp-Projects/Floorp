@@ -9747,28 +9747,6 @@ void nsLayoutUtils::FixupNoneGeneric(nsFont* aFont, uint8_t aGenericFontID,
 }
 
 /* static */
-void nsLayoutUtils::ApplyMinFontSize(nsStyleFont* aFont,
-                                     const Document* aDocument,
-                                     nscoord aMinFontSize) {
-  nscoord fontSize = aFont->mSize;
-
-  // enforce the user' specified minimum font-size on the value that we expose
-  // (but don't change font-size:0, since that would unhide hidden text)
-  if (fontSize > 0) {
-    if (aMinFontSize < 0) {
-      aMinFontSize = 0;
-    } else {
-      aMinFontSize = (aMinFontSize * aFont->mMinFontSizeRatio) / 100;
-    }
-    if (fontSize < aMinFontSize && !nsContentUtils::IsChromeDoc(aDocument)) {
-      // override the minimum font-size constraint
-      fontSize = aMinFontSize;
-    }
-  }
-  aFont->mFont.size = fontSize;
-}
-
-/* static */
 void nsLayoutUtils::ComputeSystemFont(nsFont* aSystemFont,
                                       LookAndFeel::FontID aFontID,
                                       const nsFont* aDefaultVariableFont) {

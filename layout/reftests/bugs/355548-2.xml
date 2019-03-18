@@ -26,12 +26,10 @@
   <!-- An absolute font-size value resets the unconstrained size to that value, so we
        can increase above that value with a negative scriptlevel change -->
   <m:mstyle scriptlevel="+5"><m:mstyle style="font-size:24px;"><m:mstyle scriptlevel="-1"><m:mi>Id</m:mi></m:mstyle></m:mstyle></m:mstyle>
-  <!-- An relative font-size value is applied to the unconstrained size -->
+  <!-- A relative font-size value resets the unconstrained to that value, resolved relative to the constrained size -->
   <m:mstyle scriptlevel="+2"><m:mstyle style="font-size:200%;"><m:mstyle scriptlevel="-1"><m:mi>Id</m:mi></m:mstyle></m:mstyle></m:mstyle>
   <!-- The unconstrained size does not cap the font size to below scriptminsize (so this is 18px) -->
   <m:mstyle scriptlevel="+2"><m:mstyle style="font-size:50%;"><m:mstyle scriptlevel="-1"><m:mi>Id</m:mi></m:mstyle></m:mstyle></m:mstyle>
-  <!-- The unconstrained size cap the font size otherwise (so this is 12px) -->
-  <m:mstyle scriptlevel="+2"><m:mstyle style="font-size:50%;" scriptminsize="0"><m:mstyle scriptlevel="-1"><m:mi>Id</m:mi></m:mstyle></m:mstyle></m:mstyle>
 </m:mstyle></m:math></p>
 
 </body>
