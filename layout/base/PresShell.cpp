@@ -10502,9 +10502,10 @@ nsresult PresShell::SetIsActive(bool aIsActive) {
 }
 
 void PresShell::UpdateViewportOverridden(bool aAfterInitialization) {
-  // Determine if we require a MobileViewportManager.
-  bool needMVM = nsLayoutUtils::ShouldHandleMetaViewport(mDocument) ||
-                 gfxPrefs::APZAllowZooming();
+  // Determine if we require a MobileViewportManager. This logic is
+  // equivalent to ShouldHandleMetaViewport, which will check gfxPrefs if
+  // there are not meta viewport overrides.
+  bool needMVM = nsLayoutUtils::ShouldHandleMetaViewport(mDocument);
 
   if (needMVM == !!mMobileViewportManager) {
     // Either we've need one and we've already got it, or we don't need one

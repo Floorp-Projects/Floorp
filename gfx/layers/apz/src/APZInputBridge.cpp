@@ -64,6 +64,8 @@ nsEventStatus APZInputBridge::ReceiveInputEvent(
       // mouse event undergoes (in PositionedEventTargeting.cpp) uses
       // the IGNORE_ROOT_SCROLL_FRAME flag, which is needed for correct
       // hit testing in a zoomed-in or zoomed-out state.
+      // FIXME: bug 1525793 -- this may need to handle zooming or not on a
+      // per-document basis.
       if (gfxPrefs::APZAllowZooming()) {
         mouseEvent.mIgnoreRootScrollFrame = true;
       }
