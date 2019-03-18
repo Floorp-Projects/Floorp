@@ -37,6 +37,7 @@ interface nsITableEditor : nsISupports
    *                                    before current cell.  Otherwise, will
    *                                    be inserted after the cell.
    */
+  [can_run_script]
   void insertTableCell(in long aNumberOfColumnsToInsert,
                        in boolean aInsertAfterSelectedCell);
 
@@ -52,6 +53,7 @@ interface nsITableEditor : nsISupports
    *                                    before current cell.  Otherwise, will
    *                                    be inserted after the cell.
    */
+  [can_run_script]
   void insertTableColumn(in long aNumberOfColumnsToInsert,
                          in boolean aInsertAfterSelectedCell);
 
@@ -67,6 +69,7 @@ interface nsITableEditor : nsISupports
    *                                    before current cell.  Otherwise, will
    *                                    be inserted after the cell.
    */
+  [can_run_script]
   void insertTableRow(in long aNumberOfRowsToInsert,
                       in boolean aInsertAfterSelectedCell);
 
@@ -80,6 +83,7 @@ interface nsITableEditor : nsISupports
     *
     * @param aNumber    Number of items to insert/delete
     */
+  [can_run_script]
   void deleteTable();
 
   /**
@@ -89,6 +93,7 @@ interface nsITableEditor : nsISupports
    * first selection range.  This does nothing without exception if selection
    * is not in cell element.
    */
+  [can_run_script]
   void deleteTableCellContents();
 
   /**
@@ -105,6 +110,7 @@ interface nsITableEditor : nsISupports
    * @param aNumberOfCellsToDelete  Number of cells to remove.  This is ignored
    *                                if 2 or more cells are selected.
    */
+  [can_run_script]
   void deleteTableCell(in long aNumberOfCellsToDelete);
 
   /**
@@ -124,6 +130,7 @@ interface nsITableEditor : nsISupports
    *                                    ignored if 2 ore more cells are
    *                                    selected.
    */
+  [can_run_script]
   void deleteTableColumn(in long aNumberOfColumnsToDelete);
 
   /**
@@ -141,12 +148,14 @@ interface nsITableEditor : nsISupports
    * @param aNumberOfRowsToDelete   Number of rows to remove.  This is ignored
    *                                if 2 or more cells are selected.
    */
+  [can_run_script]
   void deleteTableRow(in long aNumberOfRowsToDelete);
 
   /** Table Selection methods
     * Selecting a row or column actually
     * selects all cells (not TR in the case of rows)
     */
+  [can_run_script]
   void selectTableCell();
 
   /** Select a rectangular block of cells:
@@ -157,12 +166,17 @@ interface nsITableEditor : nsISupports
     *  @param aStartCell  starting cell in block
     *  @param aEndCell    ending cell in block
     */
+  [can_run_script]
   void selectBlockOfCells(in Element aStartCell,
                           in Element aEndCell);
 
+  [can_run_script]
   void selectTableRow();
+  [can_run_script]
   void selectTableColumn();
+  [can_run_script]
   void selectTable();
+  [can_run_script]
   void selectAllTableCells();
 
   /** Create a new TD or TH element, the opposite type of the supplied aSourceCell
@@ -173,6 +187,7 @@ interface nsITableEditor : nsISupports
     *  @param aSourceCell   The cell to be replaced
     *  @return              The new cell that replaces aSourceCell
     */
+  [can_run_script]
   Element switchTableCellHeaderType(in Element aSourceCell);
 
   /** Merges contents of all selected cells
@@ -195,6 +210,7 @@ interface nsITableEditor : nsISupports
     *   that cell and the one to the right
     *   are merged
     */
+  [can_run_script]
   void joinTableCells(in boolean aMergeNonContiguousContents);
 
   /** Split a cell that has rowspan and/or colspan > 0
@@ -203,6 +219,7 @@ interface nsITableEditor : nsISupports
     *  All of the contents are not touched --
     *   they will appear to be in the upper-left cell
     */
+  [can_run_script]
   void splitTableCell();
 
   /** Scan through all rows and add cells as needed so
@@ -215,6 +232,7 @@ interface nsITableEditor : nsISupports
     *   thus it can be used to fixup all tables
     *   in a page independent of the selection
     */
+  [can_run_script]
   void normalizeTable(in Element aTable);
 
   /**
