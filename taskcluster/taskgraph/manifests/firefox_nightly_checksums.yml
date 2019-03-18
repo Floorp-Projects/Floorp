@@ -1,8 +1,4 @@
 ---
-metadata:
-  name: "Beetmover for checksums artifacts"
-  description: "Uploads checksum files to s3 buckets"
-  owner: "release@mozilla.com"
 s3_bucket_paths:
   by-platform:
     .*devedition.*:
@@ -47,9 +43,11 @@ default: &default
 mapping:
   target.checksums:
     <<: *default
+    description: "Checksums file containing size, hash, sha algorithm and filename"
     pretty_name: firefox-${version}.${locale}.${filename_platform}.checksums
     checksums_path: firefox-${version}.${locale}.${filename_platform}.checksums
   target.checksums.asc:
     <<: *default
+    description: "Detached signature for the checksums file"
     pretty_name: firefox-${version}.${locale}.${filename_platform}.checksums.asc
     checksums_path: firefox-${version}.${locale}.${filename_platform}.checksums.asc

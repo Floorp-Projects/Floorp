@@ -30,18 +30,6 @@ void WithDeinterlacingFilter(const IntSize& aSize, bool aProgressiveDisplay,
       SurfaceConfig{decoder, aSize, SurfaceFormat::B8G8R8A8, false});
 }
 
-template <typename Func>
-void WithPalettedDeinterlacingFilter(const IntSize& aSize, Func aFunc) {
-  RefPtr<Decoder> decoder = CreateTrivialDecoder();
-  ASSERT_TRUE(decoder != nullptr);
-
-  WithFilterPipeline(
-      decoder, std::forward<Func>(aFunc),
-      DeinterlacingConfig<uint8_t>{/* mProgressiveDisplay = */ true},
-      PalettedSurfaceConfig{decoder, aSize, IntRect(0, 0, 100, 100),
-                            SurfaceFormat::B8G8R8A8, 8, false});
-}
-
 void AssertConfiguringDeinterlacingFilterFails(const IntSize& aSize) {
   RefPtr<Decoder> decoder = CreateTrivialDecoder();
   ASSERT_TRUE(decoder != nullptr);
@@ -114,13 +102,6 @@ TEST_F(ImageDeinterlacingFilter, WritePixels1_1) {
                                 /* aOutputRect = */ Some(IntRect(0, 0, 1, 1)),
                                 /* aInputRect = */ Some(IntRect(0, 0, 1, 1)));
                           });
-}
-
-TEST_F(ImageDeinterlacingFilter, PalettedWritePixels) {
-  WithPalettedDeinterlacingFilter(
-      IntSize(100, 100), [](Decoder* aDecoder, SurfaceFilter* aFilter) {
-        CheckPalettedWritePixels(aDecoder, aFilter);
-      });
 }
 
 TEST_F(ImageDeinterlacingFilter, WritePixelsNonProgressiveOutput51_52) {

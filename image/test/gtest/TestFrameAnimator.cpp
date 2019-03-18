@@ -42,7 +42,7 @@ static void CheckFrameAnimatorBlendResults(const ImageTestCase& aTestCase,
 
 template <typename Func>
 static void WithFrameAnimatorDecode(const ImageTestCase& aTestCase,
-                                    bool aBlendFilter, Func aResultChecker) {
+                                    Func aResultChecker) {
   // Create an image.
   RefPtr<Image> image = ImageFactory::CreateAnonymousImage(
       nsDependentCString(aTestCase.mMimeType));
@@ -80,9 +80,6 @@ static void WithFrameAnimatorDecode(const ImageTestCase& aTestCase,
   // Create an AnimationSurfaceProvider which will manage the decoding process
   // and make this decoder's output available in the surface cache.
   DecoderFlags decoderFlags = DefaultDecoderFlags();
-  if (aBlendFilter) {
-    decoderFlags |= DecoderFlags::BLEND_ANIMATION;
-  }
   SurfaceFlags surfaceFlags = DefaultSurfaceFlags();
   rv = DecoderFactory::CreateAnimationDecoder(
       decoderType, rasterImage, sourceBuffer, aTestCase.mSize, decoderFlags,
@@ -97,9 +94,8 @@ static void WithFrameAnimatorDecode(const ImageTestCase& aTestCase,
   aResultChecker(rasterImage.get());
 }
 
-static void CheckFrameAnimatorBlend(const ImageTestCase& aTestCase,
-                                    bool aBlendFilter) {
-  WithFrameAnimatorDecode(aTestCase, aBlendFilter, [&](RasterImage* aImage) {
+static void CheckFrameAnimatorBlend(const ImageTestCase& aTestCase) {
+  WithFrameAnimatorDecode(aTestCase, [&](RasterImage* aImage) {
     CheckFrameAnimatorBlendResults(aTestCase, aImage);
   });
 }
@@ -109,27 +105,14 @@ class ImageFrameAnimator : public ::testing::Test {
   AutoInitializeImageLib mInit;
 };
 
-TEST_F(ImageFrameAnimator, BlendGIFWithAnimator) {
-  CheckFrameAnimatorBlend(BlendAnimatedGIFTestCase(), /* aBlendFilter */ false);
-}
-
 TEST_F(ImageFrameAnimator, BlendGIFWithFilter) {
-  CheckFrameAnimatorBlend(BlendAnimatedGIFTestCase(), /* aBlendFilter */ true);
-}
-
-TEST_F(ImageFrameAnimator, BlendPNGWithAnimator) {
-  CheckFrameAnimatorBlend(BlendAnimatedPNGTestCase(), /* aBlendFilter */ false);
+  CheckFrameAnimatorBlend(BlendAnimatedGIFTestCase());
 }
 
 TEST_F(ImageFrameAnimator, BlendPNGWithFilter) {
-  CheckFrameAnimatorBlend(BlendAnimatedPNGTestCase(), /* aBlendFilter */ true);
-}
-
-TEST_F(ImageFrameAnimator, BlendWebPWithAnimator) {
-  CheckFrameAnimatorBlend(BlendAnimatedWebPTestCase(),
-                          /* aBlendFilter */ false);
+  CheckFrameAnimatorBlend(BlendAnimatedPNGTestCase());
 }
 
 TEST_F(ImageFrameAnimator, BlendWebPWithFilter) {
-  CheckFrameAnimatorBlend(BlendAnimatedWebPTestCase(), /* aBlendFilter */ true);
+  CheckFrameAnimatorBlend(BlendAnimatedWebPTestCase());
 }
