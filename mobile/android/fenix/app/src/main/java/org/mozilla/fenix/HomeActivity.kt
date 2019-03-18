@@ -32,6 +32,8 @@ import org.mozilla.fenix.settings.SettingsFragmentDirections
 
 @SuppressWarnings("TooManyFunctions")
 open class HomeActivity : AppCompatActivity() {
+    open val isCustomTab = false
+
     val themeManager = DefaultThemeManager().also {
         it.onThemeChange = { theme ->
             setTheme(theme)
@@ -60,16 +62,22 @@ open class HomeActivity : AppCompatActivity() {
         setSupportActionBar(navigationToolbar)
         NavigationUI.setupWithNavController(navigationToolbar, navHost.navController, appBarConfiguration)
 
+        val safeIntent = intent?.let { SafeIntent(it) }
+
+        if (safeIntent?.isLauncherIntent == true) {
+            val source = if (isCustomTab) Event.OpenedAppSource.CUSTOM_TAB else Event.OpenedAppSource.APP_ICON
+            components.analytics.metrics.track(Event.OpenedApp(source))
+        }
+
         handleOpenedFromExternalSourceIfNecessary(intent)
     }
-
+    
     override fun onResume() {
         super.onResume()
         // There is no session, or it has timed out; we should pop everything to home
         if (components.core.sessionStorage.current() == null) {
             navHost.navController.popBackStack(R.id.homeFragment, false)
         }
-        components.analytics.metrics.track(Event.OpenedApp)
     }
 
     override fun onNewIntent(intent: Intent?) {

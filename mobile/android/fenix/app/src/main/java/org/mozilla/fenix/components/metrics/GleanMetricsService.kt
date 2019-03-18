@@ -4,11 +4,13 @@
 package org.mozilla.fenix.components.metrics
 
 import android.content.Context
+import mozilla.components.service.glean.EventMetricType
 import mozilla.components.service.glean.Glean
 import mozilla.components.support.utils.Browsers
 import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.utils.Settings
 import org.mozilla.fenix.debug.GleanMetrics.Metrics
+import org.mozilla.fenix.debug.GleanMetrics.Events
 
 class GleanMetricsService(private val context: Context) : MetricsService {
     override fun start() {
@@ -20,9 +22,18 @@ class GleanMetricsService(private val context: Context) : MetricsService {
         }
     }
 
-    override fun track(event: Event) { }
+    private fun mapEventToGlean(event: Event): EventMetricType? = when(event) {
+        is Event.OpenedApp -> Events.appOpened
+        else -> null
+    }
 
-    override fun shouldTrack(event: Event): Boolean = Settings.getInstance(context).isTelemetryEnabled
+    override fun track(event: Event) {
+        mapEventToGlean(event)?.record(event.extras)
+    }
+
+    override fun shouldTrack(event: Event): Boolean {
+        return Settings.getInstance(context).isTelemetryEnabled
+    }
 
     companion object {
         private const val IsGleanEnabled = BuildConfig.TELEMETRY

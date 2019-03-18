@@ -4,6 +4,21 @@
 
 $schema: moz://mozilla.org/schemas/glean/metrics/1-0-0
 
+events:
+  app_opened:
+    type: event
+    description: >
+      A User opened the app
+    extra_keys:
+      source: "The source from which the app was opened"
+    bugs:
+    - 123456789
+    data_reviews:
+    - N/A
+    notification_emails:
+    - telemetry-client-dev@mozilla.com
+    expires: never
+
 metrics:
   default_browser:
     type: boolean
