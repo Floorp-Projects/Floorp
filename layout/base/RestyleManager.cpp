@@ -476,6 +476,8 @@ static nsChangeHint ChangeForContentStateChange(const Element& aElement,
         aStateMask.HasAtLeastOneOfStates(
             NS_EVENT_STATE_BROKEN | NS_EVENT_STATE_USERDISABLED |
             NS_EVENT_STATE_SUPPRESSED | NS_EVENT_STATE_LOADING)) {
+      // FIXME(emilio, bug 1395964): For <img> elements at least, we shouldn't
+      // reframe when LOADING changes anymore.
       return nsChangeHint_ReconstructFrame;
     }
 
