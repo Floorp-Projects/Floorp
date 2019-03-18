@@ -379,6 +379,11 @@ Java_org_mozilla_gecko_mozglue_GeckoLoader_nativeRun(JNIEnv* jenv, jclass jc,
     gBootstrap->XRE_InitChildProcess(argc - 1, argv, &childData);
   }
 
+#ifdef MOZ_WIDGET_ANDROID
+#  ifdef MOZ_PROFILE_GENERATE
+  gBootstrap->XRE_WriteLLVMProfData();
+#  endif
+#endif
   gBootstrap.reset();
   FreeArgv(argv, argc);
 }
