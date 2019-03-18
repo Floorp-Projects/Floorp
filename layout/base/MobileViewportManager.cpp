@@ -121,9 +121,10 @@ mozilla::CSSToScreenScale MobileViewportManager::ComputeIntrinsicScale(
   return ClampZoom(intrinsicScale, aViewportInfo);
 }
 
-void MobileViewportManager::RequestReflow() {
-  MVM_LOG("%p: got a reflow request\n", this);
-  RefreshViewportSize(false);
+void MobileViewportManager::RequestReflow(bool aForceAdjustResolution) {
+  MVM_LOG("%p: got a reflow request with force resolution: %d\n", this,
+          aForceAdjustResolution);
+  RefreshViewportSize(aForceAdjustResolution);
 }
 
 void MobileViewportManager::ResolutionUpdated() {
@@ -506,7 +507,8 @@ void MobileViewportManager::RefreshViewportSize(bool aForceAdjustResolution) {
   MVM_LOG("%p: Updating properties because %d || %d\n", this, mIsFirstPaint,
           mMobileViewportSize != viewport);
 
-  if (nsLayoutUtils::AllowZoomingForDocument(mDocument)) {
+  if (aForceAdjustResolution ||
+      nsLayoutUtils::AllowZoomingForDocument(mDocument)) {
     UpdateResolution(viewportInfo, displaySize, viewport,
                      displayWidthChangeRatio, UpdateType::ViewportSize);
   } else {
