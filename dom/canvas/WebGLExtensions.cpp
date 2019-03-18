@@ -38,7 +38,6 @@ WebGLExtensionFloatBlend::WebGLExtensionFloatBlend(WebGLContext* const webgl)
 WebGLExtensionFloatBlend::~WebGLExtensionFloatBlend() = default;
 
 bool WebGLExtensionFloatBlend::IsSupported(const WebGLContext* const webgl) {
-  if (!gfxPrefs::WebGLDraftExtensionsEnabled()) return false;
   if (!WebGLExtensionColorBufferFloat::IsSupported(webgl) &&
       !WebGLExtensionEXTColorBufferFloat::IsSupported(webgl))
     return false;
