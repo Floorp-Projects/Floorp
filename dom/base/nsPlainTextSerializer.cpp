@@ -262,6 +262,19 @@ bool nsPlainTextSerializer::IsIgnorableRubyAnnotation(nsAtom* aTag) {
          aTag == nsGkAtoms::rtc;
 }
 
+// Return true if aElement has 'display:none' or if we just don't know.
+static bool IsDisplayNone(Element* aElement) {
+  RefPtr<ComputedStyle> computedStyle =
+      nsComputedDOMStyle::GetComputedStyleNoFlush(aElement, nullptr);
+  return !computedStyle ||
+         computedStyle->StyleDisplay()->mDisplay == StyleDisplay::None;
+}
+
+static bool IsIgnorableScriptOrStyle(Element* aElement) {
+  return aElement->IsAnyOfHTMLElements(nsGkAtoms::script, nsGkAtoms::style) &&
+         IsDisplayNone(aElement);
+}
+
 NS_IMETHODIMP
 nsPlainTextSerializer::AppendText(nsIContent* aText, int32_t aStartOffset,
                                   int32_t aEndOffset, nsAString& aStr) {
@@ -445,6 +458,10 @@ nsresult nsPlainTextSerializer::DoOpenContainer(nsAtom* aTag) {
   if (IsIgnorableRubyAnnotation(aTag)) {
     // Ignorable ruby annotation shouldn't be replaced by a placeholder
     // character, neither any of its descendants.
+    mIgnoredChildNodeLevel++;
+    return NS_OK;
+  }
+  if (IsIgnorableScriptOrStyle(mElement)) {
     mIgnoredChildNodeLevel++;
     return NS_OK;
   }
@@ -756,6 +773,10 @@ nsresult nsPlainTextSerializer::DoCloseContainer(nsAtom* aTag) {
     mIgnoredChildNodeLevel--;
     return NS_OK;
   }
+  if (IsIgnorableScriptOrStyle(mElement)) {
+    mIgnoredChildNodeLevel--;
+    return NS_OK;
+  }
 
   if (mFlags & nsIDocumentEncoder::OutputForPlainTextClipboardCopy) {
     if (DoOutput() && IsInPre() && IsElementBlock(mElement)) {
@@ -868,7 +889,7 @@ nsresult nsPlainTextSerializer::DoCloseContainer(nsAtom* aTag) {
     mLineBreakDue = true;
   } else if (aTag == nsGkAtoms::q) {
     Write(NS_LITERAL_STRING("\""));
-  } else if (IsElementBlock(mElement) && aTag != nsGkAtoms::script) {
+  } else if (IsElementBlock(mElement)) {
     // All other blocks get 1 vertical space after them
     // in formatted mode, otherwise 0.
     // This is hard. Sometimes 0 is a better number, but
@@ -943,13 +964,6 @@ bool nsPlainTextSerializer::MustSuppressLeaf() {
     // Don't output the contents of SELECT elements;
     // Might be nice, eventually, to output just the selected element.
     // Read more in bug 31994.
-    return true;
-  }
-
-  if (mTagStackIndex > 0 &&
-      (mTagStack[mTagStackIndex - 1] == nsGkAtoms::script ||
-       mTagStack[mTagStackIndex - 1] == nsGkAtoms::style)) {
-    // Don't output the contents of <script> or <style> tags;
     return true;
   }
 
