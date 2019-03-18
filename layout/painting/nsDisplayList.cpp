@@ -1261,7 +1261,8 @@ AnimatedGeometryRoot* nsDisplayListBuilder::FindAnimatedGeometryRootFor(
 }
 
 void nsDisplayListBuilder::UpdateShouldBuildAsyncZoomContainer() {
-  mBuildAsyncZoomContainer = gfxPrefs::APZAllowZooming() &&
+  Document* document = mReferenceFrame->PresContext()->Document();
+  mBuildAsyncZoomContainer = nsLayoutUtils::AllowZoomingForDocument(document) &&
                              !gfxPrefs::LayoutUseContainersForRootFrames();
 }
 
