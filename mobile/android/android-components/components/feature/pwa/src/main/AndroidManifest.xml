@@ -2,4 +2,14 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="mozilla.components.feature.pwa" />
+    package="mozilla.components.feature.pwa">
+
+    <application>
+
+        <activity android:name=".WebAppLauncherActivity"
+            android:theme="@style/Theme.AppCompat.NoActionBar"
+            android:exported="true" />
+
+    </application>
+
+</manifest>
