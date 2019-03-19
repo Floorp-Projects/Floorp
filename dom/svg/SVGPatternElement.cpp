@@ -74,11 +74,11 @@ SVGPatternElement::PreserveAspectRatio() {
 
 //----------------------------------------------------------------------
 
-already_AddRefed<SVGAnimatedEnumeration> SVGPatternElement::PatternUnits() {
+already_AddRefed<DOMSVGAnimatedEnumeration> SVGPatternElement::PatternUnits() {
   return mEnumAttributes[PATTERNUNITS].ToDOMAnimatedEnum(this);
 }
 
-already_AddRefed<SVGAnimatedEnumeration>
+already_AddRefed<DOMSVGAnimatedEnumeration>
 SVGPatternElement::PatternContentUnits() {
   return mEnumAttributes[PATTERNCONTENTUNITS].ToDOMAnimatedEnum(this);
 }
@@ -91,23 +91,23 @@ SVGPatternElement::PatternTransform() {
       GetAnimatedTransformList(DO_ALLOCATE), this);
 }
 
-already_AddRefed<SVGAnimatedLength> SVGPatternElement::X() {
+already_AddRefed<DOMSVGAnimatedLength> SVGPatternElement::X() {
   return mLengthAttributes[ATTR_X].ToDOMAnimatedLength(this);
 }
 
-already_AddRefed<SVGAnimatedLength> SVGPatternElement::Y() {
+already_AddRefed<DOMSVGAnimatedLength> SVGPatternElement::Y() {
   return mLengthAttributes[ATTR_Y].ToDOMAnimatedLength(this);
 }
 
-already_AddRefed<SVGAnimatedLength> SVGPatternElement::Width() {
+already_AddRefed<DOMSVGAnimatedLength> SVGPatternElement::Width() {
   return mLengthAttributes[ATTR_WIDTH].ToDOMAnimatedLength(this);
 }
 
-already_AddRefed<SVGAnimatedLength> SVGPatternElement::Height() {
+already_AddRefed<DOMSVGAnimatedLength> SVGPatternElement::Height() {
   return mLengthAttributes[ATTR_HEIGHT].ToDOMAnimatedLength(this);
 }
 
-already_AddRefed<SVGAnimatedString> SVGPatternElement::Href() {
+already_AddRefed<DOMSVGAnimatedString> SVGPatternElement::Href() {
   return mStringAttributes[HREF].IsExplicitlySet()
              ? mStringAttributes[HREF].ToDOMAnimatedString(this)
              : mStringAttributes[XLINK_HREF].ToDOMAnimatedString(this);

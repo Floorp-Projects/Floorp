@@ -60,29 +60,32 @@ NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGFETurbulenceElement)
 
 //----------------------------------------------------------------------
 
-already_AddRefed<SVGAnimatedNumber> SVGFETurbulenceElement::BaseFrequencyX() {
+already_AddRefed<DOMSVGAnimatedNumber>
+SVGFETurbulenceElement::BaseFrequencyX() {
   return mNumberPairAttributes[BASE_FREQ].ToDOMAnimatedNumber(
       SVGNumberPair::eFirst, this);
 }
 
-already_AddRefed<SVGAnimatedNumber> SVGFETurbulenceElement::BaseFrequencyY() {
+already_AddRefed<DOMSVGAnimatedNumber>
+SVGFETurbulenceElement::BaseFrequencyY() {
   return mNumberPairAttributes[BASE_FREQ].ToDOMAnimatedNumber(
       SVGNumberPair::eSecond, this);
 }
 
-already_AddRefed<SVGAnimatedInteger> SVGFETurbulenceElement::NumOctaves() {
+already_AddRefed<DOMSVGAnimatedInteger> SVGFETurbulenceElement::NumOctaves() {
   return mIntegerAttributes[OCTAVES].ToDOMAnimatedInteger(this);
 }
 
-already_AddRefed<SVGAnimatedNumber> SVGFETurbulenceElement::Seed() {
+already_AddRefed<DOMSVGAnimatedNumber> SVGFETurbulenceElement::Seed() {
   return mNumberAttributes[SEED].ToDOMAnimatedNumber(this);
 }
 
-already_AddRefed<SVGAnimatedEnumeration> SVGFETurbulenceElement::StitchTiles() {
+already_AddRefed<DOMSVGAnimatedEnumeration>
+SVGFETurbulenceElement::StitchTiles() {
   return mEnumAttributes[STITCHTILES].ToDOMAnimatedEnum(this);
 }
 
-already_AddRefed<SVGAnimatedEnumeration> SVGFETurbulenceElement::Type() {
+already_AddRefed<DOMSVGAnimatedEnumeration> SVGFETurbulenceElement::Type() {
   return mEnumAttributes[TYPE].ToDOMAnimatedEnum(this);
 }
 

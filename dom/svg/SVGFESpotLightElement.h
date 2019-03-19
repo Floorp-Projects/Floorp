@@ -41,14 +41,14 @@ class SVGFESpotLightElement : public SVGFESpotLightElementBase {
   virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
   // WebIDL
-  already_AddRefed<SVGAnimatedNumber> X();
-  already_AddRefed<SVGAnimatedNumber> Y();
-  already_AddRefed<SVGAnimatedNumber> Z();
-  already_AddRefed<SVGAnimatedNumber> PointsAtX();
-  already_AddRefed<SVGAnimatedNumber> PointsAtY();
-  already_AddRefed<SVGAnimatedNumber> PointsAtZ();
-  already_AddRefed<SVGAnimatedNumber> SpecularExponent();
-  already_AddRefed<SVGAnimatedNumber> LimitingConeAngle();
+  already_AddRefed<DOMSVGAnimatedNumber> X();
+  already_AddRefed<DOMSVGAnimatedNumber> Y();
+  already_AddRefed<DOMSVGAnimatedNumber> Z();
+  already_AddRefed<DOMSVGAnimatedNumber> PointsAtX();
+  already_AddRefed<DOMSVGAnimatedNumber> PointsAtY();
+  already_AddRefed<DOMSVGAnimatedNumber> PointsAtZ();
+  already_AddRefed<DOMSVGAnimatedNumber> SpecularExponent();
+  already_AddRefed<DOMSVGAnimatedNumber> LimitingConeAngle();
 
  protected:
   virtual NumberAttributesInfo GetNumberInfo() override;

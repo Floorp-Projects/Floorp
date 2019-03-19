@@ -26,32 +26,32 @@ JSObject* SVGFESpecularLightingElement::WrapNode(
 
 NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGFESpecularLightingElement)
 
-already_AddRefed<SVGAnimatedString> SVGFESpecularLightingElement::In1() {
+already_AddRefed<DOMSVGAnimatedString> SVGFESpecularLightingElement::In1() {
   return mStringAttributes[IN1].ToDOMAnimatedString(this);
 }
 
-already_AddRefed<SVGAnimatedNumber>
+already_AddRefed<DOMSVGAnimatedNumber>
 SVGFESpecularLightingElement::SurfaceScale() {
   return mNumberAttributes[SURFACE_SCALE].ToDOMAnimatedNumber(this);
 }
 
-already_AddRefed<SVGAnimatedNumber>
+already_AddRefed<DOMSVGAnimatedNumber>
 SVGFESpecularLightingElement::SpecularConstant() {
   return mNumberAttributes[SPECULAR_CONSTANT].ToDOMAnimatedNumber(this);
 }
 
-already_AddRefed<SVGAnimatedNumber>
+already_AddRefed<DOMSVGAnimatedNumber>
 SVGFESpecularLightingElement::SpecularExponent() {
   return mNumberAttributes[SPECULAR_EXPONENT].ToDOMAnimatedNumber(this);
 }
 
-already_AddRefed<SVGAnimatedNumber>
+already_AddRefed<DOMSVGAnimatedNumber>
 SVGFESpecularLightingElement::KernelUnitLengthX() {
   return mNumberPairAttributes[KERNEL_UNIT_LENGTH].ToDOMAnimatedNumber(
       SVGNumberPair::eFirst, this);
 }
 
-already_AddRefed<SVGAnimatedNumber>
+already_AddRefed<DOMSVGAnimatedNumber>
 SVGFESpecularLightingElement::KernelUnitLengthY() {
   return mNumberPairAttributes[KERNEL_UNIT_LENGTH].ToDOMAnimatedNumber(
       SVGNumberPair::eSecond, this);

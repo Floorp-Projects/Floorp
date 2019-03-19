@@ -55,15 +55,15 @@ NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGFEBlendElement)
 //----------------------------------------------------------------------
 // nsIDOMSVGFEBlendElement methods
 
-already_AddRefed<SVGAnimatedString> SVGFEBlendElement::In1() {
+already_AddRefed<DOMSVGAnimatedString> SVGFEBlendElement::In1() {
   return mStringAttributes[IN1].ToDOMAnimatedString(this);
 }
 
-already_AddRefed<SVGAnimatedString> SVGFEBlendElement::In2() {
+already_AddRefed<DOMSVGAnimatedString> SVGFEBlendElement::In2() {
   return mStringAttributes[IN2].ToDOMAnimatedString(this);
 }
 
-already_AddRefed<SVGAnimatedEnumeration> SVGFEBlendElement::Mode() {
+already_AddRefed<DOMSVGAnimatedEnumeration> SVGFEBlendElement::Mode() {
   return mEnumAttributes[MODE].ToDOMAnimatedEnum(this);
 }
 

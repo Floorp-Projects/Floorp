@@ -69,7 +69,7 @@ class SVGScriptElement final : public SVGScriptElementBase,
   void SetType(const nsAString& aType, ErrorResult& rv);
   void GetCrossOrigin(nsAString& aCrossOrigin);
   void SetCrossOrigin(const nsAString& aCrossOrigin, ErrorResult& aError);
-  already_AddRefed<SVGAnimatedString> Href();
+  already_AddRefed<DOMSVGAnimatedString> Href();
 
  protected:
   ~SVGScriptElement();
