@@ -707,9 +707,9 @@ TextComposition::CompositionEventDispatcher::Run() {
       compStart.mData = selectedText.mReply.mString;
       compStart.mFlags.mIsSynthesizedForTests =
           mTextComposition->IsSynthesizedForTests();
-      IMEStateManager::DispatchCompositionEvent(mEventTarget, presContext,
-                                                &compStart, &status, nullptr,
-                                                mIsSynthesizedEvent);
+      IMEStateManager::DispatchCompositionEvent(
+          mEventTarget, presContext, mTextComposition->mTabParent, &compStart,
+          &status, nullptr, mIsSynthesizedEvent);
       break;
     }
     case eCompositionChange:
@@ -722,9 +722,9 @@ TextComposition::CompositionEventDispatcher::Run() {
       }
       compEvent.mFlags.mIsSynthesizedForTests =
           mTextComposition->IsSynthesizedForTests();
-      IMEStateManager::DispatchCompositionEvent(mEventTarget, presContext,
-                                                &compEvent, &status, nullptr,
-                                                mIsSynthesizedEvent);
+      IMEStateManager::DispatchCompositionEvent(
+          mEventTarget, presContext, mTextComposition->mTabParent, &compEvent,
+          &status, nullptr, mIsSynthesizedEvent);
       break;
     }
     default:

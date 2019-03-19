@@ -1378,13 +1378,9 @@ void IMEStateManager::EnsureTextCompositionArray() {
 // static
 void IMEStateManager::DispatchCompositionEvent(
     nsINode* aEventTargetNode, nsPresContext* aPresContext,
-    WidgetCompositionEvent* aCompositionEvent, nsEventStatus* aStatus,
-    EventDispatchingCallback* aCallBack, bool aIsSynthesized) {
-  RefPtr<TabParent> tabParent =
-      aEventTargetNode->IsContent()
-          ? TabParent::GetFrom(aEventTargetNode->AsContent())
-          : nullptr;
-
+    TabParent* aTabParent, WidgetCompositionEvent* aCompositionEvent,
+    nsEventStatus* aStatus, EventDispatchingCallback* aCallBack,
+    bool aIsSynthesized) {
   MOZ_LOG(
       sISMLog, LogLevel::Info,
       ("DispatchCompositionEvent(aNode=0x%p, "
@@ -1404,7 +1400,7 @@ void IMEStateManager::DispatchCompositionEvent(
        GetBoolName(aCompositionEvent->mWidget->Destroyed()),
        GetBoolName(aCompositionEvent->mFlags.mIsTrusted),
        GetBoolName(aCompositionEvent->mFlags.mPropagationStopped),
-       GetBoolName(aIsSynthesized), tabParent.get()));
+       GetBoolName(aIsSynthesized), aTabParent));
 
   if (!aCompositionEvent->IsTrusted() ||
       aCompositionEvent->PropagationStopped()) {
@@ -1428,8 +1424,8 @@ void IMEStateManager::DispatchCompositionEvent(
             ("  DispatchCompositionEvent(), "
              "adding new TextComposition to the array"));
     MOZ_ASSERT(aCompositionEvent->mMessage == eCompositionStart);
-    composition = new TextComposition(aPresContext, aEventTargetNode, tabParent,
-                                      aCompositionEvent);
+    composition = new TextComposition(aPresContext, aEventTargetNode,
+                                      aTabParent, aCompositionEvent);
     sTextCompositions->AppendElement(composition);
   }
 #ifdef DEBUG

@@ -203,8 +203,9 @@ class IMEStateManager {
    */
   static void DispatchCompositionEvent(
       nsINode* aEventTargetNode, nsPresContext* aPresContext,
-      WidgetCompositionEvent* aCompositionEvent, nsEventStatus* aStatus,
-      EventDispatchingCallback* aCallBack, bool aIsSynthesized = false);
+      TabParent* aTabParent, WidgetCompositionEvent* aCompositionEvent,
+      nsEventStatus* aStatus, EventDispatchingCallback* aCallBack,
+      bool aIsSynthesized = false);
 
   /**
    * All selection events must be handled via HandleSelectionEvent()
