@@ -5005,7 +5005,7 @@ bool CallIRGenerator::tryAttachStringSplit() {
 
   Int32OperandId argcId(writer.setInputOperandId(0));
 
-  // Ensure argc == 1.
+  // Ensure argc == 2.
   writer.guardSpecificInt32Immediate(argcId, 2);
 
   // 2 arguments.  Stack-layout here is (bottom to top):
@@ -5236,13 +5236,67 @@ bool CallIRGenerator::tryAttachIsSuspendedGenerator() {
   return true;
 }
 
+bool CallIRGenerator::tryAttachSpecialCaseCallNative(HandleFunction callee) {
+  MOZ_ASSERT(callee->isNative());
+
+  if (callee->native() == js::intrinsic_StringSplitString) {
+    if (tryAttachStringSplit()) {
+      return true;
+    }
+  }
+
+  if (callee->native() == js::array_push) {
+    if (tryAttachArrayPush()) {
+      return true;
+    }
+  }
+
+  if (callee->native() == js::array_join) {
+    if (tryAttachArrayJoin()) {
+      return true;
+    }
+  }
+  if (callee->native() == intrinsic_IsSuspendedGenerator) {
+    if (tryAttachIsSuspendedGenerator()) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool CallIRGenerator::tryAttachCallScripted(HandleFunction calleeFunc) {
+  if (JitOptions.disableCacheIRCalls) {
+    return false;
+  }
+
+  return false;
+}
+
+bool CallIRGenerator::tryAttachCallNative(HandleFunction calleeFunc) {
+  MOZ_ASSERT(mode_ == ICState::Mode::Specialized);
+  MOZ_ASSERT(calleeFunc->isNative());
+
+  // Check for specific native-function optimizations.
+  if (tryAttachSpecialCaseCallNative(calleeFunc)) {
+    return true;
+  }
+  if (JitOptions.disableCacheIRCalls) {
+    return false;
+  }
+
+  return false;
+}
+
 bool CallIRGenerator::tryAttachStub() {
   AutoAssertNoPendingException aanpe(cx_);
 
-  // Only optimize on JSOP_CALL or JSOP_CALL_IGNORES_RV.  No fancy business for
-  // now.
-  if ((op_ != JSOP_CALL) && (op_ != JSOP_CALL_IGNORES_RV)) {
-    return false;
+  // Some opcodes are not yet supported.
+  switch (op_) {
+    case JSOP_CALL:
+    case JSOP_CALL_IGNORES_RV:
+      break;
+    default:
+      return false;
   }
 
   // Only optimize when the mode is Specialized.
@@ -5257,30 +5311,14 @@ bool CallIRGenerator::tryAttachStub() {
 
   RootedFunction calleeFunc(cx_, &callee_.toObject().as<JSFunction>());
 
+  // Check for scripted optimizations.
+  if (calleeFunc->isInterpreted() || calleeFunc->isNativeWithJitEntry()) {
+    return tryAttachCallScripted(calleeFunc);
+  }
+
   // Check for native-function optimizations.
   if (calleeFunc->isNative()) {
-    if (calleeFunc->native() == js::intrinsic_StringSplitString) {
-      if (tryAttachStringSplit()) {
-        return true;
-      }
-    }
-
-    if (calleeFunc->native() == js::array_push) {
-      if (tryAttachArrayPush()) {
-        return true;
-      }
-    }
-
-    if (calleeFunc->native() == js::array_join) {
-      if (tryAttachArrayJoin()) {
-        return true;
-      }
-    }
-    if (calleeFunc->native() == intrinsic_IsSuspendedGenerator) {
-      if (tryAttachIsSuspendedGenerator()) {
-        return true;
-      }
-    }
+    return tryAttachCallNative(calleeFunc);
   }
 
   return false;

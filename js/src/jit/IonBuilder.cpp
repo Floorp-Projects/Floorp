@@ -3661,11 +3661,6 @@ AbortReasonOr<Ok> IonBuilder::arithTryBinaryStub(bool* emitted, JSOp op,
   MOZ_ASSERT(*emitted == false);
   JSOp actualOp = JSOp(*pc);
 
-  // Try to emit a binary arith stub cache.
-  if (JitOptions.disableCacheIRBinaryArith) {
-    return Ok();
-  }
-
   // The actual jsop 'jsop_pos' is not supported yet.
   // There's no IC support for JSOP_POW either.
   if (actualOp == JSOP_POS || actualOp == JSOP_POW) {
