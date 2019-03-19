@@ -1161,3 +1161,26 @@ async function pauseDebugger(dbg) {
   });
   await onPaused;
 }
+
+/**
+ * Check that the passed HTMLElement vertically overflows.
+ * @param {HTMLElement} container
+ * @returns {Boolean}
+ */
+function hasVerticalOverflow(container) {
+  return container.scrollHeight > container.clientHeight;
+}
+
+/**
+ * Check that the passed HTMLElement is scrolled to the bottom.
+ * @param {HTMLElement} container
+ * @returns {Boolean}
+ */
+function isScrolledToBottom(container) {
+  if (!container.lastChild) {
+    return true;
+  }
+  const lastNodeHeight = container.lastChild.clientHeight;
+  return container.scrollTop + container.clientHeight >=
+         container.scrollHeight - lastNodeHeight / 2;
+}

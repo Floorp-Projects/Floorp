@@ -108,22 +108,30 @@ class ConsoleOutput extends Component {
       return;
     }
 
+    // We need to scroll to the bottom if:
+    // - we are reacting to "initialize" action, and we are already scrolled to the bottom
+    // - the number of messages displayed changed and we are already scrolled to the
+    //   bottom, but not if we are reacting to a group opening.
+    // - the number of messages in the store changed and the new message is an evaluation
+    //   result.
+
     const lastChild = outputNode.lastChild;
     const visibleMessagesDelta =
       nextProps.visibleMessages.length - this.props.visibleMessages.length;
     const messagesDelta =
       nextProps.messages.size - this.props.messages.size;
-
-    // We need to scroll to the bottom if:
-    // - we are reacting to the "initialize" action,
-    //   and we are already scrolled to the bottom
-    // - the number of messages displayed changed
-    //   and we are already scrolled to the bottom
-    // - the number of messages in the store changed
-    //   and the new message is an evaluation result.
     const isNewMessageEvaluationResult = messagesDelta > 0 &&
       [...nextProps.messages.values()][nextProps.messages.size - 1].type
         === MESSAGE_TYPE.RESULT;
+
+    const messagesUiDelta =
+      nextProps.messagesUi.length - this.props.messagesUi.length;
+    const isOpeningGroup = messagesUiDelta > 0 &&
+      nextProps.messagesUi.some(id =>
+        !this.props.messagesUi.includes(id) &&
+        nextProps.messagesUi.includes(id) &&
+        this.props.visibleMessages.includes(id) &&
+        nextProps.visibleMessages.includes(id));
 
     this.shouldScrollBottom =
       (
@@ -132,7 +140,11 @@ class ConsoleOutput extends Component {
         isScrolledToBottom(lastChild, outputNode)
       ) ||
       (isNewMessageEvaluationResult) ||
-      (visibleMessagesDelta > 0 && isScrolledToBottom(lastChild, outputNode));
+      (
+        isScrolledToBottom(lastChild, outputNode) &&
+        visibleMessagesDelta > 0 &&
+        !isOpeningGroup
+      );
   }
 
   componentDidUpdate() {
