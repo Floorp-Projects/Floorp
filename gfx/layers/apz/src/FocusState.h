@@ -125,8 +125,6 @@ class FocusState final {
    */
   bool CanIgnoreKeyboardShortcutMisses() const;
 
-  LayersId GetFocusLayersId() const;
-
  private:
   /**
    * Whether the current focus state is known to be current or else if an event
