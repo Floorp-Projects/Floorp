@@ -14,6 +14,8 @@ service('ToolkitChromeRegistryService', 'nsIToolkitChromeRegistry',
         "@mozilla.org/chrome/chrome-registry;1")
 service('XULChromeRegistryService', 'nsIXULChromeRegistry',
         "@mozilla.org/chrome/chrome-registry;1")
+service('DirectoryService', 'nsIProperties',
+        "@mozilla.org/file/directory_service;1"),
 service('IOService', 'nsIIOService',
         "@mozilla.org/network/io-service;1")
 service('ObserverService', 'nsIObserverService',
@@ -22,6 +24,8 @@ service('StringBundleService', 'nsIStringBundleService',
         "@mozilla.org/intl/stringbundle;1")
 service('PermissionManager', 'nsIPermissionManager',
         "@mozilla.org/permissionmanager;1")
+service('PreferencesService', 'nsIPrefService',
+        "@mozilla.org/preferences-service;1")
 service('ServiceWorkerManager', 'nsIServiceWorkerManager',
         "@mozilla.org/serviceworkers/manager;1")
 service('AsyncShutdown', 'nsIAsyncShutdownService',
@@ -67,6 +71,7 @@ CPP_INCLUDES = """
 #include "IHistory.h"
 #include "nsIXPConnect.h"
 #include "nsIPermissionManager.h"
+#include "nsIPrefService.h"
 #include "nsIServiceWorkerManager.h"
 #include "nsICacheStorageService.h"
 #include "nsIStreamTransportService.h"
