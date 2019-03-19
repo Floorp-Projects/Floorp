@@ -40,6 +40,7 @@ public class WebpageItemRow extends StreamViewHolder implements Tabs.OnTabsChang
     private WebpageRowModel webpageModel;
     private OnContentChangedListener contentChangedListener;
     private int position;
+    private boolean switchToTabHintShown;
 
     private final StreamOverridablePageIconLayout pageIconLayout;
     private final TextView pageDomainView;
@@ -95,8 +96,8 @@ public class WebpageItemRow extends StreamViewHolder implements Tabs.OnTabsChang
         updatePageDomain();
         pageIconLayout.updateIcon(model.getUrl(), model.getImageUrl());
 
-        final boolean isTabOpenedForItem = isTabOpenedForItem();
-        switchToTabHint.setVisibility(isTabOpenedForItem ? View.VISIBLE : View.GONE);
+        switchToTabHintShown = isTabOpenedForItem();
+        switchToTabHint.setVisibility(switchToTabHintShown ? View.VISIBLE : View.GONE);
     }
 
     public void initResources() {
@@ -218,7 +219,9 @@ public class WebpageItemRow extends StreamViewHolder implements Tabs.OnTabsChang
         // because they can be about:reader URLs if the current or old tab page was a reader view
         final String tabUrl = ReaderModeUtils.stripAboutReaderUrl(tab.getURL());
         final String previousTabUrl = ReaderModeUtils.stripAboutReaderUrl(data);
-        if (itemUrl.equals(tabUrl) || itemUrl.equals(previousTabUrl)) {
+        if ((itemUrl.equals(tabUrl) || itemUrl.equals(previousTabUrl)) &&
+                (switchToTabHintShown != isTabOpenedForItem())) {
+            switchToTabHintShown = !switchToTabHintShown;
             notifyListenerAboutContentChange();
         }
     }
