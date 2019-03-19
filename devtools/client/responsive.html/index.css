@@ -11,6 +11,7 @@
   --submit-button-active-color: var(--theme-body-color);
   --viewport-active-color: #3b3b3b;
   --input-invalid-border-color: var(--red-60);
+  --custom-device-button-hover: var(--grey-30);
 }
 
 :root.theme-dark {
@@ -19,6 +20,7 @@
   --submit-button-active-color: var(--theme-selection-color);
   --viewport-active-color: #fcfcfc;
   --input-invalid-border-color: var(--red-50);
+  --custom-device-button-hover: var(--grey-10-a20)
 }
 
 * {
@@ -395,6 +397,8 @@ body,
 }
 
 .device-modal {
+  display: grid;
+  grid-template-rows: minmax(80px, auto) auto 20px;
   background-color: var(--theme-toolbar-background);
   border: 1px solid var(--theme-splitter-color);
   border-radius: 2px;
@@ -405,10 +409,12 @@ body,
   bottom: 0;
   left: 0;
   right: 0;
-  width: 800px;
-  max-width: 90%;
-  height: 650px;
+  width: 90%;
+  height: 90%;
+  max-width: 750px;
+  max-height: 730px;
   z-index: 1;
+  overflow: hidden;
 }
 
 /* Handles the opening/closing of the modal */
@@ -432,12 +438,98 @@ body,
 }
 
 .device-modal-content {
-  display: flex;
-  flex-direction: column;
-  flex-wrap: wrap;
+  display: grid;
+  grid-row-gap: 30px;
   overflow: auto;
-  height: 515px;
-  margin: 20px 20px 0;
+  height: 100%;
+  padding: 10px 32px 50px 32px;
+}
+
+.device-modal-content.form-shown {
+  padding-top: 30px;
+}
+
+/* On screens that are >750px*/
+@media (min-width: 750px) {
+  #device-form {
+    grid-template-areas: "name size dpr"
+                         "user-agent touch buttons";
+  }
+
+  #device-form-name input,
+  #device-form-user-agent input {
+    width: 350px;
+  }
+
+  .device-modal-content {
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-areas: "phone phone custom"
+                         "tablet laptop tv";
+  }
+}
+
+/* On screens that are between 450px and 749px */
+@media (min-width: 450px) and (max-width: 749px) {
+  #device-form {
+    grid-template-areas: "name size"
+                         "user-agent dpr"
+                         "touch buttons";
+    grid-template-columns: 2fr 1fr;
+  }
+
+  #device-form-name {
+    grid-area: name;
+  }
+
+  #device-form-name input,
+  #device-form-user-agent input {
+    width: 100%;
+  }
+
+  .device-modal-content {
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas: "phone phone"
+                         "tablet laptop"
+                         "tv custom";
+  }
+}
+
+/* On screens that are <450px */
+@media (max-width: 449px) {
+  #device-form {
+    grid-template-areas: "name"
+                         "size"
+                         "dpr"
+                         "user-agent"
+                         "touch"
+                         "buttons";
+  }
+
+  #device-form-name input,
+  #device-form-user-agent input {
+    width: 90%;
+  }
+
+  #device-form-size {
+    justify-self: unset;
+  }
+
+  .device-modal-content {
+    grid-template-areas: "phone"
+                         "phone"
+                         "tablet"
+                         "laptop"
+                         "tv"
+                         "custom";
+  }
+
+  .device-type.device-type-phones .device-list {
+    grid-template-columns: 1fr;
+  }
+
+  .device-modal-header {
+    flex-direction: column;
+  }
 }
 
 #device-close-button {
@@ -453,26 +545,63 @@ body,
 .device-type {
   display: flex;
   flex-direction: column;
-  padding: 10px;
 }
 
 .device-header {
-  font-weight: bold;
+  font-size: 17px;
+  margin-bottom: 7px;
+  height: 20px;
   text-transform: capitalize;
-  padding: 0 0 3px 23px;
 }
 
 .device-label {
   color: var(--theme-body-color);
-  padding-bottom: 3px;
+  padding-bottom: 5px;
+  padding-top: 5px;
   display: flex;
   align-items: center;
-  /* Largest size without horizontal scrollbars */
-  max-width: 181px;
+}
+
+.device-label > button {
+  visibility: hidden;
+}
+
+.device-label:focus-within > button,
+.device-label:hover > button {
+  visibility: visible;
+}
+
+.device-label:focus-within,
+.device-label:hover {
+  background-color: var(--toolbarbutton-hover-background);
+}
+
+.device-modal-header {
+  display: flex;
+  justify-content: space-between;
+  z-index: 1;
+}
+
+.device-modal-header > #device-add-button {
+  margin: 30px 75px 0 30px;
+}
+
+.device-modal-header > #device-form {
+  margin-top: 15px;
+}
+
+.device-list {
+  display: grid;
+  font-size: 13px;
 }
 
 .device-input-checkbox {
   margin-right: 5px;
+}
+
+.device-modal-title {
+  font-size: 22px;
+  margin: 30px 0 0px 30px;
 }
 
 .device-name {
@@ -506,85 +635,168 @@ body,
 }
 
 /**
- * Device Adder
+ * Device Form
  */
 
-#device-adder {
-  display: flex;
-  flex-direction: column;
-  margin: 0 20px;
+#device-form {
+  display: grid;
+  width: 100%;
+  background-color: var(--theme-toolbar-background);
+  min-height: 150px;
+  padding-left: 20px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--theme-splitter-color);
+  overflow: auto;
 }
 
-#device-adder-content {
-  display: flex;
+#device-add-button {
+  margin-right: 70px;
 }
 
-#device-adder-column-1 {
-  flex: 1;
-  margin-right: 10px;
-}
-
-#device-adder-column-2 {
-  flex: 2;
-}
-
-#device-adder button {
-  background-color: var(--theme-tab-toolbar-background);
+#device-add-button,
+#device-form button {
+  background-color: rgba(12, 12, 13, 0.1);
   border: 1px solid var(--theme-splitter-color);
   border-radius: 2px;
-  color: var(--theme-body-color);
-  margin: 0 auto;
+  cursor: pointer;
+  width: 167px;
+  height: 32px;
 }
 
-#device-adder label {
+#device-editor-remove {
+  cursor: pointer;
+}
+
+#device-editor-remove.device-remove-button:focus-within,
+#device-editor-remove.device-remove-button:hover {
+  background-color: var(--custom-device-button-hover);
+}
+
+#device-form label {
   display: flex;
-  margin-bottom: 5px;
-  align-items: center;
+  flex-direction: column;
+  margin: 5px;
 }
 
-#device-adder label > input,
-#device-adder label > .viewport-dimension {
-  flex: 1;
-  margin: 0;
-}
-
-#device-adder label > .viewport-dimension {
-  border-bottom: 1px solid transparent;
+#device-form label > .viewport-dimension {
   color: var(--theme-body-color-inactive);
   display: flex;
   align-items: center;
-  justify-content: center;
-  transition: all 0.25s ease;
 }
 
-#device-adder label > .viewport-dimension.editing {
-  border-bottom-color: var(--theme-selection-background);
-}
-
-#device-adder label > .viewport-dimension.editing.invalid {
-  border-bottom-color: #d92215;
-}
-
-#device-adder input {
+#device-form input {
   background: transparent;
-  border: 1px solid transparent;
+  border: 1px solid;
+  border-radius: 2px;
   text-align: center;
   color: var(--theme-body-color-inactive);
   transition: all 0.25s ease;
 }
 
-#device-adder input:focus {
-  color: var(--viewport-active-color);
+#device-form #device-form-name input,
+#device-form #device-form-user-agent input {
+  text-align: left;
+  padding-left: 12px;
+  padding-right: 12px;
 }
 
-#device-adder label > input:focus,
-#device-adder label > .viewport-dimension:focus  {
-  border-bottom: 1px solid var(--theme-selection-background);
+#device-form input:focus {
+  color: var(--viewport-active-color);
+  border-color: var(--blue-55);
+}
+
+#device-form label > input:focus,
+#device-form label > .viewport-dimension:focus  {
   outline: none;
 }
 
-.device-adder-label {
+#device-form-pixel-ratio {
+  grid-area: dpr;
+}
+
+#device-form-pixel-ratio input {
+  -moz-appearance: textfield;
+}
+
+#device-form-user-agent {
+  grid-area: user-agent;
+}
+
+#device-form-name input,
+#device-form-pixel-ratio input,
+#device-form-user-agent input,
+#device-form-size input {
+  height: 35px;
+}
+
+#device-form #device-form-touch {
+  flex-direction: row;
+  grid-area: touch;
+}
+
+#device-form-touch .device-form-label {
+  align-self: center;
+  margin-left: 5px;
+}
+
+#device-form #device-form-save {
+  background-color: #0060DF;
+  color: #fff;
+  border:1px solid #0060DF;
+  width: 50px;
+}
+
+#device-form-size {
+  grid-area: size;
+}
+
+#device-form-size input,
+#device-form #device-form-cancel {
+  width: 60px;
+}
+
+#device-form-save,
+#device-form-cancel {
+  align-self: center;
+}
+
+.device-form-buttons {
+  display: flex;
+  grid-area: buttons;
+  justify-content: space-evenly;
+  width: 154px;
+}
+
+.device-form-label {
   display: inline-block;
-  margin-right: 5px;
+  margin: 0 5px 5px 0;
   min-width: 35px;
+  font-size: 13px;
+}
+
+/* Device Types */
+
+.device-type-phones {
+  grid-area: phone;
+}
+
+.device-type-phones .device-list {
+  grid-template-columns: repeat(2, auto);
+}
+
+.device-type-custom {
+  grid-area: custom;
+  align-self: start;
+}
+
+.device-type-tablets {
+  grid-area: tablet;
+}
+
+.device-type-laptops {
+  grid-area: laptop;
+}
+
+.device-type-televisions {
+  grid-area: tv;
 }
