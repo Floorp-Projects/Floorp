@@ -29,4 +29,8 @@ config = {
         # "LIBGL_DEBUG": "verbose"
     },
     "marionette_extra": "--emulator",
+    # in support of test-verify
+    "android_version": 24,
+    "is_fennec": False,
+    "is_emulator": True,
 }
