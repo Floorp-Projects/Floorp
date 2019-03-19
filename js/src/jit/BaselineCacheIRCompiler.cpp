@@ -66,6 +66,9 @@ class MOZ_RAII BaselineCacheIRCompiler : public CacheIRCompiler {
                          bool isConstructing);
   void pushSpreadCallArguments(Register argcReg, Register scratch,
                                bool isJitCall, bool isConstructing);
+  void createThis(Register argcReg, Register calleeReg, Register scratch,
+                  bool isSpread);
+  void updateReturnValue();
 
   enum class NativeCallType { Native, ClassHook };
   bool emitCallNativeShared(NativeCallType callType);
@@ -2670,6 +2673,126 @@ bool BaselineCacheIRCompiler::emitCallClassHook() {
   return emitCallNativeShared(NativeCallType::ClassHook);
 }
 
+/*
+ * Scripted constructors require a |this| object to be created prior to the
+ * call. When this function is called, the stack looks like (bottom->top):
+ *
+ * [..., Callee, ThisV, Arg0V, ..., ArgNV, NewTarget, StubFrameHeader]
+ *
+ * At this point, |ThisV| is JSWhyMagic::JS_IS_CONSTRUCTING.
+ *
+ * This function calls CreateThis to generate a new |this| object, then
+ * overwrites the magic ThisV on the stack.
+ */
+void BaselineCacheIRCompiler::createThis(Register argcReg, Register calleeReg,
+                                         Register scratch, bool isSpread) {
+  // Save argc before call.
+  masm.push(argcReg);
+
+  // CreateThis takes two arguments: callee, and newTarget.
+
+  // Push newTarget:
+  Address newTargetAddress(masm.getStackPointer(),
+                           STUB_FRAME_SIZE + sizeof(size_t));
+  masm.unboxObject(newTargetAddress, scratch);
+  masm.push(scratch);
+
+  // Push callee:
+  if (isSpread) {
+    Address calleeAddress(masm.getStackPointer(),
+                          3 * sizeof(Value) +      // This, arg array, NewTarget
+                              STUB_FRAME_SIZE +    // Stub frame
+                              sizeof(size_t) +     // argc
+                              sizeof(JSObject*));  // Unboxed NewTarget
+    masm.unboxObject(calleeAddress, scratch);
+  } else {
+    BaseValueIndex calleeAddress(masm.getStackPointer(),
+                                 argcReg,                 // Arguments
+                                 2 * sizeof(Value) +      // This, NewTarget
+                                     STUB_FRAME_SIZE +    // Stub frame
+                                     sizeof(size_t) +     // argc
+                                     sizeof(JSObject*));  // Unboxed NewTarget
+    masm.unboxObject(calleeAddress, scratch);
+  }
+  masm.push(scratch);
+
+  // Call CreateThis
+  using Fn =
+      bool (*)(JSContext*, HandleObject, HandleObject, MutableHandleValue);
+  callVM<Fn, CreateThis>(masm);
+
+#ifdef DEBUG
+  Label createdThisOK;
+  masm.branchTestObject(Assembler::Equal, JSReturnOperand, &createdThisOK);
+  masm.branchTestMagic(Assembler::Equal, JSReturnOperand, &createdThisOK);
+  masm.assumeUnreachable(
+      "The return of CreateThis must be an object or uninitialized.");
+  masm.bind(&createdThisOK);
+#endif
+
+  // Restore argc
+  masm.pop(argcReg);
+
+  // Save |this| value back into pushed arguments on stack.
+  if (isSpread) {
+    Address thisAddress(masm.getStackPointer(),
+                        2 * sizeof(Value) +    // Arg array, NewTarget
+                            STUB_FRAME_SIZE);  // Stub frame
+    masm.storeValue(JSReturnOperand, thisAddress);
+  } else {
+    BaseValueIndex thisAddress(masm.getStackPointer(),
+                               argcReg,               // Arguments
+                               1 * sizeof(Value) +    // NewTarget
+                                   STUB_FRAME_SIZE);  // Stub frame
+    masm.storeValue(JSReturnOperand, thisAddress);
+  }
+
+  // Restore the stub register from the baseline stub frame.
+  Address stubRegAddress(masm.getStackPointer(), STUB_FRAME_SAVED_STUB_OFFSET);
+  masm.loadPtr(stubRegAddress, ICStubReg);
+
+  // Restore calleeReg.
+  if (isSpread) {
+    Address calleeAddress(masm.getStackPointer(),
+                          3 * sizeof(Value) +    // This, arg array, NewTarget
+                              STUB_FRAME_SIZE);  // Stub frame
+    masm.unboxObject(calleeAddress, calleeReg);
+  } else {
+    BaseValueIndex calleeAddress(masm.getStackPointer(),
+                                 argcReg,               // Arguments
+                                 2 * sizeof(Value) +    // This, NewTarget
+                                     STUB_FRAME_SIZE);  // Stub frame
+    masm.unboxObject(calleeAddress, calleeReg);
+  }
+}
+
+void BaselineCacheIRCompiler::updateReturnValue() {
+  Label skipThisReplace;
+  masm.branchTestObject(Assembler::Equal, JSReturnOperand, &skipThisReplace);
+
+  // If a constructor does not explicitly return an object, the return value
+  // of the constructor is |this|. We load it out of the baseline stub frame.
+
+  // At this point, the stack looks like this:
+  //  newTarget
+  //  ArgN
+  //  ...
+  //  Arg0
+  //  ThisVal         <---- We want this value.
+  //  argc                  ^
+  //  Callee token          | Skip three stack slots.
+  //  Frame descriptor      v
+  //  [Top of stack]
+  Address thisAddress(masm.getStackPointer(), 3 * sizeof(size_t));
+  masm.loadValue(thisAddress, JSReturnOperand);
+
+#ifdef DEBUG
+  masm.branchTestObject(Assembler::Equal, JSReturnOperand, &skipThisReplace);
+  masm.assumeUnreachable("Return of constructing call should be an object.");
+#endif
+  masm.bind(&skipThisReplace);
+}
+
 bool BaselineCacheIRCompiler::emitCallScriptedFunction() {
   JitSpew(JitSpew_Codegen, __FUNCTION__);
   AutoOutputRegister output(*this);
@@ -2692,8 +2815,9 @@ bool BaselineCacheIRCompiler::emitCallScriptedFunction() {
     masm.switchToObjectRealm(calleeReg, scratch);
   }
 
-  // TODO: If we are constructing, create |this|.
-  MOZ_ASSERT(!isConstructing);
+  if (isConstructing) {
+    createThis(argcReg, calleeReg, scratch, isSpread);
+  }
 
   if (isSpread) {
     pushSpreadCallArguments(argcReg, scratch, /*isJitCall = */ true,
@@ -2703,18 +2827,16 @@ bool BaselineCacheIRCompiler::emitCallScriptedFunction() {
   }
 
   // TODO: The callee is currently on top of the stack.  The old
-  // implementation popped it at this point, but since we don't
-  // support constructors yet, callee is definitely still in a
-  // register. For now we just free that stack slot to make things
-  // line up. This should probably be rewritten to avoid pushing
-  // callee at all if we don't have to.
+  // implementation popped it at this point, but I'm not sure why,
+  // because it is still in a register along both paths. For now we
+  // just free that stack slot to make things line up. This should
+  // probably be rewritten to avoid pushing callee at all if we don't
+  // have to.
   masm.freeStack(sizeof(Value));
 
   // Load the start of the target JitCode.
   AutoScratchRegister code(allocator, masm);
-  if (!isConstructing) {
-    masm.loadJitCodeRaw(calleeReg, code);
-  }
+  masm.loadJitCodeRaw(calleeReg, code);
 
   EmitBaselineCreateStubFrameDescriptor(masm, scratch, JitFrameLayout::Size());
 
@@ -2739,9 +2861,11 @@ bool BaselineCacheIRCompiler::emitCallScriptedFunction() {
   masm.bind(&noUnderflow);
   masm.callJit(code);
 
-  // TODO: If the return value of a constructor is not an object,
-  // replace it with |this|.
-  MOZ_ASSERT(!isConstructing);
+  // If this is a constructing call, and the callee returns a non-object,
+  // replace it with the |this| object passed in.
+  if (isConstructing) {
+    updateReturnValue();
+  }
 
   stubFrame.leave(masm, true);
 
