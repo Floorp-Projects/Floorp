@@ -2382,23 +2382,13 @@ impl Renderer {
         );
         debug_target.add(
             debug_server::BatchKind::Clip,
-            "Slow Rectangles [p]",
-            target.clip_batcher.primary_clips.slow_rectangles.len(),
+            "Rectangles [p]",
+            target.clip_batcher.primary_clips.rectangles.len(),
         );
         debug_target.add(
             debug_server::BatchKind::Clip,
-            "Fast Rectangles [p]",
-            target.clip_batcher.primary_clips.fast_rectangles.len(),
-        );
-        debug_target.add(
-            debug_server::BatchKind::Clip,
-            "Slow Rectangles [s]",
-            target.clip_batcher.secondary_clips.slow_rectangles.len(),
-        );
-        debug_target.add(
-            debug_server::BatchKind::Clip,
-            "Fast Rectangles [s]",
-            target.clip_batcher.secondary_clips.fast_rectangles.len(),
+            "Rectangles [s]",
+            target.clip_batcher.secondary_clips.rectangles.len(),
         );
         for (_, items) in target.clip_batcher.primary_clips.images.iter() {
             debug_target.add(debug_server::BatchKind::Clip, "Image mask [p]", items.len());
@@ -3722,29 +3712,15 @@ impl Renderer {
         stats: &mut RendererStats,
     ) {
         // draw rounded cornered rectangles
-        if !list.slow_rectangles.is_empty() {
-            let _gm2 = self.gpu_profile.start_marker("slow clip rectangles");
-            self.shaders.borrow_mut().cs_clip_rectangle_slow.bind(
+        if !list.rectangles.is_empty() {
+            let _gm2 = self.gpu_profile.start_marker("clip rectangles");
+            self.shaders.borrow_mut().cs_clip_rectangle.bind(
                 &mut self.device,
                 projection,
                 &mut self.renderer_errors,
             );
             self.draw_instanced_batch(
-                &list.slow_rectangles,
-                VertexArrayKind::Clip,
-                &BatchTextures::no_texture(),
-                stats,
-            );
-        }
-        if !list.fast_rectangles.is_empty() {
-            let _gm2 = self.gpu_profile.start_marker("fast clip rectangles");
-            self.shaders.borrow_mut().cs_clip_rectangle_fast.bind(
-                &mut self.device,
-                projection,
-                &mut self.renderer_errors,
-            );
-            self.draw_instanced_batch(
-                &list.fast_rectangles,
+                &list.rectangles,
                 VertexArrayKind::Clip,
                 &BatchTextures::no_texture(),
                 stats,
