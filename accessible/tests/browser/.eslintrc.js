@@ -57,7 +57,6 @@ module.exports = {
     "no-shadow": "error",
     "no-sync": "off",
     "no-ternary": "off",
-    "no-throw-literal": "error",
     "no-underscore-dangle": "off",
     "no-undefined": "off",
     "no-unused-vars": ["error", {"vars": "all", "args": "none"}],

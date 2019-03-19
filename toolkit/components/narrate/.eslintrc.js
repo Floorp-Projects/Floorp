@@ -24,7 +24,6 @@ module.exports = {
     "no-multiple-empty-lines": ["error", {"max": 1}],
     "no-return-assign": "error",
     "no-shadow": "error",
-    "no-throw-literal": "error",
     "quotes": ["error", "double", "avoid-escape"],
     "semi-spacing": ["error", {"before": false, "after": true}],
     "space-in-parens": ["error", "never"],
