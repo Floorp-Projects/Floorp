@@ -316,6 +316,7 @@ void Promise::MaybeReject(JSContext* aCx, JS::Handle<JS::Value> aValue) {
 
 enum class NativeHandlerTask : int32_t { Resolve, Reject };
 
+MOZ_CAN_RUN_SCRIPT
 static bool NativeHandlerCallback(JSContext* aCx, unsigned aArgc,
                                   JS::Value* aVp) {
   JS::CallArgs args = CallArgsFromVp(aArgc, aVp);
@@ -334,10 +335,12 @@ static bool NativeHandlerCallback(JSContext* aCx, unsigned aArgc,
   NativeHandlerTask task = static_cast<NativeHandlerTask>(v.toInt32());
 
   if (task == NativeHandlerTask::Resolve) {
-    handler->ResolvedCallback(aCx, args.get(0));
+    // handler is kept alive by "obj" on the stack.
+    MOZ_KnownLive(handler)->ResolvedCallback(aCx, args.get(0));
   } else {
     MOZ_ASSERT(task == NativeHandlerTask::Reject);
-    handler->RejectedCallback(aCx, args.get(0));
+    // handler is kept alive by "obj" on the stack.
+    MOZ_KnownLive(handler)->RejectedCallback(aCx, args.get(0));
   }
 
   return true;
@@ -377,14 +380,18 @@ class PromiseNativeHandlerShim final : public PromiseNativeHandler {
     MOZ_ASSERT(mInner);
   }
 
+  MOZ_CAN_RUN_SCRIPT
   void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override {
-    mInner->ResolvedCallback(aCx, aValue);
-    mInner = nullptr;
+    RefPtr<PromiseNativeHandler> inner = mInner.forget();
+    inner->ResolvedCallback(aCx, aValue);
+    MOZ_ASSERT(!mInner);
   }
 
+  MOZ_CAN_RUN_SCRIPT
   void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override {
-    mInner->RejectedCallback(aCx, aValue);
-    mInner = nullptr;
+    RefPtr<PromiseNativeHandler> inner = mInner.forget();
+    inner->RejectedCallback(aCx, aValue);
+    MOZ_ASSERT(!mInner);
   }
 
   bool WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto,
