@@ -39,33 +39,17 @@ const PREF_BLOCKLIST_GFX_SIGNER              = "services.blocklist.gfx.signer";
  *
  * @param {Object} data   Current records in the local db.
  */
-async function updateCertBlocklist({ data: { created, updated, deleted } }) {
-  const certList = Cc["@mozilla.org/security/certstorage;1"]
-                     .getService(Ci.nsICertStorage);
-  for (let item of deleted) {
-    if (item.issuerName && item.serialNumber) {
-      certList.setRevocationByIssuerAndSerial(item.issuerName,
-                                              item.serialNumber,
-                                              Ci.nsICertStorage.STATE_UNSET);
-      } else if (item.subject && item.pubKeyHash) {
-        certList.setRevocationBySubjectAndPubKey(item.subject,
-                                                 item.pubKeyHash,
-                                                 Ci.nsICertStorage.STATE_UNSET);
-      }
-  }
-
-  const toAdd = created.concat(updated.map(u => u.new));
-
-  for (let item of toAdd) {
+async function updateCertBlocklist({ data: { current: records } }) {
+  const certList = Cc["@mozilla.org/security/certblocklist;1"]
+                     .getService(Ci.nsICertBlocklist);
+  for (let item of records) {
     try {
       if (item.issuerName && item.serialNumber) {
-        certList.setRevocationByIssuerAndSerial(item.issuerName,
-                                                item.serialNumber,
-                                                Ci.nsICertStorage.STATE_ENFORCE);
+        certList.revokeCertByIssuerAndSerial(item.issuerName,
+                                            item.serialNumber);
       } else if (item.subject && item.pubKeyHash) {
-        certList.setRevocationBySubjectAndPubKey(item.subject,
-                                                 item.pubKeyHash,
-                                                 Ci.nsICertStorage.STATE_ENFORCE);
+        certList.revokeCertBySubjectAndPubKey(item.subject,
+                                              item.pubKeyHash);
       }
     } catch (e) {
       // prevent errors relating to individual blocklist entries from
@@ -74,6 +58,7 @@ async function updateCertBlocklist({ data: { created, updated, deleted } }) {
       Cu.reportError(e);
     }
   }
+  certList.saveEntries();
 }
 
 /**

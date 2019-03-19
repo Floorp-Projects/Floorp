@@ -4,11 +4,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "cert_storage/src/cert_storage.h"
 #include "CSTrustDomain.h"
 #include "mozilla/Base64.h"
 #include "mozilla/Preferences.h"
-#include "nsDirectoryServiceUtils.h"
 #include "nsNSSCertificate.h"
 #include "nsNSSComponent.h"
 #include "NSSCertDBTrustDomain.h"
@@ -26,7 +24,7 @@ static LazyLogModule gTrustDomainPRLog("CSTrustDomain");
 
 CSTrustDomain::CSTrustDomain(UniqueCERTCertList& certChain)
     : mCertChain(certChain),
-      mCertBlocklist(do_GetService(NS_CERT_STORAGE_CID)) {}
+      mCertBlocklist(do_GetService(NS_CERTBLOCKLIST_CONTRACTID)) {}
 
 Result CSTrustDomain::GetCertTrust(EndEntityOrCA endEntityOrCA,
                                    const CertPolicyId& policy,
@@ -55,14 +53,14 @@ Result CSTrustDomain::GetCertTrust(EndEntityOrCA endEntityOrCA,
     return Result::FATAL_ERROR_LIBRARY_FAILURE;
   }
 
-  int16_t revocationState;
-  nsrv = mCertBlocklist->GetRevocationState(encIssuer, encSerial, encSubject,
-                                            encPubKey, &revocationState);
+  bool isCertRevoked;
+  nsrv = mCertBlocklist->IsCertRevoked(encIssuer, encSerial, encSubject,
+                                       encPubKey, &isCertRevoked);
   if (NS_FAILED(nsrv)) {
     return Result::FATAL_ERROR_LIBRARY_FAILURE;
   }
 
-  if (revocationState == nsICertStorage::STATE_ENFORCE) {
+  if (isCertRevoked) {
     CSTrust_LOG(("CSTrustDomain: certificate is revoked\n"));
     return Result::ERROR_REVOKED_CERTIFICATE;
   }

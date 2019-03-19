@@ -100,12 +100,11 @@ add_task(async function testRevoked() {
   // Note that there's currently no way to un-do this. This should only be a
   // problem if another test re-uses a certificate with this same key (perhaps
   // likely) and subject (less likely).
-  let certBlocklist = Cc["@mozilla.org/security/certstorage;1"]
-                        .getService(Ci.nsICertStorage);
-  certBlocklist.setRevocationBySubjectAndPubKey(
+  let certBlocklist = Cc["@mozilla.org/security/certblocklist;1"]
+                        .getService(Ci.nsICertBlocklist);
+  certBlocklist.revokeCertBySubjectAndPubKey(
     "MBIxEDAOBgNVBAMMB3Jldm9rZWQ=", // CN=revoked
-    "VCIlmPM9NkgFQtrs4Oa5TeFcDu6MWRTKSNdePEhOgD8=", // hash of the shared key
-    Ci.nsICertStorage.STATE_ENFORCE); // yes, we want this to be revoked
+    "VCIlmPM9NkgFQtrs4Oa5TeFcDu6MWRTKSNdePEhOgD8="); // hash of the shared key
   let cert = await readCertificate("revoked.pem", ",,");
   let win = await displayCertificate(cert);
   // As of bug 1312827, OneCRL only applies to TLS web server certificates, so

@@ -9,10 +9,8 @@
 
 #include "cert.h"
 #include "CSTrustDomain.h"
-#include "nsDirectoryServiceUtils.h"
 #include "nsIContentSignatureVerifier.h"
 #include "nsIStreamListener.h"
-#include "nsNetUtil.h"
 #include "nsString.h"
 #include "ScopedNSSTypes.h"
 
