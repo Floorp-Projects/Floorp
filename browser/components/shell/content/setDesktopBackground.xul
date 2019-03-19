@@ -63,11 +63,9 @@
 #endif
 
     <vbox align="center">
-      <stack>
-        <!-- if width and height are not present, they default to 300x150 and stretch the stack -->
-        <html:canvas id="screen" width="1" height="1" role="presentation"/>
-        <image id="monitor"/>
-      </stack>
+      <!-- default to 16:9, will be adjusted to match user's actual screen -->
+      <html:canvas id="screen" width="202" height="114" role="presentation"/>
+      <image id="monitor-base"/>
     </vbox>
 
 #ifdef XP_MACOSX
