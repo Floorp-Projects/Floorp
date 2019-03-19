@@ -185,7 +185,7 @@ p, h1 {
 *  +--------+-------------+
 */
 .main-subheading {
-  margin-block: calc(var(--base-unit) * 4);
+  margin-block: calc(var(--base-unit) * 4) 0;
   font-size: var(--title-20-font-size); /* Note: this is from Photon Title 20 */
   font-weight: var(--title-20-font-weight); /* Note: this is from Photon Title 20 */
 

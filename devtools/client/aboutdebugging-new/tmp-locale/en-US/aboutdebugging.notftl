@@ -102,17 +102,23 @@ about-debugging-connect-network-disabled = Network location support currently un
 # Below are the titles for the various categories of debug targets that can be found
 # on "runtime" pages of about:debugging.
 # Title of the temporary extensions category (only available for "This Firefox" runtime).
-about-debugging-runtime-temporary-extensions = Temporary Extensions
+about-debugging-runtime-temporary-extensions =
+  .name = Temporary Extensions
 # Title of the extensions category.
-about-debugging-runtime-extensions = Extensions
+about-debugging-runtime-extensions =
+  .name = Extensions
 # Title of the tabs category.
-about-debugging-runtime-tabs = Tabs
+about-debugging-runtime-tabs =
+  .name = Tabs
 # Title of the service workers category.
-about-debugging-runtime-service-workers = Service Workers
+about-debugging-runtime-service-workers =
+  .name = Service Workers
 # Title of the shared workers category.
-about-debugging-runtime-shared-workers = Shared Workers
+about-debugging-runtime-shared-workers =
+  .name = Shared Workers
 # Title of the other workers category.
-about-debugging-runtime-other-workers = Other Workers
+about-debugging-runtime-other-workers =
+  .name = Other Workers
 
 # Label of the button opening the performance profiler panel in runtime pages for remote
 # runtimes.
