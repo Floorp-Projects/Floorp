@@ -574,8 +574,8 @@ RefPtr<U2FRegisterPromise> U2FSoftTokenManager::Register(
     }
   }
 
-  if (aInfo.Extra().type() != WebAuthnMaybeMakeCredentialExtraInfo::Tnull_t) {
-    const auto& extra = aInfo.Extra().get_WebAuthnMakeCredentialExtraInfo();
+  if (aInfo.Extra().isSome()) {
+    const auto& extra = aInfo.Extra().ref();
     const WebAuthnAuthenticatorSelection& sel = extra.AuthenticatorSelection();
 
     UserVerificationRequirement userVerificaitonRequirement =
