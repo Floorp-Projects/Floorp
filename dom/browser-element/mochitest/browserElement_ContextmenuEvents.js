@@ -1,5 +1,8 @@
 "use strict";
 
+/* global browserElementTestHelpers */
+/* eslint-env mozilla/frame-script */
+
 SimpleTest.waitForExplicitFinish();
 browserElementTestHelpers.setEnabledPref(true);
 browserElementTestHelpers.setClipboardPlainTextOnlyPref(false);

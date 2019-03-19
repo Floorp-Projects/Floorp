@@ -69,7 +69,7 @@
               }
             ).catch(err => reject(err));
           }
-          step(gen.next(value));
+          return step(gen.next(value));
         }
       });
     };

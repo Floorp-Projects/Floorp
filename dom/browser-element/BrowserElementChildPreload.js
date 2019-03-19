@@ -4,6 +4,8 @@
 
 "use strict";
 
+/* eslint-env mozilla/frame-script */
+
 function debug(msg) {
   // dump("BrowserElementChildPreload - " + msg + "\n");
 }
@@ -40,7 +42,7 @@ function sendSyncMsg(msg, data) {
   // Ensure that we don't send any messages before BrowserElementChild.js
   // finishes loading.
   if (!BrowserElementIsReady) {
-    return;
+    return undefined;
   }
 
   if (!data) {
@@ -160,10 +162,8 @@ BrowserElementChild.prototype = {
 
     addMessageListener("browser-element-api:call", this);
 
-    let els = Cc["@mozilla.org/eventlistenerservice;1"]
-                .getService(Ci.nsIEventListenerService);
     LISTENED_SYSTEM_EVENTS.forEach(event => {
-      els.addSystemEventListener(global, event.type, this, event.useCapture);
+      Services.els.addSystemEventListener(global, event.type, this, event.useCapture);
     });
 
     OBSERVED_EVENTS.forEach((aTopic) => {
@@ -192,10 +192,8 @@ BrowserElementChild.prototype = {
 
     removeMessageListener("browser-element-api:call", this);
 
-    let els = Cc["@mozilla.org/eventlistenerservice;1"]
-                .getService(Ci.nsIEventListenerService);
     LISTENED_SYSTEM_EVENTS.forEach(event => {
-      els.removeSystemEventListener(global, event.type, this, event.useCapture);
+      Services.els.removeSystemEventListener(global, event.type, this, event.useCapture);
     });
 
     OBSERVED_EVENTS.forEach((aTopic) => {
@@ -281,6 +279,7 @@ BrowserElementChild.prototype = {
     if (message.data.msg_name in mmCalls) {
       return mmCalls[message.data.msg_name].apply(self, arguments);
     }
+    return undefined;
   },
 
   _paintFrozenTimer: null,
@@ -363,6 +362,7 @@ BrowserElementChild.prototype = {
         args.promptType == "custom-prompt") {
       return returnValue;
     }
+    return undefined;
   },
 
   /**
@@ -379,7 +379,7 @@ BrowserElementChild.prototype = {
       // I have no idea what waiting for a result means when there's no inner
       // window, so let's just bail.
       debug("_waitForResult: No inner window. Bailing.");
-      return;
+      return undefined;
     }
 
     this._windowIDDict[outerWindowID] = Cu.getWeakReference(win);
@@ -902,7 +902,7 @@ BrowserElementChild.prototype = {
     if (menu) {
       this._maybeCopyAttribute(menu, menuObj, "label");
 
-      for (var i = 0, child; child = menu.children[i++];) {
+      for (var i = 0, child; (child = menu.children[i++]);) {
         if (child.nodeName === "MENU") {
           menuObj.items.push(this._buildMenuObj(child, idPrefix + i + "_", false));
         } else if (child.nodeName === "MENUITEM") {
@@ -1026,8 +1026,7 @@ BrowserElementChild.prototype = {
       }
 
       // Remove password from uri.
-      location = Cc["@mozilla.org/docshell/urifixup;1"]
-        .getService(Ci.nsIURIFixup).createExposableURI(location);
+      location = Services.uriFixup.createExposableURI(location);
 
       var webNav = docShell.QueryInterface(Ci.nsIWebNavigation);
 
@@ -1036,6 +1035,7 @@ BrowserElementChild.prototype = {
                                        canGoForward: webNav.canGoForward });
     },
 
+    // eslint-disable-next-line complexity
     onStateChange(webProgress, request, stateFlags, status) {
       if (webProgress != docShell) {
         return;

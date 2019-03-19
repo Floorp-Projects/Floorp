@@ -6,6 +6,14 @@
 
 "use strict";
 
+/*
+global addMessageListener
+global removeMessageListener
+global docShell
+global content
+global sendAsyncMsg
+*/
+
 function debug(msg) {
   // dump("BrowserElementCopyPaste - " + msg + "\n");
 }
@@ -71,7 +79,7 @@ var CopyPasteAssistent = {
     e.stopPropagation();
 
     let boundingClientRect = e.boundingClientRect;
-    let canPaste = this._isCommandEnabled("paste");
+    this._isCommandEnabled("paste");
     let zoomFactor = content.innerWidth == 0 ? 1 : content.screen.width / content.innerWidth;
 
     let detail = {

@@ -9,6 +9,9 @@
 // image load will be cancaelled and mozbrowserloadend should be called.
 
 "use strict";
+
+/* global browserElementTestHelpers */
+
 SimpleTest.waitForExplicitFinish();
 SimpleTest.requestFlakyTimeout("untriaged");
 browserElementTestHelpers.setEnabledPref(true);

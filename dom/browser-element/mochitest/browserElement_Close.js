@@ -4,6 +4,8 @@
 // Test that window.close() works.
 "use strict";
 
+/* global browserElementTestHelpers */
+
 SimpleTest.waitForExplicitFinish();
 browserElementTestHelpers.setEnabledPref(true);
 browserElementTestHelpers.addPermission();
@@ -19,7 +21,7 @@ function runTest() {
     SimpleTest.finish();
   });
 
-  iframe.src = "data:text/html,<html><body><script>window.close()</scr" + "ipt></body></html>";
+  iframe.src = "data:text/html,<html><body><script>window.close()</script></body></html>";
 }
 
 addEventListener("testready", runTest);

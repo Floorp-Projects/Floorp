@@ -4,6 +4,8 @@
 // Test that the onmozbrowsertitlechange event works.
 "use strict";
 
+/* global browserElementTestHelpers */
+
 SimpleTest.waitForExplicitFinish();
 browserElementTestHelpers.setEnabledPref(true);
 browserElementTestHelpers.addPermission();

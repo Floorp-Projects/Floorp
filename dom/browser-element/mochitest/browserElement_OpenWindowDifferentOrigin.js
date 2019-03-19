@@ -4,6 +4,9 @@
 // Bug 769182 - window.open to a different origin should load the page.
 
 "use strict";
+
+/* global browserElementTestHelpers */
+
 SimpleTest.waitForExplicitFinish();
 browserElementTestHelpers.setEnabledPref(true);
 browserElementTestHelpers.addPermission();
@@ -15,12 +18,12 @@ function runTest() {
   iframe.addEventListener("mozbrowseropenwindow", function(e) {
     ok(true, "Got first window.open call");
 
-    e.detail.frameElement.addEventListener("mozbrowseropenwindow", function(e) {
+    e.detail.frameElement.addEventListener("mozbrowseropenwindow", function(f) {
       ok(true, "Got second window.open call");
-      document.body.appendChild(e.detail.frameElement);
+      document.body.appendChild(f.detail.frameElement);
     });
 
-    e.detail.frameElement.addEventListener("mozbrowsershowmodalprompt", function(e) {
+    e.detail.frameElement.addEventListener("mozbrowsershowmodalprompt", function(f) {
       ok(true, "Got alert from second window.");
       SimpleTest.finish();
     });

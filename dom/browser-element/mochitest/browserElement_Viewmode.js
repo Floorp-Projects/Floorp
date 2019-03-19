@@ -4,6 +4,8 @@
 // Test that the onmozbrowsermetachange event for viewmode works.
 "use strict";
 
+/* global browserElementTestHelpers */
+
 SimpleTest.waitForExplicitFinish();
 browserElementTestHelpers.setEnabledPref(true);
 browserElementTestHelpers.addPermission();
@@ -68,4 +70,3 @@ function runTest() {
 }
 
 window.addEventListener("testready", runTest);
-

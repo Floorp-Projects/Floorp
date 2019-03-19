@@ -4,6 +4,8 @@
 // Test that sendMouseEvent dispatch events.
 "use strict";
 
+/* global browserElementTestHelpers */
+
 SimpleTest.waitForExplicitFinish();
 browserElementTestHelpers.setEnabledPref(true);
 

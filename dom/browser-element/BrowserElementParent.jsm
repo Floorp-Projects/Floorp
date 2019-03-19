@@ -16,14 +16,6 @@ function debug(msg) {
   // dump("BrowserElementParent - " + msg + "\n");
 }
 
-function getIntPref(prefName, def) {
-  try {
-    return Services.prefs.getIntPref(prefName);
-  } catch (err) {
-    return def;
-  }
-}
-
 function handleWindowEvent(e) {
   if (this._browserElementParents) {
     let beps = ChromeUtils.nondeterministicGetWeakMapKeys(this._browserElementParents);
@@ -96,11 +88,9 @@ BrowserElementParent.prototype = {
       this._window._browserElementParents = new WeakMap();
       let handler = handleWindowEvent.bind(this._window);
       let windowEvents = ["visibilitychange", "fullscreenchange"];
-      let els = Cc["@mozilla.org/eventlistenerservice;1"]
-                  .getService(Ci.nsIEventListenerService);
       for (let event of windowEvents) {
-        els.addSystemEventListener(this._window, event, handler,
-                                   /* useCapture = */ true);
+        Services.els.addSystemEventListener(this._window, event, handler,
+                                            /* useCapture = */ true);
       }
     }
 
@@ -138,7 +128,7 @@ BrowserElementParent.prototype = {
 
   receiveMessage(aMsg) {
     if (!this._isAlive()) {
-      return;
+      return undefined;
     }
 
     // Messages we receive are handed to functions which take a (data) argument,
@@ -184,6 +174,7 @@ BrowserElementParent.prototype = {
     } else if (aMsg.data.msg_name in mmSecuritySensitiveCalls) {
       return mmSecuritySensitiveCalls[aMsg.data.msg_name].apply(this, arguments);
     }
+    return undefined;
   },
 
   _removeMessageListener() {
@@ -210,7 +201,6 @@ BrowserElementParent.prototype = {
 
   promptAuth(authDetail, callback) {
     let evt;
-    let self = this;
     let callbackCalled = false;
     let cancelCallback = function() {
       if (!callbackCalled) {

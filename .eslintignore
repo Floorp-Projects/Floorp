@@ -167,7 +167,6 @@ dom/base/test/unit/test_serializers_entities*.js
 dom/base/test/unit_ipc/**
 dom/base/test/jsmodules/**
 dom/bindings/**
-dom/browser-element/**
 dom/canvas/**
 dom/encoding/**
 dom/events/**
