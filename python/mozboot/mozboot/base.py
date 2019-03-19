@@ -441,7 +441,7 @@ class BaseBootstrapper(object):
         ''' Prompts the user with prompt and requires a yes/no answer.'''
         valid = False
         while not valid:
-            choice = raw_input(prompt + ' [Y/n]: ').strip().lower()[:1]
+            choice = raw_input(prompt + ' (Yn): ').strip().lower()[:1]
             if choice == '':
                 choice = 'y'
             if choice not in ('y', 'n'):

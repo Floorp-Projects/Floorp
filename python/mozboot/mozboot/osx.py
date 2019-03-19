@@ -110,10 +110,9 @@ We will install a modern version of Clang through %s.
 
 PACKAGE_MANAGER_CHOICE = '''
 Please choose a package manager you'd like:
-1. Homebrew
-2. MacPorts (Does not yet support bootstrapping GeckoView/Firefox for Android.)
-Your choice:
-'''
+  1. Homebrew
+  2. MacPorts (Does not yet support bootstrapping GeckoView/Firefox for Android.)
+Your choice: '''
 
 NO_PACKAGE_MANAGER_WARNING = '''
 It seems you don't have any supported package manager installed.
