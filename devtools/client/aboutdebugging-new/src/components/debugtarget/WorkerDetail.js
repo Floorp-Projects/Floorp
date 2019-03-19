@@ -99,31 +99,8 @@ class WorkerDetail extends PureComponent {
     );
   }
 
-  renderStatus() {
-    const status = this.props.target.details.status.toLowerCase();
-
-    return FieldPair(
-      {
-        slug: "status",
-        label: Localized(
-          {
-            id: "about-debugging-worker-status",
-            $status: status,
-          },
-          dom.span(
-            {
-              className: `badge js-worker-status ` +
-                `${status === "running" ? "badge--success" : ""}`,
-            },
-            status
-          )
-        ),
-      }
-    );
-  }
-
   render() {
-    const { fetch, pushServiceEndpoint, scope, status } = this.props.target.details;
+    const { fetch, pushServiceEndpoint, scope } = this.props.target.details;
 
     const isEmptyList = !pushServiceEndpoint && !fetch && !scope && !status;
 
@@ -135,7 +112,6 @@ class WorkerDetail extends PureComponent {
       pushServiceEndpoint ? this.renderPushService() : null,
       fetch ? this.renderFetch() : null,
       scope ? this.renderScope() : null,
-      status ? this.renderStatus() : null,
     );
   }
 }
