@@ -434,3 +434,51 @@ assertErrorMessage(() => wasmEvalText(
                    SyntaxError,
                    /parsing wasm text/);
 
+// Make sure that dead code doesn't prevent compilation.
+wasmEvalText(
+    `(module
+       (table (export "t") 10 anyref)
+       (func (param i32)
+         (return)
+         (table.get (get_local 0))
+         (drop)
+        )
+    )`);
+
+wasmEvalText(
+    `(module
+       (table (export "t") 10 anyref)
+       (func (param i32) (param anyref)
+         (return)
+         (table.grow (get_local 1))
+         (drop)
+        )
+    )`);
+
+wasmEvalText(
+    `(module
+       (table (export "t") 10 anyref)
+       (func (param i32) (param anyref)
+         (return)
+         (table.set (get_local 0) (get_local 1))
+        )
+    )`);
+
+wasmEvalText(
+    `(module
+       (table (export "t") 10 anyref)
+       (func
+         (return)
+         (table.size)
+         (drop)
+        )
+    )`);
+
+wasmEvalText(
+    `(module
+       (table (export "t") 10 anyref)
+       (func
+         (return)
+         (table.copy (i32.const 0) (i32.const 1))
+        )
+    )`);

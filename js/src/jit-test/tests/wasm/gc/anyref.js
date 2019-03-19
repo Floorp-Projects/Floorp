@@ -463,3 +463,22 @@ let glutenFreeBaguette = new Baguette("calories-free bread");
 exports.set_mut(glutenFreeBaguette);
 assertEq(exports.get_mut(), glutenFreeBaguette);
 assertEq(exports.get_mut().calories, "calories-free bread");
+
+// Make sure that dead code doesn't prevent compilation.
+wasmEvalText(
+    `(module
+       (func
+         (return)
+         (ref.null)
+         (drop)
+        )
+    )`);
+
+wasmEvalText(
+    `(module
+       (func (param anyref)
+         (return)
+         (ref.is_null (get_local 0))
+         (drop)
+        )
+    )`);

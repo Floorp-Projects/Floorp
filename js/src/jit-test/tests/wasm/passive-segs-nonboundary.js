@@ -1229,3 +1229,33 @@ function checkRange(arr, minIx, maxIxPlusOne, expectedValue)
     checkRange(b, 64827, 64834, 26);
     checkRange(b, 64834, 65536, 0);
 }
+
+// Make sure dead code doesn't prevent compilation.
+wasmEvalText(
+    `(module
+       (memory 0 10)
+       (data (i32.const 0))
+       (func
+         (return)
+         (memory.init 0)
+        )
+    )`);
+
+wasmEvalText(
+    `(module
+       (memory 0 10)
+       (func
+         (return)
+         (memory.fill)
+        )
+    )`);
+
+wasmEvalText(
+    `(module
+       (table (export "t") 10 funcref)
+       (elem (i32.const 0) 0)
+       (func
+         (return)
+         (elem.drop 0)
+        )
+    )`);
