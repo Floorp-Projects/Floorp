@@ -57,27 +57,27 @@ NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGMaskElement)
 
 //----------------------------------------------------------------------
 
-already_AddRefed<SVGAnimatedEnumeration> SVGMaskElement::MaskUnits() {
+already_AddRefed<DOMSVGAnimatedEnumeration> SVGMaskElement::MaskUnits() {
   return mEnumAttributes[MASKUNITS].ToDOMAnimatedEnum(this);
 }
 
-already_AddRefed<SVGAnimatedEnumeration> SVGMaskElement::MaskContentUnits() {
+already_AddRefed<DOMSVGAnimatedEnumeration> SVGMaskElement::MaskContentUnits() {
   return mEnumAttributes[MASKCONTENTUNITS].ToDOMAnimatedEnum(this);
 }
 
-already_AddRefed<SVGAnimatedLength> SVGMaskElement::X() {
+already_AddRefed<DOMSVGAnimatedLength> SVGMaskElement::X() {
   return mLengthAttributes[ATTR_X].ToDOMAnimatedLength(this);
 }
 
-already_AddRefed<SVGAnimatedLength> SVGMaskElement::Y() {
+already_AddRefed<DOMSVGAnimatedLength> SVGMaskElement::Y() {
   return mLengthAttributes[ATTR_Y].ToDOMAnimatedLength(this);
 }
 
-already_AddRefed<SVGAnimatedLength> SVGMaskElement::Width() {
+already_AddRefed<DOMSVGAnimatedLength> SVGMaskElement::Width() {
   return mLengthAttributes[ATTR_WIDTH].ToDOMAnimatedLength(this);
 }
 
-already_AddRefed<SVGAnimatedLength> SVGMaskElement::Height() {
+already_AddRefed<DOMSVGAnimatedLength> SVGMaskElement::Height() {
   return mLengthAttributes[ATTR_HEIGHT].ToDOMAnimatedLength(this);
 }
 

@@ -44,15 +44,15 @@ NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGCircleElement)
 
 //----------------------------------------------------------------------
 
-already_AddRefed<SVGAnimatedLength> SVGCircleElement::Cx() {
+already_AddRefed<DOMSVGAnimatedLength> SVGCircleElement::Cx() {
   return mLengthAttributes[ATTR_CX].ToDOMAnimatedLength(this);
 }
 
-already_AddRefed<SVGAnimatedLength> SVGCircleElement::Cy() {
+already_AddRefed<DOMSVGAnimatedLength> SVGCircleElement::Cy() {
   return mLengthAttributes[ATTR_CY].ToDOMAnimatedLength(this);
 }
 
-already_AddRefed<SVGAnimatedLength> SVGCircleElement::R() {
+already_AddRefed<DOMSVGAnimatedLength> SVGCircleElement::R() {
   return mLengthAttributes[ATTR_R].ToDOMAnimatedLength(this);
 }
 

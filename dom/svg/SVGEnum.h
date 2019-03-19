@@ -7,12 +7,12 @@
 #ifndef __NS_SVGENUM_H__
 #define __NS_SVGENUM_H__
 
+#include "DOMSVGAnimatedEnumeration.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsError.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/SMILAttr.h"
 #include "mozilla/UniquePtr.h"
-#include "mozilla/dom/SVGAnimatedEnumeration.h"
 #include "mozilla/dom/SVGElement.h"
 
 class nsAtom;
@@ -52,7 +52,7 @@ class SVGEnum {
   uint16_t GetAnimValue() const { return mAnimVal; }
   bool IsExplicitlySet() const { return mIsAnimated || mIsBaseSet; }
 
-  already_AddRefed<mozilla::dom::SVGAnimatedEnumeration> ToDOMAnimatedEnum(
+  already_AddRefed<mozilla::dom::DOMSVGAnimatedEnumeration> ToDOMAnimatedEnum(
       SVGElement* aSVGElement);
 
   mozilla::UniquePtr<SMILAttr> ToSMILAttr(SVGElement* aSVGElement);
@@ -67,14 +67,17 @@ class SVGEnum {
   const SVGEnumMapping* GetMapping(SVGElement* aSVGElement);
 
  public:
-  struct DOMAnimatedEnum final : public mozilla::dom::SVGAnimatedEnumeration {
+  // DOM wrapper class for the (DOM)SVGAnimatedEnumeration interface where the
+  // wrapped class is SVGEnum.
+  struct DOMAnimatedEnum final
+      : public mozilla::dom::DOMSVGAnimatedEnumeration {
     DOMAnimatedEnum(SVGEnum* aVal, SVGElement* aSVGElement)
-        : mozilla::dom::SVGAnimatedEnumeration(aSVGElement), mVal(aVal) {}
+        : mozilla::dom::DOMSVGAnimatedEnumeration(aSVGElement), mVal(aVal) {}
     virtual ~DOMAnimatedEnum();
 
     SVGEnum* mVal;  // kept alive because it belongs to content
 
-    using mozilla::dom::SVGAnimatedEnumeration::SetBaseVal;
+    using mozilla::dom::DOMSVGAnimatedEnumeration::SetBaseVal;
     virtual uint16_t BaseVal() override { return mVal->GetBaseValue(); }
     virtual void SetBaseVal(uint16_t aBaseVal,
                             mozilla::ErrorResult& aRv) override {

@@ -40,9 +40,9 @@ class SVGFEPointLightElement : public SVGFEPointLightElementBase {
   virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
   // WebIDL
-  already_AddRefed<SVGAnimatedNumber> X();
-  already_AddRefed<SVGAnimatedNumber> Y();
-  already_AddRefed<SVGAnimatedNumber> Z();
+  already_AddRefed<DOMSVGAnimatedNumber> X();
+  already_AddRefed<DOMSVGAnimatedNumber> Y();
+  already_AddRefed<DOMSVGAnimatedNumber> Z();
 
  protected:
   virtual NumberAttributesInfo GetNumberInfo() override;

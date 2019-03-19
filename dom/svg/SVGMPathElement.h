@@ -65,7 +65,7 @@ class SVGMPathElement final : public SVGMPathElementBase,
   SVGPathElement* GetReferencedPath();
 
   // WebIDL
-  already_AddRefed<SVGAnimatedString> Href();
+  already_AddRefed<DOMSVGAnimatedString> Href();
 
  protected:
   /**

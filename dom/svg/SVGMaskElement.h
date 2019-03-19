@@ -43,12 +43,12 @@ class SVGMaskElement final : public SVGMaskElementBase {
   virtual bool HasValidDimensions() const override;
 
   // WebIDL
-  already_AddRefed<SVGAnimatedEnumeration> MaskUnits();
-  already_AddRefed<SVGAnimatedEnumeration> MaskContentUnits();
-  already_AddRefed<SVGAnimatedLength> X();
-  already_AddRefed<SVGAnimatedLength> Y();
-  already_AddRefed<SVGAnimatedLength> Width();
-  already_AddRefed<SVGAnimatedLength> Height();
+  already_AddRefed<DOMSVGAnimatedEnumeration> MaskUnits();
+  already_AddRefed<DOMSVGAnimatedEnumeration> MaskContentUnits();
+  already_AddRefed<DOMSVGAnimatedLength> X();
+  already_AddRefed<DOMSVGAnimatedLength> Y();
+  already_AddRefed<DOMSVGAnimatedLength> Width();
+  already_AddRefed<DOMSVGAnimatedLength> Height();
 
  protected:
   virtual LengthAttributesInfo GetLengthInfo() override;
