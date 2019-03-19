@@ -6,7 +6,7 @@ use {WindowWrapper, NotifierEvent};
 use image::png::PNGEncoder;
 use image::{self, ColorType, GenericImageView};
 use std::fs::File;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::sync::mpsc::Receiver;
 use webrender::api::units::*;
 use wrench::{Wrench, WrenchThing};
@@ -80,7 +80,6 @@ pub fn png(
     window: &mut WindowWrapper,
     mut reader: YamlFrameReader,
     rx: Receiver<NotifierEvent>,
-    out_path: Option<PathBuf>,
 ) {
     reader.do_frame(wrench);
 
@@ -108,11 +107,8 @@ pub fn png(
         }
     };
 
-    let out_path = out_path.unwrap_or_else(|| {
-        let mut path = reader.yaml_path().clone();
-        path.set_extension("png");
-        path
-    });
+    let mut out_path = reader.yaml_path().clone();
+    out_path.set_extension("png");
 
     save(out_path, data, fb_size, settings);
 }
