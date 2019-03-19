@@ -82,7 +82,7 @@ runTest(async () => {
   // Check that deviceIds are stable for same origin and differ across origins.
 
   const path = "/tests/dom/media/tests/mochitest/test_enumerateDevices_iframe.html";
-  const origins = ["http://mochi.test:8888", "http://test1.mochi.test:8888"];
+  const origins = ["https://example.com", "https://test1.example.com"];
   info(window.location);
 
   let haveDevicesMap = new Promise(resolve => {
