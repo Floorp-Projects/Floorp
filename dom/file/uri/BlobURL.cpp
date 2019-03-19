@@ -152,7 +152,7 @@ nsresult BlobURL::EqualsInternal(
 
 // Queries this list of interfaces. If none match, it queries mURI.
 NS_IMPL_NSIURIMUTATOR_ISUPPORTS(BlobURL::Mutator, nsIURISetters, nsIURIMutator,
-                                nsISerializable)
+                                nsISerializable, nsIBlobURLMutator)
 
 NS_IMETHODIMP
 BlobURL::Mutate(nsIURIMutator** aMutator) {
