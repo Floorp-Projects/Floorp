@@ -6,7 +6,6 @@
  * https://wicg.github.io/entries-api/#idl-index
  */
 
-[MOZ_CAN_RUN_SCRIPT_BOUNDARY]
 callback FileSystemEntriesCallback = void (sequence<FileSystemEntry> entries);
 
 interface FileSystemDirectoryReader {
