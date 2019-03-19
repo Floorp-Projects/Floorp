@@ -7776,9 +7776,6 @@ bool BytecodeEmitter::emitPropertyList(ListNode* obj, PropertyEmitter& pe,
   }
 
   if (obj->getKind() == ParseNodeKind::ClassMemberList) {
-    if (!emitCreateFieldKeys(obj)) {
-      return false;
-    }
     if (!emitCreateFieldInitializers(obj)) {
       return false;
     }
@@ -7800,90 +7797,6 @@ FieldInitializers BytecodeEmitter::setupFieldInitializers(
     }
   }
   return FieldInitializers(numFields);
-}
-
-// Purpose of .fieldKeys:
-// Computed field names (`["x"] = 2;`) must be ran at class-evaluation time, not
-// object construction time. The transformation to do so is roughly as follows:
-//
-// class C {
-//   [keyExpr] = valueExpr;
-// }
-// -->
-// let .fieldKeys = [keyExpr];
-// let .initializers = [
-//   () => {
-//     this[.fieldKeys[0]] = valueExpr;
-//   }
-// ];
-// class C {
-//   constructor() {
-//     .initializers[0]();
-//   }
-// }
-//
-// BytecodeEmitter::emitCreateFieldKeys does `let .fieldKeys = [keyExpr, ...];`
-// See GeneralParser::fieldInitializer for the `this[.fieldKeys[0]]` part.
-bool BytecodeEmitter::emitCreateFieldKeys(ListNode* obj) {
-  size_t numFieldKeys = 0;
-  for (ParseNode* propdef : obj->contents()) {
-    if (propdef->is<ClassField>()) {
-      ClassField* field = &propdef->as<ClassField>();
-      if (field->name().getKind() == ParseNodeKind::ComputedName) {
-        numFieldKeys++;
-      }
-    }
-  }
-
-  if (numFieldKeys == 0) {
-    return true;
-  }
-
-  NameOpEmitter noe(this, cx->names().dotFieldKeys,
-                    NameOpEmitter::Kind::Initialize);
-  if (!noe.prepareForRhs()) {
-    return false;
-  }
-
-  if (!emitUint32Operand(JSOP_NEWARRAY, numFieldKeys)) {
-    //            [stack] ARRAY
-    return false;
-  }
-
-  size_t curFieldKeyIndex = 0;
-  for (ParseNode* propdef : obj->contents()) {
-    if (propdef->is<ClassField>()) {
-      ClassField* field = &propdef->as<ClassField>();
-      if (field->name().getKind() == ParseNodeKind::ComputedName) {
-        ParseNode* nameExpr = field->name().as<UnaryNode>().kid();
-
-        if (!emitTree(nameExpr)) {
-          //        [stack] ARRAY KEY
-          return false;
-        }
-
-        if (!emitUint32Operand(JSOP_INITELEM_ARRAY, curFieldKeyIndex)) {
-          //        [stack] ARRAY
-          return false;
-        }
-
-        curFieldKeyIndex++;
-      }
-    }
-  }
-  MOZ_ASSERT(curFieldKeyIndex == numFieldKeys);
-
-  if (!noe.emitAssignment()) {
-    //            [stack] ARRAY
-    return false;
-  }
-
-  if (!emit1(JSOP_POP)) {
-    //            [stack]
-    return false;
-  }
-
-  return true;
 }
 
 bool BytecodeEmitter::emitCreateFieldInitializers(ListNode* obj) {

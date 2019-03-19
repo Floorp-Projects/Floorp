@@ -12,6 +12,13 @@ slow script test262/built-ins/decodeURIComponent/S15.1.3.2_A2.5_T1.js
 
 # Fields are not fully implemented yet
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1499448
+skip script non262/fields/access.js
+skip script non262/fields/basic.js
+skip script non262/fields/error.js
+skip script non262/fields/field_types.js
+skip script non262/fields/literal.js
+skip script non262/fields/mixed_methods.js
+skip script non262/fields/quirks.js
 skip script non262/reflect-parse/class-fields.js
 
 
