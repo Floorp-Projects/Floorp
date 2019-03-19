@@ -35,13 +35,13 @@ const char* const js::jit::CacheKindNames[] = {
 };
 
 // We need to enter the namespace here so that the definition of
-// CacheIROpFormat::OpLengths can see CacheIROpFormat::ArgType
+// CacheIROpFormat::ArgLengths can see CacheIROpFormat::ArgType
 // (without defining None/Id/Field/etc everywhere else in this file.)
 namespace js {
 namespace jit {
 namespace CacheIROpFormat {
 
-static constexpr uint32_t CacheIROpLength(ArgType arg) {
+static constexpr uint32_t CacheIRArgLength(ArgType arg) {
   switch (arg) {
     case None:
       return 0;
@@ -59,14 +59,14 @@ static constexpr uint32_t CacheIROpLength(ArgType arg) {
   }
 }
 template <typename... Args>
-static constexpr uint32_t CacheIROpLength(ArgType arg, Args... args) {
-  return CacheIROpLength(arg) + CacheIROpLength(args...);
+static constexpr uint32_t CacheIRArgLength(ArgType arg, Args... args) {
+  return CacheIRArgLength(arg) + CacheIRArgLength(args...);
 }
 
-const uint32_t OpLengths[] = {
-#define OPLENGTH(op, ...) 1 + CacheIROpLength(__VA_ARGS__),
-    CACHE_IR_OPS(OPLENGTH)
-#undef OPLENGTH
+const uint32_t ArgLengths[] = {
+#define ARGLENGTH(op, ...) CacheIRArgLength(__VA_ARGS__),
+    CACHE_IR_OPS(ARGLENGTH)
+#undef ARGLENGTH
 };
 
 }  // namespace CacheIROpFormat
@@ -5293,6 +5293,10 @@ bool CallIRGenerator::tryAttachCallScripted(HandleFunction calleeFunc) {
   }
 
   bool isConstructing = IsConstructorCallPC(pc_);
+  if (isConstructing) {
+    // TODO: Support scripted constructors
+    return false;
+  }
 
   bool isSpread = IsSpreadCallPC(pc_);
 
@@ -5368,7 +5372,9 @@ bool CallIRGenerator::tryAttachCallNative(HandleFunction calleeFunc) {
 
   bool isConstructing = IsConstructorCallPC(pc_);
   // TODO: Support constructors
-  MOZ_ASSERT(!isConstructing);
+  if (isConstructing) {
+    return false;
+  }
 
   // Check for specific native-function optimizations.
   if (tryAttachSpecialCaseCallNative(calleeFunc)) {
@@ -5402,6 +5408,27 @@ bool CallIRGenerator::tryAttachCallNative(HandleFunction calleeFunc) {
   return true;
 }
 
+bool CallIRGenerator::getTemplateObjectForClassHook(
+    HandleObject calleeObj, MutableHandleObject result) {
+  MOZ_ASSERT(IsConstructorCallPC(pc_));
+  JSNative hook = calleeObj->constructHook();
+
+  if (calleeObj->nonCCWRealm() != cx_->realm()) {
+    return true;
+  }
+
+  if (hook == TypedObject::construct) {
+    Rooted<TypeDescr*> descr(cx_, calleeObj.as<TypeDescr>());
+    result.set(TypedObject::createZeroed(cx_, descr, gc::TenuredHeap));
+    if (!result) {
+      cx_->clearPendingException();
+      return false;
+    }
+  }
+
+  return true;
+}
+
 bool CallIRGenerator::tryAttachCallHook(HandleObject calleeObj) {
   if (JitOptions.disableCacheIRCalls) {
     return false;
@@ -5419,8 +5446,11 @@ bool CallIRGenerator::tryAttachCallHook(HandleObject calleeObj) {
     return false;
   }
 
-  // TODO: Template objects.
-  MOZ_ASSERT(!isConstructing);
+  RootedObject templateObj(cx_);
+  if (isConstructing &&
+      !getTemplateObjectForClassHook(calleeObj, &templateObj)) {
+    return false;
+  }
 
   // Load argc.
   Int32OperandId argcId(writer.setInputOperandId(0));
@@ -5431,15 +5461,20 @@ bool CallIRGenerator::tryAttachCallHook(HandleObject calleeObj) {
   ObjOperandId calleeObjId = writer.guardIsObject(calleeValId);
 
   // Ensure the callee's class matches the one in this stub.
-  writer.guardAnyClass(calleeObjId, calleeObj->getClass());
+  FieldOffset classOffset =
+      writer.guardAnyClass(calleeObjId, calleeObj->getClass());
 
   // Enforce limits on spread call length, and update argc.
   if (isSpread) {
     writer.guardAndUpdateSpreadArgc(argcId, isConstructing);
   }
 
-  writer.callClassHook(calleeObjId, argcId, hook, isSpread);
+  writer.callClassHook(calleeObjId, argcId, hook, isSpread, isConstructing);
   writer.typeMonitorResult();
+
+  if (templateObj) {
+    writer.metaClassTemplateObject(templateObj, classOffset);
+  }
 
   cacheIRStubKind_ = BaselineCacheIRStubKind::Monitored;
   trackAttached("Call native func");
@@ -5455,6 +5490,8 @@ bool CallIRGenerator::tryAttachStub() {
     case JSOP_CALL:
     case JSOP_CALL_IGNORES_RV:
     case JSOP_SPREADCALL:
+    case JSOP_NEW:
+    case JSOP_SPREADNEW:
       break;
     default:
       return false;

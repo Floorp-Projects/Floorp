@@ -126,6 +126,7 @@ namespace jit {
   _(CallInt32ToString)                    \
   _(CallNumberToString)                   \
   _(CallIsSuspendedGeneratorResult)       \
+  _(MetaTwoByte)                          \
   _(WrapResult)
 
 // [SMDDOC] CacheIR Value Representation and Tracking
@@ -738,7 +739,7 @@ class MOZ_RAII CacheIRCompiler {
   // up with the opcode signature in CACHE_IR_OPS.
   void assertAllArgumentsConsumed() {
     CacheOp prevOp = CacheOp(*currentVerificationPosition_);
-    uint32_t expectedLength = CacheIROpFormat::OpLengths[uint8_t(prevOp)];
+    uint32_t expectedLength = 1 + CacheIROpFormat::ArgLengths[uint8_t(prevOp)];
 
     const uint8_t* newPosition = reader.currentPosition();
     MOZ_ASSERT(newPosition > currentVerificationPosition_);
