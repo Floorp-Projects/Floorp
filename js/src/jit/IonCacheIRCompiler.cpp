@@ -2636,6 +2636,10 @@ bool IonCacheIRCompiler::emitCallStringObjectConcatResult() {
   return true;
 }
 
+bool IonCacheIRCompiler::emitCallScriptedFunction() {
+  MOZ_CRASH("Call ICs not used in ion");
+}
+
 bool IonCacheIRCompiler::emitCallNativeFunction() {
   MOZ_CRASH("Call ICs not used in ion");
 }
