@@ -51,11 +51,11 @@ class SVGTextPathElement final : public SVGTextPathElementBase {
   nsStaticAtom* GetPathDataAttrName() const override { return nsGkAtoms::path; }
 
   // WebIDL
-  already_AddRefed<SVGAnimatedLength> StartOffset();
-  already_AddRefed<SVGAnimatedEnumeration> Method();
-  already_AddRefed<SVGAnimatedEnumeration> Spacing();
-  already_AddRefed<SVGAnimatedEnumeration> Side();
-  already_AddRefed<SVGAnimatedString> Href();
+  already_AddRefed<DOMSVGAnimatedLength> StartOffset();
+  already_AddRefed<DOMSVGAnimatedEnumeration> Method();
+  already_AddRefed<DOMSVGAnimatedEnumeration> Spacing();
+  already_AddRefed<DOMSVGAnimatedEnumeration> Side();
+  already_AddRefed<DOMSVGAnimatedString> Href();
 
   void HrefAsString(nsAString& aHref);
 

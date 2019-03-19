@@ -43,20 +43,20 @@ NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGFEMorphologyElement)
 //----------------------------------------------------------------------
 // SVGFEMorphologyElement methods
 
-already_AddRefed<SVGAnimatedString> SVGFEMorphologyElement::In1() {
+already_AddRefed<DOMSVGAnimatedString> SVGFEMorphologyElement::In1() {
   return mStringAttributes[IN1].ToDOMAnimatedString(this);
 }
 
-already_AddRefed<SVGAnimatedEnumeration> SVGFEMorphologyElement::Operator() {
+already_AddRefed<DOMSVGAnimatedEnumeration> SVGFEMorphologyElement::Operator() {
   return mEnumAttributes[OPERATOR].ToDOMAnimatedEnum(this);
 }
 
-already_AddRefed<SVGAnimatedNumber> SVGFEMorphologyElement::RadiusX() {
+already_AddRefed<DOMSVGAnimatedNumber> SVGFEMorphologyElement::RadiusX() {
   return mNumberPairAttributes[RADIUS].ToDOMAnimatedNumber(
       SVGNumberPair::eFirst, this);
 }
 
-already_AddRefed<SVGAnimatedNumber> SVGFEMorphologyElement::RadiusY() {
+already_AddRefed<DOMSVGAnimatedNumber> SVGFEMorphologyElement::RadiusY() {
   return mNumberPairAttributes[RADIUS].ToDOMAnimatedNumber(
       SVGNumberPair::eSecond, this);
 }

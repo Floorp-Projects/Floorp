@@ -60,14 +60,14 @@ class SVGPatternElement final : public SVGPatternElementBase {
   // WebIDL
   already_AddRefed<SVGAnimatedRect> ViewBox();
   already_AddRefed<DOMSVGAnimatedPreserveAspectRatio> PreserveAspectRatio();
-  already_AddRefed<SVGAnimatedEnumeration> PatternUnits();
-  already_AddRefed<SVGAnimatedEnumeration> PatternContentUnits();
+  already_AddRefed<DOMSVGAnimatedEnumeration> PatternUnits();
+  already_AddRefed<DOMSVGAnimatedEnumeration> PatternContentUnits();
   already_AddRefed<DOMSVGAnimatedTransformList> PatternTransform();
-  already_AddRefed<SVGAnimatedLength> X();
-  already_AddRefed<SVGAnimatedLength> Y();
-  already_AddRefed<SVGAnimatedLength> Width();
-  already_AddRefed<SVGAnimatedLength> Height();
-  already_AddRefed<SVGAnimatedString> Href();
+  already_AddRefed<DOMSVGAnimatedLength> X();
+  already_AddRefed<DOMSVGAnimatedLength> Y();
+  already_AddRefed<DOMSVGAnimatedLength> Width();
+  already_AddRefed<DOMSVGAnimatedLength> Height();
+  already_AddRefed<DOMSVGAnimatedString> Href();
 
  protected:
   virtual LengthAttributesInfo GetLengthInfo() override;

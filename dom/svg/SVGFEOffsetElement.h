@@ -46,9 +46,9 @@ class SVGFEOffsetElement : public SVGFEOffsetElementBase {
   virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
   // WebIDL
-  already_AddRefed<SVGAnimatedString> In1();
-  already_AddRefed<SVGAnimatedNumber> Dx();
-  already_AddRefed<SVGAnimatedNumber> Dy();
+  already_AddRefed<DOMSVGAnimatedString> In1();
+  already_AddRefed<DOMSVGAnimatedNumber> Dx();
+  already_AddRefed<DOMSVGAnimatedNumber> Dy();
 
  protected:
   virtual NumberAttributesInfo GetNumberInfo() override;

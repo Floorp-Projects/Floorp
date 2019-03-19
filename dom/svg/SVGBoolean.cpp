@@ -6,11 +6,11 @@
 
 #include "SVGBoolean.h"
 
+#include "DOMSVGAnimatedBoolean.h"
 #include "nsError.h"
 #include "SMILBoolType.h"
 #include "SVGAttrTearoffTable.h"
 #include "mozilla/SMILValue.h"
-#include "mozilla/dom/SVGAnimatedBoolean.h"
 
 using namespace mozilla::dom;
 
@@ -18,9 +18,9 @@ namespace mozilla {
 
 /* Implementation */
 
-static inline SVGAttrTearoffTable<SVGBoolean, SVGAnimatedBoolean>&
+static inline SVGAttrTearoffTable<SVGBoolean, DOMSVGAnimatedBoolean>&
 SVGAnimatedBooleanTearoffTable() {
-  static SVGAttrTearoffTable<SVGBoolean, SVGAnimatedBoolean>
+  static SVGAttrTearoffTable<SVGBoolean, DOMSVGAnimatedBoolean>
       sSVGAnimatedBooleanTearoffTable;
   return sSVGAnimatedBooleanTearoffTable;
 }
@@ -98,19 +98,19 @@ void SVGBoolean::SetAnimValue(bool aValue, SVGElement* aSVGElement) {
   aSVGElement->DidAnimateBoolean(mAttrEnum);
 }
 
-already_AddRefed<SVGAnimatedBoolean> SVGBoolean::ToDOMAnimatedBoolean(
+already_AddRefed<DOMSVGAnimatedBoolean> SVGBoolean::ToDOMAnimatedBoolean(
     SVGElement* aSVGElement) {
-  RefPtr<SVGAnimatedBoolean> domAnimatedBoolean =
+  RefPtr<DOMSVGAnimatedBoolean> domAnimatedBoolean =
       SVGAnimatedBooleanTearoffTable().GetTearoff(this);
   if (!domAnimatedBoolean) {
-    domAnimatedBoolean = new SVGAnimatedBoolean(this, aSVGElement);
+    domAnimatedBoolean = new DOMSVGAnimatedBoolean(this, aSVGElement);
     SVGAnimatedBooleanTearoffTable().AddTearoff(this, domAnimatedBoolean);
   }
 
   return domAnimatedBoolean.forget();
 }
 
-SVGAnimatedBoolean::~SVGAnimatedBoolean() {
+DOMSVGAnimatedBoolean::~DOMSVGAnimatedBoolean() {
   SVGAnimatedBooleanTearoffTable().RemoveTearoff(mVal);
 }
 

@@ -48,8 +48,8 @@ class SVGFEColorMatrixElement : public SVGFEColorMatrixElementBase {
   virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
   // WebIDL
-  already_AddRefed<SVGAnimatedString> In1();
-  already_AddRefed<SVGAnimatedEnumeration> Type();
+  already_AddRefed<DOMSVGAnimatedString> In1();
+  already_AddRefed<DOMSVGAnimatedEnumeration> Type();
   already_AddRefed<DOMSVGAnimatedNumberList> Values();
 
  protected:

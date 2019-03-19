@@ -67,8 +67,8 @@ class SVGAElement final : public SVGAElementBase, public Link {
   virtual bool ElementHasHref() const override;
 
   // WebIDL
-  already_AddRefed<SVGAnimatedString> Href();
-  already_AddRefed<SVGAnimatedString> Target();
+  already_AddRefed<DOMSVGAnimatedString> Href();
+  already_AddRefed<DOMSVGAnimatedString> Target();
   void GetDownload(nsAString& aDownload);
   void SetDownload(const nsAString& aDownload, ErrorResult& rv);
   void GetPing(nsAString& aPing);

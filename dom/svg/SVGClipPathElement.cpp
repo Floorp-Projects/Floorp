@@ -33,7 +33,8 @@ SVGClipPathElement::SVGClipPathElement(
     already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
     : SVGClipPathElementBase(std::move(aNodeInfo)) {}
 
-already_AddRefed<SVGAnimatedEnumeration> SVGClipPathElement::ClipPathUnits() {
+already_AddRefed<DOMSVGAnimatedEnumeration>
+SVGClipPathElement::ClipPathUnits() {
   return mEnumAttributes[CLIPPATHUNITS].ToDOMAnimatedEnum(this);
 }
 
