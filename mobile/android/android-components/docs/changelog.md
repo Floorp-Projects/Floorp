@@ -4,13 +4,22 @@ title: Changelog
 permalink: /changelog/
 ---
 
-# 0.47.0-SNAPSHOT  (In Development)
+# 0.48.0-SNAPSHOT  (In Development)
 
-* [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.46.0...master)
-* [Milestone](https://github.com/mozilla-mobile/android-components/milestone/50?closed=1)
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.47.0...master)
+* [Milestone](https://github.com/mozilla-mobile/android-components/milestone/51?closed=1)
 * [Dependencies](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Dependencies.kt)
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Config.kt)
+
+
+# 0.47.0
+
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.46.0...v0.47.0)
+* [Milestone](https://github.com/mozilla-mobile/android-components/milestone/50?closed=1)
+* [Dependencies](https://github.com/mozilla-mobile/android-components/blob/v0.47.0/buildSrc/src/main/java/Dependencies.kt)
+* [Gecko](https://github.com/mozilla-mobile/android-components/blob/v0.47.0/buildSrc/src/main/java/Gecko.kt)
+* [Configuration](https://github.com/mozilla-mobile/android-components/blob/v0.47.0/buildSrc/src/main/java/Config.kt)
 
 * **browser-session**
   * Added `Session.webAppManifest` to expose the [Web App Manifest](https://developer.mozilla.org/en-US/docs/Web/Manifest) of the currently visible page. This functionality will only be available in [GeckoView](https://mozilla.github.io/geckoview/)-flavored [concept-engine](https://github.com/mozilla-mobile/android-components/tree/master/components/concept/engine) implementations.
@@ -49,6 +58,7 @@ permalink: /changelog/
 
 * **support-ktx**
   * Added `File.truncateDirectory()` to remove all files (and sub directories) in a directory.
+  * Added `Activity.applyOrientation(manifest: WebAppManifest)` extension method for applying orientation modes #2291.
   * Added `Context.isMainProcess` and `Context.runOnlyInMainProcess(block: () -> Unit)` to detect when you're running on the main process.
 ```kotlin
       // true if we are running in the main process otherwise false .
@@ -59,6 +69,9 @@ permalink: /changelog/
                 in the main process, otherwise it won't be executed.  */
        }
 ```
+
+* **feature-pwa**
+  * 🆕 New component that provides functionality for supporting Progressive Web Apps (PWA).
 
 * **feature-session**
   * Adds support for the picture-in-picture mode in `PictureInPictureFeature`.
