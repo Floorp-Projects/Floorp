@@ -31,6 +31,8 @@ interface Geolocation {
   void clearWatch(long watchId);
 };
 
+[MOZ_CAN_RUN_SCRIPT_BOUNDARY]
 callback PositionCallback = void (Position position);
 
+[MOZ_CAN_RUN_SCRIPT_BOUNDARY]
 callback PositionErrorCallback = void (PositionError positionError);
