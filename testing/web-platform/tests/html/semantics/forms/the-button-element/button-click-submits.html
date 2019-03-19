@@ -207,4 +207,20 @@ async_test(t => {
 
 }, "clicking the child of a button by dispatching a non-bubbling event should not trigger submit");
 
+async_test(t => {
+  const form = document.createElement("form");
+  const button = document.createElement("button");
+  button.type = "button";
+  button.onclick =
+    function(e) {
+      form.dispatchEvent(new Event("submit"), { bubbles: true});
+    };
+  form.appendChild(button);
+  document.body.appendChild(form);
+
+  button.click();
+
+  t.step_timeout(() => t.done(), 500);
+}, "dispatching submit event should not trigger a submit");
+
 </script>
