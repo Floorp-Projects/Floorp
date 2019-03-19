@@ -3872,12 +3872,46 @@ bool DoSpreadCallFallback(JSContext* cx, BaselineFrame* frame,
   RootedValue arr(cx, vp[2]);
   RootedValue newTarget(cx, constructing ? vp[3] : NullValue());
 
+  // Transition stub state to megamorphic or generic if warranted.
+  if (stub->state().maybeTransition()) {
+    stub->discardStubs(cx);
+  }
+
   // Try attaching a call stub.
   bool handled = false;
   if (op != JSOP_SPREADEVAL && op != JSOP_STRICTSPREADEVAL &&
-      !TryAttachCallStub(cx, stub, script, pc, op, 1, vp, constructing, true,
-                         false, &handled)) {
-    return false;
+      stub->state().canAttachStub()) {
+    // Try CacheIR first:
+    RootedArrayObject aobj(cx, &arr.toObject().as<ArrayObject>());
+    MOZ_ASSERT(aobj->length() == aobj->getDenseInitializedLength());
+
+    CallIRGenerator gen(cx, script, pc, op, stub->state().mode(), 1, callee,
+                        thisv,
+                        HandleValueArray::fromMarkedLocation(
+                            aobj->length(), aobj->getDenseElements()));
+    if (gen.tryAttachStub()) {
+      ICStub* newStub = AttachBaselineCacheIRStub(
+          cx, gen.writerRef(), gen.cacheKind(), gen.cacheIRStubKind(), script,
+          stub, &handled);
+
+      if (newStub) {
+        JitSpew(JitSpew_BaselineIC, "  Attached Spread Call CacheIR stub");
+
+        // If it's an updated stub, initialize it.
+        if (gen.cacheIRStubKind() == BaselineCacheIRStubKind::Updated) {
+          SetUpdateStubData(newStub->toCacheIR_Updated(), gen.typeCheckInfo());
+        }
+      }
+    }
+
+    // Try attaching a regular call stub, but only if the CacheIR attempt didn't
+    // add any stubs.
+    if (!handled) {
+      if (!TryAttachCallStub(cx, stub, script, pc, op, 1, vp, constructing,
+                             true, false, &handled)) {
+        return false;
+      }
+    }
   }
 
   if (!SpreadCallOperation(cx, script, pc, thisv, callee, arr, newTarget,
