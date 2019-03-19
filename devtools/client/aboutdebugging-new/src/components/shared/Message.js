@@ -26,17 +26,19 @@ class Message extends PureComponent {
   static get propTypes() {
     return {
       children: PropTypes.node.isRequired,
+      className: PropTypes.string,
       level: PropTypes.oneOf(Object.values(MESSAGE_LEVEL)).isRequired,
     };
   }
 
   render() {
-    const { level, children } = this.props;
+    const { children, className, level } = this.props;
     const iconSrc = ICONS[level];
 
     return dom.aside(
       {
-        className: `message message--level-${level} js-message`,
+        className: `message message--level-${level} js-message` +
+                   (className ? ` ${ className }` : ""),
       },
       dom.img(
         {

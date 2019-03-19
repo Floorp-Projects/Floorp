@@ -17,7 +17,6 @@ const DebugTargetPane = createFactory(require("./debugtarget/DebugTargetPane"));
 const ExtensionAction = createFactory(require("./debugtarget/ExtensionAction"));
 const ExtensionDetail = createFactory(require("./debugtarget/ExtensionDetail"));
 const InspectAction = createFactory(require("./debugtarget/InspectAction"));
-const Message = createFactory(require("./shared/Message"));
 const ProfilerDialog = createFactory(require("./ProfilerDialog"));
 const RuntimeActions = createFactory(require("./RuntimeActions"));
 const RuntimeInfo = createFactory(require("./RuntimeInfo"));
@@ -29,11 +28,12 @@ const TabDetail = createFactory(require("./debugtarget/TabDetail"));
 const TemporaryExtensionAdditionalActions =
   createFactory(require("./debugtarget/TemporaryExtensionAdditionalActions"));
 const TemporaryExtensionDetail = createFactory(require("./debugtarget/TemporaryExtensionDetail"));
+const TemporaryExtensionInstallSection =
+  createFactory(require("./debugtarget/TemporaryExtensionInstallSection"));
 const WorkerDetail = createFactory(require("./debugtarget/WorkerDetail"));
 
 const Actions = require("../actions/index");
-const { DEBUG_TARGETS, DEBUG_TARGET_PANE, MESSAGE_LEVEL, PAGE_TYPES } =
-  require("../constants");
+const { DEBUG_TARGETS, DEBUG_TARGET_PANE, PAGE_TYPES } = require("../constants");
 const Types = require("../types/index");
 
 const { getCurrentRuntimeDetails } = require("../modules/runtimes-state-helper");
@@ -77,7 +77,7 @@ class RuntimePage extends PureComponent {
     throw new Error(`Unsupported type [${ type }]`);
   }
 
-  renderDebugTargetPane(name, icon, targets, actionComponent,
+  renderDebugTargetPane(name, icon, targets, children, actionComponent,
                         additionalActionsComponent, detailComponent,
                         paneKey, localizationId) {
     const { collapsibilities, dispatch, runtimeDetails } = this.props;
@@ -91,66 +91,31 @@ class RuntimePage extends PureComponent {
         id: localizationId,
         attrs: { name: true },
       },
-      DebugTargetPane({
-        actionComponent,
-        additionalActionsComponent,
-        collapsibilityKey: paneKey,
-        detailComponent,
-        dispatch,
-        icon,
-        isCollapsed: collapsibilities.get(paneKey),
-        name,
-        targets,
-      })
+      DebugTargetPane(
+        {
+          actionComponent,
+          additionalActionsComponent,
+          collapsibilityKey: paneKey,
+          detailComponent,
+          dispatch,
+          icon,
+          isCollapsed: collapsibilities.get(paneKey),
+          name,
+          targets,
+        },
+        children
+      )
     );
   }
 
-  renderTemporaryExtensionInstallError() {
-    const { runtimeDetails, temporaryInstallError } = this.props;
-    const { type } = runtimeDetails.info;
-
-    if (!temporaryInstallError ||
-        !isSupportedDebugTargetPane(type, DEBUG_TARGET_PANE.TEMPORARY_EXTENSION)) {
+  renderTemporaryExtensionInstallSection() {
+    if (!isSupportedDebugTargetPane(this.props.runtimeDetails.info.type,
+                                    DEBUG_TARGET_PANE.TEMPORARY_EXTENSION)) {
       return null;
     }
 
-    let errorMessages = [temporaryInstallError.message];
-
-    // Additional error messages can be found in additionalErrors.
-    if (Array.isArray(temporaryInstallError.additionalErrors)) {
-      errorMessages = errorMessages.concat(temporaryInstallError.additionalErrors);
-    }
-
-    const errors = errorMessages.map((message, index) => {
-      return dom.div(
-        {
-          className: "technical-text",
-          key: "tmp-extension-install-error-" + index,
-        },
-        message
-      );
-    });
-
-    return Message(
-      {
-        level: MESSAGE_LEVEL.ERROR,
-      },
-      dom.div(
-        {
-          className: "js-tmp-extension-install-error",
-        },
-        Localized(
-          {
-            id: "about-debugging-tmp-extension-install-error",
-          },
-          dom.span(
-            { },
-            "There was an error during the temporary add-on installation"
-          )
-        ),
-        errors
-      )
-    );
+    const { dispatch, temporaryInstallError } = this.props;
+    return TemporaryExtensionInstallSection({ dispatch, temporaryInstallError });
   }
 
   render() {
@@ -183,10 +148,10 @@ class RuntimePage extends PureComponent {
       RuntimeActions({ dispatch, runtimeId, runtimeDetails }),
       runtimeDetails.serviceWorkersAvailable ? null : ServiceWorkersWarning(),
       CompatibilityWarning({ compatibilityReport }),
-      this.renderTemporaryExtensionInstallError(),
       this.renderDebugTargetPane("Temporary Extensions",
                                  this.getIconByType(DEBUG_TARGETS.EXTENSION),
                                  temporaryExtensions,
+                                 this.renderTemporaryExtensionInstallSection(),
                                  ExtensionAction,
                                  TemporaryExtensionAdditionalActions,
                                  TemporaryExtensionDetail,
@@ -195,6 +160,7 @@ class RuntimePage extends PureComponent {
       this.renderDebugTargetPane("Extensions",
                                  this.getIconByType(DEBUG_TARGETS.EXTENSION),
                                  installedExtensions,
+                                 null,
                                  ExtensionAction,
                                  null,
                                  ExtensionDetail,
@@ -203,6 +169,7 @@ class RuntimePage extends PureComponent {
       this.renderDebugTargetPane("Tabs",
                                  this.getIconByType(DEBUG_TARGETS.TAB),
                                  tabs,
+                                 null,
                                  InspectAction,
                                  null,
                                  TabDetail,
@@ -211,6 +178,7 @@ class RuntimePage extends PureComponent {
       this.renderDebugTargetPane("Service Workers",
                                  this.getIconByType(DEBUG_TARGETS.WORKER),
                                  serviceWorkers,
+                                 null,
                                  ServiceWorkerAction,
                                  ServiceWorkerAdditionalActions,
                                  WorkerDetail,
@@ -219,6 +187,7 @@ class RuntimePage extends PureComponent {
       this.renderDebugTargetPane("Shared Workers",
                                  this.getIconByType(DEBUG_TARGETS.WORKER),
                                  sharedWorkers,
+                                 null,
                                  InspectAction,
                                  null,
                                  WorkerDetail,
@@ -227,6 +196,7 @@ class RuntimePage extends PureComponent {
       this.renderDebugTargetPane("Other Workers",
                                  this.getIconByType(DEBUG_TARGETS.WORKER),
                                  otherWorkers,
+                                 null,
                                  InspectAction,
                                  null,
                                  WorkerDetail,
