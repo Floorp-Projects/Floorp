@@ -820,8 +820,7 @@ bool NodeBuilder::newNodeLoc(TokenPos* pos, MutableHandleValue dst) {
 
 bool NodeBuilder::setNodeLoc(HandleObject node, TokenPos* pos) {
   if (!saveLoc) {
-    RootedValue nullVal(cx, NullValue());
-    return defineProperty(node, "loc", nullVal);
+    return true;
   }
 
   RootedValue loc(cx);
