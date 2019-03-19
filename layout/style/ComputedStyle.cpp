@@ -45,9 +45,7 @@ namespace mozilla {
 
 ComputedStyle::ComputedStyle(PseudoStyleType aPseudoType,
                              ServoComputedDataForgotten aComputedValues)
-    : mSource(aComputedValues),
-      mBits(static_cast<Bit>(Servo_ComputedValues_GetStyleBits(this))),
-      mPseudoType(aPseudoType) {}
+    : mSource(aComputedValues), mPseudoType(aPseudoType) {}
 
 nsChangeHint ComputedStyle::CalcStyleDifference(const ComputedStyle& aNewStyle,
                                                 uint32_t* aEqualStructs) const {
