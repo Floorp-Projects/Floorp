@@ -12,6 +12,10 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Config.kt)
 
+* **concept-fetch**
+  * ⚠️ **This is a breaking API change!**: `Headers.Common` was renamed to `Headers.Names`.
+  * Added `Headers.Values`.
+
 * **service-pocket**
   * Access an article's text-to-speech listen metadata via `PocketListenEndpoint.getListenArticleMetadata`.
   * ⚠️ **This is a breaking API change!**: `PocketGlobalVideoRecommendation.id` is now a Long instead of an Int
