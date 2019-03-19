@@ -258,3 +258,66 @@ task-priority:
         'autoland': 'low'
         'mozilla-inbound': 'low'
         'default': 'very-low'
+
+workers:
+    aliases:
+        b-android:
+            provisioner: aws-provisioner-v1
+            implementation: docker-worker
+            os: linux
+            worker-type: 'gecko-{level}-{alias}'
+        b-linux.*:
+            provisioner: aws-provisioner-v1
+            implementation: docker-worker
+            os: linux
+            worker-type: 'gecko-{level}-{alias}'
+        b-win2012:
+            provisioner: aws-provisioner-v1
+            implementation: generic-worker
+            os: windows
+            worker-type: 'gecko-{level}-{alias}'
+        images:
+            provisioner: aws-provisioner-v1
+            implementation: docker-worker
+            os: linux
+            worker-type: 'gecko-{level}-{alias}'
+        t-ap.*:
+            provisioner: proj-autophone
+            implementation: script-engine-autophone
+            os: linux
+            worker-type: 'gecko-{alias}'
+        t-linux(-large|-xlarge):
+            provisioner: aws-provisioner-v1
+            implementation: docker-worker
+            os: linux
+            worker-type: 'gecko-{alias}'
+        t-linux-talos:
+            provisioner: releng-hardware
+            implementation: generic-worker
+            os: linux
+            worker-type: 'gecko-{alias}'
+        t-osx-1010:
+            provisioner: releng-hardware
+            implementation: generic-worker
+            os: macosx
+            worker-type: 'gecko-{alias}'
+        t-win10-64(|-gpu):
+            provisioner: aws-provisioner-v1
+            implementation: generic-worker
+            os: windows
+            worker-type: 'gecko-{alias}'
+        t-win10-64(-hw|-ux):
+            provisioner: releng-hardware
+            implementation: generic-worker
+            os: windows
+            worker-type: 'gecko-{alias}'
+        t-win7-32(|-gpu):
+            provisioner: aws-provisioner-v1
+            implementation: generic-worker
+            os: windows
+            worker-type: 'gecko-{alias}'
+        t-win64-aarch64-laptop:
+            provisioner: bitbar
+            implementation: generic-worker
+            os: windows
+            worker-type: 'gecko-{alias}'
