@@ -17,7 +17,6 @@
 include protocol PBackground;
 
 using mozilla::dom::AuthenticatorAttachment from "mozilla/dom/WebAuthnUtil.h";
-using struct mozilla::null_t from "ipc/IPCMessageUtils.h";
 
 namespace mozilla {
 namespace dom {
@@ -98,11 +97,6 @@ struct WebAuthnGetAssertionExtraInfo {
   uint8_t userVerificationRequirement;
 };
 
-union WebAuthnMaybeGetAssertionExtraInfo {
-  WebAuthnGetAssertionExtraInfo;
-  null_t;
-};
-
 struct WebAuthnGetAssertionInfo {
   nsString Origin;
   nsString RpId;
@@ -110,7 +104,7 @@ struct WebAuthnGetAssertionInfo {
   nsCString ClientDataJSON;
   uint32_t TimeoutMS;
   WebAuthnScopedCredential[] AllowList;
-  WebAuthnMaybeGetAssertionExtraInfo Extra;
+  WebAuthnGetAssertionExtraInfo? Extra;
 };
 
 struct WebAuthnGetAssertionResult {
