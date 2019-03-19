@@ -8,6 +8,7 @@
 #define mozilla_dom_workers_workerprivate_h__
 
 #include "mozilla/dom/WorkerCommon.h"
+#include "mozilla/Attributes.h"
 #include "mozilla/CondVar.h"
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/RelativeTimeline.h"
@@ -193,6 +194,7 @@ class WorkerPrivate : public RelativeTimeline {
     return std::move(mDefaultLocale);
   }
 
+  MOZ_CAN_RUN_SCRIPT
   void DoRunLoop(JSContext* aCx);
 
   bool InterruptCallback(JSContext* aCx);
@@ -226,7 +228,7 @@ class WorkerPrivate : public RelativeTimeline {
                                       const Sequence<JSObject*>& aTransferable,
                                       ErrorResult& aRv);
 
-  void EnterDebuggerEventLoop();
+  MOZ_CAN_RUN_SCRIPT void EnterDebuggerEventLoop();
 
   void LeaveDebuggerEventLoop();
 
