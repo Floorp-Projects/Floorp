@@ -1,10 +1,10 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 
-buildscript {
-    ext.geckoRelease = [
-        revision: '84219fbf133cacfc6e31c9471ad20ee7162a02af',
-    ]
+import org.gradle.internal.logging.text.StyledTextOutput.Style
+import org.gradle.internal.logging.text.StyledTextOutputFactory
+import static org.gradle.api.tasks.testing.TestResult.ResultType
 
+buildscript {
     repositories {
         google()
         jcenter()
@@ -68,6 +68,45 @@ subprojects {
         if (it.hasProperty('android')) {
             jacoco {
                 toolVersion = "0.8.3"
+            }
+
+            // Format test output
+            tasks.matching {it instanceof Test}.all {
+                testLogging.events = []
+
+                def out = services.get(StyledTextOutputFactory).create("an-ouput")
+
+                beforeSuite { descriptor ->
+                    if (descriptor.getClassName() != null) {
+                        out.style(Style.Header).println("\nSUITE: " + descriptor.getClassName())
+                    }
+                }
+
+                beforeTest { descriptor ->
+                    out.style(Style.Description).println("  TEST: " + descriptor.getName())
+                }
+
+                onOutput { descriptor, event ->
+                    logger.lifecycle("    " + event.message.trim())
+                }
+
+                afterTest { descriptor, result ->
+                    switch (result.getResultType()) {
+                        case ResultType.SUCCESS:
+                            out.style(Style.Success).println("  SUCCESS")
+                            break
+
+                        case ResultType.FAILURE:
+                            out.style(Style.Failure).println("  FAILURE")
+                            logger.lifecycle("", result.getException())
+                            break
+
+                        case ResultType.SKIPPED:
+                            out.style(Style.Info).println("  SKIPPED")
+                            break
+                    }
+                    logger.lifecycle("")
+                }
             }
 
             dependencies {
