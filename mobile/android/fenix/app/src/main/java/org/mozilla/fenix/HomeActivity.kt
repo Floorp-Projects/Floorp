@@ -124,11 +124,7 @@ open class HomeActivity : AppCompatActivity() {
         val host = supportFragmentManager.findFragmentById(R.id.container) as NavHostFragment
 
         val directions = when (from) {
-            BrowserDirection.FromGlobal -> {
-                NavGraphDirections.actionGlobalBrowser(sessionId).apply {
-                    host.navController.popBackStack()
-                }
-            }
+            BrowserDirection.FromGlobal -> NavGraphDirections.actionGlobalBrowser(sessionId)
             BrowserDirection.FromHome -> HomeFragmentDirections.actionHomeFragmentToBrowserFragment(sessionId)
             BrowserDirection.FromSearch -> SearchFragmentDirections.actionSearchFragmentToBrowserFragment(sessionId)
             BrowserDirection.FromSettings ->

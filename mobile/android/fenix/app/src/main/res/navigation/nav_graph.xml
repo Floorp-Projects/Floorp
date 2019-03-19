@@ -7,7 +7,9 @@
 
     <action
         android:id="@+id/action_global_browser"
-        app:destination="@id/browserFragment" />
+        app:destination="@id/browserFragment"
+        app:popUpTo="@id/nav_graph"
+        app:popUpToInclusive="true" />
 
     <fragment
         android:id="@+id/homeFragment"
@@ -47,7 +49,7 @@
         <action
             android:id="@+id/action_browserFragment_to_homeFragment"
             app:destination="@id/homeFragment"
-            app:popUpTo="@+id/homeFragment"
+            app:popUpTo="@+id/nav_graph"
             app:popUpToInclusive="true" />
         <action
             android:id="@+id/action_browserFragment_to_searchFragment"
