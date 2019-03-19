@@ -3072,6 +3072,19 @@ bool CacheIRCompiler::emitGuardObjectGroupNotPretenured() {
   return true;
 }
 
+bool CacheIRCompiler::emitGuardFunctionHasJitEntry() {
+  Register fun = allocator.useRegister(masm, reader.objOperandId());
+  bool isConstructing = reader.readBool();
+
+  FailurePath* failure;
+  if (!addFailurePath(&failure)) {
+    return false;
+  }
+
+  masm.branchIfFunctionHasNoJitEntry(fun, isConstructing, failure->label());
+  return true;
+}
+
 bool CacheIRCompiler::emitLoadDenseElementHoleResult() {
   JitSpew(JitSpew_Codegen, __FUNCTION__);
   AutoOutputRegister output(*this);

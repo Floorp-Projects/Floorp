@@ -2577,3 +2577,84 @@ bool BaselineCacheIRCompiler::emitCallNativeFunction() {
 
   return true;
 }
+bool BaselineCacheIRCompiler::emitCallScriptedFunction() {
+  JitSpew(JitSpew_Codegen, __FUNCTION__);
+  AutoOutputRegister output(*this);
+  AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
+
+  Register calleeReg = allocator.useRegister(masm, reader.objOperandId());
+  Register argcReg = allocator.useRegister(masm, reader.int32OperandId());
+  bool maybeCrossRealm = reader.readBool();
+
+  // TODO: support constructors
+  bool isConstructing = false;
+
+  allocator.discardStack(masm);
+
+  // Push a stub frame so that we can perform a non-tail call.
+  // Note that this leaves the return address in TailCallReg.
+  AutoStubFrame stubFrame(*this);
+  stubFrame.enter(masm, scratch);
+
+  if (maybeCrossRealm) {
+    masm.switchToObjectRealm(calleeReg, scratch);
+  }
+
+  // TODO: If we are constructing, create |this|.
+  MOZ_ASSERT(!isConstructing);
+
+  // Values are on the stack left-to-right. Calling convention wants them
+  // right-to-left so duplicate them on the stack in reverse order.
+  // |this| and callee are pushed last.
+  pushCallArguments(argcReg, scratch, /*isJitCall = */ true, isConstructing);
+
+  // TODO: The callee is currently on top of the stack.  The old
+  // implementation popped it at this point, but since we don't
+  // support constructors yet, callee is definitely still in a
+  // register. For now we just free that stack slot to make things
+  // line up. This should probably be rewritten to avoid pushing
+  // callee at all if we don't have to.
+  masm.freeStack(sizeof(Value));
+
+  // Load the start of the target JitCode.
+  AutoScratchRegister code(allocator, masm);
+  if (!isConstructing) {
+    masm.loadJitCodeRaw(calleeReg, code);
+  }
+
+  EmitBaselineCreateStubFrameDescriptor(masm, scratch, JitFrameLayout::Size());
+
+  // Note that we use Push, not push, so that callJit will align the stack
+  // properly on ARM.
+  masm.Push(argcReg);
+  masm.PushCalleeToken(calleeReg, isConstructing);
+  masm.Push(scratch);
+
+  // Handle arguments underflow.
+  Label noUnderflow;
+  masm.load16ZeroExtend(Address(calleeReg, JSFunction::offsetOfNargs()),
+                        calleeReg);
+  masm.branch32(Assembler::AboveOrEqual, argcReg, calleeReg, &noUnderflow);
+  {
+    // Call the arguments rectifier.
+    TrampolinePtr argumentsRectifier =
+        cx_->runtime()->jitRuntime()->getArgumentsRectifier();
+    masm.movePtr(argumentsRectifier, code);
+  }
+
+  masm.bind(&noUnderflow);
+  masm.callJit(code);
+
+  // TODO: If the return value of a constructor is not an object,
+  // replace it with |this|.
+  MOZ_ASSERT(!isConstructing);
+
+  stubFrame.leave(masm, true);
+
+  if (maybeCrossRealm) {
+    // Use |code| as a scratch register.
+    masm.switchToBaselineFrameRealm(code);
+  }
+
+  return true;
+}

@@ -5269,7 +5269,74 @@ bool CallIRGenerator::tryAttachCallScripted(HandleFunction calleeFunc) {
     return false;
   }
 
-  return false;
+  // Never attach optimized scripted call stubs for JSOP_FUNAPPLY.
+  // MagicArguments may escape the frame through them.
+  if (op_ == JSOP_FUNAPPLY) {
+    return false;
+  }
+
+  bool isConstructing = IsConstructorCallPC(pc_);
+
+  // TODO: Support spread calls.
+  // bool isSpread = IsSpreadCallPC(pc_);
+  MOZ_ASSERT(!IsSpreadCallPC(pc_));
+
+  // If callee is not an interpreted constructor, we have to throw.
+  if (isConstructing && !calleeFunc->isConstructor()) {
+    return false;
+  }
+
+  // Likewise, if the callee is a class constructor, we have to throw.
+  if (!isConstructing && calleeFunc->isClassConstructor()) {
+    return false;
+  }
+
+  if (!calleeFunc->hasJitEntry()) {
+    // Don't treat this as an unoptimizable case, as we'll add a
+    // stub when the callee is delazified.
+    // TODO: find a way to represent *handled = true;
+    return false;
+  }
+
+  if (isConstructing && !calleeFunc->hasJITCode()) {
+    // If we're constructing, require the callee to have JIT
+    // code. This isn't required for correctness but avoids allocating
+    // a template object below for constructors that aren't hot. See
+    // bug 1419758.
+    // TODO: find a way to represent *handled = true;
+    return false;
+  }
+
+  // Keep track of the function's |prototype| property in type
+  // information, for use during Ion compilation.
+  if (IsIonEnabled(cx_)) {
+    EnsureTrackPropertyTypes(cx_, calleeFunc, NameToId(cx_->names().prototype));
+  }
+
+  // TODO: template object for constructors.
+  MOZ_ASSERT(!isConstructing);
+
+  // Load argc.
+  Int32OperandId argcId(writer.setInputOperandId(0));
+
+  // Load the callee
+  ValOperandId calleeValId = writer.loadStackValue(argc_ + 1);
+  ObjOperandId calleeObjId = writer.guardIsObject(calleeValId);
+
+  // Ensure callee matches this stub's callee
+  writer.guardSpecificObject(calleeObjId, calleeFunc);
+
+  // Guard against relazification
+  writer.guardFunctionHasJitEntry(calleeObjId, isConstructing);
+
+  bool isCrossRealm = cx_->realm() != calleeFunc->realm();
+  writer.callScriptedFunction(calleeObjId, argcId, isCrossRealm);
+  writer.typeMonitorResult();
+
+  cacheIRStubKind_ = BaselineCacheIRStubKind::Monitored;
+  trackAttached("Call scripted func");
+
+  return true;
 }
 
 bool CallIRGenerator::tryAttachCallNative(HandleFunction calleeFunc) {

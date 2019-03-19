@@ -173,7 +173,6 @@ enum class CacheKind : uint8_t {
 
 extern const char* const CacheKindNames[];
 
-
 // This namespace exists to make it possible to use unqualified
 // argument types in CACHE_IR_OPS without letting the symbols escape
 // into the global namespace. Any code that consumes the argument
@@ -250,6 +249,7 @@ extern const uint32_t OpLengths[];
   _(GuardFunctionPrototype, Id, Id, Field)                                     \
   _(GuardNoAllocationMetadataBuilder, None)                                    \
   _(GuardObjectGroupNotPretenured, Field)                                      \
+  _(GuardFunctionHasJitEntry, Id, Byte)                                        \
   _(LoadStackValue, Id, UInt32)                                                \
   _(LoadObject, Id, Field)                                                     \
   _(LoadProto, Id, Id)                                                         \
@@ -292,6 +292,7 @@ extern const uint32_t OpLengths[];
   _(CallAddOrUpdateSparseElementHelper, Id, Id, Id, Byte)                      \
   _(CallInt32ToString, Id, Id)                                                 \
   _(CallNumberToString, Id, Id)                                                \
+  _(CallScriptedFunction, Id, Id, Byte)                                        \
   _(CallNativeFunction, Id, Id, Byte, IF_SIMULATOR(Field, Byte))               \
                                                                                \
   /* The *Result ops load a value into the cache's result register. */         \
@@ -715,6 +716,10 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     writeOp(CacheOp::GuardObjectGroupNotPretenured);
     addStubField(uintptr_t(group), StubField::Type::ObjectGroup);
   }
+  void guardFunctionHasJitEntry(ObjOperandId fun, bool isConstructing) {
+    writeOpWithOperandId(CacheOp::GuardFunctionHasJitEntry, fun);
+    buffer_.writeByte(isConstructing);
+  }
 
  public:
   // Use (or create) a specialization below to clarify what constaint the
@@ -1117,6 +1122,12 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     writeOpWithOperandId(CacheOp::CallNumberToString, id);
     writeOperandId(res);
     return res;
+  }
+  void callScriptedFunction(ObjOperandId calleeId, Int32OperandId argc,
+                            bool isCrossRealm) {
+    writeOpWithOperandId(CacheOp::CallScriptedFunction, calleeId);
+    writeOperandId(argc);
+    buffer_.writeByte(uint32_t(isCrossRealm));
   }
   void callNativeFunction(ObjOperandId calleeId, Int32OperandId argc, JSOp op,
                           HandleFunction calleeFunc) {
