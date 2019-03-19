@@ -165,6 +165,11 @@ nsAutoCompleteController::ResetInternalState() {
 
 NS_IMETHODIMP
 nsAutoCompleteController::StartSearch(const nsAString &aSearchString) {
+  // If composition is ongoing don't start searching yet, until it is committed.
+  if (mCompositionState == eCompositionState_Composing) {
+    return NS_OK;
+  }
+
   SetSearchStringInternal(aSearchString);
   StartSearches();
   return NS_OK;

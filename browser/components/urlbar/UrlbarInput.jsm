@@ -557,6 +557,12 @@ class UrlbarInput {
     // Avoid selecting the text if this method is called twice in a row.
     this.selectionStart = -1;
 
+    // Note: proper IME Composition handling depends on the fact this generates
+    // an input event, rather than directly invoking the controller; everything
+    // goes through _on_input, that will properly skip the search until the
+    // composition is committed.
+    // If this assumption changes, we'll have to first check we are not
+    // composing, before starting a search.
     let event = this.document.createEvent("UIEvents");
     event.initUIEvent("input", true, false, this.window, 0);
     this.inputField.dispatchEvent(event);
