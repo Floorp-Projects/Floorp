@@ -10,18 +10,18 @@
  *  | [Icon] |-----------------------------| Action button  |
  *  |        | Subname                     |                |
  *  +--------+-----------------------------+----------------+
- *  |        | Detail                                       |
- *  |        |                                              |
- *  +--------+----------------------------------------------+
+ *  | Detail                                                |
+ *  |                                                       |
+ *  +-------------------------------------------------------+
  */
 .debug-target-item {
   display: grid;
   grid-template-columns: calc(var(--base-unit) * 8) 1fr max-content;
   grid-template-rows: 1fr minmax(0, auto) auto;
   grid-column-gap: calc(var(--base-unit) * 2);
-  grid-template-areas: "icon name    action"
-                       "icon subname action"
-                       ".    detail  detail";
+  grid-template-areas: "icon   name    action"
+                       "icon   subname action"
+                       "detail detail  detail";
   margin-block-end: calc(var(--base-unit) * 4);
 
   padding-block: calc(var(--base-unit) * 3) calc(var(--base-unit) * 2);
@@ -31,6 +31,7 @@
 .debug-target-item__icon {
   align-self: center;
   grid-area: icon;
+  margin-inline-start: calc(var(--base-unit) * 3);
   width: 100%;
 }
 
@@ -40,17 +41,18 @@
   font-size: var(--body-20-font-size);
   font-weight: var(--body-20-font-weight);
   line-height: 1.5;
+  margin-inline-start: calc(var(--base-unit) * 3);
 }
 
 .debug-target-item__action {
   grid-area: action;
   align-self: center;
+  margin-inline-end: calc(var(--base-unit) * 2);
 }
 
 .debug-target-item__detail {
   grid-area: detail;
-  font-size: var(--caption-20-font-size);
-  font-weight: var(--caption-20-font-weight);
+  margin-block-start: calc(var(--base-unit) * 3);
 }
 
 .debug-target-item__subname {
@@ -59,4 +61,5 @@
   font-size: var(--caption-20-font-size);
   font-weight: var(--caption-20-font-weight);
   line-height: 1.5;
+  margin-inline-start: calc(var(--base-unit) * 3);
 }
