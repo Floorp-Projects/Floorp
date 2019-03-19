@@ -1255,7 +1255,9 @@ class MacroAssemblerCompat : public vixl::MacroAssembler {
     ARMBuffer::PoolEntry pe;
     BufferOffset load_bo;
 
-    // FIXME: This load is currently unused.
+    // This no-op load exists for PatchJump(), in the case of a target outside
+    // the range of +/- 128 MB. If the load is used, then the branch here is
+    // overwritten with a `BR` from the loaded register.
     load_bo = immPool64(scratch64, (uint64_t)label, &pe);
     BufferOffset branch_bo = b(-1, LabelDoc());
 
