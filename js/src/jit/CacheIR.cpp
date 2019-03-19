@@ -5284,7 +5284,31 @@ bool CallIRGenerator::tryAttachCallNative(HandleFunction calleeFunc) {
     return false;
   }
 
-  return false;
+  // Stack layout here is (bottom to top):
+  //  argc+1: Callee
+  //  argc:   ThisValue
+  //  argc-1: Arg #0
+  //  ...
+  //  1: Arg #(argc-2)
+  //  0: Arg #(argc-1) <-- Top of stack.
+
+  // Load argc.
+  Int32OperandId argcId(writer.setInputOperandId(0));
+
+  // Load the callee
+  ValOperandId calleeValId = writer.loadStackValue(argc_ + 1);
+  ObjOperandId calleeObjId = writer.guardIsObject(calleeValId);
+
+  // Ensure callee matches this stub's callee
+  writer.guardSpecificObject(calleeObjId, calleeFunc);
+
+  writer.callNativeFunction(calleeObjId, argcId, op_, calleeFunc);
+  writer.typeMonitorResult();
+
+  cacheIRStubKind_ = BaselineCacheIRStubKind::Monitored;
+  trackAttached("Call native func");
+
+  return true;
 }
 
 bool CallIRGenerator::tryAttachStub() {
