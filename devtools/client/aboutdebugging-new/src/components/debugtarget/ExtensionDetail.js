@@ -32,9 +32,7 @@ class ExtensionDetail extends PureComponent {
   renderWarnings() {
     const { warnings } = this.props.target.details;
     return dom.section(
-      {
-        key: "extension-warnings",
-      },
+      {},
       warnings.map((warning, index) => {
         return Message(
           {
@@ -131,18 +129,20 @@ class ExtensionDetail extends PureComponent {
   }
 
   render() {
-    return [
+    return dom.section(
+      {
+        className: "debug-target-item__detail",
+      },
       this.renderWarnings(),
       dom.dl(
         {
-          key: "extension-detail",
           className: "extension-detail",
         },
         this.renderLocation(),
         this.renderExtensionId(),
         this.renderUUID(),
       ),
-    ];
+    );
   }
 }
 
