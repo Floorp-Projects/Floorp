@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 "use strict";
-
+const Services = require("Services");
 const {
   ACTIVITY_TYPE,
   OPEN_NETWORK_DETAILS,
@@ -19,6 +19,8 @@ const {
 } = require("../constants");
 
 const { getDisplayedRequests } = require("../selectors/index");
+
+const DEVTOOLS_DISABLE_CACHE_PREF = "devtools.cache.disabled";
 
 /**
  * Change network details panel.
@@ -87,6 +89,13 @@ function disableBrowserCache(disabled) {
 function openStatistics(connector, open) {
   if (open) {
     connector.triggerActivity(ACTIVITY_TYPE.RELOAD.WITH_CACHE_ENABLED);
+  } else if (Services.prefs.getBoolPref(DEVTOOLS_DISABLE_CACHE_PREF)) {
+    // Opening the Statistics panel reconfigures the page and enables
+    // the browser cache (using ACTIVITY_TYPE.RELOAD.WITH_CACHE_ENABLED).
+    // So, make sure to disable the cache again when the user returns back
+    // from the Statistics panel (if DEVTOOLS_DISABLE_CACHE_PREF == true).
+    // See also bug 1430359.
+    connector.triggerActivity(ACTIVITY_TYPE.DISABLE_CACHE);
   }
   return {
     type: OPEN_STATISTICS,
