@@ -38,8 +38,8 @@ open class MainActivity : AppCompatActivity() {
             // declared in the metrics.yaml file under the 'extra_keys' section of an event metric.
             BrowserEngagement.click.record(
                     mapOf(
-                            "key1" to "extra_value_1",
-                            "key2" to "extra_value_2"
+                            BrowserEngagement.clickKeys.key1 to "extra_value_1",
+                            BrowserEngagement.clickKeys.key2 to "extra_value_2"
                     )
             )
         }

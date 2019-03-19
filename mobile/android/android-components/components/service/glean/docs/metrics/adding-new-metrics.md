@@ -37,16 +37,20 @@ views:
       Recorded when the login view is opened.
     ...
     extra_keys:
-      source: 
+      source_of_login: 
         description: The source from which the login view was opened, e.g. "toolbar".
 ```
 
-Now you can use the event from the applications code:
+Now you can use the event from the applications code. Note that an `enum` has
+been generated for handling the `extra_keys`: it has the same name as the event
+metric, with `Keys` added. The enumeration values will be converted from
+`snake_case` to `camelCase` for use in Kotlin.
+
 ```Kotlin
 import org.mozilla.yourApplication.GleanMetrics.Views
 
 // ...
-Views.loginOpened.record(mapOf("source" to "toolbar"))
+Views.loginOpened.record(mapOf(Views.loginOpenedKeys.sourceOfLogin to "toolbar"))
 ```
 
 There are test APIs available too, for example:

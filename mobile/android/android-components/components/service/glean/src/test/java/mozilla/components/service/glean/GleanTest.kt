@@ -112,7 +112,7 @@ class GleanTest {
         val server = MockWebServer()
         server.enqueue(MockResponse().setBody("OK"))
 
-        val click = EventMetricType(
+        val click = EventMetricType<NoExtraKeys>(
             disabled = false,
             category = "ui",
             lifetime = Lifetime.Ping,

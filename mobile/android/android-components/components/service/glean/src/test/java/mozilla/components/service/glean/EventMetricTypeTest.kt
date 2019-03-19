@@ -16,6 +16,20 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import java.lang.NullPointerException
 
+// Declared here, since Kotlin can not declare nested enum classes.
+enum class clickKeys(val value: String) {
+    objectId("object_id")
+}
+
+enum class extraKeys(val value: String) {
+    extra1("extra1"),
+    extra2("extra2")
+}
+
+enum class testNameKeys(val value: String) {
+    testName("test_name")
+}
+
 @ObsoleteCoroutinesApi
 @ExperimentalCoroutinesApi
 @RunWith(RobolectricTestRunner::class)
@@ -29,7 +43,7 @@ class EventMetricTypeTest {
     @Test
     fun `The API must define the expected "default" storage`() {
         // Define a 'click' event, which will be stored in "store1"
-        val click = EventMetricType(
+        val click = EventMetricType<NoExtraKeys>(
             disabled = false,
             category = "ui",
             lifetime = Lifetime.Ping,
@@ -41,23 +55,23 @@ class EventMetricTypeTest {
 
     @Test
     fun `The API records to its storage engine`() {
+
         // Define a 'click' event, which will be stored in "store1"
-        val click = EventMetricType(
+        val click = EventMetricType<clickKeys>(
             disabled = false,
             category = "ui",
             lifetime = Lifetime.Ping,
             name = "click",
-            sendInPings = listOf("store1"),
-            allowedExtraKeys = listOf("object_id")
+            sendInPings = listOf("store1")
         )
 
         // Record two events of the same type, with a little delay.
-        click.record(extra = mapOf("object_id" to "buttonA"))
+        click.record(extra = mapOf(clickKeys.objectId to "buttonA"))
 
         val expectedTimeSinceStart: Long = 37
         SystemClock.sleep(expectedTimeSinceStart)
 
-        click.record(extra = mapOf("object_id" to "buttonB"))
+        click.record(extra = mapOf(clickKeys.objectId to "buttonB"))
 
         // Check that data was properly recorded.
         val snapshot = click.testGetValue()
@@ -79,22 +93,21 @@ class EventMetricTypeTest {
     @Test
     fun `The API records to its storage engine when category is empty`() {
         // Define a 'click' event, which will be stored in "store1"
-        val click = EventMetricType(
+        val click = EventMetricType<clickKeys>(
             disabled = false,
             category = "",
             lifetime = Lifetime.Ping,
             name = "click",
-            sendInPings = listOf("store1"),
-            allowedExtraKeys = listOf("object_id")
+            sendInPings = listOf("store1")
         )
 
         // Record two events of the same type, with a little delay.
-        click.record(extra = mapOf("object_id" to "buttonA"))
+        click.record(extra = mapOf(clickKeys.objectId to "buttonA"))
 
         val expectedTimeSinceStart: Long = 37
         SystemClock.sleep(expectedTimeSinceStart)
 
-        click.record(extra = mapOf("object_id" to "buttonB"))
+        click.record(extra = mapOf(clickKeys.objectId to "buttonB"))
 
         // Check that data was properly recorded.
         val snapshot = click.testGetValue()
@@ -112,29 +125,10 @@ class EventMetricTypeTest {
     }
 
     @Test
-    fun `events with non 'ping' lifetime must not be recorded`() {
-        val testEvent = EventMetricType(
-            disabled = false,
-            category = "ui",
-            lifetime = Lifetime.Application,
-            name = "testEvent",
-            sendInPings = listOf("store1"),
-            allowedExtraKeys = listOf("extra1", "extra2")
-        )
-
-        testEvent.record(
-            extra = mapOf("unknownExtra" to "someValue", "extra1" to "test"))
-
-        // Check that nothing was recorded.
-        assertFalse("Events must not be recorded if they use unknown extra keys",
-            testEvent.testHasValue())
-    }
-
-    @Test
     fun `disabled events must not record data`() {
         // Define a 'click' event, which will be stored in "store1". It's disabled
         // so it should not record anything.
-        val click = EventMetricType(
+        val click = EventMetricType<NoExtraKeys>(
             disabled = true,
             category = "ui",
             lifetime = Lifetime.Ping,
@@ -152,13 +146,12 @@ class EventMetricTypeTest {
 
     @Test(expected = NullPointerException::class)
     fun `testGetValue() throws NullPointerException if nothing is stored`() {
-        val testEvent = EventMetricType(
+        val testEvent = EventMetricType<NoExtraKeys>(
             disabled = false,
             category = "ui",
             lifetime = Lifetime.Ping,
             name = "testEvent",
-            sendInPings = listOf("store1"),
-            allowedExtraKeys = listOf("extra1", "truncatedExtra")
+            sendInPings = listOf("store1")
         )
         testEvent.testGetValue()
     }
@@ -166,22 +159,21 @@ class EventMetricTypeTest {
     @Test
     fun `The API records to secondary pings`() {
         // Define a 'click' event, which will be stored in "store1" and "store2"
-        val click = EventMetricType(
+        val click = EventMetricType<clickKeys>(
             disabled = false,
             category = "ui",
             lifetime = Lifetime.Ping,
             name = "click",
-            sendInPings = listOf("store1", "store2"),
-            allowedExtraKeys = listOf("object_id")
+            sendInPings = listOf("store1", "store2")
         )
 
         // Record two events of the same type, with a little delay.
-        click.record(extra = mapOf("object_id" to "buttonA"))
+        click.record(extra = mapOf(clickKeys.objectId to "buttonA"))
 
         val expectedTimeSinceStart: Long = 37
         SystemClock.sleep(expectedTimeSinceStart)
 
-        click.record(extra = mapOf("object_id" to "buttonB"))
+        click.record(extra = mapOf(clickKeys.objectId to "buttonB"))
 
         // Check that data was properly recorded in the second ping.
         val snapshot = click.testGetValue("store2")
@@ -202,26 +194,25 @@ class EventMetricTypeTest {
 
     @Test
     fun `events should not record when upload is disabled`() {
-        val eventMetric = EventMetricType(
+        val eventMetric = EventMetricType<testNameKeys>(
             disabled = false,
             category = "ui",
             lifetime = Lifetime.Ping,
             name = "event_metric",
-            sendInPings = listOf("store1"),
-            allowedExtraKeys = listOf("test_name")
+            sendInPings = listOf("store1")
         )
         assertEquals(true, Glean.getUploadEnabled())
         Glean.setUploadEnabled(true)
-        eventMetric.record(mapOf("test_name" to "event1"))
+        eventMetric.record(mapOf(testNameKeys.testName to "event1"))
         val snapshot1 = eventMetric.testGetValue()
         assertEquals(1, snapshot1.size)
         Glean.setUploadEnabled(false)
         assertEquals(false, Glean.getUploadEnabled())
-        eventMetric.record(mapOf("test_name" to "event2"))
+        eventMetric.record(mapOf(testNameKeys.testName to "event2"))
         val snapshot2 = eventMetric.testGetValue()
         assertEquals(1, snapshot2.size)
         Glean.setUploadEnabled(true)
-        eventMetric.record(mapOf("test_name" to "event3"))
+        eventMetric.record(mapOf(testNameKeys.testName to "event3"))
         val snapshot3 = eventMetric.testGetValue()
         assertEquals(2, snapshot3.size)
     }

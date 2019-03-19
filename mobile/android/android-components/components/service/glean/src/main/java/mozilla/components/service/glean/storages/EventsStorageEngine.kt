@@ -53,8 +53,8 @@ internal object EventsStorageEngine : StorageEngine {
      * @param extra an optional, user defined String to String map used to provide richer event
      *              context if needed
      */
-    fun record(
-        metricData: EventMetricType,
+    fun <ExtraKeysEnum : Enum<ExtraKeysEnum>> record(
+        metricData: EventMetricType<ExtraKeysEnum>,
         monotonicElapsedMs: Long,
         extra: Map<String, String>? = null
     ) {
@@ -68,29 +68,9 @@ internal object EventsStorageEngine : StorageEngine {
             return
         }
 
-        // Check if the provided extra keys are allowed and have sane values.
+        // Check that the extra content has sane values.
         val truncatedExtraKeys = extra?.toMutableMap()?.let { eventKeys ->
-            if (metricData.allowedExtraKeys == null) {
-                recordError(
-                    metricData,
-                    ErrorType.InvalidValue,
-                    "Cannot use extra keys when there are no extra keys defined.",
-                    logger
-                )
-                return
-            }
-
             for ((key, extraValue) in eventKeys) {
-                if (!metricData.allowedExtraKeys.contains(key)) {
-                    recordError(
-                        metricData,
-                        ErrorType.InvalidValue,
-                        "Extra key '$key' is not allowed",
-                        logger
-                    )
-                    return
-                }
-
                 if (extraValue.length > MAX_LENGTH_EXTRA_KEY_VALUE) {
                     recordError(
                         metricData,
