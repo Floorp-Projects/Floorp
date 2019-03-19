@@ -1,0 +1,8 @@
+. "$topsrcdir/browser/config/mozconfigs/macosx64/debug"
+
+ac_add_options --enable-fuzzing
+
+# Need this to prevent name conflicts with the normal nightly build packages
+export MOZ_PKG_SPECIAL=fuzzing
+
+. "$topsrcdir/build/mozconfig.common.override"
