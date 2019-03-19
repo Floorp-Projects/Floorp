@@ -8,12 +8,6 @@ exclude: true
 
 <h1> GeckoView API Changelog. </h1>
 
-## v68
-- Added [`GeckoRuntime#configurationChanged`][68.1] to notify the device
-  configuration has changed.
-
-[68.1]: ../GeckoRuntime.html#configurationChanged
-
 ## v67
 - Added [`setAutomaticFontSizeAdjustment`][67.2] to
   [`GeckoRuntimeSettings`][67.3] for automatically adjusting font size settings
