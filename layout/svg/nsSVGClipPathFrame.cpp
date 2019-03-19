@@ -157,7 +157,7 @@ void nsSVGClipPathFrame::PaintClipMask(gfxContext& aMaskContext,
 
   // Paint our children into the mask:
   for (nsIFrame* kid = mFrames.FirstChild(); kid; kid = kid->GetNextSibling()) {
-    PaintFrameIntoMask(kid, aClippedFrame, aMaskContext, aMatrix);
+    PaintFrameIntoMask(kid, aClippedFrame, aMaskContext);
   }
 
   if (maskUsage.shouldGenerateClipMaskLayer) {
@@ -179,8 +179,7 @@ void nsSVGClipPathFrame::PaintClipMask(gfxContext& aMaskContext,
 
 void nsSVGClipPathFrame::PaintFrameIntoMask(nsIFrame* aFrame,
                                             nsIFrame* aClippedFrame,
-                                            gfxContext& aTarget,
-                                            const gfxMatrix& aMatrix) {
+                                            gfxContext& aTarget) {
   nsSVGDisplayableFrame* frame = do_QueryFrame(aFrame);
   if (!frame) {
     return;
@@ -201,11 +200,12 @@ void nsSVGClipPathFrame::PaintFrameIntoMask(nsIFrame* aFrame,
   nsSVGUtils::MaskUsage maskUsage;
   nsSVGUtils::DetermineMaskUsage(aFrame, true, maskUsage);
   if (maskUsage.shouldApplyClipPath) {
-    clipPathThatClipsChild->ApplyClipPath(aTarget, aClippedFrame, aMatrix);
+    clipPathThatClipsChild->ApplyClipPath(aTarget, aClippedFrame,
+                                          mMatrixForChildren);
   } else if (maskUsage.shouldGenerateClipMaskLayer) {
     Matrix maskTransform;
     RefPtr<SourceSurface> maskSurface = clipPathThatClipsChild->GetClipMask(
-        aTarget, aClippedFrame, aMatrix, &maskTransform);
+        aTarget, aClippedFrame, mMatrixForChildren, &maskTransform);
     aTarget.PushGroupForBlendBack(gfxContentType::ALPHA, 1.0, maskSurface,
                                   maskTransform);
     // The corresponding PopGroupAndBlend call below will mask the

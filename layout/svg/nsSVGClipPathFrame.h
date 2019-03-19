@@ -145,7 +145,7 @@ class nsSVGClipPathFrame final : public nsSVGContainerFrame {
                                               mozilla::gfx::IntPoint& aOffset);
 
   void PaintFrameIntoMask(nsIFrame* aFrame, nsIFrame* aClippedFrame,
-                          gfxContext& aTarget, const gfxMatrix& aMatrix);
+                          gfxContext& aTarget);
 
   // Set, during a GetClipMask() call, to the transform that still needs to be
   // concatenated to the transform of the DrawTarget that was passed to
