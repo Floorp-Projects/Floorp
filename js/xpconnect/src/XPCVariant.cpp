@@ -29,7 +29,7 @@ NS_IMPL_CYCLE_COLLECTING_ADDREF(XPCVariant)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(XPCVariant)
 
 XPCVariant::XPCVariant(JSContext* cx, const Value& aJSVal)
-    : mJSVal(aJSVal), mCCGeneration(0) {
+    : mJSVal(aJSVal) {
   if (!mJSVal.isPrimitive()) {
     // XXXbholley - The innerization here was from bug 638026. Blake says
     // the basic problem was that we were storing the C++ inner but the JS
