@@ -78,6 +78,12 @@ class IMEStateManager {
   static void OnTabParentDestroying(TabParent* aTabParent);
 
   /**
+   * Focus moved between browsers from aBlur to aFocus. (nullptr means the
+   * chrome process.)
+   */
+  static void OnFocusMovedBetweenBrowsers(TabParent* aBlur, TabParent* aFocus);
+
+  /**
    * Called when aWidget is being deleted.
    */
   static void WidgetDestroyed(nsIWidget* aWidget);
