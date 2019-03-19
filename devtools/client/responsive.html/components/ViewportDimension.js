@@ -162,6 +162,7 @@ class ViewportDimension extends PureComponent {
         className: "text-input viewport-dimension-input" +
                    (this.state.isWidthValid ? "" : " invalid"),
         size: 4,
+        type: "number",
         value: this.state.width,
         onBlur: this.onInputBlur,
         onChange: this.onInputChange,
@@ -179,6 +180,7 @@ class ViewportDimension extends PureComponent {
         className: "text-input viewport-dimension-input" +
                    (this.state.isHeightValid ? "" : " invalid"),
         size: 4,
+        type: "number",
         value: this.state.height,
         onBlur: this.onInputBlur,
         onChange: this.onInputChange,
