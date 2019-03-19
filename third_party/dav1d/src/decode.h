@@ -25,11 +25,11 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __DAV1D_SRC_DECODE_H__
-#define __DAV1D_SRC_DECODE_H__
+#ifndef DAV1D_SRC_DECODE_H
+#define DAV1D_SRC_DECODE_H
 
 #include "src/internal.h"
 
 int dav1d_submit_frame(Dav1dContext *c);
 
-#endif /* __DAV1D_SRC_DECODE_H__ */
+#endif /* DAV1D_SRC_DECODE_H */

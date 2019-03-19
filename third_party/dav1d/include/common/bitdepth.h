@@ -25,8 +25,8 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __DAV1D_COMMON_BITDEPTH_H__
-#define __DAV1D_COMMON_BITDEPTH_H__ 1
+#ifndef DAV1D_COMMON_BITDEPTH_H
+#define DAV1D_COMMON_BITDEPTH_H
 
 #include <stdint.h>
 #include <string.h>
@@ -77,4 +77,4 @@ static inline void pixel_set(pixel *const dst, const int val, const int num) {
 name##_8bpc(__VA_ARGS__); \
 name##_16bpc(__VA_ARGS__)
 
-#endif /* __DAV1D_COMMON_BITDEPTH_H__ */
+#endif /* DAV1D_COMMON_BITDEPTH_H */

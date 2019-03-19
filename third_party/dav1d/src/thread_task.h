@@ -25,8 +25,8 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __DAV1D_SRC_THREAD_TASK_H__
-#define __DAV1D_SRC_THREAD_TASK_H__
+#ifndef DAV1D_SRC_THREAD_TASK_H
+#define DAV1D_SRC_THREAD_TASK_H
 
 #include <limits.h>
 
@@ -41,4 +41,4 @@ void *dav1d_frame_task(void *data);
 int dav1d_decode_tile_sbrow(Dav1dTileContext *t);
 void *dav1d_tile_task(void *data);
 
-#endif /* __DAV1D_SRC_THREAD_TASK_H__ */
+#endif /* DAV1D_SRC_THREAD_TASK_H */

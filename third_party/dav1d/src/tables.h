@@ -25,8 +25,8 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __DAV1D_SRC_TABLES_H__
-#define __DAV1D_SRC_TABLES_H__
+#ifndef DAV1D_SRC_TABLES_H
+#define DAV1D_SRC_TABLES_H
 
 #include <stdint.h>
 
@@ -107,7 +107,7 @@ static const unsigned interintra_allowed_mask =
 extern const Dav1dWarpedMotionParams dav1d_default_wm_params;
 
 extern const int16_t dav1d_sgr_params[16][4];
-extern const int dav1d_sgr_x_by_xplus1[256];
+extern const uint8_t dav1d_sgr_x_by_x[256];
 
 extern const int8_t dav1d_mc_subpel_filters[5][15][8];
 extern const int8_t dav1d_mc_warp_filter[193][8];
@@ -121,4 +121,4 @@ extern const uint8_t dav1d_obmc_masks[64];
 
 extern const int16_t dav1d_gaussian_sequence[2048]; // for fgs
 
-#endif /* __DAV1D_SRC_TABLES_H__ */
+#endif /* DAV1D_SRC_TABLES_H */

@@ -25,8 +25,8 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __DAV1D_SRC_MC_H__
-#define __DAV1D_SRC_MC_H__
+#ifndef DAV1D_SRC_MC_H
+#define DAV1D_SRC_MC_H
 
 #include <stdint.h>
 #include <stddef.h>
@@ -135,4 +135,4 @@ bitfn_decls(void dav1d_mc_dsp_init, Dav1dMCDSPContext *c);
 bitfn_decls(void dav1d_mc_dsp_init_arm, Dav1dMCDSPContext *c);
 bitfn_decls(void dav1d_mc_dsp_init_x86, Dav1dMCDSPContext *c);
 
-#endif /* __DAV1D_SRC_MC_H__ */
+#endif /* DAV1D_SRC_MC_H */

@@ -25,8 +25,8 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __DAV1D_SRC_GETBITS_H__
-#define __DAV1D_SRC_GETBITS_H__
+#ifndef DAV1D_SRC_GETBITS_H
+#define DAV1D_SRC_GETBITS_H
 
 #include <stddef.h>
 #include <stdint.h>
@@ -41,6 +41,7 @@ typedef struct GetBits {
 void dav1d_init_get_bits(GetBits *c, const uint8_t *data, size_t sz);
 unsigned dav1d_get_bits(GetBits *c, unsigned n);
 int dav1d_get_sbits(GetBits *c, unsigned n);
+unsigned dav1d_get_uleb128(GetBits *c);
 
 // Output in range 0..max-1
 unsigned dav1d_get_uniform(GetBits *c, unsigned max);
@@ -52,7 +53,7 @@ void dav1d_bytealign_get_bits(GetBits *c);
 
 // Return the current bit position relative to the start of the buffer.
 static inline unsigned dav1d_get_bits_pos(const GetBits *c) {
-    return (c->ptr - c->ptr_start) * 8 - c->bits_left;
+    return (unsigned) (c->ptr - c->ptr_start) * 8 - c->bits_left;
 }
 
-#endif /* __DAV1D_SRC_GETBITS_H__ */
+#endif /* DAV1D_SRC_GETBITS_H */
