@@ -519,7 +519,7 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
         PARSE_CONTENT_MODE.PSUEDO_CUE : PARSE_CONTENT_MODE.NORMAL_CUE);
       this.div.appendChild(this.cueDiv);
 
-      this.fontSize = this._getFontSize(containerBox.height);
+      this.fontSize = this._getFontSize(containerBox);
       // As pseudo element won't inherit the parent div's style, so we have to
       // set the font size explicitly.
       if (supportPseudo) {
@@ -545,13 +545,13 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
      * Following methods are private functions, should not use them outside this
      * class.
      */
-    _getFontSize(renderingAreaHeight) {
+    _getFontSize(containerBox) {
       // In https://www.w3.org/TR/webvtt1/#applying-css-properties, the spec
       // said the font size is '5vh', which means 5% of the viewport height.
       // However, if we use 'vh' as a basic unit, it would eventually become
       // 5% of screen height, instead of video's viewport height. Therefore, we
       // have to use 'px' here to make sure we have the correct font size.
-      return renderingAreaHeight * 0.05 + "px";
+      return containerBox.height * 0.05 + "px";
     }
 
     _applyNonPseudoCueStyles() {
