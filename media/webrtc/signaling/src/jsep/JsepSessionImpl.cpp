@@ -331,64 +331,19 @@ nsresult JsepSessionImpl::GetRemoteIds(const Sdp& sdp,
                                        const SdpMediaSection& msection,
                                        std::vector<std::string>* streamIds,
                                        std::string* trackId) {
-  nsresult rv = mSdpHelper.GetIdsFromMsid(sdp, msection, streamIds, trackId);
+  // Generate random track ids.
+  if (!mUuidGen->Generate(trackId)) {
+    JSEP_SET_ERROR("Failed to generate UUID for JsepTrack");
+    return NS_ERROR_FAILURE;
+  }
+
+  nsresult rv = mSdpHelper.GetIdsFromMsid(sdp, msection, streamIds);
   if (rv == NS_ERROR_NOT_AVAILABLE) {
     streamIds->push_back(mDefaultRemoteStreamId);
-
-    // Generate random track ids.
-    if (!mUuidGen->Generate(trackId)) {
-      JSEP_SET_ERROR("Failed to generate UUID for JsepTrack");
-      return NS_ERROR_FAILURE;
-    }
-
     return NS_OK;
   }
 
   return rv;
-}
-
-nsresult JsepSessionImpl::RemoveDuplicateTrackIds(Sdp* sdp) {
-  std::set<std::string> trackIds;
-
-  for (size_t i = 0; i < sdp->GetMediaSectionCount(); ++i) {
-    SdpMediaSection& msection(sdp->GetMediaSection(i));
-
-    if (mSdpHelper.MsectionIsDisabled(msection)) {
-      continue;
-    }
-
-    std::vector<std::string> streamIds;
-    std::string trackId;
-    nsresult rv =
-        mSdpHelper.GetIdsFromMsid(*sdp, msection, &streamIds, &trackId);
-
-    if (NS_SUCCEEDED(rv)) {
-      if (trackIds.count(trackId)) {
-        // Re-set trackId
-        if (!mUuidGen->Generate(&trackId)) {
-          JSEP_SET_ERROR(
-              "Tried to replace duplicate track id in SDP, but "
-              "failed to generate a UUID.");
-          return NS_ERROR_FAILURE;
-        }
-
-        auto& mediaAttrs = msection.GetAttributeList();
-        UniquePtr<SdpMsidAttributeList> newMsids(
-            new SdpMsidAttributeList(mediaAttrs.GetMsid()));
-        for (auto& msid : newMsids->mMsids) {
-          msid.appdata = trackId;
-        }
-
-        mediaAttrs.SetAttribute(newMsids.release());
-      }
-      trackIds.insert(trackId);
-    } else if (rv != NS_ERROR_NOT_AVAILABLE) {
-      // Error has already been set
-      return rv;
-    }
-  }
-
-  return NS_OK;
 }
 
 nsresult JsepSessionImpl::CreateOffer(const JsepOfferOptions& options,
@@ -416,9 +371,6 @@ nsresult JsepSessionImpl::CreateOffer(const JsepOfferOptions& options,
   }
 
   SetupBundle(sdp.get());
-
-  rv = RemoveDuplicateTrackIds(sdp.get());
-  NS_ENSURE_SUCCESS(rv, rv);
 
   if (mCurrentLocalDescription) {
     rv = CopyPreviousTransportParams(*GetAnswer(), *mCurrentLocalDescription,
@@ -549,9 +501,6 @@ nsresult JsepSessionImpl::CreateAnswer(const JsepAnswerOptions& options,
                               sdp.get());
     NS_ENSURE_SUCCESS(rv, rv);
   }
-
-  rv = RemoveDuplicateTrackIds(sdp.get());
-  NS_ENSURE_SUCCESS(rv, rv);
 
   if (mCurrentLocalDescription) {
     // per discussion with bwc, 3rd parm here should be offer, not *sdp. (mjf)
@@ -1333,9 +1282,6 @@ nsresult JsepSessionImpl::ParseSdp(const std::string& sdp,
       }
     }
   }
-
-  nsresult rv = RemoveDuplicateTrackIds(parsed.get());
-  NS_ENSURE_SUCCESS(rv, rv);
 
   *parsedp = std::move(parsed);
   return NS_OK;
