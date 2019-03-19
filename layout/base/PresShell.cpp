@@ -8180,9 +8180,9 @@ nsresult PresShell::EventHandler::DispatchEventToDOM(
     }
 
     if (aEvent->mClass == eCompositionEventClass) {
-      IMEStateManager::DispatchCompositionEvent(eventTarget, GetPresContext(),
-                                                aEvent->AsCompositionEvent(),
-                                                aEventStatus, eventCBPtr);
+      IMEStateManager::DispatchCompositionEvent(
+          eventTarget, GetPresContext(), TabParent::GetFocused(),
+          aEvent->AsCompositionEvent(), aEventStatus, eventCBPtr);
     } else {
       EventDispatcher::Dispatch(eventTarget, GetPresContext(), aEvent, nullptr,
                                 aEventStatus, eventCBPtr);
