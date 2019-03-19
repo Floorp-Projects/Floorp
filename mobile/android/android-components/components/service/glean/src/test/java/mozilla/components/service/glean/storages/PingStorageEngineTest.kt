@@ -6,7 +6,6 @@ package mozilla.components.service.glean.storages
 
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.Dispatchers
-import mozilla.components.service.glean.FakeDispatchersInTest
 import mozilla.components.service.glean.Glean
 import mozilla.components.service.glean.config.Configuration
 import mozilla.components.service.glean.resetGlean
@@ -15,7 +14,6 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Assert.assertFalse
 import org.junit.Before
-import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -39,9 +37,6 @@ class PingStorageEngineTest {
     private lateinit var pathNames: Array<String>
 
     private lateinit var pingStorageEngine: PingStorageEngine
-
-    @get:Rule
-    val fakeDispatchers = FakeDispatchersInTest()
 
     @Before
     fun setup() {

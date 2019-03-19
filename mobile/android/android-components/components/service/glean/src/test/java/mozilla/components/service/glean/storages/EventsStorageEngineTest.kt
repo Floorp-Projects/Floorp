@@ -11,7 +11,6 @@ import mozilla.components.service.glean.error.ErrorRecording.ErrorType
 import mozilla.components.service.glean.error.ErrorRecording.testGetNumRecordedErrors
 import mozilla.components.service.glean.Lifetime
 import mozilla.components.service.glean.EventMetricType
-import mozilla.components.service.glean.FakeDispatchersInTest
 import mozilla.components.service.glean.getContextWithMockedInfo
 import mozilla.components.service.glean.Glean
 import mozilla.components.service.glean.resetGlean
@@ -25,17 +24,12 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Assert.assertFalse
-import org.junit.Rule
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import java.util.concurrent.TimeUnit
 
 @RunWith(RobolectricTestRunner::class)
 class EventsStorageEngineTest {
-    @get:Rule
-    @Suppress("EXPERIMENTAL_API_USAGE")
-    val fakeDispatchers = FakeDispatchersInTest()
-
     @Before
     fun setUp() {
         resetGlean()

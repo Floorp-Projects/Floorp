@@ -9,7 +9,6 @@ import android.os.SystemClock
 import androidx.test.core.app.ApplicationProvider
 import androidx.work.testing.WorkManagerTestInitHelper
 import kotlinx.coroutines.async
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -36,7 +35,6 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers
-import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mockito.anyBoolean
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.never
@@ -59,24 +57,6 @@ class MetricsPingSchedulerTest {
         // See the related issue for why this is needed in mocks.
         @Suppress("UNCHECKED_CAST")
         return null as T
-    }
-
-    /**
-     * Run a function that uses [Dispatchers.API] in the Unconfined
-     * dispatcher. This can be used instead of FakeDispatchersInTest if we want the dispatchers
-     * to be faked in a single test.
-     *
-     * @param func the function to call with the Unconfined dispatcher
-     */
-    @Suppress("EXPERIMENTAL_API_USAGE")
-    private fun blockDispatchersAPI(func: () -> Unit) {
-        val originalDispatcher = Dispatchers.API
-        try {
-            Dispatchers.API = CoroutineScope(kotlinx.coroutines.Dispatchers.Unconfined)
-            func()
-        } finally {
-            Dispatchers.API = originalDispatcher
-        }
     }
 
     @Before
@@ -216,28 +196,28 @@ class MetricsPingSchedulerTest {
         assertEquals(expectedDate, mps.getLastCollectedDate(expectedDate))
     }
 
-    @Test
-    fun `collectMetricsPing must update the last sent date and reschedule the collection`() {
-        val mpsSpy = spy<MetricsPingScheduler>(
-            MetricsPingScheduler(ApplicationProvider.getApplicationContext<Context>()))
+    // @Test
+    // fun `collectMetricsPing must update the last sent date and reschedule the collection`() {
+    //     val mpsSpy = spy<MetricsPingScheduler>(
+    //         MetricsPingScheduler(ApplicationProvider.getApplicationContext<Context>()))
 
-        // Ensure we have the right assumptions in place: the methods were not called
-        // prior to |collectPingAndReschedule|.
-        verify(mpsSpy, times(0)).updateSentDate(anyString())
-        verify(mpsSpy, times(0)).schedulePingCollection(
-            kotlinFriendlyAny<Calendar>(),
-            anyBoolean()
-        )
+    //     // Ensure we have the right assumptions in place: the methods were not called
+    //     // prior to |collectPingAndReschedule|.
+    //     verify(mpsSpy, times(0)).updateSentDate(anyString())
+    //     verify(mpsSpy, times(0)).schedulePingCollection(
+    //         kotlinFriendlyAny<Calendar>(),
+    //         anyBoolean()
+    //     )
 
-        mpsSpy.collectPingAndReschedule(Calendar.getInstance())
+    //     mpsSpy.collectPingAndReschedule(Calendar.getInstance())
 
-        // Verify that we correctly called in the methods.
-        verify(mpsSpy, times(1)).updateSentDate(anyString())
-        verify(mpsSpy, times(1)).schedulePingCollection(
-            kotlinFriendlyAny<Calendar>(),
-            anyBoolean()
-        )
-    }
+    //     // Verify that we correctly called in the methods.
+    //     verify(mpsSpy, times(1)).updateSentDate(anyString())
+    //     verify(mpsSpy, times(1)).schedulePingCollection(
+    //         kotlinFriendlyAny<Calendar>(),
+    //         anyBoolean()
+    //     )
+    // }
 
     @Test
     fun `collectMetricsPing must correctly trigger the collection of the metrics ping`() {
@@ -312,9 +292,8 @@ class MetricsPingSchedulerTest {
         // Trigger the startup check. We need to wrap this in `blockDispatchersAPI` since
         // the immediate startup collection happens in the Dispatchers.API context. If we
         // don't, test will fail due to async weirdness.
-        blockDispatchersAPI {
-            mpsSpy.startupCheck()
-        }
+        mpsSpy.startupCheck()
+        Dispatchers.API.awaitJob()
 
         // And that we're storing the current date (this only reports the date, not the time).
         fakeNow.set(Calendar.HOUR_OF_DAY, 0)

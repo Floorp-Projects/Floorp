@@ -6,8 +6,6 @@
 package mozilla.components.service.glean.error
 
 import android.support.annotation.VisibleForTesting
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
 import mozilla.components.service.glean.CommonMetricData
 import mozilla.components.service.glean.CounterMetricType
 import mozilla.components.service.glean.Dispatchers
@@ -32,10 +30,6 @@ object ErrorRecording {
         ErrorType.InvalidValue to "invalid_value",
         ErrorType.InvalidLabel to "invalid_label"
     )
-
-    // Holds the Job returned from launch{} for awaiting purposes
-    @VisibleForTesting(otherwise = VisibleForTesting.NONE)
-    var ioTask: Job? = null
 
     /**
      * Record an error that will be sent as a labeled counter in the `glean.error` category
@@ -74,24 +68,22 @@ object ErrorRecording {
 
         logger.warn("${metricData.identifier}: $message")
 
-        ioTask = Dispatchers.API.launch {
-            // There are two reasons for using `CountersStorageEngine.record` below
-            // and not just using the public `CounterMetricType` API.
+        // There are two reasons for using `CountersStorageEngine.record` below
+        // and not just using the public `CounterMetricType` API.
 
-            // 1) The labeled counter metrics that store the errors are defined in the
-            // `metrics.yaml` for documentation purposes, but are not actually used
-            // directly, since the `sendInPings` value needs to match the pings of the
-            // metric that is erroring (plus the "metrics" ping), not some constant value
-            // that we could define in `metrics.yaml`.
+        // 1) The labeled counter metrics that store the errors are defined in the
+        // `metrics.yaml` for documentation purposes, but are not actually used
+        // directly, since the `sendInPings` value needs to match the pings of the
+        // metric that is erroring (plus the "metrics" ping), not some constant value
+        // that we could define in `metrics.yaml`.
 
-            // 2) We want to bybass the restriction that there are only N values in a
-            // dynamically labeled metric.  Error reporting should never report errors
-            // in the __other__ category.
-            CountersStorageEngine.record(
-                errorMetric,
-                amount = 1
-            )
-        }
+        // 2) We want to bybass the restriction that there are only N values in a
+        // dynamically labeled metric.  Error reporting should never report errors
+        // in the __other__ category.
+        CountersStorageEngine.record(
+            errorMetric,
+            amount = 1
+        )
     }
 
     /**
@@ -109,7 +101,7 @@ object ErrorRecording {
         errorType: ErrorType,
         pingName: String? = null
     ): Int {
-        ioTask?.let { metricData.awaitJob(it) }
+        Dispatchers.API.awaitJob()
 
         val usePingName = pingName?.let {
             pingName

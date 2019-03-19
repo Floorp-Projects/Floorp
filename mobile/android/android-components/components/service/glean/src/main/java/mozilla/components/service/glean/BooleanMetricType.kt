@@ -5,8 +5,6 @@
 package mozilla.components.service.glean
 
 import android.support.annotation.VisibleForTesting
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
 import mozilla.components.service.glean.storages.BooleansStorageEngine
 import mozilla.components.support.base.log.logger.Logger
 
@@ -30,10 +28,6 @@ data class BooleanMetricType(
 
     private val logger = Logger("glean/BooleanMetricType")
 
-    // Holds the Job returned from launch{} for awaiting purposes
-    @VisibleForTesting(otherwise = VisibleForTesting.NONE)
-    var ioTask: Job? = null
-
     /**
      * Set a boolean value.
      *
@@ -45,7 +39,7 @@ data class BooleanMetricType(
         }
 
         @Suppress("EXPERIMENTAL_API_USAGE")
-        ioTask = Dispatchers.API.launch {
+        Dispatchers.API.launch {
             // Delegate storing the boolean to the storage engine.
             BooleansStorageEngine.record(
                 this@BooleanMetricType,
@@ -66,7 +60,7 @@ data class BooleanMetricType(
      */
     @VisibleForTesting(otherwise = VisibleForTesting.NONE)
     fun testHasValue(pingName: String = getStorageNames().first()): Boolean {
-        ioTask?.let { awaitJob(it) }
+        Dispatchers.API.awaitJob()
 
         return BooleansStorageEngine.getSnapshot(pingName, false)?.get(identifier) != null
     }
@@ -83,7 +77,7 @@ data class BooleanMetricType(
      */
     @VisibleForTesting(otherwise = VisibleForTesting.NONE)
     fun testGetValue(pingName: String = getStorageNames().first()): Boolean {
-        ioTask?.let { awaitJob(it) }
+        Dispatchers.API.awaitJob()
 
         return BooleansStorageEngine.getSnapshot(pingName, false)!![identifier]!!
     }

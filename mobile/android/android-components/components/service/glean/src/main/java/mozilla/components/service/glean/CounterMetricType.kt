@@ -5,8 +5,6 @@
 package mozilla.components.service.glean
 
 import android.support.annotation.VisibleForTesting
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
 import mozilla.components.service.glean.storages.CountersStorageEngine
 import mozilla.components.support.base.log.logger.Logger
 
@@ -31,9 +29,6 @@ data class CounterMetricType(
 
     private val logger = Logger("glean/CounterMetricType")
 
-    // Holds the Job returned from launch{} for awaiting purposes
-    private var ioTask: Job? = null
-
     /**
      * Add to counter value.
      *
@@ -46,7 +41,7 @@ data class CounterMetricType(
         }
 
         @Suppress("EXPERIMENTAL_API_USAGE")
-        ioTask = Dispatchers.API.launch {
+        Dispatchers.API.launch {
             // Delegate storing the new counter value to the storage engine.
             CountersStorageEngine.record(
                     this@CounterMetricType,
@@ -67,7 +62,7 @@ data class CounterMetricType(
      */
     @VisibleForTesting(otherwise = VisibleForTesting.NONE)
     fun testHasValue(pingName: String = getStorageNames().first()): Boolean {
-        ioTask?.let { awaitJob(it) }
+        Dispatchers.API.awaitJob()
 
         return CountersStorageEngine.getSnapshot(pingName, false)?.get(identifier) != null
     }
@@ -84,7 +79,7 @@ data class CounterMetricType(
      */
     @VisibleForTesting(otherwise = VisibleForTesting.NONE)
     fun testGetValue(pingName: String = getStorageNames().first()): Int {
-        ioTask?.let { awaitJob(it) }
+        Dispatchers.API.awaitJob()
 
         return CountersStorageEngine.getSnapshot(pingName, false)!![identifier]!!
     }

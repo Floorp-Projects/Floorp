@@ -4,11 +4,6 @@
 
 package mozilla.components.service.glean
 
-import android.support.annotation.VisibleForTesting
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.TimeoutCancellationException
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withTimeout
 import mozilla.components.support.base.log.logger.Logger
 
 /**
@@ -44,10 +39,6 @@ interface CommonMetricData {
 
     companion object {
         internal const val DEFAULT_STORAGE_NAME = "default"
-        // The job timeout is useful in tests, which are usually running on CI
-        // infrastructure. The timeout needs to be reasonably high to account for
-        // slow or under-stress hardware.
-        private const val JOB_TIMEOUT_MS = 5000L
     }
 
     fun shouldRecord(logger: Logger): Boolean {
@@ -84,24 +75,5 @@ interface CommonMetricData {
 
         val filteredNames = sendInPings.filter { it != DEFAULT_STORAGE_NAME }
         return filteredNames + defaultStorageDestinations
-    }
-
-    /**
-     * Helper function to help await Jobs returned from coroutine launch executions used by metrics
-     * when recording data.  This is to help ensure that data is updated before test functions
-     * check or access them.
-     *
-     * @param job Job that is to be awaited
-     * @param timeout Length of time in milliseconds that .join will be awaited. Defaults to
-     *                [JOB_TIMEOUT_MS].
-     * @throws TimeoutCancellationException if the function times out waiting for the join()
-     */
-    @VisibleForTesting(otherwise = VisibleForTesting.NONE)
-    fun awaitJob(job: Job, timeout: Long = JOB_TIMEOUT_MS) {
-        runBlocking {
-            withTimeout(timeout) {
-                job.join()
-            }
-        }
     }
 }

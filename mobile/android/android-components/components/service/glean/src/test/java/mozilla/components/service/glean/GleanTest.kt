@@ -27,7 +27,6 @@ import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Assert.assertFalse
 import org.junit.Before
-import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.mock
@@ -43,9 +42,6 @@ import java.util.concurrent.TimeUnit
 @ExperimentalCoroutinesApi
 @RunWith(RobolectricTestRunner::class)
 class GleanTest {
-
-    @get:Rule
-    val fakeDispatchers = FakeDispatchersInTest()
 
     @Before
     fun setup() {
@@ -262,6 +258,8 @@ class GleanTest {
             Glean.handleBackgroundEvent()
         }
 
+        Glean.pingStorageEngine.testWait()
+
         // We should only have a baseline ping and no events or metrics pings since nothing was
         // recorded
         val files = Glean.pingStorageEngine.storageDirectory.listFiles()
@@ -276,7 +274,7 @@ class GleanTest {
     }
 
     @Test
-    fun `Application id sanitazer must correctly filter undesired characters`() {
+    fun `Application id sanitizer must correctly filter undesired characters`() {
         assertEquals(
             "org-mozilla-test-app",
             Glean.sanitizeApplicationId("org.mozilla.test-app")

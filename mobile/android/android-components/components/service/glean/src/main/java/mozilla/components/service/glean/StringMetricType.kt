@@ -5,8 +5,6 @@
 package mozilla.components.service.glean
 
 import android.support.annotation.VisibleForTesting
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
 import mozilla.components.service.glean.storages.StringsStorageEngine
 import mozilla.components.support.base.log.logger.Logger
 
@@ -31,9 +29,6 @@ data class StringMetricType(
 
     private val logger = Logger("glean/StringMetricType")
 
-    // Holds the Job returned from launch{} for awaiting purposes
-    private var ioTask: Job? = null
-
     /**
      * Set a string value.
      *
@@ -46,7 +41,7 @@ data class StringMetricType(
         }
 
         @Suppress("EXPERIMENTAL_API_USAGE")
-        ioTask = Dispatchers.API.launch {
+        Dispatchers.API.launch {
             // Delegate storing the string to the storage engine.
             StringsStorageEngine.record(
                 this@StringMetricType,
@@ -67,7 +62,7 @@ data class StringMetricType(
      */
     @VisibleForTesting(otherwise = VisibleForTesting.NONE)
     fun testHasValue(pingName: String = getStorageNames().first()): Boolean {
-        ioTask?.let { awaitJob(it) }
+        Dispatchers.API.awaitJob()
 
         return StringsStorageEngine.getSnapshot(pingName, false)?.get(identifier) != null
     }
@@ -84,7 +79,7 @@ data class StringMetricType(
      */
     @VisibleForTesting(otherwise = VisibleForTesting.NONE)
     fun testGetValue(pingName: String = getStorageNames().first()): String {
-        ioTask?.let { awaitJob(it) }
+        Dispatchers.API.awaitJob()
 
         return StringsStorageEngine.getSnapshot(pingName, false)!![identifier]!!
     }

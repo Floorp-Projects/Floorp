@@ -5,8 +5,6 @@
 package mozilla.components.service.glean
 
 import android.support.annotation.VisibleForTesting
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
 import mozilla.components.service.glean.storages.DatetimesStorageEngine
 import mozilla.components.service.glean.utils.parseISOTimeString
 import mozilla.components.support.base.log.logger.Logger
@@ -32,9 +30,6 @@ data class DatetimeMetricType(
 
     private val logger = Logger("glean/DatetimeMetricType")
 
-    // Holds the Job returned from launch{} for awaiting purposes
-    private var ioTask: Job? = null
-
     /**
      * Set a datetime value, truncating it to the metric's resolution.
      *
@@ -46,7 +41,7 @@ data class DatetimeMetricType(
         }
 
         @Suppress("EXPERIMENTAL_API_USAGE")
-        ioTask = Dispatchers.API.launch {
+        Dispatchers.API.launch {
             // Delegate storing the datetime to the storage engine.
             DatetimesStorageEngine.set(
                 this@DatetimeMetricType,
@@ -71,7 +66,7 @@ data class DatetimeMetricType(
         }
 
         @Suppress("EXPERIMENTAL_API_USAGE")
-        ioTask = Dispatchers.API.launch {
+        Dispatchers.API.launch {
             // Delegate storing the datetime to the storage engine.
             DatetimesStorageEngine.set(
                 this@DatetimeMetricType,
@@ -92,7 +87,7 @@ data class DatetimeMetricType(
      */
     @VisibleForTesting(otherwise = VisibleForTesting.NONE)
     fun testHasValue(pingName: String = getStorageNames().first()): Boolean {
-        ioTask?.let { awaitJob(it) }
+        Dispatchers.API.awaitJob()
 
         return DatetimesStorageEngine.getSnapshot(pingName, false)?.get(identifier) != null
     }
@@ -110,7 +105,7 @@ data class DatetimeMetricType(
      */
     @VisibleForTesting(otherwise = VisibleForTesting.NONE)
     fun testGetValueAsString(pingName: String = getStorageNames().first()): String {
-        ioTask?.let { awaitJob(it) }
+        Dispatchers.API.awaitJob()
 
         return DatetimesStorageEngine.getSnapshot(pingName, false)!![identifier]!!
     }
@@ -131,7 +126,7 @@ data class DatetimeMetricType(
      */
     @VisibleForTesting(otherwise = VisibleForTesting.NONE)
     fun testGetValue(pingName: String = getStorageNames().first()): Date {
-        ioTask?.let { awaitJob(it) }
+        Dispatchers.API.awaitJob()
 
         return parseISOTimeString(DatetimesStorageEngine.getSnapshot(pingName, false)!![identifier]!!)!!
     }

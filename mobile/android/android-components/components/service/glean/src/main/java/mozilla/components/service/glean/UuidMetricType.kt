@@ -5,8 +5,6 @@
 package mozilla.components.service.glean
 
 import android.support.annotation.VisibleForTesting
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
 import java.util.UUID
 
 import mozilla.components.service.glean.storages.UuidsStorageEngine
@@ -31,9 +29,6 @@ data class UuidMetricType(
     override val defaultStorageDestinations: List<String> = listOf("metrics")
 
     private val logger = Logger("glean/UuidMetricType")
-
-    // Holds the Job returned from launch{} for awaiting purposes
-    private var ioTask: Job? = null
 
     /**
      * Generate a new UUID value and set it in the metric store.
@@ -64,7 +59,7 @@ data class UuidMetricType(
         }
 
         @Suppress("EXPERIMENTAL_API_USAGE")
-        ioTask = Dispatchers.API.launch {
+        Dispatchers.API.launch {
             // Delegate storing the event to the storage engine.
             UuidsStorageEngine.record(
                 this@UuidMetricType,
@@ -85,7 +80,7 @@ data class UuidMetricType(
      */
     @VisibleForTesting(otherwise = VisibleForTesting.NONE)
     fun testHasValue(pingName: String = getStorageNames().first()): Boolean {
-        ioTask?.let { awaitJob(it) }
+        Dispatchers.API.awaitJob()
 
         return UuidsStorageEngine.getSnapshot(pingName, false)?.get(identifier) != null
     }
@@ -102,7 +97,7 @@ data class UuidMetricType(
      */
     @VisibleForTesting(otherwise = VisibleForTesting.NONE)
     fun testGetValue(pingName: String = getStorageNames().first()): UUID {
-        ioTask?.let { awaitJob(it) }
+        Dispatchers.API.awaitJob()
 
         return UuidsStorageEngine.getSnapshot(pingName, false)!![identifier]!!
     }

@@ -12,7 +12,6 @@ import org.junit.Assert.assertTrue
 import org.junit.Assert.assertFalse
 import org.junit.Test
 import org.junit.Before
-import org.junit.Rule
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import java.lang.NullPointerException
@@ -21,9 +20,6 @@ import java.lang.NullPointerException
 @ExperimentalCoroutinesApi
 @RunWith(RobolectricTestRunner::class)
 class EventMetricTypeTest {
-
-    @get:Rule
-    val fakeDispatchers = FakeDispatchersInTest()
 
     @Before
     fun setUp() {

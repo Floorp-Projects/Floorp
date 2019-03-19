@@ -5,8 +5,6 @@
 package mozilla.components.service.glean
 
 import android.support.annotation.VisibleForTesting
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
 import mozilla.components.service.glean.storages.StringListsStorageEngine
 import mozilla.components.support.base.log.logger.Logger
 
@@ -31,9 +29,6 @@ data class StringListMetricType(
 
     private val logger = Logger("glean/StringListMetricType")
 
-    // Holds the Job returned from launch{} for awaiting purposes
-    private var ioTask: Job? = null
-
     /**
      * Appends a string value to one or more string list metric stores.  If the string exceeds the
      * maximum string length or if the list exceeds the maximum length it will be truncated.
@@ -47,7 +42,7 @@ data class StringListMetricType(
         }
 
         @Suppress("EXPERIMENTAL_API_USAGE")
-        ioTask = Dispatchers.API.launch {
+        Dispatchers.API.launch {
             // Delegate storing the string to the storage engine.
             StringListsStorageEngine.add(
                 metricData = this@StringListMetricType,
@@ -68,7 +63,7 @@ data class StringListMetricType(
         }
 
         @Suppress("EXPERIMENTAL_API_USAGE")
-        ioTask = Dispatchers.API.launch {
+        Dispatchers.API.launch {
             // Delegate storing the string list to the storage engine.
             StringListsStorageEngine.set(
                 metricData = this@StringListMetricType,
@@ -89,7 +84,7 @@ data class StringListMetricType(
      */
     @VisibleForTesting(otherwise = VisibleForTesting.NONE)
     fun testHasValue(pingName: String = getStorageNames().first()): Boolean {
-        ioTask?.let { awaitJob(it) }
+        Dispatchers.API.awaitJob()
 
         return StringListsStorageEngine.getSnapshot(pingName, false)?.get(identifier) != null
     }
@@ -106,7 +101,7 @@ data class StringListMetricType(
      */
     @VisibleForTesting(otherwise = VisibleForTesting.NONE)
     fun testGetValue(pingName: String = getStorageNames().first()): List<String> {
-        ioTask?.let { awaitJob(it) }
+        Dispatchers.API.awaitJob()
 
         return StringListsStorageEngine.getSnapshot(pingName, false)!![identifier]!!
     }

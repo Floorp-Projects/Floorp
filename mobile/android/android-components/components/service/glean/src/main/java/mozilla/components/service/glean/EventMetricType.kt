@@ -6,8 +6,6 @@ package mozilla.components.service.glean
 
 import android.os.SystemClock
 import android.support.annotation.VisibleForTesting
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
 import mozilla.components.service.glean.storages.EventsStorageEngine
 import mozilla.components.service.glean.storages.RecordedEventData
 import mozilla.components.support.base.log.logger.Logger
@@ -34,9 +32,6 @@ data class EventMetricType(
 
     private val logger = Logger("glean/EventMetricType")
 
-    // Holds the Job returned from launch{} for awaiting purposes
-    private var ioTask: Job? = null
-
     /**
      * Record an event by using the information provided by the instance of this class.
      *
@@ -55,7 +50,7 @@ data class EventMetricType(
         val monotonicElapsed = SystemClock.elapsedRealtime()
 
         @Suppress("EXPERIMENTAL_API_USAGE")
-        ioTask = Dispatchers.API.launch {
+        Dispatchers.API.launch {
             // Delegate storing the event to the storage engine.
             EventsStorageEngine.record(
                 metricData = this@EventMetricType,
@@ -77,7 +72,7 @@ data class EventMetricType(
      */
     @VisibleForTesting(otherwise = VisibleForTesting.NONE)
     fun testHasValue(pingName: String = getStorageNames().first()): Boolean {
-        ioTask?.let { awaitJob(it) }
+        Dispatchers.API.awaitJob()
 
         val snapshot = EventsStorageEngine.getSnapshot(pingName, false) ?: return false
         return snapshot.any { event ->
@@ -97,7 +92,7 @@ data class EventMetricType(
      */
     @VisibleForTesting(otherwise = VisibleForTesting.NONE)
     fun testGetValue(pingName: String = getStorageNames().first()): List<RecordedEventData> {
-        ioTask?.let { awaitJob(it) }
+        Dispatchers.API.awaitJob()
 
         return EventsStorageEngine.getSnapshot(pingName, false)!!.filter { event ->
             event.identifier == identifier
