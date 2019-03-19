@@ -22,6 +22,8 @@ const ProfilerDialog = createFactory(require("./ProfilerDialog"));
 const RuntimeActions = createFactory(require("./RuntimeActions"));
 const RuntimeInfo = createFactory(require("./RuntimeInfo"));
 const ServiceWorkerAction = createFactory(require("./debugtarget/ServiceWorkerAction"));
+const ServiceWorkerAdditionalActions =
+  createFactory(require("./debugtarget/ServiceWorkerAdditionalActions"));
 const ServiceWorkersWarning = createFactory(require("./ServiceWorkersWarning"));
 const TabDetail = createFactory(require("./debugtarget/TabDetail"));
 const TemporaryExtensionAdditionalActions =
@@ -210,7 +212,7 @@ class RuntimePage extends PureComponent {
                                  this.getIconByType(DEBUG_TARGETS.WORKER),
                                  serviceWorkers,
                                  ServiceWorkerAction,
-                                 null,
+                                 ServiceWorkerAdditionalActions,
                                  WorkerDetail,
                                  DEBUG_TARGET_PANE.SERVICE_WORKER,
                                  "about-debugging-runtime-service-workers"),
