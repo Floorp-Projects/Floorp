@@ -400,6 +400,16 @@ nsresult nsLookAndFeel::GetIntImpl(IntID aID, int32_t& aResult) {
       aResult = java::GeckoAppShell::GetAllPointerCapabilities();
       break;
 
+    case eIntID_SystemUsesDarkTheme:
+      // Bail out if AndroidBridge hasn't initialized since we try to query
+      // this vailue via nsMediaFeatures::InitSystemMetrics without initializing
+      // AndroidBridge on xpcshell tests.
+      if (!jni::IsAvailable()) {
+        return NS_ERROR_FAILURE;
+      }
+      aResult = java::GeckoSystemStateListener::IsNightMode() ? 1 : 0;
+      break;
+
     default:
       aResult = 0;
       rv = NS_ERROR_FAILURE;
