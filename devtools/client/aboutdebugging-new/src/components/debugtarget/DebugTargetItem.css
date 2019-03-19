@@ -55,6 +55,10 @@
   margin-block-start: calc(var(--base-unit) * 3);
 }
 
+.debug-target-item__detail--empty {
+  margin-block-start: var(--base-unit);
+}
+
 .debug-target-item__subname {
   grid-area: subname;
   color: var(--grey-50);
