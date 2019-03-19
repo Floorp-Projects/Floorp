@@ -465,6 +465,7 @@ public class GeckoView extends FrameLayout {
             // we will miss such rotations and the screen orientation will not be
             // updated.
             mRuntime.orientationChanged(newConfig.orientation);
+            mRuntime.configurationChanged(newConfig);
         }
     }
 
