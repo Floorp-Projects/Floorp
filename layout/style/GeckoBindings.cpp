@@ -1967,13 +1967,11 @@ void FontSizePrefs::CopyFrom(const LangGroupFontPrefs& prefs) {
 
 FontSizePrefs Gecko_GetBaseSize(nsAtom* aLanguage) {
   LangGroupFontPrefs prefs;
-  RefPtr<nsAtom> langGroupAtom =
+  nsStaticAtom* langGroupAtom =
       StaticPresData::Get()->GetUncachedLangGroup(aLanguage);
-
   prefs.Initialize(langGroupAtom);
   FontSizePrefs sizes;
   sizes.CopyFrom(prefs);
-
   return sizes;
 }
 
