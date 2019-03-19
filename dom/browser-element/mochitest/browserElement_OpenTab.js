@@ -9,8 +9,8 @@ browserElementTestHelpers.setEnabledPref(true);
 browserElementTestHelpers.addPermission();
 
 function runTest() {
-  let iframe = document.createElement('iframe');
-  iframe.setAttribute('mozbrowser', 'true');
+  let iframe = document.createElement("iframe");
+  iframe.setAttribute("mozbrowser", "true");
   document.body.appendChild(iframe);
 
   let x = 2;
@@ -28,30 +28,30 @@ function runTest() {
     let nsIDOMWindowUtils = SpecialPowers.Ci.nsIDOMWindowUtils;
     let mod = nsIDOMWindowUtils.MODIFIER_META |
               nsIDOMWindowUtils.MODIFIER_CONTROL;
-    iframe.sendMouseEvent('mousedown', x, y, 0, 1, mod);
-    iframe.sendMouseEvent('mouseup', x, y, 0, 1, mod);
-  }
+    iframe.sendMouseEvent("mousedown", x, y, 0, 1, mod);
+    iframe.sendMouseEvent("mouseup", x, y, 0, 1, mod);
+  };
 
   let onCtrlClick = e => {
-    is(e.detail.url, 'http://example.com/', 'URL matches');
-    iframe.removeEventListener('mozbrowseropentab', onCtrlClick);
-    iframe.addEventListener('mozbrowseropentab', onMiddleClick);
+    is(e.detail.url, "http://example.com/", "URL matches");
+    iframe.removeEventListener("mozbrowseropentab", onCtrlClick);
+    iframe.addEventListener("mozbrowseropentab", onMiddleClick);
     sendMiddleClick();
-  }
+  };
 
   let sendMiddleClick = () => {
-    iframe.sendMouseEvent('mousedown', x, y, 1, 1, 0);
-    iframe.sendMouseEvent('mouseup', x, y, 1, 1, 0);
-  }
+    iframe.sendMouseEvent("mousedown", x, y, 1, 1, 0);
+    iframe.sendMouseEvent("mouseup", x, y, 1, 1, 0);
+  };
 
   let onMiddleClick = e => {
-    is(e.detail.url, 'http://example.com/', 'URL matches');
-    iframe.removeEventListener('mozbrowseropentab', onMiddleClick);
+    is(e.detail.url, "http://example.com/", "URL matches");
+    iframe.removeEventListener("mozbrowseropentab", onMiddleClick);
     SimpleTest.finish();
-  }
+  };
 
-  iframe.addEventListener('mozbrowserloadend', e => {
-    iframe.addEventListener('mozbrowseropentab', onCtrlClick);
+  iframe.addEventListener("mozbrowserloadend", e => {
+    iframe.addEventListener("mozbrowseropentab", onCtrlClick);
     sendCtrlClick();
   });
 
@@ -59,4 +59,4 @@ function runTest() {
   iframe.src = 'data:text/html,<body style="margin:0"><a href="http://example.com"><span>click here</span></a></body>';
 }
 
-addEventListener('testready', runTest);
+addEventListener("testready", runTest);

@@ -7,7 +7,7 @@
 var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 function debug(msg) {
-  //dump("BrowserElementChild - " + msg + "\n");
+  // dump("BrowserElementChild - " + msg + "\n");
 }
 
 // NB: this must happen before we process any messages from
@@ -36,9 +36,9 @@ var BrowserElementIsReady;
 
 debug(`Might load BE scripts: BEIR: ${BrowserElementIsReady}`);
 if (!BrowserElementIsReady) {
-  debug("Loading BE scripts")
+  debug("Loading BE scripts");
   if (!("BrowserElementIsPreloaded" in this)) {
-    if(Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT) {
+    if (Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT) {
       // general content apps
       if (isTopBrowserElement(docShell)) {
         Services.scriptloader.loadSubScript("chrome://global/content/BrowserElementCopyPaste.js", this);
@@ -70,4 +70,4 @@ if (!BrowserElementIsReady) {
   debug("BE already loaded, abort");
 }
 
-sendAsyncMessage('browser-element-api:call', { 'msg_name': 'hello' });
+sendAsyncMessage("browser-element-api:call", { "msg_name": "hello" });

@@ -10,7 +10,7 @@ browserElementTestHelpers.addPermission();
 
 function createFrame(aIsPrivate) {
   var iframe = document.createElement("iframe");
-  iframe.setAttribute('mozbrowser', 'true');
+  iframe.setAttribute("mozbrowser", "true");
   if (aIsPrivate) {
     iframe.setAttribute("mozprivatebrowsing", "true");
   }
@@ -30,7 +30,6 @@ function createTest(aIsPrivate, aExpected, aClearStorage) {
 
     var src = "file_browserElement_PrivateBrowsing.html";
     iframe.src = aClearStorage ? src + "?clear=true" : src;
-
   });
 }
 

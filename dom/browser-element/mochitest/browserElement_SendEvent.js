@@ -9,7 +9,7 @@ browserElementTestHelpers.setEnabledPref(true);
 
 function runTest() {
   var iframe = document.createElement("iframe");
-  iframe.setAttribute('mozbrowser', 'true');
+  iframe.setAttribute("mozbrowser", "true");
   document.body.appendChild(iframe);
   var x = 10;
   var y = 10;
@@ -44,14 +44,13 @@ function runTest() {
         break;
       case "#click":
         ok(true, "Receive a click event.");
-        iframe.removeEventListener('mozbrowserlocationchange', onlocchange);
+        iframe.removeEventListener("mozbrowserlocationchange", onlocchange);
         SimpleTest.finish();
         break;
     }
   });
 
   iframe.src = "file_browserElement_SendEvent.html";
-
 }
 
-addEventListener('testready', runTest);
+addEventListener("testready", runTest);

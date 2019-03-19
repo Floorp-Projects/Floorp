@@ -9,19 +9,19 @@ browserElementTestHelpers.setEnabledPref(true);
 browserElementTestHelpers.addPermission();
 
 function runTest() {
-  var iframe = document.createElement('iframe');
-  iframe.setAttribute('mozbrowser', 'true');
+  var iframe = document.createElement("iframe");
+  iframe.setAttribute("mozbrowser", "true");
 
-  iframe.addEventListener('mozbrowseropenwindow', function(e) {
-    ok(true, 'Got first window.open call');
+  iframe.addEventListener("mozbrowseropenwindow", function(e) {
+    ok(true, "Got first window.open call");
 
-    e.detail.frameElement.addEventListener('mozbrowseropenwindow', function(e) {
-      ok(true, 'Got second window.open call');
+    e.detail.frameElement.addEventListener("mozbrowseropenwindow", function(e) {
+      ok(true, "Got second window.open call");
       document.body.appendChild(e.detail.frameElement);
     });
 
-    e.detail.frameElement.addEventListener('mozbrowsershowmodalprompt', function(e) {
-      ok(true, 'Got alert from second window.');
+    e.detail.frameElement.addEventListener("mozbrowsershowmodalprompt", function(e) {
+      ok(true, "Got alert from second window.");
       SimpleTest.finish();
     });
 
@@ -34,8 +34,8 @@ function runTest() {
   //
   // which calls alert().
 
-  iframe.src = 'http://example.org/tests/dom/browser-element/mochitest/file_browserElement_OpenWindowDifferentOrigin.html?1';
+  iframe.src = "http://example.org/tests/dom/browser-element/mochitest/file_browserElement_OpenWindowDifferentOrigin.html?1";
   document.body.appendChild(iframe);
 }
 
-addEventListener('testready', runTest);
+addEventListener("testready", runTest);
