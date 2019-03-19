@@ -94,6 +94,7 @@ treeherder:
         'pipfu': 'pipfile update'
         'WR': 'WebRender standalone'
         'Gd': 'Geckodriver'
+        'clang': 'Clang Tidy & Format'
 
 index:
     products:
