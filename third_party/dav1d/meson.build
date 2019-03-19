@@ -1,4 +1,4 @@
-# Copyright © 2018, VideoLAN and dav1d authors
+# Copyright © 2018-2019, VideoLAN and dav1d authors
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -23,17 +23,18 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 project('dav1d', ['c'],
-    version: '0.1.1',
+    version: '0.2.2',
     default_options: ['c_std=c99',
                       'warning_level=2',
                       'buildtype=release',
                       'b_ndebug=if-release'],
     meson_version: '>= 0.47.0')
 
-dav1d_version_array    = meson.project_version().split('.')
-dav1d_version_major    = dav1d_version_array[0]
-dav1d_version_minor    = dav1d_version_array[1]
-dav1d_version_revision = dav1d_version_array[2]
+dav1d_soname_version   = '1.0.1'
+dav1d_api_version_array    = dav1d_soname_version.split('.')
+dav1d_api_version_major    = dav1d_api_version_array[0]
+dav1d_api_version_minor    = dav1d_api_version_array[1]
+dav1d_api_version_revision = dav1d_api_version_array[2]
 
 dav1d_src_root = meson.current_source_dir()
 cc = meson.get_compiler('c')
@@ -45,7 +46,7 @@ cdata = configuration_data()
 cdata_asm = configuration_data()
 
 # Include directories
-dav1d_inc_dirs = include_directories(['.', 'include', 'include/dav1d'])
+dav1d_inc_dirs = include_directories(['.', 'include/dav1d', 'include'])
 
 
 
@@ -70,6 +71,8 @@ if is_asm_enabled and get_option('b_sanitize') == 'memory'
     error('asm causes false positive with memory sanitizer. Use \'-Dbuild_asm=false\'.')
 endif
 
+# Logging option
+cdata.set10('CONFIG_LOG', get_option('logging'))
 
 #
 # OS/Compiler checks and defines
@@ -87,6 +90,12 @@ if host_machine.system() == 'windows'
     cdata.set('UNICODE',                1) # Define to 1 for Unicode (Wide Chars) APIs
     cdata.set('_UNICODE',               1) # Define to 1 for Unicode (Wide Chars) APIs
     cdata.set('__USE_MINGW_ANSI_STDIO', 1) # Define to force use of MinGW printf
+    if cc.has_function('fseeko', prefix : '#include <stdio.h>', args : test_args)
+        cdata.set('_FILE_OFFSET_BITS', 64) # Not set by default by Meson on Windows
+    else
+        cdata.set('fseeko', '_fseeki64')
+        cdata.set('ftello', '_ftelli64')
+    endif
 endif
 
 # On Windows, we use a compatibility layer to emulate pthread
@@ -120,6 +129,10 @@ endif
 
 if cc.check_header('unistd.h')
     cdata.set('HAVE_UNISTD_H', 1)
+endif
+
+if cc.check_header('io.h')
+    cdata.set('HAVE_IO_H', 1)
 endif
 
 
@@ -167,8 +180,10 @@ optional_arguments = [
   '-Wundef',
   '-Werror=vla',
   '-Wno-maybe-uninitialized',
+  '-Wno-missing-field-initializers',
   '-Wno-unused-parameter',
   '-Werror=missing-prototypes',
+  '-Wshorten-64-to-32',
 ]
 if cc.get_id() == 'msvc'
     optional_arguments += [
@@ -199,8 +214,12 @@ endif
 stackalign_flag = []
 stackrealign_flag = []
 
+cdata.set10('ENDIANNESS_BIG', host_machine.endian() == 'big')
+
 if host_machine.cpu_family().startswith('x86')
-    if host_machine.cpu_family() == 'x86_64'
+    if get_option('stack_alignment') > 0
+        stack_alignment = get_option('stack_alignment')
+    elif host_machine.cpu_family() == 'x86_64'
         if cc.has_argument('-mpreferred-stack-boundary=5')
             stackalign_flag = ['-mpreferred-stack-boundary=5']
             stackrealign_flag = ['-mincoming-stack-boundary=4']
@@ -311,8 +330,8 @@ if is_asm_enabled and host_machine.cpu_family().startswith('x86')
         nasm_r = run_command(nasm, '-v')
         out = nasm_r.stdout().strip().split()
         if out[1].to_lower() == 'version'
-            if out[2].version_compare('<2.13')
-                error('nasm 2.13 or later is required, found nasm @0@'.format(out[2]))
+            if out[2].version_compare('<2.13.02')
+                error('nasm 2.13.02 or later is required, found nasm @0@'.format(out[2]))
             endif
         else
             error('unexpected nasm version string: @0@'.format(nasm_r.stdout()))

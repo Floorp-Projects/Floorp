@@ -22,16 +22,15 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# Revision file (version.h) generation
+# Revision file (vcs_version.h) generation
 dav1d_git_dir = join_paths(dav1d_src_root, '.git')
 rev_target = vcs_tag(command: [
         'git', '--git-dir', dav1d_git_dir,
         'describe', '--tags', '--long',
         '--match', '?.*.*', '--always'
     ],
-    input: 'version.h.in',
-    output: 'version.h'
+    input: 'vcs_version.h.in',
+    output: 'vcs_version.h'
 )
 
-# Install include/dav1d headers
-install_subdir('dav1d', install_dir: get_option('includedir'))
+subdir('dav1d')

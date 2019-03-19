@@ -25,8 +25,8 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __DAV1D_SRC_CPU_H__
-#define __DAV1D_SRC_CPU_H__
+#ifndef DAV1D_SRC_CPU_H
+#define DAV1D_SRC_CPU_H
 
 #include "config.h"
 
@@ -41,4 +41,4 @@
 unsigned dav1d_get_cpu_flags(void);
 DAV1D_API void dav1d_set_cpu_flags_mask(const unsigned mask);
 
-#endif /* __DAV1D_SRC_CPU_H__ */
+#endif /* DAV1D_SRC_CPU_H */

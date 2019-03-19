@@ -25,8 +25,8 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __DAV1D_HEADERS_H__
-#define __DAV1D_HEADERS_H__
+#ifndef DAV1D_HEADERS_H
+#define DAV1D_HEADERS_H
 
 // Constants from Section 3. "Symbols and abbreviated terms"
 #define DAV1D_MAX_CDEF_STRENGTHS 8
@@ -160,6 +160,22 @@ enum Dav1dChromaSamplePosition {
     DAV1D_CHR_COLOCATED = 2, ///< Co-located with luma(0, 0) sample
 };
 
+typedef struct Dav1dContentLightLevel {
+    int max_content_light_level;
+    int max_frame_average_light_level;
+} Dav1dContentLightLevel;
+
+typedef struct Dav1dMasteringDisplay {
+    ///< 0.16 fixed point
+    uint16_t primaries[3][2];
+    ///< 0.16 fixed point
+    uint16_t white_point[2];
+    ///< 24.8 fixed point
+    uint32_t max_luminance;
+    ///< 18.14 fixed point
+    uint32_t min_luminance;
+} Dav1dMasteringDisplay;
+
 typedef struct Dav1dSequenceHeader {
     /**
      * Stream profile, 0 for 8-10 bits/component 4:2:0 or monochrome;
@@ -179,6 +195,14 @@ typedef struct Dav1dSequenceHeader {
     enum Dav1dMatrixCoefficients mtrx; ///< matrix coefficients (av1)
     enum Dav1dChromaSamplePosition chr; ///< chroma sample position (av1)
     /**
+     * 0, 1 and 2 mean 8, 10 or 12 bits/component, respectively. This is not
+     * exactly the same as 'hbd' from the spec; the spec's hbd distinguishes
+     * between 8 (0) and 10-12 (1) bits/component, and another element
+     * (twelve_bit) to distinguish between 10 and 12 bits/component. To get
+     * the spec's hbd, use !!our_hbd, and to get twelve_bit, use hbd == 2.
+     */
+    int hbd;
+    /**
      * Pixel data uses JPEG pixel range ([0,255] for 8bits) instead of
      * MPEG pixel range ([16,235] for 8bits luma, [16,240] for 8bits chroma).
      */
@@ -191,9 +215,6 @@ typedef struct Dav1dSequenceHeader {
         int idc;
         int tier;
         int decoder_model_param_present;
-        int decoder_buffer_delay;
-        int encoder_buffer_delay;
-        int low_delay_mode;
         int display_model_param_present;
     } operating_points[DAV1D_MAX_OPERATING_POINTS];
 
@@ -230,18 +251,22 @@ typedef struct Dav1dSequenceHeader {
     int super_res;
     int cdef;
     int restoration;
-    /**
-     * 0, 1 and 2 mean 8, 10 or 12 bits/component, respectively. This is not
-     * exactly the same as 'hbd' from the spec; the spec's hbd distinguishes
-     * between 8 (0) and 10-12 (1) bits/component, and another element
-     * (twelve_bit) to distinguish between 10 and 12 bits/component. To get
-     * the spec's hbd, use !!our_hbd, and to get twelve_bit, use hbd == 2.
-     */
-    int hbd;
     int ss_hor, ss_ver, monochrome;
     int color_description_present;
     int separate_uv_delta_q;
     int film_grain_present;
+
+    // Dav1dSequenceHeaders of the same sequence are required to be
+    // bit-identical until this offset. See 7.5 "Ordering of OBUs":
+    //   Within a particular coded video sequence, the contents of
+    //   sequence_header_obu must be bit-identical each time the
+    //   sequence header appears except for the contents of
+    //   operating_parameters_info.
+    struct Dav1dSequenceHeaderOperatingParameterInfo {
+        int decoder_buffer_delay;
+        int encoder_buffer_delay;
+        int low_delay_mode;
+    } operating_parameter_info[DAV1D_MAX_OPERATING_POINTS];
 } Dav1dSequenceHeader;
 
 typedef struct Dav1dSegmentationData {
@@ -382,4 +407,4 @@ typedef struct Dav1dFrameHeader {
     Dav1dWarpedMotionParams gmv[DAV1D_REFS_PER_FRAME];
 } Dav1dFrameHeader;
 
-#endif /* __DAV1D_HEADERS_H__ */
+#endif /* DAV1D_HEADERS_H */

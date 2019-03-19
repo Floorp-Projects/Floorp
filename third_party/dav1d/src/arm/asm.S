@@ -25,14 +25,15 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __DAV1D_SRC_ARM_ASM_S__
-#define __DAV1D_SRC_ARM_ASM_S__
+#ifndef DAV1D_SRC_ARM_ASM_S
+#define DAV1D_SRC_ARM_ASM_S
 
 #include "config.h"
 
 #if ARCH_ARM
     .syntax unified
 #ifdef __ELF__
+    .arch armv7-a
     .fpu neon
     .eabi_attribute 10, 0           // suppress Tag_FP_arch
     .eabi_attribute 12, 0           // suppress Tag_Advanced_SIMD_arch
@@ -114,7 +115,9 @@ EXTERN\name:
 #endif
         .purgem endconst
     .endm
-#if !defined(__MACH__)
+#if defined(_WIN32)
+        .section        .rdata
+#elif !defined(__MACH__)
         .section        .rodata
 #else
         .const_data
@@ -131,4 +134,4 @@ EXTERN\name:
 
 #define X(x) CONCAT(EXTERN, x)
 
-#endif /* __DAV1D_SRC_ARM_ASM_S__ */
+#endif /* DAV1D_SRC_ARM_ASM_S */

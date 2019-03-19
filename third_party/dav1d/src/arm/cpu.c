@@ -62,7 +62,7 @@ static unsigned parse_proc_cpuinfo(const char *flag) {
         // if line is incomplete seek back to avoid splitting the search
         // string into two buffers
         if (!strchr(line, '\n') && strlen(line) > strlen(flag)) {
-            if (fseek(file, -strlen(flag), SEEK_CUR))
+            if (fseeko(file, -strlen(flag), SEEK_CUR))
                 break;
         }
     }
