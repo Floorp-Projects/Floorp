@@ -1833,6 +1833,8 @@ static void StreamMetaJSCustomObject(PSLockRef aLock,
 
   aWriter.IntProperty("processType", XRE_GetProcessType());
 
+  aWriter.StringProperty("updateChannel", NS_STRINGIFY(MOZ_UPDATE_CHANNEL));
+
   nsresult res;
   nsCOMPtr<nsIHttpProtocolHandler> http =
       do_GetService(NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "http", &res);
