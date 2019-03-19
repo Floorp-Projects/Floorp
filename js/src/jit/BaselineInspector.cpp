@@ -850,6 +850,19 @@ JSObject* BaselineInspector::getTemplateObject(jsbytecode* pc) {
           return obj;
         }
         break;
+      case ICStub::CacheIR_Regular:
+      case ICStub::CacheIR_Monitored:
+      case ICStub::CacheIR_Updated: {
+        auto filter = [](CacheIRReader& reader, const CacheIRStubInfo* info) {
+          mozilla::Unused << reader.stubOffset();  // Skip callee
+          return true;
+        };
+        JSObject* result = MaybeTemplateObject(
+            stub, MetaTwoByteKind::ScriptedTemplateObject, filter);
+        if (result) {
+          return result;
+        }
+      } break;
       default:
         break;
     }
@@ -890,11 +903,26 @@ JSFunction* BaselineInspector::getSingleCallee(jsbytecode* pc) {
     return nullptr;
   }
 
-  if (!stub->isCall_Scripted() || stub->next() != entry.fallbackStub()) {
+  if (stub->next() != entry.fallbackStub()) {
     return nullptr;
   }
 
-  return stub->toCall_Scripted()->callee();
+  if (stub->isCall_Scripted()) {
+    return stub->toCall_Scripted()->callee();
+  }
+
+  if (ICStub::IsCacheIRKind(stub->kind())) {
+    const CacheIRStubInfo* stubInfo = GetCacheIRStubInfo(stub);
+    mozilla::Maybe<CacheIRReader> argReader;
+    if (!MaybeArgumentReader(stub, CacheOp::MetaTwoByte, argReader) ||
+        argReader->metaKind<MetaTwoByteKind>() !=
+            MetaTwoByteKind::ScriptedTemplateObject) {
+      return nullptr;
+    }
+    // The callee is the first stub field in a ScriptedTemplateObject meta op.
+    return stubInfo->getStubField<JSFunction*>(stub, argReader->stubOffset());
+  }
+  return nullptr;
 }
 
 JSObject* BaselineInspector::getTemplateObjectForNative(jsbytecode* pc,

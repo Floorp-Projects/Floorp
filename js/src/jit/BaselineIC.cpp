@@ -3744,6 +3744,7 @@ bool DoCallFallback(JSContext* cx, BaselineFrame* frame, ICCall_Fallback* stub,
   CallArgs callArgs = CallArgsFromSp(argc + constructing, vp + numValues,
                                      constructing, ignoresReturnValue);
   RootedValue callee(cx, vp[0]);
+  RootedValue newTarget(cx, constructing ? callArgs.newTarget() : NullValue());
 
   // Handle funapply with JSOP_ARGUMENTS
   if (op == JSOP_FUNAPPLY && argc == 2 &&
@@ -3765,7 +3766,7 @@ bool DoCallFallback(JSContext* cx, BaselineFrame* frame, ICCall_Fallback* stub,
   // allowed to attach stubs.
   if (canAttachStub) {
     CallIRGenerator gen(cx, script, pc, op, stub->state().mode(), argc, callee,
-                        callArgs.thisv(),
+                        callArgs.thisv(), newTarget,
                         HandleValueArray::fromMarkedLocation(argc, vp + 2));
     if (gen.tryAttachStub()) {
       ICStub* newStub = AttachBaselineCacheIRStub(
@@ -3886,7 +3887,7 @@ bool DoSpreadCallFallback(JSContext* cx, BaselineFrame* frame,
     MOZ_ASSERT(aobj->length() == aobj->getDenseInitializedLength());
 
     CallIRGenerator gen(cx, script, pc, op, stub->state().mode(), 1, callee,
-                        thisv,
+                        thisv, newTarget,
                         HandleValueArray::fromMarkedLocation(
                             aobj->length(), aobj->getDenseElements()));
     if (gen.tryAttachStub()) {

@@ -4975,12 +4975,14 @@ void GetIteratorIRGenerator::trackAttached(const char* name) {
 CallIRGenerator::CallIRGenerator(JSContext* cx, HandleScript script,
                                  jsbytecode* pc, JSOp op, ICState::Mode mode,
                                  uint32_t argc, HandleValue callee,
-                                 HandleValue thisval, HandleValueArray args)
+                                 HandleValue thisval, HandleValue newTarget,
+                                 HandleValueArray args)
     : IRGenerator(cx, script, pc, CacheKind::Call, mode),
       op_(op),
       argc_(argc),
       callee_(callee),
       thisval_(thisval),
+      newTarget_(newTarget),
       args_(args),
       typeCheckInfo_(cx, /* needsTypeBarrier = */ true),
       cacheIRStubKind_(BaselineCacheIRStubKind::Regular) {}
@@ -5283,6 +5285,69 @@ uint32_t CallIRGenerator::calleeStackSlot(bool isSpread, bool isConstructing) {
   return 1 + (isSpread ? 1 : argc_) + isConstructing;
 }
 
+// Remember the template object associated with any script being called
+// as a constructor, for later use during Ion compilation.
+bool CallIRGenerator::getTemplateObjectForScripted(HandleFunction calleeFunc,
+                                                   MutableHandleObject result,
+                                                   bool* skipAttach) {
+  MOZ_ASSERT(!*skipAttach);
+
+  // Saving the template object is unsound for super(), as a single
+  // callsite can have multiple possible prototype objects created
+  // (via different newTargets)
+  bool isSuper = op_ == JSOP_SUPERCALL || op_ == JSOP_SPREADSUPERCALL;
+  if (isSuper) {
+    return true;
+  }
+
+  // Only attach a stub if the function already has a prototype and
+  // we can look it up without causing side effects.
+  RootedValue protov(cx_);
+  RootedObject newTarget(cx_, &newTarget_.toObject());
+  if (!GetPropertyPure(cx_, newTarget, NameToId(cx_->names().prototype),
+                       protov.address())) {
+    // Can't purely lookup function prototype
+    trackAttached(IRGenerator::NotAttached);
+    *skipAttach = true;
+    return true;
+  }
+
+  if (protov.isObject()) {
+    AutoRealm ar(cx_, calleeFunc);
+    TaggedProto proto(&protov.toObject());
+    ObjectGroup* group =
+        ObjectGroup::defaultNewGroup(cx_, nullptr, proto, newTarget);
+    if (!group) {
+      return false;
+    }
+
+    AutoSweepObjectGroup sweep(group);
+    if (group->newScript(sweep) && !group->newScript(sweep)->analyzed()) {
+      // Function newScript has not been analyzed
+      trackAttached(IRGenerator::NotAttached);
+
+      // TODO: This is temporary until the analysis is perfomed, so
+      // don't treat this as unoptimizable.
+      *skipAttach = true;
+      return true;
+    }
+  }
+
+  JSObject* thisObject =
+      CreateThisForFunction(cx_, calleeFunc, newTarget, TenuredObject);
+  if (!thisObject) {
+    return false;
+  }
+
+  MOZ_ASSERT(thisObject->nonCCWRealm() == calleeFunc->realm());
+
+  if (thisObject->is<PlainObject>() || thisObject->is<UnboxedPlainObject>()) {
+    result.set(thisObject);
+  }
+
+  return true;
+}
+
 bool CallIRGenerator::tryAttachCallScripted(HandleFunction calleeFunc) {
   if (JitOptions.disableCacheIRCalls) {
     return false;
@@ -5295,11 +5360,6 @@ bool CallIRGenerator::tryAttachCallScripted(HandleFunction calleeFunc) {
   }
 
   bool isConstructing = IsConstructorCallPC(pc_);
-  if (isConstructing) {
-    // TODO: Support scripted constructors
-    return false;
-  }
-
   bool isSpread = IsSpreadCallPC(pc_);
 
   // If callee is not an interpreted constructor, we have to throw.
@@ -5334,8 +5394,16 @@ bool CallIRGenerator::tryAttachCallScripted(HandleFunction calleeFunc) {
     EnsureTrackPropertyTypes(cx_, calleeFunc, NameToId(cx_->names().prototype));
   }
 
-  // TODO: template object for constructors.
-  MOZ_ASSERT(!isConstructing);
+  RootedObject templateObj(cx_);
+  bool skipAttach = false;
+  if (isConstructing &&
+      !getTemplateObjectForScripted(calleeFunc, &templateObj, &skipAttach)) {
+    return false;
+  }
+  if (skipAttach) {
+    // TODO: this should mark "handled" somehow
+    return false;
+  }
 
   // Load argc.
   Int32OperandId argcId(writer.setInputOperandId(0));
@@ -5346,7 +5414,8 @@ bool CallIRGenerator::tryAttachCallScripted(HandleFunction calleeFunc) {
   ObjOperandId calleeObjId = writer.guardIsObject(calleeValId);
 
   // Ensure callee matches this stub's callee
-  writer.guardSpecificObject(calleeObjId, calleeFunc);
+  FieldOffset calleeOffset =
+      writer.guardSpecificObject(calleeObjId, calleeFunc);
 
   // Guard against relazification
   writer.guardFunctionHasJitEntry(calleeObjId, isConstructing);
@@ -5357,8 +5426,13 @@ bool CallIRGenerator::tryAttachCallScripted(HandleFunction calleeFunc) {
   }
 
   bool isCrossRealm = cx_->realm() != calleeFunc->realm();
-  writer.callScriptedFunction(calleeObjId, argcId, isCrossRealm, isSpread);
+  writer.callScriptedFunction(calleeObjId, argcId, isCrossRealm, isSpread,
+                              isConstructing);
   writer.typeMonitorResult();
+
+  if (templateObj) {
+    writer.metaScriptedTemplateObject(templateObj, calleeOffset);
+  }
 
   cacheIRStubKind_ = BaselineCacheIRStubKind::Monitored;
   trackAttached("Call scripted func");
@@ -5445,8 +5519,8 @@ bool CallIRGenerator::getTemplateObjectForNative(HandleFunction calleeFunc,
     }
 
     case InlinableNative::TypedArrayConstructor: {
-      return TypedArrayObject::GetTemplateObjectForNative(cx_, calleeFunc->native(),
-                                                          args_, res);
+      return TypedArrayObject::GetTemplateObjectForNative(
+          cx_, calleeFunc->native(), args_, res);
     }
 
     default:
@@ -5487,7 +5561,8 @@ bool CallIRGenerator::tryAttachCallNative(HandleFunction calleeFunc) {
   ObjOperandId calleeObjId = writer.guardIsObject(calleeValId);
 
   // Ensure callee matches this stub's callee
-  FieldOffset calleeOffset = writer.guardSpecificObject(calleeObjId, calleeFunc);
+  FieldOffset calleeOffset =
+      writer.guardSpecificObject(calleeObjId, calleeFunc);
 
   // Enforce limits on spread call length, and update argc.
   if (isSpread) {
