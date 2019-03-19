@@ -9,3 +9,7 @@ JAR_MANIFESTS += ['jar.mn']
 EXTRA_JS_MODULES += [
     'PictureInPicture.jsm',
 ]
+
+BROWSER_CHROME_MANIFESTS += [
+    'tests/browser.ini',
+]
