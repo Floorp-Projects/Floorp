@@ -12,6 +12,9 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Config.kt)
 
+* **service-pocket**
+  * Access an article's text-to-speech listen metadata via `PocketListenEndpoint.getListenArticleMetadata`.
+  * ⚠️ **This is a breaking API change!**: `PocketGlobalVideoRecommendation.id` is now a Long instead of an Int
 
 # 0.47.0
 
@@ -81,8 +84,6 @@ permalink: /changelog/
 
 * **service-pocket**
   * Access the list of global video recommendations via `PocketEndpoint.getGlobalVideoRecommendations`.
-  * Access an article's text-to-speech listen metadata via `PocketListenEndpoint.getListenArticleMetadata`.
-  * ⚠️ **This is a breaking API change!**: `PocketGlobalVideoRecommendation.id` is now a Long instead of an Int
 
 * **concept-fetch**
   * Added common HTTP header constants in `Headers.Common`. This collection is incomplete: add your own!
