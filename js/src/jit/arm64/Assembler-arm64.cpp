@@ -356,7 +356,8 @@ size_t Assembler::addPatchableJump(BufferOffset src, RelocationKind reloc) {
   return extendedTableIndex;
 }
 
-// PatchJump() is only used by the IonCacheIRCompiler.
+// PatchJump() is only used by the IonCacheIRCompiler and patches code generated
+// by jumpWithPatch.
 //
 // The CodeLocationJump is the jump to be patched.
 // The code for the jump is emitted by jumpWithPatch().
@@ -369,12 +370,18 @@ void PatchJump(CodeLocationJump& jump_, CodeLocationLabel label) {
   Instruction* branch = (Instruction*)load->NextInstruction()->skipPool();
   MOZ_ASSERT(branch->IsUncondB());
 
-  // FIXME: For the moment, just assume that the load isn't needed.
-  // FIXME: That assumption implies that the branch target is always in-range.
   if (branch->IsTargetReachable((Instruction*)label.raw())) {
     branch->SetImmPCOffsetTarget((Instruction*)label.raw());
   } else {
-    MOZ_CRASH("PatchJump target not reachable");
+    // Set the literal read by the load instruction to the target.
+    load->SetLiteral64(uint64_t(label.raw()));
+    // Get the scratch register set by the load instruction.
+    vixl::Register loadTarget = vixl::Register(load->Rt(), 64);
+    // Overwrite the branch instruction to branch on the same register as the
+    // load instruction.
+    Assembler::br(branch, loadTarget);
+    MOZ_ASSERT(branch->IsBR());
+    MOZ_ASSERT(load->Rt() == branch->Rn());
   }
 }
 
