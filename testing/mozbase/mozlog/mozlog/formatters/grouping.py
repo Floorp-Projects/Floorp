@@ -246,7 +246,7 @@ class GroupingFormatter(base.BaseFormatter):
             output = ""
 
         output += u"Ran %i tests finished in %.1f seconds.\n" % (
-            self.completed_tests, (self.end_time - self.start_time) / 1000)
+            self.completed_tests, (self.end_time - self.start_time) / 1000.0)
         output += u"  \u2022 %i ran as expected. %i tests skipped.\n" % (
             sum(self.expected.values()), self.expected['SKIP'])
 
