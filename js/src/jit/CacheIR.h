@@ -250,6 +250,7 @@ extern const uint32_t OpLengths[];
   _(GuardNoAllocationMetadataBuilder, None)                                    \
   _(GuardObjectGroupNotPretenured, Field)                                      \
   _(GuardFunctionHasJitEntry, Id, Byte)                                        \
+  _(GuardAndUpdateSpreadArgc, Id, Byte)                                        \
   _(LoadStackValue, Id, UInt32)                                                \
   _(LoadObject, Id, Field)                                                     \
   _(LoadProto, Id, Id)                                                         \
@@ -292,9 +293,9 @@ extern const uint32_t OpLengths[];
   _(CallAddOrUpdateSparseElementHelper, Id, Id, Id, Byte)                      \
   _(CallInt32ToString, Id, Id)                                                 \
   _(CallNumberToString, Id, Id)                                                \
-  _(CallScriptedFunction, Id, Id, Byte)                                        \
-  _(CallNativeFunction, Id, Id, Byte, IF_SIMULATOR(Field, Byte))               \
-  _(CallClassHook, Id, Id, Byte, Field)                                        \
+  _(CallScriptedFunction, Id, Id, Byte, Byte)                                  \
+  _(CallNativeFunction, Id, Id, Byte, Byte, IF_SIMULATOR(Field, Byte))         \
+  _(CallClassHook, Id, Id, Byte, Byte, Field)                                  \
                                                                                \
   /* The *Result ops load a value into the cache's result register. */         \
   _(LoadFixedSlotResult, Id, Field)                                            \
@@ -722,6 +723,14 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     buffer_.writeByte(isConstructing);
   }
 
+  // NOTE: This must be the last guard before a call op, because it modifies
+  // argcReg in place (to avoid running out of registers on x86-32).
+  // TODO: fold this into the call op itself.
+  void guardAndUpdateSpreadArgc(Int32OperandId argcId, bool isConstructing) {
+    writeOpWithOperandId(CacheOp::GuardAndUpdateSpreadArgc, argcId);
+    buffer_.writeByte(isConstructing);
+  }
+
  public:
   // Use (or create) a specialization below to clarify what constaint the
   // group guard is implying.
@@ -1125,17 +1134,19 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     return res;
   }
   void callScriptedFunction(ObjOperandId calleeId, Int32OperandId argc,
-                            bool isCrossRealm) {
+                            bool isCrossRealm, bool isSpread) {
     writeOpWithOperandId(CacheOp::CallScriptedFunction, calleeId);
     writeOperandId(argc);
     buffer_.writeByte(uint32_t(isCrossRealm));
+    buffer_.writeByte(uint32_t(isSpread));
   }
   void callNativeFunction(ObjOperandId calleeId, Int32OperandId argc, JSOp op,
-                          HandleFunction calleeFunc) {
+                          HandleFunction calleeFunc, bool isSpread) {
     writeOpWithOperandId(CacheOp::CallNativeFunction, calleeId);
     writeOperandId(argc);
     bool isCrossRealm = cx_->realm() != calleeFunc->realm();
     buffer_.writeByte(uint32_t(isCrossRealm));
+    buffer_.writeByte(uint32_t(isSpread));
 
     // Some native functions can be implemented faster if we know that
     // the return value is ignored.
@@ -1163,11 +1174,12 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
 #endif
   }
 
-  void callClassHook(ObjOperandId calleeId, Int32OperandId argc,
-                     JSNative hook) {
+  void callClassHook(ObjOperandId calleeId, Int32OperandId argc, JSNative hook,
+                     bool isSpread) {
     writeOpWithOperandId(CacheOp::CallClassHook, calleeId);
     writeOperandId(argc);
-    buffer_.writeByte(true);  // may be cross-realm
+    buffer_.writeByte(true);                // may be cross-realm
+    buffer_.writeByte(uint32_t(isSpread));  // may be cross-realm
     void* target = JS_FUNC_TO_DATA_PTR(void*, hook);
 
 #ifdef JS_SIMULATOR
@@ -2063,6 +2075,8 @@ class MOZ_RAII CallIRGenerator : public IRGenerator {
   HandleValueArray args_;
   PropertyTypeCheckInfo typeCheckInfo_;
   BaselineCacheIRStubKind cacheIRStubKind_;
+
+  uint32_t calleeStackSlot(bool isSpread, bool isConstructing);
 
   bool tryAttachStringSplit();
   bool tryAttachArrayPush();

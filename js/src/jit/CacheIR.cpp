@@ -5239,6 +5239,10 @@ bool CallIRGenerator::tryAttachIsSuspendedGenerator() {
 bool CallIRGenerator::tryAttachSpecialCaseCallNative(HandleFunction callee) {
   MOZ_ASSERT(callee->isNative());
 
+  if (op_ != JSOP_CALL && op_ != JSOP_CALL_IGNORES_RV) {
+    return false;
+  }
+
   if (callee->native() == js::intrinsic_StringSplitString) {
     if (tryAttachStringSplit()) {
       return true;
@@ -5264,6 +5268,19 @@ bool CallIRGenerator::tryAttachSpecialCaseCallNative(HandleFunction callee) {
   return false;
 }
 
+uint32_t CallIRGenerator::calleeStackSlot(bool isSpread, bool isConstructing) {
+  // Stack layout is (bottom to top):
+  //   Callee
+  //   ThisValue
+  //   Args:
+  //     a) if spread: array object containing args
+  //     b) if not spread: |argc| values on the stack
+  //   NewTarget (only if constructing)
+  //   <top of stack>
+
+  return 1 + (isSpread ? 1 : argc_) + isConstructing;
+}
+
 bool CallIRGenerator::tryAttachCallScripted(HandleFunction calleeFunc) {
   if (JitOptions.disableCacheIRCalls) {
     return false;
@@ -5277,9 +5294,7 @@ bool CallIRGenerator::tryAttachCallScripted(HandleFunction calleeFunc) {
 
   bool isConstructing = IsConstructorCallPC(pc_);
 
-  // TODO: Support spread calls.
-  // bool isSpread = IsSpreadCallPC(pc_);
-  MOZ_ASSERT(!IsSpreadCallPC(pc_));
+  bool isSpread = IsSpreadCallPC(pc_);
 
   // If callee is not an interpreted constructor, we have to throw.
   if (isConstructing && !calleeFunc->isConstructor()) {
@@ -5320,7 +5335,8 @@ bool CallIRGenerator::tryAttachCallScripted(HandleFunction calleeFunc) {
   Int32OperandId argcId(writer.setInputOperandId(0));
 
   // Load the callee
-  ValOperandId calleeValId = writer.loadStackValue(argc_ + 1);
+  uint32_t calleeSlot = calleeStackSlot(isSpread, isConstructing);
+  ValOperandId calleeValId = writer.loadStackValue(calleeSlot);
   ObjOperandId calleeObjId = writer.guardIsObject(calleeValId);
 
   // Ensure callee matches this stub's callee
@@ -5329,8 +5345,13 @@ bool CallIRGenerator::tryAttachCallScripted(HandleFunction calleeFunc) {
   // Guard against relazification
   writer.guardFunctionHasJitEntry(calleeObjId, isConstructing);
 
+  // Enforce limits on spread call length, and update argc.
+  if (isSpread) {
+    writer.guardAndUpdateSpreadArgc(argcId, isConstructing);
+  }
+
   bool isCrossRealm = cx_->realm() != calleeFunc->realm();
-  writer.callScriptedFunction(calleeObjId, argcId, isCrossRealm);
+  writer.callScriptedFunction(calleeObjId, argcId, isCrossRealm, isSpread);
   writer.typeMonitorResult();
 
   cacheIRStubKind_ = BaselineCacheIRStubKind::Monitored;
@@ -5343,6 +5364,12 @@ bool CallIRGenerator::tryAttachCallNative(HandleFunction calleeFunc) {
   MOZ_ASSERT(mode_ == ICState::Mode::Specialized);
   MOZ_ASSERT(calleeFunc->isNative());
 
+  bool isSpread = IsSpreadCallPC(pc_);
+
+  bool isConstructing = IsConstructorCallPC(pc_);
+  // TODO: Support constructors
+  MOZ_ASSERT(!isConstructing);
+
   // Check for specific native-function optimizations.
   if (tryAttachSpecialCaseCallNative(calleeFunc)) {
     return true;
@@ -5351,25 +5378,22 @@ bool CallIRGenerator::tryAttachCallNative(HandleFunction calleeFunc) {
     return false;
   }
 
-  // Stack layout here is (bottom to top):
-  //  argc+1: Callee
-  //  argc:   ThisValue
-  //  argc-1: Arg #0
-  //  ...
-  //  1: Arg #(argc-2)
-  //  0: Arg #(argc-1) <-- Top of stack.
-
   // Load argc.
   Int32OperandId argcId(writer.setInputOperandId(0));
 
   // Load the callee
-  ValOperandId calleeValId = writer.loadStackValue(argc_ + 1);
+  uint32_t calleeSlot = calleeStackSlot(isSpread, isConstructing);
+  ValOperandId calleeValId = writer.loadStackValue(calleeSlot);
   ObjOperandId calleeObjId = writer.guardIsObject(calleeValId);
 
   // Ensure callee matches this stub's callee
   writer.guardSpecificObject(calleeObjId, calleeFunc);
 
-  writer.callNativeFunction(calleeObjId, argcId, op_, calleeFunc);
+  // Enforce limits on spread call length, and update argc.
+  if (isSpread) {
+    writer.guardAndUpdateSpreadArgc(argcId, isConstructing);
+  }
+  writer.callNativeFunction(calleeObjId, argcId, op_, calleeFunc, isSpread);
   writer.typeMonitorResult();
 
   cacheIRStubKind_ = BaselineCacheIRStubKind::Monitored;
@@ -5383,11 +5407,11 @@ bool CallIRGenerator::tryAttachCallHook(HandleObject calleeObj) {
     return false;
   }
 
-  bool isSpread = IsSpreadCallPC(pc_);
-  if (op_ == JSOP_FUNAPPLY || isSpread) {
+  if (op_ == JSOP_FUNAPPLY) {
     return false;
   }
 
+  bool isSpread = IsSpreadCallPC(pc_);
   bool isConstructing = IsConstructorCallPC(pc_);
   JSNative hook =
       isConstructing ? calleeObj->constructHook() : calleeObj->callHook();
@@ -5402,13 +5426,19 @@ bool CallIRGenerator::tryAttachCallHook(HandleObject calleeObj) {
   Int32OperandId argcId(writer.setInputOperandId(0));
 
   // Load the callee.
-  ValOperandId calleeValId = writer.loadStackValue(argc_ + 1);
+  uint32_t calleeSlot = calleeStackSlot(isSpread, isConstructing);
+  ValOperandId calleeValId = writer.loadStackValue(calleeSlot);
   ObjOperandId calleeObjId = writer.guardIsObject(calleeValId);
 
   // Ensure the callee's class matches the one in this stub.
   writer.guardAnyClass(calleeObjId, calleeObj->getClass());
 
-  writer.callClassHook(calleeObjId, argcId, hook);
+  // Enforce limits on spread call length, and update argc.
+  if (isSpread) {
+    writer.guardAndUpdateSpreadArgc(argcId, isConstructing);
+  }
+
+  writer.callClassHook(calleeObjId, argcId, hook, isSpread);
   writer.typeMonitorResult();
 
   cacheIRStubKind_ = BaselineCacheIRStubKind::Monitored;
@@ -5424,6 +5454,7 @@ bool CallIRGenerator::tryAttachStub() {
   switch (op_) {
     case JSOP_CALL:
     case JSOP_CALL_IGNORES_RV:
+    case JSOP_SPREADCALL:
       break;
     default:
       return false;
