@@ -37,7 +37,7 @@ addRDMTask(TEST_URL, async function({ ui }) {
   await openDeviceModal(ui);
 
   info("Reveal device adder form, check that defaults match the viewport");
-  const adderShow = document.getElementById("device-adder-show");
+  const adderShow = document.getElementById("device-add-button");
   adderShow.click();
   testDeviceAdder(ui, {
     name: "Custom Device",
@@ -82,7 +82,7 @@ addRDMTask(TEST_URL, async function({ ui }) {
   await openDeviceModal(ui);
 
   info("Reveal device adder form, check that defaults are based on selected device");
-  const adderShow = document.getElementById("device-adder-show");
+  const adderShow = document.getElementById("device-add-button");
   adderShow.click();
   testDeviceAdder(ui, Object.assign({}, device, {
     name: "Test Device (Custom)",
@@ -126,7 +126,7 @@ addRDMTask(TEST_URL, async function({ ui }) {
   await openDeviceModal(ui);
 
   info("Reveal device adder form");
-  const adderShow = document.querySelector("#device-adder-show");
+  const adderShow = document.querySelector("#device-add-button");
   adderShow.click();
 
   info("Fill out device adder form by setting details to unicode device and save");
@@ -171,12 +171,12 @@ addRDMTask(TEST_URL, async function({ ui }) {
 function testDeviceAdder(ui, expected) {
   const { document } = ui.toolWindow;
 
-  const nameInput = document.querySelector("#device-adder-name input");
+  const nameInput = document.querySelector("#device-form-name input");
   const [ widthInput, heightInput ] =
-    document.querySelectorAll("#device-adder-size input");
-  const pixelRatioInput = document.querySelector("#device-adder-pixel-ratio input");
-  const userAgentInput = document.querySelector("#device-adder-user-agent input");
-  const touchInput = document.querySelector("#device-adder-touch input");
+    document.querySelectorAll("#device-form-size input");
+  const pixelRatioInput = document.querySelector("#device-form-pixel-ratio input");
+  const userAgentInput = document.querySelector("#device-form-user-agent input");
+  const touchInput = document.querySelector("#device-form-touch input");
 
   is(nameInput.value, expected.name, "Device name matches");
   is(parseInt(widthInput.value, 10), expected.width, "Width matches");
