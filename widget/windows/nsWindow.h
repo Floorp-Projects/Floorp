@@ -128,6 +128,7 @@ class nsWindow final : public nsWindowBase {
   virtual void ConstrainPosition(bool aAllowSlop, int32_t* aX,
                                  int32_t* aY) override;
   virtual void SetSizeConstraints(const SizeConstraints& aConstraints) override;
+  virtual void LockAspectRatio(bool aShouldLock) override;
   virtual const SizeConstraints GetSizeConstraints() override;
   virtual void Move(double aX, double aY) override;
   virtual void Resize(double aWidth, double aHeight, bool aRepaint) override;
@@ -601,6 +602,8 @@ class nsWindow final : public nsWindowBase {
   int32_t mCaptionHeight;
 
   double mDefaultScale;
+
+  float mAspectRatio;
 
   nsCOMPtr<nsIIdleServiceInternal> mIdleService;
 

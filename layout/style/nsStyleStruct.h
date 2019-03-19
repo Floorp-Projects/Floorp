@@ -1425,15 +1425,16 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleTextReset {
   // Note the difference between this and
   // ComputedStyle::HasTextDecorationLines.
   bool HasTextDecorationLines() const {
-    return mTextDecorationLine != NS_STYLE_TEXT_DECORATION_LINE_NONE &&
-           mTextDecorationLine != NS_STYLE_TEXT_DECORATION_LINE_OVERRIDE_ALL;
+    return mTextDecorationLine != mozilla::StyleTextDecorationLine_NONE &&
+           mTextDecorationLine !=
+               mozilla::StyleTextDecorationLine_COLOR_OVERRIDE;
   }
 
   nsChangeHint CalcDifference(const nsStyleTextReset& aNewData) const;
 
   nsStyleTextOverflow mTextOverflow;  // enum, string
 
-  uint8_t mTextDecorationLine;   // NS_STYLE_TEXT_DECORATION_LINE_*
+  mozilla::StyleTextDecorationLine mTextDecorationLine;
   uint8_t mTextDecorationStyle;  // NS_STYLE_TEXT_DECORATION_STYLE_*
   uint8_t mUnicodeBidi;          // NS_STYLE_UNICODE_BIDI_*
   nscoord mInitialLetterSink;    // 0 means normal
@@ -1879,15 +1880,13 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
   mozilla::StyleOrient mOrient;
   uint8_t mIsolation;           // NS_STYLE_ISOLATION_*
   uint8_t mTopLayer;            // NS_STYLE_TOP_LAYER_*
-  uint8_t mWillChangeBitField;  // NS_STYLE_WILL_CHANGE_*
-                                // Stores a bitfield representation of the
-                                // properties that are frequently queried. This
-                                // should match mWillChange. Also tracks if any
-                                // of the properties in the will-change list
-                                // require a stacking context.
+  // Stores a bitfield representation of the properties that are frequently
+  // queried. This should match mWillChange. Also tracks if any of the
+  // properties in the will-change list require a stacking context.
+  mozilla::StyleWillChangeBits mWillChangeBitField;
   nsTArray<RefPtr<nsAtom>> mWillChange;
 
-  uint8_t mTouchAction;     // NS_STYLE_TOUCH_ACTION_*
+  mozilla::StyleTouchAction mTouchAction;
   uint8_t mScrollBehavior;  // NS_STYLE_SCROLL_BEHAVIOR_*
   mozilla::StyleOverscrollBehavior mOverscrollBehaviorX;
   mozilla::StyleOverscrollBehavior mOverscrollBehaviorY;
@@ -2151,7 +2150,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
     return mSpecifiedTransform || mSpecifiedRotate || mSpecifiedTranslate ||
            mSpecifiedScale ||
            mTransformStyle == NS_STYLE_TRANSFORM_STYLE_PRESERVE_3D ||
-           (mWillChangeBitField & NS_STYLE_WILL_CHANGE_TRANSFORM) ||
+           (mWillChangeBitField & mozilla::StyleWillChangeBits_TRANSFORM) ||
            (mMotion && mMotion->HasPath());
   }
 

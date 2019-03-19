@@ -1257,8 +1257,12 @@ impl LonghandId {
             LonghandId::MozScriptLevel |
             % endif
 
-            // Needed to compute font-relative lengths correctly.
+            // Needed to compute the first available font, in order to
+            // compute font-relative units correctly.
             LonghandId::FontSize |
+            LonghandId::FontWeight |
+            LonghandId::FontStretch |
+            LonghandId::FontStyle |
             LonghandId::FontFamily |
 
             // Needed to resolve currentcolor at computed value time properly.
@@ -2634,24 +2638,6 @@ pub mod style_structs {
                     use crate::Zero;
                     !self.outline_width.is_zero()
                 }
-            % elif style_struct.name == "Text":
-                /// Whether the text decoration has an underline.
-                #[inline]
-                pub fn has_underline(&self) -> bool {
-                    self.text_decoration_line.contains(longhands::text_decoration_line::SpecifiedValue::UNDERLINE)
-                }
-
-                /// Whether the text decoration has an overline.
-                #[inline]
-                pub fn has_overline(&self) -> bool {
-                    self.text_decoration_line.contains(longhands::text_decoration_line::SpecifiedValue::OVERLINE)
-                }
-
-                /// Whether the text decoration has a line through.
-                #[inline]
-                pub fn has_line_through(&self) -> bool {
-                    self.text_decoration_line.contains(longhands::text_decoration_line::SpecifiedValue::LINE_THROUGH)
-                }
             % elif style_struct.name == "Box":
                 /// Sets the display property, but without touching original_display,
                 /// except when the adjustment comes from root or item display fixups.
@@ -3470,7 +3456,7 @@ impl<'a> StyleBuilder<'a> {
                 % endif
             );
     }
-    % elif property.name != "font-size":
+    % else:
     /// Reset `${property.ident}` to the initial value.
     #[allow(non_snake_case)]
     pub fn reset_${property.ident}(&mut self) {

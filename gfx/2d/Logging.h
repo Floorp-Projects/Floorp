@@ -862,6 +862,7 @@ inline bool MOZ2D_warn_if_impl(bool aCondition, const char* aExpr,
 
 const int INDENT_PER_LEVEL = 2;
 
+template<int Level = LOG_DEBUG>
 class TreeLog {
  public:
   explicit TreeLog(const std::string& aPrefix = "")
@@ -906,7 +907,7 @@ class TreeLog {
   }
 
  private:
-  Log<LOG_DEBUG> mLog;
+  Log<Level> mLog;
   std::string mPrefix;
   uint32_t mDepth;
   bool mStartOfLine;
@@ -929,9 +930,10 @@ class TreeLog {
   }
 };
 
+template<int Level = LOG_DEBUG>
 class TreeAutoIndent {
  public:
-  explicit TreeAutoIndent(TreeLog& aTreeLog) : mTreeLog(aTreeLog) {
+  explicit TreeAutoIndent(TreeLog<Level>& aTreeLog) : mTreeLog(aTreeLog) {
     mTreeLog.IncreaseIndent();
   }
 
@@ -945,7 +947,7 @@ class TreeAutoIndent {
   ~TreeAutoIndent() { mTreeLog.DecreaseIndent(); }
 
  private:
-  TreeLog& mTreeLog;
+  TreeLog<Level>& mTreeLog;
 };
 
 }  // namespace gfx

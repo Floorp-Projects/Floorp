@@ -37,6 +37,8 @@ var AboutReader = function(mm, win, articlePromise) {
   this._mm.addMessageListener("Reader:AddButton", this);
   this._mm.addMessageListener("Reader:RemoveButton", this);
   this._mm.addMessageListener("Reader:GetStoredArticleData", this);
+  this._mm.addMessageListener("Reader:ZoomIn", this);
+  this._mm.addMessageListener("Reader:ZoomOut", this);
 
   this._docRef = Cu.getWeakReference(doc);
   this._winRef = Cu.getWeakReference(win);
@@ -151,6 +153,10 @@ AboutReader.prototype = {
 
   PLATFORM_HAS_CACHE: AppConstants.platform == "android",
 
+  FONT_SIZE_MIN: 1,
+
+  FONT_SIZE_MAX: 9,
+
   get _doc() {
     return this._docRef.get();
   },
@@ -251,6 +257,15 @@ AboutReader.prototype = {
       }
       case "Reader:GetStoredArticleData": {
         this._mm.sendAsyncMessage("Reader:StoredArticleData", { article: this._article });
+        break;
+      }
+      case "Reader:ZoomIn": {
+        this._changeFontSize(+1);
+        break;
+      }
+      case "Reader:ZoomOut": {
+        this._changeFontSize(-1);
+        break;
       }
     }
   },
@@ -305,6 +320,8 @@ AboutReader.prototype = {
         this._mm.removeMessageListener("Reader:AddButton", this);
         this._mm.removeMessageListener("Reader:RemoveButton", this);
         this._mm.removeMessageListener("Reader:GetStoredArticleData", this);
+        this._mm.removeMessageListener("Reader:ZoomIn", this);
+        this._mm.removeMessageListener("Reader:ZoomOut", this);
         this._windowUnloaded = true;
         break;
     }
@@ -336,48 +353,25 @@ AboutReader.prototype = {
   },
 
   _setupFontSizeButtons() {
-    const FONT_SIZE_MIN = 1;
-    const FONT_SIZE_MAX = 9;
-
     // Sample text shown in Android UI.
     let sampleText = this._doc.querySelector(".font-size-sample");
     sampleText.textContent = gStrings.GetStringFromName("aboutReader.fontTypeSample");
 
     let currentSize = Services.prefs.getIntPref("reader.font_size");
-    currentSize = Math.max(FONT_SIZE_MIN, Math.min(FONT_SIZE_MAX, currentSize));
+    currentSize = Math.max(this.FONT_SIZE_MIN, Math.min(this.FONT_SIZE_MAX, currentSize));
 
     let plusButton = this._doc.querySelector(".plus-button");
     let minusButton = this._doc.querySelector(".minus-button");
 
-    function updateControls() {
-      if (currentSize === FONT_SIZE_MIN) {
-        minusButton.setAttribute("disabled", true);
-      } else {
-        minusButton.removeAttribute("disabled");
-      }
-      if (currentSize === FONT_SIZE_MAX) {
-        plusButton.setAttribute("disabled", true);
-      } else {
-        plusButton.removeAttribute("disabled");
-      }
-    }
-
-    updateControls();
     this._setFontSize(currentSize);
+    this._updateFontSizeButtonControls();
 
     plusButton.addEventListener("click", (event) => {
       if (!event.isTrusted) {
         return;
       }
       event.stopPropagation();
-
-      if (currentSize >= FONT_SIZE_MAX) {
-        return;
-      }
-
-      currentSize++;
-      updateControls();
-      this._setFontSize(currentSize);
+      this._changeFontSize(+1);
     }, true);
 
     minusButton.addEventListener("click", (event) => {
@@ -385,15 +379,34 @@ AboutReader.prototype = {
         return;
       }
       event.stopPropagation();
-
-      if (currentSize <= FONT_SIZE_MIN) {
-        return;
-      }
-
-      currentSize--;
-      updateControls();
-      this._setFontSize(currentSize);
+      this._changeFontSize(-1);
     }, true);
+  },
+
+  _updateFontSizeButtonControls() {
+    let plusButton = this._doc.querySelector(".plus-button");
+    let minusButton = this._doc.querySelector(".minus-button");
+
+    let currentSize = Services.prefs.getIntPref("reader.font_size");
+
+    if (currentSize === this.FONT_SIZE_MIN) {
+      minusButton.setAttribute("disabled", true);
+    } else {
+      minusButton.removeAttribute("disabled");
+    }
+    if (currentSize === this.FONT_SIZE_MAX) {
+      plusButton.setAttribute("disabled", true);
+    } else {
+      plusButton.removeAttribute("disabled");
+    }
+  },
+
+  _changeFontSize(changeAmount) {
+    let currentSize = Services.prefs.getIntPref("reader.font_size");
+    currentSize = Math.max(this.FONT_SIZE_MIN, Math.min(this.FONT_SIZE_MAX, currentSize + changeAmount));
+
+    this._setFontSize(currentSize);
+    this._updateFontSizeButtonControls();
   },
 
   _setContentWidth(newContentWidth) {

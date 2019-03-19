@@ -205,6 +205,9 @@ class Tree extends Component {
       // Handle when item is activated with a keyboard (using Space or Enter)
       onActivate: PropTypes.func,
 
+      // The currently shown item, if any such item exists.
+      shown: PropTypes.any,
+
       // Indicates if pressing ArrowRight key should only expand expandable node
       // or if the selection should also move to the next node.
       preventNavigationOnArrowRight: PropTypes.bool,
@@ -277,6 +280,7 @@ class Tree extends Component {
     window.addEventListener("resize", this._onResize);
     this._autoExpand();
     this._updateHeight();
+    this._scrollItemIntoView();
   }
 
   componentWillReceiveProps(nextProps) {
@@ -293,8 +297,21 @@ class Tree extends Component {
            mouseDown === nextState.mouseDown;
   }
 
+  componentDidUpdate() {
+    this._scrollItemIntoView();
+  }
+
   componentWillUnmount() {
     window.removeEventListener("resize", this._onResize);
+  }
+
+  _scrollItemIntoView() {
+    const { shown } = this.props;
+    if (!shown) {
+      return;
+    }
+
+    this._scrollIntoView(shown);
   }
 
   _autoExpand() {
@@ -418,6 +435,60 @@ class Tree extends Component {
   }
 
   /**
+   * Scroll item into view. Depending on whether the item is already rendered,
+   * we might have to calculate the position of the item based on its index and
+   * the item height.
+   *
+   * @param {Object} item
+   *        The item to be scrolled into view.
+   * @param {Number|undefined} index
+   *        The index of the item in a full DFS traversal (ignoring collapsed
+   *        nodes) or undefined.
+   * @param {Object} options
+   *        Optional information regarding item's requested alignement when
+   *        scrolling.
+   */
+  _scrollIntoView(item, index, options = {}) {
+    const treeElement = this.refs.tree;
+    if (!treeElement) {
+      return;
+    }
+
+    const element = document.getElementById(this.props.getKey(item));
+    if (element) {
+      scrollIntoView(element, { ...options, container: treeElement });
+      return;
+    }
+
+    if (index == null) {
+      // If index is not provided, determine item index from traversal.
+      const traversal = this._dfsFromRoots();
+      index = traversal.findIndex(({ item: i }) => i === item);
+    }
+
+    if (index == null || index < 0) {
+      return;
+    }
+
+    const { itemHeight } = this.props;
+    const { clientHeight, scrollTop } = treeElement;
+    const elementTop = index * itemHeight;
+    let scrollTo;
+    if (scrollTop >= elementTop + itemHeight) {
+      scrollTo = elementTop;
+    } else if (scrollTop + clientHeight <= elementTop) {
+      scrollTo = elementTop + itemHeight - clientHeight;
+    }
+
+    if (scrollTo != undefined) {
+      treeElement.scrollTo({
+        left: 0,
+        top: scrollTo,
+      });
+    }
+  }
+
+  /**
    * Sets the passed in item to be the focused item.
    *
    * @param {Number} index
@@ -429,12 +500,7 @@ class Tree extends Component {
    */
   _focus(index, item, options = {}) {
     if (item !== undefined && !options.preventAutoScroll) {
-      const treeElement = this.refs.tree;
-      const element = document.getElementById(this.props.getKey(item));
-      scrollIntoView(element, {
-        ...options,
-        container: treeElement,
-      });
+      this._scrollIntoView(item, index, options);
     }
 
     if (this.props.active != null) {
@@ -792,6 +858,7 @@ class ArrowExpanderClass extends Component {
       className: "arrow theme-twisty",
       // To collapse/expand the tree rows use left/right arrow keys.
       tabIndex: "-1",
+      "aria-hidden": true,
       onClick: this.props.expanded
         ? () => this.props.onCollapse(this.props.item)
         : e => this.props.onExpand(this.props.item, e.altKey),

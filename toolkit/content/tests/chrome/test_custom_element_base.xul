@@ -17,6 +17,7 @@
   <simpleelement id="three" disabled="true" style="-moz-user-focus: normal;"/>
   <button id="four"/>
   <inherited-element-declarative foo="fuagra"></inherited-element-declarative>
+  <inherited-element-shadowdom-declarative foo="fuagra"></inherited-element-shadowdom-declarative>
   <inherited-element-imperative foo="fuagra"></inherited-element-imperative>
 
 
@@ -114,6 +115,25 @@
     let declarativeEl = document.querySelector("inherited-element-declarative");
     ok(declarativeEl, "declarative inheritance element exists");
 
+    class InheritsElementShadowDOMDeclarative extends MozXULElement {
+      static get inheritedAttributes() {
+        return {
+          "label": "text=label,foo,boo,bardo=bar",
+          "unmatched": "foo", // Make sure we don't throw on unmatched selectors
+        };
+      }
+
+      connectedCallback() {
+        this.attachShadow({ mode: "open" });
+        this.shadowRoot.append(MozXULElement.parseXULToFragment(`<label />`));
+        this.label = this.shadowRoot.querySelector("label");
+        this.initializeAttributeInheritance();
+      }
+    }
+    customElements.define("inherited-element-shadowdom-declarative", InheritsElementShadowDOMDeclarative);
+    let shadowDOMDeclarativeEl = document.querySelector("inherited-element-shadowdom-declarative");
+    ok(shadowDOMDeclarativeEl, "declarative inheritance element with shadow DOM exists");
+
     class InheritsElementImperative extends MozXULElement {
       static get observedAttributes() {
         return [ "label", "foo", "boo", "bar" ];
@@ -142,7 +162,7 @@
     let imperativeEl = document.querySelector("inherited-element-imperative");
     ok(imperativeEl, "imperative inheritance element exists");
 
-    for (let el of [declarativeEl, imperativeEl]) {
+    for (let el of [declarativeEl, shadowDOMDeclarativeEl, imperativeEl]) {
       info(`Running checks for ${el.tagName}`);
       is(el.label.getAttribute("foo"), "fuagra", "predefined attribute @foo");
       ok(!el.label.hasAttribute("boo"), "predefined attribute @boo");

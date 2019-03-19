@@ -79,6 +79,10 @@ class AccessibleWrap : public Accessible {
 
   virtual role WrapperRole() { return Role(); }
 
+  void GetTextEquiv(nsString& aText);
+
+  bool HandleLiveRegionEvent(AccEvent* aEvent);
+
   static void GetRoleDescription(role aRole,
                                  nsIPersistentProperties* aAttributes,
                                  nsAString& aGeckoRole,

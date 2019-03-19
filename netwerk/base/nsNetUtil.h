@@ -7,6 +7,7 @@
 #ifndef nsNetUtil_h__
 #define nsNetUtil_h__
 
+#include <functional>
 #include "mozilla/Maybe.h"
 #include "nsCOMPtr.h"
 #include "nsIInterfaceRequestor.h"
@@ -890,11 +891,17 @@ void NS_TrimHTTPWhitespace(const nsACString &aSource, nsACString &aDest);
 
 /**
  * Return true if the given request must be upgraded to HTTPS.
+ * If |aResultCallback| is provided and the storage is not ready to read, the
+ * result will be sent back through the callback and |aWillCallback| will be
+ * true. Otherwiew, the result will be set to |aShouldUpgrade| and
+ * |aWillCallback| is false.
  */
 nsresult NS_ShouldSecureUpgrade(
     nsIURI *aURI, nsILoadInfo *aLoadInfo, nsIPrincipal *aChannelResultPrincipal,
     bool aPrivateBrowsing, bool aAllowSTS,
-    const mozilla::OriginAttributes &aOriginAttributes, bool &aShouldUpgrade);
+    const mozilla::OriginAttributes &aOriginAttributes, bool &aShouldUpgrade,
+    std::function<void(bool, nsresult)> &&aResultCallback,
+    bool &aWillCallback);
 
 /**
  * Returns an https URI for channels that need to go through secure upgrades.

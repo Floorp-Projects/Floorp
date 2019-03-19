@@ -6,6 +6,8 @@
 #ifndef nsHttpHandler_h__
 #define nsHttpHandler_h__
 
+#include <functional>
+
 #include "nsHttp.h"
 #include "nsHttpAuthCache.h"
 #include "nsHttpConnectionMgr.h"
@@ -752,6 +754,32 @@ class nsHttpsHandler : public nsIHttpProtocolHandler,
   nsHttpsHandler() = default;
 
   MOZ_MUST_USE nsresult Init();
+};
+
+//-----------------------------------------------------------------------------
+// HSTSDataCallbackWrapper - A threadsafe helper class to wrap the callback.
+//
+// We need this because dom::promise and EnsureHSTSDataResolver are not
+// threadsafe.
+//-----------------------------------------------------------------------------
+class HSTSDataCallbackWrapper final {
+ public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(HSTSDataCallbackWrapper)
+
+  explicit HSTSDataCallbackWrapper(std::function<void(bool)> &&aCallback)
+      : mCallback(std::move(aCallback)) {
+    MOZ_ASSERT(NS_IsMainThread());
+  }
+
+  void DoCallback(bool aResult) {
+    MOZ_ASSERT(NS_IsMainThread());
+    mCallback(aResult);
+  }
+
+ private:
+  ~HSTSDataCallbackWrapper() = default;
+
+  std::function<void(bool)> mCallback;
 };
 
 }  // namespace net

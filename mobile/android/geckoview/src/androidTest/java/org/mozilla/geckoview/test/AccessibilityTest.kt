@@ -103,6 +103,7 @@ class AccessibilityTest : BaseSessionTest() {
         fun onTextTraversal(event: AccessibilityEvent) { }
         fun onWinContentChanged(event: AccessibilityEvent) { }
         fun onWinStateChanged(event: AccessibilityEvent) { }
+        fun onAnnouncement(event: AccessibilityEvent) { }
     }
 
     @Before fun setup() {
@@ -134,6 +135,7 @@ class AccessibilityTest : BaseSessionTest() {
                     AccessibilityEvent.TYPE_VIEW_TEXT_TRAVERSED_AT_MOVEMENT_GRANULARITY -> newDelegate.onTextTraversal(event)
                     AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED -> newDelegate.onWinContentChanged(event)
                     AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED -> newDelegate.onWinStateChanged(event)
+                    AccessibilityEvent.TYPE_ANNOUNCEMENT -> newDelegate.onAnnouncement(event)
                     else -> {}
                 }
                 return false
@@ -591,12 +593,114 @@ class AccessibilityTest : BaseSessionTest() {
                 createNodeInfo(rootNode.getChildId(0)).childCount, equalTo(1))
         mainSession.evaluateJS("$('#to_show').style.display = 'none';")
         sessionRule.waitUntilCalled(object : EventDelegate {
+            @AssertCalled(count = 0)
+            override fun onAnnouncement(event: AccessibilityEvent) { }
+
             @AssertCalled(count = 1)
             override fun onWinContentChanged(event: AccessibilityEvent) { }
         })
 
         assertThat("Section has no children",
                 createNodeInfo(rootNode.getChildId(0)).childCount, equalTo(0))
+    }
+
+    @Test fun testLiveRegion() {
+        sessionRule.session.loadString(
+                "<div id=\"to_change\"aria-live=\"polite\"></div>","text/html")
+        waitForInitialFocus()
+
+        mainSession.evaluateJS("$('#to_change').textContent = 'Hello';")
+        sessionRule.waitUntilCalled(object : EventDelegate {
+            @AssertCalled(count = 1)
+            override fun onAnnouncement(event: AccessibilityEvent) {
+                assertThat("Announcement is correct", event.text[0].toString(), equalTo("Hello"))
+            }
+
+            @AssertCalled(count = 1)
+            override fun onWinContentChanged(event: AccessibilityEvent) { }
+        })
+    }
+
+    @Test fun testLiveRegionDescendant() {
+        sessionRule.session.loadString(
+                "<div aria-live='polite'><p id='to_show'>I will be shown</p></div>","text/html")
+        waitForInitialFocus()
+
+        mainSession.evaluateJS("$('#to_show').style.display = 'none';")
+        sessionRule.waitUntilCalled(object : EventDelegate {
+            @AssertCalled(count = 0)
+            override fun onAnnouncement(event: AccessibilityEvent) { }
+
+            @AssertCalled(count = 1)
+            override fun onWinContentChanged(event: AccessibilityEvent) { }
+        })
+
+        mainSession.evaluateJS("$('#to_show').style.display = 'block';")
+        sessionRule.waitUntilCalled(object : EventDelegate {
+            @AssertCalled(count = 1)
+            override fun onAnnouncement(event: AccessibilityEvent) {
+                assertThat("Announcement is correct", event.text[0].toString(), equalTo("I will be shown"))
+            }
+
+            @AssertCalled(count = 1)
+            override fun onWinContentChanged(event: AccessibilityEvent) { }
+        })
+    }
+
+    @Test fun testLiveRegionAtomic() {
+        sessionRule.session.loadString(
+                "<div aria-live='polite' aria-atomic='true' id='container'>The time is <p>3pm</p></div>","text/html")
+        waitForInitialFocus()
+
+        mainSession.evaluateJS("$('p').textContent = '4pm';")
+        sessionRule.waitUntilCalled(object : EventDelegate {
+            @AssertCalled(count = 1)
+            override fun onAnnouncement(event: AccessibilityEvent) {
+                assertThat("Announcement is correct", event.text[0].toString(), equalTo("The time is 4pm"))
+            }
+
+            @AssertCalled(count = 1)
+            override fun onWinContentChanged(event: AccessibilityEvent) { }
+        })
+
+        mainSession.evaluateJS("$('#container').removeAttribute('aria-atomic'); $('p').textContent = '5pm';")
+        sessionRule.waitUntilCalled(object : EventDelegate {
+            @AssertCalled(count = 1)
+            override fun onAnnouncement(event: AccessibilityEvent) {
+                assertThat("Announcement is correct", event.text[0].toString(), equalTo("5pm"))
+            }
+
+            @AssertCalled(count = 1)
+            override fun onWinContentChanged(event: AccessibilityEvent) { }
+        })
+    }
+
+    @Test fun testLiveRegionImage() {
+        sessionRule.session.loadString(
+                "<div aria-live='polite' aria-atomic='true'>This picture is <img src='data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==' alt='happy'></div>","text/html")
+        waitForInitialFocus()
+
+        mainSession.evaluateJS("console.log('eeejay', $('img').naturalWidth); $('img').alt = 'sad';")
+        sessionRule.waitUntilCalled(object : EventDelegate {
+            @AssertCalled(count = 1)
+            override fun onAnnouncement(event: AccessibilityEvent) {
+                assertThat("Announcement is correct", event.text[0].toString(), equalTo("This picture is sad"))
+            }
+        })
+    }
+
+    @Test fun testLiveRegionImageLabeledBy() {
+        sessionRule.session.loadString(
+                "<img src='data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==' aria-live='polite' aria-labelledby='l1'><span id='l1'>Hello</span><span id='l2'>Goodbye</span>","text/html")
+        waitForInitialFocus()
+
+        mainSession.evaluateJS("$('img').setAttribute('aria-labelledby', 'l2');")
+        sessionRule.waitUntilCalled(object : EventDelegate {
+            @AssertCalled(count = 1)
+            override fun onAnnouncement(event: AccessibilityEvent) {
+                assertThat("Announcement is correct", event.text[0].toString(), equalTo("Goodbye"))
+            }
+        })
     }
 
     private fun screenContainsNode(nodeId: Int): Boolean {

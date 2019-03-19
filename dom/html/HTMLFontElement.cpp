@@ -73,7 +73,7 @@ void HTMLFontElement::MapAttributesIntoRule(
   }
   if (aDecls.Document()->GetCompatibilityMode() == eCompatibility_NavQuirks) {
     // Make <a><font color="red">text</font></a> give the text a red underline
-    // in quirks mode.  The NS_STYLE_TEXT_DECORATION_LINE_OVERRIDE_ALL flag only
+    // in quirks mode.  The StyleTextDecorationLine_COLOR_OVERRIDE flag only
     // affects quirks mode rendering.
     const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::color);
     nscolor color;

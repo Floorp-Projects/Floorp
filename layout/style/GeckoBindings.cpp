@@ -1017,7 +1017,6 @@ void Gecko_nsFont_InitSystem(nsFont* aDest, int32_t aFontId,
   // itself, so this will do.
   new (aDest) nsFont(*defaultVariableFont);
 
-  *aDest = *defaultVariableFont;
   LookAndFeel::FontID fontID = static_cast<LookAndFeel::FontID>(aFontId);
 
   AutoWriteLock guard(*sServoFFILock);
@@ -1025,6 +1024,14 @@ void Gecko_nsFont_InitSystem(nsFont* aDest, int32_t aFontId,
 }
 
 void Gecko_nsFont_Destroy(nsFont* aDest) { aDest->~nsFont(); }
+
+FontFamilyType Gecko_nsStyleFont_ComputeDefaultFontType(const Document* aDoc,
+                                                        uint8_t aGenericId,
+                                                        nsAtom* aLanguage) {
+  const nsFont* defaultFont = ThreadSafeGetDefaultFontHelper(*aDoc, aLanguage,
+                                                             aGenericId);
+  return defaultFont->fontlist.GetDefaultFontType();
+}
 
 gfxFontFeatureValueSet* Gecko_ConstructFontFeatureValueSet() {
   return new gfxFontFeatureValueSet();
@@ -1423,7 +1430,8 @@ void Gecko_AppendWillChange(nsStyleDisplay* aDisplay, nsAtom* aAtom) {
   aDisplay->mWillChange.AppendElement(aAtom);
 }
 
-void Gecko_CopyWillChangeFrom(nsStyleDisplay* aDest, nsStyleDisplay* aSrc) {
+void Gecko_CopyWillChangeFrom(nsStyleDisplay* aDest,
+                              const nsStyleDisplay* aSrc) {
   aDest->mWillChange.Clear();
   aDest->mWillChange.AppendElements(aSrc->mWillChange);
 }
@@ -1913,8 +1921,14 @@ void Gecko_nsStyleFont_PrefillDefaultForGeneric(nsStyleFont* aFont,
   }
 }
 
-void Gecko_nsStyleFont_FixupMinFontSize(nsStyleFont* aFont,
-                                        const Document* aDocument) {
+nscoord Gecko_nsStyleFont_ComputeMinSize(const nsStyleFont* aFont,
+                                         const Document* aDocument) {
+  // Don't change font-size:0, since that would un-hide hidden text, nor chrome
+  // docs, we assume those know what they do.
+  if (aFont->mSize == 0 || nsContentUtils::IsChromeDoc(aDocument)) {
+    return 0;
+  }
+
   nscoord minFontSize;
   bool needsCache = false;
 
@@ -1934,7 +1948,11 @@ void Gecko_nsStyleFont_FixupMinFontSize(nsStyleFont* aFont,
     minFontSize = MinFontSize(nullptr);
   }
 
-  nsLayoutUtils::ApplyMinFontSize(aFont, aDocument, minFontSize);
+  if (minFontSize < 0) {
+    return 0;
+  }
+
+  return (minFontSize * aFont->mMinFontSizeRatio) / 100;
 }
 
 void FontSizePrefs::CopyFrom(const LangGroupFontPrefs& prefs) {

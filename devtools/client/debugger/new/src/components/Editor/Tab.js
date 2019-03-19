@@ -23,7 +23,6 @@ import {
   getRawSourceURL,
   getSourceQueryString,
   getTruncatedFileName,
-  isJavaScript,
   isPretty,
   shouldBlackbox
 } from "../../utils/source";
@@ -150,7 +149,7 @@ class Tab extends PureComponent<Props> {
         item: {
           ...tabMenuItems.prettyPrint,
           click: () => togglePrettyPrint(tab),
-          disabled: isPretty(source) || !isJavaScript(source)
+          disabled: isPretty(sourceTab)
         }
       }
     ];

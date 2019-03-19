@@ -1990,13 +1990,22 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetTextDecoration() {
       textReset->mTextDecorationStyle == NS_STYLE_TEXT_DECORATION_STYLE_SOLID;
   StyleComplexColor color = textReset->mTextDecorationColor;
 
+  RefPtr<nsROCSSPrimitiveValue> textDecorationLine = new nsROCSSPrimitiveValue;
+
+  {
+    nsAutoString decorationLine;
+    Servo_GetPropertyValue(mComputedStyle, eCSSProperty_text_decoration_line,
+                           &decorationLine);
+    textDecorationLine->SetString(decorationLine);
+  }
+
   if (isInitialStyle && color.IsCurrentColor()) {
-    return DoGetTextDecorationLine();
+    return textDecorationLine.forget();
   }
 
   RefPtr<nsDOMCSSValueList> valueList = GetROCSSValueList(false);
 
-  valueList->AppendCSSValue(DoGetTextDecorationLine());
+  valueList->AppendCSSValue(textDecorationLine.forget());
   if (!isInitialStyle) {
     valueList->AppendCSSValue(DoGetTextDecorationStyle());
   }
@@ -2010,28 +2019,6 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetTextDecoration() {
 already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetTextDecorationColor() {
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
   SetValueFromComplexColor(val, StyleTextReset()->mTextDecorationColor);
-  return val.forget();
-}
-
-already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetTextDecorationLine() {
-  RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-
-  int32_t intValue = StyleTextReset()->mTextDecorationLine;
-
-  if (NS_STYLE_TEXT_DECORATION_LINE_NONE == intValue) {
-    val->SetIdent(eCSSKeyword_none);
-  } else {
-    nsAutoString decorationLineString;
-    // Clear the OVERRIDE_ALL bits -- we don't want these to appear in
-    // the computed style.
-    intValue &= ~NS_STYLE_TEXT_DECORATION_LINE_OVERRIDE_ALL;
-    nsStyleUtil::AppendBitmaskCSSValue(
-        nsCSSProps::kTextDecorationLineKTable, intValue,
-        NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE,
-        NS_STYLE_TEXT_DECORATION_LINE_BLINK, decorationLineString);
-    val->SetString(decorationLineString);
-  }
-
   return val.forget();
 }
 
@@ -2260,22 +2247,6 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetWillChange() {
   }
 
   return valueList.forget();
-}
-
-already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetTouchAction() {
-  RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-
-  int32_t intValue = StyleDisplay()->mTouchAction;
-
-  // None and Auto and Manipulation values aren't allowed
-  // to be in conjunction with other values.
-  // But there are all checks in CSSParserImpl::ParseTouchAction
-  nsAutoString valueStr;
-  nsStyleUtil::AppendBitmaskCSSValue(
-      nsCSSProps::kTouchActionKTable, intValue, NS_STYLE_TOUCH_ACTION_NONE,
-      NS_STYLE_TOUCH_ACTION_MANIPULATION, valueStr);
-  val->SetString(valueStr);
-  return val.forget();
 }
 
 already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetHeight() {

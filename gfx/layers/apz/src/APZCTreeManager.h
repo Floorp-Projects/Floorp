@@ -884,7 +884,7 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
   ScreenPoint mCurrentMousePosition;
   /* For logging the APZC tree for debugging (enabled by the apz.printtree
    * pref). */
-  gfx::TreeLog mApzcTreeLog;
+  gfx::TreeLog<gfx::LOG_DEFAULT> mApzcTreeLog;
 
   class CheckerboardFlushObserver;
   friend class CheckerboardFlushObserver;

@@ -130,7 +130,7 @@ class App extends PureComponent {
     return Switch(
       {},
       Route({
-        path: "/connect",
+        path: "/setup",
         render: () => this.renderConnect(),
       }),
       Route({
@@ -142,7 +142,7 @@ class App extends PureComponent {
       // in this case maybe we'd like to do something else than a redirect.
       // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1509897
       Route({
-        render: () => Redirect({ to: "/connect"}),
+        render: () => Redirect({ to: "/setup"}),
       })
     );
   }

@@ -813,6 +813,8 @@ static bool GenerateAndPushTextMask(nsIFrame* aFrame, gfxContext* aContext,
     return false;
   }
 
+  SVGObserverUtils::GetAndObserveBackgroundClip(aFrame);
+
   // The main function of enabling background-clip:text property value.
   // When a nsDisplayBackgroundImage detects "text" bg-clip style, it will call
   // this function to
@@ -1261,7 +1263,8 @@ AnimatedGeometryRoot* nsDisplayListBuilder::FindAnimatedGeometryRootFor(
 }
 
 void nsDisplayListBuilder::UpdateShouldBuildAsyncZoomContainer() {
-  mBuildAsyncZoomContainer = gfxPrefs::APZAllowZooming() &&
+  Document* document = mReferenceFrame->PresContext()->Document();
+  mBuildAsyncZoomContainer = nsLayoutUtils::AllowZoomingForDocument(document) &&
                              !gfxPrefs::LayoutUseContainersForRootFrames();
 }
 

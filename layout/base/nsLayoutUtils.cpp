@@ -667,6 +667,16 @@ bool nsLayoutUtils::AsyncPanZoomEnabled(nsIFrame* aFrame) {
   return widget->AsyncPanZoomEnabled();
 }
 
+bool nsLayoutUtils::AllowZoomingForDocument(
+    const mozilla::dom::Document* aDocument) {
+  // True if we allow zooming for all documents on this platform, or if we are
+  // in RDM and handling meta viewports, which force zoom under some
+  // circumstances.
+  return gfxPrefs::APZAllowZooming() ||
+         (aDocument && aDocument->InRDMPane() &&
+          nsLayoutUtils::ShouldHandleMetaViewport(aDocument));
+}
+
 float nsLayoutUtils::GetCurrentAPZResolutionScale(nsIPresShell* aShell) {
   return aShell ? aShell->GetCumulativeNonRootScaleResolution() : 1.0;
 }
@@ -9149,10 +9159,9 @@ bool nsLayoutUtils::ContainsMetricsWithId(const Layer* aLayer,
 }
 
 /* static */
-uint32_t nsLayoutUtils::GetTouchActionFromFrame(nsIFrame* aFrame) {
-  // If aFrame is null then return default value
+StyleTouchAction nsLayoutUtils::GetTouchActionFromFrame(nsIFrame* aFrame) {
   if (!aFrame) {
-    return NS_STYLE_TOUCH_ACTION_AUTO;
+    return StyleTouchAction_AUTO;
   }
 
   // The touch-action CSS property applies to: all elements except:
@@ -9161,13 +9170,13 @@ uint32_t nsLayoutUtils::GetTouchActionFromFrame(nsIFrame* aFrame) {
   bool isNonReplacedInlineElement =
       aFrame->IsFrameOfType(nsIFrame::eLineParticipant);
   if (isNonReplacedInlineElement) {
-    return NS_STYLE_TOUCH_ACTION_AUTO;
+    return StyleTouchAction_AUTO;
   }
 
   const nsStyleDisplay* disp = aFrame->StyleDisplay();
   bool isTableElement = disp->IsInternalTableStyleExceptCell();
   if (isTableElement) {
-    return NS_STYLE_TOUCH_ACTION_AUTO;
+    return StyleTouchAction_AUTO;
   }
 
   return disp->mTouchAction;
@@ -9341,7 +9350,8 @@ static void UpdateDisplayPortMarginsForPendingMetrics(
     return;
   }
 
-  if (gfxPrefs::APZAllowZooming() && aMetrics.IsRootContent()) {
+  if (nsLayoutUtils::AllowZoomingForDocument(shell->GetDocument()) &&
+      aMetrics.IsRootContent()) {
     // See APZCCallbackHelper::UpdateRootFrame for details.
     float presShellResolution = shell->GetResolution();
     if (presShellResolution != aMetrics.GetPresShellResolution()) {
@@ -9736,28 +9746,6 @@ void nsLayoutUtils::FixupNoneGeneric(nsFont* aFont, uint8_t aGenericFontID,
 }
 
 /* static */
-void nsLayoutUtils::ApplyMinFontSize(nsStyleFont* aFont,
-                                     const Document* aDocument,
-                                     nscoord aMinFontSize) {
-  nscoord fontSize = aFont->mSize;
-
-  // enforce the user' specified minimum font-size on the value that we expose
-  // (but don't change font-size:0, since that would unhide hidden text)
-  if (fontSize > 0) {
-    if (aMinFontSize < 0) {
-      aMinFontSize = 0;
-    } else {
-      aMinFontSize = (aMinFontSize * aFont->mMinFontSizeRatio) / 100;
-    }
-    if (fontSize < aMinFontSize && !nsContentUtils::IsChromeDoc(aDocument)) {
-      // override the minimum font-size constraint
-      fontSize = aMinFontSize;
-    }
-  }
-  aFont->mFont.size = fontSize;
-}
-
-/* static */
 void nsLayoutUtils::ComputeSystemFont(nsFont* aSystemFont,
                                       LookAndFeel::FontID aFontID,
                                       const nsFont* aDefaultVariableFont) {
@@ -9805,7 +9793,7 @@ void nsLayoutUtils::ComputeSystemFont(nsFont* aSystemFont,
 }
 
 /* static */
-bool nsLayoutUtils::ShouldHandleMetaViewport(Document* aDocument) {
+bool nsLayoutUtils::ShouldHandleMetaViewport(const Document* aDocument) {
   auto metaViewportOverride = nsIDocShell::META_VIEWPORT_OVERRIDE_NONE;
   if (aDocument) {
     if (nsIDocShell* docShell = aDocument->GetDocShell()) {

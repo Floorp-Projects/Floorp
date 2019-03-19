@@ -449,6 +449,9 @@ cbindgen-types = [
     { gecko = "StyleGenericLineHeight", servo = "values::generics::text::LineHeight" },
     { gecko = "StyleContain", servo = "values::computed::Contain" },
     { gecko = "StyleRestyleHint", servo = "invalidation::element::restyle_hints::RestyleHint" },
+    { gecko = "StyleTouchAction", servo = "values::computed::TouchAction" },
+    { gecko = "StyleWillChangeBits", servo = "values::specified::box_::WillChangeBits" },
+    { gecko = "StyleTextDecorationLine", servo = "values::computed::TextDecorationLine" },
 ]
 
 mapped-generic-types = [

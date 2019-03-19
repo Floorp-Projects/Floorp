@@ -2923,8 +2923,8 @@ nsStyleDisplay::nsStyleDisplay(const Document& aDocument)
       mOrient(StyleOrient::Inline),
       mIsolation(NS_STYLE_ISOLATION_AUTO),
       mTopLayer(NS_STYLE_TOP_LAYER_NONE),
-      mWillChangeBitField(0),
-      mTouchAction(NS_STYLE_TOUCH_ACTION_AUTO),
+      mWillChangeBitField({0}),
+      mTouchAction(StyleTouchAction_AUTO),
       mScrollBehavior(NS_STYLE_SCROLL_BEHAVIOR_AUTO),
       mOverscrollBehaviorX(StyleOverscrollBehavior::Auto),
       mOverscrollBehaviorY(StyleOverscrollBehavior::Auto),
@@ -3280,20 +3280,23 @@ nsChangeHint nsStyleDisplay::CalcDifference(
   }
 
   // Note that the HasTransformStyle() != aNewData.HasTransformStyle()
-  // test above handles relevant changes in the
-  // NS_STYLE_WILL_CHANGE_TRANSFORM bit, which in turn handles frame
-  // reconstruction for changes in the containing block of
-  // fixed-positioned elements.
-  uint8_t willChangeBitsChanged =
-      mWillChangeBitField ^ aNewData.mWillChangeBitField;
+  // test above handles relevant changes in the StyleWillChangeBit_TRANSFORM
+  // bit, which in turn handles frame reconstruction for changes in the
+  // containing block of fixed-positioned elements.
+  //
+  // TODO(emilio): Should add xor to the generated cbindgen type.
+  auto willChangeBitsChanged =
+      StyleWillChangeBits{static_cast<decltype(StyleWillChangeBits::bits)>(
+          mWillChangeBitField.bits ^ aNewData.mWillChangeBitField.bits)};
+
   if (willChangeBitsChanged &
-      (NS_STYLE_WILL_CHANGE_STACKING_CONTEXT | NS_STYLE_WILL_CHANGE_SCROLL |
-       NS_STYLE_WILL_CHANGE_OPACITY)) {
+      (StyleWillChangeBits_STACKING_CONTEXT | StyleWillChangeBits_SCROLL |
+       StyleWillChangeBits_OPACITY)) {
     hint |= nsChangeHint_RepaintFrame;
   }
 
   if (willChangeBitsChanged &
-      (NS_STYLE_WILL_CHANGE_FIXPOS_CB | NS_STYLE_WILL_CHANGE_ABSPOS_CB)) {
+      (StyleWillChangeBits_FIXPOS_CB | StyleWillChangeBits_ABSPOS_CB)) {
     hint |= nsChangeHint_UpdateContainingBlock;
   }
 
@@ -3618,7 +3621,7 @@ nsChangeHint nsStyleContent::CalcDifference(
 
 nsStyleTextReset::nsStyleTextReset(const Document& aDocument)
     : mTextOverflow(),
-      mTextDecorationLine(NS_STYLE_TEXT_DECORATION_LINE_NONE),
+      mTextDecorationLine(StyleTextDecorationLine_NONE),
       mTextDecorationStyle(NS_STYLE_TEXT_DECORATION_STYLE_SOLID),
       mUnicodeBidi(NS_STYLE_UNICODE_BIDI_NORMAL),
       mInitialLetterSink(0),

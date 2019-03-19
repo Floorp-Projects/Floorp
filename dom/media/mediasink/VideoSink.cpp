@@ -571,10 +571,30 @@ void VideoSink::MaybeResolveEndPromise() {
 void VideoSink::SetSecondaryVideoContainer(VideoFrameContainer* aSecondary) {
   AssertOwnerThread();
   mSecondaryContainer = aSecondary;
-  if (!IsPlaying()) {
-    // If we're paused, try to send the current frame that we're
-    // paused at to the secondary container.
-    RenderVideoFrames(1);
+  if (!IsPlaying() && mSecondaryContainer) {
+    ImageContainer* mainImageContainer = mContainer->GetImageContainer();
+    ImageContainer* secondaryImageContainer =
+        mSecondaryContainer->GetImageContainer();
+    MOZ_DIAGNOSTIC_ASSERT(mainImageContainer);
+    MOZ_DIAGNOSTIC_ASSERT(secondaryImageContainer);
+
+    // If the video isn't currently playing, get the most recently
+    // decoded frame and display that in the secondary container as
+    // well.
+    nsTArray<ImageContainer::OwningImage> oldImages;
+    mainImageContainer->GetCurrentImages(&oldImages);
+    if (oldImages.Length()) {
+      ImageContainer::OwningImage& old = oldImages.LastElement();
+
+      nsTArray<ImageContainer::NonOwningImage> currentFrame;
+      // We hardcode this first frame to 0 so that we ensure that subsequent
+      // frames always have a greater frameID, which is an ImageContainer
+      // invariant.
+      currentFrame.AppendElement(ImageContainer::NonOwningImage(
+          old.mImage, old.mTimeStamp, /* frameID */ 0, old.mProducerID));
+
+      secondaryImageContainer->SetCurrentImages(currentFrame);
+    }
   }
 }
 

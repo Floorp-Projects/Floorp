@@ -82,17 +82,12 @@ pub enum FontBaseSize {
     ///
     /// FIXME(emilio): This is very complex, and should go away.
     InheritedStyleButStripEmUnits,
-    /// Use a custom base size.
-    ///
-    /// FIXME(emilio): This is very dubious, and only used for MathML.
-    Custom(Au),
 }
 
 impl FontBaseSize {
     /// Calculate the actual size for a given context
     pub fn resolve(&self, context: &Context) -> Au {
         match *self {
-            FontBaseSize::Custom(size) => size,
             FontBaseSize::CurrentStyle => context.style().get_font().clone_font_size().size(),
             FontBaseSize::InheritedStyleButStripEmUnits | FontBaseSize::InheritedStyle => {
                 context.style().get_parent_font().clone_font_size().size()
@@ -136,15 +131,9 @@ impl FontRelativeLength {
     ) -> (Au, CSSFloat) {
         fn query_font_metrics(
             context: &Context,
-            reference_font_size: Au,
+            base_size: FontBaseSize,
         ) -> FontMetricsQueryResult {
-            context.font_metrics_provider.query(
-                context.style().get_font(),
-                reference_font_size,
-                context.style().writing_mode,
-                context.in_media_query,
-                context.device(),
-            )
+            context.font_metrics_provider.query(context, base_size)
         }
 
         let reference_font_size = base_size.resolve(context);
@@ -169,7 +158,7 @@ impl FontRelativeLength {
                 if context.for_non_inherited_property.is_some() {
                     context.rule_cache_conditions.borrow_mut().set_uncacheable();
                 }
-                let reference_size = match query_font_metrics(context, reference_font_size) {
+                let reference_size = match query_font_metrics(context, base_size) {
                     FontMetricsQueryResult::Available(metrics) => metrics.x_height,
                     // https://drafts.csswg.org/css-values/#ex
                     //
@@ -185,7 +174,7 @@ impl FontRelativeLength {
                 if context.for_non_inherited_property.is_some() {
                     context.rule_cache_conditions.borrow_mut().set_uncacheable();
                 }
-                let reference_size = match query_font_metrics(context, reference_font_size) {
+                let reference_size = match query_font_metrics(context, base_size) {
                     FontMetricsQueryResult::Available(metrics) => metrics.zero_advance_measure,
                     // https://drafts.csswg.org/css-values/#ch
                     //

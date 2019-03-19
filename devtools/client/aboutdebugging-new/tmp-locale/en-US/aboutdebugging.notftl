@@ -17,8 +17,8 @@ about-debugging-sidebar-this-firefox =
   .name = { about-debugging-this-firefox-runtime-name }
 
 # Sidebar heading for connecting to some remote source
-about-debugging-sidebar-connect =
-  .name = Connect
+about-debugging-sidebar-setup =
+  .name = Setup
 
 # Text displayed in the about:debugging sidebar when USB devices discovery is enabled.
 about-debugging-sidebar-usb-enabled = USB enabled
@@ -60,51 +60,39 @@ about-debugging-sidebar-runtime-item-name-no-device =
 # UI, do not localize.
 about-debugging-refresh-usb-devices-button = Refresh devices
 
-# Title of the Connect page.
-about-debugging-connect-title = Connect a Device
+# Title of the Setup page.
+about-debugging-connect-title = Setup
 
-# WiFi section of the Connect page
-about-debugging-connect-wifi =
-  .title = Via WiFi
+# Explanatory text in the Setup page about what the 'This Firefox' page is for
+about-debugging-setup-this-firefox = Use <a>This Firefox</a> to debug tags, extensions and service workers on this version of Firefox.
 
-# Temporary text displayed when wifi support is turned off via preferences.
-# { $pref } is the name of the preference that enables wifi
-# Do not localize
-about-debugging-connect-wifi-disabled = WiFi debugging currently under development. You can enable it with the preference “{ $pref }”.
+# USB section of the Setup page
+about-debugging-setup-usb-title = USB
+about-debugging-setup-usb-disabled = Enabling this will download and add the required Android USB debugging components to Firefox.
+about-debugging-setup-usb-enable-button = Enable USB Devices
+about-debugging-setup-usb-disable-button = Disable USB Devices
+about-debugging-setup-usb-updating-button = Updating…
 
-# WiFi section step by step guide
-about-debugging-connect-wifi-step-same-network = Ensure that your browser and device are on the same network
-
-# WiFi section step by step guide
-about-debugging-connect-wifi-step-open-firefox = Open Firefox for Android
-
-# WiFi section step by step guide
-about-debugging-connect-wifi-step-open-options = Go to Options -> Settings -> Advanced
-
-# WiFi section step by step guide
-about-debugging-connect-wifi-step-enable-debug = Enable Remote Debugging via WiFi in the Developer Tools section
-
-# USB section of the Connect page
-about-debugging-connect-usb =
-  .title = Via USB
-
-about-debugging-connect-usb-disabled = Enabling this will download and add the required Android USB debugging components to Firefox.
-about-debugging-connect-usb-enable-button = Enable USB Devices
-about-debugging-connect-usb-disable-button = Disable USB Devices
-about-debugging-connect-usb-updating-button = Updating…
+# USB section of the Setup page (USB status)
+about-debugging-setup-usb-status-enabled = Enabled
+about-debugging-setup-usb-status-disabled = Disabled
+about-debugging-setup-usb-status-updating = Updating…
 
 # USB section step by step guide
-about-debugging-connect-usb-step-enable-dev-menu = Enable Developer menu on your Android device
+about-debugging-setup-usb-step-enable-dev-menu = Enable Developer menu on your Android device. <a>Learn how</a>
 
 # USB section step by step guide
-about-debugging-connect-usb-step-enable-debug = Enable USB Debugging on the Android Developer Menu
+about-debugging-setup-usb-step-enable-debug = Enable USB Debugging in the Android Developer Menu. <a>Learn how</a>
 
 # USB section step by step guide
-about-debugging-connect-usb-step-plug-device = Connect the USB Device to your computer
+about-debugging-setup-usb-step-enable-debug-firefox = Enable USB Debugging in Firefox on the Android device. <a>Learn how</a>
+
+# USB section step by step guide
+about-debugging-setup-usb-step-plug-device = Connect the Android device to your computer.
 
 # Network section of the Connect page
 about-debugging-connect-network =
-  .title = Via Network Location
+  .title = Network Location
 
 # Temporary text displayed when network location support is turned off via preferences.
 # { $pref } is the name of the preference that enables network locations
@@ -289,7 +277,7 @@ about-debugging-connection-prompt-disable-button = Disable connection prompt
 # Part of "about-debugging-page-title" string defined below
 about-debugging-page-title-selected-page =
   { $selectedPage ->
-     [connect] Connect
+     [connect] Setup
      *[runtime] Runtime
   }
 

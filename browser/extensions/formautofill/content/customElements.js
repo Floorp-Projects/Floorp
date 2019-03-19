@@ -90,24 +90,14 @@
       this._label = this.querySelector(".profile-label");
       this._comment = this.querySelector(".profile-comment");
 
-      this._updateAttributes();
+      this.initializeAttributeInheritance();
       this._adjustAcItem();
     }
 
-    static get observedAttributes() {
-      return [
-        "ac-image",
-      ];
-    }
-
-    attributeChangedCallback(name, oldValue, newValue) {
-      if (this.isConnectedAndReady && name == "ac-image" && oldValue != newValue) {
-        this._updateAttributes();
-      }
-    }
-
-    _updateAttributes() {
-      this.inheritAttribute(this._itemBox, "ac-image");
+    static get inheritedAttributes() {
+      return {
+        ".autofill-item-box": "ac-image",
+      };
     }
 
     set selected(val) {

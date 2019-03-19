@@ -1,0 +1,29 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>
+  Test for bug 1395964: We don't reframe for image loading state changes.
+</title>
+<link rel="author" href="mailto:emilio@crisal.io" title="Emilio Cobos Álvarez">
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<img id="content" src="support/1x1-transparent.png"></div>
+<script>
+SimpleTest.waitForExplicitFinish();
+const utils = SpecialPowers.getDOMWindowUtils(window);
+
+const content = document.getElementById("content");
+
+onload = function() {
+  content.offsetTop;
+
+  const previousConstructCount = utils.framesConstructed;
+
+  content.addEventListener("load", function() {
+    content.offsetTop;
+    is(previousConstructCount, utils.framesConstructed,
+       "We should not have reframed");
+    SimpleTest.finish();
+  });
+
+  content.src = "support/blue-100x100.png";
+}
+</script>

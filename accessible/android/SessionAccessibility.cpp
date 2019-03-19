@@ -322,6 +322,20 @@ void SessionAccessibility::SendSelectedEvent(AccessibleWrap* aAccessible,
       aAccessible->VirtualViewID(), aAccessible->AndroidClass(), eventInfo);
 }
 
+void SessionAccessibility::SendAnnouncementEvent(AccessibleWrap* aAccessible,
+                                                 const nsString& aAnnouncement,
+                                                 uint16_t aPriority) {
+  GECKOBUNDLE_START(eventInfo);
+  GECKOBUNDLE_PUT(eventInfo, "text", jni::StringParam(aAnnouncement));
+  GECKOBUNDLE_FINISH(eventInfo);
+
+  // Announcements should have the root as their source, so we ignore the
+  // accessible of the event.
+  mSessionAccessibility->SendEvent(
+      java::sdk::AccessibilityEvent::TYPE_ANNOUNCEMENT, AccessibleWrap::kNoID,
+      java::SessionAccessibility::CLASSNAME_WEBVIEW, eventInfo);
+}
+
 void SessionAccessibility::ReplaceViewportCache(
     const nsTArray<AccessibleWrap*>& aAccessibles,
     const nsTArray<BatchData>& aData) {

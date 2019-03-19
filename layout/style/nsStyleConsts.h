@@ -240,16 +240,6 @@ enum class StyleOrient : uint8_t {
   Vertical,
 };
 
-// See nsStyleDisplay
-//
-// These need to be in sync with WillChangeBits in box.rs.
-#define NS_STYLE_WILL_CHANGE_STACKING_CONTEXT (1 << 0)
-#define NS_STYLE_WILL_CHANGE_TRANSFORM (1 << 1)
-#define NS_STYLE_WILL_CHANGE_SCROLL (1 << 2)
-#define NS_STYLE_WILL_CHANGE_OPACITY (1 << 3)
-#define NS_STYLE_WILL_CHANGE_FIXPOS_CB (1 << 4)
-#define NS_STYLE_WILL_CHANGE_ABSPOS_CB (1 << 5)
-
 // See AnimationEffect.webidl
 // and mozilla/dom/AnimationEffectBinding.h
 namespace dom {
@@ -562,20 +552,6 @@ enum class StyleGridTrackBreadth : uint8_t {
 // Note: make sure that the largest NS_STYLE_TEXT_ALIGN_* value is smaller than
 // the smallest NS_STYLE_VERTICAL_ALIGN_* value below!
 
-// See nsStyleText, nsStyleFont
-#define NS_STYLE_TEXT_DECORATION_LINE_NONE 0
-#define NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE 0x01
-#define NS_STYLE_TEXT_DECORATION_LINE_OVERLINE 0x02
-#define NS_STYLE_TEXT_DECORATION_LINE_LINE_THROUGH 0x04
-#define NS_STYLE_TEXT_DECORATION_LINE_BLINK 0x08
-// OVERRIDE_ALL does not occur in stylesheets; it only comes from HTML
-// attribute mapping (and thus appears in computed data)
-#define NS_STYLE_TEXT_DECORATION_LINE_OVERRIDE_ALL 0x10
-#define NS_STYLE_TEXT_DECORATION_LINE_LINES_MASK \
-  (NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE |     \
-   NS_STYLE_TEXT_DECORATION_LINE_OVERLINE |      \
-   NS_STYLE_TEXT_DECORATION_LINE_LINE_THROUGH)
-
 // See nsStyleText
 #define NS_STYLE_TEXT_DECORATION_STYLE_NONE \
   0  // not in CSS spec, mapped to -moz-none
@@ -598,13 +574,6 @@ enum class StyleGridTrackBreadth : uint8_t {
 #define NS_STYLE_TEXT_TRANSFORM_UPPERCASE 3
 #define NS_STYLE_TEXT_TRANSFORM_FULL_WIDTH 4
 #define NS_STYLE_TEXT_TRANSFORM_FULL_SIZE_KANA 5
-
-// See nsStyleDisplay
-#define NS_STYLE_TOUCH_ACTION_NONE (1 << 0)
-#define NS_STYLE_TOUCH_ACTION_AUTO (1 << 1)
-#define NS_STYLE_TOUCH_ACTION_PAN_X (1 << 2)
-#define NS_STYLE_TOUCH_ACTION_PAN_Y (1 << 3)
-#define NS_STYLE_TOUCH_ACTION_MANIPULATION (1 << 4)
 
 // See nsStyleDisplay
 #define NS_STYLE_TOP_LAYER_NONE 0  // not in the top layer

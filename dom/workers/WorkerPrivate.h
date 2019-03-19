@@ -671,13 +671,6 @@ class WorkerPrivate : public RelativeTimeline {
     return mLoadInfo.mLoadGroup;
   }
 
-  // This method allows the principal to be retrieved off the main thread.
-  // Principals are main-thread objects so the caller must ensure that all
-  // access occurs on the main thread.
-  nsIPrincipal* GetPrincipalDontAssertMainThread() const {
-    return mLoadInfo.mPrincipal;
-  }
-
   bool UsesSystemPrincipal() const { return mLoadInfo.mPrincipalIsSystem; }
 
   const mozilla::ipc::PrincipalInfo& GetPrincipalInfo() const {

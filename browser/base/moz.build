@@ -24,6 +24,7 @@ TESTING_JS_MODULES += [
 BROWSER_CHROME_MANIFESTS += [
     'content/test/about/browser.ini',
     'content/test/alerts/browser.ini',
+    'content/test/caps/browser.ini',
     'content/test/captivePortal/browser.ini',
     'content/test/contextMenu/browser.ini',
     'content/test/favicons/browser.ini',

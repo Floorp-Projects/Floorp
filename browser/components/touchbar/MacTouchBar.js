@@ -211,6 +211,7 @@ class TouchBarHelper {
       return null;
     }
 
+    // context() may specify that one named input "point" to another.
     if (typeof kBuiltInInputs[inputName].context == "function") {
       inputName = kBuiltInInputs[inputName].context();
     }
@@ -223,16 +224,23 @@ class TouchBarHelper {
 
     let item = new TouchBarInput(inputData);
 
+    // Skip localization if there is already a cached localized title.
+    if (kBuiltInInputs[inputName].hasOwnProperty("localTitle")) {
+      return item;
+    }
+
     // Async l10n fills in the localized input labels after the initial load.
     this._l10n.formatValue(item.key).then((result) => {
       item.title = result;
       kBuiltInInputs[inputName].localTitle = result; // Cache result.
       // Checking this.window since this callback can fire after all windows are closed.
       if (this.window) {
+        let wrapperArray = Cc["@mozilla.org/array;1"].createInstance(Ci.nsIMutableArray);
+        wrapperArray.appendElement(item);
         let baseWindow = this.window.docShell.treeOwner.QueryInterface(Ci.nsIBaseWindow);
         let updater = Cc["@mozilla.org/widget/touchbarupdater;1"]
                         .getService(Ci.nsITouchBarUpdater);
-        updater.updateTouchBarInput(baseWindow, item);
+        updater.updateTouchBarInputs(baseWindow, wrapperArray);
       }
     });
 
@@ -243,17 +251,28 @@ class TouchBarHelper {
    * Fetches a specific Touch Bar Input by name and updates it on the Touch Bar.
    * @param {string} inputName
    *        A key to a value in the kBuiltInInputs object in this file.
+   * @param {...*} [otherInputs] (optional)
+   *        Additional keys to values in the kBuiltInInputs object in this file.
    */
-  _updateTouchBarInput(inputName) {
+  _updateTouchBarInputs(inputName, ...otherInputs) {
     let input = this.getTouchBarInput(inputName);
     if (!input || !this.window) {
       return;
+    }
+    let inputs = Cc["@mozilla.org/array;1"].createInstance(Ci.nsIMutableArray);
+    inputs.appendElement(input);
+    for (let otherInputName of otherInputs) {
+      input = this.getTouchBarInput(otherInputName);
+      if (!input) {
+        continue;
+      }
+      inputs.appendElement(input);
     }
 
     let baseWindow = this.window.docShell.treeOwner.QueryInterface(Ci.nsIBaseWindow);
     let updater = Cc["@mozilla.org/widget/touchbarupdater;1"]
                     .getService(Ci.nsITouchBarUpdater);
-    updater.updateTouchBarInput(baseWindow, input);
+    updater.updateTouchBarInputs(baseWindow, inputs);
   }
 
   observe(subject, topic, data) {
@@ -263,28 +282,26 @@ class TouchBarHelper {
         // ReaderView button is disabled on every location change since
         // Reader View must determine if the new page can be Reader Viewed.
         kBuiltInInputs.ReaderView.disabled = !data.startsWith("about:reader");
-        this._updateTouchBarInput("ReaderView");
         kBuiltInInputs.Back.disabled = !this.window.gBrowser.canGoBack;
-        this._updateTouchBarInput("Back");
         kBuiltInInputs.Forward.disabled = !this.window.gBrowser.canGoForward;
-        this._updateTouchBarInput("Forward");
+        this._updateTouchBarInputs("ReaderView", "Back", "Forward");
         break;
       case "bookmark-icon-updated":
         data == "starred" ?
           kBuiltInInputs.AddBookmark.image = "bookmark-filled.pdf"
           : kBuiltInInputs.AddBookmark.image = "bookmark.pdf";
-        this._updateTouchBarInput("AddBookmark");
+        this._updateTouchBarInputs("AddBookmark");
         break;
       case "reader-mode-available":
         kBuiltInInputs.ReaderView.disabled = false;
-        this._updateTouchBarInput("ReaderView");
+        this._updateTouchBarInputs("ReaderView");
         break;
       case "intl:app-locales-changed":
         // On locale change, refresh all inputs after loading new localTitle.
         for (let inputName of this._storedLayout) {
           delete kBuiltInInputs[inputName].localTitle;
-          this._updateTouchBarInput(inputName);
         }
+        this._updateTouchBarInputs(...this._storedLayout);
         break;
       case "quit-application":
         this.destructor();

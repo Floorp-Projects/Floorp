@@ -15,7 +15,7 @@ const Types = require("../types");
 class ViewportDimension extends PureComponent {
   static get propTypes() {
     return {
-      onResizeViewport: PropTypes.func.isRequired,
+      doResizeViewport: PropTypes.func.isRequired,
       onRemoveDeviceAssociation: PropTypes.func.isRequired,
       viewport: PropTypes.shape(Types.viewport).isRequired,
     };
@@ -121,7 +121,7 @@ class ViewportDimension extends PureComponent {
     const {
       viewport,
       onRemoveDeviceAssociation,
-      onResizeViewport,
+      doResizeViewport,
     } = this.props;
 
     if (!this.state.isWidthValid || !this.state.isHeightValid) {
@@ -143,7 +143,7 @@ class ViewportDimension extends PureComponent {
       onRemoveDeviceAssociation(viewport.id);
     }
 
-    onResizeViewport(viewport.id,
+    doResizeViewport(viewport.id,
       parseInt(this.state.width, 10), parseInt(this.state.height, 10));
   }
 
