@@ -90,7 +90,7 @@ RemoteAudioDecoderParent::RemoteAudioDecoderParent(
   *aSuccess = !!mDecoder;
 }
 
-void RemoteAudioDecoderParent::ProcessDecodedData(
+MediaResult RemoteAudioDecoderParent::ProcessDecodedData(
     const MediaDataDecoder::DecodedData& aData) {
   MOZ_ASSERT(OnManagerThread());
 
@@ -104,12 +104,20 @@ void RemoteAudioDecoderParent::ProcessDecodedData(
                "to be used with RemoteAudioDecoderParent");
 
     Shmem buffer;
-    if (AllocShmem(audio->Data().Length() * sizeof(AudioDataValue),
-                   Shmem::SharedMemory::TYPE_BASIC, &buffer) &&
-        audio->Data().Length() == buffer.Size<AudioDataValue>()) {
-      PodCopy(buffer.get<AudioDataValue>(), audio->Data().Elements(),
-              audio->Data().Length());
+    if (!AllocShmem(audio->Data().Length() * sizeof(AudioDataValue),
+                    Shmem::SharedMemory::TYPE_BASIC, &buffer)) {
+      return MediaResult(NS_ERROR_OUT_OF_MEMORY,
+                         "AllocShmem failed in "
+                         "RemoteAudioDecoderParent::ProcessDecodedData");
     }
+    if (audio->Data().Length() > buffer.Size<AudioDataValue>()) {
+      return MediaResult(NS_ERROR_OUT_OF_MEMORY,
+                         "AllocShmem returned less than requested in "
+                         "RemoteAudioDecoderParent::ProcessDecodedData");
+    }
+
+    PodCopy(buffer.get<AudioDataValue>(), audio->Data().Elements(),
+            audio->Data().Length());
 
     RemoteAudioDataIPDL output(
         MediaDataIPDL(data->mOffset, data->mTime, data->mTimecode,
@@ -118,6 +126,8 @@ void RemoteAudioDecoderParent::ProcessDecodedData(
 
     Unused << SendOutput(output);
   }
+
+  return NS_OK;
 }
 
 }  // namespace mozilla
