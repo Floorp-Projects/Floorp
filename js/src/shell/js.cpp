@@ -10215,10 +10215,12 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
   if (const char* str = op.getStringOption("cache-ir-stubs")) {
     if (strcmp(str, "on") == 0) {
       jit::JitOptions.disableCacheIR = false;
+      jit::JitOptions.disableCacheIRCalls = true;
     } else if (strcmp(str, "off") == 0) {
       jit::JitOptions.disableCacheIR = true;
-    } else if (strcmp(str, "nobinary") == 0) {
-      jit::JitOptions.disableCacheIRBinaryArith = true;
+    } else if (strcmp(str, "call") == 0) {
+      jit::JitOptions.disableCacheIR = false;
+      jit::JitOptions.disableCacheIRCalls = false;
     } else {
       return OptionFailure("cache-ir-stubs", str);
     }
@@ -10915,10 +10917,9 @@ int main(int argc, char** argv, char** envp) {
       !op.addStringOption('\0', "spectre-mitigations", "on/off",
                           "Whether Spectre mitigations are enabled (default: "
                           "off, on to enable)") ||
-      !op.addStringOption(
-          '\0', "cache-ir-stubs", "on/off/nobinary",
-          "Use CacheIR stubs (default: on, off to disable, nobinary to"
-          "just disable binary arith)") ||
+      !op.addStringOption('\0', "cache-ir-stubs", "on/off/call",
+                          "Use CacheIR stubs (default: on, off to disable, "
+                          "call to enable work-in-progress call ICs)") ||
       !op.addStringOption('\0', "ion-shared-stubs", "on/off",
                           "Use shared stubs (default: on, off to disable)") ||
       !op.addStringOption('\0', "ion-scalar-replacement", "on/off",
