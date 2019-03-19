@@ -75,11 +75,6 @@ struct WebAuthnMakeCredentialExtraInfo {
   uint8_t attestationConveyancePreference;
 };
 
-union WebAuthnMaybeMakeCredentialExtraInfo {
-  WebAuthnMakeCredentialExtraInfo;
-  null_t;
-};
-
 struct WebAuthnMakeCredentialInfo {
   nsString Origin;
   nsString RpId;
@@ -87,7 +82,7 @@ struct WebAuthnMakeCredentialInfo {
   nsCString ClientDataJSON;
   uint32_t TimeoutMS;
   WebAuthnScopedCredential[] ExcludeList;
-  WebAuthnMaybeMakeCredentialExtraInfo Extra;
+  WebAuthnMakeCredentialExtraInfo? Extra;
 };
 
 struct WebAuthnMakeCredentialResult {

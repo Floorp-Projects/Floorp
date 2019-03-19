@@ -109,8 +109,8 @@ RefPtr<U2FRegisterPromise> U2FHIDTokenManager::Register(
 
   uint64_t registerFlags = 0;
 
-  if (aInfo.Extra().type() != WebAuthnMaybeMakeCredentialExtraInfo::Tnull_t) {
-    const auto& extra = aInfo.Extra().get_WebAuthnMakeCredentialExtraInfo();
+  if (aInfo.Extra().isSome()) {
+    const auto& extra = aInfo.Extra().ref();
     const WebAuthnAuthenticatorSelection& sel = extra.AuthenticatorSelection();
 
     UserVerificationRequirement userVerificaitonRequirement =
