@@ -480,12 +480,17 @@ class Domain {
 
     mIsSupported = true;
 
-    ReadValueFromPowerFile("events/energy-", aName, ".scale", "%lf",
-                           &mJoulesPerTick);
+    if (!ReadValueFromPowerFile("events/energy-", aName, ".scale", "%lf",
+                                &mJoulesPerTick)) {
+      Abort("failed to read from .scale file");
+    }
 
     // The unit should be "Joules", so 128 chars should be plenty.
     char unit[128];
-    ReadValueFromPowerFile("events/energy-", aName, ".unit", "%127s", unit);
+    if (!ReadValueFromPowerFile("events/energy-", aName, ".unit", "%127s",
+                                unit)) {
+      Abort("failed to read from .unit file");
+    }
     if (strcmp(unit, "Joules") != 0) {
       Abort("unexpected unit '%s' in .unit file", unit);
     }
@@ -541,7 +546,9 @@ class RAPL {
  public:
   RAPL() {
     uint32_t type;
-    ReadValueFromPowerFile("type", "", "", "%u", &type);
+    if (!ReadValueFromPowerFile("type", "", "", "%u", &type)) {
+      Abort("failed to read from type file");
+    }
 
     mPkg = new Domain("pkg", type);
     mCores = new Domain("cores", type);
