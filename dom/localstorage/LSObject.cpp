@@ -18,6 +18,18 @@
 #include "nsIScriptObjectPrincipal.h"
 #include "nsThread.h"
 
+/**
+ * Automatically cancel and abort synchronous LocalStorage requests (for example
+ * datastore preparation) if they take this long.  We've chosen a value that is
+ * long enough that it is unlikely for the problem to be falsely triggered by
+ * slow system I/O.  We've also chosen a value long enough so that automated
+ * tests should time out and fail if LocalStorage hangs.  Also, this value is
+ * long enough so that testers can notice the (content process) hang; we want to
+ * know about the hangs, not hide them.  On the other hand this value is less
+ * than 60 seconds which is used by nsTerminator to crash a hung main process.
+ */
+#define FAILSAFE_CANCEL_SYNC_OP_MS 50000
+
 namespace mozilla {
 namespace dom {
 
@@ -137,6 +149,7 @@ class RequestHelper final : public Runnable, public LSRequestChildCallback {
   State mState;
   // Control flag for the nested event loop; once set to false, the loop ends.
   bool mWaiting;
+  bool mCancelled;
 
  public:
   RequestHelper(LSObject* aObject, const LSRequestParams& aParams)
@@ -147,7 +160,8 @@ class RequestHelper final : public Runnable, public LSRequestChildCallback {
         mParams(aParams),
         mResultCode(NS_OK),
         mState(State::Initial),
-        mWaiting(true) {}
+        mWaiting(true),
+        mCancelled(false) {}
 
   bool IsOnOwningThread() const {
     MOZ_ASSERT(mOwningEventTarget);
@@ -1078,8 +1092,25 @@ nsresult RequestHelper::StartAndReturnResponse(LSRequestResponse& aResponse) {
         return rv;
       }
 
+      nsCOMPtr<nsITimer> timer = NS_NewTimer();
+
+      MOZ_ALWAYS_SUCCEEDS(timer->SetTarget(mNestedEventTarget));
+
+      MOZ_ALWAYS_SUCCEEDS(timer->InitWithNamedFuncCallback(
+          [](nsITimer* aTimer, void* aClosure) {
+            auto helper = static_cast<RequestHelper*>(aClosure);
+
+            helper->mCancelled = true;
+          },
+          this, FAILSAFE_CANCEL_SYNC_OP_MS, nsITimer::TYPE_ONE_SHOT,
+          "RequestHelper::StartAndReturnResponse::SpinEventLoopTimer"));
+
       MOZ_ALWAYS_TRUE(SpinEventLoopUntil(
           [&]() {
+            if (mCancelled) {
+              return true;
+            }
+
             if (!mWaiting) {
               return true;
             }
@@ -1094,6 +1125,8 @@ nsresult RequestHelper::StartAndReturnResponse(LSRequestResponse& aResponse) {
             return false;
           },
           thread));
+
+      MOZ_ALWAYS_SUCCEEDS(timer->Cancel());
     }
 
     // If mWaiting is still set to true, it means that the event loop spinning

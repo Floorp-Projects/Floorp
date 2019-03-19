@@ -64,7 +64,7 @@ struct GCPolicy<T* const> : public js::InternalGCPointerPolicy<T* const> {};
 template <typename T>
 struct GCPolicy<js::HeapPtr<T>> {
   static void trace(JSTracer* trc, js::HeapPtr<T>* thingp, const char* name) {
-    js::TraceEdge(trc, thingp, name);
+    js::TraceNullableEdge(trc, thingp, name);
   }
   static bool needsSweep(js::HeapPtr<T>* thingp) {
     return js::gc::IsAboutToBeFinalized(thingp);
