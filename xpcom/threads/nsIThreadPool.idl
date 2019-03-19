@@ -69,6 +69,14 @@ interface nsIThreadPool : nsIEventTarget
   attribute unsigned long idleThreadTimeout;
 
   /**
+   * If set to true the idle timeout will be calculated as idleThreadTimeout
+   * divideded by the number of idle threads at the moment.  This may help
+   * save memory allocations but still keep reasonable amount of idle threads.
+   * Default is false, use |idleThreadTimeout| for all threads.
+   */
+  attribute boolean idleThreadTimeoutRegressive;
+
+  /**
    * Get/set the number of bytes reserved for the stack of all threads in
    * the pool. By default this is nsIThreadManager::DEFAULT_STACK_SIZE.
    */
