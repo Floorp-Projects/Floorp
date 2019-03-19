@@ -1125,18 +1125,28 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     bool isCrossRealm = cx_->realm() != calleeFunc->realm();
     buffer_.writeByte(uint32_t(isCrossRealm));
 
+    // Some native functions can be implemented faster if we know that
+    // the return value is ignored.
+    bool ignoresReturnValue =
+        op == JSOP_CALL_IGNORES_RV && calleeFunc->hasJitInfo() &&
+        calleeFunc->jitInfo()->type() == JSJitInfo::IgnoresReturnValueNative;
+
 #ifdef JS_SIMULATOR
     // The simulator requires VM calls to be redirected to a special
     // swi instruction to handle them, so we store the redirected
     // pointer in the stub and use that instead of the original one.
+    // If we are calling the ignoresReturnValue version of a native
+    // function, we bake it into the redirected pointer.
     // (See BaselineCacheIRCompiler::emitCallNativeFunction.)
-    void* target = JS_FUNC_TO_DATA_PTR(void*, calleeFunc->native());
-    void* redirected = Simulator::RedirectNativeFunction(target, Args_General3);
+    JSNative target = ignoresReturnValue
+                          ? calleeFunc->jitInfo()->ignoresReturnValueMethod
+                          : calleeFunc->native();
+    void* rawPtr = JS_FUNC_TO_DATA_PTR(void*, target);
+    void* redirected = Simulator::RedirectNativeFunction(rawPtr, Args_General3);
     addStubField(uintptr_t(redirected), StubField::Type::RawWord);
 #else
-    bool ignoresReturnValue =
-        op == JSOP_CALL_IGNORES_RV && calleeFunc->hasJitInfo() &&
-        calleeFunc->jitInfo()->type() == JSJitInfo::IgnoresReturnValueNative;
+    // If we are not running in the simulator, we generate different jitcode
+    // to find the ignoresReturnValue version of a native function.
     buffer_.writeByte(ignoresReturnValue);
 #endif
   }
