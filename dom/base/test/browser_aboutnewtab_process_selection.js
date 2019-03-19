@@ -15,10 +15,10 @@ add_task(async function(){
 
 // Ensure that the preloaded browser exists, and it's finished loading.
 async function ensurePreloaded(gBrowser) {
-  gBrowser._createPreloadBrowser();
+  NewTabPagePreloading.maybeCreatePreloadedBrowser(gBrowser.ownerGlobal);
   // We cannot use the regular BrowserTestUtils helper for waiting here, since that
   // would try to insert the preloaded browser, which would only break things.
-  await ContentTask.spawn(gBrowser._preloadedBrowser, null, async () => {
+  await ContentTask.spawn(gBrowser.preloadedBrowser, null, async () => {
     await ContentTaskUtils.waitForCondition(() => {
       return content.document && content.document.readyState == "complete";
     });
@@ -74,7 +74,7 @@ add_task(async function(){
   BrowserTestUtils.removeTab(tab2);
 
   // Make sure the preload browser does not keep any of the new processes alive.
-  gBrowser.removePreloadedBrowser();
+  NewTabPagePreloading.removePreloadedBrowser(window);
 
   // Since we kept alive all the processes, we can shut down the ones that do
   // not host any tabs reliably.
@@ -84,7 +84,7 @@ add_task(async function(){
 add_task(async function preloaded_state_attribute() {
   // Wait for a preloaded browser to exist, use it, and then create another one
   await ensurePreloaded(gBrowser);
-  let preloadedTabState = gBrowser._preloadedBrowser.getAttribute("preloadedState");
+  let preloadedTabState = gBrowser.preloadedBrowser.getAttribute("preloadedState");
   is(preloadedTabState, PRELOADED_STATE, "Sanity check that the first preloaded browser has the correct attribute");
 
   BrowserOpenTab();
@@ -94,7 +94,7 @@ add_task(async function preloaded_state_attribute() {
   let consumedTabState = gBrowser.selectedBrowser.getAttribute("preloadedState");
   is(consumedTabState, CONSUMED_STATE, "The opened tab consumed the preloaded browser and updated the attribute");
 
-  preloadedTabState = gBrowser._preloadedBrowser.getAttribute("preloadedState");
+  preloadedTabState = gBrowser.preloadedBrowser.getAttribute("preloadedState");
   is(preloadedTabState, PRELOADED_STATE, "The preloaded browser has the correct attribute");
 
   // Navigate away and check that the attribute has been removed altogether
@@ -104,6 +104,6 @@ add_task(async function preloaded_state_attribute() {
 
   // Remove tabs and preloaded browsers
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
-  gBrowser.removePreloadedBrowser();
+  NewTabPagePreloading.removePreloadedBrowser(window);
 });
 
