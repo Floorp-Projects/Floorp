@@ -39,7 +39,7 @@ want to do then dive in!
    manifestparser
    gettinginfo
    setuprunning
-   mozhttpd
+   servingcontent
    loggingreporting
    devicemanagement
 
