@@ -237,9 +237,10 @@ class Query {
       if (this.canceled) {
         break;
       }
-      if (this._providerHasAcceptableSources(provider)) {
-        promises.push(provider.startQuery(this.context, this.add.bind(this)));
-      }
+      // Immediate type providers may return heuristic results, that usually can
+      // bypass suggest.* preferences, so we always execute them, regardless of
+      // this.acceptableSources, and filter results in add().
+      promises.push(provider.startQuery(this.context, this.add.bind(this)));
     }
 
     // Tracks the delay timer. We will fire (in this specific case, cancel would
