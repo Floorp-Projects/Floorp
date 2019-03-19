@@ -85,6 +85,10 @@
 #include "nsQueryObject.h"
 #include "mozIThirdPartyUtil.h"
 #include "../mime/nsMIMEHeaderParamImpl.h"
+#include "nsStandardURL.h"
+#include "nsChromeProtocolHandler.h"
+#include "nsJSProtocolHandler.h"
+#include "nsDataHandler.h"
 
 #include <limits>
 
@@ -1672,6 +1676,128 @@ nsresult NS_NewURI(
 {
   return NS_NewURI(result, nsDependentCString(spec), nullptr, baseURI,
                    ioService);
+}
+
+static nsresult NewStandardURI(const nsACString &aSpec, const char *aCharset,
+                               nsIURI *aBaseURI, int32_t aDefaultPort,
+                               nsIURI **aURI) {
+  nsCOMPtr<nsIURI> base(aBaseURI);
+  return NS_MutateURI(new nsStandardURL::Mutator())
+      .Apply(NS_MutatorMethod(&nsIStandardURLMutator::Init,
+                              nsIStandardURL::URLTYPE_AUTHORITY, aDefaultPort,
+                              nsCString(aSpec), aCharset, base, nullptr))
+      .Finalize(aURI);
+}
+
+extern MOZ_THREAD_LOCAL(uint32_t) gTlsURLRecursionCount;
+
+template <typename T>
+class TlsAutoIncrement {
+ public:
+  explicit TlsAutoIncrement(T &var) : mVar(var) {
+    mValue = mVar.get();
+    mVar.set(mValue + 1);
+  }
+  ~TlsAutoIncrement() {
+    typename T::Type value = mVar.get();
+    MOZ_ASSERT(value == mValue + 1);
+    mVar.set(value - 1);
+  }
+
+  typename T::Type value() { return mValue; }
+
+ private:
+  typename T::Type mValue;
+  T &mVar;
+};
+
+nsresult NS_NewURIOnAnyThread(nsIURI **aURI, const nsACString &aSpec,
+                              const char *aCharset /* = nullptr */,
+                              nsIURI *aBaseURI /* = nullptr */,
+                              nsIIOService *aIOService /* = nullptr */) {
+  TlsAutoIncrement<decltype(gTlsURLRecursionCount)> inc(gTlsURLRecursionCount);
+  if (inc.value() >= MAX_RECURSION_COUNT) {
+    return NS_ERROR_MALFORMED_URI;
+  }
+
+  nsAutoCString scheme;
+  nsresult rv = net_ExtractURLScheme(aSpec, scheme);
+  if (NS_FAILED(rv)) {
+    // then aSpec is relative
+    if (!aBaseURI) {
+      return NS_ERROR_MALFORMED_URI;
+    }
+
+    if (!aSpec.IsEmpty() && aSpec[0] == '#') {
+      // Looks like a reference instead of a fully-specified URI.
+      // --> initialize |uri| as a clone of |aBaseURI|, with ref appended.
+      return NS_GetURIWithNewRef(aBaseURI, aSpec, aURI);
+    }
+
+    rv = aBaseURI->GetScheme(scheme);
+    if (NS_FAILED(rv)) return rv;
+  }
+
+  if (scheme.EqualsLiteral("http") || scheme.EqualsLiteral("ws")) {
+    return NewStandardURI(aSpec, aCharset, aBaseURI, NS_HTTP_DEFAULT_PORT,
+                          aURI);
+  }
+  if (scheme.EqualsLiteral("https") || scheme.EqualsLiteral("wss")) {
+    return NewStandardURI(aSpec, aCharset, aBaseURI, NS_HTTPS_DEFAULT_PORT,
+                          aURI);
+  }
+  if (scheme.EqualsLiteral("ftp")) {
+    return NewStandardURI(aSpec, aCharset, aBaseURI, 21, aURI);
+  }
+
+  if (scheme.EqualsLiteral("file")) {
+    nsAutoCString buf(aSpec);
+#if defined(XP_WIN)
+    buf.Truncate();
+    if (!net_NormalizeFileURL(aSpec, buf)) {
+      buf = aSpec;
+    }
+#endif
+
+    nsCOMPtr<nsIURI> base(aBaseURI);
+    return NS_MutateURI(new nsStandardURL::Mutator())
+        .Apply(NS_MutatorMethod(&nsIFileURLMutator::MarkFileURL))
+        .Apply(NS_MutatorMethod(&nsIStandardURLMutator::Init,
+                                nsIStandardURL::URLTYPE_NO_AUTHORITY, -1, buf,
+                                aCharset, base, nullptr))
+        .Finalize(aURI);
+  }
+
+  if (scheme.EqualsLiteral("data")) {
+    return nsDataHandler::CreateNewURI(aSpec, aCharset, aBaseURI, aURI);
+  }
+
+  if (scheme.EqualsLiteral("moz-safe-about") ||
+      scheme.EqualsLiteral("page-icon") || scheme.EqualsLiteral("moz") ||
+      scheme.EqualsLiteral("moz-anno") ||
+      scheme.EqualsLiteral("moz-page-thumb") ||
+      scheme.EqualsLiteral("moz-fonttable")) {
+    return NS_MutateURI(new nsSimpleURI::Mutator())
+        .SetSpec(aSpec)
+        .Finalize(aURI);
+  }
+
+  if (scheme.EqualsLiteral("chrome")) {
+    return nsChromeProtocolHandler::CreateNewURI(aSpec, aCharset, aBaseURI,
+                                                 aURI);
+  }
+
+  if (scheme.EqualsLiteral("javascript")) {
+    return nsJSProtocolHandler::CreateNewURI(aSpec, aCharset, aBaseURI, aURI);
+  }
+
+  if (NS_IsMainThread()) {
+    // XXX (valentin): this fallback should be removed once we get rid of
+    // nsIProtocolHandler.newURI
+    return NS_NewURI(aURI, aSpec, aCharset, aBaseURI, aIOService);
+  }
+
+  return NS_ERROR_UNKNOWN_PROTOCOL;
 }
 
 nsresult NS_GetSanitizedURIStringFromURI(nsIURI *aUri,
