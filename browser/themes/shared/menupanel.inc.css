@@ -16,6 +16,10 @@
   list-style-image: url(chrome://browser/skin/library.svg);
 }
 
+#appMenu-logins-button {
+  list-style-image: url(chrome://browser/skin/login.svg);
+}
+
 #appMenu-addons-button {
   list-style-image: url(chrome://mozapps/skin/extensions/extensionGeneric-16.svg);
 }
