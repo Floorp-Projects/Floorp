@@ -39,6 +39,8 @@
     <color name="session_list_private_header">#4a4671</color>
     <color name="delete_session_button_background">#e5e5ea</color>
 
+    <color name="toggle_activated_light_mode">#2E0EC1</color>
+
     <color name="private_browsing_primary">#ad3bff</color>
     <color name="private_browsing_top_gradient">#242251</color>
     <color name="private_browsing_bottom_gradient">#393862</color>

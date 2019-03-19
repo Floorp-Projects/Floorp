@@ -15,6 +15,10 @@
         <item name="colorPrimary">@color/off_white</item>
         <item name="colorAccent">@color/session_border_color</item>
 
+        <!-- Toggle colors activated and off -->
+        <item name="colorControlActivated">@color/toggle_activated_light_mode</item>
+        <item name="colorSwitchThumbNormal">@color/off_white</item>
+
         <!-- Style the navigation bar -->
         <item name="navigationBarColorHome">@android:color/transparent</item>
         <item name="navigationBarColorBrowser">@android:color/transparent</item>
