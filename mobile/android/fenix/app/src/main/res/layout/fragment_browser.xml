@@ -14,7 +14,23 @@
     <mozilla.components.concept.engine.EngineView
         android:id="@+id/engineView"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="match_parent"/>
+
+
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="80dp"
+        android:background="@color/off_white"
+        android:clipToPadding="true"
+        app:behavior_hideable="true"
+        app:behavior_peekHeight="20dp"
+        app:layout_behavior="org.mozilla.fenix.quickactionsheet.QuickActionSheetBehavior">
+        <org.mozilla.fenix.quickactionsheet.QuickActionSheet
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom"/>
+    </androidx.core.widget.NestedScrollView>
+
 
     <mozilla.components.feature.findinpage.view.FindInPageBar
         android:id="@+id/findInPageView"

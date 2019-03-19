@@ -33,7 +33,7 @@ class ToolbarUIView(
         .findViewById(R.id.toolbar)
 
     private val urlBackground = LayoutInflater.from(container.context)
-        .inflate(R.layout.layout_url_backround, container, false)
+        .inflate(R.layout.layout_url_background, container, false)
 
     init {
         view.apply {

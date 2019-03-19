@@ -18,7 +18,7 @@ class SessionBottomSheetFragment : BottomSheetDialogFragment(), LayoutContainer 
     sealed class SessionType {
         data class Current(val titles: List<String>) : SessionType()
         data class Archived(val archivedSession: ArchivedSession) : SessionType()
-        data class Private(val titles: List<String>) : SessionType()
+        data class Private(val titles: List    <String>) : SessionType()
     }
 
     private var sessionType: SessionType? = null
