@@ -324,8 +324,8 @@ class BaseMatrix {
    * translation by integers.
    */
   bool HasNonIntegerTranslation() const {
-    return HasNonTranslation() || !FuzzyEqual(_31, floor(_31 + T(0.5))) ||
-           !FuzzyEqual(_32, floor(_32 + T(0.5)));
+    return HasNonTranslation() || !FuzzyEqual(_31, floor(_31 + 0.5f)) ||
+           !FuzzyEqual(_32, floor(_32 + 0.5f));
   }
 
   /**
@@ -481,17 +481,17 @@ Point4DTyped<Units, F> ComputePerspectivePlaneIntercept(
   return aFirst + (aSecond - aFirst) * t;
 }
 
-template <typename SourceUnits, typename TargetUnits>
+template <class SourceUnits, class TargetUnits, class T>
 class Matrix4x4Typed {
  public:
-  typedef PointTyped<SourceUnits> SourcePoint;
-  typedef PointTyped<TargetUnits> TargetPoint;
-  typedef Point3DTyped<SourceUnits> SourcePoint3D;
-  typedef Point3DTyped<TargetUnits> TargetPoint3D;
-  typedef Point4DTyped<SourceUnits> SourcePoint4D;
-  typedef Point4DTyped<TargetUnits> TargetPoint4D;
-  typedef RectTyped<SourceUnits> SourceRect;
-  typedef RectTyped<TargetUnits> TargetRect;
+  typedef PointTyped<SourceUnits, T> SourcePoint;
+  typedef PointTyped<TargetUnits, T> TargetPoint;
+  typedef Point3DTyped<SourceUnits, T> SourcePoint3D;
+  typedef Point3DTyped<TargetUnits, T> TargetPoint3D;
+  typedef Point4DTyped<SourceUnits, T> SourcePoint4D;
+  typedef Point4DTyped<TargetUnits, T> TargetPoint4D;
+  typedef RectTyped<SourceUnits, T> SourceRect;
+  typedef RectTyped<TargetUnits, T> TargetRect;
 
   Matrix4x4Typed()
       : _11(1.0f),
@@ -511,10 +511,8 @@ class Matrix4x4Typed {
         _43(0.0f),
         _44(1.0f) {}
 
-  Matrix4x4Typed(Float a11, Float a12, Float a13, Float a14, Float a21,
-                 Float a22, Float a23, Float a24, Float a31, Float a32,
-                 Float a33, Float a34, Float a41, Float a42, Float a43,
-                 Float a44)
+  Matrix4x4Typed(T a11, T a12, T a13, T a14, T a21, T a22, T a23, T a24, T a31,
+                 T a32, T a33, T a34, T a41, T a42, T a43, T a44)
       : _11(a11),
         _12(a12),
         _13(a13),
@@ -532,27 +530,27 @@ class Matrix4x4Typed {
         _43(a43),
         _44(a44) {}
 
-  explicit Matrix4x4Typed(const Float aArray[16]) {
+  explicit Matrix4x4Typed(const T aArray[16]) {
     memcpy(components, aArray, sizeof(components));
   }
 
   Matrix4x4Typed(const Matrix4x4Typed& aOther) {
-    memcpy(this, &aOther, sizeof(*this));
+    memcpy(components, aOther.components, sizeof(components));
   }
 
   union {
     struct {
-      Float _11, _12, _13, _14;
-      Float _21, _22, _23, _24;
-      Float _31, _32, _33, _34;
-      Float _41, _42, _43, _44;
+      T _11, _12, _13, _14;
+      T _21, _22, _23, _24;
+      T _31, _32, _33, _34;
+      T _41, _42, _43, _44;
     };
-    Float components[16];
+    T components[16];
   };
 
   friend std::ostream& operator<<(std::ostream& aStream,
                                   const Matrix4x4Typed& aMatrix) {
-    const Float* f = &aMatrix._11;
+    const T* f = &aMatrix._11;
     aStream << "[ " << f[0] << " " << f[1] << " " << f[2] << " " << f[3] << " ;"
             << std::endl;
     f += 4;
@@ -567,13 +565,15 @@ class Matrix4x4Typed {
     return aStream;
   }
 
-  Point4D& operator[](int aIndex) {
+  Point4DTyped<UnknownUnits, T>& operator[](int aIndex) {
     MOZ_ASSERT(aIndex >= 0 && aIndex <= 3, "Invalid matrix array index");
-    return *reinterpret_cast<Point4D*>((&_11) + 4 * aIndex);
+    return *reinterpret_cast<Point4DTyped<UnknownUnits, T>*>((&_11) +
+                                                             4 * aIndex);
   }
-  const Point4D& operator[](int aIndex) const {
+  const Point4DTyped<UnknownUnits, T>& operator[](int aIndex) const {
     MOZ_ASSERT(aIndex >= 0 && aIndex <= 3, "Invalid matrix array index");
-    return *reinterpret_cast<const Point4D*>((&_11) + 4 * aIndex);
+    return *reinterpret_cast<const Point4DTyped<UnknownUnits, T>*>((&_11) +
+                                                                   4 * aIndex);
   }
 
   /**
@@ -588,7 +588,7 @@ class Matrix4x4Typed {
     return true;
   }
 
-  bool Is2D(Matrix* aMatrix) const {
+  bool Is2D(BaseMatrix<T>* aMatrix) const {
     if (!Is2D()) {
       return false;
     }
@@ -603,13 +603,13 @@ class Matrix4x4Typed {
     return true;
   }
 
-  Matrix As2D() const {
+  BaseMatrix<T> As2D() const {
     MOZ_ASSERT(Is2D(), "Matrix is not a 2D affine transform");
 
-    return Matrix(_11, _12, _21, _22, _41, _42);
+    return BaseMatrix<T>(_11, _12, _21, _22, _41, _42);
   }
 
-  bool CanDraw2D(Matrix* aMatrix = nullptr) const {
+  bool CanDraw2D(BaseMatrix<T>* aMatrix = nullptr) const {
     if (_14 != 0.0f || _24 != 0.0f || _44 != 1.0f) {
       return false;
     }
@@ -640,7 +640,7 @@ class Matrix4x4Typed {
     // a true 2D matrix by normalizing out the scaling effect of _44 on
     // the remaining components ahead of time.
     if (_14 == 0.0f && _24 == 0.0f && _44 != 1.0f && _44 != 0.0f) {
-      Float scale = 1.0f / _44;
+      T scale = 1.0f / _44;
       _11 *= scale;
       _12 *= scale;
       _21 *= scale;
@@ -887,7 +887,7 @@ class Matrix4x4Typed {
 
   static const int kTransformAndClipRectMaxVerts = 32;
 
-  static Matrix4x4Typed From2D(const Matrix& aMatrix) {
+  static Matrix4x4Typed From2D(const BaseMatrix<T>& aMatrix) {
     Matrix4x4Typed matrix;
     matrix._11 = aMatrix._11;
     matrix._12 = aMatrix._12;
@@ -983,7 +983,7 @@ class Matrix4x4Typed {
                                      max_y - min_y);
   }
 
-  static Matrix4x4Typed Translation(Float aX, Float aY, Float aZ) {
+  static Matrix4x4Typed Translation(T aX, T aY, T aZ) {
     return Matrix4x4Typed(1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f,
                           0.0f, 1.0f, 0.0f, aX, aY, aZ, 1.0f);
   }
@@ -1015,7 +1015,7 @@ class Matrix4x4Typed {
    * this method would be preferred since it only involves 12 floating-point
    * multiplications.)
    */
-  Matrix4x4Typed& PreTranslate(Float aX, Float aY, Float aZ) {
+  Matrix4x4Typed& PreTranslate(T aX, T aY, T aZ) {
     _41 += aX * _11 + aY * _21 + aZ * _31;
     _42 += aX * _12 + aY * _22 + aZ * _32;
     _43 += aX * _13 + aY * _23 + aZ * _33;
@@ -1024,7 +1024,7 @@ class Matrix4x4Typed {
     return *this;
   }
 
-  Matrix4x4Typed& PreTranslate(const Point3D& aPoint) {
+  Matrix4x4Typed& PreTranslate(const Point3DTyped<UnknownUnits, T>& aPoint) {
     return PreTranslate(aPoint.x, aPoint.y, aPoint.z);
   }
 
@@ -1040,7 +1040,7 @@ class Matrix4x4Typed {
    * the Post* methods add a transform to the device space end of the
    * transformation.
    */
-  Matrix4x4Typed& PostTranslate(Float aX, Float aY, Float aZ) {
+  Matrix4x4Typed& PostTranslate(T aX, T aY, T aZ) {
     _11 += _14 * aX;
     _21 += _24 * aX;
     _31 += _34 * aX;
@@ -1065,7 +1065,7 @@ class Matrix4x4Typed {
     return PostTranslate(aPoint.x, aPoint.y, 0);
   }
 
-  static Matrix4x4Typed Scaling(Float aScaleX, Float aScaleY, float aScaleZ) {
+  static Matrix4x4Typed Scaling(T aScaleX, T aScaleY, T aScaleZ) {
     return Matrix4x4Typed(aScaleX, 0.0f, 0.0f, 0.0f, 0.0f, aScaleY, 0.0f, 0.0f,
                           0.0f, 0.0f, aScaleZ, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f);
   }
@@ -1073,7 +1073,7 @@ class Matrix4x4Typed {
   /**
    * Similar to PreTranslate, but applies a scale instead of a translation.
    */
-  Matrix4x4Typed& PreScale(Float aX, Float aY, Float aZ) {
+  Matrix4x4Typed& PreScale(T aX, T aY, T aZ) {
     _11 *= aX;
     _12 *= aX;
     _13 *= aX;
@@ -1093,7 +1093,7 @@ class Matrix4x4Typed {
   /**
    * Similar to PostTranslate, but applies a scale instead of a translation.
    */
-  Matrix4x4Typed& PostScale(Float aScaleX, Float aScaleY, Float aScaleZ) {
+  Matrix4x4Typed& PostScale(T aScaleX, T aScaleY, T aScaleZ) {
     _11 *= aScaleX;
     _21 *= aScaleX;
     _31 *= aScaleX;
@@ -1110,17 +1110,17 @@ class Matrix4x4Typed {
     return *this;
   }
 
-  void SkewXY(Float aSkew) { (*this)[1] += (*this)[0] * aSkew; }
+  void SkewXY(T aSkew) { (*this)[1] += (*this)[0] * aSkew; }
 
-  void SkewXZ(Float aSkew) { (*this)[2] += (*this)[0] * aSkew; }
+  void SkewXZ(T aSkew) { (*this)[2] += (*this)[0] * aSkew; }
 
-  void SkewYZ(Float aSkew) { (*this)[2] += (*this)[1] * aSkew; }
+  void SkewYZ(T aSkew) { (*this)[2] += (*this)[1] * aSkew; }
 
-  Matrix4x4Typed& ChangeBasis(const Point3D& aOrigin) {
+  Matrix4x4Typed& ChangeBasis(const Point3DTyped<UnknownUnits, T>& aOrigin) {
     return ChangeBasis(aOrigin.x, aOrigin.y, aOrigin.z);
   }
 
-  Matrix4x4Typed& ChangeBasis(Float aX, Float aY, Float aZ) {
+  Matrix4x4Typed& ChangeBasis(T aX, T aY, T aZ) {
     // Translate to the origin before applying this matrix
     PreTranslate(-aX, -aY, -aZ);
 
@@ -1154,7 +1154,7 @@ class Matrix4x4Typed {
   bool operator!=(const Matrix4x4Typed& o) const { return !((*this) == o); }
 
   template <typename NewTargetUnits>
-  Matrix4x4Typed<SourceUnits, NewTargetUnits> operator*(
+  Matrix4x4Typed<SourceUnits, NewTargetUnits, T> operator*(
       const Matrix4x4Typed<TargetUnits, NewTargetUnits>& aMatrix) const {
     Matrix4x4Typed<SourceUnits, NewTargetUnits> matrix;
 
@@ -1195,7 +1195,7 @@ class Matrix4x4Typed {
   }
 
   Matrix4x4Typed& operator*=(
-      const Matrix4x4Typed<TargetUnits, TargetUnits>& aMatrix) {
+      const Matrix4x4Typed<TargetUnits, TargetUnits, T>& aMatrix) {
     *this = *this * aMatrix;
     return *this;
   }
@@ -1211,7 +1211,7 @@ class Matrix4x4Typed {
 
   bool IsSingular() const { return Determinant() == 0.0; }
 
-  Float Determinant() const {
+  T Determinant() const {
     return _14 * _23 * _32 * _41 - _13 * _24 * _32 * _41 -
            _14 * _22 * _33 * _41 + _12 * _24 * _33 * _41 +
            _13 * _22 * _34 * _41 - _12 * _23 * _34 * _41 -
@@ -1228,12 +1228,12 @@ class Matrix4x4Typed {
 
   // Invert() is not unit-correct. Prefer Inverse() where possible.
   bool Invert() {
-    Float det = Determinant();
+    T det = Determinant();
     if (!det) {
       return false;
     }
 
-    Matrix4x4Typed<SourceUnits, TargetUnits> result;
+    Matrix4x4Typed<SourceUnits, TargetUnits, T> result;
     result._11 = _23 * _34 * _42 - _24 * _33 * _42 + _24 * _32 * _43 -
                  _22 * _34 * _43 - _23 * _32 * _44 + _22 * _33 * _44;
     result._12 = _14 * _33 * _42 - _13 * _34 * _42 - _14 * _32 * _43 +
@@ -1288,8 +1288,8 @@ class Matrix4x4Typed {
     return true;
   }
 
-  Matrix4x4Typed<TargetUnits, SourceUnits> Inverse() const {
-    typedef Matrix4x4Typed<TargetUnits, SourceUnits> InvertedMatrix;
+  Matrix4x4Typed<TargetUnits, SourceUnits, T> Inverse() const {
+    typedef Matrix4x4Typed<TargetUnits, SourceUnits, T> InvertedMatrix;
     InvertedMatrix clone = InvertedMatrix::FromUnknownMatrix(ToUnknownMatrix());
     DebugOnly<bool> inverted = clone.Invert();
     MOZ_ASSERT(inverted,
@@ -1297,8 +1297,8 @@ class Matrix4x4Typed {
     return clone;
   }
 
-  Maybe<Matrix4x4Typed<TargetUnits, SourceUnits>> MaybeInverse() const {
-    typedef Matrix4x4Typed<TargetUnits, SourceUnits> InvertedMatrix;
+  Maybe<Matrix4x4Typed<TargetUnits, SourceUnits, T>> MaybeInverse() const {
+    typedef Matrix4x4Typed<TargetUnits, SourceUnits, T> InvertedMatrix;
     InvertedMatrix clone = InvertedMatrix::FromUnknownMatrix(ToUnknownMatrix());
     if (clone.Invert()) {
       return Some(clone);
@@ -1346,9 +1346,9 @@ class Matrix4x4Typed {
 
   bool IsBackfaceVisible() const {
     // Inverse()._33 < 0;
-    Float det = Determinant();
-    Float __33 = _12 * _24 * _41 - _14 * _22 * _41 + _14 * _21 * _42 -
-                 _11 * _24 * _42 - _12 * _21 * _44 + _11 * _22 * _44;
+    T det = Determinant();
+    T __33 = _12 * _24 * _41 - _14 * _22 * _41 + _14 * _21 * _42 -
+             _11 * _24 * _42 - _12 * _21 * _44 + _11 * _22 * _44;
     return (__33 * det) < 0;
   }
 
@@ -1375,11 +1375,12 @@ class Matrix4x4Typed {
 
   Point4D TransposedVector(int aIndex) const {
     MOZ_ASSERT(aIndex >= 0 && aIndex <= 3, "Invalid matrix array index");
-    return Point4D(*((&_11) + aIndex), *((&_21) + aIndex), *((&_31) + aIndex),
-                   *((&_41) + aIndex));
+    return Point4DTyped<UnknownUnits, T>(*((&_11) + aIndex), *((&_21) + aIndex),
+                                         *((&_31) + aIndex),
+                                         *((&_41) + aIndex));
   }
 
-  void SetTransposedVector(int aIndex, Point4D& aVector) {
+  void SetTransposedVector(int aIndex, Point4DTyped<UnknownUnits, T>& aVector) {
     MOZ_ASSERT(aIndex >= 0 && aIndex <= 3, "Invalid matrix array index");
     *((&_11) + aIndex) = aVector.x;
     *((&_21) + aIndex) = aVector.y;
@@ -1387,8 +1388,9 @@ class Matrix4x4Typed {
     *((&_41) + aIndex) = aVector.w;
   }
 
-  bool Decompose(Point3D& translation, Quaternion& rotation,
-                 Point3D& scale) const {
+  bool Decompose(Point3DTyped<UnknownUnits, T>& translation,
+                 BaseQuaternion<T>& rotation,
+                 Point3DTyped<UnknownUnits, T>& scale) const {
     // Ensure matrix can be normalized
     if (gfx::FuzzyEqual(_44, 0.0f)) {
       return false;
@@ -1421,9 +1423,9 @@ class Matrix4x4Typed {
       // We do not support matrices with a zero scale component
       return false;
     }
-    Float invXS = 1.0f / scale.x;
-    Float invYS = 1.0f / scale.y;
-    Float invZS = 1.0f / scale.z;
+    T invXS = 1.0f / scale.x;
+    T invYS = 1.0f / scale.y;
+    T invZS = 1.0f / scale.z;
     mat._11 *= invXS;
     mat._21 *= invXS;
     mat._31 *= invXS;
@@ -1442,11 +1444,11 @@ class Matrix4x4Typed {
   // Sets this matrix to a rotation matrix given by aQuat.
   // This quaternion *MUST* be normalized!
   // Implemented in Quaternion.cpp
-  void SetRotationFromQuaternion(const Quaternion& q) {
-    const Float x2 = q.x + q.x, y2 = q.y + q.y, z2 = q.z + q.z;
-    const Float xx = q.x * x2, xy = q.x * y2, xz = q.x * z2;
-    const Float yy = q.y * y2, yz = q.y * z2, zz = q.z * z2;
-    const Float wx = q.w * x2, wy = q.w * y2, wz = q.w * z2;
+  void SetRotationFromQuaternion(const BaseQuaternion<T>& q) {
+    const T x2 = q.x + q.x, y2 = q.y + q.y, z2 = q.z + q.z;
+    const T xx = q.x * x2, xy = q.x * y2, xz = q.x * z2;
+    const T yy = q.y * y2, yz = q.y * z2, zz = q.z * z2;
+    const T wx = q.w * x2, wy = q.w * y2, wz = q.w * z2;
 
     _11 = 1.0f - (yy + zz);
     _21 = xy + wz;
@@ -1469,29 +1471,29 @@ class Matrix4x4Typed {
 
   // Set all the members of the matrix to NaN
   void SetNAN() {
-    _11 = UnspecifiedNaN<Float>();
-    _21 = UnspecifiedNaN<Float>();
-    _31 = UnspecifiedNaN<Float>();
-    _41 = UnspecifiedNaN<Float>();
-    _12 = UnspecifiedNaN<Float>();
-    _22 = UnspecifiedNaN<Float>();
-    _32 = UnspecifiedNaN<Float>();
-    _42 = UnspecifiedNaN<Float>();
-    _13 = UnspecifiedNaN<Float>();
-    _23 = UnspecifiedNaN<Float>();
-    _33 = UnspecifiedNaN<Float>();
-    _43 = UnspecifiedNaN<Float>();
-    _14 = UnspecifiedNaN<Float>();
-    _24 = UnspecifiedNaN<Float>();
-    _34 = UnspecifiedNaN<Float>();
-    _44 = UnspecifiedNaN<Float>();
+    _11 = UnspecifiedNaN<T>();
+    _21 = UnspecifiedNaN<T>();
+    _31 = UnspecifiedNaN<T>();
+    _41 = UnspecifiedNaN<T>();
+    _12 = UnspecifiedNaN<T>();
+    _22 = UnspecifiedNaN<T>();
+    _32 = UnspecifiedNaN<T>();
+    _42 = UnspecifiedNaN<T>();
+    _13 = UnspecifiedNaN<T>();
+    _23 = UnspecifiedNaN<T>();
+    _33 = UnspecifiedNaN<T>();
+    _43 = UnspecifiedNaN<T>();
+    _14 = UnspecifiedNaN<T>();
+    _24 = UnspecifiedNaN<T>();
+    _34 = UnspecifiedNaN<T>();
+    _44 = UnspecifiedNaN<T>();
   }
 
   void SkewXY(double aXSkew, double aYSkew) {
     // XXX Is double precision really necessary here
-    float tanX = SafeTangent(aXSkew);
-    float tanY = SafeTangent(aYSkew);
-    float temp;
+    T tanX = SafeTangent(aXSkew);
+    T tanY = SafeTangent(aYSkew);
+    T temp;
 
     temp = _11;
     _11 += tanY * _21;
@@ -1515,7 +1517,7 @@ class Matrix4x4Typed {
     double cosTheta = FlushToZero(cos(aTheta));
     double sinTheta = FlushToZero(sin(aTheta));
 
-    float temp;
+    T temp;
 
     temp = _21;
     _21 = cosTheta * _21 + sinTheta * _31;
@@ -1539,7 +1541,7 @@ class Matrix4x4Typed {
     double cosTheta = FlushToZero(cos(aTheta));
     double sinTheta = FlushToZero(sin(aTheta));
 
-    float temp;
+    T temp;
 
     temp = _11;
     _11 = cosTheta * _11 + -sinTheta * _31;
@@ -1563,7 +1565,7 @@ class Matrix4x4Typed {
     double cosTheta = FlushToZero(cos(aTheta));
     double sinTheta = FlushToZero(sin(aTheta));
 
-    float temp;
+    T temp;
 
     temp = _11;
     _11 = cosTheta * _11 + sinTheta * _21;
@@ -1587,7 +1589,7 @@ class Matrix4x4Typed {
   // to a unit vector.
   // https://drafts.csswg.org/css-transforms-2/#Rotate3dDefined
   void SetRotateAxisAngle(double aX, double aY, double aZ, double aTheta) {
-    Point3D vector(aX, aY, aZ);
+    Point3DTyped<UnknownUnits, T> vector(aX, aY, aZ);
     if (!vector.Length()) {
       return;
     }
@@ -1623,7 +1625,7 @@ class Matrix4x4Typed {
     _44 = 1.0f;
   }
 
-  void Perspective(float aDepth) {
+  void Perspective(T aDepth) {
     MOZ_ASSERT(aDepth > 0.0f, "Perspective must be positive!");
     _31 += -1.0 / aDepth * _41;
     _32 += -1.0 / aDepth * _42;
@@ -1634,13 +1636,16 @@ class Matrix4x4Typed {
   Point3D GetNormalVector() const {
     // Define a plane in transformed space as the transformations
     // of 3 points on the z=0 screen plane.
-    Point3D a = TransformPoint(Point3D(0, 0, 0));
-    Point3D b = TransformPoint(Point3D(0, 1, 0));
-    Point3D c = TransformPoint(Point3D(1, 0, 0));
+    Point3DTyped<UnknownUnits, T> a =
+        TransformPoint(Point3DTyped<UnknownUnits, T>(0, 0, 0));
+    Point3DTyped<UnknownUnits, T> b =
+        TransformPoint(Point3DTyped<UnknownUnits, T>(0, 1, 0));
+    Point3DTyped<UnknownUnits, T> c =
+        TransformPoint(Point3DTyped<UnknownUnits, T>(1, 0, 0));
 
     // Convert to two vectors on the surface of the plane.
-    Point3D ab = b - a;
-    Point3D ac = c - a;
+    Point3DTyped<UnknownUnits, T> ab = b - a;
+    Point3DTyped<UnknownUnits, T> ac = c - a;
 
     return ac.CrossProduct(ab);
   }
@@ -1705,6 +1710,7 @@ class Matrix4x4Typed {
 };
 
 typedef Matrix4x4Typed<UnknownUnits, UnknownUnits> Matrix4x4;
+typedef Matrix4x4Typed<UnknownUnits, UnknownUnits, double> Matrix4x4Double;
 
 class Matrix5x4 {
  public:
