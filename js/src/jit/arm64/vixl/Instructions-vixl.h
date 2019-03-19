@@ -462,6 +462,10 @@ class Instruction {
     return literal;
   }
 
+  void SetLiteral64(uint64_t literal) const {
+    memcpy(LiteralAddress<void*>(), &literal, sizeof(literal));
+  }
+
   float LiteralFP32() const {
     return rawbits_to_float(Literal32());
   }
