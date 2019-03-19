@@ -18,8 +18,8 @@
  *
  * Unusually, this attribute doesn't have just a single corresponding DOM
  * property, but rather is split into two properties: 'orientType' (of type
- * SVGAnimatedEnumeration) and 'orientAngle' (of type SVGAnimatedAngle). If
- * 'orientType.animVal' is SVG_MARKER_ORIENT_ANGLE, then
+ * DOMSVGAnimatedEnumeration) and 'orientAngle' (of type DOMSVGAnimatedAngle).
+ * If 'orientType.animVal' is SVG_MARKER_ORIENT_ANGLE, then
  * 'orientAngle.animVal' contains the angle that is being used. The lacuna
  * value is 0.
  *

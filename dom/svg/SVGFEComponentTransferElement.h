@@ -45,7 +45,7 @@ class SVGFEComponentTransferElement : public SVGFEComponentTransferElementBase {
   virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
   // WebIDL
-  already_AddRefed<SVGAnimatedString> In1();
+  already_AddRefed<DOMSVGAnimatedString> In1();
 
  protected:
   virtual StringAttributesInfo GetStringInfo() override;

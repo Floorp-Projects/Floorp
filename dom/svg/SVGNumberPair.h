@@ -7,10 +7,10 @@
 #ifndef __NS_SVGNUMBERPAIR_H__
 #define __NS_SVGNUMBERPAIR_H__
 
+#include "DOMSVGAnimatedNumber.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsError.h"
 #include "nsMathUtils.h"
-#include "mozilla/dom/SVGAnimatedNumber.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/SMILAttr.h"
@@ -59,7 +59,7 @@ class SVGNumberPair {
   // usable, and represents the default base value of the attribute.
   bool IsExplicitlySet() const { return mIsAnimated || mIsBaseSet; }
 
-  already_AddRefed<mozilla::dom::SVGAnimatedNumber> ToDOMAnimatedNumber(
+  already_AddRefed<mozilla::dom::DOMSVGAnimatedNumber> ToDOMAnimatedNumber(
       PairIndex aIndex, SVGElement* aSVGElement);
   mozilla::UniquePtr<SMILAttr> ToSMILAttr(SVGElement* aSVGElement);
 
@@ -71,10 +71,12 @@ class SVGNumberPair {
   bool mIsBaseSet;
 
  public:
-  struct DOMAnimatedNumber final : public mozilla::dom::SVGAnimatedNumber {
+  // DOM wrapper class for the (DOM)SVGAnimatedNumber interface where the
+  // wrapped class is SVGNumberPair.
+  struct DOMAnimatedNumber final : public mozilla::dom::DOMSVGAnimatedNumber {
     DOMAnimatedNumber(SVGNumberPair* aVal, PairIndex aIndex,
                       SVGElement* aSVGElement)
-        : mozilla::dom::SVGAnimatedNumber(aSVGElement),
+        : mozilla::dom::DOMSVGAnimatedNumber(aSVGElement),
           mVal(aVal),
           mIndex(aIndex) {}
     virtual ~DOMAnimatedNumber();

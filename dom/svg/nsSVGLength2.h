@@ -26,8 +26,8 @@ namespace mozilla {
 class SMILValue;
 
 namespace dom {
+class DOMSVGAnimatedLength;
 class DOMSVGLength;
-class SVGAnimatedLength;
 class SVGAnimationElement;
 class SVGViewportElement;
 }  // namespace dom
@@ -86,7 +86,7 @@ class NonSVGFrameUserSpaceMetrics : public UserSpaceMetricsWithSize {
 }  // namespace mozilla
 
 class nsSVGLength2 {
-  friend class mozilla::dom::SVGAnimatedLength;
+  friend class mozilla::dom::DOMSVGAnimatedLength;
   friend class mozilla::dom::DOMSVGLength;
   typedef mozilla::dom::DOMSVGLength DOMSVGLength;
   typedef mozilla::dom::SVGElement SVGElement;
@@ -161,7 +161,7 @@ class nsSVGLength2 {
   // usable, and represents the default base value of the attribute.
   bool IsExplicitlySet() const { return mIsAnimated || mIsBaseSet; }
 
-  already_AddRefed<mozilla::dom::SVGAnimatedLength> ToDOMAnimatedLength(
+  already_AddRefed<mozilla::dom::DOMSVGAnimatedLength> ToDOMAnimatedLength(
       SVGElement* aSVGElement);
 
   mozilla::UniquePtr<SMILAttr> ToSMILAttr(SVGElement* aSVGElement);

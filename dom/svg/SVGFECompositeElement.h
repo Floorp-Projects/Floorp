@@ -46,13 +46,13 @@ class SVGFECompositeElement : public SVGFECompositeElementBase {
   virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
   // WebIDL
-  already_AddRefed<SVGAnimatedString> In1();
-  already_AddRefed<SVGAnimatedString> In2();
-  already_AddRefed<SVGAnimatedEnumeration> Operator();
-  already_AddRefed<SVGAnimatedNumber> K1();
-  already_AddRefed<SVGAnimatedNumber> K2();
-  already_AddRefed<SVGAnimatedNumber> K3();
-  already_AddRefed<SVGAnimatedNumber> K4();
+  already_AddRefed<DOMSVGAnimatedString> In1();
+  already_AddRefed<DOMSVGAnimatedString> In2();
+  already_AddRefed<DOMSVGAnimatedEnumeration> Operator();
+  already_AddRefed<DOMSVGAnimatedNumber> K1();
+  already_AddRefed<DOMSVGAnimatedNumber> K2();
+  already_AddRefed<DOMSVGAnimatedNumber> K3();
+  already_AddRefed<DOMSVGAnimatedNumber> K4();
   void SetK(float k1, float k2, float k3, float k4);
 
  protected:

@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_SVGAnimatedAngle_h
-#define mozilla_dom_SVGAnimatedAngle_h
+#ifndef mozilla_dom_DOMSVGAnimatedAngle_h
+#define mozilla_dom_DOMSVGAnimatedAngle_h
 
 #include "nsWrapperCache.h"
 #include "SVGElement.h"
@@ -19,12 +19,12 @@ namespace dom {
 
 class DOMSVGAngle;
 
-class SVGAnimatedAngle final : public nsWrapperCache {
+class DOMSVGAnimatedAngle final : public nsWrapperCache {
  public:
-  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(SVGAnimatedAngle)
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(SVGAnimatedAngle)
+  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(DOMSVGAnimatedAngle)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(DOMSVGAnimatedAngle)
 
-  SVGAnimatedAngle(SVGOrient* aVal, SVGElement* aSVGElement)
+  DOMSVGAnimatedAngle(SVGOrient* aVal, SVGElement* aSVGElement)
       : mVal(aVal), mSVGElement(aSVGElement) {}
 
   // WebIDL
@@ -35,7 +35,7 @@ class SVGAnimatedAngle final : public nsWrapperCache {
   already_AddRefed<DOMSVGAngle> AnimVal();
 
  protected:
-  ~SVGAnimatedAngle();
+  ~DOMSVGAnimatedAngle();
 
   SVGOrient* mVal;  // kept alive because it belongs to content
   RefPtr<SVGElement> mSVGElement;
@@ -44,4 +44,4 @@ class SVGAnimatedAngle final : public nsWrapperCache {
 }  // namespace dom
 }  // namespace mozilla
 
-#endif  // mozilla_dom_SVGAnimatedAngle_h
+#endif  // mozilla_dom_DOMSVGAnimatedAngle_h

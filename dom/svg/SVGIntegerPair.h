@@ -7,12 +7,12 @@
 #ifndef __NS_SVGINTEGERPAIR_H__
 #define __NS_SVGINTEGERPAIR_H__
 
+#include "DOMSVGAnimatedInteger.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsError.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/SMILAttr.h"
 #include "mozilla/UniquePtr.h"
-#include "mozilla/dom/SVGAnimatedInteger.h"
 
 namespace mozilla {
 
@@ -58,7 +58,7 @@ class SVGIntegerPair {
   // usable, and represents the default base value of the attribute.
   bool IsExplicitlySet() const { return mIsAnimated || mIsBaseSet; }
 
-  already_AddRefed<mozilla::dom::SVGAnimatedInteger> ToDOMAnimatedInteger(
+  already_AddRefed<mozilla::dom::DOMSVGAnimatedInteger> ToDOMAnimatedInteger(
       PairIndex aIndex, SVGElement* aSVGElement);
   mozilla::UniquePtr<SMILAttr> ToSMILAttr(SVGElement* aSVGElement);
 
@@ -70,10 +70,10 @@ class SVGIntegerPair {
   bool mIsBaseSet;
 
  public:
-  struct DOMAnimatedInteger final : public mozilla::dom::SVGAnimatedInteger {
+  struct DOMAnimatedInteger final : public mozilla::dom::DOMSVGAnimatedInteger {
     DOMAnimatedInteger(SVGIntegerPair* aVal, PairIndex aIndex,
                        SVGElement* aSVGElement)
-        : mozilla::dom::SVGAnimatedInteger(aSVGElement),
+        : mozilla::dom::DOMSVGAnimatedInteger(aSVGElement),
           mVal(aVal),
           mIndex(aIndex) {}
     virtual ~DOMAnimatedInteger();

@@ -49,19 +49,19 @@ NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGEllipseElement)
 //----------------------------------------------------------------------
 // nsIDOMSVGEllipseElement methods
 
-already_AddRefed<SVGAnimatedLength> SVGEllipseElement::Cx() {
+already_AddRefed<DOMSVGAnimatedLength> SVGEllipseElement::Cx() {
   return mLengthAttributes[CX].ToDOMAnimatedLength(this);
 }
 
-already_AddRefed<SVGAnimatedLength> SVGEllipseElement::Cy() {
+already_AddRefed<DOMSVGAnimatedLength> SVGEllipseElement::Cy() {
   return mLengthAttributes[CY].ToDOMAnimatedLength(this);
 }
 
-already_AddRefed<SVGAnimatedLength> SVGEllipseElement::Rx() {
+already_AddRefed<DOMSVGAnimatedLength> SVGEllipseElement::Rx() {
   return mLengthAttributes[RX].ToDOMAnimatedLength(this);
 }
 
-already_AddRefed<SVGAnimatedLength> SVGEllipseElement::Ry() {
+already_AddRefed<DOMSVGAnimatedLength> SVGEllipseElement::Ry() {
   return mLengthAttributes[RY].ToDOMAnimatedLength(this);
 }
 

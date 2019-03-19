@@ -21,7 +21,7 @@ using namespace mozilla::gfx;
 namespace mozilla {
 namespace dom {
 
-class SVGAnimatedLength;
+class DOMSVGAnimatedLength;
 
 JSObject* SVGRectElement::WrapNode(JSContext* aCx,
                                    JS::Handle<JSObject*> aGivenProto) {
@@ -56,27 +56,27 @@ NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGRectElement)
 
 //----------------------------------------------------------------------
 
-already_AddRefed<SVGAnimatedLength> SVGRectElement::X() {
+already_AddRefed<DOMSVGAnimatedLength> SVGRectElement::X() {
   return mLengthAttributes[ATTR_X].ToDOMAnimatedLength(this);
 }
 
-already_AddRefed<SVGAnimatedLength> SVGRectElement::Y() {
+already_AddRefed<DOMSVGAnimatedLength> SVGRectElement::Y() {
   return mLengthAttributes[ATTR_Y].ToDOMAnimatedLength(this);
 }
 
-already_AddRefed<SVGAnimatedLength> SVGRectElement::Width() {
+already_AddRefed<DOMSVGAnimatedLength> SVGRectElement::Width() {
   return mLengthAttributes[ATTR_WIDTH].ToDOMAnimatedLength(this);
 }
 
-already_AddRefed<SVGAnimatedLength> SVGRectElement::Height() {
+already_AddRefed<DOMSVGAnimatedLength> SVGRectElement::Height() {
   return mLengthAttributes[ATTR_HEIGHT].ToDOMAnimatedLength(this);
 }
 
-already_AddRefed<SVGAnimatedLength> SVGRectElement::Rx() {
+already_AddRefed<DOMSVGAnimatedLength> SVGRectElement::Rx() {
   return mLengthAttributes[ATTR_RX].ToDOMAnimatedLength(this);
 }
 
-already_AddRefed<SVGAnimatedLength> SVGRectElement::Ry() {
+already_AddRefed<DOMSVGAnimatedLength> SVGRectElement::Ry() {
   return mLengthAttributes[ATTR_RY].ToDOMAnimatedLength(this);
 }
 

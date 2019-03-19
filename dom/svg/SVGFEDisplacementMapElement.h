@@ -44,11 +44,11 @@ class SVGFEDisplacementMapElement : public SVGFEDisplacementMapElementBase {
   virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
   // WebIDL
-  already_AddRefed<SVGAnimatedString> In1();
-  already_AddRefed<SVGAnimatedString> In2();
-  already_AddRefed<SVGAnimatedNumber> Scale();
-  already_AddRefed<SVGAnimatedEnumeration> XChannelSelector();
-  already_AddRefed<SVGAnimatedEnumeration> YChannelSelector();
+  already_AddRefed<DOMSVGAnimatedString> In1();
+  already_AddRefed<DOMSVGAnimatedString> In2();
+  already_AddRefed<DOMSVGAnimatedNumber> Scale();
+  already_AddRefed<DOMSVGAnimatedEnumeration> XChannelSelector();
+  already_AddRefed<DOMSVGAnimatedEnumeration> YChannelSelector();
 
  protected:
   virtual bool OperatesOnSRGB(int32_t aInputIndex,

@@ -9,7 +9,7 @@
 
 #include "nsCycleCollectionParticipant.h"
 #include "nsError.h"
-#include "SVGAnimatedInteger.h"
+#include "DOMSVGAnimatedInteger.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/SMILAttr.h"
 #include "mozilla/UniquePtr.h"
@@ -50,7 +50,7 @@ class SVGInteger {
   // usable, and represents the default base value of the attribute.
   bool IsExplicitlySet() const { return mIsAnimated || mIsBaseSet; }
 
-  already_AddRefed<mozilla::dom::SVGAnimatedInteger> ToDOMAnimatedInteger(
+  already_AddRefed<mozilla::dom::DOMSVGAnimatedInteger> ToDOMAnimatedInteger(
       SVGElement* aSVGElement);
   mozilla::UniquePtr<SMILAttr> ToSMILAttr(SVGElement* aSVGElement);
 
@@ -62,9 +62,9 @@ class SVGInteger {
   bool mIsBaseSet;
 
  public:
-  struct DOMAnimatedInteger final : public mozilla::dom::SVGAnimatedInteger {
+  struct DOMAnimatedInteger final : public mozilla::dom::DOMSVGAnimatedInteger {
     DOMAnimatedInteger(SVGInteger* aVal, SVGElement* aSVGElement)
-        : mozilla::dom::SVGAnimatedInteger(aSVGElement), mVal(aVal) {}
+        : mozilla::dom::DOMSVGAnimatedInteger(aSVGElement), mVal(aVal) {}
     virtual ~DOMAnimatedInteger();
 
     SVGInteger* mVal;  // kept alive because it belongs to content

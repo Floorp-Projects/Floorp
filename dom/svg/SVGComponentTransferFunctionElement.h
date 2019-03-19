@@ -56,13 +56,13 @@ class SVGComponentTransferFunctionElement
   // WebIDL
   virtual JSObject* WrapNode(JSContext* aCx,
                              JS::Handle<JSObject*> aGivenProto) override = 0;
-  already_AddRefed<SVGAnimatedEnumeration> Type();
+  already_AddRefed<DOMSVGAnimatedEnumeration> Type();
   already_AddRefed<DOMSVGAnimatedNumberList> TableValues();
-  already_AddRefed<SVGAnimatedNumber> Slope();
-  already_AddRefed<SVGAnimatedNumber> Intercept();
-  already_AddRefed<SVGAnimatedNumber> Amplitude();
-  already_AddRefed<SVGAnimatedNumber> Exponent();
-  already_AddRefed<SVGAnimatedNumber> Offset();
+  already_AddRefed<DOMSVGAnimatedNumber> Slope();
+  already_AddRefed<DOMSVGAnimatedNumber> Intercept();
+  already_AddRefed<DOMSVGAnimatedNumber> Amplitude();
+  already_AddRefed<DOMSVGAnimatedNumber> Exponent();
+  already_AddRefed<DOMSVGAnimatedNumber> Offset();
 
  protected:
   virtual NumberAttributesInfo GetNumberInfo() override;

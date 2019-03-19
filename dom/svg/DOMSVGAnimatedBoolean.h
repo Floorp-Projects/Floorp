@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_SVGAnimatedBoolean_h
-#define mozilla_dom_SVGAnimatedBoolean_h
+#ifndef mozilla_dom_DOMSVGAnimatedBoolean_h
+#define mozilla_dom_DOMSVGAnimatedBoolean_h
 
 #include "SVGBoolean.h"
 #include "nsWrapperCache.h"
@@ -15,11 +15,11 @@
 namespace mozilla {
 namespace dom {
 
-class SVGAnimatedBoolean final : public nsWrapperCache {
-  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(SVGAnimatedBoolean)
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(SVGAnimatedBoolean)
+class DOMSVGAnimatedBoolean final : public nsWrapperCache {
+  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(DOMSVGAnimatedBoolean)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(DOMSVGAnimatedBoolean)
 
-  SVGAnimatedBoolean(SVGBoolean* aVal, SVGElement* aSVGElement)
+  DOMSVGAnimatedBoolean(SVGBoolean* aVal, SVGElement* aSVGElement)
       : mVal(aVal), mSVGElement(aSVGElement) {}
 
   // WebIDL
@@ -34,7 +34,7 @@ class SVGAnimatedBoolean final : public nsWrapperCache {
   }
 
  protected:
-  ~SVGAnimatedBoolean();
+  ~DOMSVGAnimatedBoolean();
 
   SVGBoolean* mVal;  // kept alive because it belongs to content
   RefPtr<SVGElement> mSVGElement;
@@ -43,4 +43,4 @@ class SVGAnimatedBoolean final : public nsWrapperCache {
 }  // namespace dom
 }  // namespace mozilla
 
-#endif  // mozilla_dom_SVGAnimatedBoolean_h
+#endif  // mozilla_dom_DOMSVGAnimatedBoolean_h

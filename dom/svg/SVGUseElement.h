@@ -75,11 +75,11 @@ class SVGUseElement final : public SVGUseElementBase,
   NS_IMETHOD_(bool) IsAttributeMapped(const nsAtom* aAttribute) const override;
 
   // WebIDL
-  already_AddRefed<SVGAnimatedString> Href();
-  already_AddRefed<SVGAnimatedLength> X();
-  already_AddRefed<SVGAnimatedLength> Y();
-  already_AddRefed<SVGAnimatedLength> Width();
-  already_AddRefed<SVGAnimatedLength> Height();
+  already_AddRefed<DOMSVGAnimatedString> Href();
+  already_AddRefed<DOMSVGAnimatedLength> X();
+  already_AddRefed<DOMSVGAnimatedLength> Y();
+  already_AddRefed<DOMSVGAnimatedLength> Width();
+  already_AddRefed<DOMSVGAnimatedLength> Height();
 
   nsIURI* GetSourceDocURI();
   URLExtraData* GetContentURLData() const { return mContentURLData; }

@@ -142,19 +142,19 @@ NS_IMPL_ELEMENT_CLONE_WITH_INIT_AND_PARSER(SVGSVGElement)
 //----------------------------------------------------------------------
 // nsIDOMSVGSVGElement methods:
 
-already_AddRefed<SVGAnimatedLength> SVGSVGElement::X() {
+already_AddRefed<DOMSVGAnimatedLength> SVGSVGElement::X() {
   return mLengthAttributes[ATTR_X].ToDOMAnimatedLength(this);
 }
 
-already_AddRefed<SVGAnimatedLength> SVGSVGElement::Y() {
+already_AddRefed<DOMSVGAnimatedLength> SVGSVGElement::Y() {
   return mLengthAttributes[ATTR_Y].ToDOMAnimatedLength(this);
 }
 
-already_AddRefed<SVGAnimatedLength> SVGSVGElement::Width() {
+already_AddRefed<DOMSVGAnimatedLength> SVGSVGElement::Width() {
   return mLengthAttributes[ATTR_WIDTH].ToDOMAnimatedLength(this);
 }
 
-already_AddRefed<SVGAnimatedLength> SVGSVGElement::Height() {
+already_AddRefed<DOMSVGAnimatedLength> SVGSVGElement::Height() {
   return mLengthAttributes[ATTR_HEIGHT].ToDOMAnimatedLength(this);
 }
 

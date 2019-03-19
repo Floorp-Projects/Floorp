@@ -136,7 +136,7 @@ void SVGIntegerPair::SetAnimValue(const int32_t aValue[2],
   aSVGElement->DidAnimateIntegerPair(mAttrEnum);
 }
 
-already_AddRefed<SVGAnimatedInteger> SVGIntegerPair::ToDOMAnimatedInteger(
+already_AddRefed<DOMSVGAnimatedInteger> SVGIntegerPair::ToDOMAnimatedInteger(
     PairIndex aIndex, SVGElement* aSVGElement) {
   RefPtr<DOMAnimatedInteger> domAnimatedInteger =
       aIndex == eFirst ? sSVGFirstAnimatedIntegerTearoffTable.GetTearoff(this)
