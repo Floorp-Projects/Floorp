@@ -27,7 +27,7 @@ def set_defaults(config, jobs):
     for job in jobs:
         job['treeherder'].setdefault('kind', 'build')
         job['treeherder'].setdefault('tier', 1)
-        _, worker_os = worker_type_implementation(job['worker-type'])
+        _, worker_os = worker_type_implementation(config.graph_config, job['worker-type'])
         worker = job.setdefault('worker', {})
         worker.setdefault('env', {})
         if worker_os == "linux":
