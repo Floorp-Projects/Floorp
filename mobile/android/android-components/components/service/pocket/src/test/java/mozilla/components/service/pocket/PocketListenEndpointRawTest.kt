@@ -86,7 +86,7 @@ class PocketListenEndpointRawTest {
 
     @Test
     fun `WHEN request listen article metadata THEN the request body is correct`() {
-        val inputArticleID = 42
+        val inputArticleID = 42L
         val inputArticleURL = "https://mozac.org/api/mozilla.components.support.ktx.android.util/"
 
         val expectedBodyValues = mapOf(

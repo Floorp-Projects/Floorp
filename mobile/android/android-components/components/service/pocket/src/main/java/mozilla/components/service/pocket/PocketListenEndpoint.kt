@@ -30,7 +30,7 @@ class PocketListenEndpoint internal constructor(
      * [PocketResponse.Failure].
      */
     @WorkerThread // Synchronous network call.
-    fun getListenArticleMetadata(articleID: Int, articleURL: String): PocketResponse<PocketListenArticleMetadata> {
+    fun getListenArticleMetadata(articleID: Long, articleURL: String): PocketResponse<PocketListenArticleMetadata> {
         val json = rawEndpoint.getArticleListenMetadata(articleID, articleURL)
         val metadata = json?.let { jsonParser.jsonToListenArticleMetadata(it) }
         return PocketResponse.wrap(metadata)

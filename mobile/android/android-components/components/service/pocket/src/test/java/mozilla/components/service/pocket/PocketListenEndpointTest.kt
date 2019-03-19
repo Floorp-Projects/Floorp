@@ -17,7 +17,7 @@ import org.junit.Before
 import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.ArgumentMatchers.anyInt
+import org.mockito.ArgumentMatchers.anyLong
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.mock
@@ -49,7 +49,7 @@ class PocketListenEndpointTest {
 
     @Test
     fun `WHEN getting listen article metadata and the endpoint returns null THEN a failure is returned`() {
-        `when`(raw.getArticleListenMetadata(anyInt(), anyString())).thenReturn(null)
+        `when`(raw.getArticleListenMetadata(anyLong(), anyString())).thenReturn(null)
         `when`(jsonParser.jsonToListenArticleMetadata(any())).thenThrow(AssertionError("We assume this won't get called so we don't mock it"))
         assertResponseIsFailure(makeRequestGetListenArticleMetadata())
     }
@@ -62,7 +62,7 @@ class PocketListenEndpointTest {
             "{}",
             """{"expectedJSON": 101}"""
         ).forEach { expected ->
-            `when`(raw.getArticleListenMetadata(anyInt(), anyString())).thenReturn(expected)
+            `when`(raw.getArticleListenMetadata(anyLong(), anyString())).thenReturn(expected)
             makeRequestGetListenArticleMetadata()
             verify(jsonParser, times(1)).jsonToListenArticleMetadata(expected)
         }
@@ -70,7 +70,7 @@ class PocketListenEndpointTest {
 
     @Test
     fun `WHEN getting listen article metadata, the server returns a String, and the JSON parser returns null THEN a failure is returned`() {
-        `when`(raw.getArticleListenMetadata(anyInt(), anyString())).thenReturn("")
+        `when`(raw.getArticleListenMetadata(anyLong(), anyString())).thenReturn("")
         `when`(jsonParser.jsonToListenArticleMetadata(any())).thenReturn(null)
         assertResponseIsFailure(makeRequestGetListenArticleMetadata())
     }
@@ -78,7 +78,7 @@ class PocketListenEndpointTest {
     @Test
     fun `WHEN getting listen article metadata, the server returns a String, and the jsonParser returns valid data THEN a success with the data is returned`() {
         val expected = PocketTestResource.getExpectedListenArticleMetadata()
-        `when`(raw.getArticleListenMetadata(anyInt(), anyString())).thenReturn("")
+        `when`(raw.getArticleListenMetadata(anyLong(), anyString())).thenReturn("")
         `when`(jsonParser.jsonToListenArticleMetadata(any())).thenReturn(expected)
 
         val actual = makeRequestGetListenArticleMetadata()

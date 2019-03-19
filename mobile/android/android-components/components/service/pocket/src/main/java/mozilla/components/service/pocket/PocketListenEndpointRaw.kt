@@ -31,7 +31,7 @@ internal class PocketListenEndpointRaw(
      * @return the metadata for the given article as a raw JSON string or null on error.
      */
     @WorkerThread // Synchronous network call.
-    fun getArticleListenMetadata(articleID: Int, articleUrl: String): String? {
+    fun getArticleListenMetadata(articleID: Long, articleUrl: String): String? {
         val request = Request(
             urls.articleService.toString(),
             Request.Method.POST,
