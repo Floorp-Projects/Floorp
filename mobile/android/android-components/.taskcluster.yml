@@ -39,6 +39,11 @@ tasks:
       then: focus-nightly-sched  # TODO: Rename to mobile-nightly-sched
       else: taskcluster-github
 
+    github_repository_full_name:
+      $if: 'tasks_for == "github-pull-request"'
+      then: ${event.pull_request.base.repo.full_name}
+      else: ${event.repository.full_name}
+
     is_repo_trusted:
       # Pull requests on main repository can't be trusted because anybody can open a PR on it, without a review
       $if: 'tasks_for in ["github-push", "github-release", "cron"] && event.repository.html_url == "https://github.com/mozilla-mobile/android-components"'
@@ -58,6 +63,16 @@ tasks:
 
       # TODO: revisit once bug 1533314 is done to possibly infer better priorities
       tasks_priority: highest
+
+      short_head_branch:
+        $if: 'head_branch[:10] == "refs/tags/"'
+        then: {$eval: 'head_branch[10:]'}
+        else:
+          $if: 'head_branch[:11] == "refs/heads/"'
+          then: {$eval: 'head_branch[11:]'}
+          else: ${head_branch}
+
+      assume_scope_prefix: assume:repo:github.com/${github_repository_full_name}
     in:
       $let:
         default_task_definition:
@@ -72,10 +87,6 @@ tasks:
           priority: ${tasks_priority}
           requires: all-completed   # Must be explicit because of Chain of Trust
           retries: 5
-          scopes:
-            - queue:create-task:${tasks_priority}:aws-provisioner-v1/${build_worker_type}
-            - queue:route:statuses
-            - queue:scheduler-id:${scheduler_id}
           routes:
             - statuses  # Automatically added by taskcluster-github. It must be explicit because of Chain of Trust
           payload:
@@ -106,8 +117,6 @@ tasks:
         then:
           $let:
             pr_or_push_parameters:
-              scopes:
-                - secrets:get:project/mobile/android-components/public-tokens
               payload:
                 command:
                   - >-
@@ -127,7 +136,9 @@ tasks:
                   $mergeDeep:
                     - {$eval: 'default_task_definition'}
                     - {$eval: 'pr_or_push_parameters'}
-                    - payload:
+                    - scopes:
+                        - ${assume_scope_prefix}:pull-request
+                      payload:
                         env:
                           GITHUB_PULL_TITLE: ${pull_request_title}
                       metadata:
@@ -138,7 +149,9 @@ tasks:
                 $mergeDeep:
                   - {$eval: 'default_task_definition'}
                   - {$eval: 'pr_or_push_parameters'}
-                  - metadata:
+                  - scopes:
+                      - ${assume_scope_prefix}:branch:${short_head_branch}
+                    metadata:
                       name: Android Components - Decision task
                       description: Schedules the build and test tasks for Android components.
         else:
@@ -169,10 +182,6 @@ tasks:
             in:
               $let:
                 nightly_or_release_definition:
-                  scopes:
-                    - project:mobile:android-components:releng:beetmover:action:push-to-maven
-                    - project:mobile:android-components:releng:beetmover:bucket:${beetmover_bucket}
-                    - queue:create-task:${tasks_priority}:scriptworker-prov-v1/${beetmover_worker_type}
                   payload:
                     env:
                       MOBILE_TRIGGERED_BY: ${user}
@@ -201,7 +210,9 @@ tasks:
                       $mergeDeep:
                         - {$eval: 'default_task_definition'}
                         - {$eval: 'nightly_or_release_definition'}
-                        - payload:
+                        - scopes:
+                            - ${assume_scope_prefix}:release
+                          payload:
                             command:
                               - >-
                                 git fetch ${repository} --tags
@@ -218,7 +229,10 @@ tasks:
                     $mergeDeep:
                       - {$eval: 'default_task_definition'}
                       - {$eval: 'nightly_or_release_definition'}
-                      - payload:
+                      - scopes:
+                          # XXX Replace with your own hook, if you perform staging releases
+                          - assume:hook-id:project-mobile/android-components-snapshot-release
+                        payload:
                           command:
                             - >-
                               git fetch ${repository} ${head_branch}
