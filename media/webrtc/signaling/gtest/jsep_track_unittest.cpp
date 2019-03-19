@@ -319,7 +319,6 @@ class JsepTrackTest : public ::testing::Test {
     ASSERT_TRUE(!!b.GetNegotiatedDetails());
     ASSERT_EQ(a.GetMediaType(), b.GetMediaType());
     ASSERT_EQ(a.GetStreamIds(), b.GetStreamIds());
-    ASSERT_EQ(a.GetTrackId(), b.GetTrackId());
     ASSERT_EQ(a.GetCNAME(), b.GetCNAME());
     ASSERT_NE(a.GetDirection(), b.GetDirection());
     ASSERT_EQ(a.GetSsrcs().size(), b.GetSsrcs().size());
