@@ -489,8 +489,9 @@ void LoadShapeWrapperContents(MacroAssembler& masm, Register obj, Register dst,
                               Label* failure);
 
 enum class MetaTwoByteKind : uint8_t {
-  ClassTemplateObject,
   NativeTemplateObject,
+  ScriptedTemplateObject,
+  ClassTemplateObject,
 };
 
 // Class to record CacheIR + some additional metadata for code generation.
@@ -1151,12 +1152,13 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     return res;
   }
   void callScriptedFunction(ObjOperandId calleeId, Int32OperandId argc,
-                            bool isCrossRealm, bool isSpread) {
+                            bool isCrossRealm, bool isSpread,
+                            bool isConstructing) {
     writeOpWithOperandId(CacheOp::CallScriptedFunction, calleeId);
     writeOperandId(argc);
     buffer_.writeByte(uint32_t(isCrossRealm));
     buffer_.writeByte(uint32_t(isSpread));
-    buffer_.writeByte(uint32_t(false));  // isConstructing
+    buffer_.writeByte(uint32_t(isConstructing));
   }
   void callNativeFunction(ObjOperandId calleeId, Int32OperandId argc, JSOp op,
                           HandleFunction calleeFunc, bool isSpread,
@@ -1219,6 +1221,13 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
                                 FieldOffset calleeOffset) {
     writeOp(CacheOp::MetaTwoByte);
     buffer_.writeByte(uint32_t(MetaTwoByteKind::NativeTemplateObject));
+    reuseStubField(calleeOffset);
+    addStubField(uintptr_t(templateObject), StubField::Type::JSObject);
+  }
+  void metaScriptedTemplateObject(JSObject* templateObject,
+                                  FieldOffset calleeOffset) {
+    writeOp(CacheOp::MetaTwoByte);
+    buffer_.writeByte(uint32_t(MetaTwoByteKind::ScriptedTemplateObject));
     reuseStubField(calleeOffset);
     addStubField(uintptr_t(templateObject), StubField::Type::JSObject);
   }
@@ -2120,11 +2129,15 @@ class MOZ_RAII CallIRGenerator : public IRGenerator {
   uint32_t argc_;
   HandleValue callee_;
   HandleValue thisval_;
+  HandleValue newTarget_;
   HandleValueArray args_;
   PropertyTypeCheckInfo typeCheckInfo_;
   BaselineCacheIRStubKind cacheIRStubKind_;
 
   uint32_t calleeStackSlot(bool isSpread, bool isConstructing);
+  bool getTemplateObjectForScripted(HandleFunction calleeFunc,
+                                    MutableHandleObject result,
+                                    bool* skipAttach);
   bool getTemplateObjectForNative(HandleFunction calleeFunc,
                                   MutableHandleObject result);
   bool getTemplateObjectForClassHook(HandleObject calleeObj,
@@ -2144,7 +2157,8 @@ class MOZ_RAII CallIRGenerator : public IRGenerator {
  public:
   CallIRGenerator(JSContext* cx, HandleScript script, jsbytecode* pc, JSOp op,
                   ICState::Mode mode, uint32_t argc, HandleValue callee,
-                  HandleValue thisval, HandleValueArray args);
+                  HandleValue thisval, HandleValue newTarget,
+                  HandleValueArray args);
 
   bool tryAttachStub();
 
