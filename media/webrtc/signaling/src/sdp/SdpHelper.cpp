@@ -277,6 +277,11 @@ nsresult SdpHelper::AddCandidateToSdp(Sdp* sdp,
     return NS_ERROR_INVALID_ARG;
   }
 
+  if (candidateUntrimmed.empty()) {
+    SetIceGatheringComplete(sdp, level);
+    return NS_OK;
+  }
+
   // Trim off '[a=]candidate:'
   size_t begin = candidateUntrimmed.find(':');
   if (begin == std::string::npos) {

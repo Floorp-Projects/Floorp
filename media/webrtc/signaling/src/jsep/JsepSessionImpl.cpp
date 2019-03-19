@@ -2060,15 +2060,21 @@ nsresult JsepSessionImpl::AddRemoteIceCandidate(const std::string& candidate,
     return NS_ERROR_UNEXPECTED;
   }
 
-  JsepTransceiver* transceiver;
+  JsepTransceiver* transceiver = nullptr;
+  bool hasMidOrLevel = true;
   if (!mid.empty()) {
     transceiver = GetTransceiverForMid(mid);
   } else if (level.isSome()) {
     transceiver = GetTransceiverForLevel(level.value());
   } else {
-    JSEP_SET_ERROR("ICE candidate: \'" << candidate
-                                       << "\' is missing MID and MLineIndex");
-    return NS_ERROR_TYPE_ERR;
+    hasMidOrLevel = false;
+  }
+
+  if (candidate.empty() && !hasMidOrLevel) {
+    for (uint16_t i = 0; i < sdp->GetMediaSectionCount(); ++i) {
+      mSdpHelper.SetIceGatheringComplete(sdp, i);
+    }
+    return NS_OK;
   }
 
   if (!transceiver) {
