@@ -48,17 +48,21 @@ interface Headers : Iterable<Header> {
      *
      * A list of common HTTP response headers can be found at
      *   https://en.wikipedia.org/wiki/List_of_HTTP_header_fields#Standard_response_fields
+     *
+     * @see [Headers.Values]
      */
-    object Common {
+    object Names {
         const val CONTENT_TYPE = "Content-Type"
         const val USER_AGENT = "User-Agent"
+    }
 
-        /*
-         * A collection of common HTTP header values.
-         */
-        object Value {
-            const val CONTENT_TYPE_FORM_URLENCODED = "application/x-www-form-urlencoded"
-        }
+    /**
+     * A collection of common HTTP header values.
+     *
+     * @see [Headers.Names]
+     */
+    object Values {
+        const val CONTENT_TYPE_FORM_URLENCODED = "application/x-www-form-urlencoded"
     }
 }
 

@@ -5,9 +5,9 @@
 package mozilla.components.service.pocket
 
 import mozilla.components.concept.fetch.Client
-import mozilla.components.concept.fetch.Headers.Common.CONTENT_TYPE
-import mozilla.components.concept.fetch.Headers.Common.USER_AGENT
-import mozilla.components.concept.fetch.Headers.Common.Value.CONTENT_TYPE_FORM_URLENCODED
+import mozilla.components.concept.fetch.Headers.Names.CONTENT_TYPE
+import mozilla.components.concept.fetch.Headers.Names.USER_AGENT
+import mozilla.components.concept.fetch.Headers.Values.CONTENT_TYPE_FORM_URLENCODED
 import mozilla.components.concept.fetch.Request
 import mozilla.components.concept.fetch.Response
 import mozilla.components.service.pocket.PocketListenEndpointRaw.Companion.X_ACCESS_TOKEN

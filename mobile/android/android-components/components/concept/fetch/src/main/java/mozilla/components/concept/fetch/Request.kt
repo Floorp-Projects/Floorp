@@ -32,6 +32,9 @@ import java.util.concurrent.TimeUnit
  * sent with the request, defaults to [CookiePolicy.INCLUDE]
  * @property useCaches Whether caches should be used or a network request
  * should be forced, defaults to true (use caches).
+ *
+ * @see [Headers.Names]
+ * @see [Headers.Values]
  */
 data class Request(
     val url: String,
@@ -69,7 +72,7 @@ data class Request(
              * and values are percent-encoded. If the given map is empty, the response body will contain the
              * empty string.
              *
-             * @see [Headers.Common.Value.CONTENT_TYPE_FORM_URLENCODED]
+             * @see [Headers.Values.CONTENT_TYPE_FORM_URLENCODED]
              */
             fun fromParamsForFormUrlEncoded(unencodedParams: Map<String, String>): Body {
                 // It's unintuitive to use the Uri class format and encode

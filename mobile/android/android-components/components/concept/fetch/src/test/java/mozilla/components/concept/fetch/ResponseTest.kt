@@ -4,7 +4,7 @@
 
 package mozilla.components.concept.fetch
 
-import mozilla.components.concept.fetch.Headers.Common.CONTENT_TYPE
+import mozilla.components.concept.fetch.Headers.Names.CONTENT_TYPE
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
