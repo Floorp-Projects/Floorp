@@ -58,7 +58,7 @@
                   android:label="@string/moz_app_displayname"
                   android:taskAffinity="@ANDROID_PACKAGE_NAME@.BROWSER"
                   android:alwaysRetainTaskState="true"
-                  android:configChanges="keyboard|keyboardHidden|mcc|mnc|orientation|screenSize|locale|layoutDirection|smallestScreenSize|screenLayout"
+                  android:configChanges="keyboard|keyboardHidden|mcc|mnc|orientation|screenSize|locale|layoutDirection|smallestScreenSize|screenLayout|uiMode"
                   android:resizeableActivity="true"
                   android:supportsPictureInPicture="true"
                   android:windowSoftInputMode="stateUnspecified|adjustResize"
@@ -352,7 +352,7 @@
         </activity>
 
         <activity android:name="org.mozilla.gecko.customtabs.CustomTabsActivity"
-                  android:configChanges="keyboard|keyboardHidden|mcc|mnc|orientation|screenSize|locale|layoutDirection|smallestScreenSize|screenLayout"
+                  android:configChanges="keyboard|keyboardHidden|mcc|mnc|orientation|screenSize|locale|layoutDirection|smallestScreenSize|screenLayout|uiMode"
                   android:windowSoftInputMode="stateUnspecified|adjustResize"
                   android:theme="@style/GeckoCustomTabs" />
 

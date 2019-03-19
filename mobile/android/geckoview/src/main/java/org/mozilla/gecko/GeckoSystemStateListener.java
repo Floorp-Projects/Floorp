@@ -7,6 +7,7 @@ package org.mozilla.gecko;
 
 import android.content.ContentResolver;
 import android.content.Context;
+import android.content.res.Configuration;
 import android.database.ContentObserver;
 import android.hardware.input.InputManager;
 import android.net.Uri;
@@ -31,6 +32,7 @@ public class GeckoSystemStateListener
     private ContentObserver mContentObserver;
     private static Context sApplicationContext;
     private InputManager mInputManager;
+    private static boolean sIsNightMode;
 
     public static GeckoSystemStateListener getInstance() {
         return listenerInstance;
@@ -58,6 +60,9 @@ public class GeckoSystemStateListener
             }
         };
         contentResolver.registerContentObserver(animationSetting, false, mContentObserver);
+
+        sIsNightMode = (sApplicationContext.getResources().getConfiguration().uiMode &
+            Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES;
 
         mInitialized = true;
     }
@@ -107,6 +112,24 @@ public class GeckoSystemStateListener
         ContentResolver contentResolver = sApplicationContext.getContentResolver();
         Uri animationSetting = Settings.System.getUriFor(Settings.Global.ANIMATOR_DURATION_SCALE);
         contentResolver.notifyChange(animationSetting, null);
+    }
+
+    @WrapForJNI(calledFrom = "gecko")
+    /**
+     * For prefers-color-scheme media queries feature.
+     */
+    private static boolean isNightMode() {
+        return sIsNightMode;
+    }
+
+    public void updateNightMode(final int newUIMode) {
+        boolean isNightMode = (newUIMode & Configuration.UI_MODE_NIGHT_MASK)
+            == Configuration.UI_MODE_NIGHT_YES;
+        if (isNightMode == sIsNightMode) {
+            return;
+        }
+        sIsNightMode = isNightMode;
+        onDeviceChanged();
     }
 
     @WrapForJNI(stubName = "OnDeviceChanged", calledFrom = "ui", dispatchTo = "gecko")
