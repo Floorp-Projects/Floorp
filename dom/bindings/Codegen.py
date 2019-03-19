@@ -10645,7 +10645,7 @@ class ClassMethod(ClassItem):
                  virtual=False, const=False, bodyInHeader=False,
                  templateArgs=None, visibility='public', body=None,
                  breakAfterReturnDecl="\n",
-                 breakAfterSelf="\n", override=False):
+                 breakAfterSelf="\n", override=False, canRunScript=False):
         """
         override indicates whether to flag the method as override
         """
@@ -10663,10 +10663,13 @@ class ClassMethod(ClassItem):
         self.breakAfterReturnDecl = breakAfterReturnDecl
         self.breakAfterSelf = breakAfterSelf
         self.override = override
+        self.canRunScript = canRunScript;
         ClassItem.__init__(self, name, visibility)
 
     def getDecorators(self, declaring):
         decorators = []
+        if self.canRunScript:
+            decorators.append('MOZ_CAN_RUN_SCRIPT')
         if self.inline:
             decorators.append('inline')
         if declaring:
@@ -14783,7 +14786,7 @@ class CGNativeMember(ClassMethod):
                  breakAfter=True, passJSBitsAsNeeded=True, visibility="public",
                  spiderMonkeyInterfacesAreStructs=True,
                  variadicIsSequence=False, resultNotAddRefed=False,
-                 virtual=False, override=False):
+                 virtual=False, override=False, canRunScript=False):
         """
         If spiderMonkeyInterfacesAreStructs is false, SpiderMonkey interfaces
         will be passed as JS::Handle<JSObject*>.  If it's true they will be
@@ -14813,7 +14816,8 @@ class CGNativeMember(ClassMethod):
                              breakAfterSelf=breakAfterSelf,
                              visibility=visibility,
                              virtual=virtual,
-                             override=override)
+                             override=override,
+                             canRunScript=canRunScript)
 
     def getReturnType(self, type, isMember):
         return self.getRetvalInfo(type, isMember)[0]
@@ -16227,17 +16231,21 @@ class CGCallback(CGClass):
         return [ClassMethod(method.name, method.returnType, args,
                             bodyInHeader=True,
                             templateArgs=["typename T"],
-                            body=bodyWithThis),
+                            body=bodyWithThis,
+                            canRunScript=method.canRunScript),
                 ClassMethod(method.name, method.returnType, argsWithoutThis,
                             bodyInHeader=True,
-                            body=bodyWithoutThis),
+                            body=bodyWithoutThis,
+                            canRunScript=method.canRunScript),
                 ClassMethod(method.name, method.returnType, argsWithoutRv,
                             bodyInHeader=True,
                             templateArgs=["typename T"],
-                            body=bodyWithThisWithoutRv),
+                            body=bodyWithThisWithoutRv,
+                            canRunScript=method.canRunScript),
                 ClassMethod(method.name, method.returnType, argsWithoutThisAndRv,
                             bodyInHeader=True,
-                            body=bodyWithoutThisAndRv),
+                            body=bodyWithoutThisAndRv,
+                            canRunScript=method.canRunScript),
                 method]
 
     def deps(self):
@@ -16388,7 +16396,8 @@ class CallbackMember(CGNativeMember):
     def __init__(self, sig, name, descriptorProvider, needThisHandling,
                  rethrowContentException=False,
                  spiderMonkeyInterfacesAreStructs=False,
-                 wrapScope='CallbackKnownNotGray()'):
+                 wrapScope='CallbackKnownNotGray()',
+                 canRunScript=False):
         """
         needThisHandling is True if we need to be able to accept a specified
         thisObj, False otherwise.
@@ -16422,7 +16431,8 @@ class CallbackMember(CGNativeMember):
                                 extendedAttrs={},
                                 passJSBitsAsNeeded=False,
                                 visibility=visibility,
-                                spiderMonkeyInterfacesAreStructs=spiderMonkeyInterfacesAreStructs)
+                                spiderMonkeyInterfacesAreStructs=spiderMonkeyInterfacesAreStructs,
+                                canRunScript=canRunScript)
         # We have to do all the generation of our body now, because
         # the caller relies on us throwing if we can't manage it.
         self.exceptionCode = ("aRv.Throw(NS_ERROR_UNEXPECTED);\n"
@@ -16644,10 +16654,12 @@ class CallbackMember(CGNativeMember):
 class CallbackMethod(CallbackMember):
     def __init__(self, sig, name, descriptorProvider, needThisHandling,
                  rethrowContentException=False,
-                 spiderMonkeyInterfacesAreStructs=False):
+                 spiderMonkeyInterfacesAreStructs=False,
+                 canRunScript=False):
         CallbackMember.__init__(self, sig, name, descriptorProvider,
                                 needThisHandling, rethrowContentException,
-                                spiderMonkeyInterfacesAreStructs=spiderMonkeyInterfacesAreStructs)
+                                spiderMonkeyInterfacesAreStructs=spiderMonkeyInterfacesAreStructs,
+                                canRunScript=canRunScript)
 
     def getRvalDecl(self):
         return "JS::Rooted<JS::Value> rval(cx, JS::UndefinedValue());\n"
@@ -16680,7 +16692,8 @@ class CallCallback(CallbackMethod):
     def __init__(self, callback, descriptorProvider):
         self.callback = callback
         CallbackMethod.__init__(self, callback.signatures()[0], "Call",
-                                descriptorProvider, needThisHandling=True)
+                                descriptorProvider, needThisHandling=True,
+                                canRunScript=not callback.isRunScriptBoundary())
 
     def getThisDecl(self):
         return ""
