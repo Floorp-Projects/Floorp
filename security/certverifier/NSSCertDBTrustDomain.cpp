@@ -14,6 +14,7 @@
 #include "PublicKeyPinningService.h"
 #include "cert.h"
 #include "certdb.h"
+#include "cert_storage/src/cert_storage.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Casting.h"
 #include "mozilla/Move.h"
@@ -85,7 +86,7 @@ NSSCertDBTrustDomain::NSSCertDBTrustDomain(
       mBuiltChain(builtChain),
       mPinningTelemetryInfo(pinningTelemetryInfo),
       mHostname(hostname),
-      mCertBlocklist(do_GetService(NS_CERTBLOCKLIST_CONTRACTID)),
+      mCertBlocklist(do_GetService(NS_CERT_STORAGE_CID)),
       mOCSPStaplingStatus(CertVerifier::OCSP_STAPLING_NEVER_CHECKED),
       mSCTListFromCertificate(),
       mSCTListFromOCSPStapling() {}
@@ -195,7 +196,7 @@ Result NSSCertDBTrustDomain::GetCertTrust(EndEntityOrCA endEntityOrCA,
   // The certificate blocklist currently only applies to TLS server
   // certificates.
   if (mCertDBTrustType == trustSSL) {
-    bool isCertRevoked;
+    int16_t revocationState;
 
     nsAutoCString encIssuer;
     nsAutoCString encSerial;
@@ -209,13 +210,13 @@ Result NSSCertDBTrustDomain::GetCertTrust(EndEntityOrCA endEntityOrCA,
       return Result::FATAL_ERROR_LIBRARY_FAILURE;
     }
 
-    nsrv = mCertBlocklist->IsCertRevoked(encIssuer, encSerial, encSubject,
-                                         encPubKey, &isCertRevoked);
+    nsrv = mCertBlocklist->GetRevocationState(encIssuer, encSerial, encSubject,
+                                              encPubKey, &revocationState);
     if (NS_FAILED(nsrv)) {
       return Result::FATAL_ERROR_LIBRARY_FAILURE;
     }
 
-    if (isCertRevoked) {
+    if (revocationState == nsICertStorage::STATE_ENFORCE) {
       MOZ_LOG(gCertVerifierLog, LogLevel::Debug,
               ("NSSCertDBTrustDomain: certificate is in blocklist"));
       return Result::ERROR_REVOKED_CERTIFICATE;
