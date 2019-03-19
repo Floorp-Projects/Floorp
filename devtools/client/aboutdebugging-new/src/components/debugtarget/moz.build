@@ -15,6 +15,7 @@ DevToolsModules(
     'FieldPair.js',
     'InspectAction.js',
     'ServiceWorkerAction.js',
+    'ServiceWorkerAdditionalActions.js',
     'TabDetail.js',
     'TemporaryExtensionAdditionalActions.js',
     'TemporaryExtensionDetail.js',
