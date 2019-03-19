@@ -104,6 +104,14 @@ var observer = {
     }
 
     switch (aEvent.type) {
+      case "keydown": {
+        if (aEvent.keyCode == aEvent.DOM_VK_TAB ||
+            aEvent.keyCode == aEvent.DOM_VK_RETURN) {
+          LoginManagerContent.onUsernameInput(aEvent);
+        }
+        break;
+      }
+
       // Only used for username fields.
       case "focus": {
         LoginManagerContent._onUsernameFocus(aEvent);
@@ -716,6 +724,8 @@ var LoginManagerContent = {
 
     if (LoginHelper.isUsernameFieldType(acInputField)) {
       this.onUsernameInput(event);
+    } else if (acInputField.hasBeenTypePassword) {
+      this._highlightFilledField(event.target);
     }
   },
 
@@ -1238,6 +1248,7 @@ var LoginManagerContent = {
       // warning, regardless of saved login.
       if (usernameField) {
         this._formFillService.markAsLoginManagerField(usernameField);
+        usernameField.addEventListener("keydown", observer);
       }
 
       // Nothing to do if we have no matching logins available.

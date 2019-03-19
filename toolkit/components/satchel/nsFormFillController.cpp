@@ -592,9 +592,21 @@ NS_IMETHODIMP
 nsFormFillController::OnSearchComplete() { return NS_OK; }
 
 NS_IMETHODIMP
-nsFormFillController::OnTextEntered(Event* aEvent, bool* aPrevent) {
+nsFormFillController::OnTextEntered(Event* aEvent, bool itemWasSelected,
+                                    bool* aPrevent) {
   NS_ENSURE_ARG(aPrevent);
   NS_ENSURE_TRUE(mFocusedInput, NS_OK);
+
+  /**
+   * This function can get called when text wasn't actually entered
+   * into the field (e.g. if an autocomplete item wasn't selected) so
+   * we don't fire DOMAutoComplete in that case since nothing
+   * was actually autocompleted.
+   */
+  if (!itemWasSelected) {
+    return NS_OK;
+  }
+
   // Fire off a DOMAutoComplete event
 
   IgnoredErrorResult ignored;
