@@ -33,7 +33,8 @@ class RemoteAudioDecoderParent final : public RemoteDecoderParent {
                            nsCString* aErrorDescription);
 
  protected:
-  void ProcessDecodedData(const MediaDataDecoder::DecodedData& aData) override;
+  MediaResult ProcessDecodedData(
+      const MediaDataDecoder::DecodedData& aData) override;
 
  private:
   // Can only be accessed from the manager thread
