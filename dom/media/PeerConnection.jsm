@@ -222,6 +222,9 @@ class RTCIceCandidate {
   }
 
   __init(dict) {
+    if (dict.sdpMid == null && dict.sdpMLineIndex == null) {
+      throw new this._win.TypeError("Either sdpMid or sdpMLineIndex must be specified");
+    }
     Object.assign(this, dict);
   }
 }
