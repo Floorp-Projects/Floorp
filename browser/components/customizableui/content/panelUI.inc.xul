@@ -761,7 +761,7 @@
                          label="&appMenuRemoteTabs.sidebar.label;"
                          oncommand="SidebarUI.toggle('viewTabsSidebar');"/>
           <toolbarseparator/>
-          <toolbarbutton class="subviewbutton" label="&fxa.menu.connectAnotherDevice.label;" oncommand="gSync.openConnectAnotherDevice('fxa_discoverability_native');"/>
+          <toolbarbutton class="subviewbutton" label="&fxa.menu.connectAnotherDevice2.label;" oncommand="gSync.openConnectAnotherDevice('fxa_discoverability_native');"/>
           <toolbarbutton class="subviewbutton" label="&fxa.menu.manageAccount.label;" oncommand="gSync.openFxAManagePage('fxa_discoverability_native');"/>
           <toolbarbutton class="subviewbutton" label="&fxa.menu.syncSettings.label;" oncommand="gSync.openPrefs('fxa_discoverability_native');"/>
           <toolbarseparator/>
