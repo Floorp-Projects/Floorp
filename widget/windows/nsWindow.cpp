@@ -593,7 +593,6 @@ nsWindow::nsWindow(bool aIsChildWindow)
   mHideChrome = false;
   mFullscreenMode = false;
   mMousePresent = false;
-  mMouseInDraggableArea = false;
   mDestroyCalled = false;
   mIsEarlyBlankWindow = false;
   mHasTaskbarIconBeenCreated = false;
@@ -614,7 +613,7 @@ nsWindow::nsWindow(bool aIsChildWindow)
   mCachedHitTestPoint.x = 0;
   mCachedHitTestPoint.y = 0;
   mCachedHitTestTime = TimeStamp::Now();
-  mCachedHitTestResult = false;
+  mCachedHitTestResult = 0;
 #ifdef MOZ_XUL
   mTransparencyMode = eTransparencyOpaque;
   memset(&mGlassMargins, 0, sizeof mGlassMargins);
@@ -5310,8 +5309,6 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
       break;
 
     case WM_MOUSEMOVE: {
-      mMouseInDraggableArea =
-          WithinDraggableRegion(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
       if (!mMousePresent && !sIsInMouseCapture) {
         // First MOUSEMOVE over the client area. Ask for MOUSELEAVE
         TRACKMOUSEEVENT mTrack;
@@ -5344,19 +5341,12 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
       }
     } break;
 
-    case WM_NCMOUSEMOVE: {
-      LPARAM lParamClient = lParamToClient(lParam);
-      if (WithinDraggableRegion(GET_X_LPARAM(lParamClient),
-                                GET_Y_LPARAM(lParamClient))) {
-        // If we noticed the mouse moving in our draggable region, forward the
-        // message as a normal WM_MOUSEMOVE.
-        SendMessage(mWnd, WM_MOUSEMOVE, wParam, lParamClient);
-      } else if (mMousePresent && !sIsInMouseCapture) {
-        // If we receive a mouse move event on non-client chrome, make sure and
-        // send an eMouseExitFromWidget event as well.
+    case WM_NCMOUSEMOVE:
+      // If we receive a mouse move event on non-client chrome, make sure and
+      // send an eMouseExitFromWidget event as well.
+      if (mMousePresent && !sIsInMouseCapture)
         SendMessage(mWnd, WM_MOUSELEAVE, 0, 0);
-      }
-    } break;
+      break;
 
     case WM_LBUTTONDOWN: {
       result = DispatchMouseEvent(
@@ -5376,7 +5366,6 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
 
     case WM_MOUSELEAVE: {
       if (!mMousePresent) break;
-      if (mMouseInDraggableArea) break;
       mMousePresent = false;
 
       // Check if the mouse is over the fullscreen transition window, if so
@@ -6172,27 +6161,22 @@ int32_t nsWindow::ClientMarginHitTestPoint(int32_t mx, int32_t my) {
   if (!sIsInMouseCapture && allowContentOverride) {
     POINT pt = {mx, my};
     ::ScreenToClient(mWnd, &pt);
-    if (WithinDraggableRegion(pt.x, pt.y)) {
+    if (pt.x == mCachedHitTestPoint.x && pt.y == mCachedHitTestPoint.y &&
+        TimeStamp::Now() - mCachedHitTestTime <
+            TimeDuration::FromMilliseconds(HITTEST_CACHE_LIFETIME_MS)) {
+      return mCachedHitTestResult;
+    }
+    if (mDraggableRegion.Contains(pt.x, pt.y)) {
       testResult = HTCAPTION;
     } else {
       testResult = HTCLIENT;
     }
+    mCachedHitTestPoint = pt;
+    mCachedHitTestTime = TimeStamp::Now();
+    mCachedHitTestResult = testResult;
   }
 
   return testResult;
-}
-
-bool nsWindow::WithinDraggableRegion(int32_t clientX, int32_t clientY) {
-  if (clientX == mCachedHitTestPoint.x && clientY == mCachedHitTestPoint.y &&
-      TimeStamp::Now() - mCachedHitTestTime <
-          TimeDuration::FromMilliseconds(HITTEST_CACHE_LIFETIME_MS)) {
-    return mCachedHitTestResult;
-  }
-  mCachedHitTestPoint = {clientX, clientY};
-  mCachedHitTestTime = TimeStamp::Now();
-
-  mCachedHitTestResult = mDraggableRegion.Contains(clientX, clientY);
-  return mCachedHitTestResult;
 }
 
 TimeStamp nsWindow::GetMessageTimeStamp(LONG aEventTime) const {
