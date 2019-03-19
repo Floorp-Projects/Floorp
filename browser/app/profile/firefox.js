@@ -1681,6 +1681,8 @@ pref("reader.parse-node-limit", 0);
 // and because (normally) these errors are not persisted anywhere.
 pref("reader.errors.includeURLs", true);
 
+pref("view_source.tab", true);
+
 pref("dom.serviceWorkers.enabled", true);
 
 // Enable Push API.

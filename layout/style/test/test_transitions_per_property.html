@@ -2841,11 +2841,11 @@ function test_rotate_transition(prop) {
   // properties we expect them to.
   div.style.transitionProperty = 'none';
   div.style[prop] = '0 1 0 45deg';
-  is(cs[prop], '0 1 0 45deg',
+  is(cs[prop], 'y 45deg',
      `rotate property ${prop}: computed value before transition`);
   div.style.transitionProperty = prop;
   div.style[prop] = '0 1 0 145deg';
-  is(cs[prop], '0 1 0 70deg',
+  is(cs[prop], 'y 70deg',
      `rotate property ${prop}: interpolation of angles`);
   check_distance(prop, '0 1 0 45deg', '0 1 0 70deg', '0 1 0 145deg');
 }
@@ -2883,9 +2883,31 @@ function test_translate_transition(prop) {
   test_percent_unclamped(prop);
 
   // Two values: <length-percentage> <length-percentage>
+  // Note: Cannot use test_length_percent_pair_transition(prop) and
+  // test_length_percent_calc_transition(prop) because we don't resolve the
+  // percentage.
   test_length_pair_transition(prop);
-  test_length_percent_pair_transition(prop);
-  test_length_percent_calc_transition(prop);
+
+  div.style.setProperty("transition-property", "none", "");
+  div.style.setProperty(prop, "4px 50%", "");
+  is(cs.getPropertyValue(prop), "4px 50%",
+    `length-valued property ${prop}: computed value before transition`);
+  div.style.setProperty("transition-property", prop, "");
+  div.style.setProperty(prop, "12px 70%", "");
+  is(cs.getPropertyValue(prop), "6px 55%",
+    `length-valued property ${prop}: interpolation of lengths`);
+  check_distance(prop, "4px 50%", "6px 55%", "12px 70%");
+
+  div.style.setProperty("transition-property", "none", "");
+  div.style.setProperty(prop, "4px 50%", "");
+  is(cs.getPropertyValue(prop), "4px 50%",
+    `length-valued property ${prop}: computed value before transition`);
+  div.style.setProperty("transition-property", prop, "");
+  div.style.setProperty(prop, "20% 20px", "");
+  is(cs.getPropertyValue(prop), "calc(5% + 3px) calc(37.5% + 5px)",
+    `length-valued property ${prop}: interpolation of lengths`);
+  check_distance(prop, "4px 50%", "calc(5% + 3px) calc(37.5% + 5px)",
+                 "20% 20px");
   // We can't use test_length_percent_pair_unclamped here since
   // it assumes that "0px 0px" is serialized as "0px 0px" but
   // translate should serialize it as "0px".
@@ -2893,11 +2915,11 @@ function test_translate_transition(prop) {
   // Three values: <length-percentage> <length-percentage> <length>
   div.style.transitionProperty = 'none';
   div.style[prop] = '10px 200% 30px';
-  is(cs[prop], '10px 20px 30px',
+  is(cs[prop], '10px 200% 30px',
      `translate property ${prop}: computed value before transition`);
   div.style.transitionProperty = prop;
   div.style[prop] = '50px 600% 70px';
-  is(cs[prop], '20px 30px 40px',
+  is(cs[prop], '20px 300% 40px',
      `translate property ${prop}: interpolation of three values`);
   check_distance(prop, '10px 20px 30px', '20px 30px 40px', '50px 60px 70px');
 }

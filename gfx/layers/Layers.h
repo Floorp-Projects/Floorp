@@ -807,7 +807,7 @@ class LayerManager : public FrameRecorder {
 class Layer {
   NS_INLINE_DECL_REFCOUNTING(Layer)
 
-  typedef InfallibleTArray<Animation> AnimationArray;
+  typedef nsTArray<Animation> AnimationArray;
 
  public:
   // Keep these in alphabetical order
@@ -1444,21 +1444,20 @@ class Layer {
 
   // Note that all lengths in animation data are either in CSS pixels or app
   // units and must be converted to device pixels by the compositor.
+  // Besides, this should only be called on the compositor thread.
   AnimationArray& GetAnimations() { return mAnimationInfo.GetAnimations(); }
   uint64_t GetCompositorAnimationsId() {
     return mAnimationInfo.GetCompositorAnimationsId();
   }
-  InfallibleTArray<AnimData>& GetAnimationData();
+  nsTArray<PropertyAnimationGroup>& GetPropertyAnimationGroups() {
+    return mAnimationInfo.GetPropertyAnimationGroups();
+  }
 
   Maybe<uint64_t> GetAnimationGeneration() const {
     return mAnimationInfo.GetAnimationGeneration();
   }
 
   bool HasTransformAnimation() const;
-
-  RawServoAnimationValue* GetBaseAnimationStyle() const {
-    return mAnimationInfo.GetBaseAnimationStyle();
-  }
 
   /**
    * Returns the local transform for this layer: either mTransform or,

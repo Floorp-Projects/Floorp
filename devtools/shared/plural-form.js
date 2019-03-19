@@ -84,6 +84,8 @@ const gFunctions = [
   [2, (n) => n!=0?1:0],
   // 18: Welsh
   [6, (n) => n==0?0:n==1?1:n==2?2:n==3?3:n==6?4:5],
+  // 19: Bosnian, Croatian, Serbian
+  [3, (n) => n % 10 == 1 && n % 100 != 11 ? 0 : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20) ? 1 : 2],
 ];
 
 const PluralForm = {

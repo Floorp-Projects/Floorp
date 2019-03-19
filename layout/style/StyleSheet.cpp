@@ -241,6 +241,11 @@ void StyleSheet::ApplicableStateChanged(bool aApplicable) {
 }
 
 void StyleSheet::SetDisabled(bool aDisabled) {
+  // Only allow disabling author sheets.
+  if (mParsingMode != css::eAuthorSheetFeatures) {
+    return;
+  }
+
   if (aDisabled == Disabled()) {
     return;
   }

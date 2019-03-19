@@ -140,6 +140,13 @@ struct Translation {
   float z;
 };
 
+union Rotate {
+  // null_t represents |rotate: none|.
+  null_t;
+  Rotation;
+  Rotation3D;
+};
+
 union TransformFunction {
   Perspective;
   RotationX;
@@ -164,6 +171,9 @@ union Animatable {
   null_t;
   float;
   nscolor;
+  Rotate;
+  Scale;
+  Translation;
   TransformFunction[];
 };
 

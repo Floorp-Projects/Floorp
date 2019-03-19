@@ -10,6 +10,11 @@
 #include "mozilla/webrender/WebRenderTypes.h"
 
 namespace mozilla {
+
+namespace wr {
+class TransactionBuilder;
+}
+
 namespace layers {
 
 class WebRenderTextureHost;

@@ -16,7 +16,6 @@ const { getCurrentRuntimeDetails } = require("../../modules/runtimes-state-helpe
 
 const InspectAction = createFactory(require("./InspectAction"));
 
-const Actions = require("../../actions/index");
 const Types = require("../../types/index");
 const { SERVICE_WORKER_STATUSES } = require("../../constants");
 
@@ -27,116 +26,55 @@ class ServiceWorkerAction extends PureComponent {
   static get propTypes() {
     return {
       dispatch: PropTypes.func.isRequired,
-      // Provided by wrapping the component with FluentReact.withLocalization.
-      getString: PropTypes.func.isRequired,
       // Provided by redux state
       runtimeDetails: Types.runtimeDetails.isRequired,
       target: Types.debugTarget.isRequired,
     };
   }
 
-  push() {
-    const { dispatch, target } = this.props;
-    dispatch(Actions.pushServiceWorker(target.id));
-  }
-
-  start() {
-    const { dispatch, target } = this.props;
-    dispatch(Actions.startServiceWorker(target.details.registrationFront));
-  }
-
-  unregister() {
-    const { dispatch, target } = this.props;
-    dispatch(Actions.unregisterServiceWorker(target.details.registrationFront));
-  }
-
-  _renderButton({ className, disabled, key, labelId, onClick }) {
-    return Localized(
-      {
-        id: labelId,
-        key,
-      },
-      dom.button(
-        {
-          className,
-          disabled,
-          onClick: e => onClick(),
-        },
-        labelId,
-      )
-    );
-  }
-
   _renderInspectAction() {
+    const { status } = this.props.target.details;
+    const shallRenderInspectAction = status === SERVICE_WORKER_STATUSES.RUNNING ||
+                                     status === SERVICE_WORKER_STATUSES.REGISTERING;
+
+    if (!shallRenderInspectAction) {
+      return null;
+    }
+
     return InspectAction({
       disabled: this.props.runtimeDetails.isMultiE10s,
       dispatch: this.props.dispatch,
-      key: "service-worker-inspect-action",
       target: this.props.target,
     });
   }
 
-  _renderPushButton() {
-    return this._renderButton({
-      className: "default-button js-push-button",
-      disabled: this.props.runtimeDetails.isMultiE10s,
-      key: "service-worker-push-button",
-      labelId: "about-debugging-worker-action-push",
-      onClick: this.push.bind(this),
-    });
-  }
+  _renderStatus() {
+    const status = this.props.target.details.status.toLowerCase();
+    const statusClassName = status === SERVICE_WORKER_STATUSES.RUNNING.toLowerCase()
+                              ? "service-worker-action__status--running" : "";
 
-  _renderStartButton() {
-    return this._renderButton({
-      className: "default-button js-start-button",
-      disabled: this.props.runtimeDetails.isMultiE10s,
-      key: "service-worker-start-button",
-      labelId: "about-debugging-worker-action-start",
-      onClick: this.start.bind(this),
-    });
-  }
-
-  _renderUnregisterButton() {
-    return this._renderButton({
-      className: "default-button js-unregister-button",
-      key: "service-worker-unregister-button",
-      labelId: "about-debugging-worker-action-unregister",
-      onClick: this.unregister.bind(this),
-    });
-  }
-
-  _renderAction() {
-    const { status } = this.props.target.details;
-
-    switch (status) {
-      case SERVICE_WORKER_STATUSES.RUNNING:
-        return [
-          this._renderUnregisterButton(),
-          this._renderPushButton(),
-          this._renderInspectAction(),
-        ];
-      case SERVICE_WORKER_STATUSES.REGISTERING:
-        // Only inspect is available if the service worker is not active.
-        return [
-          this._renderInspectAction(),
-        ];
-      case SERVICE_WORKER_STATUSES.STOPPED:
-        return [
-          this._renderUnregisterButton(),
-          this._renderStartButton(),
-        ];
-      default:
-        console.error("Unexpected service worker status: " + status);
-        return [];
-    }
+    return Localized(
+      {
+        id: "about-debugging-worker-status",
+        $status: status,
+      },
+      dom.span(
+        {
+          className:
+            `service-worker-action__status js-worker-status ${ statusClassName }`,
+        },
+        status
+      )
+    );
   }
 
   render() {
     return dom.div(
       {
-        className: "toolbar",
+        className: "service-worker-action",
       },
-      this._renderAction()
+      this._renderStatus(),
+      this._renderInspectAction(),
     );
   }
 }
@@ -147,5 +85,4 @@ const mapStateToProps = state => {
   };
 };
 
-module.exports = FluentReact.withLocalization(
-  connect(mapStateToProps)(ServiceWorkerAction));
+module.exports = connect(mapStateToProps)(ServiceWorkerAction);

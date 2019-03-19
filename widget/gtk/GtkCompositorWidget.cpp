@@ -103,5 +103,9 @@ uintptr_t GtkCompositorWidget::GetWidgetKey() {
   return reinterpret_cast<uintptr_t>(mWidget);
 }
 
+EGLNativeWindowType GtkCompositorWidget::GetEGLNativeWindow() {
+  return (EGLNativeWindowType)mWidget->GetNativeData(NS_NATIVE_EGL_WINDOW);
+}
+
 }  // namespace widget
 }  // namespace mozilla

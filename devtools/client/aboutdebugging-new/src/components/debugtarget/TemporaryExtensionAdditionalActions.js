@@ -11,15 +11,13 @@ const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const FluentReact = require("devtools/client/shared/vendor/fluent-react");
 const Localized = createFactory(FluentReact.Localized);
 
-const ExtensionAction = createFactory(require("./ExtensionAction"));
-
 const Actions = require("../../actions/index");
 const Types = require("../../types/index");
 
 /**
- * This component provides components that inspect/reload/remove temporary extension.
+ * This component provides components that reload/remove temporary extension.
  */
-class TemporaryExtensionAction extends PureComponent {
+class TemporaryExtensionAdditionalActions extends PureComponent {
   static get propTypes() {
     return {
       dispatch: PropTypes.func.isRequired,
@@ -38,20 +36,16 @@ class TemporaryExtensionAction extends PureComponent {
   }
 
   render() {
-    const { dispatch, target } = this.props;
-
-    return dom.div(
-      {
-        className: "toolbar",
-      },
-      ExtensionAction({ dispatch, target }),
+    return [
       Localized(
         {
           id: "about-debugging-tmp-extension-reload-button",
+          key: "reload-button",
         },
         dom.button(
           {
-            className: "default-button js-temporary-extension-reload-button",
+            className: "default-button default-button--micro " +
+                       "js-temporary-extension-reload-button",
             onClick: e => this.reload(),
           },
           "Reload",
@@ -60,17 +54,19 @@ class TemporaryExtensionAction extends PureComponent {
       Localized(
         {
           id: "about-debugging-tmp-extension-remove-button",
+          key: "remove-button",
         },
         dom.button(
           {
-            className: "default-button js-temporary-extension-remove-button",
+            className: "default-button default-button--micro " +
+                       "js-temporary-extension-remove-button",
             onClick: e => this.remove(),
           },
           "Remove",
         )
       ),
-    );
+    ];
   }
 }
 
-module.exports = TemporaryExtensionAction;
+module.exports = TemporaryExtensionAdditionalActions;
