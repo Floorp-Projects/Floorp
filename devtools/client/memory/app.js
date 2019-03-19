@@ -59,15 +59,15 @@ class MemoryApp extends Component {
       allocations: appModel.allocations,
       censusDisplay: appModel.censusDisplay,
       diffing: appModel.diffing,
-      dispatch: appModel.dispatch,
+      dispatch: PropTypes.func,
       filter: appModel.filter,
       front: appModel.front,
       heapWorker: appModel.heapWorker,
       individuals: appModel.individuals,
       labelDisplay: appModel.labelDisplay,
-      sizes: appModel.sizes,
+      sizes: PropTypes.object,
       snapshots: appModel.snapshots,
-      toolbox: appModel.toolbox,
+      toolbox: PropTypes.object,
       view: appModel.view,
     };
   }

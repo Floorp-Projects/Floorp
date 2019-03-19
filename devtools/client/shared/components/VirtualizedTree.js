@@ -1016,7 +1016,7 @@ class TreeNodeClass extends Component {
         ref: "treenode",
         "aria-level": this.props.depth + 1,
         onClick: this.props.onClick,
-        onKeyDownCapture: this.props.active && this._onKeyDown,
+        onKeyDownCapture: this.props.active ? this._onKeyDown : undefined,
         "aria-expanded": ariaExpanded,
         "data-expanded": this.props.expanded ? "" : undefined,
         "data-depth": this.props.depth,

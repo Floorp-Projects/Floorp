@@ -30,10 +30,10 @@ const flexItemProperties = exports.flexItemProperties = {
   "max-width": PropTypes.string,
 
   // The computed height of the flex item element.
-  "height": PropTypes.number,
+  "height": PropTypes.string,
 
   // The computed width of the flex item element.
-  "width": PropTypes.number,
+  "width": PropTypes.string,
 
 };
 

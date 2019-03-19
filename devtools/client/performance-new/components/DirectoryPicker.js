@@ -62,6 +62,7 @@ class DirectoryPicker extends PureComponent {
         },
         dirs.map((fullPath, i) => option(
           {
+            key: fullPath,
             className: "pref-settings-dir-list-item",
             title: fullPath,
           },

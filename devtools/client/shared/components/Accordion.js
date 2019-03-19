@@ -76,6 +76,7 @@ class Accordion extends Component {
           className,
           "aria-expanded": opened,
           "aria-labelledby": labelledby,
+          key: labelledby,
         },
         h2(
           {
