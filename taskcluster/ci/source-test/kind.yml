@@ -7,6 +7,7 @@ loader: taskgraph.loader.transform:loader
 transforms:
    - taskgraph.transforms.try_job:transforms
    - taskgraph.transforms.source_test:transforms
+   - taskgraph.transforms.use_toolchains:transforms
    - taskgraph.transforms.job:transforms
    - taskgraph.transforms.task:transforms
 
@@ -15,6 +16,7 @@ kind-dependencies:
    - toolchain
 
 jobs-from:
+   - clang.yml
    - cram.yml
    - doc.yml
    - file-metadata.yml
