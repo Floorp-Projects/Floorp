@@ -16,7 +16,7 @@ protocol PURLClassifier
   manager PContent;
 
 child:
-  async __delete__(MaybeInfo info, nsresult errorCode);
+  async __delete__(ClassifierInfo? info, nsresult errorCode);
 };
 
 } // namespace dom

@@ -23,13 +23,13 @@ class URLClassifierChild : public PURLClassifierChild {
     mCallback = aCallback;
   }
 
-  mozilla::ipc::IPCResult Recv__delete__(const MaybeInfo& aInfo,
+  mozilla::ipc::IPCResult Recv__delete__(const Maybe<ClassifierInfo>& aInfo,
                                          const nsresult& aResult) override {
     MOZ_ASSERT(mCallback);
-    if (aInfo.type() == MaybeInfo::TClassifierInfo) {
-      mCallback->OnClassifyComplete(aResult, aInfo.get_ClassifierInfo().list(),
-                                    aInfo.get_ClassifierInfo().provider(),
-                                    aInfo.get_ClassifierInfo().fullhash());
+    if (aInfo.isSome()) {
+      mCallback->OnClassifyComplete(aResult, aInfo.ref().list(),
+                                    aInfo.ref().provider(),
+                                    aInfo.ref().fullhash());
     }
     return IPC_OK();
   }
