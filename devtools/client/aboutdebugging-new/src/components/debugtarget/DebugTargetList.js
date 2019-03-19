@@ -23,6 +23,7 @@ class DebugTargetList extends PureComponent {
   static get propTypes() {
     return {
       actionComponent: PropTypes.any.isRequired,
+      additionalActionsComponent: PropTypes.any,
       detailComponent: PropTypes.any.isRequired,
       dispatch: PropTypes.func.isRequired,
       isCollapsed: PropTypes.bool.isRequired,
@@ -70,6 +71,7 @@ class DebugTargetList extends PureComponent {
   render() {
     const {
       actionComponent,
+      additionalActionsComponent,
       detailComponent,
       dispatch,
       isCollapsed,
@@ -84,8 +86,15 @@ class DebugTargetList extends PureComponent {
       },
       targets.length === 0
         ? this.renderEmptyList()
-        : targets.map((target, key) =>
-            DebugTargetItem({ actionComponent, detailComponent, dispatch, key, target })),
+      : targets.map((target, key) =>
+          DebugTargetItem({
+            actionComponent,
+            additionalActionsComponent,
+            detailComponent,
+            dispatch,
+            key,
+            target,
+          })),
     );
   }
 }

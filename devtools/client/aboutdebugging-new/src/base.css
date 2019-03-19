@@ -251,7 +251,7 @@ p, h1 {
 /* a series of button-like elements, layed out horizontally */
 .toolbar {
   display: flex;
-  column-gap: var(--base-unit);
+  column-gap: calc(var(--base-unit) * 3);
 }
 
 /*
