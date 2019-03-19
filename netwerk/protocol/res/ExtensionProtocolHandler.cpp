@@ -372,7 +372,7 @@ bool ExtensionProtocolHandler::ResolveSpecialCases(const nsACString& aHost,
                                                    const nsACString& aPath,
                                                    const nsACString& aPathname,
                                                    nsACString& aResult) {
-  // Create special moz-extension:-pages such as moz-extension://foo/_blank.html
+  // Create special moz-extension://foo/_generated_background_page.html page
   // for all registered extensions. We can't just do this as a substitution
   // because substitutions can only match on host.
   if (!SubstitutingProtocolHandler::HasSubstitution(aHost)) {
