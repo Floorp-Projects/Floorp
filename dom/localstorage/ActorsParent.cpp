@@ -36,6 +36,7 @@
 #include "mozilla/ipc/PBackgroundChild.h"
 #include "mozilla/ipc/PBackgroundParent.h"
 #include "mozilla/ipc/PBackgroundSharedTypes.h"
+#include "mozilla/Logging.h"
 #include "nsClassHashtable.h"
 #include "nsDataHashtable.h"
 #include "nsInterfaceHashtable.h"
@@ -2171,9 +2172,9 @@ class LSRequestBase : public DatastoreOperationBase,
   // IPDL methods.
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
- private:
-  mozilla::ipc::IPCResult RecvCancel() final;
+  mozilla::ipc::IPCResult RecvCancel() override;
 
+ private:
   mozilla::ipc::IPCResult RecvFinish() final;
 };
 
@@ -2342,6 +2343,8 @@ class PrepareDatastoreOp : public LSRequestBase, public OpenDirectoryListener {
 
   // IPDL overrides.
   void ActorDestroy(ActorDestroyReason aWhy) override;
+
+  mozilla::ipc::IPCResult RecvCancel() final;
 
   // OpenDirectoryListener overrides.
   void DirectoryLockAcquired(DirectoryLock* aLock) override;
@@ -2738,6 +2741,8 @@ StaticAutoPtr<ArchivedOriginHashtable> gArchivedOrigins;
 
 // Can only be touched on the Quota Manager I/O thread.
 bool gInitializedShadowStorage = false;
+
+LazyLogModule gLogger("LocalStorage");
 
 bool IsOnConnectionThread() {
   MOZ_ASSERT(gConnectionThread);
@@ -5721,6 +5726,52 @@ void LSRequestBase::ActorDestroy(ActorDestroyReason aWhy) {
 mozilla::ipc::IPCResult LSRequestBase::RecvCancel() {
   AssertIsOnOwningThread();
 
+  if (MOZ_LOG_TEST(gLogger, LogLevel::Info)) {
+    MOZ_LOG(gLogger, LogLevel::Info, ("LSRequestBase::RecvCancel"));
+
+    nsCString state;
+
+    switch (mState) {
+      case State::Initial:
+        state.AssignLiteral("Initial");
+        break;
+
+      case State::Opening:
+        state.AssignLiteral("Opening");
+        break;
+
+      case State::Nesting:
+        state.AssignLiteral("Nesting");
+        break;
+
+      case State::SendingReadyMessage:
+        state.AssignLiteral("SendingReadyMessage");
+        break;
+
+      case State::WaitingForFinish:
+        state.AssignLiteral("WaitingForFinish");
+        break;
+
+      case State::SendingResults:
+        state.AssignLiteral("SendingResults");
+        break;
+
+      case State::Completed:
+        state.AssignLiteral("Completed");
+        break;
+
+      default:
+        MOZ_CRASH("Bad state!");
+    }
+
+    MOZ_LOG(gLogger, LogLevel::Info, ("  mState: %s", state.get()));
+  }
+
+  const char* crashOnCancel = PR_GetEnv("LSNG_CRASH_ON_CANCEL");
+  if (crashOnCancel) {
+    MOZ_CRASH("LSNG: Crash on cancel.");
+  }
+
   IProtocol* mgr = Manager();
   if (!PBackgroundLSRequestParent::Send__delete__(this, NS_ERROR_FAILURE)) {
     return IPC_FAIL_NO_REASON(mgr);
@@ -6678,6 +6729,65 @@ void PrepareDatastoreOp::ActorDestroy(ActorDestroyReason aWhy) {
   if (mLoadDataOp) {
     mLoadDataOp->NoteComplete();
   }
+}
+
+mozilla::ipc::IPCResult PrepareDatastoreOp::RecvCancel() {
+  AssertIsOnOwningThread();
+
+  if (MOZ_LOG_TEST(gLogger, LogLevel::Info)) {
+    MOZ_LOG(gLogger, LogLevel::Info, ("PrepareDatastoreOp::RecvCancel"));
+
+    nsCString nestedState;
+
+    switch (mNestedState) {
+      case NestedState::BeforeNesting:
+        nestedState.AssignLiteral("BeforeNesting");
+        break;
+
+      case NestedState::CheckExistingOperations:
+        nestedState.AssignLiteral("CheckExistingOperations");
+        break;
+
+      case NestedState::CheckClosingDatastore:
+        nestedState.AssignLiteral("CheckClosingDatastore");
+        break;
+
+      case NestedState::PreparationPending:
+        nestedState.AssignLiteral("PreparationPending");
+        break;
+
+      case NestedState::QuotaManagerPending:
+        nestedState.AssignLiteral("QuotaManagerPending");
+        break;
+
+      case NestedState::DirectoryOpenPending:
+        nestedState.AssignLiteral("DirectoryOpenPending");
+        break;
+
+      case NestedState::DatabaseWorkOpen:
+        nestedState.AssignLiteral("DatabaseWorkOpen");
+        break;
+
+      case NestedState::BeginLoadData:
+        nestedState.AssignLiteral("BeginLoadData");
+        break;
+
+      case NestedState::DatabaseWorkLoadData:
+        nestedState.AssignLiteral("DatabaseWorkLoadData");
+        break;
+
+      case NestedState::AfterNesting:
+        nestedState.AssignLiteral("AfterNesting");
+        break;
+
+      default:
+        MOZ_CRASH("Bad state!");
+    }
+
+    MOZ_LOG(gLogger, LogLevel::Info, ("  mNestedState: %s", nestedState.get()));
+  }
+
+  return LSRequestBase::RecvCancel();
 }
 
 void PrepareDatastoreOp::DirectoryLockAcquired(DirectoryLock* aLock) {
