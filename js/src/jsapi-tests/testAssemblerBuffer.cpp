@@ -50,7 +50,6 @@ BEGIN_TEST(testAssemblerBuffer_AssemblerBuffer) {
   CHECK_EQUAL(ab.size(), 0u);
   CHECK_EQUAL(ab.nextOffset().getOffset(), 0);
   CHECK(!ab.oom());
-  CHECK(!ab.bail());
 
   BufferOffset off1 = ab.putInt(1000017);
   CHECK_EQUAL(off1.getOffset(), 0);
@@ -317,7 +316,6 @@ BEGIN_TEST(testAssemblerBuffer_AssemblerBufferWithConstantPools) {
   CHECK_EQUAL(ab.size(), 0u);
   CHECK_EQUAL(ab.nextOffset().getOffset(), 0);
   CHECK(!ab.oom());
-  CHECK(!ab.bail());
 
   // Each slice holds 5 instructions. Trigger a constant pool inside the slice.
   uint32_t poolLoad[] = {0xc0cc0000};

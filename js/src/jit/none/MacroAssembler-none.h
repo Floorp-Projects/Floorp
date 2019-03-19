@@ -170,6 +170,10 @@ class Assembler : public AssemblerShared {
                                    const Disassembler::HeapAccess& heapAccess) {
     MOZ_CRASH();
   }
+
+  void setUnlimitedBuffer() {
+    MOZ_CRASH();
+  }
 };
 
 class Operand {
