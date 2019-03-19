@@ -406,6 +406,10 @@ void CookieServiceChild::SetCookieInternal(
 }
 
 bool CookieServiceChild::RequireThirdPartyCheck(nsILoadInfo *aLoadInfo) {
+  if (!aLoadInfo) {
+    return false;
+  }
+
   nsCOMPtr<nsICookieSettings> cookieSettings;
   nsresult rv = aLoadInfo->GetCookieSettings(getter_AddRefs(cookieSettings));
   if (NS_WARN_IF(NS_FAILED(rv))) {

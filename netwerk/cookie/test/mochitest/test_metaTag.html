@@ -1,0 +1,24 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for meta tag</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<script type="application/javascript">
+
+document.addEventListener("DOMContentLoaded", _ => {
+  try {
+    document.write('<meta content=a http-equiv="set-cookie">');
+  } catch (e) {}
+
+  ok(true, "No crash!");
+  SimpleTest.finish();
+});
+
+SimpleTest.waitForExplicitFinish();
+
+</script>
+</body>
+</html>
