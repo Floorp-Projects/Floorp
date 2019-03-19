@@ -43,7 +43,7 @@ add_task(async function() {
     {
       // request #1
       method: "GET",
-      uri: STATUS_CODES_SJS + "?sts=200#doh",
+      uri: STATUS_CODES_SJS + "?sts=200",
       correctUri: STATUS_CODES_SJS + "?sts=200",
       details: {
         status: 202,

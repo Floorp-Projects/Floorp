@@ -3,9 +3,5 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 .debug-target-list {
-  overflow: hidden;
-}
-
-.debug-target-list--collapsed {
-  max-height: 0;
+  margin-block-start: calc(var(--base-unit) * 4);
 }

@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<script>
+  "use strict";
+  function ObscuredFastClick() {
+  }
+  ObscuredFastClick.prototype = {
+    needsClick: () => {},
+  };
+  window.someRandomVar = new ObscuredFastClick();
+</script>

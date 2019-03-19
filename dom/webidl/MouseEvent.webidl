@@ -79,6 +79,7 @@ partial interface MouseEvent
 {
   // Finger or touch pressure event value
   // ranges between 0.0 and 1.0
+  [Deprecated="MouseEvent_MozPressure"]
   readonly attribute float mozPressure;
 
   const unsigned short    MOZ_SOURCE_UNKNOWN    = 0;

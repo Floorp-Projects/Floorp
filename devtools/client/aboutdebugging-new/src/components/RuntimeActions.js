@@ -13,17 +13,12 @@ const Localized = createFactory(FluentReact.Localized);
 
 const ConnectionPromptSetting = createFactory(require("./ConnectionPromptSetting"));
 const ExtensionDebugSetting = createFactory(require("./ExtensionDebugSetting"));
-const TemporaryExtensionInstaller =
-  createFactory(require("./debugtarget/TemporaryExtensionInstaller"));
 
 const Actions = require("../actions/index");
-const { DEBUG_TARGET_PANE, RUNTIMES } = require("../constants");
+const { RUNTIMES } = require("../constants");
 const Types = require("../types/index");
 
-const {
-  isExtensionDebugSettingNeeded,
-  isSupportedDebugTargetPane,
-} = require("../modules/debug-target-support");
+const { isExtensionDebugSettingNeeded } = require("../modules/debug-target-support");
 
 class RuntimeActions extends PureComponent {
   static get propTypes() {
@@ -80,14 +75,6 @@ class RuntimeActions extends PureComponent {
          : null;
   }
 
-  renderTemporaryExtensionInstaller() {
-    const { dispatch, runtimeDetails } = this.props;
-    const { type } = runtimeDetails.info;
-    return isSupportedDebugTargetPane(type, DEBUG_TARGET_PANE.TEMPORARY_EXTENSION)
-             ? TemporaryExtensionInstaller({ dispatch })
-             : null;
-  }
-
   render() {
     return dom.div(
       {},
@@ -95,7 +82,6 @@ class RuntimeActions extends PureComponent {
         {
           className: "runtime-actions__toolbar",
         },
-        this.renderTemporaryExtensionInstaller(),
         this.renderProfileButton(),
         this.renderConnectionPromptSetting(),
       ),

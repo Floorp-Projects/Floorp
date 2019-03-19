@@ -888,7 +888,7 @@ void CompositorBridgeParent::SetShadowProperties(Layer* aLayer) {
     // LayerTransactionParent::RecvUpdate.
     HostLayer* layerCompositor = layer->AsHostLayer();
     // Set the layerComposite's base transform to the layer's base transform.
-    AnimationArray& animations = layer->GetAnimations();
+    const auto& animations = layer->GetPropertyAnimationGroups();
     // If there is any animation, the animation value will override
     // non-animated value later, so we don't need to set the non-animated
     // value here.

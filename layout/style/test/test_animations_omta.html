@@ -2517,5 +2517,98 @@ if (SpecialPowers.DOMWindowUtils.layerManagerType != 'WebRender') {
   });
 }
 
+// Normal translate animation.
+addAsyncAnimTest(async function() {
+  new_div("translate: 100px; " +
+          "transition: translate 10s linear");
+  await waitForPaintsFlushed();
+
+  gDiv.style.translate = "200px";
+  await waitForPaintsFlushed();
+
+  omta_is("translate", { compositorValue: { tx: 100 }, computed: "100px" },
+          RunningOn.Compositor,
+          "translate transition runs on compositor thread");
+
+  advance_clock(5000);
+  omta_is("translate", { compositorValue: { tx: 150 }, computed: "150px" },
+          RunningOn.Compositor, "translate on compositor at 5s");
+
+  done_div();
+});
+
+// Normal rotate animation.
+addAsyncAnimTest(async function() {
+  new_div("rotate: 0deg; " +
+          "transition: rotate 10s linear");
+  await waitForPaintsFlushed();
+
+  gDiv.style.rotate = "90deg";
+  await waitForPaintsFlushed();
+
+  omta_is("rotate", { compositorValue: [ 1, 0, 0, 1, 0, 0 ], computed: "0deg"},
+          RunningOn.Compositor, "rotate transition runs on compositor thread");
+
+  advance_clock(5000);
+  omta_is("rotate",
+          { compositorValue: [ Math.cos(Math.PI / 4), Math.sin(Math.PI / 4),
+                              -Math.sin(Math.PI / 4), Math.cos(Math.PI / 4),
+                               0, 0 ],
+            computed: "45deg" }, RunningOn.Compositor,
+          "rotate on compositor at 5s");
+
+  done_div();
+});
+
+// Normal scale animation.
+addAsyncAnimTest(async function() {
+  new_div("scale: 1 1; " +
+          "transition: scale 10s linear");
+  await waitForPaintsFlushed();
+
+  gDiv.style.scale = "2 2";
+  await waitForPaintsFlushed();
+
+  omta_is("scale", { compositorValue: [ 1, 0, 0, 1, 0, 0 ], computed: "1" },
+          RunningOn.Compositor, "scale transition runs on compositor thread");
+
+  advance_clock(5000);
+  omta_is("scale",
+          { compositorValue: [ 1.5, 0, 0, 1.5, 0, 0 ], computed: "1.5" },
+          RunningOn.Compositor, "scale on compositor at 5s");
+
+  done_div();
+});
+
+// Normal multiple transform-like properties animation.
+addAsyncAnimTest(async function() {
+  new_div("translate: 100px; " +
+          "scale: 1 1; " +
+          "transform: translate(200px); " +
+          "transition: all 10s linear");
+  await waitForPaintsFlushed();
+
+  gDiv.style.translate = "200px";
+  gDiv.style.scale = "2 2";
+  gDiv.style.transform = "translate(300px)";
+  await waitForPaintsFlushed();
+
+  omta_is("transform", { compositorValue: { tx: 300 },
+                         usesMultipleProperties: true },
+          RunningOn.Compositor,
+          "transform-like properties transition runs on compositor thread");
+
+  advance_clock(5000);
+  omta_is("transform",
+          // The order is: translate, scale, transform.
+          // So the translate() in transform should be multiplied by 1.5.
+          { compositorValue: [ 1.5, 0, 0, 1.5, (150 + 250*1.5), 0 ],
+            usesMultipleProperties: true },
+          RunningOn.Compositor,
+          "transform-like properties on compositor at 5s");
+
+  done_div();
+});
+
 </script>
 </html>

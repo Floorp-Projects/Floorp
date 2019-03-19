@@ -35,6 +35,7 @@
   --highlight-50: #0a84ff;
   --grey-20: #ededf0; /* for ui, no special semantic */
   --grey-30: #d7d7db; /* for ui, no special semantic */
+  --grey-50: #737373; /* for ui, no special semantic */
   --grey-90: #0c0c0d; /* for ui, no special semantic */
   --grey-90-a10: rgba(12, 12, 13, 0.1);
   --grey-90-a20: rgba(12, 12, 13, 0.2);
@@ -184,7 +185,7 @@ p, h1 {
 *  +--------+-------------+
 */
 .main-subheading {
-  margin-block: calc(var(--base-unit) * 4);
+  margin-block: calc(var(--base-unit) * 4) 0;
   font-size: var(--title-20-font-size); /* Note: this is from Photon Title 20 */
   font-weight: var(--title-20-font-weight); /* Note: this is from Photon Title 20 */
 
@@ -250,7 +251,7 @@ p, h1 {
 /* a series of button-like elements, layed out horizontally */
 .toolbar {
   display: flex;
-  column-gap: var(--base-unit);
+  column-gap: calc(var(--base-unit) * 3);
 }
 
 /*
@@ -393,6 +394,7 @@ Form controls
   background-color: var(--white-100); /* from common.inc.css */
   border-radius: var(--base-unit); /* from common.inc.css */
   box-shadow: 0 1px 4px var(--grey-90-a10); /* from common.inc.css */
+  padding-block: calc(var(--base-unit) * 3) calc(var(--base-unit) * 2);
 }
 
 .card__heading {

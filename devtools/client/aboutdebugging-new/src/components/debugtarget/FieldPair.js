@@ -8,36 +8,35 @@ const { PureComponent } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
-/* Renders a pair of `<dt>` (label) + `<dd>` (value) field.
- * It also needs a 'slug' prop, which it's an ID that will be used to generate
- * a React key for the dom element */
+/* Renders a pair of `<dt>` (label) + `<dd>` (value) field. */
 class FieldPair extends PureComponent {
   static get propTypes() {
     return {
       className: PropTypes.string,
       label: PropTypes.node.isRequired,
-      slug: PropTypes.string.isRequired,
       value: PropTypes.node,
     };
   }
 
   render() {
-    const { slug, label, value } = this.props;
-    return [
+    const { label, value } = this.props;
+    return dom.div(
+      {
+        className: "fieldpair",
+      },
       dom.dt(
         {
-          key: `${slug}-dt`,
-          className: this.props.className ? this.props.className : "",
+          className: "fieldpair__title " +
+                      (this.props.className ? this.props.className : ""),
         },
         label
       ),
       value ? dom.dd(
         {
-          key: `${slug}-dd`,
-          className: "ellipsis-text",
+          className: "fieldpair__description ellipsis-text",
         },
         value) : null,
-    ];
+    );
   }
 }
 

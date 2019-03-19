@@ -98,7 +98,7 @@ class FontPropertyValue {
     MOZ_ASSERT(aValue >= kMin && aValue <= kMax);
   }
   explicit constexpr FontPropertyValue(int aValue)
-      : mValue(aValue << kFractionBits) {
+      : mValue(aValue * kScale) {
     MOZ_ASSERT(aValue >= Min && aValue <= Max);
   }
 
@@ -113,7 +113,7 @@ class FontPropertyValue {
   float ToFloat() const { return mValue * kInverseScale; }
   int ToIntRounded() const { return (mValue + kPointFive) >> FractionBits; }
 
-  static constexpr float kScale = float(1u << FractionBits);
+  static constexpr int kScale = 1 << FractionBits;
   static constexpr float kInverseScale = 1.0f / kScale;
   static const unsigned kFractionBits = FractionBits;
 

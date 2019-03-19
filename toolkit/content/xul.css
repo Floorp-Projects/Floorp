@@ -677,10 +677,6 @@ wizardpage {
   overflow: auto;
 }
 
-.wizard-header {
-  -moz-binding: url("chrome://global/content/bindings/wizard.xml#wizard-header");
-}
-
 .wizard-buttons {
   -moz-binding: url("chrome://global/content/bindings/wizard.xml#wizard-buttons");
 }

@@ -109,6 +109,32 @@ async function checkEndpointPref() {
   }
 }
 
+function hasFastClickPageScript() {
+  const win = window.wrappedJSObject;
+
+  if (win.FastClick) {
+    return true;
+  }
+
+  for (const property in win) {
+    try {
+      const proto = win[property].prototype;
+      if (proto && proto.needsClick) {
+        return true;
+      }
+    } catch (_) {
+    }
+  }
+
+  return false;
+}
+
+function checkForFastClick(tabId) {
+  return browser.tabs.executeScript(tabId, {
+    code: `${hasFastClickPageScript};hasFastClickPageScript()`,
+  }).then(([hasFastClick]) => hasFastClick).catch(() => false);
+}
+
 function getWebCompatInfoForTab(tab) {
   const {id, windiwId, url} = tab;
   return Promise.all([
@@ -118,12 +144,13 @@ function getWebCompatInfoForTab(tab) {
     browser.browserInfo.getUpdateChannel(),
     browser.browserInfo.hasTouchScreen(),
     browser.tabExtras.getWebcompatInfo(id),
+    checkForFastClick(id),
     browser.tabs.captureVisibleTab(windiwId, Config.screenshotFormat).catch(e => {
       console.error("Report Site Issue: getting a screenshot failed", e);
       return Promise.resolve(undefined);
     }),
   ]).then(([blockList, buildID, graphicsPrefs, channel, hasTouchScreen,
-            frameInfo, screenshot]) => {
+            frameInfo, hasFastClick, screenshot]) => {
     if (channel !== "linux") {
       delete graphicsPrefs["layers.acceleration.force-enabled"];
     }
@@ -138,6 +165,7 @@ function getWebCompatInfoForTab(tab) {
         buildID,
         channel,
         consoleLog,
+        hasFastClick,
         hasTouchScreen,
         "mixed active content blocked": frameInfo.hasMixedActiveContentBlocked,
         "mixed passive content blocked": frameInfo.hasMixedDisplayContentBlocked,
@@ -166,6 +194,11 @@ async function openWebCompatTab(compatInfo, usePrivateTab) {
     details,
     label: [],
   };
+  if (details.hasFastClick) {
+    params.label.push("type-fastclick");
+  } else {
+    delete details.hasFastClick;
+  }
   if (details["gfx.webrender.all"] || details["gfx.webrender.enabled"]) {
     params.label.push("type-webrender-enabled");
   }
