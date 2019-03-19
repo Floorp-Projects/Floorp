@@ -2569,9 +2569,7 @@ bool BaselineCacheIRCompiler::emitCallNativeShared(NativeCallType callType) {
   Register argcReg = allocator.useRegister(masm, reader.int32OperandId());
   bool maybeCrossRealm = reader.readBool();
   bool isSpread = reader.readBool();
-
-  // TODO: support constructors
-  bool isConstructing = false;
+  bool isConstructing = reader.readBool();
 
   allocator.discardStack(masm);
 
@@ -2609,8 +2607,7 @@ bool BaselineCacheIRCompiler::emitCallNativeShared(NativeCallType callType) {
   masm.push(scratch);
   masm.push(ICTailCallReg);
   masm.loadJSContext(scratch);
-  masm.enterFakeExitFrameForNative(scratch, scratch,
-                                   /*isConstructing = */ false);
+  masm.enterFakeExitFrameForNative(scratch, scratch, isConstructing);
 
   // Execute call.
   masm.setupUnalignedABICall(scratch);
@@ -2682,9 +2679,7 @@ bool BaselineCacheIRCompiler::emitCallScriptedFunction() {
   Register argcReg = allocator.useRegister(masm, reader.int32OperandId());
   bool maybeCrossRealm = reader.readBool();
   bool isSpread = reader.readBool();
-
-  // TODO: support constructors
-  bool isConstructing = false;
+  bool isConstructing = reader.readBool();
 
   allocator.discardStack(masm);
 
