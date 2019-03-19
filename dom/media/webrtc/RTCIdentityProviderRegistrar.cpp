@@ -55,7 +55,8 @@ already_AddRefed<Promise> RTCIdentityProviderRegistrar::GenerateAssertion(
     aRv.Throw(NS_ERROR_NOT_INITIALIZED);
     return nullptr;
   }
-  return mGenerateAssertionCallback->Call(aContents, aOrigin, aOptions, aRv);
+  RefPtr<GenerateAssertionCallback> callback(mGenerateAssertionCallback);
+  return callback->Call(aContents, aOrigin, aOptions, aRv);
 }
 already_AddRefed<Promise> RTCIdentityProviderRegistrar::ValidateAssertion(
     const nsAString& aAssertion, const nsAString& aOrigin, ErrorResult& aRv) {
@@ -63,7 +64,8 @@ already_AddRefed<Promise> RTCIdentityProviderRegistrar::ValidateAssertion(
     aRv.Throw(NS_ERROR_NOT_INITIALIZED);
     return nullptr;
   }
-  return mValidateAssertionCallback->Call(aAssertion, aOrigin, aRv);
+  RefPtr<ValidateAssertionCallback> callback(mValidateAssertionCallback);
+  return callback->Call(aAssertion, aOrigin, aRv);
 }
 
 }  // namespace dom
