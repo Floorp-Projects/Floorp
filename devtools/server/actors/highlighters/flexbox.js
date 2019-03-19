@@ -62,9 +62,6 @@ const JUSTIFY_CONTENT = "justify-content";
  *
  * @param {String} options.color
  *        The color that should be used to draw the highlighter for this flexbox.
- * @param {Boolean} options.noCountainerOutline
- *        Prevent drawing an outline around the flex container.
- *
  * Structure:
  * <div class="highlighter-container">
  *   <div id="flexbox-root" class="flexbox-root">
@@ -111,7 +108,7 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
   _buildMarkup() {
     const container = createNode(this.win, {
       attributes: {
-        "class": "highlighter-container flexbox",
+        "class": "highlighter-container",
       },
     });
 
@@ -432,8 +429,6 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
     });
 
     this.ctx.fillStyle = this.getFlexContainerPattern(devicePixelRatio);
-    this.ctx.strokeStyle =
-      this.options.noContainerOutline ? "transparent" : this.color;
 
     drawRect(this.ctx, 0, 0, width, height, this.currentMatrix);
 

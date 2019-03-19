@@ -5,7 +5,6 @@
 "use strict";
 
 const { AutoRefreshHighlighter } = require("./auto-refresh");
-const Services = require("Services");
 const {
   CanvasFrameAnonymousContentHelper,
   createNode,
@@ -22,9 +21,6 @@ const {
 const { getNodeDisplayName } = require("devtools/server/actors/inspector/utils");
 const nodeConstants = require("devtools/shared/dom-node-constants");
 
-loader.lazyRequireGetter(this, "FlexboxHighlighter",
-  "devtools/server/actors/highlighters/flexbox", true);
-
 // Note that the order of items in this array is important because it is used
 // for drawing the BoxModelHighlighter's path elements correctly.
 const BOX_MODEL_REGIONS = ["margin", "border", "padding", "content"];
@@ -33,8 +29,6 @@ const BOX_MODEL_SIDES = ["top", "right", "bottom", "left"];
 const GUIDE_STROKE_WIDTH = 1;
 // FIXME: add ":visited" and ":link" after bug 713106 is fixed
 const PSEUDO_CLASSES = [":hover", ":active", ":focus", ":focus-within"];
-
-const FLEXBOX_HIGHLIGHTER_COMBINE_PREF = "devtools.inspector.flexboxHighlighter.combine";
 
 /**
  * The BoxModelHighlighter draws the box model regions on top of a node.
@@ -117,21 +111,6 @@ class BoxModelHighlighter extends AutoRefreshHighlighter {
 
     const { pageListenerTarget } = highlighterEnv;
     pageListenerTarget.addEventListener("pagehide", this.onPageHide);
-  }
-
-  /**
-   * Check whether we should show the combined flexbox highlighter. Because
-   * checking for prefs is slow and performance is paramount for the highlighter
-   * we cache the result. Because we cache the result the Toolbox needs to be
-   * closed and opened again for any pref changes to take affect.
-   */
-  get showCombinedFlexboxHighlighter() {
-    if (typeof this._showCombinedFlexboxHighlighter === "undefined") {
-      this._showCombinedFlexboxHighlighter =
-        Services.prefs.getBoolPref(FLEXBOX_HIGHLIGHTER_COMBINE_PREF);
-    }
-
-    return this._showCombinedFlexboxHighlighter;
   }
 
   _buildMarkup() {
@@ -294,20 +273,7 @@ class BoxModelHighlighter extends AutoRefreshHighlighter {
 
     this.markup.destroy();
 
-    if (this._flexboxHighlighter) {
-      this._flexboxHighlighter.destroy();
-      this._flexboxHighlighter = null;
-    }
-
     AutoRefreshHighlighter.prototype.destroy.call(this);
-  }
-
-  get flexboxHighlighter() {
-    if (!this._flexboxHighlighter) {
-      this._flexboxHighlighter = new FlexboxHighlighter(this.highlighterEnv);
-    }
-
-    return this._flexboxHighlighter;
   }
 
   getElement(id) {
@@ -367,10 +333,6 @@ class BoxModelHighlighter extends AutoRefreshHighlighter {
     let shown = false;
     setIgnoreLayoutChanges(true);
 
-    // We need to set this option before calling _updateBoxModel().
-    this.options.isFlexboxContainer =
-      !!(node && node.getAsFlexContainer && node.getAsFlexContainer());
-
     if (this._updateBoxModel()) {
       // Show the infobar only if configured to do so and the node is an element or a text
       // node.
@@ -388,89 +350,9 @@ class BoxModelHighlighter extends AutoRefreshHighlighter {
       this._hide();
     }
 
-    if (this.showCombinedFlexboxHighlighter) {
-      this._updateFlexboxHighlighter();
-    }
-
     setIgnoreLayoutChanges(false, this.highlighterEnv.window.document.documentElement);
 
     return shown;
-  }
-
-  /**
-   * Update the flexbox highlighter on the current highlighted node. Show it
-   * if the current node is a flexbox container or flexbox item.
-   */
-  _updateFlexboxHighlighter() {
-    this._hideFlexboxHighlighter();
-
-    if (!this.currentNode) {
-      return;
-    }
-
-    const options = {};
-    let node = this.currentNode;
-    let showFlexboxHighlighter = false;
-
-    // If the current node is a flexbox container then remove the box model
-    // content region and make the other regions a little more transparent so
-    // that the flexbox highlighting is emphasized.
-    if (this.options.isFlexboxContainer) {
-      for (const region of BOX_MODEL_REGIONS) {
-        const box = this.getElement(region);
-
-        if (region === "content") {
-          // Hide the content region.
-          box.removeAttribute("d");
-        } else {
-          // Make the non-content regions a little more transparent.
-          box.setAttribute("half-faded", "");
-        }
-      }
-
-      // Stop the flexbox highlighter from showing an outline (the guides do a
-      // great job of that themselves).
-      options.noContainerOutline = true;
-
-      // Toggle the flag to show the flexbox highlighter.
-      showFlexboxHighlighter = true;
-    } else {
-      // The highlighted element is not a flexbox container so we need to check
-      // if it is a flex item.
-      const container = node.parentFlexElement;
-
-      if (container) {
-        for (const region of BOX_MODEL_REGIONS) {
-          const box = this.getElement(region);
-
-          // Ensure that the box model regions are not faded. The content region
-          // will reappear because it is regenerated by the highlighter.
-          box.setAttribute("half-faded", "");
-        }
-
-        // Hide the guides because we are only interested in the flex item's
-        // box model regions in relation to the flexbox overlay (and to make
-        // things less ugly).
-        this._hideGuides();
-
-        node = container;
-
-        // Toggle the flag to show the flexbox highlighter.
-        showFlexboxHighlighter = true;
-      }
-    }
-
-    if (showFlexboxHighlighter) {
-      // If the flag is set then show the flexbox highlighter.
-      this.flexboxHighlighter.show(node, options);
-    } else {
-      // Otherwise ensure that the box model regions are not faded.
-      for (const region of BOX_MODEL_REGIONS) {
-        const box = this.getElement(region);
-
-        box.removeAttribute("half-faded");
-      }
-    }
   }
 
   _scrollUpdate() {
@@ -486,18 +368,8 @@ class BoxModelHighlighter extends AutoRefreshHighlighter {
     this._untrackMutations();
     this._hideBoxModel();
     this._hideInfobar();
-    this._hideFlexboxHighlighter();
 
     setIgnoreLayoutChanges(false, this.highlighterEnv.window.document.documentElement);
-  }
-
-  /**
-   * Hide the Flexbox highlighter.
-   */
-  _hideFlexboxHighlighter() {
-    if (this._flexboxHighlighter) {
-      this.flexboxHighlighter.hide();
-    }
   }
 
   /**
@@ -651,11 +523,9 @@ class BoxModelHighlighter extends AutoRefreshHighlighter {
 
   _getBoxPathCoordinates(boxQuad, nextBoxQuad) {
     const {p1, p2, p3, p4} = boxQuad;
-    const isFlexboxContainer = this.options.isFlexboxContainer;
 
     let path;
-    if ((isFlexboxContainer && !nextBoxQuad) ||
-        (!isFlexboxContainer && (!nextBoxQuad || !this.options.onlyRegionArea))) {
+    if (!nextBoxQuad || !this.options.onlyRegionArea) {
       // If this is the content box (inner-most box) or if we're not being asked
       // to highlight only region areas, then draw a simple rectangle.
       path = "M" + p1.x + "," + p1.y + " " +
