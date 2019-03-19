@@ -3719,7 +3719,7 @@ bool js::GetFrameEnvironmentAndScope(JSContext* cx, AbstractFramePtr frame,
 
 #ifdef DEBUG
 
-using PropertyNameSet = GCHashSet<PropertyName*>;
+typedef HashSet<PropertyName*> PropertyNameSet;
 
 static bool RemoveReferencedNames(JSContext* cx, HandleScript script,
                                   PropertyNameSet& remainingNames) {
@@ -3797,7 +3797,7 @@ static bool RemoveReferencedNames(JSContext* cx, HandleScript script,
 static bool AnalyzeEntrainedVariablesInScript(JSContext* cx,
                                               HandleScript script,
                                               HandleScript innerScript) {
-  Rooted<PropertyNameSet> remainingNames(cx, cx);
+  PropertyNameSet remainingNames(cx);
 
   for (BindingIter bi(script); bi; bi++) {
     if (bi.closedOver()) {
@@ -3809,7 +3809,7 @@ static bool AnalyzeEntrainedVariablesInScript(JSContext* cx,
     }
   }
 
-  if (!RemoveReferencedNames(cx, innerScript, remainingNames.get())) {
+  if (!RemoveReferencedNames(cx, innerScript, remainingNames)) {
     return false;
   }
 
