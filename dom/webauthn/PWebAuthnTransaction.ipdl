@@ -16,6 +16,7 @@
 
 include protocol PBackground;
 
+using mozilla::dom::AttestationConveyancePreference from "mozilla/dom/WebAuthnUtil.h";
 using mozilla::dom::AuthenticatorAttachment from "mozilla/dom/WebAuthnUtil.h";
 using mozilla::dom::UserVerificationRequirement from "mozilla/dom/WebAuthnUtil.h";
 
@@ -72,7 +73,7 @@ struct WebAuthnMakeCredentialExtraInfo {
   CoseAlg[] coseAlgs;
   WebAuthnExtension[] Extensions;
   WebAuthnAuthenticatorSelection AuthenticatorSelection;
-  uint8_t attestationConveyancePreference;
+  AttestationConveyancePreference attestationConveyancePreference;
 };
 
 struct WebAuthnMakeCredentialInfo {

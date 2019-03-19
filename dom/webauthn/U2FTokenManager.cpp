@@ -285,8 +285,7 @@ void U2FTokenManager::Register(
     const auto& extra = aTransactionInfo.Extra().ref();
 
     AttestationConveyancePreference attestation =
-        static_cast<AttestationConveyancePreference>(
-            extra.attestationConveyancePreference());
+        extra.attestationConveyancePreference();
 
     directAttestationRequested =
         attestation == AttestationConveyancePreference::Direct;
