@@ -49,28 +49,37 @@ add_task(async function addALoginException() {
   let btnBlock = doc.getElementById("btnBlock");
   btnBlock.click();
 
-  await TestUtils.waitForCondition(() => richlistbox.itemCount == 1);
+  await TestUtils.waitForCondition(() => richlistbox.itemCount == 2);
 
-  Assert.equal(richlistbox.getItemAtIndex(0).getAttribute("origin"),
-               "http://www.example.com");
+  let expectedResult = ["http://www.example.com", "https://www.example.com"];
+  for (let website of expectedResult) {
+    let elements = richlistbox.getElementsByAttribute("origin", website);
+    is(elements.length, 1, "It should find only one coincidence");
+  }
 });
 
 add_task(async function deleteALoginException() {
   let doc = exceptionsDialog.document;
 
   let richlistbox = doc.getElementById("permissionsBox");
-  Assert.equal(richlistbox.itemCount, 1, "Row count should initially be 1");
+  let currentItems = 2;
+  Assert.equal(richlistbox.itemCount, currentItems,
+               `Row count should initially be ${currentItems}`);
   richlistbox.focus();
-  richlistbox.selectedIndex = 0;
 
-  if (AppConstants.platform == "macosx") {
-    EventUtils.synthesizeKey("KEY_Backspace");
-  } else {
-    EventUtils.synthesizeKey("KEY_Delete");
+  while (richlistbox.itemCount) {
+    richlistbox.selectedIndex = 0;
+
+    if (AppConstants.platform == "macosx") {
+      EventUtils.synthesizeKey("KEY_Backspace");
+    } else {
+      EventUtils.synthesizeKey("KEY_Delete");
+    }
+
+    currentItems -= 1;
+
+    await TestUtils.waitForCondition(() => richlistbox.itemCount == currentItems);
+    is_element_visible(content.gSubDialog._dialogs[0]._box,
+      "Subdialog is visible after deleting an element");
   }
-
-  await TestUtils.waitForCondition(() => richlistbox.itemCount == 0);
-
-  is_element_visible(content.gSubDialog._dialogs[0]._box,
-    "Subdialog is visible after deleting an element");
 });
