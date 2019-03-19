@@ -14,7 +14,7 @@ const {
   scale,
   translate,
 } = require("devtools/shared/layout/dom-matrix-2d");
-const { getViewportDimensions } = require("devtools/shared/layout/utils");
+const { getCurrentZoom, getViewportDimensions } = require("devtools/shared/layout/utils");
 const { getComputedStyle } = require("./markup");
 
 // A set of utility functions for highlighters that render their content to a <canvas>
@@ -426,10 +426,19 @@ function getPointsFromDiagonal(x1, y1, x2, y2, matrix = identity()) {
  *         corner of the page.
  * @param  {Number} devicePixelRatio
  *         The device pixel ratio.
+ * @param  {Window} [options.zoomWindow]
+ *         Optional window object used to calculate zoom (default = undefined).
  */
-function updateCanvasElement(canvas, canvasPosition, devicePixelRatio) {
-  const { x, y } = canvasPosition;
+function updateCanvasElement(
+    canvas, canvasPosition, devicePixelRatio, { zoomWindow } = {}) {
+  let { x, y } = canvasPosition;
   const size = CANVAS_SIZE / devicePixelRatio;
+
+  if (zoomWindow) {
+    const zoom = getCurrentZoom(zoomWindow);
+    x *= zoom;
+    y *= zoom;
+  }
 
   // Resize the canvas taking the dpr into account so as to have crisp lines, and
   // translating it to give the perception that it always covers the viewport.

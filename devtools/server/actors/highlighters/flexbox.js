@@ -715,7 +715,9 @@ class FlexboxHighlighter extends AutoRefreshHighlighter {
 
     // Updates the <canvas> element's position and size.
     // It also clear the <canvas>'s drawing context.
-    updateCanvasElement(this.canvas, this._canvasPosition, this.win.devicePixelRatio);
+    updateCanvasElement(this.canvas, this._canvasPosition, this.win.devicePixelRatio, {
+      zoomWindow: this.win,
+    });
 
     // Update the current matrix used in our canvas' rendering
     const { currentMatrix, hasNodeTransformations } =
