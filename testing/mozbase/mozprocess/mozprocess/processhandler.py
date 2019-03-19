@@ -741,6 +741,12 @@ falling back to not using job objects for managing child processes""", file=sys.
         elif self.args is None:
             self.args = []
 
+    def debug(self, msg):
+        if not MOZPROCESS_DEBUG:
+            return
+        cmd = self.cmd.split(os.sep)[-1:]
+        print("DBG::MOZPROC ProcessHandlerMixin {} | {}".format(cmd, msg))
+
     @property
     def timedOut(self):
         """True if the process has timed out for any reason."""
@@ -814,7 +820,10 @@ falling back to not using job objects for managing child processes""", file=sys.
         # When we kill the the managed process we also have to wait for the
         # reader thread to be finished. Otherwise consumers would have to assume
         # that it still has not completely shutdown.
-        return self.wait()
+        rc = self.wait()
+        if rc is None:
+            self.debug("kill: wait failed -- process is still alive")
+        return rc
 
     def poll(self):
         """Check if child process has terminated
@@ -882,6 +891,7 @@ falling back to not using job objects for managing child processes""", file=sys.
                 self.reader.join(timeout=1)
                 count += 1
                 if timeout is not None and count > timeout:
+                    self.debug("wait timeout for reader thread")
                     return None
 
         self.returncode = self.proc.wait()
@@ -982,6 +992,11 @@ class ProcessReader(object):
         self.thread = None
         self.didOutputTimeout = False
 
+    def debug(self, msg):
+        if not MOZPROCESS_DEBUG:
+            return
+        print("DBG::MOZPROC ProcessReader | {}".format(msg))
+
     def _create_stream_reader(self, name, stream, queue, callback):
         thread = threading.Thread(name=name,
                                   target=self._read_stream,
@@ -1019,6 +1034,7 @@ class ProcessReader(object):
                                              queue))
         self.thread.daemon = True
         self.thread.start()
+        self.debug("ProcessReader started")
 
     def _read(self, stdout_reader, stderr_reader, queue):
         start_time = time.time()
@@ -1050,6 +1066,7 @@ class ProcessReader(object):
             if timeout is not None and now > timeout:
                 timed_out = True
                 break
+        self.debug("_read loop exited")
         # process remaining lines to read
         while not queue.empty():
             line, callback = queue.get(False)
@@ -1062,6 +1079,7 @@ class ProcessReader(object):
             stderr_reader.join()
         if not timed_out:
             self.finished_callback()
+        self.debug("_read exited")
 
     def is_alive(self):
         if self.thread:
