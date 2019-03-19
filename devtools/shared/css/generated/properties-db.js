@@ -5678,6 +5678,25 @@ exports.CSS_PROPERTIES = {
       "unset"
     ]
   },
+  "contain": {
+    "isInherited": false,
+    "subproperties": [
+      "contain"
+    ],
+    "supports": [],
+    "values": [
+      "content",
+      "inherit",
+      "initial",
+      "layout",
+      "none",
+      "paint",
+      "revert",
+      "size",
+      "strict",
+      "unset"
+    ]
+  },
   "content": {
     "isInherited": false,
     "subproperties": [
