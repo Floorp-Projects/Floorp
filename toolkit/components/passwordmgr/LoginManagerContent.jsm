@@ -993,14 +993,6 @@ var LoginManagerContent = {
         continue;
       }
 
-      if (ChromeUtils.getClassName(formRoot) === "HTMLFormElement") {
-        // For now only perform capture upon navigation for LoginForm's without
-        // a <form> to avoid capture from both a DOMFormBeforeSubmit event and
-        // navigation for the same "form".
-        log("Ignoring navigation for the form root to avoid multiple prompts " +
-            "since it was for a real <form>");
-        continue;
-      }
       let formLike = LoginFormFactory.getForRootElement(formRoot);
       this._onFormSubmit(formLike);
     }
