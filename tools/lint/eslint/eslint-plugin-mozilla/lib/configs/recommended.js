@@ -286,6 +286,10 @@ module.exports = {
     // Disallow tabs.
     "no-tabs": "error",
 
+    // Disallow throwing literals (eg. throw "error" instead of
+    // throw new Error("error")).
+    "no-throw-literal": "error",
+
     // No trailing whitespace
     "no-trailing-spaces": "error",
 
