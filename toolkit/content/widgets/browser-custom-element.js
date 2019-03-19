@@ -1001,7 +1001,7 @@ class MozBrowser extends MozElementMixin(XULFrameElement) {
   }
 
   resumeMedia() {
-    this.messageManager.sendAsyncMessage("AudioPlayback", { type: "resumeMedia" });
+    this.frameLoader.browsingContext.notifyStartDelayedAutoplayMedia();
     if (this._hasAnyPlayingMediaBeenBlocked) {
       this._hasAnyPlayingMediaBeenBlocked = false;
       let event = document.createEvent("Events");
