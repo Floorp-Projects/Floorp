@@ -105,7 +105,7 @@ struct LangGroupFontPrefs {
     }
   }
 
-  RefPtr<nsAtom> mLangGroup;
+  nsStaticAtom* mLangGroup;
   nscoord mMinimumFontSize;
   nsFont mDefaultVariableFont;
   nsFont mDefaultFixedFont;
@@ -151,13 +151,12 @@ class StaticPresData {
    * to re-call GetLanguageGroup when it is safe to cache, to avoid
    * recomputing the language group again later.
    */
-  nsAtom* GetLangGroup(nsAtom* aLanguage, bool* aNeedsToCache = nullptr) const;
+  nsStaticAtom* GetLangGroup(nsAtom* aLanguage, bool* aNeedsToCache = nullptr) const;
 
   /**
    * Same as GetLangGroup, but will not cache the result
-   *
    */
-  already_AddRefed<nsAtom> GetUncachedLangGroup(nsAtom* aLanguage) const;
+  nsStaticAtom* GetUncachedLangGroup(nsAtom* aLanguage) const;
 
   /**
    * Fetch the user's font preferences for the given aLanguage's
@@ -183,7 +182,7 @@ class StaticPresData {
 
  private:
   StaticPresData();
-  ~StaticPresData() {}
+  ~StaticPresData() = default;
 
   nsLanguageAtomService* mLangService;
 };

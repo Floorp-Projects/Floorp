@@ -14,7 +14,7 @@
 #include "mozilla/NotNull.h"
 #include "nsCOMPtr.h"
 #include "nsAtom.h"
-#include "nsRefPtrHashtable.h"
+#include "nsDataHashtable.h"
 
 namespace mozilla {
 class Encoding;
@@ -28,7 +28,7 @@ class nsLanguageAtomService final {
  public:
   static nsLanguageAtomService* GetService();
 
-  nsAtom* LookupLanguage(const nsACString& aLanguage);
+  nsStaticAtom* LookupLanguage(const nsACString& aLanguage);
   already_AddRefed<nsAtom> LookupCharSet(NotNull<const Encoding*> aCharSet);
   nsAtom* GetLocaleLanguage();
 
@@ -47,11 +47,12 @@ class nsLanguageAtomService final {
   // get a true *aNeedsToCache outparam value should make an effort
   // to re-call GetLanguageGroup when it is safe to cache, to avoid
   // recomputing the language group again later.
-  nsAtom* GetLanguageGroup(nsAtom* aLanguage, bool* aNeedsToCache = nullptr);
-  already_AddRefed<nsAtom> GetUncachedLanguageGroup(nsAtom* aLanguage) const;
+  nsStaticAtom* GetLanguageGroup(nsAtom* aLanguage,
+                                 bool* aNeedsToCache = nullptr);
+  nsStaticAtom* GetUncachedLanguageGroup(nsAtom* aLanguage) const;
 
  private:
-  nsRefPtrHashtable<nsRefPtrHashKey<nsAtom>, nsAtom> mLangToGroup;
+  nsDataHashtable<nsRefPtrHashKey<nsAtom>, nsStaticAtom*> mLangToGroup;
   RefPtr<nsAtom> mLocaleLanguage;
 };
 
