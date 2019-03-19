@@ -2257,10 +2257,6 @@ class XPCVariant : public nsIVariant {
 
   void RemovePurple() { mRefCnt.RemovePurple(); }
 
-  void SetCCGeneration(uint32_t aGen) { mCCGeneration = aGen; }
-
-  uint32_t CCGeneration() { return mCCGeneration; }
-
  protected:
   virtual ~XPCVariant() {}
 
@@ -2269,8 +2265,7 @@ class XPCVariant : public nsIVariant {
  protected:
   nsDiscriminatedUnion mData;
   JS::Heap<JS::Value> mJSVal;
-  bool mReturnRawObject : 1;
-  uint32_t mCCGeneration : 31;
+  bool mReturnRawObject;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(XPCVariant, XPCVARIANT_IID)

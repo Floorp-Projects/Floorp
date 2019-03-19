@@ -757,12 +757,6 @@ void XPCJSRuntime::TraverseAdditionalNativeRoots(
 
   for (XPCRootSetElem* e = mVariantRoots; e; e = e->GetNextRoot()) {
     XPCTraceableVariant* v = static_cast<XPCTraceableVariant*>(e);
-    if (nsCCUncollectableMarker::InGeneration(cb, v->CCGeneration())) {
-      JS::Value val = v->GetJSValPreserveColor();
-      if (val.isObject() && !JS::ObjectIsMarkedGray(&val.toObject())) {
-        continue;
-      }
-    }
     cb.NoteXPCOMRoot(
         v,
         XPCTraceableVariant::NS_CYCLE_COLLECTION_INNERCLASS::GetParticipant());
