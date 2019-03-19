@@ -894,7 +894,11 @@ void WorkerDebuggerGlobalScope::LoadSubScript(
 }
 
 void WorkerDebuggerGlobalScope::EnterEventLoop() {
-  mWorkerPrivate->EnterDebuggerEventLoop();
+  // We're on the worker thread here, and WorkerPrivate's refcounting is
+  // non-threadsafe: you can only do it on the parent thread.  What that
+  // means in practice is that we're relying on it being kept alive while
+  // we run.  Hopefully.
+  MOZ_KnownLive(mWorkerPrivate)->EnterDebuggerEventLoop();
 }
 
 void WorkerDebuggerGlobalScope::LeaveEventLoop() {

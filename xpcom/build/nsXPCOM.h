@@ -9,6 +9,7 @@
 
 #include "nscore.h"
 #include "nsXPCOMCID.h"
+#include "mozilla/Attributes.h"
 
 #ifdef __cplusplus
 #  define DECL_CLASS(c) class c
@@ -92,8 +93,12 @@ NS_InitMinimalXPCOM();
  *
  * @return NS_OK for success;
  *         other error codes indicate a failure during initialisation.
+ *
+ * MOZ_CAN_RUN_SCRIPT_BOUNDARY for now, but really it should maybe be
+ * MOZ_CAN_RUN_SCRIPT.
  */
-XPCOM_API(nsresult) NS_ShutdownXPCOM(nsIServiceManager* aServMgr);
+XPCOM_API(MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult)
+NS_ShutdownXPCOM(nsIServiceManager* aServMgr);
 
 /**
  * Public Method to access to the service manager.

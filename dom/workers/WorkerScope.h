@@ -7,6 +7,7 @@
 #ifndef mozilla_dom_workerscope_h__
 #define mozilla_dom_workerscope_h__
 
+#include "mozilla/Attributes.h"
 #include "mozilla/dom/WorkerCommon.h"
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/dom/DOMPrefs.h"
@@ -312,7 +313,7 @@ class WorkerDebuggerGlobalScope final : public DOMEventTargetHelper,
                      const Optional<JS::Handle<JSObject*>>& aSandbox,
                      ErrorResult& aRv);
 
-  void EnterEventLoop();
+  MOZ_CAN_RUN_SCRIPT void EnterEventLoop();
 
   void LeaveEventLoop();
 

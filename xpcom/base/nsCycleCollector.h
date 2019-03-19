@@ -16,6 +16,7 @@ struct already_AddRefed;
 #include "nsError.h"
 #include "nsID.h"
 
+#include "mozilla/Attributes.h"
 #include "js/SliceBudget.h"
 
 namespace mozilla {
@@ -59,6 +60,7 @@ uint32_t nsCycleCollector_suspectedCount();
 
 // If aDoCollect is true, then run the GC and CC a few times before
 // shutting down the CC completely.
+MOZ_CAN_RUN_SCRIPT
 void nsCycleCollector_shutdown(bool aDoCollect = true);
 
 // Helpers for interacting with JS
