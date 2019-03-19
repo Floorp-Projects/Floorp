@@ -281,10 +281,8 @@ void U2FTokenManager::Register(
 
   // Determine whether direct attestation was requested.
   bool directAttestationRequested = false;
-  if (aTransactionInfo.Extra().type() ==
-      WebAuthnMaybeMakeCredentialExtraInfo::TWebAuthnMakeCredentialExtraInfo) {
-    const auto& extra =
-        aTransactionInfo.Extra().get_WebAuthnMakeCredentialExtraInfo();
+  if (aTransactionInfo.Extra().isSome()) {
+    const auto& extra = aTransactionInfo.Extra().ref();
 
     AttestationConveyancePreference attestation =
         static_cast<AttestationConveyancePreference>(

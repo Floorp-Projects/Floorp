@@ -380,7 +380,7 @@ already_AddRefed<Promise> WebAuthnManager::MakeCredential(
 
   WebAuthnMakeCredentialInfo info(origin, NS_ConvertUTF8toUTF16(rpId),
                                   challenge, clientDataJSON, adjustedTimeout,
-                                  excludeList, extra);
+                                  excludeList, Some(extra));
 
 #ifdef OS_WIN
   if (!WinWebAuthnManager::AreWebAuthNApisAvailable()) {

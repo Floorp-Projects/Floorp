@@ -207,9 +207,8 @@ void WinWebAuthnManager::Register(
   // AttestationConveyance
   DWORD winAttestation = WEBAUTHN_ATTESTATION_CONVEYANCE_PREFERENCE_ANY;
 
-  if (aInfo.Extra().type() ==
-      WebAuthnMaybeMakeCredentialExtraInfo::TWebAuthnMakeCredentialExtraInfo) {
-    const auto& extra = aInfo.Extra().get_WebAuthnMakeCredentialExtraInfo();
+  if (aInfo.Extra().isSome()) {
+    const auto& extra = aInfo.Extra().ref();
 
     rpInfo.pwszName = extra.Rp().Name().get();
     rpInfo.pwszIcon = extra.Rp().Icon().get();
@@ -387,8 +386,7 @@ void WinWebAuthnManager::Register(
 
     nsTArray<uint8_t> authenticatorData;
 
-    if (aInfo.Extra().type() == WebAuthnMaybeMakeCredentialExtraInfo::
-                                    TWebAuthnMakeCredentialExtraInfo) {
+    if (aInfo.Extra().isSome()) {
       authenticatorData.AppendElements(
           pWebAuthNCredentialAttestation->pbAuthenticatorData,
           pWebAuthNCredentialAttestation->cbAuthenticatorData);
