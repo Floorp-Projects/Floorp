@@ -1236,11 +1236,16 @@ void EventStateManager::DispatchCrossProcessEvent(WidgetEvent* aEvent,
     }
     // else there is a race between APZ and the LayersId to TabParent mapping,
     // so fall back to delivering the event to the topmost child process.
+  } else {
+    // APZ attaches a LayersId to hit-testable events, for keyboard events,
+    // we use focus.
+    TabParent* preciseRemote = TabParent::GetFocused();
+    if (preciseRemote) {
+      remote = preciseRemote;
+    }
+    // else there is a race between layout and focus tracking,
+    // so fall back to delivering the event to the topmost child process.
   }
-  // else if aEvent->mLayersId was not valid: APZ thinks a pointer
-  // event didn't hit anything but traditional targeting believed it
-  // belongs to a child process-backed frame loader. Dispatch to the
-  // top-level content process found by traditional targeting.
 
   switch (aEvent->mClass) {
     case eMouseEventClass: {
@@ -2872,20 +2877,18 @@ void EventStateManager::PostHandleKeyboardEvent(
       RefPtr<TabParent> remote =
           aTargetFrame ? TabParent::GetFrom(aTargetFrame->GetContent())
                        : nullptr;
-      if (remote && aKeyboardEvent->mLayersId.IsValid()) {
+      if (remote) {
         // remote is null-checked above in order to let pre-existing event
-        // targeting code's chrome vs. content decision override APZ if they
-        // disagree in order not to disrupt non-Fission e10s mode in case
+        // targeting code's chrome vs. content decision override in case of
+        // disagreement in order not to disrupt non-Fission e10s mode in case
         // there are still bugs in the Fission-mode code. That is, if remote
         // is nullptr, the pre-existing event targeting code has deemed this
         // event to belong to chrome rather than content.
-        TabParent* preciseRemote =
-            TabParent::GetTabParentFromLayersId(aKeyboardEvent->mLayersId);
+        TabParent* preciseRemote = TabParent::GetFocused();
         if (preciseRemote) {
           remote = preciseRemote;
         }
-        // else there was a race between APZ and the chrome-process LayersId
-        // to TabParent mapping.
+        // else there was a race between layout and focus tracking
       }
       if (remote && !remote->IsReadyToHandleInputEvents()) {
         // We need to dispatch the event to the browser element again if we were
