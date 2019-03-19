@@ -51,7 +51,6 @@ const ALPHA_FEATURE: &str = "ALPHA_PASS";
 const DEBUG_OVERDRAW_FEATURE: &str = "DEBUG_OVERDRAW";
 const DITHERING_FEATURE: &str = "DITHERING";
 const DUAL_SOURCE_FEATURE: &str = "DUAL_SOURCE_BLENDING";
-const FAST_PATH_FEATURE: &str = "FAST_PATH";
 
 pub(crate) enum ShaderKind {
     Primitive,
@@ -126,39 +125,27 @@ impl LazilyCompiledShader {
         if self.program.is_none() {
             let program = match self.kind {
                 ShaderKind::Primitive | ShaderKind::Brush | ShaderKind::Text => {
-                    create_prim_shader(
-                        self.name,
-                        device,
-                        &self.features,
-                    )
+                    create_prim_shader(self.name,
+                                       device,
+                                       &self.features)
                 }
                 ShaderKind::Cache(..) => {
-                    create_prim_shader(
-                        self.name,
-                        device,
-                        &self.features,
-                    )
+                    create_prim_shader(self.name,
+                                       device,
+                                       &self.features)
                 }
                 ShaderKind::VectorStencil => {
-                    create_prim_shader(
-                        self.name,
-                        device,
-                        &self.features,
-                    )
+                    create_prim_shader(self.name,
+                                       device,
+                                       &self.features)
                 }
                 ShaderKind::VectorCover => {
-                    create_prim_shader(
-                        self.name,
-                        device,
-                        &self.features,
-                    )
+                    create_prim_shader(self.name,
+                                       device,
+                                       &self.features)
                 }
                 ShaderKind::ClipCache => {
-                    create_clip_shader(
-                        self.name,
-                        device,
-                        &self.features,
-                    )
+                    create_clip_shader(self.name, device)
                 }
             };
             self.program = Some(program?);
@@ -437,19 +424,11 @@ fn create_prim_shader(
     device.create_program(name, prefix)
 }
 
-fn create_clip_shader(
-    name: &'static str,
-    device: &mut Device,
-    features: &[&'static str],
-) -> Result<Program, ShaderError> {
-    let mut prefix = format!(
+fn create_clip_shader(name: &'static str, device: &mut Device) -> Result<Program, ShaderError> {
+    let prefix = format!(
         "#define WR_MAX_VERTEX_TEXTURE_WIDTH {}U\n",
         MAX_VERTEX_TEXTURE_WIDTH
     );
-
-    for feature in features {
-        prefix.push_str(&format!("#define WR_FEATURE_{}\n", feature));
-    }
 
     debug!("ClipShader {}", name);
 
@@ -483,8 +462,7 @@ pub struct Shaders {
     /// These are "cache clip shaders". These shaders are used to
     /// draw clip instances into the cached clip mask. The results
     /// of these shaders are also used by the primitive shaders.
-    pub cs_clip_rectangle_slow: LazilyCompiledShader,
-    pub cs_clip_rectangle_fast: LazilyCompiledShader,
+    pub cs_clip_rectangle: LazilyCompiledShader,
     pub cs_clip_box_shadow: LazilyCompiledShader,
     pub cs_clip_image: LazilyCompiledShader,
 
@@ -571,18 +549,10 @@ impl Shaders {
             options.precache_flags,
         )?;
 
-        let cs_clip_rectangle_slow = LazilyCompiledShader::new(
+        let cs_clip_rectangle = LazilyCompiledShader::new(
             ShaderKind::ClipCache,
             "cs_clip_rectangle",
             &[],
-            device,
-            options.precache_flags,
-        )?;
-
-        let cs_clip_rectangle_fast = LazilyCompiledShader::new(
-            ShaderKind::ClipCache,
-            "cs_clip_rectangle",
-            &[FAST_PATH_FEATURE],
             device,
             options.precache_flags,
         )?;
@@ -747,8 +717,7 @@ impl Shaders {
             brush_yuv_image,
             brush_radial_gradient,
             brush_linear_gradient,
-            cs_clip_rectangle_slow,
-            cs_clip_rectangle_fast,
+            cs_clip_rectangle,
             cs_clip_box_shadow,
             cs_clip_image,
             ps_text_run,
@@ -818,8 +787,7 @@ impl Shaders {
         self.brush_mix_blend.deinit(device);
         self.brush_radial_gradient.deinit(device);
         self.brush_linear_gradient.deinit(device);
-        self.cs_clip_rectangle_slow.deinit(device);
-        self.cs_clip_rectangle_fast.deinit(device);
+        self.cs_clip_rectangle.deinit(device);
         self.cs_clip_box_shadow.deinit(device);
         self.cs_clip_image.deinit(device);
         self.ps_text_run.deinit(device);
