@@ -89,6 +89,7 @@
 #include "nsChromeProtocolHandler.h"
 #include "nsJSProtocolHandler.h"
 #include "nsDataHandler.h"
+#include "mozilla/dom/BlobURLProtocolHandler.h"
 
 #include <limits>
 
@@ -1789,6 +1790,11 @@ nsresult NS_NewURIOnAnyThread(nsIURI **aURI, const nsACString &aSpec,
 
   if (scheme.EqualsLiteral("javascript")) {
     return nsJSProtocolHandler::CreateNewURI(aSpec, aCharset, aBaseURI, aURI);
+  }
+
+  if (scheme.EqualsLiteral("blob")) {
+    return BlobURLProtocolHandler::CreateNewURI(aSpec, aCharset, aBaseURI,
+                                                aURI);
   }
 
   if (NS_IsMainThread()) {
