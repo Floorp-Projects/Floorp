@@ -1638,6 +1638,7 @@ class nsINode : public mozilla::dom::EventTarget {
 
   void GenerateXPath(nsAString& aResult);
 
+  MOZ_CAN_RUN_SCRIPT
   already_AddRefed<mozilla::dom::Promise> Localize(
       JSContext* aCx, mozilla::dom::L10nCallback& aCallback,
       mozilla::ErrorResult& aRv);

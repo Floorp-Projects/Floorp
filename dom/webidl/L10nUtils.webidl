@@ -34,6 +34,5 @@ dictionary L10nValue {
   sequence<AttributeNameValue>? attributes = null;
 };
 
-[MOZ_CAN_RUN_SCRIPT_BOUNDARY]
 callback L10nCallback =
   Promise<sequence<L10nValue>> (sequence<L10nElement> l10nElements);
