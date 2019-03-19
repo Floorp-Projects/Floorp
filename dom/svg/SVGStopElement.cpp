@@ -34,7 +34,7 @@ NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGStopElement)
 
 //----------------------------------------------------------------------
 
-already_AddRefed<SVGAnimatedNumber> SVGStopElement::Offset() {
+already_AddRefed<DOMSVGAnimatedNumber> SVGStopElement::Offset() {
   return mOffset.ToDOMAnimatedNumber(this);
 }
 

@@ -42,10 +42,10 @@ class SVGEllipseElement final : public SVGEllipseElementBase {
   virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
   // WebIDL
-  already_AddRefed<SVGAnimatedLength> Cx();
-  already_AddRefed<SVGAnimatedLength> Cy();
-  already_AddRefed<SVGAnimatedLength> Rx();
-  already_AddRefed<SVGAnimatedLength> Ry();
+  already_AddRefed<DOMSVGAnimatedLength> Cx();
+  already_AddRefed<DOMSVGAnimatedLength> Cy();
+  already_AddRefed<DOMSVGAnimatedLength> Rx();
+  already_AddRefed<DOMSVGAnimatedLength> Ry();
 
  protected:
   virtual LengthAttributesInfo GetLengthInfo() override;

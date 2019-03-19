@@ -27,7 +27,7 @@ if [ "$(dirname "$2")" = "$topsrcdir" ]; then
     echo "       with comm-central as top-level directory."
     exit 1
   elif [ -d "$topsrcdir/comm/mail" ]; then
-    # Building with mozila-central as top-level directory.
+    # Building with mozilla-central as top-level directory.
     . "$topsrcdir/comm/build/mozconfig.comm-support"
   else
     echo "ERROR: Unknown build directory layout."

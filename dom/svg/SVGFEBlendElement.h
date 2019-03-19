@@ -44,9 +44,9 @@ class SVGFEBlendElement : public SVGFEBlendElementBase {
   virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
   // WebIDL
-  already_AddRefed<SVGAnimatedString> In1();
-  already_AddRefed<SVGAnimatedString> In2();
-  already_AddRefed<SVGAnimatedEnumeration> Mode();
+  already_AddRefed<DOMSVGAnimatedString> In1();
+  already_AddRefed<DOMSVGAnimatedString> In2();
+  already_AddRefed<DOMSVGAnimatedEnumeration> Mode();
 
  protected:
   virtual EnumAttributesInfo GetEnumInfo() override;

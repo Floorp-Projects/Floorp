@@ -125,7 +125,7 @@ struct AlignedArray {
     if (aZero) {
       // calloc can be more efficient than new[] for large chunks,
       // so we use calloc/malloc/free for everything.
-      mStorage = static_cast<uint8_t *>(calloc(1, storageByteCount.value()));
+      mStorage = static_cast<uint8_t *>(calloc(1u, storageByteCount.value()));
     } else {
       mStorage = static_cast<uint8_t *>(malloc(storageByteCount.value()));
     }

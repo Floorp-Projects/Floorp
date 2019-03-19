@@ -62,31 +62,31 @@ NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGFilterElement)
 
 //----------------------------------------------------------------------
 
-already_AddRefed<SVGAnimatedLength> SVGFilterElement::X() {
+already_AddRefed<DOMSVGAnimatedLength> SVGFilterElement::X() {
   return mLengthAttributes[ATTR_X].ToDOMAnimatedLength(this);
 }
 
-already_AddRefed<SVGAnimatedLength> SVGFilterElement::Y() {
+already_AddRefed<DOMSVGAnimatedLength> SVGFilterElement::Y() {
   return mLengthAttributes[ATTR_Y].ToDOMAnimatedLength(this);
 }
 
-already_AddRefed<SVGAnimatedLength> SVGFilterElement::Width() {
+already_AddRefed<DOMSVGAnimatedLength> SVGFilterElement::Width() {
   return mLengthAttributes[ATTR_WIDTH].ToDOMAnimatedLength(this);
 }
 
-already_AddRefed<SVGAnimatedLength> SVGFilterElement::Height() {
+already_AddRefed<DOMSVGAnimatedLength> SVGFilterElement::Height() {
   return mLengthAttributes[ATTR_HEIGHT].ToDOMAnimatedLength(this);
 }
 
-already_AddRefed<SVGAnimatedEnumeration> SVGFilterElement::FilterUnits() {
+already_AddRefed<DOMSVGAnimatedEnumeration> SVGFilterElement::FilterUnits() {
   return mEnumAttributes[FILTERUNITS].ToDOMAnimatedEnum(this);
 }
 
-already_AddRefed<SVGAnimatedEnumeration> SVGFilterElement::PrimitiveUnits() {
+already_AddRefed<DOMSVGAnimatedEnumeration> SVGFilterElement::PrimitiveUnits() {
   return mEnumAttributes[PRIMITIVEUNITS].ToDOMAnimatedEnum(this);
 }
 
-already_AddRefed<SVGAnimatedString> SVGFilterElement::Href() {
+already_AddRefed<DOMSVGAnimatedString> SVGFilterElement::Href() {
   return mStringAttributes[HREF].IsExplicitlySet()
              ? mStringAttributes[HREF].ToDOMAnimatedString(this)
              : mStringAttributes[XLINK_HREF].ToDOMAnimatedString(this);

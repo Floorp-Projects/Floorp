@@ -165,7 +165,7 @@ EventStates SVGFEImageElement::IntrinsicState() const {
 
 NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGFEImageElement)
 
-already_AddRefed<SVGAnimatedString> SVGFEImageElement::Href() {
+already_AddRefed<DOMSVGAnimatedString> SVGFEImageElement::Href() {
   return mStringAttributes[HREF].IsExplicitlySet()
              ? mStringAttributes[HREF].ToDOMAnimatedString(this)
              : mStringAttributes[XLINK_HREF].ToDOMAnimatedString(this);
