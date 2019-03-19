@@ -122,8 +122,8 @@ DefaultJitOptions::DefaultJitOptions() {
   // Toggles whether CacheIR stubs are used.
   SET_DEFAULT(disableCacheIR, false);
 
-  // Toggles whether CacheIR stubs for binary arith operations are used
-  SET_DEFAULT(disableCacheIRBinaryArith, false);
+  // Toggles whether CacheIR stubs for calls are used
+  SET_DEFAULT(disableCacheIRCalls, true);
 
 // Toggles whether sincos optimization is globally disabled.
 // See bug984018: The MacOS is the only one that has the sincos fast.
