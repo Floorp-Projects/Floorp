@@ -102,6 +102,7 @@ JitContext::JitContext(CompileRuntime* rt, CompileRealm* realm,
       realm_(realm),
 #ifdef DEBUG
       isCompilingWasm_(!realm),
+      oom_(false),
 #endif
       assemblerCount_(0) {
   SetJitContext(this);
@@ -115,6 +116,7 @@ JitContext::JitContext(JSContext* cx, TempAllocator* temp)
       realm_(CompileRealm::get(cx->realm())),
 #ifdef DEBUG
       isCompilingWasm_(false),
+      oom_(false),
 #endif
       assemblerCount_(0) {
   SetJitContext(this);
