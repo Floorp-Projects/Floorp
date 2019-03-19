@@ -590,13 +590,10 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
       // spec 7.2.1, calculate 'writing-mode'.
       styles["writing-mode"] = this._getCueWritingMode(cue);
 
-      // spec 7.2.2 ~ 7.2.4, calculate 'width' and 'height'.
-      const {width, height} = this._getCueWidthAndHeight(cue);
+      // spec 7.2.2 ~ 7.2.7, calculate 'width', 'height', 'left' and 'top'.
+      const {width, height, left, top} = this._getCueSizeAndPosition(cue);
       styles["width"] = width;
       styles["height"] = height;
-
-      // spec 7.2.5 ~ 7.2.7, calculate 'left' and 'top'.
-      const {left, top} = this._getCueLeftAndTop(cue);
       styles["left"] = left;
       styles["top"] = top;
     }
@@ -608,7 +605,7 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
       return cue.vertical == "lr" ? "vertical-lr" : "vertical-rl";
     }
 
-    _getCueWidthAndHeight(cue) {
+    _getCueSizeAndPosition(cue) {
       // spec 7.2.2, determine the value of maximum size for cue as per the
       // appropriate rules from the following list.
       let maximumSize;
@@ -626,16 +623,7 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
           break;
       }
       const size = Math.min(cue.size, maximumSize);
-      return cue.vertical == "" ? {
-        width: size + "%",
-        height: "auto",
-      } : {
-        width: "auto",
-        height: size + "%",
-      };
-    }
 
-    _getCueLeftAndTop(cue) {
       // spec 7.2.5, determine the value of x-position or y-position for cue as
       // per the appropriate rules from the following list.
       let xPosition = 0.0, yPosition = 0.0;
@@ -650,16 +638,16 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
           break;
         case "center":
           if (isWritingDirectionHorizontal) {
-            xPosition = cue.computedPosition - (cue.size / 2);
+            xPosition = cue.computedPosition - (size / 2);
           } else {
-            yPosition = cue.computedPosition - (cue.size / 2);
+            yPosition = cue.computedPosition - (size / 2);
           }
           break;
         case "line-right":
           if (isWritingDirectionHorizontal) {
-            xPosition = cue.computedPosition - cue.size;
+            xPosition = cue.computedPosition - size;
           } else {
-            yPosition = cue.computedPosition - cue.size;
+            yPosition = cue.computedPosition - size;
           }
           break;
       }
@@ -680,7 +668,12 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
           xPosition = 0;
         }
       }
-      return { left: xPosition + "%", top: yPosition + "%"};
+      return {
+        left: xPosition + "%",
+        top: yPosition + "%",
+        width: isWritingDirectionHorizontal ? size + "%" : "auto",
+        height: isWritingDirectionHorizontal ? "auto" : size + "%",
+      };
     }
   }
 
