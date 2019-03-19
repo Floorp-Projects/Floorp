@@ -1677,12 +1677,10 @@ class PeerConnectionObserver {
   }
 
   onSetLocalDescriptionSuccess() {
-    this._dompc._syncTransceivers();
     this._dompc._onSetLocalDescriptionSuccess();
   }
 
   onSetRemoteDescriptionSuccess() {
-    this._dompc._syncTransceivers();
     this._dompc._processTrackAdditionsAndRemovals();
     this._dompc._fireLegacyAddStreamEvents();
     this._dompc._transceivers = this._dompc._transceivers.filter(t => !t.shouldRemove);
