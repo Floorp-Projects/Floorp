@@ -254,7 +254,7 @@ class WorkerPrivate : public RelativeTimeline {
 
   void ClearTimeout(int32_t aId);
 
-  bool RunExpiredTimeouts(JSContext* aCx);
+  MOZ_CAN_RUN_SCRIPT bool RunExpiredTimeouts(JSContext* aCx);
 
   bool RescheduleTimeoutTimer(JSContext* aCx);
 
