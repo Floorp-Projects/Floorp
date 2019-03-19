@@ -169,7 +169,7 @@ fuzzy-if(Android,0-254,0-231) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == brackets-3a-ltr.html brackets-3a-ltr-ref.html # Bug 1392106
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == brackets-3a-rtl.html brackets-3a-rtl-ref.html # Bug 1392106
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == brackets-3b-ltr.html brackets-3b-ltr-ref.html # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == brackets-3b-rtl.html brackets-3b-rtl-ref.html # Bug 1392106
+fuzzy-if(Android,207-207,32-32) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == brackets-3b-rtl.html brackets-3b-rtl-ref.html # Bug 1392106
 == 1217833-1.html 1217833-1-ref.html
 == 1217833-2.html 1217833-2-ref.html
 == 1231175-1.html 1231175-1-ref.html
