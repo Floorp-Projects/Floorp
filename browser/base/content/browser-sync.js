@@ -215,7 +215,7 @@ var gSync = {
   showSendToDeviceView(anchor) {
     PanelUI.showSubView("PanelUI-sendTabToDevice", anchor);
     let panelViewNode = document.getElementById("PanelUI-sendTabToDevice");
-    this.populateSendTabToDevicesView(panelViewNode, this.populateSendTabToDevicesView);
+    this.populateSendTabToDevicesView(panelViewNode, this.populateSendTabToDevicesView.bind(this));
   },
 
   populateSendTabToDevicesView(panelViewNode, reloadFunc) {
