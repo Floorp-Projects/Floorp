@@ -488,9 +488,8 @@ void WinWebAuthnManager::Sign(PWebAuthnTransactionParent* aTransactionParent,
       WEBAUTHN_CLIENT_DATA_CURRENT_VERSION, aInfo.ClientDataJSON().Length(),
       (BYTE*)(aInfo.ClientDataJSON().get()), WEBAUTHN_HASH_ALGORITHM_SHA_256};
 
-  if (aInfo.Extra().type() ==
-      WebAuthnMaybeGetAssertionExtraInfo::TWebAuthnGetAssertionExtraInfo) {
-    const auto& extra = aInfo.Extra().get_WebAuthnGetAssertionExtraInfo();
+  if (aInfo.Extra().isSome()) {
+    const auto& extra = aInfo.Extra().ref();
 
     for (const WebAuthnExtension& ext : extra.Extensions()) {
       if (ext.type() == WebAuthnExtension::TWebAuthnExtensionAppId) {
@@ -608,8 +607,7 @@ void WinWebAuthnManager::Sign(PWebAuthnTransactionParent* aTransactionParent,
 
   if (hr == S_OK) {
     nsTArray<uint8_t> signature;
-    if (aInfo.Extra().type() ==
-        WebAuthnMaybeGetAssertionExtraInfo::TWebAuthnGetAssertionExtraInfo) {
+    if (aInfo.Extra().isSome()) {
       signature.AppendElements(pWebAuthNAssertion->pbSignature,
                                pWebAuthNAssertion->cbSignature);
     } else {

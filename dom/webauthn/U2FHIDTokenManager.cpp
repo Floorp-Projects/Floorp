@@ -226,8 +226,8 @@ RefPtr<U2FSignPromise> U2FHIDTokenManager::Sign(
   nsTArray<nsTArray<uint8_t>> appIds;
   appIds.AppendElement(rpIdHash);
 
-  if (aInfo.Extra().type() != WebAuthnMaybeGetAssertionExtraInfo::Tnull_t) {
-    const auto& extra = aInfo.Extra().get_WebAuthnGetAssertionExtraInfo();
+  if (aInfo.Extra().isSome()) {
+    const auto& extra = aInfo.Extra().ref();
 
     UserVerificationRequirement userVerificaitonReq =
         static_cast<UserVerificationRequirement>(
