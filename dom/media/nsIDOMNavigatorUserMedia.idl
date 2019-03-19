@@ -16,25 +16,3 @@ interface nsIMediaDevice : nsISupports
   readonly attribute AString groupId;
   readonly attribute boolean scary;
 };
-
-[scriptable, function, uuid(24544878-d35e-4962-8c5f-fb84e97bdfee)]
-interface nsIGetUserMediaDevicesSuccessCallback : nsISupports
-{
-  void onSuccess(in nsIVariant devices);
-};
-
-[scriptable, function, uuid(f2a144fc-3534-4761-8c5d-989ae720f89a)]
-interface nsIDOMGetUserMediaSuccessCallback : nsISupports
-{
-  /*
-   * value must be a Blob if picture is true and a
-   * DOMMediaStream if either audio or video are true.
-   */
-  void onSuccess(in nsISupports value);
-};
-
-[scriptable, function, uuid(39e96c61-2636-4f0e-918e-9bb64276492a)]
-interface nsIDOMGetUserMediaErrorCallback : nsISupports
-{
-  void onError(in nsISupports error);
-};
