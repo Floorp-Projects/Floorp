@@ -154,6 +154,8 @@ bool wasm::BoxAnyRef(JSContext* cx, HandleValue val, MutableHandleAnyRef addr) {
 }
 
 Value wasm::UnboxAnyRef(AnyRef val) {
+  // If UnboxAnyRef needs to allocate then we need a more complicated API, and
+  // we need to root the value in the callers, see comments in callExport().
   JSObject* obj = val.asJSObject();
   Value result;
   if (obj == nullptr) {
