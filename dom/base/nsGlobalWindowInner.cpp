@@ -7012,7 +7012,7 @@ void nsPIDOMWindowInner::BroadcastReport(Report* aReport) {
 
 void nsPIDOMWindowInner::NotifyReportingObservers() {
   nsTArray<RefPtr<ReportingObserver>> reportingObservers(mReportingObservers);
-  for (ReportingObserver* observer : reportingObservers) {
+  for (RefPtr<ReportingObserver>& observer : reportingObservers) {
     observer->MaybeNotify();
   }
 }
