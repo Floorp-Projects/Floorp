@@ -11,6 +11,7 @@ import android.support.annotation.WorkerThread
 import mozilla.components.concept.fetch.Client
 import mozilla.components.concept.fetch.Headers.Common.CONTENT_TYPE
 import mozilla.components.concept.fetch.Headers.Common.USER_AGENT
+import mozilla.components.concept.fetch.Headers.Common.Value.CONTENT_TYPE_FORM_URLENCODED
 import mozilla.components.concept.fetch.MutableHeaders
 import mozilla.components.concept.fetch.Request
 import mozilla.components.service.pocket.ext.fetchBodyOrNull
@@ -46,7 +47,7 @@ internal class PocketListenEndpointRaw(
             Request.Method.POST,
             MutableHeaders(
                 USER_AGENT to userAgent,
-                CONTENT_TYPE to CONTENT_TYPE_URL_ENCODED,
+                CONTENT_TYPE to CONTENT_TYPE_FORM_URLENCODED,
                 X_ACCESS_TOKEN to accessToken
             ),
             body = Request.Body(getRequestBodyString().byteInputStream())
@@ -58,6 +59,5 @@ internal class PocketListenEndpointRaw(
 
     companion object {
         @VisibleForTesting(otherwise = PRIVATE) const val X_ACCESS_TOKEN = "x-access-token"
-        @VisibleForTesting(otherwise = PRIVATE) const val CONTENT_TYPE_URL_ENCODED = "application/x-www-form-urlencoded"
     }
 }

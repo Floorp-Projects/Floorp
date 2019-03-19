@@ -41,7 +41,7 @@ interface Headers : Iterable<Header> {
     operator fun contains(name: String): Boolean
 
     /**
-     * A collection of common HTTP header definitions.
+     * A collection of common HTTP header names.
      *
      * A list of common HTTP request headers can be found at
      *   https://en.wikipedia.org/wiki/List_of_HTTP_header_fields#Standard_request_fields
@@ -52,6 +52,13 @@ interface Headers : Iterable<Header> {
     object Common {
         const val CONTENT_TYPE = "Content-Type"
         const val USER_AGENT = "User-Agent"
+
+        /*
+         * A collection of common HTTP header values.
+         */
+        object Value {
+            const val CONTENT_TYPE_FORM_URLENCODED = "application/x-www-form-urlencoded"
+        }
     }
 }
 

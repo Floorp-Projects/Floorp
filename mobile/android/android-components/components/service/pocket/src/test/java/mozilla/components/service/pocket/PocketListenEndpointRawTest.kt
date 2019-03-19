@@ -7,9 +7,9 @@ package mozilla.components.service.pocket
 import mozilla.components.concept.fetch.Client
 import mozilla.components.concept.fetch.Headers.Common.CONTENT_TYPE
 import mozilla.components.concept.fetch.Headers.Common.USER_AGENT
+import mozilla.components.concept.fetch.Headers.Common.Value.CONTENT_TYPE_FORM_URLENCODED
 import mozilla.components.concept.fetch.Request
 import mozilla.components.concept.fetch.Response
-import mozilla.components.service.pocket.PocketListenEndpointRaw.Companion.CONTENT_TYPE_URL_ENCODED
 import mozilla.components.service.pocket.PocketListenEndpointRaw.Companion.X_ACCESS_TOKEN
 import mozilla.components.service.pocket.helpers.MockResponses
 import mozilla.components.service.pocket.helpers.assertRequestParams
@@ -78,7 +78,7 @@ class PocketListenEndpointRawTest {
         assertRequestParams(client, { makeRequestArticleListenMetadata() }, assertParams = { request ->
             assertNotNull(request.headers)
             val headers = request.headers!!
-            assertEquals(CONTENT_TYPE_URL_ENCODED, headers[CONTENT_TYPE])
+            assertEquals(CONTENT_TYPE_FORM_URLENCODED, headers[CONTENT_TYPE])
             assertEquals(EXPECTED_USER_AGENT, headers[USER_AGENT])
             assertEquals(EXPECTED_ACCESS_TOKEN, headers[X_ACCESS_TOKEN])
         })
