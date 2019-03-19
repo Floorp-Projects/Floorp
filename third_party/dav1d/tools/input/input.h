@@ -25,8 +25,8 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __DAV1D_INPUT_INPUT_H__
-#define __DAV1D_INPUT_INPUT_H__
+#ifndef DAV1D_INPUT_INPUT_H
+#define DAV1D_INPUT_INPUT_H
 
 #include "data.h"
 
@@ -39,4 +39,4 @@ int input_open(DemuxerContext **const c_out,
 int input_read(DemuxerContext *ctx, Dav1dData *data);
 void input_close(DemuxerContext *ctx);
 
-#endif /* __DAV1D_INPUT_INPUT_H__ */
+#endif /* DAV1D_INPUT_INPUT_H */

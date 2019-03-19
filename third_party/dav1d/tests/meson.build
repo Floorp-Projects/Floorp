@@ -138,6 +138,9 @@ if (objcopy.found() and
                                 command: [objcopy,
                                           '--redefine-sym', 'malloc=__wrap_malloc',
                                           '--redefine-sym', 'posix_memalign=__wrap_posix_memalign',
+                                          '--redefine-sym', 'pthread_create=__wrap_pthread_create',
+                                          '--redefine-sym', 'pthread_cond_init=__wrap_pthread_cond_init',
+                                          '--redefine-sym', 'pthread_mutex_init=__wrap_pthread_mutex_init',
                                           '@INPUT@', '@OUTPUT@'])
 
     dav1d_fuzzer_mem = executable('dav1d_fuzzer_mem',

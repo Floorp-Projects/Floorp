@@ -215,7 +215,7 @@ static int ftx(coef *const buf, const enum RectTxfmSize tx,
 
     for (int y = 0; y < sh; y++)
         for (int x = 0; x < sw; x++)
-            buf[y * sw + x] = out[y * w + x] + 0.5;
+            buf[y * sw + x] = (coef) (out[y * w + x] + 0.5);
 
     return copy_subcoefs(buf, tx, txtp, sw, sh, subsh);
 }

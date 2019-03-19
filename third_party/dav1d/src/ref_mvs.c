@@ -1916,7 +1916,7 @@ void av1_find_ref_mvs(CANDIDATE_MV *mvstack, int *cnt, int_mv (*mvlist)[2],
 {
     const int bw4 = dav1d_block_dimensions[bs][0];
     const int bh4 = dav1d_block_dimensions[bs][1];
-    int stride = cm->cur_frame.mv_stride;
+    int stride = (int) cm->cur_frame.mv_stride;
     MACROBLOCKD xd = (MACROBLOCKD) {
         .n8_w = bw4,
         .n8_h = bh4,
@@ -2018,7 +2018,7 @@ int av1_init_ref_mv_common(AV1_COMMON *cm,
             cm->frame_refs[i].idx = i;
         cm->mi_cols = w8 << 1;
         cm->mi_rows = h8 << 1;
-        cm->mi_stride = stride;
+        cm->mi_stride = (int) stride;
         for (int i = 0; i < 7; i++) {
             cm->buffer_pool.frame_bufs[i].mi_rows = cm->mi_rows;
             cm->buffer_pool.frame_bufs[i].mi_cols = cm->mi_cols;

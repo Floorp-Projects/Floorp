@@ -25,14 +25,19 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __DAV1D_PICTURE_H__
-#define __DAV1D_PICTURE_H__
+#ifndef DAV1D_PICTURE_H
+#define DAV1D_PICTURE_H
 
 #include <stddef.h>
 #include <stdint.h>
 
 #include "common.h"
 #include "headers.h"
+
+/* Number of bytes to align AND pad picture memory buffers by, so that SIMD
+ * implementations can over-read by a few bytes, and use aligned read/write
+ * instructions. */
+#define DAV1D_PICTURE_ALIGNMENT 32
 
 typedef struct Dav1dPictureParameters {
     int w; ///< width (in pixels)
@@ -61,7 +66,21 @@ typedef struct Dav1dPicture {
 
     Dav1dPictureParameters p;
     Dav1dDataProps m;
-    struct Dav1dRef *frame_hdr_ref, *seq_hdr_ref, *ref; ///< allocation origins
+
+    /**
+     * High Dynamic Range Content Light Level metadata applying to this picture,
+     * as defined in section 5.8.3 and 6.7.3
+     */
+    Dav1dContentLightLevel *content_light;
+    /**
+     * High Dynamic Range Mastering Display Color Volume metadata applying to
+     * this picture, as defined in section 5.8.4 and 6.7.4
+     */
+    Dav1dMasteringDisplay *mastering_display;
+
+    struct Dav1dRef *frame_hdr_ref, *seq_hdr_ref; ///< Frame parameter allocation origins
+    struct Dav1dRef *content_light_ref, *mastering_display_ref; ///< Metadata allocation origins
+    struct Dav1dRef *ref; ///< Frame data allocation origin
 
     void *allocator_data; ///< pointer managed by the allocator
 } Dav1dPicture;
@@ -71,8 +90,10 @@ typedef struct Dav1dPicAllocator {
     /**
      * Allocate the picture buffer based on the Dav1dPictureParameters.
      *
-     * The data[0], data[1] and data[2] must be 32 byte aligned and with a
-     * pixel width/height multiple of 128 pixels.
+     * The data[0], data[1] and data[2] must be DAV1D_PICTURE_ALIGNMENT byte
+     * aligned and with a pixel width/height multiple of 128 pixels. Any
+     * allocated memory area should also be padded by DAV1D_PICTURE_ALIGNMENT
+     * bytes.
      * data[1] and data[2] must share the same stride[1].
      *
      * This function will be called on the main thread (the thread which calls
@@ -85,8 +106,10 @@ typedef struct Dav1dPicAllocator {
      *             a custom pointer that will be passed to
      *             release_picture_callback().
      * @param cookie Custom pointer passed to all calls.
-    *
-    * @return 0 on success. A negative errno value on error.
+     *
+     * @note No fields other than data, stride and allocator_data must be filled
+     *       by this callback.
+     * @return 0 on success. A negative errno value on error.
      */
     int (*alloc_picture_callback)(Dav1dPicture *pic, void *cookie);
     /**
@@ -108,4 +131,4 @@ typedef struct Dav1dPicAllocator {
  */
 DAV1D_API void dav1d_picture_unref(Dav1dPicture *p);
 
-#endif /* __DAV1D_PICTURE_H__ */
+#endif /* DAV1D_PICTURE_H */

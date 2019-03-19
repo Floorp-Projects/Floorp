@@ -90,10 +90,10 @@ int dav1d_get_shear_params(Dav1dWarpedMotionParams *const wm) {
     const int y = apply_sign(resolve_divisor_32(abs(mat[2]), &shift), mat[2]);
     const int64_t v1 = ((int64_t) mat[4] * 0x10000) * y;
     const int rnd = (1 << shift) >> 1;
-    wm->gamma = iclip_wmp(apply_sign64((llabs(v1) + rnd) >> shift, v1));
+    wm->gamma = iclip_wmp(apply_sign64((int) ((llabs(v1) + rnd) >> shift), v1));
     const int64_t v2 = ((int64_t) mat[3] * mat[4]) * y;
     wm->delta = iclip_wmp(mat[5] -
-                          (int) apply_sign64((llabs(v2) + rnd) >> shift, v2) -
+                          apply_sign64((int) ((llabs(v2) + rnd) >> shift), v2) -
                           0x10000);
 
     return (4 * abs(wm->alpha) + 7 * abs(wm->beta) >= 0x10000) ||
@@ -115,7 +115,9 @@ static int get_mult_shift_ndiag(const int64_t px,
                                 const int idet, const int shift)
 {
     const int64_t v1 = px * idet;
-    const int v2 = apply_sign64((llabs(v1) + ((1LL << shift) >> 1)) >> shift, v1);
+    const int v2 = apply_sign64((int) ((llabs(v1) +
+                                        ((1LL << shift) >> 1)) >> shift),
+                                v1);
     return iclip(v2, -0x1fff, 0x1fff);
 }
 
@@ -123,7 +125,9 @@ static int get_mult_shift_diag(const int64_t px,
                                const int idet, const int shift)
 {
     const int64_t v1 = px * idet;
-    const int v2 = apply_sign64((llabs(v1) + ((1LL << shift) >> 1)) >> shift, v1);
+    const int v2 = apply_sign64((int) ((llabs(v1) +
+                                        ((1LL << shift) >> 1)) >> shift),
+                                v1);
     return iclip(v2, 0xe001, 0x11fff);
 }
 
