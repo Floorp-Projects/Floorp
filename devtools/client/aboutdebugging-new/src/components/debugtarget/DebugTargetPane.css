@@ -25,3 +25,11 @@
 .debug-target-pane__title {
   cursor: pointer;
 }
+
+.debug-target-pane__collapsable {
+  overflow: hidden;
+}
+
+.debug-target-pane__collapsable--collapsed {
+  max-height: 0;
+}
