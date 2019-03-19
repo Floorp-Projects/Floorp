@@ -462,8 +462,9 @@ void nsMediaFeatures::InitSystemMetrics() {
         (nsStaticAtom*)nsGkAtoms::_moz_gtk_csd_reversed_placement);
   }
 
-  metricResult = LookAndFeel::GetInt(LookAndFeel::eIntID_SystemUsesDarkTheme);
-  if (metricResult) {
+  rv = LookAndFeel::GetInt(LookAndFeel::eIntID_SystemUsesDarkTheme,
+                           &metricResult);
+  if (NS_SUCCEEDED(rv) && metricResult) {
     sSystemMetrics->AppendElement(
         (nsStaticAtom*)nsGkAtoms::_moz_system_dark_theme);
   }
