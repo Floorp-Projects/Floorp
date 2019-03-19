@@ -46,6 +46,7 @@ class nsThreadPool final : public nsIThreadPool, public nsIRunnable {
   uint32_t mStackSize;
   nsCOMPtr<nsIThreadPoolListener> mListener;
   bool mShutdown;
+  bool mRegressiveMaxIdleTime;
   nsCString mName;
   nsThreadPoolNaming mThreadNaming;
 };
