@@ -19,16 +19,16 @@ const Actions = require("../../actions/index");
 
 loader.lazyRequireGetter(this, "ADB_ADDON_STATES", "devtools/shared/adb/adb-addon", true);
 
+const Link = createFactory(require("devtools/client/shared/vendor/react-router-dom").Link);
 const ConnectSection = createFactory(require("./ConnectSection"));
 const ConnectSteps = createFactory(require("./ConnectSteps"));
 const NetworkLocationsForm = createFactory(require("./NetworkLocationsForm"));
 const NetworkLocationsList = createFactory(require("./NetworkLocationsList"));
 
-const { PREFERENCES, PAGE_TYPES } = require("../../constants");
+const { PREFERENCES, PAGE_TYPES, RUNTIMES } = require("../../constants");
 const Types = require("../../types/index");
 
-const USB_ICON_SRC = "chrome://devtools/skin/images/aboutdebugging-connect-icon.svg";
-const WIFI_ICON_SRC = "chrome://devtools/skin/images/aboutdebugging-connect-icon.svg";
+const USB_ICON_SRC = "chrome://devtools/skin/images/aboutdebugging-usb-icon.svg";
 const GLOBE_ICON_SRC = "chrome://devtools/skin/images/aboutdebugging-globe-icon.svg";
 
 class ConnectPage extends PureComponent {
@@ -48,45 +48,6 @@ class ConnectPage extends PureComponent {
   // https://bugzilla.mozilla.org/show_bug.cgi?id=1508688
   componentWillMount() {
     this.props.dispatch(Actions.selectPage(PAGE_TYPES.CONNECT));
-  }
-
-  renderWifi() {
-    const { getString, wifiEnabled } = this.props;
-
-    return Localized(
-      {
-        id: "about-debugging-connect-wifi",
-        attrs: { title: true },
-      },
-      ConnectSection(
-        {
-          icon: WIFI_ICON_SRC,
-          title: "Via WiFi",
-        },
-        wifiEnabled
-          ? ConnectSteps(
-            {
-              steps: [
-                getString("about-debugging-connect-wifi-step-same-network"),
-                getString("about-debugging-connect-wifi-step-open-firefox"),
-                getString("about-debugging-connect-wifi-step-open-options"),
-                getString("about-debugging-connect-wifi-step-enable-debug"),
-              ],
-            })
-          : Localized(
-            {
-              id: "about-debugging-connect-wifi-disabled",
-              $pref: PREFERENCES.WIFI_ENABLED,
-            },
-            dom.div(
-              {
-                className: "connect-page__disabled-section",
-              },
-              "about-debugging-connect-wifi-disabled"
-            )
-          )
-      )
-    );
   }
 
   onToggleUSBClick() {
@@ -110,13 +71,33 @@ class ConnectPage extends PureComponent {
     }
   }
 
+  renderUsbStatus() {
+    const statusTextId = {
+      [USB_STATES.ENABLED_USB]: "about-debugging-setup-usb-status-enabled",
+      [USB_STATES.DISABLED_USB]: "about-debugging-setup-usb-status-disabled",
+      [USB_STATES.UPDATING_USB]: "about-debugging-setup-usb-status-updating",
+    }[this.getUsbStatus()];
+
+    return Localized(
+      {
+        id: statusTextId,
+      },
+      dom.span(
+        {
+          className: "connect-page__usb-section__heading__status",
+        },
+        statusTextId,
+      ),
+    );
+  }
+
   renderUsbToggleButton() {
     const usbStatus = this.getUsbStatus();
 
     const localizedStates = {
-      [USB_STATES.ENABLED_USB]: "about-debugging-connect-usb-disable-button",
-      [USB_STATES.DISABLED_USB]: "about-debugging-connect-usb-enable-button",
-      [USB_STATES.UPDATING_USB]: "about-debugging-connect-usb-updating-button",
+      [USB_STATES.ENABLED_USB]: "about-debugging-setup-usb-disable-button",
+      [USB_STATES.DISABLED_USB]: "about-debugging-setup-usb-enable-button",
+      [USB_STATES.UPDATING_USB]: "about-debugging-setup-usb-updating-button",
     };
     const localizedState = localizedStates[usbStatus];
 
@@ -130,7 +111,7 @@ class ConnectPage extends PureComponent {
       dom.button(
         {
           className:
-            "default-button connect-page__usb__toggle-button " +
+            "default-button connect-page__usb-section__heading__toggle " +
             "js-connect-usb-toggle-button",
           disabled,
           onClick: () => this.onToggleUSBClick(),
@@ -141,42 +122,60 @@ class ConnectPage extends PureComponent {
   }
 
   renderUsb() {
-    const { adbAddonStatus, getString } = this.props;
+    const { adbAddonStatus } = this.props;
     const isAddonInstalled = adbAddonStatus === ADB_ADDON_STATES.INSTALLED;
-    return Localized(
+    return ConnectSection(
       {
-        id: "about-debugging-connect-usb",
-        attrs: { title: true },
-      },
-      ConnectSection(
-        {
-          icon: USB_ICON_SRC,
-          title: "Via USB",
-        },
-        isAddonInstalled
-          ? ConnectSteps(
-            {
-              steps: [
-                getString("about-debugging-connect-usb-step-enable-dev-menu"),
-                getString("about-debugging-connect-usb-step-enable-debug"),
-                getString("about-debugging-connect-usb-step-plug-device"),
-              ],
-            }
-          )
-          : Localized(
-            {
-              id: "about-debugging-connect-usb-disabled",
-            },
-            dom.aside(
+        icon: USB_ICON_SRC,
+        title: dom.div(
+          {
+            className: "connect-page__usb-section__heading",
+          },
+          Localized(
+            { id: "about-debugging-setup-usb-title" },
+            dom.span(
               {
-                className: "js-connect-usb-disabled-message",
+                className: "connect-page__usb-section__heading__title",
               },
-              "Enabling this will download and add the required Android USB debugging " +
-                "components to Firefox."
-            )
+              "USB",
+            ),
           ),
-        this.renderUsbToggleButton()
-      )
+          this.renderUsbStatus(),
+          this.renderUsbToggleButton(),
+        ),
+      },
+      isAddonInstalled
+        ? ConnectSteps(
+          {
+            steps: [
+              {
+                localizationId: "about-debugging-setup-usb-step-enable-dev-menu",
+                url: "https://developer.mozilla.org/docs/Tools/Remote_Debugging/Debugging_Firefox_for_Android_with_WebIDE#Setting_up_the_Android_device",
+              },
+              {
+                localizationId: "about-debugging-setup-usb-step-enable-debug",
+                url: "https://developer.mozilla.org/docs/Tools/Remote_Debugging/Debugging_Firefox_for_Android_with_WebIDE#Setting_up_the_Android_device",
+              },
+              {
+                localizationId: "about-debugging-setup-usb-step-enable-debug-firefox",
+                url: "https://developer.mozilla.org/docs/Tools/Remote_Debugging/Debugging_Firefox_for_Android_with_WebIDE#Setting_up_the_Android_device",
+              },
+              { localizationId: "about-debugging-setup-usb-step-plug-device" },
+            ],
+          }
+        )
+        : Localized(
+          {
+            id: "about-debugging-setup-usb-disabled",
+          },
+          dom.aside(
+            {
+              className: "js-connect-usb-disabled-message",
+            },
+            "Enabling this will download and add the required Android USB debugging " +
+              "components to Firefox."
+          )
+        ),
     );
   }
 
@@ -190,33 +189,31 @@ class ConnectPage extends PureComponent {
       },
       ConnectSection(
         {
-          className: "connect-page__network",
+          className: "connect-page__breather",
           icon: GLOBE_ICON_SRC,
-          title: "Via Network Location",
-        },
-        ...(networkEnabled
-          ? [
+          title: "Network Location",
+          extraContent: networkEnabled
+            ? dom.div(
+              {},
               NetworkLocationsList({ dispatch, networkLocations }),
-              dom.hr({ className: "separator separator--breathe" }),
               NetworkLocationsForm({ dispatch }),
-          ]
-          : [
-              // We are using an array for this single element because of the spread
-              // operator (...). The spread operator avoids React warnings about missing
-              // keys.
-              Localized(
-                {
-                  id: "about-debugging-connect-network-disabled",
-                  $pref: PREFERENCES.NETWORK_ENABLED,
-                },
-                dom.div(
-                  {
-                    className: "connect-page__disabled-section",
-                  },
-                  "about-debugging-connect-network-disabled"
-                )
-              ),
-          ])
+            )
+            : null,
+        },
+        networkEnabled
+          ? null
+          : Localized(
+            {
+                id: "about-debugging-connect-network-disabled",
+                $pref: PREFERENCES.NETWORK_ENABLED,
+            },
+            dom.div(
+              {
+                className: "connect-page__disabled-section",
+              },
+              "about-debugging-connect-network-disabled"
+            )
+          ),
       )
     );
   }
@@ -234,12 +231,65 @@ class ConnectPage extends PureComponent {
           {
             className: "alt-heading",
           },
-          "Connect a Device"
+          "Setup"
+        ),
+      ),
+      Localized(
+        {
+          id: "about-debugging-setup-intro",
+        },
+        dom.p(
+          {},
+          "Configure the connection method you wish to remotely debug your device with."
         )
       ),
-      this.renderWifi(),
-      this.renderUsb(),
-      this.renderNetwork()
+      Localized(
+        {
+          id: "about-debugging-setup-link-android-devices",
+        },
+        dom.p(
+          {},
+          dom.a(
+            {
+              href: "https://support.mozilla.org/kb/will-firefox-work-my-mobile-device#w_android-devices",
+              target: "_blank",
+            },
+            "View list of supported android devices"
+          )
+        ),
+      ),
+      Localized(
+        {
+          id: "about-debugging-setup-this-firefox",
+          a: Link({
+            to: `/runtime/${RUNTIMES.THIS_FIREFOX}`,
+          }),
+        },
+        dom.p(
+          {
+            className: "connect-page__breather",
+          },
+          "about-debugging-setup-this-firefox",
+        ),
+      ),
+      dom.section(
+        {
+          className: "connect-page__breather",
+        },
+        Localized(
+          {
+            id: "about-debugging-setup-connect-heading",
+          },
+          dom.h1(
+            {
+              className: "alt-heading",
+            },
+            "Connect a device",
+          ),
+        ),
+        this.renderUsb(),
+        this.renderNetwork()
+      ),
     );
   }
 }

@@ -46,30 +46,28 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1006595
   ok(InspectorUtils.cssPropertyIsShorthand("padding"), "'padding' is a shorthand")
   ok(!InspectorUtils.cssPropertyIsShorthand("color"), "'color' is not a shorthand")
 
-  ok(!InspectorUtils.cssPropertySupportsType("padding", InspectorUtils.TYPE_COLOR),
+  ok(!InspectorUtils.cssPropertySupportsType("padding", "color"),
      "'padding' can't be a color");
 
-  ok(InspectorUtils.cssPropertySupportsType("color", InspectorUtils.TYPE_COLOR),
+  ok(InspectorUtils.cssPropertySupportsType("color", "color"),
      "'color' can be a color");
-  ok(InspectorUtils.cssPropertySupportsType("background", InspectorUtils.TYPE_COLOR),
+  ok(InspectorUtils.cssPropertySupportsType("background", "color"),
      "'background' can be a color");
-  ok(!InspectorUtils.cssPropertySupportsType("background-image", InspectorUtils.TYPE_COLOR),
+  ok(!InspectorUtils.cssPropertySupportsType("background-image", "color"),
      "'background-image' can't be a color");
 
-  ok(InspectorUtils.cssPropertySupportsType("background-image", InspectorUtils.TYPE_GRADIENT),
+  ok(InspectorUtils.cssPropertySupportsType("background-image", "gradient"),
      "'background-image' can be a gradient");
-  ok(InspectorUtils.cssPropertySupportsType("background", InspectorUtils.TYPE_GRADIENT),
+  ok(InspectorUtils.cssPropertySupportsType("background", "gradient"),
      "'background' can be a gradient");
-  ok(!InspectorUtils.cssPropertySupportsType("background-color", InspectorUtils.TYPE_GRADIENT),
+  ok(!InspectorUtils.cssPropertySupportsType("background-color", "gradient"),
      "'background-color' can't be a gradient");
 
-  ok(InspectorUtils.cssPropertySupportsType("transition", InspectorUtils.TYPE_TIMING_FUNCTION),
+  ok(InspectorUtils.cssPropertySupportsType("transition", "timing-function"),
      "'transition' can be a timing function");
-  ok(InspectorUtils.cssPropertySupportsType("transition-timing-function",
-                                   InspectorUtils.TYPE_TIMING_FUNCTION),
+  ok(InspectorUtils.cssPropertySupportsType("transition-timing-function", "timing-function"),
      "'transition-duration' can be a timing function");
-  ok(!InspectorUtils.cssPropertySupportsType("background-color",
-                                    InspectorUtils.TYPE_TIMING_FUNCTION),
+  ok(!InspectorUtils.cssPropertySupportsType("background-color", "timing-function"),
      "'background-color' can't be a timing function");
 
   </script>

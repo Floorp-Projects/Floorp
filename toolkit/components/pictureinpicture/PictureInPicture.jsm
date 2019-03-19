@@ -9,7 +9,7 @@ var EXPORTED_SYMBOLS = ["PictureInPicture"];
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const PLAYER_URI = "chrome://global/content/pictureinpicture/player.xhtml";
-const PLAYER_FEATURES = `chrome,titlebar=no,alwaysontop,resizable`;
+const PLAYER_FEATURES = `chrome,titlebar=no,alwaysontop,lockaspectratio,resizable`;
 const WINDOW_TYPE = "Toolkit:PictureInPicture";
 
 /**
@@ -135,14 +135,14 @@ var PictureInPicture = {
         // that means we need to _divide_ the MAX_WIDTH by the aspect ratio to
         // calculate the appropriate height.
         resultWidth = MAX_WIDTH;
-        resultHeight = Math.floor(MAX_WIDTH / aspectRatio);
+        resultHeight = Math.round(MAX_WIDTH / aspectRatio);
       } else {
         // We're clamping the height, so the width must be adjusted to match
         // the original aspect ratio. Since aspect ratio is width over height,
         // this means we need to _multiply_ the MAX_HEIGHT by the aspect ratio
         // to calculate the appropriate width.
         resultHeight = MAX_HEIGHT;
-        resultWidth = Math.floor(MAX_HEIGHT * aspectRatio);
+        resultWidth = Math.round(MAX_HEIGHT * aspectRatio);
       }
     }
 
@@ -153,7 +153,7 @@ var PictureInPicture = {
     let pipLeft = screenWidth.value - resultWidth;
     let pipTop = screenHeight.value - resultHeight;
     let features = `${PLAYER_FEATURES},top=${pipTop},left=${pipLeft},` +
-                   `width=${resultWidth},height=${resultHeight}`;
+                   `outerWidth=${resultWidth},outerHeight=${resultHeight}`;
 
     let pipWindow =
       Services.ww.openWindow(parentWin, PLAYER_URI, null, features, null);

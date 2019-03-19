@@ -16,9 +16,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1112014
 
   // This holds a canonical test value for each TYPE_ constant.
   let testValues = {
-    TYPE_COLOR: "rgb(3,3,3)",
-    TYPE_GRADIENT: "linear-gradient( 45deg, blue, red )",
-    TYPE_TIMING_FUNCTION: "cubic-bezier(0.1, 0.7, 1.0, 0.1)",
+    "color": "rgb(3,3,3)",
+    "gradient": "linear-gradient( 45deg, blue, red )",
+    "timing-function": "cubic-bezier(0.1, 0.7, 1.0, 0.1)",
   };
 
   // The canonical test values don't work for all properties, in
@@ -26,16 +26,16 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1112014
   // override values.
   let overrideValues = {
     "box-shadow": {
-      TYPE_COLOR: testValues.TYPE_COLOR + " 2px 2px"
+      "color": testValues.color + " 2px 2px"
     },
     "-webkit-box-shadow": {
-      TYPE_COLOR: testValues.TYPE_COLOR + " 2px 2px"
+      "color": testValues.color + " 2px 2px"
     },
     "scrollbar-color": {
-      TYPE_COLOR: testValues.TYPE_COLOR + " " + testValues.TYPE_COLOR,
+      "color": testValues.color + " " + testValues.color,
     },
     "text-shadow": {
-      TYPE_COLOR: testValues.TYPE_COLOR + " 2px 2px"
+      "color": testValues.color + " 2px 2px"
     },
   };
 
@@ -64,7 +64,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1112014
       }
 
       let supported =
-        InspectorUtils.cssPropertySupportsType(propertyName, InspectorUtils[iter]);
+        InspectorUtils.cssPropertySupportsType(propertyName, iter);
       let parsed = CSS.supports(propertyName, testValue);
       is(supported, parsed, propertyName + " supports " + iter);
     }
@@ -73,7 +73,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1112014
   // Regression test for an assertion failure in an earlier version of
   // the code.  Note that cssPropertySupportsType returns false for
   // all types for a variable.
-  ok(!InspectorUtils.cssPropertySupportsType("--variable", InspectorUtils.TYPE_COLOR),
+  ok(!InspectorUtils.cssPropertySupportsType("--variable", "color"),
      "cssPropertySupportsType returns false for variable");
 
   </script>

@@ -48,6 +48,7 @@
 #include "nsPIDOMWindow.h"
 #include "nsINetworkLinkService.h"
 #include "nsHttpChannelAuthProvider.h"
+#include "nsNetUtil.h"
 #include "nsServiceManagerUtils.h"
 #include "nsComponentManagerUtils.h"
 #include "nsSocketTransportService2.h"
@@ -69,6 +70,7 @@
 
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/Navigator.h"
+#include "mozilla/dom/Promise.h"
 #include "mozilla/dom/network/Connection.h"
 
 #include "nsNSSComponent.h"
@@ -131,6 +133,7 @@
 
 //-----------------------------------------------------------------------------
 
+using mozilla::dom::Promise;
 using mozilla::Telemetry::LABELS_NETWORK_HTTP_REDIRECT_TO_SCHEME;
 
 namespace mozilla {
@@ -2586,6 +2589,75 @@ nsHttpsHandler::AllowPort(int32_t aPort, const char *aScheme, bool *_retval) {
   // don't override anything.
   *_retval = false;
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHttpHandler::EnsureHSTSDataReadyNative(HSTSDataCallbackWrapper *aCallback) {
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aCallback);
+
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = NS_NewURI(getter_AddRefs(uri), "http://example.com");
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  bool shouldUpgrade = false;
+  bool willCallback = false;
+  OriginAttributes originAttributes;
+  RefPtr<HSTSDataCallbackWrapper> callback = aCallback;
+  auto func = [callback{std::move(callback)}](bool aResult, nsresult aStatus) {
+    callback->DoCallback(aResult);
+  };
+  rv = NS_ShouldSecureUpgrade(uri, nullptr, nullptr, false, false,
+                              originAttributes, shouldUpgrade, std::move(func),
+                              willCallback);
+  if (NS_FAILED(rv) || !willCallback) {
+    aCallback->DoCallback(false);
+    return rv;
+  }
+
+  return rv;
+}
+
+NS_IMETHODIMP
+nsHttpHandler::EnsureHSTSDataReady(JSContext *aCx, Promise **aPromise) {
+  if (NS_WARN_IF(!aCx)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsIGlobalObject *globalObject = xpc::CurrentNativeGlobal(aCx);
+  if (NS_WARN_IF(!globalObject)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  ErrorResult result;
+  RefPtr<Promise> promise = Promise::Create(globalObject, result);
+  if (NS_WARN_IF(result.Failed())) {
+    return result.StealNSResult();
+  }
+
+  if (IsNeckoChild()) {
+    gNeckoChild->SendEnsureHSTSData()->Then(
+        GetMainThreadSerialEventTarget(), __func__,
+        [promise(promise)](
+            NeckoChild::EnsureHSTSDataPromise::ResolveOrRejectValue &&aResult) {
+          if (aResult.IsResolve()) {
+            promise->MaybeResolve(aResult.ResolveValue());
+          } else {
+            promise->MaybeReject(NS_ERROR_FAILURE);
+          }
+        });
+    promise.forget(aPromise);
+    return NS_OK;
+  }
+
+  auto callback = [promise(promise)](bool aResult) {
+    promise->MaybeResolve(aResult);
+  };
+
+  RefPtr<HSTSDataCallbackWrapper> wrapper =
+      new HSTSDataCallbackWrapper(std::move(callback));
+  promise.forget(aPromise);
+  return EnsureHSTSDataReadyNative(wrapper);
 }
 
 void nsHttpHandler::ShutdownConnectionManager() {

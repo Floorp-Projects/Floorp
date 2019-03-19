@@ -275,21 +275,17 @@ var Logins = {
   _onSaveEditLogin: function() {
     let newUsername = document.getElementById("username").value;
     let newPassword = document.getElementById("password").value;
-    let newDomain  = document.getElementById("hostname").value;
     let origUsername = this._selectedLogin.username;
     let origPassword = this._selectedLogin.password;
-    let origDomain = this._selectedLogin.hostname;
 
     try {
-      if ((newUsername === origUsername) &&
-          (newPassword === origPassword) &&
-          (newDomain === origDomain) ) {
+      if ((newUsername === origUsername) && (newPassword === origPassword)) {
         Snackbars.show(gStringBundle.GetStringFromName("editLogin.saved1"), Snackbars.LENGTH_LONG);
         this._showList();
         return;
       }
 
-      let logins = Services.logins.findLogins({}, origDomain, origDomain, null);
+      let logins = Services.logins.findLogins({}, this._selectedLogin.hostname, this._selectedLogin.formSubmitURL, this._selectedLogin.httpRealm);
 
       for (let i = 0; i < logins.length; i++) {
         if (logins[i].username == origUsername) {
@@ -301,9 +297,9 @@ var Logins = {
           if (newPassword !== origPassword) {
             propBag.setProperty("password", newPassword);
           }
-          if (newDomain !== origDomain) {
-            propBag.setProperty("hostname", newDomain);
-          }
+          // Sync relies on timePasswordChanged to decide whether
+          // or not to sync a login, so touch it.
+          propBag.setProperty("timePasswordChanged", Date.now());
           Services.logins.modifyLogin(logins[i], propBag);
           break;
         }

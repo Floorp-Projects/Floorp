@@ -965,7 +965,7 @@ const uint8_t* Servo_Property_GetName(nsCSSPropertyID, uint32_t* out_length);
 bool Servo_Property_IsShorthand(const nsACString* name, bool* found);
 bool Servo_Property_IsInherited(const nsACString* name);
 
-bool Servo_Property_SupportsType(const nsACString* name, uint32_t ty,
+bool Servo_Property_SupportsType(const nsACString* name, uint8_t ty,
                                  bool* found);
 
 void Servo_Property_GetCSSValuesForProperty(const nsACString* name, bool* found,

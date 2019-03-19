@@ -10,8 +10,6 @@ const {getCSSLexer} = require("devtools/shared/css/lexer");
 const EventEmitter = require("devtools/shared/event-emitter");
 const {appendText} = require("devtools/client/inspector/shared/utils");
 
-loader.lazyRequireGetter(this, "CSS_TYPES", "devtools/shared/css/constants", true);
-
 const STYLE_INSPECTOR_PROPERTIES = "devtools/shared/locales/styleinspector.properties";
 const {LocalizationHelper} = require("devtools/shared/l10n");
 const STYLE_INSPECTOR_L10N = new LocalizationHelper(STYLE_INSPECTOR_PROPERTIES);
@@ -51,9 +49,8 @@ const HTML_NS = "http://www.w3.org/1999/xhtml";
  *
  * @param {Document} document Used to create DOM nodes.
  * @param {Function} supportsTypes - A function that returns a boolean when asked if a css
- *                   property name supports a given css type.
- *                   The function is executed like supportsType("color", CSS_TYPES.COLOR)
- *                   where CSS_TYPES is defined in devtools/shared/css/properties-db.js
+ *                   property name supports a given css type.  The function is
+ *                   executed like supportsType("color", "timing-function")
  * @param {Function} isValidOnClient - A function that checks if a css property
  *                   name/value combo is valid.
  * @param {Function} supportsCssColor4ColorFunction - A function for checking
@@ -90,13 +87,13 @@ OutputParser.prototype = {
   parseCssProperty: function(name, value, options = {}) {
     options = this._mergeOptions(options);
 
-    options.expectCubicBezier = this.supportsType(name, CSS_TYPES.TIMING_FUNCTION);
+    options.expectCubicBezier = this.supportsType(name, "timing-function");
     options.expectDisplay = name === "display";
     options.expectFilter = name === "filter";
     options.expectShape = name === "clip-path" || name === "shape-outside";
     options.expectFont = name === "font-family";
-    options.supportsColor = this.supportsType(name, CSS_TYPES.COLOR) ||
-                            this.supportsType(name, CSS_TYPES.GRADIENT);
+    options.supportsColor = this.supportsType(name, "color") ||
+                            this.supportsType(name, "gradient");
 
     // The filter property is special in that we want to show the
     // swatch even if the value is invalid, because this way the user

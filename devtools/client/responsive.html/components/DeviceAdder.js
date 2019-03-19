@@ -160,7 +160,7 @@ class DeviceAdder extends PureComponent {
                   width,
                   height,
                 },
-                onResizeViewport: this.onChangeSize,
+                doResizeViewport: this.onChangeSize,
                 onRemoveDeviceAssociation: () => {},
               })
             ),

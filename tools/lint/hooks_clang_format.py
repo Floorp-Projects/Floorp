@@ -45,8 +45,11 @@ def run_clang_format(hooktype, args):
 
 
 def hg(ui, repo, node, **kwargs):
-    hooktype = kwargs['hooktype']
-    return run_clang_format(hooktype, kwargs.get('pats', []))
+    print("warning: this hook has been deprecated. Please use the hg extension instead.\n"
+          "please add 'clang-format = ~/.mozbuild/version-control-tools/hgext/clang-format'"
+          " to hgrc\n"
+          "Or run 'mach bootstrap'")
+    return False
 
 
 def git():

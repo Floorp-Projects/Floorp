@@ -50,8 +50,8 @@ function generateCssProperties() {
     // Get the list of CSS types this property supports.
     const supports = [];
     for (const type in CSS_TYPES) {
-      if (safeCssPropertySupportsType(name, InspectorUtils["TYPE_" + type])) {
-        supports.push(CSS_TYPES[type]);
+      if (safeCssPropertySupportsType(name, type)) {
+        supports.push(type);
       }
     }
 

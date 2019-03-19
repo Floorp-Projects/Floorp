@@ -760,7 +760,7 @@ class nsTextFrame : public nsFrame {
       const TextRangeStyle& aRangeStyle, const Point& aPt,
       gfxFloat aICoordInFrame, gfxFloat aWidth, gfxFloat aAscent,
       const gfxFont::Metrics& aFontMetrics, DrawPathCallbacks* aCallbacks,
-      bool aVertical, uint8_t aDecoration);
+      bool aVertical, mozilla::StyleTextDecorationLine aDecoration);
 
   struct PaintDecorationLineParams;
   void PaintDecorationLine(const PaintDecorationLineParams& aParams);

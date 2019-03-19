@@ -775,9 +775,6 @@ nsUrlClassifierUtils::ParseFindFullHashResponseV4(
     aCallback->OnCompleteHashFound(
         nsDependentCString(hash.c_str(), hash.length()), tableNames,
         cacheDurationSec);
-
-    Telemetry::Accumulate(Telemetry::URLCLASSIFIER_POSITIVE_CACHE_DURATION,
-                          cacheDurationSec * PR_MSEC_PER_SEC);
   }
 
   auto minWaitDuration = DurationToMs(r.minimum_wait_duration());
@@ -787,10 +784,6 @@ nsUrlClassifierUtils::ParseFindFullHashResponseV4(
 
   Telemetry::Accumulate(Telemetry::URLCLASSIFIER_COMPLETION_ERROR,
                         hasUnknownThreatType ? UNKNOWN_THREAT_TYPE : SUCCESS);
-
-  Telemetry::Accumulate(Telemetry::URLCLASSIFIER_NEGATIVE_CACHE_DURATION,
-                        negCacheDurationSec * PR_MSEC_PER_SEC);
-
   return NS_OK;
 }
 

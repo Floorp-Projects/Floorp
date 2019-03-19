@@ -3437,7 +3437,7 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   AppendScrollPartsTo(aBuilder, aLists, createLayersForScrollbars, false);
 
   const nsStyleDisplay* disp = mOuter->StyleDisplay();
-  if (disp && (disp->mWillChangeBitField & NS_STYLE_WILL_CHANGE_SCROLL)) {
+  if (disp->mWillChangeBitField & StyleWillChangeBits_SCROLL) {
     aBuilder->AddToWillChangeBudget(mOuter, GetVisualViewportSize());
   }
 
@@ -4455,6 +4455,14 @@ void ScrollFrameHelper::ScrollToRestoredPosition() {
   // logical scroll position, but we scroll to the physical scroll position in
   // all cases
 
+  // The layout offset we want to restore is the same as the visual offset
+  // (for now, may change in bug 1499210), but clamped to the layout scroll
+  // range (which can be a subset of the visual scroll range).
+  // Note that we can't do the clamping when initializing mRestorePos in
+  // RestoreState(), since the scrollable rect (which the clamping depends
+  // on) can change over the course of the restoration process.
+  nsPoint layoutRestorePos = GetScrollRange().ClampPoint(mRestorePos);
+
   // Continue restoring until both the layout and visual scroll positions
   // reach the destination. (Note that the two can only be different for
   // the root content document's root scroll frame, and when zoomed in).
@@ -4470,28 +4478,31 @@ void ScrollFrameHelper::ScrollToRestoredPosition() {
     // remember that we could be incrementally loading so we may enter
     // and scroll many times.
     if (mRestorePos != mLastPos /* GetLogicalVisualViewportOffset() */ ||
-        mRestorePos != logicalLayoutScrollPos) {
+        layoutRestorePos != logicalLayoutScrollPos) {
       LoadingState state = GetPageLoadingState();
       if (state == LoadingState::Stopped && !NS_SUBTREE_DIRTY(mOuter)) {
         return;
       }
-      nsPoint scrollToPos = mRestorePos;
+      nsPoint visualScrollToPos = mRestorePos;
+      nsPoint layoutScrollToPos = layoutRestorePos;
       if (!IsPhysicalLTR()) {
         // convert from logical to physical scroll position
-        scrollToPos.x -=
+        visualScrollToPos.x -=
+            (GetVisualViewportSize().width - mScrolledFrame->GetRect().width);
+        layoutScrollToPos.x -=
             (GetVisualViewportSize().width - mScrolledFrame->GetRect().width);
       }
       AutoWeakFrame weakFrame(mOuter);
       // It's very important to pass nsGkAtoms::restore here, so
       // ScrollToWithOrigin won't clear out mRestorePos.
-      ScrollToWithOrigin(scrollToPos, nsIScrollableFrame::INSTANT,
+      ScrollToWithOrigin(layoutScrollToPos, nsIScrollableFrame::INSTANT,
                          nsGkAtoms::restore, nullptr);
       if (!weakFrame.IsAlive()) {
         return;
       }
       if (mIsRoot && mOuter->PresContext()->IsRootContentDocument()) {
         mOuter->PresShell()->SetPendingVisualScrollUpdate(
-            scrollToPos, FrameMetrics::eRestore);
+            visualScrollToPos, FrameMetrics::eRestore);
       }
       if (state == LoadingState::Loading || NS_SUBTREE_DIRTY(mOuter)) {
         // If we're trying to do a history scroll restore, then we want to
@@ -5331,7 +5342,7 @@ bool ScrollFrameHelper::IsScrollbarOnRight() const {
 
 bool ScrollFrameHelper::IsMaybeScrollingActive() const {
   const nsStyleDisplay* disp = mOuter->StyleDisplay();
-  if (disp && (disp->mWillChangeBitField & NS_STYLE_WILL_CHANGE_SCROLL)) {
+  if (disp->mWillChangeBitField & StyleWillChangeBits_SCROLL) {
     return true;
   }
 
@@ -5344,7 +5355,7 @@ bool ScrollFrameHelper::IsMaybeScrollingActive() const {
 bool ScrollFrameHelper::IsScrollingActive(
     nsDisplayListBuilder* aBuilder) const {
   const nsStyleDisplay* disp = mOuter->StyleDisplay();
-  if (disp && (disp->mWillChangeBitField & NS_STYLE_WILL_CHANGE_SCROLL) &&
+  if (disp->mWillChangeBitField & StyleWillChangeBits_SCROLL &&
       aBuilder->IsInWillChangeBudget(mOuter, GetVisualViewportSize())) {
     return true;
   }
@@ -5921,10 +5932,11 @@ void ScrollFrameHelper::LayoutScrollbars(nsBoxLayoutState& aState,
 
   bool hasResizer = HasResizer();
   bool scrollbarOnLeft = !IsScrollbarOnRight();
+  bool overlayScrollBars =
+      LookAndFeel::GetInt(LookAndFeel::eIntID_UseOverlayScrollbars) ||
+      presShell->GetDocument()->InRDMPane();
   bool overlayScrollBarsWithZoom =
-      mIsRoot &&
-      LookAndFeel::GetInt(LookAndFeel::eIntID_UseOverlayScrollbars) &&
-      presShell->IsVisualViewportSizeSet();
+      overlayScrollBars && mIsRoot && presShell->IsVisualViewportSizeSet();
 
   nsSize scrollPortClampingSize = mScrollPort.Size();
   double res = 1.0;

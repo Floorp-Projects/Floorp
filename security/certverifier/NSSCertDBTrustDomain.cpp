@@ -253,14 +253,8 @@ Result NSSCertDBTrustDomain::GetCertTrust(EndEntityOrCA endEntityOrCA,
       return Success;
     }
 
-    // For TRUST, we only use the CERTDB_TRUSTED_CA bit, because Gecko hasn't
-    // needed to consider end-entity certs to be their own trust anchors since
-    // Gecko implemented nsICertOverrideService.
-    // Of course, for this to work as expected, we need to make sure we're
-    // inquiring about the trust of a CA and not an end-entity. If an end-entity
-    // has the CERTDB_TRUSTED_CA bit set, Gecko does not consider it to be a
-    // trust anchor; it must inherit its trust.
-    if (flags & CERTDB_TRUSTED_CA && endEntityOrCA == EndEntityOrCA::MustBeCA) {
+    // For TRUST, we use the CERTDB_TRUSTED_CA bit.
+    if (flags & CERTDB_TRUSTED_CA) {
       if (policy.IsAnyPolicy()) {
         trustLevel = TrustLevel::TrustAnchor;
         return Success;
@@ -822,9 +816,9 @@ Result NSSCertDBTrustDomain::IsChainValid(const DERArray& certArray, Time time,
 
     nsrv = nssCertList->SegmentCertificateChain(rootCert, intCerts, eeCert);
     if (NS_FAILED(nsrv)) {
-      // This chain is supposed to be complete, so this is an error. There
-      // are no intermediates, so return before searching just as if the
-      // search failed.
+      // This is supposed to be a valid EV chain (where at least 3 certificates
+      // are required: end-entity, at least one intermediate, and a root), so
+      // this is an error.
       return Result::ERROR_ADDITIONAL_POLICY_CONSTRAINT_FAILED;
     }
 
@@ -872,7 +866,7 @@ Result NSSCertDBTrustDomain::IsChainValid(const DERArray& certArray, Time time,
     nsrv = nssCertList->SegmentCertificateChain(rootCert, intCerts, eeCert);
     if (NS_FAILED(nsrv)) {
       // This chain is supposed to be complete, so this is an error.
-      return Result::FATAL_ERROR_LIBRARY_FAILURE;
+      return Result::ERROR_ADDITIONAL_POLICY_CONSTRAINT_FAILED;
     }
 
     // PRTime is microseconds since the epoch, whereas JS time is milliseconds.

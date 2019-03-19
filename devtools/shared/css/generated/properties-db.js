@@ -28,7 +28,7 @@ exports.CSS_PROPERTIES = {
       "animation-play-state"
     ],
     "supports": [
-      10
+      "timing-function"
     ],
     "values": [
       "alternate",
@@ -166,7 +166,7 @@ exports.CSS_PROPERTIES = {
       "animation-timing-function"
     ],
     "supports": [
-      10
+      "timing-function"
     ],
     "values": [
       "cubic-bezier",
@@ -350,7 +350,7 @@ exports.CSS_PROPERTIES = {
       "border-inline-end-width"
     ],
     "supports": [
-      2
+      "color"
     ],
     "values": [
       "COLOR",
@@ -385,7 +385,7 @@ exports.CSS_PROPERTIES = {
       "border-inline-end-color"
     ],
     "supports": [
-      2
+      "color"
     ],
     "values": [
       "COLOR",
@@ -450,7 +450,7 @@ exports.CSS_PROPERTIES = {
       "border-image-width"
     ],
     "supports": [
-      4
+      "gradient"
     ],
     "values": [
       "-moz-element",
@@ -490,7 +490,7 @@ exports.CSS_PROPERTIES = {
       "border-inline-start-width"
     ],
     "supports": [
-      2
+      "color"
     ],
     "values": [
       "COLOR",
@@ -525,7 +525,7 @@ exports.CSS_PROPERTIES = {
       "border-inline-start-color"
     ],
     "supports": [
-      2
+      "color"
     ],
     "values": [
       "COLOR",
@@ -739,7 +739,7 @@ exports.CSS_PROPERTIES = {
       "column-rule-color"
     ],
     "supports": [
-      2
+      "color"
     ],
     "values": [
       "COLOR",
@@ -774,7 +774,7 @@ exports.CSS_PROPERTIES = {
       "column-rule-color"
     ],
     "supports": [
-      2
+      "color"
     ],
     "values": [
       "COLOR",
@@ -1269,7 +1269,7 @@ exports.CSS_PROPERTIES = {
       "transition-delay"
     ],
     "supports": [
-      10
+      "timing-function"
     ],
     "values": [
       "all",
@@ -1336,7 +1336,7 @@ exports.CSS_PROPERTIES = {
       "transition-timing-function"
     ],
     "supports": [
-      10
+      "timing-function"
     ],
     "values": [
       "cubic-bezier",
@@ -1536,7 +1536,7 @@ exports.CSS_PROPERTIES = {
       "animation-play-state"
     ],
     "supports": [
-      10
+      "timing-function"
     ],
     "values": [
       "alternate",
@@ -1674,7 +1674,7 @@ exports.CSS_PROPERTIES = {
       "animation-timing-function"
     ],
     "supports": [
-      10
+      "timing-function"
     ],
     "values": [
       "cubic-bezier",
@@ -1935,7 +1935,7 @@ exports.CSS_PROPERTIES = {
       "border-image-width"
     ],
     "supports": [
-      4
+      "gradient"
     ],
     "values": [
       "-moz-element",
@@ -2108,7 +2108,7 @@ exports.CSS_PROPERTIES = {
       "box-shadow"
     ],
     "supports": [
-      2
+      "color"
     ],
     "values": [
       "COLOR",
@@ -2331,7 +2331,7 @@ exports.CSS_PROPERTIES = {
       "mask-image"
     ],
     "supports": [
-      4
+      "gradient"
     ],
     "values": [
       "-moz-element",
@@ -2428,7 +2428,7 @@ exports.CSS_PROPERTIES = {
       "mask-image"
     ],
     "supports": [
-      4
+      "gradient"
     ],
     "values": [
       "-moz-element",
@@ -2610,7 +2610,7 @@ exports.CSS_PROPERTIES = {
       "-webkit-text-fill-color"
     ],
     "supports": [
-      2
+      "color"
     ],
     "values": [
       "COLOR",
@@ -2648,7 +2648,7 @@ exports.CSS_PROPERTIES = {
       "-webkit-text-stroke-color"
     ],
     "supports": [
-      2
+      "color"
     ],
     "values": [
       "COLOR",
@@ -2673,7 +2673,7 @@ exports.CSS_PROPERTIES = {
       "-webkit-text-stroke-color"
     ],
     "supports": [
-      2
+      "color"
     ],
     "values": [
       "COLOR",
@@ -2784,7 +2784,7 @@ exports.CSS_PROPERTIES = {
       "transition-delay"
     ],
     "supports": [
-      10
+      "timing-function"
     ],
     "values": [
       "all",
@@ -2851,7 +2851,7 @@ exports.CSS_PROPERTIES = {
       "transition-timing-function"
     ],
     "supports": [
-      10
+      "timing-function"
     ],
     "values": [
       "cubic-bezier",
@@ -3329,7 +3329,7 @@ exports.CSS_PROPERTIES = {
       "animation-play-state"
     ],
     "supports": [
-      10
+      "timing-function"
     ],
     "values": [
       "alternate",
@@ -3467,7 +3467,7 @@ exports.CSS_PROPERTIES = {
       "animation-timing-function"
     ],
     "supports": [
-      10
+      "timing-function"
     ],
     "values": [
       "cubic-bezier",
@@ -3514,8 +3514,8 @@ exports.CSS_PROPERTIES = {
       "background-clip"
     ],
     "supports": [
-      2,
-      4
+      "color",
+      "gradient"
     ],
     "values": [
       "COLOR",
@@ -3637,7 +3637,7 @@ exports.CSS_PROPERTIES = {
       "background-color"
     ],
     "supports": [
-      2
+      "color"
     ],
     "values": [
       "COLOR",
@@ -3659,7 +3659,7 @@ exports.CSS_PROPERTIES = {
       "background-image"
     ],
     "supports": [
-      4
+      "gradient"
     ],
     "values": [
       "-moz-element",
@@ -3829,7 +3829,7 @@ exports.CSS_PROPERTIES = {
       "border-image-width"
     ],
     "supports": [
-      2
+      "color"
     ],
     "values": [
       "COLOR",
@@ -3869,7 +3869,7 @@ exports.CSS_PROPERTIES = {
       "border-block-end-color"
     ],
     "supports": [
-      2
+      "color"
     ],
     "values": [
       "COLOR",
@@ -3905,7 +3905,7 @@ exports.CSS_PROPERTIES = {
       "border-block-end-color"
     ],
     "supports": [
-      2
+      "color"
     ],
     "values": [
       "COLOR",
@@ -3929,7 +3929,7 @@ exports.CSS_PROPERTIES = {
       "border-block-end-width"
     ],
     "supports": [
-      2
+      "color"
     ],
     "values": [
       "COLOR",
@@ -3964,7 +3964,7 @@ exports.CSS_PROPERTIES = {
       "border-block-end-color"
     ],
     "supports": [
-      2
+      "color"
     ],
     "values": [
       "COLOR",
@@ -4027,7 +4027,7 @@ exports.CSS_PROPERTIES = {
       "border-block-start-width"
     ],
     "supports": [
-      2
+      "color"
     ],
     "values": [
       "COLOR",
@@ -4062,7 +4062,7 @@ exports.CSS_PROPERTIES = {
       "border-block-start-color"
     ],
     "supports": [
-      2
+      "color"
     ],
     "values": [
       "COLOR",
@@ -4166,7 +4166,7 @@ exports.CSS_PROPERTIES = {
       "border-bottom-width"
     ],
     "supports": [
-      2
+      "color"
     ],
     "values": [
       "COLOR",
@@ -4201,7 +4201,7 @@ exports.CSS_PROPERTIES = {
       "border-bottom-color"
     ],
     "supports": [
-      2
+      "color"
     ],
     "values": [
       "COLOR",
@@ -4306,7 +4306,7 @@ exports.CSS_PROPERTIES = {
       "border-left-color"
     ],
     "supports": [
-      2
+      "color"
     ],
     "values": [
       "COLOR",
@@ -4358,7 +4358,7 @@ exports.CSS_PROPERTIES = {
       "border-image-width"
     ],
     "supports": [
-      4
+      "gradient"
     ],
     "values": [
       "-moz-element",
@@ -4440,7 +4440,7 @@ exports.CSS_PROPERTIES = {
       "border-image-source"
     ],
     "supports": [
-      4
+      "gradient"
     ],
     "values": [
       "-moz-element",
@@ -4491,7 +4491,7 @@ exports.CSS_PROPERTIES = {
       "border-inline-end-color"
     ],
     "supports": [
-      2
+      "color"
     ],
     "values": [
       "COLOR",
@@ -4527,7 +4527,7 @@ exports.CSS_PROPERTIES = {
       "border-inline-end-color"
     ],
     "supports": [
-      2
+      "color"
     ],
     "values": [
       "COLOR",
@@ -4551,7 +4551,7 @@ exports.CSS_PROPERTIES = {
       "border-inline-end-width"
     ],
     "supports": [
-      2
+      "color"
     ],
     "values": [
       "COLOR",
@@ -4586,7 +4586,7 @@ exports.CSS_PROPERTIES = {
       "border-inline-end-color"
     ],
     "supports": [
-      2
+      "color"
     ],
     "values": [
       "COLOR",
@@ -4649,7 +4649,7 @@ exports.CSS_PROPERTIES = {
       "border-inline-start-width"
     ],
     "supports": [
-      2
+      "color"
     ],
     "values": [
       "COLOR",
@@ -4684,7 +4684,7 @@ exports.CSS_PROPERTIES = {
       "border-inline-start-color"
     ],
     "supports": [
-      2
+      "color"
     ],
     "values": [
       "COLOR",
@@ -4788,7 +4788,7 @@ exports.CSS_PROPERTIES = {
       "border-left-width"
     ],
     "supports": [
-      2
+      "color"
     ],
     "values": [
       "COLOR",
@@ -4823,7 +4823,7 @@ exports.CSS_PROPERTIES = {
       "border-left-color"
     ],
     "supports": [
-      2
+      "color"
     ],
     "values": [
       "COLOR",
@@ -4902,7 +4902,7 @@ exports.CSS_PROPERTIES = {
       "border-right-width"
     ],
     "supports": [
-      2
+      "color"
     ],
     "values": [
       "COLOR",
@@ -4937,7 +4937,7 @@ exports.CSS_PROPERTIES = {
       "border-right-color"
     ],
     "supports": [
-      2
+      "color"
     ],
     "values": [
       "COLOR",
@@ -5065,7 +5065,7 @@ exports.CSS_PROPERTIES = {
       "border-top-width"
     ],
     "supports": [
-      2
+      "color"
     ],
     "values": [
       "COLOR",
@@ -5100,7 +5100,7 @@ exports.CSS_PROPERTIES = {
       "border-top-color"
     ],
     "supports": [
-      2
+      "color"
     ],
     "values": [
       "COLOR",
@@ -5235,7 +5235,7 @@ exports.CSS_PROPERTIES = {
       "box-shadow"
     ],
     "supports": [
-      2
+      "color"
     ],
     "values": [
       "COLOR",
@@ -5346,7 +5346,7 @@ exports.CSS_PROPERTIES = {
       "caret-color"
     ],
     "supports": [
-      2
+      "color"
     ],
     "values": [
       "COLOR",
@@ -5445,7 +5445,7 @@ exports.CSS_PROPERTIES = {
       "color"
     ],
     "supports": [
-      2
+      "color"
     ],
     "values": [
       "COLOR",
@@ -5559,7 +5559,7 @@ exports.CSS_PROPERTIES = {
       "column-rule-color"
     ],
     "supports": [
-      2
+      "color"
     ],
     "values": [
       "COLOR",
@@ -5594,7 +5594,7 @@ exports.CSS_PROPERTIES = {
       "column-rule-color"
     ],
     "supports": [
-      2
+      "color"
     ],
     "values": [
       "COLOR",
@@ -5899,7 +5899,7 @@ exports.CSS_PROPERTIES = {
       "fill"
     ],
     "supports": [
-      2
+      "color"
     ],
     "values": [
       "COLOR",
@@ -6122,7 +6122,7 @@ exports.CSS_PROPERTIES = {
       "flood-color"
     ],
     "supports": [
-      2
+      "color"
     ],
     "values": [
       "COLOR",
@@ -7259,7 +7259,7 @@ exports.CSS_PROPERTIES = {
       "lighting-color"
     ],
     "supports": [
-      2
+      "color"
     ],
     "values": [
       "COLOR",
@@ -7700,7 +7700,7 @@ exports.CSS_PROPERTIES = {
       "mask-image"
     ],
     "supports": [
-      4
+      "gradient"
     ],
     "values": [
       "-moz-element",
@@ -7797,7 +7797,7 @@ exports.CSS_PROPERTIES = {
       "mask-image"
     ],
     "supports": [
-      4
+      "gradient"
     ],
     "values": [
       "-moz-element",
@@ -8233,7 +8233,7 @@ exports.CSS_PROPERTIES = {
       "outline-width"
     ],
     "supports": [
-      2
+      "color"
     ],
     "values": [
       "COLOR",
@@ -8269,7 +8269,7 @@ exports.CSS_PROPERTIES = {
       "outline-color"
     ],
     "supports": [
-      2
+      "color"
     ],
     "values": [
       "COLOR",
@@ -9083,7 +9083,7 @@ exports.CSS_PROPERTIES = {
       "scrollbar-color"
     ],
     "supports": [
-      2
+      "color"
     ],
     "values": [
       "COLOR",
@@ -9148,7 +9148,7 @@ exports.CSS_PROPERTIES = {
       "shape-outside"
     ],
     "supports": [
-      4
+      "gradient"
     ],
     "values": [
       "-moz-element",
@@ -9206,7 +9206,7 @@ exports.CSS_PROPERTIES = {
       "stop-color"
     ],
     "supports": [
-      2
+      "color"
     ],
     "values": [
       "COLOR",
@@ -9241,7 +9241,7 @@ exports.CSS_PROPERTIES = {
       "stroke"
     ],
     "supports": [
-      2
+      "color"
     ],
     "values": [
       "COLOR",
@@ -9461,7 +9461,7 @@ exports.CSS_PROPERTIES = {
       "text-decoration-color"
     ],
     "supports": [
-      2
+      "color"
     ],
     "values": [
       "COLOR",
@@ -9494,7 +9494,7 @@ exports.CSS_PROPERTIES = {
       "text-decoration-color"
     ],
     "supports": [
-      2
+      "color"
     ],
     "values": [
       "COLOR",
@@ -9554,7 +9554,7 @@ exports.CSS_PROPERTIES = {
       "text-emphasis-color"
     ],
     "supports": [
-      2
+      "color"
     ],
     "values": [
       "COLOR",
@@ -9584,7 +9584,7 @@ exports.CSS_PROPERTIES = {
       "text-emphasis-color"
     ],
     "supports": [
-      2
+      "color"
     ],
     "values": [
       "COLOR",
@@ -9724,7 +9724,7 @@ exports.CSS_PROPERTIES = {
       "text-shadow"
     ],
     "supports": [
-      2
+      "color"
     ],
     "values": [
       "COLOR",
@@ -9887,7 +9887,7 @@ exports.CSS_PROPERTIES = {
       "transition-delay"
     ],
     "supports": [
-      10
+      "timing-function"
     ],
     "values": [
       "all",
@@ -9954,7 +9954,7 @@ exports.CSS_PROPERTIES = {
       "transition-timing-function"
     ],
     "supports": [
-      10
+      "timing-function"
     ],
     "values": [
       "cubic-bezier",

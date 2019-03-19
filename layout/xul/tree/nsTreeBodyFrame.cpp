@@ -3446,26 +3446,27 @@ ImgDrawResult nsTreeBodyFrame::PaintText(
   ColorPattern color(ToDeviceColor(textContext->StyleColor()->mColor));
 
   // Draw decorations.
-  uint8_t decorations = textContext->StyleTextReset()->mTextDecorationLine;
+  StyleTextDecorationLine decorations =
+      textContext->StyleTextReset()->mTextDecorationLine;
 
   nscoord offset;
   nscoord size;
-  if (decorations & (NS_STYLE_TEXT_DECORATION_LINE_OVERLINE |
-                     NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE)) {
+  if (decorations &
+      (StyleTextDecorationLine_OVERLINE | StyleTextDecorationLine_UNDERLINE)) {
     fontMet->GetUnderline(offset, size);
-    if (decorations & NS_STYLE_TEXT_DECORATION_LINE_OVERLINE) {
+    if (decorations & StyleTextDecorationLine_OVERLINE) {
       nsRect r(textRect.x, textRect.y, textRect.width, size);
       Rect devPxRect = NSRectToSnappedRect(r, appUnitsPerDevPixel, *drawTarget);
       drawTarget->FillRect(devPxRect, color);
     }
-    if (decorations & NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE) {
+    if (decorations & StyleTextDecorationLine_UNDERLINE) {
       nsRect r(textRect.x, textRect.y + baseline - offset, textRect.width,
                size);
       Rect devPxRect = NSRectToSnappedRect(r, appUnitsPerDevPixel, *drawTarget);
       drawTarget->FillRect(devPxRect, color);
     }
   }
-  if (decorations & NS_STYLE_TEXT_DECORATION_LINE_LINE_THROUGH) {
+  if (decorations & StyleTextDecorationLine_LINE_THROUGH) {
     fontMet->GetStrikeout(offset, size);
     nsRect r(textRect.x, textRect.y + baseline - offset, textRect.width, size);
     Rect devPxRect = NSRectToSnappedRect(r, appUnitsPerDevPixel, *drawTarget);

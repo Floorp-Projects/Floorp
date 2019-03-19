@@ -54,4 +54,16 @@ add_task(async function() {
   ok(true, "Navigation message appeared as expected");
   is(findMessages(hud, "").length, INITIAL_LOGS_NUMBER + 1,
     "Messages logged before navigation are still visible");
+
+  const {
+    visibleMessages,
+    messagesById,
+  } = hud.ui.wrapper.getStore().getState().messages;
+  const [commandId, resultId] = visibleMessages;
+  const commandMessage = messagesById.get(commandId).timeStamp;
+  const resultMessage = messagesById.get(resultId).timeStamp;
+
+  ok(resultMessage > commandMessage
+    && resultMessage < Date.now(),
+    "The result has a timestamp newer than the command and older than current time");
 });

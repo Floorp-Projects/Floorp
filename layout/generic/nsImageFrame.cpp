@@ -554,16 +554,11 @@ nsRect nsImageFrame::SourceRectToDest(const nsIntRect& aRect) {
 // that we'll construct image frames for them as needed if their display is
 // toggled from "none" (though we won't paint them, unless their visibility
 // is changed too).
-#define BAD_STATES \
-  (NS_EVENT_STATE_BROKEN | NS_EVENT_STATE_USERDISABLED | NS_EVENT_STATE_LOADING)
+#define BAD_STATES (NS_EVENT_STATE_BROKEN | NS_EVENT_STATE_USERDISABLED)
 
-// This is a macro so that we don't evaluate the boolean last arg
-// unless we have to; it can be expensive
-#define IMAGE_OK(_state, _loadingOK)                                \
-  (!(_state).HasAtLeastOneOfStates(BAD_STATES) ||                   \
-   (!(_state).HasAtLeastOneOfStates(NS_EVENT_STATE_BROKEN |         \
-                                    NS_EVENT_STATE_USERDISABLED) && \
-    (_state).HasState(NS_EVENT_STATE_LOADING) && (_loadingOK)))
+static bool ImageOk(EventStates aState) {
+  return !aState.HasAtLeastOneOfStates(BAD_STATES);
+}
 
 static bool HasAltText(const Element& aElement) {
   // We always return some alternate text for <input>, see
@@ -582,9 +577,8 @@ static bool HasAltText(const Element& aElement) {
 /* static */
 bool nsImageFrame::ShouldCreateImageFrameFor(const Element& aElement,
                                              ComputedStyle& aStyle) {
-  EventStates state = aElement.State();
-  if (IMAGE_OK(state, HaveSpecifiedSize(aStyle.StylePosition()))) {
-    // Image is fine; do the image frame thing
+  if (ImageOk(aElement.State())) {
+    // Image is fine or loading; do the image frame thing
     return true;
   }
 
@@ -697,8 +691,6 @@ nsresult nsImageFrame::OnSizeAvailable(imgIRequest* aRequest,
       // so we're ready to request a decode.
       MaybeDecodeForPredictedSize();
     }
-
-    mPrevImage = nullptr;
   }
 
   return NS_OK;
@@ -813,8 +805,6 @@ void nsImageFrame::NotifyNewCurrentRequest(imgIRequest* aRequest,
         // so we're ready to request a decode.
         MaybeDecodeForPredictedSize();
       }
-
-      mPrevImage = nullptr;
     }
     // Update border+content to account for image change
     InvalidateFrame();
@@ -1038,8 +1028,7 @@ void nsImageFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
   }
 
   aMetrics.SetOverflowAreasToDesiredBounds();
-  EventStates contentState = mContent->AsElement()->State();
-  bool imageOK = IMAGE_OK(contentState, true);
+  bool imageOK = ImageOk(mContent->AsElement()->State());
 
   // Determine if the size is available
   bool haveSize = false;
@@ -1350,7 +1339,7 @@ ImgDrawResult nsImageFrame::DisplayAltFeedback(gfxContext& aRenderingContext,
   MOZ_ASSERT(gIconLoad, "How did we succeed in Init then?");
 
   // Whether we draw the broken or loading icon.
-  bool isLoading = IMAGE_OK(GetContent()->AsElement()->State(), true);
+  bool isLoading = ImageOk(mContent->AsElement()->State());
 
   // Calculate the inner area
   nsRect inner = GetInnerArea() + aPt;
@@ -1507,7 +1496,7 @@ ImgDrawResult nsImageFrame::DisplayAltFeedbackWithoutLayer(
   MOZ_ASSERT(gIconLoad, "How did we succeed in Init then?");
 
   // Whether we draw the broken or loading icon.
-  bool isLoading = IMAGE_OK(GetContent()->AsElement()->State(), true);
+  bool isLoading = ImageOk(mContent->AsElement()->State());
 
   // Calculate the inner area
   nsRect inner = GetInnerArea() + aPt;
@@ -2059,8 +2048,7 @@ void nsImageFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
       aBuilder, this, clipFlags);
 
   if (mComputedSize.width != 0 && mComputedSize.height != 0) {
-    EventStates contentState = mContent->AsElement()->State();
-    bool imageOK = IMAGE_OK(contentState, true);
+    bool imageOK = ImageOk(mContent->AsElement()->State());
 
     nsCOMPtr<imgIRequest> currentRequest = GetCurrentRequest();
 

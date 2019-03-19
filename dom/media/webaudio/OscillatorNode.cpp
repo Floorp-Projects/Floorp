@@ -401,16 +401,16 @@ already_AddRefed<OscillatorNode> OscillatorNode::Create(
     return nullptr;
   }
 
-  audioNode->SetType(aOptions.mType, aRv);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return nullptr;
-  }
-
   audioNode->Frequency()->SetValue(aOptions.mFrequency);
   audioNode->Detune()->SetValue(aOptions.mDetune);
 
   if (aOptions.mPeriodicWave.WasPassed()) {
     audioNode->SetPeriodicWave(aOptions.mPeriodicWave.Value());
+  } else {
+    audioNode->SetType(aOptions.mType, aRv);
+    if (NS_WARN_IF(aRv.Failed())) {
+      return nullptr;
+    }
   }
 
   return audioNode.forget();

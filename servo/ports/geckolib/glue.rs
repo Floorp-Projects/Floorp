@@ -204,7 +204,7 @@ use style::values::specified;
 use style::values::specified::gecko::IntersectionObserverRootMargin;
 use style::values::specified::source_size_list::SourceSizeList;
 use style::values::{CustomIdent, KeyframesName};
-use style_traits::{CssType, CssWriter, ParsingMode, StyleParseErrorKind, ToCss};
+use style_traits::{CssWriter, ParsingMode, StyleParseErrorKind, ToCss};
 
 trait ClosureHelper {
     fn invoke(&self);
@@ -244,7 +244,6 @@ pub unsafe extern "C" fn Servo_Initialize(dummy_url_data: *mut URLExtraData) {
     traversal_flags::assert_traversal_flags_match();
     specified::font::assert_variant_east_asian_matches();
     specified::font::assert_variant_ligatures_matches();
-    specified::box_::assert_touch_action_matches();
 
     DUMMY_URL_DATA = dummy_url_data;
 }
@@ -1149,20 +1148,10 @@ pub unsafe extern "C" fn Servo_Property_IsInherited(prop_name: *const nsACString
 #[no_mangle]
 pub unsafe extern "C" fn Servo_Property_SupportsType(
     prop_name: *const nsACString,
-    ty: u32,
+    ty: u8,
     found: *mut bool,
 ) -> bool {
     let prop_id = parse_enabled_property_name!(prop_name, found, false);
-    // This should match the constants in InspectorUtils.
-    // (Let's don't bother importing InspectorUtilsBinding into bindings
-    // because it is not used anywhere else, and issue here would be
-    // caught by the property-db test anyway.)
-    let ty = match ty {
-        1 => CssType::COLOR,
-        2 => CssType::GRADIENT,
-        3 => CssType::TIMING_FUNCTION,
-        _ => unreachable!("unknown CSS type {}", ty),
-    };
     prop_id.supports_type(ty)
 }
 
@@ -4752,8 +4741,7 @@ pub extern "C" fn Servo_DeclarationBlock_SetTextDecorationColorOverride(
     use style::properties::PropertyDeclaration;
     use style::values::specified::text::TextDecorationLine;
 
-    let mut decoration = TextDecorationLine::none();
-    decoration |= TextDecorationLine::COLOR_OVERRIDE;
+    let decoration = TextDecorationLine::COLOR_OVERRIDE;
     let decl = PropertyDeclaration::TextDecorationLine(decoration);
     write_locked_arc(declarations, |decls: &mut PropertyDeclarationBlock| {
         decls.push(decl, Importance::Normal);

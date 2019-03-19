@@ -358,7 +358,7 @@ class TextAttrsMgr {
    public:
     TextDecorValue()
         : mColor{0},
-          mLine{NS_STYLE_TEXT_DECORATION_LINE_NONE},
+          mLine{StyleTextDecorationLine_NONE},
           mStyle{NS_STYLE_TEXT_DECORATION_STYLE_NONE} {}
     explicit TextDecorValue(nsIFrame* aFrame);
 
@@ -367,10 +367,10 @@ class TextAttrsMgr {
 
     bool IsDefined() const { return IsUnderline() || IsLineThrough(); }
     bool IsUnderline() const {
-      return mLine & NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE;
+      return bool(mLine & mozilla::StyleTextDecorationLine_UNDERLINE);
     }
     bool IsLineThrough() const {
-      return mLine & NS_STYLE_TEXT_DECORATION_LINE_LINE_THROUGH;
+      return bool(mLine & mozilla::StyleTextDecorationLine_LINE_THROUGH);
     }
 
     bool operator==(const TextDecorValue& aValue) {
@@ -381,7 +381,7 @@ class TextAttrsMgr {
 
    private:
     nscolor mColor;
-    uint8_t mLine;
+    mozilla::StyleTextDecorationLine mLine;
     uint8_t mStyle;
   };
 
