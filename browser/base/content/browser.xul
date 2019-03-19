@@ -1089,7 +1089,7 @@
 
         <toolbarbutton id="fxa-toolbar-menu-button" class="toolbarbutton-1 badged-button chromeclass-toolbar-additional subviewbutton-nav"
                        onmousedown="gSync.toggleAccountPanel('PanelUI-fxa', event)"
-                       onkeypress="gSync.toggleAccountPanel('PanelUI-fxa, event)"
+                       onkeypress="gSync.toggleAccountPanel('PanelUI-fxa', event)"
                        consumeanchor="fxa-toolbar-menu-button"
                        closemenu="none"
                        label="&fxa.menu.firefoxAccount;"
