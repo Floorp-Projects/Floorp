@@ -71,7 +71,7 @@ void gecko_profiler_add_text_marker(const char* name, const char* text_bytes,
   if (profiler_thread_is_being_profiled()) {
     auto now = mozilla::TimeStamp::Now();
     auto start = now - mozilla::TimeDuration::FromMicroseconds(microseconds);
-    profiler_add_text_marker(name, nsDependentCString(text_bytes, text_len),
+    profiler_add_text_marker(name, nsDependentCSubstring(text_bytes, text_len),
                              JS::ProfilingCategoryPair::GRAPHICS, start, now);
   }
 #endif
