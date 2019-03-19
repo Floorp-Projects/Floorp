@@ -9,10 +9,10 @@ browserElementTestHelpers.setEnabledPref(true);
 browserElementTestHelpers.addPermission();
 
 function runTest() {
-  var iframe = document.createElement('iframe');
-  iframe.setAttribute('mozbrowser', 'true');
+  var iframe = document.createElement("iframe");
+  iframe.setAttribute("mozbrowser", "true");
 
-  iframe.addEventListener('mozbrowseropenwindow', function(e) {
+  iframe.addEventListener("mozbrowseropenwindow", function(e) {
     ok(true, "got openwindow event.");
     document.body.appendChild(e.detail.frameElement);
 
@@ -30,4 +30,4 @@ function runTest() {
   iframe.src = "file_browserElement_CloseFromOpener.html";
 }
 
-addEventListener('testready', runTest);
+addEventListener("testready", runTest);

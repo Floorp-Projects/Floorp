@@ -15,23 +15,20 @@ browserElementTestHelpers.setEnabledPref(true);
 browserElementTestHelpers.addPermission();
 browserElementTestHelpers.allowTopLevelDataURINavigation();
 
-function runTest()
-{
-  var iframe = document.createElement('iframe');
-  iframe.setAttribute('mozbrowser', 'true');
+function runTest() {
+  var iframe = document.createElement("iframe");
+  iframe.setAttribute("mozbrowser", "true");
   document.body.appendChild(iframe);
 
   var numPrompts = 0;
-  iframe.addEventListener('mozbrowsershowmodalprompt', function(e) {
+  iframe.addEventListener("mozbrowsershowmodalprompt", function(e) {
     is(e.detail.message, String(numPrompts), "prompt message");
     if (numPrompts / 10 < 1) {
-      is(e.detail.promptType, 'alert');
-    }
-    else if (numPrompts / 10 < 2) {
-      is(e.detail.promptType, 'confirm');
-    }
-    else {
-      is(e.detail.promptType, 'prompt');
+      is(e.detail.promptType, "alert");
+    } else if (numPrompts / 10 < 2) {
+      is(e.detail.promptType, "confirm");
+    } else {
+      is(e.detail.promptType, "prompt");
     }
 
     numPrompts++;
@@ -50,11 +47,11 @@ function runTest()
         for (; i < 30; i++) { prompt(i); } \
        }); \
      }); \
-     </scr' + 'ipt></body></html>';
+     </scr' + "ipt></body></html>";
 }
 
 // The test harness sets dom.successive_dialog_time_limit to 0 for some bizarre
 // reason.  That's not normal usage, and it keeps us from testing alertCheck!
-addEventListener('testready', function() {
-  SpecialPowers.pushPrefEnv({'set': [['dom.successive_dialog_time_limit', 10]]}, runTest);
+addEventListener("testready", function() {
+  SpecialPowers.pushPrefEnv({"set": [["dom.successive_dialog_time_limit", 10]]}, runTest);
 });

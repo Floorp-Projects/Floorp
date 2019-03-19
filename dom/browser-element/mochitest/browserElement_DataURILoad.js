@@ -17,24 +17,24 @@ const DATA_URI = "data:text/html,<html><body>" + INNER + "</body></html>";
 const HTTP_URI = "browserElement_DataURILoad.html";
 
 function runTest1() {
-  let frame = document.createElement('iframe');
-  frame.setAttribute('mozbrowser', 'true');
-  frame.src = DATA_URI
+  let frame = document.createElement("iframe");
+  frame.setAttribute("mozbrowser", "true");
+  frame.src = DATA_URI;
   document.body.appendChild(frame);
   let wrappedFrame = SpecialPowers.wrap(frame);
 
   // wait for 1000ms and check that the data: URI did not load
-  setTimeout(function () {
+  setTimeout(function() {
     isnot(wrappedFrame.contentWindow.document.body.innerHTML,
-          INNER, 
+          INNER,
           "data: URI navigation should be blocked");
     runTest2();
   }, 1000);
 }
 
 function runTest2() {
-  let frame = document.createElement('iframe');
-  frame.setAttribute('mozbrowser', 'true');
+  let frame = document.createElement("iframe");
+  frame.setAttribute("mozbrowser", "true");
   frame.src = HTTP_URI;
   document.body.appendChild(frame);
   let wrappedFrame = SpecialPowers.wrap(frame);
@@ -42,16 +42,16 @@ function runTest2() {
   wrappedFrame.addEventListener("mozbrowserloadend", function onloadend(e) {
     ok(wrappedFrame.contentWindow.document.location.href.endsWith(HTTP_URI),
        "http: URI navigation should be allowed");
-    frame.src = DATA_URI
+    frame.src = DATA_URI;
 
     // wait for 1000ms and check that the data: URI did not load
-    setTimeout(function () {
+    setTimeout(function() {
       isnot(wrappedFrame.contentWindow.document.body.innerHTML,
-            INNER, 
+            INNER,
             "data: URI navigation should be blocked");
       SimpleTest.finish();
     }, 1000);
   }, {once: true});
 }
 
-addEventListener('testready', runTest1);
+addEventListener("testready", runTest1);

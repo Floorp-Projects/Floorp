@@ -10,7 +10,7 @@ browserElementTestHelpers.setEnabledPref(true);
 browserElementTestHelpers.setupAccessibleCaretPref();
 browserElementTestHelpers.addPermission();
 browserElementTestHelpers.allowTopLevelDataURINavigation();
-const { Services } = SpecialPowers.Cu.import('resource://gre/modules/Services.jsm');
+const { Services } = SpecialPowers.Cu.import("resource://gre/modules/Services.jsm");
 
 var gTextarea = null;
 var mm;
@@ -48,19 +48,19 @@ function getScriptForGetContent() {
 }
 
 function getScriptForSetFocus() {
-  var script = 'data:,' + focusScript + 'sendAsyncMessage("content-focus")';
+  var script = "data:," + focusScript + 'sendAsyncMessage("content-focus")';
   return script;
 }
 
 function runTest() {
-  iframeOuter = document.createElement('iframe');
-  iframeOuter.setAttribute('mozbrowser', 'true');
+  iframeOuter = document.createElement("iframe");
+  iframeOuter.setAttribute("mozbrowser", "true");
   if (createEmbededFrame) {
     iframeOuter.src = "file_empty.html";
   }
   document.body.appendChild(iframeOuter);
 
-  gTextarea = document.createElement('textarea');
+  gTextarea = document.createElement("textarea");
   document.body.appendChild(gTextarea);
 
   iframeOuter.addEventListener("mozbrowserloadend", function(e) {
@@ -68,9 +68,9 @@ function runTest() {
       var contentWin = SpecialPowers.wrap(iframeOuter)
                              .frameLoader.docShell.contentViewer.DOMDocument.defaultView;
       var contentDoc = contentWin.document;
-      iframeInner = contentDoc.createElement('iframe');
-      iframeInner.setAttribute('mozbrowser', true);
-      iframeInner.setAttribute('remote', 'false');
+      iframeInner = contentDoc.createElement("iframe");
+      iframeInner.setAttribute("mozbrowser", true);
+      iframeInner.setAttribute("remote", "false");
       contentDoc.body.appendChild(iframeInner);
       iframeInner.addEventListener("mozbrowserloadend", function(e) {
         mm = SpecialPowers.getBrowserFrameMessageManager(iframeInner);
@@ -86,10 +86,10 @@ function runTest() {
 
 function doCommand(cmd) {
   var COMMAND_MAP = {
-    'cut': 'cmd_cut',
-    'copy': 'cmd_copy',
-    'paste': 'cmd_paste',
-    'selectall': 'cmd_selectAll'
+    "cut": "cmd_cut",
+    "copy": "cmd_copy",
+    "paste": "cmd_paste",
+    "selectall": "cmd_selectAll",
   };
   var script = 'data:,docShell.doCommand("' + COMMAND_MAP[cmd] + '");';
   mm.loadFrameScript(script, false);
@@ -198,10 +198,10 @@ function testSelectAll(e) {
     }, {capture: true, once: true});
   }
 
-  mm.addMessageListener('content-focus', function messageforfocus(msg) {
-    mm.removeMessageListener('content-focus', messageforfocus);
+  mm.addMessageListener("content-focus", function messageforfocus(msg) {
+    mm.removeMessageListener("content-focus", messageforfocus);
     // test selectall command, after calling this the caretstatechanged event should be fired.
-    doCommand('selectall');
+    doCommand("selectall");
     if (isChildProcess()) {
       SimpleTest.executeSoon(function() { testCopy1(e); });
     }
@@ -225,11 +225,11 @@ function testCopy1(e) {
 
     let success = function() {
       nextTest(true);
-    }
+    };
 
     let fail = function() {
       nextTest(false);
-    }
+    };
 
     let compareData = defaultData;
     SimpleTest.waitForClipboard(compareData, setup, success, fail);
@@ -240,15 +240,15 @@ function testPaste1(e) {
   // Next test paste command, first we copy to global clipboard in parent side.
   // Then paste it to child side.
   copyToClipboard(pasteData, () => {
-    doCommand('selectall');
+    doCommand("selectall");
     doCommand("paste");
     SimpleTest.executeSoon(function() { testPaste2(e); });
   });
 }
 
 function testPaste2(e) {
-  mm.addMessageListener('content-text', function messageforpaste(msg) {
-    mm.removeMessageListener('content-text', messageforpaste);
+  mm.addMessageListener("content-text", function messageforpaste(msg) {
+    mm.removeMessageListener("content-text", messageforpaste);
     if (state == 4) {
       // normal div cannot paste, so the content remain unchange
       ok(SpecialPowers.wrap(msg).json === defaultData, "paste command works" + stateMeaning);
@@ -284,11 +284,11 @@ function testCut1(e) {
 
     let success = function() {
       nextTest(true);
-    }
+    };
 
     let fail = function() {
       nextTest(false);
-    }
+    };
 
     let compareData = pasteData;
 
@@ -297,7 +297,7 @@ function testCut1(e) {
     // Normal div case cannot cut, always true as well.
     if ((state == 3 && browserElementTestHelpers.getOOPByDefaultPref()) ||
         state == 4) {
-      compareData = function() { return true; }
+      compareData = function() { return true; };
     }
 
     SimpleTest.waitForClipboard(compareData, setup, success, fail);
@@ -305,8 +305,8 @@ function testCut1(e) {
 }
 
 function testCut2(e) {
-  mm.addMessageListener('content-text', function messageforcut(msg) {
-    mm.removeMessageListener('content-text', messageforcut);
+  mm.addMessageListener("content-text", function messageforcut(msg) {
+    mm.removeMessageListener("content-text", messageforcut);
     // normal div cannot cut
     if (state == 4) {
       ok(SpecialPowers.wrap(msg).json !== "", "cut command works" + stateMeaning);
@@ -331,9 +331,9 @@ var context = { url: SpecialPowers.wrap(principal.URI).spec,
                   appId: principal.appId,
                   inIsolatedMozBrowser: true }};
 
-addEventListener('testready', function() {
+addEventListener("testready", function() {
   SpecialPowers.pushPermissions([
-    {type: 'browser', allow: 1, context: context}
+    {type: "browser", allow: 1, context},
   ], runTest);
 });
 

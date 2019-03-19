@@ -11,8 +11,8 @@ browserElementTestHelpers.addPermission();
 
 var iframe = null;
 function runTest() {
-  iframe = document.createElement('iframe');
-  iframe.setAttribute('mozbrowser', 'true');
+  iframe = document.createElement("iframe");
+  iframe.setAttribute("mozbrowser", "true");
   document.body.appendChild(iframe);
 
   checkForDnsError();
@@ -55,4 +55,4 @@ function checkForNoCertificateError() {
   iframe.src = "https://nocert.example.com";
 }
 
-addEventListener('testready', runTest);
+addEventListener("testready", runTest);
