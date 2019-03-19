@@ -79,7 +79,7 @@ class BrowserFragment : Fragment(), BackHandler {
         sessionId = BrowserFragmentArgs.fromBundle(arguments!!).sessionId
 
         val view = inflater.inflate(R.layout.fragment_browser, container, false)
-0
+
         toolbarComponent = ToolbarComponent(
             view.browserLayout,
             ActionBusFactory.get(this), sessionId,

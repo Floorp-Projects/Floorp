@@ -2,20 +2,15 @@ package org.mozilla.fenix.quickactionsheet
 
 import android.content.Context
 import android.util.AttributeSet
-import android.util.Log
 import android.view.LayoutInflater
-import android.view.MotionEvent
 import android.view.View
-import android.view.ViewGroup
 import android.widget.LinearLayout
+import androidx.appcompat.widget.AppCompatImageButton
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.widget.NestedScrollView
 import com.google.android.material.bottomsheet.BottomSheetBehavior
-import kotlinx.android.synthetic.main.component_quickactionsheet.view.*
 import mozilla.components.browser.toolbar.BrowserToolbar
-import mozilla.components.feature.findinpage.view.FindInPageBar
 import org.mozilla.fenix.R
-import kotlin.math.absoluteValue
 
 class QuickActionSheet @JvmOverloads constructor(
     context: Context,
@@ -24,56 +19,26 @@ class QuickActionSheet @JvmOverloads constructor(
     defStyleRes: Int = 0
 ) : LinearLayout(context, attrs, defStyle, defStyleRes) {
 
-    var currentMargin : Float = 0f
-    var previousY : Float = 0f
-
     init {
-        LayoutInflater.from(context)
-            .inflate(R.layout.component_quickactionsheet, this, true)
+        inflate(getContext(), R.layout.component_quickactionsheet, this)
+        //setupHandle()
     }
 
-    /*
-    override fun onAttachedToWindow() {
-        super.onAttachedToWindow()
-
+    private fun setupHandle() {
+        val handle = findViewById<AppCompatImageButton>(R.id.quick_action_sheet_handle)
         val linearLayout = findViewById<LinearLayout>(R.id.quick_action_sheet)
-        val bottomSheetBehavior = BottomSheetBehavior.from(linearLayout)
-        bottomSheetBehavior.state = BottomSheetBehavior.STATE_EXPANDED
-    }
-
-*/
-
-    /*
-
-    override fun onInterceptTouchEvent(ev: MotionEvent?): Boolean {
-        Log.d("touchEvent", "starting: " + rootView.y)
-        return true
-    }
-
-    override fun onTouchEvent(event: MotionEvent?): Boolean {
-        /*
-        val layout = findViewById<LinearLayout>(R.id.quick_action_sheet)
-
-        val params = layout.layoutParams as ViewGroup.MarginLayoutParams
-
-        when (event?.action) {
-            MotionEvent.ACTION_MOVE -> {
-                Log.d("touchEvent", "handle move: " + (currentMargin))
-
-
-                previousY = event.y
-
-                params.bottomMargin += diff.toInt()
-                requestLayout()
-            }
-            MotionEvent.ACTION_UP -> Log.d("touchEvent", "handle up")
-            MotionEvent.ACTION_DOWN -> Log.d("touchEvent", "handle down")
-            else -> Log.d("touchEvent", "" + event?.action)
+        val quickActionSheetBehavior = BottomSheetBehavior.from(linearLayout) as QuickActionSheetBehavior
+        handle.setOnClickListener {
+            bounceSheet(quickActionSheetBehavior)
         }
-        */
-        return true
     }
-    */
+
+    private fun bounceSheet(quickActionSheetBehavior: QuickActionSheetBehavior) {
+        quickActionSheetBehavior.state = BottomSheetBehavior.STATE_HIDDEN
+        quickActionSheetBehavior.peekHeight = height
+        quickActionSheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
+    }
+
 }
 
 @Suppress("unused") // Referenced from XML
