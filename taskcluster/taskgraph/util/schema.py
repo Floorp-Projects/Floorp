@@ -9,6 +9,8 @@ import pprint
 import collections
 import voluptuous
 
+from six import text_type
+
 import taskgraph
 
 from mozbuild import schedules
@@ -138,7 +140,7 @@ def check_schema(schema):
 
     def iter(path, sch):
         def check_identifier(path, k):
-            if k in (basestring, voluptuous.Extra):
+            if k in (basestring, text_type, voluptuous.Extra):
                 pass
             elif isinstance(k, basestring):
                 if not identifier_re.match(k) and not whitelisted(path):
