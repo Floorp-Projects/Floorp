@@ -59,7 +59,7 @@ struct LangGroupFontPrefs {
   }
 
   // Initialize this with the data for a given language
-  void Initialize(nsAtom* aLangGroupAtom);
+  void Initialize(nsStaticAtom* aLangGroupAtom);
 
   /**
    * Get the default font for the given language and generic font ID.
@@ -174,17 +174,19 @@ class StaticPresData {
    *
    * See comment on GetLangGroup for the usage of aNeedsToCache.
    */
-  const LangGroupFontPrefs* GetFontPrefsForLangHelper(
-      nsAtom* aLanguage, const LangGroupFontPrefs* aPrefs,
-      bool* aNeedsToCache = nullptr) const;
-  const nsFont* GetDefaultFontHelper(uint8_t aFontID, nsAtom* aLanguage,
-                                     const LangGroupFontPrefs* aPrefs) const;
+  const LangGroupFontPrefs* GetFontPrefsForLang(nsAtom* aLanguage,
+                                                bool* aNeedsToCache = nullptr);
+  const nsFont* GetDefaultFont(uint8_t aFontID, nsAtom* aLanguage,
+                               const LangGroupFontPrefs* aPrefs) const;
+
+  void InvalidateFontPrefs() { mLangGroupFontPrefs.Reset(); }
 
  private:
   StaticPresData();
   ~StaticPresData() = default;
 
   nsLanguageAtomService* mLangService;
+  LangGroupFontPrefs mLangGroupFontPrefs;
 };
 
 }  // namespace mozilla
