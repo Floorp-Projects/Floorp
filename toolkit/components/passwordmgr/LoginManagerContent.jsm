@@ -452,8 +452,6 @@ var LoginManagerContent = {
       return;
     }
 
-    this.setupProgressListener(topWindow);
-
     let pwField = event.originalTarget;
     if (pwField.form) {
       // Fill is handled by onDOMFormHasPassword which is already throttled.
@@ -473,6 +471,9 @@ var LoginManagerContent = {
 
   _processDOMInputPasswordAddedEvent(event, topWindow) {
     let pwField = event.originalTarget;
+    // Only setup the listener for formless inputs.
+    // Capture within a <form> but without a submit event is bug 1287202.
+    this.setupProgressListener(topWindow);
 
     let formLike = LoginFormFactory.createFromField(pwField);
     log(" _processDOMInputPasswordAddedEvent:", pwField, formLike);
@@ -993,6 +994,14 @@ var LoginManagerContent = {
         continue;
       }
 
+      if (ChromeUtils.getClassName(formRoot) === "HTMLFormElement") {
+        // For now only perform capture upon navigation for LoginForm's without
+        // a <form> to avoid capture from both a DOMFormBeforeSubmit event and
+        // navigation for the same "form".
+        log("Ignoring navigation for the form root to avoid multiple prompts " +
+            "since it was for a real <form>");
+        continue;
+      }
       let formLike = LoginFormFactory.getForRootElement(formRoot);
       this._onFormSubmit(formLike);
     }

@@ -91,28 +91,9 @@ const TESTCASES = [
     oldPasswordFieldValue: "pass1",
   },
   {
-    // Since there are two FormLikes to auto-submit in this case we mark
-    // one FormLike's password fields with a magic "ignore-form-submission"
-    // value so we can just focus on the other form. We then repeat the testcase
-    // below with the other FormLike ignored.
     document: `<input value="user1">
-      <input type=password value="ignore-form-submission" form="form1">
+      <input type=password value="user2" form="form1">
       <input type=password value="pass1">
-      <form id="form1">
-        <input value="user3">
-        <input type=password value="ignore-form-submission">
-      </form>`,
-
-    hostname: DEFAULT_ORIGIN,
-    formSubmitURL: DEFAULT_ORIGIN,
-    usernameFieldValue: "user1",
-    newPasswordFieldValue: "pass1",
-    oldPasswordFieldValue: null,
-  },
-  { // Same as above but with the other form ignored.
-    document: `<input value="user1">
-      <input type=password value="pass2" form="form1">
-      <input type=password value="ignore-form-submission">
       <form id="form1">
         <input value="user3">
         <input type=password value="pass2">
@@ -120,8 +101,8 @@ const TESTCASES = [
 
     hostname: DEFAULT_ORIGIN,
     formSubmitURL: DEFAULT_ORIGIN,
-    usernameFieldValue: null,
-    newPasswordFieldValue: "pass2",
+    usernameFieldValue: "user1",
+    newPasswordFieldValue: "pass1",
     oldPasswordFieldValue: null,
   },
   {
@@ -139,19 +120,10 @@ const TESTCASES = [
   },
 ];
 
-/**
- * @param {Function} [aFilterFn = undefined] Function to filter out irrelevant submissions.
- * @return {Promise} resolving when a relevant form submission was processed.
- */
-function getSubmitMessage(aFilterFn = undefined) {
+function getSubmitMessage() {
   info("getSubmitMessage");
   return new Promise((resolve, reject) => {
     PWMGR_COMMON_PARENT.addMessageListener("formSubmissionProcessed", function processed(...args) {
-      if (aFilterFn && !aFilterFn(...args)) {
-        // This submission isn't the one we're waiting for.
-        return;
-      }
-
       info("got formSubmissionProcessed");
       PWMGR_COMMON_PARENT.removeMessageListener("formSubmissionProcessed", processed);
       resolve(...args);
@@ -159,64 +131,47 @@ function getSubmitMessage(aFilterFn = undefined) {
   });
 }
 
-function filterFormSubmissions(data) {
-  return data.newPasswordField.value != "ignore-form-submission";
-}
-
 add_task(async function test() {
   let loginFrame = document.getElementById("loginFrame");
 
   for (let tc of TESTCASES) {
     for (let scriptName of Object.keys(SCRIPTS)) {
-      for (let surroundDocumentWithForm of [false, true]) {
-        info("Starting testcase with script " + scriptName + " and " +
-             (surroundDocumentWithForm ? "a" : "no") + " form wrapper: " + JSON.stringify(tc));
+      info("Starting testcase with script " + scriptName + ": " + JSON.stringify(tc));
+      let loadedPromise = new Promise((resolve) => {
+        loginFrame.addEventListener("load", function() {
+          resolve();
+        }, {once: true});
+      });
+      loginFrame.src = DEFAULT_ORIGIN + "/tests/toolkit/components/passwordmgr/test/mochitest/blank.html";
+      await loadedPromise;
 
-        let loadedPromise = new Promise((resolve) => {
-          loginFrame.addEventListener("load", function() {
-            resolve();
-          }, {once: true});
-        });
-        loginFrame.src = DEFAULT_ORIGIN + "/tests/toolkit/components/passwordmgr/test/mochitest/blank.html";
-        await loadedPromise;
+      let frameDoc = SpecialPowers.wrap(loginFrame.contentWindow).document;
+      // eslint-disable-next-line no-unsanitized/property
+      frameDoc.documentElement.innerHTML = tc.document;
+      // Wait for the form to be processed before trying to submit.
+      await promiseFormsProcessed();
+      let processedPromise = getSubmitMessage();
+      info("Running " + scriptName + " script to cause a submission");
+      frameDoc.defaultView.eval(SCRIPTS[scriptName]);
 
-        let frameDoc = SpecialPowers.wrap(loginFrame.contentWindow).document;
-        let testDoc = tc.document;
-        if (surroundDocumentWithForm) {
-          if (testDoc.includes("<form")) {
-            info("Skipping surroundDocumentWithForm case since document already contains a <form>");
-            continue;
-          }
-          testDoc = "<form>" + testDoc + "</form>";
-        }
+      let submittedResult = await processedPromise;
 
-        // eslint-disable-next-line no-unsanitized/property
-        frameDoc.documentElement.innerHTML = testDoc;
-        // Wait for the form to be processed before trying to submit.
-        await promiseFormsProcessed();
-        let processedPromise = getSubmitMessage(filterFormSubmissions);
-        info("Running " + scriptName + " script to cause a submission");
-        frameDoc.defaultView.eval(SCRIPTS[scriptName]);
+      // Check data sent via PasswordManager:onFormSubmit
+      is(submittedResult.hostname, tc.hostname, "Check hostname");
+      is(submittedResult.formSubmitURL, tc.formSubmitURL, "Check formSubmitURL");
 
-        let submittedResult = await processedPromise;
+      if (tc.usernameFieldValue === null) {
+        is(submittedResult.usernameField, tc.usernameFieldValue, "Check usernameField");
+      } else {
+        is(submittedResult.usernameField.value, tc.usernameFieldValue, "Check usernameField");
+      }
 
-        // Check data sent via PasswordManager:onFormSubmit
-        is(submittedResult.hostname, tc.hostname, "Check hostname");
-        is(submittedResult.formSubmitURL, tc.formSubmitURL, "Check formSubmitURL");
+      is(submittedResult.newPasswordField.value, tc.newPasswordFieldValue, "Check newPasswordFieldValue");
 
-        if (tc.usernameFieldValue === null) {
-          is(submittedResult.usernameField, tc.usernameFieldValue, "Check usernameField");
-        } else {
-          is(submittedResult.usernameField.value, tc.usernameFieldValue, "Check usernameField");
-        }
-
-        is(submittedResult.newPasswordField.value, tc.newPasswordFieldValue, "Check newPasswordFieldValue");
-
-        if (tc.oldPasswordFieldValue === null) {
-          is(submittedResult.oldPasswordField, tc.oldPasswordFieldValue, "Check oldPasswordFieldValue");
-        } else {
-          is(submittedResult.oldPasswordField.value, tc.oldPasswordFieldValue, "Check oldPasswordFieldValue");
-        }
+      if (tc.oldPasswordFieldValue === null) {
+        is(submittedResult.oldPasswordField, tc.oldPasswordFieldValue, "Check oldPasswordFieldValue");
+      } else {
+        is(submittedResult.oldPasswordField.value, tc.oldPasswordFieldValue, "Check oldPasswordFieldValue");
       }
     }
   }

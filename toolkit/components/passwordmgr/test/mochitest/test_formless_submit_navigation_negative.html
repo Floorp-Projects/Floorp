@@ -56,8 +56,8 @@ const SCRIPTS = {
 const TESTCASES = [
   // Begin test cases that shouldn't trigger capture.
   {
-    // Empty password field in a form
-    document: `<form><input type=password value=""></form>`,
+    // For now we don't trigger upon navigation if <form> is used.
+    document: `<form><input type=password value="pass1"></form>`,
   },
   {
     // Empty password field
@@ -67,12 +67,6 @@ const TESTCASES = [
     // Test with an input that would normally be captured but with SCRIPTS that
     // shouldn't trigger capture.
     document: `<input type=password value="pass2">`,
-    wouldCapture: true,
-  },
-  {
-    // Test with an input that would normally be captured but with SCRIPTS that
-    // shouldn't trigger capture.
-    document: `<form><input type=password value="pass2"></form>`,
     wouldCapture: true,
   },
 ];
