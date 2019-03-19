@@ -125,9 +125,12 @@ class WorkerDetail extends PureComponent {
   render() {
     const { fetch, pushServiceEndpoint, scope, status } = this.props.target.details;
 
+    const isEmptyList = !pushServiceEndpoint && !fetch && !scope && !status;
+
     return dom.dl(
       {
-        className: "debug-target-item__detail worker-detail",
+        className: "debug-target-item__detail" +
+                   (isEmptyList ? " debug-target-item__detail--empty" : ""),
       },
       pushServiceEndpoint ? this.renderPushService() : null,
       fetch ? this.renderFetch() : null,

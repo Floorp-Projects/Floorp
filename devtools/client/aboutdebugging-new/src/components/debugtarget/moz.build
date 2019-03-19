@@ -19,6 +19,5 @@ DevToolsModules(
     'TemporaryExtensionAction.js',
     'TemporaryExtensionDetail.js',
     'TemporaryExtensionInstaller.js',
-    'WorkerDetail.css',
     'WorkerDetail.js',
 )
