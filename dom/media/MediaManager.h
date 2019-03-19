@@ -199,16 +199,14 @@ class MediaManager final : public nsIMediaManagerService,
   void RemoveFromWindowList(uint64_t aWindowID,
                             GetUserMediaWindowListener* aListener);
 
-  typedef dom::CallbackObjectHolder<dom::NavigatorUserMediaSuccessCallback,
-                                    nsIDOMGetUserMediaSuccessCallback>
-      GetUserMediaSuccessCallback;
-  typedef dom::CallbackObjectHolder<dom::NavigatorUserMediaErrorCallback,
-                                    nsIDOMGetUserMediaErrorCallback>
-      GetUserMediaErrorCallback;
+  typedef dom::NavigatorUserMediaSuccessCallback GetUserMediaSuccessCallback;
+  typedef dom::NavigatorUserMediaErrorCallback GetUserMediaErrorCallback;
 
-  static void CallOnError(const GetUserMediaErrorCallback* aCallback,
+  MOZ_CAN_RUN_SCRIPT
+  static void CallOnError(GetUserMediaErrorCallback& aCallback,
                           dom::MediaStreamError& aError);
-  static void CallOnSuccess(const GetUserMediaSuccessCallback* aCallback,
+  MOZ_CAN_RUN_SCRIPT
+  static void CallOnSuccess(GetUserMediaSuccessCallback& aCallback,
                             DOMMediaStream& aStream);
 
   typedef nsTArray<RefPtr<MediaDevice>> MediaDeviceSet;
@@ -227,6 +225,7 @@ class MediaManager final : public nsIMediaManagerService,
       const dom::MediaStreamConstraints& aConstraints,
       dom::CallerType aCallerType);
 
+  MOZ_CAN_RUN_SCRIPT
   nsresult GetUserMediaDevices(
       nsPIDOMWindowInner* aWindow,
       const dom::MediaStreamConstraints& aConstraints,
