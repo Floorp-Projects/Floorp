@@ -232,8 +232,12 @@ class SingleTestMixin(FetchesMixin):
         mozinfo.update({"e10s": e10s})
         headless = self.config.get('headless', False)
         mozinfo.update({"headless": headless})
-        # FIXME(emilio): Need to update test expectations.
-        mozinfo.update({'stylo': True})
+        if mozinfo.info['buildapp'] == 'mobile/android':
+            # extra android mozinfo normally comes from device queries, but this
+            # code may run before the device is ready, so rely on configuration
+            mozinfo.update({'android_version': self.config.get('android_version', 18)})
+            mozinfo.update({'is_fennec': self.config.get('is_fennec', True)})
+            mozinfo.update({'is_emulator': self.config.get('is_emulator', True)})
         mozinfo.update({'verify': True})
         self.info("Per-test run using mozinfo: %s" % str(mozinfo.info))
 
