@@ -949,6 +949,8 @@ template GCPtr<JSObject*>& CacheIRStubInfo::getStubField<ICStub>(
     ICStub* stub, uint32_t offset) const;
 template GCPtr<JSString*>& CacheIRStubInfo::getStubField<ICStub>(
     ICStub* stub, uint32_t offset) const;
+template GCPtr<JSFunction*>& CacheIRStubInfo::getStubField<ICStub>(
+    ICStub* stub, uint32_t offset) const;
 template GCPtr<JS::Symbol*>& CacheIRStubInfo::getStubField<ICStub>(
     ICStub* stub, uint32_t offset) const;
 template GCPtr<JS::Value>& CacheIRStubInfo::getStubField<ICStub>(
