@@ -148,6 +148,7 @@ add_task(async function setup() {
   NewTabPagePreloading.removePreloadedBrowser(window);
 
   await SpecialPowers.pushPrefEnv({"set": [
+    ["browser.newtab.preload", false],
     ["browser.startup.homepage", "about:home"],
     ["browser.startup.page", 1],
   ]});
