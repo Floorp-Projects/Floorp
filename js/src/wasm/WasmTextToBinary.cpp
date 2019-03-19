@@ -3701,6 +3701,9 @@ static AstDataOrElemDrop* ParseDataOrElemDrop(WasmParseContext& c,
                                               bool isData) {
   WasmToken segIndexTok;
   if (!c.ts.getIf(WasmToken::Index, &segIndexTok)) {
+    UniqueChars msg = JS_smprintf("expected %s segment reference",
+                                  isData ? "data" : "element");
+    c.ts.generateError(c.ts.peek(), msg.get(), c.error);
     return nullptr;
   }
 
@@ -3742,6 +3745,8 @@ static AstMemOrTableInit* ParseMemOrTableInit(WasmParseContext& c,
   WasmToken segIndexTok;
   if (isMem) {
     if (!c.ts.getIf(WasmToken::Index, &segIndexTok)) {
+      c.ts.generateError(c.ts.peek(), "expected data segment reference",
+                         c.error);
       return nullptr;
     }
     segIndex = segIndexTok.index();
