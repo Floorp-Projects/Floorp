@@ -127,7 +127,7 @@ class WorkerDetail extends PureComponent {
 
     return dom.dl(
       {
-        className: "worker-detail",
+        className: "debug-target-item__detail worker-detail",
       },
       pushServiceEndpoint ? this.renderPushService() : null,
       fetch ? this.renderFetch() : null,

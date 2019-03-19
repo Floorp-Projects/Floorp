@@ -35,12 +35,7 @@ class DebugTargetItem extends PureComponent {
 
   renderDetail() {
     const { detailComponent, target } = this.props;
-    return dom.div(
-      {
-        className: "debug-target-item__detail",
-      },
-      detailComponent({ target }),
-    );
+    return detailComponent({ target });
   }
 
   renderIcon() {
