@@ -33,12 +33,12 @@ async function assertDebugTargetCollapsed(paneEl, title) {
   info("Check debug target is collapsed");
 
   // check list height
-  const listEl = paneEl.querySelector(".js-debug-target-list");
-  is(listEl.clientHeight, 0, "Height of list element is zero");
+  const targetEl = paneEl.querySelector(".js-debug-target-pane__collapsable");
+  is(targetEl.clientHeight, 0, "Height of list element is zero");
   // check title
   const titleEl = paneEl.querySelector(".js-debug-target-pane-title");
   const expectedTitle =
-    `${ title } (${ listEl.querySelectorAll(".js-debug-target-item").length })`;
+    `${ title } (${ targetEl.querySelectorAll(".js-debug-target-item").length })`;
   is(titleEl.textContent, expectedTitle, "Collapsed title is correct");
 }
 
@@ -46,12 +46,12 @@ async function assertDebugTargetExpanded(paneEl, title) {
   info("Check debug target is expanded");
 
   // check list height
-  const listEl = paneEl.querySelector(".js-debug-target-list");
-  await waitUntil(() => listEl.clientHeight > 0);
+  const targetEl = paneEl.querySelector(".js-debug-target-pane__collapsable");
+  await waitUntil(() => targetEl.clientHeight > 0);
   ok(true, "Height of list element is greater than zero");
   // check title
   const titleEl = paneEl.querySelector(".js-debug-target-pane-title");
   const expectedTitle =
-    `${ title } (${ listEl.querySelectorAll(".js-debug-target-item").length })`;
+    `${ title } (${ targetEl.querySelectorAll(".js-debug-target-item").length })`;
   is(titleEl.textContent, expectedTitle, "Expanded title is correct");
 }
