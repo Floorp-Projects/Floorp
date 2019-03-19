@@ -377,20 +377,6 @@ version = "1.0.23"
 source = "git+https://github.com/glandium/cc-rs?branch=1.0.23-clang-cl-aarch64#2aa71628b1261b5515bd8668afca591669ba195d"
 
 [[package]]
-name = "cert_storage"
-version = "0.0.1"
-dependencies = [
- "base64 0.10.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "nserror 0.1.0",
- "nsstring 0.1.0",
- "rkv 0.9.3 (registry+https://github.com/rust-lang/crates.io-index)",
- "sha2 0.7.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "style 0.0.1",
- "time 0.1.40 (registry+https://github.com/rust-lang/crates.io-index)",
- "xpcom 0.1.0",
-]
-
-[[package]]
 name = "cexpr"
 version = "0.3.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1141,7 +1127,6 @@ dependencies = [
  "arrayvec 0.4.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "audioipc-client 0.4.0",
  "audioipc-server 0.2.3",
- "cert_storage 0.0.1",
  "cose-c 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "cubeb-pulse 0.2.0",
  "cubeb-sys 0.5.4 (registry+https://github.com/rust-lang/crates.io-index)",

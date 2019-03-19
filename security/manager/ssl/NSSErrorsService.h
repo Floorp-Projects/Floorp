@@ -8,8 +8,6 @@
 #include "nsINSSErrorsService.h"
 #include "mozilla/Attributes.h"
 #include "nsCOMPtr.h"
-#include "nsILineInputStream.h"
-#include "nsISafeOutputStream.h"
 #include "nsIStringBundle.h"
 #include "prerror.h"
 
