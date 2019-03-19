@@ -57,7 +57,7 @@ class nsJSScriptTimeoutHandler final : public nsIScriptTimeoutHandler {
 
   virtual const nsTArray<JS::Value>& GetArgs() override { return mArgs; }
 
-  virtual nsresult Call() override { return NS_OK; }
+  virtual void Call() override {}
 
   virtual void GetLocation(const char** aFileName, uint32_t* aLineNo,
                            uint32_t* aColumn) override {

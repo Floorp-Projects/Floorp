@@ -556,7 +556,6 @@ dictionary IdleRequestOptions {
   unsigned long timeout;
 };
 
-[MOZ_CAN_RUN_SCRIPT_BOUNDARY]
 callback IdleRequestCallback = void (IdleDeadline deadline);
 
 partial interface Window {

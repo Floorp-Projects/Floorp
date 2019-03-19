@@ -7,6 +7,7 @@
 #define nsITimeoutHandler_h___
 
 #include "nsISupports.h"
+#include "mozilla/Attributes.h"
 
 #define NS_ITIMEOUTHANDLER_IID                       \
   {                                                  \
@@ -19,7 +20,7 @@ class nsITimeoutHandler : public nsISupports {
  public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ITIMEOUTHANDLER_IID)
 
-  virtual nsresult Call() = 0;
+  MOZ_CAN_RUN_SCRIPT virtual void Call() = 0;
 
   virtual void GetLocation(const char** aFileName, uint32_t* aLineNo,
                            uint32_t* aColumn) = 0;
