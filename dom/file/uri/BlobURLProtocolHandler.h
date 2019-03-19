@@ -39,6 +39,9 @@ class BlobURLProtocolHandler final : public nsIProtocolHandler,
 
   BlobURLProtocolHandler();
 
+  static nsresult CreateNewURI(const nsACString& aSpec, const char* aCharset,
+                               nsIURI* aBaseURI, nsIURI** result);
+
   // Methods for managing uri->object mapping
   // AddDataEntry creates the URI with the given scheme and returns it in aUri
   static nsresult AddDataEntry(mozilla::dom::BlobImpl* aBlobImpl,
