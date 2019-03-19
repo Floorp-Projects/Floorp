@@ -18,6 +18,7 @@
 #include "js/GCHashTable.h"
 #include "js/UniquePtr.h"
 #include "js/Vector.h"
+#include "vm/JSObject.h"
 #include "vm/StringType.h"
 
 namespace js {
@@ -306,11 +307,11 @@ enum TypeCode {
 // Descriptor of one field in a StructType. The name of the field is stored
 // as the key to the hash entry.
 struct FieldInfo {
-  JS::Heap<JSObject*> mType;  // CType of the field
+  HeapPtr<JSObject*> mType;   // CType of the field
   size_t mIndex;              // index of the field in the struct (first is 0)
   size_t mOffset;             // offset of the field in the struct, in bytes
 
-  void trace(JSTracer* trc) { JS::TraceEdge(trc, &mType, "fieldType"); }
+  void trace(JSTracer* trc) { TraceEdge(trc, &mType, "fieldType"); }
 };
 
 struct UnbarrieredFieldInfo {
@@ -368,14 +369,14 @@ struct FunctionInfo {
 
   // Calling convention of the function. Convert to ffi_abi using GetABI
   // and ObjectValue. Stored as a JSObject* for ease of tracing.
-  JS::Heap<JSObject*> mABI;
+  HeapPtr<JSObject*> mABI;
 
   // The CType of the value returned by the function.
-  JS::Heap<JSObject*> mReturnType;
+  HeapPtr<JSObject*> mReturnType;
 
   // A fixed array of known parameter types, excluding any variadic
   // parameters (if mIsVariadic).
-  Vector<JS::Heap<JSObject*>, 0, SystemAllocPolicy> mArgTypes;
+  GCVector<HeapPtr<JSObject*>, 0, SystemAllocPolicy> mArgTypes;
 
   // A variable array of ffi_type*s corresponding to both known parameter
   // types and dynamic (variadic) parameter types. Longer than mArgTypes
@@ -390,10 +391,10 @@ struct FunctionInfo {
 // Parameters necessary for invoking a JS function from a C closure.
 struct ClosureInfo {
   JSContext* cx;
-  JS::Heap<JSObject*> closureObj;  // CClosure object
-  JS::Heap<JSObject*> typeObj;     // FunctionType describing the C function
-  JS::Heap<JSObject*> thisObj;  // 'this' object to use for the JS function call
-  JS::Heap<JSObject*> jsfnObj;  // JS function
+  HeapPtr<JSObject*> closureObj;  // CClosure object
+  HeapPtr<JSObject*> typeObj;     // FunctionType describing the C function
+  HeapPtr<JSObject*> thisObj;  // 'this' object to use for the JS function call
+  HeapPtr<JSObject*> jsfnObj;  // JS function
   void* errResult;       // Result that will be returned if the closure throws
   ffi_closure* closure;  // The C closure itself
 

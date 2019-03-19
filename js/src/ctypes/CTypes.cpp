@@ -4434,11 +4434,9 @@ void CType::Trace(JSTracer* trc, JSObject* obj) {
       MOZ_ASSERT(fninfo);
 
       // Identify our objects to the tracer.
-      JS::TraceEdge(trc, &fninfo->mABI, "abi");
-      JS::TraceEdge(trc, &fninfo->mReturnType, "returnType");
-      for (auto& argType : fninfo->mArgTypes) {
-        JS::TraceEdge(trc, &argType, "argType");
-      }
+      TraceEdge(trc, &fninfo->mABI, "abi");
+      TraceEdge(trc, &fninfo->mReturnType, "returnType");
+      fninfo->mArgTypes.trace(trc);
 
       break;
     }
@@ -7228,13 +7226,10 @@ void CClosure::Trace(JSTracer* trc, JSObject* obj) {
 
   ClosureInfo* cinfo = static_cast<ClosureInfo*>(slot.toPrivate());
 
-  // Identify our objects to the tracer. (There's no need to identify
-  // 'closureObj', since that's us.)
-  JS::TraceEdge(trc, &cinfo->typeObj, "typeObj");
-  JS::TraceEdge(trc, &cinfo->jsfnObj, "jsfnObj");
-  if (cinfo->thisObj) {
-    JS::TraceEdge(trc, &cinfo->thisObj, "thisObj");
-  }
+  TraceEdge(trc, &cinfo->closureObj, "closureObj");
+  TraceEdge(trc, &cinfo->typeObj, "typeObj");
+  TraceEdge(trc, &cinfo->jsfnObj, "jsfnObj");
+  TraceNullableEdge(trc, &cinfo->thisObj, "thisObj");
 }
 
 void CClosure::Finalize(JSFreeOp* fop, JSObject* obj) {
