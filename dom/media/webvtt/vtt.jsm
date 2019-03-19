@@ -898,7 +898,11 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
     }
   }
 
-  function adjustBoxPosition(styleBox, containerBox, controlBarBox) {
+  BoxPosition.prototype.clone = function(){
+    return new BoxPosition(this);
+  };
+
+  function adjustBoxPosition(styleBox, containerBox, controlBarBox, outputBoxes) {
     const cue = styleBox.cue;
     const isWritingDirectionHorizontal = cue.vertical == "";
     let box = new BoxPosition(styleBox);
@@ -920,25 +924,36 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
         return;
       }
 
+      // spec 7.2.10.4 ~ 7.2.10.6
       let line = Math.floor(cue.computedLine + 0.5);
       if (cue.vertical == "rl") {
         line = -1 * (line + 1);
       }
 
+      // spec 7.2.10.7 ~ 7.2.10.8
       let position = step * line;
       if (cue.vertical == "rl") {
         position = position - box.width + step;
       }
 
+      // spec 7.2.10.9
       if (line < 0) {
         position += fullDimension;
         step = -1 * step;
       }
 
-      if (isWritingDirectionHorizontal) {
-        box.top += position;
-      } else {
-        box.left += position;
+      // spec 7.2.10.10, move the box to the specific position along the direction.
+      const movingDirection = isWritingDirectionHorizontal ? "+y" : "+x";
+      box.move(movingDirection, position);
+
+      // spec 7.2.10.11, remember the position as specified position.
+      let specifiedPosition = box.clone();
+
+      // spec 7.2.10.12, let title area be a box that covers all of the video’s
+      // rendering area.
+      const titleAreaBox = containerBox.clone();
+      if (controlBarBox) {
+        titleAreaBox.height -= controlBarBox.height;
       }
 
       function isBoxOutsideTheRenderingArea() {
@@ -955,46 +970,89 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
                step > 0 && box.right > fullDimension;
       }
 
-      // TODO : implement checking if current box is overlapping with any other
-      // boxes in output. 7.2.10.13
-
-      // 7.2.10.14 ~ 7.2.10.21, if the box is outside the rendering area, we
-      // should switch the direction.
-      if (isBoxOutsideTheRenderingArea()) {
-        step = -1 * step;
-        if (isWritingDirectionHorizontal) {
-          box.top += step;
-        } else {
-          box.left += step;
+      // spec 7.2.10.13, if none of the boxes in boxes would overlap any of the
+      // boxes in output, and all of the boxes in boxes are entirely within the
+      // title area box.
+      let switched = false;
+      while (!box.within(titleAreaBox) || box.overlapsAny(outputBoxes)) {
+        // spec 7.2.10.14, check if we need to switch the direction.
+        if (isBoxOutsideTheRenderingArea()) {
+          // spec 7.2.10.17, if `switched` is true, remove all the boxes in
+          // `boxes`, which means we shouldn't apply any CSS boxes for this cue.
+          // Therefore, returns null box.
+          if (switched) {
+            return null;
+          }
+          // spec 7.2.10.18 ~ 7.2.10.20
+          switched = true;
+          box = specifiedPosition.clone();
+          step = -1 * step;
         }
+        // spec 7.2.10.15, moving box along the specific direction.
+        box.move(movingDirection, step);
+      }
+
+      if (isWritingDirectionHorizontal) {
+        styleBox.applyStyles({
+          top: getPercentagePosition(box.top, fullDimension),
+        });
+      } else {
+        styleBox.applyStyles({
+          left: getPercentagePosition(box.left, fullDimension),
+        });
       }
     } else {
+      // (snap-to-lines if false) spec 7.2.10.1 ~ 7.2.10.2
       if (cue.lineAlign != "start") {
         const isCenterAlign = cue.lineAlign == "center";
+        const movingDirection = isWritingDirectionHorizontal ? "-y" : "-x";
         if (isWritingDirectionHorizontal) {
-          box.top += isCenterAlign ? box.height : box.height / 2;
+          box.move(movingDirection, isCenterAlign ? box.height : box.height / 2);
         } else {
-          box.left += isCenterAlign ? box.width : box.width / 2;
+          box.move(movingDirection, isCenterAlign ? box.width : box.width / 2);
         }
       }
-      // TODO : implement finding the best position, 7.2.10.4
+
+      // spec 7.2.10.3
+      let bestPosition = {},
+          specifiedPosition = box.clone(),
+          outsideAreaPercentage = 1; // Highest possible so the first thing we get is better.
+      let hasFoundBestPosition = false;
+      const axis = ["-y", "-x", "+x", "+y"];
+      const toMove = parseFloat(styleBox.fontSize.replace("px", ""));
+      for (let i = 0; i < axis.length && !hasFoundBestPosition; i++) {
+        while (box.overlapsOppositeAxis(containerBox, axis[i]) ||
+               (!box.within(containerBox) || box.overlapsAny(outputBoxes))) {
+          box.move(axis[i], toMove);
+        }
+        // We found a spot where we aren't overlapping anything. This is our
+        // best position.
+        if (box.within(containerBox)) {
+          bestPosition = box.clone();
+          hasFoundBestPosition = true;
+          break;
+        }
+        let p = box.intersectPercentage(containerBox);
+        // If we're outside the container box less then we were on our last try
+        // then remember this position as the best position.
+        if (outsideAreaPercentage > p) {
+          bestPosition = box.clone();
+          outsideAreaPercentage = p;
+        }
+        // Reset the box position to the specified position.
+        box = specifiedPosition.clone();
+      }
+
+      styleBox.applyStyles({
+        top: getPercentagePosition(box.top, fullDimension),
+        left: getPercentagePosition(box.left, fullDimension),
+      });
     }
 
     // In order to not be affected by CSS scale, so we use '%' to make sure the
     // cue can stick in the right position.
     function getPercentagePosition(position, fullDimension) {
       return (position / fullDimension) * 100 + "%";
-    }
-    if (isWritingDirectionHorizontal) {
-      // Avoid to overlap the cue with the video control.
-      const controlOffset = controlBarBox ? controlBarBox.height : 0;
-      styleBox.applyStyles({
-        top: getPercentagePosition(box.top - controlOffset, fullDimension),
-      });
-    } else {
-      styleBox.applyStyles({
-        left: getPercentagePosition(box.left, fullDimension),
-      });
     }
 
     return box;
@@ -1270,14 +1328,16 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
           styleBox = new CueStyleBox(window, cue, containerBox);
           rootOfCues.appendChild(styleBox.div);
 
-          // Move the cue to correct position.
-          let cueBox = adjustBoxPosition(styleBox, containerBox, controlBarBox);
-
-          // Remember the computed div so that we don't have to recompute it later
-          // if we don't have too.
-          cue.displayState = styleBox.div;
-
-          boxPositions.push(cueBox);
+          // Move the cue to correct position, we might get the null box if the
+          // result of algorithm doesn't want us to show the cue when we don't
+          // have any room for this cue.
+          let cueBox = adjustBoxPosition(styleBox, containerBox, controlBarBox, boxPositions);
+          if (cueBox) {
+            // Remember the computed div so that we don't have to recompute it later
+            // if we don't have too.
+            cue.displayState = styleBox.div;
+            boxPositions.push(cueBox);
+          }
         }
       }
     })();
