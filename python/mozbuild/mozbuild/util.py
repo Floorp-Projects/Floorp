@@ -834,9 +834,9 @@ class LockFile(object):
                     # (but we need to let some other process close the file
                     # first).
                     time.sleep(0.1)
-            else:
-                # Re-raise unknown errors
-                raise
+                else:
+                    # Re-raise unknown errors
+                    raise
 
 
 def lock_file(lockfile, max_wait = 600):
