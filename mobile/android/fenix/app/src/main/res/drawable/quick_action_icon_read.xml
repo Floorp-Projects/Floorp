@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+    <!-- This Source Code Form is subject to the terms of the Mozilla Public
+       - License, v. 2.0. If a copy of the MPL was not distributed with this
+       - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+<item>
+  <shape android:shape="oval">
+    <size
+        android:width="40dp"
+        android:height="40dp" />
+    <solid android:color="@color/quick_action_read_icon_background" />
+  </shape>
+</item>
+<item
+    android:bottom="8dp"
+    android:left="8dp"
+    android:right="8dp"
+    android:top="8dp">
+  <vector
+          android:width="24dp"
+          android:height="24dp"
+          android:viewportWidth="24"
+          android:viewportHeight="24">
+    <path
+        android:fillColor="@color/quick_action_read_icon"
+        android:pathData="M15,7L9,7a0.5,0.5 0,0 0,-0.5 0.5,0.5 0.5,0 0,0 0.5,0.5h6a0.5,0.5 0,0 0,0 -1zM15,10L9,10a0.5,0.5 0,0 0,0 1h6a0.5,0.5 0,0 0,0 -1zM15,13L9,13a0.5,0.5 0,0 0,0 1h6a0.5,0.5 0,0 0,0 -1zM11.57,16L9,16a0.5,0.5 0,0 0,0 1h2.57a0.5,0.5 0,0 0,0 -1zM16.69,3L7.31,3A3.31,3.31 0,0 0,4 6.31v11.38A3.31,3.31 0,0 0,7.31 21h9.38A3.31,3.31 0,0 0,20 17.69L20,6.31A3.31,3.31 0,0 0,16.69 3zM18,17.69A1.31,1.31 0,0 1,16.69 19L7.31,19A1.31,1.31 0,0 1,6 17.69L6,6.31A1.31,1.31 0,0 1,7.31 5h9.38A1.31,1.31 0,0 1,18 6.31z"/>
+  </vector>
+</item>
+</layer-list>

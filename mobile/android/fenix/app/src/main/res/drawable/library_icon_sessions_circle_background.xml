@@ -6,8 +6,8 @@
     <item>
         <shape android:shape="oval">
             <size
-                android:width="48dp"
-                android:height="48dp" />
+                android:width="40dp"
+                android:height="40dp" />
             <solid android:color="@color/library_sessions_icon_background" />
         </shape>
     </item>

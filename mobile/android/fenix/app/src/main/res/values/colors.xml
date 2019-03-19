@@ -79,4 +79,10 @@
 
     <color name="crash_page_accent">#45a1ff</color>
     <color name="crash_page_off_accent">@color/photonGrey30</color>
+
+    <color name="quick_action_share_icon">#174291</color>
+    <color name="quick_action_share_icon_background">#b9f0fd</color>
+
+    <color name="quick_action_read_icon">#8a201f</color>
+    <color name="quick_action_read_icon_background">#fce98f</color>
 </resources>
