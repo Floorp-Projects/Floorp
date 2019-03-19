@@ -20,7 +20,7 @@ private object Versions {
     const val androidx_annotation = "1.1.0-alpha02"
     const val androidx_lifecycle = "2.1.0-alpha03"
     const val androidx_fragment = "1.1.0-alpha05"
-    const val androidx_navigation = "2.0.0"
+    const val androidx_navigation = "2.1.0-alpha01"
 
     const val appservices_gradle_plugin = "0.3.1"
     const val mozilla_android_components = "0.47.0-SNAPSHOT"
