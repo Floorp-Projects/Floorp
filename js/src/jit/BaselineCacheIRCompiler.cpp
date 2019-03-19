@@ -65,6 +65,9 @@ class MOZ_RAII BaselineCacheIRCompiler : public CacheIRCompiler {
   void pushCallArguments(Register argcReg, Register scratch, bool isJitCall,
                          bool isConstructing);
 
+  enum class NativeCallType { Native, ClassHook };
+  bool emitCallNativeShared(NativeCallType callType);
+
  public:
   friend class AutoStubFrame;
 
@@ -87,7 +90,6 @@ class MOZ_RAII BaselineCacheIRCompiler : public CacheIRCompiler {
 #define DEFINE_OP(op, ...) MOZ_MUST_USE bool emit##op();
   CACHE_IR_OPS(DEFINE_OP)
 #undef DEFINE_OP
-
   Address stubAddress(uint32_t offset) const {
     return Address(ICStubReg, stubDataOffset_ + offset);
   }
@@ -2488,13 +2490,13 @@ void BaselineCacheIRCompiler::pushCallArguments(Register argcReg,
   masm.bind(&done);
 }
 
-bool BaselineCacheIRCompiler::emitCallNativeFunction() {
+bool BaselineCacheIRCompiler::emitCallNativeShared(NativeCallType callType) {
   AutoOutputRegister output(*this);
   AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
 
   Register calleeReg = allocator.useRegister(masm, reader.objOperandId());
   Register argcReg = allocator.useRegister(masm, reader.int32OperandId());
-  bool isCrossRealm = reader.readBool();
+  bool maybeCrossRealm = reader.readBool();
 
   // TODO: support constructors
   bool isConstructing = false;
@@ -2506,7 +2508,7 @@ bool BaselineCacheIRCompiler::emitCallNativeFunction() {
   AutoStubFrame stubFrame(*this);
   stubFrame.enter(masm, scratch);
 
-  if (isCrossRealm) {
+  if (maybeCrossRealm) {
     masm.switchToObjectRealm(calleeReg, scratch);
   }
 
@@ -2543,23 +2545,32 @@ bool BaselineCacheIRCompiler::emitCallNativeFunction() {
   masm.passABIArg(argcReg);
   masm.passABIArg(scratch2);
 
+  switch (callType) {
+    case NativeCallType::Native: {
 #ifdef JS_SIMULATOR
-  // The simulator requires VM calls to be redirected to a special
-  // swi instruction to handle them, so we store the redirected
-  // pointer in the stub and use that instead of the original one.
-  // (See CacheIRWriter::callNativeFunction.)
-  Address redirectedAddr(stubAddress(reader.stubOffset()));
-  masm.callWithABI(redirectedAddr);
+      // The simulator requires VM calls to be redirected to a special
+      // swi instruction to handle them, so we store the redirected
+      // pointer in the stub and use that instead of the original one.
+      // (See CacheIRWriter::callNativeFunction.)
+      Address redirectedAddr(stubAddress(reader.stubOffset()));
+      masm.callWithABI(redirectedAddr);
 #else
-  bool ignoresReturnValue = reader.readBool();
-  if (ignoresReturnValue) {
-    masm.loadPtr(Address(calleeReg, JSFunction::offsetOfJitInfo()), calleeReg);
-    masm.callWithABI(
-        Address(calleeReg, JSJitInfo::offsetOfIgnoresReturnValueNative()));
-  } else {
-    masm.callWithABI(Address(calleeReg, JSFunction::offsetOfNative()));
-  }
+      bool ignoresReturnValue = reader.readBool();
+      if (ignoresReturnValue) {
+        masm.loadPtr(Address(calleeReg, JSFunction::offsetOfJitInfo()),
+                     calleeReg);
+        masm.callWithABI(
+            Address(calleeReg, JSJitInfo::offsetOfIgnoresReturnValueNative()));
+      } else {
+        masm.callWithABI(Address(calleeReg, JSFunction::offsetOfNative()));
+      }
 #endif
+    } break;
+    case NativeCallType::ClassHook: {
+      Address nativeAddr(stubAddress(reader.stubOffset()));
+      masm.callWithABI(nativeAddr);
+    } break;
+  }
 
   // Test for failure.
   masm.branchIfFalseBool(ReturnReg, masm.exceptionLabel());
@@ -2571,12 +2582,23 @@ bool BaselineCacheIRCompiler::emitCallNativeFunction() {
 
   stubFrame.leave(masm);
 
-  if (isCrossRealm) {
+  if (maybeCrossRealm) {
     masm.switchToBaselineFrameRealm(scratch2);
   }
 
   return true;
 }
+
+bool BaselineCacheIRCompiler::emitCallNativeFunction() {
+  JitSpew(JitSpew_Codegen, __FUNCTION__);
+  return emitCallNativeShared(NativeCallType::Native);
+}
+
+bool BaselineCacheIRCompiler::emitCallClassHook() {
+  JitSpew(JitSpew_Codegen, __FUNCTION__);
+  return emitCallNativeShared(NativeCallType::ClassHook);
+}
+
 bool BaselineCacheIRCompiler::emitCallScriptedFunction() {
   JitSpew(JitSpew_Codegen, __FUNCTION__);
   AutoOutputRegister output(*this);

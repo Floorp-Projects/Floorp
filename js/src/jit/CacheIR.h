@@ -294,6 +294,7 @@ extern const uint32_t OpLengths[];
   _(CallNumberToString, Id, Id)                                                \
   _(CallScriptedFunction, Id, Id, Byte)                                        \
   _(CallNativeFunction, Id, Id, Byte, IF_SIMULATOR(Field, Byte))               \
+  _(CallClassHook, Id, Id, Byte, Field)                                        \
                                                                                \
   /* The *Result ops load a value into the cache's result register. */         \
   _(LoadFixedSlotResult, Id, Field)                                            \
@@ -1160,6 +1161,23 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     // to find the ignoresReturnValue version of a native function.
     buffer_.writeByte(ignoresReturnValue);
 #endif
+  }
+
+  void callClassHook(ObjOperandId calleeId, Int32OperandId argc,
+                     JSNative hook) {
+    writeOpWithOperandId(CacheOp::CallClassHook, calleeId);
+    writeOperandId(argc);
+    buffer_.writeByte(true);  // may be cross-realm
+    void* target = JS_FUNC_TO_DATA_PTR(void*, hook);
+
+#ifdef JS_SIMULATOR
+    // The simulator requires VM calls to be redirected to a special
+    // swi instruction to handle them, so we store the redirected
+    // pointer in the stub and use that instead of the original one.
+    target = Simulator::RedirectNativeFunction(target, Args_General3);
+#endif
+
+    addStubField(uintptr_t(target), StubField::Type::RawWord);
   }
 
   void megamorphicLoadSlotResult(ObjOperandId obj, PropertyName* name,
@@ -2053,6 +2071,7 @@ class MOZ_RAII CallIRGenerator : public IRGenerator {
   bool tryAttachCallScripted(HandleFunction calleeFunc);
   bool tryAttachSpecialCaseCallNative(HandleFunction calleeFunc);
   bool tryAttachCallNative(HandleFunction calleeFunc);
+  bool tryAttachCallHook(HandleObject calleeObj);
 
   void trackAttached(const char* name);
 
