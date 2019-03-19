@@ -61,7 +61,7 @@ enum {
   eDefaultFont_COUNT
 };
 
-void LangGroupFontPrefs::Initialize(nsAtom* aLangGroupAtom) {
+void LangGroupFontPrefs::Initialize(nsStaticAtom* aLangGroupAtom) {
   mLangGroup = aLangGroupAtom;
 
   /* Fetch the font prefs to be used -- see bug 61883 for details.
@@ -214,45 +214,39 @@ void LangGroupFontPrefs::Initialize(nsAtom* aLangGroupAtom) {
   }
 }
 
-nsAtom* StaticPresData::GetLangGroup(nsAtom* aLanguage,
-                                     bool* aNeedsToCache) const {
-  nsAtom* langGroupAtom = nullptr;
-  langGroupAtom = mLangService->GetLanguageGroup(aLanguage, aNeedsToCache);
-  if (!langGroupAtom) {
-    langGroupAtom = nsGkAtoms::x_western;  // Assume x-western is safe...
-  }
-  return langGroupAtom;
+nsStaticAtom* StaticPresData::GetLangGroup(nsAtom* aLanguage,
+                                           bool* aNeedsToCache) const {
+  nsStaticAtom* langGroupAtom =
+      mLangService->GetLanguageGroup(aLanguage, aNeedsToCache);
+  // Assume x-western is safe...
+  return langGroupAtom ? langGroupAtom : nsGkAtoms::x_western;
 }
 
-already_AddRefed<nsAtom> StaticPresData::GetUncachedLangGroup(
-    nsAtom* aLanguage) const {
-  RefPtr<nsAtom> langGroupAtom =
+nsStaticAtom* StaticPresData::GetUncachedLangGroup(nsAtom* aLanguage) const {
+  nsStaticAtom* langGroupAtom =
       mLangService->GetUncachedLanguageGroup(aLanguage);
-  if (!langGroupAtom) {
-    langGroupAtom = nsGkAtoms::x_western;  // Assume x-western is safe...
-  }
-  return langGroupAtom.forget();
+  return langGroupAtom ? langGroupAtom : nsGkAtoms::x_western;
 }
 
-const LangGroupFontPrefs* StaticPresData::GetFontPrefsForLangHelper(
-    nsAtom* aLanguage, const LangGroupFontPrefs* aPrefs,
-    bool* aNeedsToCache) const {
+const LangGroupFontPrefs* StaticPresData::GetFontPrefsForLang(
+    nsAtom* aLanguage, bool* aNeedsToCache) {
   // Get language group for aLanguage:
   MOZ_ASSERT(aLanguage);
   MOZ_ASSERT(mLangService);
-  MOZ_ASSERT(aPrefs);
 
-  nsAtom* langGroupAtom = GetLangGroup(aLanguage, aNeedsToCache);
-
+  nsStaticAtom* langGroupAtom = GetLangGroup(aLanguage, aNeedsToCache);
   if (aNeedsToCache && *aNeedsToCache) {
     return nullptr;
   }
 
-  LangGroupFontPrefs* prefs = const_cast<LangGroupFontPrefs*>(aPrefs);
+  if (!aNeedsToCache) {
+    AssertIsMainThreadOrServoFontMetricsLocked();
+  }
+
+  LangGroupFontPrefs* prefs = &mLangGroupFontPrefs;
   if (prefs->mLangGroup) {  // if initialized
     DebugOnly<uint32_t> count = 0;
     for (;;) {
-      NS_ASSERTION(++count < 35, "Lang group count exceeded!!!");
       if (prefs->mLangGroup == langGroupAtom) {
         return prefs;
       }
@@ -265,7 +259,6 @@ const LangGroupFontPrefs* StaticPresData::GetFontPrefsForLangHelper(
       *aNeedsToCache = true;
       return nullptr;
     }
-    AssertIsMainThreadOrServoFontMetricsLocked();
     // nothing cached, so go on and fetch the prefs for this lang group:
     prefs->mNext = MakeUnique<LangGroupFontPrefs>();
     prefs = prefs->mNext.get();
