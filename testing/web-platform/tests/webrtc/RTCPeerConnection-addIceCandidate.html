@@ -110,20 +110,6 @@ a=rtcp-rsize
       `Expect candidate line to be found after media line ${beforeMediaLine}`);
   }
 
-  // Reject because WebIDL for addIceCandidate does not allow null argument
-  // null can be accidentally passed from onicecandidate event handler
-  // when null is used to indicate end of candidate
-  promise_test(t => {
-    const pc = new RTCPeerConnection();
-
-    t.add_cleanup(() => pc.close());
-
-    return pc.setRemoteDescription(sessionDesc)
-    .then(() =>
-      promise_rejects(t, new TypeError(),
-        pc.addIceCandidate(null)));
-  }, 'Add null candidate should reject with TypeError');
-
   /*
     4.4.2.  addIceCandidate
       4.  Return the result of enqueuing the following steps:
@@ -147,6 +133,54 @@ a=rtcp-rsize
   /*
     Success cases
    */
+  // The RTCIceCandidateInit arg to addIceCandidate is optional, and is converted
+  // to the default RTCIceCandidateInit. Then, because the default candidate is
+  // "", addIceCandidate will allow both sdpMid and sdpMLineIndex to be absent.
+  promise_test(async t => {
+    const pc = new RTCPeerConnection();
+
+    t.add_cleanup(() => pc.close());
+
+    await pc.setRemoteDescription(sessionDesc);
+    await pc.addIceCandidate();
+  }, 'addIceCandidate() should work');
+
+  // The RTCIceCandidateInit arg to addIceCandidate is optional, and not
+  // nullable, so null is converted to the default RTCIceCandidateInit. Then,
+  // because the default candidate is "", addIceCandidate will allow both
+  // sdpMid and sdpMLineIndex to be absent.
+  promise_test(async t => {
+    const pc = new RTCPeerConnection();
+
+    t.add_cleanup(() => pc.close());
+
+    await pc.setRemoteDescription(sessionDesc);
+    await pc.addIceCandidate(null);
+  }, 'Add null candidate should work');
+
+  promise_test(async t => {
+    const pc = new RTCPeerConnection();
+
+    t.add_cleanup(() => pc.close());
+
+    await pc.setRemoteDescription(sessionDesc);
+    await pc.addIceCandidate({});
+  }, 'Add candidate with empty dict should work');
+
+  promise_test(async t => {
+    const pc = new RTCPeerConnection();
+
+    t.add_cleanup(() => pc.close());
+
+    await pc.setRemoteDescription(sessionDesc);
+    await pc.addIceCandidate({
+          candidate: '',
+          sdpMid: null,
+          sdpMLineIndex: null,
+          usernameFragment: undefined
+    });
+  }, 'Add candidate with manually filled default values should work');
+
   promise_test(t => {
     const pc = new RTCPeerConnection();
 
@@ -377,33 +411,6 @@ a=rtcp-rsize
           sdpMLineIndex: null
         })));
   }, 'Add candidate with invalid candidate string and both sdpMid and sdpMLineIndex null should reject with TypeError');
-
-  promise_test(t => {
-    const pc = new RTCPeerConnection();
-
-    t.add_cleanup(() => pc.close());
-
-    return pc.setRemoteDescription(sessionDesc)
-    .then(() =>
-      promise_rejects(t, new TypeError(),
-        pc.addIceCandidate({})));
-  }, 'Add candidate with empty dict should reject with TypeError');
-
-  promise_test(t => {
-    const pc = new RTCPeerConnection();
-
-    t.add_cleanup(() => pc.close());
-
-    return pc.setRemoteDescription(sessionDesc)
-    .then(() =>
-      promise_rejects(t, new TypeError(),
-        pc.addIceCandidate({
-          candidate: '',
-          sdpMid: null,
-          sdpMLineIndex: null,
-          usernameFragment: undefined
-        })));
-  }, 'Add candidate with manually filled default values should reject with TypeError');
 
   /*
     4.4.2.  addIceCandidate
