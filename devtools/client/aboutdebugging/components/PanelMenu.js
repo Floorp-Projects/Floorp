@@ -28,6 +28,7 @@ class PanelMenu extends Component {
     const panelLinks = panels.map(({ id, name, icon }) => {
       const selected = id == selectedPanelId;
       return PanelMenuEntry({
+        key: id,
         id,
         name,
         icon,

@@ -283,7 +283,7 @@ class Accessible extends Component {
         className: classList.join(" "),
         style: {
           paddingInlineStart: depthPadding,
-          "inline-size":
+          inlineSize:
             `calc(var(--accessibility-properties-item-width) - ${depthPadding}px)`,
         },
         onClick: e => {

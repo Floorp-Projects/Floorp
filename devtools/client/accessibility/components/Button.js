@@ -44,7 +44,8 @@ class Button extends Component {
     ].join(" ");
     const props = Object.assign({}, this.props, {
       className,
-      "aria-busy": this.props.busy,
+      "aria-busy": this.props.busy.toString(),
+      busy: this.props.busy.toString(),
     });
 
     const classList = ["btn-content"];

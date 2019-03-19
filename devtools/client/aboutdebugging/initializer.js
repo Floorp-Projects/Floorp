@@ -42,11 +42,11 @@ var AboutDebugging = {
     const telemetry = new Telemetry();
 
     render(AboutDebuggingApp({ client, connect, telemetry }),
-      document.querySelector("#body"));
+      document.querySelector("#root"));
   },
 
   destroy() {
-    unmountComponentAtNode(document.querySelector("#body"));
+    unmountComponentAtNode(document.querySelector("#root"));
 
     if (this.client) {
       this.client.close();

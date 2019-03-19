@@ -48,8 +48,14 @@ class TargetList extends Component {
     if (sort) {
       targets = targets.sort(LocaleCompare);
     }
-    targets = targets.map(target => {
-      return targetClass({ client, connect, target, debugDisabled });
+    targets = targets.map((target, index) => {
+      return targetClass({
+        key: target.addonID || target.url || index,
+        client,
+        connect,
+        target,
+        debugDisabled,
+      });
     });
 
     let content = "";
