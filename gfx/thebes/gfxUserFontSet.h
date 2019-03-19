@@ -256,9 +256,6 @@ class gfxUserFontSet {
   // the given name
   gfxUserFontFamily* LookupFamily(const nsACString& aName) const;
 
-  // Look up names in a fontlist and return true if any are in the set
-  bool ContainsUserFontSetFonts(const mozilla::FontFamilyList& aFontList) const;
-
   virtual gfxFontSrcPrincipal* GetStandardFontLoadPrincipal() const = 0;
 
   // check whether content policies allow the given URI to load.
