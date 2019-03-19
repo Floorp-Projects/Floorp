@@ -7,6 +7,7 @@
 #ifndef __NS_SVGNUMBER2_H__
 #define __NS_SVGNUMBER2_H__
 
+#include "DOMSVGAnimatedNumber.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsError.h"
 #include "nsMathUtils.h"
@@ -14,7 +15,6 @@
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/SMILAttr.h"
 #include "mozilla/UniquePtr.h"
-#include "mozilla/dom/SVGAnimatedNumber.h"
 #include "mozilla/dom/SVGElement.h"
 
 namespace mozilla {
@@ -54,7 +54,7 @@ class nsSVGNumber2 {
   // usable, and represents the default base value of the attribute.
   bool IsExplicitlySet() const { return mIsAnimated || mIsBaseSet; }
 
-  already_AddRefed<mozilla::dom::SVGAnimatedNumber> ToDOMAnimatedNumber(
+  already_AddRefed<mozilla::dom::DOMSVGAnimatedNumber> ToDOMAnimatedNumber(
       SVGElement* aSVGElement);
   mozilla::UniquePtr<SMILAttr> ToSMILAttr(SVGElement* aSVGElement);
 
@@ -66,9 +66,11 @@ class nsSVGNumber2 {
   bool mIsBaseSet;
 
  public:
-  struct DOMAnimatedNumber final : public mozilla::dom::SVGAnimatedNumber {
+  // DOM wrapper class for the (DOM)SVGAnimatedNumber interface where the
+  // wrapped class is nsSVGNumber2.
+  struct DOMAnimatedNumber final : public mozilla::dom::DOMSVGAnimatedNumber {
     DOMAnimatedNumber(nsSVGNumber2* aVal, SVGElement* aSVGElement)
-        : mozilla::dom::SVGAnimatedNumber(aSVGElement), mVal(aVal) {}
+        : mozilla::dom::DOMSVGAnimatedNumber(aSVGElement), mVal(aVal) {}
     virtual ~DOMAnimatedNumber();
 
     nsSVGNumber2* mVal;  // kept alive because it belongs to content

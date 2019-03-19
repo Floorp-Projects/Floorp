@@ -586,7 +586,7 @@ static bool ZeroTextureData(const WebGLContext* webgl, GLuint tex,
 
     const size_t byteCount = checkedByteCount.value();
 
-    UniqueBuffer zeros = calloc(1, byteCount);
+    UniqueBuffer zeros = calloc(1u, byteCount);
     if (!zeros) return false;
 
     ScopedUnpackReset scopedReset(webgl);
@@ -623,7 +623,7 @@ static bool ZeroTextureData(const WebGLContext* webgl, GLuint tex,
 
   const size_t byteCount = checkedByteCount.value();
 
-  UniqueBuffer zeros = calloc(1, byteCount);
+  UniqueBuffer zeros = calloc(1u, byteCount);
   if (!zeros) return false;
 
   ScopedUnpackReset scopedReset(webgl);

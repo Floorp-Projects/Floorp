@@ -36,7 +36,7 @@ class SVGClipPathElement final : public SVGClipPathElementBase {
   virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
   // WebIDL
-  already_AddRefed<SVGAnimatedEnumeration> ClipPathUnits();
+  already_AddRefed<DOMSVGAnimatedEnumeration> ClipPathUnits();
 
   // This is an internal method that does not flush style, and thus
   // the answer may be out of date if there's a pending style flush.

@@ -47,10 +47,10 @@ class SVGFEMorphologyElement : public SVGFEMorphologyElementBase {
   virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
   // WebIDL
-  already_AddRefed<SVGAnimatedString> In1();
-  already_AddRefed<SVGAnimatedEnumeration> Operator();
-  already_AddRefed<SVGAnimatedNumber> RadiusX();
-  already_AddRefed<SVGAnimatedNumber> RadiusY();
+  already_AddRefed<DOMSVGAnimatedString> In1();
+  already_AddRefed<DOMSVGAnimatedEnumeration> Operator();
+  already_AddRefed<DOMSVGAnimatedNumber> RadiusX();
+  already_AddRefed<DOMSVGAnimatedNumber> RadiusY();
   void SetRadius(float rx, float ry);
 
  protected:

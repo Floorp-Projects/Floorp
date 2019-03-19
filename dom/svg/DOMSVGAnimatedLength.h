@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_SVGAnimatedLength_h
-#define mozilla_dom_SVGAnimatedLength_h
+#ifndef mozilla_dom_DOMSVGAnimatedLength_h
+#define mozilla_dom_DOMSVGAnimatedLength_h
 
 #include "mozilla/Attributes.h"
 #include "SVGElement.h"
@@ -18,12 +18,12 @@ namespace dom {
 
 class DOMSVGLength;
 
-class SVGAnimatedLength final : public nsWrapperCache {
+class DOMSVGAnimatedLength final : public nsWrapperCache {
  public:
-  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(SVGAnimatedLength)
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(SVGAnimatedLength)
+  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(DOMSVGAnimatedLength)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(DOMSVGAnimatedLength)
 
-  SVGAnimatedLength(nsSVGLength2* aVal, SVGElement* aSVGElement)
+  DOMSVGAnimatedLength(nsSVGLength2* aVal, SVGElement* aSVGElement)
       : mVal(aVal), mSVGElement(aSVGElement) {}
 
   // WebIDL
@@ -34,7 +34,7 @@ class SVGAnimatedLength final : public nsWrapperCache {
   already_AddRefed<DOMSVGLength> AnimVal();
 
  protected:
-  ~SVGAnimatedLength();
+  ~DOMSVGAnimatedLength();
 
   nsSVGLength2* mVal;  // kept alive because it belongs to content
   RefPtr<SVGElement> mSVGElement;
@@ -43,4 +43,4 @@ class SVGAnimatedLength final : public nsWrapperCache {
 }  // namespace dom
 }  // namespace mozilla
 
-#endif  // mozilla_dom_SVGAnimatedLength_h
+#endif  // mozilla_dom_DOMSVGAnimatedLength_h

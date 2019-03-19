@@ -303,7 +303,7 @@ class SVGElement : public SVGElementBase  // nsIContent
   // WebIDL
   mozilla::dom::SVGSVGElement* GetOwnerSVGElement();
   SVGElement* GetViewportElement();
-  already_AddRefed<mozilla::dom::SVGAnimatedString> ClassName();
+  already_AddRefed<mozilla::dom::DOMSVGAnimatedString> ClassName();
 
   void UpdateContentDeclarationBlock();
   const mozilla::DeclarationBlock* GetContentDeclarationBlock() const;

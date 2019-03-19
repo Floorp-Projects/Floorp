@@ -6,10 +6,10 @@
 
 #include "DOMSVGTransformList.h"
 
-#include "mozilla/dom/DOMSVGTransform.h"
 #include "mozilla/dom/SVGElement.h"
 #include "mozilla/dom/SVGMatrix.h"
 #include "mozilla/dom/SVGTransformListBinding.h"
+#include "DOMSVGTransform.h"
 #include "SVGAnimatedTransformList.h"
 #include "nsError.h"
 #include <algorithm>

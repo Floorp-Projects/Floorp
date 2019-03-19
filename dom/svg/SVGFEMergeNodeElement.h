@@ -38,7 +38,7 @@ class SVGFEMergeNodeElement : public SVGFEMergeNodeElementBase {
   const SVGString* GetIn1() { return &mStringAttributes[IN1]; }
 
   // WebIDL
-  already_AddRefed<SVGAnimatedString> In1();
+  already_AddRefed<DOMSVGAnimatedString> In1();
 
  protected:
   virtual StringAttributesInfo GetStringInfo() override;

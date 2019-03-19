@@ -4,14 +4,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/dom/SVGAnimatedString.h"
+#include "DOMSVGAnimatedString.h"
+
 #include "mozilla/dom/SVGAnimatedStringBinding.h"
 
 namespace mozilla {
 namespace dom {
 
-JSObject* SVGAnimatedString::WrapObject(JSContext* aCx,
-                                        JS::Handle<JSObject*> aGivenProto) {
+JSObject* DOMSVGAnimatedString::WrapObject(JSContext* aCx,
+                                           JS::Handle<JSObject*> aGivenProto) {
   return SVGAnimatedString_Binding::Wrap(aCx, this, aGivenProto);
 }
 

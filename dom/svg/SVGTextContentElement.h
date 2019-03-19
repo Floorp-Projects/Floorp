@@ -8,7 +8,7 @@
 #define mozilla_dom_SVGTextContentElement_h
 
 #include "mozilla/dom/SVGGraphicsElement.h"
-#include "mozilla/dom/SVGAnimatedEnumeration.h"
+#include "DOMSVGAnimatedEnumeration.h"
 #include "SVGEnum.h"
 #include "nsSVGLength2.h"
 
@@ -30,8 +30,8 @@ class SVGTextContentElement : public SVGTextContentElementBase {
   using FragmentOrElement::TextLength;
 
   // WebIDL
-  already_AddRefed<SVGAnimatedLength> TextLength();
-  already_AddRefed<SVGAnimatedEnumeration> LengthAdjust();
+  already_AddRefed<DOMSVGAnimatedLength> TextLength();
+  already_AddRefed<DOMSVGAnimatedEnumeration> LengthAdjust();
   MOZ_CAN_RUN_SCRIPT int32_t GetNumberOfChars();
   MOZ_CAN_RUN_SCRIPT float GetComputedTextLength();
   MOZ_CAN_RUN_SCRIPT

@@ -129,7 +129,7 @@ void SVGNumberPair::SetAnimValue(const float aValue[2],
   aSVGElement->DidAnimateNumberPair(mAttrEnum);
 }
 
-already_AddRefed<SVGAnimatedNumber> SVGNumberPair::ToDOMAnimatedNumber(
+already_AddRefed<DOMSVGAnimatedNumber> SVGNumberPair::ToDOMAnimatedNumber(
     PairIndex aIndex, SVGElement* aSVGElement) {
   RefPtr<DOMAnimatedNumber> domAnimatedNumber =
       aIndex == eFirst ? sSVGFirstAnimatedNumberTearoffTable.GetTearoff(this)

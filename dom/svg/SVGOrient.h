@@ -7,13 +7,13 @@
 #ifndef __NS_SVGORIENT_H__
 #define __NS_SVGORIENT_H__
 
+#include "DOMSVGAnimatedEnumeration.h"
 #include "nsError.h"
 #include "SVGEnum.h"
 #include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/SMILAttr.h"
 #include "mozilla/dom/SVGAngleBinding.h"
-#include "mozilla/dom/SVGAnimatedEnumeration.h"
 #include "mozilla/dom/SVGMarkerElementBinding.h"
 #include "mozilla/UniquePtr.h"
 
@@ -25,7 +25,7 @@ class SMILValue;
 
 namespace dom {
 class DOMSVGAngle;
-class SVGAnimatedAngle;
+class DOMSVGAnimatedAngle;
 class SVGAnimationElement;
 class SVGElement;
 }  // namespace dom
@@ -33,7 +33,7 @@ class SVGElement;
 class SVGOrient {
   friend class AutoChangeOrientNotifier;
   friend class mozilla::dom::DOMSVGAngle;
-  friend class mozilla::dom::SVGAnimatedAngle;
+  friend class mozilla::dom::DOMSVGAnimatedAngle;
   typedef mozilla::dom::SVGElement SVGElement;
 
  public:
@@ -72,9 +72,9 @@ class SVGOrient {
   float GetAnimValInSpecifiedUnits() const { return mAnimVal; }
 
   static nsresult ToDOMSVGAngle(nsISupports** aResult);
-  already_AddRefed<dom::SVGAnimatedAngle> ToDOMAnimatedAngle(
+  already_AddRefed<dom::DOMSVGAnimatedAngle> ToDOMAnimatedAngle(
       SVGElement* aSVGElement);
-  already_AddRefed<dom::SVGAnimatedEnumeration> ToDOMAnimatedEnum(
+  already_AddRefed<dom::DOMSVGAnimatedEnumeration> ToDOMAnimatedEnum(
       SVGElement* aSVGElement);
   UniquePtr<SMILAttr> ToSMILAttr(SVGElement* aSVGElement);
 
@@ -99,14 +99,16 @@ class SVGOrient {
   already_AddRefed<dom::DOMSVGAngle> ToDOMAnimVal(SVGElement* aSVGElement);
 
  public:
-  struct DOMAnimatedEnum final : public dom::SVGAnimatedEnumeration {
+  // DOM wrapper class for the (DOM)SVGAnimatedEnumeration interface where the
+  // wrapped class is SVGOrient.
+  struct DOMAnimatedEnum final : public dom::DOMSVGAnimatedEnumeration {
     DOMAnimatedEnum(SVGOrient* aVal, SVGElement* aSVGElement)
-        : SVGAnimatedEnumeration(aSVGElement), mVal(aVal) {}
+        : DOMSVGAnimatedEnumeration(aSVGElement), mVal(aVal) {}
     ~DOMAnimatedEnum();
 
     SVGOrient* mVal;  // kept alive because it belongs to content
 
-    using mozilla::dom::SVGAnimatedEnumeration::SetBaseVal;
+    using mozilla::dom::DOMSVGAnimatedEnumeration::SetBaseVal;
     uint16_t BaseVal() override { return Sanitize(mVal->mBaseType); }
     void SetBaseVal(uint16_t aBaseVal, ErrorResult& aRv) override {
       aRv = mVal->SetBaseType(aBaseVal, mSVGElement);
