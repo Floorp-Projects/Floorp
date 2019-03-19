@@ -86,7 +86,11 @@ mozilla::ipc::IPCResult RemoteDecoderParent::RecvInput(
         if (mDestroyed) {
           return;
         }
-        ProcessDecodedData(aResults);
+        MediaResult res = ProcessDecodedData(aResults);
+        if (res != NS_OK) {
+          self->Error(res);
+          return;
+        }
         Unused << SendInputExhausted();
       },
       [self](const MediaResult& aError) { self->Error(aError); });
@@ -117,7 +121,11 @@ mozilla::ipc::IPCResult RemoteDecoderParent::RecvDrain() {
       mManagerTaskQueue, __func__,
       [self, this](const MediaDataDecoder::DecodedData& aResults) {
         if (!mDestroyed) {
-          ProcessDecodedData(aResults);
+          MediaResult res = ProcessDecodedData(aResults);
+          if (res != NS_OK) {
+            self->Error(res);
+            return;
+          }
           Unused << SendDrainComplete();
         }
       },

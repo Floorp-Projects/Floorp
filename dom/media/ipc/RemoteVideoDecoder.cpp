@@ -163,7 +163,7 @@ RemoteVideoDecoderParent::RemoteVideoDecoderParent(
   *aSuccess = !!mDecoder;
 }
 
-void RemoteVideoDecoderParent::ProcessDecodedData(
+MediaResult RemoteVideoDecoderParent::ProcessDecodedData(
     const MediaDataDecoder::DecodedData& aData) {
   MOZ_ASSERT(OnManagerThread());
 
@@ -181,12 +181,20 @@ void RemoteVideoDecoderParent::ProcessDecodedData(
 
     SurfaceDescriptorBuffer sdBuffer;
     Shmem buffer;
-    if (AllocShmem(image->GetDataSize(), Shmem::SharedMemory::TYPE_BASIC,
-                   &buffer) &&
-        image->GetDataSize() == buffer.Size<uint8_t>()) {
-      sdBuffer.data() = std::move(buffer);
-      image->BuildSurfaceDescriptorBuffer(sdBuffer);
+    if (!AllocShmem(image->GetDataSize(), Shmem::SharedMemory::TYPE_BASIC,
+                    &buffer)) {
+      return MediaResult(NS_ERROR_OUT_OF_MEMORY,
+                         "AllocShmem failed in "
+                         "RemoteVideoDecoderParent::ProcessDecodedData");
     }
+    if (image->GetDataSize() > buffer.Size<uint8_t>()) {
+      return MediaResult(NS_ERROR_OUT_OF_MEMORY,
+                         "AllocShmem returned less than requested in "
+                         "RemoteVideoDecoderParent::ProcessDecodedData");
+    }
+
+    sdBuffer.data() = std::move(buffer);
+    image->BuildSurfaceDescriptorBuffer(sdBuffer);
 
     RemoteVideoDataIPDL output(
         MediaDataIPDL(data->mOffset, data->mTime, data->mTimecode,
@@ -194,6 +202,8 @@ void RemoteVideoDecoderParent::ProcessDecodedData(
         video->mDisplay, image->GetSize(), sdBuffer, video->mFrameID);
     Unused << SendOutput(output);
   }
+
+  return NS_OK;
 }
 
 }  // namespace mozilla
