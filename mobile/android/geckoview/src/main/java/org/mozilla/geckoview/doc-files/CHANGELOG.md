@@ -8,6 +8,12 @@ exclude: true
 
 <h1> GeckoView API Changelog. </h1>
 
+## v68
+- Added [`GeckoRuntime#configurationChanged`][68.1] to notify the device
+  configuration has changed.
+
+[68.1]: ../GeckoRuntime.html#configurationChanged
+
 ## v67
 - Added [`setAutomaticFontSizeAdjustment`][67.2] to
   [`GeckoRuntimeSettings`][67.3] for automatically adjusting font size settings
@@ -209,4 +215,4 @@ exclude: true
 [65.24]: ../CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: ../GeckoResult.html
 
-[api-version]: 09c473360eb5e17aa801fa0f966cd8671cf2f3d2
+[api-version]: e1330c0e7cfa08420041813f07f24a9389020564
