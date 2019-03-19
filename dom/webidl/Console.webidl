@@ -189,7 +189,6 @@ interface ConsoleInstance {
   void profileEnd(any... data);
 };
 
-[MOZ_CAN_RUN_SCRIPT_BOUNDARY]
 callback ConsoleInstanceDumpCallback = void (DOMString message);
 
 enum ConsoleLogLevel {
