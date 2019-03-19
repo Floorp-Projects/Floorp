@@ -83,7 +83,7 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
       return (h | 0) * 3600 + (m | 0) * 60 + (s | 0) + (f | 0) / 1000;
     }
 
-    var timestamp = input.match(/^(\d+:)?(\d{2}):(\d{2})\.(\d+)/);
+    let timestamp = input.match(/^(\d+:)?(\d{2}):(\d{2})\.(\d+)/);
     if (!timestamp || timestamp.length !== 5) {
       return null;
     }
@@ -125,7 +125,7 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
     },
     // Accept a setting if its one of the given alternatives.
     alt: function(k, v, a) {
-      for (var n = 0; n < a.length; ++n) {
+      for (let n = 0; n < a.length; ++n) {
         if (v === a[n]) {
           this.set(k, v);
           return true;
@@ -143,7 +143,7 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
     },
     // Accept a setting if its a valid percentage.
     percent: function(k, v) {
-      var m;
+      let m;
       if ((m = v.match(/^([\d]{1,3})(\.[\d]*)?%$/))) {
         v = parseFloat(v);
         if (v >= 0 && v <= 100) {
@@ -164,27 +164,27 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
   // Helper function to parse input into groups separated by 'groupDelim', and
   // interprete each group as a key/value pair separated by 'keyValueDelim'.
   function parseOptions(input, callback, keyValueDelim, groupDelim) {
-    var groups = groupDelim ? input.split(groupDelim) : [input];
-    for (var i in groups) {
+    let groups = groupDelim ? input.split(groupDelim) : [input];
+    for (let i in groups) {
       if (typeof groups[i] !== "string") {
         continue;
       }
-      var kv = groups[i].split(keyValueDelim);
+      let kv = groups[i].split(keyValueDelim);
       if (kv.length !== 2) {
         continue;
       }
-      var k = kv[0];
-      var v = kv[1];
+      let k = kv[0];
+      let v = kv[1];
       callback(k, v);
     }
   }
 
   function parseCue(input, cue, regionList) {
     // Remember the original input if we need to throw an error.
-    var oInput = input;
+    let oInput = input;
     // 4.1 WebVTT timestamp
     function consumeTimeStamp() {
-      var ts = collectTimeStamp(input);
+      let ts = collectTimeStamp(input);
       if (ts === null) {
         throw new ParsingError(ParsingError.Errors.BadTimeStamp,
                               "Malformed timestamp: " + oInput);
@@ -196,12 +196,12 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
 
     // 4.4.2 WebVTT cue settings
     function consumeCueSettings(input, cue) {
-      var settings = new Settings();
+      let settings = new Settings();
       parseOptions(input, function (k, v) {
         switch (k) {
         case "region":
           // Find the last region we parsed with the same region id.
-          for (var i = regionList.length - 1; i >= 0; i--) {
+          for (let i = regionList.length - 1; i >= 0; i--) {
             if (regionList[i].id === v) {
               settings.set(k, regionList[i].region);
               break;
@@ -211,9 +211,9 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
         case "vertical":
           settings.alt(k, v, ["rl", "lr"]);
           break;
-        case "line":
-          var vals = v.split(","),
-              vals0 = vals[0];
+        case "line": {
+          let vals = v.split(",");
+          let vals0 = vals[0];
           settings.digitsValue(k, vals0);
           settings.percent(k, vals0) ? settings.set("snapToLines", false) : null;
           settings.alt(k, vals0, ["auto"]);
@@ -221,8 +221,9 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
             settings.alt("lineAlign", vals[1], ["start", "center", "end"]);
           }
           break;
-        case "position":
-          vals = v.split(",");
+        }
+        case "position": {
+          let vals = v.split(",");
           if (settings.percent(k, vals[0])) {
             if (vals.length === 2) {
               if (!settings.alt("positionAlign", vals[1], ["line-left", "center", "line-right"])) {
@@ -233,6 +234,7 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
             }
           }
           break;
+        }
         case "size":
           settings.percent(k, v);
           break;
@@ -338,7 +340,7 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
         return result;
       }
 
-      var m = input.match(/^([^<]*)(<[^>]+>?)?/);
+      let m = input.match(/^([^<]*)(<[^>]+>?)?/);
       // The input doesn't contain a complete tag.
       if (!m[0]) {
         return null;
@@ -353,6 +355,7 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
       return ESCAPE[e];
     }
     function unescape(s) {
+      let m;
       while ((m = s.match(/&(amp|lt|gt|lrm|rlm|nbsp);/))) {
         s = s.replace(m[0], unescape1);
       }
@@ -366,12 +369,12 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
 
     // Create an element for this tag.
     function createElement(type, annotation) {
-      var tagName = TAG_NAME[type];
+      let tagName = TAG_NAME[type];
       if (!tagName) {
         return null;
       }
-      var element = window.document.createElement(tagName);
-      var name = TAG_ANNOTATION[type];
+      let element = window.document.createElement(tagName);
+      let name = TAG_ANNOTATION[type];
       if (name) {
         element[name] = annotation ? annotation.trim() : "";
       }
@@ -381,10 +384,10 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
     // https://w3c.github.io/webvtt/#webvtt-timestamp-object
     // Return hhhhh:mm:ss.fff
     function normalizedTimeStamp(secondsWithFrag) {
-      var totalsec = parseInt(secondsWithFrag, 10);
-      var hours = Math.floor(totalsec / 3600);
-      var minutes = Math.floor(totalsec % 3600 / 60);
-      var seconds = Math.floor(totalsec % 60);
+      let totalsec = parseInt(secondsWithFrag, 10);
+      let hours = Math.floor(totalsec / 3600);
+      let minutes = Math.floor(totalsec % 3600 / 60);
+      let seconds = Math.floor(totalsec % 60);
       if (hours < 10) {
         hours = "0" + hours;
       }
@@ -394,7 +397,7 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
       if (seconds < 10) {
         seconds = "0" + seconds;
       }
-      var f = secondsWithFrag.toString().split(".");
+      let f = secondsWithFrag.toString().split(".");
       if (f[1]) {
         f = f[1].slice(0, 3).padEnd(3, "0");
       } else {
@@ -403,7 +406,7 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
       return hours + ':' + minutes + ':' + seconds + '.' + f;
     }
 
-    var root;
+    let root;
     switch (mode) {
       case PARSE_CONTENT_MODE.PSUEDO_CUE:
         root = window.document.createElement("div", {pseudo: "::cue"});
@@ -417,7 +420,7 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
         break;
     }
 
-    var current = root,
+    let current = root,
         t,
         tagStack = [];
 
@@ -433,15 +436,15 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
           // Otherwise just ignore the end tag.
           continue;
         }
-        var ts = collectTimeStamp(t.substr(1, t.length - 1));
-        var node;
+        let ts = collectTimeStamp(t.substr(1, t.length - 1));
+        let node;
         if (ts) {
           // Timestamps are lead nodes as well.
           node = window.document.createProcessingInstruction("timestamp", normalizedTimeStamp(ts));
           current.appendChild(node);
           continue;
         }
-        var m = t.match(/^<([^.\s/0-9>]+)(\.[^\s\\>]+)?([^>\\]+)?(\\?)>?$/);
+        let m = t.match(/^<([^.\s/0-9>]+)(\.[^\s\\>]+)?([^>\\]+)?(\\?)>?$/);
         // If we can't parse the tag, skip to the next tag.
         if (!m) {
           continue;
@@ -482,7 +485,7 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
   // div on 'this'.
   StyleBox.prototype.applyStyles = function(styles, div) {
     div = div || this.div;
-    for (var prop in styles) {
+    for (let prop in styles) {
       if (styles.hasOwnProperty(prop)) {
         div.style[prop] = styles[prop];
       }
@@ -519,7 +522,11 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
         PARSE_CONTENT_MODE.PSUEDO_CUE : PARSE_CONTENT_MODE.NORMAL_CUE);
       this.div.appendChild(this.cueDiv);
 
-      this.fontSize = this._getFontSize(containerBox.height);
+      this.containerHeight = containerBox.height;
+      this.containerWidth = containerBox.width;
+      this.fontSize = this._getFontSize(containerBox);
+      this.isCueStyleBox = true;
+
       // As pseudo element won't inherit the parent div's style, so we have to
       // set the font size explicitly.
       if (supportPseudo) {
@@ -530,28 +537,39 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
       this.applyStyles(this._getNodeDefaultStyles(cue));
     }
 
-    move(box) {
-      this.applyStyles({
-        top: this.formatStyle(box.top, "px"),
-        bottom: this.formatStyle(box.bottom, "px"),
-        left: this.formatStyle(box.left, "px"),
-        right: this.formatStyle(box.right, "px"),
-        height: this.formatStyle(box.height, "px"),
-        width: this.formatStyle(box.width, "px")
-      });
+    getCueBoxPositionAndSize() {
+      // As `top`, `left`, `width` and `height` are all represented by the
+      // percentage of the container, we need to convert them to the actual
+      // number according to the container's size.
+      const isWritingDirectionHorizontal = this.cue.vertical == "";
+      let top =
+            this.containerHeight * this._tranferPercentageToFloat(this.div.style.top),
+          left =
+            this.containerWidth * this._tranferPercentageToFloat(this.div.style.left),
+          width = isWritingDirectionHorizontal ?
+            this.containerWidth * this._tranferPercentageToFloat(this.div.style.width) :
+            this.div.offsetWidth,
+          height = isWritingDirectionHorizontal ?
+            this.div.offsetHeight :
+            this.containerHeight * this._tranferPercentageToFloat(this.div.style.height);
+      return { top, left, width, height };
     }
 
     /**
      * Following methods are private functions, should not use them outside this
      * class.
      */
-    _getFontSize(renderingAreaHeight) {
+    _tranferPercentageToFloat(input) {
+      return input.replace("%", "") / 100.0;
+    }
+
+    _getFontSize(containerBox) {
       // In https://www.w3.org/TR/webvtt1/#applying-css-properties, the spec
       // said the font size is '5vh', which means 5% of the viewport height.
       // However, if we use 'vh' as a basic unit, it would eventually become
       // 5% of screen height, instead of video's viewport height. Therefore, we
       // have to use 'px' here to make sure we have the correct font size.
-      return renderingAreaHeight * 0.05 + "px";
+      return containerBox.height * 0.05 + "px";
     }
 
     _applyNonPseudoCueStyles() {
@@ -590,13 +608,10 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
       // spec 7.2.1, calculate 'writing-mode'.
       styles["writing-mode"] = this._getCueWritingMode(cue);
 
-      // spec 7.2.2 ~ 7.2.4, calculate 'width' and 'height'.
-      const {width, height} = this._getCueWidthAndHeight(cue);
+      // spec 7.2.2 ~ 7.2.7, calculate 'width', 'height', 'left' and 'top'.
+      const {width, height, left, top} = this._getCueSizeAndPosition(cue);
       styles["width"] = width;
       styles["height"] = height;
-
-      // spec 7.2.5 ~ 7.2.7, calculate 'left' and 'top'.
-      const {left, top} = this._getCueLeftAndTop(cue);
       styles["left"] = left;
       styles["top"] = top;
     }
@@ -608,7 +623,7 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
       return cue.vertical == "lr" ? "vertical-lr" : "vertical-rl";
     }
 
-    _getCueWidthAndHeight(cue) {
+    _getCueSizeAndPosition(cue) {
       // spec 7.2.2, determine the value of maximum size for cue as per the
       // appropriate rules from the following list.
       let maximumSize;
@@ -626,16 +641,7 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
           break;
       }
       const size = Math.min(cue.size, maximumSize);
-      return cue.vertical == "" ? {
-        width: size + "%",
-        height: "auto",
-      } : {
-        width: "auto",
-        height: size + "%",
-      };
-    }
 
-    _getCueLeftAndTop(cue) {
       // spec 7.2.5, determine the value of x-position or y-position for cue as
       // per the appropriate rules from the following list.
       let xPosition = 0.0, yPosition = 0.0;
@@ -650,16 +656,16 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
           break;
         case "center":
           if (isWritingDirectionHorizontal) {
-            xPosition = cue.computedPosition - (cue.size / 2);
+            xPosition = cue.computedPosition - (size / 2);
           } else {
-            yPosition = cue.computedPosition - (cue.size / 2);
+            yPosition = cue.computedPosition - (size / 2);
           }
           break;
         case "line-right":
           if (isWritingDirectionHorizontal) {
-            xPosition = cue.computedPosition - cue.size;
+            xPosition = cue.computedPosition - size;
           } else {
-            yPosition = cue.computedPosition - cue.size;
+            yPosition = cue.computedPosition - size;
           }
           break;
       }
@@ -680,18 +686,23 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
           xPosition = 0;
         }
       }
-      return { left: xPosition + "%", top: yPosition + "%"};
+      return {
+        left: xPosition + "%",
+        top: yPosition + "%",
+        width: isWritingDirectionHorizontal ? size + "%" : "auto",
+        height: isWritingDirectionHorizontal ? "auto" : size + "%",
+      };
     }
   }
 
   function RegionNodeBox(window, region, container) {
     StyleBox.call(this);
 
-    var boxLineHeight = container.height * 0.0533 // 0.0533vh ? 5.33vh
-    var boxHeight = boxLineHeight * region.lines;
-    var boxWidth = container.width * region.width / 100; // convert percentage to px
+    let boxLineHeight = container.height * 0.0533 // 0.0533vh ? 5.33vh
+    let boxHeight = boxLineHeight * region.lines;
+    let boxWidth = container.width * region.width / 100; // convert percentage to px
 
-    var regionNodeStyles = {
+    let regionNodeStyles = {
       position: "absolute",
       height: boxHeight + "px",
       width: boxWidth + "px",
@@ -723,7 +734,7 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
     StyleBox.call(this);
     this.cueDiv = parseContent(window, cue.text, PARSE_CONTENT_MODE.REGION_CUE);
 
-    var regionCueStyles = {
+    let regionCueStyles = {
       position: "relative",
       writingMode: "horizontal-tb",
       unicodeBidi: "plaintext",
@@ -733,7 +744,7 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
     };
     // TODO: fix me, LTR and RTL ? using margin replace the "left/right"
     // 6.1.14.3.3
-    var offset = cue.computedPosition * cue.region.width / 100;
+    let offset = cue.computedPosition * cue.region.width / 100;
     // 6.1.14.3.4
     switch (cue.align) {
       case "start":
@@ -758,283 +769,270 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
   RegionCueStyleBox.prototype.constructor = RegionCueStyleBox;
 
   // Represents the co-ordinates of an Element in a way that we can easily
-  // compute things with such as if it overlaps or intersects with another Element.
-  // Can initialize it with either a StyleBox or another BoxPosition.
-  function BoxPosition(obj) {
-    // Either a BoxPosition was passed in and we need to copy it, or a StyleBox
-    // was passed in and we need to copy the results of 'getBoundingClientRect'
-    // as the object returned is readonly. All co-ordinate values are in reference
-    // to the viewport origin (top left).
-    var lh, height, width, top;
-    if (obj.div) {
-      height = obj.div.offsetHeight;
-      width = obj.div.offsetWidth;
-      top = obj.div.offsetTop;
-
-      var rects = (rects = obj.div.childNodes) && (rects = rects[0]) &&
-                  rects.getClientRects && rects.getClientRects();
-      obj = obj.div.getBoundingClientRect();
-      // In certain cases the outter div will be slightly larger then the sum of
-      // the inner div's lines. This could be due to bold text, etc, on some platforms.
-      // In this case we should get the average line height and use that. This will
-      // result in the desired behaviour.
-      lh = rects ? Math.max((rects[0] && rects[0].height) || 0, obj.height / rects.length)
-                 : 0;
-
+  // compute things with such as if it overlaps or intersects with other boxes.
+  class BoxPosition {
+    constructor(obj) {
+      // Get dimensions by calling getCueBoxPositionAndSize on a CueStyleBox, by
+      // getting offset properties from an HTMLElement (from the object or its
+      // `div` property), otherwise look at the regular box properties on the
+      // object.
+      const isHTMLElement = !obj.isCueStyleBox && (obj.div || obj.tagName);
+      obj = obj.isCueStyleBox ? obj.getCueBoxPositionAndSize() : obj.div || obj;
+      this.top = isHTMLElement ? obj.offsetTop : obj.top;
+      this.left = isHTMLElement ? obj.offsetLeft : obj.left;
+      this.width = isHTMLElement ? obj.offsetWidth : obj.width;
+      this.height = isHTMLElement ? obj.offsetHeight : obj.height;
     }
-    this.left = obj.left;
-    this.right = obj.right;
-    this.top = obj.top || top;
-    this.height = obj.height || height;
-    this.bottom = obj.bottom || (top + (obj.height || height));
-    this.width = obj.width || width;
-    this.lineHeight = lh !== undefined ? lh : obj.lineHeight;
+
+    get bottom() {
+      return this.top + this.height;
+    }
+
+    get right() {
+      return this.left + this.width;
+    }
+
+    // Move the box along a particular axis. Optionally pass in an amount to move
+    // the box. If no amount is passed then the default is the line height of the
+    // box.
+    move(axis, toMove) {
+      switch (axis) {
+      case "+x":
+        this.left += toMove;
+        break;
+      case "-x":
+        this.left -= toMove;
+        break;
+      case "+y":
+        this.top += toMove;
+        break;
+      case "-y":
+        this.top -= toMove;
+        break;
+      }
+    }
+
+    // Check if this box overlaps another box, b2.
+    overlaps(b2) {
+      return this.left < b2.right &&
+             this.right > b2.left &&
+             this.top < b2.bottom &&
+             this.bottom > b2.top;
+    }
+
+    // Check if this box overlaps any other boxes in boxes.
+    overlapsAny(boxes) {
+      for (let i = 0; i < boxes.length; i++) {
+        if (this.overlaps(boxes[i])) {
+          return true;
+        }
+      }
+      return false;
+    }
+
+    // Check if this box overlaps any other boxes in boxes.
+    overlapsAny(boxes) {
+      for (let i = 0; i < boxes.length; i++) {
+        if (this.overlaps(boxes[i])) {
+          return true;
+        }
+      }
+      return false;
+    }
+
+    // Check if this box is within another box.
+    within(container) {
+      return this.top >= container.top &&
+             this.bottom <= container.bottom &&
+             this.left >= container.left &&
+             this.right <= container.right;
+    }
+
+    // Check if this box is entirely within the container or it is overlapping
+    // on the edge opposite of the axis direction passed. For example, if "+x" is
+    // passed and the box is overlapping on the left edge of the container, then
+    // return true.
+    overlapsOppositeAxis(container, axis) {
+      switch (axis) {
+      case "+x":
+        return this.left < container.left;
+      case "-x":
+        return this.right > container.right;
+      case "+y":
+        return this.top < container.top;
+      case "-y":
+        return this.bottom > container.bottom;
+      }
+    }
+
+    // Find the percentage of the area that this box is overlapping with another
+    // box.
+    intersectPercentage(b2) {
+      let x = Math.max(0, Math.min(this.right, b2.right) - Math.max(this.left, b2.left)),
+          y = Math.max(0, Math.min(this.bottom, b2.bottom) - Math.max(this.top, b2.top)),
+          intersectArea = x * y;
+      return intersectArea / (this.height * this.width);
+    }
   }
 
-  // Move the box along a particular axis. Optionally pass in an amount to move
-  // the box. If no amount is passed then the default is the line height of the
-  // box.
-  BoxPosition.prototype.move = function(axis, toMove) {
-    toMove = toMove !== undefined ? toMove : this.lineHeight;
-    switch (axis) {
-    case "+x":
-      this.left += toMove;
-      this.right += toMove;
-      break;
-    case "-x":
-      this.left -= toMove;
-      this.right -= toMove;
-      break;
-    case "+y":
-      this.top += toMove;
-      this.bottom += toMove;
-      break;
-    case "-y":
-      this.top -= toMove;
-      this.bottom -= toMove;
-      break;
-    }
+  BoxPosition.prototype.clone = function(){
+    return new BoxPosition(this);
   };
 
-  // Check if this box overlaps another box, b2.
-  BoxPosition.prototype.overlaps = function(b2) {
-    return this.left < b2.right &&
-           this.right > b2.left &&
-           this.top < b2.bottom &&
-           this.bottom > b2.top;
-  };
+  function adjustBoxPosition(styleBox, containerBox, controlBarBox, outputBoxes) {
+    const cue = styleBox.cue;
+    const isWritingDirectionHorizontal = cue.vertical == "";
+    let box = new BoxPosition(styleBox);
 
-  // Check if this box overlaps any other boxes in boxes.
-  BoxPosition.prototype.overlapsAny = function(boxes) {
-    for (var i = 0; i < boxes.length; i++) {
-      if (this.overlaps(boxes[i])) {
-        return true;
-      }
-    }
-    return false;
-  };
-
-  // Check if this box is within another box.
-  BoxPosition.prototype.within = function(container) {
-    return this.top >= container.top &&
-           this.bottom <= container.bottom &&
-           this.left >= container.left &&
-           this.right <= container.right;
-  };
-
-  // Check if this box is entirely within the container or it is overlapping
-  // on the edge opposite of the axis direction passed. For example, if "+x" is
-  // passed and the box is overlapping on the left edge of the container, then
-  // return true.
-  BoxPosition.prototype.overlapsOppositeAxis = function(container, axis) {
-    switch (axis) {
-    case "+x":
-      return this.left < container.left;
-    case "-x":
-      return this.right > container.right;
-    case "+y":
-      return this.top < container.top;
-    case "-y":
-      return this.bottom > container.bottom;
-    }
-  };
-
-  // Find the percentage of the area that this box is overlapping with another
-  // box.
-  BoxPosition.prototype.intersectPercentage = function(b2) {
-    var x = Math.max(0, Math.min(this.right, b2.right) - Math.max(this.left, b2.left)),
-        y = Math.max(0, Math.min(this.bottom, b2.bottom) - Math.max(this.top, b2.top)),
-        intersectArea = x * y;
-    return intersectArea / (this.height * this.width);
-  };
-
-  // Convert the positions from this box to CSS compatible positions using
-  // the reference container's positions. This has to be done because this
-  // box's positions are in reference to the viewport origin, whereas, CSS
-  // values are in referecne to their respective edges.
-  BoxPosition.prototype.toCSSCompatValues = function(reference) {
-    return {
-      top: this.top - reference.top,
-      bottom: reference.bottom - this.bottom,
-      left: this.left - reference.left,
-      right: reference.right - this.right,
-      height: this.height,
-      width: this.width
-    };
-  };
-
-  // Get an object that represents the box's position without anything extra.
-  // Can pass a StyleBox, HTMLElement, or another BoxPositon.
-  BoxPosition.getSimpleBoxPosition = function(obj) {
-    var height = obj.div ? obj.div.offsetHeight : obj.tagName ? obj.offsetHeight : 0;
-    var width = obj.div ? obj.div.offsetWidth : obj.tagName ? obj.offsetWidth : 0;
-    var top = obj.div ? obj.div.offsetTop : obj.tagName ? obj.offsetTop : 0;
-
-    obj = obj.div ? obj.div.getBoundingClientRect() :
-                  obj.tagName ? obj.getBoundingClientRect() : obj;
-    var ret = {
-      left: obj.left,
-      right: obj.right,
-      top: obj.top || top,
-      height: obj.height || height,
-      bottom: obj.bottom || (top + (obj.height || height)),
-      width: obj.width || width
-    };
-    return ret;
-  };
-
-  // Move a StyleBox to its specified, or next best, position. The containerBox
-  // is the box that contains the StyleBox, such as a div. boxPositions are
-  // a list of other boxes that the styleBox can't overlap with.
-  function moveBoxToLinePosition(window, styleBox, containerBox, boxPositions) {
-
-    // Find the best position for a cue box, b, on the video. The axis parameter
-    // is a list of axis, the order of which, it will move the box along. For example:
-    // Passing ["+x", "-x"] will move the box first along the x axis in the positive
-    // direction. If it doesn't find a good position for it there it will then move
-    // it along the x axis in the negative direction.
-    function findBestPosition(b, axis) {
-      var bestPosition,
-          specifiedPosition = new BoxPosition(b),
-          percentage = 1; // Highest possible so the first thing we get is better.
-
-      for (var i = 0; i < axis.length; i++) {
-        while (b.overlapsOppositeAxis(containerBox, axis[i]) ||
-               (b.within(containerBox) && b.overlapsAny(boxPositions))) {
-          b.move(axis[i]);
-        }
-        // We found a spot where we aren't overlapping anything. This is our
-        // best position.
-        if (b.within(containerBox)) {
-          return b;
-        }
-        var p = b.intersectPercentage(containerBox);
-        // If we're outside the container box less then we were on our last try
-        // then remember this position as the best position.
-        if (percentage > p) {
-          bestPosition = new BoxPosition(b);
-          percentage = p;
-        }
-        // Reset the box position to the specified position.
-        b = new BoxPosition(specifiedPosition);
-      }
-      return bestPosition || specifiedPosition;
-    }
-
-    var boxPosition = new BoxPosition(styleBox),
-        cue = styleBox.cue,
-        linePos = cue.computedLine,
-        axis = [];
-
-    // If we have a line number to align the cue to.
+    // Spec 7.2.10, adjust the positions of boxes according to the appropriate
+    // steps from the following list. Also, we use offsetHeight/offsetWidth here
+    // in order to prevent the incorrect positioning caused by CSS transform
+    // scale.
+    const fullDimension = isWritingDirectionHorizontal ?
+      containerBox.height : containerBox.width;
     if (cue.snapToLines) {
-      var size;
-      switch (cue.vertical) {
-      case "":
-        axis = [ "+y", "-y" ];
-        size = "height";
-        break;
-      case "rl":
-        axis = [ "+x", "-x" ];
-        size = "width";
-        break;
-      case "lr":
-        axis = [ "-x", "+x" ];
-        size = "width";
-        break;
-      }
-
-      var step = boxPosition.lineHeight,
-          position = step * Math.round(linePos),
-          maxPosition = containerBox[size] + step,
-          initialAxis = axis[0];
-
+      // The step is the height or width of the line box. We should use font
+      // size directly, instead of using text box's width or height, because the
+      // width or height of the box would be changed when the text is wrapped to
+      // different line. Ex. if text is wrapped to two line, the height or width
+      // of the box would become 2 times of font size.
+      let step = parseFloat(styleBox.fontSize.replace("px", ""));
       if (step == 0) {
         return;
       }
 
-      // If the specified intial position is greater then the max position then
-      // clamp the box to the amount of steps it would take for the box to
-      // reach the max position.
-      if (Math.abs(position) > maxPosition) {
-        position = position < 0 ? -1 : 1;
-        position *= Math.ceil(maxPosition / step) * step;
+      // spec 7.2.10.4 ~ 7.2.10.6
+      let line = Math.floor(cue.computedLine + 0.5);
+      if (cue.vertical == "rl") {
+        line = -1 * (line + 1);
       }
 
-      // If computed line position returns negative then line numbers are
-      // relative to the bottom of the video instead of the top. Therefore, we
-      // need to increase our initial position by the length or width of the
-      // video, depending on the writing direction, and reverse our axis directions.
-      if (linePos < 0) {
-        position += cue.vertical === "" ? containerBox.height : containerBox.width;
-        axis = axis.reverse();
+      // spec 7.2.10.7 ~ 7.2.10.8
+      let position = step * line;
+      if (cue.vertical == "rl") {
+        position = position - box.width + step;
       }
 
-      // Move the box to the specified position. This may not be its best
-      // position.
-      boxPosition.move(initialAxis, position);
+      // spec 7.2.10.9
+      if (line < 0) {
+        position += fullDimension;
+        step = -1 * step;
+      }
 
+      // spec 7.2.10.10, move the box to the specific position along the direction.
+      const movingDirection = isWritingDirectionHorizontal ? "+y" : "+x";
+      box.move(movingDirection, position);
+
+      // spec 7.2.10.11, remember the position as specified position.
+      let specifiedPosition = box.clone();
+
+      // spec 7.2.10.12, let title area be a box that covers all of the video’s
+      // rendering area.
+      const titleAreaBox = containerBox.clone();
+      if (controlBarBox) {
+        titleAreaBox.height -= controlBarBox.height;
+      }
+
+      function isBoxOutsideTheRenderingArea() {
+        if (isWritingDirectionHorizontal) {
+          // the top side of the box is above the rendering area, or the bottom
+          // side of the box is below the rendering area.
+          return step < 0 && box.top < 0 ||
+                 step > 0 && box.bottom > fullDimension;
+        }
+        // the left side of the box is outside the left side of the rendering
+        // area, or the right side of the box is outside the right side of the
+        // rendering area.
+        return step < 0 && box.left < 0 ||
+               step > 0 && box.right > fullDimension;
+      }
+
+      // spec 7.2.10.13, if none of the boxes in boxes would overlap any of the
+      // boxes in output, and all of the boxes in boxes are entirely within the
+      // title area box.
+      let switched = false;
+      while (!box.within(titleAreaBox) || box.overlapsAny(outputBoxes)) {
+        // spec 7.2.10.14, check if we need to switch the direction.
+        if (isBoxOutsideTheRenderingArea()) {
+          // spec 7.2.10.17, if `switched` is true, remove all the boxes in
+          // `boxes`, which means we shouldn't apply any CSS boxes for this cue.
+          // Therefore, returns null box.
+          if (switched) {
+            return null;
+          }
+          // spec 7.2.10.18 ~ 7.2.10.20
+          switched = true;
+          box = specifiedPosition.clone();
+          step = -1 * step;
+        }
+        // spec 7.2.10.15, moving box along the specific direction.
+        box.move(movingDirection, step);
+      }
+
+      if (isWritingDirectionHorizontal) {
+        styleBox.applyStyles({
+          top: getPercentagePosition(box.top, fullDimension),
+        });
+      } else {
+        styleBox.applyStyles({
+          left: getPercentagePosition(box.left, fullDimension),
+        });
+      }
     } else {
-      // If we have a percentage line value for the cue.
-      var calculatedPercentage = (boxPosition.lineHeight / containerBox.height) * 100;
-
-      switch (cue.lineAlign) {
-      case "center":
-        linePos -= (calculatedPercentage / 2);
-        break;
-      case "end":
-        linePos -= calculatedPercentage;
-        break;
+      // (snap-to-lines if false) spec 7.2.10.1 ~ 7.2.10.2
+      if (cue.lineAlign != "start") {
+        const isCenterAlign = cue.lineAlign == "center";
+        const movingDirection = isWritingDirectionHorizontal ? "-y" : "-x";
+        if (isWritingDirectionHorizontal) {
+          box.move(movingDirection, isCenterAlign ? box.height : box.height / 2);
+        } else {
+          box.move(movingDirection, isCenterAlign ? box.width : box.width / 2);
+        }
       }
 
-      // Apply initial line position to the cue box.
-      switch (cue.vertical) {
-      case "":
-        styleBox.applyStyles({
-          top: styleBox.formatStyle(linePos, "%")
-        });
-        break;
-      case "rl":
-        styleBox.applyStyles({
-          left: styleBox.formatStyle(linePos, "%")
-        });
-        break;
-      case "lr":
-        styleBox.applyStyles({
-          right: styleBox.formatStyle(linePos, "%")
-        });
-        break;
+      // spec 7.2.10.3
+      let bestPosition = {},
+          specifiedPosition = box.clone(),
+          outsideAreaPercentage = 1; // Highest possible so the first thing we get is better.
+      let hasFoundBestPosition = false;
+      const axis = ["-y", "-x", "+x", "+y"];
+      const toMove = parseFloat(styleBox.fontSize.replace("px", ""));
+      for (let i = 0; i < axis.length && !hasFoundBestPosition; i++) {
+        while (box.overlapsOppositeAxis(containerBox, axis[i]) ||
+               (!box.within(containerBox) || box.overlapsAny(outputBoxes))) {
+          box.move(axis[i], toMove);
+        }
+        // We found a spot where we aren't overlapping anything. This is our
+        // best position.
+        if (box.within(containerBox)) {
+          bestPosition = box.clone();
+          hasFoundBestPosition = true;
+          break;
+        }
+        let p = box.intersectPercentage(containerBox);
+        // If we're outside the container box less then we were on our last try
+        // then remember this position as the best position.
+        if (outsideAreaPercentage > p) {
+          bestPosition = box.clone();
+          outsideAreaPercentage = p;
+        }
+        // Reset the box position to the specified position.
+        box = specifiedPosition.clone();
       }
 
-      axis = [ "+y", "-x", "+x", "-y" ];
-
-      // Get the box position again after we've applied the specified positioning
-      // to it.
-      boxPosition = new BoxPosition(styleBox);
+      styleBox.applyStyles({
+        top: getPercentagePosition(box.top, fullDimension),
+        left: getPercentagePosition(box.left, fullDimension),
+      });
     }
 
-    var bestPosition = findBestPosition(boxPosition, axis);
-    styleBox.move(bestPosition.toCSSCompatValues(containerBox));
+    // In order to not be affected by CSS scale, so we use '%' to make sure the
+    // cue can stick in the right position.
+    function getPercentagePosition(position, fullDimension) {
+      return (position / fullDimension) * 100 + "%";
+    }
+
+    return box;
   }
 
   function WebVTT() {
@@ -1073,8 +1071,7 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
       return null;
     }
 
-    var controlBar;
-    var controlBarShown;
+    let controlBar, controlBarShown;
     if (controls) {
       // controls is a <div> that is the children of the UA Widget Shadow Root.
       controlBar = controls.parentNode.getElementById("controlBar");
@@ -1093,7 +1090,7 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
         return true;
       }
 
-      for (var i = 0; i < cues.length; i++) {
+      for (let i = 0; i < cues.length; i++) {
         if (cues[i].hasBeenReset || !cues[i].displayState) {
           return true;
         }
@@ -1111,7 +1108,7 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
     while (overlay.firstChild) {
       overlay.firstChild.remove();
     }
-    var rootOfCues = window.document.createElement("div");
+    let rootOfCues = window.document.createElement("div");
     rootOfCues.style.position = "absolute";
     rootOfCues.style.left = "0";
     rootOfCues.style.right = "0";
@@ -1119,71 +1116,70 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
     rootOfCues.style.bottom = "0";
     overlay.appendChild(rootOfCues);
 
-    var boxPositions = [],
-        containerBox = BoxPosition.getSimpleBoxPosition(rootOfCues);
+    let boxPositions = [],
+        containerBox = new BoxPosition(rootOfCues);
 
-    (function() {
-      var styleBox, cue, controlBarBox;
+    let styleBox, cue, controlBarBox;
+    if (controlBarShown) {
+      controlBarBox = new BoxPosition(controlBar);
+      // Add an empty output box that cover the same region as video control bar.
+      boxPositions.push(controlBarBox);
+    }
 
-      if (controlBarShown) {
-        controlBarBox = BoxPosition.getSimpleBoxPosition(controlBar);
-        // Add an empty output box that cover the same region as video control bar.
-        boxPositions.push(controlBarBox);
-      }
+    // https://w3c.github.io/webvtt/#processing-model 6.1.12.1
+    // Create regionNode
+    let regionNodeBoxes = {};
+    let regionNodeBox;
 
-      // https://w3c.github.io/webvtt/#processing-model 6.1.12.1
-      // Create regionNode
-      var regionNodeBoxes = {};
-      var regionNodeBox;
+    for (let i = 0; i < cues.length; i++) {
+      cue = cues[i];
+      if (cue.region != null) {
+       // 6.1.14.1
+        styleBox = new RegionCueStyleBox(window, cue);
 
-      for (var i = 0; i < cues.length; i++) {
-        cue = cues[i];
-        if (cue.region != null) {
-         // 6.1.14.1
-          styleBox = new RegionCueStyleBox(window, cue);
-
-          if (!regionNodeBoxes[cue.region.id]) {
-            // create regionNode
-            // Adjust the container hieght to exclude the controlBar
-            var adjustContainerBox = BoxPosition.getSimpleBoxPosition(rootOfCues);
-            if (controlBarShown) {
-              adjustContainerBox.height -= controlBarBox.height;
-              adjustContainerBox.bottom += controlBarBox.height;
-            }
-            regionNodeBox = new RegionNodeBox(window, cue.region, adjustContainerBox);
-            regionNodeBoxes[cue.region.id] = regionNodeBox;
+        if (!regionNodeBoxes[cue.region.id]) {
+          // create regionNode
+          // Adjust the container hieght to exclude the controlBar
+          let adjustContainerBox = new BoxPosition(rootOfCues);
+          if (controlBarShown) {
+            adjustContainerBox.height -= controlBarBox.height;
+            adjustContainerBox.bottom += controlBarBox.height;
           }
-          // 6.1.14.3
-          var currentRegionBox = regionNodeBoxes[cue.region.id];
-          var currentRegionNodeDiv = currentRegionBox.div;
-          // 6.1.14.3.2
-          // TODO: fix me, it looks like the we need to set/change "top" attribute at the styleBox.div
-          // to do the "scroll up", however, we do not implement it yet?
-          if (cue.region.scroll == "up" && currentRegionNodeDiv.childElementCount > 0) {
-            styleBox.div.style.transitionProperty = "top";
-            styleBox.div.style.transitionDuration = "0.433s";
-          }
+          regionNodeBox = new RegionNodeBox(window, cue.region, adjustContainerBox);
+          regionNodeBoxes[cue.region.id] = regionNodeBox;
+        }
+        // 6.1.14.3
+        let currentRegionBox = regionNodeBoxes[cue.region.id];
+        let currentRegionNodeDiv = currentRegionBox.div;
+        // 6.1.14.3.2
+        // TODO: fix me, it looks like the we need to set/change "top" attribute at the styleBox.div
+        // to do the "scroll up", however, we do not implement it yet?
+        if (cue.region.scroll == "up" && currentRegionNodeDiv.childElementCount > 0) {
+          styleBox.div.style.transitionProperty = "top";
+          styleBox.div.style.transitionDuration = "0.433s";
+        }
 
-          currentRegionNodeDiv.appendChild(styleBox.div);
-          rootOfCues.appendChild(currentRegionNodeDiv);
-          cue.displayState = styleBox.div;
-          boxPositions.push(BoxPosition.getSimpleBoxPosition(currentRegionBox));
-        } else {
-          // Compute the intial position and styles of the cue div.
-          styleBox = new CueStyleBox(window, cue, containerBox);
-          rootOfCues.appendChild(styleBox.div);
+        currentRegionNodeDiv.appendChild(styleBox.div);
+        rootOfCues.appendChild(currentRegionNodeDiv);
+        cue.displayState = styleBox.div;
+        boxPositions.push(new BoxPosition(currentRegionBox));
+      } else {
+        // Compute the intial position and styles of the cue div.
+        styleBox = new CueStyleBox(window, cue, containerBox);
+        rootOfCues.appendChild(styleBox.div);
 
-          // Move the cue div to it's correct line position.
-          moveBoxToLinePosition(window, styleBox, containerBox, boxPositions);
-
+        // Move the cue to correct position, we might get the null box if the
+        // result of algorithm doesn't want us to show the cue when we don't
+        // have any room for this cue.
+        let cueBox = adjustBoxPosition(styleBox, containerBox, controlBarBox, boxPositions);
+        if (cueBox) {
           // Remember the computed div so that we don't have to recompute it later
           // if we don't have too.
           cue.displayState = styleBox.div;
-
-          boxPositions.push(BoxPosition.getSimpleBoxPosition(styleBox));
+          boxPositions.push(cueBox);
         }
       }
-    })();
+    }
   };
 
   WebVTT.Parser = function(window, decoder) {
@@ -1217,12 +1213,12 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
 
       // This parser is line-based. Let's see if we have a line to parse.
       while (/\r\n|\n|\r/.test(this.buffer)) {
-        var buffer = this.buffer;
-        var pos = 0;
+        let buffer = this.buffer;
+        let pos = 0;
         while (buffer[pos] !== '\r' && buffer[pos] !== '\n') {
           ++pos;
         }
-        var line = buffer.substr(0, pos);
+        let line = buffer.substr(0, pos);
         // Advance the buffer early in case we fail below.
         if (buffer[pos] === '\r') {
           ++pos;
@@ -1243,7 +1239,7 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
       return this;
     },
     parseLine: function(line) {
-      var self = this;
+      let self = this;
 
       function createCueIfNeeded() {
         if (!self.cue) {
@@ -1283,7 +1279,7 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
 
       // 3.4 WebVTT region and WebVTT region settings syntax
       function parseRegion(input) {
-        var settings = new Settings();
+        let settings = new Settings();
         parseOptions(input, function (k, v) {
           switch (k) {
           case "id":
@@ -1296,14 +1292,14 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
             settings.digitsValue(k, v);
             break;
           case "regionanchor":
-          case "viewportanchor":
-            var xy = v.split(',');
+          case "viewportanchor": {
+            let xy = v.split(',');
             if (xy.length !== 2) {
               break;
             }
             // We have to make sure both x and y parse, so use a temporary
             // settings object here.
-            var anchor = new Settings();
+            let anchor = new Settings();
             anchor.percent("x", xy[0]);
             anchor.percent("y", xy[1]);
             if (!anchor.has("x") || !anchor.has("y")) {
@@ -1312,6 +1308,7 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
             settings.set(k + "X", anchor.get("x"));
             settings.set(k + "Y", anchor.get("y"));
             break;
+          }
           case "scroll":
             settings.alt(k, v, ["up"]);
             break;
@@ -1323,7 +1320,7 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
         // specified.
         if (settings.has("id")) {
           try {
-            var region = new self.window.VTTRegion();
+            let region = new self.window.VTTRegion();
             region.id = settings.get("id", "");
             region.width = settings.get("width", 100);
             region.lines = settings.get("lines", 3);
@@ -1342,7 +1339,7 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
             });
           } catch(e) {
             dump("VTTRegion Error " + e + "\n");
-            var regionPref = Services.prefs.getBoolPref("media.webvtt.regions.enabled");
+            let regionPref = Services.prefs.getBoolPref("media.webvtt.regions.enabled");
             dump("regionPref " + regionPref + "\n");
           }
         }
@@ -1504,7 +1501,7 @@ XPCOMUtils.defineLazyPreferenceGetter(this, "supportPseudo",
       return this;
     },
     flush: function () {
-      var self = this;
+      let self = this;
       try {
         // Finish decoding the stream.
         self.buffer += self.decoder.decode();

@@ -30,12 +30,11 @@ const {
 } = require("devtools/client/shared/unicode-url");
 const {
   getFormattedProtocol,
-  getUrlBaseName,
   getUrlHost,
-  getUrlQuery,
   getUrlScheme,
 } = require("devtools/client/netmonitor/src/utils/request-utils");
 const { EVENTS } = require("devtools/client/netmonitor/src/constants");
+const { L10N } = require("devtools/client/netmonitor/src/utils/l10n");
 
 /* eslint-disable no-unused-vars, max-len */
 const EXAMPLE_URL = "http://example.com/browser/devtools/client/netmonitor/test/";
@@ -440,8 +439,12 @@ function verifyRequestItemTarget(document, requestList, requestItem, method,
   const target = document.querySelectorAll(".request-list-item")[visibleIndex];
   // Bug 1414981 - Request URL should not show #hash
   const unicodeUrl = getUnicodeUrl(url.split("#")[0]);
-  const name = getUrlBaseName(url);
-  const query = getUrlQuery(url);
+  const ORIGINAL_FILE_URL = L10N.getFormatStr("netRequest.originalFileURL.tooltip",
+    url);
+  const DECODED_FILE_URL = L10N.getFormatStr("netRequest.decodedFileURL.tooltip",
+    unicodeUrl);
+  const fileToolTip = url === unicodeUrl ?
+    url : ORIGINAL_FILE_URL + "\n\n" + DECODED_FILE_URL;
   const host = getUnicodeHostname(getUrlHost(url));
   const scheme = getUrlScheme(url);
   const {
@@ -469,16 +472,16 @@ function verifyRequestItemTarget(document, requestList, requestItem, method,
 
   if (fuzzyUrl) {
     ok(target.querySelector(".requests-list-file").textContent.startsWith(
-      name + (query ? "?" + query : "")), "The displayed file is correct.");
+      url), "The displayed file is correct.");
     ok(target.querySelector(".requests-list-file").getAttribute("title")
-                                                  .startsWith(unicodeUrl),
+                                                  .startsWith(fileToolTip),
       "The tooltip file is correct.");
   } else {
     is(target.querySelector(".requests-list-file").textContent,
-      decodeURIComponent(name + (query ? "?" + query : "")),
+      url,
       "The displayed file is correct.");
     is(target.querySelector(".requests-list-file").getAttribute("title"),
-      unicodeUrl, "The tooltip file is correct.");
+      fileToolTip, "The tooltip file is correct.");
   }
 
   is(target.querySelector(".requests-list-protocol").textContent,

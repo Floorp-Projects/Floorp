@@ -8,7 +8,9 @@ apt-get update
 apt-get install -y --force-yes --no-install-recommends \
     ca-certificates \
     python \
-    sudo
+    sudo \
+    python3 \
+    python3-yaml
 
 BUILD=/root/build
 mkdir "$BUILD"

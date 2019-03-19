@@ -78,12 +78,7 @@ If you would like to use a different directory, hit CTRL+c and set the
 MOZBUILD_STATE_PATH environment variable to the directory you'd like to
 use and re-run the bootstrapper.
 
-Would you like to create this directory?
-
-  1. Yes
-  2. No
-
-Your choice: '''
+Would you like to create this directory? (Yn):'''
 
 STYLO_NODEJS_DIRECTORY_MESSAGE = '''
 Stylo and NodeJS packages require a directory to store shared, persistent
@@ -124,23 +119,13 @@ Mozilla recommends a number of changes to Mercurial to enhance your
 experience with it.
 
 Would you like to run a configuration wizard to ensure Mercurial is
-optimally configured?
-
-  1. Yes
-  2. No
-
-Please enter your reply: '''
+optimally configured?'''
 
 CONFIGURE_GIT = '''
 Mozilla recommends using git-cinnabar to work with mozilla-central.
 
 Would you like to run a few configuration steps to ensure Git is
-optimally configured?
-
-  1. Yes
-  2. No
-
-Please enter your reply: '''
+optimally configured?'''
 
 CLONE_VCS = '''
 If you would like to clone the {} {} repository, please
@@ -150,24 +135,30 @@ enter the destination path below.
 CLONE_VCS_PROMPT = '''
 Destination directory for {} clone (leave empty to not clone): '''.lstrip()
 
-CLONE_VCS_NOT_EMPTY = '''
-ERROR! Destination directory '{}' is not empty.
+CLONE_VCS_NOT_EMPTY = '''\
+Destination directory '{}' is not empty.
 
-Would you like to clone to '{}'?
-
+Would you like to clone to '{}' instead?
   1. Yes
   2. No, let me enter another path
   3. No, stop cloning
-
-Please enter your reply: '''.lstrip()
+Your choice: '''
 
 CLONE_VCS_NOT_EMPTY_FALLBACK_FAILED = '''
-ERROR! Destination directory '{}' is not empty.
+ERROR! Destination directory '{}' is not empty and '{}' exists.
 '''
 
 CLONE_VCS_NOT_DIR = '''
 ERROR! Destination '{}' exists but is not a directory.
 '''
+
+CLONE_MERCURIAL_PULL_FAIL = '''
+Failed to pull from hg.mozilla.org.
+
+This is most likely because of unstable network connection.
+Try running `hg pull https://hg.mozilla.org/mozilla-unified` manually, or
+download mercurial bundle and use it:
+https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/Source_Code/Mercurial/Bundles'''
 
 DEBIAN_DISTROS = (
     'Debian',
@@ -195,7 +186,7 @@ Then restart your shell.
 '''
 
 TELEMETRY_OPT_IN_PROMPT = '''
-Would you like to enable build system telemetry?
+Build system telemetry
 
 Mozilla collects data about local builds in order to make builds faster and
 improve developer tooling. To learn more about the data we intend to collect
@@ -205,7 +196,7 @@ https://firefox-source-docs.mozilla.org/build/buildsystem/telemetry.html.
 If you have questions, please ask in #build in irc.mozilla.org. If you would
 like to opt out of data collection, select (N) at the prompt.
 
-Your choice'''
+Would you like to enable build system telemetry?'''
 
 
 def update_or_create_build_telemetry_config(path):
@@ -302,7 +293,6 @@ class Bootstrapper(object):
         repo_name = 'mozilla-unified'
         vcs = 'Mercurial'
         if not with_hg:
-            repo_name = 'gecko'
             vcs = 'Git'
         print(CLONE_VCS.format(repo_name, vcs))
 
@@ -325,7 +315,7 @@ class Bootstrapper(object):
 
             newdest = os.path.join(dest, repo_name)
             if os.path.exists(newdest):
-                print(CLONE_VCS_NOT_EMPTY_FALLBACK_FAILED.format(dest))
+                print(CLONE_VCS_NOT_EMPTY_FALLBACK_FAILED.format(dest, newdest))
                 continue
 
             choice = self.instance.prompt_int(prompt=CLONE_VCS_NOT_EMPTY.format(dest,
@@ -347,12 +337,8 @@ class Bootstrapper(object):
         if not os.path.exists(state_dir):
             should_create_state_dir = True
             if not self.instance.no_interactive:
-                choice = self.instance.prompt_int(
-                    prompt=STATE_DIR_INFO.format(statedir=state_dir),
-                    low=1,
-                    high=2)
-
-                should_create_state_dir = choice == 1
+                should_create_state_dir = self.instance.prompt_yesno(
+                    prompt=STATE_DIR_INFO.format(statedir=state_dir))
 
             # This directory is by default in $HOME, or overridden via an env
             # var, so we probably shouldn't gate it on --no-system-changes.
@@ -405,7 +391,7 @@ class Bootstrapper(object):
         if self.choice is None:
             # Like ['1. Firefox for Desktop', '2. Firefox for Android Artifact Mode', ...].
             labels = ['%s. %s' % (i + 1, name) for (i, (name, _)) in enumerate(APPLICATIONS_LIST)]
-            prompt = APPLICATION_CHOICE % '\n'.join(labels)
+            prompt = APPLICATION_CHOICE % '\n'.join('  {}'.format(label) for label in labels)
             prompt_choice = self.instance.prompt_int(prompt=prompt, low=1, high=len(APPLICATIONS))
             name, application = APPLICATIONS_LIST[prompt_choice-1]
         elif self.choice not in APPLICATIONS.keys():
@@ -460,10 +446,7 @@ class Bootstrapper(object):
         if hg_installed and state_dir_available and (checkout_type == 'hg' or self.vcs == 'hg'):
             configure_hg = False
             if not self.instance.no_interactive:
-                choice = self.instance.prompt_int(prompt=CONFIGURE_MERCURIAL,
-                                                  low=1, high=2)
-                if choice == 1:
-                    configure_hg = True
+                configure_hg = self.instance.prompt_yesno(prompt=CONFIGURE_MERCURIAL)
             else:
                 configure_hg = self.hg_configure
 
@@ -474,10 +457,7 @@ class Bootstrapper(object):
         elif self.instance.which('git') and (checkout_type == 'git' or self.vcs == 'git'):
             should_configure_git = False
             if not self.instance.no_interactive:
-                choice = self.instance.prompt_int(prompt=CONFIGURE_GIT,
-                                                  low=1, high=2)
-                if choice == 1:
-                    should_configure_git = True
+                should_configure_git = self.instance.prompt_yesno(prompt=CONFIGURE_GIT)
             else:
                 # Assuming default configuration setting applies to all VCS.
                 should_configure_git = self.hg_configure
@@ -630,8 +610,7 @@ def hg_clone_firefox(hg, dest):
     res = subprocess.call([hg, 'pull', 'https://hg.mozilla.org/mozilla-unified'], cwd=dest)
     print('')
     if res:
-        print('error pulling; try running `hg pull https://hg.mozilla.org/mozilla-unified` '
-              'manually')
+        print(CLONE_MERCURIAL_PULL_FAIL)
         return False
 
     print('updating to "central" - the development head of Gecko and Firefox')

@@ -16,16 +16,30 @@
 
 namespace mozilla {
 struct AnimationValue;
+
+namespace dom {
+enum class CompositeOperation : uint8_t;
+enum class IterationCompositeOperation : uint8_t;
+};  // namespace dom
+
 namespace layers {
 class Animation;
 
-typedef InfallibleTArray<layers::Animation> AnimationArray;
+typedef nsTArray<layers::Animation> AnimationArray;
 
-struct AnimData {
-  InfallibleTArray<RefPtr<RawServoAnimationValue>> mStartValues;
-  InfallibleTArray<RefPtr<RawServoAnimationValue>> mEndValues;
-  InfallibleTArray<Maybe<mozilla::ComputedTimingFunction>> mFunctions;
+struct PropertyAnimation {
+  struct SegmentData {
+    RefPtr<RawServoAnimationValue> mStartValue;
+    RefPtr<RawServoAnimationValue> mEndValue;
+    Maybe<mozilla::ComputedTimingFunction> mFunction;
+    float mStartPortion;
+    float mEndPortion;
+    dom::CompositeOperation mStartComposite;
+    dom::CompositeOperation mEndComposite;
+  };
+  nsTArray<SegmentData> mSegments;
   TimingParams mTiming;
+
   // These two variables correspond to the variables of the same name in
   // KeyframeEffectReadOnly and are used for the same purpose: to skip composing
   // animations whose progress has not changed.
@@ -35,6 +49,27 @@ struct AnimData {
   // applied to the timing function in each keyframe.
   uint32_t mSegmentIndexOnLastCompose = 0;
   dom::Nullable<double> mPortionInSegmentOnLastCompose;
+
+  TimeStamp mOriginTime;
+  MaybeTimeDuration mStartTime;
+  TimeDuration mHoldTime;
+  float mPlaybackRate;
+  dom::IterationCompositeOperation mIterationComposite;
+  bool mIsNotPlaying;
+};
+
+struct PropertyAnimationGroup {
+  nsCSSPropertyID mProperty;
+  AnimationData mAnimationData;
+
+  nsTArray<PropertyAnimation> mAnimations;
+  RefPtr<RawServoAnimationValue> mBaseStyle;
+
+  bool IsEmpty() const { return mAnimations.IsEmpty(); }
+  void Clear() {
+    mAnimations.Clear();
+    mBaseStyle = nullptr;
+  }
 };
 
 struct AnimationTransform {
@@ -96,7 +131,8 @@ struct AnimatedValue {
 // mechanism).
 class CompositorAnimationStorage final {
   typedef nsClassHashtable<nsUint64HashKey, AnimatedValue> AnimatedValueTable;
-  typedef nsClassHashtable<nsUint64HashKey, AnimationArray> AnimationsTable;
+  typedef nsClassHashtable<nsUint64HashKey, nsTArray<PropertyAnimationGroup>>
+      AnimationsTable;
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CompositorAnimationStorage)
  public:
@@ -147,7 +183,7 @@ class CompositorAnimationStorage final {
   /**
    * Return the animations if a given id can map to its animations
    */
-  AnimationArray* GetAnimations(const uint64_t& aId) const;
+  nsTArray<PropertyAnimationGroup>* GetAnimations(const uint64_t& aId) const;
 
   /**
    * Return the iterator of animations table
@@ -184,30 +220,84 @@ class AnimationHelper {
   /**
    * Sample animations based on a given time stamp for a element(layer) with
    * its animation data.
-   * Generally |aPreviousFrameTimeStamp| is used for the sampling if it's
+   * Generally |aPreviousFrameTime| is used for the sampling if it's
    * supplied to make the animation more in sync with other animations on the
    * main-thread.  But in the case where the animation just started at the time
-   * when the animation was sent to the compositor, |aCurrentTime| is used for
-   * the sampling instead to avoid flickering the animation.
+   * when the animation was sent to the compositor, |aCurrentFrameTime| is used
+   * for sampling instead to avoid flicker.
    *
    * Returns SampleResult::None if none of the animations are producing a result
    * (e.g. they are in the delay phase with no backwards fill),
    * SampleResult::Skipped if the animation output did not change since the last
    * call of this function,
    * SampleResult::Sampled if the animation output was updated.
+   *
+   * Using the same example from ExtractAnimations (below):
+   *
+   * Input |aPropertyAnimationGroups| (ignoring the base animation style):
+   *
+   * [
+   *   Group A: [ { rotate, Animation A }, { rotate, Animation B } ],
+   *   Group B: [ { scale, Animation B } ],
+   *   Group C: [ { transform, Animation A }, { transform, Animation B } ],
+   * ]
+   *
+   * For each property group, this function interpolates each animation in turn,
+   * using the result of interpolating one animation as input for the next such
+   * that it reduces each property group to a single output value:
+   *
+   * [
+   *   { rotate, RawServoAnimationValue },
+   *   { scale, RawServoAnimationValue },
+   *   { transform, RawServoAnimationValue },
+   * ]
+   *
+   * For transform animations, the caller (SampleAnimations) will combine the
+   * result of the various transform properties into a final matrix.
    */
   static SampleResult SampleAnimationForEachNode(
       TimeStamp aPreviousFrameTime, TimeStamp aCurrentFrameTime,
-      AnimationArray& aAnimations, InfallibleTArray<AnimData>& aAnimationData,
-      RefPtr<RawServoAnimationValue>& aAnimationValue,
-      const AnimatedValue* aPreviousValue);
+      const AnimatedValue* aPreviousValue,
+      nsTArray<PropertyAnimationGroup>& aPropertyAnimationGroups,
+      nsTArray<RefPtr<RawServoAnimationValue>>& aAnimationValues);
+
   /**
-   * Populates AnimData stuctures into |aAnimData| and |aBaseAnimationStyle|
-   * based on |aAnimations|.
+   * Extract organized animation data by property into an array of
+   * PropertyAnimationGroup objects.
+   *
+   * For example, suppose we have the following animations:
+   *
+   *   Animation A: [ transform, rotate ]
+   *   Animation B: [ rotate, scale ]
+   *   Animation C: [ transform ]
+   *   Animation D: [ opacity ]
+   *
+   * When we go to send transform-like properties to the compositor, we
+   * sort them as follows:
+   *
+   *   [
+   *     { rotate: Animation A (rotate segments only) },
+   *     { rotate: Animation B ( " " ) },
+   *     { scale: Animation B (scale segments only) },
+   *     { transform: Animation A (transform segments only) },
+   *     { transform: Animation C ( " " ) },
+   *   ]
+   *
+   * In this function, we group these animations together by property producing
+   * output such as the following:
+   *
+   *   [
+   *     [ { rotate, Animation A }, { rotate, Animation B } ],
+   *     [ { scale, Animation B } ],
+   *     [ { transform, Animation A }, { transform, Animation B } ],
+   *   ]
+   *
+   * In the process of grouping these animations, we also convert their values
+   * from the rather compact representation we use for transferring across the
+   * IPC boundary into something we can readily use for sampling.
    */
-  static void SetAnimations(
-      AnimationArray& aAnimations, InfallibleTArray<AnimData>& aAnimData,
-      RefPtr<RawServoAnimationValue>& aBaseAnimationStyle);
+  static nsTArray<PropertyAnimationGroup> ExtractAnimations(
+      const AnimationArray& aAnimations);
 
   /**
    * Get a unique id to represent the compositor animation between child
@@ -227,10 +317,21 @@ class AnimationHelper {
    * Note that even if there are only in-delay phase animations (i.e. not
    * visually effective), this function returns true to ensure we composite
    * again on the next tick.
+   *
+   * Note: This is called only by WebRender.
    */
   static bool SampleAnimations(CompositorAnimationStorage* aStorage,
                                TimeStamp aPreviousFrameTime,
                                TimeStamp aCurrentFrameTime);
+
+  /**
+   * Convert an array of animation values into a matrix given the corresponding
+   * transform parameters. |aValue| must be a transform-like value
+   * (e.g. transform, translate etc.).
+   */
+  static gfx::Matrix4x4 ServoAnimationValueToMatrix4x4(
+      const nsTArray<RefPtr<RawServoAnimationValue>>& aValue,
+      const TransformData& aTransformData);
 };
 
 }  // namespace layers

@@ -597,23 +597,6 @@ void AsyncCompositionManager::AdjustFixedOrStickyLayer(
   }
 }
 
-static Matrix4x4 ServoAnimationValueToMatrix4x4(
-    const RefPtr<RawServoAnimationValue>& aValue,
-    const TransformData& aTransformData) {
-  // FIXME: Bug 1457033: We should convert servo's animation value to matrix
-  // directly without nsCSSValueSharedList.
-  RefPtr<nsCSSValueSharedList> list;
-  Servo_AnimationValue_GetTransform(aValue, &list);
-  // we expect all our transform data to arrive in device pixels
-  Point3D transformOrigin = aTransformData.transformOrigin();
-  nsDisplayTransform::FrameTransformProperties props(std::move(list),
-                                                     transformOrigin);
-
-  return nsDisplayTransform::GetResultingTransformMatrix(
-      props, aTransformData.origin(), aTransformData.appUnitsPerDevPixel(), 0,
-      &aTransformData.bounds());
-}
-
 static Matrix4x4 FrameTransformToTransformInDevice(
     const Matrix4x4& aFrameTransform, Layer* aLayer,
     const TransformData& aTransformData) {
@@ -635,23 +618,20 @@ static Matrix4x4 FrameTransformToTransformInDevice(
   return transformInDevice;
 }
 
-static void ApplyAnimatedValue(Layer* aLayer,
-                               CompositorAnimationStorage* aStorage,
-                               nsCSSPropertyID aProperty,
-                               const AnimationData& aAnimationData,
-                               const RefPtr<RawServoAnimationValue>& aValue) {
-  if (!aValue) {
-    // Return gracefully if we have no valid AnimationValue.
-    return;
-  }
+static void ApplyAnimatedValue(
+    Layer* aLayer, CompositorAnimationStorage* aStorage,
+    nsCSSPropertyID aProperty, const AnimationData& aAnimationData,
+    const nsTArray<RefPtr<RawServoAnimationValue>>& aValues) {
+  MOZ_ASSERT(!aValues.IsEmpty());
 
   HostLayer* layerCompositor = aLayer->AsHostLayer();
   switch (aProperty) {
     case eCSSProperty_background_color: {
+      MOZ_ASSERT(aValues.Length() == 1);
       // We don't support 'color' animations on the compositor yet so we never
       // meet currentColor on the compositor.
       nscolor color =
-          Servo_AnimationValue_GetColor(aValue, NS_RGBA(0, 0, 0, 0));
+          Servo_AnimationValue_GetColor(aValues[0], NS_RGBA(0, 0, 0, 0));
       aLayer->AsColorLayer()->SetColor(gfx::Color::FromABGR(color));
       aStorage->SetAnimatedValue(aLayer->GetCompositorAnimationsId(), color);
 
@@ -662,7 +642,8 @@ static void ApplyAnimatedValue(Layer* aLayer,
       break;
     }
     case eCSSProperty_opacity: {
-      float opacity = Servo_AnimationValue_GetOpacity(aValue);
+      MOZ_ASSERT(aValues.Length() == 1);
+      float opacity = Servo_AnimationValue_GetOpacity(aValues[0]);
       layerCompositor->SetShadowOpacity(opacity);
       layerCompositor->SetShadowOpacitySetByAnimation(true);
       aStorage->SetAnimatedValue(aLayer->GetCompositorAnimationsId(), opacity);
@@ -671,11 +652,15 @@ static void ApplyAnimatedValue(Layer* aLayer,
       layerCompositor->SetShadowTransformSetByAnimation(false);
       break;
     }
+    case eCSSProperty_rotate:
+    case eCSSProperty_scale:
+    case eCSSProperty_translate:
     case eCSSProperty_transform: {
       const TransformData& transformData = aAnimationData.get_TransformData();
 
       Matrix4x4 frameTransform =
-          ServoAnimationValueToMatrix4x4(aValue, transformData);
+          AnimationHelper::ServoAnimationValueToMatrix4x4(aValues,
+                                                          transformData);
 
       Matrix4x4 transform = FrameTransformToTransformInDevice(
           frameTransform, aLayer, transformData);
@@ -702,31 +687,38 @@ static bool SampleAnimations(Layer* aLayer,
   bool isAnimating = false;
 
   ForEachNode<ForwardIterator>(aLayer, [&](Layer* layer) {
-    AnimationArray& animations = layer->GetAnimations();
-    if (animations.IsEmpty()) {
+    auto& propertyAnimationGroups = layer->GetPropertyAnimationGroups();
+    if (propertyAnimationGroups.IsEmpty()) {
       return;
     }
+
     isAnimating = true;
     AnimatedValue* previousValue =
         aStorage->GetAnimatedValue(layer->GetCompositorAnimationsId());
-    RefPtr<RawServoAnimationValue> animationValue =
-        layer->GetBaseAnimationStyle();
+
+    nsTArray<RefPtr<RawServoAnimationValue>> animationValues;
     AnimationHelper::SampleResult sampleResult =
         AnimationHelper::SampleAnimationForEachNode(
-            aPreviousFrameTime, aCurrentFrameTime, animations,
-            layer->GetAnimationData(), animationValue, previousValue);
+            aPreviousFrameTime, aCurrentFrameTime, previousValue,
+            propertyAnimationGroups, animationValues);
+
+    const PropertyAnimationGroup& lastPropertyAnimationGroup =
+        propertyAnimationGroups.LastElement();
+
     switch (sampleResult) {
-      case AnimationHelper::SampleResult::Sampled: {
-        Animation& animation = animations.LastElement();
-        ApplyAnimatedValue(layer, aStorage, animation.property(),
-                           animation.data(), animationValue);
+      case AnimationHelper::SampleResult::Sampled:
+        // We assume all transform like properties (on the same frame) live in
+        // a single same layer, so using the transform data of the last element
+        // should be fine.
+        ApplyAnimatedValue(
+            layer, aStorage, lastPropertyAnimationGroup.mProperty,
+            lastPropertyAnimationGroup.mAnimationData, animationValues);
         break;
-      }
       case AnimationHelper::SampleResult::Skipped:
-        switch (animations[0].property()) {
+        switch (lastPropertyAnimationGroup.mProperty) {
           case eCSSProperty_background_color:
           case eCSSProperty_opacity: {
-            if (animations[0].property() == eCSSProperty_opacity) {
+            if (lastPropertyAnimationGroup.mProperty == eCSSProperty_opacity) {
               MOZ_ASSERT(
                   layer->AsHostLayer()->GetShadowOpacitySetByAnimation());
 #ifdef DEBUG
@@ -745,22 +737,26 @@ static bool SampleAnimations(Layer* aLayer,
             layerCompositor->SetShadowTransformSetByAnimation(false);
             break;
           }
+          case eCSSProperty_rotate:
+          case eCSSProperty_scale:
+          case eCSSProperty_translate:
           case eCSSProperty_transform: {
             MOZ_ASSERT(
                 layer->AsHostLayer()->GetShadowTransformSetByAnimation());
             MOZ_ASSERT(previousValue);
 #ifdef DEBUG
             const TransformData& transformData =
-                animations[0].data().get_TransformData();
+                lastPropertyAnimationGroup.mAnimationData.get_TransformData();
             Matrix4x4 frameTransform =
-                ServoAnimationValueToMatrix4x4(animationValue, transformData);
+                AnimationHelper::ServoAnimationValueToMatrix4x4(animationValues,
+                                                                transformData);
             Matrix4x4 transformInDevice = FrameTransformToTransformInDevice(
                 frameTransform, layer, transformData);
             MOZ_ASSERT(previousValue->mTransform.mTransformInDevSpace
                            .FuzzyEqualsMultiplicative(transformInDevice));
 #endif
             // In the case of transform we have to set the unchanged
-            // transform value again becasue APZC might have modified the
+            // transform value again because APZC might have modified the
             // previous shadow base transform value.
             HostLayer* layerCompositor = layer->AsHostLayer();
             layerCompositor->SetShadowBaseTransform(

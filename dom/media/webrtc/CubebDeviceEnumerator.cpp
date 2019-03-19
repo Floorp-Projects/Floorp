@@ -14,6 +14,7 @@ already_AddRefed<CubebDeviceEnumerator> CubebDeviceEnumerator::GetInstance() {
     sInstance = new CubebDeviceEnumerator();
   }
   RefPtr<CubebDeviceEnumerator> instance = sInstance.get();
+  MOZ_ASSERT(instance);
   return instance.forget();
 }
 
@@ -81,6 +82,92 @@ void CubebDeviceEnumerator::EnumerateAudioOutputDevices(
   aOutDevices.AppendElements(mOutputDevices);
 }
 
+#ifndef ANDROID
+static uint16_t ConvertCubebType(cubeb_device_type aType) {
+  uint16_t map[] = {
+      nsIAudioDeviceInfo::TYPE_UNKNOWN,  // CUBEB_DEVICE_TYPE_UNKNOWN
+      nsIAudioDeviceInfo::TYPE_INPUT,    // CUBEB_DEVICE_TYPE_INPUT,
+      nsIAudioDeviceInfo::TYPE_OUTPUT    // CUBEB_DEVICE_TYPE_OUTPUT
+  };
+  return map[aType];
+}
+
+static uint16_t ConvertCubebState(cubeb_device_state aState) {
+  uint16_t map[] = {
+      nsIAudioDeviceInfo::STATE_DISABLED,   // CUBEB_DEVICE_STATE_DISABLED
+      nsIAudioDeviceInfo::STATE_UNPLUGGED,  // CUBEB_DEVICE_STATE_UNPLUGGED
+      nsIAudioDeviceInfo::STATE_ENABLED     // CUBEB_DEVICE_STATE_ENABLED
+  };
+  return map[aState];
+}
+
+static uint16_t ConvertCubebPreferred(cubeb_device_pref aPreferred) {
+  if (aPreferred == CUBEB_DEVICE_PREF_NONE) {
+    return nsIAudioDeviceInfo::PREF_NONE;
+  }
+  if (aPreferred == CUBEB_DEVICE_PREF_ALL) {
+    return nsIAudioDeviceInfo::PREF_ALL;
+  }
+
+  uint16_t preferred = 0;
+  if (aPreferred & CUBEB_DEVICE_PREF_MULTIMEDIA) {
+    preferred |= nsIAudioDeviceInfo::PREF_MULTIMEDIA;
+  }
+  if (aPreferred & CUBEB_DEVICE_PREF_VOICE) {
+    preferred |= nsIAudioDeviceInfo::PREF_VOICE;
+  }
+  if (aPreferred & CUBEB_DEVICE_PREF_NOTIFICATION) {
+    preferred |= nsIAudioDeviceInfo::PREF_NOTIFICATION;
+  }
+  return preferred;
+}
+
+static uint16_t ConvertCubebFormat(cubeb_device_fmt aFormat) {
+  uint16_t format = 0;
+  if (aFormat & CUBEB_DEVICE_FMT_S16LE) {
+    format |= nsIAudioDeviceInfo::FMT_S16LE;
+  }
+  if (aFormat & CUBEB_DEVICE_FMT_S16BE) {
+    format |= nsIAudioDeviceInfo::FMT_S16BE;
+  }
+  if (aFormat & CUBEB_DEVICE_FMT_F32LE) {
+    format |= nsIAudioDeviceInfo::FMT_F32LE;
+  }
+  if (aFormat & CUBEB_DEVICE_FMT_F32BE) {
+    format |= nsIAudioDeviceInfo::FMT_F32BE;
+  }
+  return format;
+}
+
+static void GetDeviceCollection(nsTArray<RefPtr<AudioDeviceInfo>>& aDeviceInfos,
+                                Side aSide) {
+  cubeb* context = GetCubebContext();
+  if (context) {
+    cubeb_device_collection collection = {nullptr, 0};
+    if (cubeb_enumerate_devices(
+            context,
+            aSide == Input ? CUBEB_DEVICE_TYPE_INPUT : CUBEB_DEVICE_TYPE_OUTPUT,
+            &collection) == CUBEB_OK) {
+      for (unsigned int i = 0; i < collection.count; ++i) {
+        auto device = collection.device[i];
+        RefPtr<AudioDeviceInfo> info = new AudioDeviceInfo(
+            device.devid, NS_ConvertUTF8toUTF16(device.friendly_name),
+            NS_ConvertUTF8toUTF16(device.group_id),
+            NS_ConvertUTF8toUTF16(device.vendor_name),
+            ConvertCubebType(device.type), ConvertCubebState(device.state),
+            ConvertCubebPreferred(device.preferred),
+            ConvertCubebFormat(device.format),
+            ConvertCubebFormat(device.default_format), device.max_channels,
+            device.default_rate, device.max_rate, device.min_rate,
+            device.latency_hi, device.latency_lo);
+        aDeviceInfos.AppendElement(info);
+      }
+    }
+    cubeb_device_collection_destroy(context, &collection);
+  }
+}
+#endif  // non ANDROID
+
 void CubebDeviceEnumerator::EnumerateAudioDevices(
     CubebDeviceEnumerator::Side aSide) {
   mMutex.AssertCurrentThreadOwns();
@@ -130,9 +217,8 @@ void CubebDeviceEnumerator::EnumerateAudioDevices(
 #else
   if (devices.IsEmpty() || manualInvalidation) {
     devices.Clear();
-    CubebUtils::GetDeviceCollection(devices, (aSide == Side::INPUT)
-                                                 ? CubebUtils::Input
-                                                 : CubebUtils::Output);
+    GetDeviceCollection(devices, (aSide == Side::INPUT) ? CubebUtils::Input
+                                                        : CubebUtils::Output);
   }
 #endif
 
@@ -166,6 +252,37 @@ already_AddRefed<AudioDeviceInfo> CubebDeviceEnumerator::DeviceInfoFromID(
       return other.forget();
     }
   }
+  return nullptr;
+}
+
+already_AddRefed<AudioDeviceInfo> CubebDeviceEnumerator::DeviceInfoFromName(
+    const nsString& aName) {
+  RefPtr<AudioDeviceInfo> other = DeviceInfoFromName(aName, Side::INPUT);
+  if (other) {
+    return other.forget();
+  }
+  return DeviceInfoFromName(aName, Side::OUTPUT);
+}
+
+already_AddRefed<AudioDeviceInfo> CubebDeviceEnumerator::DeviceInfoFromName(
+    const nsString& aName, Side aSide) {
+  MutexAutoLock lock(mMutex);
+
+  nsTArray<RefPtr<AudioDeviceInfo>>& devices =
+      (aSide == Side::INPUT) ? mInputDevices : mOutputDevices;
+  bool manualInvalidation = (aSide == Side::INPUT) ? mManualInputInvalidation
+                                                   : mManualOutputInvalidation;
+
+  if (devices.IsEmpty() || manualInvalidation) {
+    EnumerateAudioDevices(aSide);
+  }
+  for (uint32_t i = 0; i < devices.Length(); i++) {
+    if (devices[i]->Name().Equals(aName)) {
+      RefPtr<AudioDeviceInfo> other = devices[i];
+      return other.forget();
+    }
+  }
+
   return nullptr;
 }
 

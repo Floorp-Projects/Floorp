@@ -2922,7 +2922,7 @@ static bool EmitMemOrTableCopy(FunctionCompiler& f, bool isMem) {
   }
 
   if (f.inDeadCode()) {
-    return false;
+    return true;
   }
 
   uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode();
@@ -2982,7 +2982,7 @@ static bool EmitDataOrElemDrop(FunctionCompiler& f, bool isData) {
   }
 
   if (f.inDeadCode()) {
-    return false;
+    return true;
   }
 
   uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode();
@@ -3023,7 +3023,7 @@ static bool EmitMemFill(FunctionCompiler& f) {
   }
 
   if (f.inDeadCode()) {
-    return false;
+    return true;
   }
 
   uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode();
@@ -3068,7 +3068,7 @@ static bool EmitMemOrTableInit(FunctionCompiler& f, bool isMem) {
   }
 
   if (f.inDeadCode()) {
-    return false;
+    return true;
   }
 
   uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode();
@@ -3133,7 +3133,7 @@ static bool EmitTableGet(FunctionCompiler& f) {
   }
 
   if (f.inDeadCode()) {
-    return false;
+    return true;
   }
 
   uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode();
@@ -3189,7 +3189,7 @@ static bool EmitTableGrow(FunctionCompiler& f) {
   }
 
   if (f.inDeadCode()) {
-    return false;
+    return true;
   }
 
   uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode();
@@ -3239,7 +3239,7 @@ static bool EmitTableSet(FunctionCompiler& f) {
   }
 
   if (f.inDeadCode()) {
-    return false;
+    return true;
   }
 
   uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode();
@@ -3287,7 +3287,7 @@ static bool EmitTableSize(FunctionCompiler& f) {
   }
 
   if (f.inDeadCode()) {
-    return false;
+    return true;
   }
 
   uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode();
@@ -3328,7 +3328,7 @@ static bool EmitRefNull(FunctionCompiler& f) {
   }
 
   if (f.inDeadCode()) {
-    return false;
+    return true;
   }
 
   MDefinition* nullVal = f.nullRefConstant();
@@ -3346,7 +3346,7 @@ static bool EmitRefIsNull(FunctionCompiler& f) {
   }
 
   if (f.inDeadCode()) {
-    return false;
+    return true;
   }
 
   MDefinition* nullVal = f.nullRefConstant();

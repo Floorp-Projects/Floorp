@@ -1057,5 +1057,90 @@ promise_test(async t => {
 }, 'background-color animation does not run on the compositor if the pref ' +
    'is disabled');
 
+promise_test(async t => {
+  const div = addDiv(t);
+  const animation = div.animate({ translate: ['0px', '100px'] },
+                                100 * MS_PER_SEC);
+
+  await waitForAnimationReadyToRestyle(animation);
+  await waitForPaints();
+
+  assert_animation_is_running_on_compositor(animation,
+    'translate animation should be running on the compositor');
+}, 'translate animation runs on the compositor');
+
+promise_test(async t => {
+  const div = addDiv(t);
+  const animation = div.animate({ rotate: ['0deg', '45deg'] },
+                                100 * MS_PER_SEC);
+
+  await waitForAnimationReadyToRestyle(animation);
+  await waitForPaints();
+
+  assert_animation_is_running_on_compositor(animation,
+    'rotate animation should be running on the compositor');
+}, 'rotate animation runs on the compositor');
+
+promise_test(async t => {
+  const div = addDiv(t);
+  const animation = div.animate({ scale: ['1 1', '2 2'] },
+                                100 * MS_PER_SEC);
+
+  await waitForAnimationReadyToRestyle(animation);
+  await waitForPaints();
+
+  assert_animation_is_running_on_compositor(animation,
+    'scale animation should be running on the compositor');
+}, 'scale animation runs on the compositor');
+
+promise_test(async t => {
+  const div = addDiv(t);
+  const animation = div.animate({ translate: ['0px', '100px'],
+                                  rotate: ['0deg', '45deg'],
+                                  transform: ['translate(20px)',
+                                              'translate(30px)'] },
+                                100 * MS_PER_SEC);
+
+  await waitForAnimationReadyToRestyle(animation);
+  await waitForPaints();
+
+  assert_animation_is_running_on_compositor(animation,
+    'multiple transform-like properties animation should be running on the ' +
+    'compositor');
+
+  const properties = animation.effect.getProperties();
+  properties.forEach(property => {
+    assert_true(property.runningOnCompositor,
+                property.property + ' is running on the compositor');
+  });
+}, 'Multiple transform-like properties animation runs on the compositor');
+
+promise_test(async t => {
+  const div = addDiv(t);
+  const animation = div.animate({ translate: ['0px', '100px'],
+                                  rotate: ['0deg', '45deg'],
+                                  transform: ['translate(20px)',
+                                              'translate(30px)'] },
+                                100 * MS_PER_SEC);
+
+  div.style.setProperty('translate', '50px', 'important');
+  getComputedStyle(div).translate;
+
+  await waitForAnimationReadyToRestyle(animation);
+  await waitForPaints();
+
+  assert_animation_is_not_running_on_compositor(animation,
+     'Animation overridden by an !important rule reports that it is ' +
+     'NOT running on the compositor');
+
+  const properties = animation.effect.getProperties();
+  properties.forEach(property => {
+    assert_true(!property.runningOnCompositor,
+                property.property + ' is not running on the compositor');
+  });
+}, 'Multiple transform-like properties animation does not runs on the ' +
+   'compositor because one of the transform-like property is overridden ' +
+   'by an !important rule');
+
 </script>
 </body>

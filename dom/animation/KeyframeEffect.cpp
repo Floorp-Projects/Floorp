@@ -1498,13 +1498,6 @@ bool KeyframeEffect::ShouldBlockAsyncTransformAnimations(
     }
   }
 
-  // FIXME: Bug 1425837: drop this hack.
-  // XXX cku temporarily disable async-animation when this frame has any
-  // individual transforms before bug 1425837 been fixed.
-  if (aFrame->StyleDisplay()->HasIndividualTransform()) {
-    return true;
-  }
-
   return false;
 }
 
@@ -1589,7 +1582,8 @@ void KeyframeEffect::CalculateCumulativeChangeHint(
       // on invisible elements because we can't calculate the change hint for
       // such properties until we compose it.
       if (!segment.HasReplaceableValues()) {
-        if (property.mProperty != eCSSProperty_transform) {
+        if (!nsCSSPropertyIDSet::TransformLikeProperties().HasProperty(
+                property.mProperty)) {
           mCumulativeChangeHint = ~nsChangeHint_Hints_CanIgnoreIfNotVisible;
           return;
         }

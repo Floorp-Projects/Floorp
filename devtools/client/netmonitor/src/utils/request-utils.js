@@ -300,6 +300,7 @@ function getUrlDetails(url) {
     scheme,
     unicodeUrl,
     isLocal,
+    url,
   };
 }
 

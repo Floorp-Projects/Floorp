@@ -212,6 +212,7 @@ void MediaEngineWebRTC::EnumerateSpeakerDevices(
   nsTArray<RefPtr<AudioDeviceInfo>> devices;
   mEnumerator->EnumerateAudioOutputDevices(devices);
 
+  DebugOnly<bool> preferredDeviceFound = false;
   for (auto& device : devices) {
     if (device->State() == CUBEB_DEVICE_STATE_ENABLED) {
       MOZ_ASSERT(device->Type() == CUBEB_DEVICE_TYPE_OUTPUT);
@@ -221,7 +222,16 @@ void MediaEngineWebRTC::EnumerateSpeakerDevices(
       // deviceIDs (in JS).
       uuid.Append(NS_LITERAL_STRING("_Speaker"));
       nsString groupId(device->GroupID());
-      aDevices->AppendElement(MakeRefPtr<MediaDevice>(device, uuid, groupId));
+      if (device->Preferred()) {
+#ifdef DEBUG
+        MOZ_ASSERT(!preferredDeviceFound);
+        preferredDeviceFound = true;
+#endif
+        aDevices->InsertElementAt(
+            0, MakeRefPtr<MediaDevice>(device, uuid, groupId));
+      } else {
+        aDevices->AppendElement(MakeRefPtr<MediaDevice>(device, uuid, groupId));
+      }
     }
   }
 }

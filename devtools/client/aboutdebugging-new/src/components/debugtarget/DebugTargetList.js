@@ -4,7 +4,7 @@
 
 "use strict";
 
-const { createFactory, createRef, PureComponent } =
+const { createFactory, PureComponent } =
   require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
@@ -23,34 +23,11 @@ class DebugTargetList extends PureComponent {
   static get propTypes() {
     return {
       actionComponent: PropTypes.any.isRequired,
+      additionalActionsComponent: PropTypes.any,
       detailComponent: PropTypes.any.isRequired,
       dispatch: PropTypes.func.isRequired,
-      isCollapsed: PropTypes.bool.isRequired,
       targets: PropTypes.arrayOf(Types.debugTarget).isRequired,
     };
-  }
-
-  constructor(props) {
-    super(props);
-    this.listRef = createRef();
-  }
-
-  componentDidUpdate(prevProps, prevState, snapshot) {
-    if (snapshot === null) {
-      return;
-    }
-
-    const list = this.listRef.current;
-    list.animate({ maxHeight: [`${ snapshot }px`, `${ list.clientHeight }px`] },
-                 { duration: 150, easing: "cubic-bezier(.07, .95, 0, 1)" });
-  }
-
-  getSnapshotBeforeUpdate(prevProps) {
-    if (this.props.isCollapsed !== prevProps.isCollapsed) {
-      return this.listRef.current.clientHeight;
-    }
-
-    return null;
   }
 
   renderEmptyList() {
@@ -70,22 +47,27 @@ class DebugTargetList extends PureComponent {
   render() {
     const {
       actionComponent,
+      additionalActionsComponent,
       detailComponent,
       dispatch,
-      isCollapsed,
       targets,
     } = this.props;
 
     return dom.ul(
       {
-        className: "debug-target-list js-debug-target-list" +
-                   (isCollapsed ? " debug-target-list--collapsed" : ""),
-        ref: this.listRef,
+        className: "debug-target-list js-debug-target-list",
       },
       targets.length === 0
         ? this.renderEmptyList()
         : targets.map((target, key) =>
-            DebugTargetItem({ actionComponent, detailComponent, dispatch, key, target })),
+            DebugTargetItem({
+              actionComponent,
+              additionalActionsComponent,
+              detailComponent,
+              dispatch,
+              key,
+              target,
+            })),
     );
   }
 }

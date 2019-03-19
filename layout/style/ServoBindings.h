@@ -579,11 +579,11 @@ RawServoAnimationValueStrong Servo_AnimationValue_Color(nsCSSPropertyID,
 float Servo_AnimationValue_GetOpacity(RawServoAnimationValueBorrowed value);
 RawServoAnimationValueStrong Servo_AnimationValue_Opacity(float);
 
-void Servo_AnimationValue_GetTransform(RawServoAnimationValueBorrowed value,
-                                       RefPtr<nsCSSValueSharedList>* list);
+nsCSSPropertyID Servo_AnimationValue_GetTransform(
+    RawServoAnimationValueBorrowed value, RefPtr<nsCSSValueSharedList>* list);
 
 RawServoAnimationValueStrong Servo_AnimationValue_Transform(
-    const nsCSSValueSharedList& list);
+    nsCSSPropertyID property, const nsCSSValueSharedList& list);
 
 bool Servo_AnimationValue_DeepEqual(RawServoAnimationValueBorrowed,
                                     RawServoAnimationValueBorrowed);

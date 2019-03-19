@@ -67,12 +67,6 @@
   z-index: 1;
 }
 
-:-moz-native-anonymous .highlighter-container.flexbox {
-  /* Make the flexbox highlighter have a z-index greater than the box-model so
-     it always sits above it. */
-  z-index: 2;
-}
-
 :-moz-native-anonymous .highlighter-container [hidden] {
   display: none;
 }
@@ -85,10 +79,6 @@
 
 :-moz-native-anonymous .box-model-regions {
   opacity: 0.6;
-}
-
-:-moz-native-anonymous .box-model-regions [half-faded] {
-  opacity: 0.5;
 }
 
 /* Box model regions can be faded (see the onlyRegionArea option in
@@ -152,9 +142,6 @@
   text-shadow: none;
 
   border: 1px solid var(--highlighter-bubble-border-color);
-
-  /* The infobar should always be above every other highlighter when it is visible */
-  z-index: 2147483647;
 }
 
 /* Arrows */

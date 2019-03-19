@@ -13252,9 +13252,9 @@
   "NARRATE_CONTENT_BY_LANGUAGE_2": {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["eisaacson@mozilla.com"],
-    "bug_numbers": [1308030, 1324868],
+    "bug_numbers": [1308030, 1324868, 1532821],
     "releaseChannelCollection": "opt-out",
-    "expires_in_version": "60",
+    "expires_in_version": "72",
     "kind": "enumerated",
     "keyed": true,
     "n_values": 4,
@@ -13263,9 +13263,9 @@
   "NARRATE_CONTENT_SPEAKTIME_MS": {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["eisaacson@mozilla.com"],
-    "bug_numbers": [1308030],
+    "bug_numbers": [1308030, 1532821],
     "releaseChannelCollection": "opt-out",
-    "expires_in_version": "60",
+    "expires_in_version": "72",
     "kind": "linear",
     "high": 300000,
     "n_buckets": 30,
