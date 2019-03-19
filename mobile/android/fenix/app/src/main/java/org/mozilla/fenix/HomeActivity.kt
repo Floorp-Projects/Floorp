@@ -62,12 +62,17 @@ open class HomeActivity : AppCompatActivity() {
         setSupportActionBar(navigationToolbar)
         NavigationUI.setupWithNavController(navigationToolbar, navHost.navController, appBarConfiguration)
 
-        val safeIntent = intent?.let { SafeIntent(it) }
-
-        if (safeIntent?.isLauncherIntent == true) {
-            val source = if (isCustomTab) Event.OpenedApp.Source.CUSTOM_TAB else Event.OpenedApp.Source.APP_ICON
-            components.analytics.metrics.track(Event.OpenedApp(source))
-        }
+        intent
+            ?.let { SafeIntent(it) }
+            ?.let {
+                when {
+                    isCustomTab -> Event.OpenedApp.Source.CUSTOM_TAB
+                    it.isLauncherIntent -> Event.OpenedApp.Source.APP_ICON
+                    it.action == Intent.ACTION_VIEW -> Event.OpenedApp.Source.LINK
+                    else -> null
+                }
+            }
+            ?.also { components.analytics.metrics.track(Event.OpenedApp(it)) }
 
         handleOpenedFromExternalSourceIfNecessary(intent)
     }

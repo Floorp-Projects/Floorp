@@ -10,9 +10,8 @@ sealed class Event {
     object RemoveBookmark : Event()
     object OpenedBookmark : Event()
 
-
     data class OpenedApp(val source: Source) : Event() {
-        enum class Source { APP_ICON, CUSTOM_TAB }
+        enum class Source { APP_ICON, LINK, CUSTOM_TAB }
         override val extras: Map<String, String>?
             get() = hashMapOf("source" to source.name)
     }

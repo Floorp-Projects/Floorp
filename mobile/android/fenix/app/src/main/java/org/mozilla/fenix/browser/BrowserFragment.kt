@@ -251,7 +251,9 @@ class BrowserFragment : Fragment(), BackHandler {
                                     requireComponents.core.sessionManager.selectedSession?.id)
                             )
 
-                        requireComponents.analytics.metrics.track(Event.SearchBarTapped(Event.SearchBarTapped.Source.BROWSER))
+                        requireComponents.analytics.metrics.track(
+                            Event.SearchBarTapped(Event.SearchBarTapped.Source.BROWSER)
+                        )
                     }
                     is SearchAction.ToolbarMenuItemTapped -> handleToolbarItemInteraction(it)
                 }

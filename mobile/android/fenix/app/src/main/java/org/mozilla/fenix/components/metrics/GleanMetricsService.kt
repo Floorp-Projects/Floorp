@@ -13,7 +13,7 @@ import org.mozilla.fenix.debug.GleanMetrics.Metrics
 import org.mozilla.fenix.debug.GleanMetrics.Events
 
 private val Event.metricType: EventMetricType?
-    get() = when(this) {
+    get() = when (this) {
         is Event.OpenedApp -> Events.appOpened
         is Event.SearchBarTapped -> Events.searchBarTapped
         is Event.EnteredUrl -> Events.enteredUrl
