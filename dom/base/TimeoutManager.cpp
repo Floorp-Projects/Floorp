@@ -741,11 +741,10 @@ void TimeoutManager::RunTimeout(const TimeStamp& aNow,
 
   // Make sure that the window and the script context don't go away as
   // a result of running timeouts
-  nsCOMPtr<nsIScriptGlobalObject> windowKungFuDeathGrip(&mWindow);
-  // Silence the static analysis error about windowKungFuDeathGrip.  Accessing
-  // members of mWindow here is safe, because the lifetime of TimeoutManager is
-  // the same as the lifetime of the containing nsGlobalWindow.
-  Unused << windowKungFuDeathGrip;
+  RefPtr<nsGlobalWindowInner> window(&mWindow);
+  // Accessing members of mWindow here is safe, because the lifetime of
+  // TimeoutManager is the same as the lifetime of the containing
+  // nsGlobalWindow.
 
   // A native timer has gone off. See which of our timeouts need
   // servicing
@@ -976,8 +975,9 @@ void TimeoutManager::RunTimeout(const TimeStamp& aNow,
         MOZ_ASSERT(timeout->mFiringIndex > mLastFiringIndex);
         mLastFiringIndex = timeout->mFiringIndex;
 #endif
-        // This timeout is good to run
-        bool timeout_was_cleared = mWindow.RunTimeoutHandler(timeout, scx);
+        // This timeout is good to run.
+        bool timeout_was_cleared =
+            window->RunTimeoutHandler(timeout, scx);
 #if MOZ_GECKO_PROFILER
         if (profiler_is_active()) {
           TimeDuration elapsed = now - timeout->SubmitTime();
