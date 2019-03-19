@@ -5,11 +5,17 @@
 // @flow
 
 import { PROMISE } from "../utils/middleware/promise";
-import { getSource, getSourcesEpoch } from "../../selectors";
+import {
+  getSource,
+  getGeneratedSource,
+  getSourcesEpoch
+} from "../../selectors";
 import { setBreakpointPositions } from "../breakpoints";
 
+import { prettyPrintSource } from "./prettyPrint";
+
 import * as parser from "../../workers/parser";
-import { isLoaded, isOriginal } from "../../utils/source";
+import { isLoaded, isOriginal, isPretty } from "../../utils/source";
 import { Telemetry } from "devtools-modules";
 
 import type { ThunkArgs } from "../types";
@@ -30,16 +36,14 @@ async function loadSource(
   text: string,
   contentType: string
 }> {
+  if (isPretty(source) && isOriginal(source)) {
+    const generatedSource = getGeneratedSource(state, source);
+    return prettyPrintSource(sourceMaps, source, generatedSource);
+  }
+
   if (isOriginal(source)) {
     const result = await sourceMaps.getOriginalSourceText(source);
     if (!result) {
-      // TODO: This allows pretty files to continue working the way they have
-      // been, but is very ugly. Remove this when we centralize pretty-printing
-      // in loadSource. https://github.com/firefox-devtools/debugger/issues/8071
-      if (source.isPrettyPrinted) {
-        return null;
-      }
-
       // The way we currently try to load and select a pending
       // selected location, it is possible that we will try to fetch the
       // original source text right after the source map has been cleared

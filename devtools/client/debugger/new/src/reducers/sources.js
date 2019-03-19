@@ -320,12 +320,6 @@ function updateLoadedState(
   } else if (action.status === "error") {
     source = { id: sourceId, error: action.error, loadedState: "loaded" };
   } else {
-    // TODO: Remove this once we centralize pretty-print and this can no longer
-    // return a null value when loading a in-progress prettyprinting file.
-    if (!action.value) {
-      return state;
-    }
-
     source = {
       id: sourceId,
       text: action.value.text,
