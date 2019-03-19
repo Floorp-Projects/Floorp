@@ -173,6 +173,7 @@ enum class CacheKind : uint8_t {
 
 extern const char* const CacheKindNames[];
 
+
 // This namespace exists to make it possible to use unqualified
 // argument types in CACHE_IR_OPS without letting the symbols escape
 // into the global namespace. Any code that consumes the argument
@@ -190,6 +191,12 @@ enum ArgType {
 
 extern const uint32_t OpLengths[];
 }  // namespace CacheIROpFormat
+
+#ifdef JS_SIMULATOR
+#  define IF_SIMULATOR(x, y) x
+#else
+#  define IF_SIMULATOR(x, y) y
+#endif
 
 #define CACHE_IR_OPS(_) /****************************************************/ \
   _(GuardIsObject, Id)                                                         \
@@ -285,6 +292,7 @@ extern const uint32_t OpLengths[];
   _(CallAddOrUpdateSparseElementHelper, Id, Id, Id, Byte)                      \
   _(CallInt32ToString, Id, Id)                                                 \
   _(CallNumberToString, Id, Id)                                                \
+  _(CallNativeFunction, Id, Id, Byte, IF_SIMULATOR(Field, Byte))               \
                                                                                \
   /* The *Result ops load a value into the cache's result register. */         \
   _(LoadFixedSlotResult, Id, Field)                                            \
@@ -370,6 +378,8 @@ extern const uint32_t OpLengths[];
   _(TypeMonitorResult, None)                                                   \
   _(ReturnFromIC, None)                                                        \
   _(WrapResult, None)
+
+#undef IS_SIMULATOR
 
 enum class CacheOp {
 #define DEFINE_OP(op, ...) op,
@@ -1107,6 +1117,28 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     writeOpWithOperandId(CacheOp::CallNumberToString, id);
     writeOperandId(res);
     return res;
+  }
+  void callNativeFunction(ObjOperandId calleeId, Int32OperandId argc, JSOp op,
+                          HandleFunction calleeFunc) {
+    writeOpWithOperandId(CacheOp::CallNativeFunction, calleeId);
+    writeOperandId(argc);
+    bool isCrossRealm = cx_->realm() != calleeFunc->realm();
+    buffer_.writeByte(uint32_t(isCrossRealm));
+
+#ifdef JS_SIMULATOR
+    // The simulator requires VM calls to be redirected to a special
+    // swi instruction to handle them, so we store the redirected
+    // pointer in the stub and use that instead of the original one.
+    // (See BaselineCacheIRCompiler::emitCallNativeFunction.)
+    void* target = JS_FUNC_TO_DATA_PTR(void*, calleeFunc->native());
+    void* redirected = Simulator::RedirectNativeFunction(target, Args_General3);
+    addStubField(uintptr_t(redirected), StubField::Type::RawWord);
+#else
+    bool ignoresReturnValue =
+        op == JSOP_CALL_IGNORES_RV && calleeFunc->hasJitInfo() &&
+        calleeFunc->jitInfo()->type() == JSJitInfo::IgnoresReturnValueNative;
+    buffer_.writeByte(ignoresReturnValue);
+#endif
   }
 
   void megamorphicLoadSlotResult(ObjOperandId obj, PropertyName* name,
