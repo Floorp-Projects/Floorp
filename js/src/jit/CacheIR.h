@@ -490,6 +490,7 @@ void LoadShapeWrapperContents(MacroAssembler& masm, Register obj, Register dst,
 
 enum class MetaTwoByteKind : uint8_t {
   ClassTemplateObject,
+  NativeTemplateObject,
 };
 
 // Class to record CacheIR + some additional metadata for code generation.
@@ -804,10 +805,10 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
   void guardNotDOMProxy(ObjOperandId obj) {
     writeOpWithOperandId(CacheOp::GuardNotDOMProxy, obj);
   }
-  void guardSpecificObject(ObjOperandId obj, JSObject* expected) {
+  FieldOffset guardSpecificObject(ObjOperandId obj, JSObject* expected) {
     assertSameCompartment(expected);
     writeOpWithOperandId(CacheOp::GuardSpecificObject, obj);
-    addStubField(uintptr_t(expected), StubField::Type::JSObject);
+    return addStubField(uintptr_t(expected), StubField::Type::JSObject);
   }
   void guardSpecificAtom(StringOperandId str, JSAtom* expected) {
     writeOpWithOperandId(CacheOp::GuardSpecificAtom, str);
@@ -1158,13 +1159,14 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     buffer_.writeByte(uint32_t(false));  // isConstructing
   }
   void callNativeFunction(ObjOperandId calleeId, Int32OperandId argc, JSOp op,
-                          HandleFunction calleeFunc, bool isSpread) {
+                          HandleFunction calleeFunc, bool isSpread,
+                          bool isConstructing) {
     writeOpWithOperandId(CacheOp::CallNativeFunction, calleeId);
     writeOperandId(argc);
     bool isCrossRealm = cx_->realm() != calleeFunc->realm();
     buffer_.writeByte(uint32_t(isCrossRealm));
     buffer_.writeByte(uint32_t(isSpread));
-    buffer_.writeByte(uint32_t(false));  // isConstructing
+    buffer_.writeByte(uint32_t(isConstructing));
 
     // Some native functions can be implemented faster if we know that
     // the return value is ignored.
@@ -1211,8 +1213,15 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     addStubField(uintptr_t(target), StubField::Type::RawWord);
   }
 
-  // This generates no code, but saves the template object in a stub
+  // These generate no code, but save the template object in a stub
   // field for BaselineInspector.
+  void metaNativeTemplateObject(JSObject* templateObject,
+                                FieldOffset calleeOffset) {
+    writeOp(CacheOp::MetaTwoByte);
+    buffer_.writeByte(uint32_t(MetaTwoByteKind::NativeTemplateObject));
+    reuseStubField(calleeOffset);
+    addStubField(uintptr_t(templateObject), StubField::Type::JSObject);
+  }
   void metaClassTemplateObject(JSObject* templateObject,
                                FieldOffset classOffset) {
     writeOp(CacheOp::MetaTwoByte);
@@ -2116,6 +2125,8 @@ class MOZ_RAII CallIRGenerator : public IRGenerator {
   BaselineCacheIRStubKind cacheIRStubKind_;
 
   uint32_t calleeStackSlot(bool isSpread, bool isConstructing);
+  bool getTemplateObjectForNative(HandleFunction calleeFunc,
+                                  MutableHandleObject result);
   bool getTemplateObjectForClassHook(HandleObject calleeObj,
                                      MutableHandleObject result);
 

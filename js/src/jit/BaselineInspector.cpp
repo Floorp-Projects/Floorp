@@ -909,6 +909,19 @@ JSObject* BaselineInspector::getTemplateObjectForNative(jsbytecode* pc,
         stub->toCall_Native()->callee()->native() == native) {
       return stub->toCall_Native()->templateObject();
     }
+    if (ICStub::IsCacheIRKind(stub->kind())) {
+      auto filter = [stub, native](CacheIRReader& reader,
+                                   const CacheIRStubInfo* info) {
+        JSFunction* callee =
+            info->getStubField<JSFunction*>(stub, reader.stubOffset());
+        return callee->native() == native;
+      };
+      JSObject* result = MaybeTemplateObject(
+          stub, MetaTwoByteKind::NativeTemplateObject, filter);
+      if (result) {
+        return result;
+      }
+    }
   }
 
   return nullptr;
