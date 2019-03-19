@@ -5378,6 +5378,45 @@ bool CallIRGenerator::tryAttachCallNative(HandleFunction calleeFunc) {
   return true;
 }
 
+bool CallIRGenerator::tryAttachCallHook(HandleObject calleeObj) {
+  if (JitOptions.disableCacheIRCalls) {
+    return false;
+  }
+
+  bool isSpread = IsSpreadCallPC(pc_);
+  if (op_ == JSOP_FUNAPPLY || isSpread) {
+    return false;
+  }
+
+  bool isConstructing = IsConstructorCallPC(pc_);
+  JSNative hook =
+      isConstructing ? calleeObj->constructHook() : calleeObj->callHook();
+  if (!hook) {
+    return false;
+  }
+
+  // TODO: Template objects.
+  MOZ_ASSERT(!isConstructing);
+
+  // Load argc.
+  Int32OperandId argcId(writer.setInputOperandId(0));
+
+  // Load the callee.
+  ValOperandId calleeValId = writer.loadStackValue(argc_ + 1);
+  ObjOperandId calleeObjId = writer.guardIsObject(calleeValId);
+
+  // Ensure the callee's class matches the one in this stub.
+  writer.guardAnyClass(calleeObjId, calleeObj->getClass());
+
+  writer.callClassHook(calleeObjId, argcId, hook);
+  writer.typeMonitorResult();
+
+  cacheIRStubKind_ = BaselineCacheIRStubKind::Monitored;
+  trackAttached("Call native func");
+
+  return true;
+}
+
 bool CallIRGenerator::tryAttachStub() {
   AutoAssertNoPendingException aanpe(cx_);
 
@@ -5396,11 +5435,16 @@ bool CallIRGenerator::tryAttachStub() {
   }
 
   // Ensure callee is a function.
-  if (!callee_.isObject() || !callee_.toObject().is<JSFunction>()) {
+  if (!callee_.isObject()) {
     return false;
   }
 
-  RootedFunction calleeFunc(cx_, &callee_.toObject().as<JSFunction>());
+  RootedObject calleeObj(cx_, &callee_.toObject());
+  if (!calleeObj->is<JSFunction>()) {
+    return tryAttachCallHook(calleeObj);
+  }
+
+  RootedFunction calleeFunc(cx_, &calleeObj->as<JSFunction>());
 
   // Check for scripted optimizations.
   if (calleeFunc->isInterpreted() || calleeFunc->isNativeWithJitEntry()) {
