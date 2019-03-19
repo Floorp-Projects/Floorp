@@ -134,6 +134,36 @@ true if ccache in use is sccache
 :type: ``boolean``
 
 
+.. _telemetry.json#/properties/build_attrs:
+
+build_attrs
++++++++++++
+
+Selected runtime attributes of the build
+
+:type: ``object``
+
+**Properties:** :ref:`telemetry.json#/properties/build_attrs/properties/cpu_percent`, :ref:`telemetry.json#/properties/build_attrs/properties/clobber`
+
+.. _telemetry.json#/properties/build_attrs/properties/cpu_percent:
+
+cpu_percent
+###########
+
+cpu utilization observed during the build
+
+:type: ``number``
+
+.. _telemetry.json#/properties/build_attrs/properties/clobber:
+
+clobber
+#######
+
+true if the build was a clobber/full build
+
+:type: ``boolean``
+
+
 .. _telemetry.json#/properties/client_id:
 
 client_id
