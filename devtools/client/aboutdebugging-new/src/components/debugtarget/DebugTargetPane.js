@@ -22,6 +22,7 @@ class DebugTargetPane extends PureComponent {
   static get propTypes() {
     return {
       actionComponent: PropTypes.any.isRequired,
+      additionalActionsComponent: PropTypes.any,
       collapsibilityKey: PropTypes.string.isRequired,
       detailComponent: PropTypes.any.isRequired,
       dispatch: PropTypes.func.isRequired,
@@ -42,6 +43,7 @@ class DebugTargetPane extends PureComponent {
   render() {
     const {
       actionComponent,
+      additionalActionsComponent,
       detailComponent,
       dispatch,
       getString,
@@ -84,6 +86,7 @@ class DebugTargetPane extends PureComponent {
       ),
       DebugTargetList({
         actionComponent,
+        additionalActionsComponent,
         detailComponent,
         dispatch,
         isCollapsed,

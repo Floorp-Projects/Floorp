@@ -13,15 +13,19 @@
  *  | Detail                                                |
  *  |                                                       |
  *  +-------------------------------------------------------+
+ *  | Additional actions                                    |
+ *  |                                                       |
+ *  +-------------------------------------------------------+
  */
 .debug-target-item {
   display: grid;
   grid-template-columns: calc(var(--base-unit) * 8) 1fr max-content;
   grid-template-rows: 1fr minmax(0, auto) auto;
   grid-column-gap: calc(var(--base-unit) * 2);
-  grid-template-areas: "icon   name    action"
-                       "icon   subname action"
-                       "detail detail  detail";
+  grid-template-areas: "icon               name               action"
+                       "icon               subname            action"
+                       "detail             detail             detail"
+                       "additional_actions additional_actions additional_actions";
   margin-block-end: calc(var(--base-unit) * 4);
 
   padding-block: calc(var(--base-unit) * 3) calc(var(--base-unit) * 2);
@@ -48,6 +52,15 @@
   grid-area: action;
   align-self: center;
   margin-inline-end: calc(var(--base-unit) * 2);
+}
+
+.debug-target-item__additional_actions {
+  grid-area: additional_actions;
+  border-top: 1px solid var(--grey-20);
+  justify-content: end;
+  margin-block-start: calc(var(--base-unit) * 3);
+  padding-block-start: calc(var(--base-unit) * 2);
+  padding-inline-end: calc(var(--base-unit) * 2);
 }
 
 .debug-target-item__detail {

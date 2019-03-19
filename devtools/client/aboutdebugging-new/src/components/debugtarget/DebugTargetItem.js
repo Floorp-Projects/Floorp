@@ -17,6 +17,7 @@ class DebugTargetItem extends PureComponent {
   static get propTypes() {
     return {
       actionComponent: PropTypes.any.isRequired,
+      additionalActionsComponent: PropTypes.any,
       detailComponent: PropTypes.any.isRequired,
       dispatch: PropTypes.func.isRequired,
       target: Types.debugTarget.isRequired,
@@ -30,6 +31,21 @@ class DebugTargetItem extends PureComponent {
         className: "debug-target-item__action",
       },
       actionComponent({ dispatch, target }),
+    );
+  }
+
+  renderAdditionalActions() {
+    const { additionalActionsComponent, dispatch, target } = this.props;
+
+    if (!additionalActionsComponent) {
+      return null;
+    }
+
+    return dom.section(
+      {
+        className: "debug-target-item__additional_actions toolbar",
+      },
+      additionalActionsComponent({ dispatch, target }),
     );
   }
 
@@ -64,6 +80,7 @@ class DebugTargetItem extends PureComponent {
       this.renderName(),
       this.renderAction(),
       this.renderDetail(),
+      this.renderAdditionalActions(),
     );
   }
 }

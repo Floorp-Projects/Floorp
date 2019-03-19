@@ -24,7 +24,8 @@ const RuntimeInfo = createFactory(require("./RuntimeInfo"));
 const ServiceWorkerAction = createFactory(require("./debugtarget/ServiceWorkerAction"));
 const ServiceWorkersWarning = createFactory(require("./ServiceWorkersWarning"));
 const TabDetail = createFactory(require("./debugtarget/TabDetail"));
-const TemporaryExtensionAction = createFactory(require("./debugtarget/TemporaryExtensionAction"));
+const TemporaryExtensionAdditionalActions =
+  createFactory(require("./debugtarget/TemporaryExtensionAdditionalActions"));
 const TemporaryExtensionDetail = createFactory(require("./debugtarget/TemporaryExtensionDetail"));
 const WorkerDetail = createFactory(require("./debugtarget/WorkerDetail"));
 
@@ -75,7 +76,8 @@ class RuntimePage extends PureComponent {
   }
 
   renderDebugTargetPane(name, icon, targets, actionComponent,
-                        detailComponent, paneKey, localizationId) {
+                        additionalActionsComponent, detailComponent,
+                        paneKey, localizationId) {
     const { collapsibilities, dispatch, runtimeDetails } = this.props;
 
     if (!isSupportedDebugTargetPane(runtimeDetails.info.type, paneKey)) {
@@ -89,6 +91,7 @@ class RuntimePage extends PureComponent {
       },
       DebugTargetPane({
         actionComponent,
+        additionalActionsComponent,
         collapsibilityKey: paneKey,
         detailComponent,
         dispatch,
@@ -182,7 +185,8 @@ class RuntimePage extends PureComponent {
       this.renderDebugTargetPane("Temporary Extensions",
                                  this.getIconByType(DEBUG_TARGETS.EXTENSION),
                                  temporaryExtensions,
-                                 TemporaryExtensionAction,
+                                 ExtensionAction,
+                                 TemporaryExtensionAdditionalActions,
                                  TemporaryExtensionDetail,
                                  DEBUG_TARGET_PANE.TEMPORARY_EXTENSION,
                                  "about-debugging-runtime-temporary-extensions"),
@@ -190,6 +194,7 @@ class RuntimePage extends PureComponent {
                                  this.getIconByType(DEBUG_TARGETS.EXTENSION),
                                  installedExtensions,
                                  ExtensionAction,
+                                 null,
                                  ExtensionDetail,
                                  DEBUG_TARGET_PANE.INSTALLED_EXTENSION,
                                  "about-debugging-runtime-extensions"),
@@ -197,6 +202,7 @@ class RuntimePage extends PureComponent {
                                  this.getIconByType(DEBUG_TARGETS.TAB),
                                  tabs,
                                  InspectAction,
+                                 null,
                                  TabDetail,
                                  DEBUG_TARGET_PANE.TAB,
                                  "about-debugging-runtime-tabs"),
@@ -204,6 +210,7 @@ class RuntimePage extends PureComponent {
                                  this.getIconByType(DEBUG_TARGETS.WORKER),
                                  serviceWorkers,
                                  ServiceWorkerAction,
+                                 null,
                                  WorkerDetail,
                                  DEBUG_TARGET_PANE.SERVICE_WORKER,
                                  "about-debugging-runtime-service-workers"),
@@ -211,6 +218,7 @@ class RuntimePage extends PureComponent {
                                  this.getIconByType(DEBUG_TARGETS.WORKER),
                                  sharedWorkers,
                                  InspectAction,
+                                 null,
                                  WorkerDetail,
                                  DEBUG_TARGET_PANE.SHARED_WORKER,
                                  "about-debugging-runtime-shared-workers"),
@@ -218,6 +226,7 @@ class RuntimePage extends PureComponent {
                                  this.getIconByType(DEBUG_TARGETS.WORKER),
                                  otherWorkers,
                                  InspectAction,
+                                 null,
                                  WorkerDetail,
                                  DEBUG_TARGET_PANE.OTHER_WORKER,
                                  "about-debugging-runtime-other-workers"),
