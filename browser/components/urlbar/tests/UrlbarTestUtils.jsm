@@ -12,6 +12,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
   TestUtils: "resource://testing-common/TestUtils.jsm",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
+  UrlbarTokenizer: "resource:///modules/UrlbarTokenizer.jsm",
   UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
 });
 
@@ -454,10 +455,16 @@ class UrlbarAbstraction {
         url: element._urlText,
       };
       if (details.type == UrlbarUtils.RESULT_TYPE.SEARCH) {
+        // Strip restriction tokens from input.
+        let query = action.params.input;
+        let restrictTokens = Object.values(UrlbarTokenizer.RESTRICT);
+        if (restrictTokens.includes(query[0])) {
+          query = query.substring(1).trim();
+        }
         details.searchParams = {
           engine: action.params.engineName,
           keyword: action.params.alias,
-          query: action.params.input,
+          query,
           suggestion: action.params.searchSuggestion,
         };
       }
