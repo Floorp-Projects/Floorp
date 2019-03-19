@@ -1012,17 +1012,11 @@ VARCACHE_PREF(
 )
 
 // Is support for CSS contain enabled?
-#ifdef EARLY_BETA_OR_EARLIER
-#define PREF_VALUE true
-#else
-#define PREF_VALUE false
-#endif
 VARCACHE_PREF(
   "layout.css.contain.enabled",
    layout_css_contain_enabled,
-  bool, PREF_VALUE
+  bool, false
 )
-#undef PREF_VALUE
 
 // Is steps(jump-*) supported in easing functions?
 VARCACHE_PREF(
