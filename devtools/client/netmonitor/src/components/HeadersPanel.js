@@ -379,8 +379,8 @@ class HeadersPanel extends Component {
     );
 
     // not showing #hash in url
-    const summaryUrl = urlDetails.unicodeUrl ?
-      this.renderSummary(SUMMARY_URL, urlDetails.unicodeUrl.split("#")[0]) : null;
+    const summaryUrl = urlDetails.url ?
+      this.renderSummary(SUMMARY_URL, urlDetails.url.split("#")[0]) : null;
 
     const summaryMethod = method ?
       this.renderSummary(SUMMARY_METHOD, method) : null;
