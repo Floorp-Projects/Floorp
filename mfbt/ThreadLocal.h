@@ -178,6 +178,8 @@ class ThreadLocal : public Storage<T> {
   inline T get() const;
 
   inline void set(const T aValue);
+
+  using Type = T;
 };
 
 template <typename T, template <typename U> class Storage>

@@ -13,6 +13,10 @@ XPIDL_SOURCES += [
 
 XPIDL_MODULE = 'chrome'
 
+EXPORTS += [
+    'nsChromeProtocolHandler.h',
+]
+
 EXPORTS.mozilla.chrome += [
     'RegistryMessageUtils.h',
 ]
