@@ -1769,6 +1769,12 @@ class JSScript : public js::gc::TenuredCell {
 
     // Whether this function needs a call object or named lambda environment.
     NeedsFunctionEnvironmentObjects = 1 << 24,
+
+    // LazyScript flags
+    ShouldDeclareArguments = 1 << 25,
+    IsBinAST = 1 << 26,
+    HasDebuggerStatement = 1 << 27,
+    HasDirectEval = 1 << 28,
   };
 
  private:
@@ -2979,35 +2985,23 @@ class LazyScript : public gc::TenuredCell {
   uint32_t numClosedOverBindings_;
   uint32_t numInnerFunctions_;
 
-  struct PackedView {
-    uint32_t shouldDeclareArguments : 1;
-    uint32_t hasThisBinding : 1;
-    uint32_t isAsync : 1;
-    uint32_t isBinAST : 1;
+  // See: JSScript::ImmutableFlags / MutableFlags.
+  // NOTE: Lazy script only defines and uses a subset of these flags.
+  using ImmutableFlags = JSScript::ImmutableFlags;
+  using MutableFlags = JSScript::MutableFlags;
 
-    // N.B. These are booleans but need to be uint32_t to pack correctly on
-    // MSVC. If you add another boolean here, make sure to initialize it in
-    // LazyScript::Create().
-    uint32_t isGenerator : 1;
-    uint32_t strict : 1;
-    uint32_t bindingsAccessedDynamically : 1;
-    uint32_t hasDebuggerStatement : 1;
-    uint32_t hasDirectEval : 1;
-    uint32_t isLikelyConstructorWrapper : 1;
-    uint32_t treatAsRunOnce : 1;
-    uint32_t isDerivedClassConstructor : 1;
-    uint32_t needsHomeObject : 1;
-    uint32_t hasRest : 1;
-    uint32_t parseGoal : 1;
+  uint32_t immutableFlags_;
+  uint32_t mutableFlags_;
 
-    // Runtime flags
-    uint32_t hasBeenCloned : 1;
-  };
+  MOZ_MUST_USE bool hasFlag(MutableFlags flag) const {
+    return mutableFlags_ & uint32_t(flag);
+  }
+  void setFlag(MutableFlags flag) { mutableFlags_ |= uint32_t(flag); }
 
-  union {
-    PackedView p_;
-    uint64_t packedFields_;
-  };
+  MOZ_MUST_USE bool hasFlag(ImmutableFlags flag) const {
+    return immutableFlags_ & uint32_t(flag);
+  }
+  void setFlag(ImmutableFlags flag) { immutableFlags_ |= uint32_t(flag); }
 
   FieldInitializers fieldInitializers_;
 
@@ -3024,7 +3018,7 @@ class LazyScript : public gc::TenuredCell {
 
   LazyScript(uint32_t numClosedOverBindings, uint32_t numInnerFunctions,
              JSFunction* fun, ScriptSourceObject& sourceObject, void* table,
-             uint64_t packedFields, uint32_t sourceStart, uint32_t sourceEnd,
+             uint32_t immutableFlags, uint32_t sourceStart, uint32_t sourceEnd,
              uint32_t toStringStart, uint32_t lineno, uint32_t column);
 
   // Create a LazyScript without initializing the closedOverBindings and the
@@ -3033,7 +3027,7 @@ class LazyScript : public gc::TenuredCell {
   static LazyScript* CreateRaw(JSContext* cx, uint32_t numClosedOverBindings,
                                uint32_t numInnerFunctions, HandleFunction fun,
                                HandleScriptSourceObject sourceObject,
-                               uint64_t packedData, uint32_t sourceStart,
+                               uint32_t immutableFlags, uint32_t sourceStart,
                                uint32_t sourceEnd, uint32_t toStringStart,
                                uint32_t lineno, uint32_t column);
 
@@ -3064,7 +3058,7 @@ class LazyScript : public gc::TenuredCell {
   static LazyScript* CreateForXDR(
       JSContext* cx, uint32_t numClosedOverBindings, uint32_t numInnerFunctions,
       HandleFunction fun, HandleScript script, HandleScope enclosingScope,
-      HandleScriptSourceObject sourceObject, uint64_t packedData,
+      HandleScriptSourceObject sourceObject, uint32_t immutableFlags,
       uint32_t sourceStart, uint32_t sourceEnd, uint32_t toStringStart,
       uint32_t toStringEnd, uint32_t lineno, uint32_t column);
 
@@ -3129,8 +3123,8 @@ class LazyScript : public gc::TenuredCell {
   }
 
   GeneratorKind generatorKind() const {
-    return p_.isGenerator ? GeneratorKind::Generator
-                          : GeneratorKind::NotGenerator;
+    return hasFlag(ImmutableFlags::IsGenerator) ? GeneratorKind::Generator
+                                                : GeneratorKind::NotGenerator;
   }
 
   bool isGenerator() const {
@@ -3141,69 +3135,94 @@ class LazyScript : public gc::TenuredCell {
     // A script only gets its generator kind set as part of initialization,
     // so it can only transition from NotGenerator.
     MOZ_ASSERT(!isGenerator());
-    p_.isGenerator = kind == GeneratorKind::Generator;
+    if (kind == GeneratorKind::Generator) {
+      setFlag(ImmutableFlags::IsGenerator);
+    }
   }
 
+  bool isAsync() const { return hasFlag(ImmutableFlags::IsAsync); }
   FunctionAsyncKind asyncKind() const {
-    return p_.isAsync ? FunctionAsyncKind::AsyncFunction
-                      : FunctionAsyncKind::SyncFunction;
+    return isAsync() ? FunctionAsyncKind::AsyncFunction
+                     : FunctionAsyncKind::SyncFunction;
   }
-  bool isAsync() const { return p_.isAsync; }
 
   void setAsyncKind(FunctionAsyncKind kind) {
-    p_.isAsync = kind == FunctionAsyncKind::AsyncFunction;
+    if (kind == FunctionAsyncKind::AsyncFunction) {
+      setFlag(ImmutableFlags::IsAsync);
+    }
   }
 
-  bool hasRest() const { return p_.hasRest; }
-  void setHasRest() { p_.hasRest = true; }
+  bool hasRest() const { return hasFlag(ImmutableFlags::HasRest); }
+  void setHasRest() { setFlag(ImmutableFlags::HasRest); }
 
   frontend::ParseGoal parseGoal() const {
-    return frontend::ParseGoal(p_.parseGoal);
+    if (hasFlag(ImmutableFlags::IsModule)) {
+      return frontend::ParseGoal::Module;
+    }
+    return frontend::ParseGoal::Script;
   }
 
-  bool isBinAST() const { return p_.isBinAST; }
-  void setIsBinAST() { p_.isBinAST = true; }
+  bool isBinAST() const { return hasFlag(ImmutableFlags::IsBinAST); }
+  void setIsBinAST() { setFlag(ImmutableFlags::IsBinAST); }
 
-  bool strict() const { return p_.strict; }
-  void setStrict() { p_.strict = true; }
+  bool strict() const { return hasFlag(ImmutableFlags::Strict); }
+  void setStrict() { setFlag(ImmutableFlags::Strict); }
 
   bool bindingsAccessedDynamically() const {
-    return p_.bindingsAccessedDynamically;
+    return hasFlag(ImmutableFlags::BindingsAccessedDynamically);
   }
   void setBindingsAccessedDynamically() {
-    p_.bindingsAccessedDynamically = true;
+    setFlag(ImmutableFlags::BindingsAccessedDynamically);
   }
 
-  bool hasDebuggerStatement() const { return p_.hasDebuggerStatement; }
-  void setHasDebuggerStatement() { p_.hasDebuggerStatement = true; }
+  bool hasDebuggerStatement() const {
+    return hasFlag(ImmutableFlags::HasDebuggerStatement);
+  }
+  void setHasDebuggerStatement() {
+    setFlag(ImmutableFlags::HasDebuggerStatement);
+  }
 
-  bool hasDirectEval() const { return p_.hasDirectEval; }
-  void setHasDirectEval() { p_.hasDirectEval = true; }
+  bool hasDirectEval() const { return hasFlag(ImmutableFlags::HasDirectEval); }
+  void setHasDirectEval() { setFlag(ImmutableFlags::HasDirectEval); }
 
   bool isLikelyConstructorWrapper() const {
-    return p_.isLikelyConstructorWrapper;
+    return hasFlag(ImmutableFlags::IsLikelyConstructorWrapper);
   }
-  void setLikelyConstructorWrapper() { p_.isLikelyConstructorWrapper = true; }
+  void setLikelyConstructorWrapper() {
+    setFlag(ImmutableFlags::IsLikelyConstructorWrapper);
+  }
 
-  bool hasBeenCloned() const { return p_.hasBeenCloned; }
-  void setHasBeenCloned() { p_.hasBeenCloned = true; }
+  bool hasBeenCloned() const { return hasFlag(MutableFlags::HasBeenCloned); }
+  void setHasBeenCloned() { setFlag(MutableFlags::HasBeenCloned); }
 
-  bool treatAsRunOnce() const { return p_.treatAsRunOnce; }
-  void setTreatAsRunOnce() { p_.treatAsRunOnce = true; }
+  bool treatAsRunOnce() const {
+    return hasFlag(ImmutableFlags::TreatAsRunOnce);
+  }
+  void setTreatAsRunOnce() { setFlag(ImmutableFlags::TreatAsRunOnce); }
 
   bool isDerivedClassConstructor() const {
-    return p_.isDerivedClassConstructor;
+    return hasFlag(ImmutableFlags::IsDerivedClassConstructor);
   }
-  void setIsDerivedClassConstructor() { p_.isDerivedClassConstructor = true; }
+  void setIsDerivedClassConstructor() {
+    setFlag(ImmutableFlags::IsDerivedClassConstructor);
+  }
 
-  bool needsHomeObject() const { return p_.needsHomeObject; }
-  void setNeedsHomeObject() { p_.needsHomeObject = true; }
+  bool needsHomeObject() const {
+    return hasFlag(ImmutableFlags::NeedsHomeObject);
+  }
+  void setNeedsHomeObject() { setFlag(ImmutableFlags::NeedsHomeObject); }
 
-  bool shouldDeclareArguments() const { return p_.shouldDeclareArguments; }
-  void setShouldDeclareArguments() { p_.shouldDeclareArguments = true; }
+  bool shouldDeclareArguments() const {
+    return hasFlag(ImmutableFlags::ShouldDeclareArguments);
+  }
+  void setShouldDeclareArguments() {
+    setFlag(ImmutableFlags::ShouldDeclareArguments);
+  }
 
-  bool hasThisBinding() const { return p_.hasThisBinding; }
-  void setHasThisBinding() { p_.hasThisBinding = true; }
+  bool hasThisBinding() const {
+    return hasFlag(ImmutableFlags::FunctionHasThisBinding);
+  }
+  void setHasThisBinding() { setFlag(ImmutableFlags::FunctionHasThisBinding); }
 
   void setFieldInitializers(FieldInitializers fieldInitializers) {
     fieldInitializers_ = fieldInitializers;
@@ -3246,7 +3265,7 @@ class LazyScript : public gc::TenuredCell {
     return mallocSizeOf(table_);
   }
 
-  uint64_t packedFieldsForXDR() const;
+  uint32_t immutableFlags() const { return immutableFlags_; }
 };
 
 /* If this fails, add/remove padding within LazyScript. */
