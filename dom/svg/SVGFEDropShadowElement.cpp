@@ -38,24 +38,24 @@ NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGFEDropShadowElement)
 
 //----------------------------------------------------------------------
 
-already_AddRefed<SVGAnimatedString> SVGFEDropShadowElement::In1() {
+already_AddRefed<DOMSVGAnimatedString> SVGFEDropShadowElement::In1() {
   return mStringAttributes[IN1].ToDOMAnimatedString(this);
 }
 
-already_AddRefed<SVGAnimatedNumber> SVGFEDropShadowElement::Dx() {
+already_AddRefed<DOMSVGAnimatedNumber> SVGFEDropShadowElement::Dx() {
   return mNumberAttributes[DX].ToDOMAnimatedNumber(this);
 }
 
-already_AddRefed<SVGAnimatedNumber> SVGFEDropShadowElement::Dy() {
+already_AddRefed<DOMSVGAnimatedNumber> SVGFEDropShadowElement::Dy() {
   return mNumberAttributes[DY].ToDOMAnimatedNumber(this);
 }
 
-already_AddRefed<SVGAnimatedNumber> SVGFEDropShadowElement::StdDeviationX() {
+already_AddRefed<DOMSVGAnimatedNumber> SVGFEDropShadowElement::StdDeviationX() {
   return mNumberPairAttributes[STD_DEV].ToDOMAnimatedNumber(
       SVGNumberPair::eFirst, this);
 }
 
-already_AddRefed<SVGAnimatedNumber> SVGFEDropShadowElement::StdDeviationY() {
+already_AddRefed<DOMSVGAnimatedNumber> SVGFEDropShadowElement::StdDeviationY() {
   return mNumberPairAttributes[STD_DEV].ToDOMAnimatedNumber(
       SVGNumberPair::eSecond, this);
 }

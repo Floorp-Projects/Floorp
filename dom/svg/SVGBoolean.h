@@ -20,8 +20,8 @@ namespace mozilla {
 class SMILValue;
 
 namespace dom {
+class DOMSVGAnimatedBoolean;
 class SVGAnimationElement;
-class SVGAnimatedBoolean;
 class SVGElement;
 }  // namespace dom
 
@@ -44,7 +44,7 @@ class SVGBoolean {
   void SetAnimValue(bool aValue, SVGElement* aSVGElement);
   bool GetAnimValue() const { return mAnimVal; }
 
-  already_AddRefed<mozilla::dom::SVGAnimatedBoolean> ToDOMAnimatedBoolean(
+  already_AddRefed<mozilla::dom::DOMSVGAnimatedBoolean> ToDOMAnimatedBoolean(
       SVGElement* aSVGElement);
   mozilla::UniquePtr<SMILAttr> ToSMILAttr(SVGElement* aSVGElement);
 

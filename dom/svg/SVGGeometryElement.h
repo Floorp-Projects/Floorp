@@ -31,7 +31,7 @@ struct SVGMark {
 
 namespace dom {
 
-class SVGAnimatedNumber;
+class DOMSVGAnimatedNumber;
 
 typedef mozilla::dom::SVGGraphicsElement SVGGeometryElementBase;
 
@@ -208,7 +208,7 @@ class SVGGeometryElement : public SVGGeometryElementBase {
   float GetPathLengthScale(PathLengthScaleForType aFor);
 
   // WebIDL
-  already_AddRefed<SVGAnimatedNumber> PathLength();
+  already_AddRefed<DOMSVGAnimatedNumber> PathLength();
   float GetTotalLength();
   already_AddRefed<nsISVGPoint> GetPointAtLength(float distance,
                                                  ErrorResult& rv);

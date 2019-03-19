@@ -7,6 +7,8 @@
 #ifndef mozilla_dom_SVGMarkerElement_h
 #define mozilla_dom_SVGMarkerElement_h
 
+#include "DOMSVGAnimatedAngle.h"
+#include "DOMSVGAnimatedEnumeration.h"
 #include "nsAutoPtr.h"
 #include "SVGAnimatedPreserveAspectRatio.h"
 #include "SVGEnum.h"
@@ -14,8 +16,6 @@
 #include "SVGOrient.h"
 #include "SVGViewBox.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/dom/SVGAnimatedAngle.h"
-#include "mozilla/dom/SVGAnimatedEnumeration.h"
 #include "mozilla/dom/SVGElement.h"
 #include "mozilla/dom/SVGMarkerElementBinding.h"
 
@@ -64,13 +64,13 @@ class SVGMarkerElement : public SVGMarkerElementBase {
   // WebIDL
   already_AddRefed<SVGAnimatedRect> ViewBox();
   already_AddRefed<DOMSVGAnimatedPreserveAspectRatio> PreserveAspectRatio();
-  already_AddRefed<SVGAnimatedLength> RefX();
-  already_AddRefed<SVGAnimatedLength> RefY();
-  already_AddRefed<SVGAnimatedEnumeration> MarkerUnits();
-  already_AddRefed<SVGAnimatedLength> MarkerWidth();
-  already_AddRefed<SVGAnimatedLength> MarkerHeight();
-  already_AddRefed<SVGAnimatedEnumeration> OrientType();
-  already_AddRefed<SVGAnimatedAngle> OrientAngle();
+  already_AddRefed<DOMSVGAnimatedLength> RefX();
+  already_AddRefed<DOMSVGAnimatedLength> RefY();
+  already_AddRefed<DOMSVGAnimatedEnumeration> MarkerUnits();
+  already_AddRefed<DOMSVGAnimatedLength> MarkerWidth();
+  already_AddRefed<DOMSVGAnimatedLength> MarkerHeight();
+  already_AddRefed<DOMSVGAnimatedEnumeration> OrientType();
+  already_AddRefed<DOMSVGAnimatedAngle> OrientAngle();
   void SetOrientToAuto();
   void SetOrientToAngle(DOMSVGAngle& angle, ErrorResult& rv);
 

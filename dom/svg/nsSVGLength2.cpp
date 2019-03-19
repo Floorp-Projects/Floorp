@@ -8,16 +8,16 @@
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/SMILValue.h"
-#include "mozilla/dom/SVGAnimatedLength.h"
 #include "mozilla/dom/SVGViewportElement.h"
-#include "nsContentUtils.h"
+#include "DOMSVGAnimatedLength.h"
 #include "DOMSVGLength.h"
-#include "nsIFrame.h"
 #include "LayoutLogging.h"
+#include "nsContentUtils.h"
+#include "nsIFrame.h"
+#include "nsTextFormatter.h"
 #include "SMILFloatType.h"
 #include "SVGAttrTearoffTable.h"
 #include "nsSVGIntegrationUtils.h"
-#include "nsTextFormatter.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -35,7 +35,7 @@ static const nsStaticAtom* const unitMap[] = {
     nsGkAtoms::pt,
     nsGkAtoms::pc};
 
-static SVGAttrTearoffTable<nsSVGLength2, SVGAnimatedLength>
+static SVGAttrTearoffTable<nsSVGLength2, DOMSVGAnimatedLength>
     sSVGAnimatedLengthTearoffTable;
 
 /* Helper functions */
@@ -398,19 +398,19 @@ nsresult nsSVGLength2::SetAnimValue(float aValue, SVGElement* aSVGElement) {
   return NS_ERROR_ILLEGAL_VALUE;
 }
 
-already_AddRefed<SVGAnimatedLength> nsSVGLength2::ToDOMAnimatedLength(
+already_AddRefed<DOMSVGAnimatedLength> nsSVGLength2::ToDOMAnimatedLength(
     SVGElement* aSVGElement) {
-  RefPtr<SVGAnimatedLength> svgAnimatedLength =
+  RefPtr<DOMSVGAnimatedLength> svgAnimatedLength =
       sSVGAnimatedLengthTearoffTable.GetTearoff(this);
   if (!svgAnimatedLength) {
-    svgAnimatedLength = new SVGAnimatedLength(this, aSVGElement);
+    svgAnimatedLength = new DOMSVGAnimatedLength(this, aSVGElement);
     sSVGAnimatedLengthTearoffTable.AddTearoff(this, svgAnimatedLength);
   }
 
   return svgAnimatedLength.forget();
 }
 
-SVGAnimatedLength::~SVGAnimatedLength() {
+DOMSVGAnimatedLength::~DOMSVGAnimatedLength() {
   sSVGAnimatedLengthTearoffTable.RemoveTearoff(mVal);
 }
 

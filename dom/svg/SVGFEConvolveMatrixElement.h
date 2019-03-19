@@ -7,7 +7,7 @@
 #ifndef mozilla_dom_SVGFEConvolveMatrixElement_h
 #define mozilla_dom_SVGFEConvolveMatrixElement_h
 
-#include "SVGAnimatedNumberList.h"
+#include "DOMSVGAnimatedNumberList.h"
 #include "SVGBoolean.h"
 #include "SVGEnum.h"
 #include "SVGFilters.h"
@@ -23,7 +23,7 @@ namespace mozilla {
 
 namespace dom {
 class DOMSVGAnimatedNumberList;
-class SVGAnimatedBoolean;
+class DOMSVGAnimatedBoolean;
 
 typedef SVGFE SVGFEConvolveMatrixElementBase;
 
@@ -54,18 +54,18 @@ class SVGFEConvolveMatrixElement : public SVGFEConvolveMatrixElementBase {
   virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
   // WebIDL
-  already_AddRefed<SVGAnimatedString> In1();
-  already_AddRefed<SVGAnimatedInteger> OrderX();
-  already_AddRefed<SVGAnimatedInteger> OrderY();
+  already_AddRefed<DOMSVGAnimatedString> In1();
+  already_AddRefed<DOMSVGAnimatedInteger> OrderX();
+  already_AddRefed<DOMSVGAnimatedInteger> OrderY();
   already_AddRefed<DOMSVGAnimatedNumberList> KernelMatrix();
-  already_AddRefed<SVGAnimatedInteger> TargetX();
-  already_AddRefed<SVGAnimatedInteger> TargetY();
-  already_AddRefed<SVGAnimatedEnumeration> EdgeMode();
-  already_AddRefed<SVGAnimatedBoolean> PreserveAlpha();
-  already_AddRefed<SVGAnimatedNumber> Divisor();
-  already_AddRefed<SVGAnimatedNumber> Bias();
-  already_AddRefed<SVGAnimatedNumber> KernelUnitLengthX();
-  already_AddRefed<SVGAnimatedNumber> KernelUnitLengthY();
+  already_AddRefed<DOMSVGAnimatedInteger> TargetX();
+  already_AddRefed<DOMSVGAnimatedInteger> TargetY();
+  already_AddRefed<DOMSVGAnimatedEnumeration> EdgeMode();
+  already_AddRefed<DOMSVGAnimatedBoolean> PreserveAlpha();
+  already_AddRefed<DOMSVGAnimatedNumber> Divisor();
+  already_AddRefed<DOMSVGAnimatedNumber> Bias();
+  already_AddRefed<DOMSVGAnimatedNumber> KernelUnitLengthX();
+  already_AddRefed<DOMSVGAnimatedNumber> KernelUnitLengthY();
 
  protected:
   virtual NumberAttributesInfo GetNumberInfo() override;

@@ -71,35 +71,37 @@ LightType SVGFESpotLightElement::ComputeLightAttributes(
   return LightType::Spot;
 }
 
-already_AddRefed<SVGAnimatedNumber> SVGFESpotLightElement::X() {
+already_AddRefed<DOMSVGAnimatedNumber> SVGFESpotLightElement::X() {
   return mNumberAttributes[ATTR_X].ToDOMAnimatedNumber(this);
 }
 
-already_AddRefed<SVGAnimatedNumber> SVGFESpotLightElement::Y() {
+already_AddRefed<DOMSVGAnimatedNumber> SVGFESpotLightElement::Y() {
   return mNumberAttributes[ATTR_Y].ToDOMAnimatedNumber(this);
 }
 
-already_AddRefed<SVGAnimatedNumber> SVGFESpotLightElement::Z() {
+already_AddRefed<DOMSVGAnimatedNumber> SVGFESpotLightElement::Z() {
   return mNumberAttributes[ATTR_Z].ToDOMAnimatedNumber(this);
 }
 
-already_AddRefed<SVGAnimatedNumber> SVGFESpotLightElement::PointsAtX() {
+already_AddRefed<DOMSVGAnimatedNumber> SVGFESpotLightElement::PointsAtX() {
   return mNumberAttributes[POINTS_AT_X].ToDOMAnimatedNumber(this);
 }
 
-already_AddRefed<SVGAnimatedNumber> SVGFESpotLightElement::PointsAtY() {
+already_AddRefed<DOMSVGAnimatedNumber> SVGFESpotLightElement::PointsAtY() {
   return mNumberAttributes[POINTS_AT_Y].ToDOMAnimatedNumber(this);
 }
 
-already_AddRefed<SVGAnimatedNumber> SVGFESpotLightElement::PointsAtZ() {
+already_AddRefed<DOMSVGAnimatedNumber> SVGFESpotLightElement::PointsAtZ() {
   return mNumberAttributes[POINTS_AT_Z].ToDOMAnimatedNumber(this);
 }
 
-already_AddRefed<SVGAnimatedNumber> SVGFESpotLightElement::SpecularExponent() {
+already_AddRefed<DOMSVGAnimatedNumber>
+SVGFESpotLightElement::SpecularExponent() {
   return mNumberAttributes[SPECULAR_EXPONENT].ToDOMAnimatedNumber(this);
 }
 
-already_AddRefed<SVGAnimatedNumber> SVGFESpotLightElement::LimitingConeAngle() {
+already_AddRefed<DOMSVGAnimatedNumber>
+SVGFESpotLightElement::LimitingConeAngle() {
   return mNumberAttributes[LIMITING_CONE_ANGLE].ToDOMAnimatedNumber(this);
 }
 

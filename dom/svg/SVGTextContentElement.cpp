@@ -48,11 +48,12 @@ SVGTextContentElement::GetSVGTextFrameForNonLayoutDependentQuery() {
   return static_cast<SVGTextFrame*>(textFrame);
 }
 
-already_AddRefed<SVGAnimatedLength> SVGTextContentElement::TextLength() {
+already_AddRefed<DOMSVGAnimatedLength> SVGTextContentElement::TextLength() {
   return LengthAttributes()[TEXTLENGTH].ToDOMAnimatedLength(this);
 }
 
-already_AddRefed<SVGAnimatedEnumeration> SVGTextContentElement::LengthAdjust() {
+already_AddRefed<DOMSVGAnimatedEnumeration>
+SVGTextContentElement::LengthAdjust() {
   return EnumAttributes()[LENGTHADJUST].ToDOMAnimatedEnum(this);
 }
 

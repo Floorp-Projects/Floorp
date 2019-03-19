@@ -33,7 +33,7 @@ SVGElement::StringInfo SVGFEComponentTransferElement::sStringInfo[2] = {
 
 NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGFEComponentTransferElement)
 
-already_AddRefed<SVGAnimatedString> SVGFEComponentTransferElement::In1() {
+already_AddRefed<DOMSVGAnimatedString> SVGFEComponentTransferElement::In1() {
   return mStringAttributes[IN1].ToDOMAnimatedString(this);
 }
 

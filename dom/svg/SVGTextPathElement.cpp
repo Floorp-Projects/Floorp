@@ -20,7 +20,7 @@ namespace dom {
 using namespace SVGTextContentElement_Binding;
 using namespace SVGTextPathElement_Binding;
 
-class SVGAnimatedLength;
+class DOMSVGAnimatedLength;
 
 JSObject* SVGTextPathElement::WrapNode(JSContext* aCx,
                                        JS::Handle<JSObject*> aGivenProto) {
@@ -82,7 +82,7 @@ void SVGTextPathElement::HrefAsString(nsAString& aHref) {
 
 NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGTextPathElement)
 
-already_AddRefed<SVGAnimatedString> SVGTextPathElement::Href() {
+already_AddRefed<DOMSVGAnimatedString> SVGTextPathElement::Href() {
   return mStringAttributes[HREF].IsExplicitlySet()
              ? mStringAttributes[HREF].ToDOMAnimatedString(this)
              : mStringAttributes[XLINK_HREF].ToDOMAnimatedString(this);
@@ -90,19 +90,19 @@ already_AddRefed<SVGAnimatedString> SVGTextPathElement::Href() {
 
 //----------------------------------------------------------------------
 
-already_AddRefed<SVGAnimatedLength> SVGTextPathElement::StartOffset() {
+already_AddRefed<DOMSVGAnimatedLength> SVGTextPathElement::StartOffset() {
   return mLengthAttributes[STARTOFFSET].ToDOMAnimatedLength(this);
 }
 
-already_AddRefed<SVGAnimatedEnumeration> SVGTextPathElement::Method() {
+already_AddRefed<DOMSVGAnimatedEnumeration> SVGTextPathElement::Method() {
   return mEnumAttributes[METHOD].ToDOMAnimatedEnum(this);
 }
 
-already_AddRefed<SVGAnimatedEnumeration> SVGTextPathElement::Spacing() {
+already_AddRefed<DOMSVGAnimatedEnumeration> SVGTextPathElement::Spacing() {
   return mEnumAttributes[SPACING].ToDOMAnimatedEnum(this);
 }
 
-already_AddRefed<SVGAnimatedEnumeration> SVGTextPathElement::Side() {
+already_AddRefed<DOMSVGAnimatedEnumeration> SVGTextPathElement::Side() {
   return mEnumAttributes[SIDE].ToDOMAnimatedEnum(this);
 }
 

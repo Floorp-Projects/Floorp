@@ -72,7 +72,7 @@ void SVGInteger::SetAnimValue(int aValue, SVGElement *aSVGElement) {
   aSVGElement->DidAnimateInteger(mAttrEnum);
 }
 
-already_AddRefed<SVGAnimatedInteger> SVGInteger::ToDOMAnimatedInteger(
+already_AddRefed<DOMSVGAnimatedInteger> SVGInteger::ToDOMAnimatedInteger(
     SVGElement *aSVGElement) {
   RefPtr<DOMAnimatedInteger> domAnimatedInteger =
       sSVGAnimatedIntegerTearoffTable.GetTearoff(this);

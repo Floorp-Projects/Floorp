@@ -7,7 +7,6 @@
 #include "mozilla/dom/SVGElement.h"
 
 #include "mozilla/dom/MutationEventBinding.h"
-#include "mozilla/dom/SVGAnimatedEnumeration.h"
 #include "mozilla/dom/SVGElementBinding.h"
 #include "mozilla/dom/SVGGeometryElement.h"
 #include "mozilla/dom/SVGLengthBinding.h"
@@ -25,6 +24,7 @@
 #include "mozilla/SVGContentUtils.h"
 #include "mozilla/Unused.h"
 
+#include "DOMSVGAnimatedEnumeration.h"
 #include "mozAutoDocUpdate.h"
 #include "nsAttrValueOrString.h"
 #include "nsCSSProps.h"
@@ -1016,7 +1016,7 @@ SVGElement* SVGElement::GetViewportElement() {
   return SVGContentUtils::GetNearestViewportElement(this);
 }
 
-already_AddRefed<SVGAnimatedString> SVGElement::ClassName() {
+already_AddRefed<DOMSVGAnimatedString> SVGElement::ClassName() {
   return mClassAttribute.ToDOMAnimatedString(this);
 }
 
@@ -2226,7 +2226,6 @@ UniquePtr<SMILAttr> SVGElement::GetAnimatedAttr(int32_t aNamespaceID,
       return orient ? orient->ToSMILAttr(this) : nullptr;
     }
 
-    // preserveAspectRatio:
     // viewBox:
     if (aName == nsGkAtoms::viewBox) {
       SVGViewBox* viewBox = GetViewBox();

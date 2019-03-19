@@ -7,9 +7,9 @@
 #ifndef __NS_SVGSTRING_H__
 #define __NS_SVGSTRING_H__
 
+#include "DOMSVGAnimatedString.h"
 #include "nsAutoPtr.h"
 #include "nsError.h"
-#include "mozilla/dom/SVGAnimatedString.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/UniquePtr.h"
 
@@ -47,7 +47,7 @@ class SVGString {
   // usable, and represents the default base value of the attribute.
   bool IsExplicitlySet() const { return !!mAnimVal || mIsBaseSet; }
 
-  already_AddRefed<mozilla::dom::SVGAnimatedString> ToDOMAnimatedString(
+  already_AddRefed<mozilla::dom::DOMSVGAnimatedString> ToDOMAnimatedString(
       SVGElement* aSVGElement);
 
   mozilla::UniquePtr<SMILAttr> ToSMILAttr(SVGElement* aSVGElement);
@@ -58,12 +58,14 @@ class SVGString {
   bool mIsBaseSet;
 
  public:
-  struct DOMAnimatedString final : public mozilla::dom::SVGAnimatedString {
+  // DOM wrapper class for the (DOM)SVGAnimatedString interface where the
+  // wrapped class is SVGString.
+  struct DOMAnimatedString final : public mozilla::dom::DOMSVGAnimatedString {
     NS_DECL_CYCLE_COLLECTING_ISUPPORTS
     NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(DOMAnimatedString)
 
     DOMAnimatedString(SVGString* aVal, SVGElement* aSVGElement)
-        : mozilla::dom::SVGAnimatedString(aSVGElement), mVal(aVal) {}
+        : mozilla::dom::DOMSVGAnimatedString(aSVGElement), mVal(aVal) {}
 
     SVGString* mVal;  // kept alive because it belongs to content
 
