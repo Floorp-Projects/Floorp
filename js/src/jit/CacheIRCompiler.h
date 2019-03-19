@@ -56,6 +56,7 @@ namespace jit {
   _(GuardXrayExpandoShapeAndDefaultProto) \
   _(GuardNoAllocationMetadataBuilder)     \
   _(GuardObjectGroupNotPretenured)        \
+  _(GuardFunctionHasJitEntry)             \
   _(LoadObject)                           \
   _(LoadProto)                            \
   _(LoadEnclosingEnvironment)             \
