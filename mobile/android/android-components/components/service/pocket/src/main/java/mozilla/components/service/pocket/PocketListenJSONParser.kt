@@ -5,6 +5,7 @@
 package mozilla.components.service.pocket
 
 import mozilla.components.service.pocket.data.PocketListenArticleMetadata
+import mozilla.components.service.pocket.data.PocketListenArticleMetadata.Status
 import org.json.JSONArray
 import org.json.JSONException
 
@@ -22,7 +23,7 @@ internal class PocketListenJSONParser {
         PocketListenArticleMetadata(
             format = innerObject.getString("format"),
             audioUrl = innerObject.getString("url"),
-            status = innerObject.getString("status"),
+            status = Status.fromString(innerObject.getString("status")),
             voice = innerObject.getString("voice"),
             durationSeconds = innerObject.getLong("duration"),
             size = innerObject.getString("size")

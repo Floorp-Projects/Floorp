@@ -69,7 +69,7 @@ enum class PocketTestResource(private val path: String) {
         fun getExpectedListenArticleMetadata(): PocketListenArticleMetadata = PocketListenArticleMetadata(
             format = "mp3",
             audioUrl = "https://scout-streaming-2018.s3.amazonaws.com/76cd4614-3bba-4272-b07c-0b3161aed7d9.mp3",
-            status = "available",
+            status = PocketListenArticleMetadata.Status.AVAILABLE,
             voice = "Salli",
             durationSeconds = 353,
             size = "1771738"
