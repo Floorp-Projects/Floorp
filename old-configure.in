@@ -283,16 +283,10 @@ dnl Configure platform-specific CPU architecture compiler options.
 dnl ==============================================================
 if test "$COMPILE_ENVIRONMENT"; then
     MOZ_ARCH_OPTS
-else
-    if test "$OS_TARGET" = Android; then
-        dnl Default Android builds to ARMv7.
-        MOZ_ARCH=armv7-a
-    fi
 fi # COMPILE_ENVIRONMENT
 
 dnl ========================================================
-dnl Android libstdc++, placed here so it can use MOZ_ARCH
-dnl computed above.
+dnl Android libstdc++
 dnl ========================================================
 
 MOZ_ANDROID_CPU_ARCH
