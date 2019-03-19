@@ -20,7 +20,7 @@ nsresult NS_NewSVGFilterElement(
 
 namespace mozilla {
 namespace dom {
-class SVGAnimatedLength;
+class DOMSVGAnimatedLength;
 
 typedef SVGElement SVGFilterElementBase;
 
@@ -46,13 +46,13 @@ class SVGFilterElement : public SVGFilterElementBase {
   virtual bool HasValidDimensions() const override;
 
   // WebIDL
-  already_AddRefed<SVGAnimatedLength> X();
-  already_AddRefed<SVGAnimatedLength> Y();
-  already_AddRefed<SVGAnimatedLength> Width();
-  already_AddRefed<SVGAnimatedLength> Height();
-  already_AddRefed<SVGAnimatedEnumeration> FilterUnits();
-  already_AddRefed<SVGAnimatedEnumeration> PrimitiveUnits();
-  already_AddRefed<SVGAnimatedString> Href();
+  already_AddRefed<DOMSVGAnimatedLength> X();
+  already_AddRefed<DOMSVGAnimatedLength> Y();
+  already_AddRefed<DOMSVGAnimatedLength> Width();
+  already_AddRefed<DOMSVGAnimatedLength> Height();
+  already_AddRefed<DOMSVGAnimatedEnumeration> FilterUnits();
+  already_AddRefed<DOMSVGAnimatedEnumeration> PrimitiveUnits();
+  already_AddRefed<DOMSVGAnimatedString> Href();
 
  protected:
   virtual LengthAttributesInfo GetLengthInfo() override;

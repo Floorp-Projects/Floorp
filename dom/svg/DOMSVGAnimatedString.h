@@ -4,17 +4,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_SVGAnimatedString_h
-#define mozilla_dom_SVGAnimatedString_h
+#ifndef mozilla_dom_DOMSVGAnimatedString_h
+#define mozilla_dom_DOMSVGAnimatedString_h
 
 #include "SVGElement.h"
 
 namespace mozilla {
 namespace dom {
 
-class SVGAnimatedString : public nsISupports, public nsWrapperCache {
+class DOMSVGAnimatedString : public nsISupports, public nsWrapperCache {
  public:
-  explicit SVGAnimatedString(SVGElement* aSVGElement)
+  explicit DOMSVGAnimatedString(SVGElement* aSVGElement)
       : mSVGElement(aSVGElement) {}
 
   virtual JSObject* WrapObject(JSContext* aCx,
@@ -33,4 +33,4 @@ class SVGAnimatedString : public nsISupports, public nsWrapperCache {
 }  // namespace dom
 }  // namespace mozilla
 
-#endif  // mozilla_dom_SVGAnimatedString_h
+#endif  // mozilla_dom_DOMSVGAnimatedString_h

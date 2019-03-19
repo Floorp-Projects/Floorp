@@ -48,10 +48,10 @@ class SVGLineElement final : public SVGLineElementBase {
   virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
   // WebIDL
-  already_AddRefed<SVGAnimatedLength> X1();
-  already_AddRefed<SVGAnimatedLength> Y1();
-  already_AddRefed<SVGAnimatedLength> X2();
-  already_AddRefed<SVGAnimatedLength> Y2();
+  already_AddRefed<DOMSVGAnimatedLength> X1();
+  already_AddRefed<DOMSVGAnimatedLength> Y1();
+  already_AddRefed<DOMSVGAnimatedLength> X2();
+  already_AddRefed<DOMSVGAnimatedLength> Y2();
 
  protected:
   virtual LengthAttributesInfo GetLengthInfo() override;

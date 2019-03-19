@@ -34,7 +34,7 @@ class SVGStopElement final : public SVGStopElementBase {
   virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
   // WebIDL
-  already_AddRefed<SVGAnimatedNumber> Offset();
+  already_AddRefed<DOMSVGAnimatedNumber> Offset();
 
  protected:
   virtual NumberAttributesInfo GetNumberInfo() override;

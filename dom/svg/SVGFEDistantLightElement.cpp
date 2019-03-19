@@ -49,11 +49,11 @@ LightType SVGFEDistantLightElement::ComputeLightAttributes(
   return LightType::Distant;
 }
 
-already_AddRefed<SVGAnimatedNumber> SVGFEDistantLightElement::Azimuth() {
+already_AddRefed<DOMSVGAnimatedNumber> SVGFEDistantLightElement::Azimuth() {
   return mNumberAttributes[AZIMUTH].ToDOMAnimatedNumber(this);
 }
 
-already_AddRefed<SVGAnimatedNumber> SVGFEDistantLightElement::Elevation() {
+already_AddRefed<DOMSVGAnimatedNumber> SVGFEDistantLightElement::Elevation() {
   return mNumberAttributes[ELEVATION].ToDOMAnimatedNumber(this);
 }
 

@@ -1951,12 +1951,12 @@ static bool DoCopyTexOrSubImage(WebGLContext* webgl, bool isSubImage,
 
       if (uint32_t(rwWidth) != dstWidth || uint32_t(rwHeight) != dstHeight) {
         const auto& pi = idealUnpack->ToPacking();
-        CheckedUint32 byteCount = BytesPerPixel(pi);
+        CheckedInt<size_t> byteCount = BytesPerPixel(pi);
         byteCount *= dstWidth;
         byteCount *= dstHeight;
 
         if (byteCount.isValid()) {
-          buffer = calloc(1, byteCount.value());
+          buffer = calloc(1u, byteCount.value());
         }
 
         if (!buffer.get()) {

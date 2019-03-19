@@ -179,6 +179,6 @@ float SVGGeometryElement::GetPathLengthScale(PathLengthScaleForType aFor) {
   return 1.0;
 }
 
-already_AddRefed<SVGAnimatedNumber> SVGGeometryElement::PathLength() {
+already_AddRefed<DOMSVGAnimatedNumber> SVGGeometryElement::PathLength() {
   return mPathLength.ToDOMAnimatedNumber(this);
 }

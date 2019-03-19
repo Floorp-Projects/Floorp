@@ -6,6 +6,8 @@
 #ifndef WEBGLTYPES_H_
 #define WEBGLTYPES_H_
 
+#include <limits>
+
 // Most WebIDL typedefs are identical to their OpenGL counterparts.
 #include "GLTypes.h"
 
@@ -15,10 +17,40 @@ typedef int64_t WebGLsizeiptr;
 typedef int64_t WebGLintptr;
 typedef bool WebGLboolean;
 
+// -
+
 namespace mozilla {
 namespace gl {
 class GLContext;  // This is going to be needed a lot.
 }  // namespace gl
+
+// -
+// Prevent implicit conversions into calloc and malloc. (mozilla namespace only!)
+
+template<typename DestT>
+class ForbidNarrowing final
+{
+  DestT mVal;
+
+public:
+  template<typename SrcT>
+  MOZ_IMPLICIT ForbidNarrowing(SrcT val) : mVal(val) {
+    static_assert(std::numeric_limits<SrcT>::min() >= std::numeric_limits<DestT>::min(),
+                  "SrcT must be narrower than DestT.");
+    static_assert(std::numeric_limits<SrcT>::max() <= std::numeric_limits<DestT>::max(),
+                  "SrcT must be narrower than DestT.");
+  }
+
+  explicit operator DestT() const { return mVal; }
+};
+
+inline void* malloc(const ForbidNarrowing<size_t> s) {
+  return ::malloc(size_t(s));
+}
+
+inline void* calloc(const ForbidNarrowing<size_t> n, const ForbidNarrowing<size_t> size) {
+  return ::calloc(size_t(n), size_t(size));
+}
 
 /*
  * Implementing WebGL (or OpenGL ES 2.0) on top of desktop OpenGL requires

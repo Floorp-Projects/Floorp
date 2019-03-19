@@ -47,19 +47,19 @@ NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGForeignObjectElement)
 
 //----------------------------------------------------------------------
 
-already_AddRefed<SVGAnimatedLength> SVGForeignObjectElement::X() {
+already_AddRefed<DOMSVGAnimatedLength> SVGForeignObjectElement::X() {
   return mLengthAttributes[ATTR_X].ToDOMAnimatedLength(this);
 }
 
-already_AddRefed<SVGAnimatedLength> SVGForeignObjectElement::Y() {
+already_AddRefed<DOMSVGAnimatedLength> SVGForeignObjectElement::Y() {
   return mLengthAttributes[ATTR_Y].ToDOMAnimatedLength(this);
 }
 
-already_AddRefed<SVGAnimatedLength> SVGForeignObjectElement::Width() {
+already_AddRefed<DOMSVGAnimatedLength> SVGForeignObjectElement::Width() {
   return mLengthAttributes[ATTR_WIDTH].ToDOMAnimatedLength(this);
 }
 
-already_AddRefed<SVGAnimatedLength> SVGForeignObjectElement::Height() {
+already_AddRefed<DOMSVGAnimatedLength> SVGForeignObjectElement::Height() {
   return mLengthAttributes[ATTR_HEIGHT].ToDOMAnimatedLength(this);
 }
 

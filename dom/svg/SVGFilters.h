@@ -126,11 +126,11 @@ class SVGFE : public SVGFEBase {
   operator nsISupports*() { return static_cast<nsIContent*>(this); }
 
   // WebIDL
-  already_AddRefed<mozilla::dom::SVGAnimatedLength> X();
-  already_AddRefed<mozilla::dom::SVGAnimatedLength> Y();
-  already_AddRefed<mozilla::dom::SVGAnimatedLength> Width();
-  already_AddRefed<mozilla::dom::SVGAnimatedLength> Height();
-  already_AddRefed<mozilla::dom::SVGAnimatedString> Result();
+  already_AddRefed<mozilla::dom::DOMSVGAnimatedLength> X();
+  already_AddRefed<mozilla::dom::DOMSVGAnimatedLength> Y();
+  already_AddRefed<mozilla::dom::DOMSVGAnimatedLength> Width();
+  already_AddRefed<mozilla::dom::DOMSVGAnimatedLength> Height();
+  already_AddRefed<mozilla::dom::DOMSVGAnimatedString> Result();
 
  protected:
   virtual bool OperatesOnSRGB(int32_t aInputIndex, bool aInputIsAlreadySRGB) {

@@ -4,7 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/dom/SVGAnimatedLength.h"
+#include "DOMSVGAnimatedLength.h"
+
 #include "mozilla/dom/SVGAnimatedLengthBinding.h"
 #include "nsSVGLength2.h"
 #include "DOMSVGLength.h"
@@ -12,21 +13,22 @@
 namespace mozilla {
 namespace dom {
 
-NS_SVG_VAL_IMPL_CYCLE_COLLECTION_WRAPPERCACHED(SVGAnimatedLength, mSVGElement)
+NS_SVG_VAL_IMPL_CYCLE_COLLECTION_WRAPPERCACHED(DOMSVGAnimatedLength,
+                                               mSVGElement)
 
-NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(SVGAnimatedLength, AddRef)
-NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(SVGAnimatedLength, Release)
+NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(DOMSVGAnimatedLength, AddRef)
+NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(DOMSVGAnimatedLength, Release)
 
-JSObject* SVGAnimatedLength::WrapObject(JSContext* aCx,
-                                        JS::Handle<JSObject*> aGivenProto) {
+JSObject* DOMSVGAnimatedLength::WrapObject(JSContext* aCx,
+                                           JS::Handle<JSObject*> aGivenProto) {
   return SVGAnimatedLength_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-already_AddRefed<DOMSVGLength> SVGAnimatedLength::BaseVal() {
+already_AddRefed<DOMSVGLength> DOMSVGAnimatedLength::BaseVal() {
   return mVal->ToDOMBaseVal(mSVGElement);
 }
 
-already_AddRefed<DOMSVGLength> SVGAnimatedLength::AnimVal() {
+already_AddRefed<DOMSVGLength> DOMSVGAnimatedLength::AnimVal() {
   return mVal->ToDOMAnimVal(mSVGElement);
 }
 

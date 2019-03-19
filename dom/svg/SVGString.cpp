@@ -73,7 +73,7 @@ void SVGString::SetAnimValue(const nsAString& aValue, SVGElement* aSVGElement) {
   }
 }
 
-already_AddRefed<SVGAnimatedString> SVGString::ToDOMAnimatedString(
+already_AddRefed<DOMSVGAnimatedString> SVGString::ToDOMAnimatedString(
     SVGElement* aSVGElement) {
   RefPtr<DOMAnimatedString> domAnimatedString =
       SVGAnimatedStringTearoffTable().GetTearoff(this);

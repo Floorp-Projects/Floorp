@@ -54,15 +54,15 @@ LightType SVGFEPointLightElement::ComputeLightAttributes(
   return LightType::Point;
 }
 
-already_AddRefed<SVGAnimatedNumber> SVGFEPointLightElement::X() {
+already_AddRefed<DOMSVGAnimatedNumber> SVGFEPointLightElement::X() {
   return mNumberAttributes[ATTR_X].ToDOMAnimatedNumber(this);
 }
 
-already_AddRefed<SVGAnimatedNumber> SVGFEPointLightElement::Y() {
+already_AddRefed<DOMSVGAnimatedNumber> SVGFEPointLightElement::Y() {
   return mNumberAttributes[ATTR_Y].ToDOMAnimatedNumber(this);
 }
 
-already_AddRefed<SVGAnimatedNumber> SVGFEPointLightElement::Z() {
+already_AddRefed<DOMSVGAnimatedNumber> SVGFEPointLightElement::Z() {
   return mNumberAttributes[ATTR_Z].ToDOMAnimatedNumber(this);
 }
 

@@ -37,7 +37,7 @@
 #ifndef mozilla_dom_SVGMatrix_h
 #define mozilla_dom_SVGMatrix_h
 
-#include "mozilla/dom/DOMSVGTransform.h"
+#include "DOMSVGTransform.h"
 #include "gfxMatrix.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsWrapperCache.h"

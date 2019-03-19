@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_SVGAnimatedEnumeration_h
-#define mozilla_dom_SVGAnimatedEnumeration_h
+#ifndef mozilla_dom_DOMSVGAnimatedInteger_h
+#define mozilla_dom_DOMSVGAnimatedInteger_h
 
 #include "nsWrapperCache.h"
 
@@ -14,23 +14,23 @@
 namespace mozilla {
 namespace dom {
 
-class SVGAnimatedEnumeration : public nsISupports, public nsWrapperCache {
+class DOMSVGAnimatedInteger : public nsISupports, public nsWrapperCache {
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(SVGAnimatedEnumeration)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(DOMSVGAnimatedInteger)
 
   SVGElement* GetParentObject() const { return mSVGElement; }
 
   JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) final;
 
-  virtual uint16_t BaseVal() = 0;
-  virtual void SetBaseVal(uint16_t aBaseVal, ErrorResult& aRv) = 0;
-  virtual uint16_t AnimVal() = 0;
+  virtual int32_t BaseVal() = 0;
+  virtual void SetBaseVal(int32_t aBaseVal) = 0;
+  virtual int32_t AnimVal() = 0;
 
  protected:
-  explicit SVGAnimatedEnumeration(SVGElement* aSVGElement)
+  explicit DOMSVGAnimatedInteger(SVGElement* aSVGElement)
       : mSVGElement(aSVGElement) {}
-  virtual ~SVGAnimatedEnumeration(){};
+  virtual ~DOMSVGAnimatedInteger(){};
 
   RefPtr<SVGElement> mSVGElement;
 };
@@ -38,4 +38,4 @@ class SVGAnimatedEnumeration : public nsISupports, public nsWrapperCache {
 }  // namespace dom
 }  // namespace mozilla
 
-#endif  // mozilla_dom_SVGAnimatedEnumeration_h
+#endif  // mozilla_dom_DOMSVGAnimatedInteger_h

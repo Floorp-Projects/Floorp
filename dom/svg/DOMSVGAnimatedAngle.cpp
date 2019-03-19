@@ -4,27 +4,28 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "SVGAnimatedAngle.h"
+#include "DOMSVGAnimatedAngle.h"
+
 #include "SVGOrient.h"
 #include "mozilla/dom/SVGAnimatedAngleBinding.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
 
-NS_SVG_VAL_IMPL_CYCLE_COLLECTION_WRAPPERCACHED(SVGAnimatedAngle, mSVGElement)
+NS_SVG_VAL_IMPL_CYCLE_COLLECTION_WRAPPERCACHED(DOMSVGAnimatedAngle, mSVGElement)
 
-NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(SVGAnimatedAngle, AddRef)
-NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(SVGAnimatedAngle, Release)
+NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(DOMSVGAnimatedAngle, AddRef)
+NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(DOMSVGAnimatedAngle, Release)
 
-JSObject* SVGAnimatedAngle::WrapObject(JSContext* aCx,
-                                       JS::Handle<JSObject*> aGivenProto) {
+JSObject* DOMSVGAnimatedAngle::WrapObject(JSContext* aCx,
+                                          JS::Handle<JSObject*> aGivenProto) {
   return SVGAnimatedAngle_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-already_AddRefed<DOMSVGAngle> SVGAnimatedAngle::BaseVal() {
+already_AddRefed<DOMSVGAngle> DOMSVGAnimatedAngle::BaseVal() {
   return mVal->ToDOMBaseVal(mSVGElement);
 }
 
-already_AddRefed<DOMSVGAngle> SVGAnimatedAngle::AnimVal() {
+already_AddRefed<DOMSVGAngle> DOMSVGAnimatedAngle::AnimVal() {
   return mVal->ToDOMAnimVal(mSVGElement);
 }

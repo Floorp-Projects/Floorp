@@ -20,7 +20,7 @@ namespace mozilla {
 class SMILValue;
 
 namespace dom {
-class SVGAnimatedString;
+class DOMSVGAnimatedString;
 class SVGElement;
 
 class SVGClass {
@@ -37,7 +37,7 @@ class SVGClass {
   void GetAnimValue(nsAString& aValue, const SVGElement* aSVGElement) const;
   bool IsAnimated() const { return !!mAnimVal; }
 
-  already_AddRefed<mozilla::dom::SVGAnimatedString> ToDOMAnimatedString(
+  already_AddRefed<mozilla::dom::DOMSVGAnimatedString> ToDOMAnimatedString(
       SVGElement* aSVGElement);
 
   mozilla::UniquePtr<SMILAttr> ToSMILAttr(SVGElement* aSVGElement);
