@@ -5,116 +5,161 @@ version: 1
 policy:
   pullRequests: public
 tasks:
-  - $if: 'tasks_for == "cron"'
-    then:
+  $let:
+    decision_task_id: {$eval: as_slugid("decision_task")}
+    expires_in: {$fromNow: '1 year'}
+    user: ${event.sender.login}
+
+    # We define the following variable at the very top, because they are used in the
+    # default definition
+    head_branch:
+      $if: 'tasks_for == "github-pull-request"'
+      then: ${event.pull_request.head.ref}
+      else:
+        $if: 'tasks_for == "github-push"'
+        then: ${event.ref}
+        else: ${event.release.target_commitish}
+
+    head_rev:
+      $if: 'tasks_for == "github-pull-request"'
+      then: ${event.pull_request.head.sha}
+      else:
+        $if: 'tasks_for == "github-push"'
+        then: ${event.after}
+        else: ${event.release.tag_name}
+
+    repository:
+      $if: 'tasks_for == "github-pull-request"'
+      then: ${event.pull_request.head.repo.html_url}
+      else: ${event.repository.html_url}
+
+    scheduler_id:
+      $if: 'tasks_for == "cron"'
+      then: focus-nightly-sched  # TODO: Rename to mobile-nightly-sched
+      else: taskcluster-github
+
+    github_repository_full_name:
+      $if: 'tasks_for == "github-pull-request"'
+      then: ${event.pull_request.base.repo.full_name}
+      else: ${event.repository.full_name}
+
+    is_repo_trusted:
+      # Pull requests on main repository can't be trusted because anybody can open a PR on it, without a review
+      $if: 'tasks_for in ["github-push", "github-release", "cron"] && event.repository.html_url == "https://github.com/mozilla-mobile/fenix"'
+      then: true
+      else: false
+  in:
+    $let:
+      decision_worker_type:
+        $if: 'is_repo_trusted'
+        then: mobile-3-decision
+        else: mobile-1-decision
+      build_worker_type:
+        $if: 'is_repo_trusted'
+        then: mobile-3-b-fenix
+        else: mobile-1-b-fenix
+
+      track:
+        $if: 'is_repo_trusted'
+        then: 'nightly'
+        else: 'staging-nightly'
+
+      # TODO: revisit once bug 1533314 is done to possibly infer better priorities
+      tasks_priority: highest
+
+      short_head_branch:
+        $if: 'head_branch[:10] == "refs/tags/"'
+        then: {$eval: 'head_branch[10:]'}
+        else:
+          $if: 'head_branch[:11] == "refs/heads/"'
+          then: {$eval: 'head_branch[11:]'}
+          else: ${head_branch}
+
+      assume_scope_prefix: assume:repo:github.com/${github_repository_full_name}
+    in:
       $let:
-        decision_task_id: {$eval: as_slugid("decision_task")}
-        expires_in: {$fromNow: '1 year'}
-        repository: ${event.repository.html_url}
-        scheduler_id: focus-nightly-sched
-
-        head_rev: ${event.release.tag_name}
-        head_branch: ${event.release.target_commitish}
-
-        is_mozilla_mobile_repo:
-          $eval: event.repository.html_url == 'https://github.com/mozilla-mobile/fenix'
-        track:
-          $if: event.repository.html_url == 'https://github.com/mozilla-mobile/fenix'
-          then: 'nightly'
-          else: 'staging-nightly'
-        decision_worker_type:
-          $if: event.repository.html_url == 'https://github.com/mozilla-mobile/fenix'
-          then: mobile-3-decision
-          else: mobile-1-decision
-        build_worker_type:
-          $if: event.repository.html_url == 'https://github.com/mozilla-mobile/fenix'
-          then: mobile-3-b-fenix
-          else: mobile-1-b-fenix
-
+        default_task_definition:
+          taskId: ${decision_task_id}
+          taskGroupId: ${decision_task_id}  # Must be explicit because of Chain of Trust
+          schedulerId: ${scheduler_id}
+          created: {$fromNow: ''}
+          deadline: {$fromNow: '2 hours'}
+          expires: ${expires_in}
+          provisionerId: aws-provisioner-v1
+          workerType: ${decision_worker_type}
+          priority: ${tasks_priority}
+          requires: all-completed   # Must be explicit because of Chain of Trust
+          retries: 5
+          routes:
+            - statuses  # Automatically added by taskcluster-github. It must be explicit because of Chain of Trust
+          payload:
+            maxRunTime: 600   # Decision should remain fast enough to schedule a handful of tasks
+            image: mozillamobile/fenix:1.3
+            command:
+              - /bin/bash
+              - --login
+              - -cx
+              # The rest of the command must be defined below
+            env:
+              TASK_ID: ${decision_task_id}
+              TASKS_PRIORITY: ${tasks_priority}
+              SCHEDULER_ID: ${scheduler_id}
+              BUILD_WORKER_TYPE: ${build_worker_type}
+              MOBILE_HEAD_REPOSITORY: ${repository}
+              MOBILE_HEAD_BRANCH: ${head_branch}
+              MOBILE_HEAD_REV: ${head_rev}
+            features:
+              taskclusterProxy: true
+          extra:
+            tasks_for: ${tasks_for}
+          metadata:
+            owner: ${user}@users.noreply.github.com
+            source: ${repository}/raw/${head_rev}/.taskcluster.yml
       in:
-        taskId: ${decision_task_id}
-        taskGroupId: ${decision_task_id}  # Must be explicit because of Chain of Trust
-        created: {$fromNow: ''}
-        deadline: {$fromNow: '2 hours'}
-        expires: ${expires_in}
-        schedulerId: ${scheduler_id}    # Must be explicit because of Chain of Trust
-        provisionerId: aws-provisioner-v1
-        workerType: ${decision_worker_type}
-        requires: all-completed   # Must be explicit because of Chain of Trust
-        priority: medium
-        retries: 5
-        scopes:
-          $flatten:
-            - queue:scheduler-id:${scheduler_id}
-            - queue:create-task:highest:aws-provisioner-v1/${build_worker_type}
-            - project:mobile:fenix:releng:signing:format:autograph_apk
-            - $if: is_mozilla_mobile_repo
-              then:
-                - queue:create-task:highest:scriptworker-prov-v1/mobile-signing-v1
-                - queue:create-task:highest:scriptworker-prov-v1/mobile-pushapk-v1
-                - project:mobile:fenix:releng:signing:cert:release-signing
-                - project:mobile:fenix:releng:googleplay:product:fenix
-                - queue:route:index.project.mobile.fenix.signed-nightly.*
-                - secrets:get:project/mobile/fenix/sentry
-                - secrets:get:project/mobile/fenix/leanplum
-              else:
-                - queue:create-task:highest:scriptworker-prov-v1/mobile-signing-dep-v1
-                - queue:create-task:highest:scriptworker-prov-v1/mobile-pushapk-dep-v1
-                - project:mobile:fenix:releng:signing:cert:dep-signing
-                - project:mobile:fenix:releng:googleplay:product:fenix:dep
-                - queue:route:index.project.mobile.fenix.staging-signed-nightly.*
-                - secrets:get:garbage/staging/project/mobile/fenix/sentry
-                - secrets:get:garbage/staging/project/mobile/fenix/leanplum
-        routes:
-          - notify.email.fenix-eng-notifications@mozilla.com.on-failed
-        payload:
-          maxRunTime: 600   # Decision should remain fast enough to schedule a handful of tasks
-          image: mozillamobile/fenix:1.3
-          features:
-            taskclusterProxy: true
-            chainOfTrust: true
-          env:
-            BUILD_WORKER_TYPE: ${build_worker_type}
-            MOBILE_HEAD_BRANCH: ${head_branch}
-            MOBILE_HEAD_REPOSITORY: ${repository}
-            MOBILE_HEAD_REV: ${head_rev}
-            MOBILE_TRIGGERED_BY: ${event.sender.login}
-            SCHEDULER_ID: ${scheduler_id}
-            TASK_ID: ${decision_task_id}
-          command:
-            - /bin/bash
-            - --login
-            - -cx
-            - >-
-              git fetch ${repository} ${head_branch}
-              && git config advice.detachedHead false
-              && git checkout ${head_rev}
-              && python automation/taskcluster/decision_task_nightly.py \
-                --track ${track} \
-                --commit \
-                --output /opt/fenix/app/build/outputs/apk \
-                --apk armGreenfield/release/app-arm-greenfield-release-unsigned.apk \
-                --apk x86Greenfield/release/app-x86-greenfield-release-unsigned.apk \
-                --apk aarch64Greenfield/release/app-aarch64-greenfield-release-unsigned.apk \
-                --date ${now}
-          artifacts:
-            public/task-graph.json:
-              type: file
-              path: /opt/fenix/task-graph.json
-              expires: ${expires_in}
-            public/actions.json:
-              type: file
-              path: /opt/fenix/actions.json
-              expires: ${expires_in}
-            public/parameters.yml:
-              type: file
-              path: /opt/fenix/parameters.yml
-              expires: ${expires_in}
-        extra:
-          cron: {$json: {$eval: 'cron'}}
-          tasks_for: ${tasks_for}
-        metadata:
-          name: Fenix Nightly Decision Task
-          description: Decision task scheduled by cron task [${cron.task_id}](https://tools.taskcluster.net/tasks/${cron.task_id})
-          owner: ${event.sender.login}@users.noreply.github.com
-          source: ${repository}/raw/${head_rev}/.taskcluster.yml
+        - $if: 'tasks_for == "cron"'
+          then:
+            $mergeDeep:
+              - {$eval: 'default_task_definition'}
+              - scopes:
+                  - $if: is_repo_trusted
+                    then: assume:hook-id:project-mobile/fenix-nightly
+                    else: assume:hook-id:project-mobile/fenix-nightly-staging
+                routes:
+                  - notify.email.fenix-eng-notifications@mozilla.com.on-failed
+                payload:
+                  features:
+                    taskclusterProxy: true
+                    chainOfTrust: true
+                  env:
+                    MOBILE_TRIGGERED_BY: ${user}
+                  command:
+                    - >-
+                      git fetch ${repository} ${head_branch}
+                      && git config advice.detachedHead false
+                      && git checkout ${head_rev}
+                      && python automation/taskcluster/decision_task_nightly.py \
+                        --track ${track} \
+                        --commit \
+                        --output /opt/fenix/app/build/outputs/apk \
+                        --apk armGreenfield/release/app-arm-greenfield-release-unsigned.apk \
+                        --apk x86Greenfield/release/app-x86-greenfield-release-unsigned.apk \
+                        --apk aarch64Greenfield/release/app-aarch64-greenfield-release-unsigned.apk \
+                        --date ${now}
+                  artifacts:
+                    public/task-graph.json:
+                      type: file
+                      path: /opt/fenix/task-graph.json
+                      expires: ${expires_in}
+                    public/actions.json:
+                      type: file
+                      path: /opt/fenix/actions.json
+                      expires: ${expires_in}
+                    public/parameters.yml:
+                      type: file
+                      path: /opt/fenix/parameters.yml
+                      expires: ${expires_in}
+                extra:
+                  cron: {$json: {$eval: 'cron'}}
+                metadata:
+                  name: Fenix Nightly Decision Task
+                  description: Decision task scheduled by cron task [${cron.task_id}](https://tools.taskcluster.net/tasks/${cron.task_id})

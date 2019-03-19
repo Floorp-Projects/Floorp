@@ -44,6 +44,9 @@ def make_decision_task(params):
             slugids[name] = slugid.nice()
         return slugids[name]
 
+    repository_parts = params['html_url'].split('/')
+    repository_full_name = '/'.join((repository_parts[-2], repository_parts[-1]))
+
     # provide a similar JSON-e context to what taskcluster-github provides
     context = {
         'tasks_for': 'cron',
@@ -54,14 +57,15 @@ def make_decision_task(params):
         'as_slugid': as_slugid,
         'event': {
             'repository': {
-                'html_url': params['html_url']
+                'html_url': params['html_url'],
+                'full_name': repository_full_name,
             },
             'release': {
                 'tag_name': params['head_rev'],
-                'target_commitish': params['branch']
+                'target_commitish': params['branch'],
             },
             'sender': {
-                'login': 'TaskclusterHook'
+                'login': 'TaskclusterHook',
             }
         }
     }
