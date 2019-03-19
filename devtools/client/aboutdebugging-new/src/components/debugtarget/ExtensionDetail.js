@@ -31,6 +31,11 @@ class ExtensionDetail extends PureComponent {
 
   renderWarnings() {
     const { warnings } = this.props.target.details;
+
+    if (!warnings.length) {
+      return null;
+    }
+
     return dom.section(
       {},
       warnings.map((warning, index) => {
@@ -51,28 +56,10 @@ class ExtensionDetail extends PureComponent {
   }
 
   renderUUID() {
-    const { manifestURL, uuid } = this.props.target.details;
+    const { uuid } = this.props.target.details;
     if (!uuid) {
       return null;
     }
-
-    const value = [
-      uuid,
-      Localized(
-        {
-          id: "about-debugging-extension-manifest-link",
-          key: "manifest",
-        },
-        dom.a(
-          {
-            className: "extension-detail__manifest js-manifest-url",
-            href: manifestURL,
-            target: "_blank",
-          },
-          "Manifest URL",
-        )
-      ),
-    ];
 
     return Localized(
       {
@@ -81,9 +68,8 @@ class ExtensionDetail extends PureComponent {
       },
       FieldPair(
         {
-          slug: "uuid",
           label: "Internal UUID",
-          value,
+          value: uuid,
         }
       )
     );
@@ -99,7 +85,6 @@ class ExtensionDetail extends PureComponent {
       },
       FieldPair(
         {
-          slug: "extension",
           label: "Extension ID",
           value: id,
         }
@@ -120,9 +105,37 @@ class ExtensionDetail extends PureComponent {
       },
       FieldPair(
         {
-          slug: "location",
           label: "Location",
           value: location,
+        }
+      )
+    );
+  }
+
+  renderManifest() {
+    const { manifestURL } = this.props.target.details;
+    if (!manifestURL) {
+      return null;
+    }
+
+    const link = dom.a(
+      {
+        className: "js-manifest-url",
+        href: manifestURL,
+        target: "_blank",
+      },
+      manifestURL,
+    );
+
+    return Localized(
+      {
+        id: "about-debugging-extension-manifest-link",
+        attrs: { label: true },
+      },
+      FieldPair(
+        {
+          label: "Manifest URL",
+          value: link,
         }
       )
     );
@@ -135,12 +148,11 @@ class ExtensionDetail extends PureComponent {
       },
       this.renderWarnings(),
       dom.dl(
-        {
-          className: "extension-detail",
-        },
+        {},
         this.renderLocation(),
         this.renderExtensionId(),
         this.renderUUID(),
+        this.renderManifest(),
       ),
     );
   }
