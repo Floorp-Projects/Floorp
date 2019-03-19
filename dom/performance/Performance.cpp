@@ -424,9 +424,13 @@ class NotifyObserversTask final : public CancelableRunnable {
     MOZ_ASSERT(mPerformance);
   }
 
+  // MOZ_CAN_RUN_SCRIPT_BOUNDARY for now until Runnable::Run is
+  // MOZ_CAN_RUN_SCRIPT.
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   NS_IMETHOD Run() override {
     MOZ_ASSERT(mPerformance);
-    mPerformance->NotifyObservers();
+    RefPtr<Performance> performance(mPerformance);
+    performance->NotifyObservers();
     return NS_OK;
   }
 

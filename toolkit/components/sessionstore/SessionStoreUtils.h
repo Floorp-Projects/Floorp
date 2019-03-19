@@ -7,6 +7,7 @@
 #ifndef mozilla_dom_SessionStoreUtils_h
 #define mozilla_dom_SessionStoreUtils_h
 
+#include "mozilla/Attributes.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/SessionStoreUtilsBinding.h"
@@ -22,6 +23,7 @@ struct SSScrollPositionDict;
 
 class SessionStoreUtils {
  public:
+  MOZ_CAN_RUN_SCRIPT
   static void ForEachNonDynamicChildFrame(
       const GlobalObject& aGlobal, WindowProxyHolder& aWindow,
       SessionStoreUtilsFrameCallback& aCallback, ErrorResult& aRv);
