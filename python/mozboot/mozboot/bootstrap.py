@@ -152,6 +152,14 @@ CLONE_VCS_NOT_DIR = '''
 ERROR! Destination '{}' exists but is not a directory.
 '''
 
+CLONE_MERCURIAL_PULL_FAIL = '''
+Failed to pull from hg.mozilla.org.
+
+This is most likely because of unstable network connection.
+Try running `hg pull https://hg.mozilla.org/mozilla-unified` manually, or
+download mercurial bundle and use it:
+https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/Source_Code/Mercurial/Bundles'''
+
 DEBIAN_DISTROS = (
     'Debian',
     'debian',
@@ -602,8 +610,7 @@ def hg_clone_firefox(hg, dest):
     res = subprocess.call([hg, 'pull', 'https://hg.mozilla.org/mozilla-unified'], cwd=dest)
     print('')
     if res:
-        print('error pulling; try running `hg pull https://hg.mozilla.org/mozilla-unified` '
-              'manually')
+        print(CLONE_MERCURIAL_PULL_FAIL)
         return False
 
     print('updating to "central" - the development head of Gecko and Firefox')
