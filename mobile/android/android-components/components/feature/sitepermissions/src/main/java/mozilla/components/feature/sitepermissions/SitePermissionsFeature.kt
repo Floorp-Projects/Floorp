@@ -54,6 +54,7 @@ typealias OnNeedToRequestPermissions = (permissions: Array<String>) -> Unit
  * @property sessionManager the [SessionManager] instance in order to subscribe
  * to the selected [Session].
  * @property storage the object in charge of persisting all the [SitePermissions] objects.
+ * @property sitePermissionsRules indicates how permissions should behave per permission category.
  * @property onNeedToRequestPermissions a callback invoked when permissions
  * need to be requested. Once the request is completed, [onPermissionsResult] needs to be invoked.
  **/
@@ -63,6 +64,7 @@ class SitePermissionsFeature(
     private val anchorView: View,
     private val sessionManager: SessionManager,
     private val storage: SitePermissionsStorage = SitePermissionsStorage(anchorView.context),
+    var sitePermissionsRules: SitePermissionsRules? = null,
     private val onNeedToRequestPermissions: OnNeedToRequestPermissions
 ) : LifecycleAwareFeature {
 
@@ -166,9 +168,27 @@ class SitePermissionsFeature(
 
     internal suspend fun onContentPermissionRequested(
         session: Session,
-        permissionRequest: PermissionRequest
+        request: PermissionRequest
     ): DoorhangerPrompt? {
 
+        return if (shouldApplyRules(request.host)) {
+            handleRuledFlow(request, session)
+        } else {
+            handleNoRuledFlow(request, session)
+        }
+    }
+
+    @VisibleForTesting
+    internal fun findDoNotAskAgainCheckBox(controls: List<Control>?): CheckBox? {
+        return controls?.find {
+            (it is CheckBox)
+        } as CheckBox?
+    }
+
+    private suspend fun handleNoRuledFlow(
+        permissionRequest: PermissionRequest,
+        session: Session
+    ): DoorhangerPrompt? {
         val permissionFromStorage = withContext(ioCoroutineScope.coroutineContext) {
             storage.findSitePermissionsBy(permissionRequest.host)
         }
@@ -181,15 +201,9 @@ class SitePermissionsFeature(
             } else {
                 permissionRequest.reject()
             }
+            session.contentPermissionRequest.consume { true }
             null
         }
-    }
-
-    @VisibleForTesting
-    internal fun findDoNotAskAgainCheckBox(controls: List<Control>?): CheckBox? {
-        return controls?.find {
-            (it is CheckBox)
-        } as CheckBox?
     }
 
     private fun shouldShowPrompt(
@@ -200,6 +214,23 @@ class SitePermissionsFeature(
             permissionFromStorage == null ||
             !permissionRequest.doNotAskAgain(permissionFromStorage))
     }
+
+    private fun handleRuledFlow(permissionRequest: PermissionRequest, session: Session): DoorhangerPrompt? {
+        val action = requireNotNull(sitePermissionsRules).getActionFrom(permissionRequest)
+        return when (action) {
+            SitePermissionsRules.Action.BLOCKED -> {
+                permissionRequest.reject()
+                session.contentPermissionRequest.consume { true }
+                null
+            }
+            SitePermissionsRules.Action.ASK_TO_ALLOW -> {
+                createPrompt(permissionRequest, session)
+            }
+        }
+    }
+
+    private fun shouldApplyRules(host: String) =
+        sitePermissionsRules != null && !requireNotNull(sitePermissionsRules).isHostInExceptions(host)
 
     private fun PermissionRequest.doNotAskAgain(permissionFromStore: SitePermissions): Boolean {
         return permissions.any { permission ->
