@@ -23,6 +23,7 @@ const Types = require("../../types/index");
 class ExtensionDetail extends PureComponent {
   static get propTypes() {
     return {
+      children: PropTypes.node,
       // Provided by wrapping the component with FluentReact.withLocalization.
       getString: PropTypes.func.isRequired,
       target: Types.debugTarget.isRequired,
@@ -153,6 +154,7 @@ class ExtensionDetail extends PureComponent {
         this.renderExtensionId(),
         this.renderUUID(),
         this.renderManifest(),
+        this.props.children,
       ),
     );
   }

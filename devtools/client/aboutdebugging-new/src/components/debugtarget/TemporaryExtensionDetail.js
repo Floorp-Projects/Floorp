@@ -12,6 +12,7 @@ const FluentReact = require("devtools/client/shared/vendor/fluent-react");
 const Localized = createFactory(FluentReact.Localized);
 
 const ExtensionDetail = createFactory(require("./ExtensionDetail"));
+const FieldPair = createFactory(require("./FieldPair"));
 
 const Types = require("../../types/index");
 
@@ -41,17 +42,17 @@ class TemporaryExtensionDetail extends PureComponent {
         }),
       },
       dom.div({
-        className: "temporary-extension-detail__temporary-id-message " +
-          "js-temporary-id-message",
+        className: "js-temporary-id-message",
       }),
     );
   }
 
   render() {
-    return dom.div(
-      {},
-      this.renderTemporaryIdMessage(),
-      ExtensionDetail({ target: this.props.target }),
+    return ExtensionDetail(
+      {
+        target: this.props.target,
+      },
+      FieldPair({ label: this.renderTemporaryIdMessage() }),
     );
   }
 }
