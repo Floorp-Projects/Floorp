@@ -4,7 +4,6 @@
 
 package mozilla.components.service.pocket
 
-import android.net.Uri
 import android.support.annotation.VisibleForTesting
 import android.support.annotation.VisibleForTesting.PRIVATE
 import android.support.annotation.WorkerThread
@@ -33,15 +32,6 @@ internal class PocketListenEndpointRaw(
      */
     @WorkerThread // Synchronous network call.
     fun getArticleListenMetadata(articleID: Int, articleUrl: String): String? {
-        /** @return "key=value&key2=value2..." for the hard-coded key-value pairs. */
-        fun getRequestBodyString(): String = Uri.Builder()
-            .appendQueryParameter("url", articleUrl)
-            .appendQueryParameter("article_id", articleID.toString())
-            .appendQueryParameter("v", "2")
-            .appendQueryParameter("locale", "en-US")
-            .build()
-            .encodedQuery!! // We added query params so this should be non-null: assert it.
-
         val request = Request(
             urls.articleService.toString(),
             Request.Method.POST,
@@ -50,7 +40,12 @@ internal class PocketListenEndpointRaw(
                 CONTENT_TYPE to CONTENT_TYPE_FORM_URLENCODED,
                 X_ACCESS_TOKEN to accessToken
             ),
-            body = Request.Body(getRequestBodyString().byteInputStream())
+            body = Request.Body.fromParamsForFormUrlEncoded(mapOf(
+                "url" to articleUrl,
+                "article_id" to articleID.toString(),
+                "v" to "2",
+                "locale" to "en-US"
+            ))
         )
 
         // If an invalid body is sent to the server, 404 is returned.
