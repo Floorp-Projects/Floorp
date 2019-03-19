@@ -18,7 +18,6 @@
 #include "mozilla/Unused.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsDirectoryServiceUtils.h"
-#include "nsIFileStreams.h"
 #include "nsIMemoryReporter.h"
 #include "nsIObserverService.h"
 #include "nsITimer.h"
