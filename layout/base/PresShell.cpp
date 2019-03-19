@@ -1839,8 +1839,10 @@ nsresult PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight,
   if (mMobileViewportManager) {
     // If we have a mobile viewport manager, request a reflow from it. It can
     // recompute the final CSS viewport and trigger a call to
-    // ResizeReflowIgnoreOverride if it changed.
-    mMobileViewportManager->RequestReflow();
+    // ResizeReflowIgnoreOverride if it changed. We don't force adjusting
+    // of resolution, because that is only necessary when we are destroying
+    // the MVM.
+    mMobileViewportManager->RequestReflow(false);
     return NS_OK;
   }
 
@@ -10502,9 +10504,10 @@ nsresult PresShell::SetIsActive(bool aIsActive) {
 }
 
 void PresShell::UpdateViewportOverridden(bool aAfterInitialization) {
-  // Determine if we require a MobileViewportManager.
-  bool needMVM = nsLayoutUtils::ShouldHandleMetaViewport(mDocument) ||
-                 gfxPrefs::APZAllowZooming();
+  // Determine if we require a MobileViewportManager. This logic is
+  // equivalent to ShouldHandleMetaViewport, which will check gfxPrefs if
+  // there are not meta viewport overrides.
+  bool needMVM = nsLayoutUtils::ShouldHandleMetaViewport(mDocument);
 
   if (needMVM == !!mMobileViewportManager) {
     // Either we've need one and we've already got it, or we don't need one
@@ -10526,8 +10529,19 @@ void PresShell::UpdateViewportOverridden(bool aAfterInitialization) {
 
   MOZ_ASSERT(mMobileViewportManager,
              "Shouldn't reach this without a MobileViewportManager.");
-  mMobileViewportManager->Destroy();
-  mMobileViewportManager = nullptr;
+  // Before we get rid of our MVM, ask it to update the viewport while
+  // forcing resolution, which will undo any scaling it might have imposed.
+  // To do this correctly, we need to first null out mMobileViewportManager,
+  // because during reflow we will check PresShell::GetIsViewportOverriden(),
+  // which uses that value as a signifier.
+  RefPtr<MobileViewportManager> oldMVM;
+  mMobileViewportManager.swap(oldMVM);
+
+  oldMVM->RequestReflow(true);
+  ResetVisualViewportSize();
+
+  oldMVM->Destroy();
+  oldMVM = nullptr;
 
   if (aAfterInitialization) {
     // Force a reflow to our correct size by going back to the docShell
@@ -10626,6 +10640,22 @@ void nsIPresShell::MarkFixedFramesForReflow(IntrinsicDirty aIntrinsicDirty) {
   }
 }
 
+void nsIPresShell::CompleteChangeToVisualViewportSize() {
+  if (nsIScrollableFrame* rootScrollFrame = GetRootScrollFrameAsScrollable()) {
+    rootScrollFrame->MarkScrollbarsDirtyForReflow();
+  }
+  MarkFixedFramesForReflow(nsIPresShell::eResize);
+
+  if (auto* window = nsGlobalWindowInner::Cast(mDocument->GetInnerWindow())) {
+    window->VisualViewport()->PostResizeEvent();
+  }
+
+  if (nsIScrollableFrame* rootScrollFrame = GetRootScrollFrameAsScrollable()) {
+    ScrollAnchorContainer* container = rootScrollFrame->Anchor();
+    container->UserScrolled();
+  }
+}
+
 void nsIPresShell::SetVisualViewportSize(nscoord aWidth, nscoord aHeight) {
   if (!mVisualViewportSizeSet || mVisualViewportSize.width != aWidth ||
       mVisualViewportSize.height != aHeight) {
@@ -10633,21 +10663,17 @@ void nsIPresShell::SetVisualViewportSize(nscoord aWidth, nscoord aHeight) {
     mVisualViewportSize.width = aWidth;
     mVisualViewportSize.height = aHeight;
 
-    if (nsIScrollableFrame* rootScrollFrame =
-            GetRootScrollFrameAsScrollable()) {
-      rootScrollFrame->MarkScrollbarsDirtyForReflow();
-    }
-    MarkFixedFramesForReflow(nsIPresShell::eResize);
+    CompleteChangeToVisualViewportSize();
+  }
+}
 
-    if (auto* window = nsGlobalWindowInner::Cast(mDocument->GetInnerWindow())) {
-      window->VisualViewport()->PostResizeEvent();
-    }
+void nsIPresShell::ResetVisualViewportSize() {
+  if (mVisualViewportSizeSet) {
+    mVisualViewportSizeSet = false;
+    mVisualViewportSize.width = 0;
+    mVisualViewportSize.height = 0;
 
-    if (nsIScrollableFrame* rootScrollFrame =
-            GetRootScrollFrameAsScrollable()) {
-      ScrollAnchorContainer* container = rootScrollFrame->Anchor();
-      container->UserScrolled();
-    }
+    CompleteChangeToVisualViewportSize();
   }
 }
 

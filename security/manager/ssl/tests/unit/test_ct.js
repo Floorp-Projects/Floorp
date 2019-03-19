@@ -18,6 +18,8 @@ function expectCT(value) {
 
 registerCleanupFunction(() => {
   Services.prefs.clearUserPref("security.pki.certificate_transparency.mode");
+  let cert = constructCertFromFile("test_ct/ct-valid.example.com.pem");
+  setCertTrust(cert, ",,");
 });
 
 function run_test() {
@@ -34,5 +36,17 @@ function run_test() {
   add_connection_test("ct-insufficient-scts.example.com", PRErrorCodeSuccess,
     null,
     expectCT(Ci.nsITransportSecurityInfo.CERTIFICATE_TRANSPARENCY_POLICY_NOT_ENOUGH_SCTS));
+
+  // Test that if an end-entity is marked as a trust anchor, CT verification
+  // returns a "not enough SCTs" result.
+  add_test(() => {
+    let cert = constructCertFromFile("test_ct/ct-valid.example.com.pem");
+    setCertTrust(cert, "CTu,,");
+    clearSessionCache();
+    run_next_test();
+  });
+  add_connection_test("ct-valid.example.com", PRErrorCodeSuccess, null,
+    expectCT(Ci.nsITransportSecurityInfo.CERTIFICATE_TRANSPARENCY_POLICY_NOT_ENOUGH_SCTS));
+
   run_next_test();
 }

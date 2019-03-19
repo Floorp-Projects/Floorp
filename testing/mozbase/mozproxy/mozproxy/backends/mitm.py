@@ -41,9 +41,6 @@ except Exception:
 if os.name == "nt" and "/" in DEFAULT_CERT_PATH:
     DEFAULT_CERT_PATH = DEFAULT_CERT_PATH.replace("/", "\\")
 
-# sleep in seconds after issuing a `mitmdump` command
-MITMDUMP_SLEEP = 10
-
 # to install mitmproxy certificate into Firefox and turn on/off proxy
 POLICIES_CONTENT_ON = """{
   "policies": {
@@ -118,6 +115,11 @@ class Mitmproxy(Playback):
             self.stop()
             raise
 
+    @property
+    def mitmdump_sleep_seconds(self):
+        """Time to sleep, in seconds, after issuing a `mitmdump` command."""
+        return 10 if not self.config['run_local'] else 1
+
     def download(self):
         """Download and unpack mitmproxy binary and pageset using tooltool"""
         if not os.path.exists(self.mozproxy_dir):
@@ -182,7 +184,7 @@ class Mitmproxy(Playback):
 
         # XXX replace the code below with a loop with a connection attempt
         # Bug 1532557
-        time.sleep(MITMDUMP_SLEEP)
+        time.sleep(self.mitmdump_sleep_seconds)
         data = mitmproxy_proc.poll()
         if data is None:  # None value indicates process hasn't terminated
             LOG.info(
@@ -203,7 +205,7 @@ class Mitmproxy(Playback):
         LOG.info("Stopping mitmproxy playback, killing process %d" % mitmproxy_proc.pid)
         mitmproxy_proc.kill()
 
-        time.sleep(MITMDUMP_SLEEP)
+        time.sleep(self.mitmdump_sleep_seconds)
         status = mitmproxy_proc.poll()
         if status is None:  # None value indicates process hasn't terminated
             # I *think* we can still continue, as process will be automatically
@@ -329,6 +331,11 @@ class MitmproxyAndroid(Mitmproxy):
         Mitmproxy.__init__(self, config)
         self.android_device = android_device
 
+    @property
+    def certutil_sleep_seconds(self):
+        """Time to sleep, in seconds, after issuing a `certutil` command."""
+        return 10 if not self.config['run_local'] else 1
+
     def setup(self):
         """For geckoview we need to install the generated mitmproxy CA cert"""
         if self.config["app"] in ["geckoview", "refbrow", "fenix"]:
@@ -351,10 +358,13 @@ class MitmproxyAndroid(Mitmproxy):
         2. Import the mitmproxy certificate into the database, i.e.:
            `certutil -A -d sql:<path to profile> -n "some nickname" -t TC,, -a -i <path to CA.pem>`
         """
-        self.CERTUTIL_SLEEP = 10
         if self.config['run_local']:
             # when running locally, it is found in the Firefox desktop build (..obj../dist/bin)
-            self.certutil = os.path.join(self.config['obj_path'], 'dist', 'bin')
+            self.certutil = os.path.join(os.environ['MOZ_HOST_BIN'], 'certutil')
+            if not (os.path.isfile(self.certutil) and os.access(self.certutil, os.X_OK)):
+                LOG.critical("Abort: unable to execute certutil: {}".format(self.certutil))
+                raise
+            self.certutil = os.environ['MOZ_HOST_BIN']
             os.environ['LD_LIBRARY_PATH'] = self.certutil
         else:
             # must download certutil inside hostutils via tooltool; use this manifest:
@@ -430,7 +440,7 @@ class MitmproxyAndroid(Mitmproxy):
             cert_db_exists = False
 
         # try a forced pause between certutil cmds; possibly reduce later
-        time.sleep(self.CERTUTIL_SLEEP)
+        time.sleep(self.certutil_sleep_seconds)
 
         if not cert_db_exists:
             # create cert db if it doesn't already exist; it may exist already
@@ -440,7 +450,7 @@ class MitmproxyAndroid(Mitmproxy):
 
             LOG.info("creating nss cert database using command: %s" % " ".join(command))
             cmd_proc = subprocess.Popen(command, env=os.environ.copy())
-            time.sleep(self.CERTUTIL_SLEEP)
+            time.sleep(self.certutil_sleep_seconds)
             cmd_terminated = cmd_proc.poll()
             if cmd_terminated is None:  # None value indicates process hasn't terminated
                 LOG.critical("nss cert db creation command failed to complete")
@@ -465,7 +475,7 @@ class MitmproxyAndroid(Mitmproxy):
             "importing mitmproxy cert into db using command: %s" % " ".join(command)
         )
         cmd_proc = subprocess.Popen(command, env=os.environ.copy())
-        time.sleep(self.CERTUTIL_SLEEP)
+        time.sleep(self.certutil_sleep_seconds)
         cmd_terminated = cmd_proc.poll()
         if cmd_terminated is None:  # None value indicates process hasn't terminated
             LOG.critical(
@@ -498,7 +508,7 @@ class MitmproxyAndroid(Mitmproxy):
             raise
 
         # check output from the certutil command, see if 'mitmproxy-cert' is listed
-        time.sleep(self.CERTUTIL_SLEEP)
+        time.sleep(self.certutil_sleep_seconds)
         LOG.info(cmd_output)
         if "mitmproxy-cert" in cmd_output:
             LOG.info(

@@ -5069,16 +5069,27 @@ void SVGTextFrame::MaybeReflowAnonymousBlockChild() {
       kid->AddStateBits(NS_FRAME_IS_DIRTY);
     }
 
+    // The RecordCorrespondence and DoReflow calls can result in new text frames
+    // being created (due to bidi resolution or reflow).  We set this bit to
+    // guard against unnecessarily calling back in to
+    // ScheduleReflowSVGNonDisplayText from nsFrame::DidSetComputedStyle on
+    // those new text frames.
+    AddStateBits(NS_STATE_SVG_TEXT_IN_REFLOW);
+
     TextNodeCorrespondenceRecorder::RecordCorrespondence(this);
 
     MOZ_ASSERT(nsSVGUtils::AnyOuterSVGIsCallingReflowSVG(this),
                "should be under ReflowSVG");
     nsPresContext::InterruptPreventer noInterrupts(PresContext());
     DoReflow();
+
+    RemoveStateBits(NS_STATE_SVG_TEXT_IN_REFLOW);
   }
 }
 
 void SVGTextFrame::DoReflow() {
+  MOZ_ASSERT(HasAnyStateBits(NS_STATE_SVG_TEXT_IN_REFLOW));
+
   // Since we are going to reflow the anonymous block frame, we will
   // need to update mPositions.
   // We also mark our text correspondence as dirty since we can end up needing
@@ -5116,8 +5127,6 @@ void SVGTextFrame::DoReflow() {
     kid->MarkIntrinsicISizesDirty();
   }
 
-  AddStateBits(NS_STATE_SVG_TEXT_IN_REFLOW);
-
   nscoord inlineSize = kid->GetPrefISize(renderingContext);
   WritingMode wm = kid->GetWritingMode();
   ReflowInput reflowInput(presContext, kid, renderingContext,
@@ -5134,8 +5143,6 @@ void SVGTextFrame::DoReflow() {
   kid->Reflow(presContext, desiredSize, reflowInput, status);
   kid->DidReflow(presContext, &reflowInput);
   kid->SetSize(wm, desiredSize.Size(wm));
-
-  RemoveStateBits(NS_STATE_SVG_TEXT_IN_REFLOW);
 }
 
 // Usable font size range in devpixels / user-units

@@ -109,6 +109,9 @@ with Files("test/webrtc/**"):
 with Files("aboutNetError.xhtml"):
     BUG_COMPONENT = ("Firefox", "Security")
 
+with Files("test/caps/**"):
+    BUG_COMPONENT = ("Firefox", "Security")
+
 with Files("blockedSite.xhtml"):
     BUG_COMPONENT = ("Toolkit", "Safe Browsing")
 

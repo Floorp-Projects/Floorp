@@ -120,26 +120,6 @@ class MozMenuCaption extends MozMenuBase {
     };
   }
 
-  _updateAttributes() {
-    if (!this._inheritedAttributeMap) {
-      return;
-    }
-
-    for (let [ el, attrs ] of this._inheritedAttributeMap.entries()) {
-      for (let attr of attrs) {
-        this.inheritAttribute(el, attr);
-      }
-    }
-  }
-
-  attributeChangedCallback(name, oldValue, newValue) {
-    if (oldValue === newValue) {
-      return;
-    }
-
-    this._updateAttributes();
-  }
-
   connectedCallback() {
     this.textContent = "";
     this.appendChild(MozXULElement.parseXULToFragment(`

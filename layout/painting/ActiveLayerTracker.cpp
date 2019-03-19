@@ -484,14 +484,14 @@ bool ActiveLayerTracker::IsStyleAnimated(
   const nsCSSPropertyIDSet transformSet =
       nsCSSPropertyIDSet::TransformLikeProperties();
   if ((styleFrame && (styleFrame->StyleDisplay()->mWillChangeBitField &
-                      NS_STYLE_WILL_CHANGE_TRANSFORM)) &&
+                      StyleWillChangeBits_TRANSFORM)) &&
       aPropertySet.Intersects(transformSet) &&
       (!aBuilder ||
        aBuilder->IsInWillChangeBudget(aFrame, aFrame->GetSize()))) {
     return true;
   }
   if ((aFrame->StyleDisplay()->mWillChangeBitField &
-       NS_STYLE_WILL_CHANGE_OPACITY) &&
+       StyleWillChangeBits_OPACITY) &&
       aPropertySet.Intersects(nsCSSPropertyIDSet::OpacityProperties()) &&
       (!aBuilder ||
        aBuilder->IsInWillChangeBudget(aFrame, aFrame->GetSize()))) {

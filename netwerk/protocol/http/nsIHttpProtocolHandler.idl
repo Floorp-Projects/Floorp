@@ -5,6 +5,15 @@
 
 #include "nsIProxiedProtocolHandler.idl"
 
+%{C++
+namespace mozilla {
+namespace net {
+class HSTSDataCallbackWrapper;
+}
+}
+%}
+[ptr] native HSTSDataCallbackWrapperPtr(mozilla::net::HSTSDataCallbackWrapper);
+
 [scriptable, uuid(c48126d9-2ddd-485b-a51a-378e917e75f8)]
 interface nsIHttpProtocolHandler : nsIProxiedProtocolHandler
 {
@@ -47,6 +56,20 @@ interface nsIHttpProtocolHandler : nsIProxiedProtocolHandler
      */
     [must_use] readonly attribute ACString misc;
 
+    /**
+     * This function is used to ensure HSTS data storage is ready to read after
+     * the returned promise is resolved.
+     * Note that this function should only used for testing.
+     * See bug 1521729 for more details.
+     */
+    [implicit_jscontext]
+    Promise EnsureHSTSDataReady();
+
+    /**
+     * A C++ friendly version of EnsureHSTSDataReady
+     */
+    [noscript]
+    void EnsureHSTSDataReadyNative(in HSTSDataCallbackWrapperPtr aCallback);
 };
 
 %{C++

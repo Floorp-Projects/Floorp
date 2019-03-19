@@ -101,6 +101,12 @@ interface nsIXULWindow : nsISupports
    */
   void showModal();
 
+  /**
+   * Locks the aspect ratio for a window.
+   * @param aShouldLock boolean
+   */
+  void lockAspectRatio(in bool aShouldLock);
+
   const unsigned long lowestZ = 0;
   const unsigned long loweredZ = 4;  /* "alwaysLowered" attribute */
   const unsigned long normalZ = 5;

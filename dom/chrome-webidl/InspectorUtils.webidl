@@ -40,11 +40,7 @@ namespace InspectorUtils {
   [Throws] sequence<DOMString> getSubpropertiesForCSSProperty(DOMString property);
   [Throws] boolean cssPropertyIsShorthand(DOMString property);
 
-  // TODO: Change this to use an enum.
-  const unsigned long TYPE_COLOR = 1;
-  const unsigned long TYPE_GRADIENT = 2;
-  const unsigned long TYPE_TIMING_FUNCTION = 3;
-  [Throws] boolean cssPropertySupportsType(DOMString property, unsigned long type);
+  [Throws] boolean cssPropertySupportsType(DOMString property, InspectorPropertyType type);
 
   boolean isIgnorableWhitespace(CharacterData dataNode);
   Node? getParentForNode(Node node, boolean showingAnonymousContent);
@@ -102,6 +98,14 @@ dictionary InspectorRGBATuple {
   double g = 0;
   double b = 0;
   double a = 1;
+};
+
+// Any update to this enum should probably also update
+// devtools/shared/css/constants.js
+enum InspectorPropertyType {
+  "color",
+  "gradient",
+  "timing-function",
 };
 
 dictionary InspectorVariationAxis {

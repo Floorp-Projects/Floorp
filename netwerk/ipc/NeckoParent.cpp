@@ -52,6 +52,7 @@
 #include "nsINetworkPredictor.h"
 #include "nsINetworkPredictorVerifier.h"
 #include "nsISpeculativeConnect.h"
+#include "nsHttpHandler.h"
 #include "nsNetUtil.h"
 
 using IPC::SerializedLoadContext;
@@ -973,6 +974,16 @@ mozilla::ipc::IPCResult NeckoParent::RecvInitSocketProcessBridge(
 
   aResolver(std::move(childEndpoint));
   mSocketProcessBridgeInited = true;
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult NeckoParent::RecvEnsureHSTSData(
+    EnsureHSTSDataResolver&& aResolver) {
+  auto callback = [aResolver{std::move(aResolver)}](bool aResult) {
+    aResolver(aResult);
+  };
+  gHttpHandler->EnsureHSTSDataReadyNative(
+      new HSTSDataCallbackWrapper(std::move(callback)));
   return IPC_OK();
 }
 

@@ -158,6 +158,18 @@ void a11y::ProxyScrollingEvent(ProxyAccessible* aTarget, uint32_t aEventType,
   }
 }
 
+void a11y::ProxyAnnouncementEvent(ProxyAccessible* aTarget,
+                                  const nsString& aAnnouncement,
+                                  uint16_t aPriority) {
+  SessionAccessibility* sessionAcc =
+      SessionAccessibility::GetInstanceFor(aTarget);
+
+  if (sessionAcc) {
+    sessionAcc->SendAnnouncementEvent(WrapperFor(aTarget), aAnnouncement,
+                                      aPriority);
+  }
+}
+
 void a11y::ProxyBatch(ProxyAccessible* aDocument, const uint64_t aBatchType,
                       const nsTArray<ProxyAccessible*>& aAccessibles,
                       const nsTArray<BatchData>& aData) {

@@ -622,6 +622,7 @@ nsWindow::nsWindow(bool aIsChildWindow)
   mBrush = ::CreateSolidBrush(NSRGB_2_COLOREF(background));
   mSendingSetText = false;
   mDefaultScale = -1.0;  // not yet set, will be calculated on first use
+  mAspectRatio = 0.0;    // not yet set, will be calculated on first use
 
   mTaskbarPreview = nullptr;
 
@@ -1664,6 +1665,14 @@ BOOL CALLBACK nsWindow::RegisterTouchForDescendants(HWND aWnd, LPARAM aMsg) {
     ::RegisterTouchWindow(aWnd, TWF_WANTPALM);
   }
   return TRUE;
+}
+
+void nsWindow::LockAspectRatio(bool aShouldLock) {
+  if (aShouldLock) {
+    mAspectRatio = (float)mBounds.Height() / (float)mBounds.Width();
+  } else {
+    mAspectRatio = 0.0;
+  }
 }
 
 /**************************************************************
@@ -5557,6 +5566,52 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
       break;
 
     case WM_SIZING: {
+      if (mAspectRatio > 0) {
+        LPRECT rect = (LPRECT)lParam;
+        int32_t newWidth, newHeight;
+
+        // The following conditions and switch statement borrow heavily from the
+        // Chromium source code from
+        // https://chromium.googlesource.com/chromium/src/+/456d6e533cfb4531995e0ef52c279d4b5aa8a352/ui/views/window/window_resize_utils.cc#45
+        if (wParam == WMSZ_LEFT || wParam == WMSZ_RIGHT ||
+            wParam == WMSZ_TOPLEFT || wParam == WMSZ_BOTTOMLEFT) {
+          newWidth = rect->right - rect->left;
+          newHeight = newWidth * mAspectRatio;
+        } else {
+          newHeight = rect->bottom - rect->top;
+          newWidth = newHeight / mAspectRatio;
+        }
+
+        switch (wParam) {
+          case WMSZ_RIGHT:
+          case WMSZ_BOTTOM:
+            rect->right = newWidth + rect->left;
+            rect->bottom = rect->top + newHeight;
+            break;
+          case WMSZ_TOP:
+            rect->right = newWidth + rect->left;
+            rect->top = rect->bottom - newHeight;
+            break;
+          case WMSZ_LEFT:
+          case WMSZ_TOPLEFT:
+            rect->left = rect->right - newWidth;
+            rect->top = rect->bottom - newHeight;
+            break;
+          case WMSZ_TOPRIGHT:
+            rect->right = rect->left + newWidth;
+            rect->top = rect->bottom - newHeight;
+            break;
+          case WMSZ_BOTTOMLEFT:
+            rect->left = rect->right - newWidth;
+            rect->bottom = rect->top + newHeight;
+            break;
+          case WMSZ_BOTTOMRIGHT:
+            rect->right = rect->left + newWidth;
+            rect->bottom = rect->top + newHeight;
+            break;
+        }
+      }
+
       // When we get WM_ENTERSIZEMOVE we don't know yet if we're in a live
       // resize or move event. Instead we wait for first VM_SIZING message
       // within a ENTERSIZEMOVE to consider this a live resize event.

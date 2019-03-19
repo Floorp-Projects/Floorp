@@ -459,7 +459,7 @@ void Gecko_EnsureStyleAnimationArrayLength(void* array, size_t len);
 void Gecko_EnsureStyleTransitionArrayLength(void* array, size_t len);
 void Gecko_ClearWillChange(nsStyleDisplay* display, size_t length);
 void Gecko_AppendWillChange(nsStyleDisplay* display, nsAtom* atom);
-void Gecko_CopyWillChangeFrom(nsStyleDisplay* dest, nsStyleDisplay* src);
+void Gecko_CopyWillChangeFrom(nsStyleDisplay* dest, const nsStyleDisplay* src);
 
 // Searches from the beginning of |keyframes| for a Keyframe object with the
 // specified offset and timing function. If none is found, a new Keyframe object
@@ -675,8 +675,14 @@ void Gecko_nsStyleFont_PrefillDefaultForGeneric(nsStyleFont* font,
                                                 const mozilla::dom::Document*,
                                                 uint8_t generic_id);
 
-void Gecko_nsStyleFont_FixupMinFontSize(nsStyleFont* font,
-                                        const mozilla::dom::Document*);
+nscoord Gecko_nsStyleFont_ComputeMinSize(const nsStyleFont*,
+                                         const mozilla::dom::Document*);
+
+// Computes the default generic font for a generic family and language.
+mozilla::FontFamilyType Gecko_nsStyleFont_ComputeDefaultFontType(
+    const mozilla::dom::Document*,
+    uint8_t generic_family,
+    nsAtom* language);
 
 mozilla::FontSizePrefs Gecko_GetBaseSize(nsAtom* lang);
 

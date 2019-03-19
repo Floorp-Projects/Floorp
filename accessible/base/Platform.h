@@ -122,6 +122,9 @@ void ProxyScrollingEvent(ProxyAccessible* aTarget, uint32_t aEventType,
                          uint32_t aScrollX, uint32_t aScrollY,
                          uint32_t aMaxScrollX, uint32_t aMaxScrollY);
 
+void ProxyAnnouncementEvent(ProxyAccessible* aTarget,
+                            const nsString& aAnnouncement, uint16_t aPriority);
+
 class BatchData;
 
 void ProxyBatch(ProxyAccessible* aDocument, const uint64_t aBatchType,

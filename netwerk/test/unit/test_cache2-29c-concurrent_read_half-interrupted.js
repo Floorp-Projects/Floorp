@@ -16,6 +16,8 @@ This test is using a resumable response.
 const {HttpServer} = ChromeUtils.import("resource://testing-common/httpd.js");
 const {NetUtil} = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
+var httpProtocolHandler = Cc["@mozilla.org/network/protocol;1?name=http"]
+                          .getService(Ci.nsIHttpProtocolHandler);
 
 XPCOMUtils.defineLazyGetter(this, "URL", function() {
   return "http://localhost:" + httpServer.identity.primaryPort;
@@ -71,10 +73,12 @@ function run_test()
   httpServer.registerPathHandler("/content", contentHandler);
   httpServer.start(-1);
 
-  var chan1 = make_channel(URL + "/content");
-  chan1.asyncOpen(new ChannelListener(firstTimeThrough, null));
-  var chan2 = make_channel(URL + "/content");
-  chan2.asyncOpen(new ChannelListener(secondTimeThrough, null));
+  httpProtocolHandler.EnsureHSTSDataReady().then(function() {
+    var chan1 = make_channel(URL + "/content");
+    chan1.asyncOpen(new ChannelListener(firstTimeThrough, null));
+    var chan2 = make_channel(URL + "/content");
+    chan2.asyncOpen(new ChannelListener(secondTimeThrough, null));
+  });
 
   do_test_pending();
 }

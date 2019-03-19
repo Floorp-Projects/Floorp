@@ -572,10 +572,9 @@ struct nsCSSRendering {
     // strikeout line and overline too.
     Float descentLimit = -1.0f;
     // Which line will be painted. The value can be
-    // NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE or
-    // NS_STYLE_TEXT_DECORATION_LINE_OVERLINE or
-    // NS_STYLE_TEXT_DECORATION_LINE_LINE_THROUGH.
-    uint8_t decoration = NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE;
+    // UNDERLINE or OVERLINE or LINE_THROUGH.
+    mozilla::StyleTextDecorationLine decoration =
+        mozilla::StyleTextDecorationLine_UNDERLINE;
     // The style of the decoration line such as
     // NS_STYLE_TEXT_DECORATION_STYLE_*.
     uint8_t style = NS_STYLE_TEXT_DECORATION_STYLE_NONE;

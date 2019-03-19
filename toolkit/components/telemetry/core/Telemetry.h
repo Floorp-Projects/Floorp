@@ -7,7 +7,6 @@
 #define Telemetry_h__
 
 #include "mozilla/GuardObjects.h"
-#include "mozilla/StartupTimeline.h"
 #include "mozilla/TelemetryEventEnums.h"
 #include "mozilla/TelemetryHistogramEnums.h"
 #include "mozilla/TelemetryScalarEnums.h"

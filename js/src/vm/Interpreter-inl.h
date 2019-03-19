@@ -58,9 +58,7 @@ static inline bool GuardFunApplyArgumentsOptimization(JSContext* cx,
   if (args.length() == 2 && IsOptimizedArguments(frame, args[1])) {
     if (!IsNativeFunction(args.calleev(), js::fun_apply)) {
       RootedScript script(cx, frame.script());
-      if (!JSScript::argumentsOptimizationFailed(cx, script)) {
-        return false;
-      }
+      JSScript::argumentsOptimizationFailed(cx, script);
       args[1].setObject(frame.argsObj());
     }
   }
@@ -573,9 +571,7 @@ static MOZ_ALWAYS_INLINE bool GetElemOptimizedArguments(
     }
 
     RootedScript script(cx, frame.script());
-    if (!JSScript::argumentsOptimizationFailed(cx, script)) {
-      return false;
-    }
+    JSScript::argumentsOptimizationFailed(cx, script);
 
     lref.set(ObjectValue(frame.argsObj()));
   }

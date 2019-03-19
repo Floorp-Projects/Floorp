@@ -2620,7 +2620,7 @@ class nsLayoutUtils {
   /**
    * Helper method to get touch action behaviour from the frame
    */
-  static uint32_t GetTouchActionFromFrame(nsIFrame* aFrame);
+  static mozilla::StyleTouchAction GetTouchActionFromFrame(nsIFrame* aFrame);
 
   /**
    * Helper method to transform |aBounds| from aFrame to aAncestorFrame,
@@ -2702,6 +2702,12 @@ class nsLayoutUtils {
    * enabled in Fennec it will always return 1.0.
    */
   static float GetCurrentAPZResolutionScale(nsIPresShell* aShell);
+
+  /**
+   * Returns true if aDocument should be allowed to use resolution
+   * zooming.
+   */
+  static bool AllowZoomingForDocument(const mozilla::dom::Document* aDocument);
 
   /**
    * Returns true if we need to disable async scrolling for this particular
@@ -2978,14 +2984,6 @@ class nsLayoutUtils {
   static void FixupNoneGeneric(nsFont* aFont, uint8_t aGenericFontID,
                                const nsFont* aDefaultVariableFont);
 
-  /**
-   * For an nsStyleFont with mSize set, apply minimum font size constraints
-   * from preferences, as well as -moz-min-font-size-ratio.
-   */
-  static void ApplyMinFontSize(nsStyleFont* aFont,
-                               const mozilla::dom::Document*,
-                               nscoord aMinFontSize);
-
   static void ComputeSystemFont(nsFont* aSystemFont,
                                 mozilla::LookAndFeel::FontID aFontID,
                                 const nsFont* aDefaultVariableFont);
@@ -3003,7 +3001,7 @@ class nsLayoutUtils {
    * Returns true if there are any preferences or overrides that indicate a
    * need to create a MobileViewportManager.
    */
-  static bool ShouldHandleMetaViewport(mozilla::dom::Document*);
+  static bool ShouldHandleMetaViewport(const mozilla::dom::Document*);
 
   /**
    * Resolve a CSS <length-percentage> value to a definite size.

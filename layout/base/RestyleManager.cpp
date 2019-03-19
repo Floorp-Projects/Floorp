@@ -456,6 +456,33 @@ void RestyleManager::ContentRemoved(nsIContent* aOldChild,
   }
 }
 
+static bool StateChangeMayAffectFrame(const Element& aElement,
+                                      const nsIFrame& aFrame,
+                                      EventStates aStates) {
+  if (aFrame.IsGeneratedContentFrame()) {
+    // If it's generated content, ignore LOADING/etc state changes on it.
+    return false;
+  }
+
+  const bool brokenChanged = aStates.HasAtLeastOneOfStates(
+      NS_EVENT_STATE_BROKEN | NS_EVENT_STATE_USERDISABLED |
+      NS_EVENT_STATE_SUPPRESSED);
+  const bool loadingChanged =
+      aStates.HasAtLeastOneOfStates(NS_EVENT_STATE_LOADING);
+
+  if (!brokenChanged && !loadingChanged) {
+    return false;
+  }
+
+  if (aElement.IsHTMLElement(nsGkAtoms::img)) {
+    // Loading state doesn't affect <img>, see
+    // `nsImageFrame::ShouldCreateImageFrameFor`.
+    return brokenChanged;
+  }
+
+  return brokenChanged || loadingChanged;
+}
+
 /**
  * Calculates the change hint and the restyle hint for a given content state
  * change.
@@ -471,11 +498,7 @@ static nsChangeHint ChangeForContentStateChange(const Element& aElement,
   // need to force a reframe -- if it's needed, the HasStateDependentStyle
   // call will handle things.
   if (nsIFrame* primaryFrame = aElement.GetPrimaryFrame()) {
-    // If it's generated content, ignore LOADING/etc state changes on it.
-    if (!primaryFrame->IsGeneratedContentFrame() &&
-        aStateMask.HasAtLeastOneOfStates(
-            NS_EVENT_STATE_BROKEN | NS_EVENT_STATE_USERDISABLED |
-            NS_EVENT_STATE_SUPPRESSED | NS_EVENT_STATE_LOADING)) {
+    if (StateChangeMayAffectFrame(aElement, *primaryFrame, aStateMask)) {
       return nsChangeHint_ReconstructFrame;
     }
 
