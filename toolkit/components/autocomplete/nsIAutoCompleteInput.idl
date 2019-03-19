@@ -137,9 +137,12 @@ interface nsIAutoCompleteInput : nsISupports
    *
    * @param aEvent
    *        The event that triggered the enter.
+   * @param itemWasSelected
+   *        A boolean value that indicates whether
+   *        an item was selected from the autocomplete popup.
    * @return True if the user wishes to prevent the enter
    */
-  boolean onTextEntered([optional] in Event aEvent);
+  boolean onTextEntered([optional] in Event aEvent, [optional] in boolean itemWasSelected);
 
   /*
    * Notification that the user cancelled the autocomplete session

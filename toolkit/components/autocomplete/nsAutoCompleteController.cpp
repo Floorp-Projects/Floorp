@@ -1149,6 +1149,9 @@ nsresult nsAutoCompleteController::EnterMatch(bool aIsPopupSelection,
   bool forceComplete;
   input->GetForceComplete(&forceComplete);
 
+  int32_t selectedIndex;
+  popup->GetSelectedIndex(&selectedIndex);
+
   // Ask the popup if it wants to enter a special value into the textbox
   nsAutoString value;
   popup->GetOverrideValue(value);
@@ -1158,8 +1161,6 @@ nsresult nsAutoCompleteController::EnterMatch(bool aIsPopupSelection,
     bool completeSelection;
     input->GetCompleteSelectedIndex(&completeSelection);
 
-    int32_t selectedIndex;
-    popup->GetSelectedIndex(&selectedIndex);
     if (selectedIndex >= 0) {
       nsAutoString inputValue;
       input->GetTextValue(inputValue);
@@ -1268,7 +1269,8 @@ nsresult nsAutoCompleteController::EnterMatch(bool aIsPopupSelection,
   ClosePopup();
 
   bool cancel;
-  input->OnTextEntered(aEvent, &cancel);
+  bool itemWasSelected = selectedIndex >= 0;
+  input->OnTextEntered(aEvent, itemWasSelected, &cancel);
 
   return NS_OK;
 }

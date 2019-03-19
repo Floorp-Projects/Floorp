@@ -69,8 +69,8 @@ add_task(async function test_field_highlight_on_autocomplete() {
         "Highlight was successfully applied to the password field on username autocomplete");
 
   // Clear existing highlight on login fields. We check by pressing the tab key after backspace
-  // (by shifting focus to the next element) because the tab key is known to cause a bug where the
-  // highlight is applied once again.
+  // (by shifting focus to the next element) because the tab key was known to cause a bug where the
+  // highlight is applied once again. See Bug 1526522.
   username.focus();
   synthesizeKey("KEY_Backspace");
   synthesizeKey("KEY_Tab");
@@ -79,6 +79,31 @@ add_task(async function test_field_highlight_on_autocomplete() {
 
   synthesizeKey("KEY_Backspace");
   synthesizeKey("KEY_Tab");
+  is(document.defaultView.getComputedStyle(password).getPropertyValue("filter"), "none",
+     "Highlight was successfully removed on the password field");
+
+  // Clear login fields.
+  username.value = "";
+  password.value = "";
+
+  // Test password field autocomplete.
+  password.focus();
+  shownPromise = promiseACShown();
+  synthesizeKey("KEY_ArrowDown");
+  await shownPromise;
+  synthesizeKey("KEY_ArrowDown");
+  synthesizeKey("KEY_Enter");
+
+  await ContentTaskUtils.waitForCondition(() => {
+    return document.defaultView.getComputedStyle(password).getPropertyValue("filter") !== "none";
+  }, "Highlight was successfully applied to the password field on password autocomplete");
+
+  // Clear existing highlight on the password field. We check by pressing the tab key after backspace
+  // (by shifting focus to the next element) because the tab key was known to cause a bug where the
+  // highlight is applied once again. See Bug 1526522.
+  synthesizeKey("KEY_Backspace");
+  synthesizeKey("KEY_Tab");
+
   is(document.defaultView.getComputedStyle(password).getPropertyValue("filter"), "none",
      "Highlight was successfully removed on the password field");
 });
