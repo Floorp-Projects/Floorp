@@ -10,6 +10,8 @@
 
 "use strict";
 
+/* global browserElementTestHelpers */
+
 SimpleTest.waitForExplicitFinish();
 browserElementTestHelpers.setEnabledPref(true);
 browserElementTestHelpers.addPermission();
@@ -37,6 +39,7 @@ function runTest() {
     }
   });
 
+  /* eslint-disable no-useless-concat */
   iframe.src =
     'data:text/html,<html><body><script>\
       addEventListener("load", function() { \
@@ -48,6 +51,7 @@ function runTest() {
        }); \
      }); \
      </scr' + "ipt></body></html>";
+   /* eslint-enable no-useless-concat */
 }
 
 // The test harness sets dom.successive_dialog_time_limit to 0 for some bizarre

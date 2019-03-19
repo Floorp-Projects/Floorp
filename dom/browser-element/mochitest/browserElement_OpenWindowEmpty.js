@@ -5,6 +5,9 @@
 // about:blank as default
 
 "use strict";
+
+/* global browserElementTestHelpers */
+
 SimpleTest.waitForExplicitFinish();
 browserElementTestHelpers.setEnabledPref(true);
 browserElementTestHelpers.addPermission();

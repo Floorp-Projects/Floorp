@@ -4,13 +4,14 @@
 // Test that "cut, copy, paste, selectall" and caretstatechanged event works from inside an <iframe mozbrowser>.
 "use strict";
 
+/* global browserElementTestHelpers */
+
 SimpleTest.waitForExplicitFinish();
 SimpleTest.requestFlakyTimeout("untriaged");
 browserElementTestHelpers.setEnabledPref(true);
 browserElementTestHelpers.setupAccessibleCaretPref();
 browserElementTestHelpers.addPermission();
 browserElementTestHelpers.allowTopLevelDataURINavigation();
-const { Services } = SpecialPowers.Cu.import("resource://gre/modules/Services.jsm");
 
 var gTextarea = null;
 var mm;
@@ -72,9 +73,9 @@ function runTest() {
       iframeInner.setAttribute("mozbrowser", true);
       iframeInner.setAttribute("remote", "false");
       contentDoc.body.appendChild(iframeInner);
-      iframeInner.addEventListener("mozbrowserloadend", function(e) {
+      iframeInner.addEventListener("mozbrowserloadend", function(f) {
         mm = SpecialPowers.getBrowserFrameMessageManager(iframeInner);
-        dispatchTest(e);
+        dispatchTest(f);
       }, {once: true});
     } else {
       iframeInner = iframeOuter;
@@ -96,9 +97,9 @@ function doCommand(cmd) {
 }
 
 function dispatchTest(e) {
-  iframeInner.addEventListener("mozbrowserloadend", function(e) {
+  iframeInner.addEventListener("mozbrowserloadend", function(f) {
     iframeInner.focus();
-    SimpleTest.executeSoon(function() { testSelectAll(e); });
+    SimpleTest.executeSoon(function() { testSelectAll(f); });
   }, {once: true});
 
   switch (state) {
@@ -180,21 +181,20 @@ function dispatchTest(e) {
 }
 
 function isChildProcess() {
-  return SpecialPowers.Cc["@mozilla.org/xre/app-info;1"]
-                         .getService(SpecialPowers.Ci.nsIXULRuntime)
-                         .processType != SpecialPowers.Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT;
+  return SpecialPowers.Services.appinfo
+                      .processType != SpecialPowers.Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT;
 }
 
 function testSelectAll(e) {
   // Skip mozbrowser test if we're at child process.
   if (!isChildProcess()) {
     let eventName = "mozbrowsercaretstatechanged";
-    iframeOuter.addEventListener(eventName, function(e) {
+    iframeOuter.addEventListener(eventName, function(f) {
       ok(true, "got mozbrowsercaretstatechanged event." + stateMeaning);
-      ok(e.detail, "event.detail is not null." + stateMeaning);
-      ok(e.detail.width != 0, "event.detail.width is not zero" + stateMeaning);
-      ok(e.detail.height != 0, "event.detail.height is not zero" + stateMeaning);
-      SimpleTest.executeSoon(function() { testCopy1(e); });
+      ok(f.detail, "event.detail is not null." + stateMeaning);
+      ok(f.detail.width != 0, "event.detail.width is not zero" + stateMeaning);
+      ok(f.detail.height != 0, "event.detail.height is not zero" + stateMeaning);
+      SimpleTest.executeSoon(function() { testCopy1(f); });
     }, {capture: true, once: true});
   }
 
@@ -336,4 +336,3 @@ addEventListener("testready", function() {
     {type: "browser", allow: 1, context},
   ], runTest);
 });
-

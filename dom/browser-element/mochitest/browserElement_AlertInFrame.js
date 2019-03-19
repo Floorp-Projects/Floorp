@@ -4,6 +4,8 @@
 // Test that alert works from inside an <iframe> inside an <iframe mozbrowser>.
 "use strict";
 
+/* global browserElementTestHelpers */
+
 SimpleTest.waitForExplicitFinish();
 browserElementTestHelpers.setEnabledPref(true);
 browserElementTestHelpers.addPermission();

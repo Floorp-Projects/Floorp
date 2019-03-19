@@ -2,6 +2,9 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 "use strict";
+
+/* global browserElementTestHelpers */
+
 SimpleTest.waitForExplicitFinish();
 SimpleTest.requestFlakyTimeout("testing mozbrowser data: navigation is blocked");
 

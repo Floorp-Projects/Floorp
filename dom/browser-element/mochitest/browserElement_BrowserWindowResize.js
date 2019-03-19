@@ -4,6 +4,8 @@
 // Bug 891763 - Test the mozbrowserresize event
 "use strict";
 
+/* global browserElementTestHelpers */
+
 SimpleTest.waitForExplicitFinish();
 browserElementTestHelpers.setEnabledPref(true);
 browserElementTestHelpers.addPermission();

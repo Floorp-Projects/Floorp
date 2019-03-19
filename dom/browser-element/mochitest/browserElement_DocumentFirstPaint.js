@@ -4,6 +4,8 @@
 // Bug 829486 - Add mozdocumentbrowserfirstpaint event.
 "use strict";
 
+/* global browserElementTestHelpers */
+
 SimpleTest.waitForExplicitFinish();
 browserElementTestHelpers.setEnabledPref(true);
 
