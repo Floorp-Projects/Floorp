@@ -2,7 +2,6 @@ package org.mozilla.fenix.quickactionsheet
 
 import android.content.Context
 import android.util.AttributeSet
-import android.view.LayoutInflater
 import android.view.View
 import android.widget.LinearLayout
 import androidx.appcompat.widget.AppCompatImageButton
@@ -11,6 +10,9 @@ import androidx.core.widget.NestedScrollView
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import mozilla.components.browser.toolbar.BrowserToolbar
 import org.mozilla.fenix.R
+import android.animation.ValueAnimator
+import androidx.interpolator.view.animation.FastOutSlowInInterpolator
+import org.mozilla.fenix.ext.increaseTapArea
 
 class QuickActionSheet @JvmOverloads constructor(
     context: Context,
@@ -21,24 +23,39 @@ class QuickActionSheet @JvmOverloads constructor(
 
     init {
         inflate(getContext(), R.layout.component_quickactionsheet, this)
-        //setupHandle()
+    }
+
+    fun afterInflate() {
+        setupHandle()
     }
 
     private fun setupHandle() {
         val handle = findViewById<AppCompatImageButton>(R.id.quick_action_sheet_handle)
         val linearLayout = findViewById<LinearLayout>(R.id.quick_action_sheet)
-        val quickActionSheetBehavior = BottomSheetBehavior.from(linearLayout) as QuickActionSheetBehavior
+        val quickActionSheetBehavior = BottomSheetBehavior.from(linearLayout.parent as View) as QuickActionSheetBehavior
+        handle.increaseTapArea(100)
         handle.setOnClickListener {
             bounceSheet(quickActionSheetBehavior)
         }
+
+        bounceSheet(quickActionSheetBehavior, 600L)
     }
 
-    private fun bounceSheet(quickActionSheetBehavior: QuickActionSheetBehavior) {
-        quickActionSheetBehavior.state = BottomSheetBehavior.STATE_HIDDEN
-        quickActionSheetBehavior.peekHeight = height
-        quickActionSheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
-    }
+    private fun bounceSheet(quickActionSheetBehavior: QuickActionSheetBehavior, duration: Long = 400L) {
+        val normalPeekHeight = quickActionSheetBehavior.peekHeight
+        val valueAnimator = ValueAnimator.ofFloat(normalPeekHeight.toFloat(), normalPeekHeight*6f)
 
+        valueAnimator.addUpdateListener {
+            quickActionSheetBehavior.peekHeight = (it.animatedValue as Float).toInt()
+        }
+
+        valueAnimator.repeatMode = ValueAnimator.REVERSE
+        valueAnimator.repeatCount = 1
+        // Fast out slow in looks best so far
+        valueAnimator.interpolator = FastOutSlowInInterpolator()
+        valueAnimator.duration = duration
+        valueAnimator.start()
+    }
 }
 
 @Suppress("unused") // Referenced from XML

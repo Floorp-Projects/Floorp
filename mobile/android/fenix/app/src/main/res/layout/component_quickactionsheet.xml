@@ -9,21 +9,22 @@
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="80dp"
-    android:background="@color/photonRed50">
+    android:background="@color/off_white">
 
     <androidx.appcompat.widget.AppCompatImageButton
         android:id="@+id/quick_action_sheet_handle"
-        android:layout_width="wrap_content"
-        android:layout_height="10dp"
+        android:layout_marginTop="7dp"
+        android:layout_width="24dp"
+        android:layout_height="2dp"
         android:layout_gravity="center"
-        android:src="@drawable/ic_close"/>
+        android:background="@drawable/ic_drawer_pull_tab"/>
 
     <LinearLayout
         android:orientation="horizontal"
         android:layout_gravity="bottom"
         android:layout_width="match_parent"
-        android:layout_height="70dp"
-        android:background="@color/photonBlue50">
+        android:layout_height="78dp"
+        android:background="@color/off_white">
 
         <androidx.appcompat.widget.AppCompatImageButton
             android:layout_weight="1"

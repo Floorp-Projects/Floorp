@@ -23,9 +23,10 @@
         android:background="@color/off_white"
         android:clipToPadding="true"
         app:behavior_hideable="true"
-        app:behavior_peekHeight="20dp"
+        app:behavior_peekHeight="10dp"
         app:layout_behavior="org.mozilla.fenix.quickactionsheet.QuickActionSheetBehavior">
         <org.mozilla.fenix.quickactionsheet.QuickActionSheet
+            android:id="@+id/quick_action_sheet"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="bottom"/>
