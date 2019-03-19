@@ -151,7 +151,7 @@ class AddrInfo {
   uint32_t ttl;
   static const uint32_t NO_TTL_DATA = (uint32_t)-1;
 
-  LinkedList<NetAddrElement> mAddresses;
+  AutoCleanLinkedList<NetAddrElement> mAddresses;
   unsigned int IsTRR() { return mFromTRR; }
 
  private:
