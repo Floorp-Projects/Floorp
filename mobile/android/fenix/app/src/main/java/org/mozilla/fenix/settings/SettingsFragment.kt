@@ -69,10 +69,16 @@ class SettingsFragment : PreferenceFragmentCompat(), CoroutineScope, AccountObse
         super.onResume()
 
         (activity as AppCompatActivity).supportActionBar?.show()
-        val preference =
+        val defaultBrowserPreference =
             findPreference<DefaultBrowserPreference>(getString(R.string.pref_key_make_default_browser))
+        defaultBrowserPreference?.updateSwitch()
 
-        preference?.updateSwitch()
+        val searchEnginePreference =
+            findPreference<Preference>(getString(R.string.pref_key_search_engine_settings))
+        searchEnginePreference?.summary = context?.let {
+            requireComponents.search.searchEngineManager.getDefaultSearchEngine(it).name
+        }
+
         generateWordmark()
         setupPreferences()
         setupAccountUI()
