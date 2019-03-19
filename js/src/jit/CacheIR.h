@@ -188,7 +188,7 @@ enum ArgType {
   Word,
 };
 
-extern const uint32_t OpLengths[];
+extern const uint32_t ArgLengths[];
 }  // namespace CacheIROpFormat
 
 #ifdef JS_SIMULATOR
@@ -293,9 +293,12 @@ extern const uint32_t OpLengths[];
   _(CallAddOrUpdateSparseElementHelper, Id, Id, Id, Byte)                      \
   _(CallInt32ToString, Id, Id)                                                 \
   _(CallNumberToString, Id, Id)                                                \
-  _(CallScriptedFunction, Id, Id, Byte, Byte)                                  \
-  _(CallNativeFunction, Id, Id, Byte, Byte, IF_SIMULATOR(Field, Byte))         \
-  _(CallClassHook, Id, Id, Byte, Byte, Field)                                  \
+  _(CallScriptedFunction, Id, Id, Byte, Byte, Byte)                            \
+  _(CallNativeFunction, Id, Id, Byte, Byte, Byte, IF_SIMULATOR(Field, Byte))   \
+  _(CallClassHook, Id, Id, Byte, Byte, Byte, Field)                            \
+                                                                               \
+  /* Meta ops generate no code, but contain data for BaselineInspector */      \
+  _(MetaTwoByte, Byte, Field, Field)                                           \
                                                                                \
   /* The *Result ops load a value into the cache's result register. */         \
   _(LoadFixedSlotResult, Id, Field)                                            \
@@ -457,6 +460,8 @@ class StubField {
   }
 } JS_HAZ_GC_POINTER;
 
+typedef uint8_t FieldOffset;
+
 // We use this enum as GuardClass operand, instead of storing Class* pointers
 // in the IR, to keep the IR compact and the same size on all platforms.
 enum class GuardClassKind : uint8_t {
@@ -482,6 +487,10 @@ enum TypedThingLayout {
 
 void LoadShapeWrapperContents(MacroAssembler& masm, Register obj, Register dst,
                               Label* failure);
+
+enum class MetaTwoByteKind : uint8_t {
+  ClassTemplateObject,
+};
 
 // Class to record CacheIR + some additional metadata for code generation.
 class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
@@ -546,16 +555,23 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     writeOperandId(opId);
   }
 
-  void addStubField(uint64_t value, StubField::Type fieldType) {
+  uint8_t addStubField(uint64_t value, StubField::Type fieldType) {
+    uint8_t offset = 0;
     size_t newStubDataSize = stubDataSize_ + StubField::sizeInBytes(fieldType);
     if (newStubDataSize < MaxStubDataSizeInBytes) {
       buffer_.propagateOOM(stubFields_.append(StubField(value, fieldType)));
       MOZ_ASSERT((stubDataSize_ % sizeof(uintptr_t)) == 0);
-      buffer_.writeByte(stubDataSize_ / sizeof(uintptr_t));
+      offset = stubDataSize_ / sizeof(uintptr_t);
+      buffer_.writeByte(offset);
       stubDataSize_ = newStubDataSize;
     } else {
       tooLarge_ = true;
     }
+    return offset;
+  }
+  void reuseStubField(FieldOffset offset) {
+    MOZ_ASSERT(offset < stubDataSize_ / sizeof(uintptr_t));
+    buffer_.writeByte(offset);
   }
 
   CacheIRWriter(const CacheIRWriter&) = delete;
@@ -767,9 +783,9 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     writeOpWithOperandId(CacheOp::GuardClass, obj);
     buffer_.writeByte(uint32_t(kind));
   }
-  void guardAnyClass(ObjOperandId obj, const Class* clasp) {
+  FieldOffset guardAnyClass(ObjOperandId obj, const Class* clasp) {
     writeOpWithOperandId(CacheOp::GuardAnyClass, obj);
-    addStubField(uintptr_t(clasp), StubField::Type::RawWord);
+    return addStubField(uintptr_t(clasp), StubField::Type::RawWord);
   }
   void guardIsNativeFunction(ObjOperandId obj, JSNative nativeFunc) {
     writeOpWithOperandId(CacheOp::GuardIsNativeFunction, obj);
@@ -1139,6 +1155,7 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     writeOperandId(argc);
     buffer_.writeByte(uint32_t(isCrossRealm));
     buffer_.writeByte(uint32_t(isSpread));
+    buffer_.writeByte(uint32_t(false));  // isConstructing
   }
   void callNativeFunction(ObjOperandId calleeId, Int32OperandId argc, JSOp op,
                           HandleFunction calleeFunc, bool isSpread) {
@@ -1147,6 +1164,7 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     bool isCrossRealm = cx_->realm() != calleeFunc->realm();
     buffer_.writeByte(uint32_t(isCrossRealm));
     buffer_.writeByte(uint32_t(isSpread));
+    buffer_.writeByte(uint32_t(false));  // isConstructing
 
     // Some native functions can be implemented faster if we know that
     // the return value is ignored.
@@ -1175,11 +1193,12 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
   }
 
   void callClassHook(ObjOperandId calleeId, Int32OperandId argc, JSNative hook,
-                     bool isSpread) {
+                     bool isSpread, bool isConstructing) {
     writeOpWithOperandId(CacheOp::CallClassHook, calleeId);
     writeOperandId(argc);
     buffer_.writeByte(true);                // may be cross-realm
-    buffer_.writeByte(uint32_t(isSpread));  // may be cross-realm
+    buffer_.writeByte(uint32_t(isSpread));
+    buffer_.writeByte(uint32_t(isConstructing));
     void* target = JS_FUNC_TO_DATA_PTR(void*, hook);
 
 #ifdef JS_SIMULATOR
@@ -1190,6 +1209,16 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
 #endif
 
     addStubField(uintptr_t(target), StubField::Type::RawWord);
+  }
+
+  // This generates no code, but saves the template object in a stub
+  // field for BaselineInspector.
+  void metaClassTemplateObject(JSObject* templateObject,
+                               FieldOffset classOffset) {
+    writeOp(CacheOp::MetaTwoByte);
+    buffer_.writeByte(uint32_t(MetaTwoByteKind::ClassTemplateObject));
+    reuseStubField(classOffset);
+    addStubField(uintptr_t(templateObject), StubField::Type::JSObject);
   }
 
   void megamorphicLoadSlotResult(ObjOperandId obj, PropertyName* name,
@@ -1560,6 +1589,11 @@ class MOZ_RAII CacheIRReader {
 
   // Skip data not currently used.
   void skip() { buffer_.readByte(); }
+  void skip(uint32_t skipLength) {
+    if (skipLength > 0) {
+      buffer_.seek(buffer_.currentPosition(), skipLength);
+    }
+  }
 
   ValOperandId valOperandId() { return ValOperandId(buffer_.readByte()); }
   ValueTagOperandId valueTagOperandId() {
@@ -1588,6 +1622,11 @@ class MOZ_RAII CacheIRReader {
   int32_t int32Immediate() { return int32_t(buffer_.readFixedUint32_t()); }
   uint32_t uint32Immediate() { return buffer_.readFixedUint32_t(); }
   void* pointer() { return buffer_.readRawPointer(); }
+
+  template <typename MetaKind>
+  MetaKind metaKind() {
+    return MetaKind(buffer_.readByte());
+  }
 
   ReferenceType referenceTypeDescrType() {
     return ReferenceType(buffer_.readByte());
@@ -2077,6 +2116,8 @@ class MOZ_RAII CallIRGenerator : public IRGenerator {
   BaselineCacheIRStubKind cacheIRStubKind_;
 
   uint32_t calleeStackSlot(bool isSpread, bool isConstructing);
+  bool getTemplateObjectForClassHook(HandleObject calleeObj,
+                                     MutableHandleObject result);
 
   bool tryAttachStringSplit();
   bool tryAttachArrayPush();

@@ -955,6 +955,8 @@ template GCPtr<JS::Value>& CacheIRStubInfo::getStubField<ICStub>(
     ICStub* stub, uint32_t offset) const;
 template GCPtr<jsid>& CacheIRStubInfo::getStubField<ICStub>(
     ICStub* stub, uint32_t offset) const;
+template GCPtr<Class*>& CacheIRStubInfo::getStubField<ICStub>(
+    ICStub* stub, uint32_t offset) const;
 
 template <typename T, typename V>
 static void InitGCPtr(uintptr_t* ptr, V val) {
@@ -4332,5 +4334,14 @@ bool CacheIRCompiler::emitCallIsSuspendedGeneratorResult() {
   masm.moveValue(BooleanValue(false), output.valueReg());
 
   masm.bind(&done);
+  return true;
+}
+
+// This op generates no code. It is consumed by BaselineInspector.
+bool CacheIRCompiler::emitMetaTwoByte() {
+  mozilla::Unused << reader.readByte();  // meta kind
+  mozilla::Unused << reader.readByte();  // payload byte 1
+  mozilla::Unused << reader.readByte();  // payload byte 2
+
   return true;
 }
