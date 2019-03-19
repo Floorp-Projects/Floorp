@@ -536,6 +536,7 @@ void nsDOMMutationObserver::ScheduleForRun() {
 
 class MutationObserverMicroTask final : public MicroTaskRunnable {
  public:
+  MOZ_CAN_RUN_SCRIPT
   virtual void Run(AutoSlowOperation& aAso) override {
     nsDOMMutationObserver::HandleMutations(aAso);
   }
@@ -804,7 +805,8 @@ void nsDOMMutationObserver::HandleMutation() {
   }
   ClearPendingRecords();
 
-  mCallback->Call(this, mutations, *this);
+  RefPtr<dom::MutationCallback> callback(mCallback);
+  callback->Call(this, mutations, *this);
 }
 
 void nsDOMMutationObserver::HandleMutationsInternal(AutoSlowOperation& aAso) {
