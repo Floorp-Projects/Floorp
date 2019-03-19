@@ -1696,8 +1696,12 @@ class StaticAnalysis(MachCommandBase):
                      help='Regular expression matching the names of the headers to '
                           'output diagnostics from. Diagnostics from the main file '
                           'of each translation unit are always displayed')
+    @CommandArgument('--output', '-o', default=None,
+                     help='Write clang-tidy output in a file')
+    @CommandArgument('--format', default='text', choices=('text', 'json'),
+                     help='Output format to write in a file')
     def check(self, source=None, jobs=2, strip=1, verbose=False,
-              checks='-*', fix=False, header_filter=''):
+              checks='-*', fix=False, header_filter='', output=None, format='text'):
         from mozbuild.controller.building import (
             StaticAnalysisFooter,
             StaticAnalysisOutputManager,
@@ -1732,12 +1736,17 @@ class StaticAnalysis(MachCommandBase):
         monitor = StaticAnalysisMonitor(self.topsrcdir, self.topobjdir, total)
 
         footer = StaticAnalysisFooter(self.log_manager.terminal, monitor)
-        with StaticAnalysisOutputManager(self.log_manager, monitor, footer) as output:
-            rc = self.run_process(args=args, ensure_exit_code=False, line_handler=output.on_line, cwd=cwd)
+        with StaticAnalysisOutputManager(self.log_manager, monitor, footer) as output_manager:
+            rc = self.run_process(args=args, ensure_exit_code=False, line_handler=output_manager.on_line, cwd=cwd)
 
             self.log(logging.WARNING, 'warning_summary',
                      {'count': len(monitor.warnings_db)},
                      '{count} warnings present.')
+
+            # Write output file
+            if output is not None:
+                output_manager.write(output, format)
+
         if rc != 0:
             return rc
         # if we are building firefox for android it might be nice to
