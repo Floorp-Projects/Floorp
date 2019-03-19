@@ -1107,7 +1107,6 @@ class RTCPeerConnection {
       containsTrickle(topSection) || sections.every(containsTrickle);
   }
 
-  // TODO: Implement processing for end-of-candidates (bug 1318167)
   addIceCandidate(cand, onSucc, onErr) {
     if (cand === null) {
       throw new this._win.DOMException(

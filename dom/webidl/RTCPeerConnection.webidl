@@ -97,7 +97,7 @@ interface RTCPeerConnection : EventTarget  {
   readonly attribute RTCSessionDescription? currentRemoteDescription;
   readonly attribute RTCSessionDescription? pendingRemoteDescription;
   readonly attribute RTCSignalingState signalingState;
-  Promise<void> addIceCandidate ((RTCIceCandidateInit or RTCIceCandidate)? candidate);
+  Promise<void> addIceCandidate (optional (RTCIceCandidateInit or RTCIceCandidate) candidate);
   readonly attribute boolean? canTrickleIceCandidates;
   readonly attribute RTCIceGatheringState iceGatheringState;
   readonly attribute RTCIceConnectionState iceConnectionState;
