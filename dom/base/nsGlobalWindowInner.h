@@ -1197,9 +1197,11 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
   uint32_t LastIdleRequestHandle() const {
     return mIdleRequestCallbackCounter - 1;
   }
-  nsresult RunIdleRequest(mozilla::dom::IdleRequest* aRequest,
-                          DOMHighResTimeStamp aDeadline, bool aDidTimeout);
-  nsresult ExecuteIdleRequest(TimeStamp aDeadline);
+  MOZ_CAN_RUN_SCRIPT
+  void RunIdleRequest(mozilla::dom::IdleRequest* aRequest,
+                      DOMHighResTimeStamp aDeadline, bool aDidTimeout);
+  MOZ_CAN_RUN_SCRIPT
+  void ExecuteIdleRequest(TimeStamp aDeadline);
   void ScheduleIdleRequestDispatch();
   void SuspendIdleRequests();
   void ResumeIdleRequests();
