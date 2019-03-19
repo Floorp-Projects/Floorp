@@ -14,6 +14,7 @@ already_AddRefed<CubebDeviceEnumerator> CubebDeviceEnumerator::GetInstance() {
     sInstance = new CubebDeviceEnumerator();
   }
   RefPtr<CubebDeviceEnumerator> instance = sInstance.get();
+  MOZ_ASSERT(instance);
   return instance.forget();
 }
 
@@ -166,6 +167,37 @@ already_AddRefed<AudioDeviceInfo> CubebDeviceEnumerator::DeviceInfoFromID(
       return other.forget();
     }
   }
+  return nullptr;
+}
+
+already_AddRefed<AudioDeviceInfo> CubebDeviceEnumerator::DeviceInfoFromName(
+    const nsString& aName) {
+  RefPtr<AudioDeviceInfo> other = DeviceInfoFromName(aName, Side::INPUT);
+  if (other) {
+    return other.forget();
+  }
+  return DeviceInfoFromName(aName, Side::OUTPUT);
+}
+
+already_AddRefed<AudioDeviceInfo> CubebDeviceEnumerator::DeviceInfoFromName(
+    const nsString& aName, Side aSide) {
+  MutexAutoLock lock(mMutex);
+
+  nsTArray<RefPtr<AudioDeviceInfo>>& devices =
+      (aSide == Side::INPUT) ? mInputDevices : mOutputDevices;
+  bool manualInvalidation = (aSide == Side::INPUT) ? mManualInputInvalidation
+                                                   : mManualOutputInvalidation;
+
+  if (devices.IsEmpty() || manualInvalidation) {
+    EnumerateAudioDevices(aSide);
+  }
+  for (uint32_t i = 0; i < devices.Length(); i++) {
+    if (devices[i]->Name().Equals(aName)) {
+      RefPtr<AudioDeviceInfo> other = devices[i];
+      return other.forget();
+    }
+  }
+
   return nullptr;
 }
 
