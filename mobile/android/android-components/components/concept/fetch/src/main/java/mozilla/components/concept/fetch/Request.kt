@@ -4,6 +4,7 @@
 
 package mozilla.components.concept.fetch
 
+import android.net.Uri
 import java.io.Closeable
 import java.io.File
 import java.io.IOException
@@ -61,6 +62,23 @@ data class Request(
              * Create a [Body] from the provided [File].
              */
             fun fromFile(file: File): Body = Body(file.inputStream())
+
+            /**
+             * Create a [Body] from the provided [unencodedParams] in the format of Content-Type
+             * "application/x-www-form-urlencoded". Parameters are formatted as "key1=value1&key2=value2..."
+             * and values are percent-encoded. If the given map is empty, the response body will contain the
+             * empty string.
+             *
+             * @see [Headers.Common.Value.CONTENT_TYPE_FORM_URLENCODED]
+             */
+            fun fromParamsForFormUrlEncoded(unencodedParams: Map<String, String>): Body {
+                // It's unintuitive to use the Uri class format and encode
+                // but its GET query syntax is exactly what we need.
+                val uriBuilder = Uri.Builder()
+                unencodedParams.forEach { (key, value) -> uriBuilder.appendQueryParameter(key, value) }
+                val encodedBody = uriBuilder.build().encodedQuery ?: "" // null when the given map is empty.
+                return Body(encodedBody.byteInputStream())
+            }
         }
 
         /**
