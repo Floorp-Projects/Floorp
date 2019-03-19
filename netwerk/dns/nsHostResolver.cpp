@@ -1009,6 +1009,7 @@ nsresult nsHostResolver::ResolveHost(const nsACString &aHost, uint16_t type,
             MutexAutoLock lock(addrRec->addr_info_lock);
 
             addrRec->addr_info = nullptr;
+            addrRec->addr_info_gencnt++;
             if (unspecRec->negative) {
               rec->negative = unspecRec->negative;
               rec->CopyExpirationTimesAndFlagsFrom(unspecRec);
@@ -1026,6 +1027,7 @@ nsresult nsHostResolver::ResolveHost(const nsACString &aHost, uint16_t type,
                         new AddrInfo(addrUnspecRec->addr_info->mHostName,
                                      addrUnspecRec->addr_info->mCanonicalName,
                                      addrUnspecRec->addr_info->IsTRR());
+                    addrRec->addr_info_gencnt++;
                     rec->CopyExpirationTimesAndFlagsFrom(unspecRec);
                   }
                   addrRec->addr_info->AddAddress(new NetAddrElement(*addrIter));
