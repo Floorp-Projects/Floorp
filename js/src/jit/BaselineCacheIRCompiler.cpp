@@ -2471,54 +2471,39 @@ void BaselineCacheIRCompiler::pushCallArguments(Register argcReg,
                                                 Register scratch,
                                                 bool isJitCall,
                                                 bool isConstructing) {
-  // Values are on the stack left-to-right. Calling convention wants them
-  // right-to-left so duplicate them on the stack in reverse order.
+  // The arguments to the call IC are pushed on the stack left-to-right.
+  // Our calling conventions want them right-to-left in the callee, so
+  // we duplicate them on the stack in reverse order.
   // |this| and callee are pushed last.
 
-  Register count = scratch;
+  // countReg contains the total number of arguments to copy.
+  // In addition to the actual arguments, we have to copy the callee and |this|.
+  // If we are constructing, we also have to copy newTarget.
+  // We use a scratch register to avoid clobbering argc, which is an input reg.
+  Register countReg = scratch;
+  masm.move32(argcReg, countReg);
+  masm.add32(Imm32(2 + isConstructing), countReg);
 
-  masm.move32(argcReg, count);
-
-  // TODO: This comment should be improved.
-  // If we are setting up for a jitcall, we have to align the stack taking
-  // into account the args and newTarget. We could also count callee and |this|,
-  // but it's a waste of stack space. Because we want to keep argcReg unchanged,
-  // just account for newTarget initially, and add the other 2 after assuring
-  // allignment.
-  if (isJitCall) {
-    if (isConstructing) {
-      masm.add32(Imm32(1), count);
-    }
-  } else {
-    masm.add32(Imm32(2 + isConstructing), count);
-  }
-
-  // argPtr initially points to the last argument.
+  // argPtr initially points to the last argument. Skip the stub frame.
   AutoScratchRegister argPtr(allocator, masm);
-  masm.moveStackPtrTo(argPtr.get());
-
-  // Skip 4 pointers pushed on top of the arguments: the frame descriptor,
-  // return address, old frame pointer and stub reg.
-  masm.addPtr(Imm32(STUB_FRAME_SIZE), argPtr);
+  Address argAddress(masm.getStackPointer(), STUB_FRAME_SIZE);
+  masm.computeEffectiveAddress(argAddress, argPtr.get());
 
   // Align the stack such that the JitFrameLayout is aligned on the
   // JitStackAlignment.
   if (isJitCall) {
-    masm.alignJitStackBasedOnNArgs(count);
-
-    // Account for callee and |this|, skipped earlier
-    masm.add32(Imm32(2), count);
+    masm.alignJitStackBasedOnNArgs(countReg);
   }
 
   // Push all values, starting at the last one.
   Label loop, done;
   masm.bind(&loop);
-  masm.branchTest32(Assembler::Zero, count, count, &done);
+  masm.branchTest32(Assembler::Zero, countReg, countReg, &done);
   {
     masm.pushValue(Address(argPtr, 0));
     masm.addPtr(Imm32(sizeof(Value)), argPtr);
 
-    masm.sub32(Imm32(1), count);
+    masm.sub32(Imm32(1), countReg);
     masm.jump(&loop);
   }
   masm.bind(&done);
@@ -2554,10 +2539,8 @@ void BaselineCacheIRCompiler::pushSpreadCallArguments(Register argcReg,
 
   // Push arguments: set up endReg to point to &array[argc]
   Register endReg = scratch;
-  masm.movePtr(argcReg, endReg);
-  static_assert(sizeof(Value) == 8, "Value must be 8 bytes");
-  masm.lshiftPtr(Imm32(3), endReg);
-  masm.addPtr(startReg, endReg);
+  BaseValueIndex endAddr(startReg, argcReg);
+  masm.computeEffectiveAddress(endAddr, endReg);
 
   // Copying pre-decrements endReg by 8 until startReg is reached
   Label copyDone;
