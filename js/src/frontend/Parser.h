@@ -1311,7 +1311,6 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
                                 HandlePropertyName className,
                                 uint32_t classStartOffset, bool hasHeritage,
                                 size_t& numFieldsWithInitializers,
-                                size_t& numFieldKeys,
                                 ListNodeType& classMembers, bool* done);
   MOZ_MUST_USE bool finishClassConstructor(
       const ParseContext::ClassStatement& classStmt,
@@ -1319,8 +1318,8 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
       uint32_t classEndOffset, size_t numFieldsWithInitializers,
       ListNodeType& classMembers);
 
-  FunctionNodeType fieldInitializerOpt(YieldHandling yieldHandling, Node name,
-                                       HandleAtom atom, size_t& numFieldKeys);
+  FunctionNodeType fieldInitializer(YieldHandling yieldHandling,
+                                    HandleAtom atom);
   FunctionNodeType synthesizeConstructor(HandleAtom className,
                                          uint32_t classNameOffset);
 

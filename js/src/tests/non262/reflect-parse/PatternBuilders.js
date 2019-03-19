@@ -153,10 +153,10 @@ function classMethod(id, body, kind, static) {
                      kind: kind,
                      static: static });
 }
-function classField(id, init) {
+function classField(id, initializer) {
     return Pattern({ type: "ClassField",
                      name: id,
-                     init: init });
+                     initializer: initializer });
 }
 
 function funExpr(id, args, body, gen) {
