@@ -362,7 +362,7 @@ void nsPresContext::GetUserPreferences() {
 
   mPrefScrollbarSide = Preferences::GetInt("layout.scrollbar.side");
 
-  Document()->ResetLangPrefs();
+  Document()->SetMayNeedFontPrefsUpdate();
 
   // * image animation
   nsAutoCString animatePref;
@@ -524,8 +524,12 @@ void nsPresContext::UpdateAfterPreferencesChanged() {
   }
 
   if (mDocument->IsInChromeDocShell()) {
+    // FIXME(emilio): Do really all these prefs not affect chrome docs? I
+    // suspect we should move this check somewhere else.
     return;
   }
+
+  StaticPresData::Get()->InvalidateFontPrefs();
 
   // Initialize our state from the user preferences
   GetUserPreferences();
