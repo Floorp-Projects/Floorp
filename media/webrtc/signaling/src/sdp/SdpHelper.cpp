@@ -344,58 +344,21 @@ void SdpHelper::SetDefaultAddresses(const std::string& defaultCandidateAddr,
 
 nsresult SdpHelper::GetIdsFromMsid(const Sdp& sdp,
                                    const SdpMediaSection& msection,
-                                   std::vector<std::string>* streamIds,
-                                   std::string* trackId) {
-  if (!sdp.GetAttributeList().HasAttribute(
-          SdpAttribute::kMsidSemanticAttribute)) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
-  auto& msidSemantics = sdp.GetAttributeList().GetMsidSemantic().mMsidSemantics;
+                                   std::vector<std::string>* streamIds) {
   std::vector<SdpMsidAttributeList::Msid> allMsids;
   nsresult rv = GetMsids(msection, &allMsids);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  bool allMsidsAreWebrtc = false;
-  std::set<std::string> webrtcMsids;
-
-  for (auto i = msidSemantics.begin(); i != msidSemantics.end(); ++i) {
-    if (i->semantic == "WMS") {
-      for (auto j = i->msids.begin(); j != i->msids.end(); ++j) {
-        if (*j == "*") {
-          allMsidsAreWebrtc = true;
-        } else {
-          webrtcMsids.insert(*j);
-        }
-      }
-      break;
-    }
-  }
-
-  bool found = false;
-
-  for (auto i = allMsids.begin(); i != allMsids.end(); ++i) {
-    if (allMsidsAreWebrtc || webrtcMsids.count(i->identifier)) {
-      if (!found) {
-        *trackId = i->appdata;
-        streamIds->clear();
-        found = true;
-      } else if ((*trackId != i->appdata)) {
-        SDP_SET_ERROR("Found multiple different webrtc track ids in m-section "
-                      << msection.GetLevel()
-                      << ". The behavior here is "
-                         "undefined.");
-        return NS_ERROR_INVALID_ARG;
-      }
-      // "-" means no stream, see draft-ietf-mmusic-msid
-      if (i->identifier != "-") {
-        streamIds->push_back(i->identifier);
-      }
-    }
-  }
-
-  if (!found) {
+  if (allMsids.empty()) {
     return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  streamIds->clear();
+  for (const auto& msid : allMsids) {
+    // "-" means no stream, see draft-ietf-mmusic-msid
+    if (msid.identifier != "-") {
+      streamIds->push_back(msid.identifier);
+    }
   }
 
   return NS_OK;
