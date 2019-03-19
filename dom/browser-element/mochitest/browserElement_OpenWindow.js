@@ -4,6 +4,9 @@
 // Bug 742944 - Test that window.open works with <iframe mozbrowser>.
 
 "use strict";
+
+/* global browserElementTestHelpers */
+
 SimpleTest.waitForExplicitFinish();
 browserElementTestHelpers.setEnabledPref(true);
 browserElementTestHelpers.addPermission();

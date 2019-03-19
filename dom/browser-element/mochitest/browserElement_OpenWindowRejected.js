@@ -5,6 +5,9 @@
 // reject the call.  This shouldn't cause problems (crashes, leaks).
 
 "use strict";
+
+/* global browserElementTestHelpers */
+
 SimpleTest.waitForExplicitFinish();
 browserElementTestHelpers.setEnabledPref(true);
 browserElementTestHelpers.addPermission();

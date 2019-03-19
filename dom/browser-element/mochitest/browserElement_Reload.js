@@ -4,6 +4,10 @@
 // Bug 741717 - Test the reload ability of <iframe mozbrowser>.
 
 "use strict";
+
+/* global browserElementTestHelpers */
+/* eslint-env mozilla/frame-script */
+
 SimpleTest.waitForExplicitFinish();
 browserElementTestHelpers.setEnabledPref(true);
 browserElementTestHelpers.addPermission();

@@ -4,6 +4,8 @@
 // Test that the onmozbrowsermetachange event for theme-color works.
 "use strict";
 
+/* global browserElementTestHelpers */
+
 SimpleTest.waitForExplicitFinish();
 browserElementTestHelpers.setEnabledPref(true);
 browserElementTestHelpers.addPermission();
@@ -82,4 +84,3 @@ function runTest() {
 }
 
 window.addEventListener("testready", runTest);
-

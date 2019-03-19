@@ -7,6 +7,8 @@
 
 "use strict";
 
+/* global browserElementTestHelpers */
+
 SimpleTest.waitForExplicitFinish();
 browserElementTestHelpers.setEnabledPref(true);
 browserElementTestHelpers.addPermission();
@@ -23,12 +25,12 @@ function runTest() {
     ok(true, "Got first mozbrowseropenwindow event.");
     document.body.appendChild(e.detail.frameElement);
 
-    e.detail.frameElement.addEventListener("mozbrowserlocationchange", function(e) {
-      if (e.detail.url == "http://example.com/#2") {
+    e.detail.frameElement.addEventListener("mozbrowserlocationchange", function(f) {
+      if (f.detail.url == "http://example.com/#2") {
         ok(true, "Got locationchange to http://example.com/#2");
         SimpleTest.finish();
       } else {
-        ok(true, "Got locationchange to " + e.detail.url);
+        ok(true, "Got locationchange to " + f.detail.url);
       }
     });
 
@@ -40,7 +42,7 @@ function runTest() {
       SpecialPowers.wrap(iframe2).presetOpenerWindow(iframe1.contentWindow);
       iframe2.setAttribute("mozbrowser", "true");
 
-      iframe2.addEventListener("mozbrowseropenwindow", function(e) {
+      iframe2.addEventListener("mozbrowseropenwindow", function(f) {
         ok(false, "Got second mozbrowseropenwindow event.");
       });
 

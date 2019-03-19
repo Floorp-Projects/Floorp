@@ -8,6 +8,8 @@
 // ourselves.
 "use strict";
 
+/* global browserElementTestHelpers */
+
 SimpleTest.waitForExplicitFinish();
 browserElementTestHelpers.setEnabledPref(true);
 browserElementTestHelpers.addPermission();
@@ -68,6 +70,7 @@ function runTest() {
     }
   });
 
+  /* eslint-disable no-useless-concat */
   iframe.src =
     'data:text/html,<html><body><script>\
       function sendVal(val) { \
@@ -81,6 +84,7 @@ function runTest() {
       sendVal(prompt("6", "initial")); \
       sendVal(prompt("7", "initial")); \
     </scr' + "ipt></body></html>";
+  /* eslint-enable no-useless-concat */
 }
 
 addEventListener("testready", runTest);

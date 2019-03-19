@@ -4,6 +4,8 @@
 // Bug 764718 - Test that window.close() works from the opener window.
 "use strict";
 
+/* global browserElementTestHelpers */
+
 SimpleTest.waitForExplicitFinish();
 browserElementTestHelpers.setEnabledPref(true);
 browserElementTestHelpers.addPermission();
@@ -16,7 +18,7 @@ function runTest() {
     ok(true, "got openwindow event.");
     document.body.appendChild(e.detail.frameElement);
 
-    e.detail.frameElement.addEventListener("mozbrowserclose", function(e) {
+    e.detail.frameElement.addEventListener("mozbrowserclose", function(f) {
       ok(true, "got mozbrowserclose event.");
       SimpleTest.finish();
     });

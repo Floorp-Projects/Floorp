@@ -4,6 +4,9 @@
 // Bug 1144015 - test middle/ctrl/cmd-click on a link.
 
 "use strict";
+
+/* global browserElementTestHelpers */
+
 SimpleTest.waitForExplicitFinish();
 browserElementTestHelpers.setEnabledPref(true);
 browserElementTestHelpers.addPermission();

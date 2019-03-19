@@ -23,9 +23,7 @@ document.body.appendChild(iframe1);
 iframe1.addEventListener("load", function() {
   // This causes our embedder to take a screenshot (and blocks until the
   // screenshot is completed).
-  var iframe2Loaded = false;
   iframe2.addEventListener("load", function() {
-    iframe2Loaded = true;
     alert("finish");
   }, {once: true});
 

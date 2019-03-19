@@ -4,6 +4,8 @@
 // Test that auth prompt works.
 "use strict";
 
+/* global browserElementTestHelpers */
+
 SimpleTest.waitForExplicitFinish();
 browserElementTestHelpers.setEnabledPref(true);
 browserElementTestHelpers.addPermission();
@@ -37,9 +39,9 @@ function testHttpAuthCancel(e) {
   // Will cancel authentication, but prompt should not be shown again. Instead,
   // we will be led to fail message
   iframe.addEventListener("mozbrowserusernameandpasswordrequired", testFail);
-  iframe.addEventListener("mozbrowsertitlechange", function(e) {
+  iframe.addEventListener("mozbrowsertitlechange", function(f) {
     iframe.removeEventListener("mozbrowserusernameandpasswordrequired", testFail);
-    is(e.detail, "http auth failed", "expected authentication to fail");
+    is(f.detail, "http auth failed", "expected authentication to fail");
     iframe.addEventListener("mozbrowserusernameandpasswordrequired", testHttpAuth);
     SimpleTest.executeSoon(function() {
       // Use absolute path because we need to specify host.
@@ -65,9 +67,9 @@ function testHttpAuth(e) {
   // Will authenticate with correct password, prompt should not be
   // called again.
   iframe.addEventListener("mozbrowserusernameandpasswordrequired", testFail);
-  iframe.addEventListener("mozbrowsertitlechange", function(e) {
+  iframe.addEventListener("mozbrowsertitlechange", function(f) {
     iframe.removeEventListener("mozbrowserusernameandpasswordrequired", testFail);
-    is(e.detail, "http auth success", "expect authentication to succeed");
+    is(f.detail, "http auth success", "expect authentication to succeed");
     SimpleTest.executeSoon(testProxyAuth);
   }, {once: true});
 
@@ -84,7 +86,7 @@ function testHttpAuth(e) {
   });
 }
 
-function testProxyAuth(e) {
+function testProxyAuth() {
   // The testingSJS simulates the 407 proxy authentication required response
   // for proxy server, which will trigger the browser element to send prompt
   // event with proxy infomation.
@@ -94,9 +96,9 @@ function testProxyAuth(e) {
   function onUserNameAndPasswordRequired(e) {
     iframe.removeEventListener("mozbrowserusernameandpasswordrequired",
                                onUserNameAndPasswordRequired);
-    iframe.addEventListener("mozbrowsertitlechange", function(e) {
+    iframe.addEventListener("mozbrowsertitlechange", function(event) {
       iframe.removeEventListener("mozbrowserusernameandpasswordrequired", testFail);
-      is(e.detail, "http auth success", "expect authentication to succeed");
+      is(event.detail, "http auth success", "expect authentication to succeed");
       SimpleTest.executeSoon(testAuthJarNoInterfere);
     }, {once: true});
 
@@ -149,12 +151,10 @@ function testProxyAuth(e) {
 }
 
 function testAuthJarNoInterfere(e) {
-  var authMgr = SpecialPowers.Cc["@mozilla.org/network/http-auth-manager;1"]
+  let authMgr = SpecialPowers.Cc["@mozilla.org/network/http-auth-manager;1"]
     .getService(SpecialPowers.Ci.nsIHttpAuthManager);
-  var secMan = SpecialPowers.Cc["@mozilla.org/scriptsecuritymanager;1"]
-               .getService(SpecialPowers.Ci.nsIScriptSecurityManager);
-  var ioService = SpecialPowers.Cc["@mozilla.org/network/io-service;1"]
-                  .getService(SpecialPowers.Ci.nsIIOService);
+  let secMan = SpecialPowers.Services.scriptSecurityManager;
+  let ioService = SpecialPowers.Services.io;
   var uri = ioService.newURI("http://test/tests/dom/browser-element/mochitest/file_http_401_response.sjs");
 
   // Set a bunch of auth data that should not conflict with the correct auth data already
@@ -177,9 +177,9 @@ function testAuthJarNoInterfere(e) {
   // Will authenticate with correct password, prompt should not be
   // called again.
   iframe.addEventListener("mozbrowserusernameandpasswordrequired", testFail);
-  iframe.addEventListener("mozbrowsertitlechange", function(e) {
+  iframe.addEventListener("mozbrowsertitlechange", function(f) {
     iframe.removeEventListener("mozbrowserusernameandpasswordrequired", testFail);
-    is(e.detail, "http auth success", "expected authentication success");
+    is(f.detail, "http auth success", "expected authentication success");
     SimpleTest.executeSoon(testAuthJarInterfere);
   }, {once: true});
 
@@ -189,12 +189,10 @@ function testAuthJarNoInterfere(e) {
 }
 
 function testAuthJarInterfere(e) {
-  var authMgr = SpecialPowers.Cc["@mozilla.org/network/http-auth-manager;1"]
+  let authMgr = SpecialPowers.Cc["@mozilla.org/network/http-auth-manager;1"]
     .getService(SpecialPowers.Ci.nsIHttpAuthManager);
-  var secMan = SpecialPowers.Cc["@mozilla.org/scriptsecuritymanager;1"]
-               .getService(SpecialPowers.Ci.nsIScriptSecurityManager);
-  var ioService = SpecialPowers.Cc["@mozilla.org/network/io-service;1"]
-                  .getService(SpecialPowers.Ci.nsIIOService);
+  let secMan = SpecialPowers.Services.scriptSecurityManager;
+  let ioService = SpecialPowers.Services.io;
   var uri = ioService.newURI("http://test/tests/dom/browser-element/mochitest/file_http_401_response.sjs");
 
   // Set some auth data that should overwrite the successful stored details.
@@ -211,7 +209,7 @@ function testAuthJarInterfere(e) {
   }
   iframe.addEventListener("mozbrowserusernameandpasswordrequired",
                           onUserNameAndPasswordRequired);
-  iframe.addEventListener("mozbrowsertitlechange", function(e) {
+  iframe.addEventListener("mozbrowsertitlechange", function(f) {
     iframe.removeEventListener("mozbrowserusernameandpasswordrequired",
                                onUserNameAndPasswordRequired);
     ok(gotusernamepasswordrequired,
@@ -226,13 +224,11 @@ function testAuthJarInterfere(e) {
 
 function testFinish() {
   // Clear login information stored in password manager.
-  var authMgr = SpecialPowers.Cc["@mozilla.org/network/http-auth-manager;1"]
+  let authMgr = SpecialPowers.Cc["@mozilla.org/network/http-auth-manager;1"]
     .getService(SpecialPowers.Ci.nsIHttpAuthManager);
   authMgr.clearAll();
 
-  var pwmgr = SpecialPowers.Cc["@mozilla.org/login-manager;1"]
-    .getService(SpecialPowers.Ci.nsILoginManager);
-  pwmgr.removeAllLogins();
+  SpecialPowers.Services.logins.removeAllLogins();
 
   SimpleTest.finish();
 }

@@ -5,6 +5,9 @@
 // POST respest.
 
 "use strict";
+
+/* global browserElementTestHelpers */
+
 SimpleTest.waitForExplicitFinish();
 SimpleTest.requestFlakyTimeout("untriaged");
 browserElementTestHelpers.setEnabledPref(true);
@@ -17,10 +20,8 @@ var isPostRequestSubmitted;
 
 function getExpectedStrings() {
   let result = {};
-  let bundleService = SpecialPowers.Cc["@mozilla.org/intl/stringbundle;1"].
-    getService(SpecialPowers.Ci.nsIStringBundleService);
-  let appBundle = bundleService.createBundle("chrome://global/locale/appstrings.properties");
-  let brandBundle = bundleService.createBundle("chrome://branding/locale/brand.properties");
+  let appBundle = Services.strings.createBundle("chrome://global/locale/appstrings.properties");
+  let brandBundle = Services.strings.createBundle("chrome://branding/locale/brand.properties");
   try {
     let brandName = brandBundle.GetStringFromName("brandShortName");
     result.message = appBundle.formatStringFromName("confirmRepostPrompt",

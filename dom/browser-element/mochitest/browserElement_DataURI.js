@@ -4,6 +4,9 @@
 // Test that data: URIs work with mozbrowserlocationchange events.
 
 "use strict";
+
+/* global browserElementTestHelpers */
+
 SimpleTest.waitForExplicitFinish();
 browserElementTestHelpers.setEnabledPref(true);
 browserElementTestHelpers.addPermission();

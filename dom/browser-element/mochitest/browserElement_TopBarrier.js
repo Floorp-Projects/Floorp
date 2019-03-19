@@ -4,6 +4,8 @@
 // Test that an <iframe mozbrowser> is a window.{top,parent,frameElement} barrier.
 "use strict";
 
+/* global browserElementTestHelpers */
+
 SimpleTest.waitForExplicitFinish();
 browserElementTestHelpers.setEnabledPref(true);
 browserElementTestHelpers.addPermission();
