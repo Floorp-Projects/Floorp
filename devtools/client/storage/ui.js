@@ -1119,10 +1119,6 @@ class StorageUI {
       this.sidebarToggledOpen = false;
       event.stopPropagation();
       event.preventDefault();
-    } else if (event.keyCode == KeyCodes.DOM_VK_BACK_SPACE && this.table.selectedRow) {
-      this.onRemoveItem();
-      event.stopPropagation();
-      event.preventDefault();
     }
   }
 
@@ -1304,17 +1300,13 @@ class StorageUI {
   onRemoveItem() {
     const [, host, ...path] = this.tree.selectedItem;
     const front = this.getCurrentFront();
-    const uniqueId = this.table.uniqueId;
-    const rowId = this.table.selectedRow[uniqueId];
+    const rowId = this.table.contextMenuRowId;
     const data = this.table.items.get(rowId);
-
     let name = data[this.table.uniqueId];
     if (path.length > 0) {
       name = JSON.stringify([...path, name]);
     }
     front.removeItem(host, name);
-
-    return false;
   }
 
   /**
