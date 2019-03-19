@@ -55,7 +55,7 @@ AutoCompleteSearch.prototype = {
   constructor: AutoCompleteSearch,
   stopSearchInvoked: true,
   startSearch(aSearchString, aSearchParam, aPreviousResult, aListener) {
-    print("Check stop search has been called");
+    info("Check stop search has been called");
     Assert.ok(this.stopSearchInvoked);
     this.stopSearchInvoked = false;
   },
@@ -102,35 +102,33 @@ function unregisterAutoCompleteSearch(aSearch) {
 
 var gTests = [
   function(controller) {
-    print("handleText");
+    info("handleText");
     controller.input.textValue = "hel";
     controller.handleText();
   },
   function(controller) {
-    print("handleStartComposition");
+    info("handleStartComposition");
     controller.handleStartComposition();
-  },
-  function(controller) {
-    print("handleEndComposition");
+    info("handleEndComposition");
     controller.handleEndComposition();
     // an input event always follows compositionend event.
     controller.handleText();
   },
   function(controller) {
-    print("handleEscape");
+    info("handleEscape");
     controller.handleEscape();
   },
   function(controller) {
-    print("handleEnter");
+    info("handleEnter");
     controller.handleEnter(false);
   },
   function(controller) {
-    print("handleTab");
+    info("handleTab");
     controller.handleTab();
   },
 
   function(controller) {
-    print("handleKeyNavigation");
+    info("handleKeyNavigation");
     // Hardcode KeyboardEvent.DOM_VK_RIGHT, because we can't easily
     // include KeyboardEvent here.
     controller.handleKeyNavigation(0x26 /* KeyboardEvent.DOM_VK_UP */);
@@ -138,44 +136,32 @@ var gTests = [
 ];
 
 
-var gSearch;
-var gCurrentTest;
-function run_test() {
+add_task(async function() {
   // Make an AutoCompleteSearch that always returns nothing
-  gSearch = new AutoCompleteSearch("test");
-  registerAutoCompleteSearch(gSearch);
+  let search = new AutoCompleteSearch("test");
+  registerAutoCompleteSearch(search);
 
   let controller = Cc["@mozilla.org/autocomplete/controller;1"].
                    getService(Ci.nsIAutoCompleteController);
 
   // Make an AutoCompleteInput that uses our search.
-  let input = new AutoCompleteInput([gSearch.name]);
+  let input = new AutoCompleteInput([search.name]);
   controller.input = input;
 
-  input.onSearchBegin = function() {
-    executeSoon(function() {
-      gCurrentTest(controller);
+  for (let testFn of gTests) {
+    input.onSearchBegin = function() {
+      executeSoon(() => testFn(controller));
+    };
+    let promise = new Promise(resolve => {
+      input.onSearchComplete = function() {
+        resolve();
+      };
     });
-  };
-  input.onSearchComplete = function() {
-    run_next_test(controller);
-  };
-
-  // Search is asynchronous, so don't let the test finish immediately
-  do_test_pending();
-
-  run_next_test(controller);
-}
-
-function run_next_test(controller) {
-  if (gTests.length == 0) {
-    unregisterAutoCompleteSearch(gSearch);
-    controller.stopSearch();
-    controller.input = null;
-    do_test_finished();
-    return;
+    controller.startSearch("hello");
+    await promise;
   }
 
-  gCurrentTest = gTests.shift();
-  controller.startSearch("hello");
-}
+  unregisterAutoCompleteSearch(search);
+  controller.stopSearch();
+  controller.input = null;
+});
