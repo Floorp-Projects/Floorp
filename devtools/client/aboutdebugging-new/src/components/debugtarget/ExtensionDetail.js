@@ -38,7 +38,9 @@ class ExtensionDetail extends PureComponent {
     }
 
     return dom.section(
-      {},
+      {
+        className: "debug-target-item__messages",
+      },
       warnings.map((warning, index) => {
         return Message(
           {

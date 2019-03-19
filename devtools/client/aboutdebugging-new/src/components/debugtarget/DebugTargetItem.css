@@ -72,6 +72,10 @@
   margin-block-start: var(--base-unit);
 }
 
+.debug-target-item__messages {
+  margin-inline: calc(var(--base-unit) * 3) calc(var(--base-unit) * 2);
+}
+
 .debug-target-item__subname {
   grid-area: subname;
   color: var(--grey-50);
