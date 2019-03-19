@@ -55,7 +55,7 @@ class PerformanceObserver final : public nsISupports, public nsWrapperCache {
 
   void TakeRecords(nsTArray<RefPtr<PerformanceEntry>>& aRetval);
 
-  void Notify();
+  MOZ_CAN_RUN_SCRIPT void Notify();
   void QueueEntry(PerformanceEntry* aEntry);
 
  private:

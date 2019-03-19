@@ -79,7 +79,7 @@ class Performance : public DOMEventTargetHelper {
 
   void AddObserver(PerformanceObserver* aObserver);
   void RemoveObserver(PerformanceObserver* aObserver);
-  void NotifyObservers();
+  MOZ_CAN_RUN_SCRIPT void NotifyObservers();
   void CancelNotificationObservers();
 
   virtual PerformanceTiming* Timing() = 0;
