@@ -7321,7 +7321,7 @@ class CGCallGenerator(CGThing):
 
             # If it's a refcounted object, let the static analysis know it's
             # alive for the duration of the call.
-            if a.type.isGeckoInterface():
+            if a.type.isGeckoInterface() or a.type.isCallback():
                 arg = CGWrapper(arg, pre="MOZ_KnownLive(", post=")")
 
             args.append(arg)
