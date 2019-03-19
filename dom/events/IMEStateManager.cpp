@@ -201,6 +201,12 @@ void IMEStateManager::OnTabParentDestroying(TabParent* aTabParent) {
 }
 
 // static
+void IMEStateManager::OnFocusMovedBetweenBrowsers(TabParent* aBlur,
+                                                  TabParent* aFocus) {
+  MOZ_ASSERT(aBlur != aFocus);
+}
+
+// static
 void IMEStateManager::WidgetDestroyed(nsIWidget* aWidget) {
   if (sWidget == aWidget) {
     sWidget = nullptr;
