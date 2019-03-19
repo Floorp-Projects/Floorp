@@ -394,10 +394,12 @@ static const uint32_t ION_FRAME_SLACK_SIZE = 24;
 
 static const uint32_t ShadowStackSpace = 0;
 
-// TODO:
-// This constant needs to be updated to account for whatever near/far branching
-// strategy is used by ARM64.
-static const uint32_t JumpImmediateRange = UINT32_MAX;
+// When our only strategy for far jumps is to encode the offset directly, and
+// not insert any jump islands during assembly for even further jumps, then the
+// architecture restricts us to -2^27 .. 2^27-4, to fit into a signed 28-bit
+// value.  We further reduce this range to allow the far-jump inserting code to
+// have some breathing room.
+static const uint32_t JumpImmediateRange = ((1 << 27) - (20 * 1024 * 1024));
 
 static const uint32_t ABIStackAlignment = 16;
 static const uint32_t CodeAlignment = 16;
