@@ -13,16 +13,16 @@ function addOneShotIframeEventListener(event, fn) {
   function wrapper(e) {
     iframe.removeEventListener(event, wrapper);
     fn(e);
-  };
+  }
 
   iframe.addEventListener(event, wrapper);
 }
 
 function runTest() {
-  iframe = document.createElement('iframe');
-  iframe.setAttribute('mozbrowser', 'true');
+  iframe = document.createElement("iframe");
+  iframe.setAttribute("mozbrowser", "true");
 
-  addOneShotIframeEventListener('mozbrowserloadend', function() {
+  addOneShotIframeEventListener("mozbrowserloadend", function() {
     SimpleTest.executeSoon(test2);
   });
 
@@ -59,7 +59,7 @@ function test2() {
 }
 
 function test3() {
-  addOneShotIframeEventListener('mozbrowserloadend', function() {
+  addOneShotIframeEventListener("mozbrowserloadend", function() {
     checkCanGoBackAndForward(true, false, test4);
   });
 
@@ -69,7 +69,7 @@ function test3() {
 }
 
 function test4() {
-  addOneShotIframeEventListener('mozbrowserlocationchange', function(e) {
+  addOneShotIframeEventListener("mozbrowserlocationchange", function(e) {
     is(e.detail.url, browserElementTestHelpers.emptyPage3);
     is(e.detail.canGoBack, true);
     is(e.detail.canGoForward, false);
@@ -82,7 +82,7 @@ function test4() {
 }
 
 function test5() {
-  addOneShotIframeEventListener('mozbrowserlocationchange', function(e) {
+  addOneShotIframeEventListener("mozbrowserlocationchange", function(e) {
     is(e.detail.url, browserElementTestHelpers.emptyPage2);
     is(e.detail.canGoBack, true);
     is(e.detail.canGoForward, true);
@@ -92,7 +92,7 @@ function test5() {
 }
 
 function test6() {
-  addOneShotIframeEventListener('mozbrowserlocationchange', function(e) {
+  addOneShotIframeEventListener("mozbrowserlocationchange", function(e) {
     is(e.detail.url, browserElementTestHelpers.emptyPage1);
     is(e.detail.canGoBack, false);
     is(e.detail.canGoForward, true);
@@ -101,4 +101,4 @@ function test6() {
   iframe.goBack();
 }
 
-addEventListener('testready', runTest);
+addEventListener("testready", runTest);

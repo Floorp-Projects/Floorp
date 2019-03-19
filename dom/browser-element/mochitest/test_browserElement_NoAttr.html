@@ -23,20 +23,20 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=710231
 SimpleTest.waitForExplicitFinish();
 
 function runTest() {
-  var iframe = document.getElementById('iframe');
-  iframe.addEventListener('mozbrowserloadstart', function() {
-    ok(false, 'Should not send mozbrowserloadstart event.');
+  var iframe = document.getElementById("iframe");
+  iframe.addEventListener("mozbrowserloadstart", function() {
+    ok(false, "Should not send mozbrowserloadstart event.");
   });
 
-  iframe.addEventListener('load', function() {
-    ok(true, 'Got iframe load event.');
+  iframe.addEventListener("load", function() {
+    ok(true, "Got iframe load event.");
     SimpleTest.finish();
   });
 
   iframe.src = browserElementTestHelpers.emptyPage1;
 }
 
-addEventListener('load', function() { SimpleTest.executeSoon(runTest); });
+addEventListener("load", function() { SimpleTest.executeSoon(runTest); });
 
 </script>
 
