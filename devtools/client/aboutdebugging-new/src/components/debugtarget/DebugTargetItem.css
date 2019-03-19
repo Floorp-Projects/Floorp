@@ -6,7 +6,9 @@
  * The current layout of debug target item is
  *
  *  +--------+-----------------------------+----------------+
- *  | [Icon] | Name                        | Action button  |
+ *  |        | Name                        |                |
+ *  | [Icon] |-----------------------------| Action button  |
+ *  |        | Subname                     |                |
  *  +--------+-----------------------------+----------------+
  *  |        | Detail                                       |
  *  |        |                                              |
@@ -15,9 +17,11 @@
 .debug-target-item {
   display: grid;
   grid-template-columns: calc(var(--base-unit) * 8) 1fr max-content;
+  grid-template-rows: 1fr minmax(0, auto) auto;
   grid-column-gap: calc(var(--base-unit) * 2);
-  grid-template-areas: "icon name   action"
-                       ".    detail detail";
+  grid-template-areas: "icon name    action"
+                       "icon subname action"
+                       ".    detail  detail";
   margin-block-end: calc(var(--base-unit) * 4);
 
   padding-block: calc(var(--base-unit) * 3) calc(var(--base-unit) * 2);
@@ -25,14 +29,17 @@
 }
 
 .debug-target-item__icon {
+  align-self: center;
   grid-area: icon;
   width: 100%;
 }
 
 .debug-target-item__name {
+  align-self: center;
   grid-area: name;
   font-size: var(--body-20-font-size);
   font-weight: var(--body-20-font-weight);
+  line-height: 1.5;
 }
 
 .debug-target-item__action {
@@ -44,4 +51,12 @@
   grid-area: detail;
   font-size: var(--caption-20-font-size);
   font-weight: var(--caption-20-font-weight);
+}
+
+.debug-target-item__subname {
+  grid-area: subname;
+  color: var(--grey-50);
+  font-size: var(--caption-20-font-size);
+  font-weight: var(--caption-20-font-weight);
+  line-height: 1.5;
 }
