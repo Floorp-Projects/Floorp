@@ -22,7 +22,7 @@ class App extends Component {
   static get propTypes() {
     return {
       client: PropTypes.object.isRequired,
-      workers: PropTypes.object.isRequired,
+      workers: PropTypes.array.isRequired,
       serviceContainer: PropTypes.object.isRequired,
       domain: PropTypes.string.isRequired,
       fluentBundles: PropTypes.array.isRequired,
