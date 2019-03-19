@@ -9,13 +9,13 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Move.h"
 #include "mozilla/SMILValue.h"
-#include "mozilla/dom/DOMSVGAngle.h"
-#include "mozilla/dom/SVGAnimatedAngle.h"
 #include "mozilla/dom/SVGMarkerElement.h"
+#include "DOMSVGAnimatedAngle.h"
+#include "DOMSVGAngle.h"
 #include "nsContentUtils.h"
+#include "nsTextFormatter.h"
 #include "SVGAttrTearoffTable.h"
 #include "SVGOrientSMILType.h"
-#include "nsTextFormatter.h"
 
 using namespace mozilla::dom;
 using namespace mozilla::dom::SVGAngle_Binding;
@@ -28,9 +28,9 @@ static const nsStaticAtom* const angleUnitMap[] = {
     nullptr, /* SVG_ANGLETYPE_UNSPECIFIED */
     nsGkAtoms::deg, nsGkAtoms::rad, nsGkAtoms::grad};
 
-static SVGAttrTearoffTable<SVGOrient, SVGAnimatedEnumeration>
+static SVGAttrTearoffTable<SVGOrient, DOMSVGAnimatedEnumeration>
     sSVGAnimatedEnumTearoffTable;
-static SVGAttrTearoffTable<SVGOrient, SVGAnimatedAngle>
+static SVGAttrTearoffTable<SVGOrient, DOMSVGAnimatedAngle>
     sSVGAnimatedAngleTearoffTable;
 static SVGAttrTearoffTable<SVGOrient, DOMSVGAngle> sBaseSVGAngleTearoffTable;
 static SVGAttrTearoffTable<SVGOrient, DOMSVGAngle> sAnimSVGAngleTearoffTable;
@@ -369,21 +369,21 @@ void SVGOrient::SetAnimType(SVGEnumValue aValue, SVGElement* aSVGElement) {
   aSVGElement->DidAnimateOrient();
 }
 
-already_AddRefed<SVGAnimatedAngle> SVGOrient::ToDOMAnimatedAngle(
+already_AddRefed<DOMSVGAnimatedAngle> SVGOrient::ToDOMAnimatedAngle(
     SVGElement* aSVGElement) {
-  RefPtr<SVGAnimatedAngle> domAnimatedAngle =
+  RefPtr<DOMSVGAnimatedAngle> domAnimatedAngle =
       sSVGAnimatedAngleTearoffTable.GetTearoff(this);
   if (!domAnimatedAngle) {
-    domAnimatedAngle = new SVGAnimatedAngle(this, aSVGElement);
+    domAnimatedAngle = new DOMSVGAnimatedAngle(this, aSVGElement);
     sSVGAnimatedAngleTearoffTable.AddTearoff(this, domAnimatedAngle);
   }
 
   return domAnimatedAngle.forget();
 }
 
-already_AddRefed<SVGAnimatedEnumeration> SVGOrient::ToDOMAnimatedEnum(
+already_AddRefed<DOMSVGAnimatedEnumeration> SVGOrient::ToDOMAnimatedEnum(
     SVGElement* aSVGElement) {
-  RefPtr<SVGAnimatedEnumeration> domAnimatedEnum =
+  RefPtr<DOMSVGAnimatedEnumeration> domAnimatedEnum =
       sSVGAnimatedEnumTearoffTable.GetTearoff(this);
   if (!domAnimatedEnum) {
     domAnimatedEnum = new DOMAnimatedEnum(this, aSVGElement);
@@ -393,7 +393,7 @@ already_AddRefed<SVGAnimatedEnumeration> SVGOrient::ToDOMAnimatedEnum(
   return domAnimatedEnum.forget();
 }
 
-SVGAnimatedAngle::~SVGAnimatedAngle() {
+DOMSVGAnimatedAngle::~DOMSVGAnimatedAngle() {
   sSVGAnimatedAngleTearoffTable.RemoveTearoff(mVal);
 }
 

@@ -6,21 +6,23 @@
 
 #include "SVGClass.h"
 
-#include "mozilla/dom/SVGAnimatedString.h"
 #include "mozilla/dom/SVGElement.h"
 #include "mozilla/Move.h"
 #include "mozilla/SMILValue.h"
+#include "DOMSVGAnimatedString.h"
 #include "SMILStringType.h"
 
 namespace mozilla {
 namespace dom {
 
-struct DOMAnimatedString final : public SVGAnimatedString {
+// DOM wrapper class for the (DOM)SVGAnimatedString interface where the
+// wrapped class is SVGClass.
+struct DOMAnimatedString final : public DOMSVGAnimatedString {
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(DOMAnimatedString)
 
   DOMAnimatedString(SVGClass* aVal, SVGElement* aSVGElement)
-      : SVGAnimatedString(aSVGElement), mVal(aVal) {}
+      : DOMSVGAnimatedString(aSVGElement), mVal(aVal) {}
 
   SVGClass* mVal;  // kept alive because it belongs to content
 
@@ -48,7 +50,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DOMAnimatedString)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-already_AddRefed<SVGAnimatedString> SVGClass::ToDOMAnimatedString(
+already_AddRefed<DOMSVGAnimatedString> SVGClass::ToDOMAnimatedString(
     SVGElement* aSVGElement) {
   RefPtr<DOMAnimatedString> result = new DOMAnimatedString(this, aSVGElement);
   return result.forget();

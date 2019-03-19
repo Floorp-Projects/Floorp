@@ -99,7 +99,7 @@ void SVGEnum::SetAnimValue(uint16_t aValue, SVGElement* aSVGElement) {
   aSVGElement->DidAnimateEnum(mAttrEnum);
 }
 
-already_AddRefed<SVGAnimatedEnumeration> SVGEnum::ToDOMAnimatedEnum(
+already_AddRefed<DOMSVGAnimatedEnumeration> SVGEnum::ToDOMAnimatedEnum(
     SVGElement* aSVGElement) {
   RefPtr<DOMAnimatedEnum> domAnimatedEnum =
       sSVGAnimatedEnumTearoffTable.GetTearoff(this);

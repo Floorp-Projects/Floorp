@@ -46,9 +46,9 @@ class SVGFEGaussianBlurElement : public SVGFEGaussianBlurElementBase {
   virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
   // WebIDL
-  already_AddRefed<SVGAnimatedString> In1();
-  already_AddRefed<SVGAnimatedNumber> StdDeviationX();
-  already_AddRefed<SVGAnimatedNumber> StdDeviationY();
+  already_AddRefed<DOMSVGAnimatedString> In1();
+  already_AddRefed<DOMSVGAnimatedNumber> StdDeviationX();
+  already_AddRefed<DOMSVGAnimatedNumber> StdDeviationY();
   void SetStdDeviation(float stdDeviationX, float stdDeviationY);
 
  protected:

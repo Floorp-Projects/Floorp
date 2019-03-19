@@ -49,12 +49,12 @@ class SVGFETurbulenceElement : public SVGFETurbulenceElementBase {
   virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
   // WebIDL
-  already_AddRefed<SVGAnimatedNumber> BaseFrequencyX();
-  already_AddRefed<SVGAnimatedNumber> BaseFrequencyY();
-  already_AddRefed<SVGAnimatedInteger> NumOctaves();
-  already_AddRefed<SVGAnimatedNumber> Seed();
-  already_AddRefed<SVGAnimatedEnumeration> StitchTiles();
-  already_AddRefed<SVGAnimatedEnumeration> Type();
+  already_AddRefed<DOMSVGAnimatedNumber> BaseFrequencyX();
+  already_AddRefed<DOMSVGAnimatedNumber> BaseFrequencyY();
+  already_AddRefed<DOMSVGAnimatedInteger> NumOctaves();
+  already_AddRefed<DOMSVGAnimatedNumber> Seed();
+  already_AddRefed<DOMSVGAnimatedEnumeration> StitchTiles();
+  already_AddRefed<DOMSVGAnimatedEnumeration> Type();
 
  protected:
   virtual NumberAttributesInfo GetNumberInfo() override;
