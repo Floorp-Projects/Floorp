@@ -5584,9 +5584,7 @@ nsresult EventStateManager::DoContentCommandEvent(
     if (canDoIt && !aEvent->mOnlyEnabledCheck) {
       switch (aEvent->mMessage) {
         case eContentCommandPasteTransferable: {
-          nsFocusManager* fm = nsFocusManager::GetFocusManager();
-          nsIContent* focusedContent = fm ? fm->GetFocusedElement() : nullptr;
-          RefPtr<TabParent> remote = TabParent::GetFrom(focusedContent);
+          TabParent* remote = TabParent::GetFocused();
           if (remote) {
             nsCOMPtr<nsITransferable> transferable = aEvent->mTransferable;
             IPCDataTransfer ipcDataTransfer;
