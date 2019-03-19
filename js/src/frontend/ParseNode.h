@@ -1780,9 +1780,9 @@ class NullLiteral : public NullaryNode {
   }
 };
 
-// This is only used internally, currently just for tagged templates and the
-// initial value of fields without initializers. It represents the value
-// 'undefined' (aka `void 0`), like NullLiteral represents the value 'null'.
+// This is only used internally, currently just for tagged templates.
+// It represents the value 'undefined' (aka `void 0`), like NullLiteral
+// represents the value 'null'.
 class RawUndefinedLiteral : public NullaryNode {
  public:
   explicit RawUndefinedLiteral(const TokenPos& pos)
