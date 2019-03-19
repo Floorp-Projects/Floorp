@@ -884,6 +884,12 @@ class MOZ_RAII CacheIRCompiler {
     MOZ_ASSERT(stubFieldPolicy_ == StubFieldPolicy::Constant);
     return jsid::fromRawBits(readStubWord(offset, StubField::Type::Id));
   }
+
+ public:
+  // The maximum number of inlineable spread call arguments. Keep this small
+  // to avoid controllable stack overflows by attackers passing large arrays
+  // to spread call.
+  static const uint32_t MAX_ARGS_SPREAD_LENGTH = 16;
 };
 
 // Ensures the IC's output register is available for writing.

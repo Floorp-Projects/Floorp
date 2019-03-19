@@ -2647,3 +2647,7 @@ bool IonCacheIRCompiler::emitCallNativeFunction() {
 bool IonCacheIRCompiler::emitCallClassHook() {
   MOZ_CRASH("Call ICs not used in ion");
 }
+
+bool IonCacheIRCompiler::emitGuardAndUpdateSpreadArgc() {
+  MOZ_CRASH("Call ICs not used in ion");
+}
