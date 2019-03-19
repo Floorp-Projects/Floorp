@@ -352,9 +352,6 @@ already_AddRefed<Promise> WebAuthnManager::MakeCredential(
                                                selection.mUserVerification,
                                                authenticatorAttachment);
 
-  // aOptions.mAttestation
-  uint8_t attestationConveyancePreference = static_cast<uint8_t>(attestation);
-
   nsString rpIcon;
   if (aOptions.mRp.mIcon.WasPassed()) {
     rpIcon = aOptions.mRp.mIcon.Value();
@@ -371,8 +368,7 @@ already_AddRefed<Promise> WebAuthnManager::MakeCredential(
       userId, aOptions.mUser.mName, userIcon, aOptions.mUser.mDisplayName);
 
   WebAuthnMakeCredentialExtraInfo extra(rpInfo, userInfo, coseAlgos, extensions,
-                                        authSelection,
-                                        attestationConveyancePreference);
+                                        authSelection, attestation);
 
   WebAuthnMakeCredentialInfo info(origin, NS_ConvertUTF8toUTF16(rpId),
                                   challenge, clientDataJSON, adjustedTimeout,

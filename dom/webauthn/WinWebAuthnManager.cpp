@@ -267,8 +267,7 @@ void WinWebAuthnManager::Register(
 
     // AttestationConveyance
     AttestationConveyancePreference attestation =
-        static_cast<AttestationConveyancePreference>(
-            extra.attestationConveyancePreference());
+        extra.attestationConveyancePreference();
     DWORD winAttestation = WEBAUTHN_ATTESTATION_CONVEYANCE_PREFERENCE_ANY;
     switch (attestation) {
       case AttestationConveyancePreference::Direct:
