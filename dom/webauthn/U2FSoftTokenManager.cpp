@@ -579,8 +579,7 @@ RefPtr<U2FRegisterPromise> U2FSoftTokenManager::Register(
     const WebAuthnAuthenticatorSelection& sel = extra.AuthenticatorSelection();
 
     UserVerificationRequirement userVerificaitonRequirement =
-        static_cast<UserVerificationRequirement>(
-            sel.userVerificationRequirement());
+        sel.userVerificationRequirement();
 
     bool requireUserVerification =
         userVerificaitonRequirement == UserVerificationRequirement::Required;
@@ -818,8 +817,7 @@ RefPtr<U2FSignPromise> U2FSoftTokenManager::Sign(
     const auto& extra = aInfo.Extra().ref();
 
     UserVerificationRequirement userVerificaitonReq =
-        static_cast<UserVerificationRequirement>(
-            extra.userVerificationRequirement());
+        extra.userVerificationRequirement();
 
     // The U2F softtoken doesn't support user verification.
     if (userVerificaitonReq == UserVerificationRequirement::Required) {

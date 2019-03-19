@@ -71,6 +71,13 @@ struct ParamTraits<mozilla::dom::AuthenticatorAttachment>
           mozilla::dom::AuthenticatorAttachment::Platform,
           mozilla::dom::AuthenticatorAttachment::EndGuard_> {};
 
+template <>
+struct ParamTraits<mozilla::dom::UserVerificationRequirement>
+    : public ContiguousEnumSerializer<
+          mozilla::dom::UserVerificationRequirement,
+          mozilla::dom::UserVerificationRequirement::Required,
+          mozilla::dom::UserVerificationRequirement::EndGuard_> {};
+
 }  // namespace IPC
 
 #endif  // mozilla_dom_WebAuthnUtil_h

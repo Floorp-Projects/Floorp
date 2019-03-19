@@ -114,8 +114,7 @@ RefPtr<U2FRegisterPromise> U2FHIDTokenManager::Register(
     const WebAuthnAuthenticatorSelection& sel = extra.AuthenticatorSelection();
 
     UserVerificationRequirement userVerificaitonRequirement =
-        static_cast<UserVerificationRequirement>(
-            sel.userVerificationRequirement());
+        sel.userVerificationRequirement();
 
     bool requireUserVerification =
         userVerificaitonRequirement == UserVerificationRequirement::Required;
@@ -230,8 +229,7 @@ RefPtr<U2FSignPromise> U2FHIDTokenManager::Sign(
     const auto& extra = aInfo.Extra().ref();
 
     UserVerificationRequirement userVerificaitonReq =
-        static_cast<UserVerificationRequirement>(
-            extra.userVerificationRequirement());
+        extra.userVerificationRequirement();
 
     // Set flags for credential requests.
     if (userVerificaitonReq == UserVerificationRequirement::Required) {

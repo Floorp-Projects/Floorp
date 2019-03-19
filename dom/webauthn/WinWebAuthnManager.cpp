@@ -229,8 +229,7 @@ void WinWebAuthnManager::Register(
     const auto& sel = extra.AuthenticatorSelection();
 
     UserVerificationRequirement userVerificationReq =
-        static_cast<UserVerificationRequirement>(
-            sel.userVerificationRequirement());
+        sel.userVerificationRequirement();
     switch (userVerificationReq) {
       case UserVerificationRequirement::Required:
         winUserVerificationReq =
@@ -505,8 +504,7 @@ void WinWebAuthnManager::Sign(PWebAuthnTransactionParent* aTransactionParent,
 
     // User Verification Requirement
     UserVerificationRequirement userVerificationReq =
-        static_cast<UserVerificationRequirement>(
-            extra.userVerificationRequirement());
+        extra.userVerificationRequirement();
 
     switch (userVerificationReq) {
       case UserVerificationRequirement::Required:

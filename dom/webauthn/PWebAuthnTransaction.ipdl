@@ -17,13 +17,14 @@
 include protocol PBackground;
 
 using mozilla::dom::AuthenticatorAttachment from "mozilla/dom/WebAuthnUtil.h";
+using mozilla::dom::UserVerificationRequirement from "mozilla/dom/WebAuthnUtil.h";
 
 namespace mozilla {
 namespace dom {
 
 struct WebAuthnAuthenticatorSelection {
   bool requireResidentKey;
-  uint8_t userVerificationRequirement;
+  UserVerificationRequirement userVerificationRequirement;
   AuthenticatorAttachment? authenticatorAttachment;
 };
 
@@ -94,7 +95,7 @@ struct WebAuthnMakeCredentialResult {
 
 struct WebAuthnGetAssertionExtraInfo {
   WebAuthnExtension[] Extensions;
-  uint8_t userVerificationRequirement;
+  UserVerificationRequirement userVerificationRequirement;
 };
 
 struct WebAuthnGetAssertionInfo {
