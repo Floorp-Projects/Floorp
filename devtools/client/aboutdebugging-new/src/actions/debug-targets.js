@@ -5,7 +5,9 @@
 "use strict";
 
 const { AddonManager } = require("resource://gre/modules/AddonManager.jsm");
+const { gDevTools } = require("devtools/client/framework/devtools");
 const { gDevToolsBrowser } = require("devtools/client/framework/devtools-browser");
+const { Toolbox } = require("devtools/client/framework/toolbox");
 const { remoteClientManager } =
   require("devtools/client/shared/remote-debugging/remote-client-manager");
 
@@ -27,6 +29,9 @@ const {
   REQUEST_EXTENSIONS_FAILURE,
   REQUEST_EXTENSIONS_START,
   REQUEST_EXTENSIONS_SUCCESS,
+  REQUEST_PROCESSES_FAILURE,
+  REQUEST_PROCESSES_START,
+  REQUEST_PROCESSES_SUCCESS,
   REQUEST_TABS_FAILURE,
   REQUEST_TABS_START,
   REQUEST_TABS_SUCCESS,
@@ -61,6 +66,23 @@ function inspectDebugTarget(type, id) {
       }
       case DEBUG_TARGETS.EXTENSION: {
         await debugAddon(id, runtimeDetails.clientWrapper.client);
+        break;
+      }
+      case DEBUG_TARGETS.PROCESS: {
+        const devtoolsClient = runtimeDetails.clientWrapper.client;
+        const processTargetFront = devtoolsClient.getActor(id);
+        const toolbox = await gDevTools.showToolbox(processTargetFront, null,
+          Toolbox.HostType.WINDOW);
+
+        // Once the target is destroyed after closing the toolbox, the front is gone and
+        // can no longer be used. Extensions don't have the issue because we don't list
+        // the target fronts directly, but proxies on which we call connect to create a
+        // target front when we want to inspect them. Local workers don't have this issue
+        // because closing the toolbox stops several workers which will indirectly trigger
+        // a requestWorkers action. However workers on a remote runtime have the exact
+        // same issue.
+        // To workaround the issue we request processes after the toolbox is closed.
+        toolbox.once("destroy", () => dispatch(Actions.requestProcesses()));
         break;
       }
       case DEBUG_TARGETS.WORKER: {
@@ -189,6 +211,28 @@ function requestExtensions() {
   };
 }
 
+function requestProcesses() {
+  return async (dispatch, getState) => {
+    dispatch({ type: REQUEST_PROCESSES_START });
+
+    const clientWrapper = getCurrentClient(getState().runtimes);
+
+    try {
+      const mainProcessFront = await clientWrapper.getMainProcess();
+
+      dispatch({
+        type: REQUEST_PROCESSES_SUCCESS,
+        mainProcess: {
+          id: 0,
+          processFront: mainProcessFront,
+        },
+      });
+    } catch (e) {
+      dispatch({ type: REQUEST_PROCESSES_FAILURE, error: e });
+    }
+  };
+}
+
 function requestWorkers() {
   return async (dispatch, getState) => {
     dispatch({ type: REQUEST_WORKERS_START });
@@ -252,6 +296,7 @@ module.exports = {
   removeTemporaryExtension,
   requestTabs,
   requestExtensions,
+  requestProcesses,
   requestWorkers,
   startServiceWorker,
   unregisterServiceWorker,

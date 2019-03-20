@@ -6,6 +6,7 @@
 
 const {
   REQUEST_EXTENSIONS_SUCCESS,
+  REQUEST_PROCESSES_SUCCESS,
   REQUEST_TABS_SUCCESS,
   REQUEST_WORKERS_SUCCESS,
   UNWATCH_RUNTIME_SUCCESS,
@@ -15,6 +16,7 @@ function DebugTargetsState() {
   return {
     installedExtensions: [],
     otherWorkers: [],
+    processes: [],
     serviceWorkers: [],
     sharedWorkers: [],
     tabs: [],
@@ -30,6 +32,10 @@ function debugTargetsReducer(state = DebugTargetsState(), action) {
     case REQUEST_EXTENSIONS_SUCCESS: {
       const { installedExtensions, temporaryExtensions } = action;
       return Object.assign({}, state, { installedExtensions, temporaryExtensions });
+    }
+    case REQUEST_PROCESSES_SUCCESS: {
+      const { processes } = action;
+      return Object.assign({}, state, { processes });
     }
     case REQUEST_TABS_SUCCESS: {
       const { tabs } = action;
