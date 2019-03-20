@@ -234,7 +234,7 @@ var RecipeRunner = {
 
     await actions.finalize();
 
-    Uptake.reportRunner(Uptake.RUNNER_SUCCESS);
+    await Uptake.reportRunner(Uptake.RUNNER_SUCCESS);
   },
 
   /**
@@ -264,7 +264,7 @@ var RecipeRunner = {
       } else if (e instanceof NormandyApi.InvalidSignatureError) {
         status = Uptake.RUNNER_INVALID_SIGNATURE;
       }
-      Uptake.reportRunner(status);
+      await Uptake.reportRunner(status);
       throw e;
     }
     // Evaluate recipe filters
@@ -304,7 +304,7 @@ var RecipeRunner = {
       result = await FilterExpressions.eval(recipe.filter_expression, context);
     } catch (err) {
       log.error(`Error checking filter for "${recipe.name}". Filter: [${recipe.filter_expression}]. Error: "${err}"`);
-      Uptake.reportRecipe(recipe, Uptake.RECIPE_FILTER_BROKEN);
+      await Uptake.reportRecipe(recipe, Uptake.RECIPE_FILTER_BROKEN);
       return false;
     }
 
@@ -312,7 +312,7 @@ var RecipeRunner = {
       // This represents a terminal state for the given recipe, so
       // report its outcome. Others are reported when executed in
       // ActionsManager.
-      Uptake.reportRecipe(recipe, Uptake.RECIPE_DIDNT_MATCH_FILTER);
+      await Uptake.reportRecipe(recipe, Uptake.RECIPE_DIDNT_MATCH_FILTER);
       return false;
     }
 
