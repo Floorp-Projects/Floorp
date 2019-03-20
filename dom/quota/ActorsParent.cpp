@@ -1379,7 +1379,7 @@ class StorageOperationBase {
 };
 
 struct StorageOperationBase::OriginProps {
-  enum Type { eChrome, eContent, eObsolete };
+  enum Type { eChrome, eContent, eObsolete, eInvalid };
 
   nsCOMPtr<nsIFile> mDirectory;
   nsString mLeafName;
@@ -8171,6 +8171,7 @@ nsresult StorageOperationBase::OriginProps::Init(nsIFile* aDirectory) {
   OriginParser::ResultType result =
       OriginParser::ParseOrigin(NS_ConvertUTF16toUTF8(leafName), spec, &attrs);
   if (NS_WARN_IF(result == OriginParser::InvalidOrigin)) {
+    mType = OriginProps::eInvalid;
     return NS_ERROR_FAILURE;
   }
 
@@ -8682,6 +8683,10 @@ nsresult RepositoryOperationBase::ProcessRepository() {
 
     OriginProps originProps;
     rv = originProps.Init(originDir);
+    // Bypass invalid origins while upgrading
+    if (NS_WARN_IF(originProps.mType == OriginProps::eInvalid)) {
+      continue;
+    }
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
