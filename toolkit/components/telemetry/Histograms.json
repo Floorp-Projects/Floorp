@@ -8498,7 +8498,7 @@
     "high": 60000,
     "n_buckets": 100,
     "keyed": true,
-    "description": "Time taken (in ms) to open the first DevTools toolbox. This is keyed by tool ID being opened [inspector, webconsole, jsdebugger, styleeditor, shadereditor, canvasdebugger, performance, memory, netmonitor, storage, webaudioeditor, scratchpad, dom]."
+    "description": "Time taken (in ms) to open the first DevTools toolbox. This is keyed by tool ID being opened [inspector, webconsole, jsdebugger, styleeditor, performance, memory, netmonitor, storage, scratchpad, dom]."
   },
   "DEVTOOLS_WARM_TOOLBOX_OPEN_DELAY_MS": {
     "record_in_processes": ["main"],
@@ -8509,7 +8509,7 @@
     "high": 60000,
     "n_buckets": 100,
     "keyed": true,
-    "description": "Time taken (in ms) to open all but first DevTools toolbox. This is keyed by tool ID being opened [inspector, webconsole, jsdebugger, styleeditor, shadereditor, canvasdebugger, performance, memory, netmonitor, storage, webaudioeditor, scratchpad, dom]."
+    "description": "Time taken (in ms) to open all but first DevTools toolbox. This is keyed by tool ID being opened [inspector, webconsole, jsdebugger, styleeditor, performance, memory, netmonitor, storage, scratchpad, dom]."
   },
   "DEVTOOLS_TOOLBOX_PAGE_RELOAD_DELAY_MS": {
     "record_in_processes": ["main"],
@@ -8520,7 +8520,7 @@
     "high": 120000,
     "n_buckets": 100,
     "keyed": true,
-    "description": "Time taken (in ms) to update DevTools panel when reloading a page. This is keyed by tool ID being currently opened [inspector, webconsole, jsdebugger, styleeditor, shadereditor, canvasdebugger, performance, memory, netmonitor, storage, webaudioeditor, scratchpad, dom]."
+    "description": "Time taken (in ms) to update DevTools panel when reloading a page. This is keyed by tool ID being currently opened [inspector, webconsole, jsdebugger, styleeditor, performance, memory, netmonitor, storage, scratchpad, dom]."
   },
   "DEVTOOLS_INSPECTOR_NEW_ROOT_TO_RELOAD_DELAY_MS": {
     "record_in_processes": ["main"],
@@ -9691,33 +9691,6 @@
     "description": "Number of times the DevTools Style Editor has been opened.",
     "releaseChannelCollection": "opt-out"
   },
-  "DEVTOOLS_SHADEREDITOR_OPENED_COUNT": {
-    "record_in_processes": ["main", "content"],
-    "alert_emails": ["dev-developer-tools@lists.mozilla.org"],
-    "expires_in_version": "never",
-    "kind": "count",
-    "bug_numbers": [1247985],
-    "description": "Number of times the DevTools Shader Editor has been opened.",
-    "releaseChannelCollection": "opt-out"
-  },
-  "DEVTOOLS_WEBAUDIOEDITOR_OPENED_COUNT": {
-    "record_in_processes": ["main", "content"],
-    "alert_emails": ["dev-developer-tools@lists.mozilla.org"],
-    "expires_in_version": "never",
-    "kind": "count",
-    "bug_numbers": [1247985],
-    "description": "Number of times the DevTools Web Audio Editor has been opened.",
-    "releaseChannelCollection": "opt-out"
-  },
-  "DEVTOOLS_CANVASDEBUGGER_OPENED_COUNT": {
-    "record_in_processes": ["main", "content"],
-    "alert_emails": ["dev-developer-tools@lists.mozilla.org"],
-    "expires_in_version": "never",
-    "kind": "count",
-    "bug_numbers": [1247985],
-    "description": "Number of times the DevTools Canvas Debugger has been opened.",
-    "releaseChannelCollection": "opt-out"
-  },
   "DEVTOOLS_JSPROFILER_OPENED_COUNT": {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["dev-developer-tools@lists.mozilla.org"],
@@ -10090,39 +10063,6 @@
     "alert_emails": ["dev-developer-tools@lists.mozilla.org", "jryans@mozilla.com"],
     "releaseChannelCollection": "opt-out",
     "description": "How long has the style editor been active (seconds)"
-  },
-  "DEVTOOLS_SHADEREDITOR_TIME_ACTIVE_SECONDS": {
-    "record_in_processes": ["main", "content"],
-    "expires_in_version": "never",
-    "kind": "exponential",
-    "high": 10000000,
-    "n_buckets": 100,
-    "bug_numbers": [1446496],
-    "alert_emails": ["dev-developer-tools@lists.mozilla.org", "jryans@mozilla.com"],
-    "releaseChannelCollection": "opt-out",
-    "description": "How long has the Shader Editor been active (seconds)"
-  },
-  "DEVTOOLS_WEBAUDIOEDITOR_TIME_ACTIVE_SECONDS": {
-    "record_in_processes": ["main", "content"],
-    "expires_in_version": "never",
-    "kind": "exponential",
-    "high": 10000000,
-    "n_buckets": 100,
-    "bug_numbers": [1446496],
-    "alert_emails": ["dev-developer-tools@lists.mozilla.org", "jryans@mozilla.com"],
-    "releaseChannelCollection": "opt-out",
-    "description": "How long has the Web Audio Editor been active (seconds)"
-  },
-  "DEVTOOLS_CANVASDEBUGGER_TIME_ACTIVE_SECONDS": {
-    "record_in_processes": ["main", "content"],
-    "expires_in_version": "never",
-    "kind": "exponential",
-    "high": 10000000,
-    "n_buckets": 100,
-    "bug_numbers": [1446496],
-    "alert_emails": ["dev-developer-tools@lists.mozilla.org", "jryans@mozilla.com"],
-    "releaseChannelCollection": "opt-out",
-    "description": "How long has the Canvas Debugger been active (seconds)"
   },
   "DEVTOOLS_JSPROFILER_TIME_ACTIVE_SECONDS": {
     "record_in_processes": ["main", "content"],
