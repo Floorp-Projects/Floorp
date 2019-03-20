@@ -1270,6 +1270,8 @@ static inline void pages_decommit(void* aAddr, size_t aSize) {
   // time, we may touch any region in chunksized increments.
   size_t pages_size = std::min(aSize, kChunkSize - GetChunkOffsetForPtr(aAddr));
   while (aSize > 0) {
+    // This will cause Access Violation on read and write and thus act as a
+    // guard page or region as well.
     if (!VirtualFree(aAddr, pages_size, MEM_DECOMMIT)) {
       MOZ_CRASH();
     }
@@ -1728,42 +1730,8 @@ static void* chunk_alloc_mmap(size_t size, size_t alignment) {
 // The force_zero argument explicitly requests that the memory is guaranteed
 // to be full of zeroes when the function returns.
 static bool pages_purge(void* addr, size_t length, bool force_zero) {
-#ifdef MALLOC_DECOMMIT
   pages_decommit(addr, length);
   return true;
-#else
-#  ifndef XP_LINUX
-  if (force_zero) {
-    memset(addr, 0, length);
-  }
-#  endif
-#  ifdef XP_WIN
-  // The region starting at addr may have been allocated in multiple calls
-  // to VirtualAlloc and recycled, so resetting the entire region in one
-  // go may not be valid. However, since we allocate at least a chunk at a
-  // time, we may touch any region in chunksized increments.
-  size_t pages_size = std::min(length, kChunkSize - GetChunkOffsetForPtr(addr));
-  while (length > 0) {
-    VirtualAlloc(addr, pages_size, MEM_RESET, PAGE_READWRITE);
-    addr = (void*)((uintptr_t)addr + pages_size);
-    length -= pages_size;
-    pages_size = std::min(length, kChunkSize);
-  }
-  return force_zero;
-#  else
-#    ifdef XP_LINUX
-#      define JEMALLOC_MADV_PURGE MADV_DONTNEED
-#      define JEMALLOC_MADV_ZEROS true
-#    else  // FreeBSD and Darwin.
-#      define JEMALLOC_MADV_PURGE MADV_FREE
-#      define JEMALLOC_MADV_ZEROS force_zero
-#    endif
-  int err = madvise(addr, length, JEMALLOC_MADV_PURGE);
-  return JEMALLOC_MADV_ZEROS && err == 0;
-#    undef JEMALLOC_MADV_PURGE
-#    undef JEMALLOC_MADV_ZEROS
-#  endif
-#endif
 }
 
 static void* chunk_recycle(size_t aSize, size_t aAlignment, bool* aZeroed) {
@@ -1832,7 +1800,6 @@ static void* chunk_recycle(size_t aSize, size_t aAlignment, bool* aZeroed) {
   if (node) {
     base_node_dealloc(node);
   }
-#ifdef MALLOC_DECOMMIT
   if (!pages_commit(ret, aSize)) {
     return nullptr;
   }
@@ -1840,7 +1807,7 @@ static void* chunk_recycle(size_t aSize, size_t aAlignment, bool* aZeroed) {
   if (aZeroed) {
     *aZeroed = true;
   }
-#endif
+
   return ret;
 }
 
@@ -3544,9 +3511,11 @@ void* arena_t::PallocHuge(size_t aSize, size_t aAlignment, bool aZero) {
   extent_node_t* node;
   bool zeroed;
 
-  // Allocate one or more contiguous chunks for this request.
-  csize = CHUNK_CEILING(aSize);
-  if (csize == 0) {
+  // We're going to configure guard pages in the region between the
+  // page-aligned size and the chunk-aligned size, so if those are the same
+  // then we need to force that region into existence.
+  csize = CHUNK_CEILING(aSize + gPageSize);
+  if (csize < aSize) {
     // size is large enough to cause size_t wrap-around.
     return nullptr;
   }
@@ -3557,18 +3526,21 @@ void* arena_t::PallocHuge(size_t aSize, size_t aAlignment, bool aZero) {
     return nullptr;
   }
 
+  // Allocate one or more contiguous chunks for this request.
   ret = chunk_alloc(csize, aAlignment, false, &zeroed);
   if (!ret) {
     base_node_dealloc(node);
     return nullptr;
   }
+  psize = PAGE_CEILING(aSize);
   if (aZero) {
-    chunk_ensure_zero(ret, csize, zeroed);
+    // We will decommit anything past psize so there is no need to zero
+    // further.
+    chunk_ensure_zero(ret, psize, zeroed);
   }
 
   // Insert node into huge.
   node->mAddr = ret;
-  psize = PAGE_CEILING(aSize);
   node->mSize = psize;
   node->mArena = this;
 
@@ -3598,18 +3570,10 @@ void* arena_t::PallocHuge(size_t aSize, size_t aAlignment, bool aZero) {
     huge_mapped += csize;
   }
 
-#ifdef MALLOC_DECOMMIT
-  if (csize - psize > 0) {
-    pages_decommit((void*)((uintptr_t)ret + psize), csize - psize);
-  }
-#endif
+  pages_decommit((void*)((uintptr_t)ret + psize), csize - psize);
 
   if (!aZero) {
-#ifdef MALLOC_DECOMMIT
     ApplyZeroOrJunk(ret, psize);
-#else
-    ApplyZeroOrJunk(ret, csize);
-#endif
   }
 
   return ret;
@@ -3621,12 +3585,11 @@ void* arena_t::RallocHuge(void* aPtr, size_t aSize, size_t aOldSize) {
 
   // Avoid moving the allocation if the size class would not change.
   if (aOldSize > gMaxLargeClass &&
-      CHUNK_CEILING(aSize) == CHUNK_CEILING(aOldSize)) {
+      CHUNK_CEILING(aSize + gPageSize) == CHUNK_CEILING(aOldSize + gPageSize)) {
     size_t psize = PAGE_CEILING(aSize);
     if (aSize < aOldSize) {
       memset((void*)((uintptr_t)aPtr + aSize), kAllocPoison, aOldSize - aSize);
     }
-#ifdef MALLOC_DECOMMIT
     if (psize < aOldSize) {
       extent_node_t key;
 
@@ -3647,16 +3610,10 @@ void* arena_t::RallocHuge(void* aPtr, size_t aSize, size_t aOldSize) {
                         psize - aOldSize)) {
         return nullptr;
       }
-    }
-#endif
 
-    // Although we don't have to commit or decommit anything if
-    // DECOMMIT is not defined and the size class didn't change, we
-    // do need to update the recorded size if the size increased,
-    // so malloc_usable_size doesn't return a value smaller than
-    // what was requested via realloc().
-    if (psize > aOldSize) {
-      // Update recorded size.
+      // We need to update the recorded size if the size increased,
+      // so malloc_usable_size doesn't return a value smaller than
+      // what was requested via realloc().
       extent_node_t key;
       MutexAutoLock lock(huge_mtx);
       key.mAddr = const_cast<void*>(aPtr);
@@ -3699,6 +3656,7 @@ void* arena_t::RallocHuge(void* aPtr, size_t aSize, size_t aOldSize) {
 
 static void huge_dalloc(void* aPtr, arena_t* aArena) {
   extent_node_t* node;
+  size_t mapped = 0;
   {
     extent_node_t key;
     MutexAutoLock lock(huge_mtx);
@@ -3711,12 +3669,13 @@ static void huge_dalloc(void* aPtr, arena_t* aArena) {
     MOZ_RELEASE_ASSERT(!aArena || node->mArena == aArena);
     huge.Remove(node);
 
+    mapped = CHUNK_CEILING(node->mSize + gPageSize);
     huge_allocated -= node->mSize;
-    huge_mapped -= CHUNK_CEILING(node->mSize);
+    huge_mapped -= mapped;
   }
 
   // Unmap chunk.
-  chunk_dealloc(node->mAddr, CHUNK_CEILING(node->mSize), HUGE_CHUNK);
+  chunk_dealloc(node->mAddr, mapped, HUGE_CHUNK);
 
   base_node_dealloc(node);
 }
