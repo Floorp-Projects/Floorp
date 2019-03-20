@@ -166,6 +166,16 @@ exports.shortSource = function(sheet) {
 const TAB_CHARS = "\t";
 const SPACE_CHARS = " ";
 
+function getLineCountInComments(text) {
+  let count = 0;
+
+  for (const comment of text.match(/\/\*(?:.|\n)*?\*\//mg) || []) {
+    count += comment.split("\n").length + 1;
+  }
+
+  return count;
+}
+
 /**
  * Prettify minified CSS text.
  * This prettifies CSS code where there is no indentation in usual places while
@@ -189,8 +199,8 @@ function prettifyCSS(text, ruleCount) {
   const originalText = text;
   text = text.trim();
 
-  // don't attempt to prettify if there's more than one line per rule.
-  const lineCount = text.split("\n").length - 1;
+  // don't attempt to prettify if there's more than one line per rule, excluding comments.
+  const lineCount = text.split("\n").length - 1 - getLineCountInComments(text);
   if (ruleCount !== null && lineCount >= ruleCount) {
     return originalText;
   }
