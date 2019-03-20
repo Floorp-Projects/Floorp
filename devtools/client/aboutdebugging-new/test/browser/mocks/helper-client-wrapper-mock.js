@@ -70,6 +70,8 @@ function createClientMock() {
     },
     // Empty array of addons
     listAddons: () => [],
+    // Empty array of processes
+    listProcesses: () => [],
     // Empty array of tabs
     listTabs: () => [],
     // Empty arrays of workers

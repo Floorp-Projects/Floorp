@@ -24,6 +24,7 @@ const ServiceWorkerAction = createFactory(require("./debugtarget/ServiceWorkerAc
 const ServiceWorkerAdditionalActions =
   createFactory(require("./debugtarget/ServiceWorkerAdditionalActions"));
 const ServiceWorkersWarning = createFactory(require("./ServiceWorkersWarning"));
+const ProcessDetail = createFactory(require("./debugtarget/ProcessDetail"));
 const TabDetail = createFactory(require("./debugtarget/TabDetail"));
 const TemporaryExtensionAdditionalActions =
   createFactory(require("./debugtarget/TemporaryExtensionAdditionalActions"));
@@ -48,6 +49,7 @@ class RuntimePage extends PureComponent {
       otherWorkers: PropTypes.arrayOf(PropTypes.object).isRequired,
       runtimeDetails: Types.runtimeDetails,
       runtimeId: PropTypes.string.isRequired,
+      processes: PropTypes.arrayOf(PropTypes.object).isRequired,
       serviceWorkers: PropTypes.arrayOf(PropTypes.object).isRequired,
       sharedWorkers: PropTypes.arrayOf(PropTypes.object).isRequired,
       showProfilerDialog: PropTypes.bool.isRequired,
@@ -68,6 +70,8 @@ class RuntimePage extends PureComponent {
     switch (type) {
       case DEBUG_TARGETS.EXTENSION:
         return "chrome://devtools/skin/images/debugging-addons.svg";
+      case DEBUG_TARGETS.PROCESS:
+        return "chrome://devtools/skin/images/settings.svg";
       case DEBUG_TARGETS.TAB:
         return "chrome://devtools/skin/images/debugging-tabs.svg";
       case DEBUG_TARGETS.WORKER:
@@ -123,6 +127,7 @@ class RuntimePage extends PureComponent {
       dispatch,
       installedExtensions,
       otherWorkers,
+      processes,
       runtimeDetails,
       runtimeId,
       serviceWorkers,
@@ -202,6 +207,15 @@ class RuntimePage extends PureComponent {
                                  WorkerDetail,
                                  DEBUG_TARGET_PANE.OTHER_WORKER,
                                  "about-debugging-runtime-other-workers"),
+      this.renderDebugTargetPane("Processes",
+                                 this.getIconByType(DEBUG_TARGETS.PROCESS),
+                                 processes,
+                                 null,
+                                 InspectAction,
+                                 null,
+                                 ProcessDetail,
+                                 DEBUG_TARGET_PANE.PROCESSES,
+                                 "about-debugging-runtime-processes"),
 
       showProfilerDialog ? ProfilerDialog({ dispatch, runtimeDetails }) : null,
     );
@@ -212,6 +226,7 @@ const mapStateToProps = state => {
   return {
     collapsibilities: state.ui.debugTargetCollapsibilities,
     installedExtensions: state.debugTargets.installedExtensions,
+    processes: state.debugTargets.processes,
     otherWorkers: state.debugTargets.otherWorkers,
     runtimeDetails: getCurrentRuntimeDetails(state.runtimes),
     serviceWorkers: state.debugTargets.serviceWorkers,
