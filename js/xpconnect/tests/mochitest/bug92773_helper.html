@@ -1,7 +1,7 @@
 <html>
     <head>
         <script>
-            foo getter = function() { alert("FAIL"); }
+            Object.defineProperty(window, "foo", { get() { alert("FAIL"); } });
         </script>
     </head>
 </html>
