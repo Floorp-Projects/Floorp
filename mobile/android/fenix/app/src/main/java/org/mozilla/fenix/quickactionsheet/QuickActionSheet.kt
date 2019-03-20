@@ -15,6 +15,7 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior
 import mozilla.components.browser.toolbar.BrowserToolbar
 import org.mozilla.fenix.R
 import android.animation.ValueAnimator
+import android.view.accessibility.AccessibilityManager
 import androidx.interpolator.view.animation.FastOutSlowInInterpolator
 import org.mozilla.fenix.ext.increaseTapArea
 import org.mozilla.fenix.utils.Settings
@@ -27,7 +28,7 @@ class QuickActionSheet @JvmOverloads constructor(
 ) : LinearLayout(context, attrs, defStyle, defStyleRes) {
 
     init {
-        inflate(getContext(), R.layout.component_quickactionsheet, this)
+        inflate(getContext(), R.layout.layout_quick_action_sheet, this)
     }
 
     fun afterInflate() {
@@ -38,6 +39,7 @@ class QuickActionSheet @JvmOverloads constructor(
         val handle = findViewById<AppCompatImageButton>(R.id.quick_action_sheet_handle)
         val linearLayout = findViewById<LinearLayout>(R.id.quick_action_sheet)
         val quickActionSheetBehavior = BottomSheetBehavior.from(linearLayout.parent as View) as QuickActionSheetBehavior
+
         handle.increaseTapArea(grabHandleIncreasedTapArea)
         handle.setOnClickListener {
             bounceSheet(quickActionSheetBehavior)
@@ -109,7 +111,14 @@ class QuickActionSheetBehavior(
     }
 
     private fun repositionQuickActionSheet(quickActionSheetContainer: NestedScrollView, toolbar: BrowserToolbar) {
-        state = BottomSheetBehavior.STATE_COLLAPSED
+        val accessibilityManager = quickActionSheetContainer.context
+            .getSystemService(Context.ACCESSIBILITY_SERVICE) as AccessibilityManager
+
+        state = when (accessibilityManager.isTouchExplorationEnabled) {
+            true -> BottomSheetBehavior.STATE_EXPANDED
+            false -> BottomSheetBehavior.STATE_COLLAPSED
+        }
+
         quickActionSheetContainer.translationY = (toolbar.translationY + toolbar.height * -1.0).toFloat()
     }
 }

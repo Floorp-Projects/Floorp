@@ -16,6 +16,8 @@ import org.mozilla.fenix.ext.getPreferenceKey
 class Settings private constructor(context: Context) {
 
     companion object {
+        const val autoBounceMaximumCount = 2
+
         var instance: Settings? = null
 
         @JvmStatic
@@ -40,7 +42,7 @@ class Settings private constructor(context: Context) {
         get() = preferences.getBoolean(appContext.getPreferenceKey(R.string.pref_key_telemetry), true)
 
     val shouldAutoBounceQuickActionSheet: Boolean
-        get() = autoBounceQuickActionSheetCount < 2
+        get() = autoBounceQuickActionSheetCount < autoBounceMaximumCount
 
     private val autoBounceQuickActionSheetCount: Int
         get() = (preferences.getInt(appContext.getPreferenceKey(R.string.pref_key_bounce_quick_action), 0))
