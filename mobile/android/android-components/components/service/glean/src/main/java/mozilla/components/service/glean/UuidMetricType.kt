@@ -80,7 +80,7 @@ data class UuidMetricType(
      */
     @VisibleForTesting(otherwise = VisibleForTesting.NONE)
     fun testHasValue(pingName: String = getStorageNames().first()): Boolean {
-        Dispatchers.API.awaitJob()
+        Dispatchers.API.assertInTestingMode()
 
         return UuidsStorageEngine.getSnapshot(pingName, false)?.get(identifier) != null
     }
@@ -97,7 +97,7 @@ data class UuidMetricType(
      */
     @VisibleForTesting(otherwise = VisibleForTesting.NONE)
     fun testGetValue(pingName: String = getStorageNames().first()): UUID {
-        Dispatchers.API.awaitJob()
+        Dispatchers.API.assertInTestingMode()
 
         return UuidsStorageEngine.getSnapshot(pingName, false)!![identifier]!!
     }

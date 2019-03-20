@@ -72,7 +72,7 @@ data class EventMetricType(
      */
     @VisibleForTesting(otherwise = VisibleForTesting.NONE)
     fun testHasValue(pingName: String = getStorageNames().first()): Boolean {
-        Dispatchers.API.awaitJob()
+        Dispatchers.API.assertInTestingMode()
 
         val snapshot = EventsStorageEngine.getSnapshot(pingName, false) ?: return false
         return snapshot.any { event ->
@@ -92,7 +92,7 @@ data class EventMetricType(
      */
     @VisibleForTesting(otherwise = VisibleForTesting.NONE)
     fun testGetValue(pingName: String = getStorageNames().first()): List<RecordedEventData> {
-        Dispatchers.API.awaitJob()
+        Dispatchers.API.assertInTestingMode()
 
         return EventsStorageEngine.getSnapshot(pingName, false)!!.filter { event ->
             event.identifier == identifier

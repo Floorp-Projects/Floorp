@@ -101,7 +101,7 @@ object ErrorRecording {
         errorType: ErrorType,
         pingName: String? = null
     ): Int {
-        Dispatchers.API.awaitJob()
+        Dispatchers.API.assertInTestingMode()
 
         val usePingName = pingName?.let {
             pingName

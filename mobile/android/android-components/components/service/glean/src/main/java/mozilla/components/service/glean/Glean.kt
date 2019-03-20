@@ -310,6 +310,17 @@ open class GleanInternalAPI internal constructor () {
             pingStorageEngine.store(pingId, makePath(pingName, pingId), pingContent)
         } != null
     }
+
+    /**
+     * Should be called from all users of the glean testing API.
+     *
+     * This makes all asynchronous work synchronous so we can test the results of the
+     * API synchronously.
+     */
+    @VisibleForTesting(otherwise = VisibleForTesting.NONE)
+    fun enableTestingMode() {
+        Dispatchers.API.enableTestingMode()
+    }
 }
 
 object Glean : GleanInternalAPI() {

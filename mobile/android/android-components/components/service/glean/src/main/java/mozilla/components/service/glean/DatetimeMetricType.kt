@@ -87,7 +87,7 @@ data class DatetimeMetricType(
      */
     @VisibleForTesting(otherwise = VisibleForTesting.NONE)
     fun testHasValue(pingName: String = getStorageNames().first()): Boolean {
-        Dispatchers.API.awaitJob()
+        Dispatchers.API.assertInTestingMode()
 
         return DatetimesStorageEngine.getSnapshot(pingName, false)?.get(identifier) != null
     }
@@ -105,7 +105,7 @@ data class DatetimeMetricType(
      */
     @VisibleForTesting(otherwise = VisibleForTesting.NONE)
     fun testGetValueAsString(pingName: String = getStorageNames().first()): String {
-        Dispatchers.API.awaitJob()
+        Dispatchers.API.assertInTestingMode()
 
         return DatetimesStorageEngine.getSnapshot(pingName, false)!![identifier]!!
     }
@@ -126,7 +126,7 @@ data class DatetimeMetricType(
      */
     @VisibleForTesting(otherwise = VisibleForTesting.NONE)
     fun testGetValue(pingName: String = getStorageNames().first()): Date {
-        Dispatchers.API.awaitJob()
+        Dispatchers.API.assertInTestingMode()
 
         return parseISOTimeString(DatetimesStorageEngine.getSnapshot(pingName, false)!![identifier]!!)!!
     }

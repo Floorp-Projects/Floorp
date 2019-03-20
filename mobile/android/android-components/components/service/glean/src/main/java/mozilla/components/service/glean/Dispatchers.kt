@@ -11,47 +11,57 @@ import kotlinx.coroutines.ObsoleteCoroutinesApi
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.newSingleThreadContext
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withTimeout
 
 @ObsoleteCoroutinesApi
 internal object Dispatchers {
     class WaitableCoroutineScope(val coroutineScope: CoroutineScope) {
-        // Holds the Job returned from launch{} for awaiting purposes
-        @VisibleForTesting(otherwise = VisibleForTesting.NONE)
-        var ioTask: Job? = null
+        // When true, jobs will be run synchronously
+        internal var testingMode = false
 
-        companion object {
-            // The job timeout is useful in tests, which are usually running on CI
-            // infrastructure. The timeout needs to be reasonably high to account for
-            // slow or under-stress hardware.
-            private const val JOB_TIMEOUT_MS = 5000L
-        }
-
+        /**
+         * Launch a block of work asyncronously.
+         *
+         * If [enableTestingMode] has been called, the work will run
+         * synchronously.
+         *
+         * @return Job, or null if run synchronously.
+         */
         fun launch(
             block: suspend CoroutineScope.() -> Unit
-        ): Job {
-            ioTask = coroutineScope.launch(block = block)
-            return ioTask!!
+        ): Job? {
+            if (testingMode) {
+                runBlocking {
+                    block()
+                }
+                return null
+            } else {
+                return coroutineScope.launch(block = block)
+            }
         }
 
         /**
-         * Helper function to wait for any pending Jobs used by the metrics to finish.
-         * This is to help ensure that data is updated before test functions
-         * check or access them.
-         *
-         * @param timeout Length of time in milliseconds that .join will be awaited. Defaults to
-         *                [JOB_TIMEOUT_MS].
-         * @throws TimeoutCancellationException if the function times out waiting for the join()
+         * Helper function to ensure glean is being used in testing mode and async
+         * jobs are being run synchronously.  This should be called from every method
+         * in the testing API to make sure that the results of the main API can be
+         * tested as expected.
         */
         @VisibleForTesting(otherwise = VisibleForTesting.NONE)
-        fun awaitJob(timeout: Long = JOB_TIMEOUT_MS) {
-            ioTask?.let { job ->
-                runBlocking() {
-                    withTimeout(timeout) {
-                        job.join()
-                    }
+        fun assertInTestingMode() {
+            assert(
+                testingMode,
+                {
+                    "glean must be in testing mode by calling Glean.enableTestingMode "
+                    "before using the glean testing API"
                 }
-            }
+            )
+        }
+
+        /**
+         * Enable testing mode, which makes all of the glean public API synchronous.
+         */
+        @VisibleForTesting(otherwise = VisibleForTesting.NONE)
+        fun enableTestingMode() {
+            testingMode = true
         }
     }
 
