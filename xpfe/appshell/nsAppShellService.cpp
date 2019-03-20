@@ -26,8 +26,10 @@
 #include "nsIRequestObserver.h"
 #include "nsIEmbeddingSiteWindow.h"
 
+#include "nsAppDirectoryServiceDefs.h"
 #include "nsAppShellService.h"
 #include "nsContentUtils.h"
+#include "nsDirectoryServiceUtils.h"
 #include "nsThreadUtils.h"
 #include "nsISupportsPrimitives.h"
 #include "nsILoadContext.h"
@@ -107,6 +109,18 @@ void nsAppShellService::EnsurePrivateHiddenWindow() {
 nsresult nsAppShellService::CreateHiddenWindowHelper(bool aIsPrivate) {
   if (!XRE_IsParentProcess()) {
     return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+  if (mXPCOMShuttingDown) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsIFile> profileDir;
+  NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
+                         getter_AddRefs(profileDir));
+  if (!profileDir) {
+    // This is too early on startup to create the hidden window
+    return NS_ERROR_FAILURE;
   }
 
   nsresult rv;
