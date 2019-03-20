@@ -3635,6 +3635,13 @@ mozilla::ipc::IPCResult ContentChild::RecvCrossProcessRedirect(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult ContentChild::RecvStartDelayedAutoplayMediaComponents(
+    BrowsingContext* aContext) {
+  MOZ_ASSERT(aContext);
+  aContext->StartDelayedAutoplayMediaComponents();
+  return IPC_OK();
+}
+
 already_AddRefed<nsIEventTarget> ContentChild::GetSpecificMessageEventTarget(
     const Message& aMsg) {
   switch (aMsg.type()) {
