@@ -37,7 +37,6 @@ class ConnectPage extends PureComponent {
       adbAddonStatus: Types.adbAddonStatus,
       dispatch: PropTypes.func.isRequired,
       networkLocations: PropTypes.arrayOf(Types.location).isRequired,
-      wifiEnabled: PropTypes.bool.isRequired,
     };
   }
 

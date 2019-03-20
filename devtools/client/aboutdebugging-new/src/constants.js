@@ -99,8 +99,6 @@ const PREFERENCES = {
   PROCESS_DEBUGGING_ENABLED: "devtools.aboutdebugging.process-debugging",
   // Preference that drives the display of system addons in about:debugging.
   SHOW_SYSTEM_ADDONS: "devtools.aboutdebugging.showSystemAddons",
-  // Temporary preference without any default value until wifi is enabled.
-  WIFI_ENABLED: "devtools.aboutdebugging.wifi",
 };
 
 const RUNTIME_PREFERENCE = {
