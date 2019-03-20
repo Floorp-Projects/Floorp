@@ -151,7 +151,7 @@ function test() {
       // From browser/base/content/test/general/bug792715.sjs, we should never send a
       // cookie because we are making only 2 requests: one in public mode, and
       // one in private mode.
-      throw "We should never send a cookie in this test";
+      throw new Error("We should never send a cookie in this test");
     } catch (ex) {
       if (ex.result == Cr.NS_ERROR_NOT_AVAILABLE) {
         info("onModifyRequest caught NOTAVAIL" + ex);

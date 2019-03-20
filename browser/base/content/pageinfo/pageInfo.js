@@ -24,7 +24,7 @@ function pageInfoTreeView(treeid, copycol) {
 }
 
 pageInfoTreeView.prototype = {
-  set rowCount(c) { throw "rowCount is a readonly property"; },
+  set rowCount(c) { throw new Error("rowCount is a readonly property"); },
   get rowCount() { return this.rows; },
 
   setTree(tree) {

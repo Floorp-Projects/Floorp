@@ -223,7 +223,7 @@ var Sanitizer = {
         startDate = endDate - 86400000000; // 24*60*60*1000000
         break;
       default:
-        throw "Invalid time span for clear private data: " + ts;
+        throw new Error("Invalid time span for clear private data: " + ts);
     }
     return [startDate, endDate];
   },

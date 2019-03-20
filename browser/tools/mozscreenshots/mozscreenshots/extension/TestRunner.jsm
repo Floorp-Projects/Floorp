@@ -223,7 +223,7 @@ var TestRunner = {
   **/
   _findBoundingBox(selectors, windowType) {
     if (!selectors.length) {
-      throw "No selectors specified.";
+      throw new Error("No selectors specified.");
     }
 
     // Set window type, default "navigator:browser"
@@ -253,7 +253,7 @@ var TestRunner = {
       }
 
       if (!element) {
-        throw `No element for '${selector}' found.`;
+        throw new Error(`No element for '${selector}' found.`);
       }
 
       // Calculate box region, convert to Rect

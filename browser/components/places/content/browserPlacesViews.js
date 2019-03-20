@@ -370,7 +370,7 @@ PlacesViewBase.prototype = {
 
         this._domNodes.set(aPlacesNode, popup);
       } else {
-        throw "Unexpected node";
+        throw new Error("Unexpected node");
       }
 
       element.setAttribute("label", PlacesUIUtils.getBestTitle(aPlacesNode));
@@ -1028,7 +1028,7 @@ PlacesToolbar.prototype = {
         this._onPopupHidden(aEvent);
         break;
       default:
-        throw "Trying to handle unexpected event.";
+        throw new Error("Trying to handle unexpected event.");
     }
   },
 
@@ -1994,7 +1994,7 @@ this.PlacesPanelview = class extends PlacesViewBase {
       element = document.createXULElement("toolbarseparator");
     } else {
       if (type != Ci.nsINavHistoryResultNode.RESULT_TYPE_URI)
-        throw "Unexpected node";
+        throw new Error("Unexpected node");
 
       element = document.createXULElement("toolbarbutton");
       element.classList.add("subviewbutton", "subviewbutton-iconic", "bookmark-item");

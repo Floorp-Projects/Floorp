@@ -5141,7 +5141,7 @@ var XULBrowserWindow = {
     this._lastLocationForEvent = spec;
 
     if (typeof(aIsSimulated) != "boolean" && typeof(aIsSimulated) != "undefined") {
-      throw "onContentBlockingEvent: aIsSimulated receieved an unexpected type";
+      throw new Error("onContentBlockingEvent: aIsSimulated receieved an unexpected type");
     }
 
     ContentBlocking.onContentBlockingEvent(this._event, aWebProgress, aIsSimulated);
@@ -8393,7 +8393,7 @@ TabModalPromptBox.prototype = {
   get browser() {
     let browser = this._weakBrowserRef.get();
     if (!browser) {
-      throw "Stale promptbox! The associated browser is gone.";
+      throw new Error("Stale promptbox! The associated browser is gone.");
     }
     return browser;
   },

@@ -61,7 +61,7 @@ add_task(async function() {
           ok(checked, idstring + " should be selected");
           break;
         default:
-          throw "data-state attribute is missing or has invalid value";
+          throw new Error("data-state attribute is missing or has invalid value");
       }
     });
     return contentValidLinks;
