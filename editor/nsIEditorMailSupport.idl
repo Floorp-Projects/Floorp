@@ -30,7 +30,6 @@ interface nsIEditorMailSupport : nsISupports
    * Rewrap the selected part of the document, re-quoting if necessary.
    * @param aRespectNewlines  Try to maintain newlines in the original?
    */
-  [can_run_script]
   void rewrap(in boolean aRespectNewlines);
 };
 

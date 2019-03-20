@@ -349,7 +349,6 @@ class Selection final : public nsSupportsWeakReference,
   void Modify(const nsAString& aAlter, const nsAString& aDirection,
               const nsAString& aGranularity, mozilla::ErrorResult& aRv);
 
-  MOZ_CAN_RUN_SCRIPT
   void SetBaseAndExtentJS(nsINode& aAnchorNode, uint32_t aAnchorOffset,
                           nsINode& aFocusNode, uint32_t aFocusOffset,
                           mozilla::ErrorResult& aRv);
@@ -445,84 +444,9 @@ class Selection final : public nsSupportsWeakReference,
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
   void SelectAllChildren(nsINode& aNode, mozilla::ErrorResult& aRv);
 
-  /**
-   * SetStartAndEnd() removes all ranges and sets new range as given range.
-   * Different from SetBaseAndExtent(), this won't compare the DOM points of
-   * aStartRef and aEndRef for performance nor set direction to eDirPrevious.
-   * Note that this may reset the limiter and move focus.  If you don't want
-   * that, use SetStartAndEndInLimiter() instead.
-   */
-  MOZ_CAN_RUN_SCRIPT
-  void SetStartAndEnd(const RawRangeBoundary& aStartRef,
-                      const RawRangeBoundary& aEndRef, ErrorResult& aRv) {
-    SetStartAndEndInternal(InLimiter::eNo, aStartRef, aEndRef, eDirNext, aRv);
-  }
-  MOZ_CAN_RUN_SCRIPT
-  void SetStartAndEnd(nsINode& aStartContainer, uint32_t aStartOffset,
-                      nsINode& aEndContainer, uint32_t aEndOffset,
-                      ErrorResult& aRv) {
-    SetStartAndEnd(RawRangeBoundary(&aStartContainer, aStartOffset),
-                   RawRangeBoundary(&aEndContainer, aEndOffset), aRv);
-  }
-
-  /**
-   * SetStartAndEndInLimiter() is similar to SetStartAndEnd(), but this respects
-   * the selection limiter.  If all or part of given range is not in the
-   * limiter, this returns error.
-   */
-  MOZ_CAN_RUN_SCRIPT
-  void SetStartAndEndInLimiter(const RawRangeBoundary& aStartRef,
-                               const RawRangeBoundary& aEndRef,
-                               ErrorResult& aRv) {
-    SetStartAndEndInternal(InLimiter::eYes, aStartRef, aEndRef, eDirNext, aRv);
-  }
-  MOZ_CAN_RUN_SCRIPT
-  void SetStartAndEndInLimiter(nsINode& aStartContainer, uint32_t aStartOffset,
-                               nsINode& aEndContainer, uint32_t aEndOffset,
-                               ErrorResult& aRv) {
-    SetStartAndEndInLimiter(RawRangeBoundary(&aStartContainer, aStartOffset),
-                            RawRangeBoundary(&aEndContainer, aEndOffset), aRv);
-  }
-
-  /**
-   * SetBaseAndExtent() is alternative of the JS API for internal use.
-   * Different from SetStartAndEnd(), this sets anchor and focus points as
-   * specified, then if anchor point is after focus node, this sets the
-   * direction to eDirPrevious.
-   * Note that this may reset the limiter and move focus.  If you don't want
-   * that, use SetBaseAndExtentInLimier() instead.
-   */
-  MOZ_CAN_RUN_SCRIPT
   void SetBaseAndExtent(nsINode& aAnchorNode, uint32_t aAnchorOffset,
                         nsINode& aFocusNode, uint32_t aFocusOffset,
-                        ErrorResult& aRv) {
-    SetBaseAndExtent(RawRangeBoundary(&aAnchorNode, aAnchorOffset),
-                     RawRangeBoundary(&aFocusNode, aFocusOffset), aRv);
-  }
-  MOZ_CAN_RUN_SCRIPT
-  void SetBaseAndExtent(const RawRangeBoundary& aAnchorRef,
-                        const RawRangeBoundary& aFocusRef, ErrorResult& aRv) {
-    SetBaseAndExtentInternal(InLimiter::eNo, aAnchorRef, aFocusRef, aRv);
-  }
-
-  /**
-   * SetBaseAndExtentInLimier() is similar to SetBaseAndExtent(), but this
-   * respects the selection limiter.  If all or part of given range is not in
-   * the limiter, this returns error.
-   */
-  MOZ_CAN_RUN_SCRIPT
-  void SetBaseAndExtentInLimiter(nsINode& aAnchorNode, uint32_t aAnchorOffset,
-                                 nsINode& aFocusNode, uint32_t aFocusOffset,
-                                 ErrorResult& aRv) {
-    SetBaseAndExtentInLimiter(RawRangeBoundary(&aAnchorNode, aAnchorOffset),
-                              RawRangeBoundary(&aFocusNode, aFocusOffset), aRv);
-  }
-  MOZ_CAN_RUN_SCRIPT
-  void SetBaseAndExtentInLimiter(const RawRangeBoundary& aAnchorRef,
-                                 const RawRangeBoundary& aFocusRef,
-                                 ErrorResult& aRv) {
-    SetBaseAndExtentInternal(InLimiter::eYes, aAnchorRef, aFocusRef, aRv);
-  }
+                        mozilla::ErrorResult& aRv);
 
   void AddSelectionChangeBlocker();
   void RemoveSelectionChangeBlocker();
@@ -611,25 +535,6 @@ class Selection final : public nsSupportsWeakReference,
   // Get the cached value for nsTextFrame::GetPointFromOffset.
   nsresult GetCachedFrameOffset(nsIFrame* aFrame, int32_t inOffset,
                                 nsPoint& aPoint);
-
-  enum class InLimiter {
-    // If eYes, the method may reset selection limiter and move focus if the
-    // given range is out of the limiter.
-    eYes,
-    // If eNo, the method won't reset selection limiter.  So, if given range
-    // is out of bounds, the method may return error.
-    eNo,
-  };
-  MOZ_CAN_RUN_SCRIPT
-  void SetStartAndEndInternal(InLimiter aInLimiter,
-                              const RawRangeBoundary& aStartRef,
-                              const RawRangeBoundary& aEndRef,
-                              nsDirection aDirection, ErrorResult& aRv);
-  MOZ_CAN_RUN_SCRIPT
-  void SetBaseAndExtentInternal(InLimiter aInLimiter,
-                                const RawRangeBoundary& aAnchorRef,
-                                const RawRangeBoundary& aFocusRef,
-                                ErrorResult& aRv);
 
  public:
   SelectionType GetType() const { return mSelectionType; }
