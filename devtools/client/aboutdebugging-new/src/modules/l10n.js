@@ -12,8 +12,10 @@ const { L10nRegistry } = require("resource://gre/modules/L10nRegistry.jsm");
 class L10n {
   async init() {
     const locales = Services.locale.appLocalesAsBCP47;
-    const generator = L10nRegistry.generateBundles(locales,
-      ["devtools/aboutdebugging.ftl"]);
+    const generator = L10nRegistry.generateBundles(locales, [
+      "branding/brand.ftl",
+      "devtools/aboutdebugging.ftl",
+    ]);
 
     this._bundles = [];
     for await (const bundle of generator) {
