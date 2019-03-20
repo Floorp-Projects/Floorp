@@ -112,8 +112,8 @@ async function reloadAboutDebugging(tab) {
   const browser = tab.linkedBrowser;
   const document = browser.contentDocument;
   const window = browser.contentWindow;
-  info("wait for the initial about:debugging requests to be successful");
-  await waitForRequestsSuccess(window.AboutDebugging.store);
+  info("wait for the initial about:debugging requests to settle");
+  await waitForRequestsToSettle(window.AboutDebugging.store);
 
   return document;
 }

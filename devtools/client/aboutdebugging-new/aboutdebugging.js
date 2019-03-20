@@ -109,7 +109,6 @@ const AboutDebugging = {
   async destroy() {
     const width = this.getRoundedViewportWidth();
     this.actions.recordTelemetryEvent("close_adbg", { width });
-    l10n.destroy();
 
     const state = this.store.getState();
     const currentRuntimeId = state.runtimes.selectedRuntimeId;
