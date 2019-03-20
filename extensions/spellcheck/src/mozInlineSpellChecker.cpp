@@ -869,8 +869,7 @@ mozInlineSpellChecker::ReplaceWord(nsINode* aNode, int32_t aOffset,
     return NS_OK;
   }
 
-  RefPtr<TextEditor> textEditor(mTextEditor);
-  DebugOnly<nsresult> rv = textEditor->ReplaceTextAsAction(newword, range);
+  DebugOnly<nsresult> rv = mTextEditor->ReplaceTextAsAction(newword, range);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to insert the new word");
   return NS_OK;
 }

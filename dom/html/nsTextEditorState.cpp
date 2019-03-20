@@ -2301,9 +2301,7 @@ bool nsTextEditorState::SetValue(const nsAString& aValue,
             // transactions typed by user shouldn't be merged with this).
             // In this case, we need to dispatch "input" event because
             // web apps may need to know the user's operation.
-            RefPtr<nsRange> range;  // See bug 1506439
-            DebugOnly<nsresult> rv =
-                textEditor->ReplaceTextAsAction(newValue, range);
+            DebugOnly<nsresult> rv = textEditor->ReplaceTextAsAction(newValue);
             NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                                  "Failed to set the new value");
           } else if (aFlags & eSetValue_ForXUL) {
