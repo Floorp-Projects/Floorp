@@ -18,6 +18,9 @@ The helper — described below — reports predefined update status, which event
 
    Examples of update status: *up-to-date, success, network error, server error, signature error, server backoff, unknown error…*
 
+Every call to the UptakeTelemetry helper registers a point in a single :ref:`keyed histogram <histogram-type-keyed>` whose id is ``UPTAKE_REMOTE_CONTENT_RESULT_1`` with the specified update ``source`` as the key.
+
+Additionally, to provide real-time insight into uptake, a :ref:`Telemetry Event <eventtelemetry>` may be sent. Because telemetry events are more expensive to process than histograms, we take some measures to avoid overwhelming Mozilla systems with the flood of data that this produces. We always send events when not on release channel. On release channel, we only send events from 1% of clients.
 
 Usage
 -----
@@ -58,8 +61,6 @@ Usage
   - ``UptakeTelemetry.STATUS.CUSTOM_5_ERROR``: Error #5 specific to this update source.
 
 
-The data is submitted as a :ref:`Telemetry Event <eventtelemetry>`, and to a single :ref:`keyed histogram <histogram-type-keyed>` whose id is ``UPTAKE_REMOTE_CONTENT_RESULT_1`` and the specified update ``source`` as the key.
-
 Example:
 
 .. code-block:: js
@@ -82,7 +83,7 @@ Example:
 Additional Event Info
 '''''''''''''''''''''
 
-The Event API allows to report additional information. We support the following optional fields:
+Events sent using the telemetry events API can contain additional information. Uptake Telemetry allows you to add the following extra fields to events by adding them to the ``options`` argument:
 
 - ``trigger``: A label to distinguish what triggered the polling/fetching of remote content (eg. ``"broadcast"``, ``"timer"``, ``"forced"``, ``"manual"``)
 - ``age``: The age of pulled data in seconds (ie. difference between publication time and fetch time).
@@ -90,6 +91,8 @@ The Event API allows to report additional information. We support the following 
 .. code-block:: js
 
    UptakeTelemetry.report(component, status, { source, trigger: "timer", age: 138 });
+
+Remember that events are sampled on release channel. Those calls to uptake telemetry that do not produce events will ignore these extra fields.
 
 
 Use-cases
