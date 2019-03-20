@@ -1101,7 +1101,6 @@ Result<Ok, nsresult> Sbgp::Parse(Box& aBox) {
   uint32_t flags;
   MOZ_TRY_VAR(flags, reader->ReadU32());
   const uint8_t version = flags >> 24;
-  flags = flags & 0xffffff;
 
   uint32_t type;
   MOZ_TRY_VAR(type, reader->ReadU32());
