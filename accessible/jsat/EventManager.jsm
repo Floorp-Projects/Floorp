@@ -10,11 +10,7 @@ ChromeUtils.defineModuleGetter(this, "Utils",
   "resource://gre/modules/accessibility/Utils.jsm");
 ChromeUtils.defineModuleGetter(this, "Logger",
   "resource://gre/modules/accessibility/Utils.jsm");
-ChromeUtils.defineModuleGetter(this, "Roles",
-  "resource://gre/modules/accessibility/Constants.jsm");
 ChromeUtils.defineModuleGetter(this, "Events",
-  "resource://gre/modules/accessibility/Constants.jsm");
-ChromeUtils.defineModuleGetter(this, "States",
   "resource://gre/modules/accessibility/Constants.jsm");
 
 var EXPORTED_SYMBOLS = ["EventManager"];
