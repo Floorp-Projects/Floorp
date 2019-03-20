@@ -18,6 +18,7 @@ import org.mozilla.geckoview.WebRequestError
 import android.view.inputmethod.CursorAnchorInfo
 import android.view.inputmethod.ExtractedText
 import android.view.inputmethod.ExtractedTextRequest
+import org.json.JSONObject
 
 class Callbacks private constructor() {
     object Default : All

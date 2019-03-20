@@ -21,6 +21,7 @@ const SCROLL_BEHAVIOR_AUTO = 1;
 XPCOMUtils.defineLazyModuleGetters(this, {
   FormLikeFactory: "resource://gre/modules/FormLikeFactory.jsm",
   GeckoViewAutoFill: "resource://gre/modules/GeckoViewAutoFill.jsm",
+  ManifestObtainer: "resource://gre/modules/ManifestObtainer.jsm",
   PrivacyFilter: "resource://gre/modules/sessionstore/PrivacyFilter.jsm",
   SessionHistory: "resource://gre/modules/sessionstore/SessionHistory.jsm",
 });
@@ -77,6 +78,7 @@ class GeckoViewContentChild extends GeckoViewChildModule {
     addEventListener("MozDOMFullscreen:Exited", this, false);
     addEventListener("MozDOMFullscreen:Request", this, false);
     addEventListener("contextmenu", this, { capture: true });
+    addEventListener("DOMContentLoaded", this, false);
   }
 
   onDisable() {
@@ -90,6 +92,7 @@ class GeckoViewContentChild extends GeckoViewChildModule {
     removeEventListener("MozDOMFullscreen:Exited", this);
     removeEventListener("MozDOMFullscreen:Request", this);
     removeEventListener("contextmenu", this, { capture: true });
+    removeEventListener("DOMContentLoaded", this);
   }
 
   collectSessionState() {
@@ -425,6 +428,24 @@ class GeckoViewContentChild extends GeckoViewChildModule {
           });
         }
         break;
+      case "DOMContentLoaded": {
+        content.requestIdleCallback(async () => {
+          let manifest = null;
+          try {
+            manifest = await ManifestObtainer.contentObtainManifest(content);
+          } catch (e) {
+            // Unfortunately, this throws if there is no manifest present, so we
+            // probably don't want to log anything here. Bug 1534756.
+          }
+
+          if (manifest) {
+            this.eventDispatcher.sendRequest({
+              type: "GeckoView:WebAppManifest",
+              manifest,
+            });
+          }
+        });
+      }
     }
   }
 
