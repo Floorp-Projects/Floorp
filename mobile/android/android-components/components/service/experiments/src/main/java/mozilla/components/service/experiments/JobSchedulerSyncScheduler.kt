@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package mozilla.components.service.experiments.scheduler.jobscheduler
+package mozilla.components.service.experiments
 
 import android.app.job.JobInfo
 import android.app.job.JobScheduler
@@ -16,7 +16,7 @@ import java.util.concurrent.TimeUnit
  *
  * @param context context
  */
-class JobSchedulerSyncScheduler(context: Context) {
+internal class JobSchedulerSyncScheduler(context: Context) {
     private val jobScheduler = context.getSystemService(Context.JOB_SCHEDULER_SERVICE) as JobScheduler
 
     /**

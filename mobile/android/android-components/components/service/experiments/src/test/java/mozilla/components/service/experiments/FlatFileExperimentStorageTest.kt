@@ -2,10 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package mozilla.components.service.experiments.storage.flatfile
+package mozilla.components.service.experiments
 
-import mozilla.components.service.experiments.Experiment
-import mozilla.components.service.experiments.ExperimentsSnapshot
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse

@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package mozilla.components.service.experiments.scheduler.workmanager
+package mozilla.components.service.experiments
 
 import androidx.work.Constraints
 import androidx.work.ExistingPeriodicWorkPolicy
@@ -15,7 +15,7 @@ import java.util.concurrent.TimeUnit
  * Class used to schedule sync of experiment
  * configuration from the server using WorkManager
  */
-class WorkManagerSyncScheduler {
+internal class WorkManagerSyncScheduler {
     /**
      * Schedule sync with the default constraints
      * (once a day and charging)

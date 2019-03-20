@@ -8,7 +8,7 @@ package mozilla.components.service.experiments
  * Represents a location where experiments
  * are stored locally on the device
  */
-interface ExperimentStorage {
+internal interface ExperimentStorage {
     /**
      * Stores the given experiments to disk
      *

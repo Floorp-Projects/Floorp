@@ -8,7 +8,7 @@ package mozilla.components.service.experiments
  * Represents a location where experiments are stored
  * (Kinto, a JSON file on a server, etc)
  */
-interface ExperimentSource {
+internal interface ExperimentSource {
     /**
      * Requests new experiments from the source,
      * parsing the response into experiments

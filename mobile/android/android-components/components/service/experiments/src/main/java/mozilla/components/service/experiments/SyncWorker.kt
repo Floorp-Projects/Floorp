@@ -2,14 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package mozilla.components.service.experiments.scheduler.workmanager
+package mozilla.components.service.experiments
 
 import android.content.Context
 import androidx.work.Worker
 import androidx.work.WorkerParameters
-import mozilla.components.service.experiments.Experiments
 
-abstract class SyncWorker(context: Context, params: WorkerParameters) : Worker(context, params) {
+internal abstract class SyncWorker(context: Context, params: WorkerParameters) : Worker(context, params) {
     override fun doWork(): Result {
         return if (experiments.updateExperiments()) Result.success() else Result.retry()
     }

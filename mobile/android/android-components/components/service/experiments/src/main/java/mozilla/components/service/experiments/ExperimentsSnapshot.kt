@@ -7,7 +7,7 @@ package mozilla.components.service.experiments
 /**
  * Represents an experiment sync result
  */
-data class ExperimentsSnapshot(
+internal data class ExperimentsSnapshot(
     /**
      * Downloaded list of experiments
      */

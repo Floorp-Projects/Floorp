@@ -2,14 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package mozilla.components.service.experiments.source.kinto
+package mozilla.components.service.experiments
 
 import android.util.Base64
 import mozilla.components.concept.fetch.Client
 import mozilla.components.concept.fetch.Request
-import mozilla.components.service.experiments.Experiment
-import mozilla.components.service.experiments.ExperimentDownloadException
-import mozilla.components.service.experiments.JSONExperimentParser
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.ByteArrayInputStream

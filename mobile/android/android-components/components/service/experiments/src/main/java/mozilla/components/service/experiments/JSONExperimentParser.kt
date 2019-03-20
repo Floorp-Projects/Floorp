@@ -16,7 +16,7 @@ import org.json.JSONObject
 /**
  * Default JSON parsing implementation
  */
-class JSONExperimentParser {
+internal class JSONExperimentParser {
     /**
      * Creates an experiment from its json representation
      *

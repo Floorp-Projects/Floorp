@@ -6,6 +6,10 @@ package mozilla.components.service.experiments
 
 import android.content.Context
 import mozilla.components.support.base.log.logger.Logger
+import android.support.annotation.VisibleForTesting
+import mozilla.components.concept.fetch.Client
+import mozilla.components.lib.fetch.httpurlconnection.HttpURLConnectionClient
+import java.io.File
 
 /**
  * Entry point of the library
@@ -15,29 +19,96 @@ import mozilla.components.support.base.log.logger.Logger
  * @param valuesProvider provider for the device's values
  */
 @Suppress("TooManyFunctions")
-class Experiments(
-    private val source: ExperimentSource,
-    private val storage: ExperimentStorage,
-    valuesProvider: ValuesProvider = ValuesProvider()
-) {
+open class ExperimentsInternalAPI internal constructor() {
+    private val logger: Logger = Logger(LOG_TAG)
+
     @Volatile private var experimentsResult: ExperimentsSnapshot = ExperimentsSnapshot(listOf(), null)
     private var experimentsLoaded: Boolean = false
-    private val evaluator = ExperimentEvaluator(valuesProvider)
-    private val logger = Logger(LOG_TAG)
+    private var evaluator: ExperimentEvaluator = ExperimentEvaluator(ValuesProvider())
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal var valuesProvider: ValuesProvider = ValuesProvider()
+        set(provider) {
+            field = provider
+            evaluator = ExperimentEvaluator(field)
+        }
+
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal var source: ExperimentSource? = null
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal var storage: ExperimentStorage? = null
+
+    private var isInitialized = false
+
+    /**
+     * Initialize the experiments library.
+     *
+     * This should only be initialized once by the application.
+     *
+     * @param applicationContext [Context] to access application features, such
+     * as shared preferences.
+     */
+    fun initialize(
+        applicationContext: Context,
+        fetchClient: Client = HttpURLConnectionClient()
+    ) {
+        if (isInitialized) {
+            logger.error("Experiments library should not be initialized multiple times")
+            return
+        }
+
+        experimentsResult = ExperimentsSnapshot(listOf(), null)
+        experimentsLoaded = false
+
+        if (source == null) {
+            source = KintoExperimentSource(
+                EXPERIMENTS_BASE_URL,
+                EXPERIMENTS_BUCKET_NAME,
+                EXPERIMENTS_COLLECTION_NAME,
+                fetchClient
+            )
+        }
+        if (storage == null) {
+            storage = FlatFileExperimentStorage(
+                File(applicationContext.getDir(EXPERIMENTS_DATA_DIR, Context.MODE_PRIVATE),
+                    EXPERIMENTS_JSON_FILENAME)
+            )
+        }
+
+        isInitialized = true
+    }
+
+    /**
+     * Reset the library in tests.
+     */
+    @VisibleForTesting(otherwise = VisibleForTesting.NONE)
+    internal fun testReset() {
+        experimentsResult = ExperimentsSnapshot(listOf(), null)
+        experimentsLoaded = false
+        evaluator = ExperimentEvaluator(ValuesProvider())
+        valuesProvider = ValuesProvider()
+
+        source = null
+        storage = null
+
+        isInitialized = false
+    }
 
     /**
      * Provides the list of experiments (active or not)
      */
-    val experiments: List<Experiment>
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal val experiments: List<Experiment>
         get() = experimentsResult.experiments.toList()
 
     /**
      * Loads experiments from local storage
      */
     @Synchronized
-    fun loadExperiments() {
-        experimentsResult = storage.retrieve()
-        experimentsLoaded = true
+    internal fun loadExperiments() {
+        storage?.let {
+            experimentsResult = it.retrieve()
+            experimentsLoaded = true
+        } ?: logger.error("No storage specified")
     }
 
     /**
@@ -45,14 +116,17 @@ class Experiments(
      * saves them to local storage
      */
     @Synchronized
-    fun updateExperiments(): Boolean {
+    internal fun updateExperiments(): Boolean {
         if (!experimentsLoaded) {
             loadExperiments()
         }
+
         return try {
-            val serverExperiments = source.getExperiments(experimentsResult)
-            experimentsResult = serverExperiments
-            storage.save(serverExperiments)
+            source?.let {
+                val serverExperiments = it.getExperiments(experimentsResult)
+                experimentsResult = serverExperiments
+                storage?.save(serverExperiments)
+            } ?: logger.error("No source available")
             true
         } catch (e: ExperimentDownloadException) {
             // Keep using the local experiments
@@ -66,34 +140,35 @@ class Experiments(
      * the specified experiment
      *
      * @param context context
-     * @param descriptor descriptor of the experiment to check
+     * @param experimentId the id of the experiment
      *
      * @return true if the user is part of the specified experiment, false otherwise
      */
-    fun isInExperiment(context: Context, descriptor: ExperimentDescriptor): Boolean {
-        return evaluator.evaluate(context, descriptor, experimentsResult.experiments) != null
+    fun isInExperiment(context: Context, experimentId: String): Boolean {
+        return evaluator.evaluate(context, ExperimentDescriptor(experimentId), experimentsResult.experiments) != null
     }
 
     /**
      * Performs an action if the user is part of the specified experiment
      *
      * @param context context
-     * @param descriptor descriptor of the experiment to check
+     * @param experimentId the id of the experiment
      * @param block block of code to be executed if the user is part of the experiment
      */
-    fun withExperiment(context: Context, descriptor: ExperimentDescriptor, block: (Experiment) -> Unit) {
-        evaluator.evaluate(context, descriptor, experimentsResult.experiments)?.let { block(it) }
+    fun withExperiment(context: Context, experimentId: String, block: () -> Unit) {
+        evaluator.evaluate(context, ExperimentDescriptor(experimentId), experimentsResult.experiments)?.let { block() }
     }
 
     /**
      * Gets the metadata associated with the specified experiment, even if the user is not part of it
      *
-     * @param descriptor descriptor of the experiment
+     * @param experimentId the id of the experiment
      *
      * @return metadata associated with the experiment
      */
-    fun getExperiment(descriptor: ExperimentDescriptor): Experiment? {
-        return evaluator.getExperiment(descriptor, experimentsResult.experiments)
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal fun getExperiment(experimentId: String): Experiment? {
+        return evaluator.getExperiment(ExperimentDescriptor(experimentId), experimentsResult.experiments)
     }
 
     /**
@@ -103,8 +178,9 @@ class Experiments(
      *
      * @return active experiments
      */
-    fun getActiveExperiments(context: Context): List<Experiment> {
-        return experiments.filter { isInExperiment(context, ExperimentDescriptor(it.name)) }
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal fun getActiveExperiments(context: Context): List<Experiment> {
+        return experiments.filter { isInExperiment(context, it.name) }
     }
 
     /**
@@ -114,10 +190,11 @@ class Experiments(
      *
      * @return map of experiments to A/B state
      */
-    fun getExperimentsMap(context: Context): Map<String, Boolean> {
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal fun getExperimentsMap(context: Context): Map<String, Boolean> {
         return experiments.associate {
             it.name to
-                    isInExperiment(context, ExperimentDescriptor(it.name))
+                    isInExperiment(context, it.name)
         }
     }
 
@@ -125,11 +202,12 @@ class Experiments(
      * Overrides a specified experiment asynchronously
      *
      * @param context context
-     * @param descriptor descriptor of the experiment
+     * @param experimentId the id of the experiment
      * @param active overridden value for the experiment, true to activate it, false to deactivate
      */
-    fun setOverride(context: Context, descriptor: ExperimentDescriptor, active: Boolean) {
-        evaluator.setOverride(context, descriptor, active)
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal fun setOverride(context: Context, experimentId: String, active: Boolean) {
+        evaluator.setOverride(context, ExperimentDescriptor(experimentId), active)
     }
 
     /**
@@ -137,21 +215,23 @@ class Experiments(
      *
      * @exception IllegalArgumentException when called from the main thread
      * @param context context
-     * @param descriptor descriptor of the experiment
+     * @param experimentId the id of the experiment
      * @param active overridden value for the experiment, true to activate it, false to deactivate
      */
-    fun setOverrideNow(context: Context, descriptor: ExperimentDescriptor, active: Boolean) {
-        evaluator.setOverrideNow(context, descriptor, active)
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal fun setOverrideNow(context: Context, experimentId: String, active: Boolean) {
+        evaluator.setOverrideNow(context, ExperimentDescriptor(experimentId), active)
     }
 
     /**
      * Clears an override for a specified experiment asynchronously
      *
      * @param context context
-     * @param descriptor descriptor of the experiment
+     * @param experimentId the id of the experiment
      */
-    fun clearOverride(context: Context, descriptor: ExperimentDescriptor) {
-        evaluator.clearOverride(context, descriptor)
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal fun clearOverride(context: Context, experimentId: String) {
+        evaluator.clearOverride(context, ExperimentDescriptor(experimentId))
     }
 
     /**
@@ -160,10 +240,11 @@ class Experiments(
      *
      * @exception IllegalArgumentException when called from the main thread
      * @param context context
-     * @param descriptor descriptor of the experiment
+     * @param experimentId the id of the experiment
      */
-    fun clearOverrideNow(context: Context, descriptor: ExperimentDescriptor) {
-        evaluator.clearOverrideNow(context, descriptor)
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal fun clearOverrideNow(context: Context, experimentId: String) {
+        evaluator.clearOverrideNow(context, ExperimentDescriptor(experimentId))
     }
 
     /**
@@ -171,7 +252,8 @@ class Experiments(
      *
      * @param context context
      */
-    fun clearAllOverrides(context: Context) {
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal fun clearAllOverrides(context: Context) {
         evaluator.clearAllOverrides(context)
     }
 
@@ -181,7 +263,8 @@ class Experiments(
      * @exception IllegalArgumentException when called from the main thread
      * @param context context
      */
-    fun clearAllOverridesNow(context: Context) {
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal fun clearAllOverridesNow(context: Context) {
         evaluator.clearAllOverridesNow(context)
     }
 
@@ -191,11 +274,23 @@ class Experiments(
      *
      * @param context context
      */
-    fun getUserBucket(context: Context): Int {
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal fun getUserBucket(context: Context): Int {
         return evaluator.getUserBucket(context)
     }
 
     companion object {
         private const val LOG_TAG = "experiments"
+        private const val EXPERIMENTS_DATA_DIR = "experiments-service"
+
+        private const val EXPERIMENTS_JSON_FILENAME = "experiments.json"
+        private const val EXPERIMENTS_BASE_URL = "https://settings.prod.mozaws.net/v1"
+        private const val EXPERIMENTS_BUCKET_NAME = "<TODO>"
+        private const val EXPERIMENTS_COLLECTION_NAME = "<TODO>"
+        // E.g.: https://firefox.settings.services.mozilla.com/v1/buckets/fennec/collections/experiments/records
     }
+}
+
+object Experiments : ExperimentsInternalAPI() {
+    internal const val SCHEMA_VERSION = 1
 }

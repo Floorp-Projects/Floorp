@@ -9,4 +9,4 @@ package mozilla.components.service.experiments
  *
  * @property name experiment name
  */
-data class ExperimentDescriptor(val name: String)
+internal data class ExperimentDescriptor(val name: String)

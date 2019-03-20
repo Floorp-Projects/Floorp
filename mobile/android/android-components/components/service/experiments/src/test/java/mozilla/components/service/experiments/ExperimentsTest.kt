@@ -8,9 +8,9 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
+import androidx.test.core.app.ApplicationProvider
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
-import mozilla.components.service.experiments.storage.flatfile.FlatFileExperimentStorage
 import mozilla.components.support.test.any
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -32,12 +32,24 @@ import kotlin.reflect.jvm.isAccessible
 
 @RunWith(RobolectricTestRunner::class)
 class ExperimentsTest {
+    private fun resetExperiments(
+        experimentSource: ExperimentSource,
+        experimentStorage: ExperimentStorage,
+        valuesProvider: ValuesProvider = ValuesProvider()
+    ) {
+        Experiments.testReset()
+        Experiments.source = experimentSource
+        Experiments.storage = experimentStorage
+        Experiments.valuesProvider = valuesProvider
+        Experiments.initialize(ApplicationProvider.getApplicationContext())
+    }
+
     @Test
     fun loadExperiments() {
         val experimentSource = mock(ExperimentSource::class.java)
         val experimentStorage = mock(ExperimentStorage::class.java)
-        val instance = Experiments(experimentSource, experimentStorage)
-        instance.loadExperiments()
+        resetExperiments(experimentSource, experimentStorage)
+        Experiments.loadExperiments()
         verify(experimentStorage).retrieve()
     }
 
@@ -45,10 +57,10 @@ class ExperimentsTest {
     fun updateExperimentsStorageNotLoaded() {
         val experimentSource = mock(ExperimentSource::class.java)
         val experimentStorage = mock(ExperimentStorage::class.java)
-        val instance = Experiments(experimentSource, experimentStorage)
-        instance.updateExperiments()
+        resetExperiments(experimentSource, experimentStorage)
+        Experiments.updateExperiments()
         verify(experimentStorage, times(1)).retrieve()
-        instance.updateExperiments()
+        Experiments.updateExperiments()
         verify(experimentStorage, times(1)).retrieve()
     }
 
@@ -59,8 +71,8 @@ class ExperimentsTest {
         `when`(experimentSource.getExperiments(result)).thenReturn(ExperimentsSnapshot(listOf(Experiment("id", "name")), null))
         val experimentStorage = mock(ExperimentStorage::class.java)
         `when`(experimentStorage.retrieve()).thenReturn(result)
-        val instance = Experiments(experimentSource, experimentStorage)
-        instance.updateExperiments()
+        resetExperiments(experimentSource, experimentStorage)
+        Experiments.updateExperiments()
         verify(experimentSource).getExperiments(result)
         verify(experimentStorage).save(ExperimentsSnapshot(listOf(Experiment("id", "name")), null))
     }
@@ -71,8 +83,8 @@ class ExperimentsTest {
         `when`(experimentSource.getExperiments(ExperimentsSnapshot(listOf(Experiment("id0", "name0")), null))).thenReturn(ExperimentsSnapshot(listOf(Experiment("id", "name")), null))
         val experimentStorage = mock(ExperimentStorage::class.java)
         `when`(experimentStorage.retrieve()).thenReturn(ExperimentsSnapshot(listOf(Experiment("id0", "name0")), null))
-        val instance = Experiments(experimentSource, experimentStorage)
-        instance.updateExperiments()
+        resetExperiments(experimentSource, experimentStorage)
+        Experiments.updateExperiments()
         verify(experimentSource).getExperiments(ExperimentsSnapshot(listOf(Experiment("id0", "name0")), null))
         verify(experimentStorage).save(ExperimentsSnapshot(listOf(Experiment("id", "name")), null))
     }
@@ -86,11 +98,11 @@ class ExperimentsTest {
             Experiment("second-id", "second-name")
         )
         `when`(experimentStorage.retrieve()).thenReturn(ExperimentsSnapshot(experiments, null))
-        val instance = Experiments(experimentSource, experimentStorage)
-        var returnedExperiments = instance.experiments
+        resetExperiments(experimentSource, experimentStorage)
+        var returnedExperiments = Experiments.experiments
         assertEquals(0, returnedExperiments.size)
-        instance.loadExperiments()
-        returnedExperiments = instance.experiments
+        Experiments.loadExperiments()
+        returnedExperiments = Experiments.experiments
         assertEquals(2, returnedExperiments.size)
         assertTrue(returnedExperiments.contains(experiments[0]))
         assertTrue(returnedExperiments.contains(experiments[1]))
@@ -102,8 +114,8 @@ class ExperimentsTest {
         val experimentStorage = mock(ExperimentStorage::class.java)
         val experiments = listOf<Experiment>()
         `when`(experimentStorage.retrieve()).thenReturn(ExperimentsSnapshot(experiments, null))
-        val instance = Experiments(experimentSource, experimentStorage)
-        val returnedExperiments = instance.experiments
+        resetExperiments(experimentSource, experimentStorage)
+        val returnedExperiments = Experiments.experiments
         assertEquals(0, returnedExperiments.size)
     }
 
@@ -134,8 +146,8 @@ class ExperimentsTest {
             )
         )
         `when`(experimentStorage.retrieve()).thenReturn(ExperimentsSnapshot(experiments, null))
-        val instance = Experiments(experimentSource, experimentStorage)
-        instance.loadExperiments()
+        resetExperiments(experimentSource, experimentStorage)
+        Experiments.loadExperiments()
 
         val context = mock(Context::class.java)
         `when`(context.packageName).thenReturn("test.appId")
@@ -152,7 +164,7 @@ class ExperimentsTest {
         `when`(packageManager.getPackageInfo(ArgumentMatchers.anyString(), ArgumentMatchers.anyInt())).thenReturn(packageInfo)
         `when`(context.packageManager).thenReturn(packageManager)
 
-        val activeExperiments = instance.getActiveExperiments(context)
+        val activeExperiments = Experiments.getActiveExperiments(context)
         assertEquals(2, activeExperiments.size)
         assertTrue(activeExperiments.any { it.id == "second-id" })
         assertTrue(activeExperiments.any { it.id == "third-id" })
@@ -185,8 +197,8 @@ class ExperimentsTest {
                 )
         )
         `when`(experimentStorage.retrieve()).thenReturn(ExperimentsSnapshot(experiments, null))
-        val instance = Experiments(experimentSource, experimentStorage)
-        instance.loadExperiments()
+        resetExperiments(experimentSource, experimentStorage)
+        Experiments.loadExperiments()
 
         val context = mock(Context::class.java)
         `when`(context.packageName).thenReturn("test.appId")
@@ -203,7 +215,7 @@ class ExperimentsTest {
         `when`(packageManager.getPackageInfo(ArgumentMatchers.anyString(), ArgumentMatchers.anyInt())).thenReturn(packageInfo)
         `when`(context.packageManager).thenReturn(packageManager)
 
-        val experimentsMap = instance.getExperimentsMap(context)
+        val experimentsMap = Experiments.getExperimentsMap(context)
         assertEquals(3, experimentsMap.size)
         println(experimentsMap.toString())
         assertTrue(experimentsMap["first-name"] == false)
@@ -224,8 +236,8 @@ class ExperimentsTest {
             )
         )
         `when`(experimentStorage.retrieve()).thenReturn(ExperimentsSnapshot(experiments, null))
-        var instance = Experiments(experimentSource, experimentStorage)
-        instance.loadExperiments()
+        resetExperiments(experimentSource, experimentStorage)
+        Experiments.loadExperiments()
 
         val context = mock(Context::class.java)
         `when`(context.packageName).thenReturn("test.appId")
@@ -242,7 +254,7 @@ class ExperimentsTest {
         `when`(packageManager.getPackageInfo(ArgumentMatchers.anyString(), ArgumentMatchers.anyInt())).thenReturn(packageInfo)
         `when`(context.packageManager).thenReturn(packageManager)
 
-        assertTrue(instance.isInExperiment(context, ExperimentDescriptor("first-name")))
+        assertTrue(Experiments.isInExperiment(context, "first-name"))
 
         experiments = listOf(
             Experiment("first-id",
@@ -253,10 +265,10 @@ class ExperimentsTest {
             )
         )
         `when`(experimentStorage.retrieve()).thenReturn(ExperimentsSnapshot(experiments, null))
-        instance = Experiments(experimentSource, experimentStorage)
+        resetExperiments(experimentSource, experimentStorage)
 
-        assertFalse(instance.isInExperiment(context, ExperimentDescriptor("first-name")))
-        assertFalse(instance.isInExperiment(context, ExperimentDescriptor("other-name")))
+        assertFalse(Experiments.isInExperiment(context, "first-name"))
+        assertFalse(Experiments.isInExperiment(context, "other-name"))
     }
 
     @Test
@@ -272,8 +284,8 @@ class ExperimentsTest {
             )
         )
         `when`(experimentStorage.retrieve()).thenReturn(ExperimentsSnapshot(experiments, null))
-        var instance = Experiments(experimentSource, experimentStorage)
-        instance.loadExperiments()
+        resetExperiments(experimentSource, experimentStorage)
+        Experiments.loadExperiments()
 
         val context = mock(Context::class.java)
         `when`(context.packageName).thenReturn("test.appId")
@@ -291,9 +303,8 @@ class ExperimentsTest {
         `when`(context.packageManager).thenReturn(packageManager)
 
         var invocations = 0
-        instance.withExperiment(context, ExperimentDescriptor("first-name")) {
+        Experiments.withExperiment(context, "first-name") {
             invocations++
-            assertEquals(experiments[0], it)
         }
         assertEquals(1, invocations)
 
@@ -306,16 +317,16 @@ class ExperimentsTest {
             )
         )
         `when`(experimentStorage.retrieve()).thenReturn(ExperimentsSnapshot(experiments, null))
-        instance = Experiments(experimentSource, experimentStorage)
+        resetExperiments(experimentSource, experimentStorage)
 
         invocations = 0
-        instance.withExperiment(context, ExperimentDescriptor("first-name")) {
+        Experiments.withExperiment(context, "first-name") {
             invocations++
         }
         assertEquals(0, invocations)
 
         invocations = 0
-        instance.withExperiment(context, ExperimentDescriptor("other-name")) {
+        Experiments.withExperiment(context, "other-name") {
             invocations++
         }
         assertEquals(0, invocations)
@@ -334,11 +345,11 @@ class ExperimentsTest {
             )
         )
         `when`(experimentStorage.retrieve()).thenReturn(ExperimentsSnapshot(experiments, null))
-        val instance = Experiments(experimentSource, experimentStorage)
-        instance.loadExperiments()
+        resetExperiments(experimentSource, experimentStorage)
+        Experiments.loadExperiments()
 
-        assertEquals(experiments[0], instance.getExperiment(ExperimentDescriptor("first-name")))
-        assertNull(instance.getExperiment(ExperimentDescriptor("other-name")))
+        assertEquals(experiments[0], Experiments.getExperiment("first-name"))
+        assertNull(Experiments.getExperiment("other-name"))
     }
 
     @Test
@@ -354,8 +365,8 @@ class ExperimentsTest {
             )
         )
         `when`(experimentStorage.retrieve()).thenReturn(ExperimentsSnapshot(experiments, null))
-        val instance = Experiments(experimentSource, experimentStorage)
-        instance.loadExperiments()
+        resetExperiments(experimentSource, experimentStorage)
+        Experiments.loadExperiments()
 
         val context = mock(Context::class.java)
         `when`(context.packageName).thenReturn("test.appId")
@@ -373,17 +384,17 @@ class ExperimentsTest {
         `when`(packageManager.getPackageInfo(ArgumentMatchers.anyString(), ArgumentMatchers.anyInt())).thenReturn(packageInfo)
         `when`(context.packageManager).thenReturn(packageManager)
 
-        assertTrue(instance.isInExperiment(context, ExperimentDescriptor("first-name")))
-        instance.setOverride(context, ExperimentDescriptor("first-name"), false)
+        assertTrue(Experiments.isInExperiment(context, "first-name"))
+        Experiments.setOverride(context, "first-name", false)
         verify(prefsEditor).putBoolean("first-name", false)
-        instance.setOverride(context, ExperimentDescriptor("first-name"), true)
+        Experiments.setOverride(context, "first-name", true)
         verify(prefsEditor).putBoolean("first-name", true)
 
         runBlocking(Dispatchers.Default) {
-            assertTrue(instance.isInExperiment(context, ExperimentDescriptor("first-name")))
-            instance.setOverrideNow(context, ExperimentDescriptor("first-name"), false)
+            assertTrue(Experiments.isInExperiment(context, "first-name"))
+            Experiments.setOverrideNow(context, "first-name", false)
             verify(prefsEditor, times(2)).putBoolean("first-name", false)
-            instance.setOverrideNow(context, ExperimentDescriptor("first-name"), true)
+            Experiments.setOverrideNow(context, "first-name", true)
             verify(prefsEditor, times(2)).putBoolean("first-name", true)
         }
     }
@@ -401,8 +412,8 @@ class ExperimentsTest {
             )
         )
         `when`(experimentStorage.retrieve()).thenReturn(ExperimentsSnapshot(experiments, null))
-        val instance = Experiments(experimentSource, experimentStorage)
-        instance.loadExperiments()
+        resetExperiments(experimentSource, experimentStorage)
+        Experiments.loadExperiments()
 
         val context = mock(Context::class.java)
         `when`(context.packageName).thenReturn("test.appId")
@@ -421,14 +432,14 @@ class ExperimentsTest {
         `when`(packageManager.getPackageInfo(ArgumentMatchers.anyString(), ArgumentMatchers.anyInt())).thenReturn(packageInfo)
         `when`(context.packageManager).thenReturn(packageManager)
 
-        assertTrue(instance.isInExperiment(context, ExperimentDescriptor("first-name")))
-        instance.setOverride(context, ExperimentDescriptor("first-name"), false)
-        instance.clearOverride(context, ExperimentDescriptor("first-name"))
+        assertTrue(Experiments.isInExperiment(context, "first-name"))
+        Experiments.setOverride(context, "first-name", false)
+        Experiments.clearOverride(context, "first-name")
         verify(prefsEditor).remove("first-name")
 
         runBlocking(Dispatchers.Default) {
-            instance.setOverrideNow(context, ExperimentDescriptor("first-name"), false)
-            instance.clearOverrideNow(context, ExperimentDescriptor("first-name"))
+            Experiments.setOverrideNow(context, "first-name", false)
+            Experiments.clearOverrideNow(context, "first-name")
             verify(prefsEditor, times(2)).remove("first-name")
         }
     }
@@ -446,8 +457,8 @@ class ExperimentsTest {
             )
         )
         `when`(experimentStorage.retrieve()).thenReturn(ExperimentsSnapshot(experiments, null))
-        val instance = Experiments(experimentSource, experimentStorage)
-        instance.loadExperiments()
+        resetExperiments(experimentSource, experimentStorage)
+        Experiments.loadExperiments()
 
         val context = mock(Context::class.java)
         `when`(context.packageName).thenReturn("test.appId")
@@ -466,14 +477,14 @@ class ExperimentsTest {
         `when`(packageManager.getPackageInfo(ArgumentMatchers.anyString(), ArgumentMatchers.anyInt())).thenReturn(packageInfo)
         `when`(context.packageManager).thenReturn(packageManager)
 
-        assertTrue(instance.isInExperiment(context, ExperimentDescriptor("first-name")))
-        instance.setOverride(context, ExperimentDescriptor("first-name"), false)
-        instance.clearAllOverrides(context)
+        assertTrue(Experiments.isInExperiment(context, "first-name"))
+        Experiments.setOverride(context, "first-name", false)
+        Experiments.clearAllOverrides(context)
         verify(prefsEditor).clear()
 
         runBlocking(Dispatchers.Default) {
-            instance.setOverrideNow(context, ExperimentDescriptor("first-name"), false)
-            instance.clearAllOverridesNow(context)
+            Experiments.setOverrideNow(context, "first-name", false)
+            Experiments.clearAllOverridesNow(context)
             verify(prefsEditor, times(2)).clear()
         }
     }
@@ -486,8 +497,8 @@ class ExperimentsTest {
         }.`when`(source).getExperiments(any())
         val storage = mock(ExperimentStorage::class.java)
         `when`(storage.retrieve()).thenReturn(ExperimentsSnapshot(listOf(), null))
-        val instance = Experiments(source, storage)
-        instance.updateExperiments()
+        resetExperiments(source, storage)
+        Experiments.updateExperiments()
     }
 
     @Test
@@ -503,8 +514,8 @@ class ExperimentsTest {
         `when`(context.getSharedPreferences(ArgumentMatchers.anyString(), ArgumentMatchers.anyInt())).thenReturn(sharedPrefs)
         `when`(sharedPrefs.getString(ArgumentMatchers.anyString(), ArgumentMatchers.isNull()))
                 .thenReturn("a94b1dab-030e-4b13-be15-cc80c1eda8b3")
-        val instance = Experiments(experimentSource, experimentStorage)
-        assertTrue(instance.getUserBucket(context) == 54)
+        resetExperiments(experimentSource, experimentStorage)
+        assertTrue(Experiments.getUserBucket(context) == 54)
     }
 
     @Test
@@ -512,17 +523,17 @@ class ExperimentsTest {
         val experimentSource = mock(ExperimentSource::class.java)
         val experimentStorage = mock(ExperimentStorage::class.java)
 
-        val instance1 = Experiments(experimentSource, experimentStorage, object : ValuesProvider() {
+        resetExperiments(experimentSource, experimentStorage, object : ValuesProvider() {
             override fun getClientId(context: Context): String = "c641eacf-c30c-4171-b403-f077724e848a"
         })
 
-        assertEquals(79, instance1.getUserBucket(RuntimeEnvironment.application))
+        assertEquals(79, Experiments.getUserBucket(RuntimeEnvironment.application))
 
-        val instance2 = Experiments(experimentSource, experimentStorage, object : ValuesProvider() {
+        resetExperiments(experimentSource, experimentStorage, object : ValuesProvider() {
             override fun getClientId(context: Context): String = "01a15650-9a5d-4383-a7ba-2f047b25c620"
         })
 
-        assertEquals(55, instance2.getUserBucket(RuntimeEnvironment.application))
+        assertEquals(55, Experiments.getUserBucket(RuntimeEnvironment.application))
     }
 
     @Test
@@ -575,7 +586,7 @@ class ExperimentsTest {
 
         val experimentStorage = FlatFileExperimentStorage(file)
 
-        val instance = Experiments(experimentSource, experimentStorage)
-        instance.loadExperiments() // Should not throw
+        resetExperiments(experimentSource, experimentStorage)
+        Experiments.loadExperiments() // Should not throw
     }
 }

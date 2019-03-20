@@ -7,7 +7,7 @@ package mozilla.components.service.experiments
 /**
  * Class which represents an experiment associated data
  */
-class ExperimentPayload {
+internal class ExperimentPayload {
     private val valuesMap = HashMap<String, Any>()
 
     /**

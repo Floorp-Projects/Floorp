@@ -7,7 +7,7 @@ package mozilla.components.service.experiments
 /**
  * Exception while downloading experiments from the server
  */
-class ExperimentDownloadException : Exception {
+internal class ExperimentDownloadException : Exception {
     constructor(message: String?) : super(message)
     constructor(cause: Throwable) : super(cause)
 }

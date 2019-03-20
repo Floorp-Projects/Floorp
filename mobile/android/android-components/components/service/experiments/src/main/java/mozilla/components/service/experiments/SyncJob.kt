@@ -2,17 +2,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package mozilla.components.service.experiments.scheduler.jobscheduler
+package mozilla.components.service.experiments
 
 import android.app.job.JobParameters
 import android.app.job.JobService
-import mozilla.components.service.experiments.Experiments
 import java.util.concurrent.Executors
 
 /**
  * JobScheduler job used to updating the list of experiments
  */
-abstract class SyncJob : JobService() {
+internal abstract class SyncJob : JobService() {
     private val executor = Executors.newSingleThreadExecutor()
 
     override fun onStartJob(params: JobParameters): Boolean {

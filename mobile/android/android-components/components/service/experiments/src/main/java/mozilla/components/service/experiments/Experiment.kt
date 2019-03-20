@@ -9,7 +9,7 @@ package mozilla.components.service.experiments
  * independent of the underlying
  * storage mechanism
  */
-data class Experiment(
+internal data class Experiment(
     /**
      * Unique identifier of the experiment. Used internally by Kinto. Not exposed to library consumers.
      */

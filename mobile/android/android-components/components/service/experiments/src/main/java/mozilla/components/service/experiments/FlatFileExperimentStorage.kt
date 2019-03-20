@@ -2,11 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package mozilla.components.service.experiments.storage.flatfile
+package mozilla.components.service.experiments
 
 import android.util.AtomicFile
-import mozilla.components.service.experiments.ExperimentStorage
-import mozilla.components.service.experiments.ExperimentsSnapshot
 import org.json.JSONException
 import java.io.FileNotFoundException
 import java.io.File
@@ -17,7 +15,7 @@ import java.io.IOException
  *
  * @param file file where to store experiments
  */
-class FlatFileExperimentStorage(file: File) : ExperimentStorage {
+internal class FlatFileExperimentStorage(file: File) : ExperimentStorage {
     private val atomicFile: AtomicFile = AtomicFile(file)
 
     override fun retrieve(): ExperimentsSnapshot {

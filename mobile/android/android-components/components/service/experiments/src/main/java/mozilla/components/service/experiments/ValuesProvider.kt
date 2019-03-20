@@ -13,7 +13,7 @@ import java.util.MissingResourceException
  * Class used to provide
  * custom filter values
  */
-open class ValuesProvider {
+internal open class ValuesProvider {
     /**
      * Provides the user's language
      *
