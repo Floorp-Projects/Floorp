@@ -14,7 +14,7 @@ roothash=$(python -c "$calculate_hash" "$topsrcdir")
 cachedir=$MOZBUILD_STATE_PATH/cache/$roothash/taskgraph
 mkdir -p $cachedir
 
-cat > $cachedir/target_task_graph << EOF
+cat > $cachedir/target_task_set << EOF
 {
   "test/foo-opt": {
     "kind": "test",
@@ -43,7 +43,7 @@ cat > $cachedir/target_task_graph << EOF
 }
 EOF
 
-cat > $cachedir/full_task_graph << EOF
+cat > $cachedir/full_task_set << EOF
 {
   "test/foo-opt": {
     "kind": "test",
