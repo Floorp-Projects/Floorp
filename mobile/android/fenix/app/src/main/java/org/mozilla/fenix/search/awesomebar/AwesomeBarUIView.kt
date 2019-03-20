@@ -62,10 +62,10 @@ class AwesomeBarUIView(
             if (Settings.getInstance(container.context).showSearchSuggestions()) {
                 view.addProviders(
                     SearchSuggestionProvider(
-                        components.search.searchEngineManager.getDefaultSearchEngine(this),
-                        searchUseCase,
-                        components.core.client,
-                        SearchSuggestionProvider.Mode.MULTIPLE_SUGGESTIONS
+                        searchEngine = components.search.searchEngineManager.getDefaultSearchEngine(this),
+                        searchUseCase = searchUseCase,
+                        fetchClient = components.core.client,
+                        mode = SearchSuggestionProvider.Mode.MULTIPLE_SUGGESTIONS
                     )
                 )
             }
