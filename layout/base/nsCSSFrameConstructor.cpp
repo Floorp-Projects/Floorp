@@ -10884,6 +10884,10 @@ bool nsCSSFrameConstructor::MaybeRecreateForColumnSpan(
     return false;
   }
 
+  if (aFrameList.IsEmpty()) {
+    return false;
+  }
+
   MOZ_ASSERT(!IsFramePartOfIBSplit(aParentFrame),
              "We should have wiped aParentFrame in WipeContainingBlock if it's "
              "part of IB split!");
