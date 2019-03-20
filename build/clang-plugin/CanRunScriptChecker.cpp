@@ -34,12 +34,15 @@
  *    https://bugzilla.mozilla.org/show_bug.cgi?id=1535523 tracks this.
  *
  * Given those invariants we then require that when calling a MOZ_CAN_RUN_SCRIPT
- * function all refcounted arguments (including "this") satisfy one of three
+ * function all refcounted arguments (including "this") satisfy one of four
  * conditions:
  *  a) The argument is held via a strong pointer on the stack.
- *  b) The argument is an argument of the caller (and hence held by a strong
+ *  b) The argument is a const strong pointer member of "this".  We know "this"
+ *     is being kept alive, and a const strong pointer member can't drop its ref
+ *     until "this" dies.
+ *  c) The argument is an argument of the caller (and hence held by a strong
  *     pointer somewhere higher up the callstack).
- *  c) The argument is explicitly annotated with MOZ_KnownLive, which indicates
+ *  d) The argument is explicitly annotated with MOZ_KnownLive, which indicates
  *     that something is guaranteed to keep it alive (e.g. it's rooted via a JS
  *     reflector).
  */
@@ -53,6 +56,16 @@ void CanRunScriptChecker::registerMatchers(MatchFinder *AstMatcher) {
     ignoreTrivials(
       declRefExpr(to(varDecl(hasAutomaticStorageDuration())),
                   hasType(isSmartPtrToRefCounted())));
+  auto ConstMemberOfThisSmartPtr =
+    memberExpr(hasType(isSmartPtrToRefCounted()),
+               hasType(isConstQualified()),
+               hasObjectExpression(cxxThisExpr()));
+  // A smartptr can be known-live for two reasons:
+  // 1) It's declared on the stack.
+  // 2) It's a const member of "this".  We know "this" is alive (recursively)
+  //    and const members can't change their value hence can't drop their
+  //    reference until "this" gets destroyed.
+  auto KnownLiveSmartPtr = anyOf(StackSmartPtr, ConstMemberOfThisSmartPtr);
   auto MozKnownLiveCall =
     callExpr(callee(functionDecl(hasName("MOZ_KnownLive"))));
 
@@ -69,15 +82,15 @@ void CanRunScriptChecker::registerMatchers(MatchFinder *AstMatcher) {
           // and which is not this,
           unless(cxxThisExpr()),
           // and which is not a stack smart ptr
-          unless(StackSmartPtr),
+          unless(KnownLiveSmartPtr),
           // and which is not a method call on a stack smart ptr,
-          unless(cxxMemberCallExpr(on(StackSmartPtr))),
+          unless(cxxMemberCallExpr(on(KnownLiveSmartPtr))),
           // and which is not calling operator* on a stack smart ptr.
           unless(
             allOf(
               cxxOperatorCallExpr(hasOverloadedOperatorName("*")),
               callExpr(allOf(
-                hasAnyArgument(StackSmartPtr),
+                hasAnyArgument(KnownLiveSmartPtr),
                 argumentCountIs(1)
               ))
             )

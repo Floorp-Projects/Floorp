@@ -436,8 +436,7 @@ void DataTransferItem::GetAsString(FunctionStringCallback* aCallback,
     MOZ_CAN_RUN_SCRIPT_BOUNDARY
     NS_IMETHOD Run() override {
       ErrorResult rv;
-      // mCallback is const, so we never null it out until our destructor.
-      MOZ_KnownLive(mCallback)->Call(mStringData, rv);
+      mCallback->Call(mStringData, rv);
       NS_WARNING_ASSERTION(!rv.Failed(), "callback failed");
       return rv.StealNSResult();
     }
