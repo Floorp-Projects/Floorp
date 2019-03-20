@@ -16,20 +16,16 @@
 
 include protocol PBackground;
 
+using mozilla::dom::AuthenticatorAttachment from "mozilla/dom/WebAuthnUtil.h";
 using struct mozilla::null_t from "ipc/IPCMessageUtils.h";
 
 namespace mozilla {
 namespace dom {
 
-union WebAuthnMaybeAuthenticatorAttachment {
-  uint8_t;
-  null_t;
-};
-
 struct WebAuthnAuthenticatorSelection {
   bool requireResidentKey;
   uint8_t userVerificationRequirement;
-  WebAuthnMaybeAuthenticatorAttachment authenticatorAttachment;
+  AuthenticatorAttachment? authenticatorAttachment;
 };
 
 struct WebAuthnScopedCredential {
