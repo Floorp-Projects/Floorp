@@ -341,8 +341,6 @@ pref("devtools.responsive.showUserAgentInput", false);
 
 // Enable new about:debugging.
 pref("devtools.aboutdebugging.new-enabled", false);
-// Enable the network location feature.
-pref("devtools.aboutdebugging.network", false);
 // Enable the wifi feature.
 pref("devtools.aboutdebugging.wifi", false);
 // Show process debug targets.
