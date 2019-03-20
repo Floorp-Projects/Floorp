@@ -249,15 +249,15 @@ about-debugging-worker-fetch-not-listening =
   .label = { -worker-fetch-label }
   .value = Not listening for fetch events
 
-# Displayed for service workers in runtime pages, to indicate the status of a worker.
-# For workers for which no registration could be found yet, they are considered as
-# 'registering' (only active registrations are visible from about:debugging).
-about-debugging-worker-status =
-  { $status ->
-    [running] Running
-   *[stopped] Stopped
-    [registering] Registering
-  }
+# Displayed for service workers in runtime pages that are currently running (service
+# worker instance is active).
+about-debugging-worker-status-running = Running
+
+# Displayed for service workers in runtime pages that are registered but stopped.
+about-debugging-worker-status-stopped = Stopped
+
+# Displayed for service workers in runtime pages that are registering.
+about-debugging-worker-status-registering = Registering
 
 # Displayed for service workers in runtime pages, to label the scope of a worker
 about-debugging-worker-scope =
