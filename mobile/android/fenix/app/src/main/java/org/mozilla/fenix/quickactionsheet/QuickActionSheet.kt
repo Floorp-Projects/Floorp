@@ -43,7 +43,7 @@ class QuickActionSheet @JvmOverloads constructor(
 
     private fun bounceSheet(quickActionSheetBehavior: QuickActionSheetBehavior, duration: Long = 400L) {
         val normalPeekHeight = quickActionSheetBehavior.peekHeight
-        val valueAnimator = ValueAnimator.ofFloat(normalPeekHeight.toFloat(), normalPeekHeight*5f)
+        val valueAnimator = ValueAnimator.ofFloat(normalPeekHeight.toFloat(), normalPeekHeight*3f)
 
         valueAnimator.addUpdateListener {
             quickActionSheetBehavior.peekHeight = (it.animatedValue as Float).toInt()

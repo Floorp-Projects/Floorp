@@ -13,7 +13,8 @@
 
     <androidx.appcompat.widget.AppCompatImageButton
         android:id="@+id/quick_action_sheet_handle"
-        android:layout_marginBottom="13dp"
+        android:layout_marginTop="3dp"
+        android:layout_marginBottom="10dp"
         android:layout_width="24dp"
         android:layout_height="2dp"
         android:layout_gravity="center_horizontal"
@@ -27,10 +28,6 @@
         android:layout_height="wrap_content"
         android:background="@color/off_white">
 
-        <LinearLayout android:layout_width="wrap_content"
-                      android:layout_height="match_parent"
-                      android:layout_weight="1">
-        </LinearLayout>
         <androidx.appcompat.widget.AppCompatImageButton
             android:layout_weight="1"
             android:layout_width="0dp"
@@ -39,7 +36,7 @@
             android:layout_marginEnd="10dp"
             android:layout_gravity="center_vertical"
             android:src="@drawable/quick_action_icon_share"
-            android:background="?android:attr/selectableItemBackground"/>
+            android:background="@color/off_white"/>
 
         <androidx.appcompat.widget.AppCompatImageButton
             android:layout_weight="1"
@@ -49,10 +46,9 @@
             android:layout_marginEnd="10dp"
             android:layout_gravity="center_vertical"
             android:src="@drawable/library_icon_screenshots_circle_background"
-            android:background="?android:attr/selectableItemBackground"/>
+            android:background="@color/off_white"/>
 
         <androidx.appcompat.widget.AppCompatImageButton
-
             android:layout_weight="1"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -60,7 +56,7 @@
             android:layout_marginEnd="10dp"
             android:layout_gravity="center_vertical"
             android:src="@drawable/library_icon_downloads_circle_background"
-            android:background="?android:attr/selectableItemBackgroundBorderless"/>
+            android:background="@color/off_white"/>
 
         <androidx.appcompat.widget.AppCompatImageButton
             android:layout_weight="1"
@@ -70,7 +66,7 @@
             android:layout_marginEnd="10dp"
             android:layout_gravity="center_vertical"
             android:src="@drawable/library_icon_favorites_circle_background"
-            android:background="?android:attr/selectableItemBackground"/>
+            android:background="@color/off_white"/>
 
         <androidx.appcompat.widget.AppCompatImageButton
             android:layout_weight="1"
@@ -80,7 +76,7 @@
             android:layout_marginEnd="10dp"
             android:layout_gravity="center_vertical"
             android:src="@drawable/quick_action_icon_read"
-            android:background="?android:attr/selectableItemBackground"/>
+            android:background="@color/off_white"/>
     </LinearLayout>
 
     <LinearLayout
