@@ -116,7 +116,7 @@ class DebugTargetInfo extends PureComponent {
   render() {
     return dom.header(
       {
-        className: "debug-target-info js-debug-target-info",
+        className: "debug-target-info",
       },
       this.shallRenderConnection() ? this.renderConnection() : null,
       this.renderRuntime(),

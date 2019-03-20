@@ -63,12 +63,12 @@ async function openAboutDebugging({ enableWorkerUpdates } = {}) {
   return { tab, document, window };
 }
 
-async function openAboutDevtoolsToolbox(doc, tab, win, targetTitle = "about:debugging") {
+async function openAboutDevtoolsToolbox(doc, tab, win) {
   info("Open about:devtools-toolbox page");
-  const target = findDebugTargetByText(targetTitle, doc);
+  const target = findDebugTargetByText("about:debugging", doc);
   ok(target, "about:debugging tab target appeared");
   const inspectButton = target.querySelector(".js-debug-target-inspect-button");
-  ok(inspectButton, `Inspect button for ${targetTitle} appeared`);
+  ok(inspectButton, "Inspect button for about:debugging appeared");
   inspectButton.click();
   await Promise.all([
     waitUntil(() => tab.nextElementSibling),
