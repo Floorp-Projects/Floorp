@@ -63,12 +63,10 @@ class MOZ_STACK_CLASS AutoSelectionSetterAfterTableEdit final {
         mDirection(aDirection),
         mSelected(aSelected) {}
 
-  MOZ_CAN_RUN_SCRIPT
   ~AutoSelectionSetterAfterTableEdit() {
     if (mHTMLEditor) {
-      MOZ_KnownLive(mHTMLEditor)
-          ->SetSelectionAfterTableEdit(MOZ_KnownLive(mTable), mRow, mCol,
-                                       mDirection, mSelected);
+      mHTMLEditor->SetSelectionAfterTableEdit(mTable, mRow, mCol, mDirection,
+                                              mSelected);
     }
   }
 

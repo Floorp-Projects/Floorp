@@ -230,7 +230,6 @@ class HTMLEditRules : public TextEditRules {
    * @param aCancel             Returns true if the operation is canceled.
    * @param aHandled            Returns true if the edit action is handled.
    */
-  MOZ_CAN_RUN_SCRIPT
   MOZ_MUST_USE nsresult WillDeleteSelection(
       nsIEditor::EDirection aAction, nsIEditor::EStripWrappers aStripWrappers,
       bool* aCancel, bool* aHandled);
@@ -375,7 +374,6 @@ class HTMLEditRules : public TextEditRules {
   /**
    * XXX Should document what this does.
    */
-  MOZ_CAN_RUN_SCRIPT
   MOZ_MUST_USE nsresult WillMakeList(const nsAString* aListType,
                                      bool aEntireList,
                                      const nsAString* aBulletType,
@@ -390,7 +388,6 @@ class HTMLEditRules : public TextEditRules {
    * @param aCancel             Returns true if the operation is canceled.
    * @param aHandled            Returns true if the edit action is handled.
    */
-  MOZ_CAN_RUN_SCRIPT
   MOZ_MUST_USE nsresult WillRemoveList(bool* aCancel, bool* aHandled);
 
   /**
@@ -400,7 +397,6 @@ class HTMLEditRules : public TextEditRules {
    * @param aCancel             Returns true if the operation is canceled.
    * @param aHandled            Returns true if the edit action is handled.
    */
-  MOZ_CAN_RUN_SCRIPT
   MOZ_MUST_USE nsresult WillIndent(bool* aCancel, bool* aHandled);
 
   /**
@@ -410,7 +406,6 @@ class HTMLEditRules : public TextEditRules {
    * @param aCancel             Returns true if the operation is canceled.
    * @param aHandled            Returns true if the edit action is handled.
    */
-  MOZ_CAN_RUN_SCRIPT
   MOZ_MUST_USE nsresult WillCSSIndent(bool* aCancel, bool* aHandled);
 
   /**
@@ -420,7 +415,6 @@ class HTMLEditRules : public TextEditRules {
    * @param aCancel             Returns true if the operation is canceled.
    * @param aHandled            Returns true if the edit action is handled.
    */
-  MOZ_CAN_RUN_SCRIPT
   MOZ_MUST_USE nsresult WillHTMLIndent(bool* aCancel, bool* aHandled);
 
   /**
@@ -430,7 +424,6 @@ class HTMLEditRules : public TextEditRules {
    * @param aCancel             Returns true if the operation is canceled.
    * @param aHandled            Returns true if the edit action is handled.
    */
-  MOZ_CAN_RUN_SCRIPT
   MOZ_MUST_USE nsresult WillOutdent(bool* aCancel, bool* aHandled);
 
   /**
@@ -442,7 +435,6 @@ class HTMLEditRules : public TextEditRules {
    * @param aCancel             Returns true if the operation is canceled.
    * @param aHandled            Returns true if the edit action is handled.
    */
-  MOZ_CAN_RUN_SCRIPT
   nsresult WillAlign(const nsAString& aAlignType, bool* aCancel,
                      bool* aHandled);
 
@@ -481,7 +473,6 @@ class HTMLEditRules : public TextEditRules {
    * @param aCancel                 Returns true if the operation is canceled.
    * @param aHandled                Returns true if the edit action is handled.
    */
-  MOZ_CAN_RUN_SCRIPT
   MOZ_MUST_USE nsresult WillMakeDefListItem(const nsAString* aBlockType,
                                             bool aEntireList, bool* aCancel,
                                             bool* aHandled);
@@ -494,7 +485,6 @@ class HTMLEditRules : public TextEditRules {
    * @param aCancel             Returns true if the operation is canceled.
    * @param aHandled            Returns true if the edit action is handled.
    */
-  MOZ_CAN_RUN_SCRIPT
   MOZ_MUST_USE nsresult WillMakeBasicBlock(const nsAString& aBlockType,
                                            bool* aCancel, bool* aHandled);
 
@@ -511,7 +501,6 @@ class HTMLEditRules : public TextEditRules {
    *                            will be called.
    *                            Otherwise, ApplyBlockStyle() will be called.
    */
-  MOZ_CAN_RUN_SCRIPT
   MOZ_MUST_USE nsresult MakeBasicBlock(nsAtom& aBlockType);
 
   /**
@@ -530,7 +519,6 @@ class HTMLEditRules : public TextEditRules {
    * @param aCancel             Returns true if the operation is canceled.
    * @param aHandled            Returns true if the edit action is handled.
    */
-  MOZ_CAN_RUN_SCRIPT
   MOZ_MUST_USE nsresult WillAbsolutePosition(bool* aCancel, bool* aHandled);
 
   /**
@@ -860,7 +848,6 @@ class HTMLEditRules : public TextEditRules {
    * invisible <br> element for preventing delete action handler to keep
    * unexpected nodes.
    */
-  MOZ_CAN_RUN_SCRIPT
   MOZ_MUST_USE nsresult ExpandSelectionForDeletion();
 
   /**
@@ -869,7 +856,6 @@ class HTMLEditRules : public TextEditRules {
    * non-editable point, they should be moved to nearest text node or something
    * where the other methods easier to handle edit action.
    */
-  MOZ_CAN_RUN_SCRIPT
   MOZ_MUST_USE nsresult NormalizeSelection();
 
   /**
