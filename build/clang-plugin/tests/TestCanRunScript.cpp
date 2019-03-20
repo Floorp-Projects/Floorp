@@ -60,12 +60,12 @@ MOZ_CAN_RUN_SCRIPT void testLambda() {
 }
 
 void test2_parent() { // expected-note {{caller function declared here}}
-  test2(new RefCountedBase); // expected-error {{arguments must all be strong refs or parent parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument)}} \
+  test2(new RefCountedBase); // expected-error {{arguments must all be strong refs or caller's parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument).  'new RefCountedBase' is neither.}} \
                              // expected-error {{functions marked as MOZ_CAN_RUN_SCRIPT can only be called from functions also marked as MOZ_CAN_RUN_SCRIPT}}
 }
 
 MOZ_CAN_RUN_SCRIPT void test2_parent2() {
-  test2(new RefCountedBase); // expected-error {{arguments must all be strong refs or parent parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument)}}
+  test2(new RefCountedBase); // expected-error {{arguments must all be strong refs or caller's parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument).  'new RefCountedBase' is neither.}}
 }
 
 MOZ_CAN_RUN_SCRIPT void test2_parent3(RefCountedBase* param) {
@@ -89,8 +89,8 @@ MOZ_CAN_RUN_SCRIPT void test2_parent6() {
 
 MOZ_CAN_RUN_SCRIPT void test2_parent7() {
   RefCountedBase* t = new RefCountedBase;
-  t->method_test(); // expected-error {{arguments must all be strong refs or parent parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument)}}
-  t->method_test2(); // expected-error {{arguments must all be strong refs or parent parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument)}}
+  t->method_test(); // expected-error {{arguments must all be strong refs or caller's parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument).  't' is neither.}}
+  t->method_test2(); // expected-error {{arguments must all be strong refs or caller's parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument).  't' is neither.}}
 }
 
 MOZ_CAN_RUN_SCRIPT void test2_parent8() {
@@ -154,7 +154,7 @@ void test5_b() {
 
 MOZ_CAN_RUN_SCRIPT void test6() {
   void* x = new RefCountedBase();
-  test2((RefCountedBase*)x); // expected-error {{arguments must all be strong refs or parent parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument)}}
+  test2((RefCountedBase*)x); // expected-error {{arguments must all be strong refs or caller's parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument).  'x' is neither.}}
 }
 
 MOZ_CAN_RUN_SCRIPT void test_ref(const RefCountedBase&) {
@@ -163,24 +163,24 @@ MOZ_CAN_RUN_SCRIPT void test_ref(const RefCountedBase&) {
 
 MOZ_CAN_RUN_SCRIPT void test_ref_1() {
   RefCountedBase* t = new RefCountedBase;
-  test_ref(*t); // expected-error {{arguments must all be strong refs or parent parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument)}}
+  test_ref(*t); // expected-error {{arguments must all be strong refs or caller's parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument).  '*t' is neither.}}
 }
 
 MOZ_CAN_RUN_SCRIPT void test_ref_2() {
   RefCountedBase* t = new RefCountedBase;
-  (*t).method_test(); // expected-error {{arguments must all be strong refs or parent parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument)}}
+  (*t).method_test(); // expected-error {{arguments must all be strong refs or caller's parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument).  '*t' is neither.}}
 }
 
 MOZ_CAN_RUN_SCRIPT void test_ref_3() {
   RefCountedBase* t = new RefCountedBase;
   auto& ref = *t;
-  test_ref(ref); // expected-error {{arguments must all be strong refs or parent parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument)}}
+  test_ref(ref); // expected-error {{arguments must all be strong refs or caller's parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument).  'ref' is neither.}}
 }
 
 MOZ_CAN_RUN_SCRIPT void test_ref_4() {
   RefCountedBase* t = new RefCountedBase;
   auto& ref = *t;
-  ref.method_test(); // expected-error {{arguments must all be strong refs or parent parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument)}}
+  ref.method_test(); // expected-error {{arguments must all be strong refs or caller's parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument).  'ref' is neither.}}
 }
 
 MOZ_CAN_RUN_SCRIPT void test_ref_5() {
@@ -207,25 +207,25 @@ MOZ_CAN_RUN_SCRIPT void test_ref_8() {
 
 MOZ_CAN_RUN_SCRIPT void test_ref_9() {
   void* x = new RefCountedBase();
-  test_ref(*(RefCountedBase*)x); // expected-error {{arguments must all be strong refs or parent parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument)}}
+  test_ref(*(RefCountedBase*)x); // expected-error {{arguments must all be strong refs or caller's parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument).  '*(RefCountedBase*)x' is neither.}}
 }
 
 MOZ_CAN_RUN_SCRIPT void test_ref_10() {
   void* x = new RefCountedBase();
-  test_ref((RefCountedBase&)*x); // expected-error {{arguments must all be strong refs or parent parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument)}} expected-warning {{ISO C++ does not allow indirection on operand of type 'void *'}}
+  test_ref((RefCountedBase&)*x); // expected-error {{arguments must all be strong refs or caller's parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument).  '*x' is neither.}}  expected-warning {{ISO C++ does not allow indirection on operand of type 'void *'}}
 }
 
 MOZ_CAN_RUN_SCRIPT void test_maybe() {
   mozilla::Maybe<RefCountedBase*> unsafe;
   unsafe.emplace(new RefCountedBase);
-  (*unsafe)->method_test(); // expected-error {{arguments must all be strong refs or parent parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument)}}
+  (*unsafe)->method_test(); // expected-error {{arguments must all be strong refs or caller's parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument).  '*unsafe' is neither.}}
 }
 
 MOZ_CAN_RUN_SCRIPT void test_maybe_2() {
   // FIXME(bz): This should not generate an error!
   mozilla::Maybe<RefPtr<RefCountedBase>> safe;
   safe.emplace(new RefCountedBase);
-  (*safe)->method_test(); // expected-error {{arguments must all be strong refs or parent parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument)}}
+  (*safe)->method_test(); // expected-error {{arguments must all be strong refs or caller's parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument).  '(*safe)' is neither.}}
 }
 
 MOZ_CAN_RUN_SCRIPT void test_defaults_helper_1(RefCountedBase* arg = nullptr) {
@@ -237,7 +237,7 @@ MOZ_CAN_RUN_SCRIPT void test_defaults_1() {
 
 MOZ_CAN_RUN_SCRIPT void test_defaults_2() {
   RefCountedBase* t = new RefCountedBase;
-  test_defaults_helper_1(t); // expected-error {{arguments must all be strong refs or parent parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument)}}
+  test_defaults_helper_1(t); // expected-error {{arguments must all be strong refs or caller's parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument).  't' is neither.}}
 }
 
 MOZ_CAN_RUN_SCRIPT void test_defaults_3() {
@@ -245,16 +245,16 @@ MOZ_CAN_RUN_SCRIPT void test_defaults_3() {
   test_defaults_helper_1(t);
 }
 
-MOZ_CAN_RUN_SCRIPT void test_defaults_helper_2(RefCountedBase* arg = new RefCountedBase()) {
+MOZ_CAN_RUN_SCRIPT void test_defaults_helper_2(RefCountedBase* arg = new RefCountedBase()) { // expected-error {{arguments must all be strong refs or caller's parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument).  'new RefCountedBase()' is neither.}}
 }
 
 MOZ_CAN_RUN_SCRIPT void test_defaults_4() {
-  test_defaults_helper_2(); // expected-error {{arguments must all be strong refs or parent parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument)}}
+  test_defaults_helper_2();
 }
 
 MOZ_CAN_RUN_SCRIPT void test_defaults_5() {
   RefCountedBase* t = new RefCountedBase;
-  test_defaults_helper_2(t); // expected-error {{arguments must all be strong refs or parent parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument)}}
+  test_defaults_helper_2(t); // expected-error {{arguments must all be strong refs or caller's parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument).  't' is neither.}}
 }
 
 MOZ_CAN_RUN_SCRIPT void test_defaults_6() {
@@ -278,20 +278,20 @@ struct RefCountedDerefTester : public RefCountedBase {
 struct DisallowMemberArgs {
   RefPtr<RefCountedBase> mRefCounted;
   MOZ_CAN_RUN_SCRIPT void foo() {
-    mRefCounted->method_test(); // expected-error {{arguments must all be strong refs or parent parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument)}}
+    mRefCounted->method_test(); // expected-error {{arguments must all be strong refs or caller's parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument).  'mRefCounted' is neither.}}
   }
   MOZ_CAN_RUN_SCRIPT void bar() {
-    test2(mRefCounted); // expected-error {{arguments must all be strong refs or parent parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument)}}
+    test2(mRefCounted); // expected-error {{arguments must all be strong refs or caller's parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument).  'mRefCounted' is neither.}}
   }
 };
 
 struct DisallowMemberArgsWithGet {
   RefPtr<RefCountedBase> mRefCounted;
   MOZ_CAN_RUN_SCRIPT void foo() {
-    mRefCounted.get()->method_test(); // expected-error {{arguments must all be strong refs or parent parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument)}}
+    mRefCounted.get()->method_test(); // expected-error {{arguments must all be strong refs or caller's parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument).  'mRefCounted.get()' is neither.}}
   }
   MOZ_CAN_RUN_SCRIPT void bar() {
-    test2(mRefCounted.get()); // expected-error {{arguments must all be strong refs or parent parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument)}}
+    test2(mRefCounted.get()); // expected-error {{arguments must all be strong refs or caller's parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument).  'mRefCounted.get()' is neither.}}
   }
 };
 
@@ -314,19 +314,19 @@ struct DisallowMemberCallsOnRandomKnownLive {
   WeakPtrReturner* mWeakPtrReturner2;
 
   MOZ_CAN_RUN_SCRIPT void test_refptr_method() {
-    MOZ_KnownLive(mWeakPtrReturner1)->getWeakPtr()->method_test(); // expected-error {{arguments must all be strong refs or parent parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument)}}
+    MOZ_KnownLive(mWeakPtrReturner1)->getWeakPtr()->method_test(); // expected-error {{arguments must all be strong refs or caller's parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument).  'MOZ_KnownLive(mWeakPtrReturner1)->getWeakPtr()' is neither.}}
   }
 
   MOZ_CAN_RUN_SCRIPT void test_refptr_function() {
-    test2(MOZ_KnownLive(mWeakPtrReturner1)->getWeakPtr()); // expected-error {{arguments must all be strong refs or parent parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument)}}
+    test2(MOZ_KnownLive(mWeakPtrReturner1)->getWeakPtr()); // expected-error {{arguments must all be strong refs or caller's parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument).  'MOZ_KnownLive(mWeakPtrReturner1)->getWeakPtr()' is neither.}}
   }
 
   MOZ_CAN_RUN_SCRIPT void test_raw_method() {
-    MOZ_KnownLive(mWeakPtrReturner2)->getWeakPtr()->method_test(); // expected-error {{arguments must all be strong refs or parent parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument)}}
+    MOZ_KnownLive(mWeakPtrReturner2)->getWeakPtr()->method_test(); // expected-error {{arguments must all be strong refs or caller's parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument).  'MOZ_KnownLive(mWeakPtrReturner2)->getWeakPtr()' is neither.}}
   }
 
   MOZ_CAN_RUN_SCRIPT void test_raw_function() {
-    test2(MOZ_KnownLive(mWeakPtrReturner2)->getWeakPtr()); // expected-error {{arguments must all be strong refs or parent parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument)}}
+    test2(MOZ_KnownLive(mWeakPtrReturner2)->getWeakPtr()); // expected-error {{arguments must all be strong refs or caller's parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument).  'MOZ_KnownLive(mWeakPtrReturner2)->getWeakPtr()' is neither.}}
   }
 };
 
@@ -353,20 +353,20 @@ struct AllowConstMemberArgsWithExplicitThis {
 struct DisallowConstMemberArgsOfMembers {
   RefPtr<AllowConstMemberArgs> mMember;
   MOZ_CAN_RUN_SCRIPT void foo() {
-    mMember->mRefCounted->method_test(); // expected-error {{arguments must all be strong refs or parent parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument)}}
+    mMember->mRefCounted->method_test(); // expected-error {{arguments must all be strong refs or caller's parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument).  'mMember->mRefCounted' is neither.}}
   }
   MOZ_CAN_RUN_SCRIPT void bar() {
-    test2(mMember->mRefCounted); // expected-error {{arguments must all be strong refs or parent parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument)}}
+    test2(mMember->mRefCounted); // expected-error {{arguments must all be strong refs or caller's parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument).  'mMember->mRefCounted' is neither.}}
   }
 };
 
 struct DisallowConstNonRefPtrMemberArgs {
   RefCountedBase* const mRefCounted;
   MOZ_CAN_RUN_SCRIPT void foo() {
-    mRefCounted->method_test(); // expected-error {{arguments must all be strong refs or parent parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument)}}
+    mRefCounted->method_test(); // expected-error {{arguments must all be strong refs or caller's parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument).  'mRefCounted' is neither.}}
   }
   MOZ_CAN_RUN_SCRIPT void bar() {
-    test2(mRefCounted); // expected-error {{arguments must all be strong refs or parent parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument)}}
+    test2(mRefCounted); // expected-error {{arguments must all be strong refs or caller's parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument).  'mRefCounted' is neither.}}
   }
 };
 
@@ -397,15 +397,15 @@ struct WeakSmartPtr {
 };
 
 MOZ_CAN_RUN_SCRIPT void test_temporary_3() {
-  WeakSmartPtr(new RefCountedBase())->method_test(); // expected-error {{arguments must all be strong refs or parent parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument)}}
+  WeakSmartPtr(new RefCountedBase())->method_test(); // expected-error {{arguments must all be strong refs or caller's parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument).  'WeakSmartPtr(new RefCountedBase())' is neither.}}
 }
 
 MOZ_CAN_RUN_SCRIPT void test_temporary_4() {
-  test_ref(*WeakSmartPtr(new RefCountedBase())); // expected-error {{arguments must all be strong refs or parent parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument)}}
+  test_ref(*WeakSmartPtr(new RefCountedBase())); // expected-error {{arguments must all be strong refs or caller's parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument).  '*WeakSmartPtr(new RefCountedBase())' is neither.}}
 }
 
 MOZ_CAN_RUN_SCRIPT void test_temporary_5() {
-  test2(WeakSmartPtr(new RefCountedBase())); // expected-error {{arguments must all be strong refs or parent parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument)}}
+  test2(WeakSmartPtr(new RefCountedBase())); // expected-error {{arguments must all be strong refs or caller's parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument).  'WeakSmartPtr(new RefCountedBase())' is neither.}}
 }
 
 
@@ -421,20 +421,20 @@ struct TArray {
 struct DisallowRawTArrayElement {
   TArray<RefCountedBase*> mArray;
   MOZ_CAN_RUN_SCRIPT void foo() {
-    mArray[0]->method_test(); // expected-error {{arguments must all be strong refs or parent parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument)}}
+    mArray[0]->method_test(); // expected-error {{arguments must all be strong refs or caller's parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument).  'mArray[0]' is neither.}}
   }
   MOZ_CAN_RUN_SCRIPT void bar() {
-    test2(mArray[0]); // expected-error {{arguments must all be strong refs or parent parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument)}}
+    test2(mArray[0]); // expected-error {{arguments must all be strong refs or caller's parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument).  'mArray[0]' is neither.}}
   }
 };
 
 struct DisallowRefPtrTArrayElement {
   TArray<RefPtr<RefCountedBase>> mArray;
   MOZ_CAN_RUN_SCRIPT void foo() {
-    mArray[0]->method_test(); // expected-error {{arguments must all be strong refs or parent parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument)}}
+    mArray[0]->method_test(); // expected-error {{arguments must all be strong refs or caller's parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument).  'mArray[0]' is neither.}}
   }
   MOZ_CAN_RUN_SCRIPT void bar() {
-    test2(mArray[0]); // expected-error {{arguments must all be strong refs or parent parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument)}}
+    test2(mArray[0]); // expected-error {{arguments must all be strong refs or caller's parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument).  'mArray[0]' is neither.}}
   }
 };
 
