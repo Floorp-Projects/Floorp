@@ -19,6 +19,13 @@ const extensionTargetDetails = {
   warnings: PropTypes.arrayOf(PropTypes.string).isRequired,
 };
 
+const processTargetDetails = {
+  // Description for the process.
+  description: PropTypes.string.isRequired,
+  // The id for the process. #0 is the main/parent process, #1++ are parent processes
+  processId: PropTypes.number.isRequired,
+};
+
 const tabTargetDetails = {
   // the url of the tab.
   url: PropTypes.string.isRequired,
@@ -39,6 +46,7 @@ const debugTarget = {
   // details property will contain a type-specific object.
   details: PropTypes.oneOfType([
     PropTypes.shape(extensionTargetDetails),
+    PropTypes.shape(processTargetDetails),
     PropTypes.shape(tabTargetDetails),
     PropTypes.shape(workerTargetDetails),
   ]).isRequired,

@@ -28,6 +28,9 @@ const actionTypes = {
   REQUEST_EXTENSIONS_FAILURE: "REQUEST_EXTENSIONS_FAILURE",
   REQUEST_EXTENSIONS_START: "REQUEST_EXTENSIONS_START",
   REQUEST_EXTENSIONS_SUCCESS: "REQUEST_EXTENSIONS_SUCCESS",
+  REQUEST_PROCESSES_FAILURE: "REQUEST_PROCESSES_FAILURE",
+  REQUEST_PROCESSES_START: "REQUEST_PROCESSES_START",
+  REQUEST_PROCESSES_SUCCESS: "REQUEST_PROCESSES_SUCCESS",
   REQUEST_TABS_FAILURE: "REQUEST_TABS_FAILURE",
   REQUEST_TABS_START: "REQUEST_TABS_START",
   REQUEST_TABS_SUCCESS: "REQUEST_TABS_SUCCESS",
@@ -65,12 +68,14 @@ const actionTypes = {
 
 const DEBUG_TARGETS = {
   EXTENSION: "EXTENSION",
+  PROCESS: "PROCESS",
   TAB: "TAB",
   WORKER: "WORKER",
 };
 
 const DEBUG_TARGET_PANE = {
   INSTALLED_EXTENSION: "installedExtension",
+  PROCESSES: "processes",
   OTHER_WORKER: "otherWorker",
   SERVICE_WORKER: "serviceWorker",
   SHARED_WORKER: "sharedWorker",
@@ -92,6 +97,8 @@ const PAGE_TYPES = {
 const PREFERENCES = {
   // Temporary preference without any default value until network locations are enabled.
   NETWORK_ENABLED: "devtools.aboutdebugging.network",
+  // Preference that drives the display of the "Processes" debug target category.
+  PROCESS_DEBUGGING_ENABLED: "devtools.aboutdebugging.process-debugging",
   // Preference that drives the display of system addons in about:debugging.
   SHOW_SYSTEM_ADDONS: "devtools.aboutdebugging.showSystemAddons",
   // Temporary preference without any default value until wifi is enabled.

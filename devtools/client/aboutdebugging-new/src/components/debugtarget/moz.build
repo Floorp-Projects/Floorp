@@ -14,6 +14,7 @@ DevToolsModules(
     'FieldPair.css',
     'FieldPair.js',
     'InspectAction.js',
+    'ProcessDetail.js',
     'ServiceWorkerAction.css',
     'ServiceWorkerAction.js',
     'ServiceWorkerAdditionalActions.js',

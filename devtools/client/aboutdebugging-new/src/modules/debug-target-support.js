@@ -4,10 +4,18 @@
 
 "use strict";
 
-const { DEBUG_TARGET_PANE, RUNTIMES } = require("../constants");
+const { DEBUG_TARGET_PANE, PREFERENCES, RUNTIMES } = require("../constants");
+
+const Services = require("Services");
+
+// Process target debugging is disabled by default.
+function isProcessDebuggingSupported() {
+  return Services.prefs.getBoolPref(PREFERENCES.PROCESS_DEBUGGING_ENABLED, false);
+}
 
 const ALL_DEBUG_TARGET_PANES = [
   DEBUG_TARGET_PANE.INSTALLED_EXTENSION,
+  ...(isProcessDebuggingSupported() ? [DEBUG_TARGET_PANE.PROCESSES] : []),
   DEBUG_TARGET_PANE.OTHER_WORKER,
   DEBUG_TARGET_PANE.SERVICE_WORKER,
   DEBUG_TARGET_PANE.SHARED_WORKER,
@@ -19,8 +27,14 @@ const ALL_DEBUG_TARGET_PANES = [
 const REMOTE_DEBUG_TARGET_PANES = ALL_DEBUG_TARGET_PANES.filter(p =>
   p !== DEBUG_TARGET_PANE.TEMPORARY_EXTENSION);
 
+// Main process debugging is not available for This Firefox.
+// At the moment only the main process is listed under processes, so remove the category
+// for this runtime.
+const THIS_FIREFOX_DEBUG_TARGET_PANES = ALL_DEBUG_TARGET_PANES.filter(p =>
+  p !== DEBUG_TARGET_PANE.PROCESSES);
+
 const SUPPORTED_TARGET_PANE_BY_RUNTIME = {
-  [RUNTIMES.THIS_FIREFOX]: ALL_DEBUG_TARGET_PANES,
+  [RUNTIMES.THIS_FIREFOX]: THIS_FIREFOX_DEBUG_TARGET_PANES,
   [RUNTIMES.USB]: REMOTE_DEBUG_TARGET_PANES,
   [RUNTIMES.NETWORK]: REMOTE_DEBUG_TARGET_PANES,
 };
