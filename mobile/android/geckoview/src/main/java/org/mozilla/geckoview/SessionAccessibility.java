@@ -544,7 +544,7 @@ public class SessionAccessibility {
             }
 
             @Override
-            public void sendAccessibilityEvent(View host, int eventType) {
+            public void sendAccessibilityEvent(final View host, final int eventType) {
                 if (eventType == AccessibilityEvent.TYPE_VIEW_FOCUSED) {
                     // We rely on the focus events sent from Gecko.
                     return;
