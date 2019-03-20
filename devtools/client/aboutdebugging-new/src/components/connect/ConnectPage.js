@@ -221,12 +221,12 @@ class ConnectPage extends PureComponent {
           "Configure the connection method you wish to remotely debug your device with."
         )
       ),
-      Localized(
-        {
-          id: "about-debugging-setup-link-android-devices",
-        },
-        dom.p(
-          {},
+      dom.p(
+        {},
+        Localized(
+          {
+            id: "about-debugging-setup-link-android-devices",
+          },
           dom.a(
             {
               href: "https://support.mozilla.org/kb/will-firefox-work-my-mobile-device#w_android-devices",

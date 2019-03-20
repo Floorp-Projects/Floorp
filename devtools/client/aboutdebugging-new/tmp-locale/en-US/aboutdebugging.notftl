@@ -63,8 +63,18 @@ about-debugging-refresh-usb-devices-button = Refresh devices
 # Title of the Setup page.
 about-debugging-setup-title = Setup
 
+# Introduction text in the Setup page to explain how to configure remote debugging.
+about-debugging-setup-intro = Configure the connection method you wish to remotely debug your device with.
+
+# Link displayed in the Setup page that leads to MDN page with list of supported devices.
+# Temporarily leads to https://support.mozilla.org/en-US/kb/will-firefox-work-my-mobile-device#w_android-devices
+about-debugging-setup-link-android-devices = View list of supported android devices
+
 # Explanatory text in the Setup page about what the 'This Firefox' page is for
-about-debugging-setup-this-firefox = Use <a>This Firefox</a> to debug tags, extensions and service workers on this version of Firefox.
+about-debugging-setup-this-firefox = Use <a>This Firefox</a> to debug tabs, extensions and service workers on this version of Firefox.
+
+# Title of the heading Connect section of the Setup page.
+about-debugging-setup-connect-heading = Connect a Device
 
 # USB section of the Setup page
 about-debugging-setup-usb-title = USB
