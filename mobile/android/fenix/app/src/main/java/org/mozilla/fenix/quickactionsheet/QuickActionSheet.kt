@@ -17,6 +17,7 @@ import org.mozilla.fenix.R
 import android.animation.ValueAnimator
 import androidx.interpolator.view.animation.FastOutSlowInInterpolator
 import org.mozilla.fenix.ext.increaseTapArea
+import org.mozilla.fenix.utils.Settings
 
 class QuickActionSheet @JvmOverloads constructor(
     context: Context,
@@ -42,16 +43,24 @@ class QuickActionSheet @JvmOverloads constructor(
             bounceSheet(quickActionSheetBehavior)
         }
 
-        bounceSheet(quickActionSheetBehavior, bounceAnimationLength)
+        val settings = Settings.getInstance(context)
+        if (settings.shouldAutoBounceQuickActionSheet) {
+            settings.incrementAutomaticBounceQuickActionSheetCount()
+            bounceSheet(quickActionSheetBehavior, demoBounceAnimationLength)
+        }
     }
 
     private fun bounceSheet(
         quickActionSheetBehavior: QuickActionSheetBehavior,
-        duration: Long = quickBounceAnimationLength
+        duration: Long = bounceAnimationLength
     ) {
         val normalPeekHeight = quickActionSheetBehavior.peekHeight
+
+        val peakHeightMultiplier = if (duration == demoBounceAnimationLength)
+            demoBounceAnimationPeekHeightMultiplier else bounceAnimationPeekHeightMultiplier
+
         val valueAnimator = ValueAnimator.ofFloat(normalPeekHeight.toFloat(),
-            normalPeekHeight * bounceAnimationPeekHeightMultiplier)
+            normalPeekHeight * peakHeightMultiplier)
 
         valueAnimator.addUpdateListener {
             quickActionSheetBehavior.peekHeight = (it.animatedValue as Float).toInt()
@@ -66,8 +75,9 @@ class QuickActionSheet @JvmOverloads constructor(
 
     companion object {
         const val grabHandleIncreasedTapArea = 50
-        const val bounceAnimationLength = 500L
-        const val quickBounceAnimationLength = 400L
+        const val demoBounceAnimationLength = 600L
+        const val bounceAnimationLength = 400L
+        const val demoBounceAnimationPeekHeightMultiplier = 4.5f
         const val bounceAnimationPeekHeightMultiplier = 3f
     }
 }

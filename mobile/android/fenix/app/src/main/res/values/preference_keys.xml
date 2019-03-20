@@ -36,4 +36,5 @@
     <!-- Search Settings -->
     <string name="pref_key_show_search_suggestions" translatable="false">pref_key_show_search_suggestions</string>
 
+    <string name = "pref_key_bounce_quick_action" translatable="false">pref_key_bounce_quick_action</string>
 </resources>

@@ -39,6 +39,16 @@ class Settings private constructor(context: Context) {
     val isTelemetryEnabled: Boolean
         get() = preferences.getBoolean(appContext.getPreferenceKey(R.string.pref_key_telemetry), true)
 
+    val shouldAutoBounceQuickActionSheet: Boolean
+        get() = autoBounceQuickActionSheetCount < 2
+
+    private val autoBounceQuickActionSheetCount: Int
+        get() = (preferences.getInt(appContext.getPreferenceKey(R.string.pref_key_bounce_quick_action), 0))
+
+    fun incrementAutomaticBounceQuickActionSheetCount() {
+        preferences.edit().putInt(appContext.getPreferenceKey(R.string.pref_key_bounce_quick_action),
+            autoBounceQuickActionSheetCount + 1).apply()
+    }
     fun setDefaultSearchEngineByName(name: String) {
         preferences.edit()
             .putString(appContext.getPreferenceKey(R.string.pref_key_search_engine), name)
