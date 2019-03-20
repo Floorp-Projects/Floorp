@@ -11181,14 +11181,26 @@ int main(int argc, char** argv, char** envp) {
   if (!cx) {
     return 1;
   }
+  auto destroyCx = MakeScopeExit([cx] { JS_DestroyContext(cx); });
 
   UniquePtr<ShellContext> sc = MakeUnique<ShellContext>(cx);
   if (!sc) {
     return 1;
   }
+  auto destroyShellContext = MakeScopeExit([cx, &sc] {
+    // Must clear out some of sc's pointer containers before JS_DestroyContext.
+    sc->markObservers.reset();
+
+    JS_SetContextPrivate(cx, nullptr);
+    sc.reset();
+  });
 
   JS_SetContextPrivate(cx, sc.get());
   JS_SetGrayGCRootsTracer(cx, TraceGrayRoots, nullptr);
+  auto resetGrayGCRootsTracer = MakeScopeExit([cx] {
+    JS_SetGrayGCRootsTracer(cx, nullptr, nullptr);
+  });
+
   // Waiting is allowed on the shell's main thread, for now.
   JS_SetFutexCanWait(cx);
   JS::SetWarningReporter(cx, WarningReporter);
@@ -11229,6 +11241,13 @@ int main(int argc, char** argv, char** envp) {
   JS::dbg::SetDebuggerMallocSizeOf(cx, moz_malloc_size_of);
 
   js::UseInternalJobQueues(cx);
+
+  auto shutdownShellThreads = MakeScopeExit([cx] {
+    KillWatchdog(cx);
+    KillWorkerThreads(cx);
+    DestructSharedObjectMailbox();
+    CancelOffThreadJobsForRuntime(cx);
+  });
 
   if (const char* opt = op.getStringOption("nursery-strings")) {
     if (strcmp(opt, "on") == 0) {
@@ -11275,21 +11294,5 @@ int main(int argc, char** argv, char** envp) {
   }
 #endif
 
-  JS_SetGrayGCRootsTracer(cx, nullptr, nullptr);
-
-  // Must clear out some of sc's pointer containers before JS_DestroyContext.
-  sc->markObservers.reset();
-
-  KillWatchdog(cx);
-
-  KillWorkerThreads(cx);
-
-  DestructSharedObjectMailbox();
-
-  CancelOffThreadJobsForRuntime(cx);
-
-  JS_SetContextPrivate(cx, nullptr);
-  sc.reset();
-  JS_DestroyContext(cx);
   return result;
 }
