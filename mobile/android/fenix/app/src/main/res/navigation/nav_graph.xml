@@ -11,6 +11,10 @@
         app:popUpTo="@id/nav_graph"
         app:popUpToInclusive="true" />
 
+    <action
+            android:id="@+id/action_global_crash_reporter"
+            app:destination="@id/crashReporterFragment" />
+
     <fragment
         android:id="@+id/homeFragment"
         android:name="org.mozilla.fenix.home.HomeFragment"
@@ -119,4 +123,15 @@
         android:id="@+id/searchEngineFragment"
         android:name="org.mozilla.fenix.settings.SearchEngineFragment"
         android:label="SearchEngineFragment" />
+    <fragment android:id="@+id/crashReporterFragment" android:name="org.mozilla.fenix.crashes.CrashReporterFragment"
+              android:label="CrashReporterFragment">
+        <action
+                android:id="@+id/action_crashReporterFragment_to_browserFragment"
+                app:destination="@id/browserFragment"
+                app:popUpTo="@id/homeFragment">
+            <argument android:name="session_id" app:argType="string" app:nullable="true"/>
+        </action>
+        <action android:id="@+id/action_crashReporterFragment_to_homeFragment" app:destination="@id/homeFragment"/>
+        <argument android:name="crashIntent" app:argType="android.content.Intent"/>
+    </fragment>
 </navigation>

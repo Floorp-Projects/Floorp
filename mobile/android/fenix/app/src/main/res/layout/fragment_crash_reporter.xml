@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<androidx.constraintlayout.widget.ConstraintLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/photonGrey10">
+
+    <ImageView
+        android:id="@+id/crash_tab_image"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginTop="8dp"
+        android:src="@drawable/ic_error_session_crashed"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintDimensionRatio="1:1"
+        app:layout_constraintWidth_percent="0.6"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"/>
+
+    <TextView
+            android:id="@+id/title"
+            android:layout_width="300dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:lineSpacingExtra="8sp"
+            android:singleLine="false"
+            android:text="@string/tab_crash_title"
+            android:textAlignment="center"
+            android:textColor="@color/search_text"
+            android:textSize="20sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/crash_tab_image" />
+
+    <TextView
+            android:id="@+id/description"
+            android:layout_width="300dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:lineSpacingExtra="7sp"
+            android:singleLine="false"
+            android:text="@string/tab_crash_description"
+            android:textColor="@color/search_text"
+            android:textSize="15sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/title" />
+
+    <CheckBox
+            android:id="@+id/sendCrashCheckbox"
+            android:layout_width="0dp"
+            android:layout_height="32dp"
+            android:layout_marginBottom="@dimen/crash_reporter_close_tab_button_bottom_margin"
+            android:buttonTint="@color/crash_page_accent"
+            android:checked="true"
+            android:text="@string/tab_crash_send_report"
+            android:textColor="@color/search_text"
+            android:textSize="15sp"
+            app:layout_constraintBottom_toTopOf="@id/restoreTabButton"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintWidth_percent="0.8"
+            tools:text="@string/tab_crash_send_report" />
+
+    <Button
+            android:id="@+id/restoreTabButton"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/crash_reporter_close_tab_button_horizontal_margin"
+            android:layout_marginEnd="@dimen/crash_reporter_close_tab_button_horizontal_margin"
+            android:layout_marginBottom="@dimen/crash_reporter_close_tab_button_bottom_margin"
+            android:backgroundTint="@color/crash_page_accent"
+            android:text="@string/tab_crash_restore"
+            android:textColor="@color/off_white"
+            android:textSize="14sp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintWidth_percent="0.4" />
+
+    <Button
+            android:id="@+id/closeTabButton"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/crash_reporter_close_tab_button_horizontal_margin"
+            android:layout_marginEnd="@dimen/crash_reporter_close_tab_button_horizontal_margin"
+            android:layout_marginBottom="@dimen/crash_reporter_close_tab_button_bottom_margin"
+            android:backgroundTint="@color/crash_page_off_accent"
+            android:text="@string/tab_crash_close"
+            android:textColor="@color/search_text"
+            android:textSize="14sp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintWidth_percent="0.4" />
+</androidx.constraintlayout.widget.ConstraintLayout>
