@@ -706,7 +706,6 @@ function getChartsFromToolId(id) {
     case "STORAGE":
     case "STYLEEDITOR":
     case "TOOLBOX":
-    case "WEBAUDIOEDITOR":
     case "WEBCONSOLE":
     case "WEBIDE":
       timerHist = `DEVTOOLS_${id}_TIME_ACTIVE_SECONDS`;
