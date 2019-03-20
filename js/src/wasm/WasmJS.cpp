@@ -241,14 +241,8 @@ static bool GetProperty(JSContext* cx, HandleObject obj, const char* chars,
 }
 
 static bool GetImports(JSContext* cx, const Module& module,
-                       HandleObject importObj,
-                       MutableHandle<FunctionVector> funcImports,
-                       WasmTableObjectVector& tableImports,
-                       MutableHandleWasmMemoryObject memoryImport,
-                       WasmGlobalObjectVector& globalObjs,
-                       MutableHandleValVector globalImportValues) {
-  const ImportVector& imports = module.imports();
-  if (!imports.empty() && !importObj) {
+                       HandleObject importObj, ImportValues* imports) {
+  if (!module.imports().empty() && !importObj) {
     return ThrowBadImportArg(cx);
   }
 
@@ -258,7 +252,7 @@ static bool GetImports(JSContext* cx, const Module& module,
   const GlobalDescVector& globals = metadata.globals;
   uint32_t tableIndex = 0;
   const TableDescVector& tables = metadata.tables;
-  for (const Import& import : imports) {
+  for (const Import& import : module.imports()) {
     RootedValue v(cx);
     if (!GetProperty(cx, importObj, import.module.get(), &v)) {
       return false;
@@ -282,7 +276,7 @@ static bool GetImports(JSContext* cx, const Module& module,
           return ThrowBadImportType(cx, import.field.get(), "Function");
         }
 
-        if (!funcImports.append(&v.toObject().as<JSFunction>())) {
+        if (!imports->funcs.append(&v.toObject().as<JSFunction>())) {
           return false;
         }
 
@@ -301,7 +295,7 @@ static bool GetImports(JSContext* cx, const Module& module,
           return false;
         }
 
-        if (!tableImports.append(obj)) {
+        if (!imports->tables.append(obj)) {
           return false;
         }
         break;
@@ -311,8 +305,8 @@ static bool GetImports(JSContext* cx, const Module& module,
           return ThrowBadImportType(cx, import.field.get(), "Memory");
         }
 
-        MOZ_ASSERT(!memoryImport);
-        memoryImport.set(&v.toObject().as<WasmMemoryObject>());
+        MOZ_ASSERT(!imports->memory);
+        imports->memory = &v.toObject().as<WasmMemoryObject>();
         break;
       }
       case DefinitionKind::Global: {
@@ -335,11 +329,12 @@ static bool GetImports(JSContext* cx, const Module& module,
             return false;
           }
 
-          if (globalObjs.length() <= index && !globalObjs.resize(index + 1)) {
+          if (imports->globalObjs.length() <= index &&
+              !imports->globalObjs.resize(index + 1)) {
             ReportOutOfMemory(cx);
             return false;
           }
-          globalObjs[index] = obj;
+          imports->globalObjs[index] = obj;
           obj->val(&val);
         } else {
           if (IsNumberType(global.type())) {
@@ -371,7 +366,7 @@ static bool GetImports(JSContext* cx, const Module& module,
           }
         }
 
-        if (!globalImportValues.append(val)) {
+        if (!imports->globalValues.append(val)) {
           return false;
         }
 
@@ -450,19 +445,12 @@ bool wasm::Eval(JSContext* cx, Handle<TypedArrayObject*> code,
     return false;
   }
 
-  Rooted<FunctionVector> funcs(cx, FunctionVector(cx));
-  Rooted<WasmTableObjectVector> tables(cx);
-  RootedWasmMemoryObject memory(cx);
-  Rooted<WasmGlobalObjectVector> globalObjs(cx);
-
-  RootedValVector globals(cx);
-  if (!GetImports(cx, *module, importObj, &funcs, tables.get(), &memory,
-                  globalObjs.get(), &globals)) {
+  Rooted<ImportValues> imports(cx);
+  if (!GetImports(cx, *module, importObj, imports.address())) {
     return false;
   }
 
-  return module->instantiate(cx, funcs, tables.get(), memory, globals,
-                             globalObjs.get(), nullptr, instanceObj);
+  return module->instantiate(cx, imports.get(), nullptr, instanceObj);
 }
 
 struct MOZ_STACK_CLASS SerializeListener : JS::OptimizedEncodingListener {
@@ -1250,8 +1238,8 @@ WasmInstanceObject* WasmInstanceObject::create(
     const ElemSegmentVector& elemSegments, UniqueTlsData tlsData,
     HandleWasmMemoryObject memory, SharedTableVector&& tables,
     StructTypeDescrVector&& structTypeDescrs,
-    Handle<FunctionVector> funcImports, const GlobalDescVector& globals,
-    HandleValVector globalImportValues,
+    const JSFunctionVector& funcImports, const GlobalDescVector& globals,
+    const ValVector& globalImportValues,
     const WasmGlobalObjectVector& globalObjs, HandleObject proto,
     UniqueDebugState maybeDebug) {
   UniquePtr<ExportMap> exports = js::MakeUnique<ExportMap>();
@@ -1374,20 +1362,13 @@ bool WasmInstanceObject::construct(JSContext* cx, unsigned argc, Value* vp) {
   RootedObject instanceProto(
       cx, &cx->global()->getPrototype(JSProto_WasmInstance).toObject());
 
-  Rooted<FunctionVector> funcs(cx, FunctionVector(cx));
-  Rooted<WasmTableObjectVector> tables(cx);
-  RootedWasmMemoryObject memory(cx);
-  Rooted<WasmGlobalObjectVector> globalObjs(cx);
-
-  RootedValVector globals(cx);
-  if (!GetImports(cx, *module, importObj, &funcs, tables.get(), &memory,
-                  globalObjs.get(), &globals)) {
+  Rooted<ImportValues> imports(cx);
+  if (!GetImports(cx, *module, importObj, imports.address())) {
     return false;
   }
 
   RootedWasmInstanceObject instanceObj(cx);
-  if (!module->instantiate(cx, funcs, tables.get(), memory, globals,
-                           globalObjs.get(), instanceProto, &instanceObj)) {
+  if (!module->instantiate(cx, imports.get(), instanceProto, &instanceObj)) {
     return false;
   }
 
@@ -2868,20 +2849,13 @@ static bool AsyncInstantiate(JSContext* cx, const Module& module,
   RootedObject instanceProto(
       cx, &cx->global()->getPrototype(JSProto_WasmInstance).toObject());
 
-  Rooted<FunctionVector> funcs(cx, FunctionVector(cx));
-  Rooted<WasmTableObjectVector> tables(cx);
-  RootedWasmMemoryObject memory(cx);
-  Rooted<WasmGlobalObjectVector> globalObjs(cx);
-
-  RootedValVector globals(cx);
-  if (!GetImports(cx, module, importObj, &funcs, tables.get(), &memory,
-                  globalObjs.get(), &globals)) {
+  Rooted<ImportValues> imports(cx);
+  if (!GetImports(cx, module, importObj, imports.address())) {
     return RejectWithPendingException(cx, promise);
   }
 
   RootedWasmInstanceObject instanceObj(cx);
-  if (!module.instantiate(cx, funcs, tables.get(), memory, globals,
-                          globalObjs.get(), instanceProto, &instanceObj)) {
+  if (!module.instantiate(cx, imports.get(), instanceProto, &instanceObj)) {
     return RejectWithPendingException(cx, promise);
   }
 

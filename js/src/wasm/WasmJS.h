@@ -245,8 +245,9 @@ class WasmInstanceObject : public NativeObject {
       Vector<RefPtr<wasm::Table>, 0, SystemAllocPolicy>&& tables,
       GCVector<HeapPtr<StructTypeDescr*>, 0, SystemAllocPolicy>&&
           structTypeDescrs,
-      Handle<FunctionVector> funcImports, const wasm::GlobalDescVector& globals,
-      wasm::HandleValVector globalImportValues,
+      const JSFunctionVector& funcImports,
+      const wasm::GlobalDescVector& globals,
+      const wasm::ValVector& globalImportValues,
       const WasmGlobalObjectVector& globalObjs, HandleObject proto,
       UniquePtr<wasm::DebugState> maybeDebug);
   void initExportsObj(JSObject& exportsObj);
