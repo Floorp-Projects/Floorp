@@ -163,9 +163,9 @@ class UrlbarEventBufferer {
    *        the event.
    */
   deferEvent(event, callback) {
-    // TODO: once one-off buttons are implemented, figure out if the following
-    // is true for the quantum bar as well: somehow event.defaultPrevented ends
-    // up true for deferred events.  Autocomplete ignores defaultPrevented
+    // TODO Bug 1536822: once one-off buttons are implemented, figure out if the
+    // following is true for the quantum bar as well: somehow event.defaultPrevented
+    // ends up true for deferred events.  Autocomplete ignores defaultPrevented
     // events, which means it would ignore replayed deferred events if we didn't
     // tell it to bypass defaultPrevented through urlbarDeferred.
     // Check we don't try to defer events more than once.
@@ -311,8 +311,8 @@ class UrlbarEventBufferer {
   }
 
   get lastResultIsSelected() {
-    // TODO: Once one-off buttons are fully implemented, it would be nice to have
-    // a better way to check if the next down will focus one-off buttons.
+    // TODO Bug 1536818: Once one-off buttons are fully implemented, it would be
+    // nice to have a better way to check if the next down will focus one-off buttons.
     let results = this._lastQuery.results;
     return results.length &&
            results[results.length - 1] == this.input.view.selectedResult;
