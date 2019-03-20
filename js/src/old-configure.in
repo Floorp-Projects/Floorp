@@ -302,7 +302,8 @@ dnl ==============================================================
 MOZ_ARCH_OPTS
 
 dnl ========================================================
-dnl Android libstdc++
+dnl Android libstdc++, placed here so it can use MOZ_ARCH
+dnl computed above.
 dnl ========================================================
 
 MOZ_ANDROID_CPU_ARCH
