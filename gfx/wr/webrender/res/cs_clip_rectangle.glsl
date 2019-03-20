@@ -4,12 +4,17 @@
 
 #include shared,clip_shared,ellipse
 
+#ifdef WR_FEATURE_FAST_PATH
+varying vec2 vLocalPos;
+flat varying vec3 vClipParams;      // xy = box size, z = radius
+#else
 varying vec3 vLocalPos;
 flat varying float vClipMode;
 flat varying vec4 vClipCenter_Radius_TL;
 flat varying vec4 vClipCenter_Radius_TR;
 flat varying vec4 vClipCenter_Radius_BL;
 flat varying vec4 vClipCenter_Radius_BR;
+#endif
 
 #ifdef WR_VERTEX_SHADER
 struct ClipRect {
@@ -77,6 +82,15 @@ void main(void) {
         cmi.device_pixel_scale
     );
 
+#ifdef WR_FEATURE_FAST_PATH
+    // If the radii are all uniform, we can use a much simpler 2d
+    // signed distance function to get a rounded rect clip.
+    vec2 half_size = 0.5 * local_rect.size;
+    float radius = clip.top_left.outer_inner_radius.x;
+    vLocalPos = vi.local_pos.xy - half_size - cmi.local_pos;
+    vClipParams.xy = half_size - vec2(radius);
+    vClipParams.z = radius;
+#else
     vLocalPos = vi.local_pos;
     vClipMode = clip.rect.mode.x;
 
@@ -98,16 +112,34 @@ void main(void) {
     vClipCenter_Radius_BL = vec4(clip_rect.p0.x + r_bl.x,
                                  clip_rect.p1.y - r_bl.y,
                                  r_bl);
+#endif
 }
 #endif
 
 #ifdef WR_FRAGMENT_SHADER
-void main(void) {
-    vec2 local_pos = vLocalPos.xy / vLocalPos.z;
 
-    float alpha = init_transform_fs(local_pos.xy);
+#ifdef WR_FEATURE_FAST_PATH
+// See http://www.iquilezles.org/www/articles/distfunctions2d/distfunctions2d.htm
+float sdf_rounded_rect(vec2 pos, vec3 clip_params) {
+    return length(max(abs(pos) - clip_params.xy, 0.0)) - clip_params.z;
+}
+#endif
+
+void main(void) {
+#ifdef WR_FEATURE_FAST_PATH
+    vec2 local_pos = vLocalPos.xy;
+#else
+    vec2 local_pos = vLocalPos.xy / vLocalPos.z;
+#endif
 
     float aa_range = compute_aa_range(local_pos.xy);
+
+#ifdef WR_FEATURE_FAST_PATH
+    float d = sdf_rounded_rect(local_pos, vClipParams);
+    float f = distance_aa(aa_range, d);
+    oFragColor = vec4(f);
+#else
+    float alpha = init_transform_fs(local_pos.xy);
 
     float clip_alpha = rounded_rect(local_pos.xy,
                                     vClipCenter_Radius_TL,
@@ -122,5 +154,6 @@ void main(void) {
     float final_alpha = mix(combined_alpha, 1.0 - combined_alpha, vClipMode);
 
     oFragColor = vec4(final_alpha, 0.0, 0.0, 1.0);
+#endif
 }
 #endif

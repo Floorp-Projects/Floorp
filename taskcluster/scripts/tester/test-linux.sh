@@ -23,6 +23,7 @@ fi
 : MOZHARNESS_URL                ${MOZHARNESS_URL}
 : MOZHARNESS_SCRIPT             ${MOZHARNESS_SCRIPT}
 : MOZHARNESS_CONFIG             ${MOZHARNESS_CONFIG}
+: MOZHARNESS_OPTIONS            ${MOZHARNESS_OPTIONS}
 : NEED_XVFB                     ${NEED_XVFB:=true}
 : NEED_WINDOW_MANAGER           ${NEED_WINDOW_MANAGER:=false}
 : NEED_PULSEAUDIO               ${NEED_PULSEAUDIO:=false}
@@ -175,6 +176,13 @@ for cfg in $MOZHARNESS_CONFIG; do
   config_cmds="${config_cmds} --config-file ${MOZHARNESS_PATH}/configs/${cfg}"
 done
 
+if [ -n "$MOZHARNESS_OPTIONS" ]; then
+    options=""
+    for option in $MOZHARNESS_OPTIONS; do
+        options="$options --$option"
+    done
+fi
+
 mozharness_bin="$HOME/bin/run-mozharness"
 mkdir -p $(dirname $mozharness_bin)
 
@@ -184,7 +192,7 @@ echo -e "#!/usr/bin/env bash
 # Some mozharness scripts assume base_work_dir is in
 # the current working directory, see bug 1279237
 cd "$WORKSPACE"
-cmd=\"python2.7 ${MOZHARNESS_PATH}/scripts/${MOZHARNESS_SCRIPT} ${config_cmds} ${@} \${@}\"
+cmd=\"python2.7 ${MOZHARNESS_PATH}/scripts/${MOZHARNESS_SCRIPT} ${config_cmds} ${options} ${@} \${@}\"
 echo \"Running: \${cmd}\"
 exec \${cmd}" > ${mozharness_bin}
 chmod +x ${mozharness_bin}

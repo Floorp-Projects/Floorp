@@ -8,6 +8,10 @@ job-defaults:
             linux64/debug: both
             default: false
     socketprocess-e10s: false
+    run-on-projects:
+        by-test-platform:
+            android-em-4.3-arm7-api-16/opt: ['try']
+            default: built-projects
     mozharness:
         script:
             by-test-platform:
@@ -38,7 +42,6 @@ mochitest:
     suite: mochitest/plain-chunked
     treeherder-symbol: M()
     loopback-video: true
-    run-on-projects: built-projects
     tier:
         by-test-platform:
             android-em-7.*/opt: 2
@@ -257,7 +260,6 @@ mochitest-gpu:
     description: "Mochitest GPU run"
     suite: mochitest/gpu
     treeherder-symbol: M(gpu)
-    run-on-projects: built-projects
     loopback-video: true
     instance-size:
         by-test-platform:
@@ -287,7 +289,11 @@ mochitest-media:
             windows10-64-ccov/debug: 7200
             macosx64-ccov/debug: 7200
             default: 5400
-    run-on-projects: built-projects
+    run-on-projects:
+        by-test-platform:
+            android-hw-.*-api-16/opt: ['try']
+            android-em-4.3-arm7-api-16/opt: ['try']
+            default: built-projects
     socketprocess-e10s:
         by-test-platform:
             android.*: false

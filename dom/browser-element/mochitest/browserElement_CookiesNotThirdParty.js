@@ -5,33 +5,35 @@
 // third-party.
 "use strict";
 
+/* global browserElementTestHelpers */
+
 SimpleTest.waitForExplicitFinish();
 browserElementTestHelpers.setEnabledPref(true);
 browserElementTestHelpers.addPermission();
 
 function runTest() {
-  const innerPage = 'http://example.com/tests/dom/browser-element/mochitest/file_browserElement_CookiesNotThirdParty.html';
+  const innerPage = "http://example.com/tests/dom/browser-element/mochitest/file_browserElement_CookiesNotThirdParty.html";
 
-  var iframe = document.createElement('iframe');
-  iframe.setAttribute('mozbrowser', 'true');
+  var iframe = document.createElement("iframe");
+  iframe.setAttribute("mozbrowser", "true");
 
-  iframe.addEventListener('mozbrowsershowmodalprompt', function(e) {
-    if (e.detail.message == 'next') {
-      iframe.src = innerPage + '?step=2';
+  iframe.addEventListener("mozbrowsershowmodalprompt", function(e) {
+    if (e.detail.message == "next") {
+      iframe.src = innerPage + "?step=2";
       return;
     }
 
-    if (e.detail.message.startsWith('success:')) {
+    if (e.detail.message.startsWith("success:")) {
       ok(true, e.detail.message);
       return;
     }
 
-    if (e.detail.message.startsWith('failure:')) {
+    if (e.detail.message.startsWith("failure:")) {
       ok(false, e.detail.message);
       return;
     }
 
-    if (e.detail.message == 'finish') {
+    if (e.detail.message == "finish") {
       SimpleTest.finish();
     }
   });
@@ -46,6 +48,6 @@ function runTest() {
 }
 
 // Disable third-party cookies for this test.
-addEventListener('testready', function() {
-  SpecialPowers.pushPrefEnv({'set': [['network.cookie.cookieBehavior', 1]]}, runTest);
+addEventListener("testready", function() {
+  SpecialPowers.pushPrefEnv({"set": [["network.cookie.cookieBehavior", 1]]}, runTest);
 });

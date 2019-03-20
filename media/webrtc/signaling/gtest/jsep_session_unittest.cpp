@@ -834,8 +834,7 @@ class JsepSessionTest : public JsepSessionTestBase,
         if (track.GetMediaType() != SdpMediaSection::kApplication) {
           std::string msidAttr("a=msid:");
           msidAttr += track.GetStreamIds()[0];
-          msidAttr += " ";
-          msidAttr += track.GetTrackId();
+          // Track id will not match, and will eventually not be present at all
           ASSERT_NE(std::string::npos, offer.find(msidAttr))
               << "Did not find " << msidAttr << " in offer";
         }
@@ -924,8 +923,7 @@ class JsepSessionTest : public JsepSessionTestBase,
         if (recvTrack.GetMediaType() != SdpMediaSection::kApplication) {
           std::string msidAttr("a=msid:");
           msidAttr += recvTrack.GetStreamIds()[0];
-          msidAttr += " ";
-          msidAttr += recvTrack.GetTrackId();
+          // Track id will not match, and will eventually not be present at all
           ASSERT_NE(std::string::npos, answer.find(msidAttr))
               << "Did not find " << msidAttr << " in answer";
         }
@@ -1183,9 +1181,13 @@ class JsepSessionTest : public JsepSessionTestBase,
   }
 
   void DisableMsid(std::string* sdp) const {
-    size_t pos = sdp->find("a=msid-semantic");
-    ASSERT_NE(std::string::npos, pos);
-    (*sdp)[pos + 2] = 'X';  // garble, a=Xsid-semantic
+    while (true) {
+      size_t pos = sdp->find("a=msid");
+      if (pos == std::string::npos) {
+        break;
+      }
+      (*sdp)[pos + 2] = 'X';  // garble, a=Xsid
+    }
   }
 
   void DisableBundle(std::string* sdp) const {
@@ -1826,7 +1828,6 @@ TEST_P(JsepSessionTest, RenegotiationOffererChangesMsid) {
   SetRemoteOffer(offer);
   transceiver = GetNegotiatedTransceiver(*mSessionAns, 0);
   ASSERT_EQ("foo", transceiver->mRecvTrack.GetStreamIds()[0]);
-  ASSERT_EQ("bar", transceiver->mRecvTrack.GetTrackId());
 
   std::string answer = CreateAnswer();
   SetLocalAnswer(answer);
@@ -1873,7 +1874,6 @@ TEST_P(JsepSessionTest, RenegotiationAnswererChangesMsid) {
 
   transceiver = GetNegotiatedTransceiver(*mSessionOff, 0);
   ASSERT_EQ("foo", transceiver->mRecvTrack.GetStreamIds()[0]);
-  ASSERT_EQ("bar", transceiver->mRecvTrack.GetTrackId());
 }
 
 TEST_P(JsepSessionTest, RenegotiationOffererStopsTransceiver) {

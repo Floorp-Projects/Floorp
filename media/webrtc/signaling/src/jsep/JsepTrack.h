@@ -106,7 +106,7 @@ class JsepTrack {
     mRemoteSetSendBit = msection.IsSending();
 
     if (msection.IsSending()) {
-      (void)helper.GetIdsFromMsid(sdp, msection, &mStreamIds, &mTrackId);
+      (void)helper.GetIdsFromMsid(sdp, msection, &mStreamIds);
     } else {
       mStreamIds.clear();
     }

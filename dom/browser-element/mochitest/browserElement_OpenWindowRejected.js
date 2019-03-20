@@ -5,40 +5,41 @@
 // reject the call.  This shouldn't cause problems (crashes, leaks).
 
 "use strict";
+
+/* global browserElementTestHelpers */
+
 SimpleTest.waitForExplicitFinish();
 browserElementTestHelpers.setEnabledPref(true);
 browserElementTestHelpers.addPermission();
 
 function runTest() {
-  var iframe = document.createElement('iframe');
-  iframe.setAttribute('mozbrowser', 'true');
+  var iframe = document.createElement("iframe");
+  iframe.setAttribute("mozbrowser", "true");
 
-  iframe.addEventListener('mozbrowseropenwindow', function(e) {
-    ok(e.detail.url.includes('does_not_exist.html'),
-       'Opened URL; got ' + e.detail.url);
-    is(e.detail.name, '');
-    is(e.detail.features, '');
+  iframe.addEventListener("mozbrowseropenwindow", function(e) {
+    ok(e.detail.url.includes("does_not_exist.html"),
+       "Opened URL; got " + e.detail.url);
+    is(e.detail.name, "");
+    is(e.detail.features, "");
 
     // Don't add e.detail.frameElement to the DOM, so the window.open is
     // effectively blocked.
     e.preventDefault();
   });
 
-  iframe.addEventListener('mozbrowsershowmodalprompt', function(e) {
+  iframe.addEventListener("mozbrowsershowmodalprompt", function(e) {
     var msg = e.detail.message;
-    if (msg.indexOf('success:') == 0) {
+    if (msg.indexOf("success:") == 0) {
       ok(true, msg);
-    }
-    else if (msg == 'finish') {
+    } else if (msg == "finish") {
       SimpleTest.finish();
-    }
-    else {
+    } else {
       ok(false, msg);
     }
   });
 
-  iframe.src = 'file_browserElement_OpenWindowRejected.html';
+  iframe.src = "file_browserElement_OpenWindowRejected.html";
   document.body.appendChild(iframe);
 }
 
-addEventListener('testready', runTest);
+addEventListener("testready", runTest);

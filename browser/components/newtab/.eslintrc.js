@@ -185,7 +185,6 @@ module.exports = {
     "no-sync": 0,
     "no-template-curly-in-string": 2,
     "no-ternary": 0,
-    "no-throw-literal": 2,
     "no-undef-init": 2,
     "no-undefined": 0,
     "no-underscore-dangle": 0,

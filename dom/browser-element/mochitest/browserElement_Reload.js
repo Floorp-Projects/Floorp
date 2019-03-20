@@ -4,15 +4,19 @@
 // Bug 741717 - Test the reload ability of <iframe mozbrowser>.
 
 "use strict";
+
+/* global browserElementTestHelpers */
+/* eslint-env mozilla/frame-script */
+
 SimpleTest.waitForExplicitFinish();
 browserElementTestHelpers.setEnabledPref(true);
 browserElementTestHelpers.addPermission();
 
 var iframeScript = function() {
-  sendAsyncMessage('test:innerHTML', {
-    data: XPCNativeWrapper.unwrap(content).document.body.innerHTML
+  sendAsyncMessage("test:innerHTML", {
+    data: XPCNativeWrapper.unwrap(content).document.body.innerHTML,
   });
-}
+};
 
 var mm;
 var iframe;
@@ -20,12 +24,12 @@ var loadedEvents = 0;
 var countAcc;
 
 function runTest() {
-  iframe = document.createElement('iframe');
-  iframe.setAttribute('mozbrowser', 'true');
+  iframe = document.createElement("iframe");
+  iframe.setAttribute("mozbrowser", "true");
 
-  iframe.addEventListener('mozbrowserloadend', mozbrowserLoaded);
+  iframe.addEventListener("mozbrowserloadend", mozbrowserLoaded);
 
-  iframe.src = 'file_bug741717.sjs';
+  iframe.src = "file_bug741717.sjs";
   document.body.appendChild(iframe);
 }
 
@@ -39,12 +43,12 @@ function iframeBodyRecv(data) {
     iframe.reload();
     break;
   case 2:
-    ok(true, 'reload was triggered');
-    ok(previousCount === currentCount, 'reload was a soft reload');
+    ok(true, "reload was triggered");
+    ok(previousCount === currentCount, "reload was a soft reload");
     iframe.reload(true);
     break;
   case 3:
-    ok(currentCount > previousCount, 'reload was a hard reload');
+    ok(currentCount > previousCount, "reload was a hard reload");
     SimpleTest.finish();
   }
 }
@@ -52,8 +56,8 @@ function iframeBodyRecv(data) {
 function mozbrowserLoaded() {
   loadedEvents++;
   mm = SpecialPowers.getBrowserFrameMessageManager(iframe);
-  mm.addMessageListener('test:innerHTML', iframeBodyRecv);
-  mm.loadFrameScript('data:,(' + iframeScript.toString() + ')();', false);
+  mm.addMessageListener("test:innerHTML", iframeBodyRecv);
+  mm.loadFrameScript("data:,(" + iframeScript.toString() + ")();", false);
 }
 
-addEventListener('testready', runTest);
+addEventListener("testready", runTest);

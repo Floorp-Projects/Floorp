@@ -3,10 +3,11 @@
 <div id='url'></div>
 
 <script>
-if (location.search == '') {
-  window.open('file_browserElement_TargetTop.html?2', '_top');
+if (location.search == "") {
+  window.open("file_browserElement_TargetTop.html?2", "_top");
 }
-document.getElementById('url').innerHTML = document.location.href;
+// eslint-disable-next-line no-unsanitized/property
+document.getElementById("url").innerHTML = document.location.href;
 </script>
 </body>
 </html>

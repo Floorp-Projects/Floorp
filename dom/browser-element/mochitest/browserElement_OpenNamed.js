@@ -5,6 +5,9 @@
 // with the same name, we get only one mozbrowseropenwindow event.
 
 "use strict";
+
+/* global browserElementTestHelpers */
+
 SimpleTest.waitForExplicitFinish();
 browserElementTestHelpers.setEnabledPref(true);
 browserElementTestHelpers.addPermission();
@@ -12,20 +15,20 @@ browserElementTestHelpers.addPermission();
 var iframe;
 var popupFrame;
 function runTest() {
-  iframe = document.createElement('iframe');
-  iframe.setAttribute('mozbrowser', 'true');
+  iframe = document.createElement("iframe");
+  iframe.setAttribute("mozbrowser", "true");
 
   var gotPopup = false;
-  iframe.addEventListener('mozbrowseropenwindow', function(e) {
-    is(gotPopup, false, 'Should get just one popup.');
+  iframe.addEventListener("mozbrowseropenwindow", function(e) {
+    is(gotPopup, false, "Should get just one popup.");
     gotPopup = true;
     popupFrame = e.detail.frameElement;
-    is(popupFrame.getAttribute('name'), 'OpenNamed');
+    is(popupFrame.getAttribute("name"), "OpenNamed");
 
     // Called when file_browserElement_OpenNamed2.html loads into popupFrame.
-    popupFrame.addEventListener('mozbrowsershowmodalprompt', function(e) {
-      ok(gotPopup, 'Got openwindow event before showmodalprompt event.');
-      is(e.detail.message, 'success: loaded');
+    popupFrame.addEventListener("mozbrowsershowmodalprompt", function(f) {
+      ok(gotPopup, "Got openwindow event before showmodalprompt event.");
+      is(f.detail.message, "success: loaded");
       SimpleTest.executeSoon(test2);
     }, {once: true});
 
@@ -39,17 +42,17 @@ function runTest() {
   // Once that popup loads, we reload OpenNamed.html.  That will call
   // window.open again, but we shouldn't get another openwindow event, because
   // we're opening into the same named window.
-  iframe.src = 'file_browserElement_OpenNamed.html';
+  iframe.src = "file_browserElement_OpenNamed.html";
   document.body.appendChild(iframe);
 }
 
 function test2() {
-  popupFrame.addEventListener('mozbrowsershowmodalprompt', function(e) {
-    is(e.detail.message, 'success: loaded');
+  popupFrame.addEventListener("mozbrowsershowmodalprompt", function(e) {
+    is(e.detail.message, "success: loaded");
     SimpleTest.finish();
   });
 
-  iframe.src = 'file_browserElement_OpenNamed.html?test2';
+  iframe.src = "file_browserElement_OpenNamed.html?test2";
 }
 
-addEventListener('testready', runTest);
+addEventListener("testready", runTest);

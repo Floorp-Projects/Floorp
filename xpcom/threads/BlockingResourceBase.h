@@ -101,7 +101,12 @@ class BlockingResourceBase {
 #  ifdef MOZ_CALLSTACK_DISABLED
   typedef bool AcquisitionState;
 #  else
-  typedef AutoTArray<void*, 24> AcquisitionState;
+  // Using maybe to use emplacement as the acquisition state flag; we may not
+  // always get a stack trace because of possible stack walk suppression or
+  // errors, hence can't use !IsEmpty() on the array itself as indication.
+  static size_t const kAcquisitionStateStackSize = 24;
+  typedef Maybe<AutoTArray<void*, kAcquisitionStateStackSize> >
+      AcquisitionState;
 #  endif
 
   /**
@@ -217,7 +222,7 @@ class BlockingResourceBase {
 #  ifdef MOZ_CALLSTACK_DISABLED
     mAcquired = false;
 #  else
-    mAcquired.Clear();
+    mAcquired.reset();
 #  endif
   }
 
@@ -227,13 +232,7 @@ class BlockingResourceBase {
    *
    * *NOT* thread safe.  Requires ownership of underlying resource.
    */
-  bool IsAcquired() const {
-#  ifdef MOZ_CALLSTACK_DISABLED
-    return mAcquired;
-#  else
-    return !mAcquired.IsEmpty();
-#  endif
-  }
+  bool IsAcquired() const { return (bool)mAcquired; }
 
   /**
    * mChainPrev

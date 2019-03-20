@@ -183,41 +183,7 @@ var gPermissionManager = {
     this._permissions.set(p.origin, p);
   },
 
-  addPermission(capability) {
-    let textbox = document.getElementById("url");
-    let input_url = textbox.value.replace(/^\s*/, ""); // trim any leading space
-    let principal;
-    try {
-      // The origin accessor on the principal object will throw if the
-      // principal doesn't have a canonical origin representation. This will
-      // help catch cases where the URI parser parsed something like
-      // `localhost:8080` as having the scheme `localhost`, rather than being
-      // an invalid URI. A canonical origin representation is required by the
-      // permission manager for storage, so this won't prevent any valid
-      // permissions from being entered by the user.
-      let uri;
-      try {
-        uri = Services.io.newURI(input_url);
-        principal = Services.scriptSecurityManager.createCodebasePrincipal(uri, {});
-        if (principal.origin.startsWith("moz-nullprincipal:")) {
-          throw "Null principal";
-        }
-      } catch (ex) {
-        uri = Services.io.newURI("http://" + input_url);
-        principal = Services.scriptSecurityManager.createCodebasePrincipal(uri, {});
-        // If we have ended up with an unknown scheme, the following will throw.
-        principal.origin;
-      }
-    } catch (ex) {
-      document.l10n.formatValues([
-        {id: "permissions-invalid-uri-title"},
-        {id: "permissions-invalid-uri-label"},
-      ]).then(([title, message]) => {
-        Services.prompt.alert(window, title, message);
-      });
-      return;
-    }
-
+  _addOrModifyPermission(principal, capability) {
     // check whether the permission already exists, if not, add it
     let permissionParams = {principal, type: this._type, capability};
     let existingPermission = this._permissions.get(principal.origin);
@@ -229,6 +195,50 @@ var gPermissionManager = {
       existingPermission.capability = capability;
       this._permissionsToAdd.set(principal.origin, permissionParams);
       this._handleCapabilityChange(existingPermission);
+    }
+  },
+
+  _addNewPrincipalToList(list, uri) {
+    list.push(Services.scriptSecurityManager.createCodebasePrincipal(uri, {}));
+    // If we have ended up with an unknown scheme, the following will throw.
+    list[list.length - 1].origin;
+  },
+
+  addPermission(capability) {
+    let textbox = document.getElementById("url");
+    let input_url = textbox.value.replace(/^\s*/, ""); // trim any leading space
+    let principals = [];
+    try {
+      // The origin accessor on the principal object will throw if the
+      // principal doesn't have a canonical origin representation. This will
+      // help catch cases where the URI parser parsed something like
+      // `localhost:8080` as having the scheme `localhost`, rather than being
+      // an invalid URI. A canonical origin representation is required by the
+      // permission manager for storage, so this won't prevent any valid
+      // permissions from being entered by the user.
+      try {
+        let uri = Services.io.newURI(input_url);
+        let principal = Services.scriptSecurityManager.createCodebasePrincipal(uri, {});
+        if (principal.origin.startsWith("moz-nullprincipal:")) {
+          throw "Null principal";
+        }
+        principals.push(principal);
+      } catch (ex) {
+        this._addNewPrincipalToList(principals, Services.io.newURI("http://" + input_url));
+        this._addNewPrincipalToList(principals, Services.io.newURI("https://" + input_url));
+      }
+    } catch (ex) {
+      document.l10n.formatValues([
+        {id: "permissions-invalid-uri-title"},
+        {id: "permissions-invalid-uri-label"},
+      ]).then(([title, message]) => {
+        Services.prompt.alert(window, title, message);
+      });
+      return;
+    }
+
+    for (let principal of principals) {
+      this._addOrModifyPermission(principal, capability);
     }
 
     textbox.value = "";

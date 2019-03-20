@@ -4,6 +4,8 @@
 // Test that an <iframe mozbrowser> is a window.{top,parent,frameElement} barrier.
 "use strict";
 
+/* global browserElementTestHelpers */
+
 SimpleTest.waitForExplicitFinish();
 browserElementTestHelpers.setEnabledPref(true);
 browserElementTestHelpers.addPermission();
@@ -11,19 +13,19 @@ browserElementTestHelpers.allowTopLevelDataURINavigation();
 
 var iframe;
 function runTest() {
-  iframe = document.createElement('iframe');
-  iframe.addEventListener('mozbrowserloadend', function() {
+  iframe = document.createElement("iframe");
+  iframe.addEventListener("mozbrowserloadend", function() {
     try {
       outerIframeLoaded();
-    } catch(e) {
-      dump("Got error: " + e + '\n');
+    } catch (e) {
+      dump("Got error: " + e + "\n");
     }
   });
-  iframe.setAttribute('mozbrowser', 'true');
+  iframe.setAttribute("mozbrowser", "true");
   iframe.src = 'data:text/html,Outer iframe <iframe id="inner-iframe"></iframe>';
   // For kicks, this test uses a display:none iframe.  This shouldn't make a
   // difference in anything.
-  iframe.style.display = 'none';
+  iframe.style.display = "none";
   document.body.appendChild(iframe);
 }
 
@@ -48,7 +50,7 @@ function outerIframeLoaded() {
     is(innerWindow.top, content.window, 'inner top');                    \
     is(innerWindow.content, content.window, 'inner content');            \
     is(innerWindow.parent, content.window, 'inner parent');              \
-    is(innerWindow.frameElement, innerIframe, 'inner frameElement');"
+    is(innerWindow.frameElement, innerIframe, 'inner frameElement');";
 
   var mm = SpecialPowers.getBrowserFrameMessageManager(iframe);
 
@@ -56,13 +58,13 @@ function outerIframeLoaded() {
     numMsgReceived++;
     ok(true, msg.json);
   }
-  mm.addMessageListener('test:test-pass', onRecvTestPass);
+  mm.addMessageListener("test:test-pass", onRecvTestPass);
 
   function onRecvTestFail(msg) {
     numMsgReceived++;
     ok(false, msg.json);
   }
-  mm.addMessageListener('test:test-fail', onRecvTestFail);
+  mm.addMessageListener("test:test-fail", onRecvTestFail);
 
   mm.loadFrameScript(injectedScript, /* allowDelayedLoad = */ false);
 
@@ -79,4 +81,4 @@ function waitForMessages(num) {
   SimpleTest.finish();
 }
 
-addEventListener('testready', runTest);
+addEventListener("testready", runTest);

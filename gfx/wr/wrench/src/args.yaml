@@ -85,6 +85,10 @@ subcommands:
               help: The input YAML file
               required: true
               index: 1
+          - OUTPUT:
+              help: Optional output path to save to.
+              required: false
+              index: 2
     - show:
         about: show frame(s) described by YAML, binary recording, or capture
         aliases: ['load', 'replay']

@@ -366,6 +366,12 @@ android-em-4.3-arm7-api-16/opt:
         - android-common-tests
         - android-opt-tests
 
+android-em-4.3-arm7-api-16-pgo/opt:
+    build-platform: android-api-16-pgo/opt
+    test-sets:
+        - android-common-tests
+        - android-opt-tests
+
 android-em-7.0-x86/opt:
     build-platform: android-x86/opt
     test-sets:
@@ -393,7 +399,22 @@ android-hw-g5-7-0-arm7-api-16/opt:
         - android-hw-arm7-raptor-power
         - raptor-fetch-geckoview
 
+android-hw-g5-7-0-arm7-api-16-pgo/opt:
+    build-platform: android-api-16-pgo/opt
+    test-sets:
+        - android-hw-arm7-raptor
+        - android-hw-arm7-raptor-power
+        - raptor-fetch-geckoview
+
 # android-hw-p2-8-0 Google Pixel 2 Android 8.0
+
+android-hw-p2-8-0-arm7-api-16-pgo/opt:
+    build-platform: android-api-16-pgo/opt
+    test-sets:
+        - android-hw-arm7-opt-unittests
+        - android-hw-arm7-raptor
+        - android-hw-arm7-raptor-power
+        - raptor-fetch-geckoview
 
 android-hw-p2-8-0-arm7-api-16/opt:
     build-platform: android-api-16/opt

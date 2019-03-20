@@ -4,14 +4,16 @@
 // Test that scroll event bubbles up.
 "use strict";
 
+/* global browserElementTestHelpers */
+
 SimpleTest.waitForExplicitFinish();
 browserElementTestHelpers.setEnabledPref(true);
 browserElementTestHelpers.addPermission();
 browserElementTestHelpers.allowTopLevelDataURINavigation();
 
 function runTest() {
-  var iframe = document.createElement('iframe');
-  iframe.setAttribute('mozbrowser', 'true');
+  var iframe = document.createElement("iframe");
+  iframe.setAttribute("mozbrowser", "true");
   document.body.appendChild(iframe);
 
   iframe.addEventListener("mozbrowserscroll", function(e) {
@@ -25,4 +27,4 @@ function runTest() {
   iframe.src = "data:text/html,<html><body style='min-height: 5000px; min-width: 5000px;'></body><script>window.scrollTo(4000, 4000);</script></html>";
 }
 
-addEventListener('testready', runTest);
+addEventListener("testready", runTest);

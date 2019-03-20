@@ -5,22 +5,24 @@
 // <iframe mozbrowser>.
 "use strict";
 
+/* global browserElementTestHelpers */
+
 SimpleTest.waitForExplicitFinish();
 browserElementTestHelpers.setEnabledPref(true);
 browserElementTestHelpers.addPermission();
 
 function runTest() {
-  var iframe = document.createElement('iframe');
-  iframe.setAttribute('mozbrowser', 'true');
+  var iframe = document.createElement("iframe");
+  iframe.setAttribute("mozbrowser", "true");
 
   // The page we load will fire an alert when it successfully loads.
-  iframe.addEventListener('mozbrowsershowmodalprompt', function(e) {
+  iframe.addEventListener("mozbrowsershowmodalprompt", function(e) {
     ok(true, "Got alert");
     SimpleTest.finish();
   });
 
   document.body.appendChild(iframe);
-  iframe.src = 'file_browserElement_XFrameOptions.sjs?DENY';
+  iframe.src = "file_browserElement_XFrameOptions.sjs?DENY";
 }
 
-addEventListener('testready', runTest);
+addEventListener("testready", runTest);

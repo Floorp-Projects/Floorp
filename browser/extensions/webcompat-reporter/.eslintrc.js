@@ -83,10 +83,6 @@ module.exports = {
     // single line of code to have only one easily predictable effect.
     "no-return-assign": "error",
 
-    // Disallow throwing literals (eg. throw "error" instead of
-    // throw new Error("error")).
-    "no-throw-literal": "error",
-
     // Require use of the second argument for parseInt().
     "radix": "error",
 

@@ -39,14 +39,14 @@ addRDMTask(TEST_URL, async function({ ui }) {
   await openDeviceModal(ui);
 
   info("Reveal device adder form");
-  let adderShow = document.querySelector("#device-adder-show");
+  let adderShow = document.querySelector("#device-add-button");
   adderShow.click();
 
   info("Add test device 1");
   await addDeviceInModal(ui, device1);
 
   info("Reveal device adder form");
-  adderShow = document.querySelector("#device-adder-show");
+  adderShow = document.querySelector("#device-add-button");
   adderShow.click();
 
   info("Add test device 2");

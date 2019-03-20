@@ -39,9 +39,9 @@
         if (typeof func !== "function") {
           reject(new TypeError("Expected a Function."));
         }
-        //not a generator, wrap it.
+        // not a generator, wrap it.
         if (func.constructor.name !== "GeneratorFunction") {
-          gen = (function*() {
+          gen = (function* () {
             return func.apply(self, functionArgs);
           }());
         } else {
@@ -69,7 +69,7 @@
               }
             ).catch(err => reject(err));
           }
-          step(gen.next(value));
+          return step(gen.next(value));
         }
       });
     };

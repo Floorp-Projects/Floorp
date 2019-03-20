@@ -12,12 +12,17 @@ add_task(async function testAllow() {
 
     assertListContents(params, [
       ["http://test.com", params.allowL10nId],
+      ["https://test.com", params.allowL10nId],
     ]);
 
     apply();
     await observeAllPromise;
-  }, [{ type: "cookie", origin: "http://test.com", data: "added",
-        capability: Ci.nsIPermissionManager.ALLOW_ACTION }]);
+  }, (params) => {
+    return [{ type: "cookie", origin: "http://test.com", data: "added",
+              capability: Ci.nsIPermissionManager.ALLOW_ACTION },
+            { type: "cookie", origin: "https://test.com", data: "added",
+              capability: Ci.nsIPermissionManager.ALLOW_ACTION }];
+  });
 });
 
 add_task(async function testBlock() {
@@ -27,12 +32,17 @@ add_task(async function testBlock() {
 
     assertListContents(params, [
       ["http://test.com", params.denyL10nId],
+      ["https://test.com", params.denyL10nId],
     ]);
 
     apply();
     await observeAllPromise;
-  }, [{ type: "cookie", origin: "http://test.com", data: "changed",
-        capability: Ci.nsIPermissionManager.DENY_ACTION  }]);
+  }, (params) => {
+    return [{ type: "cookie", origin: "http://test.com", data: "changed",
+              capability: Ci.nsIPermissionManager.DENY_ACTION  },
+            { type: "cookie", origin: "https://test.com", data: "changed",
+              capability: Ci.nsIPermissionManager.DENY_ACTION  }];
+  });
 });
 
 add_task(async function testAllowAgain() {
@@ -42,24 +52,41 @@ add_task(async function testAllowAgain() {
 
     assertListContents(params, [
       ["http://test.com", params.allowL10nId],
+      ["https://test.com", params.allowL10nId],
     ]);
 
     apply();
     await observeAllPromise;
-  }, [{ type: "cookie", origin: "http://test.com", data: "changed",
-        capability: Ci.nsIPermissionManager.ALLOW_ACTION }]);
+  }, (params) => {
+    return [{ type: "cookie", origin: "http://test.com", data: "changed",
+              capability: Ci.nsIPermissionManager.ALLOW_ACTION },
+            { type: "cookie", origin: "https://test.com", data: "changed",
+              capability: Ci.nsIPermissionManager.ALLOW_ACTION }];
+  });
 });
 
 add_task(async function testRemove() {
   await runTest(async (params, observeAllPromise, apply) => {
-    params.richlistbox.selectedIndex = 0;
-    params.btnRemove.doCommand();
-
+    while (params.richlistbox.itemCount) {
+      params.richlistbox.selectedIndex = 0;
+      params.btnRemove.doCommand();
+    }
     assertListContents(params, []);
 
     apply();
     await observeAllPromise;
-  }, [{ type: "cookie", origin: "http://test.com", data: "deleted" }]);
+  }, (params) => {
+    let richlistItems = params.richlistbox.getElementsByAttribute("origin", "*");
+    let observances = [];
+    for (let item of richlistItems) {
+      observances.push({
+        type: "cookie",
+        origin: item.getAttribute("origin"),
+        data: "deleted",
+      });
+    }
+    return observances;
+  });
 });
 
 add_task(async function testAdd() {
@@ -74,8 +101,10 @@ add_task(async function testAdd() {
     await observeAllPromise;
 
     Services.perms.remove(uri, "popup");
-  }, [{ type: "popup", origin: "http://test.com", data: "added",
-        capability: Ci.nsIPermissionManager.DENY_ACTION }]);
+  }, (params) => {
+    return [{ type: "popup", origin: "http://test.com", data: "added",
+              capability: Ci.nsIPermissionManager.DENY_ACTION }];
+  });
 });
 
 add_task(async function testAllowHTTPSWithPort() {
@@ -89,8 +118,10 @@ add_task(async function testAllowHTTPSWithPort() {
 
     apply();
     await observeAllPromise;
-  }, [{ type: "cookie", origin: "https://test.com:12345", data: "added",
-        capability: Ci.nsIPermissionManager.ALLOW_ACTION }]);
+  }, (params) => {
+    return [{ type: "cookie", origin: "https://test.com:12345", data: "added",
+              capability: Ci.nsIPermissionManager.ALLOW_ACTION }];
+  });
 });
 
 add_task(async function testBlockHTTPSWithPort() {
@@ -104,8 +135,10 @@ add_task(async function testBlockHTTPSWithPort() {
 
     apply();
     await observeAllPromise;
-  }, [{ type: "cookie", origin: "https://test.com:12345", data: "changed",
-        capability: Ci.nsIPermissionManager.DENY_ACTION  }]);
+  }, (params) => {
+    return [{ type: "cookie", origin: "https://test.com:12345", data: "changed",
+              capability: Ci.nsIPermissionManager.DENY_ACTION  }];
+  });
 });
 
 add_task(async function testAllowAgainHTTPSWithPort() {
@@ -119,20 +152,35 @@ add_task(async function testAllowAgainHTTPSWithPort() {
 
     apply();
     await observeAllPromise;
-  }, [{ type: "cookie", origin: "https://test.com:12345", data: "changed",
-        capability: Ci.nsIPermissionManager.ALLOW_ACTION }]);
+  }, (params) => {
+    return [{ type: "cookie", origin: "https://test.com:12345", data: "changed",
+              capability: Ci.nsIPermissionManager.ALLOW_ACTION }];
+  });
 });
 
 add_task(async function testRemoveHTTPSWithPort() {
   await runTest(async (params, observeAllPromise, apply) => {
-    params.richlistbox.selectedIndex = 0;
-    params.btnRemove.doCommand();
+    while (params.richlistbox.itemCount) {
+      params.richlistbox.selectedIndex = 0;
+      params.btnRemove.doCommand();
+    }
 
     assertListContents(params, []);
 
     apply();
     await observeAllPromise;
-  }, [{ type: "cookie", origin: "https://test.com:12345", data: "deleted" }]);
+  }, (params) => {
+    let richlistItems = params.richlistbox.getElementsByAttribute("origin", "*");
+    let observances = [];
+    for (let item of richlistItems) {
+      observances.push({
+        type: "cookie",
+        origin: item.getAttribute("origin"),
+        data: "deleted",
+      });
+    }
+    return observances;
+  });
 });
 
 add_task(async function testAllowPort() {
@@ -142,12 +190,17 @@ add_task(async function testAllowPort() {
 
     assertListContents(params, [
       ["http://localhost:12345", params.allowL10nId],
+      ["https://localhost:12345", params.allowL10nId],
     ]);
 
     apply();
     await observeAllPromise;
-  }, [{ type: "cookie", origin: "http://localhost:12345", data: "added",
-        capability: Ci.nsIPermissionManager.ALLOW_ACTION }]);
+  }, (params) => {
+    return [{ type: "cookie", origin: "http://localhost:12345", data: "added",
+              capability: Ci.nsIPermissionManager.ALLOW_ACTION },
+            { type: "cookie", origin: "https://localhost:12345", data: "added",
+              capability: Ci.nsIPermissionManager.ALLOW_ACTION }];
+  });
 });
 
 add_task(async function testBlockPort() {
@@ -157,12 +210,17 @@ add_task(async function testBlockPort() {
 
     assertListContents(params, [
       ["http://localhost:12345", params.denyL10nId],
+      ["https://localhost:12345", params.denyL10nId],
     ]);
 
     apply();
     await observeAllPromise;
-  }, [{ type: "cookie", origin: "http://localhost:12345", data: "changed",
-        capability: Ci.nsIPermissionManager.DENY_ACTION  }]);
+  }, (params) => {
+    return [{ type: "cookie", origin: "http://localhost:12345", data: "changed",
+              capability: Ci.nsIPermissionManager.DENY_ACTION  },
+            { type: "cookie", origin: "https://localhost:12345", data: "changed",
+              capability: Ci.nsIPermissionManager.DENY_ACTION  }];
+  });
 });
 
 add_task(async function testAllowAgainPort() {
@@ -172,24 +230,42 @@ add_task(async function testAllowAgainPort() {
 
     assertListContents(params, [
       ["http://localhost:12345", params.allowL10nId],
+      ["https://localhost:12345", params.allowL10nId],
     ]);
 
     apply();
     await observeAllPromise;
-  }, [{ type: "cookie", origin: "http://localhost:12345", data: "changed",
-        capability: Ci.nsIPermissionManager.ALLOW_ACTION }]);
+  }, (params) => {
+    return [{ type: "cookie", origin: "http://localhost:12345", data: "changed",
+              capability: Ci.nsIPermissionManager.ALLOW_ACTION },
+            { type: "cookie", origin: "https://localhost:12345", data: "changed",
+              capability: Ci.nsIPermissionManager.ALLOW_ACTION }];
+  });
 });
 
 add_task(async function testRemovePort() {
   await runTest(async (params, observeAllPromise, apply) => {
-    params.richlistbox.selectedIndex = 0;
-    params.btnRemove.doCommand();
+    while (params.richlistbox.itemCount) {
+      params.richlistbox.selectedIndex = 0;
+      params.btnRemove.doCommand();
+    }
 
     assertListContents(params, []);
 
     apply();
     await observeAllPromise;
-  }, [{ type: "cookie", origin: "http://localhost:12345", data: "deleted" }]);
+  }, (params) => {
+    let richlistItems = params.richlistbox.getElementsByAttribute("origin", "*");
+    let observances = [];
+    for (let item of richlistItems) {
+      observances.push({
+        type: "cookie",
+        origin: item.getAttribute("origin"),
+        data: "deleted",
+      });
+    }
+    return observances;
+  });
 });
 
 add_task(async function testSort() {
@@ -226,27 +302,29 @@ add_task(async function testSort() {
       let uri = Services.io.newURI(URL);
       Services.perms.remove(uri, "cookie");
     }
-  }, [{ type: "cookie", origin: "http://a", data: "added",
+  }, (params) => {
+    return [{ type: "cookie", origin: "http://a", data: "added",
         capability: Ci.nsIPermissionManager.ALLOW_ACTION },
       { type: "cookie", origin: "http://z", data: "added",
         capability: Ci.nsIPermissionManager.ALLOW_ACTION },
       { type: "cookie", origin: "http://b", data: "added",
-        capability: Ci.nsIPermissionManager.ALLOW_ACTION }]);
+        capability: Ci.nsIPermissionManager.ALLOW_ACTION }];
+  });
 });
 
 function assertListContents(params, expected) {
   Assert.equal(params.richlistbox.itemCount, expected.length);
+
   for (let i = 0; i < expected.length; i++) {
-    let richlistitem = params.richlistbox.getItemAtIndex(i);
-    Assert.equal(richlistitem.getAttribute("origin"), expected[i][0]);
-    Assert.equal(richlistitem.querySelector(".website-name > label")
-                             .getAttribute("value"), expected[i][0]);
-    Assert.equal(richlistitem.querySelector(".website-capability-value")
+    let website = expected[i][0];
+    let elements = params.richlistbox.getElementsByAttribute("origin", website);
+    Assert.equal(elements.length, 1); // "It should find only one coincidence"
+    Assert.equal(elements[0].querySelector(".website-capability-value")
                              .getAttribute("data-l10n-id"), expected[i][1]);
   }
 }
 
-async function runTest(test, observances) {
+async function runTest(test, getObservances) {
   registerCleanupFunction(function() {
     Services.prefs.clearUserPref("privacy.history.custom");
   });
@@ -278,6 +356,7 @@ async function runTest(test, observances) {
     deny: Ci.nsIPermissionManager.DENY_ACTION,
   };
   let btnApplyChanges = doc.getElementById("btnApplyChanges");
+  let observances = getObservances(params);
   let observeAllPromise = createObserveAllPromise(observances);
 
   await test(params, observeAllPromise, () => btnApplyChanges.doCommand());

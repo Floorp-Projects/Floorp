@@ -53,3 +53,39 @@ jobs:
             command: >
                 cd /builds/worker/checkouts/gecko &&
                 ./taskcluster/scripts/misc/run-profileserver.sh
+
+    android-api-16/pgo:
+        description: "Android 4.0 api-16+ Profile Generation"
+        shipping-phase: build
+        shipping-product: fennec
+        index:
+            product: mobile
+            job-name: android-api-16-profile
+        treeherder:
+            platform: android-4-0-armv7-api16/pgo
+        worker-type: t-linux-xlarge-pgo
+        worker:
+            max-run-time: 5400
+            docker-image: {in-tree: desktop1604-test}
+            env:
+                WORKSPACE: "/builds/worker/workspace"
+                WORKING_DIR: "/builds/worker"
+                MOZHARNESS_PATH: "/builds/worker/workspace/build/src/testing/mozharness"
+            artifacts:
+                - type: file
+                  name: public/build/profdata.tar.xz
+                  path: /builds/worker/artifacts/profdata.tar.xz
+                - type: directory
+                  name: public/build
+                  path: /builds/worker/artifacts/blobber_upload_dir
+        run:
+            using: mozharness
+            need-xvfb: true
+            job-script: taskcluster/scripts/tester/test-linux.sh
+            script: android_emulator_pgo.py
+            tooltool-downloads: internal
+            options: [installer-path=/builds/worker/fetches/target.apk]
+            config:
+                - android/android_common.py
+                - android/androidarm_4_3.py
+                - android/android_pgo.py
