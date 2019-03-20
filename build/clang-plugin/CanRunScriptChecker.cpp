@@ -110,6 +110,10 @@ void CanRunScriptChecker::registerMatchers(MatchFinder *AstMatcher) {
           ),
           // and which is not a parameter of the parent function,
           unless(declRefExpr(to(parmVarDecl()))),
+          // and which is not a constexpr variable, since that must be
+          // computable at compile-time and therefore isn't going to be going
+          // away.
+          unless(declRefExpr(to(varDecl(isConstexpr())))),
           // and which is not a default arg with value nullptr, since those are
           // always safe.
           unless(cxxDefaultArgExpr(isNullDefaultArg())),
@@ -130,7 +134,12 @@ void CanRunScriptChecker::registerMatchers(MatchFinder *AstMatcher) {
                   // implicitCastExpr), but it's simpler to just use
                   // ignoreTrivials to strip off the cast.
                   ignoreTrivials(declRefExpr(to(parmVarDecl()))),
-                  cxxThisExpr()
+                  cxxThisExpr(),
+                  // We also allow dereferencing a constexpr variable here,
+                  // since that will just end up with a reference to the
+                  // compile-time-constant thing.  Again, use ignoreTrivials()
+                  // to stip off the LValueToRValue cast.
+                  ignoreTrivials(declRefExpr(to(varDecl(isConstexpr()))))
                 )
               )
             )

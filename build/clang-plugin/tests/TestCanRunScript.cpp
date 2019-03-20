@@ -437,3 +437,28 @@ struct DisallowRefPtrTArrayElement {
     test2(mArray[0]); // expected-error {{arguments must all be strong refs or parent parameters when calling a function marked as MOZ_CAN_RUN_SCRIPT (including the implicit object argument)}}
   }
 };
+
+struct AllowConstexprMembers {
+  static constexpr RefCountedBase* mRefCounted = nullptr;
+  MOZ_CAN_RUN_SCRIPT void foo() {
+    mRefCounted->method_test();
+  }
+  MOZ_CAN_RUN_SCRIPT void bar() {
+    test2(mRefCounted);
+  }
+  MOZ_CAN_RUN_SCRIPT void baz() {
+    test_ref(*mRefCounted);
+  }
+};
+
+MOZ_CAN_RUN_SCRIPT void test_constexpr_1() {
+  AllowConstexprMembers::mRefCounted->method_test();
+}
+
+MOZ_CAN_RUN_SCRIPT void test_constexpr_2() {
+  test2(AllowConstexprMembers::mRefCounted);
+}
+
+MOZ_CAN_RUN_SCRIPT void test_constexpr_3() {
+  test_ref(*AllowConstexprMembers::mRefCounted);
+}
