@@ -47,7 +47,7 @@ JSObject* PositionError::WrapObject(JSContext* aCx,
 void PositionError::NotifyCallback(const GeoPositionErrorCallback& aCallback) {
   nsAutoMicroTask mt;
   if (aCallback.HasWebIDLCallback()) {
-    PositionErrorCallback* callback = aCallback.GetWebIDLCallback();
+    RefPtr<PositionErrorCallback> callback = aCallback.GetWebIDLCallback();
 
     if (callback) {
       callback->Call(*this);

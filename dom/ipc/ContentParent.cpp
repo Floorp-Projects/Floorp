@@ -4001,6 +4001,7 @@ mozilla::ipc::IPCResult ContentParent::RecvAsyncMessage(
   return IPC_OK();
 }
 
+MOZ_CAN_RUN_SCRIPT
 static int32_t AddGeolocationListener(
     nsIDOMGeoPositionCallback* watcher,
     nsIDOMGeoPositionErrorCallback* errorCallBack, bool highAccuracy) {
