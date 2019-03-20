@@ -1970,7 +1970,10 @@ var gA11yEventObserver =
       // Remove the leftover observer, otherwise it "leaks" to all the following tests.
       Services.obs.removeObserver(this, "accessible-event");
       // Forward the exception, with added explanation.
-      throw "[accessible/events.js, gA11yEventObserver.observe] This is expected if a previous test has been aborted... Initial exception was: [ " + ex + " ]";
+      throw new Error(
+        "[accessible/events.js, gA11yEventObserver.observe] This is expected " +
+        `if a previous test has been aborted... Initial exception was: [ ${ex} ]`
+      );
     }
     var listenersArray = gA11yEventListeners[event.eventType];
 
