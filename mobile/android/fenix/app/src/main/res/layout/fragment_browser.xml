@@ -32,7 +32,6 @@
             android:layout_gravity="bottom"/>
     </androidx.core.widget.NestedScrollView>
 
-
     <mozilla.components.feature.findinpage.view.FindInPageBar
         android:id="@+id/findInPageView"
         android:layout_width="match_parent"

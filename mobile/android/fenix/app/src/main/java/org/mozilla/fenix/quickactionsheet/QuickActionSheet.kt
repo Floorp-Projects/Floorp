@@ -1,3 +1,7 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+   License, v. 2.0. If a copy of the MPL was not distributed with this
+   file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 package org.mozilla.fenix.quickactionsheet
 
 import android.content.Context
@@ -33,17 +37,21 @@ class QuickActionSheet @JvmOverloads constructor(
         val handle = findViewById<AppCompatImageButton>(R.id.quick_action_sheet_handle)
         val linearLayout = findViewById<LinearLayout>(R.id.quick_action_sheet)
         val quickActionSheetBehavior = BottomSheetBehavior.from(linearLayout.parent as View) as QuickActionSheetBehavior
-        handle.increaseTapArea(100)
+        handle.increaseTapArea(grabHandleIncreasedTapArea)
         handle.setOnClickListener {
             bounceSheet(quickActionSheetBehavior)
         }
 
-        bounceSheet(quickActionSheetBehavior, 500L)
+        bounceSheet(quickActionSheetBehavior, bounceAnimationLength)
     }
 
-    private fun bounceSheet(quickActionSheetBehavior: QuickActionSheetBehavior, duration: Long = 400L) {
+    private fun bounceSheet(
+        quickActionSheetBehavior: QuickActionSheetBehavior,
+        duration: Long = quickBounceAnimationLength
+    ) {
         val normalPeekHeight = quickActionSheetBehavior.peekHeight
-        val valueAnimator = ValueAnimator.ofFloat(normalPeekHeight.toFloat(), normalPeekHeight*3f)
+        val valueAnimator = ValueAnimator.ofFloat(normalPeekHeight.toFloat(),
+            normalPeekHeight * bounceAnimationPeekHeightMultiplier)
 
         valueAnimator.addUpdateListener {
             quickActionSheetBehavior.peekHeight = (it.animatedValue as Float).toInt()
@@ -51,10 +59,16 @@ class QuickActionSheet @JvmOverloads constructor(
 
         valueAnimator.repeatMode = ValueAnimator.REVERSE
         valueAnimator.repeatCount = 1
-        // Fast out slow in looks best so far
         valueAnimator.interpolator = FastOutSlowInInterpolator()
         valueAnimator.duration = duration
         valueAnimator.start()
+    }
+
+    companion object {
+        const val grabHandleIncreasedTapArea = 50
+        const val bounceAnimationLength = 500L
+        const val quickBounceAnimationLength = 400L
+        const val bounceAnimationPeekHeightMultiplier = 3f
     }
 }
 
