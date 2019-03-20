@@ -132,7 +132,7 @@ class ExtensionDetail extends PureComponent {
 
     return Localized(
       {
-        id: "about-debugging-extension-manifest-link",
+        id: "about-debugging-extension-manifest-url",
         attrs: { label: true },
       },
       FieldPair(

@@ -189,9 +189,10 @@ about-debugging-tmp-extension-install-message = Select manifest.json file or .xp
 # This string is displayed as a message about the add-on having a temporaryID.
 about-debugging-tmp-extension-temporary-id = This WebExtension has a temporary ID. <a>Learn more</a>
 
-# Text of a link displayed for extensions in "runtime" pages.
-# Clicking on the link should open the manifest file in a new tab.
-about-debugging-extension-manifest-link = Manifest URL
+# Text displayed for extensions in "runtime" pages, before displaying a link the extension's
+# manifest URL.
+about-debugging-extension-manifest-url =
+  .label = Manifest URL
 
 # Text displayed for extensions in "runtime" pages, before displaying the extension's uuid.
 # UUIDs look like b293e463-481e-5148-a487-5aaf7a130429
@@ -205,7 +206,8 @@ about-debugging-extension-location =
 
 # Text displayed for extensions in "runtime" pages, before displaying the extension's ID.
 # For instance "geckoprofiler@mozilla.com" or "{ed26ddcb-5611-4512-a89a-51b8db81cfb2}".
-about-debugging-extension-id = Extension ID
+about-debugging-extension-id =
+  .label = Extension ID
 
 # Text of a button displayed after the network locations "Host" input.
 # Clicking on it will add the new network location to the list.
