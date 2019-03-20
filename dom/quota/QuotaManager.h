@@ -411,6 +411,8 @@ class QuotaManager final : public BackgroundThreadObject {
 
   nsresult UpgradeStorageFrom2_0To2_1(mozIStorageConnection* aConnection);
 
+  nsresult UpgradeStorageFrom2_1To2_2(mozIStorageConnection* aConnection);
+
   nsresult MaybeRemoveLocalStorageData();
 
   nsresult MaybeRemoveLocalStorageDirectories();

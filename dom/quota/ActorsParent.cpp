@@ -161,7 +161,7 @@ const uint32_t kHackyDowngradeMinorStorageVersion = 1;
 const uint32_t kMajorStorageVersion = 2;
 
 // Minor storage version. Bump for backwards-compatible changes.
-const uint32_t kMinorStorageVersion = 1;
+const uint32_t kMinorStorageVersion = 2;
 
 // The storage version we store in the SQLite database is a (signed) 32-bit
 // integer. The major version is left-shifted 16 bits so the max value is
@@ -1566,6 +1566,18 @@ class UpgradeStorageFrom1_0To2_0Helper final : public RepositoryOperationBase {
 class UpgradeStorageFrom2_0To2_1Helper final : public RepositoryOperationBase {
  public:
   UpgradeStorageFrom2_0To2_1Helper(nsIFile* aDirectory, bool aPersistent)
+      : RepositoryOperationBase(aDirectory, aPersistent) {}
+
+ private:
+  nsresult PrepareOriginDirectory(OriginProps& aOriginProps,
+                                  bool* aRemoved) override;
+
+  nsresult ProcessOriginDirectory(const OriginProps& aOriginProps) override;
+};
+
+class UpgradeStorageFrom2_1To2_2Helper final : public RepositoryOperationBase {
+ public:
+  UpgradeStorageFrom2_1To2_2Helper(nsIFile* aDirectory, bool aPersistent)
       : RepositoryOperationBase(aDirectory, aPersistent) {}
 
  private:
@@ -4358,6 +4370,22 @@ nsresult QuotaManager::UpgradeStorageFrom2_0To2_1(
   return NS_OK;
 }
 
+nsresult QuotaManager::UpgradeStorageFrom2_1To2_2(
+    mozIStorageConnection* aConnection) {
+  AssertIsOnIOThread();
+  MOZ_ASSERT(aConnection);
+
+  // The upgrade is mainly to clean obsolete origins in the repositoies.
+
+  nsresult rv = UpgradeStorage<UpgradeStorageFrom2_1To2_2Helper>(
+      MakeStorageVersion(2, 1), MakeStorageVersion(2, 2), aConnection);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  return NS_OK;
+}
+
 nsresult QuotaManager::MaybeRemoveLocalStorageData() {
   AssertIsOnIOThread();
   MOZ_ASSERT(!CachedNextGenLocalStorageEnabled());
@@ -4875,7 +4903,7 @@ nsresult QuotaManager::EnsureStorageIsInitialized() {
       MOZ_ASSERT(storageVersion == kStorageVersion);
     } else {
       // This logic needs to change next time we change the storage!
-      static_assert(kStorageVersion == int32_t((2 << 16) + 1),
+      static_assert(kStorageVersion == int32_t((2 << 16) + 2),
                     "Upgrade function needed due to storage version increase.");
 
       while (storageVersion != kStorageVersion) {
@@ -4885,6 +4913,8 @@ nsresult QuotaManager::EnsureStorageIsInitialized() {
           rv = UpgradeStorageFrom1_0To2_0(connection);
         } else if (storageVersion == MakeStorageVersion(2, 0)) {
           rv = UpgradeStorageFrom2_0To2_1(connection);
+        } else if (storageVersion == MakeStorageVersion(2, 1)) {
+          rv = UpgradeStorageFrom2_1To2_2(connection);
         } else {
           NS_WARNING(
               "Unable to initialize storage, no upgrade path is "
@@ -9303,6 +9333,65 @@ nsresult UpgradeStorageFrom2_0To2_1Helper::PrepareOriginDirectory(
 }
 
 nsresult UpgradeStorageFrom2_0To2_1Helper::ProcessOriginDirectory(
+    const OriginProps& aOriginProps) {
+  AssertIsOnIOThread();
+
+  nsresult rv;
+
+  if (aOriginProps.mNeedsRestore) {
+    rv = CreateDirectoryMetadata(aOriginProps.mDirectory,
+                                 aOriginProps.mTimestamp, aOriginProps.mSuffix,
+                                 aOriginProps.mGroup, aOriginProps.mOrigin);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  }
+
+  if (aOriginProps.mNeedsRestore2) {
+    rv = CreateDirectoryMetadata2(aOriginProps.mDirectory,
+                                  aOriginProps.mTimestamp,
+                                  /* aPersisted */ false, aOriginProps.mSuffix,
+                                  aOriginProps.mGroup, aOriginProps.mOrigin);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  }
+
+  return NS_OK;
+}
+
+nsresult UpgradeStorageFrom2_1To2_2Helper::PrepareOriginDirectory(
+    OriginProps& aOriginProps, bool* aRemoved) {
+  AssertIsOnIOThread();
+  MOZ_ASSERT(aOriginProps.mDirectory);
+  MOZ_ASSERT(aRemoved);
+
+  int64_t timestamp;
+  nsCString group;
+  nsCString origin;
+  Nullable<bool> isApp;
+  nsresult rv = GetDirectoryMetadata(aOriginProps.mDirectory, timestamp, group,
+                                     origin, isApp);
+  if (NS_FAILED(rv) || isApp.IsNull()) {
+    aOriginProps.mNeedsRestore = true;
+  }
+
+  nsCString suffix;
+  rv = GetDirectoryMetadata2(aOriginProps.mDirectory, timestamp, suffix, group,
+                             origin, isApp.SetValue());
+  if (NS_FAILED(rv)) {
+    aOriginProps.mTimestamp =
+        GetLastModifiedTime(aOriginProps.mDirectory, mPersistent);
+    aOriginProps.mNeedsRestore2 = true;
+  } else {
+    aOriginProps.mTimestamp = timestamp;
+  }
+
+  *aRemoved = false;
+  return NS_OK;
+}
+
+nsresult UpgradeStorageFrom2_1To2_2Helper::ProcessOriginDirectory(
     const OriginProps& aOriginProps) {
   AssertIsOnIOThread();
 
