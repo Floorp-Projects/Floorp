@@ -936,7 +936,32 @@ class QuotaUsageRequestBase : public NormalOriginOperationBase,
   mozilla::ipc::IPCResult RecvCancel() final;
 };
 
-class GetUsageOp final : public QuotaUsageRequestBase {
+// A mix-in class to simplify operations that need to process every origin in
+// one or more repositories. Sub-classes should call TraverseRepository in their
+// DoDirectoryWork and implement a ProcessOrigin method for their per-origin
+// logic.
+class TraverseRepositoryHelper {
+ public:
+  TraverseRepositoryHelper() = default;
+
+ protected:
+  virtual ~TraverseRepositoryHelper() = default;
+
+  // If ProcessOrigin returns an error, TraverseRepository will immediately
+  // terminate and return the received error code to its caller.
+  nsresult TraverseRepository(QuotaManager* aQuotaManager,
+                              PersistenceType aPersistenceType);
+
+ private:
+  virtual bool IsCanceled() = 0;
+
+  virtual nsresult ProcessOrigin(QuotaManager* aQuotaManager,
+                                 nsIFile* aOriginDir, const bool aPersistent,
+                                 const PersistenceType aPersistenceType) = 0;
+};
+
+class GetUsageOp final : public QuotaUsageRequestBase,
+                         public TraverseRepositoryHelper {
   nsTArray<OriginUsage> mOriginUsages;
   nsDataHashtable<nsCStringHashKey, uint32_t> mOriginUsagesIndex;
 
@@ -948,10 +973,13 @@ class GetUsageOp final : public QuotaUsageRequestBase {
  private:
   ~GetUsageOp() {}
 
-  nsresult TraverseRepository(QuotaManager* aQuotaManager,
-                              PersistenceType aPersistenceType);
-
   nsresult DoDirectoryWork(QuotaManager* aQuotaManager) override;
+
+  bool IsCanceled() override;
+
+  nsresult ProcessOrigin(QuotaManager* aQuotaManager, nsIFile* aOriginDir,
+                         const bool aPersistent,
+                         const PersistenceType aPersistenceType) override;
 
   void GetResponse(UsageRequestResponse& aResponse) override;
 };
@@ -1148,6 +1176,30 @@ class PersistOp final : public PersistRequestBase {
   ~PersistOp() {}
 
   nsresult DoDirectoryWork(QuotaManager* aQuotaManager) override;
+
+  void GetResponse(RequestResponse& aResponse) override;
+};
+
+class ListInitializedOriginsOp final : public QuotaRequestBase,
+                                       public TraverseRepositoryHelper {
+  // XXX Bug 1521541 will make each origin has it's own state.
+  nsTArray<nsCString> mOrigins;
+
+ public:
+  ListInitializedOriginsOp();
+
+  bool Init(Quota* aQuota) override;
+
+ private:
+  ~ListInitializedOriginsOp() = default;
+
+  nsresult DoDirectoryWork(QuotaManager* aQuotaManager) override;
+
+  bool IsCanceled() override;
+
+  nsresult ProcessOrigin(QuotaManager* aQuotaManager, nsIFile* aOriginDir,
+                         const bool aPersistent,
+                         const PersistenceType aPersistenceType) override;
 
   void GetResponse(RequestResponse& aResponse) override;
 };
@@ -6519,6 +6571,7 @@ bool Quota::VerifyRequestParams(const RequestParams& aParams) const {
 
     case RequestParams::TClearAllParams:
     case RequestParams::TResetAllParams:
+    case RequestParams::TListInitializedOriginsParams:
       break;
 
     case RequestParams::TPersistedParams: {
@@ -6679,6 +6732,10 @@ PQuotaRequestParent* Quota::AllocPQuotaRequestParent(
 
     case RequestParams::TPersistParams:
       actor = new PersistOp(aParams);
+      break;
+
+    case RequestParams::TListInitializedOriginsParams:
+      actor = new ListInitializedOriginsOp();
       break;
 
     default:
@@ -6954,14 +7011,8 @@ mozilla::ipc::IPCResult QuotaUsageRequestBase::RecvCancel() {
   return IPC_OK();
 }
 
-GetUsageOp::GetUsageOp(const UsageRequestParams& aParams)
-    : mGetAll(aParams.get_AllUsageParams().getAll()) {
-  AssertIsOnOwningThread();
-  MOZ_ASSERT(aParams.type() == UsageRequestParams::TAllUsageParams);
-}
-
-nsresult GetUsageOp::TraverseRepository(QuotaManager* aQuotaManager,
-                                        PersistenceType aPersistenceType) {
+nsresult TraverseRepositoryHelper::TraverseRepository(
+    QuotaManager* aQuotaManager, PersistenceType aPersistenceType) {
   AssertIsOnIOThread();
   MOZ_ASSERT(aQuotaManager);
 
@@ -6992,7 +7043,7 @@ nsresult GetUsageOp::TraverseRepository(QuotaManager* aQuotaManager,
 
   nsCOMPtr<nsIFile> originDir;
   while (NS_SUCCEEDED((rv = entries->GetNextFile(getter_AddRefs(originDir)))) &&
-         originDir && !mCanceled) {
+         originDir && !IsCanceled()) {
     bool isDirectory;
     rv = originDir->IsDirectory(&isDirectory);
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -7014,59 +7065,86 @@ nsresult GetUsageOp::TraverseRepository(QuotaManager* aQuotaManager,
       continue;
     }
 
-    int64_t timestamp;
-    bool persisted;
-    nsCString suffix;
-    nsCString group;
-    nsCString origin;
-    rv = aQuotaManager->GetDirectoryMetadata2WithRestore(
-        originDir, persistent, &timestamp, &persisted, suffix, group, origin);
+    rv = ProcessOrigin(aQuotaManager, originDir, persistent, aPersistenceType);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
-
-    if (!mGetAll && aQuotaManager->IsOriginInternal(origin)) {
-      continue;
-    }
-
-    OriginUsage* originUsage;
-
-    // We can't store pointers to OriginUsage objects in the hashtable
-    // since AppendElement() reallocates its internal array buffer as number
-    // of elements grows.
-    uint32_t index;
-    if (mOriginUsagesIndex.Get(origin, &index)) {
-      originUsage = &mOriginUsages[index];
-    } else {
-      index = mOriginUsages.Length();
-
-      originUsage = mOriginUsages.AppendElement();
-
-      originUsage->origin() = origin;
-      originUsage->persisted() = false;
-      originUsage->usage() = 0;
-
-      mOriginUsagesIndex.Put(origin, index);
-    }
-
-    if (aPersistenceType == PERSISTENCE_TYPE_DEFAULT) {
-      originUsage->persisted() = persisted;
-    }
-
-    originUsage->lastAccessed() = timestamp;
-
-    UsageInfo usageInfo;
-    rv = GetUsageForOrigin(aQuotaManager, aPersistenceType, group, origin,
-                           &usageInfo);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    originUsage->usage() = originUsage->usage() + usageInfo.TotalUsage();
   }
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
+
+  return NS_OK;
+}
+
+GetUsageOp::GetUsageOp(const UsageRequestParams& aParams)
+    : mGetAll(aParams.get_AllUsageParams().getAll()) {
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(aParams.type() == UsageRequestParams::TAllUsageParams);
+}
+
+bool GetUsageOp::IsCanceled() {
+  AssertIsOnIOThread();
+
+  return mCanceled;
+}
+
+nsresult GetUsageOp::ProcessOrigin(QuotaManager* aQuotaManager,
+                                   nsIFile* aOriginDir, const bool aPersistent,
+                                   const PersistenceType aPersistenceType) {
+  AssertIsOnIOThread();
+  MOZ_ASSERT(aQuotaManager);
+  MOZ_ASSERT(aOriginDir);
+
+  int64_t timestamp;
+  bool persisted;
+  nsCString suffix;
+  nsCString group;
+  nsCString origin;
+  nsresult rv = aQuotaManager->GetDirectoryMetadata2WithRestore(
+      aOriginDir, aPersistent, &timestamp, &persisted, suffix, group, origin);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  if (!mGetAll && aQuotaManager->IsOriginInternal(origin)) {
+    return NS_OK;
+  }
+
+  OriginUsage* originUsage;
+
+  // We can't store pointers to OriginUsage objects in the hashtable
+  // since AppendElement() reallocates its internal array buffer as number
+  // of elements grows.
+  uint32_t index;
+  if (mOriginUsagesIndex.Get(origin, &index)) {
+    originUsage = &mOriginUsages[index];
+  } else {
+    index = mOriginUsages.Length();
+
+    originUsage = mOriginUsages.AppendElement();
+
+    originUsage->origin() = origin;
+    originUsage->persisted() = false;
+    originUsage->usage() = 0;
+
+    mOriginUsagesIndex.Put(origin, index);
+  }
+
+  if (aPersistenceType == PERSISTENCE_TYPE_DEFAULT) {
+    originUsage->persisted() = persisted;
+  }
+
+  originUsage->lastAccessed() = timestamp;
+
+  UsageInfo usageInfo;
+  rv = GetUsageForOrigin(aQuotaManager, aPersistenceType, group, origin,
+                         &usageInfo);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  originUsage->usage() = originUsage->usage() + usageInfo.TotalUsage();
 
   return NS_OK;
 }
@@ -7846,6 +7924,88 @@ void PersistOp::GetResponse(RequestResponse& aResponse) {
   AssertIsOnOwningThread();
 
   aResponse = PersistResponse();
+}
+
+ListInitializedOriginsOp::ListInitializedOriginsOp()
+    : QuotaRequestBase(/* aExclusive */ false), TraverseRepositoryHelper() {
+  AssertIsOnOwningThread();
+}
+
+bool ListInitializedOriginsOp::Init(Quota* aQuota) {
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(aQuota);
+
+  mNeedsQuotaManagerInit = true;
+
+  return true;
+}
+
+nsresult ListInitializedOriginsOp::DoDirectoryWork(
+    QuotaManager* aQuotaManager) {
+  AssertIsOnIOThread();
+  MOZ_ASSERT(aQuotaManager);
+
+  AUTO_PROFILER_LABEL("ListInitializedOriginsOp::DoDirectoryWork", OTHER);
+
+  nsresult rv;
+  if (!aQuotaManager->IsTemporaryStorageInitialized()) {
+    return NS_OK;
+  }
+
+  for (const PersistenceType type : kAllPersistenceTypes) {
+    rv = TraverseRepository(aQuotaManager, type);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  }
+
+  return NS_OK;
+}
+
+bool ListInitializedOriginsOp::IsCanceled() {
+  AssertIsOnIOThread();
+
+  return mCanceled;
+}
+
+nsresult ListInitializedOriginsOp::ProcessOrigin(
+    QuotaManager* aQuotaManager, nsIFile* aOriginDir, const bool aPersistent,
+    const PersistenceType aPersistenceType) {
+  AssertIsOnIOThread();
+  MOZ_ASSERT(aQuotaManager);
+  MOZ_ASSERT(aOriginDir);
+
+  int64_t timestamp;
+  bool persisted;
+  nsCString suffix;
+  nsCString group;
+  nsCString origin;
+  nsresult rv = aQuotaManager->GetDirectoryMetadata2WithRestore(
+      aOriginDir, aPersistent, &timestamp, &persisted, suffix, group, origin);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  if (aQuotaManager->IsOriginInternal(origin)) {
+    return NS_OK;
+  }
+
+  mOrigins.AppendElement(origin);
+
+  return NS_OK;
+}
+
+void ListInitializedOriginsOp::GetResponse(RequestResponse& aResponse) {
+  AssertIsOnOwningThread();
+
+  aResponse = ListInitializedOriginsResponse();
+  if (mOrigins.IsEmpty()) {
+    return;
+  }
+
+  nsTArray<nsCString>& origins =
+      aResponse.get_ListInitializedOriginsResponse().origins();
+  mOrigins.SwapElements(origins);
 }
 
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
