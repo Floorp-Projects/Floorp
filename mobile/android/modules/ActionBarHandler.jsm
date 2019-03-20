@@ -1,5 +1,4 @@
 // -*- indent-tabs-mode: nil; js-indent-level: 2 -*-
-/* vim: set ts=2 et sw=2 tw=80 filetype=javascript: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -443,10 +442,17 @@ var ActionBarHandler = {
       },
 
       action: function(element, win) {
-        ActionBarHandler._getEditor(element, win).cut();
+        // First copy the selection text to the clipboard.
+        let selectedText = ActionBarHandler._getSelectedText();
+        let clipboard = Cc["@mozilla.org/widget/clipboardhelper;1"].
+          getService(Ci.nsIClipboardHelper);
+        clipboard.copyString(selectedText);
 
         let msg = Strings.browser.GetStringFromName("selectionHelper.textCopied");
         Snackbars.show(msg, Snackbars.LENGTH_LONG);
+
+        // Then cut the selection text.
+        ActionBarHandler._getSelection(element, win).deleteFromDocument();
 
         ActionBarHandler._uninit();
         UITelemetry.addEvent("action.1", "actionbar", null, "cut");
@@ -474,7 +480,10 @@ var ActionBarHandler = {
       },
 
       action: function(element, win) {
-        ActionBarHandler._getEditor(element, win).copy();
+        let selectedText = ActionBarHandler._getSelectedText();
+        let clipboard = Cc["@mozilla.org/widget/clipboardhelper;1"].
+          getService(Ci.nsIClipboardHelper);
+        clipboard.copyString(selectedText);
 
         let msg = Strings.browser.GetStringFromName("selectionHelper.textCopied");
         Snackbars.show(msg, Snackbars.LENGTH_LONG);

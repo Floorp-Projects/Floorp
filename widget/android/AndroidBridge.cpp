@@ -292,6 +292,17 @@ void AndroidBridge::GetExtensionFromMimeType(const nsACString& aMimeType,
   }
 }
 
+bool AndroidBridge::GetClipboardText(nsAString& aText) {
+  ALOG_BRIDGE("AndroidBridge::GetClipboardText");
+
+  auto text = Clipboard::GetText(GeckoAppShell::GetApplicationContext());
+
+  if (text) {
+    aText = text->ToString();
+  }
+  return !!text;
+}
+
 int AndroidBridge::GetScreenDepth() {
   ALOG_BRIDGE("%s", __PRETTY_FUNCTION__);
 
