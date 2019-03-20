@@ -6473,9 +6473,6 @@ void nsBlockFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   Maybe<TextOverflow> textOverflow =
       TextOverflow::WillProcessLines(aBuilder, this);
 
-  // We'll collect our lines' display items here, & then append this to aLists.
-  nsDisplayListCollection linesDisplayListCollection(aBuilder);
-
   // Don't use the line cursor if we might have a descendant placeholder ...
   // it might skip lines that contain placeholders but don't themselves
   // intersect with the dirty area.
@@ -6502,8 +6499,8 @@ void nsBlockFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
           break;
         }
         MOZ_ASSERT(textOverflow.isNothing());
-        DisplayLine(aBuilder, lineArea, line, depth, drawnLines,
-                    linesDisplayListCollection, this, nullptr, 0);
+        DisplayLine(aBuilder, lineArea, line, depth, drawnLines, aLists, this,
+                    nullptr, 0);
       }
     }
   } else {
@@ -6513,9 +6510,8 @@ void nsBlockFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
     nscoord lastYMost = INT32_MIN;
     for (LineIterator line = LinesBegin(); line != line_end; ++line) {
       nsRect lineArea = line->GetVisualOverflowArea();
-      DisplayLine(aBuilder, lineArea, line, depth, drawnLines,
-                  linesDisplayListCollection, this, textOverflow.ptrOr(nullptr),
-                  lineCount);
+      DisplayLine(aBuilder, lineArea, line, depth, drawnLines, aLists, this,
+                  textOverflow.ptrOr(nullptr), lineCount);
       if (!lineArea.IsEmpty()) {
         if (lineArea.y < lastY || lineArea.YMost() < lastYMost) {
           nonDecreasingYs = false;
@@ -6530,8 +6526,6 @@ void nsBlockFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
       SetupLineCursor();
     }
   }
-
-  linesDisplayListCollection.MoveTo(aLists);
 
   if (textOverflow.isSome()) {
     // Put any text-overflow:ellipsis markers on top of the non-positioned
