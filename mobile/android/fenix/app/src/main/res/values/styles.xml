@@ -19,6 +19,9 @@
         <item name="colorControlActivated">@color/toggle_activated_light_mode</item>
         <item name="colorSwitchThumbNormal">@color/off_white</item>
 
+        <!-- Color of overscroll glow -->
+        <item name="android:colorEdgeEffect">@color/toggle_activated_light_mode</item>
+
         <!-- Style the navigation bar -->
         <item name="navigationBarColorHome">@android:color/transparent</item>
         <item name="navigationBarColorBrowser">@android:color/transparent</item>
