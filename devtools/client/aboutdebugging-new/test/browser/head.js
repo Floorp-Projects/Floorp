@@ -41,7 +41,6 @@ registerCleanupFunction(async function() {
  */
 async function enableNewAboutDebugging() {
   await pushPref("devtools.aboutdebugging.new-enabled", true);
-  await pushPref("devtools.aboutdebugging.network", true);
 }
 
 async function openAboutDebugging({ enableWorkerUpdates } = {}) {
