@@ -119,6 +119,7 @@
   MACRO(dotGenerator, dotGenerator, ".generator")                              \
   MACRO(dotThis, dotThis, ".this")                                             \
   MACRO(dotInitializers, dotInitializers, ".initializers")                     \
+  MACRO(dotFieldKeys, dotFieldKeys, ".fieldKeys")                              \
   MACRO(each, each, "each")                                                    \
   MACRO(elementType, elementType, "elementType")                               \
   MACRO(else, else_, "else")                                                   \
