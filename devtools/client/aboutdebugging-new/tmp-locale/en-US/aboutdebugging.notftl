@@ -61,7 +61,7 @@ about-debugging-sidebar-runtime-item-name-no-device =
 about-debugging-refresh-usb-devices-button = Refresh devices
 
 # Title of the Setup page.
-about-debugging-connect-title = Setup
+about-debugging-setup-title = Setup
 
 # Explanatory text in the Setup page about what the 'This Firefox' page is for
 about-debugging-setup-this-firefox = Use <a>This Firefox</a> to debug tags, extensions and service workers on this version of Firefox.
@@ -90,14 +90,14 @@ about-debugging-setup-usb-step-enable-debug-firefox = Enable USB Debugging in Fi
 # USB section step by step guide
 about-debugging-setup-usb-step-plug-device = Connect the Android device to your computer.
 
-# Network section of the Connect page
-about-debugging-connect-network =
+# Network section of the Setup page
+about-debugging-setup-network =
   .title = Network Location
 
 # Temporary text displayed when network location support is turned off via preferences.
 # { $pref } is the name of the preference that enables network locations
 # Do not localize
-about-debugging-connect-network-disabled = Network location support currently under development. You can enable it with the preference “{ $pref }”.
+about-debugging-setup-network-disabled = Network location support currently under development. You can enable it with the preference “{ $pref }”.
 
 # Below are the titles for the various categories of debug targets that can be found
 # on "runtime" pages of about:debugging.

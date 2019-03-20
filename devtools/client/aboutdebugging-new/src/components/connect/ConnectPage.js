@@ -184,7 +184,7 @@ class ConnectPage extends PureComponent {
 
     return Localized(
       {
-        id: "about-debugging-connect-network",
+        id: "about-debugging-setup-network",
         attrs: { title: true },
       },
       ConnectSection(
@@ -204,14 +204,14 @@ class ConnectPage extends PureComponent {
           ? null
           : Localized(
             {
-                id: "about-debugging-connect-network-disabled",
+                id: "about-debugging-setup-network-disabled",
                 $pref: PREFERENCES.NETWORK_ENABLED,
             },
             dom.div(
               {
                 className: "connect-page__disabled-section",
               },
-              "about-debugging-connect-network-disabled"
+              "about-debugging-setup-network-disabled"
             )
           ),
       )
@@ -225,7 +225,7 @@ class ConnectPage extends PureComponent {
       },
       Localized(
         {
-          id: "about-debugging-connect-title",
+          id: "about-debugging-setup-title",
         },
         dom.h1(
           {
