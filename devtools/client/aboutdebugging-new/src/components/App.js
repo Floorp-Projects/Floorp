@@ -34,7 +34,6 @@ class App extends PureComponent {
       // getString prop is injected by the withLocalization wrapper
       getString: PropTypes.func.isRequired,
       isScanningUsb: PropTypes.bool.isRequired,
-      networkEnabled: PropTypes.bool.isRequired,
       networkLocations: PropTypes.arrayOf(Types.location).isRequired,
       networkRuntimes: PropTypes.arrayOf(Types.runtime).isRequired,
       selectedPage: Types.page,
@@ -68,7 +67,6 @@ class App extends PureComponent {
     const {
       adbAddonStatus,
       dispatch,
-      networkEnabled,
       networkLocations,
       wifiEnabled,
     } = this.props;
@@ -76,7 +74,6 @@ class App extends PureComponent {
     return ConnectPage({
       adbAddonStatus,
       dispatch,
-      networkEnabled,
       networkLocations,
       wifiEnabled,
     });
@@ -182,7 +179,6 @@ const mapStateToProps = state => {
   return {
     adbAddonStatus: state.ui.adbAddonStatus,
     isScanningUsb: state.ui.isScanningUsb,
-    networkEnabled: state.ui.networkEnabled,
     networkLocations: state.ui.networkLocations,
     networkRuntimes: state.runtimes.networkRuntimes,
     selectedPage: state.ui.selectedPage,

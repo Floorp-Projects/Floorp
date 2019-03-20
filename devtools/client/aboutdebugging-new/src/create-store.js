@@ -49,11 +49,10 @@ function configureStore() {
 function getUiState() {
   const collapsibilities = getDebugTargetCollapsibilities();
   const locations = getNetworkLocations();
-  const networkEnabled = Services.prefs.getBoolPref(PREFERENCES.NETWORK_ENABLED, false);
   const wifiEnabled = Services.prefs.getBoolPref(PREFERENCES.WIFI_ENABLED, false);
   const showSystemAddons = Services.prefs.getBoolPref(PREFERENCES.SHOW_SYSTEM_ADDONS,
     false);
-  return new UiState(locations, collapsibilities, networkEnabled, wifiEnabled,
+  return new UiState(locations, collapsibilities, wifiEnabled,
     showSystemAddons);
 }
 

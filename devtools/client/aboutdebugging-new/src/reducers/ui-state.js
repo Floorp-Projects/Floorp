@@ -18,13 +18,11 @@ const {
 } = require("../constants");
 
 function UiState(locations = [], debugTargetCollapsibilities = {},
-                 networkEnabled = false, wifiEnabled = false,
-                 showSystemAddons = false) {
+                 wifiEnabled = false, showSystemAddons = false) {
   return {
     adbAddonStatus: null,
     debugTargetCollapsibilities,
     isScanningUsb: false,
-    networkEnabled,
     networkLocations: locations,
     selectedPage: null,
     showProfilerDialog: false,

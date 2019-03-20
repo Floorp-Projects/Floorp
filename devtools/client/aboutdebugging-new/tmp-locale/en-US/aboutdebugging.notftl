@@ -94,11 +94,6 @@ about-debugging-setup-usb-step-plug-device = Connect the Android device to your 
 about-debugging-setup-network =
   .title = Network Location
 
-# Temporary text displayed when network location support is turned off via preferences.
-# { $pref } is the name of the preference that enables network locations
-# Do not localize
-about-debugging-setup-network-disabled = Network location support currently under development. You can enable it with the preference “{ $pref }”.
-
 # Below are the titles for the various categories of debug targets that can be found
 # on "runtime" pages of about:debugging.
 # Title of the temporary extensions category (only available for "This Firefox" runtime).
