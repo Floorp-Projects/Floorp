@@ -395,7 +395,9 @@ var TestRunner = {
 
     let browserWindow = Services.wm.getMostRecentWindow("navigator:browser");
     await this._cropImage(browserWindow, OS.Path.toFileURI(imagePath), bounds, rects, imagePath).catch((msg) => {
-      throw `Cropping combo [${combo.map((e) => e.name).join(", ")}] failed: ${msg}`;
+      throw new Error(
+        `Cropping combo [${combo.map((e) => e.name).join(", ")}] failed: ${msg}`
+      );
     });
     this.completedCombos++;
     this.mochitestScope.info("_onConfigurationReady");
