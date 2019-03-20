@@ -2069,7 +2069,7 @@ var CustomizableUIInternal = {
     try {
       gSavedState = JSON.parse(state);
       if (typeof gSavedState != "object" || gSavedState === null) {
-        throw "Invalid saved state";
+        throw new Error("Invalid saved state");
       }
     } catch (e) {
       Services.prefs.clearUserPref(kPrefCustomizationState);

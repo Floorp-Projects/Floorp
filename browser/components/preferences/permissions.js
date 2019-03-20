@@ -220,7 +220,7 @@ var gPermissionManager = {
         let uri = Services.io.newURI(input_url);
         let principal = Services.scriptSecurityManager.createCodebasePrincipal(uri, {});
         if (principal.origin.startsWith("moz-nullprincipal:")) {
-          throw "Null principal";
+          throw new Error("Null principal");
         }
         principals.push(principal);
       } catch (ex) {
