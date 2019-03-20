@@ -34,6 +34,31 @@ struct CompileArgs;
 
 typedef RefPtr<JS::OptimizedEncodingListener> Tier2Listener;
 
+// A struct containing the typed, imported values that are harvested from the
+// import object and passed to Module::instantiate(). This struct must be
+// stored in a (Persistent)Rooted, not in the heap due to its use of TraceRoot()
+// and complete lack of barriers.
+
+struct ImportValues {
+  JSFunctionVector funcs;
+  WasmTableObjectVector tables;
+  WasmMemoryObject* memory;
+  WasmGlobalObjectVector globalObjs;
+  ValVector globalValues;
+
+  ImportValues() : memory(nullptr) {}
+
+  void trace(JSTracer* trc) {
+    funcs.trace(trc);
+    tables.trace(trc);
+    if (memory) {
+      TraceRoot(trc, &memory, "import values memory");
+    }
+    globalObjs.trace(trc);
+    globalValues.trace(trc);
+  }
+};
+
 // Module represents a compiled wasm module and primarily provides three
 // operations: instantiation, tiered compilation, serialization. A Module can be
 // instantiated any number of times to produce new Instance objects. A Module
@@ -82,7 +107,7 @@ class Module : public JS::WasmModule {
   mutable Atomic<bool> testingTier2Active_;
 
   bool instantiateFunctions(JSContext* cx,
-                            Handle<FunctionVector> funcImports) const;
+                            const JSFunctionVector& funcImports) const;
   bool instantiateMemory(JSContext* cx,
                          MutableHandleWasmMemoryObject memory) const;
   bool instantiateImportedTable(JSContext* cx, const TableDesc& td,
@@ -92,15 +117,16 @@ class Module : public JS::WasmModule {
   bool instantiateLocalTable(JSContext* cx, const TableDesc& td,
                              WasmTableObjectVector* tableObjs,
                              SharedTableVector* tables) const;
-  bool instantiateTables(JSContext* cx, WasmTableObjectVector& tableImports,
+  bool instantiateTables(JSContext* cx,
+                         const WasmTableObjectVector& tableImports,
                          MutableHandle<WasmTableObjectVector> tableObjs,
                          SharedTableVector* tables) const;
-  bool instantiateGlobals(JSContext* cx, HandleValVector globalImportValues,
+  bool instantiateGlobals(JSContext* cx, const ValVector& globalImportValues,
                           WasmGlobalObjectVector& globalObjs) const;
   bool initSegments(JSContext* cx, HandleWasmInstanceObject instance,
-                    Handle<FunctionVector> funcImports,
+                    const JSFunctionVector& funcImports,
                     HandleWasmMemoryObject memory,
-                    HandleValVector globalImportValues) const;
+                    const ValVector& globalImportValues) const;
   SharedCode getDebugEnabledCode() const;
   bool makeStructTypeDescrs(
       JSContext* cx,
@@ -144,11 +170,7 @@ class Module : public JS::WasmModule {
 
   // Instantiate this module with the given imports:
 
-  bool instantiate(JSContext* cx, Handle<FunctionVector> funcImports,
-                   WasmTableObjectVector& tableImport,
-                   HandleWasmMemoryObject memoryImport,
-                   HandleValVector globalImportValues,
-                   WasmGlobalObjectVector& globalObjs,
+  bool instantiate(JSContext* cx, ImportValues& imports,
                    HandleObject instanceProto,
                    MutableHandleWasmInstanceObject instanceObj) const;
 
