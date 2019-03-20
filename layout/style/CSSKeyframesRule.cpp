@@ -69,7 +69,15 @@ class CSSKeyframeList : public dom::CSSRuleList {
 
   void AppendRule() { mRules.AppendObject(nullptr); }
 
-  void RemoveRule(uint32_t aIndex) { mRules.RemoveObjectAt(aIndex); }
+  void RemoveRule(uint32_t aIndex) {
+    if (aIndex >= mRules.Length()) {
+      return;
+    }
+    if (css::Rule* child = mRules[aIndex]) {
+      child->DropReferences();
+    }
+    mRules.RemoveObjectAt(aIndex);
+  }
 
   uint32_t Length() final { return mRules.Length(); }
 
