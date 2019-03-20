@@ -122,6 +122,7 @@ static const char* const kTestFileExtensions[] = {
     ".mhtml",              // MS HTML
     ".mim",                // MS Mail
     ".mmc",                // MS Office
+    ".mobileconfig",       // Configuration file for Apple systems
     ".mof",                // Windows
     ".mpkg",               // Mac installer
     ".msc",                // Windows executable
