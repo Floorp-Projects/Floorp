@@ -85,27 +85,6 @@ this.EventManager.prototype = {
     }
 
     switch (aEvent.eventType) {
-      case Events.VIRTUALCURSOR_CHANGED:
-      {
-        if (!aEvent.isFromUserInput) {
-          break;
-        }
-
-        const event = aEvent.
-          QueryInterface(Ci.nsIAccessibleVirtualCursorChangeEvent);
-        const position = event.newAccessible;
-
-        // We pass control to the vc in the embedded frame.
-        if (position && position.role == Roles.INTERNAL_FRAME) {
-          break;
-        }
-
-        // Blur to document if new position is not explicitly focused.
-        if (!position || !Utils.getState(position).contains(States.FOCUSED)) {
-          aEvent.accessibleDocument.takeFocus();
-        }
-        break;
-      }
       case Events.NAME_CHANGE:
       {
         // XXX: Port to Android
