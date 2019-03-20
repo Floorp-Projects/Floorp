@@ -62,14 +62,19 @@ class RuntimeInfo extends PureComponent {
           deviceName
         ) : null,
       runtimeId !== RUNTIMES.THIS_FIREFOX ?
-        dom.button(
+        Localized(
           {
-            className: "default-button runtime-info__action qa-runtime-info__action",
-            onClick() {
-              dispatch(Actions.disconnectRuntime(runtimeId, true));
-            },
+            id: "about-debugging-runtime-disconnect-button",
           },
-          "Disconnect"
+          dom.button(
+            {
+              className: "default-button runtime-info__action qa-runtime-info__action",
+              onClick() {
+                dispatch(Actions.disconnectRuntime(runtimeId, true));
+              },
+            },
+            "Disconnect"
+          )
         ) : null,
     );
   }
